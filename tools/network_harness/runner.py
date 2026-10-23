@@ -206,7 +206,8 @@ def tcp_kernel_progress_counts(raw):
     Per-socket endpoint lines are read only in memory and immediately dropped.
     """
     fields=("bytes_sent","bytes_acked","bytes_received","notsent",
-            "unacked","cwnd","snd_wnd","rto")
+            "unacked","cwnd","snd_wnd","rto","mss","advmss","pmtu",
+            "rcvmss","ssthresh","reordering","rcv_space","dsack_dups")
     blocks=[]
     current=None
     for line in raw.splitlines():
@@ -225,8 +226,14 @@ def tcp_kernel_progress_counts(raw):
     out={"established":len(blocks)}
     values={k:[] for k in fields}
     retrans=[]
+    rtts=[]
+    cc_counts={}
     for block in blocks:
         details=" ".join(block)
+        cc=re.match(r"\s*(cubic|reno|bbr|bbr2|vegas|westwood|htcp)\b",details)
+        if cc: cc_counts[cc.group(1)]=cc_counts.get(cc.group(1),0)+1
+        matched_rtt=re.search(r"(?<![a-zA-Z0-9_])rtt:(\d+(?:\.\d+)?)/(\d+(?:\.\d+)?)",details)
+        if matched_rtt: rtts.append(float(matched_rtt.group(1)))
         for name in fields:
             found=re.search(r"(?<![a-zA-Z0-9_])"+name+r":(\d+)(?![0-9])",details)
             if found:
@@ -240,6 +247,9 @@ def tcp_kernel_progress_counts(raw):
     out["retrans"]={"sampled_sockets":len(retrans),
                     "in_flight_sum":sum(a for a,_ in retrans),
                     "total_sum":sum(b for _,b in retrans)} if retrans else "NOT_OBSERVED"
+    out["rtt_ms"]={"sampled_sockets":len(rtts),
+                   "max":max(rtts),"mean":sum(rtts)/len(rtts)} if rtts else "NOT_OBSERVED"
+    out["congestion_algorithm_counts"]=cc_counts if cc_counts else "NOT_OBSERVED"
     return out
 
 
@@ -273,18 +283,33 @@ def process(pid):
 
 
 class Monitor:
-    def __init__(self, products, output):
+    def __init__(self, products, output, tcp_namespaces=None):
         self.products, self.output = products, output
+        self.tcp_namespaces=tcp_namespaces or {}
         self.samples, self.stop = [], threading.Event()
+        self.last_tcp_poll_ns=0
         self.thread = threading.Thread(target=self.run, daemon=True)
 
     def run(self):
         while not self.stop.is_set():
             fields = read("/proc/stat").splitlines()[0].split()[1:]
-            self.samples.append({"ns": time.monotonic_ns(), "cpu": list(map(int, fields)),
-                "psi_cpu": read("/proc/pressure/cpu"),
-                "psi_memory": read("/proc/pressure/memory"),
-                "processes": {name: process(p.pid) for name, p in self.products.items()}})
+            now=time.monotonic_ns()
+            sample={"ns":now,"cpu":list(map(int,fields)),
+                    "psi_cpu":read("/proc/pressure/cpu"),
+                    "psi_memory":read("/proc/pressure/memory"),
+                    "processes":{name:process(p.pid) for name,p in self.products.items()}}
+            # Numeric TCP_INFO every 2s. Never persist raw addresses, ports,
+            # payloads or secret-bearing socket output.
+            if self.tcp_namespaces and now-self.last_tcp_poll_ns>=2_000_000_000:
+                self.last_tcp_poll_ns=now
+                sample["tcp"]={}
+                for role,ns in self.tcp_namespaces.items():
+                    try:
+                        raw=command(["ip","netns","exec",ns,"ss","-H","-tin"],False)
+                        sample["tcp"][role]=tcp_kernel_progress_counts(raw)
+                    except (OSError,subprocess.SubprocessError):
+                        sample["tcp"][role]="NOT_OBSERVED"
+            self.samples.append(sample)
             self.stop.wait(1)
 
     def finish(self, window=None):
@@ -310,9 +335,34 @@ class Monitor:
             if points:
                 costs[name] = {"cpu_s_observed_including_warmup_setup_drain": points[-1]["cpu_s"]-points[0]["cpu_s"],
                                "rss_peak_bytes": max(p["rss_bytes"] for p in points)}
+        tcp_summary={}
+        for role in self.tcp_namespaces:
+            rows=[p["tcp"][role] for p in samples
+                  if isinstance(p.get("tcp",{}).get(role),dict)
+                  and p["tcp"][role].get("established",0)>0]
+            v={"samples":len(rows)}
+            for key in ("cwnd","snd_wnd","notsent","mss","advmss","pmtu",
+                        "ssthresh","unacked","rto","reordering"):
+                vals=[p[key]["sum"] for p in rows if isinstance(p.get(key),dict)]
+                if vals:
+                    sorted_vals=sorted(vals)
+                    v[key]={"min":sorted_vals[0],
+                            "median":sorted_vals[len(sorted_vals)//2],
+                            "max":sorted_vals[-1]}
+                else: v[key]="NOT_OBSERVED"
+            rtt=[p["rtt_ms"]["mean"] for p in rows if isinstance(p.get("rtt_ms"),dict)]
+            v["rtt_ms"]={"min":min(rtt),"max":max(rtt)} if rtt else "NOT_OBSERVED"
+            cc={}
+            for p in rows:
+                d=p.get("congestion_algorithm_counts")
+                if isinstance(d,dict):
+                    for name,n in d.items(): cc[name]=cc.get(name,0)+n
+            v["congestion_algorithm_counts"]=cc if cc else "NOT_OBSERVED"
+            tcp_summary[role]=v
         return {"cpu_psi_some_peak": peak_psi, "cpu_psi_some_mean": sum(psi)/len(psi) if psi else None,
                 "cpu_psi_over20_fraction": sum(v > 20 for v in psi)/len(psi) if psi else None,
-                "samples_in_measurement": len(samples), "steal_pct_peak": peak_steal, "processes": costs}
+                "samples_in_measurement": len(samples), "steal_pct_peak": peak_steal,
+                "processes": costs, "tcp_window_summary": tcp_summary or "NOT_OBSERVED"}
 
 
 def startup_diagnostic(log_text):
@@ -473,6 +523,14 @@ class LinuxExperiment:
                 "tcp_states": tcp_socket_state_counts(self.nscommand(role, ["ss", "-H", "-tan"], False)),
                 "tcp_kernel_progress": tcp_kernel_progress_counts(self.nscommand(role, ["ss", "-H", "-tin"], False)),
                 "blackhole_counters": self.nscommand(role, ["iptables", "-nvxL", "WBN_LOSS"])}
+        if name.startswith("before-"):
+            settings=("tcp_congestion_control","tcp_available_congestion_control",
+                      "tcp_mtu_probing","tcp_sack","tcp_timestamps",
+                      "tcp_window_scaling","tcp_rmem","tcp_wmem")
+            row["tcp_kernel_settings"]={
+                role:{k:self.nscommand(role,["sysctl","-n","net.ipv4."+k],False).strip()
+                      or "NOT_OBSERVED" for k in settings}
+                for role in self.ns}
         self.snapshots.append(row)
 
     def wait_until(self, ns):
@@ -605,7 +663,7 @@ class LinuxExperiment:
                 self.workers[role] = self.spawn(role, [sys.executable, str(TRAFFIC), "--config", str(config_path),
                     "--role", role, "--local", self.inner[role], "--peer", self.inner[peer],
                     "--output", str(self.out / (role + "-traffic.json")), "--start-ns", str(start_ns)], role + "-traffic.log")
-            self.monitor = Monitor({**self.products, **{r + "-injector": p for r, p in self.workers.items()}}, self.out)
+            self.monitor = Monitor({**self.products, **{r + "-injector": p for r, p in self.workers.items()}}, self.out, self.ns)
             self.monitor.thread.start()
             deadline = time.monotonic() + 18
             while time.monotonic() < deadline:
@@ -643,6 +701,8 @@ class LinuxExperiment:
             result = summarize(self.config, json.loads((self.out / "client-traffic.json").read_text()),
                                json.loads((self.out / "server-traffic.json").read_text()), self.telemetry(), host)
             result["network_accounting"] = network_accounting(self.snapshots)
+            before=[v for v in self.snapshots if v["name"]=="before-"+self.config["phases"][0]["name"]]
+            result["tcp_kernel_settings"]=before[0].get("tcp_kernel_settings","NOT_OBSERVED") if before else "NOT_OBSERVED"
             # Source cohort includes late packets; CPU/wire window excludes warmup/drain.
             begin = next(s for s in self.snapshots if s["name"] == "before-" + self.config["phases"][0]["name"])
             end = next(s for s in self.snapshots if s["name"] == "measurement-end")
@@ -761,7 +821,9 @@ def capacity_action_digest(leg):
                    "outer_tx_bytes":
                         costs.get(role, {}).get("outer_interface_tx_bytes")}
             for role in ("client", "server")},
-        "host": {"cpu_psi_peak": host.get("cpu_psi_some_peak"),
+        "tcp_kernel_settings":leg.get("tcp_kernel_settings","NOT_OBSERVED"),
+        "host": {"tcp_window_summary":host.get("tcp_window_summary","NOT_OBSERVED"),
+                 "cpu_psi_peak": host.get("cpu_psi_some_peak"),
                  "cpu_psi_over20_fraction": host.get("cpu_psi_over20_fraction"),
                  "steal_pct_peak": host.get("steal_pct_peak"),
                  "processes": {

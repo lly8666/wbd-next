@@ -287,7 +287,20 @@ class Contracts(unittest.TestCase):
         self.assertEqual(missing["bytes_acked"],"NOT_OBSERVED")
         self.assertEqual(tcp_kernel_progress_counts(""),{"established":0,
             **{k:"NOT_OBSERVED" for k in ("bytes_sent","bytes_acked",
-                "bytes_received","notsent","unacked","cwnd","snd_wnd","rto","retrans")}})
+                "bytes_received","notsent","unacked","cwnd","snd_wnd","rto",
+                "mss","advmss","pmtu","rcvmss","ssthresh","reordering",
+                "rcv_space","dsack_dups","retrans","rtt_ms",
+                "congestion_algorithm_counts")}})
+        enriched=tcp_kernel_progress_counts(
+            "ESTAB 0 0 sensitive:111 sensitive:222\n"
+            "  cubic wscale:7,7 rtt:401.4/3.5 mss:1289 pmtu:1329 "
+            "advmss:1289 cwnd:43 unacked:49 snd_wnd:539648 "
+            "ssthresh:24 reordering:3 rto:1743\n")
+        self.assertEqual(enriched["mss"]["sum"],1289)
+        self.assertEqual(enriched["pmtu"]["max"],1329)
+        self.assertEqual(enriched["rtt_ms"]["max"],401.4)
+        self.assertEqual(enriched["congestion_algorithm_counts"],{"cubic":1})
+        self.assertNotIn("sensitive",str(enriched))
 
     def test_original_m2_numeric_proof_and_tcp_state_only_no_addresses(self):
         from tools.network_harness.runner import (
