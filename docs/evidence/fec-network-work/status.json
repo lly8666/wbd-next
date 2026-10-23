@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "FEC_ONLY_INITIAL_NATIVE_ACTIONS_PASS_FIRST_PRODUCT_SCENARIO_REQUESTED",
+  "phase": "FEC_ONLY_W1_PREFLIGHT_FIXED_RETRY",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -29,11 +29,17 @@
   "open_requests": [
     {
       "path": "tests/network/fec-work/W1-fixed-max-off-loss5-arm64.json",
-      "id": "FEC-W1-fixed-max-outeroff-baseline-loss5-arm64",
+      "run": 39915604295,
+      "result": "FAIL_HARNESS_PREFLIGHT_NO_PRODUCT_EXECUTION",
+      "root_cause": "GitHub checkout shallow clone HEAD parent absent; git diff-tree returned zero request files"
+    },
+    {
+      "path": "tests/network/fec-work/W1R-fixed-max-off-loss5-arm64.json",
+      "id": "FEC-W1R-fixed-max-outeroff-baseline-loss5-arm64",
       "source": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57",
+      "state": "SUBMITTED_FIRST_ACTUAL_MEASUREMENT",
       "build_run": 39915080968,
-      "expectation": "ONE push-triggered ARM64 measure job with committed immutable request; both native OFF readbacks and original_frozen_retransmitted zero; FEC r_sent and real rx applied, authentic receipts and first delivery",
-      "state": "SUBMITTED_IN_COMMIT_PENDING_ACTIONS"
+      "artifact": 12484770973
     }
   ],
   "open_issues": [
@@ -42,7 +48,7 @@
     "Upstream 2% Normal record-vs-UDP discrepancy remains COMMON_PATH_UNRESOLVED and outside FEC math attribution.",
     "Public Game, Windows UI/platform, cipher choices and outer OFF beyond installed Linux Normal/FEC are UNSUPPORTED/NOT_WIRED; no claim of all-platform switch."
   ],
-  "next_action": "Fetch network-harness Action triggered by W1 request and review exact one-job result/artifact. Gate both native repair_enabled=0 and zero DATA copies/shadows, FEC readback and genuine parity/recovered TUN; investigate compile/native/readback/first delivery before any high load. Reuse pinned ARM64 build 39915080968 artifact 12484770973; only then schedule separate scenario per Action, never shadow upstream.",
+  "next_action": "Inspect W1R single ARM64 network Action; request selection now fetches depth=2 before git diff-tree. Never treat 39915604295 as FEC runtime failure. Verify two-sided native off zero retransmit, parity recovery and quality feedback; fix concrete product issues with same frozen source observation and new exact build only if code changes.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {

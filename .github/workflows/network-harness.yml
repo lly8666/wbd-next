@@ -40,6 +40,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # checkout uses a one-commit shallow clone; fetch its immediate parent
+          # so diff-tree never mistakes a root/graft for an empty request change.
+          git fetch --no-tags --depth=2 origin "$GITHUB_SHA"
           mapfile -t requests < <(git diff-tree --no-commit-id --name-only -r HEAD -- tests/network/fec-work/)
           test "${#requests[@]}" -eq 1
           [[ "${requests[0]}" =~ ^tests/network/fec-work/[A-Za-z0-9_.-]+\.json$ ]]

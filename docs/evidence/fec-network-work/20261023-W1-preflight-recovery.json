@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "branch": "experiment/fec-network-tuning",
+  "source": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57",
+  "failed_run": 39915604295,
+  "failed_job": 120288377517,
+  "stage": "Select exactly one immutable own-branch FEC request on push",
+  "failure": "exit code 1 before bundle download/product startup",
+  "reason": "Shallow checkout lacks HEAD parent so git diff-tree returns no files",
+  "fix": "fetch shallow depth2 explicit GitHub SHA before HEAD diff",
+  "attempt_request": "tests/network/fec-work/W1R-fixed-max-off-loss5-arm64.json",
+  "immutable_build_run": 39915080968,
+  "qualification": "HARNESS_PREFLIGHT_ONLY_NOT_PRODUCT_FAILURE"
+}
