@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-A-real-product-code-native-arm64-PASS-lossless-AB-prepared-V3-B-in-progress",
+  "phase": "V3-A-qualified-two-native-scenarios-V3-B-dynamic-MTU-native-PASS-V3-C-capacity-pending",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -24,17 +24,8 @@
     "zip_sha256": "40d06411b4b431882fdb727012e3b859d2cca58932e85ecd0325f8807e321b3b",
     "build_status": "success"
   },
-  "latest_harness_source": "5cbd0164fac06442c6bc42d9a512d9104d0ee0b2",
-  "open_requests": [
-    {
-      "id": "V3-B-cold-MTU-MSS-native-build",
-      "run": 39978082812,
-      "attempt": 1,
-      "state": "ACTIONS_IN_PROGRESS",
-      "source": "3894f0877ce5be95c75e304d8c55f850465a37e2",
-      "do_not_redispatch": true
-    }
-  ],
+  "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
+  "open_requests": [],
   "recent_evidence": [
     {
       "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
@@ -104,7 +95,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "V3-A candidate source4f3fe926 native ARM build39977358138 PASS (artifact12511253952 zipsha6bc78d...), v3 authenticated mature-gap + 1/2 PN mixed candidate + 32768/s admission +8192/s repair cap+9% credit + 10% original ceiling + no DATA PTO, historical unit tests intact. Run ONE same-VM 0loss TCP1 10Mbps/dir 200ms AB vs valid A=b179fd0e build39967257701 and B4f3fe; both exact artifacts known. Measure old 387 repair duplicates and new near-zero, TUN source drops0, TCP kernel retrans0, CPU and Stop; no hidden throughput downgrade. V3-B dynamic Go cold MSS/record and pinned temporary packet patch source3894f087 build run39978082812 IN_PROGRESS; do NOT performance test or claim until native Go/MTU passes. Then V3-A 30% standard F/C=0.727, >=6% repair/C gate and <=10% R/F require byte-accurate telemetry. Preserve unrelated FEC tests and original source-TUN-2048 repair, do not retune lossy TCP1 or start optional CPU controller.",
+  "next_action": "V3-A CLOSED SCOPED: same-VM 0loss TCP1 AB39978337012 298->0 outer repairs CPU18.07->17.27s, both sides inner TCP retrans0/TUN drops0; highloss native ARM64 50M/30%/300ms run39979596886 artifact12512458869 SHA4a56... PASS real per-direction R/F8.879/8.865%, R/C6.457/6.447%, UDP loss <30%, TUN drops0. V3-B dynamic Go local SYN MSS/record offer exact product source86d35af native build39978760399/MTU9 PASS, but codec V3Fec2Fixed 14B tests and sustained max packet NOT_RUN. Next: add 64MiB namespaced TCP BDP socket profile, calibrate suitable outer line >=700Mbps + host capacity and drive scoped singleTCP 500M/200ms/0loss with actual product, stop higher if host/injector limited; M1 2048 may saturate at 500M, don't declare PASS without source TUN0. Then V3-B largest unfragmented real UDP/MTU boundaries, V3-D mixed/lifecycle. Do not retune lossy TCP full speed or work on FEC independent branch. Keep one-action-one-scenario, no duplicate dispatch. Status evidence scope not production deployment.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -177,23 +168,38 @@
   "v3": {
     "decision_source": "98ec7f9a8155893fc836552ce0470ded48fb3fa1",
     "phase_A": {
-      "product_source": "4f3fe926530e3cee903289142fcfb8437b9e4fbb",
-      "run": 39977358138,
-      "attempt": 1,
-      "build_result": "PASS",
-      "artifact_id": 12511253952,
-      "artifact_sha256": "6bc78db2933a812576501f94888a70f5d2a424f6f9efd861bbad6fbf50feeed7",
-      "mtu_function_result": "PASS",
-      "tests": "Legacy R2 sweep + added v3 negative-only timer/gap/ACK race tests; no business qualified",
-      "perf_status": "NOT_RUN"
+      "lossless_source": "4f3fe926530e3cee903289142fcfb8437b9e4fbb",
+      "build_run": 39977358138,
+      "lossless_AB_run": 39978337012,
+      "lossless_AB_artifact": 12513160269,
+      "lossless_result": "PASS: 0% netem 10Mbps/dir TCP1 A298 repairs B0, kernel TCP retrans0, source TUN drops0, CPU 18.07->17.27s total /60s",
+      "lossless_evidence": "V3-A-lossless-TCP1-AB-20261023.json",
+      "highloss_source": "86d35af39b0aac04f549d870d8c2c1e77d09704b",
+      "native_build_run": 39978760399,
+      "highloss_run": 39979596886,
+      "highloss_attempt": 1,
+      "highloss_artifact": 12512458869,
+      "highloss_artifact_sha256": "4a56dc00cc1e2f43802dce6e8011de307e1764261d6a5c3146dcce4e5db779b4",
+      "highloss_result": "PASS: 30% IID one-way300ms line50Mbps/dir UDP33.7Mbps, R/F8.879%/8.865%, R/C6.457%/6.447%, TUN drops0",
+      "highloss_evidence": "V3-A-30pct-50M-300ms-repair-budget-20261023.json"
     },
     "phase_B": {
-      "candidate_source": "3894f0877ce5be95c75e304d8c55f850465a37e2",
-      "build_run": 39978082812,
-      "status": "ACTIONS_IN_PROGRESS",
-      "scope": "Go cold MSS+record offer incl pinned temp source adapter; native/functional not yet qualified"
+      "source": "86d35af39b0aac04f549d870d8c2c1e77d09704b",
+      "build_run": 39978760399,
+      "result": "NATIVE_ARM64_BUILD_AND_MTU9_PASS",
+      "features": [
+        "V3 advertised SYN/SYN-ACK MSS on original Go temp checkout",
+        "real local record offer from outer-interface limits",
+        "authenticated peer constraints",
+        "FEC2 separate 14B codec reservation added later untested"
+      ],
+      "pending": [
+        "specific1500 max UDP/TCP continuous",
+        "real on-wire and asymmetric peer MSS edge",
+        "Windows shared config/readback"
+      ]
     },
-    "phase_C": "NOT_STARTED",
-    "phase_D": "NOT_STARTED"
+    "phase_C": "NOT_RUN_TCP500",
+    "phase_D": "NOT_RUN_MIXED"
   }
 }
