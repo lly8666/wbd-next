@@ -36,6 +36,18 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_native_tun_ring_profile_is_bound_and_per_leg(self):
+        q=request()
+        q["network"]["tun_txqlen_profiles"]={"A":500,"B":1024}
+        self.assertEqual(validate(q)["network"]["tun_txqlen_profiles"],
+                         {"A":500,"B":1024})
+        q["network"]["tun_txqlen_profiles"]["B"]=8192
+        with self.assertRaises(ValueError):
+            validate(q)
+        q["network"]["tun_txqlen_profiles"]={"C":500}
+        with self.assertRaises(ValueError):
+            validate(q)
+
     def test_true_idle_phase_has_no_synthetic_probe_sends(self):
         r=request()
         r["traffic"]["probe_hz"]=0
