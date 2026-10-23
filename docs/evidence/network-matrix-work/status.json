@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-C-matched-200Mbps-native-CPU-stage-AB-IN_PROGRESS",
+  "phase": "V3-C-TCP500-single-flow-native-arm64-in-actions",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -27,18 +27,17 @@
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
   "open_requests": [
     {
-      "id": "V3-C-TCP1-200M-CPU-thread-stage-AB",
+      "id": "V3-C-TCP1-500M-native-timeline-capacity",
       "state": "ACTIONS_IN_PROGRESS",
-      "run": 39991452116,
+      "run": 39997296538,
       "attempt": 1,
-      "request_source": "be569e1c3cb3f47371ad751b5d8b8b8c00a85e31",
-      "source_A": "bb9a036873d186a84ca9e64727df342d68e59df0",
-      "source_B": "de420809585e60a8ac07c510bdee1a75ad7c7a25",
-      "build_A": 39981175602,
-      "artifact_A": 12513677330,
-      "build_B": 39990605291,
-      "artifact_B": 12517028689,
-      "scope": "single TCP C2S offered200Mbps, 0loss, one-way200ms, outer700Mbps, netns64MiB; sourceB only adds per-Rust RX/TX CPU ns at Stop; A/B same runner ARM64 VM",
+      "request_source": "9c5b1cc484e7901ed2d656ccc79993ae653d6e10",
+      "product_source": "63adb210f724d4b2812d75a292617103ac735b53",
+      "product_native_build_run": 39992871952,
+      "product_artifact_id": 12517549925,
+      "product_artifact_sha256": "4886370e8d20bb081f2311642a1f06b4ebeeb196e11e337b377a543f210d5536",
+      "scope": "Normal/off C2S one inner TCP application stream target500Mbps; outer700Mbps/dir, one_way200ms, netem0, MSS1377, socket TCP64MiB, 20s warm 60s steady 30s drain, bounded 4Hz native TX/RX/CPU timeline",
+      "comparison": "A old sameVM TCP200 PASS sourcebb9a run39991452116; direct TCP200 run39989048165 PASS. TCP500 first legitimate single-run attempt only after TCP200 PASS, not projected PASS.",
       "do_not_redispatch": true
     }
   ],
@@ -136,7 +135,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "V3-C actual same-VM 200Mbps scope A/B run39991452116 IN_PROGRESS, exact source be569e. A old product bb9a compiled artifact12513677330, B de420 compiled native ARM64 run39990605291 artifact12517028689 sha821aaf... plus MTU suite PASS. B adds V4_PUBLIC_WORKER_CPU role rx_thread_cpu_ns tx_thread_cpu_ns on stop; full process CPU already measured by harness. Diagnose whether product TX or RX worker CPU serial saturation vs kernel/Go; DIRECT native control 200Mbps PASS run39989048165, so not general host TCP limit; product175 prior run39983733109 remains unresolved. Avoid rerun or heavier500 until exact matched AB artifacts and stage-specific info read. V3-D 0/100/0 blackhole corrected Actions run39990331827 PASS overall at 2Mbps/dir, qdisc applied by8ms not120ms. Still C2S first RX only at+1.15s and phase missing762, S2C by+0.20s and missing8, TUN source steady0. Received C2S catchup burst => not purely scheduler; record in V3-D-0-100-0-control-blackhole-boundary-20261024.json; not full lifecycle PASS. All Actions only, FEC independent unchanged, no main merge.",
+  "next_action": "V3-C exact source bb9a delivered TCP single 200.003Mbps p99 200.9 no backpressure in same-VM A/B39991452116 (B de420196.726 p99 1642.3), DIRECT native200 achieved199.998Mbps. Thus previous 175.108 action39983733109 is NOT a repeatable 175 hard cap; preserve both evidence, don't claim permanent fix. V3 native opt-in timeline source63adb native ARM64 product bundle+MTU PASS run39992871952 product artifact12517549925 sha4886370...; harness timeline whitelist contracts b4f52d PASS. First justified TCP1 500Mbps0loss200ms one-way with 700Mbps external cap and native4Hz stage/CPU run39997296538 from request9c5b1cc now underway. Check exact Action source, artifacts and readback, 500 acceptance >=475Mbps, injection adequate, no TUN or kernel drops, p99 not arbitrarily inflated, host PSI/steal, process CPU; if fails identify product/host/tester via stage timeline and stop heavier. Also phase-corrected blackhole run39990331827 still C2S initial +1.15s recovery gap while S2C +0.2s: actual qdisc apply within8ms; cannot claim entire lifecycle complete. Preserve V3-A/B and lossless D pass. All tests Actions; don't overlap FEC/M0 platform roles, no main merge.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -289,7 +288,16 @@
       "native_cpu_probe_product_artifact": 12517028689,
       "native_cpu_probe_zip_digest": "sha256:821aaf1fd3777cc33cb13823a2e1a15c768cfc7d51583d6bb13efd5092742720",
       "native_cpu_probe_mtu_artifact": 12517607804,
-      "native_cpu_probe_next": "matched AB same VM 200Mbps 0loss 200ms one-way; A bb9a original v3, B de420 CPU per-worker terminal readback; 64MiB netns bdp500, no change of product crypto/ARQ"
+      "native_cpu_probe_next": "matched AB same VM 200Mbps 0loss 200ms one-way; A bb9a original v3, B de420 CPU per-worker terminal readback; 64MiB netns bdp500, no change of product crypto/ARQ",
+      "tcp200_AB_run": 39991452116,
+      "tcp200_AB_artifact_id": 12517394712,
+      "tcp200_AB_evidence": "V3-C-TCP1-200M-native-sameVM-CPU-AB-20261024.json",
+      "tcp200_AB_observed": "A200.003Mbps/no backpressure p99 200.9ms; B196.726Mbps/750 backpressure p99 1642.3ms, same VM source A bb9a/B de420; earlier175.1 was not repeatable hard ceiling",
+      "tcp500_run": 39997296538,
+      "tcp500_source": "63adb210f724d4b2812d75a292617103ac735b53",
+      "tcp500_status": "ACTIONS_IN_PROGRESS",
+      "timeline_readback_source": "63adb210f724d4b2812d75a292617103ac735b53",
+      "timeline_enabled": true
     },
     "phase_D": {
       "run": 39985073396,
