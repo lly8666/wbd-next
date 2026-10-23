@@ -4,6 +4,7 @@ Linux namespaces are the adapter; the actual Go CLI owns TLS and Rust raw/TUN.
 This file never synthesizes transport packets, ACKs, FEC or product readiness.
 """
 import argparse
+import copy
 import json
 import os
 import platform
@@ -392,7 +393,10 @@ def startup_diagnostic(log_text):
 
 class LinuxExperiment:
     def __init__(self, config, bundle_dir, out, label):
-        self.config, self.bundle = config, Path(bundle_dir) / "fixed-build"
+        self.config=copy.deepcopy(config)
+        self.tcp_profile=config["network"].get("tcp_window_profiles",{}).get(label,"baseline")
+        self.config["network"]["tcp_window_profile_selected"]=self.tcp_profile
+        self.bundle = Path(bundle_dir) / "fixed-build"
         self.out, self.label = Path(out), label
         self.out.mkdir(parents=True, exist_ok=False)
         self.temp = tempfile.TemporaryDirectory(prefix="wbd-net-", dir=os.environ.get("RUNNER_TEMP"))
@@ -422,6 +426,19 @@ class LinuxExperiment:
         for ns in self.ns.values():
             command(["ip", "netns", "add", ns])
             self.created.append(ns)
+        if self.tcp_profile=="large":
+            # Test-only namespace-local TCP tuning, not global sysctl/product config.
+            # Core max permits SO_SNDBUF/SO_RCVBUF effective 16MiB after doubling.
+            settings=(("net.core.rmem_max","16777216"),
+                      ("net.core.wmem_max","16777216"),
+                      ("net.ipv4.tcp_rmem","4096 4194304 16777216"),
+                      ("net.ipv4.tcp_wmem","4096 4194304 16777216"))
+            for role in self.ns:
+                for k,value in settings:
+                    self.nscommand(role,["sysctl","-w",k+"="+value])
+                    actual=self.nscommand(role,["sysctl","-n",k]).strip()
+                    if actual.split()!=value.split():
+                        raise RuntimeError("namespaced TCP window readback mismatch "+k)
         # Create veth inside the owned namespace, never touch host routes/firewall.
         self.nscommand("client", ["ip", "link", "add", "wbnc0", "type", "veth", "peer", "name", "wbns0"])
         self.nscommand("client", ["ip", "link", "set", "wbns0", "netns", self.ns["server"]])
@@ -475,6 +492,8 @@ class LinuxExperiment:
             if (not self.config["traffic"]["allow_fragmentation"] and self.config["traffic"]["udp_share"]
                     and max(s for s, _ in self.config["traffic"]["sizes"]) + 28 > links[0]["mtu"]):
                 raise Unsupported("UDP payload+28 exceeds actual TUN MTU; explicitly allow_fragmentation or use a separate rejection case")
+        self.effective["tcp_window_profile"]=self.tcp_profile
+        self.effective["tcp_window_override"]="namespaced tcp_[rw]mem 16MiB max, socket 8MiB request" if self.tcp_profile=="large" else "untouched baseline"
         dump(self.out / "effective-config.json", self.effective)
         inner = min(links[0]["mtu"] for links in self.effective["inner_links"].values())
         dump(self.out / "capacity-envelope-observed-mtu.json", request_envelope(self.config, inner))
@@ -528,8 +547,10 @@ class LinuxExperiment:
                       "tcp_mtu_probing","tcp_sack","tcp_timestamps",
                       "tcp_window_scaling","tcp_rmem","tcp_wmem")
             row["tcp_kernel_settings"]={
-                role:{k:self.nscommand(role,["sysctl","-n","net.ipv4."+k],False).strip()
-                      or "NOT_OBSERVED" for k in settings}
+                role:{**{k:self.nscommand(role,["sysctl","-n","net.ipv4."+k],False).strip()
+                      or "NOT_OBSERVED" for k in settings},
+                      **{k:self.nscommand(role,["sysctl","-n","net.core."+k],False).strip()
+                      or "NOT_OBSERVED" for k in ("rmem_max","wmem_max")}}
                 for role in self.ns}
         self.snapshots.append(row)
 
@@ -701,6 +722,10 @@ class LinuxExperiment:
             result = summarize(self.config, json.loads((self.out / "client-traffic.json").read_text()),
                                json.loads((self.out / "server-traffic.json").read_text()), self.telemetry(), host)
             result["network_accounting"] = network_accounting(self.snapshots)
+            result["tcp_window_profile"]=self.tcp_profile
+            result["socket_effective_buffers"]={
+                role:json.loads((self.out/(role+"-traffic.json")).read_text()).get("effective_buffers",{})
+                for role in ("client","server")}
             before=[v for v in self.snapshots if v["name"]=="before-"+self.config["phases"][0]["name"]]
             result["tcp_kernel_settings"]=before[0].get("tcp_kernel_settings","NOT_OBSERVED") if before else "NOT_OBSERVED"
             # Source cohort includes late packets; CPU/wire window excludes warmup/drain.
@@ -821,6 +846,8 @@ def capacity_action_digest(leg):
                    "outer_tx_bytes":
                         costs.get(role, {}).get("outer_interface_tx_bytes")}
             for role in ("client", "server")},
+        "tcp_window_profile":leg.get("tcp_window_profile","NOT_OBSERVED"),
+        "socket_effective_buffers":leg.get("socket_effective_buffers","NOT_OBSERVED"),
         "tcp_kernel_settings":leg.get("tcp_kernel_settings","NOT_OBSERVED"),
         "host": {"tcp_window_summary":host.get("tcp_window_summary","NOT_OBSERVED"),
                  "cpu_psi_peak": host.get("cpu_psi_some_peak"),
