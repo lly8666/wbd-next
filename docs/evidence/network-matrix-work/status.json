@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-TCP1-10M-2pct-historical-logic-comparison-complete",
+  "phase": "P2-single-TCP-lossless-window-isolation",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,7 +23,16 @@
     "build_status": "success"
   },
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "P2-TCP1-zero-loss-control-10M",
+      "status": "ACTION_AUTO_39937279597",
+      "run": 39937279597,
+      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "native_artifact_id": 12486939897,
+      "reason": "Single INNER TCP at10Mbps EACH under2% netem failed1.008/1.127Mbps; fresh harness numeric every2s CC/mss/pmtu/cwnd/RTT+CPU, now identical product in 0% loss under same200ms one-way. No FEC tests. Existing 2% Action39932398428 is source evidence, not duplicate."
+    }
+  ],
   "recent_evidence": [
     {
       "id": "P2-Normaloff-10Mbps-2pct-4flow-INCONCLUSIVE-20261023",
@@ -75,7 +84,7 @@
     "P2 exact source281f6c64 Normal/off 10Mbps/dir 2%/200ms mixed 8 TCP flows PASS scoped (run39927659556): actual UDP both0.034%, TCP throughput meets5Mbps each; TCP p99 2.35/1.08s (not low tail). TCP4-only at5Mbps/dir still INCONCLUSIVE run39928829670 (4.82/4.37Mbps), no UDP bulk, owner capacity ample, kernel congestion. No single-flow guarantee.",
     "MODEL_ONLY 500Mbps/RTT600 capacity: current eager physical Arena max8192 vs hard-lifetime >80k potential backed records, fixed logical131072 shadow; endpoint shared512MiB and low CPU per outer event require distinct bounded lazy pool/index design and Actions on suitable host. No projection-as-pass."
   ],
-  "next_action": "Legacy single-flow is single OUTER FakeTCP 4tuple, not single INNER TCP; old UDP100M example not comparable, old four-TCP lossless 10M run37762364098 FAIL. New TCP1 10M/dir2% run39932398428 INCONCLUSIVE:1.008/1.127Mbps, cwnd43/49MSS vs model388, source stage/receipt/CPU/memory healthy. No duplicate Action. To improve, instrument authenticated outer repair arrival timing separately for inner TCP DATA vs ACK, and confirm Linux TCP congestion algorithm. No FEC tests, no blind M1 or retry inflation.",
+  "next_action": "Reconcile exact action39937279597 and its contracts. Analyze real 0% single TCP cwnd/mss/advmss/pmtu/snd_wnd and sysctl CC vs lossy Action39932398428. If lossless also under-injected, prioritize socket sndbuf/receiver window and MSS TUN route. If lossless passes, prioritize outer repair budget timeliness and inner TCP SACK/reordering; do not change 10% budget or outer one-repair blindly. No FEC tests.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
