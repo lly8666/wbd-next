@@ -65,6 +65,8 @@ class Contracts(unittest.TestCase):
         q["network"]["tun_txqlen_profiles"]={"A":500,"B":1024}
         self.assertEqual(validate(q)["network"]["tun_txqlen_profiles"],
                          {"A":500,"B":1024})
+        q["network"]["tun_txqlen_profiles"]["B"]=2048
+        self.assertEqual(validate(q)["network"]["tun_txqlen_profiles"]["B"],2048)
         q["network"]["tun_txqlen_profiles"]["B"]=8192
         with self.assertRaises(ValueError):
             validate(q)
