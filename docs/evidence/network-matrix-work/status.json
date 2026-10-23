@@ -27,10 +27,13 @@
     {
       "id": "P1-single-repair-v2-native-recovery",
       "type": "ONE_NATIVE_ARM64_BUILD_PLUS_FULL_RECOVERY_AND_MTU9",
-      "status": "INTENT_COMMITTED_RUN_PENDING",
-      "source": "COMMIT_TBD",
+      "status": "IN_PROGRESS",
+      "source": "3561ff4beb4f1b1c1d56a606b53fecf9abca3ac1",
       "prior_failed_source": "9329d3f5ea9727b7941ab16dedda1a4f877e0a37",
-      "why": "Only update four obsolete two-repair workpack assertions; runtime semantics unchanged. Rebuild exact branch source and require full recovery library sweep + targeted release races + Fixed/FEC + MTU9."
+      "why": "Only update four obsolete two-repair workpack assertions; runtime semantics unchanged. Rebuild exact branch source and require full recovery library sweep + targeted release races + Fixed/FEC + MTU9.",
+      "run_id": 39905955967,
+      "attempt": 1,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39905955967"
     }
   ],
   "recent_evidence": [
@@ -289,7 +292,7 @@
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2."
   ],
-  "next_action": "After this push locate exactly one ARM64 build. Do not redispatch. Require 75/75 wbd-recovery lib tests, targeted single-repair race tests, product build and MTU9. If pass, one same-VM legacy f8b29e vs new single-repair exact Normal2pct/200ms/60s AB; B policy readback and UDP<=0.25%.",
+  "next_action": "ONE ARM64 native recovery build39905955967 attempt1 SOURCE3561ff4b in progress. Do not redispatch. Require product release, 75/75 recovery lib, targeted single-repair release race/timing/quota tests and MTU9. Then one same-VM f8b29e legacy vs new exact Normal2pct/200ms/60s AB with B policy readback and UDP<=0.25%.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "f8b29e785ac8251c526e74b6288ae59ab031016d",
