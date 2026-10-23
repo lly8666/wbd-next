@@ -737,9 +737,13 @@ class LinuxExperiment:
             boundary = start_ns + int(self.config["warmup_s"] * 1e9)
             for i, phase in enumerate(self.config["phases"], 1):
                 self.wait_until(boundary)
-                self.snapshot("before-" + phase["name"])
+                # Apply the new qdisc condition BEFORE slow 100ms+ sampling.
+                # Snapshot-first moves old impairment ~120ms into a declared
+                # 0%-recovered traffic cohort and falsely attributes boundary
+                # losses to the product. Timestamp actual begin/end separately.
                 self.configure(phase, i)
                 self.config_events[-1]["scheduled_start_ns"] = boundary
+                self.snapshot("before-" + phase["name"])
                 boundary += int(phase["seconds"] * 1e9)
             self.wait_until(boundary)
             self.snapshot("measurement-end")
