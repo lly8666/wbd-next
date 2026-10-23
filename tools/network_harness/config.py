@@ -152,9 +152,11 @@ def validate(raw):
         raise ValueError("bundles must contain A, optionally B")
     for label, b in bundles.items():
         keys(b, ["source", "run_id", "attempt", "artifact_id", "sha256",
-                 "step_attested_failure"], f"bundle {label}")
+                 "step_attested_failure", "recovery_policy"], f"bundle {label}")
         if "step_attested_failure" in b and type(b["step_attested_failure"]) is not bool:
             raise ValueError("step_attested_failure must be boolean")
+        if "recovery_policy" in b and b["recovery_policy"] not in ("legacy-two-repair-v1", "outer-single-repair-v2"):
+            raise ValueError("invalid per-bundle recovery policy")
         for k, length in [("source", 40), ("sha256", 64)]:
             if not re.fullmatch("[0-9a-f]{%d}" % length, b.get(k, "")):
                 raise ValueError(f"bundle {k} must be exact full hex")

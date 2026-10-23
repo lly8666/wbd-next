@@ -36,6 +36,28 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_same_vm_legacy_new_policy_checked_per_frozen_bundle(self):
+        from tools.network_harness.runner import verify_outer_recovery_policy
+        expected = "outer-single-repair-v2"
+        native = {role: {"policy": expected, "repair_attempt_limit": 1,
+                          "shadow_limit": 131072, "retain_cap_us": 1500000}
+                  for role in ("client", "server")}
+        self.assertTrue(verify_outer_recovery_policy(expected, native))
+        self.assertFalse(verify_outer_recovery_policy(expected, {"client": native["client"]}))
+        self.assertFalse(verify_outer_recovery_policy(expected, {
+            **native, "server": {**native["server"], "repair_attempt_limit": 2}}))
+        self.assertIsNone(verify_outer_recovery_policy("legacy-two-repair-v1", {}))
+        ab = request()
+        ab["policy"] = expected
+        ab["bundles"]["A"]["recovery_policy"] = "legacy-two-repair-v1"
+        ab["bundles"]["B"] = dict(ab["bundles"]["A"], recovery_policy=expected)
+        valid = validate(ab)
+        self.assertEqual(valid["bundles"]["A"]["recovery_policy"], "legacy-two-repair-v1")
+        self.assertEqual(valid["bundles"]["B"]["recovery_policy"], expected)
+        ab["bundles"]["B"]["recovery_policy"] = "unproven"
+        with self.assertRaises(ValueError):
+            validate(ab)
+
     def test_presets_are_complete_and_valid(self):
         base = request()
         catalog = json.loads((ROOT / "tests/network/scenarios.json").read_text())

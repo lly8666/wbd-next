@@ -26,6 +26,22 @@ from .envelope import request_envelope
 ROOT = Path(__file__).resolve().parents[2]
 TRAFFIC = Path(__file__).with_name("traffic.py")
 
+def verify_outer_recovery_policy(expected, observed):
+    """Only single-repair sources can prove the v2 readback.
+
+    Historical legacy bundles lack this native marker: never certify them as
+    v2, but do not invalidate an otherwise useful same-VM AB control.
+    """
+    if expected != "outer-single-repair-v2":
+        return None
+    return len(observed) == 2 and all(
+        v.get("policy") == expected
+        and v.get("repair_attempt_limit") == 1
+        and v.get("shadow_limit") == 131072
+        and v.get("retain_cap_us") == 1500000
+        for v in observed.values())
+
+
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
@@ -502,16 +518,12 @@ class LinuxExperiment:
                         **{k: int(v) for k, v in re.findall(
                             r"(repair_attempt_limit|shadow_limit|retain_cap_us)=(\d+)", outer[-1])},
                     }
-        requested_policy = self.config.get("policy")
-        policy_verified = True
-        if requested_policy == "outer-single-repair-v2":
-            policy_verified = len(recovery_policy) == 2 and all(
-                v.get("policy") == requested_policy
-                and v.get("repair_attempt_limit") == 1
-                and v.get("shadow_limit") == 131072
-                and v.get("retain_cap_us") == 1500000
-                for v in recovery_policy.values())
-            verified = verified and policy_verified
+        requested_policy = self.config["bundles"][self.label].get(
+            "recovery_policy", self.config.get("policy"))
+        policy_verified = verify_outer_recovery_policy(
+            requested_policy, recovery_policy)
+        if policy_verified is False:
+            verified = False
         repair = sum(v["original_frozen_retransmitted"] for v in counters.values()) if all("original_frozen_retransmitted" in v for v in counters.values()) else None
         fec_tx = {role:public_fec_tx_snapshot(log) for role,log in logs.items()}
         tx_available = all(v is not None for v in fec_tx.values())
@@ -529,6 +541,7 @@ class LinuxExperiment:
                 "effective_config_verified": verified, "fec_final_readback": applied, "counters": counters,
                 "recovery_policy_readback": recovery_policy,
                 "recovery_policy_verified": policy_verified,
+                "recovery_policy_expected": requested_policy or "NOT_DECLARED",
                 "repair_packets": repair,
                 "original_m2_authenticated_coverage": fec_m2 if all(v is not None for v in fec_m2.values()) else "NOT_OBSERVED",
                 "original_fec_rx_m3_m4_proof": fec_rx if all(v is not None for v in fec_rx.values()) else "NOT_OBSERVED",
