@@ -427,11 +427,11 @@ class LinuxExperiment:
             command(["ip", "netns", "add", ns])
             self.created.append(ns)
         if self.tcp_profile=="large":
-            # Test-only namespace-local TCP tuning, not global sysctl/product config.
-            # Core max permits SO_SNDBUF/SO_RCVBUF effective 16MiB after doubling.
-            settings=(("net.core.rmem_max","16777216"),
-                      ("net.core.wmem_max","16777216"),
-                      ("net.ipv4.tcp_rmem","4096 4194304 16777216"),
+            # Restrict writes to per-netns IPv4 TCP autotuning limits.
+            # Do NOT attempt net.core *mem_max writes: the ARM runner failed
+            # that readback before business; user socket SO_*BUF is clamped,
+            # so report actual getsockopt bytes instead of claiming 8MiB.
+            settings=(("net.ipv4.tcp_rmem","4096 4194304 16777216"),
                       ("net.ipv4.tcp_wmem","4096 4194304 16777216"))
             for role in self.ns:
                 for k,value in settings:
@@ -493,7 +493,7 @@ class LinuxExperiment:
                     and max(s for s, _ in self.config["traffic"]["sizes"]) + 28 > links[0]["mtu"]):
                 raise Unsupported("UDP payload+28 exceeds actual TUN MTU; explicitly allow_fragmentation or use a separate rejection case")
         self.effective["tcp_window_profile"]=self.tcp_profile
-        self.effective["tcp_window_override"]="namespaced tcp_[rw]mem 16MiB max, socket 8MiB request" if self.tcp_profile=="large" else "untouched baseline"
+        self.effective["tcp_window_override"]="namespaced tcp_[rw]mem 16MiB max; socket requested 8MiB but SO_*BUF may be kernel-clamped (read back)" if self.tcp_profile=="large" else "untouched baseline"
         dump(self.out / "effective-config.json", self.effective)
         inner = min(links[0]["mtu"] for links in self.effective["inner_links"].values())
         dump(self.out / "capacity-envelope-observed-mtu.json", request_envelope(self.config, inner))
