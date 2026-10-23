@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-opportunistic-repair-unified-MTU-plan-authorized-implementation-pending",
+  "phase": "V3-A-real-product-code-native-arm64-PASS-lossless-AB-prepared-V3-B-in-progress",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -25,7 +25,16 @@
     "build_status": "success"
   },
   "latest_harness_source": "5cbd0164fac06442c6bc42d9a512d9104d0ee0b2",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "V3-B-cold-MTU-MSS-native-build",
+      "run": 39978082812,
+      "attempt": 1,
+      "state": "ACTIONS_IN_PROGRESS",
+      "source": "3894f0877ce5be95c75e304d8c55f850465a37e2",
+      "do_not_redispatch": true
+    }
+  ],
   "recent_evidence": [
     {
       "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
@@ -95,7 +104,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "核对最新远端及在途Actions，保留b179fd0e无损10M源TUN修复与387次误重传反例。用户已授权v3，按NETWORK_CURRENT_PLAN和NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md依次完成V3-A机会式一次重传（取消DATA RACK/PTO及低损恢复SLA）、V3-B动态MSS/record/FEC2/MTU统一、V3-C同机CPU与单TCP500应用/200ms/0损及原UDP极限、V3-D混跑/生命周期。同步工具/请求/readback/永久提示词适用项后在Actions按新policy验真，不仅改label；单性能Action一场景、AB同VM顺序。原2%TCP1低吞吐留历史，不重复为已取消SLA调参。当前只是方案交付，产品/工具v3尚未实现未跑，不动FEC独立岗位。",
+  "next_action": "V3-A candidate source4f3fe926 native ARM build39977358138 PASS (artifact12511253952 zipsha6bc78d...), v3 authenticated mature-gap + 1/2 PN mixed candidate + 32768/s admission +8192/s repair cap+9% credit + 10% original ceiling + no DATA PTO, historical unit tests intact. Run ONE same-VM 0loss TCP1 10Mbps/dir 200ms AB vs valid A=b179fd0e build39967257701 and B4f3fe; both exact artifacts known. Measure old 387 repair duplicates and new near-zero, TUN source drops0, TCP kernel retrans0, CPU and Stop; no hidden throughput downgrade. V3-B dynamic Go cold MSS/record and pinned temporary packet patch source3894f087 build run39978082812 IN_PROGRESS; do NOT performance test or claim until native Go/MTU passes. Then V3-A 30% standard F/C=0.727, >=6% repair/C gate and <=10% R/F require byte-accurate telemetry. Preserve unrelated FEC tests and original source-TUN-2048 repair, do not retune lossy TCP1 or start optional CPU controller.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -164,5 +173,27 @@
     "preserve_baseline": "lossless_tcp1_current exact SOURCE/artifacts remain prior scoped evidence, not v3 PASS",
     "arithmetic": "docs/evidence/network-matrix-work/V3-opportunistic-plan-model-20261023.json",
     "handoff_log": "docs/devlog/network-matrix-work/20261023-opportunistic-v3-MTU-plan-handoff.md"
+  },
+  "v3": {
+    "decision_source": "98ec7f9a8155893fc836552ce0470ded48fb3fa1",
+    "phase_A": {
+      "product_source": "4f3fe926530e3cee903289142fcfb8437b9e4fbb",
+      "run": 39977358138,
+      "attempt": 1,
+      "build_result": "PASS",
+      "artifact_id": 12511253952,
+      "artifact_sha256": "6bc78db2933a812576501f94888a70f5d2a424f6f9efd861bbad6fbf50feeed7",
+      "mtu_function_result": "PASS",
+      "tests": "Legacy R2 sweep + added v3 negative-only timer/gap/ACK race tests; no business qualified",
+      "perf_status": "NOT_RUN"
+    },
+    "phase_B": {
+      "candidate_source": "3894f0877ce5be95c75e304d8c55f850465a37e2",
+      "build_run": 39978082812,
+      "status": "ACTIONS_IN_PROGRESS",
+      "scope": "Go cold MSS+record offer incl pinned temp source adapter; native/functional not yet qualified"
+    },
+    "phase_C": "NOT_STARTED",
+    "phase_D": "NOT_STARTED"
   }
 }
