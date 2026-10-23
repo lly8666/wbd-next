@@ -1,0 +1,134 @@
+{
+  "schema": 1,
+  "id": "P2-TCP1-2pct-reordering192-AB-rejected-20261023",
+  "action": {
+    "run": 39941976324,
+    "attempt": 1,
+    "artifact_id": 12497230448,
+    "artifact_zip_sha256": "6e569ed296778a873a1dc9eb9f5b4a484076ee76d720d39b48008b418d63ed64",
+    "status": "FAIL_BOTH_INPUT_RATE"
+  },
+  "same_VM_product": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+  "scenario": {
+    "Normal_only": true,
+    "inner_tcp_flows_per_direction": 1,
+    "target_mbps_each_direction": 10,
+    "loss_pct_requested": 2,
+    "oneway_ms": 200,
+    "steady_seconds": 60,
+    "source_artifact": 12486939897,
+    "seed": 5237,
+    "netem": "unseeded_recorded"
+  },
+  "A": {
+    "profile": "default_tcp_reordering_3",
+    "effective_kernel_tcp_reordering": 3,
+    "c2s_injected_mbps": 0.9602452,
+    "s2c_injected_mbps": 0.99937853,
+    "tcp_p99_ms": {
+      "c2s": 3583.3,
+      "s2c": 7766
+    },
+    "tcp_cwnd_median": {
+      "client": 44,
+      "server": 41
+    },
+    "tcp_rto_median_ms": {
+      "client": 1025,
+      "server": 1155
+    },
+    "kernel_retrans_delta": {
+      "client": 112,
+      "server": 117
+    },
+    "M1_peak": {
+      "client": 141,
+      "server": 172
+    },
+    "M1_pre_read_deferred": {
+      "client": 0,
+      "server": 0
+    },
+    "source_tun_tx_drop": {
+      "client": 0,
+      "server": 0
+    },
+    "product_cpu_steady_s": {
+      "client": 1.28,
+      "server": 1.32
+    },
+    "netem_loss_pct": {
+      "client": 1.809,
+      "server": 1.9423
+    },
+    "repair_sent_total": 711,
+    "repair_quota_abandon": {
+      "client": 126,
+      "server": 134
+    }
+  },
+  "B": {
+    "profile": "test_only_tcp_reordering_192",
+    "effective_kernel_tcp_reordering": 192,
+    "c2s_injected_mbps": 0.85207747,
+    "s2c_injected_mbps": 1.4378668,
+    "tcp_p99_ms": {
+      "c2s": 8526.9,
+      "s2c": 5107.5
+    },
+    "tcp_cwnd_median": {
+      "client": 35,
+      "server": 59
+    },
+    "tcp_rto_median_ms": {
+      "client": 1186,
+      "server": 1454
+    },
+    "kernel_retrans_delta": {
+      "client": 110,
+      "server": 161
+    },
+    "M1_peak": {
+      "client": 104,
+      "server": 109
+    },
+    "M1_pre_read_deferred": {
+      "client": 0,
+      "server": 0
+    },
+    "source_tun_tx_drop": {
+      "client": 0,
+      "server": 0
+    },
+    "product_cpu_steady_s": {
+      "client": 1.38,
+      "server": 1.42
+    },
+    "netem_loss_pct": {
+      "client": 1.9506,
+      "server": 1.9872
+    },
+    "repair_sent_total": 836,
+    "repair_quota_abandon": {
+      "client": 119,
+      "server": 103
+    }
+  },
+  "verdict": "NOT_QUALIFIED_REORDER_TUNING_REJECTED_UNEVEN_AND_TAIL_RISK",
+  "limits": [
+    "Observed actual netem loss differs between stochastic AB sequential legs; modest direction improvements cannot claim causal product gain",
+    "B C2S rate worse, B C2S p99 far worse; both actual TCP rates <15% 10Mbps target",
+    "No source TUN or M1 bottleneck at low rate; window buffering and reordering knobs inadequate",
+    "Never deploy netns-only tcp_reordering setting to product OS/system or change authentic outer one-repair quota based on this."
+  ],
+  "combined_parameter_conclusion": {
+    "window_AB_run": 39940890996,
+    "window_artifact": 12496675342,
+    "window_result": "No improvement: A0.992/1.014, B0.931/1.041Mbps, sndbuf46080->425984 and rcvbuf131072->2097152; cwnd37..45MSS",
+    "tuned_reorder_AB_run": 39941976324,
+    "intervention": "kernel per netns tcp_reordering=192 vs default3",
+    "result": "No stable two-way gain and p99 worse",
+    "do_not_repeat": "No more blind socket buffer and kernel reordering tuning under identical 2% high-RTT test."
+  },
+  "next_product_direction": "Existing external one-repair RTT+forward delay (~400ms authenticated gap witness +200ms second forward hop) is generally later than peer Linux TCP DUPACK/fast recovery under out-of-order first delivery, so even repaired original PN may not prevent cwnd shrink. Instrument bounded authentic original TCP data-vs-ACK repair candidate usefulness, per-epoch byte quota blocked and decision age; then select narrow policy with unchanged hard one repair,10% aggregate budget, first delivery, and low CPU. No lossless proactive duplication or TCP cross-business HOL."
+}
