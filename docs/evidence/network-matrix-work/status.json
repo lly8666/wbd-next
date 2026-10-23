@@ -39,6 +39,18 @@
       "scope": "Normal/off C2S one inner TCP application stream target500Mbps; outer700Mbps/dir, one_way200ms, netem0, MSS1377, socket TCP64MiB, 20s warm 60s steady 30s drain, bounded 4Hz native TX/RX/CPU timeline",
       "comparison": "A old sameVM TCP200 PASS sourcebb9a run39991452116; direct TCP200 run39989048165 PASS. TCP500 first legitimate single-run attempt only after TCP200 PASS, not projected PASS.",
       "do_not_redispatch": true
+    },
+    {
+      "id": "V3-D-blackhole-native-stage-timeline-0-100-0",
+      "state": "ACTIONS_QUEUED",
+      "run": 39997661008,
+      "attempt": 1,
+      "request_source": "0694f4900c0c274cb20b7fdb1261b7647eb0b75a",
+      "product_source": "63adb210f724d4b2812d75a292617103ac735b53",
+      "build_run": 39992871952,
+      "product_artifact": 12517549925,
+      "reason": "different independent ARM VM scenario: diagnostic 4Hz native real M4 TX/RX vs UDP delivery on exact 0/100/0 2Mbps/dir, 200ms one-way; isolate asymmetric C2S first-delivery delay ~1.15s",
+      "do_not_redispatch": true
     }
   ],
   "recent_evidence": [
@@ -135,7 +147,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "V3-C exact source bb9a delivered TCP single 200.003Mbps p99 200.9 no backpressure in same-VM A/B39991452116 (B de420196.726 p99 1642.3), DIRECT native200 achieved199.998Mbps. Thus previous 175.108 action39983733109 is NOT a repeatable 175 hard cap; preserve both evidence, don't claim permanent fix. V3 native opt-in timeline source63adb native ARM64 product bundle+MTU PASS run39992871952 product artifact12517549925 sha4886370...; harness timeline whitelist contracts b4f52d PASS. First justified TCP1 500Mbps0loss200ms one-way with 700Mbps external cap and native4Hz stage/CPU run39997296538 from request9c5b1cc now underway. Check exact Action source, artifacts and readback, 500 acceptance >=475Mbps, injection adequate, no TUN or kernel drops, p99 not arbitrarily inflated, host PSI/steal, process CPU; if fails identify product/host/tester via stage timeline and stop heavier. Also phase-corrected blackhole run39990331827 still C2S initial +1.15s recovery gap while S2C +0.2s: actual qdisc apply within8ms; cannot claim entire lifecycle complete. Preserve V3-A/B and lossless D pass. All tests Actions; don't overlap FEC/M0 platform roles, no main merge.",
+  "next_action": "Two independently declared Actions in progress, do not repeat: V3-C first TCP500 0loss 200ms one-way 700Mbps outer product63adb build39992871952 run39997296538 source9c5b1cc. V3-D lowload UDP 0/100/0 with bounded native 4Hz timeline same product source63adb run39997661008 source0694f49, intended to distinguish C2S ~1.15s recovery delay after corrected qdisc switch<=8ms; both work one scenario/Action on separate native ARM64 VM. Reconcile exact artifact/sha, run/attempt, native TX/RX/CPU markers and cohort stats before edits. 200Mbps A same-VM AB39991452116 product bb9a delivered200.003Mbps p99 200.9 no backpressure, B de420 delivered196.726 with 750 backpressure p99 1642.3; previous175 is variable not hard cap; direct200 native200 PASS. V3-A0loss 298->0 outer repair, 30pct 9% target and6% R/C pass; V3-B 1500 UDP max PASS; D no loss mix PASS, 30pct UDP independently continues, old lifecycle +1.15s C2S delay not fixed. No FEC role, main merge, deployment.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
