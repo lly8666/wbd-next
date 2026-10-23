@@ -27,6 +27,7 @@ type V4LinuxClientProductConfig struct {
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     FECMode FecV2Mode
     FECProfile FecV2Profile
+    DisableOuterRepair bool
 }
 type V4LinuxClientProduct struct {
     mu sync.Mutex
@@ -105,6 +106,7 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     if err==nil{
         p.fec,err=v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,cold)
     }
+    if err==nil{err=bridge.configureOriginalOuterRepair(!p.cfg.DisableOuterRepair)}
     if err==nil{err=bridge.armOriginalPublicM2Feedback()}
     if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
     if err!=nil{

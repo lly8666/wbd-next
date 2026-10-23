@@ -25,6 +25,8 @@ extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
     uint64_t *,uint32_t *,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t);
+extern int32_t wbd_m0_embedded_go_set_public_outer_repair(uint64_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_read_public_outer_repair(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_public_outer_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_public_outer_diagnostics(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_public_fec2_tx_snapshot(uint64_t,uint64_t *,size_t);
@@ -278,6 +280,23 @@ func (b *v4EmbeddedNativeBridge) tunToKernelRaw(ifindex uint32)(uint64,uint32,ui
     return uint64(pn),uint32(seq),uint32(full),uint32(app),nil
 }
 
+// Applied after original credential TLS Commit and M4 driver binding.
+// Strict native readback; no analyzer-only policy interpretation.
+func (b *v4EmbeddedNativeBridge) configureOriginalOuterRepair(enabled bool)error{
+    if b==nil||!b.committed||b.stopped||b.handle==0{return errV4Embedded}
+    value:=C.uint32_t(0)
+    if enabled{value=1}
+    rc:=C.wbd_m0_embedded_go_set_public_outer_repair(C.uint64_t(b.handle),value)
+    if rc!=0{return fmt.Errorf("%w: set native outer repair=%d",errV4Embedded,int(rc))}
+    var applied C.uint32_t
+    rc=C.wbd_m0_embedded_go_read_public_outer_repair(C.uint64_t(b.handle),&applied)
+    if rc!=0||applied!=value{
+        return fmt.Errorf("%w: native outer repair mismatch requested=%d actual=%d code=%d",
+            errV4Embedded,uint32(value),uint32(applied),int(rc))
+    }
+    return nil
+}
+
 // Development-only original Rust owner continuous worker controls. No Go
 // per-packet RX/TX invocation while the loop owns both drivers.
 // Only the actual shipping original Go V4 client/server after credential
@@ -287,6 +306,7 @@ func (b *v4EmbeddedNativeBridge) tunToKernelRaw(ifindex uint32)(uint64,uint32,ui
 // Original public CLI exposes only Rust's post-kernel, post-AEAD M2
 // counters. These are facts, NOT a synthetic readiness or APPLIED grant.
 type V4PublicOuterCounters struct{
+    OuterRepairEnabled bool
     FirstKernelCopied uint64
     AuthenticatedAckRetired uint64
     OriginalFrozenRepaired uint64
@@ -316,7 +336,11 @@ func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCoun
     rc=C.wbd_m0_embedded_go_public_outer_diagnostics(
         C.uint64_t(b.handle),&d[0],34)
     if rc!=0{return zero,fmt.Errorf("%w: native original M2 diagnostics=%d",errV4Embedded,int(rc))}
+    var enabled C.uint32_t
+    rc=C.wbd_m0_embedded_go_read_public_outer_repair(C.uint64_t(b.handle),&enabled)
+    if rc!=0||enabled>1{return zero,fmt.Errorf("%w: outer repair readback=%d",errV4Embedded,int(rc))}
     return V4PublicOuterCounters{
+        OuterRepairEnabled:enabled==1,
         FirstKernelCopied:uint64(values[0]),
         AuthenticatedAckRetired:uint64(values[1]),
         OriginalFrozenRepaired:uint64(values[2]),

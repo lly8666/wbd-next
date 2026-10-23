@@ -418,6 +418,9 @@ struct Entry{
     feedback_queued:Option<(wbd_recovery::FeedbackDraft,u64)>,
     #[cfg(feature="fec2_product_record")]
     original_outer:Option<Arc<Mutex<OriginalOuterRepair>>>,
+    // FEC parity and authenticated M2 feedback are independent of retries.
+    #[cfg(feature="fec2_product_record")]
+    outer_repair_enabled:bool,
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     normal_off_applied_revision:u64,
     // Ordinary non-probe owner: only Go verified TLS feature7 may stage FEC2
@@ -655,6 +658,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         feedback_queued:None,
         #[cfg(feature="fec2_product_record")]
         original_outer:None,
+        #[cfg(feature="fec2_product_record")]
+        outer_repair_enabled:true,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         normal_off_applied_revision:0,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -2716,6 +2721,45 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_arm_public_original_m2_feedback(
     }
 }
 
+// Authenticated owner-local policy, set after real M4 binding but BEFORE
+// worker start. OFF never changes parity, genuine reverse receipts or M2.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_set_public_outer_repair(
+    h:u64,enabled:u32
+)->i32{
+    if enabled>1{return INVALID}
+    #[cfg(not(feature="fec2_product_record"))]
+    {let _=h;BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    {
+        let Ok(cell)=session(h)else{return UNKNOWN};
+        let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+        if e.phase!=PH_ACTIVE||e.workers.is_some()||
+            e.original_public_feedback_armed||
+            e.raw_rx.is_none()||e.tun_sink.is_none(){return BAD_STAGE}
+        e.outer_repair_enabled=enabled==1;
+        OK
+    }
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_read_public_outer_repair(
+    h:u64,out:*mut u32
+)->i32{
+    if out.is_null(){return INVALID}
+    #[cfg(not(feature="fec2_product_record"))]
+    {let _=h;BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    {
+        let Ok(cell)=session(h)else{return UNKNOWN};
+        let Ok(e)=cell.lock()else{return BAD_STAGE};
+        if e.phase!=PH_ACTIVE{return BAD_STAGE}
+        unsafe{out.write(u32::from(e.outer_repair_enabled))};
+        OK
+    }
+}
+
 // The same non-_test Go-verified owner now owns BOTH actual M4 device
 // handles. No shadow/test engine, no alternate AEAD/PN or delivery route.
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -3946,29 +3990,31 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     #[cfg(feature="fec2_product_record")]
     if let Some(shared)=e.original_outer.as_ref(){
         let mut original=shared.lock().map_err(|_|BAD_STAGE)?;
-        let mut global=original_process_repair_quota().lock()
-            .map_err(|_|BAD_STAGE)?;
-        let now=loop_now();
         let copied=(finish.copied as usize).min(frozen_for_outer.len());
-        // Fresh ciphertext is registered only for the actual M4 definite
-        // copied prefix; never register health-control kind1, driver-unknown,
-        // or definitely-not-sent as missing data.
+        // Only actual kernel-copied DATA counts; control is appended last.
         let control_last=e.feedback_queued.is_some();
         let data_count=frozen_for_outer.len()-usize::from(control_last);
-        for record in frozen_for_outer.iter().take(copied.min(data_count)){
-            let frame_bytes=(record.bytes().len()+
-                wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64;
-            match global.on_fresh_accepted(
-                original.direction,frame_bytes,now
-            ){
-                Ok(())=>{
-                    if original.shadow.on_sent_adaptive(record.clone(),now).is_ok(){
-                        original.sent_fresh=original.sent_fresh.saturating_add(1);
-                    }else{
-                        original.note_block(OriginalRepairBlockReason::FreshShadow);
-                    }
-                },
-                Err(_)=>original.note_block(OriginalRepairBlockReason::FreshGlobal),
+        if !e.outer_repair_enabled {
+            // No payload shadow registration or repair budget in OFF.
+            original.sent_fresh=original.sent_fresh
+                .saturating_add(copied.min(data_count) as u64);
+        } else {
+            let mut global=original_process_repair_quota().lock()
+                .map_err(|_|BAD_STAGE)?;
+            let now=loop_now();
+            for record in frozen_for_outer.iter().take(copied.min(data_count)){
+                let frame_bytes=(record.bytes().len()+
+                    wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64;
+                match global.on_fresh_accepted(original.direction,frame_bytes,now){
+                    Ok(())=>{
+                        if original.shadow.on_sent_adaptive(record.clone(),now).is_ok(){
+                            original.sent_fresh=original.sent_fresh.saturating_add(1);
+                        }else{
+                            original.note_block(OriginalRepairBlockReason::FreshShadow);
+                        }
+                    },
+                    Err(_)=>original.note_block(OriginalRepairBlockReason::FreshGlobal),
+                }
             }
         }
     }
@@ -4184,7 +4230,8 @@ fn background_original_repair_once(
     if stop.load(Ordering::Acquire){return Ok(0)}
     let (shared,raw,flow,server,generation,mature)={
         let e=cell.lock().map_err(|_|BAD_STAGE)?;
-        if e.phase!=PH_ACTIVE||e.workers.is_none(){return Ok(0)}
+        if e.phase!=PH_ACTIVE||e.workers.is_none()||
+            !e.outer_repair_enabled{return Ok(0)}
         let Some(shared)=e.original_outer.as_ref().map(Arc::clone)
             else{return Ok(0)};
         let Some(raw)=e.raw_tx.as_ref().map(Arc::clone)
@@ -4410,7 +4457,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             block_reasons:[0;ORIGINAL_REPAIR_BLOCK_REASON_COUNT],retired:0,
         }));
         e.original_outer=Some(Arc::clone(&active));
-        Some(active)
+        // OFF still has actual first-send quality metadata and RxFeedbackState;
+        // it does not attach any repair shadow to the authenticated RX owner.
+        if e.outer_repair_enabled{Some(active)}else{None}
     }else{None};
     let mature=Arc::new(Mutex::new(first));
     e.normal_firstsend_m2=Some(Arc::clone(&mature));

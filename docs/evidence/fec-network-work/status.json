@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "FEC_ONLY_BOOTSTRAP_READY",
+  "phase": "OUTER_REPAIR_OFF_WIRING_PENDING_ACTIONS",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -17,11 +17,17 @@
   "product_current": null,
   "open_requests": [],
   "open_issues": [
-    "Public runtime repair-disable switch is not verified. Harness currently rejects explicit repair_enabled; implement minimal truthful end-to-end switch without disabling receipts/RTT/keepalive or FEC parity.",
-    "Upstream Normal reports record-vs-UDP delivery discrepancy under 2% damage. Preserve it as a common-path qualification boundary; do not assume all residual is FEC failure or duplicate upstream dispatches.",
-    "FEC fixed/auto/fullstack capability and performance under actual zero outer data repairs remain NOT_RUN for this task."
+    "OFF policy is source-wired for genuine Linux Normal/FEC V4 owners but exact ARM64 build, two-side runtime readback, zero DATA retransmits under injected loss and retained first-send feedback are NOT_YET_VERIFIED; never mark FEC-only PASS until Action.",
+    "FEC fixed/auto actual k/r, recovery, first TUN delivery, CPU/RSS and sustained p99 are NOT_RUN on this source; prior upstream evidence is not a pure FEC qualifier.",
+    "Upstream 2% Normal record-vs-UDP discrepancy remains COMMON_PATH_UNRESOLVED and outside FEC math attribution.",
+    "Public Game, Windows UI/platform, cipher choices and outer OFF beyond installed Linux Normal/FEC are UNSUPPORTED/NOT_WIRED; no claim of all-platform switch."
   ],
-  "next_action": "Read task entry, recover exact branch and build evidence; implement/reuse real outer-repair OFF with two-sided readback/counters, retain feedback and minimal quality metadata, then native functional and one FEC-only true-business positive case. Reuse existing codec tests and artifacts where applicable; all execution in Actions.",
+  "next_action": "Inspect native ARM64 build and harness contract Actions triggered by this isolated push; repair compile/contract failures first. Pin exact successful build run/artifact/SHA, create tests/network/fec-work/<unique-case>.json with repair_enabled:false, dispatch ONE cheap no-loss/known-missing-source case and verify both native outer-repair readbacks/counters plus FEC parity and authentic feedback. Do not dispatch heavier performance scenarios before this gate; one scenario per performance Action, build artifact reuse.",
   "evidence_directory": "docs/evidence/fec-network-work/",
-  "devlog_directory": "docs/devlog/fec-network-work/"
+  "devlog_directory": "docs/devlog/fec-network-work/",
+  "wiring_intent": {
+    "started_from": "486db552b40c17ab52b1248eef64fd3e61ae84ef",
+    "note": "Source patch staged; no Action run or runtime receipt for the new source yet.",
+    "verified": false
+  }
 }

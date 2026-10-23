@@ -36,6 +36,26 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_fec_only_outer_switch_requires_real_boolean_and_rejects_game(self):
+        base = request()
+        for mode in ("normal", "fec-fixed", "fec-auto"):
+            trial = copy.deepcopy(base)
+            trial["product"]["mode"] = mode
+            trial["product"]["repair_enabled"] = False
+            trial["product"]["fec_profile"] = 1
+            self.assertIs(validate(trial)["product"]["repair_enabled"], False)
+        for value in (0, 1, "false", None):
+            trial = request()
+            trial["product"]["repair_enabled"] = value
+            with self.assertRaises(ValueError):
+                validate(trial)
+        for mode in ("game2", "game4"):
+            trial = request()
+            trial["product"]["mode"] = mode
+            trial["product"]["repair_enabled"] = False
+            with self.assertRaises(Unsupported):
+                validate(trial)
+
     def test_same_vm_legacy_new_policy_checked_per_frozen_bundle(self):
         from tools.network_harness.runner import verify_outer_recovery_policy
         expected = "outer-single-repair-v2"

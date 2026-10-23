@@ -1,7 +1,7 @@
 name: Network harness contracts
 on:
   push:
-    branches: [main, feat/network-scenario-harness-20261021, experiment/network-matrix-tuning]
+    branches: [main, feat/network-scenario-harness-20261021, experiment/network-matrix-tuning, experiment/fec-network-tuning]
     paths: ["tools/network_harness/**", "tests/network/**", ".github/workflows/network-harness*.yml"]
   pull_request:
     paths: ["tools/network_harness/**", "tests/network/**", ".github/workflows/network-harness*.yml"]

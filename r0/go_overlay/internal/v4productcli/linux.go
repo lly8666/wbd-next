@@ -85,6 +85,7 @@ type config struct{
     fecProfile realityfront.FecV2Profile
     gameLanes uint8
     outerMTU int
+    disableOuterRepair bool
     recordLimit uint16
     innerMTU int
 }
@@ -111,6 +112,7 @@ func parse(role string,args []string)(config,error){
     tunnel:=flags.String("tunnel-id","","original logical 16B hex tunnel id")
     mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4")
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for fixed; auto uses strong startup")
+    outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and genuine receipt feedback stay enabled")
     outerMTU:=flags.Int("outer-mtu",1500,"outer IPv4 packet MTU; inner TUN MTU is derived automatically and clamped to device/peer limits")
     if err:=flags.Parse(args);err!=nil{return c,err}
     if *passFile!="" {
@@ -135,6 +137,14 @@ func parse(role string,args []string)(config,error){
     }
     if *profile>6{return c,fmt.Errorf("fec-profile must be 0..6")}
     if *outerMTU<576||*outerMTU>9000{return c,fmt.Errorf("outer-mtu must be 576..9000")}
+    switch *outerRepair{
+    case "on":c.disableOuterRepair=false
+    case "off":c.disableOuterRepair=true
+    default:return c,fmt.Errorf("outer-repair must be on or off")
+    }
+    if c.disableOuterRepair&&c.gameLanes!=0{
+        return c,fmt.Errorf("outer-repair=off is not wired to public Game")
+    }
     c.outerMTU=*outerMTU
     c.fecProfile=realityfront.FecV2Profile(*profile)
     if *iface==""||len(*tunName)==0||len(*tunName)>15||
@@ -257,8 +267,8 @@ func logAuthenticOuter(role string,v realityfront.V4PublicOuterCounters,err erro
         log.Printf("V4_PUBLIC_M2_OUTER_NOT_AVAILABLE role=%s error=%v",role,err)
         return
     }
-    log.Printf("V4_PUBLIC_M2_OUTER role=%s policy=outer-single-repair-v2 real_first_copy=%d authenticated_ack=%d original_frozen_retransmitted=%d driver_uncertain=%d quota_or_capacity_blocked=%d retired_total=%d repair_attempt_limit=%d shadow_limit=%d retain_cap_us=%d candidate_first=%d candidate_retry=%d acked0=%d acked1=%d acked2=%d expired0=%d expired1=%d expired2=%d repair_accepted_retired=%d repair_uncertain_retired=%d repair_abandoned_retired=%d max_queue_age_us=%d late_positive_expired=%d timing_samples=%d srtt_us=%d rttvar_us=%d recent_rtt_us=%d reorder_us=%d pto_us=%d cache_us=%d shadow_outstanding=%d blocked_fresh_global=%d blocked_fresh_shadow=%d blocked_grant=%d blocked_burst=%d blocked_quota=%d blocked_capacity=%d blocked_stale=%d blocked_local_other=%d blocked_global_other=%d blocked_invariant=%d",
-        role,v.FirstKernelCopied,v.AuthenticatedAckRetired,
+    log.Printf("V4_PUBLIC_M2_OUTER role=%s policy=outer-single-repair-v2 repair_enabled=%d real_first_copy=%d authenticated_ack=%d original_frozen_retransmitted=%d driver_uncertain=%d quota_or_capacity_blocked=%d retired_total=%d repair_attempt_limit=%d shadow_limit=%d retain_cap_us=%d candidate_first=%d candidate_retry=%d acked0=%d acked1=%d acked2=%d expired0=%d expired1=%d expired2=%d repair_accepted_retired=%d repair_uncertain_retired=%d repair_abandoned_retired=%d max_queue_age_us=%d late_positive_expired=%d timing_samples=%d srtt_us=%d rttvar_us=%d recent_rtt_us=%d reorder_us=%d pto_us=%d cache_us=%d shadow_outstanding=%d blocked_fresh_global=%d blocked_fresh_shadow=%d blocked_grant=%d blocked_burst=%d blocked_quota=%d blocked_capacity=%d blocked_stale=%d blocked_local_other=%d blocked_global_other=%d blocked_invariant=%d",
+        role,func()int{if v.OuterRepairEnabled{return 1};return 0}(),v.FirstKernelCopied,v.AuthenticatedAckRetired,
         v.OriginalFrozenRepaired,v.DriverUncertain,
         v.BudgetOrCapacityBlocked,v.RetiredTotal,
         v.RepairAttemptLimit,v.ShadowLimit,v.RetainCapus,
@@ -390,7 +400,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
-            FECMode:c.fecMode,FECProfile:c.fecProfile,
+            FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
         })
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
@@ -464,7 +474,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
-            FECMode:c.fecMode,FECProfile:c.fecProfile,
+            FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
         })
     if err!=nil{return err}
     table,err:=faketcp.NewServerAssociationTable(32,emit)

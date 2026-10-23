@@ -73,9 +73,13 @@ def validate(raw):
         raise Unsupported("public V4 adapter has no such mode")
     p.setdefault("fec_profile", 1)
     integer(p["fec_profile"], 0, 6, "fec_profile")
-    # Current public CLI hardcodes Game FEC off and exposes neither cipher nor repair knobs.
-    if p.get("game_fec", "off") != "off" or any(k in p for k in ["cipher", "repair_enabled", "repair_ratio"]):
-        raise Unsupported("current public CLI does not expose requested Game-FEC/cipher/repair setting")
+    # Genuine owner policy, never an analyzer-only OFF.
+    if "repair_enabled" in p and type(p["repair_enabled"]) is not bool:
+        raise ValueError("repair_enabled must be boolean")
+    if p.get("game_fec", "off") != "off" or any(k in p for k in ["cipher", "repair_ratio"]):
+        raise Unsupported("current public CLI does not expose requested Game-FEC/cipher setting")
+    if p.get("repair_enabled") is False and p["mode"] in ("game2", "game4"):
+        raise Unsupported("outer repair off is not wired to public Game owners")
     if p["mode"] == "fec-auto" and p["fec_profile"] != 1:
         raise Unsupported("auto startup is product-controlled; fec_profile cannot set it")
     lanes = {"game2": 2, "game4": 4}.get(p["mode"], 1)

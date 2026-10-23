@@ -396,7 +396,8 @@ class LinuxExperiment:
                 "--tun-name", "wbntun0", "--tun-ipv4", self.inner[role] + "/24",
                 "--server-name", "wbd-v4.example.test", "--route-key-hex", route,
                 "--username", "ephemeral-harness", "--password", password, "--tunnel-id", tunnel,
-                "--mode", self.config["product"]["mode"], "--fec-profile", str(self.config["product"]["fec_profile"])]
+                "--mode", self.config["product"]["mode"], "--fec-profile", str(self.config["product"]["fec_profile"]),
+                "--outer-repair", "on" if self.config["product"].get("repair_enabled", True) else "off"]
             if role == "server":
                 args += ["--tls-cert", str(self.private / "cert.pem"), "--tls-key", str(self.private / "key.pem")]
             else:
@@ -418,7 +419,9 @@ class LinuxExperiment:
         else:
             raise RuntimeError("real native READY timeout")
         self.effective = {"mode": self.config["product"]["mode"], "lanes": self.lanes,
-                          "game_fec": "off (public CLI explicitly sets off)", "inner_links": {}}
+                          "game_fec": "off (public CLI explicitly sets off)",
+                          "outer_repair_requested": self.config["product"].get("repair_enabled", True),
+                          "outer_repair_applied": "NOT_OBSERVED_UNTIL_NATIVE_STOP", "inner_links": {}}
         for role in self.ns:
             links = json.loads(self.nscommand(role, ["ip", "-j", "link", "show", "wbntun0"]))
             self.effective["inner_links"][role] = links
@@ -546,6 +549,20 @@ class LinuxExperiment:
         if policy_verified is False:
             verified = False
         repair = sum(v["original_frozen_retransmitted"] for v in counters.values()) if all("original_frozen_retransmitted" in v for v in counters.values()) else None
+        # Missing native readback is NOT zero DATA retransmission.
+        requested_repair = self.config["product"].get("repair_enabled")
+        repair_readback_verified = None
+        if requested_repair is not None:
+            repair_readback_verified = len(counters) == 2 and all(
+                v.get("repair_enabled") == int(requested_repair)
+                for v in counters.values())
+            if requested_repair is False:
+                repair_readback_verified = repair_readback_verified and repair == 0 and all(
+                    v.get("candidate_first") == 0 and v.get("candidate_retry") == 0
+                    and v.get("shadow_outstanding") == 0
+                    for v in counters.values())
+            if not repair_readback_verified:
+                verified = False
         fec_tx = {role:public_fec_tx_snapshot(log) for role,log in logs.items()}
         tx_available = all(v is not None for v in fec_tx.values())
         fec_failures = {role:public_fec_failure_reasons(log) for role,log in logs.items()}
@@ -561,6 +578,8 @@ class LinuxExperiment:
         return {"stop_drained_both": all(("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED" if self.lanes > 1 else "V4_PUBLIC_NATIVE_STOP_DRAINED") in s for s in logs.values()),
                 "effective_config_verified": verified, "fec_final_readback": applied, "counters": counters,
                 "recovery_policy_readback": recovery_policy,
+                "outer_repair_requested": requested_repair if requested_repair is not None else "NOT_DECLARED",
+                "outer_repair_native_verified": repair_readback_verified,
                 "original_rx_chain": rx_chain if len(rx_chain)==2 else "NOT_OBSERVED",
                 "original_tx_chain": tx_chain if len(tx_chain)==2 else "NOT_OBSERVED",
                 "recovery_policy_verified": policy_verified,

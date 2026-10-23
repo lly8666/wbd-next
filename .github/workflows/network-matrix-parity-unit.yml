@@ -1,8 +1,12 @@
 name: ARM64 product FEC2 maximum row contract
 on:
   push:
-    branches: [experiment/network-matrix-tuning]
-    paths: [.github/workflows/network-matrix-parity-unit.yml]
+    branches: [experiment/network-matrix-tuning, experiment/fec-network-tuning]
+    paths:
+      - .github/workflows/network-matrix-parity-unit.yml
+      - crates/wbd-engine/src/v4_embedded_go.rs
+      - crates/wbd-engine/src/v4_fixed_stream.rs
+      - crates/wbd-codec/src/fec_v2.rs
 permissions: {contents: read}
 jobs:
   native-fixed-maximum-row:
