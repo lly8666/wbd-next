@@ -153,6 +153,7 @@
      incoming: Receiver<Returned>,
      returns: Arc<ReturnPath>,
      loaned: usize,
+     peak_loaned: usize,
      retired: usize,
      charged_bytes: usize,
      stopping: bool,
@@ -195,7 +196,7 @@
                  max_backlog: count,
                  wake: OnceLock::new(),
              }),
-             loaned: 0, retired: 0, charged_bytes: charged, stopping: false,
+             loaned: 0, peak_loaned: 0, retired: 0, charged_bytes: charged, stopping: false,
              channel_next: true,
          })
      }
@@ -204,6 +205,9 @@
      pub fn register_wake(&mut self, gate: Arc<WakeGate>) -> bool {
          self.returns.wake.set(gate).is_ok()
      }
+     pub fn capacity(&self) -> usize { self.slots.len() }
+     pub fn peak_loaned(&self) -> usize { self.peak_loaned }
+     pub fn charged_bytes(&self) -> usize { self.charged_bytes }
      pub fn allocate(&mut self) -> Result<UniqueBuffer, BufferContractError> {
          self.allocate_preserving(0)
      }
@@ -219,6 +223,7 @@
          debug_assert!(!slot.loaned);
          slot.loaned = true;
          self.loaned += 1;
+         self.peak_loaned=self.peak_loaned.max(self.loaned);
          Ok(UniqueBuffer {
              origin: BufferOrigin {
                  owner_arena: self.id,
@@ -337,6 +342,8 @@
              Err(BufferContractError::NoCapacity)));
          // Even at the fresh limit, control keeps its owned slab.
          let feedback=arena.allocate().unwrap();
+         assert_eq!(arena.peak_loaned(),4);
+         assert_eq!(arena.capacity(),4);
          assert!(matches!(arena.allocate(),Err(BufferContractError::NoCapacity)));
          drop(feedback);
          let repeated_control=arena.allocate().unwrap();

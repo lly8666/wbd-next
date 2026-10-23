@@ -45,7 +45,7 @@ def verify_outer_recovery_policy(expected, observed):
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
@@ -539,6 +539,14 @@ class LinuxExperiment:
             if lines:
                 row={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",lines[-1])}
                 if all(k in row for k in tx_fields): tx_chain[role]=row
+        m1_pool={}
+        for role,log in logs.items():
+            rows=[line for line in log.splitlines() if "V4_PUBLIC_M1_POOL " in line]
+            if rows:
+                v={k:int(n) for k,n in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
+                if all(k in v for k in ("slots","peak_loaned","charged_bytes",
+                                        "normal_control_reserve")):
+                    m1_pool[role]=v
         requested_policy = self.config["bundles"][self.label].get(
             "recovery_policy", self.config.get("policy"))
         policy_verified = verify_outer_recovery_policy(
@@ -563,6 +571,7 @@ class LinuxExperiment:
                 "recovery_policy_readback": recovery_policy,
                 "original_rx_chain": rx_chain if len(rx_chain)==2 else "NOT_OBSERVED",
                 "original_tx_chain": tx_chain if len(tx_chain)==2 else "NOT_OBSERVED",
+                "original_m1_pool": m1_pool if len(m1_pool)==2 else "NOT_OBSERVED",
                 "recovery_policy_verified": policy_verified,
                 "recovery_policy_expected": requested_policy or "NOT_DECLARED",
                 "repair_packets": repair,
@@ -761,6 +770,7 @@ def capacity_action_digest(leg):
                             "peak_rss_bytes": proc.get(name, {}).get("rss_peak_bytes")}
                      for name in ("client", "server", "client-injector", "server-injector")}},
         "original_tx_chain": telemetry.get("original_tx_chain", "NOT_OBSERVED"),
+        "original_m1_pool": telemetry.get("original_m1_pool", "NOT_OBSERVED"),
         "original_rx_chain": telemetry.get("original_rx_chain", "NOT_OBSERVED"),
         "repair_packets": telemetry.get("repair_packets"),
         "stop_drained_both": telemetry.get("stop_drained_both"),

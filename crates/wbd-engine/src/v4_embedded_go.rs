@@ -608,9 +608,16 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
     // In the real 2Mbps/408ms RTT Normal scenario the 128 shared M1 slabs
     // were exhausted (227/234 already-consumed TUN packets lost). The shadow
     // retains immutable M1 slab references until verified ACK or completion.
-    // Use the existing bounded 512-slot feature7 pool for Linux normal too:
-    // ~1.1MiB/session, NOT a 500Mbps or endpoint 512MiB capacity proof.
-    // Neither receipt expiry nor global repair quota nor Stop changes.
+    // Original Normal/off at 10Mbps with RTT400ms ran out of 496 DATA
+    // loans even after reserving 16 receipt slots: zero-netem A/B showed
+    // >11k deferred reads per side and 819/936 TUN TX drops during steady.
+    // RX unique-to-TUN and successful TX sealing conserve; this is a source
+    // flight-capacity boundary, not lost encrypted packets or VM pressure.
+    // Raise the fixed public Linux backing to 1024 small slabs (~2.2MiB
+    // charged per endpoint); this is not a 500Mbps payload-pool design.
+    // FEC feature7 shares the constructor, so its passive cold backing also
+    // grows; FEC data algorithms/configuration and tests are not changed.
+    // Neither receipt expiry, retry quota, crypto nor Stop changes.
     #[cfg(all(feature="fec2_product_record",target_os="linux"))]
     let fec2_product_pool=handoff.negotiated_features==7;
     #[cfg(not(all(feature="fec2_product_record",target_os="linux")))]
@@ -618,7 +625,7 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
     let public_normal_pool=cfg!(target_os="linux")
         && cfg!(feature="fec2_product_record");
     let (slots,bytes)=if fec2_product_pool || public_normal_pool {
-        (512,1_200_000)
+        (1024,2_400_000)
     }else{(128,1_000_000)};
     let arena=Arena::new(generation,slots,2048,128,bytes)
         .map_err(|_|FULL)?;
@@ -2633,6 +2640,12 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_diagnostics(
             "V4_PUBLIC_TX_CHAIN role={} tun_udp={} tun_tcp={} tun_other={} tun_rejected={} arena_failed={} staged_udp={} staged_tcp={} pre_read_deferred={}",
             if e.server_side{"server"}else{"client"},
             t[0],t[1],t[2],t[3],t[4],t[5],t[6],t[7]);
+        eprintln!(
+            "V4_PUBLIC_M1_POOL role={} slots={} peak_loaned={} charged_bytes={} normal_control_reserve={}",
+            if e.server_side{"server"}else{"client"},
+            e.arena.capacity(),e.arena.peak_loaned(),e.arena.charged_bytes(),
+            if e.rx_feedback.is_some() && e.fixed_pending.is_none()
+                && e.fixed_applied.is_none(){16}else{0});
         OK
     }
 }

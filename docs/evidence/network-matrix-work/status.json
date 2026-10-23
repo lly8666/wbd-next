@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-Normaloff-zero-loss-feedback-reserve-sameVM-AB",
+  "phase": "P2-Normaloff-zero-loss-M1-flight-backing-causal-fix-native",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,25 +25,16 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P2-Normaloff-10Mbps-zero-loss-feedback-reserve-AB-60s",
-      "type": "ONE_SAME_VM_NORMAL_ONLY_PERFORMANCE_ACTION",
-      "status": "PUSH_INTENT_PENDING_AUTORUN",
-      "A_source": "de55a1322b4580c60e77322d2d38843caefeec79",
-      "B_source": "1605c32d5f5bdc99da792959dde99294a13cec77",
-      "why": "Root known: 10Mbps 0% loss old source had 278718/282025 feedback NotSent/expiry, 13960/13837 replay duplicates, 27797 repair packets, 69837/64629 pre-read backpressure, despite no kernel/netem loss, valid 5Mbps UDP+TCP injection and host PSI0. New source reserves 16/512 M1 slabs for original authenticated receipts, native 75/75 & MTU9 PASS. Same VM AB exact 10Mbps 200ms zero-loss isolates causal feedback improvement and CPU/RSS versus old."
+      "id": "P2-Normaloff-1024-M1-slots",
+      "type": "ONE_NATIVE_ARM64_BUNDLE_THEN_10MBPS_SAME_VM_AB",
+      "status": "AUTO_BUILD_INTENT_COMMITTED",
+      "product_source": "COMMIT_PENDING",
+      "baseline_run": 39920539877,
+      "baseline_artifact_id": 12487087003,
+      "why": "10Mbps zero netem AB proved 16 receipt reserved eliminates feedback storms but still 11,233/11,250 owner pre-read deferrals, TUN TX drops rose 819/936 during steady, actual UDP missing305/330. Product M3/TUN delivery exactly conserves input: source unread due 512-slot M1 flight limitation. Increase bounded backing to1024 ~2.2MiB/endpoint, keep 16 receipt slots, measure peak loaned+RSS+CPU, no FEC performance tests."
     }
   ],
   "recent_evidence": [
-    {
-      "id": "P1-normal-preloan-native",
-      "result": "PASS_BUILD_RECOVERY75_MTU9",
-      "run": 39913063383,
-      "product_source": "de55a1322b4580c60e77322d2d38843caefeec79",
-      "product_artifact": 12483243411,
-      "mtu_artifact": 12483528926,
-      "sha256": "8a6a8c240430b32f4270085c45569245f65476ba1fb6ff987942a2169a813479",
-      "file": "P1-TUN-preloan-root-cause-fix-20261023.json"
-    },
     {
       "id": "P1-TUN-preloan-Normal2pct-sameVM-AB-result-20261023",
       "run": 39913690718,
@@ -77,6 +68,14 @@
       "result": "FAIL_ZERO_NETEM_CONTROL_STARVATION",
       "source": "de55a1322b4580c60e77322d2d38843caefeec79",
       "file": "P2-Normaloff-10Mbps-lossless-FAIL-20261023.json"
+    },
+    {
+      "id": "P2-Normaloff-10Mbps-feedback-reserve-AB",
+      "result": "A_FAIL_B_FAIL_FEEDBACK_FIXED_DATA_CAPACITY_BLOCKED",
+      "run": 39920539877,
+      "artifact_id": 12487087003,
+      "source_B": "1605c32d5f5bdc99da792959dde99294a13cec77",
+      "note": "B feedback drops0/0 vs A 284419/280354, dup98/97 vs 13759/13550, frozen repairs195 vs27309. B 11233/11250 pre-read defer, no post-read loss; TUN tx drop steady +819/+936, netem0, UDP miss305/330. B product cpu2.71/2.78s steady; RSS18,276,352/18,345,984B. Need bounded data flight headroom, not more control reserve."
     }
   ],
   "open_issues": [
@@ -97,7 +96,7 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN."
   ],
-  "next_action": "Find one automatically triggered real AB Action from changed request. Do not dispatch. Read bound NETWORK_CAPACITY_LEG for each A/B, source hashes, 0% actual netem, injector sent, CPU/RSS, real UDP loss, TCP p99/backpressure, feedback_drop, replay duplicates, original TUN read/staged, pre_read_deferred, repair packets, Stop/cleanup. B must not be reported PASS by native/MTU. If B still starves, analyze 512 M1 capacity and control staging order; never blindly lift quota/PTO or blame VM. No FEC performance tests.",
+  "next_action": "Find exact native ARM64 build triggered by Normal-only fixed1024 backing plus peak arena marker, no manual duplicate. If native full recovery and MTU smoke PASS, run ONE same-VM A=1605c32d 512 slots vs B=new 1024 slots at 10Mbps/dir zero-loss/200ms 60s. Confirm same-VM CPU RSS, highwater<=1024, owner deferrals, netem0, TX/RX UDP/TCP conservation, kernel TUN tx drops, real UDP missing, tcp p99, Stop. Keep v2 <=0.25 gate. Stop higher stress when product constrained; no FEC performance work.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "1605c32d5f5bdc99da792959dde99294a13cec77",
