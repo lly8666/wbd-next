@@ -56,6 +56,8 @@ jobs:
             r2_adaptive_authenticated_rtt_drives_pto_reorder_and_cache_without_unbounded_retry -- --nocapture
           cargo +1.85.1 test --release --locked -p wbd-recovery \
             r2_diagnostics_split_no_repair_one_repair_two_repair_retirement -- --nocapture
+          cargo +1.85.1 test --release --locked -p wbd-recovery \
+            r2_budget_sparse_floor_burst_absorbs_batched_auth_loss_without_raising_epoch_quota -- --nocapture
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

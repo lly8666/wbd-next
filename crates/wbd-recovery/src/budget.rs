@@ -123,16 +123,28 @@ impl RepairBudget {
         {
             return Err(BudgetError::InvalidConfig);
         }
+        // The sparse 32KiB floor is already the legal per-epoch repair
+        // allowance. Make that same bounded amount immediately burstable so
+        // one authenticated receipt/PTO wake does not reject most of a
+        // <=32-candidate batch merely because 8 MTUs is smaller. This does
+        // NOT raise the epoch quota or long-run pace_rate.
+        let burst=cfg.outer_mtu.saturating_mul(8)
+            .max(SPARSE_FLOOR_BYTES)
+            .min(cfg.max_repair_bytes_per_epoch);
         Ok(Self {
             direction, current: Epoch::new(now.0 / SECOND_NS), previous: None,
-            tokens: cfg.outer_mtu * 8, cfg,
+            tokens: burst, cfg,
             pending: BTreeMap::new(), pending_bytes: 0, next_id: 0,
             last_now: now, fractional_token_ns: 0,
             overdue_uncertain_bytes: 0, overdue_uncertain_count: 0,
         })
     }
 
-    fn burst_cap(&self) -> u64 { self.cfg.outer_mtu * 8 }
+    fn burst_cap(&self) -> u64 {
+        self.cfg.outer_mtu.saturating_mul(8)
+            .max(SPARSE_FLOOR_BYTES)
+            .min(self.cfg.max_repair_bytes_per_epoch)
+    }
     fn epoch_limit(&self) -> u64 {
         // The 32KiB sparse allowance is a floor, not an additional bonus.
         (self.current.fresh / 10)
@@ -410,28 +422,31 @@ mod tests {
         assert_eq!(b.snapshot().epoch_repair_limit, 32_768);
         b.on_send_result(id, RepairSendResult::NotSent, MonoNs(1_000_000_001)).unwrap();
         assert_eq!(b.snapshot().charged_repair_bytes, 0);
-        assert!(b.snapshot().pacer_tokens <= 12_000);
+        assert!(b.snapshot().pacer_tokens <= 32_768);
         let later = candidate(2, 1_000_000_002);
         let new_id = b.reserve(&later, 1500, MonoNs(1_000_000_002)).unwrap();
         b.on_send_result(new_id, RepairSendResult::Accepted, MonoNs(1_000_000_002)).unwrap();
         assert_eq!(b.snapshot().charged_repair_bytes, 1500);
     }
     #[test]
-    fn r2_budget_pacer_eight_mtu_and_unreported_fresh_not_blocked() {
+    fn r2_budget_sparse_floor_burst_absorbs_batched_auth_loss_without_raising_epoch_quota() {
         let mut b = ledger(1500, 0);
-        for i in 0..8 {
-            let c = candidate(i, 1);
-            let id = b.reserve(&c, 1500, MonoNs(1)).unwrap();
-            b.on_send_result(id, RepairSendResult::Accepted, MonoNs(1)).unwrap();
+        b.on_fresh_accepted(5_000_000, MonoNs(1)).unwrap();
+        assert_eq!(b.snapshot().pacer_burst_limit, 32_768);
+        assert_eq!(b.snapshot().epoch_repair_limit, 500_000);
+        for i in 0..21 {
+            let c = candidate(i, 2);
+            let id = b.reserve(&c, 1500, MonoNs(2)).unwrap();
+            b.on_send_result(id, RepairSendResult::Accepted, MonoNs(2)).unwrap();
         }
-        let extra = candidate(8, 1);
-        assert_eq!(b.reserve(&extra, 1500, MonoNs(1)), Err(BudgetError::BurstPaced));
-        b.on_fresh_accepted(5_000_000, MonoNs(2)).unwrap(); // no repair dependency
-        assert_eq!(b.snapshot().fresh_confirmed_bytes, 5_000_000);
-        b.on_timer(MonoNs(5_000_002)).unwrap();
-        assert!(b.snapshot().pacer_tokens <= 12_000);
-        let id = b.reserve(&extra, 1500, MonoNs(5_000_002)).unwrap();
-        b.on_send_result(id, RepairSendResult::Accepted, MonoNs(5_000_002)).unwrap();
+        let extra = candidate(21, 2);
+        assert_eq!(b.reserve(&extra, 1500, MonoNs(2)), Err(BudgetError::BurstPaced));
+        assert_eq!(b.snapshot().charged_repair_bytes, 31_500);
+        assert_eq!(b.snapshot().epoch_repair_limit, 500_000);
+        b.on_timer(MonoNs(3_000_002)).unwrap();
+        let id = b.reserve(&extra, 1500, MonoNs(3_000_002)).unwrap();
+        b.on_send_result(id, RepairSendResult::Accepted, MonoNs(3_000_002)).unwrap();
+        assert!(b.snapshot().pacer_tokens <= 32_768);
     }
     #[test]
     fn r2_budget_capacity_timeout_conservative_debt_and_clock_reversal() {
