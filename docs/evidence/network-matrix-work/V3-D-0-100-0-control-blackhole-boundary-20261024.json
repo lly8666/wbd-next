@@ -73,7 +73,39 @@
     ],
     "effect": "Some packets labeled recovered_zero were actually sent under old blackhole condition. This is a discovered harness scheduling defect, not proof of product recovered-phase loss.",
     "harness_fix_commit": "014a513f1c1cf06cfc20431889ca52437eca4ad9",
-    "corrected_action": "NOT_YET_RUN"
+    "corrected_action": {
+      "run": 39990331827,
+      "attempt": 1,
+      "source": "7826082d88bc0ddb2b5a7949f2041f578d9b6bcd",
+      "result": "PASS_SCOPED_OBSERVATION_BUT_ASYMMETRIC_RECOVERY_GAP",
+      "artifact_id": 12517572497,
+      "artifact_zip_sha256": "d62ff99c48eebd4b6a0b7e326978e13a1d43a5044652e59b543524f61358709f",
+      "artifact_zip_sha256_locally_verified": true,
+      "actual_qdisc_phase_begin_after_boundary_ms": {
+        "healthy": 0.08,
+        "blackhole": 0.07,
+        "recovered": 0.07
+      },
+      "actual_qdisc_phase_end_after_boundary_ms": {
+        "healthy": 8.17,
+        "blackhole": 8.26,
+        "recovered": 8.1
+      },
+      "recovered_udp_app_mbps_c2s_s2c": [
+        1.9479893333333334,
+        1.9994624
+      ],
+      "recovered_phase_missing_c2s_s2c": [
+        762,
+        8
+      ],
+      "source_tun_kernel_drops_both": 0,
+      "recovered_rx_first_after_phase_start_ms_c2s_s2c": [
+        1150,
+        200
+      ],
+      "observed": "Correct phase control timing now verified. Large C2S ~1.15s no-first-delivery after restored path vs S2C ~200ms. Received records briefly burst >3x steady 10ms rate on C2S. Product/control/pacing stage ambiguity remains, cannot classify as qdisc boundary delay."
+    }
   },
-  "qualification": "LIFECYCLE_RESTART_AND_UDP_TRAFFIC_RESUMES_SCOPED_PASS_EXACT_RECOVERY_ZERO_DROP_NOT_VERIFIED; BOUNDARY_INSTRUMENTATION_DEFECT_FIXED_PENDING_REPEAT"
+  "qualification": "BOUNDARY_HARNESS_DEFECT_RESOLVED; BOTH_DIRECTIONS_UDP_RESUME; ASYMMETRIC_C2S_RECOVERY_DELAY_OPEN_AND_NOT_FULL_LIFECYCLE_PASS"
 }
