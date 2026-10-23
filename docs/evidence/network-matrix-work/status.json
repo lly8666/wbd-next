@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-lossless-TCP1-10Mbps-drop-and-inner-retrans-resolved-scoped-CPU-open",
+  "phase": "V3-opportunistic-repair-unified-MTU-plan-authorized-implementation-pending",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -95,7 +95,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "P2 Normal/off 0% netem single inner TCP 10Mbps/dir 200ms one-way SOURCE-M1 local-TUN-drop defect is RESOLVED_SCOPED: commit b179fd0e M1 1024->2048, native ARM64 build39967257701 PASS incl MTU9, matched same-VM sequential AB39967951884/attempt1 artifact12508340683 ZIPsha e86638b4: A 574 client source TUN dropped+545 kernel TCP retrans, B source TUN drops0 and Tcp.RetransSegs0 both, pre-read deferred0 both, TCP10Mbps/dir, p99 200.3ms, Stop PASS. Evidence JSON P2-TCP1-0loss-M1-2048-drop-retrans-AB-20261023.json. Caveats: run Action conclusion failure because A invalid for full performance; B CPU8.88/8.80s vs A6.20/5.16s, A source-loss limited so no CPU causality; B accepted 387 outer repair duplicates at0 netem. No repeat of identical scenario. Next independent cost task only if prioritized: bounded zero-loss Normal-only outer candidate/receipt-age CPU timing then eliminate spurious cost with R2 auth, one repair,10% quota intact. Higher-rate lossless M1/500Mbps remains NOT_RUN; separate lossy2% TCP1 still unqualified. Do not start previously postponed opportunistic ARQ redesign/FEC or change sysctls without explicit new priority.",
+  "next_action": "核对最新远端及在途Actions，保留b179fd0e无损10M源TUN修复与387次误重传反例。用户已授权v3，按NETWORK_CURRENT_PLAN和NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md依次完成V3-A机会式一次重传（取消DATA RACK/PTO及低损恢复SLA）、V3-B动态MSS/record/FEC2/MTU统一、V3-C同机CPU与单TCP500应用/200ms/0损及原UDP极限、V3-D混跑/生命周期。同步工具/请求/readback/永久提示词适用项后在Actions按新policy验真，不仅改label；单性能Action一场景、AB同VM顺序。原2%TCP1低吞吐留历史，不重复为已取消SLA调参。当前只是方案交付，产品/工具v3尚未实现未跑，不动FEC独立岗位。",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -154,5 +154,15 @@
     "artifact_id": 12508340683,
     "artifact_zip_sha256": "e86638b48e2f036d05ae4ffd7983b02b98ff54597511af96125325bb151f0733",
     "business_scope": "Normal/off native ARM64 TCP1 each direction10Mbps 0% injected loss one-way200ms steady60s; 0 TUN source kernel drops, 0 Tcp.RetransSegs client and server, pre-read deferred0, p99 200.3ms both; PASS_SCOPED_OBSERVATION_B; CPU not yet qualified"
+  },
+  "current_plan": {
+    "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
+    "policy": "outer-opportunistic-v3",
+    "status": "AUTHORIZED_PLAN_IMPLEMENTATION_PENDING",
+    "actions": "NOT_RUN_FOR_V3",
+    "supersedes": "v2 low-loss recovery SLA and DATA RACK/PTO; previous next_action postponing opportunistic redesign",
+    "preserve_baseline": "lossless_tcp1_current exact SOURCE/artifacts remain prior scoped evidence, not v3 PASS",
+    "arithmetic": "docs/evidence/network-matrix-work/V3-opportunistic-plan-model-20261023.json",
+    "handoff_log": "docs/devlog/network-matrix-work/20261023-opportunistic-v3-MTU-plan-handoff.md"
   }
 }

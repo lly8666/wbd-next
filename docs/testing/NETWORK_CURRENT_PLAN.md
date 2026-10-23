@@ -1,24 +1,19 @@
 # 独立网络测试：当前生效计划入口
 
-本页只指向已授权设计和剩余工作范围，不复制进度、SOURCE或Actions清单；事实唯一读取任务分支的 `docs/evidence/network-matrix-work/status.json`。长期工作方法及永久提示词见 [NETWORK_AUTONOMOUS_WORK](NETWORK_AUTONOMOUS_WORK.md)。用户变更计划时更新本页与对应决策，无须改写永久提示词；不要根据文件名日期自行挑“最新方案”。
+做什么以本页决策为准，做到哪里只读任务分支 `docs/evidence/network-matrix-work/status.json`，长期职责与提示词见 [NETWORK_AUTONOMOUS_WORK](NETWORK_AUTONOMOUS_WORK.md)。计划不是实现收据，不重置已完成工作或重跑旧流程。
 
-## 当前决策及优先级
+## 当前决策
 
-1. [外层一次修复与固定容量上限](../decisions/NETWORK-ONE-REPAIR-20261023.md)：用户最新授权，覆盖旧两次重传、相应寿命与验收。最大单程300ms、容量留余量并按需使用/回收、CPU优先；具体参数和允许带只在决策中维护。本页不宣称产品已实现。
-2. [容量/自动MTU方案](NETWORK_CAPACITY_ENVELOPE.md)：保留MTU、包型、字节/PPS、预算闭环和有限测试顺序；与上一条冲突的旧两次数字不再使用。
-3. [网络矩阵](NETWORK_MATRIX_20261022.md)和[诊断手册](NETWORK_TRIAGE.md)：其余FEC、Game、auto、生命周期、真实业务和容量停止规则继续适用，按当前模式/平台实际接线选场景，不重新穷举。
+1. [机会式外层重传、统一MTU与真实性能验收 v3](../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md) 是最新授权。实施V3-A→B→C→D：取消低损快速恢复SLA及持续DATA RACK/PTO猜测；30%标准高负载R/C至少6%、R/F最多10%的分母约束、无损近零重传、UDP残余无下限、单流TCP500Mbps/200ms/0损、混跑无跨业务HOL、同机CPU与MTU闭环。具体数学、工程初值、边界和验收均在该决策，不在提示词复制参数。
+2. [容量模型](NETWORK_CAPACITY_ENVELOPE.md)、[网络矩阵](NETWORK_MATRIX_20261022.md)、[夹具](NETWORK_HARNESS.md)、[诊断](NETWORK_TRIAGE.md)保留通用方法；旧v2数值/模型不得用于新v3产品，工具同步是新工作包的一部分。[旧一次修复](../decisions/NETWORK-ONE-REPAIR-20261023.md)仅解释历史源码和证据。
+3. 本次是方案交付，不改运行请求、不dispatch、不宣称产品或工具已经支持v3。接手者先处理在途结果并留旧policy事实，再开发；status中“不开始opportunistic”的旧建议已被本次用户授权覆盖。
 
-## 当前并行分工
+## 并行边界
 
-外层一次修复、Normal/off真实TCP/UDP与容量问题继续由本网络岗位处理，按自己的status接续；提示词更新不重置进度。用户另行授权的 `experiment/fec-network-tuning` 负责**关闭外层数据重传后的FEC固定/auto功能、恢复与成本**，其入口为该分支的 `docs/testing/FEC_AUTONOMOUS_WORK.md`。本岗位不重复开展这套FEC专项，也不修改其状态或重传OFF开关的独立任务；发现共用收发缺陷保留最小补丁和精确证据，后续按需集成并做组合复验。无需互相等待全部完成。
+本岗位独立处理外层机会式重传、Normal/off TCP/UDP、共享MTU与容量修复。`experiment/fec-network-tuning`在关闭外层DATA重传下处理FEC固定/auto的恢复与成本，不重复它的矩阵、不修改其状态；共享预算接口改动保留独立可集成提交，后续做必要组合验收。M0继续自己的Windows接线，不必等它才测Linux，也不覆盖它的并行工作。
 
-单TCP与多TCP并发必须分别留资格。多流跑满不能替代单流；TCP受内核背压达不到目标是实际业务能力未达，不自动等同夹具故障。最终残余少不能单独证明补包足够及时，吞吐与p99须结合内层DATA/ACK、窗口和修复时序判断；已否定的扩buffer或放宽重排假设不原样重跑。具体已测结果/下一诊断仍只读status及其证据，不在这里复制run表或改变验收门。
+## 当前起点与收口
 
-## 如何选下一步
+先从status和最新Git/Actions核准实际产品，保留已验证的M1源TUN丢包修复。旧0损10M通过不等于500M通过；旧有损TCP1未满速如实保留，不再围绕已取消的低损满速目标循环调窗口。旧run按旧标准结算，新run明确v3 readback。
 
-- 先结清/留痕已有在途请求，旧策略结果按旧规则保存；不重复发起，也不因计划更新丢弃有价值的诊断。
-- 对照status确认上述一次修复、清理、模型/readback/验收是否已完成。缺什么补什么；已实现已验证就直接复用，不能每次接班重做“第一项任务”。
-- 一次修复能力收口后继续容量与代表网络矩阵，采用原计划的有限覆盖/停止条件。不再为第二次重传调优；也不借本任务推翻已修MTU、RTT和其他平台改进。
-- status的next_action若仍指向被覆盖的要求，按本决策与真实证据更新它；历史事实保留，未完成不写完成。若未来用户再授权新计划，在这里替换引用与剩余范围，旧决策留在Git历史/日志中。
-
-实施权限沿用永久入口；无需新增工位、审批、状态文件或独立交接系统。
+每次推进一个完整能力：缺什么补什么，不从第一步重做。单性能Action单一配置/seed/预声明波形和一个测量job；A/B同VM顺序，独立场景可并行；容量不足停止更高资源测试并解释。源码修复后只测原反例、相关硬门和代表性能。已满足代表覆盖就交付，未跑/受限/需要平台接线的范围如实保留。

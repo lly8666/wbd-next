@@ -1,5 +1,7 @@
 # 网络测试优化：低成本定位与按问题接班
 
+网络岗位当前恢复/MTU/性能门以[机会式v3](../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)为准。先复核policy、实际SOURCE和分母；旧低损TCP满速或p²门已取消，0损TCP500应用目标与真实额外drop仍需处理。不要重复以扩大窗口/重排/预算追已取消目标。
+
 这是网络矩阵的操作手册，不发布新任务；正式工位的权限/状态读registry/cursor，用户直接授权的独立实验任务读[NETWORK_AUTONOMOUS_WORK](NETWORK_AUTONOMOUS_WORK.md)及其分支status。生效决策从[当前计划](NETWORK_CURRENT_PLAN.md)定位，场景与指标读其指向的矩阵，不让旧方案覆盖用户新要求。本手册规定待实现/接线的监测能力，不宣称全部已经具备。
 
 ## 1. 谁推进、先读什么

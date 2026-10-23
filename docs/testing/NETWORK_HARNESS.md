@@ -1,6 +1,6 @@
 # 可复用真实网络 Actions 夹具
 
-**2026-10-23新外层策略**：新SOURCE请求显式 `policy=outer-single-repair-v2`；双端必须回读同名policy、`repair_attempt_limit=1`、固定shadow逻辑上限和retain硬帽。IID外层一次修复理想残余为p²、repair/fresh≈p；Normal/off 1/2/5%新稳态参考分别≤0.15/0.25/0.75%。旧请求未声明policy时仍按历史证据解释，绝不用新门槛重标旧PASS/FAIL。详见[一次修复决策](../decisions/NETWORK-ONE-REPAIR-20261023.md)。
+**2026-10-23当前策略**：[机会式v3](../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)要求新请求/双端readback显式 `policy=outer-opportunistic-v3`，只重传一次、成熟认证缺口触发、data_pto=false及真实MTU预算版本。工具接线尚待实施：不能只改label；旧outer-single-repair-v2请求继续按旧标准保存。新UDP上界/无下限、0损近零修复、30%充分负载至少6%线路修复、TCP500应用目标及CPU口径全部按v3，不再套p²恢复门。
 
 2026-10-21 用户直接授权实现。入口：`.github/workflows/network-harness.yml`；请求格式示例 `tests/network/request.json`；预置工况 `tests/network/scenarios.json`。PR21最初只增加测试工具，这是历史实现范围，不是后续岗位的产品只读限制。当前独立岗位按[永久说明](NETWORK_AUTONOMOUS_WORK.md)和[当前计划](NETWORK_CURRENT_PLAN.md)自主修复相关产品、配置、观测与夹具，不等待M0；不改他人游标或接管其他岗位任务。接入正式客户端/服务端 `wbd-v4-client/server`，复用成熟 Go TLS 和真实 Rust raw/TUN owner；**不借测试 helper 伪造数据路径、认证、ACK 或应用交付**。
 
@@ -59,7 +59,7 @@ UDP实际发送率默认允许±3%偏差，不以一个skipped slot判无效；T
 
 `cohort_delivered_app_mbps` 按发送阶段归属，包含 drain 内迟到交付，**不是阶段内即时 goodput**；`arrival_window_app_mbps` 和10ms首到字节桶另报实际时段交付，不能用drain掩盖阶段停顿。总进程CPU（处理双向）按本进程收到业务归一化 CPU-s/GiB 和 CPU-s/Mrecords，并公开分母；需与交付数量、发送比例一同对比。接口外层字节含控制/修复/冗余，但不能把总包数除首发包数当“重传字节超过10%”。稀疏业务还另有比例豁免。
 
-理论参考只解释，不充当万能门槛：新 `outer-single-repair-v2` 下IID理想残余为p²、期望repair/fresh≈p；p=5%时分别0.25%、5%。旧两次策略的p³/p+p²仅用于历史SOURCE解释。系统性RS实际(k,r)的单源残余为 `p*P[Bin(k+r-1,p)>=r]`，不是简单“丢包低于r/(k+r)就全恢复”。真实模型还要代入短块分布、及时发送的parity、相关性、多lane共享编码结构。Game独立复制和同时黑洞分别测，不拿p⁴解释相关黑洞。实际修复时序未观测时不能宣称已达到模型。
+理论参考只解释：[机会式v3](../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)使用实际成功修复量计算，不强求p²；无修复也不是UDP失败的充分理由，必须看真实线路与本地额外损失。旧p²/p³仅解释历史policy。FEC仍使用实际(k,r)和及时到达符号，Game区分独立/共同损伤；不能用理论输出或换policy标签替代真实接线/readback。
 
 ## 有限测试顺序与容量停止
 
