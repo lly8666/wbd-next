@@ -4,6 +4,7 @@ on:
   push:
     branches: [feature/arm64-linux-android-openwrt-autoaccel, experiment/network-matrix-tuning]
     paths:
+      - '.github/workflows/arm64-public-go-build.yml'
       - 'tools/arm64_public_go_rust_bundle.sh'
       - 'r0/go_overlay/internal/realityfront/**'
       - 'r0/go_overlay/internal/v4productcli/**'
