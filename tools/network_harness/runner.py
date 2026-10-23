@@ -53,7 +53,7 @@ def verify_outer_recovery_policy(expected, observed):
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
@@ -594,7 +594,14 @@ class LinuxExperiment:
         for role in self.ns:
             lines = [line for line in read(self.private / (role + ".log")).splitlines()
                      if product_marker_line(line)]
-            logs[role] = "\n".join(lines[-40:])
+            if self.config["network"].get("v3_timeline",False):
+                timeline = [line for line in lines if "V4_PUBLIC_TIMELINE " in line]
+                # At 4Hz the 1200-sample cap covers up to five minutes,
+                # never copies private TLS args, payloads or credentials.
+                (self.out / (role+"-v3-timeline.log")).write_text(
+                    "\n".join(timeline[-1200:])+"\n")
+            logs[role] = "\n".join(
+                line for line in lines[-40:] if "V4_PUBLIC_TIMELINE " not in line)
             (self.out / (role + "-product-markers.log")).write_text(logs[role] + "\n")
         return logs
 
