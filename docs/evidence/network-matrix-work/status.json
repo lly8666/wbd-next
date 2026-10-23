@@ -29,11 +29,13 @@
     {
       "id": "V3-D-30pct-mixed-UDP-progress-against-TCP-degradation",
       "state": "ACTIONS_IN_PROGRESS",
-      "run": 39985836341,
+      "run": 39986170337,
       "attempt": 1,
-      "request_source": "7b976a4b1bba261d4653d33760648ac1506557c5",
+      "request_source": "b21c96454968c6a5e7a461dca2fd57d949e111d8",
+      "previous_preflight_only_rejected_run": 39985836341,
+      "previous_preflight_only_rejected_source": "7b976a4b1bba261d4653d33760648ac1506557c5",
+      "previous_reject_reason": "INVALID_REQUEST drain_s40 exceeds 30s schema maximum; no actual packets measured",
       "product_source": "bb9a036873d186a84ca9e64727df342d68e59df0",
-      "scope": "same native VM single declared mixed waveform 0pct20s/30pct60s/0pct20s, 300ms one-way, 50Mbps link per-direction, 5Mbps traffic per-direction TCP70 UDP30 +~1pct small, two TCP sockets, UDP progress despite impaired TCP",
       "do_not_redispatch": true
     }
   ],
@@ -122,7 +124,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "V3-D lossless native mixed run39985073396 SUCCESS, both 15Mbps/dir split TCP10.5/UDP4.5, missing0, TCP kernel retrans0, TUN steady drop0, firstarrival p99 UDP200.4/TCP200.5; 10ms bins trimmed [11,69] seconds show zero empty UDP/TCP COMMON buckets in either receiver; artifact12515571537 hash c8b881. New independent mixed 0(20s)->30%(60s)->0(20s) 50Mbps link/dir, offered5Mbps/dir, run39985836341 now running, no duplicate; inspect UDP residual against actual30% p_data, TCP backpressure separately, control health, drop/CPU/10ms progress and recovery after damage. V3-C TCP200 no further heavier 500 until throughput bottleneck/harness vs product isolated, see V3-C evidence. V3-B 1401B UDP MTU1500 PASS. v3 cost_model + model-inputs and contract tests updated, source e67635e tested PASS. No FEC independent work.",
+  "next_action": "V3-D zero-loss mixed passed run39985073396 evidence V3-D-lossless-mixed-70-29-1-20261023.json, 10ms no simultaneous TCP/UDP stall in trimmed steady and TUN source drops0. First v3-D highloss mixed multi-phase run39985836341/attempt1 INVALID_REQUEST at prepare due drain_s40 exceeding30; no product launched and no valid performance data. Corrected same intent drain_s30 exact source b21c9645 and new run39986170337 in progress (one scenario 0%20s->30%60s->0%20s, 300ms one-way, 5Mbps offered/dir, 50Mbps line cap/dir, 70/30 TCP/UDP and~1% small). Check run, exact artifact, UDP per-phase loss/progress, 10ms bins, TCP backpressure, any warmup/source TUN losses; no redisp. V3-C TCP200 run39983733109 INCONCLUSIVE app175.1Mbps kernel notsent27.6MB median, source TUN warmup TX drops8446 but steady0, host steal0, false to qualify500. V3-B MTU1500 real UDP1401 per-direction10M PASS. V3-A0/30 verified. Avoid FEC branch, old low-loss SLA, global sysctls; all exec Actions.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
