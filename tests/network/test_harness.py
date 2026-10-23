@@ -36,6 +36,21 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_opt_in_v3_owner_timeline_strict_and_privacy_whitelist(self):
+        from tools.network_harness.runner import product_marker_line
+        good = request()
+        good["network"]["v3_timeline"] = True
+        self.assertTrue(validate(good)["network"]["v3_timeline"])
+        good["network"]["v3_timeline"] = "true"
+        with self.assertRaises(ValueError):
+            validate(good)
+        self.assertTrue(product_marker_line(
+            "2026/10/24 V4_PUBLIC_TIMELINE role=client unix_ns=42 rx_records=3 tx_records=9"))
+        self.assertTrue(product_marker_line(
+            "2026/10/24 V4_PUBLIC_WORKER_CPU role=server rx_thread_cpu_ns=123 tx_thread_cpu_ns=34"))
+        self.assertFalse(product_marker_line("TOKEN secret=DO_NOT_UPLOAD"))
+        self.assertFalse(product_marker_line("V4_PRIVATE_TLS_PASSWORD secret=DO_NOT_UPLOAD"))
+
     def test_capacity_action_digest_source_fields_and_no_raw_body(self):
         from tools.network_harness.runner import capacity_action_digest
         leg = {"label": "A", "result": "INCONCLUSIVE",
