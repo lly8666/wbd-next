@@ -4229,6 +4229,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             return INVALID
         }
         let Ok(mut global)=original_process_repair_quota().lock()else{return BAD_STAGE};
+        // RepairBudget derives its finite instantaneous burst from the same
+        // sparse/10% ledger. The large configured ceiling remains only an
+        // absolute safety cap; it is not extra repair credit or fresh HOL.
         if global.register(direction,wbd_recovery::RepairBudgetConfig{
             outer_mtu:u64::from(e.raw_tx_lease_mtu),
             max_repair_bytes_per_epoch:8*1024*1024,

@@ -8,6 +8,7 @@ on:
       - 'r0/go_overlay/internal/realityfront/**'
       - 'r0/go_overlay/internal/v4productcli/**'
       - 'crates/wbd-engine/**'
+      - 'crates/wbd-recovery/**'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
