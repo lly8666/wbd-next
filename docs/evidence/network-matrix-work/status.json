@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-C-capacity-directTCP-counterfactual-native-Actions-in-progress",
+  "phase": "V3-C-direct200-PASS-stage-CPU-probe-building-V3-D-phase-corrected-blackhole-Actions",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -27,13 +27,22 @@
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
   "open_requests": [
     {
-      "id": "V3-C-direct200-RTT400-MTU1429-control",
-      "state": "ACTIONS_IN_PROGRESS",
-      "run": 39989048165,
+      "id": "V3-D-0-100-0-recovery-after-phase-order-fix",
+      "run": 39990331827,
       "attempt": 1,
-      "request_source": "ee09ca4e7ba9f02641077684c6ee37b0105b30f0",
-      "test": "native ARM64 direct veth TCP200Mbps RTT400ms netem700Mbps MTU1429 namespaces with TCP r/wmem64MiB, matching C source TCP MSS and sender rate but bypassing WBD product; 15s warmup 60s steady",
-      "purpose": "discriminate runner/host TCP transport from product data-path bottleneck before heavier TCP500",
+      "state": "ACTIONS_IN_PROGRESS",
+      "request_source": "7826082d88bc0ddb2b5a7949f2041f578d9b6bcd",
+      "product_source": "bb9a036873d186a84ca9e64727df342d68e59df0",
+      "purpose": "recheck old qdisc active into recovered cohort due snapshot-before-configure, original recovered C2S missing391 S2C116; new config first; same seed but changed test controller",
+      "do_not_redispatch": true
+    },
+    {
+      "id": "V3-C-per-Rust-RX-TX-threadCPU-native-build",
+      "run": 39990605291,
+      "attempt": 1,
+      "state": "ACTIONS_IN_PROGRESS",
+      "source": "de420809585e60a8ac07c510bdee1a75ad7c7a25",
+      "purpose": "CPU attribution for product 175M vs DIRECT 200 at same RTT and TCP windows; no product semantics change",
       "do_not_redispatch": true
     }
   ],
@@ -131,7 +140,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "Recovered exact V3 status from HEAD b49f5392: zero-loss v3 10Mbps TCP0retrans repair0, standard30% R/F<10 and R/C>6 PASS; Normal/MTU1500 UDP1401 PASS; mixed0% no crossHOL PASS, mixed0/30/0 per TCP_BACKPRESSURED overall INCONCLUSIVE but UDP max no-delivery40/50ms while TCP2-3s, lifecycle rotation/blackhole NOT_RUN. V3-C product 200Mbps C2S single TCP RTT400 0loss produced175.1078Mbps and firstarr p99 2.568s, client TUN warmup drops8446 (steady0), M1 peak32, client TCP notsent median27.65MB and backpressure5698, sender cwnd median10315MSS ~14.2MB and advertised snd_wnd33.8MB; host PSIpeak19.82 no steal. New Action native ARM64 DIRECT same RTT400/MTU1429/window64M TCP200 baseline run39989048165 launched from source ee09ca4e. It is a control ONLY, not product pass. If DIRECT<190Mbps classify environment/tester, if DIRECT>=190 then product stage bottleneck likely and add source/sink bounded packet handling/queue delay counters rather than blindly bump M1/TCPlimits. No TCP500 product until C bottleneck distinguished. Scope after C: lifecycle/rotation/blackhole representative, native Windows/MTU asym readback outstanding, no FEC independent work. All Actions only, no main merge.",
+  "next_action": "Direct native TCP counterpart run39989048165 PASS sender=receiver199.9984Mbps at RTT400/MSS1377/MTU1429, 200Mbps, 64MiB TCP autotune; full evidence V3-C-direct-TCP200-RTT400-control-20261024.json. Product at same envelope run39983733109 only175.1078Mbps with notsent27.6MB, source TUN warmup8446/steady0, M1peak32. General host TCP inability ruled out; product RX/TX stage bottleneck NOT yet isolated. Product V3 native RX/TX CPU instrumentation added only at stop in Go/readback source de420809, build run39990605291 active, do not accidentally compare runs on different VM as CPU AB; after native build success issue one same-VM 200M performance diagnostic, compare with matched old within same job only if CPU attribution required. Independent V3-D 0/100/0 lifecycle run39989342662 UDP recovers to1.973/1.992Mbps 30s but recovered miss391/116, original tc impairment switched119.27ms after cohort due expensive before-phase snapshot; fix runner phase configure-first commit014a513f, new run39990331827 IN_PROGRESS, no duplicate. Native build triggered at earlier intermediary source commits too; prefer newest exact source build only. V3-A/B/lowloss mixed prior PASS retained; no high-rate500 dispatch until root; no FEC independent work.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -268,7 +277,19 @@
       },
       "evidence": "V3-C-TCP1-200M-calibration-20261023.json",
       "tcp500": "PROJECTED_NOT_TESTED_STOPPED_HEAVIER_200M_INCONCLUSIVE",
-      "reason": "Must isolate source TUN warmup loss, harness TCP notsent backlog and product/receiver pacing vs host; no fake full capacity from max CWND or PSI."
+      "reason": "Must isolate source TUN warmup loss, harness TCP notsent backlog and product/receiver pacing vs host; no fake full capacity from max CWND or PSI.",
+      "direct_baseline_run": 39989048165,
+      "direct_baseline_artifact_id": 12516767356,
+      "direct_baseline_zip_sha256": "702d27ae8fb403b5f3d359a928e952d34a76d38f5d0b4f0d3ca10d28f03d2876",
+      "direct_baseline_mbps_c2s_sender_receiver": [
+        199.99839573333333,
+        199.99839573333333
+      ],
+      "direct_baseline_result": "PASS_NOT_PRODUCT_PRODUCT_BOTTLENECK_BEFORE_200_STILL_OPEN",
+      "direct_baseline_evidence": "V3-C-direct-TCP200-RTT400-control-20261024.json",
+      "native_cpu_probe_source": "de420809585e60a8ac07c510bdee1a75ad7c7a25",
+      "native_cpu_probe_build_run": 39990605291,
+      "native_cpu_probe_status": "ACTIONS_IN_PROGRESS"
     },
     "phase_D": {
       "run": 39985073396,
@@ -293,7 +314,15 @@
         1,
         0
       ],
-      "highloss_tcp_after_recovery": "SLOW_CC_RECOVERY_NOT_FULL_3_5Mbps"
+      "highloss_tcp_after_recovery": "SLOW_CC_RECOVERY_NOT_FULL_3_5Mbps",
+      "blackhole_old_run": 39989342662,
+      "blackhole_old_artifact_id": 12516064991,
+      "blackhole_old_result": "SCOPED_RESUMES_TRAFFIC_BUT_RECOVERED_ZERO_COHORT_MISSING391_116",
+      "blackhole_boundary_harness_fix": "014a513f1c1cf06cfc20431889ca52437eca4ad9",
+      "blackhole_recheck_run": 39990331827,
+      "blackhole_recheck_source": "7826082d88bc0ddb2b5a7949f2041f578d9b6bcd",
+      "blackhole_recheck_status": "ACTIONS_IN_PROGRESS",
+      "blackhole_evidence": "V3-D-0-100-0-control-blackhole-boundary-20261024.json"
     },
     "math_model": {
       "source": "e67635e76f86a0515099aef599ee38a13e54c555",
