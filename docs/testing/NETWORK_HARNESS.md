@@ -1,5 +1,7 @@
 # 可复用真实网络 Actions 夹具
 
+2026-10-23外层改为一次修复：新模型p²、低损允许带和policy/readback迁移见[一次修复决策](../decisions/NETWORK-ONE-REPAIR-20261023.md)。本页旧p³说明及模型工具输出属于旧两次策略，接手者须同步工具/请求/判定器，不能用新门槛重标历史产物；本docs变更不代表产品已生效。
+
 2026-10-21 用户直接授权实现。入口：`.github/workflows/network-harness.yml`；请求格式示例 `tests/network/request.json`；预置工况 `tests/network/scenarios.json`。PR #21最初实现只增加测试工具，没有修改产品、M0工作游标、权限或生产开关；这不是后续任务的“产品只读”限制。2026-10-22独立实验任务可按[NETWORK_AUTONOMOUS_WORK](NETWORK_AUTONOMOUS_WORK.md)在本分支修产品和必要观测。接入正式客户端/服务端 `wbd-v4-client/server`，复用成熟 Go TLS 和真实 Rust raw/TUN owner；**不借测试 helper 伪造数据路径、认证、ACK 或应用交付**。
 
 这落实 `docs/architecture/TEST_PLAN.md` 的持续业务、产物复用、单场景 Actions 和理论允许带原则，不替代它。已有小回显夹具继续作为便宜的功能回归。
@@ -60,6 +62,8 @@ UDP实际发送率默认允许±3%偏差，不以一个 skipped slot 判无效�
 理论参考只解释，不充当万能门槛：IID下两次重传的理想残余为p³，期望修复为p+p²；p=5%时分别0.0125%、5.25%。系统性RS实际(k,r)的单源残余为 `p*P[Bin(k+r-1,p)>=r]`，不是简单“丢包低于r/(k+r)就全恢复”。真实模型还要代入短块分布、及时发送的parity、相关性、多lane共享编码结构。Game独立复制和同时黑洞分别测，不拿p⁴解释相关黑洞。实际修复时序未观测时不能宣称已达到模型。
 
 ## 有限测试顺序与容量停止
+
+后续按 [包长与极限容量补充](NETWORK_CAPACITY_ENVELOPE.md) 选择少量代表点，覆盖同维度后可跳过中间档。prepare生成 `capacity-envelope.json`（UDP份额、FEC满组/单源组与netem队列估算），不在测量循环计算、不自动改队列或PASS门。TCP分段和分片另需真实统计。模型可单独用 `python3 -m tools.network_harness.envelope --request tests/network/request.json` 读取。
 
 1. 先跑示例 Normal/off、10Mbps/方向、lossless，确认生成器和实际产品有容量。需要业务混合，再跑相同速率真实多连接TCP+UDP。
 2. off 的1%、5%与双向非对称；RTT50/150/600ms，优先实际常用点。高损20%只要求新包不被修复拖死和预算可解释，别强求零丢包。

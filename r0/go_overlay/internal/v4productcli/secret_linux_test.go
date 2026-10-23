@@ -6,6 +6,8 @@ import (
     "path/filepath"
     "strings"
     "testing"
+
+    "github.com/lly8666/wobuzhidao/internal/realityfront"
 )
 
 func TestArm64V4PrivateCredentialsNoArgv(t *testing.T) {
@@ -37,5 +39,39 @@ func TestArm64V4PrivateCredentialsNoArgv(t *testing.T) {
     if _,err:=parse("client",shifted);err==nil{t.Fatal("symlink accepted")}
     if _,err:=parse("client",append(args,"--password","plaintext"));err==nil{
       t.Fatal("secret argv mixed with fd input")
+    }
+}
+
+// Actual public CLI cold-path budget. Include asymmetric authenticated limits,
+// a smaller interface, and a too-small path; never turn an oversize reject off.
+func TestOriginalProductAutomaticTunnelMTU(t *testing.T){
+    for _,tc:=range []struct{
+        name string
+        outer,device int
+        mss,record uint16
+        mode realityfront.FecV2Mode
+        game bool
+        wire uint16
+        inner int
+    }{
+        {"normal",1500,1500,1360,0,realityfront.FecV2Off,false,1360,1329},
+        {"fixed",1500,1500,1360,0,realityfront.FecV2Fixed,false,1360,1315},
+        {"auto",1500,1500,1360,0,realityfront.FecV2Auto,false,1360,1315},
+        {"game",1500,1500,1360,0,realityfront.FecV2Off,true,1360,1313},
+        {"configured-small",1280,1500,1360,0,realityfront.FecV2Fixed,false,1240,1195},
+        {"device-small",1500,1280,1360,0,realityfront.FecV2Auto,false,1240,1195},
+        {"peer-mss",1500,1500,1200,0,realityfront.FecV2Fixed,false,1200,1155},
+        {"peer-record",1500,1500,1360,1180,realityfront.FecV2Fixed,false,1180,1135},
+        {"jumbo-still-peer-limited",9000,9000,1360,0,realityfront.FecV2Off,false,1360,1329},
+    }{
+        t.Run(tc.name,func(t *testing.T){
+            wire,inner,err:=deriveMTUBudget(tc.outer,tc.device,tc.mss,tc.record,tc.mode,tc.game)
+            if err!=nil||wire!=tc.wire||inner!=tc.inner {
+                t.Fatalf("wire=%d inner=%d err=%v; want %d/%d",wire,inner,err,tc.wire,tc.inner)
+            }
+        })
+    }
+    if _,_,err:=deriveMTUBudget(1500,1500,536,0,realityfront.FecV2Fixed,false);err==nil{
+        t.Fatal("unsupported small path must fail explicitly before TUN worker starts")
     }
 }

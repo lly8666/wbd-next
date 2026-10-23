@@ -21,6 +21,7 @@ type V4LinuxGameProductConfig struct {
     Tun *os.File
     TunName string
     CleanupOwnedNetwork func()error
+    ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     Epochs *V4EpochStore // mandatory only for actual server group
 }
 type V4LinuxGameProduct struct{
@@ -108,6 +109,12 @@ func (p *V4LinuxGameProduct) ConnectClientGame(
         }
         p.clientSessions=append(p.clientSessions,session)
         p.bridges=append(p.bridges,bridge)
+        if p.cfg.ConfigureTunnelMTU!=nil {
+            cold,err:=session.ColdSnapshot()
+            if err!=nil{return errors.Join(err,p.abortLocked())}
+            cl,sl:=cold.RecordLimits()
+            if err=p.cfg.ConfigureTunnelMTU(handoff.Peer.MSS,cl,sl);err!=nil{return errors.Join(err,p.abortLocked())}
+        }
     }
     if err:=p.commitGroupedOwnerLocked();err!=nil{
         return errors.Join(err,p.abortLocked())
@@ -153,6 +160,12 @@ func (p *V4LinuxGameProduct) AcceptServerGame(
         if e!=nil{return errors.Join(e,p.abortLocked())}
         p.serverSessions=append(p.serverSessions,session)
         p.bridges=append(p.bridges,bridge)
+        if p.cfg.ConfigureTunnelMTU!=nil {
+            cold,err:=session.ColdSnapshot()
+            if err!=nil{return errors.Join(err,p.abortLocked())}
+            cl,sl:=cold.RecordLimits()
+            if err=p.cfg.ConfigureTunnelMTU(a.PeerTCPProfile().MSS,cl,sl);err!=nil{return errors.Join(err,p.abortLocked())}
+        }
     }
     if err:=p.commitGroupedOwnerLocked();err!=nil{
         return errors.Join(err,p.abortLocked())

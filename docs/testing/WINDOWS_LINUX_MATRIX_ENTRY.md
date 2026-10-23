@@ -1,5 +1,7 @@
 # Windows客户端→Linux服务端：先打通产品，再扩网络矩阵
 
+2026-10-23用户将共享外层恢复改为最多一次，见[一次修复决策](../decisions/NETWORK-ONE-REPAIR-20261023.md)。下文旧“两次”接线目标已被覆盖；Windows仍需消费同一共享实现，不能留平台私有额外重试。此文档变更不宣称Windows已完成新策略接线/测试。
+
 2026-10-22用户后续授权的执行收口。审阅main `1857e781dc3d5d1acb7a99d8d7f588773585a4e4`，产品最新相关SOURCE `a22c4e09baf7c42a39b4eab1d7c3febffc5a6836`。这是待执行计划，不是已接通声明；并入PR22，由当前M0集成并更新既有任务/next_action，不修改其他活跃作者的cursor。场景/数学门继续读[矩阵](NETWORK_MATRIX_20261022.md)，定位与修复前复习继续读[手册](NETWORK_TRIAGE.md)。
 
 ## 1. 当前真正卡住的地方
