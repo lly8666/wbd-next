@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P0-merged-PR25-Fixed-low-loss-mature-applied-diagnostic",
+  "phase": "P0-Fixed2pct-parity-repair-budget-boundary-fix-build",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,20 +25,13 @@
   "latest_harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
   "open_requests": [
     {
-      "id": "arm64-P0-merged-MTU-Fixed2pct-large99-120s",
-      "status": "IN_PROGRESS",
-      "type": "ONE_PERFORMANCE_ACTION",
-      "trigger": "changed tests/network/request.json push only; no manual dispatch",
-      "source": "d64be28591c3752af06be399ff598266ecf4d664",
-      "source_run": 39881938976,
-      "artifact_id": 12470698437,
-      "question": "At 2% IID RTT400 and 99% actual nearMTU UDP does client Fixed mature and TCP/UDP continue, unlike earlier S032 30% hard failure?",
-      "scenario": "Fixed Maximum profile6, 2Mbps/dir, 50/50 UDP/TCP4, 99%1287B/1%64B, one-way200ms, 120s steady",
-      "run_id": 39885059364,
-      "attempt": 1,
-      "harness_source": "f72230bed72ffc19e69c6df05f5d063256b165a9",
-      "url": "https://github.com/lly8666/wbd-next/actions/runs/39885059364",
-      "harness_contract_run_id": 39885059358
+      "id": "P0-Fixed2pct-parity-kind3-boundary-fix-native-build",
+      "type": "ONE_NEW_EXACT_SOURCE_PRODUCT_BUILD",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "trigger": "branch push Rust owner + existing native builder workflow invokes one ARM64 original Go/Rust build and actual Rust unit; no manual dispatch",
+      "previous_run": 39885059364,
+      "previous_result": "HARD_FAIL",
+      "intent": "Fix already-validated 12B REPAIR_HEADER body guard, preserve 14B source reservation, AEAD/PN/MTU/FEC and Stop gates; prove scalar codec boundary actual Rust test, then one exact high-information same-VM old/new Fixed2% AB. M2 applied remains OPEN."
     }
   ],
   "recent_evidence": [
@@ -119,10 +112,16 @@
       "result": "PASS_SCOPED",
       "run": 39884432309,
       "file": "P0-PR25-Normal-nearMTU-90s-pass-20261023.json"
+    },
+    {
+      "id": "P0-Fixed2pct-largest",
+      "result": "FAIL_PARITY_SEAL_M2_PENDING_AND_TCP_P99",
+      "run": 39885059364,
+      "artifact_id": 12472073637,
+      "file": "P0-PR25-Fixed2pct-nearMTU-120s-fail-20261023.json"
     }
   ],
   "open_issues": [
-    "S017 native M3 post-retire identity fix: 30% iid same-VM AB duplicates 1/1 → 0/0, but client Fixed applied0/pending and TCP zero throughput remain HARD FAIL. FEC peer RX recovered/first-send coverage NOT_OBSERVED; can instrument real boundary next.",
     "S020 M2 real reverse reports 12047/12061, but unknown_2s 155/132 and censorship both; client Fixed pending, server applied1. Need bounded per-commit root/cause and FEC RX acceptance/decoding before changes.",
     "S020 TCP sockets ESTAB 4+4 through steady but application TCP accepted0 after 30pct loss and persistent backpressure: not initial connection failure. TCP cwnd/recv accounting NOT_OBSERVED.",
     "S020 FEC native r_sent/planned 33907/35712 and33994/35689 but end-to-end UDP residual32.4/32.6% under30%; per-source, parity, recovered and TUN receipt NOT_OBSERVED.",
@@ -133,9 +132,10 @@
     "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending.",
     "S028 authentic TUN read ~28.8k/side and pre-stage loan success ~28.76k; genuine pre-stage arena failures only 24/42, not ~7k. Owner FEC accepted ~21.7k with source_payload0; stage pre-guard/mode/Err/Ok(false) not accounted. Fixed pending, TCP zero steady, UDP ~32.7-32.9% residual. Host CPU PSI >20 for 10% samples.",
     "S032 same-VM real Fixed30 B1280 fixes 7073/7074 oversize and restores TCP nonzero, but both legs FAIL Fixed client applied0; B pre-stage arena NoCapacity 1812/1918 and parity arena NoCapacity 9343/9815, TCP severely backpressured. One-side source/budget/MTU and actual M2 maturity remain OPEN.",
-    "P0 PR25 merged exact SOURCE ce70f53b native builder FAIL from Bash unbound `features` after successful Rust release compile; no merged product artifact, cannot claim nine-case PASS."
+    "P0 PR25 merged exact SOURCE ce70f53b native builder FAIL from Bash unbound `features` after successful Rust release compile; no merged product artifact, cannot claim nine-case PASS.",
+    "P0 Fixed2% original merged PR25 source parity_seal 33648/33502 real send failures (budget-14 wrong for repair body length budget-12), UDP missing1.91/1.83% vs target1%, TCP tail4.1/8.1s and client applied0 with M2 unknown/censored. Repair boundary fix under native validation, NOT YET QUALIFIED."
   ],
-  "next_action": "P0 Fixed2% nearMTU genuine business Action39885059364 IN_PROGRESS, contract39885059358. Do not dispatch again. Inspect whether client Fixed pending despite 2% loss, RTT400, 1287B UDP; compare actual source/parity NoCapacity, FEC k/r, TCP ACK stalls, first-delivery and netem/PSI. Preserve merged-source Normal nearMTU 90s PASS 39884432309; high-loss S032 both FAIL. Then plan P1 bundle based on measured RTT/PTO/receipt capacity without changing gates.",
+  "next_action": "Identify the ONE ARM64 product build triggered by parity-body guard source fix push; do not repeat original 39885059364 or build39881938976. Inspect Rust codec exact-MTU kind3 regression, Go/Rust build, 9 scoped MTU functional cases, ZIP/manifest/ELF hashes. If SUCCESS, pin fresh product and set ONE same-VM sequential Fixed2% A old d64be vs B new source AB (99% 1287B, RTT400,2%IID,120s) to compare parity seal/actual sent, UDP loss, TCP p99, Fixed readback and CPU. Keep M2 unknown/censored pending hard gate and S032 high loss FAIL.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "d64be28591c3752af06be399ff598266ecf4d664",

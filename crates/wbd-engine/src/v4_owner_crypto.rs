@@ -55,6 +55,15 @@ pub(crate) enum ProtectedCryptoError {
     Early(EarlyError),
 }
 
+// Genuine codec REPAIR_HEADER is 12 bytes; its body includes a protected
+// 2-byte source length. RECORD_RESERVATION=14 applies to original-source
+// admission, NOT to a second check of the already-parsed repair body.
+// Keep this in the product owner seal path, not a test-only acceptance rule.
+#[cfg(feature="fec2_product_record")]
+fn original_fec2_repair_symbol_fits(body_len:usize,record_budget:usize)->bool{
+    body_len<=record_budget.saturating_sub(wbd_codec::fec_v2::REPAIR_HEADER)
+}
+
 /// The scoped owner still owns dispatch, generation, driver leases and Stop.
 /// This is the reusable AEAD/PN half of that owner; no payload is delivered.
 pub(crate) struct ProtectedScopedCrypto {
@@ -992,7 +1001,9 @@ impl ProtectedScopedOwner {
                 let rep=wbd_codec::fec_v2::parse_repair(
                     frame,budget.record_payload_mtu)
                     .map_err(|_|ProtectedCryptoError::Tx)?;
-                if rep.body.len()>budget.record_payload_mtu-14{
+                if !original_fec2_repair_symbol_fits(
+                    rep.body.len(),budget.record_payload_mtu
+                ){
                     return Err(ProtectedCryptoError::Tx)
                 }
             }
@@ -1632,5 +1643,36 @@ mod m0_tx_seq64_contract {
         // Wire projection must not shrink the monotone owner offset.
         assert!(first>u64::from(u32::MAX) && next>first);
         assert_eq!(u64::MAX.checked_add(1),None);
+    }
+}
+
+
+#[cfg(all(test,feature="fec2_product_record"))]
+mod m0_fec2_full_mtu_repair_body_contract {
+    use super::original_fec2_repair_symbol_fits;
+    use wbd_codec::fec_v2::{
+        parse_repair,BackendChoice,Profile,Rs16,RECORD_RESERVATION,REPAIR_HEADER,
+    };
+    #[test]
+    fn m0_fec2_kind3_full_mtu_repair_budget_invariant(){
+        // Outer 1500 / auth record budget for Fixed: one genuine near-TUN-MTU
+        // source reaches maximum, and protected repair length adds 2B.
+        let record_budget=1329usize;
+        let frame=vec![0x6a;record_budget-RECORD_RESERVATION];
+        let (encoded,_)=Rs16::new().encode_owned(
+            1,&[frame.as_slice()],Profile::Maximum,0,1,
+            record_budget,BackendChoice::Scalar,
+        ).expect("actual codec encodes in-budget full-sized source");
+        let rep=parse_repair(&encoded[0],record_budget).expect(
+            "real codec accepts repair length exactly at record budget"
+        );
+        assert_eq!(encoded[0].len(),record_budget);
+        assert_eq!(rep.body.len(),record_budget-REPAIR_HEADER);
+        assert!(original_fec2_repair_symbol_fits(rep.body.len(),record_budget));
+        // Source's fourteen-byte reservation cannot be charged again to
+        // this already-encoded body. Still reject any truly oversized body.
+        assert!(rep.body.len()>record_budget-RECORD_RESERVATION);
+        assert!(!original_fec2_repair_symbol_fits(rep.body.len()+1,record_budget));
+        assert!(!original_fec2_repair_symbol_fits(1,0));
     }
 }
