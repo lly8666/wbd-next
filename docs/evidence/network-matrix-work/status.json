@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-Normaloff-TCP-only-fourflow-window-vs-cross-flow-isolation",
+  "phase": "P2-Normaloff-4flow-TCP-only-valid-request",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -25,12 +25,12 @@
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
-      "id": "P2-Normaloff-5Mbps-TCP-only-4flows-isolate-inner-congestion-2pct-60s",
-      "status": "INTENT_COMMITTED_AUTO_RUN_PENDING",
-      "type": "ONE_TCP_ONLY_NORMAL_OFF_SCENARIO",
-      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "id": "P2-Normal-TCP4-only-5M-2pct-200ms",
+      "status": "INTENT_COMMITTED_AUTO_ACTION_PENDING",
+      "type": "ONE_TCP_ONLY_NORMAL_SCENARIO",
+      "product_source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
       "artifact_id": 12486939897,
-      "why": "Mixed 4-flow 10Mbps total failed TCP 5Mbps per direction under 2%/200ms; mixed 8-flow same 10Mbps succeeded but separate VM and latency remains high. One TCP-only 5Mbps/dir with original 4 flows same transport impairment tests intrinsic per-flow cwnd/RTO vs competition with simultaneously injected 5Mbps UDP. In result do not assign causal CPU across VMs or claim UDP qualification."
+      "why": "Correct pure request ID length <=64; earlier run39928595426 VALIDATION_FAIL_BEFORE_BUSINESS, contracts39928595502 fail solely invalid id, no native execution. Otherwise identical 4flows/5M TCP-only/2pct/200ms."
     }
   ],
   "recent_evidence": [
@@ -63,6 +63,14 @@
       "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
       "result": "PASS_NORMAL_10MBPS_2PCT_8_TCP_STREAMS_UDP0_034PCT_EACH_TCP_TARGET_5MBPS_BOTH",
       "note": "BUT_TCP_P99_2349_1078MS; M1 peak910/908 of1024, source conserved and no TUN/feedback failures; 4flow earlier INCONCLUSIVE preserved."
+    },
+    {
+      "id": "P2-TCP4-only-invalid-request",
+      "result": "HARNESS_INVALID_ID_NO_BUSINESS_EXECUTED",
+      "run": 39928595426,
+      "contracts_run": 39928595502,
+      "source": "b4b4cb01b4ceac970af6c5e79c50d00f9b6aec23",
+      "note": "ID regex [A-Za-z0-9_.-]{1,64}; failed before fetching any product binary or measuring. No product conclusion."
     }
   ],
   "open_issues": [
@@ -83,7 +91,7 @@
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN."
   ],
-  "next_action": "Check EXACT one Action from four-flow TCP-only 5Mbps/dir 2%/200ms request; do not dispatch twice. Check 4-stream kernel TCP_INFO cwnd/notsent/RTO/retrans, actual TCP injection and first-arrival p99 plus M1 occupancy and cleanup. If TCP-only 4-flow still backpressures, inner TCP per-flow congestion limits the 4-flow target, not UDP-specific HOL; if succeeds, investigate same-owner UDP/TCP scheduling competition using existing counters before code changes. 8flow mixed 10M PASS scoped, 4flow mixed INCONCLUSIVE retained. Do NOT run FEC tests, no ungrounded buffer growth or sameVM causal CPU claims.",
+  "next_action": "Discover one auto Action for validated short-ID TCP-only Normal request and its contracts; do not re-dispatch. If valid, read actual TCP goodput/p99/backpressure and native source M1 data, kernel cwnd/notsent/retrans; old 39928595426 invalid request, no business. No FEC.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",

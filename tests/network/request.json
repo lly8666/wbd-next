@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "P2-Normaloff-5Mbps-TCP-only-4flows-isolate-inner-congestion-2pct-60s",
+  "id": "P2-Normal-TCP4-only-5M-2pct-200ms",
   "owner": "network-matrix-work",
   "seed": 5207,
   "product": {
