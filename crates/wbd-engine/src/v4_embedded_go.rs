@@ -52,6 +52,9 @@ const UNKNOWN:i32=2;
 const BAD_STAGE:i32=3;
 const FULL:i32=4;
 const STOP_INCOMPLETE:i32=5;
+// Explicit compile-time marker: only the dedicated Actions diagnostic build
+// can overprovision buffers and the native repair broker. Not a CLI knob.
+const NETWORK_DIAG_10X:bool=matches!(option_env!("WBD_NETWORK_DIAG_10X"),Some("1"));
 const MAX_SESSIONS:usize=16;
 const MAX_EARLY:u32=32;
 const PH_PREPARED:u32=1;
@@ -369,9 +372,12 @@ fn original_process_repair_quota()->&'static Mutex<wbd_recovery::GlobalRepairAll
     static BROKER:OnceLock<Mutex<wbd_recovery::GlobalRepairAllocator>>=OnceLock::new();
     BROKER.get_or_init(||{
         let cfg=wbd_recovery::GlobalRepairConfig{
-            max_bytes_per_epoch:16*1024*1024,max_directions:32,
-            max_grant_bytes:256*1024,max_grant_lifetime_ns:50_000_000,
-            max_pending:256,max_pending_bytes:4*1024*1024,
+            max_bytes_per_epoch:if NETWORK_DIAG_10X {160*1024*1024}else{16*1024*1024},
+            max_directions:32,
+            max_grant_bytes:if NETWORK_DIAG_10X {2560*1024}else{256*1024},
+            max_grant_lifetime_ns:50_000_000,
+            max_pending:if NETWORK_DIAG_10X {2560}else{256},
+            max_pending_bytes:if NETWORK_DIAG_10X {40*1024*1024}else{4*1024*1024},
         };
         Mutex::new(wbd_recovery::GlobalRepairAllocator::new(
             cfg,MonoNs(0)).expect("constant bounded global M2 repair config"))
@@ -625,7 +631,9 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
     let public_normal_pool=cfg!(target_os="linux")
         && cfg!(feature="fec2_product_record");
     let (slots,bytes)=if fec2_product_pool || public_normal_pool {
-        (1024,2_400_000)
+        // Arena::new's existing hard maximum is 8192, so 1024 -> 8192
+        // is the largest legal multiplier (8x), NOT an exact 10x.
+        if NETWORK_DIAG_10X {(8192,20_000_000)}else{(1024,2_400_000)}
     }else{(128,1_000_000)};
     let arena=Arena::new(generation,slots,2048,128,bytes)
         .map_err(|_|FULL)?;
@@ -2641,11 +2649,12 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_diagnostics(
             if e.server_side{"server"}else{"client"},
             t[0],t[1],t[2],t[3],t[4],t[5],t[6],t[7]);
         eprintln!(
-            "V4_PUBLIC_M1_POOL role={} slots={} peak_loaned={} charged_bytes={} normal_control_reserve={}",
+            "V4_PUBLIC_M1_POOL role={} slots={} peak_loaned={} charged_bytes={} normal_control_reserve={} diagnostic_10x={}",
             if e.server_side{"server"}else{"client"},
             e.arena.capacity(),e.arena.peak_loaned(),e.arena.charged_bytes(),
             if e.rx_feedback.is_some() && e.fixed_pending.is_none()
-                && e.fixed_applied.is_none(){16}else{0});
+                && e.fixed_applied.is_none(){16}else{0},
+            usize::from(NETWORK_DIAG_10X));
         OK
     }
 }
@@ -4399,7 +4408,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     // allocate a second crypto instance or credential authority.
     let rx_arena_id=e.generation ^ 0x8000_0000;
     if rx_arena_id==0{return FULL}
-    let Ok(mut rx_arena)=Arena::new(rx_arena_id,64,2048,64,1_000_000)
+    let rx_slots=if NETWORK_DIAG_10X {640}else{64};
+    let rx_bytes=if NETWORK_DIAG_10X {10_000_000}else{1_000_000};
+    let Ok(mut rx_arena)=Arena::new(rx_arena_id,rx_slots,2048,64,rx_bytes)
     else{return FULL};
     // Preserve pre-Detach early RX bytes. Original M1 32-slot queue is
     // flushed through the SAME opener and LINK table before the move.
@@ -4443,8 +4454,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         // an absolute safety cap; it is not extra repair credit or fresh HOL.
         if global.register(direction,wbd_recovery::RepairBudgetConfig{
             outer_mtu:u64::from(e.raw_tx_lease_mtu),
-            max_repair_bytes_per_epoch:8*1024*1024,
-            max_pending_reservations:128,max_pending_bytes:4*1024*1024,
+            max_repair_bytes_per_epoch:if NETWORK_DIAG_10X {80*1024*1024}else{8*1024*1024},
+            max_pending_reservations:if NETWORK_DIAG_10X {1280}else{128},
+            max_pending_bytes:if NETWORK_DIAG_10X {40*1024*1024}else{4*1024*1024},
             io_timeout_ns:100_000_000,
         },now).is_err(){return BAD_STAGE}
         if global.bind_receipt_route(direction,route,now).is_err(){return BAD_STAGE}

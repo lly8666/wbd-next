@@ -23,7 +23,17 @@
     "build_status": "success"
   },
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "P2-TCP1-2pct-product-ceilings-10x-AB",
+      "state": "BUILD_PENDING",
+      "type": "TEMP_DIAGNOSTIC_NOT_QUALIFICATION",
+      "baseline_source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "baseline_artifact_id": 12486939897,
+      "scenario": "one-inner-TCP-per-direction 10Mbps/dir 2%IID loss 200ms one-way 60s",
+      "plan": "Build diag ARM64 B (compile-time only), exact SHA artifact + zip hash, then same VM sequential AB against A. Never repeat socket/reordering AB. No FEC/production tuning."
+    }
+  ],
   "recent_evidence": [
     {
       "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
@@ -68,7 +78,7 @@
     "MODEL_ONLY 500Mbps/RTT600 capacity: current eager physical Arena max8192 vs hard-lifetime >80k potential backed records, fixed logical131072 shadow; endpoint shared512MiB and low CPU per outer event require distinct bounded lazy pool/index design and Actions on suitable host. No projection-as-pass.",
     "P2 single inner TCP 10Mbps/dir 2% RTT~400: matched same-VM large socket buffers AB39940890996 and reordering192 AB39941976324 both failed TCP input qualification; kernel CC CUBIC cwnd 35-59MSS despite >1.15MB rx advertised window; no M1/TUN/host fault. Do not promote test-only sysctl profiles to production; user one-outer-repair and 10% budget remain."
   ],
-  "next_action": "No repeat dispatch for single TCP window AB39940890996 or tcp_reordering192 AB39941976324. Both hypotheses REJECTED: effective TCP socket sndbuf46080->425984, rcvbuf131072->2097152, snd_wnd~1.15MB but TCP CUBIC cwnd~37..45 and TCP only~1Mbps; tcp_reordering192 asymmetric (0.85/1.44Mbps) and C2S p99 worsens8.53s. Preserve source281f6c64 and practical 8-TCP-flow Normal10Mbps/dir2pct scoped PASS run39927659556, but single TCP10M/dir2pct is NOT_QUALIFIED. Next evidence-led product capability: bounded Normal-only M2 TCP DATA-vs-ACK authenticated loss/repair timeliness + per-second quota denied and spurious-PTO diagnostics before any change to earliest authentic loss witness; no FEC, no second repair, no global hot lock, no blind buffers. Separately isolate zero-loss source M1 1009/1024 kernel TUN drop with FEC unaffected, test before claiming full capacity. Do not merge main.",
+  "next_action": "One-off USER_REQUESTED 10x capacity-ceilings diagnostic: await exact-source ARM64 diagnostic build (workflow path updated in same commit); require product readback diagnostic_10x=1 and verified artifact; do same-VM AB of preserved single-TCP 10Mbps/dir, 2% IID, one-way200ms, 60s, default kernel TCP; inspect injected/delivered throughput, TCP p99, quota abandon, M1 pool, TUN drop, CPU, limits. Afterward restore ordinary build workflow for future runs; no permanent 100% repair quota. Run once, not matrix.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",

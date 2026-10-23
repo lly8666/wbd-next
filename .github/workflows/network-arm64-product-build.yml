@@ -1,5 +1,5 @@
-name: Network experiment exact-source ARM64 product build
-run-name: "ARM64 frozen public V4 source ${{ github.sha }}"
+name: Network experiment ARM64 10x ceiling diagnostic build
+run-name: "ARM64 isolated diagnostic 10x ceilings ${{ github.sha }}"
 on:
   push:
     branches: [experiment/network-matrix-tuning]
@@ -9,6 +9,9 @@ permissions: {contents: read}
 jobs:
   frozen-product-build:
     runs-on: ubuntu-24.04-arm
+    env:
+      # Build-time only: all ordinary bundles have unset WBD_NETWORK_DIAG_10X.
+      WBD_NETWORK_DIAG_10X: "1"
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
