@@ -304,13 +304,14 @@ type V4PublicOuterCounters struct{
     BlockedLocalOther,BlockedGlobalOther,BlockedInvariant uint64
     RepairAcceptedRetired,RepairUncertainRetired,RepairAbandonedRetired uint64
     MaxQueueAgeus,RepairAttemptLimit,ShadowLimit,RetainCapus uint64
+    FirstWireBytes,RepairAcceptedWireBytes,RepairUncertainWireBytes uint64
 }
 func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCounters,error){
     var zero V4PublicOuterCounters
     if b==nil||!b.committed||b.stopped||b.handle==0{return zero,errV4Embedded}
-    var values [6]C.uint64_t
+    var values [9]C.uint64_t
     rc:=C.wbd_m0_embedded_go_public_outer_counters(
-        C.uint64_t(b.handle),&values[0],6)
+        C.uint64_t(b.handle),&values[0],9)
     if rc!=0{return zero,fmt.Errorf("%w: native original M2 stats=%d",errV4Embedded,int(rc))}
     var d [34]C.uint64_t
     rc=C.wbd_m0_embedded_go_public_outer_diagnostics(
@@ -323,6 +324,9 @@ func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCoun
         DriverUncertain:uint64(values[3]),
         BudgetOrCapacityBlocked:uint64(values[4]),
         RetiredTotal:uint64(values[5]),
+        FirstWireBytes:uint64(values[6]),
+        RepairAcceptedWireBytes:uint64(values[7]),
+        RepairUncertainWireBytes:uint64(values[8]),
         CandidateFirst:uint64(d[0]),CandidateRetry:uint64(d[1]),
         AckedAttempt0:uint64(d[2]),AckedAttempt1:uint64(d[3]),AckedAttempt2:uint64(d[4]),
         ExpiredAttempt0:uint64(d[5]),ExpiredAttempt1:uint64(d[6]),ExpiredAttempt2:uint64(d[7]),
