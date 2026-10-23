@@ -512,6 +512,11 @@ class LinuxExperiment:
             for role in self.ns:
                 self.nscommand(role,["ip","link","set","dev","wbntun0",
                                      "txqueuelen",str(qlen_profile)])
+        qdisc_profile=self.config["network"].get("tun_qdisc_profiles",{}).get(self.label)
+        if qdisc_profile is not None:
+            for role in self.ns:
+                self.nscommand(role,["tc","qdisc","replace","dev","wbntun0",
+                                     "root",qdisc_profile])
         self.effective = {"mode": self.config["product"]["mode"], "lanes": self.lanes,
                           "game_fec": "off (public CLI explicitly sets off)", "inner_links": {}}
         for role in self.ns:
@@ -522,6 +527,18 @@ class LinuxExperiment:
             if (not self.config["traffic"]["allow_fragmentation"] and self.config["traffic"]["udp_share"]
                     and max(s for s, _ in self.config["traffic"]["sizes"]) + 28 > links[0]["mtu"]):
                 raise Unsupported("UDP payload+28 exceeds actual TUN MTU; explicitly allow_fragmentation or use a separate rejection case")
+        self.effective["test_only_tun_qdisc_profile"]=(
+            qdisc_profile if qdisc_profile is not None else "product_default")
+        if qdisc_profile is not None:
+            observed={}
+            for role in self.ns:
+                readback=json.loads(self.nscommand(role,["tc","-j","qdisc","show",
+                                                       "dev","wbntun0"]))
+                if not any(z.get("kind")==qdisc_profile and z.get("root")
+                           for z in readback):
+                    raise RuntimeError("diagnostic TUN qdisc root readback mismatch "+role)
+                observed[role]=qdisc_profile
+            self.effective["test_only_tun_qdisc_readback"]=observed
         self.effective["test_only_tun_txqlen_profile"]=(
             qlen_profile if qlen_profile is not None else "product_default")
         self.effective["v3_timeline_enabled"]=self.config["network"].get("v3_timeline",False)
