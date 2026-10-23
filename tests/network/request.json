@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "id": "P2-TCP1-zero-loss-control-10M",
+  "id": "P2-TCP1-2pct-default-v-large-window-AB",
   "owner": "network-matrix-work",
-  "seed": 5221,
+  "seed": 5231,
   "product": {
     "mode": "normal",
     "fec_profile": 1
@@ -32,7 +32,11 @@
     "outer_mtu": 1500,
     "lane_loss": "shared",
     "queue_packets": 32768,
-    "netem_rng": "unseeded_recorded"
+    "netem_rng": "unseeded_recorded",
+    "tcp_window_profiles": {
+      "A": "baseline",
+      "B": "large"
+    }
   },
   "warmup_s": 10,
   "drain_s": 30,
@@ -44,7 +48,7 @@
       "c2s": {
         "delay_ms": 200,
         "jitter_ms": 0,
-        "loss_pct": 0,
+        "loss_pct": 2,
         "duplicate_pct": 0,
         "reorder_pct": 0,
         "rate_mbps": 0,
@@ -53,7 +57,7 @@
       "s2c": {
         "delay_ms": 200,
         "jitter_ms": 0,
-        "loss_pct": 0,
+        "loss_pct": 2,
         "duplicate_pct": 0,
         "reorder_pct": 0,
         "rate_mbps": 0,
@@ -64,7 +68,7 @@
   "acceptance": {
     "injection_tolerance_pct": 3,
     "max_loss_pct": 0.25,
-    "require_retransmission": false
+    "require_retransmission": true
   },
   "bundles": {
     "A": {
@@ -74,8 +78,16 @@
       "artifact_id": 12486939897,
       "sha256": "637ca5d47d06e0aea0674d535821dcfc2e1f055f3fb5201b82deab1a64217f11",
       "recovery_policy": "outer-single-repair-v2"
+    },
+    "B": {
+      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "run_id": 39921718042,
+      "attempt": 1,
+      "artifact_id": 12486939897,
+      "sha256": "637ca5d47d06e0aea0674d535821dcfc2e1f055f3fb5201b82deab1a64217f11",
+      "recovery_policy": "outer-single-repair-v2"
     }
   },
-  "order": "A",
+  "order": "AB",
   "policy": "outer-single-repair-v2"
 }
