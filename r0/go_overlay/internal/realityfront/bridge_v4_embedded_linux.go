@@ -450,6 +450,13 @@ func (b *v4EmbeddedNativeBridge) rustOwnerDebugJumboPause(enabled bool)(bool,uin
     return paused!=0,uint32(loaned),nil
 }
 
+// One readback on stop/diagnostic only: native Linux per-thread CPU time,
+// kept separate from total Go+Rust process CPU in the Actions monitor.
+type V4PublicWorkerCPU struct{RxNs,TxNs uint64}
+func (b *v4EmbeddedNativeBridge) originalPublicWorkerCPU()(V4PublicWorkerCPU,error){
+    rx,tx,err:=b.rustOwnerWorkerCPU()
+    return V4PublicWorkerCPU{RxNs:rx,TxNs:tx},err
+}
 func (b *v4EmbeddedNativeBridge) rustOwnerWorkerCPU()(uint64,uint64,error){
     if !b.committed||b.handle==0{return 0,0,errV4Embedded}
     var rx,tx C.uint64_t
