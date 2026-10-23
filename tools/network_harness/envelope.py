@@ -138,6 +138,14 @@ def suite():
 
 def request_envelope(request, inner_mtu=1200):
     t = request["traffic"]
+    if t["udp_share"] == 0:
+        # TCP application writes are a byte stream and may exceed the TUN
+        # MTU; the kernel segments at its negotiated real MSS.
+        return {"qualification":"TCP_STREAM_ONLY_PPS_NOT_MODELED",
+                "tcp_application_write_sizes":[s for s,_ in t["sizes"]],
+                "inner_mtu_input":inner_mtu,
+                "policy":request.get("policy"),
+                "limits":["Do not treat application writes as outer packets; measure actual TCP MSS, PPS and cwnd"]}
     if t["allow_fragmentation"] or max(s for s, _ in t["sizes"]) > inner_mtu-28:
         return {"qualification": "NOT_MODELED_FRAGMENTATION_OR_LARGER_TUN", "rows": []}
     mode = request["product"]["mode"]
@@ -162,7 +170,7 @@ def request_envelope(request, inner_mtu=1200):
                         queue_model_short=need>request["network"]["queue_packets"]))
     return {"qualification": "ESTIMATE_ONLY_NO_VERDICT_CHANGE",
         "policy": request.get("policy", "legacy-two-repair-v1"),
-        "repair_attempt_limit": 1 if request.get("policy") == "outer-single-repair-v2" else 2,
+        "repair_attempt_limit": 1 if request.get("policy") in ("outer-single-repair-v2","outer-opportunistic-v3") else 2,
         "inner_mtu_input": inner_mtu, "rows": rows,
         "limits": ["UDP portion only; TCP write sizes are not TCP segment sizes",
                    "Measure control/ACK/parity k/r_sent; independent netem rate is per lane, not a shared line cap",
