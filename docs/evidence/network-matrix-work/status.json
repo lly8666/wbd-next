@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "P2-singleTCP-two-parameter-AB-causes-isolated",
+  "phase": "P2-single-innerTCP-2pct-buffers-and-reorder-falsified",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -23,32 +23,8 @@
     "build_status": "success"
   },
   "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
-  "open_requests": [
-    {
-      "id": "P2-TCP1-2pct-reorder192-AB",
-      "status": "AUTO_ACTION_39941976324",
-      "run": 39941976324,
-      "product_source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "why": "Same VM original one-outer-repair source10Mbps/dir inner single TCP,2%loss,200ms one-way. Previous expanded socket window A/B run39940890996 proved B real sndbuf425984/rcvbuf2097152 and snd_wnd 1.15MB vs baseline, still only.93/1.04Mbps. Now separate hypothesis: per-netns tcp_reordering baseline vs192 may avoid Linux TCP premature fast recovery while authentic outer one-repair arrives; risk worse RTO/p99. No FEC testing."
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
-    {
-      "id": "P2-TCP4-only-invalid-request",
-      "result": "HARNESS_INVALID_ID_NO_BUSINESS_EXECUTED",
-      "run": 39928595426,
-      "contracts_run": 39928595502,
-      "source": "b4b4cb01b4ceac970af6c5e79c50d00f9b6aec23",
-      "note": "ID regex [A-Za-z0-9_.-]{1,64}; failed before fetching any product binary or measuring. No product conclusion."
-    },
-    {
-      "id": "P2-Normaloff-four-TCP-only-2pct-INCONCLUSIVE-20261023",
-      "run": 39928829670,
-      "result": "INCONCLUSIVE_TCP4_ONLY_5M_2PCT_KERN_CWND_LIMIT_WITHOUT_UDP_BULK",
-      "artifact_id": 12491146172,
-      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
-      "file": "P2-Normaloff-four-TCP-only-2pct-INCONCLUSIVE-20261023.json"
-    },
     {
       "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
       "result": "NEW_TCP1_10M2PCT_INCONCLUSIVE_1_008_1_127MBPS_OLD_MATCHING_PASS_NOT_FOUND",
@@ -72,19 +48,27 @@
       "result": "FAIL_BOTH_TCP_INPUT~1MBPS_DESPITE_9X_SOCKET_SNDBUF_16X_RCVBUF",
       "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
       "file": "P2-TCP1-2pct-large-window-AB-no-improvement-20261023.json"
+    },
+    {
+      "id": "P2-TCP1-2pct-reordering192-AB-rejected-20261023",
+      "run": 39941976324,
+      "artifact_id": 12497230448,
+      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "result": "A_INCONCLUSIVE_B_INCONCLUSIVE_REORDER192_C2S_WORSE_P99_WORSE",
+      "file": "P2-TCP1-2pct-reordering192-AB-rejected-20261023.json"
     }
   ],
   "open_issues": [
-    "P0 PR25 merged exact SOURCE ce70f53b native builder FAIL from Bash unbound `features` after successful Rust release compile; no merged product artifact, cannot claim nine-case PASS.",
     "P0 Fixed2% old source parity_seal 33648/33502 FAIL; a58d kind3 12B guard built and MTU functional9/9 PASS, same-host traffic AB pending. Client M2 Fixed applied0/pending and TCP 4.1/8.1s tail remain OPEN independent of seal.",
     "P1/P2 static audit (not runtime): real Linux original RX shadow4096; PTO80ms/reorder15ms; repair cap65536B/epoch per direction, 131072B/epoch process; max grant32768 and 50ms; original crypto replay1000 PN/s, 3s horizon and 8KiB metadata; RX retained pages8; FEC 512-slot arena. Not yet sufficient basis for H500; see 20261023-P1-static-construction-audit.md.",
     "P0 client M2 gate revised in isolated SOURCE (native unverified): old lifetime cumulative >=all copied FEC sources, sticky historic unknown0 and FEC whole-owner idle are inappropriate for active 2s authentic M2; replaces with contiguous matured clean real M4 firstsource receipt cohort, strict censorship and scope, bounded 8192 metadata. If new client pending inspect true censored origin; no weakening without evidence.",
     "P0 Normal2pct source18860 failed due proven RTT400 vs static PTO80 repair storm; P1 authenticated RTT batch pending native validation. Shadow remains4096 until full-table RACK refresh is addressed before P2.",
     "Normal2pct two-way real business recovered for exact de55a132 60s 2Mbps each direction/2% IID/200ms. NOT a guarantee of H500 capacity, zero CPU increase or no cross-tunnel HOL; B CPU +0.22s/client+0.22s/server vs A in same VM and RSS +~1.2-1.4MiB. Distinct high-rate owner backing >512 slabs, endpoint shared512MiB and Fixed/Auto sustained loss remain OPEN.",
     "P2 exact source281f6c64 Normal/off 10Mbps/dir 2%/200ms mixed 8 TCP flows PASS scoped (run39927659556): actual UDP both0.034%, TCP throughput meets5Mbps each; TCP p99 2.35/1.08s (not low tail). TCP4-only at5Mbps/dir still INCONCLUSIVE run39928829670 (4.82/4.37Mbps), no UDP bulk, owner capacity ample, kernel congestion. No single-flow guarantee.",
-    "MODEL_ONLY 500Mbps/RTT600 capacity: current eager physical Arena max8192 vs hard-lifetime >80k potential backed records, fixed logical131072 shadow; endpoint shared512MiB and low CPU per outer event require distinct bounded lazy pool/index design and Actions on suitable host. No projection-as-pass."
+    "MODEL_ONLY 500Mbps/RTT600 capacity: current eager physical Arena max8192 vs hard-lifetime >80k potential backed records, fixed logical131072 shadow; endpoint shared512MiB and low CPU per outer event require distinct bounded lazy pool/index design and Actions on suitable host. No projection-as-pass.",
+    "P2 single inner TCP 10Mbps/dir 2% RTT~400: matched same-VM large socket buffers AB39940890996 and reordering192 AB39941976324 both failed TCP input qualification; kernel CC CUBIC cwnd 35-59MSS despite >1.15MB rx advertised window; no M1/TUN/host fault. Do not promote test-only sysctl profiles to production; user one-outer-repair and 10% budget remain."
   ],
-  "next_action": "Find EXACT one automatic ACTION39941976324 and contracts for Normal/off single inner TCP10Mbps/dir2pct/200ms matched AB: A baseline, B namespaced tcp_reordering192, both baseline socket buffers. Do not redispatch. Inspect real kernel tcp_reordering sysctl readback, cwnd/RTO/ssthresh and recovery timing, actual app injection/p99, CPU/RSS, original M1/feedback/TUN drops and final stop. Large TCP window 16MiB requested earlier NO performance benefit, no further blind window bump. If B fails/worsens, abandon this tuning and record irreducible once-repair residual with class-specific next observation; no FEC, no main merge.",
+  "next_action": "No repeat dispatch for single TCP window AB39940890996 or tcp_reordering192 AB39941976324. Both hypotheses REJECTED: effective TCP socket sndbuf46080->425984, rcvbuf131072->2097152, snd_wnd~1.15MB but TCP CUBIC cwnd~37..45 and TCP only~1Mbps; tcp_reordering192 asymmetric (0.85/1.44Mbps) and C2S p99 worsens8.53s. Preserve source281f6c64 and practical 8-TCP-flow Normal10Mbps/dir2pct scoped PASS run39927659556, but single TCP10M/dir2pct is NOT_QUALIFIED. Next evidence-led product capability: bounded Normal-only M2 TCP DATA-vs-ACK authenticated loss/repair timeliness + per-second quota denied and spurious-PTO diagnostics before any change to earliest authentic loss witness; no FEC, no second repair, no global hot lock, no blind buffers. Separately isolate zero-loss source M1 1009/1024 kernel TUN drop with FEC unaffected, test before claiming full capacity. Do not merge main.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
