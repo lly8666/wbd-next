@@ -174,5 +174,31 @@
     "Lossless recovered phase has one UDP missing in C2S; do not convert to literal zero-drop PASS. Transition overlap/last report not classified.",
     "The 6% R/C rule is restricted to the standard saturated 30% waveform; at only ~5Mbps app per direction over a 50Mbps line, it is mathematically impossible and not applied.",
     "The Action conclusion is failure due valid TCP_BACKPRESSURED performance-limit observation, not a failed UDP firstsend integrity gate."
-  ]
+  ],
+  "additional_automatic_same_source_run": {
+    "run": 39986429782,
+    "attempt": 1,
+    "source": "b21c96454968c6a5e7a461dca2fd57d949e111d8",
+    "event": "push",
+    "not_manually_redispatched": true,
+    "artifact_id": 12515029240,
+    "github_artifact_digest": "sha256:f95ed4a5b46d90373dc45dd4460ee8bb714e7a75a764e04b540611c722f6991d",
+    "sha256_locally_verified": false,
+    "action": "failure",
+    "leg": "INCONCLUSIVE",
+    "limits": "TCP_BACKPRESSURED during loss30 and recovered_zero both directions",
+    "loss30_udp_delivered_c2s_s2c_mbps": [
+      1.1727142666666666,
+      1.1729693333333333
+    ],
+    "loss30_tcp_delivered_c2s_s2c_mbps": [
+      0.7368268,
+      0.6411976
+    ],
+    "recovered_udp_missing_c2s_s2c": [
+      6,
+      4
+    ],
+    "interpretation": "A second automatic push event for the exact same request source occurred without new user dispatch; it does NOT change the scoped verdict. DO NOT trigger another identical scenario."
+  }
 }
