@@ -22,12 +22,12 @@
     "zip_sha256": "40d06411b4b431882fdb727012e3b859d2cca58932e85ecd0325f8807e321b3b",
     "build_status": "success"
   },
-  "latest_harness_source": "REQUEST_COMMIT_PENDING",
+  "latest_harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
   "open_requests": [
     {
       "id": "P0-kind3-nearMTU-original-vs-fix-AB",
       "type": "ONE_PERFORMANCE_ACTION_ONE_SCENARIO_ONE_MEASUREMENT_JOB",
-      "status": "INTENT_COMMITTED_RUN_ID_NOT_YET_OBSERVED",
+      "status": "IN_PROGRESS_MEASUREMENT",
       "trigger": "push of tests/network/request.json on experiment branch; no manual dispatch",
       "why": "Distinguish parity kind3 12B seal boundary as cause of near-MTU FEC2 losses from remaining M2 applied/receipt and TCP tail; if parity failures vanish and residual improves, proceed to P1; otherwise inspect earliest remaining boundary.",
       "A": {
@@ -52,9 +52,11 @@
       },
       "seed": 5205,
       "scenario": "2Mbps/direction, 99% 1287B UDP, 1%64B, UDP/TCP50/50, 4 TCP streams, 2%IID,200ms one-way,120s steady",
-      "expected_run": "UNKNOWN_FIND_AFTER_PUSH",
-      "expected_request_commit": "UNKNOWN_UNTIL_PUSH",
-      "cleanup_hard_gate": true
+      "cleanup_hard_gate": true,
+      "run_id": 39887028993,
+      "attempt": 1,
+      "source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39887028993"
     }
   ],
   "recent_evidence": [
@@ -163,9 +165,10 @@
     "S028 authentic TUN read ~28.8k/side and pre-stage loan success ~28.76k; genuine pre-stage arena failures only 24/42, not ~7k. Owner FEC accepted ~21.7k with source_payload0; stage pre-guard/mode/Err/Ok(false) not accounted. Fixed pending, TCP zero steady, UDP ~32.7-32.9% residual. Host CPU PSI >20 for 10% samples.",
     "S032 same-VM real Fixed30 B1280 fixes 7073/7074 oversize and restores TCP nonzero, but both legs FAIL Fixed client applied0; B pre-stage arena NoCapacity 1812/1918 and parity arena NoCapacity 9343/9815, TCP severely backpressured. One-side source/budget/MTU and actual M2 maturity remain OPEN.",
     "P0 PR25 merged exact SOURCE ce70f53b native builder FAIL from Bash unbound `features` after successful Rust release compile; no merged product artifact, cannot claim nine-case PASS.",
-    "P0 Fixed2% old source parity_seal 33648/33502 FAIL; a58d kind3 12B guard built and MTU functional9/9 PASS, same-host traffic AB pending. Client M2 Fixed applied0/pending and TCP 4.1/8.1s tail remain OPEN independent of seal."
+    "P0 Fixed2% old source parity_seal 33648/33502 FAIL; a58d kind3 12B guard built and MTU functional9/9 PASS, same-host traffic AB pending. Client M2 Fixed applied0/pending and TCP 4.1/8.1s tail remain OPEN independent of seal.",
+    "P1/P2 static audit (not runtime): real Linux original RX shadow4096; PTO80ms/reorder15ms; repair cap65536B/epoch per direction, 131072B/epoch process; max grant32768 and 50ms; original crypto replay1000 PN/s, 3s horizon and 8KiB metadata; RX retained pages8; FEC 512-slot arena. Not yet sufficient basis for H500; see 20261023-P1-static-construction-audit.md."
   ],
-  "next_action": "Automatic ONE test on request.json push: discover unique network-harness run for the exact request commit; verify its same-job A=d64be native ZIP and B=a58d native ZIP, ELF183/manifest/ZIP and per-binary hashes. Read both legs parity_seal, k/r, UDP residual, TCP tail, product CPU/RSS, client+server mode applied and M2 unknown/censored and Stop. Preserve remaining FAIL; only then decide minimal next action. Do not dispatch again on timeout.",
+  "next_action": "ONE outstanding P0 Fixed2pct same-VM AB Action39887028993 on exact request/harness SOURCE 39cb2783, attempt1; already dispatched by push. Check completion/artifact+per-leg actual result, do not redispatch. A=d64be native bundle vs B=a58d native bundle, 120s each, one measurement VM; confirm parity_seal, UDP loss/p99, TCP p99, per-side applied, M2 censored, CPU/RSS/PSI, Stop and queued drops, then classify and archive. P1 static limitation recorded in 20261023-P1-static-construction-audit.md; DO NOT run H500 before P0 and dynamic effective readback.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
