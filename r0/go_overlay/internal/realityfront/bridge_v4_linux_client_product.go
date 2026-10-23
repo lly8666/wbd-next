@@ -23,6 +23,8 @@ type V4LinuxClientProductConfig struct {
     Tun *os.File
     TunName string
     CleanupOwnedNetwork func()error
+    // Optional original OS owner callback, only after authentication and before TUN starts.
+    ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     FECMode FecV2Mode
     FECProfile FecV2Profile
 }
@@ -91,6 +93,12 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     p.owner=bridge
     p.session=session
     p.association=assoc
+    if p.cfg.ConfigureTunnelMTU!=nil {
+        clientLimit,serverLimit:=cold.RecordLimits()
+        if err=p.cfg.ConfigureTunnelMTU(handoff.Peer.MSS,clientLimit,serverLimit);err!=nil{
+            return nil,errors.Join(err,p.closeLocked())
+        }
+    }
     if err=bridge.attachRawRxOnInterface(p.cfg.NetworkInterface,p.cfg.NetworkIfIndex);err==nil{
         err=bridge.attachKernelTun(p.cfg.Tun.Fd(),p.cfg.TunName)
     }

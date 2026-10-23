@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "S032-same-VM-Fixed30-source-limit-repair-A-B",
+  "phase": "P0-capacity-PR25-integrated-with-S032-pinned-AB-inflight",
   "recovered": true,
   "origins": {
     "two_parent_merge": "89657354f2784d89e2c42e1556bfb79b82b8012a",
@@ -27,7 +27,7 @@
     {
       "id": "arm64-fixed30-record-cap-S032-same-host-AB",
       "type": "ONE_PERFORMANCE_ACTION_ONE_MEASUREMENT_JOB",
-      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "status": "IN_PROGRESS",
       "trigger": "one changed request.json push; no manual dispatch; same VM sequential AB",
       "comparison": "Old 1180 record/FEC1135 early rejection vs B1280 record valid up to1235, all other network parameters unchanged",
       "A": {
@@ -43,7 +43,21 @@
         "attempt": 1,
         "artifact_id": 12438592249,
         "sha256": "7fb49eb7cb3727f754f0174005dec4dd40c43b2c9590fa8daa76faaa08cb52eb"
-      }
+      },
+      "run_id": 39877362034,
+      "attempt": 1,
+      "contract_run_id": 39877362037,
+      "request_source": "b169ad07c5b293168925af2a65f1b7fed41338af",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/39877362034"
+    },
+    {
+      "id": "P0-PR25-experiment-integrated-native-build",
+      "type": "ONE_EXACT_SOURCE_ARM64_NATIVE_MTU_BOUNDARY_ACTION",
+      "status": "INTENT_COMMITTED_PUSH_TRIGGER_PENDING_RUN_ID",
+      "trigger": "merge commit changes Rust/Go source and ARM build workflow; one native product build with nine MTU boundary/DF cases, no manual dispatch",
+      "merged_fix_ref": "ae73332d4814edc1c8669a44cbe38fc1b134c367",
+      "baseline_experiment_head": "b169ad07c5b293168925af2a65f1b7fed41338af",
+      "scope": "automatically derived live TUN inner MTU, authenticated record RX/TX direction, Game 1200 ceiling removal; preserve S031 1280 and all instrumentation"
     }
   ],
   "recent_evidence": [
@@ -150,7 +164,7 @@
     "S026 M4 recovered UDP reaches kernel InDatagrams exactly (no UDP checksum/socket drops), but TUN egress~28.8k vs genuine FEC offered~21.7k each side; cannot infer ingress drops until bounded pre-stage arena/TUN-read source count. TCP ACK remains frozen under Fixed30, client Fixed pending.",
     "S028 authentic TUN read ~28.8k/side and pre-stage loan success ~28.76k; genuine pre-stage arena failures only 24/42, not ~7k. Owner FEC accepted ~21.7k with source_payload0; stage pre-guard/mode/Err/Ok(false) not accounted. Fixed pending, TCP zero steady, UDP ~32.7-32.9% residual. Host CPU PSI >20 for 10% samples."
   ],
-  "next_action": "Resolve ONE S032 native same-host sequential AB Action id from request push, no duplicate. Judge application UDP/TCP, original M1 oversize, Fixed applied both roles, M2 unknown and CPU/PSI/Stop; pre/post same-host underlay loss distributions unseeded. After it completes and status archived, integrate PR25 fix/capacity-budget-mtu-20261022 at safe node by 3-way preserving experiment source/observations; run P0 nine MTU function cases and then P1/P2. PR25 ARM39875959734 success; do not repeat.",
+  "next_action": "Resolve P0 integrated native ARM run and strict network harness contract once, plus pinned S032 same-host AB39877362034; NEVER repeat dispatch. Verify merged Go/Rust SOURCE, native jobs and nine actual MTU/DF/Stop functional cases; record failure if any. After S032 AB result evaluate fixed length/ TCP applied. P0 correctness first; then P1 actual RTT/repair/receipt/replay budget and only then near-MTU P2 load envelope; no large load before calibrated effective values. Keep S030 7074/7068 oversize historical FAIL and Windows separate.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",

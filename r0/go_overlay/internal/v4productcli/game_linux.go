@@ -82,6 +82,7 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
         realityfront.V4LinuxGameProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
+            ConfigureTunnelMTU:configureTunnelMTU(c,tun),
         })
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
@@ -89,7 +90,7 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             ServerName:c.serverName,RouteKey:c.routeKey,Timeout:15*time.Second,
         },
         Username:c.username,Password:c.password,TunnelID:c.tunnel[:],
-        ClientLimit:1180,DesiredLanes:c.gameLanes,Policy:policy,
+        ClientLimit:c.recordLimit,DesiredLanes:c.gameLanes,Policy:policy,
     }
     dialCtx,cancel:=context.WithTimeout(ctx,60*time.Second)
     err=native.ConnectClientGame(dialCtx,assocs,cfg)
@@ -118,6 +119,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
         realityfront.V4LinuxGameProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
+            ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             Epochs:store,
         })
     if err!=nil{return err}
@@ -200,7 +202,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},
             Timeout:15*time.Second,
         },
-        ExpectedUsername:c.username,ExpectedPassword:c.password,ServerLimit:1180,
+        ExpectedUsername:c.username,ExpectedPassword:c.password,ServerLimit:c.recordLimit,
         ValidateRequest:func(req realityfront.AdmissionRequest)error{
             if len(req.TunnelID)!=16||string(req.TunnelID)!=string(c.tunnel[:]){
                 return realityfront.ErrAdmissionParams

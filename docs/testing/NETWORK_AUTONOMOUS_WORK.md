@@ -29,6 +29,10 @@ PR #21的Game+FEC、cipher/repair参数、生命周期等能力有明确未支�
 
 ## 自主执行顺序与停止条件
 
+用户新增要求与现有S030/S031修复的衔接见 [容量/MTU补充](NETWORK_CAPACITY_ENVELOPE.md) §3–4。先接续自己的唯一open request；已有MTU修复不重写、不重复dispatch。模型计算后对照产品实际构造参数；不能拿小规模80ms PTO/64KiB repair cap去判断500Mbps能力。源文件冲突保留本分支较新的观测/修复，只引入新增模型与必要边界验证。
+
+2026-10-23接续任务： [PR #25](https://github.com/lly8666/wbd-next/pull/25) / `fix/capacity-budget-mtu-20261022` 提供自动内层MTU与容量计算。先核PR最新证据与本分支在途请求，选择安全点合入；不要覆盖自己较新的S031/S032数据面改动或把固定1280重新覆盖自动预算。大流量以接近实际MTU的大包为主+少量小探针；纯小包只是PPS诊断，不承担500Mbps指标。具体工作顺序为容量方案P0→P1→P2，每批有因果问题才加测试，不逐参数制造新工作包。
+
 1. 复用已通过的基础功能。先运行真实双向混合大小包持续基线，确认注入、交付、模式与Stop；低开销记录产品/注入器CPU、RSS、p99/未到/迟到、10ms首到桶、socket/qdisc drops。iperf进程CPU不能冒充产品CPU，最终applied不能代替auto全程曲线。
 2. 按模型估算PPS、FEC/Game/修复膨胀、BDP和netem队列容量，再逐档发现机器容量。注入器不足、宿主争用、本地内核drop和产品单核瓶颈分开。容量不足停止更重负载并给有依据的PROJECTED_NOT_TESTED；不得以总CPU没到100%掩盖单核瓶颈。
 3. 按NETWORK_MATRIX关键集合覆盖off低损/预算上限、固定FEC中高损、auto升降与不对称、Game独立/相关损失，混合UDP/TCP/小包探针、稀疏/大包兼容、换lane、单/双向黑洞、payload idle/keepalive/有数据重建。先代表组合再针对问题扩展，不跑全笛卡尔积。真正idle测试须关闭业务探针；有探针不能声称无payload。
@@ -43,3 +47,5 @@ PR #21的Game+FEC、cipher/repair参数、生命周期等能力有明确未支�
 每次有实质代码/参数/请求/结论变化即提交并推本分支；外部试验前留intent，结果回来补run/attempt、精确产品/夹具SOURCE与配置hash、机器信息、通过/失败/缺测及解释。凭据、正文和大pcap不入库，清理自己的原始大文件保留摘要/hash。热状态压缩只保留重要OPEN和下一动作，旧日志按需引用，失败证据不删不改绿。
 
 完成后写 `docs/evidence/network-matrix-work/final-report.md`：实测覆盖表、每模式适用范围、CPU/内存/外层开销/首次交付及尾延迟、默认参数建议、因果对比、机器上限、未关闭事项和未测范围、可合并提交。没有更多可区分的新问题就收口，不以全绿/所有极端工况/最大速率为无限任务。不宣称ARM或Linux结果代表Windows或物理机通过。
+>
+> 当前新增容量/MTU任务按 NETWORK_CAPACITY_ENVELOPE.md 执行；先核PR #25及自己最新进度。逐项核公式与实际构造，优先真实大包主场景。每次Action先写一句“本次区分哪个假设、结果将决定什么”；没有信息增益就计算/读源码/补观测，别刷同因失败或全排列。允许根据实际包型、FEC k/r、CPU容量纠正模型，保留依据，不能暗改目标刷绿。

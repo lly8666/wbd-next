@@ -104,8 +104,19 @@ chmod 0600 "$work/route-key" "$work/password" "$work/server.key"
 set -- --username smoke --password-file "$work/password" \
   --route-key-hex-file "$work/route-key" --server-name wbd.test \
   --tunnel-id 00112233445566778899aabbccddeeff --mode "$mode" --fec-profile 1
+client_mtu_args=(); server_mtu_args=()
+# Older frozen bundles do not expose this flag. Default smoke keeps their
+# original argv; explicit MTU tests require the new real CLI capability.
+if [ -n "${WBD_ARM64_OUTER_MTU+x}" ]; then
+  client_mtu_args=(--outer-mtu "$WBD_ARM64_OUTER_MTU")
+  server_mtu_args=(--outer-mtu "$WBD_ARM64_OUTER_MTU")
+fi
+if [ -n "${WBD_ARM64_SERVER_OUTER_MTU+x}" ]; then
+  server_mtu_args=(--outer-mtu "$WBD_ARM64_SERVER_OUTER_MTU")
+fi
 sudo -n ip netns exec "$server_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-server" "$@" \
   --raw-interface v4as --local-ip 198.18.7.2 --local-port 443 \
+  "${server_mtu_args[@]}" \
   --tun-name wbdsv --tun-ipv4 10.188.18.2/24 \
   --tls-cert "$work/server.crt" --tls-key "$work/server.key" \
   >"$out/server.log" 2>&1 &
@@ -123,6 +134,7 @@ if [ "$found" -ne 1 ]; then
 fi
 sudo -n ip netns exec "$client_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-client" "$@" \
   --raw-interface v4ac --local-ip 198.18.7.1 --peer-ip 198.18.7.2 \
+  "${client_mtu_args[@]}" \
   --local-port 50001 --peer-port 443 --tun-name wbdcl --tun-ipv4 10.188.18.1/24 \
   >"$out/client.log" 2>&1 &
 client_launcher=$!
@@ -169,6 +181,28 @@ sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -i "$interval" -c "$count" -
   >"$out/s2c.log" 2>&1
 grep -q '0% packet loss' "$out/c2s.log"
 grep -q '0% packet loss' "$out/s2c.log"
+if [ "${WBD_ARM64_MTU_BOUNDARY:-0}" = 1 ]; then
+  # Read the actual post-auth TUN MTU, not an assumed 1200B fixture constant.
+  for direction in c2s s2c; do
+    ns="$client_ns"; device=wbdcl; target=10.188.18.2; role=client
+    if [ "$direction" = s2c ]; then ns="$server_ns"; device=wbdsv; target=10.188.18.1; role=server; fi
+    mtu=$(sudo -n ip -j -n "$ns" link show "$device" | python3 -c 'import json,sys; print(json.load(sys.stdin)[0]["mtu"])')
+    grep -Eq "V4_PUBLIC_MTU .*tun_mtu=$mtu " "$out/$role.log"
+    # Keep the regression crossing the old 1135B ceiling and test the NEW boundary.
+    for payload in 1107 1108 "$((mtu-29))" "$((mtu-28))"; do
+      if [ "$((payload+28))" -gt "$mtu" ]; then continue; fi
+      log="$out/mtu-${direction}-${payload}.log"
+      sudo -n ip netns exec "$ns" ping -n -M do -I "$device" -s "$payload" -i .1 -c 3 -W 3 "$target" >"$log" 2>&1
+      grep -Eq ', 0% packet loss' "$log"
+    done
+    # DF > actual interface MTU is a local error, never silent loss of a valid packet.
+    if sudo -n ip netns exec "$ns" ping -n -M do -I "$device" -s "$((mtu-27))" -c 1 -W 1 "$target" >"$out/mtu-df-oversize-$direction.log" 2>&1; then
+      echo 'unexpected DF packet beyond TUN MTU'; exit 1
+    fi
+    grep -Eqi "message too long|mtu=$mtu" "$out/mtu-df-oversize-$direction.log"
+    echo "ARM64_REAL_MTU_BOUNDARY_PASS mode=$mode direction=$direction inner_ipv4=$mtu df_plus_one=REJECTED" >>"$out/mtu-boundary.txt"
+  done
+fi
 export WBD_V4_EXPECTED_ICMP="$count"
 # One bounded, real-product capacity discovery; not codec A/B, first-arrival
 # p99, or a production rate guarantee. Do NOT repeat if capacity is insufficient.

@@ -531,9 +531,13 @@ impl ProtectedScopedOwner {
         }
         // Construct all resources locally; NONE is published on half failure.
         let crypto=ProtectedScopedCrypto::prepare_from_protected_go(cold,expected)?;
-        let wire=usize::from(cold.identity().server_limit);
+        // Limits name the RECEIVER. The client receives up to client_limit,
+        // not server_limit; unequal authenticated MTUs must remain directional.
+        let id=cold.identity();
+        let wire=usize::from(if expected.server{id.server_limit}else{id.client_limit});
+        let tx_wire=usize::from(if expected.server{id.client_limit}else{id.server_limit});
         let limits=QueueLimits {
-            slots:32,bytes:wire.saturating_mul(32),max_age_ns:50_000_000,
+            slots:32,bytes:tx_wire.saturating_mul(32),max_age_ns:50_000_000,
         };
         let rx_limits=QueueLimits {
             slots:64,bytes:wire.saturating_mul(64),max_age_ns:50_000_000,
@@ -552,9 +556,7 @@ impl ProtectedScopedOwner {
             rx_tx,token,crypto,state:OwnerPhase::Prepared,
             generation:expected.owner_generation,go_lane:expected.go_lane_id,
             epoch:expected.logical_epoch,rx_wire_limit:wire,
-            tx_wire_limit:usize::from(if expected.server {
-                cold.identity().client_limit
-            }else{cold.identity().server_limit}),
+            tx_wire_limit:tx_wire,
             peer_mss,peer_mss_advertised,
             next_tx_seq:None,server:expected.server,
             #[cfg(feature="m0_fec2_owner_probe")]

@@ -21,6 +21,7 @@ from pathlib import Path
 from .artifacts import fetch, sha, verify
 from .config import Unsupported, netem_args, validate
 from .report import markdown, summarize, network_accounting
+from .envelope import request_envelope
 
 ROOT = Path(__file__).resolve().parents[2]
 TRAFFIC = Path(__file__).with_name("traffic.py")
@@ -28,7 +29,7 @@ TRAFFIC = Path(__file__).with_name("traffic.py")
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
@@ -409,6 +410,8 @@ class LinuxExperiment:
                     and max(s for s, _ in self.config["traffic"]["sizes"]) + 28 > links[0]["mtu"]):
                 raise Unsupported("UDP payload+28 exceeds actual TUN MTU; explicitly allow_fragmentation or use a separate rejection case")
         dump(self.out / "effective-config.json", self.effective)
+        inner = min(links[0]["mtu"] for links in self.effective["inner_links"].values())
+        dump(self.out / "capacity-envelope-observed-mtu.json", request_envelope(self.config, inner))
 
     def configure(self, phase, index, initial=False):
         event = {"phase": phase["name"], "scheduled_index": index, "begin_ns": time.monotonic_ns(), "commands": []}
@@ -671,6 +674,7 @@ def main():
     if os.environ.get("GITHUB_ACTIONS") != "true" or platform.system() != "Linux":
         raise RuntimeError("execution validation is GitHub Actions Linux only")
     if a.command == "prepare":
+        dump(directory / "capacity-envelope.json", request_envelope(config))
         for label, bundle in config["bundles"].items():
             receipt = fetch(bundle, directory / ("bundle-" + label))
             dump(directory / ("bundle-" + label + "-receipt.json"), receipt)
