@@ -1,25 +1,25 @@
 {
   "version": 1,
-  "id": "V3-D-blackhole-native-stage-timeline-0-100-0",
+  "id": "V3-C-TCP1-500M-remove-redundant-TUN-poll-AB",
   "owner": "network-matrix-work",
-  "seed": 6630,
+  "seed": 6725,
   "product": {
     "mode": "normal",
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 2,
-    "s2c_mbps": 2,
-    "udp_share": 1,
+    "c2s_mbps": 500,
+    "s2c_mbps": 0,
+    "udp_share": 0,
     "sizes": [
       [
-        256,
+        32768,
         1
       ]
     ],
     "tcp_flows": 1,
-    "probe_hz": 10,
-    "deadline_ms": 3000,
+    "probe_hz": 20,
+    "deadline_ms": 5000,
     "burst_ms": 0,
     "max_packets": 20000000,
     "allow_fragmentation": false
@@ -29,14 +29,22 @@
     "lane_loss": "shared",
     "queue_packets": 32768,
     "netem_rng": "unseeded_recorded",
+    "tcp_window_profiles": {
+      "A": "bdp500",
+      "B": "bdp500"
+    },
+    "tcp_reordering_profiles": {
+      "A": "baseline",
+      "B": "baseline"
+    },
     "v3_timeline": true
   },
-  "warmup_s": 10,
+  "warmup_s": 20,
   "drain_s": 30,
   "phases": [
     {
-      "name": "healthy_before",
-      "seconds": 15,
+      "name": "steady",
+      "seconds": 60,
       "rate_scale": 1,
       "c2s": {
         "delay_ms": 200,
@@ -44,7 +52,7 @@
         "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 10,
+        "rate_mbps": 700,
         "blackhole_lanes": []
       },
       "s2c": {
@@ -53,60 +61,14 @@
         "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 10,
-        "blackhole_lanes": []
-      }
-    },
-    {
-      "name": "control_blackhole",
-      "seconds": 10,
-      "rate_scale": 1,
-      "c2s": {
-        "delay_ms": 200,
-        "jitter_ms": 0,
-        "loss_pct": 100,
-        "duplicate_pct": 0,
-        "reorder_pct": 0,
-        "rate_mbps": 10,
-        "blackhole_lanes": []
-      },
-      "s2c": {
-        "delay_ms": 200,
-        "jitter_ms": 0,
-        "loss_pct": 100,
-        "duplicate_pct": 0,
-        "reorder_pct": 0,
-        "rate_mbps": 10,
-        "blackhole_lanes": []
-      }
-    },
-    {
-      "name": "recovered_zero",
-      "seconds": 30,
-      "rate_scale": 1,
-      "c2s": {
-        "delay_ms": 200,
-        "jitter_ms": 0,
-        "loss_pct": 0,
-        "duplicate_pct": 0,
-        "reorder_pct": 0,
-        "rate_mbps": 10,
-        "blackhole_lanes": []
-      },
-      "s2c": {
-        "delay_ms": 200,
-        "jitter_ms": 0,
-        "loss_pct": 0,
-        "duplicate_pct": 0,
-        "reorder_pct": 0,
-        "rate_mbps": 10,
+        "rate_mbps": 700,
         "blackhole_lanes": []
       }
     }
   ],
   "acceptance": {
-    "injection_tolerance_pct": 3,
-    "max_loss_pct": 100,
+    "injection_tolerance_pct": 5,
+    "max_loss_pct": 0,
     "require_retransmission": false,
     "max_repair_fresh_pct": 10
   },
@@ -118,8 +80,16 @@
       "artifact_id": 12517549925,
       "sha256": "4886370e8d20bb081f2311642a1f06b4ebeeb196e11e337b377a543f210d5536",
       "recovery_policy": "outer-opportunistic-v3"
+    },
+    "B": {
+      "source": "31e3c9f7d987a8e188cae290f8c7851068fee6b3",
+      "run_id": 39998272925,
+      "attempt": 1,
+      "artifact_id": 12520568152,
+      "sha256": "7cf0f88aa8c2440540463a9192513b7b6a428d576c5fcff0f84ef3c34f8e47b1",
+      "recovery_policy": "outer-opportunistic-v3"
     }
   },
-  "order": "A",
+  "order": "AB",
   "policy": "outer-opportunistic-v3"
 }
