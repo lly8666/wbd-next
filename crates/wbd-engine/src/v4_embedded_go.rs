@@ -4795,6 +4795,11 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let rx_flow=e.flow;
     let rx_server_side=e.server_side;
     let generation=e.generation;
+    // Diagnostic-only, opt-in, at most 2 timestamps/sec per worker.
+    // No new per-packet atomics, locks, blocking IO or production behavior.
+    #[cfg(feature="fec2_product_record")]
+    let egress_diag=std::env::var("WBD_FEC_EGRESS_DIAG")
+        .ok().as_deref()==Some("1");
     let shutdown=Arc::new(AtomicBool::new(false));
     let stats=Arc::clone(&e.counters);
     #[cfg(feature="fec2_product_record")]
@@ -4808,8 +4813,22 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
             let mut last_cpu_sample=Instant::now();
+            #[cfg(feature="fec2_product_record")]
+            let mut last_egress_diag=Instant::now();
             let mut rx_pending=Vec::<crate::memory::UniqueBuffer>::with_capacity(32);
             while !stop_rx.load(Ordering::Acquire){
+                #[cfg(feature="fec2_product_record")]
+                if egress_diag && last_egress_diag.elapsed()>=Duration::from_millis(500){
+                    last_egress_diag=Instant::now();
+                    eprintln!("V4_PUBLIC_FEC2_EGRESS_DIAG role={} side=rx ns={} raw_batches={} rx_err={} fec_source={} fec_parity={} fec_recovered={} tun_failure={}",
+                        if rx_server_side{"server"}else{"client"},
+                        loop_now().0,stats_rx.rx.load(Ordering::Relaxed),
+                        stats_rx.rx_error.load(Ordering::Relaxed),
+                        stats_rx.fec_rx[0].load(Ordering::Relaxed),
+                        stats_rx.fec_rx[2].load(Ordering::Relaxed),
+                        stats_rx.fec_rx[5].load(Ordering::Relaxed),
+                        stats_rx.fec_rx[8].load(Ordering::Relaxed));
+                }
                 if last_cpu_sample.elapsed()>=Duration::from_millis(100){
                     stats_rx.rx_thread_cpu_ns.store(
                         owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
@@ -4875,6 +4894,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
             let mut last_cpu_sample=Instant::now();
+            #[cfg(feature="fec2_product_record")]
+            let mut last_egress_diag=Instant::now();
             let mut tx_storage=Vec::<TxDispatch>::with_capacity(32);
             let mut tx_pending=Vec::<(crate::memory::UniqueBuffer,usize)>::with_capacity(32);
             let mut tx_prefetched=Vec::<crate::memory::UniqueBuffer>::with_capacity(8);
@@ -4886,6 +4907,30 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut jumbo_queue=VecDeque::<Vec<u8>>::with_capacity(M0_MAX_PENDING_JUMBO);
             let mut active_jumbo=None::<PendingOriginalJumbo>;
             while !stop_tx.load(Ordering::Acquire){
+                #[cfg(feature="fec2_product_record")]
+                if egress_diag && last_egress_diag.elapsed()>=Duration::from_millis(500){
+                    last_egress_diag=Instant::now();
+                    // Native M1/FEC and M4 counters already exist; take only
+                    // one best-effort *slow* session snapshot, never sleep
+                    // waiting for a diagnostic lock in the DATA sender.
+                    let slow=tx_cell.try_lock().ok().and_then(|e|
+                        e.fec2_live_tx.as_ref().map(|stream|
+                            (e.server_side,original_fec_tx_snapshot(stream.report()))));
+                    if let Some((server_side,fec))=slow {
+                        // Logging only after the owner mutex has been dropped.
+                        eprintln!("V4_PUBLIC_FEC2_EGRESS_DIAG role={} side=tx ns={} tun_read={} source_queued={} m4_copied={} m4_errors={} m4_uncertain={} backpressure={} route_refresh={} fec_first={} fec_parity_planned={} fec_parity_sent={}",
+                            if server_side{"server"}else{"client"},
+                            loop_now().0,
+                            stats.fec_m1_ingress[0].load(Ordering::Relaxed),
+                            stats.fec_m1_stage[1].load(Ordering::Relaxed),
+                            stats.tx.load(Ordering::Relaxed),
+                            stats.tx_error.load(Ordering::Relaxed),
+                            stats.tx_uncertain.load(Ordering::Relaxed),
+                            stats.tx_backpressure.load(Ordering::Relaxed),
+                            stats.route_refresh.load(Ordering::Relaxed),
+                            fec[0],fec[8],fec[9]);
+                    }
+                }
                 if split_ingress {
                     // This is the SOLE recipient of one bounded original
                     // source TUN ingress queue. Sender preserves fresh-order.

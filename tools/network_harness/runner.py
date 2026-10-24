@@ -68,7 +68,7 @@ def verify_native_game_counters(lanes,counters):
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
@@ -457,6 +457,9 @@ class LinuxExperiment:
         self.products, self.workers, self.samplers, self.handles = {}, {}, {}, []
         self.created = []
         self.monitor = None
+        self.egress_trace=[]
+        self.egress_stop=threading.Event()
+        self.egress_thread=None
         self.lanes = {"game2": 2, "game4": 4}.get(config["product"]["mode"], 1)
         self.config_events, self.snapshots = [], []
         self.child_env = {k: v for k, v in os.environ.items() if k not in ["GH_TOKEN", "GITHUB_TOKEN"]}
@@ -517,6 +520,7 @@ class LinuxExperiment:
         for role in ["server", "client"]:
             args = ["env", "LD_LIBRARY_PATH=" + str(self.bundle),
                 *(["WBD_V3_TIMELINE=1"] if self.config["network"].get("v3_timeline",False) else []),
+                *(["WBD_FEC_EGRESS_DIAG=1"] if self.config["network"].get("fec_egress_diagnostic",False) else []),
                 str(self.bundle / ("wbd-v4-" + role)),
                 "--raw-interface", self.iface[role], "--local-ip", self.ip[role],
                 "--local-port", "443" if role == "server" else "41031",
@@ -675,6 +679,40 @@ class LinuxExperiment:
         event["end_ns"] = time.monotonic_ns()
         event["wall_end_ns"] = time.time_ns()
         self.config_events.append(event)
+
+    def egress_sampling_loop(self):
+        """Optional 500ms numeric counters, one owned netns read per edge.
+
+        No per-packet hooks, product mutation, pcap, packet/IP addresses.
+        Limits to 220 samples and preserves monotonic begin/end for alignment.
+        """
+        while not self.egress_stop.is_set() and len(self.egress_trace)<220:
+            tick=time.monotonic()
+            row={"begin_ns":time.monotonic_ns(),"roles":{}}
+            for role in ("client","server"):
+                try:
+                    v=json.loads(self.nscommand(role,["ip","-s","-j",
+                        "link","show","dev",self.iface[role]]))[0]
+                    tun=json.loads(self.nscommand(role,["ip","-s","-j",
+                        "link","show","dev","wbntun0"]))[0]
+                    qs=json.loads(self.nscommand(role,["tc","-s","-j",
+                        "qdisc","show","dev",self.iface[role]]))
+                    q=next((p for p in qs if p.get("kind")=="netem"),None)
+                    def brief(x):
+                        return {side:{key:x.get(side,{}).get(key) for key
+                            in ("bytes","packets","dropped","errors")}
+                            for side in ("tx","rx")}
+                    row["roles"][role]={
+                        "outer_veth":brief(v.get("stats64",v.get("stats",{}))),
+                        "source_tun":brief(tun.get("stats64",tun.get("stats",{}))),
+                        "netem":({k:q.get(k) for k in
+                            ("packets","drops","overlimits","qlen","backlog")}
+                            if q is not None else "NOT_OBSERVED")}
+                except Exception:
+                    row["roles"][role]={"status":"NOT_OBSERVED_SAMPLER_ERROR"}
+            row["end_ns"]=time.monotonic_ns()
+            self.egress_trace.append(row)
+            self.egress_stop.wait(max(0,0.5-(time.monotonic()-tick)))
 
     def snapshot(self, name):
         row = {"name": name, "ns": time.monotonic_ns(), "processes": {r: process(p.pid) for r, p in self.products.items()}, "network": {}}
@@ -929,6 +967,12 @@ class LinuxExperiment:
             # precisely the first 100ms of TUN ring burst loss. Only use a
             # pre-start snapshot whose actual END precedes the sender epoch.
             self.snapshot("warmup-start")
+            if self.config["network"].get("fec_egress_diagnostic",False):
+                self.egress_stop.clear()
+                self.egress_thread=threading.Thread(
+                    target=self.egress_sampling_loop,
+                    name="owned-fec-egress-numeric-500ms",daemon=True)
+                self.egress_thread.start()
             if self.snapshots[-1]["end_ns"]>=start_ns:
                 raise RuntimeError("startup TUN counters sampled after traffic epoch")
             self.wait_until(start_ns)
@@ -945,6 +989,12 @@ class LinuxExperiment:
                 boundary += int(phase["seconds"] * 1e9)
             self.wait_until(boundary)
             self.snapshot("measurement-end")
+            if self.egress_thread is not None:
+                self.egress_stop.set()
+                self.egress_thread.join(timeout=3)
+                dump(self.out/"egress-trace.json",{
+                    "interval_hint_ms":500,"diagnostic_only":True,
+                    "no_packet_capture":True,"samples":self.egress_trace})
             for role,p in self.samplers.items():
                 p.wait(timeout=8)
                 if p.returncode:
@@ -965,6 +1015,18 @@ class LinuxExperiment:
             result = summarize(self.config, json.loads((self.out / "client-traffic.json").read_text()),
                                json.loads((self.out / "server-traffic.json").read_text()), self.telemetry(), host)
             result["network_accounting"] = network_accounting(self.snapshots)
+            if self.config["network"].get("fec_egress_diagnostic",False):
+                result["fec_egress_trace"]={
+                    "filename":"egress-trace.json","samples":len(self.egress_trace),
+                    "diagnostic_sampling_only":True,
+                    "missing_role_samples":{
+                        role:sum(1 for row in self.egress_trace
+                            if row["roles"].get(role,{}).get("status"))
+                        for role in ("client","server")},
+                    "native_timeline_lines":{
+                        role:sum("V4_PUBLIC_FEC2_EGRESS_DIAG role="+role in ln
+                            for ln in read(self.private/(role+".log")).splitlines())
+                        for role in ("client","server")}}
             if self.config["acceptance"].get("require_zero_tun_root_qdisc_drops_full_run",False):
                 qdrops={}
                 for role in self.ns:

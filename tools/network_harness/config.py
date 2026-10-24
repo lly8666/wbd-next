@@ -117,8 +117,11 @@ def validate(raw):
     keys(n, ["outer_mtu", "lane_loss", "queue_packets", "netem_rng",
              "tcp_window_profiles", "tcp_reordering_profiles", "v3_timeline",
              "tun_txqlen_profiles", "warmup_rate_scale_profiles", "tun_qdisc_profiles",
-              "startup_tun_drop_timeline", "tcp_socket_pacing_mbps_profiles",
+              "startup_tun_drop_timeline", "fec_egress_diagnostic", "tcp_socket_pacing_mbps_profiles",
               "tun_fq_maxrate_mbps_profiles", "product_tun_fq_maxrate_mbps_profiles"], "network")
+    n.setdefault("fec_egress_diagnostic",False)
+    if type(n["fec_egress_diagnostic"]) is not bool:
+        raise ValueError("network.fec_egress_diagnostic must be boolean")
     n.setdefault("v3_timeline", False)
     if type(n["v3_timeline"]) is not bool:
         raise ValueError("network.v3_timeline must be boolean")
