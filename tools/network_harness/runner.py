@@ -575,10 +575,13 @@ class LinuxExperiment:
                 detail=self.nscommand(role,["tc","-d","qdisc","show","dev","wbntun0"])
                 actual=json.loads(self.nscommand(role,["tc","-d","-j","qdisc","show",
                                                        "dev","wbntun0"]))
-                if not any(line.startswith("qdisc fq ") and " root " in line and
-                           re.search(r"\bmaxrate\s+600Mbit\b",line,re.I)
-                           and re.search(r"\bflow_limit\s+256\b",line,re.I)
-                           for line in detail.splitlines()):
+                # iproute2 may format fq root/flow_limit/maxrate across
+                # separate detail lines, and print 256p with a suffix.
+                # Verify root and maxrate across the whole detail record;
+                # kernel -d -j options.flow_limit is the numeric source of truth.
+                if not any(line.startswith("qdisc fq ") and " root " in line
+                           for line in detail.splitlines()) or not re.search(
+                           r"\bmaxrate\s+600Mbit\b",detail,re.I):
                     raise RuntimeError("real product TUN fq kernel readback mismatch "+role)
                 if not any(q.get("kind")=="fq" and q.get("root") and
                            q.get("options",{}).get("flow_limit")==256
