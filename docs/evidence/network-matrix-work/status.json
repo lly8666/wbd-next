@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3_DEFAULT_LINUX_NORMAL_FQ600_FLOW256_REPRESENTATIVE_NATIVE_COMPLETE",
+  "phase": "V3_USER_ALL_LINUX_MODE_DEFAULT_FQ600_SOURCE_NATIVE_BUILD_IN_PROGRESS",
   "current_plan": {
     "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
     "policy": "outer-opportunistic-v3",
@@ -42,7 +42,22 @@
       "zip_sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749"
     }
   },
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "native_all_modes_fq600_product_build",
+      "run": 40060850580,
+      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+      "status": "IN_PROGRESS_LAST_READ",
+      "do_not_redispatch": true
+    },
+    {
+      "id": "native_all_modes_fq600_duplicate_auto_build",
+      "run": 40060850790,
+      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+      "status": "IN_PROGRESS_LAST_READ",
+      "do_not_redispatch": true
+    }
+  ],
   "recent_evidence": [
     {
       "id": "v3 default fq600 original source8d highloss30",
@@ -91,7 +106,7 @@
     "Windows/FEC Fixed/Auto/Game, multi-client shared endpoint/no cross-HOL at 500Mbps, physical native deployment and arbitrary >600Mbps per-flow are NOT_QUALIFIED. CPU absolute per-source/VM observed, no measured optimization gain against locally dropping baseline; user requested bounded work, no more blind matrix.",
     "Pre-flowlimit original strict H500 root-drop FAIL retained. Two pre-business harness parser FAIL Actions do not count as capacity FAIL."
   ],
-  "next_action": "SCOPED_DELIVERY_COMPLETE: write and retain final-report/devlog/evidence, no in-flight Actions/no duplicate dispatch/no main merge. Exact native601e default Linux normal fq600 flow_limit256 qualifies true TCP500 0loss one-way200/RTT400 and outer500Mbps line/2% one-way200 at net UDP370Mbps offered; previous source8d highloss30/mixed PASS retain accurate scope. Do not invent UDP min residual, change recovery gates, or chase unrelated all-green tests. If later asked to extend to Windows/FEC/Game/physical or true duplex high rate, design new separate native qualification.",
+  "next_action": "Finish existing exact source1c43b69 native build(s) without duplicating, bind one verified artifact for all-mode tests. Five separate committed native Actions fixed5 5pct, auto1-20-1%, Game2 independent5%, Game4 one lane blackhole, Normal lossless mixed. No shared runner performance comparison, strict Go/kernel fq600 flow256/readback, source TUN/rootfq drop0, Stop; FEC correctness scoped not blanket qualification. Preserve v3 recovery/MTU and no main merge.",
   "current_source_verified": {
     "source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
     "branch": "experiment/network-matrix-tuning",
@@ -166,5 +181,37 @@
       ],
       "preflight_fail_reason": "tc -d fq options split lines and 256p suffix; no business samples; corrected to separate text fq root/maxrate + JSON numeric flow_limit==256; new contract40056048217 PASS"
     }
+  },
+  "new_all_modes_default": {
+    "authorized": "2026-10-24 user fq600默认在所有工况生效 然后继续跑其他测试",
+    "scope": [
+      "normal",
+      "fec-fixed",
+      "fec-auto",
+      "game2",
+      "game4"
+    ],
+    "product_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+    "default_owned_tun_mbps_per_flow": 600,
+    "owned_fq_flow_limit_packets": 256,
+    "global_fq_limit_packets_unchanged": 10000,
+    "rollback": "--tun-fq-maxrate-mbps=0",
+    "no_windows_native_tc_claim": true,
+    "harness_contract": {
+      "run": 40060895860,
+      "source": "fbc4e2df8464290534831e46afb6cd199b8437aa",
+      "result": "SUCCESS"
+    },
+    "builds": [
+      {
+        "run": 40060850580,
+        "status": "IN_PROGRESS_LAST_READ"
+      },
+      {
+        "run": 40060850790,
+        "status": "IN_PROGRESS_LAST_READ"
+      }
+    ],
+    "devlog": "docs/devlog/network-matrix-work/20261024-all-modes-fq600-matrix.md"
   }
 }
