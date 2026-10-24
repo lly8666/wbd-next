@@ -122,7 +122,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Run corrected ARM64 build Action on current Auto live source, distinguish workflow syntax and Rust/Go compiler failures. Reuse exact successful build artifact only after all source-level functional checks; W7 single fresh case afterward, no high-load stress before validation.",
+  "next_action": "Correct existing test build-tag in ARM64 product Action then inspect targeted tests/deterministic true parity-to-TUN result; no duplicate performance requests. If test passes freeze successful SOURCE/manifest, W7 new ID unique case with identical asym scenarios and truthful dynamic revisions.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -357,6 +357,14 @@
       "result": "FAIL_INVALID_WORKFLOW_YAML_ZERO_JOBS",
       "root": "GitHub Actions YAML generated regex anchor expansion corrupted test.run and upload step; no native/product code ran",
       "not_product_failure": true
+    },
+    "second_build_attempt": {
+      "run": 40081805068,
+      "result": "PRODUCT_BUILD_PASS_RUST_LAG_UNIT_PASS_GO_TEST_COMPILE_FAIL_TAG",
+      "artifact_id": 12554933739,
+      "digest": "ac857cd4ea1d81eee0b420052e9c167e9e26b5364c56db3e0a22ce5f86a79b31",
+      "failure": "One validation command missing wbd_v4_native_probe build tag, source test helper v4RawCheckSum / v4RawC2STestPacket hidden; deterministic test NOT_RUN, no FEC runtime result",
+      "product_compiled": true
     }
   }
 }

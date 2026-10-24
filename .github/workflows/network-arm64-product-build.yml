@@ -43,7 +43,7 @@ jobs:
           export CGO_ENABLED=1 GOOS=linux GOARCH=arm64 GOTOOLCHAIN=local
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release"
-          (cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run TestV4FecAutoMatureDeltaNeverConvertsUnknownToNoLoss ./internal/realityfront -v)
+          (cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_native_probe,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run TestV4FecAutoMatureDeltaNeverConvertsUnknownToNoLoss ./internal/realityfront -v)
       - name: Real authenticated missing-source parity-to-TUN deterministic regression
         shell: bash
         run: |
@@ -51,7 +51,7 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
           export CGO_ENABLED=1 GOOS=linux GOARCH=arm64 GOTOOLCHAIN=local
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
-          (cd legacy && go test -c -tags wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fec-deterministic.test" ./internal/realityfront)
+          (cd legacy && go test -c -tags wbd_v4_embedded_go,wbd_v4_native_probe,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/fec-deterministic.test" ./internal/realityfront)
           sudo ip netns add wbd-fec-deterministic
           trap 'sudo ip netns del wbd-fec-deterministic || true' EXIT
           sudo ip -n wbd-fec-deterministic link set lo up
