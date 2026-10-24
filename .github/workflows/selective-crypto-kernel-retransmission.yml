@@ -1,0 +1,175 @@
+name: Selective TLS genuine inner TCP retransmission bounded capture
+run-name: "selective kernel inner retransmission capture | ${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/selective-tls-crypto]
+    paths: ["tests/network/selective-crypto-work/run-kernel-retransmission.trigger"]
+permissions: {contents: read}
+concurrency:
+  group: selective-kernel-retransmission-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  single-bounded-capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Frozen lab codec check and one executable build
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test -z "$(git diff --name-only 98e5b09b972196b97476b4311346cb79681773c5 -- Cargo.toml Cargo.lock crates/wbd-codec/)"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 tcpdump
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 build --release --locked -p wbd-codec --features selective-crypto-experiment
+          lib="$(find target/release/deps -maxdepth 1 -name 'libwbd_codec-*.rlib' | head -n 1)"
+          test -n "$lib"
+          rustc +1.85.1 -C opt-level=3 --edition=2021 -L dependency=target/release/deps \
+            --extern wbd_codec="$lib" tools/selective_crypto_kernel_outer.rs -o selective_crypto_kernel_outer
+          mkdir -p selective-kernel-retx-report
+          sha256sum selective_crypto_kernel_outer > selective-kernel-retx-report/outer_fixture_binary.sha256
+      - name: Real TLS1.3 data, isolated Linux namespace ACK loss and actual inner retransmission capture
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          ns_a="wbd-sc-a-$GITHUB_RUN_ID"
+          ns_b="wbd-sc-b-$GITHUB_RUN_ID"
+          cleanup() {
+            sudo ip netns del "$ns_a" 2>/dev/null || true
+            sudo ip netns del "$ns_b" 2>/dev/null || true
+            rm -rf "$tmp"
+          }
+          trap cleanup EXIT
+          export CRYPTO_TMP="$tmp"
+          openssl req -x509 -newkey rsa:2048 -nodes -keyout "$tmp/key.pem" -out "$tmp/cert.pem" -days 1 -subj /CN=localhost >/dev/null 2>&1
+          python3 - <<'PY'
+          import hashlib,os,pathlib,ssl
+          root=pathlib.Path(os.environ["CRYPTO_TMP"])
+          srv=ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+          srv.minimum_version=srv.maximum_version=ssl.TLSVersion.TLSv1_3
+          srv.load_cert_chain(str(root/"cert.pem"),str(root/"key.pem"))
+          cli=ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+          cli.minimum_version=cli.maximum_version=ssl.TLSVersion.TLSv1_3
+          cli.check_hostname=False;cli.verify_mode=ssl.CERT_NONE
+          ci,co,si,so=(ssl.MemoryBIO() for _ in range(4))
+          c=cli.wrap_bio(ci,co,server_side=False,server_hostname="localhost")
+          s=srv.wrap_bio(si,so,server_side=True)
+          cd=sd=False
+          for _ in range(100):
+              if not cd:
+                  try:c.do_handshake();cd=True
+                  except ssl.SSLWantReadError:pass
+              if not sd:
+                  try:s.do_handshake();sd=True
+                  except ssl.SSLWantReadError:pass
+              for source,dest in ((co,si),(so,ci)):
+                  while 1:
+                      chunk=source.read()
+                      if not chunk:break
+                      dest.write(chunk)
+              if cd and sd:break
+          assert cd and sd and c.version()=="TLSv1.3"
+          while so.read():pass
+          message=bytes((i*13+41)%256 for i in range(1300))
+          assert s.write(message)==len(message)
+          encrypted=so.read()
+          assert encrypted[:3]==b"\x17\x03\x03"
+          n=int.from_bytes(encrypted[3:5],"big")
+          assert 1300<=n<1375 and len(encrypted)==5+n
+          ci.write(encrypted)
+          assert c.read(len(message))==message
+          (root/"encrypted_tls.bin").write_bytes(encrypted)
+          (root/"tls_summary.txt").write_text(
+              "tls=TLS1.3\nrecord_ciphertext_bytes="+str(n)+
+              "\ntls_record_sha256="+hashlib.sha256(encrypted).hexdigest()+"\n")
+          PY
+          cp "$tmp/tls_summary.txt" selective-kernel-retx-report/tls_corpus_hash.txt
+          sudo ip netns add "$ns_a"
+          sudo ip netns add "$ns_b"
+          sudo ip link add wbd-sca0 type veth peer name wbd-scb0
+          sudo ip link set wbd-sca0 netns "$ns_a"
+          sudo ip link set wbd-scb0 netns "$ns_b"
+          sudo ip -n "$ns_a" addr add 10.252.31.1/24 dev wbd-sca0
+          sudo ip -n "$ns_b" addr add 10.252.31.2/24 dev wbd-scb0
+          sudo ip -n "$ns_a" link set dev wbd-sca0 mtu 1427 up
+          sudo ip -n "$ns_b" link set dev wbd-scb0 mtu 1427 up
+          sudo ip -n "$ns_a" link set lo up
+          sudo ip -n "$ns_b" link set lo up
+          sudo ip netns exec "$ns_b" python3 -u -c '
+          import socket,sys,time
+          s=socket.socket();s.bind(("10.252.31.2",38813));s.listen(1)
+          client,_=s.accept();client.settimeout(6)
+          while True:
+              try:
+                  data=client.recv(8192)
+                  if not data:break
+                  time.sleep(0.2)
+              except socket.timeout:break
+          client.close();s.close()
+          ' > "$tmp/server.log" 2>&1 &
+          server_pid=$!
+          sleep 1
+          sudo ip netns exec "$ns_a" python3 -u -c '
+          import pathlib,socket,sys,time
+          directory=pathlib.Path(sys.argv[1])
+          data=(directory/"encrypted_tls.bin").read_bytes()
+          client=socket.socket()
+          client.setsockopt(socket.IPPROTO_TCP,socket.TCP_MAXSEG,1360)
+          client.connect(("10.252.31.2",38813))
+          (directory/"connected").touch()
+          for _ in range(100):
+              if (directory/"send_go").exists():break
+              time.sleep(0.05)
+          assert (directory/"send_go").exists(),"host never started controlled loss"
+          client.sendall(data)
+          time.sleep(4)
+          client.close()
+          ' "$tmp" > "$tmp/client.log" 2>&1 &
+          client_pid=$!
+          for i in $(seq 1 50); do
+            test -f "$tmp/connected" && break
+            sleep 0.1
+          done
+          test -f "$tmp/connected"
+          sudo ip netns exec "$ns_a" timeout --signal=INT --kill-after=2s 9s \
+            tcpdump -i wbd-sca0 -s 2048 -U -w "$tmp/inner.pcap" \
+            "tcp and src host 10.252.31.1 and dst port 38813" > "$tmp/tcpdump-inner.log" 2>&1 &
+          capture_pid=$!
+          sleep 1
+          sudo ip netns exec "$ns_b" tc qdisc add dev wbd-scb0 root netem loss 100%
+          touch "$tmp/send_go"
+          wait "$client_pid"
+          wait "$capture_pid" || test -f "$tmp/inner.pcap"
+          test "$(stat -c %s "$tmp/inner.pcap")" -le 33554432
+          python3 tools/selective_crypto_kernel_retx_extract.py \
+            "$tmp/inner.pcap" "$tmp/pair.bin" \
+            selective-kernel-retx-report/inner_retransmission_summary.json
+          # No raw inner TCP packet or pcap leaves owned temp.
+          echo 'inner_capture_done=true' > selective-kernel-retx-report/capture_scope.txt
+          echo "source=$GITHUB_SHA" >> selective-kernel-retx-report/capture_scope.txt
+          echo "codec_source=98e5b09b972196b97476b4311346cb79681773c5" >> selective-kernel-retx-report/capture_scope.txt
+          echo "run=$GITHUB_RUN_ID" >> selective-kernel-retx-report/capture_scope.txt
+          # Capture actual outer Linux TCP stream carrying four separately sealed lab records.
+          timeout --signal=INT --kill-after=2s 8s sudo tcpdump -i lo -s 2048 -U \
+            -w "$tmp/outer.pcap" "tcp and dst port 38419" > "$tmp/tcpdump-outer.log" 2>&1 &
+          outer_pid=$!
+          sleep 1
+          ./selective_crypto_kernel_outer 38419 "$tmp/pair.bin" |
+            tee selective-kernel-retx-report/fixture.txt
+          wait "$outer_pid" || test -f "$tmp/outer.pcap"
+          test "$(stat -c %s "$tmp/outer.pcap")" -le 33554432
+          python3 tools/selective_crypto_capture_analyze.py \
+            --pcap "$tmp/outer.pcap" --port 38419 \
+            --output selective-kernel-retx-report/outer_capture_summary.json
+          # Owned namespace, pcap, private cert+key, TLS corpus and pair.bin cleaned by trap.
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: selective-kernel-retransmission-${{ github.run_id }}-${{ github.run_attempt }}
+          path: selective-kernel-retx-report/
+          retention-days: 30
+          if-no-files-found: warn
