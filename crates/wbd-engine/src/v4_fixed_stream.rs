@@ -156,7 +156,6 @@ impl FixedStream {
         for _ in 0..max_quanta{
             // M3 still processes exactly one <=4-row quantum per call.
             // The two batches share only the current block and M4 sendmmsg.
-            let cur=self.in_flight.as_mut().ok_or(StreamError::Invalid)?;
             if cur.prepared.remaining_rows()==0{break}
             let row_start=cur.job.r as usize-cur.prepared.remaining_rows();
             let rows=match cur.prepared.next_quantum(
