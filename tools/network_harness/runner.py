@@ -516,10 +516,13 @@ class LinuxExperiment:
                 self.nscommand(role,["ip","link","set","dev","wbntun0",
                                      "txqueuelen",str(qlen_profile)])
         qdisc_profile=self.config["network"].get("tun_qdisc_profiles",{}).get(self.label)
+        fq_rate=self.config["network"].get("tun_fq_maxrate_mbps_profiles",{}).get(self.label)
         if qdisc_profile is not None:
             for role in self.ns:
-                self.nscommand(role,["tc","qdisc","replace","dev","wbntun0",
-                                     "root",qdisc_profile])
+                args=["tc","qdisc","replace","dev","wbntun0","root",qdisc_profile]
+                if fq_rate:
+                    args.extend(["maxrate",str(fq_rate)+"mbit"])
+                self.nscommand(role,args)
         self.effective = {"mode": self.config["product"]["mode"], "lanes": self.lanes,
                           "game_fec": "off (public CLI explicitly sets off)", "inner_links": {}}
         for role in self.ns:
@@ -540,8 +543,18 @@ class LinuxExperiment:
                 if not any(z.get("kind")==qdisc_profile and z.get("root")
                            for z in readback):
                     raise RuntimeError("diagnostic TUN qdisc root readback mismatch "+role)
+                if fq_rate:
+                    # The actual kernel qdisc, NOT an intent/strategy label:
+                    # iproute2 uses e.g. 'maxrate 600Mbit' in -d readback.
+                    detail=self.nscommand(role,["tc","-d","qdisc","show",
+                                                "dev","wbntun0"])
+                    if not re.search(r"\bmaxrate\s+600Mbit\b",detail,re.I):
+                        raise RuntimeError("TUN fq maxrate readback mismatch "+role+
+                                           " (expected 600Mbit actual kernel qdisc)")
                 observed[role]=qdisc_profile
             self.effective["test_only_tun_qdisc_readback"]=observed
+        self.effective["test_only_tun_fq_maxrate_mbps"]=(
+            fq_rate if fq_rate is not None else "NO_TEST_OVERRIDE")
         self.effective["test_only_tun_txqlen_profile"]=(
             qlen_profile if qlen_profile is not None else "product_default")
         self.effective["v3_timeline_enabled"]=self.config["network"].get("v3_timeline",False)
@@ -839,6 +852,21 @@ class LinuxExperiment:
             result = summarize(self.config, json.loads((self.out / "client-traffic.json").read_text()),
                                json.loads((self.out / "server-traffic.json").read_text()), self.telemetry(), host)
             result["network_accounting"] = network_accounting(self.snapshots)
+            if self.config["acceptance"].get("require_zero_tun_root_qdisc_drops_full_run",False):
+                qdrops={}
+                for role in self.ns:
+                    samples=[]
+                    for snapshot in self.snapshots:
+                        roots=[q for q in snapshot.get("network",{}).get(role,{}).get("tun_qdisc",[])
+                               if q.get("root") and q.get("kind")=="fq"]
+                        samples.append(roots[0].get("drops") if len(roots)==1 else None)
+                    qdrops[role]=samples
+                result["source_tun_fq_root_qdisc_drops_full_run"]=qdrops
+                if any(not samples or any(type(n) is not int or n != 0
+                                           for n in samples)
+                       for samples in qdrops.values()):
+                    result["failures"].append("SOURCE_TUN_FQ_ROOT_QDISC_DROP_OR_MISSING_REQUIRED")
+                    result["result"]="FAIL"
             if self.config["network"].get("startup_tun_drop_timeline",False):
                 sample_file=self.out/"client-tun-startup-samples.json"
                 samples=json.loads(sample_file.read_text())["samples"]
