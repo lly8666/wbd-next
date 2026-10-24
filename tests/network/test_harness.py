@@ -123,6 +123,19 @@ class Contracts(unittest.TestCase):
             r["product"]["fec_profile"]=1  # Auto startup is independently product-controlled.
             self.assertEqual(validate(r)["network"]["product_tun_fq_maxrate_mbps_profiles"]["B"],600)
 
+    def test_game_native_counters_and_no_false_single_lane_v3_receipt(self):
+        from tools.network_harness.runner import verify_native_game_counters, verify_outer_recovery_policy
+        good={r:{"lanes":4,"copied":268620,"delivered":75212,
+                  "raw_received":268616,"rejected":32228,"auth_rejected":0}
+              for r in ("client","server")}
+        self.assertTrue(verify_native_game_counters(4,good))
+        self.assertFalse(verify_native_game_counters(2,good))
+        self.assertFalse(verify_native_game_counters(4,{"client":good["client"]}))
+        self.assertFalse(verify_native_game_counters(4,{**good,"server":{**good["server"],"auth_rejected":1}}))
+        # Game does not have the Normal v3 repair ledger: the absence must
+        # never be reclassified as v3 readback PASS.
+        self.assertFalse(verify_outer_recovery_policy("outer-opportunistic-v3",{}))
+
     def test_all_linux_public_modes_default_product_fq600_or_rollback0(self):
         from tools.network_harness.runner import LinuxExperiment
         import shutil
