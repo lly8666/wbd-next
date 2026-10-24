@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "V3-C-TCP500-owned-fq-1024-vs2048-warmup-burst-AB",
+  "id": "V3-C-TCP500-strict-startup-source-drop-batched8-AB",
   "owner": "network-matrix-work",
   "seed": 7092,
   "product": {
@@ -39,7 +39,7 @@
     },
     "tun_txqlen_profiles": {
       "A": 1024,
-      "B": 2048
+      "B": 1024
     },
     "tun_qdisc_profiles": {
       "A": "fq",
@@ -83,7 +83,8 @@
     "max_loss_pct": 0,
     "require_retransmission": false,
     "max_repair_fresh_pct": 10,
-    "max_p99_ms": 400
+    "max_p99_ms": 400,
+    "require_zero_source_tun_drops_full_run": true
   },
   "bundles": {
     "A": {
@@ -95,11 +96,11 @@
       "recovery_policy": "outer-opportunistic-v3"
     },
     "B": {
-      "source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
-      "run_id": 40001498261,
+      "source": "ae38b36048024f18df01cbdad171cffdc7dd2da7",
+      "run_id": 40043419093,
       "attempt": 1,
-      "artifact_id": 12521858079,
-      "sha256": "864a208701801ee672b6b563c9c13b28e2c778a18ef60f12678f427ed6475523",
+      "artifact_id": 12539949237,
+      "sha256": "e4d2e25771b1bde88ca7bebc6dec0f76bb7d4fccc6b298129c773e37ceb2bf48",
       "recovery_policy": "outer-opportunistic-v3"
     }
   },
