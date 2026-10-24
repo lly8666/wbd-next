@@ -62,7 +62,7 @@ class Contracts(unittest.TestCase):
 
     def test_testonly_tun_fq_perflow_rate_and_full_run_qdisc_zero_contract(self):
         r=request()
-        r["network"]["product_tun_fq_maxrate_mbps_profiles"]={}
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]={"A":0,"B":0}
         r["network"]["tun_qdisc_profiles"]={"A":"fq","B":"fq"}
         r["network"]["tun_fq_maxrate_mbps_profiles"]={"A":0,"B":600}
         r["acceptance"]["require_zero_tun_root_qdisc_drops_full_run"]=True
@@ -81,6 +81,27 @@ class Contracts(unittest.TestCase):
         r["acceptance"]["require_zero_tun_root_qdisc_drops_full_run"]="true"
         with self.assertRaises(ValueError):
             validate(r)
+
+    def test_normal_default_fq600_and_explicit_zero_semantics(self):
+        from tools.network_harness.runner import LinuxExperiment
+        r=request()
+        r["network"]["tun_qdisc_profiles"]={}
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]={"A":0}
+        validated=validate(r)
+        a=LinuxExperiment(validated,"/does-not-exist","/tmp/wbd-default-fq-A","A")
+        b=LinuxExperiment(validated,"/does-not-exist","/tmp/wbd-default-fq-B","B")
+        try:
+            self.assertTrue(a.product_tun_fq_explicit)
+            self.assertEqual(a.product_tun_fq_maxrate_mbps,0)
+            self.assertFalse(b.product_tun_fq_explicit)
+            self.assertEqual(b.product_tun_fq_maxrate_mbps,600)
+        finally:
+            a.temp.cleanup()
+            b.temp.cleanup()
+            # TemporaryDirectory(out) is not auto-owned by experiment.
+            import shutil
+            shutil.rmtree("/tmp/wbd-default-fq-A",ignore_errors=True)
+            shutil.rmtree("/tmp/wbd-default-fq-B",ignore_errors=True)
 
     def test_product_owned_fq_cannot_be_test_override_or_wrong_mode(self):
         r=request()
@@ -103,7 +124,7 @@ class Contracts(unittest.TestCase):
 
     def test_testonly_tun_root_qdisc_fq_pacing_vs_fqcodel_strict(self):
         r=request()
-        r["network"]["product_tun_fq_maxrate_mbps_profiles"]={}
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]={"A":0,"B":0}
         r["network"]["tun_qdisc_profiles"]={"A":"fq_codel","B":"fq"}
         # This legacy qdisc-name contract is independent of the prior request's
         # optional test-only maxrate, which requires fq on both legs.
@@ -272,7 +293,7 @@ class Contracts(unittest.TestCase):
         base = request()
         # Preset suite spans FEC/Game; inherited B-only native product pacing
         # is one scene's narrow capability, not the default for every preset.
-        base["network"]["product_tun_fq_maxrate_mbps_profiles"]={}
+        base["network"]["product_tun_fq_maxrate_mbps_profiles"]={"A":0,"B":0}
         catalog = json.loads((ROOT / "tests/network/scenarios.json").read_text())
         for case in catalog.values():
             r = copy.deepcopy(base)
