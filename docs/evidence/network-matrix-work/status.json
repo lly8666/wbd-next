@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3_ALL_FIVE_LINUX_MODES_DEFAULT_FQ600_REAL_KERNEL_PROVEN_GAME_NORMAL_FIXED0_SCOPED_PASS_FEC_PENDING_AB_DIAG_RUNNING",
+  "phase": "V3_ALL_FIVE_LINUX_MODE_FQ600_KERNEL_VERIFIED_NORMAL_FIXED0_GAME_SCOPED_PASS_AUTO_FIXED5_LOSS_FEC_OPEN",
   "current_plan": {
     "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
     "policy": "outer-opportunistic-v3",
-    "status": "V3-A 50Mbps line/30pct UDP and V3-D lossless mixed verified source8d; same-source601e native full TCP500/0loss and H500 line/2pct original FAIL retest both PASS_SCOPED; old 2 root fq drops isolated/fixed; other platform/modes NOT_QUALIFIED."
+    "status": "Linux public V4 five modes native fq600 flow256 actual kernel applied all; Normal mixed PASS, Fixed5 lossless PASS, Game2/4 PASS; Fixed5 5pct and Auto healthy/lossy have genuine FEC applied-revision pending. No all-green claim."
   },
   "restoration": {
     "remote_main_at_resume": "d8ba2cf270ff6ca5cadae6dab778c49c32636ef6",
@@ -42,16 +42,7 @@
       "zip_sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749"
     }
   },
-  "open_requests": [
-    {
-      "id": "Auto healthy sameVM A explicit-off fq versus B default600 FEC applied readback",
-      "run": 40061749129,
-      "request_source": "e79dc7faec4865d3ffb001ec2839226d9ec0baaa",
-      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
-      "status": "IN_PROGRESS_LAST_READ",
-      "do_not_redispatch": true
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
     {
       "id": "v3 default fq600 original source8d highloss30",
@@ -101,51 +92,55 @@
         40061035463
       ],
       "result": "Generic contracts temporarily inherited Fixed5 fec_profile for Auto mode or partial product and runner updates. Isolated generic profile in test source ce90a06b. These are not native product failure; perf actions run separately."
+    },
+    {
+      "id": "all_mode_real_native_summary",
+      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+      "runs": [
+        40061090616,
+        40061035456,
+        40061487976,
+        40061047243,
+        40061499022,
+        40061387213,
+        40061402339,
+        40061749129
+      ],
+      "result": "Default fq600 + flow256 live kernel PASS all five; Normal/Fixed0/Game PASS scoped; Fixed5 loss FEC pending, Auto including sameVM off/on FEC pending",
+      "file": "V3-all-Linux-modes-owned-fq600-20261024.json"
     }
   ],
   "open_issues": [
-    "Linux Normal/off default fq600 + bounded flow_limit256 is verified only on ARM64 native as scoped: H500 outer-line single C2S/2% and single inner TCP500/0loss; it is not a blanket 500Mbps net business at 2% or a dual-direction saturation result.",
-    "Highloss30 and mixed PASS belong prior fq600 default source8d with per-flow limit100 (unaffected repair protocol); do not claim they are exact product source601e regressions without Actions. Historical V3-B MTU and V3-D idle/blackhole also source-scoped reused.",
-    "Windows/FEC Fixed/Auto/Game, multi-client shared endpoint/no cross-HOL at 500Mbps, physical native deployment and arbitrary >600Mbps per-flow are NOT_QUALIFIED. CPU absolute per-source/VM observed, no measured optimization gain against locally dropping baseline; user requested bounded work, no more blind matrix.",
-    "Pre-flowlimit original strict H500 root-drop FAIL retained. Two pre-business harness parser FAIL Actions do not count as capacity FAIL."
+    "FEC Auto: 0loss and asymmetric1-20-1 real FEC requested1 but applied0 pending true. SameVM A explicit fq0 ALSO had server pending; B default fq600 BOTH pending. Underlying issue not solely fq, effect of fq not proven absent; retain FEC native integration OPEN.",
+    "FEC Fixed profile5 5% IID: server applied0 pending true while healthy0loss both applied1 PASS; full lossy Fixed mode not qualified.",
+    "Game2/4 native lane duplication is not Normal single-lane V3 DATA ledger; original red Actions were invalid-applicability harness errors, later corrected Game Actions passed. Game2 under independent5% had real residual UDP packets.",
+    "All five Linux modes native Go/kernel owned fq600 default; Windows/physical/no global OS-level native paced default, high-rate duplex and full FEC Auto not qualified. CPU-s reported, no proof of optimization vs other VM."
   ],
-  "next_action": "Recover completed Action40061749129 exact AB sameVM Auto FEC revision readback with product A explicit0 vs B default600; check artifact digest, log both mode controls, any source/root drop, CPU/Stop. Preserve authentic Fixed5 FEC 5% server pending, Fixed0 PASS, Auto high/clean pending, Normal/Game PASS. Do not modify independent FEC algorithm or claim repair/Windows/physical. Close status and final report once observed, no duplicate dispatch or main merge.",
+  "next_action": "DELIVER scoped all-five-native-Linux-mode fq600 default with real Go/kernel readback, results and FEC applied-revision open. No pending Actions, no duplicate dispatch, no main merge/deploy; refer FEC revision convergence to the independent FEC/integrator scope rather than hiding FAIL or rerunning seeds.",
   "current_source_verified": {
-    "source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
-    "branch": "experiment/network-matrix-tuning",
+    "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+    "platform": "native Linux ARM64",
     "build": {
-      "run": 40055776896,
-      "attempt": 1,
-      "artifact": 12545850127,
-      "zip_sha256": "b631975bd4f70db690f5dcd7acfa122f191675950bd8c835ec0c5185a16ae261",
-      "platform": "aarch64",
-      "result": "success"
+      "run": 40060850580,
+      "artifact": 12546779978,
+      "zip_sha256": "6ee4a55d14a4a7f01e49a95b3654a79af1498aeca878b0c2ba9454ec2a9100e5",
+      "status": "SUCCESS"
     },
-    "runtime_policy": "outer-opportunistic-v3",
-    "owner_tun_fq": {
-      "mode": "normal/off Linux",
-      "default_mbps_per_flow": 600,
-      "default_flow_limit_packets": 256,
-      "kernel_global_limit_packets": 10000,
-      "explicit_off_flag": "--tun-fq-maxrate-mbps=0",
-      "go_and_kernel_readback": "verified both roles in business Actions40056093313/40056105730"
+    "owned_fq": {
+      "rate_mbps": 600,
+      "flow_limit_packets": 256,
+      "global_limit_packets": 10000,
+      "default_in_modes": [
+        "normal",
+        "fec-fixed",
+        "fec-auto",
+        "game2",
+        "game4"
+      ],
+      "rollback": "--tun-fq-maxrate-mbps=0",
+      "live_Go_and_kernel_readback_all_five": true
     },
-    "H500_line_2pct": {
-      "run": 40056093313,
-      "request_source": "ffc01a07de95ba13077d417fd253e4404e396b92",
-      "artifact": 12545397787,
-      "zip_sha256": "ca9dc410bc125ae0ebed4dee341bff52182890c7884ef1a3ea150954a7d4652e",
-      "result": "PASS_SCOPED native outer configured line500Mbps C2S UDP app injected370.014 delivered363.434Mbps/2pct/200ms-oneway root/TUN startup+steady drops0; not net application500 nor bidirectional",
-      "file": "V3-H500-default-fq600-flow256-2pct-recheck-PASS-20261024.json"
-    },
-    "TCP500_0loss": {
-      "run": 40056105730,
-      "request_source": "32e40a6b27beedfcc8196dc0f9fc9feca6fa114d",
-      "artifact": 12545700555,
-      "zip_sha256": "1fe5b395b2cbfc80528de07548f149029e025fbe049b132a3880672cee9ea75d",
-      "result": "PASS_SCOPED 500.000Mbps real single inner TCP application 0loss RTT400 p99203.3ms zero source/root warmup+steady drops Stop",
-      "file": "V3-C-default-fq600-flow256-native-TCP500-PASS-20261024.json"
-    }
+    "evidence": "docs/evidence/network-matrix-work/V3-all-Linux-modes-owned-fq600-20261024.json"
   },
   "current_policy_addendum": {
     "authorization": "user 2026-10-24: 默认启动fq600，然后继续跑其他工况内容",
@@ -297,6 +292,17 @@
       }
     },
     "game_harness_mode_fix": "043e76c871e1ea6901d0beb2d39ff5ade901331d",
-    "evidence_file": "docs/evidence/network-matrix-work/V3-all-Linux-modes-owned-fq600-20261024.json"
+    "evidence_file": "docs/evidence/network-matrix-work/V3-all-Linux-modes-owned-fq600-20261024.json",
+    "status": "ALL_FIVE_NATIVE_KERNEL_READBACK_PASS_MODE_BUSINESS_SCOPED",
+    "current_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+    "FEC_causal_AB": {
+      "run": 40061749129,
+      "artifact": 12547319636,
+      "sha256": "ed142c2c991324bed43ffc102b59164192784fafc0962703929047a9764abb07",
+      "A": "explicit0, FEC server pending=true, client applied1",
+      "B": "omitted native fq600, FEC both pending=true",
+      "result": "FAIL BOTH mode qualification, root/source all0 Stop; A failure disproves fq-exclusive root cause, B may still have interaction due host PSI",
+      "file": "V3-Auto-FEC-fq0-vs-default600-sameVM-20261024.json"
+    }
   }
 }
