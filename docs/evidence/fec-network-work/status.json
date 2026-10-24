@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W17_STANDALONE_BUSINESS_PASS_WARMUP_S2C_KERNEL_EGRESS_STALL_DIAG_W18_PENDING",
+  "phase": "W18_EXACT_100MBPS_FULL_NATIVE_TIMELINE_DIAG_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -230,6 +230,15 @@
       "outer_cap_mbps_each": 400,
       "result": "STEADY_PASS_WARMUP_S2C_KERNEL_EGRESS_STALL",
       "result_artifact": 12562332268
+    },
+    {
+      "id": "FEC-W18-100Mbps-Native-Egress-All-Boundaries-ARM64",
+      "path": "tests/network/fec-work/W18-100Mbps-retained-native-egress-diag-arm64.json",
+      "run_id": null,
+      "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "artifact_id": 12562092730,
+      "result": "PENDING_EXACT_DIAGNOSTIC",
+      "purpose": "Locate first native TUN read/M1 stage/M4 kernel copy stall vs netem/veth first-arrival gap on either direction, both warmup and steady"
     }
   ],
   "open_issues": [
