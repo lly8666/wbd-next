@@ -1,36 +1,41 @@
 {
   "version": 1,
-  "id": "V3-Linux-global-fq600-Auto-asym-1-20-1",
+  "id": "V3-Linux-global-fq600-Game2-independent5",
   "owner": "network-matrix-work",
-  "seed": 8172,
+  "seed": 8173,
   "product": {
-    "mode": "fec-auto",
-    "fec_profile": 1
+    "mode": "game2",
+    "fec_profile": 1,
+    "game_fec": "off"
   },
   "traffic": {
-    "c2s_mbps": 10,
-    "s2c_mbps": 10,
+    "c2s_mbps": 3,
+    "s2c_mbps": 3,
     "udp_share": 1,
     "sizes": [
       [
         64,
-        1
+        4
+      ],
+      [
+        256,
+        4
       ],
       [
         1172,
-        99
+        2
       ]
     ],
     "tcp_flows": 1,
     "probe_hz": 20,
-    "deadline_ms": 500,
+    "deadline_ms": 150,
     "burst_ms": 0,
     "max_packets": 20000000,
     "allow_fragmentation": false
   },
   "network": {
     "outer_mtu": 1500,
-    "lane_loss": "shared",
+    "lane_loss": "independent",
     "queue_packets": 32768,
     "netem_rng": "unseeded_recorded",
     "product_tun_fq_maxrate_mbps_profiles": {},
@@ -40,48 +45,18 @@
   "drain_s": 20,
   "phases": [
     {
-      "name": "low",
-      "seconds": 20,
+      "name": "steady",
+      "seconds": 60,
       "rate_scale": 1,
       "c2s": {
         "delay_ms": 25,
-        "loss_pct": 1,
-        "rate_mbps": 100
+        "loss_pct": 5,
+        "rate_mbps": 50
       },
       "s2c": {
         "delay_ms": 25,
-        "loss_pct": 1,
-        "rate_mbps": 100
-      }
-    },
-    {
-      "name": "up20",
-      "seconds": 40,
-      "rate_scale": 1,
-      "c2s": {
-        "delay_ms": 25,
-        "loss_pct": 20,
-        "rate_mbps": 100
-      },
-      "s2c": {
-        "delay_ms": 25,
-        "loss_pct": 1,
-        "rate_mbps": 100
-      }
-    },
-    {
-      "name": "recover",
-      "seconds": 20,
-      "rate_scale": 1,
-      "c2s": {
-        "delay_ms": 25,
-        "loss_pct": 1,
-        "rate_mbps": 100
-      },
-      "s2c": {
-        "delay_ms": 25,
-        "loss_pct": 1,
-        "rate_mbps": 100
+        "loss_pct": 5,
+        "rate_mbps": 50
       }
     }
   ],
