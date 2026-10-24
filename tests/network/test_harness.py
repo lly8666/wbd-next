@@ -62,6 +62,7 @@ class Contracts(unittest.TestCase):
 
     def test_testonly_tun_fq_perflow_rate_and_full_run_qdisc_zero_contract(self):
         r=request()
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]={}
         r["network"]["tun_qdisc_profiles"]={"A":"fq","B":"fq"}
         r["network"]["tun_fq_maxrate_mbps_profiles"]={"A":0,"B":600}
         r["acceptance"]["require_zero_tun_root_qdisc_drops_full_run"]=True
@@ -102,6 +103,7 @@ class Contracts(unittest.TestCase):
 
     def test_testonly_tun_root_qdisc_fq_pacing_vs_fqcodel_strict(self):
         r=request()
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]={}
         r["network"]["tun_qdisc_profiles"]={"A":"fq_codel","B":"fq"}
         # This legacy qdisc-name contract is independent of the prior request's
         # optional test-only maxrate, which requires fq on both legs.
@@ -268,6 +270,9 @@ class Contracts(unittest.TestCase):
 
     def test_presets_are_complete_and_valid(self):
         base = request()
+        # Preset suite spans FEC/Game; inherited B-only native product pacing
+        # is one scene's narrow capability, not the default for every preset.
+        base["network"]["product_tun_fq_maxrate_mbps_profiles"]={}
         catalog = json.loads((ROOT / "tests/network/scenarios.json").read_text())
         for case in catalog.values():
             r = copy.deepcopy(base)
