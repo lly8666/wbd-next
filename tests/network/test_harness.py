@@ -103,7 +103,7 @@ class Contracts(unittest.TestCase):
             shutil.rmtree("/tmp/wbd-default-fq-A",ignore_errors=True)
             shutil.rmtree("/tmp/wbd-default-fq-B",ignore_errors=True)
 
-    def test_product_owned_fq_cannot_be_test_override_or_wrong_mode(self):
+    def test_product_owned_fq_cannot_be_test_overridden_any_mode(self):
         r=request()
         r["network"]["tun_qdisc_profiles"]={"A":"fq"}
         r["network"]["tun_fq_maxrate_mbps_profiles"]={}
@@ -118,9 +118,39 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
         r["network"]["product_tun_fq_maxrate_mbps_profiles"]["B"]=600
-        r["product"]["mode"]="fec-fixed"
-        with self.assertRaises(ValueError):
-            validate(r)
+        for mode in ("normal","fec-fixed","fec-auto","game2","game4"):
+            r["product"]["mode"]=mode
+            self.assertEqual(validate(r)["network"]["product_tun_fq_maxrate_mbps_profiles"]["B"],600)
+
+    def test_all_linux_public_modes_default_product_fq600_or_rollback0(self):
+        from tools.network_harness.runner import LinuxExperiment
+        import shutil
+        with tempfile.TemporaryDirectory() as tmp:
+            for mode in ("normal","fec-fixed","fec-auto","game2","game4"):
+                r=request()
+                r["product"]["mode"]=mode
+                r["network"]["tun_qdisc_profiles"]={}
+                r["network"]["tun_fq_maxrate_mbps_profiles"]={}
+                r["network"]["product_tun_fq_maxrate_mbps_profiles"]={"B":0}
+                validated=validate(r)
+                a=LinuxExperiment(validated,"/unused",str(Path(tmp)/(mode+"-A")),"A")
+                b=LinuxExperiment(validated,"/unused",str(Path(tmp)/(mode+"-B")),"B")
+                try:
+                    self.assertFalse(a.product_tun_fq_explicit)
+                    self.assertEqual(a.product_tun_fq_maxrate_mbps,600)
+                    self.assertTrue(b.product_tun_fq_explicit)
+                    self.assertEqual(b.product_tun_fq_maxrate_mbps,0)
+                finally:
+                    a.temp.cleanup()
+                    b.temp.cleanup()
+                    shutil.rmtree(str(Path(tmp)/(mode+"-A")),ignore_errors=True)
+                    shutil.rmtree(str(Path(tmp)/(mode+"-B")),ignore_errors=True)
+                # A native default fq root must not be swapped by diagnostic tc.
+                conflict=copy.deepcopy(r)
+                conflict["network"]["product_tun_fq_maxrate_mbps_profiles"]={}
+                conflict["network"]["tun_qdisc_profiles"]={"A":"fq_codel"}
+                with self.assertRaises(ValueError):
+                    validate(conflict)
 
     def test_testonly_tun_root_qdisc_fq_pacing_vs_fqcodel_strict(self):
         r=request()
@@ -291,9 +321,9 @@ class Contracts(unittest.TestCase):
 
     def test_presets_are_complete_and_valid(self):
         base = request()
-        # Preset suite spans FEC/Game; inherited B-only native product pacing
-        # is one scene's narrow capability, not the default for every preset.
-        base["network"]["product_tun_fq_maxrate_mbps_profiles"]={"A":0,"B":0}
+        # Preset suite exercises actual global Linux mode default fq600;
+        # only explicit profiles may disable it for a deliberate override.
+        base["network"]["product_tun_fq_maxrate_mbps_profiles"]={}
         catalog = json.loads((ROOT / "tests/network/scenarios.json").read_text())
         for case in catalog.values():
             r = copy.deepcopy(base)
