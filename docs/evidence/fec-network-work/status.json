@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "FEC_RX640_NATIVE_BUILD_PASS_MAXIMUM100_RETEST_PENDING",
+  "phase": "MAXIMUM100_RX640_CAPACITY_FIXED_BUT_BUSINESS_OUTER_EGRESS_FAIL_STOP_125_TO_350",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -212,16 +212,16 @@
     {
       "id": "FEC-W16-Maximum100-RX640-Original-Stop-Counterexample-ARM64",
       "path": "tests/network/fec-work/W16-maximum100-rx640-retest-arm64.json",
+      "run_id": 40097487779,
       "source": "8ec552bdd146cf33233130c4779ed5339e27a3c7",
       "build_run": 40097251707,
       "artifact_id": 12561755643,
-      "run_id": null,
-      "result": "PENDING_ACTION",
-      "app_mbps_each": 100,
-      "outer_cap_mbps_each": 400
+      "result": "FAIL_C2S_BUSINESS_RESIDUAL5PCT_WITH_ZERO_RX_PRESSURE",
+      "result_artifact_id": 12561303555
     }
   ],
   "open_issues": [
+    "W16 new RX640/48MiB bounded cache on 100Mbps original case Action40097487779 fixed RX pressure=0 (peak109/640) but C2S business delivered only94.579Mbps, missing15993 (~5.42%), S2C 99.979Mbps; client actual virtual outer TX164.16 vs server173.35Mbps over30s even with authentic first-wire 45s ~1.377GB each, native M4 FEC parity ~554k copied both, zero outer DATA retry, no source TUN/root fq loss. Similar W12 underfeeding; stop further125-350 until kernel egress or harness timing cause established.",
     "At W15 100Mbps 30% IID/300ms Action40094982877 both actual app paths pass (~99.956/99.968Mbps), but FEC RX exactly 96/96 active and pressure evicts29,425 blocks per side; first capacity bottleneck is RX slot count, not 8MiB bytes or CPU. Stop all higher 125/150/175/200 (NOT_RUN) under stop-on-capacity. W12 sameVM 2nd leg output asymmetry remains unresolved.",
     "W13 standalone 50Mbps Maximum30 repaired RX-capacity passes (Action40090193642 loss0.0517/0.0496%, zero decoder/capacity reject, recovered TUN>66k each). But prior W12 same VM AB B had C2S 12.23% when client veth measured 286.9MB despite source/parity M4 copy; W13 client326.27MB. Non-repeatable 2nd-leg sender-to-netem gap remains unresolved; do NOT infer that all 50Mbps arrangements passed. No further pressure as requested.",
     "FEC Maximum 50/75Mbps capacity knee independently observed at old b601 source (50Mbps 4.36/3.91% loss; 75Mbps 11.52/10.42%); candidate fix full-delivery immediate retire+bounded 96 blocks/8MiB/512 reorder, 150ms unchanged and exact reasons. UNVERIFIED pending new Action.",
@@ -232,7 +232,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Inspect W16 first original 100Mbps 96 slot-pressure counterexample on exact new source 8ec... artifact12561755643. Require business<=1% missing both, RX peak<640 and pressure eviction0, real FEC/TUN and outer-off dual, no local TUN/qdisc drops, CPU/RSS p99 and true outer interface tx Mbps per direction, original 45s first-wire/repair ledger. If PASS stage 125Mbps W17 one Actions job; otherwise stop.",
+  "next_action": "STOP at W16 100Mbps due measured C2S 94.579/100Mbps, missing15993, compared W15 old 99.956/100Mbps; new RX source now 109/640 and no pressure evictions, codec/decoder reject0, native FEC TX rsent~554k per side, original 45s first-wire bytes~1.3768GB per side, outer off data retrans0 and local source TUN drops0. Real 30s client virtual egress164.164Mbps vs server173.350; investigate output discrepancy with kernel netem packet admission/rate/output qdisc and same-VM measurement timeline before any further throughput. Do NOT launch 125-350 until reliable 100Mbps repeat gate passes. User expects per-stage CPU/RSS/all outer traffic; W16 authenticated report has these. No main merge or network status changes.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -304,7 +304,7 @@
   },
   "merge_ready": false,
   "recovery_qualified": true,
-  "capacity_stop": false,
+  "capacity_stop": true,
   "merge_intent": {
     "first_parent": "9cfd72968e21a63834f455a96afc71a5d35737db",
     "second_parent": "040741820b2f917b5868c285c438d4cc21c6193a",
@@ -384,7 +384,7 @@
     ],
     "requires_review": "Auto dynamic and OFF genuine RTT telemetry remain separate mandatory capabilities before full FEC mandate is green"
   },
-  "load_expansion_stop": false,
+  "load_expansion_stop": true,
   "same_vm_normal_onoff": {
     "run": 40079302195,
     "artifact": 12554018197,
@@ -908,7 +908,7 @@
       },
       "memory_no_preallocation": true,
       "basis": "W15 100Mbps 96/96 pressure29425. 75Mbps 83 slots no pressure. Estimate full 350Mbps 100-reference ~110 required slots*3.5=385, safety factor1.66 gives 640 slots. At 100 RX bytes3.61MiB pressure-limited; approximate 350 12.6-15MiB, 48MiB bounds near maximum all-parity stored. 1024 ID reordering > estimated 350 live. No O(n) scan per incoming symbol; touched-order BTreeSet O(logn).",
-      "first_gate": "W16 real 100Mbps old W15 scenario identical new ARM64 bundle; no 125 submitted until pass and pressure0.",
+      "first_gate": "W16 exact 100Mbps original scenario real Action40097487779 completed FAIL business C2S 94.579Mbps (5.42% loss), despite RX pressure0/0, peak109/640. Halt ladder, do not run any 125-350.",
       "cap_rule": "4x application WAN rate each side (up to 1400Mbps at350), preserves workload not fixed WAN ceiling. True measured outer veth tx includes all first DATA+parity+control+actual retrans; report as bytes/30s, plus native first-wire cumulative45s and repair bytes; do not add nested byte ledgers.",
       "remaining_levels": [
         125,
@@ -922,12 +922,164 @@
         325,
         350
       ],
-      "status": "BUILD_NOT_RUN",
+      "status": "HARD_STOP_BUSINESS_RELIABILITY_OUTER_EGRESS_ANOMALY_AT100",
       "build_run": 40097251707,
       "arm64_artifact": 12561755643,
       "zip_sha256": "866aae86f355e76b8269ea86a72fd15748ee0448d4095085a374695678f45674",
       "native_build": "PASS",
-      "native_450_live_and_authentic_TUN": "PASS"
+      "native_450_live_and_authentic_TUN": "PASS",
+      "first_performance": {
+        "run": 40097487779,
+        "source": "8ec552bdd146cf33233130c4779ed5339e27a3c7",
+        "product_build_run": 40097251707,
+        "product_artifact_id": 12561755643,
+        "product_zip_sha256": "866aae86f355e76b8269ea86a72fd15748ee0448d4095085a374695678f45674",
+        "result_artifact_id": 12561303555,
+        "result_sha256": "0cc77ea7e6cc55bed5f1adacbd554bf90be64944b419996eadba2a92597e4d94",
+        "scenario": "100Mbps each; FEC Maximum profile6, 30% IID each, one-way300ms, virtual outer cap400Mbps each, outer data retransmission OFF",
+        "conclusion": "FAIL_C2S_BUSINESS_LOSS_OUTER_EGRESS_DEFICIT",
+        "business": {
+          "c2s": {
+            "injected_mbps": 99.99863013333334,
+            "delivered_mbps": 94.5789728,
+            "missing": 15993,
+            "p99_ms": 303.1
+          },
+          "s2c": {
+            "injected_mbps": 100.00206213333334,
+            "delivered_mbps": 99.97866186666666,
+            "missing": 129,
+            "p99_ms": 303.2
+          }
+        },
+        "resource": {
+          "cpu_s": {
+            "client": 18.57,
+            "server": 18.15
+          },
+          "rss_peak_bytes": {
+            "client": 40132608,
+            "server": 40144896
+          },
+          "host_cpu_psi_peak": 16.5
+        },
+        "real_outer_interface": {
+          "measurement_seconds": 30,
+          "client_tx_bytes": 615616431,
+          "server_tx_bytes": 650063883,
+          "client_tx_mbps": 164.1643816,
+          "server_tx_mbps": 173.3503688,
+          "combined_mbps": 337.5147504,
+          "all_transmissions_included": true
+        },
+        "original_wire_first_send_cumulative": {
+          "window_seconds": 45,
+          "client_bytes": 1376830446,
+          "server_bytes": 1376844261,
+          "client_gross_mbps": 244.76985706666667,
+          "server_gross_mbps": 244.7723121777778,
+          "accounting_different_window_do_not_add_to_outer_interface": true
+        },
+        "actual_retransmission": {
+          "client_packets": 0,
+          "server_packets": 0,
+          "client_repair_wire_bytes": 0,
+          "server_repair_wire_bytes": 0
+        },
+        "fec": {
+          "client": {
+            "rsent": 554439,
+            "source_accepted": 443019,
+            "rx_recovered_tun": 132655
+          },
+          "server": {
+            "rsent": 554434,
+            "source_accepted": 443005,
+            "rx_recovered_tun": 127783
+          }
+        },
+        "rx_capacity": {
+          "client": {
+            "peak_active": 109,
+            "max_active": 640,
+            "peak_bytes": 3829255,
+            "max_stored_bytes": 50331648,
+            "pressure_evicted": 0,
+            "decoder_rejected": 0,
+            "age_evicted": 29527,
+            "reorder_evicted": 0
+          },
+          "server": {
+            "peak_active": 109,
+            "max_active": 640,
+            "peak_bytes": 3774985,
+            "max_stored_bytes": 50331648,
+            "pressure_evicted": 0,
+            "decoder_rejected": 0,
+            "age_evicted": 28364,
+            "reorder_evicted": 101
+          }
+        },
+        "netem_loss_pct": {
+          "client": 29.983550892729433,
+          "server": 30.01534867415148
+        },
+        "source_tun_drops_both": 0,
+        "stop_drained_both": true,
+        "interpretation": "RX slot bottleneck eliminated: 109/640 peak, no pressure eviction. Business fails in C2S; client 30s virtual netem egress164.16 Mbps vs server173.35 Mbps, while both TUN source 100Mbps, both first-wire45s ~1.3768GB, first-copy parity ~554k, no M4 copy failures, and 30% netem loss. Similar underfeed as W12 second leg, not proven FEC decoding/CPU issue."
+      },
+      "unmeasured": [
+        {
+          "mbps": 125,
+          "status": "NOT_RUN",
+          "reason": "W16 new 640 cache 100Mbps counterexample FAIL C2S 5.42% loss; stop-on-business-failure; no resource/bandwidth numbers invented."
+        },
+        {
+          "mbps": 150,
+          "status": "NOT_RUN",
+          "reason": "W16 new 640 cache 100Mbps counterexample FAIL C2S 5.42% loss; stop-on-business-failure; no resource/bandwidth numbers invented."
+        },
+        {
+          "mbps": 175,
+          "status": "NOT_RUN",
+          "reason": "W16 new 640 cache 100Mbps counterexample FAIL C2S 5.42% loss; stop-on-business-failure; no resource/bandwidth numbers invented."
+        },
+        {
+          "mbps": 200,
+          "status": "NOT_RUN",
+          "reason": "W16 new 640 cache 100Mbps counterexample FAIL C2S 5.42% loss; stop-on-business-failure; no resource/bandwidth numbers invented."
+        },
+        {
+          "mbps": 225,
+          "status": "NOT_RUN",
+          "reason": "W16 new 640 cache 100Mbps counterexample FAIL C2S 5.42% loss; stop-on-business-failure; no resource/bandwidth numbers invented."
+        },
+        {
+          "mbps": 250,
+          "status": "NOT_RUN",
+          "reason": "W16 new 640 cache 100Mbps counterexample FAIL C2S 5.42% loss; stop-on-business-failure; no resource/bandwidth numbers invented."
+        },
+        {
+          "mbps": 275,
+          "status": "NOT_RUN",
+          "reason": "W16 new 640 cache 100Mbps counterexample FAIL C2S 5.42% loss; stop-on-business-failure; no resource/bandwidth numbers invented."
+        },
+        {
+          "mbps": 300,
+          "status": "NOT_RUN",
+          "reason": "W16 new 640 cache 100Mbps counterexample FAIL C2S 5.42% loss; stop-on-business-failure; no resource/bandwidth numbers invented."
+        },
+        {
+          "mbps": 325,
+          "status": "NOT_RUN",
+          "reason": "W16 new 640 cache 100Mbps counterexample FAIL C2S 5.42% loss; stop-on-business-failure; no resource/bandwidth numbers invented."
+        },
+        {
+          "mbps": 350,
+          "status": "NOT_RUN",
+          "reason": "W16 new 640 cache 100Mbps counterexample FAIL C2S 5.42% loss; stop-on-business-failure; no resource/bandwidth numbers invented."
+        }
+      ]
     }
   }
 }
