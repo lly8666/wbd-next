@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/selective-tls-crypto",
-  "phase": "S0_ACTION_RUNNING_NO_RESULT",
+  "phase": "S0_ARM64_COMPONENT_PASS_S1_ARM64_REQUESTED",
   "entry": "docs/testing/SELECTIVE_TLS_CRYPTO_WORK.md",
   "architecture": "docs/architecture/SELECTIVE_TLS_CRYPTO_EXPERIMENT.md",
   "test_plan": "docs/testing/SELECTIVE_TLS_CRYPTO_TEST_PLAN.md",
@@ -32,8 +32,12 @@
       "run_id": 40108785993,
       "attempt": 1,
       "job_id": 120915933711,
-      "result": "IN_PROGRESS",
-      "artifact": "NOT_YET_VERIFIED"
+      "result": "PASS",
+      "artifact": "NOT_YET_VERIFIED",
+      "artifact_id": 12565812441,
+      "artifact_zip_sha256": "19043c73f18ce01664c0c7add48669965b2258fb31dae188a9dc2c2337acbead",
+      "bench_binary_sha256": "9b18cd5c9c60820146655d0df4b0111e2f51d38fd3712acffbc1edb7a600d735",
+      "tests": "157 passed, 0 failed, 1 ignored; unrelated FEC test ~710s"
     },
     {
       "stage": "S0_X64_REPRESENTATIVE",
@@ -43,24 +47,33 @@
       "attempt": 1,
       "result": "IN_PROGRESS",
       "artifact": "NOT_YET_VERIFIED"
+    },
+    {
+      "stage": "S1_ARM_AES128_REAL_TLS_ORACLE",
+      "source": "98e5b09b972196b97476b4311346cb79681773c5",
+      "trigger_commit": "e9a8617bbe805aef30ffac4f56d12bf6d4f57f63",
+      "run_id": 40109817134,
+      "attempt": 1,
+      "result": "QUEUED_NOT_MEASURED",
+      "build_run_id": 40108785993,
+      "build_artifact_id": 12565812441
     }
   ],
   "open_requests": [
-    {
-      "stage": "S0",
-      "run_id": 40108785993,
-      "source": "98e5b09b972196b97476b4311346cb79681773c5",
-      "state": "WAITING_FOR_ACTION_RESULT"
-    },
     {
       "stage": "S0_X64",
       "run_id": 40109345476,
       "source": "98e5b09b972196b97476b4311346cb79681773c5",
       "state": "WAITING_FOR_ACTION_RESULT"
+    },
+    {
+      "stage": "S1-ARM-AES128",
+      "run_id": 40109817134,
+      "state": "QUEUED_WAITING_FOR_ACTION_RESULT"
     }
   ],
-  "functional": "NOT_RUN",
-  "performance": "NOT_RUN",
+  "functional": "ARM64_S0_COMPONENT_PASS_NOT_PRODUCT_QUALIFICATION",
+  "performance": "S1_ARM_AES128_REQUESTED_NOT_YET_OBSERVED",
   "capture": "NOT_RUN",
   "appearance": "NOT_RUN",
   "physical": "NOT_RUN",
@@ -72,15 +85,9 @@
     "New experimental wire and protected descriptor require actual two-end capability binding, MTU derivation and negative tests; no compatibility claim.",
     "Inherited workflow branch-name selection needs explicit experimental adaptation; do not dispatch old FEC/network requests."
   ],
-  "next_action": "Inspect S0 job logs and exact ARM64 artifact; repair only grounded failures and rerun with new SOURCE. After verified S0, use exact artifact/hash for one S1 ARM64 AES128 scenario, then assess net record saving and distinct-PN repeated ciphertext before expanding. No inherited network/FEC actions.",
+  "next_action": "Read S1 run 40109817134 and exact artifact after completion; read x86 S0 40109345476; run one bounded independent laboratory wire capture; record actual CPU savings/noise and 64/128B repeated ciphertext, stop on negative/appearance, keep real Go/TUN/product qualification NOT_RUN. Never inherit network/fec.",
   "latest_log": "docs/devlog/selective-crypto-work/20261024-s0-implementation.md",
   "prepared_not_dispatched": [
-    {
-      "stage": "S1-ARM-AES",
-      "workflow": ".github/workflows/selective-crypto-s1-arm-aes.yml",
-      "trigger": "tests/network/selective-crypto-work/run-s1-arm-aes.trigger",
-      "requires": "S0 ARM PASS + artifact hash"
-    },
     {
       "stage": "S3-LAB-CAPTURE",
       "workflow": ".github/workflows/selective-crypto-s3-capture.yml",
