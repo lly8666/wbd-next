@@ -111,14 +111,21 @@ impl FixedStream {
         self.revision=ConfigRevision(revision);
         Ok(())
     }
-    /// At most one four-row M3 encode quantum per call; never wait for more
-    /// sources and never hold a fresh source behind parity or driver HOL.
-    /// Every emitted row consumes the independent original owner's AEAD PN
-    /// at callback time, even when kernel copy is uncertain; NO retry here.
-    pub fn poll_parity<F>(&mut self,now:MonoNs,mut on_parity:F)
+    /// Default M3 call stays a single <=4-row quantum for existing callers.
+    /// A product M4 turn may explicitly coalesce two such quanta of the SAME
+    /// parity job only AFTER staging fresh DATA and only within its remaining
+    /// kernel-send budget. This removes one syscall/settlement wait per four
+    /// rows, without changing parity r, original source priority or AEAD PN.
+    pub fn poll_parity<F>(&mut self,now:MonoNs,on_parity:F)
         ->Result<(usize,u8),StreamError>
     where F:FnMut(&[u8],u64,u8,ConfigRevision)->DriverProof {
+        self.poll_parity_quanta(now,1,on_parity)
+    }
+    pub fn poll_parity_quanta<F>(&mut self,now:MonoNs,max_quanta:usize,
+        mut on_parity:F)->Result<(usize,u8),StreamError>
+    where F:FnMut(&[u8],u64,u8,ConfigRevision)->DriverProof {
         if self.stopped{return Err(StreamError::Stopped)}
+        if !(1..=2).contains(&max_quanta){return Err(StreamError::Invalid)}
         self.owner.on_due(now).map_err(StreamError::Owner)?;
         if self.in_flight.is_none(){
             let Some(mut job)=self.owner.take_parity(now)
@@ -144,29 +151,44 @@ impl FixedStream {
             self.owner.finish_parity(job.job,job.copied,false);
             return Ok((0,0))
         }
-        let row_start=cur.job.r as usize-cur.prepared.remaining_rows();
-        let rows=match cur.prepared.next_quantum(
-            &self.codec,self.record_payload_budget,BackendChoice::default()
-        ){
-            Ok(Some((rows,_)))=>rows,
-            Ok(None)=>Vec::new(),
-            Err(e)=>{
-                let job=self.in_flight.take().ok_or(StreamError::Invalid)?;
-                self.owner.finish_parity(job.job,job.copied,false);
-                return Err(StreamError::Codec(e))
-            }
-        };
+        let mut emitted=0usize;
         let mut copied_now=0u8;
-        for (i,wire) in rows.iter().enumerate(){
-            let row=u8::try_from(row_start+i).map_err(|_|StreamError::Invalid)?;
-            match on_parity(wire,cur.job.block_id,row,cur.job.revision){
-                DriverProof::Copied=>{cur.copied=cur.copied.saturating_add(1);copied_now+=1;},
-                DriverProof::NotSent=>{},
-                DriverProof::Uncertain=>cur.capacity_known=false,
-                DriverProof::Staged=>cur.staged=cur.staged.saturating_add(1),
+        for _ in 0..max_quanta{
+            // M3 still processes exactly one <=4-row quantum per call.
+            // The two batches share only the current block and M4 sendmmsg.
+            let cur=self.in_flight.as_mut().ok_or(StreamError::Invalid)?;
+            if cur.prepared.remaining_rows()==0{break}
+            let row_start=cur.job.r as usize-cur.prepared.remaining_rows();
+            let rows=match cur.prepared.next_quantum(
+                &self.codec,self.record_payload_budget,BackendChoice::default()
+            ){
+                Ok(Some((rows,_)))=>rows,
+                Ok(None)=>break,
+                Err(e)=>{
+                    if emitted>0 {
+                        // The first quantum is already sealed/staged; keep
+                        // the in-flight job for genuine M4 completion. Never
+                        // discard its completion state or reseal a row.
+                        return Err(StreamError::Codec(e))
+                    }
+                    let job=self.in_flight.take().ok_or(StreamError::Invalid)?;
+                    self.owner.finish_parity(job.job,job.copied,false);
+                    return Err(StreamError::Codec(e))
+                }
+            };
+            for (i,wire) in rows.iter().enumerate(){
+                let row=u8::try_from(row_start+i).map_err(|_|StreamError::Invalid)?;
+                match on_parity(wire,cur.job.block_id,row,cur.job.revision){
+                    DriverProof::Copied=>{
+                        cur.copied=cur.copied.saturating_add(1);copied_now+=1;
+                    },
+                    DriverProof::NotSent=>{},
+                    DriverProof::Uncertain=>cur.capacity_known=false,
+                    DriverProof::Staged=>cur.staged=cur.staged.saturating_add(1),
+                }
             }
+            emitted+=rows.len();
         }
-        let emitted=rows.len();
         if cur.prepared.remaining_rows()==0 && cur.staged==0{
             let finished=self.in_flight.take().ok_or(StreamError::Invalid)?;
             self.owner.finish_parity(
@@ -289,6 +311,52 @@ mod tests{
         assert_eq!(stream.report().classes[0].r_sent,1);
         stream.stop();arena.stop();arena.drain_returns();
     }
+    #[test]
+    fn m0_fixed_stream_two_quanta_one_m4_settlement_no_reseal_no_data_hol(){
+        let mut arena=Arena::new(607,48,2048,48,1_000_000).unwrap();
+        let mut stream=FixedStream::new(6,21,1400).unwrap(); // Maximum k8 r10
+        let mut fresh=Vec::new();
+        for i in 0..8 {
+            push(&mut stream,&mut arena,&[i as u8;125],i,&mut fresh);
+        }
+        assert_eq!(fresh.len(),8);
+        let mut staged=Vec::new();
+        assert!(matches!(stream.poll_parity_quanta(
+            MonoNs(6_100_000),3,|_,_,_,_|DriverProof::Staged
+        ),Err(StreamError::Invalid)));
+        let (n,c)=stream.poll_parity_quanta(MonoNs(6_100_000),2,
+            |wire,id,row,rev|{
+                assert_eq!(rev,ConfigRevision(21));
+                assert_eq!(id,1);
+                assert_eq!(parse_repair(wire,1400).unwrap().parity_row,row);
+                staged.push(row);
+                DriverProof::Staged
+            }).unwrap();
+        assert_eq!((n,c),(8,0));
+        assert_eq!(staged,(0..8).collect::<Vec<u8>>());
+        assert_eq!(stream.report().classes[0].r_sent,0);
+        assert_eq!(stream.poll_parity_quanta(MonoNs(6_100_001),2,
+            |_,_,_,_|panic!("cannot generate rows while M4 unsettled")
+        ).unwrap(),(0,0));
+        // A fresh source from the next block is admitted without waiting
+        // for parity kernel copy or an artificial FEC ACK.
+        push(&mut stream,&mut arena,&[99u8;125],6_100_002,&mut fresh);
+        assert_eq!(fresh.last().unwrap().0,2);
+        assert!(matches!(stream.settle_staged(7,0,0),Err(StreamError::Invalid)));
+        stream.settle_staged(8,0,0).unwrap();
+        assert_eq!(stream.report().classes[0].r_sent,0); // remaining 2 rows
+        let (n,c)=stream.poll_parity_quanta(MonoNs(6_100_003),2,
+            |_,_,row,_|{
+                assert!(row>=8 && row<10);
+                DriverProof::Copied
+            }).unwrap();
+        assert_eq!((n,c),(2,2));
+        assert_eq!(stream.report().classes[0].r_sent,10);
+        assert_eq!(stream.report().outstanding_jobs,0);
+        stream.stop();arena.stop();arena.drain_returns();
+        assert_eq!(arena.report().loaned,0);
+    }
+
     #[test]
     fn m0_fixed_stream_eight_repair_rows_bounded_quantum_and_pressure_no_hol(){
         let mut arena=Arena::new(605,32,2048,32,1_000_000).unwrap();

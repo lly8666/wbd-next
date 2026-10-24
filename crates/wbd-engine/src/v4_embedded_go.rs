@@ -3700,12 +3700,17 @@ fn original_fixed_stage_source(e:&mut Entry,
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn original_fixed_stage_due(e:&mut Entry,
-    budget:wbd_codec::path_budget::FrameBudget,now:MonoNs)->Result<usize,i32>{
+    budget:wbd_codec::path_budget::FrameBudget,now:MonoNs,
+    remaining_kernel_slots:usize)->Result<usize,i32>{
     use crate::v4_fixed_stream::DriverProof;
     let Some(mut stream)=e.fec2_live_tx.take()else{return Ok(0)};
     let (_,epoch)=e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
     let mut failed=None;
-    let result=stream.poll_parity(now,|parity,_block,row,revision|{
+    // Original M4 batch has 32 total records. Never reserve parity before
+    // new DATA, and coalesce only when >=8 slots remain after fresh sources.
+    // Each M3 quantum is still <=4 rows and settles by this same M4 prefix.
+    let quanta=if remaining_kernel_slots>=8 {2}else{1};
+    let result=stream.poll_parity_quanta(now,quanta,|parity,_block,row,revision|{
         if e.fixed_applied.or(e.fixed_pending).is_none_or(|(_,r)|r!=revision.0)
             ||!original_public_fixed_row_allowed(row){
             e.fec2_fail_reasons[3]+=1;return DriverProof::NotSent
@@ -4106,7 +4111,8 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             }
             let budget=e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped.frame;
             let before=e.fec2_staged_pns.len();
-            if original_fixed_stage_due(e,budget,loop_now()).is_err(){
+            if original_fixed_stage_due(e,budget,loop_now(),
+                32usize.saturating_sub(accepted)).is_err(){
                 failed=true
             }
             accepted+=e.fec2_staged_pns.len().saturating_sub(before);
