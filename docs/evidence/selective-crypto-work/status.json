@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/selective-tls-crypto",
-  "phase": "NEGATIVE_LAB_AND_NATIVE_INNER_RETX_CONFIRMED_RECEIPT_PROVENANCE_RERUN_PENDING",
+  "phase": "COMPLETE_SCOPED_NEGATIVE_PERF_BENEFIT_APPEARANCE_REGRESSION",
   "entry": "docs/testing/SELECTIVE_TLS_CRYPTO_WORK.md",
   "architecture": "docs/architecture/SELECTIVE_TLS_CRYPTO_EXPERIMENT.md",
   "test_plan": "docs/testing/SELECTIVE_TLS_CRYPTO_TEST_PLAN.md",
@@ -24,7 +24,7 @@
     "existing_record_overhead_bytes": 31,
     "reused_ciphertext_is_authenticated": true
   },
-  "implementation": "ISOLATED_OPT_IN_LAB_RECORD_AND_ORACLE_TOOLS_COMMITTED_ARM_S0_PASS",
+  "implementation": "LAB_ONLY_EXPLICIT_FEATURE_NATIVE_COMPONENT_PASS_PRODUCTION_UNWIRED",
   "actions": [
     {
       "stage": "S0_ARM64_NATIVE",
@@ -33,7 +33,7 @@
       "attempt": 1,
       "job_id": 120915933711,
       "result": "PASS",
-      "artifact": "NOT_YET_VERIFIED",
+      "artifact": "VERIFIED_PRESENT_GITHUB_ACTIONS_ARTIFACT",
       "artifact_id": 12565812441,
       "artifact_zip_sha256": "19043c73f18ce01664c0c7add48669965b2258fb31dae188a9dc2c2337acbead",
       "bench_binary_sha256": "9b18cd5c9c60820146655d0df4b0111e2f51d38fd3712acffbc1edb7a600d735",
@@ -46,7 +46,7 @@
       "run_id": 40109345476,
       "attempt": 1,
       "result": "PASS",
-      "artifact": "NOT_YET_VERIFIED",
+      "artifact": "VERIFIED_PRESENT_GITHUB_ACTIONS_ARTIFACT",
       "job_id": 120917611078,
       "artifact_id": 12565888233,
       "artifact_zip_sha256": "a61779add3bc8c6d8522dda645f0ef522b969babb998ba932f5b3b6d92bc9cb9",
@@ -111,22 +111,34 @@
       "run_id": 40110917872,
       "trigger_source": "61bdf461e0101b67d3ba6c87e34f0b21d3a71f40",
       "codec_source": "98e5b09b972196b97476b4311346cb79681773c5",
-      "result": "QUEUED_NOT_YET_VERIFIED",
-      "reason": "Source attribution and >100ms same-Seq native packet interarrival guard, no seed change"
+      "result": "PASS_NATIVE_CAPTURE_TIMESTAMPED_CORRECTED_SOURCE",
+      "reason": "Source attribution and >100ms same-Seq native packet interarrival guard, no seed change",
+      "job_id": 120922265170,
+      "attempt": 1,
+      "artifact_id": 12566463062,
+      "artifact_zip_sha256": "0dc786ab6c0bf532497001ad1dfc30fc5db70b7f856ed8cb79b437d75d6803a6",
+      "native_netns": true,
+      "ack_loss": "100% downstream egress ACK during data phase only",
+      "inner_tcp_seq": 140851678,
+      "inner_duplicate_interarrival_ms": 207.223,
+      "minimum_time_gap_ms": 100,
+      "inner_tls_ciphertext_repeated_len": 1317,
+      "inner_pcap_bytes": 9852,
+      "inner_pcap_sha256": "e651e9d84c6275fb16b32bdccf4e7ba3d201c0d40f2e548a671072127827ff56",
+      "outer_pcap_sha256": "40852aeff4e2ba938f3a77df13503cbc81c790bed6950b7c12204579a524ebc9",
+      "outer_seq_positions_distinct": true,
+      "repeated_64": true,
+      "repeated_128": true,
+      "raw_pcaps_and_keys_retained": false,
+      "go_tun_product_qualified": false
     }
   ],
-  "open_requests": [
-    {
-      "stage": "S3_KERNEL_INNER_TCP_PROVENANCE_FIX",
-      "run_id": 40110917872,
-      "state": "PENDING_RESULT"
-    }
-  ],
-  "functional": "ARM64_AND_X86_S0_COMPONENT_PASS_157_PASS_0_FAIL_1_IGNORED_PER_ARCH_NOT_PRODUCT",
-  "performance": "ARM64_AES128_IDEAL_RECORD_CPU_29_473239_PERCENT_SAVING_REAL_TUN_NOT_TESTED",
-  "capture": "S3_BOUNDED_NATIVE_LAB_OUTER_TCP_PCAP_PASS_REPEATED_TLS_BODY_DISTINCT_OUTER_SEQ_RAW_CLEANED",
-  "appearance": "LAB_CAPTURE_REPEATED_INNER_CIPHERTEXT_DIFFERENT_OUTER_SEQ_CONFIRMED_REAL_DRIVER_UNTESTED",
-  "physical": "NOT_RUN",
+  "open_requests": [],
+  "functional": "ARM64_AND_X86_NATIVE_COMPONENT_S0_157_PASS_0_FAIL_1_IGNORED_PER_ARCH",
+  "performance": "ARM64_AES128_REAL_TLS13_IDEAL_RECORD_CPU_B_VS_A_29_473239_PERCENT_SAVING_NOT_PRODUCT_CPU",
+  "capture": "CONTROLLED_AND_REAL_NETNS_LINUX_INNER_TCP_RETX_REPEATED_TLS_BODY_ACROSS_DISTINCT_OUTER_SEQ_CAPTURED",
+  "appearance": "APPEARANCE_REGRESSION_REPEATED_INNER_CIPHERTEXT_CONFIRMED_TEST_LAB_NOT_REAL_GO_TUN",
+  "physical": "INTENTIONALLY_NOT_RUN_AFTER_APPEARANCE_VETO_REAL_GO_TUN_P99_STOP_GENERATION_NOT_QUALIFIED",
   "merge_ready": false,
   "known_risks": [
     "TLS ciphertext repeated by inner TCP can recur under different outer PN/Seq; a confirmed occurrence is an appearance regression, not hidden by a CPU PASS.",
@@ -135,9 +147,18 @@
     "New experimental wire and protected descriptor require actual two-end capability binding, MTU derivation and negative tests; no compatibility claim.",
     "Inherited workflow branch-name selection needs explicit experimental adaptation; do not dispatch old FEC/network requests."
   ],
-  "next_action": "Inspect 40110917872 Action result for native Linux inner TCP retransmission interarrival >=100ms plus distinct outer-Seq 64/128B duplicate and owned raw cleanup; if pass, update final report/status/devlog then close negative experiment. Do not expand S2 classification/network/FEC.",
+  "next_action": "NONE_SCOPED_EXPERIMENT_CLOSED_NEGATIVE_DO_NOT_INHERIT_NETWORK_FEC_ACTIONS",
   "latest_log": "docs/devlog/selective-crypto-work/20261024-measured-negative.md",
   "prepared_not_dispatched": [],
-  "outcome": "IDEAL_RECORD_CPU_BENEFIT_APPEARANCE_REGRESSION_LAB_NEGATIVE_NO_MAINLINE_PROMOTION",
-  "final_report": "docs/evidence/selective-crypto-work/FINAL_REPORT.md"
+  "outcome": "PERF_BENEFIT_APPEARANCE_REGRESSION_SCOPED_NEGATIVE_NO_PROMOTION",
+  "final_report": "docs/evidence/selective-crypto-work/FINAL_REPORT.md",
+  "outstanding_product_tests": {
+    "S0_full_Go_bootstrap_generation_stop": "NOT_RUN",
+    "S1_ARM_ChaCha": "NOT_RUN_STOP_AFTER_VETO",
+    "S1_X86_CPU": "NOT_RUN_STOP_AFTER_VETO",
+    "S2_full_product_first_delivery_p99_queues_drops": "NOT_RUN_STOP_AFTER_VETO",
+    "S3_actual_product_stealth_and_real_handshake": "NOT_RUN_STOP_AFTER_VETO",
+    "S3_native_netns_kernel_inner_retx": "PASS_ISOLATED_LAB_ONLY"
+  },
+  "complete_date": "2026-10-24"
 }
