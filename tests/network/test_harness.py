@@ -36,6 +36,30 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_full_run_source_tun_zero_drop_gate_and_snapshot_delta(self):
+        from tools.network_harness.runner import source_tun_tx_drops_by_role
+        request_data=request()
+        request_data["acceptance"]["require_zero_source_tun_drops_full_run"]=True
+        self.assertTrue(validate(request_data)["acceptance"]
+                        ["require_zero_source_tun_drops_full_run"])
+        request_data["acceptance"]["require_zero_source_tun_drops_full_run"]="true"
+        with self.assertRaises(ValueError):
+            validate(request_data)
+        def snapshot(client,server):
+            return {"network":{
+                "client":{"links":[{"ifname":"wbntun0",
+                    "stats64":{"tx":{"dropped":client}}}]},
+                "server":{"links":[{"ifname":"wbntun0",
+                    "stats64":{"tx":{"dropped":server}}}]}
+            }}
+        self.assertEqual(source_tun_tx_drops_by_role(
+            snapshot(0,0),snapshot(7471,0)),{"client":7471,"server":0})
+        self.assertEqual(source_tun_tx_drops_by_role(
+            snapshot(7471,0),snapshot(7471,0)),{"client":0,"server":0})
+        self.assertEqual(source_tun_tx_drops_by_role(
+            snapshot(0,0),{"network":{}}),
+            {"client":"NOT_OBSERVED","server":"NOT_OBSERVED"})
+
     def test_testonly_tun_root_qdisc_fq_pacing_vs_fqcodel_strict(self):
         r=request()
         r["network"]["tun_qdisc_profiles"]={"A":"fq_codel","B":"fq"}
