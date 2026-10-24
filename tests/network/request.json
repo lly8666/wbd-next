@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "id": "V3-C-dedicated-TUN-ingress-10M-both-0loss-AB",
+  "id": "V3-C-TCP500-dedicated-TUN-reader-strict-startup-AB",
   "owner": "network-matrix-work",
-  "seed": 7124,
+  "seed": 7162,
   "product": {
     "mode": "normal",
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 10,
-    "s2c_mbps": 10,
+    "c2s_mbps": 500,
+    "s2c_mbps": 0,
     "udp_share": 0,
     "sizes": [
       [
@@ -19,7 +19,7 @@
     ],
     "tcp_flows": 1,
     "probe_hz": 20,
-    "deadline_ms": 3000,
+    "deadline_ms": 5000,
     "burst_ms": 0,
     "max_packets": 20000000,
     "allow_fragmentation": false
@@ -30,16 +30,28 @@
     "queue_packets": 32768,
     "netem_rng": "unseeded_recorded",
     "tcp_window_profiles": {
-      "A": "baseline",
-      "B": "baseline"
+      "A": "bdp500",
+      "B": "bdp500"
     },
     "tcp_reordering_profiles": {
       "A": "baseline",
       "B": "baseline"
     },
-    "v3_timeline": false
+    "tun_txqlen_profiles": {
+      "A": 1024,
+      "B": 1024
+    },
+    "tun_qdisc_profiles": {
+      "A": "fq",
+      "B": "fq"
+    },
+    "warmup_rate_scale_profiles": {
+      "A": 1,
+      "B": 1
+    },
+    "v3_timeline": true
   },
-  "warmup_s": 10,
+  "warmup_s": 20,
   "drain_s": 30,
   "phases": [
     {
@@ -52,7 +64,7 @@
         "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 0,
+        "rate_mbps": 700,
         "blackhole_lanes": []
       },
       "s2c": {
@@ -61,17 +73,17 @@
         "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 0,
+        "rate_mbps": 700,
         "blackhole_lanes": []
       }
     }
   ],
   "acceptance": {
-    "injection_tolerance_pct": 3,
+    "injection_tolerance_pct": 5,
     "max_loss_pct": 0,
     "require_retransmission": false,
-    "max_p99_ms": 500,
     "max_repair_fresh_pct": 10,
+    "max_p99_ms": 400,
     "require_zero_source_tun_drops_full_run": true
   },
   "bundles": {
