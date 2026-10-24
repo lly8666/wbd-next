@@ -86,6 +86,13 @@ func realOriginalGoFec2LinuxMode(t *testing.T,mode FecV2Mode){
     peer,err:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_TCP)
     if err!=nil{t.Fatal(err)}
     defer syscall.Close(peer)
+    // The original TLS peer IP intentionally becomes local only after
+    // the independent CLIENT TUN is created. Binding the observer before
+    // then requires Linux IP_FREEBIND, not a preinstalled local address
+    // that could bypass the actual missing-source->parity->TUN route.
+    if err:=syscall.SetsockoptInt(peer,syscall.SOL_IP,15,1);err!=nil{
+        t.Fatalf("raw peer IP_FREEBIND: %v",err)
+    }
     if err:=syscall.Bind(peer,&syscall.SockaddrInet4{Addr:b.originalFlow.ClientIP});err!=nil{
         t.Fatal(err)
     }
