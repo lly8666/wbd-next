@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "FEC_RX_MAXIMUM_50MBPS_CAPACITY_MINIMAL_FIX_PENDING_NATIVE_BUILD_AND_REPRO",
+  "phase": "FEC_RX_MAXIMUM_50MBPS_BOUNDED_ONLY_FIX_SECOND_CANDIDATE_PENDING_BUILD",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -157,7 +157,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Read automatically selected W11 performance Action on latest FEC branch; inspect both leg results (A expected old FAIL, B must meet <=1% in BOTH), per-side p99, CPU/RSS, bytes and native RX_CAP pressure/invalid categories. Do not mistake top-level FAIL with expected old A FAIL if B passes. If B fails locate exact capacity reason, minimal patch+new once-build, same original W8 recheck only; no 75/100+ pressure. Auto work on hold.",
+  "next_action": "Inspect second bounded-only candidate native ARM64 build+RX test Action, then freeze immutable artifact. Create one W12 50Mbps Maximum IID30 300ms same VM AB against source a969217e (same Go Auto source) and new bounded-only candidate; harness runner now exports RX_CAP typed Stop evidence. Do not run 75+; if B fails, use precise RX source/parity, qdisc, reject reasons before further code changes. Auto live W10 paused.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -468,6 +468,41 @@
       "architecture": "arm64",
       "native_RX_tests": "5 PASS including 56 blocks 5 recovered each / retirement / replay Stop",
       "real_TUN_missing_source": "PASS"
+    },
+    "first_perf": {
+      "run": 40086619261,
+      "artifact": 12556763687,
+      "same_vm_order": "AB",
+      "source_A": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+      "source_B": "2674ca05dede656cb1c84e80ed3b4de9d0c3ce61",
+      "A": {
+        "c2s_missing": 5769,
+        "s2c_missing": 5331,
+        "c2s_delivered_mbps": 48.03335,
+        "s2c_delivered_mbps": 48.18262,
+        "client_cpu_s": 12.11,
+        "server_cpu_s": 12.02
+      },
+      "B": {
+        "c2s_missing": 12996,
+        "s2c_missing": 18031,
+        "c2s_delivered_mbps": 45.59369,
+        "s2c_delivered_mbps": 43.88334,
+        "client_cpu_s": 10.57,
+        "server_cpu_s": 10.85,
+        "decoder_rejected_client": 116812,
+        "decoder_rejected_server": 119879,
+        "source_seen_client": 142932,
+        "source_seen_server": 146456
+      },
+      "result": "B_FAIL_REGRESSION_DO_NOT_QUALIFY"
+    },
+    "second_candidate": {
+      "from_source": "77488ee53ad75931ed6f8fbe5713689d4bf43b50",
+      "change": "Remove early retire of complete blocks. Preserve 150ms FEC RX state and authenticated redundant parity receipt; raise bounded MAX_ACTIVE32->96 and 1MiB->8MiB only. Restore BLOCK_REORDER_SPAN128 and code/Stop rejection reason diagnostics. W12 AB compare against closer original Auto code source a969.",
+      "source_commit": "PENDING_COMMIT",
+      "build": "NOT_RUN",
+      "performance": "NOT_RUN"
     }
   }
 }

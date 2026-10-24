@@ -10,15 +10,15 @@ use wbd_codec::fec_v2::{self,BackendChoice,Rs16};
 use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig};
 use wbd_types::MonoNs;
 
-// 50/75Mbps sustained Maximum k16 yields ~46/~69 block identities in
-// 150ms before accounting for parity/reorder. The old 32-slot/1MiB cap
-// evicted incompletes at 50Mbps despite idle host CPU and no TUN drops.
-// Leave age unchanged, reclaim full blocks immediately, and keep a bounded
-// >75Mbps headroom rather than unbounded rate-derived allocation.
+// Measured 50Mbps: 13,651 full plus 2,214 partial source groups over
+// 45s -> ~53 simultaneous identities for 150ms, exceeding the old 32.
+// Do not retire fully delivered blocks early: later authenticated parity
+// still must enter the original M3/M2 accounting without fake invalids.
+// Bounded 96 slots/8MiB; original age and 128-block reordering unchanged.
 const MAX_ACTIVE:usize=96;
 const MAX_STORED_BYTES:usize=8*1024*1024;
 const MAX_BLOCK_AGE_NS:u64=150_000_000;
-const BLOCK_REORDER_SPAN:u64=512;
+const BLOCK_REORDER_SPAN:u64=128;
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub(crate) struct VerifiedReceiveEpoch {
     pub generation:u32,pub epoch:[u8;16],
@@ -40,7 +40,6 @@ pub(crate) struct Fec2RxCapacityReport {
     pub evicted_age:u64,
     pub evicted_reorder:u64,
     pub evicted_pressure:u64,
-    pub completed_early:u64,
     pub invalid_retired:u64,
     pub refused_bytes:u64,
     pub rejected_invalid:u64,
@@ -282,23 +281,6 @@ impl Fec2LiveRx{
                 }
             }
         }
-        // A parity-bearing block whose every original source has reached
-        // the immutable first-delivery ledger needs no more RX payload.
-        // Keep the generation-local retired block ID to prevent late
-        // authenticated symbols from producing a second TUN delivery.
-        // Incomplete blocks preserve all stored repair symbols until normal
-        // age/pressure retirement and are never reprofiled.
-        let complete=b.actual_k.is_some_and(|k|{
-            let mask=((1u32<<u32::from(k))-1) as u16;
-            b.delivered & mask == mask
-        });
-        if complete {
-            if let Some(done)=self.blocks.remove(&id){
-                self.stored=self.stored.saturating_sub(done.bytes);
-                self.retired.insert(id);
-                self.capacity_report.completed_early+=1;
-            }
-        }
         self.capacity_report.peak_active=self.capacity_report.peak_active
             .max(self.blocks.len() as u64);
         self.capacity_report.peak_stored_bytes=self.capacity_report.peak_stored_bytes
@@ -457,17 +439,18 @@ mod tests {
                 }
                 recovered+=out.len();
             }
-            assert_eq!(rx.active_blocks(),0,"completed block not retired");
-            assert_eq!(rx.stored_bytes(),0,"completed repair payload retained");
+            assert!(rx.active_blocks()<=MAX_ACTIVE);
+            assert!(rx.stored_bytes()<=MAX_STORED_BYTES);
         }
         assert_eq!(delivered,56*11);
         assert_eq!(recovered,56*5);
-        assert_eq!(rx.capacity_report().completed_early,56);
+        assert_eq!(rx.active_blocks(),56);
+        assert!(rx.stored_bytes()>0);
         assert_eq!(rx.capacity_report().evicted_pressure,0);
         assert_eq!(rx.capacity_report().refused_bytes,0);
         let duplicate=fec_v2::source_owned(56,0,&frames_for_late(),1369).unwrap();
         assert_eq!(rx.accept_authenticated(epoch(),2,&duplicate,MonoNs(57_000_000)),
-            Err(ReceiveError::Invalid));
+            Err(ReceiveError::ConflictingBlock));
         rx.stop();
     }
     fn frames_for_late()->Vec<u8>{vec![0u8;1287]}
@@ -508,8 +491,8 @@ mod tests {
                 recovered+=1;
             }
             assert_eq!(recovered,4);
-            assert_eq!(rx.stored_bytes(),0);
-            assert_eq!(rx.active_blocks(),0);
+            assert!(rx.stored_bytes()>0);
+            assert_eq!(rx.active_blocks(),4);
             rx.stop();assert_eq!(rx.active_blocks(),0);
             assert_eq!(rx.stored_bytes(),0);
             assert_eq!(rx.consume(epoch(),&mut vec![0u8;40],MonoNs(30_000)),

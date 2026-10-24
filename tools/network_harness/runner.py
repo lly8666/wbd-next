@@ -68,7 +68,7 @@ def verify_native_game_counters(lanes,counters):
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
@@ -155,6 +155,24 @@ def public_fec_rx_proof(log_text):
             values["source_seen"]+values["parity_seen"]):
         return None
     return {k:values[k] for k in fields}
+
+
+def public_fec_rx_capacity(log_text):
+    """One bounded original-Rust RX owner Stop readback, NEVER fake zero.
+    Keeps late authenticated parity/old block rejection distinct from codec.
+    """
+    fields=("peak_active","peak_bytes","pressure_evicted","age_evicted",
+            "reorder_evicted","invalid_retired","refused_bytes",
+            "reject_invalid","reject_capacity","reject_conflict","reject_codec")
+    rows=[line for line in log_text.splitlines()
+          if "V4_PUBLIC_FEC2_RX_CAP role=" in line]
+    if not rows:
+        return None
+    d={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
+    if any(k not in d for k in fields):return None
+    if d["peak_active"]>96 or d["peak_bytes"]>8*1024*1024:
+        return None
+    return {k:d[k] for k in fields}
 
 
 def public_fec_m2_proof(log_text):
@@ -819,6 +837,7 @@ class LinuxExperiment:
         fec_failures = {role:public_fec_failure_reasons(log) for role,log in logs.items()}
         fec_m2 = {role:public_fec_m2_proof(log) for role,log in logs.items()}
         fec_rx = {role:public_fec_rx_proof(log) for role,log in logs.items()}
+        fec_capacity = {role:public_fec_rx_capacity(log) for role,log in logs.items()}
         fec_ip = {role:public_fec_rx_ip_class(log) for role,log in logs.items()}
         fec_m1 = {role:public_fec_m1_ingress(log) for role,log in logs.items()}
         fec_stage = {role:public_fec_m1_stage(log) for role,log in logs.items()}
@@ -845,6 +864,7 @@ class LinuxExperiment:
                 "repair_packets": repair,
                 "original_m2_authenticated_coverage": fec_m2 if all(v is not None for v in fec_m2.values()) else "NOT_OBSERVED",
                 "original_fec_rx_m3_m4_proof": fec_rx if all(v is not None for v in fec_rx.values()) else "NOT_OBSERVED",
+                "original_fec_rx_capacity": fec_capacity if all(v is not None for v in fec_capacity.values()) else "NOT_OBSERVED",
                 "original_fec_rx_ipv4_classes": fec_ip if fec_class_valid else "NOT_OBSERVED",
                 "original_fec_m1_tun_ingress": fec_m1 if all(v is not None for v in fec_m1.values()) else "NOT_OBSERVED",
                 "original_fec_m1_postloan_stage": fec_stage if all(v is not None for v in fec_stage.values()) else "NOT_OBSERVED",
@@ -1216,6 +1236,8 @@ def capacity_action_digest(leg):
         "original_tx_chain": telemetry.get("original_tx_chain", "NOT_OBSERVED"),
         "original_m1_pool": telemetry.get("original_m1_pool", "NOT_OBSERVED"),
         "original_rx_chain": telemetry.get("original_rx_chain", "NOT_OBSERVED"),
+        "original_fec_rx_capacity": telemetry.get("original_fec_rx_capacity", "NOT_OBSERVED"),
+        "original_fec_rx_m3_m4_proof": telemetry.get("original_fec_rx_m3_m4_proof", "NOT_OBSERVED"),
         "repair_packets": telemetry.get("repair_packets"),
         "v3_repair_accounting": leg.get("v3_repair_accounting","NOT_OBSERVED"),
         "stop_drained_both": telemetry.get("stop_drained_both"),
