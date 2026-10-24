@@ -103,6 +103,9 @@ class Contracts(unittest.TestCase):
     def test_testonly_tun_root_qdisc_fq_pacing_vs_fqcodel_strict(self):
         r=request()
         r["network"]["tun_qdisc_profiles"]={"A":"fq_codel","B":"fq"}
+        # This legacy qdisc-name contract is independent of the prior request's
+        # optional test-only maxrate, which requires fq on both legs.
+        r["network"]["tun_fq_maxrate_mbps_profiles"]={}
         self.assertEqual(validate(r)["network"]["tun_qdisc_profiles"],
                          {"A":"fq_codel","B":"fq"})
         r["network"]["tun_qdisc_profiles"]["B"]="pfifo_fast"
