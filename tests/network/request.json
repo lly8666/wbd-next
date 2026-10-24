@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "id": "V3-C-TCP500-cold-TUN-25ms-numeric-rootcause",
+  "id": "V3-C-TCP500-socket-pacing600-cold-burst-AB",
   "owner": "network-matrix-work",
-  "seed": 7255,
+  "seed": 7304,
   "product": {
     "mode": "normal",
     "fec_profile": 1
@@ -30,21 +30,30 @@
     "queue_packets": 32768,
     "netem_rng": "unseeded_recorded",
     "tcp_window_profiles": {
-      "A": "bdp500"
+      "A": "bdp500",
+      "B": "bdp500"
     },
     "tcp_reordering_profiles": {
-      "A": "baseline"
+      "A": "baseline",
+      "B": "baseline"
     },
     "tun_txqlen_profiles": {
-      "A": 1024
+      "A": 1024,
+      "B": 1024
     },
     "tun_qdisc_profiles": {
-      "A": "fq"
+      "A": "fq",
+      "B": "fq"
     },
     "warmup_rate_scale_profiles": {
-      "A": 1
+      "A": 1,
+      "B": 1
     },
     "v3_timeline": true,
+    "tcp_socket_pacing_mbps_profiles": {
+      "A": 0,
+      "B": 600
+    },
     "startup_tun_drop_timeline": true
   },
   "warmup_s": 20,
@@ -90,8 +99,16 @@
       "artifact_id": 12540624073,
       "sha256": "f52f3c67749b399fa6778e9031e83a0f93f1fe4780d6836d7d120928b9fed763",
       "recovery_policy": "outer-opportunistic-v3"
+    },
+    "B": {
+      "source": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
+      "run_id": 40044879144,
+      "attempt": 1,
+      "artifact_id": 12540624073,
+      "sha256": "f52f3c67749b399fa6778e9031e83a0f93f1fe4780d6836d7d120928b9fed763",
+      "recovery_policy": "outer-opportunistic-v3"
     }
   },
-  "order": "A",
+  "order": "AB",
   "policy": "outer-opportunistic-v3"
 }
