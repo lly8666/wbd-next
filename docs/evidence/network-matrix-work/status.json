@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-C_NATIVE_PRODUCT_FQ600_SAMEVM_STRICT_ACTION_40053396971_QUEUED",
+  "phase": "V3_REPRESENTATIVE_CLOSED_WITH_NATIVE_LINUX_NORMAL_OPTIN_TCP500_SCOPED_PASS_DEFAULT_COLD_BURST_OPEN",
   "current_plan": {
     "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
     "policy": "outer-opportunistic-v3",
-    "status": "V3-A_HIGHLOSS_PASS_B_MTU_SCOPED_PASS_D_MIXED_IDLE_SCOPED_PASS_C_DEFAULT_COLD_TCP500_FAIL_PRODUCT_OWNED_OPTIN_PENDING"
+    "status": "V3-A_HIGHLOSS_PASS_B_MTU_SCOPED_PASS_D_MIXED_IDLE_SCOPED_PASS_C_OWNED_NATIVE_FQ600_OPTIN_500MBPS_SCOPED_PASS_DEFAULT_COLD_FAIL"
   },
   "restoration": {
     "remote_main_at_resume": "d8ba2cf270ff6ca5cadae6dab778c49c32636ef6",
@@ -42,23 +42,7 @@
       "zip_sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749"
     }
   },
-  "open_requests": [
-    {
-      "id": "V3-C-TCP500-real-owned-TUN-fq600-cold-AB",
-      "state": "ACTIONS_QUEUED",
-      "run": 40053396971,
-      "attempt": 1,
-      "request_source": "4cecde55daf10d2213d25e4af77ba5377395b174",
-      "contract_run": 40053396949,
-      "product_source_A_B": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
-      "product_build_run": 40053179394,
-      "artifact": 12543904263,
-      "sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749",
-      "scenario": "sameVM ARM64 real Go TLS Rust TUN Normal/off one TCP application c2s500Mbps RTT400 0loss outer line700, qlen1024, full-run TUN+root qdisc0, A external fq unlimited B owned Go CLI fq600",
-      "do_not_redispatch": true,
-      "contract_result": "ACTION40053396949 failed from scenario-specific fq600 leaked into old suite; isolated suite commit92ea70; contract40053463038 SUCCESS. Performance measurement40053396971 not restarted."
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
     {
       "id": "V3-A-50mbps-line30pct",
@@ -116,12 +100,34 @@
       "source": "92ea70abb34c99fe6ea789a9d500b7db8da6f380",
       "action": 40053463038,
       "result": "SUCCESS_ALL_NATIVE_HARNESS_CONTRACTS including generic FEC/Game presets after isolating request-specific product fq600"
+    },
+    {
+      "id": "V3-C_native_owned_600_TCP500_real_AB",
+      "action": 40053396971,
+      "attempt": 1,
+      "artifact": 12543608967,
+      "zip_sha256": "e94d703d1d699ae3d5a4b5224aa2fbeeeebbb23010ba2ffdc62a7ae5b8c94375",
+      "source": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
+      "file": "docs/evidence/network-matrix-work/V3-C-owned-Linux-TUN-fq600-TCP500-real-AB-20261024.json",
+      "result": "A_FAIL_startup_TUN6613_B_PASS_SCOPED_product_fq600_readback_kernel75000000Bps_app500.0003584Mbps_p99_203.2ms_source_TUN_warmup_steady0_root_qdisc0_StopPASS_Action_overall_FAIL"
     }
   ],
   "open_issues": [
-    "Default Linux TUN fq unpaced cold TCP500 has ~6k real kernel source TUN drops despite 500Mbps steady; not qualified.",
-    "New owned Linux Normal/off opt-in fq600 must pass exact source native build and A/B strict full warmup+steady TUN and qdisc drops 0, authenticated real Go/Rust single TCP500 and Stop; no B PASS until measured.",
-    "FEC fixed/auto/Game, Windows/physical, wider MTU/Game regression and highloss inner TCP throughput remain independent or NOT_QUALIFIED."
+    "Default Linux Normal/off remains strict cold-start local TUN drop FAIL at TCP500 (A6613); explicitly scoped product-owned fq600 B reaches real TCP500 without hiding drops, but is opt-in not a default policy decision.",
+    "Host CPU/PSI significant at this load (B client48.66/server64.33 CPU-s per60s, host PSI some peak30.13%); no low CPU comparative improvement claim and do not use A local-drop as successful CPU baseline.",
+    "Windows, Fixed/Auto/Game, physical, multi-business 500/no-HOL, bidirectional500 and wider MTU regressions remain separate NOT_QUALIFIED; previously passed v3-A/B/D scoped cases reused."
   ],
-  "next_action": "Check in-flight product native real TCP500 strict sameVM Action40053396971; record exact artifact and A/B results, full-run kernel TUN/qdisc/readback, CPU and Stop; do not redispatch. Keep source-specific pass from prior other v3 scopes and avoid unsupported broad claims."
+  "next_action": "DELIVER scoped Linux Normal/off native owned TUN fq600 opt-in single-TCP500 qualification from exact Action40053396971 B only; stop additional pressure now (representative v3-A/B/D passed, default cold FAIL explicitly documented). No more pending dispatch, no main merge. Any proposal to make fq600 a default needs distinct product/platform scope, CPU and fairness evaluation; do not alter policy/UDP loss minimum.",
+  "current_source_verified": {
+    "source": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
+    "build": 40053179394,
+    "bundle": 12543904263,
+    "bundle_zip_sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749",
+    "business_request_source": "4cecde55daf10d2213d25e4af77ba5377395b174",
+    "business_run": 40053396971,
+    "attempt": 1,
+    "business_artifact": 12543608967,
+    "business_artifact_zip_sha256": "e94d703d1d699ae3d5a4b5224aa2fbeeeebbb23010ba2ffdc62a7ae5b8c94375"
+  },
+  "recovered_latest_action": "40053396971 attempt1 completed failure overall because A default warmup source-TUN6613; B PASS_SCOPED_OBSERVATION with real owned fq600 kernel readback 75MB/s both, app500.000Mbps p99203.2ms, warmup/steady source TUN0/qdisc0, auth Stop PASS; artifact digest verified."
 }
