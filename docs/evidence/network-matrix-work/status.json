@@ -29,12 +29,22 @@
     {
       "id": "V3-C-source-TUN-bounded512-reader-native-build",
       "state": "ACTIONS_IN_PROGRESS",
-      "run": 40044752157,
+      "run": 40044879144,
       "attempt": 1,
-      "source": "3c05563d6a956d563e71a86140a292ef06ef4026",
-      "previous_intermediate_build_run": 40044721183,
-      "previous_intermediate_source": "d03cdced5ce19f82c117cc3e3952e64b75ba622a",
-      "purpose": "Real Normal/off original Linux Rust data-plane source TUN independent bounded read worker; SyncSender512 preowned M1, existing TX AEAD/M4 single owner, Stop joins reader and both workers; no production qlen or repair credit/cipher changes. Must pass native ARM build and MTU before lower load regression and strict500.",
+      "source": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
+      "previous_compile_only_failures": [
+        {
+          "run": 40044721183,
+          "source": "d03cdced5ce19f82c117cc3e3952e64b75ba622a",
+          "cause": "Rust E0382 moved Arc TunSink reused after TX capture"
+        },
+        {
+          "run": 40044752157,
+          "source": "3c05563d6a956d563e71a86140a292ef06ef4026",
+          "cause": "same compile issue preceding Arc clone fix"
+        }
+      ],
+      "purpose": "Same scoped original Normal/off bounded512 M1-owned intake queue with dedicated sole Linux TUN fd reader, TX crypto M4 unchanged, Stop joins third worker, wake on idle bounded and jumbo cap; native build + MTU required before scoped low load A/B",
       "do_not_redispatch": true
     }
   ],
@@ -207,7 +217,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "Work resumed: actual strict500 sourceb8df vs8loan ae38 run40043921913 artifact12540218977 ZIPsha9391e0560f23b62a49d3779de8fb7c2e65453404bf3f090c354b4b043947956d verified: A warmup sourceTUN drops7026, B6714, both FAIL ALL-RUN ZERO source; both steady ~500Mbps p99202.9 source TUN steady0 backpressure0, M1peak32. Actual tun qdisc fq drops0 all snapshots despite source TUN dropped; kernel6.17 TUNGETFEATURES0x7173 lacks BACKPRESSURE. Evidence V3-C-TCP500-hot8-prefetch-strict-AB-20261024.json. Stop blindly increasing queue/loan; new bounded512 dedicated TUN read vs original M3/M4 crypto/source sender split code source3c05563 commit; only Normal/off guarded by original native public policy, pre-loans original M1 +feedback16 before destructive TUN read, async queue full holds message until consumer; Stop joins third thread, other FEC/game untouched. ARM64 Actions build40044752157 in progress, sourced03 earlier intermediate build40044721183 irrelevant; do NOT dispatch tests until full native and MTU PASS. First check lowload real original10Mbps 0% both directions with source old b8df vs new3c055 EXACT artifacts sameVM to catch hangs/Stop/control reordering and CPU; then one strict TCP500 fullwarmup20/steady60 using CORRECTED warmup sampler sourceeea88c and fq1024 same VM, no repeated same-source overload or qlen>2048. If direct reader architecture FAILS, revert unverified risky source in experiment branch and leave V3-C startup OPEN. Preserve prior V3-A 30% standard, B dynamic MTU, D true idle and mixed, FEC separate, no main merge or deploy.",
+  "next_action": "Work resumed: actual strict500 sourceb8df vs8loan ae38 run40043921913 artifact12540218977 ZIPsha9391e0560f23b62a49d3779de8fb7c2e65453404bf3f090c354b4b043947956d verified: A warmup sourceTUN drops7026, B6714, both FAIL ALL-RUN ZERO source; both steady ~500Mbps p99202.9 source TUN steady0 backpressure0, M1peak32. Actual tun qdisc fq drops0 all snapshots despite source TUN dropped; kernel6.17 TUNGETFEATURES0x7173 lacks BACKPRESSURE. Evidence V3-C-TCP500-hot8-prefetch-strict-AB-20261024.json. Stop blindly increasing queue/loan; new bounded512 dedicated TUN read vs original M3/M4 crypto/source sender split code source3c05563 commit; only Normal/off guarded by original native public policy, pre-loans original M1 +feedback16 before destructive TUN read, async queue full holds message until consumer; Stop joins third thread, other FEC/game untouched. ARM64 Actions build40044752157 in progress, sourced03 earlier intermediate build40044721183 irrelevant; do NOT dispatch tests until full native and MTU PASS. First check lowload real original10Mbps 0% both directions with source old b8df vs new3c055 EXACT artifacts sameVM to catch hangs/Stop/control reordering and CPU; then one strict TCP500 fullwarmup20/steady60 using CORRECTED warmup sampler sourceeea88c and fq1024 same VM, no repeated same-source overload or qlen>2048. If direct reader architecture FAILS, revert unverified risky source in experiment branch and leave V3-C startup OPEN. Preserve prior V3-A 30% standard, B dynamic MTU, D true idle and mixed, FEC separate, no main merge or deploy. Dedicated reader intermediate sources d03cdced and3c05563 failed native compile E0382 because tun Arc moved to TX before reader clone; exact corrected source a0a1285 build40044879144 IN_PROGRESS. Only qualify if final native+MTU success. Do not call earlier builds product performance.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -514,12 +524,13 @@
       ],
       "cold_source_tun_drop_causal_boundary": "Linux TUN internal ring vs scheduler/queue not proven via event timestamp, root fq sampled drops0; IFF_BACKPRESSURE unsupported in 6.17",
       "next_architecture": "Bounded dedicated TUN ingress reader and crypto/send partition (ownership-safe finite ring with 16 feedback slots), no more identical high-rate reruns until code actually changes",
-      "bounded_reader_source": "3c05563d6a956d563e71a86140a292ef06ef4026",
-      "bounded_reader_build_run": 40044752157,
+      "bounded_reader_source": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
+      "bounded_reader_build_run": 40044879144,
       "bounded_reader_build_status": "ACTIONS_IN_PROGRESS",
       "bounded_reader_limit_slots": 512,
       "bounded_reader_mode": "native Linux Normal/off only; other modes original synchronous path",
-      "bounded_reader_arch_validation": "NOT_RUN"
+      "bounded_reader_arch_validation": "NOT_RUN",
+      "bounded_reader_previous_build_errors": "d03c and3c Rust E0382 moved Arc TUN, fixed by one owned Arc clone for producer at a0a128"
     },
     "phase_D": {
       "run": 39985073396,
