@@ -1,25 +1,29 @@
 {
   "version": 1,
-  "id": "V3-C-default600-flow256-TCP500-cold-regression",
+  "id": "V3-H500-flow256-native-preflight-fixed-2pct",
   "owner": "network-matrix-work",
-  "seed": 7341,
+  "seed": 7343,
   "product": {
     "mode": "normal",
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 500,
+    "c2s_mbps": 370,
     "s2c_mbps": 0,
-    "udp_share": 0,
+    "udp_share": 1,
     "sizes": [
       [
-        32768,
+        64,
         1
+      ],
+      [
+        1401,
+        99
       ]
     ],
     "tcp_flows": 1,
     "probe_hz": 20,
-    "deadline_ms": 5000,
+    "deadline_ms": 1200,
     "burst_ms": 0,
     "max_packets": 20000000,
     "allow_fragmentation": false
@@ -29,28 +33,9 @@
     "lane_loss": "shared",
     "queue_packets": 32768,
     "netem_rng": "unseeded_recorded",
-    "tcp_window_profiles": {
-      "A": "bdp500"
-    },
-    "tcp_reordering_profiles": {
-      "A": "baseline"
-    },
-    "tun_txqlen_profiles": {
-      "A": 1024
-    },
-    "tun_qdisc_profiles": {},
-    "warmup_rate_scale_profiles": {
-      "A": 1
-    },
-    "v3_timeline": true,
-    "tcp_socket_pacing_mbps_profiles": {
-      "A": 0
-    },
-    "startup_tun_drop_timeline": true,
-    "tun_fq_maxrate_mbps_profiles": {},
     "product_tun_fq_maxrate_mbps_profiles": {}
   },
-  "warmup_s": 20,
+  "warmup_s": 15,
   "drain_s": 30,
   "phases": [
     {
@@ -60,29 +45,29 @@
       "c2s": {
         "delay_ms": 200,
         "jitter_ms": 0,
-        "loss_pct": 0,
+        "loss_pct": 2,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 700,
+        "rate_mbps": 500,
         "blackhole_lanes": []
       },
       "s2c": {
         "delay_ms": 200,
         "jitter_ms": 0,
-        "loss_pct": 0,
+        "loss_pct": 2,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 700,
+        "rate_mbps": 500,
         "blackhole_lanes": []
       }
     }
   ],
   "acceptance": {
     "injection_tolerance_pct": 5,
-    "max_loss_pct": 0,
-    "require_retransmission": false,
+    "max_loss_pct": 2.2,
+    "require_retransmission": true,
     "max_repair_fresh_pct": 10,
-    "max_p99_ms": 400,
+    "max_p99_ms": 950,
     "require_zero_source_tun_drops_full_run": true,
     "require_zero_tun_root_qdisc_drops_full_run": true
   },
