@@ -81,6 +81,25 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_product_owned_fq_cannot_be_test_override_or_wrong_mode(self):
+        r=request()
+        r["network"]["tun_qdisc_profiles"]={"A":"fq"}
+        r["network"]["tun_fq_maxrate_mbps_profiles"]={}
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]={"A":0,"B":600}
+        self.assertEqual(validate(r)["network"]["product_tun_fq_maxrate_mbps_profiles"],
+                         {"A":0,"B":600})
+        r["network"]["tun_qdisc_profiles"]["B"]="fq"
+        with self.assertRaises(ValueError):
+            validate(r)
+        del r["network"]["tun_qdisc_profiles"]["B"]
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]["B"]=500
+        with self.assertRaises(ValueError):
+            validate(r)
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]["B"]=600
+        r["product"]["mode"]="fec-fixed"
+        with self.assertRaises(ValueError):
+            validate(r)
+
     def test_testonly_tun_root_qdisc_fq_pacing_vs_fqcodel_strict(self):
         r=request()
         r["network"]["tun_qdisc_profiles"]={"A":"fq_codel","B":"fq"}
