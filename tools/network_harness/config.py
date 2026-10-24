@@ -109,7 +109,7 @@ def validate(raw):
     keys(n, ["outer_mtu", "lane_loss", "queue_packets", "netem_rng",
              "tcp_window_profiles", "tcp_reordering_profiles", "v3_timeline",
              "tun_txqlen_profiles", "warmup_rate_scale_profiles", "tun_qdisc_profiles",
-              "startup_tun_drop_timeline"], "network")
+              "startup_tun_drop_timeline", "tcp_socket_pacing_mbps_profiles"], "network")
     n.setdefault("v3_timeline", False)
     if type(n["v3_timeline"]) is not bool:
         raise ValueError("network.v3_timeline must be boolean")
@@ -130,6 +130,13 @@ def validate(raw):
     keys(profiles,["A","B"],"tcp_window_profiles")
     if not all(v in ("baseline","large","bdp500") for v in profiles.values()):
         raise ValueError("tcp_window_profiles must be baseline or large")
+    pacing=n.setdefault("tcp_socket_pacing_mbps_profiles",{})
+    keys(pacing,["A","B"],"tcp_socket_pacing_mbps_profiles")
+    # Test-only per-socket SO_MAX_PACING_RATE. No host/netns sysctl writes,
+    # no change to real WBD kernel/TUN configuration or offered app target.
+    for leg,v in pacing.items():
+        if type(v) is not int or v not in (0,600):
+            raise ValueError("test-only TCP socket pacing must be 0 or 600Mbps")
     qlens=n.setdefault("tun_txqlen_profiles",{})
     keys(qlens,["A","B"],"tun_txqlen_profiles")
     # STRICT TEST-ONLY options to distinguish a short kernel TUN burst
