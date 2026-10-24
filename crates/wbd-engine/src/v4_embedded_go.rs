@@ -4831,6 +4831,18 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     Err(_)=>{stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);}
                 }
             }
+            // One numeric-only report on final Stop, never a hot-path log.
+            // Bounded high water, age/active eviction, and typed rejected
+            // symbols distinguish capacity pressure from genuine codec fail.
+            #[cfg(feature="fec2_product_record")]
+            if let Some(c)=original_rx.fec2_capacity_report(){
+                eprintln!("V4_PUBLIC_FEC2_RX_CAP role={} peak_active={} peak_bytes={} pressure_evicted={} age_evicted={} reorder_evicted={} complete_retired={} invalid_retired={} refused_bytes={} reject_invalid={} reject_capacity={} reject_conflict={} reject_codec={}",
+                    if rx_server_side{"server"}else{"client"},
+                    c.peak_active,c.peak_stored_bytes,c.evicted_pressure,c.evicted_age,
+                    c.evicted_reorder,c.completed_early,c.invalid_retired,
+                    c.refused_bytes,c.rejected_invalid,c.rejected_capacity,
+                    c.rejected_conflict,c.rejected_codec);
+            }
             // No outstanding kernel borrow after the synchronous call,
             // and STOP joins this thread before retiring original drivers.
             rx_pending.clear();

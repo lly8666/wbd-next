@@ -50,6 +50,9 @@ rustup toolchain install 1.85.1 --profile minimal
 features=m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration
 cargo +1.85.1 build --release --locked -p wbd-engine   --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration
 cargo +1.85.1 test --locked -p wbd-engine --features "$features" --lib v4_game_lane::tests
+# Same pinned ARM64 build: protect 50Mbps RX completed-block bounded
+# reclaim, AEAD replay/retirement, and maximum missing+parity codec.
+cargo +1.85.1 test --locked -p wbd-engine --features "$features" --lib v4_fec2_live_rx::tests
 test -s target/release/libwbd_engine.so
 files=(
  bridge_v4_linux_server_product.go bridge_v4_linux_client_product.go

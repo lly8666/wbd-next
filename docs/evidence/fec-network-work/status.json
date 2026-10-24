@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "AUTO_LIVE_M2_ACTUAL_K_AND_AUTHENTIC_QUIESCENT_REVISION_SOURCE_PENDING_ACTIONS",
+  "phase": "FEC_RX_MAXIMUM_50MBPS_CAPACITY_MINIMAL_FIX_PENDING_NATIVE_BUILD_AND_REPRO",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -138,6 +138,7 @@
     }
   ],
   "open_issues": [
+    "FEC Maximum 50/75Mbps capacity knee independently observed at old b601 source (50Mbps 4.36/3.91% loss; 75Mbps 11.52/10.42%); candidate fix full-delivery immediate retire+bounded 96 blocks/8MiB/512 reorder, 150ms unchanged and exact reasons. UNVERIFIED pending new Action.",
     "Auto live source is being wired on this branch, not yet runtime verified: per-direction genuine maturity/actual-k 2s policy, pending native stage, quiescent switch, revision-specific M4/parity/M2 readback must all pass W7; old W7 static fail retained.",
     "Outer-repair OFF preserves genuine authenticated original firstsend M2 reverse coverage and FEC quality but its separate outer repair shadow RTT diagnostic has timing_samples=0 and fallback srtt_us=600000; that is NOT a measured OFF RTT. Scope a FEC owner independent true feedback age/RTT readout before asserting quality RTT cost gate.",
     "Deterministic single missing-source plus timely parity end-to-end native OS TUN positive exists as test source r0/go_overlay/internal/realityfront/bridge_v4_live_fec2_kernel_linux_test.go, but has NOT been rerun against merged b601 native product. W3/W5 real IID loss recovered TUN positive, not deterministic scenario equivalence.",
@@ -145,7 +146,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Review W10 new product Action at pinned a969 40083030170 artifact. Inspect client/server V4_PUBLIC_FEC2_AUTO_QUALITY real 2s/8s actual-k, authenticated receipt lag, real pending→applied revisions, outbound profiles through independent 2/0→20/1→1/0; fail closed if quality UNKNOWN or old quiescence. Require native dual repair_enabled=0, zero DATA duplicates, genuine parity, recovered TUN, p99/CPU/RSS/host-drop. If no revision changes, locate counters/NativeStream quiescence and only minimal related patch. No capacity elevation.",
+  "next_action": "Inspect exact-source native ARM64 build+FEC RX tests triggered by RX capacity source change. If red fix compile/unit only. Then freeze successful ARM64 artifact and run exactly one new W8 50Mbps Maximum IID30 300ms FEC-only request using new artifact; compare app missing, decoder rejection reasons, per-direction recovery/TUN, CPU/RSS/queues. If passed, stop at 50 (user requested temporary closure), retain original 75 failure; do not schedule higher load. Auto work suspended without invalidating old evidence.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -409,5 +410,38 @@
       "source": "a969217e1edd3577ae41df81c38aa7ac84a4a484",
       "architecture": "aarch64"
     }
+  },
+  "suspended_work": {
+    "area": "Auto true live up/down revision W10",
+    "source": "a969217e1edd3577ae41df81c38aa7ac84a4a484",
+    "build_run": 40083030170,
+    "prior_action": 40083278404,
+    "reason": "User explicitly prioritized W8/W9 FEC Maximum RX capacity and temporarily stops Auto, no unverified Auto qualification reported."
+  },
+  "capacity_fix": {
+    "baseline_product_source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+    "baseline_50_run": 40082173102,
+    "baseline_75_run": 40082494664,
+    "current_base": "6cd5f7d36b6c0fd97087cec30c020aae35123aa0",
+    "source_commit": "PENDING_THIS_COMMIT",
+    "qualified": false,
+    "scope": "Only Fec2LiveRx bounded block lifecycle, 50 Mbps retest; no outer repair changes",
+    "calculation": {
+      "packet_bytes": 1287,
+      "source_packets_per_s_at50": 4856.25,
+      "full_k16_blocks_per_s_at50": 303.52,
+      "blocks_in_150ms_at50": 45.53,
+      "blocks_in_150ms_at75": 68.29,
+      "old_max_active": 32,
+      "new_max_active": 96,
+      "old_memory_bytes": 1048576,
+      "new_memory_bytes": 8388608,
+      "age_ns_unchanged": 150000000,
+      "reorder_span_old": 128,
+      "reorder_span_new": 512
+    },
+    "actions": "Not run yet. Product native ARM64 build + crate RX regressions then only old W8 50 Mbps scenario on new artifact. Do not rerun W9 / new pressure until W8 accepted.",
+    "new_diagnostics": "On genuine RX Stop: peak_active, peak_bytes, pressure/age/reorder evictions, completed early reclaim, invalid retired, refused bytes, Invalid/Capacity/Conflict/Codec rejections.",
+    "risk": "Extra authentic parity after completed block is rejected/ignored, counted as invalid_retired; do not interpret the old aggregate decoder-rejected count as failed recovered source."
   }
 }

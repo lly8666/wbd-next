@@ -379,6 +379,11 @@ pub(crate) struct AuthenticatedNormalKind1{
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 impl ProtectedBackgroundRx{
     #[cfg(feature="fec2_product_record")]
+    pub(crate) fn fec2_capacity_report(&self)->
+        Option<crate::v4_fec2_live_rx::Fec2RxCapacityReport>{
+        self.fec2.as_ref().map(|(blocks,_,_)|blocks.capacity_report())
+    }
+    #[cfg(feature="fec2_product_record")]
     pub(crate) fn arm_fec2_original_go_only(
         &mut self,
         exact:crate::v4_fec2_live_rx::VerifiedReceiveEpoch,
@@ -465,7 +470,11 @@ impl ProtectedBackgroundRx{
                         }
                     }
                 }
-                Err(_)=>{receipt.invalid=1;receipt.fec_rx[9]+=1},
+                Err(reason)=>{
+                    blocks.record_rejection(reason);
+                    receipt.invalid=1;
+                    receipt.fec_rx[9]+=1;
+                },
             }
             return receipt
         }
