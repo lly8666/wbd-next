@@ -405,7 +405,10 @@ class LinuxExperiment:
         self.tcp_profile=config["network"].get("tcp_window_profiles",{}).get(label,"baseline")
         self.tcp_reorder_profile=config["network"].get("tcp_reordering_profiles",{}).get(label,"baseline")
         self.tcp_socket_pacing_mbps=config["network"].get("tcp_socket_pacing_mbps_profiles",{}).get(label,0)
-        self.product_tun_fq_maxrate_mbps=config["network"].get("product_tun_fq_maxrate_mbps_profiles",{}).get(label,0)
+        selected_fq=config["network"].get("product_tun_fq_maxrate_mbps_profiles",{})
+        self.product_tun_fq_explicit=label in selected_fq
+        self.product_tun_fq_maxrate_mbps=selected_fq.get(
+            label,600 if config["product"]["mode"]=="normal" else 0)
         self.config["network"]["tcp_window_profile_selected"]=self.tcp_profile
         self.config["network"]["tcp_reordering_profile_selected"]=self.tcp_reorder_profile
         self.config["network"]["tcp_socket_pacing_mbps_selected"]=self.tcp_socket_pacing_mbps
@@ -494,7 +497,9 @@ class LinuxExperiment:
                 args += ["--tls-cert", str(self.private / "cert.pem"), "--tls-key", str(self.private / "key.pem")]
             else:
                 args += ["--peer-ip", self.ip["server"], "--peer-port", "443"]
-            if self.product_tun_fq_maxrate_mbps:
+            if self.product_tun_fq_explicit:
+                # A=0 disables even though product's Normal/off default is
+                # now600. Absent B flag proves the real native default.
                 args.extend(["--tun-fq-maxrate-mbps",str(self.product_tun_fq_maxrate_mbps)])
             self.products[role] = self.spawn(role, args, role + ".log")
             if role == "server":
@@ -558,6 +563,8 @@ class LinuxExperiment:
                 observed[role]=qdisc_profile
             self.effective["test_only_tun_qdisc_readback"]=observed
         self.effective["product_tun_fq_maxrate_mbps"]=self.product_tun_fq_maxrate_mbps
+        self.effective["product_tun_fq_cli_override"]=(
+            str(self.product_tun_fq_maxrate_mbps) if self.product_tun_fq_explicit else "OMITTED_USE_NATIVE_DEFAULT")
         if self.product_tun_fq_maxrate_mbps:
             product_readback={}
             for role in self.ns:
