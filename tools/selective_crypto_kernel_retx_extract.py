@@ -12,6 +12,8 @@ link = struct.unpack_from(order+"I", raw, 20)[0]
 assert link == 1, f"veth capture should be EN10MB, found {link}"
 items, offset=[], 24
 while offset+16 <= len(raw):
+    ts_sec,ts_usec=struct.unpack_from(order+"II",raw,offset)
+    timestamp_us=ts_sec*1000000+ts_usec
     n=struct.unpack_from(order+"I",raw,offset+8)[0];offset+=16
     assert n<=2048 and offset+n<=len(raw),"capture length exceeds packet bound"
     frame=raw[offset:offset+n];offset+=n
@@ -33,19 +35,19 @@ while offset+16 <= len(raw):
     if declared_tls<1300:continue
     if len(packet)+33>1500-40:continue
     seq=int.from_bytes(tcp[4:8],"big")
-    items.append((seq,packet,bytes(data),ihl+th+5))
+    items.append((seq,packet,bytes(data),ihl+th+5,timestamp_us))
 assert offset==len(raw),"trailing truncated packets"
 pair=None
-for i,(seq,packet,data,h) in enumerate(items):
+for i,(seq,packet,data,h,ts_us) in enumerate(items):
     for nxt in items[i+1:]:
-        if seq==nxt[0] and data==nxt[2] and h==nxt[3]:
-            pair=(packet,nxt[1],h,seq)
+        delta_us=nxt[4]-ts_us
+        if seq==nxt[0] and data==nxt[2] and h==nxt[3] and delta_us>=100000:
+            pair=(packet,nxt[1],h,seq,delta_us)
             break
     if pair:break
 assert pair is not None, ("no witnessed Linux inner TCP payload retransmission; "
                           "do not synthesize duplicate after this assertion")
-a,b,h,seq=pair
-assert a!=b or a==b  # packets can be identical; only distinct capture events matter
+a,b,h,seq,delta_us=pair
 assert len(a)>h+512 and len(b)>h+512
 assert a[h:]==b[h:], "true captured B suffix must match"
 with out.open("wb") as f:
@@ -55,6 +57,8 @@ result={
   "provenance":"NATIVE_LINUX_NETNS_VETH_TCP_CAPTURE",
   "outer_oracle":"two captured complete same-seq TLS ciphertext-bearing packets",
   "inner_tcp_seq":seq,"different_capture_events":True,
+  "duplicate_interarrival_ms":delta_us/1000,
+  "minimum_interval_ms_required":100,
   "inner_packet_lens":[len(a),len(b)],
   "h_prefix_lengths":[h,h],
   "tls_ciphertext_suffix_len":len(a)-h,
