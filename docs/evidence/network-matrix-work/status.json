@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3_DEFAULT_LINUX_NORMAL_FQ600_NATIVE_TCP500_AND_30PCT_PASS_500LINE_2PCT_IN_PROGRESS",
+  "phase": "V3_NATIVE_DEFAULT_FQ600_FLOW256_H500_COUNTEREXAMPLE_RETEST_IN_FLIGHT",
   "current_plan": {
     "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
     "policy": "outer-opportunistic-v3",
@@ -44,16 +44,21 @@
   },
   "open_requests": [
     {
-      "id": "V3-H500-default600-outer500-2pct-UDP-oneway",
-      "run": 40055236284,
+      "id": "V3-H500-flow256-native-preflight-fixed-2pct",
+      "run": 40056093313,
       "attempt": 1,
-      "request_source": "dbffcdfd672ba4ece9dc29638a22b46600f0c5c2",
-      "state": "PENDING_LAST_READ",
-      "app_mbps": 370,
-      "projected_outer_fresh_mbps": 396.4,
-      "outer_line_mbps": 500,
-      "loss_pct": 2,
-      "one_way_ms": 200,
+      "request_source": "ffc01a07de95ba13077d417fd253e4404e396b92",
+      "source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
+      "state": "IN_PROGRESS_LAST_READ",
+      "do_not_redispatch": true
+    },
+    {
+      "id": "V3-C-default-flow256-native-TCP500-exec",
+      "run": 40056105730,
+      "attempt": 1,
+      "request_source": "32e40a6b27beedfcc8196dc0f9fc9feca6fa114d",
+      "source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
+      "state": "QUEUED_LAST_READ",
       "do_not_redispatch": true
     }
   ],
@@ -148,6 +153,21 @@
       "artifact_zip_sha256": "b48bc908ecad811d75f729c3909db7d6cba8694fc1c75683ab1cdce0994cc162",
       "result": "PASS_SCOPED both directions true outerline50Mbps 30% IID RTT600: UDP delivery25.166/25.641Mbps R/F8.833/8.757<=10 R/C6.424/6.369>=6 sourceTUN/root0, StopPASS",
       "file": "V3-A-default-fq600-30pct-line50-real-20261024.json"
+    },
+    {
+      "id": "default_fq600_mixed15_70_30",
+      "run": 40055680062,
+      "artifact": 12545570785,
+      "zip_sha256": "eb42154bbe49fbca45a88649e5bbc3d94591515b69c1f57080f6a83c110cc8ba",
+      "result": "PASS_SCOPED both15Mbps per direction TCP10.5 UDP4.5 zero missing 10ms no common gap sourceTUN/root0",
+      "file": "V3-D-default-fq600-mixed-70TCP30UDP-20261024.json"
+    },
+    {
+      "id": "default_fq600_outer500_2pct_original_FAIL",
+      "run": 40055236284,
+      "artifact": 12544894146,
+      "zip_sha256": "0e863ad289573c61c55039624c77b6cfe3b37ba82bd95e9d5c15cdb9ec624cec",
+      "result": "STRICT_FAIL rootfq warmup drops2 flows_plimit2 despite sourceTUN0, injected370.008 UDP received363.434, netem2% CPU PSI9.89, actual qdisc limit100/600mbit, no CPU bottleneck evidence"
     }
   ],
   "open_issues": [
@@ -155,7 +175,7 @@
     "Host CPU/PSI significant at this load (B client48.66/server64.33 CPU-s per60s, host PSI some peak30.13%); no low CPU comparative improvement claim and do not use A local-drop as successful CPU baseline.",
     "Windows, Fixed/Auto/Game, physical, multi-business 500/no-HOL, bidirectional500 and wider MTU regressions remain separate NOT_QUALIFIED; previously passed v3-A/B/D scoped cases reused."
   ],
-  "next_action": "Complete already dispatched Action40055236284 (single direction 370Mbps app, 500Mbps outer line,2% IID,oneway200ms), capture exact source ZIP digest, source-TUN/root drops, policy R/F, UDP final missing/p99, host+process CPU denominator and Stop. Resolve any material FAIL with evidence, no blind rerun. Preserve true default fq600 TCP500 B success and highloss30 pass; record final-report/devlog/evidence, no main merge.",
+  "next_action": "Recover existing Action40056093313 H500 exact old counterexample (370 app Mbps/500 line/2pct) and Action40056105730 TCP500 0loss from native601e flow_limit256. Both use same product artifact12545850127 and strict native Go/kernel fq600 flow_limit256 readback. Preserve failed older qdisc flows_plimit=2 and 2 pre-business parser failures, do not change hard acceptance or dispatch again. If both PASS, finish scoped report; if FAIL pinpoint new counter before further code. New default ARM64 other scoped cases 30pct highloss/mixed prior source8d are retained but not promoted as exact flow256 source. No main merge.",
   "current_source_verified": {
     "source": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
     "build": 40053179394,
@@ -191,6 +211,19 @@
     "concurrency_fix": {
       "source": "d67c09a2528fd9479c00c77fb6264dd3c7472499",
       "reason": "Existing group by request path automatically cancelled never-executed pending highloss40055207569 when later 500M2pct was queued; new workflow groups by frozen github.sha + path so independent committed requests do not evict."
+    },
+    "fq_bounded_flow_fix": {
+      "source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
+      "build_run": 40055776896,
+      "artifact": 12545850127,
+      "sha256": "b631975bd4f70db690f5dcd7acfa122f191675950bd8c835ec0c5185a16ae261",
+      "reason": "Run40055236284 370Mbps app/outer500/2pct measured root fq drops2 warmup, kernel flows_plimit2, flow_limit100, sourceTUN0, PSI9.89%; raise only owned per-flow fq queue to256 packets, global max10000 same, 600Mbps rate same.",
+      "harness_readback_source": "c0f94f659978915f1443496ed781946636e28152",
+      "harness_preflight_false_fail": [
+        40055969268,
+        40055987386
+      ],
+      "preflight_fail_reason": "tc -d fq options split lines and 256p suffix; no business samples; corrected to separate text fq root/maxrate + JSON numeric flow_limit==256; new contract40056048217 PASS"
     }
   }
 }
