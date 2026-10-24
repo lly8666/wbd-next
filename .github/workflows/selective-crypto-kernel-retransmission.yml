@@ -164,6 +164,7 @@ jobs:
           test "$(stat -c %s "$tmp/outer.pcap")" -le 33554432
           python3 tools/selective_crypto_capture_analyze.py \
             --pcap "$tmp/outer.pcap" --port 38419 \
+            --inner-source kernel-netns \
             --output selective-kernel-retx-report/outer_capture_summary.json
           # Owned namespace, pcap, private cert+key, TLS corpus and pair.bin cleaned by trap.
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
