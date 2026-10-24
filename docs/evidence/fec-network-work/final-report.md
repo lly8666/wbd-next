@@ -168,3 +168,31 @@ W16真实 netem损伤29.984%/30.015%，业务C→S注入99.99863Mbps、交付94.
 | Host CPU PSI峰/over20持续比 |30.58% / 100%|30.25% / 100%|
 
 **资格**：W26 A/B两个方向、两腿各自产品级功能/业务均 PASS_SCOPED，B无Parity/首达回退；修订消除一次真实 source Vec 分配和重复copy。CPU 客户 -0.49s、服务 +0.12s，合计 -0.37s /30s，只有同机一次AB观测，**不能据此宣称有稳定0.73%硬件加速**。150Mbps比125Mbps多20%吞吐，CPU总秒不应硬压到125的绝对数而不减少真实Parity；更高175+依然 NOT_RUN，因为宿主CPU PSI持续>20%。独立 FEC Fixed 功能代表已具备150Mbps scoped资格；Auto真实损伤阶跃动态profile、真实反馈RTT age与Windows/组合资格仍未完成，merge_ready=false。现不再无限提高业务档或刷种子。
+
+
+## 2026-10-25 W27/W28 用户要求：175Mbps与200Mbps原生双向逐档试验（外层DATA修复OFF）
+
+产品冻结：Rust/Go 原生ARM64 W26 exact source `564490bc7a8f61c9ab06be58add8138212306393`，build Action40109847848 / artifact12566326717 / ZIP SHA256 `a1ce0b81738a9a74ac04835546479ada398e99718fd5086775c0b765625f649c`。两次性能Action均一个独立单腿场景（非同runner AB），依次先175后200；均为 ARM64 GitHub VM，Fixed Maximum6 真实双端applied，repair_enabled=false原生readback/实际outer DATA repair=0；原TUN fq600和owned静态veth邻居，150档延续的600Mbps外层netem rate不变，30% IID netem实测29.94–29.98%、单向300ms，15s warmup+30s measurement+30s drain，99%大小1287B，真实性能/PN/M2/RX和cleanup报告原样保留，不改代码不重新编译。速率仅改变 app offer `175/200` Mbps each。
+
+| 双向重要指标 | W27 175Mbps | W28 200Mbps |
+|---|---:|---:|
+| 原生业务门 | **PASS_SCOPED_OBSERVATION** | **FAIL 2方向残余>1%** |
+| C→S 交付 / 残余 |174.822 Mbps / **0.1187%**|191.462 Mbps / **4.302%**|
+| S→C 交付 / 残余 |174.746 Mbps / **0.1661%**|190.519 Mbps / **4.765%**|
+| C→S/S→C 实际首达 p99（仅已交付样本） |306.0/306.7ms|312.0/312.0ms|
+| 客户端原生Parity rplanned→rsent |968003→965077（缺0.302%）|1106096→913794（缺**17.39%**）|
+| 服务端原生Parity rplanned→rsent |967928→964020（缺0.404%）|1106095→893380（缺**19.23%**）|
+| Parity队列过期Jobs C/S |69 / 96|**5864 / 6541**|
+| 原生unknown_capacity C/S |116 / 172|**9320 / 10186**|
+| 每侧进程CPU-s/30s C/S |27.11 / 27.53|28.64 / 29.08|
+| host CPU PSI均值/峰值 |33.00% / 35.51%|**38.38% / 41.19%**|
+| RX peak active C/S |183 / 183|209 / 210|
+| RX capacity拒收/压力淘汰、原始TUN根fq/source drop |全部0|全部0|
+| 真实外层DATA重传 / 假造反馈 |0 / 无|0 / 无|
+| Stop原生命名空间清理 |PASS|PASS|
+
+[W27 ARM64 Action40127642866](https://github.com/lly8666/wbd-next/actions/runs/40127642866) SUCCESS；请求 `tests/network/fec-work/W27-maximum175-W26single-static-owned-fq600-arm64.json` at `3a694dea12653eebe24bf5174f9c0c57e1cf533a`；result ZIP artifact **12573724068**, sha256 `00722004b9fbd1fc59e244b69045ff95ca0cdbe8ab008d4df1aa4bc9a5b0b7a0`。
+
+[W28 ARM64 Action40127866107](https://github.com/lly8666/wbd-next/actions/runs/40127866107) FAILURE：仅两方向 `declared loss allowance exceeded`；请求 `tests/network/fec-work/W28-maximum200-W26single-static-owned-fq600-arm64.json` at `11774fb26d720f99f3c8801c5dfb843498f5dae8`；result ZIP artifact **12573539799**, sha256 `a5937ac9939a1d51c3693099b6a05163e09b2d5fbe9c8fe7c89efe0c4f7d9f53`。
+
+**边界/解释**：175 Mbps业务单次限域达标，宿主CPU高争用不能保证多次/真实物理稳定；200 Mbps 双向残余显著超过1%，即使只看已交付的 p99 312ms貌似不高，也不能忽略50k+未交付。200Mbps对比175Mbps parity 未发比例突升至17–19%，作业到期数跃升，RX/源TUN均无压力拒收，因此首要调查发送端 Parity编码/调度在10ms期限下的CPU与M4排队，但单次共享runner不能全归产品CPU瓶颈。**容量STOP：不再压测225/250/350，不刷seed，不延长原生过期窗口，不降低loss资格要求**。Fixed-only 175有正例、200有确定反例；Auto真实升降档仍待独立资格，merge_ready=false，原network角色与main未动。

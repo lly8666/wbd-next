@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W26_SOURCE_DIRECT_ARENA_150_SAME_VM_AB_BOTH_PASS_FEC_ONLY_CPU_SMALL_OBSERVED_WIN_CAPACITY_STOP",
+  "phase": "W28_CAPACITY_175_SCOPED_PASS_200_BOTH_RESIDUAL_FAIL_PARITY_DEADLINE_CLIFF_STOP",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -328,9 +328,36 @@
       "A_source": "ab7ea894100f245d6a510137282736781bd017ce",
       "B_source": "564490bc7a8f61c9ab06be58add8138212306393",
       "result": "SUCCESS_BOTH_LEGS_SCOPED_PASS"
+    },
+    {
+      "id": "FEC-W27-Maximum175-W26DirectArena-Fixed-OuterOff-ARM64",
+      "path": "tests/network/fec-work/W27-maximum175-W26single-static-owned-fq600-arm64.json",
+      "source": "564490bc7a8f61c9ab06be58add8138212306393",
+      "build_run": 40109847848,
+      "artifact_id": 12566326717,
+      "run_id": 40127642866,
+      "attempt": 1,
+      "result_artifact_id": 12573724068,
+      "artifact_sha256": "00722004b9fbd1fc59e244b69045ff95ca0cdbe8ab008d4df1aa4bc9a5b0b7a0",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "app_mbps_each": 175
+    },
+    {
+      "id": "FEC-W28-Maximum200-W26DirectArena-Fixed-OuterOff-ARM64",
+      "path": "tests/network/fec-work/W28-maximum200-W26single-static-owned-fq600-arm64.json",
+      "source": "564490bc7a8f61c9ab06be58add8138212306393",
+      "build_run": 40109847848,
+      "artifact_id": 12566326717,
+      "run_id": 40127866107,
+      "attempt": 1,
+      "result_artifact_id": 12573539799,
+      "artifact_sha256": "a5937ac9939a1d51c3693099b6a05163e09b2d5fbe9c8fe7c89efe0c4f7d9f53",
+      "result": "FAIL_BOTH_DIRECTIONS_RESIDUAL_GT_1PCT",
+      "app_mbps_each": 200
     }
   ],
   "open_issues": [
+    "User-authorized 175/200 step tests on same frozen native W26 product (SOURCE 564490bc, ARM64 build40109847848, native original FEC Fixed Maximum, outer data retrans ZERO, 30%IID+300ms, fq600/600 unchanged): W27 175 both PASS residual0.119/0.166%, p99 306.0/306.7ms, CPU PSI peak35.51%; W28 200 both FAIL residual4.302/4.765% delivered191.462/190.519Mbps, p99 of delivered312ms, Parity sent deficit17.4/19.2%, expire5864/6541, CPU PSI peak41.19%, RX pressure0 and original source drops0. Stop escalation above175 scoped /200 failed, no 225+ load. Independent actions40127642866/40127866107 artifacts12573724068/12573539799, immutable evidence files.",
     "W26 Action40110100061 same ARM64 VM 150Mbps Fixed Maximum outerOFF 30% IID 300ms AB both PASS. Original direct-arena source_into product SOURCE 564490bc B delivered149.897/149.926Mbps residual0.0836/0.0623%, p99 303.7/303.8ms, parity deficits0.103/0.069%. Process CPU client24.87 vs A25.36(-0.49s), server25.39 vs A25.27(+0.12s), combined -0.37s over30s (0.73%); single AB cannot qualify sustained CPU gain under PSI>20 all samples. Memory ~50MB per side, source drops/RTX/RX rejects0. W25 ab7e old PASS retained. No 175+ due host capacity; Auto true dynamic and RTT still OPEN.",
     "W25 Action40109234114 same ARM64 VM sequential AB: B source ab7ea894 optimized 2x <=4-row same-M4 staging achieved genuine Fixed Maximum150Mbps 30%IID 300ms C2S149.938/S2C149.953Mbps residual0.054/0.0485% p99 303.3/303.2ms, FEC parity deficit0.08/0.051%, no RX pressure or outer DATA retrans. A source cf00a47c fails both at1.951/1.774%. Overall Action FAIL only because old A failed. No repeatability BA and host CPU PSI peak29.61, always>20; CPU client/server higher B24.85/24.58s versus A24.24/24.06s as B emits more genuine parity. Keep STOP 175+, hold full merge; next optimize FEC per-source allocation/copy only if justified, but avoid diluting W25 B qualification.",
     "W24 same ARM64 VM AB Action40105506052 artifact12564980324: both old A and new B FAIL <=1% residual at150Mbps (A 2.153/2.453%; B1.642/1.826%) under 30% IID+300ms Maximum6 outerOFF. Immutable ISA-L table reuse reduces parity planned/sent gap A9.77/11.19% to B8.04/9.06% and queued expiry A915/1102 to B817/882, but client/server CPU seconds essentially unchanged (23.91/24.46 to23.98/24.32), host PSI>20 in all measurement samples with worse B peak31.78. No RX capacity issue, source TUN0, outer DATA repair0. Neither qualifies stable150; single W23 PASS not reproduced. Remain capacity_stop=true and no175+.",
@@ -347,7 +374,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Representative high-loss Fixed Maximum and outer DATA repair OFF business throughput now scoped 150Mbps pass on W25 + W26; STOP escalation at 150 host CPU PSI>20 100% samples. Next distinct incomplete FEC capability: native Auto true authenticated maturity -> per-direction rise/recover/asymmetric profile revision and genuine RTT-age telemetry, reusing W10 intent if still valid, without repeating fixed/150 performance tests. W26 source direct arena has one same-VM A/B observed combined -0.73% CPU, do not assert stable hardware gain. No outer network next_action, no main merge until complete dynamic Auto coverage and final qualification.",
+  "next_action": "Capacity edge now directly observed: one scoped 175Mbps/side Fixed Maximum PASS, 200Mbps/side BOTH FAIL under 30%IID 300ms and host PSI>20 all samples; STOP 200+ escalation. If explicitly tasked to optimize 200, first add narrow per-M4 parity deadline/quantum observability and test source-first/CPU scheduling bottleneck with a single frozen old/new same VM 200Mbps AB; do not extend 10ms deadline, increase unbounded buffers or weaken residual <=1% gate. Otherwise prioritize distinct Auto genuine authenticated feedback rise/fall/asym / real RTT coverage. Preserve main and original network next_action, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -2216,5 +2243,199 @@
       "Host PSI stays above20% across100% samples, physical 175-350 not authorized; 150 single-run PASS does not prove sustained stability.",
       "Auto dynamic loss-step/asymmetric live configuration and genuine measurement RTT age remain OPEN, merge_ready=false."
     ]
+  },
+  "w27": {
+    "owner": "fec-network-work",
+    "source": "564490bc7a8f61c9ab06be58add8138212306393",
+    "build_run": 40109847848,
+    "product_artifact": 12566326717,
+    "product_zip_sha256": "a1ce0b81738a9a74ac04835546479ada398e99718fd5086775c0b765625f649c",
+    "host": "GitHub Actions ubuntu-24.04-arm aarch64 4 logical CPU",
+    "fec_profile": "fixed maximum 6 both true applied",
+    "loss_iid_pct": 30,
+    "oneway_delay_ms": 300,
+    "outer_rate_limit_mbps_each": 600,
+    "original_fq600": true,
+    "owned_veth_permanent_neighbour": true,
+    "outer_data_retransmission": "OFF native verified 0 packets",
+    "authenticated_reverse_feedback_real": true,
+    "warmup_s": 15,
+    "measurement_s": 30,
+    "drain_s": 30,
+    "no_source_tun_drops": true,
+    "no_source_fq_root_qdisc_drops": true,
+    "no_RX_capacity_pressure_evictions": true,
+    "no_RX_decoder_capacity_rejects": true,
+    "stop_owned_drained": true,
+    "verdict_scope": "single-arm64-VM original public Linux TUN; not persistent/physical/Windows capacity qualification",
+    "id": "FEC-W27-Maximum175-W26DirectArena-Fixed-OuterOff-ARM64",
+    "request_path": "tests/network/fec-work/W27-maximum175-W26single-static-owned-fq600-arm64.json",
+    "request_commit": "3a694dea12653eebe24bf5174f9c0c57e1cf533a",
+    "run_id": 40127642866,
+    "attempt": 1,
+    "result_artifact": 12573724068,
+    "artifact_sha256": "00722004b9fbd1fc59e244b69045ff95ca0cdbe8ab008d4df1aa4bc9a5b0b7a0",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "stop_heavier_resource_cases": false,
+    "rate_mbps_each": 175,
+    "c2s": {
+      "injected_mbps": 175.0007688,
+      "delivered_mbps": 174.8223824,
+      "residual_loss_pct": 0.11868663813784355,
+      "p99_ms": 306,
+      "missing_after_drain": 611
+    },
+    "s2c": {
+      "injected_mbps": 175.0021416,
+      "delivered_mbps": 174.7458848,
+      "residual_loss_pct": 0.16608230300793506,
+      "p99_ms": 306.7,
+      "missing_after_drain": 855
+    },
+    "outer_actual_netem_loss_pct": {
+      "client": 29.970403425646055,
+      "server": 29.960447298282926
+    },
+    "cpu_s_30s": {
+      "client": 27.11,
+      "server": 27.53
+    },
+    "host_psi_some_pct": {
+      "mean": 32.998,
+      "peak": 35.51,
+      "over20_fraction": 1
+    },
+    "native_parity": {
+      "client": {
+        "rplanned": 968003,
+        "rsent": 965077,
+        "queued_expired": 69,
+        "unknown_capacity": 116,
+        "parity_seal_fail": 750,
+        "pressure_jobs": 0,
+        "pressure_sources": 0
+      },
+      "server": {
+        "rplanned": 967928,
+        "rsent": 964020,
+        "queued_expired": 96,
+        "unknown_capacity": 172,
+        "parity_seal_fail": 833,
+        "pressure_jobs": 0,
+        "pressure_sources": 0
+      }
+    },
+    "RX_peak_active": {
+      "client": 183,
+      "server": 183
+    },
+    "RX_peak_bytes": {
+      "client": 6784981,
+      "server": 6862107
+    },
+    "native_TUN_recovered": {
+      "client": 230911,
+      "server": 231416
+    },
+    "rss_peak_bytes": {
+      "client": 53522432,
+      "server": 53735424
+    },
+    "interpretation": "Single 175 Mbps both directions meets <=1% residual while host CPU PSI remains high; no direct evidence that 200 Mbps will pass."
+  },
+  "w28": {
+    "owner": "fec-network-work",
+    "source": "564490bc7a8f61c9ab06be58add8138212306393",
+    "build_run": 40109847848,
+    "product_artifact": 12566326717,
+    "product_zip_sha256": "a1ce0b81738a9a74ac04835546479ada398e99718fd5086775c0b765625f649c",
+    "host": "GitHub Actions ubuntu-24.04-arm aarch64 4 logical CPU",
+    "fec_profile": "fixed maximum 6 both true applied",
+    "loss_iid_pct": 30,
+    "oneway_delay_ms": 300,
+    "outer_rate_limit_mbps_each": 600,
+    "original_fq600": true,
+    "owned_veth_permanent_neighbour": true,
+    "outer_data_retransmission": "OFF native verified 0 packets",
+    "authenticated_reverse_feedback_real": true,
+    "warmup_s": 15,
+    "measurement_s": 30,
+    "drain_s": 30,
+    "no_source_tun_drops": true,
+    "no_source_fq_root_qdisc_drops": true,
+    "no_RX_capacity_pressure_evictions": true,
+    "no_RX_decoder_capacity_rejects": true,
+    "stop_owned_drained": true,
+    "verdict_scope": "single-arm64-VM original public Linux TUN; not persistent/physical/Windows capacity qualification",
+    "id": "FEC-W28-Maximum200-W26DirectArena-Fixed-OuterOff-ARM64",
+    "request_path": "tests/network/fec-work/W28-maximum200-W26single-static-owned-fq600-arm64.json",
+    "request_commit": "11774fb26d720f99f3c8801c5dfb843498f5dae8",
+    "run_id": 40127866107,
+    "attempt": 1,
+    "result_artifact": 12573539799,
+    "artifact_sha256": "a5937ac9939a1d51c3693099b6a05163e09b2d5fbe9c8fe7c89efe0c4f7d9f53",
+    "result": "FAIL_BOTH_DIRECTIONS_RESIDUAL_GT_1PCT",
+    "stop_heavier_resource_cases": false,
+    "rate_mbps_each": 200,
+    "c2s": {
+      "injected_mbps": 199.995,
+      "delivered_mbps": 191.462,
+      "residual_loss_pct": 4.302,
+      "p99_ms": 312,
+      "missing_after_drain": 25310
+    },
+    "s2c": {
+      "injected_mbps": 199.994,
+      "delivered_mbps": 190.519,
+      "residual_loss_pct": 4.7652,
+      "p99_ms": 312,
+      "missing_after_drain": 28035
+    },
+    "outer_actual_netem_loss_pct": {
+      "client": 29.976035038426577,
+      "server": 29.943933759796554
+    },
+    "cpu_s_30s": {
+      "client": 28.64,
+      "server": 29.08
+    },
+    "host_psi_some_pct": {
+      "mean": 38.376,
+      "peak": 41.19,
+      "over20_fraction": 1
+    },
+    "native_parity": {
+      "client": {
+        "rplanned": 1106096,
+        "rsent": 913794,
+        "queued_expired": 5864,
+        "unknown_capacity": 9320,
+        "parity_seal_fail": 5277,
+        "pressure_jobs": 0,
+        "pressure_sources": 0
+      },
+      "server": {
+        "rplanned": 1106095,
+        "rsent": 893380,
+        "queued_expired": 6541,
+        "unknown_capacity": 10186,
+        "parity_seal_fail": 4945,
+        "pressure_jobs": 0,
+        "pressure_sources": 0
+      }
+    },
+    "RX_peak_active": {
+      "client": 209,
+      "server": 210
+    },
+    "RX_peak_bytes": {
+      "client": 7601833,
+      "server": 7678919
+    },
+    "failures": [
+      "c2s/udp/capacity_200: declared loss allowance exceeded",
+      "s2c/udp/capacity_200: declared loss allowance exceeded"
+    ],
+    "interpretation": "200Mbps/side is not qualified. Parity deadlines under high sender/host CPU contention are the leading directly observed mechanism (17.4/19.2% rows not sent, thousands of expired jobs), not RX pressure or lost source ingress. Single ARM64 shared runner cannot attribute entire cause to engine alone. Stop higher pressure; do not relax loss thresholds."
   }
 }
