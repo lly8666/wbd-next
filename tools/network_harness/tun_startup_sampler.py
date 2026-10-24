@@ -34,7 +34,8 @@ def main():
     count = 0
     rows = []
     period_ns = 25_000_000
-    sample_ns = opts.start_ns
+    # Pre-start counter baseline makes even the very first microburst visible.
+    sample_ns = opts.start_ns - 200_000_000
     while sample_ns <= horizon:
         now = time.monotonic_ns()
         if now < sample_ns:
