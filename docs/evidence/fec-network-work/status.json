@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "V3_MERGED_ARM64_BUILD_PASS_FEC_ONLY_RUNTIME_W2_DISPATCH",
+  "phase": "V3_W2_OUTER_OFF_AND_TUN_FEC_RECOVERY_OBSERVED_FIXED_APPLIED_FIX_NEEDS_ACTION",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -16,7 +16,7 @@
     "shared_implementation": "V3 public data path, original global repairs, unified MTU, TUN ingress, Linux owned fq600/flow256"
   },
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
-  "outer_repair_disabled_verified": false,
+  "outer_repair_disabled_verified": true,
   "product_current": {
     "source": "1a04e791d28d860107f31bcfe463846cf3f5c2ac",
     "build_run": 40077530806,
@@ -54,19 +54,26 @@
       "id": "FEC-W2-V3-Fixed5-OuterOff-Clean-Loss5",
       "source": "1a04e791d28d860107f31bcfe463846cf3f5c2ac",
       "build_run": 40077530806,
-      "artifact_id": 12553429349,
-      "result": "DISPATCHED_BY_IMMUTABLE_REQUEST_COMMIT_PENDING_RUN",
-      "qualification": "NOT_YET_OBSERVED"
+      "artifact_id": 12554116413,
+      "result": "FAIL_FIXED_CLIENT_PENDING_NATIVE_OFF_AND_RECOVERED_TUN_POSITIVE",
+      "qualification": "NOT_YET_OBSERVED",
+      "run_id": 40077795567,
+      "qualifications": {
+        "outer_off": true,
+        "parity": true,
+        "tun_recovery": true,
+        "fixed_applied": false
+      }
     }
   ],
   "open_issues": [
-    "V3 merge is source-only; new exact native ARM64 binary, native ON/OFF readbacks and fixed/auto authentic FEC applied are NOT_YET_QUALIFIED.",
-    "V3 source retains half-PN frozen repair-only copies, independent first-send F/R ledger and batch budget ON; OFF must show zero candidates/repair copies and real feedback without fallback to v2.",
-    "Upstream evidence source 1c43b69: Fixed5 IID5 server applied0/pending true; Auto 0-loss both applied0/pending true (fq0 still one pending). Root cause NOT_ESTABLISHED; investigate true M2 reverse receipt and policy revision state.",
-    "Upstream historical 2% mixed RX conservation and host/product limits remain COMMON_PATH_SCOPE separate from FEC codec.",
-    "Historical FEC 7ad7 product zip download errors preserved in open_requests; do not repeat obsolete artifacts. Linux Game OFF switch/Windows GUI are unsupported/not wired."
+    "Source 1a04e791 W2: full product ran and proven BOTH real outer OFF and FEC parity/recovered TUN; Fixed client applied=0/pending=true despite 5784 authenticated reverse receipts. Cause: clean_2s cohort resets on any UNKNOWN, and permanent first.censored blocks applied. A narrowly scoped native witness distinction is prepared, NOT YET ACTIONS-VERIFIED.",
+    "FEC auto under actual outer OFF and clean/lossy scenarios untested on V3 merged code; upstream 1c43 native Auto even at zero loss may pending, fq0 baseline also pending.",
+    "Need W3 same actual Fixed5 lossy case on a fresh pinned build of native M2 applied witness repair; no old 1a04 product artifact qualifies modified source.",
+    "Actual CPU/RSS and p99 at 2Mbps observed but NOT cost/memory scaling or matched sameVM AB; 30%/300ms and Auto asym/transition NOT_RUN.",
+    "Linux Game OFF and Windows GUI/OS wiring UNSUPPORTED; upstream normal mixed RX ambiguity remains common-path."
   ],
-  "next_action": "Read W2 Auto-triggered network-harness Action at exact SOURCE 1a04e791 using artifact12553429349; classify early artifact download errors separately. If it runs, inspect real native repair_enabled=0 per side, zero outer DATA copies/candidates, reverse M2 authentic coverage, FEC source/parity/decoded TUN and Fixed revision (including pending root). If no runtime, avoid new performance scenarios. Next Auto/clean with same product artifact after diagnosing Fixed.",
+  "next_action": "Run exact native ARM64 product build + targeted native FEC maximum and harness contracts for Fixed applied witness patch; once successful, freeze SOURCE/artifact and rerun W2 as new unique W3 request with same loss0->5 measurement. Require both applied=1, outer OFF, recovery TUN positive, feedback authentic. Then run Auto clean/transition with same artifact; avoid prematurely launching max30 pressure.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -150,5 +157,12 @@
       "tools/network_harness/runner.py"
     ],
     "prior_download_failures_preserved": true
+  },
+  "outer_repair_verification_scope": "Linux ARM64 V3 source 1a04e791, genuine W2 Action40077795567 / artifact12554116413, two peers repair_enabled=0, 0 copies/candidates/shadow/repair bytes with real 5% damage, FEC parity and recovered TUN positive",
+  "pending_fix": {
+    "file": "crates/wbd-engine/src/v4_embedded_go.rs",
+    "source_before": "9cef7cfae2c1811f5589b55e2543f320d933b3ce",
+    "change": "Replace entire-clean 2s cohort FEC APPLIED gate with real mature unambiguous positive ACK witness while leaving censored quality/unknown metadata intact; require native copied FEC source AND parity, epoch/revision identity and no capacity censorship.",
+    "validated": false
   }
 }

@@ -258,6 +258,19 @@ impl NormalFirstSendM2 {
             Err(_)=>self.censored=true,
         }
     }
+    // A configuration APPLIED receipt requires a real 2s-mature positive
+    // proof for one original, first-copied DATA PN, not an entire 2s epoch
+    // with zero uncovered packets. With IID loss that historical all-clean
+    // predicate could remain pending forever despite thousands of genuine
+    // authenticated positive receipts. Uncovered, late, old and ambiguous
+    // observations remain UNKNOWN in the quality estimator; they never
+    // become fake ACKs or zero loss. Capacity censorship still fails closed.
+    fn has_verified_fixed_m2_witness(&self)->bool{
+        self.authenticated_reverse_reports>0 &&
+        self.covered_2s>0 && self.positive_2s>0 &&
+        self.state.counters().capacity_censored==0
+    }
+    #[cfg(test)]
     fn has_clean_fixed_m2(&self)->bool{
         self.authenticated_reverse_reports>0 && !self.censored &&
         self.clean_2s>0 && self.clean_positive_2s>0
@@ -5180,7 +5193,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_commit_mature_m2(
         m2.poll(loop_now());
         // A 2s-mature authentic clean cohort, NOT all-source epoch totals.
         // Identity/capacity censorship is still a hard failure.
-        m2.has_clean_fixed_m2()
+        m2.has_verified_fixed_m2_witness()
     };
     if !covered{return BAD_STAGE}
     let Some(policy)=e.fixed_pending.take()else{return BAD_STAGE};
@@ -5445,11 +5458,16 @@ mod tests{
         assert_eq!(first.unknown_2s,1);
         assert_eq!((first.clean_2s,first.clean_positive_2s),(1,1));
         assert!(first.has_clean_fixed_m2());
+        assert!(first.has_verified_fixed_m2_witness());
         first.on_real_kernel_turn(&[(RecordPn(9),1200)],copied,MonoNs(4_200_000_000));
         first.poll(MonoNs(6_200_000_100));
         assert!(!first.has_clean_fixed_m2());
+        // A real mature positive witness survives unrelated later UNKNOWNs;
+        // the quality estimate is still censored, not re-labelled clean.
+        assert!(first.has_verified_fixed_m2_witness());
         first.censored=true;
         assert!(!first.has_clean_fixed_m2());
+        assert!(first.has_verified_fixed_m2_witness());
     }
     #[cfg(all(feature="fec2_product_record",target_os="linux",
         any(target_arch="x86_64",target_arch="aarch64")))]

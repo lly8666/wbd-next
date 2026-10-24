@@ -1,0 +1,93 @@
+{
+  "schema": 1,
+  "branch": "experiment/fec-network-tuning",
+  "source": "1a04e791d28d860107f31bcfe463846cf3f5c2ac",
+  "request_source": "9cef7cfae2c1811f5589b55e2543f320d933b3ce",
+  "request_path": "tests/network/fec-work/W2-v3-fixed5-outeroff-loss0to5-arm64.json",
+  "run": 40077795567,
+  "attempt": 1,
+  "artifact": 12554116413,
+  "artifact_sha256": "f484785ce7959074565d7af73114f5c04a908000332a1d23678dfeb6937135dd",
+  "result": "FAIL_FEC_FIXED_CLIENT_PENDING",
+  "outer_repair_enabled_requested": false,
+  "outer_readback_verified": true,
+  "outer_native_per_side": {
+    "client": {
+      "repair_enabled": 0,
+      "data_retransmissions": 0,
+      "repair_candidates_first": 0,
+      "repair_candidates_retry": 0,
+      "shadow_outstanding": 0,
+      "accepted_repair_wire_bytes": 0
+    },
+    "server": {
+      "repair_enabled": 0,
+      "data_retransmissions": 0,
+      "repair_candidates_first": 0,
+      "repair_candidates_retry": 0,
+      "shadow_outstanding": 0,
+      "accepted_repair_wire_bytes": 0
+    }
+  },
+  "fec": {
+    "client": {
+      "requested": 1,
+      "applied": 0,
+      "pending": true,
+      "profile": 5,
+      "actual_r_sent": 16512,
+      "parity_accepted_rx": 15964,
+      "recovered_tun": 532,
+      "authenticated_reverse_reports": 5784,
+      "mature_2s_covered": 16507,
+      "unknown_2s": 5,
+      "first_censored": 1
+    },
+    "server": {
+      "requested": 1,
+      "applied": 1,
+      "pending": false,
+      "profile": 5,
+      "actual_r_sent": 16510,
+      "parity_accepted_rx": 15976,
+      "recovered_tun": 518,
+      "authenticated_reverse_reports": 5774,
+      "mature_2s_covered": 16097,
+      "unknown_2s": 7,
+      "first_censored": 1
+    }
+  },
+  "business": {
+    "c2s_mbps": 2,
+    "s2c_mbps": 2,
+    "traffic": "UDP mostly 1287B; 10s warmup, 15s no netem loss, 45s IID 5% loss, one-way 25ms",
+    "c2s_missing": 0,
+    "s2c_missing": 0,
+    "p99_ms_clean": 25.3,
+    "p99_ms_loss5_range": [
+      43.3,
+      45
+    ],
+    "root_fq_drops": "none observed",
+    "source_TUN_tx_drops": {
+      "client": 0,
+      "server": 0
+    }
+  },
+  "cost": {
+    "client_cpu_s_measurement": 1.87,
+    "server_cpu_s_measurement": 1.94,
+    "client_rss_peak_bytes": 19931136,
+    "server_rss_peak_bytes": 19542016,
+    "stop_drained_both": true,
+    "host_steal_pct_peak": 0
+  },
+  "source_diagnosis": "has_clean_fixed_m2 requires uninterrupted zero-uncovered 2s cohort; source proof and authentic receipt actually present. M2 estimator UNKNOWN remains real: Fixed applied criterion must not require perfect loss-free cohort.",
+  "qualification": {
+    "outer_data_repair_off": "PASS_SCOPED",
+    "fec_source_parity_TUN_recovery": "PASS_SCOPED",
+    "fixed_real_applied": "FAIL",
+    "full_FEC_only": "NOT_QUALIFIED",
+    "performance": "LOW_LOAD_OBSERVATION_ONLY"
+  }
+}
