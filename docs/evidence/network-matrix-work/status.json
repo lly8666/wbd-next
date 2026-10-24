@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-C-TCP500-steady500-STRICT_STARTUP_LOSS_OPEN-sampled-TUN-drop-timeseries-under-Actions",
+  "phase": "V3-C-TCP500-cold-source-slowstart-burst-at-6s-true-per-socket-pacing-AB-queued",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -27,17 +27,18 @@
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
   "open_requests": [
     {
-      "id": "V3-C-TCP500-cold-TUN-25ms-numeric-rootcause",
+      "id": "V3-C-TCP500-socket-pacing600-cold-burst-AB",
       "state": "ACTIONS_QUEUED",
-      "run": 40047401954,
+      "run": 40047976746,
       "attempt": 1,
-      "request_source": "4947ff7b701e0eddb2dcfb54c212b7f614433d60",
-      "product_source": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
-      "build_run": 40044879144,
-      "artifact_id": 12540624073,
-      "artifact_zip_sha256": "f52f3c67749b399fa6778e9031e83a0f93f1fe4780d6836d7d120928b9fed763",
-      "contract_run": 40047401901,
-      "scope": "one native ARM64 500Mbps TCP1 strict full startup zero source TUN loss, 20warm/60steady, qlen1024 root fq, read Linux TUN tx_drop/tx_packets at 25ms for first2s and100ms for rest of warmup with prestart-200ms baseline, bounded <=300 numeric counters in owned namespace; correlate Rust native 4Hz M4 TX/RX progress; no source product change",
+      "request_source": "31d5a2d1c5cfe5b21b8cbb5b94a679d81d53ed32",
+      "contract_run": 40047976745,
+      "product_source_A_B": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
+      "product_native_build_run": 40044879144,
+      "product_artifact_id": 12540624073,
+      "product_bundle_sha256": "f52f3c67749b399fa6778e9031e83a0f93f1fe4780d6836d7d120928b9fed763",
+      "only_difference": "SameVM product/seed/real500Mbps/RTT400/netem0/qlen1024 fq; client test app SO_MAX_PACING_RATE A0 (default) vs B600Mbps, actual readback required, no changes to business offered target or host sysctl",
+      "strict": "source TUN warmup+steady kernel drops0, throughput>=475Mbps, p99<=400ms, qdisc/TUN true drops, authenticated v3 policy and Stop",
       "do_not_redispatch": true
     }
   ],
@@ -219,6 +220,15 @@
       "artifact_id": 12541762637,
       "result": "PASS_R_F8.88pct_R_C6.45pct_both_normaloff_sourceTUN_zero",
       "file": "V3-A-dedicated-TUN-reader-30pct-standard-20261024.json"
+    },
+    {
+      "id": "V3-C-TCP500-cold-TUN-25ms-drop-timeline-20261024",
+      "run": 40047401954,
+      "attempt": 1,
+      "artifact_id": 12541148938,
+      "artifact_zip_sha256": "680a3a3bbae840fc4eb19b0922b4ce0b281ea7751fab5205a2a0f13f5d271a34",
+      "result": "STRICT_FAIL_TUN_KERNEL_DROP6629_ALL_NEAR6SEC_SOURCE_CUBIC_CWND50.75MB_VS_BDP25MB",
+      "file": "V3-C-TCP500-cold-TUN-25ms-drop-timeline-20261024.json"
     }
   ],
   "open_issues": [
@@ -233,7 +243,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "Latest strict same-VM native ARM64 TCP500 source A oldb8df vs B new bounded512 dedicated TUN reader a0a run40046507450 completed ACTION FAILURE, exact ZIPsha c41f58... verified artifact12541886545. Both injected/delivered500Mbps C2S over60s, p99 A202.9/B203ms, no TCP steady retrans, steady source TUN dropped0, no backpressure, clean Stop; BUT warmup full500 source TUN kernel dropped A6488 vs B6720 (first snapshot before traffic). B dedicated reader does not fix startup, do not qualify/product promote as startup fix, do not blindly increase 1024-q TUN ring. Source B separately passed sameVM native TCP10Mbps duplex0loss full warmup/steady zero drop/retrans run40045323595; source B V3 standard30% loss line50Mbps/dir UDP33.7Mbps/dir R/F8.878%/8.870%, R/C6.457%/6.451%, TUN warmup+steady0, 60s Actions40046784480 PASS evidence V3-A-dedicated-TUN-reader-30pct-standard-20261024.json. Need FIRST temporally localize cold TUN source tx_dropped vs actual producer with bounded numeric-only test-owned observer before considering code fix; new test-only startup sampler (25ms first2s,100ms rest, prestart baseline200ms) contract Actions40047384542 success, 500 single-arm exact same product with native Rust 4Hz M4 progress, 20s warmup/60steady strict0 loss, qlen1024 root fq, Action40047401954 source4947ff7b queued, contract40047401901. Capture exact run/attempt/artifact/hash, first_drop_ms/time distribution and correlate with tx_records/host PSI, then choose narrowly testable fix rather than repeat same fail. V3-A/B/D previously scoped PASS, other FEC and Windows platform untouched, no main merge/deploy.",
+  "next_action": "Recovered/continued task after latest branch3471: dedicated bounded512 source ingress new product a0a native build40044879144 PASS. Lowload sameVM10Mbps both/0loss fullrun TUN0 TCP Retrans0, p99200.8, CPU5.04->5.02 total PASS run40045323595. Exact sameVM full500 coldstart A old b8df/B new a0a run40046507450 sourcea23c81d ZIPsha c41f58d both reach steady500Mbps+P99~203+steadyTUN0 but FAIL strict startup TUN drop A6488 B6720. Highloss30% standard new a0a run40046784480 SHA f6402f... R/F8.878/8.870 <=10%, R/C6.457/6.451>=6%, no source TUN loss, UDP25.66/25.70PASS. Bounded 25ms first2s and100ms until20s SOURCE TUN kernel numeric sampler run40047401954 artifact12541148938 sha680a3a... local drops6629 all at6.0-6.1s:2849,6.4-6.5s:3759,7.4-7.5s:21; source CUBIC cwnd~50.75MB at6.14s vs RTT400 500Mbps BDP25MB. This strongly implicates startup TCP slowstart microbursts and finite TUN queue, not 500 steady processing limit. Test-only socket-scoped pacing diagnostic (NOT PRODUCT FIX) per-socket SO_MAX_PACING_RATE=600Mbps B vs default A, true offered500 both, qlen1024 fq, live readback and 25ms startup time series, strict FULL warmup local0, same VM run40047976746 source31d5a2d queued, contract40047976745. If B fails/source TUN qdisc loses, no further blind queue/prefetch tests; identify deployable Linux pacing mechanism or state intrinsic cold-burst limitation; no network sysctl changes and no cheating by reducing offered target. V3-A/B/D scoped PASS retained, no FEC independent work, no main merge/deploy.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -572,7 +582,13 @@
       "reader_30pct_result": "PASS_NATIVE_STANDARD_LINE50MBPS_PER_DIRECTION_P30_R/F8.878_8.870_R/C6.457_6.451_UDP25.66_25.70_TUN0",
       "reader_30pct_evidence": "V3-A-dedicated-TUN-reader-30pct-standard-20261024.json",
       "reader_startup_sampler_run": 40047401954,
-      "reader_startup_sampler_status": "ACTIONS_QUEUED"
+      "reader_startup_sampler_status": "ACTIONS_QUEUED",
+      "reader_startup_sampler_artifact_id": 12541148938,
+      "reader_startup_sampler_zip_sha256": "680a3a3bbae840fc4eb19b0922b4ce0b281ea7751fab5205a2a0f13f5d271a34",
+      "reader_startup_sampler_result": "STRICT_FAIL_SOURCE_TUN_DROPS6629 concentrated in 6.00-6.10s:2849, 6.40-6.50s:3759, 7.40-7.50s:21. cwnd36853 MSS at6.141s ~50.75MB >500Mbps/400ms BDP25MB. Steady500.000Mbps p99202.9 source drops steady0, backpressure0. New bounded sysfs numeric-only diagnostic.",
+      "reader_startup_sampler_evidence": "V3-C-TCP500-cold-TUN-25ms-drop-timeline-20261024.json",
+      "tcp_socket_pacing_diagnostic_run": 40047976746,
+      "tcp_socket_pacing_diagnostic_status": "ACTIONS_QUEUED_NOT_PRODUCT_FIX"
     },
     "phase_D": {
       "run": 39985073396,
