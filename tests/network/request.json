@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "id": "V3-C-TCP500-strict-startup-source-drop-batched8-AB",
+  "id": "V3-C-dedicated-TUN-ingress-10M-both-0loss-AB",
   "owner": "network-matrix-work",
-  "seed": 7092,
+  "seed": 7124,
   "product": {
     "mode": "normal",
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 500,
-    "s2c_mbps": 0,
+    "c2s_mbps": 10,
+    "s2c_mbps": 10,
     "udp_share": 0,
     "sizes": [
       [
@@ -19,7 +19,7 @@
     ],
     "tcp_flows": 1,
     "probe_hz": 20,
-    "deadline_ms": 5000,
+    "deadline_ms": 3000,
     "burst_ms": 0,
     "max_packets": 20000000,
     "allow_fragmentation": false
@@ -30,28 +30,16 @@
     "queue_packets": 32768,
     "netem_rng": "unseeded_recorded",
     "tcp_window_profiles": {
-      "A": "bdp500",
-      "B": "bdp500"
+      "A": "baseline",
+      "B": "baseline"
     },
     "tcp_reordering_profiles": {
       "A": "baseline",
       "B": "baseline"
     },
-    "tun_txqlen_profiles": {
-      "A": 1024,
-      "B": 1024
-    },
-    "tun_qdisc_profiles": {
-      "A": "fq",
-      "B": "fq"
-    },
-    "warmup_rate_scale_profiles": {
-      "A": 1,
-      "B": 1
-    },
-    "v3_timeline": true
+    "v3_timeline": false
   },
-  "warmup_s": 20,
+  "warmup_s": 10,
   "drain_s": 30,
   "phases": [
     {
@@ -64,7 +52,7 @@
         "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 700,
+        "rate_mbps": 0,
         "blackhole_lanes": []
       },
       "s2c": {
@@ -73,17 +61,17 @@
         "loss_pct": 0,
         "duplicate_pct": 0,
         "reorder_pct": 0,
-        "rate_mbps": 700,
+        "rate_mbps": 0,
         "blackhole_lanes": []
       }
     }
   ],
   "acceptance": {
-    "injection_tolerance_pct": 5,
+    "injection_tolerance_pct": 3,
     "max_loss_pct": 0,
     "require_retransmission": false,
+    "max_p99_ms": 500,
     "max_repair_fresh_pct": 10,
-    "max_p99_ms": 400,
     "require_zero_source_tun_drops_full_run": true
   },
   "bundles": {
@@ -96,11 +84,11 @@
       "recovery_policy": "outer-opportunistic-v3"
     },
     "B": {
-      "source": "ae38b36048024f18df01cbdad171cffdc7dd2da7",
-      "run_id": 40043419093,
+      "source": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
+      "run_id": 40044879144,
       "attempt": 1,
-      "artifact_id": 12539949237,
-      "sha256": "e4d2e25771b1bde88ca7bebc6dec0f76bb7d4fccc6b298129c773e37ceb2bf48",
+      "artifact_id": 12540624073,
+      "sha256": "f52f3c67749b399fa6778e9031e83a0f93f1fe4780d6836d7d120928b9fed763",
       "recovery_policy": "outer-opportunistic-v3"
     }
   },
