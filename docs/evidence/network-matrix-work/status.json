@@ -175,6 +175,14 @@
       "artifact_zip_sha256": "2a86c05b90bee15d34887810618448a153b2e99f9a89ba6507f9447f4d21893f",
       "result": "A_B_500.000Mbps_STEADY_PASS_WARMUP_LOCAL_TUN_DROP_A7471_B7544_AND_TCP_RETRANS7468_7541",
       "file": "V3-C-TCP500-fq-1024-vs2048-fullwarmup-AB-20261024.json"
+    },
+    {
+      "id": "V3-C-TUNGETFEATURES-native-6.17",
+      "run": 40043592393,
+      "artifact_id": 12540287492,
+      "artifact_zip_sha256": "3a043613b649fb00fab28440a8cacb2c4ae86fbae7b5a0c01ee2e19a845849a6",
+      "result": "HOST_AARCH64_LINUX6.17_TUNGETFEATURES0x7173_IFF_BACKPRESSURE_UNSUPPORTED",
+      "file": "V3-C-TUNGETFEATURES-native-6.17-20261024.json"
     }
   ],
   "open_issues": [
@@ -189,7 +197,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "Reconnected 2026-10-24 and reconciled Actions40039093306 and40039575725 both SUCCESS exact ZIP. Native latest b8df single TCP10Mbps both0loss passed sourceTUN drop0 TCP retrans0, outer repair0. Native TCP500 sameVM fq qlen1024(A)/2048(B) run40039575725 exact artifact12538359391 sha2a86c05: BOTH 500.0003584Mbps steady, source TUN steady0 inner kernel retrans steady0, p99202.9/203.0, no backpressure; BUT A source TUN WARMUP dropped7471 (TCP retrans7468), B warmup7544 (TCP retrans7541), queue growth no benefit. Save evidence V3-C-TCP500-fq-1024-vs2048-fullwarmup-AB-20261024.json. ALL-RUN zero-loss startup qualification NOT PASS. Kernel6.17 likely lacks IFF_BACKPRESSURE (flag introduced in newer kernel Aug2026); require TUNGETFEATURES/readback before use, do NOT assume backpressure. Bounded ingress prefetch change source ae38b360 (up to8 M1 loans when >=4 actual reads, no per-packet heap, preserve control16 and M1 pool2048, no normal rate limit change) native ARM build40043419093 QUEUED. Harness now opts into require_zero_source_tun_drops_full_run and snapshots real tun qdisc stats, latest contract Actions40043360947 PASS. After successful source build+MTU, run ONE matched sameVM TCP500 startup A old b8df/B ae38 with identical fq qlen1024 test-only and strict full-run TUN drops0, plus steady>=475, p99<=400, host CPU; no blind qlen>2048. If startup source loss persists stop heavy; next architecture bounded dedicated TUN reader/background crypto decoupling or supported kernel IFF_BACKPRESSURE capability, not unbounded buffering. V3-A standard30%8.877% R/F 6.456% R/C and10Mbps0loss repairs0 still PASS, D mixed/idle scoped PASS, no FEC branch or main.",
+  "next_action": "Reconnected 2026-10-24 and reconciled Actions40039093306 and40039575725 both SUCCESS exact ZIP. Native latest b8df single TCP10Mbps both0loss passed sourceTUN drop0 TCP retrans0, outer repair0. Native TCP500 sameVM fq qlen1024(A)/2048(B) run40039575725 exact artifact12538359391 sha2a86c05: BOTH 500.0003584Mbps steady, source TUN steady0 inner kernel retrans steady0, p99202.9/203.0, no backpressure; BUT A source TUN WARMUP dropped7471 (TCP retrans7468), B warmup7544 (TCP retrans7541), queue growth no benefit. Save evidence V3-C-TCP500-fq-1024-vs2048-fullwarmup-AB-20261024.json. ALL-RUN zero-loss startup qualification NOT PASS. Native host Action40043592393 TUNGETFEATURES=0x7173 confirms IFF_BACKPRESSURE flag 0x80 UNSUPPORTED on this Linux6.17, verified artifact12540287492. Do not set unsupported flag. Evidence V3-C-TUNGETFEATURES-native-6.17-20261024.json. Bounded ingress prefetch change source ae38b360 (up to8 M1 loans when >=4 actual reads, no per-packet heap, preserve control16 and M1 pool2048, no normal rate limit change) native ARM build40043419093 QUEUED. Harness now opts into require_zero_source_tun_drops_full_run and snapshots real tun qdisc stats, latest contract Actions40043360947 PASS. After successful source build+MTU, run ONE matched sameVM TCP500 startup A old b8df/B ae38 with identical fq qlen1024 test-only and strict full-run TUN drops0, plus steady>=475, p99<=400, host CPU; no blind qlen>2048. If startup source loss persists stop heavy; next architecture bounded dedicated TUN reader/background crypto decoupling or supported kernel IFF_BACKPRESSURE capability, not unbounded buffering. V3-A standard30%8.877% R/F 6.456% R/C and10Mbps0loss repairs0 still PASS, D mixed/idle scoped PASS, no FEC branch or main.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -457,7 +465,15 @@
       "fullwarmup_queue_AB_evidence": "V3-C-TCP500-fq-1024-vs2048-fullwarmup-AB-20261024.json",
       "startup_zero_drop": "NOT_SOLVED queue expansion1024->2048 no benefit",
       "next_source_ingress_candidate": "ae38b36048024f18df01cbdad171cffdc7dd2da7",
-      "next_source_ingress_build_run": 40043419093
+      "next_source_ingress_build_run": 40043419093,
+      "tun_features_action": 40043592393,
+      "tun_features_artifact_id": 12540287492,
+      "tun_features_zip_sha256": "3a043613b649fb00fab28440a8cacb2c4ae86fbae7b5a0c01ee2e19a845849a6",
+      "tun_features_readback": "Linux6.17.0-1022-azure TUNGETFEATURES=0x7173 IFF_BACKPRESSURE(0x0080) NOT_SUPPORTED",
+      "tun_features_evidence": "V3-C-TUNGETFEATURES-native-6.17-20261024.json",
+      "full_run_source_drop_gate": "CODED_AND_CONTRACT_PASS",
+      "tun_root_qdisc_stats": "CODED_AND_CONTRACT_PASS",
+      "native_prefetch_build": "NATIVE_GO_RUST_PASS_MTU_JOB_IN_PROGRESS"
     },
     "phase_D": {
       "run": 39985073396,
