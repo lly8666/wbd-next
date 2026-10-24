@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "FEC_RX_640_48M_INCREMENTAL_RETIRE_BUILD_PENDING_100_TO_350_STAGED",
+  "phase": "FEC_RX640_NATIVE_BUILD_PASS_MAXIMUM100_RETEST_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -208,6 +208,17 @@
         "RX_pressure_eviction": false,
         "capacity_qualified": false
       }
+    },
+    {
+      "id": "FEC-W16-Maximum100-RX640-Original-Stop-Counterexample-ARM64",
+      "path": "tests/network/fec-work/W16-maximum100-rx640-retest-arm64.json",
+      "source": "8ec552bdd146cf33233130c4779ed5339e27a3c7",
+      "build_run": 40097251707,
+      "artifact_id": 12561755643,
+      "run_id": null,
+      "result": "PENDING_ACTION",
+      "app_mbps_each": 100,
+      "outer_cap_mbps_each": 400
     }
   ],
   "open_issues": [
@@ -221,7 +232,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Inspect native exact-source ARM64 product build on 640 groups/48MiB/touched_order-index patch and harness check. Verify new 450-live-block unit, original deterministic parity→TUN, Rust release and matching Go runner. If green pin artifact, single W16 100Mbps reaccreditation with same old W15 impairment/cap=400Mbps, then sequential 125,150,175,200,225,250,275,300,325,350 with cap=4x user business Mbps. At every step record CPU/RSS, actual veth tx bytes and Mbps INCLUDING all kinds, authenticated first-wire and repair in different 45s time window, FEC recovered TUN, RX pressure, netem/kernel drops. Stop and mark later steps NOT_RUN on first business/reliability/resource failure. Do not touch main or other network status.",
+  "next_action": "Inspect W16 first original 100Mbps 96 slot-pressure counterexample on exact new source 8ec... artifact12561755643. Require business<=1% missing both, RX peak<640 and pressure eviction0, real FEC/TUN and outer-off dual, no local TUN/qdisc drops, CPU/RSS p99 and true outer interface tx Mbps per direction, original 45s first-wire/repair ledger. If PASS stage 125Mbps W17 one Actions job; otherwise stop.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -888,7 +899,7 @@
       350
     ],
     "plan_after_fix": {
-      "product_source": "PENDING_BUILD_COMMIT",
+      "product_source": "8ec552bdd146cf33233130c4779ed5339e27a3c7",
       "native_limits": {
         "max_active": 640,
         "max_stored_bytes": 50331648,
@@ -897,7 +908,7 @@
       },
       "memory_no_preallocation": true,
       "basis": "W15 100Mbps 96/96 pressure29425. 75Mbps 83 slots no pressure. Estimate full 350Mbps 100-reference ~110 required slots*3.5=385, safety factor1.66 gives 640 slots. At 100 RX bytes3.61MiB pressure-limited; approximate 350 12.6-15MiB, 48MiB bounds near maximum all-parity stored. 1024 ID reordering > estimated 350 live. No O(n) scan per incoming symbol; touched-order BTreeSet O(logn).",
-      "first_gate": "Rebuild exact ARM64 native and cheap full RX unit including 450 distinct incomplete authentic FIRST blocks without pressure, per-block age retirement and real Linux parity-to-TUN. Then recheck W15 100Mbps original with new binary. Only at success progress one request per Actions job to 125..350.",
+      "first_gate": "W16 real 100Mbps old W15 scenario identical new ARM64 bundle; no 125 submitted until pass and pressure0.",
       "cap_rule": "4x application WAN rate each side (up to 1400Mbps at350), preserves workload not fixed WAN ceiling. True measured outer veth tx includes all first DATA+parity+control+actual retrans; report as bytes/30s, plus native first-wire cumulative45s and repair bytes; do not add nested byte ledgers.",
       "remaining_levels": [
         125,
@@ -911,7 +922,12 @@
         325,
         350
       ],
-      "status": "BUILD_NOT_RUN"
+      "status": "BUILD_NOT_RUN",
+      "build_run": 40097251707,
+      "arm64_artifact": 12561755643,
+      "zip_sha256": "866aae86f355e76b8269ea86a72fd15748ee0448d4095085a374695678f45674",
+      "native_build": "PASS",
+      "native_450_live_and_authentic_TUN": "PASS"
     }
   }
 }
