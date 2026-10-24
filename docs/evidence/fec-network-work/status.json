@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W17_100MBPS_500MS_NATIVE_KERNEL_EGRESS_DIAGNOSTIC_PENDING",
+  "phase": "W17_STANDALONE_BUSINESS_PASS_WARMUP_S2C_KERNEL_EGRESS_STALL_DIAG_W18_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -225,10 +225,11 @@
       "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
       "build_run": 40099179830,
       "artifact_id": 12562092730,
-      "run_id": null,
+      "run_id": 40099424995,
       "app_mbps_each": 100,
       "outer_cap_mbps_each": 400,
-      "result": "PENDING_DIAG"
+      "result": "STEADY_PASS_WARMUP_S2C_KERNEL_EGRESS_STALL",
+      "result_artifact": 12562332268
     }
   ],
   "open_issues": [
@@ -243,7 +244,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Read W17 100Mbps one job original asym impairment with native twice/sec TX/RX numeric, outer veth/netem/TUN 500ms monotonic snapshots and client/server traffic 10ms RX/TX bins. Inspect first 1.6s C2S gap boundaries. If apparent PASS (unreproduced), do not invent root cause; consider one scope-limited duplicate W16 timing with diagnostic minimal overhead only after evidence. If repeated identify first counter plateau and implement minimal source fix; rebuild exact ARM64 and recheck W16 diagnostic OFF. No 125-350 until reliable 100Mbps.",
+  "next_action": "Run W18 one 100Mbps diagnostic Action with same native frozen artifact and corrected harness retention of 500 V4_PUBLIC_FEC2_EGRESS_DIAG events/role. Correlate server warmup 3.7s raw qdisc plateau with native sender M1 tun_read, source queued, M4 copied and route_refresh / TX errors at exact boot ns; inspect client->server counterpart. Then implement minimal branch-only patch only after originating edge proven, repeat 100Mbps diagnostics OFF for CPU/RSS/no regression. Do not resume 125-350 until startup and steady bidirectional reliability.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -1123,6 +1124,31 @@
       "diagnostic_egress_interval_ms": 500,
       "run": null,
       "status": "PUSH_TO_TRIGGER"
+    },
+    "w17": {
+      "run": 40099424995,
+      "product_source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "product_artifact": 12562092730,
+      "result_artifact": 12562332268,
+      "result_sha256": "d0f8daf42e013c3207ec84ad8d9c012bd8cab76dfcfb9239d95bff6324a314a0",
+      "measured_business": {
+        "c2s_mbps": 99.98001573333333,
+        "s2c_mbps": 99.97428746666667,
+        "c2s_missing": 109,
+        "s2c_missing": 151
+      },
+      "measured_cpu": {
+        "client_s": 19.47,
+        "server_s": 19.63
+      },
+      "outer_tx_mbps": {
+        "client": 173.4415896,
+        "server": 173.40193013333334
+      },
+      "diagnostics": "Original 10ms bins show S2C UDP application delivery ZERO in warmup T0.3..3.9s while server injected~980 pkts/100ms; C2S normal. Both roles same netem400Mbps30%300ms and native fixed6 outerOFF.",
+      "kernel_witness": "In egress-trace.json server source TUN tx 36,293 by T3.68s, while server outer veth tx18 and netem sent7 throughout; client outer veth tx52,270 and netem sent52,318 by same time. Server veth starts at T4.18s 2,843 TX; the first broken edge is server TUN-to-native-M4-to-netem, not receiver FEC decoder. Native per500ms timeline existed (339 lines/role) but previous harness markers limited to last 40, losing initial warmup proof; fixed by preserving bounded 500 numeric lines per role independently.",
+      "qualification": "MEASURED_STEADY_PASS_NOT_FULL_STARTUP_RELIABILITY",
+      "followup": "W18 exact same 100Mbps scenario, product frozen, independent 500ms native timeline retained. Locate native M1/M4/route_refresh plateau during server veth stall before implementing scoped fix."
     }
   }
 }

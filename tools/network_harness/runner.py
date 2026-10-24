@@ -759,6 +759,14 @@ class LinuxExperiment:
                 # never copies private TLS args, payloads or credentials.
                 (self.out / (role+"-v3-timeline.log")).write_text(
                     "\n".join(timeline[-1200:])+"\n")
+            if self.config["network"].get("fec_egress_diagnostic",False):
+                egress_events=[line for line in lines if
+                    "V4_PUBLIC_FEC2_EGRESS_DIAG " in line]
+                # At 2Hz per worker and max 75s measured/dry run,
+                # retain enough samples to include both warmup and steady.
+                # Never retain private logs, key material or packet payload.
+                (self.out/(role+"-fec-egress-timeline.log")).write_text(
+                    "\n".join(egress_events[-500:])+"\n")
             auto_events=[line for line in lines if
                 "V4_PUBLIC_FEC2_AUTO_QUALITY " in line or
                 "V4_PUBLIC_FEC2_AUTO_STAGE " in line]
