@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-A_30pct_latest_PASS-V3-C_500_steady_PASS_with_fq_startup_loss-open-V3-D_work",
+  "phase": "V3-C-singleTCP500-steady-native-pass_startup-sourceTUN-loss-open_bounded-ingress-prefetch-build",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -27,23 +27,13 @@
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
   "open_requests": [
     {
-      "id": "V3-A-lossless-TCP1-latest-native-0-repair-regression",
-      "state": "ACTIONS_IN_PROGRESS",
-      "run": 40039093306,
-      "attempt": 1,
-      "request_source": "6672d32b29e1be4232b60a7a81dd8fbf22621f21",
-      "product_source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
-      "scope": "native ARM64 Normal/off no-loss TCP1 both 10Mbps no tune test-only TUN default, check native repairs/TCP kernel retrans/source TUN",
-      "do_not_redispatch": true
-    },
-    {
-      "id": "V3-C-TCP500-owned-fq-1024-vs2048-warmup-burst-AB",
+      "id": "V3-C-hot-only-eight-M1-ingress-prefetch-native-ARM64-build",
       "state": "ACTIONS_QUEUED",
-      "run": 40039575725,
+      "run": 40043419093,
       "attempt": 1,
-      "request_source": "cf4a8f2ee9b6d9588b5ddf9d87e231701bc679fd",
-      "product_source_A_and_B": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
-      "scope": "single same native ARM VM source each immutable same, full TCP500 warmup20+steady60 0loss/RTT400, TUN root fq readback both legs, A tun txqlen1024 B2048 readback, strict p99<=400, source warmup and steady TUN drops, no production default changes",
+      "source": "ae38b36048024f18df01cbdad171cffdc7dd2da7",
+      "baseline_product_source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+      "scope": "Rust original TunSink M1 owner prefetch at most8 slabs only after >=4 genuine observed reads, preserve feedback16, no kernel qlen or qdisc/default change, native build + MTU qualification prior to any matched 500 test",
       "do_not_redispatch": true
     }
   ],
@@ -176,6 +166,15 @@
       "artifact_id": 12538288191,
       "result": "A_fqcodel_473Mbps_warmup_drop21107_B_fq_500Mbps_warmup_drop6735_steady0",
       "file": "V3-C-TCP500-fqcodel-vs-fq-startup-AB-20261024.json"
+    },
+    {
+      "id": "V3-C-TCP500-fq-1024-vs2048-fullwarmup-AB",
+      "run": 40039575725,
+      "attempt": 1,
+      "artifact_id": 12538359391,
+      "artifact_zip_sha256": "2a86c05b90bee15d34887810618448a153b2e99f9a89ba6507f9447f4d21893f",
+      "result": "A_B_500.000Mbps_STEADY_PASS_WARMUP_LOCAL_TUN_DROP_A7471_B7544_AND_TCP_RETRANS7468_7541",
+      "file": "V3-C-TCP500-fq-1024-vs2048-fullwarmup-AB-20261024.json"
     }
   ],
   "open_issues": [
@@ -190,7 +189,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "Native b8df V3 highloss30% standard passed R/F~8.877%, R/C~6.456%, TUN0, evidence V3-A-latest-driver-30pct-standard-20261024.json. Lossless latest single TCP1 10Mbps both normal default qlen Action40039093306 in progress, no redispatch. V3-C fq_codel vs fq test-only owned TUN root qdisc same source and sameVM run40038882744: A fq_codel 1024 full500 startup loses21107 local TUN warmup drops, steady473.458Mbps/p99991.5/backpressure6075; B fq 1024 full500 startup loses6735 warmup drops, steady500.000Mbps/p99202.6/backpressure0, source TUN steady0. KEEP distinctions: steady full-speed qualification scoped PASS but TOTAL zero-loss TUN startup NOT PASS and current Linux product creates default fq_codel qlen500; do not pretend test qdisc is product configuration. Next only ONE bounded fq qlen1024 vs2048 startup with no pacing (500 both warm/steady), sameVM A/B Action40039575725 from source cf4a8f, strict qdisc & qlen readback and max steady p99400ms, collect warmup TUN drops; no queue >2048 or unbounded. If B warmup drops0, implement actual Go owned TUN cold path explicit qlen/fq config+readback, run native build/test and full500 qualification plus 10Mbps0loss/30% repair policy regressions. If B still drops, stop heavy and design packet admission/backpressure vs over-size queues. No FEC independent work or main merge/deploy.",
+  "next_action": "Reconnected 2026-10-24 and reconciled Actions40039093306 and40039575725 both SUCCESS exact ZIP. Native latest b8df single TCP10Mbps both0loss passed sourceTUN drop0 TCP retrans0, outer repair0. Native TCP500 sameVM fq qlen1024(A)/2048(B) run40039575725 exact artifact12538359391 sha2a86c05: BOTH 500.0003584Mbps steady, source TUN steady0 inner kernel retrans steady0, p99202.9/203.0, no backpressure; BUT A source TUN WARMUP dropped7471 (TCP retrans7468), B warmup7544 (TCP retrans7541), queue growth no benefit. Save evidence V3-C-TCP500-fq-1024-vs2048-fullwarmup-AB-20261024.json. ALL-RUN zero-loss startup qualification NOT PASS. Kernel6.17 likely lacks IFF_BACKPRESSURE (flag introduced in newer kernel Aug2026); require TUNGETFEATURES/readback before use, do NOT assume backpressure. Bounded ingress prefetch change source ae38b360 (up to8 M1 loans when >=4 actual reads, no per-packet heap, preserve control16 and M1 pool2048, no normal rate limit change) native ARM build40043419093 QUEUED. Harness now opts into require_zero_source_tun_drops_full_run and snapshots real tun qdisc stats, latest contract Actions40043360947 PASS. After successful source build+MTU, run ONE matched sameVM TCP500 startup A old b8df/B ae38 with identical fq qlen1024 test-only and strict full-run TUN drops0, plus steady>=475, p99<=400, host CPU; no blind qlen>2048. If startup source loss persists stop heavy; next architecture bounded dedicated TUN reader/background crypto decoupling or supported kernel IFF_BACKPRESSURE capability, not unbounded buffering. V3-A standard30%8.877% R/F 6.456% R/C and10Mbps0loss repairs0 still PASS, D mixed/idle scoped PASS, no FEC branch or main.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -450,7 +449,15 @@
       "fq_AB_evidence": "V3-C-TCP500-fqcodel-vs-fq-startup-AB-20261024.json",
       "fq_AB_result": "A fq_codel qlen1024 full warmup500 drops21107 steady473.458Mbps/backpressure6075/p99991.5; B fq qlen1024 full warmup500 still drops6735 but steady500.000Mbps/backpressure0/p99202.6. Test-only qdisc, not product cold setting.",
       "fq_queue2048_AB_run": 40039575725,
-      "fq_queue2048_AB_status": "QUEUED"
+      "fq_queue2048_AB_status": "QUEUED",
+      "fullwarmup_queue_AB_run": 40039575725,
+      "fullwarmup_queue_AB_artifact_id": 12538359391,
+      "fullwarmup_queue_AB_verified_sha256": "2a86c05b90bee15d34887810618448a153b2e99f9a89ba6507f9447f4d21893f",
+      "fullwarmup_queue_AB_result": "A fq1024 TCP500 steady PASS p99202.9 tcp_retrans_steady0 TUN_steady0 but warmup TUN drops7471/TCP retrans7468; B fq2048 TCP500 steady PASS p99203.0 but warmup TUN drops7544/TCP retrans7541",
+      "fullwarmup_queue_AB_evidence": "V3-C-TCP500-fq-1024-vs2048-fullwarmup-AB-20261024.json",
+      "startup_zero_drop": "NOT_SOLVED queue expansion1024->2048 no benefit",
+      "next_source_ingress_candidate": "ae38b36048024f18df01cbdad171cffdc7dd2da7",
+      "next_source_ingress_build_run": 40043419093
     },
     "phase_D": {
       "run": 39985073396,
