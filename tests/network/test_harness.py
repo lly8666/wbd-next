@@ -84,6 +84,18 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_testonly_per_socket_TCP_pacing_is_bounded_without_global_sysctl(self):
+        r=request()
+        r["network"]["tcp_socket_pacing_mbps_profiles"]={"A":0,"B":600}
+        self.assertEqual(validate(r)["network"]["tcp_socket_pacing_mbps_profiles"],
+                         {"A":0,"B":600})
+        r["network"]["tcp_socket_pacing_mbps_profiles"]["B"]=1000
+        with self.assertRaises(ValueError):
+            validate(r)
+        r["network"]["tcp_socket_pacing_mbps_profiles"]={"C":600}
+        with self.assertRaises(ValueError):
+            validate(r)
+
     def test_optional_bounded_original_tun_startup_timeline_contract(self):
         r=request()
         r["network"]["startup_tun_drop_timeline"]=True
