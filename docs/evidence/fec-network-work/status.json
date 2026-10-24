@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "MAXIMUM50_RX_BOUNDED_STANDALONE_PASS_AB_REPEATABILITY_UNRESOLVED_TEMPORARY_CLOSE",
+  "phase": "MAXIMUM_STEPWISE_NEW_AUTHORIZATION_75_OF_200_PENDING_ACTION",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -178,6 +178,17 @@
         "loss_under_one_pct_both": true,
         "repeatability_AB": false
       }
+    },
+    {
+      "id": "FEC-W14-Maximum75-Stepwise-OuterOff-ARM64",
+      "path": "tests/network/fec-work/W14-maximum75-stepwise-outeroff-arm64.json",
+      "source": "ec344557fa8cbf4d717a81833d36f92584263478",
+      "build_run": 40087393299,
+      "artifact_id": 12558215058,
+      "app_mbps_each": 75,
+      "outer_cap_mbps_each": 300,
+      "result": "PENDING_PUSH_TRIGGER",
+      "run_id": null
     }
   ],
   "open_issues": [
@@ -190,7 +201,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "TEMPORARY_STOP_REQUESTED: No pending performance Action. Keep W13 50Mbps standalone PASS and W12 sameVM AB second-leg FAIL, no full green, no 75/100+ pressure. Before any future claim of high-rate reliability, investigate old-new A/B order and native-M4-kernel to netem-registered packet gap (W12 B client interface 286.89MB vs W13 standalone client326.27MB with ~279k real FEC parity copies), using existing per-leg snapshots; only if reproduced add bounded egress diagnostics. Preserve Auto W10 pending independently and main unmerged.",
+  "next_action": "Inspect W14 Maximum75 arm64 FEC-only Action. Require both <=1% missing, per-side FEC RX_CAP, actual source/parity recovered TUN, dual native outer OFF, kernel/source/qdisc drops, CPU/RSS/p99 and netem rate. If failure stop and record bottleneck. If PASS request ONLY next 100Mbps (outer cap400Mbps per direction) on same frozen artifact and same profile, repeating until first failure or 200. One performance Action one measurement job; no simultaneous heavier runs.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -262,7 +273,7 @@
   },
   "merge_ready": false,
   "recovery_qualified": true,
-  "capacity_stop": true,
+  "capacity_stop": false,
   "merge_intent": {
     "first_parent": "9cfd72968e21a63834f455a96afc71a5d35737db",
     "second_parent": "040741820b2f917b5868c285c438d4cc21c6193a",
@@ -342,7 +353,7 @@
     ],
     "requires_review": "Auto dynamic and OFF genuine RTT telemetry remain separate mandatory capabilities before full FEC mandate is green"
   },
-  "load_expansion_stop": true,
+  "load_expansion_stop": false,
   "same_vm_normal_onoff": {
     "run": 40079302195,
     "artifact": 12554018197,
@@ -651,5 +662,38 @@
       "W13": 40090193642,
       "finding": "Non-repeatable sender-to-netem interface delivery in sameVM second leg, cannot claim causation by RX cache; verify kernel output counts and sequential harness measurement fairness before full qualification."
     }
+  },
+  "capacity_stepwise_20261024": {
+    "authorization": "User explicitly requested to ramp business bandwidth toward 200Mbps after previous temporary closure",
+    "frozen_product_source": "ec344557fa8cbf4d717a81833d36f92584263478",
+    "frozen_build_run": 40087393299,
+    "frozen_arm64_artifact": 12558215058,
+    "frozen_zip_sha256": "bd22744ae29bcb0ec8b57cba9bdcc7b10228911e9af628791501ff7623b008d3",
+    "profile": 6,
+    "outer_repair": false,
+    "iid_loss_pct": 30,
+    "one_way_delay_ms": 300,
+    "mbps_each_direction": [
+      75,
+      100,
+      125,
+      150,
+      175,
+      200
+    ],
+    "outer_link_rate_rule": "4× application Mbps per direction (50→200Mbps passed; 75→300; 100→400; 125→500; 150→600; 175→700; 200→800). Deliberate extra link headroom, not identical original 75Mbps=200Mbps WAN cap.",
+    "stop_condition": "At first failed both-direction business residual <=1%, unconfirmed FEC applied/off, TUN/qdisc drops or capacity exhaustion; do not dispatch later heavier steps.",
+    "current_step": 75,
+    "requests": [
+      {
+        "id": "FEC-W14-Maximum75-Stepwise-OuterOff-ARM64",
+        "path": "tests/network/fec-work/W14-maximum75-stepwise-outeroff-arm64.json",
+        "product_source": "ec344557fa8cbf4d717a81833d36f92584263478",
+        "artifact_id": 12558215058,
+        "run_id": null,
+        "status": "PENDING_PUSH_TRIGGER"
+      }
+    ],
+    "previous_W12_sameVM_issue": "W12 second leg output asymmetry unresolved; standalone results are scoped observations, not guaranteed reliability."
   }
 }
