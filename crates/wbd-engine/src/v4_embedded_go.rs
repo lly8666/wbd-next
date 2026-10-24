@@ -3721,10 +3721,13 @@ fn original_fixed_stage_due(e:&mut Entry,
     let Some(mut stream)=e.fec2_live_tx.take()else{return Ok(0)};
     let (_,epoch)=e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
     let mut failed=None;
-    // Original M4 batch has 32 total records. Never reserve parity before
-    // new DATA, and coalesce only when >=8 slots remain after fresh sources.
-    // Each M3 quantum is still <=4 rows and settles by this same M4 prefix.
-    let quanta=if remaining_kernel_slots>=8 {2}else{1};
+    // The original M4 sendmmsg has at most 32 records TOTAL. Never reserve
+    // parity before fresh DATA. Leave one slot for real reverse M2 feedback;
+    // do not stage a 4-row native quantum that cannot fit. A Maximum k16/r20
+    // job now needs only one M4 definite-prefix settlement when all 20 rows
+    // fit, rather than 3 separate settlements at high traffic.
+    // Every ISA-L call is still a bounded <=4-row quantum.
+    let quanta=(remaining_kernel_slots.saturating_sub(1)/4).min(5);
     let result=stream.poll_parity_quanta(now,quanta,|parity,_block,row,revision|{
         if e.fixed_applied.or(e.fixed_pending).is_none_or(|(_,r)|r!=revision.0)
             ||!original_public_fixed_row_allowed(row){

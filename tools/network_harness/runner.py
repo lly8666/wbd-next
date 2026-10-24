@@ -323,10 +323,52 @@ def process(pid):
         return None
 
 
+def fec_cpu_irq_snapshot(products):
+    """1 Hz, FEC-only numeric proc counters; no addresses or product payloads."""
+    stat=read("/proc/stat")
+    cpus={}
+    for line in stat.splitlines():
+        parts=line.split()
+        if len(parts)>1 and re.fullmatch(r"cpu[0-9]+",parts[0]):
+            try: cpus[parts[0]]=[int(v) for v in parts[1:11]]
+            except ValueError: pass
+    irq={}
+    for line in read("/proc/softirqs").splitlines():
+        if ":" not in line: continue
+        key,counts=line.strip().split(":",1)
+        if key not in ("NET_RX","NET_TX","TIMER","SCHED","RCU","HI","TASKLET"): continue
+        try: irq[key]=[int(v) for v in counts.split()]
+        except ValueError: pass
+    tasks={}
+    for role,proc in products.items():
+        if role not in ("client","server"): continue
+        rows=[]
+        try:
+            for entry in Path(f"/proc/{proc.pid}/task").iterdir():
+                try:
+                    raw=read(str(entry/"stat"))
+                    tail=raw.rsplit(")",1)[1].split()
+                    # Linux /proc/TID/stat indexes: utime=14 stime=15,
+                    # processor=39. The tail begins at field 3.
+                    if len(tail)<37: continue
+                    rows.append({"tid":int(entry.name),
+                        "cpu_ticks":int(tail[11])+int(tail[12]),
+                        "processor":int(tail[36]),
+                        "name":raw.split("(",1)[1].split(")",1)[0][:32]})
+                except (OSError,ValueError,IndexError): pass
+        except OSError: pass
+        tasks[role]=rows
+    return {"per_core_cpu":cpus,"per_core_softirqs":irq,
+        "cpu_cgroup_stat":read("/sys/fs/cgroup/cpu.stat"),
+        "cpu_cgroup_max":read("/sys/fs/cgroup/cpu.max"),
+        "product_threads":tasks}
+
+
 class Monitor:
-    def __init__(self, products, output, tcp_namespaces=None):
+    def __init__(self, products, output, tcp_namespaces=None, fec_irq_diag=False):
         self.products, self.output = products, output
         self.tcp_namespaces=tcp_namespaces or {}
+        self.fec_irq_diag=fec_irq_diag
         self.samples, self.stop = [], threading.Event()
         self.last_tcp_poll_ns=0
         self.thread = threading.Thread(target=self.run, daemon=True)
@@ -339,6 +381,8 @@ class Monitor:
                     "psi_cpu":read("/proc/pressure/cpu"),
                     "psi_memory":read("/proc/pressure/memory"),
                     "processes":{name:process(p.pid) for name,p in self.products.items()}}
+            if self.fec_irq_diag:
+                sample["fec_cpu_irq"]=fec_cpu_irq_snapshot(self.products)
             # Numeric TCP_INFO every 2s. Never persist raw addresses, ports,
             # payloads or secret-bearing socket output.
             if self.tcp_namespaces and now-self.last_tcp_poll_ns>=2_000_000_000:
@@ -992,7 +1036,9 @@ class LinuxExperiment:
                 self.workers[role] = self.spawn(role, [sys.executable, str(TRAFFIC), "--config", str(config_path),
                     "--role", role, "--local", self.inner[role], "--peer", self.inner[peer],
                     "--output", str(self.out / (role + "-traffic.json")), "--start-ns", str(start_ns)], role + "-traffic.log")
-            self.monitor = Monitor({**self.products, **{r + "-injector": p for r, p in self.workers.items()}}, self.out, self.ns)
+            self.monitor = Monitor({**self.products, **{r + "-injector": p for r, p in self.workers.items()}},
+                                   self.out, self.ns,
+                                   fec_irq_diag=self.config.get("owner")=="fec-network-work")
             self.monitor.thread.start()
             deadline = time.monotonic() + 18
             while time.monotonic() < deadline:
