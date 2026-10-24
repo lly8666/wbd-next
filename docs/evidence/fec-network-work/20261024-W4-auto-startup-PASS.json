@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+  "AutoClean": {
+    "run": 40078980002,
+    "artifact": 12554611589,
+    "digest": "1f42b40c21efa20acfbb79d39f150df91e61853fd78ad6d1f4963f5f17b89b2d",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "actual_readback": {
+      "client": [
+        "auto",
+        1,
+        1,
+        5,
+        false
+      ],
+      "server": [
+        "auto",
+        1,
+        1,
+        5,
+        false
+      ]
+    },
+    "outer_repair_readback": false,
+    "outer_data_retransmits_both": 0,
+    "parity_accepted": {
+      "client": 9437,
+      "server": 9435
+    },
+    "TUN_first": {
+      "client": 9437,
+      "server": 9437
+    },
+    "delivered_missing_both": 0,
+    "p99_ms": 25.3,
+    "cpu_s_measured": {
+      "client": 1.03,
+      "server": 1.03
+    },
+    "stop_drained": true
+  },
+  "open": "Auto online dynamic control is not connected; upfront profile strong only. No more qualification than initial applied."
+}

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "V3_FIXED5_LOSS5_AND_OFF_RECOVERY_PASS_AUTO_CLEAN_NATIVE_TEST_PENDING",
+  "phase": "V3_FIXED5_AND_AUTO_CLEAN_PASS_MAX30_ANCHOR_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -82,16 +82,25 @@
       "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
       "product_build_run": 40078403217,
       "artifact_id": 12554277143,
-      "result": "PENDING_IMMUTABLE_REQUEST_PUSH"
+      "result": "PASS_SCOPED_AUTO_STARTUP_ONLY",
+      "run_id": 40078980002,
+      "result_artifact_id": 12554611589
+    },
+    {
+      "id": "FEC-W5-V3-Max30-OuterOff-C50-OneWay300-ARM64",
+      "path": "tests/network/fec-work/W5-v3-fixed-max30-outeroff-50m-300ms-arm64.json",
+      "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+      "product_build_run": 40078403217,
+      "result": "PENDING_RUN_MAX30_CAPACITY_GATE"
     }
   ],
   "open_issues": [
+    "Auto startup no-loss W4 run40078980002 PASS applied1/1 both sides, strong profile5 parity present, but shipped Go v4ProductFecMonitor exits after initial mature ACK; no wired periodic real snapshot→profile decision→native revision applies. Auto full dynamic NOT_WIRED; don't pretend static strong is adaptive.",
     "Fixed5 W2 one-sided pending resolved by native genuine mature M2 witness patch: W3 run40078693282 PASS both applied, 5% phase 0 missing, >500 recovered TUN each peer, zero outer repairs. W2 historical fail remains.",
-    "FEC auto under actual outer OFF and clean/lossy scenarios untested on V3 merged code; upstream 1c43 native Auto even at zero loss may pending, fq0 baseline also pending.",
     "Actual CPU/RSS and p99 at 2Mbps observed but NOT cost/memory scaling or matched sameVM AB; 30%/300ms and Auto asym/transition NOT_RUN.",
     "Linux Game OFF and Windows GUI/OS wiring UNSUPPORTED; upstream normal mixed RX ambiguity remains common-path."
   ],
-  "next_action": "Read W4 native ARM64 Auto clean actual readback both revisions and original M2; if PASS then run 0->asym20->low Auto same pinned SOURCE/artifact with one performance scenario, check real selected/applied profiles. If Auto has static-only startup profile, report precise not-wired scope, do not invent adaptation. Then max30 product represent at capacity gate; final report.",
+  "next_action": "Inspect W5 max30 genuine kernel netem/actual k-r and two peer applied/outer off/recovered TUN; check capacity/CPU,RSS and p99. If host or product saturates stop heavier workloads and record estimate. Compare model only after observing actual k/r bins. Then Normal ON/OFF on sameVM AB protected, finally Auto asymmetric static-versus-dynamic limitation and a scoped final report.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -188,5 +197,13 @@
     "fixed_run": 40078693282,
     "old_fail_retained": true
   },
-  "recovery_qualification_scope": "ARM64 V3 Fixed5 2Mbps both directions zero loss and IID5% W3 run40078693282; do not generalize to auto/high loss/CPU baseline."
+  "recovery_qualification_scope": "ARM64 V3 Fixed5 2Mbps both directions zero loss and IID5% W3 run40078693282; do not generalize to auto/high loss/CPU baseline.",
+  "auto_startup_qualified": {
+    "mode": "auto",
+    "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+    "run": 40078980002,
+    "artifact": 12554611589,
+    "readback": "both actual requested=applied=1 profile5 strong, outer repair off",
+    "dynamic_profile_transitions": "NOT_WIRED"
+  }
 }
