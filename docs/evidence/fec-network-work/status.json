@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "OWNED_VETH_NUD_FIXED_W20_DIAG_AND_W21_UNINSTRUMENTED_PASS_W22_125_PENDING",
+  "phase": "NUD_OWNED_VETH_FIXED_W22_125MBPS_PASS_W23_150_STAGED_CPU_PSI_WATCH",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -270,14 +270,26 @@
     {
       "id": "FEC-W22-Maximum125-Static-veth-NUD-Original-fq600",
       "path": "tests/network/fec-work/W22-maximum125-static-owned-neighbour-original-fq600-arm64.json",
-      "run_id": null,
+      "run_id": 40102622202,
       "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
       "artifact_id": 12562092730,
       "build_run": 40099179830,
-      "result": "PENDING_PUSH_TRIGGER",
+      "result": "PASS_SCOPED_BOTH_125MBPS",
       "rate_mbps_each": 125,
       "outer_cap_mbps_each": 500,
-      "static_veth_peer_neighbour": true
+      "static_veth_peer_neighbour": true,
+      "result_artifact_id": 12563376791
+    },
+    {
+      "id": "FEC-W23-Maximum150-Static-veth-NUD-Original-fq600",
+      "path": "tests/network/fec-work/W23-maximum150-static-owned-neighbour-original-fq600-arm64.json",
+      "run_id": null,
+      "result": "PENDING_PUSH_TRIGGER",
+      "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "artifact_id": 12562092730,
+      "app_mbps_each": 150,
+      "outer_cap_mbps_each": 600,
+      "static_test_veth_neighbor": true
     }
   ],
   "open_issues": [
@@ -293,7 +305,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Inspect W22 125Mbps with same original native ARM64 source artifact and test-owned PERMANENT IPv4 veth neighbours, original fq600 unchanged and diagnostic sampling disabled. Require BOTH business residual<1%, both native Fixed Maximum applied, true parity recovered TUN positive, outer OFF retransmits zero, actual netem 30%, RX pressure0 of640 and source TUN/root-qdisc drop0. Report CPU-s/30, RSS, 30s total outer veth Mbps including all actual packet kinds, netem queue and PSI. If PASS only then consider 150Mbps one Action; if FAIL stop higher and identify exact bottleneck. Never claim production ARP permanently fixed.",
+  "next_action": "Check W23 bounded 150Mbps same original frozen native arm64 with owned veth static neigh and original FQ600. W22 125Mbps valid business/FEC/no RX drops, CPU PSI peak23.81 and >20 83% of measurement. W23: require both business residual<1%, no source/fq qdisc drops, RX decoder/pressure0, no substantial CPU PSI/resource overload, host steal low, outer measured veth TX true 30s all kinds and retrans 0, p99 and RAM. If resource or business FAIL stop 175-350 and record precise cause. If PASS inspect PSI before any 175.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -1392,6 +1404,72 @@
       "source_TUN_drops_both": 0,
       "outer_DATA_repair_copies_both": 0,
       "stop_drained": true
+    },
+    "w22": {
+      "run": 40102622202,
+      "result_artifact": 12563376791,
+      "digest": "e07469d772931ab0101777e8e785896da8307f54d82e1439a8ec32af062dab83",
+      "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "result": "PASS_SCOPED_125MBPS",
+      "mode": "Maximum6 outerOFF fq600 original static owned neighbour",
+      "app_mbps_each": 125,
+      "impairment": {
+        "loss_pct_client": 29.923955811138015,
+        "loss_pct_server": 29.981850406650278,
+        "oneway_ms": 300
+      },
+      "business": {
+        "c2s": {
+          "injected_mbps": 124.99750693333334,
+          "delivered_mbps": 124.96122053333333,
+          "missing": 177,
+          "p99_ms": 306.1
+        },
+        "s2c": {
+          "injected_mbps": 125.00025253333334,
+          "delivered_mbps": 124.94020186666665,
+          "missing": 270,
+          "p99_ms": 305.8
+        }
+      },
+      "real_outer_30s": {
+        "client_tx_bytes": 813259651,
+        "server_tx_bytes": 812165955,
+        "client_mbps": 216.86924026666668,
+        "server_mbps": 216.577588,
+        "combined_mbps": 433.4468282666667
+      },
+      "native_outer_repair": {
+        "copies": 0,
+        "bytes": 0
+      },
+      "rx": {
+        "client": {
+          "peak_active": 136,
+          "peak_bytes": 4857654,
+          "pressure_evicted": 0,
+          "decoder_rejected": 0,
+          "recovered_tun": 165399
+        },
+        "server": {
+          "peak_active": 136,
+          "peak_bytes": 4902854,
+          "pressure_evicted": 0,
+          "decoder_rejected": 0,
+          "recovered_tun": 165718
+        }
+      },
+      "cost": {
+        "cpu_s_client": 22.28,
+        "cpu_s_server": 22.42,
+        "rss_peak_client": 45187072,
+        "rss_peak_server": 45125632,
+        "cpu_psi_peak_pct": 23.81,
+        "cpu_psi_over20_fraction": 0.8333333333333334
+      },
+      "source_tun_drops_both": 0,
+      "Stop_drained": true,
+      "qualification": "Single observed rate PASS, CPU PSI some >20 most measurement samples; next rate should be bounded."
     }
   }
 }
