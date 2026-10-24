@@ -8,6 +8,9 @@
 pub mod record_frame;
 /// Real independent ChaCha AEAD and full eight-byte PN header protection.
 pub mod record_crypto;
+/// NOT production wire or admission; oracle-only isolated experiment.
+#[cfg(feature = "selective-crypto-experiment")]
+pub mod selective_record_experiment;
 /// Bounded per-lane authenticated replay admission; separate from raw crypto.
 pub mod record_replay;
 /// R0 LINK fragment and FEC shard wire layout only (not reassembly/GF recovery).
