@@ -30,6 +30,7 @@ extern int32_t wbd_m0_embedded_go_read_public_outer_repair(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_public_outer_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_public_outer_diagnostics(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_public_fec2_tx_snapshot(uint64_t,uint64_t *,size_t);
+extern int32_t wbd_m0_embedded_go_public_fec2_mature_quality(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_public_fec2_tx_failures(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
@@ -459,6 +460,18 @@ func (b *v4EmbeddedNativeBridge) rustOwnerNormalM2Firstsend()(v4NormalM2Firstsen
      if rc!=0{return z,fmt.Errorf("%w: normal M2 authentic reverse coverage=%d",errV4Embedded,int(rc))}
      return v4NormalM2Coverage{uint64(a),uint64(b8),uint64(reports),c!=0},nil
  }
+// Full original native source-only quality readback. No copied parity,
+// repair-shadow RTT or inferred netem loss enters these 30 monotone counts.
+func (b *v4EmbeddedNativeBridge) rustOwnerFec2MatureQuality()([30]uint64,error){
+    var out [30]uint64
+    if b==nil||!b.committed||b.handle==0||b.stopped{return out,errV4Embedded}
+    var native [30]C.uint64_t
+    rc:=C.wbd_m0_embedded_go_public_fec2_mature_quality(
+        C.uint64_t(b.handle),&native[0],C.size_t(len(native)))
+    if rc!=0{return out,fmt.Errorf("%w: native FEC M2 quality=%d",errV4Embedded,int(rc))}
+    for i,v:=range native {out[i]=uint64(v)}
+    return out,nil
+}
 // Developer-only feature-gated barrier. This is not a product scheduler,
 // data-plane syscall, or authorization to enable FEC2.
 func (b *v4EmbeddedNativeBridge) rustOwnerDebugJumboPause(enabled bool)(bool,uint32,error){

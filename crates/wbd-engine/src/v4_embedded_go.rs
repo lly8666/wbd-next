@@ -197,6 +197,23 @@ fn fec2_probe_process_quota()->&'static Mutex<Fec2ProbeProcessQuota>{
 // never zero loss or a fabricated receipt. All state is scoped to this
 // Go TLS credential-bound lane+epoch and bounded by M2 capacity.
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn m0_sum_mature_window(dst:&mut wbd_recovery::MatureWindow,src:wbd_recovery::MatureWindow){
+    dst.first_sent=dst.first_sent.saturating_add(src.first_sent);
+    dst.first_sent_wire_bytes=dst.first_sent_wire_bytes.saturating_add(src.first_sent_wire_bytes);
+    dst.unambiguous_positive=dst.unambiguous_positive.saturating_add(src.unambiguous_positive);
+    dst.positive_wire_bytes=dst.positive_wire_bytes.saturating_add(src.positive_wire_bytes);
+    dst.covered_missing=dst.covered_missing.saturating_add(src.covered_missing);
+    dst.missing_wire_bytes=dst.missing_wire_bytes.saturating_add(src.missing_wire_bytes);
+    dst.repaired_or_ambiguous=dst.repaired_or_ambiguous.saturating_add(src.repaired_or_ambiguous);
+    dst.ambiguous_wire_bytes=dst.ambiguous_wire_bytes.saturating_add(src.ambiguous_wire_bytes);
+    dst.uncovered=dst.uncovered.saturating_add(src.uncovered);
+    dst.uncovered_wire_bytes=dst.uncovered_wire_bytes.saturating_add(src.uncovered_wire_bytes);
+    dst.positive_confirmation_lag_ns=dst.positive_confirmation_lag_ns
+        .saturating_add(src.positive_confirmation_lag_ns);
+    dst.positive_confirmation_samples=dst.positive_confirmation_samples
+        .saturating_add(src.positive_confirmation_samples);
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct NormalFirstSendM2 {
     lane:wbd_types::LaneKey,
     route:wbd_recovery::ReceiptRouteScope,
@@ -205,6 +222,8 @@ struct NormalFirstSendM2 {
     state:wbd_recovery::MatureFirstSend,
     accepted:u64,unknown_2s:u64,unknown_8s:u64,
     covered_2s:u64,covered_8s:u64,positive_2s:u64,
+    live_mature_2s:wbd_recovery::MatureWindow,
+    live_mature_8s:wbd_recovery::MatureWindow,
     // Bounded authenticated 2s cohort; reset on uncovered source.
     clean_2s:u64,clean_positive_2s:u64,
     authenticated_reverse_reports:u64,censored:bool,
@@ -227,6 +246,8 @@ impl NormalFirstSendM2 {
             .map_err(|_|INVALID)?;
         Ok(Self{lane,route,reverse_direction,epoch,state,accepted:0,unknown_2s:0,unknown_8s:0,
             covered_2s:0,covered_8s:0,positive_2s:0,
+            live_mature_2s:wbd_recovery::MatureWindow::default(),
+            live_mature_8s:wbd_recovery::MatureWindow::default(),
             clean_2s:0,clean_positive_2s:0,
             authenticated_reverse_reports:0,censored:false})
     }
@@ -253,6 +274,8 @@ impl NormalFirstSendM2 {
                     result.window_2s.unambiguous_positive);
                 self.covered_8s=self.covered_8s.saturating_add(
                     result.window_8s.covered());
+                m0_sum_mature_window(&mut self.live_mature_2s,result.window_2s);
+                m0_sum_mature_window(&mut self.live_mature_8s,result.window_8s);
                 if result.capacity_limited{self.censored=true}
             }
             Err(_)=>self.censored=true,
@@ -496,6 +519,10 @@ struct Entry{
     fec2_staged_pns:Vec<(u64,u8)>,
     #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     fec2_copied_source:u64,
+    #[cfg(feature="fec2_product_record")]
+    fec2_pending_m2_positive_baseline:u64,
+    #[cfg(feature="fec2_product_record")]
+    fec2_pending_m2_reverse_baseline:u64,
     #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     fec2_copied_repair:u64,
     // Fixed-size existing TX-owner diagnosis, no payload or hot tracing.
@@ -746,6 +773,10 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         fec2_staged_pns:Vec::new(),
         #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         fec2_copied_source:0,
+        #[cfg(feature="fec2_product_record")]
+        fec2_pending_m2_positive_baseline:0,
+        #[cfg(feature="fec2_product_record")]
+        fec2_pending_m2_reverse_baseline:0,
         #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         fec2_copied_repair:0,
         #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -2035,6 +2066,10 @@ fn m0_add_mature_window(
     dst.ambiguous_wire_bytes=dst.ambiguous_wire_bytes.saturating_add(src.ambiguous_wire_bytes);
     dst.uncovered=dst.uncovered.saturating_add(src.uncovered);
     dst.uncovered_wire_bytes=dst.uncovered_wire_bytes.saturating_add(src.uncovered_wire_bytes);
+    dst.positive_confirmation_lag_ns=dst.positive_confirmation_lag_ns
+        .saturating_add(src.positive_confirmation_lag_ns);
+    dst.positive_confirmation_samples=dst.positive_confirmation_samples
+        .saturating_add(src.positive_confirmation_samples);
 }
 #[cfg(all(feature="m0_fec2_owner_probe",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
@@ -3592,8 +3627,30 @@ fn original_fixed_stage_source(e:&mut Entry,
     budget:wbd_codec::path_budget::FrameBudget,now:MonoNs)->Result<bool,i32>{
     use crate::v4_fixed_stream::FixedStream;
     use wbd_types::ConfigRevision;
-    let (profile,rev)=e.fixed_pending.or(e.fixed_applied).ok_or(BAD_STAGE)?;
     if e.protected_features!=7||e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
+    // Keep original M1/M3/M4 old first-send data and parity intact until
+    // the actual FEC stream (not a Go desired flag) is quiescent. This
+    // checks at the next natural FIRST source turn, never blocks a packet.
+    if let (Some((next_profile,next_rev)),Some((_,old_rev)))=
+        (e.fixed_pending,e.fixed_applied){
+        if next_rev>old_rev && e.fec2_staged_pns.is_empty(){
+            if let Some(stream)=e.fec2_live_tx.as_mut(){
+                if stream.quiescent_change(next_profile,next_rev,now).is_ok(){
+                    let Some(m2)=e.normal_firstsend_m2.as_ref()else{return Err(BAD_STAGE)};
+                    let Ok(mut m2)=m2.lock()else{return Err(BAD_STAGE)};
+                    m2.poll(now);
+                    e.fec2_pending_m2_positive_baseline=m2.positive_2s;
+                    e.fec2_pending_m2_reverse_baseline=m2.authenticated_reverse_reports;
+                    e.fixed_applied=None;
+                    e.fec2_copied_source=0;
+                    e.fec2_copied_repair=0;
+                    // No receiver replay/gen reset; prior peer ciphertext
+                    // remains authenticated independently of TX revision.
+                }
+            }
+        }
+    }
+    let (profile,rev)=e.fixed_applied.or(e.fixed_pending).ok_or(BAD_STAGE)?;
     let (_,epoch)=e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
     if n==0||n>budget.record_payload_mtu.saturating_sub(14){return Err(INVALID)}
     let mut stream=match e.fec2_live_tx.take(){
@@ -3649,7 +3706,7 @@ fn original_fixed_stage_due(e:&mut Entry,
     let (_,epoch)=e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
     let mut failed=None;
     let result=stream.poll_parity(now,|parity,_block,row,revision|{
-        if e.fixed_pending.or(e.fixed_applied).is_none_or(|(_,r)|r!=revision.0)
+        if e.fixed_applied.or(e.fixed_pending).is_none_or(|(_,r)|r!=revision.0)
             ||!original_public_fixed_row_allowed(row){
             e.fec2_fail_reasons[3]+=1;return DriverProof::NotSent
         }
@@ -5122,16 +5179,23 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_stage_pending(
         // A new policy is NOT allowed to truncate or reprofile any older
         // unretired FEC source/parity block; preserve old authority until
         // a genuine application control quiescent transition.
-        if e.fec2_live_tx.as_ref().is_some_and(|s|
-            s.report().charged_bytes!=0 || s.report().outstanding_jobs!=0
-            || s.report().open_bytes!=0) || !e.fec2_staged_pns.is_empty(){
-            return BAD_STAGE
+        if e.fixed_applied.is_none(){
+            if e.fec2_live_tx.as_ref().is_some_and(|s|
+                s.report().charged_bytes!=0 || s.report().outstanding_jobs!=0
+                || s.report().open_bytes!=0) || !e.fec2_staged_pns.is_empty(){
+                return BAD_STAGE
+            }
+            if let Some(old)=e.fec2_live_tx.as_mut(){old.stop()}
+            e.fec2_live_tx=None;
+            e.fec2_copied_source=0;
+            e.fec2_copied_repair=0;
+            e.fec2_pending_m2_positive_baseline=0;
+            e.fec2_pending_m2_reverse_baseline=0;
+            e.fec2_rx_admit.store(false,Ordering::Release);
+        }else{
+            // Live Auto stage does not reset or truncate any old FEC owner.
+            if e.fixed_pending.is_some()||e.fec2_live_tx.is_none(){return BAD_STAGE}
         }
-        if let Some(old)=e.fec2_live_tx.as_mut(){old.stop()}
-        e.fec2_live_tx=None;
-        e.fec2_copied_source=0;
-        e.fec2_copied_repair=0;
-        e.fec2_rx_admit.store(false,Ordering::Release);
     }
     e.fixed_pending=Some((profile,revision));
     // Private legacy FEC probe must never leave a different pending policy
@@ -5183,7 +5247,10 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_commit_mature_m2(
         e.protected_features!=7||
         !e.fixed_pending.is_some_and(|(_,r)|r==revision)||
         e.fec2_copied_source==0||e.fec2_copied_repair==0||
-        !e.fec2_staged_pns.is_empty(){return BAD_STAGE}
+        !e.fec2_staged_pns.is_empty()||
+        e.fec2_live_tx.as_ref().is_none_or(|s|s.revision().0!=revision){
+        return BAD_STAGE
+    }
     // Under continuing business FEC open/queued jobs are bounded and
     // expected; a global all-jobs-zero gate is a startup timing race.
     if e.fec2_live_tx.is_none(){return BAD_STAGE}
@@ -5193,7 +5260,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_commit_mature_m2(
         m2.poll(loop_now());
         // A 2s-mature authentic clean cohort, NOT all-source epoch totals.
         // Identity/capacity censorship is still a hard failure.
-        m2.has_verified_fixed_m2_witness()
+        m2.has_verified_fixed_m2_witness() &&
+        m2.positive_2s>e.fec2_pending_m2_positive_baseline &&
+        m2.authenticated_reverse_reports>e.fec2_pending_m2_reverse_baseline
     };
     if !covered{return BAD_STAGE}
     let Some(policy)=e.fixed_pending.take()else{return BAD_STAGE};
@@ -5309,6 +5378,46 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_firstsend_m2_coverage(
         censored.write(u32::from(first.censored));
     }
     OK
+}
+// Native AUTHENTIC M2 cumulative 2s/8s and exact FEC actual-k histogram.
+// Counts are post-M4 FIRST DATA only, excluding parity/outer retransmit;
+// real positive ACK confirmation latency is not the shadow default RTT.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_mature_quality(
+    h:u64,out:*mut u64,n:usize
+)->i32{
+    if out.is_null()||n!=30{return INVALID}
+    #[cfg(not(feature="fec2_product_record"))]
+    {let _=h;BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    {
+        let Ok(cell)=session(h)else{return UNKNOWN};
+        let Ok(e)=cell.lock()else{return BAD_STAGE};
+        if e.phase!=PH_ACTIVE||e.protected_features!=7||e.workers.is_none(){return BAD_STAGE}
+        let Some(m2)=e.normal_firstsend_m2.as_ref()else{return BAD_STAGE};
+        let Ok(mut m)=m2.lock()else{return BAD_STAGE};
+        m.poll(loop_now());
+        let a=m.live_mature_2s;let b=m.live_mature_8s;
+        let w=|x:wbd_recovery::MatureWindow|->[u64;5]{
+            [x.first_sent,x.unambiguous_positive,x.covered_missing,
+                x.uncovered,x.repaired_or_ambiguous]
+        };
+        let mut v=[0u64;30];
+        v[..5].copy_from_slice(&w(a));v[5..10].copy_from_slice(&w(b));
+        v[10]=m.authenticated_reverse_reports;
+        v[11]=m.state.counters().capacity_censored;
+        v[12]=b.positive_confirmation_lag_ns;
+        v[13]=b.positive_confirmation_samples;
+        let Some(stream)=e.fec2_live_tx.as_ref()else{return BAD_STAGE};
+        for cl in &stream.report().classes {
+            for k in 1..=16 {
+                v[13+k]=v[13+k].saturating_add(cl.k_hist[k]);
+            }
+        }
+        unsafe{std::ptr::copy_nonoverlapping(v.as_ptr(),out,30)}
+        OK
+    }
 }
 // M0 developer-only test rendezvous. A real original M4 sendmmsg prefix
 // must finish before the concurrent Go netlink MTU mutation is permitted.

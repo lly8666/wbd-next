@@ -7,6 +7,7 @@ package realityfront
 // APPLIED: only original Rust M1/M3/M4 actual kernel source+parity and mature
 // authenticated opposite-direction kind1 can publish fixed/auto startup ACK.
 import (
+    "log"
     "sync"
     "time"
 )
@@ -68,6 +69,13 @@ type V4PublicFecRxIpClass struct {
 type v4ProductFecMonitor struct {
     epoch [16]byte
     state FecV2State
+    cfg FecV2Config
+    mu sync.Mutex
+    // Real 2s/8s M4 FIRST source maturity and exact closed-k are all
+    // monotonically increasing; no per-packet Go callbacks or trace buffers.
+    history []v4AutoQualitySample
+    startedAt time.Time
+    lastAutoAt time.Duration
     stopCh chan struct{}
     doneCh chan struct{}
     once sync.Once
@@ -100,13 +108,133 @@ func v4ConfigureProductFec(
         return nil,ErrAdmissionUnsupported
     }
     return &v4ProductFecMonitor{
-        epoch:authenticated.Epoch(),state:state,
+        epoch:authenticated.Epoch(),state:state,cfg:cfg,
+        history:make([]v4AutoQualitySample,0,12),
         stopCh:make(chan struct{}),doneCh:make(chan struct{}),
     },nil
+}
+// Native facts are cumulative. Delaying the k histogram by 8s aligns it
+// with M2's 8s-mature FIRST source window (source first-sent 8..16s ago).
+// Unknown, ambiguous, missing hist or capacity censorship never become
+// a manufactured zero-loss sample.
+type v4AutoQualitySample struct {
+    at time.Duration
+    counters [30]uint64
+}
+func v4FecAutoDiff(a,b uint64)(uint64,bool){
+    if b<a{return 0,false}
+    return b-a,true
+}
+func v4FecAutoWindow(now,then [30]uint64,offset int)(FecV2Window,bool){
+    var v [5]uint64
+    for i:=range v {
+        x,ok:=v4FecAutoDiff(then[offset+i],now[offset+i])
+        if !ok{return FecV2Window{},false}
+        v[i]=x
+    }
+    return FecV2Window{
+        FirstSent:v[0],Observed:v[1]+v[2],Missing:v[2],
+        Unknown:v[3]+v[4],
+    },v[0]==v[1]+v[2]+v[3]+v[4]
+}
+func (m *v4ProductFecMonitor)autoObserve(bridge *v4EmbeddedNativeBridge,
+    now time.Duration)(FecV2Snapshot,error){
+    snap:=FecV2Snapshot{
+        Client:m.cfg.Client,Direction:m.cfg.Direction,
+        At:now,Validity:FecV2Unknown,
+    }
+    raw,err:=bridge.rustOwnerFec2MatureQuality()
+    if err!=nil{return snap,err}
+    m.history=append(m.history,v4AutoQualitySample{at:now,counters:raw})
+    // Retain 20s plus one floor point, never an unbounded history table.
+    for len(m.history)>12{m.history=m.history[1:]}
+    find:=func(age time.Duration)([30]uint64,bool){
+        for i:=len(m.history)-1;i>=0;i--{
+            if m.history[i].at<=now-age {
+                return m.history[i].counters,true
+            }
+        }
+        return [30]uint64{},false
+    }
+    fast,haveFast:=find(2*time.Second)
+    slow,haveSlow:=find(8*time.Second)
+    histOld,haveHist:=find(16*time.Second)
+    if !haveFast||!haveSlow||!haveHist{return snap,nil}
+    var ok bool
+    snap.Fast,ok=v4FecAutoWindow(raw,fast,0)
+    if !ok{return snap,nil}
+    snap.Slow,ok=v4FecAutoWindow(raw,slow,5)
+    if !ok{return snap,nil}
+    for k:=0;k<16;k++{
+        n,valid:=v4FecAutoDiff(histOld[14+k],slow[14+k])
+        if !valid{return snap,nil}
+        snap.ActualK[k]=n
+    }
+    if raw[11]!=0 {
+        snap.Validity=FecV2HostCapacity
+        snap.HostDrops=raw[11]
+        return snap,nil
+    }
+    reports,ok:=v4FecAutoDiff(slow[10],raw[10])
+    if !ok||reports==0{return snap,nil}
+    lag,ok:=v4FecAutoDiff(slow[12],raw[12])
+    if !ok{return snap,nil}
+    samples,ok:=v4FecAutoDiff(slow[13],raw[13])
+    if !ok||samples==0{return snap,nil}
+    // Authentic DATA positive confirmation age, not the OFF outer shadow's
+    // synthetic 600ms value; includes feedback cadence, conservative RTT.
+    mean:=lag/samples
+    if mean>uint64((1<<63)-1){return snap,nil}
+    snap.SRTT=time.Duration(mean)
+    snap.Validity=FecV2Valid
+    return snap,nil
+}
+func (m *v4ProductFecMonitor)tick(
+    bridge *v4EmbeddedNativeBridge,now time.Duration,
+){
+    m.mu.Lock()
+    defer m.mu.Unlock()
+    if m.state.AppliedRevision!=m.state.RequestedRevision{
+        // Native M4 definitely copied source+parity plus authenticated
+        // reverse M2 are the ONLY authority to mark this revision applied.
+        if v4PublicMatureFixedNative(bridge,m.epoch,m.state.RequestedRevision)!=nil {
+            return
+        }
+        applied,_,err:=bridge.readbackOriginalFixedPending(m.state,m.epoch)
+        if err!=nil{return}
+        m.state=applied
+        m.history=m.history[:0] // policy now has a new actual-k epoch
+    }
+    if m.cfg.Mode!=FecV2Auto||now-m.lastAutoAt<2*time.Second{return}
+    m.lastAutoAt=now
+    snap,err:=m.autoObserve(bridge,now)
+    if err!=nil{return}
+    if m.state.AppliedRevision!=m.state.RequestedRevision{return}
+    next,intent,err:=FecV2Step(m.cfg,m.state,snap,now)
+    if err!=nil{return}
+    var kSources uint64
+    for i,n:=range snap.ActualK{kSources+=uint64(i+1)*n}
+    log.Printf("V4_PUBLIC_FEC2_AUTO_QUALITY direction=%s revision=%d profile=%d validity=%s reason=%q fast_first=%d fast_observed=%d fast_missing=%d fast_unknown=%d slow_first=%d slow_observed=%d slow_missing=%d slow_unknown=%d actual_k_sources=%d reverse_confirm_lag_us=%d target_profile=%d request=%t",
+        m.cfg.Direction,m.state.RequestedRevision,m.state.Desired,
+        intent.Validity,intent.Reason,snap.Fast.FirstSent,snap.Fast.Observed,
+        snap.Fast.Missing,snap.Fast.Unknown,snap.Slow.FirstSent,
+        snap.Slow.Observed,snap.Slow.Missing,snap.Slow.Unknown,
+        kSources,snap.SRTT.Microseconds(),intent.Profile,intent.Send)
+    if intent.Send{
+        if err=bridge.stageOriginalAutoRevision(m.epoch,m.state,intent);err!=nil{
+            // Native still owns the older profile until a real quiescent
+            // cutover; no early Go requested/applied revision advancement.
+            return
+        }
+        log.Printf("V4_PUBLIC_FEC2_AUTO_STAGE mode=auto direction=%s requested=%d profile=%d validity=%s reason=%s",
+            m.cfg.Direction,intent.Revision,intent.Profile,intent.Validity,intent.Reason)
+    }
+    m.state=next
 }
 func (m *v4ProductFecMonitor)start(bridge *v4EmbeddedNativeBridge){
     if m==nil{return}
     m.started=true
+    m.startedAt=time.Now()
     go func(){
         defer close(m.doneCh)
         ticker:=time.NewTicker(200*time.Millisecond)
@@ -114,13 +242,7 @@ func (m *v4ProductFecMonitor)start(bridge *v4EmbeddedNativeBridge){
         for{
             select{
             case <-m.stopCh:return
-            case <-ticker.C:
-                // NO positive transition until mature 2s observed first
-                // sends, real source and parity copied by M4, original
-                // M3 opposite-direction verified kind1, same epoch/revision.
-                if v4PublicMatureFixedNative(
-                    bridge,m.epoch,m.state.RequestedRevision,
-                )==nil{return}
+            case <-ticker.C:m.tick(bridge,time.Since(m.startedAt))
             }
         }
     }()
@@ -135,8 +257,11 @@ func (m *v4ProductFecMonitor)readback(
 )(V4PublicFecReadback,error){
     var out V4PublicFecReadback
     if m==nil{return out,ErrAdmissionUnsupported}
+    m.mu.Lock()
+    defer m.mu.Unlock()
     next,_,err:=bridge.readbackOriginalFixedPending(m.state,m.epoch)
     if err!=nil{return out,err}
+    m.state=next
     return V4PublicFecReadback{
         Mode:next.Mode,RequestedRevision:next.RequestedRevision,
         AppliedRevision:next.AppliedRevision,Profile:next.Desired,

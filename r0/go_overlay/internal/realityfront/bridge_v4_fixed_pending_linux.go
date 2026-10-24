@@ -73,6 +73,36 @@ func (b *v4EmbeddedNativeBridge) stageOriginalFixedPending(
     return pending,ack,nil
 }
 
+// Auto profile is a newer policy on the original authenticated TLS owner,
+// not a second FEC sender. A pending old revision is never coalesced by Go.
+// Rust keeps old source+parity immutable until M1 quiescent cutover, and
+// requires new kernel source+parity plus true M2 before applied readback.
+func (b *v4EmbeddedNativeBridge) stageOriginalAutoRevision(
+    epoch [16]byte,prev FecV2State,intent FecV2Intent,
+)error{
+    if b==nil||!b.committed||b.stopped||b.handle==0||
+        epoch==[16]byte{}||epoch!=b.protectedEpoch||
+        b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2)||
+        !prev.Initialized||prev.Mode!=FecV2Auto||
+        prev.Client!=b.authenticatedPrincipal||
+        prev.Direction!=func()FecV2Direction{
+            if b.serverSide{return FecV2S2C}
+            return FecV2C2S
+        }()||prev.AppliedRevision!=prev.RequestedRevision||
+        !intent.Send||intent.Mode!=FecV2Auto||
+        intent.Client!=prev.Client||intent.Direction!=prev.Direction||
+        intent.Revision<=prev.RequestedRevision||!intent.Profile.Valid(){
+        return ErrFecV2Scope
+    }
+    rc:=C.wbd_m0_embedded_go_fixed_stage_pending(C.uint64_t(b.handle),
+        (*C.uchar)(unsafe.Pointer(&epoch[0])),C.size_t(16),
+        C.uint8_t(intent.Profile),C.uint64_t(intent.Revision))
+    runtime.KeepAlive(epoch)
+    if rc!=0{return fmt.Errorf("%w: native Auto revision pending denied=%d",
+        errV4Embedded,int(rc))}
+    return nil
+}
+
 // Reads the SAME generation/epoch owner, which intentionally returns
 // applied=0 until real native parity send/repair-to-app is demonstrated.
 // Do not map this pending receipt to FecV2Apply or product enabled.
