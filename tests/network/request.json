@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "id": "V3-Linux-global-fq600-Fixed5-IID5",
+  "id": "V3-Linux-global-fq600-Auto-asym-1-20-1",
   "owner": "network-matrix-work",
-  "seed": 8171,
+  "seed": 8172,
   "product": {
-    "mode": "fec-fixed",
-    "fec_profile": 5
+    "mode": "fec-auto",
+    "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 12,
-    "s2c_mbps": 12,
+    "c2s_mbps": 10,
+    "s2c_mbps": 10,
     "udp_share": 1,
     "sizes": [
       [
@@ -40,17 +40,47 @@
   "drain_s": 20,
   "phases": [
     {
-      "name": "steady",
-      "seconds": 60,
+      "name": "low",
+      "seconds": 20,
       "rate_scale": 1,
       "c2s": {
         "delay_ms": 25,
-        "loss_pct": 5,
+        "loss_pct": 1,
         "rate_mbps": 100
       },
       "s2c": {
         "delay_ms": 25,
-        "loss_pct": 5,
+        "loss_pct": 1,
+        "rate_mbps": 100
+      }
+    },
+    {
+      "name": "up20",
+      "seconds": 40,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 25,
+        "loss_pct": 20,
+        "rate_mbps": 100
+      },
+      "s2c": {
+        "delay_ms": 25,
+        "loss_pct": 1,
+        "rate_mbps": 100
+      }
+    },
+    {
+      "name": "recover",
+      "seconds": 20,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 25,
+        "loss_pct": 1,
+        "rate_mbps": 100
+      },
+      "s2c": {
+        "delay_ms": 25,
+        "loss_pct": 1,
         "rate_mbps": 100
       }
     }
