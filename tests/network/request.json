@@ -1,34 +1,29 @@
 {
   "version": 1,
-  "id": "V3-AllModes-fq600-Game4-blackhole-receipt-correct",
+  "id": "V3-AllModes-fq600-Fixed5-clean-FEC-readback",
   "owner": "network-matrix-work",
-  "seed": 8174,
+  "seed": 8176,
   "product": {
-    "mode": "game4",
-    "fec_profile": 1,
-    "game_fec": "off"
+    "mode": "fec-fixed",
+    "fec_profile": 5
   },
   "traffic": {
-    "c2s_mbps": 3,
-    "s2c_mbps": 3,
+    "c2s_mbps": 12,
+    "s2c_mbps": 12,
     "udp_share": 1,
     "sizes": [
       [
         64,
-        4
-      ],
-      [
-        256,
-        4
+        1
       ],
       [
         1172,
-        2
+        99
       ]
     ],
     "tcp_flows": 1,
     "probe_hz": 20,
-    "deadline_ms": 150,
+    "deadline_ms": 500,
     "burst_ms": 0,
     "max_packets": 20000000,
     "allow_fragmentation": false
@@ -42,51 +37,21 @@
     "startup_tun_drop_timeline": true
   },
   "warmup_s": 10,
-  "drain_s": 20,
+  "drain_s": 15,
   "phases": [
     {
-      "name": "healthy",
-      "seconds": 10,
-      "rate_scale": 1,
-      "c2s": {
-        "delay_ms": 25,
-        "rate_mbps": 50
-      },
-      "s2c": {
-        "delay_ms": 25,
-        "rate_mbps": 50
-      }
-    },
-    {
-      "name": "one_dead",
+      "name": "steady",
       "seconds": 30,
       "rate_scale": 1,
       "c2s": {
         "delay_ms": 25,
-        "rate_mbps": 50,
-        "blackhole_lanes": [
-          1
-        ]
+        "loss_pct": 0,
+        "rate_mbps": 100
       },
       "s2c": {
         "delay_ms": 25,
-        "rate_mbps": 50,
-        "blackhole_lanes": [
-          1
-        ]
-      }
-    },
-    {
-      "name": "recover",
-      "seconds": 20,
-      "rate_scale": 1,
-      "c2s": {
-        "delay_ms": 25,
-        "rate_mbps": 50
-      },
-      "s2c": {
-        "delay_ms": 25,
-        "rate_mbps": 50
+        "loss_pct": 0,
+        "rate_mbps": 100
       }
     }
   ],
@@ -95,7 +60,8 @@
     "require_retransmission": false,
     "max_repair_fresh_pct": 10,
     "require_zero_source_tun_drops_full_run": true,
-    "require_zero_tun_root_qdisc_drops_full_run": true
+    "require_zero_tun_root_qdisc_drops_full_run": true,
+    "max_loss_pct": 0
   },
   "bundles": {
     "A": {
