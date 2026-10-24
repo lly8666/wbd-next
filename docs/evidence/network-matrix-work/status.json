@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3_NATIVE_DEFAULT_FQ600_FLOW256_H500_COUNTEREXAMPLE_RETEST_IN_FLIGHT",
+  "phase": "V3_DEFAULT_LINUX_NORMAL_FQ600_FLOW256_REPRESENTATIVE_NATIVE_COMPLETE",
   "current_plan": {
     "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
     "policy": "outer-opportunistic-v3",
-    "status": "New Linux normal/off fq600 default source8d5bbd: true B single TCP500/RTT400 0loss PASS_SCOPED; highloss outer50/30pct UDP both directions PASS_SCOPED; 500Mbps outer line/2pct C2S in progress. Fixed/Auto/Game mode unaffected; no Windows claim."
+    "status": "V3-A 50Mbps line/30pct UDP and V3-D lossless mixed verified source8d; same-source601e native full TCP500/0loss and H500 line/2pct original FAIL retest both PASS_SCOPED; old 2 root fq drops isolated/fixed; other platform/modes NOT_QUALIFIED."
   },
   "restoration": {
     "remote_main_at_resume": "d8ba2cf270ff6ca5cadae6dab778c49c32636ef6",
@@ -42,152 +42,93 @@
       "zip_sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749"
     }
   },
-  "open_requests": [
-    {
-      "id": "V3-H500-flow256-native-preflight-fixed-2pct",
-      "run": 40056093313,
-      "attempt": 1,
-      "request_source": "ffc01a07de95ba13077d417fd253e4404e396b92",
-      "source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
-      "state": "IN_PROGRESS_LAST_READ",
-      "do_not_redispatch": true
-    },
-    {
-      "id": "V3-C-default-flow256-native-TCP500-exec",
-      "run": 40056105730,
-      "attempt": 1,
-      "request_source": "32e40a6b27beedfcc8196dc0f9fc9feca6fa114d",
-      "source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
-      "state": "QUEUED_LAST_READ",
-      "do_not_redispatch": true
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
     {
-      "id": "V3-A-50mbps-line30pct",
-      "action": 40046784480,
-      "result": "SCOPED_PASS_R_F8.878_8.870_R_C6.457_6.451_UDP25.66_25.70_source_TUN0"
-    },
-    {
-      "id": "V3-B-1500_1280_mtu",
-      "actions": [
-        39983912729,
-        40037686584
-      ],
-      "result": "SCOPED_PASS_normal_off_actual_MSS_TUN_UDP_boundaries"
-    },
-    {
-      "id": "V3-D-0loss_mixed_idle",
-      "actions": [
-        39985073396,
-        40000054306
-      ],
-      "result": "SCOPED_PASS"
-    },
-    {
-      "id": "V3-C-500cold-timeline",
-      "action": 40047401954,
-      "result": "STRICT_FAIL_warmup_TUN6629_cwnd50.75MB_vs_BDP25MB"
-    },
-    {
-      "id": "V3-C-test_socket_pacing_AB",
-      "action": 40047976746,
-      "artifact": 12542740290,
-      "digest": "sha256:545e32ba8b7bb9618f3f5b0e364c7d90d259c1aee7c715088e78e63975ee7dd0",
-      "result": "A_FAIL_TUN6131_B_SCOPED_PASS_TEST_ONLY_TUN0_TCP500.005_p99203ms"
-    },
-    {
-      "id": "V3-C-test_TUN_fq_AB",
-      "action": 40048710703,
-      "artifact": 12542646899,
-      "digest": "sha256:5614971ff10e87132a8fe60da09114ef9296d97bb74e7fb5f8d6137b0d36143a",
-      "result": "A_FAIL_TUN6249_B_SCOPED_PASS_TEST_ONLY_TUN0_TCP499.996_p99202.9ms"
-    },
-    {
-      "id": "contract_stale_inherited_request",
-      "action": 40053188967,
-      "result": "FAIL_testonly_qdisc_name_mixed_with_prev_B600_profile_corrected_38ba0f3_action_verification_pending"
-    },
-    {
-      "id": "harness_contract_recovered",
-      "action": 40053299866,
-      "source": "38ba0f3b8d0d52ad64731bc1c68f7e87d9563fca",
-      "result": "PASS_44_test_harness_contracts_including_owned_profile"
-    },
-    {
-      "id": "contract request isolation",
-      "source": "92ea70abb34c99fe6ea789a9d500b7db8da6f380",
-      "action": 40053463038,
-      "result": "SUCCESS_ALL_NATIVE_HARNESS_CONTRACTS including generic FEC/Game presets after isolating request-specific product fq600"
-    },
-    {
-      "id": "V3-C_native_owned_600_TCP500_real_AB",
-      "action": 40053396971,
-      "attempt": 1,
-      "artifact": 12543608967,
-      "zip_sha256": "e94d703d1d699ae3d5a4b5224aa2fbeeeebbb23010ba2ffdc62a7ae5b8c94375",
-      "source": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
-      "file": "docs/evidence/network-matrix-work/V3-C-owned-Linux-TUN-fq600-TCP500-real-AB-20261024.json",
-      "result": "A_FAIL_startup_TUN6613_B_PASS_SCOPED_product_fq600_readback_kernel75000000Bps_app500.0003584Mbps_p99_203.2ms_source_TUN_warmup_steady0_root_qdisc0_StopPASS_Action_overall_FAIL"
-    },
-    {
-      "id": "native_fq600_default_contract",
-      "run": 40055025852,
-      "source": "1d5d34954535fc8e40606888f1ec4c16164f5180",
-      "result": "SUCCESS"
-    },
-    {
-      "id": "V3-native-default-fq600-TCP500",
-      "run": 40055169119,
-      "attempt": 1,
-      "artifact": 12544784157,
-      "artifact_zip_sha256": "e787e0d879494900212b1040f1ad888d1cea4f0f9f42c315e2dd76f42692b152",
-      "result": "Overall FAIL due negative A explicit0 drops8098 at startup. B CLI omitted native fq600 kernel readback dual ends PASS_SCOPED app500.000Mbps p99203.1 sourceTUN0 rootfq0 StopPASS.",
-      "file": "V3-C-Linux-default-fq600-TCP500-AB-20261024.json"
-    },
-    {
-      "id": "V3-native-default-fq600-highloss30",
+      "id": "v3 default fq600 original source8d highloss30",
       "run": 40055272532,
-      "attempt": 1,
-      "artifact": 12544759103,
-      "artifact_zip_sha256": "b48bc908ecad811d75f729c3909db7d6cba8694fc1c75683ab1cdce0994cc162",
-      "result": "PASS_SCOPED both directions true outerline50Mbps 30% IID RTT600: UDP delivery25.166/25.641Mbps R/F8.833/8.757<=10 R/C6.424/6.369>=6 sourceTUN/root0, StopPASS",
+      "result": "PASS R/F 8.833/8.757 R/C6.424/6.369 each with genuine 50Mbps line/30% IID, kernel TUN/qdisc drops0",
       "file": "V3-A-default-fq600-30pct-line50-real-20261024.json"
     },
     {
-      "id": "default_fq600_mixed15_70_30",
+      "id": "v3 default fq600 original source8d lossless mixed",
       "run": 40055680062,
-      "artifact": 12545570785,
-      "zip_sha256": "eb42154bbe49fbca45a88649e5bbc3d94591515b69c1f57080f6a83c110cc8ba",
-      "result": "PASS_SCOPED both15Mbps per direction TCP10.5 UDP4.5 zero missing 10ms no common gap sourceTUN/root0",
+      "result": "PASS dual 15Mbps each, TCP70/UDP30/small ~1% bytes, 10ms common zero bins0, source/qdisc0",
       "file": "V3-D-default-fq600-mixed-70TCP30UDP-20261024.json"
     },
     {
-      "id": "default_fq600_outer500_2pct_original_FAIL",
+      "id": "v3 H500 original source8d root flow limit",
       "run": 40055236284,
-      "artifact": 12544894146,
-      "zip_sha256": "0e863ad289573c61c55039624c77b6cfe3b37ba82bd95e9d5c15cdb9ec624cec",
-      "result": "STRICT_FAIL rootfq warmup drops2 flows_plimit2 despite sourceTUN0, injected370.008 UDP received363.434, netem2% CPU PSI9.89, actual qdisc limit100/600mbit, no CPU bottleneck evidence"
+      "result": "REAL FAIL two root fq startup drops from flows_plimit2/flow_limit100, sourceTUN0, CPU host PSI9.89%; fixed bounded flow256; failure preserved",
+      "file": "V3-H500-default-fq600-flow100-root-qdisc-FAIL-20261024.json"
+    },
+    {
+      "id": "v3 exact source601e flow256 H500 original counterexample retest",
+      "run": 40056093313,
+      "artifact": 12545397787,
+      "result": "PASS_SCOPED 370.014Mbps business offered,363.434 delivered,500Mbps outer line 2%/200ms, 0 source/root drops",
+      "file": "V3-H500-default-fq600-flow256-2pct-recheck-PASS-20261024.json"
+    },
+    {
+      "id": "v3 exact source601e flow256 TCP500 cold default",
+      "run": 40056105730,
+      "artifact": 12545700555,
+      "result": "PASS_SCOPED 500Mbps business one inner TCP 0loss RTT400 p99203.3ms startup+steady TUN/root0",
+      "file": "V3-C-default-fq600-flow256-native-TCP500-PASS-20261024.json"
+    },
+    {
+      "id": "recovered non-business harness preflight",
+      "runs": [
+        40055969268,
+        40055987386
+      ],
+      "result": "FAIL BEFORE BUSINESS because tc -d options were multiline; corrected parser c0f94f6 and harness contracts40056048217 PASS; no false product failure claim"
     }
   ],
   "open_issues": [
-    "Default Linux Normal/off remains strict cold-start local TUN drop FAIL at TCP500 (A6613); explicitly scoped product-owned fq600 B reaches real TCP500 without hiding drops, but is opt-in not a default policy decision.",
-    "Host CPU/PSI significant at this load (B client48.66/server64.33 CPU-s per60s, host PSI some peak30.13%); no low CPU comparative improvement claim and do not use A local-drop as successful CPU baseline.",
-    "Windows, Fixed/Auto/Game, physical, multi-business 500/no-HOL, bidirectional500 and wider MTU regressions remain separate NOT_QUALIFIED; previously passed v3-A/B/D scoped cases reused."
+    "Linux Normal/off default fq600 + bounded flow_limit256 is verified only on ARM64 native as scoped: H500 outer-line single C2S/2% and single inner TCP500/0loss; it is not a blanket 500Mbps net business at 2% or a dual-direction saturation result.",
+    "Highloss30 and mixed PASS belong prior fq600 default source8d with per-flow limit100 (unaffected repair protocol); do not claim they are exact product source601e regressions without Actions. Historical V3-B MTU and V3-D idle/blackhole also source-scoped reused.",
+    "Windows/FEC Fixed/Auto/Game, multi-client shared endpoint/no cross-HOL at 500Mbps, physical native deployment and arbitrary >600Mbps per-flow are NOT_QUALIFIED. CPU absolute per-source/VM observed, no measured optimization gain against locally dropping baseline; user requested bounded work, no more blind matrix.",
+    "Pre-flowlimit original strict H500 root-drop FAIL retained. Two pre-business harness parser FAIL Actions do not count as capacity FAIL."
   ],
-  "next_action": "Recover existing Action40056093313 H500 exact old counterexample (370 app Mbps/500 line/2pct) and Action40056105730 TCP500 0loss from native601e flow_limit256. Both use same product artifact12545850127 and strict native Go/kernel fq600 flow_limit256 readback. Preserve failed older qdisc flows_plimit=2 and 2 pre-business parser failures, do not change hard acceptance or dispatch again. If both PASS, finish scoped report; if FAIL pinpoint new counter before further code. New default ARM64 other scoped cases 30pct highloss/mixed prior source8d are retained but not promoted as exact flow256 source. No main merge.",
+  "next_action": "SCOPED_DELIVERY_COMPLETE: write and retain final-report/devlog/evidence, no in-flight Actions/no duplicate dispatch/no main merge. Exact native601e default Linux normal fq600 flow_limit256 qualifies true TCP500 0loss one-way200/RTT400 and outer500Mbps line/2% one-way200 at net UDP370Mbps offered; previous source8d highloss30/mixed PASS retain accurate scope. Do not invent UDP min residual, change recovery gates, or chase unrelated all-green tests. If later asked to extend to Windows/FEC/Game/physical or true duplex high rate, design new separate native qualification.",
   "current_source_verified": {
-    "source": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
-    "build": 40053179394,
-    "bundle": 12543904263,
-    "bundle_zip_sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749",
-    "business_request_source": "4cecde55daf10d2213d25e4af77ba5377395b174",
-    "business_run": 40053396971,
-    "attempt": 1,
-    "business_artifact": 12543608967,
-    "business_artifact_zip_sha256": "e94d703d1d699ae3d5a4b5224aa2fbeeeebbb23010ba2ffdc62a7ae5b8c94375"
+    "source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
+    "branch": "experiment/network-matrix-tuning",
+    "build": {
+      "run": 40055776896,
+      "attempt": 1,
+      "artifact": 12545850127,
+      "zip_sha256": "b631975bd4f70db690f5dcd7acfa122f191675950bd8c835ec0c5185a16ae261",
+      "platform": "aarch64",
+      "result": "success"
+    },
+    "runtime_policy": "outer-opportunistic-v3",
+    "owner_tun_fq": {
+      "mode": "normal/off Linux",
+      "default_mbps_per_flow": 600,
+      "default_flow_limit_packets": 256,
+      "kernel_global_limit_packets": 10000,
+      "explicit_off_flag": "--tun-fq-maxrate-mbps=0",
+      "go_and_kernel_readback": "verified both roles in business Actions40056093313/40056105730"
+    },
+    "H500_line_2pct": {
+      "run": 40056093313,
+      "request_source": "ffc01a07de95ba13077d417fd253e4404e396b92",
+      "artifact": 12545397787,
+      "zip_sha256": "ca9dc410bc125ae0ebed4dee341bff52182890c7884ef1a3ea150954a7d4652e",
+      "result": "PASS_SCOPED native outer configured line500Mbps C2S UDP app injected370.014 delivered363.434Mbps/2pct/200ms-oneway root/TUN startup+steady drops0; not net application500 nor bidirectional",
+      "file": "V3-H500-default-fq600-flow256-2pct-recheck-PASS-20261024.json"
+    },
+    "TCP500_0loss": {
+      "run": 40056105730,
+      "request_source": "32e40a6b27beedfcc8196dc0f9fc9feca6fa114d",
+      "artifact": 12545700555,
+      "zip_sha256": "1fe5b395b2cbfc80528de07548f149029e025fbe049b132a3880672cee9ea75d",
+      "result": "PASS_SCOPED 500.000Mbps real single inner TCP application 0loss RTT400 p99203.3ms zero source/root warmup+steady drops Stop",
+      "file": "V3-C-default-fq600-flow256-native-TCP500-PASS-20261024.json"
+    }
   },
-  "recovered_latest_action": "40053396971 attempt1 completed failure overall because A default warmup source-TUN6613; B PASS_SCOPED_OBSERVATION with real owned fq600 kernel readback 75MB/s both, app500.000Mbps p99203.2ms, warmup/steady source TUN0/qdisc0, auth Stop PASS; artifact digest verified.",
   "current_policy_addendum": {
     "authorization": "user 2026-10-24: 默认启动fq600，然后继续跑其他工况内容",
     "scope": "newly-owned Linux Normal/off TUN startup fq maxrate 600Mbps per-flow; omitted CLI value uses600, explicit0 disables; other FEC/Game modes retain0 until independent true-native qualification; no global sysctl, or alteration to repair/UDP acceptance",
