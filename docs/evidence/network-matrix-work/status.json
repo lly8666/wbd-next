@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3_USER_ALL_LINUX_MODE_DEFAULT_FQ600_SOURCE_NATIVE_BUILD_IN_PROGRESS",
+  "phase": "V3_ALL_LINUX_MODES_DEFAULT_FQ600_NATIVE_FIVE_REPRESENTATIVE_ACTIONS_IN_FLIGHT",
   "current_plan": {
     "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
     "policy": "outer-opportunistic-v3",
@@ -44,17 +44,43 @@
   },
   "open_requests": [
     {
-      "id": "native_all_modes_fq600_product_build",
-      "run": 40060850580,
-      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
-      "status": "IN_PROGRESS_LAST_READ",
+      "id": "Fixed5-default-fq600-5pct",
+      "run": 40061035456,
+      "request_source": "ef5a087b75726bcf6cd25f06b0fdb1bc557c4413",
+      "state": "IN_PROGRESS_LAST_READ",
+      "product_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
       "do_not_redispatch": true
     },
     {
-      "id": "native_all_modes_fq600_duplicate_auto_build",
-      "run": 40060850790,
-      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
-      "status": "IN_PROGRESS_LAST_READ",
+      "id": "Auto-default-fq600-1-20-1",
+      "run": 40061047243,
+      "request_source": "9d97ef89c287003b6f4532d5733c1e81ea86a88d",
+      "state": "IN_PROGRESS_LAST_READ",
+      "product_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+      "do_not_redispatch": true
+    },
+    {
+      "id": "Game2-default-fq600-independent5",
+      "run": 40061064744,
+      "request_source": "81ab1cb62ebc3cf3ebe2a890205b898c5fe8380c",
+      "state": "IN_PROGRESS_LAST_READ",
+      "product_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+      "do_not_redispatch": true
+    },
+    {
+      "id": "Game4-default-fq600-one-lane-blackhole",
+      "run": 40061078908,
+      "request_source": "282ebce41fbb3d8ae0558884cf2c326a03afd8fb",
+      "state": "IN_PROGRESS_LAST_READ",
+      "product_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+      "do_not_redispatch": true
+    },
+    {
+      "id": "Normal-default-fq600-lossless-mixed",
+      "run": 40061090616,
+      "request_source": "32602bb1129fb83c2e8b5f7a18c9a860325be7ce",
+      "state": "IN_PROGRESS_LAST_READ",
+      "product_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
       "do_not_redispatch": true
     }
   ],
@@ -98,6 +124,15 @@
         40055987386
       ],
       "result": "FAIL BEFORE BUSINESS because tc -d options were multiline; corrected parser c0f94f6 and harness contracts40056048217 PASS; no false product failure claim"
+    },
+    {
+      "id": "intermediate_partial_commit_generic_contract_failure",
+      "actions": [
+        40060864256,
+        40060875613,
+        40061035463
+      ],
+      "result": "Generic contracts temporarily inherited Fixed5 fec_profile for Auto mode or partial product and runner updates. Isolated generic profile in test source ce90a06b. These are not native product failure; perf actions run separately."
     }
   ],
   "open_issues": [
@@ -106,7 +141,7 @@
     "Windows/FEC Fixed/Auto/Game, multi-client shared endpoint/no cross-HOL at 500Mbps, physical native deployment and arbitrary >600Mbps per-flow are NOT_QUALIFIED. CPU absolute per-source/VM observed, no measured optimization gain against locally dropping baseline; user requested bounded work, no more blind matrix.",
     "Pre-flowlimit original strict H500 root-drop FAIL retained. Two pre-business harness parser FAIL Actions do not count as capacity FAIL."
   ],
-  "next_action": "Finish existing exact source1c43b69 native build(s) without duplicating, bind one verified artifact for all-mode tests. Five separate committed native Actions fixed5 5pct, auto1-20-1%, Game2 independent5%, Game4 one lane blackhole, Normal lossless mixed. No shared runner performance comparison, strict Go/kernel fq600 flow256/readback, source TUN/rootfq drop0, Stop; FEC correctness scoped not blanket qualification. Preserve v3 recovery/MTU and no main merge.",
+  "next_action": "Recover 5 already-dispatched native Actions40061035456,40061047243,40061064744,40061078908,40061090616 and build40060850790, plus final corrected contract on latest SHA. No duplicate dispatch. For every mode assert actual native owned fq600 flow_limit256 both roles, full source TUN/rootfq drop0, first and unique delivery, injected offer, Stop, host+process CPU. If real FAIL, distinguish Go/Rust/harness/FEC/Game/host. Fix only scoped defect with new exact native source build and representative retest; preserve current source outcomes. No blanket Windows/physical qualification, no main merge.",
   "current_source_verified": {
     "source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
     "branch": "experiment/network-matrix-tuning",
@@ -205,13 +240,17 @@
     "builds": [
       {
         "run": 40060850580,
-        "status": "IN_PROGRESS_LAST_READ"
+        "status": "SUCCESS",
+        "artifact": 12546779978,
+        "sha256": "6ee4a55d14a4a7f01e49a95b3654a79af1498aeca878b0c2ba9454ec2a9100e5"
       },
       {
         "run": 40060850790,
-        "status": "IN_PROGRESS_LAST_READ"
+        "status": "IN_PROGRESS_LAST_READ",
+        "do_not_redispatch": true
       }
     ],
-    "devlog": "docs/devlog/network-matrix-work/20261024-all-modes-fq600-matrix.md"
+    "devlog": "docs/devlog/network-matrix-work/20261024-all-modes-fq600-matrix.md",
+    "updated_contract_source": "ce90a06b5aeeb743b25c8fd156a9fc429ed508d4"
   }
 }
