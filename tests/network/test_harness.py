@@ -316,6 +316,18 @@ class Contracts(unittest.TestCase):
             "2026/10/24 V4_PUBLIC_WORKER_CPU role=server rx_thread_cpu_ns=123 tx_thread_cpu_ns=34"))
         self.assertFalse(product_marker_line("TOKEN secret=DO_NOT_UPLOAD"))
         self.assertFalse(product_marker_line("V4_PRIVATE_TLS_PASSWORD secret=DO_NOT_UPLOAD"))
+        # Exact original TLS-scoped Go Auto readback is a numeric-only
+        # bounded control marker. Never whitelist arbitrary TLS material.
+        self.assertTrue(product_marker_line(
+            'V4_PUBLIC_FEC2_AUTO_QUALITY direction=c2s revision=2 profile=3 validity=VALID '
+            'reason="mature first-send evidence" fast_first=900 fast_observed=899 '
+            'fast_missing=18 fast_unknown=1 slow_first=3700 slow_observed=3697 '
+            'slow_missing=74 slow_unknown=3 actual_k_sources=3600 '
+            'reverse_confirm_lag_us=80001 target_profile=4 request=true'))
+        self.assertTrue(product_marker_line(
+            "V4_PUBLIC_FEC2_AUTO_STAGE mode=auto direction=c2s requested=2 "
+            "profile=4 validity=VALID reason=two valid rising fast windows"))
+        self.assertFalse(product_marker_line("V4_PRIVATE_AUTO_KEY=NO_LEAK"))
 
     def test_capacity_action_digest_source_fields_and_no_raw_body(self):
         from tools.network_harness.runner import capacity_action_digest

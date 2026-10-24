@@ -68,7 +68,7 @@ def verify_native_game_counters(lanes,counters):
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
@@ -703,8 +703,17 @@ class LinuxExperiment:
                 # never copies private TLS args, payloads or credentials.
                 (self.out / (role+"-v3-timeline.log")).write_text(
                     "\n".join(timeline[-1200:])+"\n")
+            auto_events=[line for line in lines if
+                "V4_PUBLIC_FEC2_AUTO_QUALITY " in line or
+                "V4_PUBLIC_FEC2_AUTO_STAGE " in line]
+            # Keep all three 2->20->1% phases in a capped, numeric-only
+            # control timeline independent of the 40-line Stop readback.
+            # Neither direction receives netem truth, keys or packet data.
+            (self.out / (role+"-auto-quality.log")).write_text(
+                "\n".join(auto_events[-160:])+"\n")
             logs[role] = "\n".join(
-                [line for line in lines if "V4_PUBLIC_TIMELINE " not in line][-40:])
+                [line for line in lines if "V4_PUBLIC_TIMELINE " not in line and
+                 "V4_PUBLIC_FEC2_AUTO_QUALITY " not in line][-40:])
             (self.out / (role + "-product-markers.log")).write_text(logs[role] + "\n")
         return logs
 
