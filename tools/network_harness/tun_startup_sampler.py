@@ -23,11 +23,13 @@ def main():
     p.add_argument("--start-ns", type=int, required=True)
     p.add_argument("--warmup-s", type=int, required=True)
     p.add_argument("--output", type=Path, required=True)
+    p.add_argument("--ready", type=Path, required=True)
     opts = p.parse_args()
     if opts.warmup_s not in (10, 15, 20):
         raise ValueError("bounded startup diagnostic permits only 10,15,20s")
     if not ROOT.is_dir():
         raise RuntimeError("owned original TUN device does not exist")
+    opts.ready.write_text("ready")
     horizon = opts.start_ns + opts.warmup_s * 1_000_000_000
     count = 0
     rows = []
