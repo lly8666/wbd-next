@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3_ALL_LINUX_MODES_DEFAULT_FQ600_NATIVE_FIVE_REPRESENTATIVE_ACTIONS_IN_FLIGHT",
+  "phase": "V3_ALL_LINUX_MODE_OWNED_FQ600_DEFAULT_PROVEN_NATIVE_FEC_CONTROL_PENDING_GAME_RECEIPT_RECHECK",
   "current_plan": {
     "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
     "policy": "outer-opportunistic-v3",
@@ -44,43 +44,35 @@
   },
   "open_requests": [
     {
-      "id": "Fixed5-default-fq600-5pct",
-      "run": 40061035456,
-      "request_source": "ef5a087b75726bcf6cd25f06b0fdb1bc557c4413",
-      "state": "IN_PROGRESS_LAST_READ",
-      "product_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+      "id": "Game2 exact native game-lane receipt applicability test",
+      "run": 40061387213,
+      "request_source": "431698b26dcbfde575d6dce26445fa8448451eeb",
+      "status": "IN_PROGRESS_LAST_READ",
+      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
       "do_not_redispatch": true
     },
     {
-      "id": "Auto-default-fq600-1-20-1",
-      "run": 40061047243,
-      "request_source": "9d97ef89c287003b6f4532d5733c1e81ea86a88d",
-      "state": "IN_PROGRESS_LAST_READ",
-      "product_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+      "id": "Game4 one-lane blackout valid game-native receipt test",
+      "run": 40061402339,
+      "request_source": "5e69f39eceafb30cae4e0eebb5fb82b6b6262c53",
+      "status": "IN_PROGRESS_LAST_READ",
+      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
       "do_not_redispatch": true
     },
     {
-      "id": "Game2-default-fq600-independent5",
-      "run": 40061064744,
-      "request_source": "81ab1cb62ebc3cf3ebe2a890205b898c5fe8380c",
-      "state": "IN_PROGRESS_LAST_READ",
-      "product_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+      "id": "Fixed5 FEC applied revision healthy 0 loss discriminator",
+      "run": 40061487976,
+      "request_source": "34509e80b3327680b93bd9d51bb8dc0f99345219",
+      "status": "IN_PROGRESS_LAST_READ",
+      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
       "do_not_redispatch": true
     },
     {
-      "id": "Game4-default-fq600-one-lane-blackhole",
-      "run": 40061078908,
-      "request_source": "282ebce41fbb3d8ae0558884cf2c326a03afd8fb",
-      "state": "IN_PROGRESS_LAST_READ",
-      "product_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
-      "do_not_redispatch": true
-    },
-    {
-      "id": "Normal-default-fq600-lossless-mixed",
-      "run": 40061090616,
-      "request_source": "32602bb1129fb83c2e8b5f7a18c9a860325be7ce",
-      "state": "IN_PROGRESS_LAST_READ",
-      "product_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+      "id": "Auto FEC applied revision healthy 0 loss discriminator",
+      "run": 40061499022,
+      "request_source": "008208315a151778314a972a8f7500225d2b68fe",
+      "status": "QUEUED_LAST_READ",
+      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
       "do_not_redispatch": true
     }
   ],
@@ -141,7 +133,7 @@
     "Windows/FEC Fixed/Auto/Game, multi-client shared endpoint/no cross-HOL at 500Mbps, physical native deployment and arbitrary >600Mbps per-flow are NOT_QUALIFIED. CPU absolute per-source/VM observed, no measured optimization gain against locally dropping baseline; user requested bounded work, no more blind matrix.",
     "Pre-flowlimit original strict H500 root-drop FAIL retained. Two pre-business harness parser FAIL Actions do not count as capacity FAIL."
   ],
-  "next_action": "Recover 5 already-dispatched native Actions40061035456,40061047243,40061064744,40061078908,40061090616 and build40060850790, plus final corrected contract on latest SHA. No duplicate dispatch. For every mode assert actual native owned fq600 flow_limit256 both roles, full source TUN/rootfq drop0, first and unique delivery, injected offer, Stop, host+process CPU. If real FAIL, distinguish Go/Rust/harness/FEC/Game/host. Fix only scoped defect with new exact native source build and representative retest; preserve current source outcomes. No blanket Windows/physical qualification, no main merge.",
+  "next_action": "Recover these four in-flight exact Actions without duplicates. Product-owned fq600 flow256 Go+kernel readback already verified 5 modes; Normal success. Game corrected applicable REAL native lane proof Actions40061387213/40061402339. FEC fixed/auto real one-sided applied_revision pending with prior loss; 0% control Actions40061487976/40061499022 discriminate impairment vs basic FEC control; preserve FAIL if pending. Record artifacts hashes, CPU/drop/Stop and scoped results in final-report + devlog. No scope creep to independent FEC algorithm; no main merge/deploy.",
   "current_source_verified": {
     "source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
     "branch": "experiment/network-matrix-tuning",
@@ -246,11 +238,49 @@
       },
       {
         "run": 40060850790,
-        "status": "IN_PROGRESS_LAST_READ",
-        "do_not_redispatch": true
+        "status": "SUCCESS_SEPARATE_AUTO_SAME_SOURCE_NOT_CONSUMED"
       }
     ],
     "devlog": "docs/devlog/network-matrix-work/20261024-all-modes-fq600-matrix.md",
-    "updated_contract_source": "ce90a06b5aeeb743b25c8fd156a9fc429ed508d4"
+    "updated_contract_source": "ce90a06b5aeeb743b25c8fd156a9fc429ed508d4",
+    "product_go_kernel_all_modes_verified": true,
+    "harness_last_corrected_contract": {
+      "run": 40061361983,
+      "result": "SUCCESS",
+      "source": "827d433f5ec311a1396318d4eb11ffdc78098a17"
+    },
+    "first_five_exact_results": [
+      {
+        "mode": "fec-fixed",
+        "run": 40061035456,
+        "artifact": 12547447656,
+        "result": "FAIL_FEC_CLIENT_applied1_SERVER_applied0_pending_true_BUT_PRODUCT_NATIVE_FQ600_BOTH_SOURCE_TUN_ROOT0_BUSINESS_~12MBPS"
+      },
+      {
+        "mode": "fec-auto",
+        "run": 40061047243,
+        "artifact": 12546474541,
+        "result": "FAIL_FEC_CLIENT_applied0_pending_true_SERVER_applied1_BUT_PRODUCT_NATIVE_FQ600_BOTH_SOURCE_TUN_ROOT0_REAL_1_20_1UDP"
+      },
+      {
+        "mode": "game2",
+        "run": 40061064744,
+        "artifact": 12546928377,
+        "result": "OVERALL_FAIL_TEST_HARNESS_OLD_SINGLE_LANE_V3_RECEIPT_NOT_APPLICABLE_GAMELANES; TRUE_GAME_KERNEL_COUNTERS_GO_KERNEL_FQ600_BOTH"
+      },
+      {
+        "mode": "game4",
+        "run": 40061078908,
+        "artifact": 12546964879,
+        "result": "OVERALL_FAIL_TEST_HARNESS_OLD_SINGLE_LANE_V3_RECEIPT_NOT_APPLICABLE; TRUE_GAME_1_LANE_BLACKHOLE_WITH_0BUSINESS_MISSING_AND_OWNED_FQ600_BOTH"
+      },
+      {
+        "mode": "normal",
+        "run": 40061090616,
+        "artifact": 12546813359,
+        "sha256": "8e7a7301bfa20e84eb9c7435a1d99a26e8337b3c5058e257c453ec03c81e41ac",
+        "result": "SUCCESS_15MBPS_PER_DIRECTION_TCP70_UDP30_ZERO_MISSING_P99_200.4_200.5_TUN_ROOT0_Stop"
+      }
+    ]
   }
 }
