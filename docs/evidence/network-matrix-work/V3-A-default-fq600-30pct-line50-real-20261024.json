@@ -1,0 +1,166 @@
+{
+  "schema": 1,
+  "scenario": "Linux ARM64 normal/off native owned-TUN fq600 DEFAULT full UDP high loss",
+  "request_source": "1c5eafb5954e6bed726be214373eedce0788669d",
+  "request_id": "V3-A-default600-30pct-line50-UDP-resume",
+  "product_source": "8d5bbdbca636e129481393fdbfa10b2c0e31e999",
+  "native_build": {
+    "run": 40054986786,
+    "artifact": 12545077578,
+    "artifact_sha256": "1b4f8f2a02a9758caae40ea09d91acfab9242811192e1b52f019a396d2162732"
+  },
+  "action": {
+    "run": 40055272532,
+    "attempt": 1,
+    "conclusion": "success",
+    "artifact": 12544759103,
+    "artifact_zip_sha256": "b48bc908ecad811d75f729c3909db7d6cba8694fc1c75683ab1cdce0994cc162",
+    "locally_verified": true
+  },
+  "capacity": {
+    "outer_line_mbps_per_direction": 50,
+    "app_offered_mbps_per_direction": 33.7,
+    "netem_loss_pct_per_direction": 30,
+    "one_way_delay_ms": 300,
+    "udp_size_packet_weight": [
+      {
+        "bytes": 64,
+        "pct_packets": 1
+      },
+      {
+        "bytes": 1287,
+        "pct_packets": 99
+      }
+    ],
+    "warmup_s": 10,
+    "steady_s": 60,
+    "drain_s": 30,
+    "F_count_window_s": 70,
+    "outer_mtu": 1500,
+    "tun_mtu": 1429,
+    "record_wire": 1460,
+    "no_fec": true
+  },
+  "runtime": {
+    "product_fq_cli": "OMITTED_USE_NATIVE_DEFAULT",
+    "go_product_and_kernel_readback": {
+      "client": "owned_normal_fq_600Mbit",
+      "server": "owned_normal_fq_600Mbit"
+    },
+    "tun_qdisc": "fq",
+    "tun_qlen": 500,
+    "other_tc_overrides": "NONE",
+    "readback_mss": 1460,
+    "policy": "outer-opportunistic-v3",
+    "repair_limit": 1,
+    "stop_drained": true,
+    "owned_cleanup": true
+  },
+  "observed": {
+    "c2s": {
+      "udp_injected_mbps": 33.6995992,
+      "udp_delivered_mbps": 25.1656948,
+      "udp_missing": 50159,
+      "p99_first_arrival_ms": 944,
+      "repair_first_ip_bytes": 318181372,
+      "repair_accepted_ip_bytes": 28106164,
+      "R_over_F_pct": 8.833378215491509,
+      "R_over_C_pct": 6.424266057142857
+    },
+    "s2c": {
+      "udp_injected_mbps": 33.6999424,
+      "udp_delivered_mbps": 25.6406808,
+      "udp_missing": 47336,
+      "p99_first_arrival_ms": 943.9,
+      "repair_first_ip_bytes": 318181047,
+      "repair_accepted_ip_bytes": 27863205,
+      "R_over_F_pct": 8.757028510249386,
+      "R_over_C_pct": 6.368732571428572
+    },
+    "source_tun_kernel_drops_warmup_client_server": [
+      0,
+      0
+    ],
+    "source_tun_kernel_drops_steady_client_server": [
+      0,
+      0
+    ],
+    "fq_root_drop_samples_client_server": [
+      [
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "original_TUN_read_equals_staged": {
+      "client": 233823,
+      "server": 233806
+    },
+    "arena_failure": [
+      0,
+      0
+    ],
+    "preread_deferrals": [
+      0,
+      0
+    ],
+    "product_CPU_steady60_seconds_client_server": [
+      12.02,
+      11.65
+    ],
+    "server_CPU_s_per_received_GiB": 66.27589581247457,
+    "client_CPU_s_per_received_GiB": 67.11406157088726,
+    "client_server_peak_RSS_bytes": [
+      27492352,
+      27283456
+    ],
+    "injectors_cpu_including_setup_s": [
+      13.96,
+      13.67
+    ],
+    "host_CPU_PSI_some_peak_pct": 1.17,
+    "stop_cleanup": true
+  },
+  "acceptance": {
+    "R_over_F_max_pct": 10,
+    "R_over_C_min_pct": 6,
+    "udp_app_residual_lower_bound": "NONE",
+    "source_TUN_drop_full_run_max": 0,
+    "tun_root_qdisc_drop_full_run_max": 0,
+    "result": "PASS_SCOPED_OBSERVATION"
+  },
+  "history": {
+    "old_matched_highloss": {
+      "run": 40046784480,
+      "source": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
+      "R_over_F_pct_c2s_s2c": [
+        8.878,
+        8.87
+      ],
+      "R_over_C_pct_c2s_s2c": [
+        6.457,
+        6.451
+      ]
+    },
+    "cpu_comparison_policy": "Different runner/VM: cannot claim cost savings or performance regression simply dividing old/new CPU; report real work and supplied offered/received denominators."
+  },
+  "cancelled_pending_intent": {
+    "run": 40055207569,
+    "conclusion": "cancelled",
+    "reason": "Old shared path-only concurrency pending slot replaced before any product business; scope resumed under unique request-source concurrency group."
+  },
+  "not_claimed": [
+    "FEC fixed/auto/Game mode qualified",
+    "Windows/physical native",
+    "default single TCP500 qualified",
+    "full 500Mbps outer capacity at 2% qualified"
+  ],
+  "next": "Continue already-dispatched Action40055169119 default TCP500 A/B and Action40055236284 outer500/2% one direction. No duplicate dispatch."
+}
