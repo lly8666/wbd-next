@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "id": "V3-Linux-global-fq600-Game2-independent5",
+  "id": "V3-Linux-global-fq600-Game4-one-lane-blackhole",
   "owner": "network-matrix-work",
-  "seed": 8173,
+  "seed": 8174,
   "product": {
-    "mode": "game2",
+    "mode": "game4",
     "fec_profile": 1,
     "game_fec": "off"
   },
@@ -35,7 +35,7 @@
   },
   "network": {
     "outer_mtu": 1500,
-    "lane_loss": "independent",
+    "lane_loss": "shared",
     "queue_packets": 32768,
     "netem_rng": "unseeded_recorded",
     "product_tun_fq_maxrate_mbps_profiles": {},
@@ -45,17 +45,47 @@
   "drain_s": 20,
   "phases": [
     {
-      "name": "steady",
-      "seconds": 60,
+      "name": "healthy",
+      "seconds": 10,
       "rate_scale": 1,
       "c2s": {
         "delay_ms": 25,
-        "loss_pct": 5,
         "rate_mbps": 50
       },
       "s2c": {
         "delay_ms": 25,
-        "loss_pct": 5,
+        "rate_mbps": 50
+      }
+    },
+    {
+      "name": "one_dead",
+      "seconds": 30,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 25,
+        "rate_mbps": 50,
+        "blackhole_lanes": [
+          1
+        ]
+      },
+      "s2c": {
+        "delay_ms": 25,
+        "rate_mbps": 50,
+        "blackhole_lanes": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "recover",
+      "seconds": 20,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 25,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 25,
         "rate_mbps": 50
       }
     }
