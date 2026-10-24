@@ -60,6 +60,27 @@ class Contracts(unittest.TestCase):
             snapshot(0,0),{"network":{}}),
             {"client":"NOT_OBSERVED","server":"NOT_OBSERVED"})
 
+    def test_testonly_tun_fq_perflow_rate_and_full_run_qdisc_zero_contract(self):
+        r=request()
+        r["network"]["tun_qdisc_profiles"]={"A":"fq","B":"fq"}
+        r["network"]["tun_fq_maxrate_mbps_profiles"]={"A":0,"B":600}
+        r["acceptance"]["require_zero_tun_root_qdisc_drops_full_run"]=True
+        got=validate(r)
+        self.assertEqual(got["network"]["tun_fq_maxrate_mbps_profiles"],
+                         {"A":0,"B":600})
+        self.assertTrue(got["acceptance"]["require_zero_tun_root_qdisc_drops_full_run"])
+        r["network"]["tun_fq_maxrate_mbps_profiles"]["B"]=1000
+        with self.assertRaises(ValueError):
+            validate(r)
+        r["network"]["tun_fq_maxrate_mbps_profiles"]["B"]=600
+        r["network"]["tun_qdisc_profiles"]["B"]="fq_codel"
+        with self.assertRaises(ValueError):
+            validate(r)
+        r["network"]["tun_qdisc_profiles"]["B"]="fq"
+        r["acceptance"]["require_zero_tun_root_qdisc_drops_full_run"]="true"
+        with self.assertRaises(ValueError):
+            validate(r)
+
     def test_testonly_tun_root_qdisc_fq_pacing_vs_fqcodel_strict(self):
         r=request()
         r["network"]["tun_qdisc_profiles"]={"A":"fq_codel","B":"fq"}
