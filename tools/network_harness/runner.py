@@ -51,6 +51,14 @@ def verify_outer_recovery_policy(expected, observed):
     return len(observed) == 2 and all(verified(v) for v in observed.values())
 
 
+def verify_native_game_counters(lanes,counters):
+    """Real Game lane public kernel counters; no fabricated v3 single-lane DATA repair."""
+    return lanes in (2,4) and len(counters)==2 and all(
+        c.get("lanes")==lanes and c.get("copied",0)>0
+        and c.get("delivered",0)>0 and c.get("raw_received",0)>0
+        and c.get("auth_rejected")==0
+        for c in counters.values())
+
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
@@ -756,10 +764,20 @@ class LinuxExperiment:
             verified=False
         requested_policy = self.config["bundles"][self.label].get(
             "recovery_policy", self.config.get("policy"))
-        policy_verified = verify_outer_recovery_policy(
-            requested_policy, recovery_policy)
-        if policy_verified is False:
-            verified = False
+        # Game2/Game4 use authenticated multi-lane native duplication, not
+        # the one-lane Normal/FEC M2 DATA repair ledger. They do not emit
+        # V4_PUBLIC_M2_OUTER. Never claim a v3 outer repair receipt for Game.
+        game_verified = None
+        if self.lanes > 1:
+            game_verified = verify_native_game_counters(self.lanes,counters)
+            policy_verified = None  # Explicitly N/A, not green for v3 repair.
+            if not game_verified:
+                verified = False
+        else:
+            policy_verified = verify_outer_recovery_policy(
+                requested_policy, recovery_policy)
+            if policy_verified is False:
+                verified = False
         repair = sum(v["original_frozen_retransmitted"] for v in counters.values()) if all("original_frozen_retransmitted" in v for v in counters.values()) else None
         fec_tx = {role:public_fec_tx_snapshot(log) for role,log in logs.items()}
         tx_available = all(v is not None for v in fec_tx.values())
@@ -783,6 +801,9 @@ class LinuxExperiment:
                 "diagnostic_10x_readback":diag_readback,
                 "diagnostic_10x_verified":diag_verified,
                 "recovery_policy_verified": policy_verified,
+                "recovery_policy_applicability": ("NOT_APPLICABLE_GAME_MULTILANE"
+                    if self.lanes > 1 else "REQUIRED_SINGLE_LANE"),
+                "game_native_counters_verified": game_verified,
                 "recovery_policy_expected": requested_policy or "NOT_DECLARED",
                 "repair_packets": repair,
                 "original_m2_authenticated_coverage": fec_m2 if all(v is not None for v in fec_m2.values()) else "NOT_OBSERVED",
@@ -951,7 +972,12 @@ class LinuxExperiment:
             # plus the declared phases; no inferred steady-only R/C is claimed.
             policy=self.config["bundles"][self.label].get(
                 "recovery_policy",self.config.get("policy"))
-            if policy=="outer-opportunistic-v3":
+            if policy=="outer-opportunistic-v3" and self.lanes>1:
+                # The Game wire format has no per-direction v3 DATA repair
+                # byte ledger. A Game lane-copy counter is not R/F or R/C.
+                result["v3_repair_accounting"]={
+                    d:{"status":"NOT_APPLICABLE_GAME_MULTI_LANE"} for d in ("c2s","s2c")}
+            if policy=="outer-opportunistic-v3" and self.lanes==1:
                 v3={}
                 horizon=[{"seconds":self.config["warmup_s"],
                           "c2s":self.config["phases"][0]["c2s"],
