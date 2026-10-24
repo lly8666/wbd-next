@@ -698,6 +698,19 @@ class LinuxExperiment:
                     qs=json.loads(self.nscommand(role,["tc","-s","-j",
                         "qdisc","show","dev",self.iface[role]]))
                     q=next((p for p in qs if p.get("kind")=="netem"),None)
+                    # Diagnostic-only original kernel NUD (IPv4 ARP).
+                    # NEVER persist lladdr, dst address or peer secrets.
+                    ns=json.loads(self.nscommand(role,["ip","-s","-j",
+                        "neigh","show","dev",self.iface[role]]))
+                    peer=self.ip["server" if role=="client" else "client"]
+                    nd=next((item for item in ns if item.get("dst")==peer),None)
+                    neighbour=({
+                        "nud_state":nd.get("state","UNKNOWN"),
+                        "probes":nd.get("probes"),
+                        "used":nd.get("used"),
+                        "confirmed":nd.get("confirmed"),
+                        "updated":nd.get("updated")}
+                        if nd is not None else {"nud_state":"NO_ENTRY"})
                     def brief(x):
                         return {side:{key:x.get(side,{}).get(key) for key
                             in ("bytes","packets","dropped","errors")}
@@ -707,7 +720,8 @@ class LinuxExperiment:
                         "source_tun":brief(tun.get("stats64",tun.get("stats",{}))),
                         "netem":({k:q.get(k) for k in
                             ("packets","drops","overlimits","qlen","backlog")}
-                            if q is not None else "NOT_OBSERVED")}
+                            if q is not None else "NOT_OBSERVED"),
+                        "ipv4_neighbour":neighbour}
                 except Exception:
                     row["roles"][role]={"status":"NOT_OBSERVED_SAMPLER_ERROR"}
             row["end_ns"]=time.monotonic_ns()

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W18_EXACT_100MBPS_FULL_NATIVE_TIMELINE_DIAG_PENDING",
+  "phase": "W18_POST_NATIVE_COPY_TO_NETEM_BLACKHOLE_IPV4_NUD_DIAGNOSTIC_NEXT",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -234,11 +234,20 @@
     {
       "id": "FEC-W18-100Mbps-Native-Egress-All-Boundaries-ARM64",
       "path": "tests/network/fec-work/W18-100Mbps-retained-native-egress-diag-arm64.json",
-      "run_id": null,
+      "run_id": 40099868782,
       "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
       "artifact_id": 12562092730,
-      "result": "PENDING_EXACT_DIAGNOSTIC",
-      "purpose": "Locate first native TUN read/M1 stage/M4 kernel copy stall vs netem/veth first-arrival gap on either direction, both warmup and steady"
+      "result": "STEADY_PASS_WARMUP_S2C_POST_M4_EGRESS_BLACKHOLE",
+      "purpose": "Locate first native TUN read/M1 stage/M4 kernel copy stall vs netem/veth first-arrival gap on either direction, both warmup and steady",
+      "result_artifact": 12561618909
+    },
+    {
+      "id": "FEC-W19-100Mbps-IPv4-Neighbor-NUD-Egress-Root-ARM64",
+      "path": "tests/network/fec-work/W19-100Mbps-ipv4-neighbor-nud-egress-arm64.json",
+      "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "artifact_id": 12562092730,
+      "run_id": null,
+      "result": "PENDING_KERNEL_NUD_DIAGNOSTIC"
     }
   ],
   "open_issues": [
@@ -253,7 +262,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Run W18 one 100Mbps diagnostic Action with same native frozen artifact and corrected harness retention of 500 V4_PUBLIC_FEC2_EGRESS_DIAG events/role. Correlate server warmup 3.7s raw qdisc plateau with native sender M1 tun_read, source queued, M4 copied and route_refresh / TX errors at exact boot ns; inspect client->server counterpart. Then implement minimal branch-only patch only after originating edge proven, repeat 100Mbps diagnostics OFF for CPU/RSS/no regression. Do not resume 125-350 until startup and steady bidirectional reliability.",
+  "next_action": "Inspect W19 native M4 + owned veth/netem TUN and per-peer kernel IPv4 NUD state/probes/age at500ms during unilateral warmup blackhole. If NUD INCOMPLETE,FAILED,PROBE during post-M4 TX/kernel netem deficit, fix ONLY owned netns ARP/neighbor setup (before impairment) with matching client/server readback and keep netem 30% on actual DATA; then recheck uninstrumented real 100Mbps in exact ARM64 source. If not NUD, do not guess; split route/netfilter/neighbor queue. No 125+ pressure.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -1158,6 +1167,19 @@
       "kernel_witness": "In egress-trace.json server source TUN tx 36,293 by T3.68s, while server outer veth tx18 and netem sent7 throughout; client outer veth tx52,270 and netem sent52,318 by same time. Server veth starts at T4.18s 2,843 TX; the first broken edge is server TUN-to-native-M4-to-netem, not receiver FEC decoder. Native per500ms timeline existed (339 lines/role) but previous harness markers limited to last 40, losing initial warmup proof; fixed by preserving bounded 500 numeric lines per role independently.",
       "qualification": "MEASURED_STEADY_PASS_NOT_FULL_STARTUP_RELIABILITY",
       "followup": "W18 exact same 100Mbps scenario, product frozen, independent 500ms native timeline retained. Locate native M1/M4/route_refresh plateau during server veth stall before implementing scoped fix."
+    },
+    "w18": {
+      "run": 40099868782,
+      "artifact_id": 12561618909,
+      "sha256": "789140fafd74b1ad734c2b7a211412d786ab1b8c60e590de5473f396acfae304",
+      "product_source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "result": "STEADY_PASS_S2C_WARMUP_BLACKHOLE_REPEATED",
+      "business": {
+        "c2s_mbps": 99.97754506666666,
+        "s2c_mbps": 99.9667712
+      },
+      "proof": "First 3.5s warmup native server TX tun_read4909->39382, source_queued same, kernel M4 copied11148->90466, parity_sent6140->49269, 0 errors or backpressure. But at T3.68s server source TUN tx36293, native netem sent7, veth TX18, versus client veth TX52270; native M4 copy does not prove external egress.",
+      "suspect": "IPv4 ARP neighbor unresolved/retry under root netem 30% loss on veth; 3-4s warmup outage and W16 ~1.6s after30s could be NUD. Hypothesis must be tested, no confirmed cause yet."
     }
   }
 }
