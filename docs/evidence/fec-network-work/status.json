@@ -112,6 +112,20 @@
       "result": "PASS_BUSINESS_STATIC_AUTO_DYNAMIC_NOT_WIRED",
       "run_id": 40079564452,
       "result_artifact_id": 12554836370
+    },
+    {
+      "id": "FEC-W8-CAPACITY-P50-Max30-300ms-IID30-ARM64",
+      "path": "tests/network/fec-work/W8-capacity-p050-fixedmax30-300ms-arm64.json",
+      "run_id": 40082173102,
+      "result": "FAIL_REAL_LOSS_BOUND_EXCEEDED",
+      "note": "50Mbps each, delivery47.82/48.04Mbps, 30% netem, zero outer DATA repaired, CPU PSI 12.24; not a FEC algorithm causal determination"
+    },
+    {
+      "id": "FEC-W9-CAPACITY-P75-Max30-300ms-IID30-ARM64",
+      "path": "tests/network/fec-work/W9-capacity-p075-fixedmax30-300ms-arm64.json",
+      "run_id": 40082494664,
+      "result": "FAIL_REAL_LOSS_BOUND_EXCEEDED",
+      "note": "75Mbps each delivery66.30/67.13Mbps, 30% netem; strong evidence STOP higher pressure"
     }
   ],
   "open_issues": [
@@ -122,7 +136,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Correct existing test build-tag in ARM64 product Action then inspect targeted tests/deterministic true parity-to-TUN result; no duplicate performance requests. If test passes freeze successful SOURCE/manifest, W7 new ID unique case with identical asym scenarios and truthful dynamic revisions.",
+  "next_action": "Wait for exact-source ARM64 build+netns deterministic regression after isolated reverse C2S local route test fix. Then freeze only a completely successful build/functional artifact and single W10 Auto asym measured rerun, requiring real revision progression; do NOT add >12Mbps capacity load. W8/W9 source50/75Mbps max30 failed residual and are capacity boundary evidence, not FEC codec attribution.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -194,7 +208,7 @@
   },
   "merge_ready": false,
   "recovery_qualified": true,
-  "capacity_stop": false,
+  "capacity_stop": true,
   "merge_intent": {
     "first_parent": "9cfd72968e21a63834f455a96afc71a5d35737db",
     "second_parent": "040741820b2f917b5868c285c438d4cc21c6193a",
@@ -365,6 +379,18 @@
       "digest": "ac857cd4ea1d81eee0b420052e9c167e9e26b5364c56db3e0a22ce5f86a79b31",
       "failure": "One validation command missing wbd_v4_native_probe build tag, source test helper v4RawCheckSum / v4RawC2STestPacket hidden; deterministic test NOT_RUN, no FEC runtime result",
       "product_compiled": true
+    },
+    "third_build_attempt": {
+      "run": 40082105783,
+      "result": "NATIVE_BUILD_AND_M2_UNIT_PASS_NETNS_NONLOCAL_BIND_ERROR",
+      "artifact_id": 12555478063,
+      "native_test": "FAIL_PRE_PRODUCT_DATA:EADDRNOTAVAIL"
+    },
+    "fourth_build_attempt": {
+      "run": 40082584838,
+      "result": "NATIVE_BUILD_RUST_M2_AND_GO_M2_UNIT_PASS_DETERMINISTIC_FEC_SOURCE_PARITY_TUN_DELIVERY_REACHED_BUT_TRUE_REVERSE_M2_RAW_SEND_ENETUNREACH",
+      "artifact_id": 12556001940,
+      "native_test": "FAIL_REVERSE_NETNS_LOCAL_ROUTE_MISSING"
     }
   }
 }

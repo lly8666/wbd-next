@@ -241,6 +241,15 @@ func realOriginalGoFec2LinuxMode(t *testing.T,mode FecV2Mode){
     if e:=syscall.SetsockoptInt(rawFeedback,syscall.IPPROTO_IP,
         syscall.IP_HDRINCL,1);e!=nil{t.Fatal(e)}
     c2sPacket:=v4RawC2STestPacket(draft.Ciphertext,b.rxBoundary,b.originalFlow)
+    // Same-netns test only: server original IP is nonlocal until the
+    // authenticated M2 reverse turn. Install a local kernel route *after*
+    // the real original systematic/parity TX and client TUN UDP delivery,
+    // never a synthetic receipt or extra independent decryptor.
+    serverAddress:=net.IP(b.originalFlow.ServerIP[:]).String()
+    if out,e:=exec.Command("ip","route","replace","local",
+        serverAddress+"/32","dev","lo").CombinedOutput();e!=nil{
+        t.Fatalf("isolated reverse M2 local route: %v %s",e,out)
+    }
     if e:=syscall.Sendto(rawFeedback,c2sPacket,0,
         &syscall.SockaddrInet4{Addr:b.originalFlow.ServerIP});e!=nil{
         t.Fatalf("client authenticated FEC M2 kernel TX: %v",e)
