@@ -87,6 +87,7 @@ type config struct{
     outerMTU int
     recordLimit uint16
     innerMTU int
+    tunFqMaxrateMbps int
 }
 func parse(role string,args []string)(config,error){
     var c config
@@ -112,6 +113,7 @@ func parse(role string,args []string)(config,error){
     mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4")
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for fixed; auto uses strong startup")
     outerMTU:=flags.Int("outer-mtu",1500,"outer IPv4 packet MTU; inner TUN MTU is derived automatically and clamped to device/peer limits")
+    tunFqRate:=flags.Int("tun-fq-maxrate-mbps",0,"owned Linux Normal/off TUN fq 600Mbps per-flow pacing; 0 leaves kernel qdisc default")
     if err:=flags.Parse(args);err!=nil{return c,err}
     if *passFile!="" {
         if *pass!="" {return c,fmt.Errorf("password and password-file are mutually exclusive")}
@@ -135,6 +137,13 @@ func parse(role string,args []string)(config,error){
     }
     if *profile>6{return c,fmt.Errorf("fec-profile must be 0..6")}
     if *outerMTU<576||*outerMTU>9000{return c,fmt.Errorf("outer-mtu must be 576..9000")}
+    if *tunFqRate!=0 && *tunFqRate!=600 {
+        return c,fmt.Errorf("tun-fq-maxrate-mbps must be 0 or 600")
+    }
+    if *tunFqRate!=0 && (c.fecMode!=realityfront.FecV2Off || c.gameLanes!=0) {
+        return c,fmt.Errorf("tun-fq-maxrate-mbps is Linux Normal/off only")
+    }
+    c.tunFqMaxrateMbps=*tunFqRate
     c.outerMTU=*outerMTU
     c.fecProfile=realityfront.FecV2Profile(*profile)
     if *iface==""||len(*tunName)==0||len(*tunName)>15||
@@ -176,6 +185,28 @@ func runIP(args ...string)error{
     output,err:=cmd.CombinedOutput()
     if err!=nil{return fmt.Errorf("owned Linux ip %v: %w %s",args,err,output)}
     return nil
+}
+// Only the newly-owned ephemeral TUN is modified: never host/global sysctls
+// or arbitrary application TCP sockets. If tc/kernel fq is unavailable,
+// fail closed instead of claiming protected startup traffic.
+func setOwnedTunFq(name string,rateMbps int)error{
+    if rateMbps==0{return nil}
+    if rateMbps!=600{return fmt.Errorf("unsupported owned TUN fq rate")}
+    cmd:=exec.Command("tc","qdisc","replace","dev",name,"root","fq",
+        "maxrate",strconv.Itoa(rateMbps)+"mbit")
+    if b,err:=cmd.CombinedOutput();err!=nil{
+        return fmt.Errorf("owned TUN fq setup: %w %s",err,b)
+    }
+    b,err:=exec.Command("tc","-d","qdisc","show","dev",name).CombinedOutput()
+    if err!=nil{return fmt.Errorf("owned TUN fq readback: %w %s",err,b)}
+    for _,line:=range strings.Split(string(b),"\n"){
+        if strings.HasPrefix(line,"qdisc fq ") &&
+            strings.Contains(line," root ") &&
+            strings.Contains(line," maxrate 600Mbit"){
+            return nil
+        }
+    }
+    return fmt.Errorf("owned TUN fq maxrate readback mismatch on %s",name)
 }
 type ownedTun struct{
     f *os.File
@@ -239,6 +270,12 @@ func Run(role string,args []string)error{
     // An active owner's Close performs Stop->release->network cleanup instead.
     connected:=false
     defer func(){if !connected {_ = tun.Close()}}()
+    if err=setOwnedTunFq(tun.name,cfg.tunFqMaxrateMbps);err!=nil{return err}
+    if cfg.tunFqMaxrateMbps!=0 {
+        log.Printf("V4_PUBLIC_TUN_FQ role=%s interface=%s maxrate_mbps=600 readback=kernel_fq_600Mbit",cfg.role,tun.name)
+    } else {
+        log.Printf("V4_PUBLIC_TUN_FQ role=%s interface=%s maxrate_mbps=0 readback=kernel_default",cfg.role,tun.name)
+    }
     if cfg.gameLanes!=0{
         ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
         defer stop()
