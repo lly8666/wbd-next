@@ -1,8 +1,13 @@
 {
   "schema": 1,
   "kind": "DESIGN_MATRIX_NOT_A_HARNESS_REQUEST",
-  "status": "NOT_RUN",
-  "scope": {"mode": "normal", "lanes": 1, "fec": "off", "classifier": "oracle"},
+  "status": "SCOPED_NEGATIVE_LAB_COMPLETE_FULL_PRODUCT_MATRIX_NOT_RUN",
+  "scope": {
+    "mode": "normal",
+    "lanes": 1,
+    "fec": "off",
+    "classifier": "oracle"
+  },
   "common": {
     "outer_mtu": 1500,
     "experimental_record_overhead": 33,
@@ -19,16 +24,175 @@
     "one_performance_scenario_per_action": true
   },
   "cases": [
-    {"id": "S0", "kind": "functional", "suites": ["aes128gcm", "aes256gcm", "chacha20poly1305"], "mtus": [1500, 1400, 1280], "result": "NOT_RUN"},
-    {"id": "S1-AES-ARM", "kind": "record_cost", "arch": "arm64", "suite": "aes128gcm", "payload_profile": "near_common_mtu_long_tls", "legs": ["A", "A-layout", "B", "B", "A-layout", "A"], "warmup_s": 2, "measure_s": 15, "outer_repair": "not_applicable", "result": "NOT_RUN"},
-    {"id": "S1-CHACHA-ARM", "kind": "record_cost", "arch": "arm64", "suite": "chacha20poly1305", "payload_profile": "near_common_mtu_long_tls", "legs": ["A", "A-layout", "B", "B", "A-layout", "A"], "warmup_s": 2, "measure_s": 15, "result": "NOT_RUN"},
-    {"id": "S1-AES-X64", "kind": "record_cost", "arch": "amd64", "suite": "aes128gcm", "payload_profile": "near_common_mtu_long_tls", "legs": ["A", "A-layout", "B", "B", "A-layout", "A"], "warmup_s": 2, "measure_s": 15, "result": "NOT_RUN"},
-    {"id": "S1-REPEAT", "kind": "bounded_appearance_counterexample", "inner_tcp_duplicate_forced": true, "distinct_outer_pn_required": true, "match_lengths_bytes": [64, 128], "result": "NOT_RUN"},
-    {"id": "S2-MIX100", "kind": "real_driver_cost", "requires": "clear_S1_net_benefit", "arch": "arm64", "app_mbps_each_direction": 50, "oneway_ms": 25, "loss_pct": 0, "outer_line_mbps_per_direction": 150, "byte_mix": {"tls_tcp": 0.8, "plain_tcp": 0.1, "udp": 0.1}, "small_udp_share_of_total_bytes": 0.01, "legs": ["A", "B", "B", "A"], "warmup_s": 30, "measure_s": 60, "drain_s": 10, "outer_repair": "off", "result": "NOT_RUN"},
-    {"id": "S2-TCP500", "kind": "conditional_capacity", "requires": "S2_MIX100_valid_with_headroom", "app_mbps_c2s": 500, "app_mbps_s2c": 0, "outer_line_mbps_per_direction": 700, "oneway_ms": 200, "loss_pct": 0, "legs": ["A", "B", "B", "A"], "outer_repair": "off", "result": "NOT_RUN"},
-    {"id": "S2-LOSS", "kind": "conditional_delivery", "app_mbps_total": 10, "oneway_ms": 100, "loss_pct": 5, "legs": ["A", "B", "B", "A"], "outer_repair": "off", "inner_tcp_fullrate_required": false, "result": "NOT_RUN"},
-    {"id": "S2-SPARSE", "kind": "conditional_sparse_and_idle", "packet_rates": [1, 20], "requires_independent_action_per_rate": true, "outer_repair": "off", "result": "NOT_RUN"},
-    {"id": "S3-CAPTURE", "kind": "capture_separate_from_cpu_measurement", "app_mbps_total": 10, "capture_duration_cap_s": 30, "pcap_bytes_cap_each_endpoint": 33554432, "raw_upload": false, "cleanup_owned_raw": true, "sources": ["current_full", "selective", "ordinary_https_reference"], "trigger_inner_and_outer_retransmission_separately": true, "result": "NOT_RUN"}
+    {
+      "id": "S0",
+      "kind": "functional",
+      "suites": [
+        "aes128gcm",
+        "aes256gcm",
+        "chacha20poly1305"
+      ],
+      "mtus": [
+        1500,
+        1400,
+        1280
+      ],
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "S1-AES-ARM",
+      "kind": "record_cost",
+      "arch": "arm64",
+      "suite": "aes128gcm",
+      "payload_profile": "near_common_mtu_long_tls",
+      "legs": [
+        "A",
+        "A-layout",
+        "B",
+        "B",
+        "A-layout",
+        "A"
+      ],
+      "warmup_s": 2,
+      "measure_s": 15,
+      "outer_repair": "not_applicable",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "S1-CHACHA-ARM",
+      "kind": "record_cost",
+      "arch": "arm64",
+      "suite": "chacha20poly1305",
+      "payload_profile": "near_common_mtu_long_tls",
+      "legs": [
+        "A",
+        "A-layout",
+        "B",
+        "B",
+        "A-layout",
+        "A"
+      ],
+      "warmup_s": 2,
+      "measure_s": 15,
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "S1-AES-X64",
+      "kind": "record_cost",
+      "arch": "amd64",
+      "suite": "aes128gcm",
+      "payload_profile": "near_common_mtu_long_tls",
+      "legs": [
+        "A",
+        "A-layout",
+        "B",
+        "B",
+        "A-layout",
+        "A"
+      ],
+      "warmup_s": 2,
+      "measure_s": 15,
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "S1-REPEAT",
+      "kind": "bounded_appearance_counterexample",
+      "inner_tcp_duplicate_forced": true,
+      "distinct_outer_pn_required": true,
+      "match_lengths_bytes": [
+        64,
+        128
+      ],
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "S2-MIX100",
+      "kind": "real_driver_cost",
+      "requires": "clear_S1_net_benefit",
+      "arch": "arm64",
+      "app_mbps_each_direction": 50,
+      "oneway_ms": 25,
+      "loss_pct": 0,
+      "outer_line_mbps_per_direction": 150,
+      "byte_mix": {
+        "tls_tcp": 0.8,
+        "plain_tcp": 0.1,
+        "udp": 0.1
+      },
+      "small_udp_share_of_total_bytes": 0.01,
+      "legs": [
+        "A",
+        "B",
+        "B",
+        "A"
+      ],
+      "warmup_s": 30,
+      "measure_s": 60,
+      "drain_s": 10,
+      "outer_repair": "off",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "S2-TCP500",
+      "kind": "conditional_capacity",
+      "requires": "S2_MIX100_valid_with_headroom",
+      "app_mbps_c2s": 500,
+      "app_mbps_s2c": 0,
+      "outer_line_mbps_per_direction": 700,
+      "oneway_ms": 200,
+      "loss_pct": 0,
+      "legs": [
+        "A",
+        "B",
+        "B",
+        "A"
+      ],
+      "outer_repair": "off",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "S2-LOSS",
+      "kind": "conditional_delivery",
+      "app_mbps_total": 10,
+      "oneway_ms": 100,
+      "loss_pct": 5,
+      "legs": [
+        "A",
+        "B",
+        "B",
+        "A"
+      ],
+      "outer_repair": "off",
+      "inner_tcp_fullrate_required": false,
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "S2-SPARSE",
+      "kind": "conditional_sparse_and_idle",
+      "packet_rates": [
+        1,
+        20
+      ],
+      "requires_independent_action_per_rate": true,
+      "outer_repair": "off",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "S3-CAPTURE",
+      "kind": "capture_separate_from_cpu_measurement",
+      "app_mbps_total": 10,
+      "capture_duration_cap_s": 30,
+      "pcap_bytes_cap_each_endpoint": 33554432,
+      "raw_upload": false,
+      "cleanup_owned_raw": true,
+      "sources": [
+        "current_full",
+        "selective",
+        "ordinary_https_reference"
+      ],
+      "trigger_inner_and_outer_retransmission_separately": true,
+      "result": "NOT_RUN"
+    }
   ],
   "stop_rules": {
     "no_clear_full_record_cpu_gain_below_fraction": 0.05,
@@ -38,5 +202,72 @@
     "capacity_limited_stops_heavier_cases": true,
     "confirmed_new_repeated_ciphertext": "APPEARANCE_REGRESSION",
     "performance_pass_does_not_override_appearance_fail": true
-  }
+  },
+  "result_semantics": "cases[].result is the full planned product/matrix case, not an individual component/lab result. Retain NOT_RUN unless its entire planned case was exercised. Actual bounded lab subsets follow in observed_subsets; official status/FINAL_REPORT are authoritative.",
+  "observed_subsets": [
+    {
+      "case_id": "S0",
+      "coverage": "COMPONENT_ONLY_NO_GO_TUN_BOOTSTRAP_GENERATION_STOP",
+      "status": "PASS_COMPONENT_NOT_FULL_S0",
+      "arch": "arm64",
+      "source": "98e5b09b972196b97476b4311346cb79681773c5",
+      "run_id": 40108785993,
+      "tests_passed": 157,
+      "tests_failed": 0,
+      "tests_ignored": 1
+    },
+    {
+      "case_id": "S0",
+      "coverage": "COMPONENT_ONLY_NO_PRODUCT_WIRING",
+      "status": "PASS_COMPONENT_NOT_FULL_S0",
+      "arch": "amd64",
+      "source": "98e5b09b972196b97476b4311346cb79681773c5",
+      "run_id": 40109345476,
+      "tests_passed": 157,
+      "tests_failed": 0,
+      "tests_ignored": 1
+    },
+    {
+      "case_id": "S1-AES-ARM",
+      "coverage": "SAME_JOB_6_LEGS_REAL_TLS13_CIPHERTEXT_IDEAL_ORACLE_RECORD_SEAL_OPEN_ONLY",
+      "status": "PASS_SCOPED_RECORD_COST",
+      "source": "98e5b09b972196b97476b4311346cb79681773c5",
+      "run_id": 40109817134,
+      "build_run_id": 40108785993,
+      "artifact_id": 12565174759,
+      "A_ns_per_inner_byte": 0.7752137365702558,
+      "A_layout_ns_per_inner_byte": 0.8053942386306677,
+      "B_ns_per_inner_byte": 0.5467331361783643,
+      "B_vs_A_saving_pct": 29.47323939366042,
+      "full_product_cpu": "NOT_OBSERVED"
+    },
+    {
+      "case_id": "S1-REPEAT",
+      "coverage": "CONTROLLED_SAME_INNER_SEQ_NATIVE_LOOPBACK_CAPTURE",
+      "status": "CONFIRMED_LAB_APPEARANCE_REGRESSION",
+      "run_id": 40109989226,
+      "outer_distinct_seq": true,
+      "ciphertext_matches_bytes": [
+        64,
+        128
+      ]
+    },
+    {
+      "case_id": "S1-REPEAT",
+      "coverage": "ACTUAL_NATIVE_LINUX_NETNS_INNER_TCP_RETRANSMISSION_THEN_ISOLATED_OUTER_LOOPBACK_CAPTURE",
+      "status": "CONFIRMED_LAB_APPEARANCE_REGRESSION",
+      "run_id": 40110917872,
+      "preceding_mislabeled_source_run_id": 40110713400,
+      "inner_retx_interarrival_ms": 207.223,
+      "outer_distinct_seq": true,
+      "ciphertext_matches_bytes": [
+        64,
+        128
+      ],
+      "product_TUN_path": "NOT_RUN"
+    }
+  ],
+  "stop_reason": "APPEARANCE_REGRESSION_REPEATED_INNER_TLS_CIPHERTEXT_AT_DIFFERENT_OUTER_TCP_SEQ",
+  "product_qualification": "NOT_RUN_AFTER_PREDECLARED_APPEARANCE_VETO",
+  "final_report": "docs/evidence/selective-crypto-work/FINAL_REPORT.md"
 }
