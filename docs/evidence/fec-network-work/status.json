@@ -18,15 +18,15 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
-    "run_id": 40078403217,
+    "source": "a969217e1edd3577ae41df81c38aa7ac84a4a484",
+    "run_id": 40083030170,
     "attempt": 1,
-    "artifact_id": 12554277143,
-    "sha256": "552a9c19ca4b9045cabe08abeed4f80e440f73f8fcc34a5f06670f4450d9fde6",
-    "policy": "outer-opportunistic-v3",
+    "artifact_id": 12555524616,
+    "sha256": "2013372c5555180ea75a9c06d2f980fcb211a992e3c71470de984b1b98b62fb4",
     "platform": "aarch64",
+    "policy": "outer-opportunistic-v3",
     "build_action": "SUCCESS",
-    "runtime_fec_only": "W3_FIXED5_PASS_W4_AUTO_STARTUP_PASS_W5_MAX30_PASS_W6_NORMAL_ONOFF_AB_PASS_W7_AUTO_ASYM_STATIC_ONLY"
+    "runtime_fec_only": "AUTO_LIVE_W10_NOT_YET_OBSERVED"
   },
   "open_requests": [
     {
@@ -126,6 +126,15 @@
       "run_id": 40082494664,
       "result": "FAIL_REAL_LOSS_BOUND_EXCEEDED",
       "note": "75Mbps each delivery66.30/67.13Mbps, 30% netem; strong evidence STOP higher pressure"
+    },
+    {
+      "id": "FEC-W10-AUTO-LIVE-M2-REVISION-ASYM-8M",
+      "path": "tests/network/fec-work/W10-autolive-m2-asym-rise-recover-off-arm64.json",
+      "run_id": null,
+      "source": "a969217e1edd3577ae41df81c38aa7ac84a4a484",
+      "build_run": 40083030170,
+      "artifact_id": 12555524616,
+      "result": "PENDING_FIRST_AUTO_LIVE_PRODUCT_ACTION"
     }
   ],
   "open_issues": [
@@ -136,7 +145,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Wait for exact-source ARM64 build+netns deterministic regression after isolated reverse C2S local route test fix. Then freeze only a completely successful build/functional artifact and single W10 Auto asym measured rerun, requiring real revision progression; do NOT add >12Mbps capacity load. W8/W9 source50/75Mbps max30 failed residual and are capacity boundary evidence, not FEC codec attribution.",
+  "next_action": "Review W10 new product Action at pinned a969 40083030170 artifact. Inspect client/server V4_PUBLIC_FEC2_AUTO_QUALITY real 2s/8s actual-k, authenticated receipt lag, real pending→applied revisions, outbound profiles through independent 2/0→20/1→1/0; fail closed if quality UNKNOWN or old quiescence. Require native dual repair_enabled=0, zero DATA duplicates, genuine parity, recovered TUN, p99/CPU/RSS/host-drop. If no revision changes, locate counters/NativeStream quiescence and only minimal related patch. No capacity elevation.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -365,7 +374,7 @@
       "Auto policy could remain UNKNOWN if exact actual-k sources and mature data windows cannot be reconciled; observe and refine, not synthesize.",
       "True ACK confirmation delay is not kernel probe RTT."
     ],
-    "test_stage": "COMPILATION_NATIVE_INTEGRATION_NOT_RUN",
+    "test_stage": "NATIVE_BUILD_GENUINE_M2_AND_NETNS_DETERMINISTIC_ALL_PASS_W10_PRODUCT_PENDING",
     "first_build_attempt": {
       "run": 40081707620,
       "result": "FAIL_INVALID_WORKFLOW_YAML_ZERO_JOBS",
@@ -391,6 +400,14 @@
       "result": "NATIVE_BUILD_RUST_M2_AND_GO_M2_UNIT_PASS_DETERMINISTIC_FEC_SOURCE_PARITY_TUN_DELIVERY_REACHED_BUT_TRUE_REVERSE_M2_RAW_SEND_ENETUNREACH",
       "artifact_id": 12556001940,
       "native_test": "FAIL_REVERSE_NETNS_LOCAL_ROUTE_MISSING"
+    },
+    "deterministic": {
+      "run": 40083030170,
+      "result": "PASS_ORIGINAL_TLS_REAL_M4_MISSING_SOURCE_PARITY_TUN_REVERSE_M2_STOP",
+      "artifact_id": 12555524616,
+      "zip_sha256": "2013372c5555180ea75a9c06d2f980fcb211a992e3c71470de984b1b98b62fb4",
+      "source": "a969217e1edd3577ae41df81c38aa7ac84a4a484",
+      "architecture": "aarch64"
     }
   }
 }
