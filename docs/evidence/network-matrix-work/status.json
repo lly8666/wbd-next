@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3_ALL_FIVE_LINUX_MODE_FQ600_KERNEL_VERIFIED_NORMAL_FIXED0_GAME_SCOPED_PASS_AUTO_FIXED5_LOSS_FEC_OPEN",
+  "phase": "V3_CROSS_BUSINESS_HOL_LOW2_HIGH30_NATIVE_ACTIONS_IN_FLIGHT",
   "current_plan": {
     "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
     "policy": "outer-opportunistic-v3",
@@ -42,7 +42,36 @@
       "zip_sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749"
     }
   },
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "V3-HOL-low2-15s-startup-UDP-TCPx2",
+      "run": 40065824207,
+      "request_source": "2fc0462c97f78be05ca2c7bd7a93f870961a3994",
+      "state": "IN_PROGRESS_LAST_READ",
+      "app_each_direction_mbps": 15,
+      "loss_pct": 2,
+      "oneway_ms": 200,
+      "outerline_each_mbps": 100,
+      "real_tcp_flows_per_direction": 2,
+      "udp_share": 0.3,
+      "strict_10ms_no_cross_HOL": true,
+      "do_not_redispatch": true
+    },
+    {
+      "id": "V3-HOL-high30-15s-startup-UDP-TCPx2",
+      "run": 40065834480,
+      "request_source": "6290e9f5cffdd9e8f90178ecfefae56ab926a8b6",
+      "state": "QUEUED_LAST_READ",
+      "app_each_direction_mbps": 33.7,
+      "loss_pct": 30,
+      "oneway_ms": 300,
+      "outerline_each_mbps": 50,
+      "real_tcp_flows_per_direction": 2,
+      "udp_share": 0.3,
+      "strict_10ms_no_cross_HOL": true,
+      "do_not_redispatch": true
+    }
+  ],
   "recent_evidence": [
     {
       "id": "v3 default fq600 original source8d highloss30",
@@ -116,7 +145,7 @@
     "Game2/4 native lane duplication is not Normal single-lane V3 DATA ledger; original red Actions were invalid-applicability harness errors, later corrected Game Actions passed. Game2 under independent5% had real residual UDP packets.",
     "All five Linux modes native Go/kernel owned fq600 default; Windows/physical/no global OS-level native paced default, high-rate duplex and full FEC Auto not qualified. CPU-s reported, no proof of optimization vs other VM."
   ],
-  "next_action": "DELIVER scoped all-five-native-Linux-mode fq600 default with real Go/kernel readback, results and FEC applied-revision open. No pending Actions, no duplicate dispatch, no main merge/deploy; refer FEC revision convergence to the independent FEC/integrator scope rather than hiding FAIL or rerunning seeds.",
+  "next_action": "Recover exact already dispatched low Action40065824207 and high Action40065834480, never duplicate, also contracts after source6290. Check per TCP socket 10ms flow receipts and UDP protected gap<=100ms plus true root/source kernel drop0 and Stop, low loss2 vs high loss30. If fail, separate own TCP retrans HOL/UDP host injection/backpressure from cross business blocking, preserve actual findings and one differentiating fix if possible. Write final report/evidence/devlog/status; no main merge.",
   "current_source_verified": {
     "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
     "platform": "native Linux ARM64",
@@ -304,5 +333,45 @@
       "result": "FAIL BOTH mode qualification, root/source all0 Stop; A failure disproves fq-exclusive root cause, B may still have interaction due host PSI",
       "file": "V3-Auto-FEC-fq0-vs-default600-sameVM-20261024.json"
     }
+  },
+  "latest_resume": {
+    "date": "2026-10-24",
+    "main": "d8ba2cf270ff6ca5cadae6dab778c49c32636ef6",
+    "task_at_resume": "c1469b3815d02d6463f0cbd1f6c5cd862ed2d649",
+    "no_active_actions_on_resume": true,
+    "request": "recover after interruption, verify low/high loss cross-business delivery/HOL",
+    "native_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+    "native_bundle": {
+      "run": 40060850580,
+      "artifact": 12546779978,
+      "sha256": "6ee4a55d14a4a7f01e49a95b3654a79af1498aeca878b0c2ba9454ec2a9100e5"
+    },
+    "harness_contract": {
+      "run": 40065718805,
+      "result": "SUCCESS",
+      "source": "4f83c80f961d2ad097425d9722273155e131662d"
+    },
+    "new_hol_telemetry": {
+      "flow_source": "1bd1e2ffd81132c4640d991ec4715bf417a2eca7",
+      "gate_source": "d1d4c486b0bae3fea76c6db84ccd6533bd266d28",
+      "purpose": "Actual two independent TCP socket 10ms unique receipts + protected UDP/any-business progress despite another TCP's own retrans HOL; guard phase boundary 2s and 1s, source UDP 95% offered, recipient shared/protected<=100ms; strict true kernel TUN/fq drops and Stop."
+    },
+    "initial_pre_business_invalid": [
+      {
+        "run": 40065674297,
+        "source": "788a4bf5566ac244fb31644c1ced74266f4fb710",
+        "reason": "unsupported 12s bounded startup TUN diagnostic (only 10,15,20); NO ACTUAL BUSINESS",
+        "artifact": 12549352090,
+        "zip_sha256": "6d14d092237b4dff2db4fc8382bcb70b741374577f6fcce56acd236924a1e43c"
+      },
+      {
+        "run": 40065688564,
+        "source": "9ad1bd9a864f138995ef23d4f565f43710273c59",
+        "reason": "same unsupported12s startup TUN diagnostic; NO BUSINESS",
+        "artifact": 12548643287,
+        "zip_sha256": "2863daac441da5e098a5545cf1abbdba6af3845e735d310b630c5fa1c6d97221"
+      }
+    ],
+    "plan": "docs/devlog/network-matrix-work/20261024-cross-business-hol-loss-low-high.md"
   }
 }
