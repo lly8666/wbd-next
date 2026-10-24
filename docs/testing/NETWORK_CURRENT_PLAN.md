@@ -21,3 +21,9 @@
 ## 2026-10-24 实际执行收口（不是替代 v3 决策）
 
 已回收并结算旧 QUEUED 的两条性能 Actions40047976746/40048710703，不重复dispatch；继续完成**一项**真实原生产品能力：Linux ARM64 Normal/off 显式 opt-in `--tun-fq-maxrate-mbps=600`（默认0不变），只配置拥有的临时 TUN fq 每流速率并严格核对内核 readback，非应用 socket 测试设定/全局 sysctl/Windows/FEC。新原生 build40053179394 SOURCE81881a1d 成功，夹具合同40053463038 PASS，同 VM 单流TCP500/RTT400/0损/线路700Mbps的 [Action40053396971](https://github.com/lly8666/wbd-next/actions/runs/40053396971) **整体FAIL因A默认路径启动 TUN 丢6613**；B产品-owned fq600 **PASS_SCOPED_OBSERVATION**，业务500.000Mbps、p99203.2ms、启动+稳态源TUN0、root fq qdisc0、Stop/认证正常。不能从 B 延伸至默认、FEC、Windows、其它端点/双向或CPU效率。既有v3-A高损/预算、v3-B部分MTU、v3-D混跑/idle继续复用；本轮代表覆盖已收口，未引入新恢复率/UDP下限。确切产物SHA和资源分母、尚未资格范围见 [任务状态](../evidence/network-matrix-work/status.json)、[原生B真实证据](../evidence/network-matrix-work/V3-C-owned-Linux-TUN-fq600-TCP500-real-AB-20261024.json) 和 [报告](../evidence/network-matrix-work/final-report.md)。默认冷启动仍OPEN，不自动合main或部署，不因失败全红反复追测。
+
+## 2026-10-24 后续授权：Linux Normal/off 默认启动 fq600，继续代表工况
+
+用户明确同意把上一轮已通过**显式选项**的 Linux Normal/off owned TUN `fq maxrate 600Mbit`改为**默认启动**，保留 `--tun-fq-maxrate-mbps=0` 明确回退。产品其它 Fixed/Auto/Game 模式沿用当前0默认，不从Normal/off资格推导。实际生效以新 SOURCE、CLI省略参数、Go marker及内核 `tc -d` 双读回为准，验证启动、业务、Stop和CPU/资源硬门；旧 opt-in B PASS 不自动覆盖新默认 SOURCE。授权并未变更 v3 外层重传、R/C 6%、R/F 10%、UDP无残余下限及MTU合同。
+
+本轮其他代表工况依次补：同机产品默认 fq600 对显式回退0的冷启动单TCP500/0损/RTT400（不复用旧A drop作CPU收益）；同SOURCE 50Mbps线路/30% IID/单程300ms高损UDP双向预算及早期交付回归；同SOURCE 500Mbps线路/2% IID/单程200ms近MTU UDP容量（业务Mbps与线路Mbps严格分开，一方向先验证，承载后再决定反向）。已有旧 SOURCE 的V3-A/B/D证明只复用未受改动的核心模块，不充当新默认全工况验证。每个Action单场景，一次构建复用，不改主线。具体执行收据只读 `status.json`。
