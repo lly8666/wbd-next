@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "NUD_OWNED_VETH_FIXED_W22_125MBPS_PASS_W23_150_STAGED_CPU_PSI_WATCH",
+  "phase": "OWNED_TEST_VETH_NUD_ROOT_FIXED_W20_W21_100_W22_125_PASS_W23_150_PARITY_PSI_KNEE_STOP_HIGHER",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -283,16 +283,18 @@
     {
       "id": "FEC-W23-Maximum150-Static-veth-NUD-Original-fq600",
       "path": "tests/network/fec-work/W23-maximum150-static-owned-neighbour-original-fq600-arm64.json",
-      "run_id": null,
-      "result": "PENDING_PUSH_TRIGGER",
+      "run_id": 40102994265,
+      "result": "BUSINESS_PASS_BUT_PARITY_TX_AND_CPU_PSI_FIRST_PERFORMANCE_KNEE",
       "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
       "artifact_id": 12562092730,
       "app_mbps_each": 150,
       "outer_cap_mbps_each": 600,
-      "static_test_veth_neighbor": true
+      "static_test_veth_neighbor": true,
+      "result_artifact": 12563149315
     }
   ],
   "open_issues": [
+    "W23 150Mbps original fq600 with static disposable veth neighbour Action40102994265: BUSINESS PASS narrowly 148.869/148.893Mbps, loss0.754/0.738%, but native FEC parity planned830246/830265 vs true sent800359/799115 (gap3.60/3.75%), unknown capacity2983/3054 and host CPU PSI peak30.62, over20 fraction100% (W22 125 parity gap~0.2%). RX pressure0, source TUN drops0, outer repair0. New possible parity scheduling/CPU pressure performance knee: stop175-350, investigate without violating source-first priority.",
     "W19 Action40100361068 (artifact12562403617): 100Mbps S2C delivery87.746Mbps (36,083 lost), server peer IPv4 NUD became INCOMPLETE, probes4..6; veth TX/netem output 0 continuously ~55..57.5s while server TUN admitted ~4900 source packets/500ms, resumed exactly when NUD REACHABLE. This is a concrete link-layer neighbor-resolution outage after actual native M4 copy, not CPU/RX FEC or TUN fq600. W20 test-only static MAC peer policy pending; unseeded netem may also randomly cause outages in baseline.",
     "W16 new RX640/48MiB bounded cache on 100Mbps original case Action40097487779 fixed RX pressure=0 (peak109/640) but C2S business delivered only94.579Mbps, missing15993 (~5.42%), S2C 99.979Mbps; client actual virtual outer TX164.16 vs server173.35Mbps over30s even with authentic first-wire 45s ~1.377GB each, native M4 FEC parity ~554k copied both, zero outer DATA retry, no source TUN/root fq loss. Similar W12 underfeeding; stop further125-350 until kernel egress or harness timing cause established.",
     "At W15 100Mbps 30% IID/300ms Action40094982877 both actual app paths pass (~99.956/99.968Mbps), but FEC RX exactly 96/96 active and pressure evicts29,425 blocks per side; first capacity bottleneck is RX slot count, not 8MiB bytes or CPU. Stop all higher 125/150/175/200 (NOT_RUN) under stop-on-capacity. W12 sameVM 2nd leg output asymmetry remains unresolved.",
@@ -305,7 +307,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Check W23 bounded 150Mbps same original frozen native arm64 with owned veth static neigh and original FQ600. W22 125Mbps valid business/FEC/no RX drops, CPU PSI peak23.81 and >20 83% of measurement. W23: require both business residual<1%, no source/fq qdisc drops, RX decoder/pressure0, no substantial CPU PSI/resource overload, host steal low, outer measured veth TX true 30s all kinds and retrans 0, p99 and RAM. If resource or business FAIL stop 175-350 and record precise cause. If PASS inspect PSI before any 175.",
+  "next_action": "CURRENT TASK CONCLUDED WITH VERIFIED ROOT: W19 dynamic NUD IPv4 INCOMPLETE caused 2.5-3s outer veth/netem blackout post-M4, unrelated to inner TUN fq600; W20 test-only owned veth neighbor PERMANENT both 130/130 samples fixed blackout at 100, W21 uninstrumented 100 PASS, W22 125 PASS. W23 150 business technically <=1% residual but native FEC parity rplanned/rsent gap3.6-3.8%, host CPU PSI peak30.62 above20 at 100% samples, p99 ~311ms; STOP user-authorized 175-350. Before further pressure, investigate bounded native TX parity job deadline / scheduler / thread CPU profile and host injection contention, not blindly grow RX/queue or change fq600, and retain project source-first semantics. All rate evidence CPU/RSS and 30s gross outer includes retrans (actual repair OFF=0) in W19-W23 report. No new Actions needed until cause isolated; no main merge/upstream status edits.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -377,7 +379,7 @@
   },
   "merge_ready": false,
   "recovery_qualified": true,
-  "capacity_stop": false,
+  "capacity_stop": true,
   "merge_intent": {
     "first_parent": "9cfd72968e21a63834f455a96afc71a5d35737db",
     "second_parent": "040741820b2f917b5868c285c438d4cc21c6193a",
@@ -457,7 +459,7 @@
     ],
     "requires_review": "Auto dynamic and OFF genuine RTT telemetry remain separate mandatory capabilities before full FEC mandate is green"
   },
-  "load_expansion_stop": false,
+  "load_expansion_stop": true,
   "same_vm_normal_onoff": {
     "run": 40079302195,
     "artifact": 12554018197,
@@ -995,7 +997,7 @@
         325,
         350
       ],
-      "status": "HARD_STOP_BUSINESS_RELIABILITY_OUTER_EGRESS_ANOMALY_AT100",
+      "status": "STOPPED_AT_150_NATIVE_PARITY_DEADLINE_CPU_PSI_HEADROOM",
       "build_run": 40097251707,
       "arm64_artifact": 12561755643,
       "zip_sha256": "866aae86f355e76b8269ea86a72fd15748ee0448d4095085a374695678f45674",
@@ -1207,7 +1209,212 @@
         "stop_drained": true
       },
       "next_user_authorized_step": 125,
-      "pending_125_request": "tests/network/fec-work/W22-maximum125-static-owned-neighbour-original-fq600-arm64.json"
+      "pending_125_request": "tests/network/fec-work/W22-maximum125-static-owned-neighbour-original-fq600-arm64.json",
+      "post_nud_125": {
+        "run": 40102622202,
+        "result_artifact": 12563376791,
+        "digest": "e07469d772931ab0101777e8e785896da8307f54d82e1439a8ec32af062dab83",
+        "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+        "result": "PASS_SCOPED_125MBPS",
+        "mode": "Maximum6 outerOFF fq600 original static owned neighbour",
+        "app_mbps_each": 125,
+        "impairment": {
+          "loss_pct_client": 29.923955811138015,
+          "loss_pct_server": 29.981850406650278,
+          "oneway_ms": 300
+        },
+        "business": {
+          "c2s": {
+            "injected_mbps": 124.99750693333334,
+            "delivered_mbps": 124.96122053333333,
+            "missing": 177,
+            "p99_ms": 306.1
+          },
+          "s2c": {
+            "injected_mbps": 125.00025253333334,
+            "delivered_mbps": 124.94020186666665,
+            "missing": 270,
+            "p99_ms": 305.8
+          }
+        },
+        "real_outer_30s": {
+          "client_tx_bytes": 813259651,
+          "server_tx_bytes": 812165955,
+          "client_mbps": 216.86924026666668,
+          "server_mbps": 216.577588,
+          "combined_mbps": 433.4468282666667
+        },
+        "native_outer_repair": {
+          "copies": 0,
+          "bytes": 0
+        },
+        "rx": {
+          "client": {
+            "peak_active": 136,
+            "peak_bytes": 4857654,
+            "pressure_evicted": 0,
+            "decoder_rejected": 0,
+            "recovered_tun": 165399
+          },
+          "server": {
+            "peak_active": 136,
+            "peak_bytes": 4902854,
+            "pressure_evicted": 0,
+            "decoder_rejected": 0,
+            "recovered_tun": 165718
+          }
+        },
+        "cost": {
+          "cpu_s_client": 22.28,
+          "cpu_s_server": 22.42,
+          "rss_peak_client": 45187072,
+          "rss_peak_server": 45125632,
+          "cpu_psi_peak_pct": 23.81,
+          "cpu_psi_over20_fraction": 0.8333333333333334
+        },
+        "source_tun_drops_both": 0,
+        "Stop_drained": true,
+        "qualification": "Single observed rate PASS, CPU PSI some >20 most measurement samples; next rate should be bounded."
+      },
+      "post_nud_150": {
+        "run": 40102994265,
+        "result_artifact": 12563149315,
+        "artifact_sha256": "f64b606746b3a7b317e81fb5fb8849447ceed1cc21607624508743567c01f9c4",
+        "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+        "exact_native_artifact": 12562092730,
+        "mode": "fec-fixed Maximum6",
+        "outer_data_repair": "OFF 0 packet 0 bytes",
+        "qdisc": "original fq600 on both owned TUN",
+        "owned_test_veth_neighbour": "PERMANENT BOTH",
+        "loss_iid_pct": 30,
+        "oneway_delay_ms": 300,
+        "business_mbps_each": 150,
+        "measured_seconds": 30,
+        "result": "BUSINESS_SCOPED_PASS_WITH_FIRST_PARITY_CPU_PSI_PERFORMANCE_KNEE",
+        "business": {
+          "c2s": {
+            "injected": 150.00015893333332,
+            "delivered": 148.869036,
+            "missing": 3426,
+            "loss_pct": 0.7540811565646788,
+            "p99_ms": 311
+          },
+          "s2c": {
+            "injected": 150.00050213333333,
+            "delivered": 148.89309226666668,
+            "missing": 3336,
+            "loss_pct": 0.7382707730420046,
+            "p99_ms": 310.9
+          }
+        },
+        "actual_outer_veth_30s": {
+          "client_tx_bytes": 952710407,
+          "server_tx_bytes": 953387605,
+          "client_mbps": 254.05610853333334,
+          "server_mbps": 254.23669466666666,
+          "combined_mbps": 508.2928032,
+          "note": "All actual first DATA+fresh FEC parity+control+any genuine retransmission recorded, not native 45s firstsend counter; netem postloss interface not physical L1."
+        },
+        "cpu_s_30s": {
+          "client": 24.2,
+          "server": 24.33
+        },
+        "rss_peak_bytes": {
+          "client": 50233344,
+          "server": 50417664
+        },
+        "host_cpu_psi": {
+          "peak": 30.62,
+          "over20_fraction": 1
+        },
+        "rx": {
+          "client": {
+            "peak_active": 163,
+            "peak_bytes": 5828926,
+            "pressure": 0,
+            "decoder_reject": 0,
+            "recovered_tun": 194296
+          },
+          "server": {
+            "peak_active": 163,
+            "peak_bytes": 5847056,
+            "pressure": 0,
+            "decoder_reject": 0,
+            "recovered_tun": 194436
+          }
+        },
+        "native_fec_tx": {
+          "client": {
+            "rplanned": 830246,
+            "rsent": 800359,
+            "unsent": 29887,
+            "gap_pct": 3.5997764517986237,
+            "unknown_capacity": 2983,
+            "parity_seal": 48
+          },
+          "server": {
+            "rplanned": 830265,
+            "rsent": 799115,
+            "unsent": 31150,
+            "gap_pct": 3.7518141798100606,
+            "unknown_capacity": 3054,
+            "parity_seal": 63
+          }
+        },
+        "native_source_TUN_drop_both": 0,
+        "actual_netem_loss_pct": {
+          "client": 30.03915524848989,
+          "server": 29.958184443077197
+        },
+        "stopped_and_drained_both": true,
+        "limits": [
+          "CPU PSI host-scope, cannot identify individual thread from this alone",
+          "Parity planned/sent counts are 45s native owner aggregate, not 30s interface bytes; missed planned rows not equivalent to lost app packets",
+          "Unseeded netem and single standalone measurement cannot assert invariant throughput for all runs"
+        ]
+      },
+      "high_levels_not_run": [
+        {
+          "app_mbps_each": 175,
+          "status": "NOT_RUN",
+          "reason": "W23 150Mbps native planned/sent parity gap3.6-3.8%, CPU PSI>20 throughout, business residual~0.75%; user requires stop at first performance/resource knee."
+        },
+        {
+          "app_mbps_each": 200,
+          "status": "NOT_RUN",
+          "reason": "W23 150Mbps native planned/sent parity gap3.6-3.8%, CPU PSI>20 throughout, business residual~0.75%; user requires stop at first performance/resource knee."
+        },
+        {
+          "app_mbps_each": 225,
+          "status": "NOT_RUN",
+          "reason": "W23 150Mbps native planned/sent parity gap3.6-3.8%, CPU PSI>20 throughout, business residual~0.75%; user requires stop at first performance/resource knee."
+        },
+        {
+          "app_mbps_each": 250,
+          "status": "NOT_RUN",
+          "reason": "W23 150Mbps native planned/sent parity gap3.6-3.8%, CPU PSI>20 throughout, business residual~0.75%; user requires stop at first performance/resource knee."
+        },
+        {
+          "app_mbps_each": 275,
+          "status": "NOT_RUN",
+          "reason": "W23 150Mbps native planned/sent parity gap3.6-3.8%, CPU PSI>20 throughout, business residual~0.75%; user requires stop at first performance/resource knee."
+        },
+        {
+          "app_mbps_each": 300,
+          "status": "NOT_RUN",
+          "reason": "W23 150Mbps native planned/sent parity gap3.6-3.8%, CPU PSI>20 throughout, business residual~0.75%; user requires stop at first performance/resource knee."
+        },
+        {
+          "app_mbps_each": 325,
+          "status": "NOT_RUN",
+          "reason": "W23 150Mbps native planned/sent parity gap3.6-3.8%, CPU PSI>20 throughout, business residual~0.75%; user requires stop at first performance/resource knee."
+        },
+        {
+          "app_mbps_each": 350,
+          "status": "NOT_RUN",
+          "reason": "W23 150Mbps native planned/sent parity gap3.6-3.8%, CPU PSI>20 throughout, business residual~0.75%; user requires stop at first performance/resource knee."
+        }
+      ]
     }
   },
   "single_direction_investigation": {
@@ -1470,6 +1677,103 @@
       "source_tun_drops_both": 0,
       "Stop_drained": true,
       "qualification": "Single observed rate PASS, CPU PSI some >20 most measurement samples; next rate should be bounded."
+    },
+    "w23": {
+      "run": 40102994265,
+      "result_artifact": 12563149315,
+      "artifact_sha256": "f64b606746b3a7b317e81fb5fb8849447ceed1cc21607624508743567c01f9c4",
+      "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "exact_native_artifact": 12562092730,
+      "mode": "fec-fixed Maximum6",
+      "outer_data_repair": "OFF 0 packet 0 bytes",
+      "qdisc": "original fq600 on both owned TUN",
+      "owned_test_veth_neighbour": "PERMANENT BOTH",
+      "loss_iid_pct": 30,
+      "oneway_delay_ms": 300,
+      "business_mbps_each": 150,
+      "measured_seconds": 30,
+      "result": "BUSINESS_SCOPED_PASS_WITH_FIRST_PARITY_CPU_PSI_PERFORMANCE_KNEE",
+      "business": {
+        "c2s": {
+          "injected": 150.00015893333332,
+          "delivered": 148.869036,
+          "missing": 3426,
+          "loss_pct": 0.7540811565646788,
+          "p99_ms": 311
+        },
+        "s2c": {
+          "injected": 150.00050213333333,
+          "delivered": 148.89309226666668,
+          "missing": 3336,
+          "loss_pct": 0.7382707730420046,
+          "p99_ms": 310.9
+        }
+      },
+      "actual_outer_veth_30s": {
+        "client_tx_bytes": 952710407,
+        "server_tx_bytes": 953387605,
+        "client_mbps": 254.05610853333334,
+        "server_mbps": 254.23669466666666,
+        "combined_mbps": 508.2928032,
+        "note": "All actual first DATA+fresh FEC parity+control+any genuine retransmission recorded, not native 45s firstsend counter; netem postloss interface not physical L1."
+      },
+      "cpu_s_30s": {
+        "client": 24.2,
+        "server": 24.33
+      },
+      "rss_peak_bytes": {
+        "client": 50233344,
+        "server": 50417664
+      },
+      "host_cpu_psi": {
+        "peak": 30.62,
+        "over20_fraction": 1
+      },
+      "rx": {
+        "client": {
+          "peak_active": 163,
+          "peak_bytes": 5828926,
+          "pressure": 0,
+          "decoder_reject": 0,
+          "recovered_tun": 194296
+        },
+        "server": {
+          "peak_active": 163,
+          "peak_bytes": 5847056,
+          "pressure": 0,
+          "decoder_reject": 0,
+          "recovered_tun": 194436
+        }
+      },
+      "native_fec_tx": {
+        "client": {
+          "rplanned": 830246,
+          "rsent": 800359,
+          "unsent": 29887,
+          "gap_pct": 3.5997764517986237,
+          "unknown_capacity": 2983,
+          "parity_seal": 48
+        },
+        "server": {
+          "rplanned": 830265,
+          "rsent": 799115,
+          "unsent": 31150,
+          "gap_pct": 3.7518141798100606,
+          "unknown_capacity": 3054,
+          "parity_seal": 63
+        }
+      },
+      "native_source_TUN_drop_both": 0,
+      "actual_netem_loss_pct": {
+        "client": 30.03915524848989,
+        "server": 29.958184443077197
+      },
+      "stopped_and_drained_both": true,
+      "limits": [
+        "CPU PSI host-scope, cannot identify individual thread from this alone",
+        "Parity planned/sent counts are 45s native owner aggregate, not 30s interface bytes; missed planned rows not equivalent to lost app packets",
+        "Unseeded netem and single standalone measurement cannot assert invariant throughput for all runs"
+      ]
     }
   }
 }
