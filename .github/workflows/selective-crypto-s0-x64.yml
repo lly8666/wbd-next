@@ -1,0 +1,47 @@
+name: Selective TLS lab S0 x86_64 representative exact-source
+run-name: "selective S0 x64 representative | frozen 98e5b09b"
+on:
+  push:
+    branches: [experiment/selective-tls-crypto]
+    paths: [".github/workflows/selective-crypto-s0-x64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: selective-s0-x64-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  native-functional:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 98e5b09b972196b97476b4311346cb79681773c5
+          persist-credentials: false
+      - name: Native x86_64 S0 frozen product source verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test "$(git rev-parse HEAD)" = 98e5b09b972196b97476b4311346cb79681773c5
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --release --locked -p wbd-codec --features selective-crypto-experiment
+          cargo +1.85.1 build --release --locked -p wbd-codec --features selective-crypto-experiment --example selective_crypto_cost
+          mkdir -p selective-s0-x64
+          cp target/release/examples/selective_crypto_cost selective-s0-x64/selective_crypto_cost
+          sha256sum selective-s0-x64/selective_crypto_cost > selective-s0-x64/binary.sha256
+          {
+            echo "SOURCE=$(git rev-parse HEAD)"
+            echo "TRIGGER=$GITHUB_SHA"
+            echo "RUN=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "TARGET=$(uname -m)"
+            echo "LOCK_SHA256=$(sha256sum Cargo.lock | awk '{print $1}')"
+            echo "RUST=$(rustc +1.85.1 --version)"
+          } > selective-s0-x64/manifest.env
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: selective-x64-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: selective-s0-x64/
+          if-no-files-found: error
+          retention-days: 30
