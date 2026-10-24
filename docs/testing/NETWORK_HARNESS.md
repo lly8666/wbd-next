@@ -83,3 +83,9 @@ UDP实际发送率默认允许±3%偏差，不以一个skipped slot判无效；T
 夹具 `38c7e2f` 的8项自检及真实内核选项检查已通过。固定产品 `bdcd66c` 的双向10Mbps lossless UDP大小包通过；同产品1% loss / 50ms RTT的UDP+TCP混合场景真实完成但为INCONCLUSIVE：TCP反压使请求的5Mbps/TCP未达到，尾延迟也需继续定位。不是全矩阵PASS，也不是Windows或物理机资格。
 
 上述历史run、计数、失败解释与artifact hash见[验收开发日志](../devlog/network-harness-20261021.md)和[结构化证据目录](../evidence/network-harness-20261021/)。当前进度和下一步只读任务status及后续证据，不从这份历史快照重启任务。
+
+### Linux Normal/off product-owned TUN fq600 cold-burst option (scoped)
+
+The real original-Go public Linux client/server CLI now accepts `--tun-fq-maxrate-mbps=600`, exclusively in Normal/off; `0` (default) retains the kernel default. When enabled, the product configures `fq maxrate 600mbit` **only on its newly-created ephemeral owned TUN**, checks the kernel's `tc -d qdisc` readback before handing the FD to Rust, and refuses startup if unsupported. Stop closes the owned TUN and removes that qdisc. This is a per-flow TUN pacing setting, not the test-only TCP application socket `SO_MAX_PACING_RATE`, not a host/global sysctl, and not a guarantee of arbitrary traffic capacity. It may limit each flow above600Mbps; not a blanket default.
+
+A native scenario uses `network.product_tun_fq_maxrate_mbps_profiles: {"A":0,"B":600}` to pass a true Go CLI flag and require **both** product marker and kernel qdisc readback. The separate `tun_fq_maxrate_mbps_profiles` is a **test-only external `tc` override**, and the two may not coexist in the same A/B leg. Compare A/B on one native VM with identical source, 500Mbps offered real single-inner-TCP and >500Mbps outer line; record full cold warmup+steady source TUN drop and root qdisc drop deltas, injection and business delivery, p99, auth/MTU/policy, per-process CPU per delivered GiB, and Stop. A harness B under test-only external fq does **not** qualify the product opt-in; likewise, an Actions build PASS is not real business validation. Windows, FEC and host interface defaults have no such qualification.
