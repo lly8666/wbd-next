@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "V3_MATURE_M2_WITNESS_BUILD_AND_NATIVE_ROW_PASS_W3_REAL_FIXED_RETEST",
+  "phase": "V3_FIXED5_LOSS5_AND_OFF_RECOVERY_PASS_AUTO_CLEAN_NATIVE_TEST_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -70,20 +70,28 @@
       "id": "FEC-W3-V3-Fixed5-OuterOff-Clean-Loss5-MatureWitness",
       "path": "tests/network/fec-work/W3-v3-fixed5-outeroff-mature-witness-arm64.json",
       "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
-      "run_id": null,
+      "run_id": 40078693282,
       "artifact_id": 12554277143,
-      "result": "PENDING_PUSH_TRIGGERED_ACTION",
-      "qualification": "NOT_RUN"
+      "result": "PASS_SCOPED_OBSERVATION",
+      "qualification": "NOT_RUN",
+      "result_artifact_id": 12554815630
+    },
+    {
+      "id": "FEC-W4-V3-Auto-OuterOff-Clean-FirstApplied",
+      "path": "tests/network/fec-work/W4-v3-auto-outeroff-clean-applied-arm64.json",
+      "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+      "product_build_run": 40078403217,
+      "artifact_id": 12554277143,
+      "result": "PENDING_IMMUTABLE_REQUEST_PUSH"
     }
   ],
   "open_issues": [
-    "Source 1a04e791 W2: full product ran and proven BOTH real outer OFF and FEC parity/recovered TUN; Fixed client applied=0/pending=true despite 5784 authenticated reverse receipts. Cause: clean_2s cohort resets on any UNKNOWN, and permanent first.censored blocks applied. A narrowly scoped native witness distinction is prepared, NOT YET ACTIONS-VERIFIED.",
+    "Fixed5 W2 one-sided pending resolved by native genuine mature M2 witness patch: W3 run40078693282 PASS both applied, 5% phase 0 missing, >500 recovered TUN each peer, zero outer repairs. W2 historical fail remains.",
     "FEC auto under actual outer OFF and clean/lossy scenarios untested on V3 merged code; upstream 1c43 native Auto even at zero loss may pending, fq0 baseline also pending.",
-    "Need W3 same actual Fixed5 lossy case on a fresh pinned build of native M2 applied witness repair; no old 1a04 product artifact qualifies modified source.",
     "Actual CPU/RSS and p99 at 2Mbps observed but NOT cost/memory scaling or matched sameVM AB; 30%/300ms and Auto asym/transition NOT_RUN.",
     "Linux Game OFF and Windows GUI/OS wiring UNSUPPORTED; upstream normal mixed RX ambiguity remains common-path."
   ],
-  "next_action": "Inspect single new W3 Action's exact-source native readback; require Fixed both applied and no extra data copies with FEC recovered TUN. Test authentic 2s mature witness unit via updated existing FEC parity-unit workflow (runs on W3 push), not a second harness. If W3 succeeds then one Auto clean scenario on same binary artifact; preserve original W2 FAIL.",
+  "next_action": "Read W4 native ARM64 Auto clean actual readback both revisions and original M2; if PASS then run 0->asym20->low Auto same pinned SOURCE/artifact with one performance scenario, check real selected/applied profiles. If Auto has static-only startup profile, report precise not-wired scope, do not invent adaptation. Then max30 product represent at capacity gate; final report.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -154,7 +162,7 @@
     ]
   },
   "merge_ready": false,
-  "recovery_qualified": false,
+  "recovery_qualified": true,
   "capacity_stop": false,
   "merge_intent": {
     "first_parent": "9cfd72968e21a63834f455a96afc71a5d35737db",
@@ -173,8 +181,12 @@
     "file": "crates/wbd-engine/src/v4_embedded_go.rs",
     "source_before": "9cef7cfae2c1811f5589b55e2543f320d933b3ce",
     "change": "Replace entire-clean 2s cohort FEC APPLIED gate with real mature unambiguous positive ACK witness while leaving censored quality/unknown metadata intact; require native copied FEC source AND parity, epoch/revision identity and no capacity censorship.",
-    "validated": "BUILD_AND_OLD_PARITY_ROW_PASS_W3_FULL_PRODUCT_PENDING",
+    "validated": "PASS_SCOPED_REAL_PRODUCT_W3",
     "native_unit_action_run": 40078403227,
-    "build_run": 40078403217
-  }
+    "build_run": 40078403217,
+    "counterexample_run": 40077795567,
+    "fixed_run": 40078693282,
+    "old_fail_retained": true
+  },
+  "recovery_qualification_scope": "ARM64 V3 Fixed5 2Mbps both directions zero loss and IID5% W3 run40078693282; do not generalize to auto/high loss/CPU baseline."
 }

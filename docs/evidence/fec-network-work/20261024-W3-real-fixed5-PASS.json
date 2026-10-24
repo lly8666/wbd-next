@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "date": "2026-10-24",
+  "branch": "experiment/fec-network-tuning",
+  "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+  "original_regression": {
+    "case": "W2",
+    "run": 40077795567,
+    "result": "FAIL client applied0"
+  },
+  "fixed_case": {
+    "case": "W3",
+    "run": 40078693282,
+    "attempt": 1,
+    "artifact_id": 12554815630,
+    "artifact_zip_sha256": "c02d27230dc207edea86c9dd8a1ecd7e37f746acd746c4c99ee4388c1780ffc7",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "native_both_fixed": {
+      "client": {
+        "requested": 1,
+        "applied": 1,
+        "profile": 5,
+        "pending": false
+      },
+      "server": {
+        "requested": 1,
+        "applied": 1,
+        "profile": 5,
+        "pending": false
+      }
+    },
+    "native_both_outer_repair_off": true,
+    "outer_data_retransmit_both": 0,
+    "shadow_candidates_both": 0,
+    "shadow_outstanding_both": 0,
+    "received_fec_parity": {
+      "client": 16025,
+      "server": 15978
+    },
+    "recovered_TUN": {
+      "client": 521,
+      "server": 519
+    },
+    "iid_loss_pct": 5,
+    "source_udp_mbps_per_direction": 2,
+    "missing_udp_including_drain_per_direction": 0,
+    "p99_iid5_ms": {
+      "c2s": 41.3,
+      "s2c": 44.3
+    },
+    "cpu_s_measurement": {
+      "client": 1.66,
+      "server": 1.67
+    },
+    "rss_peak_bytes": {
+      "client": 19910656,
+      "server": 19738624
+    },
+    "source_TUN_drop_both": 0,
+    "stop_drained_both": true
+  },
+  "native_unit_runs": [
+    40078403227,
+    40078693263
+  ],
+  "contracts_run": 40078693315,
+  "remaining": [
+    "No deterministic missing source injection separate from IID native product yet",
+    "Auto actual profile dynamic not evidenced",
+    "Maximum30% high delay not yet run",
+    "Game FEC and Windows not wired",
+    "CPU/RSS low-load only"
+  ]
+}
