@@ -34,12 +34,27 @@
       "job_id": 120915933711,
       "result": "IN_PROGRESS",
       "artifact": "NOT_YET_VERIFIED"
+    },
+    {
+      "stage": "S0_X64_REPRESENTATIVE",
+      "source": "98e5b09b972196b97476b4311346cb79681773c5",
+      "workflow_source": "aa15d5d8e9696c0880d30eeb3e8536f553918920",
+      "run_id": 40109345476,
+      "attempt": 1,
+      "result": "IN_PROGRESS",
+      "artifact": "NOT_YET_VERIFIED"
     }
   ],
   "open_requests": [
     {
       "stage": "S0",
       "run_id": 40108785993,
+      "source": "98e5b09b972196b97476b4311346cb79681773c5",
+      "state": "WAITING_FOR_ACTION_RESULT"
+    },
+    {
+      "stage": "S0_X64",
+      "run_id": 40109345476,
       "source": "98e5b09b972196b97476b4311346cb79681773c5",
       "state": "WAITING_FOR_ACTION_RESULT"
     }
@@ -58,5 +73,20 @@
     "Inherited workflow branch-name selection needs explicit experimental adaptation; do not dispatch old FEC/network requests."
   ],
   "next_action": "Inspect S0 job logs and exact ARM64 artifact; repair only grounded failures and rerun with new SOURCE. After verified S0, use exact artifact/hash for one S1 ARM64 AES128 scenario, then assess net record saving and distinct-PN repeated ciphertext before expanding. No inherited network/FEC actions.",
-  "latest_log": "docs/devlog/selective-crypto-work/20261024-s0-implementation.md"
+  "latest_log": "docs/devlog/selective-crypto-work/20261024-s0-implementation.md",
+  "prepared_not_dispatched": [
+    {
+      "stage": "S1-ARM-AES",
+      "workflow": ".github/workflows/selective-crypto-s1-arm-aes.yml",
+      "trigger": "tests/network/selective-crypto-work/run-s1-arm-aes.trigger",
+      "requires": "S0 ARM PASS + artifact hash"
+    },
+    {
+      "stage": "S3-LAB-CAPTURE",
+      "workflow": ".github/workflows/selective-crypto-s3-capture.yml",
+      "trigger": "tests/network/selective-crypto-work/run-s3-capture.trigger",
+      "requires": "S0 correct",
+      "qualification": "CONTROLLED_DUPLICATE_INNER_SEQ_NOT_KERNEL_RETRANSMISSION"
+    }
+  ]
 }
