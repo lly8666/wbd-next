@@ -203,8 +203,12 @@ func runIP(args ...string)error{
 func setOwnedTunFq(name string,rateMbps int)error{
     if rateMbps==0{return nil}
     if rateMbps!=600{return fmt.Errorf("unsupported owned TUN fq rate")}
+    // The default kernel fq flow_limit=100 dropped two real warmup UDP
+    // frames at 370Mbps despite a 500Mbps outer line (flows_plimit=2).
+    // 256 near-MTU packets are at most ~384KiB per flow; global fq
+    // limit=10000 remains unchanged and bounds aggregate queue memory.
     cmd:=exec.Command("tc","qdisc","replace","dev",name,"root","fq",
-        "maxrate",strconv.Itoa(rateMbps)+"mbit")
+        "maxrate",strconv.Itoa(rateMbps)+"mbit","flow_limit","256")
     if b,err:=cmd.CombinedOutput();err!=nil{
         return fmt.Errorf("owned TUN fq setup: %w %s",err,b)
     }
@@ -213,7 +217,8 @@ func setOwnedTunFq(name string,rateMbps int)error{
     for _,line:=range strings.Split(string(b),"\n"){
         if strings.HasPrefix(line,"qdisc fq ") &&
             strings.Contains(line," root ") &&
-            strings.Contains(line," maxrate 600Mbit"){
+            strings.Contains(line," maxrate 600Mbit") &&
+            strings.Contains(line," flow_limit 256"){
             return nil
         }
     }
@@ -283,7 +288,7 @@ func Run(role string,args []string)error{
     defer func(){if !connected {_ = tun.Close()}}()
     if err=setOwnedTunFq(tun.name,cfg.tunFqMaxrateMbps);err!=nil{return err}
     if cfg.tunFqMaxrateMbps!=0 {
-        log.Printf("V4_PUBLIC_TUN_FQ role=%s interface=%s maxrate_mbps=600 readback=kernel_fq_600Mbit",cfg.role,tun.name)
+        log.Printf("V4_PUBLIC_TUN_FQ role=%s interface=%s maxrate_mbps=600 flow_limit_packets=256 readback=kernel_fq_600Mbit",cfg.role,tun.name)
     } else {
         log.Printf("V4_PUBLIC_TUN_FQ role=%s interface=%s maxrate_mbps=0 readback=kernel_default",cfg.role,tun.name)
     }
