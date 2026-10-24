@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "FEC_MAX50_W12_CLOSE_SOURCE_SAMEVM_AB_DISPATCH_PENDING",
+  "phase": "MAXIMUM50_BOUNDED_RX_FIXED_NO_DECODER_REJECTS_OUTBOUND_ASYMMETRIC_FAIL_W13_DIAGNOSTIC",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -150,17 +150,29 @@
     {
       "id": "FEC-W12-Maximum50-RX-CapacityOnly-CloseSource-AB-ARM64",
       "path": "tests/network/fec-work/W12-maximum50-rx-capacityonly-close-source-AB-arm64.json",
-      "run_id": null,
+      "run_id": 40089406842,
       "order": "AB",
       "A_source": "a969217e1edd3577ae41df81c38aa7ac84a4a484",
       "B_source": "ec344557fa8cbf4d717a81833d36f92584263478",
       "A_build_run": 40083030170,
       "B_build_run": 40087393299,
       "B_artifact": 12558215058,
-      "result": "DISPATCH_BY_PUSH_PENDING"
+      "result": "FAIL_B_ASYMMETRIC_C2S_12PCT_RX_REJECTION_ZERO",
+      "artifact": 12558900477
+    },
+    {
+      "id": "FEC-W13-Maximum50-RX-Bounded-Standalone-ARM64",
+      "path": "tests/network/fec-work/W13-maximum50-rx-bounded-standalone-arm64.json",
+      "source": "ec344557fa8cbf4d717a81833d36f92584263478",
+      "build_run": 40087393299,
+      "artifact_id": 12558215058,
+      "run_id": null,
+      "result": "STANDALONE_DIAGNOSTIC_PENDING",
+      "qualification": "NOT_RUN"
     }
   ],
   "open_issues": [
+    "W12 run40089406842 same VM close baseline vs capped RX: B reject 0, peak 58/59 blocks (~1.9MiB) with no pressure/byte cap; S2C loss0.03% PASS but C2S loss12.23% FAIL; B client veth measurement TX286.9MB vs server326.1MB while both FEC rsent279k and source staged222k with TX fail0. Likely separate output timing/interface gap, not an RX memory pressure cause. Standalone W13 identifies runner AB second-leg effect; no higher pressure.",
     "FEC Maximum 50/75Mbps capacity knee independently observed at old b601 source (50Mbps 4.36/3.91% loss; 75Mbps 11.52/10.42%); candidate fix full-delivery immediate retire+bounded 96 blocks/8MiB/512 reorder, 150ms unchanged and exact reasons. UNVERIFIED pending new Action.",
     "Auto live source is being wired on this branch, not yet runtime verified: per-direction genuine maturity/actual-k 2s policy, pending native stage, quiescent switch, revision-specific M4/parity/M2 readback must all pass W7; old W7 static fail retained.",
     "Outer-repair OFF preserves genuine authenticated original firstsend M2 reverse coverage and FEC quality but its separate outer repair shadow RTT diagnostic has timing_samples=0 and fallback srtt_us=600000; that is NOT a measured OFF RTT. Scope a FEC owner independent true feedback age/RTT readout before asserting quality RTT cost gate.",
@@ -169,7 +181,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Inspect automatically launched W12 Action same VM sequential 50Mbps AB, parse both native per-side typed FEC RX_CAP; require full two leg results, host/local drop and actual netem. The old A may fail so overall workflow FAIL isn't sufficient to judge new B. If B misses >1%, preserve FAIL and check peak/stored/eviction/late/block classifier before minimal further repair. No 75Mbps repeat/higher. Auto paused.",
+  "next_action": "Inspect W13 exact-source B-only Maximum50 original counterexample; distinguish second-leg contamination vs repeatable client outer interface under-submission. Need two-direction residual <=1%, read true RX_CAP, native FEC TX copied and iface-veth bytes/netem drops, CPU/RSS, local source drops. If persistent C2S under-sending despite native M4 proof, STOP further pressure and report distinct sender-to-qdisc gap; no outer algorithm rewrite. Never mark W12 B PASS.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -523,7 +535,86 @@
         "contract_run": 40087393284,
         "deterministic_missing_source_real_tun": "PASS"
       },
-      "performance": "W12_PENDING"
+      "performance": {
+        "run": 40089406842,
+        "artifact": 12558900477,
+        "artifact_sha256": "9780c422df5bc319954a84494d44958d8c45cb2c21556382b98c6d913d7e1343",
+        "same_vm": "AB",
+        "A": {
+          "source": "a969217e1edd3577ae41df81c38aa7ac84a4a484",
+          "app_delivered_mbps": {
+            "c2s": 47.9869,
+            "s2c": 47.96776
+          },
+          "missing": {
+            "c2s": 5908,
+            "s2c": 5958
+          },
+          "native_rx_rejected": {
+            "client": 19688,
+            "server": 18368
+          },
+          "measurement_cpu_s": {
+            "client": 12.52,
+            "server": 12.67
+          }
+        },
+        "B": {
+          "source": "ec344557fa8cbf4d717a81833d36f92584263478",
+          "app_delivered_mbps": {
+            "c2s": 43.88279,
+            "s2c": 49.99944
+          },
+          "missing": {
+            "c2s": 18025,
+            "s2c": 43
+          },
+          "native_rx_rejected": {
+            "client": 0,
+            "server": 0
+          },
+          "native_RX_capacity": {
+            "client": {
+              "peak_active": 58,
+              "peak_bytes": 1921203,
+              "pressure_evicted": 0,
+              "age_evicted": 15268,
+              "reorder_evicted": 0,
+              "reject_capacity": 0,
+              "reject_codec": 0
+            },
+            "server": {
+              "peak_active": 59,
+              "peak_bytes": 1941753,
+              "pressure_evicted": 0,
+              "age_evicted": 14496,
+              "reorder_evicted": 55,
+              "reject_capacity": 0,
+              "reject_codec": 0
+            }
+          },
+          "outer_interface_tx_bytes_measurement": {
+            "client": 286886952,
+            "server": 326114835
+          },
+          "native_FEC_TX_rsent": {
+            "client": 279164,
+            "server": 279144
+          },
+          "native_FEC_TX_failures_all_zero": true,
+          "meas_cpu_s": {
+            "client": 12.78,
+            "server": 12.08
+          },
+          "rss_peak_bytes": {
+            "client": 29720576,
+            "server": 29462528
+          }
+        },
+        "result": "FAIL_B_C2S_LOSS12.23PCT_DESPITE_RX_CAPACITY_REJECT0",
+        "qualification": "RX_CAPACITY_DIAGNOSTIC_PASS_ONLY_NOT_PERFORMANCE"
+      },
+      "qualified": false
     }
   }
 }
