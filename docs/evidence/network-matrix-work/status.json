@@ -55,7 +55,8 @@
       "artifact": 12543904263,
       "sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749",
       "scenario": "sameVM ARM64 real Go TLS Rust TUN Normal/off one TCP application c2s500Mbps RTT400 0loss outer line700, qlen1024, full-run TUN+root qdisc0, A external fq unlimited B owned Go CLI fq600",
-      "do_not_redispatch": true
+      "do_not_redispatch": true,
+      "contract_result": "ACTION40053396949 failed from scenario-specific fq600 leaked into old suite; isolated suite commit92ea70; contract40053463038 SUCCESS. Performance measurement40053396971 not restarted."
     }
   ],
   "recent_evidence": [
@@ -109,6 +110,12 @@
       "action": 40053299866,
       "source": "38ba0f3b8d0d52ad64731bc1c68f7e87d9563fca",
       "result": "PASS_44_test_harness_contracts_including_owned_profile"
+    },
+    {
+      "id": "contract request isolation",
+      "source": "92ea70abb34c99fe6ea789a9d500b7db8da6f380",
+      "action": 40053463038,
+      "result": "SUCCESS_ALL_NATIVE_HARNESS_CONTRACTS including generic FEC/Game presets after isolating request-specific product fq600"
     }
   ],
   "open_issues": [
@@ -116,5 +123,5 @@
     "New owned Linux Normal/off opt-in fq600 must pass exact source native build and A/B strict full warmup+steady TUN and qdisc drops 0, authenticated real Go/Rust single TCP500 and Stop; no B PASS until measured.",
     "FEC fixed/auto/Game, Windows/physical, wider MTU/Game regression and highloss inner TCP throughput remain independent or NOT_QUALIFIED."
   ],
-  "next_action": "Inspect existing Actions40053396971 attempt1 result and associated artifact after completion; no repeat dispatch. A failing default expected, only B with real CLI+kernel readback can earn source-scoped TCP500 PASS. Then finalize report/devlog/status with detailed CPU, drop, speed, p99 and Stop. Preserve separate highloss/MTU/mixed results; no main merge."
+  "next_action": "Check in-flight product native real TCP500 strict sameVM Action40053396971; record exact artifact and A/B results, full-run kernel TUN/qdisc/readback, CPU and Stop; do not redispatch. Keep source-specific pass from prior other v3 scopes and avoid unsupported broad claims."
 }
