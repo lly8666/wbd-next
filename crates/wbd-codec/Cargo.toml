@@ -12,6 +12,8 @@ m0-fec2-record-probe = []
 # grant; not a feature grant, policy ACK, or default product enablement.
 fec2-product-record = []
 native-isal = ["dep:wbd-isal-safe", "wbd-isal-safe/native"]
+# Isolated oracle-only experimental wire; never available in production defaults.
+selective-crypto-experiment = []
 
 [dependencies]
 wbd-types = { path = "../wbd-types" }
