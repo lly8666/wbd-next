@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "MAXIMUM50_BOUNDED_RX_FIXED_NO_DECODER_REJECTS_OUTBOUND_ASYMMETRIC_FAIL_W13_DIAGNOSTIC",
+  "phase": "MAXIMUM50_RX_BOUNDED_STANDALONE_PASS_AB_REPEATABILITY_UNRESOLVED_TEMPORARY_CLOSE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -166,13 +166,22 @@
       "source": "ec344557fa8cbf4d717a81833d36f92584263478",
       "build_run": 40087393299,
       "artifact_id": 12558215058,
-      "run_id": null,
-      "result": "STANDALONE_DIAGNOSTIC_PENDING",
-      "qualification": "NOT_RUN"
+      "run_id": 40090193642,
+      "result": "PASS_SCOPED_ORIGINAL_50MBPS_STANDALONE",
+      "qualification": "NOT_RUN",
+      "result_artifact_id": 12559170488,
+      "qualifications": {
+        "native_applied_both": true,
+        "outer_off_both": true,
+        "zero_repair": true,
+        "true_tun_recovery": true,
+        "loss_under_one_pct_both": true,
+        "repeatability_AB": false
+      }
     }
   ],
   "open_issues": [
-    "W12 run40089406842 same VM close baseline vs capped RX: B reject 0, peak 58/59 blocks (~1.9MiB) with no pressure/byte cap; S2C loss0.03% PASS but C2S loss12.23% FAIL; B client veth measurement TX286.9MB vs server326.1MB while both FEC rsent279k and source staged222k with TX fail0. Likely separate output timing/interface gap, not an RX memory pressure cause. Standalone W13 identifies runner AB second-leg effect; no higher pressure.",
+    "W13 standalone 50Mbps Maximum30 repaired RX-capacity passes (Action40090193642 loss0.0517/0.0496%, zero decoder/capacity reject, recovered TUN>66k each). But prior W12 same VM AB B had C2S 12.23% when client veth measured 286.9MB despite source/parity M4 copy; W13 client326.27MB. Non-repeatable 2nd-leg sender-to-netem gap remains unresolved; do NOT infer that all 50Mbps arrangements passed. No further pressure as requested.",
     "FEC Maximum 50/75Mbps capacity knee independently observed at old b601 source (50Mbps 4.36/3.91% loss; 75Mbps 11.52/10.42%); candidate fix full-delivery immediate retire+bounded 96 blocks/8MiB/512 reorder, 150ms unchanged and exact reasons. UNVERIFIED pending new Action.",
     "Auto live source is being wired on this branch, not yet runtime verified: per-direction genuine maturity/actual-k 2s policy, pending native stage, quiescent switch, revision-specific M4/parity/M2 readback must all pass W7; old W7 static fail retained.",
     "Outer-repair OFF preserves genuine authenticated original firstsend M2 reverse coverage and FEC quality but its separate outer repair shadow RTT diagnostic has timing_samples=0 and fallback srtt_us=600000; that is NOT a measured OFF RTT. Scope a FEC owner independent true feedback age/RTT readout before asserting quality RTT cost gate.",
@@ -181,7 +190,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Inspect W13 exact-source B-only Maximum50 original counterexample; distinguish second-leg contamination vs repeatable client outer interface under-submission. Need two-direction residual <=1%, read true RX_CAP, native FEC TX copied and iface-veth bytes/netem drops, CPU/RSS, local source drops. If persistent C2S under-sending despite native M4 proof, STOP further pressure and report distinct sender-to-qdisc gap; no outer algorithm rewrite. Never mark W12 B PASS.",
+  "next_action": "TEMPORARY_STOP_REQUESTED: No pending performance Action. Keep W13 50Mbps standalone PASS and W12 sameVM AB second-leg FAIL, no full green, no 75/100+ pressure. Before any future claim of high-rate reliability, investigate old-new A/B order and native-M4-kernel to netem-registered packet gap (W12 B client interface 286.89MB vs W13 standalone client326.27MB with ~279k real FEC parity copies), using existing per-leg snapshots; only if reproduced add bounded egress diagnostics. Preserve Auto W10 pending independently and main unmerged.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -536,85 +545,111 @@
         "deterministic_missing_source_real_tun": "PASS"
       },
       "performance": {
-        "run": 40089406842,
-        "artifact": 12558900477,
-        "artifact_sha256": "9780c422df5bc319954a84494d44958d8c45cb2c21556382b98c6d913d7e1343",
-        "same_vm": "AB",
-        "A": {
-          "source": "a969217e1edd3577ae41df81c38aa7ac84a4a484",
-          "app_delivered_mbps": {
-            "c2s": 47.9869,
-            "s2c": 47.96776
+        "run": 40090193642,
+        "result_artifact": 12559170488,
+        "artifact_zip_sha256": "aeea1dd50cce86e0a9b0f1a89ad7e5f8e62a5b680e79df47fb9f354067e9c42f",
+        "product_source": "ec344557fa8cbf4d717a81833d36f92584263478",
+        "product_build_run": 40087393299,
+        "product_artifact": 12558215058,
+        "order": "A_ONLY",
+        "scenario": "Fixed Maximum profile6 outer_repair OFF true ARM64 netns, bidirectional 50Mbps, IID30%, one-way300ms, 15s warmup+30s measured+30s drain",
+        "pass": "PASS_SCOPED_OBSERVATION",
+        "business": {
+          "c2s": {
+            "injected_mbps": 49.999143466666666,
+            "delivered_mbps": 49.9851272,
+            "sent": 147083,
+            "delivered": 147007,
+            "missing": 76,
+            "loss_pct": 0.051671505204544374,
+            "p99_ms": 304.6
           },
-          "missing": {
-            "c2s": 5908,
-            "s2c": 5958
-          },
-          "native_rx_rejected": {
-            "client": 19688,
-            "server": 18368
-          },
-          "measurement_cpu_s": {
-            "client": 12.52,
-            "server": 12.67
+          "s2c": {
+            "injected_mbps": 50.000516266666665,
+            "delivered_mbps": 49.98981253333333,
+            "sent": 147087,
+            "delivered": 147014,
+            "missing": 73,
+            "loss_pct": 0.04963049079796311,
+            "p99_ms": 304.7
           }
         },
-        "B": {
-          "source": "ec344557fa8cbf4d717a81833d36f92584263478",
-          "app_delivered_mbps": {
-            "c2s": 43.88279,
-            "s2c": 49.99944
+        "netem_actual_drop_pct": {
+          "client": 29.995676485847696,
+          "server": 30.0577151489293
+        },
+        "native_rx": {
+          "client": {
+            "decoder_rejected": 0,
+            "pressure_evicted": 0,
+            "reject_capacity": 0,
+            "reject_codec": 0,
+            "peak_active": 57,
+            "peak_bytes": 1922278,
+            "recovered_tun": 67115
           },
-          "missing": {
-            "c2s": 18025,
-            "s2c": 43
+          "server": {
+            "decoder_rejected": 0,
+            "pressure_evicted": 0,
+            "reject_capacity": 0,
+            "reject_codec": 0,
+            "peak_active": 58,
+            "peak_bytes": 1922935,
+            "recovered_tun": 66417
+          }
+        },
+        "native_readback": {
+          "both_fixed_requested_applied": "1/1",
+          "both_profile": 6,
+          "both_pending": false,
+          "both_outer_repair_off": true,
+          "outer_data_retransmit": 0,
+          "true_auth_reverse_reports": {
+            "client": 12753,
+            "server": 12633
           },
-          "native_rx_rejected": {
-            "client": 0,
-            "server": 0
-          },
-          "native_RX_capacity": {
-            "client": {
-              "peak_active": 58,
-              "peak_bytes": 1921203,
-              "pressure_evicted": 0,
-              "age_evicted": 15268,
-              "reorder_evicted": 0,
-              "reject_capacity": 0,
-              "reject_codec": 0
-            },
-            "server": {
-              "peak_active": 59,
-              "peak_bytes": 1941753,
-              "pressure_evicted": 0,
-              "age_evicted": 14496,
-              "reorder_evicted": 55,
-              "reject_capacity": 0,
-              "reject_codec": 0
-            }
-          },
-          "outer_interface_tx_bytes_measurement": {
-            "client": 286886952,
-            "server": 326114835
-          },
-          "native_FEC_TX_rsent": {
-            "client": 279164,
-            "server": 279144
-          },
-          "native_FEC_TX_failures_all_zero": true,
-          "meas_cpu_s": {
-            "client": 12.78,
-            "server": 12.08
+          "stopped_and_drained_both": true
+        },
+        "resource": {
+          "measurement_cpu_s": {
+            "client": 12.54,
+            "server": 12.67
           },
           "rss_peak_bytes": {
-            "client": 29720576,
-            "server": 29462528
-          }
+            "client": 29724672,
+            "server": 29569024
+          },
+          "root_qdisc_drop_client": 0,
+          "root_qdisc_drop_server": 0,
+          "source_tun_drop_client": 0,
+          "source_tun_drop_server": 0,
+          "host_cpu_psi_peak_pct": 8.83
         },
-        "result": "FAIL_B_C2S_LOSS12.23PCT_DESPITE_RX_CAPACITY_REJECT0",
-        "qualification": "RX_CAPACITY_DIAGNOSTIC_PASS_ONLY_NOT_PERFORMANCE"
+        "limitation": "W12 preceding same-VM second-leg B failed C2S ~12.23%; standalone PASS doesn't erase performance repeatability ambiguity; 75Mbps not retested"
       },
-      "qualified": false
+      "qualified": "SCOPED_STANDALONE_50MBPS"
+    },
+    "scoped_50mbps": {
+      "status": "PASS_SINGLE_STANDALONE_ONLY",
+      "source": "ec344557fa8cbf4d717a81833d36f92584263478",
+      "run": 40090193642,
+      "result_artifact": 12559170488,
+      "app_loss_pct": {
+        "c2s": 0.051671505204544374,
+        "s2c": 0.04963049079796311
+      },
+      "rx_rejected_both_zero": true,
+      "pressure_evicted_both_zero": true,
+      "source_tun_drop_both_zero": true,
+      "outer_data_retransmit_both_zero": true,
+      "host_cpu_psi_peak_pct": 8.83,
+      "not_qualified": "W12 sameVM AB second-leg client output timing unexplained"
+    },
+    "follow_up_boundary": {
+      "W12": 40089406842,
+      "result": "PASS_BOTH_LOSS0.052PCT/0.050PCT with balanced outer bytes326.27MB/325.81MB",
+      "W13": 40090193642,
+      "finding": "Non-repeatable sender-to-netem interface delivery in sameVM second leg, cannot claim causation by RX cache; verify kernel output counts and sequential harness measurement fairness before full qualification."
     }
   }
 }

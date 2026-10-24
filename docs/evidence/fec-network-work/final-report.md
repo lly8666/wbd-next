@@ -33,3 +33,9 @@ V3 双亲合并 [1a04e791](https://github.com/lly8666/wbd-next/commit/1a04e791d2
 4. **未测试：** 多业务极限 HOL、Windows 产品、Game+FEC 动态、物理链路、未知更高单核容量边界、全 k 档逐组概率的精确对应；不再放大容量压力。原网络独立已知混合 RX 问题属于 COMMON_PATH、不能由 FEC 收据覆盖。
 
 **交付资格：** 合并 V3、真实外层 OFF、Native Fixed5/Maximum 及默认 V3 ON 保护已形成可复用、可审查的单分支**限域合并候选**；**完整用户 FEC Auto 目标未验收，故整体 `merge_ready=false`，不自行合入 main。** 不应重复跑已通过的 W3–W6 或旧 `7ad7e0e1` 二进制。继续工作必须针对 Auto 真实观测/安全在线修订与独立 RTT 证据，而非原网络岗位 `next_action`。
+
+## 2026-10-24 Maximum50 容量修复专项补充（Auto 仍未完整通过）
+
+最新独立 RX source `ec344557fa8cbf4d717a81833d36f92584263478`：原生 ARM64 build [40087393299](https://github.com/lly8666/wbd-next/actions/runs/40087393299) + deterministic actual parity-to-TUN 单测 PASS；[W13 单场景](https://github.com/lly8666/wbd-next/actions/runs/40090193642) 真 50Mbps/方向 30% IID 300ms，双端 delivered49.985/49.990Mbps，残余0.0517%/0.0496%，native Fixed Maximum profile6 两端 applied，outer DATA repair=0，RX decoder reject0/0，FEC recovered TUN67115/66417，CPU12.54/12.67s、RSS29.7/29.6MB、p99 304.6/304.7ms，源 TUN/root qdisc drop0。RX bounded 96 blocks/8MiB，原 age150ms、reorder span128，峰值57/58blocks、约1.9MiB，Stop typed error counters齐全。[专项证据](20261024-W13-max50-scoped-PASS-and-W12-AB-boundary.md)。
+
+**独立单次 W13 PASS 并不覆盖 [W12 同VM顺序 AB](https://github.com/lly8666/wbd-next/actions/runs/40089406842) 的 B 单向 C→S 12.23% FAIL**；后一收据含 client veth 286.9MB，W13 client326.3MB，虽两次 FEC RX 拒绝和 native M4失败均为零。顺序效应/本地出口节奏尚未归因，需另行验证才能声称全场景性能可靠。75Mbps历史失效依旧，100–200Mbps未测；Auto 真升降档仍未验收，保持 `merge_ready=false`、容量停止继续。用户要求暂时收口，本轮不再刷全绿或扩压。
