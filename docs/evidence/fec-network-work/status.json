@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "V3_MERGE_SOURCE_READY_PENDING_BUILD_AND_PRODUCT_FEC_ONLY_GATES",
+  "phase": "V3_MERGED_ARM64_BUILD_PASS_FEC_ONLY_RUNTIME_W2_DISPATCH",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -17,7 +17,16 @@
   },
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": false,
-  "product_current": null,
+  "product_current": {
+    "source": "1a04e791d28d860107f31bcfe463846cf3f5c2ac",
+    "build_run": 40077530806,
+    "attempt": 1,
+    "artifact_id": 12553429349,
+    "zip_sha256": "5825ca179607b7e0c67e29c143ecb66526a4002a8b6309c10e2fabacd00fd0f6",
+    "policy": "outer-opportunistic-v3",
+    "architecture": "aarch64",
+    "qualification": "BUILD_ONLY_NATIVE_PRODUCT_NOT_FEC_ONLY"
+  },
   "open_requests": [
     {
       "id": "FEC-W1-fixed-max-outeroff-baseline-loss5-arm64",
@@ -39,6 +48,15 @@
       "run_id": 39916080164,
       "result": "FAIL_PREP_FIRST_PARTY_ARTIFACT_DOWNLOAD_AFTER_FIVE_RETRIES",
       "product_started": false
+    },
+    {
+      "path": "tests/network/fec-work/W2-v3-fixed5-outeroff-loss0to5-arm64.json",
+      "id": "FEC-W2-V3-Fixed5-OuterOff-Clean-Loss5",
+      "source": "1a04e791d28d860107f31bcfe463846cf3f5c2ac",
+      "build_run": 40077530806,
+      "artifact_id": 12553429349,
+      "result": "DISPATCHED_BY_IMMUTABLE_REQUEST_COMMIT_PENDING_RUN",
+      "qualification": "NOT_YET_OBSERVED"
     }
   ],
   "open_issues": [
@@ -48,7 +66,7 @@
     "Upstream historical 2% mixed RX conservation and host/product limits remain COMMON_PATH_SCOPE separate from FEC codec.",
     "Historical FEC 7ad7 product zip download errors preserved in open_requests; do not repeat obsolete artifacts. Linux Game OFF switch/Windows GUI are unsupported/not wired."
   ],
-  "next_action": "Verify merge two-parent SHA and inspect Actions at merged SOURCE (build + targeted harness contracts, parity native). Pin exactly one successful fresh ARM64 artifact; run ONE new immutable fec-work scenario with repair_enabled:false and policy outer-opportunistic-v3. Check two true native off readbacks, zero repair candidates/copies, true feedback and first TUN recovery. Then reproduce Fixed5 loss pending, Auto clean pending before performance; don't blame fq absent causal evidence.",
+  "next_action": "Read W2 Auto-triggered network-harness Action at exact SOURCE 1a04e791 using artifact12553429349; classify early artifact download errors separately. If it runs, inspect real native repair_enabled=0 per side, zero outer DATA copies/candidates, reverse M2 authentic coverage, FEC source/parity/decoded TUN and Fixed revision (including pending root). If no runtime, avoid new performance scenarios. Next Auto/clean with same product artifact after diagnosing Fixed.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -91,7 +109,32 @@
         "product_started": false
       }
     ],
-    "same_vm_AB_bundle_switch_supported": true
+    "same_vm_AB_bundle_switch_supported": true,
+    "merged_source": "1a04e791d28d860107f31bcfe463846cf3f5c2ac",
+    "merged_workflow_runs": [
+      {
+        "type": "ARM64_PRODUCT_BUILD",
+        "run": 40077530806,
+        "status": "success",
+        "artifact": 12553429349
+      },
+      {
+        "type": "HARNESS_CONTRACTS",
+        "run": 40077530811,
+        "status": "success"
+      },
+      {
+        "type": "NATIVE_MAXIMUM_ROW",
+        "run": 40077530837,
+        "status": "success"
+      },
+      {
+        "type": "MERGE_SPURIOUS_PERF_REQUEST_SELECTOR",
+        "run": 40077530873,
+        "status": "failed_before_product",
+        "reason": "merge second-parent path diff, no new case"
+      }
+    ]
   },
   "merge_ready": false,
   "recovery_qualified": false,
@@ -99,8 +142,8 @@
   "merge_intent": {
     "first_parent": "9cfd72968e21a63834f455a96afc71a5d35737db",
     "second_parent": "040741820b2f917b5868c285c438d4cc21c6193a",
-    "source_after_merge": "PENDING_GITHUB_COMMIT",
-    "result": "SRC_MERGE_NOT_PRODUCT_QUALIFIED",
+    "source_after_merge": "1a04e791d28d860107f31bcfe463846cf3f5c2ac",
+    "result": "TWO_PARENT_MERGE_CONFIRMED_BUILD_AND_COMPONENT_PASS",
     "shared_files_protected": [
       "crates/wbd-engine/src/v4_embedded_go.rs",
       "r0/go_overlay/internal/v4productcli/linux.go",
