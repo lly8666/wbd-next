@@ -24,7 +24,7 @@ Historical P1/P2 sections below remain policy/source-specific and do not overrid
 
 **当前 V3 产品：** Normal/off 仍使用身份认证、一次固定密文外层修复、真实 R/F≤10% 和选包门限；保留源 TUN 先借原 M1 slab 再读入、2048-slots/16反馈预留的历史安全修复。新实验来源 `a0a1285e73584a99c94eb573e7278ce5716fa2a5` 把数据源读取移至另一个有界512项 worker，旧 M3/PN/AEAD/M4 仍只由原发送 owner 处理；源码尚未进入 `main` 或部署。
 
-**容量限制及下一步：** 直接 TCP500 环境对照曾达到500Mbps，但不能取代 WBD 产品资格；单产品500**稳态已达到**，**冷启动全程零源 TUN 丢包尚未达到**。不要复用“仅稳态500”作为全程成功，也不允许忽略失败包以减少CPU。最新仅供因果诊断的单 Socket `SO_MAX_PACING_RATE` 对照在 Actions 上，若能抑制快启动突发也仅是试验性 socket pacing 证据，**不得冒充 VPN 任意业务通用修复**。FEC 固定/Auto 和 Windows 独立工位尚未以本岗位 Linux Normal/off 结果取得资格。
+**容量边界及后续：** 默认 Linux Normal/off 单TCP500 即使稳态业务500Mbps仍在冷启动源TUN丢包，严格 FAIL（最新 A6613）；同源码、同机 Linux ARM64 **产品显式 opt-in owned fq600** 已有真实认证业务 B PASS_SCOPED，启动与稳态源TUN/qdisc 0 丢包，业务500Mbps且 p99203.2ms，详见本报告顶部新证据。此前测试器改 socket 或 qdisc 的两个 B 仅是因果诊断，不能混同产品修复。CPU不是优化成功结论；Windows、FEC Fixed/Auto 和 Game2/4、物理端点、同时双向及多租户资格仍须独立证据。代表覆盖已有依据，默认方案是否选作部署策略留开放决策，不再盲目追绿或自动合main。
 
 
 
