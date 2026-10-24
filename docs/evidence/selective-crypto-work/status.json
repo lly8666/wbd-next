@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/selective-tls-crypto",
-  "phase": "S0_ARM64_COMPONENT_PASS_S1_ARM64_REQUESTED",
+  "phase": "S1_IDEAL_RECORD_CPU_BENEFIT_CONFIRMED_S3_LAB_CAPTURE_RUNNING",
   "entry": "docs/testing/SELECTIVE_TLS_CRYPTO_WORK.md",
   "architecture": "docs/architecture/SELECTIVE_TLS_CRYPTO_EXPERIMENT.md",
   "test_plan": "docs/testing/SELECTIVE_TLS_CRYPTO_TEST_PLAN.md",
@@ -54,9 +54,26 @@
       "trigger_commit": "e9a8617bbe805aef30ffac4f56d12bf6d4f57f63",
       "run_id": 40109817134,
       "attempt": 1,
-      "result": "QUEUED_NOT_MEASURED",
+      "result": "PASS_IDEAL_RECORD_CPU_MEASUREMENT",
       "build_run_id": 40108785993,
-      "build_artifact_id": 12565812441
+      "build_artifact_id": 12565812441,
+      "job_id": 120918993965,
+      "artifact_id": 12565174759,
+      "artifact_zip_sha256": "49082dd9e512d5f1285534d84a7272ed528b70b1a9b4572f0f1e752a44f0ffd5",
+      "A_cpu_ns_per_inner_byte": 0.7752137365702558,
+      "A_layout_cpu_ns_per_inner_byte": 0.8053942386306677,
+      "B_cpu_ns_per_inner_byte": 0.5467331361783643,
+      "B_vs_A_cpu_saving_pct": 29.47323939366042,
+      "A_forward_reverse_noise_pct": 0.06723600305799293,
+      "oracle_classification_cost": "EXCLUDED",
+      "real_TUN_p99": "NOT_OBSERVED"
+    },
+    {
+      "stage": "S3_CONTROLLED_BOUNDED_LAB_CAPTURE",
+      "source": "8c981a2432350c3a92b1e73ea87647bc6a537d9a",
+      "run_id": 40109989226,
+      "result": "IN_PROGRESS_NOT_YET_CAPTURE_RECEIPT",
+      "qualification": "CONTROLLED_INNER_SEQ_RESEND_NOT_REAL_KERNEL_INNER_RETRANSMISSION"
     }
   ],
   "open_requests": [
@@ -67,14 +84,14 @@
       "state": "WAITING_FOR_ACTION_RESULT"
     },
     {
-      "stage": "S1-ARM-AES128",
-      "run_id": 40109817134,
-      "state": "QUEUED_WAITING_FOR_ACTION_RESULT"
+      "stage": "S3-LAB-CAPTURE",
+      "run_id": 40109989226,
+      "state": "RUNNING"
     }
   ],
   "functional": "ARM64_S0_COMPONENT_PASS_NOT_PRODUCT_QUALIFICATION",
-  "performance": "S1_ARM_AES128_REQUESTED_NOT_YET_OBSERVED",
-  "capture": "NOT_RUN",
+  "performance": "S1_ARM_AES128_IDEAL_ORACLE_RECORD_CPU_29_473_PERCENT_SAVING_NOT_END_TO_END",
+  "capture": "S3_LAB_IN_PROGRESS_REAL_TUN_CAPTURE_NOT_RUN",
   "appearance": "NOT_RUN",
   "physical": "NOT_RUN",
   "merge_ready": false,
@@ -85,15 +102,7 @@
     "New experimental wire and protected descriptor require actual two-end capability binding, MTU derivation and negative tests; no compatibility claim.",
     "Inherited workflow branch-name selection needs explicit experimental adaptation; do not dispatch old FEC/network requests."
   ],
-  "next_action": "Read S1 run 40109817134 and exact artifact after completion; read x86 S0 40109345476; run one bounded independent laboratory wire capture; record actual CPU savings/noise and 64/128B repeated ciphertext, stop on negative/appearance, keep real Go/TUN/product qualification NOT_RUN. Never inherit network/fec.",
+  "next_action": "Inspect bounded S3 laboratory capture Action 40109989226 and x86 S0 40109345476. Report appearance independently. Distinct-PN repeated encrypted inner TLS data is a possible hard veto notwithstanding 29.47% record CPU; decide stop without enlarging classifier or disguising wire. Preserve real driver p99/Stop/queue as NOT_RUN unless actually measured.",
   "latest_log": "docs/devlog/selective-crypto-work/20261024-s0-implementation.md",
-  "prepared_not_dispatched": [
-    {
-      "stage": "S3-LAB-CAPTURE",
-      "workflow": ".github/workflows/selective-crypto-s3-capture.yml",
-      "trigger": "tests/network/selective-crypto-work/run-s3-capture.trigger",
-      "requires": "S0 correct",
-      "qualification": "CONTROLLED_DUPLICATE_INNER_SEQ_NOT_KERNEL_RETRANSMISSION"
-    }
-  ]
+  "prepared_not_dispatched": []
 }
