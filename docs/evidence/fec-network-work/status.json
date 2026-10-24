@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "V3_W2_OUTER_OFF_AND_TUN_FEC_RECOVERY_OBSERVED_FIXED_APPLIED_FIX_NEEDS_ACTION",
+  "phase": "V3_MATURE_M2_WITNESS_BUILD_AND_NATIVE_ROW_PASS_W3_REAL_FIXED_RETEST",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -18,14 +18,15 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "1a04e791d28d860107f31bcfe463846cf3f5c2ac",
-    "build_run": 40077530806,
+    "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+    "run_id": 40078403217,
     "attempt": 1,
-    "artifact_id": 12553429349,
-    "zip_sha256": "5825ca179607b7e0c67e29c143ecb66526a4002a8b6309c10e2fabacd00fd0f6",
+    "artifact_id": 12554277143,
+    "sha256": "552a9c19ca4b9045cabe08abeed4f80e440f73f8fcc34a5f06670f4450d9fde6",
     "policy": "outer-opportunistic-v3",
-    "architecture": "aarch64",
-    "qualification": "BUILD_ONLY_NATIVE_PRODUCT_NOT_FEC_ONLY"
+    "platform": "aarch64",
+    "build_action": "SUCCESS",
+    "runtime_fec_only": "W3_NOT_YET_OBSERVED"
   },
   "open_requests": [
     {
@@ -64,6 +65,15 @@
         "tun_recovery": true,
         "fixed_applied": false
       }
+    },
+    {
+      "id": "FEC-W3-V3-Fixed5-OuterOff-Clean-Loss5-MatureWitness",
+      "path": "tests/network/fec-work/W3-v3-fixed5-outeroff-mature-witness-arm64.json",
+      "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+      "run_id": null,
+      "artifact_id": 12554277143,
+      "result": "PENDING_PUSH_TRIGGERED_ACTION",
+      "qualification": "NOT_RUN"
     }
   ],
   "open_issues": [
@@ -73,7 +83,7 @@
     "Actual CPU/RSS and p99 at 2Mbps observed but NOT cost/memory scaling or matched sameVM AB; 30%/300ms and Auto asym/transition NOT_RUN.",
     "Linux Game OFF and Windows GUI/OS wiring UNSUPPORTED; upstream normal mixed RX ambiguity remains common-path."
   ],
-  "next_action": "Run exact native ARM64 product build + targeted native FEC maximum and harness contracts for Fixed applied witness patch; once successful, freeze SOURCE/artifact and rerun W2 as new unique W3 request with same loss0->5 measurement. Require both applied=1, outer OFF, recovery TUN positive, feedback authentic. Then run Auto clean/transition with same artifact; avoid prematurely launching max30 pressure.",
+  "next_action": "Inspect single new W3 Action's exact-source native readback; require Fixed both applied and no extra data copies with FEC recovered TUN. Test authentic 2s mature witness unit via updated existing FEC parity-unit workflow (runs on W3 push), not a second harness. If W3 succeeds then one Auto clean scenario on same binary artifact; preserve original W2 FAIL.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -163,6 +173,8 @@
     "file": "crates/wbd-engine/src/v4_embedded_go.rs",
     "source_before": "9cef7cfae2c1811f5589b55e2543f320d933b3ce",
     "change": "Replace entire-clean 2s cohort FEC APPLIED gate with real mature unambiguous positive ACK witness while leaving censored quality/unknown metadata intact; require native copied FEC source AND parity, epoch/revision identity and no capacity censorship.",
-    "validated": false
+    "validated": "BUILD_AND_OLD_PARITY_ROW_PASS_W3_FULL_PRODUCT_PENDING",
+    "native_unit_action_run": 40078403227,
+    "build_run": 40078403217
   }
 }
