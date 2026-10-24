@@ -27,3 +27,7 @@
 用户明确同意把上一轮已通过**显式选项**的 Linux Normal/off owned TUN `fq maxrate 600Mbit`改为**默认启动**，保留 `--tun-fq-maxrate-mbps=0` 明确回退。产品其它 Fixed/Auto/Game 模式沿用当前0默认，不从Normal/off资格推导。实际生效以新 SOURCE、CLI省略参数、Go marker及内核 `tc -d` 双读回为准，验证启动、业务、Stop和CPU/资源硬门；旧 opt-in B PASS 不自动覆盖新默认 SOURCE。授权并未变更 v3 外层重传、R/C 6%、R/F 10%、UDP无残余下限及MTU合同。
 
 本轮其他代表工况依次补：同机产品默认 fq600 对显式回退0的冷启动单TCP500/0损/RTT400（不复用旧A drop作CPU收益）；同SOURCE 50Mbps线路/30% IID/单程300ms高损UDP双向预算及早期交付回归；同SOURCE 500Mbps线路/2% IID/单程200ms近MTU UDP容量（业务Mbps与线路Mbps严格分开，一方向先验证，承载后再决定反向）。已有旧 SOURCE 的V3-A/B/D证明只复用未受改动的核心模块，不充当新默认全工况验证。每个Action单场景，一次构建复用，不改主线。具体执行收据只读 `status.json`。
+
+### 本轮结果收口（2026-10-24）
+
+上述事项已按精确SOURCE结算，**不是待重新dispatch清单**：原生 Linux ARM64 Normal/off 默认 fq600、新增有界 `flow_limit=256` 源码 `601eab251d4819ec82721d05c71e9cea20c11c0b`，单TCP500/0损/RTT400 Actions40056105730、500Mbps外层/2%线路/单向370Mbps近MTU UDP Actions40056093313 **PASS_SCOPED**，全程源TUN/根fq实际drop0、Go+kernel读回及Stop PASS；早先源 `8d5bbdbc` 的标准50Mbps线路/30%双向UDP预算Actions40055272532与15Mbps/向TCP70 UDP30混跑Actions40055680062 **PASS_SCOPED**，不将旧源资格扩展到新源码。原H500真实两次kernel `flows_plimit` drop已定位修复、原FAIL证据保留；两个后来的Action因夹具解析跨行readback在业务前失败，不算产品FAIL。当前 `status.json` 的 `open_requests=[]`，收口结果见既有 `final-report.md`。未做的高率双向/Windows/FEC/Game/实机明确保留 NOT_QUALIFIED，不合main、不额外重复运行。
