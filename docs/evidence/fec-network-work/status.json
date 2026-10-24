@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W19_UNILATERAL_IPV4_NUD_INCOMPLETE_CORRELATED_EGRESS_BLACKHOLE_W20_STATIC_TEST_PENDING",
+  "phase": "W20_PERMANENT_NEIGH_BOTH_PASS_W21_UNINSTRUMENTED_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -252,11 +252,20 @@
     {
       "id": "FEC-W20-100Mbps-Owned-Veth-Permanent-Neighbor-Diagnostic",
       "path": "tests/network/fec-work/W20-100Mbps-static-owned-veth-neighbour-fq600-diag-arm64.json",
-      "run_id": null,
+      "run_id": 40101978371,
       "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
       "artifact_id": 12562092730,
-      "result": "PENDING_PUSH_TRIGGER",
-      "purpose": "Prove W19 post-M4 ARP-induced 2.5-3s traffic blackout is eliminated with test-only owned reciprocal permanent NUD, without changing fq600 or real DATA netem."
+      "result": "PASS_SCOPED_BOTH_NEIGH_PERMANENT_AND_BUSINESS",
+      "purpose": "Prove W19 post-M4 ARP-induced 2.5-3s traffic blackout is eliminated with test-only owned reciprocal permanent NUD, without changing fq600 or real DATA netem.",
+      "result_artifact": 12562314781
+    },
+    {
+      "id": "FEC-W21-100Mbps-Owned-Static-Neighbour-Uninstrumented",
+      "path": "tests/network/fec-work/W21-100Mbps-static-owned-veth-fq600-uninstrumented-arm64.json",
+      "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "artifact_id": 12562092730,
+      "run_id": null,
+      "result": "PENDING_ACTION"
     }
   ],
   "open_issues": [
@@ -272,7 +281,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Inspect W20 exact same native diagnostic 100Mbps 30% IID/300ms artifact12562092730, own netns static veth IPv4 peers. Readback PERMANENT BOTH, 500ms TX/netem tick and native M4 copied, full warmup+steady gap, business delivered both >=99Mbps, source TUN/root fq no drops, outer interface gross rates, CPU/RSS/p99 and genuine repair OFF. If success freeze harness fix and do ONE non-diag (fec_egress_diagnostic=false) W21 100Mbps on same owned-static setup, validating no material performance regression. If failure do not claim full fix or increase 125+, inspect NUD or different edge. Do not change native fq600, outer repair, or any main/upstream status.",
+  "next_action": "Read W21 standalone 100Mbps on same frozen ARM64 artifact with static owned veth IPv4 neighbour both PERMANENT and diagnostics OFF. Verify loss<1% both, TUN/fq root no drops, native fixed6/outer OFF, FEC recovered real TUN, outer TX symmetry and CPU/RSS. If PASS, preserve as uninstrumented scoped reliability gate, then consider one 125Mbps on user-authorized gradual ladder. If FAIL inspect separate kernel edge, do not alter native fq600 or FEC math/main/upstream.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -1208,9 +1217,64 @@
       "path": "tests/network/fec-work/W20-100Mbps-static-owned-veth-neighbour-fq600-diag-arm64.json",
       "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
       "artifact_id": 12562092730,
-      "run": null,
+      "run": 40101978371,
       "result": "PENDING",
-      "treatment": "Controlled disposable veth MACs static PERMANENT in BOTH owned namespaces only, before netem 30% IID+300ms and before TLS. Observe both neighbor PERMANENT at 500ms, real outer veth+netem TX no multi-second blackholes, business both <=1%, CPU/RSS/p99 not degraded; fq600 unchanged."
+      "treatment": "Controlled disposable veth MACs static PERMANENT in BOTH owned namespaces only, before netem 30% IID+300ms and before TLS. Observe both neighbor PERMANENT at 500ms, real outer veth+netem TX no multi-second blackholes, business both <=1%, CPU/RSS/p99 not degraded; fq600 unchanged.",
+      "result_artifact": 12562314781,
+      "digest": "87a5e9652c868f3595817279beb70e824c0a255cbb17bb2efd82709748492850",
+      "status": "PASS_SCOPED_500MS_NATIVE_AND_KERNEL_DIAGNOSTIC",
+      "netem_loss_pct": {
+        "client": 29.96963625290177,
+        "server": 29.94953581779929
+      },
+      "business": {
+        "c2s": {
+          "delivered_mbps": 99.96938026666666,
+          "missing": 170,
+          "p99_ms": 303.4
+        },
+        "s2c": {
+          "delivered_mbps": 99.984976,
+          "missing": 98,
+          "p99_ms": 303.3
+        }
+      },
+      "outer_measured_30s": {
+        "client_bytes": 650809689,
+        "server_bytes": 650710222,
+        "client_mbps": 173.5492504,
+        "server_mbps": 173.52272586666666
+      },
+      "cpu_s": {
+        "client": 19.79,
+        "server": 19.62
+      },
+      "rss_peak_bytes": {
+        "client": 40398848,
+        "server": 39931904
+      },
+      "first_leg_neighbor_verified_permanent_both": true,
+      "neighbour_sampler": {
+        "client_permanent_samples": 130,
+        "server_permanent_samples": 130,
+        "total": 130
+      },
+      "native_original_fq600_both": true,
+      "native_outer_retransmits": 0,
+      "FEC_rx_decoder_reject": 0,
+      "FEC_rx_pressure": 0,
+      "source_TUN_drops": 0
+    },
+    "w21": {
+      "path": "tests/network/fec-work/W21-100Mbps-static-owned-veth-fq600-uninstrumented-arm64.json",
+      "run_id": null,
+      "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "build_run": 40099179830,
+      "artifact": 12562092730,
+      "diagnostics": false,
+      "static_peer_neighbour": true,
+      "original_fq600_unchanged": true,
+      "status": "PENDING"
     }
   }
 }
