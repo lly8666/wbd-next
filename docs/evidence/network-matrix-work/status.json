@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3_REPRESENTATIVE_CLOSED_WITH_NATIVE_LINUX_NORMAL_OPTIN_TCP500_SCOPED_PASS_DEFAULT_COLD_BURST_OPEN",
+  "phase": "V3_LINUX_NORMAL_DEFAULT_FQ600_CHANGE_NATIVE_BUILD_PENDING_CONTINUE_MATRIX",
   "current_plan": {
     "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
     "policy": "outer-opportunistic-v3",
-    "status": "V3-A_HIGHLOSS_PASS_B_MTU_SCOPED_PASS_D_MIXED_IDLE_SCOPED_PASS_C_OWNED_NATIVE_FQ600_OPTIN_500MBPS_SCOPED_PASS_DEFAULT_COLD_FAIL"
+    "status": "USER_2026_10_24_DEFAULT_OWNED_FQ600_LINUX_NORMAL_OPTION_DISABLED0_AVAILABLE_UNVERIFIED_NEW_SOURCE; REUSE_PREV_OPTON_500_SCOPED; NEXT_DEFAULT_TCP500_STRICT_THEN_30PCT_50M_AND_2PCT_500M_OUTER"
   },
   "restoration": {
     "remote_main_at_resume": "d8ba2cf270ff6ca5cadae6dab778c49c32636ef6",
@@ -42,7 +42,18 @@
       "zip_sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749"
     }
   },
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "native_fq600_default_source_build",
+      "source": "8d5bbdbca636e129481393fdbfa10b2c0e31e999",
+      "actions": [
+        40054986786,
+        40054986784
+      ],
+      "status": "IN_PROGRESS_LAST_READ",
+      "do_not_redispatch": true
+    }
+  ],
   "recent_evidence": [
     {
       "id": "V3-A-50mbps-line30pct",
@@ -117,7 +128,7 @@
     "Host CPU/PSI significant at this load (B client48.66/server64.33 CPU-s per60s, host PSI some peak30.13%); no low CPU comparative improvement claim and do not use A local-drop as successful CPU baseline.",
     "Windows, Fixed/Auto/Game, physical, multi-business 500/no-HOL, bidirectional500 and wider MTU regressions remain separate NOT_QUALIFIED; previously passed v3-A/B/D scoped cases reused."
   ],
-  "next_action": "DELIVER scoped Linux Normal/off native owned TUN fq600 opt-in single-TCP500 qualification from exact Action40053396971 B only; stop additional pressure now (representative v3-A/B/D passed, default cold FAIL explicitly documented). No more pending dispatch, no main merge. Any proposal to make fq600 a default needs distinct product/platform scope, CPU and fairness evaluation; do not alter policy/UDP loss minimum.",
+  "next_action": "Reuse first successful valid native ARM64 artifact for source8d5bbdb..., pin ZIP sha+manifest, then test only in Actions: (1) sameVM Normal/off default omitted B versus explicit0 A real singleTCP500 0loss RTT400 full warmup TUN+qdisc zero; (2) independent native default highloss UDP/line50Mbps/30% IID RTT600 with R/C>=6% R/F<=10%; (3) independent native default outer500Mbps/2% RTT400 near-MTU UDP with honest one-way/bidirectional scope and CPU/host stop. One performance Action per scenario; reuse prior B but never call it default SOURCE PASS. Correct evidence and STOP as needed; no main merge.",
   "current_source_verified": {
     "source": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
     "build": 40053179394,
@@ -129,5 +140,18 @@
     "business_artifact": 12543608967,
     "business_artifact_zip_sha256": "e94d703d1d699ae3d5a4b5224aa2fbeeeebbb23010ba2ffdc62a7ae5b8c94375"
   },
-  "recovered_latest_action": "40053396971 attempt1 completed failure overall because A default warmup source-TUN6613; B PASS_SCOPED_OBSERVATION with real owned fq600 kernel readback 75MB/s both, app500.000Mbps p99203.2ms, warmup/steady source TUN0/qdisc0, auth Stop PASS; artifact digest verified."
+  "recovered_latest_action": "40053396971 attempt1 completed failure overall because A default warmup source-TUN6613; B PASS_SCOPED_OBSERVATION with real owned fq600 kernel readback 75MB/s both, app500.000Mbps p99203.2ms, warmup/steady source TUN0/qdisc0, auth Stop PASS; artifact digest verified.",
+  "current_policy_addendum": {
+    "authorization": "user 2026-10-24: 默认启动fq600，然后继续跑其他工况内容",
+    "scope": "newly-owned Linux Normal/off TUN startup fq maxrate 600Mbps per-flow; omitted CLI value uses600, explicit0 disables; other FEC/Game modes retain0 until independent true-native qualification; no global sysctl, or alteration to repair/UDP acceptance",
+    "source": "8d5bbdbca636e129481393fdbfa10b2c0e31e999",
+    "build_runs": [
+      40054986786,
+      40054986784
+    ],
+    "harness_source": "1d5d34954535fc8e40606888f1ec4c16164f5180",
+    "harness_contract_run": 40055025852,
+    "harness_contract_result": "SUCCESS",
+    "latest_doc": "docs/testing/NETWORK_HARNESS.md"
+  }
 }
