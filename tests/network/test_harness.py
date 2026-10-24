@@ -289,6 +289,9 @@ class Contracts(unittest.TestCase):
 
     def test_true_idle_phase_has_no_synthetic_probe_sends(self):
         r=request()
+        # This isolated idle contract is intentionally not a mixed-business
+        # cross-HOL test, even if the current committed scenario is.
+        r["acceptance"]["cross_business_hol"]=False
         r["traffic"]["probe_hz"]=0
         r["traffic"]["udp_share"]=1
         r["phases"][0]["rate_scale"]=0
@@ -681,6 +684,9 @@ class Contracts(unittest.TestCase):
     def test_independent_udp_tcp_duplex_and_real_missing_accounting(self):
         r = request()
         r.update(warmup_s=1, drain_s=1, phases=[{"name": "test", "seconds": 2}])
+        # A 2s cheap socket selfcheck cannot exercise the independent
+        # 2s+1s guarded 60s HOL phase; these are separate tests/Actions.
+        r["acceptance"]["cross_business_hol"]=False
         # Synthetic socket selfcheck has no product or retransmission receipt.
         # Do not inherit pressure-request repair gates into this independent contract.
         r["acceptance"]["require_retransmission"] = False
