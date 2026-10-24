@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3_ALL_LINUX_MODE_OWNED_FQ600_DEFAULT_PROVEN_NATIVE_FEC_CONTROL_PENDING_GAME_RECEIPT_RECHECK",
+  "phase": "V3_ALL_FIVE_LINUX_MODES_DEFAULT_FQ600_REAL_KERNEL_PROVEN_GAME_NORMAL_FIXED0_SCOPED_PASS_FEC_PENDING_AB_DIAG_RUNNING",
   "current_plan": {
     "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
     "policy": "outer-opportunistic-v3",
@@ -44,35 +44,11 @@
   },
   "open_requests": [
     {
-      "id": "Game2 exact native game-lane receipt applicability test",
-      "run": 40061387213,
-      "request_source": "431698b26dcbfde575d6dce26445fa8448451eeb",
+      "id": "Auto healthy sameVM A explicit-off fq versus B default600 FEC applied readback",
+      "run": 40061749129,
+      "request_source": "e79dc7faec4865d3ffb001ec2839226d9ec0baaa",
+      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
       "status": "IN_PROGRESS_LAST_READ",
-      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
-      "do_not_redispatch": true
-    },
-    {
-      "id": "Game4 one-lane blackout valid game-native receipt test",
-      "run": 40061402339,
-      "request_source": "5e69f39eceafb30cae4e0eebb5fb82b6b6262c53",
-      "status": "IN_PROGRESS_LAST_READ",
-      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
-      "do_not_redispatch": true
-    },
-    {
-      "id": "Fixed5 FEC applied revision healthy 0 loss discriminator",
-      "run": 40061487976,
-      "request_source": "34509e80b3327680b93bd9d51bb8dc0f99345219",
-      "status": "IN_PROGRESS_LAST_READ",
-      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
-      "do_not_redispatch": true
-    },
-    {
-      "id": "Auto FEC applied revision healthy 0 loss discriminator",
-      "run": 40061499022,
-      "request_source": "008208315a151778314a972a8f7500225d2b68fe",
-      "status": "QUEUED_LAST_READ",
-      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
       "do_not_redispatch": true
     }
   ],
@@ -133,7 +109,7 @@
     "Windows/FEC Fixed/Auto/Game, multi-client shared endpoint/no cross-HOL at 500Mbps, physical native deployment and arbitrary >600Mbps per-flow are NOT_QUALIFIED. CPU absolute per-source/VM observed, no measured optimization gain against locally dropping baseline; user requested bounded work, no more blind matrix.",
     "Pre-flowlimit original strict H500 root-drop FAIL retained. Two pre-business harness parser FAIL Actions do not count as capacity FAIL."
   ],
-  "next_action": "Recover these four in-flight exact Actions without duplicates. Product-owned fq600 flow256 Go+kernel readback already verified 5 modes; Normal success. Game corrected applicable REAL native lane proof Actions40061387213/40061402339. FEC fixed/auto real one-sided applied_revision pending with prior loss; 0% control Actions40061487976/40061499022 discriminate impairment vs basic FEC control; preserve FAIL if pending. Record artifacts hashes, CPU/drop/Stop and scoped results in final-report + devlog. No scope creep to independent FEC algorithm; no main merge/deploy.",
+  "next_action": "Recover completed Action40061749129 exact AB sameVM Auto FEC revision readback with product A explicit0 vs B default600; check artifact digest, log both mode controls, any source/root drop, CPU/Stop. Preserve authentic Fixed5 FEC 5% server pending, Fixed0 PASS, Auto high/clean pending, Normal/Game PASS. Do not modify independent FEC algorithm or claim repair/Windows/physical. Close status and final report once observed, no duplicate dispatch or main merge.",
   "current_source_verified": {
     "source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
     "branch": "experiment/network-matrix-tuning",
@@ -281,6 +257,46 @@
         "sha256": "8e7a7301bfa20e84eb9c7435a1d99a26e8337b3c5058e257c453ec03c81e41ac",
         "result": "SUCCESS_15MBPS_PER_DIRECTION_TCP70_UDP30_ZERO_MISSING_P99_200.4_200.5_TUN_ROOT0_Stop"
       }
-    ]
+    ],
+    "frozen_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+    "last_scoped_results": {
+      "normal": {
+        "action": 40061090616,
+        "result": "PASS_SCOPED 15Mbps/dir TCP70 UDP30 0loss TUN/root0",
+        "artifact": 12546813359
+      },
+      "fixed0loss": {
+        "action": 40061487976,
+        "result": "PASS_SCOPED Fixed5 FEC applied1 both 0% loss 12Mbps/dir TUN/root0",
+        "artifact": 12547458439
+      },
+      "fixed5pct": {
+        "action": 40061035456,
+        "result": "FAIL server FEC applied0 pendingtrue under 5% IID though TUN/root0 and owned fq600 works",
+        "artifact": 12547447656
+      },
+      "auto1_20_1": {
+        "action": 40061047243,
+        "result": "FAIL client FEC applied0 pendingtrue asymmetric loss though real UDP near target TUN/root0",
+        "artifact": 12546474541
+      },
+      "auto0loss": {
+        "action": 40061499022,
+        "result": "FAIL both client and server FEC applied0 pendingtrue even healthy while 10Mbps/dir delivered and TUN/root0",
+        "artifact": 12547443507
+      },
+      "game2": {
+        "action": 40061387213,
+        "result": "PASS_SCOPED genuine 2 Game lanes independent5% loss, residual146/133 packets, p9927.4, native Game counters, TUN/root0",
+        "artifact": 12547756255
+      },
+      "game4": {
+        "action": 40061402339,
+        "result": "PASS_SCOPED genuine 4 Game lanes one dead30s zero app missing, p9927.5, Game counters, TUN/root0",
+        "artifact": 12547358796
+      }
+    },
+    "game_harness_mode_fix": "043e76c871e1ea6901d0beb2d39ff5ade901331d",
+    "evidence_file": "docs/evidence/network-matrix-work/V3-all-Linux-modes-owned-fq600-20261024.json"
   }
 }
