@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "id": "V3-AllModes-fq600-Auto-clean-FEC-readback",
+  "id": "V3-AllModes-Auto-clean-sameVM-fq0-vs-default600",
   "owner": "network-matrix-work",
-  "seed": 8177,
+  "seed": 8178,
   "product": {
     "mode": "fec-auto",
     "fec_profile": 1
@@ -33,8 +33,14 @@
     "lane_loss": "shared",
     "queue_packets": 32768,
     "netem_rng": "unseeded_recorded",
-    "product_tun_fq_maxrate_mbps_profiles": {},
-    "startup_tun_drop_timeline": true
+    "product_tun_fq_maxrate_mbps_profiles": {
+      "A": 0
+    },
+    "startup_tun_drop_timeline": true,
+    "tun_qdisc_profiles": {
+      "A": "fq"
+    },
+    "tun_fq_maxrate_mbps_profiles": {}
   },
   "warmup_s": 10,
   "drain_s": 15,
@@ -71,8 +77,16 @@
       "artifact_id": 12546779978,
       "sha256": "6ee4a55d14a4a7f01e49a95b3654a79af1498aeca878b0c2ba9454ec2a9100e5",
       "recovery_policy": "outer-opportunistic-v3"
+    },
+    "B": {
+      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+      "run_id": 40060850580,
+      "attempt": 1,
+      "artifact_id": 12546779978,
+      "sha256": "6ee4a55d14a4a7f01e49a95b3654a79af1498aeca878b0c2ba9454ec2a9100e5",
+      "recovery_policy": "outer-opportunistic-v3"
     }
   },
-  "order": "A",
+  "order": "AB",
   "policy": "outer-opportunistic-v3"
 }
