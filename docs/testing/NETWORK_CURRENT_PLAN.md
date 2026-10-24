@@ -31,3 +31,9 @@
 ### 本轮结果收口（2026-10-24）
 
 上述事项已按精确SOURCE结算，**不是待重新dispatch清单**：原生 Linux ARM64 Normal/off 默认 fq600、新增有界 `flow_limit=256` 源码 `601eab251d4819ec82721d05c71e9cea20c11c0b`，单TCP500/0损/RTT400 Actions40056105730、500Mbps外层/2%线路/单向370Mbps近MTU UDP Actions40056093313 **PASS_SCOPED**，全程源TUN/根fq实际drop0、Go+kernel读回及Stop PASS；早先源 `8d5bbdbc` 的标准50Mbps线路/30%双向UDP预算Actions40055272532与15Mbps/向TCP70 UDP30混跑Actions40055680062 **PASS_SCOPED**，不将旧源资格扩展到新源码。原H500真实两次kernel `flows_plimit` drop已定位修复、原FAIL证据保留；两个后来的Action因夹具解析跨行readback在业务前失败，不算产品FAIL。当前 `status.json` 的 `open_requests=[]`，收口结果见既有 `final-report.md`。未做的高率双向/Windows/FEC/Game/实机明确保留 NOT_QUALIFIED，不合main、不额外重复运行。
+
+## 2026-10-24 用户最新授权：Linux 全模式默认 fq600，继续剩余工况
+
+**此条覆盖前文“Fixed/Auto/Game保持0默认”的旧范围决定。** 用户要求 fq600 在**所有工况**默认生效：本岗位实际接线为原生 Linux Go 公共V4支持的 `normal`、`fec-fixed`、`fec-auto`、`game2`、`game4` 五种模式，共用产品独占临时TUN上的 `fq maxrate 600mbit flow_limit 256`；不碰宿主物理口/全局/sysctl，不自造 Windows `tc` 能力。省略CLI自动=600，`--tun-fq-maxrate-mbps=0`为所有模式的明确回退；失败时拒绝虚假成功，完整 Stop/owned 清理。所有模式必须读回Go与真实内核设置；未实际通过原生Actions的模式不得冒充产品性能资格。
+
+任务分支独立完成最小修改及合同，冻结新的原生ARM64产品SOURCE后，**一个模式/网络波形一个Action**，独立先测 FEC Fixed/Auto 的真实Go→Rust→TUN，Game2/Game4 真实多lane+损伤；从成功的Frozen bundle复用，无需重复编译。按工况保留各自原生成功/失败结论、业务丢包/首次交付、每流fq与原TUN队列真实drop、产品CPU/内存、认证/Stop；高损预算仅在v3标准50Mbps线路/30%充分负载场景检验6%/10%，不能拿低负载FEC/Game测它。此前Normal/off TCP500/H500结果属于**旧SOURCE `601eab25`**，不自动升格为此次全模式源码。若产生已有产品安全或数据流FAIL，最小定位后修复及相关回归；不重复压力刷全绿、不合main、不部署实机。实际run/产物与下一动作以状态JSON为准。
