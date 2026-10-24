@@ -405,9 +405,11 @@ class LinuxExperiment:
         self.tcp_profile=config["network"].get("tcp_window_profiles",{}).get(label,"baseline")
         self.tcp_reorder_profile=config["network"].get("tcp_reordering_profiles",{}).get(label,"baseline")
         self.tcp_socket_pacing_mbps=config["network"].get("tcp_socket_pacing_mbps_profiles",{}).get(label,0)
+        self.product_tun_fq_maxrate_mbps=config["network"].get("product_tun_fq_maxrate_mbps_profiles",{}).get(label,0)
         self.config["network"]["tcp_window_profile_selected"]=self.tcp_profile
         self.config["network"]["tcp_reordering_profile_selected"]=self.tcp_reorder_profile
         self.config["network"]["tcp_socket_pacing_mbps_selected"]=self.tcp_socket_pacing_mbps
+        self.config["network"]["product_tun_fq_maxrate_mbps_selected"]=self.product_tun_fq_maxrate_mbps
         self.bundle = Path(bundle_dir) / "fixed-build"
         self.out, self.label = Path(out), label
         self.out.mkdir(parents=True, exist_ok=False)
@@ -492,6 +494,8 @@ class LinuxExperiment:
                 args += ["--tls-cert", str(self.private / "cert.pem"), "--tls-key", str(self.private / "key.pem")]
             else:
                 args += ["--peer-ip", self.ip["server"], "--peer-port", "443"]
+            if self.product_tun_fq_maxrate_mbps:
+                args.extend(["--tun-fq-maxrate-mbps",str(self.product_tun_fq_maxrate_mbps)])
             self.products[role] = self.spawn(role, args, role + ".log")
             if role == "server":
                 time.sleep(.5)
@@ -553,6 +557,21 @@ class LinuxExperiment:
                                            " (expected 600Mbit actual kernel qdisc)")
                 observed[role]=qdisc_profile
             self.effective["test_only_tun_qdisc_readback"]=observed
+        self.effective["product_tun_fq_maxrate_mbps"]=self.product_tun_fq_maxrate_mbps
+        if self.product_tun_fq_maxrate_mbps:
+            product_readback={}
+            for role in self.ns:
+                marker=("V4_PUBLIC_TUN_FQ role="+role+
+                        " interface=wbntun0 maxrate_mbps=600 readback=kernel_fq_600Mbit")
+                if marker not in read(self.private / (role+".log")):
+                    raise RuntimeError("real product TUN fq readback marker missing "+role)
+                detail=self.nscommand(role,["tc","-d","qdisc","show","dev","wbntun0"])
+                if not any(line.startswith("qdisc fq ") and " root " in line and
+                           re.search(r"\bmaxrate\s+600Mbit\b",line,re.I)
+                           for line in detail.splitlines()):
+                    raise RuntimeError("real product TUN fq kernel readback mismatch "+role)
+                product_readback[role]="owned_normal_fq_600Mbit"
+            self.effective["product_tun_fq_kernel_readback"]=product_readback
         self.effective["test_only_tun_fq_maxrate_mbps"]=(
             fq_rate if fq_rate is not None else "NO_TEST_OVERRIDE")
         self.effective["test_only_tun_txqlen_profile"]=(
