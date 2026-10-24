@@ -591,6 +591,7 @@ class LinuxExperiment:
         for role in self.ns:
             row["network"][role] = {
                 "qdisc": json.loads(self.nscommand(role, ["tc", "-s", "-j", "qdisc", "show", "dev", self.iface[role]])),
+                "tun_qdisc": json.loads(self.nscommand(role, ["tc", "-s", "-j", "qdisc", "show", "dev", "wbntun0"])),
                 "links": json.loads(self.nscommand(role, ["ip", "-s", "-j", "link", "show"])),
                 "snmp": self.nscommand(role, ["cat", "/proc/net/snmp"]),
                 "udp_sockets": self.nscommand(role, ["ss", "-uanm"], False),
@@ -807,13 +808,30 @@ class LinuxExperiment:
             result = summarize(self.config, json.loads((self.out / "client-traffic.json").read_text()),
                                json.loads((self.out / "server-traffic.json").read_text()), self.telemetry(), host)
             result["network_accounting"] = network_accounting(self.snapshots)
+            warmup_start=next((p for p in self.snapshots if p["name"]=="warmup-start"),None)
             steady_start=next((p for p in self.snapshots if
                 p["name"]=="before-"+self.config["phases"][0]["name"]),None)
             steady_end=next((p for p in self.snapshots if
                 p["name"]=="measurement-end"),None)
+            if warmup_start is not None and steady_start is not None:
+                warmup_drops=source_tun_tx_drops_by_role(warmup_start,steady_start)
+                result["source_tun_tx_drops_warmup"]=warmup_drops
+                if any(isinstance(n,int) and n>0 for n in warmup_drops.values()):
+                    result["warnings"].append("SOURCE_TUN_WARMUP_DROPS_NOT_FULL_ZEROLOSS")
+            if self.config["acceptance"].get("require_zero_source_tun_drops_full_run",False):
+                parts=(result.get("source_tun_tx_drops_warmup"),)
+                for section in parts:
+                    if section is None or any(type(v) is not int or v!=0 for v in section.values()):
+                        result["failures"].append("SOURCE_TUN_WARMUP_ZERO_DROP_REQUIRED")
+                        result["result"]="FAIL"
+                        break
             if steady_start is not None and steady_end is not None:
                 drops=source_tun_tx_drops_by_role(steady_start,steady_end)
                 result["source_tun_tx_drops_steady"]=drops
+                if self.config["acceptance"].get("require_zero_source_tun_drops_full_run",False):
+                    if any(type(v) is not int or v!=0 for v in drops.values()):
+                        result["failures"].append("SOURCE_TUN_STEADY_ZERO_DROP_REQUIRED")
+                        result["result"]="FAIL"
                 if any(isinstance(n,int) and n>0 for n in drops.values()):
                     result["limits"].append("SOURCE_TUN_TX_DROPS: kernel upstream loss before product")
                     if result["result"]=="PASS_SCOPED_OBSERVATION":
@@ -1009,6 +1027,7 @@ def capacity_action_digest(leg):
                         costs.get(role, {}).get("outer_interface_tx_bytes")}
             for role in ("client", "server")},
         "source_tun_tx_drops_steady":leg.get("source_tun_tx_drops_steady","NOT_OBSERVED"),
+        "source_tun_tx_drops_warmup":leg.get("source_tun_tx_drops_warmup","NOT_OBSERVED"),
         "tcp_window_profile":leg.get("tcp_window_profile","NOT_OBSERVED"),
         "tcp_reordering_profile":leg.get("tcp_reordering_profile","NOT_OBSERVED"),
         "socket_effective_buffers":leg.get("socket_effective_buffers","NOT_OBSERVED"),
