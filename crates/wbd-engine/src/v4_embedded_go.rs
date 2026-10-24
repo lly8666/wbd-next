@@ -3554,6 +3554,7 @@ fn original_fixed_stage_due(e:&mut Entry,
 fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     stop:&AtomicBool,ifindex:u32,ifname:&str,tx_storage:&mut Vec<TxDispatch>,
     pending:&mut Vec<(crate::memory::UniqueBuffer,usize)>,
+    prefetched:&mut Vec<crate::memory::UniqueBuffer>,
     ready_records:&mut Vec<crate::memory::FrozenRecord>,
     presentations:&mut Vec<Presentation>,
     actual_firstsend:&mut Vec<(wbd_types::RecordPn,u64)>,
@@ -3572,6 +3573,8 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     // across a route/coalescing abort. Never silently clear a kernel-consumed
     // packet on the next owner turn; it still belongs to this generation.
     let recovered_small=!pending.is_empty();
+    // Do not carry speculative ownership across turns/generation changes.
+    prefetched.clear();
     ready_records.clear();
     presentations.clear();
     actual_firstsend.clear();
@@ -3614,15 +3617,13 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         // Linux TUN read is destructive. Reserve a real owner slab BEFORE
         // consuming a business datagram; deferred packets stay in kernel TUN.
         // The jumbo/rejected/no-data branch drops the unused reservation.
-        let pre_read={
+        let pre_read=if let Some(loan)=prefetched.pop(){
+            Ok(loan)
+        }else{
             let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
             if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
-            // Normal/off DATA and authenticated reverse receipts use the
-            // SAME M1 frozen arena. With all loans held by sender shadow,
-            // reverse ACK staging cannot acquire a slab, so 2ms NotSent
-            // retries and PTO duplicates amplify capacity exhaustion even
-            // on a zero-loss wire. Reserve small, REAL owner slots for ACK.
-            // Fixed/Auto data staging keeps its existing arena admission.
+            // Every borrowed slab precedes the destructive TUN read and
+            // respects the existing 16-slot authenticated receipt reserve.
             #[cfg(feature="fec2_product_record")]
             let control_floor=if e.rx_feedback.is_some()
                 && e.fixed_pending.is_none() && e.fixed_applied.is_none() {
@@ -3630,7 +3631,20 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             }else{0};
             #[cfg(not(feature="fec2_product_record"))]
             let control_floor=0;
-            e.arena.allocate_preserving(control_floor)
+            let first=e.arena.allocate_preserving(control_floor);
+            // Sparse-first: do NOT allocate a 32-slab packet batch when only
+            // one datagram is present. Once >=4 real reads proved the TUN
+            // hot, amortize one session lock over up to eight bounded loans.
+            // All unused loans are returned before crypto/M4 submission.
+            if first.is_ok() && observed>=4 {
+                for _ in 0..7.min(32usize.saturating_sub(observed+1)) {
+                    match e.arena.allocate_preserving(control_floor){
+                        Ok(loan)=>prefetched.push(loan),
+                        Err(_)=>break,
+                    }
+                }
+            }
+            first
         };
         let mut reserved=match pre_read{
             Ok(slot)=>slot,
@@ -3706,6 +3720,9 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         // Probe the next packet via the driver's own nonblocking readiness;
         // WouldBlock exits the loop immediately without business blocking.
     }
+    // Release speculative unread slabs before source sealing and M4; they
+    // cannot delay control allocation or pin repair snapshots.
+    prefetched.clear();
     if pending.is_empty() && jumbo_queue.is_empty() && active_jumbo.is_none(){
         #[cfg(feature="fec2_product_record")]
         let due={
@@ -4638,6 +4655,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut last_cpu_sample=Instant::now();
             let mut tx_storage=Vec::<TxDispatch>::with_capacity(32);
             let mut tx_pending=Vec::<(crate::memory::UniqueBuffer,usize)>::with_capacity(32);
+            let mut tx_prefetched=Vec::<crate::memory::UniqueBuffer>::with_capacity(8);
             let mut tx_records=Vec::<crate::memory::FrozenRecord>::with_capacity(32);
             let mut tx_presentations=Vec::<Presentation>::with_capacity(32);
             let mut tx_actual_firstsend=Vec::<(wbd_types::RecordPn,u64)>::with_capacity(32);
@@ -4680,7 +4698,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 let slice_start=Instant::now();
                 match background_tun_once(
                     &tx_cell,&tun,&stop_tx,ifindex,&tx_ifname,&mut tx_storage,
-                    &mut tx_pending,&mut tx_records,&mut tx_presentations,
+                    &mut tx_pending,&mut tx_prefetched,&mut tx_records,&mut tx_presentations,
                     &mut tx_actual_firstsend,&tx_events,&mut jumbo_read,&mut jumbo_queue,&mut active_jumbo,
                     #[cfg(feature="fec2_product_record")]
                     &stats,
