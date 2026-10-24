@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/selective-tls-crypto",
-  "phase": "SCOPED_NEGATIVE_CPU_AND_LAB_CAPTURE_PASS_KERNEL_RETX_CAPTURE_RUNNING",
+  "phase": "NEGATIVE_LAB_AND_NATIVE_INNER_RETX_CONFIRMED_RECEIPT_PROVENANCE_RERUN_PENDING",
   "entry": "docs/testing/SELECTIVE_TLS_CRYPTO_WORK.md",
   "architecture": "docs/architecture/SELECTIVE_TLS_CRYPTO_EXPERIMENT.md",
   "test_plan": "docs/testing/SELECTIVE_TLS_CRYPTO_TEST_PLAN.md",
@@ -94,15 +94,32 @@
       "run_id": 40110713400,
       "trigger_source": "edeef6df55b6c3ec056ece821c3ba3cf8444798e",
       "codec_source": "98e5b09b972196b97476b4311346cb79681773c5",
-      "result": "QUEUED_OR_RUNNING_UNVERIFIED",
-      "scope": "ISOLATED_NETNS_ACTUAL_LINUX_INNER_TCP_RETX_TO_LAB_OUTER_TCP"
+      "result": "PASS_NATIVE_TCP_RETX_CAPTURE_WITH_MISLABELED_OUTER_SUMMARY_SOURCE",
+      "scope": "ISOLATED_NETNS_ACTUAL_LINUX_INNER_TCP_RETX_TO_LAB_OUTER_TCP",
+      "job_id": 120921654435,
+      "artifact_id": 12566642021,
+      "artifact_zip_sha256": "6174cac7040b5698bc7357e29ae4cb80fe0d98dd3c00ce4e99b5aebdd96d6fe9",
+      "inner_pcap_sha256": "3fed60da30446911fe539c88abcb8a1d0b6f9226c00d8c2e980a6f3b71fecb00",
+      "outer_pcap_sha256": "4d151c6b6a1db747e7da75873076b8a4e8311dee4065d96ad7502c1823a12017",
+      "actual_inner_tcp_same_seq": true,
+      "inner_tls_suffix_bytes": 1317,
+      "outer_diff_seq_repeated_64_128": true,
+      "discrepancy": "outer analyzer old static cause field says synthetic; independently included inner kernel veth pcap summary proves genuine inner TCP repetition; follow-up requested"
+    },
+    {
+      "stage": "S3_REAL_KERNEL_TCP_RETX_PROVENANCE_FIX",
+      "run_id": 40110917872,
+      "trigger_source": "61bdf461e0101b67d3ba6c87e34f0b21d3a71f40",
+      "codec_source": "98e5b09b972196b97476b4311346cb79681773c5",
+      "result": "QUEUED_NOT_YET_VERIFIED",
+      "reason": "Source attribution and >100ms same-Seq native packet interarrival guard, no seed change"
     }
   ],
   "open_requests": [
     {
-      "stage": "S3_KERNEL_INNER_TCP",
-      "run_id": 40110713400,
-      "state": "PENDING_ACTION_RESULT"
+      "stage": "S3_KERNEL_INNER_TCP_PROVENANCE_FIX",
+      "run_id": 40110917872,
+      "state": "PENDING_RESULT"
     }
   ],
   "functional": "ARM64_AND_X86_S0_COMPONENT_PASS_157_PASS_0_FAIL_1_IGNORED_PER_ARCH_NOT_PRODUCT",
@@ -118,7 +135,7 @@
     "New experimental wire and protected descriptor require actual two-end capability binding, MTU derivation and negative tests; no compatibility claim.",
     "Inherited workflow branch-name selection needs explicit experimental adaptation; do not dispatch old FEC/network requests."
   ],
-  "next_action": "Read S3 real Linux kernel inner TCP retransmission run 40110713400; repair grounded errors once without rerolling packet seed, then register exact result/limitations and finalize negative report. ARM64/x86 component native PASS and ARM64 ideal record +29.47%, lab capture negative; never run inherited network/fec or heavy S2 after appearance veto.",
+  "next_action": "Inspect 40110917872 Action result for native Linux inner TCP retransmission interarrival >=100ms plus distinct outer-Seq 64/128B duplicate and owned raw cleanup; if pass, update final report/status/devlog then close negative experiment. Do not expand S2 classification/network/FEC.",
   "latest_log": "docs/devlog/selective-crypto-work/20261024-measured-negative.md",
   "prepared_not_dispatched": [],
   "outcome": "IDEAL_RECORD_CPU_BENEFIT_APPEARANCE_REGRESSION_LAB_NEGATIVE_NO_MAINLINE_PROMOTION",
