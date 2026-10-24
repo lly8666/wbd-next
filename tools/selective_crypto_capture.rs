@@ -19,7 +19,8 @@ fn main() {
     assert!(rec_size>=1300 && tls.len()>=5+rec_size);
     let mut inner=vec![0u8;1345];
     inner[0]=0x45;
-    inner[2..4].copy_from_slice(&(inner.len() as u16).to_be_bytes());
+    let inner_len=inner.len() as u16;
+    inner[2..4].copy_from_slice(&inner_len.to_be_bytes());
     inner[6]=0x40;inner[8]=64;inner[9]=6;
     inner[12..16].copy_from_slice(&[10,11,12,13]);
     inner[16..20].copy_from_slice(&[10,21,22,23]);
