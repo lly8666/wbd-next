@@ -148,7 +148,7 @@
     "Inherited workflow branch-name selection needs explicit experimental adaptation; do not dispatch old FEC/network requests."
   ],
   "next_action": "NONE_SCOPED_EXPERIMENT_CLOSED_NEGATIVE_DO_NOT_INHERIT_NETWORK_FEC_ACTIONS",
-  "latest_log": "docs/devlog/selective-crypto-work/20261024-measured-negative.md",
+  "latest_log": "docs/devlog/selective-crypto-work/20261025-recovery-audit.md",
   "prepared_not_dispatched": [],
   "outcome": "PERF_BENEFIT_APPEARANCE_REGRESSION_SCOPED_NEGATIVE_NO_PROMOTION",
   "final_report": "docs/evidence/selective-crypto-work/FINAL_REPORT.md",
@@ -160,5 +160,24 @@
     "S3_actual_product_stealth_and_real_handshake": "NOT_RUN_STOP_AFTER_VETO",
     "S3_native_netns_kernel_inner_retx": "PASS_ISOLATED_LAB_ONLY"
   },
-  "complete_date": "2026-10-24"
+  "complete_date": "2026-10-24",
+  "recovery_audit": {
+    "date": "2026-10-25",
+    "recovered_branch_head": "126052adb1c59e5fe7c4baf06a37683c59cadcf0",
+    "outcome_unchanged": true,
+    "intent_count": 0,
+    "related_actions_checked": 6,
+    "related_actions_all_terminal_success": true,
+    "local_git_checkout_available": false,
+    "static_documentation_only": true,
+    "navigation_sync_commits": [
+      "cecccf8b1ecd04c09cd3a9fad7d90e5de338778f",
+      "52446057d7004c3e82f12692d0ffc36365f96526",
+      "219ce153ec07c40e921224c40cc112e4fc963470"
+    ],
+    "archive_log": "docs/devlog/selective-crypto-work/20261025-recovery-audit.md",
+    "new_validation_runs": 0,
+    "product_qualification_changed": false,
+    "negative_appearance_conclusion_unchanged": true
+  }
 }
