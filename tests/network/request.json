@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "V3-C-TCP500-TUN-fq-perflow-maxrate600-cold-AB",
+  "id": "V3-C-TCP500-real-owned-TUN-fq600-cold-AB",
   "owner": "network-matrix-work",
   "seed": 7341,
   "product": {
@@ -42,8 +42,7 @@
       "B": 1024
     },
     "tun_qdisc_profiles": {
-      "A": "fq",
-      "B": "fq"
+      "A": "fq"
     },
     "warmup_rate_scale_profiles": {
       "A": 1,
@@ -55,7 +54,8 @@
       "B": 0
     },
     "startup_tun_drop_timeline": true,
-    "tun_fq_maxrate_mbps_profiles": {
+    "tun_fq_maxrate_mbps_profiles": {},
+    "product_tun_fq_maxrate_mbps_profiles": {
       "A": 0,
       "B": 600
     }
@@ -98,19 +98,19 @@
   },
   "bundles": {
     "A": {
-      "source": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
-      "run_id": 40044879144,
+      "source": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
+      "run_id": 40053179394,
       "attempt": 1,
-      "artifact_id": 12540624073,
-      "sha256": "f52f3c67749b399fa6778e9031e83a0f93f1fe4780d6836d7d120928b9fed763",
+      "artifact_id": 12543904263,
+      "sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749",
       "recovery_policy": "outer-opportunistic-v3"
     },
     "B": {
-      "source": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
-      "run_id": 40044879144,
+      "source": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
+      "run_id": 40053179394,
       "attempt": 1,
-      "artifact_id": 12540624073,
-      "sha256": "f52f3c67749b399fa6778e9031e83a0f93f1fe4780d6836d7d120928b9fed763",
+      "artifact_id": 12543904263,
+      "sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749",
       "recovery_policy": "outer-opportunistic-v3"
     }
   },
