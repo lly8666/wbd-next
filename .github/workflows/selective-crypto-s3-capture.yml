@@ -1,0 +1,118 @@
+name: Selective TLS S3 bounded independent lab capture
+run-name: "selective lab capture | ${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/selective-tls-crypto]
+    paths: ["tests/network/selective-crypto-work/run-s3-capture.trigger"]
+permissions: {contents: read}
+concurrency:
+  group: selective-s3-capture-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  bounded-capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Ensure underlying record codec exactly frozen from S0
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git diff 98e5b09b972196b97476b4311346cb79681773c5 -- Cargo.toml Cargo.lock crates/wbd-codec/ | wc -c)" = 0
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tcpdump
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 build --release --locked -p wbd-codec --features selective-crypto-experiment
+          lib="$(find target/release/deps -maxdepth 1 -name 'libwbd_codec-*.rlib' | head -n 1)"
+          test -n "$lib"
+          rustc +1.85.1 --edition=2021 -C opt-level=3 -L dependency=target/release/deps \
+            --extern wbd_codec="$lib" tools/selective_crypto_capture.rs -o selective_crypto_capture
+          mkdir -p selective-s3-report
+          sha256sum selective_crypto_capture > selective-s3-report/capture_binary.sha256
+      - name: Generate locally verified TLS ciphertext; capture a bounded lab outer TCP stream
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          cap_pid=""
+          cleanup() {
+            if test -n "$cap_pid"; then sudo kill -INT "$cap_pid" 2>/dev/null || true; fi
+            rm -rf "$tmp"
+          }
+          trap cleanup EXIT
+          export CRYPTO_TMP="$tmp"
+          openssl req -x509 -newkey rsa:2048 -nodes -keyout "$tmp/key.pem" -out "$tmp/cert.pem" -days 1 -subj /CN=localhost >/dev/null 2>&1
+          python3 - <<'PY'
+          import hashlib, os, pathlib, ssl
+          root=pathlib.Path(os.environ["CRYPTO_TMP"])
+          srv=ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+          srv.minimum_version=srv.maximum_version=ssl.TLSVersion.TLSv1_3
+          srv.load_cert_chain(str(root/"cert.pem"),str(root/"key.pem"))
+          cli=ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+          cli.minimum_version=cli.maximum_version=ssl.TLSVersion.TLSv1_3
+          cli.check_hostname=False;cli.verify_mode=ssl.CERT_NONE
+          ci,co,si,so=(ssl.MemoryBIO() for _ in range(4))
+          c=cli.wrap_bio(ci,co,server_side=False,server_hostname="localhost")
+          s=srv.wrap_bio(si,so,server_side=True)
+          cd=sd=False
+          for _ in range(100):
+              if not cd:
+                  try: c.do_handshake();cd=True
+                  except ssl.SSLWantReadError: pass
+              if not sd:
+                  try: s.do_handshake();sd=True
+                  except ssl.SSLWantReadError: pass
+              for outbound,inbound in ((co,si),(so,ci)):
+                  while True:
+                      chunk=outbound.read()
+                      if not chunk: break
+                      inbound.write(chunk)
+              if cd and sd: break
+          assert cd and sd and c.version()==s.version()=="TLSv1.3"
+          while so.read(): pass
+          plaintext=bytes((i*37+11)%256 for i in range(16000))
+          assert s.write(plaintext)==len(plaintext)
+          record=so.read()
+          assert record[:3]==b"\x17\x03\x03"
+          length=int.from_bytes(record[3:5],"big")
+          assert length>=1300 and len(record)>=5+length
+          ci.write(record)
+          assert c.read(len(plaintext))==plaintext
+          (root/"record.bin").write_bytes(record[:5+length])
+          (root/"corpus.txt").write_text("tls=TLS1.3\nciphertext_bytes="+str(length)+
+              "\nsha256="+hashlib.sha256(record[:5+length]).hexdigest()+"\n")
+          PY
+          cp "$tmp/corpus.txt" selective-s3-report/corpus.txt
+          PORT=38411
+          sudo timeout --signal=INT --kill-after=2s 30s tcpdump -i lo -s 2000 -c 64 \
+            -w "$tmp/outer.pcap" "tcp and dst port $PORT" >/dev/null 2>&1 &
+          cap_pid=$!
+          sleep 2
+          ./selective_crypto_capture "$PORT" "$tmp/record.bin" | tee selective-s3-report/fixture.txt
+          sleep 1
+          sudo kill -INT "$cap_pid" 2>/dev/null || true
+          wait "$cap_pid" || true
+          cap_pid=""
+          test -f "$tmp/outer.pcap"
+          test "$(stat -c %s "$tmp/outer.pcap")" -le 33554432
+          python3 tools/selective_crypto_capture_analyze.py \
+            --pcap "$tmp/outer.pcap" --port "$PORT" \
+            --output selective-s3-report/capture_summary.json
+          {
+            echo "source=$GITHUB_SHA"
+            echo "s0_codec_source=98e5b09b972196b97476b4311346cb79681773c5"
+            echo "run_id=$GITHUB_RUN_ID"
+            echo "attempt=$GITHUB_RUN_ATTEMPT"
+            echo "target=$(uname -m)"
+            echo "kernel=$(uname -r)"
+            echo "pcap_raw_owned=deleted_in_trap"
+          } > selective-s3-report/provenance.txt
+          # Raw pcap and ephemeral TLS keys remain owned in tmp and are deleted.
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: selective-s3-lab-capture-${{ github.run_id }}-${{ github.run_attempt }}
+          path: selective-s3-report/
+          retention-days: 30
+          if-no-files-found: warn
