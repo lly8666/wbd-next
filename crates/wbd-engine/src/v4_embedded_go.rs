@@ -2215,7 +2215,8 @@ fn stop(handle:u64)->i32{
         if let Some(w)=workers{
             let rx=w.rx.join();
             let tx=w.tx.join();
-            if rx.is_err()||tx.is_err(){
+            let ingress=match w.ingress{Some(h)=>h.join(),None=>Ok(())};
+            if rx.is_err()||tx.is_err()||ingress.is_err(){
                 // A failed join cannot authorize driver/slab retirement.
                 return STOP_INCOMPLETE
             }
@@ -2995,11 +2996,84 @@ struct LoopCounts {
     // turns. Never compiled into ordinary FEC2-OFF production builds.
     debug_pause_jumbo:AtomicBool,debug_jumbo_paused:AtomicBool,
 }
+// One bounded per-product Normal/off ingress. No AEAD/PN, raw socket or
+// forged TCP ACK is owned by this reader. The receiver remains sole M3/M4.
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+enum OriginalTunIngress{
+    Small(crate::memory::UniqueBuffer,usize),
+    Jumbo(Vec<u8>),
+}
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn original_tun_ingress_worker(
+    cell:Arc<Mutex<Entry>>,tun:Arc<ScopedTunSink>,stop:Arc<AtomicBool>,
+    generation:u32,send:std::sync::mpsc::SyncSender<OriginalTunIngress>,
+    tun_fd:i32
+){
+    use std::sync::mpsc::TrySendError;
+    let mut scratch=vec![0u8;M0_TUN_IPV4_MAX];
+    while !stop.load(Ordering::Acquire){
+        if !loop_readiness(tun_fd,&stop,10){continue}
+        // A source M1 slab exists BEFORE any destructive TUN read. The
+        // original sixteen authenticated receipt slots remain inaccessible.
+        let loan={
+            let Ok(mut e)=cell.lock()else{break};
+            if e.phase!=PH_ACTIVE{break}
+            #[cfg(feature="fec2_product_record")]
+            let floor=if e.rx_feedback.is_some()
+                && e.fixed_pending.is_none()&&e.fixed_applied.is_none(){
+                M0_NORMAL_FEEDBACK_SLAB_RESERVE
+            }else{0};
+            #[cfg(not(feature="fec2_product_record"))]
+            let floor=0;
+            e.arena.allocate_preserving(floor)
+        };
+        let Ok(mut slab)=loan else{
+            thread::sleep(Duration::from_micros(100));
+            continue
+        };
+        let batch={let mut slots=[&mut scratch[..]];
+            tun.read_ready_batch(generation,&mut slots)};
+        let msg=match batch{
+            Ok(batch)=>match batch.entry(0){
+                Some(TunReadyEntry::UntrustedIpv4{len}) if len<=M0_SMALL_ARENA_PAYLOAD=>{
+                    slab.writable()[14..14+len].copy_from_slice(&scratch[..len]);
+                    Some(OriginalTunIngress::Small(slab,len))
+                },
+                Some(TunReadyEntry::UntrustedIpv4{len})=>{
+                    // Jumbo uses the existing bounded LINK source path;
+                    // no speculative M1 slot is retained for its heap copy.
+                    drop(slab);
+                    Some(OriginalTunIngress::Jumbo(scratch[..len].to_vec()))
+                },
+                Some(TunReadyEntry::Rejected)=>None,
+                _=>None,
+            },
+            Err(TunError::Stopped)=>break,
+            Err(_)=>None,
+        };
+        let Some(mut msg)=msg else{continue};
+        // Exact finite backpressure: if 512-item inbox is full, RETAIN the
+        // already kernel-consumed packet rather than discarding identity.
+        // Stop breaks the wait and drops every real owned M1 buffer.
+        loop{
+            if stop.load(Ordering::Acquire){return}
+            match send.try_send(msg){
+                Ok(())=>break,
+                Err(TrySendError::Full(owned))=>{
+                    msg=owned;
+                    thread::sleep(Duration::from_micros(100));
+                },
+                Err(TrySendError::Disconnected(_))=>return,
+            }
+        }
+    }
+}
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct LoopWorkers{
     shutdown:Arc<AtomicBool>,
     rx:JoinHandle<()>,
     tx:JoinHandle<()>,
+    ingress:Option<JoinHandle<()>>,
     route_events:Arc<wbd_platform::linux_route_events::RouteEvents>,
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -3553,6 +3627,7 @@ fn original_fixed_stage_due(e:&mut Entry,
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     stop:&AtomicBool,ifindex:u32,ifname:&str,tx_storage:&mut Vec<TxDispatch>,
+    dedicated_ingress:bool,
     pending:&mut Vec<(crate::memory::UniqueBuffer,usize)>,
     prefetched:&mut Vec<crate::memory::UniqueBuffer>,
     ready_records:&mut Vec<crate::memory::FrozenRecord>,
@@ -3607,7 +3682,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     let mut tx_trace=[0u64;8];
     if jumbo_read.len()<M0_TUN_IPV4_MAX{return Err(INVALID)}
     loop {
-        if recovered_small{break}
+        if recovered_small||dedicated_ingress{break}
         if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
         // A full-size, reusable TUN scratch is necessary: Linux TUN read()
         // truncates a packet irreversibly if called with the 2034B small slab.
@@ -4645,6 +4720,14 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         e.phase=PH_STOPPING;
         return INVALID
     };
+    // Restrict split ingress to the live Normal/off public product. Fixed,
+    // Auto, Game and probe owners retain their existing single TUN reader.
+    #[cfg(feature="fec2_product_record")]
+    let split_ingress=e.original_public_feedback_armed && e.protected_features==7
+        && e.fixed_pending.is_none() && e.fixed_applied.is_none();
+    #[cfg(not(feature="fec2_product_record"))]
+    let split_ingress=false;
+    let (ingress_send,ingress_recv)=std::sync::mpsc::sync_channel::<OriginalTunIngress>(512);
     let stop_tx=Arc::clone(&shutdown);
     let tx_events=Arc::clone(&events);
     let tx_cell=Arc::clone(&cell);
@@ -4664,12 +4747,26 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut jumbo_queue=VecDeque::<Vec<u8>>::with_capacity(M0_MAX_PENDING_JUMBO);
             let mut active_jumbo=None::<PendingOriginalJumbo>;
             while !stop_tx.load(Ordering::Acquire){
+                if split_ingress {
+                    // This is the SOLE recipient of one bounded original
+                    // source TUN ingress queue. Sender preserves fresh-order.
+                    for _ in 0..32 {
+                        if tx_pending.len()+jumbo_queue.len()>=32{break}
+                        match ingress_recv.try_recv(){
+                            Ok(OriginalTunIngress::Small(buf,n))=>tx_pending.push((buf,n)),
+                            Ok(OriginalTunIngress::Jumbo(buf))=>jumbo_queue.push_back(buf),
+                            Err(_)=>break,
+                        }
+                    }
+                }
                 if last_cpu_sample.elapsed()>=Duration::from_millis(100){
                     stats.tx_thread_cpu_ns.store(
                         owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
                     last_cpu_sample=Instant::now();
                 }
-                let tun_ready=loop_readiness(tun_fd,&stop_tx,10);
+                let tun_ready=if split_ingress {
+                    !tx_pending.is_empty()||!jumbo_queue.is_empty()
+                }else{loop_readiness(tun_fd,&stop_tx,10)};
                 #[cfg(feature="fec2_product_record")]
                 let (fec_due,feedback_due)=tx_cell.lock().ok().map_or(
                     (false,false),|e|{
@@ -4698,7 +4795,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 let slice_start=Instant::now();
                 match background_tun_once(
                     &tx_cell,&tun,&stop_tx,ifindex,&tx_ifname,&mut tx_storage,
-                    &mut tx_pending,&mut tx_prefetched,&mut tx_records,&mut tx_presentations,
+                    split_ingress,&mut tx_pending,&mut tx_prefetched,
+                    &mut tx_records,&mut tx_presentations,
                     &mut tx_actual_firstsend,&tx_events,&mut jumbo_read,&mut jumbo_queue,&mut active_jumbo,
                     #[cfg(feature="fec2_product_record")]
                     &stats,
@@ -4747,7 +4845,25 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         let _=rx.join();
         return INVALID
     };
-    e.workers=Some(LoopWorkers{shutdown,rx,tx,route_events:events});
+    let ingress=if split_ingress{
+        let stop_ingress=Arc::clone(&shutdown);
+        let ingress_cell=Arc::clone(&cell);
+        let ingress_tun=Arc::clone(&tun);
+        let Some(worker)=thread::Builder::new().name("wbd-original-tun-ingress".into())
+            .spawn(move||original_tun_ingress_worker(
+                ingress_cell,ingress_tun,stop_ingress,generation,
+                ingress_send,tun_fd
+            )).ok()else{
+                shutdown.store(true,Ordering::Release);
+                e.phase=PH_STOPPING;
+                drop(e);
+                let _=tx.join();
+                let _=rx.join();
+                return INVALID
+            };
+        Some(worker)
+    }else{None};
+    e.workers=Some(LoopWorkers{shutdown,rx,tx,ingress,route_events:events});
     OK
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
