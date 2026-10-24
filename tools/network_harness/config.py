@@ -165,7 +165,11 @@ def validate(raw):
             raise ValueError("owned Linux product TUN fq maxrate must be 0 or 600Mbps")
         if rate and r["product"]["mode"]!="normal":
             raise ValueError("owned fq pacing is Normal/off only")
-        if rate and (qdiscs.get(leg) is not None or fq_maxrate.get(leg)):
+    # Unspecified means native product default, NOT 0. The selected
+    # Normal/off kernel fq600 must not be replaced by harness tc.
+    for leg in ("A","B"):
+        effective=owned_fq.get(leg,600 if r["product"]["mode"]=="normal" else 0)
+        if effective and (qdiscs.get(leg) is not None or fq_maxrate.get(leg)):
             raise ValueError("product TUN fq cannot be overridden by diagnostic qdisc in same leg")
     warm_scales=n.setdefault("warmup_rate_scale_profiles",{})
     keys(warm_scales,["A","B"],"warmup_rate_scale_profiles")
