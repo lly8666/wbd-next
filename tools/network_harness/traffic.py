@@ -157,6 +157,16 @@ class Worker:
                 while True:
                     s = socket.socket()
                     self.tcp_preconnect_buffers(s)
+                    # Bounded A/B diagnostic only: force one Linux TCP
+                    # socket pacing ceiling without editing any TCP sysctl,
+                    # the WBD product, normal app rate, or other sockets.
+                    pacing=self.config["network"].get("tcp_socket_pacing_mbps_selected",0)
+                    if pacing:
+                        opt=getattr(socket,"SO_MAX_PACING_RATE",47)
+                        limit=pacing*1_000_000//8  # Linux option uses bytes/s
+                        s.setsockopt(socket.SOL_SOCKET,opt,limit)
+                        if s.getsockopt(socket.SOL_SOCKET,opt)!=limit:
+                            raise RuntimeError("per-socket pace readback mismatch")
                     s.bind((self.local, 0))
                     s.settimeout(1)
                     try:
@@ -170,9 +180,13 @@ class Worker:
                         time.sleep(.1)
         for s in self.streams:
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            profile=self.config["network"].get("tcp_socket_pacing_mbps_selected",0)
             self.effective_buffers.setdefault("tcp",[]).append({
                 "sndbuf":s.getsockopt(socket.SOL_SOCKET,socket.SO_SNDBUF),
-                "rcvbuf":s.getsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF)})
+                "rcvbuf":s.getsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF),
+                "SO_MAX_PACING_RATE_bytes_s":(
+                    s.getsockopt(socket.SOL_SOCKET,getattr(socket,"SO_MAX_PACING_RATE",47))
+                    if profile and self.role=="client" else "NOT_SET")})
             s.setblocking(False)
             self.sel.register(s, selectors.EVENT_READ, "tcp")
             self.read_buffers[s] = bytearray()
