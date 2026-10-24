@@ -407,8 +407,7 @@ class LinuxExperiment:
         self.tcp_socket_pacing_mbps=config["network"].get("tcp_socket_pacing_mbps_profiles",{}).get(label,0)
         selected_fq=config["network"].get("product_tun_fq_maxrate_mbps_profiles",{})
         self.product_tun_fq_explicit=label in selected_fq
-        self.product_tun_fq_maxrate_mbps=selected_fq.get(
-            label,600 if config["product"]["mode"]=="normal" else 0)
+        self.product_tun_fq_maxrate_mbps=selected_fq.get(label,600)
         self.config["network"]["tcp_window_profile_selected"]=self.tcp_profile
         self.config["network"]["tcp_reordering_profile_selected"]=self.tcp_reorder_profile
         self.config["network"]["tcp_socket_pacing_mbps_selected"]=self.tcp_socket_pacing_mbps
@@ -498,8 +497,8 @@ class LinuxExperiment:
             else:
                 args += ["--peer-ip", self.ip["server"], "--peer-port", "443"]
             if self.product_tun_fq_explicit:
-                # A=0 disables even though product's Normal/off default is
-                # now600. Absent B flag proves the real native default.
+                # Explicit0 is rollback for any mode; omission proves the
+                # native Linux product default=600 in ALL supported modes.
                 args.extend(["--tun-fq-maxrate-mbps",str(self.product_tun_fq_maxrate_mbps)])
             self.products[role] = self.spawn(role, args, role + ".log")
             if role == "server":
@@ -587,7 +586,7 @@ class LinuxExperiment:
                            q.get("options",{}).get("flow_limit")==256
                            for q in actual):
                     raise RuntimeError("real product TUN fq kernel flow_limit readback mismatch "+role)
-                product_readback[role]="owned_normal_fq_600Mbit_flow_limit256"
+                product_readback[role]="owned_"+self.config["product"]["mode"]+"_fq_600Mbit_flow_limit256"
             self.effective["product_tun_fq_kernel_readback"]=product_readback
         self.effective["test_only_tun_fq_maxrate_mbps"]=(
             fq_rate if fq_rate is not None else "NO_TEST_OVERRIDE")
