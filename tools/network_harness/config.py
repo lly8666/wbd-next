@@ -109,7 +109,8 @@ def validate(raw):
     keys(n, ["outer_mtu", "lane_loss", "queue_packets", "netem_rng",
              "tcp_window_profiles", "tcp_reordering_profiles", "v3_timeline",
              "tun_txqlen_profiles", "warmup_rate_scale_profiles", "tun_qdisc_profiles",
-              "startup_tun_drop_timeline", "tcp_socket_pacing_mbps_profiles"], "network")
+              "startup_tun_drop_timeline", "tcp_socket_pacing_mbps_profiles",
+              "tun_fq_maxrate_mbps_profiles"], "network")
     n.setdefault("v3_timeline", False)
     if type(n["v3_timeline"]) is not bool:
         raise ValueError("network.v3_timeline must be boolean")
@@ -150,6 +151,13 @@ def validate(raw):
     keys(qdiscs,["A","B"],"tun_qdisc_profiles")
     if any(value not in ("fq_codel","fq") for value in qdiscs.values()):
         raise ValueError("tun_qdisc_profiles only fq_codel and fq for owned namespace")
+    fq_maxrate=n.setdefault("tun_fq_maxrate_mbps_profiles",{})
+    keys(fq_maxrate,["A","B"],"tun_fq_maxrate_mbps_profiles")
+    for leg,rate in fq_maxrate.items():
+        if type(rate) is not int or rate not in (0,600):
+            raise ValueError("test-only TUN fq maxrate must be 0 or 600Mbps")
+        if qdiscs.get(leg)!="fq":
+            raise ValueError("TUN fq maxrate requires explicitly selected fq qdisc")
     warm_scales=n.setdefault("warmup_rate_scale_profiles",{})
     keys(warm_scales,["A","B"],"warmup_rate_scale_profiles")
     for leg,scale in warm_scales.items():
@@ -180,10 +188,14 @@ def validate(raw):
     a = r.setdefault("acceptance", {})
     keys(a, ["injection_tolerance_pct", "max_loss_pct", "max_p99_ms",
              "max_active_gap_ms", "require_retransmission", "max_repair_fresh_pct", "min_repair_line_pct",
-             "require_zero_source_tun_drops_full_run"], "acceptance")
+             "require_zero_source_tun_drops_full_run",
+              "require_zero_tun_root_qdisc_drops_full_run"], "acceptance")
     a.setdefault("injection_tolerance_pct", 3)
     a.setdefault("require_retransmission", False)
     a.setdefault("require_zero_source_tun_drops_full_run", False)
+    a.setdefault("require_zero_tun_root_qdisc_drops_full_run",False)
+    if type(a["require_zero_tun_root_qdisc_drops_full_run"]) is not bool:
+        raise ValueError("require_zero_tun_root_qdisc_drops_full_run must be boolean")
     if type(a["require_zero_source_tun_drops_full_run"]) is not bool:
         raise ValueError("require_zero_source_tun_drops_full_run must be boolean")
     number(a["injection_tolerance_pct"], 0.1, 10, "injection tolerance")
