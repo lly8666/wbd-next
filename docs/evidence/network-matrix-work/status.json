@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-C-TCP500-steady_PASS-startup_FAIL-dedicated-reader-native-built-lowload-AB-running",
+  "phase": "V3-C-bounded-dedicated-TUN-reader-10M-PASS-500M-strict-startup-AB-running",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -27,17 +27,18 @@
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
   "open_requests": [
     {
-      "id": "V3-C-dedicated-TUN-ingress-10M-both-0loss-AB",
-      "run": 40045323595,
-      "attempt": 1,
+      "id": "V3-C-TCP500-dedicated-TUN-reader-strict-startup-AB",
       "state": "ACTIONS_IN_PROGRESS",
-      "request_source": "610ef93fba8255f7185abb1d93ab8b5c592ed962",
+      "run": 40046507450,
+      "attempt": 1,
+      "request_source": "a23c81d746472a62f991cb974fb311d8767b511a",
       "source_A": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
       "source_B": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
       "build_B_run": 40044879144,
       "artifact_B": 12540624073,
       "artifact_B_zip_sha256": "f52f3c67749b399fa6778e9031e83a0f93f1fe4780d6836d7d120928b9fed763",
-      "scope": "one same-VM sequential old vs bounded512 dedicated source TUN reader Normal/off inner single TCP10Mbps both, RTT400 loss0, 10warm60steady30drain, original default Linux TUN qdisc/qlen, strict full-run ZERO source TUN kernel drop, zero inner TCP retrans, p99<=500, Stop+readback, CPU and no HOL",
+      "contract_run": 40046507471,
+      "scope": "one sameVM ARM64 old vs new 512 bounded dedicated M1-owned source TUN reader, 500Mbps singleTCP C2S/RTT400/0loss/outer700, Normal/off, warm20 steady60 drain30, qlen1024 fq, ZERO source TUN kernel drops FULL run, firstarr p99<=400ms, CPU/TCP retrans/Stop, no re-dispatch",
       "do_not_redispatch": true
     }
   ],
@@ -196,6 +197,15 @@
       "artifact_zip_sha256": "9391e0560f23b62a49d3779de8fb7c2e65453404bf3f090c354b4b043947956d",
       "result": "A_B_500Mbps_STEADY_PASS_BOTH_STRICT_FAIL_SOURCE_TUN_WARMUP_DROPS_A7026_B6714",
       "file": "V3-C-TCP500-hot8-prefetch-strict-AB-20261024.json"
+    },
+    {
+      "id": "V3-C-dedicated-TUN-reader-10M-lossless-AB-20261024",
+      "run": 40045323595,
+      "attempt": 1,
+      "artifact_id": 12541675416,
+      "artifact_zip_sha256": "61d39eb37f0749a8956b7586e893f8bc56b5f57d57b6b323977941150dcc9318",
+      "result": "SAME_VM_BOTH_ARM64_NORMAL_OFF_10M_ZERO_SOURCE_TUN_WARMUP_STEADY_DROPS_ZERO_TCP_RETRANS_PASS",
+      "file": "V3-C-dedicated-TUN-reader-10M-lossless-AB-20261024.json"
     }
   ],
   "open_issues": [
@@ -210,7 +220,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "After original + hot8 TCP500 strict both startup TUN drop failure (run40043921913 A7026/B6714, artifact12540218977 ZIPsha9391... verified, evidence V3-C-TCP500-hot8-prefetch-strict-AB-20261024.json), bounded Normal/off original Rust TUN ingress worker implemented source a0a1285 with 512 fixed sync_channel of original M1-owned UniqueBuffer, old M3 AEAD/M4 raw sender sole crypto/PN owner, ingress borrows M1 before destructive read, retains on full, stop joins 3 workers, preserves feedback floor16, no FEC/game changes, no queue increase. First two intermediate builds failed one Rust Arc move E0382, fixed in a0a. Native ARM64 Go Rust bundle and MTU boundary PASS run40044879144 artifact12540624073 ZIPsha f52f3c67749b... verified. To detect regressions BEFORE heavy, one sameVM real Normal/off lowload TCP1 10Mbps/dir 0loss RTT400 10warm60steady source A oldb8df B a0a run40045323595 from request610ef93f QUEUED; strict FULL warmup+steady 0 kernel TUN drops from corrected pre-start baseline snapshot, TCP retrans0, business complete, p99<=500, Stop and CPU. No dispatch duplication. If B regress/hang, revert dangerous experiment candidate. If lowload pass, ONE matched TCP500 strict qlen1024 fq sameVM full500 warmup20steady60, per-stage kernel TUN drop; no qlen>2048, no unsupported IFF_BACKPRESSURE. Other V3-A highloss30 and lossless10m original b8df PASS, V3-B dynamic MTU PASS, D mixed/idle scoped. No FEC independent, main merge or deployment.",
+  "next_action": "2026-10-24 interruption recovery: exact remote HEAD3471b447 showed lowload dedicated original TUN reader sameVM AB run40045323595 completed SUCCESS artifact12541675416 SHA256 61d39eb37... validated zip: A oldb8df B new a0a each inner TCP1 10Mbps/dir RTT400 0netem, warm10 steady60, 0 TUN source kernel warmup+steady drops (both roles), Tcp.RetransSegs0 both roles, no app losses/backpressure, firstarrival p99 200.8ms, product CPU total per 60s A5.04 B5.02. Detailed evidence V3-C-dedicated-TUN-reader-10M-lossless-AB-20261024.json. Since low load PASS, one exactly matched source A b8df B a0a TCP500 fullwarmup20 steady60 drain30 sameVM qlen1024 fq outer700/dir, warmup rate500, P99<=400ms, ZERO source TUN kernel drops FULL run now Action40046507450 source a23c81d in progress, contracts Action40046507471. Retrieve exact run/attempt/artifact ZIP+hash; check startup TUN kernel drop zero full, steady throughput>=475, firstarr p99, Tcp retrans, product CPU/host psi/Stop. If B still has source TUN warmup drops or sub500, halt repeats and inspect bounded reader 512 queue, shared owner lock and wakeups using precise telemetry; do not silently relax gate or enlarge TUN qlen>2048. Keep A/B under one VM one scenario. Retain V3-A 30pct6%/10%, V3-B real MTU, V3-D 0loss mixed/idle/lifecycle scoped, do not modify FEC separate, no main merge/deploy.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -527,7 +537,18 @@
       "bounded_reader_artifact_id": 12540624073,
       "bounded_reader_artifact_sha256": "f52f3c67749b399fa6778e9031e83a0f93f1fe4780d6836d7d120928b9fed763",
       "bounded_reader_lowload_run": 40045323595,
-      "bounded_reader_lowload_status": "ACTIONS_IN_PROGRESS"
+      "bounded_reader_lowload_status": "ACTIONS_IN_PROGRESS",
+      "reader_source": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
+      "reader_build_run": 40044879144,
+      "reader_build_artifact_id": 12540624073,
+      "reader_build_zip_sha256": "f52f3c67749b399fa6778e9031e83a0f93f1fe4780d6836d7d120928b9fed763",
+      "reader_lowload_run": 40045323595,
+      "reader_lowload_artifact_id": 12541675416,
+      "reader_lowload_zip_sha256": "61d39eb37f0749a8956b7586e893f8bc56b5f57d57b6b323977941150dcc9318",
+      "reader_lowload_status": "PASS_SAMEVM_NATIVE_NORMAL_OFF_TCP10_MBPS_EACH0LOSS_WARMUP_AND_STEADY_TUN0_TCP_RETRANS0_P99_200.8_CPU_NO_SIGNIFICANT_CHANGE",
+      "reader_lowload_evidence": "V3-C-dedicated-TUN-reader-10M-lossless-AB-20261024.json",
+      "reader_tcp500_strict_run": 40046507450,
+      "reader_tcp500_strict_status": "ACTIONS_IN_PROGRESS"
     },
     "phase_D": {
       "run": 39985073396,
