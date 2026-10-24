@@ -84,6 +84,17 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_optional_bounded_original_tun_startup_timeline_contract(self):
+        r=request()
+        r["network"]["startup_tun_drop_timeline"]=True
+        self.assertTrue(validate(r)["network"]["startup_tun_drop_timeline"])
+        r["network"]["startup_tun_drop_timeline"]=0
+        with self.assertRaises(ValueError):
+            validate(r)
+        r["network"]["startup_tun_drop_timeline"]="true"
+        with self.assertRaises(ValueError):
+            validate(r)
+
     def test_native_tun_ring_profile_is_bound_and_per_leg(self):
         q=request()
         q["network"]["tun_txqlen_profiles"]={"A":500,"B":1024}
