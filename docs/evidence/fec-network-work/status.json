@@ -122,7 +122,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Inspect source-specific new ARM64 product build Action and its exact-source native/Go FEC auto provenance tests plus deterministic missing-source real TUN suite. Fix compile/ABI or quiescent cutover failures with minimal patch. Only after green artifact pin immutable b601 successor and rerun W7 asym as ONE fresh fec-work request; require actual revisions >1 and per-direction profiles tracking genuine M2/actual-k, never netem input or post-hoc fake readback. Preserve W3-W7 old binary receipts, no higher load.",
+  "next_action": "Run corrected ARM64 build Action on current Auto live source, distinguish workflow syntax and Rust/Go compiler failures. Reuse exact successful build artifact only after all source-level functional checks; W7 single fresh case afterward, no high-load stress before validation.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -351,6 +351,12 @@
       "Auto policy could remain UNKNOWN if exact actual-k sources and mature data windows cannot be reconciled; observe and refine, not synthesize.",
       "True ACK confirmation delay is not kernel probe RTT."
     ],
-    "test_stage": "COMPILATION_NATIVE_INTEGRATION_NOT_RUN"
+    "test_stage": "COMPILATION_NATIVE_INTEGRATION_NOT_RUN",
+    "first_build_attempt": {
+      "run": 40081707620,
+      "result": "FAIL_INVALID_WORKFLOW_YAML_ZERO_JOBS",
+      "root": "GitHub Actions YAML generated regex anchor expansion corrupted test.run and upload step; no native/product code ran",
+      "not_product_failure": true
+    }
   }
 }

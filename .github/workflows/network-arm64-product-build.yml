@@ -43,13 +43,7 @@ jobs:
           export CGO_ENABLED=1 GOOS=linux GOARCH=arm64 GOTOOLCHAIN=local
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release"
-          (cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run '^TestV4FecAutoMatureDeltaNeverConvertsUnknownToNoLossea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: "network-arm64-public-${{ github.run_id }}-${{ github.run_attempt }}"
-          path: arm64-public-bundle/
-          if-no-files-found: error
-          retention-days: 30
- ./internal/realityfront -v)
+          (cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run TestV4FecAutoMatureDeltaNeverConvertsUnknownToNoLoss ./internal/realityfront -v)
       - name: Real authenticated missing-source parity-to-TUN deterministic regression
         shell: bash
         run: |
@@ -65,13 +59,7 @@ jobs:
             LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release" \
             WBD_REAL_TUN=1 WBD_M0_FEC2_CONTINUOUS=1 \
             "$GITHUB_WORKSPACE/fec-deterministic.test" -test.v \
-            -test.run '^TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParityea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: "network-arm64-public-${{ github.run_id }}-${{ github.run_attempt }}"
-          path: arm64-public-bundle/
-          if-no-files-found: error
-          retention-days: 30
-
+            -test.run TestR0V4Fec2ContinuousOriginalGoKernelSourceAndParity
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
