@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "scope": "Native Linux ARM64 Normal/off, one-direction 370Mbps business UDP with outer500Mbps line capacity, 2% IID one-way200ms",
+  "product_source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
+  "native_build": {
+    "run": 40055776896,
+    "artifact": 12545850127,
+    "sha256": "b631975bd4f70db690f5dcd7acfa122f191675950bd8c835ec0c5185a16ae261"
+  },
+  "action": {
+    "run": 40056093313,
+    "attempt": 1,
+    "request_source": "ffc01a07de95ba13077d417fd253e4404e396b92",
+    "artifact": 12545397787,
+    "zip_sha256": "ca9dc410bc125ae0ebed4dee341bff52182890c7884ef1a3ea150954a7d4652e",
+    "locally_verified": true,
+    "result": "success"
+  },
+  "input": {
+    "UDP_packet_weights": [
+      [
+        64,
+        1
+      ],
+      [
+        1401,
+        99
+      ]
+    ],
+    "application_target_mbps": 370,
+    "outer_configured_line_mbps": 500,
+    "projected_fresh_outer_mbps": 396.3975,
+    "loss_pct_each_direction": 2,
+    "oneway_ms": 200,
+    "warmup_s": 15,
+    "steady_s": 60,
+    "drain_s": 30
+  },
+  "readback": {
+    "CLI": "OMITTED_USE_NATIVE_DEFAULT",
+    "client": "owned_normal_fq_600Mbit_flow_limit256",
+    "server": "owned_normal_fq_600Mbit_flow_limit256",
+    "fq_maxrate_bytes_per_s": 75000000,
+    "fq_flow_limit_packets": 256,
+    "fq_global_limit_packets": 10000,
+    "no_test_only_qdisc_override": true
+  },
+  "observed": {
+    "app_injected_mbps": 370.0137365333,
+    "app_delivered_mbps": 363.4344985333,
+    "udp_missing": 35550,
+    "arrival_survivor_p99_ms": 201.8,
+    "netem_steady_drop_pct_c2s": 1.9970835545,
+    "netem_steady_drop_pct_s2c": 2.0367278798,
+    "outer_first_wire_bytes_c2s": 3716801795,
+    "outer_repair_bytes_c2s": 8433454,
+    "R_over_F_pct": 0.2269008267,
+    "R_over_C_pct": 0.1799136853,
+    "source_TUN_kernel_drops_warmup_client_server": [
+      0,
+      0
+    ],
+    "source_TUN_kernel_drops_steady_client_server": [
+      0,
+      0
+    ],
+    "fq_root_drop_samples_client_server": [
+      [
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "flows_plimit_drop": 0,
+    "original_owner_ingress_stage_records_c2s": 2502794,
+    "arena_failed": 0,
+    "pre_read_deferred": 0,
+    "product_CPU_steady60_s_client_server": [
+      30.17,
+      33.91
+    ],
+    "server_CPU_s_per_received_GiB": 13.35796331894,
+    "product_peak_RSS_bytes_client_server": [
+      68661248,
+      19779584
+    ],
+    "host_CPU_PSI_peak_pct": 9.97,
+    "host_steal_pct": 0,
+    "stop_cleanup": true
+  },
+  "result": "PASS_SCOPED_OBSERVATION",
+  "comparison": "Old flow_limit100 source8d5 Action40055236284 STRICT_FAIL actual fq drops2 and flows_plimit2 during startup. Same shape and rate on new native flow_limit256 source601e reaches zero true fq drops. Different VM: not a paired CPU savings comparison. Earlier preflight40055969268 was tool parser FAIL with no traffic and must not be marked product FAIL.",
+  "not_qualified": [
+    "Full 500Mbps actual net application throughput (only 370 requested)",
+    "500Mbps outer link at literal saturation",
+    "Both directions simultaneously 500Mbps",
+    "FEC/Windows/physical native",
+    "Arbitrary correlated/reordering losses"
+  ],
+  "next": "Reuse exact SOURCE and runtime proof for scoped H500. New native TCP500 flow256 independent Action40056105730 qualifies separate full business goal; no further blind ramp."
+}

@@ -114,6 +114,7 @@ pub struct RepairBudget {
     /// epochs until this ledger is retired, never turned into free credit.
     overdue_uncertain_bytes: u64,
     overdue_uncertain_count: u64,
+    opportunistic_v3: bool,
 }
 impl RepairBudget {
     pub fn new(direction: BudgetDirection, cfg: RepairBudgetConfig, now: MonoNs)
@@ -132,13 +133,19 @@ impl RepairBudget {
             pending: BTreeMap::new(), pending_bytes: 0, next_id: 0,
             last_now: now, fractional_token_ns: 0,
             overdue_uncertain_bytes: 0, overdue_uncertain_count: 0,
+            opportunistic_v3: false,
         })
     }
 
+    /// Switch to v3 9% byte credit; the independent historical 10% cap
+    /// remains a strict upper bound (except the explicit sparse floor).
+    pub fn enable_opportunistic_v3(&mut self) { self.opportunistic_v3 = true; }
     fn burst_cap(&self) -> u64 { self.cfg.outer_mtu * 8 }
     fn epoch_limit(&self) -> u64 {
         // The 32KiB sparse allowance is a floor, not an additional bonus.
-        (self.current.fresh / 10)
+        (if self.opportunistic_v3 {
+            self.current.fresh.saturating_mul(9)/100
+        }else{self.current.fresh/10})
             .max(SPARSE_FLOOR_BYTES)
             .min(self.cfg.max_repair_bytes_per_epoch)
     }
@@ -147,7 +154,8 @@ impl RepairBudget {
         // its unused byte allowance into the new epoch.
         let recent_f = self.previous.map_or(self.current.fresh,
             |e| e.fresh.max(self.current.fresh));
-        (recent_f / 10).max(SPARSE_FLOOR_BYTES)
+        (if self.opportunistic_v3 {recent_f.saturating_mul(9)/100}
+            else{recent_f/10}).max(SPARSE_FLOOR_BYTES)
     }
 
     fn advance(&mut self, now: MonoNs) -> Result<(), BudgetError> {

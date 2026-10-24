@@ -2,12 +2,35 @@
 import json
 import unittest
 from pathlib import Path
-from tools.cost_model import timers
+from tools.cost_model import timers, opportunistic_v3_iid, v3_timers, model
 from tools.network_harness.config import validate
 from tools.network_harness.envelope import envelope, packet_cost, request_envelope, suite, PROFILES
 
 
 class EnvelopeTests(unittest.TestCase):
+    def test_v3_authentic_gap_budget_is_not_v2_p_squared(self):
+        zero = opportunistic_v3_iid(0)
+        self.assertEqual(zero["ideal_repair_over_fresh"], 0)
+        self.assertEqual(zero["ideal_residual"], 0)
+        stressed = opportunistic_v3_iid(.30)
+        self.assertAlmostEqual(stressed["eligible_repair_over_fresh"], .15)
+        self.assertAlmostEqual(stressed["ideal_repair_over_fresh"], .09)
+        self.assertAlmostEqual(stressed["ideal_repair_over_line"], .06545454545454546)
+        self.assertAlmostEqual(stressed["ideal_residual"], .237)
+        low = opportunistic_v3_iid(.02)
+        self.assertAlmostEqual(low["ideal_residual"], .0102)
+        self.assertFalse(stressed["data_pto"])
+        tm = v3_timers(400, 5)
+        self.assertFalse(tm["data_pto"])
+        self.assertEqual(tm["reorder_guard_ms"], 20)
+        self.assertEqual(tm["retain_ms"], 720)
+        requested = json.loads((Path(__file__).parents[2]/
+                               "docs/architecture/model-inputs.json").read_text())
+        rows = model(requested)
+        self.assertEqual(rows["policy"], "outer-opportunistic-v3")
+        self.assertEqual(rows["shadow_process_slots"], 65536)
+        self.assertEqual(rows["repair"][0]["policy"], "outer-opportunistic-v3")
+
     def test_udp_and_fec_units(self):
         self.assertEqual(packet_cost([[1172, 1]])["fresh_outer_bytes_per_logical_packet"], 1271)
         self.assertEqual(packet_cost([[1172, 1]], 1)["fresh_outer_bytes_per_logical_packet"], 2566)
@@ -53,7 +76,10 @@ class EnvelopeTests(unittest.TestCase):
     def test_queue_check_is_report_only(self):
         p = Path(__file__).parent/"request.json"
         r = validate(json.loads(p.read_text()))
-        r["traffic"].update(c2s_mbps=100, sizes=[[64, 1]])
+        r["traffic"].update(c2s_mbps=100, udp_share=1, sizes=[[64, 1]])
+        # The current live request may be true idle with rate_scale=0:
+        # force this model-only capacity fixture to actively offer traffic.
+        r["phases"][0]["rate_scale"]=1
         r["phases"][0]["c2s"].update(delay_ms=200)
         r["network"]["queue_packets"] = 1024
         report = request_envelope(r)
@@ -63,12 +89,14 @@ class EnvelopeTests(unittest.TestCase):
 
     def test_large_udp_does_not_assume_one_wire_packet(self):
         r = validate(json.loads((Path(__file__).parent/"request.json").read_text()))
-        r["traffic"].update(sizes=[[4096, 1]], allow_fragmentation=True)
+        # Model contract tests are UDP-specific; the mutable live request
+        # may legitimately be a pure TCP500/BDP calibration scenario.
+        r["traffic"].update(udp_share=1, sizes=[[4096, 1]], allow_fragmentation=True)
         self.assertEqual(request_envelope(r)["rows"], [])
 
     def test_observed_inner_mtu_unblocks_large_packet_model(self):
         r = validate(json.loads((Path(__file__).parent/"request.json").read_text()))
-        r["traffic"]["sizes"] = [[1287,1]]
+        r["traffic"].update(udp_share=1, sizes=[[1287,1]])
         self.assertEqual(request_envelope(r)["rows"], [])
         report = request_envelope(r, inner_mtu=1315)
         self.assertTrue(report["rows"])

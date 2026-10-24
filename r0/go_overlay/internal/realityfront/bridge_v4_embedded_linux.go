@@ -280,23 +280,6 @@ func (b *v4EmbeddedNativeBridge) tunToKernelRaw(ifindex uint32)(uint64,uint32,ui
     return uint64(pn),uint32(seq),uint32(full),uint32(app),nil
 }
 
-// Applied after original credential TLS Commit and M4 driver binding.
-// Strict native readback; no analyzer-only policy interpretation.
-func (b *v4EmbeddedNativeBridge) configureOriginalOuterRepair(enabled bool)error{
-    if b==nil||!b.committed||b.stopped||b.handle==0{return errV4Embedded}
-    value:=C.uint32_t(0)
-    if enabled{value=1}
-    rc:=C.wbd_m0_embedded_go_set_public_outer_repair(C.uint64_t(b.handle),value)
-    if rc!=0{return fmt.Errorf("%w: set native outer repair=%d",errV4Embedded,int(rc))}
-    var applied C.uint32_t
-    rc=C.wbd_m0_embedded_go_read_public_outer_repair(C.uint64_t(b.handle),&applied)
-    if rc!=0||applied!=value{
-        return fmt.Errorf("%w: native outer repair mismatch requested=%d actual=%d code=%d",
-            errV4Embedded,uint32(value),uint32(applied),int(rc))
-    }
-    return nil
-}
-
 // Development-only original Rust owner continuous worker controls. No Go
 // per-packet RX/TX invocation while the loop owns both drivers.
 // Only the actual shipping original Go V4 client/server after credential
@@ -324,13 +307,14 @@ type V4PublicOuterCounters struct{
     BlockedLocalOther,BlockedGlobalOther,BlockedInvariant uint64
     RepairAcceptedRetired,RepairUncertainRetired,RepairAbandonedRetired uint64
     MaxQueueAgeus,RepairAttemptLimit,ShadowLimit,RetainCapus uint64
+    FirstWireBytes,RepairAcceptedWireBytes,RepairUncertainWireBytes uint64
 }
 func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCounters,error){
     var zero V4PublicOuterCounters
     if b==nil||!b.committed||b.stopped||b.handle==0{return zero,errV4Embedded}
-    var values [6]C.uint64_t
+    var values [9]C.uint64_t
     rc:=C.wbd_m0_embedded_go_public_outer_counters(
-        C.uint64_t(b.handle),&values[0],6)
+        C.uint64_t(b.handle),&values[0],9)
     if rc!=0{return zero,fmt.Errorf("%w: native original M2 stats=%d",errV4Embedded,int(rc))}
     var d [34]C.uint64_t
     rc=C.wbd_m0_embedded_go_public_outer_diagnostics(
@@ -347,6 +331,9 @@ func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCoun
         DriverUncertain:uint64(values[3]),
         BudgetOrCapacityBlocked:uint64(values[4]),
         RetiredTotal:uint64(values[5]),
+        FirstWireBytes:uint64(values[6]),
+        RepairAcceptedWireBytes:uint64(values[7]),
+        RepairUncertainWireBytes:uint64(values[8]),
         CandidateFirst:uint64(d[0]),CandidateRetry:uint64(d[1]),
         AckedAttempt0:uint64(d[2]),AckedAttempt1:uint64(d[3]),AckedAttempt2:uint64(d[4]),
         ExpiredAttempt0:uint64(d[5]),ExpiredAttempt1:uint64(d[6]),ExpiredAttempt2:uint64(d[7]),
@@ -400,6 +387,21 @@ func (b *v4EmbeddedNativeBridge) originalPublicFecTxFailures()(V4PublicFecTxFail
     return V4PublicFecTxFailures{SourcePayload:uint64(v[0]),SourceArena:uint64(v[1]),
         SourceSeal:uint64(v[2]),ParityPolicy:uint64(v[3]),ParityArena:uint64(v[4]),
         ParitySeal:uint64(v[5]),ParityM4Noncopy:uint64(v[6]),SourceM4Noncopy:uint64(v[7])},nil
+}
+// Strict post-auth, pre-worker native policy; a Go-only toggle is invalid.
+func (b *v4EmbeddedNativeBridge) configureOriginalOuterRepair(enabled bool)error{
+    if b==nil||!b.committed||b.stopped||b.handle==0{return errV4Embedded}
+    value:=C.uint32_t(0)
+    if enabled{value=1}
+    rc:=C.wbd_m0_embedded_go_set_public_outer_repair(C.uint64_t(b.handle),value)
+    if rc!=0{return fmt.Errorf("%w: set native outer repair=%d",errV4Embedded,int(rc))}
+    var applied C.uint32_t
+    rc=C.wbd_m0_embedded_go_read_public_outer_repair(C.uint64_t(b.handle),&applied)
+    if rc!=0||applied!=value{
+        return fmt.Errorf("%w: native outer repair mismatch requested=%d actual=%d code=%d",
+            errV4Embedded,uint32(value),uint32(applied),int(rc))
+    }
+    return nil
 }
 func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback()error{
     if b==nil||!b.committed||b.stopped||b.handle==0||
@@ -470,6 +472,34 @@ func (b *v4EmbeddedNativeBridge) rustOwnerDebugJumboPause(enabled bool)(bool,uin
     return paused!=0,uint32(loaned),nil
 }
 
+// One readback on stop/diagnostic only: native Linux per-thread CPU time,
+// kept separate from total Go+Rust process CPU in the Actions monitor.
+type V4PublicWorkerCPU struct{RxNs,TxNs uint64}
+// Low-frequency terminal or explicitly enabled diagnostic only. This method
+// queries real native worker completion counters and CPU; no packet or
+// authentication path is redirected to Go.
+type V4PublicLoopPulse struct{
+    RxRecords,TxRecords,RxErrors,TxErrors uint64
+    RxThreadCPUns,TxThreadCPUns uint64
+}
+func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,error){
+    if b==nil||!b.committed||b.stopped||b.handle==0 {
+        return V4PublicLoopPulse{},errV4Embedded
+    }
+    stats,err:=b.rustOwnerLoopStats()
+    if err!=nil{return V4PublicLoopPulse{},err}
+    rx,tx,err:=b.rustOwnerWorkerCPU()
+    if err!=nil{return V4PublicLoopPulse{},err}
+    return V4PublicLoopPulse{
+        RxRecords:stats.RxOK,TxRecords:stats.TxOK,
+        RxErrors:stats.RxErr,TxErrors:stats.TxErr,
+        RxThreadCPUns:rx,TxThreadCPUns:tx,
+    },nil
+}
+func (b *v4EmbeddedNativeBridge) originalPublicWorkerCPU()(V4PublicWorkerCPU,error){
+    rx,tx,err:=b.rustOwnerWorkerCPU()
+    return V4PublicWorkerCPU{RxNs:rx,TxNs:tx},err
+}
 func (b *v4EmbeddedNativeBridge) rustOwnerWorkerCPU()(uint64,uint64,error){
     if !b.committed||b.handle==0{return 0,0,errV4Embedded}
     var rx,tx C.uint64_t

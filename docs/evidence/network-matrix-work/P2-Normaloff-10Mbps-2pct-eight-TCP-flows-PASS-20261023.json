@@ -1,0 +1,150 @@
+{
+  "schema": 1,
+  "id": "P2-Normaloff-10Mbps-2pct-eight-TCP-flows-PASS-20261023",
+  "exact_product_source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+  "request_sha": "8a0c3cd239af12700fbc265fc44b216098253f39",
+  "run": 39927659556,
+  "attempt": 1,
+  "result": "PASS_SCOPED_OBSERVATION",
+  "artifact_id": 12490421685,
+  "artifact_zip_sha256": "8f38508a9da256cb924120df7a596b0f967443ea4a64ef3bb90b77df8bee7151",
+  "scenario": {
+    "mode": "Normal/off only",
+    "source_mbps_each_direction": 10,
+    "udp_mbps_each": 5,
+    "tcp_mbps_each": 5,
+    "tcp_flows": 8,
+    "near_mtu_payload_fraction": 0.99,
+    "one_way_ms": 200,
+    "iid_loss_pct": 2,
+    "steady_s": 60,
+    "warmup_s": 10,
+    "drain_s": 30,
+    "seed": 5207
+  },
+  "measured": {
+    "udp_c2s": {
+      "offered": 29417,
+      "missing": 10,
+      "loss_pct": 0.03399394907706428,
+      "one_way_p99_ms": 614.3
+    },
+    "udp_s2c": {
+      "offered": 29417,
+      "missing": 10,
+      "loss_pct": 0.03399394907706428,
+      "one_way_p99_ms": 614.5
+    },
+    "tcp_c2s": {
+      "injected_mbps": 5.0000156,
+      "target_mbps": 5,
+      "backpressure": 0,
+      "missing": 0,
+      "p99_ms": 2349.2
+    },
+    "tcp_s2c": {
+      "injected_mbps": 5.0000156,
+      "target_mbps": 5,
+      "backpressure": 0,
+      "missing": 0,
+      "p99_ms": 1077.9
+    },
+    "cpu_60s_s": {
+      "client": 7.26,
+      "server": 7.3
+    },
+    "cpu_per_received_business_GiB_s": {
+      "client": 103.9557,
+      "server": 104.5285
+    },
+    "product_peak_RSS_bytes": {
+      "client": 20824064,
+      "server": 21213184
+    },
+    "injector_cpu_including_warmup_setup_drain_s": {
+      "client": 5.86,
+      "server": 5.85
+    },
+    "injector_peak_RSS_bytes": {
+      "client": 24236032,
+      "server": 24088576
+    },
+    "original_pool": {
+      "client": {
+        "slots": 1024,
+        "peak_loaned": 910,
+        "charged_bytes": 2195456,
+        "control_reserve": 16
+      },
+      "server": {
+        "slots": 1024,
+        "peak_loaned": 908,
+        "charged_bytes": 2195456,
+        "control_reserve": 16
+      }
+    },
+    "tx_client": {
+      "tun_udp": 37097,
+      "staged_udp": 37097,
+      "tun_tcp": 101843,
+      "staged_tcp": 101843,
+      "postread_arena_failed": 0,
+      "pre_read_deferred": 0
+    },
+    "tx_server": {
+      "tun_udp": 37095,
+      "staged_udp": 37095,
+      "tun_tcp": 101730,
+      "staged_tcp": 101730,
+      "postread_arena_failed": 0,
+      "pre_read_deferred": 0
+    },
+    "rx": {
+      "link_malformed": 0,
+      "link_discarded": 0,
+      "tun_write_failed": 0,
+      "feedback_drop_client": 0,
+      "feedback_drop_server": 0
+    },
+    "netem_loss_pct": {
+      "client": 1.9821505,
+      "server": 2.0020776
+    },
+    "host": {
+      "cpu_psi_some_peak": 0.77,
+      "steal_pct_peak": 0
+    },
+    "tcp_kernel": {
+      "client": {
+        "tcp_retrans_steady_delta": 897,
+        "at_steady_end_cwnd_sum": 501,
+        "at_steady_end_tcp_notsent": "NOT_OBSERVED",
+        "established": 8
+      },
+      "server": {
+        "tcp_retrans_steady_delta": 918,
+        "at_steady_end_cwnd_sum": 1178,
+        "at_steady_end_tcp_notsent_sum": 143336,
+        "established": 8
+      }
+    },
+    "stop": true,
+    "owned_cleanup": true
+  },
+  "disposition": [
+    "Distinct 8-flow mixed scenario meets existing 0.25% UDP loss and 3% TCP injection tolerance, not a causal same-VM CPU comparison against 4-flow run",
+    "4-flow 10Mbps mix from run39923334085 remains INCONCLUSIVE and TCP latency caution; do not waive or rename that failure",
+    "8-flow TCP survivor p99 still 2.35s/1.08s vs one-way200ms; low-tail/one-flow guarantee NOT_QUALIFIED",
+    "1024 M1 pool peak910/908; retain control reserve16 and record projected headroom: 25% atop observed peak + reserve16 -> 1153.5, round conservatively to1280. Do NOT silently change FEC-shared constructor or claim 1280 is deployed.",
+    "Cannot extrapolate current eager arena max8192 and per-session charged2195456B to 500Mbps; model upfront logical 131072 and on-demand shared payload needed, CPU/actual host requirement NOT_TESTED"
+  ],
+  "capacity_margin": {
+    "peak": 910,
+    "protected_control": 16,
+    "required_25pct_peak_plus_control": 1154,
+    "proposed_future_fixed_normal_only_slots": 1280,
+    "incremental_bytes_from_1024": 548864,
+    "current_status": "MODEL_ONLY_NOT_APPLIED_AND_NOT_REQUIRED_FOR_QUALIFIED_10MBPS",
+    "reason": "At 8-flow full-rate source peak910/1024 (88.9%), no observed overflow. 1280 would yield ~29% spare, but no demonstrated failure so refrain from code churn/FEC-shared constructor change; higher target requires endpoint-shared lazy slabs, not repeating 128->512->1024 blindly."
+  }
+}

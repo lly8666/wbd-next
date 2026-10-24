@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_REAL_WBD_NORMAL_OFF_0_100_0_4HZ_STAGE_TIMELINE",
+  "run": 39997661008,
+  "attempt": 1,
+  "conclusion": "success",
+  "artifact_id": 12521205988,
+  "artifact_zip_sha256": "5af128f340d73bb196a1b9bcdfc9f7650a8c8838748d9cdb8c9bc22c520ed8d5",
+  "artifact_locally_verified": true,
+  "product_source": "63adb210f724d4b2812d75a292617103ac735b53",
+  "scope": {
+    "udp_offered_each_direction_mbps": 2,
+    "one_way_ms": 200,
+    "loss_phases_pct": [
+      0,
+      100,
+      0
+    ],
+    "phase_seconds": [
+      15,
+      10,
+      30
+    ],
+    "warmup_s": 10,
+    "drain_s": 30,
+    "network_profile": "native 10Mbps line cap/dir, same 0/100/0 wave but new diagnostic source and seed6630",
+    "v3_timeline": true
+  },
+  "observed": {
+    "phase_before_udp_loss_both": 0,
+    "phase_blackhole_delivered_mbps_c2s_s2c": [
+      0.019456,
+      0.0202752
+    ],
+    "phase_recovered_udp_delivered_mbps_c2s_s2c": [
+      1.9996672,
+      1.9995306666666668
+    ],
+    "recovered_missing_c2s_s2c": [
+      5,
+      8
+    ],
+    "recovered_first_udp_after_phase_ms_c2s_s2c": [
+      200,
+      200
+    ],
+    "phase_recovered_p99_ms_both": 200.8,
+    "steady_tun_source_drops_both": 0,
+    "outer_repair_bytes_client_server": [
+      32468,
+      32631
+    ],
+    "native_timeline_files": [
+      "A/client-v3-timeline.log",
+      "A/server-v3-timeline.log"
+    ],
+    "timeline_samples_each": 461,
+    "products_stop_drained_both": true
+  },
+  "previous_control": {
+    "run": 39990331827,
+    "artifact_id": 12517572497,
+    "first_delivered_udp_c2s_s2c_ms": [
+      1150,
+      200
+    ],
+    "recovered_missing_c2s_s2c": [
+      762,
+      8
+    ],
+    "netem_transition_to_recover_config_latency_ms": 8.1
+  },
+  "interpretation": [
+    "0/100/0 real native customer business and recovery source63adb correctly resumed both UDP directions after forward-path delay200ms with near-target2Mbps, missing5/8 packets around phase boundary; no source TUN drops.",
+    "Earlier same plan source bb9a run39990331827 showed asymmetric ~1.15s C2S restoration and 762 missing. That anomaly did not reproduce in the bounded 4Hz native timeline run; cannot call an underlying deterministic code bug fixed, nor erase prior evidence.",
+    "Remaining few missing near phase change do not imply 0%-loss product steady errors without per-source DATA transmission timestamp trace; classification edge-condition-specific."
+  ],
+  "disposition": "V3_D_SCOPED_BLACKHOLE_RECOVERY_RETEST_PASS_NO_GENERAL_ALWAYS_RECOVERY_CLAIM"
+}

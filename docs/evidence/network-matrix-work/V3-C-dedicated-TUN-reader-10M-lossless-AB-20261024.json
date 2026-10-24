@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_MATCHED_SAME_VM_V3_NORMAL_OFF_DEDICATED_TUN_READER_LOWLOAD_AB",
+  "request_id": "V3-C-dedicated-TUN-ingress-10M-both-0loss-AB",
+  "request_source": "610ef93fba8255f7185abb1d93ab8b5c592ed962",
+  "run": 40045323595,
+  "attempt": 1,
+  "action_conclusion": "success",
+  "artifact_id": 12541675416,
+  "artifact_zip_sha256": "61d39eb37f0749a8956b7586e893f8bc56b5f57d57b6b323977941150dcc9318",
+  "artifact_sha256_verified_locally": true,
+  "contract_run": 40045323723,
+  "contract_conclusion": "success",
+  "scenario": {
+    "normal_off": true,
+    "single_TCP_flow_per_direction": 1,
+    "app_mbps_each_direction": 10,
+    "one_way_ms": 200,
+    "loss_pct": 0,
+    "warmup_s": 10,
+    "steady_s": 60,
+    "drain_s": 30,
+    "native_arch": "aarch64",
+    "same_VM_order": "AB",
+    "tun_kernel_default_txqueue": true,
+    "required_zero_source_tun_drop_full_run": true
+  },
+  "A": {
+    "source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+    "native_build_run": 40001498261,
+    "native_bundle_artifact": 12521858079,
+    "public_policy": "outer-opportunistic-v3",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "app_mbps_c2s_s2c": [
+      10.0007936,
+      10.0007936
+    ],
+    "missing_packets_c2s_s2c": [
+      0,
+      0
+    ],
+    "source_tun_kernel_drops_warmup_client_server": [
+      0,
+      0
+    ],
+    "source_tun_kernel_drops_steady_client_server": [
+      0,
+      0
+    ],
+    "kernel_TCP_RetransSegs_client_server": [
+      0,
+      0
+    ],
+    "app_TCP_backpressure_events": 0,
+    "first_arrival_p99_ms_c2s_s2c": [
+      200.8,
+      200.8
+    ],
+    "product_cpu_s_client_server_steady": [
+      2.49,
+      2.55
+    ],
+    "peak_RSS_client_server_bytes": [
+      21991424,
+      22298624
+    ],
+    "stop_owned_namespaces_removed": true
+  },
+  "B": {
+    "source": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
+    "native_build_run": 40044879144,
+    "native_bundle_artifact": 12540624073,
+    "native_bundle_zip_sha256": "f52f3c67749b399fa6778e9031e83a0f93f1fe4780d6836d7d120928b9fed763",
+    "change": "512 fixed bounded M1-owned source ingress SyncSender + reader worker in Normal/off; original Rust TX exclusive PN/AEAD/M4 and receipt, generation and full queue backpressure; original 2048 M1+16 receipt protection unchanged; stop joins reader",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "app_mbps_c2s_s2c": [
+      10.0007936,
+      10.0007936
+    ],
+    "missing_packets_c2s_s2c": [
+      0,
+      0
+    ],
+    "source_tun_kernel_drops_warmup_client_server": [
+      0,
+      0
+    ],
+    "source_tun_kernel_drops_steady_client_server": [
+      0,
+      0
+    ],
+    "kernel_TCP_RetransSegs_client_server": [
+      0,
+      0
+    ],
+    "app_TCP_backpressure_events": 0,
+    "first_arrival_p99_ms_c2s_s2c": [
+      200.8,
+      200.8
+    ],
+    "product_cpu_s_client_server_steady": [
+      2.5,
+      2.52
+    ],
+    "peak_RSS_client_server_bytes": [
+      22601728,
+      22085632
+    ],
+    "stop_owned_namespaces_removed": true
+  },
+  "disposition": "DEDICATED_READER_LOWLOAD_REGRESSION_PASS; FULL_TCP500_STARTUP_ZERO_DROP_PENDING",
+  "notes": [
+    "Original full-run TUN warmup/steady kernel deltas are explicit zero both A and B; unlike older 500 hot8 AB these snapshots cover original traffic start.",
+    "Kernel TCP RetransSegs counters absent from terse leg logs but independently read in exact A/B zipped result network_accounting for both endpoints, both zero.",
+    "One same-VM sample does not establish CPU savings. No crossing FEC and Windows variants."
+  ]
+}

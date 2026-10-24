@@ -1,0 +1,93 @@
+{
+  "schema": 1,
+  "id": "V3-A-30pct-50M-300ms-repair-budget",
+  "policy": "outer-opportunistic-v3",
+  "kind": "NATIVE_ARM64_REAL_PUBLIC_GO_TLS_RUST_TUN_UDP",
+  "source": "86d35af39b0aac04f549d870d8c2c1e77d09704b",
+  "native_build_run": 39978760399,
+  "native_bundle_id": 12513355204,
+  "native_bundle_sha256": "98cf89f1f693fd31fc66f22d36071d5a1424f0d2fb0f62d1dbb6c274fc980f18",
+  "request_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
+  "run": 39979596886,
+  "attempt": 1,
+  "action_conclusion": "success",
+  "artifact_id": 12512458869,
+  "artifact_zip_sha256": "4a56dc00cc1e2f43802dce6e8011de307e1764261d6a5c3146dcce4e5db779b4",
+  "sha256_verified_locally": true,
+  "contracts_run": 39979596951,
+  "contracts_conclusion": "success",
+  "mode": "Normal/off",
+  "scenario": {
+    "loss_pct": 30,
+    "one_way_ms": 300,
+    "outer_line_mbps_per_direction": 50,
+    "app_offered_udp_mbps_per_direction": 33.7,
+    "traffic_sizes": [
+      [
+        64,
+        1
+      ],
+      [
+        1287,
+        99
+      ]
+    ],
+    "steady_s": 60,
+    "warmup_s": 10,
+    "drain_s": 30,
+    "netem_rng": "unseeded_recorded",
+    "source_tun_drops_steady": {
+      "client": 0,
+      "server": 0
+    }
+  },
+  "observed": {
+    "c2s": {
+      "outer_netem_loss_pct": 30.11491462329,
+      "first_wire_bytes": 318187404,
+      "repair_accepted_wire_bytes": 28251447,
+      "repair_uncertain_wire_bytes": 0,
+      "repair_over_fresh_pct": 8.878870327626169,
+      "repair_over_capacity_pct": 6.4574736,
+      "actual_udp_injected_mbps": 33.700114,
+      "udp_cohort_delivered_mbps": 25.6329076,
+      "first_arrival_p99_ms": 944.1,
+      "udp_missing_after_drain": 47388
+    },
+    "s2c": {
+      "outer_netem_loss_pct": 29.967577019757375,
+      "first_wire_bytes": 318181454,
+      "repair_accepted_wire_bytes": 28207017,
+      "repair_uncertain_wire_bytes": 0,
+      "repair_over_fresh_pct": 8.865072632423132,
+      "repair_over_capacity_pct": 6.447318171428571,
+      "actual_udp_injected_mbps": 33.6997708,
+      "udp_cohort_delivered_mbps": 25.6740404,
+      "first_arrival_p99_ms": 944,
+      "udp_missing_after_drain": 47152
+    },
+    "total_repair_accepted_records": 41979,
+    "process_cpu_steady60s": {
+      "client": 12.3,
+      "server": 12.07
+    },
+    "host_cpu_psi_peak": 1,
+    "host_steal_peak_pct": 0,
+    "owned_cleanup_pass": true
+  },
+  "limits": {
+    "hard_repair_over_fresh_pct": 10,
+    "min_repair_over_line_pct": 6,
+    "loss_udp_max_pct": 30.5,
+    "CPU_0loss_matched": "NOT_RUN",
+    "per_epoch_breakdown": "NOT_OBSERVED",
+    "line_overhead_control_separate": "NOT_OBSERVED"
+  },
+  "result": "PASS_SCOPED_OBSERVATION_HIGH_LOSS_30PCT_6PCT_AND_10PCT_BOTH_DIRECTIONS",
+  "notes": [
+    "Byte ratios are exact native M4 readback for full 70s warmup+steady; line capacity is configured50Mbps per direction times70s, not application offered bytes.",
+    "No zero-loss same-SOURCE CPU pairing yet; 30pct delivered throughput cannot be compared to 0-loss goodput CPU without distinct normalization.",
+    "App UDP missing under 30pct is expected; business delivery is not required to have a minimum loss. Native source TUN steady drops zero.",
+    "This is not FEC fixed/auto, Windows, physical or 500Mbps product qualification."
+  ]
+}

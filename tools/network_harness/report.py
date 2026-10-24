@@ -58,6 +58,96 @@ def active_gap(tx, rx, allowance_bins=0):
     return longest * 10
 
 
+def cross_business_hol(config, client, server):
+    """10ms true per-business delivery continuity in steady interior.
+
+    Never label a TCP flow's *own* retransmission HOL a tunnel cross-HOL.
+    Skip 2s after an impairment boundary and 1s before the next boundary:
+    delayed packets/RTT across phases are not misleadingly bin-attributed.
+    Inspect every UDP delivery and both independent TCP socket streams. Raw
+    send/receive bins remain in the artifacts, not survivor-only histograms.
+    """
+    phases = [{"name":"warmup","seconds":config["warmup_s"]}] + config["phases"]
+    out, failures, limits = {}, [], []
+    elapsed = 0
+    for ph in phases:
+        first = round(elapsed*100)
+        elapsed += ph["seconds"]
+        last = round(elapsed*100)
+        if ph["name"]=="warmup":
+            continue
+        lo, hi = first+200, last-100
+        if hi<=lo:
+            limits.append("HOL_"+ph["name"]+": steady interior insufficient for 2s/1s guard")
+            continue
+        for direction,tx,rx in (("c2s",client,server),("s2c",server,client)):
+            tag=direction+"/"+ph["name"]
+            src=tx["tx_bins_10ms"]["udp"]
+            dst=rx["rx_bins_10ms"]["udp"]
+            sent_tcp=tx.get("tcp_flow_tx_bins_10ms")
+            received_tcp=rx.get("tcp_flow_rx_bins_10ms")
+            n=config["traffic"]["tcp_flows"]
+            if (sent_tcp is None or received_tcp is None or
+                len(sent_tcp)!=n or len(received_tcp)!=n or
+                min(len(src),len(dst),*[len(v) for v in sent_tcp+received_tcp])<hi):
+                failures.append(tag+": missing independent 10ms TCP/UDP evidence")
+                continue
+            max_src_off = no_udp = no_all = 0
+            src_run = udp_run = all_run = 0
+            offered_bins = delivered_bins = shared_bins = 0
+            for i in range(lo,hi):
+                offered=src[i]>0
+                got_udp=dst[i]>0
+                got_tcp=any(flow[i]>0 for flow in received_tcp)
+                src_run = 0 if offered else src_run+1
+                max_src_off=max(max_src_off,src_run)
+                udp_run = udp_run+1 if offered and not got_udp else 0
+                no_udp=max(no_udp,udp_run)
+                all_run = all_run+1 if offered and not got_udp and not got_tcp else 0
+                no_all=max(no_all,all_run)
+                offered_bins+=int(offered)
+                delivered_bins+=int(got_udp)
+                shared_bins+=int(got_udp or got_tcp)
+            tcp_flows=[]
+            for idx in range(n):
+                tx_bins=sent_tcp[idx]
+                rx_bins=received_tcp[idx]
+                max_gap=gap=0
+                delivered=0
+                offered=0
+                udp_forward_while_tcp_empty=0
+                for i in range(lo,hi):
+                    offered+=tx_bins[i]
+                    delivered+=rx_bins[i]
+                    gap=gap+1 if rx_bins[i]==0 else 0
+                    max_gap=max(max_gap,gap)
+                    udp_forward_while_tcp_empty+=int(rx_bins[i]==0 and dst[i]>0)
+                tcp_flows.append({"id":idx,
+                    "offered_packets_in_window":offered,
+                    "delivered_packets_in_window":delivered,
+                    "max_zero_delivery_ms":max_gap*10,
+                    "udp_progress_bins_while_this_tcp_idle":udp_forward_while_tcp_empty})
+                if offered>0 and delivered==0:
+                    failures.append(tag+f": TCP independent flow {idx} never delivered")
+            out[tag]={"scope":"OWNED_NAMESPACE_REAL_TCP_SOCKET_IDS_NOT_AGGREGATE",
+                "phase_interior_guard_s":[2,1],
+                "examined_10ms_bins":hi-lo,
+                "udp_tx_active_bins":offered_bins,
+                "udp_rx_active_bins":delivered_bins,
+                "any_business_rx_active_bins":shared_bins,
+                "longest_udp_sender_silence_ms":max_src_off*10,
+                "longest_udp_receiver_zero_while_offered_ms":no_udp*10,
+                "longest_ALL_business_receiver_zero_while_udp_offered_ms":no_all*10,
+                "tcp_independent_socket_flows":tcp_flows}
+            if max_src_off*10>100 or offered_bins<(hi-lo)*0.95:
+                limits.append(tag+": offered UDP sender not continuously paced, HOL unqualified")
+            if no_udp*10>100:
+                failures.append(tag+": protected UDP blocked >100ms despite offered packets")
+            if no_all*10>100:
+                failures.append(tag+": all independent businesses blocked >100ms despite UDP offer")
+    return out, failures, limits
+
+
 def summarize(config, client, server, telemetry, host):
     failures, limits, observed, warnings = [], [], [], []
     phases = [{"name": "warmup", "seconds": config["warmup_s"], "rate_scale": 1}] + config["phases"]
@@ -114,6 +204,11 @@ def summarize(config, client, server, telemetry, host):
             gaps[f"{direction}_{proto}"] = gap
             if "max_active_gap_ms" in a and gap > a["max_active_gap_ms"]:
                 failures.append(f"{direction}/{proto}: declared active delivery gap allowance exceeded")
+    hol = {}
+    if a.get("cross_business_hol",False):
+        hol, hol_failures, hol_limits = cross_business_hol(config,client,server)
+        failures.extend(hol_failures)
+        limits.extend(hol_limits)
     for role, data in [("client", client), ("server", server)]:
         if data["capacity_exceeded"] or data["socket_drops"]:
             limits.append(role + ": HARNESS_CAPACITY_LIMITED")
@@ -143,7 +238,8 @@ def summarize(config, client, server, telemetry, host):
     status = "FAIL" if failures else ("INCONCLUSIVE" if limits else "PASS_SCOPED_OBSERVATION")
     return {"result": status, "failures": failures, "limits": limits, "warnings": warnings, "observed": observed,
             "performance_comparison": "INCONCLUSIVE_HOST_CONTENTION" if host_risk else "REQUIRES_MATCHED_VALID_AB_LEGS",
-            "active_zero_delivery_ms": gaps, "telemetry": telemetry, "host": host,
+            "active_zero_delivery_ms": gaps, "cross_business_hol": hol,
+            "telemetry": telemetry, "host": host,
             "probes": {role: [{"phase": ph["name"], "sent": st["probe_sent"],
                                 "received": st["probe_received"], "missing": st["probe_sent"]-st["probe_received"],
                                 "rtt_ms": st["rtt"]}

@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "kind": "DESIGN_ARITHMETIC_NOT_PRODUCT_TEST",
+  "policy": "outer-opportunistic-v3",
+  "implementation_status": "PENDING",
+  "actions_status": "NOT_RUN",
+  "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
+  "audited_branch_head": "a470dd08",
+  "baseline_reference": "b179fd0ef83814a05e41833a1f312a8792625b3b",
+  "units": {
+    "rates": "decimal Mbps",
+    "memory": "binary MiB",
+    "loss": "fraction",
+    "wire": "outer IPv4 L3 bytes",
+    "firstsend": "includes FEC/lane DATA but excludes control and retransmissions"
+  },
+  "parameters": {
+    "sampling_fraction": 0.5,
+    "repair_credit_fraction": 0.09,
+    "repair_hard_fraction": 0.1,
+    "admission_pps_process": 32768,
+    "admission_burst_packets": 32,
+    "repair_pps_process": 8192,
+    "repair_burst_mtus": 8,
+    "retain_max_ms": 1500,
+    "slots_process": 65536,
+    "repair_payload_mib_process": 128,
+    "endpoint_total_mib": 512
+  },
+  "high_loss_standard": {
+    "line_mbps": 50,
+    "firstsend_fraction_of_line": 0.7272727272727273,
+    "firstsend_mbps": 36.36363636363636,
+    "repair_mbps": 3.272727272727272,
+    "repair_line_fraction": 0.06545454545454546,
+    "firstsend_plus_repair_line_fraction": 0.7927272727272728,
+    "required_repair_line_fraction": 0.06,
+    "scope": "saturated representative IID30%, healthy host and feedback; not sparse or blackhole"
+  },
+  "tcp500": {
+    "app_mbps": 500,
+    "one_way_ms": 200,
+    "rtt_ms": 400,
+    "bdp_bytes": 25000000,
+    "window_margin_bytes": 37500000,
+    "initial_test_socket_ceiling_mib": 64,
+    "outer_test_capacity_mbps_per_direction": 700,
+    "outer_mtu": 1500,
+    "off_tun_mtu": 1429,
+    "inner_tcp_payload_example": 1377,
+    "tcp_payload_pps": 45388.52578068264,
+    "outer_data_mbps": 544.6623093681917,
+    "note": "example includes inner TCP timestamp12; reverse ACK/control extra; actual readback authoritative; 95% throughput engineering band not exact 500 qualification"
+  },
+  "retention_examples": [
+    {
+      "srtt": 400,
+      "rttvar": 5,
+      "gap_guard_ms": 20,
+      "retain_ms": 720
+    },
+    {
+      "srtt": 600,
+      "rttvar": 5,
+      "gap_guard_ms": 20,
+      "retain_ms": 1020
+    },
+    {
+      "srtt": 600,
+      "rttvar": 50,
+      "gap_guard_ms": 100,
+      "retain_ms": 1200
+    }
+  ],
+  "mtu_examples": [
+    {
+      "outer": 1500,
+      "wire": 1460,
+      "normal_off": 1429,
+      "fixed_auto": 1415,
+      "game_off": 1413,
+      "game_fec2": 1399,
+      "assumptions": "no extra outer options, no restrictive peer/record/implementation limit"
+    },
+    {
+      "outer": 1400,
+      "wire": 1360,
+      "normal_off": 1329,
+      "fixed_auto": 1315,
+      "game_off": 1313,
+      "game_fec2": 1299,
+      "assumptions": "no extra outer options, no restrictive peer/record/implementation limit"
+    },
+    {
+      "outer": 1280,
+      "wire": 1240,
+      "normal_off": 1209,
+      "fixed_auto": 1195,
+      "game_off": 1193,
+      "game_fec2": 1179,
+      "assumptions": "no extra outer options, no restrictive peer/record/implementation limit"
+    }
+  ],
+  "memory_derivation": {
+    "admission_times_max_seconds_times_margin": 61440,
+    "rounded_slots": 65536,
+    "payload_bytes_if_2k_slab": 134217728,
+    "note": "metadata, larger slabs and actual IO retention separately accounted; no eager payload allocation"
+  },
+  "measurement_status": "No product code or model-tool behavior changed in this docs-only delivery; old outputs keep old policy."
+}

@@ -1,10 +1,12 @@
 # WBD Next｜新 agent 唯一启动入口
 
-当前独立FEC岗位直接读 [FEC_AUTONOMOUS_WORK](docs/testing/FEC_AUTONOMOUS_WORK.md) 和 `docs/evidence/fec-network-work/status.json`；其用户授权覆盖下方正式角色派单流程。外层重传岗位的status仅作只读共性证据，不能当本岗位下一任务。
+**独立 FEC 合并岗位**：只在 `experiment/fec-network-tuning` 读取 [FEC_AUTONOMOUS_WORK](docs/testing/FEC_AUTONOMOUS_WORK.md)、`docs/evidence/fec-network-work/status.json` 并按 FEC 的外层 DATA repair OFF 目标推进。已同步网络冻结点的 V3 公用代码，不执行/覆盖网络岗位的 `next_action`、status 或 main。分支 FEC-only 验收仍必须用合并后源码 Actions 独立证明。
 
 仓库 `lly8666/wbd-next`；控制分支 `main`，其他工位分支由 main 的 `.governance/registry.json` 授权。**先刷新远端，不相信聊天、旧提示词、目录中的某个日期或本地缓存。**
 
 ## 最小热读取（不超过 8 文件）
+
+**用户直接授权的独立网络测试任务例外**：按 [NETWORK_AUTONOMOUS_WORK](docs/testing/NETWORK_AUTONOMOUS_WORK.md)读取任务分支的当前计划与 `docs/evidence/network-matrix-work/status.json`，不领取M0–M4身份、不创建正式角色cursor、不等待registry派单。下列正式角色流程仅用于避冲突，不覆盖该独立任务已有的自主修复与Actions授权。
 
 1. `AGENTS.md`、`PROJECT_CHARTER.md`。
 2. main 的 `.governance/project.json`、`.governance/registry.json`。

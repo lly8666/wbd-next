@@ -4,7 +4,7 @@
 
 ## 正常路径
 
-`FrameBudget`唯一计算位置在codec/path_budget：outer MTU、实际IP/TCP header、peer MSS、record max、31B record开销、是否保留56B FEC、Game16B封装。Normal auto即使当前off也按最大FEC20预算保留固定TUN/MSS包络，避免升档后突然超MTU；fixed/off才能使用更大off预算。不能在多个模块各减一次同样开销。
+`FrameBudget`/等价统一冷路径快照是唯一预算来源。当前V4/FEC2按[机会式v3 MTU](../../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)落实：实际outer IP/TCP、真实peer MSS和双端record限制取最小，再扣record31、FEC2 off=0/on-auto最坏repair14、Game16一次；LINK20只用于分片。旧FEC56/MSS1360/record1180或1280不得作新默认；真实对端小限制仍须遵守。auto即使off也维持on预算，避免切档超长。源码还有旧预算接口，必须审计真实调用，不把文档更新当已修复。
 
 原包≤LINK frame budget且不撞保留magic时，直接移动handle，不加新头。Game先加16B逻辑envelope再进入LINK。启动padding是额外动态字节，只能利用当前剩余空间，不能挤掉已经确定的业务包尾部。
 

@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_LATEST_V3_SOURCE_NORMAL_OFF_ZEROLOSS_TCP1_BOTH_DIRECTIONS_DEFAULT_KERNEL_TUN",
+  "run": 40039093306,
+  "attempt": 1,
+  "conclusion": "success",
+  "artifact_id": 12538701517,
+  "artifact_zip_sha256": "67f8f4db9d5eeddb470f4a4c0a93bf92fb012c009bc9e98297dd94f6846d0d06",
+  "artifact_verified_locally": true,
+  "request_source": "6672d32b29e1be4232b60a7a81dd8fbf22621f21",
+  "product_source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+  "scope": {
+    "mode": "Normal/off",
+    "outer_mtu": 1500,
+    "tun_mtu": 1429,
+    "loss_pct": 0,
+    "one_way_ms": 200,
+    "each_direction_one_tcp_flow": true,
+    "offered_mbps_each_direction": 10,
+    "steady_s": 60,
+    "warmup_s": 10,
+    "drain_s": 30,
+    "no_tun_queue_or_qdisc_test_override": true
+  },
+  "observed": {
+    "status": "PASS_SCOPED_OBSERVATION",
+    "c2s_injected_delivered_mbps": 10.0007936,
+    "s2c_injected_delivered_mbps": 10.0007936,
+    "source_tun_steady_drops_client_server": [
+      0,
+      0
+    ],
+    "tcp_kernel_RetransSegs_steady_client_server": [
+      0,
+      0
+    ],
+    "outer_repair_accepted_wire_bytes_client_server": [
+      0,
+      0
+    ],
+    "firstarrival_p99_ms_c2s_s2c": [
+      200.8,
+      200.7
+    ],
+    "product_process_cpu_s_steady_client_server": [
+      2.39,
+      2.45
+    ],
+    "host_cpu_psi_peak": 0,
+    "stop_and_owned_cleanup": true
+  },
+  "interpretation": [
+    "Latest native b8df product source preserves zero-loss one-TCP each direction 10Mbps without outer opportunistic repair at all, no kernel TCP retransmission, no TUN steady drop and low first-arrival tail in 200ms one-way environment.",
+    "The product process CPU seconds are from this one native ARM64 action. Historical A/B runs on different runner VMs cannot be treated as a matched CPU efficiency reduction; no percentage improvement claim.",
+    "Outer repair R/F=0 both, R/C not meaningful because the declared outer line capacity was unbounded (rate_mbps0) in this scenario; not falsely interpreted as zero-capacity."
+  ],
+  "qualification": "LATEST_V3_NATIVE_0LOSS_TCP1_BIDIRECTIONAL10MBPS_ZERO_REPAIR_ZERO_TCP_RETRANS_PASS"
+}

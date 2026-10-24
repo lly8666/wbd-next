@@ -344,11 +344,45 @@ fn original_repair_reserve_block_reason(
         _=>OriginalRepairBlockReason::GlobalOther,
     }
 }
+/// Process-wide v3 packet admission/send caps. One atomic counter per 1s
+/// epoch, no RNG, heap allocation, syscalls or global hot-path Mutex.
+#[cfg(feature="fec2_product_record")]
+fn v3_pps_permit(counter:&std::sync::atomic::AtomicU64,
+    now:MonoNs,max_packets:u64)->bool{
+    use std::sync::atomic::Ordering;
+    let epoch=(now.0/1_000_000_000)&0xffff_ffff;
+    counter.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|prev|{
+        let count=if (prev>>32)==epoch {prev&0xffff_ffff}else{0};
+        (count<max_packets).then_some((epoch<<32)|(count+1))
+    }).is_ok()
+}
+#[cfg(feature="fec2_product_record")]
+fn v3_admit_shadow(pn:u64,lane:wbd_types::LaneKey,now:MonoNs)->bool{
+    use std::sync::atomic::AtomicU64;
+    static ADMISSIONS:AtomicU64=AtomicU64::new(0);
+    let key=pn^((lane.tunnel.slot as u64)<<48)
+        ^((lane.tunnel.generation as u64)<<32)
+        ^((lane.slot as u64)<<16)^(lane.generation as u64);
+    let mut x=key.wrapping_add(0x9e3779b97f4a7c15);
+    x=(x^(x>>30)).wrapping_mul(0xbf58476d1ce4e5b9);
+    x=(x^(x>>27)).wrapping_mul(0x94d049bb133111eb);
+    x^=x>>31;
+    x&1==0 && v3_pps_permit(&ADMISSIONS,now,32_768)
+}
+#[cfg(feature="fec2_product_record")]
+fn v3_send_pps_permit(now:MonoNs)->bool{
+    use std::sync::atomic::AtomicU64;
+    static REPAIRS:AtomicU64=AtomicU64::new(0);
+    v3_pps_permit(&REPAIRS,now,8192)
+}
 struct OriginalOuterRepair{
     shadow:wbd_recovery::ReceiptState<crate::memory::FrozenRecord>,
     direction:wbd_recovery::BudgetDirection,
     route:wbd_recovery::ReceiptRouteScope,
     sent_fresh:u64,
+    sent_first_wire_bytes:u64,
+    repair_accepted_wire_bytes:u64,
+    repair_uncertain_wire_bytes:u64,
     authentic_ack:u64,
     repair_copied:u64,
     repair_uncertain:u64,
@@ -418,7 +452,8 @@ struct Entry{
     feedback_queued:Option<(wbd_recovery::FeedbackDraft,u64)>,
     #[cfg(feature="fec2_product_record")]
     original_outer:Option<Arc<Mutex<OriginalOuterRepair>>>,
-    // FEC parity and authenticated M2 feedback are independent of retries.
+    // One authenticated, immutable-per-worker public policy. V3 ON remains
+    // unchanged; OFF cannot hold repair ciphertext or send outer DATA copies.
     #[cfg(feature="fec2_product_record")]
     outer_repair_enabled:bool,
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -608,15 +643,33 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
     // sends/s, 600ms RTT and partial feedback, the original 128-slot pool
     // starved BOTH fresh systematic and parity (S013 measured 5k/18k
     // NoCapacity failures per side with zero seal/driver failures).
-    // Preallocate a bounded ~1.1MiB owner-local FEC pool only for negotiated
-    // Linux feature7; ordinary/off and non-Linux retain 128-slot cost.
-    // Neither receipt expiry nor global retry quota nor original Stop changes.
+    // In the real 2Mbps/408ms RTT Normal scenario the 128 shared M1 slabs
+    // were exhausted (227/234 already-consumed TUN packets lost). The shadow
+    // retains immutable M1 slab references until verified ACK or completion.
+    // Original Normal/off at 10Mbps with RTT400ms ran out of 496 DATA
+    // loans even after reserving 16 receipt slots: zero-netem A/B showed
+    // >11k deferred reads per side and 819/936 TUN TX drops during steady.
+    // RX unique-to-TUN and successful TX sealing conserve; this is a source
+    // flight-capacity boundary, not lost encrypted packets or VM pressure.
+    // At Normal/off TCP1 10Mbps/direction, 0% netem loss and RTT ~400ms,
+    // actual M1 peak reached 1009/1024 with 16 feedback slots reserved;
+    // source TUN kernel TX drops rose 132/359 and inner TCP retransmitted
+    // 97/303 times (run39937279597). Enlarging the fixed small-slab backing
+    // to 2048 (~4.5MiB charged per endpoint) restores spare source flight
+    // capacity without allowing TUN reads before an owned slab exists.
+    // This is not the 500Mbps lazy-payload-pool design.
+    // FEC feature7 shares the constructor, so its passive cold backing also
+    // grows; FEC data algorithms/configuration and tests are not changed.
+    // Neither receipt expiry, retry quota, crypto nor Stop changes.
     #[cfg(all(feature="fec2_product_record",target_os="linux"))]
     let fec2_product_pool=handoff.negotiated_features==7;
     #[cfg(not(all(feature="fec2_product_record",target_os="linux")))]
     let fec2_product_pool=false;
-    let (slots,bytes)=if fec2_product_pool{(512,1_200_000)}
-        else{(128,1_000_000)};
+    let public_normal_pool=cfg!(target_os="linux")
+        && cfg!(feature="fec2_product_record");
+    let (slots,bytes)=if fec2_product_pool || public_normal_pool {
+        (2048,4_800_000)
+    }else{(128,1_000_000)};
     let arena=Arena::new(generation,slots,2048,128,bytes)
         .map_err(|_|FULL)?;
     r.entries.insert(handle,Arc::new(Mutex::new(Entry{
@@ -2168,7 +2221,8 @@ fn stop(handle:u64)->i32{
         if let Some(w)=workers{
             let rx=w.rx.join();
             let tx=w.tx.join();
-            if rx.is_err()||tx.is_err(){
+            let ingress=match w.ingress{Some(h)=>h.join(),None=>Ok(())};
+            if rx.is_err()||tx.is_err()||ingress.is_err(){
                 // A failed join cannot authorize driver/slab retirement.
                 return STOP_INCOMPLETE
             }
@@ -2558,7 +2612,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_state(h:u64,out:*mut u32)->i32{
 pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_counters(
     h:u64,out:*mut u64,n:usize
 )->i32{
-    if out.is_null()||n!=6{return INVALID}
+    if out.is_null()||(n!=6 && n!=9){return INVALID}
     #[cfg(not(feature="fec2_product_record"))]
     {let _=h;BAD_STAGE}
     #[cfg(feature="fec2_product_record")]
@@ -2569,8 +2623,10 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_counters(
         let Some(outer)=e.original_outer.as_ref()else{return BAD_STAGE};
         let Ok(v)=outer.lock()else{return BAD_STAGE};
         let vals=[v.sent_fresh,v.authentic_ack,v.repair_copied,
-            v.repair_uncertain,v.repair_blocked,v.retired];
-        unsafe{std::ptr::copy_nonoverlapping(vals.as_ptr(),out,6)}
+            v.repair_uncertain,v.repair_blocked,v.retired,
+            v.sent_first_wire_bytes,v.repair_accepted_wire_bytes,
+            v.repair_uncertain_wire_bytes];
+        unsafe{std::ptr::copy_nonoverlapping(vals.as_ptr(),out,n)}
         OK
     }
 }
@@ -2629,9 +2685,15 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_diagnostics(
         let tx=&e.counters.tx_chain;
         let t:Vec<u64>=tx.iter().map(|n|n.load(Ordering::Relaxed)).collect();
         eprintln!(
-            "V4_PUBLIC_TX_CHAIN role={} tun_udp={} tun_tcp={} tun_other={} tun_rejected={} arena_failed={} staged_udp={} staged_tcp={}",
+            "V4_PUBLIC_TX_CHAIN role={} tun_udp={} tun_tcp={} tun_other={} tun_rejected={} arena_failed={} staged_udp={} staged_tcp={} pre_read_deferred={}",
             if e.server_side{"server"}else{"client"},
-            t[0],t[1],t[2],t[3],t[4],t[5],t[6]);
+            t[0],t[1],t[2],t[3],t[4],t[5],t[6],t[7]);
+        eprintln!(
+            "V4_PUBLIC_M1_POOL role={} slots={} peak_loaned={} charged_bytes={} normal_control_reserve={}",
+            if e.server_side{"server"}else{"client"},
+            e.arena.capacity(),e.arena.peak_loaned(),e.arena.charged_bytes(),
+            if e.rx_feedback.is_some() && e.fixed_pending.is_none()
+                && e.fixed_applied.is_none(){16}else{0});
         OK
     }
 }
@@ -2721,8 +2783,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_arm_public_original_m2_feedback(
     }
 }
 
-// Authenticated owner-local policy, set after real M4 binding but BEFORE
-// worker start. OFF never changes parity, genuine reverse receipts or M2.
+// Policy is set on a committed original TLS session after actual M4 driver
+// binding, before arming feedback and starting threads. Never touch FEC
+// source/parity, first-send M2 quality, authenticated ACK or keepalive.
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_set_public_outer_repair(
@@ -2971,18 +3034,92 @@ struct LoopCounts {
     rx_chain:[AtomicU64;16],
     // Real TUN IPv4 ingress classifications and successful immutable
     // Normal/off source staging, batched once per worker turn.
-    // UDP,TCP,other,rejected,arena_failed,staged_UDP,staged_TCP.
+    // UDP,TCP,other,rejected,postread_arena_failed,staged_UDP,
+    // staged_TCP,pre_read_deferred (NOT consumed or dropped).
     #[cfg(feature="fec2_product_record")]
-    tx_chain:[AtomicU64;7],
+    tx_chain:[AtomicU64;8],
     // M0 developer-only deterministic barrier between 32-slot real kernel
     // turns. Never compiled into ordinary FEC2-OFF production builds.
     debug_pause_jumbo:AtomicBool,debug_jumbo_paused:AtomicBool,
+}
+// One bounded per-product Normal/off ingress. No AEAD/PN, raw socket or
+// forged TCP ACK is owned by this reader. The receiver remains sole M3/M4.
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+enum OriginalTunIngress{
+    Small(crate::memory::UniqueBuffer,usize),
+    Jumbo(Vec<u8>),
+}
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn original_tun_ingress_worker(
+    cell:Arc<Mutex<Entry>>,tun:Arc<ScopedTunSink>,stop:Arc<AtomicBool>,
+    generation:u32,send:std::sync::mpsc::SyncSender<OriginalTunIngress>,
+    tun_fd:i32
+){
+    use std::sync::mpsc::TrySendError;
+    let mut scratch=vec![0u8;M0_TUN_IPV4_MAX];
+    while !stop.load(Ordering::Acquire){
+        if !loop_readiness(tun_fd,&stop,10){continue}
+        // A source M1 slab exists BEFORE any destructive TUN read. The
+        // original sixteen authenticated receipt slots remain inaccessible.
+        let loan={
+            let Ok(mut e)=cell.lock()else{break};
+            if e.phase!=PH_ACTIVE{break}
+            #[cfg(feature="fec2_product_record")]
+            let floor=if e.rx_feedback.is_some()
+                && e.fixed_pending.is_none()&&e.fixed_applied.is_none(){
+                M0_NORMAL_FEEDBACK_SLAB_RESERVE
+            }else{0};
+            #[cfg(not(feature="fec2_product_record"))]
+            let floor=0;
+            e.arena.allocate_preserving(floor)
+        };
+        let Ok(mut slab)=loan else{
+            thread::sleep(Duration::from_micros(100));
+            continue
+        };
+        let batch={let mut slots=[&mut scratch[..]];
+            tun.read_ready_batch(generation,&mut slots)};
+        let msg=match batch{
+            Ok(batch)=>match batch.entry(0){
+                Some(TunReadyEntry::UntrustedIpv4{len}) if len<=M0_SMALL_ARENA_PAYLOAD=>{
+                    slab.writable()[14..14+len].copy_from_slice(&scratch[..len]);
+                    Some(OriginalTunIngress::Small(slab,len))
+                },
+                Some(TunReadyEntry::UntrustedIpv4{len})=>{
+                    // Jumbo uses the existing bounded LINK source path;
+                    // no speculative M1 slot is retained for its heap copy.
+                    drop(slab);
+                    Some(OriginalTunIngress::Jumbo(scratch[..len].to_vec()))
+                },
+                Some(TunReadyEntry::Rejected)=>None,
+                _=>None,
+            },
+            Err(TunError::Stopped)=>break,
+            Err(_)=>None,
+        };
+        let Some(mut msg)=msg else{continue};
+        // Exact finite backpressure: if 512-item inbox is full, RETAIN the
+        // already kernel-consumed packet rather than discarding identity.
+        // Stop breaks the wait and drops every real owned M1 buffer.
+        loop{
+            if stop.load(Ordering::Acquire){return}
+            match send.try_send(msg){
+                Ok(())=>break,
+                Err(TrySendError::Full(owned))=>{
+                    msg=owned;
+                    thread::sleep(Duration::from_micros(100));
+                },
+                Err(TrySendError::Disconnected(_))=>return,
+            }
+        }
+    }
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct LoopWorkers{
     shutdown:Arc<AtomicBool>,
     rx:JoinHandle<()>,
     tx:JoinHandle<()>,
+    ingress:Option<JoinHandle<()>>,
     route_events:Arc<wbd_platform::linux_route_events::RouteEvents>,
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -3307,6 +3444,10 @@ const M0_TUN_IPV4_MAX:usize=65_535;
 const M0_SMALL_ARENA_PAYLOAD:usize=2048-14;
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 const M0_MAX_PENDING_JUMBO:usize=4;
+#[cfg(all(feature="fec2_product_record",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+const M0_NORMAL_FEEDBACK_SLAB_RESERVE:usize=16;
 
 // The sole background TX worker owns this logical packet. No self-referential
 // borrowed plan crosses worker calls: rehydrate M3's immutable planner and
@@ -3532,7 +3673,9 @@ fn original_fixed_stage_due(e:&mut Entry,
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     stop:&AtomicBool,ifindex:u32,ifname:&str,tx_storage:&mut Vec<TxDispatch>,
+    dedicated_ingress:bool,
     pending:&mut Vec<(crate::memory::UniqueBuffer,usize)>,
+    prefetched:&mut Vec<crate::memory::UniqueBuffer>,
     ready_records:&mut Vec<crate::memory::FrozenRecord>,
     presentations:&mut Vec<Presentation>,
     actual_firstsend:&mut Vec<(wbd_types::RecordPn,u64)>,
@@ -3551,6 +3694,8 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     // across a route/coalescing abort. Never silently clear a kernel-consumed
     // packet on the next owner turn; it still belongs to this generation.
     let recovered_small=!pending.is_empty();
+    // Do not carry speculative ownership across turns/generation changes.
+    prefetched.clear();
     ready_records.clear();
     presentations.clear();
     actual_firstsend.clear();
@@ -3580,16 +3725,63 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     let mut observed=0usize;
     // One stack-local numeric batch, no packet identity or per-packet atomic.
     #[cfg(feature="fec2_product_record")]
-    let mut tx_trace=[0u64;7];
+    let mut tx_trace=[0u64;8];
     if jumbo_read.len()<M0_TUN_IPV4_MAX{return Err(INVALID)}
     loop {
-        if recovered_small{break}
+        if recovered_small||dedicated_ingress{break}
         if stop.load(Ordering::Acquire){return Err(BAD_STAGE)}
         // A full-size, reusable TUN scratch is necessary: Linux TUN read()
         // truncates a packet irreversibly if called with the 2034B small slab.
         // Only jumbo copies are retained; ordinary traffic moves into the
         // original generation-scoped M1 arena immediately after kernel read.
         if jumbo_queue.len()>=M0_MAX_PENDING_JUMBO{break}
+        // Linux TUN read is destructive. Reserve a real owner slab BEFORE
+        // consuming a business datagram; deferred packets stay in kernel TUN.
+        // The jumbo/rejected/no-data branch drops the unused reservation.
+        let pre_read=if let Some(loan)=prefetched.pop(){
+            Ok(loan)
+        }else{
+            let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+            if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
+            // Every borrowed slab precedes the destructive TUN read and
+            // respects the existing 16-slot authenticated receipt reserve.
+            #[cfg(feature="fec2_product_record")]
+            let control_floor=if e.rx_feedback.is_some()
+                && e.fixed_pending.is_none() && e.fixed_applied.is_none() {
+                M0_NORMAL_FEEDBACK_SLAB_RESERVE
+            }else{0};
+            #[cfg(not(feature="fec2_product_record"))]
+            let control_floor=0;
+            let first=e.arena.allocate_preserving(control_floor);
+            // Sparse-first: do NOT allocate a 32-slab packet batch when only
+            // one datagram is present. Once >=4 real reads proved the TUN
+            // hot, amortize one session lock over up to eight bounded loans.
+            // All unused loans are returned before crypto/M4 submission.
+            if first.is_ok() && observed>=4 {
+                for _ in 0..7.min(32usize.saturating_sub(observed+1)) {
+                    match e.arena.allocate_preserving(control_floor){
+                        Ok(loan)=>prefetched.push(loan),
+                        Err(_)=>break,
+                    }
+                }
+            }
+            first
+        };
+        let mut reserved=match pre_read{
+            Ok(slot)=>slot,
+            Err(wbd_types::buffer_contract::BufferContractError::NoCapacity)=>{
+                #[cfg(feature="fec2_product_record")]
+                {tx_trace[7]+=1;}
+                // An already-ready TUN fd is level-triggered. No-spin on
+                // saturation, but do not delay other pending work this turn.
+                if pending.is_empty() && jumbo_queue.is_empty()
+                    && active_jumbo.is_none() && !stop.load(Ordering::Acquire){
+                    thread::sleep(Duration::from_millis(1));
+                }
+                break
+            },
+            Err(_)=>{ingress_error=true;break}
+        };
         let read={
             let mut slots=[&mut jumbo_read[..M0_TUN_IPV4_MAX]];
             tun.read_ready_batch(generation,&mut slots)
@@ -3615,30 +3807,14 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                         }
                         jumbo_queue.push_back(jumbo_read[..len].to_vec());
                     }else{
-                        let slab={
-                            let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
-                            if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
-                            e.arena.allocate()
-                        };
-                        match slab{
-                            Ok(mut slot)=>{
-                                slot.writable()[14..14+len]
-                                    .copy_from_slice(&jumbo_read[..len]);
-                                pending.push((slot,len));
-                                #[cfg(feature="fec2_product_record")]
-                                if fec_ingress_on{
-                                    ingress.fec_m1_ingress[1].fetch_add(1,Ordering::Relaxed);
-                                }
-                            }
-                            Err(_)=>{
-                                #[cfg(feature="fec2_product_record")]
-                                {tx_trace[4]+=1;}
-                                #[cfg(feature="fec2_product_record")]
-                                if fec_ingress_on{
-                                    ingress.fec_m1_ingress[2].fetch_add(1,Ordering::Relaxed);
-                                }
-                                ingress_error=true;break
-                            }
+                        // Small fresh packet always owns an M1 loan before
+                        // kernel TUN consumption. No post-read slot failure.
+                        reserved.writable()[14..14+len]
+                            .copy_from_slice(&jumbo_read[..len]);
+                        pending.push((reserved,len));
+                        #[cfg(feature="fec2_product_record")]
+                        if fec_ingress_on{
+                            ingress.fec_m1_ingress[1].fetch_add(1,Ordering::Relaxed);
                         }
                     }
                 }
@@ -3657,8 +3833,17 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         }
         if observed>=32 || stop.load(Ordering::Acquire){break}
         if pending.len()%8==0 && started.elapsed()>=Duration::from_micros(100){break}
-        if !loop_readiness(tun.readiness_fd(),stop,0){break}
+        // A second readiness poll is redundant: read_ready_batch already
+        // performs a zero-time poll and the exclusively owned TUN fd is
+        // O_NONBLOCK. At 500Mbps this path sees ~45k packets/sec, so an
+        // additional poll syscall per record competes with draining the
+        // kernel TUN ring and can induce LOCAL packet drops/TCP cwnd cuts.
+        // Probe the next packet via the driver's own nonblocking readiness;
+        // WouldBlock exits the loop immediately without business blocking.
     }
+    // Release speculative unread slabs before source sealing and M4; they
+    // cannot delay control allocation or pin repair snapshots.
+    prefetched.clear();
     if pending.is_empty() && jumbo_queue.is_empty() && active_jumbo.is_none(){
         #[cfg(feature="fec2_product_record")]
         let due={
@@ -3990,31 +4175,45 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     #[cfg(feature="fec2_product_record")]
     if let Some(shared)=e.original_outer.as_ref(){
         let mut original=shared.lock().map_err(|_|BAD_STAGE)?;
+        // OFF never copies immutable ciphertext into v3 repair-only storage.
+        // Keep genuine DATA first-copy counts and wire-byte ledger for auto.
+        let allow_repair=e.outer_repair_enabled;
+        let now=loop_now();
         let copied=(finish.copied as usize).min(frozen_for_outer.len());
-        // Only actual kernel-copied DATA counts; control is appended last.
+        // All actual DATA first-copies contribute F once; only one half,
+        // mixed by PN+generation, may pin a frozen repair shadow. This
+        // unconditionally preserves the independent first-send fast path.
         let control_last=e.feedback_queued.is_some();
         let data_count=frozen_for_outer.len()-usize::from(control_last);
-        if !e.outer_repair_enabled {
-            // No payload shadow registration or repair budget in OFF.
-            original.sent_fresh=original.sent_fresh
-                .saturating_add(copied.min(data_count) as u64);
-        } else {
+        let real_copied=copied.min(data_count);
+        let mut fresh_bytes=0u64;
+        for record in frozen_for_outer.iter().take(real_copied){
+            let meta=record.metadata();
+            fresh_bytes=fresh_bytes.saturating_add((record.bytes().len()+
+                wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64);
+            original.sent_fresh=original.sent_fresh.saturating_add(1);
+            if allow_repair && v3_admit_shadow(meta.pn.0,meta.lane,now){
+                // A selected once-repair must never pin the shared source
+                // M1 slab for a whole RTT. Copy ciphertext exactly once into
+                // bounded process-shared repair-only backing after M4 copy.
+                // No new PN, AEAD or business HOL on admission failure.
+                let tracked=record.try_v3_repair_snapshot().is_some_and(|frozen|
+                    original.shadow.on_sent_adaptive(frozen,now).is_ok());
+                if !tracked{
+                    original.note_block(OriginalRepairBlockReason::FreshShadow);
+                }
+            }
+        }
+        original.sent_first_wire_bytes=original.sent_first_wire_bytes
+            .saturating_add(fresh_bytes);
+        // Only ON registers first-send credits in the outer repair budget;
+        // OFF keeps the authentic F/R counters but creates no grants/timers.
+        if allow_repair && fresh_bytes!=0 {
             let mut global=original_process_repair_quota().lock()
                 .map_err(|_|BAD_STAGE)?;
-            let now=loop_now();
-            for record in frozen_for_outer.iter().take(copied.min(data_count)){
-                let frame_bytes=(record.bytes().len()+
-                    wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64;
-                match global.on_fresh_accepted(original.direction,frame_bytes,now){
-                    Ok(())=>{
-                        if original.shadow.on_sent_adaptive(record.clone(),now).is_ok(){
-                            original.sent_fresh=original.sent_fresh.saturating_add(1);
-                        }else{
-                            original.note_block(OriginalRepairBlockReason::FreshShadow);
-                        }
-                    },
-                    Err(_)=>original.note_block(OriginalRepairBlockReason::FreshGlobal),
-                }
+            if global.on_fresh_accepted_batch(
+                original.direction,fresh_bytes,now).is_err(){
+                original.note_block(OriginalRepairBlockReason::FreshGlobal);
             }
         }
     }
@@ -4270,6 +4469,12 @@ fn background_original_repair_once(
         let reserved={
             let mut own=shared.lock().map_err(|_|BAD_STAGE)?;
             if !own.shadow.preflight(&candidate,now){continue}
+            if !v3_send_pps_permit(now){
+                own.note_block(OriginalRepairBlockReason::Capacity);
+                let _=own.shadow.on_quota_exhausted(&candidate,now);
+                own.retired=own.retired.saturating_add(1);
+                continue
+            }
             let dir=own.direction;
             let route=own.route;
             let mut global=original_process_repair_quota().lock()
@@ -4345,6 +4550,13 @@ fn background_original_repair_once(
                 Err(_)=>RepairSendResult::Uncertain,
             };
             let _=global.revoke(lease,now);
+            if status==RepairSendResult::Accepted {
+                own.repair_accepted_wire_bytes=own.repair_accepted_wire_bytes
+                    .saturating_add(wire_bytes);
+            }else if status==RepairSendResult::Uncertain {
+                own.repair_uncertain_wire_bytes=own.repair_uncertain_wire_bytes
+                    .saturating_add(wire_bytes);
+            }
             if copied && status==RepairSendResult::Accepted{
                 repaired+=1;
                 own.repair_copied=own.repair_copied.saturating_add(1);
@@ -4433,11 +4645,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         let route=first.route;
         let Ok(mut shadow)=wbd_recovery::ReceiptState::new(
             lane,wbd_recovery::ReceiptConfig{
-                max_shadow_entries:131_072,pto_ns:810_000_000,
+                max_shadow_entries:65_536,pto_ns:810_000_000,
                 reorder_window_ns:20_000_000,
             }
         )else{return INVALID};
-        if shadow.enable_adaptive_timing(600_000_000,50_000_000).is_err(){
+        if shadow.enable_adaptive_timing(600_000_000,50_000_000).is_err()
+            || shadow.enable_opportunistic_v3().is_err(){
             return INVALID
         }
         let Ok(mut global)=original_process_repair_quota().lock()else{return BAD_STAGE};
@@ -4450,16 +4663,17 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             max_pending_reservations:128,max_pending_bytes:4*1024*1024,
             io_timeout_ns:100_000_000,
         },now).is_err(){return BAD_STAGE}
-        if global.bind_receipt_route(direction,route,now).is_err(){return BAD_STAGE}
+        if global.enable_opportunistic_v3(direction).is_err()
+            || global.bind_receipt_route(direction,route,now).is_err(){return BAD_STAGE}
         let active=Arc::new(Mutex::new(OriginalOuterRepair{
-            shadow,direction,route,sent_fresh:0,authentic_ack:0,
+            shadow,direction,route,sent_fresh:0,sent_first_wire_bytes:0,
+            repair_accepted_wire_bytes:0,repair_uncertain_wire_bytes:0,
+            authentic_ack:0,
             repair_copied:0,repair_uncertain:0,repair_blocked:0,
             block_reasons:[0;ORIGINAL_REPAIR_BLOCK_REASON_COUNT],retired:0,
         }));
         e.original_outer=Some(Arc::clone(&active));
-        // OFF still has actual first-send quality metadata and RxFeedbackState;
-        // it does not attach any repair shadow to the authenticated RX owner.
-        if e.outer_repair_enabled{Some(active)}else{None}
+        Some(active)
     }else{None};
     let mature=Arc::new(Mutex::new(first));
     e.normal_firstsend_m2=Some(Arc::clone(&mature));
@@ -4560,6 +4774,17 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         e.phase=PH_STOPPING;
         return INVALID
     };
+    // Restrict split ingress to the live Normal/off public product. Fixed,
+    // Auto, Game and probe owners retain their existing single TUN reader.
+    #[cfg(feature="fec2_product_record")]
+    let split_ingress=e.original_public_feedback_armed && e.protected_features==7
+        && e.fixed_pending.is_none() && e.fixed_applied.is_none();
+    #[cfg(not(feature="fec2_product_record"))]
+    let split_ingress=false;
+    let (ingress_send,ingress_recv)=std::sync::mpsc::sync_channel::<OriginalTunIngress>(512);
+    // TX and the dedicated FD reader hold independent Arc handles; the
+    // original bounded TunSink remains one object/one generation/one FD.
+    let tun_for_ingress=Arc::clone(&tun);
     let stop_tx=Arc::clone(&shutdown);
     let tx_events=Arc::clone(&events);
     let tx_cell=Arc::clone(&cell);
@@ -4570,6 +4795,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut last_cpu_sample=Instant::now();
             let mut tx_storage=Vec::<TxDispatch>::with_capacity(32);
             let mut tx_pending=Vec::<(crate::memory::UniqueBuffer,usize)>::with_capacity(32);
+            let mut tx_prefetched=Vec::<crate::memory::UniqueBuffer>::with_capacity(8);
             let mut tx_records=Vec::<crate::memory::FrozenRecord>::with_capacity(32);
             let mut tx_presentations=Vec::<Presentation>::with_capacity(32);
             let mut tx_actual_firstsend=Vec::<(wbd_types::RecordPn,u64)>::with_capacity(32);
@@ -4578,12 +4804,27 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut jumbo_queue=VecDeque::<Vec<u8>>::with_capacity(M0_MAX_PENDING_JUMBO);
             let mut active_jumbo=None::<PendingOriginalJumbo>;
             while !stop_tx.load(Ordering::Acquire){
+                if split_ingress {
+                    // This is the SOLE recipient of one bounded original
+                    // source TUN ingress queue. Sender preserves fresh-order.
+                    for _ in 0..32 {
+                        if tx_pending.len()+jumbo_queue.len()>=32 ||
+                            jumbo_queue.len()>=M0_MAX_PENDING_JUMBO{break}
+                        match ingress_recv.try_recv(){
+                            Ok(OriginalTunIngress::Small(buf,n))=>tx_pending.push((buf,n)),
+                            Ok(OriginalTunIngress::Jumbo(buf))=>jumbo_queue.push_back(buf),
+                            Err(_)=>break,
+                        }
+                    }
+                }
                 if last_cpu_sample.elapsed()>=Duration::from_millis(100){
                     stats.tx_thread_cpu_ns.store(
                         owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
                     last_cpu_sample=Instant::now();
                 }
-                let tun_ready=loop_readiness(tun_fd,&stop_tx,10);
+                let tun_ready=if split_ingress {
+                    !tx_pending.is_empty()||!jumbo_queue.is_empty()
+                }else{loop_readiness(tun_fd,&stop_tx,10)};
                 #[cfg(feature="fec2_product_record")]
                 let (fec_due,feedback_due)=tx_cell.lock().ok().map_or(
                     (false,false),|e|{
@@ -4607,12 +4848,18 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     if background_original_repair_once(&tx_cell,&stop_tx).is_err(){
                         stats.tx_error.fetch_add(1,Ordering::Relaxed);
                     }
+                    // The older worker blocks for 10ms inside tun poll.
+                    // Split-ingress mode must NOT poll the same owned fd:
+                    // allow the separate reader to make progress without
+                    // spinning on an empty bounded queue and starving CPU.
+                    if split_ingress{thread::sleep(Duration::from_micros(250));}
                     continue
                 }
                 let slice_start=Instant::now();
                 match background_tun_once(
                     &tx_cell,&tun,&stop_tx,ifindex,&tx_ifname,&mut tx_storage,
-                    &mut tx_pending,&mut tx_records,&mut tx_presentations,
+                    split_ingress,&mut tx_pending,&mut tx_prefetched,
+                    &mut tx_records,&mut tx_presentations,
                     &mut tx_actual_firstsend,&tx_events,&mut jumbo_read,&mut jumbo_queue,&mut active_jumbo,
                     #[cfg(feature="fec2_product_record")]
                     &stats,
@@ -4661,7 +4908,25 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         let _=rx.join();
         return INVALID
     };
-    e.workers=Some(LoopWorkers{shutdown,rx,tx,route_events:events});
+    let ingress=if split_ingress{
+        let stop_ingress=Arc::clone(&shutdown);
+        let ingress_cell=Arc::clone(&cell);
+        let ingress_tun=Arc::clone(&tun_for_ingress);
+        let Some(worker)=thread::Builder::new().name("wbd-original-tun-ingress".into())
+            .spawn(move||original_tun_ingress_worker(
+                ingress_cell,ingress_tun,stop_ingress,generation,
+                ingress_send,tun_fd
+            )).ok()else{
+                shutdown.store(true,Ordering::Release);
+                e.phase=PH_STOPPING;
+                drop(e);
+                let _=tx.join();
+                let _=rx.join();
+                return INVALID
+            };
+        Some(worker)
+    }else{None};
+    e.workers=Some(LoopWorkers{shutdown,rx,tx,ingress,route_events:events});
     OK
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]

@@ -11,6 +11,7 @@ on:
       - "crates/wbd-engine/src/runtime/fec2_owner*"
       - "crates/wbd-codec/src/fec*"
       - "r0/go_overlay/internal/v4productcli/**"
+      - "r0/go_overlay/internal/v4productcli/linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_*"
       - "r0/go_overlay/internal/realityfront/fec_v2_*"
       - "tools/arm64_public_go_rust_bundle.sh"

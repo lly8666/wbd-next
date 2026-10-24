@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_ONE_TCP_500M_0LOSS_400MS_RTT_WITH_NATIVE_4HZ_OWNER_TIMELINE",
+  "action": {
+    "run": 39997296538,
+    "attempt": 1,
+    "conclusion": "failure",
+    "why": "TCP_BACKPRESSURED plus source TUN kernel TX drops",
+    "artifact_id": 12519943165,
+    "artifact_zip_sha256": "e28054770b14a7c3a11219a374874fc17242a869a69fdbbc87e81c94b47f9588",
+    "verified_zip_sha256_locally": true
+  },
+  "product": {
+    "source": "63adb210f724d4b2812d75a292617103ac735b53",
+    "native_arm64_build_run": 39992871952,
+    "artifact_id": 12517549925,
+    "policy": "outer-opportunistic-v3",
+    "origin_tun_pool_slots": 2048,
+    "normal_feedback_reserve_slots": 16,
+    "original_m1_peak_loaned_client_server": [
+      32,
+      32
+    ],
+    "native_timeline_enabled": true
+  },
+  "scenario": {
+    "app_tcp_single_flow_c2s_target_mbps": 500,
+    "app_s2c_target_mbps": 0,
+    "one_way_ms": 200,
+    "rtt_ms": 400,
+    "outer_line_rate_mbps_each_direction": 700,
+    "outer_mtu": 1500,
+    "inner_mtu": 1429,
+    "advmss": 1377,
+    "loss_pct": 0,
+    "warmup_s": 20,
+    "steady_s": 60,
+    "drain_s": 30,
+    "network_tcp_profile": "bdp500",
+    "namespace_tcp_rmem_wmem_max_bytes": 67108864,
+    "real_socket_initial_sndbuf_rcvbuf_bytes": [
+      4194304,
+      4194304
+    ]
+  },
+  "observed": {
+    "app_injected_mbps_c2s": 292.55707306666665,
+    "app_delivered_mbps_c2s": 292.55707306666665,
+    "app_missing_after_drain": 0,
+    "tcp_backpressure_slots": 47481,
+    "firstarrival_p99_ms": 1713.9,
+    "tun_source_tx_drops_client_before_steady": 2932,
+    "tun_source_tx_drops_client_steady_delta": 11283,
+    "tun_source_tx_drops_client_total": 14215,
+    "tun_txqlen_client_packets": 500,
+    "source_tun_pre_read_deferred_client": 0,
+    "source_tun_staged_tcp_total": 1796045,
+    "origin_m1_peak_loans_client_server": [
+      32,
+      32
+    ],
+    "netem_outer_qdisc_drops_both": 0,
+    "rx_tun_delivery_failure_both": 0,
+    "outer_repair_accepted_bytes_both": 0,
+    "client_tcp_cwnd_median_segments": 12218,
+    "client_tcp_advmss_bytes": 1377,
+    "client_tcp_cwnd_median_bytes": 16824786,
+    "client_tcp_cwnd_max_segments": 19884,
+    "client_tcp_snd_wnd_median_bytes": 40062976,
+    "client_tcp_notsent_median_bytes": 26028794,
+    "tcp_target_BDP_bytes": 25000000,
+    "host_cpu_psi_some_mean_pct": 6.44,
+    "host_cpu_psi_some_peak_pct": 13.93,
+    "host_cpu_psi_over20_fraction": 0,
+    "host_steal_pct_peak": 0,
+    "client_product_cpu_seconds_steady": 25.16,
+    "server_product_cpu_seconds_steady": 38.36,
+    "native_workers_130s_total_client_rx_cpu_s": 8.672,
+    "native_workers_130s_total_client_tx_cpu_s": 16.534,
+    "native_workers_130s_total_server_rx_cpu_s": 22.711,
+    "native_workers_130s_total_server_tx_cpu_s": 12.477
+  },
+  "interpretation": [
+    "This is one source-verified native ARM64 performance qualification run, not a source/host generalized limit. Earlier bb9a matched sameVM TCP200 PASS run39991452116, directTCP200 PASS run39989048165.",
+    "First hard failure boundary is kernel client TUN TX qlen500 overflow with pre_read_deferred0 and original M1 only32/2048; the outer qdisc0loss and M4 no outbound cache pool starvation. The inner TCP experienced local losses, and median cwnd is 16.82MB, less than RTT400ms*500Mbps/8=25MB needed.",
+    "Static socket snd_wnd median40.06MB above required BDP; setting larger socket buffer again without fixing local packet loss is not justified.",
+    "Product stage native TX/RX per-thread CPU is low compared with a whole busy core on average across the 130s observed window; qdisc and TCP notsent contribute; root is NOT proven to be one native CPU core or general host VM saturation.",
+    "Real platform TunSink::read_ready_batch polls O_NONBLOCK Tun FD nonblocking already; caller background_tun_once also polls0 for readiness after every packet. This duplicate syscall per packet is a targeted V3-C cost candidate removed by later source31e3c9; changed source NOT yet qualified."
+  ],
+  "disposition": "TCP500_FAIL_SCOPED_SOURCE_TUN_KERN_DROP_11283_TCP_CWND_LIMIT; DO_NOT_CONFLATE_APP_292.6_WITH_OUTER_700_CAP; TARGETED_POLL_ELIMINATION_CANDIDATE_PENDING_BUILD_AND_MATCHED_AB"
+}

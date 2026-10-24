@@ -59,7 +59,7 @@ def validate(raw):
     r = copy.deepcopy(raw)
     keys(r, ["version", "id", "owner", "seed", "policy", "product", "traffic", "network",
              "warmup_s", "drain_s", "phases", "acceptance", "bundles", "order"], "request")
-    if "policy" in r and r["policy"] not in ["legacy-two-repair-v1", "outer-single-repair-v2"]:
+    if "policy" in r and r["policy"] not in ["legacy-two-repair-v1", "outer-single-repair-v2", "outer-opportunistic-v3"]:
         raise ValueError("unknown recovery policy")
     if r.get("version") != 1:
         raise ValueError("version must be 1")
@@ -73,19 +73,20 @@ def validate(raw):
         raise Unsupported("public V4 adapter has no such mode")
     p.setdefault("fec_profile", 1)
     integer(p["fec_profile"], 0, 6, "fec_profile")
-    # Genuine owner policy, never an analyzer-only OFF.
+    # Two-sided native OFF is an actual product policy, never analyzer-only.
     if "repair_enabled" in p and type(p["repair_enabled"]) is not bool:
         raise ValueError("repair_enabled must be boolean")
     if p.get("game_fec", "off") != "off" or any(k in p for k in ["cipher", "repair_ratio"]):
         raise Unsupported("current public CLI does not expose requested Game-FEC/cipher setting")
     if p.get("repair_enabled") is False and p["mode"] in ("game2", "game4"):
-        raise Unsupported("outer repair off is not wired to public Game owners")
+        raise Unsupported("outer repair off not wired to public Game")
     if p["mode"] == "fec-auto" and p["fec_profile"] != 1:
         raise Unsupported("auto startup is product-controlled; fec_profile cannot set it")
     lanes = {"game2": 2, "game4": 4}.get(p["mode"], 1)
     t = r["traffic"]
     keys(t, ["c2s_mbps", "s2c_mbps", "udp_share", "sizes", "tcp_flows", "probe_hz",
-             "deadline_ms", "burst_ms", "max_packets", "allow_fragmentation"], "traffic")
+             "deadline_ms", "burst_ms", "max_packets", "allow_fragmentation",
+             "observe_independent_flows"], "traffic")
     for k in ["c2s_mbps", "s2c_mbps"]:
         number(t.get(k), 0, 500, k)
     if not t["c2s_mbps"] and not t["s2c_mbps"]:
@@ -96,12 +97,15 @@ def validate(raw):
         t.setdefault(k, v)
     number(t["udp_share"], 0, 1, "udp_share")
     integer(t["tcp_flows"], 1, 16, "tcp_flows")
-    number(t["probe_hz"], 1, 100, "probe_hz")
+    number(t["probe_hz"], 0, 100, "probe_hz")
     number(t["deadline_ms"], 1, 10000, "deadline_ms")
     number(t["burst_ms"], 0, 100, "burst_ms")
     integer(t["max_packets"], 1, 20000000, "max_packets")
     if type(t["allow_fragmentation"]) is not bool:
         raise ValueError("allow_fragmentation must be boolean")
+    t.setdefault("observe_independent_flows",False)
+    if type(t["observe_independent_flows"]) is not bool:
+        raise ValueError("observe_independent_flows must be boolean")
     if not isinstance(t.get("sizes"), list) or not 1 <= len(t["sizes"]) <= 32:
         raise ValueError("sizes: 1..32 [application payload bytes, weight] pairs")
     for size, weight in t["sizes"]:
@@ -110,7 +114,17 @@ def validate(raw):
     if sum(w for _, w in t["sizes"]) > 512:
         raise ValueError("size cycle too large")
     n = r.setdefault("network", {})
-    keys(n, ["outer_mtu", "lane_loss", "queue_packets", "netem_rng"], "network")
+    keys(n, ["outer_mtu", "lane_loss", "queue_packets", "netem_rng",
+             "tcp_window_profiles", "tcp_reordering_profiles", "v3_timeline",
+             "tun_txqlen_profiles", "warmup_rate_scale_profiles", "tun_qdisc_profiles",
+              "startup_tun_drop_timeline", "tcp_socket_pacing_mbps_profiles",
+              "tun_fq_maxrate_mbps_profiles", "product_tun_fq_maxrate_mbps_profiles"], "network")
+    n.setdefault("v3_timeline", False)
+    if type(n["v3_timeline"]) is not bool:
+        raise ValueError("network.v3_timeline must be boolean")
+    n.setdefault("startup_tun_drop_timeline",False)
+    if type(n["startup_tun_drop_timeline"]) is not bool:
+        raise ValueError("network.startup_tun_drop_timeline must be boolean")
     n.setdefault("outer_mtu", 1500)
     n.setdefault("lane_loss", "shared")
     n.setdefault("queue_packets", 32768)
@@ -121,6 +135,57 @@ def validate(raw):
     integer(n["queue_packets"], 1024, 131072, "queue_packets")
     if n["lane_loss"] not in ["shared", "independent"]:
         raise ValueError("lane_loss must be shared or independent")
+    profiles=n.setdefault("tcp_window_profiles",{})
+    keys(profiles,["A","B"],"tcp_window_profiles")
+    if not all(v in ("baseline","large","bdp500") for v in profiles.values()):
+        raise ValueError("tcp_window_profiles must be baseline or large")
+    pacing=n.setdefault("tcp_socket_pacing_mbps_profiles",{})
+    keys(pacing,["A","B"],"tcp_socket_pacing_mbps_profiles")
+    # Test-only per-socket SO_MAX_PACING_RATE. No host/netns sysctl writes,
+    # no change to real WBD kernel/TUN configuration or offered app target.
+    for leg,v in pacing.items():
+        if type(v) is not int or v not in (0,600):
+            raise ValueError("test-only TCP socket pacing must be 0 or 600Mbps")
+    qlens=n.setdefault("tun_txqlen_profiles",{})
+    keys(qlens,["A","B"],"tun_txqlen_profiles")
+    # STRICT TEST-ONLY options to distinguish a short kernel TUN burst
+    # against its default500 ring. 1024 ~23ms and 2048 ~47ms of near-MTU
+    # at 500Mbps; never change product default or use unbounded sizes.
+    for leg,qlen in qlens.items():
+        integer(qlen,500,2048,"tun_txqlen_profiles."+leg)
+        if qlen not in (500,1024,2048):
+            raise ValueError("diagnostic TUN queue must be 500, 1024 or 2048")
+    qdiscs=n.setdefault("tun_qdisc_profiles",{})
+    keys(qdiscs,["A","B"],"tun_qdisc_profiles")
+    if any(value not in ("fq_codel","fq") for value in qdiscs.values()):
+        raise ValueError("tun_qdisc_profiles only fq_codel and fq for owned namespace")
+    fq_maxrate=n.setdefault("tun_fq_maxrate_mbps_profiles",{})
+    keys(fq_maxrate,["A","B"],"tun_fq_maxrate_mbps_profiles")
+    for leg,rate in fq_maxrate.items():
+        if type(rate) is not int or rate not in (0,600):
+            raise ValueError("test-only TUN fq maxrate must be 0 or 600Mbps")
+        if qdiscs.get(leg)!="fq":
+            raise ValueError("TUN fq maxrate requires explicitly selected fq qdisc")
+    owned_fq=n.setdefault("product_tun_fq_maxrate_mbps_profiles",{})
+    keys(owned_fq,["A","B"],"product_tun_fq_maxrate_mbps_profiles")
+    for leg,rate in owned_fq.items():
+        if type(rate) is not int or rate not in (0,600):
+            raise ValueError("owned Linux product TUN fq maxrate must be 0 or 600Mbps")
+    # Every supported Linux product mode defaults owned TUN to fq600;
+    # unset means OMIT CLI flag, not implicit disabling. Diagnostic tc
+    # may touch that qdisc only when explicit0 was sent on the same leg.
+    for leg in ("A","B"):
+        effective=owned_fq.get(leg,600)
+        if effective and (qdiscs.get(leg) is not None or fq_maxrate.get(leg)):
+            raise ValueError("product TUN fq cannot be overridden by diagnostic qdisc in same leg")
+    warm_scales=n.setdefault("warmup_rate_scale_profiles",{})
+    keys(warm_scales,["A","B"],"warmup_rate_scale_profiles")
+    for leg,scale in warm_scales.items():
+        number(scale,0.05,1,"warmup_rate_scale_profiles."+leg)
+    reorder=n.setdefault("tcp_reordering_profiles",{})
+    keys(reorder,["A","B"],"tcp_reordering_profiles")
+    if not all(v in ("baseline","outer_repair_tolerant") for v in reorder.values()):
+        raise ValueError("tcp_reordering_profiles must be baseline or outer_repair_tolerant")
     r.setdefault("warmup_s", 10)
     r.setdefault("drain_s", 5)
     number(r["warmup_s"], 1, 60, "warmup_s")
@@ -142,11 +207,26 @@ def validate(raw):
         raise ValueError("one run maximum 1200 measured seconds")
     a = r.setdefault("acceptance", {})
     keys(a, ["injection_tolerance_pct", "max_loss_pct", "max_p99_ms",
-             "max_active_gap_ms", "require_retransmission"], "acceptance")
+             "max_active_gap_ms", "require_retransmission", "max_repair_fresh_pct", "min_repair_line_pct",
+             "require_zero_source_tun_drops_full_run",
+              "require_zero_tun_root_qdisc_drops_full_run", "cross_business_hol"], "acceptance")
     a.setdefault("injection_tolerance_pct", 3)
     a.setdefault("require_retransmission", False)
+    a.setdefault("require_zero_source_tun_drops_full_run", False)
+    a.setdefault("require_zero_tun_root_qdisc_drops_full_run",False)
+    a.setdefault("cross_business_hol",False)
+    if type(a["cross_business_hol"]) is not bool:
+        raise ValueError("cross_business_hol must be boolean")
+    if a["cross_business_hol"] and not (0 < t["udp_share"] < 1
+            and t["tcp_flows"]>=2 and t["observe_independent_flows"]):
+        raise ValueError("cross_business_hol requires UDP + two independent TCP streams + per-flow 10ms receipts")
+    if type(a["require_zero_tun_root_qdisc_drops_full_run"]) is not bool:
+        raise ValueError("require_zero_tun_root_qdisc_drops_full_run must be boolean")
+    if type(a["require_zero_source_tun_drops_full_run"]) is not bool:
+        raise ValueError("require_zero_source_tun_drops_full_run must be boolean")
     number(a["injection_tolerance_pct"], 0.1, 10, "injection tolerance")
-    for k, hi in [("max_loss_pct", 100), ("max_p99_ms", 30000), ("max_active_gap_ms", 30000)]:
+    for k, hi in [("max_loss_pct", 100), ("max_p99_ms", 30000), ("max_active_gap_ms", 30000),
+                  ("max_repair_fresh_pct", 100), ("min_repair_line_pct", 100)]:
         if k in a:
             number(a[k], 0, hi, k)
     if type(a["require_retransmission"]) is not bool:
@@ -156,14 +236,16 @@ def validate(raw):
         raise ValueError("bundles must contain A, optionally B")
     for label, b in bundles.items():
         keys(b, ["source", "run_id", "attempt", "artifact_id", "sha256",
-                 "step_attested_failure", "recovery_policy", "repair_enabled"], f"bundle {label}")
-        if "repair_enabled" in b and type(b["repair_enabled"]) is not bool:
-            raise ValueError("per-bundle repair_enabled must be boolean")
-        if b.get("repair_enabled") is False and p["mode"] in ("game2","game4"):
-            raise Unsupported("per-bundle outer OFF is not wired to Game")
+                 "step_attested_failure", "recovery_policy", "diagnostic_10x", "repair_enabled"], f"bundle {label}")
         if "step_attested_failure" in b and type(b["step_attested_failure"]) is not bool:
             raise ValueError("step_attested_failure must be boolean")
-        if "recovery_policy" in b and b["recovery_policy"] not in ("legacy-two-repair-v1", "outer-single-repair-v2"):
+        if "diagnostic_10x" in b and type(b["diagnostic_10x"]) is not bool:
+            raise ValueError("diagnostic_10x must be boolean")
+        if "repair_enabled" in b and type(b["repair_enabled"]) is not bool:
+            raise ValueError("bundle repair_enabled must be boolean")
+        if b.get("repair_enabled") is False and p["mode"] in ("game2", "game4"):
+            raise Unsupported("outer repair off not wired to public Game")
+        if "recovery_policy" in b and b["recovery_policy"] not in ("legacy-two-repair-v1", "outer-single-repair-v2", "outer-opportunistic-v3"):
             raise ValueError("invalid per-bundle recovery policy")
         for k, length in [("source", 40), ("sha256", 64)]:
             if not re.fullmatch("[0-9a-f]{%d}" % length, b.get(k, "")):

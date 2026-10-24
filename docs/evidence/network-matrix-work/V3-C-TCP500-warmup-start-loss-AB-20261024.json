@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_SAME_VM_TCP500_DIAGNOSE_STARTUP_LOSS_WITH_ONLY_WARMUP_RATE_AB",
+  "request_id": "V3-C-TCP500-warmup-ramp-loss-isolation-AB",
+  "request_source": "9e1027f9d6144ebe636148da0d00a53e1c66398f",
+  "run": 40038167186,
+  "attempt": 1,
+  "action_conclusion": "failure",
+  "artifact_id": 12538371856,
+  "artifact_zip_sha256": "1eee15282e9f37be627bbc44eb59f1b98f10aa83c9332980ed36498304ee09a4",
+  "zip_sha256_locally_verified": true,
+  "product_both_source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+  "product_native_arm_build_run": 40001498261,
+  "original_rust_policy": "outer-opportunistic-v3",
+  "scope": {
+    "mode": "Normal/off",
+    "target_tcp_single_c2s_mbps_steady": 500,
+    "one_way_delay_ms": 200,
+    "rtt_ms": 400,
+    "outer_mtu": 1500,
+    "inner_mtu": 1429,
+    "advmss_bytes": 1377,
+    "outer_line_cap_mbps_each_direction": 700,
+    "outer_netem_loss_pct": 0,
+    "both_owned_tun_qlen": 1024,
+    "both_readback_qlen_verified": true,
+    "tcp_max_buffer_bytes": 67108864,
+    "warmup_s": 20,
+    "steady_s": 60,
+    "drain_s": 30,
+    "order": "AB",
+    "only_test_knob": "Private injector warmup rate A1*500Mbps, B0.30*500Mbps; BOTH steady phase500Mbps, unchanged same product and TCP stack"
+  },
+  "A": {
+    "warmup_offered_tcp_mbps": 500,
+    "actual_steady_tcp_injected_delivered_mbps": 419.9153664,
+    "tun_kernel_drops_warmup_client": 13339,
+    "tun_kernel_drops_steady_client": 0,
+    "tcp_backpressure_slots_steady": 18331,
+    "firstarrival_p99_ms_steady": 1326.1,
+    "tcp_cwnd_median_mss": 14356,
+    "tcp_cwnd_median_bytes": 19766612,
+    "process_cpu_s_steady_client_server": [
+      37.55,
+      55.71
+    ],
+    "host_CPU_PSI_mean_peak_pct": [
+      14.4627,
+      26.91
+    ],
+    "result": "INCONCLUSIVE_TCP_BACKPRESSURED"
+  },
+  "B": {
+    "warmup_offered_tcp_mbps": 150,
+    "actual_steady_tcp_injected_delivered_mbps": 500.0003584,
+    "tun_kernel_drops_warmup_client": 0,
+    "tun_kernel_drops_steady_client": 0,
+    "tcp_backpressure_slots_steady": 0,
+    "firstarrival_p99_ms_steady": 202.7,
+    "tcp_cwnd_median_mss": 22584,
+    "tcp_cwnd_median_bytes": 31097568,
+    "tcp_notsent": "NOT_OBSERVED",
+    "process_cpu_s_steady_client_server": [
+      44.54,
+      64.22
+    ],
+    "host_CPU_PSI_mean_peak_pct": [
+      23.0197,
+      28.23
+    ],
+    "result": "PASS_SCOPED_OBSERVATION"
+  },
+  "interpretation": [
+    "Same exact product, owned namespaces, 1024 packet TUN qlen, CPU host job, RTT and loss; only declared application warmup pacing differs. A local TUN warmup dropped13339 IP packets, inner CUBIC median window19.77MB < target BDP25MB and steady delivery420Mbps; B warmup drops0 and single inner TCP steady delivers500.000Mbps with zero backpressure and one-way p99 202.7ms.",
+    "This establishes the ability of this native product build to sustain500Mbps under a gentle startup condition and the substantial contribution of startup local TUN loss to previous failures. It does NOT qualify abrupt 500Mbps initial offered traffic in the actual product, because reduced warmup is a test-only injected workload; production TUN remains qlen500 by default unless explicitly configured.",
+    "Do NOT roll out synthetic generator warmup into actual product or claim no CPU regression: B process CPU naturally increases with payload throughput.",
+    "Next compare a bounded owned TUN fq_codel vs TCP pacing fq qdisc at FULL500Mbps startup and qlen1024; only adopt a product-owned queue/pacer if native real A/B passes zero warmup/steady source drop and steady >=475Mbps and acceptable latency/CPU."
+  ],
+  "qualification": "NATIVE_SINGLE_TCP500_STEADY_SCOPED_PASS_ONLY_WITH_TEST_WARMUP_RAMP; PRODUCT_ABRUPT_STARTUP_500_UNQUALIFIED"
+}

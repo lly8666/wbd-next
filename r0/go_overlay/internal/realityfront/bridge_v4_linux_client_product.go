@@ -181,6 +181,20 @@ func (p *V4LinuxClientProduct) OriginalFecTxSnapshot()(V4PublicFecTxSnapshot,err
     if p.owner==nil||p.stopped{return V4PublicFecTxSnapshot{},ErrAdmissionUnsupported}
     return p.owner.originalPublicFecTxSnapshot()
 }
+func (p *V4LinuxClientProduct) OriginalLoopPulse()(V4PublicLoopPulse,error){
+    if p==nil{return V4PublicLoopPulse{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.owner==nil||p.stopped{return V4PublicLoopPulse{},ErrAdmissionUnsupported}
+    return p.owner.originalPublicLoopPulse()
+}
+func (p *V4LinuxClientProduct) OriginalWorkerCPU()(V4PublicWorkerCPU,error){
+    if p==nil{return V4PublicWorkerCPU{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.owner==nil||p.stopped{return V4PublicWorkerCPU{},ErrAdmissionUnsupported}
+    return p.owner.originalPublicWorkerCPU()
+}
 func (p *V4LinuxClientProduct) OriginalOuterCounters()(V4PublicOuterCounters,error){
     if p==nil{return V4PublicOuterCounters{},ErrAdmissionParams}
     p.mu.Lock()

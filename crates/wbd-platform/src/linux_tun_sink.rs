@@ -251,18 +251,14 @@ impl ScopedTunSink{
         })?;
         let _lock=self.serialized.lock().map_err(|_|TunError::InvalidFd)?;
         for (i,slot) in slots[..out.attempted].iter_mut().enumerate(){
-            let mut p=PollFd{fd:self.fd.as_raw_fd(),events:POLLIN,revents:0};
-            // SAFETY: owned O_NONBLOCK TUN fd and one live pollfd, timeout 0.
-            let ready=unsafe{poll(&mut p,1,0)};
-            if ready<0{
-                let e=io::Error::last_os_error().raw_os_error().unwrap_or(5);
-                if e==4{out.status=TunReadyStatus::Interrupted;break}
-                return Err(TunError::Kernel(e))
-            }
-            if ready==0 {out.status=TunReadyStatus::WouldBlock;break}
-            if p.revents&POLLIN==0{return Err(TunError::InvalidFd)}
-            // SAFETY: caller-exclusive slot stays borrowed, kernel-owned
-            // descriptor is nonblocking even if another event races poll.
+            // This exact owned FD was forced O_NONBLOCK in from_owned_fd.
+            // A speculative read is itself the readiness check: EAGAIN
+            // terminates the bounded turn immediately. Poll(0) plus read
+            // doubles syscalls per DATA at tens of thousands of PPS while
+            // gaining no safety or correctness for this single-owner loop.
+            // Unlike read_ipv4_into's legacy readiness API, batch callers
+            // explicitly accept WouldBlock and never wait for missing DATA.
+            // SAFETY: caller-exclusive frame buffer and scoped nonblocking FD.
             let n=unsafe{read(self.fd.as_raw_fd(),slot.as_mut_ptr().cast(),slot.len())};
             if n<0{
                 let e=io::Error::last_os_error().raw_os_error().unwrap_or(5);
@@ -270,6 +266,7 @@ impl ScopedTunSink{
                 if e==4{out.status=TunReadyStatus::Interrupted;break}
                 return Err(TunError::Kernel(e))
             }
+            if n==0{out.status=TunReadyStatus::WouldBlock;break}
             out.observed+=1;
             let size=n as usize;
             out.entries[i]=if ipv4_contract(&slot[..size]){

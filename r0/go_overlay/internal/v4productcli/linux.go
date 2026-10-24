@@ -88,6 +88,7 @@ type config struct{
     disableOuterRepair bool
     recordLimit uint16
     innerMTU int
+    tunFqMaxrateMbps int
 }
 func parse(role string,args []string)(config,error){
     var c config
@@ -112,8 +113,9 @@ func parse(role string,args []string)(config,error){
     tunnel:=flags.String("tunnel-id","","original logical 16B hex tunnel id")
     mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4")
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for fixed; auto uses strong startup")
-    outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and genuine receipt feedback stay enabled")
+    outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and actual receipt feedback remain enabled")
     outerMTU:=flags.Int("outer-mtu",1500,"outer IPv4 packet MTU; inner TUN MTU is derived automatically and clamped to device/peer limits")
+    tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
     if err:=flags.Parse(args);err!=nil{return c,err}
     if *passFile!="" {
         if *pass!="" {return c,fmt.Errorf("password and password-file are mutually exclusive")}
@@ -137,13 +139,20 @@ func parse(role string,args []string)(config,error){
     }
     if *profile>6{return c,fmt.Errorf("fec-profile must be 0..6")}
     if *outerMTU<576||*outerMTU>9000{return c,fmt.Errorf("outer-mtu must be 576..9000")}
+    // User authorized product-owned fq600 for ALL Linux public modes:
+    // Normal/off, FEC Fixed/Auto, Game2/Game4. It is applied only after
+    // creating our ephemeral TUN; explicit0 remains a safe rollback.
+    if *tunFqRate!=0 && *tunFqRate!=600 {
+        return c,fmt.Errorf("tun-fq-maxrate-mbps must be 0 or 600")
+    }
+    c.tunFqMaxrateMbps=*tunFqRate
     switch *outerRepair{
     case "on":c.disableOuterRepair=false
     case "off":c.disableOuterRepair=true
     default:return c,fmt.Errorf("outer-repair must be on or off")
     }
     if c.disableOuterRepair&&c.gameLanes!=0{
-        return c,fmt.Errorf("outer-repair=off is not wired to public Game")
+        return c,fmt.Errorf("outer-repair=off currently not wired to public Game")
     }
     c.outerMTU=*outerMTU
     c.fecProfile=realityfront.FecV2Profile(*profile)
@@ -186,6 +195,33 @@ func runIP(args ...string)error{
     output,err:=cmd.CombinedOutput()
     if err!=nil{return fmt.Errorf("owned Linux ip %v: %w %s",args,err,output)}
     return nil
+}
+// Only the newly-owned ephemeral TUN is modified: never host/global sysctls
+// or arbitrary application TCP sockets. If tc/kernel fq is unavailable,
+// fail closed instead of claiming protected startup traffic.
+func setOwnedTunFq(name string,rateMbps int)error{
+    if rateMbps==0{return nil}
+    if rateMbps!=600{return fmt.Errorf("unsupported owned TUN fq rate")}
+    // The default kernel fq flow_limit=100 dropped two real warmup UDP
+    // frames at 370Mbps despite a 500Mbps outer line (flows_plimit=2).
+    // 256 near-MTU packets are at most ~384KiB per flow; global fq
+    // limit=10000 remains unchanged and bounds aggregate queue memory.
+    cmd:=exec.Command("tc","qdisc","replace","dev",name,"root","fq",
+        "maxrate",strconv.Itoa(rateMbps)+"mbit","flow_limit","256")
+    if b,err:=cmd.CombinedOutput();err!=nil{
+        return fmt.Errorf("owned TUN fq setup: %w %s",err,b)
+    }
+    b,err:=exec.Command("tc","-d","qdisc","show","dev",name).CombinedOutput()
+    if err!=nil{return fmt.Errorf("owned TUN fq readback: %w %s",err,b)}
+    for _,line:=range strings.Split(string(b),"\n"){
+        if strings.HasPrefix(line,"qdisc fq ") &&
+            strings.Contains(line," root ") &&
+            strings.Contains(line," maxrate 600Mbit") &&
+            strings.Contains(line," flow_limit 256"){
+            return nil
+        }
+    }
+    return fmt.Errorf("owned TUN fq maxrate readback mismatch on %s",name)
 }
 type ownedTun struct{
     f *os.File
@@ -234,15 +270,27 @@ func Run(role string,args []string)error{
     if err!=nil{return err}
     iface,err:=net.InterfaceByName(cfg.rawInterface)
     if err!=nil{return err}
+    // Product SYN MSS and initial record offer are computed from the same
+    // real cold outer/interface envelope. No inherited 1360/1280 ceiling.
+    publicMSS:=min(cfg.outerMTU,iface.MTU)-40
+    if publicMSS<536||publicMSS>8960{return fmt.Errorf("unsupported public IPv4 MSS %d",publicMSS)}
+    if err=faketcp.SetPublicV4AdvertisedMSS(uint16(publicMSS));err!=nil{return err}
     cfg.recordLimit,cfg.innerMTU,err=deriveMTUBudget(cfg.outerMTU,iface.MTU,
-        faketcp.DefaultMSS,0,cfg.fecMode,cfg.gameLanes!=0)
+        uint16(publicMSS),0,cfg.fecMode,cfg.gameLanes!=0)
     if err!=nil{return err}
+    log.Printf("V4_PUBLIC_MTU_PREPARE role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d record_offer=%d tun_planned=%d",cfg.role,cfg.outerMTU,iface.MTU,publicMSS,cfg.recordLimit,cfg.innerMTU)
     tun,err:=openTun(cfg.tunName,cfg.tunCIDR,cfg.innerMTU)
     if err!=nil{return err}
     // This fallback is ONLY used if no authenticated Rust owner was started.
     // An active owner's Close performs Stop->release->network cleanup instead.
     connected:=false
     defer func(){if !connected {_ = tun.Close()}}()
+    if err=setOwnedTunFq(tun.name,cfg.tunFqMaxrateMbps);err!=nil{return err}
+    if cfg.tunFqMaxrateMbps!=0 {
+        log.Printf("V4_PUBLIC_TUN_FQ role=%s interface=%s maxrate_mbps=600 flow_limit_packets=256 readback=kernel_fq_600Mbit",cfg.role,tun.name)
+    } else {
+        log.Printf("V4_PUBLIC_TUN_FQ role=%s interface=%s maxrate_mbps=0 readback=kernel_default",cfg.role,tun.name)
+    }
     if cfg.gameLanes!=0{
         ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
         defer stop()
@@ -262,13 +310,40 @@ func Run(role string,args []string)error{
     }
     return runServer(ctx,cfg,uint32(iface.Index),tun,raw,emit,&connected)
 }
+// Opt-in native V3 diagnostic, OFF by default. Samples only every 250ms;
+ // no packet timestamps, packet payloads, heap per-record work or control ACK
+ // changes. A bounded series can distinguish TUN-M4 progress from raw-M4 RX
+ // and native worker CPU across netem blackhole/restore transitions.
+func startV3ProductTimeline(ctx context.Context,role string,
+    pulse func()(realityfront.V4PublicLoopPulse,error),
+    outer func()(realityfront.V4PublicOuterCounters,error)){
+    if os.Getenv("WBD_V3_TIMELINE")!="1"{return}
+    go func(){
+        ticker:=time.NewTicker(250*time.Millisecond)
+        defer ticker.Stop()
+        for{
+            select{
+            case <-ctx.Done(): return
+            case <-ticker.C:
+                s,e:=pulse()
+                if e!=nil{continue}
+                o,e:=outer()
+                if e!=nil{continue}
+                log.Printf("V4_PUBLIC_TIMELINE role=%s unix_ns=%d rx_records=%d tx_records=%d rx_err=%d tx_err=%d rust_rx_cpu_ns=%d rust_tx_cpu_ns=%d first_wire_bytes=%d repair_wire_bytes=%d",
+                    role,time.Now().UnixNano(),s.RxRecords,s.TxRecords,s.RxErrors,s.TxErrors,
+                    s.RxThreadCPUns,s.TxThreadCPUns,o.FirstWireBytes,o.RepairAcceptedWireBytes)
+            }
+        }
+    }()
+}
 func logAuthenticOuter(role string,v realityfront.V4PublicOuterCounters,err error){
     if err!=nil{
         log.Printf("V4_PUBLIC_M2_OUTER_NOT_AVAILABLE role=%s error=%v",role,err)
         return
     }
-    log.Printf("V4_PUBLIC_M2_OUTER role=%s policy=outer-single-repair-v2 repair_enabled=%d real_first_copy=%d authenticated_ack=%d original_frozen_retransmitted=%d driver_uncertain=%d quota_or_capacity_blocked=%d retired_total=%d repair_attempt_limit=%d shadow_limit=%d retain_cap_us=%d candidate_first=%d candidate_retry=%d acked0=%d acked1=%d acked2=%d expired0=%d expired1=%d expired2=%d repair_accepted_retired=%d repair_uncertain_retired=%d repair_abandoned_retired=%d max_queue_age_us=%d late_positive_expired=%d timing_samples=%d srtt_us=%d rttvar_us=%d recent_rtt_us=%d reorder_us=%d pto_us=%d cache_us=%d shadow_outstanding=%d blocked_fresh_global=%d blocked_fresh_shadow=%d blocked_grant=%d blocked_burst=%d blocked_quota=%d blocked_capacity=%d blocked_stale=%d blocked_local_other=%d blocked_global_other=%d blocked_invariant=%d",
-        role,func()int{if v.OuterRepairEnabled{return 1};return 0}(),v.FirstKernelCopied,v.AuthenticatedAckRetired,
+    log.Printf("V4_PUBLIC_M2_OUTER role=%s policy=outer-opportunistic-v3 loss_trigger=authenticated_mature_gap data_pto=false shadow_sampling_numerator=1 shadow_sampling_denominator=2 admission_pps=32768 repair_pps=8192 byte_credit_pct=9 byte_cap_pct=10 repair_enabled=%d first_wire_bytes=%d repair_accepted_wire_bytes=%d repair_uncertain_wire_bytes=%d real_first_copy=%d authenticated_ack=%d original_frozen_retransmitted=%d driver_uncertain=%d quota_or_capacity_blocked=%d retired_total=%d repair_attempt_limit=%d shadow_limit=%d retain_cap_us=%d candidate_first=%d candidate_retry=%d acked0=%d acked1=%d acked2=%d expired0=%d expired1=%d expired2=%d repair_accepted_retired=%d repair_uncertain_retired=%d repair_abandoned_retired=%d max_queue_age_us=%d late_positive_expired=%d timing_samples=%d srtt_us=%d rttvar_us=%d recent_rtt_us=%d reorder_us=%d pto_us=%d cache_us=%d shadow_outstanding=%d blocked_fresh_global=%d blocked_fresh_shadow=%d blocked_grant=%d blocked_burst=%d blocked_quota=%d blocked_capacity=%d blocked_stale=%d blocked_local_other=%d blocked_global_other=%d blocked_invariant=%d",
+        role,func()int{if v.OuterRepairEnabled{return 1};return 0}(),v.FirstWireBytes,v.RepairAcceptedWireBytes,v.RepairUncertainWireBytes,
+        v.FirstKernelCopied,v.AuthenticatedAckRetired,
         v.OriginalFrozenRepaired,v.DriverUncertain,
         v.BudgetOrCapacityBlocked,v.RetiredTotal,
         v.RepairAttemptLimit,v.ShadowLimit,v.RetainCapus,
@@ -302,18 +377,8 @@ func logAuthenticFecFailures(role string,v realityfront.V4PublicFecTxFailures,er
         role,v.SourcePayload,v.SourceArena,v.SourceSeal,v.ParityPolicy,
         v.ParityArena,v.ParitySeal,v.ParityM4Noncopy,v.SourceM4Noncopy)
 }
-// Product-only V4 record wire budget. The original TUN is 1200B L3 while
-// Fixed/Auto FEC requires 31B record framing plus 14B FEC repair headroom:
-// a 1180B record silently rejects every original IPv4 packet >1135B.
-// 1280B supports <=1200B L3 and stays below the independently negotiated
-// FakeTCP MSS=1360 and the real 1500B outer MTU. Never override the Rust
-// original owner route/peer MSS/MTU validation or the M4 kernel DF gate.
-func publicRecordWireLimit(mode realityfront.FecV2Mode)uint16{
-    if mode==realityfront.FecV2Fixed||mode==realityfront.FecV2Auto {
-        return 1280
-    }
-    return 1180
-}
+// No legacy 1180/1280 default record cap: deriveMTUBudget is the
+// single cold-path source of the actual offer and authenticated TUN ceiling.
 
 // One cold-path budget, in bytes. Normal data uses IPv4/TCP20+20,
 // independent record31, FEC2 repair14, and optional logical Game envelope16.
@@ -348,8 +413,9 @@ func configureTunnelMTU(c config,tun *ownedTun)func(uint16,uint16,uint16)error{
             if err=runIP("link","set","dev",tun.name,"mtu",strconv.Itoa(inner));err!=nil{return err}
             tun.mtu=inner
         }
-        log.Printf("V4_PUBLIC_MTU role=%s outer_config=%d interface=%d peer_mss=%d record_wire=%d tun_mtu=%d fec=%s lanes=%d",
-            c.role,c.outerMTU,iface.MTU,peerMSS,wire,tun.mtu,c.fecMode,c.gameLanes)
+        log.Printf("V4_PUBLIC_MTU role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d peer_mss=%d local_record_cap=%d peer_record_cap=%d record_wire=%d tun_mtu=%d fec=%s lanes=%d",
+            c.role,c.outerMTU,iface.MTU,faketcp.PublicV4AdvertisedMSS(),peerMSS,
+            c.recordLimit,limit,wire,tun.mtu,c.fecMode,c.gameLanes)
         return nil
     }
 }
@@ -411,12 +477,19 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if _,err=native.ConnectAuthenticatedPeer(dialCtx,assoc,cfg);err!=nil{return err}
     *connected=true
     log.Printf("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client Rust_owner=active real_raw_tun=1")
+    startV3ProductTimeline(ctx,"client",native.OriginalLoopPulse,native.OriginalOuterCounters)
     select{
     case <-ctx.Done():
     case err=<-errs:
     }
     counters,countErr:=native.OriginalOuterCounters()
     logAuthenticOuter("client",counters,countErr)
+    cpu,cpuErr:=native.OriginalWorkerCPU()
+    if cpuErr==nil {
+        log.Printf("V4_PUBLIC_WORKER_CPU role=client rx_thread_cpu_ns=%d tx_thread_cpu_ns=%d",cpu.RxNs,cpu.TxNs)
+    }else{
+        log.Printf("V4_PUBLIC_WORKER_CPU_UNAVAILABLE role=client reason=%v",cpuErr)
+    }
     if c.fecMode!=realityfront.FecV2Off {
         tx,txErr:=native.OriginalFecTxSnapshot()
         logAuthenticFecTx("client",tx,txErr)
@@ -542,6 +615,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                         if e==nil{
                             *connected=true
                             log.Printf("V4_ORIGINAL_GO_SERVER_NATIVE_READY role=server Rust_owner=active real_raw_tun=1")
+                            startV3ProductTimeline(ctx,"server",product.OriginalLoopPulse,product.OriginalOuterCounters)
                         }
                     }()
                 default:}
@@ -552,6 +626,12 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if *connected{
         counters,countErr:=product.OriginalOuterCounters()
         logAuthenticOuter("server",counters,countErr)
+        cpu,cpuErr:=product.OriginalWorkerCPU()
+        if cpuErr==nil {
+            log.Printf("V4_PUBLIC_WORKER_CPU role=server rx_thread_cpu_ns=%d tx_thread_cpu_ns=%d",cpu.RxNs,cpu.TxNs)
+        }else{
+            log.Printf("V4_PUBLIC_WORKER_CPU_UNAVAILABLE role=server reason=%v",cpuErr)
+        }
         if c.fecMode!=realityfront.FecV2Off {
             tx,txErr:=product.OriginalFecTxSnapshot()
             logAuthenticFecTx("server",tx,txErr)

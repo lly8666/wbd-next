@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_REAL_V3_OPPORTUNISTIC_HIGH_LOSS_30PCT_DEDICATED_TUN_READER",
+  "run": 40046784480,
+  "attempt": 1,
+  "action_conclusion": "success",
+  "artifact_id": 12541762637,
+  "artifact_zip_sha256": "f6402faeb78c308fb434daaf255032667ff52a845fa5021c256a10b64fc67aca",
+  "artifact_zip_sha256_locally_verified": true,
+  "request_source": "6681e15b2e0c136ba7a236fc508a3096b2820f77",
+  "product_source": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
+  "native_build_run": 40044879144,
+  "product_artifact_id": 12540624073,
+  "scenario": {
+    "outer_capacity_mbps_each_direction": 50,
+    "outer_loss_pct_each": 30,
+    "one_way_ms": 300,
+    "warmup_s": 10,
+    "steady_s": 60,
+    "drain_s": 30,
+    "offered_udp_app_mbps_each_direction": 33.7,
+    "policy": "outer-opportunistic-v3",
+    "zero_fec": true
+  },
+  "result": "PASS_SCOPED_OBSERVATION",
+  "observed": {
+    "udp_offered_mbps_c2s_s2c": [
+      33.6999424,
+      33.6999424
+    ],
+    "udp_delivered_mbps_c2s_s2c": [
+      25.661324933333333,
+      25.6974472
+    ],
+    "udp_missing_c2s_s2c": [
+      47229,
+      47028
+    ],
+    "firstarrival_p99_ms_c2s_s2c": [
+      944.1,
+      944.1
+    ],
+    "R_over_F_pct_c2s_s2c": [
+      8.878171085466537,
+      8.869568918792174
+    ],
+    "R_over_C_pct_c2s_s2c": [
+      6.456802971428571,
+      6.4507088
+    ],
+    "first_wire_bytes_c2s_s2c": [
+      318179417,
+      318187403
+    ],
+    "accepted_repair_wire_bytes_c2s_s2c": [
+      28248513,
+      28221851
+    ],
+    "uncertain_repair_wire_bytes_c2s_s2c": [
+      0,
+      0
+    ],
+    "source_TUN_kernel_drop_warmup_client_server": [
+      0,
+      0
+    ],
+    "source_TUN_kernel_drop_steady_client_server": [
+      0,
+      0
+    ],
+    "product_CPU_steady_s_client_server": [
+      13.87,
+      13.9
+    ],
+    "host_cpu_psi_peak_pct": 1.84,
+    "policy_readback_verified": true,
+    "stop_cleanup": true
+  },
+  "qualification": {
+    "V3_A_30pct_repair_budget": "PASS_6pct_line_AND_10pct_firstsend",
+    "UDP_product_delivery": "MEASURED_NO_INVENTED_RESIDUAL_FLOOR",
+    "source_TUN_data_safety": "PASS",
+    "V3_C_TCP500_coldstart": "NOT_QUALIFIED_REFERENCE_DISTINCT_ACTION_40046507450"
+  },
+  "note": "R/C denominator declared 50Mbps directional line times70s warmup+measurement. Received UDP business is not equal to full line capacity and is not required to be."
+}

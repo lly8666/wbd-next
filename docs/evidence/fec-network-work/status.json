@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "BLOCKED_ARTIFACT_EGRESS_NO_RUNTIME_PRODUCT_OBSERVATION",
+  "phase": "V3_MERGE_SOURCE_READY_PENDING_BUILD_AND_PRODUCT_FEC_ONLY_GATES",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -10,22 +10,14 @@
     "build_run": 39911318918,
     "artifact_id": 12482468452,
     "zip_sha256": "3518c2c3c2ea112547baaa4c732dcf99efdd18587a28af761c2f8791628fd0d9",
-    "qualification": "UPSTREAM_SINGLE_REPAIR_NOT_FEC_ONLY"
+    "qualification": "UPSTREAM_SINGLE_REPAIR_NOT_FEC_ONLY",
+    "latest_merged_freeze": "040741820b2f917b5868c285c438d4cc21c6193a",
+    "v3_policy": "outer-opportunistic-v3",
+    "shared_implementation": "V3 public data path, original global repairs, unified MTU, TUN ingress, Linux owned fq600/flow256"
   },
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": false,
-  "product_current": {
-    "source": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57",
-    "run_id": 39915080968,
-    "attempt": 1,
-    "artifact_id": 12484770973,
-    "sha256": "fd22c47a4f57fe5968f4ffb927ba7e284217c0a3fd2b3a3271ab583b600d98f4",
-    "recovery_policy": "outer-single-repair-v2",
-    "platform": "native-aarch64",
-    "build_action": "SUCCESS",
-    "arch_attested_by": "tools/network_harness/artifacts.py ELF+manifest",
-    "runtime_fec_only": "BLOCKED_GITHUB_ARTIFACT_DOWNLOAD_AFTER_SUCCESSFUL_NATIVE_BUILD"
-  },
+  "product_current": null,
   "open_requests": [
     {
       "id": "FEC-W1-fixed-max-outeroff-baseline-loss5-arm64",
@@ -50,12 +42,13 @@
     }
   ],
   "open_issues": [
-    "FEC-only original Go/Rust real public TLS/TUN performance and recovery gate NOT_RUN: artifact transfer unavailable. Native build and unit PASS do not qualify product.",
-    "Raw GitHub artifact ZIP reroute returned HTTP 503 Egress is over the account limit (Action 39915779256); first-party actions/download-artifact to Azure blob failed after five retries (39916080164). Stop pressure.",
-    "Two-side native OFF readback, zero retransmit under loss, authentic feedback, FEC parity recovered TUN, actual k/r, CPU/RSS/p99 and auto transitions NOT_OBSERVED.",
-    "Public Game and Windows outer-off wiring unsupported; upstream 2% Normal RX class conservation unresolved and may confound product results, separate from FEC codec."
+    "V3 merge is source-only; new exact native ARM64 binary, native ON/OFF readbacks and fixed/auto authentic FEC applied are NOT_YET_QUALIFIED.",
+    "V3 source retains half-PN frozen repair-only copies, independent first-send F/R ledger and batch budget ON; OFF must show zero candidates/repair copies and real feedback without fallback to v2.",
+    "Upstream evidence source 1c43b69: Fixed5 IID5 server applied0/pending true; Auto 0-loss both applied0/pending true (fq0 still one pending). Root cause NOT_ESTABLISHED; investigate true M2 reverse receipt and policy revision state.",
+    "Upstream historical 2% mixed RX conservation and host/product limits remain COMMON_PATH_SCOPE separate from FEC codec.",
+    "Historical FEC 7ad7 product zip download errors preserved in open_requests; do not repeat obsolete artifacts. Linux Game OFF switch/Windows GUI are unsupported/not wired."
   ],
-  "next_action": "STOP all new performance scenario Actions while artifact egress is blocked. On restored GitHub/Azure artifact download capacity rerun ONLY the existing immutable W1RR action 39916080164 (or one successor request after restoring, never multiple concurrent duplicate cases) with pinned ARM64 build 39915080968 artifact 12484770973. Require both native repair_enabled=0 readbacks, zero original frozen retransmitted and zero shadow candidates, real M2 feedback, live FEC parity/recovered_tun, first delivery and CPU/RSS before fixed/auto or A/B scenario expansion. Then same-VM AB/BA with explicit per-bundle repair_enabled override; old baseline has no new CLI flag. Do not update original network next_action.",
+  "next_action": "Verify merge two-parent SHA and inspect Actions at merged SOURCE (build + targeted harness contracts, parity native). Pin exactly one successful fresh ARM64 artifact; run ONE new immutable fec-work scenario with repair_enabled:false and policy outer-opportunistic-v3. Check two true native off readbacks, zero repair candidates/copies, true feedback and first TUN recovery. Then reproduce Fixed5 loss pending, Auto clean pending before performance; don't blame fq absent causal evidence.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -102,5 +95,17 @@
   },
   "merge_ready": false,
   "recovery_qualified": false,
-  "capacity_stop": true
+  "capacity_stop": false,
+  "merge_intent": {
+    "first_parent": "9cfd72968e21a63834f455a96afc71a5d35737db",
+    "second_parent": "040741820b2f917b5868c285c438d4cc21c6193a",
+    "source_after_merge": "PENDING_GITHUB_COMMIT",
+    "result": "SRC_MERGE_NOT_PRODUCT_QUALIFIED",
+    "shared_files_protected": [
+      "crates/wbd-engine/src/v4_embedded_go.rs",
+      "r0/go_overlay/internal/v4productcli/linux.go",
+      "tools/network_harness/runner.py"
+    ],
+    "prior_download_failures_preserved": true
+  }
 }

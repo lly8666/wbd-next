@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_SAME_VM_SEQUENTIAL_AB_TCP500_FIXED_QLEN1024_DRIVER_READ_SYSCALL",
+  "request_id": "V3-C-TCP1-500M-same-qlen1024-driver-poll-AB",
+  "request_source": "995cd84fd5966d54fbf9c10a3c282fbd544ad44f",
+  "run": 40037435905,
+  "attempt": 1,
+  "action_conclusion": "failure",
+  "action_failure_reason": "Both legs TCP_BACKPRESSURED and below target500; no steady TUN kernel drop",
+  "artifact_id": 12538440127,
+  "artifact_zip_sha256": "83a1b1ed47ef5fa5d947a3960a0d8bc623d6bd7f9462bae05de3d2f92d8e232c",
+  "artifact_zip_sha256_locally_verified": true,
+  "scenario": {
+    "mode": "Normal/off",
+    "tcp_single_flow_c2s": true,
+    "app_target_mbps": 500,
+    "one_way_ms": 200,
+    "outer_line_cap_mbps_each_direction": 700,
+    "outer_mtu": 1500,
+    "inner_mtu": 1429,
+    "mss_bytes": 1377,
+    "netem_loss_pct": 0,
+    "original_repair_attempt_limit": 1,
+    "original_test_only_tun_txqlen_both": 1024,
+    "tun_queue_verified_by_actual_ip_json_both": true,
+    "tcp_rmem_wmem_max": 67108864,
+    "warmup_s": 20,
+    "steady_s": 60,
+    "drain_s": 30,
+    "order": "AB"
+  },
+  "A": {
+    "source": "31e3c9f7d987a8e188cae290f8c7851068fee6b3",
+    "native_build_run": 39998272925,
+    "app_injected_delivered_mbps": 366.3200256,
+    "tcp_backpressure_events": 30598,
+    "firstarrival_p99_ms": 1884.1,
+    "tun_source_kernel_drop_warmup_client": 5440,
+    "tun_source_kernel_drop_steady_client": 0,
+    "tcp_cwnd_median_mss": 16464,
+    "tcp_notsent_median_bytes": 24146229,
+    "process_CPU_s_steady_client_server": [
+      32.69,
+      47.24
+    ],
+    "host_cpu_psi_some_peak": 27.13,
+    "host_cpu_psi_some_mean": 11.9172,
+    "result": "INCONCLUSIVE_TCP_BACKPRESSURED"
+  },
+  "B": {
+    "source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+    "native_build_run": 40001498261,
+    "artifact_id": 12521858079,
+    "artifact_zip_sha256": "864a208701801ee672b6b563c9c13b28e2c778a18ef60f12678f427ed6475523",
+    "delta_source": "ScopedTunSink::read_ready_batch uses O_NONBLOCK read as readiness, no poll0 before each packet, retains kernel EAGAIN/EINTR ownership and stop contracts",
+    "app_injected_delivered_mbps": 426.4558592,
+    "tcp_backpressure_events": 16833,
+    "firstarrival_p99_ms": 1332.1,
+    "tun_source_kernel_drop_warmup_client": 10830,
+    "tun_source_kernel_drop_steady_client": 0,
+    "tcp_cwnd_median_mss": 18000,
+    "tcp_cwnd_median_bytes": 24786000,
+    "tcp_snd_wnd_median_bytes": 40108032,
+    "tcp_notsent_median_bytes": 32019265,
+    "original_m1_peak_loans_client_server": [
+      32,
+      32
+    ],
+    "outer_repair_accepted_records_client": 35,
+    "outer_repair_accepted_ip_bytes_client": 52500,
+    "process_CPU_s_steady_client_server": [
+      37.24,
+      56.52
+    ],
+    "host_cpu_psi_some_peak": 27.6,
+    "host_cpu_psi_some_mean": 15.4778,
+    "result": "INCONCLUSIVE_TCP_BACKPRESSURED"
+  },
+  "comparison": {
+    "delta_mbps": 60.1358336,
+    "relative_throughput_change_pct": 16.415,
+    "backpressure_events_change": -13765,
+    "firstarrival_p99_change_ms": -552,
+    "total_process_CPU_seconds_A": 79.93,
+    "total_process_CPU_seconds_B": 93.76,
+    "CPU_seconds_per_Mbps_A": 0.2182,
+    "CPU_seconds_per_Mbps_B": 0.2199,
+    "interpretation": "More bytes moved at similar CPU per delivered Mbps, but not proven isolated lower CPU cost. Same-VM sequential time variability and B warmup-local-drops remain."
+  },
+  "qualified": "NO_PRODUCT_TCP500_PASS_YET",
+  "next": "Use strict test-only warmup rate contrast on same source and fixed qlen1024 to distinguish startup kernel TUN losses/CUBIC window collapse from sustained product service limit; do not silently change production queue or accept 500 from direct host-only control."
+}

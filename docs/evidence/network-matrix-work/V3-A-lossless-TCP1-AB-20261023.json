@@ -1,0 +1,125 @@
+{
+  "schema": 1,
+  "policy": "outer-opportunistic-v3",
+  "scope": "NATIVE_ARM64_SAME_VM_AB_SINGLE_TCP1_0LOSS_10M_BOTH_200MS",
+  "harness_run": 39978337012,
+  "harness_attempt": 1,
+  "harness_source": "353ac3b41cfca446c06ac0f1c228dde166984c91",
+  "artifact_id": 12513160269,
+  "artifact_zip_sha256": "2090c311cec82f6d6f4b3403fa95fe08737436e90d989cf6bfc551e16e9cf72a",
+  "artifact_zip_sha256_locally_verified": true,
+  "scenario": {
+    "one_way_ms": 200,
+    "loss_pct": 0,
+    "jitter_ms": 0,
+    "outer_mtu": 1500,
+    "tcp_flows": 1,
+    "app_mbps_each_direction": 10,
+    "steady_seconds": 60,
+    "warmup_s": 10,
+    "drain_s": 30,
+    "order": "AB"
+  },
+  "A": {
+    "source": "b179fd0ef83814a05e41833a1f312a8792625b3b",
+    "product_build_run": 39967257701,
+    "product_artifact": 12507646828,
+    "policy": "outer-single-repair-v2",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "outer_repair_accepted_client_server": [
+      147,
+      151
+    ],
+    "outer_repair_total": 298,
+    "tcp_kernel_retrans_client_server": [
+      0,
+      0
+    ],
+    "source_tun_tx_drops_client_server": [
+      0,
+      0
+    ],
+    "app_mbps_c2s_s2c": [
+      9.9998681333,
+      10.0002028
+    ],
+    "first_arrival_p99_ms_c2s_s2c": [
+      200.3,
+      200.3
+    ],
+    "product_cpu_seconds_client_server": [
+      9.02,
+      9.05
+    ],
+    "m1_peak_client_server": [
+      1406,
+      1597
+    ],
+    "feedback_dropped_client_server": [
+      0,
+      0
+    ]
+  },
+  "B": {
+    "source": "4f3fe926530e3cee903289142fcfb8437b9e4fbb",
+    "product_build_run": 39977358138,
+    "product_artifact": 12511253952,
+    "product_artifact_zip_sha256": "6bc78db2933a812576501f94888a70f5d2a424f6f9efd861bbad6fbf50feeed7",
+    "policy": "outer-opportunistic-v3",
+    "public_readback_verified": true,
+    "result": "PASS_SCOPED_OBSERVATION",
+    "outer_repair_accepted_client_server": [
+      0,
+      0
+    ],
+    "outer_repair_total": 0,
+    "outer_candidates_client_server": [
+      0,
+      0
+    ],
+    "tcp_kernel_retrans_client_server": [
+      0,
+      0
+    ],
+    "source_tun_tx_drops_client_server": [
+      0,
+      0
+    ],
+    "app_mbps_c2s_s2c": [
+      9.9998596,
+      10.0002113333
+    ],
+    "first_arrival_p99_ms_c2s_s2c": [
+      200.3,
+      200.3
+    ],
+    "product_cpu_seconds_client_server": [
+      8.71,
+      8.56
+    ],
+    "m1_peak_client_server": [
+      682,
+      874
+    ],
+    "shadow_limit": 65536,
+    "retained_attempts": 1,
+    "shadow_sampler": "1/2 PN mixed per scoped generation",
+    "data_pto": false,
+    "repair_trigger": "authenticated_mature_gap",
+    "feedback_dropped_client_server": [
+      0,
+      0
+    ],
+    "stop_and_cleanup": true
+  },
+  "cpu_seconds_total_A": 18.07,
+  "cpu_seconds_total_B": 17.27,
+  "cpu_rel_change_pct": -4.4272274488,
+  "interpretation": [
+    "Same native ARM64 Actions job, 60s steady, identical old MTU, injected/received TCP throughput at target both; neither leg had TUN/kernel TCP drops.",
+    "V3-A eliminated all recorded outer repairs (298->0), both TCP retrans remained zero, source TUN drops remained zero and per-side first arrival p99 remained200.3ms.",
+    "Per-product CPU-s per delivered GiB reduced, and M1 peak loans fell (client1406->682; server1597->874), but one paired Action is scoped not a general CPU% guarantee.",
+    "Existing legacy v2 component tests remain, new authenticated v3 mature-gap/no PTO/race tests pass on exact ARM64 source; dynamic MSS v3-B not present in B test binary."
+  ],
+  "qualification": "V3-A_ZERO_LOSS_SCOPED_PASS; V3-A_HIGH_LOSS_30PCT_6PCT_LINE_NOT_YET_TESTED; V3-B/C/D_NOT_YET_QUALIFIED"
+}

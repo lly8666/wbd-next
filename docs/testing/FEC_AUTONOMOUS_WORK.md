@@ -1,5 +1,7 @@
 # FEC独立岗位：关闭外层重传后验证与修复
 
+**2026-10-24 V3 共享代码同步优先规则**：已授权把网络冻结点 `040741820b2f917b5868c285c438d4cc21c6193a` 合入自身分支并保留双亲历史；本独立岗位仅使用最新 V3 opportunistic repair ON，不能因本文旧版 v2 引用回退统计、半量独立缓存、批量预算、统一 MTU、TUN 和 owned fq600/flow256。OFF 是一个不可伪造的真实数据重传禁止政策，同时继续真实首发质量/反馈/FEC parity。此前旧7ad7产物 Actions 下载失败是历史事实，**不能复用为 V3 合并后产品资格**。优先处理上游 Fixed 损伤/Auto 无损 pending 的原生双端策略收敛，不将其未经证明归咎 fq。
+
 2026-10-23用户直接授权新分支和新agent，随后澄清：**先完全关闭外层数据重传，只靠FEC把整套功能、恢复和成本修好。** 不等Normal外层重传岗位收口，不重做另一岗位的恢复调优；本授权覆盖本岗位自主修改、Actions dispatch和留痕，不需M0派单。
 
 工作分支 `experiment/fec-network-tuning`，独立目录 `D:\codex\wbd\wbd-fec-network-tuning`。本岗位进度只写 `docs/evidence/fec-network-work/status.json`，证据/日志分别写同名evidence子目录与 `docs/devlog/fec-network-work/`。从上游网络实验分支45325c9c冻结起步；不能把它或旧组件PASS称为FEC-only已通过。上游后续修复按相关性在安全点引入，不追浮动HEAD，不改上游分支/状态/请求。

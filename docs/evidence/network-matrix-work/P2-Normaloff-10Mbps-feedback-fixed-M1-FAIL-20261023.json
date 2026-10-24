@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "id": "P2-Normaloff-10Mbps-feedback-fixed-M1-capacity-FAIL-20261023",
+  "same_vm_ab_run": 39920539877,
+  "artifact_id": 12487087003,
+  "digest": "sha256:4f437402fcb951a5d1f5da4c536615cd3b4081f7f04088fb4e7397a074938278",
+  "products": {
+    "A": "de55a1322b4580c60e77322d2d38843caefeec79",
+    "B": "1605c32d5f5bdc99da792959dde99294a13cec77"
+  },
+  "scenario": {
+    "mode": "normal-off-only",
+    "mbps_each_direction": 10,
+    "loss_pct": 0,
+    "one_way_ms": 200,
+    "steady_s": 60,
+    "seed": 5206
+  },
+  "measurements": {
+    "A": {
+      "feedback_drop_client": 284419,
+      "feedback_drop_server": 280354,
+      "replay_duplicate_client": 13759,
+      "replay_duplicate_server": 13550,
+      "total_repair_packets": 27309,
+      "pre_read_deferred_client": 69558,
+      "pre_read_deferred_server": 65768,
+      "udp_missing_c2s": 214,
+      "udp_missing_s2c": 381
+    },
+    "B": {
+      "feedback_drop_client": 0,
+      "feedback_drop_server": 0,
+      "replay_duplicate_client": 98,
+      "replay_duplicate_server": 97,
+      "total_repair_packets": 195,
+      "pre_read_deferred_client": 11233,
+      "pre_read_deferred_server": 11250,
+      "udp_missing_c2s": 305,
+      "udp_missing_s2c": 330,
+      "c2s_udp_sent": 29417,
+      "s2c_udp_sent": 29417,
+      "client_tun_udp_read": 36720,
+      "client_staged_udp": 36720,
+      "server_tun_udp_read": 36686,
+      "server_staged_udp": 36686,
+      "server_rx_tun_udp": 36720,
+      "client_rx_tun_udp": 36686,
+      "client_product_cpu_steady_s": 2.71,
+      "server_product_cpu_steady_s": 2.78,
+      "client_peak_rss_bytes": 18276352,
+      "server_peak_rss_bytes": 18345984,
+      "client_tun_tx_dropped_before_steady": 102,
+      "client_tun_tx_dropped_measurement_end": 921,
+      "server_tun_tx_dropped_before_steady": 118,
+      "server_tun_tx_dropped_measurement_end": 1054
+    }
+  },
+  "inference": "Zero netem, no product-auth/malformed/TUN write failures, no UDP kernel socket error or host PSI, valid injected5Mbps UDP per direction. Client/Server inner sender TUN TX drop delta819/936 during steady and DATA admission defers11233/11250 despite 16 live ACK reserve; unresolved loss is BEFORE original owned read. Increasing 512->1024 M1 backed slabs is bounded source flight capacity fix, not increasing repair retries/quota or netem queue.",
+  "next_code": "Fixed cold M1 backing1024 slots, byte cap2400000; existing original 16 receipt reserve preserved. Passive FEC feature7 constructor shares arena, so static backing affected; no FEC tests dispatched intentionally.",
+  "qualification": "FAIL_10MBPS_ZERO_LOSS_FOR_B_512_SLOTS; new source untested"
+}

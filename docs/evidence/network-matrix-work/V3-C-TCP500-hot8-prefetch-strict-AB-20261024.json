@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_SAME_VM_SEQUENTIAL_AB_ONLY_ONE_INGRESS_CHANGE_STRICT_FULL_RUN_LOSSLESS",
+  "request_id": "V3-C-TCP500-strict-startup-source-drop-batched8-AB",
+  "request_source": "e1aea47973a5b655551c2cfb29213367ca080188",
+  "run": 40043921913,
+  "attempt": 1,
+  "action_conclusion": "failure",
+  "why": "Strict full-run TUN source zero-drop gate failed BOTH old/new in startup, despite TCP steady500Mbps success",
+  "artifact_id": 12540218977,
+  "artifact_zip_sha256": "9391e0560f23b62a49d3779de8fb7c2e65453404bf3f090c354b4b043947956d",
+  "artifact_sha256_verified_in_current_runtime": true,
+  "scenario": {
+    "mode": "Normal/off",
+    "one_tcp_stream": "C2S",
+    "app_target_mbps": 500,
+    "app_reverse_mbps": 0,
+    "one_way_ms": 200,
+    "outer_rate_mbps_both_directions": 700,
+    "netem_loss_pct": 0,
+    "host_arch": "aarch64",
+    "inner_mtu": 1429,
+    "tcp_mss": 1377,
+    "full_rate_warmup_s": 20,
+    "steady_s": 60,
+    "drain_s": 30,
+    "order": "AB",
+    "seed": 7092,
+    "per_leg_tun_root_qdisc": "fq",
+    "per_leg_txqueuelen": 1024,
+    "real_kernel_tun_qdisc_counters_collected": true,
+    "acceptance": {
+      "zero_source_tun_drops_full_run": true,
+      "max_steady_first_arrival_p99_ms": 400,
+      "throughput_injection_tolerance_pct": 5
+    }
+  },
+  "A": {
+    "source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+    "native_build_run": 40001498261,
+    "product_artifact_id": 12521858079,
+    "result": "FAIL_SOURCE_TUN_WARMUP_ZERO_DROP_REQUIRED",
+    "warmup_source_tun_drops_client_server": [
+      7026,
+      0
+    ],
+    "steady_source_tun_drops_client_server": [
+      0,
+      0
+    ],
+    "steady_tcp_c2s_offered_and_delivered_mbps": 500.0003584,
+    "steady_tcp_backpressure_events": 0,
+    "steady_first_arrival_p99_ms": 202.9,
+    "client_original_m1_peak_loans": 32,
+    "client_original_m1_slots": 2048,
+    "client_cpu_s_steady": 47.85,
+    "server_cpu_s_steady": 64.1,
+    "tun_root_fq_qdisc_drops_all_snapshots": 0,
+    "client_tun_tx_packets_first_steady_snapshot": 677684
+  },
+  "B": {
+    "source": "ae38b36048024f18df01cbdad171cffdc7dd2da7",
+    "native_build_run": 40043419093,
+    "native_build_conclusion": "success",
+    "native_mtu_conclusion": "success",
+    "product_artifact_id": 12539949237,
+    "product_zip_sha256": "e4d2e25771b1bde88ca7bebc6dec0f76bb7d4fccc6b298129c773e37ceb2bf48",
+    "change": "Hot only preborrow up to8 original M1 slabs after >=4 true reads in same owner mutex, sparse one remains one, unused returned before M4; no qdisc, queue, repair, crypto or feedback changes",
+    "result": "FAIL_SOURCE_TUN_WARMUP_ZERO_DROP_REQUIRED",
+    "warmup_source_tun_drops_client_server": [
+      6714,
+      0
+    ],
+    "steady_source_tun_drops_client_server": [
+      0,
+      0
+    ],
+    "steady_tcp_c2s_offered_and_delivered_mbps": 499.99598933333334,
+    "steady_tcp_backpressure_events": 0,
+    "steady_first_arrival_p99_ms": 202.9,
+    "client_original_m1_peak_loans": 32,
+    "client_original_m1_slots": 2048,
+    "client_cpu_s_steady": 45.92,
+    "server_cpu_s_steady": 64.59,
+    "tun_root_fq_qdisc_drops_all_snapshots": 0,
+    "client_tun_tx_packets_first_steady_snapshot": 692236
+  },
+  "deltas": {
+    "warmup_tun_drop_absolute_improvement": 312,
+    "warmup_tun_drop_relative_improvement_pct": 4.440648,
+    "steady_mbps_change_B_minus_A": -0.004369067,
+    "client_cpu_s_change_B_minus_A": -1.93
+  },
+  "qualification": {
+    "tcp500_steady": "PASS_SCOPED_BOTH",
+    "source_TUN_full_run_drop_zero": "FAIL_BOTH",
+    "hot8_ingress_prefetch": "INSUFFICIENT_TO_REMOVE_STARTUP_LOSS",
+    "preserved_safety": "Native build + MTU PASS, pre-read slab reservation+feedback16+one frozen repair unchanged",
+    "root_fq_qdisc_drop": "0_AT_SNAPSHOTS_BOTH_NOT_CAUSAL_PROOF_OF_RING",
+    "recorded_startup_tun_drops": "LOWER_BOUND_due to POST-start snapshot in source e1aea; corrected sampler sourceeea88c thereafter",
+    "conclusion": "Stop repeating heavier identical tests; do not raise TUN txqlen beyond2048; one under-verified option is bounded dedicated TUN reader/crypto worker separation."
+  },
+  "notes": [
+    "Direct per-device snapshot tc -s -j qdisc shows root fq drops0, with TUN link TX dropped>6700 by before-steady: this points away from fq discards at sampled moments and toward kernel TUN internal enqueue/ring, but driver and scheduler event timing is not directly observed.",
+    "Kernel Actions6.17 TUNGETFEATURES=0x7173 lacks IFF_BACKPRESSURE 0x80, so opt-in new backpressure is unavailable; evidence V3-C-TUNGETFEATURES-native-6.17-20261024.json.",
+    "In-flight 40043921913 was built before first-burst sampler correction eea88ce; counters 7026/6714 are valid lower bounds. Both already fail strict zero; there is NO need to repeat identical version only for improved early baseline.",
+    "Client CPU improvement 47.85s to45.92s one sameVM sequence not enough to prove general CPU savings; both deliver nearly identical TCP500 steady while no loss there."
+  ]
+}

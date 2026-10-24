@@ -1,0 +1,93 @@
+{
+  "schema": 1,
+  "id": "V3-C-TCP500-fq-1024-vs2048-fullwarmup-AB",
+  "kind": "NATIVE_ARM64_SAME_VM_SEQUENTIAL_AB_TEST_ONLY_TUN_QUEUE",
+  "run": 40039575725,
+  "attempt": 1,
+  "conclusion": "success",
+  "artifact_id": 12538359391,
+  "artifact_zip_sha256": "2a86c05b90bee15d34887810618448a153b2e99f9a89ba6507f9447f4d21893f",
+  "artifact_zip_sha256_locally_verified": true,
+  "request_source": "cf4a8f2ee9b6d9588b5ddf9d87e231701bc679fd",
+  "source_A_and_B": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+  "build_run": 40001498261,
+  "product_artifact_id": 12521858079,
+  "product_artifact_sha256": "864a208701801ee672b6b563c9c13b28e2c778a18ef60f12678f427ed6475523",
+  "scenario": {
+    "mode": "Normal/off",
+    "one_tcp_flow": "C2S",
+    "app_target_mbps": 500,
+    "one_way_ms": 200,
+    "rtt_ms": 400,
+    "outer_line_mbps_each_direction": 700,
+    "netem_loss_pct": 0,
+    "warmup_s": 20,
+    "warmup_rate_scale": 1,
+    "steady_s": 60,
+    "drain_s": 30,
+    "inner_tun_mtu": 1429,
+    "tcp_mss": 1377,
+    "host_arch": "aarch64",
+    "host_kernel": "6.17.0-1022-azure",
+    "tun_root_qdisc": "fq",
+    "one_owned_VM_sequential_AB": true,
+    "only_differing_knob": "test-only TUN txqueuelen A1024 B2048; SAME product and fq qdisc"
+  },
+  "A": {
+    "tun_txqlen_readback": 1024,
+    "steady_app_offered_mbps": 500.0003584,
+    "steady_app_delivered_mbps": 500.0003584,
+    "steady_missing": 0,
+    "steady_tcp_backpressure": 0,
+    "steady_firstarrival_p99_ms": 202.9,
+    "steady_tcp_kernel_retrans": 0,
+    "steady_tun_source_tx_drops_client_server": [
+      0,
+      0
+    ],
+    "client_tun_source_drop_warmup": 7471,
+    "client_tun_source_drop_total": 7471,
+    "client_tcp_retrans_cumulative_before_steady": 7468,
+    "client_m1_peak_loans": 32,
+    "client_cpu_seconds_steady": 46.34,
+    "server_cpu_seconds_steady": 64,
+    "host_cpu_psi_some_mean_pct": 27.72,
+    "product_outer_repairs_zero_loss": 0
+  },
+  "B": {
+    "tun_txqlen_readback": 2048,
+    "steady_app_offered_mbps": 500.0003584,
+    "steady_app_delivered_mbps": 500.0003584,
+    "steady_missing": 0,
+    "steady_tcp_backpressure": 0,
+    "steady_firstarrival_p99_ms": 203,
+    "steady_tcp_kernel_retrans": 0,
+    "steady_tun_source_tx_drops_client_server": [
+      0,
+      0
+    ],
+    "client_tun_source_drop_warmup": 7544,
+    "client_tun_source_drop_total": 7544,
+    "client_tcp_retrans_cumulative_before_steady": 7541,
+    "client_m1_peak_loans": 32,
+    "client_cpu_seconds_steady": 46.31,
+    "server_cpu_seconds_steady": 64.11,
+    "host_cpu_psi_some_mean_pct": 27.69,
+    "product_outer_repairs_zero_loss": 0
+  },
+  "interpreted": [
+    "Both A and B achieve sustained single-TCP500 zero injected netem loss, no application missing, no TCP backpressure, firstarrival p99~203ms, source TUN steady delta0. This is a SCOPED steady-state product PASS at full requested target, not entire-run zero source drop.",
+    "A source TUN warmup kernel drop7471 and TCP cumulative retrans7468; B TUN warmup drops7544 TCP retrans7541. Increasing txqueuelen 1024->2048 does not solve startup drops and offers no measured steady throughput improvement; keep production queue unchanged pending root cause.",
+    "Linux kernel TUN TX ring overflow can bypass root qdisc, unless backpressure supported. New IFF_BACKPRESSURE was only integrated in 2026 into newer Linux line; current Actions kernel6.17 requires actual TUNGETFEATURES readback before any use. Do not silently claim unsupported flag.",
+    "Kernel uses TUN/TAP ring and NETDEV_CHANGE_TX_QUEUE_LEN resize; qdisc fq default per-flow limit100 also exists, but root fq statistics were not captured on TUN, so no causal classification between native ring overflow and qdisc per-flow drops from this evidence alone.",
+    "Host PSI mean~27.7% while 4 vCPU and no steal; no claim of general CPU reduction or physical Windows qualification.",
+    "Success action despite warmup drops is due scoped steady gating. Extend acceptance with startup drop requirement before any all-run zero-loss product qualification."
+  ],
+  "disposition": {
+    "TCP500_STEADY": "PASS_SCOPED_NATIVE_ARM64_SINGLE_DIRECTION",
+    "STARTUP_ZERO_LOCAL_DROP": "FAIL_BOTH",
+    "QUEUE1024_TO_2048": "NO_DEMONSTRATED_BENEFIT",
+    "PRODUCTION_TUN_QUEUE_CHANGE": "NOT_AUTHORIZED_BY_THIS_EVIDENCE",
+    "NEXT": "STOP_MORE_HEAVY_BENCHMARKS; DESIGN_BOUNDED_SOURCE_TUN_ADMISSION_AND_BACKPRESSURE_WITH_KERNEL_CAPABILITY_READBACK; DO_NOT_BYPASS_AUTH; DO_NOT_INCREASE_ABOVE_2048"
+  }
+}

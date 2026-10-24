@@ -4,6 +4,7 @@ Linux namespaces are the adapter; the actual Go CLI owns TLS and Rust raw/TUN.
 This file never synthesizes transport packets, ACKs, FEC or product readiness.
 """
 import argparse
+import copy
 import json
 import os
 import platform
@@ -25,10 +26,10 @@ from .envelope import request_envelope
 
 ROOT = Path(__file__).resolve().parents[2]
 TRAFFIC = Path(__file__).with_name("traffic.py")
+TUN_STARTUP_SAMPLER = Path(__file__).with_name("tun_startup_sampler.py")
 
 def requested_outer_repair(config, label):
-    # A frozen legacy binary must never receive a flag it did not ship with.
-    # Pair A may omit the knob (historical ON); B may explicitly request OFF.
+    # Frozen legacy binaries must never receive flags they did not ship.
     return config["bundles"][label].get(
         "repair_enabled", config["product"].get("repair_enabled"))
 
@@ -39,20 +40,35 @@ def verify_outer_recovery_policy(expected, observed):
     Historical legacy bundles lack this native marker: never certify them as
     v2, but do not invalidate an otherwise useful same-VM AB control.
     """
-    if expected != "outer-single-repair-v2":
+    if expected not in ("outer-single-repair-v2", "outer-opportunistic-v3"):
         return None
-    return len(observed) == 2 and all(
-        v.get("policy") == expected
-        and v.get("repair_attempt_limit") == 1
-        and v.get("shadow_limit") == 131072
-        and v.get("retain_cap_us") == 1500000
-        for v in observed.values())
+    def verified(v):
+        if v.get("policy") != expected or v.get("repair_attempt_limit") != 1 or v.get("retain_cap_us") != 1500000:
+            return False
+        if expected == "outer-single-repair-v2":
+            return v.get("shadow_limit") == 131072
+        return (v.get("shadow_limit") == 65536
+                and v.get("loss_trigger") == "authenticated_mature_gap"
+                and v.get("data_pto") == "false"
+                and all(v.get(k) == n for k,n in (
+                    ("shadow_sampling_numerator",1),("shadow_sampling_denominator",2),
+                    ("admission_pps",32768),("repair_pps",8192),
+                    ("byte_credit_pct",9),("byte_cap_pct",10))))
+    return len(observed) == 2 and all(verified(v) for v in observed.values())
 
+
+def verify_native_game_counters(lanes,counters):
+    """Real Game lane public kernel counters; no fabricated v3 single-lane DATA repair."""
+    return lanes in (2,4) and len(counters)==2 and all(
+        c.get("lanes")==lanes and c.get("copied",0)>0
+        and c.get("delivered",0)>0 and c.get("raw_received",0)>0
+        and c.get("auth_rejected")==0
+        for c in counters.values())
 
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_RX_PROOF |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
@@ -213,7 +229,8 @@ def tcp_kernel_progress_counts(raw):
     Per-socket endpoint lines are read only in memory and immediately dropped.
     """
     fields=("bytes_sent","bytes_acked","bytes_received","notsent",
-            "unacked","cwnd","snd_wnd","rto")
+            "unacked","cwnd","snd_wnd","rto","mss","advmss","pmtu",
+            "rcvmss","ssthresh","reordering","rcv_space","dsack_dups")
     blocks=[]
     current=None
     for line in raw.splitlines():
@@ -232,8 +249,14 @@ def tcp_kernel_progress_counts(raw):
     out={"established":len(blocks)}
     values={k:[] for k in fields}
     retrans=[]
+    rtts=[]
+    cc_counts={}
     for block in blocks:
         details=" ".join(block)
+        cc=re.match(r"\s*(cubic|reno|bbr|bbr2|vegas|westwood|htcp)\b",details)
+        if cc: cc_counts[cc.group(1)]=cc_counts.get(cc.group(1),0)+1
+        matched_rtt=re.search(r"(?<![a-zA-Z0-9_])rtt:(\d+(?:\.\d+)?)/(\d+(?:\.\d+)?)",details)
+        if matched_rtt: rtts.append(float(matched_rtt.group(1)))
         for name in fields:
             found=re.search(r"(?<![a-zA-Z0-9_])"+name+r":(\d+)(?![0-9])",details)
             if found:
@@ -247,6 +270,9 @@ def tcp_kernel_progress_counts(raw):
     out["retrans"]={"sampled_sockets":len(retrans),
                     "in_flight_sum":sum(a for a,_ in retrans),
                     "total_sum":sum(b for _,b in retrans)} if retrans else "NOT_OBSERVED"
+    out["rtt_ms"]={"sampled_sockets":len(rtts),
+                   "max":max(rtts),"mean":sum(rtts)/len(rtts)} if rtts else "NOT_OBSERVED"
+    out["congestion_algorithm_counts"]=cc_counts if cc_counts else "NOT_OBSERVED"
     return out
 
 
@@ -280,18 +306,33 @@ def process(pid):
 
 
 class Monitor:
-    def __init__(self, products, output):
+    def __init__(self, products, output, tcp_namespaces=None):
         self.products, self.output = products, output
+        self.tcp_namespaces=tcp_namespaces or {}
         self.samples, self.stop = [], threading.Event()
+        self.last_tcp_poll_ns=0
         self.thread = threading.Thread(target=self.run, daemon=True)
 
     def run(self):
         while not self.stop.is_set():
             fields = read("/proc/stat").splitlines()[0].split()[1:]
-            self.samples.append({"ns": time.monotonic_ns(), "cpu": list(map(int, fields)),
-                "psi_cpu": read("/proc/pressure/cpu"),
-                "psi_memory": read("/proc/pressure/memory"),
-                "processes": {name: process(p.pid) for name, p in self.products.items()}})
+            now=time.monotonic_ns()
+            sample={"ns":now,"cpu":list(map(int,fields)),
+                    "psi_cpu":read("/proc/pressure/cpu"),
+                    "psi_memory":read("/proc/pressure/memory"),
+                    "processes":{name:process(p.pid) for name,p in self.products.items()}}
+            # Numeric TCP_INFO every 2s. Never persist raw addresses, ports,
+            # payloads or secret-bearing socket output.
+            if self.tcp_namespaces and now-self.last_tcp_poll_ns>=2_000_000_000:
+                self.last_tcp_poll_ns=now
+                sample["tcp"]={}
+                for role,ns in self.tcp_namespaces.items():
+                    try:
+                        raw=command(["ip","netns","exec",ns,"ss","-H","-tin"],False)
+                        sample["tcp"][role]=tcp_kernel_progress_counts(raw)
+                    except (OSError,subprocess.SubprocessError):
+                        sample["tcp"][role]="NOT_OBSERVED"
+            self.samples.append(sample)
             self.stop.wait(1)
 
     def finish(self, window=None):
@@ -317,9 +358,34 @@ class Monitor:
             if points:
                 costs[name] = {"cpu_s_observed_including_warmup_setup_drain": points[-1]["cpu_s"]-points[0]["cpu_s"],
                                "rss_peak_bytes": max(p["rss_bytes"] for p in points)}
+        tcp_summary={}
+        for role in self.tcp_namespaces:
+            rows=[p["tcp"][role] for p in samples
+                  if isinstance(p.get("tcp",{}).get(role),dict)
+                  and p["tcp"][role].get("established",0)>0]
+            v={"samples":len(rows)}
+            for key in ("cwnd","snd_wnd","notsent","mss","advmss","pmtu",
+                        "ssthresh","unacked","rto","reordering"):
+                vals=[p[key]["sum"] for p in rows if isinstance(p.get(key),dict)]
+                if vals:
+                    sorted_vals=sorted(vals)
+                    v[key]={"min":sorted_vals[0],
+                            "median":sorted_vals[len(sorted_vals)//2],
+                            "max":sorted_vals[-1]}
+                else: v[key]="NOT_OBSERVED"
+            rtt=[p["rtt_ms"]["mean"] for p in rows if isinstance(p.get("rtt_ms"),dict)]
+            v["rtt_ms"]={"min":min(rtt),"max":max(rtt)} if rtt else "NOT_OBSERVED"
+            cc={}
+            for p in rows:
+                d=p.get("congestion_algorithm_counts")
+                if isinstance(d,dict):
+                    for name,n in d.items(): cc[name]=cc.get(name,0)+n
+            v["congestion_algorithm_counts"]=cc if cc else "NOT_OBSERVED"
+            tcp_summary[role]=v
         return {"cpu_psi_some_peak": peak_psi, "cpu_psi_some_mean": sum(psi)/len(psi) if psi else None,
                 "cpu_psi_over20_fraction": sum(v > 20 for v in psi)/len(psi) if psi else None,
-                "samples_in_measurement": len(samples), "steal_pct_peak": peak_steal, "processes": costs}
+                "samples_in_measurement": len(samples), "steal_pct_peak": peak_steal,
+                "processes": costs, "tcp_window_summary": tcp_summary or "NOT_OBSERVED"}
 
 
 def startup_diagnostic(log_text):
@@ -349,7 +415,18 @@ def startup_diagnostic(log_text):
 
 class LinuxExperiment:
     def __init__(self, config, bundle_dir, out, label):
-        self.config, self.bundle = config, Path(bundle_dir) / "fixed-build"
+        self.config=copy.deepcopy(config)
+        self.tcp_profile=config["network"].get("tcp_window_profiles",{}).get(label,"baseline")
+        self.tcp_reorder_profile=config["network"].get("tcp_reordering_profiles",{}).get(label,"baseline")
+        self.tcp_socket_pacing_mbps=config["network"].get("tcp_socket_pacing_mbps_profiles",{}).get(label,0)
+        selected_fq=config["network"].get("product_tun_fq_maxrate_mbps_profiles",{})
+        self.product_tun_fq_explicit=label in selected_fq
+        self.product_tun_fq_maxrate_mbps=selected_fq.get(label,600)
+        self.config["network"]["tcp_window_profile_selected"]=self.tcp_profile
+        self.config["network"]["tcp_reordering_profile_selected"]=self.tcp_reorder_profile
+        self.config["network"]["tcp_socket_pacing_mbps_selected"]=self.tcp_socket_pacing_mbps
+        self.config["network"]["product_tun_fq_maxrate_mbps_selected"]=self.product_tun_fq_maxrate_mbps
+        self.bundle = Path(bundle_dir) / "fixed-build"
         self.out, self.label = Path(out), label
         self.out.mkdir(parents=True, exist_ok=False)
         self.temp = tempfile.TemporaryDirectory(prefix="wbd-net-", dir=os.environ.get("RUNNER_TEMP"))
@@ -359,7 +436,7 @@ class LinuxExperiment:
         self.iface = {"client": "wbnc0", "server": "wbns0"}
         self.ip = {"client": "10.25.0.2", "server": "10.25.0.1"}
         self.inner = {"client": "10.66.0.2", "server": "10.66.0.1"}
-        self.products, self.workers, self.handles = {}, {}, []
+        self.products, self.workers, self.samplers, self.handles = {}, {}, {}, []
         self.created = []
         self.monitor = None
         self.lanes = {"game2": 2, "game4": 4}.get(config["product"]["mode"], 1)
@@ -379,6 +456,29 @@ class LinuxExperiment:
         for ns in self.ns.values():
             command(["ip", "netns", "add", ns])
             self.created.append(ns)
+        if self.tcp_profile in ("large","bdp500"):
+            # Restrict writes to per-netns IPv4 TCP autotuning limits.
+            # Do NOT attempt net.core *mem_max writes: the ARM runner failed
+            # that readback before business; user socket SO_*BUF is clamped,
+            # so report actual getsockopt bytes instead of claiming 8MiB.
+            max_window=67108864 if self.tcp_profile=="bdp500" else 16777216
+            settings=(("net.ipv4.tcp_rmem",f"4096 4194304 {max_window}"),
+                      ("net.ipv4.tcp_wmem",f"4096 4194304 {max_window}"))
+            for role in self.ns:
+                for k,value in settings:
+                    self.nscommand(role,["sysctl","-w",k+"="+value])
+                    actual=self.nscommand(role,["sysctl","-n",k]).strip()
+                    if actual.split()!=value.split():
+                        raise RuntimeError("namespaced TCP window readback mismatch "+k)
+        if self.tcp_reorder_profile=="outer_repair_tolerant":
+            # Experimental per-netns Linux TCP threshold. Not product default.
+            # At 10Mbps/MSS1277, 192 in-flight segments span ~196ms,
+            # comparable to the extra forward path of one outer repair.
+            for role in self.ns:
+                key="net.ipv4.tcp_reordering"
+                self.nscommand(role,["sysctl","-w",key+"=192"])
+                if self.nscommand(role,["sysctl","-n",key]).strip()!="192":
+                    raise RuntimeError("namespaced TCP reordering readback mismatch")
         # Create veth inside the owned namespace, never touch host routes/firewall.
         self.nscommand("client", ["ip", "link", "add", "wbnc0", "type", "veth", "peer", "name", "wbns0"])
         self.nscommand("client", ["ip", "link", "set", "wbns0", "netns", self.ns["server"]])
@@ -397,7 +497,9 @@ class LinuxExperiment:
         (self.private / "key.pem").chmod(0o600)
         route, password, tunnel = secrets.token_hex(32), secrets.token_hex(16), secrets.token_hex(16)
         for role in ["server", "client"]:
-            args = ["env", "LD_LIBRARY_PATH=" + str(self.bundle), str(self.bundle / ("wbd-v4-" + role)),
+            args = ["env", "LD_LIBRARY_PATH=" + str(self.bundle),
+                *(["WBD_V3_TIMELINE=1"] if self.config["network"].get("v3_timeline",False) else []),
+                str(self.bundle / ("wbd-v4-" + role)),
                 "--raw-interface", self.iface[role], "--local-ip", self.ip[role],
                 "--local-port", "443" if role == "server" else "41031",
                 "--tun-name", "wbntun0", "--tun-ipv4", self.inner[role] + "/24",
@@ -411,6 +513,10 @@ class LinuxExperiment:
                 args += ["--tls-cert", str(self.private / "cert.pem"), "--tls-key", str(self.private / "key.pem")]
             else:
                 args += ["--peer-ip", self.ip["server"], "--peer-port", "443"]
+            if self.product_tun_fq_explicit:
+                # Explicit0 is rollback for any mode; omission proves the
+                # native Linux product default=600 in ALL supported modes.
+                args.extend(["--tun-fq-maxrate-mbps",str(self.product_tun_fq_maxrate_mbps)])
             self.products[role] = self.spawn(role, args, role + ".log")
             if role == "server":
                 time.sleep(.5)
@@ -427,22 +533,100 @@ class LinuxExperiment:
             time.sleep(.1)
         else:
             raise RuntimeError("real native READY timeout")
+        qlen_profile=self.config["network"].get("tun_txqlen_profiles",{}).get(self.label)
+        if qlen_profile is not None:
+            # Strict namespace-only, matched one-leg A/B diagnostic. No host
+            # sysctl and no production default change. Apply before warmup.
+            for role in self.ns:
+                self.nscommand(role,["ip","link","set","dev","wbntun0",
+                                     "txqueuelen",str(qlen_profile)])
+        qdisc_profile=self.config["network"].get("tun_qdisc_profiles",{}).get(self.label)
+        fq_rate=self.config["network"].get("tun_fq_maxrate_mbps_profiles",{}).get(self.label)
+        if qdisc_profile is not None:
+            for role in self.ns:
+                args=["tc","qdisc","replace","dev","wbntun0","root",qdisc_profile]
+                if fq_rate:
+                    args.extend(["maxrate",str(fq_rate)+"mbit"])
+                self.nscommand(role,args)
         self.effective = {"mode": self.config["product"]["mode"], "lanes": self.lanes,
-                          "game_fec": "off (public CLI explicitly sets off)",
-                          "outer_repair_requested": requested_outer_repair(self.config, self.label),
-                          "outer_repair_applied": "NOT_OBSERVED_UNTIL_NATIVE_STOP", "inner_links": {}}
+                          "game_fec": "off (public CLI explicitly sets off)", "inner_links": {}}
         for role in self.ns:
             links = json.loads(self.nscommand(role, ["ip", "-j", "link", "show", "wbntun0"]))
             self.effective["inner_links"][role] = links
+            if qlen_profile is not None and links[0].get("txqlen")!=qlen_profile:
+                raise RuntimeError("diagnostic TUN queue readback mismatch "+role)
             if (not self.config["traffic"]["allow_fragmentation"] and self.config["traffic"]["udp_share"]
                     and max(s for s, _ in self.config["traffic"]["sizes"]) + 28 > links[0]["mtu"]):
                 raise Unsupported("UDP payload+28 exceeds actual TUN MTU; explicitly allow_fragmentation or use a separate rejection case")
+        self.effective["test_only_tun_qdisc_profile"]=(
+            qdisc_profile if qdisc_profile is not None else "product_default")
+        if qdisc_profile is not None:
+            observed={}
+            for role in self.ns:
+                readback=json.loads(self.nscommand(role,["tc","-j","qdisc","show",
+                                                       "dev","wbntun0"]))
+                if not any(z.get("kind")==qdisc_profile and z.get("root")
+                           for z in readback):
+                    raise RuntimeError("diagnostic TUN qdisc root readback mismatch "+role)
+                if fq_rate:
+                    # The actual kernel qdisc, NOT an intent/strategy label:
+                    # iproute2 uses e.g. 'maxrate 600Mbit' in -d readback.
+                    detail=self.nscommand(role,["tc","-d","qdisc","show",
+                                                "dev","wbntun0"])
+                    if not re.search(r"\bmaxrate\s+600Mbit\b",detail,re.I):
+                        raise RuntimeError("TUN fq maxrate readback mismatch "+role+
+                                           " (expected 600Mbit actual kernel qdisc)")
+                observed[role]=qdisc_profile
+            self.effective["test_only_tun_qdisc_readback"]=observed
+        self.effective["product_tun_fq_maxrate_mbps"]=self.product_tun_fq_maxrate_mbps
+        self.effective["product_tun_fq_cli_override"]=(
+            str(self.product_tun_fq_maxrate_mbps) if self.product_tun_fq_explicit else "OMITTED_USE_NATIVE_DEFAULT")
+        if self.product_tun_fq_maxrate_mbps:
+            product_readback={}
+            for role in self.ns:
+                marker=("V4_PUBLIC_TUN_FQ role="+role+
+                        " interface=wbntun0 maxrate_mbps=600 flow_limit_packets=256 readback=kernel_fq_600Mbit")
+                if marker not in read(self.private / (role+".log")):
+                    raise RuntimeError("real product TUN fq readback marker missing "+role)
+                detail=self.nscommand(role,["tc","-d","qdisc","show","dev","wbntun0"])
+                actual=json.loads(self.nscommand(role,["tc","-d","-j","qdisc","show",
+                                                       "dev","wbntun0"]))
+                # iproute2 may format fq root/flow_limit/maxrate across
+                # separate detail lines, and print 256p with a suffix.
+                # Verify root and maxrate across the whole detail record;
+                # kernel -d -j options.flow_limit is the numeric source of truth.
+                if not any(line.startswith("qdisc fq ") and " root " in line
+                           for line in detail.splitlines()) or not re.search(
+                           r"\bmaxrate\s+600Mbit\b",detail,re.I):
+                    raise RuntimeError("real product TUN fq kernel readback mismatch "+role)
+                if not any(q.get("kind")=="fq" and q.get("root") and
+                           q.get("options",{}).get("flow_limit")==256
+                           for q in actual):
+                    raise RuntimeError("real product TUN fq kernel flow_limit readback mismatch "+role)
+                product_readback[role]="owned_"+self.config["product"]["mode"]+"_fq_600Mbit_flow_limit256"
+            self.effective["product_tun_fq_kernel_readback"]=product_readback
+        self.effective["test_only_tun_fq_maxrate_mbps"]=(
+            fq_rate if fq_rate is not None else "NO_TEST_OVERRIDE")
+        self.effective["test_only_tun_txqlen_profile"]=(
+            qlen_profile if qlen_profile is not None else "product_default")
+        self.effective["outer_repair_requested"]=requested_outer_repair(self.config,self.label)
+        self.effective["outer_repair_applied"]="NOT_OBSERVED_UNTIL_NATIVE_STOP"
+        self.effective["v3_timeline_enabled"]=self.config["network"].get("v3_timeline",False)
+        self.effective["startup_tun_drop_timeline_enabled"]=self.config["network"].get("startup_tun_drop_timeline",False)
+        self.effective["tcp_window_profile"]=self.tcp_profile
+        self.effective["tcp_reordering_profile"]=self.tcp_reorder_profile
+        self.effective["test_only_inner_tcp_socket_max_pacing_mbps"]=self.tcp_socket_pacing_mbps
+        self.effective["tcp_window_override"]=(
+            "namespaced tcp_[rw]mem 64MiB max; NO SO_*BUF override; preserve Linux TCP autotuning, read actual TCP_INFO and advertised window"
+            if self.tcp_profile=="bdp500" else (
+            "namespaced tcp_[rw]mem 16MiB max; socket requested 8MiB but SO_*BUF may be kernel-clamped (read back)"
+            if self.tcp_profile=="large" else "untouched baseline"))
         dump(self.out / "effective-config.json", self.effective)
         inner = min(links[0]["mtu"] for links in self.effective["inner_links"].values())
         dump(self.out / "capacity-envelope-observed-mtu.json", request_envelope(self.config, inner))
 
     def configure(self, phase, index, initial=False):
-        event = {"phase": phase["name"], "scheduled_index": index, "begin_ns": time.monotonic_ns(), "commands": []}
+        event = {"phase": phase["name"], "scheduled_index": index, "begin_ns": time.monotonic_ns(), "wall_begin_ns": time.time_ns(), "commands": []}
         for role, direction in [("client", "c2s"), ("server", "s2c")]:
             dev, d = self.iface[role], phase[direction]
             self.nscommand(role, ["iptables", "-F", "WBN_LOSS"])
@@ -471,6 +655,7 @@ class LinuxExperiment:
                         "pref", str(10+lane), "flower", "ip_proto", "tcp", "dst_port" if role == "client" else "src_port",
                         str(443+lane), "classid", f"1:{lane+1}"])
         event["end_ns"] = time.monotonic_ns()
+        event["wall_end_ns"] = time.time_ns()
         self.config_events.append(event)
 
     def snapshot(self, name):
@@ -478,6 +663,7 @@ class LinuxExperiment:
         for role in self.ns:
             row["network"][role] = {
                 "qdisc": json.loads(self.nscommand(role, ["tc", "-s", "-j", "qdisc", "show", "dev", self.iface[role]])),
+                "tun_qdisc": json.loads(self.nscommand(role, ["tc", "-s", "-j", "qdisc", "show", "dev", "wbntun0"])),
                 "links": json.loads(self.nscommand(role, ["ip", "-s", "-j", "link", "show"])),
                 "snmp": self.nscommand(role, ["cat", "/proc/net/snmp"]),
                 "udp_sockets": self.nscommand(role, ["ss", "-uanm"], False),
@@ -485,6 +671,18 @@ class LinuxExperiment:
                 "tcp_states": tcp_socket_state_counts(self.nscommand(role, ["ss", "-H", "-tan"], False)),
                 "tcp_kernel_progress": tcp_kernel_progress_counts(self.nscommand(role, ["ss", "-H", "-tin"], False)),
                 "blackhole_counters": self.nscommand(role, ["iptables", "-nvxL", "WBN_LOSS"])}
+        if name.startswith("before-"):
+            settings=("tcp_congestion_control","tcp_available_congestion_control",
+                      "tcp_mtu_probing","tcp_sack","tcp_timestamps",
+                      "tcp_window_scaling","tcp_rmem","tcp_wmem",
+                      "tcp_reordering","tcp_max_reordering","tcp_recovery")
+            row["tcp_kernel_settings"]={
+                role:{**{k:self.nscommand(role,["sysctl","-n","net.ipv4."+k],False).strip()
+                      or "NOT_OBSERVED" for k in settings},
+                      **{k:self.nscommand(role,["sysctl","-n","net.core."+k],False).strip()
+                      or "NOT_OBSERVED" for k in ("rmem_max","wmem_max")}}
+                for role in self.ns}
+        row["end_ns"]=time.monotonic_ns()
         self.snapshots.append(row)
 
     def wait_until(self, ns):
@@ -499,7 +697,14 @@ class LinuxExperiment:
         for role in self.ns:
             lines = [line for line in read(self.private / (role + ".log")).splitlines()
                      if product_marker_line(line)]
-            logs[role] = "\n".join(lines[-40:])
+            if self.config["network"].get("v3_timeline",False):
+                timeline = [line for line in lines if "V4_PUBLIC_TIMELINE " in line]
+                # At 4Hz the 1200-sample cap covers up to five minutes,
+                # never copies private TLS args, payloads or credentials.
+                (self.out / (role+"-v3-timeline.log")).write_text(
+                    "\n".join(timeline[-1200:])+"\n")
+            logs[role] = "\n".join(
+                [line for line in lines if "V4_PUBLIC_TIMELINE " not in line][-40:])
             (self.out / (role + "-product-markers.log")).write_text(logs[role] + "\n")
         return logs
 
@@ -528,7 +733,9 @@ class LinuxExperiment:
                     recovery_policy[role] = {
                         "policy": m.group(1),
                         **{k: int(v) for k, v in re.findall(
-                            r"(repair_attempt_limit|shadow_limit|retain_cap_us)=(\d+)", outer[-1])},
+                            r"(repair_attempt_limit|shadow_limit|retain_cap_us|shadow_sampling_numerator|shadow_sampling_denominator|admission_pps|repair_pps|byte_credit_pct|byte_cap_pct)=(\d+)", outer[-1])},
+                        **{k: v for k, v in re.findall(
+                            r"(loss_trigger|data_pto)=([A-Za-z0-9_-]+)", outer[-1])},
                     }
         rx_chain={}
         required_rx=("raw_observed","raw_tuple","data_unique","data_lagged32",
@@ -551,14 +758,38 @@ class LinuxExperiment:
             if lines:
                 row={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",lines[-1])}
                 if all(k in row for k in tx_fields): tx_chain[role]=row
+        m1_pool={}
+        for role,log in logs.items():
+            rows=[line for line in log.splitlines() if "V4_PUBLIC_M1_POOL " in line]
+            if rows:
+                v={k:int(n) for k,n in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
+                if all(k in v for k in ("slots","peak_loaned","charged_bytes",
+                                        "normal_control_reserve")):
+                    m1_pool[role]=v
+        diag_expected=self.config["bundles"][self.label].get("diagnostic_10x")
+        diag_readback=({role:row.get("diagnostic_10x") for role,row in m1_pool.items()}
+                       if len(m1_pool)==2 else {})
+        diag_verified=(diag_expected is None or
+            (len(diag_readback)==2 and all(n==int(diag_expected) for n in diag_readback.values())))
+        if not diag_verified:
+            verified=False
         requested_policy = self.config["bundles"][self.label].get(
             "recovery_policy", self.config.get("policy"))
-        policy_verified = verify_outer_recovery_policy(
-            requested_policy, recovery_policy)
-        if policy_verified is False:
-            verified = False
+        # Game2/Game4 use authenticated multi-lane native duplication, not
+        # the one-lane Normal/FEC M2 DATA repair ledger. They do not emit
+        # V4_PUBLIC_M2_OUTER. Never claim a v3 outer repair receipt for Game.
+        game_verified = None
+        if self.lanes > 1:
+            game_verified = verify_native_game_counters(self.lanes,counters)
+            policy_verified = None  # Explicitly N/A, not green for v3 repair.
+            if not game_verified:
+                verified = False
+        else:
+            policy_verified = verify_outer_recovery_policy(
+                requested_policy, recovery_policy)
+            if policy_verified is False:
+                verified = False
         repair = sum(v["original_frozen_retransmitted"] for v in counters.values()) if all("original_frozen_retransmitted" in v for v in counters.values()) else None
-        # Missing native readback is NOT zero DATA retransmission.
         requested_repair = requested_outer_repair(self.config, self.label)
         repair_readback_verified = None
         if requested_repair is not None:
@@ -569,6 +800,8 @@ class LinuxExperiment:
                 repair_readback_verified = repair_readback_verified and repair == 0 and all(
                     v.get("candidate_first") == 0 and v.get("candidate_retry") == 0
                     and v.get("shadow_outstanding") == 0
+                    and v.get("repair_accepted_wire_bytes") == 0
+                    and v.get("repair_uncertain_wire_bytes") == 0
                     for v in counters.values())
             if not repair_readback_verified:
                 verified = False
@@ -591,7 +824,14 @@ class LinuxExperiment:
                 "outer_repair_native_verified": repair_readback_verified,
                 "original_rx_chain": rx_chain if len(rx_chain)==2 else "NOT_OBSERVED",
                 "original_tx_chain": tx_chain if len(tx_chain)==2 else "NOT_OBSERVED",
+                "original_m1_pool": m1_pool if len(m1_pool)==2 else "NOT_OBSERVED",
+                "diagnostic_10x_expected":diag_expected,
+                "diagnostic_10x_readback":diag_readback,
+                "diagnostic_10x_verified":diag_verified,
                 "recovery_policy_verified": policy_verified,
+                "recovery_policy_applicability": ("NOT_APPLICABLE_GAME_MULTILANE"
+                    if self.lanes > 1 else "REQUIRED_SINGLE_LANE"),
+                "game_native_counters_verified": game_verified,
                 "recovery_policy_expected": requested_policy or "NOT_DECLARED",
                 "repair_packets": repair,
                 "original_m2_authenticated_coverage": fec_m2 if all(v is not None for v in fec_m2.values()) else "NOT_OBSERVED",
@@ -617,14 +857,19 @@ class LinuxExperiment:
             self.setup()
             self.configure({**self.config["phases"][0], "name": "warmup"}, 0, True)
             config_path = self.private / "effective-request.json"
-            dump(config_path, self.config)
+            traffic_config=copy.deepcopy(self.config)
+            warm_scale=self.config["network"].get("warmup_rate_scale_profiles",{}).get(self.label,1)
+            traffic_config["traffic"]["warmup_rate_scale"]=warm_scale
+            self.effective["test_only_warmup_rate_scale"]=warm_scale
+            dump(self.out/"effective-config.json",self.effective)
+            dump(config_path, traffic_config)
             start_ns = time.monotonic_ns() + 20_000_000_000
             for role in ["server", "client"]:
                 peer = "server" if role == "client" else "client"
                 self.workers[role] = self.spawn(role, [sys.executable, str(TRAFFIC), "--config", str(config_path),
                     "--role", role, "--local", self.inner[role], "--peer", self.inner[peer],
                     "--output", str(self.out / (role + "-traffic.json")), "--start-ns", str(start_ns)], role + "-traffic.log")
-            self.monitor = Monitor({**self.products, **{r + "-injector": p for r, p in self.workers.items()}}, self.out)
+            self.monitor = Monitor({**self.products, **{r + "-injector": p for r, p in self.workers.items()}}, self.out, self.ns)
             self.monitor.thread.start()
             deadline = time.monotonic() + 18
             while time.monotonic() < deadline:
@@ -635,17 +880,46 @@ class LinuxExperiment:
                 time.sleep(.1)
             else:
                 raise RuntimeError("traffic worker not ready before scheduled start")
-            self.wait_until(start_ns)
+            if self.config["network"].get("startup_tun_drop_timeline",False):
+                ready=self.private/"client-tun-startup.ready"
+                self.samplers["client"]=self.spawn("client",[
+                    sys.executable,str(TUN_STARTUP_SAMPLER),
+                    "--start-ns",str(start_ns),
+                    "--warmup-s",str(self.config["warmup_s"]),
+                    "--output",str(self.out/"client-tun-startup-samples.json"),
+                    "--ready",str(ready)],"client-tun-startup.log")
+                deadline=time.monotonic()+4
+                while not ready.exists() and time.monotonic()<deadline:
+                    if self.samplers["client"].poll() is not None:
+                        raise RuntimeError("startup TUN observer failed before traffic")
+                    time.sleep(.02)
+                if not ready.exists():
+                    raise RuntimeError("startup TUN observer not ready before traffic")
+            # Kernel startup loss must be counted BEFORE ANY app packet.
+            # Sampling after the scheduled traffic start silently censors
+            # precisely the first 100ms of TUN ring burst loss. Only use a
+            # pre-start snapshot whose actual END precedes the sender epoch.
             self.snapshot("warmup-start")
+            if self.snapshots[-1]["end_ns"]>=start_ns:
+                raise RuntimeError("startup TUN counters sampled after traffic epoch")
+            self.wait_until(start_ns)
             boundary = start_ns + int(self.config["warmup_s"] * 1e9)
             for i, phase in enumerate(self.config["phases"], 1):
                 self.wait_until(boundary)
-                self.snapshot("before-" + phase["name"])
+                # Apply the new qdisc condition BEFORE slow 100ms+ sampling.
+                # Snapshot-first moves old impairment ~120ms into a declared
+                # 0%-recovered traffic cohort and falsely attributes boundary
+                # losses to the product. Timestamp actual begin/end separately.
                 self.configure(phase, i)
                 self.config_events[-1]["scheduled_start_ns"] = boundary
+                self.snapshot("before-" + phase["name"])
                 boundary += int(phase["seconds"] * 1e9)
             self.wait_until(boundary)
             self.snapshot("measurement-end")
+            for role,p in self.samplers.items():
+                p.wait(timeout=8)
+                if p.returncode:
+                    raise RuntimeError("numeric TUN startup observer failed: "+role)
             for p in self.workers.values():
                 p.wait(timeout=self.config["drain_s"] + 10)
                 if p.returncode:
@@ -662,6 +936,126 @@ class LinuxExperiment:
             result = summarize(self.config, json.loads((self.out / "client-traffic.json").read_text()),
                                json.loads((self.out / "server-traffic.json").read_text()), self.telemetry(), host)
             result["network_accounting"] = network_accounting(self.snapshots)
+            if self.config["acceptance"].get("require_zero_tun_root_qdisc_drops_full_run",False):
+                qdrops={}
+                for role in self.ns:
+                    samples=[]
+                    for snapshot in self.snapshots:
+                        roots=[q for q in snapshot.get("network",{}).get(role,{}).get("tun_qdisc",[])
+                               if q.get("root") and q.get("kind")=="fq"]
+                        samples.append(roots[0].get("drops") if len(roots)==1 else None)
+                    qdrops[role]=samples
+                result["source_tun_fq_root_qdisc_drops_full_run"]=qdrops
+                if any(not samples or any(type(n) is not int or n != 0
+                                           for n in samples)
+                       for samples in qdrops.values()):
+                    result["failures"].append("SOURCE_TUN_FQ_ROOT_QDISC_DROP_OR_MISSING_REQUIRED")
+                    result["result"]="FAIL"
+            if self.config["network"].get("startup_tun_drop_timeline",False):
+                sample_file=self.out/"client-tun-startup-samples.json"
+                samples=json.loads(sample_file.read_text())["samples"]
+                if not samples:
+                    raise RuntimeError("numeric startup TUN timeline not observed")
+                first=samples[0]["tx_dropped"]
+                delta=max(0,samples[-1]["tx_dropped"]-first)
+                first_increase=next((v["from_start_ms"] for v in samples
+                                     if v["tx_dropped"]>first),None)
+                result["source_tun_startup_timeline"]={
+                    "scope":"TEST_ONLY_OWNED_SOURCE_TUN_NUMERIC_KERNEL_COUNTS",
+                    "samples":len(samples),"sample_first_ms":samples[0]["from_start_ms"],
+                    "first_drop_increase_ms":first_increase,"warmup_drop_delta":delta,
+                    "client_only":True,
+                    "raw_file":"client-tun-startup-samples.json"}
+            warmup_start=next((p for p in self.snapshots if p["name"]=="warmup-start"),None)
+            steady_start=next((p for p in self.snapshots if
+                p["name"]=="before-"+self.config["phases"][0]["name"]),None)
+            steady_end=next((p for p in self.snapshots if
+                p["name"]=="measurement-end"),None)
+            if warmup_start is not None and steady_start is not None:
+                warmup_drops=source_tun_tx_drops_by_role(warmup_start,steady_start)
+                result["source_tun_tx_drops_warmup"]=warmup_drops
+                if any(isinstance(n,int) and n>0 for n in warmup_drops.values()):
+                    result["warnings"].append("SOURCE_TUN_WARMUP_DROPS_NOT_FULL_ZEROLOSS")
+            if self.config["acceptance"].get("require_zero_source_tun_drops_full_run",False):
+                parts=(result.get("source_tun_tx_drops_warmup"),)
+                for section in parts:
+                    if section is None or any(type(v) is not int or v!=0 for v in section.values()):
+                        result["failures"].append("SOURCE_TUN_WARMUP_ZERO_DROP_REQUIRED")
+                        result["result"]="FAIL"
+                        break
+            if steady_start is not None and steady_end is not None:
+                drops=source_tun_tx_drops_by_role(steady_start,steady_end)
+                result["source_tun_tx_drops_steady"]=drops
+                if self.config["acceptance"].get("require_zero_source_tun_drops_full_run",False):
+                    if any(type(v) is not int or v!=0 for v in drops.values()):
+                        result["failures"].append("SOURCE_TUN_STEADY_ZERO_DROP_REQUIRED")
+                        result["result"]="FAIL"
+                if any(isinstance(n,int) and n>0 for n in drops.values()):
+                    result["limits"].append("SOURCE_TUN_TX_DROPS: kernel upstream loss before product")
+                    if result["result"]=="PASS_SCOPED_OBSERVATION":
+                        result["result"]="INCONCLUSIVE"
+            # Authentic public counters include post-M4 accepted first/repair
+            # *IP bytes*, not just packets. V3 cost gates are explicitly scoped:
+            # both numerator and full offered-capacity horizon include warmup
+            # plus the declared phases; no inferred steady-only R/C is claimed.
+            policy=self.config["bundles"][self.label].get(
+                "recovery_policy",self.config.get("policy"))
+            if policy=="outer-opportunistic-v3" and self.lanes>1:
+                # The Game wire format has no per-direction v3 DATA repair
+                # byte ledger. A Game lane-copy counter is not R/F or R/C.
+                result["v3_repair_accounting"]={
+                    d:{"status":"NOT_APPLICABLE_GAME_MULTI_LANE"} for d in ("c2s","s2c")}
+            if policy=="outer-opportunistic-v3" and self.lanes==1:
+                v3={}
+                horizon=[{"seconds":self.config["warmup_s"],
+                          "c2s":self.config["phases"][0]["c2s"],
+                          "s2c":self.config["phases"][0]["s2c"]},
+                         *self.config["phases"]]
+                for role,direction in (("client","c2s"),("server","s2c")):
+                    counters=result["telemetry"].get("counters",{}).get(role,{})
+                    fbytes=counters.get("first_wire_bytes")
+                    accepted=counters.get("repair_accepted_wire_bytes")
+                    uncertain=counters.get("repair_uncertain_wire_bytes")
+                    capacities=[p[direction]["rate_mbps"] for p in horizon]
+                    capacity=(sum(cap*1e6*p["seconds"]/8 for p,cap in
+                                  zip(horizon,capacities))
+                              if all(cap>0 for cap in capacities) else None)
+                    if not (isinstance(fbytes,int) and isinstance(accepted,int)
+                            and isinstance(uncertain,int) and fbytes>0):
+                        v3[direction]={"status":"NOT_OBSERVED"}
+                        result["limits"].append("V3_AUTHENTIC_BYTE_LEDGER_NOT_OBSERVED_"+direction)
+                        continue
+                    charged=accepted+uncertain
+                    over_f=100*charged/fbytes
+                    over_c=(100*charged/capacity if capacity else None)
+                    v3[direction]={"status":"OBSERVED_FULL_WARMUP_PLUS_PHASES",
+                        "first_wire_bytes":fbytes,"accepted_repair_wire_bytes":accepted,
+                        "uncertain_repair_wire_bytes":uncertain,
+                        "conservative_charged_wire_bytes":charged,
+                        "repair_over_fresh_pct":over_f,"declared_line_capacity_bytes":capacity,
+                        "repair_over_line_pct":over_c,"horizon_seconds":sum(p["seconds"] for p in horizon)}
+                    if over_f>self.config["acceptance"].get("max_repair_fresh_pct",10)+1e-9:
+                        # The normal percentage applies only in sustained load,
+                        # not the product's explicit 32KiB/s sparse exception.
+                        if fbytes>=327680*sum(p["seconds"] for p in horizon):
+                            result["failures"].append("V3_REPAIR_OVER_10PCT_"+direction)
+                    if "min_repair_line_pct" in self.config["acceptance"]:
+                        if over_c is None:
+                            result["limits"].append("V3_LINE_CAPACITY_NOT_OBSERVED_"+direction)
+                        elif over_c+1e-9<self.config["acceptance"]["min_repair_line_pct"]:
+                            result["failures"].append("V3_REPAIR_LINE_BELOW_MIN_"+direction)
+                result["v3_repair_accounting"]=v3
+                if result["failures"]:
+                    result["result"]="FAIL"
+                elif result["limits"] and result["result"]=="PASS_SCOPED_OBSERVATION":
+                    result["result"]="INCONCLUSIVE"
+            result["tcp_window_profile"]=self.tcp_profile
+            result["tcp_reordering_profile"]=self.tcp_reorder_profile
+            result["socket_effective_buffers"]={
+                role:json.loads((self.out/(role+"-traffic.json")).read_text()).get("effective_buffers",{})
+                for role in ("client","server")}
+            before=[v for v in self.snapshots if v["name"]=="before-"+self.config["phases"][0]["name"]]
+            result["tcp_kernel_settings"]=before[0].get("tcp_kernel_settings","NOT_OBSERVED") if before else "NOT_OBSERVED"
             # Source cohort includes late packets; CPU/wire window excludes warmup/drain.
             begin = next(s for s in self.snapshots if s["name"] == "before-" + self.config["phases"][0]["name"])
             end = next(s for s in self.snapshots if s["name"] == "measurement-end")
@@ -717,10 +1111,10 @@ class LinuxExperiment:
         return result
 
     def cleanup(self):
-        for p in [*self.workers.values(), *self.products.values()]:
+        for p in [*self.workers.values(), *self.samplers.values(), *self.products.values()]:
             if p.poll() is None:
                 p.terminate()
-        for p in [*self.workers.values(), *self.products.values()]:
+        for p in [*self.workers.values(), *self.samplers.values(), *self.products.values()]:
             try:
                 p.wait(timeout=3)
             except subprocess.TimeoutExpired:
@@ -732,6 +1126,93 @@ class LinuxExperiment:
         self.cleanup_result = {"owned_namespaces_absent": all(ns not in present for ns in self.created)}
         for f in self.handles:
             f.close()
+
+
+def source_tun_tx_drops_by_role(before,after):
+    """Exact steady kernel source TUN TX loss, before product can read it."""
+    result={}
+    for role in ("client","server"):
+        def count(snapshot):
+            links=snapshot.get("network",{}).get(role,{}).get("links",[])
+            dev=next((p for p in links if p.get("ifname")=="wbntun0"),None)
+            if not dev: return None
+            stats=dev.get("stats64",dev.get("stats",{}))
+            return stats.get("tx",{}).get("dropped")
+        x,y=count(before),count(after)
+        result[role]=y-x if isinstance(x,int) and isinstance(y,int) and y>=x else "NOT_OBSERVED"
+    return result
+
+
+def capacity_action_digest(leg):
+    """Small source-bounded numeric evidence in the Actions log, in addition
+    to the ordinary artifact. No packet payloads, addresses or credentials.
+    The log must distinguish host, injector and product capacity even when
+    a result is INCONCLUSIVE and artifact retrieval is unavailable.
+    """
+    host = leg.get("host", {})
+    proc = host.get("processes", {})
+    costs = leg.get("measurement_cost", {})
+    telemetry = leg.get("telemetry", {})
+    rows = []
+    for row in leg.get("observed", []):
+        rows.append({
+            "direction": row.get("direction"), "protocol": row.get("protocol"),
+            "phase": row.get("phase"),
+            "target_mbps": row.get("target_app_mbps"),
+            "injected_mbps": row.get("injected_app_mbps"),
+            "delivered_mbps": row.get("cohort_delivered_app_mbps"),
+            "missing": row.get("missing_after_drain"),
+            "arrival_p99_ms": row.get("first_arrival_ms", {}).get("p99_ms"),
+            "send_lag_p99_ms": row.get("send_lag_ms", {}).get("p99_ms"),
+            "tcp_backpressure": row.get("tcp_backpressure_slots"),
+            "app_send_errors": row.get("send_errors"),
+        })
+    netem = []
+    for item in leg.get("network_accounting", []):
+        for q in item.get("netem", []):
+            netem.append({"role": item.get("role"),
+                "phase": item.get("phase"), "netem_drop_pct": q.get("approx_loss_pct"),
+                "backlog_packets": q.get("end_qlen"),
+                "backlog_bytes": q.get("end_backlog_bytes"),
+                "kernel_delta": item.get("kernel_delta", {})})
+    return {
+        "label": leg.get("label"), "result": leg.get("result"),
+        "limits": leg.get("limits", [])[:16],
+        "failures": leg.get("failures", [])[:16],
+        "warnings": leg.get("warnings", [])[:8],
+        "stop_heavier_resource_cases": leg.get("stop_heavier_resource_cases"),
+        "observed": rows, "netem": netem,
+        "measurement_cpu": {
+            role: {"cpu_s": costs.get(role, {}).get("cpu_s"),
+                   "cpu_s_per_delivered_GiB":
+                        costs.get(role, {}).get("cpu_s_per_delivered_GiB"),
+                   "outer_tx_bytes":
+                        costs.get(role, {}).get("outer_interface_tx_bytes")}
+            for role in ("client", "server")},
+        "source_tun_tx_drops_steady":leg.get("source_tun_tx_drops_steady","NOT_OBSERVED"),
+        "source_tun_tx_drops_warmup":leg.get("source_tun_tx_drops_warmup","NOT_OBSERVED"),
+        "tcp_window_profile":leg.get("tcp_window_profile","NOT_OBSERVED"),
+        "tcp_reordering_profile":leg.get("tcp_reordering_profile","NOT_OBSERVED"),
+        "socket_effective_buffers":leg.get("socket_effective_buffers","NOT_OBSERVED"),
+        "tcp_kernel_settings":leg.get("tcp_kernel_settings","NOT_OBSERVED"),
+        "host": {"tcp_window_summary":host.get("tcp_window_summary","NOT_OBSERVED"),
+                 "cpu_psi_peak": host.get("cpu_psi_some_peak"),
+                 "cpu_psi_over20_fraction": host.get("cpu_psi_over20_fraction"),
+                 "steal_pct_peak": host.get("steal_pct_peak"),
+                 "processes": {
+                     name: {"cpu_s_including_setup":
+                                proc.get(name, {}).get("cpu_s_observed_including_warmup_setup_drain"),
+                            "peak_rss_bytes": proc.get(name, {}).get("rss_peak_bytes")}
+                     for name in ("client", "server", "client-injector", "server-injector")}},
+        "original_tx_chain": telemetry.get("original_tx_chain", "NOT_OBSERVED"),
+        "original_m1_pool": telemetry.get("original_m1_pool", "NOT_OBSERVED"),
+        "original_rx_chain": telemetry.get("original_rx_chain", "NOT_OBSERVED"),
+        "repair_packets": telemetry.get("repair_packets"),
+        "v3_repair_accounting": leg.get("v3_repair_accounting","NOT_OBSERVED"),
+        "stop_drained_both": telemetry.get("stop_drained_both"),
+        "policy_verified": telemetry.get("recovery_policy_verified"),
+        "owned_cleanup": leg.get("cleanup", {}).get("owned_namespaces_absent"),
+    }
 
 
 def host_identity():
@@ -780,6 +1261,11 @@ def main():
         results.append(LinuxExperiment(config, directory / ("bundle-" + label), directory / label, label).run())
         if not results[-1]["cleanup"]["owned_namespaces_absent"]:
             break  # never contaminate the second measurement
+    # The bounded digest survives in the job log when an artifact retrieval
+    # backend fails; do not make a different Action just to fetch raw results.
+    for leg in results:
+        print("NETWORK_CAPACITY_LEG " +
+              json.dumps(capacity_action_digest(leg), sort_keys=True), flush=True)
     statuses = [r["result"] for r in results]
     status = "PASS_SCOPED_OBSERVATION" if all(s == "PASS_SCOPED_OBSERVATION" for s in statuses) else (
         "FAIL" if "FAIL" in statuses else "INCONCLUSIVE")

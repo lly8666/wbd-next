@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "id": "P2-Normaloff-10Mbps-lossless-FAIL-20261023",
+  "product_source": "de55a1322b4580c60e77322d2d38843caefeec79",
+  "request_source": "d71476174cae68a6ac5bb18ceb0ed92422a3cf03",
+  "run": 39917051708,
+  "artifact_id": 12484844980,
+  "artifact_sha256": "4849a6dd624203405e7aa906f2b741d7fb21203ff27ff8ec07f43e6ec48c7787",
+  "scenario": {
+    "normal_only": true,
+    "rate_mbps_each_direction": 10,
+    "udp_tcp_split": 0.5,
+    "near_mtu_packet_pct": 99,
+    "one_way_ms": 200,
+    "loss_pct": 0,
+    "steady_s": 60
+  },
+  "result": "FAIL",
+  "observed": {
+    "c2s_udp": {
+      "sent": 29417,
+      "received": 29084,
+      "missing": 333,
+      "loss_pct": 1.1319985
+    },
+    "s2c_udp": {
+      "sent": 29417,
+      "received": 28884,
+      "missing": 533,
+      "loss_pct": 1.8118775
+    },
+    "c2s_tcp_p99_ms": 3325.8,
+    "s2c_tcp_p99_ms": 4406.4,
+    "injected_app_mbps_each_protocol_each_direction": 5.0000156,
+    "tcp_backpressure": 0,
+    "app_send_errors": 0,
+    "client": {
+      "product_cpu_steady_s": 2.61,
+      "product_rss_peak_bytes": 18018304,
+      "injector_cpu_including_setup_s": 3.58,
+      "injector_rss_peak_bytes": 25681920,
+      "pre_read_deferred": 69837,
+      "arena_failed": 0,
+      "feedback_dropped": 278718,
+      "rx_replay_duplicates": 13960
+    },
+    "server": {
+      "product_cpu_steady_s": 2.79,
+      "product_rss_peak_bytes": 18157568,
+      "injector_cpu_including_setup_s": 3.76,
+      "injector_rss_peak_bytes": 25944064,
+      "pre_read_deferred": 64629,
+      "arena_failed": 0,
+      "feedback_dropped": 282025,
+      "rx_replay_duplicates": 13837
+    },
+    "repair_packets_total": 27797,
+    "netem_loss_pct": {
+      "client": 0,
+      "server": 0
+    },
+    "host_psi_peak": 0,
+    "steal_peak": 0,
+    "kernel_udp_errors": 0,
+    "stop_drained": true,
+    "cleanup": true
+  },
+  "causal_chain": "Shared 512-slot M1 frozen owner arena is consumed by fresh DATA shadow. Authenticated reverse feedback stage also calls e.arena.allocate(); on FULL returns NotSent, requeued after 2ms, page-attempt feedback_drop amplifies, no ACK retires sender shadow, expensive PTO duplicates compete. This is a zero-wire-loss circular resource dependency, not an injector/VM/repair probability failure.",
+  "disposition": "Reserve a small bound of real M1 slots for Normal receipt stage using O(1) free list and same bounded64 return drain; no pool-size change first; preserve FEC path and all original security/retry rules; native+real business still required."
+}

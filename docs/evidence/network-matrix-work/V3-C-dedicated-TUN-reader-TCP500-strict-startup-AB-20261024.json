@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_SAME_VM_SEQUENTIAL_AB_ORIGINAL_V3_TUN_READER_VS_BOUNDED_DEDICATED_512_INGRESS",
+  "request_id": "V3-C-TCP500-dedicated-TUN-reader-strict-startup-AB",
+  "request_source": "a23c81d746472a62f991cb974fb311d8767b511a",
+  "run": 40046507450,
+  "attempt": 1,
+  "action_conclusion": "failure",
+  "artifact_id": 12541886545,
+  "artifact_zip_sha256": "c41f58d12d8ae23a2be3d885da9d9e7b33e83dbfbf6da0043dee5a3723bd6779",
+  "artifact_zip_sha256_locally_verified": true,
+  "contracts_run": 40046507471,
+  "contracts_result": "success",
+  "scenario": {
+    "policy": "outer-opportunistic-v3",
+    "mode": "Normal/off",
+    "one_TCP_stream_C2S": true,
+    "app_target_mbps": 500,
+    "outer_rate_mbps_each_direction": 700,
+    "one_way_ms": 200,
+    "loss_pct": 0,
+    "outer_mtu": 1500,
+    "tun_mtu": 1429,
+    "tcp_mss": 1377,
+    "tun_txqlen": 1024,
+    "tun_root_qdisc": "fq",
+    "warmup_s": 20,
+    "steady_s": 60,
+    "drain_s": 30,
+    "full_traffic_warmup_rate_mbps": 500,
+    "acceptance": {
+      "min_app_mbps": 475,
+      "max_firstarrival_p99_ms": 400,
+      "zero_source_tun_kernel_drop_full_run": true
+    }
+  },
+  "A": {
+    "source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+    "build_run": 40001498261,
+    "artifact_id": 12521858079,
+    "reader": "M4 original worker owner source read",
+    "result": "FAIL_SOURCE_TUN_WARMUP_ZERO_DROP_REQUIRED",
+    "kernel_source_TUN_client_dropped_warmup": 6488,
+    "kernel_source_TUN_client_dropped_steady": 0,
+    "kernel_source_TUN_server_dropped_fullrun": 0,
+    "kernel_TCP_RetransSegs_steady_client_server": [
+      0,
+      0
+    ],
+    "app_actual_injected_mbps_C2S": 500.0003584,
+    "app_actual_delivered_mbps_C2S": 500.0003584,
+    "missing_after_drain": 0,
+    "tcp_app_backpressure_events_steady": 0,
+    "first_arrival_p99_ms": 202.9,
+    "product_steady_CPU_seconds_client_server": [
+      46.17,
+      63.85
+    ],
+    "m1_pool_peak_loans_client_server": [
+      32,
+      32
+    ],
+    "policy_readback_verified": true,
+    "stop_cleanup": true
+  },
+  "B": {
+    "source": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
+    "build_run": 40044879144,
+    "artifact_id": 12540624073,
+    "artifact_zip_sha256": "f52f3c67749b399fa6778e9031e83a0f93f1fe4780d6836d7d120928b9fed763",
+    "reader": "New bounded dedicated 512-item M1-owned original TUN reader, sender exclusive PN/AEAD/M4; control reserve16, 2048 M1 slots unchanged",
+    "result": "FAIL_SOURCE_TUN_WARMUP_ZERO_DROP_REQUIRED",
+    "kernel_source_TUN_client_dropped_warmup": 6720,
+    "kernel_source_TUN_client_dropped_steady": 0,
+    "kernel_source_TUN_server_dropped_fullrun": 0,
+    "kernel_TCP_RetransSegs_steady_client_server": [
+      0,
+      0
+    ],
+    "app_actual_injected_mbps_C2S": 499.99598933333334,
+    "app_actual_delivered_mbps_C2S": 499.99598933333334,
+    "missing_after_drain": 0,
+    "tcp_app_backpressure_events_steady": 0,
+    "first_arrival_p99_ms": 203,
+    "product_steady_CPU_seconds_client_server": [
+      45.13,
+      63.02
+    ],
+    "m1_pool_peak_loans_client_server": [
+      32,
+      32
+    ],
+    "policy_readback_verified": true,
+    "stop_cleanup": true
+  },
+  "comparison": {
+    "client_startup_tun_drops_delta_B_minus_A": 232,
+    "steady_mbps_change_B_minus_A": -0.00436906666666,
+    "client_steady_cpu_s_delta_B_minus_A": -1.04,
+    "server_steady_cpu_s_delta_B_minus_A": -0.83
+  },
+  "cause_inference": [
+    "At full500Mbps warmup, both A and B cause source kernel TUN link tx_dropped thousands while full steady period has zero source kernel drops and full500Mbps delivered, so failure is specifically startup burst/arrival vs temporary TUN capacity, NOT a sustained500Mbps data path inability on this VM.",
+    "Dedicated separate source reader preserving M1 and 512 bounded handoff is functionally valid at 10Mbps both directions and meets measured 500 steady, but does not reduce startup TUN loss and incurs an additional concurrent worker; cannot promote as startup correctness fix.",
+    "M1 peak32/2048, no pre-read defer or feedback issue, policy readback true, downstream no missing after drain, both Stop cleanup pass. Raising qlen1024 to2048, hot8 slab prefetch, driver poll removal, and test-only fq were tried separately in earlier evidence without eliminating cold-start drop.",
+    "Single matched VM A/B CPU observations indicate slight reduction while both did equal work, not enough evidence to claim broad CPU efficiency improvement.",
+    "No alteration to hidden source loss acceptance is permitted. Do not call product500 full-run PASS, and do not repeat heavy 500 lossless scenario unchanged without new stage diagnostic or source fix."
+  ],
+  "qualification": {
+    "steady_TCP500": "PASS_SCOPED_BOTH",
+    "full_run_zero_TUN_drop": "FAIL_BOTH",
+    "dedicated_reader_lowload": "PASS_FROM_40045323595",
+    "dedicated_reader_startup_fix": "NOT_QUALIFIED",
+    "next": "Target a bounded first-2s burst/tx_drop timeline or other discriminating source/TUN scheduling measurement; no blind queue enlargement, no fake sender pacing, no FEC overlap."
+  }
+}
