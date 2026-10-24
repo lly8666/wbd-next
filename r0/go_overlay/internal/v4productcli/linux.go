@@ -113,7 +113,7 @@ func parse(role string,args []string)(config,error){
     mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4")
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for fixed; auto uses strong startup")
     outerMTU:=flags.Int("outer-mtu",1500,"outer IPv4 packet MTU; inner TUN MTU is derived automatically and clamped to device/peer limits")
-    tunFqRate:=flags.Int("tun-fq-maxrate-mbps",0,"owned Linux Normal/off TUN fq 600Mbps per-flow pacing; 0 leaves kernel qdisc default")
+    tunFqRate:=flags.Int("tun-fq-maxrate-mbps",-1,"Linux owned TUN per-flow fq rate Mbps: default automatic (Normal/off=600, other modes=0), explicit 0 disables, 600 enables Normal/off")
     if err:=flags.Parse(args);err!=nil{return c,err}
     if *passFile!="" {
         if *pass!="" {return c,fmt.Errorf("password and password-file are mutually exclusive")}
@@ -137,13 +137,24 @@ func parse(role string,args []string)(config,error){
     }
     if *profile>6{return c,fmt.Errorf("fec-profile must be 0..6")}
     if *outerMTU<576||*outerMTU>9000{return c,fmt.Errorf("outer-mtu must be 576..9000")}
-    if *tunFqRate!=0 && *tunFqRate!=600 {
-        return c,fmt.Errorf("tun-fq-maxrate-mbps must be 0 or 600")
+    // An omitted flag follows the validated Normal/off default. Explicit
+    // --tun-fq-maxrate-mbps=0 retains an immediate rollback path, and
+    // Fixed/Auto/Game are not silently opted into a Normal-only mechanism.
+    if *tunFqRate == -1 {
+        if c.fecMode==realityfront.FecV2Off && c.gameLanes==0 {
+            c.tunFqMaxrateMbps=600
+        } else {
+            c.tunFqMaxrateMbps=0
+        }
+    } else {
+        if *tunFqRate!=0 && *tunFqRate!=600 {
+            return c,fmt.Errorf("tun-fq-maxrate-mbps must be 0 or 600")
+        }
+        if *tunFqRate!=0 && (c.fecMode!=realityfront.FecV2Off || c.gameLanes!=0) {
+            return c,fmt.Errorf("tun-fq-maxrate-mbps is Linux Normal/off only")
+        }
+        c.tunFqMaxrateMbps=*tunFqRate
     }
-    if *tunFqRate!=0 && (c.fecMode!=realityfront.FecV2Off || c.gameLanes!=0) {
-        return c,fmt.Errorf("tun-fq-maxrate-mbps is Linux Normal/off only")
-    }
-    c.tunFqMaxrateMbps=*tunFqRate
     c.outerMTU=*outerMTU
     c.fecProfile=realityfront.FecV2Profile(*profile)
     if *iface==""||len(*tunName)==0||len(*tunName)>15||
