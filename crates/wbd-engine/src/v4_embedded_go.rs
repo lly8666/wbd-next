@@ -4728,6 +4728,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     #[cfg(not(feature="fec2_product_record"))]
     let split_ingress=false;
     let (ingress_send,ingress_recv)=std::sync::mpsc::sync_channel::<OriginalTunIngress>(512);
+    // TX and the dedicated FD reader hold independent Arc handles; the
+    // original bounded TunSink remains one object/one generation/one FD.
+    let tun_for_ingress=Arc::clone(&tun);
     let stop_tx=Arc::clone(&shutdown);
     let tx_events=Arc::clone(&events);
     let tx_cell=Arc::clone(&cell);
@@ -4854,7 +4857,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let ingress=if split_ingress{
         let stop_ingress=Arc::clone(&shutdown);
         let ingress_cell=Arc::clone(&cell);
-        let ingress_tun=Arc::clone(&tun);
+        let ingress_tun=Arc::clone(&tun_for_ingress);
         let Some(worker)=thread::Builder::new().name("wbd-original-tun-ingress".into())
             .spawn(move||original_tun_ingress_worker(
                 ingress_cell,ingress_tun,stop_ingress,generation,
