@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-C-TCP500-steady-pass-cold-source-drop-bounded8-native-AB-running",
+  "phase": "V3-C-TCP500-steady-native-pass_cold-sourceTUN-zero-drop-still-fails_bounded-reader-design",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -25,28 +25,7 @@
     "build_status": "success"
   },
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
-  "open_requests": [
-    {
-      "id": "V3-C-TCP500-strict-startup-source-drop-batched8-AB",
-      "state": "ACTIONS_QUEUED",
-      "run": 40043921913,
-      "attempt": 1,
-      "request_source": "e1aea47973a5b655551c2cfb29213367ca080188",
-      "source_A": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
-      "source_B": "ae38b36048024f18df01cbdad171cffdc7dd2da7",
-      "build_A_run": 40001498261,
-      "build_A_artifact_id": 12521858079,
-      "build_B_run": 40043419093,
-      "build_B_artifact_id": 12539949237,
-      "build_B_artifact_zip_sha256": "e4d2e25771b1bde88ca7bebc6dec0f76bb7d4fccc6b298129c773e37ceb2bf48",
-      "build_B_native_arm64": "success",
-      "build_B_native_mtu": "success",
-      "same_VM_sequential_AB": true,
-      "profile": "single TCP C2S 500Mbps RTT400, outer700Mbps both, netem0, 20warm60steady30drain, fq both, TUN qlen1024 both, warmup rate scale1 both",
-      "hard_gate": "source TUN kernel 0 drops across warmup+steady,>=475Mbps delivered, p99<=400ms, no product ACK/security changes",
-      "do_not_redispatch": true
-    }
-  ],
+  "open_requests": [],
   "recent_evidence": [
     {
       "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
@@ -193,6 +172,15 @@
       "artifact_zip_sha256": "3a043613b649fb00fab28440a8cacb2c4ae86fbae7b5a0c01ee2e19a845849a6",
       "result": "HOST_AARCH64_LINUX6.17_TUNGETFEATURES0x7173_IFF_BACKPRESSURE_UNSUPPORTED",
       "file": "V3-C-TUNGETFEATURES-native-6.17-20261024.json"
+    },
+    {
+      "id": "V3-C-TCP500-hot8-prefetch-strict-AB",
+      "run": 40043921913,
+      "attempt": 1,
+      "artifact_id": 12540218977,
+      "artifact_zip_sha256": "9391e0560f23b62a49d3779de8fb7c2e65453404bf3f090c354b4b043947956d",
+      "result": "A_B_500Mbps_STEADY_PASS_BOTH_STRICT_FAIL_SOURCE_TUN_WARMUP_DROPS_A7026_B6714",
+      "file": "V3-C-TCP500-hot8-prefetch-strict-AB-20261024.json"
     }
   ],
   "open_issues": [
@@ -207,7 +195,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "V3-C same-VM full TCP500 0loss RTT400 fq qlen1024 vs2048 run40039575725 BOTH STEADY500Mbps kernel TCP retrans0 sourceTUN steady0 p99~203 but warmup original A sourceTUN dropped7471/TCP retrans7468, B dropped7544/retrans7541, so all-run 0-drop NOT QUALIFIED; artifact12538359391 sha2a86c05... evidence V3-C-TCP500-fq-1024-vs2048-fullwarmup-AB-20261024.json. Confirmed Actions6.17 TUNGETFEATURES=0x7173 IFF_BACKPRESSURE unsupported native run40043592393/art12540287492 verified sha3a043...; no unsupported kernel flag. Scoped bounded8 ingress prefetch sourceae38 native+MTU run40043419093 SUCCESS product artifact12539949237 sha e4d2e257..., compared to prior sourceb8df native build40001498261 artifact12521858079. New ONE same-VM sequential A/B sourcee1aea479 (run40043921913 QUEUED) with exactly same qlen1024 fq seed7092, 20s FULL500 warmup, 60s steady, strict acceptance.require_zero_source_tun_drops_full_run=true, app>=475Mbps, p99<=400, no kernel local loss. New harness records warmup and steady drop deltas and true TUN qdisc stats, contracts run40043360947 PASS. DO NOT REDISPATCH. If B still startup drops stop heavier and plan bounded dedicated TUN intake producer/consumer <=512-1k slots with existing original ownership/feedback reserve, not qlen>2048 or fake ACK/auth relaxation. V3-A highloss 30pct and zero-loss10M real product b8df already PASS, V3-D mixed/idle scoped PASS. No FEC branch, main merge, deploy. Critical new validity correction: prior harness warmup-start snapshot was taken AFTER start_ns, losing potential first ~100ms drops. Commit eea88ce moves warmup snapshot and verifies end_ns<start_ns, contract to validate. In-progress Action40043921913 is immutable pre-fix request; its nonzero warmup-drop evidence remains valid lower bound, but zero warmup source drop cannot qualify until a corrected-sampler rerun. Do not auto duplicate or modify in-flight Action.",
+  "next_action": "Action40043921913 COMPLETE, artifact12540218977 sha9391e... verified ZIP. Native same-VM source A=b8df vs B=ae38 hot8 preregistry. A C2S steady500.000Mbps p99202.9/backpressure0/TUN source steady0, but warmup source TUN dropped7026; B steady499.996Mbps p99202.9/backpressure0/steady TUN0, but warmup drops6714, only312 (~4.44%) lower. STRICT ALL-RUN ZERO SOURCE TUN gate FAIL BOTH; action conclusion failure is expected. Direct TUN root fq tc -s snapshots dropped0 both, source tun link TX dropped>6700; likely internal TUN ring/driver scheduling, not authenticated repair/shadow (M1peak32/2048). More qlen1024->2048 failed; native Linux6.17 TUNGETFEATURES0x7173 lacks IFF_BACKPRESSURE. Record V3-C-TCP500-hot8-prefetch-strict-AB-20261024.json. Next real architecture: bounded dedicated TUN fd drain worker that takes arena loan BEFORE destructive TUN read, queues <=512 finite preowned slabs to independent owner M3/AEAD/M4 worker, preserves generation/route/16 control slots, no unbounded buffers, stop joins all, no DATA PTO or ACK spoof. Analyze FEC mixed mode gating before implementation. Do NOT launch another identical TCP500 test or grow qlen >2048. Only after integrated source + native ARM/MTU build, run ONE matched strict start+steady zero-TUN-drop TCP500 with CORRECTED warmup baseline snapshot end before sender start (commit eea88ce). Other V3-A highloss30 repair>=6% line <=10% fresh/0loss zero repair PASS, V3-B 1500MTU/UDP1401 PASS, V3-D mixed idle and blackhole scope PASS. No FEC independent or Windows role work; no main merge/deploy.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -484,13 +472,36 @@
       "full_run_source_drop_gate": "CODED_AND_CONTRACT_PASS",
       "tun_root_qdisc_stats": "CODED_AND_CONTRACT_PASS",
       "native_prefetch_build": "ARM64_GO_RUST_AND_MTU_SUCCESS",
-      "native_prefetch_artifact_id": 12539949237,
+      "native_prefetch_artifact_id": 12540218977,
       "native_prefetch_artifact_sha256": "e4d2e25771b1bde88ca7bebc6dec0f76bb7d4fccc6b298129c773e37ceb2bf48",
       "native_prefetch_test_run": 40043921913,
-      "native_prefetch_test_state": "ACTIONS_QUEUED",
+      "native_prefetch_test_state": "COMPLETE_STRICT_FAIL_BOTH_WARMUP_KERNEL_TUN_DROPS",
       "warmup_baseline_harness_fix": "eea88ce089e8ec0ee3fff24b81cba48c8aa870f5",
       "warmup_baseline_fix_description": "warmup-start snapshot actual end_ns BEFORE scheduled traffic start_ns; otherwise reject incomplete startup zero drop",
-      "strict_500_run_sampler_caveat": "RUN40043921913 request sourcee1aea479 predates baseline fix; if B warmup zero, MUST validate once with corrected sampler rather than treating missing earliest ~100ms as proof"
+      "strict_500_run_sampler_caveat": "RUN40043921913 request sourcee1aea479 predates baseline fix; if B warmup zero, MUST validate once with corrected sampler rather than treating missing earliest ~100ms as proof",
+      "native_prefetch_zip_sha256": "9391e0560f23b62a49d3779de8fb7c2e65453404bf3f090c354b4b043947956d",
+      "native_prefetch_a_warmup_drop": 7026,
+      "native_prefetch_b_warmup_drop": 6714,
+      "native_prefetch_steady_mbps_A_B": [
+        500.0003584,
+        499.9959893
+      ],
+      "native_prefetch_steady_drop_A_B": [
+        0,
+        0
+      ],
+      "native_prefetch_p99_A_B": [
+        202.9,
+        202.9
+      ],
+      "native_prefetch_source_startup_snapshot_caveat": "warmup counter is lower bound due pre-corrected timestamp; both observed positive and strict fail already",
+      "native_prefetch_evidence": "V3-C-TCP500-hot8-prefetch-strict-AB-20261024.json",
+      "qdisc_drop_snapshot_A_B": [
+        0,
+        0
+      ],
+      "cold_source_tun_drop_causal_boundary": "Linux TUN internal ring vs scheduler/queue not proven via event timestamp, root fq sampled drops0; IFF_BACKPRESSURE unsupported in 6.17",
+      "next_architecture": "Bounded dedicated TUN ingress reader and crypto/send partition (ownership-safe finite ring with 16 feedback slots), no more identical high-rate reruns until code actually changes"
     },
     "phase_D": {
       "run": 39985073396,
