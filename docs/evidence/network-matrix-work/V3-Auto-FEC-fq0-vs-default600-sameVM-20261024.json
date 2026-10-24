@@ -1,0 +1,163 @@
+{
+  "schema": 1,
+  "scope": "native Linux ARM64 public FEC Auto, one single sameVM sequential AB healthy0loss mode-revision causal discriminator; not broad FEC Auto qualification",
+  "product_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+  "native_build": {
+    "run": 40060850580,
+    "artifact": 12546779978,
+    "zip_sha256": "6ee4a55d14a4a7f01e49a95b3654a79af1498aeca878b0c2ba9454ec2a9100e5"
+  },
+  "action": {
+    "run": 40061749129,
+    "attempt": 1,
+    "request_source": "e79dc7faec4865d3ffb001ec2839226d9ec0baaa",
+    "artifact": 12547319636,
+    "zip_sha256": "ed142c2c991324bed43ffc102b59164192784fafc0962703929047a9764abb07",
+    "locally_verified": true,
+    "conclusion": "failure_A_and_B_FEC_applied_revision"
+  },
+  "request": {
+    "mode": "fec-auto",
+    "profile": 1,
+    "per_direction_udp_app_mbps": 10,
+    "netem_loss_pct": 0,
+    "oneway_ms": 25,
+    "warmup_s": 10,
+    "steady_s": 30,
+    "drain_s": 15,
+    "order": "AB",
+    "same_product_source_and_VM": true,
+    "strict_source_TUN_zero_drops_fullrun": true,
+    "strict_kernel_root_fq_zero_drops_fullrun": true
+  },
+  "legs": {
+    "A": {
+      "product_CLI": "--tun-fq-maxrate-mbps=0",
+      "test_only_root_qdisc": "fq no maxrate (default kernel flow_limit100)",
+      "product_default_setting": "explicit rollback",
+      "fq_root_drops_all_snapshots_client_server": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "source_tun_tx_drops_warmup_client_server": [
+        0,
+        0
+      ],
+      "source_tun_tx_drops_steady_client_server": [
+        0,
+        0
+      ],
+      "FEC_client": {
+        "mode": "auto",
+        "requested_revision": 1,
+        "applied_revision": 1,
+        "profile": 5,
+        "pending": false
+      },
+      "FEC_server": {
+        "mode": "auto",
+        "requested_revision": 1,
+        "applied_revision": 0,
+        "profile": 5,
+        "pending": true
+      },
+      "real_app_delivered_mbps_c2s_s2c": [
+        10.000016,
+        9.9997034667
+      ],
+      "missing_both": 0,
+      "p99_firstarrival_ms": 25.8,
+      "CPU_s_steady30_client_server": [
+        3.77,
+        3.65
+      ],
+      "host_PSI_some_peak_pct": 0.97,
+      "Stop": true,
+      "result": "FAIL_REAL_FEC_PENDING_SERVER"
+    },
+    "B": {
+      "product_CLI": "OMITTED_NATIVE_DEFAULT",
+      "kernel_product_fq_both": "fq maxrate 600mbit flow_limit256",
+      "fq_global_limit_packets": 10000,
+      "product_go_and_kernel_readback": true,
+      "fq_root_drops_all_snapshots_client_server": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "source_tun_tx_drops_warmup_client_server": [
+        0,
+        0
+      ],
+      "source_tun_tx_drops_steady_client_server": [
+        0,
+        0
+      ],
+      "FEC_client": {
+        "mode": "auto",
+        "requested_revision": 1,
+        "applied_revision": 0,
+        "profile": 5,
+        "pending": true
+      },
+      "FEC_server": {
+        "mode": "auto",
+        "requested_revision": 1,
+        "applied_revision": 0,
+        "profile": 5,
+        "pending": true
+      },
+      "real_app_delivered_mbps_c2s_s2c": [
+        10.000016,
+        10.0003285333
+      ],
+      "missing_both": 0,
+      "p99_firstarrival_ms": 25.8,
+      "CPU_s_steady30_client_server": [
+        3.71,
+        3.66
+      ],
+      "host_PSI_some_peak_pct": 28.33,
+      "Stop": true,
+      "result": "FAIL_REAL_FEC_PENDING_BOTH"
+    }
+  },
+  "interpretation": [
+    "Explicit fq0 A still has one-sided Auto revision pending in same exact product source/VM, so Auto FEC control incompletion is not exclusively caused by enabling fq600.",
+    "Default fq600 B also has both sides pending. This difference is not a controlled proof of worsening due to pacing: actual host PSI diverged greatly and an unseeded full AB does not reproduce identical scheduling/convergence. Do not claim fq is exonerated or guilty.",
+    "Both legs delivered ~10Mbps UDP with zero real missing/source/kernel root drops, but authentic FEC applied revision gate is unmet; never silently reclassify either leg as an Auto-mode PASS.",
+    "No change to product FEC negotiation algorithm, per team scope; FEC owner/integration needs independent review with actual readback evidence. The user-required all-mode Linux fq600 default remains enforced and verified."
+  ],
+  "qualification": "FEC_AUTO_NOT_QUALIFIED_FQ600_DEFAULT_KERNEL_APPLIED_BOTH",
+  "prior": [
+    {
+      "run": 40061047243,
+      "loss": "asym1-20-1",
+      "result": "FEC_client_pending"
+    },
+    {
+      "run": 40061499022,
+      "loss": "0%",
+      "result": "FEC_both_pending"
+    }
+  ]
+}
