@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "MAXIMUM75_PASS_100MBPS_PENDING_EXACT_FROZEN_ARM64_ACTION",
+  "phase": "MAXIMUM100_BUSINESS_PASS_RX_SLOT_CAPACITY_KNEE_STOP_125_TO_200",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -194,15 +194,24 @@
       "id": "FEC-W15-Maximum100-Stepwise-OuterOff-ARM64",
       "path": "tests/network/fec-work/W15-maximum100-stepwise-outeroff-arm64.json",
       "source": "ec344557fa8cbf4d717a81833d36f92584263478",
-      "run_id": null,
+      "run_id": 40094982877,
       "build_run": 40087393299,
       "artifact_id": 12558215058,
       "app_mbps_each": 100,
       "outer_cap_mbps_each": 400,
-      "result": "PENDING_PUSH_TRIGGER"
+      "result": "BUSINESS_PASS_RX_CAPACITY_HARD_STOP",
+      "result_artifact_id": 12559509835,
+      "qualification": {
+        "business_1pct": true,
+        "FEC_recovered_TUN": true,
+        "outer_repair_off": true,
+        "RX_pressure_eviction": false,
+        "capacity_qualified": false
+      }
     }
   ],
   "open_issues": [
+    "At W15 100Mbps 30% IID/300ms Action40094982877 both actual app paths pass (~99.956/99.968Mbps), but FEC RX exactly 96/96 active and pressure evicts29,425 blocks per side; first capacity bottleneck is RX slot count, not 8MiB bytes or CPU. Stop all higher 125/150/175/200 (NOT_RUN) under stop-on-capacity. W12 sameVM 2nd leg output asymmetry remains unresolved.",
     "W13 standalone 50Mbps Maximum30 repaired RX-capacity passes (Action40090193642 loss0.0517/0.0496%, zero decoder/capacity reject, recovered TUN>66k each). But prior W12 same VM AB B had C2S 12.23% when client veth measured 286.9MB despite source/parity M4 copy; W13 client326.27MB. Non-repeatable 2nd-leg sender-to-netem gap remains unresolved; do NOT infer that all 50Mbps arrangements passed. No further pressure as requested.",
     "FEC Maximum 50/75Mbps capacity knee independently observed at old b601 source (50Mbps 4.36/3.91% loss; 75Mbps 11.52/10.42%); candidate fix full-delivery immediate retire+bounded 96 blocks/8MiB/512 reorder, 150ms unchanged and exact reasons. UNVERIFIED pending new Action.",
     "Auto live source is being wired on this branch, not yet runtime verified: per-direction genuine maturity/actual-k 2s policy, pending native stage, quiescent switch, revision-specific M4/parity/M2 readback must all pass W7; old W7 static fail retained.",
@@ -212,7 +221,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Inspect W15 one-scenario ARM64 Maximum100Mbps outer cap400 true FEC-only. Both residual<=1%, applied and outer repair off real dual readback, zero source/kernel/qdisc drop, decoder pressure <96 blocks and zero capacity reject, actual repaired TUN, CPU/RSS/host PSI and p99. On ANY failure STOP 125/150/175/200 and record exact first limit; if PASS dispatch one 125 step on unchanged frozen artifact.",
+  "next_action": "CAPACITY_LADDER_STOPPED_AT_100_Mbps (W15 Action40094982877): business both delivered>=99.95 Mbps and RX decoder rejects0, but active block capacity96/96 and 29,425 native pressure evictions per receiver. Do NOT submit 125/150/175/200 under user's stop-on-capacity rule. If authorized to repair later, investigate 150ms real block age + input rate and bounded slot sizing; implement minimum FEC RX-only capacity change, rebuild exact ARM64 product and only rerun 100Mbps original counterexample before any heavier stage. W12 second-leg veth underfeed and Auto dynamic remain independently UNRESOLVED; no main merge/network role edits.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -284,7 +293,7 @@
   },
   "merge_ready": false,
   "recovery_qualified": true,
-  "capacity_stop": false,
+  "capacity_stop": true,
   "merge_intent": {
     "first_parent": "9cfd72968e21a63834f455a96afc71a5d35737db",
     "second_parent": "040741820b2f917b5868c285c438d4cc21c6193a",
@@ -364,7 +373,7 @@
     ],
     "requires_review": "Auto dynamic and OFF genuine RTT telemetry remain separate mandatory capabilities before full FEC mandate is green"
   },
-  "load_expansion_stop": false,
+  "load_expansion_stop": true,
   "same_vm_normal_onoff": {
     "run": 40079302195,
     "artifact": 12554018197,
@@ -712,8 +721,11 @@
         "path": "tests/network/fec-work/W15-maximum100-stepwise-outeroff-arm64.json",
         "source": "ec344557fa8cbf4d717a81833d36f92584263478",
         "artifact_id": 12558215058,
-        "run_id": null,
-        "status": "PENDING_PUSH_TRIGGER"
+        "run_id": 40094982877,
+        "status": "BUSINESS_PASS_RX_CAPACITY_HARD_STOP",
+        "conclusion": "success",
+        "result_artifact_id": 12559509835,
+        "digest": "sha256:877d3177d03268adc325aa1aa8b5e418d597c8d1ac223f9030671a683a721175"
       }
     ],
     "previous_W12_sameVM_issue": "W12 second leg output asymmetry unresolved; standalone results are scoped observations, not guaranteed reliability.",
@@ -765,6 +777,101 @@
       },
       "outer_data_retransmit_both": 0,
       "source_TUN_drop_both": 0
-    }
+    },
+    "final_observation": {
+      "schema": 1,
+      "session": "FEC_MAXIMUM_STEPWISE",
+      "source": "ec344557fa8cbf4d717a81833d36f92584263478",
+      "run": 40094982877,
+      "artifact_id": 12559509835,
+      "artifact_sha256": "877d3177d03268adc325aa1aa8b5e418d597c8d1ac223f9030671a683a721175",
+      "request": "tests/network/fec-work/W15-maximum100-stepwise-outeroff-arm64.json",
+      "mode": "fec-fixed",
+      "profile": 6,
+      "native_applied_both": true,
+      "outer_repair_off_both": true,
+      "outer_data_retransmit": 0,
+      "business_mbps_each": 100,
+      "outer_cap_mbps_each": 400,
+      "loss_iid_pct": 30,
+      "one_way_delay_ms": 300,
+      "measure_seconds": 30,
+      "business": {
+        "c2s": {
+          "injected_mbps": 100.00000293333333,
+          "delivered_mbps": 99.95597653333333,
+          "missing": 191,
+          "p99_ms": 303.1
+        },
+        "s2c": {
+          "injected_mbps": 99.99965973333333,
+          "delivered_mbps": 99.96807386666666,
+          "missing": 150,
+          "p99_ms": 303.1
+        }
+      },
+      "netem_loss_pct": {
+        "client": 29.94035311660848,
+        "server": 29.854795286363704
+      },
+      "rx": {
+        "client": {
+          "peak_active": 96,
+          "peak_stored_bytes": 3605923,
+          "pressure_evicted": 29425,
+          "age_evicted": 98,
+          "decoder_rejected": 0,
+          "reject_capacity": 0,
+          "reject_codec": 0,
+          "real_recovered_tun": 131785
+        },
+        "server": {
+          "peak_active": 96,
+          "peak_stored_bytes": 3605720,
+          "pressure_evicted": 29425,
+          "age_evicted": 97,
+          "decoder_rejected": 0,
+          "reject_capacity": 0,
+          "reject_codec": 0,
+          "real_recovered_tun": 132456
+        }
+      },
+      "cpu_measurement_s": {
+        "client": 19.4,
+        "server": 19.54
+      },
+      "rss_peak_bytes": {
+        "client": 39686144,
+        "server": 39915520
+      },
+      "host_cpu_psi_peak": 17.76,
+      "source_tun_drops_both": 0,
+      "stop_drained_both": true,
+      "result": "BUSINESS_PASS_RX_BLOCK_SLOT_CAPACITY_EXHAUSTED_STOP_LADDER",
+      "capacity_signal": "Both native receiver peak_active=96/96 and pressure_evicted=29425 each, while RX bytes peak3.61MB<8MiB, decoder reject0 and source TUN drop0. Business passes on this sample but FEC state eviction at hard limit is capacity pressure. Do not run higher under stop-on-capacity rule."
+    },
+    "unmeasured": [
+      {
+        "mbps_each": 125,
+        "status": "NOT_RUN",
+        "reason": "W15 100Mbps RX slot capacity exhausted: native 96/96 active and pressure_evicted 29425 each; stop-on-capacity rule."
+      },
+      {
+        "mbps_each": 150,
+        "status": "NOT_RUN",
+        "reason": "W15 100Mbps RX slot capacity exhausted: native 96/96 active and pressure_evicted 29425 each; stop-on-capacity rule."
+      },
+      {
+        "mbps_each": 175,
+        "status": "NOT_RUN",
+        "reason": "W15 100Mbps RX slot capacity exhausted: native 96/96 active and pressure_evicted 29425 each; stop-on-capacity rule."
+      },
+      {
+        "mbps_each": 200,
+        "status": "NOT_RUN",
+        "reason": "W15 100Mbps RX slot capacity exhausted: native 96/96 active and pressure_evicted 29425 each; stop-on-capacity rule."
+      }
+    ],
+    "status": "STOPPED_AT_100MBPS_RX_SLOT_CAPACITY_WITH_BUSINESS_PASS"
   }
 }
