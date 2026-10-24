@@ -1,0 +1,50 @@
+name: Selective TLS lab S0 native ARM64 exact-source build and functional
+run-name: "selective S0 ARM64 | ${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/selective-tls-crypto]
+    paths:
+      - ".github/workflows/selective-crypto-s0.yml"
+      - "crates/wbd-codec/**"
+      - "tools/selective_crypto/**"
+permissions: {contents: read}
+concurrency:
+  group: selective-s0-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build-functional:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Compile default-off lab feature natively and run S0 tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --release --locked -p wbd-codec --features selective-crypto-experiment
+          cargo +1.85.1 build --release --locked -p wbd-codec --features selective-crypto-experiment --example selective_crypto_cost
+          mkdir -p selective-s0-build
+          cp target/release/examples/selective_crypto_cost selective-s0-build/selective_crypto_cost
+          sha256sum selective-s0-build/selective_crypto_cost | tee selective-s0-build/binary.sha256
+          {
+            echo "SOURCE=$GITHUB_SHA"
+            echo "RUN=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "TARGET=$(uname -m)"
+            echo "RUST=$(rustc +1.85.1 --version)"
+            echo "KERNEL=$(uname -r)"
+            echo "LOCK_SHA256=$(sha256sum Cargo.lock | awk '{print $1}')"
+            echo "FEATURE=selective-crypto-experiment"
+            echo "PROFILE=release"
+            echo "CPU=$(sed -n '1p' /proc/cpuinfo)"
+          } > selective-s0-build/manifest.env
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: selective-arm64-build-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: selective-s0-build/
+          if-no-files-found: error
+          retention-days: 30
