@@ -14,7 +14,7 @@ on:
     paths: [tests/network/request.json]
 permissions: {contents: read, actions: read}
 concurrency:
-  group: "network-harness-${{ github.ref }}-${{ inputs.request || 'tests/network/request.json' }}"
+  group: "network-harness-${{ github.ref }}-${{ github.sha }}-${{ inputs.request || 'tests/network/request.json' }}"
   cancel-in-progress: false
 jobs:
   measure:
