@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W20_PERMANENT_NEIGH_BOTH_PASS_W21_UNINSTRUMENTED_PENDING",
+  "phase": "OWNED_VETH_NUD_FIXED_W20_DIAG_AND_W21_UNINSTRUMENTED_PASS_W22_125_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -263,9 +263,21 @@
       "id": "FEC-W21-100Mbps-Owned-Static-Neighbour-Uninstrumented",
       "path": "tests/network/fec-work/W21-100Mbps-static-owned-veth-fq600-uninstrumented-arm64.json",
       "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
-      "artifact_id": 12562092730,
+      "artifact_id": 12562933989,
+      "run_id": 40102339446,
+      "result": "PASS_SCOPED_UNINSTRUMENTED_BOTH_100MBPS"
+    },
+    {
+      "id": "FEC-W22-Maximum125-Static-veth-NUD-Original-fq600",
+      "path": "tests/network/fec-work/W22-maximum125-static-owned-neighbour-original-fq600-arm64.json",
       "run_id": null,
-      "result": "PENDING_ACTION"
+      "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "artifact_id": 12562092730,
+      "build_run": 40099179830,
+      "result": "PENDING_PUSH_TRIGGER",
+      "rate_mbps_each": 125,
+      "outer_cap_mbps_each": 500,
+      "static_veth_peer_neighbour": true
     }
   ],
   "open_issues": [
@@ -281,7 +293,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Read W21 standalone 100Mbps on same frozen ARM64 artifact with static owned veth IPv4 neighbour both PERMANENT and diagnostics OFF. Verify loss<1% both, TUN/fq root no drops, native fixed6/outer OFF, FEC recovered real TUN, outer TX symmetry and CPU/RSS. If PASS, preserve as uninstrumented scoped reliability gate, then consider one 125Mbps on user-authorized gradual ladder. If FAIL inspect separate kernel edge, do not alter native fq600 or FEC math/main/upstream.",
+  "next_action": "Inspect W22 125Mbps with same original native ARM64 source artifact and test-owned PERMANENT IPv4 veth neighbours, original fq600 unchanged and diagnostic sampling disabled. Require BOTH business residual<1%, both native Fixed Maximum applied, true parity recovered TUN positive, outer OFF retransmits zero, actual netem 30%, RX pressure0 of640 and source TUN/root-qdisc drop0. Report CPU-s/30, RSS, 30s total outer veth Mbps including all actual packet kinds, netem queue and PSI. If PASS only then consider 150Mbps one Action; if FAIL stop higher and identify exact bottleneck. Never claim production ARP permanently fixed.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -353,7 +365,7 @@
   },
   "merge_ready": false,
   "recovery_qualified": true,
-  "capacity_stop": true,
+  "capacity_stop": false,
   "merge_intent": {
     "first_parent": "9cfd72968e21a63834f455a96afc71a5d35737db",
     "second_parent": "040741820b2f917b5868c285c438d4cc21c6193a",
@@ -433,7 +445,7 @@
     ],
     "requires_review": "Auto dynamic and OFF genuine RTT telemetry remain separate mandatory capabilities before full FEC mandate is green"
   },
-  "load_expansion_stop": true,
+  "load_expansion_stop": false,
   "same_vm_normal_onoff": {
     "run": 40079302195,
     "artifact": 12554018197,
@@ -1128,7 +1140,62 @@
           "status": "NOT_RUN",
           "reason": "W16 new 640 cache 100Mbps counterexample FAIL C2S 5.42% loss; stop-on-business-failure; no resource/bandwidth numbers invented."
         }
-      ]
+      ],
+      "post_nud_100": {
+        "run": 40102339446,
+        "artifact_id": 12562933989,
+        "sha256": "009ea92abf5926471d8c404a08c22f8fa64fbe463a6052c5977d4f8f19681963",
+        "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+        "role_neighbours": "both PERMANENT on test-only owned veth before real DATA netem",
+        "source_tun_fq600": "unchanged both",
+        "diagnostic_500ms": false,
+        "conclusion": "PASS_SCOPED_UNINSTRUMENTED_100MBPS",
+        "business": {
+          "c2s": {
+            "injected_mbps": 99.99965973333333,
+            "delivered_mbps": 99.98362026666666,
+            "missing": 99,
+            "p99_ms": 303.5
+          },
+          "s2c": {
+            "injected_mbps": 100.00000293333333,
+            "delivered_mbps": 99.97648133333333,
+            "missing": 117,
+            "p99_ms": 303.4
+          }
+        },
+        "outer_measured_30s": {
+          "client_bytes": 650298409,
+          "server_bytes": 650397408,
+          "client_mbps": 173.41290906666666,
+          "server_mbps": 173.4393088,
+          "combined_mbps": 346.8522178666667
+        },
+        "cpu_s": {
+          "client": 20.19,
+          "server": 20.18
+        },
+        "rss_peak_bytes": {
+          "client": 40062976,
+          "server": 39948288
+        },
+        "netem_loss_pct": {
+          "client": 30.019025925582586,
+          "server": 29.98569460633676
+        },
+        "FEC_recovered_to_TUN": {
+          "client": 132147,
+          "server": 132834
+        },
+        "RX_active_peak_both": 109,
+        "RX_pressure_evictions_both": 0,
+        "RX_decoder_rejects_both": 0,
+        "source_TUN_drops_both": 0,
+        "outer_DATA_repair_copies_both": 0,
+        "stop_drained": true
+      },
+      "next_user_authorized_step": 125,
+      "pending_125_request": "tests/network/fec-work/W22-maximum125-static-owned-neighbour-original-fq600-arm64.json"
     }
   },
   "single_direction_investigation": {
@@ -1274,7 +1341,57 @@
       "diagnostics": false,
       "static_peer_neighbour": true,
       "original_fq600_unchanged": true,
-      "status": "PENDING"
+      "status": "PENDING",
+      "run": 40102339446,
+      "artifact_id": 12562933989,
+      "sha256": "009ea92abf5926471d8c404a08c22f8fa64fbe463a6052c5977d4f8f19681963",
+      "role_neighbours": "both PERMANENT on test-only owned veth before real DATA netem",
+      "source_tun_fq600": "unchanged both",
+      "diagnostic_500ms": false,
+      "conclusion": "PASS_SCOPED_UNINSTRUMENTED_100MBPS",
+      "business": {
+        "c2s": {
+          "injected_mbps": 99.99965973333333,
+          "delivered_mbps": 99.98362026666666,
+          "missing": 99,
+          "p99_ms": 303.5
+        },
+        "s2c": {
+          "injected_mbps": 100.00000293333333,
+          "delivered_mbps": 99.97648133333333,
+          "missing": 117,
+          "p99_ms": 303.4
+        }
+      },
+      "outer_measured_30s": {
+        "client_bytes": 650298409,
+        "server_bytes": 650397408,
+        "client_mbps": 173.41290906666666,
+        "server_mbps": 173.4393088,
+        "combined_mbps": 346.8522178666667
+      },
+      "cpu_s": {
+        "client": 20.19,
+        "server": 20.18
+      },
+      "rss_peak_bytes": {
+        "client": 40062976,
+        "server": 39948288
+      },
+      "netem_loss_pct": {
+        "client": 30.019025925582586,
+        "server": 29.98569460633676
+      },
+      "FEC_recovered_to_TUN": {
+        "client": 132147,
+        "server": 132834
+      },
+      "RX_active_peak_both": 109,
+      "RX_pressure_evictions_both": 0,
+      "RX_decoder_rejects_both": 0,
+      "source_TUN_drops_both": 0,
+      "outer_DATA_repair_copies_both": 0,
+      "stop_drained": true
     }
   }
 }

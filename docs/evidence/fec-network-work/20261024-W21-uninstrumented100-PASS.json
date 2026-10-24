@@ -1,0 +1,53 @@
+{
+  "run": 40102339446,
+  "artifact_id": 12562933989,
+  "sha256": "009ea92abf5926471d8c404a08c22f8fa64fbe463a6052c5977d4f8f19681963",
+  "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+  "role_neighbours": "both PERMANENT on test-only owned veth before real DATA netem",
+  "source_tun_fq600": "unchanged both",
+  "diagnostic_500ms": false,
+  "conclusion": "PASS_SCOPED_UNINSTRUMENTED_100MBPS",
+  "business": {
+    "c2s": {
+      "injected_mbps": 99.99965973333333,
+      "delivered_mbps": 99.98362026666666,
+      "missing": 99,
+      "p99_ms": 303.5
+    },
+    "s2c": {
+      "injected_mbps": 100.00000293333333,
+      "delivered_mbps": 99.97648133333333,
+      "missing": 117,
+      "p99_ms": 303.4
+    }
+  },
+  "outer_measured_30s": {
+    "client_bytes": 650298409,
+    "server_bytes": 650397408,
+    "client_mbps": 173.41290906666666,
+    "server_mbps": 173.4393088,
+    "combined_mbps": 346.8522178666667
+  },
+  "cpu_s": {
+    "client": 20.19,
+    "server": 20.18
+  },
+  "rss_peak_bytes": {
+    "client": 40062976,
+    "server": 39948288
+  },
+  "netem_loss_pct": {
+    "client": 30.019025925582586,
+    "server": 29.98569460633676
+  },
+  "FEC_recovered_to_TUN": {
+    "client": 132147,
+    "server": 132834
+  },
+  "RX_active_peak_both": 109,
+  "RX_pressure_evictions_both": 0,
+  "RX_decoder_rejects_both": 0,
+  "source_TUN_drops_both": 0,
+  "outer_DATA_repair_copies_both": 0,
+  "stop_drained": true
+}
