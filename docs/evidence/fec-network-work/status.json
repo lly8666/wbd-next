@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "FEC_UNILATERAL_1P6S_EGRESS_GAP_DIAG_SOURCE_PENDING_ARM64",
+  "phase": "W17_100MBPS_500MS_NATIVE_KERNEL_EGRESS_DIAGNOSTIC_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -218,6 +218,17 @@
       "artifact_id": 12561755643,
       "result": "FAIL_C2S_BUSINESS_RESIDUAL5PCT_WITH_ZERO_RX_PRESSURE",
       "result_artifact_id": 12561303555
+    },
+    {
+      "id": "FEC-W17-100Mbps-Unilateral-Egress-500ms-DIAG-ARM64",
+      "path": "tests/network/fec-work/W17-100Mbps-unilateral-egress-500ms-arm64.json",
+      "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "build_run": 40099179830,
+      "artifact_id": 12562092730,
+      "run_id": null,
+      "app_mbps_each": 100,
+      "outer_cap_mbps_each": 400,
+      "result": "PENDING_DIAG"
     }
   ],
   "open_issues": [
@@ -232,7 +243,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Build diagnostic-only source (not a performance algorithm fix). After native and harness green, pin new exact ARM64 artifact and reproduce W16 one 100Mbps directional issue with diagnostic flag; compare source ingress/stage and M4 copy deltas, netem drop+forward and veth TX/RX deltas in 500ms windows, native RX/FEC TUN and receiver application bins. If failure appears at qdisc, validate client/server owned qdisc readback and netem kernel counters, apply minimal exact boundary remedy then rerun W16 original with diagnostics OFF for clean CPU/RSS. No 125-350 before 100 reliable. Don't claim code-level performance improvement from instrumentation.",
+  "next_action": "Read W17 100Mbps one job original asym impairment with native twice/sec TX/RX numeric, outer veth/netem/TUN 500ms monotonic snapshots and client/server traffic 10ms RX/TX bins. Inspect first 1.6s C2S gap boundaries. If apparent PASS (unreproduced), do not invent root cause; consider one scope-limited duplicate W16 timing with diagnostic minimal overhead only after evidence. If repeated identify first counter plateau and implement minimal source fix; rebuild exact ARM64 and recheck W16 diagnostic OFF. No 125-350 until reliable 100Mbps.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -1084,7 +1095,7 @@
   },
   "single_direction_investigation": {
     "source_parent": "eeb594875992a1b5815250751a6e1c30ab928a0d",
-    "source_commit": "PENDING",
+    "source_commit": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
     "w16_run": 40097487779,
     "failure_c2s_missing": 15993,
     "detailed_time_window": "Traffic application monotonic age 30.4-32.0s: server receives essentially zero C2S app UDP for 1.6s while client continues 100Mbps injection, reverse S2C continues normally",
@@ -1092,6 +1103,26 @@
     "native_differences": "Native both FEC TX source accepted~443k, parity sent~554k, M4 copies errors0, RX decode reject0; 30s client veth tx615.6MB/164.164Mbps, server650.1MB/173.35Mbps, TUN source drops0, netem drop ~30% both.",
     "symmetry": "Both effective product fixed6, outer OFF, same MTU1415, owned TUN fq600Mbps256 flows, socket effective sndbuf425984/rcvbuf2097152, unseeded netem rate400Mbps each, no TCP; timing of gap 30.4-32.0 sec not explained by endpoint asymmetric config.",
     "diagnostic": "Opt-in WBD_FEC_EGRESS_DIAG prints existing native M1 ingress/stage, actual M4 copied/errors/backpressure, parity planned/sent and RX counters twice/sec with monotonic clock; harness optional 500ms owned namespace veth TX/RX, source TUN and netem dropped/backlog, whitelist numeric-only logs; no per-packet tracing/pcap, default OFF. Frozen source must pass ARM64 native and harness checks before one W17 100Mbps reproduction. Preserve native user data path unchanged.",
-    "status": "SOURCE_PENDING_BUILD"
+    "status": "BUILD_PASS_DIAG_RUN_PENDING",
+    "build": {
+      "run": 40099179830,
+      "conclusion": "success",
+      "artifact": 12562092730,
+      "zip_sha256": "e3509e34a11f4763011c08312d02270e560ac7d04f5136ad22f76b5990f4cda5",
+      "native_FEC_deterministic_test": "PASS",
+      "native_RX_unit": "PASS",
+      "harness_check_run": 40099179823,
+      "parity_unit_run": 40099179787
+    },
+    "pending_w17": {
+      "path": "tests/network/fec-work/W17-100Mbps-unilateral-egress-500ms-arm64.json",
+      "mode": "fec-fixed",
+      "mbps_each": 100,
+      "outer_capacity_each_mbps": 400,
+      "full_window_seconds": 30,
+      "diagnostic_egress_interval_ms": 500,
+      "run": null,
+      "status": "PUSH_TO_TRIGGER"
+    }
   }
 }
