@@ -94,6 +94,18 @@ class Worker:
         self.rx_bins = {p: array.array("I", [0]) * count for p in self.seq}
         self.tx_byte_bins = {p: array.array("I", [0]) * count for p in self.seq}
         self.rx_byte_bins = {p: array.array("I", [0]) * count for p in self.seq}
+        # Opt-in bounded per-TCP-socket evidence: independent framed
+        # business streams (not just an aggregate "TCP" histogram).
+        # Keep the established global seq+CRC integrity and no per-frame IO.
+        self.observe_independent = t.get("observe_independent_flows", False)
+        self.stream_index = {}
+        self.tcp_flow_tx_bins = ([array.array("I", [0]) * count for _ in range(t["tcp_flows"])]
+                                 if self.observe_independent else [])
+        self.tcp_flow_rx_bins = ([array.array("I", [0]) * count for _ in range(t["tcp_flows"])]
+                                 if self.observe_independent else [])
+        self.tcp_flow_stats = ([{"tx_packets":0,"tx_bytes":0,"rx_packets":0,"rx_bytes":0,
+                                 "latency":Histogram()} for _ in range(t["tcp_flows"])]
+                               if self.observe_independent else [])
         # Windows Winsock offers no Linux SO_RXQ_OVFL ancillary counter;
         # missing host queue drop telemetry is UNKNOWN, never asserted zero.
         self.socket_drops = 0 if os.name == 'posix' else None
@@ -178,6 +190,7 @@ class Worker:
                         if time.monotonic() > deadline:
                             raise
                         time.sleep(.1)
+        self.stream_index = {s:i for i,s in enumerate(self.streams)}
         for s in self.streams:
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             profile=self.config["network"].get("tcp_socket_pacing_mbps_selected",0)
@@ -198,14 +211,21 @@ class Worker:
     def bucket(self, now):
         return min(len(self.tx_bins["udp"]) - 1, max(0, (now - self.start_ns) // 10000000))
 
-    def sent(self, proto, phase, size, now):
+    def sent(self, proto, phase, size, now, flow_index=None):
         st = self.stats[proto][phase]
         st["tx_packets"] += 1
         st["tx_bytes"] += size
-        self.tx_bins[proto][self.bucket(now)] += 1
-        self.tx_byte_bins[proto][self.bucket(now)] += size
+        bucket = self.bucket(now)
+        self.tx_bins[proto][bucket] += 1
+        self.tx_byte_bins[proto][bucket] += size
+        if proto=="tcp" and self.observe_independent:
+            if flow_index is None or not 0 <= flow_index < len(self.tcp_flow_tx_bins):
+                raise ValueError("TCP flow identity not observed at send")
+            self.tcp_flow_tx_bins[flow_index][bucket] += 1
+            self.tcp_flow_stats[flow_index]["tx_packets"] += 1
+            self.tcp_flow_stats[flow_index]["tx_bytes"] += size
 
-    def receive(self, data, now, proto):
+    def receive(self, data, now, proto, flow_index=None):
         fallback = self.stats[proto][min(len(self.phases)-1, bisect.bisect_right(self.ends, now))]
         if len(data) < HEADER.size:
             fallback["invalid"] += 1
@@ -246,8 +266,16 @@ class Worker:
         delay = (now - sent) / 1e6
         st["latency"].add(delay)
         st["late"] += int(delay > self.config["traffic"]["deadline_ms"])
-        self.rx_bins[proto][self.bucket(now)] += 1
-        self.rx_byte_bins[proto][self.bucket(now)] += size
+        bucket = self.bucket(now)
+        self.rx_bins[proto][bucket] += 1
+        self.rx_byte_bins[proto][bucket] += size
+        if proto=="tcp" and self.observe_independent:
+            if flow_index is None or not 0 <= flow_index < len(self.tcp_flow_rx_bins):
+                raise ValueError("TCP flow identity not observed at receive")
+            self.tcp_flow_rx_bins[flow_index][bucket] += 1
+            self.tcp_flow_stats[flow_index]["rx_packets"] += 1
+            self.tcp_flow_stats[flow_index]["rx_bytes"] += size
+            self.tcp_flow_stats[flow_index]["latency"].add(delay)
 
     def flush_tcp(self, s, now):
         if s not in self.pending:
@@ -257,7 +285,7 @@ class Worker:
             n = s.send(memoryview(data)[offset:])
             offset += n
             if offset == len(data):
-                self.sent("tcp", phase, size, now)
+                self.sent("tcp", phase, size, now, self.stream_index[s])
                 del self.pending[s]
                 self.sel.modify(s, selectors.EVENT_READ, "tcp")
             else:
@@ -291,7 +319,8 @@ class Worker:
                                 raise ValueError("invalid TCP application frame length")
                             if len(b) < size + 4:
                                 break
-                            self.receive(bytes(b[4:4+size]), time.monotonic_ns(), "tcp")
+                            self.receive(bytes(b[4:4+size]), time.monotonic_ns(), "tcp",
+                                         self.stream_index[s])
                             del b[:4+size]
                     else:
                         if os.name == "posix":
@@ -399,6 +428,12 @@ class Worker:
                   "socket_drops": self.socket_drops, "effective_buffers": self.effective_buffers,
                   "errors": self.errors, "capacity_exceeded": self.capacity_exceeded,
                   "tcp_pending_at_deadline": len(self.pending)}
+        if self.observe_independent:
+            result["tcp_flow_tx_bins_10ms"] = self.tcp_flow_tx_bins
+            result["tcp_flow_rx_bins_10ms"] = self.tcp_flow_rx_bins
+            result["tcp_flow_stats"] = [
+                {k:(v.result() if isinstance(v,Histogram) else v) for k,v in row.items()}
+                for row in self.tcp_flow_stats]
         for proto, rows in self.stats.items():
             result["stats"][proto] = []
             for phase, st in zip(self.phases, rows):
