@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "V3_FIXED5_AND_AUTO_CLEAN_PASS_MAX30_ANCHOR_PENDING",
+  "phase": "V3_MAX30_PASS_AUTO_ASYM_OBSERVATION_PENDING_NORMAL_ONOFF_AB_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -91,7 +91,9 @@
       "path": "tests/network/fec-work/W5-v3-fixed-max30-outeroff-50m-300ms-arm64.json",
       "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
       "product_build_run": 40078403217,
-      "result": "PENDING_RUN_MAX30_CAPACITY_GATE"
+      "result": "PASS_SCOPED_OBSERVATION",
+      "run_id": 40079244149,
+      "result_artifact_id": 12554751036
     },
     {
       "id": "FEC-W6-V3-Normal-On-Off-Sequential-AB-2Pct",
@@ -99,6 +101,13 @@
       "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
       "product_build_run": 40078403217,
       "result": "PENDING_ACTION_ON_OFF_SAMEVM_AB"
+    },
+    {
+      "id": "FEC-W7-V3-Auto-Asym-OuterOff-RiseRecover-ARM64",
+      "path": "tests/network/fec-work/W7-v3-auto-asym-rise-recover-off-arm64.json",
+      "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+      "product_build_run": 40078403217,
+      "result": "PENDING_AUTO_ASYM_NATIVE_ACTION"
     }
   ],
   "open_issues": [
@@ -107,7 +116,7 @@
     "Actual CPU/RSS and p99 at 2Mbps observed but NOT cost/memory scaling or matched sameVM AB; 30%/300ms and Auto asym/transition NOT_RUN.",
     "Linux Game OFF and Windows GUI/OS wiring UNSUPPORTED; upstream normal mixed RX ambiguity remains common-path."
   ],
-  "next_action": "Read independent max30 W5 and protected Normal V3 ON vs OFF sameVM AB W6. Validate both FEC-only ON startup, OFF zero data repairs/metadata, ON actual V3 policy and source F,R/C accounting, first delivery, host capacity. Stop heavier if W5 capacity limited. Then targeted auto asymmetric observation with honest static/dynamic report.",
+  "next_action": "Review sameVM W6 Normal default V3 ON/OFF AB and W7 Auto asymmetric 2->20->1% real quality and actual applied/readback; W7 is not a dynamic profile controller proof because current Go monitor exits on startup mature. Stop higher pressure (W5 core succeeded); record result and final merge-ready scoped report with unresolved Auto dynamic wiring, original exact source and all Actions. Do not merge main.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -212,5 +221,33 @@
     "artifact": 12554611589,
     "readback": "both actual requested=applied=1 profile5 strong, outer repair off",
     "dynamic_profile_transitions": "NOT_WIRED"
+  },
+  "max30_qualified": {
+    "run": 40079244149,
+    "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+    "mode": "fixed maximum profile6 both applied1",
+    "network": "IID30% / one-way 300ms / 50Mbps line each direction / 12Mbps source UDP each",
+    "outer_repair": "both true OFF zero data copies",
+    "residual_pct": {
+      "c2s": 0.08073425681992012,
+      "s2c": 0.06373847395929236
+    },
+    "recovered_tun": {
+      "client": 27035,
+      "server": 27247
+    },
+    "first_p99_ms": {
+      "c2s": 315.3,
+      "s2c": 315.2
+    },
+    "cpu_s": {
+      "client": 7.92,
+      "server": 7.84
+    },
+    "rss_peak_bytes": {
+      "client": 22425600,
+      "server": 21905408
+    },
+    "qualification": "PASS_SCOPED (>=1% max residual target satisfied)"
   }
 }
