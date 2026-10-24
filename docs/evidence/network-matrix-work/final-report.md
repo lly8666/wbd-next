@@ -1,5 +1,25 @@
 # Network matrix work — scoped P1 Normal/off recovery report (2026-10-23)
 
+> **当前 V3 状态（2026-10-24）：** 下方原有 P1/P2 内容仅作历史证据，不能被视为新的 v3 产品策略/性能资格。当前授权及方案见 [NETWORK_CURRENT_PLAN](../../testing/NETWORK_CURRENT_PLAN.md) 和 [v3 决策](../../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)。V3-A/B/D 已有代表工况实测，V3-C 的 **单 TCP 500Mbps 冷启动零 TUN 丢包仍未完成**；不得使用任何稳态满速结果掩盖启动丢包。
+
+## V3 真实架构与验收更新（截至 2026-10-24）
+
+| 能力 / 精确真实场景 | 证据 | 结论 |
+|---|---|---|
+| V3 认证成熟缺口/无 DATA PTO，0% 丢包单 TCP 各 10Mbps、RTT400 | [V3-A 0loss A/B](V3-A-lossless-TCP1-AB-20261023.json) | 新 v3 原始修复 298→0，双向 TCP 0 重传、源 TUN 0 丢包，CPU 合计 18.07→17.27s/60s；单次同机观测 |
+| V3 高损线路每方向 50Mbps、30% IID、单程 300ms，UDP 原始33.7Mbps/dir | [最新独立 TUN reader 30%](V3-A-dedicated-TUN-reader-30pct-standard-20261024.json) | **PASS**：R/F 8.878% / 8.870% ≤10%，R/C 6.457% / 6.451% ≥6%，UDP 实收25.66/25.70Mbps，源 TUN 0 丢包；50Mbps 为每方向线路上限，不是业务已交付50Mbps |
+| V3-B Linux 原生动态 MTU/MSS | [1500 最大 UDP](V3-B-1500-full-UDP-20261023.json)、[1280 最大 UDP](V3-B-outer1280-max-UDP1181-20261024.json) | **Normal/off 有范围 PASS**：真实 Go SYN MSS/认证 record/TUN 读回，1401B/1181B 应用 UDP 不分片；并非 Windows 或 FEC 端到端认可 |
+| V3-D Normal/off 无损混跑 TCP70/UDP29/小包约1%、两个 TCP 流 | [无损混跑](V3-D-lossless-mixed-70-29-1-20261023.json) | **PASS scoped**，业务交付不丢、无公共 10ms 交付空洞；[高损混跑](V3-D-mixed-0-30-0-UDP-vs-TCP-20261023.json) UDP 最长40/50ms停顿、TCP 因自身丢包停顿2.79/1.99s，故总 Action 为 INCONCLUSIVE，不把 TCP 自身背压认作跨业务 HOL |
+| V3-D 真正空闲无探针30s → UDP恢复30s | [Idle/Wake](V3-D-idle-no-probes-wake-20261024.json) | **PASS scoped**：双向2Mbps、UDP 无丢包、p99 200.8ms、完整 Stop |
+| V3-C 500Mbps 单 TCP、0% 外层丢包、RTT400、TUN qlen1024、root fq | [独立 reader 高速 A/B](V3-C-dedicated-TUN-reader-TCP500-strict-startup-AB-20261024.json) | **未通过全程零本地丢包**：同机 A 旧入口、B 512 项新 reader 稳态都500Mbps、p99 约203ms，0 稳态丢包；但预热 TUN 6488/6720 丢包。独立 reader 10Mbps双向低损验证通过，**不视为冷启动修复** |
+| V3-C 500Mbps 冷启动细粒度内核统计 | [25ms/100ms TUN 时间线](V3-C-TCP500-cold-TUN-25ms-drop-timeline-20261024.json) | **根因已收窄**：一次预热全部6629 TUN 丢包分别集中在6.0–6.1s 2849 包、6.4–6.5s 3759 包、7.4–7.5s 21 包。6.14s CUBIC cwnd 36853×1377≈50.75MB，高于500Mbps×400ms所需25MB BDP。短时 TCP startup burst 比稳定500Mbps处理能力更可疑，尚缺经测试的通用生产解决方案 |
+
+**当前 V3 产品：** Normal/off 仍使用身份认证、一次固定密文外层修复、真实 R/F≤10% 和选包门限；保留源 TUN 先借原 M1 slab 再读入、2048-slots/16反馈预留的历史安全修复。新实验来源 `a0a1285e73584a99c94eb573e7278ce5716fa2a5` 把数据源读取移至另一个有界512项 worker，旧 M3/PN/AEAD/M4 仍只由原发送 owner 处理；源码尚未进入 `main` 或部署。
+
+**容量限制及下一步：** 直接 TCP500 环境对照曾达到500Mbps，但不能取代 WBD 产品资格；单产品500**稳态已达到**，**冷启动全程零源 TUN 丢包尚未达到**。不要复用“仅稳态500”作为全程成功，也不允许忽略失败包以减少CPU。最新仅供因果诊断的单 Socket `SO_MAX_PACING_RATE` 对照在 Actions 上，若能抑制快启动突发也仅是试验性 socket pacing 证据，**不得冒充 VPN 任意业务通用修复**。FEC 固定/Auto 和 Windows 独立工位尚未以本岗位 Linux Normal/off 结果取得资格。
+
+
+
 **Scope:** isolated Linux ARM64 public original-Go + Rust V4 Normal/off, 60-second steady 2 Mbps per direction, 50/50 UDP/TCP, 99% 1287-byte UDP payloads, 1% 64-byte probes, 2% IID netem, one-way 200ms, one outer repair, v2 0.25% UDP acceptance. This is NOT the final qualification of the entire product or H500 envelope.
 
 ## Root cause and fix
