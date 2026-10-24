@@ -440,8 +440,13 @@
       "reorder_span_old": 128,
       "reorder_span_new": 512
     },
-    "actions": "Not run yet. Product native ARM64 build + crate RX regressions then only old W8 50 Mbps scenario on new artifact. Do not rerun W9 / new pressure until W8 accepted.",
+    "actions": "First action 40086110031 product BUILD BLOCKED by new regression fixture asking encode_owned 5 rows in one batch; MAX_BATCH_ROWS=4. Existing 4 FEC RX tests PASS; corrected fixture emits 4+1, unchanged product algorithm. Native original maximum row Action40086110067 SUCCESS; rerun compilation and exact test before 50Mbps.",
     "new_diagnostics": "On genuine RX Stop: peak_active, peak_bytes, pressure/age/reorder evictions, completed early reclaim, invalid retired, refused bytes, Invalid/Capacity/Conflict/Codec rejections.",
-    "risk": "Extra authentic parity after completed block is rejected/ignored, counted as invalid_retired; do not interpret the old aggregate decoder-rejected count as failed recovered source."
+    "risk": "Extra authentic parity after completed block is rejected/ignored, counted as invalid_retired; do not interpret the old aggregate decoder-rejected count as failed recovered source.",
+    "first_build_attempt": {
+      "run": 40086110031,
+      "stage": "NEW_UNIT_TEST_FAIL_INVALID_ROW_COUNT5_EXCEEDS_MAX_BATCH4",
+      "product_built": false
+    }
   }
 }

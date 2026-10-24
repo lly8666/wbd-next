@@ -438,9 +438,14 @@ mod tests {
                     MonoNs(block_id*1_000_000)).unwrap();
                 delivered+=out.len();
             }
-            let parity=codec.encode_owned(block_id,&refs,
-                fec_v2::Profile::Maximum,0,5,1369,BackendChoice::Scalar)
+            // Live M4 parity policy batches at most MAX_BATCH_ROWS=4.
+            // Five genuine rows therefore require two bounded polls.
+            let mut parity=codec.encode_owned(block_id,&refs,
+                fec_v2::Profile::Maximum,0,4,1369,BackendChoice::Scalar)
                 .unwrap().0;
+            parity.extend(codec.encode_owned(block_id,&refs,
+                fec_v2::Profile::Maximum,4,1,1369,BackendChoice::Scalar)
+                .unwrap().0);
             assert_eq!(parity.len(),5);
             for row in &parity{
                 let out=rx.accept_authenticated(epoch(),3,row,
