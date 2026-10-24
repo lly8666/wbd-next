@@ -1,81 +1,71 @@
 {
   "version": 1,
-  "id": "V3-Linux-global-fq600-Normal-TCP70-UDP30",
+  "id": "V3-AllModes-fq600-Game2-lane-receipt-correct",
   "owner": "network-matrix-work",
-  "seed": 8175,
+  "seed": 8173,
   "product": {
-    "mode": "normal",
-    "fec_profile": 1
+    "mode": "game2",
+    "fec_profile": 1,
+    "game_fec": "off"
   },
   "traffic": {
-    "c2s_mbps": 15,
-    "s2c_mbps": 15,
-    "udp_share": 0.3,
+    "c2s_mbps": 3,
+    "s2c_mbps": 3,
+    "udp_share": 1,
     "sizes": [
       [
         64,
-        18
+        4
       ],
       [
-        1401,
-        82
+        256,
+        4
+      ],
+      [
+        1172,
+        2
       ]
     ],
-    "tcp_flows": 2,
+    "tcp_flows": 1,
     "probe_hz": 20,
-    "deadline_ms": 1200,
+    "deadline_ms": 150,
     "burst_ms": 0,
     "max_packets": 20000000,
     "allow_fragmentation": false
   },
   "network": {
     "outer_mtu": 1500,
-    "lane_loss": "shared",
+    "lane_loss": "independent",
     "queue_packets": 32768,
     "netem_rng": "unseeded_recorded",
-    "tcp_window_profiles": {
-      "A": "baseline"
-    },
-    "tcp_reordering_profiles": {
-      "A": "baseline"
-    },
-    "product_tun_fq_maxrate_mbps_profiles": {}
+    "product_tun_fq_maxrate_mbps_profiles": {},
+    "startup_tun_drop_timeline": true
   },
   "warmup_s": 10,
-  "drain_s": 30,
+  "drain_s": 20,
   "phases": [
     {
       "name": "steady",
       "seconds": 60,
       "rate_scale": 1,
       "c2s": {
-        "delay_ms": 200,
-        "jitter_ms": 0,
-        "loss_pct": 0,
-        "duplicate_pct": 0,
-        "reorder_pct": 0,
-        "rate_mbps": 0,
-        "blackhole_lanes": []
+        "delay_ms": 25,
+        "loss_pct": 5,
+        "rate_mbps": 50
       },
       "s2c": {
-        "delay_ms": 200,
-        "jitter_ms": 0,
-        "loss_pct": 0,
-        "duplicate_pct": 0,
-        "reorder_pct": 0,
-        "rate_mbps": 0,
-        "blackhole_lanes": []
+        "delay_ms": 25,
+        "loss_pct": 5,
+        "rate_mbps": 50
       }
     }
   ],
   "acceptance": {
-    "injection_tolerance_pct": 3,
-    "max_loss_pct": 0,
+    "injection_tolerance_pct": 5,
     "require_retransmission": false,
     "max_repair_fresh_pct": 10,
     "require_zero_source_tun_drops_full_run": true,
-    "require_zero_tun_root_qdisc_drops_full_run": true,
-    "max_p99_ms": 450
+    "require_zero_tun_root_qdisc_drops_full_run": true
   },
   "bundles": {
     "A": {
