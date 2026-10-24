@@ -81,7 +81,8 @@ def validate(raw):
     lanes = {"game2": 2, "game4": 4}.get(p["mode"], 1)
     t = r["traffic"]
     keys(t, ["c2s_mbps", "s2c_mbps", "udp_share", "sizes", "tcp_flows", "probe_hz",
-             "deadline_ms", "burst_ms", "max_packets", "allow_fragmentation"], "traffic")
+             "deadline_ms", "burst_ms", "max_packets", "allow_fragmentation",
+             "observe_independent_flows"], "traffic")
     for k in ["c2s_mbps", "s2c_mbps"]:
         number(t.get(k), 0, 500, k)
     if not t["c2s_mbps"] and not t["s2c_mbps"]:
@@ -98,6 +99,9 @@ def validate(raw):
     integer(t["max_packets"], 1, 20000000, "max_packets")
     if type(t["allow_fragmentation"]) is not bool:
         raise ValueError("allow_fragmentation must be boolean")
+    t.setdefault("observe_independent_flows",False)
+    if type(t["observe_independent_flows"]) is not bool:
+        raise ValueError("observe_independent_flows must be boolean")
     if not isinstance(t.get("sizes"), list) or not 1 <= len(t["sizes"]) <= 32:
         raise ValueError("sizes: 1..32 [application payload bytes, weight] pairs")
     for size, weight in t["sizes"]:
@@ -201,11 +205,17 @@ def validate(raw):
     keys(a, ["injection_tolerance_pct", "max_loss_pct", "max_p99_ms",
              "max_active_gap_ms", "require_retransmission", "max_repair_fresh_pct", "min_repair_line_pct",
              "require_zero_source_tun_drops_full_run",
-              "require_zero_tun_root_qdisc_drops_full_run"], "acceptance")
+              "require_zero_tun_root_qdisc_drops_full_run", "cross_business_hol"], "acceptance")
     a.setdefault("injection_tolerance_pct", 3)
     a.setdefault("require_retransmission", False)
     a.setdefault("require_zero_source_tun_drops_full_run", False)
     a.setdefault("require_zero_tun_root_qdisc_drops_full_run",False)
+    a.setdefault("cross_business_hol",False)
+    if type(a["cross_business_hol"]) is not bool:
+        raise ValueError("cross_business_hol must be boolean")
+    if a["cross_business_hol"] and not (0 < t["udp_share"] < 1
+            and t["tcp_flows"]>=2 and t["observe_independent_flows"]):
+        raise ValueError("cross_business_hol requires UDP + two independent TCP streams + per-flow 10ms receipts")
     if type(a["require_zero_tun_root_qdisc_drops_full_run"]) is not bool:
         raise ValueError("require_zero_tun_root_qdisc_drops_full_run must be boolean")
     if type(a["require_zero_source_tun_drops_full_run"]) is not bool:
