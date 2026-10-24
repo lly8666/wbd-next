@@ -110,7 +110,7 @@ def validate(raw):
              "tcp_window_profiles", "tcp_reordering_profiles", "v3_timeline",
              "tun_txqlen_profiles", "warmup_rate_scale_profiles", "tun_qdisc_profiles",
               "startup_tun_drop_timeline", "tcp_socket_pacing_mbps_profiles",
-              "tun_fq_maxrate_mbps_profiles"], "network")
+              "tun_fq_maxrate_mbps_profiles", "product_tun_fq_maxrate_mbps_profiles"], "network")
     n.setdefault("v3_timeline", False)
     if type(n["v3_timeline"]) is not bool:
         raise ValueError("network.v3_timeline must be boolean")
@@ -158,6 +158,15 @@ def validate(raw):
             raise ValueError("test-only TUN fq maxrate must be 0 or 600Mbps")
         if qdiscs.get(leg)!="fq":
             raise ValueError("TUN fq maxrate requires explicitly selected fq qdisc")
+    owned_fq=n.setdefault("product_tun_fq_maxrate_mbps_profiles",{})
+    keys(owned_fq,["A","B"],"product_tun_fq_maxrate_mbps_profiles")
+    for leg,rate in owned_fq.items():
+        if type(rate) is not int or rate not in (0,600):
+            raise ValueError("owned Linux product TUN fq maxrate must be 0 or 600Mbps")
+        if rate and r["product"]["mode"]!="normal":
+            raise ValueError("owned fq pacing is Normal/off only")
+        if rate and (qdiscs.get(leg) is not None or fq_maxrate.get(leg)):
+            raise ValueError("product TUN fq cannot be overridden by diagnostic qdisc in same leg")
     warm_scales=n.setdefault("warmup_rate_scale_profiles",{})
     keys(warm_scales,["A","B"],"warmup_rate_scale_profiles")
     for leg,scale in warm_scales.items():
