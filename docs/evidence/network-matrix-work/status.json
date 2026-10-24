@@ -40,6 +40,19 @@
       "contract_run": 40046507471,
       "scope": "one sameVM ARM64 old vs new 512 bounded dedicated M1-owned source TUN reader, 500Mbps singleTCP C2S/RTT400/0loss/outer700, Normal/off, warm20 steady60 drain30, qlen1024 fq, ZERO source TUN kernel drops FULL run, firstarr p99<=400ms, CPU/TCP retrans/Stop, no re-dispatch",
       "do_not_redispatch": true
+    },
+    {
+      "id": "V3-A-dedicated-TUN-reader-30pct-standard-regression",
+      "state": "ACTIONS_QUEUED",
+      "run": 40046784480,
+      "attempt": 1,
+      "request_source": "6681e15b2e0c136ba7a236fc508a3096b2820f77",
+      "source_A": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
+      "build_run": 40044879144,
+      "artifact_id": 12540624073,
+      "artifact_zip_sha256": "f52f3c67749b399fa6778e9031e83a0f93f1fe4780d6836d7d120928b9fed763",
+      "scope": "independent other native ARM64 Actions VM, Normal/off 50Mbps outer line per direction 30% IID 300ms one-way offered UDP33.7Mbps each, 60s steady, byte ledger R/F<=10%, R/C>=6%, no source TUN drops, no FEC overlap",
+      "do_not_redispatch": true
     }
   ],
   "recent_evidence": [
@@ -220,7 +233,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "2026-10-24 interruption recovery: exact remote HEAD3471b447 showed lowload dedicated original TUN reader sameVM AB run40045323595 completed SUCCESS artifact12541675416 SHA256 61d39eb37... validated zip: A oldb8df B new a0a each inner TCP1 10Mbps/dir RTT400 0netem, warm10 steady60, 0 TUN source kernel warmup+steady drops (both roles), Tcp.RetransSegs0 both roles, no app losses/backpressure, firstarrival p99 200.8ms, product CPU total per 60s A5.04 B5.02. Detailed evidence V3-C-dedicated-TUN-reader-10M-lossless-AB-20261024.json. Since low load PASS, one exactly matched source A b8df B a0a TCP500 fullwarmup20 steady60 drain30 sameVM qlen1024 fq outer700/dir, warmup rate500, P99<=400ms, ZERO source TUN kernel drops FULL run now Action40046507450 source a23c81d in progress, contracts Action40046507471. Retrieve exact run/attempt/artifact ZIP+hash; check startup TUN kernel drop zero full, steady throughput>=475, firstarr p99, Tcp retrans, product CPU/host psi/Stop. If B still has source TUN warmup drops or sub500, halt repeats and inspect bounded reader 512 queue, shared owner lock and wakeups using precise telemetry; do not silently relax gate or enlarge TUN qlen>2048. Keep A/B under one VM one scenario. Retain V3-A 30pct6%/10%, V3-B real MTU, V3-D 0loss mixed/idle/lifecycle scoped, do not modify FEC separate, no main merge/deploy.",
+  "next_action": "Two INDEPENDENT full Actions now live: 1) same-VM TCP500 old b8df vs new dedicated reader a0a, strict 0 kernel source TUN drops WARMUP+STEADY, 20warm+60steady, full TCP500 p99<=400 and RTT400, qlen1024 root fq run40046507450 from sourcea23c81d. 2) independent ARM64 VM new a0a 30pct IID 300ms one-way 50Mbps capacity each, UDP33.7Mbps each offered, min R/C6% max R/F10% 60s and CPU/UDP observation run40046784480 source6681e15, reuse matched B native build40044879144/artifact12540624073. Requests are independent, no repeated performance Action. Latest reader lowload A/B passed entire warmup+steady source TUN drops0 and kernel TCP retrans0, p99200.8, evidence V3-C-dedicated-TUN-reader-10M-lossless-AB-20261024.json. Finish both results with exact artifact hashes and source, and choose whether candidate qualifies; if 500 startup source drops positive do not misstate as PASS even with steady500. Preserve V3-A/B/D and separate FEC, no main.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
