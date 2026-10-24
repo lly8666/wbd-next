@@ -380,6 +380,47 @@ fn r1_f2_prepared_native_cached_tables_real_ec_encode_data() {
     assert_eq!(block.cached_native_tables(),1);
 }
 
+/// Complete Maximum 20-row parity from two distinct k16 blocks; exact GF
+/// bytes differ with input, while native matrix identity is reused.
+#[cfg(feature="native-isal")]
+#[test]
+fn r1_f2_prepared_native_tables_shared_across_blocks_full_maximum_exact() {
+    let rs=Rs16::new();
+    let originals_a=(0..16).map(|i|vec![(i*11+3) as u8;128+i])
+        .collect::<Vec<_>>();
+    let originals_b=(0..16).map(|i|vec![(i*7+29) as u8;100+i*2])
+        .collect::<Vec<_>>();
+    let a=originals_a.iter().map(Vec::as_slice).collect::<Vec<_>>();
+    let b=originals_b.iter().map(Vec::as_slice).collect::<Vec<_>>();
+    let mut first=PreparedBlock::from_frames(&a,180).unwrap();
+    let mut second=PreparedBlock::from_frames(&b,180).unwrap();
+    for start in (0..20).step_by(MAX_BATCH_ROWS) {
+        for (block_id,prepared,source) in [
+            (915u64,&mut first,&a), (916u64,&mut second,&b)
+        ] {
+            let mut out=vec![vec![0xd3;REPAIR_HEADER+prepared.symbol_len()];4];
+            let mut views=out.iter_mut().map(Vec::as_mut_slice).collect::<Vec<_>>();
+            assert_eq!(
+                rs.encode_prepared_into(block_id,prepared,Profile::Maximum,
+                    start,&mut views,180,BackendChoice::RequireNative).unwrap(),
+                BackendUsed::NativeIsaL
+            );
+            for (i,wire) in out.iter().enumerate() {
+                let parsed=parse_repair(wire,180).unwrap();
+                assert_eq!(parsed.block_id,block_id);
+                assert_eq!(parsed.parity_row as usize,start+i);
+                assert_eq!(parsed.body,oracle_row(source,start+i));
+            }
+        }
+        let key=(start,4);
+        let lhs=*first.native_tables.get(&key).unwrap();
+        let rhs=*second.native_tables.get(&key).unwrap();
+        assert!(std::ptr::eq(lhs,rhs),"same shape must reuse ISA-L matrix");
+    }
+    assert_eq!(first.cached_native_tables(),5);
+    assert_eq!(second.cached_native_tables(),5);
+}
+
 #[test]
 fn r1_f2_source_membership_and_index_reject_conflict() {
     let rs=Rs16::new();

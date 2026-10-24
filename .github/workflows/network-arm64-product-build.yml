@@ -35,6 +35,16 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc
           test "$(go version | awk '{print $3}')" = go1.23.12
           bash tools/arm64_public_go_rust_bundle.sh
+      - name: Real ARM64 ISA-L FEC cross-block parity table regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test -s "$RUNNER_TEMP/wbd-isal-arm64-public/lib/libisal.a"
+          WBD_ISAL_PREFIX="$RUNNER_TEMP/wbd-isal-arm64-public" \
+          WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985 \
+            cargo +1.85.1 test --locked -p wbd-codec --features native-isal \
+              r1_f2_prepared_native_ -- --nocapture
       - name: FEC native authenticated-latency and Auto counter provenance contracts
         shell: bash
         run: |
