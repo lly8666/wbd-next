@@ -1,6 +1,6 @@
 # TLS 正文复用：理想化成本与真实外观验收
 
-状态：计划，**NOT_RUN**。架构见[SELECTIVE_TLS_CRYPTO_EXPERIMENT](../architecture/SELECTIVE_TLS_CRYPTO_EXPERIMENT.md)。机器可读参数见[矩阵](selective-crypto-matrix.json)，它不是可直接投递到旧network-harness的请求。
+状态：**部分按 Actions 执行；理想 ARM64 AES record CPU + 有界 lab 外观反例已测，完整产品 S0/S2/real TLS handshakes 和 p99 仍 NOT_RUN**。结果/运行范围以 [本岗位状态](../evidence/selective-crypto-work/status.json) 和 [最终实验报告](../evidence/selective-crypto-work/FINAL_REPORT.md) 为准。架构见[SELECTIVE_TLS_CRYPTO_EXPERIMENT](../architecture/SELECTIVE_TLS_CRYPTO_EXPERIMENT.md)。机器可读参数见[矩阵](selective-crypto-matrix.json)，它不是可直接投递到旧network-harness的请求。
 
 ## 0. 不扩散的执行顺序
 
