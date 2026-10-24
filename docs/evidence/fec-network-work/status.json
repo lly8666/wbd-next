@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "MAXIMUM_STEPWISE_NEW_AUTHORIZATION_75_OF_200_PENDING_ACTION",
+  "phase": "MAXIMUM75_PASS_100MBPS_PENDING_EXACT_FROZEN_ARM64_ACTION",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -189,6 +189,17 @@
       "outer_cap_mbps_each": 300,
       "result": "PENDING_PUSH_TRIGGER",
       "run_id": null
+    },
+    {
+      "id": "FEC-W15-Maximum100-Stepwise-OuterOff-ARM64",
+      "path": "tests/network/fec-work/W15-maximum100-stepwise-outeroff-arm64.json",
+      "source": "ec344557fa8cbf4d717a81833d36f92584263478",
+      "run_id": null,
+      "build_run": 40087393299,
+      "artifact_id": 12558215058,
+      "app_mbps_each": 100,
+      "outer_cap_mbps_each": 400,
+      "result": "PENDING_PUSH_TRIGGER"
     }
   ],
   "open_issues": [
@@ -201,7 +212,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Inspect W14 Maximum75 arm64 FEC-only Action. Require both <=1% missing, per-side FEC RX_CAP, actual source/parity recovered TUN, dual native outer OFF, kernel/source/qdisc drops, CPU/RSS/p99 and netem rate. If failure stop and record bottleneck. If PASS request ONLY next 100Mbps (outer cap400Mbps per direction) on same frozen artifact and same profile, repeating until first failure or 200. One performance Action one measurement job; no simultaneous heavier runs.",
+  "next_action": "Inspect W15 one-scenario ARM64 Maximum100Mbps outer cap400 true FEC-only. Both residual<=1%, applied and outer repair off real dual readback, zero source/kernel/qdisc drop, decoder pressure <96 blocks and zero capacity reject, actual repaired TUN, CPU/RSS/host PSI and p99. On ANY failure STOP 125/150/175/200 and record exact first limit; if PASS dispatch one 125 step on unchanged frozen artifact.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -683,17 +694,77 @@
     ],
     "outer_link_rate_rule": "4× application Mbps per direction (50→200Mbps passed; 75→300; 100→400; 125→500; 150→600; 175→700; 200→800). Deliberate extra link headroom, not identical original 75Mbps=200Mbps WAN cap.",
     "stop_condition": "At first failed both-direction business residual <=1%, unconfirmed FEC applied/off, TUN/qdisc drops or capacity exhaustion; do not dispatch later heavier steps.",
-    "current_step": 75,
+    "current_step": 100,
     "requests": [
       {
         "id": "FEC-W14-Maximum75-Stepwise-OuterOff-ARM64",
         "path": "tests/network/fec-work/W14-maximum75-stepwise-outeroff-arm64.json",
         "product_source": "ec344557fa8cbf4d717a81833d36f92584263478",
         "artifact_id": 12558215058,
+        "run_id": 40091124249,
+        "status": "PASS_SCOPED_OBSERVATION",
+        "conclusion": "success",
+        "result_artifact_id": 12559275827,
+        "digest": "sha256:b897193008c3203ca9014d826b27bc1a306261d1d7e298eb35c5db7ce819fad7"
+      },
+      {
+        "id": "FEC-W15-Maximum100-Stepwise-OuterOff-ARM64",
+        "path": "tests/network/fec-work/W15-maximum100-stepwise-outeroff-arm64.json",
+        "source": "ec344557fa8cbf4d717a81833d36f92584263478",
+        "artifact_id": 12558215058,
         "run_id": null,
         "status": "PENDING_PUSH_TRIGGER"
       }
     ],
-    "previous_W12_sameVM_issue": "W12 second leg output asymmetry unresolved; standalone results are scoped observations, not guaranteed reliability."
+    "previous_W12_sameVM_issue": "W12 second leg output asymmetry unresolved; standalone results are scoped observations, not guaranteed reliability.",
+    "last_pass": {
+      "mbps_each": 75,
+      "run": 40091124249,
+      "artifact_id": 12559275827,
+      "result": "PASS_SCOPED_OBSERVATION",
+      "business": {
+        "c2s": {
+          "injected_mbps": 74.99973626666666,
+          "delivered_mbps": 74.96737493333333,
+          "missing": 119,
+          "p99_ms": 303.5
+        },
+        "s2c": {
+          "injected_mbps": 74.99870666666668,
+          "delivered_mbps": 74.97887306666667,
+          "missing": 92,
+          "p99_ms": 303.5
+        }
+      },
+      "rx": {
+        "client": {
+          "peak_active": 83,
+          "peak_bytes": 2843941,
+          "decoder_rejected": 0,
+          "pressure_evicted": 0,
+          "recovered_tun": 99625
+        },
+        "server": {
+          "peak_active": 83,
+          "peak_bytes": 2873610,
+          "decoder_rejected": 0,
+          "pressure_evicted": 0,
+          "recovered_tun": 99396
+        }
+      },
+      "cost": {
+        "cpu_s": {
+          "client": 16.79,
+          "server": 16.93
+        },
+        "rss_bytes": {
+          "client": 34443264,
+          "server": 35098624
+        },
+        "psi_peak": 14.33
+      },
+      "outer_data_retransmit_both": 0,
+      "source_TUN_drop_both": 0
+    }
   }
 }
