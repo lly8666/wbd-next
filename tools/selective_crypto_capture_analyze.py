@@ -54,7 +54,7 @@ def packets(raw: bytes):
     if offset != len(raw):
         raise ValueError("truncated pcap tail")
 
-def analyze(path: pathlib.Path, port: int):
+def analyze(path: pathlib.Path, port: int, inner_source: str):
     raw = path.read_bytes()
     assert 0 < len(raw) <= 33554432, "32MiB owned pcap cap"
     entries = [(seq, payload) for dst, seq, payload in packets(raw)
@@ -110,7 +110,10 @@ def analyze(path: pathlib.Path, port: int):
         "same_tls_ciphertext_128": same128,
         "clear_inner_ip_header_canary_found": canary in stream,
         "appearance": "LAB_CAPTURE_CONFIRMS_REPEATED_INNER_CIPHERTEXT_ACROSS_OUTER_SEQ",
-        "inner_retransmission_cause": "CONTROLLED_SAME_INNER_TCP_SEQ_RESEND_NOT_KERNEL_TUN_RETRANSMISSION",
+        "inner_retransmission_cause": (
+            "CAPTURED_TIMED_NATIVE_LINUX_NETNS_TCP_RETRANSMISSION_NOT_TUN_PRODUCT"
+            if inner_source == "kernel-netns" else
+            "CONTROLLED_SAME_INNER_TCP_SEQ_RESEND_NOT_KERNEL_TUN_RETRANSMISSION"),
         "go_tls_outer_handshake": "NOT_TESTED",
         "real_driver_and_p99": "NOT_TESTED",
         "classifier": "IDEAL_TRUSTED_TLS_ORACLE",
@@ -123,7 +126,8 @@ if __name__ == "__main__":
     ap.add_argument("--pcap", required=True, type=pathlib.Path)
     ap.add_argument("--port", required=True, type=int)
     ap.add_argument("--output", required=True, type=pathlib.Path)
+    ap.add_argument("--inner-source", choices=["synthetic", "kernel-netns"], default="synthetic")
     args = ap.parse_args()
-    result = analyze(args.pcap, args.port)
+    result = analyze(args.pcap, args.port, args.inner_source)
     args.output.write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result, indent=2))
