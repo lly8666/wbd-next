@@ -108,10 +108,14 @@ def validate(raw):
     n = r.setdefault("network", {})
     keys(n, ["outer_mtu", "lane_loss", "queue_packets", "netem_rng",
              "tcp_window_profiles", "tcp_reordering_profiles", "v3_timeline",
-             "tun_txqlen_profiles", "warmup_rate_scale_profiles", "tun_qdisc_profiles"], "network")
+             "tun_txqlen_profiles", "warmup_rate_scale_profiles", "tun_qdisc_profiles",
+              "startup_tun_drop_timeline"], "network")
     n.setdefault("v3_timeline", False)
     if type(n["v3_timeline"]) is not bool:
         raise ValueError("network.v3_timeline must be boolean")
+    n.setdefault("startup_tun_drop_timeline",False)
+    if type(n["startup_tun_drop_timeline"]) is not bool:
+        raise ValueError("network.startup_tun_drop_timeline must be boolean")
     n.setdefault("outer_mtu", 1500)
     n.setdefault("lane_loss", "shared")
     n.setdefault("queue_packets", 32768)
