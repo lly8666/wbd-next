@@ -26,6 +26,7 @@ from .envelope import request_envelope
 
 ROOT = Path(__file__).resolve().parents[2]
 TRAFFIC = Path(__file__).with_name("traffic.py")
+TUN_STARTUP_SAMPLER = Path(__file__).with_name("tun_startup_sampler.py")
 
 def verify_outer_recovery_policy(expected, observed):
     """Only single-repair sources can prove the v2 readback.
@@ -415,7 +416,7 @@ class LinuxExperiment:
         self.iface = {"client": "wbnc0", "server": "wbns0"}
         self.ip = {"client": "10.25.0.2", "server": "10.25.0.1"}
         self.inner = {"client": "10.66.0.2", "server": "10.66.0.1"}
-        self.products, self.workers, self.handles = {}, {}, []
+        self.products, self.workers, self.samplers, self.handles = {}, {}, {}, []
         self.created = []
         self.monitor = None
         self.lanes = {"game2": 2, "game4": 4}.get(config["product"]["mode"], 1)
@@ -542,6 +543,7 @@ class LinuxExperiment:
         self.effective["test_only_tun_txqlen_profile"]=(
             qlen_profile if qlen_profile is not None else "product_default")
         self.effective["v3_timeline_enabled"]=self.config["network"].get("v3_timeline",False)
+        self.effective["startup_tun_drop_timeline_enabled"]=self.config["network"].get("startup_tun_drop_timeline",False)
         self.effective["tcp_window_profile"]=self.tcp_profile
         self.effective["tcp_reordering_profile"]=self.tcp_reorder_profile
         self.effective["tcp_window_override"]=(
@@ -778,6 +780,21 @@ class LinuxExperiment:
                 time.sleep(.1)
             else:
                 raise RuntimeError("traffic worker not ready before scheduled start")
+            if self.config["network"].get("startup_tun_drop_timeline",False):
+                ready=self.private/"client-tun-startup.ready"
+                self.samplers["client"]=self.spawn("client",[
+                    sys.executable,str(TUN_STARTUP_SAMPLER),
+                    "--start-ns",str(start_ns),
+                    "--warmup-s",str(self.config["warmup_s"]),
+                    "--output",str(self.out/"client-tun-startup-samples.json"),
+                    "--ready",str(ready)],"client-tun-startup.log")
+                deadline=time.monotonic()+4
+                while not ready.exists() and time.monotonic()<deadline:
+                    if self.samplers["client"].poll() is not None:
+                        raise RuntimeError("startup TUN observer failed before traffic")
+                    time.sleep(.02)
+                if not ready.exists():
+                    raise RuntimeError("startup TUN observer not ready before traffic")
             # Kernel startup loss must be counted BEFORE ANY app packet.
             # Sampling after the scheduled traffic start silently censors
             # precisely the first 100ms of TUN ring burst loss. Only use a
@@ -799,6 +816,10 @@ class LinuxExperiment:
                 boundary += int(phase["seconds"] * 1e9)
             self.wait_until(boundary)
             self.snapshot("measurement-end")
+            for role,p in self.samplers.items():
+                p.wait(timeout=8)
+                if p.returncode:
+                    raise RuntimeError("numeric TUN startup observer failed: "+role)
             for p in self.workers.values():
                 p.wait(timeout=self.config["drain_s"] + 10)
                 if p.returncode:
@@ -815,6 +836,21 @@ class LinuxExperiment:
             result = summarize(self.config, json.loads((self.out / "client-traffic.json").read_text()),
                                json.loads((self.out / "server-traffic.json").read_text()), self.telemetry(), host)
             result["network_accounting"] = network_accounting(self.snapshots)
+            if self.config["network"].get("startup_tun_drop_timeline",False):
+                sample_file=self.out/"client-tun-startup-samples.json"
+                samples=json.loads(sample_file.read_text())["samples"]
+                if not samples:
+                    raise RuntimeError("numeric startup TUN timeline not observed")
+                first=samples[0]["tx_dropped"]
+                delta=max(0,samples[-1]["tx_dropped"]-first)
+                first_increase=next((v["from_start_ms"] for v in samples
+                                     if v["tx_dropped"]>first),None)
+                result["source_tun_startup_timeline"]={
+                    "scope":"TEST_ONLY_OWNED_SOURCE_TUN_NUMERIC_KERNEL_COUNTS",
+                    "samples":len(samples),"sample_first_ms":samples[0]["from_start_ms"],
+                    "first_drop_increase_ms":first_increase,"warmup_drop_delta":delta,
+                    "client_only":True,
+                    "raw_file":"client-tun-startup-samples.json"}
             warmup_start=next((p for p in self.snapshots if p["name"]=="warmup-start"),None)
             steady_start=next((p for p in self.snapshots if
                 p["name"]=="before-"+self.config["phases"][0]["name"]),None)
@@ -955,10 +991,10 @@ class LinuxExperiment:
         return result
 
     def cleanup(self):
-        for p in [*self.workers.values(), *self.products.values()]:
+        for p in [*self.workers.values(), *self.samplers.values(), *self.products.values()]:
             if p.poll() is None:
                 p.terminate()
-        for p in [*self.workers.values(), *self.products.values()]:
+        for p in [*self.workers.values(), *self.samplers.values(), *self.products.values()]:
             try:
                 p.wait(timeout=3)
             except subprocess.TimeoutExpired:
