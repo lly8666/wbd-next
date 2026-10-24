@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3_NATIVE_LINUX_NORMAL_FQ600_DEFAULT_MATRIX_3_SCENARIOS_ACTIONS_IN_FLIGHT",
+  "phase": "V3_DEFAULT_LINUX_NORMAL_FQ600_NATIVE_TCP500_AND_30PCT_PASS_500LINE_2PCT_IN_PROGRESS",
   "current_plan": {
     "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
     "policy": "outer-opportunistic-v3",
-    "status": "USER_2026_10_24_DEFAULT_OWNED_FQ600_LINUX_NORMAL_OPTION_DISABLED0_AVAILABLE_UNVERIFIED_NEW_SOURCE; REUSE_PREV_OPTON_500_SCOPED; NEXT_DEFAULT_TCP500_STRICT_THEN_30PCT_50M_AND_2PCT_500M_OUTER"
+    "status": "New Linux normal/off fq600 default source8d5bbd: true B single TCP500/RTT400 0loss PASS_SCOPED; highloss outer50/30pct UDP both directions PASS_SCOPED; 500Mbps outer line/2pct C2S in progress. Fixed/Auto/Game mode unaffected; no Windows claim."
   },
   "restoration": {
     "remote_main_at_resume": "d8ba2cf270ff6ca5cadae6dab778c49c32636ef6",
@@ -44,17 +44,6 @@
   },
   "open_requests": [
     {
-      "id": "V3-C-default600-native-TCP500-AB",
-      "run": 40055169119,
-      "attempt": 1,
-      "request_source": "c37310a38b17696efaf6234db335229cafe70425",
-      "state": "IN_PROGRESS_LAST_READ",
-      "A": "Go flag0 explicit",
-      "B": "no flag, expect kernel native fq600",
-      "stop": "full source TUN/qdisc drop gate, real oneTCP500, Stop",
-      "do_not_redispatch": true
-    },
-    {
       "id": "V3-H500-default600-outer500-2pct-UDP-oneway",
       "run": 40055236284,
       "attempt": 1,
@@ -65,19 +54,6 @@
       "outer_line_mbps": 500,
       "loss_pct": 2,
       "one_way_ms": 200,
-      "do_not_redispatch": true
-    },
-    {
-      "id": "V3-A-default600-30pct-line50-UDP-resume",
-      "run": 40055272532,
-      "attempt": 1,
-      "request_source": "1c5eafb5954e6bed726be214373eedce0788669d",
-      "state": "QUEUED_LAST_READ",
-      "old_cancelled_before_business": 40055207569,
-      "app_mbps_each": 33.7,
-      "line_mbps_each": 50,
-      "loss_pct": 30,
-      "one_way_ms": 300,
       "do_not_redispatch": true
     }
   ],
@@ -154,6 +130,24 @@
       "run": 40055025852,
       "source": "1d5d34954535fc8e40606888f1ec4c16164f5180",
       "result": "SUCCESS"
+    },
+    {
+      "id": "V3-native-default-fq600-TCP500",
+      "run": 40055169119,
+      "attempt": 1,
+      "artifact": 12544784157,
+      "artifact_zip_sha256": "e787e0d879494900212b1040f1ad888d1cea4f0f9f42c315e2dd76f42692b152",
+      "result": "Overall FAIL due negative A explicit0 drops8098 at startup. B CLI omitted native fq600 kernel readback dual ends PASS_SCOPED app500.000Mbps p99203.1 sourceTUN0 rootfq0 StopPASS.",
+      "file": "V3-C-Linux-default-fq600-TCP500-AB-20261024.json"
+    },
+    {
+      "id": "V3-native-default-fq600-highloss30",
+      "run": 40055272532,
+      "attempt": 1,
+      "artifact": 12544759103,
+      "artifact_zip_sha256": "b48bc908ecad811d75f729c3909db7d6cba8694fc1c75683ab1cdce0994cc162",
+      "result": "PASS_SCOPED both directions true outerline50Mbps 30% IID RTT600: UDP delivery25.166/25.641Mbps R/F8.833/8.757<=10 R/C6.424/6.369>=6 sourceTUN/root0, StopPASS",
+      "file": "V3-A-default-fq600-30pct-line50-real-20261024.json"
     }
   ],
   "open_issues": [
@@ -161,7 +155,7 @@
     "Host CPU/PSI significant at this load (B client48.66/server64.33 CPU-s per60s, host PSI some peak30.13%); no low CPU comparative improvement claim and do not use A local-drop as successful CPU baseline.",
     "Windows, Fixed/Auto/Game, physical, multi-business 500/no-HOL, bidirectional500 and wider MTU regressions remain separate NOT_QUALIFIED; previously passed v3-A/B/D scoped cases reused."
   ],
-  "next_action": "Recover exact attempt/artifacts for already dispatched 40055169119 / 40055236284 / 40055272532. Never redispatch while pending; if sameVM A expected failure B true default needed, record scoped B; highloss require R/C>=6 R/F<=10 and UDP no lower bound, product/TUN drops0; H500 is 500 line and 370 app one direction only. Stop identical reruns; fix located failures, write final-report/devlog/evidence. No main merge.",
+  "next_action": "Complete already dispatched Action40055236284 (single direction 370Mbps app, 500Mbps outer line,2% IID,oneway200ms), capture exact source ZIP digest, source-TUN/root drops, policy R/F, UDP final missing/p99, host+process CPU denominator and Stop. Resolve any material FAIL with evidence, no blind rerun. Preserve true default fq600 TCP500 B success and highloss30 pass; record final-report/devlog/evidence, no main merge.",
   "current_source_verified": {
     "source": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
     "build": 40053179394,
