@@ -3,7 +3,9 @@ run-name: "ARM64 frozen public V4 source ${{ github.sha }}"
 on:
   push:
     branches: [experiment/network-matrix-tuning]
-    paths: [".github/workflows/network-arm64-product-build.yml"]
+    paths:
+      - ".github/workflows/network-arm64-product-build.yml"
+      - "r0/go_overlay/internal/v4productcli/linux.go"
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
