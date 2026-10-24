@@ -92,6 +92,13 @@
       "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
       "product_build_run": 40078403217,
       "result": "PENDING_RUN_MAX30_CAPACITY_GATE"
+    },
+    {
+      "id": "FEC-W6-V3-Normal-On-Off-Sequential-AB-2Pct",
+      "path": "tests/network/fec-work/W6-v3-normal-on-vs-off-sameVM-AB-2pct-arm64.json",
+      "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+      "product_build_run": 40078403217,
+      "result": "PENDING_ACTION_ON_OFF_SAMEVM_AB"
     }
   ],
   "open_issues": [
@@ -100,7 +107,7 @@
     "Actual CPU/RSS and p99 at 2Mbps observed but NOT cost/memory scaling or matched sameVM AB; 30%/300ms and Auto asym/transition NOT_RUN.",
     "Linux Game OFF and Windows GUI/OS wiring UNSUPPORTED; upstream normal mixed RX ambiguity remains common-path."
   ],
-  "next_action": "Inspect W5 max30 genuine kernel netem/actual k-r and two peer applied/outer off/recovered TUN; check capacity/CPU,RSS and p99. If host or product saturates stop heavier workloads and record estimate. Compare model only after observing actual k/r bins. Then Normal ON/OFF on sameVM AB protected, finally Auto asymmetric static-versus-dynamic limitation and a scoped final report.",
+  "next_action": "Read independent max30 W5 and protected Normal V3 ON vs OFF sameVM AB W6. Validate both FEC-only ON startup, OFF zero data repairs/metadata, ON actual V3 policy and source F,R/C accounting, first delivery, host capacity. Stop heavier if W5 capacity limited. Then targeted auto asymmetric observation with honest static/dynamic report.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
