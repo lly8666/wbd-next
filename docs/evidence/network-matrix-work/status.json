@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-C-TCP500-steady-native-pass_cold-sourceTUN-zero-drop-still-fails_bounded-reader-design",
+  "phase": "V3-C-bounded-source-TUN-reader-512-integration-native-build-in-progress",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -25,7 +25,19 @@
     "build_status": "success"
   },
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
-  "open_requests": [],
+  "open_requests": [
+    {
+      "id": "V3-C-source-TUN-bounded512-reader-native-build",
+      "state": "ACTIONS_IN_PROGRESS",
+      "run": 40044752157,
+      "attempt": 1,
+      "source": "3c05563d6a956d563e71a86140a292ef06ef4026",
+      "previous_intermediate_build_run": 40044721183,
+      "previous_intermediate_source": "d03cdced5ce19f82c117cc3e3952e64b75ba622a",
+      "purpose": "Real Normal/off original Linux Rust data-plane source TUN independent bounded read worker; SyncSender512 preowned M1, existing TX AEAD/M4 single owner, Stop joins reader and both workers; no production qlen or repair credit/cipher changes. Must pass native ARM build and MTU before lower load regression and strict500.",
+      "do_not_redispatch": true
+    }
+  ],
   "recent_evidence": [
     {
       "id": "P2-old-Go-outer-single-vs-Rust-inner-TCP1-10Mbps-2pct",
@@ -195,7 +207,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "Action40043921913 COMPLETE, artifact12540218977 sha9391e... verified ZIP. Native same-VM source A=b8df vs B=ae38 hot8 preregistry. A C2S steady500.000Mbps p99202.9/backpressure0/TUN source steady0, but warmup source TUN dropped7026; B steady499.996Mbps p99202.9/backpressure0/steady TUN0, but warmup drops6714, only312 (~4.44%) lower. STRICT ALL-RUN ZERO SOURCE TUN gate FAIL BOTH; action conclusion failure is expected. Direct TUN root fq tc -s snapshots dropped0 both, source tun link TX dropped>6700; likely internal TUN ring/driver scheduling, not authenticated repair/shadow (M1peak32/2048). More qlen1024->2048 failed; native Linux6.17 TUNGETFEATURES0x7173 lacks IFF_BACKPRESSURE. Record V3-C-TCP500-hot8-prefetch-strict-AB-20261024.json. Next real architecture: bounded dedicated TUN fd drain worker that takes arena loan BEFORE destructive TUN read, queues <=512 finite preowned slabs to independent owner M3/AEAD/M4 worker, preserves generation/route/16 control slots, no unbounded buffers, stop joins all, no DATA PTO or ACK spoof. Analyze FEC mixed mode gating before implementation. Do NOT launch another identical TCP500 test or grow qlen >2048. Only after integrated source + native ARM/MTU build, run ONE matched strict start+steady zero-TUN-drop TCP500 with CORRECTED warmup baseline snapshot end before sender start (commit eea88ce). Other V3-A highloss30 repair>=6% line <=10% fresh/0loss zero repair PASS, V3-B 1500MTU/UDP1401 PASS, V3-D mixed idle and blackhole scope PASS. No FEC independent or Windows role work; no main merge/deploy.",
+  "next_action": "Work resumed: actual strict500 sourceb8df vs8loan ae38 run40043921913 artifact12540218977 ZIPsha9391e0560f23b62a49d3779de8fb7c2e65453404bf3f090c354b4b043947956d verified: A warmup sourceTUN drops7026, B6714, both FAIL ALL-RUN ZERO source; both steady ~500Mbps p99202.9 source TUN steady0 backpressure0, M1peak32. Actual tun qdisc fq drops0 all snapshots despite source TUN dropped; kernel6.17 TUNGETFEATURES0x7173 lacks BACKPRESSURE. Evidence V3-C-TCP500-hot8-prefetch-strict-AB-20261024.json. Stop blindly increasing queue/loan; new bounded512 dedicated TUN read vs original M3/M4 crypto/source sender split code source3c05563 commit; only Normal/off guarded by original native public policy, pre-loans original M1 +feedback16 before destructive TUN read, async queue full holds message until consumer; Stop joins third thread, other FEC/game untouched. ARM64 Actions build40044752157 in progress, sourced03 earlier intermediate build40044721183 irrelevant; do NOT dispatch tests until full native and MTU PASS. First check lowload real original10Mbps 0% both directions with source old b8df vs new3c055 EXACT artifacts sameVM to catch hangs/Stop/control reordering and CPU; then one strict TCP500 fullwarmup20/steady60 using CORRECTED warmup sampler sourceeea88c and fq1024 same VM, no repeated same-source overload or qlen>2048. If direct reader architecture FAILS, revert unverified risky source in experiment branch and leave V3-C startup OPEN. Preserve prior V3-A 30% standard, B dynamic MTU, D true idle and mixed, FEC separate, no main merge or deploy.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -501,7 +513,13 @@
         0
       ],
       "cold_source_tun_drop_causal_boundary": "Linux TUN internal ring vs scheduler/queue not proven via event timestamp, root fq sampled drops0; IFF_BACKPRESSURE unsupported in 6.17",
-      "next_architecture": "Bounded dedicated TUN ingress reader and crypto/send partition (ownership-safe finite ring with 16 feedback slots), no more identical high-rate reruns until code actually changes"
+      "next_architecture": "Bounded dedicated TUN ingress reader and crypto/send partition (ownership-safe finite ring with 16 feedback slots), no more identical high-rate reruns until code actually changes",
+      "bounded_reader_source": "3c05563d6a956d563e71a86140a292ef06ef4026",
+      "bounded_reader_build_run": 40044752157,
+      "bounded_reader_build_status": "ACTIONS_IN_PROGRESS",
+      "bounded_reader_limit_slots": 512,
+      "bounded_reader_mode": "native Linux Normal/off only; other modes original synchronous path",
+      "bounded_reader_arch_validation": "NOT_RUN"
     },
     "phase_D": {
       "run": 39985073396,
