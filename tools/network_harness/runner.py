@@ -404,8 +404,10 @@ class LinuxExperiment:
         self.config=copy.deepcopy(config)
         self.tcp_profile=config["network"].get("tcp_window_profiles",{}).get(label,"baseline")
         self.tcp_reorder_profile=config["network"].get("tcp_reordering_profiles",{}).get(label,"baseline")
+        self.tcp_socket_pacing_mbps=config["network"].get("tcp_socket_pacing_mbps_profiles",{}).get(label,0)
         self.config["network"]["tcp_window_profile_selected"]=self.tcp_profile
         self.config["network"]["tcp_reordering_profile_selected"]=self.tcp_reorder_profile
+        self.config["network"]["tcp_socket_pacing_mbps_selected"]=self.tcp_socket_pacing_mbps
         self.bundle = Path(bundle_dir) / "fixed-build"
         self.out, self.label = Path(out), label
         self.out.mkdir(parents=True, exist_ok=False)
@@ -546,6 +548,7 @@ class LinuxExperiment:
         self.effective["startup_tun_drop_timeline_enabled"]=self.config["network"].get("startup_tun_drop_timeline",False)
         self.effective["tcp_window_profile"]=self.tcp_profile
         self.effective["tcp_reordering_profile"]=self.tcp_reorder_profile
+        self.effective["test_only_inner_tcp_socket_max_pacing_mbps"]=self.tcp_socket_pacing_mbps
         self.effective["tcp_window_override"]=(
             "namespaced tcp_[rw]mem 64MiB max; NO SO_*BUF override; preserve Linux TCP autotuning, read actual TCP_INFO and advertised window"
             if self.tcp_profile=="bdp500" else (
