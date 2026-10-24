@@ -1,6 +1,6 @@
 # Normal/OFF：TLS 密文复用实验架构
 
-状态：**DESIGN_READY，尚未实现、测量或抓包验收**。本页只在 `experiment/selective-tls-crypto` 生效，不改变正式数据面默认值。
+状态：**LAB_ONLY_COMPONENT_S0_PASS / IDEAL_ORACLE_S1_MEASURED / NEGATIVE_APPEARANCE_LAB_CAPTURED**。真实 Go→Rust→raw/TUN 接线、生产 Stop/generation/MTU、业务 p99 和端到端 CPU 仍 NOT_RUN；精确 SOURCE/Actions/最终否定结论见 [本岗位状态](../evidence/selective-crypto-work/status.json) 和 [最终实验报告](../evidence/selective-crypto-work/FINAL_REPORT.md)。本页只在 `experiment/selective-tls-crypto` 生效，不改变正式数据面默认值。
 
 ## 1. 已确定的选择
 
