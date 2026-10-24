@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "FEC_RX_MAXIMUM_50MBPS_BOUNDED_ONLY_FIX_SECOND_CANDIDATE_PENDING_BUILD",
+  "phase": "FEC_MAX50_W12_CLOSE_SOURCE_SAMEVM_AB_DISPATCH_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -146,6 +146,18 @@
       "order": "AB",
       "run_id": null,
       "result": "PENDING_ONE_VM_SEQUENTIAL_AB"
+    },
+    {
+      "id": "FEC-W12-Maximum50-RX-CapacityOnly-CloseSource-AB-ARM64",
+      "path": "tests/network/fec-work/W12-maximum50-rx-capacityonly-close-source-AB-arm64.json",
+      "run_id": null,
+      "order": "AB",
+      "A_source": "a969217e1edd3577ae41df81c38aa7ac84a4a484",
+      "B_source": "ec344557fa8cbf4d717a81833d36f92584263478",
+      "A_build_run": 40083030170,
+      "B_build_run": 40087393299,
+      "B_artifact": 12558215058,
+      "result": "DISPATCH_BY_PUSH_PENDING"
     }
   ],
   "open_issues": [
@@ -157,7 +169,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Inspect second bounded-only candidate native ARM64 build+RX test Action, then freeze immutable artifact. Create one W12 50Mbps Maximum IID30 300ms same VM AB against source a969217e (same Go Auto source) and new bounded-only candidate; harness runner now exports RX_CAP typed Stop evidence. Do not run 75+; if B fails, use precise RX source/parity, qdisc, reject reasons before further code changes. Auto live W10 paused.",
+  "next_action": "Inspect automatically launched W12 Action same VM sequential 50Mbps AB, parse both native per-side typed FEC RX_CAP; require full two leg results, host/local drop and actual netem. The old A may fail so overall workflow FAIL isn't sufficient to judge new B. If B misses >1%, preserve FAIL and check peak/stored/eviction/late/block classifier before minimal further repair. No 75Mbps repeat/higher. Auto paused.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -500,9 +512,18 @@
     "second_candidate": {
       "from_source": "77488ee53ad75931ed6f8fbe5713689d4bf43b50",
       "change": "Remove early retire of complete blocks. Preserve 150ms FEC RX state and authenticated redundant parity receipt; raise bounded MAX_ACTIVE32->96 and 1MiB->8MiB only. Restore BLOCK_REORDER_SPAN128 and code/Stop rejection reason diagnostics. W12 AB compare against closer original Auto code source a969.",
-      "source_commit": "PENDING_COMMIT",
-      "build": "NOT_RUN",
-      "performance": "NOT_RUN"
+      "source_commit": "ec344557fa8cbf4d717a81833d36f92584263478",
+      "build": {
+        "run": 40087393299,
+        "attempt": 1,
+        "artifact": 12558215058,
+        "zip_sha256": "bd22744ae29bcb0ec8b57cba9bdcc7b10228911e9af628791501ff7623b008d3",
+        "conclusion": "success",
+        "native_maximum_unit_run": 40087393285,
+        "contract_run": 40087393284,
+        "deterministic_missing_source_real_tun": "PASS"
+      },
+      "performance": "W12_PENDING"
     }
   }
 }
