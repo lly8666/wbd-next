@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3_LINUX_NORMAL_DEFAULT_FQ600_CHANGE_NATIVE_BUILD_PENDING_CONTINUE_MATRIX",
+  "phase": "V3_NATIVE_LINUX_NORMAL_FQ600_DEFAULT_MATRIX_3_SCENARIOS_ACTIONS_IN_FLIGHT",
   "current_plan": {
     "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
     "policy": "outer-opportunistic-v3",
@@ -44,13 +44,40 @@
   },
   "open_requests": [
     {
-      "id": "native_fq600_default_source_build",
-      "source": "8d5bbdbca636e129481393fdbfa10b2c0e31e999",
-      "actions": [
-        40054986786,
-        40054986784
-      ],
-      "status": "IN_PROGRESS_LAST_READ",
+      "id": "V3-C-default600-native-TCP500-AB",
+      "run": 40055169119,
+      "attempt": 1,
+      "request_source": "c37310a38b17696efaf6234db335229cafe70425",
+      "state": "IN_PROGRESS_LAST_READ",
+      "A": "Go flag0 explicit",
+      "B": "no flag, expect kernel native fq600",
+      "stop": "full source TUN/qdisc drop gate, real oneTCP500, Stop",
+      "do_not_redispatch": true
+    },
+    {
+      "id": "V3-H500-default600-outer500-2pct-UDP-oneway",
+      "run": 40055236284,
+      "attempt": 1,
+      "request_source": "dbffcdfd672ba4ece9dc29638a22b46600f0c5c2",
+      "state": "PENDING_LAST_READ",
+      "app_mbps": 370,
+      "projected_outer_fresh_mbps": 396.4,
+      "outer_line_mbps": 500,
+      "loss_pct": 2,
+      "one_way_ms": 200,
+      "do_not_redispatch": true
+    },
+    {
+      "id": "V3-A-default600-30pct-line50-UDP-resume",
+      "run": 40055272532,
+      "attempt": 1,
+      "request_source": "1c5eafb5954e6bed726be214373eedce0788669d",
+      "state": "QUEUED_LAST_READ",
+      "old_cancelled_before_business": 40055207569,
+      "app_mbps_each": 33.7,
+      "line_mbps_each": 50,
+      "loss_pct": 30,
+      "one_way_ms": 300,
       "do_not_redispatch": true
     }
   ],
@@ -121,6 +148,12 @@
       "source": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
       "file": "docs/evidence/network-matrix-work/V3-C-owned-Linux-TUN-fq600-TCP500-real-AB-20261024.json",
       "result": "A_FAIL_startup_TUN6613_B_PASS_SCOPED_product_fq600_readback_kernel75000000Bps_app500.0003584Mbps_p99_203.2ms_source_TUN_warmup_steady0_root_qdisc0_StopPASS_Action_overall_FAIL"
+    },
+    {
+      "id": "native_fq600_default_contract",
+      "run": 40055025852,
+      "source": "1d5d34954535fc8e40606888f1ec4c16164f5180",
+      "result": "SUCCESS"
     }
   ],
   "open_issues": [
@@ -128,7 +161,7 @@
     "Host CPU/PSI significant at this load (B client48.66/server64.33 CPU-s per60s, host PSI some peak30.13%); no low CPU comparative improvement claim and do not use A local-drop as successful CPU baseline.",
     "Windows, Fixed/Auto/Game, physical, multi-business 500/no-HOL, bidirectional500 and wider MTU regressions remain separate NOT_QUALIFIED; previously passed v3-A/B/D scoped cases reused."
   ],
-  "next_action": "Reuse first successful valid native ARM64 artifact for source8d5bbdb..., pin ZIP sha+manifest, then test only in Actions: (1) sameVM Normal/off default omitted B versus explicit0 A real singleTCP500 0loss RTT400 full warmup TUN+qdisc zero; (2) independent native default highloss UDP/line50Mbps/30% IID RTT600 with R/C>=6% R/F<=10%; (3) independent native default outer500Mbps/2% RTT400 near-MTU UDP with honest one-way/bidirectional scope and CPU/host stop. One performance Action per scenario; reuse prior B but never call it default SOURCE PASS. Correct evidence and STOP as needed; no main merge.",
+  "next_action": "Recover exact attempt/artifacts for already dispatched 40055169119 / 40055236284 / 40055272532. Never redispatch while pending; if sameVM A expected failure B true default needed, record scoped B; highloss require R/C>=6 R/F<=10 and UDP no lower bound, product/TUN drops0; H500 is 500 line and 370 app one direction only. Stop identical reruns; fix located failures, write final-report/devlog/evidence. No main merge.",
   "current_source_verified": {
     "source": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
     "build": 40053179394,
@@ -152,6 +185,18 @@
     "harness_source": "1d5d34954535fc8e40606888f1ec4c16164f5180",
     "harness_contract_run": 40055025852,
     "harness_contract_result": "SUCCESS",
-    "latest_doc": "docs/testing/NETWORK_HARNESS.md"
+    "latest_doc": "docs/testing/NETWORK_HARNESS.md",
+    "native_bundle": {
+      "source": "8d5bbdbca636e129481393fdbfa10b2c0e31e999",
+      "run": 40054986786,
+      "attempt": 1,
+      "artifact": 12545077578,
+      "sha256": "1b4f8f2a02a9758caae40ea09d91acfab9242811192e1b52f019a396d2162732",
+      "result": "SUCCESS_NATIVE_AARCH64"
+    },
+    "concurrency_fix": {
+      "source": "d67c09a2528fd9479c00c77fb6264dd3c7472499",
+      "reason": "Existing group by request path automatically cancelled never-executed pending highloss40055207569 when later 500M2pct was queued; new workflow groups by frozen github.sha + path so independent committed requests do not evict."
+    }
   }
 }
