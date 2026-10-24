@@ -1,0 +1,138 @@
+name: Selective TLS S1 ARM64 AES128 same-VM oracle cost
+run-name: "selective S1 ARM AES128 | frozen 98e5b09b"
+on:
+  push:
+    branches: [experiment/selective-tls-crypto]
+    paths: ["tests/network/selective-crypto-work/run-s1-arm-aes.trigger"]
+permissions: {contents: read, actions: read}
+concurrency:
+  group: selective-s1-arm-aes-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  single-scenario:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 98e5b09b972196b97476b4311346cb79681773c5
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          run-id: 40108785993
+          github-token: ${{ github.token }}
+          name: selective-arm64-build-98e5b09b972196b97476b4311346cb79681773c5-40108785993-1
+          path: selective-s0-build
+      - name: Verify source/lock/target/binary hash before one measured scenario
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git rev-parse HEAD)" = 98e5b09b972196b97476b4311346cb79681773c5
+          grep -Fx 'SOURCE=98e5b09b972196b97476b4311346cb79681773c5' selective-s0-build/manifest.env
+          grep -Fx 'RUN=40108785993' selective-s0-build/manifest.env
+          grep -Fx 'ATTEMPT=1' selective-s0-build/manifest.env
+          grep -Fx 'TARGET=aarch64' selective-s0-build/manifest.env
+          grep -Fx "LOCK_SHA256=$(sha256sum Cargo.lock | awk '{print $1}')" selective-s0-build/manifest.env
+          sha256sum -c selective-s0-build/binary.sha256
+          chmod +x selective-s0-build/selective_crypto_cost
+      - name: Generate genuine TLS1.3 encrypted application record locally and measure one scenario
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p selective-s1-report
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          openssl req -x509 -newkey rsa:2048 -nodes -keyout "$tmp/key.pem" -out "$tmp/cert.pem" -days 1 -subj /CN=localhost >/dev/null 2>&1
+          export CRYPTO_TMP="$tmp"
+          python3 - <<'PY'
+          import hashlib, os, pathlib, ssl
+          tmp=pathlib.Path(os.environ["CRYPTO_TMP"])
+          srv=ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+          srv.minimum_version=srv.maximum_version=ssl.TLSVersion.TLSv1_3
+          srv.load_cert_chain(str(tmp/"cert.pem"),str(tmp/"key.pem"))
+          cli=ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+          cli.minimum_version=cli.maximum_version=ssl.TLSVersion.TLSv1_3
+          cli.check_hostname=False
+          cli.verify_mode=ssl.CERT_NONE
+          ci,co,si,so=(ssl.MemoryBIO() for _ in range(4))
+          c=cli.wrap_bio(ci,co,server_side=False,server_hostname="localhost")
+          s=srv.wrap_bio(si,so,server_side=True)
+          cd=sd=False
+          for _ in range(100):
+              if not cd:
+                  try: c.do_handshake(); cd=True
+                  except ssl.SSLWantReadError: pass
+              if not sd:
+                  try: s.do_handshake(); sd=True
+                  except ssl.SSLWantReadError: pass
+              for outbound,inbound in ((co,si),(so,ci)):
+                  while True:
+                      data=outbound.read()
+                      if not data: break
+                      inbound.write(data)
+              if cd and sd: break
+          assert cd and sd
+          assert c.version()==s.version()=="TLSv1.3"
+          # Post-handshake NewSessionTicket records are not application ciphertext.
+          while so.read(): pass
+          data=bytes((i*37+11)%256 for i in range(16000))
+          assert s.write(data)==len(data)
+          record=so.read()
+          assert len(record)>1305 and record[:3]==bytes([23,3,3])
+          declared=int.from_bytes(record[3:5],"big")
+          assert declared>=1300 and len(record)>=5+declared
+          ci.write(record)
+          assert c.read(len(data))==data
+          (tmp/"tls_record.bin").write_bytes(record[:5+declared])
+          (tmp/"record_summary.txt").write_text(
+              "tls=TLS1.3\nrecord_type=23\nciphertext_bytes="+str(declared)+
+              "\nsha256="+hashlib.sha256(record[:5+declared]).hexdigest()+"\n")
+          PY
+          cp "$tmp/record_summary.txt" selective-s1-report/corpus_summary.txt
+          printf 'build_source=98e5b09b972196b97476b4311346cb79681773c5\nbuild_run=40108785993\njob_id=%s\nrun_id=%s\narch=%s\n' \
+            "$GITHUB_JOB" "$GITHUB_RUN_ID" "$(uname -m)" > selective-s1-report/provenance.txt
+          cat /proc/pressure/cpu > selective-s1-report/host_psi_before.txt || true
+          cat /proc/meminfo | head -n 5 > selective-s1-report/memory_before.txt
+          selective-s0-build/selective_crypto_cost aes128 "$tmp/tls_record.bin" 15 | tee selective-s1-report/legs.ndjson
+          cat /proc/pressure/cpu > selective-s1-report/host_psi_after.txt || true
+          python3 - <<'PY'
+          import json, pathlib, statistics
+          root=pathlib.Path("selective-s1-report")
+          rows=[json.loads(s) for s in (root/"legs.ndjson").read_text().splitlines()]
+          counter=rows.pop(0)
+          assert counter["pn_distinct"] and counter["same_64"] and counter["same_128"]
+          assert [r["leg"] for r in rows]==["A","A-layout","B","B","A-layout","A"]
+          assert len({r["index"] for r in rows})==6
+          assert all(r["packets"]>0 and r["cpu_ns"]>0 for r in rows)
+          unit=lambda r:r["cpu_ns"]/r["bytes_inner"]
+          groups={n:[unit(r) for r in rows if r["leg"]==n] for n in ("A","A-layout","B")}
+          mean={k:statistics.mean(v) for k,v in groups.items()}
+          noise=abs(groups["A"][0]-groups["A"][1])/mean["A"]*100
+          improvement=(mean["A"]-mean["B"])/mean["A"]*100
+          verdict=("INCONCLUSIVE_NOISE" if abs(improvement)<=noise else
+                   "NO_CLEAR_BENEFIT" if improvement<5 else
+                   "IDEAL_RECORD_BENEFIT_ONLY")
+          summary={"source":"98e5b09b972196b97476b4311346cb79681773c5",
+                   "scope":"ARM64 AES128 real TLS1.3 ciphertext; oracle record cost only",
+                   "cpu_ns_per_inner_byte":mean,
+                   "a_forward_reverse_noise_pct":noise,
+                   "b_vs_a_cpu_saving_pct":improvement,
+                   "verdict":verdict,
+                   "appearance_counterexample":"CONFIRMED_DISTINCT_PN_REPEAT_IN_CONSTRUCTED_WIRE_NOT_PCAP",
+                   "true_application_delivery_p99":"NOT_OBSERVED",
+                   "queues_and_kernel_drops":"NOT_APPLICABLE_TO_RECORD_BENCH",
+                   "oracle_classification_cost":"EXCLUDED",
+                   "real_tun_stop_generation":"NOT_TESTED",
+                   "workspace_overhead":"NOT_ISOLATED_RSS_ONLY",
+                   "raw_corpus_uploaded":False}
+          (root/"summary.json").write_text(json.dumps(summary,indent=2)+"\n")
+          print(json.dumps(summary,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: selective-s1-arm-aes-${{ github.run_id }}-${{ github.run_attempt }}
+          path: selective-s1-report/
+          if-no-files-found: warn
+          retention-days: 30
