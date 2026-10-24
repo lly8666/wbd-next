@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "V3_MAX30_PASS_AUTO_ASYM_OBSERVATION_PENDING_NORMAL_ONOFF_AB_PENDING",
+  "phase": "SCOPED_FEC_ONLY_FIXED_MAX_AND_OUTER_SWITCH_ACCEPTED_AUTO_DYNAMIC_NOT_WIRED",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -26,7 +26,7 @@
     "policy": "outer-opportunistic-v3",
     "platform": "aarch64",
     "build_action": "SUCCESS",
-    "runtime_fec_only": "W3_NOT_YET_OBSERVED"
+    "runtime_fec_only": "W3_FIXED5_PASS_W4_AUTO_STARTUP_PASS_W5_MAX30_PASS_W6_NORMAL_ONOFF_AB_PASS_W7_AUTO_ASYM_STATIC_ONLY"
   },
   "open_requests": [
     {
@@ -100,29 +100,35 @@
       "path": "tests/network/fec-work/W6-v3-normal-on-vs-off-sameVM-AB-2pct-arm64.json",
       "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
       "product_build_run": 40078403217,
-      "result": "PENDING_ACTION_ON_OFF_SAMEVM_AB"
+      "result": "PASS_SCOPED_SAME_VM_AB",
+      "run_id": 40079302195,
+      "result_artifact_id": 12554018197
     },
     {
       "id": "FEC-W7-V3-Auto-Asym-OuterOff-RiseRecover-ARM64",
       "path": "tests/network/fec-work/W7-v3-auto-asym-rise-recover-off-arm64.json",
       "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
       "product_build_run": 40078403217,
-      "result": "PENDING_AUTO_ASYM_NATIVE_ACTION"
+      "result": "PASS_BUSINESS_STATIC_AUTO_DYNAMIC_NOT_WIRED",
+      "run_id": 40079564452,
+      "result_artifact_id": 12554836370
     }
   ],
   "open_issues": [
-    "Auto startup no-loss W4 run40078980002 PASS applied1/1 both sides, strong profile5 parity present, but shipped Go v4ProductFecMonitor exits after initial mature ACK; no wired periodic real snapshot→profile decision→native revision applies. Auto full dynamic NOT_WIRED; don't pretend static strong is adaptive.",
-    "Fixed5 W2 one-sided pending resolved by native genuine mature M2 witness patch: W3 run40078693282 PASS both applied, 5% phase 0 missing, >500 recovered TUN each peer, zero outer repairs. W2 historical fail remains.",
-    "Actual CPU/RSS and p99 at 2Mbps observed but NOT cost/memory scaling or matched sameVM AB; 30%/300ms and Auto asym/transition NOT_RUN.",
-    "Linux Game OFF and Windows GUI/OS wiring UNSUPPORTED; upstream normal mixed RX ambiguity remains common-path."
+    "Auto live controller NOT_WIRED: v4ProductFecMonitor.start exits on first mature applied revision, no 2s real M2 + actual-k snapshot -> FecV2Step -> authenticated post-quiescent native revision stage/apply; W7 both sides remained applied=1 profile=5 through asymmetric 2/20/1% and recovery. Do not call Auto dynamic qualified.",
+    "Outer-repair OFF preserves genuine authenticated original firstsend M2 reverse coverage and FEC quality but its separate outer repair shadow RTT diagnostic has timing_samples=0 and fallback srtt_us=600000; that is NOT a measured OFF RTT. Scope a FEC owner independent true feedback age/RTT readout before asserting quality RTT cost gate.",
+    "Deterministic single missing-source plus timely parity end-to-end native OS TUN positive exists as test source r0/go_overlay/internal/realityfront/bridge_v4_live_fec2_kernel_linux_test.go, but has NOT been rerun against merged b601 native product. W3/W5 real IID loss recovered TUN positive, not deterministic scenario equivalence.",
+    "Per-exact-k + actual-r model: W5 exported actual hist in buckets (k1,k2_4,k5_12,k13_16), actual emitted parity and recovered TUN; exact weighted theoretical residual remains unavailable until 16-bin source and r histogram telemetry. Partial k1 expected residual 2.7% at 30%, so do not impose unrealistic zero residual on k1/fragmented traffic.",
+    "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
+    "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Review sameVM W6 Normal default V3 ON/OFF AB and W7 Auto asymmetric 2->20->1% real quality and actual applied/readback; W7 is not a dynamic profile controller proof because current Go monitor exits on startup mature. Stop higher pressure (W5 core succeeded); record result and final merge-ready scoped report with unresolved Auto dynamic wiring, original exact source and all Actions. Do not merge main.",
+  "next_action": "Full Auto unblocking only: add actual per-direction authenticated mature first-send quality/actual-k observations and safe quiescent live revision staging/apply to current Go public v4ProductFecMonitor; never synthesize netem loss/ACK/RTT or truncate prior block. Cheap FEC-controller tests and original W7 asym high->low recheck after ONE new ARM64 product build. Also report actual OFF M2 confirmation latency/RTT independently of repair shadow and run existing deterministic real TUN missing-source test on exact source before full FEC certification. Fixed/Maximum representative and Normal ON/OFF have complete evidence; no more pressure/same-source green reruns. Do not execute original network next_action.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
     "started_from": "486db552b40c17ab52b1248eef64fd3e61ae84ef",
-    "note": "Source patch staged; no Action run or runtime receipt for the new source yet.",
-    "verified": false,
+    "note": "Historical old v2 note preserved in earlier evidence. Current source b601: real ARM64 native on/off readback and FEC first-send TUN validated W3-W7; dynamic auto still unwired.",
+    "verified": true,
     "build_checked": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57",
     "actions": [
       {
@@ -141,7 +147,7 @@
         "type": "fixed-max-parity-unit"
       }
     ],
-    "runtime_verified": false,
+    "runtime_verified": true,
     "runtime_attempts": [
       {
         "run": 39915604295,
@@ -249,5 +255,90 @@
       "server": 21905408
     },
     "qualification": "PASS_SCOPED (>=1% max residual target satisfied)"
+  },
+  "scoped_merge_qualification": {
+    "scope": "Native ARM64 public Normal ON/OFF toggle plus Fixed5 lossy and Maximum30 FEC-only capability",
+    "ready": true,
+    "full_auto": false,
+    "full_platform": false,
+    "policy": "outer-opportunistic-v3 on by default; public off genuine native",
+    "binary_source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+    "build_run": 40078403217,
+    "artifact_id": 12554277143,
+    "complete_representative_runs": [
+      40078693282,
+      40078980002,
+      40079244149,
+      40079302195,
+      40079564452
+    ],
+    "requires_review": "Auto dynamic and OFF genuine RTT telemetry remain separate mandatory capabilities before full FEC mandate is green"
+  },
+  "load_expansion_stop": true,
+  "same_vm_normal_onoff": {
+    "run": 40079302195,
+    "artifact": 12554018197,
+    "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+    "policy": "V3 both roles native",
+    "order": "AB single job/VM",
+    "on": {
+      "repair_client": 131,
+      "repair_server": 127,
+      "accepted_wire_bytes": {
+        "client": 147322,
+        "server": 150339
+      },
+      "missing": {
+        "c2s": 95,
+        "s2c": 90
+      },
+      "p99_ms": {
+        "c2s": 25.5,
+        "s2c": 25.4
+      },
+      "cpu_s_observed": {
+        "client": 1.39,
+        "server": 1.43
+      }
+    },
+    "off": {
+      "repair_client": 0,
+      "repair_server": 0,
+      "candidates_both": 0,
+      "shadow_both": 0,
+      "accepted_wire_bytes_both": 0,
+      "missing": {
+        "c2s": 212,
+        "s2c": 182
+      },
+      "p99_ms": {
+        "c2s": 25.2,
+        "s2c": 25.2
+      },
+      "cpu_s_observed": {
+        "client": 1.29,
+        "server": 1.32
+      }
+    }
+  },
+  "auto_asym": {
+    "run": 40079564452,
+    "artifact": 12554836370,
+    "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+    "mode": "auto requested startup strong, no dynamic revisions",
+    "requested_applied_both": "1/1 profile5 pending=false",
+    "outer_off_both": true,
+    "retransmits_both": 0,
+    "high_loss_c2s_missing": 10,
+    "high_loss_c2s_pct": 0.021246308453906133,
+    "high_loss_p99_ms": 92.9,
+    "high_loss_s2c_missing": 0,
+    "client_recovered_tun": 511,
+    "server_recovered_tun": 10929,
+    "client_cpu_s": 15.53,
+    "server_cpu_s": 15.16,
+    "client_rss_peak_bytes": 21291008,
+    "server_rss_peak_bytes": 20668416,
+    "classification": "PASS_BUSINESS_STATIC_STRONG_AUTO_NOT_DYNAMIC"
   }
 }
