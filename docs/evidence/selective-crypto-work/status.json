@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/selective-tls-crypto",
-  "phase": "S1_IDEAL_RECORD_CPU_BENEFIT_CONFIRMED_S3_LAB_CAPTURE_RUNNING",
+  "phase": "SCOPED_NEGATIVE_CONCLUSION_X64_S0_RUNNING",
   "entry": "docs/testing/SELECTIVE_TLS_CRYPTO_WORK.md",
   "architecture": "docs/architecture/SELECTIVE_TLS_CRYPTO_EXPERIMENT.md",
   "test_plan": "docs/testing/SELECTIVE_TLS_CRYPTO_TEST_PLAN.md",
@@ -24,7 +24,7 @@
     "existing_record_overhead_bytes": 31,
     "reused_ciphertext_is_authenticated": true
   },
-  "implementation": "EXPERIMENT_FEATURE_AND_RECORD_TOOL_COMMITTED_UNVERIFIED",
+  "implementation": "ISOLATED_OPT_IN_LAB_RECORD_AND_ORACLE_TOOLS_COMMITTED_ARM_S0_PASS",
   "actions": [
     {
       "stage": "S0_ARM64_NATIVE",
@@ -72,8 +72,17 @@
       "stage": "S3_CONTROLLED_BOUNDED_LAB_CAPTURE",
       "source": "8c981a2432350c3a92b1e73ea87647bc6a537d9a",
       "run_id": 40109989226,
-      "result": "IN_PROGRESS_NOT_YET_CAPTURE_RECEIPT",
-      "qualification": "CONTROLLED_INNER_SEQ_RESEND_NOT_REAL_KERNEL_INNER_RETRANSMISSION"
+      "result": "PASS_LAB_PCAP_NEGATIVE_APPEARANCE",
+      "qualification": "CONTROLLED_INNER_SEQ_RESEND_NOT_REAL_KERNEL_INNER_RETRANSMISSION",
+      "job_id": 120919506998,
+      "artifact_id": 12566246128,
+      "artifact_zip_sha256": "991d18fda3c1c9df6a17e36fd57c5fd9d97341563a19ece6b31ddcf45bead592",
+      "pcap_sha256": "42907dd45a18d5ccc08b3598417c5e9e320d6ad6395e67fc357e335177de1750",
+      "pcap_bytes": 6196,
+      "raw_pcap_retained": false,
+      "same_64": true,
+      "same_128": true,
+      "different_outer_seq": true
     }
   ],
   "open_requests": [
@@ -82,17 +91,12 @@
       "run_id": 40109345476,
       "source": "98e5b09b972196b97476b4311346cb79681773c5",
       "state": "WAITING_FOR_ACTION_RESULT"
-    },
-    {
-      "stage": "S3-LAB-CAPTURE",
-      "run_id": 40109989226,
-      "state": "RUNNING"
     }
   ],
-  "functional": "ARM64_S0_COMPONENT_PASS_NOT_PRODUCT_QUALIFICATION",
-  "performance": "S1_ARM_AES128_IDEAL_ORACLE_RECORD_CPU_29_473_PERCENT_SAVING_NOT_END_TO_END",
-  "capture": "S3_LAB_IN_PROGRESS_REAL_TUN_CAPTURE_NOT_RUN",
-  "appearance": "NOT_RUN",
+  "functional": "ARM64_S0_COMPONENT_PASS_157_PASS_0_FAIL_1_IGNORED_X64_S0_PENDING_NOT_PRODUCT",
+  "performance": "ARM64_AES128_IDEAL_RECORD_CPU_29_473239_PERCENT_SAVING_REAL_TUN_NOT_TESTED",
+  "capture": "S3_BOUNDED_NATIVE_LAB_OUTER_TCP_PCAP_PASS_REPEATED_TLS_BODY_DISTINCT_OUTER_SEQ_RAW_CLEANED",
+  "appearance": "LAB_CAPTURE_REPEATED_INNER_CIPHERTEXT_DIFFERENT_OUTER_SEQ_CONFIRMED_REAL_DRIVER_UNTESTED",
   "physical": "NOT_RUN",
   "merge_ready": false,
   "known_risks": [
@@ -102,7 +106,9 @@
     "New experimental wire and protected descriptor require actual two-end capability binding, MTU derivation and negative tests; no compatibility claim.",
     "Inherited workflow branch-name selection needs explicit experimental adaptation; do not dispatch old FEC/network requests."
   ],
-  "next_action": "Inspect bounded S3 laboratory capture Action 40109989226 and x86 S0 40109345476. Report appearance independently. Distinct-PN repeated encrypted inner TLS data is a possible hard veto notwithstanding 29.47% record CPU; decide stop without enlarging classifier or disguising wire. Preserve real driver p99/Stop/queue as NOT_RUN unless actually measured.",
-  "latest_log": "docs/devlog/selective-crypto-work/20261024-s0-implementation.md",
-  "prepared_not_dispatched": []
+  "next_action": "Only read already-running x86 S0 exact run 40109345476, recover its factual result and artifact hash in this status/final report; then close this negative scoped experiment. No new workload or classifier development; no S2 product performance claims and do not execute inherited network/fec tasks.",
+  "latest_log": "docs/devlog/selective-crypto-work/20261024-measured-negative.md",
+  "prepared_not_dispatched": [],
+  "outcome": "IDEAL_RECORD_CPU_BENEFIT_APPEARANCE_REGRESSION_LAB_NEGATIVE_NO_MAINLINE_PROMOTION",
+  "final_report": "docs/evidence/selective-crypto-work/FINAL_REPORT.md"
 }
