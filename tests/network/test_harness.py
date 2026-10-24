@@ -336,9 +336,13 @@ class Contracts(unittest.TestCase):
 
     def test_presets_are_complete_and_valid(self):
         base = request()
-        # Preset suite exercises actual global Linux mode default fq600;
-        # only explicit profiles may disable it for a deliberate override.
+        # Preset suite exercises actual global Linux mode default fq600.
+        # A different request may be a paired explicit0-vs-default test
+        # with an A-only external qdisc: do not inherit any of that
+        # single-request diagnostic state into unrelated preset contracts.
         base["network"]["product_tun_fq_maxrate_mbps_profiles"]={}
+        base["network"]["tun_qdisc_profiles"]={}
+        base["network"]["tun_fq_maxrate_mbps_profiles"]={}
         catalog = json.loads((ROOT / "tests/network/scenarios.json").read_text())
         for case in catalog.values():
             r = copy.deepcopy(base)
