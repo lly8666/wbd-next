@@ -170,7 +170,7 @@ def public_fec_rx_capacity(log_text):
         return None
     d={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
     if any(k not in d for k in fields):return None
-    if d["peak_active"]>96 or d["peak_bytes"]>8*1024*1024:
+    if d["peak_active"]>640 or d["peak_bytes"]>48*1024*1024:
         return None
     return {k:d[k] for k in fields}
 
@@ -1088,6 +1088,7 @@ class LinuxExperiment:
             # Source cohort includes late packets; CPU/wire window excludes warmup/drain.
             begin = next(s for s in self.snapshots if s["name"] == "before-" + self.config["phases"][0]["name"])
             end = next(s for s in self.snapshots if s["name"] == "measurement-end")
+            result["measurement_seconds"] = sum(p["seconds"] for p in self.config["phases"])
             result["measurement_cost"] = {}
             for role, direction in [("client", "s2c"), ("server", "c2s")]:
                 cpu = end["processes"][role]["cpu_s"] - begin["processes"][role]["cpu_s"]
@@ -1211,12 +1212,23 @@ def capacity_action_digest(leg):
         "warnings": leg.get("warnings", [])[:8],
         "stop_heavier_resource_cases": leg.get("stop_heavier_resource_cases"),
         "observed": rows, "netem": netem,
+        "measurement_seconds":leg.get("measurement_seconds","NOT_OBSERVED"),
         "measurement_cpu": {
             role: {"cpu_s": costs.get(role, {}).get("cpu_s"),
                    "cpu_s_per_delivered_GiB":
                         costs.get(role, {}).get("cpu_s_per_delivered_GiB"),
                    "outer_tx_bytes":
-                        costs.get(role, {}).get("outer_interface_tx_bytes")}
+                        costs.get(role, {}).get("outer_interface_tx_bytes"),
+                   # Exact measured netem-veth interface egress counter.
+                   # The complete byte number already includes all record
+                   # kinds and any retransmission: NEVER add them again.
+                   "outer_tx_mbps": (
+                       costs[role]["outer_interface_tx_bytes"]*8 /
+                       (leg["measurement_seconds"]*1e6)
+                       if isinstance(leg.get("measurement_seconds"),(int,float))
+                       and leg["measurement_seconds"]>0
+                       and isinstance(costs.get(role,{}).get("outer_interface_tx_bytes"),int)
+                       else None)}
             for role in ("client", "server")},
         "source_tun_tx_drops_steady":leg.get("source_tun_tx_drops_steady","NOT_OBSERVED"),
         "source_tun_tx_drops_warmup":leg.get("source_tun_tx_drops_warmup","NOT_OBSERVED"),
@@ -1240,6 +1252,19 @@ def capacity_action_digest(leg):
         "original_fec_rx_m3_m4_proof": telemetry.get("original_fec_rx_m3_m4_proof", "NOT_OBSERVED"),
         "repair_packets": telemetry.get("repair_packets"),
         "v3_repair_accounting": leg.get("v3_repair_accounting","NOT_OBSERVED"),
+        # Separate 45s authenticated original first-send/repair ledger from
+        # 30s interface accounting. Parity rows are fresh and already
+        # included in the real egress byte counter.
+        "original_fec_tx": (
+            telemetry["FEC_k_r_parity_queue_decode"].get(
+                "real_tx_owner_end_snapshot","NOT_OBSERVED")
+            if isinstance(telemetry.get("FEC_k_r_parity_queue_decode"),dict)
+            else "NOT_OBSERVED"),
+        "original_fec_tx_failure_reasons": (
+            telemetry["FEC_k_r_parity_queue_decode"].get(
+                "real_tx_fail_reasons","NOT_OBSERVED")
+            if isinstance(telemetry.get("FEC_k_r_parity_queue_decode"),dict)
+            else "NOT_OBSERVED"),
         "stop_drained_both": telemetry.get("stop_drained_both"),
         "policy_verified": telemetry.get("recovery_policy_verified"),
         "owned_cleanup": leg.get("cleanup", {}).get("owned_namespaces_absent"),

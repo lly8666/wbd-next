@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "MAXIMUM100_BUSINESS_PASS_RX_SLOT_CAPACITY_KNEE_STOP_125_TO_200",
+  "phase": "FEC_RX_640_48M_INCREMENTAL_RETIRE_BUILD_PENDING_100_TO_350_STAGED",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -221,7 +221,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "CAPACITY_LADDER_STOPPED_AT_100_Mbps (W15 Action40094982877): business both delivered>=99.95 Mbps and RX decoder rejects0, but active block capacity96/96 and 29,425 native pressure evictions per receiver. Do NOT submit 125/150/175/200 under user's stop-on-capacity rule. If authorized to repair later, investigate 150ms real block age + input rate and bounded slot sizing; implement minimum FEC RX-only capacity change, rebuild exact ARM64 product and only rerun 100Mbps original counterexample before any heavier stage. W12 second-leg veth underfeed and Auto dynamic remain independently UNRESOLVED; no main merge/network role edits.",
+  "next_action": "Inspect native exact-source ARM64 product build on 640 groups/48MiB/touched_order-index patch and harness check. Verify new 450-live-block unit, original deterministic parity→TUN, Rust release and matching Go runner. If green pin artifact, single W16 100Mbps reaccreditation with same old W15 impairment/cap=400Mbps, then sequential 125,150,175,200,225,250,275,300,325,350 with cap=4x user business Mbps. At every step record CPU/RSS, actual veth tx bytes and Mbps INCLUDING all kinds, authenticated first-wire and repair in different 45s time window, FEC recovered TUN, RX pressure, netem/kernel drops. Stop and mark later steps NOT_RUN on first business/reliability/resource failure. Do not touch main or other network status.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -293,7 +293,7 @@
   },
   "merge_ready": false,
   "recovery_qualified": true,
-  "capacity_stop": true,
+  "capacity_stop": false,
   "merge_intent": {
     "first_parent": "9cfd72968e21a63834f455a96afc71a5d35737db",
     "second_parent": "040741820b2f917b5868c285c438d4cc21c6193a",
@@ -373,7 +373,7 @@
     ],
     "requires_review": "Auto dynamic and OFF genuine RTT telemetry remain separate mandatory capabilities before full FEC mandate is green"
   },
-  "load_expansion_stop": true,
+  "load_expansion_stop": false,
   "same_vm_normal_onoff": {
     "run": 40079302195,
     "artifact": 12554018197,
@@ -872,6 +872,46 @@
         "reason": "W15 100Mbps RX slot capacity exhausted: native 96/96 active and pressure_evicted 29425 each; stop-on-capacity rule."
       }
     ],
-    "status": "STOPPED_AT_100MBPS_RX_SLOT_CAPACITY_WITH_BUSINESS_PASS"
+    "status": "STOPPED_AT_100MBPS_RX_SLOT_CAPACITY_WITH_BUSINESS_PASS",
+    "user_new_authorization": "2026-10-24 continue remaining bands 125,150,175,200, then 225,250,275,300,325,350 Mbps per direction; calculate bounded RX needed, fix slot bottleneck first; report CPU,RSS,real outer interface TX bytes and true retransmission ledger each stage. Stop at first resource or service failure.",
+    "stage_list": [
+      100,
+      125,
+      150,
+      175,
+      200,
+      225,
+      250,
+      275,
+      300,
+      325,
+      350
+    ],
+    "plan_after_fix": {
+      "product_source": "PENDING_BUILD_COMMIT",
+      "native_limits": {
+        "max_active": 640,
+        "max_stored_bytes": 50331648,
+        "block_reorder_span": 1024,
+        "max_touch_age_ms": 150
+      },
+      "memory_no_preallocation": true,
+      "basis": "W15 100Mbps 96/96 pressure29425. 75Mbps 83 slots no pressure. Estimate full 350Mbps 100-reference ~110 required slots*3.5=385, safety factor1.66 gives 640 slots. At 100 RX bytes3.61MiB pressure-limited; approximate 350 12.6-15MiB, 48MiB bounds near maximum all-parity stored. 1024 ID reordering > estimated 350 live. No O(n) scan per incoming symbol; touched-order BTreeSet O(logn).",
+      "first_gate": "Rebuild exact ARM64 native and cheap full RX unit including 450 distinct incomplete authentic FIRST blocks without pressure, per-block age retirement and real Linux parity-to-TUN. Then recheck W15 100Mbps original with new binary. Only at success progress one request per Actions job to 125..350.",
+      "cap_rule": "4x application WAN rate each side (up to 1400Mbps at350), preserves workload not fixed WAN ceiling. True measured outer veth tx includes all first DATA+parity+control+actual retrans; report as bytes/30s, plus native first-wire cumulative45s and repair bytes; do not add nested byte ledgers.",
+      "remaining_levels": [
+        125,
+        150,
+        175,
+        200,
+        225,
+        250,
+        275,
+        300,
+        325,
+        350
+      ],
+      "status": "BUILD_NOT_RUN"
+    }
   }
 }

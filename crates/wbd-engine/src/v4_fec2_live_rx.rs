@@ -10,15 +10,18 @@ use wbd_codec::fec_v2::{self,BackendChoice,Rs16};
 use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig};
 use wbd_types::MonoNs;
 
-// Measured 50Mbps: 13,651 full plus 2,214 partial source groups over
-// 45s -> ~53 simultaneous identities for 150ms, exceeding the old 32.
-// Do not retire fully delivered blocks early: later authenticated parity
-// still must enter the original M3/M2 accounting without fake invalids.
-// Bounded 96 slots/8MiB; original age and 128-block reordering unchanged.
-const MAX_ACTIVE:usize=96;
-const MAX_STORED_BYTES:usize=8*1024*1024;
+// Frozen W15 100Mbps: 96/96 active, 29,425 pressure retirements/side,
+// 3.61MiB stored (well below 8MiB); 75Mbps: 83 blocks, no pressure.
+// Extrapolate <=~(100Mbps equivalent 110 live)*3.5=385 blocks at
+// 350Mbps, then reserve ~1.66x for actual-k/feedback/reordering bursts.
+// The cache is on-demand, not a preallocated 48MiB slab. Keep the same
+// 150ms age and never reclaim completed groups early (W11 regression).
+// Retire with a monotonic touched-time index rather than O(live blocks)
+// scans on every authenticated source/parity symbol.
+const MAX_ACTIVE:usize=640;
+const MAX_STORED_BYTES:usize=48*1024*1024;
 const MAX_BLOCK_AGE_NS:u64=150_000_000;
-const BLOCK_REORDER_SPAN:u64=128;
+const BLOCK_REORDER_SPAN:u64=1024;
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub(crate) struct VerifiedReceiveEpoch {
     pub generation:u32,pub epoch:[u8;16],
@@ -69,6 +72,9 @@ pub(crate) struct Fec2LiveRx {
     rs:Rs16,budget:usize,stopped:bool,
     highest_block:u64,
     blocks:BTreeMap<u64,LiveBlock>,retired:BTreeSet<u64>,
+    // One (last genuine receive ns, block id) entry per live block.
+    // O(log n) update / amortized oldest-only expiration at 350Mbps.
+    touched_order:BTreeSet<(u64,u64)>,
     stored:usize,evicted:u64,
     capacity_report:Fec2RxCapacityReport,
 }
@@ -99,7 +105,8 @@ impl Fec2LiveRx{
         if budget<32||budget>2048{return Err(ReceiveError::Invalid)}
         Ok(Self{credential:verified,opener:None,rs:Rs16::new(),budget,
             stopped:false,highest_block:0,blocks:BTreeMap::new(),retired:BTreeSet::new(),
-            stored:0,evicted:0,capacity_report:Fec2RxCapacityReport::default()})
+            touched_order:BTreeSet::new(),stored:0,evicted:0,
+            capacity_report:Fec2RxCapacityReport::default()})
     }
     pub(crate) fn active_blocks(&self)->usize{self.blocks.len()}
     pub(crate) fn stored_bytes(&self)->usize{self.stored}
@@ -116,27 +123,37 @@ impl Fec2LiveRx{
         }
     }
     pub(crate) fn stop(&mut self){
-        self.stopped=true;self.blocks.clear();self.retired.clear();self.stored=0;
+        self.stopped=true;self.blocks.clear();self.retired.clear();
+        self.touched_order.clear();self.stored=0;
+    }
+    fn retire_one(&mut self,id:u64,reason:u8){
+        if let Some(block)=self.blocks.remove(&id){
+            self.touched_order.remove(&(block.touched.0,id));
+            self.stored=self.stored.saturating_sub(block.bytes);
+            self.retired.insert(id);
+            self.evicted=self.evicted.saturating_add(1);
+            match reason{
+                0=>self.capacity_report.evicted_age+=1,
+                1=>self.capacity_report.evicted_reorder+=1,
+                _=>self.capacity_report.evicted_pressure+=1,
+            }
+        }
     }
     fn retire(&mut self,now:MonoNs){
         let floor=self.highest_block.saturating_sub(BLOCK_REORDER_SPAN);
-        self.retired.retain(|id|*id>=floor);
-        let keys=self.blocks.iter().filter_map(|(&id,b)|{
-            if id<floor||now.elapsed_since(b.touched)>MAX_BLOCK_AGE_NS{
-                Some(id)
-            }else{None}
-        }).collect::<Vec<_>>();
-        for id in keys{
-            if let Some(old)=self.blocks.remove(&id){
-                self.stored=self.stored.saturating_sub(old.bytes);
-                self.retired.insert(id);
-                self.evicted=self.evicted.saturating_add(1);
-                if id<floor{
-                    self.capacity_report.evicted_reorder+=1;
-                }else{
-                    self.capacity_report.evicted_age+=1;
-                }
-            }
+        // Both indices are ordered. Work proportional to actually expired
+        // blocks, not to all cached blocks per one received packet.
+        while let Some(&id)=self.retired.first(){
+            if id>=floor{break}
+            self.retired.pop_first();
+        }
+        while let Some((&id,_))=self.blocks.first_key_value(){
+            if id>=floor{break}
+            self.retire_one(id,1);
+        }
+        while let Some(&(touched,id))=self.touched_order.first(){
+            if now.elapsed_since(MonoNs(touched))<=MAX_BLOCK_AGE_NS{break}
+            self.retire_one(id,0);
         }
     }
     /// First delivery can occur from a systematic source before ANY prior
@@ -204,14 +221,9 @@ impl Fec2LiveRx{
             // Never allow old incomplete parity/source work to block a
             // freshly authenticated source. Evict ONE oldest incomplete
             // block; this is a censored drop, not successful recovery.
-            let oldest=self.blocks.iter()
-                .min_by_key(|(id,b)|(b.touched.0,**id))
-                .map(|(&id,_)|id).ok_or(ReceiveError::Capacity)?;
-            let retired=self.blocks.remove(&oldest).ok_or(ReceiveError::Capacity)?;
-            self.stored=self.stored.saturating_sub(retired.bytes);
-            self.retired.insert(oldest);
-            self.evicted=self.evicted.saturating_add(1);
-            self.capacity_report.evicted_pressure+=1;
+            let oldest=self.touched_order.first().map(|(_,id)|*id)
+                .ok_or(ReceiveError::Capacity)?;
+            self.retire_one(oldest,2);
         }
         let old=self.blocks.get(&id);
         if old.is_some_and(|b|b.touched.0>now.0){return Err(ReceiveError::Invalid)}
@@ -219,8 +231,15 @@ impl Fec2LiveRx{
             self.capacity_report.refused_bytes+=1;
             return Err(ReceiveError::Capacity)
         }
+        // Mirror the last-touch semantics even if this authenticated
+        // unique-PN symbol later proves to conflict with an already
+        // delivered source; no stale expiry-index entries are left behind.
+        if let Some(old)=self.blocks.get(&id){
+            self.touched_order.remove(&(old.touched.0,id));
+        }
         let b=self.blocks.entry(id).or_insert_with(||LiveBlock::new(now));
         b.touched=now;
+        self.touched_order.insert((now.0,id));
         let mut output=Vec::new();
         if kind==2{
             let index=index as usize;
@@ -370,6 +389,42 @@ mod tests {
             MonoNs(MAX_BLOCK_AGE_NS+4)).unwrap().len(),1);
         rx.stop();
         assert_eq!(rx.stored_bytes(),0);
+    }
+    #[test]
+    fn m0_fec2_350mbps_bounded_touch_index_retirement_no_full_scan(){
+        // Capacity derived from W15 100Mbps 96/96 pressure at 150ms:
+        // 640 live blocks admit the >=~385 extrapolated 350Mbps window.
+        // All 450 independent distinct blocks are incomplete, so there
+        // is no premature complete-block retirement, no pressure or HOL.
+        let mut rx=Fec2LiveRx::from_authenticated_scope(epoch(),1400).unwrap();
+        for id in 1..=450u64{
+            let frame=fec_v2::source_owned(id,0,&[id as u8;1287],1369).unwrap();
+            let r=rx.accept_authenticated(epoch(),2,&frame,MonoNs(id*1000)).unwrap();
+            assert_eq!(r.len(),1);
+            assert!(!r[0].recovered);
+        }
+        assert_eq!(rx.active_blocks(),450);
+        assert_eq!(rx.touched_order.len(),450);
+        assert_eq!(rx.capacity_report().evicted_pressure,0);
+        assert_eq!(rx.capacity_report().evicted_reorder,0);
+        assert_eq!(rx.capacity_report().evicted_age,0);
+        assert!(rx.stored_bytes()<=MAX_STORED_BYTES);
+        // Refresh a block without copying the entire metadata table.
+        let more=fec_v2::source_owned(1,1,&[0x42;1287],1369).unwrap();
+        assert_eq!(rx.accept_authenticated(epoch(),2,&more,MonoNs(1_000_000))
+            .unwrap().len(),1);
+        assert_eq!(rx.touched_order.len(),rx.blocks.len());
+        // Expire all OTHER blocks; the last refreshed record stays live.
+        let recent=fec_v2::source_owned(451,0,&[0x31;1287],1369).unwrap();
+        let now=MonoNs(MAX_BLOCK_AGE_NS+600_000);
+        assert_eq!(rx.accept_authenticated(epoch(),2,&recent,now).unwrap().len(),1);
+        assert_eq!(rx.capacity_report().evicted_age,449);
+        assert_eq!(rx.active_blocks(),2);
+        assert_eq!(rx.touched_order.len(),2);
+        assert_eq!(rx.blocks.len(),2);
+        rx.stop();
+        assert_eq!(rx.stored_bytes(),0);
+        assert!(rx.touched_order.is_empty());
     }
     #[test]
     fn m0_fec2_live_rx_old_incomplete_blocks_cannot_head_of_line_fresh(){
