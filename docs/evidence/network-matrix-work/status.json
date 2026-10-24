@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-C_ARM64_NATIVE_OWNED_FQ600_BUILD_AND_SCENARIO_PENDING",
+  "phase": "V3-C_NATIVE_PRODUCT_FQ600_SAMEVM_STRICT_ACTION_40053396971_QUEUED",
   "current_plan": {
     "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
     "policy": "outer-opportunistic-v3",
@@ -32,17 +32,30 @@
     "build_trigger": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
     "harness": "c2c905a7e5dcbfae8ff3bdb96ca28b667ba7e176",
     "contracts_fix": "38ba0f3b8d0d52ad64731bc1c68f7e87d9563fca",
-    "scope": "Linux owned ephemeral TUN fq per-flow maxrate 600mbit explicit opt-in Normal/off only; 0 original default; fail closed kernel readback; not global nor TCP app knob"
+    "scope": "Linux owned ephemeral TUN fq per-flow maxrate 600mbit explicit opt-in Normal/off only; 0 original default; fail closed kernel readback; not global nor TCP app knob",
+    "native_build": {
+      "run": 40053179394,
+      "attempt": 1,
+      "status": "SUCCESS",
+      "source": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
+      "artifact": 12543904263,
+      "zip_sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749"
+    }
   },
   "open_requests": [
     {
-      "id": "V3-C-real-owned-TUN-fq600-native-build",
-      "build_actions": [
-        40053171857,
-        40053179394
-      ],
-      "state": "ACTIONS_IN_PROGRESS_LAST_READ",
-      "intent": "Use exactly one verified native artifact, avoid redundant builds, then update one committed sameVM A(default fq)/B(product-owned fq600) real500mbps request; no existing product qualification."
+      "id": "V3-C-TCP500-real-owned-TUN-fq600-cold-AB",
+      "state": "ACTIONS_QUEUED",
+      "run": 40053396971,
+      "attempt": 1,
+      "request_source": "4cecde55daf10d2213d25e4af77ba5377395b174",
+      "contract_run": 40053396949,
+      "product_source_A_B": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
+      "product_build_run": 40053179394,
+      "artifact": 12543904263,
+      "sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749",
+      "scenario": "sameVM ARM64 real Go TLS Rust TUN Normal/off one TCP application c2s500Mbps RTT400 0loss outer line700, qlen1024, full-run TUN+root qdisc0, A external fq unlimited B owned Go CLI fq600",
+      "do_not_redispatch": true
     }
   ],
   "recent_evidence": [
@@ -90,6 +103,12 @@
       "id": "contract_stale_inherited_request",
       "action": 40053188967,
       "result": "FAIL_testonly_qdisc_name_mixed_with_prev_B600_profile_corrected_38ba0f3_action_verification_pending"
+    },
+    {
+      "id": "harness_contract_recovered",
+      "action": 40053299866,
+      "source": "38ba0f3b8d0d52ad64731bc1c68f7e87d9563fca",
+      "result": "PASS_44_test_harness_contracts_including_owned_profile"
     }
   ],
   "open_issues": [
@@ -97,5 +116,5 @@
     "New owned Linux Normal/off opt-in fq600 must pass exact source native build and A/B strict full warmup+steady TUN and qdisc drops 0, authenticated real Go/Rust single TCP500 and Stop; no B PASS until measured.",
     "FEC fixed/auto/Game, Windows/physical, wider MTU/Game regression and highloss inner TCP throughput remain independent or NOT_QUALIFIED."
   ],
-  "next_action": "Check current native build Actions40053171857/40053179394 and new harness contract after38ba0f3; do not dispatch duplicates. Pin successful exact source/artifact hashes; update committed tests/network/request.json to sameVM one scenario A default fq B product-owned --tun-fq-maxrate-mbps600 (no external B tc override), both offered real TCP500Mbps/0loss/RTT400 and outer line700Mbps, require full-run source TUN/qdisc drops0, p99<=400ms and Stop; capture B verdict. Write precise evidence/devlog/final report. Do not falsely promote A or test-only B, no main merge."
+  "next_action": "Inspect existing Actions40053396971 attempt1 result and associated artifact after completion; no repeat dispatch. A failing default expected, only B with real CLI+kernel readback can earn source-scoped TCP500 PASS. Then finalize report/devlog/status with detailed CPU, drop, speed, p99 and Stop. Preserve separate highloss/MTU/mixed results; no main merge."
 }
