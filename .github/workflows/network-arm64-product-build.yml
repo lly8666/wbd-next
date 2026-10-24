@@ -54,6 +54,14 @@ jobs:
           WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985 \
             cargo +1.85.1 test --locked -p wbd-codec --features native-isal \
               r1_f2_prepared_native_ -- --nocapture
+      - name: FEC direct original source arena wire equals owned source wire
+        shell: bash
+        run: |
+          set -euo pipefail
+          WBD_ISAL_PREFIX="$RUNNER_TEMP/wbd-isal-arm64-public" \
+          WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985 \
+            cargo +1.85.1 test --locked -p wbd-codec --features native-isal \
+              r1_f2_source_into_sealed_arena_window_exact_owned_equivalence -- --nocapture
       - name: FEC native authenticated-latency and Auto counter provenance contracts
         shell: bash
         run: |

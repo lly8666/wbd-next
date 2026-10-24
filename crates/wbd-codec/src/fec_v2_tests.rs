@@ -422,6 +422,27 @@ fn r1_f2_prepared_native_tables_shared_across_blocks_full_maximum_exact() {
 }
 
 #[test]
+fn r1_f2_source_into_sealed_arena_window_exact_owned_equivalence() {
+    for (block,index,len) in [(1u64,0u8,1usize),(72,5,127),(300,15,1287)] {
+        let src=(0..len).map(|j|((j*7+usize::from(index))%251) as u8)
+            .collect::<Vec<_>>();
+        let old=source_owned(block,index,&src,1400).unwrap();
+        let mut arena=vec![0xa5;1536];
+        let start=14usize;
+        let end=start+old.len();
+        let n=source_into(block,index,&src,1400,&mut arena[start..end]).unwrap();
+        assert_eq!(n,old.len());
+        assert_eq!(&arena[start..end],&old);
+        assert!(arena[..start].iter().all(|&x|x==0xa5));
+        assert!(arena[end..].iter().all(|&x|x==0xa5));
+    }
+    // Invalid frame: no partially published ciphertext, no owner PN.
+    let mut dirty=[0xa5;64];
+    assert!(source_into(0,0,&[7],1400,&mut dirty).is_err());
+    assert!(dirty.iter().all(|&x|x==0xa5));
+}
+
+#[test]
 fn r1_f2_source_membership_and_index_reject_conflict() {
     let rs=Rs16::new();
     let f=frames(2);

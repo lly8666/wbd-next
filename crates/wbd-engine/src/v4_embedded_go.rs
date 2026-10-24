@@ -3665,25 +3665,40 @@ fn original_fixed_stage_source(e:&mut Entry,
     let offered=stream.offer_source(slab,14..14+n,now,|ticket,source|{
         let attempt=(||->Result<(),i32>{
             if ticket.revision!=ConfigRevision(rev){return Err(BAD_STAGE)}
-            let payload=match wbd_codec::fec_v2::source_owned(
-                ticket.block_id,ticket.index,source,budget.record_payload_mtu
-            ){
-                Ok(payload)=>payload,
-                Err(_)=>{e.fec2_fail_reasons[0]+=1;return Err(INVALID)}
+            // One immutable M1 source slab is already borrowed. Write the
+            // exact authenticated FEC wire directly into the original M1
+            // sealer's arena, without allocating a temporary source_owned Vec
+            // and copying the same frame twice for every DATA packet.
+            // source_into does exactly the same block/index/budget checks.
+            let Some(payload_len)=wbd_codec::fec_v2::SOURCE_HEADER
+                .checked_add(source.len())else{
+                e.fec2_fail_reasons[0]+=1;return Err(INVALID)
             };
+            if source.len()>wbd_codec::fec_v2::max_original_for_record_budget(
+                budget.record_payload_mtu
+            ).map_err(|_|INVALID)? ||
+                payload_len>budget.record_payload_mtu {
+                e.fec2_fail_reasons[0]+=1;return Err(INVALID)
+            }
             let mut sealed=match e.arena.allocate(){
                 Ok(slot)=>slot,
                 Err(_)=>{e.fec2_fail_reasons[1]+=1;return Err(FULL)}
             };
-            let Some(end)=14usize.checked_add(payload.len())else{
+            let Some(end)=14usize.checked_add(payload_len)else{
                 e.fec2_fail_reasons[0]+=1;return Err(INVALID)
             };
             if end>sealed.writable().len(){
                 e.fec2_fail_reasons[0]+=1;return Err(FULL)
             }
-            sealed.writable()[14..end].copy_from_slice(&payload);
+            let written=match wbd_codec::fec_v2::source_into(
+                ticket.block_id,ticket.index,source,budget.record_payload_mtu,
+                &mut sealed.writable()[14..end]
+            ){
+                Ok(n) if n==payload_len=>n,
+                _=>{e.fec2_fail_reasons[0]+=1;return Err(INVALID)}
+            };
             let (pn,_,_)=match e.owner.seal_fec2_product_one(
-                sealed,payload.len(),2,budget,15,epoch,now
+                sealed,written,2,budget,15,epoch,now
             ){
                 Ok(x)=>x,
                 Err(_)=>{e.fec2_fail_reasons[2]+=1;return Err(BAD_STAGE)}
