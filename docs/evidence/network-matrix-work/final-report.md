@@ -1,5 +1,7 @@
 # Network matrix work — scoped P1 Normal/off recovery report (2026-10-23)
 
+> **2026-10-24 最新用户授权（新 SOURCE 尚未验收）：** Linux 原始 Go Normal/off 在创建其独占临时 TUN 时默认安装 fq 每流上限600Mbps，`--tun-fq-maxrate-mbps=0`可显式关闭；Fixed/Auto/Game沿用原默认，Windows未接线。确切产品变更`8d5bbdbca636e129481393fdbfa10b2c0e31e999`，原生 ARM64 Actions构建40054986786已成功，产物12545077578 sha256:1b4f8f2a02a9758caae40ea09d91acfab9242811192e1b52f019a396d2162732。原来 Action40053396971 **B的显式fq600** PASS不替新默认源码的PASS；新默认真实TCP500 Action40055169119、30%高损 Action40055272532、外层500/2% Action40055236284 已分别dispatch，不能在结果前宣告通过。30%原场景队列取消40055207569没有执行真实业务，已通过按SOURCE隔离并发分组修复，无重刷已执行性能。
+
 > **当前 V3 状态（2026-10-24）：** 下方原有 P1/P2 内容仅作历史证据，不能被视为新的 v3 产品策略/性能资格。当前授权及方案见 [NETWORK_CURRENT_PLAN](../../testing/NETWORK_CURRENT_PLAN.md) 和 [v3 决策](../../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)。V3-A/B/D 已有代表工况实测，V3-C **默认路径**单 TCP 500Mbps 冷启动零 TUN 丢包仍未完成；**显式产品-owned fq600 Linux Normal/off B** 已获得原生场景范围内 PASS；不得使用任何稳态满速结果掩盖启动丢包。
 
 ## 2026-10-24 recovered cold-start evidence and owned Linux option (newest first)
