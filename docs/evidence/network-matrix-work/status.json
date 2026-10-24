@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/network-matrix-tuning",
-  "phase": "V3-C-singleTCP500-steady-native-pass_startup-sourceTUN-loss-open_bounded-ingress-prefetch-build",
+  "phase": "V3-C-TCP500-steady-pass-cold-source-drop-bounded8-native-AB-running",
   "recovered": {
     "lossless_tcp1_resume": "Recovered and verified GitHub Actions run39967951884 attempt1/artifact12508340683 from full SHA256-verified ZIP on 2026-10-23. A INCONCLUSIVE due TUN drops, B PASS_SCOPED_OBSERVATION with zero TCP retrans and zero TUN drops."
   },
@@ -27,13 +27,23 @@
   "latest_harness_source": "9697566bfc1239ae73a6e7942eeb5d4c563233e9",
   "open_requests": [
     {
-      "id": "V3-C-hot-only-eight-M1-ingress-prefetch-native-ARM64-build",
+      "id": "V3-C-TCP500-strict-startup-source-drop-batched8-AB",
       "state": "ACTIONS_QUEUED",
-      "run": 40043419093,
+      "run": 40043921913,
       "attempt": 1,
-      "source": "ae38b36048024f18df01cbdad171cffdc7dd2da7",
-      "baseline_product_source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
-      "scope": "Rust original TunSink M1 owner prefetch at most8 slabs only after >=4 genuine observed reads, preserve feedback16, no kernel qlen or qdisc/default change, native build + MTU qualification prior to any matched 500 test",
+      "request_source": "e1aea47973a5b655551c2cfb29213367ca080188",
+      "source_A": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+      "source_B": "ae38b36048024f18df01cbdad171cffdc7dd2da7",
+      "build_A_run": 40001498261,
+      "build_A_artifact_id": 12521858079,
+      "build_B_run": 40043419093,
+      "build_B_artifact_id": 12539949237,
+      "build_B_artifact_zip_sha256": "e4d2e25771b1bde88ca7bebc6dec0f76bb7d4fccc6b298129c773e37ceb2bf48",
+      "build_B_native_arm64": "success",
+      "build_B_native_mtu": "success",
+      "same_VM_sequential_AB": true,
+      "profile": "single TCP C2S 500Mbps RTT400, outer700Mbps both, netem0, 20warm60steady30drain, fq both, TUN qlen1024 both, warmup rate scale1 both",
+      "hard_gate": "source TUN kernel 0 drops across warmup+steady,>=475Mbps delivered, p99<=400ms, no product ACK/security changes",
       "do_not_redispatch": true
     }
   ],
@@ -197,7 +207,7 @@
     "20261023 exact same-VM 10x-ceilings AB39950439687: A TCP1 c2s/s2c 1.199/0.723Mbps; B 1.108/1.346Mbps, 10M/dir unqualified; quota denies197->21, M1 peak <=210/1024 baseline, M1/TUN drops0; B host CPU PSI observed, loss differs. Test-only 100% repair budget must not become default. Product/Workflow restored in subsequent commit; next target authenticated TCP DATA/ACK repair timeliness.",
     "2026-10-23 zero-loss single TCP1 at10Mbps/dir, 200ms one-way: B 2048-slot M1 eliminates source TUN drops and kernel TCP retrans on both ends in same-VM sequential AB39967951884. B has higher measured process CPU (client 8.88 vs6.20s, server 8.80 vs5.16s/60s), but A was source-loss limited; do not claim CPU improvement or isolated pool cost. B also outer accepted 137+250 retrans and peer replay duplicates 250+137 despite zero netem loss; possible unnecessary repairs/feedback cadence to diagnose separately. Higher PPS/50-500Mbps remains unqualified."
   ],
-  "next_action": "Reconnected 2026-10-24 and reconciled Actions40039093306 and40039575725 both SUCCESS exact ZIP. Native latest b8df single TCP10Mbps both0loss passed sourceTUN drop0 TCP retrans0, outer repair0. Native TCP500 sameVM fq qlen1024(A)/2048(B) run40039575725 exact artifact12538359391 sha2a86c05: BOTH 500.0003584Mbps steady, source TUN steady0 inner kernel retrans steady0, p99202.9/203.0, no backpressure; BUT A source TUN WARMUP dropped7471 (TCP retrans7468), B warmup7544 (TCP retrans7541), queue growth no benefit. Save evidence V3-C-TCP500-fq-1024-vs2048-fullwarmup-AB-20261024.json. ALL-RUN zero-loss startup qualification NOT PASS. Native host Action40043592393 TUNGETFEATURES=0x7173 confirms IFF_BACKPRESSURE flag 0x80 UNSUPPORTED on this Linux6.17, verified artifact12540287492. Do not set unsupported flag. Evidence V3-C-TUNGETFEATURES-native-6.17-20261024.json. Bounded ingress prefetch change source ae38b360 (up to8 M1 loans when >=4 actual reads, no per-packet heap, preserve control16 and M1 pool2048, no normal rate limit change) native ARM build40043419093 QUEUED. Harness now opts into require_zero_source_tun_drops_full_run and snapshots real tun qdisc stats, latest contract Actions40043360947 PASS. After successful source build+MTU, run ONE matched sameVM TCP500 startup A old b8df/B ae38 with identical fq qlen1024 test-only and strict full-run TUN drops0, plus steady>=475, p99<=400, host CPU; no blind qlen>2048. If startup source loss persists stop heavy; next architecture bounded dedicated TUN reader/background crypto decoupling or supported kernel IFF_BACKPRESSURE capability, not unbounded buffering. V3-A standard30%8.877% R/F 6.456% R/C and10Mbps0loss repairs0 still PASS, D mixed/idle scoped PASS, no FEC branch or main.",
+  "next_action": "V3-C same-VM full TCP500 0loss RTT400 fq qlen1024 vs2048 run40039575725 BOTH STEADY500Mbps kernel TCP retrans0 sourceTUN steady0 p99~203 but warmup original A sourceTUN dropped7471/TCP retrans7468, B dropped7544/retrans7541, so all-run 0-drop NOT QUALIFIED; artifact12538359391 sha2a86c05... evidence V3-C-TCP500-fq-1024-vs2048-fullwarmup-AB-20261024.json. Confirmed Actions6.17 TUNGETFEATURES=0x7173 IFF_BACKPRESSURE unsupported native run40043592393/art12540287492 verified sha3a043...; no unsupported kernel flag. Scoped bounded8 ingress prefetch sourceae38 native+MTU run40043419093 SUCCESS product artifact12539949237 sha e4d2e257..., compared to prior sourceb8df native build40001498261 artifact12521858079. New ONE same-VM sequential A/B sourcee1aea479 (run40043921913 QUEUED) with exactly same qlen1024 fq seed7092, 20s FULL500 warmup, 60s steady, strict acceptance.require_zero_source_tun_drops_full_run=true, app>=475Mbps, p99<=400, no kernel local loss. New harness records warmup and steady drop deltas and true TUN qdisc stats, contracts run40043360947 PASS. DO NOT REDISPATCH. If B still startup drops stop heavier and plan bounded dedicated TUN intake producer/consumer <=512-1k slots with existing original ownership/feedback reserve, not qlen>2048 or fake ACK/auth relaxation. V3-A highloss 30pct and zero-loss10M real product b8df already PASS, V3-D mixed/idle scoped PASS. No FEC branch, main merge, deploy.",
   "evidence_index": "docs/evidence/network-matrix-work/ and docs/devlog/network-matrix-work/",
   "product_current": {
     "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
@@ -473,7 +483,11 @@
       "tun_features_evidence": "V3-C-TUNGETFEATURES-native-6.17-20261024.json",
       "full_run_source_drop_gate": "CODED_AND_CONTRACT_PASS",
       "tun_root_qdisc_stats": "CODED_AND_CONTRACT_PASS",
-      "native_prefetch_build": "NATIVE_GO_RUST_PASS_MTU_JOB_IN_PROGRESS"
+      "native_prefetch_build": "ARM64_GO_RUST_AND_MTU_SUCCESS",
+      "native_prefetch_artifact_id": 12539949237,
+      "native_prefetch_artifact_sha256": "e4d2e25771b1bde88ca7bebc6dec0f76bb7d4fccc6b298129c773e37ceb2bf48",
+      "native_prefetch_test_run": 40043921913,
+      "native_prefetch_test_state": "ACTIONS_QUEUED"
     },
     "phase_D": {
       "run": 39985073396,
