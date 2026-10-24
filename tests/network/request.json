@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "id": "V3-C-TCP500-socket-pacing600-cold-burst-AB",
+  "id": "V3-C-TCP500-TUN-fq-perflow-maxrate600-cold-AB",
   "owner": "network-matrix-work",
-  "seed": 7304,
+  "seed": 7341,
   "product": {
     "mode": "normal",
     "fec_profile": 1
@@ -52,9 +52,13 @@
     "v3_timeline": true,
     "tcp_socket_pacing_mbps_profiles": {
       "A": 0,
-      "B": 600
+      "B": 0
     },
-    "startup_tun_drop_timeline": true
+    "startup_tun_drop_timeline": true,
+    "tun_fq_maxrate_mbps_profiles": {
+      "A": 0,
+      "B": 600
+    }
   },
   "warmup_s": 20,
   "drain_s": 30,
@@ -89,7 +93,8 @@
     "require_retransmission": false,
     "max_repair_fresh_pct": 10,
     "max_p99_ms": 400,
-    "require_zero_source_tun_drops_full_run": true
+    "require_zero_source_tun_drops_full_run": true,
+    "require_zero_tun_root_qdisc_drops_full_run": true
   },
   "bundles": {
     "A": {
