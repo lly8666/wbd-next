@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "id": "V3-AllModes-fq600-Fixed5-clean-FEC-readback",
+  "id": "V3-AllModes-fq600-Auto-clean-FEC-readback",
   "owner": "network-matrix-work",
-  "seed": 8176,
+  "seed": 8177,
   "product": {
-    "mode": "fec-fixed",
-    "fec_profile": 5
+    "mode": "fec-auto",
+    "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 12,
-    "s2c_mbps": 12,
+    "c2s_mbps": 10,
+    "s2c_mbps": 10,
     "udp_share": 1,
     "sizes": [
       [
