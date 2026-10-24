@@ -121,3 +121,28 @@ W16真实 netem损伤29.984%/30.015%，业务C→S注入99.99863Mbps、交付94.
 | 源TUN丢包、RX容量淘汰/codec拒绝、外层DATA重传 | 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 |
 
 **判定：** 新 native ISA-L 表复用的 *功能* 合格，但改善幅度仅每方向约 0.76/0.93Mbps 与 parity 缺口1.73/2.13百分点，进程总 CPU 无显著下降；B 宿主 PSI峰更高。**A/B两腿均不能满足≤1%残余门限，禁止把旧 W23 单点 PASS 当作150Mbps可重复资格。** 原生45秒 Parity累计不可与30秒净业务包数混作相同分母。无 BA、未固定netem及共享主机容量拥塞限制因果判定；性能收益 *观察到趋势*，不能宣称严格归因。先定位10ms关闭后作业有效期内的逐量子 CPU/M4排队时间，不能仅因 `unknown_capacity` 字段名就增加接收缓存；在无新增原因前不再测175–350Mbps。自动档全动态阶跃/非对称与测量真实RTT年龄独立OPEN。**merge_ready=false**；不改原网络岗位的恢复算法及进度。
+
+
+## 2026-10-24 W25：Parity 两个4行量子共用一次M4，150Mbps新源码限域通过
+
+针对 W24 150Mbps 每侧失发 Parity 8–11% 和每秒910+个满块的 5 次 sendmmsg/结算，FEC-only 原生修复在一次 owner turn 先密封所有新 DATA，再只在空余≥8个M4 record槽时将**同一个** ParityJob 的两个≤4行原生M3量子一起密封，原生 M4 同一 syscall 按PN顺序归责；否则仍使用旧的≤4行单量子。代码 commit [aab45f7c](https://github.com/lly8666/wbd-next/commit/aab45f7cc304c09065e3614d0b5c61cff2097b56) + [ab7ea894](https://github.com/lly8666/wbd-next/commit/ab7ea894100f245d6a510137282736781bd017ce)（首个编译尝试原 Rust 二重可变借用失败，修复保留证据）；新精确SOURCE `ab7ea894100f245d6a510137282736781bd017ce` ARM64 build [40108972702](https://github.com/lly8666/wbd-next/actions/runs/40108972702) 成功，产物12565424535 ZIP SHA256 `9bf5b07eee3e90a37a69844b23fb08834c38a9d5781f0f1635c27543bbba7067`。包括 native staged prefix确证、不复发 PN、新 DATA 无阻塞、真实ISA-L和固定/Auto真正内核恢复回归 PASS；Maximum20 行合同40108972687 PASS。
+
+[W25 Action40109234114](https://github.com/lly8666/wbd-next/actions/runs/40109234114) 同 VM **一个场景一个测量 job、A→B顺序**，旧A `cf00a47c`（构建40105262367）/新B `ab7ea894`（构建40108972702）均复用ARTIFACT，不在测量 job 编译。150Mbps **每方向**，原始fq600、Static owned veth邻居，30% IID实际netem 29.98–30.06%，单程300ms、最大档Fixed6 applied、外层真实DATA重传0包0B（parity另算），15秒warmup+30秒measure+30秒drain，双方Stop owned清理，源TUN/root drop0，RX pressure/decoder reject0。结果artifact12565917569 SHA256 `6dae0f82569e28a8c72785c126c1d18a3c6d322538a250b1f287d6f331705683`。
+
+| 指标 | A旧源码（业务FAIL） | B双量子同M4（业务PASS） |
+|---|---:|---:|
+| C→S净业务/残余 |147.123 Mbps / **1.951%** | **149.938 Mbps / 0.0542%** |
+| S→C净业务/残余 |147.379 Mbps / **1.774%** | **149.953 Mbps / 0.0485%** |
+| 首次交付 p99 C2S/S2C |311.3/311.2ms | **303.3/303.2ms** |
+| client parity rplanned→rsent |830066→745874（缺10.14%） | **830367→829702（缺0.080%）** |
+| server parity rplanned→rsent |830066→753112（缺9.27%） | **830361→829936（缺0.051%）** |
+| queued_expired jobs C/S |985 / 848 | **15 / 8** |
+| unknown_capacity C/S |8049 / 7399 | **51 / 31** |
+| 30秒进程CPU-s C/S |24.24 / 24.06 | **24.85 / 24.58**（无CPU节省声明） |
+| RSS peak C/S MB |49.84 / 49.62 |50.12 / 49.78 |
+| 30秒真实veth outer TX C/S Mbps |244.85 / 246.52 | **259.68 / 259.85**（包括更多真实Parity） |
+| host CPU PSI peak |27.42% |29.61% |
+
+**结论：** 新 B 150Mbps FEC-only 满足≤1%残余交付且 p99 相比 A低8ms；性能成果是 Parity按时发送与首次交付改善，**不是更低总CPU/总外层带宽**。B 发出了更多真实 Parity，故 CPU-s、外层 TX Mbps略升是合理成本，不能把少发 parity 的 A当作节能资格。整个 Action 按用户验收脚本判 *FAIL（A旧腿失败）*，但 B 腿原生产物 `PASS_SCOPED_OBSERVATION`；与W23孤立通过不同，本次是在旧版同机失败的情形下 B 正向通过，不过仍为一次未固定netem随机序列的AB而不是 BA/持续压测/物理保证。
+
+**容量停止继续：** W25新B宿主CPU PSI峰29.61%、30秒持续高压力，175–350Mbps 继续 NOT_RUN；RX低占用、外层DATA retrans 0不代表宿主CPU可继续加压。Auto真实动态升降档、反馈RTT真实性以及 Windows 和整体合并仍未过；`merge_ready=false`，只改独立FEC分支与自身状态，不接管原network工作包。
