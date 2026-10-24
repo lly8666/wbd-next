@@ -13,7 +13,7 @@ from pathlib import Path
 
 from tools.network_harness.config import Unsupported, fec_residual, netem_args, validate
 from tools.network_harness.report import active_gap, summarize
-from tools.network_harness.traffic import Histogram, HEADER, UDP, Worker
+from tools.network_harness.traffic import Histogram, HEADER, UDP, TCP, Worker
 from tools.network_harness.artifacts import verify, sha, attested_recovered_product_build
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -231,6 +231,61 @@ class Contracts(unittest.TestCase):
         q["network"]["tun_txqlen_profiles"]={"C":500}
         with self.assertRaises(ValueError):
             validate(q)
+
+    def test_cross_business_hol_per_real_tcp_socket_receipts_and_gates(self):
+        from tools.network_harness.report import cross_business_hol
+        from tools.network_harness.traffic import Worker
+        r=request()
+        r["product"]={"mode":"normal","fec_profile":1}
+        r["traffic"].update(udp_share=.3,tcp_flows=2,
+                            observe_independent_flows=True)
+        r["acceptance"]["cross_business_hol"]=True
+        r["network"]["tun_qdisc_profiles"]={}
+        r["network"]["tun_fq_maxrate_mbps_profiles"]={}
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]={}
+        valid=validate(r)
+        self.assertTrue(valid["acceptance"]["cross_business_hol"])
+        invalid=copy.deepcopy(valid)
+        invalid["traffic"]["tcp_flows"]=1
+        with self.assertRaises(ValueError): validate(invalid)
+        invalid=copy.deepcopy(valid)
+        invalid["traffic"]["observe_independent_flows"]=False
+        with self.assertRaises(ValueError): validate(invalid)
+        # The same input frame becomes a unique received business record
+        # attributed to the actual TCP socket, not an aggregate TCP group.
+        with tempfile.TemporaryDirectory() as tmp:
+            w=Worker(valid,"client","127.0.0.1","127.0.0.2",45800,
+                     str(Path(tmp)/"worker.json"),1)
+            frame=w.packet(TCP,0,0,64,1)
+            w.sent("tcp",0,64,1,0)
+            w.receive(frame,10_000_001,"tcp",0)
+            self.assertEqual(w.tcp_flow_stats[0]["tx_packets"],1)
+            self.assertEqual(w.tcp_flow_stats[0]["rx_packets"],1)
+            self.assertEqual(w.tcp_flow_stats[1]["rx_packets"],0)
+            w.sel.close()
+        # Synthetic 10ms patterns exercise analysis, not product success.
+        cfg={"warmup_s":10,"phases":[{"name":"steady","seconds":10}],
+             "traffic":{"tcp_flows":2}}
+        n=2600
+        def endpoint():
+            a=[1]*n
+            return {"tx_bins_10ms":{"udp":a[:]},
+                    "rx_bins_10ms":{"udp":a[:]},
+                    "tcp_flow_tx_bins_10ms":[[int(i%5==0) for i in range(n)],
+                                              [int(i%5==2) for i in range(n)]],
+                    "tcp_flow_rx_bins_10ms":[[int(i%5==0) for i in range(n)],
+                                              [int(i%5==2) for i in range(n)]]}
+        sender,receiver=endpoint(),endpoint()
+        healthy,fail,limits=cross_business_hol(cfg,sender,receiver)
+        self.assertEqual(fail,[])
+        self.assertEqual(limits,[])
+        self.assertEqual(healthy["c2s/steady"]["longest_ALL_business_receiver_zero_while_udp_offered_ms"],0)
+        for i in range(1500,1512):
+            receiver["rx_bins_10ms"]["udp"][i]=0
+        blocked,fail,limits=cross_business_hol(cfg,sender,receiver)
+        self.assertTrue(any("protected UDP blocked" in f for f in fail))
+        self.assertEqual(blocked["c2s/steady"]["longest_udp_receiver_zero_while_offered_ms"],120)
+        self.assertLess(blocked["c2s/steady"]["longest_ALL_business_receiver_zero_while_udp_offered_ms"],100)
 
     def test_true_idle_phase_has_no_synthetic_probe_sends(self):
         r=request()
