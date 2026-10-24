@@ -1,5 +1,7 @@
 # WBD Next｜新 agent 唯一启动入口
 
+**本实验分支入口**：若当前分支是 `experiment/selective-tls-crypto`，先读 [SELECTIVE_TLS_CRYPTO_WORK](docs/testing/SELECTIVE_TLS_CRYPTO_WORK.md) 和 [本岗位状态](docs/evidence/selective-crypto-work/status.json)。用户已直接授权独立的 Normal/FEC OFF 选择性正文加密成本与外观实验；不要执行继承的 network/fec 工位 next_action，也不要把设计文档当已实现/测试通过。正式角色流程仍用于避冲突，不要求此实验领取M0–M4身份。
+
 **独立 FEC 合并岗位**：只在 `experiment/fec-network-tuning` 读取 [FEC_AUTONOMOUS_WORK](docs/testing/FEC_AUTONOMOUS_WORK.md)、`docs/evidence/fec-network-work/status.json` 并按 FEC 的外层 DATA repair OFF 目标推进。已同步网络冻结点的 V3 公用代码，不执行/覆盖网络岗位的 `next_action`、status 或 main。分支 FEC-only 验收仍必须用合并后源码 Actions 独立证明。
 
 仓库 `lly8666/wbd-next`；控制分支 `main`，其他工位分支由 main 的 `.governance/registry.json` 授权。**先刷新远端，不相信聊天、旧提示词、目录中的某个日期或本地缓存。**

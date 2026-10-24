@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "branch": "experiment/selective-tls-crypto",
+  "phase": "DESIGN_READY_IMPLEMENTATION_NOT_STARTED",
+  "entry": "docs/testing/SELECTIVE_TLS_CRYPTO_WORK.md",
+  "architecture": "docs/architecture/SELECTIVE_TLS_CRYPTO_EXPERIMENT.md",
+  "test_plan": "docs/testing/SELECTIVE_TLS_CRYPTO_TEST_PLAN.md",
+  "permanent_prompt": "docs/prompts/selective-crypto.md",
+  "base": {
+    "branch": "experiment/fec-network-tuning",
+    "sha": "34985d2df47ad9c08ce0828554241515a5704266",
+    "network_ancestor": "040741820b2f917b5868c285c438d4cc21c6193a",
+    "qualification": "UPSTREAM_EVIDENCE_ONLY_NOT_SELECTIVE_CRYPTO_PASS"
+  },
+  "scope": {
+    "mode": "normal",
+    "lanes": 1,
+    "fec": "off",
+    "initial_outer_data_repair": "off",
+    "classifier": "IDEAL_TLS_CIPHERTEXT_RANGE_ORACLE_ONLY",
+    "production_default_changed": false,
+    "protocol": "EXPERIMENTAL_SELECTIVE_AAD_V1_NOT_IMPLEMENTED",
+    "record_overhead_bytes": 33,
+    "existing_record_overhead_bytes": 31,
+    "reused_ciphertext_is_authenticated": true
+  },
+  "implementation": "NOT_STARTED",
+  "actions": [],
+  "open_requests": [],
+  "functional": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "capture": "NOT_RUN",
+  "appearance": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "merge_ready": false,
+  "known_risks": [
+    "TLS ciphertext repeated by inner TCP can recur under different outer PN/Seq; a confirmed occurrence is an appearance regression, not hidden by a CPU PASS.",
+    "AAD still costs full-body authentication; skipped encryption is not skipped AEAD and may not improve an accelerated implementation.",
+    "Rearrangement, receiver reconstruction and real classification can exceed crypto savings; oracle estimates cannot qualify a production classifier.",
+    "New experimental wire and protected descriptor require actual two-end capability binding, MTU derivation and negative tests; no compatibility claim.",
+    "Inherited workflow branch-name selection needs explicit experimental adaptation; do not dispatch old FEC/network requests."
+  ],
+  "next_action": "Implement isolated opt-in record tool and S0 functions per architecture, freeze one native ARM64 build; run S1 same-VM A/A-layout/B with early repeated-ciphertext counterexample. Only after clear net benefit consider limited real-driver S2 and bounded S3 capture. Stop normally on no benefit or appearance regression. Do not touch ongoing FEC work.",
+  "latest_log": "docs/devlog/selective-crypto-work/20261024-design.md"
+}

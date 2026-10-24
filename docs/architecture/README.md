@@ -1,5 +1,7 @@
 # 长期运行路径重构方案 v1
 
+仅在 `experiment/selective-tls-crypto`：用户新授权的 [Normal/OFF TLS正文复用实验](SELECTIVE_TLS_CRYPTO_EXPERIMENT.md) 采用理想oracle、单AEAD/AAD验证CPU成本和有界抓包外观。该协议候选未实现，不替代下述生产架构；接续读[独立入口](../testing/SELECTIVE_TLS_CRYPTO_WORK.md)。
+
 这是长期设计入口，不是当前进度快照。实现和资格分别读取 main 的 project、registry 及角色分支 cursor/evidence；不得从早期方案推断“尚未开始”或“已完成产品”。2026-10-14 用户明确的同机顺序 A/B 要求覆盖旧版“每 run 禁止 multi-leg”约定。
 
 ## 结论
