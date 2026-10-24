@@ -4751,7 +4751,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     // This is the SOLE recipient of one bounded original
                     // source TUN ingress queue. Sender preserves fresh-order.
                     for _ in 0..32 {
-                        if tx_pending.len()+jumbo_queue.len()>=32{break}
+                        if tx_pending.len()+jumbo_queue.len()>=32 ||
+                            jumbo_queue.len()>=M0_MAX_PENDING_JUMBO{break}
                         match ingress_recv.try_recv(){
                             Ok(OriginalTunIngress::Small(buf,n))=>tx_pending.push((buf,n)),
                             Ok(OriginalTunIngress::Jumbo(buf))=>jumbo_queue.push_back(buf),
@@ -4790,6 +4791,11 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     if background_original_repair_once(&tx_cell,&stop_tx).is_err(){
                         stats.tx_error.fetch_add(1,Ordering::Relaxed);
                     }
+                    // The older worker blocks for 10ms inside tun poll.
+                    // Split-ingress mode must NOT poll the same owned fd:
+                    // allow the separate reader to make progress without
+                    // spinning on an empty bounded queue and starving CPU.
+                    if split_ingress{thread::sleep(Duration::from_micros(250));}
                     continue
                 }
                 let slice_start=Instant::now();
