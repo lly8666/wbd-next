@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "OWNED_TEST_VETH_NUD_ROOT_FIXED_W20_W21_100_W22_125_PASS_W23_150_PARITY_PSI_KNEE_STOP_HIGHER",
+  "phase": "W24_NATIVE_SHARED_ISAL_MATRIX_FUNCTIONAL_PASS_150_AB_BOTH_BUSINESS_FAIL_CAPACITY_STOP",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -18,15 +18,16 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "a969217e1edd3577ae41df81c38aa7ac84a4a484",
-    "run_id": 40083030170,
+    "source": "cf00a47c9564d67b15409d50178a956416227a8a",
+    "run_id": 40105262367,
     "attempt": 1,
-    "artifact_id": 12555524616,
-    "sha256": "2013372c5555180ea75a9c06d2f980fcb211a992e3c71470de984b1b98b62fb4",
+    "artifact_id": 12564910143,
+    "sha256": "39809b55b380b4a161f47b367f734c2e45efa526efc36817e3ac6eb500c21d03",
     "platform": "aarch64",
     "policy": "outer-opportunistic-v3",
     "build_action": "SUCCESS",
-    "runtime_fec_only": "AUTO_LIVE_W10_NOT_YET_OBSERVED"
+    "native_fixed_auto_kernel_functional": "PASS_SCOPED",
+    "runtime_fec_only": "W24_150_AB_BOTH_FAIL_LOSS_OVER_1PCT"
   },
   "open_requests": [
     {
@@ -291,9 +292,22 @@
       "outer_cap_mbps_each": 600,
       "static_test_veth_neighbor": true,
       "result_artifact": 12563149315
+    },
+    {
+      "id": "FEC-W24-Maximum150-NativeISA-L-SharedCoefficient-AB-ARM64",
+      "path": "tests/network/fec-work/W24-maximum150-native-shared-tables-AB-arm64.json",
+      "run_id": 40105506052,
+      "attempt": 1,
+      "result_artifact_id": 12564980324,
+      "artifact_sha256": "cf2ba13a6a7876ba186f42fd424845bbc49b3a4c870137a3a10158204c581d98",
+      "order": "AB",
+      "A_source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "B_source": "cf00a47c9564d67b15409d50178a956416227a8a",
+      "result": "BOTH_LEGS_FAIL_RESIDUAL_GT_1PCT_B_IMPROVES_PARITY_BUT_NO_CPU_CAPACITY_QUALIFICATION"
     }
   ],
   "open_issues": [
+    "W24 same ARM64 VM AB Action40105506052 artifact12564980324: both old A and new B FAIL <=1% residual at150Mbps (A 2.153/2.453%; B1.642/1.826%) under 30% IID+300ms Maximum6 outerOFF. Immutable ISA-L table reuse reduces parity planned/sent gap A9.77/11.19% to B8.04/9.06% and queued expiry A915/1102 to B817/882, but client/server CPU seconds essentially unchanged (23.91/24.46 to23.98/24.32), host PSI>20 in all measurement samples with worse B peak31.78. No RX capacity issue, source TUN0, outer DATA repair0. Neither qualifies stable150; single W23 PASS not reproduced. Remain capacity_stop=true and no175+.",
     "W23 150Mbps original fq600 with static disposable veth neighbour Action40102994265: BUSINESS PASS narrowly 148.869/148.893Mbps, loss0.754/0.738%, but native FEC parity planned830246/830265 vs true sent800359/799115 (gap3.60/3.75%), unknown capacity2983/3054 and host CPU PSI peak30.62, over20 fraction100% (W22 125 parity gap~0.2%). RX pressure0, source TUN drops0, outer repair0. New possible parity scheduling/CPU pressure performance knee: stop175-350, investigate without violating source-first priority.",
     "W19 Action40100361068 (artifact12562403617): 100Mbps S2C delivery87.746Mbps (36,083 lost), server peer IPv4 NUD became INCOMPLETE, probes4..6; veth TX/netem output 0 continuously ~55..57.5s while server TUN admitted ~4900 source packets/500ms, resumed exactly when NUD REACHABLE. This is a concrete link-layer neighbor-resolution outage after actual native M4 copy, not CPU/RX FEC or TUN fq600. W20 test-only static MAC peer policy pending; unseeded netem may also randomly cause outages in baseline.",
     "W16 new RX640/48MiB bounded cache on 100Mbps original case Action40097487779 fixed RX pressure=0 (peak109/640) but C2S business delivered only94.579Mbps, missing15993 (~5.42%), S2C 99.979Mbps; client actual virtual outer TX164.16 vs server173.35Mbps over30s even with authentic first-wire 45s ~1.377GB each, native M4 FEC parity ~554k copied both, zero outer DATA retry, no source TUN/root fq loss. Similar W12 underfeeding; stop further125-350 until kernel egress or harness timing cause established.",
@@ -307,7 +321,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "CURRENT TASK CONCLUDED WITH VERIFIED ROOT: W19 dynamic NUD IPv4 INCOMPLETE caused 2.5-3s outer veth/netem blackout post-M4, unrelated to inner TUN fq600; W20 test-only owned veth neighbor PERMANENT both 130/130 samples fixed blackout at 100, W21 uninstrumented 100 PASS, W22 125 PASS. W23 150 business technically <=1% residual but native FEC parity rplanned/rsent gap3.6-3.8%, host CPU PSI peak30.62 above20 at 100% samples, p99 ~311ms; STOP user-authorized 175-350. Before further pressure, investigate bounded native TX parity job deadline / scheduler / thread CPU profile and host injection contention, not blindly grow RX/queue or change fq600, and retain project source-first semantics. All rate evidence CPU/RSS and 30s gross outer includes retrans (actual repair OFF=0) in W19-W23 report. No new Actions needed until cause isolated; no main merge/upstream status edits.",
+  "next_action": "W24 scoped cross-block ISA-L coefficient optimization is functional PASS but 150Mbps A/B business FAIL under shared-host PSI; do NOT rerun same seed without new information or attempt >150. First collect bounded native FEC TX M1 job-close -> queue -> first encode -> each M4 settle timing plus worker CPU/genuine host capacity on existing bounded scenario, separating in-flight expiry (unknown_capacity) from queued-expired and memory pressure. Calculate how many of 5 four-row turns miss original 10ms post-close deadline, then if proven apply smallest source-first-safe parity scheduling/deadline fix and one new old/new same-VM 150 (or lower if host overloaded) request; retain original outer DATA repair OFF and genuine M2 feedback. Auto live 2s low-high-low/asym and independent authentic RTT age remain OPEN. No main merge, no changes to network job status.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -1775,5 +1789,127 @@
         "Unseeded netem and single standalone measurement cannot assert invariant throughput for all runs"
       ]
     }
+  },
+  "w24": {
+    "run": 40105506052,
+    "run_attempt": 1,
+    "result_artifact": 12564980324,
+    "result_artifact_sha256": "cf2ba13a6a7876ba186f42fd424845bbc49b3a4c870137a3a10158204c581d98",
+    "request": "tests/network/fec-work/W24-maximum150-native-shared-tables-AB-arm64.json",
+    "request_commit": "d0c5cdd70d3145de597b50286026d06cceeb7808",
+    "order": "AB",
+    "runner": "ubuntu-24.04-arm same job, sequential",
+    "source_A": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+    "build_A": 40099179830,
+    "product_artifact_A": 12562092730,
+    "source_B": "cf00a47c9564d67b15409d50178a956416227a8a",
+    "build_B": 40105262367,
+    "product_artifact_B": 12564910143,
+    "build_B_artifact_sha256": "39809b55b380b4a161f47b367f734c2e45efa526efc36817e3ac6eb500c21d03",
+    "build_B_result": "SUCCESS_NATIVE_TWO_PREPARED_PARITY_TESTS_ORIGINAL_GO_FIXED_AUTO_KERNEL_RECOVERY",
+    "maximum_row_contract": 40105262390,
+    "harness_contract": 40105506150,
+    "result": "BOTH_LEGS_FAIL_RESIDUAL_GT_1PCT_B_IMPROVES_PARITY_BUT_NO_CPU_CAPACITY_QUALIFICATION",
+    "fixed_profile": 6,
+    "app_rate_mbps_each": 150,
+    "netem_loss_requested_pct": 30,
+    "oneway_delay_ms": 300,
+    "outer_DATA_repair": "OFF_RUNTIME_VERIFIED_ZERO_A_AND_B",
+    "data": {
+      "A": {
+        "c2s": {
+          "delivered_mbps": 146.81698426666668,
+          "loss_pct": 2.152742996616438,
+          "p99_ms": 311.3
+        },
+        "s2c": {
+          "delivered_mbps": 146.37564986666666,
+          "loss_pct": 2.4527934151006683,
+          "p99_ms": 311.3
+        },
+        "client": {
+          "cpu_s_30s": 23.91,
+          "rss_peak_bytes": 50569216,
+          "parity_planned": 830151,
+          "parity_sent": 749061,
+          "parity_gap_pct": 9.768102429558,
+          "queued_expired_jobs": 915,
+          "unknown_capacity": 7679,
+          "pressure_jobs": 0,
+          "pressure_sources": 0
+        },
+        "server": {
+          "cpu_s_30s": 24.46,
+          "rss_peak_bytes": 50356224,
+          "parity_planned": 830134,
+          "parity_sent": 737230,
+          "parity_gap_pct": 11.191446200252,
+          "queued_expired_jobs": 1102,
+          "unknown_capacity": 8708,
+          "pressure_jobs": 0,
+          "pressure_sources": 0
+        },
+        "host_cpu_psi_peak_pct": 27.55,
+        "host_cpu_psi_over20_fraction": 1,
+        "netem_loss_actual_pct": {
+          "client": 30.034997473163525,
+          "server": 30.020517211778746
+        },
+        "RX_capacity_evictions": 0,
+        "RX_codec_rejects": 0,
+        "source_TUN_drops": 0
+      },
+      "B": {
+        "c2s": {
+          "delivered_mbps": 147.5757957333333,
+          "loss_pct": 1.6417183197543315,
+          "p99_ms": 311.2
+        },
+        "s2c": {
+          "delivered_mbps": 147.30226533333334,
+          "loss_pct": 1.8261259750443048,
+          "p99_ms": 311.2
+        },
+        "client": {
+          "cpu_s_30s": 23.98,
+          "rss_peak_bytes": 49393664,
+          "parity_planned": 830055,
+          "parity_sent": 763348,
+          "parity_gap_pct": 8.036455415604992,
+          "queued_expired_jobs": 817,
+          "unknown_capacity": 6295,
+          "pressure_jobs": 0,
+          "pressure_sources": 0
+        },
+        "server": {
+          "cpu_s_30s": 24.32,
+          "rss_peak_bytes": 49713152,
+          "parity_planned": 830127,
+          "parity_sent": 754905,
+          "parity_gap_pct": 9.06150504681814,
+          "queued_expired_jobs": 882,
+          "unknown_capacity": 7145,
+          "pressure_jobs": 0,
+          "pressure_sources": 0
+        },
+        "host_cpu_psi_peak_pct": 31.78,
+        "host_cpu_psi_over20_fraction": 1,
+        "netem_loss_actual_pct": {
+          "client": 30.052505818142237,
+          "server": 29.964830990472016
+        },
+        "RX_capacity_evictions": 0,
+        "RX_codec_rejects": 0,
+        "source_TUN_drops": 0
+      }
+    },
+    "interpretation": [
+      "Same-VM A/B gives directional parity gap improvement 1.73/2.13 percentage points, business delivery +0.76/+0.93 Mbps, but BOTH legs fail the <=1% residual requirement",
+      "CPU client +0.07s/30s, server -0.14s/30s; no material aggregate CPU improvement proven; B host PSI peak worse",
+      "unknown_capacity includes in-flight parity deadline expiry, not proven memory pressure; queued expiry separate; RX pressure0",
+      "Native TX cumulative parity covers 45s (including warmup), app throughput 30s. Do not divide rplanned-rsent by app cohort packets",
+      "One A/B without BA, unseeded recorded netem and shared-runner contention cannot establish causality/generalize; W23 standalone150 passed narrowly but not repeatable",
+      "Do not run 175Mbps or higher: capacity_stop=true. Do not change source-first, outer recovery or original fq600."
+    ]
   }
 }
