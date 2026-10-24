@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "id": "FEC-W11-Maximum50-RX-Bounded-Old-New-AB-ARM64",
+  "owner": "fec-network-work",
+  "seed": 8050,
+  "policy": "outer-opportunistic-v3",
+  "product": {
+    "mode": "fec-fixed",
+    "fec_profile": 6,
+    "repair_enabled": false
+  },
+  "traffic": {
+    "c2s_mbps": 50,
+    "s2c_mbps": 50,
+    "udp_share": 1,
+    "sizes": [
+      [
+        64,
+        1
+      ],
+      [
+        1287,
+        99
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "deadline_ms": 5000,
+    "burst_ms": 0,
+    "max_packets": 5000000,
+    "allow_fragmentation": false
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "shared",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded"
+  },
+  "warmup_s": 15,
+  "drain_s": 30,
+  "phases": [
+    {
+      "name": "capacity_050",
+      "seconds": 30,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 300,
+        "loss_pct": 30,
+        "rate_mbps": 200
+      },
+      "s2c": {
+        "delay_ms": 300,
+        "loss_pct": 30,
+        "rate_mbps": 200
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false,
+    "max_loss_pct": 1,
+    "require_zero_source_tun_drops_full_run": true,
+    "require_zero_tun_root_qdisc_drops_full_run": true
+  },
+  "bundles": {
+    "A": {
+      "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+      "run_id": 40078403217,
+      "attempt": 1,
+      "artifact_id": 12554277143,
+      "sha256": "552a9c19ca4b9045cabe08abeed4f80e440f73f8fcc34a5f06670f4450d9fde6",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false
+    },
+    "B": {
+      "source": "2674ca05dede656cb1c84e80ed3b4de9d0c3ce61",
+      "run_id": 40086334333,
+      "attempt": 1,
+      "artifact_id": 12557456388,
+      "sha256": "eddd54f9fd7e12e66f94287c2cc40180e057bef277dcb4985f5766ab5e0633a4",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false
+    }
+  },
+  "order": "AB"
+}

@@ -135,6 +135,17 @@
       "build_run": 40083030170,
       "artifact_id": 12555524616,
       "result": "PENDING_FIRST_AUTO_LIVE_PRODUCT_ACTION"
+    },
+    {
+      "id": "FEC-W11-Maximum50-RX-Bounded-Old-New-AB-ARM64",
+      "path": "tests/network/fec-work/W11-maximum50-rx-bounded-old-new-AB-arm64.json",
+      "source_A": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+      "source_B": "2674ca05dede656cb1c84e80ed3b4de9d0c3ce61",
+      "build_run_B": 40086334333,
+      "artifact_B": 12557456388,
+      "order": "AB",
+      "run_id": null,
+      "result": "PENDING_ONE_VM_SEQUENTIAL_AB"
     }
   ],
   "open_issues": [
@@ -146,7 +157,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Inspect exact-source native ARM64 build+FEC RX tests triggered by RX capacity source change. If red fix compile/unit only. Then freeze successful ARM64 artifact and run exactly one new W8 50Mbps Maximum IID30 300ms FEC-only request using new artifact; compare app missing, decoder rejection reasons, per-direction recovery/TUN, CPU/RSS/queues. If passed, stop at 50 (user requested temporary closure), retain original 75 failure; do not schedule higher load. Auto work suspended without invalidating old evidence.",
+  "next_action": "Read automatically selected W11 performance Action on latest FEC branch; inspect both leg results (A expected old FAIL, B must meet <=1% in BOTH), per-side p99, CPU/RSS, bytes and native RX_CAP pressure/invalid categories. Do not mistake top-level FAIL with expected old A FAIL if B passes. If B fails locate exact capacity reason, minimal patch+new once-build, same original W8 recheck only; no 75/100+ pressure. Auto work on hold.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -423,7 +434,7 @@
     "baseline_50_run": 40082173102,
     "baseline_75_run": 40082494664,
     "current_base": "6cd5f7d36b6c0fd97087cec30c020aae35123aa0",
-    "source_commit": "PENDING_THIS_COMMIT",
+    "source_commit": "2674ca05dede656cb1c84e80ed3b4de9d0c3ce61",
     "qualified": false,
     "scope": "Only Fec2LiveRx bounded block lifecycle, 50 Mbps retest; no outer repair changes",
     "calculation": {
@@ -440,13 +451,23 @@
       "reorder_span_old": 128,
       "reorder_span_new": 512
     },
-    "actions": "First action 40086110031 product BUILD BLOCKED by new regression fixture asking encode_owned 5 rows in one batch; MAX_BATCH_ROWS=4. Existing 4 FEC RX tests PASS; corrected fixture emits 4+1, unchanged product algorithm. Native original maximum row Action40086110067 SUCCESS; rerun compilation and exact test before 50Mbps.",
+    "actions": "Product+RX tests PASS; W11 old-vs-new same VM A/B 50Mbps IID30 submitted, PENDING performance Action; no pressure increase.",
     "new_diagnostics": "On genuine RX Stop: peak_active, peak_bytes, pressure/age/reorder evictions, completed early reclaim, invalid retired, refused bytes, Invalid/Capacity/Conflict/Codec rejections.",
     "risk": "Extra authentic parity after completed block is rejected/ignored, counted as invalid_retired; do not interpret the old aggregate decoder-rejected count as failed recovered source.",
     "first_build_attempt": {
       "run": 40086110031,
       "stage": "NEW_UNIT_TEST_FAIL_INVALID_ROW_COUNT5_EXCEEDS_MAX_BATCH4",
       "product_built": false
+    },
+    "exact_source_build": {
+      "run": 40086334333,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact": 12557456388,
+      "digest": "eddd54f9fd7e12e66f94287c2cc40180e057bef277dcb4985f5766ab5e0633a4",
+      "architecture": "arm64",
+      "native_RX_tests": "5 PASS including 56 blocks 5 recovered each / retirement / replay Stop",
+      "real_TUN_missing_source": "PASS"
     }
   }
 }
