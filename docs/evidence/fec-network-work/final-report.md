@@ -146,3 +146,25 @@ W16真实 netem损伤29.984%/30.015%，业务C→S注入99.99863Mbps、交付94.
 **结论：** 新 B 150Mbps FEC-only 满足≤1%残余交付且 p99 相比 A低8ms；性能成果是 Parity按时发送与首次交付改善，**不是更低总CPU/总外层带宽**。B 发出了更多真实 Parity，故 CPU-s、外层 TX Mbps略升是合理成本，不能把少发 parity 的 A当作节能资格。整个 Action 按用户验收脚本判 *FAIL（A旧腿失败）*，但 B 腿原生产物 `PASS_SCOPED_OBSERVATION`；与W23孤立通过不同，本次是在旧版同机失败的情形下 B 正向通过，不过仍为一次未固定netem随机序列的AB而不是 BA/持续压测/物理保证。
 
 **容量停止继续：** W25新B宿主CPU PSI峰29.61%、30秒持续高压力，175–350Mbps 继续 NOT_RUN；RX低占用、外层DATA retrans 0不代表宿主CPU可继续加压。Auto真实动态升降档、反馈RTT真实性以及 Windows 和整体合并仍未过；`merge_ready=false`，只改独立FEC分支与自身状态，不接管原network工作包。
+
+
+## 2026-10-24 W26：取消每源包临时Vec及重复复制，150Mbps同机AB双腿PASS
+
+在 W25 Fix Maximum6 150Mbps真实双向残余降到0.05%的基础上，本次只优化 FEC source 密封的CPU成本。旧 `original_fixed_stage_source` 每个源包先调用 `source_owned()` 创建新 Vec，再将同一 10B头+真实源字节复制到原 M1 arena，额外每侧约663,000次源包heap申请/45s。新精确SOURCE `564490bc7a8f61c9ab06be58add8138212306393` ([commit](https://github.com/lly8666/wbd-next/commit/564490bc7a8f61c9ab06be58add8138212306393)) 使用现有 `source_into` 对原 owned arena 精确 `[14..14+SOURCE_HEADER+len]` 写入，source/TICKET/budget校验、AEAD PN、复制确认、所有frame字节相同；不改 M3 Parity调度或外层恢复/真M2。Exact source ARM64 [构建40109847848](https://github.com/lly8666/wbd-next/actions/runs/40109847848) 全绿，zip artifact12566326717 SHA256 `a1ce0b81738a9a74ac04835546479ada398e99718fd5086775c0b765625f649c`，包括 dirty arena 源wire等价及 Fixed/Auto 内核缺源回归。
+
+[W26 performance Action40110100061](https://github.com/lly8666/wbd-next/actions/runs/40110100061) **SUCCESS**：唯一场景、同一ARM64 runner/同一job、旧A `ab7ea894` →新B `564490bc` 顺序比较；各自warmup15s+measure30s+drain30s，双向150Mbps、真实netem IID约30%、300ms单程、固定最大6真正applied、外层DATA修复0包0B、真实首发Parity照常、原TUN fq600及owned测试静态邻居不动；Stop owned清理、TUN/source root丢包0、RX压力淘汰/codec reject0。结果artifact12565693815 SHA256 `d7127551bec2574ec38858e232cce03a65f3c76020c71856be9f389fb81e9051`。
+
+| 同机30秒量纲 | A原双量子 | B+直接arena |
+|---|---:|---:|
+| C→S 实际交付/残余 |149.874Mbps / 0.1015%| **149.897Mbps / 0.0836%**|
+| S→C 实际交付/残余 |149.871Mbps / 0.0954%| **149.926Mbps / 0.0623%**|
+| 首次p99 C→S/S→C |304.5/304.0ms|303.7/303.8ms|
+| CPU-s 客户/服务 |25.36 / 25.27 | **24.87 / 25.39**|
+| CPU-s 双端合计 |50.63 | **50.26（少0.37s，-0.73%）**|
+| RSS峰 客户/服务 MB |49.90 / 50.17 |49.85 / 49.71|
+| native parity rplanned→rsent 客户 |830379→829009|830269→829411|
+| native parity rplanned→rsent 服务 |830337→829059|830185→829614|
+| 30秒outer veth TX 客户/服务 Mbps |259.71 / 259.49|259.85 / 259.81|
+| Host CPU PSI峰/over20持续比 |30.58% / 100%|30.25% / 100%|
+
+**资格**：W26 A/B两个方向、两腿各自产品级功能/业务均 PASS_SCOPED，B无Parity/首达回退；修订消除一次真实 source Vec 分配和重复copy。CPU 客户 -0.49s、服务 +0.12s，合计 -0.37s /30s，只有同机一次AB观测，**不能据此宣称有稳定0.73%硬件加速**。150Mbps比125Mbps多20%吞吐，CPU总秒不应硬压到125的绝对数而不减少真实Parity；更高175+依然 NOT_RUN，因为宿主CPU PSI持续>20%。独立 FEC Fixed 功能代表已具备150Mbps scoped资格；Auto真实损伤阶跃动态profile、真实反馈RTT age与Windows/组合资格仍未完成，merge_ready=false。现不再无限提高业务档或刷种子。

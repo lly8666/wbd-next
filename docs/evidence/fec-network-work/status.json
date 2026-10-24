@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W25_MAXIMUM150_NATIVE_TWO_QUANTA_SCOPED_PASS_CPU_PSI_CAPACITY_STOP",
+  "phase": "W26_SOURCE_DIRECT_ARENA_150_SAME_VM_AB_BOTH_PASS_FEC_ONLY_CPU_SMALL_OBSERVED_WIN_CAPACITY_STOP",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -18,16 +18,16 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "ab7ea894100f245d6a510137282736781bd017ce",
-    "run_id": 40108972702,
+    "source": "564490bc7a8f61c9ab06be58add8138212306393",
+    "run_id": 40109847848,
     "attempt": 1,
-    "artifact_id": 12565424535,
-    "sha256": "9bf5b07eee3e90a37a69844b23fb08834c38a9d5781f0f1635c27543bbba7067",
+    "artifact_id": 12566326717,
+    "sha256": "a1ce0b81738a9a74ac04835546479ada398e99718fd5086775c0b765625f649c",
     "platform": "aarch64",
     "policy": "outer-opportunistic-v3",
     "build_action": "SUCCESS",
     "native_fixed_auto_kernel_functional": "PASS_SCOPED",
-    "runtime_fec_only": "MAXIMUM_FIXED_150MBPS_B_BOTH_SCOPED_PASS_IN_W25_AB"
+    "runtime_fec_only": "W26_FIXED_MAXIMUM150_AB_BOTH_PASS"
   },
   "open_requests": [
     {
@@ -316,9 +316,22 @@
       "A_source": "cf00a47c9564d67b15409d50178a956416227a8a",
       "B_source": "ab7ea894100f245d6a510137282736781bd017ce",
       "result": "AB_OVERALL_FAILURE_BECAUSE_OLD_A_FAILS; NEW_B_150MBPS_SCOPED_PASS"
+    },
+    {
+      "id": "FEC-W26-Maximum150-DirectSourceArena-SameM4-AB-ARM64",
+      "path": "tests/network/fec-work/W26-maximum150-direct-source-arena-AB-arm64.json",
+      "run_id": 40110100061,
+      "attempt": 1,
+      "result_artifact_id": 12565693815,
+      "artifact_sha256": "d7127551bec2574ec38858e232cce03a65f3c76020c71856be9f389fb81e9051",
+      "order": "AB",
+      "A_source": "ab7ea894100f245d6a510137282736781bd017ce",
+      "B_source": "564490bc7a8f61c9ab06be58add8138212306393",
+      "result": "SUCCESS_BOTH_LEGS_SCOPED_PASS"
     }
   ],
   "open_issues": [
+    "W26 Action40110100061 same ARM64 VM 150Mbps Fixed Maximum outerOFF 30% IID 300ms AB both PASS. Original direct-arena source_into product SOURCE 564490bc B delivered149.897/149.926Mbps residual0.0836/0.0623%, p99 303.7/303.8ms, parity deficits0.103/0.069%. Process CPU client24.87 vs A25.36(-0.49s), server25.39 vs A25.27(+0.12s), combined -0.37s over30s (0.73%); single AB cannot qualify sustained CPU gain under PSI>20 all samples. Memory ~50MB per side, source drops/RTX/RX rejects0. W25 ab7e old PASS retained. No 175+ due host capacity; Auto true dynamic and RTT still OPEN.",
     "W25 Action40109234114 same ARM64 VM sequential AB: B source ab7ea894 optimized 2x <=4-row same-M4 staging achieved genuine Fixed Maximum150Mbps 30%IID 300ms C2S149.938/S2C149.953Mbps residual0.054/0.0485% p99 303.3/303.2ms, FEC parity deficit0.08/0.051%, no RX pressure or outer DATA retrans. A source cf00a47c fails both at1.951/1.774%. Overall Action FAIL only because old A failed. No repeatability BA and host CPU PSI peak29.61, always>20; CPU client/server higher B24.85/24.58s versus A24.24/24.06s as B emits more genuine parity. Keep STOP 175+, hold full merge; next optimize FEC per-source allocation/copy only if justified, but avoid diluting W25 B qualification.",
     "W24 same ARM64 VM AB Action40105506052 artifact12564980324: both old A and new B FAIL <=1% residual at150Mbps (A 2.153/2.453%; B1.642/1.826%) under 30% IID+300ms Maximum6 outerOFF. Immutable ISA-L table reuse reduces parity planned/sent gap A9.77/11.19% to B8.04/9.06% and queued expiry A915/1102 to B817/882, but client/server CPU seconds essentially unchanged (23.91/24.46 to23.98/24.32), host PSI>20 in all measurement samples with worse B peak31.78. No RX capacity issue, source TUN0, outer DATA repair0. Neither qualifies stable150; single W23 PASS not reproduced. Remain capacity_stop=true and no175+.",
     "W23 150Mbps original fq600 with static disposable veth neighbour Action40102994265: BUSINESS PASS narrowly 148.869/148.893Mbps, loss0.754/0.738%, but native FEC parity planned830246/830265 vs true sent800359/799115 (gap3.60/3.75%), unknown capacity2983/3054 and host CPU PSI peak30.62, over20 fraction100% (W22 125 parity gap~0.2%). RX pressure0, source TUN drops0, outer repair0. New possible parity scheduling/CPU pressure performance knee: stop175-350, investigate without violating source-first priority.",
@@ -334,7 +347,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W25 same-M4 two-quanta native FEC optimized SOURCE ab7ea894 has a scoped single 150Mbps PASS with high host PSI; DO NOT raise to175+ until CPU capacity clears. If further user-requested efficiency work, prefer independently eliminating one temporary FEC source_owned Vec allocation+copy via existing fec_v2::source_into directly into original M1 arena, then exact native correctness and same-VM 150 old/new AB while preserving outgoing parity/first-delivery. New data and M2 feedback remain first priority; avoid changing post-close expiry, outer recovery, or tests. Recheck Auto true live rise/fall/asym (W10 still pending) and measured RTT age before complete merge; merge_ready remains false.",
+  "next_action": "Representative high-loss Fixed Maximum and outer DATA repair OFF business throughput now scoped 150Mbps pass on W25 + W26; STOP escalation at 150 host CPU PSI>20 100% samples. Next distinct incomplete FEC capability: native Auto true authenticated maturity -> per-direction rise/recover/asymmetric profile revision and genuine RTT-age telemetry, reusing W10 intent if still valid, without repeating fixed/150 performance tests. W26 source direct arena has one same-VM A/B observed combined -0.73% CPU, do not assert stable hardware gain. No outer network next_action, no main merge until complete dynamic Auto coverage and final qualification.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -2066,6 +2079,142 @@
       "Single sequential AB, unseeded netem, no BA replication or 150 stable-product qualification.",
       "Old/new outer interface byte measurements include DATA, real FEC parity and control. Zero outer DATA retrans; do not add 45s native wire ledger.",
       "Auto dynamic live step changes, authenticated RTT age, Windows/physical, combined outer ON qualification remain unproven."
+    ]
+  },
+  "w26": {
+    "schema_version": 1,
+    "owner": "fec-network-work",
+    "task": "W26-150Mbps-source-direct-arena-CPU-AB",
+    "action_run": 40110100061,
+    "run_attempt": 1,
+    "conclusion": "SUCCESS_BOTH_LEGS_SCOPED_PASS",
+    "artifact_id": 12565693815,
+    "artifact_sha256": "d7127551bec2574ec38858e232cce03a65f3c76020c71856be9f389fb81e9051",
+    "request_commit": "2ecf68430b207ee0181215c03b1357e74e2148d6",
+    "request_path": "tests/network/fec-work/W26-maximum150-direct-source-arena-AB-arm64.json",
+    "run_mode": "single ARM64 VM, one performance job, sequential AB",
+    "old": {
+      "source": "ab7ea894100f245d6a510137282736781bd017ce",
+      "build_run": 40108972702,
+      "product_artifact": 12565424535,
+      "business": {
+        "c2s_mbps": 149.87436746666665,
+        "s2c_mbps": 149.87072693333334,
+        "residual_pct_c2s": 0.10152951494727491,
+        "residual_pct_s2c": 0.09541292720514913,
+        "p99_ms_c2s": 304.5,
+        "p99_ms_s2c": 304
+      },
+      "process_cpu_s_30s": {
+        "client": 25.36,
+        "server": 25.27
+      },
+      "rss_peak_bytes": {
+        "client": 49897472,
+        "server": 50171904
+      },
+      "original_native_parity": {
+        "client": {
+          "rplanned": 830379,
+          "rsent": 829009,
+          "queued_expired": 34,
+          "unknown_capacity": 90
+        },
+        "server": {
+          "rplanned": 830337,
+          "rsent": 829059,
+          "queued_expired": 38,
+          "unknown_capacity": 65
+        }
+      },
+      "outer_virtual_tx_bytes_30s": {
+        "client": 973921100,
+        "server": 973093110
+      },
+      "host_cpu_psi_pct": {
+        "peak": 30.58,
+        "mean": 28.096333333333334,
+        "over20_fraction": 1
+      },
+      "result": "PASS_SCOPED_OBSERVATION"
+    },
+    "optimized": {
+      "source": "564490bc7a8f61c9ab06be58add8138212306393",
+      "build_run": 40109847848,
+      "product_artifact": 12566326717,
+      "zip_sha256": "a1ce0b81738a9a74ac04835546479ada398e99718fd5086775c0b765625f649c",
+      "business": {
+        "c2s_mbps": 149.89670773333333,
+        "s2c_mbps": 149.9263082666667,
+        "residual_pct_c2s": 0.08362454618386522,
+        "residual_pct_s2c": 0.06232223997461785,
+        "p99_ms_c2s": 303.7,
+        "p99_ms_s2c": 303.8
+      },
+      "process_cpu_s_30s": {
+        "client": 24.87,
+        "server": 25.39
+      },
+      "rss_peak_bytes": {
+        "client": 49852416,
+        "server": 49713152
+      },
+      "original_native_parity": {
+        "client": {
+          "rplanned": 830269,
+          "rsent": 829411,
+          "queued_expired": 24,
+          "unknown_capacity": 46
+        },
+        "server": {
+          "rplanned": 830185,
+          "rsent": 829614,
+          "queued_expired": 12,
+          "unknown_capacity": 30
+        }
+      },
+      "outer_virtual_tx_bytes_30s": {
+        "client": 974426572,
+        "server": 974278667
+      },
+      "host_cpu_psi_pct": {
+        "peak": 30.25,
+        "mean": 27.724,
+        "over20_fraction": 1
+      },
+      "result": "PASS_SCOPED_OBSERVATION"
+    },
+    "settings": {
+      "fec": "Fixed Maximum 6 both applied",
+      "outer_data_repair": "OFF zero bytes/copies",
+      "traffic_mbps_each": 150,
+      "netem_loss_iid_pct": 30,
+      "oneway_delay_ms": 300,
+      "netem_observed_loss_pct": {
+        "A": {
+          "client": 29.987682231247557,
+          "server": 30.026944949380503
+        },
+        "B": {
+          "client": 29.977144993309643,
+          "server": 29.98858643942406
+        }
+      },
+      "warmup_s": 15,
+      "measurement_s": 30,
+      "drain_s": 30,
+      "owned_static_test_veth_neighbor": true,
+      "original_owned_TUN_fq600_unchanged": true,
+      "source_tun_root_drops_both_zero": true,
+      "rx_capacity_evictions_and_decoder_rejects_zero": true,
+      "stop_owned_namespaces_absent": true
+    },
+    "interpretation": [
+      "Both A and B business scoped PASS under exact mode. Source_into eliminates one source_owned Vec allocation and duplicate copy for every FEC TX source.",
+      "Client CPU observed -0.49s/30s (-1.93%), server +0.12s (+0.47%), combined -0.37s/30s (-0.73%). This single AB is not a causal/general CPU speedup qualification.",
+      "Process RSS near 50MB each and parity planned/sent virtually complete. Low residual and p99 are maintained; no reduced parity/shorter data output trick.",
+      "Host PSI stays above20% across100% samples, physical 175-350 not authorized; 150 single-run PASS does not prove sustained stability.",
+      "Auto dynamic loss-step/asymmetric live configuration and genuine measurement RTT age remain OPEN, merge_ready=false."
     ]
   }
 }
