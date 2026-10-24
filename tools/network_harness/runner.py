@@ -569,15 +569,22 @@ class LinuxExperiment:
             product_readback={}
             for role in self.ns:
                 marker=("V4_PUBLIC_TUN_FQ role="+role+
-                        " interface=wbntun0 maxrate_mbps=600 readback=kernel_fq_600Mbit")
+                        " interface=wbntun0 maxrate_mbps=600 flow_limit_packets=256 readback=kernel_fq_600Mbit")
                 if marker not in read(self.private / (role+".log")):
                     raise RuntimeError("real product TUN fq readback marker missing "+role)
                 detail=self.nscommand(role,["tc","-d","qdisc","show","dev","wbntun0"])
+                actual=json.loads(self.nscommand(role,["tc","-d","-j","qdisc","show",
+                                                       "dev","wbntun0"]))
                 if not any(line.startswith("qdisc fq ") and " root " in line and
                            re.search(r"\bmaxrate\s+600Mbit\b",line,re.I)
+                           and re.search(r"\bflow_limit\s+256\b",line,re.I)
                            for line in detail.splitlines()):
                     raise RuntimeError("real product TUN fq kernel readback mismatch "+role)
-                product_readback[role]="owned_normal_fq_600Mbit"
+                if not any(q.get("kind")=="fq" and q.get("root") and
+                           q.get("options",{}).get("flow_limit")==256
+                           for q in actual):
+                    raise RuntimeError("real product TUN fq kernel flow_limit readback mismatch "+role)
+                product_readback[role]="owned_normal_fq_600Mbit_flow_limit256"
             self.effective["product_tun_fq_kernel_readback"]=product_readback
         self.effective["test_only_tun_fq_maxrate_mbps"]=(
             fq_rate if fq_rate is not None else "NO_TEST_OVERRIDE")
