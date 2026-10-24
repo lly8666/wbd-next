@@ -120,6 +120,7 @@ class Contracts(unittest.TestCase):
         r["network"]["product_tun_fq_maxrate_mbps_profiles"]["B"]=600
         for mode in ("normal","fec-fixed","fec-auto","game2","game4"):
             r["product"]["mode"]=mode
+            r["product"]["fec_profile"]=1  # Auto startup is independently product-controlled.
             self.assertEqual(validate(r)["network"]["product_tun_fq_maxrate_mbps_profiles"]["B"],600)
 
     def test_all_linux_public_modes_default_product_fq600_or_rollback0(self):
@@ -129,6 +130,7 @@ class Contracts(unittest.TestCase):
             for mode in ("normal","fec-fixed","fec-auto","game2","game4"):
                 r=request()
                 r["product"]["mode"]=mode
+                r["product"]["fec_profile"]=1  # Not inherited from a Fixed5 request.
                 r["network"]["tun_qdisc_profiles"]={}
                 r["network"]["tun_fq_maxrate_mbps_profiles"]={}
                 r["network"]["product_tun_fq_maxrate_mbps_profiles"]={"B":0}
