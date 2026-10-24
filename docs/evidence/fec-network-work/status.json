@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W18_POST_NATIVE_COPY_TO_NETEM_BLACKHOLE_IPV4_NUD_DIAGNOSTIC_NEXT",
+  "phase": "W19_UNILATERAL_IPV4_NUD_INCOMPLETE_CORRELATED_EGRESS_BLACKHOLE_W20_STATIC_TEST_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -248,9 +248,19 @@
       "artifact_id": 12562092730,
       "run_id": null,
       "result": "PENDING_KERNEL_NUD_DIAGNOSTIC"
+    },
+    {
+      "id": "FEC-W20-100Mbps-Owned-Veth-Permanent-Neighbor-Diagnostic",
+      "path": "tests/network/fec-work/W20-100Mbps-static-owned-veth-neighbour-fq600-diag-arm64.json",
+      "run_id": null,
+      "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "artifact_id": 12562092730,
+      "result": "PENDING_PUSH_TRIGGER",
+      "purpose": "Prove W19 post-M4 ARP-induced 2.5-3s traffic blackout is eliminated with test-only owned reciprocal permanent NUD, without changing fq600 or real DATA netem."
     }
   ],
   "open_issues": [
+    "W19 Action40100361068 (artifact12562403617): 100Mbps S2C delivery87.746Mbps (36,083 lost), server peer IPv4 NUD became INCOMPLETE, probes4..6; veth TX/netem output 0 continuously ~55..57.5s while server TUN admitted ~4900 source packets/500ms, resumed exactly when NUD REACHABLE. This is a concrete link-layer neighbor-resolution outage after actual native M4 copy, not CPU/RX FEC or TUN fq600. W20 test-only static MAC peer policy pending; unseeded netem may also randomly cause outages in baseline.",
     "W16 new RX640/48MiB bounded cache on 100Mbps original case Action40097487779 fixed RX pressure=0 (peak109/640) but C2S business delivered only94.579Mbps, missing15993 (~5.42%), S2C 99.979Mbps; client actual virtual outer TX164.16 vs server173.35Mbps over30s even with authentic first-wire 45s ~1.377GB each, native M4 FEC parity ~554k copied both, zero outer DATA retry, no source TUN/root fq loss. Similar W12 underfeeding; stop further125-350 until kernel egress or harness timing cause established.",
     "At W15 100Mbps 30% IID/300ms Action40094982877 both actual app paths pass (~99.956/99.968Mbps), but FEC RX exactly 96/96 active and pressure evicts29,425 blocks per side; first capacity bottleneck is RX slot count, not 8MiB bytes or CPU. Stop all higher 125/150/175/200 (NOT_RUN) under stop-on-capacity. W12 sameVM 2nd leg output asymmetry remains unresolved.",
     "W13 standalone 50Mbps Maximum30 repaired RX-capacity passes (Action40090193642 loss0.0517/0.0496%, zero decoder/capacity reject, recovered TUN>66k each). But prior W12 same VM AB B had C2S 12.23% when client veth measured 286.9MB despite source/parity M4 copy; W13 client326.27MB. Non-repeatable 2nd-leg sender-to-netem gap remains unresolved; do NOT infer that all 50Mbps arrangements passed. No further pressure as requested.",
@@ -262,7 +272,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Inspect W19 native M4 + owned veth/netem TUN and per-peer kernel IPv4 NUD state/probes/age at500ms during unilateral warmup blackhole. If NUD INCOMPLETE,FAILED,PROBE during post-M4 TX/kernel netem deficit, fix ONLY owned netns ARP/neighbor setup (before impairment) with matching client/server readback and keep netem 30% on actual DATA; then recheck uninstrumented real 100Mbps in exact ARM64 source. If not NUD, do not guess; split route/netfilter/neighbor queue. No 125+ pressure.",
+  "next_action": "Inspect W20 exact same native diagnostic 100Mbps 30% IID/300ms artifact12562092730, own netns static veth IPv4 peers. Readback PERMANENT BOTH, 500ms TX/netem tick and native M4 copied, full warmup+steady gap, business delivered both >=99Mbps, source TUN/root fq no drops, outer interface gross rates, CPU/RSS/p99 and genuine repair OFF. If success freeze harness fix and do ONE non-diag (fec_egress_diagnostic=false) W21 100Mbps on same owned-static setup, validating no material performance regression. If failure do not claim full fix or increase 125+, inspect NUD or different edge. Do not change native fq600, outer repair, or any main/upstream status.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -1180,6 +1190,27 @@
       },
       "proof": "First 3.5s warmup native server TX tun_read4909->39382, source_queued same, kernel M4 copied11148->90466, parity_sent6140->49269, 0 errors or backpressure. But at T3.68s server source TUN tx36293, native netem sent7, veth TX18, versus client veth TX52270; native M4 copy does not prove external egress.",
       "suspect": "IPv4 ARP neighbor unresolved/retry under root netem 30% loss on veth; 3-4s warmup outage and W16 ~1.6s after30s could be NUD. Hypothesis must be tested, no confirmed cause yet."
+    },
+    "w19": {
+      "run": 40100361068,
+      "artifact_id": 12562403617,
+      "sha256": "9cb236679011941a276868905936ab5915e42c401397ce37a402a03938c115de",
+      "result": "FAIL_S2C_USER_BUSINESS",
+      "business_mbps": {
+        "c2s": 99.96459066666667,
+        "s2c": 87.7461184
+      },
+      "s2c_missing": 36083,
+      "confirmed_kernel": "At W19 egress-trace time ~54.5-57.5s server dynamic peer IPv4 NUD=INCOMPLETE, probe counter4->6, server veth TX and netem net_sent stay 0 for 2.5-3s despite server source TUN advancing roughly 4900 packets per 500ms. At ~57.5s neighbour resolves REACHABLE and TX resumes. Client NUD REACHABLE, outer TX continues. Product M4 already kernel copied sources+parity; RX reject0 and pressure0; client/server product both owned TUN fq600 configured, both socket effective buffers same. ARP loss/NUD is causal discontinuity at post-sendmmsg kernel neighbor, not yet proof W16 earlier timing same cause.",
+      "tunnel_qdisc_relation": "fq600 applied to wbntun0 on each endpoint; data TUN increments unabated during NUD outage, choke occurs on separate wbn?0 outer interface with dynamic peer neighbor under root netem random drop. fq600 not causally implicated by W19; keep fq600 unchanged."
+    },
+    "w20": {
+      "path": "tests/network/fec-work/W20-100Mbps-static-owned-veth-neighbour-fq600-diag-arm64.json",
+      "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "artifact_id": 12562092730,
+      "run": null,
+      "result": "PENDING",
+      "treatment": "Controlled disposable veth MACs static PERMANENT in BOTH owned namespaces only, before netem 30% IID+300ms and before TLS. Observe both neighbor PERMANENT at 500ms, real outer veth+netem TX no multi-second blackholes, business both <=1%, CPU/RSS/p99 not degraded; fq600 unchanged."
     }
   }
 }

@@ -118,7 +118,15 @@ def validate(raw):
              "tcp_window_profiles", "tcp_reordering_profiles", "v3_timeline",
              "tun_txqlen_profiles", "warmup_rate_scale_profiles", "tun_qdisc_profiles",
               "startup_tun_drop_timeline", "fec_egress_diagnostic", "tcp_socket_pacing_mbps_profiles",
-              "tun_fq_maxrate_mbps_profiles", "product_tun_fq_maxrate_mbps_profiles"], "network")
+              "tun_fq_maxrate_mbps_profiles", "product_tun_fq_maxrate_mbps_profiles",
+              "owned_veth_static_neighbour"], "network")
+    # Test-owned veth peer L2 is directly attached with a stable MAC.
+    # Pinning ONLY this neighbour avoids impairing ARP discovery when netem
+    # applies real 30% loss to every frame including control-plane ARP.
+    # Public product and all host routes/ARP remain untouched.
+    n.setdefault("owned_veth_static_neighbour",False)
+    if type(n["owned_veth_static_neighbour"]) is not bool:
+        raise ValueError("network.owned_veth_static_neighbour must be boolean")
     n.setdefault("fec_egress_diagnostic",False)
     if type(n["fec_egress_diagnostic"]) is not bool:
         raise ValueError("network.fec_egress_diagnostic must be boolean")

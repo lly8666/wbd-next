@@ -512,6 +512,36 @@ class LinuxExperiment:
             self.nscommand(role, ["iptables", "-A", "OUTPUT", "-p", "tcp", "--tcp-flags", "RST", "RST", "-j", "DROP"])
             self.nscommand(role, ["iptables", "-N", "WBN_LOSS"])
             self.nscommand(role, ["iptables", "-I", "OUTPUT", "1", "-j", "WBN_LOSS"])
+        # Opt-in diagnostic/fix for owned test-only namespaces. Netem is
+        # installed AFTER this, with exactly the same real DATA loss, queue
+        # and delay. Do not alter product fq600, kernels outside namespaces,
+        # or install host IP/ARP state. Verify both reciprocal peer MACs.
+        if self.config["network"].get("owned_veth_static_neighbour",False):
+            link={}
+            for role in self.ns:
+                rows=json.loads(self.nscommand(role,["ip","-j","link","show",
+                                                     "dev",self.iface[role]]))
+                if len(rows)!=1:raise RuntimeError("owned veth link disappeared "+role)
+                mac=rows[0].get("address","").lower()
+                if not re.fullmatch(r"[0-9a-f]{2}(?::[0-9a-f]{2}){5}",mac):
+                    raise RuntimeError("owned veth MAC missing "+role)
+                link[role]=mac
+            for role in self.ns:
+                peer_role="server" if role=="client" else "client"
+                self.nscommand(role,["ip","neigh","replace",self.ip[peer_role],
+                    "lladdr",link[peer_role],"dev",self.iface[role],
+                    "nud","permanent"])
+                neighbours=json.loads(self.nscommand(role,["ip","-j",
+                    "neigh","show","to",self.ip[peer_role],
+                    "dev",self.iface[role]]))
+                match=[n for n in neighbours
+                    if n.get("dst")==self.ip[peer_role] and
+                    n.get("lladdr","").lower()==link[peer_role] and
+                    "PERMANENT" in (
+                        [n.get("state")] if isinstance(n.get("state"),str)
+                        else n.get("state",[]))]
+                if len(match)!=1:
+                    raise RuntimeError("owned veth permanent neighbour not applied "+role)
         command(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-sha256", "-days", "1", "-nodes",
                  "-keyout", self.private / "key.pem", "-out", self.private / "cert.pem",
                  "-subj", "/CN=wbd-v4.example.test", "-addext", "subjectAltName=DNS:wbd-v4.example.test"])
@@ -571,6 +601,10 @@ class LinuxExperiment:
                     args.extend(["maxrate",str(fq_rate)+"mbit"])
                 self.nscommand(role,args)
         self.effective = {"mode": self.config["product"]["mode"], "lanes": self.lanes,
+                          "owned_veth_neighbour_policy": (
+                              "PERMANENT_BOTH_VERIFIED_TEST_ONLY" if self.config["network"].get(
+                                  "owned_veth_static_neighbour",False)
+                              else "KERNEL_DYNAMIC_ARP_UNMODIFIED"),
                           "game_fec": "off (public CLI explicitly sets off)", "inner_links": {}}
         for role in self.ns:
             links = json.loads(self.nscommand(role, ["ip", "-j", "link", "show", "wbntun0"]))

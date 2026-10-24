@@ -36,6 +36,19 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_test_only_owned_veth_static_neighbour_requires_boolean(self):
+        # A/B control keeps original dynamic ARP by default. Explicit true
+        # pins only the direct peer inside disposable namespaces, no host
+        # sysctl / forwarding / repair policy changes.
+        r=request()
+        self.assertFalse(validate(r)["network"]["owned_veth_static_neighbour"])
+        r["network"]["owned_veth_static_neighbour"]=True
+        self.assertTrue(validate(r)["network"]["owned_veth_static_neighbour"])
+        for bad in ("yes",1,None):
+            r["network"]["owned_veth_static_neighbour"]=bad
+            with self.assertRaises(ValueError):
+                validate(r)
+
     def test_full_run_source_tun_zero_drop_gate_and_snapshot_delta(self):
         from tools.network_harness.runner import source_tun_tx_drops_by_role
         request_data=request()
