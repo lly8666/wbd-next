@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "id": "V3-HOL-real-high30-duplex-UDP-TCPx2",
+  "id": "V3-HOL-low2-15s-startup-UDP-TCPx2",
   "owner": "network-matrix-work",
-  "seed": 8212,
+  "seed": 8211,
   "product": {
     "mode": "normal",
     "fec_profile": 1
   },
   "traffic": {
-    "c2s_mbps": 33.7,
-    "s2c_mbps": 33.7,
+    "c2s_mbps": 15,
+    "s2c_mbps": 15,
     "udp_share": 0.3,
     "sizes": [
       [
@@ -43,7 +43,7 @@
     "product_tun_fq_maxrate_mbps_profiles": {},
     "startup_tun_drop_timeline": true
   },
-  "warmup_s": 12,
+  "warmup_s": 15,
   "drain_s": 20,
   "phases": [
     {
@@ -51,14 +51,14 @@
       "seconds": 60,
       "rate_scale": 1,
       "c2s": {
-        "delay_ms": 300,
-        "loss_pct": 30,
-        "rate_mbps": 50
+        "delay_ms": 200,
+        "loss_pct": 2,
+        "rate_mbps": 100
       },
       "s2c": {
-        "delay_ms": 300,
-        "loss_pct": 30,
-        "rate_mbps": 50
+        "delay_ms": 200,
+        "loss_pct": 2,
+        "rate_mbps": 100
       }
     }
   ],
