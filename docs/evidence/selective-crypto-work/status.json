@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/selective-tls-crypto",
-  "phase": "DESIGN_READY_IMPLEMENTATION_NOT_STARTED",
+  "phase": "S0_ACTION_RUNNING_NO_RESULT",
   "entry": "docs/testing/SELECTIVE_TLS_CRYPTO_WORK.md",
   "architecture": "docs/architecture/SELECTIVE_TLS_CRYPTO_EXPERIMENT.md",
   "test_plan": "docs/testing/SELECTIVE_TLS_CRYPTO_TEST_PLAN.md",
@@ -19,14 +19,31 @@
     "initial_outer_data_repair": "off",
     "classifier": "IDEAL_TLS_CIPHERTEXT_RANGE_ORACLE_ONLY",
     "production_default_changed": false,
-    "protocol": "EXPERIMENTAL_SELECTIVE_AAD_V1_NOT_IMPLEMENTED",
+    "protocol": "EXPERIMENTAL_SELECTIVE_AAD_V1_LAB_ONLY_NOT_PRODUCT_WIRED",
     "record_overhead_bytes": 33,
     "existing_record_overhead_bytes": 31,
     "reused_ciphertext_is_authenticated": true
   },
-  "implementation": "NOT_STARTED",
-  "actions": [],
-  "open_requests": [],
+  "implementation": "EXPERIMENT_FEATURE_AND_RECORD_TOOL_COMMITTED_UNVERIFIED",
+  "actions": [
+    {
+      "stage": "S0_ARM64_NATIVE",
+      "source": "98e5b09b972196b97476b4311346cb79681773c5",
+      "run_id": 40108785993,
+      "attempt": 1,
+      "job_id": 120915933711,
+      "result": "IN_PROGRESS",
+      "artifact": "NOT_YET_VERIFIED"
+    }
+  ],
+  "open_requests": [
+    {
+      "stage": "S0",
+      "run_id": 40108785993,
+      "source": "98e5b09b972196b97476b4311346cb79681773c5",
+      "state": "WAITING_FOR_ACTION_RESULT"
+    }
+  ],
   "functional": "NOT_RUN",
   "performance": "NOT_RUN",
   "capture": "NOT_RUN",
@@ -40,6 +57,6 @@
     "New experimental wire and protected descriptor require actual two-end capability binding, MTU derivation and negative tests; no compatibility claim.",
     "Inherited workflow branch-name selection needs explicit experimental adaptation; do not dispatch old FEC/network requests."
   ],
-  "next_action": "Implement isolated opt-in record tool and S0 functions per architecture, freeze one native ARM64 build; run S1 same-VM A/A-layout/B with early repeated-ciphertext counterexample. Only after clear net benefit consider limited real-driver S2 and bounded S3 capture. Stop normally on no benefit or appearance regression. Do not touch ongoing FEC work.",
-  "latest_log": "docs/devlog/selective-crypto-work/20261024-design.md"
+  "next_action": "Inspect S0 job logs and exact ARM64 artifact; repair only grounded failures and rerun with new SOURCE. After verified S0, use exact artifact/hash for one S1 ARM64 AES128 scenario, then assess net record saving and distinct-PN repeated ciphertext before expanding. No inherited network/FEC actions.",
+  "latest_log": "docs/devlog/selective-crypto-work/20261024-s0-implementation.md"
 }
