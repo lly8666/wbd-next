@@ -19,3 +19,28 @@ An intermediate harness contract Action 40053188967 failed **only** because a pr
 - Product native exact frozen source 81881a1df69e6bf0b5fd3f3076e2433bfb442d96, [build40053179394](https://github.com/lly8666/wbd-next/actions/runs/40053179394) completed success, artifact12543904263 ZIP digest sha256:5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749. Another automatic build40053171857 was already in progress from Go file push; it was not redispatched or used for scenario.
 - Strict native one scenario request source4cecde55daf10d2213d25e4af77ba5377395b174, [Action40053396971](https://github.com/lly8666/wbd-next/actions/runs/40053396971) attempt1 started (sameVM A/B only, external A fq root unbounded, product B owned fq600 readback, no B external tc override; identical bundle/hash both). Entire Action verdict pending; **no qualification recorded yet**.
 - Contract run40053396949 failed because generic preset and old test-only fq contracts inherited request's now product-owned Normal/off B fq600 config. Isolated those tests in source92ea70abb34c99fe6ea789a9d500b7db8da6f380; [contracts40053463038](https://github.com/lly8666/wbd-next/actions/runs/40053463038) completed **SUCCESS**, leaving real measurement untouched. This is a harness fixture scoping fix, not a change to acceptance threshold or product behavior.
+
+## Final real native product A/B — completed Action40053396971 attempt1
+
+Downloaded full Actions artifact12543608967 ZIP and independently verified sha256:e94d703d1d699ae3d5a4b5224aa2fbeeeebbb23010ba2ffdc62a7ae5b8c94375. A/B both verified exact native source81881a1df69e6bf0b5fd3f3076e2433bfb442d96 from successful native build40053179394 artifact12543904263; same VM, same one-way200ms, 0% artificial loss, outer configured700Mbps/dir, one true inner TCP500Mbps C2S, app write32KiB segmented at inner MSS1377, TUN MTU1429, root fq, qlen1024, 20s startup +60s steady +30s drain each leg. Real TLS/Go raw/TUN -> Rust v3 auth, Stop and owned cleanup both good.
+
+| Actual | A unbounded test-selected fq / product default0 | B true product-owned fq600 |
+|---|---:|---:|
+| TCP application injected/delivered Mbps in 60s | 500.0003584 / 500.0003584 | 500.0003584 / 500.0003584 |
+| TCP p99 ms | 203.0 | 203.2 |
+| Source TUN kernel startup drop client/server | **6613/0 FAIL** | **0/0 PASS** |
+| Steady kernel source TUN drop | 0/0 | 0/0 |
+| Full-run TUN fq root drop samples | all0 | all0 |
+| Product Go->kernel per-flow fq maxrate readback | product default0 / test-selected fq unlimited | both **75000000 B/s** / product600 |
+| Socket SO_MAX_PACING_RATE | NOT_SET | NOT_SET |
+| DATA repairs / netem drops / kernel TCP steady retrans | 0 / 0 / 0 | 0 / 0 / 0 |
+| CPU seconds per endpoint (steady 60s) | client47.48/server64.29 | client48.66/server64.33 |
+| Server CPU seconds / actual received GiB | 18.408 | 18.420 |
+| Real v3 policy, TUN M1 2048-slot, Stop | PASS | PASS |
+| Qualifier | strict FAIL because source warmup drop | **PASS_SCOPED_OBSERVATION** |
+
+Whole Action marked failure on **A**, not an issue with B. B app 114441 32KiB cohorts sent and uniquely delivered, zero missing after drain. Both observed actual TCP send/receive buffer4194304B; peer advertised snd_wnd median40,108,032B, over 25MB RTT400 BDP; no hidden socket pacing. A is a cold-loss-failed path and must not be taken as a valid cheaper CPU comparison. B client+server112.99 vs A111.77 CPU-s/60s, host CPU PSI some peak30.13%, steal0.0; no standalone low-CPU optimization claim; capacity is real application and not 700Mbps L1. B namespace/policy/kernel qdisc telemetry is present even though raw Go fq marker is privacy-filtered in shipped product-marker subset; harness explicitly verified actual Go ready marker AND kernel live qdisc, result `effective-config.json` records both.
+
+This closes **one complete native Linux ARM64 Normal/off product-owned fq600 opt-in TCP500 scoped capability**, without setting fq600 default and without claiming physical/Windows/FEC, Game, mixed500, dual TCP500, broad MTU and shared endpoint resources. Previously v3-A highloss30% standard R/F8.878/8.870 R/C6.457/6.451 and zero source TUN, native Normal/off 1500/1280 MTU and scoped mixed/idle results retained. Default unpaced source TCP slowstart still has6613 real startup TUN drops; explicit OPEN and no additional blind queue pressure, tuning or repeated dispatch. All new tests ran Actions, no main merge.
+
+Exact evidence: `docs/evidence/network-matrix-work/V3-C-owned-Linux-TUN-fq600-TCP500-real-AB-20261024.json`; compact `status.json`; existing `final-report.md`. Current next action is scoped delivery, not another test. Source commit and native runtime qualified only under opt-in.
