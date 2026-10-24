@@ -610,6 +610,7 @@ class LinuxExperiment:
                       **{k:self.nscommand(role,["sysctl","-n","net.core."+k],False).strip()
                       or "NOT_OBSERVED" for k in ("rmem_max","wmem_max")}}
                 for role in self.ns}
+        row["end_ns"]=time.monotonic_ns()
         self.snapshots.append(row)
 
     def wait_until(self, ns):
@@ -777,8 +778,14 @@ class LinuxExperiment:
                 time.sleep(.1)
             else:
                 raise RuntimeError("traffic worker not ready before scheduled start")
-            self.wait_until(start_ns)
+            # Kernel startup loss must be counted BEFORE ANY app packet.
+            # Sampling after the scheduled traffic start silently censors
+            # precisely the first 100ms of TUN ring burst loss. Only use a
+            # pre-start snapshot whose actual END precedes the sender epoch.
             self.snapshot("warmup-start")
+            if self.snapshots[-1]["end_ns"]>=start_ns:
+                raise RuntimeError("startup TUN counters sampled after traffic epoch")
+            self.wait_until(start_ns)
             boundary = start_ns + int(self.config["warmup_s"] * 1e9)
             for i, phase in enumerate(self.config["phases"], 1):
                 self.wait_until(boundary)
