@@ -37,3 +37,12 @@
 **此条覆盖前文“Fixed/Auto/Game保持0默认”的旧范围决定。** 用户要求 fq600 在**所有工况**默认生效：本岗位实际接线为原生 Linux Go 公共V4支持的 `normal`、`fec-fixed`、`fec-auto`、`game2`、`game4` 五种模式，共用产品独占临时TUN上的 `fq maxrate 600mbit flow_limit 256`；不碰宿主物理口/全局/sysctl，不自造 Windows `tc` 能力。省略CLI自动=600，`--tun-fq-maxrate-mbps=0`为所有模式的明确回退；失败时拒绝虚假成功，完整 Stop/owned 清理。所有模式必须读回Go与真实内核设置；未实际通过原生Actions的模式不得冒充产品性能资格。
 
 任务分支独立完成最小修改及合同，冻结新的原生ARM64产品SOURCE后，**一个模式/网络波形一个Action**，独立先测 FEC Fixed/Auto 的真实Go→Rust→TUN，Game2/Game4 真实多lane+损伤；从成功的Frozen bundle复用，无需重复编译。按工况保留各自原生成功/失败结论、业务丢包/首次交付、每流fq与原TUN队列真实drop、产品CPU/内存、认证/Stop；高损预算仅在v3标准50Mbps线路/30%充分负载场景检验6%/10%，不能拿低负载FEC/Game测它。此前Normal/off TCP500/H500结果属于**旧SOURCE `601eab25`**，不自动升格为此次全模式源码。若产生已有产品安全或数据流FAIL，最小定位后修复及相关回归；不重复压力刷全绿、不合main、不部署实机。实际run/产物与下一动作以状态JSON为准。
+
+## 2026-10-24 中断恢复后：高低损独立多业务无 HOL 真实结算
+
+最新用户明确要求恢复中断继续，检测**高/低真实丢包下业务间无交付阻塞**。原有状态全部结清，且新原生产品源码保持 `1c43b69a15e4eb9cb38e5662e34c0b106c18981d`（所有Linux公共V4模式TUN默认fq600/flow_limit256，非Windows），没有重复编译。夹具新增**只在请求中显式打开**的独立两条TCP实际 socket+UDP 双向10ms 交付/注入收据，按损伤阶段跳过前2秒/尾1秒，严格以100ms受保护UDP和所有业务共同零交付为检查线；内层TCP自身单连接重传HOL不冒充隧道跨业务HOL。启动与稳态TUN/根fq本地drop必须0，Go/kernel fq readback、原生认证、Stop保持真验。三个损伤场景分别一份精确 SOURCE Actions，所有实际业务执行在 ARM64 Actions。
+
+- [低损2%/单程200ms Action40065824207](https://github.com/lly8666/wbd-next/actions/runs/40065824207) 与 [高损30%/单程300ms Action40065834480](https://github.com/lly8666/wbd-next/actions/runs/40065834480)：**UDP和所有业务共同10ms交付空洞最大0ms**；双向均每5700个稳定内部10ms检查桶都有 UDP 真收包，且两条独立TCP socket有真收据。不过各自 TCP因内层传输拥塞/有序等待，无法注入/交付请求10.5Mbps、23.59Mbps/dir，故两个整个业务场景严格**INCONCLUSIVE**，不把UDP跨业务保护升级为全业务性能PASS。全程本地TUN/fq0、认证及Stop正常；高损R/F8.76%，R/C1.94%不满足原典型全UDP充分负载公式的前提，不宣称6%下限。
+- [独立较低 RTT 校准 Action40066158628](https://github.com/lly8666/wbd-next/actions/runs/40066158628)：**PASS_SCOPED**，1% IID/单程25ms，双向每方向真实请求6Mbps（双TCP合计4.2+UDP1.8）。实际 TCP4.187/4.125Mbps/dir，双向四条TCP socket稳态57秒各真收超过12,000个独立应用帧，TCP无最终缺失，UDP实收1.789/1.792Mbps；UDP最大空洞10ms、所有业务共享最大空洞0/10ms；源TUN/根fq所有相位0，读回和Stop通过。业务范围限精确SRC、丢包率、RTT与速率，不把自流TCP重传延迟否认，也不宣称Windows、高损TCP跑满或定向阻断其它TCP全覆盖。
+
+两次首次请求预热12s被原高精度TUN sampler在业务前拒绝（只支持10/15/20s），已按15s修正，保留红色原始收据但不当产品性能失败；通用 idle/2s socket 合同继承新60s HOL验收导致临时红灯，已隔离并在合同 PASS 后继续。**当前status.open_requests为空**。全部SHA/负载、各业务收发、每流10ms空桶和成本见 [最新证据](../evidence/network-matrix-work/V3-D-cross-business-HOL-2pct-30pct-20261024.json)、[1%通过收据](../evidence/network-matrix-work/V3-D-cross-business-HOL-low1-50ms-full-mixed-PASS-20261024.json)、[最终报告](../evidence/network-matrix-work/final-report.md)。不以追求全绿重复压测；不合并main、不部署实机，早先 FEC Auto/Fixed有损读回 OPEN 继续保留独立归因。
