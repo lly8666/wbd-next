@@ -1,0 +1,10 @@
+stage=S1-ARM-AES128
+frozen_codec_source=98e5b09b972196b97476b4311346cb79681773c5
+build_run=40108785993
+build_attempt=1
+build_artifact=12565812441
+order=A,A-layout,B,B,A-layout,A
+seed=single_real_TLS13_record_oracle
+warmup_seconds_per_leg=2
+measure_seconds_per_leg=15
+requested_once=true
