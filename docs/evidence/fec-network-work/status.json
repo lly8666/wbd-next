@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W60_COMMON_ARM64_FEC_ONLY_REPRESENTATIVE_COVERAGE_PASS_SCOPED_REPORT_FOR_INTEGRATION_REVIEW",
+  "phase": "W68_BOTH_ENDPOINT_REAL_HOST_LOSS_NO_FALSE_AUTO_UP_SCOPED_RECEIPTS_DELIVERED",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -5409,5 +5409,48 @@
     "capacity_stop": true,
     "scoped_integration_review_ready": true,
     "full_merge_ready": false
+  },
+  "w61_w68_host_cpu": {
+    "status": "SCOPED_REAL_HOST_LOSS_NO_FALSE_AUTO_RISE_OBSERVED",
+    "source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+    "frozen_build": 40173359338,
+    "proof": "docs/evidence/fec-network-work/20261025-W61-W68-CPU-starvation-host-loss-Auto-no-false-up.json",
+    "runner_regression_source": "623ac5ceb704a4a176430cbf36b139c93b1f46c0",
+    "network_loss_injected_pct": 0,
+    "leader_only_exploratory_runs": [
+      40176086163,
+      40176089227
+    ],
+    "full_thread_competition_runs": [
+      40176341191,
+      40176348148,
+      40176790249,
+      40176793874
+    ],
+    "bounded_real_host_loss_runs": [
+      40177265469,
+      40177269298
+    ],
+    "stress_real_loss": {
+      "client_host_tun": 9291,
+      "server_host_tun": 9286,
+      "client_case_udp_miss_c2s_s2c": [
+        9113,
+        9140
+      ],
+      "server_case_udp_miss_c2s_s2c": [
+        9140,
+        9106
+      ],
+      "recovery_udp_missing_zero_both": true,
+      "auto_rise_count_both": 0
+    },
+    "host_capacity_native_validity_triggered": false,
+    "reproducer_harness_decision": "INCONCLUSIVE_by_source_tun_kernel_drop; performance Actions are failures, NOT business PASS",
+    "product_auto_code_changed": false,
+    "more_sustained_host_loss_unqualified": true,
+    "capacity_stop": true,
+    "merge_ready": false,
+    "scoped_integration_review_ready": true
   }
 }

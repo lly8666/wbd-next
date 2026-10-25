@@ -1,0 +1,229 @@
+{
+  "date_utc": "2026-10-25",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "kind": "ORIGINAL_LINUX_ARM64_FEC_AUTO_HOST_CAPACITY_BOUNDED_SCOPED",
+  "decision": "NO_FALSE_AUTO_UP_OBSERVED_IN_EITHER_7S_HOST_STALL_REPRODUCTION",
+  "product_source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+  "product_build_run": 40173359338,
+  "product_build_artifact": 12590822815,
+  "product_bundle_sha256": "cdc5d4eb68621321f7f918b6667ff16c0a166bfe6b509ded310afc467294a97f",
+  "test_owned_code_commit": "623ac5ceb704a4a176430cbf36b139c93b1f46c0",
+  "network_loss_injection_pct": {
+    "c2s": 0,
+    "s2c": 0
+  },
+  "baseline_delay_oneway_ms": 75,
+  "app_mbps_each_direction": 8,
+  "app_mix": "96% UDP, 4% TCP across two flows, 64–1287B and sparse20Hz",
+  "phases": "30s pre / 60s targeted CPU condition / 90s restored, 15s warmup, 30s drain",
+  "stressor": "FEC-only harness, pin every product Go/Rust TID to one allowed core, test-owned competitors under taskset; W67/W68 perform timed SIGSTOP/SIGCONT at +20/+27s inside pressure phase; original product binary and authenticated feedback unaltered",
+  "outer_data_retransmission_policy": "off both endpoints; observed zero",
+  "verification": "real TLS original native M2 authenticated feedback, true TUN, parity, actual readback and zero external DATA repair",
+  "cases": [
+    {
+      "id": "W61",
+      "role": "client",
+      "kind": "exploratory_leader_only_NOT_valid_full_product_starvation",
+      "request": "tests/network/fec-work/W61-auto-client-cpu-starvation-zero-netem-arm64.json",
+      "run": 40176086163,
+      "artifact": 12593045151,
+      "zip": "0f938a34e15ddcc4df0cdbfabc6f522a15507165ef04b1be8ad917986c4ca1c7",
+      "action_url": "https://github.com/lly8666/wbd-next/actions/runs/40176086163",
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/40176086163/artifacts/12593045151"
+    },
+    {
+      "id": "W62",
+      "role": "server",
+      "kind": "exploratory_leader_only_NOT_valid_full_product_starvation",
+      "request": "tests/network/fec-work/W62-auto-server-cpu-starvation-zero-netem-arm64.json",
+      "run": 40176089227,
+      "artifact": 12592301263,
+      "zip": "02655b2938ddedc4cbc50c0546ee1f0c5f3e68f5284775ccb0b4d84578386718",
+      "action_url": "https://github.com/lly8666/wbd-next/actions/runs/40176089227",
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/40176089227/artifacts/12592301263"
+    },
+    {
+      "id": "W63",
+      "role": "client",
+      "kind": "all_threads_12_python_competitors",
+      "run": 40176341191,
+      "artifact": 12592221649,
+      "zip": "1ca3f4a296a73773f3cd1e755903c31c0f8a350619447b894929481f8a664378",
+      "kernel_tun_drop": 0,
+      "app_udp_missing": {
+        "c2s": 0,
+        "s2c": 0
+      },
+      "auto_rise": 0,
+      "result": "PASS_SCOPED_OBSERVATION",
+      "request": "tests/network/fec-work/W63-auto-client-allthread-starve-zero-netem-arm64.json",
+      "action_url": "https://github.com/lly8666/wbd-next/actions/runs/40176341191",
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/40176341191/artifacts/12592221649"
+    },
+    {
+      "id": "W64",
+      "role": "server",
+      "kind": "all_threads_12_python_competitors",
+      "run": 40176348148,
+      "artifact": 12593060626,
+      "zip": "bb7108c54c798ace9c2a6715c7fe98ec4d03c2378117a2abd523d6dbdbc0f458",
+      "kernel_tun_drop": 0,
+      "app_udp_missing": {
+        "c2s": 0,
+        "s2c": 0
+      },
+      "auto_rise": 0,
+      "result": "PASS_SCOPED_OBSERVATION",
+      "request": "tests/network/fec-work/W64-auto-server-allthread-starve-zero-netem-arm64.json",
+      "action_url": "https://github.com/lly8666/wbd-next/actions/runs/40176348148",
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/40176348148/artifacts/12593060626"
+    },
+    {
+      "id": "W65",
+      "role": "client",
+      "kind": "all_threads_32_native_cpu_competitors",
+      "run": 40176790249,
+      "artifact": 12593201088,
+      "zip": "5504df77d6267884a0bfd9ba13a77800ad6789f57ec7600577631599484e3146",
+      "kernel_tun_drop": 0,
+      "app_udp_missing": {
+        "c2s": 0,
+        "s2c": 0
+      },
+      "auto_rise": 0,
+      "result": "PASS_SCOPED_OBSERVATION",
+      "request": "tests/network/fec-work/W65-auto-client-32cpu-competitors-no-netem-arm64.json",
+      "action_url": "https://github.com/lly8666/wbd-next/actions/runs/40176790249",
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/40176790249/artifacts/12593201088"
+    },
+    {
+      "id": "W66",
+      "role": "server",
+      "kind": "all_threads_32_native_cpu_competitors",
+      "run": 40176793874,
+      "artifact": 12592297205,
+      "zip": "e6ae89bf9f3b1775ec30ba9919772cbb0a86be784b430ed7490c698e30d4ca75",
+      "kernel_tun_drop": 0,
+      "app_udp_missing": {
+        "c2s": 0,
+        "s2c": 0
+      },
+      "auto_rise": 0,
+      "result": "PASS_SCOPED_OBSERVATION",
+      "request": "tests/network/fec-work/W66-auto-server-32cpu-competitors-no-netem-arm64.json",
+      "action_url": "https://github.com/lly8666/wbd-next/actions/runs/40176793874",
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/40176793874/artifacts/12592297205"
+    },
+    {
+      "id": "W67",
+      "role": "client",
+      "kind": "all_threads_32_native_competitors_plus_7s_SIGSTOP_resumed",
+      "run": 40177265469,
+      "contract": 40177265283,
+      "artifact": 12592557329,
+      "zip": "3ed5def716dbca302f36d405cf555755b1ce9a4e8a92016abd326f60a99330ac",
+      "requested_pause_s": 7,
+      "actual_pause_s": 7.00018,
+      "pinned_threads_start_end": 13,
+      "competitors_at_end": 32,
+      "kernel_tun_drop": 9291,
+      "app_udp_missing": {
+        "c2s": 9113,
+        "s2c": 9140
+      },
+      "app_udp_recover_missing": {
+        "c2s": 0,
+        "s2c": 0
+      },
+      "auto_rise": 0,
+      "auto_client_valid_unknown": {
+        "valid": 74,
+        "unknown": 38
+      },
+      "auto_server_valid_unknown": {
+        "valid": 73,
+        "unknown": 41
+      },
+      "m2_native_host_capacity_logged": 0,
+      "m2_real_missing_max_server": {
+        "fast": 27,
+        "slow": 65
+      },
+      "result": "INCONCLUSIVE",
+      "action_conclusion": "failure",
+      "diagnostic": "SOURCE_TUN_TX_DROPS: kernel upstream loss before product",
+      "final_profile": {
+        "client": 0,
+        "server": 0
+      },
+      "outer_data_retrans": 0,
+      "stop_clean": true,
+      "request": "tests/network/fec-work/W67-auto-client-true-host-stall-zero-wireloss-arm64.json",
+      "action_url": "https://github.com/lly8666/wbd-next/actions/runs/40177265469",
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/40177265469/artifacts/12592557329"
+    },
+    {
+      "id": "W68",
+      "role": "server",
+      "kind": "all_threads_32_native_competitors_plus_7s_SIGSTOP_resumed",
+      "run": 40177269298,
+      "contract": 40177269370,
+      "artifact": 12593226945,
+      "zip": "4ba34893844e3e81f22ef569adbb4099f81b70853cc6f73bac63a7b808d0b042",
+      "requested_pause_s": 7,
+      "actual_pause_s": 7.00015,
+      "pinned_threads_start_end": 13,
+      "competitors_at_end": 32,
+      "kernel_tun_drop": 9286,
+      "app_udp_missing": {
+        "c2s": 9140,
+        "s2c": 9106
+      },
+      "app_udp_recover_missing": {
+        "c2s": 0,
+        "s2c": 0
+      },
+      "auto_rise": 0,
+      "auto_client_valid_unknown": {
+        "valid": 75,
+        "unknown": 40
+      },
+      "auto_server_valid_unknown": {
+        "valid": 77,
+        "unknown": 35
+      },
+      "m2_native_host_capacity_logged": 0,
+      "m2_real_missing_max_client": {
+        "fast": 69,
+        "slow": 81
+      },
+      "result": "INCONCLUSIVE",
+      "action_conclusion": "failure",
+      "diagnostic": "SOURCE_TUN_TX_DROPS: kernel upstream loss before product",
+      "final_profile": {
+        "client": 0,
+        "server": 0
+      },
+      "outer_data_retrans": 0,
+      "stop_clean": true,
+      "request": "tests/network/fec-work/W68-auto-server-true-host-stall-zero-wireloss-arm64.json",
+      "action_url": "https://github.com/lly8666/wbd-next/actions/runs/40177269298",
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/40177269298/artifacts/12593226945"
+    }
+  ],
+  "host_loss_scope": "W67/W68 original source TUN TX kernel drops BEFORE FEC source staging, with separate bidirectional application UDP missing; unlike deliberately injected link loss, these are actual paused-endpoint capacity losses. Source TUN drop differs from application missing; do NOT sum or equate them.",
+  "auto_policy_scope": "On both W67/W68, real VALID and UNKNOWN windows including limited observed mature gaps, zero native HOST_CAPACITY readings, zero Auto UP stages; all actual stages were one-grade down and final native requested=applied revision6 profile Light0 both endpoints. It would be false to claim the native HOST_CAPACITY gate fired, to infer fake clean ACK, or to generalize to sustained multi-window receiver overrun.",
+  "qualifications": [
+    "W61/W62 only constrained Linux leader not every Go/Rust TID: exploration, not conclusive.",
+    "W63–W66 true per-TID contention but NO business drop: negative false-rise observations only.",
+    "W67/W68 intentionally produce upstream host kernel drops, so main harness marks INCONCLUSIVE and GitHub performance Actions finish failure; this IS a valid stress reproduction and is NOT a successful no-loss service qualification.",
+    "Zero wire netem loss does not prove no host RX/kernel loss. Severe process-wide scheduler stall is a controlled extreme, not typical busy-product CPU load.",
+    "A sender cannot universally separate receiver-side loss from real wire loss using only missing authenticated M2 feedback; long sustained capacity pressure still unqualified.",
+    "W67/W68 hard stall temporarily loses first-arrival business and inner TCP tail increases to ~7s; not fixed by Auto FEC because some source never enters FEC.",
+    "No product Auto source modification necessary on the tested workload; W56 legitimate 20% authenticated rapid rise remains protected. Full merge_ready stays false."
+  ],
+  "capacity_stop": true,
+  "merge_ready": false,
+  "scoped_integration_review_ready": true
+}
