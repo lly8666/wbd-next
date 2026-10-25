@@ -36,6 +36,7 @@ const pathMTU=1500
 const underlayOverhead=40
 const maxWireRecord=pathMTU-underlayOverhead
 const labAeadOverhead=31
+const maxPadPerBoundary=256 // resource cap even if the full MTU has more space
 const delayMinMs=11000
 const delayRangeMs=10001
 type Spec struct{
@@ -82,6 +83,7 @@ type Manifest struct{
  PaddingBytesTotal int
  MTUMaxRecordObserved int
  LargeNoRoomFallback int
+ MaxPadPerBoundary int
 }
 
 func fail(err error){if err!=nil{panic(err)}}
@@ -188,6 +190,7 @@ func choosePadding(s Spec)int{
  if !s.Boundary{return 0}
  room:=maxWireRecord-len(s.Inner)-labAeadOverhead
  if room<=0{return 0}
+ if room>maxPadPerBoundary{room=maxPadPerBoundary}
  var b [2]byte;if _,e:=rand.Read(b[:]);e!=nil{panic(e)}
  min:=16;if room<min{min=1}
  return min+int(binary.BigEndian.Uint16(b[:]))%(room-min+1)
@@ -345,6 +348,7 @@ func run(port int,root,manifestPath string)error{
   RealProductionClassifier:false,RealWbdAeadWire:false,
   PlaintextRoundtripAll:true,ModeDowngradeRejectedInTestOracle:true,
   ChosenHoldMs:holdMs,MtuBytes:pathMTU,OuterIPTCPOverhead:underlayOverhead,
+  MaxPadPerBoundary:maxPadPerBoundary,
   Records:make([]Receipt,0,len(ss))}
  aesCount,xorCount:=0,0
  for i,item:=range ss{
@@ -424,6 +428,7 @@ func run(port int,root,manifestPath string)error{
   "zero_room_boundary_records":manifest.LargeNoRoomFallback,
   "hold_ms":holdMs,"first_fast_elapsed_ms":firstFastElapsedMs,
   "max_record_plus_underlay":manifest.MTUMaxRecordObserved+underlayOverhead,
+  "max_pad_per_boundary":maxPadPerBoundary,
   "all_records_roundtrip":true,"fallback_tamper_rejected":true,
   "real_tls_classifier":false,"wire":"LAB_ONLY_GO_AES_DIFFERENT_FROM_WBD_RUST",
  })
