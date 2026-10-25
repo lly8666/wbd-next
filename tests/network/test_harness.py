@@ -692,6 +692,22 @@ class Contracts(unittest.TestCase):
         self.assertIsNone(public_fec_m2_proof(""))
         self.assertIsNone(public_fec_m2_proof(row.replace("reverse_reports=31","no_report=31")))
         self.assertIsNone(public_fec_m2_proof(row.replace("cover_censored=1","cover_censored=3")))
+        # Genuine W51 original M2 positive receipt lag is a separate
+        # read-only field, never the OFF outer shadow fallback SRTT.
+        valid=row+" positive_lag_ns=1207000000 positive_samples=2 positive_mean_us=603500 positive_mean_known=true"
+        value=public_fec_m2_proof(valid)
+        self.assertEqual(value["positive_mean_us"],603500)
+        self.assertTrue(value["positive_mean_known"])
+        self.assertIn("NOT_shadow_RTT",value["positive_lag_qualification"])
+        unknown=row+" positive_lag_ns=0 positive_samples=0 positive_mean_us=0 positive_mean_known=false"
+        self.assertFalse(public_fec_m2_proof(unknown)["positive_mean_known"])
+        self.assertIsNone(public_fec_m2_proof(valid.replace("positive_mean_us=603500","positive_mean_us=600000")))
+        self.assertIsNone(public_fec_m2_proof(valid.replace("positive_samples=2","positive_samples=0")))
+        self.assertIsNone(public_fec_m2_proof(valid.replace("positive_mean_known=true","positive_mean_known=false")))
+        self.assertIsNone(public_fec_m2_proof(valid.replace("positive_mean_known=true","positive_mean_known=UNKNOWN")))
+        # Older exact-source product logs remain readable without a
+        # fabricated zero-value count or new field.
+        self.assertNotIn("positive_mean_known",public_fec_m2_proof(row))
         counts=tcp_socket_state_counts("SYN-SENT 0 1 private:333 private:444\n"
                                        "ESTAB 0 0 private:333 private:444\n"
                                        "ESTAB 0 0 private:333 private:444\n")

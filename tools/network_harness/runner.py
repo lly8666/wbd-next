@@ -189,7 +189,26 @@ def public_fec_m2_proof(log_text):
         return None
     if values["first_censored"] not in (0,1) or values["cover_censored"] not in (0,1):
         return None
-    return {k:values[k] for k in fields}
+    result={k:values[k] for k in fields}
+    # W51 makes the existing original FEC-only native 8s mature M2
+    # positive lag public. Old exact-source artifacts stay readable; but
+    # a partially emitted or mathematically invalid new marker fails
+    # closed instead of silently inventing a zero-lag RTT.
+    lag_fields=("positive_lag_ns","positive_samples","positive_mean_us")
+    if any(k+"=" in rows[-1] for k in lag_fields) or "positive_mean_known=" in rows[-1]:
+        match=re.search(r"positive_mean_known=(true|false)(?:\s|$)",rows[-1])
+        if not match or any(k not in values for k in lag_fields):
+            return None
+        lag,samples,mean=(values[k] for k in lag_fields)
+        known=(match.group(1)=="true")
+        if (known != (samples>0) or
+            mean != (lag//samples//1000 if samples else 0)):
+            return None
+        result.update({k:values[k] for k in lag_fields})
+        result["positive_mean_known"]=known
+        result["positive_lag_qualification"]=(
+            "native_mature_8s_unambiguous_firstsend_authenticated_M2_confirmation_age_NOT_shadow_RTT")
+    return result
 
 
 def public_fec_failure_reasons(log_text):
