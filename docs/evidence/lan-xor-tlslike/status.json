@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "experiment": "LAN_XOR_TLSLIKE_BOUNDED_LAB",
+  "branch": "experiment/lan-xor-tlslike",
+  "phase": "LAB_CAPTURE_PASS_PRODUCT_NOT_WIRED_INSECURE_OBFUSCATION",
+  "base": {
+    "branch": "experiment/selective-tls-crypto",
+    "sha": "ca72b345de5846a5c58f28d6be24b4e2fcd057b1",
+    "previous_result": "CLOSED_NEGATIVE_NOT_REOPENED"
+  },
+  "source": "f914b396d3251978bc11c9899e385c7bcac1ebe6",
+  "workflow": {
+    "id": 40173004832,
+    "job_id": 121107650547,
+    "attempt": 1,
+    "conclusion": "success",
+    "platform": "ubuntu-24.04/x86_64",
+    "tests": {
+      "passed": 5,
+      "failed": 0,
+      "ignored": 0
+    },
+    "artifact_id": 12591221570,
+    "artifact_zip_sha256": "cad4e7ceecda9ef9dd37c4ac1e839b766b55422d7e497ed889cd7c0b41e6661c"
+  },
+  "capture": {
+    "real_tcp_loopback": true,
+    "actual_go_tls_bootstrap": false,
+    "real_tun_packets": false,
+    "outer_tcp_payload_segments": 4,
+    "record_count": 4,
+    "record_lengths": [
+      1360,
+      1360,
+      1360,
+      1360
+    ],
+    "same_outer_seq_retx": 0,
+    "record_pns": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "fixed_same64": true,
+    "fixed_same128": true,
+    "rolling_same64": false,
+    "rolling_same128": false,
+    "raw_pcap_sha256": "4cb2dacea41088e6fcce1a3a3128e4de369d4e06e5b3ffccca1f21de1f471174",
+    "raw_pcap_cleaned": true
+  },
+  "protocol": {
+    "header": "17 03 03 length",
+    "original_packet": "constructed_complete_ipv4_tcp",
+    "wire_overhead_bytes": 15,
+    "security": "NONE_NONCRYPTOGRAPHIC_XOR",
+    "authenticated": false,
+    "replay_protected": false,
+    "confidential": false,
+    "production_wired": false,
+    "main_modified": false
+  },
+  "report": "docs/evidence/lan-xor-tlslike/REPORT.md",
+  "open_requests": [],
+  "next_action": "NONE_SCOPE_LAB_COMPLETE_PRODUCT_GO_TLS_TUN_AND_CPU_NOT_TESTED",
+  "merge_ready": false
+}
