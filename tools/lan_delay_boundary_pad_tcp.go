@@ -26,7 +26,6 @@ import (
  "net"
  "os"
  "strconv"
- "strings"
  "time"
 )
 
@@ -60,7 +59,7 @@ type Receipt struct{
  PaddingBytes int
  LifecycleBoundary bool
  Stage string
- ElapsedFromLastServerFlightMs int64
+ ElapsedFromFinishedMs int64
  PadSha256 string
 }
 type Manifest struct{
@@ -208,21 +207,23 @@ func testCert()(tls.Certificate,*x509.CertPool,error){
  pool:=x509.NewCertPool();pool.AddCert(cert)
  return tls.Certificate{Certificate:[][]byte{der},PrivateKey:priv,Leaf:cert},pool,nil
 }
-func readCorpus(root string)([]byte,[]byte,[]byte){
+func readCorpus(root string)([]byte,[]byte,[]byte,[]byte){
  ch,e:=os.ReadFile(root+"/client_hello.bin");fail(e)
  sf,e:=os.ReadFile(root+"/server_flight.bin");fail(e)
+ finished,e:=os.ReadFile(root+"/client_finished.bin");fail(e)
  app,e:=os.ReadFile(root+"/encrypted_app.bin");fail(e)
  if len(ch)<50||ch[0]!=22||!bytes.Contains(ch,[]byte(innerPublicSNI))||
    len(sf)<50||sf[0]!=22||sf[5]!=2||len(app)<1305||
-   !bytes.Equal(app[:3],[]byte{23,3,3}){panic("not genuine inner TLS1.3 corpus")}
+   !bytes.Equal(app[:3],[]byte{23,3,3})||len(finished)<40||
+ !bytes.Equal(finished[:3],[]byte{23,3,3}){panic("not genuine complete inner TLS1.3 corpus")}
  // RFC8446 HelloRetryRequest fixed ServerHello.random. Do not advance gate on HRR.
  hrr:=[]byte{0xcf,0x21,0xad,0x74,0xe5,0x9a,0x61,0x11,0xbe,0x1d,0x8c,0x02,
  0x1e,0x65,0xb8,0x91,0xc2,0xa2,0x11,0x16,0x7a,0xbb,0x8c,0x5e,0x07,0x9e,
  0x09,0xe2,0xc8,0xa8,0x33,0x9c}
  if len(sf)<43||bytes.Equal(sf[11:43],hrr){panic("inner server flight not final ServerHello")}
- return ch,sf,app
+ return ch,sf,finished,app
 }
-func specs(ch,sf,app []byte)[]Spec{
+func specs(ch,sf,finished,app []byte)[]Spec{
  build:=func(label,stage string,boundary bool,port uint16,seq uint32,proto,flags byte,data []byte,trust bool)Spec{
   return Spec{Label:label,Stage:stage,Boundary:boundary,Port:port,
    Seq:seq,Proto:proto,Flags:flags,TrustedApp:trust,
@@ -241,6 +242,8 @@ func specs(ch,sf,app []byte)[]Spec{
   add(fmt.Sprintf("genuine_serverflight_chunk%d_start_PAD",i),"early",true,
    443,2000+uint32(start),6,0x18,sf[start:stop],false)
  }
+ add("genuine_client_finished_completes_handshake_PAD","early",true,
+  mainPort,17000,6,0x18,finished,false)
  add("QUIC_Initial_start_PAD","early",true,40001,4000,17,0,
   []byte{0xc3,0,0,0,1,0x21,0x55,0x01,0,0,0,0,0,0,1},false)
  add("TLS13_early_app_before_hold_no_PAD_AES","early",false,mainPort,20000,6,0x18,app[:1305],true)
@@ -271,8 +274,8 @@ func specs(ch,sf,app []byte)[]Spec{
  return ss
 }
 func run(port int,root,manifestPath string)error{
- ch,sf,app:=readCorpus(root)
- ss:=specs(ch,sf,app)
+ ch,sf,finished,app:=readCorpus(root)
+ ss:=specs(ch,sf,finished,app)
  verified:=len(sf)>=43&&sf[5]==2
  if !verified{return errors.New("final inner ServerHello not in test corpus")}
  coder,e:=newCoder();if e!=nil{return e}
@@ -332,9 +335,9 @@ func run(port int,root,manifestPath string)error{
  if _,e=io.ReadFull(tc,ack[:]);e!=nil{return e}
  if string(ack[:])!="S_READY"{return errors.New("missing encrypted bootstrap TLS barrier")}
  direct:=tc.NetConn()
- // The offline genuine inner TLS13 flight is injected as source packets
- // over this real connection. Mark the LAST server flight packet as the
- // beginning of the *real monotonic* randomized post-handshake hold.
+ // The offline genuine inner TLS13 flight and actual encrypted client
+ // Finished are injected over real TCP. The Finished record marks the
+ // beginning of the real monotonic 11-21s post-handshake hold.
  var establishedAt time.Time
  firstFastElapsedMs:=int64(-1)
  manifest:=Manifest{Scope:"Genuine outer mutual TLS13 then lab-only raw AES/PnXor random-hold and boundary-only pad",
@@ -397,7 +400,7 @@ func run(port int,root,manifestPath string)error{
   })
   modes<-mode;pads<-padLen
   if _,e=direct.Write(w);e!=nil{return e}
-  if strings.HasPrefix(item.Label,"genuine_serverflight_chunk"){
+  if item.Label=="genuine_client_finished_completes_handshake_PAD"{
    establishedAt=time.Now()
   }
   time.Sleep(18*time.Millisecond)
