@@ -631,7 +631,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W91: Check exact source 84f316608135 ARM64 build and native Game OFF error-classification test (Action 40212344161). Preserve W90 six failed real Game+FEC actions and b505 rollback. If build succeeds, run only bounded clean 3Mbps Game2/4 FEC OFF UDP+real TCP on independent Actions using that immutable artifact; no pressure escalation. Game fixed FEC remains NOT_PRODUCT_SUPPORTED until separately proven startup/clean path, do not revive a failed candidate blindly. Keep Windows role TEMP_SKIPPED, capacity_stop=true and merge_ready=false.",
+  "next_action": "W92: verify exact ARM64 58c1eae Linux game raw cBPF build+test Action40213051826. If success, reuse frozen binary for separate Game2 / Game4 clean 3Mbps real mixed UDP/TCP same-VM sequential A=84f31660 (W91 PASS) versus B=58c1eae; do not compare across VMs; preserve all W90 Game-FEC FAIL/rollback. If regression, roll back only own BPF candidate, not external branch. Do not revive Game fixed6 unqualified public switch; Windows TEMP_SKIPPED; capacity_stop=true; merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6012,16 +6012,50 @@
     }
   },
   "w91_game_off_rx_classification": {
-    "status": "PATCH_COMMITTED_EXACT_ARM64_VALIDATION_RUNNING",
-    "source_commit": "19942fab71b1b84d5caa31254e9c3d60a36d8366",
-    "exact_build_workflow_commit": "84f3166081350290a6d0f07e4b70ccace09fa44f",
+    "status": "EXACT_NATIVE_AND_BOTH_REAL_CLEAN_PRODUCT_PASS_SCOPED",
+    "product_source": "84f3166081350290a6d0f07e4b70ccace09fa44f",
     "build_run": 40212344161,
-    "test_scope": "original Linux Game2/4 FEC OFF; true AEAD vs authenticated replay duplicate/retired, malformed record, capacity and scope",
-    "caveat": "Public Game+FEC candidate withdrawn after SIX real failed Linux business Actions; no fixed profile available in current public product. No Game+FEC qualification.",
-    "tx_lock": "pre-W90 original Game idle 2ms sleep already precedes mutex; TX still holds GameAdapter during raw syscalls (B decision pending clean evidence)",
-    "verification": "RUNNING_NOT_PASS",
+    "build_attempt": 1,
+    "build_artifact_id": 12605554651,
+    "build_sha256": "71b9169b320dce1a76b40b79d80261c4d9afd387881038af7dee735636a10f39",
+    "game2": {
+      "request": "tests/network/fec-work/W91-Game2-OFF-clean3Mbps-arm64.json",
+      "run_id": 40212643000,
+      "result": "PASS_SCOPED_OBSERVATION",
+      "both_directions_tcp_udp": "INJECTION_AND_DELIVERY_MATCH",
+      "udp_loss": 0,
+      "tcp_backpressure": 0,
+      "p99_ms": 77.5,
+      "client_cpu_s": 1.57,
+      "server_cpu_s": 1.56,
+      "client_rss_bytes": 25186304,
+      "server_rss_bytes": 24510464,
+      "stop": true
+    },
+    "game4": {
+      "request": "tests/network/fec-work/W91-Game4-OFF-clean3Mbps-arm64.json",
+      "run_id": 40212646332,
+      "result": "PASS_SCOPED_OBSERVATION",
+      "both_directions_tcp_udp": "INJECTION_AND_DELIVERY_MATCH",
+      "udp_loss": 0,
+      "tcp_backpressure": 0,
+      "p99_ms": 77.7,
+      "client_cpu_s": 2.81,
+      "server_cpu_s": 2.82,
+      "client_rss_bytes": 37376000,
+      "server_rss_bytes": 37261312,
+      "stop": true
+    },
+    "caveat": "GAME_FEC_FIXED_NOT_IN_PUBLIC_PRODUCT; six W90 real failures and rollback b505 retained; different VMs not same-VM CPU A/B; Windows TEMP_SKIPPED; not outer M2 DATA repair proof"
+  },
+  "w92_game_linux_raw_filter": {
+    "status": "SOURCE_CANDIDATE_ARM64_BUILD_RUNNING_NOT_QUALIFIED",
+    "source": "58c1eaece7ea64c1a437978c1e9f526836ed4b3e",
+    "build_run": 40213051826,
+    "change": "SO_ATTACH_FILTER classic BPF authenticated GoFlow exact tuple and dynamic IPv4 IHL; full Go connection and lane AEAD remain",
+    "validation": "PENDING_NATIVE_THEN_GAME2_GAME4_CLEAN_SAMEVM_AB",
     "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN",
     "capacity_stop": true,
-    "devlog": "docs/devlog/fec-network-work/20261026-W91-game-off-rx-reason-classification.md"
+    "devlog": "docs/devlog/fec-network-work/20261026-W92-linux-game-rx-exact-kernel-filter-candidate.md"
   }
 }
