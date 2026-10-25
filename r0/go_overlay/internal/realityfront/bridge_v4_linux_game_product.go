@@ -186,6 +186,15 @@ func (p *V4LinuxGameProduct) KernelCounters()(V4GameKernelCounters,error){
     }
     return p.native.originalM4Counters()
 }
+// Genuine M3/M4 post-driver counters, only valid for explicit Game fixed FEC.
+func (p *V4LinuxGameProduct) FecCounters()(V4GameFecCounters,error){
+    if p==nil{return V4GameFecCounters{},ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    if !p.connected||p.stopped||p.native==nil||!p.cfg.GameFecEnabled{
+        return V4GameFecCounters{},ErrAdmissionUnsupported
+    }
+    return p.native.originalGameFecCounters()
+}
 func (p *V4LinuxGameProduct) Connected()bool{
     if p==nil{return false}
     p.mu.Lock();defer p.mu.Unlock()
