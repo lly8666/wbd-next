@@ -92,7 +92,10 @@ impl GameKernelOwner{
         let tx_tun=Arc::clone(&tun);
         let tx_copy=Arc::clone(&copied);
         let tx_rejected=Arc::clone(&rejected);
-        let inner_mtu=adapter.lock().map_err(|_|())?.inner_mtu();
+        let (inner_mtu,rx_owner)={
+            let game=adapter.lock().map_err(|_|())?;
+            (game.inner_mtu(),game.receiver_handle())
+        };
         let tx_worker=thread::Builder::new().name("wbd-v4-game-tx".into())
             .spawn(move||{
                 let Ok(mut arena)=Arena::new(generation^0x4000_0000,64,2048,64,1_000_000)
@@ -187,7 +190,7 @@ impl GameKernelOwner{
             let lane=lanes_key(generation,i);
             let flow=flows[i];
             let raw=Arc::clone(&rx[i]);
-            let client_rx_adapter=Arc::clone(&adapter);
+            let receiver_owner=Arc::clone(&rx_owner);
             let rx_tun=Arc::clone(&tun);
             let rx_stop=Arc::clone(&stop);
             let recv_count=Arc::clone(&delivered);
@@ -226,9 +229,9 @@ impl GameKernelOwner{
                     if rx_stop.load(Ordering::Acquire){break}
                     raw_seen.fetch_add(1,Ordering::Relaxed);
                     let received={
-                        let Ok(mut game)=client_rx_adapter.lock()else{break};
+                        let Ok(mut receiver)=receiver_owner.lock()else{break};
                         rx_held.fetch_add(1,Ordering::Relaxed);
-                        game.receive(lane,wire[..len].to_vec())
+                        receiver.receive(lane,wire[..len].to_vec())
                     };
                     match received{
                         Ok(Some(plaintext))=>{
@@ -299,7 +302,7 @@ impl GameKernelOwner{
         // Counters distinguish real kernel ingress from blocked shared
         // GameAdapter lock, AEAD/GameRx duplicate and TUN failure.
         // No packet content, secret, raw key, TLS material or payload emitted.
-        eprintln!("M0_GAME_M4_RX_STAGE_BOUNDARY raw={} timeout={} other={} adapter_lock={} authenticated_some={} duplicate_none={} aead_denied={} invalid={} replay_dup={} stale={} capacity={} scope={} stopped={} game={} tun_fail={} tun_delivered={}",
+        eprintln!("M0_GAME_M4_RX_STAGE_BOUNDARY raw={} timeout={} other={} rx_owner_lock={} authenticated_some={} duplicate_none={} aead_denied={} invalid={} replay_dup={} stale={} capacity={} scope={} stopped={} game={} tun_fail={} tun_delivered={}",
             self.raw_received.load(Ordering::Relaxed),
             self.rx_driver_timeout.load(Ordering::Relaxed),
             self.rx_driver_other.load(Ordering::Relaxed),

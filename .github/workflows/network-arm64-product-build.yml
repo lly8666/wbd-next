@@ -47,6 +47,15 @@ jobs:
           cargo +1.85.1 test --locked -p wbd-engine \
             --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
             --lib game_rx_aeAD_tag_failure_not_replay_or_malformed -- --nocapture
+      - name: Game RX owner continues while TX adapter lock held (no new thread per packet)
+        shell: bash
+        run: |
+          set -euo pipefail
+          WBD_ISAL_PREFIX="$RUNNER_TEMP/wbd-isal-arm64-public" \
+          WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985 \
+          cargo +1.85.1 test --locked -p wbd-engine \
+            --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
+            --lib game_receive_owner_progress_while_tx_adapter_lock_held -- --nocapture
       - name: Linux Game raw kernel exact-tuple BPF contract (no cross-lane copies)
         shell: bash
         run: |

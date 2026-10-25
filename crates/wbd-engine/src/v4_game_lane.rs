@@ -4,6 +4,7 @@
 //! per-lane AEAD/PN/replay are independently allocated; no public Go grant.
 #![forbid(unsafe_code)]
 use crate::memory::Arena;
+use std::sync::{Arc,Mutex};
 use crate::cold_v4::UntrustedColdV4;
 use wbd_types::TunnelKey;
 use crate::runtime::game_shared::{
@@ -16,12 +17,48 @@ use wbd_codec::record_crypto::{DirectionKeys,LaneTxCrypto,RecordSuite};
 use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig,UniqueOpenError};
 use wbd_codec::record_crypto::CryptoError;
 pub struct ScopedKeys{pub lane:QualifiedLane,pub tx:DirectionKeys,pub rx:DirectionKeys}
-struct Lane{key:LaneKey,tx:LaneTxCrypto,rx:ReplayProtectedLaneRx}
+struct TxLane{key:LaneKey,tx:LaneTxCrypto}
+struct RxLane{key:LaneKey,rx:ReplayProtectedLaneRx}
 #[derive(Debug,PartialEq,Eq)]
 pub enum Error{Unauthorized,Invalid,Capacity,Stopped,Duplicate,Stale,Crypto,Game(GameError)}
+/// One bounded RX owner for all authenticated Game lanes; independent of the
+/// TX owner mutex even while TX is sealing or executing raw send syscalls.
+pub(crate) struct GameReceiveOwner{
+    rx:GameRx,rx_scope:GameScope,lanes:Vec<RxLane>,
+    arena:Arena,stopped:bool,inner_mtu:usize,
+}
+impl GameReceiveOwner{
+    pub(crate) fn receive(&mut self,lane_key:LaneKey,mut wire:Vec<u8>)
+        ->Result<Option<Vec<u8>>,Error>{
+        if self.stopped{return Err(Error::Stopped)}
+        let lane=self.lanes.iter_mut().find(|l|l.key==lane_key)
+            .ok_or(Error::Unauthorized)?;
+        let opened=lane.rx.open_unique_in_place(&mut wire).map_err(|e|match e{
+            UniqueOpenError::InvalidRecord(CryptoError::Authentication)=>Error::Crypto,
+            UniqueOpenError::InvalidRecord(_)=>Error::Invalid,
+            UniqueOpenError::Duplicate=>Error::Duplicate,
+            UniqueOpenError::Retired=>Error::Stale,
+        })?;
+        if opened.kind!=1{return Err(Error::Invalid)}
+        let (id,payload)=wbd_codec::decode_game(opened.payload,self.inner_mtu+16)
+            .map_err(|_|Error::Invalid)?;
+        if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
+        let mut owned=self.arena.allocate().map_err(|_|Error::Capacity)?;
+        owned.writable()[14..14+payload.len()].copy_from_slice(payload);
+        match self.rx.first_delivery(self.rx_scope,lane_key,id,owned){
+            Ok(mut b)=>Ok(Some(b.writable()[14..14+payload.len()].to_vec())),
+            Err((GameError::Duplicate,_))=>Ok(None),
+            Err((e,_))=>Err(Error::Game(e)),
+        }
+    }
+    fn stop(&mut self){
+        if self.stopped{return}self.stopped=true;
+        self.rx.stop();self.arena.stop();self.arena.drain_returns();
+    }
+}
 pub struct GameAdapter{
-    tx:GameTx,rx:GameRx,rx_scope:GameScope,
-    lanes:Vec<Lane>,arena:Arena,stopped:bool,inner_mtu:usize
+    tx:GameTx,rx_owner:Arc<Mutex<GameReceiveOwner>>,
+    lanes:Vec<TxLane>,arena:Arena,stopped:bool,inner_mtu:usize,
 }
 impl GameAdapter{
     /// Caller MUST independently check Go TLS feature, KDF, lane owner and
@@ -33,6 +70,7 @@ impl GameAdapter{
             tx_scope.tunnel!=rx_scope.tunnel||tx_scope.epoch!=rx_scope.epoch||
             tx_scope.epoch==[0;16]{return Err(Error::Unauthorized)}
         let mut infos=Vec::new();let mut lanes=Vec::new();
+        let mut rx_lanes=Vec::new();
         let mut identities=Vec::new();
         let mut inner_mtu=2048usize;
         for m in materials {
@@ -54,7 +92,9 @@ impl GameAdapter{
                 suite,ReplayWindowConfig{pn_per_second:2000,
                     cache_horizon_ms:200,fec_horizon_ms:200,rtt_ms:100,
                     metadata_budget_bytes:131072}).map_err(|_|Error::Crypto)?;
-            infos.push(m.lane);lanes.push(Lane{key:m.lane.key,tx,rx});
+            infos.push(m.lane);
+            lanes.push(TxLane{key:m.lane.key,tx});
+            rx_lanes.push(RxLane{key:m.lane.key,rx});
         }
         let txsnap=ActiveLaneSnapshot::new(tx_scope,infos.clone())
             .ok_or(Error::Unauthorized)?;
@@ -66,9 +106,16 @@ impl GameAdapter{
         let rx=GameRx::new(rxsnap,RxLimits{
             delivered_window:4096,open_blocks:64,open_bytes:256*1024
         }).ok_or(Error::Invalid)?;
+        // Independent bounded arenas avoid TX slab capacity making RX stall.
+        // Generation and scope remain checked by the authenticated lane owner.
         let arena=Arena::new(905,256,2048,256,1024*1024)
             .map_err(|_|Error::Capacity)?;
-        Ok(Self{tx,rx,rx_scope,lanes,arena,stopped:false,inner_mtu})
+        let rx_arena=Arena::new(906,256,2048,256,1024*1024)
+            .map_err(|_|Error::Capacity)?;
+        let rx_owner=Arc::new(Mutex::new(GameReceiveOwner{
+            rx,rx_scope,lanes:rx_lanes,arena:rx_arena,stopped:false,inner_mtu
+        }));
+        Ok(Self{tx,rx_owner,lanes,arena,stopped:false,inner_mtu})
     }
     /// The only prospective Go TLS→Game adapter construction boundary.
     /// The Go caller MUST have run its private 2/4 original TLS ColdSnapshot
@@ -146,6 +193,9 @@ impl GameAdapter{
     }
     pub fn counters(&self)->GameCounters{self.tx.counters()}
     pub(crate) fn inner_mtu(&self)->usize{self.inner_mtu}
+    pub(crate) fn receiver_handle(&self)->Arc<Mutex<GameReceiveOwner>>{
+        Arc::clone(&self.rx_owner)
+    }
     pub fn offer(&mut self,data:&[u8],now:MonoNs)->Result<LogicalPacketId,Error>{
         if self.stopped{return Err(Error::Stopped)}
         if data.is_empty()||data.len()>self.inner_mtu{return Err(Error::Invalid)}
@@ -179,34 +229,18 @@ impl GameAdapter{
             }else{DispatchOutcome::PressureDrop}
         })
     }
-    /// This is a peer-facing authenticated receiver. Original Go's
-    /// source, peer directions and actual kernel ingress still gate its use.
-    pub fn receive(&mut self,lane_key:LaneKey,mut wire:Vec<u8>)
+    /// Synchronous adapter callers preserve the original API. The Linux
+    /// worker instead keeps the RX handle once and NEVER takes TX mutex.
+    pub fn receive(&mut self,lane_key:LaneKey,wire:Vec<u8>)
         ->Result<Option<Vec<u8>>,Error>{
         if self.stopped{return Err(Error::Stopped)}
-        let lane=self.lanes.iter_mut().find(|l|l.key==lane_key)
-            .ok_or(Error::Unauthorized)?;
-        let opened=lane.rx.open_unique_in_place(&mut wire).map_err(|e|match e{
-            UniqueOpenError::InvalidRecord(CryptoError::Authentication)=>Error::Crypto,
-            UniqueOpenError::InvalidRecord(_)=>Error::Invalid,
-            UniqueOpenError::Duplicate=>Error::Duplicate,
-            UniqueOpenError::Retired=>Error::Stale,
-        })?;
-        if opened.kind!=1{return Err(Error::Invalid)}
-        let (id,payload)=wbd_codec::decode_game(opened.payload,self.inner_mtu+16)
-            .map_err(|_|Error::Invalid)?;
-        if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
-        let mut owned=self.arena.allocate().map_err(|_|Error::Capacity)?;
-        owned.writable()[14..14+payload.len()].copy_from_slice(payload);
-        match self.rx.first_delivery(self.rx_scope,lane_key,id,owned){
-            Ok(mut b)=>Ok(Some(b.writable()[14..14+payload.len()].to_vec())),
-            Err((GameError::Duplicate,_))=>Ok(None),
-            Err((e,_))=>Err(Error::Game(e)),
-        }
+        self.rx_owner.lock().map_err(|_|Error::Stopped)?.receive(lane_key,wire)
     }
     pub fn stop(&mut self){
-        if self.stopped{return}self.stopped=true;
-        self.tx.stop();self.rx.stop();self.arena.stop();self.arena.drain_returns();
+        if self.stopped{return}
+        self.stopped=true;
+        self.tx.stop();self.arena.stop();self.arena.drain_returns();
+        if let Ok(mut receiver)=self.rx_owner.lock(){receiver.stop();}
     }
 }
 #[cfg(test)]
@@ -224,6 +258,33 @@ mod tests{
                 generation:7},mss:1400},
             tx:keys((i+1) as u8),rx:keys((i+1) as u8)
         }).collect(),RecordSuite::ChaCha20Poly1305).unwrap()
+    }
+    #[test]
+    fn game_receive_owner_progress_while_tx_adapter_lock_held(){
+        use std::sync::mpsc;
+        use std::time::Duration;
+        let mut game=build(2);
+        game.offer(b"no-tx-lock-hol",MonoNs(0)).unwrap();
+        let mut copies=Vec::new();
+        game.drain(MonoNs(1),|lane,_,_,wire|{
+            copies.push((lane,wire.to_vec()));true
+        });
+        let (lane,wire)=copies.remove(0);
+        let rx=game.receiver_handle();
+        let game=Arc::new(Mutex::new(game));
+        let hold_tx=game.lock().unwrap();
+        let (tx,ch)=mpsc::channel();
+        let worker=std::thread::spawn(move||{
+            let result=rx.lock().unwrap().receive(lane,wire);
+            tx.send(result).unwrap();
+        });
+        // Receive while TX lock is STILL held: do not create a deadlock
+        // by allowing RX to access the legacy combined GameAdapter mutex.
+        let outcome=ch.recv_timeout(Duration::from_millis(750));
+        drop(hold_tx);
+        worker.join().unwrap();
+        assert_eq!(outcome.unwrap().unwrap(),Some(b"no-tx-lock-hol".to_vec()));
+        game.lock().unwrap().stop();
     }
     #[test]
     fn game_rx_aeAD_tag_failure_not_replay_or_malformed(){
