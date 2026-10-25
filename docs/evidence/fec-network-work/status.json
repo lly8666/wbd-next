@@ -5586,5 +5586,48 @@
     "capacity_stop": true,
     "merge_ready": false,
     "scoped_integration_review_ready": true
+  },
+  "w85_two_ready_parity_interleave": {
+    "status": "FINISHED_NEGATIVE_REAL_SAMEVM_AB_ROLLED_BACK_PRODUCT_TO_PRE_W85_BLOBS",
+    "evidence": "docs/evidence/fec-network-work/20261025-W85-two-ready-parity-interleave-sameVM-AB-NEGATIVE-ROLLBACK.json",
+    "devlog": "docs/devlog/fec-network-work/20261025-W85-two-ready-parity-interleave-implementation-and-Actions.md",
+    "request_invalid_action": 40202287598,
+    "request_invalid_reason": "ID_TOO_LONG_NO_MEASUREMENT",
+    "valid_AB_action": 40202359496,
+    "artifact_id": 12601699742,
+    "zip_sha256": "6c7c388eb00d3babf93897d12333c5dbeef4d4b71d86d493b9a54a6c0ec4fea8",
+    "old_source": "7ad0ba91b656ff8e9ee965d0c093a18e048971fb",
+    "new_candidate_source": "7cb64bfce4fe2539a6cfc87eae41fbb4914235d7",
+    "new_build_action": 40201990439,
+    "new_build_success": true,
+    "new_build_artifact_id": 12602486310,
+    "new_build_artifact_sha256": "1c0ba44937b1d7d7c6d6d8d04d1dc887e32414f999e7ed60fda8d3430c15ba32",
+    "A_main_UDP_long_GE_pct": [
+      1.3252848,
+      1.1982027
+    ],
+    "B_main_UDP_long_GE_pct": [
+      1.3903387,
+      1.193646
+    ],
+    "strict_one_pct_gate": "FAILED_BOTH_A_B_NO_GATE_WEAKENING",
+    "B_interleaved_parity_fraction_pct": {
+      "client": 1.2217,
+      "server": 1.1031
+    },
+    "B_host_CPU_PSI_peak_pct": 32.21,
+    "A_host_CPU_PSI_peak_pct": 2,
+    "product_fixed_stream_rollback_commit": "78095cc2e8680f507c087ea3df5944d0afa92a5d",
+    "product_original_sealer_diag_rollback_commit": "4322a811fd63e096458f202767faa2f097a587c0",
+    "rollback_verified_preW85_product_blobs": {
+      "fixed_stream": "a57f5f4fb6ffa2de753b622bd646fe873e597524",
+      "embedded_go": "3cba62daf5e09c509731f504343ec8b2b4c84362"
+    },
+    "tests_BA_short_GE_IID_highload": "NOT_RUN_AFTER_NEGATIVE_FIRST_AB",
+    "no_product_semantics_change_after_rollback": true,
+    "other_role_next_action_unchanged": true,
+    "merge_ready": false,
+    "capacity_stop": true,
+    "scoped_integration_review_ready": true
   }
 }
