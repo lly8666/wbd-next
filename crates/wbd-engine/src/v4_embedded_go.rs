@@ -4457,6 +4457,30 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     Ok(finish)
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+// Do not block an original TUN sender over a known FEC close/expiry
+// or authenticated M2 feedback deadline. poll() timeout is integer ms:
+// round DOWN, so a sub-ms deadline is serviced immediately. This does
+// not spin during genuine idle (10ms cap), allocate or add a thread.
+#[cfg(feature="fec2_product_record")]
+fn original_fec_tun_wait_ms(queued:bool,next_due:Option<MonoNs>,
+    now:MonoNs)->c_int {
+    if queued{return 0}
+    let Some(due)=next_due else{return 10};
+    if due.0<=now.0{return 0}
+    (due.0.saturating_sub(now.0)/1_000_000).min(10) as c_int
+}
+#[cfg(all(test,feature="fec2_product_record"))]
+#[test]
+fn m0_fec_tx_poll_budget_never_sleeps_through_fec_or_feedback_due(){
+    let now=MonoNs(1_000_000_000);
+    assert_eq!(original_fec_tun_wait_ms(false,None,now),10);
+    assert_eq!(original_fec_tun_wait_ms(true,None,now),0);
+    assert_eq!(original_fec_tun_wait_ms(false,Some(MonoNs(1_000_000_000)),now),0);
+    assert_eq!(original_fec_tun_wait_ms(false,Some(MonoNs(1_000_900_000)),now),0);
+    assert_eq!(original_fec_tun_wait_ms(false,Some(MonoNs(1_004_500_000)),now),4);
+    assert_eq!(original_fec_tun_wait_ms(false,Some(MonoNs(1_010_000_000)),now),10);
+    assert_eq!(original_fec_tun_wait_ms(false,Some(MonoNs(1_100_000_000)),now),10);
+}
 fn loop_readiness(fd:i32,stop:&AtomicBool,timeout_ms:c_int)->bool{
     if stop.load(Ordering::Acquire){return false}
     let mut p=PollFd{fd,events:1,revents:0};
@@ -4973,12 +4997,36 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
                     last_cpu_sample=Instant::now();
                 }
+                // Snapshot actual FEC close / pending parity and authentic
+                // M2 deadlines BEFORE sleeping for TUN. Never hold Entry
+                // or feedback locks during poll; recalculate due after poll,
+                // including a deadline that became due during that wait.
+                #[cfg(feature="fec2_product_record")]
+                let (wait_ms,initial_due)={
+                    let now=loop_now();
+                    tx_cell.lock().ok().map_or((10,false),|e|{
+                        let queued=e.fec2_live_tx.as_ref().is_some_and(|s|
+                            s.report().queued_jobs>0);
+                        let fec_deadline=e.fec2_live_tx.as_ref()
+                            .and_then(|s|s.next_deadline());
+                        let feedback_deadline=if e.feedback_queued.is_none(){
+                            e.rx_feedback.as_ref().and_then(|f|
+                                f.lock().ok().and_then(|rx|rx.next_deadline()))
+                        }else{None};
+                        let earliest=fec_deadline.into_iter()
+                            .chain(feedback_deadline).min_by_key(|x|x.0);
+                        let wait=original_fec_tun_wait_ms(queued,earliest,now);
+                        (wait,queued||earliest.is_some_and(|d|d<=now))
+                    })
+                };
+                #[cfg(not(feature="fec2_product_record"))]
+                let (wait_ms,initial_due)=(10,false);
                 let tun_ready=if split_ingress {
                     !tx_pending.is_empty()||!jumbo_queue.is_empty()
-                }else{loop_readiness(tun_fd,&stop_tx,10)};
+                }else{loop_readiness(tun_fd,&stop_tx,wait_ms)};
                 #[cfg(feature="fec2_product_record")]
                 let (fec_due,feedback_due)=tx_cell.lock().ok().map_or(
-                    (false,false),|e|{
+                    (initial_due,false),|e|{
                         let now=loop_now();
                         let fec=e.fec2_live_tx.as_ref().is_some_and(|s|
                             s.report().queued_jobs>0 ||
