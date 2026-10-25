@@ -268,7 +268,7 @@ func TestF2ControlW52IntermittentActualKNoFakeCleanDown(t *testing.T) {
         if stage.misaligned {
             // Native closed k sources exceed 8s mature FIRST denominator;
             // keep it unknown, DO NOT clip counts to manufacture a window.
-            snap.ActualK[15]=376
+            snap.ActualK[15]=400 // +6.67% cohort mismatch must remain UNKNOWN (>5% bound)
         }
         before:=state
         next,intent,e:=FecV2Step(cfg,state,snap,now)
@@ -304,7 +304,7 @@ func TestF2ControlW52CensoredCapacityAndLongUnknownResetDownProof(t *testing.T) 
         {"feedback_lost",func(s *FecV2Snapshot){s.Validity=FecV2Unknown}},
         {"capacity",func(s *FecV2Snapshot){s.HostDrops=1}},
         {"censored",func(s *FecV2Snapshot){s.Validity=FecV2Censored}},
-        {"long_k_unknown",func(s *FecV2Snapshot){s.ActualK[15]=376}},
+        {"long_k_unknown",func(s *FecV2Snapshot){s.ActualK[15]=400}}, // >5% is truly invalid
     } {
         t.Run(fault.name,func(t *testing.T){
             state,_,e:=FecV2Step(cfg,FecV2State{},FecV2Snapshot{},0)
