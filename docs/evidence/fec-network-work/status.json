@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W34_MAXIMUM250_SAMEVM_A_B_BOTH_SCOPED_PASS_W32_HIGH_PSI_FAIL_HOST_VARIANCE_CAPACITY_STOP",
+  "phase": "W38_MIXED200_SMALL_TCP_AB_BOTH_FAIL_SOURCE_TUN_DROPS_HIGH_PSI_W39_SAFE_DIAG_RUNNING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -18,16 +18,16 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "e99a4afff3e9e55e3a11113ed30097e1789e86af",
-    "run_id": 40147815858,
+    "source": "861f0396264734f97658243156060f13e6a2f74f",
+    "run_id": 40150749260,
     "attempt": 1,
-    "artifact_id": 12580544395,
-    "sha256": "e1ec27312a833e03762a4b9bc6201ff143867b65a6dba02ce17a12a8bb9221eb",
+    "artifact_id": 12582379708,
+    "sha256": "5f9f587a4d1d44a3cf482c4c46a5be5b52cc71fdb4080935de153dc85f89f7e5",
     "platform": "aarch64",
     "policy": "outer-opportunistic-v3",
     "build_action": "SUCCESS",
     "native_fixed_auto_kernel_functional": "PASS_SCOPED",
-    "runtime_fec_only": "W34_FIXED_MAXIMUM250_AB_BOTH_SCOPED_PASS_LOWER_PSI_HOST_NO_STABLE_CAPACITY_CLAIM"
+    "runtime_fec_only": "W38_MIXED200_BOTH_FAIL_SMALL_UDP_AND_TCP_HIGH_PSI_NOT_QUALIFIED"
   },
   "open_requests": [
     {
@@ -411,9 +411,28 @@
       "source_A": "3b16e79698d33ef49628dfa8f67a47550438ebbc",
       "source_B": "e99a4afff3e9e55e3a11113ed30097e1789e86af",
       "result": "SUCCESS_BOTH_A_AND_B_PASS_SCOPED_OBSERVATION"
+    },
+    {
+      "id": "FEC-W38-Mixed200-SmallUDP-TCP-SchedulerWorkspace-SameVM-AB",
+      "path": "tests/network/fec-work/W38-maximum200-mixed-small-udp-tcp-deadline-sourceworkspace-AB-arm64.json",
+      "run_id": 40150988880,
+      "attempt": 1,
+      "result_artifact_id": 12583045399,
+      "artifact_sha256": "c90496f5f074082ac174de109d1830b3289f3f24d83ea61678e1df67d9cadb26",
+      "source_A": "e99a4afff3e9e55e3a11113ed30097e1789e86af",
+      "source_B": "861f0396264734f97658243156060f13e6a2f74f",
+      "result": "FAIL_BOTH_A_AND_B_NATIVE_BUSINESS_GATES"
+    },
+    {
+      "id": "FEC-W39-MixedSmall100-SparseProbe-Calibrate-OneNative-ARM64",
+      "path": "tests/network/fec-work/W39-mixed-small100-sparse-probe-diagnostic-arm64.json",
+      "run_id": 40151444036,
+      "source": "861f0396264734f97658243156060f13e6a2f74f",
+      "result": "PENDING_LOWER_RATE_DIAGNOSTIC_NOT_200_QUALIFICATION"
     }
   ],
   "open_issues": [
+    "W38 true 200Mbps/side count35%<=256B with two real TCP streams4% and UDP96% 30%IID/300ms sameVM A old e99a4 vs B scheduler+source workspace861f: BOTH FAIL 1% UDP/small gates and nonzero SOURCE TUN drops. A UDP loss13.3746/13.719%, small13.6155/14.0161%, TCP actual0.132/0.102 of8Mbps; B UDP loss5.5686/6.3371%, small5.4765/6.3845%, TCP actual0.386/0.238, huge real backpressure. Parity expiry A40824/42260, B14479/16998, CPU PSI mean A43.48 B56.57, peak B60.32. B sends more actual Parity and reduces miss but fails; NO 200 mixed capacity claim, STOP further high load. W39 separate lower 100Mbps safety diagnostic will read 64B sparse 20Hz actual first-arrival.",
     "W34 A W31 old/B W33 new on SAME VM 250Mbps/each 30%IID/300ms outer DATA0 both scoped PASS residual A0.0287/0.0310%, B0.0363/0.0313%, zero injector errors, Parity full (>99.998%) and almost zero expiry; CPU combined 55.62 ->55.41s/30s (-0.38% only, no stable CPU win). Host PSI W34 mean33.66/33.48 peak36.11/35.90 vs W32 OTHER VM old SAME SOURCE fails2.740/2.550% and injector send errors39/245, Parity deficit8.6%, PSI mean47.19 peak50.66! Host load variance is primary demonstrated factor; cannot attribute passing 250 to W33 nor declare stable 250 capacity. W33 source e99a4aff native fixed/auto real build PASS and global coefficient ref stack micro-opt. Do not test >250 on this 4core VM, capacity_stop true.",
     "W32 one frozen native ARM64 250Mbps/side Action40147431966 both FAIL delivered243.173/243.547Mbps residual2.740/2.550% p99 313.3ms; real injector SndbufErrors39/245 preclude attributing all loss FEC. Parity planned/sent client1382114/1263176, server1381771/1263279 (~8.6% deficit); expired5610/5587, unknown_capacity1116/1093, pressure_jobs/sources0; RX/TUN capacity drops0, outer DATA retrans0, kernel CPU PSI peak50.66% avg47.19. W33 new native code e99a4afff succeeded fixed/auto missing-source ARM64 build40147815858 and maximum row contract40147815849, sameVM W34 250 AB action40148014701 ongoing. Stop >250.",
     "W31 per-stream four Parity scratch row reuse source3b16e796 ARM64 build40146207152 FULL PASS and Maximum20 native. Same VM 220Mbps Action40146429352 overall FAILURE only A old INCONCLUSIVE because S2C two APP_SEND_ERRORS; A observed residual0.599/0.547%, B new PASS_SCOPED 0.323/0.353%, delivered219.322/219.244Mbps, p99 310.4/310.7. B parity deficits0.753/0.823% vs A1.584/1.519%; expiry424/463 vs889/864, no B source drops/RX reject/outer DATA retrans. But B CPU client30.95/server31.24s vs A30.97/30.87 (combined +0.35s), PSI B peak50.44! No CPU saving qualification, only observed parity/delivery improvement, single AB not long-run capacity. Do not escalate above220; next instrument TX cost.",
@@ -436,7 +455,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W34 sameVM 250Mbps old A W31/new B W33 both pass under substantially lower host PSI (~33.5% mean), while W32 identical W31 source 250 fails at PSI47.2% and has injector UDP send errors. W33 removes native ISA-L per-quantum borrowed view Vec and per-job BTreeMap, native backend and Fixed/Auto kernel real tests PASS, but measured -0.38% process CPU is not material. Do not claim 250 under host contention stable or escalate >250. Next optimize deterministic TX owner 10ms parity deadline under CPU scheduling contention by low-overhead timing of M3 per 4 rows, original M4 source-first remaining slot distribution and sendmmsg cost, then true same VM old/new high-load AB without weakening FEC or DATA retry. Independent Auto true dynamic M2 still open; merge_ready=false.",
+  "next_action": "W38 mixed 200Mbps packet-heavy real mixed UDP/TCP AB: both FAIL, original SOURCE TUN drops and TCP backpressure; B better parity and small loss but higher CPU PSI. Do not run further >100 mixed or imply 200 mixed passes; W39 separately probes 100Mbps safe same mix with genuine 64B sparse first-arrival. Next TX+reader phase instrumentation and actual age/bytes-aware M4 reserve must be proved against CPU/TUN drop before spinning more work; consider separate ingress only after single-thread starvation measurements, NOT speculative extra thread. Strict mixed UDP <=1% and small <=1%, 500ms small p99, zero source drops remain; outer DATA repairs OFF. Auto authentic dynamic still unqualified, main untouched, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -3284,6 +3303,252 @@
       "Process CPU combined A55.62/B55.41 CPU-s /30s, -0.38% one AB; do not claim causal material CPU optimization or higher capacity attributable to W33.",
       "Per-core prior W32 softirq balanced and CPU throttling0, no IRQ saturation evidence, but sender parity 10ms deadlines miss under host scheduling contention. Real high contention optimization should focus bounded M4 DATA/Parity slot control and TX per-phase timing, not blindly increase RX buffers.",
       "No load >250 on shared ARM64 while W32 has genuine high PSI FEC-only failed evidence, capacity_stop=true; merge_ready=false and Auto live dynamic still open."
+    ]
+  },
+  "w35": {
+    "source": "e2aeba7a8cd4dc480dff50e3904e8ebe10bea964",
+    "result": "PASS_REAL_NATIVE_ARM64_BUILD_40150502182",
+    "change": "reorder original FEC due check before TUN poll, wait <= nearest FEC/M2 deadline, idle max10ms",
+    "combined_product_source": "861f0396264734f97658243156060f13e6a2f74f"
+  },
+  "w36": {
+    "source": "861f0396264734f97658243156060f13e6a2f74f",
+    "build_run": 40150749260,
+    "product_artifact": 12582379708,
+    "zip_sha256": "5f9f587a4d1d44a3cf482c4c46a5be5b52cc71fdb4080935de153dc85f89f7e5",
+    "result": "PASS_NATIVE_ARM64_FIXED_AUTO_TUN_AND_MAXIMUM",
+    "change": "one source-symbol continuous allocation across FEC jobs reused only after real M4 definite-prefix settlement, zero tail and stop scrub"
+  },
+  "w38": {
+    "schema": 1,
+    "owner": "fec-network-work",
+    "id": "FEC-W38-Mixed200-SmallUDP-TCP-SchedulerWorkspace-SameVM-AB",
+    "request": "tests/network/fec-work/W38-maximum200-mixed-small-udp-tcp-deadline-sourceworkspace-AB-arm64.json",
+    "request_commit": "d6af29a5066c4cb662466586f7e21cd7a2e79395",
+    "run_id": 40150988880,
+    "attempt": 1,
+    "run_conclusion": "FAIL_BOTH_A_AND_B_NATIVE_BUSINESS_GATES",
+    "artifact_id": 12583045399,
+    "zip_sha256": "c90496f5f074082ac174de109d1830b3289f3f24d83ea61678e1df67d9cadb26",
+    "A": {
+      "source": "e99a4afff3e9e55e3a11113ed30097e1789e86af",
+      "build_run": 40147815858,
+      "artifact_id": 12580544395,
+      "result": "FAIL",
+      "c2s_udp": {
+        "target_mbps": 192,
+        "injected_mbps": 191.884,
+        "delivered_mbps": 166.859,
+        "residual_pct": 13.3746,
+        "first_p99_ms": 315.4
+      },
+      "s2c_udp": {
+        "target_mbps": 192,
+        "injected_mbps": 191.329,
+        "delivered_mbps": 165.813,
+        "residual_pct": 13.719,
+        "first_p99_ms": 315.3
+      },
+      "c2s_small_udp": {
+        "sent": 360500,
+        "delivered": 311416,
+        "loss_pct": 13.61553,
+        "p99_ms": 316.2,
+        "max_aligned_offered_zero_gap_ms": 0
+      },
+      "s2c_small_udp": {
+        "sent": 359450,
+        "delivered": 309069,
+        "loss_pct": 14.01614,
+        "p99_ms": 316.2,
+        "max_aligned_offered_zero_gap_ms": 0
+      },
+      "tcp_c2s": {
+        "target_mbps": 8,
+        "injected_mbps": 0.132,
+        "observed_backpressure_slots": 128144
+      },
+      "tcp_s2c": {
+        "target_mbps": 8,
+        "injected_mbps": 0.102,
+        "observed_backpressure_slots": 29443
+      },
+      "parity": {
+        "client": {
+          "planned": 1935490,
+          "sent": 1075756,
+          "expired_jobs": 40824,
+          "unknown_capacity": 5350
+        },
+        "server": {
+          "planned": 1932987,
+          "sent": 1042770,
+          "expired_jobs": 42260,
+          "unknown_capacity": 5604
+        }
+      },
+      "source_tun_tx_drops_steady": {
+        "client": 296,
+        "server": 0
+      },
+      "source_tun_tx_drops_warmup": {
+        "client": 0,
+        "server": 0
+      },
+      "host_cpu_psi": {
+        "mean_pct": 43.484,
+        "peak_pct": 46.31
+      },
+      "client_process_cpu_s_full_run": 43.65,
+      "server_process_cpu_s_full_run": 44.35,
+      "source_ingress": {
+        "client": 1546995,
+        "server": 1545022
+      }
+    },
+    "B": {
+      "source": "861f0396264734f97658243156060f13e6a2f74f",
+      "build_run": 40150749260,
+      "artifact_id": 12582379708,
+      "build_sha256": "5f9f587a4d1d44a3cf482c4c46a5be5b52cc71fdb4080935de153dc85f89f7e5",
+      "build": "PASS_ARM64_NATIVE_FIXED_AUTO_REAL_TUN_AND_ISAL",
+      "result": "FAIL",
+      "c2s_udp": {
+        "target_mbps": 192,
+        "injected_mbps": 190.259,
+        "delivered_mbps": 179.686,
+        "residual_pct": 5.5686,
+        "first_p99_ms": 319.9
+      },
+      "s2c_udp": {
+        "target_mbps": 192,
+        "injected_mbps": 190.762,
+        "delivered_mbps": 178.756,
+        "residual_pct": 6.3371,
+        "first_p99_ms": 320.7
+      },
+      "c2s_small_udp": {
+        "sent": 357473,
+        "delivered": 337896,
+        "loss_pct": 5.4765,
+        "p99_ms": 320.5,
+        "max_aligned_offered_zero_gap_ms": 0
+      },
+      "s2c_small_udp": {
+        "sent": 358400,
+        "delivered": 335518,
+        "loss_pct": 6.38449,
+        "p99_ms": 321.3,
+        "max_aligned_offered_zero_gap_ms": 10
+      },
+      "tcp_c2s": {
+        "target_mbps": 8,
+        "injected_mbps": 0.386,
+        "observed_backpressure_slots": 30404
+      },
+      "tcp_s2c": {
+        "target_mbps": 8,
+        "injected_mbps": 0.238,
+        "observed_backpressure_slots": 37524
+      },
+      "parity": {
+        "client": {
+          "planned": 1926712,
+          "sent": 1628512,
+          "expired_jobs": 14479,
+          "unknown_capacity": 1291,
+          "pressure_sources": 86
+        },
+        "server": {
+          "planned": 1928128,
+          "sent": 1577641,
+          "expired_jobs": 16998,
+          "unknown_capacity": 1480,
+          "pressure_sources": 24
+        }
+      },
+      "source_tun_tx_drops_steady": {
+        "client": 390,
+        "server": 1017
+      },
+      "source_tun_tx_drops_warmup": {
+        "client": 292,
+        "server": 492
+      },
+      "host_cpu_psi": {
+        "mean_pct": 56.568,
+        "peak_pct": 60.32
+      },
+      "client_process_cpu_s_full_run": 54.09,
+      "server_process_cpu_s_full_run": 54.68,
+      "source_ingress": {
+        "client": 1539611,
+        "server": 1540716
+      }
+    },
+    "traffic": {
+      "offered_mbps_each": 200,
+      "udp_share": 0.96,
+      "tcp_share": 0.04,
+      "tcp_flows_per_direction": 2,
+      "probe_hz": 20,
+      "payload_size_count_weights": [
+        [
+          64,
+          6
+        ],
+        [
+          96,
+          8
+        ],
+        [
+          160,
+          10
+        ],
+        [
+          256,
+          11
+        ],
+        [
+          512,
+          15
+        ],
+        [
+          900,
+          20
+        ],
+        [
+          1287,
+          30
+        ]
+      ],
+      "count_pct_small_le256": 35,
+      "mean_payload_bytes": 698.58,
+      "loss_iid_pct": 30,
+      "oneway_delay_ms": 300,
+      "outer_netem_rate_mbps_each": 600,
+      "original_fq600": true,
+      "static_owned_veth_neighbors": true,
+      "fixed_maximum_both_applied": true,
+      "outer_DATA_retransmission_count": 0,
+      "warmup_s": 15,
+      "measure_s": 30,
+      "drain_s": 30,
+      "small_udp_gates": {
+        "residual_loss_pct_max": 1,
+        "p99_first_arrival_ms_max": 500
+      },
+      "other_udp_loss_pct_max": 1,
+      "one_direction_tcp_target_mbps": 8
+    },
+    "findings": [
+      "THIS NEW PACKET MIX IS A MUCH HIGHER PACKETS/S REAL LOAD THAN 99% 1287B historic benchmark; lower Mbps is not lower CPU.",
+      "Both old and new FAIL declared UDP all-size <=1%, small UDP <=1%, and original source TUN zero drop. Both have severe genuine TCP backpressure, hence cannot claim 200Mbps full mixed capacity.",
+      "B reduces native parity queued expired jobs40824/42260 to14479/16998 and small UDP loss13.62/14.02% to5.48/6.38%, but also increases actual Parity sent (1.07/1.04m to1.63/1.58m), host CPU PSI 43.48%->56.57%. This AB combines scheduling-before-10ms-poll and contiguous source reuse, cannot allocate contribution/causality between patches.",
+      "Actual 64B 20Hz sparse probes did traverse product but W38 artifact has existing real RTT echo only; W39 FEC harness extension captures genuine receiving-side first arrival separately.",
+      "Native RX rejected_capacity and evicted_pressure both 0; real outer DATA repair0; all original Stop cleanup true; source TUN drops/nonzero and TCP injector backpressure are disqualifying, not hidden.",
+      "Short-block FEC / high packet counts over 4 CPU under 30% underlay and 600ms RTT trigger contention and source starvation even though formerly 250Mbps near-MTU passed; CPU quotas and single-core IRQ saturation not evidenced. No higher rate, capacity_stop true.",
+      "Independent role-specific Original Normal/off TUN split ingress exists but Fixed/Auto was not switched because would add 512-item channel and concurrent CPU load with no measured waiting-benefit; defer to measured phase-timing research."
     ]
   }
 }
