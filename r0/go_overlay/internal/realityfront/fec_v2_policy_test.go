@@ -397,7 +397,7 @@ func TestF2ControlW56RealLowCanDownWithSmallKOverhang(t *testing.T) {
         snap:=f2Snapshot("k-skew",FecV2C2S,at,10,60)
         snap.ActualK[15]=386 // original native close-vs-M2 skew, within bound
         previous:=state
-        state,intent,e:=FecV2Step(cfg,state,snap,at)
+        next,intent,e:=FecV2Step(cfg,state,snap,at)
         if e!=nil||intent.Validity!=FecV2Valid{
             t.Fatalf("bounded authentic k window rejected at %ds: %+v %v",sec,intent,e)
         }
@@ -407,6 +407,7 @@ func TestF2ControlW56RealLowCanDownWithSmallKOverhang(t *testing.T) {
             }
             downs++
         }
+        state=next
     }
     if downs!=1 ||state.Desired!=FecV2Strong {
         t.Fatalf("no legitimate gradual W56 DOWN: downs=%d state=%+v",downs,state)
