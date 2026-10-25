@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "phase": "COMPLETE_SCOPED_NATIVE_FLOWSTART_NO_SYNTH_RETX_2_ARCH_PCAP_AND_GO_BENCH_PASS_NOT_PRODUCT",
+  "branch": "experiment/lan-flowstart-no-synth-retrans",
+  "base": {
+    "branch": "experiment/lan-gated-boundary-pad",
+    "sha": "a992565780c85bb1dad2fa9d8f939ff0e63989f4"
+  },
+  "report": "docs/evidence/lan-flowstart-no-synth-retrans/FINAL_REPORT.md",
+  "main_modified": false,
+  "production_wired": false,
+  "merge_ready": false,
+  "synthetic_handshake_retransmission_off_test": true,
+  "real_linux_TCP_retransmission_disabled": false,
+  "hold_timer_origin": "first_inner_SYN_sent_to_tunnel",
+  "random_hold_target_range_ms": [
+    11000,
+    21000
+  ],
+  "admission": "trusted_offline_TLS13_eligible_label AND observed_finished AND original_source_TCP_seq_boundary AND now>=start_plus_hold",
+  "real_production_TLS13_classifier_implemented": false,
+  "record_modes": "visible 5B header + one clear 0_AES_GCM or 1_public_PN_XOR + 8B PN; AES AAD auth header; receiver requires independent trusted policy; no authentic XOR admission mechanism in product",
+  "padding": "only labelled lifecycle AES, crypto random <=256B, inner IPv4 TotalLength preserved, no fill on ordinary/fast, physical MTU1500 cap tested with actual IPv4 packet capture",
+  "results": {
+    "x86_64": {
+      "run_id": 40192615875,
+      "job_id": 121166657682,
+      "checkout": "8e8ad79abf8e931d0c20509d24294b53e9b70ab3",
+      "conclusion": "success",
+      "artifact_id": 12598895626,
+      "artifact_sha256": "ea0eb6d5b05bdc43e4b1e4657c1437c91ac5b96fb83405af33c731d9d97e6ab3",
+      "manual_retrans_2": {
+        "records": 28,
+        "aes": 23,
+        "xor": 5,
+        "padded_boundary": 13,
+        "ordinary_plus_fast_unpadded": 14,
+        "mtu_full_unpadded": 1,
+        "handshake_duplicate_wire_bytes": 1406,
+        "flowstart_first_xor_ms": 15741.141,
+        "hold_selected_ms": 15708,
+        "synthetic_flow_benchmark_ns_mean": 65566.33333333333,
+        "synthetic_flow_benchmark_ns_samples": [
+          62288,
+          64988,
+          69423
+        ]
+      },
+      "manual_retrans_0": {
+        "records": 26,
+        "aes": 21,
+        "xor": 5,
+        "padded_boundary": 11,
+        "ordinary_plus_fast_unpadded": 14,
+        "mtu_full_unpadded": 1,
+        "flowstart_first_xor_ms": 15630.784,
+        "hold_selected_ms": 15598,
+        "synthetic_flow_benchmark_ns_mean": 64624.333333333336,
+        "synthetic_flow_benchmark_ns_samples": [
+          64013,
+          64164,
+          65696
+        ]
+      },
+      "wall_time_saving_percent": 1.4367129471934192,
+      "go_heap_alloc_saved_per_flow_bytes_approx": 4567,
+      "go_alloc_calls_saved_per_flow": 10,
+      "max_actual_outgoing_ipv4_packet_size_bytes": 1500
+    },
+    "arm64": {
+      "run_id": 40192618992,
+      "job_id": 121166667161,
+      "checkout": "fe02d035ddd65cfdceddf84f7a5756822e821767",
+      "conclusion": "success",
+      "artifact_id": 12598806919,
+      "artifact_sha256": "07b5da59f36bd297dd8e5494712c95d1be078720b1a591af5f4cce756a99a38c",
+      "manual_retrans_2": {
+        "records": 28,
+        "aes": 23,
+        "xor": 5,
+        "padded_boundary": 13,
+        "ordinary_plus_fast_unpadded": 14,
+        "mtu_full_unpadded": 1,
+        "handshake_duplicate_wire_bytes": 1439,
+        "flowstart_first_xor_ms": 18766.913,
+        "hold_selected_ms": 18737,
+        "synthetic_flow_benchmark_ns_mean": 124744,
+        "synthetic_flow_benchmark_ns_samples": [
+          124059,
+          125834,
+          124339
+        ]
+      },
+      "manual_retrans_0": {
+        "records": 26,
+        "aes": 21,
+        "xor": 5,
+        "padded_boundary": 11,
+        "ordinary_plus_fast_unpadded": 14,
+        "mtu_full_unpadded": 1,
+        "flowstart_first_xor_ms": 14583.088,
+        "hold_selected_ms": 14550,
+        "synthetic_flow_benchmark_ns_mean": 122476,
+        "synthetic_flow_benchmark_ns_samples": [
+          122628,
+          122409,
+          122391
+        ]
+      },
+      "wall_time_saving_percent": 1.818123516962744,
+      "go_heap_alloc_saved_per_flow_bytes_approx": 4563,
+      "go_alloc_calls_saved_per_flow": 10,
+      "max_actual_outgoing_ipv4_packet_size_bytes": 1500
+    }
+  },
+  "limitations": [
+    "removed deliberately injected synthetic handshake repeats, not actual kernel TCP retransmissions",
+    "Go crypto AES128GCM loopback fixture is NOT production WBD Rust wire",
+    "trusted offline TLS1.3 application labels; no live classifier, independent authenticated fast permission or XOR MAC",
+    "repeat benchmarks are elapsed wall time in Go fixture not WBD full product CPU or throughput",
+    "XOR body totally reversible, unauthenticated and replayable",
+    "real TCP transport loss/RTT/IPv6/path MTU not tested"
+  ],
+  "open_requests": [],
+  "next_action": "NONE_SCOPED_BENCH_COMPLETE; KEEP ISOLATED; DO_NOT_DISABLE_TCP_RETRANSMISSION_OR_MERGE_INSECURE_MODE"
+}
