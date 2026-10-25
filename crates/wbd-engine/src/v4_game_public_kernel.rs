@@ -55,8 +55,17 @@ impl GameKernelOwner{
         for _ in 0..n{
             tx.push(Arc::new(ScopedRawIpv4Tx::open(ifname,ifindex,generation)
                 .map_err(|_|())?));
-            rx.push(Arc::new(ScopedRawIpv4Rx::open(ifname,ifindex,generation)
-                .map_err(|_|())?));
+            let f=flows[i];
+            let (src,dst,sp,dp)=if server{
+                (f.client_ip,f.server_ip,f.client_port,f.server_port)
+            }else{
+                (f.server_ip,f.client_ip,f.server_port,f.client_port)
+            };
+            let exact_rx=Ipv4Tuple{
+                src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp
+            };
+            rx.push(Arc::new(ScopedRawIpv4Rx::open_exact_tuple(
+                ifname,ifindex,generation,exact_rx).map_err(|_|())?));
         }
         let stop=Arc::new(AtomicBool::new(false));
         let copied=Arc::new(AtomicU64::new(0));
