@@ -5998,6 +5998,17 @@
     "capacity_stop": true,
     "rollback_build_artifact_id": 12605274526,
     "rollback_build_zip_sha256": "ba846bca14a07f8bcfdefef423151b9075a05c4cfa2fad49332c22c6ab83a591",
-    "rollback_maximum_contract_result": "SUCCESS"
+    "rollback_maximum_contract_result": "SUCCESS",
+    "post_rollback_followup": {
+      "commit": "19942fab71b1b84d5caa31254e9c3d60a36d8366",
+      "scope": "Subsequent same-branch W91 Game OFF receiver error category attribution; preserves rollback's removal of public Game+FEC; do not overwrite this external follow-up.",
+      "modified_paths": [
+        "crates/wbd-engine/src/v4_game_lane.rs",
+        "crates/wbd-engine/src/v4_game_public_kernel.rs"
+      ],
+      "native_linux_validation": "NOT_YET_ATTESTED_ON_W91_COMMIT; rollback build 40211941478 was for b5052654 BEFORE W91",
+      "strict_rollback_correct_at_commit": "b5052654975b4c3aa33fdabcb90d0e0803768315 exactly restored 15 baseline blobs; current branch later intentionally diverged at 2 files via W91",
+      "W90_game_fec_product_public": "UNSUPPORTED_AFTER_ROLLBACK"
+    }
   }
 }
