@@ -28,12 +28,12 @@ pub(crate) struct GameReceiveOwner{
     arena:Arena,stopped:bool,inner_mtu:usize,
 }
 impl GameReceiveOwner{
-    pub(crate) fn receive(&mut self,lane_key:LaneKey,mut wire:Vec<u8>)
+    pub(crate) fn receive(&mut self,lane_key:LaneKey,wire:&mut [u8])
         ->Result<Option<Vec<u8>>,Error>{
         if self.stopped{return Err(Error::Stopped)}
         let lane=self.lanes.iter_mut().find(|l|l.key==lane_key)
             .ok_or(Error::Unauthorized)?;
-        let opened=lane.rx.open_unique_in_place(&mut wire).map_err(|e|match e{
+        let opened=lane.rx.open_unique_in_place(wire).map_err(|e|match e{
             UniqueOpenError::InvalidRecord(CryptoError::Authentication)=>Error::Crypto,
             UniqueOpenError::InvalidRecord(_)=>Error::Invalid,
             UniqueOpenError::Duplicate=>Error::Duplicate,
@@ -43,6 +43,13 @@ impl GameReceiveOwner{
         let (id,payload)=wbd_codec::decode_game(opened.payload,self.inner_mtu+16)
             .map_err(|_|Error::Invalid)?;
         if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
+        // Reject an authenticated cross-lane duplicate BEFORE acquiring/copying
+        // another arena slab. Recheck and commit only after slab allocation.
+        match self.rx.first_delivery_candidate(self.rx_scope,lane_key,id){
+            Ok(true)=>{},
+            Ok(false)=>return Ok(None),
+            Err(e)=>return Err(Error::Game(e)),
+        }
         let mut owned=self.arena.allocate().map_err(|_|Error::Capacity)?;
         owned.writable()[14..14+payload.len()].copy_from_slice(payload);
         match self.rx.first_delivery(self.rx_scope,lane_key,id,owned){
@@ -59,6 +66,7 @@ impl GameReceiveOwner{
 pub struct GameAdapter{
     tx:GameTx,rx_owner:Arc<Mutex<GameReceiveOwner>>,
     lanes:Vec<TxLane>,arena:Arena,stopped:bool,inner_mtu:usize,
+    wire_scratch:[u8;2048],
 }
 impl GameAdapter{
     /// Caller MUST independently check Go TLS feature, KDF, lane owner and
@@ -115,7 +123,8 @@ impl GameAdapter{
         let rx_owner=Arc::new(Mutex::new(GameReceiveOwner{
             rx,rx_scope,lanes:rx_lanes,arena:rx_arena,stopped:false,inner_mtu
         }));
-        Ok(Self{tx,rx_owner,lanes,arena,stopped:false,inner_mtu})
+        Ok(Self{tx,rx_owner,lanes,arena,stopped:false,inner_mtu,
+            wire_scratch:[0u8;2048]})
     }
     /// The only prospective Go TLS→Game adapter construction boundary.
     /// The Go caller MUST have run its private 2/4 original TLS ColdSnapshot
@@ -215,14 +224,21 @@ impl GameAdapter{
     where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
         if self.stopped{return 0}
         let lanes=&mut self.lanes;
+        let scratch=&mut self.wire_scratch;
         self.tx.drain_ready(now,32,|view|{
             let Some(id)=view.logical_id else{return DispatchOutcome::PressureDrop};
             let Some(lane)=lanes.iter_mut().find(|l|l.key==view.lane)
             else{return DispatchOutcome::PressureDrop};
             let len=view.common_payload.len();
-            let mut wire=vec![0u8;31+len];
+            let Some(end)=31usize.checked_add(len)else{
+                return DispatchOutcome::PressureDrop
+            };
+            if end>scratch.len(){return DispatchOutcome::PressureDrop}
+            // Final synchronous record is resealed per lane with independent
+            // PN/key; scratch cannot outlive kernel_copy's successful return.
+            let wire=&mut scratch[..end];
             wire[14..14+len].copy_from_slice(view.common_payload);
-            let Ok((pn,n))=lane.tx.seal_in_place(1,&mut wire,len,0)
+            let Ok((pn,n))=lane.tx.seal_in_place(1,wire,len,0)
             else{return DispatchOutcome::PressureDrop};
             if kernel_copy(view.lane,id,pn,&wire[..n]){
                 DispatchOutcome::Accepted
@@ -231,10 +247,11 @@ impl GameAdapter{
     }
     /// Synchronous adapter callers preserve the original API. The Linux
     /// worker instead keeps the RX handle once and NEVER takes TX mutex.
-    pub fn receive(&mut self,lane_key:LaneKey,wire:Vec<u8>)
+    pub fn receive(&mut self,lane_key:LaneKey,mut wire:Vec<u8>)
         ->Result<Option<Vec<u8>>,Error>{
         if self.stopped{return Err(Error::Stopped)}
-        self.rx_owner.lock().map_err(|_|Error::Stopped)?.receive(lane_key,wire)
+        self.rx_owner.lock().map_err(|_|Error::Stopped)?
+            .receive(lane_key,wire.as_mut_slice())
     }
     pub fn stop(&mut self){
         if self.stopped{return}
@@ -260,6 +277,27 @@ mod tests{
         }).collect(),RecordSuite::ChaCha20Poly1305).unwrap()
     }
     #[test]
+    fn game_reused_tx_scratch_mixed_lengths_across_lanes_and_rx_duplicate_precheck(){
+        let mut sender=build(4);
+        let mut receiver=build(4);
+        for (step,len) in [128usize,1260,77,1200,60,1300].iter().enumerate(){
+            let payload=vec![(step+11) as u8;*len];
+            let now=MonoNs((step as u64)*20);
+            sender.offer(&payload,now).unwrap();
+            let mut wires=Vec::new();
+            let written=sender.drain(MonoNs(now.0+1),|lane,_,_,wire|{
+                wires.push((lane,wire.to_vec()));true
+            });
+            assert_eq!(written,4);
+            let mut delivered=Vec::new();
+            for (lane,wire) in wires{
+                if let Some(data)=receiver.receive(lane,wire).unwrap(){delivered.push(data)}
+            }
+            assert_eq!(delivered,vec![payload]);
+        }
+        sender.stop();receiver.stop();
+    }
+    #[test]
     fn game_receive_owner_progress_while_tx_adapter_lock_held(){
         use std::sync::mpsc;
         use std::time::Duration;
@@ -269,13 +307,13 @@ mod tests{
         game.drain(MonoNs(1),|lane,_,_,wire|{
             copies.push((lane,wire.to_vec()));true
         });
-        let (lane,wire)=copies.remove(0);
+        let (lane,mut wire)=copies.remove(0);
         let rx=game.receiver_handle();
         let game=Arc::new(Mutex::new(game));
         let hold_tx=game.lock().unwrap();
         let (tx,ch)=mpsc::channel();
         let worker=std::thread::spawn(move||{
-            let result=rx.lock().unwrap().receive(lane,wire);
+            let result=rx.lock().unwrap().receive(lane,wire.as_mut_slice());
             tx.send(result).unwrap();
         });
         // Receive while TX lock is STILL held: do not create a deadlock

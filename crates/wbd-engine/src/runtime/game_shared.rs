@@ -405,6 +405,19 @@ impl GameRx{
             self.head=(self.head+shift)%width;
         }
     }
+    /// Read-only early duplicate/stale test AFTER per-lane AEAD and Game
+    /// header decoding. Does NOT mark a packet as delivered; capacity failure
+    /// must not evict the window or suppress another lane's valid first copy.
+    pub fn first_delivery_candidate(&self,scope:GameScope,lane:LaneKey,
+        id:LogicalPacketId)->Result<bool,GameError>{
+        self.validate(scope,lane)?;
+        if id.0<self.base{return Err(GameError::Stale)}
+        let width=self.limit.delivered_window;
+        let delta=id.0-self.base;
+        if delta>=width as u64{return Ok(true)}
+        let position=(self.head+delta as usize)%width;
+        Ok(self.delivered[position/64]&(1u64<<(position%64))==0)
+    }
     /// Consumes only M0/M3-authenticated and decoded/reassembled results.
     /// Shared logical PacketID dedup across lanes and recovered candidates.
     /// Older-than-window IDs are refused rather than accidentally redelivered.

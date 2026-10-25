@@ -231,7 +231,9 @@ impl GameKernelOwner{
                     let received={
                         let Ok(mut receiver)=receiver_owner.lock()else{break};
                         rx_held.fetch_add(1,Ordering::Relaxed);
-                        receiver.receive(lane,wire[..len].to_vec())
+                        // In-place authenticated record; original 2048B RX
+                        // scratch remains exclusively held until output is owned.
+                        receiver.receive(lane,&mut wire[..len])
                     };
                     match received{
                         Ok(Some(plaintext))=>{
