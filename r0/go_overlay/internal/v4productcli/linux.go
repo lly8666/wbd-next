@@ -526,9 +526,11 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                 firstCensored,coverCensored:=0,0
                 if proof.FirstCensored{firstCensored=1}
                 if proof.CoverageCensored{coverCensored=1}
-                log.Printf("V4_PUBLIC_FEC2_M2_PROOF role=client accepted=%d not_sent=%d uncertain=%d unknown_2s=%d unknown_8s=%d covered_2s=%d covered_8s=%d reverse_reports=%d first_censored=%d cover_censored=%d",
+                log.Printf("V4_PUBLIC_FEC2_M2_PROOF role=client accepted=%d not_sent=%d uncertain=%d unknown_2s=%d unknown_8s=%d covered_2s=%d covered_8s=%d reverse_reports=%d first_censored=%d cover_censored=%d positive_lag_ns=%d positive_samples=%d positive_mean_us=%d positive_mean_known=%t",
                     proof.Accepted,proof.NotSent,proof.Uncertain,proof.Unknown2s,proof.Unknown8s,
-                    proof.Covered2s,proof.Covered8s,proof.ReverseReports,firstCensored,coverCensored)
+                    proof.Covered2s,proof.Covered8s,proof.ReverseReports,firstCensored,coverCensored,
+                    proof.PositiveConfirmationLagNs,proof.PositiveConfirmationSamples,
+                    proof.PositiveConfirmationMeanUs,proof.PositiveConfirmationMeanKnown)
             }
     }
     closeErr:=native.Close()
@@ -668,9 +670,11 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                 firstCensored,coverCensored:=0,0
                 if proof.FirstCensored{firstCensored=1}
                 if proof.CoverageCensored{coverCensored=1}
-                log.Printf("V4_PUBLIC_FEC2_M2_PROOF role=server accepted=%d not_sent=%d uncertain=%d unknown_2s=%d unknown_8s=%d covered_2s=%d covered_8s=%d reverse_reports=%d first_censored=%d cover_censored=%d",
+                log.Printf("V4_PUBLIC_FEC2_M2_PROOF role=server accepted=%d not_sent=%d uncertain=%d unknown_2s=%d unknown_8s=%d covered_2s=%d covered_8s=%d reverse_reports=%d first_censored=%d cover_censored=%d positive_lag_ns=%d positive_samples=%d positive_mean_us=%d positive_mean_known=%t",
                     proof.Accepted,proof.NotSent,proof.Uncertain,proof.Unknown2s,proof.Unknown8s,
-                    proof.Covered2s,proof.Covered8s,proof.ReverseReports,firstCensored,coverCensored)
+                    proof.Covered2s,proof.Covered8s,proof.ReverseReports,firstCensored,coverCensored,
+                    proof.PositiveConfirmationLagNs,proof.PositiveConfirmationSamples,
+                    proof.PositiveConfirmationMeanUs,proof.PositiveConfirmationMeanKnown)
             }
         }
         closeErr:=product.Close()

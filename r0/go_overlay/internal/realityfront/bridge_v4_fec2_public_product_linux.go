@@ -25,6 +25,20 @@ type V4PublicFecM2Proof struct {
     Accepted,NotSent,Uncertain,Unknown2s,Unknown8s uint64
     Covered2s,Covered8s,ReverseReports uint64
     FirstCensored,CoverageCensored bool
+    // Actual original M4 FIRST DATA + same-generation authenticated
+    // reverse M2 positive receipt age, accumulated by the native 8s
+    // mature window. Not an outer-repair shadow RTT or one-way delay.
+    PositiveConfirmationLagNs,PositiveConfirmationSamples uint64
+    PositiveConfirmationMeanUs uint64
+    PositiveConfirmationMeanKnown bool
+}
+// Exactly the same raw native 30-field snapshot already used by FEC Auto.
+// Avoid a second M2 state, new feedback packet, per-packet callback, or
+// guessed default RTT when there are no real unambiguous positives.
+func v4Fec2PositiveConfirmation(raw [30]uint64)(uint64,uint64,uint64,bool){
+    lag,samples:=raw[12],raw[13]
+    if samples==0{return lag,0,0,false}
+    return lag,samples,lag/samples/1000,true
 }
 func v4ReadOriginalFecM2Proof(b *v4EmbeddedNativeBridge)(V4PublicFecM2Proof,error){
     var zero V4PublicFecM2Proof
@@ -32,6 +46,11 @@ func v4ReadOriginalFecM2Proof(b *v4EmbeddedNativeBridge)(V4PublicFecM2Proof,erro
     if err!=nil{return zero,err}
     coverage,err:=b.rustOwnerNormalM2Coverage()
     if err!=nil{return zero,err}
+    // This native ABI only exists for an authenticated feature7 FEC
+    // owner; failure must remain unavailable, never a fake 0ms mean.
+    quality,err:=b.rustOwnerFec2MatureQuality()
+    if err!=nil{return zero,err}
+    lag,samples,mean,known:=v4Fec2PositiveConfirmation(quality)
     return V4PublicFecM2Proof{
         Accepted:first.Accepted,NotSent:first.DefinitelyNotSent,
         Uncertain:first.Uncertain,Unknown2s:first.Unknown2s,
@@ -39,6 +58,8 @@ func v4ReadOriginalFecM2Proof(b *v4EmbeddedNativeBridge)(V4PublicFecM2Proof,erro
         Covered8s:coverage.Covered8s,
         ReverseReports:coverage.AuthenticatedReverseReports,
         FirstCensored:first.Censored,CoverageCensored:coverage.Censored,
+        PositiveConfirmationLagNs:lag,PositiveConfirmationSamples:samples,
+        PositiveConfirmationMeanUs:mean,PositiveConfirmationMeanKnown:known,
     },nil
 }
 
