@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "id": "FEC-W32-Maximum250-W31Scratch-Fixed-OuterOff-ARM64",
+  "owner": "fec-network-work",
+  "seed": 8250,
+  "policy": "outer-opportunistic-v3",
+  "product": {
+    "mode": "fec-fixed",
+    "fec_profile": 6,
+    "repair_enabled": false
+  },
+  "traffic": {
+    "c2s_mbps": 250,
+    "s2c_mbps": 250,
+    "udp_share": 1,
+    "sizes": [
+      [
+        64,
+        1
+      ],
+      [
+        1287,
+        99
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "deadline_ms": 5000,
+    "burst_ms": 0,
+    "max_packets": 5000000,
+    "allow_fragmentation": false
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "shared",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded",
+    "fec_egress_diagnostic": false,
+    "owned_veth_static_neighbour": true
+  },
+  "warmup_s": 15,
+  "drain_s": 30,
+  "phases": [
+    {
+      "name": "capacity_250",
+      "seconds": 30,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 300,
+        "loss_pct": 30,
+        "rate_mbps": 600
+      },
+      "s2c": {
+        "delay_ms": 300,
+        "loss_pct": 30,
+        "rate_mbps": 600
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false,
+    "max_loss_pct": 1,
+    "require_zero_source_tun_drops_full_run": true,
+    "require_zero_tun_root_qdisc_drops_full_run": true
+  },
+  "bundles": {
+    "A": {
+      "source": "3b16e79698d33ef49628dfa8f67a47550438ebbc",
+      "run_id": 40146207152,
+      "attempt": 1,
+      "artifact_id": 12580177860,
+      "sha256": "69c14dbc1f3a65040c7013844c02d6af036b4a238c6d78262f6edc65d891b30f",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false
+    }
+  },
+  "order": "A"
+}
