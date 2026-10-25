@@ -1,0 +1,57 @@
+name: LAN XOR x64 native same-VM CPU comparison
+on:
+  push:
+    branches: [experiment/lan-xor-tlslike]
+    paths: [".github/workflows/lan-xor-perf-x64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: lan-xor-perf-x64
+  cancel-in-progress: false
+jobs:
+  native-cpu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Build release exact-source benchmark and verify LAN codec
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "x86_64"
+          mkdir -p lan-xor-perf-report
+          rustup toolchain install 1.85.1 --profile minimal
+          rustc +1.85.1 --edition=2021 --test -C opt-level=2 \
+            tools/lan_xor_tlslike_lab.rs -o /tmp/lan_xor_tests
+          /tmp/lan_xor_tests --nocapture | tee lan-xor-perf-report/unit-tests.txt
+          cargo +1.85.1 build --release --locked -p wbd-codec --example lan_xor_record_cost
+          test -x target/release/examples/lan_xor_record_cost
+          sha256sum target/release/examples/lan_xor_record_cost > lan-xor-perf-report/binary.sha256
+          {
+            echo "SOURCE=$GITHUB_SHA"
+            echo "RUN_ID=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "TARGET=$(uname -m)"
+            echo "RUST=$(rustc +1.85.1 --version)"
+            echo "LOCK_SHA256=$(sha256sum Cargo.lock | awk '{print $1}')"
+            echo "BENCH=single-host-symmetric-reusable-buffer-packet1345-seal-and-open"
+            echo "BENCH_UNIT=thread_cpu_ns_per_inner_byte"
+            echo "MODELS=aes128gcm chacha20poly1305 fixed_xor rolling_xor clear"
+            echo "NOTE=not actual WBD product or TUN"
+          } > lan-xor-perf-report/manifest.txt
+          lscpu > lan-xor-perf-report/host_cpu.txt
+      - name: Six-second paired same-VM five-mode release cost with preflight equivalence
+        shell: bash
+        run: |
+          set -euo pipefail
+          target/release/examples/lan_xor_record_cost 6 | tee lan-xor-perf-report/legs.jsonl
+          python3 tools/lan_xor_perf_analyze.py \
+            --input lan-xor-perf-report/legs.jsonl \
+            --output lan-xor-perf-report/summary.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-xor-x64-cpu-paired
+          path: lan-xor-perf-report/
+          if-no-files-found: warn
+          retention-days: 30
