@@ -22,6 +22,14 @@ from pathlib import Path
 HEADER = struct.Struct("!4sBBHQQII")  # magic, version, kind, phase, seq, sent_ns, size, CRC
 MAGIC = b"WBN1"
 UDP, PROBE, ECHO, TCP = 0, 1, 2, 3
+SIZE_CLASSES = ("small_64_256", "medium_257_899", "large_900_plus")
+
+def size_class(size):
+    return SIZE_CLASSES[0 if size<=256 else (1 if size<900 else 2)]
+
+def fresh_size_stat():
+    return {"tx_packets":0,"tx_bytes":0,"rx_packets":0,"rx_bytes":0,
+            "late":0,"latency":Histogram(),"send_lag":Histogram()}
 
 
 class Histogram:
@@ -84,6 +92,10 @@ class Worker:
         self.end_ns = self.ends[-1]
         self.stats = {proto: [fresh_stats() for _ in self.phases] for proto in ["udp", "tcp"]}
         t = config["traffic"]
+        self.observe_sizes=t.get("observe_size_classes",False)
+        self.size_stats=({p:[{band:fresh_size_stat() for band in SIZE_CLASSES}
+                             for _ in self.phases] for p in ("udp","tcp")}
+                         if self.observe_sizes else {})
         self.cycle = [size for size, weight in t["sizes"] for _ in range(weight)]
         self.body = bodies(set(self.cycle) | {64}, config["seed"])
         self.seq = {"udp": 0, "tcp": 0}
@@ -94,6 +106,8 @@ class Worker:
         self.rx_bins = {p: array.array("I", [0]) * count for p in self.seq}
         self.tx_byte_bins = {p: array.array("I", [0]) * count for p in self.seq}
         self.rx_byte_bins = {p: array.array("I", [0]) * count for p in self.seq}
+        self.small_udp_tx_bins=(array.array("I",[0])*count if self.observe_sizes else None)
+        self.small_udp_rx_bins=(array.array("I",[0])*count if self.observe_sizes else None)
         # Opt-in bounded per-TCP-socket evidence: independent framed
         # business streams (not just an aggregate "TCP" histogram).
         # Keep the established global seq+CRC integrity and no per-frame IO.
@@ -218,6 +232,12 @@ class Worker:
         bucket = self.bucket(now)
         self.tx_bins[proto][bucket] += 1
         self.tx_byte_bins[proto][bucket] += size
+        if self.observe_sizes:
+            cls=self.size_stats[proto][phase][size_class(size)]
+            cls["tx_packets"]+=1
+            cls["tx_bytes"]+=size
+            if proto=="udp" and size<=256:
+                self.small_udp_tx_bins[bucket]+=1
         if proto=="tcp" and self.observe_independent:
             if flow_index is None or not 0 <= flow_index < len(self.tcp_flow_tx_bins):
                 raise ValueError("TCP flow identity not observed at send")
@@ -269,6 +289,14 @@ class Worker:
         bucket = self.bucket(now)
         self.rx_bins[proto][bucket] += 1
         self.rx_byte_bins[proto][bucket] += size
+        if self.observe_sizes:
+            cls=self.size_stats[proto][phase][size_class(size)]
+            cls["rx_packets"]+=1
+            cls["rx_bytes"]+=size
+            cls["latency"].add(delay)
+            cls["late"]+=int(delay>self.config["traffic"]["deadline_ms"])
+            if proto=="udp" and size<=256:
+                self.small_udp_rx_bins[bucket]+=1
         if proto=="tcp" and self.observe_independent:
             if flow_index is None or not 0 <= flow_index < len(self.tcp_flow_rx_bins):
                 raise ValueError("TCP flow identity not observed at receive")
@@ -387,6 +415,9 @@ class Worker:
                         st = self.stats[proto][phase]
                         st["scheduled"] += 1
                         st["send_lag"].add(max(0, now - due[proto]) / 1e6)
+                        if self.observe_sizes:
+                            self.size_stats[proto][phase][size_class(size)]["send_lag"].add(
+                                max(0,now-due[proto])/1e6)
                         interval = size / bps * 1e9
                         due[proto] += max(1, int(interval))
                         data = self.packet(UDP if proto == "udp" else TCP, phase, seq, size, now)
@@ -428,6 +459,17 @@ class Worker:
                   "socket_drops": self.socket_drops, "effective_buffers": self.effective_buffers,
                   "errors": self.errors, "capacity_exceeded": self.capacity_exceeded,
                   "tcp_pending_at_deadline": len(self.pending)}
+        if self.observe_sizes:
+            result["size_classes"]={
+                proto:[{band:{key:(value.result() if isinstance(value,Histogram) else value)
+                                for key,value in metrics.items()}
+                        for band,metrics in phase.items()}
+                       for phase in phases]
+                for proto,phases in self.size_stats.items()
+            }
+            result["small_udp_tx_bins_10ms"]=self.small_udp_tx_bins
+            result["small_udp_rx_bins_10ms"]=self.small_udp_rx_bins
+            result["size_class_semantics"]="real application payloads: UDP packet, TCP framed record NOT wire packet; probes separate"
         if self.observe_independent:
             result["tcp_flow_tx_bins_10ms"] = self.tcp_flow_tx_bins
             result["tcp_flow_rx_bins_10ms"] = self.tcp_flow_rx_bins

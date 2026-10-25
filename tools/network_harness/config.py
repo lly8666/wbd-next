@@ -86,7 +86,7 @@ def validate(raw):
     t = r["traffic"]
     keys(t, ["c2s_mbps", "s2c_mbps", "udp_share", "sizes", "tcp_flows", "probe_hz",
              "deadline_ms", "burst_ms", "max_packets", "allow_fragmentation",
-             "observe_independent_flows"], "traffic")
+             "observe_independent_flows", "observe_size_classes"], "traffic")
     for k in ["c2s_mbps", "s2c_mbps"]:
         number(t.get(k), 0, 500, k)
     if not t["c2s_mbps"] and not t["s2c_mbps"]:
@@ -106,6 +106,11 @@ def validate(raw):
     t.setdefault("observe_independent_flows",False)
     if type(t["observe_independent_flows"]) is not bool:
         raise ValueError("observe_independent_flows must be boolean")
+    t.setdefault("observe_size_classes",False)
+    if type(t["observe_size_classes"]) is not bool:
+        raise ValueError("observe_size_classes must be boolean")
+    if t["observe_size_classes"] and not (r.get("owner")=="fec-network-work" and t["udp_share"]>0):
+        raise ValueError("size classes are scoped to FEC owned real UDP")
     if not isinstance(t.get("sizes"), list) or not 1 <= len(t["sizes"]) <= 32:
         raise ValueError("sizes: 1..32 [application payload bytes, weight] pairs")
     for size, weight in t["sizes"]:
@@ -220,12 +225,15 @@ def validate(raw):
     keys(a, ["injection_tolerance_pct", "max_loss_pct", "max_p99_ms",
              "max_active_gap_ms", "require_retransmission", "max_repair_fresh_pct", "min_repair_line_pct",
              "require_zero_source_tun_drops_full_run",
-              "require_zero_tun_root_qdisc_drops_full_run", "cross_business_hol"], "acceptance")
+              "require_zero_tun_root_qdisc_drops_full_run", "cross_business_hol",
+             "max_small_udp_loss_pct", "max_small_udp_p99_ms"], "acceptance")
     a.setdefault("injection_tolerance_pct", 3)
     a.setdefault("require_retransmission", False)
     a.setdefault("require_zero_source_tun_drops_full_run", False)
     a.setdefault("require_zero_tun_root_qdisc_drops_full_run",False)
     a.setdefault("cross_business_hol",False)
+    if any(k in a for k in ("max_small_udp_loss_pct","max_small_udp_p99_ms")) and not t["observe_size_classes"]:
+        raise ValueError("small-packet gates require actual small-packet observations")
     if type(a["cross_business_hol"]) is not bool:
         raise ValueError("cross_business_hol must be boolean")
     if a["cross_business_hol"] and not (0 < t["udp_share"] < 1
@@ -236,7 +244,8 @@ def validate(raw):
     if type(a["require_zero_source_tun_drops_full_run"]) is not bool:
         raise ValueError("require_zero_source_tun_drops_full_run must be boolean")
     number(a["injection_tolerance_pct"], 0.1, 10, "injection tolerance")
-    for k, hi in [("max_loss_pct", 100), ("max_p99_ms", 30000), ("max_active_gap_ms", 30000),
+    for k, hi in [("max_small_udp_loss_pct",100), ("max_small_udp_p99_ms",30000),
+                  ("max_loss_pct", 100), ("max_p99_ms", 30000), ("max_active_gap_ms", 30000),
                   ("max_repair_fresh_pct", 100), ("min_repair_line_pct", 100)]:
         if k in a:
             number(a[k], 0, hi, k)
