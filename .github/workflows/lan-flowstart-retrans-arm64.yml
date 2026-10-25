@@ -1,0 +1,117 @@
+name: LAN start-clock and no-manual-handshake-resend A-B arm64
+on:
+  push:
+    branches: [experiment/lan-flowstart-no-synth-retrans]
+    paths: [".github/workflows/lan-flowstart-retrans-arm64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: lan-flowstart-retrans-arm64
+  cancel-in-progress: false
+jobs:
+  real-native-ab:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Real Go AES and XOR tests, trusted-mode-negative tests, 99percent native A-B CPU
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "aarch64"
+          mkdir -p lan-retrans-report
+          go version > lan-retrans-report/go_version.txt
+          lscpu > lan-retrans-report/host_cpu.txt
+          go test -v \
+            tools/lan_flowstart_retrans_tcp.go \
+            tools/lan_delay_boundary_pad_tcp_test.go \
+            tools/lan_flowstart_retrans_bench_test.go \
+            -run '^Test' | tee lan-retrans-report/unit_tests.txt
+          go test \
+            tools/lan_flowstart_retrans_tcp.go \
+            tools/lan_delay_boundary_pad_tcp_test.go \
+            tools/lan_flowstart_retrans_bench_test.go \
+            -run '^$' -bench '^BenchmarkFlow' -benchtime=2s \
+            -count=3 -benchmem | tee lan-retrans-report/benchmark.txt
+          go build -trimpath -o /tmp/lan_flowstart_retrans_tcp \
+            tools/lan_flowstart_retrans_tcp.go
+          sha256sum /tmp/lan_flowstart_retrans_tcp > lan-retrans-report/binary.sha256
+          {
+            echo "SOURCE=$GITHUB_SHA"
+            echo "RUN=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "ARCH=$(uname -m)"
+            echo "SCENARIO=one_real_inner_TLS13_handshake_plus_99_fast_app_with_or_without_two_manual_duplicate_hello_packets"
+            echo "IMPORTANT=real_kernel_TCP_retransmission_NOT_DISABLED"
+            echo "RANDOM_DELAY_ORIGIN=first_inner_TCP_SYN"
+            echo "TRUSTED_ORACLE_NOT_PRODUCT_CLASSIFIER=true"
+            echo "LAB_GO_AES_GCM_NOT_PRODUCTION_WBD_RUST=true"
+            echo "AUTHENTICATED_FAST_MODE_ADMISSION_NOT_IMPLEMENTED=true"
+          } > lan-retrans-report/manifest.env
+      - name: Two actual loopback TCP captures, verify hold since first inner SYN, padding only at boundaries and real MTU
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tcpdump iproute2 ethtool
+          tmp="$(mktemp -d)"
+          cap_pid=""
+          original_mtu="$(cat /sys/class/net/lo/mtu)"
+          cleanup(){
+            if test -n "$cap_pid"; then
+              sudo kill -INT "$cap_pid" 2>/dev/null || true
+              wait "$cap_pid" 2>/dev/null || true
+            fi
+            sudo ip link set dev lo mtu "$original_mtu" 2>/dev/null || true
+            rm -rf "$tmp"
+          }
+          trap cleanup EXIT
+          sudo ip link set dev lo mtu 1500
+          test "$(cat /sys/class/net/lo/mtu)" = 1500
+          sudo ethtool -K lo gro off gso off tso off || true
+          ethtool -k lo > lan-retrans-report/loopback_offload_features.txt
+          openssl req -x509 -newkey rsa:2048 -nodes \
+            -keyout "$tmp/key.pem" -out "$tmp/cert.pem" \
+            -days 1 -subj /CN=localhost >/dev/null 2>&1
+          python3 tools/lan_delay_boundary_pad_inner_corpus.py \
+            --cert "$tmp/cert.pem" --key "$tmp/key.pem" \
+            --dir "$tmp/inner" | tee lan-retrans-report/genuine_inner_tls13.json
+          for mode in with_two_manual_retrans no_manual_retrans; do
+            if [ "$mode" = "with_two_manual_retrans" ]; then
+              value=2
+              port=38943
+              export LAN_LAB_SYNTH_RETX=2
+            else
+              value=0
+              port=38944
+              export LAN_LAB_SYNTH_RETX=0
+            fi
+            sudo timeout --signal=INT --kill-after=2s 65s tcpdump \
+              -i lo -s 2048 -c 400 -w "$tmp/$mode.pcap" \
+              "tcp and dst port $port" >/dev/null 2>&1 &
+            cap_pid=$!
+            sleep 1
+            /tmp/lan_flowstart_retrans_tcp "$port" "$tmp/inner" \
+              "lan-retrans-report/$mode.record_manifest.json" \
+              | tee "lan-retrans-report/$mode.peer_roundtrip.json"
+            sleep 1
+            sudo kill -INT "$cap_pid" 2>/dev/null || true
+            wait "$cap_pid" || true
+            cap_pid=""
+            test -s "$tmp/$mode.pcap"
+            python3 tools/lan_flowstart_retrans_pcap.py \
+              --pcap "$tmp/$mode.pcap" --port "$port" \
+              --manifest "lan-retrans-report/$mode.record_manifest.json" \
+              --expected-synthetic-retrans "$value" \
+              --output "lan-retrans-report/$mode.pcap_summary.json" \
+              | tee "lan-retrans-report/$mode.pcap_stdout.txt"
+          done
+          echo "Raw PCAPs and ephemeral TLS keys/ciphertext destroyed on exit" \
+            >> lan-retrans-report/manifest.env
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-flowstart-retrans-arm64-AB
+          path: lan-retrans-report/
+          retention-days: 30
+          if-no-files-found: warn
