@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W76_OWN_SELF_OVERLOAD_NATIVE_AUTO_RESUME_AND_FAST_LINK_RISE_SCOPED_DELIVERED",
+  "phase": "W78_REAL_PRODUCT_REORDER_DUPLICATE_AND_NATIVE_MULTI_CLASS_REVISION_PASS_SCOPED_INTEGRATION",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -631,7 +631,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W69–W76 FEC-only own-high-PPS capacity repair COMPLETE for scoped original Linux ARM64. W75 sameVM Action40185308539 A old native FAIL (requested2/applied1), B exact frozen source7ad0ba91 actually applied 5 one-grade DOWN each to Light0 requested=applied6 pendingfalse, zero false UP, real host TUN drops => INCONCLUSIVE service (not zero-loss PASS). W76 Action40185321854 confirmed real20% authenticated UP Balanced3→Maximum6, full native DOWN to Light0 both PASS_SCOPED. Build40185113624 PASS artifact12596370712 sha256 ab1407...; receipt docs/evidence/fec-network-work/20261025-W69-W76-real-self-overload-Auto-capacity-recovery-AB-SCOPED.json. Do not add high-rate ladder or merge other team's work. For integration review only, still merge_ready=false, capacity_stop=true; unqualified remote receiver sustained overload, Windows/Game/real FEC TUN jumbo and historical mixed100 TCP recovery. Combined-source qualification required before any merge.",
+  "next_action": "W77 original native Linux ARM64 Fixed Medium2 8Mbps each real IID5% + reorder10% + duplicate2% + jitter15ms odd MTU-class sizes Action40189681443 PASS_SCOPED, zero outer DATA retrans, zero source TUN drops, actual app C2S6/124328 S2C2/124327 missing stress, 0 after, TCP0, exact frozen source7ad0ba91. W78 FEC original fixed-stream 3-class old parity/monotonic identity/final Stop native tests + exact ARM64 compilation PASS Actions40189755295/40189755361, commit4a77104b (test-only). Own-host W69–W76 remains scoped closed; do not revive high-load ladder. Scope limitations unchanged (remote receiver sustained overload, actual 65KiB FEC TUN, Windows/Game, 100Mbps inner TCP postloss, exact combined source). Stop extra tests unless explicit new functional target/integration. Review scoped FEC integration when owner ready; no merge/main or other role status. Evidence docs/evidence/fec-network-work/20261025-W77-W78-reorder-duplicate-multiclass-original-arm64-PASS.json",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -5490,6 +5490,32 @@
     "no_future_unbounded_highload": true,
     "merge_ready": false,
     "capacity_stop": true,
+    "scoped_integration_review_ready": true
+  },
+  "w77_w78": {
+    "status": "SCOPED_ORIGINAL_ARM64_W77_W78_PASS",
+    "receipt": "docs/evidence/fec-network-work/20261025-W77-W78-reorder-duplicate-multiclass-original-arm64-PASS.json",
+    "w77_action": 40189681443,
+    "w77_result": "PASS_SCOPED_OBSERVATION",
+    "w77_source": "7ad0ba91b656ff8e9ee965d0c093a18e048971fb",
+    "w77_original_outer_data_retrans": 0,
+    "w77_main_udp_stress_loss_c2s_s2c": [
+      6,
+      2
+    ],
+    "w77_netem_injection_pct_each": 5,
+    "w77_reorder_duplicate_jitter_pct": "reorder10 duplicate2 jitter15ms",
+    "w77_native_recovered_tun": {
+      "client": 9374,
+      "server": 9510
+    },
+    "w77_source_tun_drops": 0,
+    "w78_test_source": "4a77104b23363bc1d1802223643d6ab441d7f019",
+    "w78_native_contract_action": 40189755295,
+    "w78_arm64_build_action": 40189755361,
+    "w78_test_only_no_product_semantics_change": true,
+    "capacity_stop": true,
+    "merge_ready": false,
     "scoped_integration_review_ready": true
   }
 }
