@@ -202,7 +202,7 @@ impl Pair{
             let read_pn=u64::from_be_bytes(self.wire[5..13].try_into().unwrap());
             assert_eq!(read_pn,pn);
             match plan {
-                Plan::HybridPn|Plan::AllPn=>
+                Plan::HybridPn|Plan::HybridGate|Plan::AllPn=>
                     xor::pn_repeat_word_mask(&mut self.wire[13..used],read_pn),
                 Plan::HybridWord=>xor::rolling_word_mask(&mut self.wire[13..used],xor::DEMO_SEED,read_pn),
                 _=>unreachable!()
@@ -254,6 +254,10 @@ fn guardrail(tls:&[u8]){
     assert_eq!(&p.body[40..],&e.body[40..]);
     assert!(fast_gate(&p));
     assert!(!fast_gate(&e));
+    for c in [Class::TlsHandshake,Class::PlainTcp,Class::AckOnly,Class::Udp] {
+        let n=if c==Class::AckOnly{40}else if c==Class::TlsHandshake{360}else if c==Class::Udp{540}else{1345};
+        assert!(!fast_gate(&make_ipv4(n,c,tls)),"unexpected fast gate for {:?}",c);
+    }
     for plan in [Plan::HybridPn,Plan::HybridWord] {
         assert!(plan.mode_xor(p.cls));
         assert!(!plan.mode_xor(e.cls));
