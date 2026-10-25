@@ -294,6 +294,81 @@ mod tests{
             tx:keys((i+1) as u8),rx:keys((i+1) as u8)
         }).collect(),RecordSuite::ChaCha20Poly1305).unwrap()
     }
+    #[cfg(feature="fec2_product_record")]
+    #[test]
+    fn fec_game2_game4_full_group_missing_original_reconstructed_only_once(){
+        // Authenticated per-lane Game AEAD+unique replay -> logical de-dup
+        // -> the SAME existing M3 FEC2 source/repair parser and RS16 cache.
+        for n in [2,4]{
+            let mut tx=build(n);
+            let mut rx=build(n);
+            tx.enable_game_fec(6,false).unwrap();
+            rx.enable_game_fec(6,true).unwrap();
+            let mut delivered=Vec::new();
+            for i in 0..16u8{
+                let msg=vec![i;128];
+                let now=MonoNs(100+u64::from(i));
+                let id=tx.offer(&msg,now).unwrap();
+                assert_eq!(id.0,u64::from(i));
+                tx.drain(now,|lane,logical,_,wire|{
+                    // The first source is erased on ALL lanes. Every other
+                    // source arrives through one authenticated lane only.
+                    if logical.0!=0 && lane.slot==1{
+                        delivered.extend(rx.receive_at(lane,wire.to_vec(),now).unwrap());
+                    }
+                    true
+                });
+            }
+            assert_eq!(delivered.len(),15);
+            assert!(!delivered.iter().any(|x|x==&vec![0;128]));
+            // Full small group was CLOSED immediately at k16. No timer wait.
+            assert_eq!(tx.poll_game_fec(MonoNs(120)).unwrap(),4);
+            tx.drain(MonoNs(121),|lane,_,_,wire|{
+                if lane.slot==1{
+                    delivered.extend(rx.receive_at(lane,wire.to_vec(),MonoNs(121)).unwrap());
+                }
+                true
+            });
+            assert_eq!(delivered.len(),16);
+            assert_eq!(delivered.iter().filter(|x|*x==&vec![0;128]).count(),1);
+            let stats=rx.game_fec_counters().unwrap().0;
+            assert_eq!(stats.recovered_tun,1);
+            assert_eq!(stats.source_first_tun,15);
+            // Remaining parity cannot redeliver recovered or source.
+            for t in 0..5{
+                let now=MonoNs(122+t);
+                let _=tx.poll_game_fec(now).unwrap();
+                tx.drain(now,|lane,_,_,wire|{
+                    if lane.slot==1{
+                        delivered.extend(rx.receive_at(lane,wire.to_vec(),now).unwrap());
+                    }
+                    true
+                });
+            }
+            assert_eq!(delivered.len(),16);
+            assert!(tx.game_fec_counters().unwrap().0.parity_kernel_copied>0);
+            tx.stop();rx.stop();
+            assert_eq!(tx.game_fec_counters().unwrap().1.charged_bytes,0);
+        }
+    }
+    #[cfg(feature="fec2_product_record")]
+    #[test]
+    fn fec_game_first_source_without_peer_or_timer_and_stop_fence(){
+        let mut tx=build(2);
+        tx.enable_game_fec(3,false).unwrap();
+        let packet=vec![1;128];
+        assert!(matches!(tx.offer(&vec![0;1340],MonoNs(0)),Err(Error::Invalid)));
+        let id=tx.offer(&packet,MonoNs(10)).unwrap();
+        assert_eq!(id.0,0);
+        assert_eq!(tx.drain(MonoNs(11),|_,_,_,_|true),2);
+        // Partially filled class closes only once due; parity never blocks
+        // a fresh source's first encrypted copy.
+        assert_eq!(tx.poll_game_fec(MonoNs(15)).unwrap(),0);
+        tx.stop();
+        assert!(matches!(tx.poll_game_fec(MonoNs(16)),Err(Error::Invalid)|Err(Error::Stopped)));
+        assert!(matches!(tx.offer(&packet,MonoNs(17)),Err(Error::Stopped)));
+        assert_eq!(tx.game_fec_counters().unwrap().1.charged_bytes,0);
+    }
     #[test]
     fn game_mtu_uses_negotiated_record_budget_above_old1200(){
         let mut game=build(2);
