@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "FEC-W54-AutoM2AuthenticatedExtended180sLowSteadyConvergence-8Mbps",
+  "id": "FEC-W54-AutoM2-LongLow180s-8Mbps",
   "owner": "fec-network-work",
   "seed": 821054,
   "policy": "outer-opportunistic-v3",
