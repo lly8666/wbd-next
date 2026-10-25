@@ -32,3 +32,14 @@ Action [40204401717](https://github.com/lly8666/wbd-next/actions/runs/4020440171
 所有原始数据、分组阶段计数与SHA256在 [W86 原始收据](../../evidence/fec-network-work/20261025-W86-balanced3-8m-TCP-highloss-recovery-INCONCLUSIVE.json)。Action artifact 12603890171，ZIP SHA256 `785c061807f17df193121bed8c8621bf575614d8bdb45329f6f0465518721f3c`。与 W50 相比仅是较低业务负载的再现，**不能声称100Mbps宿主已通过或残余原因完全等同**。本岗位不加大负载。
 
 为区分是 Balanced3 的有限 r 不足，还是最高档也有类似内层TCP恢复问题，仅授权一个相同业务/网参数的 Fixed Maximum6 低负载 [W87 请求](../../../tests/network/fec-work/W87-maximum6-8m-TCP-recovery-original-arm64.json)，Action [40204822076](https://github.com/lly8666/wbd-next/actions/runs/40204822076)，`seed=820087`、`netem_rng=unseeded_recorded`。两 Actions 不在同 VM，**只能作机制/功能定性参照，不能作可归因CPU AB**。结果未出之前，不预测通过或降低高损门槛；继续保持 Windows TEMP_SKIPPED/NOT_RUN。
+
+## W87 真实结果：低负载 Fixed Maximum6 恢复成功，W49/W50 原高载仍未覆盖
+
+唯一 [W87 Action 40204822076](https://github.com/lly8666/wbd-next/actions/runs/40204822076) **SUCCESS/PASS_SCOPED_OBSERVATION**，只测一个 Linux ARM64 Fixed Maximum6 产品场景；contract Action [40204822093](https://github.com/lly8666/wbd-next/actions/runs/40204822093) SUCCESS，原始 artifact `12603069627` ZIP SHA256 `6c3ab1777a400601671cc6c30ac504503aab936391a5b77253284b5062fae6fd`，本地复算与 Actions digest 一致。固定 `4322a811` 同一已验产品 build artifact，没有新编译、没有变 Auto/outer policy。
+
+- 双向每方向8Mbps、96% UDP/4% TCP、单程300ms、IID10→30→10%、原始 outer DATA真实 retrans0；两侧 authentic native Fixed6 applied1/pendingfalse、M2 positive、parity planned=sent client256497/server256699，原 TUN source/root drop0、RX capacity/codec/conflict reject0、native FEC recovered TUN client**37771**/server**37856**，Stop owned 清理成功。
+- 高损30%阶段 C→S/S→C UDP **31/82430 (0.0376%)** / **59/82430 (0.0716%)** 残余；TCP仍持续各约 **0.320Mbps**（目标0.320），p99 **1039.8/993.7ms**，两向回压=**0**；恢复到10%后 TCP回压仍**0**、TCP p99 **315.3/316.4ms**，UDP两向缺失**0**。
+- 测量 CPU client15.97s/server15.96s，按有效交付 GiB 142.95/142.84 CPU-s/GiB，RSS peak 23,072,768/22,986,752 B，host PSI peak 1.00%/mean0.978%。比 W86 Fixed3 的 13.35/13.28s、每GiB127.85/127.00、RX恢复27k更高，但**两次跑在不同 VM、实际送出的 parity 数量不同、成功到达的业务量也不同**，不允许宣称严格因果 CPU 升幅、性能无代价或高载回归已经通过。
+- 这是一条**针对 Fixed3 / Fixed6 的能力分辨**：W86 低载在30%严重 TCP stalls，W87 同源更高冗余没有 stalls，支持 FEC保护足够才避免内层 TCP RTO/HOL。两次随机 netem 均 `unseeded_recorded`，没有固定同轨迹，只是有限证据而不是确定性比较。产品 Default/Auto升降档逻辑未动；不能从已知 netem真值驱动线上 Auto 选档。
+
+**最后收口：** 不追加100Mbps高负载、不强行调 Balanced3 到支持其理论上做不到的高损结果、不把 W50 从 INCONCLUSIVE 改 PASS；窗口长 GE W85仍 OPEN且候选 rollback。继续遵守 capacity_stop，Windows平台本岗位仍为 `TEMP_SKIPPED_USER_20261025 / NOT_RUN`。真实原始 W86/W87 收据分别在 [W86 INCONCLUSIVE](../../evidence/fec-network-work/20261025-W86-balanced3-8m-TCP-highloss-recovery-INCONCLUSIVE.json) 与 [W87 PASS_SCOPED](../../evidence/fec-network-work/20261025-W87-maximum6-8m-TCP-highloss-recovery-PASS-SCOPED.json)。
