@@ -332,8 +332,8 @@ mod tests{
             assert_eq!(delivered.len(),16);
             assert_eq!(delivered.iter().filter(|x|*x==&vec![0;128]).count(),1);
             let stats=rx.game_fec_counters().unwrap().0;
-            assert_eq!(stats.recovered_tun,1);
-            assert_eq!(stats.source_first_tun,15);
+            assert_eq!(stats.recovered_candidate,1);
+            assert_eq!(stats.source_first_candidate,15);
             // Remaining parity cannot redeliver recovered or source.
             for t in 0..5{
                 let now=MonoNs(122+t);
