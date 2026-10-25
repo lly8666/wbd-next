@@ -23,6 +23,8 @@ type V4LinuxGameProductConfig struct {
     CleanupOwnedNetwork func()error
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     Epochs *V4EpochStore // mandatory only for actual server group
+    GameFecEnabled bool // explicit BOTH-endpoint fixed FEC, never Auto
+    GameFecProfile uint8 // 0..6; only used when GameFecEnabled
 }
 type V4LinuxGameProduct struct{
     mu sync.Mutex
@@ -37,6 +39,7 @@ type V4LinuxGameProduct struct{
     connected bool
 }
 func newV4LinuxGameProduct(cfg V4LinuxGameProductConfig,server bool)(*V4LinuxGameProduct,error){
+    if cfg.GameFecEnabled&&cfg.GameFecProfile>6{return nil,ErrAdmissionParams}
     if cfg.NetworkInterface==""||cfg.NetworkIfIndex==0||cfg.Tun==nil||
        cfg.TunName==""||len(cfg.TunName)>15||cfg.CleanupOwnedNetwork==nil||
        (server&&cfg.Epochs==nil){return nil,ErrAdmissionParams}
@@ -68,6 +71,9 @@ func (p *V4LinuxGameProduct) commitGroupedOwnerLocked()error{
     if err!=nil{return err}
     p.native,err=p.game.joinAuthenticatedOriginalRust(p.bridges...)
     if err!=nil{return err}
+    if p.cfg.GameFecEnabled{
+        if err=p.native.configureFixedFEC(p.cfg.GameFecProfile);err!=nil{return err}
+    }
     if err=p.native.startNativeM4(
         p.cfg.NetworkInterface,p.cfg.NetworkIfIndex,p.cfg.Tun,p.cfg.TunName,
     );err!=nil{return err}
