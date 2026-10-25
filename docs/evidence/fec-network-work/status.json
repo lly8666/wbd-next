@@ -631,7 +631,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W85 two-ready parity interleave no measurable improvement (only 1.1-1.2pct rows alternated) and exact rollback; preserve W80/W83/W85 long correlated GE >1pct FAIL, do not retry more seeds/peer wait/r. User TEMP_SKIPPED_USER_20261025 all THIS FEC ROLE Windows native codec/Go Rust/Wintun/GUI/Game tests NOT_RUN; M0 Windows unaffected. W86 Fixed Balanced3 same-source Linux ARM64 8Mbps mixed TCP IID10->30->10 300ms Action40204401717 INCONCLUSIVE: high30 TCP 0.146/0.155Mbps vs 0.320 target, p99 21.5/16.9s; recovery S2C TCP backpressured; host PSI peak0.42, outer DATA0, source TUN0, one server native RX conflict reject. W87 Fixed Maximum6 Action40204822076 PASS_SCOPED: high30 TCP near0.320Mbps both, p99 1.04/0.99s, no backpressure; recovery clean. W86/W87 different VMs and unseeded IID, NO crossVM CPU efficiency claim; W49/W50 100Mbps recovery remains INCONCLUSIVE, capacity_stop=true, do not raise load. Other Linux open: real 65KiB FEC TUN jumbo path unsupported, sustained remote RX host overload signal, exact latest outer ON + FEC integrated source; don't modify other-role outer or M0 Windows. Scoped integration review only; merge_ready=false. Own new evidence W86 and W87 scoped JSON, preserve original W79-W85 history.",
+  "next_action": "W91: Check exact source 84f316608135 ARM64 build and native Game OFF error-classification test (Action 40212344161). Preserve W90 six failed real Game+FEC actions and b505 rollback. If build succeeds, run only bounded clean 3Mbps Game2/4 FEC OFF UDP+real TCP on independent Actions using that immutable artifact; no pressure escalation. Game fixed FEC remains NOT_PRODUCT_SUPPORTED until separately proven startup/clean path, do not revive a failed candidate blindly. Keep Windows role TEMP_SKIPPED, capacity_stop=true and merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6010,5 +6010,18 @@
       "strict_rollback_correct_at_commit": "b5052654975b4c3aa33fdabcb90d0e0803768315 exactly restored 15 baseline blobs; current branch later intentionally diverged at 2 files via W91",
       "W90_game_fec_product_public": "UNSUPPORTED_AFTER_ROLLBACK"
     }
+  },
+  "w91_game_off_rx_classification": {
+    "status": "PATCH_COMMITTED_EXACT_ARM64_VALIDATION_RUNNING",
+    "source_commit": "19942fab71b1b84d5caa31254e9c3d60a36d8366",
+    "exact_build_workflow_commit": "84f3166081350290a6d0f07e4b70ccace09fa44f",
+    "build_run": 40212344161,
+    "test_scope": "original Linux Game2/4 FEC OFF; true AEAD vs authenticated replay duplicate/retired, malformed record, capacity and scope",
+    "caveat": "Public Game+FEC candidate withdrawn after SIX real failed Linux business Actions; no fixed profile available in current public product. No Game+FEC qualification.",
+    "tx_lock": "pre-W90 original Game idle 2ms sleep already precedes mutex; TX still holds GameAdapter during raw syscalls (B decision pending clean evidence)",
+    "verification": "RUNNING_NOT_PASS",
+    "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN",
+    "capacity_stop": true,
+    "devlog": "docs/devlog/fec-network-work/20261026-W91-game-off-rx-reason-classification.md"
   }
 }
