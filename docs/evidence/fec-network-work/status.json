@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W53_SAMEVM_AB_SCOPED_BUSINESS_PASS_C2S_RECOVERY_DOWN_NOT_OBSERVED_W54_EXTENDED_LOW_TEST_RUNNING",
+  "phase": "W54_GENUINE_C2S_AUTO_DOWN_180S_PASS_TOO_SLOW_W55_NATIVE_HISTORY_REUSE_ARM64_BUILD_RUNNING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -564,6 +564,7 @@
     }
   ],
   "open_issues": [
+    "W54 genuine 180s Auto source946346bb ARM64 run40170625652 PASS true C2S recovery DOWN Maximum6->Strong5 at +23.5s, ->High4 at +121.5s, ->Balanced3 at +152.5s, independent S2C Strong5->Light0; true DATA retrans0, parity/real M2/native applied, UDP missing0 recovery, CPU27.71/28.4 over extended duration. Misses new user's 30–60s desirable low-loss return. First attempt 40170452215 failed invalid long request ID pre-product and is preserved. W55 source f3b9e8a5 isolated Go monitor patch on real authenticated APPLIED down only, native build Action40171595909 was RUNNING when checkpoint; no product qualification or 30–60s claim.",
     "W53 sameVM AB run40169675377 both product legs PASS_SCOPED_OBSERVATION but B C2S recovery DOWN NOT_OBSERVED, five real VALID ticks 06:42:53..06:43:01 then >6s actual-k unknown; B S2C independently 5->4->3->2->1, native outer data retrans0, genuine M2/TUN/Stop PASS. Action artifact12590008550 SHA256 3e0c4270b9066f5161754118b92e640f60982caee9de4d20e7d03e83780e6f8e. W54 extended 180s low steady at same 8Mbps product reuse, Action40170452215, pending; no claim full Auto or merge. capacity_stop true.",
     "W52 current frozen FEC source e446fa1 Action40168045298 real Auto 8Mbps each actual UDP-only (64B1%,1287B99%, sparse probes) 2/0->20/1->1/0%IID, no outer DATA repair, native user mainline branch no main restore. Native real M2 positive confirmation mean client153665us (118931 samples), server154241us (129400); original AUTHENTIC stages C2S Strong5->Maximum6 revision2 during20% high, S2C Strong5->High4 rev2 then Balanced3 rev3 independently; final native both requested=applied pendingfalse. Parity full167271/121021 expired0, source TUN0, Stop clean, true UDP8Mbps each all3 phases high C2S loss0.01487%. BUT C2S did NOT step down to Strong after last 1%-loss60s and remains max6; unlike previous W45 prior source, current run does not qualify complete Auto rise-return. AUTO_QUALITY often UNKNOWN actual-k/feedback, policy requires predicted one-step-lower residual<=0.0005 and full 10s+4096 valid samples. Do not modify policy without causal evidence, do not call full Auto curve PASS; no TCP in W52. W48-50 temporary side tests already closed.",
     "W51 exact new FEC mainline source e446fa1 from user-approved 3af257cd direct branch ONLY: real ARM64 product build Action40167423967 SUCCESS, real W51 original Fixed3 8Mbps each 2%IID/75ms Action40167733514 PASS. Reuses existing Rust native 8s matured unambiguous M4 first-send positive authenticated reverse M2 [12]lag sum ns/[13]samples; public Go product M2_PROOF now reports client53875 sample mean152966us, server53938 mean152937us, true reverse reports 11346/11400. Old OFF 600000us outer shadow RTT NOT claimed as actual. Both raw M2 UNKNOWN161/175 and first/coverage censored flags1 preserved, no globally clean quality claim. UDP/TCP target full, 0 loss small p99 89.1/89.4ms, native parity planned==sent, expiry0, source TUN/root0, original OUTER DATA retrans0, STOP. W48-50 temporary step tests retained historical but CLOSED. Never merge/import main or network matrix. Next FEC mainline continue Auto authenticated positive M2 readback regression on same new source and lifecycle/MTU bounded functional checks, NO throughput ladder, capacity_stop true merge_ready false.",
@@ -594,7 +595,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W53 sameVM AB Action40169675377 both legs scoped original-native business PASS, outer DATA retrans0 genuine parity/M2 and Stop; original B C2S 5->6 rising but 1%-recovery down NOT_OBSERVED (same for A), B S2C 5->4->3->2->1. Do NOT mark Auto full pass. W53 product report 20261025-W53-sameVM-Auto-AB-native-scope-result.json. W54 low steady 180s instead of 60s request 63e49ecbcb56cb29a816ac4bf3dbc4d67f90a2fb, Action40170452215 running/queued, same native source 946346bb and original 8Mbps with outer DATA off; observe exact native C2S step and feedback validity without changing trust guard or adding capacity. After W54 inspect, then bounded original MTU±1 /Stop generation only if missing. No network-matrix/main edits; capacity_stop true, merge_ready false.",
+  "next_action": "W54 original Auto real ARM64 180s run40170625652 completed PASS and genuine C2S Maximum6->Balanced3 eventual return but 152.5s too slow for user-preferred 30-60s smooth gradual down; ZERO outer DATA retrans and M2/parity real. New minimal FEC-only patch SOURCE f3b9e8a5 retains bounded native mature firstsend/k histogram history only on same-epoch applied DOWN, preserving 10s/4096 + 5 actual valid + residual<=0.0005 gates, resets on up/start/scope/error. Exact-source ARM64 product build Action40171595909 in progress, do not claim PASS until actual completed artifacts. After build PASS run ONE sameVM sequential AB Action at 8Mbps/75ms high20%->low1% with 90s low, A946346bb Bf3b9e8a5, artifacts reused, no extra capacity; measure original C2S exact stage+readback by wall-clock, 0 outer data retx, genuine parity/M2, app receipt, CPU RSS, Stop. If B fails diagnose original log, do not blindly relax safety. Then finite exact-boundary MTU/Stop/generation only if missing, final merge report; no cross branch, capacity_stop=true merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -5158,9 +5159,51 @@
     "native_product_source": "946346bbd84ff88910ed169037330e8eae13cea3",
     "product_build": 40169455103,
     "artifact": 12590097082,
-    "action": 40170452215,
-    "action_status": "QUEUED_AT_LAST_CHECK",
+    "action": 40170625652,
+    "action_status": "SUCCESS",
     "change": "60s->180s recovery window only; still 8Mbps per direction, original authenticated M2, outer DATA repair off",
+    "capacity_stop": true,
+    "merge_ready": false,
+    "first_attempt": {
+      "run_id": 40170452215,
+      "conclusion": "FAIL_REQUEST_ID_TOO_LONG_PRE_PRODUCT",
+      "product_started": false
+    },
+    "fixed_request_commit": "74d595f3c5c9436cd5d1c001e50e7b1fbaf778c5",
+    "attempt": 1,
+    "result": "PASS_SCOPED_BUSINESS_AND_EVENTUAL_C2S_DOWN_LATENCY_TARGET_NOT_MET",
+    "result_artifact_id": 12590265917,
+    "result_zip_sha256": "093784ec4b7e3b30b1b5d4cee77c3654b044b37d22995cf3dabc3faaef8457d4",
+    "evidence": "docs/evidence/fec-network-work/20261025-W54-original-native-180s-auto-return.json",
+    "c2s": {
+      "recovery_start_UTC": "2026-10-25T06:54:23.491Z",
+      "max_to_strong_seconds": 23.5,
+      "max_to_high_seconds": 121.5,
+      "max_to_balanced_seconds": 152.5,
+      "final_profile": 3
+    },
+    "s2c": {
+      "last_profile": 0,
+      "all_down_stages_genuine": true
+    },
+    "outer_data_retrans_both": 0,
+    "parity_full_both": true,
+    "real_tun_recovery_both": true,
+    "native_readback_both_applied": true,
+    "one_minute_target_met": false
+  },
+  "auto_user_preference_20261025": "Prioritize rapid trustworthy UP on consecutive valid fast windows; transient rise loss tolerated. DOWN gradually one profile at a time, preferably complete relevant low-loss recovery in about 30-60s once feedback is sufficient, not indefinitely stuck at Maximum; never fake ACK/UNKNOWN==0, change model/r/k, or exceed capacity stop.",
+  "w55": {
+    "source": "f3b9e8a5a6ac226d13066fc7ccc780cb5f94fa85",
+    "parent": "74d595f3c5c9436cd5d1c001e50e7b1fbaf778c5",
+    "patch": "Only same-owner native applied Auto DOWN retains existing authenticated M2 and k histogram history, no revision relabel or false ACK",
+    "build_action_run": 40171595909,
+    "build_status": "IN_PROGRESS_LAST_CHECK",
+    "build_artifact": null,
+    "product_action": null,
+    "product_result": "NOT_RUN",
+    "comparison": "A 946346bb / B f3b9e8a5 same VM AB 8Mbps intended only after build pass",
+    "evidence": "docs/devlog/fec-network-work/20261025-W54-180s-and-W55-native-applied-history-intent.md",
     "capacity_stop": true,
     "merge_ready": false
   }
