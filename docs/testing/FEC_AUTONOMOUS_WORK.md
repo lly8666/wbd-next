@@ -8,6 +8,8 @@
 
 工作分支 `experiment/fec-network-tuning`，独立目录 `D:\codex\wbd\wbd-fec-network-tuning`。本岗位进度只写 `docs/evidence/fec-network-work/status.json`，证据/日志分别写同名evidence子目录与 `docs/devlog/fec-network-work/`。从上游网络实验分支45325c9c冻结起步；不能把它或旧组件PASS称为FEC-only已通过。上游后续修复按相关性在安全点引入，不追浮动HEAD，不改上游分支/状态/请求。
 
+**2026-10-25 W85 长相关丢包负例永久留痕：** Normal Fixed Maximum 在约15%长 GE 下 1% 门未通过（W80/W83及W85旧A）；已经按用户授权尝试最多两个已就绪修复组 4-row SIMD 编码后的 A/B 交错，精确源 `7cb64bfc` 原生 Actions 成功、真实 W85b 同 VM AB [40202359496](https://github.com/lly8666/wbd-next/actions/runs/40202359496) 未改善（旧A C→S/S→C 1.325%/1.198%，新B 1.390%/1.194%，仅约1.1%–1.2% parity行实际发生交替）；额外工作区成本不值得，原始源码双文件完全回撤至前置 blob，回撤 Action [40203220219](https://github.com/lly8666/wbd-next/actions/runs/40203220219) 成功。**保留严格门和全部失败，不因理论相关损伤强追≤1%，不等待第二组、不加冗余、不开新线程、不堆更多组/缓存、不刷随机种子**。未来要重启需新的 per-block timely erasure/成本证据及明确用户收益目标。结构化结论见 [W85 收据](../evidence/fec-network-work/20261025-W85-two-ready-parity-interleave-sameVM-AB-NEGATIVE-ROLLBACK.json)。非 Windows 剩余问题继续有限验证，Windows 仍本岗位 `TEMP_SKIPPED`。
+
 **2026-10-25 用户补充的 Auto 速度/安全验收（优先于旧计划的 180s 对照等待）**：升档在真实认证反馈 VALID 且样本足够时尽量快速，升档过渡有丢包可以接受，但不允许借此遗漏可恢复的 FEC 源包或延迟新源首次交付。降档应逐级、缓慢平滑，在持续低损、容量健康且真实样本充足后，**以约 30–60 秒完成有意义的恢复降档为期望**，最终收敛到模型与真实 k/反馈所支持的较低档，不能无限留在 Maximum。这里不是无论网络怎样都强制降至 Light；UNKNOWN、过期/污染反馈、CENSORED 和 HOST_CAPACITY 一律不当作零损或触发无证据降档。不同样本窗口恢复延迟要报告，不为了读数改变 parity、ACK 或 outer DATA OFF 语义。W54 的 180 秒只是旧源码诊断波形，不是理想降档时长；W55 定向同 VM 配对验证及事实留在本岗位证据目录。
 
 ## 长期职责与边界
