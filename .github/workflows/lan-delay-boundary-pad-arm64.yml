@@ -1,0 +1,100 @@
+name: LAN random hold lifecycle MTU pad capture and benchmark arm64
+on:
+  push:
+    branches: [experiment/lan-gated-boundary-pad]
+    paths: [".github/workflows/lan-delay-boundary-pad-arm64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: lan-delay-boundary-pad-arm64
+  cancel-in-progress: false
+jobs:
+  bounded-native:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Actual Go AES-GCM and PN-XOR policy unit tests and 99pct microbenchmark
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "aarch64"
+          mkdir -p lan-boundary-pad-report
+          go version > lan-boundary-pad-report/go-version.txt
+          lscpu > lan-boundary-pad-report/host_cpu.txt
+          go test -v tools/lan_delay_boundary_pad_tcp.go \
+            tools/lan_delay_boundary_pad_tcp_test.go \
+            | tee lan-boundary-pad-report/unit-tests.txt
+          go test tools/lan_delay_boundary_pad_tcp.go \
+            tools/lan_delay_boundary_pad_tcp_test.go \
+            -run '^$' -bench '^BenchmarkMixed99_' \
+            -benchtime=2s -count=3 -benchmem \
+            | tee lan-boundary-pad-report/benchmark.txt
+          go build -trimpath -o /tmp/lan_delay_boundary_pad_tcp \
+            tools/lan_delay_boundary_pad_tcp.go
+          sha256sum /tmp/lan_delay_boundary_pad_tcp \
+            > lan-boundary-pad-report/binary.sha256
+          {
+            echo "SOURCE=$GITHUB_SHA"
+            echo "RUN=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "ARCH=$(uname -m)"
+            echo "TEST=real_inner_TLS13_corpus_real_outer_TLS13_then_raw_test_record_AES_XOR"
+            echo "MTU=1500"
+            echo "RANDOM_MONOTONIC_HOLD_MS=11000_to_21000"
+            echo "BOUNDARY_ONLY_RANDOM_FILL=true"
+            echo "REAL_CLASSIFIER=false"
+            echo "ACTUAL_WBD_RUST_WIRE=false"
+          } > lan-boundary-pad-report/manifest.env
+      - name: Native outgoing TCP capture with real 11-21 second hold
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tcpdump
+          tmp="$(mktemp -d)"
+          cap_pid=""
+          cleanup(){
+            if test -n "$cap_pid"; then
+              sudo kill -INT "$cap_pid" 2>/dev/null || true
+              wait "$cap_pid" 2>/dev/null || true
+            fi
+            rm -rf "$tmp"
+          }
+          trap cleanup EXIT
+          openssl req -x509 -newkey rsa:2048 -nodes \
+            -keyout "$tmp/key.pem" -out "$tmp/cert.pem" \
+            -days 1 -subj /CN=localhost >/dev/null 2>&1
+          python3 tools/lan_fastgate_inner_tls13_corpus.py \
+            --cert "$tmp/cert.pem" --key "$tmp/key.pem" \
+            --dir "$tmp/inner" | tee lan-boundary-pad-report/inner_tls13_summary.json
+          port=38822
+          sudo timeout --signal=INT --kill-after=2s 55s tcpdump \
+            -i lo -s 2048 -c 300 -w "$tmp/wire.pcap" \
+            "tcp and dst port $port" >/dev/null 2>&1 &
+          cap_pid=$!
+          sleep 2
+          /tmp/lan_delay_boundary_pad_tcp "$port" "$tmp/inner" \
+            lan-boundary-pad-report/record_manifest.json \
+            | tee lan-boundary-pad-report/receiver_roundtrip.json
+          sleep 1
+          sudo kill -INT "$cap_pid" 2>/dev/null || true
+          wait "$cap_pid" || true
+          cap_pid=""
+          test -s "$tmp/wire.pcap"
+          test "$(stat -c %s "$tmp/wire.pcap")" -le 4194304
+          python3 tools/lan_delay_boundary_pad_pcap.py \
+            --pcap "$tmp/wire.pcap" \
+            --port "$port" \
+            --manifest lan-boundary-pad-report/record_manifest.json \
+            --output lan-boundary-pad-report/capture_summary.json \
+            | tee lan-boundary-pad-report/capture_stdout.txt
+          echo "Ephemeral inner TLS13 corpus, raw pcap and private keys deleted at job exit" \
+            >> lan-boundary-pad-report/manifest.env
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-boundary-pad-arm64-evidence
+          path: lan-boundary-pad-report/
+          retention-days: 30
+          if-no-files-found: warn
