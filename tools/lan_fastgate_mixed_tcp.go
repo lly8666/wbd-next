@@ -202,10 +202,7 @@ func specs(ch,sf,app []byte)[]Spec{
   build("tls13_app_fast_retransmitted_new_outer_PN_XOR",mainPort,20000,6,0x18,app[:1305],true),
   build("tls13_app_fast_next_XOR",mainPort,22000,6,0x18,app[:1305],true),
   build("tls13_app_fast_small_XOR",mainPort,24000,6,0x18,app[:290],true),
-  build("ordinary_http_TCP_AES",51001,33000,6,0x18,[]byte("GET / HTTP/1.1
-Host: example.test
-
-"),false),
+  build("ordinary_http_TCP_AES",51001,33000,6,0x18,[]byte("GET / HTTP/1.1"),false),
   build("TCP_ACK_only_AES",mainPort,25000,6,0x10,nil,false),
   build("TCP_FIN_AES",mainPort,25100,6,0x11,nil,false),
   build("UDP_dns_like_AES",53001,6000,17,0,[]byte{0x10,0x20,1,0,0,1,0,0,0,0,0,0},false),
@@ -255,8 +252,7 @@ func run(port int,root,manifestPath string)error{
  manifest.AESFallbackTamperRejected=true
  if aesCount<10||xorCount<3{return fmt.Errorf("incorrect split aes=%d xor=%d",aesCount,xorCount)}
  parsed,e:=json.MarshalIndent(manifest,"","  ");if e!=nil{return e}
- if e=os.WriteFile(manifestPath,append(parsed,'
-'),0600);e!=nil{return e}
+ if e=os.WriteFile(manifestPath,append(parsed,byte(10)),0600);e!=nil{return e}
  cert,pool,e:=testCert();if e!=nil{return e}
  listener,e:=net.Listen("tcp",net.JoinHostPort("127.0.0.1",strconv.Itoa(port)))
  if e!=nil{return e}
@@ -312,8 +308,14 @@ func run(port int,root,manifestPath string)error{
   time.Sleep(17*time.Millisecond)
  }
  if e=<-serverResult;e!=nil{return e}
- fmt.Printf("{"outer_mutual_tls13":true,"inner_tls13_corpus":true,"records":%d,"fallback_aes":%d,"fast_pn_xor":%d,"all_exact_roundtrip":true,"fallback_tamper_rejected":true,"scope":"LAB_ONLY_NO_REAL_CLASSIFIER_OR_WBD_AEAD_WIRE"}
-",len(recs),aesCount,xorCount)
+ receipt,e:=json.Marshal(map[string]interface{}{
+  "outer_mutual_tls13":true,"inner_tls13_corpus":true,
+  "records":len(recs),"fallback_aes":aesCount,"fast_pn_xor":xorCount,
+  "all_exact_roundtrip":true,"fallback_tamper_rejected":true,
+  "scope":"LAB_ONLY_NO_REAL_CLASSIFIER_OR_WBD_AEAD_WIRE",
+ })
+ if e!=nil{return e}
+ fmt.Println(string(receipt))
  return nil
 }
 func main(){
