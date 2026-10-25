@@ -65,7 +65,7 @@ jobs:
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release"
           (cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_native_probe,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product \
-            -run 'TestFECGameProtectedV4ProfileWireOffAndFailClosed|TestR0V4FeatureGateAndBoundedStore|TestR0V4RealProtectedFec2Bit2FeatureAndKDFThreeCiphers' \
+            -run 'TestFECGameProtectedV4ProfileWireOffAndFailClosed|TestFECGameProtectedTLSRejectsDifferentFixedProfilesBeforeOwner|TestR0V4FeatureGateAndBoundedStore|TestR0V4RealProtectedFec2Bit2FeatureAndKDFThreeCiphers' \
             ./internal/realityfront -v)
       - name: Real ARM64 ISA-L FEC cross-block parity table regression
         shell: bash
