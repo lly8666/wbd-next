@@ -4,6 +4,7 @@ on:
     branches: [experiment/lan-gated-boundary-pad]
     paths: [".github/workflows/lan-delay-boundary-pad-x64.yml"]
 permissions: {contents: read}
+# Completion marker: monotonic timer begins at genuine encrypted inner TLS13 client Finished.
 concurrency:
   group: lan-delay-boundary-pad-x64
   cancel-in-progress: false
@@ -65,7 +66,7 @@ jobs:
           openssl req -x509 -newkey rsa:2048 -nodes \
             -keyout "$tmp/key.pem" -out "$tmp/cert.pem" \
             -days 1 -subj /CN=localhost >/dev/null 2>&1
-          python3 tools/lan_fastgate_inner_tls13_corpus.py \
+          python3 tools/lan_delay_boundary_pad_inner_corpus.py \
             --cert "$tmp/cert.pem" --key "$tmp/key.pem" \
             --dir "$tmp/inner" | tee lan-boundary-pad-report/inner_tls13_summary.json
           port=38821
