@@ -131,6 +131,13 @@ func run(port int) error {
         conn := tls.Server(raw, scfg)
         if e = conn.Handshake(); e != nil {serverResult <- e; return}
         if conn.ConnectionState().Version != tls.VersionTLS13 {serverResult <- errors.New("server TLS version");return}
+        // A real TLS-protected two-sided switch barrier. Handshake completion
+        // alone is not a peer-ready signal: racing the raw handoff can corrupt
+        // stream boundaries or close a peer on differently scheduled hosts.
+        var ready [7]byte
+        if _,e=io.ReadFull(conn,ready[:]);e!=nil {serverResult<-fmt.Errorf("server encrypted ready read: %w",e);return}
+        if string(ready[:])!="C_READY" {serverResult<-errors.New("invalid client TLS-ready marker");return}
+        if _,e=conn.Write([]byte("S_READY"));e!=nil {serverResult<-fmt.Errorf("server encrypted ready write: %w",e);return}
         direct := conn.NetConn()
         for i:=0; i<4; i++ {
             var h [5]byte
@@ -158,6 +165,10 @@ func run(port int) error {
     if tc.ConnectionState().Version!=tls.VersionTLS13 || len(tc.ConnectionState().PeerCertificates)==0 {
         return errors.New("client TLS handshake/authentication failed")
     }
+    if _,err=tc.Write([]byte("C_READY"));err!=nil {return fmt.Errorf("client encrypted ready write: %w",err)}
+    var ack [7]byte
+    if _,err=io.ReadFull(tc,ack[:]);err!=nil {return fmt.Errorf("client encrypted ready read: %w",err)}
+    if string(ack[:])!="S_READY" {return errors.New("bad peer TLS-ready marker")}
     direct:=tc.NetConn()
     for i:=0;i<4;i++ {
         rec:=seal(expected,i>=2,uint64(i))
