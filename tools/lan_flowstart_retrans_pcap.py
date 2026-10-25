@@ -202,6 +202,13 @@ def audit(pcap,port,manifest,expected_retx):
        "observed_pcap_flow_start_to_first_XOR_ms":round(delta_ms,3),
        "observed_pcap_client_finished_to_first_XOR_ms":round(from_finished_ms,3),
        "synthetic_handshake_retransmissions":expected_retx,
+       "total_custom_record_wire_bytes":sum(len(frame) for _,frame,_ in observed),
+       "manual_handshake_retransmission_wire_bytes":sum(
+            len(label_map[name][0]) for name in
+            ("genuine_clienthello_retransmit_start_PAD",
+             "genuine_clienthello_oldseq_late_PAD_AES") if name in label_map),
+       "ordinary_plus_fast_unpadded_record_count":unpadded+xor,
+       "no_mode_guessing_from_tls_outer_17_03_03":True,
        "sensitive_inner_TLS13_test_SNI_absent_entire_wire":True,
        "fallback_go_AES_GCM_native_roundtrip_and_tag_failure":True,
        "original_late_ClientHello_retransmission_still_AES_and_padded":expected_retx==2,
