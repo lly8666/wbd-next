@@ -2522,7 +2522,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_state(
 // Called ONLY after all original-Go TLS Game lane handles have committed and
 // before real Game M4 drivers start. Both endpoint operators must select the
 // same fixed profile; no automatic Game FEC mode or anonymous grant.
-#[cfg(feature="fec2_product_record")]
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub extern "C" fn wbd_fec_network_game_group_fixed_configure(
     group:u64,profile:u32
