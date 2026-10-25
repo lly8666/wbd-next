@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W32_250_BOTH_RESIDUAL_FAIL_REAL_INJECTOR_ERRORS_W33_NATIVE_BUILD_PASS_AB_PENDING",
+  "phase": "W34_MAXIMUM250_SAMEVM_A_B_BOTH_SCOPED_PASS_W32_HIGH_PSI_FAIL_HOST_VARIANCE_CAPACITY_STOP",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -18,16 +18,16 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "3b16e79698d33ef49628dfa8f67a47550438ebbc",
-    "run_id": 40146207152,
+    "source": "e99a4afff3e9e55e3a11113ed30097e1789e86af",
+    "run_id": 40147815858,
     "attempt": 1,
-    "artifact_id": 12580177860,
-    "sha256": "69c14dbc1f3a65040c7013844c02d6af036b4a238c6d78262f6edc65d891b30f",
+    "artifact_id": 12580544395,
+    "sha256": "e1ec27312a833e03762a4b9bc6201ff143867b65a6dba02ce17a12a8bb9221eb",
     "platform": "aarch64",
     "policy": "outer-opportunistic-v3",
     "build_action": "SUCCESS",
     "native_fixed_auto_kernel_functional": "PASS_SCOPED",
-    "runtime_fec_only": "W31_FIXED_MAXIMUM220_AB_NEW_B_ONLY_SCOPED_PASS_OLD_A_INCONCLUSIVE"
+    "runtime_fec_only": "W34_FIXED_MAXIMUM250_AB_BOTH_SCOPED_PASS_LOWER_PSI_HOST_NO_STABLE_CAPACITY_CLAIM"
   },
   "open_requests": [
     {
@@ -399,9 +399,22 @@
       "artifact_sha256": "2d14df2efc9231f84fda1d1727529093d2eda7f5ed5a4a233a3be56dfe21d03a",
       "result": "FAIL_BOTH_RESIDUAL_GT_1PCT_AND_REAL_INJECTOR_ERRORS",
       "app_mbps_each": 250
+    },
+    {
+      "id": "FEC-W34-Maximum250-NativeCoeffSlot-StackViews-SameVM-AB-ARM64",
+      "path": "tests/network/fec-work/W34-maximum250-stack-isaL-nativeCoeff-AB-arm64.json",
+      "run_id": 40148014701,
+      "attempt": 1,
+      "result_artifact_id": 12581460257,
+      "artifact_sha256": "b64b94cebf5aa465421ee89bb310071401623820b9ed021630097fb92b5b785c",
+      "order": "AB",
+      "source_A": "3b16e79698d33ef49628dfa8f67a47550438ebbc",
+      "source_B": "e99a4afff3e9e55e3a11113ed30097e1789e86af",
+      "result": "SUCCESS_BOTH_A_AND_B_PASS_SCOPED_OBSERVATION"
     }
   ],
   "open_issues": [
+    "W34 A W31 old/B W33 new on SAME VM 250Mbps/each 30%IID/300ms outer DATA0 both scoped PASS residual A0.0287/0.0310%, B0.0363/0.0313%, zero injector errors, Parity full (>99.998%) and almost zero expiry; CPU combined 55.62 ->55.41s/30s (-0.38% only, no stable CPU win). Host PSI W34 mean33.66/33.48 peak36.11/35.90 vs W32 OTHER VM old SAME SOURCE fails2.740/2.550% and injector send errors39/245, Parity deficit8.6%, PSI mean47.19 peak50.66! Host load variance is primary demonstrated factor; cannot attribute passing 250 to W33 nor declare stable 250 capacity. W33 source e99a4aff native fixed/auto real build PASS and global coefficient ref stack micro-opt. Do not test >250 on this 4core VM, capacity_stop true.",
     "W32 one frozen native ARM64 250Mbps/side Action40147431966 both FAIL delivered243.173/243.547Mbps residual2.740/2.550% p99 313.3ms; real injector SndbufErrors39/245 preclude attributing all loss FEC. Parity planned/sent client1382114/1263176, server1381771/1263279 (~8.6% deficit); expired5610/5587, unknown_capacity1116/1093, pressure_jobs/sources0; RX/TUN capacity drops0, outer DATA retrans0, kernel CPU PSI peak50.66% avg47.19. W33 new native code e99a4afff succeeded fixed/auto missing-source ARM64 build40147815858 and maximum row contract40147815849, sameVM W34 250 AB action40148014701 ongoing. Stop >250.",
     "W31 per-stream four Parity scratch row reuse source3b16e796 ARM64 build40146207152 FULL PASS and Maximum20 native. Same VM 220Mbps Action40146429352 overall FAILURE only A old INCONCLUSIVE because S2C two APP_SEND_ERRORS; A observed residual0.599/0.547%, B new PASS_SCOPED 0.323/0.353%, delivered219.322/219.244Mbps, p99 310.4/310.7. B parity deficits0.753/0.823% vs A1.584/1.519%; expiry424/463 vs889/864, no B source drops/RX reject/outer DATA retrans. But B CPU client30.95/server31.24s vs A30.97/30.87 (combined +0.35s), PSI B peak50.44! No CPU saving qualification, only observed parity/delivery improvement, single AB not long-run capacity. Do not escalate above220; next instrument TX cost.",
     "W30 one W29 frozen native ARM64 Fixed Maximum 220Mbps/side outer repair OFF 30% IID 300ms Action40145722367 scoped PASS delivered218.146/217.874Mbps, residual0.850/0.977%; S2C only0.023pp beneath1% gate. Parity deficit2.52/2.84%, expiry1398/1588, PSI peak48.47%, 4 cores nonidle79-81%, softirq balanced10-11%, no throttle/RX pressure/source drops; full-run original TX thread CPU21.6s each vs RX16.6s. Code FEC transient parity Vec<Vec<u8>> per4-row quantum may be next targeted optimization.",
@@ -423,7 +436,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "No pressure >250. W32 250 frozen W31 failed residual2.740/2.550% and injector UDP send errors39/245; native parity deadline under CPU contention deficit8.6%. New W33 e99a4afff ISA-L stack borrowed views+bounded per-block global table ref cache compiled real native ARM64 and 250 sameVM old/new W34 currently pending. Read independent AB outcome, preserve injector error qualification and no relaxation of loss limit; only then judge if further source-first M4 slot scheduling needed.",
+  "next_action": "W34 sameVM 250Mbps old A W31/new B W33 both pass under substantially lower host PSI (~33.5% mean), while W32 identical W31 source 250 fails at PSI47.2% and has injector UDP send errors. W33 removes native ISA-L per-quantum borrowed view Vec and per-job BTreeMap, native backend and Fixed/Auto kernel real tests PASS, but measured -0.38% process CPU is not material. Do not claim 250 under host contention stable or escalate >250. Next optimize deterministic TX owner 10ms parity deadline under CPU scheduling contention by low-overhead timing of M3 per 4 rows, original M4 source-first remaining slot distribution and sendmmsg cost, then true same VM old/new high-load AB without weakening FEC or DATA retry. Independent Auto true dynamic M2 still open; merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -3098,5 +3111,179 @@
     },
     "qualification": "250Mbps failed both 1% business gates and injector errors; sender M4 parity deadline gap ~8.6% in both, jobs expired >5500, native RX/owner pressure0. Injector SndbufErrors preclude attributing all business deficit to FEC. Not a physical/Windows/stable capacity qualification.",
     "stop_heavier": true
+  },
+  "w34": {
+    "schema": 1,
+    "owner": "fec-network-work",
+    "id": "FEC-W34-Maximum250-NativeCoeffSlot-StackViews-SameVM-AB-ARM64",
+    "request": "tests/network/fec-work/W34-maximum250-stack-isaL-nativeCoeff-AB-arm64.json",
+    "request_commit": "4d950ebcd23253e7d2521daff9487cc81604032a",
+    "action_run": 40148014701,
+    "attempt": 1,
+    "action_conclusion": "SUCCESS_BOTH_A_AND_B_PASS_SCOPED_OBSERVATION",
+    "artifact_id": 12581460257,
+    "zip_sha256": "b64b94cebf5aa465421ee89bb310071401623820b9ed021630097fb92b5b785c",
+    "same_vm": true,
+    "order": "A_before_B",
+    "source_A": "3b16e79698d33ef49628dfa8f67a47550438ebbc",
+    "source_B": "e99a4afff3e9e55e3a11113ed30097e1789e86af",
+    "build_B": {
+      "action": 40147815858,
+      "artifact": 12580544395,
+      "sha256": "e1ec27312a833e03762a4b9bc6201ff143867b65a6dba02ce17a12a8bb9221eb",
+      "native_maximum_contract_run": 40147815849,
+      "build": "SUCCESS_AUTHENTIC_FIXED_AUTO_NATIVE_MISSING_SOURCE_KERNEL_TUN"
+    },
+    "initial_B_failed_build": {
+      "source": "ac4d9b21e6e15c2e1fe3da57256e72c593a08796",
+      "run": 40147681385,
+      "reason": "Rust E0502 immutable outputs.len after mutable borrow; fixed and recompiled exact new SOURCE e99a4aff, failed source never used as product"
+    },
+    "settings": {
+      "app_rate_mbps_each": 250,
+      "outer_rate_mbps_each": 600,
+      "loss_iid_pct": 30,
+      "oneway_delay_ms": 300,
+      "warmup_s": 15,
+      "measurement_s": 30,
+      "drain_s": 30,
+      "fec": "Fixed Maximum6 both native applied",
+      "outer_data_retransmissions": 0,
+      "owned_fq600": true,
+      "static_test_veth_neighbors": true,
+      "authenticated_feedback": true
+    },
+    "A": {
+      "result": "PASS_SCOPED_OBSERVATION",
+      "app": {
+        "c2s": {
+          "offered_mbps": 249.99947546666667,
+          "delivered_mbps": 249.94956346666666,
+          "residual_pct": 0.028690893021042253,
+          "p99_ms": 301.9,
+          "injector_send_errors": 0
+        },
+        "s2c": {
+          "offered_mbps": 250.00187786666666,
+          "delivered_mbps": 249.947436,
+          "residual_pct": 0.031002186469993146,
+          "p99_ms": 301.9,
+          "injector_send_errors": 0
+        }
+      },
+      "parity": {
+        "client": {
+          "planned": 1382007,
+          "sent": 1381992,
+          "expired_jobs": 1,
+          "unknown_capacity": 0
+        },
+        "server": {
+          "planned": 1381927,
+          "sent": 1381927,
+          "expired_jobs": 0,
+          "unknown_capacity": 0
+        }
+      },
+      "CPU": {
+        "client_s_30": 27.760000000000005,
+        "server_s_30": 27.86,
+        "combined_s_30": 55.62,
+        "host_psi_mean_pct": 33.664,
+        "host_psi_peak_pct": 36.11
+      },
+      "observed_netem_loss_pct": {
+        "client": 29.942706463075414,
+        "server": 29.95103011877028
+      }
+    },
+    "B": {
+      "result": "PASS_SCOPED_OBSERVATION",
+      "app": {
+        "c2s": {
+          "offered_mbps": 250.00016186666667,
+          "delivered_mbps": 249.93559653333332,
+          "residual_pct": 0.03630543888108541,
+          "p99_ms": 301.9,
+          "injector_send_errors": 0
+        },
+        "s2c": {
+          "offered_mbps": 250.00050506666668,
+          "delivered_mbps": 249.9502688,
+          "residual_pct": 0.031274305574441004,
+          "p99_ms": 301.9,
+          "injector_send_errors": 0
+        }
+      },
+      "parity": {
+        "client": {
+          "planned": 1381912,
+          "sent": 1381912,
+          "expired_jobs": 0,
+          "unknown_capacity": 0
+        },
+        "server": {
+          "planned": 1381924,
+          "sent": 1381924,
+          "expired_jobs": 0,
+          "unknown_capacity": 0
+        }
+      },
+      "CPU": {
+        "client_s_30": 27.729999999999997,
+        "server_s_30": 27.68,
+        "combined_s_30": 55.41,
+        "host_psi_mean_pct": 33.48,
+        "host_psi_peak_pct": 35.9
+      },
+      "observed_netem_loss_pct": {
+        "client": 29.969584516273503,
+        "server": 29.999940414121852
+      }
+    },
+    "safety": {
+      "native_source_ingress_drops_both_zero": true,
+      "root_qdisc_drop_both_zero": true,
+      "rx_pressure_evicted_both_zero": true,
+      "rx_capacity_reject_both_zero": true,
+      "parity_seal_fail_both_zero": true,
+      "original_outer_data_retransmitted_both_zero": true,
+      "owned_stop_cleanup_both": true
+    },
+    "host_variance": {
+      "W32_other_vm": "GitHub Actions 1000105611",
+      "W34_this_vm": "GitHub Actions 1000105617",
+      "W32_failure": {
+        "residual_pct": {
+          "c2s": 2.73951367037175,
+          "s2c": 2.5504124406912463
+        },
+        "host_psi_mean_pct": 47.19,
+        "host_psi_peak_pct": 50.66,
+        "injector_errors": {
+          "c2s": 39,
+          "s2c": 245
+        },
+        "parity_deficit_client_pct": 8.61,
+        "parity_deficit_server_pct": 8.57
+      },
+      "W34_sameVM_A_old_pass": {
+        "residual_pct": {
+          "c2s": 0.028690893021042253,
+          "s2c": 0.031002186469993146
+        },
+        "host_psi_mean_pct": 33.664,
+        "injector_errors": 0
+      },
+      "inference": "The older product succeeded at 250 on the W34 lower-PSI host; do NOT attribute recovered 250Mbps capacity to new W33 code. W33 no meaningful CPU gain proven: -0.21 CPU-sec/30 combined (-0.38%), unseeded netem/one AB, residual B slightly worse C2S and same S2C."
+    },
+    "interpretation": [
+      "W33 removed native ISA-L short-lived borrowed view Vecs and per-block BTreeMap table-reference nodes; globally immutable native coefficient cache identity and exact math unchanged; bounded inline local table slots ~640 bytes per one in-flight block.",
+      "W34 same-VM A and B true scoped passing Fixed Maximum250 with residual<0.04% both. Whole Action success confirms no injector error and authentic outer OFF readback; validates W33 no obvious functionality regression.",
+      "W32 same W31 A exact product FAILS under much higher host CPU PSI and injector errors: significant uncontrolled cloud-runner variance; one W34 pass not repeatability/stability qualification.",
+      "Process CPU combined A55.62/B55.41 CPU-s /30s, -0.38% one AB; do not claim causal material CPU optimization or higher capacity attributable to W33.",
+      "Per-core prior W32 softirq balanced and CPU throttling0, no IRQ saturation evidence, but sender parity 10ms deadlines miss under host scheduling contention. Real high contention optimization should focus bounded M4 DATA/Parity slot control and TX per-phase timing, not blindly increase RX buffers.",
+      "No load >250 on shared ARM64 while W32 has genuine high PSI FEC-only failed evidence, capacity_stop=true; merge_ready=false and Auto live dynamic still open."
+    ]
   }
 }
