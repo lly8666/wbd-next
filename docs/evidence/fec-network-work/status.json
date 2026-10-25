@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W38_MIXED200_SMALL_TCP_AB_BOTH_FAIL_SOURCE_TUN_DROPS_HIGH_PSI_W39_SAFE_DIAG_RUNNING",
+  "phase": "W39_MIXED100_SMALL_SPARSE_PASS_W38_MIXED200_BOTH_FAIL_CPU_CAPACITY_STOP",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -428,10 +428,15 @@
       "path": "tests/network/fec-work/W39-mixed-small100-sparse-probe-diagnostic-arm64.json",
       "run_id": 40151444036,
       "source": "861f0396264734f97658243156060f13e6a2f74f",
-      "result": "PENDING_LOWER_RATE_DIAGNOSTIC_NOT_200_QUALIFICATION"
+      "result": "PASS_SCOPED_OBSERVATION",
+      "attempt": 1,
+      "result_artifact_id": 12582309090,
+      "artifact_sha256": "80fa6550e58c62bdd884d22c816cf7a2f1ec6c5bd45fbe133d5f7723f62f80e0",
+      "app_mbps_each": 100
     }
   ],
   "open_issues": [
+    "W39 lower bounded safe calibration 100Mbps per direction same count-weighted mix small35%+two real TCP flows4%+20Hz64B probe Action40151444036 PASS: UDP residual0.046/0.031%, smallUDP0.064/0.066% with p99 308.6/308.7ms; sparse 64B 595 sent 593 real peer-first-arrival each dir p99 307.1/306.7ms (separate RTT610ms); TCP actual4Mbps each, 0 backpressure; Parity full sent planned1.019/1.020m, expired0, source TUN drops0, Stop cleaned. Not substitute for W38 200 mixed A/B both FAIL and high PSI/source drop. NO >100 mixed increase while capacity_stop, keep 200 mixed goal unqualified.",
     "W38 true 200Mbps/side count35%<=256B with two real TCP streams4% and UDP96% 30%IID/300ms sameVM A old e99a4 vs B scheduler+source workspace861f: BOTH FAIL 1% UDP/small gates and nonzero SOURCE TUN drops. A UDP loss13.3746/13.719%, small13.6155/14.0161%, TCP actual0.132/0.102 of8Mbps; B UDP loss5.5686/6.3371%, small5.4765/6.3845%, TCP actual0.386/0.238, huge real backpressure. Parity expiry A40824/42260, B14479/16998, CPU PSI mean A43.48 B56.57, peak B60.32. B sends more actual Parity and reduces miss but fails; NO 200 mixed capacity claim, STOP further high load. W39 separate lower 100Mbps safety diagnostic will read 64B sparse 20Hz actual first-arrival.",
     "W34 A W31 old/B W33 new on SAME VM 250Mbps/each 30%IID/300ms outer DATA0 both scoped PASS residual A0.0287/0.0310%, B0.0363/0.0313%, zero injector errors, Parity full (>99.998%) and almost zero expiry; CPU combined 55.62 ->55.41s/30s (-0.38% only, no stable CPU win). Host PSI W34 mean33.66/33.48 peak36.11/35.90 vs W32 OTHER VM old SAME SOURCE fails2.740/2.550% and injector send errors39/245, Parity deficit8.6%, PSI mean47.19 peak50.66! Host load variance is primary demonstrated factor; cannot attribute passing 250 to W33 nor declare stable 250 capacity. W33 source e99a4aff native fixed/auto real build PASS and global coefficient ref stack micro-opt. Do not test >250 on this 4core VM, capacity_stop true.",
     "W32 one frozen native ARM64 250Mbps/side Action40147431966 both FAIL delivered243.173/243.547Mbps residual2.740/2.550% p99 313.3ms; real injector SndbufErrors39/245 preclude attributing all loss FEC. Parity planned/sent client1382114/1263176, server1381771/1263279 (~8.6% deficit); expired5610/5587, unknown_capacity1116/1093, pressure_jobs/sources0; RX/TUN capacity drops0, outer DATA retrans0, kernel CPU PSI peak50.66% avg47.19. W33 new native code e99a4afff succeeded fixed/auto missing-source ARM64 build40147815858 and maximum row contract40147815849, sameVM W34 250 AB action40148014701 ongoing. Stop >250.",
@@ -455,7 +460,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W38 mixed 200Mbps packet-heavy real mixed UDP/TCP AB: both FAIL, original SOURCE TUN drops and TCP backpressure; B better parity and small loss but higher CPU PSI. Do not run further >100 mixed or imply 200 mixed passes; W39 separately probes 100Mbps safe same mix with genuine 64B sparse first-arrival. Next TX+reader phase instrumentation and actual age/bytes-aware M4 reserve must be proved against CPU/TUN drop before spinning more work; consider separate ingress only after single-thread starvation measurements, NOT speculative extra thread. Strict mixed UDP <=1% and small <=1%, 500ms small p99, zero source drops remain; outer DATA repairs OFF. Auto authentic dynamic still unqualified, main untouched, merge_ready=false.",
+  "next_action": "W35 deadline-before-TUN-poll & W36 contiguous source symbol reuse source861f native functional PASS. W38 user-requested 200Mbps/side real 35%-small-count and two TCP flows with 30%IID/300ms sameVM A/B both FAIL (new B small loss5.48/6.38%, native Parity improved but high CPU PSI56.6 peak60.3, source TUN drops and TCP backpressure). W39 lower diagnostic 100Mbps same mix PASS actual small loss0.064/0.066%, small first p99 309ms, sparse64B probe direct one-way p99~307ms,0 source drops, TCP4Mbps true. Do NOT claim 200 mixed qualification or scale pressure; next profile original-TUN read pause and M4 native parity encode per-quantum CPU versus actual deadlines and live packet/s under CPU pressure, then investigate age+byte-aware bounded service and FEC ingress split if measured; do not simply add CPU threads or grow RX buffers. Auto true dynamic remains unqualified; main untouched; merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -3549,6 +3554,169 @@
       "Native RX rejected_capacity and evicted_pressure both 0; real outer DATA repair0; all original Stop cleanup true; source TUN drops/nonzero and TCP injector backpressure are disqualifying, not hidden.",
       "Short-block FEC / high packet counts over 4 CPU under 30% underlay and 600ms RTT trigger contention and source starvation even though formerly 250Mbps near-MTU passed; CPU quotas and single-core IRQ saturation not evidenced. No higher rate, capacity_stop true.",
       "Independent role-specific Original Normal/off TUN split ingress exists but Fixed/Auto was not switched because would add 512-item channel and concurrent CPU load with no measured waiting-benefit; defer to measured phase-timing research."
+    ]
+  },
+  "w39": {
+    "schema": 1,
+    "owner": "fec-network-work",
+    "id": "FEC-W39-MixedSmall100-SparseProbe-Calibrate-OneNative-ARM64",
+    "request": "tests/network/fec-work/W39-mixed-small100-sparse-probe-diagnostic-arm64.json",
+    "request_commit": "06eced3da900887f2bdab0e7719fd949c3ef5c7a",
+    "action_run": 40151444036,
+    "attempt": 1,
+    "result": "PASS_SCOPED_OBSERVATION",
+    "result_artifact_id": 12582309090,
+    "zip_sha256": "80fa6550e58c62bdd884d22c816cf7a2f1ec6c5bd45fbe133d5f7723f62f80e0",
+    "source": "861f0396264734f97658243156060f13e6a2f74f",
+    "build_run": 40150749260,
+    "build_artifact": 12582379708,
+    "product_zip_sha256": "5f9f587a4d1d44a3cf482c4c46a5be5b52cc71fdb4080935de153dc85f89f7e5",
+    "settings": {
+      "app_rate_mbps_each": 100,
+      "udp_mbps_each": 96,
+      "tcp_mbps_each": 4,
+      "tcp_flows_each": 2,
+      "size_payload_count_weights": [
+        [
+          64,
+          6
+        ],
+        [
+          96,
+          8
+        ],
+        [
+          160,
+          10
+        ],
+        [
+          256,
+          11
+        ],
+        [
+          512,
+          15
+        ],
+        [
+          900,
+          20
+        ],
+        [
+          1287,
+          30
+        ]
+      ],
+      "pct_small_by_count": 35,
+      "sparse_probe_bytes": 64,
+      "sparse_probe_hz": 20,
+      "loss_iid_pct": 30,
+      "netem_oneway_ms": 300,
+      "netem_outer_mbps_each": 600,
+      "fixed_maximum6_actual_both": true,
+      "outer_DATA_retransmission_zero": true,
+      "authenticated_M2": true,
+      "static_veth_neighbors": true,
+      "original_fq600": true,
+      "warmup_s": 15,
+      "measure_s": 30,
+      "drain_s": 30,
+      "small_udp_max_loss_pct": 1,
+      "small_udp_max_p99_ms": 500
+    },
+    "results": {
+      "c2s": {
+        "udp_injected_mbps": 95.998,
+        "udp_delivered_mbps": 95.9578,
+        "udp_residual_loss_pct": 0.04637975901931067,
+        "udp_p99_ms": 307.5,
+        "tcp_target_mbps": 4,
+        "tcp_injected_mbps": 3.9997,
+        "tcp_delivered_mbps": 3.9997,
+        "tcp_residual_loss_pct": 0,
+        "tcp_p99_ms": 943.3,
+        "tcp_backpressure_slots": 0,
+        "small_udp": {
+          "sent": 180355,
+          "delivered": 180240,
+          "missing": 115,
+          "loss_pct": 0.06376313381941172,
+          "p99_ms": 308.6,
+          "send_lag_p99_ms": 2.1,
+          "netem_aligned_10ms_delivery_gap_ms": 0
+        },
+        "sparse_64B": {
+          "offered_hz": 20,
+          "sent": 595,
+          "first_received": 593,
+          "missing": 2,
+          "first_oneway_p99_ms": 307.1,
+          "reverse_rtt_p99_ms": 610
+        }
+      },
+      "s2c": {
+        "udp_injected_mbps": 95.9935,
+        "udp_delivered_mbps": 95.9783,
+        "udp_residual_loss_pct": 0.03085593190736234,
+        "udp_p99_ms": 307.5,
+        "tcp_target_mbps": 4,
+        "tcp_injected_mbps": 3.9998,
+        "tcp_delivered_mbps": 3.9998,
+        "tcp_residual_loss_pct": 0,
+        "tcp_p99_ms": 925.9,
+        "tcp_backpressure_slots": 0,
+        "small_udp": {
+          "sent": 180355,
+          "delivered": 180236,
+          "missing": 119,
+          "loss_pct": 0.06598098195226082,
+          "p99_ms": 308.7,
+          "send_lag_p99_ms": 2.1,
+          "netem_aligned_10ms_delivery_gap_ms": 0
+        },
+        "sparse_64B": {
+          "offered_hz": 20,
+          "sent": 595,
+          "first_received": 593,
+          "missing": 2,
+          "first_oneway_p99_ms": 306.7,
+          "reverse_rtt_p99_ms": 610
+        }
+      }
+    },
+    "native_parity": {
+      "client": {
+        "planned": 1019107,
+        "sent": 1019107,
+        "expired_jobs": 0,
+        "unknown_capacity": 0,
+        "pressure_jobs": 0,
+        "pressure_sources": 0
+      },
+      "server": {
+        "planned": 1020072,
+        "sent": 1020072,
+        "expired_jobs": 0,
+        "unknown_capacity": 0,
+        "pressure_jobs": 0,
+        "pressure_sources": 0
+      }
+    },
+    "resource": {
+      "host_cpu_psi_pct": {
+        "mean": 37.647333333333336,
+        "peak": 40.43
+      },
+      "source_tun_tx_drops_steady_both": 0,
+      "source_tun_tx_drops_warmup_both": 0,
+      "original_tun_root_fq_drops_both": 0,
+      "original_outer_DATA_retransmitted_both": 0,
+      "stop_drained_both": true
+    },
+    "qualification": [
+      "PASS only safe 100Mbps each on 4-core shared ARM64 VM, unchanged loss30%IID/300ms; NOT a 200Mbps mixed qualification.",
+      "W38 200Mbps each with same packet-size weights and higher packet/s load FAILS in A/B: loss~13–14% older and5–6% optimized B, real TUN source drops and TCP severe backpressure. Full mixed 200 still unqualified.",
+      "64B sparse first-arrival direct peer receipt, not echo RTT, actually observed in W39; 595 real probes offered, 593 received per direction, never fabricate 0% loss or survivor-only goodput.",
+      "No native codec/AEAD mathematical changes; destination probe packets included in original on-wire pipeline and recovered by genuine FEC."
     ]
   }
 }
