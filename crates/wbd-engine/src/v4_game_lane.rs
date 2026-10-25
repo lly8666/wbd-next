@@ -175,7 +175,7 @@ impl GameAdapter{
     /// Game16 remains the only outer logical envelope: a typed FEC2
     /// symbol is INSIDE it, after the authenticated per-lane record.
     fn enqueue(tx:&mut GameTx,arena:&mut Arena,bytes:&[u8],
-        inner_mtu:usize,now:MonoNs)->Result<LogicalPacketId,Error>{
+        inner_mtu:usize,now:MonoNs,mode:Mode)->Result<LogicalPacketId,Error>{
         if bytes.is_empty()||bytes.len()>inner_mtu{return Err(Error::Invalid)}
         let id=tx.next_packet().ok_or(Error::Stopped)?;
         let packet=wbd_codec::encode_game(id,bytes,inner_mtu+16)
@@ -183,7 +183,7 @@ impl GameAdapter{
         let mut slab=arena.allocate().map_err(|_|Error::Capacity)?;
         let end=14+packet.len();
         slab.writable()[14..end].copy_from_slice(&packet);
-        let offered=tx.offer(slab,14..end,Mode::Game,31+packet.len(),
+        let offered=tx.offer(slab,14..end,mode,31+packet.len(),
             None,now).map_err(|(e,_)|Error::Game(e))?;
         if offered!=Some(id){return Err(Error::Invalid)}
         Ok(id)
@@ -195,9 +195,9 @@ impl GameAdapter{
             let tx=&mut self.tx;
             let arena=&mut self.arena;
             let mtu=self.inner_mtu;
-            return fec.offer(data,now,|symbol|Self::enqueue(tx,arena,symbol,mtu,now))
+            return fec.offer(data,now,|symbol|Self::enqueue(tx,arena,symbol,mtu,now,Mode::Game))
         }
-        Self::enqueue(&mut self.tx,&mut self.arena,data,self.inner_mtu,now)
+        Self::enqueue(&mut self.tx,&mut self.arena,data,self.inner_mtu,now,Mode::Game)
     }
     #[cfg(feature="fec2_product_record")]
     pub(crate) fn poll_game_fec(&mut self,now:MonoNs)->Result<usize,Error>{
@@ -206,7 +206,7 @@ impl GameAdapter{
         let arena=&mut self.arena;
         let mtu=self.inner_mtu;
         let quiet=tx.in_use().0==0;
-        fec.poll(now,quiet,|symbol|Self::enqueue(tx,arena,symbol,mtu,now))
+        fec.poll(now,quiet,|symbol|Self::enqueue(tx,arena,symbol,mtu,now,Mode::GameFecParity))
     }
     /// Original M4 callback still assigns PN/AEAD in exact queued order.
     /// Only its definite kernel copy may credit a Game-FEC repair row.
