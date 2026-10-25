@@ -1,0 +1,75 @@
+name: LAN XOR genuine TLS13 handoff then bounded pcap
+on:
+  push:
+    branches: [experiment/lan-xor-tlslike]
+    paths:
+      - "tools/lan_xor_tlslike_tls_handoff.go"
+      - "tools/lan_xor_tlslike_tls13_pcap.py"
+      - ".github/workflows/lan-xor-tls13-handoff.yml"
+permissions: {contents: read}
+concurrency:
+  group: lan-xor-tls13-handoff
+  cancel-in-progress: false
+jobs:
+  tls13-handoff-capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Build exact-source Go TLS13 + raw handoff fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p lan-xor-tls13-report
+          go version
+          go build -trimpath -o /tmp/lan_xor_tls13 tools/lan_xor_tlslike_tls_handoff.go
+          sha256sum /tmp/lan_xor_tls13 > lan-xor-tls13-report/binary.sha256
+          {
+            echo "SOURCE=$GITHUB_SHA"
+            echo "RUN_ID=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "GO=$(go version)"
+            echo "TARGET=$(uname -m)"
+            echo "SCOPE=real_mutual_TLS13_fixture_then_raw_data_not_WBD_product"
+          } > lan-xor-tls13-report/manifest.txt
+      - name: Capture handshake followed by 4 new TLS-like XOR data records
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tcpdump
+          tmp="$(mktemp -d)"
+          cap_pid=""
+          cleanup() {
+            if test -n "$cap_pid"; then
+              sudo kill -INT "$cap_pid" 2>/dev/null || true
+              wait "$cap_pid" 2>/dev/null || true
+            fi
+            rm -rf "$tmp"
+          }
+          trap cleanup EXIT
+          port=38462
+          sudo timeout --signal=INT --kill-after=2s 25s tcpdump \
+            -i lo -s 2000 -c 128 -w "$tmp/tls13-and-steady.pcap" \
+            "tcp and dst port $port" >/dev/null 2>&1 &
+          cap_pid=$!
+          sleep 2
+          /tmp/lan_xor_tls13 "$port" | tee lan-xor-tls13-report/roundtrip.json
+          sleep 1
+          sudo kill -INT "$cap_pid" 2>/dev/null || true
+          wait "$cap_pid" || true
+          cap_pid=""
+          test -s "$tmp/tls13-and-steady.pcap"
+          test "$(stat -c %s "$tmp/tls13-and-steady.pcap")" -le 4194304
+          python3 tools/lan_xor_tlslike_tls13_pcap.py \
+            --pcap "$tmp/tls13-and-steady.pcap" --port "$port" \
+            --output lan-xor-tls13-report/capture_summary.json
+          echo "Raw owned pcap/cert/key not persisted" >> lan-xor-tls13-report/manifest.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-xor-tls13-handoff-evidence
+          path: lan-xor-tls13-report/
+          retention-days: 30
+          if-no-files-found: warn
