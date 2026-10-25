@@ -109,7 +109,7 @@ def audit(pcap,port,manifest):
         pad=m["PaddingBytes"]
         bound=m["LifecycleBoundary"]
         stage=m["Stage"]
-        elapsed=m["ElapsedFromLastServerFlightMs"]
+        elapsed=m["ElapsedFromFinishedMs"]
         assert 0<=elapsed<40000
         if name=="genuine_client_finished_completes_handshake_PAD":
             assert m["mode"]=="aes128_gcm_full" and pad>0 and bound
