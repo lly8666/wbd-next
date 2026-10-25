@@ -26,6 +26,7 @@ import (
  "net"
  "os"
  "strconv"
+ "strings"
  "time"
 )
 
@@ -86,7 +87,7 @@ type Manifest struct{
 
 func fail(err error){if err!=nil{panic(err)}}
 func packet(port uint16,seq uint32,proto byte,flags byte,data []byte)[]byte{
- n:=40+len(data);if n>1345{panic("excessive owned inner payload")}
+ n:=40+len(data);if n>1429{panic("excessive owned inner payload")}
  p:=make([]byte,n);p[0]=0x45;p[2]=byte(n>>8);p[3]=byte(n)
  p[6]=0x40;p[8]=64;p[9]=proto
  copy(p[12:20],[]byte{10,11,12,13,10,21,22,23})
@@ -271,48 +272,16 @@ func specs(ch,sf,app []byte)[]Spec{
 }
 func run(port int,root,manifestPath string)error{
  ch,sf,app:=readCorpus(root)
- var sample []byte
- sample=append(sample,[]byte("test")...)
- maskPnRepeat(sample,7);maskPnRepeat(sample,7)
- if string(sample)!="test"{return errors.New("mask roundtrip fail")}
- specs:=specs(ch,sf,app)
- // Gate is not enabled until the genuine inner final ServerHello is present
- // in a verified local TLS transcript. This is only a test-controlled gate.
- verified:=len(sf)>=43 && sf[5]==2
- if !verified{return errors.New("final serverhello not seen")}
- c,e:=newCoder();if e!=nil{return e}
- recs:=make([][]byte,0,len(specs))
- manifest:=Manifest{Scope:"GENUINE_OUTER_MUTUAL_TLS13_THEN_TEST_ONLY_MIXED_AESGCM_OR_PUBLIC_PN_XOR",
-  InnerTLS13Genuine:true,OuterMutualTLS13Genuine:true,FinalServerHelloSeen:true,
-  RealProductionClassifier:false,RealWbdAeadWire:false,PlaintextRoundtripAll:true,
-  ModeDowngradeRejectedInTestOracle:true,Records:make([]Receipt,0,len(specs))}
- aesCount,xorCount:=0,0
- for i,s:=range specs{
-  mode:=byte(0);if gate(s,verified){mode=1;xorCount++}else{aesCount++}
-  w:=c.seal(s.Inner,mode,uint64(i))
-  got,pn,e:=c.open(w,mode)
-  if e!=nil||pn!=uint64(i)||!bytes.Equal(got,s.Inner){return fmt.Errorf("local exact mixed roundtrip failed %s: %v",s.Label,e)}
-  if mode==0{
-   tampered:=append([]byte{},w...)
-   tampered[len(tampered)-1]^=1
-   if _,_,e=c.open(tampered,0);e==nil{return errors.New("AEAD tamper not rejected")}
-   wrong:=append([]byte{},w...);wrong[5]=1
-   if _,_,e=c.open(wrong,0);e==nil{return errors.New("lab oracle mode downgrade accepted")}
-  }
-  h:=sha256.Sum256(s.Inner)
-  name:="aes128_gcm_full";if mode==1{name="public_pn_xor_fast"}
-  manifest.Records=append(manifest.Records,Receipt{s.Label,uint64(i),name,len(w),len(s.Inner),hex.EncodeToString(h[:])})
-  recs=append(recs,w)
- }
- manifest.AESFallbackTamperRejected=true
- if aesCount<10||xorCount<3{return fmt.Errorf("incorrect split aes=%d xor=%d",aesCount,xorCount)}
- parsed,e:=json.MarshalIndent(manifest,"","  ");if e!=nil{return e}
- if e=os.WriteFile(manifestPath,append(parsed,byte(10)),0600);e!=nil{return e}
+ ss:=specs(ch,sf,app)
+ verified:=len(sf)>=43&&sf[5]==2
+ if !verified{return errors.New("final inner ServerHello not in test corpus")}
+ coder,e:=newCoder();if e!=nil{return e}
+ holdMs:=randomHoldMs()
+ if holdMs<11000||holdMs>21000{return errors.New("bad random hold")}
  cert,pool,e:=testCert();if e!=nil{return e}
  listener,e:=net.Listen("tcp",net.JoinHostPort("127.0.0.1",strconv.Itoa(port)))
  if e!=nil{return e}
  defer listener.Close()
- addr:=listener.Addr().String()
  srv:=&tls.Config{MinVersion:tls.VersionTLS13,MaxVersion:tls.VersionTLS13,
   Certificates:[]tls.Certificate{cert},ClientAuth:tls.RequireAndVerifyClientCert,
   ClientCAs:pool,SessionTicketsDisabled:true}
@@ -320,10 +289,12 @@ func run(port int,root,manifestPath string)error{
   ServerName:"localhost",RootCAs:pool,Certificates:[]tls.Certificate{cert},
   SessionTicketsDisabled:true}
  serverResult:=make(chan error,1)
+ modes:=make(chan byte,len(ss))
+ pads:=make(chan int,len(ss))
  go func(){
   raw,err:=listener.Accept();if err!=nil{serverResult<-err;return}
   defer raw.Close()
-  raw.SetDeadline(time.Now().Add(18*time.Second))
+  raw.SetDeadline(time.Now().Add(50*time.Second))
   sc:=tls.Server(raw,srv)
   if e:=sc.Handshake();e!=nil{serverResult<-e;return}
   var ready [7]byte
@@ -331,46 +302,130 @@ func run(port int,root,manifestPath string)error{
   if string(ready[:])!="C_READY"{serverResult<-errors.New("missing encrypted bootstrap barrier");return}
   if _,e:=sc.Write([]byte("S_READY"));e!=nil{serverResult<-e;return}
   direct:=sc.NetConn()
-  for i,s:=range specs{
+  for i,item:=range ss{
    var h [5]byte
    if _,e:=io.ReadFull(direct,h[:]);e!=nil{serverResult<-e;return}
    n:=int(binary.BigEndian.Uint16(h[3:5]))
-   if n<=0||n>1500||!bytes.Equal(h[:3],[]byte{0x17,0x03,0x03}){
-    serverResult<-errors.New("bad post-handshake raw outer frame");return
+   if n<40||n+5>maxWireRecord||!bytes.Equal(h[:3],[]byte{0x17,0x03,0x03}){
+    serverResult<-fmt.Errorf("bad outer record %s n=%d",item.Label,n);return
    }
    w:=make([]byte,n+5);copy(w[:5],h[:])
    if _,e:=io.ReadFull(direct,w[5:]);e!=nil{serverResult<-e;return}
-   expectedMode:=byte(0);if gate(s,verified){expectedMode=1}
-   decoded,pn,e:=c.open(w,expectedMode)
-   if e!=nil||pn!=uint64(i)||!bytes.Equal(decoded,s.Inner){
-    serverResult<-fmt.Errorf("on-wire server decrypt failed %s: %v",s.Label,e);return
+   expectedMode,padLen:=<-modes,<-pads
+   decoded,pn,gotPad,e:=coder.open(w,expectedMode)
+   if e!=nil||pn!=uint64(i)||gotPad!=padLen||!bytes.Equal(decoded,item.Inner){
+    serverResult<-fmt.Errorf("on-wire exact original recovery failed %s gotpad=%d want=%d err=%v",
+      item.Label,gotPad,padLen,e);return
    }
   }
   serverResult<-nil
  }()
- raw,e:=net.DialTimeout("tcp",addr,5*time.Second);if e!=nil{return e}
+ raw,e:=net.DialTimeout("tcp",listener.Addr().String(),5*time.Second)
+ if e!=nil{return e}
  defer raw.Close()
- raw.SetDeadline(time.Now().Add(18*time.Second))
+ raw.SetDeadline(time.Now().Add(50*time.Second))
  tc:=tls.Client(raw,cli)
  if e=tc.Handshake();e!=nil{return e}
- if tc.ConnectionState().Version!=tls.VersionTLS13{return errors.New("wrong TLS version")}
+ if tc.ConnectionState().Version!=tls.VersionTLS13{return errors.New("wrong outer TLS version")}
  if _,e=tc.Write([]byte("C_READY"));e!=nil{return e}
- var ack [7]byte;if _,e=io.ReadFull(tc,ack[:]);e!=nil{return e}
- if string(ack[:])!="S_READY"{return errors.New("missing server TLS barrier")}
+ var ack [7]byte
+ if _,e=io.ReadFull(tc,ack[:]);e!=nil{return e}
+ if string(ack[:])!="S_READY"{return errors.New("missing encrypted bootstrap TLS barrier")}
  direct:=tc.NetConn()
- for _,w:=range recs{
+ // The offline genuine inner TLS13 flight is injected as source packets
+ // over this real connection. Mark the LAST server flight packet as the
+ // beginning of the *real monotonic* randomized post-handshake hold.
+ var establishedAt time.Time
+ firstFastElapsedMs:=int64(-1)
+ manifest:=Manifest{Scope:"Genuine outer mutual TLS13 then lab-only raw AES/PnXor random-hold and boundary-only pad",
+  InnerTLS13Genuine:true,OuterMutualTLS13Genuine:true,FinalServerHelloSeen:true,
+  RealProductionClassifier:false,RealWbdAeadWire:false,
+  PlaintextRoundtripAll:true,ModeDowngradeRejectedInTestOracle:true,
+  ChosenHoldMs:holdMs,MtuBytes:pathMTU,OuterIPTCPOverhead:underlayOverhead,
+  Records:make([]Receipt,0,len(ss))}
+ aesCount,xorCount:=0,0
+ for i,item:=range ss{
+  if item.Stage=="late"&&establishedAt.IsZero(){return errors.New("no verified established clock")}
+  // One wait, no per-packet RNG and no per-packet timer allocation.
+  if item.Stage=="late"&&firstFastElapsedMs<0{
+   target:=establishedAt.Add(time.Duration(holdMs)*time.Millisecond)
+   if d:=time.Until(target);d>0{time.Sleep(d)}
+  }
+  elapsedMs:=int64(0)
+  if !establishedAt.IsZero(){elapsedMs=time.Since(establishedAt).Milliseconds()}
+  fast:=gate(item,verified,elapsedMs,holdMs)
+  if item.Stage=="early"&&fast{return errors.New("early fast path leak")}
+  if item.Stage=="late"&&item.TrustedApp&&item.Port==mainPort&&
+    item.Seq>=safeBoundary&&!fast{
+    return fmt.Errorf("late trusted fast packet unexpectedly rejected %s",item.Label)
+  }
+  mode:=byte(0)
+  if fast{mode=1;xorCount++}else{aesCount++}
+  padLen:=0
+  if mode==0{padLen=choosePadding(item)}
+  if padLen>0&&!item.Boundary{return errors.New("nonboundary padded")}
+  if fast&&padLen!=0{return errors.New("fast packet padded")}
+  w,pad:=coder.seal(item.Inner,mode,uint64(i),padLen)
+  if len(w)+underlayOverhead>pathMTU{return errors.New("outer path MTU exceeded")}
+  decoded,pn,gotPad,e:=coder.open(w,mode)
+  if e!=nil||pn!=uint64(i)||gotPad!=padLen||!bytes.Equal(decoded,item.Inner){
+   return fmt.Errorf("local roundtrip failed %s: %v",item.Label,e)
+  }
+  if mode==0{
+   tampered:=append([]byte{},w...);tampered[len(tampered)-1]^=1
+   if _,_,_,e=coder.open(tampered,0);e==nil{return errors.New("AES tag/padding tamper accepted")}
+   wrong:=append([]byte{},w...);wrong[5]=1
+   if _,_,_,e=coder.open(wrong,0);e==nil{return errors.New("test oracle mode downgrade accepted")}
+  }
+  if item.Boundary&&!fast{
+   if padLen>0{manifest.PaddedRecords++;manifest.PaddingBytesTotal+=padLen
+   }else{manifest.LargeNoRoomFallback++}
+  }else{manifest.UnpaddedRecords++}
+  if item.Boundary&&padLen==0&&len(item.Inner)+labAeadOverhead<maxWireRecord{
+   return fmt.Errorf("boundary had room but no random pad %s",item.Label)
+  }
+  if len(w)>manifest.MTUMaxRecordObserved{manifest.MTUMaxRecordObserved=len(w)}
+  if fast&&firstFastElapsedMs<0{firstFastElapsedMs=elapsedMs}
+  h:=sha256.Sum256(item.Inner);ph:=sha256.Sum256(pad)
+  modeName:="aes128_gcm_full";if fast{modeName="public_pn_xor_fast"}
+  manifest.Records=append(manifest.Records,Receipt{
+    Label:item.Label,PN:uint64(i),Mode:modeName,WireBytes:len(w),
+    InnerBytes:len(item.Inner),PlainSha256:hex.EncodeToString(h[:]),
+    PaddingBytes:padLen,LifecycleBoundary:item.Boundary,
+    Stage:item.Stage,ElapsedFromLastServerFlightMs:elapsedMs,
+    PadSha256:hex.EncodeToString(ph[:]),
+  })
+  modes<-mode;pads<-padLen
   if _,e=direct.Write(w);e!=nil{return e}
-  time.Sleep(17*time.Millisecond)
+  if strings.HasPrefix(item.Label,"genuine_serverflight_chunk"){
+   establishedAt=time.Now()
+  }
+  time.Sleep(18*time.Millisecond)
  }
  if e=<-serverResult;e!=nil{return e}
- receipt,e:=json.Marshal(map[string]interface{}{
-  "outer_mutual_tls13":true,"inner_tls13_corpus":true,
-  "records":len(recs),"fallback_aes":aesCount,"fast_pn_xor":xorCount,
-  "all_exact_roundtrip":true,"fallback_tamper_rejected":true,
-  "scope":"LAB_ONLY_NO_REAL_CLASSIFIER_OR_WBD_AEAD_WIRE",
+ manifest.AESFallbackTamperRejected=true
+ manifest.ObservedFastElapsedMs=firstFastElapsedMs
+ if manifest.PaddedRecords<7||manifest.UnpaddedRecords<7||aesCount<12||xorCount<4||
+  manifest.LargeNoRoomFallback!=1||firstFastElapsedMs<holdMs||
+  firstFastElapsedMs>holdMs+3000{
+  return fmt.Errorf("strict policy counts/hold failed: aes=%d xor=%d padded=%d unpad=%d exact=%d hold=%d fast=%d",
+    aesCount,xorCount,manifest.PaddedRecords,manifest.UnpaddedRecords,manifest.LargeNoRoomFallback,
+    holdMs,firstFastElapsedMs)
+ }
+ blob,e:=json.MarshalIndent(manifest,"","  ");if e!=nil{return e}
+ if e=os.WriteFile(manifestPath,append(blob,byte(10)),0600);e!=nil{return e}
+ summary,e:=json.Marshal(map[string]interface{}{
+  "records":len(ss),"full_AES_records":aesCount,"PN_XOR_records":xorCount,
+  "padded_boundary_records":manifest.PaddedRecords,
+  "unpadded_nonboundary_records":manifest.UnpaddedRecords,
+  "zero_room_boundary_records":manifest.LargeNoRoomFallback,
+  "hold_ms":holdMs,"first_fast_elapsed_ms":firstFastElapsedMs,
+  "max_record_plus_underlay":manifest.MTUMaxRecordObserved+underlayOverhead,
+  "all_records_roundtrip":true,"fallback_tamper_rejected":true,
+  "real_tls_classifier":false,"wire":"LAB_ONLY_GO_AES_DIFFERENT_FROM_WBD_RUST",
  })
  if e!=nil{return e}
- fmt.Println(string(receipt))
+ fmt.Println(string(summary))
  return nil
 }
 func main(){
