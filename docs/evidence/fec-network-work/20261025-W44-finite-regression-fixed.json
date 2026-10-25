@@ -1,0 +1,51 @@
+{
+  "branch": "experiment/fec-network-tuning",
+  "source": "23da99f0de04afe17756542f5176f2759e318747",
+  "product_build_run": 40153525640,
+  "product_artifact_id": 12583149711,
+  "product_sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
+  "arm64": true,
+  "outer_DATA_retransmission_enabled": false,
+  "original_M4": true,
+  "id": "W44",
+  "mode": "fec-fixed",
+  "profile": 3,
+  "case": "nonmax_fixed3_sparse_8Mbps_each_loss2_delay75ms",
+  "commit": "b03a87c3f467f71165bf3277404df2d8b9bc6745",
+  "request": "tests/network/fec-work/W44-fixed3-2pct-sparseSmall8-arm64.json",
+  "run": 40156902370,
+  "artifact": 12585161305,
+  "sha256": "0578be49b8941971b6a24ea54f3689fe9e0460638c38c9657ef122b26b7a4e7c",
+  "result": "PASS_SCOPED_OBSERVATION",
+  "native_applied_both": "fixed requested=1 applied=1 profile=3 pending=false",
+  "udp_c2s_mbps": 7.68,
+  "udp_s2c_mbps": 7.68,
+  "tcp_c2s_mbps": 0.32,
+  "tcp_s2c_mbps": 0.32,
+  "small_loss_pct": [
+    0,
+    0
+  ],
+  "small_p99_ms": [
+    89,
+    89.8
+  ],
+  "sparse_received_by_sent": [
+    [
+      595,
+      596
+    ],
+    [
+      595,
+      596
+    ]
+  ],
+  "source_TUN_drops": 0,
+  "root_fq_drops": 0,
+  "parity_expired_both": 0,
+  "process_cpu_s_client_server": [
+    4.13,
+    4.1
+  ],
+  "qualification": "one standalone arm64 product; nonmaximum, not 30percent maximum capacity"
+}

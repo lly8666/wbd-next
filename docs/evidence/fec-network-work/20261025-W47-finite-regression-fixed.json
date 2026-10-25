@@ -1,0 +1,59 @@
+{
+  "branch": "experiment/fec-network-tuning",
+  "source": "23da99f0de04afe17756542f5176f2759e318747",
+  "product_build_run": 40153525640,
+  "product_artifact_id": 12583149711,
+  "product_sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
+  "arm64": true,
+  "outer_DATA_retransmission_enabled": false,
+  "original_M4": true,
+  "id": "W47",
+  "mode": "fec-fixed",
+  "profile": 3,
+  "case": "Fixed3_8Mbps_sameVM_new_W40_B_then_old_W36_A",
+  "commit": "c74aff1a76554d5e5740a649ec8c64c94d1bcf51",
+  "request": "tests/network/fec-work/W47-fixed3-2pct-sparseSmall8-oldnew-BA-arm64.json",
+  "run": 40157346725,
+  "artifact": 12585227054,
+  "sha256": "61d4c6d1d70476247b9ae04d6b588036243d4002caa3d62770ce9293ab6c9271",
+  "result": "PASS_SCOPED_OBSERVATION_BOTH",
+  "source_A": "861f0396264734f97658243156060f13e6a2f74f",
+  "source_B": "23da99f0de04afe17756542f5176f2759e318747",
+  "order": "BA",
+  "process_cpu_s_combined": {
+    "A": 20.54,
+    "B": 7.93
+  },
+  "observed_cpu_reduction_pct": 61.39240506329114,
+  "host_PSI_mean_pct": {
+    "A": 1.8413333333333335,
+    "B": 0.9183333333333333
+  },
+  "small_loss_pct": {
+    "A": [
+      0,
+      0
+    ],
+    "B": [
+      0,
+      0
+    ]
+  },
+  "small_p99_ms": {
+    "A": [
+      89.4,
+      85
+    ],
+    "B": [
+      88.9,
+      89.1
+    ]
+  },
+  "native_readback": "Fixed3 both endpoints requested=applied=1,pending=false",
+  "tcp_real_rate_mbps_each": 0.32,
+  "source_TUN_drops_both": 0,
+  "outer_DATA_retransmission_count": 0,
+  "parity_copy_equals_planned_both": true,
+  "parity_jobs_expired_both": 0,
+  "qualification": "one BA different VM from W46; S2C small p99 B89.1ms > A85.0ms single-sample +4.1ms, stays <=500ms; not unconditional latency win"
+}

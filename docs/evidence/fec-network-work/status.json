@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W42_NATIVE_PPOLL_PARITY_BOUNDED_100MIXED_AB_BA_BOTH_PASS_CPU_OBSERVED_MINUS21PCT_CAPACITY_STOP_200MIXED_FAIL",
+  "phase": "W47_FINITE_CLOSURE_FEC_OFF_FIXED3_AUTO_AUTH_REAL_PASS_AB_BA_CPU_IMPROVED_200MIXED_W40_UNQUALIFIED_CAPACITY_STOP",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -457,9 +457,60 @@
       "order": "BA",
       "source_A": "861f0396264734f97658243156060f13e6a2f74f",
       "source_B": "23da99f0de04afe17756542f5176f2759e318747"
+    },
+    {
+      "id": "W43",
+      "path": "tests/network/fec-work/W43-normal-FECoff-outeroff-sparseSmall2-arm64.json",
+      "run_id": 40156880680,
+      "attempt": 1,
+      "result_artifact_id": 12585645415,
+      "artifact_sha256": "1659cb0203e9ef114e4458be773ddf7e178e074617ffc4e777a463006ade92af",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "source": "23da99f0de04afe17756542f5176f2759e318747"
+    },
+    {
+      "id": "W44",
+      "path": "tests/network/fec-work/W44-fixed3-2pct-sparseSmall8-arm64.json",
+      "run_id": 40156902370,
+      "attempt": 1,
+      "result_artifact_id": 12585161305,
+      "artifact_sha256": "0578be49b8941971b6a24ea54f3689fe9e0460638c38c9657ef122b26b7a4e7c",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "source": "23da99f0de04afe17756542f5176f2759e318747"
+    },
+    {
+      "id": "W45",
+      "path": "tests/network/fec-work/W45-auto-m2-asym-rise-recover-8-W40-arm64.json",
+      "run_id": 40156921978,
+      "attempt": 1,
+      "result_artifact_id": 12584856579,
+      "artifact_sha256": "8e09b19dde8cd99ff805497b41f88bb3fbc6fef0a63b0304db70ada9119c9394",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "source": "23da99f0de04afe17756542f5176f2759e318747"
+    },
+    {
+      "id": "W46",
+      "path": "tests/network/fec-work/W46-normal-FECoff-outeroff-sparseSmall2-oldnew-AB-arm64.json",
+      "run_id": 40157334097,
+      "attempt": 1,
+      "result_artifact_id": 12584617269,
+      "artifact_sha256": "2516e42e28cab589723092573de3844641d408dce2e21aca1394ccbcb86fe7cf",
+      "result": "PASS_SCOPED_OBSERVATION_BOTH",
+      "source": "23da99f0de04afe17756542f5176f2759e318747"
+    },
+    {
+      "id": "W47",
+      "path": "tests/network/fec-work/W47-fixed3-2pct-sparseSmall8-oldnew-BA-arm64.json",
+      "run_id": 40157346725,
+      "attempt": 1,
+      "result_artifact_id": 12585227054,
+      "artifact_sha256": "61d4c6d1d70476247b9ae04d6b588036243d4002caa3d62770ce9293ab6c9271",
+      "result": "PASS_SCOPED_OBSERVATION_BOTH",
+      "source": "23da99f0de04afe17756542f5176f2759e318747"
     }
   ],
   "open_issues": [
+    "Finite W43-W47 low-risk regression completed W40 source23da99: Normal/FEC OFF 2Mbps W43 PASS and old/new W46 sameVM A61? No, CPU actual old7.46/new2.45s combined -67.2%; Fixed3 8Mbps 2%IID W44 PASS and W47 BA CPU old20.54/new7.93s -61.4%, BOTH retain zero drop and small UDP accept, although Fixed3 S2C small p99 85.0->89.1ms (+4.1ms) single observation. Auto W45 8Mbps 2->20->1% C2S, 0->1->0% S2C ACTUAL original QUALITY VALID and STAGE: C2S Strong5->High4->Maximum6->Strong5 requested=applied4; S2C Strong5->High4 revision2, genuine authenticated M2, C2S high 47/47066 missing (0.09986%), both outer DATA0/TUNdrop0. Saved Auto quality raw log confirms stage while harness summary auto_runtime_curve says NOT_OBSERVED_FINAL_READBACK_ONLY; never claim telemetry auto phase curve auto-verified. W40 still NOT tested 200Mbps mixed. Stop perf micro-optimizing; capacity_stop=true; merge_ready=false.",
     "W41 sameVM A->B and W42 reverse B->A identical actual 100Mbps each mixed UDP96% 35%<=256B-count two TCP4% + sparse64B20Hz 30%IID/300ms both product-native PASS 1% total/small gates TCP true 4Mbps each, source TUN/root drops0 and parity 1.02m planned=sent expiry0, outer DATA retrans0. New W40 Linux ppoll ns and source-first M4 cap31 default/cap23 if <=1ms FEC due or jobs pending, <=8 Parity+1 real M2, no flows reordered. W41 original process CPU-s A61.44/B48.42 -21.19%; W42 B47.97/A61.20 -21.62%, reversed-order replication strengthens signal but VM host PSI differs concurrently (A~37.9/36.7, B~29.4/29.1), no universal causal 21% pledge. Small UDP p99 B307.7/307.8 vs A308.7/308.7 AB; BA B307.7/307.7 vs A308.2/308.3. W38 user-requested true mixed200 BOTH FAIL and source drops/TCP backpressure; DO NOT claim high-pressure rescue, capacity_stop true, merge_ready false. Need instrument exact CPU stage costs or benchmark 200 only with owned headroom before further tuning.",
     "W39 lower bounded safe calibration 100Mbps per direction same count-weighted mix small35%+two real TCP flows4%+20Hz64B probe Action40151444036 PASS: UDP residual0.046/0.031%, smallUDP0.064/0.066% with p99 308.6/308.7ms; sparse 64B 595 sent 593 real peer-first-arrival each dir p99 307.1/306.7ms (separate RTT610ms); TCP actual4Mbps each, 0 backpressure; Parity full sent planned1.019/1.020m, expired0, source TUN drops0, Stop cleaned. Not substitute for W38 200 mixed A/B both FAIL and high PSI/source drop. NO >100 mixed increase while capacity_stop, keep 200 mixed goal unqualified.",
     "W38 true 200Mbps/side count35%<=256B with two real TCP streams4% and UDP96% 30%IID/300ms sameVM A old e99a4 vs B scheduler+source workspace861f: BOTH FAIL 1% UDP/small gates and nonzero SOURCE TUN drops. A UDP loss13.3746/13.719%, small13.6155/14.0161%, TCP actual0.132/0.102 of8Mbps; B UDP loss5.5686/6.3371%, small5.4765/6.3845%, TCP actual0.386/0.238, huge real backpressure. Parity expiry A40824/42260, B14479/16998, CPU PSI mean A43.48 B56.57, peak B60.32. B sends more actual Parity and reduces miss but fails; NO 200 mixed capacity claim, STOP further high load. W39 separate lower 100Mbps safety diagnostic will read 64B sparse 20Hz actual first-arrival.",
@@ -485,7 +536,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W40 Linux `ppoll` real nanos sub-1ms FEC/M2 due wait and conservative source-first 23/8/1 M4 Parity/feedback opportunity with 31/1 fallback, ARM64 native Fixed Auto TUN and Maximum PASS; W41 AB & W42 BA exact same100Mbps each real mixed two TCP streams + real sparse64B both scoped PASS, measured process CPU sums consistently ~21% lower B though shared VM PSI moved. Preserve immutable signed FEC math/10ms TTL, no inner TCP flow reordering or new threads. W38 mixed200 both FAIL under CPU source TUN drops and real TCP backpressure, keep capacity_stop and no >100 mixed repeat until new low-cost TX phase per-class deadline timing demonstrates headroom. Per-flow small packet prioritization deferred because same TCP stream/order must be protected and low cost fairness already addresses control+Parity. Auto dynamic rise/fall/asymmetry remains unqualified; do not merge into main, status merge_ready=false.",
+  "next_action": "Finite low-load regression W43-W47 is complete with exact native W40 source23da99 fixed, OFF, Auto authentic dynamic all scoped PASS; W46 and W47 low-load old/new A/B reversed order observed large CPU reduction and no source drops/TCP backpressure. Stop performance engineering / extra throughput ladder and do a focused scoped code review and voluntary real user-device field experience next, preserving 23/8/1 as bounded best-effort not high-saturation Parity balance. If real product high-load mixed under adequate CPU headroom is requested, instrument per-turn exact Parity byte demand/age, TUN read delay/CPU and compare 200Mbps only under controlled sufficient host CPU; W40 200 mixed NOT_RUN. Remain capacity_stop=true and merge_ready=false, no main/upstream merge or modifications.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -4034,5 +4085,335 @@
       "owned_Stop_cleanup": true
     },
     "observed_process_cpu_reduction_pct": 21.617647058823536
+  },
+  "w43": {
+    "id": "W43",
+    "mode": "normal",
+    "case": "fec_off_sparse_2Mbps_each_loss0_delay25ms",
+    "commit": "b1fd495029df79153a0a4bfa425398919a4f8841",
+    "request": "tests/network/fec-work/W43-normal-FECoff-outeroff-sparseSmall2-arm64.json",
+    "run": 40156880680,
+    "artifact": 12585645415,
+    "sha256": "1659cb0203e9ef114e4458be773ddf7e178e074617ffc4e777a463006ade92af",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "mode_applied": "Normal, FEC OFF, outer-repair OFF",
+    "udp_c2s_mbps": 1.92,
+    "udp_s2c_mbps": 1.92,
+    "tcp_c2s_mbps": 0.08,
+    "tcp_s2c_mbps": 0.08,
+    "small_loss_pct": [
+      0,
+      0
+    ],
+    "small_p99_ms": [
+      25.4,
+      25.3
+    ],
+    "sparse_received_by_sent": [
+      [
+        597,
+        597
+      ],
+      [
+        597,
+        597
+      ]
+    ],
+    "source_TUN_drops": 0,
+    "root_fq_drops": 0,
+    "process_cpu_s_client_server": [
+      1.27,
+      1.29
+    ],
+    "qualification": "one standalone arm64 product success; no old/new CPU comparison here"
+  },
+  "w44": {
+    "id": "W44",
+    "mode": "fec-fixed",
+    "profile": 3,
+    "case": "nonmax_fixed3_sparse_8Mbps_each_loss2_delay75ms",
+    "commit": "b03a87c3f467f71165bf3277404df2d8b9bc6745",
+    "request": "tests/network/fec-work/W44-fixed3-2pct-sparseSmall8-arm64.json",
+    "run": 40156902370,
+    "artifact": 12585161305,
+    "sha256": "0578be49b8941971b6a24ea54f3689fe9e0460638c38c9657ef122b26b7a4e7c",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "native_applied_both": "fixed requested=1 applied=1 profile=3 pending=false",
+    "udp_c2s_mbps": 7.68,
+    "udp_s2c_mbps": 7.68,
+    "tcp_c2s_mbps": 0.32,
+    "tcp_s2c_mbps": 0.32,
+    "small_loss_pct": [
+      0,
+      0
+    ],
+    "small_p99_ms": [
+      89,
+      89.8
+    ],
+    "sparse_received_by_sent": [
+      [
+        595,
+        596
+      ],
+      [
+        595,
+        596
+      ]
+    ],
+    "source_TUN_drops": 0,
+    "root_fq_drops": 0,
+    "parity_expired_both": 0,
+    "process_cpu_s_client_server": [
+      4.13,
+      4.1
+    ],
+    "qualification": "one standalone arm64 product; nonmaximum, not 30percent maximum capacity"
+  },
+  "w45": {
+    "id": "W45",
+    "mode": "fec-auto",
+    "case": "authentic_M2_asymmetric_8Mbps_each_2to20to1_loss_c2s_0to1to0_s2c_delay75ms",
+    "commit": "1dc3171212a0082b756d6d329f7be898b8760eb6",
+    "request": "tests/network/fec-work/W45-auto-m2-asym-rise-recover-8-W40-arm64.json",
+    "run": 40156921978,
+    "artifact": 12584856579,
+    "sha256": "8e09b19dde8cd99ff805497b41f88bb3fbc6fef0a63b0304db70ada9119c9394",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "impairment_wallclock_UTC": {
+      "pre_low": "2026-10-25T03:06:25.456Z",
+      "asym_high": "2026-10-25T03:06:55.456Z",
+      "recover_low": "2026-10-25T03:07:55.456Z"
+    },
+    "original_go_quality_stages": {
+      "c2s": [
+        {
+          "time_utc": "2026-10-25T03:06:54Z",
+          "from": 5,
+          "to": 4,
+          "revision": 2,
+          "stage_reason": "10s and 4096 valid sources; one-step down",
+          "phase": "pre_low"
+        },
+        {
+          "time_utc": "2026-10-25T03:07:15Z",
+          "from": 4,
+          "to": 6,
+          "revision": 3,
+          "stage_reason": "two valid rising fast windows",
+          "phase": "asym_high"
+        },
+        {
+          "time_utc": "2026-10-25T03:08:43Z",
+          "from": 6,
+          "to": 5,
+          "revision": 4,
+          "stage_reason": "10s and 4096 valid sources; one-step down",
+          "phase": "recover_low"
+        }
+      ],
+      "s2c": [
+        {
+          "time_utc": "2026-10-25T03:07:33Z",
+          "from": 5,
+          "to": 4,
+          "revision": 2,
+          "stage_reason": "10s and 4096 valid sources; one-step down",
+          "phase": "asym_high"
+        }
+      ]
+    },
+    "final_original_native_readback": {
+      "client": {
+        "mode": "auto",
+        "requested": 4,
+        "applied": 4,
+        "profile": 5,
+        "pending": false
+      },
+      "server": {
+        "mode": "auto",
+        "requested": 2,
+        "applied": 2,
+        "profile": 4,
+        "pending": false
+      }
+    },
+    "true_data_rtt_horizon": "original 2s/8s matured encrypted reverse M2 owner counters; validity=VALID at stage; missing-feedback and actual-k incomplete periods remain UNKNOWN",
+    "app_per_phase": {
+      "c2s_pre_low_missing": 0,
+      "c2s_asym_high_missing": 47,
+      "c2s_asym_high_first_arrivals": 47019,
+      "c2s_asym_high_residual_pct": 0.09985977138486381,
+      "c2s_recover_low_missing": 0,
+      "s2c_all_three_missing": 0
+    },
+    "native_parity_planned_sent_client": [
+      155998,
+      155998
+    ],
+    "native_parity_planned_sent_server": [
+      121187,
+      121187
+    ],
+    "parity_jobs_expired_both": 0,
+    "source_TUN_drops": 0,
+    "outer_DATA_retransmission_count": 0,
+    "recovered_tun_client": 527,
+    "recovered_tun_server": 11106,
+    "process_cpu_s_client_server": [
+      15.07,
+      15.11
+    ],
+    "telemetry_gap": "automated auto_runtime_curve is NOT_OBSERVED_FINAL_READBACK_ONLY, but saved ORIGINAL client/server-auto-quality.log and impairment-events.json independently prove requested stages, VALID input and temporal phases; final readback proves applied revision. Do not mislabel summary curve fully automatic.",
+    "qualification": "valid one real asymmetric stage-up/return product instance, not all Auto curves/policies/platforms"
+  },
+  "w46": {
+    "id": "W46",
+    "mode": "normal",
+    "case": "FEC_OFF_2Mbps_sameVM_old_W36_A_then_new_W40_B",
+    "commit": "0b70e4cdaadef1919b5e2fb5c8b857f917fa867a",
+    "request": "tests/network/fec-work/W46-normal-FECoff-outeroff-sparseSmall2-oldnew-AB-arm64.json",
+    "run": 40157334097,
+    "artifact": 12584617269,
+    "sha256": "2516e42e28cab589723092573de3844641d408dce2e21aca1394ccbcb86fe7cf",
+    "result": "PASS_SCOPED_OBSERVATION_BOTH",
+    "source_A": "861f0396264734f97658243156060f13e6a2f74f",
+    "source_B": "23da99f0de04afe17756542f5176f2759e318747",
+    "order": "AB",
+    "process_cpu_s_combined": {
+      "A": 7.46,
+      "B": 2.45
+    },
+    "observed_cpu_reduction_pct": 67.15817694369973,
+    "host_PSI_mean_pct": {
+      "A": 0,
+      "B": 5.014666666666667
+    },
+    "small_loss_pct": {
+      "A": [
+        0,
+        0
+      ],
+      "B": [
+        0,
+        0
+      ]
+    },
+    "small_p99_ms": {
+      "A": [
+        25.3,
+        25.3
+      ],
+      "B": [
+        25.3,
+        25.3
+      ]
+    },
+    "tcp_real_rate_mbps_each": 0.08,
+    "source_TUN_drops_both": 0,
+    "outer_DATA_retransmission_count": 0,
+    "qualification": "one sameVM AB observation, variable host CPU PSI; no universal CPU gain guarantee"
+  },
+  "w47": {
+    "id": "W47",
+    "mode": "fec-fixed",
+    "profile": 3,
+    "case": "Fixed3_8Mbps_sameVM_new_W40_B_then_old_W36_A",
+    "commit": "c74aff1a76554d5e5740a649ec8c64c94d1bcf51",
+    "request": "tests/network/fec-work/W47-fixed3-2pct-sparseSmall8-oldnew-BA-arm64.json",
+    "run": 40157346725,
+    "artifact": 12585227054,
+    "sha256": "61d4c6d1d70476247b9ae04d6b588036243d4002caa3d62770ce9293ab6c9271",
+    "result": "PASS_SCOPED_OBSERVATION_BOTH",
+    "source_A": "861f0396264734f97658243156060f13e6a2f74f",
+    "source_B": "23da99f0de04afe17756542f5176f2759e318747",
+    "order": "BA",
+    "process_cpu_s_combined": {
+      "A": 20.54,
+      "B": 7.93
+    },
+    "observed_cpu_reduction_pct": 61.39240506329114,
+    "host_PSI_mean_pct": {
+      "A": 1.8413333333333335,
+      "B": 0.9183333333333333
+    },
+    "small_loss_pct": {
+      "A": [
+        0,
+        0
+      ],
+      "B": [
+        0,
+        0
+      ]
+    },
+    "small_p99_ms": {
+      "A": [
+        89.4,
+        85
+      ],
+      "B": [
+        88.9,
+        89.1
+      ]
+    },
+    "native_readback": "Fixed3 both endpoints requested=applied=1,pending=false",
+    "tcp_real_rate_mbps_each": 0.32,
+    "source_TUN_drops_both": 0,
+    "outer_DATA_retransmission_count": 0,
+    "parity_copy_equals_planned_both": true,
+    "parity_jobs_expired_both": 0,
+    "qualification": "one BA different VM from W46; S2C small p99 B89.1ms > A85.0ms single-sample +4.1ms, stays <=500ms; not unconditional latency win"
+  },
+  "finite_closure": {
+    "branch": "experiment/fec-network-tuning",
+    "source": "23da99f0de04afe17756542f5176f2759e318747",
+    "product_build_run": 40153525640,
+    "product_artifact_id": 12583149711,
+    "product_sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
+    "arm64": true,
+    "outer_DATA_retransmission_enabled": false,
+    "original_M4": true,
+    "id": "W43-W47-FiniteClosure-NoMoreUnscopedPerfChasing",
+    "prior_high_load": "W38 200Mbps each real small-UDP/TCP mixed on W36 A/B FAIL 1% total/small, source TUN drops, TCP severe backpressure; W40 23da99 product not retested at200; cannot infer PASS or FAIL for W40",
+    "previous_success": "W41 and W42 100Mbps each mixed sameVM AB+BA both scoped PASS, measured combined CPU -21.19/-21.62%, host contention caveat",
+    "profile_coverage": "Normal FEC OFF lossless sparse W43 W46; Fixed3 2% 8Mbps W44 W47; Fixed6 30% 100Mbps real mixed W41 W42; Auto true asymmetric 2->20->1% 8Mbps W45, 3 VALID original C2S stages 1 S2C stage, native applied revisions diverge authentically",
+    "tested_actions": [
+      {
+        "id": "W43",
+        "run": 40156880680,
+        "artifact": 12585645415,
+        "conclusion": "PASS_SCOPED_OBSERVATION"
+      },
+      {
+        "id": "W44",
+        "run": 40156902370,
+        "artifact": 12585161305,
+        "conclusion": "PASS_SCOPED_OBSERVATION"
+      },
+      {
+        "id": "W45",
+        "run": 40156921978,
+        "artifact": 12584856579,
+        "conclusion": "PASS_SCOPED_OBSERVATION"
+      },
+      {
+        "id": "W46",
+        "run": 40157334097,
+        "artifact": 12584617269,
+        "conclusion": "PASS_SCOPED_OBSERVATION_BOTH"
+      },
+      {
+        "id": "W47",
+        "run": 40157346725,
+        "artifact": 12585227054,
+        "conclusion": "PASS_SCOPED_OBSERVATION_BOTH"
+      }
+    ],
+    "recommended_stop": "Retain native W40 without new packet priority classes/senders/threads. No new high-stress 200Mbps mixed on capacity_stop shared CPU VM. 23/8/1 fairness is bounded minimum not stable high-load max: full k16/r20 requires 1.25 Parity per source; saturated 23DATA+8Parity cannot serve perpetual backlog, but pressure scenario is not measured W40. Reopen only on evidence of real traffic stalls with fixed host CPU headroom or genuine user-facing regression. Preserve original Auto real feedback and per-stream TCP order. Do not merge main until deliberate review and platform/target checks.",
+    "qualification": "Finite functional and low-load regression complete, not physical Linux/Windows or 200Mbps mixed capacity guarantee",
+    "capacity_stop": true,
+    "merge_ready": false
   }
 }
