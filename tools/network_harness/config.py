@@ -226,12 +226,21 @@ def validate(raw):
              "max_active_gap_ms", "require_retransmission", "max_repair_fresh_pct", "min_repair_line_pct",
              "require_zero_source_tun_drops_full_run",
               "require_zero_tun_root_qdisc_drops_full_run", "cross_business_hol",
-             "max_small_udp_loss_pct", "max_small_udp_p99_ms"], "acceptance")
+             "max_small_udp_loss_pct", "max_small_udp_p99_ms", "loss_gate_phases"], "acceptance")
     a.setdefault("injection_tolerance_pct", 3)
     a.setdefault("require_retransmission", False)
     a.setdefault("require_zero_source_tun_drops_full_run", False)
     a.setdefault("require_zero_tun_root_qdisc_drops_full_run",False)
     a.setdefault("cross_business_hol",False)
+    if "loss_gate_phases" in a:
+        gate=a["loss_gate_phases"]
+        names={p["name"] for p in r["phases"]}
+        if (r.get("owner")!="fec-network-work" or not isinstance(gate,list)
+            or not gate or any(not isinstance(p,str) for p in gate)
+            or len(set(gate))!=len(gate) or not set(gate)<=names):
+            raise ValueError("loss_gate_phases must name distinct FEC-owned phases")
+        if not all(k in a for k in ("max_loss_pct","max_small_udp_loss_pct")):
+            raise ValueError("phase-scoped loss requires real total and small UDP gates")
     if any(k in a for k in ("max_small_udp_loss_pct","max_small_udp_p99_ms")) and not t["observe_size_classes"]:
         raise ValueError("small-packet gates require actual small-packet observations")
     if type(a["cross_business_hol"]) is not bool:

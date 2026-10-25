@@ -822,5 +822,27 @@ class FecSizeClassContracts(unittest.TestCase):
         self.assertEqual(w.size_stats["udp"][1]["large_900_plus"]["tx_packets"],1)
         self.assertEqual(sum(w.small_udp_tx_bins),1)
 
+
+class FecBurstLossGateContracts(unittest.TestCase):
+    def test_burst_step_loss_scope_only_fec_owner(self):
+        r=copy.deepcopy(request())
+        r["owner"]="fec-network-work"
+        r["traffic"]["observe_size_classes"]=True
+        r["phases"]=[
+            {"name":"pre10","seconds":30,"c2s":{"loss_pct":10},"s2c":{"loss_pct":10}},
+            {"name":"peak30","seconds":60,"c2s":{"loss_pct":30},"s2c":{"loss_pct":30}},
+            {"name":"recover10","seconds":30,"c2s":{"loss_pct":10},"s2c":{"loss_pct":10}}]
+        r["acceptance"]["max_loss_pct"]=1
+        r["acceptance"]["max_small_udp_loss_pct"]=1
+        r["acceptance"]["loss_gate_phases"]=["pre10","recover10"]
+        self.assertEqual(validate(r)["acceptance"]["loss_gate_phases"],["pre10","recover10"])
+        for bad in ([],["invalid"],["pre10","pre10"]):
+            q=copy.deepcopy(r);q["acceptance"]["loss_gate_phases"]=bad
+            with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["owner"]="network-matrix"
+        with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["acceptance"].pop("max_loss_pct")
+        with self.assertRaises(ValueError):validate(q)
+
 if __name__ == "__main__":
     unittest.main()

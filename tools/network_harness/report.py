@@ -191,7 +191,10 @@ def summarize(config, client, server, telemetry, host):
                                          else ": INVALID_INJECTOR_RATE"))
                 if tx["send_errors"]:
                     limits.append(tag + ": APP_SEND_ERRORS_OR_MTU_REJECTION")
-                if loss is not None and "max_loss_pct" in a and loss > a["max_loss_pct"]:
+                if (loss is not None and "max_loss_pct" in a
+                    and ph["name"] in a.get("loss_gate_phases",
+                        [p["name"] for p in config["phases"]])
+                    and loss > a["max_loss_pct"]):
                     failures.append(tag + ": declared loss allowance exceeded")
                 if "max_p99_ms" in a and rx["latency"]["n"]:
                     if rx["latency"]["p99_ms"] is None or rx["latency"]["p99_ms"] > a["max_p99_ms"]:
@@ -251,7 +254,10 @@ def summarize(config, client, server, telemetry, host):
                 small_udp[tag]=stat
                 if sent==0 or missing<0:
                     failures.append(tag+": small UDP cohort missing or nonconserving")
-                if loss is not None and "max_small_udp_loss_pct" in a and loss>a["max_small_udp_loss_pct"]:
+                if (loss is not None and "max_small_udp_loss_pct" in a
+                    and ph["name"] in a.get("loss_gate_phases",
+                        [p["name"] for p in config["phases"]])
+                    and loss>a["max_small_udp_loss_pct"]):
                     failures.append(tag+": small UDP residual exceeds allowance")
                 p99=stat["first_arrival_ms"]["p99_ms"]
                 if "max_small_udp_p99_ms" in a and (p99 is None or p99>a["max_small_udp_p99_ms"]):
@@ -299,6 +305,8 @@ def summarize(config, client, server, telemetry, host):
     return {"result": status, "failures": failures, "limits": limits, "warnings": warnings, "observed": observed,
             "performance_comparison": "INCONCLUSIVE_HOST_CONTENTION" if host_risk else "REQUIRES_MATCHED_VALID_AB_LEGS",
             "active_zero_delivery_ms": gaps, "small_udp": small_udp,
+            "loss_gate_phases":a.get("loss_gate_phases",
+                [p["name"] for p in config["phases"]]),
             "sparse_small_probes": sparse_small,
             "cross_business_hol": hol,
             "telemetry": telemetry, "host": host,
