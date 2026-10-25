@@ -1,0 +1,100 @@
+{
+  "schema": "W94_GAME_FEC_OFF_SCRATCH_RX_PRECHECK_SAMEVM_AB_V1",
+  "owner": "fec-network-work",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "scope": "Game2/4 FEC OFF Linux ARM64 clean 3Mbps mixed TCP/UDP only",
+  "old_source": "221bb440563258d72636abd2ba4f8c0bd537e893",
+  "new_source": "fb65d8136c32e3e2182a09425f517cd7b98162ce",
+  "build": {
+    "run": 40214830539,
+    "result": "SUCCESS",
+    "artifact_id": 12607335802,
+    "sha256": "1e5afba4a73968228ebf1d7085a7b5e0ca874c5dd77c22cc9f0ec42b6b7cc310"
+  },
+  "game2": {
+    "run": 40215055396,
+    "status": "PASS_SCOPED_A_B",
+    "client_cpu_s_A_B": [
+      1.52,
+      1.57
+    ],
+    "server_cpu_s_A_B": [
+      1.53,
+      1.59
+    ],
+    "client_cpu_per_gib_A_B": [
+      217.5946,
+      224.7523
+    ],
+    "server_cpu_per_gib_A_B": [
+      219.0261,
+      227.6154
+    ],
+    "client_rss_A_B": [
+      25804800,
+      25919488
+    ],
+    "server_rss_A_B": [
+      25448448,
+      25526272
+    ],
+    "p99_max_ms": 77.7,
+    "loss_udp_tcp": 0,
+    "tcp_backpressure": 0,
+    "source_tun_drops": 0,
+    "both_stop_drained": true,
+    "host_psi_peak_pct_A_B": [
+      0.96,
+      1.63
+    ]
+  },
+  "game4": {
+    "run": 40215059452,
+    "status": "PASS_SCOPED_A_B",
+    "client_cpu_s_A_B": [
+      2.51,
+      2.44
+    ],
+    "server_cpu_s_A_B": [
+      2.53,
+      2.49
+    ],
+    "client_cpu_per_gib_A_B": [
+      359.379,
+      349.3565
+    ],
+    "server_cpu_per_gib_A_B": [
+      362.2426,
+      356.5155
+    ],
+    "client_rss_A_B": [
+      37392384,
+      38047744
+    ],
+    "server_rss_A_B": [
+      38035456,
+      37113856
+    ],
+    "p99_max_ms": 77.6,
+    "loss_udp_tcp": 0,
+    "tcp_backpressure": 0,
+    "source_tun_drops": 0,
+    "both_stop_drained": true,
+    "host_psi_peak_pct_A_B": [
+      4.44,
+      4.22
+    ]
+  },
+  "input": "both directions 3Mbps of 96% UDP and 4% actual TCP; 75ms one way; 20s clean; artifact reused within each VM A->B",
+  "interpretation": "Keep bounded scratch / authenticated precheck for allocation reduction and correct clean first arrival; no proven CPU win. Game2 small CPU rise, Game4 small fall, needs larger evidence for performance claim.",
+  "limitations": [
+    "Game fixed FEC withdrawn W90 six real FAIL, not tested or supported by W94",
+    "No TUN write transactional dedup: marking before actual TUN write remains",
+    "No Windows/physical machine verification",
+    "No sameVM injury A/B yet",
+    "capacity_stop=true"
+  ],
+  "merge_ready": false,
+  "capacity_stop": true
+}

@@ -631,7 +631,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W94: check exact ARM64 native build/test Action40214830539. If pass, reuse single immutable W94 product artifact in isolated Game2 and Game4 FEC OFF 3Mbps clean mixed TCP+UDP same-VM A=W93 221bb440 vs B=W94 fb65d813. Preserve W93 CPU-neutral Game4 + minor RSS, W92 kernel filter Game4 9-10% AB/BA. Do not revive W90 withdrawn fixed6 unless new working plain/fixed candidate fully validated. Then targeted loss/blackhole and TUN commit failure semantics, and only then fixed FEC scheduler qualification; Windows skip, capacity_stop=true, merge_ready=false.",
+  "next_action": "W95: reuse exact W94 fb65d813 native immutable artifact 12607335802 for original W88-style Game2/4 FEC OFF independent20/lane1-blackhole/clean recovery at unchanged 3Mbps, two independent Actions. Then targeted transactional TUN commit failure fix, native regression, and same clean scope before separate Game fixed FEC re-qualification. Keep all six W90 Game+FEC failures and rollback; Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6105,13 +6105,18 @@
     "capacity_stop": true
   },
   "w94_game_scratch_rx_precheck": {
-    "status": "SOURCE_CANDIDATE_NATIVE_BUILD_IN_PROGRESS",
+    "status": "EXACT_NATIVE_GAME2_GAME4_CLEAN_SAMEVM_AB_PASS_SCOPED_CPU_INCONCLUSIVE",
     "source": "fb65d8136c32e3e2182a09425f517cd7b98162ce",
     "build_run": 40214830539,
-    "changes": "Game2/4 FEC OFF TX 2048B reusable final wire scratch; RX authenticates in raw stack buffer without per-packet Vec copy; authenticated logic bitmap precheck rejects duplicates before allocating Arena slab without early marking",
-    "correctness": "NATIVE_AND_REAL_NOT_YET_PASS",
-    "risk": "Game logical committed before actual TUN write remains preexisting future failure-path risk; do not claim transactional delivery.",
-    "devlog": "docs/devlog/fec-network-work/20261026-W94-game-bounded-tx-scratch-rx-inplace-dedup-candidate.md",
+    "build_artifact_id": 12607335802,
+    "build_zip_sha256": "1e5afba4a73968228ebf1d7085a7b5e0ca874c5dd77c22cc9f0ec42b6b7cc310",
+    "baseline": "221bb440563258d72636abd2ba4f8c0bd537e893",
+    "game2_ab_run": 40215055396,
+    "game4_ab_run": 40215059452,
+    "correctness": "BOTH A/B genuine UDP+TCP injected=delivered 3Mbps per direction; p99~77.5ms; Stop OK",
+    "cpu": "Game2 +3-4%, Game4 -2-3%, not established causal improvement",
+    "risk": "Game logical marked before TUN write; cannot claim transactional delivery",
+    "evidence": "docs/evidence/fec-network-work/20261026-W94-Game2-Game4-scratch-precheck-clean-sameVM-AB.json",
     "capacity_stop": true,
     "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN"
   }
