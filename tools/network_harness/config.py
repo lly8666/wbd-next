@@ -223,10 +223,17 @@ def validate(raw):
         if stress is not None:
             if r.get("owner")!="fec-network-work" or p["mode"]!="fec-auto" or p.get("repair_enabled") is not False:
                 raise Unsupported("product CPU stress is FEC-only Auto with real outer repair off")
-            keys(stress, ["role","competitors"], "product_cpu_stress")
+            keys(stress, ["role","competitors","pause_seconds","pause_offset_seconds"], "product_cpu_stress")
             if stress.get("role") not in ("client","server"):
                 raise ValueError("product_cpu_stress.role must be client or server")
             integer(stress.get("competitors"), 1, 48, "product_cpu_stress.competitors")
+            if "pause_seconds" in stress:
+                number(stress["pause_seconds"],1,10,"product_cpu_stress.pause_seconds")
+                number(stress.get("pause_offset_seconds"),5,100,"product_cpu_stress.pause_offset_seconds")
+                if stress["pause_offset_seconds"]+stress["pause_seconds"]>=ph["seconds"]-5:
+                    raise ValueError("CPU pause must complete >=5s before stress phase ends")
+            elif "pause_offset_seconds" in stress:
+                raise ValueError("pause_offset_seconds requires pause_seconds")
         for direction in ["c2s", "s2c"]:
             ph[direction] = impairment(ph.get(direction, {}), lanes)
             if stress is not None and (ph[direction]["loss_pct"]!=0 or

@@ -521,6 +521,8 @@ class LinuxExperiment:
         self.created = []
         self.monitor = None
         self.cpu_stress_workers=[]
+        self.cpu_pause_worker=None
+        self.cpu_pause_stop=threading.Event()
         self.cpu_stress_affinity={}
         self.cpu_stress_events=[]
         self.egress_trace=[]
@@ -748,6 +750,15 @@ class LinuxExperiment:
         dump(self.out / "capacity-envelope-observed-mtu.json", request_envelope(self.config, inner))
 
     def stop_product_cpu_stress(self):
+        # Resume the original process unconditionally on phase switch/teardown:
+        # test-only SIGSTOP must never leak to real product Stop/owned cleanup.
+        self.cpu_pause_stop.set()
+        for role in self.cpu_stress_affinity:
+            try: os.kill(self.products[role].pid,signal.SIGCONT)
+            except ProcessLookupError: pass
+        if self.cpu_pause_worker is not None:
+            self.cpu_pause_worker.join(timeout=3)
+            self.cpu_pause_worker=None
         # End-of-phase proof: other worker threads must not have escaped
         # confinement when the burn started; record evidence before cleanup.
         if self.cpu_stress_affinity and self.cpu_stress_events:
@@ -781,6 +792,7 @@ class LinuxExperiment:
                     except (ProcessLookupError,OSError): pass
             except (FileNotFoundError,ProcessLookupError): pass
         self.cpu_stress_affinity={}
+        self.cpu_pause_stop.clear()
 
     def set_product_cpu_stress(self, phase):
         self.stop_product_cpu_stress()
@@ -840,6 +852,32 @@ class LinuxExperiment:
             "readback_all_threads_pinned":True,
             "readback_thread_count":len(all_threads()),
             "started_ns":time.monotonic_ns()})
+        if spec.get("pause_seconds"):
+            event=self.cpu_stress_events[-1]
+            event["test_only_pause_requested_s"]=spec["pause_seconds"]
+            event["test_only_pause_offset_s"]=spec["pause_offset_seconds"]
+            def pause_owned_product():
+                if self.cpu_pause_stop.wait(spec["pause_offset_seconds"]): return
+                try:
+                    if product.poll() is not None:
+                        event["pause_error"]="product_exited_before_pause"
+                        return
+                    event["paused_at_ns"]=time.monotonic_ns()
+                    os.kill(product.pid,signal.SIGSTOP)
+                    event["stop_signal_sent"]=True
+                    self.cpu_pause_stop.wait(spec["pause_seconds"])
+                except (OSError,ProcessLookupError) as exc:
+                    event["pause_error"]=type(exc).__name__
+                finally:
+                    try:
+                        os.kill(product.pid,signal.SIGCONT)
+                        event["continue_signal_sent"]=True
+                    except ProcessLookupError:
+                        event["continue_signal_sent"]=False
+                    event["resumed_at_ns"]=time.monotonic_ns()
+            self.cpu_pause_worker=threading.Thread(
+                target=pause_owned_product,name="fec-test-only-bounded-host-pause",daemon=True)
+            self.cpu_pause_worker.start()
 
     def configure(self, phase, index, initial=False):
         event = {"phase": phase["name"], "scheduled_index": index, "begin_ns": time.monotonic_ns(), "wall_begin_ns": time.time_ns(), "commands": []}
