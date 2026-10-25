@@ -1,0 +1,74 @@
+name: LAN fast-gate fallback AES mixed native record CPU x64
+on:
+  push:
+    branches: [experiment/lan-fastgate-mixed-wire]
+    paths: [".github/workflows/lan-fastgate-mixed-perf-x64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: lan-fastgate-mixed-perf-x64
+  cancel-in-progress: false
+jobs:
+  one-native-vm:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 34
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Build exact real WBD AES record implementation and gate benchmarks
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "x86_64"
+          mkdir -p lan-fastgate-perf-report
+          rustup toolchain install 1.85.1 --profile minimal
+          rustc +1.85.1 --edition=2021 --test -C opt-level=2 \
+            tools/lan_xor_tlslike_lab.rs -o /tmp/fastgate_xor_tests
+          /tmp/fastgate_xor_tests --nocapture | tee lan-fastgate-perf-report/xor-unit-tests.txt
+          cargo +1.85.1 test --release --locked -p wbd-codec \
+            --features selective-crypto-experiment selective_record_experiment::tests:: \
+            -- --nocapture > lan-fastgate-perf-report/selective-unit-tests.txt
+          cargo +1.85.1 build --release --locked -p wbd-codec \
+            --features selective-crypto-experiment --example lan_fastgate_mixed_cost
+          sha256sum target/release/examples/lan_fastgate_mixed_cost \
+            > lan-fastgate-perf-report/binary_sha256.txt
+          lscpu > lan-fastgate-perf-report/host_cpu.txt
+          {
+            echo "SOURCE=$GITHUB_SHA"
+            echo "RUN=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "ARCH=$(uname -m)"
+            echo "RUST=$(rustc +1.85.1 --version)"
+            echo "LOCK_SHA256=$(sha256sum Cargo.lock | awk '{print $1}')"
+            echo "FASTGATE=O1_IP_TCP_SEQ_BOUNDS_USING_TRUSTED_TEST_ORACLE"
+            echo "REAL_TLS_CLASSIFIER=false"
+            echo "REAL_WBD_TUN=false"
+            echo "XOR_INTEGRITY=NONE"
+          } > lan-fastgate-perf-report/manifest.env
+      - name: True local inner TLS13 encrypted application plus 126 symmetric mixed CPU legs
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          openssl req -x509 -newkey rsa:2048 -nodes \
+            -keyout "$tmp/key.pem" -out "$tmp/cert.pem" \
+            -days 1 -subj /CN=localhost >/dev/null 2>&1
+          python3 tools/lan_hybrid_generate_tls13.py \
+            --cert "$tmp/cert.pem" --key "$tmp/key.pem" \
+            --out "$tmp/tls_app.bin" \
+            --summary lan-fastgate-perf-report/tls13_corpus_summary.json
+          target/release/examples/lan_fastgate_mixed_cost "$tmp/tls_app.bin" 1 \
+            | tee lan-fastgate-perf-report/legs.ndjson
+          python3 tools/lan_fastgate_mixed_analyze.py \
+            --input lan-fastgate-perf-report/legs.ndjson \
+            --output lan-fastgate-perf-report/summary.json \
+            | tee lan-fastgate-perf-report/summary_stdout.txt
+          echo "Ephemeral corpus and private cert/key owned temp cleaned" \
+            >> lan-fastgate-perf-report/manifest.env
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-fastgate-x64-paired-cpu
+          path: lan-fastgate-perf-report/
+          retention-days: 30
+          if-no-files-found: warn
