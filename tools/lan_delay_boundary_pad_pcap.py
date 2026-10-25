@@ -95,7 +95,7 @@ def audit(pcap,port,manifest):
     assert hs[0][1][0]==22
     assert any(b[1][0]==23 for b in hs)
     aes=0;xor=0;padded=0;unpadded=0;zero_room=0;pad_sum=0
-    first_xor_ts=None;final_flight_ts=None
+    first_xor_ts=None;client_finished_ts=None
     label_map={}
     for (_,frame,ts),m in zip(observed,specs):
         name=m["label"]
@@ -111,8 +111,9 @@ def audit(pcap,port,manifest):
         stage=m["Stage"]
         elapsed=m["ElapsedFromLastServerFlightMs"]
         assert 0<=elapsed<40000
-        if name.startswith("genuine_serverflight_chunk"):
-            final_flight_ts=ts
+        if name=="genuine_client_finished_completes_handshake_PAD":
+            assert m["mode"]=="aes128_gcm_full" and pad>0 and bound
+            client_finished_ts=ts
         if m["mode"]=="public_pn_xor_fast":
             xor+=1
             assert stage=="late" and not bound and pad==0
@@ -146,8 +147,8 @@ def audit(pcap,port,manifest):
     assert unpadded+xor==meta["UnpaddedRecords"]
     assert pad_sum==meta["PaddingBytesTotal"]
     assert zero_room==meta["LargeNoRoomFallback"]
-    assert final_flight_ts is not None and first_xor_ts is not None
-    delta_ms=(first_xor_ts-final_flight_ts)*1000
+    assert client_finished_ts is not None and first_xor_ts is not None
+    delta_ms=(first_xor_ts-client_finished_ts)*1000
     assert 11000<=delta_ms<=23000,(delta_ms,meta["ChosenHoldMs"])
     assert delta_ms+200>=meta["ChosenHoldMs"],(delta_ms,meta["ChosenHoldMs"])
     assert meta["ObservedFastElapsedMs"]>=meta["ChosenHoldMs"]
@@ -161,6 +162,12 @@ def audit(pcap,port,manifest):
     assert "TCP_RST_end_PAD_AES" in label_map
     assert "QUIC_CONNECTION_CLOSE_end_PAD_AES" in label_map
     assert "genuine_clienthello_oldseq_late_PAD_AES" in label_map
+    assert "genuine_client_finished_completes_handshake_PAD" in label_map
+    # The authenticated plaintext pad hash is audited in trusted fixture
+    # metadata; no pad content or keys need to be published with raw PCAP.
+    lifecycle_hashes=[m["PadSha256"] for m in specs if m["PaddingBytes"]>0]
+    assert len(lifecycle_hashes)==padded
+    assert len(set(lifecycle_hashes))==len(lifecycle_hashes),"non-random repeated lifecycle pad material"
     return {
        "scope":"NATIVE_REAL_LOOPBACK_TCP_PCAP_OUTER_MUTUAL_TLS13_CUSTOM_AES_OR_PUBLIC_XOR",
        "pcap_bytes_before_cleanup":len(raw),
@@ -179,7 +186,7 @@ def audit(pcap,port,manifest):
        "path_mtu":MTU,
        "max_record_plus_underlay":max(len(frame)+UNDERLAY for _,frame,_ in observed),
        "hold_random_target_ms":meta["ChosenHoldMs"],
-       "observed_pcap_serverflight_to_first_XOR_ms":round(delta_ms,3),
+       "observed_pcap_client_finished_to_first_XOR_ms":round(delta_ms,3),
        "sensitive_inner_TLS13_test_SNI_absent_entire_wire":True,
        "fallback_go_AES_GCM_native_roundtrip_and_tag_failure":True,
        "original_late_ClientHello_retransmission_still_AES_and_padded":True,
