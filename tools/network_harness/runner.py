@@ -748,7 +748,22 @@ class LinuxExperiment:
         dump(self.out / "capacity-envelope-observed-mtu.json", request_envelope(self.config, inner))
 
     def stop_product_cpu_stress(self):
-        # Always restore before stopping product / deleting owned namespaces.
+        # End-of-phase proof: other worker threads must not have escaped
+        # confinement when the burn started; record evidence before cleanup.
+        if self.cpu_stress_affinity and self.cpu_stress_events:
+            event=self.cpu_stress_events[-1]
+            role=event["role"]
+            pid=self.products[role].pid
+            try:
+                tids=[int(p.name) for p in Path(f"/proc/{pid}/task").iterdir()]
+                event["threads_at_end"]=len(tids)
+                event["all_threads_pinned_at_end"]=all(
+                    os.sched_getaffinity(tid)=={event["core"]} for tid in tids)
+                event["competitors_alive_at_end"]=sum(
+                    child.poll() is None for child in self.cpu_stress_workers)
+                event["ended_ns"]=time.monotonic_ns()
+            except (FileNotFoundError,ProcessLookupError):
+                event["all_threads_pinned_at_end"]=False
         for child in self.cpu_stress_workers:
             if child.poll() is None: child.terminate()
         for child in self.cpu_stress_workers:
