@@ -1,0 +1,243 @@
+{
+  "schema": "FEC_W85_TWO_READY_PARITY_INTERLEAVE_SAME_VM_AB_NEGATIVE_ROLLBACK_V1",
+  "date_utc": "2026-10-25",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "scope": "Normal Linux ARM64 original public Go TLS Rust owner M3/M4; Fixed Maximum6, 8Mbps each direction, 96% UDP mixed + 2 TCP, 64..1287B sizes, 75ms one-way, real outer DATA retransmit OFF; 45s long GE [3,17,100,0] between 15s clean before/30s clean after; one Actions measure job two sequential AB legs one VM; netem unseeded_recorded",
+  "old_product": {
+    "source": "7ad0ba91b656ff8e9ee965d0c093a18e048971fb",
+    "build_run": 40185113624,
+    "artifact_id": 12596370712,
+    "zip_sha256": "ab1407ccc5dd85c3a66c885cd410dbdd27fa7059461f18647d8ca6b41ce7384e"
+  },
+  "new_candidate": {
+    "source": "7cb64bfce4fe2539a6cfc87eae41fbb4914235d7",
+    "build_run": 40201990439,
+    "artifact_id": 12602486310,
+    "zip_sha256": "1c0ba44937b1d7d7c6d6d8d04d1dc887e32414f999e7ed60fda8d3430c15ba32",
+    "build_and_native_correctness": "SUCCESS; dual group parity order, mixed M4 copied/unknown/not_sent attribution, single fallback, TTL, revision/Stop, ISA-L, original TUN/M2"
+  },
+  "implementation": {
+    "source": "crates/wbd-engine/src/v4_fixed_stream.rs",
+    "original_prod_path": "crates/wbd-engine/src/v4_embedded_go.rs",
+    "change": "max two already-ready parity jobs; each <=4-row native codec batch; call existing M4 PN+AEAD in A0,B0,A1,B1 order; stage_order[32] maps real M4 copied-prefix and uncertainty to exact job",
+    "new_config": false,
+    "wire_change": false,
+    "parity_count_increase": false,
+    "outer_data_retransmits_enabled": false,
+    "game_auto_windows_changed": false,
+    "extra_working_buffer_bound_bytes_per_direction_at_record_mtu1500": 29808,
+    "reason": "one extra 16*(1500-14+2)B prepared padded-source workspace + four 1500B repair scratch rows; vector capacities reused, source slab charge remains bounded, may vary by actual budget"
+  },
+  "native_test_history": [
+    {
+      "run": 40201676599,
+      "conclusion": "FAIL",
+      "reason": "existing full-Maximum single-only fixture inadvertently had third ready k1 job; candidate correctly saw second ready group"
+    },
+    {
+      "run": 40201776497,
+      "conclusion": "FAIL",
+      "reason": "new dual group test used incorrect new source arrival time; old single fixture third group still present"
+    },
+    {
+      "run": 40201813887,
+      "conclusion": "FAIL",
+      "reason": "8 FixedStream tests passed, existing single fixture accidentally had third ready k1 job"
+    },
+    {
+      "run": 40201990439,
+      "conclusion": "SUCCESS",
+      "reason": "full native ARM64 build and all regression steps passing"
+    },
+    {
+      "run": 40201990341,
+      "conclusion": "SUCCESS",
+      "reason": "native maximum-row contract"
+    }
+  ],
+  "network_request_history": [
+    {
+      "path": "tests/network/fec-work/W85-fixed-Maximum15-GE-long-twoReady-interleave-sameVM-AB-arm64.json",
+      "run": 40202287598,
+      "conclusion": "FAIL_INVALID_REQUEST",
+      "reason": "id has 67 characters; permitted max 64; no business measurement performed; no gate modification"
+    },
+    {
+      "path": "tests/network/fec-work/W85b-fixed-Maximum15-GE-long-twoReady-interleave-sameVM-AB-arm64.json",
+      "run": 40202359496,
+      "attempt": 1,
+      "conclusion": "FAIL_STRICT_1PCT_BOTH_LEGS",
+      "reason": "real AB both exceeded strict 1% long GE business loss gate"
+    }
+  ],
+  "performance": {
+    "run": 40202359496,
+    "attempt": 1,
+    "measurement_job_count": 1,
+    "vm": "same ARM64 runner sequential AB",
+    "artifact_id": 12601699742,
+    "zip_sha256": "6c7c388eb00d3babf93897d12333c5dbeef4d4b71d86d493b9a54a6c0ec4fea8",
+    "A": {
+      "wire_loss_pct": {
+        "client": 15.1792701661,
+        "server": 14.9959439101
+      },
+      "udp_long_GE": {
+        "c2s": {
+          "sent": 66099,
+          "missing": 876,
+          "residual_loss_pct": 1.3252848,
+          "p99_ms": 91.9
+        },
+        "s2c": {
+          "sent": 66099,
+          "missing": 792,
+          "residual_loss_pct": 1.1982027,
+          "p99_ms": 91.8
+        }
+      },
+      "small_udp_long_GE": {
+        "c2s": {
+          "sent": 25118,
+          "missing": 304,
+          "loss_pct": 1.2102874,
+          "p99_ms": 93.5
+        },
+        "s2c": {
+          "sent": 25118,
+          "missing": 380,
+          "loss_pct": 1.5129,
+          "p99_ms": 91.9
+        }
+      },
+      "process_measurement_cpu_s": {
+        "client": 15.56,
+        "server": 15.41
+      },
+      "cpu_s_per_delivered_GiB": {
+        "client": 186.6404561,
+        "server": 185.0421268
+      },
+      "rss_peak_bytes": {
+        "client": 23064576,
+        "server": 23289856
+      },
+      "host_psi": {
+        "mean": 1.9659,
+        "peak": 2,
+        "over20_fraction": 0
+      },
+      "parity_planned_sent": {
+        "client": [
+          212585,
+          212585
+        ],
+        "server": [
+          212720,
+          212720
+        ]
+      },
+      "source_tun_drops": 0,
+      "fec_expired": 0,
+      "fec_pressure": 0,
+      "rx_capacity_reject": 0,
+      "rx_codec_reject": 0,
+      "tcp_missing_both": 0,
+      "clean_udp_missing_both": 0,
+      "outer_data_retransmitted": 0
+    },
+    "B": {
+      "wire_loss_pct": {
+        "client": 15.0580559933,
+        "server": 14.620431658
+      },
+      "udp_long_GE": {
+        "c2s": {
+          "sent": 66099,
+          "missing": 919,
+          "residual_loss_pct": 1.3903387,
+          "p99_ms": 91.7
+        },
+        "s2c": {
+          "sent": 66100,
+          "missing": 789,
+          "residual_loss_pct": 1.193646,
+          "p99_ms": 91.8
+        }
+      },
+      "small_udp_long_GE": {
+        "c2s": {
+          "sent": 25118,
+          "missing": 351,
+          "loss_pct": 1.3974043,
+          "p99_ms": 91.8
+        },
+        "s2c": {
+          "sent": 25118,
+          "missing": 317,
+          "loss_pct": 1.2620432,
+          "p99_ms": 92.7
+        }
+      },
+      "process_measurement_cpu_s": {
+        "client": 15.45,
+        "server": 15.41
+      },
+      "cpu_s_per_delivered_GiB": {
+        "client": 185.3992341,
+        "server": 185.1168593
+      },
+      "rss_peak_bytes": {
+        "client": 23060480,
+        "server": 23347200
+      },
+      "host_psi": {
+        "mean": 4.5711,
+        "peak": 32.21,
+        "over20_fraction": 0.0888889
+      },
+      "parity_planned_sent": {
+        "client": [
+          212653,
+          212653
+        ],
+        "server": [
+          212684,
+          212684
+        ]
+      },
+      "source_tun_drops": 0,
+      "fec_expired": 0,
+      "fec_pressure": 0,
+      "rx_capacity_reject": 0,
+      "rx_codec_reject": 0,
+      "tcp_missing_both": 0,
+      "clean_udp_missing_both": 0,
+      "outer_data_retransmitted": 0,
+      "interleave_offered": {
+        "client": {
+          "paired_quanta": 391,
+          "alternating_rows": 2598,
+          "total_parity_rows": 212653,
+          "alternating_fraction_pct": 1.2217,
+          "single_quanta": 56227,
+          "max_same_group_run": 20,
+          "max_ready_age_us": 251
+        },
+        "server": {
+          "paired_quanta": 350,
+          "alternating_rows": 2346,
+          "total_parity_rows": 212684,
+          "alternating_fraction_pct": 1.1031,
+          "single_quanta": 56309,
+          "max_same_group_run": 20,
+          "max_ready_age_us": 216
+        }
+      }
+    },
+    "interpretation": "B C2S +0.0651 percentage points worse, S2C -0.0046 pp inconclusive, A/B IID/GE random traces differ, B host PSI spike confounds. Only ~1.1-1.2% of parity rows interleaved, insufficient opportunity without waiting ready groups; no demonstrable improvement. Both legs strict >1% failures retained."
+  },
+  "decision": "NEGATIVE; ROLLBACK product candidate, retain documentation/artifact and original W80/W83 1pct failures. No BA repeat or further load: tiny interleave opportunity, no directional improvement, candidate conflicts with user no-wait/no-complexity benefit criterion. No change to Auto, Game, M0 Windows or outer repair.",
+  "caution": "Dual-ready offered alternation is not independently verified per-row receiver arrival/copy trace; original M4 sent=planned positive and no fail counters. W85 diagnostic only. No Windows/Game/physical/outer ON/full product qualification."
+}
