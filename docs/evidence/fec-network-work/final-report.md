@@ -237,3 +237,35 @@ Native parity planned/sent client1216607/1186004 gap2.516%; server1216680/118208
 CPU 30s client32.0/server32.11s; host CPU PSI mean45.53%, peak48.47%, >20% all samples. Each core nonidle79.16/80.22/80.36/80.93%, softirq CPU10.16/10.37/10.24/10.97%, NET_RX/TX balanced, steal0, cgroup CPU throttles0. Full-run original native TX thread21.6 CPU-s vs RX16.6 CPU-s EACH, not a 30-second counter. This is scheduling/CPU headroom, not memory exhaustion or one saturated IRQ.
 
 Code-specific next candidate: StagedParity::next_quantum makes 4 new parity Vec + a Vec of mutable row views on each <=4-row ISA-L quantum, up to5 quanta per k16/r20 full block; W30 each end60k+ full blocks. Reuse four bounded row output buffers per stream for identical math, no change to AEAD, PN, deadline, first-send or copied prefix. Test against frozen W29 once, same VM old/new AB 220Mbps, after native function regression. Do not escalate >220, merge_ready=false.
+
+## W31 (2026-10-25): 220Mbps per-stream Parity scratch same-VM AB
+
+Exact new source 3b16e79698d33ef49628dfa8f67a47550438ebbc native ARM64 build Action40146207152 PASS, artifact12580177860 ZIP SHA256 69c14dbc1f3a65040c7013844c02d6af036b4a238c6d78262f6edc65d891b30f. W31 reuses only four bounded plaintext Parity row Vec per FixedStream, eliminates one temporary Vec row views per quantum, zeroes on Stop; exact independent scalar full Maximum20 parity row comparison and real native Fixed/Auto TUN recovery PASS, original PN/M4 prefix untouched.
+
+W31 sameVM sequential A(old frozen W29 6246aa82) then B(new3b16e796) Action40146429352 artifact12580747651 ZIP SHA256 cf2ec141c998ea3a0259be51c43e95f2971af3f56017d2e1a92e5e2d254eb667. Both request outer DATA repair OFF actually0; Fixed Maximum6 both applied, original fq600 test permanent neighbors, 30%IID/300ms one-way, rate220Mbps each, outer rate600Mbps, 15s warmup30s measure30s drain, source root/TUN drop0, native RX pressure/capacity rejects0, Stop full cleanup.
+
+| Measure 30s each | A old (INCONCLUSIVE) | B new (PASS_SCOPED) |
+
+|---|---:|---:|
+
+| C2S delivered Mbps / residual |218.704 / 0.5991%|219.322 / 0.3226%|
+
+| S2C delivered Mbps / residual |218.825 / 0.5467%|219.244 / 0.3526%|
+
+| First p99 C2S/S2C ms |311.4/311.4|310.4/310.7|
+
+| Source injector S2C send errors |2|0|
+
+| Client parity planned / sent |1216620/1197346|1216772/1207605|
+
+| Server parity planned / sent |1216630/1198153|1216724/1206714|
+
+| Expired jobs client/server |889/864|424/463|
+
+| CPU process client/server seconds |30.97/30.87|30.95/31.24|
+
+| Host CPU PSI mean/peak pct |44.26/47.54|44.18/50.44|
+
+Important: Entire W31 Action failure is A INCONCLUSIVE due 2 genuine injector errors (APP_SEND_ERRORS_OR_MTU_REJECTION), not B failure. A observed business residual values are descriptive only, not a strict A PASS. B both directions true PASS_SCOPED_OBSERVATION, parity sent ~0.75/0.82% deficit vs A 1.58/1.52%. CPU total increased 61.84->62.19 CPU-s, cannot claim net CPU saving; may reflect sending more parity, runner variance, unseeded netem and source A injector error. Host PSI peak B50.44%, so no rate above220 and no sustained qualification.
+
+Next plausible bounded CPU work visible in original codec: PreparedBlock per-job table reference BTreeMap, per-quantum dynamically allocated src/dst slice views inside encode_prepared_into, and original authenticated M4 TX. Profile before replacing; no CPU overhead attribution without timing breakdown. Keep outer DATA retrans OFF, native Auto dynamic unfinished, merge_ready=false.

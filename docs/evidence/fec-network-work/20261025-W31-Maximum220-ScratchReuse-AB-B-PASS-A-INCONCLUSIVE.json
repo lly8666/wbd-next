@@ -1,0 +1,152 @@
+{
+  "schema": 1,
+  "owner": "fec-network-work",
+  "id": "FEC-W31-Maximum220-ParityScratchReuse-SameVM-AB-ARM64",
+  "request_path": "tests/network/fec-work/W31-maximum220-parity-scratch-reuse-sameVM-AB-arm64.json",
+  "request_commit": "a9f8ebbbedc79b1063c08deec00f4d4858ceda64",
+  "action_run": 40146429352,
+  "attempt": 1,
+  "action_conclusion": "FAILURE_A_INCONCLUSIVE_B_PASS",
+  "result_artifact_id": 12580747651,
+  "artifact_sha256": "cf2ec141c998ea3a0259be51c43e95f2971af3f56017d2e1a92e5e2d254eb667",
+  "arch": "aarch64",
+  "ordering": "A then B on same GitHub Actions VM",
+  "conditions": "220Mbps EACH, Fixed Maximum6 both applied, 30% IID real netem loss, one-way delay300ms, original outer rate600Mbps, FQ600 original, permanent owned veth neighbor, outer DATA retrans OFF, warmup15 measure30 drain30",
+  "old_A": {
+    "product_source": "6246aa82df5140807914545b2fc9343b8c70a1aa",
+    "build_run": 40144596602,
+    "product_artifact_id": 12579619244,
+    "result": "INCONCLUSIVE_2_APP_INJECTOR_SEND_ERRORS_S2C",
+    "observed": {
+      "c2s": {
+        "injected_mbps": 219.99423386666666,
+        "delivered_mbps": 218.70441413333333,
+        "residual_pct": 0.5990799787996458,
+        "p99_ms": 311.4,
+        "send_errors": 0,
+        "send_lag_p99_ms": 3.2
+      },
+      "s2c": {
+        "injected_mbps": 219.99526346666667,
+        "delivered_mbps": 218.82472373333331,
+        "residual_pct": 0.5466946452356597,
+        "p99_ms": 311.4,
+        "send_errors": 2,
+        "send_lag_p99_ms": 3.8
+      }
+    },
+    "native_parity": {
+      "client": {
+        "rplanned": 1216620,
+        "rsent": 1197346,
+        "expired_jobs": 889,
+        "unknown_capacity": 245,
+        "parity_seal_fail": 0
+      },
+      "server": {
+        "rplanned": 1216630,
+        "rsent": 1198153,
+        "expired_jobs": 864,
+        "unknown_capacity": 209,
+        "parity_seal_fail": 0
+      }
+    },
+    "cpu_s_30": {
+      "client": 30.97,
+      "server": 30.87
+    },
+    "psi_cpu_pct": {
+      "mean": 44.26166666666666,
+      "peak": 47.54,
+      "over20_fraction": 1
+    },
+    "observed_netem_loss_pct": {
+      "client": 29.954984592777794,
+      "server": 29.96254476332484
+    },
+    "RX": {
+      "pressure_evicted": 0,
+      "rejected_capacity": 0,
+      "rejected_codec": 0,
+      "client_reject_conflict": 3
+    },
+    "original_outer_DATA_retransmitted": 0,
+    "stop_drained": true
+  },
+  "optimized_B": {
+    "product_source": "3b16e79698d33ef49628dfa8f67a47550438ebbc",
+    "build_run": 40146207152,
+    "product_artifact_id": 12580177860,
+    "product_zip_sha256": "69c14dbc1f3a65040c7013844c02d6af036b4a238c6d78262f6edc65d891b30f",
+    "build_result": "PASS_REAL_ARM64_FIXED_AUTO_MISSING_SOURCE_NATIVE_CODEC_FULL_MAXIMUM",
+    "contract_result": "PASS_ARM64_MAXIMUM_20_ROWS_RUN_40146207212",
+    "result": "PASS_SCOPED_OBSERVATION_BOTH_DIRECTIONS",
+    "observed": {
+      "c2s": {
+        "injected_mbps": 220.00452986666667,
+        "delivered_mbps": 219.3224984,
+        "residual_pct": 0.32262600260511226,
+        "p99_ms": 310.4,
+        "send_errors": 0,
+        "send_lag_p99_ms": 2.7
+      },
+      "s2c": {
+        "injected_mbps": 219.99903866666665,
+        "delivered_mbps": 219.24357759999998,
+        "residual_pct": 0.3526105075458958,
+        "p99_ms": 310.7,
+        "send_errors": 0,
+        "send_lag_p99_ms": 2.9
+      }
+    },
+    "native_parity": {
+      "client": {
+        "rplanned": 1216772,
+        "rsent": 1207605,
+        "expired_jobs": 424,
+        "unknown_capacity": 110,
+        "parity_seal_fail": 0
+      },
+      "server": {
+        "rplanned": 1216724,
+        "rsent": 1206714,
+        "expired_jobs": 463,
+        "unknown_capacity": 115,
+        "parity_seal_fail": 0
+      }
+    },
+    "cpu_s_30": {
+      "client": 30.95,
+      "server": 31.24
+    },
+    "psi_cpu_pct": {
+      "mean": 44.176,
+      "peak": 50.44,
+      "over20_fraction": 1
+    },
+    "observed_netem_loss_pct": {
+      "client": 29.990502327406713,
+      "server": 30.026015956180206
+    },
+    "RX": {
+      "pressure_evicted": 0,
+      "rejected_capacity": 0,
+      "rejected_codec": 0,
+      "rejected_conflict": 0
+    },
+    "original_outer_DATA_retransmitted": 0,
+    "source_tun_drops": 0,
+    "root_qdisc_drops": 0,
+    "stop_drained": true,
+    "owned_cleanup": true
+  },
+  "interpretation": [
+    "W31 native scratch reduces output row temporary allocations, retaining identical codec mathematics, FEC PN/AEAD, 10ms deadline and original M4 definite-prefix confirmation.",
+    "B passes both scoped business residual<=1%; A is harness INCONCLUSIVE due two actual injector send errors in S2C, despite observed residual rates under1%. Entire Action failure is not a B regression.",
+    "B real parity sent deficit client~0.753%, server~0.823% versus A~1.584%/1.519%; expired jobs424/463 versus889/864; consistent positive directional observation.",
+    "Per-30s combined process CPU B62.19 seconds versus A61.84 seconds (+0.35s, ~0.57%), no CPU savings proved; B sent substantially more real parity; CPU PSI B peak50.44 versus A47.54 though means similar.",
+    "Single unseeded-netem AB with old-leg injector errors cannot establish causal or long-run 220Mbps headroom. Separate W30 standalone W29 old passed once but S2C0.977% borderline.",
+    "No memory or IRQ bottleneck measured; next CPU profiling focus M4 TX. Codec native prepared source/destination slice Vec and per-job native table BTreeMap allocation remain possible bounded targets, but must test separately.",
+    "Do not escalate beyond220Mbps on 4core GitHub VM under PSI>20 all samples. Auto dynamic and physical qualification still open; no main merge."
+  ]
+}
