@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "status": "COMPLETE_SCOPED_NATIVE_GO_HP_MODE_A_B_SIX_REPLICATES_AND_ARCHIVED_ARTIFACT_ANALYZER_PASS_NOT_PRODUCT",
+  "branch": "experiment/lan-hp-mode-cost",
+  "base": {
+    "branch": "experiment/lan-flowstart-no-synth-retrans",
+    "sha": "1accc0fb65a1bf42edeee1d22b52e10ae3844033"
+  },
+  "report": "docs/evidence/lan-hp-mode-cost/FINAL_REPORT.md",
+  "go_test_source": "tools/lan_hp_mode_cost_test.go",
+  "analyzer": "tools/lan_hp_mode_cost_analyze.py",
+  "is_wbd_production": false,
+  "main_changed": false,
+  "merge_ready": false,
+  "experiment_original_header": "5B TLS-like | 1B clear mode | 8B clear PN | opaque body",
+  "experiment_new_header": "5B TLS-like | 8B AES128 header-protected 63bit PN + 1bit mode | opaque body",
+  "wire_bytes_saved_per_record": 1,
+  "mode_bit_hidden_but_not_authenticated": true,
+  "fast_xor_payload_unauthenticated": true,
+  "initial_go_native_jobs": {
+    "x64": {
+      "run_id": 40200548326,
+      "archive_artifact_id": 12601238990,
+      "go_correctness": "PASS",
+      "native_benchmark": "PASS_48_BENCHMARK_ROWS",
+      "postprocess": "FAIL_ONLY_SYNTAX"
+    },
+    "arm64": {
+      "run_id": 40200552303,
+      "archive_artifact_id": 12601177583,
+      "go_correctness": "PASS",
+      "native_benchmark": "PASS_48_BENCHMARK_ROWS",
+      "postprocess": "FAIL_ONLY_SYNTAX"
+    }
+  },
+  "independent_audit": {
+    "run_id": 40200979162,
+    "archived_data_validation": "SUCCESS",
+    "artifact_id": 12601354511,
+    "sha256": "0a6e42084dd0f35809f5976578afc17de5bf4ea0fe83258e4de61fcaab7f33b9"
+  },
+  "sample_count_per_mode": 6,
+  "measurement": "Go wall nanoseconds per 100 original 1345B packets complete encode+decode, GOMAXPROCS1, buffers preallocated",
+  "x86_64": {
+    "mixed99": {
+      "plain_ns_per_100": 36201,
+      "protected_ns_per_100": 34066.333333333336,
+      "extra_pct": -5.896706352494863,
+      "extra_ns_per_packet": -21.346666666666643
+    },
+    "allAES": {
+      "extra_pct": 0.1644619234894451
+    },
+    "allXOR": {
+      "extra_pct": -6.906780445365868
+    },
+    "header_read_extra_ns_per_record": 5.889366666666667,
+    "heap_extra_B_per_100": 0,
+    "heap_extra_allocations_per_100": 0
+  },
+  "arm64": {
+    "mixed99": {
+      "plain_ns_per_100": 37034.166666666664,
+      "protected_ns_per_100": 39678,
+      "extra_pct": 7.138903265003038,
+      "extra_ns_per_packet": 26.438333333333357
+    },
+    "allAES": {
+      "extra_pct": -1.0846928816789503
+    },
+    "allXOR": {
+      "extra_pct": 7.069789107382629
+    },
+    "header_read_extra_ns_per_record": 9.55255,
+    "heap_extra_B_per_100": 0,
+    "heap_extra_allocations_per_100": 0
+  },
+  "limitations": [
+    "Go lab crypto implementation not native WBD Rust wire",
+    "no real TLS flow classification or authenticated fast-mode control",
+    "public PN-XOR reversible and malleable",
+    "single platform runner VM each, no TUN/GoRust end-to-end CPU or throughput",
+    "63bit PN wire design would require protocol change and key derivation",
+    "x86 lower whole-cycle time is not proof header protection boosts XOR speed"
+  ]
+}
