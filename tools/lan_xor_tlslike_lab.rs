@@ -48,6 +48,31 @@ pub(crate) fn mask(bytes: &mut [u8], mode: Mode, seed: u64, pn: u64) {
     }
 }
 
+/// Same rolling keystream as Mode::RollingXor above; optimize only the
+/// XOR application by processing each full 8-byte word as a u64, and a
+/// bounded 1..7-byte tail. No unsafe / SIMD ISA requirement / wire change.
+/// This is still insecure noncryptographic obfuscation, not encryption.
+pub(crate) fn rolling_word_mask(bytes: &mut [u8], seed: u64, pn: u64) {
+    let mut state = mix64(seed ^ pn.rotate_left(17) ^ 0x4c41_4e5f_584f_525f);
+    let mut chunks = bytes.chunks_exact_mut(8);
+    for word in &mut chunks {
+        state ^= state >> 12;
+        state ^= state << 25;
+        state ^= state >> 27;
+        let ks = state.wrapping_mul(0x2545_f491_4f6c_dd1d);
+        let v = u64::from_le_bytes(word.try_into().expect("8-byte slice"));
+        word.copy_from_slice(&(v ^ ks).to_le_bytes());
+    }
+    let tail = chunks.into_remainder();
+    if !tail.is_empty() {
+        state ^= state >> 12;
+        state ^= state << 25;
+        state ^= state >> 27;
+        let ks = state.wrapping_mul(0x2545_f491_4f6c_dd1d).to_le_bytes();
+        for (byte, mask_byte) in tail.iter_mut().zip(ks) { *byte ^= mask_byte; }
+    }
+}
+
 /// Each IPv4 packet becomes exactly one new TLS-looking application_data record.
 /// The caller must avoid PN wrap. There is intentionally no authenticity.
 pub(crate) fn seal(packet: &[u8], mode: Mode, seed: u64, pn: u64) -> Result<Vec<u8>, &'static str> {
@@ -177,6 +202,41 @@ mod tests {
         assert_ne!(&r2[15..79], &r3[15..79]);
         assert_ne!(&r2[15..143], &r3[15..143]);
         assert_ne!(&r2[15..], &p);
+    }
+
+    #[test]
+    fn fast_word_xor_byte_identical_to_old_rolling_for_all_tails_and_pns() {
+        for len in [0usize,1,2,3,4,5,6,7,8,9,15,16,17,63,64,65,127,128,129,1347,16397] {
+            for pn in [0u64, 1, 2, 3, 9, 255, 256, 65535, u32::MAX as u64, u64::MAX] {
+                let mut old = (0..len).map(|i| (i.wrapping_mul(53).wrapping_add(91)) as u8).collect::<Vec<_>>();
+                let mut fast = old.clone();
+                mask(&mut old, Mode::RollingXor, DEMO_SEED, pn);
+                rolling_word_mask(&mut fast, DEMO_SEED, pn);
+                assert_eq!(fast, old, "len={len}, pn={pn}");
+                rolling_word_mask(&mut fast, DEMO_SEED, pn);
+                assert_eq!(fast, (0..len).map(|i| (i.wrapping_mul(53).wrapping_add(91)) as u8).collect::<Vec<_>>());
+            }
+        }
+    }
+
+    #[test]
+    fn fast_word_xor_same_packet_different_new_pn_avoids_simple_repeat() {
+        let p = sample_ip_packet();
+        let mut a = seal(&p,Mode::RollingXor,DEMO_SEED,2).unwrap();
+        let mut b = seal(&p,Mode::RollingXor,DEMO_SEED,3).unwrap();
+        let mut fa = p.clone();
+        let mut fb = p.clone();
+        rolling_word_mask(&mut fa,DEMO_SEED,2);
+        rolling_word_mask(&mut fb,DEMO_SEED,3);
+        assert_ne!(&fa[..64], &fb[..64]);
+        assert_ne!(&fa[..128], &fb[..128]);
+        let mut masked = vec![0u8;2+p.len()];
+        masked[..2].copy_from_slice(&(p.len() as u16).to_be_bytes());
+        masked[2..].copy_from_slice(&p);
+        rolling_word_mask(&mut masked,DEMO_SEED,2);
+        assert_eq!(&a[13..], &masked[..]);
+        assert_ne!(&a[15..79],&b[15..79]);
+        assert_ne!(&a[15..143],&b[15..143]);
     }
 
     #[test]
