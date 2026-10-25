@@ -1,0 +1,51 @@
+name: LAN PN-repeat XOR arm64 native paired CPU
+on:
+  push:
+    branches: [experiment/lan-xor-pn-mask]
+    paths: [".github/workflows/lan-xor-pn-perf-arm64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: lan-xor-pn-perf-arm64
+  cancel-in-progress: false
+jobs:
+  paired-cpu:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Exact-source Rust fixture tests and release executable
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "aarch64"
+          mkdir -p lan-pn-perf-report
+          rustup toolchain install 1.85.1 --profile minimal
+          rustc +1.85.1 --edition=2021 --test -C opt-level=2 tools/lan_xor_tlslike_lab.rs -o /tmp/pn_tests
+          /tmp/pn_tests --nocapture | tee lan-pn-perf-report/unit-tests.txt
+          cargo +1.85.1 build --locked --release -p wbd-codec --example lan_xor_record_cost
+          sha256sum target/release/examples/lan_xor_record_cost > lan-pn-perf-report/binary.sha256
+          lscpu > lan-pn-perf-report/cpu.txt
+          {
+            echo "SOURCE=$GITHUB_SHA"
+            echo "RUN=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "ARCH=$(uname -m)"
+            echo "RUST=$(rustc +1.85.1 --version)"
+            echo "LOCK_SHA256=$(sha256sum Cargo.lock | awk '{print $1}')"
+            echo "MEASURE=single_host_1345B_seal_plus_open_14_legs_symmetric"
+            echo "SECURITY=NONE_NONGRYPTOGRAPHIC_PUBLIC_PN_REPEAT_MASK"
+          } > lan-pn-perf-report/manifest.env
+      - name: Six-second per leg symmetric paired record CPU microbenchmark
+        shell: bash
+        run: |
+          set -euo pipefail
+          target/release/examples/lan_xor_record_cost 6 | tee lan-pn-perf-report/legs.jsonl
+          python3 tools/lan_xor_perf_analyze.py --input lan-pn-perf-report/legs.jsonl --output lan-pn-perf-report/summary.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-pn-arm64-paired-perf
+          path: lan-pn-perf-report/
+          retention-days: 30
+          if-no-files-found: warn
