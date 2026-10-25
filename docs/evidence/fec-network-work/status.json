@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W55_ORIGINAL_AUTO_FAST_UP_GRADUAL_DOWN_SAME_VM_AB_ACTION_RUNNING",
+  "phase": "W55_REAL_SAMEVM_AUTO_AB_B_FASTER_47_79S_NOT_FULL_RETURN_W56_BOUNDED_K_COHORT_FIX_BUILD_RUNNING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -564,6 +564,7 @@
     }
   ],
   "open_issues": [
+    "W55 sameVM original ARM64 Action40171851168 SUCCESS both A/B 8Mbps outerDATA0 true parity/M2/TUN, client B first down +47s vs A+67s, second B+79s vs A NOT_OBSERVED, source B f3b9e8a5. Still not full user 30–60s return, no CPU win. Native B client38 exact k-window UNKNOWN, all due kSource>Slow.FirstSent, usually +0.03..4.9%, after idle >5%; W56 source3b89a140 solely bounds original mismatched maturity cohorts <=5%, uses worst-k pessimistic model margin, invalid remains UNKNOWN; native Action40172735047 pending. Do not claim full Auto or merge.",
     "W54 genuine 180s Auto source946346bb ARM64 run40170625652 PASS true C2S recovery DOWN Maximum6->Strong5 at +23.5s, ->High4 at +121.5s, ->Balanced3 at +152.5s, independent S2C Strong5->Light0; true DATA retrans0, parity/real M2/native applied, UDP missing0 recovery, CPU27.71/28.4 over extended duration. Misses new user's 30–60s desirable low-loss return. First attempt 40170452215 failed invalid long request ID pre-product and is preserved. W55 source f3b9e8a5 isolated Go monitor patch on real authenticated APPLIED down only, native build Action40171595909 was RUNNING when checkpoint; no product qualification or 30–60s claim.",
     "W53 sameVM AB run40169675377 both product legs PASS_SCOPED_OBSERVATION but B C2S recovery DOWN NOT_OBSERVED, five real VALID ticks 06:42:53..06:43:01 then >6s actual-k unknown; B S2C independently 5->4->3->2->1, native outer data retrans0, genuine M2/TUN/Stop PASS. Action artifact12590008550 SHA256 3e0c4270b9066f5161754118b92e640f60982caee9de4d20e7d03e83780e6f8e. W54 extended 180s low steady at same 8Mbps product reuse, Action40170452215, pending; no claim full Auto or merge. capacity_stop true.",
     "W52 current frozen FEC source e446fa1 Action40168045298 real Auto 8Mbps each actual UDP-only (64B1%,1287B99%, sparse probes) 2/0->20/1->1/0%IID, no outer DATA repair, native user mainline branch no main restore. Native real M2 positive confirmation mean client153665us (118931 samples), server154241us (129400); original AUTHENTIC stages C2S Strong5->Maximum6 revision2 during20% high, S2C Strong5->High4 rev2 then Balanced3 rev3 independently; final native both requested=applied pendingfalse. Parity full167271/121021 expired0, source TUN0, Stop clean, true UDP8Mbps each all3 phases high C2S loss0.01487%. BUT C2S did NOT step down to Strong after last 1%-loss60s and remains max6; unlike previous W45 prior source, current run does not qualify complete Auto rise-return. AUTO_QUALITY often UNKNOWN actual-k/feedback, policy requires predicted one-step-lower residual<=0.0005 and full 10s+4096 valid samples. Do not modify policy without causal evidence, do not call full Auto curve PASS; no TCP in W52. W48-50 temporary side tests already closed.",
@@ -595,7 +596,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W55 exact source B f3b9e8a5 build Action40171595909 SUCCESS, artifact12590711550/digest111ccc8; old A946346bb build40169455103. New user's auto criterion rapid genuine UP and 30-60s smooth eventual low-loss DOWN; latest task doc now records preference without bypassing UNKNOWN safety. W55 sameVM sequential AB request commit9e2a69930bb3bbd90594fc5e426ac7933f0b3fd7, measurement Action40171851168 RUNNING after harness contract40171851135 SUCCESS. After completion download exact artifact, parse client/server auto-quality.log and impairment-events: stage/revision/pending, actual VALID/UNKNOWN and duration to down, parity planned==sent, outer DATA retrans0, first-delivery residual/p99, CPU/RSS/PSI, TUN/Stop. Do not assume green workflow means complete auto speed. Finish bounded MTU/Stop/generation if needed, then qualify report; no capacity increases or other branches.",
+  "next_action": "W56 FEC isolated Go Auto cold quality patch source3b89a140 native build Action40172735047 in progress. Previously W55 sameVM AB Action40171851168 both PASS, B c2s rise and native applied MAX6->STRONG5 +47s and HIGH4 +79s vs A first+67s only, outerDATA0, source TUN0, parity full/Stop; user 30–60s complete DOWN still OPEN. W56 accommodates <=5% *authentic* actual-k window overhang while adding worst-k modeled risk penalty and retaining UNKNOWN on large skew/host/idle; no fabricated ACK, no outer algorithm touch. After ARM64 build and exact Go model tests PASS, run one comparable sameVM AB 8Mbps high20%->low1%90s using B f3b9 vs C3b89, single job, same frozen binary reuse. Parse real AUTO_STAGE vs impairment start, both native readbacks, cost/MTU p99, genuine zero outer DATA and no TUN drop. If still >60, record bound and review rather than endless repetitions. Then finite MTU/Stop/generation reusable coverage, final report merge_ready only if all scope ready; capacity_stop true, no other branch changes.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -5201,15 +5202,43 @@
     "build_status": "SUCCESS",
     "build_artifact": 12590711550,
     "product_action": 40171851168,
-    "product_result": "NOT_YET_OBSERVED",
+    "product_result": "PASS_SCOPED_BUSINESS_BOTH; DOWN_IMPROVED_BUT_FULL_30_60_NOT_OBSERVED",
     "comparison": "Same VM one measurement job sequential A946346bb Bf3b9e8a5; 8Mbps each, 2%30s->20%60s->1%90s, 75ms",
-    "evidence": "docs/devlog/fec-network-work/20261025-W54-180s-and-W55-native-applied-history-intent.md",
+    "evidence": "docs/evidence/fec-network-work/20261025-W55-authentic-Auto-sameVM-AB-result.json",
     "capacity_stop": true,
     "merge_ready": false,
-    "product_status": "IN_PROGRESS_AT_CHECK",
+    "product_status": "COMPLETED_SUCCESS",
     "product_request": "tests/network/fec-work/W55-auto-down-history90-sameVM-AB-arm64.json",
     "product_request_commit": "9e2a69930bb3bbd90594fc5e426ac7933f0b3fd7",
     "harness_contract_run": 40171851135,
-    "harness_contract_status": "SUCCESS"
+    "harness_contract_status": "SUCCESS",
+    "product_result_artifact_id": 12591025916,
+    "result_sha256": "a4eee1e2fb24526aeae7ac1bafd82691c1fe7e7ee99026081e9ad575c6f74ed7",
+    "source_A": "946346bbd84ff88910ed169037330e8eae13cea3",
+    "source_B": "f3b9e8a5a6ac226d13066fc7ccc780cb5f94fa85",
+    "c2s_recovery_A": "first MAX6->STRONG5 at +67s; second not observed in90s",
+    "c2s_recovery_B": "MAX6->STRONG5 +47s; then HIGH4 +79s",
+    "c2s_app_recovery_missing_both": 0,
+    "outer_data_retrans_both": 0,
+    "parity_full_and_real_M2_both": true,
+    "native_applied_and_TUN_Stop_both": true,
+    "cpu_s": {
+      "A_client": 18.3,
+      "A_server": 18.83,
+      "B_client": 18.64,
+      "B_server": 18.85
+    }
+  },
+  "w56": {
+    "patch_source": "3b89a14039834dd59db5807294f26d80e85fea63",
+    "diagnosis": "W55 original B auto-quality 38/105 C2S k histogram UNKNOWN due authentic M4 closed k 0.03-4.9% more than M2 8s firstsend; >5%/idle remains UNKNOWN",
+    "change": "Auto cold 2s quality only: permit <=5% native hist cohort overhang, pessimistic q=actual-k mix + abs(cohort ratio-1)*worst legal-k q. Genuine M2 required; no ACK forgery. Up/down 2fast valid or 5valid+10s+4096, native APPLIED unchanged.",
+    "unit": "TestF2ControlW56... in existing original ARM64 build",
+    "build_run": 40172735047,
+    "build_status": "IN_PROGRESS",
+    "build_artifact": null,
+    "performance": "NOT_RUN",
+    "capacity_stop": true,
+    "merge_ready": false
   }
 }
