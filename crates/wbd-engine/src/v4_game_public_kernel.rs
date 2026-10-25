@@ -116,8 +116,11 @@ impl GameKernelOwner{
                     if len>0&&game.offer(&inbound[..len],now).is_err(){
                         tx_rejected.fetch_add(1,Ordering::Relaxed);continue
                     }
-                    let _=game.poll_game_fec(now);
-                    game.drain(now,|lane,_,pn,wire|{
+                    // SOURCE has to reach the genuine M4 kernel before
+                    // parity is even enqueued. Merely invoking offer() first
+                    // is insufficient: per-lane fair scheduling could send
+                    // a parity lane before a source copy.
+                    let mut original_kernel_copy=|lane,_,pn,wire:&[u8]|{
                         let Some(item)=lanes.iter_mut().find(|x|x.key==lane) else{
                             tx_rejected.fetch_add(1,Ordering::Relaxed);
                             return false
@@ -161,7 +164,16 @@ impl GameKernelOwner{
                             tx_rejected.fetch_add(1,Ordering::Relaxed);
                             false
                         }
-                    });
+                    };
+                    // First: all already-ready Game source copies and any
+                    // previously queued accepted M4 records. No delay/wait
+                    // for a second group and no fresh source behind parity.
+                    game.drain(now,&mut original_kernel_copy);
+                    let _=game.poll_game_fec(now);
+                    // Second: parity only after the new source's real
+                    // definite send_one result; all rows keep original
+                    // authenticated lane PN and source-first ordering.
+                    game.drain(now,&mut original_kernel_copy);
                     arena.drain_returns();
                     if len==0{thread::sleep(Duration::from_millis(2));}
                 }
