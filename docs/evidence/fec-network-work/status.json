@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W56_AUTHENTIC_K_BOUND_RECHECK_HISTORIC_NEGATIVE_FIX_PENDING_ARM64",
+  "phase": "W56_AUTHENTIC_K_COHORT_ACTION_BUILD_PASS_REAL_AUTO_SAMEVM_AB_SUBMITTED",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -598,7 +598,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W56 source 3b89a140 policy unchanged; latest old W52 fixtures used k=376*16=6016 vs authentic M2 Slow.FirstSent=6000 => 0.267% overhang intentionally VALID under <=5% conservative bound. Second ARM64 Action40172963939 Go tests compiled, W56 positive/negative PASS, old W52 two negative cases FAIL due obsolete +0.27% fixture, so workflow FAIL and product artifact not qualified. New test-only fix sets genuine invalid 400*16=6400 (+6.67%) in both W52 negative cases, preserving UNKNOWN and reset protection. Await exact-source ARM64 Action auto triggered after commit, inspect unit/real TUN/ISA-L and ZIP hash; only after SUCCESS one native ARM64 8Mbps same-VM AB old f3b9 vs corrected W56 binary, low90s. No source policy adjustment or extra pressure; capacity_stop true merge_ready false.",
+  "next_action": "W56 source1673cd96 corrected exact ARM64 product build/test Action40173359338 PASS artifact12590822815, ZIP SHA256 cdc5d4eb; W56 same-VM original Auto product comparison request commit9ec341e6 Action40173582990 queued, contract40173582999 pending. A f3b9e8 native frozen build40171595909, B1673cd build40173359338, one scenario 8Mbps UDP/75ms, C2S high20%60s→1%90s. After run, download artifact, inspect per-leg real C2S stage times and actual applied readback, independent S2C, VALID/UNKNOWN, zero outer DATA retrans, genuine parity/real M2, first-TUN/UDP missing+p99, CPU/RSS/host PSI/Stop; report if 30–60s gradual-down criterion met (not assume success). Keep failed Actions40172735047/40172963939 in record as preproduct test faults, no capacity ladder, no other branch/state touch. Then bounded original FEC MTU/generation functionality only if missing and update final report.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -5269,6 +5269,18 @@
       "old_w52_legacy_fixture": "+0.27% k skew now VALID by design, test expected UNKNOWN",
       "product_qualified": false
     },
-    "third_build_status": "PENDING_AFTER_TEST_ONLY_FIX"
+    "third_build_status": "SUCCESS_ARM64_ORIGINAL_PUBLIC_FEC2_M2_K_RISK_AND_TUN_TESTS",
+    "source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+    "third_build_source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+    "third_build_run": 40173359338,
+    "third_build_artifact": 12590822815,
+    "third_build_zip_sha256": "cdc5d4eb68621321f7f918b6667ff16c0a166bfe6b509ded310afc467294a97f",
+    "product_request": "tests/network/fec-work/W56-auto-k-guard-down90-sameVM-AB-arm64.json",
+    "request_commit": "9ec341e6b25816e63f9ca9dc97988038e69d0098",
+    "same_vm_ab_run": 40173582990,
+    "contract_run": 40173582999,
+    "same_vm_ab_status": "QUEUED_AT_CHECK",
+    "old_product_source": "f3b9e8a5a6ac226d13066fc7ccc780cb5f94fa85",
+    "comparison": "one fixed 8Mbps/75ms 2%30s→20%60s→1%90s original Arm64 A/B"
   }
 }
