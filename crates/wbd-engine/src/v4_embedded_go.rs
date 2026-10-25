@@ -516,7 +516,7 @@ struct Entry{
     // Actual pending driver loans, each tagged with its original same
     // M3 AEAD PN and source/repair kind. Reset only after synchronous M4.
     #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-    fec2_staged_pns:Vec<(u64,u8)>,
+    fec2_staged_pns:Vec<(u64,u8,u64)>, // (real M4 PN, kind, exact FEC revision)
     #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     fec2_copied_source:u64,
     #[cfg(feature="fec2_product_record")]
@@ -3712,7 +3712,7 @@ fn original_fixed_stage_source(e:&mut Entry,
                 Ok(x)=>x,
                 Err(_)=>{e.fec2_fail_reasons[2]+=1;return Err(BAD_STAGE)}
             };
-            e.fec2_staged_pns.push((pn,2));
+            e.fec2_staged_pns.push((pn,2,rev));
             Ok(())
         })();
         if let Err(err)=attempt{callback_error=Some(err);false}else{true}
@@ -3764,7 +3764,7 @@ fn original_fixed_stage_due(e:&mut Entry,
                 Ok(x)=>x,
                 Err(_)=>{e.fec2_fail_reasons[5]+=1;return Err(BAD_STAGE)}
             };
-            e.fec2_staged_pns.push((pn,3));
+            e.fec2_staged_pns.push((pn,3,revision.0));
             Ok(())
         })();
         match attempt{
@@ -4375,7 +4375,8 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         let mut actual_fec_sources=Vec::new();
         let mut source_copied=0u32;
         let mut source_uncertain=0u32;
-        for (pn,kind) in e.fec2_staged_pns.drain(..){
+        let newly_applied_rev=e.fec2_live_tx.as_ref().map(|s|s.revision().0);
+        for (pn,kind,emitted_rev) in e.fec2_staged_pns.drain(..){
             let idx=actual_firstsend.iter().position(|x|x.0.0==pn);
             let copied=idx.is_some_and(|i|i<finish.copied as usize);
             let uncertain=idx.is_some_and(|i|
@@ -4396,7 +4397,13 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             }else{
                 if copied{
                     parity_copied+=1;
-                    e.fec2_copied_repair=e.fec2_copied_repair.saturating_add(1);
+                    // A successfully copied OLD sealed parity is still
+                    // settled against its job, but MUST NOT witness APPLIED
+                    // for the new revision. Only actual same-revision M4
+                    // parity after new first source may satisfy the gate.
+                    if Some(emitted_rev)==newly_applied_rev{
+                        e.fec2_copied_repair=e.fec2_copied_repair.saturating_add(1);
+                    }
                 }else if uncertain{
                     parity_uncertain+=1;
                     e.fec2_fail_reasons[6]+=1;
