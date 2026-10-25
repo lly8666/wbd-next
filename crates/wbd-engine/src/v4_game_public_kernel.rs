@@ -71,6 +71,7 @@ impl GameKernelOwner{
                 flow:flows[i],seq:seqs[i],raw:Arc::clone(&tx[i])
             });
         }
+        let start=Instant::now();
         let tx_adapter=Arc::clone(&adapter);
         let tx_stop=Arc::clone(&stop);
         let tx_tun=Arc::clone(&tun);
@@ -81,7 +82,6 @@ impl GameKernelOwner{
             .spawn(move||{
                 let Ok(mut arena)=Arena::new(generation^0x4000_0000,64,2048,64,1_000_000)
                     else{return};
-                let start=Instant::now();
                 let mut inbound=[0u8;2048];
                 while !tx_stop.load(Ordering::Acquire){
                     // Never hold the TUN device's shared serialized mutex
@@ -96,12 +96,7 @@ impl GameKernelOwner{
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                                 continue
                             },
-                            _=>{
-                                // Bounded 2ms idle wait yields to peer RX/TUN
-                                // and limits empty-device wakes to <=500/s.
-                                thread::sleep(Duration::from_millis(2));
-                                continue
-                            }
+                            _=>0 // parity expiry must still make progress while TUN idle
                         },
                         Err(_)=>{
                             if tx_stop.load(Ordering::Acquire){break}
@@ -110,14 +105,18 @@ impl GameKernelOwner{
                             continue
                         }
                     };
-                    if len==0||len>inner_mtu{
+                    if len>inner_mtu{
                         tx_rejected.fetch_add(1,Ordering::Relaxed);continue
                     }
                     let now=MonoNs(start.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
                     let Ok(mut game)=tx_adapter.lock()else{break};
-                    if game.offer(&inbound[..len],now).is_err(){
+                    // First TUN source is ALWAYS admitted before parity work.
+                    // When TUN is idle, due short Game groups still close
+                    // and send on the existing worker, without a new thread.
+                    if len>0&&game.offer(&inbound[..len],now).is_err(){
                         tx_rejected.fetch_add(1,Ordering::Relaxed);continue
                     }
+                    let _=game.poll_game_fec(now);
                     game.drain(now,|lane,_,pn,wire|{
                         let Some(item)=lanes.iter_mut().find(|x|x.key==lane) else{
                             tx_rejected.fetch_add(1,Ordering::Relaxed);
@@ -164,6 +163,7 @@ impl GameKernelOwner{
                         }
                     });
                     arena.drain_returns();
+                    if len==0{thread::sleep(Duration::from_millis(2));}
                 }
             }).map_err(|_|())?;
         let mut threads=vec![tx_worker];
@@ -212,19 +212,24 @@ impl GameKernelOwner{
                     let received={
                         let Ok(mut game)=client_rx_adapter.lock()else{break};
                         rx_held.fetch_add(1,Ordering::Relaxed);
-                        game.receive(lane,wire[..len].to_vec())
+                        game.receive_at(lane,wire[..len].to_vec(),
+                            MonoNs(start.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64))
                     };
                     match received{
-                        Ok(Some(plaintext))=>{
+                        Ok(originals) if !originals.is_empty()=>{
                             rx_some.fetch_add(1,Ordering::Relaxed);
-                            if rx_tun.write_authenticated_ipv4(generation,&plaintext).is_ok(){
-                                recv_count.fetch_add(1,Ordering::Relaxed);
-                            }else{
-                                tun_failed.fetch_add(1,Ordering::Relaxed);
-                                recv_rejected.fetch_add(1,Ordering::Relaxed);
+                            // FEC may recover several distinct originals
+                            // from ONE uniquely authenticated repair symbol.
+                            for plaintext in originals{
+                                if rx_tun.write_authenticated_ipv4(generation,&plaintext).is_ok(){
+                                    recv_count.fetch_add(1,Ordering::Relaxed);
+                                }else{
+                                    tun_failed.fetch_add(1,Ordering::Relaxed);
+                                    recv_rejected.fetch_add(1,Ordering::Relaxed);
+                                }
                             }
                         },
-                        Ok(None)=>{
+                        Ok(_)=>{
                             rx_none.fetch_add(1,Ordering::Relaxed);
                         }, // exact GameRx cross-lane dedup
                         Err(_)=>{
