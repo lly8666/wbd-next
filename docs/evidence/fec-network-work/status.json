@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W78_REAL_PRODUCT_REORDER_DUPLICATE_AND_NATIVE_MULTI_CLASS_REVISION_PASS_SCOPED_INTEGRATION",
+  "phase": "W83_FINITE_GILBERT_ELLIOTT_CORRELATED_BURST_REAL_FEC_BOUNDARY_SCOPED_DELIVERED",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -631,7 +631,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W77 original native Linux ARM64 Fixed Medium2 8Mbps each real IID5% + reorder10% + duplicate2% + jitter15ms odd MTU-class sizes Action40189681443 PASS_SCOPED, zero outer DATA retrans, zero source TUN drops, actual app C2S6/124328 S2C2/124327 missing stress, 0 after, TCP0, exact frozen source7ad0ba91. W78 FEC original fixed-stream 3-class old parity/monotonic identity/final Stop native tests + exact ARM64 compilation PASS Actions40189755295/40189755361, commit4a77104b (test-only). Own-host W69–W76 remains scoped closed; do not revive high-load ladder. Scope limitations unchanged (remote receiver sustained overload, actual 65KiB FEC TUN, Windows/Game, 100Mbps inner TCP postloss, exact combined source). Stop extra tests unless explicit new functional target/integration. Review scoped FEC integration when owner ready; no merge/main or other role status. Evidence docs/evidence/fec-network-work/20261025-W77-W78-reorder-duplicate-multiclass-original-arm64-PASS.json",
+  "next_action": "W79–W83 finite authentic GE burst correlated-loss original Linux ARM64 DONE, exact frozen source7ad0ba91. W79 Fixed Medium~5% long GE action40191027046 observational green but actual 2.85/2.80% UDP residual >1%, do not mislabel service pass. W80 Fixed Maximum~15% long GE Action40191030800 FAIL 1% goal (1.34/1.53%). W82 shorter bad-state same average~15% action40191413910 PASS (0.16/0.22%). W83 same-original-process waveform Action40191819998 long~15% 1.32/1.30% vs short~15% 0.21/0.20%, short gate PASS only; normal phases zero missing. W81 Auto asymmetric GE Action40191033811 authentic VALID Balanced3→High4→Maximum6 and gradual down Light0, native client11/11 server6/6, outer DATA0. All no source TUN/capacity drop or decoder failure, no evidenced deterministic decodable lost source; don't retune FEC math or outer recovery, stop load ladder. Receipt docs/evidence/fec-network-work/20261025-W79-W83-GE-correlated-burst-original-arm64-SCOPED.json. Scoped integration review only, merge_ready=false capacity_stop=true. Other outstanding: receiver host overload signal, real FEC TUN65KiB, Windows/Game, historical mixed TCP100, exact combined-source qualification, no merge main.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -5514,6 +5514,50 @@
     "w78_native_contract_action": 40189755295,
     "w78_arm64_build_action": 40189755361,
     "w78_test_only_no_product_semantics_change": true,
+    "capacity_stop": true,
+    "merge_ready": false,
+    "scoped_integration_review_ready": true
+  },
+  "w79_w83_correlated_burst": {
+    "status": "FINITE_GE_SCOPED_VERIFIED_WITH_W80_MAXIMUM_GT1PCT_NEGATIVE_KEPT",
+    "proof": "docs/evidence/fec-network-work/20261025-W79-W83-GE-correlated-burst-original-arm64-SCOPED.json",
+    "source": "7ad0ba91b656ff8e9ee965d0c093a18e048971fb",
+    "frozen_action": 40185113624,
+    "actions": [
+      40191027046,
+      40191030800,
+      40191033811,
+      40191413910,
+      40191819998
+    ],
+    "all_contract_runs_success": true,
+    "w79_fixed_medium5_long_burst_residual_pct": [
+      2.8491,
+      2.798
+    ],
+    "w80_fixed_maximum15_long_burst_fail_1pct_residual_pct": [
+      1.3412,
+      1.5306
+    ],
+    "w81_auto_valid_rise": "C2S Balanced3→High4→Maximum6",
+    "w81_auto_native_final": "client11/11 server6/6 both Light0 pendingfalse",
+    "w82_maximum15_short_burst_pass_1pct_pct": [
+      0.1623,
+      0.219
+    ],
+    "w83_same_vm_long_burst_pct": [
+      1.3207,
+      1.3026
+    ],
+    "w83_same_vm_short_burst_pct": [
+      0.2148,
+      0.1997
+    ],
+    "w83_short_phase_gate_success_long_phase_not_qualified": true,
+    "all_original_outer_data_retransmitted": 0,
+    "all_source_tun_tx_drops": 0,
+    "all_native_fec_rx_capacity_rejects": 0,
+    "product_source_patch_required": false,
     "capacity_stop": true,
     "merge_ready": false,
     "scoped_integration_review_ready": true
