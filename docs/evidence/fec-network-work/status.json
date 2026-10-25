@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W56_AUTHENTIC_K_COHORT_ACTION_BUILD_PASS_REAL_AUTO_SAMEVM_AB_SUBMITTED",
+  "phase": "W56_AUTO_NATIVE_GRADUAL_DOWN_PASS_REVISED_USER_PER_GRADE_2_3MIN_W58_W60_COMMON_SCENARIOS_RUNNING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -561,9 +561,31 @@
       "result": "PASS_SCOPED_OBSERVATION",
       "source": "e446fa1cf09ebfb259da3d764abf8f8ed8d4211f",
       "caveat": "C2S recovery downshift NOT_OBSERVED"
+    },
+    {
+      "id": "W58",
+      "path": "tests/network/fec-work/W58-fixed-medium5-mixed8-outeroff-arm64.json",
+      "source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+      "run_id": 40174383391,
+      "result": "RUNNING_NOT_YET_QUALIFIED"
+    },
+    {
+      "id": "W59",
+      "path": "tests/network/fec-work/W59-fixed-strong15-mixed8-outeroff-arm64.json",
+      "source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+      "run_id": 40174386036,
+      "result": "RUNNING_NOT_YET_QUALIFIED"
+    },
+    {
+      "id": "W60",
+      "path": "tests/network/fec-work/W60-auto-mixed8-lowmedium-recover-arm64.json",
+      "source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+      "run_id": 40174389833,
+      "result": "RUNNING_NOT_YET_QUALIFIED"
     }
   ],
   "open_issues": [
+    "W58–W60 regular-user 8Mbps mixed UDP+TCP representative cases from exact frozen ARM64 Auto/fixed product source1673cd96 submitted and running; Action IDs 40174383391/40174386036/40174389833. Do NOT claim PASS until artifacts reviewed. User revised downward timing to <=2-3min PER GRADE, multi-grade cumulative; W56 real source native 6→0 completed one-grade at a time under90s recovery, no reason to further micro-optimize.",
     "W57 native ARM64 Action40173816559 PASS for exactly 8 listed functional filters including FEC codec odd-size budget, recovered sources/Stop/auth 3 suites, retired k1 parity no redelivery, and COMMON_PATH original send MTU±1/generation/65KiB segmentation/Stop. This is unit/shared-path-only, real 65KiB FEC-over-TUN product NOT_RUN. No outer recovery change or host pressure. W56 sameVM Action40173582990 still pending at last check.",
     "W56 second ARM64 run40172963939 FAILURE: new W56 acceptance and risk controls PASS, two older W52 negative tests FAIL since obsolete k=376 (6016/6000=+0.267%) is now intentionally VALID under <=5% authenticated M4/M2 window skew guard. Changed those negatives to k=400 (6400/6000=+6.67% >5%, must remain UNKNOWN), test-only, no product policy change; preserve failed run/artifact12590394517, do not reuse failed artifact.",
     "W56 original ARM64 build40172735047 Rust/native compiled PASS but Go FEC unit test did NOT compile at fec_v2_policy_test.go:400 shadowed state; entire Action FAIL and artifact12590778407 must not serve as product qualifier. Test-only fix source743040554098a910bdafe2169218d7437a5cda6d, exact ARM64 build40172963939 queued. No W56 performance Action yet. Underlying guarded k-window patch not accepted until tests PASS.",
@@ -599,7 +621,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W56 source1673cd96 corrected exact ARM64 product build/test Action40173359338 PASS artifact12590822815, ZIP SHA256 cdc5d4eb; W56 same-VM original Auto product comparison request commit9ec341e6 Action40173582990 queued, contract40173582999 pending. A f3b9e8 native frozen build40171595909, B1673cd build40173359338, one scenario 8Mbps UDP/75ms, C2S high20%60s→1%90s. After run, download artifact, inspect per-leg real C2S stage times and actual applied readback, independent S2C, VALID/UNKNOWN, zero outer DATA retrans, genuine parity/real M2, first-TUN/UDP missing+p99, CPU/RSS/host PSI/Stop; report if 30–60s gradual-down criterion met (not assume success). Keep failed Actions40172735047/40172963939 in record as preproduct test faults, no capacity ladder, no other branch/state touch. Then bounded original FEC MTU/generation functionality only if missing and update final report. W57 finite native ARM64 shared MTU/Stop generation Action40173816559 PASS, cannot generalize to actual 65KiB FEC product across TUN. Preserve W56 sameVM result as next gate.",
+  "next_action": "User latest Auto acceptance: allow 2-3min per grade downward, cumulative multi-grade; do not further tune. W56 exact B source1673cd96 native ARM64 build40173359338 and sameVM AB40173582990 PASS_SCOPED, real full 6->0 one-grade return within90s; retains real M2/outer DATA off. W57 native ARM64 MTU/Stop/generation scoped PASS. W58/W59/W60 three independent 8Mbps mixed UDP/TCP common coverage Actions40174383391 /40174386036 /40174389833 RUNNING, all reuse exact frozen1673 source product artifact12590822815. Inspect each actual Action result/artifact, distinguish APP UDP/TCP and small probes, genuine fixed/auto readback, original M2+parity, no outer retrans, CPU/RSS/host capacity and Stop. Do NOT double-run or add throughput ladder. Update individual evidence and final-report after real outcomes; capacity_stop true; do not modify network-matrix/main/status, merge_ready false pending finish.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -5196,7 +5218,7 @@
     "native_readback_both_applied": true,
     "one_minute_target_met": false
   },
-  "auto_user_preference_20261025": "Prioritize rapid trustworthy UP on consecutive valid fast windows; transient rise loss tolerated. DOWN gradually one profile at a time, preferably complete relevant low-loss recovery in about 30-60s once feedback is sufficient, not indefinitely stuck at Maximum; never fake ACK/UNKNOWN==0, change model/r/k, or exceed capacity stop.",
+  "auto_user_preference_20261025": "LATEST 2026-10-25 clarification supersedes old 30-60s full return target: Auto rise as fast as authentic evidence permits (rise phase loss acceptable); each individual DOWN grade may take as long as 2-3 minutes, aggregate multi-grade return may sum per-grade windows, smooth gradual one-grade moves, and given sufficiently steady low loss/valid feedback eventual full downward convergence is required. Do not force early reductions, fake ACKs or UNKNOWN loss=0. W56 original authentic ARM64 sameVM B observed 6->5->4->3->2->1->0 in ~90s; stop further micro-optimization.",
   "w55": {
     "source": "f3b9e8a5a6ac226d13066fc7ccc780cb5f94fa85",
     "parent": "74d595f3c5c9436cd5d1c001e50e7b1fbaf778c5",
@@ -5240,7 +5262,7 @@
     "build_run": 40172735047,
     "build_status": "IN_PROGRESS",
     "build_artifact": null,
-    "performance": "NOT_RUN",
+    "performance": "W56 SAME_VM_AB PASS_SCOPED_BOTH; B AUTHENTIC C2S 3->6 RISE DURING_HIGH then 6->5->4->3->2->1->0, S2C 5->4->3->2->1->0; real native M2/parity/TUN, zero outer DATA retrans, no source TUN drops, no capacity; B high app residual0.1317% within1%, recovery missing0.",
     "capacity_stop": true,
     "merge_ready": false,
     "first_build": {
@@ -5280,9 +5302,14 @@
     "request_commit": "9ec341e6b25816e63f9ca9dc97988038e69d0098",
     "same_vm_ab_run": 40173582990,
     "contract_run": 40173582999,
-    "same_vm_ab_status": "QUEUED_AT_CHECK",
+    "same_vm_ab_status": "COMPLETED_SUCCESS_PASS_SCOPED_BOTH",
     "old_product_source": "f3b9e8a5a6ac226d13066fc7ccc780cb5f94fa85",
-    "comparison": "one fixed 8Mbps/75ms 2%30s→20%60s→1%90s original Arm64 A/B"
+    "comparison": "one fixed 8Mbps/75ms 2%30s→20%60s→1%90s original Arm64 A/B",
+    "same_vm_ab_artifact_id": 12591456771,
+    "same_vm_ab_zip_sha256": "1bc9dfade3a26016e5d80dd610da1801a6d6e291c1322aea9517b47e302487ce",
+    "contract_result": "SUCCESS",
+    "result_evidence": "docs/evidence/fec-network-work/20261025-W56-authentic-k-source-native-Auto-sameVM-AB-PASS.json",
+    "revised_per_grade_user_target": "MET_SCOPED_REAL_8MBPS_1PCT_LOW_RETURN"
   },
   "w57": {
     "workflow_source": "54716f97add9f451ccf03bfa1b1c15b721ac5125",
@@ -5292,6 +5319,43 @@
     "artifact": "NONE_ACTION_LOG",
     "evidence": "docs/evidence/fec-network-work/20261025-W57-bounded-arm64-FEC-MTU-generation-Stop-PASS.json",
     "product_jumbo_tun": "NOT_RUN",
+    "capacity_stop": true,
+    "merge_ready": false
+  },
+  "w58_w60": {
+    "source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+    "build_run": 40173359338,
+    "build_artifact": 12590822815,
+    "build_zip_sha256": "cdc5d4eb68621321f7f918b6667ff16c0a166bfe6b509ded310afc467294a97f",
+    "outer_repair_disabled_required": true,
+    "mode": "COMMON_SCOPED_REAL_ORIGINAL_ARM64",
+    "cases": [
+      {
+        "id": "W58",
+        "path": "tests/network/fec-work/W58-fixed-medium5-mixed8-outeroff-arm64.json",
+        "request_commit": "3622ee4f652d667ece896ed85403c8a62f7dcd42",
+        "run_id": 40174383391,
+        "scenario": "fixed Medium2, IID5% both, mixed UDP96% / TCP4%, 8Mbps each 60s",
+        "status": "IN_PROGRESS_NOT_YET_QUALIFIED"
+      },
+      {
+        "id": "W59",
+        "path": "tests/network/fec-work/W59-fixed-strong15-mixed8-outeroff-arm64.json",
+        "request_commit": "89494d1cf848d3bdee0d6690265e04a626ad7423",
+        "run_id": 40174386036,
+        "scenario": "fixed Strong5, IID15% both, mixed UDP96% / TCP4%, 8Mbps each 60s",
+        "status": "IN_PROGRESS_NOT_YET_QUALIFIED"
+      },
+      {
+        "id": "W60",
+        "path": "tests/network/fec-work/W60-auto-mixed8-lowmedium-recover-arm64.json",
+        "request_commit": "ce1975e50e8bf6340493ef1d8665a996bab19624",
+        "run_id": 40174389833,
+        "scenario": "Auto1%30s->5%60s->1%120s both, mixed UDP96% / TCP4%, 8Mbps each",
+        "status": "IN_PROGRESS_NOT_YET_QUALIFIED"
+      }
+    ],
+    "intent": "docs/devlog/fec-network-work/20261025-W56-native-return-and-W58-W60-common-scenarios-intent.md",
     "capacity_stop": true,
     "merge_ready": false
   }
