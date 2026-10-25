@@ -1,0 +1,59 @@
+name: LAN masked-PN mode A/B native x64
+on:
+  push:
+    branches: [experiment/lan-hp-mode-cost]
+    paths: [".github/workflows/lan-hp-mode-cost-x64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: lan-hp-mode-cost-x64
+  cancel-in-progress: false
+jobs:
+  ab:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Native Go full encode/decode and protected mode bit correctness tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "x86_64"
+          mkdir -p lan-hp-mode-report
+          go version > lan-hp-mode-report/go_version.txt
+          lscpu > lan-hp-mode-report/cpu.txt
+          go test -v tools/lan_hp_mode_cost_test.go -run '^Test' -count=1 \
+            | tee lan-hp-mode-report/unit_tests.txt
+          {
+            echo "SHA=$GITHUB_SHA"
+            echo "RUN=$GITHUB_RUN_ID"
+            echo "ARCH=$(uname -m)"
+            echo "ORIGINAL=5_TLS_like_1_plain_mode_8_clear_PN"
+            echo "NEW=5_TLS_like_8_header_protected_63bit_PN_plus_1_mode"
+            echo "HEADER_HP=AES128_ECB_single_16B_ciphertext_sample_AES_separate_test_key"
+            echo "INNER_B=1345"
+            echo "ELIGIBLE_PCT=99"
+            echo "SCOPE=ONLY_GO_LAB_SEAL_OPEN_CIPHERS_NO_REAL_WBD_APP"
+            echo "PRODUCT_WIRED=false"
+            echo "XOR_UNAUTHENTICATED=true"
+          } > lan-hp-mode-report/manifest.env
+      - name: Paired native 6x A/B 99pct and pure AES/XOR plus parse-only CPU per op
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GOMAXPROCS=1
+          go test tools/lan_hp_mode_cost_test.go \
+            -run '^$' -bench '^Benchmark' \
+            -benchtime=2s -count=6 -benchmem -cpu=1 \
+            | tee lan-hp-mode-report/bench.txt
+          python3 tools/lan_hp_mode_cost_analyze.py \
+            --input lan-hp-mode-report/bench.txt \
+            --output lan-hp-mode-report/summary.json \
+            | tee lan-hp-mode-report/summary_stdout.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-hp-mode-cost-x64-native
+          path: lan-hp-mode-report/
+          retention-days: 30
+          if-no-files-found: warn
