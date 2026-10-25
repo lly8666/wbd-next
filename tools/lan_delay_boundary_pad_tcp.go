@@ -32,6 +32,12 @@ import (
 const innerPublicSNI="private.inner-wbd.example"
 const mainPort uint16=50101
 const safeBoundary uint32=18000
+const pathMTU=1500
+const underlayOverhead=40
+const maxWireRecord=pathMTU-underlayOverhead
+const labAeadOverhead=31
+const delayMinMs=11000
+const delayRangeMs=10001
 type Spec struct{
  Label string
  Port uint16
@@ -39,6 +45,8 @@ type Spec struct{
  Proto byte
  Flags byte
  TrustedApp bool
+ Boundary bool
+ Stage string
  Inner []byte
 }
 type Receipt struct{
@@ -48,6 +56,11 @@ type Receipt struct{
  WireBytes int `json:"wire_bytes"`
  InnerBytes int `json:"inner_bytes"`
  PlainSha256 string `json:"inner_sha256"`
+ PaddingBytes int
+ LifecycleBoundary bool
+ Stage string
+ ElapsedFromLastServerFlightMs int64
+ PadSha256 string
 }
 type Manifest struct{
  Scope string `json:"scope"`
@@ -60,6 +73,15 @@ type Manifest struct{
  PlaintextRoundtripAll bool `json:"plaintext_roundtrip_all"`
  ModeDowngradeRejectedInTestOracle bool `json:"mode_downgrade_rejected_in_test_oracle"`
  Records []Receipt `json:"records"`
+ ChosenHoldMs int64
+ ObservedFastElapsedMs int64
+ MtuBytes int
+ OuterIPTCPOverhead int
+ PaddedRecords int
+ UnpaddedRecords int
+ PaddingBytesTotal int
+ MTUMaxRecordObserved int
+ LargeNoRoomFallback int
 }
 
 func fail(err error){if err!=nil{panic(err)}}
@@ -79,7 +101,8 @@ func tlsRecordHeader(data []byte)bool{
 }
 // Trusted label is provided by the test harness, not derivable from visible
 // TLS1.3 0x17; boundary check prevents old-range retransmit fast-path.
-func gate(s Spec, verifiedServerHello bool)bool{
+func gate(s Spec, verifiedServerHello bool, elapsedMs, holdMs int64)bool{
+ if elapsedMs<holdMs{return false}
  if !verifiedServerHello||!s.TrustedApp||s.Port!=mainPort||s.Proto!=6||
     s.Seq<safeBoundary||len(s.Inner)<40+64||s.Flags&0x07!=0{return false}
  return tlsRecordHeader(s.Inner[40:])
@@ -112,42 +135,62 @@ func (c Coder)nonce(pn uint64)[]byte{
 // XOR: masked(kind=0 | inner_ipv4) -> inner+15B.
 // Mode is unauthenticated for XOR; authenticated in AES AAD. A real receiver
 // needs secure capability/mode admission; this fixture assumes oracle identity.
-func (c Coder)seal(p []byte,mode byte,pn uint64)[]byte{
- n:=len(p);used:=n+31;if mode==1{used=n+15}
+// Authenticated original IPv4 bytes plus optional trailing random filler.
+// Original IPv4 TotalLength stays intact; receiver trims after AES verifies.
+// This LAB custom format is not the production WBD Rust wire protocol.
+func (c Coder)seal(p []byte,mode byte,pn uint64,padLen int)([]byte,[]byte){
+ if padLen<0||padLen>maxWireRecord-len(p)-labAeadOverhead{panic("MTU pad budget exceeded")}
+ if mode==1&&padLen!=0{panic("fast path must not pad")}
+ n:=len(p);used:=n+labAeadOverhead+padLen
+ if mode==1{used=n+15}
+ if used>maxWireRecord{panic("outer record exceeds MTU")}
  w:=make([]byte,used);copy(w[:3],[]byte{0x17,0x03,0x03})
  binary.BigEndian.PutUint16(w[3:5],uint16(used-5))
  w[5]=mode;binary.BigEndian.PutUint64(w[6:14],pn)
- body:=make([]byte,1+n);body[0]=0;copy(body[1:],p)
+ body:=make([]byte,1+n+padLen);body[0]=0;copy(body[1:],p)
+ var pad []byte
+ if padLen>0{pad=body[1+n:];if _,e:=rand.Read(pad);e!=nil{panic(e)}}
  if mode==0{
-  encrypted:=c.aead.Seal(nil,c.nonce(pn),body,w[:14])
-  copy(w[14:],encrypted)
- }else if mode==1{
-  copy(w[14:],body);maskPnRepeat(w[14:],pn)
+  v:=c.aead.Seal(w[14:14],c.nonce(pn),body,w[:14])
+  if len(v)!=used-14{panic("AEAD length mismatch")}
+ }else if mode==1{copy(w[14:],body);maskPnRepeat(w[14:],pn)
  }else{panic("bad mode")}
- return w
+ return w,pad
 }
-func (c Coder)open(w []byte,expectedMode byte)([]byte,uint64,error){
+func (c Coder)open(w []byte,expectedMode byte)([]byte,uint64,int,error){
  if len(w)<15||!bytes.Equal(w[:3],[]byte{0x17,0x03,0x03})||
-    int(binary.BigEndian.Uint16(w[3:5]))+5!=len(w){
-  return nil,0,errors.New("bad outer framing")
+   int(binary.BigEndian.Uint16(w[3:5]))+5!=len(w)||len(w)>maxWireRecord{
+  return nil,0,0,errors.New("bad outer framing or MTU")
  }
- if w[5]!=expectedMode{return nil,0,errors.New("test oracle mode mismatch")}
+ if w[5]!=expectedMode{return nil,0,0,errors.New("test oracle mode mismatch")}
  pn:=binary.BigEndian.Uint64(w[6:14])
  var plain []byte
  if expectedMode==0{
-  if len(w)<31+40{return nil,0,errors.New("too small AEAD")}
+  if len(w)<labAeadOverhead+40{return nil,0,0,errors.New("short AEAD")}
   v,e:=c.aead.Open(nil,c.nonce(pn),w[14:],w[:14])
-  if e!=nil{return nil,0,fmt.Errorf("AEAD authentication failed: %w",e)}
+  if e!=nil{return nil,0,0,fmt.Errorf("AEAD auth failure: %w",e)}
   plain=v
  }else if expectedMode==1{
-  plain=append([]byte{},w[14:]...)
-  maskPnRepeat(plain,pn)
- }else{return nil,0,errors.New("bad mode")}
- if len(plain)<41||plain[0]!=0||plain[1]>>4!=4||
-    int(binary.BigEndian.Uint16(plain[3:5]))!=len(plain)-1{
-  return nil,0,errors.New("decoded IPv4 invalid")
- }
- return plain[1:],pn,nil
+  plain=append([]byte{},w[14:]...);maskPnRepeat(plain,pn)
+ }else{return nil,0,0,errors.New("bad mode")}
+ if len(plain)<41||plain[0]!=0||plain[1]>>4!=4{return nil,0,0,errors.New("invalid IPv4")}
+ declared:=int(binary.BigEndian.Uint16(plain[3:5]))
+ if declared<40||declared>len(plain)-1{return nil,0,0,errors.New("original IPv4 total length invalid")}
+ padLen:=len(plain)-1-declared
+ if expectedMode==1&&padLen!=0{return nil,0,0,errors.New("XOR must not pad")}
+ return plain[1:1+declared],pn,padLen,nil
+}
+func randomHoldMs()int64{
+ var b [4]byte;if _,e:=rand.Read(b[:]);e!=nil{panic(e)}
+ return delayMinMs+int64(binary.BigEndian.Uint32(b[:])%delayRangeMs)
+}
+func choosePadding(s Spec)int{
+ if !s.Boundary{return 0}
+ room:=maxWireRecord-len(s.Inner)-labAeadOverhead
+ if room<=0{return 0}
+ var b [2]byte;if _,e:=rand.Read(b[:]);e!=nil{panic(e)}
+ min:=16;if room<min{min=1}
+ return min+int(binary.BigEndian.Uint16(b[:]))%(room-min+1)
 }
 func testCert()(tls.Certificate,*x509.CertPool,error){
  pub,priv,e:=ed25519.GenerateKey(rand.Reader);if e!=nil{return tls.Certificate{},nil,e}
