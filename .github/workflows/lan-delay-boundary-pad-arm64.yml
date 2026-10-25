@@ -58,7 +58,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tcpdump iproute2
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tcpdump iproute2 ethtool
           tmp="$(mktemp -d)"
           cap_pid=""
           original_lo_mtu="$(cat /sys/class/net/lo/mtu)"
@@ -73,6 +73,8 @@ jobs:
           trap cleanup EXIT
           sudo ip link set dev lo mtu 1500
           test "$(cat /sys/class/net/lo/mtu)" = 1500
+          sudo ethtool -K lo gro off gso off tso off || true
+          ethtool -k lo > lan-boundary-pad-report/loopback_offload_features.txt
           echo "ACTUAL_CAPTURE_INTERFACE_MTU=1500" >> lan-boundary-pad-report/manifest.env
           openssl req -x509 -newkey rsa:2048 -nodes \
             -keyout "$tmp/key.pem" -out "$tmp/cert.pem" \
