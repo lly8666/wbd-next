@@ -2,7 +2,7 @@
   "schema": 1,
   "experiment": "LAN_XOR_TLSLIKE_BOUNDED_LAB",
   "branch": "experiment/lan-xor-tlslike",
-  "phase": "LAB_TCP_AND_REAL_TLS13_HANDOFF_CAPTURE_PASS_PRODUCT_NOT_WIRED_INSECURE_OBFUSCATION",
+  "phase": "COMPLETE_SCOPED_LAN_XOR_TLSLIKE_LAB_NATIVE_X86_ARM_PASS_PRODUCT_UNWIRED_INSECURE",
   "base": {
     "branch": "experiment/selective-tls-crypto",
     "sha": "ca72b345de5846a5c58f28d6be24b4e2fcd057b1",
@@ -62,7 +62,7 @@
   },
   "report": "docs/evidence/lan-xor-tlslike/REPORT.md",
   "open_requests": [],
-  "next_action": "NONE_TWO_SCOPED_LAB_CAPTURES_CLOSED_REAL_WBD_PRODUCT_NOT_WIRED",
+  "next_action": "NONE_SCOPED_CAPTURE_COMPLETED_DO_NOT_PROMOTE_INSECURE_LAB_TO_PRODUCT",
   "merge_ready": false,
   "real_tls13_handoff_fixture": {
     "source": "00e7138177058c1d4286eb867983af5afb6ba98d",
@@ -90,5 +90,55 @@
     "real_WBD_Go_Rust_TUN": false,
     "real_standard_TLS_data_after_switch": false
   },
-  "tls13_followup_report": "docs/evidence/lan-xor-tlslike/TLS13_HANDOFF_REPORT.md"
+  "tls13_followup_report": "docs/evidence/lan-xor-tlslike/TLS13_HANDOFF_REPORT.md",
+  "cross_platform_audit": "docs/evidence/lan-xor-tlslike/CROSS_PLATFORM_REPORT.md",
+  "arm64_failure_retained": {
+    "source": "e6d98d39d94abf20a0dedbdcd92987e5fda1502d",
+    "run_id": 40173618918,
+    "job_id": 121109547810,
+    "conclusion": "failure",
+    "rust_tests": "5 passed, 0 failed",
+    "tcp_capture": "FAIL_BROKEN_PIPE_RAW_TLS_HANDOFF",
+    "artifact_id": 12591750206,
+    "artifact_zip_sha256": "afd795ea02c73ae5207f1de86502ebbda42f946f478f7b7bbc0c4fabecf2cd94"
+  },
+  "tls_ready_fix": {
+    "commit": "28ce2f2c4bdbc1ee966593565631a976326fec98",
+    "change": "TLS-authenticated C_READY/S_READY two-sided synchronization before NetConn() raw handoff",
+    "xor_algorithm_changed": false,
+    "fixture_or_seed_changed": false
+  },
+  "x86_tls_ready_verification": {
+    "source": "28ce2f2c4bdbc1ee966593565631a976326fec98",
+    "run_id": 40173724240,
+    "job_id": 121109856012,
+    "conclusion": "success",
+    "artifact_id": 12591042778,
+    "artifact_zip_sha256": "4d1f93184cd0dee62f349a77dbae4aa923216b62be44bbb81ba2b7ff85cc6bee",
+    "pcap_sha256": "b63a92b160debbba42a974ea8a619263110ba59706eef0737079642bbfd2b3fe",
+    "pcap_bytes": 8465,
+    "prior_tls_records": 6,
+    "steady_record_count": 4,
+    "rolling_repeat64": false,
+    "rolling_repeat128": false
+  },
+  "arm64_tls_ready_verification": {
+    "source": "dcce18a418c55fed1a787d254fce5f97a3b421da",
+    "run_id": 40173739049,
+    "job_id": 121109902166,
+    "conclusion": "success",
+    "tests": {
+      "passed": 5,
+      "failed": 0,
+      "ignored": 0
+    },
+    "artifact_id": 12591416126,
+    "artifact_zip_sha256": "c01dea791a3ee3ec2a7fa28a6ccd519cdc91fc3e99007b49f3bc6169f38a97c3",
+    "pcap_sha256": "3ad5e28786abb23bbe67fd08e599590c2ce875407d759708e8283997964135e3",
+    "pcap_bytes": 8301,
+    "prior_tls_records": 6,
+    "steady_record_count": 4,
+    "rolling_repeat64": false,
+    "rolling_repeat128": false
+  }
 }
