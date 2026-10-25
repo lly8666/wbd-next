@@ -790,5 +790,37 @@ class Contracts(unittest.TestCase):
             self.assertTrue(any(x["missing_after_drain"] == 2 for x in report["observed"]))
 
 
+
+class FecSizeClassContracts(unittest.TestCase):
+    def test_actual_size_class_math_and_owner_scope(self):
+        from tools.network_harness.traffic import size_class, SIZE_CLASSES
+        self.assertEqual([size_class(n) for n in (64,96,256,257,899,900,1287)],
+                         [SIZE_CLASSES[0]]*3+[SIZE_CLASSES[1]]*2+[SIZE_CLASSES[2]]*2)
+        r=request()
+        r["owner"]="fec-network-work"
+        r["traffic"]["observe_size_classes"]=True
+        r["acceptance"]["max_small_udp_loss_pct"]=1
+        r["acceptance"]["max_small_udp_p99_ms"]=500
+        self.assertTrue(validate(r)["traffic"]["observe_size_classes"])
+        r["traffic"]["observe_size_classes"]=False
+        with self.assertRaises(ValueError): validate(r)
+        r["traffic"]["observe_size_classes"]=True
+        r["owner"]="network-matrix"
+        with self.assertRaises(ValueError): validate(r)
+
+    def test_true_small_udp_tx_rx_10ms_and_phase_counter(self):
+        from tools.network_harness.traffic import Worker
+        cfg=request()
+        cfg["owner"]="fec-network-work"
+        cfg["traffic"]["observe_size_classes"]=True
+        w=Worker(validate(cfg),"client","127.0.0.1","127.0.0.2",45901,
+                 "/tmp/wbd-size-test.json",1_000_000_000)
+        w.sent("udp",1,96,1_001_000_000)
+        self.assertEqual(w.size_stats["udp"][1]["small_64_256"]["tx_packets"],1)
+        self.assertEqual(sum(w.small_udp_tx_bins),1)
+        w.sent("udp",1,1287,1_002_000_000)
+        self.assertEqual(w.size_stats["udp"][1]["large_900_plus"]["tx_packets"],1)
+        self.assertEqual(sum(w.small_udp_tx_bins),1)
+
 if __name__ == "__main__":
     unittest.main()

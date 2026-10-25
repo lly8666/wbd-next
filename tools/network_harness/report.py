@@ -196,6 +196,49 @@ def summarize(config, client, server, telemetry, host):
                 if "max_p99_ms" in a and rx["latency"]["n"]:
                     if rx["latency"]["p99_ms"] is None or rx["latency"]["p99_ms"] > a["max_p99_ms"]:
                         failures.append(tag + ": declared one-way p99 allowance exceeded")
+    small_udp={}
+    if config["traffic"].get("observe_size_classes",False):
+        elapsed=config["warmup_s"]
+        for pi,ph in enumerate(config["phases"],1):
+            # Guard first 2s / last 1s against netem phase switches.
+            lo=round(elapsed*100)+200
+            hi=round((elapsed+ph["seconds"])*100)-100
+            elapsed+=ph["seconds"]
+            for direction, sender, receiver in (("c2s",client,server),("s2c",server,client)):
+                tag=direction+"/"+ph["name"]
+                tx=sender.get("size_classes",{}).get("udp",[])
+                rx=receiver.get("size_classes",{}).get("udp",[])
+                small_tx=sender.get("small_udp_tx_bins_10ms")
+                small_rx=receiver.get("small_udp_rx_bins_10ms")
+                if len(tx)<=pi or len(rx)<=pi or small_tx is None or small_rx is None:
+                    failures.append(tag+": missing actual small UDP telemetry")
+                    continue
+                sent=tx[pi]["small_64_256"]["tx_packets"]
+                delivered=rx[pi]["small_64_256"]["rx_packets"]
+                missing=sent-delivered
+                loss=100*missing/sent if sent else None
+                # Compare true small-packet sender/receiver bins shifted by
+                # the declared one-way delay; no survivor-only histogram gap.
+                shift=round(ph[direction]["delay_ms"]/10)
+                gap=(active_gap(small_tx[lo:hi],small_rx[lo+shift:hi+shift])
+                     if hi>lo and hi+shift<=len(small_rx) else None)
+                stat={"sent":sent,"delivered":delivered,"missing_after_drain":missing,
+                      "loss_pct":loss,"first_arrival_ms":rx[pi]["small_64_256"]["latency"],
+                      "send_lag_ms":tx[pi]["small_64_256"]["send_lag"],
+                      "sender_active_receiver_zero_10ms_gap_ms":gap,
+                      "gap_alignment_netem_delay_ms":ph[direction]["delay_ms"],
+                      "size_classes":{name:{"tx_packets":tx[pi][name]["tx_packets"],
+                                        "rx_packets":rx[pi][name]["rx_packets"],
+                                        "p99_ms":rx[pi][name]["latency"]["p99_ms"]}
+                                      for name in ("small_64_256","medium_257_899","large_900_plus")}}
+                small_udp[tag]=stat
+                if sent==0 or missing<0:
+                    failures.append(tag+": small UDP cohort missing or nonconserving")
+                if loss is not None and "max_small_udp_loss_pct" in a and loss>a["max_small_udp_loss_pct"]:
+                    failures.append(tag+": small UDP residual exceeds allowance")
+                p99=stat["first_arrival_ms"]["p99_ms"]
+                if "max_small_udp_p99_ms" in a and (p99 is None or p99>a["max_small_udp_p99_ms"]):
+                    failures.append(tag+": small UDP first-arrival p99 exceeds allowance")
     gaps = {}
     for direction, sender, receiver in [("c2s", client, server), ("s2c", server, client)]:
         for proto in ["udp", "tcp"]:
@@ -238,7 +281,8 @@ def summarize(config, client, server, telemetry, host):
     status = "FAIL" if failures else ("INCONCLUSIVE" if limits else "PASS_SCOPED_OBSERVATION")
     return {"result": status, "failures": failures, "limits": limits, "warnings": warnings, "observed": observed,
             "performance_comparison": "INCONCLUSIVE_HOST_CONTENTION" if host_risk else "REQUIRES_MATCHED_VALID_AB_LEGS",
-            "active_zero_delivery_ms": gaps, "cross_business_hol": hol,
+            "active_zero_delivery_ms": gaps, "small_udp": small_udp,
+            "cross_business_hol": hol,
             "telemetry": telemetry, "host": host,
             "probes": {role: [{"phase": ph["name"], "sent": st["probe_sent"],
                                 "received": st["probe_received"], "missing": st["probe_sent"]-st["probe_received"],
