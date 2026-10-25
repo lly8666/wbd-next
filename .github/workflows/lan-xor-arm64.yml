@@ -1,4 +1,6 @@
 name: LAN XOR ARM64 native TLS13 handoff and capture
+# One bounded rerun after preserving failed ARM64 raw-handoff race receipt 40173618918.
+# The source fix adds TLS-protected bilateral READY before raw transport switch.
 on:
   push:
     branches: [experiment/lan-xor-tlslike]
