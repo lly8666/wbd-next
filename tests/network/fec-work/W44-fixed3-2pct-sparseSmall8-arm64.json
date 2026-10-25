@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "id": "FEC-W44-Fixed3-2pct-SparseSmall8Mbps",
+  "owner": "fec-network-work",
+  "seed": 820044,
+  "policy": "outer-opportunistic-v3",
+  "product": {
+    "mode": "fec-fixed",
+    "fec_profile": 3,
+    "repair_enabled": false
+  },
+  "traffic": {
+    "c2s_mbps": 8,
+    "s2c_mbps": 8,
+    "udp_share": 0.96,
+    "sizes": [
+      [
+        64,
+        6
+      ],
+      [
+        96,
+        8
+      ],
+      [
+        160,
+        10
+      ],
+      [
+        256,
+        11
+      ],
+      [
+        512,
+        15
+      ],
+      [
+        900,
+        20
+      ],
+      [
+        1287,
+        30
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "deadline_ms": 5000,
+    "burst_ms": 0,
+    "max_packets": 5000000,
+    "allow_fragmentation": false,
+    "observe_size_classes": true,
+    "observe_independent_flows": true
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "shared",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded",
+    "fec_egress_diagnostic": false,
+    "owned_veth_static_neighbour": true
+  },
+  "warmup_s": 15,
+  "drain_s": 15,
+  "phases": [
+    {
+      "name": "fixed3_iid2",
+      "seconds": 30,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 2,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 2,
+        "rate_mbps": 50
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false,
+    "max_loss_pct": 1,
+    "require_zero_source_tun_drops_full_run": true,
+    "require_zero_tun_root_qdisc_drops_full_run": true,
+    "max_small_udp_loss_pct": 1,
+    "max_small_udp_p99_ms": 500
+  },
+  "bundles": {
+    "A": {
+      "source": "23da99f0de04afe17756542f5176f2759e318747",
+      "run_id": 40153525640,
+      "attempt": 1,
+      "artifact_id": 12583149711,
+      "sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false
+    }
+  },
+  "order": "A"
+}
