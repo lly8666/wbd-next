@@ -1,0 +1,72 @@
+name: LAN 99pct fastgate vs all PN XOR native x64
+on:
+  push:
+    branches: [experiment/lan-fastgate-99pct-cost]
+    paths: [".github/workflows/lan-fastgate-99pct-x64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: lan-fastgate-99pct-x64
+  cancel-in-progress: false
+jobs:
+  native-99:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Build exact test fixture with WBD AES128GCM and public PN XOR
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "x86_64"
+          mkdir -p lan-fastgate-99-report
+          rustup toolchain install 1.85.1 --profile minimal
+          rustc +1.85.1 --edition=2021 --test -C opt-level=2 \
+            tools/lan_xor_tlslike_lab.rs -o /tmp/fast99_unit_tests
+          /tmp/fast99_unit_tests --nocapture | tee lan-fastgate-99-report/unit-tests.txt
+          cargo +1.85.1 build --locked --release -p wbd-codec \
+            --features selective-crypto-experiment --example lan_fastgate_99pct_cost
+          sha256sum target/release/examples/lan_fastgate_99pct_cost \
+            > lan-fastgate-99-report/binary.sha256
+          lscpu > lan-fastgate-99-report/host_cpu.txt
+          {
+            echo "SOURCE=$GITHUB_SHA"
+            echo "RUN=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "ARCH=$(uname -m)"
+            echo "RUST=$(rustc +1.85.1 --version)"
+            echo "LOCK_SHA256=$(sha256sum Cargo.lock | awk '{print $1}')"
+            echo "SCOPE=99pct_confirmed_inner_tls13_fast_1pct_protected_edge_AES"
+            echo "BENCH=4modes_4replicates_2sec_cpu_per_leg_16_total"
+            echo "CLASSIFICATION=TRUSTED_OFFLINE_ORACLE_NOT_REAL_TLS_CLASSIFIER"
+            echo "XOR_SECURITY=NONE"
+            echo "PRODUCT_WIRED=false"
+          } > lan-fastgate-99-report/manifest.env
+      - name: Real inner TLS13 corpus and 99pct-only symmetric native CPU comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          openssl req -x509 -newkey rsa:2048 -nodes \
+            -keyout "$tmp/key.pem" -out "$tmp/cert.pem" \
+            -days 1 -subj /CN=localhost >/dev/null 2>&1
+          python3 tools/lan_hybrid_generate_tls13.py \
+            --cert "$tmp/cert.pem" --key "$tmp/key.pem" \
+            --out "$tmp/tls_app.bin" \
+            --summary lan-fastgate-99-report/tls13_corpus.json
+          target/release/examples/lan_fastgate_99pct_cost "$tmp/tls_app.bin" 2 \
+            | tee lan-fastgate-99-report/legs.jsonl
+          python3 tools/lan_fastgate_99pct_analyze.py \
+            --input lan-fastgate-99-report/legs.jsonl \
+            --output lan-fastgate-99-report/summary.json \
+            | tee lan-fastgate-99-report/summary_stdout.txt
+          echo "Ephemeral TLS13 corpus/cert/private key destroyed with tmp on exit" \
+            >> lan-fastgate-99-report/manifest.env
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-fastgate-99-x64-cpu
+          path: lan-fastgate-99-report/
+          retention-days: 30
+          if-no-files-found: warn
