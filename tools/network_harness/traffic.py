@@ -73,8 +73,9 @@ def fresh_stats():
     return {"tx_packets": 0, "tx_bytes": 0, "rx_packets": 0, "rx_bytes": 0,
             "send_errors": 0, "emsgsize": 0, "backpressure": 0, "duplicates": 0,
             "invalid": 0, "late": 0, "reordered": 0, "scheduled": 0,
-            "probe_sent": 0, "probe_received": 0,
-            "latency": Histogram(), "send_lag": Histogram(), "rtt": Histogram()}
+            "probe_sent": 0, "probe_received": 0, "probe_rx_first_arrival": 0,
+            "latency": Histogram(), "send_lag": Histogram(), "rtt": Histogram(),
+            "sparse_probe_oneway": Histogram()}
 
 
 class Worker:
@@ -257,6 +258,12 @@ class Worker:
             fallback["invalid"] += 1
             return
         if kind == PROBE:
+            # A genuine sparse 64B application UDP datagram arrived across
+            # the real TUN/FEC path. Unlike an echo-only RTT, this first
+            # arrival measures the small incoming packet before reply loss.
+            probe=self.stats["udp"][phase]
+            probe["probe_rx_first_arrival"]+=1
+            probe["sparse_probe_oneway"].add((now-sent)/1e6)
             try:
                 self.probe.sendto(self.packet(ECHO, phase, seq, size, sent), (self.peer, self.peer_port + 1))
             except OSError:

@@ -196,6 +196,23 @@ def summarize(config, client, server, telemetry, host):
                 if "max_p99_ms" in a and rx["latency"]["n"]:
                     if rx["latency"]["p99_ms"] is None or rx["latency"]["p99_ms"] > a["max_p99_ms"]:
                         failures.append(tag + ": declared one-way p99 allowance exceeded")
+    sparse_small={}
+    if config["traffic"].get("observe_size_classes",False):
+        for direction,sender,receiver in (("c2s",client,server),("s2c",server,client)):
+            for pi,ph in enumerate(config["phases"],1):
+                tx=sender["stats"]["udp"][pi]
+                rx=receiver["stats"]["udp"][pi]
+                sent=tx["probe_sent"];arrived=rx.get("probe_rx_first_arrival",0)
+                sparse_small[direction+"/"+ph["name"]]={
+                    "payload_bytes":64,"offered_hz":config["traffic"]["probe_hz"],
+                    "real_sent":sent,"real_first_arrivals":arrived,
+                    "missing_after_drain":sent-arrived,
+                    "first_arrival_ms":rx.get("sparse_probe_oneway","NOT_OBSERVED"),
+                    "reverse_echo_rtt_ms":tx["rtt"],
+                    "qualification":"actual 64B 20Hz UDP probes; one-way arrival is NOT echo RTT; no synthetic FEC"
+                }
+                if sent and (arrived>sent or not isinstance(rx.get("sparse_probe_oneway"),dict)):
+                    failures.append(direction+"/"+ph["name"]+": invalid sparse probe first-arrival receipt")
     small_udp={}
     if config["traffic"].get("observe_size_classes",False):
         elapsed=config["warmup_s"]
@@ -282,6 +299,7 @@ def summarize(config, client, server, telemetry, host):
     return {"result": status, "failures": failures, "limits": limits, "warnings": warnings, "observed": observed,
             "performance_comparison": "INCONCLUSIVE_HOST_CONTENTION" if host_risk else "REQUIRES_MATCHED_VALID_AB_LEGS",
             "active_zero_delivery_ms": gaps, "small_udp": small_udp,
+            "sparse_small_probes": sparse_small,
             "cross_business_hol": hol,
             "telemetry": telemetry, "host": host,
             "probes": {role: [{"phase": ph["name"], "sent": st["probe_sent"],
