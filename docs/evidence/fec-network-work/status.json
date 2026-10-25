@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W54_GENUINE_C2S_AUTO_DOWN_180S_PASS_TOO_SLOW_W55_NATIVE_HISTORY_REUSE_ARM64_BUILD_RUNNING",
+  "phase": "W55_ORIGINAL_AUTO_FAST_UP_GRADUAL_DOWN_SAME_VM_AB_ACTION_RUNNING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -595,7 +595,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W54 original Auto real ARM64 180s run40170625652 completed PASS and genuine C2S Maximum6->Balanced3 eventual return but 152.5s too slow for user-preferred 30-60s smooth gradual down; ZERO outer DATA retrans and M2/parity real. New minimal FEC-only patch SOURCE f3b9e8a5 retains bounded native mature firstsend/k histogram history only on same-epoch applied DOWN, preserving 10s/4096 + 5 actual valid + residual<=0.0005 gates, resets on up/start/scope/error. Exact-source ARM64 product build Action40171595909 in progress, do not claim PASS until actual completed artifacts. After build PASS run ONE sameVM sequential AB Action at 8Mbps/75ms high20%->low1% with 90s low, A946346bb Bf3b9e8a5, artifacts reused, no extra capacity; measure original C2S exact stage+readback by wall-clock, 0 outer data retx, genuine parity/M2, app receipt, CPU RSS, Stop. If B fails diagnose original log, do not blindly relax safety. Then finite exact-boundary MTU/Stop/generation only if missing, final merge report; no cross branch, capacity_stop=true merge_ready=false.",
+  "next_action": "W55 exact source B f3b9e8a5 build Action40171595909 SUCCESS, artifact12590711550/digest111ccc8; old A946346bb build40169455103. New user's auto criterion rapid genuine UP and 30-60s smooth eventual low-loss DOWN; latest task doc now records preference without bypassing UNKNOWN safety. W55 sameVM sequential AB request commit9e2a69930bb3bbd90594fc5e426ac7933f0b3fd7, measurement Action40171851168 RUNNING after harness contract40171851135 SUCCESS. After completion download exact artifact, parse client/server auto-quality.log and impairment-events: stage/revision/pending, actual VALID/UNKNOWN and duration to down, parity planned==sent, outer DATA retrans0, first-delivery residual/p99, CPU/RSS/PSI, TUN/Stop. Do not assume green workflow means complete auto speed. Finish bounded MTU/Stop/generation if needed, then qualify report; no capacity increases or other branches.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -5198,13 +5198,18 @@
     "parent": "74d595f3c5c9436cd5d1c001e50e7b1fbaf778c5",
     "patch": "Only same-owner native applied Auto DOWN retains existing authenticated M2 and k histogram history, no revision relabel or false ACK",
     "build_action_run": 40171595909,
-    "build_status": "IN_PROGRESS_LAST_CHECK",
-    "build_artifact": null,
-    "product_action": null,
-    "product_result": "NOT_RUN",
-    "comparison": "A 946346bb / B f3b9e8a5 same VM AB 8Mbps intended only after build pass",
+    "build_status": "SUCCESS",
+    "build_artifact": 12590711550,
+    "product_action": 40171851168,
+    "product_result": "NOT_YET_OBSERVED",
+    "comparison": "Same VM one measurement job sequential A946346bb Bf3b9e8a5; 8Mbps each, 2%30s->20%60s->1%90s, 75ms",
     "evidence": "docs/devlog/fec-network-work/20261025-W54-180s-and-W55-native-applied-history-intent.md",
     "capacity_stop": true,
-    "merge_ready": false
+    "merge_ready": false,
+    "product_status": "IN_PROGRESS_AT_CHECK",
+    "product_request": "tests/network/fec-work/W55-auto-down-history90-sameVM-AB-arm64.json",
+    "product_request_commit": "9e2a69930bb3bbd90594fc5e426ac7933f0b3fd7",
+    "harness_contract_run": 40171851135,
+    "harness_contract_status": "SUCCESS"
   }
 }

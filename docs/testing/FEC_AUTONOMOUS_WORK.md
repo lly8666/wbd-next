@@ -6,6 +6,8 @@
 
 工作分支 `experiment/fec-network-tuning`，独立目录 `D:\codex\wbd\wbd-fec-network-tuning`。本岗位进度只写 `docs/evidence/fec-network-work/status.json`，证据/日志分别写同名evidence子目录与 `docs/devlog/fec-network-work/`。从上游网络实验分支45325c9c冻结起步；不能把它或旧组件PASS称为FEC-only已通过。上游后续修复按相关性在安全点引入，不追浮动HEAD，不改上游分支/状态/请求。
 
+**2026-10-25 用户补充的 Auto 速度/安全验收（优先于旧计划的 180s 对照等待）**：升档在真实认证反馈 VALID 且样本足够时尽量快速，升档过渡有丢包可以接受，但不允许借此遗漏可恢复的 FEC 源包或延迟新源首次交付。降档应逐级、缓慢平滑，在持续低损、容量健康且真实样本充足后，**以约 30–60 秒完成有意义的恢复降档为期望**，最终收敛到模型与真实 k/反馈所支持的较低档，不能无限留在 Maximum。这里不是无论网络怎样都强制降至 Light；UNKNOWN、过期/污染反馈、CENSORED 和 HOST_CAPACITY 一律不当作零损或触发无证据降档。不同样本窗口恢复延迟要报告，不为了读数改变 parity、ACK 或 outer DATA OFF 语义。W54 的 180 秒只是旧源码诊断波形，不是理想降档时长；W55 定向同 VM 配对验证及事实留在本岗位证据目录。
+
 ## 长期职责与边界
 
 真实业务首次到达、低延迟/无HOL、低CPU优先，有界内存可以换CPU。原认证、完整性、账号/地址隔离、generation、固定密文、MTU和Stop/owned清理保持。大容量按需使用、增量有界回收；不逐包分配/日志、全表扫描、全局锁覆盖I/O、空闲忙轮询。不得用改弱校验、丢更多包、延长源包等待来优化表面数据。
