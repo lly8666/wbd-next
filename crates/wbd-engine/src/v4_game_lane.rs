@@ -205,7 +205,8 @@ impl GameAdapter{
         let tx=&mut self.tx;
         let arena=&mut self.arena;
         let mtu=self.inner_mtu;
-        fec.poll(now,|symbol|Self::enqueue(tx,arena,symbol,mtu,now))
+        let quiet=tx.in_use().0==0;
+        fec.poll(now,quiet,|symbol|Self::enqueue(tx,arena,symbol,mtu,now))
     }
     /// Original M4 callback still assigns PN/AEAD in exact queued order.
     /// Only its definite kernel copy may credit a Game-FEC repair row.
