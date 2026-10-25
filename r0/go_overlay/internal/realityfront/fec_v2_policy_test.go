@@ -334,3 +334,81 @@ func TestF2ControlW52CensoredCapacityAndLongUnknownResetDownProof(t *testing.T) 
         })
     }
 }
+
+
+// W55 original native ARM64 8Mbps actual-k cohort can close 0.03-4.9%
+// *more* symbols than an 8s matured FIRST-send window due to independent
+// sample/close boundaries. All 38 client UNKNOWN were actual-k overcount.
+// The overhang bound is NOT a new ACK, and unknown/host/censored sources
+// remain invalid; the conservative risk penalty must never improve q.
+func TestF2ControlW56AuthenticKWindowSkewRiskEnvelope(t *testing.T){
+    cfg:=f2Config("w56",FecV2C2S,FecV2Auto,FecV2Conservative)
+    snap:=f2Snapshot("w56",FecV2C2S,2*time.Second,10,60)
+    snap.ActualK[15]=386 // 6176 genuine k sources vs 6000 mature FIRST
+    validity,reason,p:=fecV2Quality(2*time.Second,snap)
+    if validity!=FecV2Valid || reason!="mature first-send; bounded authentic k-window overhang"{
+        t.Fatalf("small native cohort overhang discarded: %s %q",validity,reason)
+    }
+    for prof:=FecV2Light;prof<=FecV2Maximum;prof++{
+        old:=fecV2Mix(snap.ActualK,prof,p)
+        conservative:=fecV2GuardedMix(snap,prof,p)
+        if conservative<old || conservative>1 {
+            t.Fatalf("false optimistic bound profile=%s q=%g guarded=%g",prof,old,conservative)
+        }
+    }
+    snap.ActualK[15]=395 // 6320 is >5% above observed; no trust
+    validity,reason,_=fecV2Quality(2*time.Second,snap)
+    if validity!=FecV2Unknown||reason!="actual-k observation incomplete"{
+        t.Fatalf("large wrong k cohort promoted to VALID: %s %q",validity,reason)
+    }
+    // False zero loss from no genuine positive feedback is prohibited.
+    snap.ActualK[15]=386
+    snap.Validity=FecV2Unknown
+    validity,_,_=fecV2Quality(2*time.Second,snap)
+    if validity!=FecV2Unknown{t.Fatal("no M2 feedback forged VALID")}
+    snap.Validity=FecV2Valid
+    snap.HostDrops=1
+    validity,_,_=fecV2Quality(2*time.Second,snap)
+    if validity!=FecV2HostCapacity{t.Fatal("host drop not frozen")}
+    snap.HostDrops=0
+    snap.Fast.FirstSent=32
+    snap.Fast.Observed=32
+    snap.Slow.FirstSent=128
+    snap.Slow.Observed=128
+    snap.ActualK[15]=8
+    validity,_,_=fecV2Quality(2*time.Second,snap)
+    if validity!=FecV2Unknown{t.Fatal("sparse/idle window forged VALID")}
+    _=cfg
+}
+
+func TestF2ControlW56RealLowCanDownWithSmallKOverhang(t *testing.T) {
+    cfg:=f2Config("k-skew",FecV2C2S,FecV2Auto,FecV2Conservative)
+    state,_,err:=FecV2Step(cfg,FecV2State{},FecV2Snapshot{},0)
+    if err!=nil{t.Fatal(err)}
+    for _,sec:=range []int{2,4}{
+        at:=time.Duration(sec)*time.Second
+        state,_,err=FecV2Step(cfg,state,f2Snapshot("k-skew",FecV2C2S,at,310,1800),at)
+        if err!=nil{t.Fatal(err)}
+    }
+    if state.Desired!=FecV2Maximum{t.Fatal("genuine high loss failed UP")}
+    downs:=0
+    for sec:=6;sec<=18;sec+=2{
+        at:=time.Duration(sec)*time.Second
+        snap:=f2Snapshot("k-skew",FecV2C2S,at,10,60)
+        snap.ActualK[15]=386 // original native close-vs-M2 skew, within bound
+        previous:=state
+        state,intent,e:=FecV2Step(cfg,state,snap,at)
+        if e!=nil||intent.Validity!=FecV2Valid{
+            t.Fatalf("bounded authentic k window rejected at %ds: %+v %v",sec,intent,e)
+        }
+        if intent.Send{
+            if previous.Desired!=FecV2Maximum||intent.Profile!=FecV2Strong||sec<16{
+                t.Fatalf("too-fast/illegal DOWN: %+v",intent)
+            }
+            downs++
+        }
+    }
+    if downs!=1 ||state.Desired!=FecV2Strong {
+        t.Fatalf("no legitimate gradual W56 DOWN: downs=%d state=%+v",downs,state)
+    }
+}

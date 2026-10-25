@@ -238,6 +238,47 @@ func fecV2Base(hist [16]uint64,p float64) (FecV2Profile,bool,float64) {
     }
     return FecV2Maximum,true,fecV2Mix(hist,FecV2Maximum,p)
 }
+
+// Native 8s-M2 first-send maturity and the actual block-close k counters
+// both describe genuine first-transmitted sources, but their fixed windows
+// have different closure boundary timing. W55 retained original cohorts:
+// 38 C2S actual-k UNKNOWN ticks, usually just 0.03..4.9% *above* 8s
+// mature source count, never missing ACKs. The non-sparse product traffic
+// runs ~7k sources/window. Allow at most a 5% upper boundary skew, with a
+// conservative residual penalty for every uncertain source, not a clipped
+// histogram, forged receipt, zero-loss inference, or lenient under-coverage.
+const fecV2MaxActualKWindowOverhang=0.05
+
+func fecV2KCount(h [16]uint64) float64 {
+    total:=0.0
+    for i,n:=range h { total+=float64(n)*float64(i+1) }
+    return total
+}
+
+// q(known mix)+fraction-of-cohort-uncertainty*worst(any legal k) never
+// treats unmatched block-close symbols as clean, and is evaluated only in
+// the existing 2s cold quality control. This is a conservative uncertainty
+// envelope, not a claim of a mathematically exact same-time histogram.
+func fecV2GuardedMix(s FecV2Snapshot,profile FecV2Profile,p float64) float64 {
+    if s.Slow.FirstSent==0{return 1}
+    observed:=fecV2Mix(s.ActualK,profile,p)
+    ratio:=fecV2KCount(s.ActualK)/float64(s.Slow.FirstSent)
+    skew:=math.Abs(ratio-1)
+    if skew==0{return observed}
+    worst:=0.0
+    for k:=uint8(1);k<=16;k++{
+        repair,_:=FecV2Parity(profile,k)
+        q:=fecV2Residual(k,repair,p)
+        if q>worst{worst=q}
+    }
+    return math.Min(1,observed+skew*worst)
+}
+func fecV2GuardedBase(s FecV2Snapshot,p float64)(FecV2Profile,bool){
+    for profile:=FecV2Light;profile<=FecV2Maximum;profile++{
+        if fecV2GuardedMix(s,profile,p)<=0.001{return profile,false}
+    }
+    return FecV2Maximum,true
+}
 func fecV2Quality(now time.Duration,s FecV2Snapshot) (FecV2Validity, string, float64) {
     if s.Validity==FecV2HostCapacity || s.HostDrops>0 || s.QueueGrowing {
         return FecV2HostCapacity,"local drop / queue growth",0
@@ -264,10 +305,10 @@ func fecV2Quality(now time.Duration,s FecV2Snapshot) (FecV2Validity, string, flo
             return FecV2Censored,"uncertain / censored fraction above 20%",0
         }
     }
-    var kSources float64
-    for i,n:=range s.ActualK {kSources+=float64(n)*float64(i+1)}
-    if kSources==0 || kSources/float64(s.Slow.FirstSent)<0.90 ||
-        kSources>float64(s.Slow.FirstSent) {
+    kSources:=fecV2KCount(s.ActualK)
+    kRatio:=kSources/float64(s.Slow.FirstSent)
+    if kSources==0 || kRatio<0.90 ||
+        kRatio>1+fecV2MaxActualKWindowOverhang {
         return FecV2Unknown,"actual-k observation incomplete",0
     }
     if s.Fast.Observed<512 || s.Slow.Observed<512 {
@@ -277,6 +318,10 @@ func fecV2Quality(now time.Duration,s FecV2Snapshot) (FecV2Validity, string, flo
     ps:=float64(s.Slow.Missing)/float64(s.Slow.Observed)
     n:=float64(s.Slow.Observed)
     margin:=math.Min(0.005,1.64*math.Sqrt(ps*(1-ps)/n))
+    if kRatio>1 {
+        return FecV2Valid,"mature first-send; bounded authentic k-window overhang",
+            math.Min(1,math.Max(pf,ps)+margin)
+    }
     return FecV2Valid,"mature first-send evidence",math.Min(1,math.Max(pf,ps)+margin)
 }
 
@@ -363,7 +408,7 @@ func FecV2Step(c FecV2Config, previous FecV2State, snap FecV2Snapshot, now time.
         }
         return s,out,nil
     }
-    baseline,unattainable,_:=fecV2Base(snap.ActualK,p)
+    baseline,unattainable:=fecV2GuardedBase(snap,p)
     target:=baseline
     if c.AutoPolicy==FecV2Aggressive {target=fecV2Raise(target)}
     if snap.ConsecutiveMatureGaps>=3 && snap.Fast.Observed>=512 {
@@ -374,7 +419,7 @@ func FecV2Step(c FecV2Config, previous FecV2State, snap FecV2Snapshot, now time.
         if extra>target {target=extra}
     }
     out.TargetUnattainable=unattainable
-    out.PredictedResidual=fecV2Mix(snap.ActualK,s.Desired,p)
+    out.PredictedResidual=fecV2GuardedMix(snap,s.Desired,p)
     if target>s.Desired {
         if s.HighFastWindows<2 {s.HighFastWindows++}
         fecV2ClearDown(&s)
@@ -387,7 +432,7 @@ func FecV2Step(c FecV2Config, previous FecV2State, snap FecV2Snapshot, now time.
     }
     s.HighFastWindows=0
     if target<s.Desired && s.Desired>FecV2Light && s.BurstUntil<=now &&
-        fecV2Mix(snap.ActualK,s.Desired-1,p)<=0.0005 {
+        fecV2GuardedMix(snap,s.Desired-1,p)<=0.0005 {
         // A ticker stall is not an implicit VALID observation.
         if s.DownSince==0 || (s.DownLastValid!=0 &&
             (now<s.DownLastValid || now-s.DownLastValid>6*time.Second)) {

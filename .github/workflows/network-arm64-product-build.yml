@@ -70,7 +70,7 @@ jobs:
           export CGO_ENABLED=1 GOOS=linux GOARCH=arm64 GOTOOLCHAIN=local
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release"
-          (cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_native_probe,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run 'TestV4FecAutoMatureDeltaNeverConvertsUnknownToNoLoss|TestV4FecAutoAppliedDownRetainsOnlyAuthenticHistory|TestF2ControlW52' ./internal/realityfront -v)
+          (cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_native_probe,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product -run 'TestV4FecAutoMatureDeltaNeverConvertsUnknownToNoLoss|TestV4FecAutoAppliedDownRetainsOnlyAuthenticHistory|TestF2ControlW52|TestF2ControlW56' ./internal/realityfront -v)
       - name: Real authenticated missing-source parity-to-TUN deterministic regression
         shell: bash
         run: |
