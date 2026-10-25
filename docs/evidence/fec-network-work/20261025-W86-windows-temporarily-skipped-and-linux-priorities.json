@@ -1,0 +1,92 @@
+{
+  "schema": "FEC_W86_ROLE_SCOPED_WINDOWS_USER_TEMP_SKIP_AND_LINUX_BACKLOG_V1",
+  "date": "2026-10-25",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "status": "ROLE_ONLY_TEMPORARY_WINDOWS_TEST_SKIP; LINUX_TASKS_CONTINUE",
+  "scope_warning": "No changes to M0 Windows tasks/workflows, no Windows test disable in CI, no rewrite of old Windows results; Windows testing NOT_RUN does NOT qualify pass.",
+  "skip": {
+    "state": "TEMP_SKIPPED_USER_20261025",
+    "reason": "User explicitly requested Windows-related FEC tests temporarily skipped while non-Windows FEC work proceeds",
+    "resumption": "Explicit user request to resume; inspect M0's latest exact Windows code/Actions and use Windows runner with actual Wintun/Go/Rust owner before certification",
+    "items": [
+      {
+        "id": "WIN-FEC2-CODEC-X64",
+        "name": "Windows x64 native FEC2 codec SIMD/ISA-L, scalar and ABI",
+        "result": "TEMP_SKIPPED_NOT_RUN"
+      },
+      {
+        "id": "WIN-FEC2-GO-RUST",
+        "name": "Windows original TLS Go/Rust FEC2 product configuration and protected-replay end-to-end",
+        "result": "TEMP_SKIPPED_NOT_RUN"
+      },
+      {
+        "id": "WIN-FEC2-WINTUN",
+        "name": "Windows Wintun native interface and real original TUN initial delivery/recovered TUN",
+        "result": "TEMP_SKIPPED_NOT_RUN"
+      },
+      {
+        "id": "WIN-FEC2-GUI",
+        "name": "Windows GUI/packaging/revision/Stop/MTU mode selection full product",
+        "result": "TEMP_SKIPPED_NOT_RUN"
+      },
+      {
+        "id": "WIN-FEC2-GAME",
+        "name": "Windows Game2/4 + FEC shared/actual modes",
+        "result": "TEMP_SKIPPED_NOT_RUN"
+      }
+    ]
+  },
+  "issue_register": [
+    {
+      "id": "FEC-LONG-GE-MAXIMUM-RESIDUAL",
+      "status": "OPEN_KNOWN_BOUNDARY_NO_UNDERLYING_CODEC_BUG_PROVEN",
+      "finding": "W83 Fixed Maximum ~15% correlated long GE actual UDP ~1.3207/1.3026%, W85 AB old 1.3253/1.1982 new 1.3903/1.1936; same average loss short GE only ~0.2148/0.1997%",
+      "attempt": "W85 max-two-already-ready groups alternate parity without increasing r; ARM64 function passed, real product same-VM AB gave no loss improvement; 1.10-1.22% parity rows actually alternate",
+      "resolution": "CANDIDATE_ROLLED_BACK_EXACT_SOURCE_AND_NO_FURTHER_EXPERIMENT_UNLESS_NEW_ERASURE_EVIDENCE_OR_CHANGED_USER_GOAL",
+      "candidate_source": "7cb64bfce4fe2539a6cfc87eae41fbb4914235d7",
+      "baseline_source": "7ad0ba91b656ff8e9ee965d0c093a18e048971fb",
+      "action": 40202359496,
+      "artifact_id": 12601699742,
+      "digest": "sha256:6c7c388eb00d3babf93897d12333c5dbeef4d4b71d86d493b9a54a6c0ec4fea8",
+      "evidence": "docs/evidence/fec-network-work/20261025-W85-two-ready-parity-interleave-sameVM-AB-NEGATIVE-ROLLBACK.json",
+      "constraints": "No waiting for peer, extra redundancy, >2 jobs, new timers or threads, gate weakening; retain strict long-GE fail"
+    },
+    {
+      "id": "FEC-NATIVE-65K-TUN",
+      "status": "OPEN_NOT_RUN_UNSUPPORTED_CURRENT_FIXED_JUMBO_PATH",
+      "finding": "Current original Rust public Fixed TX in v4_embedded_go.rs rejects non-FEC LINK fragmentation in native Fixed/Auto; jumbo_queue is cleared and non-small FEC source fails size budget. W57 covers shared normal LINK jumbo+Stop, NOT actual FEC 65KiB on TUN",
+      "action": "Do not claim pass; any FEC jumbo support requires an explicit scoped fragmentation/reassembly design with unchanged authenticated FEC semantics and product test before implementation; keep Normal existing jumbo functional"
+    },
+    {
+      "id": "FEC-REMOTE-RX-HOST-CAPACITY",
+      "status": "OPEN_NOT_TESTED_SUSTAINED_REMOTE_RX_HOST_SIGNAL",
+      "finding": "Historical W61-W76 are local overloaded source/host starvation only; cannot equate to remote receiving host sustained pressure"
+    },
+    {
+      "id": "FEC-TCP-W49-W50-RECOVERY",
+      "status": "OPEN_HISTORICAL_100MBPS_BACKPRESSURE",
+      "finding": "W49 Medium2 and W50 Balanced3 at 100Mbps each, 300ms one-way, IID10->30->10 had mixed TCP post-burst injection/backpressure inconclusive. Capacity stop prohibits further heavy load; diagnostic lower 8Mbps one scenario may show whether this symptom persists at reduced load.",
+      "historical_receipt": "docs/evidence/fec-network-work/20261025-W48-W50-Mixed100-BurstStep10-30-10-results.json",
+      "planned_action": "W86 finite Fixed Balanced3 8Mbps mixed TCP same shape, no test escalation, not a 100Mbps qualification"
+    },
+    {
+      "id": "FEC-EXACT-COMBINED-OUTER-ON",
+      "status": "OPEN_NOT_RUN_CURRENT_COMBINED_SOURCE",
+      "finding": "All recent FEC-only exact product Linux tests have real outer DATA retransmission OFF; a separate outer ON product composition source not yet qualified in this FEC role."
+    }
+  ],
+  "invariants": {
+    "windows_tests_are_not_pass": true,
+    "no_M0_windows_workflow_change": true,
+    "other_role_next_action_unchanged": true,
+    "merge_ready": false,
+    "capacity_stop": true
+  },
+  "related_docs": [
+    "docs/testing/FEC_AUTONOMOUS_WORK.md",
+    "docs/architecture/FEC_V2_TEST_PLAN.md",
+    "docs/evidence/fec-network-work/final-report.md",
+    "docs/evidence/fec-network-work/status.json"
+  ]
+}
