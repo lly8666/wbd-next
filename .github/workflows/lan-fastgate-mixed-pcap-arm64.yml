@@ -4,6 +4,7 @@ on:
     branches: [experiment/lan-fastgate-mixed-wire]
     paths: [".github/workflows/lan-fastgate-mixed-pcap-arm64.yml"]
 permissions: {contents: read}
+# Rerun: fixed Go raw test string encoding; keep lab separate from production.
 concurrency:
   group: lan-fastgate-mixed-pcap-arm64
   cancel-in-progress: false
