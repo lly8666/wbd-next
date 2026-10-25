@@ -1110,8 +1110,8 @@ class LinuxExperiment:
             configured=self.config["product"].get("game_fec","off")
             for role,log in logs.items():
                 applied=re.findall(
-                    r"V4_PUBLIC_GAME_FEC_APPLIED role=(\\w+) lanes=(\\d+) mode=(\\w+) profile=(\\d+) auth_original_tls=(\\d+) original_M4=(\\d+)",log)
-                observed=re.findall(r"V4_PUBLIC_GAME_FEC_COUNTERS role=(\\w+) lanes=(\\d+) (.+)",log)
+                    r"V4_PUBLIC_GAME_FEC_APPLIED role=(\w+) lanes=(\d+) mode=(\w+) profile=(\d+) auth_original_tls=(\d+) original_M4=(\d+)",log)
+                observed=re.findall(r"V4_PUBLIC_GAME_FEC_COUNTERS role=(\w+) lanes=(\d+) (.+)",log)
                 if len(applied)!=1 or applied[0][0]!=role or int(applied[0][1])!=self.lanes:
                     verified=False;continue
                 expected_mode="off" if configured=="off" else "fixed"
@@ -1122,7 +1122,7 @@ class LinuxExperiment:
                 if configured!="off":
                     if len(observed)!=1 or observed[0][0]!=role or int(observed[0][1])!=self.lanes:
                         verified=False;continue
-                    counts={k:int(v) for k,v in re.findall(r"(\\w+)=(\\d+)",observed[0][2])}
+                    counts={k:int(v) for k,v in re.findall(r"(\w+)=(\d+)",observed[0][2])}
                     game_fec_proof[role]=counts
                     if (counts.get("source_offered",0)==0 or
                         counts.get("parity_copied",0)==0 or
