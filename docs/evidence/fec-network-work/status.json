@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W87_LINUX_MAXIMUM6_LOWLOAD_MIXED_TCP_PASS_SCOPED_WINDOWS_TEMP_SKIPPED",
+  "phase": "W89_LINUX_GAME2_GAME4_REAL_MULTILANE_SCOPED_PASS_SHARED_GE_HIGHLOSS_WINDOWS_TEMP_SKIPPED",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -5791,5 +5791,116 @@
     "windows_test_status": "TEMP_SKIPPED_USER_20261025",
     "capacity_stop": true,
     "merge_ready": false
+  },
+  "w88_w89_linux_public_game_modes": {
+    "status": "FINAL_FEC_SCOPED_REVIEW_READY; GAME2_AND_GAME4_LINUX_REAL_NATIVE_PASS_SCOPED; SHARED_GE_LONG_SERVICE_NOT_1PCT",
+    "product_source": "4322a811fd63e096458f202767faa2f097a587c0",
+    "build_run": 40203220219,
+    "build_artifact_id": 12602931174,
+    "build_zip_sha256": "0ae0939bdd4c02932a6452260fa65f4e1851bf37bd79d7485c28e1895022f125",
+    "game_product_exposure": "PUBLIC_MODE_GAME2_AND_GAME4_NATIVE_DUPLICATION; game_fec=off; combined Game+FEC UNSUPPORTED; M2 DATA repair ledger NOT_APPLICABLE_GAME_MULTILANE",
+    "tests": [
+      {
+        "case": "W88_Game2_independent20_lane1_blackhole",
+        "action": 40206528368,
+        "attempt": 1,
+        "contract_action": 40206528303,
+        "artifact_id": 12603594529,
+        "zip_sha256": "06bdb69fdce8b0dc2952aeeda0b97f9ac5860d0df1c7f7476139e1d0eaec0058",
+        "harness": "PASS_SCOPED_OBSERVATION",
+        "independent20_udp_loss_pct_c2s_s2c": [
+          3.9843,
+          4.1293
+        ],
+        "lane1_blackhole_udp_missing_c2s_s2c": [
+          2,
+          0
+        ],
+        "clean_before_after_udp_missing": "ZERO_BOTH",
+        "TCP_backpressure": "ZERO",
+        "source_TUN_drop": 0,
+        "auth_rejected": 0,
+        "PSI_peak_pct": 34.98,
+        "host_contention_warning": true
+      },
+      {
+        "case": "W88_Game4_independent20_lane1_blackhole",
+        "action": 40206531539,
+        "attempt": 1,
+        "contract_action": 40206531579,
+        "artifact_id": 12603269226,
+        "zip_sha256": "83297d2cc27b7984fa5663a9b70faab778bc821dd748a5adfbfc18db855256e5",
+        "harness": "PASS_SCOPED_OBSERVATION",
+        "independent20_udp_loss_pct_c2s_s2c": [
+          0.1938,
+          0.1393
+        ],
+        "lane1_blackhole_udp_missing_c2s_s2c": [
+          0,
+          0
+        ],
+        "clean_before_after_udp_missing": "ZERO_BOTH",
+        "TCP_backpressure": "ZERO",
+        "source_TUN_drop": 0,
+        "auth_rejected": 0,
+        "PSI_peak_pct": 4.69
+      },
+      {
+        "case": "W89_Game2_shared_long_GE15",
+        "action": 40206930859,
+        "attempt": 1,
+        "contract_action": 40206930868,
+        "artifact_id": 12604730245,
+        "zip_sha256": "776ac80984e38ee91b709a8479c91ac8994e09ec0ce119d3afcd53bb23beab31",
+        "harness": "PASS_SCOPED_OBSERVATION_CLEAN_ONLY",
+        "measured_high_loss_phase_service_1pct": "FAILED_OBSERVATIONAL",
+        "long_GE_UDP_loss_pct_c2s_s2c": [
+          13.3549,
+          13.1491
+        ],
+        "clean_after_udp_missing": "ZERO_BOTH",
+        "TCP_high_phase_p99_ms": [
+          2787.1,
+          2345.1
+        ],
+        "source_TUN_drop": 0,
+        "auth_rejected": 0,
+        "PSI_peak_pct": 0.5
+      },
+      {
+        "case": "W89_Game4_shared_long_GE15",
+        "action": 40206935735,
+        "attempt": 1,
+        "contract_action": 40206935795,
+        "artifact_id": 12603719684,
+        "zip_sha256": "20a6168b7bb68cc98cdf00e09cee4ee9b6712ddd4592f565289e80ba24eaaaef",
+        "harness": "PASS_SCOPED_OBSERVATION_CLEAN_ONLY",
+        "measured_high_loss_phase_service_1pct": "FAILED_OBSERVATIONAL",
+        "long_GE_UDP_loss_pct_c2s_s2c": [
+          8.3118,
+          8.5657
+        ],
+        "clean_after_udp_missing": "ZERO_BOTH",
+        "TCP_high_phase_p99_ms": [
+          651.8,
+          620.2
+        ],
+        "source_TUN_drop": 0,
+        "auth_rejected": 0,
+        "PSI_peak_pct": 4.85
+      }
+    ],
+    "evidence": [
+      "docs/evidence/fec-network-work/20261025-W88-original-Linux-Game2-Game4-independent20-lane1-blackhole-PASS-SCOPED.json",
+      "docs/evidence/fec-network-work/20261025-W89-original-Linux-Game2-Game4-shared-GE15Long-SCOPED-HIGHLOSS.json"
+    ],
+    "devlog": "docs/devlog/fec-network-work/20261025-W88-real-Linux-Game2-Game4-scope.md",
+    "verification": "4 perf Actions, distinct VM each, one scenario/one measurement job per Action; original certified source reused; no product code modifications, no main merge, no M0 Windows edits; all genuine native Game counters and Stop clean; Game2 W88 host contention so no crossVM CPU causal claim",
+    "test_stop": "No greater loads, extra random seeds, new Game+FEC protocol or Windows until separately authorized",
+    "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN",
+    "merge_ready": false,
+    "capacity_stop": true,
+    "scoped_integration_review_ready": true,
+    "remaining": "UNSUPPORTED Game+FEC current public mode, Windows Game skipped, FEC fixed max long GE>1% scope, outer ON integrated source, remote receiving host overload, real FEC 65KiB TUN and 100Mbps W49/W50 TCP capacity"
   }
 }
