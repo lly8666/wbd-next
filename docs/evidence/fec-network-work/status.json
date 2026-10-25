@@ -5902,5 +5902,41 @@
     "capacity_stop": true,
     "scoped_integration_review_ready": true,
     "remaining": "UNSUPPORTED Game+FEC current public mode, Windows Game skipped, FEC fixed max long GE>1% scope, outer ON integrated source, remote receiving host overload, real FEC 65KiB TUN and 100Mbps W49/W50 TCP capacity"
+  },
+  "w90_game_fixed_FEC_integration": {
+    "status": "AUTHORIZED_GAME2_GAME4_FIXED_FEC_IMPLEMENTED_SOURCE_PENDING_FINAL_ARM64_TLS_CORRECTNESS_AND_REAL_PRODUCT_NETWORK",
+    "date": "2026-10-25",
+    "branch": "experiment/fec-network-tuning",
+    "scope": "Linux original-Go TLS Game2/4 fixed0..fixed6 only, no Windows, no Game Auto",
+    "latest_source_candidate": "ad9eaab88b93501e3de64efdc8fabc89f087e51e",
+    "implementation": {
+      "rust": [
+        "crates/wbd-engine/src/v4_game_fec.rs",
+        "crates/wbd-engine/src/v4_game_lane.rs",
+        "crates/wbd-engine/src/v4_game_public_kernel.rs",
+        "crates/wbd-engine/src/v4_embedded_go.rs"
+      ],
+      "go": [
+        "r0/go_overlay/internal/realityfront/admission_v4.go",
+        "r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go",
+        "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux.go",
+        "r0/go_overlay/internal/v4productcli/linux.go",
+        "r0/go_overlay/internal/v4productcli/game_linux.go"
+      ],
+      "harness": [
+        "tools/network_harness/config.py",
+        "tools/network_harness/runner.py",
+        ".github/workflows/network-arm64-product-build.yml"
+      ],
+      "devlog": "docs/devlog/fec-network-work/20261025-W90-game2-game4-fixed-FEC-wiring-and-native-validation.md",
+      "code_test": "crates/wbd-engine/src/v4_game_lane.rs::tests::fec_game*",
+      "genuine_prior_arm64_test_step": 40209014616,
+      "prior_intermediate_compile_fail_run": 40209000274,
+      "game_fec_overhead_on_prior_game_mtu_bytes": 15,
+      "original_Go_TLS_feature7_profile_match": true,
+      "game_fec_m2_DATA_repair_claim": "NOT_APPLICABLE_GAME_MULTILANE",
+      "candidate_not_merge_qualified": true
+    },
+    "next": "Finish latest ARM64 fixed-FEC original-Go TLS no-downgrade tests and exact artifact source SHA; only after native unit tests pass launch Linux Game2/4 product sessions with fixed6 under bounded independent loss and blackhole, capture actual repair/TUN counters. No Windows or heavy load."
   }
 }
