@@ -65,10 +65,55 @@
     },
     {
       "id": "FEC-TCP-W49-W50-RECOVERY",
-      "status": "OPEN_HISTORICAL_100MBPS_BACKPRESSURE",
+      "status": "W86_FIXED_BALANCED3_8MBPS_TCP_INCONCLUSIVE; W87_FIXED_MAXIMUM6_8MBPS_PASS_SCOPED; 100MBPS_ORIGINAL_STILL_OPEN",
       "finding": "W49 Medium2 and W50 Balanced3 at 100Mbps each, 300ms one-way, IID10->30->10 had mixed TCP post-burst injection/backpressure inconclusive. Capacity stop prohibits further heavy load; diagnostic lower 8Mbps one scenario may show whether this symptom persists at reduced load.",
       "historical_receipt": "docs/evidence/fec-network-work/20261025-W48-W50-Mixed100-BurstStep10-30-10-results.json",
-      "planned_action": "W86 finite Fixed Balanced3 8Mbps mixed TCP same shape, no test escalation, not a 100Mbps qualification"
+      "planned_action": "Preserve W49/W50 100Mbps INCONCLUSIVE and capacity stop. No heavier retest until separately authorized and capacity resources proven; use current low-load evidence for policy/scope only.",
+      "actual_bounded_actions": [
+        {
+          "case": "W86",
+          "source": "4322a811fd63e096458f202767faa2f097a587c0",
+          "profile": 3,
+          "run": 40204401717,
+          "result": "INCONCLUSIVE_TCP_BACKPRESSURE_EVEN_LOW_LOAD",
+          "evidence": "docs/evidence/fec-network-work/20261025-W86-balanced3-8m-TCP-highloss-recovery-INCONCLUSIVE.json",
+          "tcp_peak_mbps": [
+            0.1457,
+            0.1547
+          ],
+          "tcp_peak_p99_ms": [
+            21477,
+            16942.8
+          ],
+          "tcp_recover_mbps": [
+            0.3095,
+            0.277
+          ],
+          "host_PSI_peak_pct": 0.42
+        },
+        {
+          "case": "W87",
+          "source": "4322a811fd63e096458f202767faa2f097a587c0",
+          "profile": 6,
+          "run": 40204822076,
+          "result": "PASS_SCOPED_8MBPS_FIXED6_IID30_TCP_RECOVERY",
+          "evidence": "docs/evidence/fec-network-work/20261025-W87-maximum6-8m-TCP-highloss-recovery-PASS-SCOPED.json",
+          "tcp_peak_mbps": [
+            0.3199,
+            0.3199
+          ],
+          "tcp_peak_p99_ms": [
+            1039.8,
+            993.7
+          ],
+          "tcp_recover_mbps": [
+            0.32008,
+            0.32008
+          ],
+          "host_PSI_peak_pct": 1
+        }
+      ],
+      "limits": "Distinct native ARM64 Actions, different VMs and unseeded random IID traces; FEC profile differs (3 vs 6). Qualifies low-load symptom protection, NOT 100Mbps recovery / same VM CPU causal benefit."
     },
     {
       "id": "FEC-EXACT-COMBINED-OUTER-ON",
@@ -88,5 +133,6 @@
     "docs/architecture/FEC_V2_TEST_PLAN.md",
     "docs/evidence/fec-network-work/final-report.md",
     "docs/evidence/fec-network-work/status.json"
-  ]
+  ],
+  "last_nonwindows_work": "W87_MAXIMUM6_LINUX_LOWLOAD_MIXED_TCP_SCOPED_PASS; W86_BALANCED3_LOWLOAD_TCP_INCONCLUSIVE"
 }
