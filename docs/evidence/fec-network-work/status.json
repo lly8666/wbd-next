@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W89_LINUX_GAME2_GAME4_REAL_MULTILANE_SCOPED_PASS_SHARED_GE_HIGHLOSS_WINDOWS_TEMP_SKIPPED",
+  "phase": "W90_GAME_FEC_REAL_LINUX_PRODUCT_FAILED_AND_ATOMIC_ROLLBACK; PREVIOUS_W89_SCOPED_GAME_ONLY",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -5904,7 +5904,7 @@
     "remaining": "UNSUPPORTED Game+FEC current public mode, Windows Game skipped, FEC fixed max long GE>1% scope, outer ON integrated source, remote receiving host overload, real FEC 65KiB TUN and 100Mbps W49/W50 TCP capacity"
   },
   "w90_game_fixed_FEC_integration": {
-    "status": "AUTHORIZED_GAME2_GAME4_FIXED_FEC_IMPLEMENTED_SOURCE_PENDING_FINAL_ARM64_TLS_CORRECTNESS_AND_REAL_PRODUCT_NETWORK",
+    "status": "FAILED_REAL_LINUX_GAME2_GAME4_BUSINESS; GAME_FEC_CANDIDATE_ATOMICALLY_REVERTED_TO_EXACT_PRE_W90_SOURCE",
     "date": "2026-10-25",
     "branch": "experiment/fec-network-tuning",
     "scope": "Linux original-Go TLS Game2/4 fixed0..fixed6 only, no Windows, no Game Auto",
@@ -5937,6 +5937,64 @@
       "game_fec_m2_DATA_repair_claim": "NOT_APPLICABLE_GAME_MULTILANE",
       "candidate_not_merge_qualified": true
     },
-    "next": "Finish latest ARM64 fixed-FEC original-Go TLS no-downgrade tests and exact artifact source SHA; only after native unit tests pass launch Linux Game2/4 product sessions with fixed6 under bounded independent loss and blackhole, capture actual repair/TUN counters. No Windows or heavy load."
+    "next": "Further Game-FEC coding blocked by failing netem0/TCP bootstrap; need bounded per-stage actual M4/rawRX/FEC/PN and SYN/ACK evidence before re-attempt; currently plain Game2/Game4 and Normal FEC restored.",
+    "decision": "GAME_PLUS_FEC_NOT_PRODUCT_QUALIFIED; NO PUBLIC GAME_FEC_SWITCH_IN_CURRENT_SOURCE; HISTORICAL_W90_GIT_COMMITS_AND_ALL_FAILED_ARTIFACTS_RETAINED",
+    "initial_valid_native_build": {
+      "source": "ad9eaab88b93501e3de64efdc8fabc89f087e51e",
+      "run": 40209693209,
+      "artifact": 12604894755,
+      "zip_sha256": "d9254af56a9461b88467cc2c62a360e7fb31308a3318be50d3e74e86b7d4301e",
+      "result": "SUCCESS"
+    },
+    "revised_valid_native_build": {
+      "source": "c4b439ae891a7af5e7cf84476024479247c7ce21",
+      "run": 40211176601,
+      "artifact": 12605522541,
+      "zip_sha256": "939fe977a1393a6a3ae69e18074a5d6ad4603064eb7d7e4c1abc45dcb8de58be",
+      "result": "SUCCESS"
+    },
+    "real_product_actions": [
+      {
+        "run": 40209948309,
+        "mode": "Game2 fixed6",
+        "status": "FAIL_TCP_SETUP"
+      },
+      {
+        "run": 40209953632,
+        "mode": "Game4 fixed6",
+        "status": "FAIL_CLEAN_UDP_TCP"
+      },
+      {
+        "run": 40210447377,
+        "mode": "Game2 fixed0",
+        "status": "FAIL_TCP_SETUP"
+      },
+      {
+        "run": 40210452663,
+        "mode": "Game4 fixed0",
+        "status": "FAIL_CLEAN_UDP_TCP"
+      },
+      {
+        "run": 40211434490,
+        "mode": "Game2 fixed0 source-first one-lane repair",
+        "status": "FAIL_TCP_SETUP"
+      },
+      {
+        "run": 40211439531,
+        "mode": "Game4 fixed0 source-first one-lane repair",
+        "status": "FAIL_CLEAN_UDP_TCP"
+      }
+    ],
+    "final_evidence": "docs/evidence/fec-network-work/20261025-W90-GameFEC-product-candidate-FAILED-rollback.json",
+    "rollback_commit": "b5052654975b4c3aa33fdabcb90d0e0803768315",
+    "preW90_source_commit": "d4759a1dcd9cacc0cc40ff9d27379f1a733780bc",
+    "rollback_files_exact_15": true,
+    "removed_new_game_fec_module": true,
+    "rollback_build_run": 40211941478,
+    "rollback_row_contract_run": 40211941508,
+    "rollback_build_outcome": "PENDING_ACTION_RESULT",
+    "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN",
+    "merge_ready": false,
+    "capacity_stop": true
   }
 }
