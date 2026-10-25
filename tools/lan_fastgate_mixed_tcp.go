@@ -302,7 +302,7 @@ func run(port int,root,manifestPath string)error{
  raw.SetDeadline(time.Now().Add(18*time.Second))
  tc:=tls.Client(raw,cli)
  if e=tc.Handshake();e!=nil{return e}
- if e=tc.ConnectionState().Version; e==0{return errors.New("no TLS version")}
+ if tc.ConnectionState().Version!=tls.VersionTLS13{return errors.New("wrong TLS version")}
  if _,e=tc.Write([]byte("C_READY"));e!=nil{return e}
  var ack [7]byte;if _,e=io.ReadFull(tc,ack[:]);e!=nil{return e}
  if string(ack[:])!="S_READY"{return errors.New("missing server TLS barrier")}
