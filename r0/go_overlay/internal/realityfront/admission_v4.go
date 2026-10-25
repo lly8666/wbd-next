@@ -210,6 +210,7 @@ type V4ServerOptions struct {
     DataPlaneReady bool
     fec2ProbeOnly bool // package-private, no production caller switch
     fec2Product bool // package-private genuine Linux fixed/auto owner
+    GameFec uint8 // 0=off; 1..7=Game fixed profiles 0..6, private TLS
     Epochs *V4EpochStore // shared by all lanes of the same server instance
     ownerBridge v4OwnerBridge // unexported, no public arbitrary-bytes activation
 }
@@ -494,7 +495,8 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
 // Epoch becomes active only after successful authenticated reply and detach.
 // Caller must ReleaseLane on tunnel teardown. Legacy EstablishServer is intact.
 func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg ServerAdmissionConfig,opt V4ServerOptions)(*V4ServerSession,error) {
-    if !opt.DataPlaneReady || opt.Epochs==nil {return nil,ErrAdmissionUnsupported}
+    if !opt.DataPlaneReady||opt.Epochs==nil||opt.GameFec>7||
+       (opt.GameFec!=0&&!opt.fec2Product){return nil,ErrAdmissionUnsupported}
     if assoc==nil || cfg.ExpectedUsername=="" || cfg.ExpectedPassword=="" || !validRecordLimit(cfg.ServerLimit) {
         return nil,ErrAdmissionParams
     }
@@ -520,7 +522,8 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     }
     serverFeatures:=v4RequiredFeatures
     if opt.fec2ProbeOnly||opt.fec2Product {serverFeatures |= v4FeatureFEC2}
-    if offered.Features!=serverFeatures {
+    if offered.Features!=serverFeatures||offered.GameFec!=opt.GameFec||
+       (opt.GameFec!=0&&req.Policy.Transport!=TransportGame){
         _=writeAdmissionFailure(tlsConn,admissionParamFail)
         return nil,ErrAdmissionUnsupported
     }
@@ -568,7 +571,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         LaneID:req.LaneID,IncarnationNonce:nonce,TunnelID:append([]byte(nil),req.TunnelID...),
         ClientLimit:req.ClientLimit,ServerLimit:cfg.ServerLimit,
     }
-    ext:=V4Extension{Features:serverFeatures,Epoch:epoch}
+    ext:=V4Extension{Features:serverFeatures,Epoch:epoch,GameFec:opt.GameFec}
     state:=tlsConn.ConnectionState()
     keys,err:=v4DeriveRecordKeys(&state,result,ext)
     if err!=nil{return nil,err}
