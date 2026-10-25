@@ -2,7 +2,7 @@
   "schema": 1,
   "experiment": "LAN_XOR_TLSLIKE_BOUNDED_LAB",
   "branch": "experiment/lan-xor-tlslike",
-  "phase": "COMPLETE_SCOPED_LAN_XOR_TLSLIKE_LAB_NATIVE_X86_ARM_PASS_PRODUCT_UNWIRED_INSECURE",
+  "phase": "COMPLETE_SCOPED_LAN_XOR_X86_ARM_PERF_FIXED_FAST_ROLLING_SLOW_PRODUCT_UNWIRED",
   "base": {
     "branch": "experiment/selective-tls-crypto",
     "sha": "ca72b345de5846a5c58f28d6be24b4e2fcd057b1",
@@ -62,7 +62,7 @@
   },
   "report": "docs/evidence/lan-xor-tlslike/REPORT.md",
   "open_requests": [],
-  "next_action": "NONE_SCOPED_CAPTURE_COMPLETED_DO_NOT_PROMOTE_INSECURE_LAB_TO_PRODUCT",
+  "next_action": "NONE_SCOPED_CPU_COMPARISON_COMPLETED_NEGATIVE_ROLLING_NO_PRODUCT_INTEGRATION",
   "merge_ready": false,
   "real_tls13_handoff_fixture": {
     "source": "00e7138177058c1d4286eb867983af5afb6ba98d",
@@ -140,5 +140,64 @@
     "steady_record_count": 4,
     "rolling_repeat64": false,
     "rolling_repeat128": false
+  },
+  "perf_report": "docs/evidence/lan-xor-tlslike/PERF_REPORT.md",
+  "record_cpu_perf": {
+    "status": "MEASURED_NATIVE_PAIRED_RECORD_ONLY_NO_WBD_PRODUCT_PATH",
+    "contract": "1345B original IPv4 fixture; 0.7s warmup + 6s measured per leg; five modes symmetric 10 legs per single native VM; reuse buffers; seal+open; Linux thread schedstat CPU ns per inner byte",
+    "benchmark_source_commit": "beb15bfbfd6a61a03252792c9d65f35a194a0e49",
+    "modes": [
+      "clear",
+      "fixed_xor",
+      "rolling_xor",
+      "aes128_gcm",
+      "chacha20_poly1305"
+    ],
+    "x86_64": {
+      "run_id": 40175257396,
+      "job_id": 121114417612,
+      "attempt": 1,
+      "source": "2057148a527ede7abb21665b622011efe8c618f6",
+      "conclusion": "success",
+      "artifact_id": 12591593605,
+      "artifact_zip_sha256": "4f3ce2572f67f4177c59582f549d56fedc506ae9990e1c4f4ab82768c3d40079",
+      "cpu_ns_per_inner_byte": {
+        "clear": 0.03198123274048832,
+        "fixed_xor": 0.08328194052779983,
+        "rolling_xor": 3.315260515595277,
+        "aes128_gcm": 0.7758763363070419,
+        "chacha20_poly1305": 1.4407807692703054
+      },
+      "fixed_saving_vs_aes_pct": 89.2660806070979,
+      "rolling_cpu_increase_vs_aes_pct": 327.2923867449039,
+      "tests": "5 PASS 0 fail"
+    },
+    "arm64": {
+      "run_id": 40175259608,
+      "job_id": 121114423842,
+      "attempt": 1,
+      "source": "f9d47e9ba7988cf5b0aeb207f95d704c6689cc16",
+      "conclusion": "success",
+      "artifact_id": 12591533829,
+      "artifact_zip_sha256": "352dca881c1ffdeae3a3c13e150382f74bb3741b5551c6c346ff997a4cac4c6c",
+      "cpu_ns_per_inner_byte": {
+        "clear": 0.03476398581821781,
+        "fixed_xor": 0.07911899046646692,
+        "rolling_xor": 3.126751933385333,
+        "aes128_gcm": 0.7547864311535817,
+        "chacha20_poly1305": 2.677998059924599
+      },
+      "fixed_saving_vs_aes_pct": 89.5176983579918,
+      "rolling_cpu_increase_vs_aes_pct": 314.2565107598113,
+      "tests": "5 PASS 0 fail"
+    },
+    "disposition": "FIXED_XOR_FAST_BUT_REPEAT_LEAKS_AND_NO_SECURITY; EXISTING_ROLLING_XOR_SLOWER_THAN_AES; NO_PRODUCTION_INTEGRATION",
+    "not_measured": [
+      "REAL_WBD_GO_RUST_TUN_CPU",
+      "PRODUCT_PPS_OR_P99",
+      "DRIVER_COPIES",
+      "SECURITY_OF_XOR",
+      "OPTIMIZED_MASK"
+    ]
   }
 }
