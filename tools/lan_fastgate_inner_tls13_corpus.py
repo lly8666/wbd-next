@@ -11,7 +11,7 @@ srv.minimum_version=srv.maximum_version=ssl.TLSVersion.TLSv1_3
 srv.load_cert_chain(a.cert,a.key)
 cli=ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 cli.minimum_version=cli.maximum_version=ssl.TLSVersion.TLSv1_3
-cli.verify_mode=ssl.CERT_NONE;cli.check_hostname=False
+cli.check_hostname=False;cli.verify_mode=ssl.CERT_NONE
 cli.set_alpn_protocols(["h2","http/1.1"])
 ci,co,si,so=(ssl.MemoryBIO() for i in range(4))
 c=cli.wrap_bio(ci,co,server_hostname="private.inner-wbd.example")
