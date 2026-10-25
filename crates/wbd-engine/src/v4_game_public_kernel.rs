@@ -37,6 +37,7 @@ pub(crate) struct GameKernelOwner{
     rx_driver_timeout:Arc<AtomicU64>,rx_driver_other:Arc<AtomicU64>,
     rx_mutex_acquired:Arc<AtomicU64>,rx_authenticated_some:Arc<AtomicU64>,
     rx_dedup_none:Arc<AtomicU64>,rx_tun_failed:Arc<AtomicU64>,
+    rx_delivery_commit_failed:Arc<AtomicU64>,
 }
 impl GameKernelOwner{
     pub(crate) fn start(
@@ -79,6 +80,7 @@ impl GameKernelOwner{
         let rx_authenticated_some=Arc::new(AtomicU64::new(0));
         let rx_dedup_none=Arc::new(AtomicU64::new(0));
         let rx_tun_failed=Arc::new(AtomicU64::new(0));
+        let rx_delivery_commit_failed=Arc::new(AtomicU64::new(0));
         let mut lanes=Vec::new();
         for i in 0..n{
             lanes.push(TxLane{
@@ -203,6 +205,7 @@ impl GameKernelOwner{
             let rx_some=Arc::clone(&rx_authenticated_some);
             let rx_none=Arc::clone(&rx_dedup_none);
             let tun_failed=Arc::clone(&rx_tun_failed);
+            let commit_failed=Arc::clone(&rx_delivery_commit_failed);
             let builder=thread::Builder::new().name(format!("wbd-v4-game-rx-{}",i+1));
             let worker=builder.spawn(move||{
                 let (src,dst,sp,dp)=if server{
@@ -233,16 +236,35 @@ impl GameKernelOwner{
                         rx_held.fetch_add(1,Ordering::Relaxed);
                         // In-place authenticated record; original 2048B RX
                         // scratch remains exclusively held until output is owned.
-                        receiver.receive(lane,&mut wire[..len])
+                        receiver.prepare_receive(lane,&mut wire[..len])
                     };
                     match received{
-                        Ok(Some(plaintext))=>{
+                        Ok(Some(mut prepared))=>{
                             rx_some.fetch_add(1,Ordering::Relaxed);
-                            if rx_tun.write_authenticated_ipv4(generation,&plaintext).is_ok(){
-                                recv_count.fetch_add(1,Ordering::Relaxed);
-                            }else{
+                            // Do not hold RX owner mutex across a TUN syscall;
+                            // other lanes can authenticate/prepare immediately.
+                            let written=rx_tun.write_authenticated_ipv4(
+                                generation,prepared.payload()).is_ok();
+                            let finished=match receiver_owner.lock(){
+                                Ok(mut rx)=>rx.finish_receive(prepared,written),
+                                Err(_)=>{
+                                    commit_failed.fetch_add(1,Ordering::Relaxed);
+                                    rx_stop.store(true,Ordering::Release);
+                                    break
+                                }
+                            };
+                            if !written{
                                 tun_failed.fetch_add(1,Ordering::Relaxed);
                                 recv_rejected.fetch_add(1,Ordering::Relaxed);
+                            }else if finished.is_ok(){
+                                recv_count.fetch_add(1,Ordering::Relaxed);
+                            }else{
+                                // A committed-to-TUN but stale/invalid receive
+                                // cannot safely be reported as delivered once.
+                                commit_failed.fetch_add(1,Ordering::Relaxed);
+                                recv_rejected.fetch_add(1,Ordering::Relaxed);
+                                rx_stop.store(true,Ordering::Release);
+                                break
                             }
                         },
                         Ok(None)=>{
@@ -283,7 +305,8 @@ impl GameKernelOwner{
         Ok(Self{stop,threads,tun,tx,rx,copied,delivered,rejected,
             raw_received,rx_reject,
             rx_driver_timeout,rx_driver_other,rx_mutex_acquired,
-            rx_authenticated_some,rx_dedup_none,rx_tun_failed})
+            rx_authenticated_some,rx_dedup_none,rx_tun_failed,
+            rx_delivery_commit_failed})
     }
     pub(crate) fn counters(&self)->(u64,u64,u64){
         (self.copied.load(Ordering::Relaxed),
@@ -304,7 +327,7 @@ impl GameKernelOwner{
         // Counters distinguish real kernel ingress from blocked shared
         // GameAdapter lock, AEAD/GameRx duplicate and TUN failure.
         // No packet content, secret, raw key, TLS material or payload emitted.
-        eprintln!("M0_GAME_M4_RX_STAGE_BOUNDARY raw={} timeout={} other={} rx_owner_lock={} authenticated_some={} duplicate_none={} aead_denied={} invalid={} replay_dup={} stale={} capacity={} scope={} stopped={} game={} tun_fail={} tun_delivered={}",
+        eprintln!("M0_GAME_M4_RX_STAGE_BOUNDARY raw={} timeout={} other={} rx_owner_lock={} authenticated_some={} duplicate_none={} aead_denied={} invalid={} replay_dup={} stale={} capacity={} scope={} stopped={} game={} tun_fail={} tun_commit_fail={} tun_delivered={}",
             self.raw_received.load(Ordering::Relaxed),
             self.rx_driver_timeout.load(Ordering::Relaxed),
             self.rx_driver_other.load(Ordering::Relaxed),
@@ -320,6 +343,7 @@ impl GameKernelOwner{
             self.rx_reject.stopped.load(Ordering::Relaxed),
             self.rx_reject.game.load(Ordering::Relaxed),
             self.rx_tun_failed.load(Ordering::Relaxed),
+            self.rx_delivery_commit_failed.load(Ordering::Relaxed),
             self.delivered.load(Ordering::Relaxed));
         self.tun.begin_stop();
         for x in &self.tx{x.begin_stop()}

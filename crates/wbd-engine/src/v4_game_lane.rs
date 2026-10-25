@@ -3,7 +3,7 @@
 //! Reuses frozen M1 GameTx shared-buffer dispatch and GameRx dedup;
 //! per-lane AEAD/PN/replay are independently allocated; no public Go grant.
 #![forbid(unsafe_code)]
-use crate::memory::Arena;
+use crate::memory::{Arena,UniqueBuffer};
 use std::sync::{Arc,Mutex};
 use crate::cold_v4::UntrustedColdV4;
 use wbd_types::TunnelKey;
@@ -23,13 +23,28 @@ struct RxLane{key:LaneKey,rx:ReplayProtectedLaneRx}
 pub enum Error{Unauthorized,Invalid,Capacity,Stopped,Duplicate,Stale,Crypto,Game(GameError)}
 /// One bounded RX owner for all authenticated Game lanes; independent of the
 /// TX owner mutex even while TX is sealing or executing raw send syscalls.
+/// Temporary authenticated, scope-bound source reserved against concurrent
+/// lane duplicates, but NOT yet marked delivered in the shared Game window.
+/// Its original slab remains frozen to this worker until the TUN result.
+pub(crate) struct PreparedGameDelivery{
+    id:LogicalPacketId,lane:LaneKey,len:usize,slab:UniqueBuffer,
+}
+impl PreparedGameDelivery{
+    pub(crate) fn payload(&mut self)->&[u8]{
+        &self.slab.writable()[14..14+self.len]
+    }
+}
 pub(crate) struct GameReceiveOwner{
     rx:GameRx,rx_scope:GameScope,lanes:Vec<RxLane>,
     arena:Arena,stopped:bool,inner_mtu:usize,
+    // At most one in-flight TUN write per RX lane, no per-packet HashSet.
+    // A pending entry suppresses a concurrent duplicate but does not set
+    // shared delivery bits until the genuine TUN write succeeds.
+    pending:Vec<LogicalPacketId>,
 }
 impl GameReceiveOwner{
-    pub(crate) fn receive(&mut self,lane_key:LaneKey,wire:&mut [u8])
-        ->Result<Option<Vec<u8>>,Error>{
+    pub(crate) fn prepare_receive(&mut self,lane_key:LaneKey,wire:&mut [u8])
+        ->Result<Option<PreparedGameDelivery>,Error>{
         if self.stopped{return Err(Error::Stopped)}
         let lane=self.lanes.iter_mut().find(|l|l.key==lane_key)
             .ok_or(Error::Unauthorized)?;
@@ -43,23 +58,48 @@ impl GameReceiveOwner{
         let (id,payload)=wbd_codec::decode_game(opened.payload,self.inner_mtu+16)
             .map_err(|_|Error::Invalid)?;
         if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
-        // Reject an authenticated cross-lane duplicate BEFORE acquiring/copying
-        // another arena slab. Recheck and commit only after slab allocation.
+        // Duplicate/stale after AEAD, BEFORE allocating the owned frame.
         match self.rx.first_delivery_candidate(self.rx_scope,lane_key,id){
             Ok(true)=>{},
             Ok(false)=>return Ok(None),
             Err(e)=>return Err(Error::Game(e)),
         }
-        let mut owned=self.arena.allocate().map_err(|_|Error::Capacity)?;
-        owned.writable()[14..14+payload.len()].copy_from_slice(payload);
-        match self.rx.first_delivery(self.rx_scope,lane_key,id,owned){
-            Ok(mut b)=>Ok(Some(b.writable()[14..14+payload.len()].to_vec())),
-            Err((GameError::Duplicate,_))=>Ok(None),
-            Err((e,_))=>Err(Error::Game(e)),
+        if self.pending.contains(&id){return Ok(None)}
+        if self.pending.len()>=self.lanes.len(){
+            return Err(Error::Capacity)
         }
+        let mut slab=self.arena.allocate().map_err(|_|Error::Capacity)?;
+        slab.writable()[14..14+payload.len()].copy_from_slice(payload);
+        self.pending.push(id);
+        Ok(Some(PreparedGameDelivery{id,lane:lane_key,len:payload.len(),slab}))
+    }
+    /// The call site MUST invoke this only after the real kernel TUN write
+    /// resolves; unsuccessful writes release reservation without touching the
+    /// logical delivery window. A future authenticated lane copy may retry.
+    pub(crate) fn finish_receive(&mut self,prepared:PreparedGameDelivery,
+        tun_written:bool)->Result<(),Error>{
+        let Some(at)=self.pending.iter().position(|id|*id==prepared.id)
+            else{return Err(Error::Invalid)};
+        self.pending.swap_remove(at);
+        if !tun_written{return Ok(())}
+        self.rx.first_delivery(self.rx_scope,prepared.lane,
+            prepared.id,prepared.slab).map(|_|())
+            .map_err(|(e,_)|Error::Game(e))
+    }
+    /// In-memory test/adapter path: the caller accepts the payload as the
+    /// delivery boundary. The live Linux worker uses prepare + TUN + finish.
+    pub(crate) fn receive(&mut self,lane_key:LaneKey,wire:&mut [u8])
+        ->Result<Option<Vec<u8>>,Error>{
+        let Some(mut prepared)=self.prepare_receive(lane_key,wire)?
+            else{return Ok(None)};
+        let result=prepared.payload().to_vec();
+        self.finish_receive(prepared,true)?;
+        Ok(Some(result))
     }
     fn stop(&mut self){
-        if self.stopped{return}self.stopped=true;
+        if self.stopped{return}
+        self.stopped=true;
+        self.pending.clear();
         self.rx.stop();self.arena.stop();self.arena.drain_returns();
     }
 }
@@ -120,8 +160,10 @@ impl GameAdapter{
             .map_err(|_|Error::Capacity)?;
         let rx_arena=Arena::new(906,256,2048,256,1024*1024)
             .map_err(|_|Error::Capacity)?;
+        let lane_count=rx_lanes.len();
         let rx_owner=Arc::new(Mutex::new(GameReceiveOwner{
-            rx,rx_scope,lanes:rx_lanes,arena:rx_arena,stopped:false,inner_mtu
+            rx,rx_scope,lanes:rx_lanes,arena:rx_arena,stopped:false,inner_mtu,
+            pending:Vec::with_capacity(lane_count)
         }));
         Ok(Self{tx,rx_owner,lanes,arena,stopped:false,inner_mtu,
             wire_scratch:[0u8;2048]})
@@ -275,6 +317,63 @@ mod tests{
                 generation:7},mss:1400},
             tx:keys((i+1) as u8),rx:keys((i+1) as u8)
         }).collect(),RecordSuite::ChaCha20Poly1305).unwrap()
+    }
+    #[test]
+    fn game_tun_write_failure_does_not_commit_logical_delivery(){
+        for n in [2,4]{
+            let mut game=build(n);
+            game.offer(b"deliver-only-after-tun",MonoNs(1)).unwrap();
+            let mut copies=Vec::new();
+            game.drain(MonoNs(2),|lane,_,_,wire|{
+                copies.push((lane,wire.to_vec()));true
+            });
+            let rx=game.receiver_handle();
+            let mut receiver=rx.lock().unwrap();
+            let (first_lane,mut first_wire)=copies.remove(0);
+            let failed=receiver.prepare_receive(first_lane,&mut first_wire)
+                .unwrap().unwrap();
+            // Kernel write fails: the payload is NOT in the delivered bitmap.
+            assert_eq!(receiver.pending.len(),1);
+            receiver.finish_receive(failed,false).unwrap();
+            assert!(receiver.pending.is_empty());
+            let (other_lane,mut other_wire)=copies.remove(0);
+            let mut alternate=receiver.prepare_receive(other_lane,&mut other_wire)
+                .unwrap().expect("another independently authenticated lane may deliver");
+            assert_eq!(alternate.payload(),b"deliver-only-after-tun");
+            receiver.finish_receive(alternate,true).unwrap();
+            assert!(receiver.pending.is_empty());
+            // An additional authenticated lane is a true duplicate only
+            // AFTER a successful write; every per-lane AEAD remains unique.
+            if n==4{
+                let (lane,mut wire)=copies.remove(0);
+                assert!(receiver.prepare_receive(lane,&mut wire).unwrap().is_none());
+            }
+            drop(receiver);
+            game.stop();
+        }
+    }
+    #[test]
+    fn game_pending_tun_write_suppresses_concurrent_duplicate_without_early_commit(){
+        let mut game=build(4);
+        game.offer(b"inflight",MonoNs(1)).unwrap();
+        let mut copies=Vec::new();
+        game.drain(MonoNs(2),|lane,_,_,wire|{
+            copies.push((lane,wire.to_vec()));true
+        });
+        let rx=game.receiver_handle();
+        let mut receiver=rx.lock().unwrap();
+        let (lane0,mut wire0)=copies.remove(0);
+        let first=receiver.prepare_receive(lane0,&mut wire0).unwrap().unwrap();
+        let (lane1,mut wire1)=copies.remove(0);
+        assert!(receiver.prepare_receive(lane1,&mut wire1).unwrap().is_none());
+        receiver.finish_receive(first,false).unwrap();
+        let (lane2,mut wire2)=copies.remove(0);
+        let mut next=receiver.prepare_receive(lane2,&mut wire2)
+            .unwrap().expect("failed TUN write did not poison shared dedup");
+        assert_eq!(next.payload(),b"inflight");
+        receiver.finish_receive(next,true).unwrap();
+        drop(receiver);
+        game.stop();
     }
     #[test]
     fn game_reused_tx_scratch_mixed_lengths_across_lanes_and_rx_duplicate_precheck(){
