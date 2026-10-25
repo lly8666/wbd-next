@@ -1,0 +1,120 @@
+{
+  "schema": "W90_GAME_FEC_MAXIMUM6_REAL_PUBLIC_LINUX_NEGATIVE_V1",
+  "date": "2026-10-25",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "source": "ad9eaab88b93501e3de64efdc8fabc89f087e51e",
+  "build": {
+    "run": 40209693209,
+    "conclusion": "SUCCESS",
+    "artifact_id": 12604894755,
+    "zip_sha256": "d9254af56a9461b88467cc2c62a360e7fb31308a3318be50d3e74e86b7d4301e",
+    "native_game_fec_missing_source_tun_unit_test": "PASS",
+    "go_original_tls_profile_mismatch": "PASS"
+  },
+  "mode": "game2/game4+fixed6 explicit TLS native applied; NOT Game Auto; uses existing per-lane Game AEAD/PN and typed FEC2 symbols",
+  "network_cases": [
+    {
+      "mode": "game2",
+      "run": 40209948309,
+      "conclusion": "FAIL",
+      "request_commit": "b8b17ee870972ea688c50a892f74c377e1104621",
+      "artifact_id": 12604984802,
+      "zip_sha256": "3aa1f124b04e18a51c2e9729bc82a38ad71424f24827d35e4bf4f9a698a377a9",
+      "cause": "TCP worker setup failed before impairment measured; server-injector inner TCP accept timed out despite TLS Game+FEC ready and real parity M4",
+      "client_native": {
+        "lanes": 2,
+        "copied": 84,
+        "delivered": 12,
+        "auth_rejected": 14,
+        "raw_received": 65,
+        "source_offered": 14,
+        "parity_offered": 28,
+        "parity_copied": 28,
+        "systematic_candidate": 12,
+        "recovered_candidate": 0,
+        "rplanned": 28,
+        "rsent": 28
+      },
+      "server_native": {
+        "lanes": 2,
+        "copied": 256,
+        "delivered": 14,
+        "auth_rejected": 19,
+        "raw_received": 80,
+        "source_offered": 44,
+        "parity_offered": 84,
+        "parity_copied": 84,
+        "systematic_candidate": 14,
+        "recovered_candidate": 0,
+        "rplanned": 84,
+        "rsent": 84
+      },
+      "host_CPU_PSI_peak_pct": 0.33,
+      "netem_measured": false,
+      "source_product_committed": true
+    },
+    {
+      "mode": "game4",
+      "run": 40209953632,
+      "conclusion": "FAIL",
+      "request_commit": "4db880174dbef22626fbe27924071c6eea1950dc",
+      "artifact_id": 12604114639,
+      "zip_sha256": "e7a3138fa0acbed7a7eba9904062f6aaa1dd7e1bd64676ebbfb7e7a69afc7cd4",
+      "cause": "True product impairment phases ran but business loss and TCP long blocked even in clean phases; native FEC recovered source candidates but overwhelmed per-lane game/raw RX path; test-on scoped clean1pct gate failed no gate weakening",
+      "client_native": {
+        "lanes": 4,
+        "copied": 471355,
+        "delivered_to_tun": 23571,
+        "rejected": 41133,
+        "auth_rejected": 5848,
+        "raw_received": 88618,
+        "source_offered": 53951,
+        "parity_offered": 72709,
+        "parity_copied": 72709,
+        "systematic_candidate": 18708,
+        "recovered_candidate": 4863,
+        "expired": 0,
+        "failed": 0,
+        "rplanned": 72709,
+        "rsent": 72709
+      },
+      "server_native": {
+        "lanes": 4,
+        "copied": 470617,
+        "delivered_to_tun": 20694,
+        "rejected": 40929,
+        "auth_rejected": 5722,
+        "raw_received": 77287,
+        "source_offered": 53878,
+        "parity_offered": 72578,
+        "parity_copied": 72578,
+        "systematic_candidate": 16403,
+        "recovered_candidate": 4297,
+        "expired": 0,
+        "failed": 0,
+        "rplanned": 72578,
+        "rsent": 72578
+      },
+      "host_CPU_PSI_peak_pct": 2.98,
+      "original_src_TUN_drops": 0,
+      "TCP_backpressured": true,
+      "clean_UDP_loss_strict_1pct": "FAILED",
+      "native_recovered_candidate_is_not_tun_proof": true,
+      "host_issue": "Not just global CPU PSI; original M4 per-lane raw/receive and netem drops/cipher rejects observed. Source congestion/transport not yet isolated."
+    }
+  ],
+  "assessment": "Game FEC Maximum6 definitely NOT product qualified; clean Game4 very poor; Game2 TCP startup failed. Source/parity + real M4 counters are positive but not sufficient. Do not label PASS, do not weaken thresholds. Distinct Game2/Game4 Actions, unseeded real netem, no same-VM CPU causal comparison.",
+  "bounded_followup": {
+    "name": "W90b fixed Light0 Game2/Game4 same real Linux 3Mbps workload",
+    "reason": "Determine whether heavy Game parity amplification at Maximum6 is the active cause without raising load or changing product code",
+    "requests": [
+      "tests/network/fec-work/W90b-Game2-FEC-fixed0-independent20-lane1-blackhole-arm64.json",
+      "tests/network/fec-work/W90b-Game4-FEC-fixed0-independent20-lane1-blackhole-arm64.json"
+    ],
+    "old_failures_preserved": true
+  },
+  "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN",
+  "capacity_stop": true,
+  "merge_ready": false
+}
