@@ -1,0 +1,71 @@
+name: LAN optimized word XOR arm64 TLS13 handoff six-record pcap
+on:
+  push:
+    branches: [experiment/lan-xor-word-optim]
+    paths: [".github/workflows/lan-xor-word-capture-arm64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: lan-xor-word-capture-arm64
+  cancel-in-progress: false
+jobs:
+  native-handshake-wire:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Compile exact source + independent Go byte-equivalence preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "aarch64"
+          mkdir -p lan-word-pcap-report
+          go build -trimpath -o /tmp/lan_word_tls13 tools/lan_xor_tls13_word_handoff.go
+          sha256sum /tmp/lan_word_tls13 > lan-word-pcap-report/binary.sha256
+          {
+            echo "SOURCE=$GITHUB_SHA"
+            echo "RUN_ID=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "TARGET=$(uname -m)"
+            echo "GO=$(go version)"
+            echo "SECURITY=NO_XOR_DATA_AUTH_OR_REPLAY_PROTECTION"
+            echo "SCOPE=real_mutual_TLS13_fixture_not_WBD_Go_Rust_TUN"
+          } > lan-word-pcap-report/manifest.txt
+      - name: Bound actual Linux TCP pcap across verified TLS13 READY to XOR fastpath
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tcpdump
+          tmp="$(mktemp -d)"
+          cap_pid=""
+          cleanup() {
+            if test -n "$cap_pid"; then
+              sudo kill -INT "$cap_pid" 2>/dev/null || true
+              wait "$cap_pid" 2>/dev/null || true
+            fi
+            rm -rf "$tmp"
+          }
+          trap cleanup EXIT
+          port=38522
+          sudo timeout --signal=INT --kill-after=2s 25s tcpdump -i lo -s 2000 -c 128 \
+            -w "$tmp/wire.pcap" "tcp and dst port $port" >/dev/null 2>&1 &
+          cap_pid=$!
+          sleep 2
+          /tmp/lan_word_tls13 "$port" | tee lan-word-pcap-report/roundtrip.json
+          sleep 1
+          sudo kill -INT "$cap_pid" 2>/dev/null || true
+          wait "$cap_pid" || true
+          cap_pid=""
+          test -s "$tmp/wire.pcap"
+          test "$(stat -c %s "$tmp/wire.pcap")" -le 4194304
+          python3 tools/lan_xor_tls13_word_pcap.py --pcap "$tmp/wire.pcap" \
+            --port "$port" --output lan-word-pcap-report/capture_summary.json
+          echo "Owned raw pcap deleted on exit, hashes and summary retained" >> lan-word-pcap-report/manifest.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-xor-word-arm64-tls13-capture
+          path: lan-word-pcap-report/
+          if-no-files-found: warn
+          retention-days: 30
