@@ -108,6 +108,7 @@ def audit(pcap,port,manifest):
         assert len(frame)==m["wire_bytes"]<=MAX_WIRE
         assert len(frame)+UNDERLAY<=MTU
         pad=m["PaddingBytes"]
+        assert 0<=pad<=256,(name,pad)
         bound=m["LifecycleBoundary"]
         stage=m["Stage"]
         elapsed=m["ElapsedFromFinishedMs"]
