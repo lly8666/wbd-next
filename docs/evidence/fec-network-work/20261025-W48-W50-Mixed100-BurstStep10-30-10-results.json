@@ -1,0 +1,440 @@
+{
+  "date": "2026-10-25",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "product_source": "23da99f0de04afe17756542f5176f2759e318747",
+  "product_build_run": 40153525640,
+  "product_artifact_id": 12583149711,
+  "product_zip_sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
+  "scenario": "Real same W40 native ARM64 product Fixed, source fq600, owned veth static neighbours, authentic M2, outer DATA retransmission genuinely OFF, simultaneous c2s/s2c application 100Mbps, 96% UDP and two real TCP flows shared 4%, UDP payload size by packet count 64:6%/96:8%/160:10%/256:11%/512:15%/900:20%/1287:30%, 64B 20Hz sparse probes, netem 300ms one-way 600Mbps each, IID loss 10%30s -> 30%60s -> 10%30s, warmup15 drain30",
+  "iid_not_correlated_blackout": true,
+  "independent_arm64_actions_runners": true,
+  "not_same_vm_CPU_comparison": true,
+  "loss_gate_logic": "Maximum6: both directions, total and <=256B UDP <=1% all phases; Medium2 and Balanced3: <=1% only 10% first/last, BUT all actual high-loss receipts/TCP pacing, source zero-drop, small first p99<=500ms, Stop are still checked.",
+  "kernel_queue_interpretation": "Nonzero netem qlen is normal with 300ms configured delay; check after-vs-before stage, and distinguish from inner TCP sender backpressure. Zero source TUN loss does not certify TCP quality.",
+  "loss_definition": "Original UDP true application cohort missing after 30s drain; first-arrival p99 among actually delivered samples only. TCP application records can require inner retrans and be very late even with no lost record after drain.",
+  "status": "Maximum truly accepted; Medium2 and Balanced3 both INCONCLUSIVE because TCP injection/backpressure and post-burst recovery, not because 30%-phase high loss was disallowed.",
+  "runs": {
+    "W48": {
+      "id": "FEC-W48-Maximum-BurstStep10-30-10-Mixed100-ARM64",
+      "request_commit": "34a18ef393dd4badcd99fdb08f8364acd248cd85",
+      "request": "tests/network/fec-work/W48-maximum-mixed100-step10-30-10-arm64.json",
+      "profile": 6,
+      "action": 40158682220,
+      "attempt": 1,
+      "action_conclusion": "SUCCESS",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "artifact": 12584913673,
+      "zip_sha256": "c2b83b15d8cfda7842551003149d1476d1cae5446e0f7c205d9a5f234994a1b3",
+      "loss_gate_phases": [
+        "baseline10",
+        "peak30",
+        "recover10"
+      ],
+      "phases": {
+        "baseline10": {
+          "c2s_udp_loss_pct": 0,
+          "s2c_udp_loss_pct": 0,
+          "c2s_small_udp_loss_pct": 0,
+          "s2c_small_udp_loss_pct": 0,
+          "small_udp_p99_ms": [
+            307.4,
+            307.4
+          ],
+          "tcp_injected_mbps": [
+            3.9999,
+            3.9998
+          ],
+          "tcp_p99_ms": [
+            306.1,
+            305.8
+          ],
+          "sparse64_received_sent": {
+            "c2s": [
+              596,
+              596
+            ],
+            "s2c": [
+              596,
+              596
+            ]
+          },
+          "cpu_combined_s_per_30": 51.49,
+          "cpu_per_GiB": 73.75,
+          "host_psi_avg10_mean_pct": 33.41,
+          "netem_qlen_end": {
+            "client": 11197,
+            "server": 11020
+          },
+          "source_tun_drop_total": 0
+        },
+        "peak30": {
+          "c2s_udp_loss_pct": 0.0388,
+          "s2c_udp_loss_pct": 0.038,
+          "c2s_small_udp_loss_pct": 0.07844877,
+          "s2c_small_udp_loss_pct": 0.06957823,
+          "small_udp_p99_ms": [
+            307.7,
+            307.7
+          ],
+          "tcp_injected_mbps": [
+            4,
+            4.0001
+          ],
+          "tcp_p99_ms": [
+            885.7,
+            868.4
+          ],
+          "sparse64_received_sent": {
+            "c2s": [
+              1193,
+              1193
+            ],
+            "s2c": [
+              1188,
+              1192
+            ]
+          },
+          "cpu_combined_s_per_30": 47.82,
+          "cpu_per_GiB": 68.49,
+          "host_psi_avg10_mean_pct": 32.32,
+          "netem_qlen_end": {
+            "client": 8791,
+            "server": 8890
+          },
+          "source_tun_drop_total": 0
+        },
+        "recover10": {
+          "c2s_udp_loss_pct": 0,
+          "s2c_udp_loss_pct": 0,
+          "c2s_small_udp_loss_pct": 0,
+          "s2c_small_udp_loss_pct": 0,
+          "small_udp_p99_ms": [
+            307.2,
+            307.3
+          ],
+          "tcp_injected_mbps": [
+            4,
+            3.9998
+          ],
+          "tcp_p99_ms": [
+            305.6,
+            305.5
+          ],
+          "sparse64_received_sent": {
+            "c2s": [
+              596,
+              596
+            ],
+            "s2c": [
+              597,
+              597
+            ]
+          },
+          "cpu_combined_s_per_30": 51.47,
+          "cpu_per_GiB": 73.94,
+          "host_psi_avg10_mean_pct": 34.46,
+          "netem_qlen_end": {
+            "client": 11169,
+            "server": 10079
+          },
+          "source_tun_drop_total": 0
+        }
+      },
+      "parity": {
+        "client": {
+          "planned": 3066375,
+          "sent": 3066375,
+          "expired_jobs": 0,
+          "unknown_capacity": 0,
+          "pressure_jobs": 0
+        },
+        "server": {
+          "planned": 3060133,
+          "sent": 3060133,
+          "expired_jobs": 0,
+          "unknown_capacity": 0,
+          "pressure_jobs": 0
+        }
+      },
+      "native_applied": "both fixed profile6 requested1 applied1 pendingfalse",
+      "outer_data_retransmitted": 0,
+      "source_tun_drop_full_run": 0,
+      "root_fq_drops_full_run": 0,
+      "stop_cleanup": true,
+      "recovery_cpu_per_GiB_ratio": 1.003,
+      "recovery_tcp_mbps_both": [
+        4,
+        3.9998
+      ],
+      "recovery_qualified": true,
+      "scope": "One ARM64 native stage-loss observation; highest profile passes all strict UDP, small, TCP rate and zero-drop/CPU recovery metrics, not correlated loss burst or field-device guarantee."
+    },
+    "W49": {
+      "id": "FEC-W49-Medium2-BurstStep10-30-10-Mixed100-ARM64",
+      "request_commit": "7caccebbd57b7063a6d63f271e4512965433585c",
+      "request": "tests/network/fec-work/W49-medium2-mixed100-step10-30-10-arm64.json",
+      "profile": 2,
+      "action": 40158700155,
+      "attempt": 1,
+      "action_conclusion": "FAILURE",
+      "result": "INCONCLUSIVE_TCP_BACKPRESSURED_ALL_STAGES",
+      "artifact": 12585349294,
+      "zip_sha256": "15cefb85d53a9f4f5aac197b50821627338522f42d7ec71a2c99ffa5c581ce4f",
+      "loss_gate_phases": [
+        "baseline10",
+        "recover10"
+      ],
+      "phases": {
+        "baseline10": {
+          "c2s_udp_loss_pct": 0.1494,
+          "s2c_udp_loss_pct": 0.1622,
+          "c2s_small_udp_loss_pct": 0.187408,
+          "s2c_small_udp_loss_pct": 0.214577,
+          "small_udp_p99_ms": [
+            306.6,
+            306.6
+          ],
+          "tcp_injected_mbps": [
+            3.7269,
+            3.6778
+          ],
+          "tcp_p99_ms": [
+            4277.5,
+            2702.7
+          ],
+          "tcp_backpressure_slots": [
+            1341,
+            2406
+          ],
+          "cpu_combined_s_per_30": 37.92,
+          "cpu_per_GiB": 54.52,
+          "netem_qlen_end": {
+            "client": 6618,
+            "server": 6454
+          },
+          "source_tun_drop_total": 0
+        },
+        "peak30": {
+          "c2s_udp_loss_pct": 18.9502,
+          "s2c_udp_loss_pct": 19.1073,
+          "c2s_small_udp_loss_pct": 18.5982,
+          "s2c_small_udp_loss_pct": 18.9857,
+          "small_udp_p99_ms": [
+            306.7,
+            306.7
+          ],
+          "tcp_injected_mbps": [
+            0.4493,
+            0.4347
+          ],
+          "tcp_p99_ms": [
+            null,
+            null
+          ],
+          "tcp_backpressure_slots": [
+            27491,
+            22132
+          ],
+          "cpu_combined_s_per_30": 32.29,
+          "cpu_per_GiB": 59.21,
+          "netem_qlen_end": {
+            "client": 5126,
+            "server": 5292
+          },
+          "source_tun_drop_total": 0
+        },
+        "recover10": {
+          "c2s_udp_loss_pct": 0.1651,
+          "s2c_udp_loss_pct": 0.15,
+          "c2s_small_udp_loss_pct": 0.222894,
+          "s2c_small_udp_loss_pct": 0.17521,
+          "small_udp_p99_ms": [
+            306.6,
+            306.6
+          ],
+          "tcp_injected_mbps": [
+            2.7371,
+            2.8712
+          ],
+          "tcp_p99_ms": [
+            3964.3,
+            7052
+          ],
+          "tcp_backpressure_slots": [
+            4229,
+            3289
+          ],
+          "cpu_combined_s_per_30": 37.51,
+          "cpu_per_GiB": 54.59,
+          "netem_qlen_end": {
+            "client": 6659,
+            "server": 6124
+          },
+          "source_tun_drop_total": 0
+        }
+      },
+      "parity": {
+        "client": {
+          "planned": 893598,
+          "sent": 893598,
+          "expired_jobs": 0,
+          "unknown_capacity": 0,
+          "pressure_jobs": 0
+        },
+        "server": {
+          "planned": 893843,
+          "sent": 893843,
+          "expired_jobs": 0,
+          "unknown_capacity": 0,
+          "pressure_jobs": 0
+        }
+      },
+      "native_applied": "both fixed profile2 requested1 applied1 pendingfalse",
+      "outer_data_retransmitted": 0,
+      "source_tun_drop_full_run": 0,
+      "root_fq_drops_full_run": 0,
+      "stop_cleanup": true,
+      "recovery_cpu_per_GiB_ratio": 1.001,
+      "recovery_tcp_fraction_of_target": [
+        0.6842652,
+        0.7178094
+      ],
+      "recovery_qualified": false,
+      "scope": "Medium2 k16/r6 UDP and small UDP <=1% at both10%-IID phases, high30% allowed actual UDP lost ~19%. CPU/outer qdisc/Parity source show no growing backlog, but genuine TCP backpressure starts even baseline10% and remains after loss relief: fails full mixed-service restoration; host Actions overall FAILURE because leg INCONCLUSIVE."
+    },
+    "W50": {
+      "id": "FEC-W50-Balanced3-BurstStep10-30-10-Mixed100-ARM64",
+      "request_commit": "80b8f16ddf7384305ad3768a6d717b834fe5553a",
+      "request": "tests/network/fec-work/W50-balanced3-mixed100-step10-30-10-arm64.json",
+      "profile": 3,
+      "action": 40159048877,
+      "attempt": 1,
+      "action_conclusion": "FAILURE",
+      "result": "INCONCLUSIVE_TCP_BACKPRESSURED_HIGH_AND_RECOVERY",
+      "artifact": 12584709340,
+      "zip_sha256": "9dc6d27333f56e8eb17fd2020006d0e960a05c88ad5df47113627894850b8b0e",
+      "loss_gate_phases": [
+        "baseline10",
+        "recover10"
+      ],
+      "phases": {
+        "baseline10": {
+          "c2s_udp_loss_pct": 0.0202,
+          "s2c_udp_loss_pct": 0.0105,
+          "c2s_small_udp_loss_pct": 0.03437665,
+          "s2c_small_udp_loss_pct": 0.01829725,
+          "small_udp_p99_ms": [
+            306.6,
+            306.6
+          ],
+          "tcp_injected_mbps": [
+            4.0002,
+            4
+          ],
+          "tcp_p99_ms": [
+            400.2,
+            912.6
+          ],
+          "tcp_backpressure_slots": [
+            0,
+            0
+          ],
+          "cpu_combined_s_per_30": 39.65,
+          "cpu_per_GiB": 56.77,
+          "netem_qlen_end": {
+            "client": 7359,
+            "server": 7378
+          },
+          "source_tun_drop_total": 0
+        },
+        "peak30": {
+          "c2s_udp_loss_pct": 11.4622,
+          "s2c_udp_loss_pct": 11.3897,
+          "c2s_small_udp_loss_pct": 11.53446,
+          "s2c_small_udp_loss_pct": 11.52227,
+          "small_udp_p99_ms": [
+            306.9,
+            307
+          ],
+          "tcp_injected_mbps": [
+            0.7589,
+            0.844
+          ],
+          "tcp_p99_ms": [
+            null,
+            null
+          ],
+          "tcp_backpressure_slots": [
+            24743,
+            145890
+          ],
+          "cpu_combined_s_per_30": 34.95,
+          "cpu_per_GiB": 58.27,
+          "netem_qlen_end": {
+            "client": 5598,
+            "server": 5676
+          },
+          "source_tun_drop_total": 0
+        },
+        "recover10": {
+          "c2s_udp_loss_pct": 0.0202,
+          "s2c_udp_loss_pct": 0.018,
+          "c2s_small_udp_loss_pct": 0.0421391,
+          "s2c_small_udp_loss_pct": 0.0232874,
+          "small_udp_p99_ms": [
+            306.6,
+            306.6
+          ],
+          "tcp_injected_mbps": [
+            2.9646,
+            2.8923
+          ],
+          "tcp_p99_ms": [
+            3972.1,
+            1922.9
+          ],
+          "tcp_backpressure_slots": [
+            3958,
+            3485
+          ],
+          "cpu_combined_s_per_30": 39.26,
+          "cpu_per_GiB": 56.98,
+          "netem_qlen_end": {
+            "client": 7467,
+            "server": 6775
+          },
+          "source_tun_drop_total": 0
+        }
+      },
+      "parity": {
+        "client": {
+          "planned": 1197087,
+          "sent": 1197087,
+          "expired_jobs": 0,
+          "unknown_capacity": 0,
+          "pressure_jobs": 0
+        },
+        "server": {
+          "planned": 1198724,
+          "sent": 1198724,
+          "expired_jobs": 0,
+          "unknown_capacity": 0,
+          "pressure_jobs": 0
+        }
+      },
+      "native_applied": "both fixed profile3 requested1 applied1 pendingfalse",
+      "outer_data_retransmitted": 0,
+      "source_tun_drop_full_run": 0,
+      "root_fq_drops_full_run": 0,
+      "stop_cleanup": true,
+      "recovery_cpu_per_GiB_ratio": 1.004,
+      "recovery_tcp_fraction_of_target": [
+        0.741138,
+        0.7230672
+      ],
+      "recovery_qualified": false,
+      "scope": "Balanced3 full-group r8/k16 passes10%-IID UDP+small+TCP target at PRE phase, all-out30% residual high recorded not disqualified, but inner TCP drops to0.76/0.84Mbps and only2.96/2.89 in recover10 despite zero source/kernel pressure; result INCONCLUSIVE due original sender TCP BACKPRESSURED. No CPU/outer netem backlog growth or parity expiration; cannot qualify mixed recovery."
+    }
+  }
+}
