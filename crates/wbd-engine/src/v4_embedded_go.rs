@@ -2519,6 +2519,27 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_state(
     // installation ONLY, not a positive M4 kernel/TUN product readiness.
     OK
 }
+// Called ONLY after all original-Go TLS Game lane handles have committed and
+// before real Game M4 drivers start. Both endpoint operators must select the
+// same fixed profile; no automatic Game FEC mode or anonymous grant.
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub extern "C" fn wbd_fec_network_game_group_fixed_configure(
+    group:u64,profile:u32
+)->i32{
+    if profile>6{return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
+    if e.stopped||e.stopping{return BAD_STAGE}
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+    if e.drivers.is_some(){return BAD_STAGE}
+    let Ok(mut adapter)=e.adapter.lock()else{return BAD_STAGE};
+    if adapter.enable_game_fec(profile as u8,e.server).is_err(){
+        return INVALID
+    }
+    OK
+}
+
 #[cfg(feature="fec2_product_record")]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
