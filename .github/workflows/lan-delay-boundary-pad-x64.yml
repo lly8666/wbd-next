@@ -4,6 +4,7 @@ on:
     branches: [experiment/lan-gated-boundary-pad]
     paths: [".github/workflows/lan-delay-boundary-pad-x64.yml"]
 permissions: {contents: read}
+# Full Finished-relative receipt field compiled, correct native fixture version.
 # Final independent capture analyzer matches Finished-relative receipt fields.
 # Completion marker: monotonic timer begins at genuine encrypted inner TLS13 client Finished.
 concurrency:
