@@ -102,8 +102,10 @@ func (p *V4LinuxGameProduct) ConnectClientGame(
             return errors.Join(ErrAdmissionParams,p.abortLocked())
         }
         cfg:=base;cfg.LaneID=uint8(i+1)
+        gameFec:=uint8(0)
+        if p.cfg.GameFecEnabled{gameFec=p.cfg.GameFecProfile+1}
         session,e:=EstablishClientV4(ctx,a.BootstrapConn(),cfg,V4ClientOptions{
-            DataPlaneReady:true,Epoch:epoch,fec2Product:true,
+            DataPlaneReady:true,Epoch:epoch,fec2Product:true,GameFec:gameFec,
         })
         if e!=nil{return errors.Join(e,p.abortLocked())}
         if i==0{epoch=session.Epoch}
@@ -159,9 +161,11 @@ func (p *V4LinuxGameProduct) AcceptServerGame(
             return nil
         }
         bridge:=&v4EmbeddedNativeBridge{}
+        gameFec:=uint8(0)
+        if p.cfg.GameFecEnabled{gameFec=p.cfg.GameFecProfile+1}
         session,e:=EstablishServerV4(ctx,a,cfg,V4ServerOptions{
             DataPlaneReady:true,Epochs:p.cfg.Epochs,
-            ownerBridge:bridge,fec2Product:true,
+            ownerBridge:bridge,fec2Product:true,GameFec:gameFec,
         })
         if e!=nil{return errors.Join(e,p.abortLocked())}
         p.serverSessions=append(p.serverSessions,session)
