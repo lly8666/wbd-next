@@ -218,7 +218,9 @@ func readCorpus(root string)([]byte,[]byte,[]byte,[]byte){
  if len(ch)<50||ch[0]!=22||!bytes.Contains(ch,[]byte(innerPublicSNI))||
    len(sf)<50||sf[0]!=22||sf[5]!=2||len(app)<1305||
    !bytes.Equal(app[:3],[]byte{23,3,3})||len(finished)<40||
- !bytes.Equal(finished[:3],[]byte{23,3,3}){panic("not genuine complete inner TLS1.3 corpus")}
+ !bytes.Contains(finished,[]byte{23,3,3})||
+ !(bytes.Equal(finished[:3],[]byte{20,3,3})||
+   bytes.Equal(finished[:3],[]byte{23,3,3})){panic("not genuine complete inner TLS1.3 corpus")}
  // RFC8446 HelloRetryRequest fixed ServerHello.random. Do not advance gate on HRR.
  hrr:=[]byte{0xcf,0x21,0xad,0x74,0xe5,0x9a,0x61,0x11,0xbe,0x1d,0x8c,0x02,
  0x1e,0x65,0xb8,0x91,0xc2,0xa2,0x11,0x16,0x7a,0xbb,0x8c,0x5e,0x07,0x9e,
