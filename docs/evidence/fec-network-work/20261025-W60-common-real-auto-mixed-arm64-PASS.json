@@ -1,0 +1,187 @@
+{
+  "schema": 1,
+  "id": "FEC-W60-OriginalAutoCommon1-5-1-MixedUDP-TCP-ARM64",
+  "branch": "experiment/fec-network-tuning",
+  "request": "tests/network/fec-work/W60-auto-mixed8-lowmedium-recover-arm64.json",
+  "request_commit": "ce1975e50e8bf6340493ef1d8665a996bab19624",
+  "action": 40174389833,
+  "contract_action": 40174389146,
+  "attempt": 1,
+  "result": "PASS_SCOPED_OBSERVATION",
+  "artifact_id": 12591467746,
+  "zip_sha256": "f989968a349b6bdab31f819b0b4c3e2a48fec19e22229a56c685710fbc75851e",
+  "product_source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+  "product_build": 40173359338,
+  "product_artifact": 12590822815,
+  "product_build_zip_sha256": "cdc5d4eb68621321f7f918b6667ff16c0a166bfe6b509ded310afc467294a97f",
+  "scene": "Go TLS original native ARM64 8Mbps each (UDP7.68 TCP0.32 each with 2 TCP flows), packet count sizes 64B6,96B8,160B10,256B11,512B15,900B20,1287B30; 75ms one way; IID both 1%30s→5%60s→1%120s; warmup15 drain30, separate sparse probes 64B20Hz. One performance Action one scene; not paired CPU test.",
+  "phases_utc": {
+    "initial1": "2026-10-25T07:52:47.031Z",
+    "medium5": "2026-10-25T07:53:17.031Z",
+    "recover1": "2026-10-25T07:54:17.031Z"
+  },
+  "app": {
+    "c2s_udp_sent": [
+      41225,
+      82430,
+      164903
+    ],
+    "c2s_udp_missing": [
+      0,
+      2,
+      19
+    ],
+    "s2c_udp_sent": [
+      41224,
+      82430,
+      164904
+    ],
+    "s2c_udp_missing": [
+      0,
+      0,
+      16
+    ],
+    "tcp_both_missing": 0,
+    "tcp_each_rate_mbps": 0.32,
+    "udp_each_rate_mbps": 7.68,
+    "c2s_udp_p99_ms": [
+      78.3,
+      90.1,
+      76.5
+    ],
+    "s2c_udp_p99_ms": [
+      78.3,
+      90.1,
+      76.5
+    ],
+    "small_udp_missing": {
+      "c2s": [
+        0,
+        2,
+        5
+      ],
+      "s2c": [
+        0,
+        0,
+        5
+      ]
+    },
+    "independent_64B_probe_missing": {
+      "c2s": [
+        0,
+        4,
+        0
+      ],
+      "s2c": [
+        0,
+        1,
+        1
+      ]
+    },
+    "note": "Late 1%-recovery packet residual is nonzero; never call zero total packet loss."
+  },
+  "auto": {
+    "true_m2_control": true,
+    "c2s_stages": [
+      [
+        "2026-10-25T07:52:56Z",
+        5,
+        4
+      ],
+      [
+        "2026-10-25T07:53:09Z",
+        4,
+        3
+      ],
+      [
+        "2026-10-25T07:53:22Z",
+        3,
+        2
+      ],
+      [
+        "2026-10-25T07:54:40Z",
+        2,
+        1
+      ],
+      [
+        "2026-10-25T07:54:55Z",
+        1,
+        0
+      ]
+    ],
+    "s2c_stages": [
+      [
+        "2026-10-25T07:52:57Z",
+        5,
+        4
+      ],
+      [
+        "2026-10-25T07:53:09Z",
+        4,
+        3
+      ],
+      [
+        "2026-10-25T07:53:22Z",
+        3,
+        2
+      ],
+      [
+        "2026-10-25T07:54:40Z",
+        2,
+        1
+      ],
+      [
+        "2026-10-25T07:54:53Z",
+        1,
+        0
+      ]
+    ],
+    "readback_both": "auto requested=applied=6 profile0 pending=false",
+    "quality_observations": {
+      "client_valid": 98,
+      "client_unknown": 31,
+      "server_valid": 98,
+      "server_unknown": 31
+    },
+    "meaning": "With 1%→5%→1% shared common pattern the initial Strong5 is sufficient; no forced UP expected. Both directions converge to Light0 in finite period from genuine VALID windows; no UNKNOWN conversion."
+  },
+  "native": {
+    "outer_data_repair_enabled": false,
+    "outer_data_retrans_packets": 0,
+    "parity_tx_planned_sent": {
+      "client": 133411,
+      "server": 133311
+    },
+    "parity_expired_both": 0,
+    "native_recovered_tun": {
+      "client": 6876,
+      "server": 6913
+    },
+    "original_M2_positive_samples": {
+      "client": 315380,
+      "server": 315405
+    },
+    "original_M2_positive_mean_us": {
+      "client": 153039,
+      "server": 153031
+    },
+    "unknown_2s": {
+      "client": 153,
+      "server": 151
+    },
+    "m2_censored_flags_persist": true,
+    "source_tun_drops_both": 0,
+    "rx_decoder_rejected_both": 0,
+    "stop_owned_clean": true
+  },
+  "cost": {
+    "client_cpu_s": 28.31,
+    "server_cpu_s": 28.49,
+    "client_rss_peak_bytes": 22937600,
+    "server_rss_peak_bytes": 23564288,
+    "host_cpu_psi_peak_pct": 1.17
+  },
+  "qualification": "SCOPED_ARM64_MIXED_REPRESENTATIVE; DOES_NOT_PROVE_GAME_WINDOWS_65KB_TUN_OR_MIXED100_TCP_RECOVERY",
+  "capacity_stop": true,
+  "merge_ready": false
+}
