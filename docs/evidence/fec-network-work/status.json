@@ -5623,6 +5623,18 @@
       "fixed_stream": "a57f5f4fb6ffa2de753b622bd646fe873e597524",
       "embedded_go": "3cba62daf5e09c509731f504343ec8b2b4c84362"
     },
+    "reverted_source_validation": {
+      "source": "4322a811fd63e096458f202767faa2f097a587c0",
+      "native_arm64_build_run": 40203220219,
+      "native_arm64_build_result": "SUCCESS",
+      "native_arm64_artifact_id": 12602931174,
+      "native_arm64_zip_sha256": "0ae0939bdd4c02932a6452260fa65f4e1851bf37bd79d7485c28e1895022f125",
+      "native_maximum_row_contract_run": 40203220240,
+      "native_maximum_row_contract_result": "SUCCESS",
+      "intermediate_partial_rollback_build_failure": 40203200964,
+      "intermediate_partial_rollback_contract_failure": 40203200998,
+      "source_blobs_identical_to_pre_W85": true
+    },
     "tests_BA_short_GE_IID_highload": "NOT_RUN_AFTER_NEGATIVE_FIRST_AB",
     "no_product_semantics_change_after_rollback": true,
     "other_role_next_action_unchanged": true,
