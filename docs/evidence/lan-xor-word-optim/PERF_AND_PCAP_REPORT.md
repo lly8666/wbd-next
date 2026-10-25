@@ -63,7 +63,7 @@ Each independent Go lab first completes **real mutual TLS 1.3 certificate-verifi
 | Same outer TCP Seq duplication in capture | 0 | 0 |
 | Fixed XOR 64/128B repeat at different outer positions | YES / YES | YES / YES |
 | Old rolling XOR 64/128B same-span repeat | NO / NO | NO / NO |
-| **Optimized rolling word XOR 64/128B same-span repeat** | **NO / NO** | **NO / NO |
+| **Optimized rolling word XOR 64/128B same-span repeat** | **NO / NO** | **NO / NO** |
 | Full original IPv4 fixture recovered at receiver | YES 6/6 | YES 6/6 |
 | Go old/word XOR byte equality at same PN | PASS | PASS |
 
