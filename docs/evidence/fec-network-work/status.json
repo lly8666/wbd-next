@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W52_FEC_MAINLINE_AUTHENTIC_M2_AUTO_INDEPENDENT_DIRECTION_PASS_C2S_RECOVERY_DOWN_NOT_OBSERVED",
+  "phase": "W53_C2S_AUTO_DOWNSHIFT_BOUNDED_VALID_PROOF_PATCH_PENDING_EXACT_SOURCE_ARM64_ACTION",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -564,6 +564,7 @@
     }
   ],
   "open_issues": [
+    "W53 SOURCE 946346bbd84ff88910ed169037330e8eae13cea3 fix/test commit on isolated FEC branch. Original W52 real source e446fa1 native Auto recovery C2S downshift not observed; six noncontiguous authentic VALID windows (10877 fast sources) satisfy model guard, but intermittent 'actual-k observation incomplete' UNKNOWN cleared proof. New bounded <=6s skip retains previously VALID proof, counts only >=5 true VALID windows and 4096 sources/10s, preserves conservative residual<=0.0005, host/censored/missing feedback hard resets. Precise analysis SHA/artifacts in 20261025-W53-auto-downshift-valid-window-model-and-intent.json; no new native Action as of last check, all new behavior NOT_RUN. Retain prior W51/W52 positives and capacity_stop true.",
     "W52 current frozen FEC source e446fa1 Action40168045298 real Auto 8Mbps each actual UDP-only (64B1%,1287B99%, sparse probes) 2/0->20/1->1/0%IID, no outer DATA repair, native user mainline branch no main restore. Native real M2 positive confirmation mean client153665us (118931 samples), server154241us (129400); original AUTHENTIC stages C2S Strong5->Maximum6 revision2 during20% high, S2C Strong5->High4 rev2 then Balanced3 rev3 independently; final native both requested=applied pendingfalse. Parity full167271/121021 expired0, source TUN0, Stop clean, true UDP8Mbps each all3 phases high C2S loss0.01487%. BUT C2S did NOT step down to Strong after last 1%-loss60s and remains max6; unlike previous W45 prior source, current run does not qualify complete Auto rise-return. AUTO_QUALITY often UNKNOWN actual-k/feedback, policy requires predicted one-step-lower residual<=0.0005 and full 10s+4096 valid samples. Do not modify policy without causal evidence, do not call full Auto curve PASS; no TCP in W52. W48-50 temporary side tests already closed.",
     "W51 exact new FEC mainline source e446fa1 from user-approved 3af257cd direct branch ONLY: real ARM64 product build Action40167423967 SUCCESS, real W51 original Fixed3 8Mbps each 2%IID/75ms Action40167733514 PASS. Reuses existing Rust native 8s matured unambiguous M4 first-send positive authenticated reverse M2 [12]lag sum ns/[13]samples; public Go product M2_PROOF now reports client53875 sample mean152966us, server53938 mean152937us, true reverse reports 11346/11400. Old OFF 600000us outer shadow RTT NOT claimed as actual. Both raw M2 UNKNOWN161/175 and first/coverage censored flags1 preserved, no globally clean quality claim. UDP/TCP target full, 0 loss small p99 89.1/89.4ms, native parity planned==sent, expiry0, source TUN/root0, original OUTER DATA retrans0, STOP. W48-50 temporary step tests retained historical but CLOSED. Never merge/import main or network matrix. Next FEC mainline continue Auto authenticated positive M2 readback regression on same new source and lifecycle/MTU bounded functional checks, NO throughput ladder, capacity_stop true merge_ready false.",
     "W48-50 genuine ARM64 W40 source23da99 dual100Mbps real mixed96%UDP35% small-by-count 2 TCP sockets4%, 64B20Hz sparse 10%IID30s->30%IID60s->10%IID30s one-way300ms netem600/fq600 outerDATA0: MAXIMUM6 W48 strict all 3 phases PASS residual high30 C2S0.0388/S2C0.0380%, small0.0784/0.0696%, trueTCP4Mbps throughout, native Parity planned=sent 3066375/3060133 expiry0, source TUN/root0; CPU per30 pre51.49 high47.82 post51.47 and unitCPU/GiB post/pre1.003, netem queue no upward trend. MEDIUM2 W49 10%-IID UDP <=0.23% small low phases and CPU recovery1.001, but TCP rates baseline3.73/3.68 high0.45/0.43 recovery2.74/2.87 (<4) with backpressure, Action failure because qualified INCONCLUSIVE. BALANCED3 W50 pre TCP4Mbps and low UDP small <=0.043%, but high30 TCP0.76/0.84 and after10 still2.96/2.89; CPU perGiB recovery1.004, FEC parity full+no owner capacity, source TUN/drop0, netem queue no growth, still TCP_BACKPRESSURED high and recovery, Action INCONCLUSIVE. Mid-low grade not qualified for post-burst mixed TCP restore within30sec. Tests are IID drop-probability steps not correlated/Gilbert-Elliott blackout; don't compare raw CPU between independent host Actions. No further infinite tier/rate ladder; capacity_stop true and merge_ready false.",
@@ -593,7 +594,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Continue FEC branch MAINLINE from user-selected 3af257cd with existing e446fa1 scoped native product SOURCE. W51 authentic positive M2 readback Fixed3 PASS; W52 current native Auto genuine directional C2S rise/S2C stepdown and positive M2 PASS, but C2S 1%-recovery downshift NOT_OBSERVED. Next investigate FecV2Step low-loss 0.0005 predicted-next-lower guard + actual-k histogram against W52 saved valid windows and old W45 raw controls WITHOUT inventing ACK, revising policy or rerunning high stress. If policy retains Maximum legitimately, document scope, then complete finite original FEC MTU boundary and Stop/generation test needed by original program. Temporary W48-50 closed. NEVER import/merge main network recovery, never modify network-matrix branch, no throughput ladder; capacity_stop true merge_ready false.",
+  "next_action": "W53 FEC-only exact branch code commit 946346bbd84ff88910ed169037330e8eae13cea3. W52 original client AUTO_QUALITY diagnosed intermittent actual-k hist cohort UNKNOWN resetting 6 genuine VALID windows/10877 fast first sources, p_design 1.18–1.64%, Strong k1 conservative residual <=0.000268 <0.0005. New cold-Go bounded continuity fix preserves only prior authentically VALID down proof across <=6s actual-k misalignment; UNKNOWN does not count/issue; protects censored/host/long gaps. POSITIVE+NEGATIVE deterministic tests in fec_v2_policy_test.go and exact-source ARM64 product build workflow test command committed. GitHub Actions API currently lists zero workflows for exact 946346bb (do NOT mark CI PASS or product PASS). Next secure Actions trigger for exact 946346bb and inspect native ARM64 test/build result and artifact; only after PASS issue unique W53 original Go ARM64 Auto native scenario request, reuse original W52 shape, no extra capacity. Then complete bounded original FEC MTU±1 and Stop/generation protection only if prior Actions lack exact scope. No import/merge main or network-matrix, no throughput ladder, capacity_stop true, merge_ready false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -5103,5 +5104,36 @@
     "capability": "ARM64 real product Auto independent directional stages, actual positive M2 measured, source TUN+Parity true, scoped real UDP business. NOT full Auto return qualification, no TCP mixed, no high-rate or Game/Windows, not main branch.",
     "merge_ready": false,
     "capacity_stop": true
+  },
+  "w53": {
+    "patch_source": "946346bbd84ff88910ed169037330e8eae13cea3",
+    "previous_product_source": "e446fa1cf09ebfb259da3d764abf8f8ed8d4211f",
+    "diagnosis_from": {
+      "w52_run": 40168045298,
+      "w52_artifact": 12589925435,
+      "w45_run": 40156921978,
+      "w45_artifact": 12584856579,
+      "valid_windows": 6,
+      "authentic_fast_sources": 10877,
+      "p_design_pct": "1.18..1.64",
+      "strong_k1_upper_residual": "0.000268",
+      "outcome": "CAUSAL_CANDIDATE_NOT_PRODUCT_PROVEN"
+    },
+    "modified": [
+      "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
+      "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go",
+      ".github/workflows/network-arm64-product-build.yml"
+    ],
+    "intent": "docs/devlog/fec-network-work/20261025-W53-W52-valid-cohort-gap-minimal-fix-intent.md",
+    "evidence": "docs/evidence/fec-network-work/20261025-W53-auto-downshift-valid-window-model-and-intent.json",
+    "exact_source_actions": {
+      "run_id": null,
+      "result": "NOT_TRIGGERED_OR_NOT_INDEXED_AT_LAST_READ",
+      "build_artifact": null
+    },
+    "new_product_run": "NOT_RUN",
+    "full_auto_qualified": false,
+    "capacity_stop": true,
+    "merge_ready": false
   }
 }
