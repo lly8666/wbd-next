@@ -7,14 +7,14 @@ import json
 import pathlib
 import statistics
 
-ORDER=["aes128_gcm","chacha20_poly1305","fixed_xor","rolling_xor","rolling_word_xor","clear",
-       "clear","rolling_word_xor","rolling_xor","fixed_xor","chacha20_poly1305","aes128_gcm"]
+ORDER=["aes128_gcm","chacha20_poly1305","fixed_xor","rolling_xor","rolling_word_xor","pn_repeat_word_xor","clear",
+       "clear","pn_repeat_word_xor","rolling_word_xor","rolling_xor","fixed_xor","chacha20_poly1305","aes128_gcm"]
 def analyze(path):
     lines=[json.loads(l) for l in pathlib.Path(path).read_text().splitlines() if l.strip()]
     measure=[l for l in lines if "kind" in l]
     transitions=[l for l in lines if "sequence_index" in l]
     assert [x["kind"] for x in measure] == ORDER, "unexpected predeclared balanced order"
-    assert len(transitions)==12 and all(x["sequence_index"]==i and x["next_kind"]==ORDER[i] for i,x in enumerate(transitions))
+    assert len(transitions)==14 and all(x["sequence_index"]==i and x["next_kind"]==ORDER[i] for i,x in enumerate(transitions))
     for x in measure:
         assert all(x[k]>0 for k in ["packets","bytes_inner","bytes_wire","cpu_ns","wall_ns"])
         assert x["bytes_inner"]==x["packets"]*1345
@@ -25,7 +25,7 @@ def analyze(path):
     for x in measure:
         name=x["kind"]
         groups.setdefault(name,[]).append(x)
-    assert len(groups)==6 and all(len(v)==2 for v in groups.values())
+    assert len(groups)==7 and all(len(v)==2 for v in groups.values())
     results={}
     for kind,v in groups.items():
         vals=[x["cpu_ns"]/x["bytes_inner"] for x in v]
