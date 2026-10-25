@@ -26,6 +26,24 @@ func TestV4FecAutoMatureDeltaNeverConvertsUnknownToNoLoss(t *testing.T) {
     if _,ok:=v4FecAutoWindow(reset,older,0);ok{
         t.Fatal("impossible mature numerator accepted")
     }
+    // W70 host pressure is native sender-side capacity censorship, NOT a
+    // permanent bit. A historic native count must not immortal-freeze Auto.
+    older[11],newer[11]=17,18
+    if d,ok:=v4FecAutoRecentHostCapacity(newer,older);!ok||d!=1{
+        t.Fatalf("new genuine capacity censorship must freeze: %d %t",d,ok)
+    }
+    older[11]=18
+    if d,ok:=v4FecAutoRecentHostCapacity(newer,older);!ok||d!=0{
+        t.Fatalf("stale historical host drop must not freeze recovery: %d %t",d,ok)
+    }
+    older[11]=19
+    if _,ok:=v4FecAutoRecentHostCapacity(newer,older);ok{
+        t.Fatal("native capacity counter reset forged healthy observation")
+    }
+    older[11],newer[11]=0,^uint64(0)
+    if d,ok:=v4FecAutoRecentHostCapacity(newer,older);!ok||d==0{
+        t.Fatal("saturated capacity counter must fail closed")
+    }
 }
 
 func TestV4Fec2OriginalPositiveConfirmationLagNoFakeRTT(t *testing.T) {

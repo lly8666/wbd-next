@@ -146,6 +146,15 @@ func v4FecAutoDiff(a,b uint64)(uint64,bool){
     if b<a{return 0,false}
     return b-a,true
 }
+// The original native M2 capacity_censored field is a lifetime cumulative
+// sender-side counter. Comparing it to zero would freeze Auto forever after
+// one transient host-overload event, even long after normal capacity recovers.
+// Use an authentic 16s native delta (the existing k-history floor), not an
+// inferred zero-drop state, and reject any native generation/counter reset.
+func v4FecAutoRecentHostCapacity(now,then [30]uint64)(uint64,bool){
+    if now[11]==^uint64(0){return now[11],true} // saturated evidence is not healthy
+    return v4FecAutoDiff(then[11],now[11])
+}
 func v4FecAutoWindow(now,then [30]uint64,offset int)(FecV2Window,bool){
     var v [5]uint64
     for i:=range v {
@@ -191,9 +200,17 @@ func (m *v4ProductFecMonitor)autoObserve(bridge *v4EmbeddedNativeBridge,
         if !valid{return snap,nil}
         snap.ActualK[k]=n
     }
-    if raw[11]!=0 {
+    // W70 original ARM64 60Mbps small-PPS: local TUN truly dropped but
+    // 104 consecutive Auto ticks stayed HOST_CAPACITY even in clean 6Mbps
+    // recovery, because old code tested cumulative raw[11]!=0.
+    // Freeze while *recent native* capacity censorship is advancing, then
+    // permit the existing VALID 2s/8s and model gates to recover gradually.
+    // No missing or ambiguous receipt is converted to a fabricated ACK.
+    recent,capacityKnown:=v4FecAutoRecentHostCapacity(raw,histOld)
+    if !capacityKnown{return snap,nil}
+    if recent!=0 {
         snap.Validity=FecV2HostCapacity
-        snap.HostDrops=raw[11]
+        snap.HostDrops=recent
         return snap,nil
     }
     reports,ok:=v4FecAutoDiff(slow[10],raw[10])
@@ -254,12 +271,12 @@ func (m *v4ProductFecMonitor)tick(
     if err!=nil{return}
     var kSources uint64
     for i,n:=range snap.ActualK{kSources+=uint64(i+1)*n}
-    log.Printf("V4_PUBLIC_FEC2_AUTO_QUALITY direction=%s revision=%d profile=%d validity=%s reason=%q fast_first=%d fast_observed=%d fast_missing=%d fast_unknown=%d slow_first=%d slow_observed=%d slow_missing=%d slow_unknown=%d actual_k_sources=%d reverse_confirm_lag_us=%d target_profile=%d request=%t",
+    log.Printf("V4_PUBLIC_FEC2_AUTO_QUALITY direction=%s revision=%d profile=%d validity=%s reason=%q fast_first=%d fast_observed=%d fast_missing=%d fast_unknown=%d slow_first=%d slow_observed=%d slow_missing=%d slow_unknown=%d actual_k_sources=%d host_capacity_recent=%d reverse_confirm_lag_us=%d target_profile=%d request=%t",
         m.cfg.Direction,m.state.RequestedRevision,m.state.Desired,
         intent.Validity,intent.Reason,snap.Fast.FirstSent,snap.Fast.Observed,
         snap.Fast.Missing,snap.Fast.Unknown,snap.Slow.FirstSent,
         snap.Slow.Observed,snap.Slow.Missing,snap.Slow.Unknown,
-        kSources,snap.SRTT.Microseconds(),intent.Profile,intent.Send)
+        kSources,snap.HostDrops,snap.SRTT.Microseconds(),intent.Profile,intent.Send)
     if intent.Send{
         if err=bridge.stageOriginalAutoRevision(m.epoch,m.state,intent);err!=nil{
             // Native still owns the older profile until a real quiescent
