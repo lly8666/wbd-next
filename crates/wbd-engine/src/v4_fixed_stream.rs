@@ -507,6 +507,59 @@ mod tests{
         assert_eq!(arena.report().loaned,0);
     }
     #[test]
+    fn m0_auto_prior_three_classes_sealed_same_owner_no_cross_revision_parity(){
+        // The W75 native seamless transition must preserve ALL three source
+        // classes and reject an overlapping second revision until original
+        // old-parity M4 proof has settled. No extra sender, synthetic ACK
+        // or block-id reset is permitted.
+        let mut arena=Arena::new(607,96,2048,96,1_000_000).unwrap();
+        let mut stream=FixedStream::new(5,10,1400).unwrap();
+        let mut sources=Vec::new();
+        for (i,n) in [65usize,300,1100].into_iter().enumerate(){
+            push(&mut stream,&mut arena,&vec![i as u8;n],i as u64,&mut sources);
+        }
+        assert_eq!(sources.iter().map(|v|v.0).collect::<Vec<_>>(),vec![1,2,3]);
+        // Genuine M4 kernel batches for old sources have settled, but
+        // nonempty open groups remain at the control revision boundary.
+        stream.quiescent_change(2,11,MonoNs(4)).unwrap();
+        assert_eq!(stream.prior_parity_revision(),Some(ConfigRevision(10)));
+        assert!(matches!(stream.quiescent_change(1,12,MonoNs(5)),
+            Err(StreamError::Busy)));
+        push(&mut stream,&mut arena,&[99u8;65],6,&mut sources);
+        assert_eq!(sources.last().unwrap().0,4);
+        // Each old class keeps STRONG original matrix and actual-k, even
+        // though new systematic source id4 already uses rev11 Medium.
+        let mut old=Vec::new();
+        for now in 7..10u64{
+            let (rows,copied)=stream.poll_parity(MonoNs(now),
+                |wire,id,row,revision|{
+                    let parsed=parse_repair(wire,1400).unwrap();
+                    old.push((id,row,revision,parsed.actual_k));
+                    DriverProof::Copied
+                }).unwrap();
+            assert_eq!((rows,copied),(1,1));
+        }
+        assert_eq!(old.len(),3);
+        assert_eq!(old.iter().map(|v|v.0).collect::<Vec<_>>(),vec![1,2,3]);
+        assert!(old.iter().all(|(_,row,rev,k)|
+            *row==0&&*rev==ConfigRevision(10)&&*k==1));
+        // Once old same-owner parity drained, another revision may seal
+        // the newly open class; no prior job can cross the revision fence.
+        stream.quiescent_change(1,12,MonoNs(10)).unwrap();
+        let mut new_parity=Vec::new();
+        assert_eq!(stream.poll_parity(MonoNs(11),|wire,id,row,rev|{
+            let parsed=parse_repair(wire,1400).unwrap();
+            new_parity.push((id,row,rev,parsed.actual_k));
+            DriverProof::Copied
+        }).unwrap(),(1,1));
+        assert_eq!(new_parity,vec![(4,0,ConfigRevision(11),1)]);
+        push(&mut stream,&mut arena,&[77u8;65],12,&mut sources);
+        assert_eq!(sources.last().unwrap().0,5);
+        stream.stop();stream.stop();
+        arena.stop();arena.drain_returns();
+        assert_eq!(arena.report().loaned,0);
+    }
+    #[test]
     fn m0_fixed_stream_eight_repair_rows_bounded_quantum_and_pressure_no_hol(){
         let mut arena=Arena::new(605,32,2048,32,1_000_000).unwrap();
         let mut stream=FixedStream::new(5,1,1400).unwrap(); // Strong k8 r8
