@@ -5072,11 +5072,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     // waiting for a diagnostic lock in the DATA sender.
                     let slow=tx_cell.try_lock().ok().and_then(|e|
                         e.fec2_live_tx.as_ref().map(|stream|
-                            (e.server_side,original_fec_tx_snapshot(stream.report()),
-                             stream.interleave_stats())));
-                    if let Some((server_side,fec,mix))=slow {
+                            (e.server_side,original_fec_tx_snapshot(stream.report()))));
+                    if let Some((server_side,fec))=slow {
                         // Logging only after the owner mutex has been dropped.
-                        eprintln!("V4_PUBLIC_FEC2_EGRESS_DIAG role={} side=tx ns={} tun_read={} source_queued={} m4_copied={} m4_errors={} m4_uncertain={} backpressure={} route_refresh={} fec_first={} fec_parity_planned={} fec_parity_sent={} fec_pair_quanta={} fec_alternating_offered={} fec_single_quanta={} fec_max_same_group_run={} fec_max_repair_ready_us={}",
+                        eprintln!("V4_PUBLIC_FEC2_EGRESS_DIAG role={} side=tx ns={} tun_read={} source_queued={} m4_copied={} m4_errors={} m4_uncertain={} backpressure={} route_refresh={} fec_first={} fec_parity_planned={} fec_parity_sent={}",
                             if server_side{"server"}else{"client"},
                             loop_now().0,
                             stats.fec_m1_ingress[0].load(Ordering::Relaxed),
@@ -5086,9 +5085,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             stats.tx_uncertain.load(Ordering::Relaxed),
                             stats.tx_backpressure.load(Ordering::Relaxed),
                             stats.route_refresh.load(Ordering::Relaxed),
-                            fec[0],fec[8],fec[9],
-                            mix.paired_quanta,mix.alternating_rows,mix.single_quanta,
-                            mix.max_consecutive_same_group,mix.max_ready_age_ns/1000);
+                            fec[0],fec[8],fec[9]);
                     }
                 }
                 if split_ingress {
