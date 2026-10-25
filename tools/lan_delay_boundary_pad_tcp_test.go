@@ -37,15 +37,15 @@ func TestRandomHoldAndSequence(t *testing.T){
 }
 func TestPaddingOnlyLifecycleAndMTU(t *testing.T){
  coder,e:=newCoder();if e!=nil{t.Fatal(e)}
- for _,n:=range []int{40,52,360,1000,1345,1429}{
+ for _,n:=range []int{40,52,360,1000,1345,1389}{
   for _,boundary:=range []bool{false,true}{
    s:=boundaryTestSpec(boundary,false,n,0x11,6)
    for trial:=0;trial<8;trial++{
     pad:=choosePadding(s)
     if !boundary&&pad!=0{t.Fatal("steady/unknown payload padded")}
-    if boundary&&n<1429&&pad<=0{t.Fatal("lifecycle missed padding")}
+    if boundary&&n<1389&&pad<=0{t.Fatal("lifecycle missed padding")}
     if pad>256{t.Fatal("random padding exceeded resource budget")}
-    if n==1429&&pad!=0{t.Fatal("must not fragment oversize outer packet")}
+    if n==1389&&pad!=0{t.Fatal("must not fragment oversize outer packet")}
     w,fill:=coder.seal(s.Inner,0,uint64(n*100+trial),pad)
     if len(w)+underlayOverhead>pathMTU{t.Fatal("MTU violation")}
     got,pn,padLen,e:=coder.open(w,0)
