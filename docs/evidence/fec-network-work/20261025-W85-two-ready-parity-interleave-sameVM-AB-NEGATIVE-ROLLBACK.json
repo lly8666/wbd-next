@@ -239,5 +239,26 @@
     "interpretation": "B C2S +0.0651 percentage points worse, S2C -0.0046 pp inconclusive, A/B IID/GE random traces differ, B host PSI spike confounds. Only ~1.1-1.2% of parity rows interleaved, insufficient opportunity without waiting ready groups; no demonstrable improvement. Both legs strict >1% failures retained."
   },
   "decision": "NEGATIVE; ROLLBACK product candidate, retain documentation/artifact and original W80/W83 1pct failures. No BA repeat or further load: tiny interleave opportunity, no directional improvement, candidate conflicts with user no-wait/no-complexity benefit criterion. No change to Auto, Game, M0 Windows or outer repair.",
-  "caution": "Dual-ready offered alternation is not independently verified per-row receiver arrival/copy trace; original M4 sent=planned positive and no fail counters. W85 diagnostic only. No Windows/Game/physical/outer ON/full product qualification."
+  "caution": "Dual-ready offered alternation is not independently verified per-row receiver arrival/copy trace; original M4 sent=planned positive and no fail counters. W85 diagnostic only. No Windows/Game/physical/outer ON/full product qualification.",
+  "rollback_validation": {
+    "intermediate_one_file_only": {
+      "source": "78095cc2e8680f507c087ea3df5944d0afa92a5d",
+      "product_build_action": 40203200964,
+      "maximum_row_contract_action": 40203200998,
+      "results": "FAIL_EXPECTED_UNSUPPORTED_PARTIAL_ROLLBACK; Rust FixedStream source reverted before original embedded-Go diagnostics which still referenced interleave_stats; historical Actions retained"
+    },
+    "final_both_files": {
+      "source": "4322a811fd63e096458f202767faa2f097a587c0",
+      "product_build_action": 40203220219,
+      "product_build_action_conclusion": "SUCCESS_ALL_TEST_STEPS",
+      "product_build_artifact_id": 12602931174,
+      "product_build_zip_sha256": "0ae0939bdd4c02932a6452260fa65f4e1851bf37bd79d7485c28e1895022f125",
+      "maximum_row_contract_action": 40203220240,
+      "maximum_row_contract_conclusion": "SUCCESS",
+      "product_blobs_exactly_preW85": true,
+      "previous_fixed_stream_blob_sha": "a57f5f4fb6ffa2de753b622bd646fe873e597524",
+      "previous_embedded_go_blob_sha": "3cba62daf5e09c509731f504343ec8b2b4c84362"
+    },
+    "validation_scope": "Reverted source is byte-identical to pre-W85 components, native Linux ARM64 build and correctness tests passed; NOT a second long-GE product performance qualification on revert."
+  }
 }
