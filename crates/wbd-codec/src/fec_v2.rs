@@ -238,7 +238,9 @@ pub struct PreparedBlock {
     symbols: Vec<Vec<u8>>,
     symbol_len: usize,
     #[cfg(feature="native-isal")]
-    native_tables: BTreeMap<(usize,usize),&'static wbd_isal_safe::Tables>,
+    // Immutable shared native coefficient tables indexed by bounded
+    // (first_row,row_count) references. No per-block BTreeMap nodes.
+    native_tables: [Option<&'static wbd_isal_safe::Tables>;MAX_R*MAX_BATCH_ROWS],
 }
 impl PreparedBlock {
     pub fn from_frames(frames:&[&[u8]],record_payload_budget:usize)->Result<Self,Error> {
@@ -251,7 +253,7 @@ impl PreparedBlock {
         }).collect();
         Ok(Self{symbols,symbol_len:len,
             #[cfg(feature="native-isal")]
-            native_tables:BTreeMap::new(),
+            native_tables:[None;MAX_R*MAX_BATCH_ROWS],
         })
     }
     pub fn k(&self)->usize{self.symbols.len()}
@@ -260,7 +262,7 @@ impl PreparedBlock {
     /// independent of authenticated source symbols and bounded globally.
     pub fn cached_native_tables(&self)->usize {
         #[cfg(feature="native-isal")]
-        {self.native_tables.len()}
+        {self.native_tables.iter().filter(|v|v.is_some()).count()}
         #[cfg(not(feature="native-isal"))]
         {0}
     }
@@ -445,11 +447,10 @@ impl Rs16 {
         if native_ok {
             #[cfg(feature="native-isal")]
             {
-                let cache_key=(first_row,outputs.len());
-                if !prepared.native_tables.contains_key(&cache_key) {
-                    // k and row limits are verified above, before indexing.
-                    // Keep only immutable GF coefficients globally; never
-                    // share plaintext symbols, row buffers or wire records.
+                let shape=first_row*MAX_BATCH_ROWS+outputs.len()-1;
+                if prepared.native_tables[shape].is_none() {
+                    // Source bytes and FEC epoch never enter coefficient
+                    // identity; the shared slot includes the verified k.
                     let slot=((k-1)*MAX_R+first_row)*MAX_BATCH_ROWS+outputs.len()-1;
                     let table=SHARED_ENCODE_TABLES[slot].get_or_init(|| {
                         let mut coeff=Vec::with_capacity(k*outputs.len());
@@ -461,14 +462,24 @@ impl Rs16 {
                         }
                         wbd_isal_safe::Tables::new(k,outputs.len(),&coeff).ok()
                     }).as_ref().ok_or(Error::NativeFailure)?;
-                    prepared.native_tables.insert(cache_key,table);
+                    prepared.native_tables[shape]=Some(table);
                 }
-                let tables=*prepared.native_tables.get(&cache_key)
-                    .ok_or(Error::NativeFailure)?;
-                let src=prepared.symbols.iter().map(Vec::as_slice).collect::<Vec<_>>();
-                let mut dest=outputs.iter_mut().map(|o|&mut o[REPAIR_HEADER..])
-                    .collect::<Vec<_>>();
-                tables.encode(&src,&mut dest).map_err(|_|Error::NativeFailure)?;
+                let tables=prepared.native_tables[shape].ok_or(Error::NativeFailure)?;
+                // Native k<=16, rows<=4: pass stack-backed borrowed views,
+                // eliminating two short-lived per-quantum Vec allocations.
+                let mut src:[&[u8];MAX_K]=[&[];MAX_K];
+                for (dst,sym) in src.iter_mut().zip(prepared.symbols.iter()) {
+                    *dst=sym.as_slice();
+                }
+                let mut e0=[];let mut e1=[];let mut e2=[];let mut e3=[];
+                let mut dest:[&mut [u8];MAX_BATCH_ROWS]=[
+                    &mut e0,&mut e1,&mut e2,&mut e3
+                ];
+                for (dst,out) in dest.iter_mut().zip(outputs.iter_mut()) {
+                    *dst=&mut out[REPAIR_HEADER..];
+                }
+                tables.encode(&src[..k],&mut dest[..outputs.len()])
+                    .map_err(|_|Error::NativeFailure)?;
                 used=BackendUsed::NativeIsaL;
             }
         }

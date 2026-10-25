@@ -412,9 +412,9 @@ fn r1_f2_prepared_native_tables_shared_across_blocks_full_maximum_exact() {
                 assert_eq!(parsed.body,oracle_row(source,start+i));
             }
         }
-        let key=(start,4);
-        let lhs=*first.native_tables.get(&key).unwrap();
-        let rhs=*second.native_tables.get(&key).unwrap();
+        let slot=start*MAX_BATCH_ROWS+3;
+        let lhs=first.native_tables[slot].unwrap();
+        let rhs=second.native_tables[slot].unwrap();
         assert!(std::ptr::eq(lhs,rhs),"same shape must reuse ISA-L matrix");
     }
     assert_eq!(first.cached_native_tables(),5);
