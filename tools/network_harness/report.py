@@ -287,6 +287,16 @@ def summarize(config, client, server, telemetry, host):
         failures.append("public Rust Stop not drained on both sides")
     if not telemetry["effective_config_verified"]:
         failures.append("requested mode/profile/recovery policy has no matching product readback")
+    if a.get("require_native_m2_positive_confirmation",False):
+        genuine=telemetry.get("original_m2_authenticated_coverage")
+        if (not isinstance(genuine,dict) or set(genuine)!={"client","server"} or
+            any(not isinstance(genuine[role],dict) or
+                genuine[role].get("positive_mean_known") is not True or
+                not isinstance(genuine[role].get("positive_samples"),int) or
+                genuine[role]["positive_samples"]<1 or
+                not isinstance(genuine[role].get("positive_mean_us"),int)
+                for role in ("client","server"))):
+            failures.append("native FEC M2 real mature positive confirmation age not verified on both roles")
     if a["require_retransmission"] and (telemetry["repair_packets"] is None or telemetry["repair_packets"] <= 0):
         failures.append("requested retransmission observation absent")
     if any(row["target_app_mbps"] > 0 and row["delivered"] == 0 for row in observed):

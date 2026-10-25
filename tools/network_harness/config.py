@@ -226,12 +226,20 @@ def validate(raw):
              "max_active_gap_ms", "require_retransmission", "max_repair_fresh_pct", "min_repair_line_pct",
              "require_zero_source_tun_drops_full_run",
               "require_zero_tun_root_qdisc_drops_full_run", "cross_business_hol",
-             "max_small_udp_loss_pct", "max_small_udp_p99_ms", "loss_gate_phases"], "acceptance")
+             "max_small_udp_loss_pct", "max_small_udp_p99_ms", "loss_gate_phases",
+             "require_native_m2_positive_confirmation"], "acceptance")
     a.setdefault("injection_tolerance_pct", 3)
     a.setdefault("require_retransmission", False)
     a.setdefault("require_zero_source_tun_drops_full_run", False)
     a.setdefault("require_zero_tun_root_qdisc_drops_full_run",False)
     a.setdefault("cross_business_hol",False)
+    a.setdefault("require_native_m2_positive_confirmation",False)
+    if type(a["require_native_m2_positive_confirmation"]) is not bool:
+        raise ValueError("native positive M2 readback gate must be boolean")
+    if a["require_native_m2_positive_confirmation"] and (
+            r.get("owner")!="fec-network-work" or
+            p["mode"] not in ("fec-fixed","fec-auto")):
+        raise ValueError("native positive M2 receipt gate only for actual owned Fixed/Auto")
     if "loss_gate_phases" in a:
         gate=a["loss_gate_phases"]
         names={p["name"] for p in r["phases"]}

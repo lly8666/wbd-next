@@ -839,6 +839,25 @@ class FecSizeClassContracts(unittest.TestCase):
         self.assertEqual(sum(w.small_udp_tx_bins),1)
 
 
+class FecNativePositiveM2GateContracts(unittest.TestCase):
+
+    def test_native_m2_positive_gate_owner_and_modes(self):
+        r=copy.deepcopy(request())
+        r["owner"]="fec-network-work"
+        r["product"]["mode"]="fec-fixed"
+        r["product"]["fec_profile"]=3
+        r["acceptance"]["require_native_m2_positive_confirmation"]=True
+        validate(r)
+        for mode in ("normal","game2","game4"):
+            q=copy.deepcopy(r);q["product"]["mode"]=mode
+            if mode.startswith("game"):q["product"]["repair_enabled"]=True
+            with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["owner"]="network-matrix"
+        with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["acceptance"]["require_native_m2_positive_confirmation"]=1
+        with self.assertRaises(ValueError):validate(q)
+
+
 class FecBurstLossGateContracts(unittest.TestCase):
     def test_burst_step_loss_scope_only_fec_owner(self):
         r=copy.deepcopy(request())
