@@ -18,16 +18,16 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "e446fa1cf09ebfb259da3d764abf8f8ed8d4211f",
-    "run_id": 40167423967,
+    "source": "7ad0ba91b656ff8e9ee965d0c093a18e048971fb",
+    "run_id": 40185113624,
     "attempt": 1,
-    "artifact_id": 12588789024,
-    "sha256": "3bac82b33642335ed3691c763d66c3c556c575f38f92fd635073fc9673ea1cb4",
+    "artifact_id": 12596370712,
+    "sha256": "ab1407ccc5dd85c3a66c885cd410dbdd27fa7059461f18647d8ca6b41ce7384e",
     "platform": "aarch64",
     "policy": "outer-opportunistic-v3",
     "build_action": "SUCCESS",
-    "native_fixed_auto_kernel_functional": "PASS_SCOPED",
-    "runtime_fec_only": "W51_FIXED3_NATIVE_AUTHENTIC_M2_POSITIVE_CONFIRMATION_REAL_PLUS_W41_W42_100MIXED_SCOPED_FIXED_AUTO_W45_PRIOR_SOURCE; W40_200MIXED_NOT_RUN"
+    "native_fixed_auto_kernel_functional": "PASS_SCOPED_FROZEN_W77_W79_W83; W78_NATIVE_FENCE_TEST_ONLY",
+    "runtime_fec_only": "W77_REAL_REORDER_DUPLICATE_ODD_LENGTH_FIXED_MEDIUM2; W79_MEDIUM_LONG_GE_DIAGNOSTIC_ONLY; W80_MAXIMUM_LONG_GE_STRICT_1PCT_FAIL; W81_AUTO_AUTHENTIC_RISE_DOWN_SCOPED; W82_MAXIMUM_SHORT_GE_1PCT_PASS; W83_SAME_VM_LONG_FAIL_SHORT_PASS; HISTORICAL_W51_W56_W60_ON_DIFFERENT_SOURCES"
   },
   "open_requests": [
     {
