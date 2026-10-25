@@ -33,7 +33,7 @@ const innerPublicSNI="private.inner-wbd.example"
 const mainPort uint16=50101
 const safeBoundary uint32=18000
 const pathMTU=1500
-const underlayOverhead=40
+const underlayOverhead=80 // conservative IPv4=20 + TCP up to 60B including options
 const maxWireRecord=pathMTU-underlayOverhead
 const labAeadOverhead=31
 const maxPadPerBoundary=256 // resource cap even if the full MTU has more space
@@ -88,7 +88,7 @@ type Manifest struct{
 
 func fail(err error){if err!=nil{panic(err)}}
 func packet(port uint16,seq uint32,proto byte,flags byte,data []byte)[]byte{
- n:=40+len(data);if n>1429{panic("excessive owned inner payload")}
+ n:=40+len(data);if n>1389{panic("excessive owned inner payload")}
  p:=make([]byte,n);p[0]=0x45;p[2]=byte(n>>8);p[3]=byte(n)
  p[6]=0x40;p[8]=64;p[9]=proto
  copy(p[12:20],[]byte{10,11,12,13,10,21,22,23})
