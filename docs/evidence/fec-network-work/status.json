@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W50_BURST_STEP10_30_10_MIXED100_MAXIMUM_PASS_MEDIUM_AND_BALANCED_TCP_POST_RECOVERY_INCONCLUSIVE_CAPACITY_STOP",
+  "phase": "W51_FEC_MAINLINE_ORIGINAL_AUTHENTIC_M2_POSITIVE_AGE_ARM64_REAL_PASS_NO_MAIN_RESTORE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -18,16 +18,16 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "23da99f0de04afe17756542f5176f2759e318747",
-    "run_id": 40153525640,
+    "source": "e446fa1cf09ebfb259da3d764abf8f8ed8d4211f",
+    "run_id": 40167423967,
     "attempt": 1,
-    "artifact_id": 12583149711,
-    "sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
+    "artifact_id": 12588789024,
+    "sha256": "3bac82b33642335ed3691c763d66c3c556c575f38f92fd635073fc9673ea1cb4",
     "platform": "aarch64",
     "policy": "outer-opportunistic-v3",
     "build_action": "SUCCESS",
     "native_fixed_auto_kernel_functional": "PASS_SCOPED",
-    "runtime_fec_only": "W41_W42_MIXED100_BOTH_AB_BA_SCOPED_PASS_CPU_OBSERVED_MINUS21PCT_W38_MIXED200_FAIL"
+    "runtime_fec_only": "W51_FIXED3_NATIVE_AUTHENTIC_M2_POSITIVE_CONFIRMATION_REAL_PLUS_W41_W42_100MIXED_SCOPED_FIXED_AUTO_W45_PRIOR_SOURCE; W40_200MIXED_NOT_RUN"
   },
   "open_requests": [
     {
@@ -540,9 +540,20 @@
       "artifact_sha256": "9dc6d27333f56e8eb17fd2020006d0e960a05c88ad5df47113627894850b8b0e",
       "result": "INCONCLUSIVE_TCP_BACKPRESSURED_HIGH_AND_RECOVERY",
       "profile": 3
+    },
+    {
+      "id": "W51",
+      "path": "tests/network/fec-work/W51-real-original-m2-confirmation-age-fixed3-8Mbps-arm64.json",
+      "run_id": 40167733514,
+      "attempt": 1,
+      "artifact_id": 12588149669,
+      "artifact_sha256": "bec3f9384f16a52356a443aac2e4d30f60edd250bce0321a332596991dd25485",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "product_source": "e446fa1cf09ebfb259da3d764abf8f8ed8d4211f"
     }
   ],
   "open_issues": [
+    "W51 exact new FEC mainline source e446fa1 from user-approved 3af257cd direct branch ONLY: real ARM64 product build Action40167423967 SUCCESS, real W51 original Fixed3 8Mbps each 2%IID/75ms Action40167733514 PASS. Reuses existing Rust native 8s matured unambiguous M4 first-send positive authenticated reverse M2 [12]lag sum ns/[13]samples; public Go product M2_PROOF now reports client53875 sample mean152966us, server53938 mean152937us, true reverse reports 11346/11400. Old OFF 600000us outer shadow RTT NOT claimed as actual. Both raw M2 UNKNOWN161/175 and first/coverage censored flags1 preserved, no globally clean quality claim. UDP/TCP target full, 0 loss small p99 89.1/89.4ms, native parity planned==sent, expiry0, source TUN/root0, original OUTER DATA retrans0, STOP. W48-50 temporary step tests retained historical but CLOSED. Never merge/import main or network matrix. Next FEC mainline continue Auto authenticated positive M2 readback regression on same new source and lifecycle/MTU bounded functional checks, NO throughput ladder, capacity_stop true merge_ready false.",
     "W48-50 genuine ARM64 W40 source23da99 dual100Mbps real mixed96%UDP35% small-by-count 2 TCP sockets4%, 64B20Hz sparse 10%IID30s->30%IID60s->10%IID30s one-way300ms netem600/fq600 outerDATA0: MAXIMUM6 W48 strict all 3 phases PASS residual high30 C2S0.0388/S2C0.0380%, small0.0784/0.0696%, trueTCP4Mbps throughout, native Parity planned=sent 3066375/3060133 expiry0, source TUN/root0; CPU per30 pre51.49 high47.82 post51.47 and unitCPU/GiB post/pre1.003, netem queue no upward trend. MEDIUM2 W49 10%-IID UDP <=0.23% small low phases and CPU recovery1.001, but TCP rates baseline3.73/3.68 high0.45/0.43 recovery2.74/2.87 (<4) with backpressure, Action failure because qualified INCONCLUSIVE. BALANCED3 W50 pre TCP4Mbps and low UDP small <=0.043%, but high30 TCP0.76/0.84 and after10 still2.96/2.89; CPU perGiB recovery1.004, FEC parity full+no owner capacity, source TUN/drop0, netem queue no growth, still TCP_BACKPRESSURED high and recovery, Action INCONCLUSIVE. Mid-low grade not qualified for post-burst mixed TCP restore within30sec. Tests are IID drop-probability steps not correlated/Gilbert-Elliott blackout; don't compare raw CPU between independent host Actions. No further infinite tier/rate ladder; capacity_stop true and merge_ready false.",
     "Finite W43-W47 low-risk regression completed W40 source23da99: Normal/FEC OFF 2Mbps W43 PASS and old/new W46 sameVM A61? No, CPU actual old7.46/new2.45s combined -67.2%; Fixed3 8Mbps 2%IID W44 PASS and W47 BA CPU old20.54/new7.93s -61.4%, BOTH retain zero drop and small UDP accept, although Fixed3 S2C small p99 85.0->89.1ms (+4.1ms) single observation. Auto W45 8Mbps 2->20->1% C2S, 0->1->0% S2C ACTUAL original QUALITY VALID and STAGE: C2S Strong5->High4->Maximum6->Strong5 requested=applied4; S2C Strong5->High4 revision2, genuine authenticated M2, C2S high 47/47066 missing (0.09986%), both outer DATA0/TUNdrop0. Saved Auto quality raw log confirms stage while harness summary auto_runtime_curve says NOT_OBSERVED_FINAL_READBACK_ONLY; never claim telemetry auto phase curve auto-verified. W40 still NOT tested 200Mbps mixed. Stop perf micro-optimizing; capacity_stop=true; merge_ready=false.",
     "W41 sameVM A->B and W42 reverse B->A identical actual 100Mbps each mixed UDP96% 35%<=256B-count two TCP4% + sparse64B20Hz 30%IID/300ms both product-native PASS 1% total/small gates TCP true 4Mbps each, source TUN/root drops0 and parity 1.02m planned=sent expiry0, outer DATA retrans0. New W40 Linux ppoll ns and source-first M4 cap31 default/cap23 if <=1ms FEC due or jobs pending, <=8 Parity+1 real M2, no flows reordered. W41 original process CPU-s A61.44/B48.42 -21.19%; W42 B47.97/A61.20 -21.62%, reversed-order replication strengthens signal but VM host PSI differs concurrently (A~37.9/36.7, B~29.4/29.1), no universal causal 21% pledge. Small UDP p99 B307.7/307.8 vs A308.7/308.7 AB; BA B307.7/307.7 vs A308.2/308.3. W38 user-requested true mixed200 BOTH FAIL and source drops/TCP backpressure; DO NOT claim high-pressure rescue, capacity_stop true, merge_ready false. Need instrument exact CPU stage costs or benchmark 200 only with owned headroom before further tuning.",
@@ -570,7 +581,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W48-50 final requested burst loss response proved Maximum6 native 100Mbps mixed 10%(30)->30%(60)->10%(30) all-UDP+small p99/loss/TCP4Mbps and CPU/backlog post recovery PASS. Medium2 and Balanced3 adequately cover actual10% UDP and CPU no accumulation but fail real inner TCP maintenance and recovery after 30% surge, despite zero native Parity expiry, zero source TUN/fq drops, no outer DATA retrans. Do NOT weaken TCP injector/backpressure gates or call them PASS; for product mixed heavy loss bursts recommend Maximum until Auto profile quality and original inner TCP recovery are specifically evaluated on adequate host; no new FEC math/threads/priority queues without concrete defect. These are IID step changes only, temporal correlation not tested. Keep capacity_stop true, merge_ready false, main/upstream untouched.",
+  "next_action": "Resume independent FEC mainline ONLY from user-approved 3af257cd and new validated e446fa1 native product source; all W48/W49/W50 ad-hoc steps CLOSED. W51 original authenticated real M2 firstsend positive confirmation lag public readback fully actual Fixed3 ARM64 PASS. Next: use same frozen e446fa1 product for a single representative low-load 8Mbps real Auto asymmetric rising/return test with both-end M2 positive-lag evidence and original source code; then pursue finite native FEC MTU-1/equal/+1 and Stop/rekey lifecycle only if not already current precise SOURCE qualified. No more capacity/perf ladder or speculative thread/class scheduling. Absolutely no main recovery import or merge, no other branch, merge_ready remains false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -4870,5 +4881,94 @@
     ],
     "recovery_qualified": false,
     "scope": "Balanced3 full-group r8/k16 passes10%-IID UDP+small+TCP target at PRE phase, all-out30% residual high recorded not disqualified, but inner TCP drops to0.76/0.84Mbps and only2.96/2.89 in recover10 despite zero source/kernel pressure; result INCONCLUSIVE due original sender TCP BACKPRESSURED. No CPU/outer netem backlog growth or parity expiration; cannot qualify mixed recovery."
+  },
+  "w51": {
+    "owner": "fec-network-work",
+    "user_instruction": "User declares the latest FEC branch at 3af257cd1a353a47d424094a689fa5179b198a07 is the functional mainline. Close temporary W48-W50, continue only FEC branch follow-up tasks. Do NOT merge, re-import, cherry-pick, or restore code from main or experiment/network-matrix-tuning.",
+    "original_fec_base": "3af257cd1a353a47d424094a689fa5179b198a07",
+    "source": "e446fa1cf09ebfb259da3d764abf8f8ed8d4211f",
+    "branch": "experiment/fec-network-tuning",
+    "product_build_action": 40167423967,
+    "product_artifact_id": 12588789024,
+    "product_zip_sha256": "3bac82b33642335ed3691c763d66c3c556c575f38f92fd635073fc9673ea1cb4",
+    "harness_contract_actions": [
+      40167596889,
+      40167677632
+    ],
+    "action": 40167733514,
+    "result": "PASS_SCOPED_OBSERVATION",
+    "artifact_id": 12588149669,
+    "result_zip_sha256": "bec3f9384f16a52356a443aac2e4d30f60edd250bce0321a332596991dd25485",
+    "test_case": "FEC-W51-OriginalM2NativePositiveConfirmationFixed3-8Mbps",
+    "request": "tests/network/fec-work/W51-real-original-m2-confirmation-age-fixed3-8Mbps-arm64.json",
+    "scope": "actual original-Go TLS Rust FEC fixed3 2%IID/75ms oneway each, app8Mbps/dir 96% UDP two real TCP flow4%, 35% small by count, sparse64B20Hz, outer DATA repair truly OFF, genuine original M4 first-copy and M3 authenticated M2, no new feedback packet",
+    "real_positive_m2": {
+      "client": {
+        "samples": 53875,
+        "positive_lag_ns": 8241048743812,
+        "mean_us": 152966,
+        "reverse_reports": 11346,
+        "uncovered_2s": 161,
+        "uncovered_8s": 161,
+        "first_censored": true,
+        "cover_censored": true
+      },
+      "server": {
+        "samples": 53938,
+        "positive_lag_ns": 8249165558731,
+        "mean_us": 152937,
+        "reverse_reports": 11400,
+        "uncovered_2s": 175,
+        "uncovered_8s": 175,
+        "first_censored": true,
+        "cover_censored": true
+      }
+    },
+    "traffic": {
+      "client_to_server": {
+        "udp_mbps": 7.68,
+        "tcp_mbps": 0.32,
+        "udp_loss_pct": 0,
+        "small_udp_loss_pct": 0,
+        "small_udp_p99_ms": 89.1
+      },
+      "server_to_client": {
+        "udp_mbps": 7.68,
+        "tcp_mbps": 0.32,
+        "udp_loss_pct": 0,
+        "small_udp_loss_pct": 0,
+        "small_udp_p99_ms": 89.4
+      }
+    },
+    "parity": {
+      "client": {
+        "planned": 34699,
+        "sent": 34699,
+        "expired": 0
+      },
+      "server": {
+        "planned": 34710,
+        "sent": 34710,
+        "expired": 0
+      }
+    },
+    "actual_product_readback": "both fixed3, requested=applied=1, pending=false, real original Stop success, TUN source dropped0, outer DATA retransmitted0",
+    "interpretation": "mean first copied DATA to genuine authenticated positive receipt including feedback cadence; not one-way, not p99, not outer shadow RTT. Residual UNKNOWN and censored flags preserved, no claim clean global M2 quality.",
+    "main_unmodified": true,
+    "network_matrix_unmodified": true,
+    "capacity_stop": true,
+    "merge_ready": false
+  },
+  "fec_mainline_resumption": {
+    "base": "3af257cd1a353a47d424094a689fa5179b198a07",
+    "code_product_source": "e446fa1cf09ebfb259da3d764abf8f8ed8d4211f",
+    "mainline_branch": "experiment/fec-network-tuning",
+    "temporary_side_experiments_closed": [
+      "W48",
+      "W49",
+      "W50"
+    ],
+    "frozen_product_artifact_id": 12588789024,
+    "no_main_or_network_restore": true
   }
 }
