@@ -4,6 +4,7 @@ on:
     branches: [experiment/lan-fastgate-mixed-wire]
     paths: [".github/workflows/lan-fastgate-mixed-pcap-x64.yml"]
 permissions: {contents: read}
+# Retest native ephemeral TLS1.3 client context property initialization order.
 # Rerun: fixed Go raw test string encoding; keep lab separate from production.
 concurrency:
   group: lan-fastgate-mixed-pcap-x64
