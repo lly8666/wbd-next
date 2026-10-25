@@ -5821,33 +5821,53 @@ mod tests{
         assert!(!first.has_clean_fixed_m2());
         assert!(first.has_verified_fixed_m2_witness(MonoNs(6_200_000_100)));
 
-        // Real previous accepted positives do not satisfy a new revision
-        // after sender-host M2 capacity was exhausted. A stale cumulative
-        // count is not eternal HOST_CAPACITY either: require bounded
-        // quiet time PLUS post-capacity authentic positives and reverse M2.
-        first.capacity_last_total=1;
-        first.capacity_last_change=Some(MonoNs(6_300_000_000));
-        first.capacity_positive_at_change=first.positive_2s;
-        first.capacity_reverse_at_change=first.authenticated_reverse_reports;
-        assert!(!first.has_verified_fixed_m2_witness(MonoNs(22_500_000_000)));
-        first.on_real_kernel_turn(&[(RecordPn(10),1200)],copied,MonoNs(6_400_000_000));
-        let mut bits=[0u8;32];bits[1]=4; // authenticated positive DATA PN10
-        first.on_original_authenticated_reverse(AuthenticatedNormalKind1{
-            reverse_record_pn:4,receipt:wbd_codec::Receipt{
-                largest_data_pn:10,ack_delay_us:0,report_seq:2,
-                pages:vec![wbd_codec::ReceiptPage{base_pn:0,bitmap:bits}],
-            },
-        },MonoNs(6_500_000_000)).unwrap();
-        first.poll(MonoNs(8_500_000_200));
-        assert!(!first.has_verified_fixed_m2_witness(MonoNs(9_000_000_000)));
-        assert!(first.has_verified_fixed_m2_witness(MonoNs(22_500_000_000)));
-        // Counter rollback, even if scheduler recovers, is a fail-closed
-        // mutation; saturated lifetime counter can never be called healthy.
+        // Saturation and rollback are NEVER silently healthy.
         first.capacity_ever_reset=true;
         assert!(!first.has_verified_fixed_m2_witness(MonoNs(40_000_000_000)));
         first.capacity_ever_reset=false;
         first.capacity_last_total=u64::MAX;
         assert!(!first.has_verified_fixed_m2_witness(MonoNs(40_000_000_000)));
+    }
+    #[cfg(all(feature="fec2_product_record",target_os="linux",
+        any(target_arch="x86_64",target_arch="aarch64")))]
+    #[test]
+    fn m0_original_w71_native_capacity_recovers_after_real_positive_window(){
+        use wbd_types::{LaneKey,TunnelKey,RecordPn};
+        use crate::v4_owner_crypto::AuthenticatedNormalKind1;
+        use wbd_recovery::{MatureFirstSend,MaturityConfig};
+        let lane=LaneKey{tunnel:TunnelKey{slot:105,generation:4},slot:1,generation:4};
+        let mut m=NormalFirstSendM2::new(lane,[6;16],false,MonoNs(0)).unwrap();
+        // Native M2 ledger REAL capacity error with a bounded 1-PN test
+        // fixture; first source is confirmed M4, second cannot be tracked.
+        m.state=MatureFirstSend::new(m.route,MaturityConfig{max_live_data:1},MonoNs(0)).unwrap();
+        let copied=TxTurnCompletion{copied:1,..Default::default()};
+        m.on_real_kernel_turn(&[(RecordPn(7),1000)],copied,MonoNs(100));
+        m.on_real_kernel_turn(&[(RecordPn(8),1000)],copied,MonoNs(200));
+        m.poll(MonoNs(2_000_000_300));
+        assert_eq!(m.capacity_last_total,1);
+        assert!(!m.has_verified_fixed_m2_witness(MonoNs(17_000_000_000)));
+        // Mature the old resident source at its real long deadline so a
+        // NEW same-generation first source can safely enter M2 capacity.
+        m.poll(MonoNs(8_000_000_300));
+        m.on_real_kernel_turn(&[(RecordPn(9),1000)],copied,MonoNs(8_100_000_000));
+        let mut bitmap=[0u8;32];bitmap[1]=2;
+        m.on_original_authenticated_reverse(AuthenticatedNormalKind1{
+            reverse_record_pn:4,receipt:wbd_codec::Receipt{
+                largest_data_pn:9,ack_delay_us:0,report_seq:1,
+                pages:vec![wbd_codec::ReceiptPage{base_pn:0,bitmap}],
+            },
+        },MonoNs(8_200_000_000)).unwrap();
+        m.poll(MonoNs(10_100_000_200));
+        assert_eq!(m.capacity_last_total,1); // never erase original loss
+        assert!(m.positive_2s>m.capacity_positive_at_change);
+        assert!(m.authenticated_reverse_reports>m.capacity_reverse_at_change);
+        assert!(!m.has_verified_fixed_m2_witness(MonoNs(17_900_000_000)));
+        assert!(m.has_verified_fixed_m2_witness(MonoNs(18_000_000_300)));
+        m.capacity_ever_reset=true;
+        assert!(!m.has_verified_fixed_m2_witness(MonoNs(60_000_000_000)));
+        m.capacity_ever_reset=false;
+        m.capacity_last_total=u64::MAX;
+        assert!(!m.has_verified_fixed_m2_witness(MonoNs(60_000_000_000)));
     }
     #[cfg(all(feature="fec2_product_record",target_os="linux",
         any(target_arch="x86_64",target_arch="aarch64")))]
