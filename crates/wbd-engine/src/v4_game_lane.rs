@@ -325,9 +325,9 @@ mod tests{
             // Full small group was CLOSED immediately at k16. No timer wait.
             assert_eq!(tx.poll_game_fec(MonoNs(120)).unwrap(),4);
             tx.drain(MonoNs(121),|lane,_,_,wire|{
-                if lane.slot==1{
-                    delivered.extend(rx.receive_at(lane,wire.to_vec(),MonoNs(121)).unwrap());
-                }
+                // Parity is intentionally on exactly ONE rotating Game
+                // lane; source remains duplicated over all healthy lanes.
+                delivered.extend(rx.receive_at(lane,wire.to_vec(),MonoNs(121)).unwrap());
                 true
             });
             assert_eq!(delivered.len(),16);
@@ -340,9 +340,7 @@ mod tests{
                 let now=MonoNs(122+t);
                 let _=tx.poll_game_fec(now).unwrap();
                 tx.drain(now,|lane,_,_,wire|{
-                    if lane.slot==1{
-                        delivered.extend(rx.receive_at(lane,wire.to_vec(),now).unwrap());
-                    }
+                    delivered.extend(rx.receive_at(lane,wire.to_vec(),now).unwrap());
                     true
                 });
             }
