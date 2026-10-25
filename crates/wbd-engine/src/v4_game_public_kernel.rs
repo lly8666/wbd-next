@@ -8,7 +8,8 @@ use std::os::fd::OwnedFd;
 use std::sync::{Arc,Mutex,atomic::{AtomicBool,AtomicU64,Ordering}};
 use std::thread::{self,JoinHandle};
 use std::time::{Instant,Duration};
-use crate::v4_game_lane::GameAdapter;
+use crate::v4_game_lane::{GameAdapter,Error as GameAdapterError};
+use crate::runtime::game_shared::GameError;
 use crate::v4_protected_handoff::GoFlow;
 use crate::memory::Arena;
 use wbd_types::{MonoNs,RecordPn,SeqOffset,LaneKey,TunnelKey};
@@ -21,12 +22,18 @@ use wbd_platform::r1::StopResult;
 struct TxLane{
     key:LaneKey,flow:GoFlow,seq:u64,raw:Arc<ScopedRawIpv4Tx>
 }
+#[derive(Default)]
+struct RxRejectReasons {
+    aead:AtomicU64,invalid:AtomicU64,duplicate:AtomicU64,
+    stale:AtomicU64,capacity:AtomicU64,scope:AtomicU64,
+    stopped:AtomicU64,game:AtomicU64,
+}
 pub(crate) struct GameKernelOwner{
     stop:Arc<AtomicBool>,threads:Vec<JoinHandle<()>>,
     tun:Arc<ScopedTunSink>,
     tx:Vec<Arc<ScopedRawIpv4Tx>>,rx:Vec<Arc<ScopedRawIpv4Rx>>,
     copied:Arc<AtomicU64>,delivered:Arc<AtomicU64>,rejected:Arc<AtomicU64>,
-    raw_received:Arc<AtomicU64>,authenticated_rejected:Arc<AtomicU64>,
+    raw_received:Arc<AtomicU64>,rx_reject:Arc<RxRejectReasons>,
     rx_driver_timeout:Arc<AtomicU64>,rx_driver_other:Arc<AtomicU64>,
     rx_mutex_acquired:Arc<AtomicU64>,rx_authenticated_some:Arc<AtomicU64>,
     rx_dedup_none:Arc<AtomicU64>,rx_tun_failed:Arc<AtomicU64>,
@@ -56,7 +63,7 @@ impl GameKernelOwner{
         let delivered=Arc::new(AtomicU64::new(0));
         let rejected=Arc::new(AtomicU64::new(0));
         let raw_received=Arc::new(AtomicU64::new(0));
-        let authenticated_rejected=Arc::new(AtomicU64::new(0));
+        let rx_reject=Arc::new(RxRejectReasons::default());
         let rx_driver_timeout=Arc::new(AtomicU64::new(0));
         let rx_driver_other=Arc::new(AtomicU64::new(0));
         let rx_mutex_acquired=Arc::new(AtomicU64::new(0));
@@ -177,7 +184,7 @@ impl GameKernelOwner{
             let recv_count=Arc::clone(&delivered);
             let recv_rejected=Arc::clone(&rejected);
             let raw_seen=Arc::clone(&raw_received);
-            let auth_denied=Arc::clone(&authenticated_rejected);
+            let classified=Arc::clone(&rx_reject);
             let rx_err_timeout=Arc::clone(&rx_driver_timeout);
             let rx_err_other=Arc::clone(&rx_driver_other);
             let rx_held=Arc::clone(&rx_mutex_acquired);
@@ -227,8 +234,24 @@ impl GameKernelOwner{
                         Ok(None)=>{
                             rx_none.fetch_add(1,Ordering::Relaxed);
                         }, // exact GameRx cross-lane dedup
-                        Err(_)=>{
-                            auth_denied.fetch_add(1,Ordering::Relaxed);
+                        Err(reason)=>{
+                            // AEAD tag rejection is not a valid authenticated replay.
+                            let counter=match reason{
+                                GameAdapterError::Crypto=>&classified.aead,
+                                GameAdapterError::Invalid=>&classified.invalid,
+                                GameAdapterError::Duplicate=>&classified.duplicate,
+                                GameAdapterError::Stale=>&classified.stale,
+                                GameAdapterError::Capacity=>&classified.capacity,
+                                GameAdapterError::Unauthorized=>&classified.scope,
+                                GameAdapterError::Stopped=>&classified.stopped,
+                                GameAdapterError::Game(GameError::Stale)=>&classified.stale,
+                                GameAdapterError::Game(GameError::Duplicate)=>&classified.duplicate,
+                                GameAdapterError::Game(GameError::Capacity|GameError::ByteBudget)=>
+                                    &classified.capacity,
+                                GameAdapterError::Game(GameError::Stopped)=>&classified.stopped,
+                                GameAdapterError::Game(_)=>&classified.game,
+                            };
+                            counter.fetch_add(1,Ordering::Relaxed);
                             recv_rejected.fetch_add(1,Ordering::Relaxed);
                         }
                     }
@@ -244,7 +267,7 @@ impl GameKernelOwner{
             }
         }
         Ok(Self{stop,threads,tun,tx,rx,copied,delivered,rejected,
-            raw_received,authenticated_rejected,
+            raw_received,rx_reject,
             rx_driver_timeout,rx_driver_other,rx_mutex_acquired,
             rx_authenticated_some,rx_dedup_none,rx_tun_failed})
     }
@@ -257,7 +280,7 @@ impl GameKernelOwner{
     // first kernel copy is not proof of peer raw receive or TUN delivery.
     pub(crate) fn receive_diagnostics(&self)->(u64,u64){
         (self.raw_received.load(Ordering::Relaxed),
-         self.authenticated_rejected.load(Ordering::Relaxed))
+         self.rx_reject.aead.load(Ordering::Relaxed))
     }
     pub(crate) fn stop_and_drain(&mut self)->Result<(),()>{
         self.stop.store(true,Ordering::Release);
@@ -267,14 +290,21 @@ impl GameKernelOwner{
         // Counters distinguish real kernel ingress from blocked shared
         // GameAdapter lock, AEAD/GameRx duplicate and TUN failure.
         // No packet content, secret, raw key, TLS material or payload emitted.
-        eprintln!("M0_GAME_M4_RX_STAGE_BOUNDARY raw={} timeout={} other={} adapter_lock={} authenticated_some={} duplicate_none={} aead_denied={} tun_fail={} tun_delivered={}",
+        eprintln!("M0_GAME_M4_RX_STAGE_BOUNDARY raw={} timeout={} other={} adapter_lock={} authenticated_some={} duplicate_none={} aead_denied={} invalid={} replay_dup={} stale={} capacity={} scope={} stopped={} game={} tun_fail={} tun_delivered={}",
             self.raw_received.load(Ordering::Relaxed),
             self.rx_driver_timeout.load(Ordering::Relaxed),
             self.rx_driver_other.load(Ordering::Relaxed),
             self.rx_mutex_acquired.load(Ordering::Relaxed),
             self.rx_authenticated_some.load(Ordering::Relaxed),
             self.rx_dedup_none.load(Ordering::Relaxed),
-            self.authenticated_rejected.load(Ordering::Relaxed),
+            self.rx_reject.aead.load(Ordering::Relaxed),
+            self.rx_reject.invalid.load(Ordering::Relaxed),
+            self.rx_reject.duplicate.load(Ordering::Relaxed),
+            self.rx_reject.stale.load(Ordering::Relaxed),
+            self.rx_reject.capacity.load(Ordering::Relaxed),
+            self.rx_reject.scope.load(Ordering::Relaxed),
+            self.rx_reject.stopped.load(Ordering::Relaxed),
+            self.rx_reject.game.load(Ordering::Relaxed),
             self.rx_tun_failed.load(Ordering::Relaxed),
             self.delivered.load(Ordering::Relaxed));
         self.tun.begin_stop();

@@ -13,11 +13,12 @@ use crate::runtime::game_shared::{
 use wbd_types::{LaneKey,LogicalPacketId,MonoNs};
 use wbd_types::buffer_contract::UniqueSealable;
 use wbd_codec::record_crypto::{DirectionKeys,LaneTxCrypto,RecordSuite};
-use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig};
+use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig,UniqueOpenError};
+use wbd_codec::record_crypto::CryptoError;
 pub struct ScopedKeys{pub lane:QualifiedLane,pub tx:DirectionKeys,pub rx:DirectionKeys}
 struct Lane{key:LaneKey,tx:LaneTxCrypto,rx:ReplayProtectedLaneRx}
 #[derive(Debug,PartialEq,Eq)]
-pub enum Error{Unauthorized,Invalid,Capacity,Stopped,Duplicate,Crypto,Game(GameError)}
+pub enum Error{Unauthorized,Invalid,Capacity,Stopped,Duplicate,Stale,Crypto,Game(GameError)}
 pub struct GameAdapter{
     tx:GameTx,rx:GameRx,rx_scope:GameScope,
     lanes:Vec<Lane>,arena:Arena,stopped:bool,inner_mtu:usize
@@ -185,8 +186,12 @@ impl GameAdapter{
         if self.stopped{return Err(Error::Stopped)}
         let lane=self.lanes.iter_mut().find(|l|l.key==lane_key)
             .ok_or(Error::Unauthorized)?;
-        let opened=lane.rx.open_unique_in_place(&mut wire)
-            .map_err(|_|Error::Crypto)?;
+        let opened=lane.rx.open_unique_in_place(&mut wire).map_err(|e|match e{
+            UniqueOpenError::InvalidRecord(CryptoError::Authentication)=>Error::Crypto,
+            UniqueOpenError::InvalidRecord(_)=>Error::Invalid,
+            UniqueOpenError::Duplicate=>Error::Duplicate,
+            UniqueOpenError::Retired=>Error::Stale,
+        })?;
         if opened.kind!=1{return Err(Error::Invalid)}
         let (id,payload)=wbd_codec::decode_game(opened.payload,self.inner_mtu+16)
             .map_err(|_|Error::Invalid)?;
@@ -219,6 +224,23 @@ mod tests{
                 generation:7},mss:1400},
             tx:keys((i+1) as u8),rx:keys((i+1) as u8)
         }).collect(),RecordSuite::ChaCha20Poly1305).unwrap()
+    }
+    #[test]
+    fn game_rx_aeAD_tag_failure_not_replay_or_malformed(){
+        let mut game=build(2);
+        game.offer(b"first",MonoNs(0)).unwrap();
+        let mut wires=Vec::new();
+        game.drain(MonoNs(1),|lane,_,_,wire|{
+            wires.push((lane,wire.to_vec()));true
+        });
+        let (lane,wire)=wires.remove(0);
+        let mut tampered=wire.clone();
+        *tampered.last_mut().unwrap()^=1;
+        assert!(matches!(game.receive(lane,tampered),Err(Error::Crypto)));
+        assert_eq!(game.receive(lane,wire.clone()).unwrap(),Some(b"first".to_vec()));
+        assert!(matches!(game.receive(lane,wire),Err(Error::Duplicate)));
+        assert!(matches!(game.receive(lane,vec![0;3]),Err(Error::Invalid)));
+        game.stop();
     }
     #[test]
     fn game_mtu_uses_negotiated_record_budget_above_old1200(){
