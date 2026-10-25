@@ -1,0 +1,71 @@
+name: LAN masked-PN archived native A/B analysis
+on:
+  push:
+    branches: [experiment/lan-hp-mode-cost]
+    paths: [".github/workflows/lan-hp-mode-analyze-artifacts.yml"]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit-original-native-benchmarks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Download original 6-replicate x86 and ARM native Go benchmark artifacts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/x64 evidence/arm64 final-report
+          gh run download 40200548326 -R "$GITHUB_REPOSITORY" \
+            -n lan-hp-mode-cost-x64-native -D evidence/x64
+          gh run download 40200552303 -R "$GITHUB_REPOSITORY" \
+            -n lan-hp-mode-cost-arm64-native -D evidence/arm64
+          for arch in x64 arm64; do
+            test -s "evidence/$arch/bench.txt"
+            test -s "evidence/$arch/unit_tests.txt"
+            grep -q PASS "evidence/$arch/bench.txt"
+            grep -q PASS "evidence/$arch/unit_tests.txt"
+            sha256sum "evidence/$arch/bench.txt" > "final-report/$arch.benchmark.sha256"
+          done
+      - name: Strict analyzer audit on archived native measurements
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/lan_hp_mode_cost_analyze.py
+          python3 tools/lan_hp_mode_cost_analyze.py \
+            --input evidence/x64/bench.txt \
+            --output final-report/x64.summary.json \
+            | tee final-report/x64.stdout.json
+          python3 tools/lan_hp_mode_cost_analyze.py \
+            --input evidence/arm64/bench.txt \
+            --output final-report/arm64.summary.json \
+            | tee final-report/arm64.stdout.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path("final-report/x64.summary.json").read_text())
+          a=json.loads(Path("final-report/arm64.summary.json").read_text())
+          assert x["sample_count_per_mode"]==a["sample_count_per_mode"]==6
+          assert x["comparisons"]["Mixed99"]["plain_ns_per_100_original_packets"]>0
+          assert a["comparisons"]["Mixed99"]["hidden_ns_per_100_original_packets"]>0
+          assert x["comparisons"]["Mixed99"]["additional_alloc_calls_per_100"]==0
+          assert a["comparisons"]["Mixed99"]["additional_alloc_calls_per_100"]==0
+          Path("final-report/result.json").write_text(json.dumps({
+           "status":"COMPLETE_REANALYZED_ORIGINAL_NATIVE_BENCHMARKS",
+           "native_sources":{"x64_run":40200548326,"arm64_run":40200552303},
+           "x86_64":x["comparisons"],"arm64":a["comparisons"],
+           "note":"Go microbench seal/open, not WBD Rust production",
+           "no_main_changes":True,"product_wired":False,
+          },indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-hp-mode-validated-native-6x-report
+          path: final-report/
+          retention-days: 30
+          if-no-files-found: warn
