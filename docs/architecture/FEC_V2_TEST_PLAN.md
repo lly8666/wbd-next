@@ -2,6 +2,10 @@
 
 本页随[FEC v2设计](FEC_V2_BALANCED.md)实施。沿用TEST_PLAN/ACTIONS_CONTRACT与现有请求/证据，不另建测试进度数据库。理论计算器`tools/fec_v2_model.py`只产出MODEL_ONLY；当前设计不是已实现功能。
 
+## 2026-10-25 FEC 独立岗位平台执行例外（当前生效）
+
+用户要求 **Windows 相关 FEC 测试暂时跳过**。在 `experiment/fec-network-tuning` 本岗位，Windows x64 native codec/ISA-L、Windows Rust/Go FEC ABI、Wintun/GUI/模式接线、Windows Game 与 Windows 原生应用恢复标记为 **`TEMP_SKIPPED_USER_20261025` / `NOT_RUN`**。这是**暂时不安排这些测试**，不是改成通过、不是删除测试或降低门槛；本计划后续 `F2-PLATFORM` 表中的 Windows 也受此例外约束。不会触碰 M0 自己的 Windows 工作流、源代码、测试排期和已有结果。解除例外必须有用户新指示，届时以最新 M0 Windows 产品源码重新定向验收，不借用 Linux ARM64 的 PASS。Linux ARM64/native 网络、Fixed/Auto 等非 Windows 本岗任务继续；容量停止条件仍有效。执行留痕以 [本岗位 W86 暂跳与 Linux 优先级收据](../evidence/fec-network-work/20261025-W86-windows-temporarily-skipped-and-linux-priorities.json) 为准。
+
 ## 1. 统一纪律与对比口径
 
 - **每个性能Action只有一个预声明场景/配置/seed和一个测量job**；旧新必须在这个job/VM顺序AB或BA。一个配置可以有预声明的网络波形，但不能跑完后挑最优档。功能断言可合批。
