@@ -11,7 +11,9 @@ use crate::runtime::fec2_owner::{
     OwnerReport,SourceTicket,
 };
 use crate::fec2_staged::StagedParity;
-use wbd_codec::fec_v2::{BackendChoice,Profile as CodecProfile,Rs16,Error as CodecError};
+use wbd_codec::fec_v2::{
+    BackendChoice,Profile as CodecProfile,Rs16,Error as CodecError,MAX_BATCH_ROWS
+};
 use wbd_types::{ConfigRevision,MonoNs};
 
 /// This confirms an immutable ciphertext kernel-copy prefix, not delivery.
@@ -34,6 +36,9 @@ pub struct FixedStream {
     revision:ConfigRevision,
     record_payload_budget:usize,
     in_flight:Option<InFlight>,
+    // Bounded 4-row plaintext parity scratch, reused for every block,
+    // never exposed or borrowed across the synchronous original M4 seal.
+    parity_scratch:[Vec<u8>;MAX_BATCH_ROWS],
     stopped:bool,
 }
 impl FixedStream {
@@ -61,7 +66,8 @@ impl FixedStream {
             })?;
         Some(Self{owner,codec:Rs16::new(),profile:m3,
             revision:ConfigRevision(revision),record_payload_budget,
-            in_flight:None,stopped:false})
+            in_flight:None,parity_scratch:std::array::from_fn(|_|Vec::new()),
+            stopped:false})
     }
     pub fn revision(&self)->ConfigRevision{self.revision}
     pub fn report(&self)->OwnerReport{self.owner.report()}
@@ -160,10 +166,11 @@ impl FixedStream {
             // All selected batches share only this block and M4 sendmmsg.
             if cur.prepared.remaining_rows()==0{break}
             let row_start=cur.job.r as usize-cur.prepared.remaining_rows();
-            let rows=match cur.prepared.next_quantum(
-                &self.codec,self.record_payload_budget,BackendChoice::default()
+            let count=match cur.prepared.next_quantum_reuse(
+                &self.codec,self.record_payload_budget,BackendChoice::default(),
+                &mut self.parity_scratch
             ){
-                Ok(Some((rows,_)))=>rows,
+                Ok(Some((count,_)))=>count,
                 Ok(None)=>break,
                 Err(e)=>{
                     if emitted>0 {
@@ -177,7 +184,7 @@ impl FixedStream {
                     return Err(StreamError::Codec(e))
                 }
             };
-            for (i,wire) in rows.iter().enumerate(){
+            for (i,wire) in self.parity_scratch[..count].iter().enumerate(){
                 let row=u8::try_from(row_start+i).map_err(|_|StreamError::Invalid)?;
                 match on_parity(wire,cur.job.block_id,row,cur.job.revision){
                     DriverProof::Copied=>{
@@ -188,7 +195,7 @@ impl FixedStream {
                     DriverProof::Staged=>cur.staged=cur.staged.saturating_add(1),
                 }
             }
-            emitted+=rows.len();
+            emitted+=count;
         }
         if cur.prepared.remaining_rows()==0 && cur.staged==0{
             let finished=self.in_flight.take().ok_or(StreamError::Invalid)?;
@@ -225,6 +232,9 @@ impl FixedStream {
             self.owner.finish_parity(flight.job,flight.copied,false);
         }
         self.owner.stop();
+        // Retained parity scratch may contain plaintext-derived bytes;
+        // scrub once on Stop and never reuse across the stopped generation.
+        for row in &mut self.parity_scratch{row.fill(0);row.clear();}
     }
 }
 
@@ -367,6 +377,17 @@ mod tests{
             push(&mut stream,&mut arena,&[i as u8;135],i,&mut fresh);
         }
         assert_eq!(fresh.len(),16);
+        let original=(0..16).map(|i|vec![i as u8;135]).collect::<Vec<_>>();
+        let refs=original.iter().map(Vec::as_slice).collect::<Vec<_>>();
+        let mut oracle=Vec::new();
+        for first in (0..20).step_by(4){
+            let (mut batch,_)=Rs16::new().encode_owned(
+                1,&refs,CodecProfile::Maximum,first,4,1400,
+                BackendChoice::Scalar
+            ).unwrap();
+            oracle.append(&mut batch);
+        }
+        assert_eq!(oracle.len(),20);
         // At an exhausted M4 kernel budget, time/expiry advances but no PN
         // can be allocated to unsendable parity.
         assert_eq!(stream.poll_parity_quanta(MonoNs(6_100_000),0,
@@ -377,6 +398,7 @@ mod tests{
                 assert_eq!(id,1);
                 assert_eq!(rev,ConfigRevision(33));
                 assert_eq!(parse_repair(wire,1400).unwrap().parity_row,row);
+                assert_eq!(wire,oracle[usize::from(row)].as_slice());
                 rows.push(row);
                 DriverProof::Staged
             }).unwrap(),(20,0));

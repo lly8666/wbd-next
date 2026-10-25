@@ -62,6 +62,33 @@ impl StagedParity {
         Ok(Some((rows,used)))
     }
 
+    /// Same bounded M3 encode and row cursor, but reuse the original
+    /// FixedStream-owned four wire scratch slabs across ALL FEC blocks.
+    /// No heap allocation per row or temporary Vec of borrowed row views.
+    /// Scratch is never loaned to M4: original owner seals/copies each row
+    /// synchronously before the next quantum may overwrite its plaintext.
+    pub fn next_quantum_reuse(
+        &mut self,rs:&Rs16,record_payload_budget:usize,
+        backend:BackendChoice,rows:&mut [Vec<u8>;MAX_BATCH_ROWS]
+    )->Result<Option<(usize,BackendUsed)>,Error>{
+        if self.next_row==self.r{return Ok(None)}
+        let count=(self.r-self.next_row).min(MAX_BATCH_ROWS);
+        let len=REPAIR_HEADER+self.prepared.symbol_len();
+        if len>record_payload_budget{return Err(Error::BudgetExceeded)}
+        for row in rows.iter_mut().take(count){row.resize(len,0)}
+        // Stack-only four-slice view. The codec sees EXACTLY count output
+        // rows, never any stale unused scratch row from a previous block.
+        let [a,b,c,d]=rows;
+        let mut views=[a.as_mut_slice(),b.as_mut_slice(),
+                       c.as_mut_slice(),d.as_mut_slice()];
+        let used=rs.encode_prepared_into(
+            self.block_id,&mut self.prepared,self.profile,self.next_row,
+            &mut views[..count],record_payload_budget,backend
+        )?;
+        self.next_row+=count;
+        Ok(Some((count,used)))
+    }
+
     pub fn remaining_rows(&self)->usize {self.r-self.next_row}
 }
 
