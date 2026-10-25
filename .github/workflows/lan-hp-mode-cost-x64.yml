@@ -45,7 +45,7 @@ jobs:
           export GOMAXPROCS=1
           go test tools/lan_hp_mode_cost_test.go \
             -run '^$' -bench '^Benchmark' \
-            -benchtime=2s -count=6 -benchmem -cpu=1 \
+            -benchtime=1s -count=6 -benchmem -cpu=1 \
             | tee lan-hp-mode-report/bench.txt
           python3 tools/lan_hp_mode_cost_analyze.py \
             --input lan-hp-mode-report/bench.txt \
