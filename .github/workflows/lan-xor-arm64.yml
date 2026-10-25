@@ -1,0 +1,75 @@
+name: LAN XOR ARM64 native TLS13 handoff and capture
+on:
+  push:
+    branches: [experiment/lan-xor-tlslike]
+    paths: [".github/workflows/lan-xor-arm64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: lan-xor-arm64
+  cancel-in-progress: false
+jobs:
+  native-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Real native ARM64 codec function verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "aarch64"
+          mkdir -p lan-xor-arm-report
+          rustup toolchain install 1.85.1 --profile minimal
+          rustc +1.85.1 --edition=2021 --test -C opt-level=2 tools/lan_xor_tlslike_lab.rs -o /tmp/lan_xor_tests
+          /tmp/lan_xor_tests --nocapture | tee lan-xor-arm-report/unit-tests.txt
+          go build -trimpath -o /tmp/lan_xor_tls13 tools/lan_xor_tlslike_tls_handoff.go
+          sha256sum /tmp/lan_xor_tls13 > lan-xor-arm-report/binary.sha256
+          {
+            echo "SOURCE=$GITHUB_SHA"
+            echo "RUN_ID=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "TARGET=$(uname -m)"
+            echo "GO=$(go version)"
+            echo "RUST=$(rustc +1.85.1 --version)"
+            echo "SCOPE=isolated_true_tls13_handoff_not_WBD_product"
+          } > lan-xor-arm-report/manifest.txt
+      - name: Native ARM64 real TLS handshake then bounded XOR wire capture
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tcpdump
+          tmp="$(mktemp -d)"
+          cap_pid=""
+          cleanup() {
+            if test -n "$cap_pid"; then
+              sudo kill -INT "$cap_pid" 2>/dev/null || true
+              wait "$cap_pid" 2>/dev/null || true
+            fi
+            rm -rf "$tmp"
+          }
+          trap cleanup EXIT
+          port=38464
+          sudo timeout --signal=INT --kill-after=2s 25s tcpdump -i lo -s 2000 -c 128 \
+            -w "$tmp/wire.pcap" "tcp and dst port $port" >/dev/null 2>&1 &
+          cap_pid=$!
+          sleep 2
+          /tmp/lan_xor_tls13 "$port" | tee lan-xor-arm-report/roundtrip.json
+          sleep 1
+          sudo kill -INT "$cap_pid" 2>/dev/null || true
+          wait "$cap_pid" || true
+          cap_pid=""
+          test -s "$tmp/wire.pcap"
+          test "$(stat -c %s "$tmp/wire.pcap")" -le 4194304
+          python3 tools/lan_xor_tlslike_tls13_pcap.py \
+            --pcap "$tmp/wire.pcap" --port "$port" \
+            --output lan-xor-arm-report/capture_summary.json
+          echo "Owned raw pcap removed by trap, not uploaded" >> lan-xor-arm-report/manifest.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-xor-arm64-native-evidence
+          path: lan-xor-arm-report/
+          retention-days: 30
+          if-no-files-found: warn
