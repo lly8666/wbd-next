@@ -757,9 +757,14 @@ class LinuxExperiment:
                 child.kill()
                 child.wait(timeout=2)
         self.cpu_stress_workers=[]
-        for role, original in self.cpu_stress_affinity.items():
-            try: os.sched_setaffinity(self.products[role].pid, original)
-            except (ProcessLookupError, OSError): pass
+        for role, saved in self.cpu_stress_affinity.items():
+            pid=self.products[role].pid
+            try:
+                tasks=[int(p.name) for p in Path(f"/proc/{pid}/task").iterdir()]
+                for tid in tasks:
+                    try: os.sched_setaffinity(tid,saved["threads"].get(tid,saved["leader"]))
+                    except (ProcessLookupError,OSError): pass
+            except (FileNotFoundError,ProcessLookupError): pass
         self.cpu_stress_affinity={}
 
     def set_product_cpu_stress(self, phase):
@@ -774,10 +779,23 @@ class LinuxExperiment:
         if len(original)<2:
             raise RuntimeError("CPU stress needs >=2 eligible cores; will not saturate whole runner")
         core=min(original)
-        self.cpu_stress_affinity[role]=original
-        os.sched_setaffinity(product.pid,{core})
-        if os.sched_getaffinity(product.pid)!={core}:
-            raise RuntimeError("original product CPU affinity did not apply")
+        # Linux affinity is per-TID, not per-process: Go/Rust worker threads
+        # must ALL share the constrained core or this is not host pressure.
+        def all_threads():
+            return [int(p.name) for p in Path(f"/proc/{product.pid}/task").iterdir()]
+        saved={"leader":original,"threads":{}}
+        self.cpu_stress_affinity[role]=saved
+        for _ in range(3):
+            tids=all_threads()
+            for tid in tids:
+                try:
+                    if tid not in saved["threads"]:
+                        saved["threads"][tid]=os.sched_getaffinity(tid)
+                    os.sched_setaffinity(tid,{core})
+                except ProcessLookupError: continue
+            time.sleep(.03)
+        if not all(os.sched_getaffinity(tid)=={core} for tid in all_threads()):
+            raise RuntimeError("original Go/Rust product worker threads escaped test CPU limit")
         for _ in range(spec["competitors"]):
             # Same eligible core, separate test-owned schedulable processes.
             # Products and their authentic M2/Auto code remain unchanged;
@@ -789,11 +807,21 @@ class LinuxExperiment:
         time.sleep(.15)
         if any(p.poll() is not None for p in self.cpu_stress_workers):
             raise RuntimeError("CPU competitors exited before measurement")
+        # Capture every TID's actual post-burn readback, not just leader.
+        final_tids=all_threads()
+        for tid in final_tids:
+            if tid not in saved["threads"]:
+                saved["threads"][tid]=original
+            os.sched_setaffinity(tid,{core})
+        if not all(os.sched_getaffinity(tid)=={core} for tid in all_threads()):
+            raise RuntimeError("CPU threads migrated outside the stressed core")
         self.cpu_stress_events.append({"phase":phase["name"],"role":role,
             "product_pid":product.pid,"core":core,
             "original_eligible_cores":len(original),
             "competitors_started":len(self.cpu_stress_workers),
             "readback_product_affinity":sorted(os.sched_getaffinity(product.pid)),
+            "readback_all_threads_pinned":True,
+            "readback_thread_count":len(all_threads()),
             "started_ns":time.monotonic_ns()})
 
     def configure(self, phase, index, initial=False):
