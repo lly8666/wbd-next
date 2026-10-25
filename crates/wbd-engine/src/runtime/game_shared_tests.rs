@@ -43,6 +43,38 @@ fn permutations(items:&mut [usize;4],at:usize,out:&mut Vec<[usize;4]>){
     }
 }
 #[test]
+fn fec_game_parity_one_rotating_lane_still_has_authenticated_logical_ids(){
+    let mut a=arena(32);
+    let mut tx=GameTx::new(snap(FlowDirection::Tx,1,&[1,2,3,4],256),
+        limits(64,64*1024)).unwrap();
+    let first=tx.offer(input(&mut a,1),0..1,Mode::Game,1,None,MonoNs(0)).unwrap();
+    let mut normal=Vec::new();
+    tx.drain_ready(MonoNs(1),32,|v|{
+        normal.push((v.lane.slot,v.logical_id));
+        DispatchOutcome::Accepted
+    });
+    assert_eq!(first,Some(LogicalPacketId(0)));
+    assert_eq!(normal.len(),4);
+    let mut parity=Vec::new();
+    for i in 0..8{
+        let id=tx.offer(input(&mut a,i as u8),0..1,
+            Mode::GameFecParity,1,None,MonoNs(2+i as u64)).unwrap();
+        assert_eq!(id,Some(LogicalPacketId((i+1) as u64)));
+        tx.drain_ready(MonoNs(2+i as u64),32,|v|{
+            assert_eq!(v.mode,Mode::GameFecParity);
+            parity.push((v.lane.slot,v.logical_id));
+            DispatchOutcome::Accepted
+        });
+    }
+    assert_eq!(parity.len(),8);
+    let mut lanes=parity.iter().map(|x|x.0).collect::<Vec<_>>();
+    lanes.sort_unstable();lanes.dedup();
+    assert_eq!(lanes,vec![1,2,3,4]);
+    assert_eq!(tx.counters().lane_copy_drop,0);
+    tx.stop();
+}
+
+#[test]
 fn r1_game_r4_g01_one_common_job_four_lane_copies_no_source_clone(){
     let mut a=arena(32);let mut tx=GameTx::new(snap(FlowDirection::Tx,1,&[4,1,3,2],256),
         limits(32,1024)).unwrap();
