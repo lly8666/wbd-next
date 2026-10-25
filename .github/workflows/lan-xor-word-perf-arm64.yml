@@ -1,0 +1,53 @@
+name: LAN optimized word XOR arm64 exact-source native CPU A/B
+on:
+  push:
+    branches: [experiment/lan-xor-word-optim]
+    paths: [".github/workflows/lan-xor-word-perf-arm64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: lan-xor-word-perf-arm64
+  cancel-in-progress: false
+jobs:
+  paired-single-host:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Native code equivalence and Rust release exact-source binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "aarch64"
+          mkdir -p lan-word-perf-report
+          rustup toolchain install 1.85.1 --profile minimal
+          rustc +1.85.1 --edition=2021 --test -C opt-level=2 tools/lan_xor_tlslike_lab.rs -o /tmp/lan_word_tests
+          /tmp/lan_word_tests --nocapture | tee lan-word-perf-report/unit-tests.txt
+          cargo +1.85.1 build --release --locked -p wbd-codec --example lan_xor_record_cost
+          sha256sum target/release/examples/lan_xor_record_cost > lan-word-perf-report/binary.sha256
+          lscpu > lan-word-perf-report/host_cpu.txt
+          {
+            echo "SOURCE=$GITHUB_SHA"
+            echo "RUN_ID=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "TARGET=$(uname -m)"
+            echo "RUST=$(rustc +1.85.1 --version)"
+            echo "LOCK_SHA256=$(sha256sum Cargo.lock | awk '{print $1}')"
+            echo "METRIC=thread_cpu_ns_per_inner_byte"
+            echo "TEST=single_VM_1345B_fixed_synthetic_IP_seal+open_12_symmetric_legs"
+            echo "SECURITY=rolling_word_is_INSECURE_noncryptographic_obfuscation"
+          } > lan-word-perf-report/manifest.txt
+      - name: Six modes 12 symmetric same-host paired record CPU legs
+        shell: bash
+        run: |
+          set -euo pipefail
+          target/release/examples/lan_xor_record_cost 6 | tee lan-word-perf-report/legs.jsonl
+          python3 tools/lan_xor_perf_analyze.py --input lan-word-perf-report/legs.jsonl \
+            --output lan-word-perf-report/summary.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-xor-word-arm64-record-perf
+          path: lan-word-perf-report/
+          if-no-files-found: warn
+          retention-days: 30
