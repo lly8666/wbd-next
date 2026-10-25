@@ -1,0 +1,7 @@
+# W95 Game OFF Linux ARM64 realistic loss and blackhole (recovered)
+
+- Exact immutable SOURCE: `fb65d8136c32e3e2182a09425f517cd7b98162ce`, ARM64 native build [40214830539](https://github.com/lly8666/wbd-next/actions/runs/40214830539), artifact `12607335802` SHA256 `1e5afba4a73968228ebf1d7085a7b5e0ca874c5dd77c22cc9f0ec42b6b7cc310`.
+- One scenario/Action, unchanged 3Mbps each direction 96% UDP + real TCP2, 75ms one way, 15s clean → 30s independent lane IID20 → 30s lane1 blackhole → 15s clean recovery; original W88 fixture, no added load.
+- Game2 [40246424032](https://github.com/lly8666/wbd-next/actions/runs/40246424032) PASS_SCOPED: IID20 UDP C→S/S→C missing626/655, ~3.8–4.0% of source; lane1 blackhole and both clean phases 0 missing; real TCP fully injected/delivered, IID20 TCP p99 350/402ms, no backpressure; Stop drained; CPU 5.93/6.04s, RSS ~25.9/26.5MB, PSI peak1.35%.
+- Game4 [40246427496](https://github.com/lly8666/wbd-next/actions/runs/40246427496) PASS_SCOPED: IID20 missing23/27, ~0.14–0.16% of source; lane1 blackhole/clean phases zero missing; TCP full, no backpressure, p99~77.6ms; Stop drained; CPU9.95/10.09s, RSS~38.2/38.2MB, PSI peak3.83%.
+- Independent theoretical Game **OFF** replicated source residual `p^N` gives ~4% Game2, ~0.16% Game4, no FEC recovery implied. Shared burst does not obey this model. VMs differ so no paired CPU comparison. No Game fixed6 qualification; historical W90 six FAIL preserved. W96 two-phase TUN commit needs its own build + real clean regression. Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.

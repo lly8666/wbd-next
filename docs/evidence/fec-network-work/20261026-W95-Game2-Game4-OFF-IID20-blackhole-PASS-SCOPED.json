@@ -1,0 +1,108 @@
+{
+  "schema": "W95_GAME_FEC_OFF_IID20_AND_LANE1_BLACKHOLE_ARM64_V1",
+  "owner": "fec-network-work",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "source": "fb65d8136c32e3e2182a09425f517cd7b98162ce",
+  "build_run": 40214830539,
+  "build_artifact_id": 12607335802,
+  "build_sha256": "1e5afba4a73968228ebf1d7085a7b5e0ca874c5dd77c22cc9f0ec42b6b7cc310",
+  "input": {
+    "c2s_mbps": 3,
+    "s2c_mbps": 3,
+    "udp_share": 0.96,
+    "real_tcp_flows": 2,
+    "one_way_delay_ms": 75,
+    "phase_seconds": {
+      "clean_before": 15,
+      "iid20": 30,
+      "lane1_blackhole": 30,
+      "clean_after": 15
+    },
+    "warmup_seconds": 15,
+    "drain_seconds": 30,
+    "netem_rng": "unseeded_recorded",
+    "one_action_per_case": true,
+    "capacity_stop": true
+  },
+  "game2": {
+    "run": 40246424032,
+    "request_commit": "26d6e661268bb9117d3d62bf9a5789a4fbbe3a83",
+    "status": "PASS_SCOPED_OBSERVATION",
+    "failure": [],
+    "iid20_udp_missing_c2s_s2c": [
+      626,
+      655
+    ],
+    "iid20_udp_delivered_mbps_c2s_s2c": [
+      2.77310533,
+      2.7670672
+    ],
+    "iid20_udp_injected_mbps": 2.880064,
+    "tcp_iid20_injected_delivered_mbps": 0.1199405333,
+    "tcp_iid20_p99_c2s_s2c_ms": [
+      349.9,
+      401.6
+    ],
+    "one_lane_blackhole_udp_missing_both": 0,
+    "clean_before_after_udp_missing_both": 0,
+    "tcp_actual_delivery_all_phases": true,
+    "tcp_backpressure": 0,
+    "source_tun_drop": 0,
+    "client_cpu_s": 5.93,
+    "server_cpu_s": 6.04,
+    "client_cpu_per_gib": 191.0593,
+    "server_cpu_per_gib": 194.4713,
+    "rss_peak_client_server": [
+      25874432,
+      26468352
+    ],
+    "cpu_psi_peak_pct": 1.35,
+    "stop_drained": true
+  },
+  "game4": {
+    "run": 40246427496,
+    "request_commit": "1208c069d1fd2ca8828b99d1206846d2e0bb7f94",
+    "status": "PASS_SCOPED_OBSERVATION",
+    "failure": [],
+    "iid20_udp_missing_c2s_s2c": [
+      23,
+      27
+    ],
+    "iid20_udp_delivered_mbps_c2s_s2c": [
+      2.87546133,
+      2.87656213
+    ],
+    "iid20_udp_injected_mbps": 2.880064,
+    "tcp_iid20_injected_delivered_mbps": 0.1199405333,
+    "tcp_iid20_p99_c2s_s2c_ms": [
+      77.6,
+      77.6
+    ],
+    "one_lane_blackhole_udp_missing_both": 0,
+    "clean_before_after_udp_missing_both": 0,
+    "tcp_actual_delivery_all_phases": true,
+    "tcp_backpressure": 0,
+    "source_tun_drop": 0,
+    "client_cpu_s": 9.95,
+    "server_cpu_s": 10.09,
+    "client_cpu_per_gib": 316.6784,
+    "server_cpu_per_gib": 321.1735,
+    "rss_peak_client_server": [
+      38248448,
+      38150144
+    ],
+    "cpu_psi_peak_pct": 3.83,
+    "stop_drained": true
+  },
+  "interpretation": "Off-source redundancy has expected independent-loss residual approximately p^N, clean and restored phases full delivery, lane1 blackhole keeps other lanes delivering; runs on different VMs, no CPU causal comparison.",
+  "boundaries": [
+    "Does not test Game+fixed FEC (withdrawn after six W90 failures)",
+    "Shared GE bursts not rerun on this exact W94 source; W89 historical Game OFF shows >1% residual",
+    "No Windows/physical machine",
+    "No new outer DATA repair proof for multi-lane Game",
+    "TX/RX return-to-TUN commit failure is repaired only in separate W96 candidate, not this source"
+  ],
+  "merge_ready": false,
+  "capacity_stop": true
+}
