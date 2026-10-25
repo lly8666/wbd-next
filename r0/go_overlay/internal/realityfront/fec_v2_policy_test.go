@@ -239,3 +239,98 @@ func TestF2ControlAggressiveStableOneProfileAboveNormal(t *testing.T) {
         t.Fatalf("steady targets normal=%s aggressive=%s (one level required)",a.Desired,b.Desired)
     }
 }
+
+ 
+// W52 real Auto (8 Mbps original ARM64 owner, outer DATA OFF) had genuine
+// 1%-loss low-stage VALID observations interleaved with original M2 actual-k
+// cohort misalignment UNKNOWN. W45 prior-source had consecutive VALID ticks.
+// Retain only bounded, authenticated VALID proof; no synthetic ACK or clean
+// sample is permitted, and UNKNOWN must never itself issue a downshift.
+func TestF2ControlW52IntermittentActualKNoFakeCleanDown(t *testing.T) {
+    cfg:=f2Config("w52",FecV2C2S,FecV2Auto,FecV2Conservative)
+    state,_,err:=FecV2Step(cfg,FecV2State{},FecV2Snapshot{},0)
+    if err!=nil {t.Fatal(err)}
+    // Two independently measured high-loss fast cohorts legitimately rise.
+    for _,sec:=range []int{2,4} {
+        now:=time.Duration(sec)*time.Second
+        state,_,err=FecV2Step(cfg,state,f2Snapshot("w52",FecV2C2S,now,310,1800),now)
+        if err!=nil {t.Fatal(err)}
+    }
+    if state.Desired!=FecV2Maximum {t.Fatalf("no legitimate high-loss rise: %+v",state)}
+    var observedValid,observedUnknown int
+    stepped:=false
+    for _,stage:=range []struct{sec int; misaligned bool}{
+        {6,false},{8,true},{10,false},{12,false},
+        {14,true},{16,false},{18,false},{20,true},{22,false},
+    } {
+        now:=time.Duration(stage.sec)*time.Second
+        snap:=f2Snapshot("w52",FecV2C2S,now,12,70)
+        if stage.misaligned {
+            // Native closed k sources exceed 8s mature FIRST denominator;
+            // keep it unknown, DO NOT clip counts to manufacture a window.
+            snap.ActualK[15]=376
+        }
+        before:=state
+        next,intent,e:=FecV2Step(cfg,state,snap,now)
+        if e!=nil {t.Fatal(e)}
+        if stage.misaligned {
+            observedUnknown++
+            if intent.Validity!=FecV2Unknown||intent.Send||
+                next.DownSources!=before.DownSources||
+                next.DownValidWindows!=before.DownValidWindows {
+                t.Fatalf("UNKNOWN forged a sample/revision at %ds: %+v %+v",stage.sec,next,intent)
+            }
+        } else {
+            observedValid++
+            if intent.Validity!=FecV2Valid {t.Fatalf("valid cohort rejected at %ds: %+v",stage.sec,intent)}
+        }
+        if intent.Send {
+            if intent.Profile!=FecV2Strong||stage.misaligned {
+                t.Fatalf("bad downshift from genuine proof: %+v",intent)
+            }
+            stepped=true
+        }
+        state=next
+    }
+    if observedUnknown!=3||observedValid!=6||!stepped||state.Desired!=FecV2Strong {
+        t.Fatalf("bounded W52 hold did not downshift: valid=%d unknown=%d stepped=%t profile=%s",
+            observedValid,observedUnknown,stepped,state.Desired)
+    }
+}
+
+func TestF2ControlW52CensoredCapacityAndLongUnknownResetDownProof(t *testing.T) {
+    cfg:=f2Config("isolation",FecV2C2S,FecV2Auto,FecV2Conservative)
+    for _,fault:=range []struct{name string; mutate func(*FecV2Snapshot)}{
+        {"feedback_lost",func(s *FecV2Snapshot){s.Validity=FecV2Unknown}},
+        {"capacity",func(s *FecV2Snapshot){s.HostDrops=1}},
+        {"censored",func(s *FecV2Snapshot){s.Validity=FecV2Censored}},
+        {"long_k_unknown",func(s *FecV2Snapshot){s.ActualK[15]=376}},
+    } {
+        t.Run(fault.name,func(t *testing.T){
+            state,_,e:=FecV2Step(cfg,FecV2State{},FecV2Snapshot{},0)
+            if e!=nil {t.Fatal(e)}
+            for _,sec:=range []int{2,4} {
+                now:=time.Duration(sec)*time.Second
+                state,_,e=FecV2Step(cfg,state,f2Snapshot("isolation",FecV2C2S,now,310,1800),now)
+                if e!=nil {t.Fatal(e)}
+            }
+            first:=f2Snapshot("isolation",FecV2C2S,6*time.Second,12,70)
+            state,_,e=FecV2Step(cfg,state,first,6*time.Second)
+            if e!=nil||state.DownValidWindows!=1 {t.Fatalf("no valid anchor %+v %v",state,e)}
+            faultAt:=8*time.Second
+            if fault.name=="long_k_unknown" {faultAt=14*time.Second}
+            bad:=f2Snapshot("isolation",FecV2C2S,faultAt,12,70)
+            fault.mutate(&bad)
+            state,intent,e:=FecV2Step(cfg,state,bad,faultAt)
+            if e!=nil||intent.Send||state.DownValidWindows!=0||state.DownSources!=0 {
+                t.Fatalf("invalid evidence not cleared: state=%+v intent=%+v err=%v",state,intent,e)
+            }
+            // A later good cohort cannot spend the invalidated earlier time.
+            when:=faultAt+2*time.Second
+            state,intent,e=FecV2Step(cfg,state,f2Snapshot("isolation",FecV2C2S,when,12,70),when)
+            if e!=nil||intent.Send||state.DownValidWindows!=1 {
+                t.Fatalf("stale down proof reused: %+v %+v %v",state,intent,e)
+            }
+        })
+    }
+}

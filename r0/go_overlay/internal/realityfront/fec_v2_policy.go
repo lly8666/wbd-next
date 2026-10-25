@@ -155,6 +155,10 @@ type FecV2State struct {
     HighFastWindows uint8
     DownSince time.Duration
     DownSources uint64
+    // Only genuinely VALID low-loss evaluations add evidence. A short
+    // actual-k cohort alignment miss may pause (not advance) the hold.
+    DownValidWindows uint8
+    DownLastValid time.Duration
     LastDown time.Duration
     LastSparseUp time.Duration
     LastSparseEvents uint64 // last consumed cumulative trustworthy events
@@ -276,6 +280,13 @@ func fecV2Quality(now time.Duration,s FecV2Snapshot) (FecV2Validity, string, flo
     return FecV2Valid,"mature first-send evidence",math.Min(1,math.Max(pf,ps)+margin)
 }
 
+// Reset all of the downshift proof together; it is never inferred from
+// a skipped, unknown, censored, or capacity-limited quality observation.
+func fecV2ClearDown(s *FecV2State) {
+    s.DownSince,s.DownSources=0,0
+    s.DownValidWindows,s.DownLastValid=0,0
+}
+
 // FecV2Step is deterministic, side-effect-free and has no timers or idle
 // activity writes. The controlling Go goroutine must provide distinct state
 // per authenticated client/direction and send its returned intent itself.
@@ -297,8 +308,9 @@ func FecV2Step(c FecV2Config, previous FecV2State, snap FecV2Snapshot, now time.
         s.Initialized=true
         s.Client,s.Direction,s.ConfigRevision=c.Client,c.Direction,c.ConfigRevision
         s.Mode,s.Policy=c.Mode,c.AutoPolicy
-        s.HighFastWindows,s.DownSources=0,0
-        s.DownSince,s.BurstUntil=0,0
+        s.HighFastWindows=0
+        fecV2ClearDown(&s)
+        s.BurstUntil=0
         s.LastEvaluate=0
         p,off:=FecV2Light,false
         switch c.Mode {
@@ -323,7 +335,17 @@ func FecV2Step(c FecV2Config, previous FecV2State, snap FecV2Snapshot, now time.
     validity,reason,p:=fecV2Quality(now,snap)
     out.Validity,out.Reason=validity,reason
     if validity!=FecV2Valid {
-        s.HighFastWindows,s.DownSources,s.DownSince=0,0,0
+        s.HighFastWindows=0
+        // In real M2 windows, independently matured original FIRST-source
+        // receipts and k-histogram cohorts can straddle a two-second tick.
+        // Preserve *previous* VALID evidence across at most a 6s alignment
+        // gap, but NEVER count this UNKNOWN tick or issue a downgrade from it.
+        // Missing feedback, censorship, host drops and longer unknowns reset.
+        transientK := validity==FecV2Unknown &&
+            reason=="actual-k observation incomplete" &&
+            s.DownSince!=0 && s.DownLastValid!=0 &&
+            now>=s.DownLastValid && now-s.DownLastValid<=6*time.Second
+        if !transientK {fecV2ClearDown(&s)}
         // Host-limited misses cannot be banked for a later network-loss
         // escalation. Consume them while freezing the known good profile.
         if validity==FecV2HostCapacity && snap.TrustedMissingOrLate>s.LastSparseEvents {
@@ -355,7 +377,7 @@ func FecV2Step(c FecV2Config, previous FecV2State, snap FecV2Snapshot, now time.
     out.PredictedResidual=fecV2Mix(snap.ActualK,s.Desired,p)
     if target>s.Desired {
         if s.HighFastWindows<2 {s.HighFastWindows++}
-        s.DownSince,s.DownSources=0,0
+        fecV2ClearDown(&s)
         if s.HighFastWindows>=2 {
             s.HighFastWindows=0
             out.Reason="two valid rising fast windows"
@@ -366,17 +388,27 @@ func FecV2Step(c FecV2Config, previous FecV2State, snap FecV2Snapshot, now time.
     s.HighFastWindows=0
     if target<s.Desired && s.Desired>FecV2Light && s.BurstUntil<=now &&
         fecV2Mix(snap.ActualK,s.Desired-1,p)<=0.0005 {
-        if s.DownSince==0 {s.DownSince=now;s.DownSources=0}
+        // A ticker stall is not an implicit VALID observation.
+        if s.DownSince==0 || (s.DownLastValid!=0 &&
+            (now<s.DownLastValid || now-s.DownLastValid>6*time.Second)) {
+            fecV2ClearDown(&s)
+            s.DownSince=now
+        }
         if s.DownSources>^uint64(0)-snap.Fast.Observed {s.DownSources=^uint64(0)
         } else {s.DownSources+=snap.Fast.Observed}
-        if now-s.DownSince>=10*time.Second && s.DownSources>=4096 &&
+        if s.DownValidWindows<5 {s.DownValidWindows++}
+        s.DownLastValid=now
+        // Require both elapsed hold and >=5 authentic valid 2s windows.
+        // Interleaved UNKNOWN adds neither an outcome nor maturity.
+        if now-s.DownSince>=10*time.Second && s.DownValidWindows>=5 &&
+            s.DownSources>=4096 &&
             (s.LastDown==0 || now-s.LastDown>=10*time.Second) {
             s.LastDown=now
-            s.DownSince,s.DownSources=0,0
+            fecV2ClearDown(&s)
             out.Reason="10s and 4096 valid sources; one-step down"
             return fecV2Issue(c,s,out,s.Desired-1,false)
         }
-    } else {s.DownSince,s.DownSources=0,0}
+    } else {fecV2ClearDown(&s)}
     return s,out,nil
 }
 

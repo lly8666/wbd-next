@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "id": "FEC-W53-W52-auto-valid-evidence-bounded-gap-intent",
+  "classification": "PRE_ACTION_CAUSAL_MODEL_AND_TEST_INTENT",
+  "branch": "experiment/fec-network-tuning",
+  "source_before": "9205e42930878124c1d477a831eaa1aa91c23840",
+  "product_reference_source": "e446fa1cf09ebfb259da3d764abf8f8ed8d4211f",
+  "w52": {
+    "run_id": 40168045298,
+    "artifact_id": 12589925435,
+    "client_auto_quality_sha256": "d91f914dd300c255cb6c6d5ac7dbfa85f84d9185bcd76a2c4e6b11340dfa01d7",
+    "valid_fast_windows": 6,
+    "valid_fast_sources_total": 10877,
+    "p_design_min": 0.011802,
+    "p_design_max": 0.016365,
+    "upper_k1_strong_residual": 0.000268,
+    "unknown_reason": "actual-k observation incomplete",
+    "full_c2s_downshift": "NOT_OBSERVED"
+  },
+  "w45": {
+    "run_id": 40156921978,
+    "artifact_id": 12584856579,
+    "client_auto_quality_sha256": "a070d39fac5b420f22c3a1632ebccfdfbe7caae706e22d8f5d1555e697a4d092",
+    "original_genuine_downshift": "PASS_PRIOR_SOURCE"
+  },
+  "hypothesis": "short cohort alignment UNKNOWN resets already authenticated valid down evidence",
+  "constraints": {
+    "outer_data_retransmitted": 0,
+    "parity_not_outer_repair": true,
+    "invalid_evidence_not_counted": true,
+    "allowed_actual_k_unknown_gap_seconds": 6,
+    "required_valid_windows": 5,
+    "required_real_sources": 4096,
+    "hold_seconds": 10,
+    "next_lower_residual_guard": 0.0005,
+    "capacity_stop": true
+  },
+  "new_product_validation": "PENDING_EXACT_SOURCE_ACTION_BUILD_AND_W53_NATIVE_RECHECK",
+  "merge_ready": false
+}
