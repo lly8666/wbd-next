@@ -52,7 +52,7 @@ impl GameKernelOwner{
             .map_err(|_|())?);
         let mut tx=Vec::with_capacity(n);
         let mut rx=Vec::with_capacity(n);
-        for _ in 0..n{
+        for i in 0..n{
             tx.push(Arc::new(ScopedRawIpv4Tx::open(ifname,ifindex,generation)
                 .map_err(|_|())?));
             let f=flows[i];
