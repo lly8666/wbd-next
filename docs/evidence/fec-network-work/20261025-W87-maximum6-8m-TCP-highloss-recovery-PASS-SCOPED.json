@@ -1,0 +1,229 @@
+{
+  "schema": "FEC_W87_MAXIMUM6_LOWLOAD_TCP_HIGHLOSS_RECOVERY_PASS_SCOPED_V1",
+  "date": "2026-10-25",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "request": "tests/network/fec-work/W87-maximum6-8m-TCP-recovery-original-arm64.json",
+  "request_commit": "51f49ba3bbe694dbc1009bb7e502d657a2ff9664",
+  "contract_action": 40204822093,
+  "contract_conclusion": "SUCCESS",
+  "network_action": 40204822076,
+  "attempt": 1,
+  "network_conclusion": "SUCCESS",
+  "harness_result": "PASS_SCOPED_OBSERVATION",
+  "artifact_id": 12603069627,
+  "artifact_zip_sha256": "6c3ab1777a400601671cc6c30ac504503aab936391a5b77253284b5062fae6fd",
+  "source": "4322a811fd63e096458f202767faa2f097a587c0",
+  "build_run": 40203220219,
+  "build_artifact_id": 12602931174,
+  "build_zip_sha256": "0ae0939bdd4c02932a6452260fa65f4e1851bf37bd79d7485c28e1895022f125",
+  "scenario": {
+    "mode": "fec-fixed",
+    "profile": 6,
+    "app_mbps_each_direction": 8,
+    "udp_share": 0.96,
+    "tcp_flows": 2,
+    "tcp_target_mbps_each": 0.32,
+    "oneway_delay_ms": 300,
+    "netem_IID_loss_pct_by_phase": [
+      10,
+      30,
+      10
+    ],
+    "seconds_by_phase": [
+      30,
+      60,
+      30
+    ],
+    "netem_rng": "unseeded_recorded",
+    "outer_repair": "OFF",
+    "max_loss_gate_pct": 1,
+    "gate_phases": [
+      "baseline10",
+      "recover10"
+    ],
+    "one_measurement_job": true,
+    "no_AB_same_VM": false
+  },
+  "results": {
+    "baseline10": {
+      "udp_missing": [
+        0,
+        0
+      ],
+      "udp_injected_mbps": [
+        7.68,
+        7.68
+      ],
+      "udp_p99_ms": [
+        315.6,
+        315.7
+      ],
+      "tcp_injected_mbps": [
+        0.32012,
+        0.32012
+      ],
+      "tcp_p99_ms": [
+        314.4,
+        316.3
+      ],
+      "tcp_backpressure_slots": [
+        0,
+        0
+      ]
+    },
+    "peak30": {
+      "udp_missing": [
+        31,
+        59
+      ],
+      "udp_sent": [
+        82430,
+        82430
+      ],
+      "udp_residual_pct": [
+        0.0376077,
+        0.0715759
+      ],
+      "udp_p99_ms": [
+        316.4,
+        316.4
+      ],
+      "tcp_injected_mbps": [
+        0.3199008,
+        0.3199008
+      ],
+      "tcp_target_mbps": [
+        0.32,
+        0.32
+      ],
+      "tcp_p99_ms": [
+        1039.8,
+        993.7
+      ],
+      "tcp_backpressure_slots": [
+        0,
+        0
+      ],
+      "tcp_missing_after_drain": [
+        0,
+        0
+      ]
+    },
+    "recover10": {
+      "udp_missing": [
+        0,
+        0
+      ],
+      "udp_p99_ms": [
+        315.5,
+        315.6
+      ],
+      "tcp_injected_mbps": [
+        0.3200784,
+        0.3200784
+      ],
+      "tcp_target_mbps": [
+        0.32,
+        0.32
+      ],
+      "tcp_p99_ms": [
+        315.3,
+        316.4
+      ],
+      "tcp_backpressure_slots": [
+        0,
+        0
+      ],
+      "tcp_missing_after_drain": [
+        0,
+        0
+      ]
+    },
+    "native_fixed_applied": [
+      "client fixed requested1 applied1 profile6 pendingfalse",
+      "server fixed requested1 applied1 profile6 pendingfalse"
+    ],
+    "authentic_m2": {
+      "client": {
+        "positive_samples": 152315,
+        "reverse_reports": 35446
+      },
+      "server": {
+        "positive_samples": 152342,
+        "reverse_reports": 35456
+      }
+    },
+    "parity_planned_sent": {
+      "client": [
+        256497,
+        256497
+      ],
+      "server": [
+        256699,
+        256699
+      ]
+    },
+    "outer_DATA_retransmitted": [
+      0,
+      0
+    ],
+    "source_TUN_drops": [
+      0,
+      0
+    ],
+    "TUN_root_qdisc_drops": [
+      0,
+      0
+    ],
+    "RX_capacity_rejected": [
+      0,
+      0
+    ],
+    "RX_codec_rejected": [
+      0,
+      0
+    ],
+    "RX_conflict_rejected": [
+      0,
+      0
+    ],
+    "native_TUN_failed": [
+      0,
+      0
+    ],
+    "native_recovered_TUN": {
+      "client": 27316,
+      "server": 27441
+    },
+    "note_recovered": "recovered TUN field must be taken from actual W87 native artifact not copied W86; verify separately if cited",
+    "measured_seconds": 120,
+    "CPU_s": {
+      "client": 15.97,
+      "server": 15.96
+    },
+    "CPU_s_per_delivered_GiB": {
+      "client": 142.95305,
+      "server": 142.83802
+    },
+    "RSS_peak_B": {
+      "client": 23072768,
+      "server": 22986752
+    },
+    "host_CPU_PSI": {
+      "mean_pct": 0.9779,
+      "peak_pct": 1
+    },
+    "cleanup_owned_namespaces_absent": true
+  },
+  "interpretation": "Fixed Maximum6 at the same application offered 8Mbps and one-way300ms with IID30% maintained authentic two-way 0.32Mbps TCP injections, 0 backpressure, ~1.0s peak-phase TCP p99 and no post-burst TCP slowdown, unlike W86 Fixed Balanced3 same source with 0.146/0.155Mbps + 17-21s p99. Stronger FEC protection is consistent with lower inner TCP losses and improved TCP behavior; no evidence of source TUN or RX capacity overload. This is a separate unseeded Action/VM from W86, NOT controlled same-VM performance AB; do not infer a causal absolute CPU percentage or fix at 100Mbps.",
+  "limits": [
+    "Does not qualify original W49/W50 100Mbps highloss cases",
+    "Cannot project to Windows/Game, 65KiB FEC TUN, sustained remote RX overload, outer ON combined-source",
+    "Does not change fixed/auto selection or prove throughput on a user device",
+    "No additional higher load/BA or randomized seed selection; W85 long-GE >1% loss still OPEN and parity interleave rollback intact"
+  ],
+  "windows_test_status": "TEMP_SKIPPED_USER_20261025_NOT_RUN",
+  "capacity_stop": true,
+  "merge_ready": false
+}
