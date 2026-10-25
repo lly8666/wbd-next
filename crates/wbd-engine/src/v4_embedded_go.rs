@@ -227,6 +227,12 @@ struct NormalFirstSendM2 {
     // Bounded authenticated 2s cohort; reset on uncovered source.
     clean_2s:u64,clean_positive_2s:u64,
     authenticated_reverse_reports:u64,censored:bool,
+    // Actual native M2 capacity censorship is cumulative and MUST stay
+    // exposed to Auto as a monotone counter. APPLIED, however, needs a
+    // recent healthy authentic witness, not lifetime zero-capacity history.
+    capacity_last_total:u64,capacity_ever_reset:bool,
+    capacity_last_change:Option<MonoNs>,
+    capacity_positive_at_change:u64,capacity_reverse_at_change:u64,
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 impl NormalFirstSendM2 {
@@ -249,7 +255,23 @@ impl NormalFirstSendM2 {
             live_mature_2s:wbd_recovery::MatureWindow::default(),
             live_mature_8s:wbd_recovery::MatureWindow::default(),
             clean_2s:0,clean_positive_2s:0,
-            authenticated_reverse_reports:0,censored:false})
+            authenticated_reverse_reports:0,censored:false,
+            capacity_last_total:0,capacity_ever_reset:false,
+            capacity_last_change:None,capacity_positive_at_change:0,
+            capacity_reverse_at_change:0})
+    }
+    // Count only changes in the *real* native capacity-censorship ledger.
+    // Never clear or reinterpret the lifetime counter as healthy, and
+    // never accept wrap/rollback/saturation as a fresh good interval.
+    fn refresh_capacity_witness(&mut self,now:MonoNs){
+        let total=self.state.counters().capacity_censored;
+        if total<self.capacity_last_total{self.capacity_ever_reset=true}
+        if total!=self.capacity_last_total{
+            self.capacity_last_total=total;
+            self.capacity_last_change=Some(now);
+            self.capacity_positive_at_change=self.positive_2s;
+            self.capacity_reverse_at_change=self.authenticated_reverse_reports;
+        }
     }
     fn poll(&mut self,now:MonoNs){
         match self.state.on_due(now){
@@ -280,6 +302,7 @@ impl NormalFirstSendM2 {
             }
             Err(_)=>self.censored=true,
         }
+        self.refresh_capacity_witness(now);
     }
     // A configuration APPLIED receipt requires a real 2s-mature positive
     // proof for one original, first-copied DATA PN, not an entire 2s epoch
@@ -287,11 +310,23 @@ impl NormalFirstSendM2 {
     // predicate could remain pending forever despite thousands of genuine
     // authenticated positive receipts. Uncovered, late, old and ambiguous
     // observations remain UNKNOWN in the quality estimator; they never
-    // become fake ACKs or zero loss. Capacity censorship still fails closed.
-    fn has_verified_fixed_m2_witness(&self)->bool{
+    // become fake ACKs or zero loss. Genuine capacity censorship freezes
+    // the witness for >=16s after the LAST positive native increase,
+    // then requires new authentic positive DATA and reverse receipts
+    // AFTER that capacity event. A saturated or reset ledger fails closed.
+    fn has_verified_fixed_m2_witness(&self,now:MonoNs)->bool{
+        if self.capacity_ever_reset||self.capacity_last_total==u64::MAX{
+            return false
+        }
+        if let Some(at)=self.capacity_last_change {
+            if now.0<at.0.saturating_add(16_000_000_000) ||
+                self.positive_2s<=self.capacity_positive_at_change ||
+                self.authenticated_reverse_reports<=self.capacity_reverse_at_change{
+                return false
+            }
+        }
         self.authenticated_reverse_reports>0 &&
-        self.covered_2s>0 && self.positive_2s>0 &&
-        self.state.counters().capacity_censored==0
+        self.covered_2s>0 && self.positive_2s>0
     }
     #[cfg(test)]
     fn has_clean_fixed_m2(&self)->bool{
@@ -5468,7 +5503,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_commit_mature_m2(
         m2.poll(loop_now());
         // A 2s-mature authentic clean cohort, NOT all-source epoch totals.
         // Identity/capacity censorship is still a hard failure.
-        m2.has_verified_fixed_m2_witness() &&
+        m2.has_verified_fixed_m2_witness(now) &&
         m2.positive_2s>e.fec2_pending_m2_positive_baseline &&
         m2.authenticated_reverse_reports>e.fec2_pending_m2_reverse_baseline
     };
@@ -5775,16 +5810,44 @@ mod tests{
         assert_eq!(first.unknown_2s,1);
         assert_eq!((first.clean_2s,first.clean_positive_2s),(1,1));
         assert!(first.has_clean_fixed_m2());
-        assert!(first.has_verified_fixed_m2_witness());
+        assert!(first.has_verified_fixed_m2_witness(MonoNs(4_100_000_100)));
         first.on_real_kernel_turn(&[(RecordPn(9),1200)],copied,MonoNs(4_200_000_000));
         first.poll(MonoNs(6_200_000_100));
         assert!(!first.has_clean_fixed_m2());
         // A real mature positive witness survives unrelated later UNKNOWNs;
         // the quality estimate is still censored, not re-labelled clean.
-        assert!(first.has_verified_fixed_m2_witness());
+        assert!(first.has_verified_fixed_m2_witness(MonoNs(6_200_000_100)));
         first.censored=true;
         assert!(!first.has_clean_fixed_m2());
-        assert!(first.has_verified_fixed_m2_witness());
+        assert!(first.has_verified_fixed_m2_witness(MonoNs(6_200_000_100)));
+
+        // Real previous accepted positives do not satisfy a new revision
+        // after sender-host M2 capacity was exhausted. A stale cumulative
+        // count is not eternal HOST_CAPACITY either: require bounded
+        // quiet time PLUS post-capacity authentic positives and reverse M2.
+        first.capacity_last_total=1;
+        first.capacity_last_change=Some(MonoNs(6_300_000_000));
+        first.capacity_positive_at_change=first.positive_2s;
+        first.capacity_reverse_at_change=first.authenticated_reverse_reports;
+        assert!(!first.has_verified_fixed_m2_witness(MonoNs(22_500_000_000)));
+        first.on_real_kernel_turn(&[(RecordPn(10),1200)],copied,MonoNs(6_400_000_000));
+        let mut bits=[0u8;32];bits[1]=4; // authenticated positive DATA PN10
+        first.on_original_authenticated_reverse(AuthenticatedNormalKind1{
+            reverse_record_pn:4,receipt:wbd_codec::Receipt{
+                largest_data_pn:10,ack_delay_us:0,report_seq:2,
+                pages:vec![wbd_codec::ReceiptPage{base_pn:0,bitmap:bits}],
+            },
+        },MonoNs(6_500_000_000)).unwrap();
+        first.poll(MonoNs(8_500_000_200));
+        assert!(!first.has_verified_fixed_m2_witness(MonoNs(9_000_000_000)));
+        assert!(first.has_verified_fixed_m2_witness(MonoNs(22_500_000_000)));
+        // Counter rollback, even if scheduler recovers, is a fail-closed
+        // mutation; saturated lifetime counter can never be called healthy.
+        first.capacity_ever_reset=true;
+        assert!(!first.has_verified_fixed_m2_witness(MonoNs(40_000_000_000)));
+        first.capacity_ever_reset=false;
+        first.capacity_last_total=u64::MAX;
+        assert!(!first.has_verified_fixed_m2_witness(MonoNs(40_000_000_000)));
     }
     #[cfg(all(feature="fec2_product_record",target_os="linux",
         any(target_arch="x86_64",target_arch="aarch64")))]
