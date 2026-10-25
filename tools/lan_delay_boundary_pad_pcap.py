@@ -6,7 +6,7 @@ import argparse,hashlib,json,pathlib,struct
 
 TEST_SNI=b"private.inner-wbd.example"
 MTU=1500
-UNDERLAY=40
+UNDERLAY=80 # reserve IPv4 min 20B and TCP max 60B including options
 MAX_WIRE=MTU-UNDERLAY
 def timed_segments(raw,port):
     assert len(raw)>=24
@@ -39,11 +39,13 @@ def timed_segments(raw,port):
         thl=(tcp[12]>>4)*4
         if thl<20 or total<ihl+thl:continue
         if int.from_bytes(tcp[2:4],"big")!=port:continue
+        assert total<=MTU,("real captured outer IPv4 packet exceeded path MTU",total)
+        assert (ip[6]&0x3f)==0 and ip[7]==0,"outer IPv4 fragmented on loopback"
         body=ip[ihl+thl:min(total,len(ip))]
         if not body:continue
         ts=sec+frac/(1e9 if nanos else 1e6)
         seq=int.from_bytes(tcp[4:8],"big")
-        segs.append((seq,body,ts))
+        segs.append((seq,body,ts,total))
     assert offset==len(raw)
     return segs
 
@@ -61,7 +63,7 @@ def audit(pcap,port,manifest):
     entries=timed_segments(raw,port)
     assert entries
     uniq={};duplicates=0
-    for seq,body,ts in entries:
+    for seq,body,ts,total in entries:
         if seq in uniq:
             assert uniq[seq][0]==body,"outer same-seq bytes changed"
             duplicates+=1
@@ -186,6 +188,8 @@ def audit(pcap,port,manifest):
        "some_packets_not_padded":(unpadded+xor+zero_room)>0,
        "ALL_packets_padded":False,
        "path_mtu":MTU,
+       "max_observed_outer_ipv4_packet_bytes":max(x[3] for x in entries),
+       "all_real_captured_outer_ipv4_packets_at_or_under_mtu":True,
        "max_record_plus_underlay":max(len(frame)+UNDERLAY for _,frame,_ in observed),
        "hold_random_target_ms":meta["ChosenHoldMs"],
        "observed_pcap_client_finished_to_first_XOR_ms":round(delta_ms,3),
