@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "phase": "COMPLETE_SCOPED_NATIVE_99PCT_ALL_PN_VS_HYBRID_GATE_CPU_PASS_NO_PRODUCTION",
+  "branch": "experiment/lan-fastgate-99pct-cost",
+  "base": {
+    "branch": "experiment/lan-fastgate-mixed-wire",
+    "sha": "dae61abcf2dc44c05e3b803cb8985d760ab2a958"
+  },
+  "report": "docs/evidence/lan-fastgate-99pct/REPORT.md",
+  "scope": "99 same-length 1345B actual inner IPv4 TLS13 app record packets fast eligible and 1 same-size marked TLS edge per 100 packets, genuine WBD Rust AES128GCM FULL vs all public PN-XOR vs 99pct mixed with oracle vs 99pct mixed with extra O1 IPv4/TCP check",
+  "source": {
+    "benchmark_file": "crates/wbd-codec/examples/lan_fastgate_99pct_cost.rs",
+    "analyzer": "tools/lan_fastgate_99pct_analyze.py"
+  },
+  "test": {
+    "profiles": [
+      "equal_99"
+    ],
+    "packet_bytes": 1345,
+    "eligible_records_per_100": 99,
+    "protected_edge_full_AES_records_per_100": 1,
+    "modes": 4,
+    "replicates_per_mode": 4,
+    "total_symmetric_legs": 16,
+    "timed_leg_seconds": 2,
+    "warmup_leg_seconds": 0.35,
+    "full_AES_overhead_bytes": 31,
+    "public_XOR_overhead_bytes": 15
+  },
+  "evidence": {
+    "x86_64": {
+      "run_id": 40185975878,
+      "job_id": 121146721987,
+      "source_sha": "9e8af7daa03ce0e2640409c6a7aad47215dbe2dc",
+      "conclusion": "success",
+      "unit_tests": "10/10",
+      "artifact_id": 12596197692,
+      "artifact_zip_sha256": "244feb7a7b527078805327ab45817c0e990843e9ff5b0a3f045b0ceea3ba4872",
+      "cpu_ns_per_original_inner_byte": {
+        "full_AES": 0.791092324351685,
+        "all_public_PN_XOR": 0.1031607184400925,
+        "ideal_99pct_hybrid": 0.11026961983546515,
+        "gated_99pct_hybrid": 0.1110143799955682
+      },
+      "hybrid_over_all_pct": 7.613034955777742,
+      "ideal_over_all_pct": 6.891093337529375,
+      "gate_over_ideal_pct": 0.6753992271074427,
+      "hybrid_saving_vs_all_AES_pct": 85.96695018036655
+    },
+    "arm64": {
+      "run_id": 40185978508,
+      "job_id": 121146731010,
+      "source_sha": "64bcde9a9948f9dcfa83cd8da2cadb26107e5dfb",
+      "conclusion": "success",
+      "unit_tests": "10/10",
+      "artifact_id": 12595334009,
+      "artifact_zip_sha256": "1f6e841ab6bd4a837dc9e7470212be1a457aea55ad178002f54b162a916937c5",
+      "cpu_ns_per_original_inner_byte": {
+        "full_AES": 0.7649193415024877,
+        "all_public_PN_XOR": 0.08688513168783195,
+        "ideal_99pct_hybrid": 0.09433314366701634,
+        "gated_99pct_hybrid": 0.09566894672364445
+      },
+      "hybrid_over_all_pct": 10.10968719869323,
+      "ideal_over_all_pct": 8.57225147099301,
+      "gate_over_ideal_pct": 1.4160484901715176,
+      "hybrid_saving_vs_all_AES_pct": 87.49293663620436
+    }
+  },
+  "on_wire_extra_over_all_XOR_per_100_packets_bytes": 16,
+  "security": "all PN-XOR is fully reversible and violates the sensitive handshake plaintext hiding requirement; hybrid XOR leg is also unauthenticated; only 1pct full AES protects handshake when confidently labelled",
+  "limitations": [
+    "the trusted app label is an ideal offline oracle, not an available live WBD classifier",
+    "real O1 IPv4 TCP check included but per-flow classification discovery, authenticated mode signaling and capability admission omitted",
+    "one native VM per architecture; not full WBD Go Rust TUN CPU, throughput or p99",
+    "equally sized 1pct AES edge assumption not representative of all real flow mixes"
+  ],
+  "main_modified": false,
+  "production_wired": false,
+  "merge_ready": false,
+  "open_requests": [],
+  "next_action": "NONE_SCOPED_A_B_COST_EXPERIMENT_COMPLETE_DO_NOT_MERGE_INSECURE_ORACLE_LAB"
+}
