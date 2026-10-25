@@ -12,15 +12,16 @@ const XOR_OVERHEAD: usize = 15;
 const AEAD_OVERHEAD: usize = 31;
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
-enum Kind { Clear, Fixed, Rolling, Aes128, Chacha }
+enum Kind { Clear, Fixed, Rolling, RollingWord, Aes128, Chacha }
 impl Kind {
     fn name(self)->&'static str { match self {
         Self::Clear=>"clear",Self::Fixed=>"fixed_xor",Self::Rolling=>"rolling_xor",
+        Self::RollingWord=>"rolling_word_xor",
         Self::Aes128=>"aes128_gcm",Self::Chacha=>"chacha20_poly1305"
     }}
     fn xor_mode(self)->Option<xor::Mode> {match self {
         Self::Fixed=>Some(xor::Mode::FixedXor),
-        Self::Rolling=>Some(xor::Mode::RollingXor),
+        Self::Rolling|Self::RollingWord=>Some(xor::Mode::RollingXor),
         _=>None
     }}
     fn suite(self)->Option<RecordSuite> {match self {
@@ -52,7 +53,7 @@ fn rss_kb()->u64 {
 /// Fast-path reuses a preallocated buffer; format EXACTLY matches the
 /// separately unit-tested fixed/rolling XOR standalone LAN fixture.
 fn xor_seal_into(
-    p:&[u8],mode:Option<xor::Mode>,pn:u64,wire:&mut [u8]
+    p:&[u8],mode:Option<xor::Mode>,fast_word:bool,pn:u64,wire:&mut [u8]
 )->usize {
     let used = p.len()+XOR_OVERHEAD;
     assert!(used<=wire.len() && used<=MAX_WIRE);
@@ -61,16 +62,18 @@ fn xor_seal_into(
     wire[5..13].copy_from_slice(&pn.to_be_bytes());
     wire[13..15].copy_from_slice(&(p.len() as u16).to_be_bytes());
     wire[15..used].copy_from_slice(p);
-    if let Some(m)=mode { xor::mask(&mut wire[13..used],m,xor::DEMO_SEED,pn); }
+    if fast_word { xor::rolling_word_mask(&mut wire[13..used],xor::DEMO_SEED,pn); }
+    else if let Some(m)=mode { xor::mask(&mut wire[13..used],m,xor::DEMO_SEED,pn); }
     used
 }
 fn xor_open_into(
-    mode:Option<xor::Mode>,wire:&mut [u8],used:usize,out:&mut [u8]
+    mode:Option<xor::Mode>,fast_word:bool,wire:&mut [u8],used:usize,out:&mut [u8]
 )->u64 {
     assert_eq!(&wire[..3], &[0x17,0x03,0x03]);
     assert_eq!(usize::from(u16::from_be_bytes([wire[3],wire[4]])),used-5);
     let pn=u64::from_be_bytes(wire[5..13].try_into().unwrap());
-    if let Some(m)=mode {xor::mask(&mut wire[13..used],m,xor::DEMO_SEED,pn);}
+    if fast_word {xor::rolling_word_mask(&mut wire[13..used],xor::DEMO_SEED,pn);}
+    else if let Some(m)=mode {xor::mask(&mut wire[13..used],m,xor::DEMO_SEED,pn);}
     let n=usize::from(u16::from_be_bytes([wire[13],wire[14]]));
     assert_eq!(n+XOR_OVERHEAD,used);
     out[..n].copy_from_slice(&wire[15..used]);
@@ -112,9 +115,9 @@ impl Pair {
         } else {
             let pn=self.xor_next_pn;
             self.xor_next_pn=self.xor_next_pn.checked_add(1).unwrap();
-            let used=xor_seal_into(p,kind.xor_mode(),pn,&mut self.wire);
+            let used=xor_seal_into(p,kind.xor_mode(),kind==Kind::RollingWord,pn,&mut self.wire);
             black_box(&mut self.wire[..used]);
-            let readpn=xor_open_into(kind.xor_mode(),&mut self.wire,used,&mut self.out);
+            let readpn=xor_open_into(kind.xor_mode(),kind==Kind::RollingWord,&mut self.wire,used,&mut self.out);
             assert_eq!(pn,readpn);
             used
         };
@@ -126,20 +129,21 @@ impl Pair {
 fn check_fixture_equivalence(p:&[u8]){
     assert!(xor::ipv4_packet_ok(p));
     for (m,kind) in [(xor::Mode::FixedXor,Kind::Fixed),
-                     (xor::Mode::RollingXor,Kind::Rolling)] {
+                     (xor::Mode::RollingXor,Kind::Rolling),
+                     (xor::Mode::RollingXor,Kind::RollingWord)] {
         for pn in [0u64,1,2,3,100] {
             let fixture=xor::seal(p,m,xor::DEMO_SEED,pn).unwrap();
             let mut w=vec![0u8;p.len()+XOR_OVERHEAD];
-            let used=xor_seal_into(p,kind.xor_mode(),pn,&mut w);
+            let used=xor_seal_into(p,kind.xor_mode(),kind==Kind::RollingWord,pn,&mut w);
             assert_eq!(&w[..used],&fixture[..],"benchmark must use captured wire format");
             let mut out=vec![0u8;p.len()];
-            assert_eq!(xor_open_into(kind.xor_mode(),&mut w,used,&mut out),pn);
+            assert_eq!(xor_open_into(kind.xor_mode(),kind==Kind::RollingWord,&mut w,used,&mut out),pn);
             assert_eq!(out,p);
             let (fpn,decoded)=xor::open(&fixture,m,xor::DEMO_SEED).unwrap();
             assert_eq!(fpn,pn);assert_eq!(decoded,p);
         }
     }
-    for kind in [Kind::Clear,Kind::Fixed,Kind::Rolling,Kind::Aes128,Kind::Chacha]{
+    for kind in [Kind::Clear,Kind::Fixed,Kind::Rolling,Kind::RollingWord,Kind::Aes128,Kind::Chacha]{
         let mut pair=Pair::new(kind,100,p.len());
         let used=pair.round(kind,p);
         assert_eq!(used,p.len()+if kind.suite().is_some(){AEAD_OVERHEAD}else{XOR_OVERHEAD});
@@ -183,8 +187,8 @@ fn main(){
     check_fixture_equivalence(&p);
     eprintln!("preflight passed: same fixture bytes/headers & both native AEAD suites");
     let order=[
-        Kind::Aes128,Kind::Chacha,Kind::Fixed,Kind::Rolling,Kind::Clear,
-        Kind::Clear,Kind::Rolling,Kind::Fixed,Kind::Chacha,Kind::Aes128
+        Kind::Aes128,Kind::Chacha,Kind::Fixed,Kind::Rolling,Kind::RollingWord,Kind::Clear,
+        Kind::Clear,Kind::RollingWord,Kind::Rolling,Kind::Fixed,Kind::Chacha,Kind::Aes128
     ];
     for (i,kind) in order.iter().copied().enumerate(){
         drive(kind,(i+20) as u8,&p,Duration::from_millis(700),false);
