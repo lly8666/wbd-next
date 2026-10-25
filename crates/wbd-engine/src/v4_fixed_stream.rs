@@ -39,6 +39,9 @@ pub struct FixedStream {
     // Bounded 4-row plaintext parity scratch, reused for every block,
     // never exposed or borrowed across the synchronous original M4 seal.
     parity_scratch:[Vec<u8>;MAX_BATCH_ROWS],
+    // One bounded MAX_K*symbol_len source workspace. Recovered ONLY after
+    // original M4 finishes the previous job; zeroed on Stop.
+    source_scratch:Vec<u8>,
     stopped:bool,
 }
 impl FixedStream {
@@ -67,7 +70,7 @@ impl FixedStream {
         Some(Self{owner,codec:Rs16::new(),profile:m3,
             revision:ConfigRevision(revision),record_payload_budget,
             in_flight:None,parity_scratch:std::array::from_fn(|_|Vec::new()),
-            stopped:false})
+            source_scratch:Vec::new(),stopped:false})
     }
     pub fn revision(&self)->ConfigRevision{self.revision}
     pub fn report(&self)->OwnerReport{self.owner.report()}
@@ -138,8 +141,9 @@ impl FixedStream {
         if self.in_flight.is_none(){
             let Some(mut job)=self.owner.take_parity(now)
                 .map_err(StreamError::Owner)? else{return Ok((0,0))};
-            let prepared=match StagedParity::from_owner_job(
-                &mut job,self.profile,self.record_payload_budget
+            let prepared=match StagedParity::from_owner_job_with_workspace(
+                &mut job,self.profile,self.record_payload_budget,
+                std::mem::take(&mut self.source_scratch)
             ){
                 Ok(x)=>x,
                 Err(e)=>{
@@ -156,6 +160,7 @@ impl FixedStream {
         if cur.staged>0{return Ok((0,0))}
         if now.0>cur.job.expire_at.0{
             let job=self.in_flight.take().ok_or(StreamError::Invalid)?;
+            self.source_scratch=job.prepared.into_workspace();
             self.owner.finish_parity(job.job,job.copied,false);
             return Ok((0,0))
         }
@@ -180,6 +185,7 @@ impl FixedStream {
                         return Err(StreamError::Codec(e))
                     }
                     let job=self.in_flight.take().ok_or(StreamError::Invalid)?;
+                    self.source_scratch=job.prepared.into_workspace();
                     self.owner.finish_parity(job.job,job.copied,false);
                     return Err(StreamError::Codec(e))
                 }
@@ -199,6 +205,7 @@ impl FixedStream {
         }
         if cur.prepared.remaining_rows()==0 && cur.staged==0{
             let finished=self.in_flight.take().ok_or(StreamError::Invalid)?;
+            self.source_scratch=finished.prepared.into_workspace();
             self.owner.finish_parity(
                 finished.job,finished.copied,finished.capacity_known
             );
@@ -219,6 +226,7 @@ impl FixedStream {
         cur.staged=0;
         if cur.prepared.remaining_rows()==0{
             let done=self.in_flight.take().ok_or(StreamError::Invalid)?;
+            self.source_scratch=done.prepared.into_workspace();
             self.owner.finish_parity(done.job,done.copied,done.capacity_known);
         }
         Ok(())
@@ -229,12 +237,14 @@ impl FixedStream {
         if self.stopped{return}
         self.stopped=true;
         if let Some(flight)=self.in_flight.take(){
+            self.source_scratch=flight.prepared.into_workspace();
             self.owner.finish_parity(flight.job,flight.copied,false);
         }
         self.owner.stop();
         // Retained parity scratch may contain plaintext-derived bytes;
         // scrub once on Stop and never reuse across the stopped generation.
         for row in &mut self.parity_scratch{row.fill(0);row.clear();}
+        self.source_scratch.fill(0);self.source_scratch.clear();
     }
 }
 
@@ -412,6 +422,21 @@ mod tests{
         stream.settle_staged(20,0,0).unwrap();
         assert_eq!(stream.report().classes[0].r_sent,20);
         assert_eq!(stream.report().outstanding_jobs,0);
+        assert_eq!(stream.source_scratch.len(),16*(135+2));
+        let ptr=stream.source_scratch.as_ptr();
+        // Second DIFFERENT full block MUST reuse the same continuous
+        // source symbol allocation with exact per-block zero-tail bytes.
+        let mut second=Vec::new();
+        for i in 0..16{push(&mut stream,&mut arena,&[i as u8;77],7_000_000+i as u64,&mut second);}
+        assert_eq!(stream.poll_parity_quanta(MonoNs(13_100_000),5,
+            |wire,id,row,_|{
+                assert_eq!(id,2);
+                assert_eq!(parse_repair(wire,1400).unwrap().parity_row,row);
+                DriverProof::Staged
+            }).unwrap(),(20,0));
+        stream.settle_staged(20,0,0).unwrap();
+        assert_eq!(stream.source_scratch.as_ptr(),ptr);
+        assert_eq!(stream.source_scratch.len(),16*(77+2));
         stream.stop();arena.stop();arena.drain_returns();
         assert_eq!(arena.report().loaned,0);
     }

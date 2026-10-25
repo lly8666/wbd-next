@@ -235,7 +235,11 @@ struct CacheKey {k:u8, missing:u16, selected_rows:u32}
 /// fresh first-send/AEAD ownership. Reusable by <=4-row encoding quanta, so
 /// ISA-L does NOT pad/copy k full source symbols for each quantum.
 pub struct PreparedBlock {
-    symbols: Vec<Vec<u8>>,
+    // One reusable contiguous k*symbol_len source workspace. No k tiny
+    // allocations, and zero-tail/prefix are identical to the previous
+    // per-frame Vec representation.
+    symbols: Vec<u8>,
+    k: usize,
     symbol_len: usize,
     #[cfg(feature="native-isal")]
     // Immutable shared native coefficient tables indexed by bounded
@@ -244,19 +248,28 @@ pub struct PreparedBlock {
 }
 impl PreparedBlock {
     pub fn from_frames(frames:&[&[u8]],record_payload_budget:usize)->Result<Self,Error> {
+        Self::from_frames_with_workspace(frames,record_payload_budget,Vec::new())
+    }
+    /// The workspace is owned by the one in-flight FixedStream job and only
+    /// returned after the original M4 copied-prefix is settled. This cannot
+    /// overlap another block's codec use or an M1 source slab loan.
+    pub fn from_frames_with_workspace(frames:&[&[u8]],
+        record_payload_budget:usize,mut symbols:Vec<u8>)->Result<Self,Error> {
         let len=Rs16::validate_sources(frames,record_payload_budget)?;
-        let symbols=frames.iter().map(|frame|{
-            let mut out=vec![0u8;len];
+        let bytes=len.checked_mul(frames.len()).ok_or(Error::BudgetExceeded)?;
+        symbols.resize(bytes,0);
+        for (frame,out) in frames.iter().zip(symbols.chunks_exact_mut(len)){
+            out.fill(0); // zero tail when this buffer previously held longer frames
             out[..2].copy_from_slice(&(frame.len() as u16).to_be_bytes());
             out[2..2+frame.len()].copy_from_slice(frame);
-            out
-        }).collect();
-        Ok(Self{symbols,symbol_len:len,
+        }
+        Ok(Self{symbols,k:frames.len(),symbol_len:len,
             #[cfg(feature="native-isal")]
             native_tables:[None;MAX_R*MAX_BATCH_ROWS],
         })
     }
-    pub fn k(&self)->usize{self.symbols.len()}
+    pub fn into_workspace(self)->Vec<u8>{self.symbols}
+    pub fn k(&self)->usize{self.k}
     pub fn symbol_len(&self)->usize{self.symbol_len}
     /// Native table references used by this block; matrix allocation is
     /// independent of authenticated source symbols and bounded globally.
@@ -468,9 +481,9 @@ impl Rs16 {
                 // Native k<=16, rows<=4: pass stack-backed borrowed views,
                 // eliminating two short-lived per-quantum Vec allocations.
                 let mut src:[&[u8];MAX_K]=[&[];MAX_K];
-                for (dst,sym) in src.iter_mut().zip(prepared.symbols.iter()) {
-                    *dst=sym.as_slice();
-                }
+                for (dst,sym) in src.iter_mut().zip(
+                    prepared.symbols.chunks_exact(prepared.symbol_len)
+                ){ *dst=sym; }
                 let mut e0=[];let mut e1=[];let mut e2=[];let mut e3=[];
                 let mut dest:[&mut [u8];MAX_BATCH_ROWS]=[
                     &mut e0,&mut e1,&mut e2,&mut e3
@@ -488,7 +501,7 @@ impl Rs16 {
             for (i,o) in outputs.iter_mut().enumerate() {
                 let dst=&mut o[REPAIR_HEADER..];
                 dst.fill(0);
-                for (col,src) in prepared.symbols.iter().enumerate() {
+                for (col,src) in prepared.symbols.chunks_exact(len).enumerate() {
                     let c=self.coefficient(first_row+i,col,k)?;
                     for (b,&x) in dst.iter_mut().zip(src.iter()) {
                         *b^=if c==1{x}else{self.gf.mul(c,x)};

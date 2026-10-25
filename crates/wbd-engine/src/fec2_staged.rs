@@ -28,6 +28,13 @@ impl StagedParity {
         job: &mut ParityJob, authenticated_profile: Profile,
         record_payload_budget: usize,
     ) -> Result<Self, Error> {
+        Self::from_owner_job_with_workspace(job,authenticated_profile,
+                                            record_payload_budget,Vec::new())
+    }
+    pub fn from_owner_job_with_workspace(
+        job: &mut ParityJob, authenticated_profile: Profile,
+        record_payload_budget: usize, workspace: Vec<u8>,
+    ) -> Result<Self, Error> {
         let k=job.source_count();
         if job.block_id==0 || k==0 || k!=usize::from(job.k)
             || authenticated_profile.parity_count(k)?!=usize::from(job.r)
@@ -35,7 +42,8 @@ impl StagedParity {
             return Err(Error::ConflictingMeta);
         }
         let prepared=job.with_sources(|refs|
-            PreparedBlock::from_frames(refs,record_payload_budget))?;
+            PreparedBlock::from_frames_with_workspace(
+                refs,record_payload_budget,workspace))?;
         Ok(Self{block_id:job.block_id,profile:authenticated_profile,
                 r:usize::from(job.r),next_row:0,prepared})
     }
@@ -89,6 +97,7 @@ impl StagedParity {
         Ok(Some((count,used)))
     }
 
+    pub fn into_workspace(self)->Vec<u8>{self.prepared.into_workspace()}
     pub fn remaining_rows(&self)->usize {self.r-self.next_row}
 }
 
