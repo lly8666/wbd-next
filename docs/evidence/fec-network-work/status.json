@@ -5641,5 +5641,37 @@
     "merge_ready": false,
     "capacity_stop": true,
     "scoped_integration_review_ready": true
+  },
+  "windows_fec_testing_20261025": {
+    "status": "TEMP_SKIPPED_USER_20261025",
+    "applicability": "ONLY_FEC_NETWORK_WORK_ROLE",
+    "requested_by_user": true,
+    "tests": [
+      "Windows x64 native FEC2 SIMD/ISA-L/codec",
+      "Windows original Go/Rust FEC2 product E2E",
+      "Windows Wintun actual TUN delivery and FEC recovery",
+      "Windows GUI/config/revision/Stop/MTU package",
+      "Windows Game+FEC scope"
+    ],
+    "qualification": "NOT_RUN_NOT_PASS",
+    "ci_disabling": "NONE: M0 WINDOWS OWNER WORKFLOWS/TESTS UNCHANGED",
+    "resumption": "Only after user asks to resume; verify current M0 Windows exact source and actual native Actions",
+    "receipt": "docs/evidence/fec-network-work/20261025-W86-windows-temporarily-skipped-and-linux-priorities.json",
+    "windows_product_pass": false
+  },
+  "w86_linux_mixed_tcp_lowload": {
+    "status": "ONE_FINITE_LINUX_ACTION_STARTED_RESULT_NOT_YET_RECEIVED",
+    "source": "4322a811fd63e096458f202767faa2f097a587c0",
+    "source_build_action": 40203220219,
+    "source_artifact_id": 12602931174,
+    "source_artifact_zip_sha256": "0ae0939bdd4c02932a6452260fa65f4e1851bf37bd79d7485c28e1895022f125",
+    "request": "tests/network/fec-work/W86-balanced3-8m-TCP-recovery-original-arm64.json",
+    "contract_action": 40204401670,
+    "network_action": 40204401717,
+    "case": "Fixed Balanced3 original Linux ARM64, 8Mbps/side mixed TCP/UDP, IID10%30%10%, one-way300ms, outer DATA OFF",
+    "reason": "Bounded diagnostic if historical W50 100Mbps post-burst inner TCP injection backpressure also happens with no high-load/host knee",
+    "not_a_100Mbps_qualification": true,
+    "capacity_stop": true,
+    "windows_skipped": true
   }
 }
