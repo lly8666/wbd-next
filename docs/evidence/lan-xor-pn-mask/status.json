@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "branch": "experiment/lan-xor-pn-mask",
+  "experiment": "LAN_XOR_PUBLIC_PN_REPEAT_64BIT_MASK",
+  "phase": "COMPLETE_SCOPED_NATIVE_X86_ARM_PERF_AND_PCAP_PASS_INSECURE_LAB_ONLY",
+  "base": {
+    "branch": "experiment/lan-xor-word-optim",
+    "sha": "56b6049f7c3307af27a88034b518943fe739d43d"
+  },
+  "report": "docs/evidence/lan-xor-pn-mask/FINAL_REPORT.md",
+  "security": "NONE_PUBLIC_PN_MASK_FULLY_REVERSIBLE_NO_AUTH_CONFIDENTIALITY_REPLAY",
+  "algorithm": "rotl64(clear_outer_PN,17)^public_salt; XOR one same 64bit word over all inner payload bytes; apply tail; one mask generation per original IP packet",
+  "production_wired": false,
+  "main_modified": false,
+  "perf_contract": "14 symmetric native same-job record seal/open legs, 0.7s warm + 6s measure each, 1345B constructed same original IPv4 packet, reuse buffers, Linux schedstat CPU ns per original byte",
+  "perf": {
+    "x86_64": {
+      "run_id": 40177705366,
+      "source": "3266927b7dd77408f3742207173055486190049d",
+      "job_id": 121121883616,
+      "conclusion": "success",
+      "rust_tests": {
+        "passed": 10,
+        "failed": 0
+      },
+      "artifact_id": 12593271865,
+      "zip_sha256": "a74a681c3f7716adb10b7e25420cfe6d18041bec16c4b2b22e293300850b510b",
+      "cpu_ns_per_byte": {
+        "clear": 0.03392410866354262,
+        "fixed_xor": 0.08511077909290982,
+        "new_pn_repeat_xor": 0.08505598361769096,
+        "rolling_word_xor": 0.5766786647841197,
+        "old_rolling_byte_xor": 3.320453958620323,
+        "aes128_gcm": 0.7738996675523215,
+        "chacha20_poly1305": 1.4347056115784955
+      },
+      "saving_vs_word_pct": 85.25071433854211,
+      "saving_vs_aes_pct": 89.0094301388312
+    },
+    "arm64": {
+      "run_id": 40177708017,
+      "source": "01bf8ea29d1bab31d158107cca01bd78849ae95b",
+      "job_id": 121121892057,
+      "conclusion": "success",
+      "rust_tests": {
+        "passed": 10,
+        "failed": 0
+      },
+      "artifact_id": 12592923076,
+      "zip_sha256": "20e7b15aecbab0a6613936966766af48e392a871fe01987b4c4fd3905c6199a7",
+      "cpu_ns_per_byte": {
+        "clear": 0.035990350508592325,
+        "fixed_xor": 0.08058484706158206,
+        "new_pn_repeat_xor": 0.08042031499215738,
+        "rolling_word_xor": 0.2884006308917194,
+        "old_rolling_byte_xor": 3.115254920631684,
+        "aes128_gcm": 0.7552175569178196,
+        "chacha20_poly1305": 2.6816905670509037
+      },
+      "saving_vs_word_pct": 72.11506967113696,
+      "saving_vs_aes_pct": 89.35137110419316
+    }
+  },
+  "pcap": {
+    "x86_64": {
+      "run_id": 40177730105,
+      "source": "52d75502faa19acd9d098d9eea52448051d29b5f",
+      "job_id": 121121960717,
+      "conclusion": "success",
+      "artifact_id": 12592303188,
+      "zip_sha256": "9e9aeab6e2e0c543840cd7f1f4e3a8a332903eec60c0a502e50e0f19e0c5996e",
+      "raw_pcap_bytes": 14233,
+      "raw_pcap_sha256": "35315c728c55a6621e10e0a53785193cfb8f5f59c48a8327dc558e9914a49be1"
+    },
+    "arm64": {
+      "run_id": 40177732221,
+      "source": "070926f30f88459bce98907f4d28cca5fd136501",
+      "job_id": 121121967224,
+      "conclusion": "success",
+      "artifact_id": 12592552702,
+      "zip_sha256": "b731e2aa687c7a0ae42213fac9429267ca8205c0f3852ed1bb82a869d84ef209",
+      "raw_pcap_bytes": 14233,
+      "raw_pcap_sha256": "cefee91f8d9387c6c1495cc5e62e6dfff46e0433d3d7ed3a8ecdcc3f52732db0"
+    },
+    "protocol": "real mutually authenticated TLS1.3 standalone handshake then fake TLS-looking 17 03 03 raw data; not WBD Go-Rust-TUN or real RFC TLS cipher record",
+    "steady_records": 8,
+    "per_record_wire_bytes": 1360,
+    "synthetic_original_ip_bytes": 1345,
+    "outer_seq_distinct": true,
+    "each_new_pn_masked_full_8B_block_distinct_for_identical_input": true,
+    "repeat_64_128": false,
+    "real_WBD_product_path": false,
+    "raw_pcap_retained": false
+  },
+  "limitations": [
+    "no real WBD Go-Rust-TUN",
+    "no product throughput latency CPU",
+    "no true cryptographic TLS ciphertext",
+    "no confidentiality integrity anti-replay or classifier security"
+  ],
+  "open_requests": [],
+  "next_action": "NONE_SCOPED_NATIVE_CPU_AND_PCAP_EXPERIMENT_COMPLETE_NO_PRODUCTION_MERGE",
+  "merge_ready": false
+}
