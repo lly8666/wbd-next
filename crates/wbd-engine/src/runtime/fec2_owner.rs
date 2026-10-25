@@ -274,6 +274,13 @@ impl Fec2Owner {
             .chain(self.pending.front().map(|b|MonoNs(b.expire_at.0.saturating_add(1))))
             .min_by_key(|t|t.0)
     }
+    // Called ONLY on the already authenticated, single M4 owner when its
+    // synchronous previous kernel batch has fully settled. A new FEC
+    // revision can seal old open blocks into genuine same-revision parity
+    // without dropping them, and still admit the next fresh source at once.
+    pub fn pending_revision(&self,revision:ConfigRevision)->bool{
+        self.pending.iter().any(|job|job.revision==revision)
+    }
     pub fn change_policy(&mut self,mode:FecMode,profile:Profile,revision:ConfigRevision,
         max_frame:usize,now:MonoNs)->Result<(),FecError> {
         self.clock(now)?;

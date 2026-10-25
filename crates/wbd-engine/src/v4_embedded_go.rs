@@ -3638,6 +3638,10 @@ fn original_fixed_stage_source(e:&mut Entry,
     // checks at the next natural FIRST source turn, never blocks a packet.
     if let (Some((next_profile,next_rev)),Some((_,old_rev)))=
         (e.fixed_pending,e.fixed_applied){
+        // Transition never races outstanding M4 immutable source/parity.
+        // The FixedStream seals open old groups into its bounded parity
+        // queue, preserves per-job old matrix and monotonically increasing
+        // block IDs, then admits the next source immediately under new rev.
         if next_rev>old_rev && e.fec2_staged_pns.is_empty(){
             if let Some(stream)=e.fec2_live_tx.as_mut(){
                 if stream.quiescent_change(next_profile,next_rev,now).is_ok(){
@@ -3726,6 +3730,10 @@ fn original_fixed_stage_due(e:&mut Entry,
     let Some(mut stream)=e.fec2_live_tx.take()else{return Ok(0)};
     let (_,epoch)=e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
     let mut failed=None;
+    // Staged old parity of a prior applied revision is still authorized
+    // by this same TLS owner during the bounded seamless source transition.
+    let active_rev=stream.revision();
+    let prior_rev=stream.prior_parity_revision();
     // The original M4 sendmmsg has at most 32 records TOTAL. Never reserve
     // parity before fresh DATA. Leave one slot for real reverse M2 feedback;
     // do not stage a 4-row native quantum that cannot fit. A Maximum k16/r20
@@ -3734,7 +3742,7 @@ fn original_fixed_stage_due(e:&mut Entry,
     // Every ISA-L call is still a bounded <=4-row quantum.
     let quanta=(remaining_kernel_slots.saturating_sub(1)/4).min(5);
     let result=stream.poll_parity_quanta(now,quanta,|parity,_block,row,revision|{
-        if e.fixed_applied.or(e.fixed_pending).is_none_or(|(_,r)|r!=revision.0)
+        if (revision!=active_rev && Some(revision)!=prior_rev)
             ||!original_public_fixed_row_allowed(row){
             e.fec2_fail_reasons[3]+=1;return DriverProof::NotSent
         }

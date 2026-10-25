@@ -36,6 +36,11 @@ pub struct FixedStream {
     revision:ConfigRevision,
     record_payload_budget:usize,
     in_flight:Option<InFlight>,
+    // At most one prior applied revision can have bounded old parity jobs
+    // draining through the same original M4 / same monotone block-id owner.
+    // The new source is first-sealed immediately; only old parity rows use
+    // the prior profile's codec shape, never a newly selected matrix.
+    prior_profile:Option<(ConfigRevision,CodecProfile)>,
     // Bounded 4-row plaintext parity scratch, reused for every block,
     // never exposed or borrowed across the synchronous original M4 seal.
     parity_scratch:[Vec<u8>;MAX_BATCH_ROWS],
@@ -69,7 +74,8 @@ impl FixedStream {
             })?;
         Some(Self{owner,codec:Rs16::new(),profile:m3,
             revision:ConfigRevision(revision),record_payload_budget,
-            in_flight:None,parity_scratch:std::array::from_fn(|_|Vec::new()),
+            in_flight:None,prior_profile:None,
+            parity_scratch:std::array::from_fn(|_|Vec::new()),
             source_scratch:Vec::new(),stopped:false})
     }
     pub fn revision(&self)->ConfigRevision{self.revision}
@@ -93,21 +99,27 @@ impl FixedStream {
         self.owner.push_source(buffer,wire,now,|first|
             first.ticket.is_some_and(|ticket|on_source(ticket,first.frame)))
     }
-    /// Change to a newer Go-authenticated policy ONLY at a quiescent owner
-    /// boundary; no old block may use a new matrix profile/revision.
+    // W71 real own-60Mbps small-PPS: waiting for all three continuously
+    // populated open groups to be empty can leave a genuinely REQUESTED
+    // downshift PENDING forever. The M4 batch is already synchronously
+    // settled at this caller's boundary. Seal old open blocks under their
+    // ORIGINAL profile, retain queued old parity and unique block IDs in
+    // this same owner, and immediately stage the next fresh first-send with
+    // the new profile. No fake APPLIED: kernel source+repair and authentic
+    // reverse M2 still gate the revision.
     pub fn quiescent_change(&mut self,profile:u8,revision:u64,now:MonoNs)
         ->Result<(),StreamError>{
         if self.stopped{return Err(StreamError::Stopped)}
         if revision<=self.revision.0{return Err(StreamError::StaleRevision)}
-        let r=self.owner.report();
-        if self.in_flight.is_some()||r.open_bytes!=0||
-            r.outstanding_jobs!=0||r.queued_jobs!=0{
-            return Err(StreamError::Busy)
+        // A staged/part-encoded old parity job must first be settled by
+        // original M4. No early release of its slab, row or seal authority.
+        if self.in_flight.is_some(){return Err(StreamError::Busy)}
+        if let Some((old,_))=self.prior_profile {
+            if self.owner.pending_revision(old){return Err(StreamError::Busy)}
+            self.prior_profile=None;
         }
         let next=Self::new(profile,revision,self.record_payload_budget)
             .ok_or(StreamError::Invalid)?;
-        // No pending original slabs or cipher loans may exist in this
-        // owned queue at a mode boundary; old M1 owner drains at Stop.
         self.owner.change_policy(FecMode::Normal,
             match profile{
                 0=>OwnerProfile::Light,1=>OwnerProfile::Mild,
@@ -116,9 +128,13 @@ impl FixedStream {
                 6=>OwnerProfile::Maximum,_=>return Err(StreamError::Invalid),
             },ConfigRevision(revision),
             self.record_payload_budget-14,now).map_err(StreamError::Owner)?;
+        self.prior_profile=Some((self.revision,self.profile));
         self.profile=next.profile;
         self.revision=ConfigRevision(revision);
         Ok(())
+    }
+    pub fn prior_parity_revision(&self)->Option<ConfigRevision>{
+        self.prior_profile.map(|(revision,_)|revision)
     }
     /// Default M3 call stays a single <=4-row quantum for existing callers.
     /// A product M4 turn may explicitly coalesce up to five such quanta of
@@ -141,8 +157,21 @@ impl FixedStream {
         if self.in_flight.is_none(){
             let Some(mut job)=self.owner.take_parity(now)
                 .map_err(StreamError::Owner)? else{return Ok((0,0))};
+            // Old CLOSED jobs are protected with their old parity matrix,
+            // even while new sources already have the newer applied intent.
+            let job_profile=if job.revision==self.revision{self.profile}
+                else if let Some((revision,prior))=self.prior_profile {
+                    if job.revision!=revision{
+                        self.owner.finish_parity(job,0,false);
+                        return Err(StreamError::Invalid)
+                    }
+                    prior
+                }else{
+                    self.owner.finish_parity(job,0,false);
+                    return Err(StreamError::Invalid)
+                };
             let prepared=match StagedParity::from_owner_job_with_workspace(
-                &mut job,self.profile,self.record_payload_budget,
+                &mut job,job_profile,self.record_payload_budget,
                 std::mem::take(&mut self.source_scratch)
             ){
                 Ok(x)=>x,
@@ -241,6 +270,7 @@ impl FixedStream {
             self.owner.finish_parity(flight.job,flight.copied,false);
         }
         self.owner.stop();
+        self.prior_profile=None;
         // Retained parity scratch may contain plaintext-derived bytes;
         // scrub once on Stop and never reuse across the stopped generation.
         for row in &mut self.parity_scratch{row.fill(0);row.clear();}
@@ -439,6 +469,40 @@ mod tests{
         // Block 2 begins with the preserved 135B first-send DATA; the
         // other 15 symbols are only 77B, so its maximum remains 137B.
         assert_eq!(stream.source_scratch.len(),16*(135+2));
+        stream.stop();arena.stop();arena.drain_returns();
+        assert_eq!(arena.report().loaned,0);
+    }
+
+    #[test]
+    fn m0_auto_w71_continuous_small_sources_quiescent_reprofile_keeps_old_parity(){
+        let mut arena=Arena::new(606,64,2048,64,1_000_000).unwrap();
+        let mut stream=FixedStream::new(5,1,1400).unwrap();
+        let mut ready=Vec::new();
+        for i in 0..6 {
+            push(&mut stream,&mut arena,&[i as u8;64],i,&mut ready);
+        }
+        // Original M4 has settled every first-source borrow. These open
+        // groups have not emptied naturally; the new request must NOT stall.
+        stream.quiescent_change(0,2,MonoNs(7)).unwrap();
+        assert_eq!(stream.prior_parity_revision(),Some(ConfigRevision(1)));
+        push(&mut stream,&mut arena,&[99u8;64],8,&mut ready);
+        assert_eq!(ready.last().unwrap().0,2); // block IDs never reset
+        let mut actual=Vec::new();
+        let (n,c)=stream.poll_parity_quanta(MonoNs(10),5,|wire,id,row,rev|{
+            let r=parse_repair(wire,1400).unwrap();
+            actual.push((id,row,rev,r.actual_k));
+            DriverProof::Copied
+        }).unwrap();
+        assert_eq!((n,c),(6,6)); // old Strong k6 -> SIX old rows, not new Light1
+        assert_eq!(actual.len(),6);
+        assert!(actual.iter().all(|(id,_,rev,k)|
+            *id==1 && *rev==ConfigRevision(1) && *k==6));
+        let st=stream.report().classes[0];
+        assert_eq!(st.accepted,7);
+        assert_eq!(st.r_sent,6);
+        // Once old M4 proof has drained, the next revision is again legal;
+        // no stale matrices or old block identity can cross into rev3.
+        stream.quiescent_change(1,3,MonoNs(11)).unwrap();
         stream.stop();arena.stop();arena.drain_returns();
         assert_eq!(arena.report().loaned,0);
     }
