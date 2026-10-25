@@ -125,6 +125,46 @@ func TestR0V4WrongEpochAndIdentityReject(t *testing.T) {
 // This V4 private extension byte was reserved in all off-mode records.
 // A Game+FEC server may never turn a requested fixed profile into another,
 // and a legacy feature3 peer cannot accept a fixed FEC profile silently.
+func TestFECGameProtectedTLSRejectsDifferentFixedProfilesBeforeOwner(t *testing.T){
+    for _,pair:=range [][2]uint8{{7,6},{7,0},{0,7}}{
+        t.Run(string(rune('A'+pair[0]))+string(rune('A'+pair[1])),func(t *testing.T){
+            cert:=makeServerCert(t)
+            key:=[]byte("0123456789abcdef0123456789abcdef")
+            assoc,peer:=newAssociationPeer(t)
+            defer assoc.Close();defer peer.Close()
+            store,_:=NewV4EpochStore(2)
+            ch:=make(chan error,1)
+            go func(){
+                _,err:=EstablishServerV4(context.Background(),assoc,ServerAdmissionConfig{
+                    TLS:ServerConfig{ServerName:"target.test",RouteKey:key,
+                        TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},
+                        Timeout:3*time.Second},
+                    ExpectedUsername:"game-fec",ExpectedPassword:"secret",ServerLimit:1400,
+                },V4ServerOptions{
+                    DataPlaneReady:true,Epochs:store,fec2Product:true,GameFec:pair[1],
+                })
+                ch<-err
+            }()
+            policy:=v4TestPolicy(2,CipherChaCha)
+            _,ce:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
+                TLS:ClientConfig{ServerName:"target.test",RouteKey:key,Timeout:3*time.Second},
+                Username:"game-fec",Password:"secret",
+                TunnelID:[]byte("gamefec012345678"),ClientLimit:1400,
+                LaneID:1,DesiredLanes:2,Policy:policy,
+            },V4ClientOptions{
+                DataPlaneReady:true,fec2Product:true,GameFec:pair[0],
+            })
+            select{
+            case se:=<-ch:
+                if !errors.Is(se,ErrAdmissionUnsupported)||ce==nil{
+                    t.Fatalf("profile mismatch admitted server=%v client=%v",se,ce)
+                }
+            case <-time.After(5*time.Second):t.Fatal("TLS profile mismatch did not abort promptly")
+            }
+        })
+    }
+}
+
 func TestFECGameProtectedV4ProfileWireOffAndFailClosed(t *testing.T){
     var epoch [16]byte;epoch[0]=17
     off:=V4Extension{Features:v4RequiredFeatures|v4FeatureFEC2,Epoch:epoch}
