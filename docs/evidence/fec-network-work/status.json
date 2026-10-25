@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W83_FINITE_GILBERT_ELLIOTT_CORRELATED_BURST_REAL_FEC_BOUNDARY_SCOPED_DELIVERED",
+  "phase": "W85_TWO_READY_PARITY_INTERLEAVE_NEGATIVE_ROLLED_BACK_SCOPED",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
