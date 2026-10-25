@@ -631,7 +631,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W92: verify exact ARM64 58c1eae Linux game raw cBPF build+test Action40213051826. If success, reuse frozen binary for separate Game2 / Game4 clean 3Mbps real mixed UDP/TCP same-VM sequential A=84f31660 (W91 PASS) versus B=58c1eae; do not compare across VMs; preserve all W90 Game-FEC FAIL/rollback. If regression, roll back only own BPF candidate, not external branch. Do not revive Game fixed6 unqualified public switch; Windows TEMP_SKIPPED; capacity_stop=true; merge_ready=false.",
+  "next_action": "W92: inspect Game4 B/A reversed Action40213802360; if parity of correct delivery and CPU benefit holds, retain Linux raw exact tuple kernel prefilter. Then target bounded Game TX/RX adapter lock separation and RX zero-allocation duplicate bypass, with clean off regression before attempting any Game fixed profile. Prior 6 Game+FEC real product failures and atomic rollback retained; no public fixed FEC re-enable without netem0 TCP proof. Windows TEMP_SKIPPED; capacity_stop=true; merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6049,13 +6049,21 @@
     "caveat": "GAME_FEC_FIXED_NOT_IN_PUBLIC_PRODUCT; six W90 real failures and rollback b505 retained; different VMs not same-VM CPU A/B; Windows TEMP_SKIPPED; not outer M2 DATA repair proof"
   },
   "w92_game_linux_raw_filter": {
-    "status": "SOURCE_CANDIDATE_ARM64_BUILD_RUNNING_NOT_QUALIFIED",
-    "source": "58c1eaece7ea64c1a437978c1e9f526836ed4b3e",
-    "build_run": 40213051826,
-    "change": "SO_ATTACH_FILTER classic BPF authenticated GoFlow exact tuple and dynamic IPv4 IHL; full Go connection and lane AEAD remain",
-    "validation": "PENDING_NATIVE_THEN_GAME2_GAME4_CLEAN_SAMEVM_AB",
-    "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN",
+    "status": "EXACT_NATIVE_AND_TWO_CLEAN_SAMEVM_AB_PASS_SCOPED; GAME4_REVERSE_BA_RUNNING",
+    "source": "96522e95127641d9f8ac99436cdb7363ef36b0b0",
+    "build_run": 40213234927,
+    "build_artifact_id": 12606701246,
+    "build_zip_sha256": "1c704254dfac0f38e54c8ca0240ff19a6216e0c30c4d4f7bf845e2dd3f443a7a",
+    "game2_ab_run": 40213467037,
+    "game4_ab_run": 40213471471,
+    "game4_ba_run": 40213802360,
+    "game4_cpu_reduction_observed_pct_approx": 10,
+    "game2_cpu_reduction_observed_pct_approx": 1.2,
+    "interpretation": "Game4 promising, reverse BA pending; Game2 within noise; both clean UDP/TCP delivery PASS.",
+    "initial_compile_failure_run": 40213051826,
+    "initial_compile_failure_kind": "E0425 fixed before success",
     "capacity_stop": true,
+    "evidence": "docs/evidence/fec-network-work/20261026-W92-Game2-Game4-Linux-GameOFF-kernel-prefilter-sameVM-AB.json",
     "devlog": "docs/devlog/fec-network-work/20261026-W92-linux-game-rx-exact-kernel-filter-candidate.md"
   }
 }

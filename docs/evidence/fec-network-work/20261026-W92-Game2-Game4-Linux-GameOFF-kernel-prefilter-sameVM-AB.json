@@ -1,0 +1,162 @@
+{
+  "schema": "W92_LINUX_GAME_RAW_RX_EXACT_TUPLE_BPF_SAMEVM_AB_V1",
+  "date": "2026-10-26",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "scope": "Game2/4 FEC OFF Linux ARM64 only; kernel prefilter cBPF AUTH GoFlow exact 4tuple, original Game owner + lane AEAD retained",
+  "baseline": {
+    "source": "84f3166081350290a6d0f07e4b70ccace09fa44f",
+    "build_run": 40212344161,
+    "artifact": 12605554651,
+    "sha256": "71b9169b320dce1a76b40b79d80261c4d9afd387881038af7dee735636a10f39"
+  },
+  "candidate": {
+    "source": "96522e95127641d9f8ac99436cdb7363ef36b0b0",
+    "build_run": 40213234927,
+    "artifact": 12606701246,
+    "sha256": "1c704254dfac0f38e54c8ca0240ff19a6216e0c30c4d4f7bf845e2dd3f443a7a"
+  },
+  "intermediate_compile_error": {
+    "source": "58c1eaece7ea64c1a437978c1e9f526836ed4b3e",
+    "run": 40213051826,
+    "reason": "E0425 loop variable i missing in per-lane raw socket open",
+    "fixed_in": "96522e95127641d9f8ac99436cdb7363ef36b0b0",
+    "capacity_issue": false
+  },
+  "build": {
+    "run": 40213234927,
+    "result": "SUCCESS_ALL",
+    "bpf_tuple_contract": "PASS",
+    "game_off_aead_replay": "PASS",
+    "native_fec_isa_l_go_tun": "PASS"
+  },
+  "scenario": {
+    "each_direction_mbps": 3,
+    "tcp_flows": 2,
+    "udp_share": 0.96,
+    "one_way_delay_ms": 75,
+    "artificial_loss_pct": 0,
+    "phase_s": 20,
+    "stop_drained_both": true,
+    "one_scenario_per_action": true,
+    "order": "A old then B filtered on same VM",
+    "netem_rng": "unseeded_recorded",
+    "no_cross_vm_cpu_comparison": true
+  },
+  "game2": {
+    "run": 40213467037,
+    "request_commit": "e92c52abd97246365e2f660b6f0e83f6a1664597",
+    "result_A": "PASS_SCOPED_OBSERVATION",
+    "result_B": "PASS_SCOPED_OBSERVATION",
+    "client_cpu_s_old_new": [
+      1.66,
+      1.64
+    ],
+    "server_cpu_s_old_new": [
+      1.67,
+      1.65
+    ],
+    "client_cpu_per_delivered_GiB_old_new": [
+      237.6362,
+      234.8134
+    ],
+    "server_cpu_per_delivered_GiB_old_new": [
+      239.1088,
+      236.2047
+    ],
+    "client_rss_peak_old_new_B": [
+      24870912,
+      25219072
+    ],
+    "server_rss_peak_old_new_B": [
+      24707072,
+      25178112
+    ],
+    "cpu_psi_peak_pct_old_new": [
+      1.43,
+      1.72
+    ],
+    "p99_ms_c2s_s2c_old_new": [
+      [
+        77.5,
+        77.5
+      ],
+      [
+        77.5,
+        77.5
+      ]
+    ],
+    "zero_udp_missing": true,
+    "true_tcp_delivered_both": true,
+    "no_tcp_backpressure": true,
+    "zero_source_tun_drop": true,
+    "stop": true,
+    "interpretation": "~-1.2% CPU, NOT CONFIRMED beneficial versus ordinary variation"
+  },
+  "game4": {
+    "run": 40213471471,
+    "request_commit": "b503f9a33449c0b16b0568b3e96074c5d055100f",
+    "result_A": "PASS_SCOPED_OBSERVATION",
+    "result_B": "PASS_SCOPED_OBSERVATION",
+    "client_cpu_s_old_new": [
+      2.61,
+      2.35
+    ],
+    "server_cpu_s_old_new": [
+      2.66,
+      2.38
+    ],
+    "client_cpu_per_delivered_GiB_old_new": [
+      373.6328,
+      336.4704
+    ],
+    "server_cpu_per_delivered_GiB_old_new": [
+      380.7905,
+      340.7073
+    ],
+    "client_rss_peak_old_new_B": [
+      37847040,
+      37392384
+    ],
+    "server_rss_peak_old_new_B": [
+      37765120,
+      37625856
+    ],
+    "cpu_psi_peak_pct_old_new": [
+      4.83,
+      3.86
+    ],
+    "p99_ms_c2s_s2c_old_new": [
+      [
+        77.5,
+        77.5
+      ],
+      [
+        77.5,
+        77.5
+      ]
+    ],
+    "zero_udp_missing": true,
+    "true_tcp_delivered_both": true,
+    "no_tcp_backpressure": true,
+    "zero_source_tun_drop": true,
+    "stop": true,
+    "interpretation": "~-10% CPU while both delivered equal. B/A reversal to rule ordering pending"
+  },
+  "ba_game4": {
+    "run": 40213802360,
+    "request": "tests/network/fec-work/W92-Game4-OFF-clean3Mbps-newold-BA-arm64.json",
+    "status": "IN_PROGRESS_NOT_PASS"
+  },
+  "boundaries": [
+    "BPF is kernel prefilter, NOT a single shared raw socket or recvmmsg",
+    "B remains GameAdapter shared TX/RX owner, no architectural split proof",
+    "FEC fixed profiles not currently exposed after six real W90 candidate failures and rollback b5052654",
+    "Windows and physical devices NOT_RUN",
+    "Cross-VM old/new unpaired CPU comparisons forbidden",
+    "Queue peak/age and largest no-delivery gaps NOT_OBSERVED in W92 harness; no claims",
+    "No incremental high loss stress; capacity_stop=true"
+  ],
+  "capacity_stop": true,
+  "merge_ready": false
+}
