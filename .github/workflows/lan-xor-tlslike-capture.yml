@@ -1,0 +1,80 @@
+name: LAN XOR TLS-like bounded loopback capture
+on:
+  push:
+    branches: [experiment/lan-xor-tlslike]
+    paths:
+      - "tools/lan_xor_tlslike_lab.rs"
+      - "tools/lan_xor_tlslike_pcap.py"
+      - ".github/workflows/lan-xor-tlslike-capture.yml"
+permissions: {contents: read}
+concurrency:
+  group: lan-xor-capture
+  cancel-in-progress: false
+jobs:
+  native-loopback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Compile and run exact-source native XOR tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p lan-xor-report
+          rustup toolchain install 1.85.1 --profile minimal
+          rustc +1.85.1 --edition=2021 --test -C opt-level=2 \
+            tools/lan_xor_tlslike_lab.rs -o /tmp/lan_xor_tests
+          /tmp/lan_xor_tests --nocapture | tee lan-xor-report/unit-tests.txt
+          rustc +1.85.1 --edition=2021 -C opt-level=3 \
+            tools/lan_xor_tlslike_lab.rs -o /tmp/lan_xor_probe
+          sha256sum /tmp/lan_xor_probe > lan-xor-report/binary.sha256
+          {
+            echo "SOURCE=$GITHUB_SHA"
+            echo "RUN_ID=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "TARGET=$(uname -m)"
+            echo "RUST=$(rustc +1.85.1 --version)"
+            echo "SCOPE=standalone_loopback_fixture_not_authenticated_WBD_product"
+            echo "SECURITY=no_integrity_no_confidentiality_no_replay_defense"
+          } > lan-xor-report/manifest.txt
+      - name: Capture actual Linux TCP wire with independent bounded parser
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tcpdump
+          tmp="$(mktemp -d)"
+          cap_pid=""
+          cleanup() {
+            if test -n "$cap_pid"; then
+              sudo kill -INT "$cap_pid" 2>/dev/null || true
+              wait "$cap_pid" 2>/dev/null || true
+            fi
+            rm -rf "$tmp"
+          }
+          trap cleanup EXIT
+          port=38461
+          sudo timeout --signal=INT --kill-after=2s 25s tcpdump \
+            -i lo -s 2000 -c 64 -w "$tmp/wire.pcap" \
+            "tcp and dst port $port" >/dev/null 2>&1 &
+          cap_pid=$!
+          sleep 2
+          /tmp/lan_xor_probe "$port" | tee lan-xor-report/roundtrip.json
+          sleep 1
+          sudo kill -INT "$cap_pid" 2>/dev/null || true
+          wait "$cap_pid" || true
+          cap_pid=""
+          test -s "$tmp/wire.pcap"
+          test "$(stat -c %s "$tmp/wire.pcap")" -le 4194304
+          python3 tools/lan_xor_tlslike_pcap.py \
+            --pcap "$tmp/wire.pcap" --port "$port" \
+            --output lan-xor-report/capture_summary.json
+          echo "Raw bounded pcap deleted by owned tmp trap" >> lan-xor-report/manifest.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-xor-tlslike-evidence
+          path: lan-xor-report/
+          retention-days: 30
+          if-no-files-found: warn
