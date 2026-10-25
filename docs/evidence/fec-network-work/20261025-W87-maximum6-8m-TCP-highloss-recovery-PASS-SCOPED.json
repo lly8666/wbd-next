@@ -193,10 +193,10 @@
       0
     ],
     "native_recovered_TUN": {
-      "client": 27316,
-      "server": 27441
+      "client": 37771,
+      "server": 37856
     },
-    "note_recovered": "recovered TUN field must be taken from actual W87 native artifact not copied W86; verify separately if cited",
+    "note_recovered": "Direct W87 raw artifact A/result.json native client/server recovered_tun, not reused W86 counters.",
     "measured_seconds": 120,
     "CPU_s": {
       "client": 15.97,
