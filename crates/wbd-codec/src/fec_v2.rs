@@ -475,10 +475,11 @@ impl Rs16 {
                 let mut dest:[&mut [u8];MAX_BATCH_ROWS]=[
                     &mut e0,&mut e1,&mut e2,&mut e3
                 ];
+                let row_count=outputs.len();
                 for (dst,out) in dest.iter_mut().zip(outputs.iter_mut()) {
                     *dst=&mut out[REPAIR_HEADER..];
                 }
-                tables.encode(&src[..k],&mut dest[..outputs.len()])
+                tables.encode(&src[..k],&mut dest[..row_count])
                     .map_err(|_|Error::NativeFailure)?;
                 used=BackendUsed::NativeIsaL;
             }
