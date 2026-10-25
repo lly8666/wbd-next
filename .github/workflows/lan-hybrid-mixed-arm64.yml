@@ -1,0 +1,68 @@
+name: LAN hybrid TLS steady XOR arm64 native mixed CPU profiles
+on:
+  push:
+    branches: [experiment/lan-hybrid-tls-xor-cost]
+    paths: [".github/workflows/lan-hybrid-mixed-arm64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: lan-hybrid-mixed-arm64
+  cancel-in-progress: false
+jobs:
+  one-native-vm:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Build real AES-GCM and mixed PN-XOR / selective-AAD experiment
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "aarch64"
+          mkdir -p hybrid-mixed-report
+          rustup toolchain install 1.85.1 --profile minimal
+          rustc +1.85.1 --edition=2021 --test -C opt-level=2 \
+            tools/lan_xor_tlslike_lab.rs -o /tmp/hybrid_xor_tests
+          /tmp/hybrid_xor_tests --nocapture | tee hybrid-mixed-report/xor-unit-tests.txt
+          cargo +1.85.1 test --release --locked -p wbd-codec --features selective-crypto-experiment \
+            selective_record_experiment::tests:: -- --nocapture > hybrid-mixed-report/selective-unit-tests.txt
+          cargo +1.85.1 build --release --locked -p wbd-codec \
+            --features selective-crypto-experiment --example lan_hybrid_mixed_cost
+          sha256sum target/release/examples/lan_hybrid_mixed_cost > hybrid-mixed-report/binary.sha256
+          lscpu > hybrid-mixed-report/host_cpu.txt
+          {
+            echo "SOURCE=$GITHUB_SHA"
+            echo "RUN_ID=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "TARGET=$(uname -m)"
+            echo "RUST=$(rustc +1.85.1 --version)"
+            echo "LOCK_SHA256=$(sha256sum Cargo.lock | awk '{print $1}')"
+            echo "SCOPE=ideal_oracle_record_CPU_not_real_WBD_TUN_or_classifier"
+            echo "SECURITY=hybrid_XOR_has_no_integrity_and_is_not_a_cryptographic_TLS_record"
+          } > hybrid-mixed-report/manifest.env
+      - name: Generate real local TLS13 application ciphertext and nine mixed CPU profiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          openssl req -x509 -newkey rsa:2048 -nodes \
+            -keyout "$tmp/key.pem" -out "$tmp/cert.pem" \
+            -days 1 -subj /CN=localhost >/dev/null 2>&1
+          python3 tools/lan_hybrid_generate_tls13.py \
+            --cert "$tmp/cert.pem" --key "$tmp/key.pem" \
+            --out "$tmp/tls_app.bin" --summary hybrid-mixed-report/tls_corpus_summary.json
+          target/release/examples/lan_hybrid_mixed_cost "$tmp/tls_app.bin" 1 \
+            | tee hybrid-mixed-report/legs.ndjson
+          python3 tools/lan_hybrid_mixed_analyze.py \
+            --input hybrid-mixed-report/legs.ndjson \
+            --output hybrid-mixed-report/summary.json \
+            | tee hybrid-mixed-report/summary.stdout.txt
+          echo "Owned TLS certificate, key and raw encrypted record removed" >> hybrid-mixed-report/manifest.env
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-hybrid-mixed-arm64-evidence
+          path: hybrid-mixed-report/
+          retention-days: 30
+          if-no-files-found: warn
