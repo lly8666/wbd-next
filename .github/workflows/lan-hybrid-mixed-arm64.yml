@@ -1,4 +1,6 @@
 name: LAN hybrid TLS steady XOR arm64 native mixed CPU profiles
+# Paired final source has full-byte functional checks in preflight, not on every measured packet.
+# Earlier first run with per-packet memcmp is retained as a diagnostic receipt.
 on:
   push:
     branches: [experiment/lan-hybrid-tls-xor-cost]
