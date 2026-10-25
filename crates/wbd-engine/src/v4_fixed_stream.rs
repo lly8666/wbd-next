@@ -409,6 +409,91 @@ mod tests{
             }).unwrap();
         assert!(r.fec_retained&&r.source_enqueued);
     }
+
+    // Two already CLOSED classes, 4-row M3 encode per class and a single
+    // original M4 copied-prefix split A/B. No fake per-job acknowledgement.
+    #[test]
+    fn fec_interleave_two_ready_maximum_blocks_and_m4_partial_prefix(){
+        let mut arena=Arena::new(619,128,2048,128,1_000_000).unwrap();
+        let mut stream=FixedStream::new(6,51,1400).unwrap();
+        let mut fresh=Vec::new();
+        for i in 0..16{
+            push(&mut stream,&mut arena,&[i as u8;128],i,&mut fresh);
+        }
+        for i in 0..16{
+            push(&mut stream,&mut arena,&[i as u8;440],16+i,&mut fresh);
+        }
+        assert_eq!(fresh.len(),32);
+        assert!(fresh.iter().take(16).all(|x|x.0==1));
+        assert!(fresh.iter().skip(16).all(|x|x.0==2));
+        let mut order=Vec::new();
+        let (n,copied)=stream.poll_parity_quanta(MonoNs(6_100_000),2,
+            |wire,id,row,rev|{
+                assert_eq!(rev,ConfigRevision(51));
+                assert_eq!(parse_repair(wire,1400).unwrap().parity_row,row);
+                order.push((id,row));
+                DriverProof::Staged
+            }).unwrap();
+        assert_eq!((n,copied),(8,0));
+        assert_eq!(order,vec![(1,0),(2,0),(1,1),(2,1),
+                              (1,2),(2,2),(1,3),(2,3)]);
+        let stats=stream.interleave_stats();
+        assert_eq!((stats.paired_quanta,stats.alternating_rows,
+            stats.max_consecutive_same_group),(1,8,1));
+        assert_eq!(stream.report().classes[0].r_sent,0);
+        assert_eq!(stream.report().classes[1].r_sent,0);
+        assert_eq!(stream.poll_parity_quanta(MonoNs(6_100_001),2,
+            |_,_,_,_|panic!("no seal while M4 borrows previous row")).unwrap(),(0,0));
+        // A0,B0,A1 definitely copied; B1 outcome unknown, A2,B2,A3,B3 unsent.
+        assert!(matches!(stream.settle_staged(4,1,1),Err(StreamError::Invalid)));
+        stream.settle_staged(3,4,1).unwrap();
+        assert_eq!(stream.report().classes[0].r_sent,0); // A still has 16 rows
+        assert_eq!(stream.report().classes[1].r_sent,0);
+        // New sources never wait for old parity or the next paired quantum.
+        push(&mut stream,&mut arena,&[7u8;130],6_100_002,&mut fresh);
+        assert_eq!(fresh.last().unwrap().0,3);
+        // At the old close+10ms TTL, the remaining A/B rows must NOT be
+        // emitted. Only original M4 definite prefix counts each class.
+        assert_eq!(stream.poll_parity_quanta(MonoNs(16_100_001),2,
+            |_,_,_,_|panic!("expired parity must never reach M4")).unwrap(),(0,0));
+        assert_eq!(stream.report().classes[0].r_sent,2);
+        assert_eq!(stream.report().classes[1].r_sent,1);
+        stream.stop();
+        assert_eq!(stream.report().charged_bytes,0);
+        arena.stop();arena.drain_returns();
+        assert_eq!(arena.report().loaned,0);
+    }
+    #[test]
+    fn fec_interleave_single_fallback_stop_and_revision_busy(){
+        let mut arena=Arena::new(620,96,2048,96,1_000_000).unwrap();
+        let mut stream=FixedStream::new(6,60,1400).unwrap();
+        let mut first=Vec::new();
+        for i in 0..16{
+            push(&mut stream,&mut arena,&[i as u8;128],i,&mut first);
+        }
+        let mut rows=Vec::new();
+        let (n,copy)=stream.poll_parity_quanta(MonoNs(6_100_000),2,
+            |wire,id,row,rev|{
+                assert_eq!((id,rev),(1,ConfigRevision(60)));
+                assert_eq!(parse_repair(wire,1400).unwrap().parity_row,row);
+                rows.push(row);
+                DriverProof::Staged
+            }).unwrap();
+        assert_eq!((n,copy),(8,0));
+        assert_eq!(rows,(0..8).collect::<Vec<u8>>());
+        assert_eq!(stream.interleave_stats().paired_quanta,0);
+        assert!(matches!(stream.quiescent_change(5,61,MonoNs(6_100_001)),
+            Err(StreamError::Busy)));
+        // Stop with M4 unsettled must not claim any copied row, and must
+        // release both owned source workspaces; no parity is ever retried.
+        stream.stop();
+        assert_eq!(stream.report().classes[0].r_sent,0);
+        assert_eq!(stream.report().charged_bytes,0);
+        assert!(matches!(stream.settle_staged(8,0,0),Err(StreamError::Stopped)));
+        arena.stop();arena.drain_returns();
+        assert_eq!(arena.report().loaned,0);
+    }
+
     #[test]
     fn m0_fixed_stream_multiple_live_blocks_first_send_no_hol_codec_recover_stop(){
         let mut arena=Arena::new(604,24,2048,24,1_000_000).unwrap();
