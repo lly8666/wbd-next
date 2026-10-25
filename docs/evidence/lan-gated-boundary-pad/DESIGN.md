@@ -15,8 +15,8 @@ Only **recognized lifecycle boundary packets** may be randomly filled, including
 For each eligible AES boundary source packet:
 
 1. Determine the original complete inner IPv4 byte length from the already validated packet.
-2. Reserve complete outer IPv4/TCP overhead (40B in this fixed lab), lab AES record overhead (31B) and the original inner length in the path MTU (1500B). This means the lab's maximum custom record size is 1460B.
-3. Compute per-source-packet space = 1460 − 31 − original inner packet bytes. If space ≤ 0, pad **zero** and do not fragment.
+2. Reserve complete outer IPv4/TCP overhead (80B reserved for IPv4 and maximum TCP options in this fixed lab), lab AES record overhead (31B) and the original inner length in the path MTU (1500B). This means the lab's maximum custom record size is 1420B.
+3. Compute per-source-packet space = 1420 − 31 − original inner packet bytes. If space ≤ 0, pad **zero** and do not fragment.
 4. Limit remaining pad space to **256B** to keep bandwidth, random-generation and AES costs bounded. Choose random pad size 16..min(256, available) bytes (or 1..available when remaining room <16), using crypto/rand.
 5. Append random padding inside AES-authenticated encryption, *after* the original IPv4 packet, leaving its TotalLength unchanged. AES outer AAD includes framing fields and sequence number. After authenticating the whole outer record, the receiver reads the original inner IPv4 TotalLength and strips all trailing padding before delivering any original IP packet.
 
