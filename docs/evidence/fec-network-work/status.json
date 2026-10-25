@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W39_MIXED100_SMALL_SPARSE_PASS_W38_MIXED200_BOTH_FAIL_CPU_CAPACITY_STOP",
+  "phase": "W42_NATIVE_PPOLL_PARITY_BOUNDED_100MIXED_AB_BA_BOTH_PASS_CPU_OBSERVED_MINUS21PCT_CAPACITY_STOP_200MIXED_FAIL",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -18,16 +18,16 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "861f0396264734f97658243156060f13e6a2f74f",
-    "run_id": 40150749260,
+    "source": "23da99f0de04afe17756542f5176f2759e318747",
+    "run_id": 40153525640,
     "attempt": 1,
-    "artifact_id": 12582379708,
-    "sha256": "5f9f587a4d1d44a3cf482c4c46a5be5b52cc71fdb4080935de153dc85f89f7e5",
+    "artifact_id": 12583149711,
+    "sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
     "platform": "aarch64",
     "policy": "outer-opportunistic-v3",
     "build_action": "SUCCESS",
     "native_fixed_auto_kernel_functional": "PASS_SCOPED",
-    "runtime_fec_only": "W38_MIXED200_BOTH_FAIL_SMALL_UDP_AND_TCP_HIGH_PSI_NOT_QUALIFIED"
+    "runtime_fec_only": "W41_W42_MIXED100_BOTH_AB_BA_SCOPED_PASS_CPU_OBSERVED_MINUS21PCT_W38_MIXED200_FAIL"
   },
   "open_requests": [
     {
@@ -433,9 +433,34 @@
       "result_artifact_id": 12582309090,
       "artifact_sha256": "80fa6550e58c62bdd884d22c816cf7a2f1ec6c5bd45fbe133d5f7723f62f80e0",
       "app_mbps_each": 100
+    },
+    {
+      "id": "FEC-W41-Mixed100-NativePpoll-BoundedParityFeedback-SameVM-AB",
+      "path": "tests/network/fec-work/W41-mixed100-native-ppoll-boundedParityFB-sameVM-AB-arm64.json",
+      "run_id": 40153771977,
+      "attempt": 1,
+      "artifact_id": 12584120637,
+      "artifact_sha256": "17e4fd8dfe1c872ed6ca6ecdc7ba84207ff4c2c4eff5a15f785c72442b5ea459",
+      "result": "PASS_SCOPED_OBSERVATION_BOTH",
+      "order": "AB",
+      "source_A": "861f0396264734f97658243156060f13e6a2f74f",
+      "source_B": "23da99f0de04afe17756542f5176f2759e318747"
+    },
+    {
+      "id": "FEC-W42-Mixed100-NativePpoll-BoundedParityFeedback-SameVM-BA",
+      "path": "tests/network/fec-work/W42-mixed100-native-ppoll-boundedParityFB-sameVM-BA-arm64.json",
+      "run_id": 40154125275,
+      "attempt": 1,
+      "artifact_id": 12583383213,
+      "artifact_sha256": "89a4b0014e590b0a66d8492efd817efe354909f875121a54e425065f94b2fa49",
+      "result": "PASS_SCOPED_OBSERVATION_BOTH",
+      "order": "BA",
+      "source_A": "861f0396264734f97658243156060f13e6a2f74f",
+      "source_B": "23da99f0de04afe17756542f5176f2759e318747"
     }
   ],
   "open_issues": [
+    "W41 sameVM A->B and W42 reverse B->A identical actual 100Mbps each mixed UDP96% 35%<=256B-count two TCP4% + sparse64B20Hz 30%IID/300ms both product-native PASS 1% total/small gates TCP true 4Mbps each, source TUN/root drops0 and parity 1.02m planned=sent expiry0, outer DATA retrans0. New W40 Linux ppoll ns and source-first M4 cap31 default/cap23 if <=1ms FEC due or jobs pending, <=8 Parity+1 real M2, no flows reordered. W41 original process CPU-s A61.44/B48.42 -21.19%; W42 B47.97/A61.20 -21.62%, reversed-order replication strengthens signal but VM host PSI differs concurrently (A~37.9/36.7, B~29.4/29.1), no universal causal 21% pledge. Small UDP p99 B307.7/307.8 vs A308.7/308.7 AB; BA B307.7/307.7 vs A308.2/308.3. W38 user-requested true mixed200 BOTH FAIL and source drops/TCP backpressure; DO NOT claim high-pressure rescue, capacity_stop true, merge_ready false. Need instrument exact CPU stage costs or benchmark 200 only with owned headroom before further tuning.",
     "W39 lower bounded safe calibration 100Mbps per direction same count-weighted mix small35%+two real TCP flows4%+20Hz64B probe Action40151444036 PASS: UDP residual0.046/0.031%, smallUDP0.064/0.066% with p99 308.6/308.7ms; sparse 64B 595 sent 593 real peer-first-arrival each dir p99 307.1/306.7ms (separate RTT610ms); TCP actual4Mbps each, 0 backpressure; Parity full sent planned1.019/1.020m, expired0, source TUN drops0, Stop cleaned. Not substitute for W38 200 mixed A/B both FAIL and high PSI/source drop. NO >100 mixed increase while capacity_stop, keep 200 mixed goal unqualified.",
     "W38 true 200Mbps/side count35%<=256B with two real TCP streams4% and UDP96% 30%IID/300ms sameVM A old e99a4 vs B scheduler+source workspace861f: BOTH FAIL 1% UDP/small gates and nonzero SOURCE TUN drops. A UDP loss13.3746/13.719%, small13.6155/14.0161%, TCP actual0.132/0.102 of8Mbps; B UDP loss5.5686/6.3371%, small5.4765/6.3845%, TCP actual0.386/0.238, huge real backpressure. Parity expiry A40824/42260, B14479/16998, CPU PSI mean A43.48 B56.57, peak B60.32. B sends more actual Parity and reduces miss but fails; NO 200 mixed capacity claim, STOP further high load. W39 separate lower 100Mbps safety diagnostic will read 64B sparse 20Hz actual first-arrival.",
     "W34 A W31 old/B W33 new on SAME VM 250Mbps/each 30%IID/300ms outer DATA0 both scoped PASS residual A0.0287/0.0310%, B0.0363/0.0313%, zero injector errors, Parity full (>99.998%) and almost zero expiry; CPU combined 55.62 ->55.41s/30s (-0.38% only, no stable CPU win). Host PSI W34 mean33.66/33.48 peak36.11/35.90 vs W32 OTHER VM old SAME SOURCE fails2.740/2.550% and injector send errors39/245, Parity deficit8.6%, PSI mean47.19 peak50.66! Host load variance is primary demonstrated factor; cannot attribute passing 250 to W33 nor declare stable 250 capacity. W33 source e99a4aff native fixed/auto real build PASS and global coefficient ref stack micro-opt. Do not test >250 on this 4core VM, capacity_stop true.",
@@ -460,7 +485,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W35 deadline-before-TUN-poll & W36 contiguous source symbol reuse source861f native functional PASS. W38 user-requested 200Mbps/side real 35%-small-count and two TCP flows with 30%IID/300ms sameVM A/B both FAIL (new B small loss5.48/6.38%, native Parity improved but high CPU PSI56.6 peak60.3, source TUN drops and TCP backpressure). W39 lower diagnostic 100Mbps same mix PASS actual small loss0.064/0.066%, small first p99 309ms, sparse64B probe direct one-way p99~307ms,0 source drops, TCP4Mbps true. Do NOT claim 200 mixed qualification or scale pressure; next profile original-TUN read pause and M4 native parity encode per-quantum CPU versus actual deadlines and live packet/s under CPU pressure, then investigate age+byte-aware bounded service and FEC ingress split if measured; do not simply add CPU threads or grow RX buffers. Auto true dynamic remains unqualified; main untouched; merge_ready=false.",
+  "next_action": "W40 Linux `ppoll` real nanos sub-1ms FEC/M2 due wait and conservative source-first 23/8/1 M4 Parity/feedback opportunity with 31/1 fallback, ARM64 native Fixed Auto TUN and Maximum PASS; W41 AB & W42 BA exact same100Mbps each real mixed two TCP streams + real sparse64B both scoped PASS, measured process CPU sums consistently ~21% lower B though shared VM PSI moved. Preserve immutable signed FEC math/10ms TTL, no inner TCP flow reordering or new threads. W38 mixed200 both FAIL under CPU source TUN drops and real TCP backpressure, keep capacity_stop and no >100 mixed repeat until new low-cost TX phase per-class deadline timing demonstrates headroom. Per-flow small packet prioritization deferred because same TCP stream/order must be protected and low cost fairness already addresses control+Parity. Auto dynamic rise/fall/asymmetry remains unqualified; do not merge into main, status merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -3718,5 +3743,296 @@
       "64B sparse first-arrival direct peer receipt, not echo RTT, actually observed in W39; 595 real probes offered, 593 received per direction, never fabricate 0% loss or survivor-only goodput.",
       "No native codec/AEAD mathematical changes; destination probe packets included in original on-wire pipeline and recovered by genuine FEC."
     ]
+  },
+  "w40": {
+    "source": "23da99f0de04afe17756542f5176f2759e318747",
+    "description": "Linux ppoll nanosecond FEC and real M2 deadline wait eliminates sub-ms poll(0); one M4 source-first DATA cap31 idle/23 only when genuine queued parity or <=1ms FEC deadline, freeing <=8 native Parity and one M2 slots; no new thread, no reordered TCP, no increased outer retransmission",
+    "build": {
+      "action": 40153525640,
+      "artifact_id": 12583149711,
+      "zip_sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
+      "result": "SUCCESS_REAL_NATIVE_ARM64_FIXED_AUTO_MISSING_SOURCE_TUN_ORIGINAL_M4_SOURCE_PARITY_FEC_MATH"
+    },
+    "maximum_contract_action": 40153525653
+  },
+  "w41": {
+    "owner": "fec-network-work",
+    "scenario": "Mixed 100Mbps app each side: UDP96% 35% small<=256B by packet count, 2 real TCP flows4%, 20Hz genuine sparse64B, Fixed Maximum6, outer DATA repair OFF, 30%IID/300ms, fq600, 15s warmup/30 measure/30 drain",
+    "source_A": "861f0396264734f97658243156060f13e6a2f74f",
+    "source_B": "23da99f0de04afe17756542f5176f2759e318747",
+    "source_B_build": {
+      "action": 40153525640,
+      "artifact_id": 12583149711,
+      "zip_sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
+      "result": "SUCCESS_REAL_NATIVE_ARM64_FIXED_AUTO_MISSING_SOURCE_TUN_ORIGINAL_M4_SOURCE_PARITY_FEC_MATH"
+    },
+    "native_maximum_contract_action": 40153525653,
+    "id": "FEC-W41-Mixed100-NativePpoll-BoundedParityFeedback-SameVM-AB",
+    "request": "tests/network/fec-work/W41-mixed100-native-ppoll-boundedParityFB-sameVM-AB-arm64.json",
+    "request_commit": "15d4c215ac6edf925293293f9cf057cd4335988d",
+    "action": 40153771977,
+    "order": "AB",
+    "result": "PASS_SCOPED_OBSERVATION_BOTH",
+    "artifact_id": 12584120637,
+    "zip_sha256": "17e4fd8dfe1c872ed6ca6ecdc7ba84207ff4c2c4eff5a15f785c72442b5ea459",
+    "A": {
+      "cpu_seconds": {
+        "client": 30.64,
+        "server": 30.8,
+        "combined": 61.44
+      },
+      "host_cpu_psi_mean_pct": 37.931333333333335,
+      "host_cpu_psi_peak_pct": 40.61,
+      "udp_loss_pct": {
+        "c2s": 0.042692913752551874,
+        "s2c": 0.044633067669552294
+      },
+      "small_loss_pct": {
+        "c2s": 0.07707022261650634,
+        "s2c": 0.06819883008510992
+      },
+      "small_p99_ms": {
+        "c2s": 308.7,
+        "s2c": 308.7
+      },
+      "small_send_lag_p99_ms": {
+        "c2s": 2,
+        "s2c": 2.1
+      },
+      "tcp_delivered_mbps": {
+        "c2s": 3.9998192,
+        "s2c": 3.9997008
+      },
+      "tcp_first_p99_ms": {
+        "c2s": 934.1,
+        "s2c": 941.2
+      },
+      "sparse_64B": {
+        "c2s": {
+          "sent": 596,
+          "received": 595,
+          "p99_ms": 307
+        },
+        "s2c": {
+          "sent": 595,
+          "received": 592,
+          "p99_ms": 307.7
+        }
+      },
+      "parity": {
+        "client": [
+          1021312,
+          1021312,
+          0
+        ],
+        "server": [
+          1021158,
+          1021158,
+          0
+        ]
+      }
+    },
+    "B": {
+      "cpu_seconds": {
+        "client": 24.13,
+        "server": 24.29,
+        "combined": 48.42
+      },
+      "host_cpu_psi_mean_pct": 29.362666666666666,
+      "host_cpu_psi_peak_pct": 32.08,
+      "udp_loss_pct": {
+        "c2s": 0.033377707572470376,
+        "s2c": 0.03434745654173507
+      },
+      "small_loss_pct": {
+        "c2s": 0.05433727925480303,
+        "s2c": 0.05378281722159075
+      },
+      "small_p99_ms": {
+        "c2s": 307.7,
+        "s2c": 307.8
+      },
+      "small_send_lag_p99_ms": {
+        "c2s": 1.2,
+        "s2c": 1.2
+      },
+      "tcp_delivered_mbps": {
+        "c2s": 4.0001368,
+        "s2c": 4.0003872000000005
+      },
+      "tcp_first_p99_ms": {
+        "c2s": 907.4,
+        "s2c": 450.8
+      },
+      "sparse_64B": {
+        "c2s": {
+          "sent": 597,
+          "received": 597,
+          "p99_ms": 306.2
+        },
+        "s2c": {
+          "sent": 596,
+          "received": 596,
+          "p99_ms": 306.3
+        }
+      },
+      "parity": {
+        "client": [
+          1021688,
+          1021688,
+          0
+        ],
+        "server": [
+          1022000,
+          1022000,
+          0
+        ]
+      }
+    },
+    "both_actual": {
+      "source_tun_warmup_steady_drops": 0,
+      "source_fq_root_drops": 0,
+      "outer_DATA_retransmitted": 0,
+      "tcp_backpressure": 0,
+      "native_parity_expired_jobs": 0,
+      "owned_Stop_cleanup": true
+    },
+    "observed_process_cpu_reduction_pct": 21.19140625
+  },
+  "w42": {
+    "owner": "fec-network-work",
+    "scenario": "Mixed 100Mbps app each side: UDP96% 35% small<=256B by packet count, 2 real TCP flows4%, 20Hz genuine sparse64B, Fixed Maximum6, outer DATA repair OFF, 30%IID/300ms, fq600, 15s warmup/30 measure/30 drain",
+    "source_A": "861f0396264734f97658243156060f13e6a2f74f",
+    "source_B": "23da99f0de04afe17756542f5176f2759e318747",
+    "source_B_build": {
+      "action": 40153525640,
+      "artifact_id": 12583149711,
+      "zip_sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
+      "result": "SUCCESS_REAL_NATIVE_ARM64_FIXED_AUTO_MISSING_SOURCE_TUN_ORIGINAL_M4_SOURCE_PARITY_FEC_MATH"
+    },
+    "native_maximum_contract_action": 40153525653,
+    "id": "FEC-W42-Mixed100-NativePpoll-BoundedParityFeedback-SameVM-BA",
+    "request": "tests/network/fec-work/W42-mixed100-native-ppoll-boundedParityFB-sameVM-BA-arm64.json",
+    "request_commit": "df587f44af2179251866df9f18cacde6cdd3f6e7",
+    "action": 40154125275,
+    "order": "BA",
+    "result": "PASS_SCOPED_OBSERVATION_BOTH",
+    "artifact_id": 12583383213,
+    "zip_sha256": "89a4b0014e590b0a66d8492efd817efe354909f875121a54e425065f94b2fa49",
+    "B": {
+      "cpu_seconds": {
+        "client": 23.92,
+        "server": 24.05,
+        "combined": 47.97
+      },
+      "host_cpu_psi_mean_pct": 29.104,
+      "host_cpu_psi_peak_pct": 31.35,
+      "udp_loss_pct": {
+        "c2s": 0.02891384837500291,
+        "s2c": 0.04657345507117006
+      },
+      "small_loss_pct": {
+        "c2s": 0.05600066535443986,
+        "s2c": 0.05877297552050123
+      },
+      "small_p99_ms": {
+        "c2s": 307.7,
+        "s2c": 307.7
+      },
+      "tcp_delivered_mbps": {
+        "c2s": 3.9999096,
+        "s2c": 3.9999536
+      },
+      "tcp_first_p99_ms": {
+        "c2s": 925.8,
+        "s2c": 947
+      },
+      "sparse_64B": {
+        "c2s": {
+          "sent": 596,
+          "received": 595,
+          "p99_ms": 306
+        },
+        "s2c": {
+          "sent": 596,
+          "received": 594,
+          "p99_ms": 306.5
+        }
+      },
+      "parity": {
+        "client": [
+          1021935,
+          1021935,
+          0
+        ],
+        "server": [
+          1019385,
+          1019385,
+          0
+        ]
+      }
+    },
+    "A": {
+      "cpu_seconds": {
+        "client": 30.5,
+        "server": 30.7,
+        "combined": 61.2
+      },
+      "host_cpu_psi_mean_pct": 36.69133333333333,
+      "host_cpu_psi_peak_pct": 39.36,
+      "udp_loss_pct": {
+        "c2s": 0.029496349826708946,
+        "s2c": 0.038422503944128245
+      },
+      "small_loss_pct": {
+        "c2s": 0.05101050705552937,
+        "s2c": 0.06209974771977489
+      },
+      "small_p99_ms": {
+        "c2s": 308.2,
+        "s2c": 308.3
+      },
+      "tcp_delivered_mbps": {
+        "c2s": 3.9999122666666667,
+        "s2c": 4.000044
+      },
+      "tcp_first_p99_ms": {
+        "c2s": 958.2,
+        "s2c": 945.3
+      },
+      "sparse_64B": {
+        "c2s": {
+          "sent": 596,
+          "received": 596,
+          "p99_ms": 306.6
+        },
+        "s2c": {
+          "sent": 596,
+          "received": 594,
+          "p99_ms": 306.1
+        }
+      },
+      "parity": {
+        "client": [
+          1019654,
+          1019654,
+          0
+        ],
+        "server": [
+          1022695,
+          1022695,
+          0
+        ]
+      }
+    },
+    "both_actual": {
+      "source_tun_warmup_steady_drops": 0,
+      "source_fq_root_drops": 0,
+      "outer_DATA_retransmitted": 0,
+      "tcp_backpressure": 0,
+      "native_parity_expired_jobs": 0,
+      "owned_Stop_cleanup": true
+    },
+    "observed_process_cpu_reduction_pct": 21.617647058823536
   }
 }
