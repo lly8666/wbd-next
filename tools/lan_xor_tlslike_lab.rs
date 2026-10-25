@@ -73,6 +73,27 @@ pub(crate) fn rolling_word_mask(bytes: &mut [u8], seed: u64, pn: u64) {
     }
 }
 
+/// Deliberately INSECURE PN-mask fast path. One reversible 64-bit mask per
+/// record, repeated on every 8-byte body chunk. No PRNG per chunk, crypto,
+/// secret, integrity, replay protection, or traffic-analysis resistance.
+///
+/// key(PN) is injective for distinct u64 PNs. Thus, for identical plaintext,
+/// each full aligned 8-byte ciphertext block is necessarily different between
+/// records with distinct PNs. This DOES NOT make the wire valid TLS ciphertext.
+pub(crate) fn pn_repeat_word_mask(bytes: &mut [u8], pn: u64) {
+    const PUBLIC_SALT: u64 = 0x6c61_6e5f_6e6f_7365;
+    let key = pn.rotate_left(17) ^ PUBLIC_SALT;
+    let mask = key.to_le_bytes();
+    let mut chunks = bytes.chunks_exact_mut(8);
+    for chunk in &mut chunks {
+        let value = u64::from_le_bytes(chunk.try_into().expect("exact 8 byte chunk"));
+        chunk.copy_from_slice(&(value ^ key).to_le_bytes());
+    }
+    for (byte, m) in chunks.into_remainder().iter_mut().zip(mask) {
+        *byte ^= m;
+    }
+}
+
 /// Each IPv4 packet becomes exactly one new TLS-looking application_data record.
 /// The caller must avoid PN wrap. There is intentionally no authenticity.
 pub(crate) fn seal(packet: &[u8], mode: Mode, seed: u64, pn: u64) -> Result<Vec<u8>, &'static str> {
@@ -237,6 +258,50 @@ mod tests {
         assert_eq!(&a[13..], &masked[..]);
         assert_ne!(&a[15..79],&b[15..79]);
         assert_ne!(&a[15..143],&b[15..143]);
+    }
+
+    #[test]
+    fn pn_mask_is_reversible_for_all_tails_and_extreme_pns() {
+        for len in [0usize,1,2,3,4,5,6,7,8,9,15,16,17,63,64,65,127,128,129,1347,16397] {
+            for pn in [0u64,1,2,3,255,256,65535,u32::MAX as u64,u64::MAX] {
+                let original = (0..len).map(|i| (i.wrapping_mul(53).wrapping_add(91)) as u8).collect::<Vec<_>>();
+                let mut masked = original.clone();
+                pn_repeat_word_mask(&mut masked,pn);
+                pn_repeat_word_mask(&mut masked,pn);
+                assert_eq!(original,masked, "PN mask did not roundtrip len={len} pn={pn}");
+            }
+        }
+    }
+
+    #[test]
+    fn pn_mask_guarantees_each_complete_8byte_word_differs_on_distinct_pn() {
+        let p=sample_ip_packet();
+        for (a,b) in [(0u64,1u64),(255,256),(0,u64::MAX),
+                      (0,1u64<<47),(u64::MAX-1,u64::MAX)] {
+            let mut x = vec![0u8;2+p.len()];
+            x[..2].copy_from_slice(&(p.len() as u16).to_be_bytes());
+            x[2..].copy_from_slice(&p);
+            let mut y=x.clone();
+            pn_repeat_word_mask(&mut x,a);
+            pn_repeat_word_mask(&mut y,b);
+            for (cx,cy) in x.chunks_exact(8).zip(y.chunks_exact(8)) {
+                assert_ne!(cx,cy, "identical full 8B word with different PN {a} {b}");
+            }
+            assert_ne!(&x[2..66],&y[2..66]);
+            assert_ne!(&x[2..130],&y[2..130]);
+        }
+    }
+
+    #[test]
+    fn pn_mask_known_pn_and_salt_make_plaintext_trivially_recoverable() {
+        let p=sample_ip_packet();
+        let pn=5u64;
+        let mut masked=p.clone();
+        pn_repeat_word_mask(&mut masked,pn);
+        assert_ne!(masked,p);
+        // PN is transmitted clear: any observer can reverse the transform.
+        pn_repeat_word_mask(&mut masked,pn);
+        assert_eq!(masked,p);
     }
 
     #[test]
