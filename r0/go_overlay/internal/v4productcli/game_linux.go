@@ -25,6 +25,20 @@ func runGame(ctx context.Context,c config,ifindex uint32,tun *ownedTun,connected
     if c.role=="client"{return runGameClient(ctx,c,ifindex,tun,connected)}
     return runGameServer(ctx,c,ifindex,tun,connected)
 }
+// Planned is the original bounded FEC owner count; sent requires at
+// least ONE definite kernel M4 copy per Game logical parity row. Recovery
+// count here is authenticated decoder candidate, not claimed TUN delivery.
+func logOriginalGameFec(role string,n int,p *realityfront.V4LinuxGameProduct){
+    proof,err:=p.FecCounters()
+    if err!=nil{
+        log.Printf("V4_PUBLIC_GAME_FEC_COUNTERS_NOT_AVAILABLE role=%s error=%v",role,err)
+        return
+    }
+    log.Printf("V4_PUBLIC_GAME_FEC_COUNTERS role=%s lanes=%d source_offered=%d parity_offered=%d parity_copied=%d systematic_candidate=%d recovered_candidate=%d expired=%d failed=%d rplanned=%d rsent=%d retained_bytes=%d",
+        role,n,proof.SourceOffered,proof.ParityOffered,
+        proof.ParityKernelCopied,proof.SourceCandidate,proof.RecoveredCandidate,
+        proof.Expired,proof.Failed,proof.Planned,proof.Sent,proof.RetainedBytes)
+}
 func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,connected *bool)error{
     n:=int(c.gameLanes)
     policy,err:=realityfront.FixedPolicyForClient(int(c.gameLanes),4)
@@ -111,6 +125,7 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             n,counters.Copied,counters.Delivered,counters.Rejected,
             counters.RawReceived,counters.AuthenticatedRejected)
     }
+    if c.gameFecEnabled{logOriginalGameFec("client",n,native)}
     closeErr:=native.Close()
     if closeErr==nil{log.Printf("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=%d",n)}
     return errors.Join(err,closeErr)
@@ -235,6 +250,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             n,counters.Copied,counters.Delivered,counters.Rejected,
             counters.RawReceived,counters.AuthenticatedRejected)
     }
+    if c.gameFecEnabled{logOriginalGameFec("server",n,native)}
     closeErr:=native.Close()
     if closeErr==nil{log.Printf("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server lanes=%d",n)}
     return errors.Join(err,closeErr)
