@@ -5660,7 +5660,7 @@
     "windows_product_pass": false
   },
   "w86_linux_mixed_tcp_lowload": {
-    "status": "ONE_FINITE_LINUX_ACTION_STARTED_RESULT_NOT_YET_RECEIVED",
+    "status": "FINISHED_INCONCLUSIVE_LOWLOAD_TCP_HIGHLOSS_AND_RECOVERY_BACKPRESSURE",
     "source": "4322a811fd63e096458f202767faa2f097a587c0",
     "source_build_action": 40203220219,
     "source_artifact_id": 12602931174,
@@ -5673,5 +5673,55 @@
     "not_a_100Mbps_qualification": true,
     "capacity_stop": true,
     "windows_skipped": true
+  },
+  "w86_linux_mixed_tcp_result": {
+    "result": "INCONCLUSIVE",
+    "action_conclusion": "FAILURE",
+    "evidence": "docs/evidence/fec-network-work/20261025-W86-balanced3-8m-TCP-highloss-recovery-INCONCLUSIVE.json",
+    "artifact_id": 12603890171,
+    "zip_sha256": "785c061807f17df193121bed8c8621bf575614d8bdb45329f6f0465518721f3c",
+    "tcp_peak_injected_mbps": [
+      0.1457,
+      0.1547
+    ],
+    "tcp_peak_target_mbps": [
+      0.32,
+      0.32
+    ],
+    "tcp_peak_p99_ms": [
+      21477,
+      16942.8
+    ],
+    "tcp_recover_injected_mbps": [
+      0.3095,
+      0.277
+    ],
+    "tcp_recover_target_mbps": [
+      0.32,
+      0.32
+    ],
+    "tcp_recover_p99_ms": [
+      7454.7,
+      2902.8
+    ],
+    "peak_host_CPU_PSI_pct": 0.42,
+    "native_parity_planned_equal_sent": true,
+    "outer_data_retransmitted": 0,
+    "source_tun_drops": 0,
+    "rx_capacity_reject": 0,
+    "server_RX_conflict_reject": 1,
+    "capacity_stop": true,
+    "service_100Mbps_qualification": "NOT_RUN_ON_CURRENT_SOURCE"
+  },
+  "w87_linux_maximum_mixed_tcp": {
+    "status": "ONE_FINITE_MAXIMUM6_8MBPS_DIAGNOSTIC_ACTION_IN_PROGRESS",
+    "request": "tests/network/fec-work/W87-maximum6-8m-TCP-recovery-original-arm64.json",
+    "source": "4322a811fd63e096458f202767faa2f097a587c0",
+    "action": 40204822076,
+    "contract_action": 40204822093,
+    "reason": "Check whether Fixed Maximum improves low-load high-IID inner TCP recovery vs W86 Balanced3, not sameVM CPU comparison",
+    "netem_rng": "unseeded_recorded",
+    "capacity_stop": true,
+    "windows_tests": "TEMP_SKIPPED_USER_20261025"
   }
 }
