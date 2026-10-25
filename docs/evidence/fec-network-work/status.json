@@ -5992,9 +5992,12 @@
     "removed_new_game_fec_module": true,
     "rollback_build_run": 40211941478,
     "rollback_row_contract_run": 40211941508,
-    "rollback_build_outcome": "PENDING_ACTION_RESULT",
+    "rollback_build_outcome": "SUCCESS_FULL_NATIVE_ARM64_BUILD_FUNCTIONAL_40211941478_MAX_ROW_40211941508",
     "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN",
     "merge_ready": false,
-    "capacity_stop": true
+    "capacity_stop": true,
+    "rollback_build_artifact_id": 12605274526,
+    "rollback_build_zip_sha256": "ba846bca14a07f8bcfdefef423151b9075a05c4cfa2fad49332c22c6ab83a591",
+    "rollback_maximum_contract_result": "SUCCESS"
   }
 }
