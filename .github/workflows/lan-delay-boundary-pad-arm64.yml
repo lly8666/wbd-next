@@ -4,6 +4,7 @@ on:
     branches: [experiment/lan-gated-boundary-pad]
     paths: [".github/workflows/lan-delay-boundary-pad-arm64.yml"]
 permissions: {contents: read}
+# Audit real outgoing IPv4 TotalLength against MTU, with worst-case TCP options.
 # TLS13 compatibility client flight may contain ChangeCipherSpec before Finished.
 # Final resource-budget variant: <=256B random pad for lifecycle only, finished clock.
 # Full Finished-relative receipt field compiled, correct native fixture version.
