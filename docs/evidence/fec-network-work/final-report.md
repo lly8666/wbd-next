@@ -1,6 +1,6 @@
 # FEC-only 独立岗位｜2026-10-25 限域合并审查索引
 
-**当前交付状态：** `scoped_integration_review_ready=true`；**`merge_ready=false`，`capacity_stop=true`**。以下只为已跑原生 Linux ARM64、真实外层 DATA repair OFF 的 FEC 功能/业务性能**限域审查**，不是全平台、不是与 main/新外层 ON 组合的整机合并资格。分支当前审查 HEAD `084e7215f48c0d96a55b92a5a3691aa346dcdda2`（2026-10-25 12:17 UTC，文档收口）；后续源码或分支变化必须重新核证，不能把 HEAD 直接当作已运行的产品二进制。
+**当前交付状态：** `scoped_integration_review_ready=true`；**`merge_ready=false`，`capacity_stop=true`**。以下只为已跑原生 Linux ARM64、真实外层 DATA repair OFF 的 FEC 功能/业务性能**限域审查**，不是全平台、不是与 main/新外层 ON 组合的整机合并资格。入库前的证据审查基线 `084e7215f48c0d96a55b92a5a3691aa346dcdda2`（2026-10-25 12:17 UTC，W83 文档收口）；后续源码或分支变化必须重新核证，不能把 HEAD 直接当作已运行的产品二进制。
 
 ## 精确产品与证据索引（旧时点记录保留在后文）
 
