@@ -1,0 +1,107 @@
+{
+  "schema": 1,
+  "experiment": "LAN_ROLLING_XOR_BYTE_EXACT_U64_APPLY_OPTIMIZATION",
+  "branch": "experiment/lan-xor-word-optim",
+  "base": {
+    "branch": "experiment/lan-xor-tlslike",
+    "sha": "c5bd5f0e42ce07b74e7f166101e54b203f05ea2a",
+    "previous_result": "CLOSED_RECORD_PERF_NEGATIVE_FOR_ORIGINAL_ROLLING_XOR"
+  },
+  "phase": "COMPLETE_SCOPED_LAB_CPU_AND_PCAP_POSITIVE_BYTE_EXACT_NOT_PRODUCT_WIRED_INSECURE",
+  "scope": "separate opt-in noncryptographic LAN XOR lab, no WBD production code or Go->Rust->TUN integration",
+  "code": {
+    "opt_change": "apply same rolling XOR keystream to 8-byte little-endian u64 words instead of eight per-byte XOR operations; handle remaining tail bytes",
+    "seed_changed": false,
+    "keystream_changed": false,
+    "outer_record_format_changed": false,
+    "security": "NONE_INSECURE_OBFUSCATION_NO_AUTH_CONFIDENTIALITY_REPLAY"
+  },
+  "native_ci": {
+    "x86_64_perf": {
+      "run_id": 40176827919,
+      "source": "25a183f7a469a158ebf750fd1f194991f8a7d65b",
+      "job_id": 121119204057,
+      "conclusion": "success",
+      "rust_tests": {
+        "passed": 7,
+        "failed": 0
+      },
+      "artifact_id": 12593036310,
+      "zip_sha256": "dc663f629302904986e9824993a83657a9060e0200d7a545e7bf7f55470f07bb",
+      "cpu_ns_per_inner_byte": {
+        "original_rolling": 3.000110506782959,
+        "optimized_rolling_word": 0.5846226286003586,
+        "aes128_gcm": 0.7871780485576568,
+        "fixed_xor": 0.08512586988531876,
+        "clear": 0.03259330272916504,
+        "chacha20_poly1305": 1.4387060830948593
+      },
+      "cpu_saving_vs_original_pct": 80.51329685094653,
+      "cpu_saving_vs_aes_pct": 25.731843047254642
+    },
+    "arm64_perf": {
+      "run_id": 40176831540,
+      "source": "91325bf1a123f6c3d3a9cfcc76d7ba3fcc5d4e46",
+      "job_id": 121119214546,
+      "conclusion": "success",
+      "rust_tests": {
+        "passed": 7,
+        "failed": 0
+      },
+      "artifact_id": 12592491759,
+      "zip_sha256": "c22b645eb1a1bfd5f478f269aaada39cac9c30a26c00dcf7ae221749ed742c0b",
+      "cpu_ns_per_inner_byte": {
+        "original_rolling": 3.1013945544535844,
+        "optimized_rolling_word": 0.28720330866157584,
+        "aes128_gcm": 0.7541713583620153,
+        "fixed_xor": 0.08219437342782716,
+        "clear": 0.03748012533747265,
+        "chacha20_poly1305": 2.678905838699623
+      },
+      "cpu_saving_vs_original_pct": 90.73954301463664,
+      "cpu_saving_vs_aes_pct": 61.918030235813696
+    },
+    "x86_64_capture": {
+      "run_id": 40176869208,
+      "source": "0fbdef60a4e27905d093d1a9f830faeb0559ddd1",
+      "job_id": 121119328917,
+      "conclusion": "success",
+      "artifact_id": 12593105987,
+      "zip_sha256": "eb9cb384e2c2b0cafd9649df27bdbb1c5b26c6c1a5dd5946d10daf007bc312c0",
+      "pcap_sha256": "e369035267e78a4555b36a72d9c0b32b73bdf9e325bd88237953b032b0754750",
+      "pcap_bytes": 11349
+    },
+    "arm64_capture": {
+      "run_id": 40176873117,
+      "source": "9a4d873040703dd44ef14deb7986716b3b9a65e2",
+      "job_id": 121119340511,
+      "conclusion": "success",
+      "artifact_id": 12592846516,
+      "zip_sha256": "48401dbf4c8dfdb918c37f7d0bc8610f65068d4276a25a6c888bbd0ff171ffe5",
+      "pcap_sha256": "438daeebd52cc9248d44cfb6f77b6f0ee3ecafeb85c47a3d48bbbb03db051777",
+      "pcap_bytes": 11349
+    }
+  },
+  "capture": {
+    "genuine_mutual_tls13_handshake_in_isolated_fixture": true,
+    "post_tls_authenticated_READY_barrier": true,
+    "then_raw_tcp_tlslike_data": true,
+    "prior_client_tls_records": 6,
+    "steady_records": 6,
+    "wire_size_per_record": 1360,
+    "fixed_xor_repeat64_128": true,
+    "old_rolling_repeat64_128": false,
+    "optimized_word_repeat64_128": false,
+    "byte_equivalent_optimized_and_original_for_same_pn": true,
+    "synthetic_ipv4_packet_restored": true,
+    "actual_WBD_Go_Rust_TUN": false,
+    "raw_pcap_cleaned": true
+  },
+  "cpu_contract": "same-machine symmetric twelve legs, each 0.7s warm + 6s measured, 1345B synthetic original IP, Rust release record seal+open, /proc/thread-self/schedstat CPU ns per inner byte; not product throughput",
+  "reports": [
+    "docs/evidence/lan-xor-word-optim/PERF_AND_PCAP_REPORT.md"
+  ],
+  "open_requests": [],
+  "next_action": "NONE_SCOPED_OPTIMIZED_ROLLING_XOR_LAB_COMPLETE_NO_WBD_PRODUCT_INTEGRATION_OR_DEPLOYMENT",
+  "merge_ready": false
+}
