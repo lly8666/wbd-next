@@ -122,6 +122,54 @@ func TestR0V4WrongEpochAndIdentityReject(t *testing.T) {
     if err:=store.ReleaseLane("solo",tunnel,1,c.Epoch);err!=nil{t.Fatal(err)}
 }
 
+// This V4 private extension byte was reserved in all off-mode records.
+// A Game+FEC server may never turn a requested fixed profile into another,
+// and a legacy feature3 peer cannot accept a fixed FEC profile silently.
+func TestFECGameProtectedV4ProfileWireOffAndFailClosed(t *testing.T){
+    var epoch [16]byte;epoch[0]=17
+    off:=V4Extension{Features:v4RequiredFeatures|v4FeatureFEC2,Epoch:epoch}
+    wire,err:=v4Encode(off)
+    if err!=nil{t.Fatal(err)}
+    if wire[21]!=0||wire[22]!=0||wire[23]!=0{
+        t.Fatal("off-mode must remain byte-for-byte old V4 extension")
+    }
+    for profile:=uint8(1);profile<=7;profile++{
+        choice:=V4Extension{Features:v4RequiredFeatures|v4FeatureFEC2,
+            Epoch:epoch,GameFec:profile}
+        raw,e:=v4Encode(choice)
+        if e!=nil{t.Fatal(e)}
+        decoded,e:=v4Decode(raw[:])
+        if e!=nil||decoded!=choice{t.Fatalf("auth extension=%d got=%+v err=%v",profile,decoded,e)}
+        raw[21]=8
+        if _,e=v4Decode(raw[:]);!errors.Is(e,ErrAdmissionParams){
+            t.Fatalf("out-of-range fixed profile %d not denied: %v",profile,e)
+        }
+    }
+    if _,err=v4Encode(V4Extension{
+        Features:v4RequiredFeatures,Epoch:epoch,GameFec:7,
+    });!errors.Is(err,ErrAdmissionUnsupported){t.Fatalf("feature3 admitted GameFEC: %v",err)}
+    raw,_:=v4Encode(V4Extension{Features:v4RequiredFeatures,Epoch:epoch})
+    raw[21]=1
+    if _,err=v4Decode(raw[:]);!errors.Is(err,ErrAdmissionUnsupported){
+        t.Fatalf("legacy mode accepted forged Game fixed profile: %v",err)
+    }
+    raw,_=v4Encode(off);raw[22]=1
+    if _,err=v4Decode(raw[:]);!errors.Is(err,ErrAdmissionParams){
+        t.Fatalf("nonzero still-reserved byte accepted: %v",err)
+    }
+    store,_:=NewV4EpochStore(2)
+    if _,err=EstablishServerV4(context.Background(),nil,ServerAdmissionConfig{},
+        V4ServerOptions{DataPlaneReady:true,Epochs:store,GameFec:8});
+        !errors.Is(err,ErrAdmissionUnsupported){
+        t.Fatalf("invalid server GameFEC accepted: %v",err)
+    }
+    if _,err=EstablishClientV4(context.Background(),nil,ClientAdmissionConfig{},
+        V4ClientOptions{DataPlaneReady:true,GameFec:1});
+        !errors.Is(err,ErrAdmissionUnsupported){
+        t.Fatalf("non-native GameFEC client grant accepted: %v",err)
+    }
+}
+
 func TestR0V4FeatureGateAndBoundedStore(t *testing.T) {
     if _,err:=NewV4EpochStore(0);!errors.Is(err,ErrAdmissionParams){t.Fatal("unbounded store accepted")}
     store,_:=NewV4EpochStore(1)
