@@ -16,8 +16,8 @@ use wbd_types::buffer_contract::UniqueSealable;
 #[derive(Clone,Copy,Debug,Default)]
 pub(crate) struct GameFecCounters{
     pub source_offered:u64,pub parity_offered:u64,
-    pub parity_kernel_copied:u64,pub recovered_tun:u64,
-    pub source_first_tun:u64,pub expired:u64,pub failed:u64,
+    pub parity_kernel_copied:u64,pub recovered_candidate:u64,
+    pub source_first_candidate:u64,pub expired:u64,pub failed:u64,
 }
 struct Flight{
     job:ParityJob,prepared:StagedParity,copied:u8,
@@ -184,8 +184,8 @@ impl GameFec{
             if v.frame.is_empty()||v.frame.len()>self.max_original(){
                 self.counters.failed+=1;return Err(GameError::Invalid)
             }
-            if v.recovered{self.counters.recovered_tun+=1}
-            else{self.counters.source_first_tun+=1}
+            if v.recovered{self.counters.recovered_candidate+=1}
+            else{self.counters.source_first_candidate+=1}
             out.push(v.frame);
         }
         Ok(out)
