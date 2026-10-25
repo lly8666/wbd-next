@@ -1,5 +1,7 @@
 # FEC独立岗位：关闭外层重传后验证与修复
 
+**2026-10-25 最新测试执行例外（用户明确要求）：本 FEC 独立工位 Windows 相关测试暂时跳过 `TEMP_SKIPPED_USER_20261025`。** 包括 Windows x64 native ISA-L/codec、Go/Rust FEC Windows ABI/构建、Wintun/GUI/配置、Windows Game 或 Windows 真实端到端产品验证；均记 `NOT_RUN/TEMP_SKIPPED`，不是 PASS/FAIL、不是永久移除。**仅此岗位的计划/验收队列**，不修改或禁用 M0 Windows 所有权、工作流、任务与状态；已存在其他岗位的历史 Windows 结果不应删除或重标。用户明确恢复后，先核对 M0 独立提交和最新真实 Windows CI，再定向补验证；Linux ARM64、外层 OFF、FEC fixed/auto 和未覆盖风险继续处理。同步状态见 [本岗位 Windows 暂跳记录](../evidence/fec-network-work/20261025-W86-windows-temporarily-skipped-and-linux-priorities.json) 及 [FEC 测试计划](../architecture/FEC_V2_TEST_PLAN.md)。
+
 **2026-10-24 V3 共享代码同步优先规则**：已授权把网络冻结点 `040741820b2f917b5868c285c438d4cc21c6193a` 合入自身分支并保留双亲历史；本独立岗位仅使用最新 V3 opportunistic repair ON，不能因本文旧版 v2 引用回退统计、半量独立缓存、批量预算、统一 MTU、TUN 和 owned fq600/flow256。OFF 是一个不可伪造的真实数据重传禁止政策，同时继续真实首发质量/反馈/FEC parity。此前旧7ad7产物 Actions 下载失败是历史事实，**不能复用为 V3 合并后产品资格**。优先处理上游 Fixed 损伤/Auto 无损 pending 的原生双端策略收敛，不将其未经证明归咎 fq。
 
 2026-10-23用户直接授权新分支和新agent，随后澄清：**先完全关闭外层数据重传，只靠FEC把整套功能、恢复和成本修好。** 不等Normal外层重传岗位收口，不重做另一岗位的恢复调优；本授权覆盖本岗位自主修改、Actions dispatch和留痕，不需M0派单。
