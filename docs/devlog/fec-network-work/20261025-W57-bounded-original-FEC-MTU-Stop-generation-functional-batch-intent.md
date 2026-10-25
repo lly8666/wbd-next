@@ -1,0 +1,7 @@
+# W57 finite FEC MTU/Stop/generation functional batch — pretest intent
+
+Independent branch experiment/fec-network-tuning. W56 exact native Go/ARM64 build Action40173359338 SUCCESS and product original TUN missing source verified; W56 one-performance-scenario sameVM AB Action40173582990 runs independently, no capacity increase.
+
+This W57 is a functional-only batch using existing .github/workflows/network-matrix-parity-unit.yml on ARM64, one job, no netem/performance product compilation. Existing row0..19 and genuine M2/replay tests remain intact. New filters: r1_f2_odd_size_mtu_dirty_outputs_and_direct_borrowed (exact FEC codec MTU record boundary/dirty reuse); m0_fec2_live_rx_interleaved_four_blocks_3_ciphers_no_hol_and_stop (authenticated FEC recover and Stop); m0_fec2_live_rx_same_turn_age_retirement_cannot_redeliver_k1 (stale/duplicate); m0_pending_jumbo_midflight_scope_stop_prefix_matrix (COMMON_PATH MTU +/-1, generation, route revision, kernel copied-prefix uncertainty and Stop); m0_background_owned_jumbo_persists_65k_generation_32_16_nohol_mtu_stop (COMMON_PATH 65KiB two turns+no HOL).
+
+COMMON_PATH shared 65KiB tests are not FEC codec bug or native TUN product certification. They protect source framing/Stop and cannot qualify actual 65KiB product delivery through real TUN or Windows/GUI/driver. Keep exact run and result in own evidence/status, no other role edits, no throughput or additional performance scenario. Failed tests retain FAIL and source; no sweeping changes.
