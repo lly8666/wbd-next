@@ -146,7 +146,7 @@ impl Pair{
             xor_pn:0,used_aead:0,used_xor:0,used_aad_partial:0,
         }
     }
-    fn round(&mut self,plan:Plan,p:&Packet)->usize{
+    fn round<const CHECK:bool>(&mut self,plan:Plan,p:&Packet)->usize{
         let n=p.len();
         let used=if plan.mode_xor(p.cls){
             // The recording carries NO authenticated policy marker. The
@@ -207,7 +207,7 @@ impl Pair{
         };
         // Functional validation upfront and continuously prevents measuring
         // a branch that secretly drops or skips original packets.
-        assert_eq!(&self.out[..n],&p.body[..]);
+        if CHECK {assert_eq!(&self.out[..n],&p.body[..]);}
         black_box(&self.out[..n]);
         used
     }
@@ -235,7 +235,7 @@ fn guardrail(tls:&[u8]){
                   Class::PlainTcp,Class::AckOnly,Class::Udp] {
             let n=if c==Class::AckOnly{40}else if c==Class::TlsHandshake{360}else if c==Class::Udp{540}else{1345};
             let q=make_ipv4(n,c,tls);
-            p1.round(kind,&q);
+            p1.round::<true>(kind,&q);
         }
     }
     assert!(p1.used_aad_partial>0 && p1.used_xor>0 && p1.used_aead>0);
@@ -258,7 +258,7 @@ fn run(label:&str,kind:Plan,seed:u8,items:&[Packet],secs:u64,warm:bool)->(u64,u6
     loop {
         for _ in 0..100 {
             let item=&items[(packets as usize)%items.len()];
-            let used=pair.round(kind,item);
+            let used=pair.round::<false>(kind,item);
             packets+=1;
             bytes_in+=item.len() as u64;
             bytes_wire+=used as u64;
@@ -268,6 +268,8 @@ fn run(label:&str,kind:Plan,seed:u8,items:&[Packet],secs:u64,warm:bool)->(u64,u6
     }
     let wall=start.elapsed().as_nanos();
     let cpu=thread_cpu().saturating_sub(start_cpu);
+    let last=&items[((packets-1) as usize)%items.len()];
+    assert_eq!(&pair.out[..last.len()],&last.body[..],"last measured packet failed byte-exact roundtrip");
     assert!(cpu>0 && packets>0);
     if !warm{
         println!("{{\"scenario\":\"{}\",\"mode\":\"{}\",\"packets\":{},\"inner_bytes\":{},\"wire_bytes\":{},\"cpu_ns\":{},\"wall_ns\":{},\"aes_records\":{},\"xor_records\":{},\"aad_partial_records\":{},\"eligible_per_100\":{}}}",
