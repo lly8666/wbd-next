@@ -7,7 +7,7 @@ MODES=[
  "PlainModeAllXOR","HiddenPNModeAllXOR",
  "ReadPlainModeOnly","ReadHiddenModeOnly"
 ]
-RE=re.compile(r'^Benchmark(\w+)(?:-\d+)?\s+(\d+)\s+([\d.]+) ns/op(?:\s+[\d.]+ MB/s)?\s+(\d+) B/op\s+(\d+) allocs/op\s*
+RE=re.compile(r"Benchmark(\w+)(?:-\d+)?\s+(\d+)\s+([\d.]+) ns/op.*?(\d+) B/op\s+(\d+) allocs/op")
 def read(p):
     text=p.read_text()
     assert 'PASS' in text and 'FAIL' not in text
