@@ -6,6 +6,12 @@
 
 用户要求 **Windows 相关 FEC 测试暂时跳过**。在 `experiment/fec-network-tuning` 本岗位，Windows x64 native codec/ISA-L、Windows Rust/Go FEC ABI、Wintun/GUI/模式接线、Windows Game 与 Windows 原生应用恢复标记为 **`TEMP_SKIPPED_USER_20261025` / `NOT_RUN`**。这是**暂时不安排这些测试**，不是改成通过、不是删除测试或降低门槛；本计划后续 `F2-PLATFORM` 表中的 Windows 也受此例外约束。不会触碰 M0 自己的 Windows 工作流、源代码、测试排期和已有结果。解除例外必须有用户新指示，届时以最新 M0 Windows 产品源码重新定向验收，不借用 Linux ARM64 的 PASS。Linux ARM64/native 网络、Fixed/Auto 等非 Windows 本岗任务继续；容量停止条件仍有效。执行留痕以 [本岗位 W86 暂跳与 Linux 优先级收据](../evidence/fec-network-work/20261025-W86-windows-temporarily-skipped-and-linux-priorities.json) 为准。
 
+## 2026-10-25 W88–W89 真实 GameMode 状态覆盖旧设计计划
+
+本工位已在不修改产品源代码/CI 的条件下复用原 ARM64 Go TLS native binary `4322a811`，完成 **Game2 与 Game4 的真实 Linux public-mode 双向业务**：单独一 Action 一测量 job，独立20%每lane丢包、1 lane 黑洞/恢复 [W88](../evidence/fec-network-work/20261025-W88-original-Linux-Game2-Game4-independent20-lane1-blackhole-PASS-SCOPED.json)，单共享 netem root queue 长相关 GE15%/clean 恢复 [W89](../evidence/fec-network-work/20261025-W89-original-Linux-Game2-Game4-shared-GE15Long-SCOPED-HIGHLOSS.json)。原生 auth/多lane copied/unique delivered、业务双向、源TUN/Stop均通过**限域功能门**。独立20%下 Game2 UDP残余约4%，Game4约0.14%–0.19%；共享长 GE 下 Game2 **13%** 左右、Game4 **8%–9%**，**两者都不能称相关高损≤1% PASS**，Action Green只含clean阶段严格业务门。
+
+旧 §2/§3 中 Game+FEC 或“Game 固定 strong”是**设计/目标**，目前公开产品 CLI Game2/4 明确只有 `game_fec=off`，Game+FEC **UNSUPPORTED / NOT_RUN**；Game2/4 的复制首交不是FEC parity，也未实现可认证的单 lane `outer-repair=off` 真正配置/字节账本，不能借已跑 Game结果冒充 Game+FEC 已完成。Windows x64/Game/Wintun/GUI 本岗位按用户明确要求继续 `TEMP_SKIPPED_USER_20261025 / NOT_RUN`，M0 的 Windows CI 不动。保留宿主容量 stop，不重复耗费 seed/负载，明确末级产品 `merge_ready=false`。
+
 ## 1. 统一纪律与对比口径
 
 - **每个性能Action只有一个预声明场景/配置/seed和一个测量job**；旧新必须在这个job/VM顺序AB或BA。一个配置可以有预声明的网络波形，但不能跑完后挑最优档。功能断言可合批。
