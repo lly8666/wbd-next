@@ -7,6 +7,9 @@ on:
       - ".github/workflows/network-arm64-product-build.yml"
       - "crates/wbd-engine/src/v4_embedded_go.rs"
       - "crates/wbd-engine/src/v4_fixed_stream.rs"
+      - "crates/wbd-engine/src/v4_game_lane.rs"
+      - "crates/wbd-engine/src/v4_game_fec.rs"
+      - "crates/wbd-engine/src/v4_game_public_kernel.rs"
       - "crates/wbd-engine/src/v4_fec2_live_rx.rs"
       - "crates/wbd-engine/src/runtime/fec2_owner*"
       - "crates/wbd-codec/src/fec*"
@@ -44,6 +47,15 @@ jobs:
           cargo +1.85.1 test --locked -p wbd-engine \
             --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
             --lib v4_fixed_stream::tests -- --nocapture
+      - name: Native original Game2/4 fixed-FEC after-AEAD cross-lane missing-source regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          WBD_ISAL_PREFIX="$RUNNER_TEMP/wbd-isal-arm64-public" \
+          WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985 \
+          cargo +1.85.1 test --locked -p wbd-engine \
+            --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
+            --lib v4_game_lane::tests::fec_game -- --nocapture
       - name: Real ARM64 ISA-L FEC cross-block parity table regression
         shell: bash
         run: |
