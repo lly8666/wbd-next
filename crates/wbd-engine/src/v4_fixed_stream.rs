@@ -436,7 +436,9 @@ mod tests{
             }).unwrap(),(20,0));
         stream.settle_staged(20,0,0).unwrap();
         assert_eq!(stream.source_scratch.as_ptr(),ptr);
-        assert_eq!(stream.source_scratch.len(),16*(77+2));
+        // Block 2 begins with the preserved 135B first-send DATA; the
+        // other 15 symbols are only 77B, so its maximum remains 137B.
+        assert_eq!(stream.source_scratch.len(),16*(135+2));
         stream.stop();arena.stop();arena.drain_returns();
         assert_eq!(arena.report().loaned,0);
     }
