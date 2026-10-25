@@ -3054,6 +3054,11 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_tun_to_raw(
 struct PollFd {fd:c_int,events:i16,revents:i16}
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 unsafe extern "C" {fn poll(fds:*mut PollFd,count:usize,timeout:c_int)->c_int;}
+#[cfg(feature="fec2_product_record")]
+unsafe extern "C" {
+    fn ppoll(fds:*mut PollFd,count:usize,timeout:*const ClockTimespec,
+        sigmask:*const core::ffi::c_void)->c_int;
+}
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[derive(Default)]
 struct LoopCounts {
@@ -3794,7 +3799,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     actual_firstsend.clear();
     let started=Instant::now();
     let observed_event=events.snapshot();
-    let (generation,defer_route)={
+    let (generation,defer_route,read_cap)={
         let e=cell.lock().map_err(|_|BAD_STAGE)?;
         if e.phase!=PH_ACTIVE{return Err(BAD_STAGE)}
         let defer_route=e.tx_route.as_ref().is_some_and(|cache|
@@ -3803,7 +3808,22 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 cache.observed_at.elapsed()
             )==wbd_platform::linux_route_events::EventRefresh::Defer
         );
-        (e.generation,defer_route)
+        // Keep one genuine authenticated M2 feedback slot at all times
+        // in Fixed/Auto, and reserve two <=4-row M3 quanta ONLY while
+        // queued Parity or a native FEC deadline is imminent. New DATA
+        // retains at least 23/32 M4 slots; no packet/flow is reordered.
+        #[cfg(feature="fec2_product_record")]
+        let read_cap=if fec_ingress_on &&
+            (e.fixed_pending.is_some()||e.fixed_applied.is_some()){
+            let now=loop_now();
+            let stream=e.fec2_live_tx.as_ref();
+            original_fec_tx_data_cap(true,
+                stream.is_some_and(|st|st.report().queued_jobs>0),
+                stream.and_then(|st|st.next_deadline()),now)
+        }else{32};
+        #[cfg(not(feature="fec2_product_record"))]
+        let read_cap=32;
+        (e.generation,defer_route,read_cap)
     };
     if defer_route{
         // The source has not been read from TUN yet, so its first arrival
@@ -3851,7 +3871,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             // hot, amortize one session lock over up to eight bounded loans.
             // All unused loans are returned before crypto/M4 submission.
             if first.is_ok() && observed>=4 {
-                for _ in 0..7.min(32usize.saturating_sub(observed+1)) {
+                for _ in 0..7.min(read_cap.saturating_sub(observed+1)) {
                     match e.arena.allocate_preserving(control_floor){
                         Ok(loan)=>prefetched.push(loan),
                         Err(_)=>break,
@@ -3924,7 +3944,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             Err(TunError::Stopped)=>return Err(BAD_STAGE),
             Err(_)=>{ingress_error=true;break},
         }
-        if observed>=32 || stop.load(Ordering::Acquire){break}
+        if observed>=read_cap || stop.load(Ordering::Acquire){break}
         if pending.len()%8==0 && started.elapsed()>=Duration::from_micros(100){break}
         // A second readiness poll is redundant: read_ready_batch already
         // performs a zero-time poll and the exclusively owned TUN fd is
@@ -4457,29 +4477,68 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     Ok(finish)
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-// Do not block an original TUN sender over a known FEC close/expiry
-// or authenticated M2 feedback deadline. poll() timeout is integer ms:
-// round DOWN, so a sub-ms deadline is serviced immediately. This does
-// not spin during genuine idle (10ms cap), allocate or add a thread.
+// An absolute native FEC/real authenticated M2 deadline bounds one
+// idle TUN wait. ppoll uses an exact relative ns timespec: no truncated
+// sub-millisecond poll(0) spin, and a real newly-ready TUN wakes immediately.
 #[cfg(feature="fec2_product_record")]
-fn original_fec_tun_wait_ms(queued:bool,next_due:Option<MonoNs>,
-    now:MonoNs)->c_int {
+fn original_fec_tun_wait_ns(queued:bool,next_due:Option<MonoNs>,
+    now:MonoNs)->u64 {
     if queued{return 0}
-    let Some(due)=next_due else{return 10};
-    if due.0<=now.0{return 0}
-    (due.0.saturating_sub(now.0)/1_000_000).min(10) as c_int
+    let Some(due)=next_due else{return 10_000_000};
+    due.0.saturating_sub(now.0).min(10_000_000)
+}
+// Preserve source-first order, authenticated M2 control one slot, and a
+// strictly bounded 8/32 opportunity for <=2 native 4-row Parity quanta.
+// No size-based reordering, new owner queue, packet copy or unbounded
+// priority; unavailable parity capacity returns to DATA the next turn.
+// NOTE: a pending group can close while staging new DATA, so it will
+// qualify for its reservation on the very next original M4 turn.
+#[cfg(feature="fec2_product_record")]
+fn original_fec_tx_data_cap(fec_active:bool,queued:bool,
+    deadline:Option<MonoNs>,now:MonoNs)->usize {
+    if !fec_active{return 32}
+    if queued || deadline.is_some_and(|d|
+        d.0<=now.0.saturating_add(1_000_000)) {23}
+    else{31}
 }
 #[cfg(all(test,feature="fec2_product_record"))]
 #[test]
-fn m0_fec_tx_poll_budget_never_sleeps_through_fec_or_feedback_due(){
+fn m0_fec_native_deadline_wait_no_submillisecond_spin(){
     let now=MonoNs(1_000_000_000);
-    assert_eq!(original_fec_tun_wait_ms(false,None,now),10);
-    assert_eq!(original_fec_tun_wait_ms(true,None,now),0);
-    assert_eq!(original_fec_tun_wait_ms(false,Some(MonoNs(1_000_000_000)),now),0);
-    assert_eq!(original_fec_tun_wait_ms(false,Some(MonoNs(1_000_900_000)),now),0);
-    assert_eq!(original_fec_tun_wait_ms(false,Some(MonoNs(1_004_500_000)),now),4);
-    assert_eq!(original_fec_tun_wait_ms(false,Some(MonoNs(1_010_000_000)),now),10);
-    assert_eq!(original_fec_tun_wait_ms(false,Some(MonoNs(1_100_000_000)),now),10);
+    assert_eq!(original_fec_tun_wait_ns(false,None,now),10_000_000);
+    assert_eq!(original_fec_tun_wait_ns(true,None,now),0);
+    assert_eq!(original_fec_tun_wait_ns(false,Some(now),now),0);
+    assert_eq!(original_fec_tun_wait_ns(false,Some(MonoNs(1_000_900_000)),now),900_000);
+    assert_eq!(original_fec_tun_wait_ns(false,Some(MonoNs(1_004_500_000)),now),4_500_000);
+    assert_eq!(original_fec_tun_wait_ns(false,Some(MonoNs(1_100_000_000)),now),10_000_000);
+}
+#[cfg(all(test,feature="fec2_product_record"))]
+#[test]
+fn m0_fec_native_m4_quanta_control_and_source_fairness_budget(){
+    let now=MonoNs(2_000_000_000);
+    assert_eq!(original_fec_tx_data_cap(false,true,Some(now),now),32);
+    assert_eq!(original_fec_tx_data_cap(true,false,None,now),31);
+    assert_eq!(original_fec_tx_data_cap(true,false,
+        Some(MonoNs(now.0+1_000_001)),now),31);
+    assert_eq!(original_fec_tx_data_cap(true,false,
+        Some(MonoNs(now.0+1_000_000)),now),23);
+    assert_eq!(original_fec_tx_data_cap(true,true,None,now),23);
+    assert_eq!(original_fec_tx_data_cap(true,false,Some(now),now),23);
+    // Source FIRST, two whole <=4-row quanta and one M2 reply LAST:
+    let remaining=32-original_fec_tx_data_cap(true,true,None,now);
+    assert_eq!((remaining.saturating_sub(1)/4).min(5),2);
+    assert_eq!(remaining-8,1);
+}
+#[cfg(feature="fec2_product_record")]
+fn loop_readiness_ns(fd:i32,stop:&AtomicBool,timeout_ns:u64)->bool{
+    if stop.load(Ordering::Acquire){return false}
+    let mut p=PollFd{fd,events:1,revents:0};
+    let ns=timeout_ns.min(10_000_000);
+    let ts=ClockTimespec{seconds:0,nanoseconds:ns as i64};
+    // Linux ppoll is the same ready-fd wait with nanosecond timeout,
+    // including a genuine sub-ms sleep. No lock is held through this call.
+    let got=unsafe{ppoll(&mut p,1,&ts,std::ptr::null())};
+    got>0 && p.revents&1!=0
 }
 fn loop_readiness(fd:i32,stop:&AtomicBool,timeout_ms:c_int)->bool{
     if stop.load(Ordering::Acquire){return false}
@@ -5002,9 +5061,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 // or feedback locks during poll; recalculate due after poll,
                 // including a deadline that became due during that wait.
                 #[cfg(feature="fec2_product_record")]
-                let (wait_ms,initial_due)={
+                let (wait_ns,initial_due)={
                     let now=loop_now();
-                    tx_cell.lock().ok().map_or((10,false),|e|{
+                    tx_cell.lock().ok().map_or((10_000_000,false),|e|{
                         let queued=e.fec2_live_tx.as_ref().is_some_and(|s|
                             s.report().queued_jobs>0);
                         let fec_deadline=e.fec2_live_tx.as_ref()
@@ -5015,15 +5074,20 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         }else{None};
                         let earliest=fec_deadline.into_iter()
                             .chain(feedback_deadline).min_by_key(|x|x.0);
-                        let wait=original_fec_tun_wait_ms(queued,earliest,now);
+                        let wait=original_fec_tun_wait_ns(queued,earliest,now);
                         (wait,queued||earliest.is_some_and(|d|d<=now))
                     })
                 };
                 #[cfg(not(feature="fec2_product_record"))]
-                let (wait_ms,initial_due)=(10,false);
+                let (wait_ns,initial_due)=(10_000_000,false);
                 let tun_ready=if split_ingress {
                     !tx_pending.is_empty()||!jumbo_queue.is_empty()
-                }else{loop_readiness(tun_fd,&stop_tx,wait_ms)};
+                }else{
+                    #[cfg(feature="fec2_product_record")]
+                    {loop_readiness_ns(tun_fd,&stop_tx,wait_ns)}
+                    #[cfg(not(feature="fec2_product_record"))]
+                    {loop_readiness(tun_fd,&stop_tx,(wait_ns/1_000_000) as c_int)}
+                };
                 #[cfg(feature="fec2_product_record")]
                 let (fec_due,feedback_due)=tx_cell.lock().ok().map_or(
                     (initial_due,false),|e|{
