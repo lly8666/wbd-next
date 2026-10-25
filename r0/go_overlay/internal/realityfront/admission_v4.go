@@ -35,24 +35,17 @@ const (
 type V4Extension struct {
     Features uint16
     Epoch [16]byte
-    // Exact fixed Game FEC profile+1 (1..7), 0=off. Authenticated
-    // inside the existing V4 TLS request/reply; no downgrade or Auto.
-    GameFec uint8
 }
 // Exactly 3(default) or 7(private test), rejecting all unknown/partial sets.
 func v4KnownFeatureSet(f uint16)bool{return f==v4RequiredFeatures||f==(v4RequiredFeatures|v4FeatureFEC2)}
 
 func v4Encode(e V4Extension) ([24]byte, error) {
     var buf [24]byte
-    if !v4KnownFeatureSet(e.Features)||e.GameFec>7||
-        (e.GameFec!=0&&e.Features!=v4RequiredFeatures|v4FeatureFEC2){
-        return buf,ErrAdmissionUnsupported
-    }
+    if !v4KnownFeatureSet(e.Features) { return buf, ErrAdmissionUnsupported }
     binary.BigEndian.PutUint16(buf[0:2], 1)
     binary.BigEndian.PutUint16(buf[2:4], e.Features)
     copy(buf[4:20], e.Epoch[:])
     buf[20] = v4FeedbackPages
-    buf[21] = e.GameFec
     return buf, nil
 }
 
@@ -60,13 +53,9 @@ func v4Decode(raw []byte) (V4Extension,error) {
     var e V4Extension
     if len(raw)!=v4ExtensionLen { return e,ErrAdmissionParams }
     if binary.BigEndian.Uint16(raw[:2])!=1 || raw[20]!=v4FeedbackPages ||
-       raw[22]!=0 || raw[23]!=0 || raw[21]>7 { return e,ErrAdmissionParams }
+       raw[21]!=0 || raw[22]!=0 || raw[23]!=0 { return e,ErrAdmissionParams }
     e.Features=binary.BigEndian.Uint16(raw[2:4])
-    if !v4KnownFeatureSet(e.Features) ||
-       (raw[21]!=0&&e.Features!=v4RequiredFeatures|v4FeatureFEC2){
-        return V4Extension{},ErrAdmissionUnsupported
-    }
-    e.GameFec=raw[21]
+    if !v4KnownFeatureSet(e.Features) { return V4Extension{},ErrAdmissionUnsupported }
     copy(e.Epoch[:],raw[4:20])
     return e,nil
 }
@@ -78,7 +67,6 @@ type V4ClientOptions struct {
     Epoch [16]byte // zero only for the first lane of a new logical tunnel
     fec2ProbeOnly bool // unexported and default false: no product authority
     fec2Product bool // original-Go TLS + true native Linux feature7 owner only
-    GameFec uint8 // 0=off; 1..7 = fixed profile 0..6; TLS-protected
 }
 // The backend is deliberately package-private: a caller cannot provide an
 // arbitrary 248-byte cold grammar and ask the engine to call it authenticated.
@@ -210,7 +198,6 @@ type V4ServerOptions struct {
     DataPlaneReady bool
     fec2ProbeOnly bool // package-private, no production caller switch
     fec2Product bool // package-private genuine Linux fixed/auto owner
-    GameFec uint8 // 0=off; 1..7=Game fixed profiles 0..6, private TLS
     Epochs *V4EpochStore // shared by all lanes of the same server instance
     ownerBridge v4OwnerBridge // unexported, no public arbitrary-bytes activation
 }
@@ -440,10 +427,7 @@ func v4DeriveRecordKeys(exporter keyingMaterialExporter,result AdmissionResult,e
 // EstablishClientV4 preserves exactly one protected request and reply; no
 // additional RTT. This opt-in API is fail-closed until caller proves readiness.
 func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConfig,opt V4ClientOptions)(*V4ClientSession,error) {
-    if !opt.DataPlaneReady||opt.GameFec>7||
-       (opt.GameFec!=0&&(!opt.fec2Product||cfg.Policy.Transport!=TransportGame)){
-        return nil,ErrAdmissionUnsupported
-    }
+    if !opt.DataPlaneReady {return nil,ErrAdmissionUnsupported}
     lane:=cfg.LaneID
     if lane==0 {lane=1}
     req:=AdmissionRequest{
@@ -456,7 +440,7 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     if cfg.Policy.Schema!=PolicySchemaV3 || cfg.Policy.SupportedNow()!=nil {return nil,ErrAdmissionUnsupported}
     offeredFeatures:=v4RequiredFeatures
     if opt.fec2ProbeOnly||opt.fec2Product {offeredFeatures |= v4FeatureFEC2}
-    wire,err:=v4RequestWire(req,V4Extension{Features:offeredFeatures,Epoch:opt.Epoch,GameFec:opt.GameFec})
+    wire,err:=v4RequestWire(req,V4Extension{Features:offeredFeatures,Epoch:opt.Epoch})
     if err!=nil{return nil,err}
     guard,err:=beginCandidateDeadline(ctx,conn,cfg.TLS.Timeout)
     if err!=nil{return nil,err}
@@ -471,7 +455,7 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     result,extension,err:=v4ReadReply(client,req)
     if err!=nil{return nil,candidateError(ctx,err)}
     // No protected reply feature downgrade/upgrade is admissible.
-    if extension.Features!=offeredFeatures || extension.GameFec!=opt.GameFec || extension.Epoch==[16]byte{} ||
+    if extension.Features!=offeredFeatures || extension.Epoch==[16]byte{} ||
        (opt.Epoch!=[16]byte{} && opt.Epoch!=extension.Epoch) {
         return nil,ErrAdmissionParams
     }
@@ -495,8 +479,7 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
 // Epoch becomes active only after successful authenticated reply and detach.
 // Caller must ReleaseLane on tunnel teardown. Legacy EstablishServer is intact.
 func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg ServerAdmissionConfig,opt V4ServerOptions)(*V4ServerSession,error) {
-    if !opt.DataPlaneReady||opt.Epochs==nil||opt.GameFec>7||
-       (opt.GameFec!=0&&!opt.fec2Product){return nil,ErrAdmissionUnsupported}
+    if !opt.DataPlaneReady || opt.Epochs==nil {return nil,ErrAdmissionUnsupported}
     if assoc==nil || cfg.ExpectedUsername=="" || cfg.ExpectedPassword=="" || !validRecordLimit(cfg.ServerLimit) {
         return nil,ErrAdmissionParams
     }
@@ -522,8 +505,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     }
     serverFeatures:=v4RequiredFeatures
     if opt.fec2ProbeOnly||opt.fec2Product {serverFeatures |= v4FeatureFEC2}
-    if offered.Features!=serverFeatures||offered.GameFec!=opt.GameFec||
-       (opt.GameFec!=0&&req.Policy.Transport!=TransportGame){
+    if offered.Features!=serverFeatures {
         _=writeAdmissionFailure(tlsConn,admissionParamFail)
         return nil,ErrAdmissionUnsupported
     }
@@ -571,7 +553,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         LaneID:req.LaneID,IncarnationNonce:nonce,TunnelID:append([]byte(nil),req.TunnelID...),
         ClientLimit:req.ClientLimit,ServerLimit:cfg.ServerLimit,
     }
-    ext:=V4Extension{Features:serverFeatures,Epoch:epoch,GameFec:opt.GameFec}
+    ext:=V4Extension{Features:serverFeatures,Epoch:epoch}
     state:=tlsConn.ConnectionState()
     keys,err:=v4DeriveRecordKeys(&state,result,ext)
     if err!=nil{return nil,err}

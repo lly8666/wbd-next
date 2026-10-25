@@ -10,7 +10,7 @@ use crate::memory::UniqueBuffer;
 const MAX_LANES:usize=8;
 const MAX_SHARDS:usize=4;
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
-pub enum Mode {Normal,Game,GameFecParity}
+pub enum Mode {Normal,Game}
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub enum FlowDirection {Tx,Rx}
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
@@ -167,17 +167,13 @@ impl GameTx {
                 self.counters.lane_copy_drop+=1;continue;
             }
             choices[count]=index;count+=1;
-            // Game-FEC parity has its own independently authenticated
-            // logical ID, but sends via ONE rotating healthy lane rather
-            // than duplicating every repair on all lanes. Sources retain
-            // ordinary full Game2/4 protection and first-delivery priority.
-            if matches!(mode,Mode::Normal|Mode::GameFecParity){break;}
+            if mode==Mode::Normal{break;}
         }
         if count==0{return Err((GameError::NoLane,buffer));}
-        if matches!(mode,Mode::Game|Mode::GameFecParity)&&self.next_packet==u64::MAX{
+        if mode==Mode::Game&&self.next_packet==u64::MAX{
             return Err((GameError::Overflow,buffer));
         }
-        let packet_id=if matches!(mode,Mode::Game|Mode::GameFecParity){
+        let packet_id=if mode==Mode::Game{
             let id=LogicalPacketId(self.next_packet);
             self.next_packet+=1;Some(id)
         }else{None};

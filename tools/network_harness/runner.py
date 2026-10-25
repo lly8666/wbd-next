@@ -68,7 +68,7 @@ def verify_native_game_counters(lanes,counters):
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |GAME_FEC_APPLIED |GAME_FEC_COUNTERS |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
@@ -626,9 +626,6 @@ class LinuxExperiment:
                 "--server-name", "wbd-v4.example.test", "--route-key-hex", route,
                 "--username", "ephemeral-harness", "--password", password, "--tunnel-id", tunnel,
                 "--mode", self.config["product"]["mode"], "--fec-profile", str(self.config["product"]["fec_profile"])]
-            game_fec=self.config["product"].get("game_fec","off")
-            if game_fec!="off":
-                args += ["--game-fec",game_fec]
             repair_switch = requested_outer_repair(self.config, self.label)
             if repair_switch is not None:
                 args += ["--outer-repair", "on" if repair_switch else "off"]
@@ -676,7 +673,7 @@ class LinuxExperiment:
                               "PERMANENT_BOTH_VERIFIED_TEST_ONLY" if self.config["network"].get(
                                   "owned_veth_static_neighbour",False)
                               else "KERNEL_DYNAMIC_ARP_UNMODIFIED"),
-                          "game_fec": self.config["product"].get("game_fec","off"), "inner_links": {}}
+                          "game_fec": "off (public CLI explicitly sets off)", "inner_links": {}}
         for role in self.ns:
             links = json.loads(self.nscommand(role, ["ip", "-j", "link", "show", "wbntun0"]))
             self.effective["inner_links"][role] = links
@@ -1101,34 +1098,11 @@ class LinuxExperiment:
         # the one-lane Normal/FEC M2 DATA repair ledger. They do not emit
         # V4_PUBLIC_M2_OUTER. Never claim a v3 outer repair receipt for Game.
         game_verified = None
-        game_fec_proof={}
         if self.lanes > 1:
             game_verified = verify_native_game_counters(self.lanes,counters)
             policy_verified = None  # Explicitly N/A, not green for v3 repair.
             if not game_verified:
                 verified = False
-            configured=self.config["product"].get("game_fec","off")
-            for role,log in logs.items():
-                applied=re.findall(
-                    r"V4_PUBLIC_GAME_FEC_APPLIED role=(\w+) lanes=(\d+) mode=(\w+) profile=(\d+) auth_original_tls=(\d+) original_M4=(\d+)",log)
-                observed=re.findall(r"V4_PUBLIC_GAME_FEC_COUNTERS role=(\w+) lanes=(\d+) (.+)",log)
-                if len(applied)!=1 or applied[0][0]!=role or int(applied[0][1])!=self.lanes:
-                    verified=False;continue
-                expected_mode="off" if configured=="off" else "fixed"
-                expected_profile=0 if configured=="off" else int(configured[-1])
-                if (applied[0][2]!=expected_mode or int(applied[0][3])!=expected_profile
-                    or applied[0][4:]!=("1","1")):
-                    verified=False
-                if configured!="off":
-                    if len(observed)!=1 or observed[0][0]!=role or int(observed[0][1])!=self.lanes:
-                        verified=False;continue
-                    counts={k:int(v) for k,v in re.findall(r"(\w+)=(\d+)",observed[0][2])}
-                    game_fec_proof[role]=counts
-                    if (counts.get("source_offered",0)==0 or
-                        counts.get("parity_copied",0)==0 or
-                        counts.get("parity_offered",0)<counts.get("parity_copied",0) or
-                        counts.get("rsent",0)>counts.get("rplanned",0)):
-                        verified=False
         else:
             policy_verified = verify_outer_recovery_policy(
                 requested_policy, recovery_policy)
@@ -1178,7 +1152,6 @@ class LinuxExperiment:
                 "recovery_policy_applicability": ("NOT_APPLICABLE_GAME_MULTILANE"
                     if self.lanes > 1 else "REQUIRED_SINGLE_LANE"),
                 "game_native_counters_verified": game_verified,
-                "game_fec_native_proof": game_fec_proof if game_fec_proof else "NOT_APPLICABLE_OR_NOT_OBSERVED",
                 "recovery_policy_expected": requested_policy or "NOT_DECLARED",
                 "repair_packets": repair,
                 "original_m2_authenticated_coverage": fec_m2 if all(v is not None for v in fec_m2.values()) else "NOT_OBSERVED",

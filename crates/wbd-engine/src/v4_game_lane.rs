@@ -14,19 +14,13 @@ use wbd_types::{LaneKey,LogicalPacketId,MonoNs};
 use wbd_types::buffer_contract::UniqueSealable;
 use wbd_codec::record_crypto::{DirectionKeys,LaneTxCrypto,RecordSuite};
 use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig};
-#[cfg(feature="fec2_product_record")]
-use crate::v4_game_fec::{GameFec,GameFecCounters};
-#[cfg(feature="fec2_product_record")]
-use crate::v4_fec2_live_rx::VerifiedReceiveEpoch;
 pub struct ScopedKeys{pub lane:QualifiedLane,pub tx:DirectionKeys,pub rx:DirectionKeys}
 struct Lane{key:LaneKey,tx:LaneTxCrypto,rx:ReplayProtectedLaneRx}
 #[derive(Debug,PartialEq,Eq)]
 pub enum Error{Unauthorized,Invalid,Capacity,Stopped,Duplicate,Crypto,Game(GameError)}
 pub struct GameAdapter{
     tx:GameTx,rx:GameRx,rx_scope:GameScope,
-    lanes:Vec<Lane>,arena:Arena,stopped:bool,inner_mtu:usize,
-    #[cfg(feature="fec2_product_record")]
-    fec:Option<GameFec>
+    lanes:Vec<Lane>,arena:Arena,stopped:bool,inner_mtu:usize
 }
 impl GameAdapter{
     /// Caller MUST independently check Go TLS feature, KDF, lane owner and
@@ -73,9 +67,7 @@ impl GameAdapter{
         }).ok_or(Error::Invalid)?;
         let arena=Arena::new(905,256,2048,256,1024*1024)
             .map_err(|_|Error::Capacity)?;
-        Ok(Self{tx,rx,rx_scope,lanes,arena,stopped:false,inner_mtu,
-            #[cfg(feature="fec2_product_record")]
-            fec:None})
+        Ok(Self{tx,rx,rx_scope,lanes,arena,stopped:false,inner_mtu})
     }
     /// The only prospective Go TLS→Game adapter construction boundary.
     /// The Go caller MUST have run its private 2/4 original TLS ColdSnapshot
@@ -153,70 +145,26 @@ impl GameAdapter{
     }
     pub fn counters(&self)->GameCounters{self.tx.counters()}
     pub(crate) fn inner_mtu(&self)->usize{self.inner_mtu}
-    #[cfg(feature="fec2_product_record")]
-    pub(crate) fn enable_game_fec(&mut self,profile:u8,server:bool)
-        ->Result<(),Error>{
-        if self.stopped||self.fec.is_some()||self.tx.in_use().0!=0{
-            return Err(Error::Invalid)
-        }
-        let scope=VerifiedReceiveEpoch{
-            generation:self.rx_scope.tunnel.generation,
-            epoch:self.rx_scope.epoch,negotiated_features:7,
-            direction_s2c:!server,
-        };
-        self.fec=Some(GameFec::new(profile,scope,self.inner_mtu,
-            self.lanes.len()).ok_or(Error::Invalid)?);
-        Ok(())
-    }
-    #[cfg(feature="fec2_product_record")]
-    pub(crate) fn game_fec_counters(&self)->Option<(GameFecCounters,crate::runtime::fec2_owner::OwnerReport)>{
-        self.fec.as_ref().map(|f|(f.counters(),f.owner_report()))
-    }
-    /// Game16 remains the only outer logical envelope: a typed FEC2
-    /// symbol is INSIDE it, after the authenticated per-lane record.
-    fn enqueue(tx:&mut GameTx,arena:&mut Arena,bytes:&[u8],
-        inner_mtu:usize,now:MonoNs,mode:Mode)->Result<LogicalPacketId,Error>{
-        if bytes.is_empty()||bytes.len()>inner_mtu{return Err(Error::Invalid)}
-        let id=tx.next_packet().ok_or(Error::Stopped)?;
-        let packet=wbd_codec::encode_game(id,bytes,inner_mtu+16)
-            .map_err(|_|Error::Invalid)?;
-        let mut slab=arena.allocate().map_err(|_|Error::Capacity)?;
+    pub fn offer(&mut self,data:&[u8],now:MonoNs)->Result<LogicalPacketId,Error>{
+        if self.stopped{return Err(Error::Stopped)}
+        if data.is_empty()||data.len()>self.inner_mtu{return Err(Error::Invalid)}
+        let id=self.tx.next_packet().ok_or(Error::Stopped)?;
+        let packet=wbd_codec::encode_game(id,data,self.inner_mtu+16).map_err(|_|Error::Invalid)?;
+        let mut slab=self.arena.allocate().map_err(|_|Error::Capacity)?;
         let end=14+packet.len();
         slab.writable()[14..end].copy_from_slice(&packet);
-        let offered=tx.offer(slab,14..end,mode,31+packet.len(),
+        let offered=self.tx.offer(slab,14..end,Mode::Game,31+packet.len(),
             None,now).map_err(|(e,_)|Error::Game(e))?;
         if offered!=Some(id){return Err(Error::Invalid)}
         Ok(id)
     }
-    pub fn offer(&mut self,data:&[u8],now:MonoNs)->Result<LogicalPacketId,Error>{
-        if self.stopped{return Err(Error::Stopped)}
-        #[cfg(feature="fec2_product_record")]
-        if let Some(fec)=self.fec.as_mut(){
-            let tx=&mut self.tx;
-            let arena=&mut self.arena;
-            let mtu=self.inner_mtu;
-            return fec.offer(data,now,|symbol|Self::enqueue(tx,arena,symbol,mtu,now,Mode::Game))
-        }
-        Self::enqueue(&mut self.tx,&mut self.arena,data,self.inner_mtu,now,Mode::Game)
-    }
-    #[cfg(feature="fec2_product_record")]
-    pub(crate) fn poll_game_fec(&mut self,now:MonoNs)->Result<usize,Error>{
-        let Some(fec)=self.fec.as_mut()else{return Ok(0)};
-        let tx=&mut self.tx;
-        let arena=&mut self.arena;
-        let mtu=self.inner_mtu;
-        let quiet=tx.in_use().0==0;
-        fec.poll(now,quiet,|symbol|Self::enqueue(tx,arena,symbol,mtu,now,Mode::GameFecParity))
-    }
-    /// Original M4 callback still assigns PN/AEAD in exact queued order.
-    /// Only its definite kernel copy may credit a Game-FEC repair row.
+    /// Each ready lane gets a distinct AEAD nonce/PN and cipher buffer;
+    /// network copy acknowledgement is supplied by the M0 kernel driver.
     pub fn drain<F>(&mut self,now:MonoNs,mut kernel_copy:F)->usize
     where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
         if self.stopped{return 0}
         let lanes=&mut self.lanes;
-        #[cfg(feature="fec2_product_record")]
-        let fec=&mut self.fec;
-        let processed=self.tx.drain_ready(now,32,|view|{
+        self.tx.drain_ready(now,32,|view|{
             let Some(id)=view.logical_id else{return DispatchOutcome::PressureDrop};
             let Some(lane)=lanes.iter_mut().find(|l|l.key==view.lane)
             else{return DispatchOutcome::PressureDrop};
@@ -226,21 +174,14 @@ impl GameAdapter{
             let Ok((pn,n))=lane.tx.seal_in_place(1,&mut wire,len,0)
             else{return DispatchOutcome::PressureDrop};
             if kernel_copy(view.lane,id,pn,&wire[..n]){
-                #[cfg(feature="fec2_product_record")]
-                if let Some(f)=fec.as_mut(){f.copied(id);}
                 DispatchOutcome::Accepted
             }else{DispatchOutcome::PressureDrop}
-        });
-        #[cfg(feature="fec2_product_record")]
-        if let Some(f)=self.fec.as_mut(){
-            f.settle_when_quiet(self.tx.in_use().0==0);
-        }
-        processed
+        })
     }
-    /// One authenticated Game symbol can reconstruct >1 missing sources;
-    /// the caller MUST deliver every verified original, never just the first.
-    pub(crate) fn receive_at(&mut self,lane_key:LaneKey,mut wire:Vec<u8>,
-        now:MonoNs)->Result<Vec<Vec<u8>>,Error>{
+    /// This is a peer-facing authenticated receiver. Original Go's
+    /// source, peer directions and actual kernel ingress still gate its use.
+    pub fn receive(&mut self,lane_key:LaneKey,mut wire:Vec<u8>)
+        ->Result<Option<Vec<u8>>,Error>{
         if self.stopped{return Err(Error::Stopped)}
         let lane=self.lanes.iter_mut().find(|l|l.key==lane_key)
             .ok_or(Error::Unauthorized)?;
@@ -253,29 +194,13 @@ impl GameAdapter{
         let mut owned=self.arena.allocate().map_err(|_|Error::Capacity)?;
         owned.writable()[14..14+payload.len()].copy_from_slice(payload);
         match self.rx.first_delivery(self.rx_scope,lane_key,id,owned){
-            Ok(mut b)=>{
-                let data=&b.writable()[14..14+payload.len()];
-                #[cfg(feature="fec2_product_record")]
-                if let Some(fec)=self.fec.as_mut(){
-                    return fec.receive(data,now)
-                }
-                Ok(vec![data.to_vec()])
-            },
-            Err((GameError::Duplicate,_))=>Ok(Vec::new()),
+            Ok(mut b)=>Ok(Some(b.writable()[14..14+payload.len()].to_vec())),
+            Err((GameError::Duplicate,_))=>Ok(None),
             Err((e,_))=>Err(Error::Game(e)),
         }
     }
-    pub fn receive(&mut self,lane_key:LaneKey,wire:Vec<u8>)
-        ->Result<Option<Vec<u8>>,Error>{
-        #[cfg(feature="fec2_product_record")]
-        if self.fec.is_some(){return Err(Error::Invalid)} // no lost multi-delivery
-        let mut out=self.receive_at(lane_key,wire,MonoNs(0))?;
-        Ok(out.pop())
-    }
     pub fn stop(&mut self){
         if self.stopped{return}self.stopped=true;
-        #[cfg(feature="fec2_product_record")]
-        if let Some(fec)=self.fec.as_mut(){fec.stop()}
         self.tx.stop();self.rx.stop();self.arena.stop();self.arena.drain_returns();
     }
 }
@@ -294,79 +219,6 @@ mod tests{
                 generation:7},mss:1400},
             tx:keys((i+1) as u8),rx:keys((i+1) as u8)
         }).collect(),RecordSuite::ChaCha20Poly1305).unwrap()
-    }
-    #[cfg(feature="fec2_product_record")]
-    #[test]
-    fn fec_game2_game4_full_group_missing_original_reconstructed_only_once(){
-        // Authenticated per-lane Game AEAD+unique replay -> logical de-dup
-        // -> the SAME existing M3 FEC2 source/repair parser and RS16 cache.
-        for n in [2,4]{
-            let mut tx=build(n);
-            let mut rx=build(n);
-            tx.enable_game_fec(6,false).unwrap();
-            rx.enable_game_fec(6,true).unwrap();
-            let mut delivered=Vec::new();
-            for i in 0..16u8{
-                let msg=vec![i;128];
-                let now=MonoNs(100+u64::from(i));
-                let id=tx.offer(&msg,now).unwrap();
-                assert_eq!(id.0,u64::from(i));
-                tx.drain(now,|lane,logical,_,wire|{
-                    // The first source is erased on ALL lanes. Every other
-                    // source arrives through one authenticated lane only.
-                    if logical.0!=0 && lane.slot==1{
-                        delivered.extend(rx.receive_at(lane,wire.to_vec(),now).unwrap());
-                    }
-                    true
-                });
-            }
-            assert_eq!(delivered.len(),15);
-            assert!(!delivered.iter().any(|x|x==&vec![0;128]));
-            // Full small group was CLOSED immediately at k16. No timer wait.
-            assert_eq!(tx.poll_game_fec(MonoNs(120)).unwrap(),4);
-            tx.drain(MonoNs(121),|lane,_,_,wire|{
-                // Parity is intentionally on exactly ONE rotating Game
-                // lane; source remains duplicated over all healthy lanes.
-                delivered.extend(rx.receive_at(lane,wire.to_vec(),MonoNs(121)).unwrap());
-                true
-            });
-            assert_eq!(delivered.len(),16);
-            assert_eq!(delivered.iter().filter(|x|*x==&vec![0;128]).count(),1);
-            let stats=rx.game_fec_counters().unwrap().0;
-            assert_eq!(stats.recovered_candidate,1);
-            assert_eq!(stats.source_first_candidate,15);
-            // Remaining parity cannot redeliver recovered or source.
-            for t in 0..5{
-                let now=MonoNs(122+t);
-                let _=tx.poll_game_fec(now).unwrap();
-                tx.drain(now,|lane,_,_,wire|{
-                    delivered.extend(rx.receive_at(lane,wire.to_vec(),now).unwrap());
-                    true
-                });
-            }
-            assert_eq!(delivered.len(),16);
-            assert!(tx.game_fec_counters().unwrap().0.parity_kernel_copied>0);
-            tx.stop();rx.stop();
-            assert_eq!(tx.game_fec_counters().unwrap().1.charged_bytes,0);
-        }
-    }
-    #[cfg(feature="fec2_product_record")]
-    #[test]
-    fn fec_game_first_source_without_peer_or_timer_and_stop_fence(){
-        let mut tx=build(2);
-        tx.enable_game_fec(3,false).unwrap();
-        let packet=vec![1;128];
-        assert!(matches!(tx.offer(&vec![0;1340],MonoNs(0)),Err(Error::Invalid)));
-        let id=tx.offer(&packet,MonoNs(10)).unwrap();
-        assert_eq!(id.0,0);
-        assert_eq!(tx.drain(MonoNs(11),|_,_,_,_|true),2);
-        // Partially filled class closes only once due; parity never blocks
-        // a fresh source's first encrypted copy.
-        assert_eq!(tx.poll_game_fec(MonoNs(15)).unwrap(),0);
-        tx.stop();
-        assert!(matches!(tx.poll_game_fec(MonoNs(16)),Err(Error::Invalid)|Err(Error::Stopped)));
-        assert!(matches!(tx.offer(&packet,MonoNs(17)),Err(Error::Stopped)));
-        assert_eq!(tx.game_fec_counters().unwrap().1.charged_bytes,0);
     }
     #[test]
     fn game_mtu_uses_negotiated_record_budget_above_old1200(){

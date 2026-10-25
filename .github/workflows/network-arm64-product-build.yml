@@ -7,18 +7,12 @@ on:
       - ".github/workflows/network-arm64-product-build.yml"
       - "crates/wbd-engine/src/v4_embedded_go.rs"
       - "crates/wbd-engine/src/v4_fixed_stream.rs"
-      - "crates/wbd-engine/src/v4_game_lane.rs"
-      - "crates/wbd-engine/src/runtime/game_shared.rs"
-      - "crates/wbd-engine/src/runtime/game_shared_tests.rs"
-      - "crates/wbd-engine/src/v4_game_fec.rs"
-      - "crates/wbd-engine/src/v4_game_public_kernel.rs"
       - "crates/wbd-engine/src/v4_fec2_live_rx.rs"
       - "crates/wbd-engine/src/runtime/fec2_owner*"
       - "crates/wbd-codec/src/fec*"
       - "r0/go_overlay/internal/v4productcli/**"
       - "r0/go_overlay/internal/v4productcli/linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_*"
-      - "r0/go_overlay/internal/realityfront/admission_v4.go"
       - "r0/go_overlay/internal/realityfront/fec_v2_*"
       - "tools/arm64_public_go_rust_bundle.sh"
   workflow_dispatch:
@@ -50,34 +44,6 @@ jobs:
           cargo +1.85.1 test --locked -p wbd-engine \
             --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
             --lib v4_fixed_stream::tests -- --nocapture
-      - name: Native original Game2/4 fixed-FEC after-AEAD cross-lane missing-source regression
-        shell: bash
-        run: |
-          set -euo pipefail
-          WBD_ISAL_PREFIX="$RUNNER_TEMP/wbd-isal-arm64-public" \
-          WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985 \
-          cargo +1.85.1 test --locked -p wbd-engine \
-            --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
-            --lib v4_game_lane::tests::fec_game -- --nocapture
-      - name: Game FEC parity one authenticated rotating lane, source copies intact
-        shell: bash
-        run: |
-          set -euo pipefail
-          WBD_ISAL_PREFIX="$RUNNER_TEMP/wbd-isal-arm64-public" \
-          WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985 \
-          cargo +1.85.1 test --locked -p wbd-engine \
-            --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
-            --lib fec_game_parity_one_rotating_lane -- --nocapture
-      - name: Original Go TLS Game fixed-FEC negotiated profile and no-downgrade unit tests
-        shell: bash
-        run: |
-          set -euo pipefail
-          export CGO_ENABLED=1 GOOS=linux GOARCH=arm64 GOTOOLCHAIN=local
-          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
-          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release"
-          (cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_native_probe,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product \
-            -run 'TestFECGameProtectedV4ProfileWireOffAndFailClosed|TestFECGameProtectedTLSRejectsDifferentFixedProfilesBeforeOwner|TestR0V4FeatureGateAndBoundedStore|TestR0V4RealProtectedFec2Bit2FeatureAndKDFThreeCiphers' \
-            ./internal/realityfront -v)
       - name: Real ARM64 ISA-L FEC cross-block parity table regression
         shell: bash
         run: |

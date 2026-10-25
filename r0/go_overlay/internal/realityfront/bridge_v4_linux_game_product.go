@@ -23,8 +23,6 @@ type V4LinuxGameProductConfig struct {
     CleanupOwnedNetwork func()error
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     Epochs *V4EpochStore // mandatory only for actual server group
-    GameFecEnabled bool // explicit BOTH-endpoint fixed FEC, never Auto
-    GameFecProfile uint8 // 0..6; only used when GameFecEnabled
 }
 type V4LinuxGameProduct struct{
     mu sync.Mutex
@@ -39,7 +37,6 @@ type V4LinuxGameProduct struct{
     connected bool
 }
 func newV4LinuxGameProduct(cfg V4LinuxGameProductConfig,server bool)(*V4LinuxGameProduct,error){
-    if cfg.GameFecEnabled&&cfg.GameFecProfile>6{return nil,ErrAdmissionParams}
     if cfg.NetworkInterface==""||cfg.NetworkIfIndex==0||cfg.Tun==nil||
        cfg.TunName==""||len(cfg.TunName)>15||cfg.CleanupOwnedNetwork==nil||
        (server&&cfg.Epochs==nil){return nil,ErrAdmissionParams}
@@ -71,9 +68,6 @@ func (p *V4LinuxGameProduct) commitGroupedOwnerLocked()error{
     if err!=nil{return err}
     p.native,err=p.game.joinAuthenticatedOriginalRust(p.bridges...)
     if err!=nil{return err}
-    if p.cfg.GameFecEnabled{
-        if err=p.native.configureFixedFEC(p.cfg.GameFecProfile);err!=nil{return err}
-    }
     if err=p.native.startNativeM4(
         p.cfg.NetworkInterface,p.cfg.NetworkIfIndex,p.cfg.Tun,p.cfg.TunName,
     );err!=nil{return err}
@@ -102,10 +96,8 @@ func (p *V4LinuxGameProduct) ConnectClientGame(
             return errors.Join(ErrAdmissionParams,p.abortLocked())
         }
         cfg:=base;cfg.LaneID=uint8(i+1)
-        gameFec:=uint8(0)
-        if p.cfg.GameFecEnabled{gameFec=p.cfg.GameFecProfile+1}
         session,e:=EstablishClientV4(ctx,a.BootstrapConn(),cfg,V4ClientOptions{
-            DataPlaneReady:true,Epoch:epoch,fec2Product:true,GameFec:gameFec,
+            DataPlaneReady:true,Epoch:epoch,fec2Product:true,
         })
         if e!=nil{return errors.Join(e,p.abortLocked())}
         if i==0{epoch=session.Epoch}
@@ -161,11 +153,9 @@ func (p *V4LinuxGameProduct) AcceptServerGame(
             return nil
         }
         bridge:=&v4EmbeddedNativeBridge{}
-        gameFec:=uint8(0)
-        if p.cfg.GameFecEnabled{gameFec=p.cfg.GameFecProfile+1}
         session,e:=EstablishServerV4(ctx,a,cfg,V4ServerOptions{
             DataPlaneReady:true,Epochs:p.cfg.Epochs,
-            ownerBridge:bridge,fec2Product:true,GameFec:gameFec,
+            ownerBridge:bridge,fec2Product:true,
         })
         if e!=nil{return errors.Join(e,p.abortLocked())}
         p.serverSessions=append(p.serverSessions,session)
@@ -189,15 +179,6 @@ func (p *V4LinuxGameProduct) KernelCounters()(V4GameKernelCounters,error){
         return V4GameKernelCounters{},ErrAdmissionUnsupported
     }
     return p.native.originalM4Counters()
-}
-// Genuine M3/M4 post-driver counters, only valid for explicit Game fixed FEC.
-func (p *V4LinuxGameProduct) FecCounters()(V4GameFecCounters,error){
-    if p==nil{return V4GameFecCounters{},ErrAdmissionParams}
-    p.mu.Lock();defer p.mu.Unlock()
-    if !p.connected||p.stopped||p.native==nil||!p.cfg.GameFecEnabled{
-        return V4GameFecCounters{},ErrAdmissionUnsupported
-    }
-    return p.native.originalGameFecCounters()
 }
 func (p *V4LinuxGameProduct) Connected()bool{
     if p==nil{return false}
