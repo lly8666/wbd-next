@@ -631,7 +631,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W93: inspect exact ARM64 native Action40214123744 for split Game RX owner; if PASS run bounded 3Mbps clean Game2+Game4 real TCP/UDP same-VM AB with A=W92 96522e95 vs B=W93 221bb440; no new heavier workload. Preserve W92 Game4 AB 40213471471 BA40213802360 verified ~9-10% CPU filter benefit; Game2 filter ~1% inconclusive. Next only if no RX lifecycle/correctness regress: remove redundant RX record Vec and authenticated-duplicate preallocations, then fixed Game FEC separate qualification from W90 withdrawn candidate. No external role next_action; Windows TEMP_SKIPPED, capacity_stop=true merge_ready=false.",
+  "next_action": "W94: check exact ARM64 native build/test Action40214830539. If pass, reuse single immutable W94 product artifact in isolated Game2 and Game4 FEC OFF 3Mbps clean mixed TCP+UDP same-VM A=W93 221bb440 vs B=W94 fb65d813. Preserve W93 CPU-neutral Game4 + minor RSS, W92 kernel filter Game4 9-10% AB/BA. Do not revive W90 withdrawn fixed6 unless new working plain/fixed candidate fully validated. Then targeted loss/blackhole and TUN commit failure semantics, and only then fixed FEC scheduler qualification; Windows skip, capacity_stop=true, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6068,13 +6068,51 @@
     "game4_ba_result": "PASS_SCOPED; order-independent ~9-10% CPU decrease at equal genuine output"
   },
   "w93_game_rx_owner_split": {
-    "status": "CODE_CANDIDATE_EXACT_ARM64_NATIVE_PENDING",
+    "status": "NATIVE_PLUS_GAME2_GAME4_CLEAN_SAME_VM_AB_PASS_SCOPED_CORRECTNESS; CPU_NEUTRAL_RSS_SLIGHTLY_HIGHER",
     "source": "221bb440563258d72636abd2ba4f8c0bd537e893",
     "build_run": 40214123744,
-    "scope": "Linux Game2/4 FEC OFF one shared RX owner Mutex separate from TX Adapter mutex; one Arc cloned per RX worker; no per-packet new tasks",
-    "regression": "game_receive_owner_progress_while_tx_adapter_lock_held",
-    "baseline": "W92 kernel tuple filter 96522e95127641d9f8ac99436cdb7363ef36b0b0",
-    "memory": "Separate bounded RX Arena may increase RSS; must measure",
+    "build_artifact_id": 12607041955,
+    "build_zip_sha256": "a8eb92d818016f8804347d5a39cf31328663cacffb0136fbaf04ad55f76aa6d6",
+    "baseline_source": "96522e95127641d9f8ac99436cdb7363ef36b0b0",
+    "game2_ab_run": 40214330740,
+    "game4_ab_run": 40214339875,
+    "Game2_CPU_old_to_new_client_server": [
+      [
+        1.72,
+        1.66
+      ],
+      [
+        1.72,
+        1.67
+      ]
+    ],
+    "Game4_CPU_old_to_new_client_server": [
+      [
+        2.32,
+        2.35
+      ],
+      [
+        2.37,
+        2.39
+      ]
+    ],
+    "memory": "Game4 B+ 0.5/1.4MB RSS, Game2 B+ ~1.3/0.85MB RSS, no normal FEC math modified",
+    "scope": "TX holds old GameAdapter during send, RX authenticated de-dup uses independent shared owner Mutex with no TX mutex acquisition. Native test holds TX lock while RX delivers. Scoped clean 3Mbps true TCP+UDP/Stop PASS.",
+    "interpretation": "No demonstrated CPU win in Game4; preserve for cross-direction no-HOL correctness; weak network future validation, no heavy capacity stress.",
+    "native_test": "game_receive_owner_progress_while_tx_adapter_lock_held",
+    "evidence": "docs/evidence/fec-network-work/20261026-W93-Game2-Game4-RXowner-split-clean-sameVM-AB.json",
+    "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN",
     "capacity_stop": true
+  },
+  "w94_game_scratch_rx_precheck": {
+    "status": "SOURCE_CANDIDATE_NATIVE_BUILD_IN_PROGRESS",
+    "source": "fb65d8136c32e3e2182a09425f517cd7b98162ce",
+    "build_run": 40214830539,
+    "changes": "Game2/4 FEC OFF TX 2048B reusable final wire scratch; RX authenticates in raw stack buffer without per-packet Vec copy; authenticated logic bitmap precheck rejects duplicates before allocating Arena slab without early marking",
+    "correctness": "NATIVE_AND_REAL_NOT_YET_PASS",
+    "risk": "Game logical committed before actual TUN write remains preexisting future failure-path risk; do not claim transactional delivery.",
+    "devlog": "docs/devlog/fec-network-work/20261026-W94-game-bounded-tx-scratch-rx-inplace-dedup-candidate.md",
+    "capacity_stop": true,
+    "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN"
   }
 }
