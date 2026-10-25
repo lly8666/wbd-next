@@ -145,8 +145,45 @@
   },
   "ba_game4": {
     "run": 40213802360,
-    "request": "tests/network/fec-work/W92-Game4-OFF-clean3Mbps-newold-BA-arm64.json",
-    "status": "IN_PROGRESS_NOT_PASS"
+    "request_commit": "c1bde4812297c1323eb0dc78d0c659e312084026",
+    "order": "BA",
+    "result_B": "PASS_SCOPED_OBSERVATION",
+    "result_A": "PASS_SCOPED_OBSERVATION",
+    "client_cpu_s_new_then_old": [
+      2.46,
+      2.71
+    ],
+    "server_cpu_s_new_then_old": [
+      2.51,
+      2.78
+    ],
+    "client_cpu_per_effective_GiB_new_then_old": [
+      352.1597,
+      387.9482
+    ],
+    "server_cpu_per_effective_GiB_new_then_old": [
+      359.379,
+      398.0373
+    ],
+    "client_rss_peak_bytes_new_then_old": [
+      36868096,
+      36737024
+    ],
+    "server_rss_peak_bytes_new_then_old": [
+      37130240,
+      37130240
+    ],
+    "cpu_psi_peak_pct_new_then_old": [
+      3.92,
+      4.8
+    ],
+    "p99_udp_both_ms": 77.5,
+    "p99_tcp_max_ms": 77.7,
+    "both_true_tcp_delivered": true,
+    "udp_loss_zero": true,
+    "tcp_backpressure_zero": true,
+    "stop_drained": true,
+    "interpretation": "Reverse BA supports 9-10% Game4 CPU reduction at equal delivered volume; independent VM from AB, only within-run percentage comparisons valid."
   },
   "boundaries": [
     "BPF is kernel prefilter, NOT a single shared raw socket or recvmmsg",
@@ -158,5 +195,6 @@
     "No incremental high loss stress; capacity_stop=true"
   ],
   "capacity_stop": true,
-  "merge_ready": false
+  "merge_ready": false,
+  "validation_decision": "GAME4_FILTER_RETAIN_SCOPED_2_ORDER_WITHINVM_9_TO_10PCT_LOWER_CPU; GAME2_1PCT_INCONCLUSIVE"
 }

@@ -14,3 +14,11 @@ TX/RX owner 全拆锁会触及 `GameAdapter` 内 `tx/rx/lanes/arena` 和 Go-owne
 
 ## 待验证/停止条件
 精确 ARM64 build/native pass，然后沿用 W91 3Mbps clean Game2/4 **同 VM 顺序 old/new A/B**；外层流量/CPU/RSS/p99/TUN 和 TCP 真实交付先守门。任何更差/无法安全接入应撤回此候选，原 W91 可运行基线保留。高负载容量停止、fixed6仍 UNSUPPORTED，merge_ready=false。
+
+## Actual validation (W92)
+- Candidate first source `58c1eaece7ea` Action [40213051826](https://github.com/lly8666/wbd-next/actions/runs/40213051826) **COMPILATION FAIL** E0425 (per-lane loop bound `_` yet indexing i); fix exactly in `96522e95127641d9f8ac99436cdb7363ef36b0b0`.
+- Fixed exact ARM64 original Go native build + Game AEAD, Linux BPF tuple and existing native FEC suite [40213234927](https://github.com/lly8666/wbd-next/actions/runs/40213234927) **FULL SUCCESS**, frozen artifact 12606701246 ZIP sha256 `1c704254dfac0f38e54c8ca0240ff19a6216e0c30c4d4f7bf845e2dd3f443a7a`.
+- Same VM Game2 A(old W91)/B(filter): [40213467037](https://github.com/lly8666/wbd-next/actions/runs/40213467037) full TCP/UDP/Stop PASS both, client/server CPU 1.66/1.67 → 1.64/1.65 CPU-s; ~1.2% is **inconclusive**.
+- Same VM Game4 AB: [40213471471](https://github.com/lly8666/wbd-next/actions/runs/40213471471) full genuine delivery both, CPU 2.61/2.66 → 2.35/2.38 CPU-s, ~10% lower, p99 ~77.5ms unchanged.
+- Same VM Game4 reversed BA: [40213802360](https://github.com/lly8666/wbd-next/actions/runs/40213802360) full genuine delivery both, B 2.46/2.51 then A 2.71/2.78 CPU-s; ~9–10% lower despite order reversal, stable zero clean loss/TCP backpressure/TUN drop/Stop. No cross-VM CPU % claim, only within-job comparisons.
+- Decision: retain low-risk Linux kernel exact-tuple filter for scoped clean Game4 CPU benefit; Game2 improvement unproven. No Game+fixed6 reenable. Windows remains TEMP_SKIPPED. Full shared RX entry and actual `recvmmsg` not proven.
