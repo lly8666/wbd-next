@@ -564,6 +564,7 @@
     }
   ],
   "open_issues": [
+    "W57 native ARM64 Action40173816559 PASS for exactly 8 listed functional filters including FEC codec odd-size budget, recovered sources/Stop/auth 3 suites, retired k1 parity no redelivery, and COMMON_PATH original send MTU±1/generation/65KiB segmentation/Stop. This is unit/shared-path-only, real 65KiB FEC-over-TUN product NOT_RUN. No outer recovery change or host pressure. W56 sameVM Action40173582990 still pending at last check.",
     "W56 second ARM64 run40172963939 FAILURE: new W56 acceptance and risk controls PASS, two older W52 negative tests FAIL since obsolete k=376 (6016/6000=+0.267%) is now intentionally VALID under <=5% authenticated M4/M2 window skew guard. Changed those negatives to k=400 (6400/6000=+6.67% >5%, must remain UNKNOWN), test-only, no product policy change; preserve failed run/artifact12590394517, do not reuse failed artifact.",
     "W56 original ARM64 build40172735047 Rust/native compiled PASS but Go FEC unit test did NOT compile at fec_v2_policy_test.go:400 shadowed state; entire Action FAIL and artifact12590778407 must not serve as product qualifier. Test-only fix source743040554098a910bdafe2169218d7437a5cda6d, exact ARM64 build40172963939 queued. No W56 performance Action yet. Underlying guarded k-window patch not accepted until tests PASS.",
     "W55 sameVM original ARM64 Action40171851168 SUCCESS both A/B 8Mbps outerDATA0 true parity/M2/TUN, client B first down +47s vs A+67s, second B+79s vs A NOT_OBSERVED, source B f3b9e8a5. Still not full user 30–60s return, no CPU win. Native B client38 exact k-window UNKNOWN, all due kSource>Slow.FirstSent, usually +0.03..4.9%, after idle >5%; W56 source3b89a140 solely bounds original mismatched maturity cohorts <=5%, uses worst-k pessimistic model margin, invalid remains UNKNOWN; native Action40172735047 pending. Do not claim full Auto or merge.",
@@ -598,7 +599,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W56 source1673cd96 corrected exact ARM64 product build/test Action40173359338 PASS artifact12590822815, ZIP SHA256 cdc5d4eb; W56 same-VM original Auto product comparison request commit9ec341e6 Action40173582990 queued, contract40173582999 pending. A f3b9e8 native frozen build40171595909, B1673cd build40173359338, one scenario 8Mbps UDP/75ms, C2S high20%60s→1%90s. After run, download artifact, inspect per-leg real C2S stage times and actual applied readback, independent S2C, VALID/UNKNOWN, zero outer DATA retrans, genuine parity/real M2, first-TUN/UDP missing+p99, CPU/RSS/host PSI/Stop; report if 30–60s gradual-down criterion met (not assume success). Keep failed Actions40172735047/40172963939 in record as preproduct test faults, no capacity ladder, no other branch/state touch. Then bounded original FEC MTU/generation functionality only if missing and update final report.",
+  "next_action": "W56 source1673cd96 corrected exact ARM64 product build/test Action40173359338 PASS artifact12590822815, ZIP SHA256 cdc5d4eb; W56 same-VM original Auto product comparison request commit9ec341e6 Action40173582990 queued, contract40173582999 pending. A f3b9e8 native frozen build40171595909, B1673cd build40173359338, one scenario 8Mbps UDP/75ms, C2S high20%60s→1%90s. After run, download artifact, inspect per-leg real C2S stage times and actual applied readback, independent S2C, VALID/UNKNOWN, zero outer DATA retrans, genuine parity/real M2, first-TUN/UDP missing+p99, CPU/RSS/host PSI/Stop; report if 30–60s gradual-down criterion met (not assume success). Keep failed Actions40172735047/40172963939 in record as preproduct test faults, no capacity ladder, no other branch/state touch. Then bounded original FEC MTU/generation functionality only if missing and update final report. W57 finite native ARM64 shared MTU/Stop generation Action40173816559 PASS, cannot generalize to actual 65KiB FEC product across TUN. Preserve W56 sameVM result as next gate.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -5282,5 +5283,16 @@
     "same_vm_ab_status": "QUEUED_AT_CHECK",
     "old_product_source": "f3b9e8a5a6ac226d13066fc7ccc780cb5f94fa85",
     "comparison": "one fixed 8Mbps/75ms 2%30s→20%60s→1%90s original Arm64 A/B"
+  },
+  "w57": {
+    "workflow_source": "54716f97add9f451ccf03bfa1b1c15b721ac5125",
+    "run_id": 40173816559,
+    "result": "PASS_SCOPED_ARM64_NATIVE_COMPONENT_AND_SHARED_PATH",
+    "job_id": 121110129464,
+    "artifact": "NONE_ACTION_LOG",
+    "evidence": "docs/evidence/fec-network-work/20261025-W57-bounded-arm64-FEC-MTU-generation-Stop-PASS.json",
+    "product_jumbo_tun": "NOT_RUN",
+    "capacity_stop": true,
+    "merge_ready": false
   }
 }
