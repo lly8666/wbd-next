@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W29_MAXIMUM200_FIVE_QUANTA_M4_B_PASS_OLD_A_FAIL_PERCORE_SOFTIRQ_NOT_SATURATED_CPU_PSI_CAPACITY_STOP",
+  "phase": "W30_MAXIMUM220_SINGLE_SCOPED_PASS_NARROW_MARGIN_PARITY_DEADLINE_CPU_PSI_STOP",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -366,9 +366,21 @@
       "A_source": "564490bc7a8f61c9ab06be58add8138212306393",
       "B_source": "6246aa82df5140807914545b2fc9343b8c70a1aa",
       "result": "A_FAIL_B_PASS_SCOPED_CPU_PSI_CAPACITY_STOP"
+    },
+    {
+      "id": "FEC-W30-Maximum220-W29FiveQuanta-Fixed-OuterOff-ARM64",
+      "path": "tests/network/fec-work/W30-maximum220-W29single-static-owned-fq600-arm64.json",
+      "run_id": 40145722367,
+      "attempt": 1,
+      "source": "6246aa82df5140807914545b2fc9343b8c70a1aa",
+      "result_artifact_id": 12581285466,
+      "artifact_sha256": "c2acba0adf8de8ae3cb7599e69930ba4e2582df0e4677f34632612010abd0e35",
+      "result": "PASS_SCOPED_OBSERVATION_MARGIN_NARROW",
+      "app_mbps_each": 220
     }
   ],
   "open_issues": [
+    "W30 one W29 frozen native ARM64 Fixed Maximum 220Mbps/side outer repair OFF 30% IID 300ms Action40145722367 scoped PASS delivered218.146/217.874Mbps, residual0.850/0.977%; S2C only0.023pp beneath1% gate. Parity deficit2.52/2.84%, expiry1398/1588, PSI peak48.47%, 4 cores nonidle79-81%, softirq balanced10-11%, no throttle/RX pressure/source drops; full-run original TX thread CPU21.6s each vs RX16.6s. Code FEC transient parity Vec<Vec<u8>> per4-row quantum may be next targeted optimization.",
     "W29 new FEC M4 slot-fit five bounded 4-row native quanta SOURCE6246aa82 new B 200Mbps true FEC-only 30%IID 300ms double PASS delivered199.546/199.594Mbps residual0.239/0.220%, p99 309.9/309.3ms vs old A FAIL4.271/4.813%. Parity deficit collapses17/18.65% to0.624/0.596%, no seal failures, expired jobs330/310 vs5872/6537; source drop0, RX pressure0, outer DATA retrans0. Genuine A/B Action40144809020 overall failure because old A fails. New FEC-only per-core diag demonstrates 4 cores B nonidle76.55/76.90/78.02/76.16%, percore softirq CPU10.54/9.95/10.85/10.10%, balanced NET_RX/TX, hardirq0, steal0, cgroup throttle delta0 (cpu.max unavailable). CPU use B30.61/30.38 seconds vs A28.04/28.74 and PSI mean42.2% peak45.3%. Not RAM shortage or saturated IRQ; true 10ms bounded parity scheduling problem. 200 more pressure unsafe, no load higher.",
     "User-authorized 175/200 step tests on same frozen native W26 product (SOURCE 564490bc, ARM64 build40109847848, native original FEC Fixed Maximum, outer data retrans ZERO, 30%IID+300ms, fq600/600 unchanged): W27 175 both PASS residual0.119/0.166%, p99 306.0/306.7ms, CPU PSI peak35.51%; W28 200 both FAIL residual4.302/4.765% delivered191.462/190.519Mbps, p99 of delivered312ms, Parity sent deficit17.4/19.2%, expire5864/6541, CPU PSI peak41.19%, RX pressure0 and original source drops0. Stop escalation above175 scoped /200 failed, no 225+ load. Independent actions40127642866/40127866107 artifacts12573724068/12573539799, immutable evidence files.",
     "W26 Action40110100061 same ARM64 VM 150Mbps Fixed Maximum outerOFF 30% IID 300ms AB both PASS. Original direct-arena source_into product SOURCE 564490bc B delivered149.897/149.926Mbps residual0.0836/0.0623%, p99 303.7/303.8ms, parity deficits0.103/0.069%. Process CPU client24.87 vs A25.36(-0.49s), server25.39 vs A25.27(+0.12s), combined -0.37s over30s (0.73%); single AB cannot qualify sustained CPU gain under PSI>20 all samples. Memory ~50MB per side, source drops/RTX/RX rejects0. W25 ab7e old PASS retained. No 175+ due host capacity; Auto true dynamic and RTT still OPEN.",
@@ -387,7 +399,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W29 solved Fixed Maximum 200Mbps FEC-only scoped business old-vs-new failure gap by genuine one-M4 five <=4-row parity quanta and capacity-fit, without weakening source-first/M2/outer repair OFF. STOP any >200 rate until CPU headroom independent diagnosis under PSI42%+; no 225/250/350 on this VM. If user requests further CPU efficiency, profile Rust original M4 TX and RX CPU/packet under validated W29 baseline before new changes (real parity is cost), include scheduler latency/phase distributions and improve source-first under host pressure; do not treat softirq as fully saturated (four cores balanced). Otherwise genuine Auto live rise/fall asym dynamic remaining; merge_ready=false.",
+  "next_action": "W30 220Mbps single bounded native Linux scoped PASS borderline0.850/0.977% residual; STOP rates above220 due 4-core 80% nonidle, CPU PSI48.47. Investigate original FEC TX parity transient allocation in StagedParity::next_quantum, reuse four 4-row scratch vectors across blocks, retain exact codec and M4 strict copied prefix and source first; then native product functional and same-VM 220 original-vs-new AB needed before CPU benefit claim. Keep outer DATA retrans OFF, RX unchanged, Auto dynamic future, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -2623,5 +2635,160 @@
       "Single unseeded netem AB without BA repeatability; fixed maximum Linux only",
       "DO NOT escalate higher than200 while host CPU PSI>20 all samples; Auto true dynamic not qualified"
     ]
+  },
+  "w30": {
+    "schema": 1,
+    "owner": "fec-network-work",
+    "id": "FEC-W30-Maximum220-W29FiveQuanta-Fixed-OuterOff-ARM64",
+    "run_id": 40145722367,
+    "attempt": 1,
+    "result": "PASS_SCOPED_OBSERVATION_MARGIN_NARROW",
+    "request_path": "tests/network/fec-work/W30-maximum220-W29single-static-owned-fq600-arm64.json",
+    "request_commit": "f7e74111fd3a16e15acb3cf3e3cec5df03e7873b",
+    "artifact_id": 12581285466,
+    "artifact_sha256": "c2acba0adf8de8ae3cb7599e69930ba4e2582df0e4677f34632612010abd0e35",
+    "product": {
+      "source": "6246aa82df5140807914545b2fc9343b8c70a1aa",
+      "run_id": 40144596602,
+      "artifact_id": 12579619244,
+      "sha256": "f6baae3d9ca042d80b854fff1b217da8a11a2d8ce4aaf852935f2b641fdfcb7c"
+    },
+    "settings": {
+      "rate_mbps_each": 220,
+      "outer_rate_mbps_each": 600,
+      "loss_iid_pct": 30,
+      "oneway_delay_ms": 300,
+      "warmup_s": 15,
+      "measure_s": 30,
+      "drain_s": 30,
+      "mode": "Fixed Maximum profile6 both readback",
+      "repair_enabled": false,
+      "original_outer_DATA_retransmitted": 0,
+      "owned_fq600": true,
+      "static_veth_neighbours": true
+    },
+    "business": {
+      "c2s": {
+        "offered_mbps": 219.99800906666667,
+        "delivered_mbps": 218.14588933333334,
+        "residual_pct": 0.8504720552559606,
+        "missing_after_drain": 5504,
+        "p99_ms": 312,
+        "send_lag_p99_ms": 3.7,
+        "send_lag_max_ms": 10.31719
+      },
+      "s2c": {
+        "offered_mbps": 219.99492026666667,
+        "delivered_mbps": 217.87407866666666,
+        "residual_pct": 0.9773456682340252,
+        "missing_after_drain": 6325,
+        "p99_ms": 312,
+        "send_lag_p99_ms": 3.5,
+        "send_lag_max_ms": 10.491048
+      }
+    },
+    "netem_actual_loss_pct": {
+      "client": 30.031964952245506,
+      "server": 30.001996756824727
+    },
+    "parity": {
+      "client": {
+        "rplanned": 1216607,
+        "rsent": 1186004,
+        "expired_jobs": 1398,
+        "unknown_capacity": 396,
+        "pressure_jobs": 0,
+        "pressure_sources": 0,
+        "parity_seal_fail": 0
+      },
+      "server": {
+        "rplanned": 1216680,
+        "rsent": 1182083,
+        "expired_jobs": 1588,
+        "unknown_capacity": 427,
+        "pressure_jobs": 0,
+        "pressure_sources": 0,
+        "parity_seal_fail": 0
+      }
+    },
+    "RX": {
+      "client": {
+        "peak_active": 236,
+        "peak_bytes": 8873860,
+        "recovered_tun": 284121,
+        "evicted_pressure": 0,
+        "rejected_capacity": 0,
+        "rejected_codec": 0
+      },
+      "server": {
+        "peak_active": 234,
+        "peak_bytes": 8735704,
+        "recovered_tun": 285276,
+        "evicted_pressure": 0,
+        "rejected_capacity": 0,
+        "rejected_codec": 0
+      }
+    },
+    "CPU": {
+      "process_s_30": {
+        "client": 32,
+        "server": 32.11
+      },
+      "psi_some_pct": {
+        "mean": 45.53033333333334,
+        "peak": 48.47,
+        "over20_fraction": 1
+      },
+      "core_nonidle_pct": [
+        79.16,
+        80.22,
+        80.36,
+        80.93
+      ],
+      "core_softirq_pct": [
+        10.16,
+        10.37,
+        10.24,
+        10.97
+      ],
+      "NET_RX_events_percore": [
+        461738,
+        475527,
+        493684,
+        484169
+      ],
+      "NET_TX_events_percore": [
+        548283,
+        554572,
+        573779,
+        559428
+      ],
+      "steal_pct": 0,
+      "hardirq_pct": 0,
+      "cgroup_throttled_usec_delta": 0,
+      "cgroup_nr_throttled_delta": 0,
+      "cpu_max": "UNAVAILABLE",
+      "native_full_run_worker_cpu_ns": {
+        "client": {
+          "rx": 16667925920,
+          "tx": 21616125560
+        },
+        "server": {
+          "rx": 16588510728,
+          "tx": 21658992664
+        }
+      }
+    },
+    "kernel_queues": {
+      "netem_end_qlen": {
+        "client": 10271,
+        "server": 8976
+      },
+      "tun_root_qdisc_drops": 0,
+      "source_tun_drops": 0
+    },
+    "stop_drained": true,
+    "owned_cleanup": true,
+    "conclusion": "Single ARM64 220Mbps business PASS but S2C residual margin 0.02265 percentage points. 200Mbps W29 B residual0.239/0.220%. Parity planned-sent deficits now2.516/2.844% with 1398/1588 expired jobs; CPU PSI peak48.47 and 4-core nonidle about80%, softirq evenly distributed; no RX memory or Linux CPU quota evidence. Do NOT increase rate or claim stable 220Mbps."
   }
 }
