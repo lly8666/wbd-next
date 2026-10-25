@@ -26,6 +26,7 @@ import (
  "net"
  "os"
  "strconv"
+ "syscall"
  "time"
 )
 
@@ -195,6 +196,21 @@ func choosePadding(s Spec)int{
  min:=16;if room<min{min=1}
  return min+int(binary.BigEndian.Uint16(b[:]))%(room-min+1)
 }
+// The Linux loopback interface normally permits very large TCP/GSO packets.
+// Clamp negotiated sender MSS for the owned MTU1500 capture fixture. This
+// DOES NOT change WBD product sockets; the receiver reassembles TCP normally.
+func clampOwnedTCPMSS(conn net.Conn)error{
+ tcp,ok:=conn.(*net.TCPConn)
+ if !ok{return errors.New("lab requires TCPConn")}
+ raw,e:=tcp.SyscallConn()
+ if e!=nil{return e}
+ var optErr error
+ e=raw.Control(func(fd uintptr){
+  optErr=syscall.SetsockoptInt(int(fd),syscall.IPPROTO_TCP,syscall.TCP_MAXSEG,1200)
+ })
+ if e!=nil{return e}
+ return optErr
+}
 func testCert()(tls.Certificate,*x509.CertPool,error){
  pub,priv,e:=ed25519.GenerateKey(rand.Reader);if e!=nil{return tls.Certificate{},nil,e}
  now:=time.Now()
@@ -302,6 +318,7 @@ func run(port int,root,manifestPath string)error{
  go func(){
   raw,err:=listener.Accept();if err!=nil{serverResult<-err;return}
   defer raw.Close()
+  if err=clampOwnedTCPMSS(raw);err!=nil{serverResult<-err;return}
   raw.SetDeadline(time.Now().Add(50*time.Second))
   sc:=tls.Server(raw,srv)
   if e:=sc.Handshake();e!=nil{serverResult<-e;return}
@@ -331,6 +348,7 @@ func run(port int,root,manifestPath string)error{
  raw,e:=net.DialTimeout("tcp",listener.Addr().String(),5*time.Second)
  if e!=nil{return e}
  defer raw.Close()
+ if e=clampOwnedTCPMSS(raw);e!=nil{return e}
  raw.SetDeadline(time.Now().Add(50*time.Second))
  tc:=tls.Client(raw,cli)
  if e=tc.Handshake();e!=nil{return e}
