@@ -1,0 +1,83 @@
+name: LAN strict fast-only XOR mixed actual TCP pcap arm64
+on:
+  push:
+    branches: [experiment/lan-fastgate-mixed-wire]
+    paths: [".github/workflows/lan-fastgate-mixed-pcap-arm64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: lan-fastgate-mixed-pcap-arm64
+  cancel-in-progress: false
+jobs:
+  real-loopback:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Build native real AES-128-GCM and mutual TLS13 test executable
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "aarch64"
+          mkdir -p lan-fastgate-pcap-report
+          go build -trimpath -o /tmp/lan_fastgate_mixed tools/lan_fastgate_mixed_tcp.go
+          sha256sum /tmp/lan_fastgate_mixed > lan-fastgate-pcap-report/binary_sha256.txt
+          {
+            echo "SOURCE=$GITHUB_SHA"
+            echo "RUN=$GITHUB_RUN_ID"
+            echo "ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "ARCH=$(uname -m)"
+            echo "GO=$(go version)"
+            echo "SCOPE=standalone_mutual_TLS13_then_mixed_real_AES_GCM_and_INSECURE_XOR"
+            echo "NOT_WBD_RUST_AEAD_WIRE=true"
+            echo "REAL_FLOW_CLASSIFIER=false"
+          } > lan-fastgate-pcap-report/manifest.env
+      - name: Genuine inner TLS13, mixed packet classes, native actual TCP capture
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tcpdump
+          tmp="$(mktemp -d)"
+          cap_pid=""
+          cleanup(){
+            if test -n "$cap_pid"; then
+              sudo kill -INT "$cap_pid" 2>/dev/null || true
+              wait "$cap_pid" 2>/dev/null || true
+            fi
+            rm -rf "$tmp"
+          }
+          trap cleanup EXIT
+          openssl req -x509 -newkey rsa:2048 -nodes \
+            -keyout "$tmp/key.pem" -out "$tmp/cert.pem" \
+            -days 1 -subj /CN=localhost >/dev/null 2>&1
+          python3 tools/lan_fastgate_inner_tls13_corpus.py \
+            --cert "$tmp/cert.pem" --key "$tmp/key.pem" \
+            --dir "$tmp/inner" | tee lan-fastgate-pcap-report/inner_tls13_summary.json
+          port=38718
+          sudo timeout --signal=INT --kill-after=2s 30s tcpdump \
+            -i lo -s 2048 -c 160 -w "$tmp/wire.pcap" \
+            "tcp and dst port $port" >/dev/null 2>&1 &
+          cap_pid=$!
+          sleep 2
+          /tmp/lan_fastgate_mixed "$port" "$tmp/inner" \
+            lan-fastgate-pcap-report/record_manifest.json \
+            | tee lan-fastgate-pcap-report/receiver_roundtrip.json
+          sleep 1
+          sudo kill -INT "$cap_pid" 2>/dev/null || true
+          wait "$cap_pid" || true
+          cap_pid=""
+          test -s "$tmp/wire.pcap"
+          test "$(stat -c %s "$tmp/wire.pcap")" -le 4194304
+          python3 tools/lan_fastgate_mixed_pcap.py --pcap "$tmp/wire.pcap" \
+            --port "$port" --manifest lan-fastgate-pcap-report/record_manifest.json \
+            --output lan-fastgate-pcap-report/capture_summary.json
+          echo "Owned raw capture and ephemeral TLS13 corpus/cert/key cleaned on exit" \
+            >> lan-fastgate-pcap-report/manifest.env
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-fastgate-arm64-mixed-pcap
+          path: lan-fastgate-pcap-report/
+          retention-days: 30
+          if-no-files-found: warn
