@@ -1,4 +1,23 @@
-# FEC-only V3 公共代码合并与原生 ARM64 代表验收报告
+# FEC-only 独立岗位｜2026-10-25 限域合并审查索引
+
+**当前交付状态：** `scoped_integration_review_ready=true`；**`merge_ready=false`，`capacity_stop=true`**。以下只为已跑原生 Linux ARM64、真实外层 DATA repair OFF 的 FEC 功能/业务性能**限域审查**，不是全平台、不是与 main/新外层 ON 组合的整机合并资格。分支当前审查 HEAD `084e7215f48c0d96a55b92a5a3691aa346dcdda2`（2026-10-25 12:17 UTC，文档收口）；后续源码或分支变化必须重新核证，不能把 HEAD 直接当作已运行的产品二进制。
+
+## 精确产品与证据索引（旧时点记录保留在后文）
+
+- **近期真实 FEC-only 产品源码：** 冻结 `7ad0ba91b656ff8e9ee965d0c093a18e048971fb`；原生 aarch64 [build 40185113624](https://github.com/lly8666/wbd-next/actions/runs/40185113624)，artifact `12596370712`，ZIP SHA256 `ab1407ccc5dd85c3a66c885cd410dbdd27fa7059461f18647d8ca6b41ce7384e`。W77 与 W79–W83 独立场景复用这同一产品，**各 Action 一个 VM/测量 job**；W83 在同 VM、同进程顺序比较长/短相关丢包。W78 的 `4a77104b` 是额外 native **测试专用** fence 构建，不能擅自把它当作 W83 产品。
+- **开关与反馈：** 上游 V3 为基底，公开 `--outer-repair=off` 的两端 native readback 和受损时 0 外层 DATA 重发/候选/shadow 已验证（W2/W6 及后续），默认 ON 保护由 W6 同 VM 正反例验证。OFF **未关闭首次 DATA、FEC parity 或认证的原始 M2 回执/质量反馈**。真实 native Fixed/Auto requested→applied、parity planned=sent、recovered-to-TUN、原 TUN 源丢失和资源上限均有独立证据；不以 netem 线损代替 Auto 质量。
+- **固定与成本：** W3/W5/W51/W58–W59 的真实固定档、双向首次交付、恢复与低中强档代表通过限域门；W41/W42 是 Maximum 30% IID/300ms、双向各100Mbps混合流量的同 VM AB/BA 正向收据（测量 CPU 相对降低约21%，有 VM host PSI 混杂，不能泛化）；W46/W47 是 Normal/off 与 Fixed3 小流量同 VM CPU 保护；W77 覆盖真实奇数包长、reorder/duplicate、健康 TCP，以及 old revision fence W78。相关原始 CPU-s/RSS、p99、流量分母和容量约束必须读下文原始表，不将不同 VM 相除算提速。
+- **自动控制：** W45/W52–W56/W60 已记录原生双端认证 M2 控制/上下行独立升降档与恢复改进，W61–W76 覆盖本机过载 host-capacity 样本、保护与解除后的 native APPLIED；最新 W81 真正 VALID 的 C→S 强升至 Maximum6 再逐级降到 Light0，两端 native `requested=applied` 且 `pending=false`。**W81 高损过渡 C→S 3.049% 残余允许用于控制验证，但不是 1% 业务服务通过。** Auto 未验证的远端持续接收机过载，不能假称被本机保护覆盖。
+- **相关丢包反例和边界必须保留：** W79 Medium2 的约5% GE 长突发 residual **2.849%/2.798%**，Action 绿仅是宽诊断门；[W80 40191030800](https://github.com/lly8666/wbd-next/actions/runs/40191030800) Maximum6、约15% GE 较长突发 **1.341%/1.531%，严格1%门失败**。W82 较短突发同约15%均值 **0.162%/0.219%**，W83 相同 VM/进程先长后短 **1.321%/1.303% → 0.215%/0.200%**，短段严格门通过、长段未通过。该有限统计与计划/发出 parity 相等、native reject0、源 TUN drop0 一致，**不证明有可及时解码却漏交付的 codec 缺陷**，不应因此臆造重传或调整 FEC 算法。详情及 Action/attempt/artifact/hash 在 [W79–W83 原始收据](20261025-W79-W83-GE-correlated-burst-original-arm64-SCOPED.json)。
+- **未覆盖/不能合并成全绿：** 真实 FEC-over-TUN 65KiB 产品、Windows/Game 产品接线、远端接收方持续 host 过载反馈、W49/W50 历史100Mbps TCP 高损后恢复、和**精确最新组合源码上 outer ON+FEC** 均未拿到本岗位代表资格。W38 混合200Mbps已有源头丢失/TCP 回压负例，故依约停高压，不再无意义扩梯子。未新跑 Actions，不接管外层恢复实现、不改其他岗位进度、不合 main。
+
+**复核结论：** 当前可交付一份带正反例、核对过最新 Actions 单 job 与 artifact digest 的**限域合并审查包**；没有已证据支持的 FEC 算法小修复待做。审查者若需要扩大产品资格，应按未测项另建精确组合验证，不能复用旧 W3–W7 的 `b601f2e5` 二进制替代 W79–W83 的 `7ad0ba91`。以下是原有逐阶段原始报告，历史 SHA/失败/指标均完整保留。
+
+---
+
+## 历史阶段报告（保留其当时产品适用范围）
+
+### 2026-10-24 初始 V3/b601 分阶段验收
 
 **更新：2026-10-24。分支：** `experiment/fec-network-tuning`。**适用产品源码：** `b601f2e546bf5f071eb33a80a01beec71d91c5cf`，原生 ARM64 build Action [40078403217](https://github.com/lly8666/wbd-next/actions/runs/40078403217)、bundle artifact `12554277143`、ZIP SHA256 `552a9c19ca4b9045cabe08abeed4f80e440f73f8fcc34a5f06670f4450d9fde6`。以下实际产品运行 W3–W7 均复用这同一 SOURCE 构建的冻结二进制，夹具请求源码各自独立。
 
