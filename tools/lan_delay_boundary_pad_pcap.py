@@ -54,6 +54,7 @@ def audit(pcap,port,manifest):
     specs=meta["records"]
     assert 20<=len(specs)<=60
     assert meta["MtuBytes"]==MTU and meta["OuterIPTCPOverhead"]==UNDERLAY
+    assert meta["MaxPadPerBoundary"]==256
     assert 11000<=meta["ChosenHoldMs"]<=21000
     assert meta["inner_tls13_genuine"] and meta["outer_mutual_tls13_genuine"]
     assert meta["aes_fallback_tamper_rejected"] and meta["plaintext_roundtrip_all"]
