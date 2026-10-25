@@ -1,0 +1,139 @@
+{
+  "schema": 1,
+  "phase": "COMPLETE_SCOPED_NATIVE_MIXED_AES_FALLBACK_ACTUAL_TCP_PCAP_AND_X86_ARM_126_LEG_CPU_PASS_NOT_PRODUCT",
+  "branch": "experiment/lan-fastgate-mixed-wire",
+  "base": {
+    "branch": "experiment/lan-hybrid-tls-xor-cost",
+    "sha": "c961503ece276cc6a8709651e0ba9a058478fe62"
+  },
+  "report": "docs/evidence/lan-fastgate-mixed-wire/FINAL_REPORT.md",
+  "policy": "Only externally trusted confirmed TLS13 inner app data that additionally passes fast IPv4 TCP seq boundary gate uses public PN-XOR; all other inner records use authenticated full AES128-GCM",
+  "initial_outer_tls": "genuine TLS13 mutual authentication on TCP then deliberate raw TCP handoff; outer borrowed-domain bootstrap design unmodified",
+  "main_modified": false,
+  "production_wired": false,
+  "merge_ready": false,
+  "real_tcp_capture": {
+    "x86_64": {
+      "run_id": 40184692670,
+      "job_id": 121142882946,
+      "source": "6477b2be0d966e1695a3e547e0811002df1afdb3",
+      "conclusion": "success",
+      "outer_records": 20,
+      "authenticated_aes_fallback": 15,
+      "unauthenticated_fast_pn_xor": 5,
+      "pre_data_tls_handshake_client_records": 6,
+      "raw_pcap_bytes": 21069,
+      "raw_pcap_sha256": "9c4176bee33748def0e44a58f08b87d20801c7fbc2c51fcb79442bc12d991a1d",
+      "artifact_id": 12595855895,
+      "artifact_sha256": "cfe319b67766d5b53945d67b874b14a5d73fbb2b2e4aee7c39cfca1b4dc90ada"
+    },
+    "arm64": {
+      "run_id": 40184697105,
+      "job_id": 121142896298,
+      "source": "295a29f839584cadfd78cd6a55b6e7e7f4597b8d",
+      "conclusion": "success",
+      "outer_records": 20,
+      "authenticated_aes_fallback": 15,
+      "unauthenticated_fast_pn_xor": 5,
+      "pre_data_tls_handshake_client_records": 6,
+      "raw_pcap_bytes": 21069,
+      "raw_pcap_sha256": "d14650e2dc6a14ca135ea6d5aa8a4dad84247278e421b07a14e4466f47a67006",
+      "artifact_id": 12596085386,
+      "artifact_sha256": "50dd9fb29012778d53b621e3eeac37e9a7d0e248637ac7f9b34035409a55eeb0"
+    },
+    "genuine_inner_tls13_sni_test": "private.inner-wbd.example",
+    "genuine_inner_tls13_clienthello_and_serverhello": true,
+    "sni_marker_absent_from_entire_outer_capture": true,
+    "fallback_aead_tag_tamper_rejected": true,
+    "each_inner_packet_recovered_byte_exact": true,
+    "xor_fast_reversal_from_public_pn": true,
+    "xor_duplicate_new_pn_no_identical_64_128_window": true,
+    "raw_pcap_retained": false,
+    "lab_go_aes_wire_is_native_wbd_rust_wire": false,
+    "security": "ONLY LAB_AES_FALLBACK_AUTHENTICATED; PUBLIC_XOR_NOT_SECRET_OR_AUTHENTICATED; LAB_RECEIVER_HAS_TRUSTED_MODE_LABEL"
+  },
+  "cpu": {
+    "scope": "native same_VM WBD Rust AES128GCM record seal+open; offline trusted app labels plus O1 TCP boundary checks; 9 profiles x 7 modes x 2 paired =126 timed legs each architecture; no real classifier or Go Rust TUN",
+    "x86_64": {
+      "run_id": 40184529033,
+      "job_id": 121142393468,
+      "source": "22d1290b25c5d0a8cf02f55efd04f6e9d98c67a6",
+      "conclusion": "success",
+      "tests": "10/10",
+      "artifact_id": 12595576961,
+      "artifact_sha256": "65791b177557a5b3145d7eb963f3e98a80b233834260e265d029169282e17c7e",
+      "full_aes_ns_per_inner_byte_at_90pct": 0.7805852205698716,
+      "gated_pn_ns_per_inner_byte_at_90pct": 0.16471004890908808,
+      "ideal_pn_ns_per_inner_byte_at_90pct": 0.16343838216357565,
+      "gate_extra_cost_vs_ideal_pct_at_90pct": 0.7780710556958947
+    },
+    "arm64": {
+      "run_id": 40184533528,
+      "job_id": 121142407503,
+      "source": "81ff743e58556b66a83298a2a7a91f027d2714b2",
+      "conclusion": "success",
+      "tests": "10/10",
+      "artifact_id": 12595487157,
+      "artifact_sha256": "2f2390e232b01eca8d74a44baa39880ee23452fe4ebf154f531d6bc317f5ac56",
+      "full_aes_ns_per_inner_byte_at_90pct": 0.7637153866952777,
+      "gated_pn_ns_per_inner_byte_at_90pct": 0.15760566887952548,
+      "ideal_pn_ns_per_inner_byte_at_90pct": 0.15582751788508836,
+      "gate_extra_cost_vs_ideal_pct_at_90pct": 1.1411020457557264
+    },
+    "eligible_pct_uniform": [
+      0,
+      25,
+      50,
+      75,
+      90,
+      100
+    ],
+    "saving_pct_vs_full": {
+      "x86_64": [
+        -0.11703829942169008,
+        21.623255708353785,
+        43.65384172191512,
+        65.40928978844053,
+        78.89915866087749,
+        87.19925335417551
+      ],
+      "arm64": [
+        0.001429641766070855,
+        21.773738564854284,
+        43.777028697475316,
+        65.89280302596885,
+        79.36329794774579,
+        88.3691663997432
+      ]
+    },
+    "mixed_profiles": {
+      "tls_bulk": {
+        "eligible_packet_pct": 80,
+        "eligible_byte_pct": 87.901315,
+        "x86_saving_pct": 73.74394749513202,
+        "arm_saving_pct": 75.3758852503433
+      },
+      "mixed_session": {
+        "eligible_packet_pct": 40,
+        "eligible_byte_pct": 55.072167,
+        "x86_saving_pct": 41.71372323423128,
+        "arm_saving_pct": 43.93191427297023
+      },
+      "non_tls_heavy": {
+        "eligible_packet_pct": 10,
+        "eligible_byte_pct": 15.717207,
+        "x86_saving_pct": 11.014329803174583,
+        "arm_saving_pct": 11.93848477162267
+      }
+    }
+  },
+  "hard_open_blockers": [
+    "genuine passive TLS13 classifier not implemented; 0x17 03 03 may be encrypted handshake or alert",
+    "real authenticated mixed receiver mode capability absent; downgrade risk",
+    "PN XOR no integrity secrecy replay protection",
+    "actual WBD Go→Rust→TUN not wired",
+    "no whole product CPU throughput or p99 qualification"
+  ],
+  "open_requests": [],
+  "next_action": "NONE_SCOPED_LAB_COMPLETE_DO_NOT_MERGE_OR_DEPLOY"
+}
