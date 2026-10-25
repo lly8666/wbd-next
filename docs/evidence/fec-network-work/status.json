@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W51_FEC_MAINLINE_ORIGINAL_AUTHENTIC_M2_POSITIVE_AGE_ARM64_REAL_PASS_NO_MAIN_RESTORE",
+  "phase": "W52_FEC_MAINLINE_AUTHENTIC_M2_AUTO_INDEPENDENT_DIRECTION_PASS_C2S_RECOVERY_DOWN_NOT_OBSERVED",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -550,9 +550,21 @@
       "artifact_sha256": "bec3f9384f16a52356a443aac2e4d30f60edd250bce0321a332596991dd25485",
       "result": "PASS_SCOPED_OBSERVATION",
       "product_source": "e446fa1cf09ebfb259da3d764abf8f8ed8d4211f"
+    },
+    {
+      "id": "W52",
+      "path": "tests/network/fec-work/W52-real-auto-M2-confirmation-asym-rise-recover-8Mbps-arm64.json",
+      "run_id": 40168045298,
+      "attempt": 1,
+      "artifact_id": 12589925435,
+      "artifact_sha256": "22a5b1de99366e172d11fd3f9e47dabf70a47e874b18ec0e4e3152f373dbcf04",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "source": "e446fa1cf09ebfb259da3d764abf8f8ed8d4211f",
+      "caveat": "C2S recovery downshift NOT_OBSERVED"
     }
   ],
   "open_issues": [
+    "W52 current frozen FEC source e446fa1 Action40168045298 real Auto 8Mbps each actual UDP-only (64B1%,1287B99%, sparse probes) 2/0->20/1->1/0%IID, no outer DATA repair, native user mainline branch no main restore. Native real M2 positive confirmation mean client153665us (118931 samples), server154241us (129400); original AUTHENTIC stages C2S Strong5->Maximum6 revision2 during20% high, S2C Strong5->High4 rev2 then Balanced3 rev3 independently; final native both requested=applied pendingfalse. Parity full167271/121021 expired0, source TUN0, Stop clean, true UDP8Mbps each all3 phases high C2S loss0.01487%. BUT C2S did NOT step down to Strong after last 1%-loss60s and remains max6; unlike previous W45 prior source, current run does not qualify complete Auto rise-return. AUTO_QUALITY often UNKNOWN actual-k/feedback, policy requires predicted one-step-lower residual<=0.0005 and full 10s+4096 valid samples. Do not modify policy without causal evidence, do not call full Auto curve PASS; no TCP in W52. W48-50 temporary side tests already closed.",
     "W51 exact new FEC mainline source e446fa1 from user-approved 3af257cd direct branch ONLY: real ARM64 product build Action40167423967 SUCCESS, real W51 original Fixed3 8Mbps each 2%IID/75ms Action40167733514 PASS. Reuses existing Rust native 8s matured unambiguous M4 first-send positive authenticated reverse M2 [12]lag sum ns/[13]samples; public Go product M2_PROOF now reports client53875 sample mean152966us, server53938 mean152937us, true reverse reports 11346/11400. Old OFF 600000us outer shadow RTT NOT claimed as actual. Both raw M2 UNKNOWN161/175 and first/coverage censored flags1 preserved, no globally clean quality claim. UDP/TCP target full, 0 loss small p99 89.1/89.4ms, native parity planned==sent, expiry0, source TUN/root0, original OUTER DATA retrans0, STOP. W48-50 temporary step tests retained historical but CLOSED. Never merge/import main or network matrix. Next FEC mainline continue Auto authenticated positive M2 readback regression on same new source and lifecycle/MTU bounded functional checks, NO throughput ladder, capacity_stop true merge_ready false.",
     "W48-50 genuine ARM64 W40 source23da99 dual100Mbps real mixed96%UDP35% small-by-count 2 TCP sockets4%, 64B20Hz sparse 10%IID30s->30%IID60s->10%IID30s one-way300ms netem600/fq600 outerDATA0: MAXIMUM6 W48 strict all 3 phases PASS residual high30 C2S0.0388/S2C0.0380%, small0.0784/0.0696%, trueTCP4Mbps throughout, native Parity planned=sent 3066375/3060133 expiry0, source TUN/root0; CPU per30 pre51.49 high47.82 post51.47 and unitCPU/GiB post/pre1.003, netem queue no upward trend. MEDIUM2 W49 10%-IID UDP <=0.23% small low phases and CPU recovery1.001, but TCP rates baseline3.73/3.68 high0.45/0.43 recovery2.74/2.87 (<4) with backpressure, Action failure because qualified INCONCLUSIVE. BALANCED3 W50 pre TCP4Mbps and low UDP small <=0.043%, but high30 TCP0.76/0.84 and after10 still2.96/2.89; CPU perGiB recovery1.004, FEC parity full+no owner capacity, source TUN/drop0, netem queue no growth, still TCP_BACKPRESSURED high and recovery, Action INCONCLUSIVE. Mid-low grade not qualified for post-burst mixed TCP restore within30sec. Tests are IID drop-probability steps not correlated/Gilbert-Elliott blackout; don't compare raw CPU between independent host Actions. No further infinite tier/rate ladder; capacity_stop true and merge_ready false.",
     "Finite W43-W47 low-risk regression completed W40 source23da99: Normal/FEC OFF 2Mbps W43 PASS and old/new W46 sameVM A61? No, CPU actual old7.46/new2.45s combined -67.2%; Fixed3 8Mbps 2%IID W44 PASS and W47 BA CPU old20.54/new7.93s -61.4%, BOTH retain zero drop and small UDP accept, although Fixed3 S2C small p99 85.0->89.1ms (+4.1ms) single observation. Auto W45 8Mbps 2->20->1% C2S, 0->1->0% S2C ACTUAL original QUALITY VALID and STAGE: C2S Strong5->High4->Maximum6->Strong5 requested=applied4; S2C Strong5->High4 revision2, genuine authenticated M2, C2S high 47/47066 missing (0.09986%), both outer DATA0/TUNdrop0. Saved Auto quality raw log confirms stage while harness summary auto_runtime_curve says NOT_OBSERVED_FINAL_READBACK_ONLY; never claim telemetry auto phase curve auto-verified. W40 still NOT tested 200Mbps mixed. Stop perf micro-optimizing; capacity_stop=true; merge_ready=false.",
@@ -581,7 +593,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Resume independent FEC mainline ONLY from user-approved 3af257cd and new validated e446fa1 native product source; all W48/W49/W50 ad-hoc steps CLOSED. W51 original authenticated real M2 firstsend positive confirmation lag public readback fully actual Fixed3 ARM64 PASS. Next: use same frozen e446fa1 product for a single representative low-load 8Mbps real Auto asymmetric rising/return test with both-end M2 positive-lag evidence and original source code; then pursue finite native FEC MTU-1/equal/+1 and Stop/rekey lifecycle only if not already current precise SOURCE qualified. No more capacity/perf ladder or speculative thread/class scheduling. Absolutely no main recovery import or merge, no other branch, merge_ready remains false.",
+  "next_action": "Continue FEC branch MAINLINE from user-selected 3af257cd with existing e446fa1 scoped native product SOURCE. W51 authentic positive M2 readback Fixed3 PASS; W52 current native Auto genuine directional C2S rise/S2C stepdown and positive M2 PASS, but C2S 1%-recovery downshift NOT_OBSERVED. Next investigate FecV2Step low-loss 0.0005 predicted-next-lower guard + actual-k histogram against W52 saved valid windows and old W45 raw controls WITHOUT inventing ACK, revising policy or rerunning high stress. If policy retains Maximum legitimately, document scope, then complete finite original FEC MTU boundary and Stop/generation test needed by original program. Temporary W48-50 closed. NEVER import/merge main network recovery, never modify network-matrix branch, no throughput ladder; capacity_stop true merge_ready false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -4970,5 +4982,126 @@
     ],
     "frozen_product_artifact_id": 12588789024,
     "no_main_or_network_restore": true
+  },
+  "w52": {
+    "id": "FEC-W52-MainlineAuto-AuthenticM2Latency-AsymRiseRecover-8Mbps",
+    "request": "tests/network/fec-work/W52-real-auto-M2-confirmation-asym-rise-recover-8Mbps-arm64.json",
+    "request_commit": "83d91b5d836a1fb21fa4795feadce851abf91bc3",
+    "branch": "experiment/fec-network-tuning",
+    "base": "3af257cd1a353a47d424094a689fa5179b198a07",
+    "product_source": "e446fa1cf09ebfb259da3d764abf8f8ed8d4211f",
+    "product_run": 40167423967,
+    "product_artifact": 12588789024,
+    "product_zip_sha256": "3bac82b33642335ed3691c763d66c3c556c575f38f92fd635073fc9673ea1cb4",
+    "action": 40168045298,
+    "action_status": "SUCCESS",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "artifact_id": 12589925435,
+    "zip_sha256": "22a5b1de99366e172d11fd3f9e47dabf70a47e874b18ec0e4e3152f373dbcf04",
+    "scenario": "Real original Go authenticated TLS Linux ARM64 product Auto 8Mbps UDP each; 64B1%/1287B99% UDP count, independent64B20Hz true probes. 2%IID C2S 30s, 20%IID C2S60s, 1%IID C2S60s; S2C0/1/0%; netem75ms one-way each with outer DATA retrans truly disabled; warmup15s and drain30s; NOT mixed TCP or 100Mbps",
+    "observation": {
+      "client_positive_samples": 118931,
+      "client_mean_confirmation_us": 153665,
+      "client_reverse_reports": 38413,
+      "client_unknown_2s": 3,
+      "client_first_censored": 1,
+      "client_coverage_censored": 1,
+      "server_positive_samples": 129400,
+      "server_mean_confirmation_us": 154241,
+      "server_reverse_reports": 33050,
+      "server_unknown_2s": 54,
+      "server_first_censored": 1,
+      "server_coverage_censored": 1,
+      "final_native": {
+        "client": {
+          "mode": "auto",
+          "requested": 2,
+          "applied": 2,
+          "profile": 6,
+          "pending": false
+        },
+        "server": {
+          "mode": "auto",
+          "requested": 3,
+          "applied": 3,
+          "profile": 3,
+          "pending": false
+        }
+      },
+      "actual_stages": {
+        "c2s": [
+          {
+            "time_UTC": "2026-10-25T06:09:58Z",
+            "prev_profile": 5,
+            "new_profile": 6,
+            "requested_revision": 2,
+            "validity": "VALID",
+            "reason": "two valid rising fast windows",
+            "during": "C2S_20pct_loss"
+          }
+        ],
+        "s2c": [
+          {
+            "time_UTC": "2026-10-25T06:10:39Z",
+            "prev_profile": 5,
+            "new_profile": 4,
+            "requested_revision": 2,
+            "validity": "VALID",
+            "reason": "10s and 4096 valid sources",
+            "during": "S2C_1pct_loss"
+          },
+          {
+            "time_UTC": "2026-10-25T06:11:42Z",
+            "prev_profile": 4,
+            "new_profile": 3,
+            "requested_revision": 3,
+            "validity": "VALID",
+            "reason": "10s and 4096 valid sources",
+            "during": "S2C_0pct_loss"
+          }
+        ]
+      },
+      "impairment_wall_clock_UTC": {
+        "pre_low": "2026-10-25T06:09:22.691Z",
+        "asym_high": "2026-10-25T06:09:52.691Z",
+        "recover_low": "2026-10-25T06:10:52.691Z"
+      },
+      "app_udp_residual_pct": {
+        "c2s_pre_low": 0,
+        "c2s_asym_high": 0.0148720999405116,
+        "c2s_recover_low": 0,
+        "s2c_pre_low": 0,
+        "s2c_asym_high": 0,
+        "s2c_recover_low": 0
+      },
+      "app_udp_first_p99_ms": {
+        "c2s_pre_low": 84.7,
+        "c2s_asym_high": 92,
+        "c2s_recover_low": 79.2,
+        "s2c_pre_low": 78.1,
+        "s2c_asym_high": 78.3,
+        "s2c_recover_low": 77.4
+      },
+      "parity": {
+        "client": {
+          "planned": 167271,
+          "sent": 167271,
+          "expired": 0
+        },
+        "server": {
+          "planned": 121021,
+          "sent": 121021,
+          "expired": 0
+        }
+      },
+      "source_tun_warmup_steady_drops": 0,
+      "outer_data_retransmitted": 0,
+      "stop_drained_both": true,
+      "owned_namespaces_absent": true
+    },
+    "caveat": "W52 confirms authentic C2S rise to Maximum and S2C per-direction downward steps, but NO C2S step down during 60s 1%-loss recovery on exact current source. Auto full rise-and-fall in this run NOT OBSERVED, despite W45 prior-source one positive return. FecV2Step requires predicted next lower profile residual <=0.0005 plus 10s/4096 actual valid sources; cannot force down merely from netem truth or zero app UDP loss. Some Go AUTO_QUALITY windows remain UNKNOWN due missing auth sample/actual-k hist and native M2 first_censored/cover_censored=1; never manufacture healthy samples.",
+    "capability": "ARM64 real product Auto independent directional stages, actual positive M2 measured, source TUN+Parity true, scoped real UDP business. NOT full Auto return qualification, no TCP mixed, no high-rate or Game/Windows, not main branch.",
+    "merge_ready": false,
+    "capacity_stop": true
   }
 }
