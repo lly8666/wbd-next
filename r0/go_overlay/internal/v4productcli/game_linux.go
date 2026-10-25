@@ -83,6 +83,7 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
+            GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
         })
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
@@ -98,6 +99,11 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     if err!=nil{return err}
     *connected=true
     log.Printf("V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=%d original_tls=1 rust_m4=1",n)
+    if c.gameFecEnabled{
+        log.Printf("V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=%d mode=fixed profile=%d auth_original_tls=1 original_M4=1",n,c.gameFecProfile)
+    }else{
+        log.Printf("V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=%d mode=off profile=0 auth_original_tls=1 original_M4=1",n)
+    }
     select{case <-ctx.Done():case err=<-fail:}
     counters,countErr:=native.KernelCounters()
     if countErr==nil{
@@ -120,6 +126,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
+            GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
             Epochs:store,
         })
     if err!=nil{return err}
@@ -216,6 +223,11 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     if err!=nil{return err}
     *connected=true
     log.Printf("V4_ORIGINAL_GO_GAME_NATIVE_READY role=server lanes=%d original_tls=1 rust_m4=1",n)
+    if c.gameFecEnabled{
+        log.Printf("V4_PUBLIC_GAME_FEC_APPLIED role=server lanes=%d mode=fixed profile=%d auth_original_tls=1 original_M4=1",n,c.gameFecProfile)
+    }else{
+        log.Printf("V4_PUBLIC_GAME_FEC_APPLIED role=server lanes=%d mode=off profile=0 auth_original_tls=1 original_M4=1",n)
+    }
     select{case <-ctx.Done():case err=<-failed:}
     counters,countErr:=native.KernelCounters()
     if countErr==nil{
