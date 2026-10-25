@@ -655,7 +655,10 @@ mod tests{
         // Second DIFFERENT full block MUST reuse the same continuous
         // source symbol allocation with exact per-block zero-tail bytes.
         let mut second=Vec::new();
-        for i in 0..16{push(&mut stream,&mut arena,&[i as u8;77],7_000_000+i as u64,&mut second);}
+        // The previous one-source open group is block 2 index0. Supply only
+        // 15 more sources; the old 16-source test accidentally formed an
+        // additional k1 block3, legitimately eligible as a ready peer.
+        for i in 0..15{push(&mut stream,&mut arena,&[i as u8;77],7_000_000+i as u64,&mut second);}
         assert_eq!(stream.poll_parity_quanta(MonoNs(13_100_000),5,
             |wire,id,row,_|{
                 assert_eq!(id,2);
