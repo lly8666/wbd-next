@@ -24,3 +24,12 @@
 新产物真实ARM64完成功能门后**同一build artifact跨性能请求复用**，按W88原场景每方向3Mbps mixed UDP/TCP、75ms单程、外层Game DATA repair 不适用，Game2+FixedMaximum和Game4+FixedMaximum分别跑独立20%每lane +第1lane黑洞+无损恢复（每种模式一个性能Action一个job）；确证source/parity genuine per-lane/counter、恢复原IPv4/TUN、业务到达/p99、源TUN/root丢包0、Stop清理、核RSS/CPU/PSI。若正确性和这些保护回归确实通过，再每模式一个共享长GE15%和旧W89比较，明确随机未固定、Action非同VM不能声称严格CPU同比；不能为了理论≤1%改损伤门或刷seed。若尾延迟、FEC报错或TUN未到达，必须记录并修原反例后停止进一步多场景。
 
 注意 Windows本岗位依用户要求 `TEMP_SKIPPED_USER_20261025`，`capacity_stop=true`，`merge_ready=false`；历史W85/W86/W89失败不修改，Go TLS/Native均不可把部分测试误称整体交付。
+
+
+## W90 已确认 ARM64 专项及进入真实业务
+
+精确候选 source `ad9eaab88b93501e3de64efdc8fabc89f087e51e` 的完整原生 product [Action 40209693209](https://github.com/lly8666/wbd-next/actions/runs/40209693209) **SUCCESS**，经过 Rust `v4_game_lane::tests::fec_game*` 两套 lane2/4 FEC缺源恢复、Go 真实 TLS 档位不一致严拒绝、原生 M3+ISA-L、已验证原 FEC TUN与Auto合同（无需并不代表 Game native真正端到端过）。同 Action 的产物 `network-arm64-public-40209693209-1` artifact `12604894755`，ZIP SHA256 `d9254af56a9461b88467cc2c62a360e7fb31308a3318be50d3e74e86b7d4301e`，后续两测试复用完全相同 build，不改 Game/FEC 产品代码。
+- [W90 Game2+Fixed6 请求](../../../tests/network/fec-work/W90-Game2-FEC-fixed6-independent20-lane1-blackhole-arm64.json)：提交 `b8b17ee870972ea688c50a892f74c377e1104621`，真实 [Action 40209948309](https://github.com/lly8666/wbd-next/actions/runs/40209948309)，合同 [40209948336](https://github.com/lly8666/wbd-next/actions/runs/40209948336) PASS。
+- [W90 Game4+Fixed6 请求](../../../tests/network/fec-work/W90-Game4-FEC-fixed6-independent20-lane1-blackhole-arm64.json)：提交 `4db880174dbef22626fbe27924071c6eea1950dc`，真实 [Action 40209953632](https://github.com/lly8666/wbd-next/actions/runs/40209953632)，合同 [40209953658](https://github.com/lly8666/wbd-next/actions/runs/40209953658) PASS。
+
+两个真实网络 Action 都使用 `--game-fec fixed6`、Game 2/4原M4真实TCP/TUN、各方向3Mbps mixed业务、75ms单程；warmup15s后12s clean→25s各lane IID20%→25s lane1黑洞→12s clean；原 Game W88 1287B最大包改为**1200B最大包（明示新增15B FEC预算并保守避开边界）**，所以它们与 W88 同类但**并非完全相同包长分布、随机轨迹或同VM CPU A/B**。真实`netem_rng=unseeded_recorded`，只在两个 clean phase 保持原1%严格UDP/小包门，受损时记录实际丢包/恢复与p99，不能变相豁免新功能未收到真实恢复证据。等待原始artifact后再判 PASS或FAIL，本段不预支产品结论。
