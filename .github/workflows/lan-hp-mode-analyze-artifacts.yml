@@ -4,6 +4,7 @@ on:
     branches: [experiment/lan-hp-mode-cost]
     paths: [".github/workflows/lan-hp-mode-analyze-artifacts.yml"]
 permissions:
+# Analyzer syntax corrected: one implementation, no trailing orphaned code.
   contents: read
   actions: read
 jobs:
