@@ -44,6 +44,7 @@ func TestPaddingOnlyLifecycleAndMTU(t *testing.T){
     pad:=choosePadding(s)
     if !boundary&&pad!=0{t.Fatal("steady/unknown payload padded")}
     if boundary&&n<1429&&pad<=0{t.Fatal("lifecycle missed padding")}
+    if pad>256{t.Fatal("random padding exceeded resource budget")}
     if n==1429&&pad!=0{t.Fatal("must not fragment oversize outer packet")}
     w,fill:=coder.seal(s.Inner,0,uint64(n*100+trial),pad)
     if len(w)+underlayOverhead>pathMTU{t.Fatal("MTU violation")}
