@@ -43,7 +43,7 @@
       "recover10"
     ],
     "one_measurement_job": true,
-    "no_AB_same_VM": false
+    "measurement_structure": "ONE_A_LEG_ONE_PERFORMANCE_ACTION_ONE_VM; W86_SEPARATE_ACTION_VM_UNSEEDED_NOT_CAUSAL_AB"
   },
   "results": {
     "baseline10": {
