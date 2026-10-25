@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W68_BOTH_ENDPOINT_REAL_HOST_LOSS_NO_FALSE_AUTO_UP_SCOPED_RECEIPTS_DELIVERED",
+  "phase": "W76_OWN_SELF_OVERLOAD_NATIVE_AUTO_RESUME_AND_FAST_LINK_RISE_SCOPED_DELIVERED",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -631,7 +631,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "FEC independent finite representative coverage DONE: user permits Auto 2–3min PER DOWN grade, cumulative transitions. W56 exact ARM64 native old/new AB Action40173582990 real B 20% UP Maximum and gradual 6→0 on1% within90s; W57 scoped native MTU/Stop/generation PASS; W58 Medium5% mixed8 Action40174383391 PASS, W59 Strong15% mixed8 Action40174386036 PASS, W60 Auto1→5→1% mixed8 Action40174389833 PASS, all frozen original Go+Rust ARM64 SOURCE1673cd96 artifact12590822815, outer DATA repair OFF0 and parity/TUN/M2 authentic. Final report docs/evidence/fec-network-work/final-report.md UPDATED with actual run/artifact SHA and scoped limits. No more perf ladder or Auto timing micro-tuning. Next integration owner may review scoped merge; do not merge main without combined exact-source CI, no overwrite other role next_action. Boundaries: W49/W50 mixed100 TCP backpressure, Windows/Game/65KB real FEC TUN NOT_QUALIFIED. capacity_stop=true; merge_ready=false (whole product); scoped_integration_review_ready=true.",
+  "next_action": "W69–W76 FEC-only own-high-PPS capacity repair COMPLETE for scoped original Linux ARM64. W75 sameVM Action40185308539 A old native FAIL (requested2/applied1), B exact frozen source7ad0ba91 actually applied 5 one-grade DOWN each to Light0 requested=applied6 pendingfalse, zero false UP, real host TUN drops => INCONCLUSIVE service (not zero-loss PASS). W76 Action40185321854 confirmed real20% authenticated UP Balanced3→Maximum6, full native DOWN to Light0 both PASS_SCOPED. Build40185113624 PASS artifact12596370712 sha256 ab1407...; receipt docs/evidence/fec-network-work/20261025-W69-W76-real-self-overload-Auto-capacity-recovery-AB-SCOPED.json. Do not add high-rate ladder or merge other team's work. For integration review only, still merge_ready=false, capacity_stop=true; unqualified remote receiver sustained overload, Windows/Game/real FEC TUN jumbo and historical mixed100 TCP recovery. Combined-source qualification required before any merge.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -5451,6 +5451,45 @@
     "more_sustained_host_loss_unqualified": true,
     "capacity_stop": true,
     "merge_ready": false,
+    "scoped_integration_review_ready": true
+  },
+  "w69_w76_self_overload": {
+    "status": "SCOPED_POLICY_RECOVERY_PASS_REAL_NATIVE_APPLIED_W75_B_AND_W76_LINK_LOSS_PASS",
+    "evidence": "docs/evidence/fec-network-work/20261025-W69-W76-real-self-overload-Auto-capacity-recovery-AB-SCOPED.json",
+    "latest_frozen_product_source": "7ad0ba91b656ff8e9ee965d0c093a18e048971fb",
+    "build_action": 40185113624,
+    "build_zip_sha256": "ab1407ccc5dd85c3a66c885cd410dbdd27fa7059461f18647d8ca6b41ce7384e",
+    "w69_no_overload": 40179143633,
+    "w70_real_host_loss_old_permanent_host_capacity": 40179596226,
+    "w71_old_go_fix_new_pending_failure": 40180341171,
+    "w72_real_line_rise_pass": 40180375088,
+    "w73_native_reprofile_alone_still_pending": 40183965888,
+    "w74_line_rise_pass": 40183982270,
+    "w75_same_VM_old_fail_new_policy_pass_source_drop_inconclusive": 40185308539,
+    "w76_exact_latest_line_rise_pass": 40185321854,
+    "w75_new_B_applied_both": "rev6/rev6 gradeLight0 pendingfalse",
+    "w75_new_B_false_up": 0,
+    "w75_new_B_genuine_down_each": 5,
+    "w75_new_B_steady_source_tun_drops": {
+      "client": 55,
+      "server": 92
+    },
+    "w75_new_B_peak_udp_missing": {
+      "c2s": 426,
+      "s2c": 485
+    },
+    "w75_new_B_recovery_udp_missing": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "w75_B_harness_result": "INCONCLUSIVE_real_upstream_source_TUN_drops; no product readback failure",
+    "W75_overall_action": "failure due to old A expected FAIL",
+    "W76_harness_result": "PASS_SCOPED_OBSERVATION",
+    "W76_link_loss_auto_up": "C2S Balanced3→Maximum6 authentic VALID",
+    "remote_receiver_cpu_overload_unqualified": true,
+    "no_future_unbounded_highload": true,
+    "merge_ready": false,
+    "capacity_stop": true,
     "scoped_integration_review_ready": true
   }
 }
