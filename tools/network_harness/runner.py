@@ -815,8 +815,10 @@ class LinuxExperiment:
             # Same eligible core, separate test-owned schedulable processes.
             # Products and their authentic M2/Auto code remain unchanged;
             # traffic generators stay unpinned on other available cores.
-            child=subprocess.Popen(["taskset","-c",str(core),sys.executable,
-                "-c","while True: pass"],stdin=subprocess.DEVNULL,
+            # GNU yes is a lightweight native CPU competitor (no packet IO
+            # and no heap-heavy Python worker). It writes only to /dev/null.
+            child=subprocess.Popen(["taskset","-c",str(core),"yes"],
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
             self.cpu_stress_workers.append(child)
         time.sleep(.15)

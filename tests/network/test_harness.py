@@ -65,6 +65,8 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError): validate(bad)
         bad=copy.deepcopy(r);bad["phases"][0]["product_cpu_stress"]["role"]="all"
         with self.assertRaises(ValueError): validate(bad)
+        bad=copy.deepcopy(r);bad["phases"][0]["product_cpu_stress"]["competitors"]=49
+        with self.assertRaises(ValueError): validate(bad)
 
     def test_full_run_source_tun_zero_drop_gate_and_snapshot_delta(self):
         from tools.network_harness.runner import source_tun_tx_drops_by_role

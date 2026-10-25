@@ -226,7 +226,7 @@ def validate(raw):
             keys(stress, ["role","competitors"], "product_cpu_stress")
             if stress.get("role") not in ("client","server"):
                 raise ValueError("product_cpu_stress.role must be client or server")
-            integer(stress.get("competitors"), 1, 12, "product_cpu_stress.competitors")
+            integer(stress.get("competitors"), 1, 48, "product_cpu_stress.competitors")
         for direction in ["c2s", "s2c"]:
             ph[direction] = impairment(ph.get(direction, {}), lanes)
             if stress is not None and (ph[direction]["loss_pct"]!=0 or
