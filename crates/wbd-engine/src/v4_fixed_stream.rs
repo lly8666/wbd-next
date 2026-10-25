@@ -28,6 +28,48 @@ struct InFlight {
     staged:u8,
     capacity_known:bool,
 }
+#[derive(Clone,Copy,Debug,Default)]
+pub struct InterleaveStats {
+    pub paired_quanta:u64,pub alternating_rows:u64,
+    pub single_quanta:u64,pub max_consecutive_same_group:u64,
+    pub max_ready_age_ns:u64,
+    last_block:u64,last_run:u64,
+}
+impl InterleaveStats {
+    fn observe(&mut self,id:u64,age_ns:u64){
+        self.last_run=if self.last_block==id{self.last_run+1}else{1};
+        self.last_block=id;
+        self.max_consecutive_same_group=self.max_consecutive_same_group.max(self.last_run);
+        self.max_ready_age_ns=self.max_ready_age_ns.max(age_ns);
+    }
+}
+// Call M4 ONLY in the post-interleave order: it allocates PN/seq and AEAD.
+fn offer_repair<F>(flight:&mut InFlight,wire:&[u8],row:u8,group:u8,
+    callback:&mut F,order:&mut [u8;32],length:&mut usize,
+    stats:&mut InterleaveStats,now:MonoNs,copied:&mut u8)
+where F:FnMut(&[u8],u64,u8,ConfigRevision)->DriverProof{
+    stats.observe(flight.job.block_id,now.0.saturating_sub(flight.job.closed_at.0));
+    match callback(wire,flight.job.block_id,row,flight.job.revision){
+        DriverProof::Copied=>{
+            flight.copied=flight.copied.saturating_add(1);
+            *copied=copied.saturating_add(1);
+        },
+        DriverProof::NotSent=>{},
+        DriverProof::Uncertain=>flight.capacity_known=false,
+        DriverProof::Staged=>{
+            assert!(*length<order.len(),"M4 never stages >32 rows");
+            order[*length]=group;*length+=1;
+            flight.staged=flight.staged.saturating_add(1);
+        },
+    }
+}
+fn encode_rows(f:&mut InFlight,rs:&Rs16,budget:usize,
+    scratch:&mut [Vec<u8>;MAX_BATCH_ROWS])->Result<(usize,usize),CodecError>{
+    let start=usize::from(f.job.r)-f.prepared.remaining_rows();
+    let count=f.prepared.next_quantum_reuse(
+        rs,budget,BackendChoice::default(),scratch)?.map_or(0,|x|x.0);
+    Ok((start,count))
+}
 /// Exactly one original generation/direction owns one instance; no global queue.
 pub struct FixedStream {
     owner:Fec2Owner,
@@ -36,6 +78,9 @@ pub struct FixedStream {
     revision:ConfigRevision,
     record_payload_budget:usize,
     in_flight:Option<InFlight>,
+    peer:Option<InFlight>,
+    stage_order:[u8;32],stage_len:usize,
+    interleave:InterleaveStats,
     // At most one prior applied revision can have bounded old parity jobs
     // draining through the same original M4 / same monotone block-id owner.
     // The new source is first-sealed immediately; only old parity rows use
@@ -44,9 +89,11 @@ pub struct FixedStream {
     // Bounded 4-row plaintext parity scratch, reused for every block,
     // never exposed or borrowed across the synchronous original M4 seal.
     parity_scratch:[Vec<u8>;MAX_BATCH_ROWS],
+    peer_scratch:[Vec<u8>;MAX_BATCH_ROWS],
     // One bounded MAX_K*symbol_len source workspace. Recovered ONLY after
     // original M4 finishes the previous job; zeroed on Stop.
     source_scratch:Vec<u8>,
+    peer_source_scratch:Vec<u8>,
     stopped:bool,
 }
 impl FixedStream {
@@ -74,15 +121,18 @@ impl FixedStream {
             })?;
         Some(Self{owner,codec:Rs16::new(),profile:m3,
             revision:ConfigRevision(revision),record_payload_budget,
-            in_flight:None,prior_profile:None,
+            in_flight:None,peer:None,stage_order:[0;32],stage_len:0,
+            interleave:InterleaveStats::default(),prior_profile:None,
             parity_scratch:std::array::from_fn(|_|Vec::new()),
-            source_scratch:Vec::new(),stopped:false})
+            peer_scratch:std::array::from_fn(|_|Vec::new()),
+            source_scratch:Vec::new(),peer_source_scratch:Vec::new(),
+            stopped:false})
     }
     pub fn revision(&self)->ConfigRevision{self.revision}
     pub fn report(&self)->OwnerReport{self.owner.report()}
     pub fn next_deadline(&self)->Option<MonoNs>{
-        if self.in_flight.as_ref().is_some_and(|j|
-            j.staged==0&&j.prepared.remaining_rows()>0){
+        if [self.in_flight.as_ref(),self.peer.as_ref()].iter().any(|x|
+            x.is_some_and(|j|j.staged==0&&j.prepared.remaining_rows()>0)){
             // No new kernel borrow outstanding: schedule the next <=4
             // rows immediately without waiting for another TUN packet.
             return Some(MonoNs(0))
@@ -113,7 +163,9 @@ impl FixedStream {
         if revision<=self.revision.0{return Err(StreamError::StaleRevision)}
         // A staged/part-encoded old parity job must first be settled by
         // original M4. No early release of its slab, row or seal authority.
-        if self.in_flight.is_some(){return Err(StreamError::Busy)}
+        if self.in_flight.is_some()||self.peer.is_some()||self.stage_len>0{
+            return Err(StreamError::Busy)
+        }
         if let Some((old,_))=self.prior_profile {
             if self.owner.pending_revision(old){return Err(StreamError::Busy)}
             self.prior_profile=None;
@@ -136,12 +188,69 @@ impl FixedStream {
     pub fn prior_parity_revision(&self)->Option<ConfigRevision>{
         self.prior_profile.map(|(revision,_)|revision)
     }
-    /// Default M3 call stays a single <=4-row quantum for existing callers.
-    /// A product M4 turn may explicitly coalesce up to five such quanta of
-    /// the SAME parity job only AFTER staging fresh DATA and only within its
-    /// remaining kernel-send budget. The caller reserves authentic M2 feedback
-    /// space separately; no extra PN, row or retry is generated. Zero quanta
-    /// only advances time-based owner closure/expiry, never takes a parity job.
+
+    fn take_job(&mut self,now:MonoNs,peer:bool)->Result<bool,StreamError>{
+        let Some(mut job)=self.owner.take_parity(now)
+            .map_err(StreamError::Owner)? else{return Ok(false)};
+        let profile=if job.revision==self.revision{self.profile}
+            else if let Some((rev,old))=self.prior_profile {
+                if job.revision!=rev{
+                    self.owner.finish_parity(job,0,false);
+                    return Err(StreamError::Invalid)
+                }
+                old
+            }else{
+                self.owner.finish_parity(job,0,false);
+                return Err(StreamError::Invalid)
+            };
+        let workspace=if peer{std::mem::take(&mut self.peer_source_scratch)}
+            else{std::mem::take(&mut self.source_scratch)};
+        let prepared=match StagedParity::from_owner_job_with_workspace(
+            &mut job,profile,self.record_payload_budget,workspace){
+            Ok(x)=>x,Err(e)=>{
+                self.owner.finish_parity(job,0,false);
+                return Err(StreamError::Codec(e))
+            }
+        };
+        let flight=InFlight{job,prepared,copied:0,staged:0,capacity_known:true};
+        if peer{self.peer=Some(flight)}else{self.in_flight=Some(flight)}
+        Ok(true)
+    }
+    fn complete_quiescent(&mut self){
+        if self.in_flight.as_ref().is_some_and(|f|
+            f.staged==0&&f.prepared.remaining_rows()==0){
+            let f=self.in_flight.take().unwrap();
+            self.source_scratch=f.prepared.into_workspace();
+            self.owner.finish_parity(f.job,f.copied,f.capacity_known);
+        }
+        if self.peer.as_ref().is_some_and(|f|
+            f.staged==0&&f.prepared.remaining_rows()==0){
+            let f=self.peer.take().unwrap();
+            self.peer_source_scratch=f.prepared.into_workspace();
+            self.owner.finish_parity(f.job,f.copied,f.capacity_known);
+        }
+        if self.in_flight.is_none()&&self.peer.is_some(){
+            self.in_flight=self.peer.take();
+            std::mem::swap(&mut self.parity_scratch,&mut self.peer_scratch);
+            std::mem::swap(&mut self.source_scratch,&mut self.peer_source_scratch);
+        }
+    }
+    fn expire_quiescent(&mut self,now:MonoNs){
+        if self.in_flight.as_ref().is_some_and(|f|
+            f.staged==0&&now.0>f.job.expire_at.0){
+            let f=self.in_flight.take().unwrap();
+            self.source_scratch=f.prepared.into_workspace();
+            self.owner.finish_parity(f.job,f.copied,false);
+        }
+        if self.peer.as_ref().is_some_and(|f|
+            f.staged==0&&now.0>f.job.expire_at.0){
+            let f=self.peer.take().unwrap();
+            self.peer_source_scratch=f.prepared.into_workspace();
+            self.owner.finish_parity(f.job,f.copied,false);
+        }
+        self.complete_quiescent();
+    }
+    pub fn interleave_stats(&self)->InterleaveStats{self.interleave}
     pub fn poll_parity<F>(&mut self,now:MonoNs,on_parity:F)
         ->Result<(usize,u8),StreamError>
     where F:FnMut(&[u8],u64,u8,ConfigRevision)->DriverProof {
@@ -154,110 +263,107 @@ impl FixedStream {
         if max_quanta>5{return Err(StreamError::Invalid)}
         self.owner.on_due(now).map_err(StreamError::Owner)?;
         if max_quanta==0{return Ok((0,0))}
-        if self.in_flight.is_none(){
-            let Some(mut job)=self.owner.take_parity(now)
-                .map_err(StreamError::Owner)? else{return Ok((0,0))};
-            // Old CLOSED jobs are protected with their old parity matrix,
-            // even while new sources already have the newer applied intent.
-            let job_profile=if job.revision==self.revision{self.profile}
-                else if let Some((revision,prior))=self.prior_profile {
-                    if job.revision!=revision{
-                        self.owner.finish_parity(job,0,false);
-                        return Err(StreamError::Invalid)
-                    }
-                    prior
-                }else{
-                    self.owner.finish_parity(job,0,false);
-                    return Err(StreamError::Invalid)
-                };
-            let prepared=match StagedParity::from_owner_job_with_workspace(
-                &mut job,job_profile,self.record_payload_budget,
-                std::mem::take(&mut self.source_scratch)
-            ){
-                Ok(x)=>x,
-                Err(e)=>{
-                    self.owner.finish_parity(job,0,false);
-                    return Err(StreamError::Codec(e))
-                }
-            };
-            self.in_flight=Some(InFlight{job,prepared,copied:0,staged:0,capacity_known:true});
+        // Never encode or seal another row until original M4 settled its
+        // previous immutable batch and released every ciphertext borrow.
+        if self.stage_len>0{return Ok((0,0))}
+        self.expire_quiescent(now);
+        if self.in_flight.is_none()&&!self.take_job(now,false)?{return Ok((0,0))}
+        // No wait for a peer. Old single ready group path is unchanged.
+        if max_quanta>=2&&self.peer.is_none()&&self.in_flight.as_ref()
+            .is_some_and(|f|f.prepared.remaining_rows()>0){
+            let _=self.take_job(now,true)?;
         }
-        let cur=self.in_flight.as_mut().ok_or(StreamError::Invalid)?;
-        // The original kernel batch still borrows these immutable
-        // ciphertexts. Never complete or encode another parity job until
-        // actual M4 definite-prefix resolution is reported.
-        if cur.staged>0{return Ok((0,0))}
-        if now.0>cur.job.expire_at.0{
-            let job=self.in_flight.take().ok_or(StreamError::Invalid)?;
-            self.source_scratch=job.prepared.into_workspace();
-            self.owner.finish_parity(job.job,job.copied,false);
-            return Ok((0,0))
-        }
+        self.expire_quiescent(now);
+        let mut remaining=max_quanta;
         let mut emitted=0usize;
-        let mut copied_now=0u8;
-        for _ in 0..max_quanta{
-            // M3 still processes exactly one <=4-row quantum per call.
-            // All selected batches share only this block and M4 sendmmsg.
-            if cur.prepared.remaining_rows()==0{break}
-            let row_start=cur.job.r as usize-cur.prepared.remaining_rows();
-            let count=match cur.prepared.next_quantum_reuse(
-                &self.codec,self.record_payload_budget,BackendChoice::default(),
-                &mut self.parity_scratch
-            ){
-                Ok(Some((count,_)))=>count,
-                Ok(None)=>break,
-                Err(e)=>{
-                    if emitted>0 {
-                        // The first quantum is already sealed/staged; keep
-                        // the in-flight job for genuine M4 completion. Never
-                        // discard its completion state or reseal a row.
+        let mut copied=0u8;
+        while remaining>0{
+            let a=self.in_flight.as_ref().is_some_and(|f|f.prepared.remaining_rows()>0);
+            let b=self.peer.as_ref().is_some_and(|f|f.prepared.remaining_rows()>0);
+            if !a&&!b{break}
+            let pair=a&&b&&remaining>=2;
+            let (start_a,n_a)=if a{
+                let f=self.in_flight.as_mut().unwrap();
+                match encode_rows(f,&self.codec,self.record_payload_budget,
+                    &mut self.parity_scratch){
+                    Ok(x)=>x,Err(e)=>{
+                        if emitted==0&&f.staged==0{
+                            let retired=self.in_flight.take().unwrap();
+                            self.source_scratch=retired.prepared.into_workspace();
+                            self.owner.finish_parity(retired.job,retired.copied,false);
+                        }
                         return Err(StreamError::Codec(e))
                     }
-                    let job=self.in_flight.take().ok_or(StreamError::Invalid)?;
-                    self.source_scratch=job.prepared.into_workspace();
-                    self.owner.finish_parity(job.job,job.copied,false);
-                    return Err(StreamError::Codec(e))
                 }
-            };
-            for (i,wire) in self.parity_scratch[..count].iter().enumerate(){
-                let row=u8::try_from(row_start+i).map_err(|_|StreamError::Invalid)?;
-                match on_parity(wire,cur.job.block_id,row,cur.job.revision){
-                    DriverProof::Copied=>{
-                        cur.copied=cur.copied.saturating_add(1);copied_now+=1;
-                    },
-                    DriverProof::NotSent=>{},
-                    DriverProof::Uncertain=>cur.capacity_known=false,
-                    DriverProof::Staged=>cur.staged=cur.staged.saturating_add(1),
+            }else{(0,0)};
+            let (start_b,n_b)=if pair||(!a&&b){
+                let f=self.peer.as_mut().unwrap();
+                match encode_rows(f,&self.codec,self.record_payload_budget,
+                    &mut self.peer_scratch){
+                    Ok(x)=>x,Err(e)=>{
+                        // A is already prepared, not yet staged. Send A's
+                        // quantum rather than silently skipping its cursor.
+                        let retired=self.peer.take().unwrap();
+                        self.peer_source_scratch=retired.prepared.into_workspace();
+                        self.owner.finish_parity(retired.job,retired.copied,false);
+                        if n_a==0{return Err(StreamError::Codec(e))}
+                        (0,0)
+                    }
+                }
+            }else{(0,0)};
+            if n_a+n_b==0{break}
+            if n_a>0&&n_b>0{
+                self.interleave.paired_quanta+=1;
+                self.interleave.alternating_rows+=(2*n_a.min(n_b)) as u64;
+            }else{self.interleave.single_quanta+=1}
+            for i in 0..n_a.max(n_b){
+                if i<n_a{
+                    let f=self.in_flight.as_mut().unwrap();
+                    offer_repair(f,&self.parity_scratch[i],(start_a+i) as u8,0,
+                        &mut on_parity,&mut self.stage_order,&mut self.stage_len,
+                        &mut self.interleave,now,&mut copied);
+                }
+                if i<n_b{
+                    let f=self.peer.as_mut().unwrap();
+                    offer_repair(f,&self.peer_scratch[i],(start_b+i) as u8,1,
+                        &mut on_parity,&mut self.stage_order,&mut self.stage_len,
+                        &mut self.interleave,now,&mut copied);
                 }
             }
-            emitted+=count;
+            emitted+=n_a+n_b;
+            remaining-=usize::from(n_a>0)+usize::from(n_b>0);
         }
-        if cur.prepared.remaining_rows()==0 && cur.staged==0{
-            let finished=self.in_flight.take().ok_or(StreamError::Invalid)?;
-            self.source_scratch=finished.prepared.into_workspace();
-            self.owner.finish_parity(
-                finished.job,finished.copied,finished.capacity_known
-            );
-        }
-        Ok((emitted,copied_now))
+        self.complete_quiescent();
+        Ok((emitted,copied))
     }
-    /// The SAME original M4 kernel batch resolves staged immutable parity
-    /// records only after its synchronous sendmmsg definite prefix. Neither
-    /// a Rust queue acceptance nor an uncertain syscall counts copied.
+    /// M4 provides its genuine copied-prefix, one uncertain item and
+    /// not-sent suffix. Attribute each staged parity by original A/B order.
     pub fn settle_staged(&mut self,copied:u8,not_sent:u8,uncertain:u8)
         ->Result<(),StreamError>{
         if self.stopped{return Err(StreamError::Stopped)}
-        let cur=self.in_flight.as_mut().ok_or(StreamError::Invalid)?;
-        if u16::from(copied)+u16::from(not_sent)+u16::from(uncertain)
-            !=u16::from(cur.staged){return Err(StreamError::Invalid)}
-        cur.copied=cur.copied.saturating_add(copied);
-        cur.capacity_known &= uncertain==0;
-        cur.staged=0;
-        if cur.prepared.remaining_rows()==0{
-            let done=self.in_flight.take().ok_or(StreamError::Invalid)?;
-            self.source_scratch=done.prepared.into_workspace();
-            self.owner.finish_parity(done.job,done.copied,done.capacity_known);
+        if self.stage_len==0||uncertain>1||
+            usize::from(copied)+usize::from(not_sent)+usize::from(uncertain)
+                !=self.stage_len{return Err(StreamError::Invalid)}
+        let mut owner_counts=[0u8;2];
+        for &idx in &self.stage_order[..self.stage_len]{
+            if idx>1{return Err(StreamError::Invalid)}
+            owner_counts[usize::from(idx)]+=1;
         }
+        if self.in_flight.as_ref().is_none_or(|f|f.staged!=owner_counts[0])||
+            (owner_counts[1]>0&&self.peer.is_none())||
+            self.peer.as_ref().is_some_and(|f|f.staged!=owner_counts[1]){
+            return Err(StreamError::Invalid)
+        }
+        for i in 0..self.stage_len{
+            let f=if self.stage_order[i]==0{self.in_flight.as_mut().unwrap()}
+                else{self.peer.as_mut().unwrap()};
+            if i<usize::from(copied){f.copied=f.copied.saturating_add(1)}
+            else if i==usize::from(copied)&&uncertain==1{f.capacity_known=false}
+        }
+        if let Some(f)=self.in_flight.as_mut(){f.staged=0}
+        if let Some(f)=self.peer.as_mut(){f.staged=0}
+        self.stage_len=0;
+        self.complete_quiescent();
         Ok(())
     }
     /// Stop cancels owned parity and prevents all subsequent source/cipher
@@ -269,12 +375,19 @@ impl FixedStream {
             self.source_scratch=flight.prepared.into_workspace();
             self.owner.finish_parity(flight.job,flight.copied,false);
         }
+        if let Some(f)=self.peer.take(){
+            self.peer_source_scratch=f.prepared.into_workspace();
+            self.owner.finish_parity(f.job,f.copied,false);
+        }
+        self.stage_len=0;
         self.owner.stop();
         self.prior_profile=None;
         // Retained parity scratch may contain plaintext-derived bytes;
         // scrub once on Stop and never reuse across the stopped generation.
         for row in &mut self.parity_scratch{row.fill(0);row.clear();}
+        for row in &mut self.peer_scratch{row.fill(0);row.clear();}
         self.source_scratch.fill(0);self.source_scratch.clear();
+        self.peer_source_scratch.fill(0);self.peer_source_scratch.clear();
     }
 }
 
