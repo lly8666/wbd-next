@@ -76,8 +76,12 @@ def validate(raw):
     # Two-sided native OFF is an actual product policy, never analyzer-only.
     if "repair_enabled" in p and type(p["repair_enabled"]) is not bool:
         raise ValueError("repair_enabled must be boolean")
-    if p.get("game_fec", "off") != "off" or any(k in p for k in ["cipher", "repair_ratio"]):
-        raise Unsupported("current public CLI does not expose requested Game-FEC/cipher setting")
+    game_fec=p.setdefault("game_fec","off")
+    if game_fec!="off" and (p["mode"] not in ("game2","game4") or
+        game_fec not in tuple("fixed"+str(n) for n in range(7))):
+        raise Unsupported("Game FEC must be fixed0..fixed6 on public game2/game4; no Auto or other mode")
+    if any(k in p for k in ["cipher", "repair_ratio"]):
+        raise Unsupported("no caller-selected cipher or repair ratio on original Go TLS public CLI")
     if p.get("repair_enabled") is False and p["mode"] in ("game2", "game4"):
         raise Unsupported("outer repair off not wired to public Game")
     if p["mode"] == "fec-auto" and p["fec_profile"] != 1:
