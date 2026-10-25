@@ -395,7 +395,7 @@ func run(port int,root,manifestPath string)error{
     Label:item.Label,PN:uint64(i),Mode:modeName,WireBytes:len(w),
     InnerBytes:len(item.Inner),PlainSha256:hex.EncodeToString(h[:]),
     PaddingBytes:padLen,LifecycleBoundary:item.Boundary,
-    Stage:item.Stage,ElapsedFromLastServerFlightMs:elapsedMs,
+    Stage:item.Stage,ElapsedFromFinishedMs:elapsedMs,
     PadSha256:hex.EncodeToString(ph[:]),
   })
   modes<-mode;pads<-padLen
