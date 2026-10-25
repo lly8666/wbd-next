@@ -41,7 +41,10 @@ assert sf[0]==22 and sf[1:3]==b"\x03\x03"
 assert b"\x17\x03\x03" in sf
 assert len(client_records)>=2,"genuine client finished missing"
 client_finished=b"".join(client_records[1:])
-assert client_finished[:3]==b"\x17\x03\x03" and len(client_finished)>40
+# In TLS1.3 compatibility mode a plaintext ChangeCipherSpec (0x14) may
+# precede the encrypted client Finished (0x17) in one outgoing flight.
+assert len(client_finished)>40 and b"\x17\x03\x03" in client_finished
+assert client_finished[:3] in (b"\x14\x03\x03",b"\x17\x03\x03")
 while so.read():pass
 data=bytes(((i*37+11)&255) for i in range(16000))
 assert s.write(data)==len(data)
