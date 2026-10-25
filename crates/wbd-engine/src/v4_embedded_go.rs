@@ -5500,7 +5500,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_commit_mature_m2(
     let Some(first)=e.normal_firstsend_m2.as_ref()else{return BAD_STAGE};
     let covered={
         let Ok(mut m2)=first.lock()else{return BAD_STAGE};
-        m2.poll(loop_now());
+        let now=loop_now();
+        m2.poll(now);
         // A 2s-mature authentic clean cohort, NOT all-source epoch totals.
         // Identity/capacity censorship is still a hard failure.
         m2.has_verified_fixed_m2_witness(now) &&
