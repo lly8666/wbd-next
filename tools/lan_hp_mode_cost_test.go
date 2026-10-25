@@ -30,6 +30,11 @@ type labCoder struct {
  aead cipher.AEAD
  hp cipher.Block
  iv [12]byte
+ // Per-lane reusable scratch. A normal WBD owner processes each direction
+ // serially; no shared/global mutable state. Zero per-record HP allocations.
+ hpBlock [16]byte
+ aadScratch [14]byte
+ nonceScratch [12]byte
 }
 func newLabCoder() labCoder {
  // Repeatable independent lab keys; NOT production key derivation.
@@ -40,10 +45,10 @@ func newLabCoder() labCoder {
  aead,_:=cipher.NewGCM(block)
  return labCoder{aead:aead,hp:hp,iv:[12]byte{9,2,21,4,5,1,0,0,0,0,0,0}}
 }
-func (c labCoder) nonce(pn uint64)(out [12]byte) {
- out=c.iv
- for i:=0;i<8;i++{out[4+i]^=byte(pn>>(56-8*i))}
- return
+func (c *labCoder) nonce(pn uint64)[]byte {
+ copy(c.nonceScratch[:],c.iv[:])
+ for i:=0;i<8;i++{c.nonceScratch[4+i]^=byte(pn>>(56-8*i))}
+ return c.nonceScratch[:]
 }
 func xorBody(x []byte,pn uint64) {
  mask:=bits.RotateLeft64(pn,17)^uint64(0x6c616e5f6e6f7365)
@@ -54,12 +59,11 @@ func xorBody(x []byte,pn uint64) {
  }
  for j:=0;i+j<len(x);j++ {x[i+j]^=byte(mask>>(8*j))}
 }
-func (c labCoder) headerMask(sample []byte)uint64 {
- var block [16]byte
- c.hp.Encrypt(block[:],sample[:16])
- return binary.BigEndian.Uint64(block[:8])
+func (c *labCoder) headerMask(sample []byte)uint64 {
+ c.hp.Encrypt(c.hpBlock[:],sample[:16])
+ return binary.BigEndian.Uint64(c.hpBlock[:8])
 }
-func (c labCoder) seal(slot,plain []byte,pn uint64,mode byte,hidden bool) []byte{
+func (c *labCoder) seal(slot,plain []byte,pn uint64,mode byte,hidden bool) []byte{
  if pn>pnMask||mode>modeXor{panic("invalid lab PN/mode")}
  header:=14
  if hidden{header=13}
@@ -75,8 +79,7 @@ func (c labCoder) seal(slot,plain []byte,pn uint64,mode byte,hidden bool) []byte
   raw:=(uint64(mode)<<63)|pn
   binary.BigEndian.PutUint64(w[5:13],raw)
   if mode==modeAes{
-   nn:=c.nonce(pn)
-   c.aead.Seal(w[13:13],nn[:],plain,w[:13])
+   c.aead.Seal(w[13:13],c.nonce(pn),plain,w[:13])
   } else{
    copy(w[13:],plain)
    xorBody(w[13:],pn)
@@ -87,8 +90,7 @@ func (c labCoder) seal(slot,plain []byte,pn uint64,mode byte,hidden bool) []byte
   w[5]=mode
   binary.BigEndian.PutUint64(w[6:14],pn)
   if mode==modeAes {
-   nn:=c.nonce(pn)
-   c.aead.Seal(w[14:14],nn[:],plain,w[:14])
+   c.aead.Seal(w[14:14],c.nonce(pn),plain,w[:14])
   }else{
    copy(w[14:],plain)
    xorBody(w[14:],pn)
@@ -96,7 +98,7 @@ func (c labCoder) seal(slot,plain []byte,pn uint64,mode byte,hidden bool) []byte
  }
  return w
 }
-func (c labCoder) open(w,dst []byte,hidden bool)(byte,uint64,[]byte,error){
+func (c *labCoder) open(w,dst []byte,hidden bool)(byte,uint64,[]byte,error){
  h:=14
  if hidden{h=13}
  if len(w)<h+41 || w[0]!=0x17||w[1]!=3||w[2]!=3||
@@ -105,7 +107,7 @@ func (c labCoder) open(w,dst []byte,hidden bool)(byte,uint64,[]byte,error){
  }
  var pn uint64
  var mode byte
- var aad [14]byte
+ aad:=c.aadScratch[:]
  if hidden{
   if len(w)<h+16{return 0,0,nil,errors.New("short HP sample")}
   mask:=c.headerMask(w[13:])
@@ -119,9 +121,8 @@ func (c labCoder) open(w,dst []byte,hidden bool)(byte,uint64,[]byte,error){
   copy(aad[:14],w[:14])
  }
  if mode==modeAes{
-  nn:=c.nonce(pn)
   aa:=aad[:14];if hidden{aa=aad[:13]}
-  plain,e:=c.aead.Open(dst[:0],nn[:],w[h:],aa)
+  plain,e:=c.aead.Open(dst[:0],c.nonce(pn),w[h:],aa)
   if e!=nil{return mode,pn,nil,e}
   return mode,pn,plain,nil
  }
