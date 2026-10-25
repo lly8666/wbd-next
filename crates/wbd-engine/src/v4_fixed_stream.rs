@@ -450,7 +450,7 @@ mod tests{
         assert_eq!(stream.report().classes[0].r_sent,0); // A still has 16 rows
         assert_eq!(stream.report().classes[1].r_sent,0);
         // New sources never wait for old parity or the next paired quantum.
-        push(&mut stream,&mut arena,&[7u8;130],6_100_002,&mut fresh);
+        push(&mut stream,&mut arena,&[7u8;130],12_000_000,&mut fresh);
         assert_eq!(fresh.last().unwrap().0,3);
         // At the old close+10ms TTL, the remaining A/B rows must NOT be
         // emitted. Only original M4 definite prefix counts each class.
