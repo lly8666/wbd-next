@@ -210,6 +210,23 @@ func (m *v4ProductFecMonitor)autoObserve(bridge *v4EmbeddedNativeBridge,
     snap.Validity=FecV2Valid
     return snap,nil
 }
+// A downward FEC-only revision changes redundancy, not the original
+// generation-scoped first-send ACK provenance or source k/copy counters.
+// The previous bounded 20s history remains authentic for the SAME client,
+// direction and native generation. Keep it on a genuine one-step DOWN only:
+// the pure Go policy still needs 10s/4096 genuinely VALID sources and native
+// APPLIED, and fail-closed v4FecAutoDiff rejects counter reset/censorship.
+// Startup, rise, config change and stale/scope mismatches hard-reset history.
+func v4FecAutoKeepHistoryAfterApplied(before,after FecV2State) bool {
+    return before.Initialized && after.Initialized &&
+        before.Mode==FecV2Auto && after.Mode==FecV2Auto &&
+        before.Client==after.Client && before.Direction==after.Direction &&
+        before.ConfigRevision==after.ConfigRevision &&
+        before.RequestedRevision==after.AppliedRevision &&
+        before.AppliedRevision<after.AppliedRevision &&
+        after.AppliedProfile<before.AppliedProfile &&
+        !after.AppliedOff
+}
 func (m *v4ProductFecMonitor)tick(
     bridge *v4EmbeddedNativeBridge,now time.Duration,
 ){
@@ -223,8 +240,10 @@ func (m *v4ProductFecMonitor)tick(
         }
         applied,_,err:=bridge.readbackOriginalFixedPending(m.state,m.epoch)
         if err!=nil{return}
+        if !v4FecAutoKeepHistoryAfterApplied(m.state,applied) {
+            m.history=m.history[:0]
+        }
         m.state=applied
-        m.history=m.history[:0] // policy now has a new actual-k epoch
     }
     if m.cfg.Mode!=FecV2Auto||now-m.lastAutoAt<2*time.Second{return}
     m.lastAutoAt=now
@@ -282,6 +301,10 @@ func (m *v4ProductFecMonitor)readback(
     defer m.mu.Unlock()
     next,_,err:=bridge.readbackOriginalFixedPending(m.state,m.epoch)
     if err!=nil{return out,err}
+    if m.state.AppliedRevision!=next.AppliedRevision &&
+        !v4FecAutoKeepHistoryAfterApplied(m.state,next) {
+        m.history=m.history[:0]
+    }
     m.state=next
     return V4PublicFecReadback{
         Mode:next.Mode,RequestedRevision:next.RequestedRevision,

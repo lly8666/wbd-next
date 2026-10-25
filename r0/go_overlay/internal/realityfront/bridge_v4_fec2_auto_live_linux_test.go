@@ -53,3 +53,40 @@ func TestV4Fec2OriginalPositiveConfirmationLagNoFakeRTT(t *testing.T) {
     _,n,mean,known=v4Fec2PositiveConfirmation(native)
     if n!=1||mean!=^uint64(0)/1000||!known{t.Fatal("large native lag overflow")}
 }
+
+
+// Source k histogram and matured original FIRST-send M2 counters are
+// generation-scoped, not per-profile. Only an actually APPLIED downward
+// revision on the exact same owner can retain the bounded rolling history;
+// initial, upward, pending, changed config/client and OFF must not.
+func TestV4FecAutoAppliedDownRetainsOnlyAuthenticHistory(t *testing.T) {
+    base:=FecV2State{
+        Initialized:true,Client:"client-A",Direction:FecV2C2S,
+        ConfigRevision:9,Mode:FecV2Auto,
+        Desired:FecV2Strong,AppliedProfile:FecV2Maximum,
+        AppliedRevision:3,RequestedRevision:4,
+    }
+    down:=base
+    down.AppliedRevision=4
+    down.AppliedProfile=FecV2Strong
+    if !v4FecAutoKeepHistoryAfterApplied(base,down) {
+        t.Fatal("genuine same-owner applied one-step down must retain native history")
+    }
+    for _,broken:=range []struct{name string; mutate func(*FecV2State)}{
+        {"unapplied",func(s *FecV2State){s.AppliedRevision=3}},
+        {"stale_ack",func(s *FecV2State){s.AppliedRevision=5}},
+        {"rise",func(s *FecV2State){s.AppliedProfile=FecV2Maximum}},
+        {"other_client",func(s *FecV2State){s.Client="client-B"}},
+        {"other_direction",func(s *FecV2State){s.Direction=FecV2S2C}},
+        {"other_config",func(s *FecV2State){s.ConfigRevision=10}},
+        {"off",func(s *FecV2State){s.AppliedOff=true}},
+        {"fixed",func(s *FecV2State){s.Mode=FecV2Fixed}},
+    } {
+        t.Run(broken.name,func(t *testing.T){
+            test:=down;broken.mutate(&test)
+            if v4FecAutoKeepHistoryAfterApplied(base,test) {
+                t.Fatalf("unsafe history carried across %s",broken.name)
+            }
+        })
+    }
+}
