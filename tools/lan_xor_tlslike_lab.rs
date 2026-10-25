@@ -11,12 +11,12 @@ use std::time::Duration;
 
 const MAX_TLS_BODY: usize = (1 << 14) + 256;
 const OVERHEAD: usize = 5 + 8 + 2; // TLS-like header, clear experiment PN, masked payload length
-const DEMO_SEED: u64 = 0x74ba_be32_9afe_5b13; // publicly known non-secret test fixture
+pub(crate) const DEMO_SEED: u64 = 0x74ba_be32_9afe_5b13; // publicly known non-secret test fixture
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Mode { FixedXor, RollingXor }
+pub(crate) enum Mode { FixedXor, RollingXor }
 
-fn ipv4_packet_ok(packet: &[u8]) -> bool {
+pub(crate) fn ipv4_packet_ok(packet: &[u8]) -> bool {
     if packet.len() < 20 || packet.len() > u16::MAX as usize || packet[0] >> 4 != 4 { return false; }
     let ihl = (packet[0] & 15) as usize * 4;
     ihl >= 20 && ihl <= packet.len()
@@ -30,7 +30,7 @@ fn mix64(mut x: u64) -> u64 {
     x ^ (x >> 31)
 }
 
-fn mask(bytes: &mut [u8], mode: Mode, seed: u64, pn: u64) {
+pub(crate) fn mask(bytes: &mut [u8], mode: Mode, seed: u64, pn: u64) {
     match mode {
         Mode::FixedXor => bytes.iter_mut().for_each(|b| *b ^= 0xa5),
         Mode::RollingXor => {
@@ -50,7 +50,7 @@ fn mask(bytes: &mut [u8], mode: Mode, seed: u64, pn: u64) {
 
 /// Each IPv4 packet becomes exactly one new TLS-looking application_data record.
 /// The caller must avoid PN wrap. There is intentionally no authenticity.
-fn seal(packet: &[u8], mode: Mode, seed: u64, pn: u64) -> Result<Vec<u8>, &'static str> {
+pub(crate) fn seal(packet: &[u8], mode: Mode, seed: u64, pn: u64) -> Result<Vec<u8>, &'static str> {
     if !ipv4_packet_ok(packet) { return Err("not a single bounded IPv4 packet"); }
     let body = packet.len().checked_add(10).ok_or("length overflow")?;
     if body > MAX_TLS_BODY { return Err("TLS-like record budget exceeded"); }
@@ -64,7 +64,7 @@ fn seal(packet: &[u8], mode: Mode, seed: u64, pn: u64) -> Result<Vec<u8>, &'stat
     Ok(wire)
 }
 
-fn open(wire: &[u8], mode: Mode, seed: u64) -> Result<(u64, Vec<u8>), &'static str> {
+pub(crate) fn open(wire: &[u8], mode: Mode, seed: u64) -> Result<(u64, Vec<u8>), &'static str> {
     if wire.len() < OVERHEAD + 20 || wire.len() > MAX_TLS_BODY + 5
         || wire[..3] != [0x17, 0x03, 0x03] { return Err("invalid outer header"); }
     let body = usize::from(u16::from_be_bytes([wire[3], wire[4]]));
@@ -80,7 +80,7 @@ fn open(wire: &[u8], mode: Mode, seed: u64) -> Result<(u64, Vec<u8>), &'static s
     Ok((pn, plain[2..].to_vec()))
 }
 
-fn sample_ip_packet() -> Vec<u8> {
+pub(crate) fn sample_ip_packet() -> Vec<u8> {
     let n = 1345;
     let mut p = vec![0u8; n];
     p[0] = 0x45;
