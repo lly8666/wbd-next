@@ -210,15 +210,29 @@ def validate(raw):
         raise ValueError("phases: 1..16 declared stages of ONE scenario")
     seen = set()
     for ph in r["phases"]:
-        keys(ph, ["name", "seconds", "c2s", "s2c", "rate_scale"], "phase")
+        keys(ph, ["name", "seconds", "c2s", "s2c", "rate_scale", "product_cpu_stress"], "phase")
         if not re.fullmatch(r"[A-Za-z0-9_-]{1,32}", ph.get("name", "")) or ph["name"] in seen:
             raise ValueError("invalid/duplicate phase name")
         seen.add(ph["name"])
         number(ph["seconds"], 0.05, 600, "phase seconds")
         ph.setdefault("rate_scale", 1)
         number(ph["rate_scale"], 0, 1, "rate_scale")
+        # FEC-owned 0%-netem test-only product CPU contention. Never affects
+        # other jobs, a production knob, a traffic injector or the host globally.
+        stress=ph.get("product_cpu_stress")
+        if stress is not None:
+            if r.get("owner")!="fec-network-work" or p["mode"]!="fec-auto" or p.get("repair_enabled") is not False:
+                raise Unsupported("product CPU stress is FEC-only Auto with real outer repair off")
+            keys(stress, ["role","competitors"], "product_cpu_stress")
+            if stress.get("role") not in ("client","server"):
+                raise ValueError("product_cpu_stress.role must be client or server")
+            integer(stress.get("competitors"), 1, 12, "product_cpu_stress.competitors")
         for direction in ["c2s", "s2c"]:
             ph[direction] = impairment(ph.get(direction, {}), lanes)
+            if stress is not None and (ph[direction]["loss_pct"]!=0 or
+                ph[direction]["duplicate_pct"]!=0 or ph[direction]["reorder_pct"]!=0 or
+                ph[direction]["blackhole_lanes"]):
+                raise ValueError("CPU stress experiment must keep both network lanes loss/reorder/blackhole free")
     if sum(ph["seconds"] for ph in r["phases"]) > 1200:
         raise ValueError("one run maximum 1200 measured seconds")
     a = r.setdefault("acceptance", {})

@@ -520,6 +520,9 @@ class LinuxExperiment:
         self.products, self.workers, self.samplers, self.handles = {}, {}, {}, []
         self.created = []
         self.monitor = None
+        self.cpu_stress_workers=[]
+        self.cpu_stress_affinity={}
+        self.cpu_stress_events=[]
         self.egress_trace=[]
         self.egress_stop=threading.Event()
         self.egress_thread=None
@@ -743,6 +746,55 @@ class LinuxExperiment:
         dump(self.out / "effective-config.json", self.effective)
         inner = min(links[0]["mtu"] for links in self.effective["inner_links"].values())
         dump(self.out / "capacity-envelope-observed-mtu.json", request_envelope(self.config, inner))
+
+    def stop_product_cpu_stress(self):
+        # Always restore before stopping product / deleting owned namespaces.
+        for child in self.cpu_stress_workers:
+            if child.poll() is None: child.terminate()
+        for child in self.cpu_stress_workers:
+            try: child.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                child.kill()
+                child.wait(timeout=2)
+        self.cpu_stress_workers=[]
+        for role, original in self.cpu_stress_affinity.items():
+            try: os.sched_setaffinity(self.products[role].pid, original)
+            except (ProcessLookupError, OSError): pass
+        self.cpu_stress_affinity={}
+
+    def set_product_cpu_stress(self, phase):
+        self.stop_product_cpu_stress()
+        spec=phase.get("product_cpu_stress")
+        if not spec: return
+        role=spec["role"]
+        product=self.products[role]
+        if product.poll() is not None:
+            raise RuntimeError("cannot stress exited original product "+role)
+        original=os.sched_getaffinity(product.pid)
+        if len(original)<2:
+            raise RuntimeError("CPU stress needs >=2 eligible cores; will not saturate whole runner")
+        core=min(original)
+        self.cpu_stress_affinity[role]=original
+        os.sched_setaffinity(product.pid,{core})
+        if os.sched_getaffinity(product.pid)!={core}:
+            raise RuntimeError("original product CPU affinity did not apply")
+        for _ in range(spec["competitors"]):
+            # Same eligible core, separate test-owned schedulable processes.
+            # Products and their authentic M2/Auto code remain unchanged;
+            # traffic generators stay unpinned on other available cores.
+            child=subprocess.Popen(["taskset","-c",str(core),sys.executable,
+                "-c","while True: pass"],stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+            self.cpu_stress_workers.append(child)
+        time.sleep(.15)
+        if any(p.poll() is not None for p in self.cpu_stress_workers):
+            raise RuntimeError("CPU competitors exited before measurement")
+        self.cpu_stress_events.append({"phase":phase["name"],"role":role,
+            "product_pid":product.pid,"core":core,
+            "original_eligible_cores":len(original),
+            "competitors_started":len(self.cpu_stress_workers),
+            "readback_product_affinity":sorted(os.sched_getaffinity(product.pid)),
+            "started_ns":time.monotonic_ns()})
 
     def configure(self, phase, index, initial=False):
         event = {"phase": phase["name"], "scheduled_index": index, "begin_ns": time.monotonic_ns(), "wall_begin_ns": time.time_ns(), "commands": []}
@@ -1105,6 +1157,7 @@ class LinuxExperiment:
                 # 0%-recovered traffic cohort and falsely attributes boundary
                 # losses to the product. Timestamp actual begin/end separately.
                 self.configure(phase, i)
+                self.set_product_cpu_stress(phase)
                 self.config_events[-1]["scheduled_start_ns"] = boundary
                 self.snapshot("before-" + phase["name"])
                 boundary += int(phase["seconds"] * 1e9)
@@ -1271,6 +1324,7 @@ class LinuxExperiment:
             # Source cohort includes late packets; CPU/wire window excludes warmup/drain.
             begin = next(s for s in self.snapshots if s["name"] == "before-" + self.config["phases"][0]["name"])
             end = next(s for s in self.snapshots if s["name"] == "measurement-end")
+            result["test_only_product_cpu_stress"]=self.cpu_stress_events
             result["measurement_seconds"] = sum(p["seconds"] for p in self.config["phases"])
             result["measurement_cost"] = {}
             for role, direction in [("client", "s2c"), ("server", "c2s")]:
@@ -1324,6 +1378,7 @@ class LinuxExperiment:
         return result
 
     def cleanup(self):
+        self.stop_product_cpu_stress()
         for p in [*self.workers.values(), *self.samplers.values(), *self.products.values()]:
             if p.poll() is None:
                 p.terminate()

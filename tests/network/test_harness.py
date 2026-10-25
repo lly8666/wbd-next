@@ -49,6 +49,23 @@ class Contracts(unittest.TestCase):
             with self.assertRaises(ValueError):
                 validate(r)
 
+    def test_fec_cpu_stress_only_auto_outer_off_and_zero_netem(self):
+        r=request()
+        r["owner"]="fec-network-work"
+        r["product"].update(mode="fec-auto",fec_profile=1,repair_enabled=False)
+        r["phases"][0]["c2s"]={"loss_pct":0}
+        r["phases"][0]["s2c"]={"loss_pct":0}
+        r["phases"][0]["product_cpu_stress"]={"role":"client","competitors":8}
+        self.assertEqual(validate(r)["phases"][0]["product_cpu_stress"]["competitors"],8)
+        bad=copy.deepcopy(r);bad["owner"]="network-matrix"
+        with self.assertRaises(Unsupported): validate(bad)
+        bad=copy.deepcopy(r);bad["product"]["repair_enabled"]=True
+        with self.assertRaises(Unsupported): validate(bad)
+        bad=copy.deepcopy(r);bad["phases"][0]["c2s"]["loss_pct"]=1
+        with self.assertRaises(ValueError): validate(bad)
+        bad=copy.deepcopy(r);bad["phases"][0]["product_cpu_stress"]["role"]="all"
+        with self.assertRaises(ValueError): validate(bad)
+
     def test_full_run_source_tun_zero_drop_gate_and_snapshot_delta(self):
         from tools.network_harness.runner import source_tun_tx_drops_by_role
         request_data=request()
