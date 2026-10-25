@@ -222,39 +222,51 @@ func readCorpus(root string)([]byte,[]byte,[]byte){
  return ch,sf,app
 }
 func specs(ch,sf,app []byte)[]Spec{
- build:=func(label string,port uint16,seq uint32,proto,flags byte,data []byte,trust bool)Spec{
-  return Spec{Label:label,Port:port,Seq:seq,Proto:proto,Flags:flags,
-   TrustedApp:trust,Inner:packet(port,seq,proto,flags,data)}
+ build:=func(label,stage string,boundary bool,port uint16,seq uint32,proto,flags byte,data []byte,trust bool)Spec{
+  return Spec{Label:label,Stage:stage,Boundary:boundary,Port:port,
+   Seq:seq,Proto:proto,Flags:flags,TrustedApp:trust,
+   Inner:packet(port,seq,proto,flags,data)}
  }
- // Keep 1305 payload per IP packet. Large genuine ServerHello flight may
- // straddle multiple source packets; all chunks must be FULL AES.
- ss:=[]Spec{
-  build("genuine_clienthello_sni_alpn_AES",mainPort,1000,6,0x18,ch,false),
-  build("clienthello_retransmit_old_seq_AES",mainPort,1000,6,0x18,ch,false),
+ var ss []Spec
+ add:=func(label,stage string,boundary bool,port uint16,seq uint32,proto,flags byte,data []byte,trust bool){
+  ss=append(ss,build(label,stage,boundary,port,seq,proto,flags,data,trust))
  }
- for i,start:=0,0;start<len(sf);i,start=i+1,start+1000 {
-  end:=start+1000;if end>len(sf){end=len(sf)}
-  ss=append(ss,build(fmt.Sprintf("genuine_serverhello_flight_chunk%d_AES",i),
-    443,2000+uint32(start),6,0x18,sf[start:end],false))
+ add("TCP_SYN_start_PAD","early",true,mainPort,0,6,0x02,nil,false)
+ add("TCP_SYNACK_start_PAD","early",true,443,0,6,0x12,nil,false)
+ add("genuine_clienthello_start_PAD","early",true,mainPort,1000,6,0x18,ch,false)
+ add("genuine_clienthello_retransmit_start_PAD","early",true,mainPort,1000,6,0x18,ch,false)
+ for i,start:=0,0;start<len(sf);i,start=i+1,start+1000{
+  stop:=start+1000;if stop>len(sf){stop=len(sf)}
+  add(fmt.Sprintf("genuine_serverflight_chunk%d_start_PAD",i),"early",true,
+   443,2000+uint32(start),6,0x18,sf[start:stop],false)
  }
- ss=append(ss,
-  build("handshake_boundary_retransmission_AES",mainPort,1000,6,0x18,ch,false),
-  build("tls13_app_but_unconfirmed_flow_AES",50202,20000,6,0x18,app[:1305],true),
-  build("same_tls13_ciphertext_marked_PROTECTED_EDGE_AES",mainPort,20000,6,0x18,app[:1305],false),
-  build("tls13_app_fast_first_XOR",mainPort,20000,6,0x18,app[:1305],true),
-  build("tls13_app_fast_retransmitted_new_outer_PN_XOR",mainPort,20000,6,0x18,app[:1305],true),
-  build("tls13_app_fast_next_XOR",mainPort,22000,6,0x18,app[:1305],true),
-  build("tls13_app_fast_small_XOR",mainPort,24000,6,0x18,app[:290],true),
-  build("ordinary_http_TCP_AES",51001,33000,6,0x18,[]byte("GET / HTTP/1.1"),false),
-  build("TCP_ACK_only_AES",mainPort,25000,6,0x10,nil,false),
-  build("TCP_FIN_AES",mainPort,25100,6,0x11,nil,false),
-  build("UDP_dns_like_AES",53001,6000,17,0,[]byte{0x10,0x20,1,0,0,1,0,0,0,0,0,0},false),
-  build("TLS12_like_unconfirmed_AES",50203,6000,6,0x18,[]byte{23,3,3,0,15,1,2,3,4,5,6,7,8,9,10},false),
-  build("unknown_flow_same_170303_AES",50204,6000,6,0x18,app[:1305],false),
-  build("same_TLS13_app_marked_Alert_AES",mainPort,26000,6,0x18,app[:1305],false),
-  build("TLS13_app_under_safe_seq_even_with_trust_AES",mainPort,12000,6,0x18,app[:1305],true),
-  build("tls13_app_fast_last_XOR",mainPort,30000,6,0x18,app[:1305],true),
- )
+ add("QUIC_Initial_start_PAD","early",true,40001,4000,17,0,
+  []byte{0xc3,0,0,0,1,0x21,0x55,0x01,0,0,0,0,0,0,1},false)
+ add("TLS13_early_app_before_hold_no_PAD_AES","early",false,mainPort,20000,6,0x18,app[:1305],true)
+ add("HTTP_middle_no_PAD_AES","early",false,51001,25000,6,0x18,[]byte("GET /index HTTP/1.1"),false)
+ add("TCP_ACK_middle_no_PAD_AES","early",false,mainPort,25000,6,0x10,nil,false)
+ add("UDP_middle_no_PAD_AES","early",false,53001,6000,17,0,[]byte{1,2,3,4,5},false)
+ add("unknown_TLS13_middle_no_PAD_AES","early",false,50204,6000,6,0x18,app[:1305],false)
+ // Exactly MTU (no padding capacity); do not fragment or exceed MTU.
+ add("TCP_end_exact_MTU_zero_pad_AES","late",true,mainPort,31000,6,0x11,
+  app[:maxWireRecord-labAeadOverhead-40],false)
+ add("TLS13_app_fast_after_hold_XOR","late",false,mainPort,20000,6,0x18,app[:1305],true)
+ add("TLS13_fast_same_app_new_PN_XOR","late",false,mainPort,20000,6,0x18,app[:1305],true)
+ add("TLS13_app_fast_small_XOR","late",false,mainPort,26000,6,0x18,app[:290],true)
+ add("TLS13_app_fast_later_XOR","late",false,mainPort,28000,6,0x18,app[:1305],true)
+ add("genuine_clienthello_oldseq_late_PAD_AES","late",true,mainPort,1000,6,0x18,ch,false)
+ add("TLS13_protected_edge_identical_cipher_PAD_AES","late",true,mainPort,20000,6,0x18,app[:1305],false)
+ add("TCP_FIN_end_PAD_AES","late",true,mainPort,32000,6,0x11,nil,false)
+ add("TCP_RST_end_PAD_AES","late",true,mainPort,33000,6,0x14,nil,false)
+ add("QUIC_CONNECTION_CLOSE_end_PAD_AES","late",true,40001,5000,17,0,
+  []byte{0x43,0,0,0,0,0,1,0x1c},false)
+ add("TCP_normal_middle_AFTER_HOLD_no_PAD_AES","late",false,51001,35000,6,0x18,
+  []byte("ordinary unchanged application data"),false)
+ add("TCP_ACK_after_hold_no_PAD_AES","late",false,mainPort,35000,6,0x10,nil,false)
+ add("UDP_normal_after_hold_no_PAD_AES","late",false,53001,6000,17,0,[]byte{1,2,3},false)
+ add("TLS12_like_unknown_after_hold_no_PAD_AES","late",false,50203,6000,6,0x18,
+  []byte{23,3,3,0,4,1,2,3,4},false)
+ add("TLS13_app_fast_end_XOR","late",false,mainPort,39000,6,0x18,app[:1305],true)
  return ss
 }
 func run(port int,root,manifestPath string)error{
