@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "experiment": "IDEAL_ORACLE_TLS13_STEADY_PN_XOR_OTHERS_FULL_WBD_AES128_GCM",
+  "branch": "experiment/lan-hybrid-tls-xor-cost",
+  "phase": "COMPLETE_SCOPED_NATIVE_MIXED_RECORD_CPU_BENEFIT_WITH_UNSOLVED_CLASSIFICATION_AND_UNAUTHENTICATED_XOR",
+  "base": {
+    "branch": "experiment/lan-xor-pn-mask",
+    "sha": "86a4293a3348024231f7b51cbe0f58b691494d3c"
+  },
+  "report": "docs/evidence/lan-hybrid-tls-xor/FINAL_PERF_REPORT.md",
+  "policy": "only trusted-confirmed inner TLS1.3 steady application ciphertext PN-repeat XOR; all TLS handshake/edge/alert, ordinary TCP, TCP ACK-only, UDP other full existing WBD AES-GCM with HP",
+  "auth_important": "XOR byte stream has ZERO secrecy/integrity/origin/replay security; strong WBD AEAD guarantee only for fallback",
+  "classification": "ideal trusted offline oracle; real TLS1.3 encrypted handshake/app/alert all may have outer 0x17 03 03, so a generic passive classifier cannot prove the strict requirement",
+  "mode_signal": "test fixture dispatches RX by ideal oracle; NO authenticated mixed-mode on-wire discriminator or production negotiation",
+  "build_source": {
+    "benchmark": "8c2b58d22b7537b127837e54a38f714652491215",
+    "hot_loop_validation_correction": "c7f5a1fa4748b9cabe081bfc815f828b5916ae67",
+    "tls13_corpus": "68ce0fe8a6777a8a523cd3129c982f7f1bcb38df",
+    "summary_validator": "a7d9c1a97d60c4f2f8e8d80cd3dc18d5e108a8d6"
+  },
+  "native_final": {
+    "x86_64": {
+      "run_id": 40180809351,
+      "job_id": 121131537365,
+      "source": "548776b32b5f3847e23f8a2ae9ce81e23fd0a27f",
+      "status": "success",
+      "xor_tests": "10/10",
+      "artifact_id": 12593547885,
+      "zip_sha256": "bf2ab5055907e31a541539de8c96932125be507ba760be499bb750da16c27db1"
+    },
+    "arm64": {
+      "run_id": 40180812382,
+      "job_id": 121131515427,
+      "source": "b9c304c319788a3c4df5e3aa5ea5bebee4ae831a",
+      "status": "success",
+      "xor_tests": "10/10",
+      "artifact_id": 12594472987,
+      "zip_sha256": "681acbeb67a6618006d7edb3625c822eea4a7d44e76fb79f5c1332d097b1228f"
+    }
+  },
+  "diagnostic_superseded": [
+    40180659070,
+    40180662061
+  ],
+  "cpu_contract": "single native VM,9 synthetic class profiles x6 modes x2 symmetric order =108 legs per machine; 0.35s warm+1s timed; live Linux thread schedstat cpu nanos per inner byte; same genuine TLS13 app ciphertext fixture; no timed whole-packet memcmp; reusable wire buffers",
+  "equal_1345B_profile_pct_eligible": [
+    0,
+    25,
+    50,
+    75,
+    90,
+    100
+  ],
+  "cpu_saving_pct_hybrid_pn_vs_full": {
+    "x86_64": [
+      -0.282217773409843,
+      21.553221972472947,
+      43.687665230135956,
+      65.43600893218775,
+      78.82354202684473,
+      87.29972796973837
+    ],
+    "arm64": [
+      0.03621638737781874,
+      21.900550580801358,
+      44.05780598548261,
+      66.15670377207479,
+      79.59721282875087,
+      88.54391815228045
+    ]
+  },
+  "cpu_saving_pct_old_selective_aad_vs_full": {
+    "x86_64": [
+      -3.385923305983285,
+      1.7496066068541816,
+      6.8533876281750565,
+      12.418878165678537,
+      15.363370988232806,
+      16.77620845056286
+    ],
+    "arm64": [
+      -3.218655894475453,
+      4.770671835414575,
+      13.54835756587719,
+      21.929890467696534,
+      27.464845342856993,
+      30.998457479915842
+    ]
+  },
+  "mixed_synthetic_profiles": {
+    "web_bulk": {
+      "eligible_packet_pct": 80,
+      "eligible_byte_pct": 87.901315,
+      "x86_hybrid_saving_pct": 74.86607728016541,
+      "arm_hybrid_saving_pct": 75.76381886460956
+    },
+    "mixed_session": {
+      "eligible_packet_pct": 40,
+      "eligible_byte_pct": 55.072167,
+      "x86_hybrid_saving_pct": 41.8516859319667,
+      "arm_hybrid_saving_pct": 44.27088454407142
+    },
+    "non_tls_heavy": {
+      "eligible_packet_pct": 10,
+      "eligible_byte_pct": 15.717207,
+      "x86_hybrid_saving_pct": 11.132413705809741,
+      "arm_hybrid_saving_pct": 12.03812879800491
+    }
+  },
+  "wire_savings_bytes_per_eligible_packet": 16,
+  "limitations": [
+    "ideal oracle classification price missing",
+    "actual authenticated mixed mode not implemented",
+    "genuine WBD Go Rust TUN not measured",
+    "whole process CPU throughput p99 queue not measured",
+    "XOR security none",
+    "TLS-like record header not authentic RFC TLS13 app record"
+  ],
+  "main_modified": false,
+  "production_wired": false,
+  "merge_ready": false,
+  "open_requests": [],
+  "next_action": "NONE_SCOPED_EXPERIMENT_CLOSED; DO_NOT_PROMOTE_TO_PRODUCT_WITHOUT_SEPARATE_AUTHENTICATED_CLASSIFIER_AND_SECURITY_DESIGN"
+}
