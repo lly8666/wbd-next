@@ -4,6 +4,7 @@ on:
     branches: [experiment/lan-hp-mode-cost]
     paths: [".github/workflows/lan-hp-mode-cost-arm64.yml"]
 permissions: {contents: read}
+# Verified A/B analyzer is committed before benchmarking this exact revision.
 concurrency:
   group: lan-hp-mode-cost-arm64
   cancel-in-progress: false
