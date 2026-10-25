@@ -2,7 +2,7 @@
   "version": 1,
   "id": "FEC-W45-AutoRealM2-AsymRiseRecover-8Mbps-W40",
   "owner": "fec-network-work",
-  "seed": 820045,
+  "seed": 821045,
   "policy": "outer-opportunistic-v3",
   "product": {
     "mode": "fec-auto",
