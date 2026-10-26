@@ -1,5 +1,17 @@
 # FEC-only 独立岗位｜2026-10-26 限域合并审查索引
 
+## 2026-10-26 W168｜56/56纯UDP常规矩阵正式完成（ARM64+x86，原生20s、无外层限速/PSI停测）
+
+原生 [GitHub Action40345202316](https://github.com/lly8666/wbd-next/actions/runs/40345202316) **SUCCESS**，两个架构各7模式×IID1/5/15/30%=**56/56个真实10Mbps/方向、100%UDP、20s业务工况均有独立 VM 执行证据与原生readback**，加两架构250Mbps/方向Fixed6 IID30%=总58项。注意这56项只声明`PASS_SCOPED_OBSERVATION`：本次**没有给所有模式设小于某百分比最终丢包的验收线**，不能将Action绿色翻译成正常OFF在30%损伤零丢包。
+
+30%IID业务受损期最终UDP残余（C2S/S2C）：ARM64 Normal OFF **23.159%/23.652%**、Normal Fixed6 **0.069%/0.062%**、Auto **0.465%/0.279%**、Game2 OFF **8.741%/9.020%**、Game2 Fixed6 **0%/0%**、Game4 OFF **0.854%/0.775%**、Game4 Fixed6 **0%/0%**；AMD64 对应 Normal OFF **23.294%/23.736%**、Fixed6 **0.010%/0.086%**、Auto **0.472%/0.430%**、Game2 OFF **8.979%/8.711%**、Game2 Fixed6 **0/0**、Game4 OFF **0.840%/0.874%**、Game4 Fixed6 **0/0**。这些零值仅限20s特定样本。
+
+**CPU按单核100%计**，四种丢包档每端CPU%平均（ARM64客户端）：Normal OFF7.1、Fixed6 9.81、Auto9.70、Game2 OFF5.60、Game2 Fixed6 11.82、Game4 OFF11.72、Game4 Fixed6 20.21；AMD64客户端约6.82、9.82、10.15、5.49、13.06、13.85、21.10。四档任一测次RSS峰值ARM64客户端范围16.64–40.88MiB（随模式不同），AMD64约20.58–47.82MiB；服务端ARM64最高41.02MiB、AMD64最高48.82MiB。**Normal三模式原生Rust M4 RX/TX工作线程CPU占Go+Rust进程近似95–98%；Game未提供同等线程分摊采样，只能写NOT_OBSERVED。** RSS仍是整个混合进程的内存。
+
+[W168完整结构化矩阵收据](20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json) 留有逐模式30%残余/四档平均CPU和RSS峰值、全56个原始artifact定位。产品Normal outer DATA retry / native first+repair在各随机损失下有真值，但**严格的全外层带宽百分比未观测**；之前错把前netem修复字节除以后netem veth TX的派生数已禁止引用。额外250Mbps独立高压 **ARM64 PASS，AMD64 INCONCLUSIVE且双向约15.6–15.9%最终残余**，详见独立高压收据。容量历史标志`capacity_stop=true`和不合main仍保留。
+
+
+
 ## 2026-10-26 W168｜250Mbps/方向 30%IID fixed6 纯UDP双架构原生实测（非完整56项矩阵）
 
 本轮原始TLS→Rust→TUN，外层重传双方 native readback=ON，`tc netem` **仅75ms时延+30%丢包，无rate限速**，每向250Mbps、20秒+2s热身+4s排空。Action [40345202316](https://github.com/lly8666/wbd-next/actions/runs/40345202316) 中 ARM64 子工况 **PASS_SCOPED_OBSERVATION**：UDP C2S缺117/520818=0.02246%、S2C缺59/520827=0.01133%，真实到达约250Mbps/向。产品client/server CPU分别18.91/18.85 core·s（94.55%/94.25%单核）、RSS峰62.14/62.91MiB，原生Rust RX/TX线程占进程CPU近似100.17%/99.91%（采样边界误差），FEC修补717835/717835和717883/717883确实全部发送，无repair job expired，FEC RX peak9.18/9.63MiB无capacity evicted。主机PSI peak24.84%。

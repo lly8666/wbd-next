@@ -1,0 +1,240 @@
+{
+  "schema": "FEC_W168_56_COMPLETE_20261026_V1",
+  "branch": "experiment/fec-network-tuning",
+  "source": "0776fc4ede72fabd711e8333568eb88a58e8a6ea",
+  "action_run_id": 40345202316,
+  "action_conclusion": "SUCCESS",
+  "case_10mbps_count": 56,
+  "case_10mbps_all_executed": 56,
+  "arch": [
+    "arm64",
+    "amd64"
+  ],
+  "modes": [
+    "normal_off",
+    "normal_maximum6",
+    "normal_auto",
+    "game2_off",
+    "game2_fixed6",
+    "game4_off",
+    "game4_fixed6"
+  ],
+  "loss_pct": [
+    1,
+    5,
+    15,
+    30
+  ],
+  "real_execution_config": {
+    "udp_app_fraction": 1,
+    "tcp_app_fraction": 0,
+    "actual_TLS_control_TCP": "ON_AS_PROTOCOL_REQUIRED",
+    "c2s_mbps": 10,
+    "s2c_mbps": 10,
+    "seconds_each": 20,
+    "netem_delay_ms": 75,
+    "netem_outer_rate_mbps": 0,
+    "performance_auto_stop": "DISABLED",
+    "outer_data_repair_native_requested_on": true,
+    "all_56_native_policy_verified": true
+  },
+  "observed_status_counts": {
+    "PASS_SCOPED_OBSERVATION": 56
+  },
+  "critical_status_meaning": "All 56 real observations were executed and passed their configured scope/readback/injection checks. No max residual loss gate was imposed. Normal OFF/ Game2 OFF delivered significant lost UDP packets; never conflate success status with near-zero loss.",
+  "aggregate_artifact": {
+    "id": 12661808868,
+    "sha256": "a81c0c013c503d20f518389b55bfa2c4c669803766ef26a460b8264eb955e7",
+    "name": "w168-aggregate",
+    "retention_days": 14
+  },
+  "full_raw_per_case_artifacts": "w168-result-{arch}-{variant}-IID{1,5,15,30} attached to Action; 56 unique artifacts, each has original A/result.json and host-samples and public native markers.",
+  "summary_30pct_by_arch_mode": [
+    {
+      "architecture": "arm64",
+      "mode": "normal_off",
+      "loss_30pct_c2s_residual_pct": 23.159,
+      "loss_30pct_s2c_residual_pct": 23.652,
+      "cpu_client_pct_one_core_mean_over_four_separate_20s_cases": 7.1,
+      "cpu_server_pct_one_core_mean_over_four_separate_20s_cases": 6.99,
+      "rss_client_mib_peak_over_four_separate_20s_cases": 16.89,
+      "rss_server_mib_peak_over_four_separate_20s_cases": 17.52,
+      "rust_native_rx_tx_thread_share_client_pct_mean_approx": 97.49,
+      "rust_native_rx_tx_thread_share_server_pct_mean_approx": 97.39
+    },
+    {
+      "architecture": "arm64",
+      "mode": "normal_maximum6",
+      "loss_30pct_c2s_residual_pct": 0.069,
+      "loss_30pct_s2c_residual_pct": 0.062,
+      "cpu_client_pct_one_core_mean_over_four_separate_20s_cases": 9.81,
+      "cpu_server_pct_one_core_mean_over_four_separate_20s_cases": 9.75,
+      "rss_client_mib_peak_over_four_separate_20s_cases": 18.64,
+      "rss_server_mib_peak_over_four_separate_20s_cases": 19.02,
+      "rust_native_rx_tx_thread_share_client_pct_mean_approx": 98.23,
+      "rust_native_rx_tx_thread_share_server_pct_mean_approx": 97.85
+    },
+    {
+      "architecture": "arm64",
+      "mode": "normal_auto",
+      "loss_30pct_c2s_residual_pct": 0.465,
+      "loss_30pct_s2c_residual_pct": 0.279,
+      "cpu_client_pct_one_core_mean_over_four_separate_20s_cases": 9.7,
+      "cpu_server_pct_one_core_mean_over_four_separate_20s_cases": 9.62,
+      "rss_client_mib_peak_over_four_separate_20s_cases": 18.39,
+      "rss_server_mib_peak_over_four_separate_20s_cases": 18.89,
+      "rust_native_rx_tx_thread_share_client_pct_mean_approx": 97.49,
+      "rust_native_rx_tx_thread_share_server_pct_mean_approx": 97.27
+    },
+    {
+      "architecture": "arm64",
+      "mode": "game2_off",
+      "loss_30pct_c2s_residual_pct": 8.741,
+      "loss_30pct_s2c_residual_pct": 9.02,
+      "cpu_client_pct_one_core_mean_over_four_separate_20s_cases": 5.6,
+      "cpu_server_pct_one_core_mean_over_four_separate_20s_cases": 5.58,
+      "rss_client_mib_peak_over_four_separate_20s_cases": 21.14,
+      "rss_server_mib_peak_over_four_separate_20s_cases": 20.52,
+      "rust_native_rx_tx_thread_share_client_pct_mean_approx": null,
+      "rust_native_rx_tx_thread_share_server_pct_mean_approx": null
+    },
+    {
+      "architecture": "arm64",
+      "mode": "game2_fixed6",
+      "loss_30pct_c2s_residual_pct": 0,
+      "loss_30pct_s2c_residual_pct": 0,
+      "cpu_client_pct_one_core_mean_over_four_separate_20s_cases": 11.82,
+      "cpu_server_pct_one_core_mean_over_four_separate_20s_cases": 11.86,
+      "rss_client_mib_peak_over_four_separate_20s_cases": 22.27,
+      "rss_server_mib_peak_over_four_separate_20s_cases": 22.64,
+      "rust_native_rx_tx_thread_share_client_pct_mean_approx": null,
+      "rust_native_rx_tx_thread_share_server_pct_mean_approx": null
+    },
+    {
+      "architecture": "arm64",
+      "mode": "game4_off",
+      "loss_30pct_c2s_residual_pct": 0.854,
+      "loss_30pct_s2c_residual_pct": 0.775,
+      "cpu_client_pct_one_core_mean_over_four_separate_20s_cases": 11.72,
+      "cpu_server_pct_one_core_mean_over_four_separate_20s_cases": 11.78,
+      "rss_client_mib_peak_over_four_separate_20s_cases": 39.33,
+      "rss_server_mib_peak_over_four_separate_20s_cases": 39.15,
+      "rust_native_rx_tx_thread_share_client_pct_mean_approx": null,
+      "rust_native_rx_tx_thread_share_server_pct_mean_approx": null
+    },
+    {
+      "architecture": "arm64",
+      "mode": "game4_fixed6",
+      "loss_30pct_c2s_residual_pct": 0,
+      "loss_30pct_s2c_residual_pct": 0,
+      "cpu_client_pct_one_core_mean_over_four_separate_20s_cases": 20.21,
+      "cpu_server_pct_one_core_mean_over_four_separate_20s_cases": 20.25,
+      "rss_client_mib_peak_over_four_separate_20s_cases": 40.88,
+      "rss_server_mib_peak_over_four_separate_20s_cases": 41.02,
+      "rust_native_rx_tx_thread_share_client_pct_mean_approx": null,
+      "rust_native_rx_tx_thread_share_server_pct_mean_approx": null
+    },
+    {
+      "architecture": "amd64",
+      "mode": "normal_off",
+      "loss_30pct_c2s_residual_pct": 23.294,
+      "loss_30pct_s2c_residual_pct": 23.736,
+      "cpu_client_pct_one_core_mean_over_four_separate_20s_cases": 6.82,
+      "cpu_server_pct_one_core_mean_over_four_separate_20s_cases": 6.85,
+      "rss_client_mib_peak_over_four_separate_20s_cases": 22.51,
+      "rss_server_mib_peak_over_four_separate_20s_cases": 22.87,
+      "rust_native_rx_tx_thread_share_client_pct_mean_approx": 96.48,
+      "rust_native_rx_tx_thread_share_server_pct_mean_approx": 96.54
+    },
+    {
+      "architecture": "amd64",
+      "mode": "normal_maximum6",
+      "loss_30pct_c2s_residual_pct": 0.01,
+      "loss_30pct_s2c_residual_pct": 0.086,
+      "cpu_client_pct_one_core_mean_over_four_separate_20s_cases": 9.82,
+      "cpu_server_pct_one_core_mean_over_four_separate_20s_cases": 9.82,
+      "rss_client_mib_peak_over_four_separate_20s_cases": 24.01,
+      "rss_server_mib_peak_over_four_separate_20s_cases": 23.95,
+      "rust_native_rx_tx_thread_share_client_pct_mean_approx": 96.81,
+      "rust_native_rx_tx_thread_share_server_pct_mean_approx": 96.66
+    },
+    {
+      "architecture": "amd64",
+      "mode": "normal_auto",
+      "loss_30pct_c2s_residual_pct": 0.472,
+      "loss_30pct_s2c_residual_pct": 0.43,
+      "cpu_client_pct_one_core_mean_over_four_separate_20s_cases": 10.15,
+      "cpu_server_pct_one_core_mean_over_four_separate_20s_cases": 10.11,
+      "rss_client_mib_peak_over_four_separate_20s_cases": 23.62,
+      "rss_server_mib_peak_over_four_separate_20s_cases": 23.94,
+      "rust_native_rx_tx_thread_share_client_pct_mean_approx": 96.48,
+      "rust_native_rx_tx_thread_share_server_pct_mean_approx": 96.65
+    },
+    {
+      "architecture": "amd64",
+      "mode": "game2_off",
+      "loss_30pct_c2s_residual_pct": 8.979,
+      "loss_30pct_s2c_residual_pct": 8.711,
+      "cpu_client_pct_one_core_mean_over_four_separate_20s_cases": 5.49,
+      "cpu_server_pct_one_core_mean_over_four_separate_20s_cases": 5.5,
+      "rss_client_mib_peak_over_four_separate_20s_cases": 26.31,
+      "rss_server_mib_peak_over_four_separate_20s_cases": 26,
+      "rust_native_rx_tx_thread_share_client_pct_mean_approx": null,
+      "rust_native_rx_tx_thread_share_server_pct_mean_approx": null
+    },
+    {
+      "architecture": "amd64",
+      "mode": "game2_fixed6",
+      "loss_30pct_c2s_residual_pct": 0,
+      "loss_30pct_s2c_residual_pct": 0,
+      "cpu_client_pct_one_core_mean_over_four_separate_20s_cases": 13.06,
+      "cpu_server_pct_one_core_mean_over_four_separate_20s_cases": 13.09,
+      "rss_client_mib_peak_over_four_separate_20s_cases": 27.45,
+      "rss_server_mib_peak_over_four_separate_20s_cases": 27.25,
+      "rust_native_rx_tx_thread_share_client_pct_mean_approx": null,
+      "rust_native_rx_tx_thread_share_server_pct_mean_approx": null
+    },
+    {
+      "architecture": "amd64",
+      "mode": "game4_off",
+      "loss_30pct_c2s_residual_pct": 0.84,
+      "loss_30pct_s2c_residual_pct": 0.874,
+      "cpu_client_pct_one_core_mean_over_four_separate_20s_cases": 13.85,
+      "cpu_server_pct_one_core_mean_over_four_separate_20s_cases": 13.91,
+      "rss_client_mib_peak_over_four_separate_20s_cases": 47.82,
+      "rss_server_mib_peak_over_four_separate_20s_cases": 45.57,
+      "rust_native_rx_tx_thread_share_client_pct_mean_approx": null,
+      "rust_native_rx_tx_thread_share_server_pct_mean_approx": null
+    },
+    {
+      "architecture": "amd64",
+      "mode": "game4_fixed6",
+      "loss_30pct_c2s_residual_pct": 0,
+      "loss_30pct_s2c_residual_pct": 0,
+      "cpu_client_pct_one_core_mean_over_four_separate_20s_cases": 21.1,
+      "cpu_server_pct_one_core_mean_over_four_separate_20s_cases": 21.15,
+      "rss_client_mib_peak_over_four_separate_20s_cases": 47.55,
+      "rss_server_mib_peak_over_four_separate_20s_cases": 48.82,
+      "rust_native_rx_tx_thread_share_client_pct_mean_approx": null,
+      "rust_native_rx_tx_thread_share_server_pct_mean_approx": null
+    }
+  ],
+  "also_250mbps_per_dir_Fixed6_30pct": {
+    "arm64": "PASS_SCOPED_OBSERVATION",
+    "amd64": "INCONCLUSIVE",
+    "evidence": "docs/evidence/fec-network-work/20261026-W168-250Mbps-UDP30-Fixed6-ARM64-AMD64-Native-Results.json"
+  },
+  "qualifications": [
+    "Only 20s per case with different cloud VMs and random netem waveforms. No stable matched CPU A/B or guaranteed worst-case.",
+    "Game 2/4 lacks a comparable V4_PUBLIC_TIMELINE Rust RX/TX split; null is NOT_OBSERVED, not zero Rust CPU.",
+    "Normal Rust native RX/TX share 95-98% approximate of Go+Rust process CPU, but worker threads may include FFI/scheduling and other Rust work may live elsewhere. This does not prove all modules are Rust.",
+    "Go+Rust product RSS 16.6-48.8MiB regular cases; no genuine per-language or per-module RSS attribution.",
+    "Normal v3 DATA retrans accepted+uncertain divided by first+repair available per-case. Game first-lane copies and Game FEC parity not DATA outer retries.",
+    "Entire outer retransmission percentage NOT_OBSERVED: native accepted repair bytes pre-netem vs veth TX bytes post-netem, cannot divide. Historical auto field 11.x% unfit.",
+    "Historical capacity_stop true retained; W168 user-scoped independent tests permitted performance observation instead of auto-stop.",
+    "Normal RX age250ms and reorder span2048 remain DESIGN ONLY; no source change, main merge not authorized."
+  ],
+  "capacity_stop_historical": true,
+  "merge_ready": false,
+  "original_network_next_action_unchanged": true
+}

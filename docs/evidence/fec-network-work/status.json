@@ -7823,5 +7823,19 @@
     "regular_56": "IN_PROGRESS_AT_RECEIPT",
     "capacity_stop": true,
     "merge_ready": false
+  },
+  "w168_full_56case_udp_matrix_completed_20261026": {
+    "evidence": "docs/evidence/fec-network-work/20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json",
+    "action_run_id": 40345202316,
+    "action_conclusion": "SUCCESS",
+    "lowrate_count": 56,
+    "lowrate_completed": 56,
+    "lowrate_scope_result": "56_PASS_SCOPED_OBSERVATION_ONLY_NONZERO_RESIDUALS_PRESERVED",
+    "aggregate_artifact_id": 12661808868,
+    "highrate_arm64": "PASS_SCOPED_OBSERVATION",
+    "highrate_amd64": "INCONCLUSIVE",
+    "full_outer_retry_fraction": "NOT_OBSERVED_COUNTER_STAGE_MISMATCH",
+    "capacity_stop": true,
+    "merge_ready": false
   }
 }
