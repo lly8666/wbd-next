@@ -27,6 +27,12 @@ struct TxLane{
     last_initial_id:Option<u64>
 }
 #[derive(Default)]
+struct TxBatchSample {
+    native_calls:AtomicU64,native_records:AtomicU64,
+    native_confirmed:AtomicU64,native_partial:AtomicU64,
+    singleton_calls:AtomicU64,unsent:AtomicU64,largest:AtomicU64,
+}
+#[derive(Default)]
 struct RxLockSample {
     samples:AtomicU64,wait_total_ns:AtomicU64,
     hold_total_ns:AtomicU64,wait_max_ns:AtomicU64,
@@ -58,6 +64,7 @@ pub(crate) struct GameKernelOwner{
     rx_dedup_none:Arc<AtomicU64>,rx_tun_failed:Arc<AtomicU64>,
     rx_delivery_commit_failed:Arc<AtomicU64>,
     rx_lock_sample:Arc<RxLockSample>,
+    tx_batch_sample:Arc<TxBatchSample>,
     outer_blocked_duplicate:Arc<AtomicU64>,
     outer_repeated_copy_sent:Arc<AtomicU64>,
 }
@@ -118,6 +125,7 @@ impl GameKernelOwner{
         let rx_tun_failed=Arc::new(AtomicU64::new(0));
         let rx_delivery_commit_failed=Arc::new(AtomicU64::new(0));
         let rx_lock_sample=Arc::new(RxLockSample::default());
+        let tx_batch_sample=Arc::new(TxBatchSample::default());
         let outer_blocked_duplicate=Arc::new(AtomicU64::new(0));
         let outer_repeated_copy_sent=Arc::new(AtomicU64::new(0));
         let mut lanes=Vec::new();
@@ -134,6 +142,7 @@ impl GameKernelOwner{
         let tx_tun=Arc::clone(&tun);
         let tx_copy=Arc::clone(&copied);
         let tx_rejected=Arc::clone(&rejected);
+        let tx_sample=Arc::clone(&tx_batch_sample);
         let outer_denied=Arc::clone(&outer_blocked_duplicate);
         let outer_repeated=Arc::clone(&outer_repeated_copy_sent);
         #[allow(unused_variables)]
@@ -279,13 +288,27 @@ impl GameKernelOwner{
                                 // Single ready copy goes without waiting to
                                 // fill, preserving Game first arrival.
                                 let prefix=if frames.len()==1{
+                                    tx_sample.singleton_calls.fetch_add(1,Ordering::Relaxed);
                                     usize::from(item.raw.send_one(generation,&frames[0],
                                         tuple,presentations[0]).is_ok())
                                 }else{
+                                    tx_sample.native_calls.fetch_add(1,Ordering::Relaxed);
+                                    tx_sample.native_records.fetch_add(
+                                        frames.len() as u64,Ordering::Relaxed);
+                                    tx_sample.largest.fetch_max(
+                                        frames.len() as u64,Ordering::Relaxed);
                                     let receipt=item.raw.send_kernel_multimsg(
                                         generation,&frames,tuple,&presentations);
-                                    receipt.outcome.accepted_prefix.min(frames.len())
+                                    let n=receipt.outcome.accepted_prefix.min(frames.len());
+                                    tx_sample.native_confirmed.fetch_add(n as u64,
+                                        Ordering::Relaxed);
+                                    if n<frames.len(){
+                                        tx_sample.native_partial.fetch_add(1,Ordering::Relaxed);
+                                    }
+                                    n
                                 };
+                                tx_sample.unsent.fetch_add(
+                                    (frames.len()-prefix) as u64,Ordering::Relaxed);
                                 for (rank,&staged_idx) in selected.iter().enumerate(){
                                     let candidate=&staged[staged_idx];
                                     if rank<prefix{
@@ -644,7 +667,7 @@ impl GameKernelOwner{
             raw_received,rx_reject,
             rx_driver_timeout,rx_driver_other,rx_mutex_acquired,
             rx_authenticated_some,rx_dedup_none,rx_tun_failed,
-            rx_delivery_commit_failed,rx_lock_sample,outer_blocked_duplicate,
+            rx_delivery_commit_failed,rx_lock_sample,tx_batch_sample,outer_blocked_duplicate,
             outer_repeated_copy_sent})
     }
     pub(crate) fn outer_policy_counters(&self)->(u64,u64,u64){
@@ -698,6 +721,17 @@ impl GameKernelOwner{
                 self.rx_lock_sample.wait_total_ns.load(Ordering::Relaxed),
                 self.rx_lock_sample.hold_total_ns.load(Ordering::Relaxed),
                 self.rx_lock_sample.wait_max_ns.load(Ordering::Relaxed));
+        }
+        let group_calls=self.tx_batch_sample.native_calls.load(Ordering::Relaxed);
+        if group_calls>0||self.tx_batch_sample.singleton_calls.load(Ordering::Relaxed)>0{
+            eprintln!("M0_GAME_M4_TX_MMSG native_calls={} native_records={} native_confirmed={} native_partial={} singleton_calls={} unsent={} largest={}",
+                group_calls,
+                self.tx_batch_sample.native_records.load(Ordering::Relaxed),
+                self.tx_batch_sample.native_confirmed.load(Ordering::Relaxed),
+                self.tx_batch_sample.native_partial.load(Ordering::Relaxed),
+                self.tx_batch_sample.singleton_calls.load(Ordering::Relaxed),
+                self.tx_batch_sample.unsent.load(Ordering::Relaxed),
+                self.tx_batch_sample.largest.load(Ordering::Relaxed));
         }
         self.tun.begin_stop();
         for x in &self.tx{x.begin_stop()}
