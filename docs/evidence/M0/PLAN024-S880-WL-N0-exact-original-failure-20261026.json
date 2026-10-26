@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "M0_PLAN024_RECOVERED_NATIVE_WL_N0_RESULTS",
+  "source_sha": "f11b6e7a13dafc7203a2630a92957ab80be48ff9",
+  "result": "FAIL_SCOPED_PUBLIC_NETWORK",
+  "artifact_verified": true,
+  "qualification": "PARTIAL_FUNCTIONAL_PASS_WL_N0_FAIL",
+  "run_id": 40295748769,
+  "run_attempt": 1,
+  "workflow_conclusion": "failure",
+  "jobs": [
+    {
+      "id": 121481260214,
+      "scope": "same_source_original_linux_go_rust_build",
+      "conclusion": "success"
+    },
+    {
+      "id": 121481794541,
+      "scope": "windows2025_original_go_credential_tls_npcap_wintun_to_linux_raw_tun_public",
+      "conclusion": "failure"
+    }
+  ],
+  "artifact": {
+    "id": 12638820426,
+    "name": "m0-wl-full-public-normal-direct",
+    "sha256": "0b8ae2705182efeac8a412c166ac39969961755c981b3d86c5a87b0fac09b56f",
+    "downloaded_and_read": true
+  },
+  "reached": {
+    "original_go_credential_tls": "PASS",
+    "real_windows_npcap_signed_wintun": "PASS",
+    "linux_raw_tun_wsl2": "PASS",
+    "scoped_native_os_wal_apply": "PASS",
+    "true_kernel_udp_warmup_both_directions": "PASS",
+    "linux_kernel_tc_netem_300ms_0pct_both_directions": "PASS_CONFIGURED",
+    "windows_authenticated_highwater_native_go_test": "PASS",
+    "owned_cleanup_after_failure": "PASS",
+    "wl_n0_60s": "FAIL_NOT_COMPLETED"
+  },
+  "first_fatal": {
+    "source": "Windows original Go and Rust public Normal/off worker",
+    "message": "native normal TX sequence mismatch expected=1472781435 got=1472781538",
+    "delta_bytes": 103,
+    "point": "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go::transmitOne Rust immutable seal return",
+    "time_after_60s_measurement_start_approx_s": 11.875,
+    "root_of_reserved_sequence_advance": "NOT_YET_PROVEN",
+    "tcp_appearance_ack_forgery": "NOT_AUTHORIZED"
+  },
+  "partial_counters": {
+    "windows": "tx_records=16587 rx_first_delivered_ipv4=18378 reverse_m2_controls=3429 frozen_ciphertext_retransmits=2674 pending_shadow=854",
+    "linux": "real_first_copy=24894 authenticated_ack=16495 frozen_retransmitted=5417 quota_or_capacity_blocked=276439 max_retransmits=2"
+  },
+  "earlier_preserved": [
+    {
+      "source_sha": "8dd51f10dd9f2b299abab34390ee214a4bee81a9",
+      "run_id": 40291751850,
+      "conclusion": "success",
+      "qualified_result": "FAIL_WL_N0_DELIVERY_0.059Mbps_WINDOWS_1.717Mbps_LINUX",
+      "artifact_id": 12636459485
+    },
+    {
+      "source_sha": "8642ad4ac05ac280282b33201af12c4615cf980b",
+      "run_id": 40294153223,
+      "conclusion": "failure",
+      "qualified_result": "native_Linux_compile_E0308_named_shadow",
+      "fix_source_sha": "b4ed6c7f3693772e2f96d24ffd2dfbf1e8e599e5"
+    },
+    {
+      "source_sha": "b4ed6c7f3693772e2f96d24ffd2dfbf1e8e599e5",
+      "run_id": 40294472503,
+      "conclusion": "failure",
+      "artifact_id": 12638215105,
+      "qualified_result": "public_business_started_but_original_windows_rust_owner_generic_fatal"
+    },
+    {
+      "source_sha": "49943d727fe80603d4b0ec8e17f7f33a577597b9",
+      "run_id": 40291751926,
+      "conclusion": "failure",
+      "qualified_result": "older_frozen_Windows_DNS_IPv6_native_guard_FAIL_CLOSED"
+    }
+  ],
+  "unverified": [
+    "Origin of local 103-byte sequence difference",
+    "Whether a control record was reserved without being accepted by kernel",
+    "Actual 60s WL-N0 10Mbps each direction PASS",
+    "WL-N1 1pct50ms",
+    "WL-N5 5pct50ms",
+    "induced two-repair/Abandoned",
+    "host-global WFP DNS GUI",
+    "physical"
+  ],
+  "next_action": "Trace the exact original Rust owner TX sequence reservation or control completion that advanced by 103 bytes without matching Go presentation, source-lock its proof, then make a narrow owner/Go transaction correction while preserving current strict sequence check, auth, M2 budget, WAL and Stop. No further high-load scenario until this is resolved."
+}
