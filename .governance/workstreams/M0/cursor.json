@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 277,
-  "checkpoint_sha": "01d8b7291d0d675a8e1ee8c56e0aa28c2422dd88",
+  "sequence": 278,
+  "checkpoint_sha": "3fabfaf493a1fbed00d354bfe736b7fdc6433fec",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 current W168 Windows Fixed6 Linux-architecture-reuse: source 19db3a8 Action40376199812 exact public Fixed6 trial FAIL at original M2 reverse-kind1 feedback before READY, Normal/off true Windows/Linux duplex/Stop PASS; 01d8b729 adds fail-path stage diagnostics + feature7 genuine M2 reverse kind1 Rust unit and fixes diagnostic Go fmt build; exact full Action40379315293 was in progress in real WSL2/NPF/TUN product at this checkpoint. User directive applies to ALL Windows product wiring.",
-  "why_now": "Recovered full Actions40375634021/40376199812 source-locked reds and 40378794358/40378830835 local Go fmt compile reds. Focused 01d8b729 source run40379315293 Linux original Go/Rust source build PASS and Windows Go+Rust native feature7 M2 unit PASS, real two-OS run still in progress; no product result invented. Updated docs/features/entries/fec-fixed.json to include Windows FAIL row on 19db without overwriting untouched complete Fixed6 NOT_RUN row. No new task, epoch, or performance load.",
-  "done_when": "Registry unchanged: exact public Windows→Linux Normal/off sustained 10Mbps+0%/300ms kernel bidirectional 60s, authentic M2 bounded two repair/Abandoned and >256 carrier ACK gap, owned Stop. Only after valid N0, distinct N1 1%/50ms and N5 5%/50ms Actions. Fixed/Auto/Game/global WFP/DNS/GUI/physical own distinct gate; default FEC2 OFF.",
-  "next_action": "Read terminal job/artifact result of already dispatched exact SOURCE 01d8b729 Actions40379315293/1. If real Windows/Linux Fixed6 fails, use bounded stage=preflight|owner_readback|native_abi|length error and exact source call-chain to repair only proven owner/OS boundary, then one low-cost source-locked functional Action; do not alter Linux-tested FEC/M2 or disable AEAD/PN/OS security. If actual Fixed6 M2 Applied+parity+two-OS UDP/TCP+Stop PASS, close Fixed6 functional-only gate and retain WL-N0/N1/N5/Auto/Game/physical separate NOT_RUN.",
+  "current_task": "SAME existing M0 TASK R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025: WHOLE original Windows client↔Linux server product wiring, following CURRENT Linux protected TLS/Detach, shared Rust M1/M2/M3/recovery/FEC2/Auto/Game, Windows Npcap/Wintun/WFP/route/DNS/WAL GUI Applied/Stop. User confirmed earlier Fixed6 was a typo: no standalone Fixed6 priority or public testing loop. Authoritative main registry/PLAN020 now corrected at 4cf8af67 and main cursor H275.",
+  "why_now": "Recovered prior in-flight exact code01d8b729 native Actions40379315293 terminal FAIL: Linux/Windows genuine build/native Rust/Go unit + driver PASS but Windows/WSL two-OS public step incomplete, terminal GitHub log BlobNotFound/no Windows artifact, earliest error UNKNOWN. Verified real source4fb263 Action40362898805 Normal/off two-way UDP/TCP/owned Stop PASS (older); historical Fixed M2 FAIL and main WL-N0 TX+103B FAIL separate. Audited original Linux/Windows call chain and found Rust Windows mode bit3 claims unfinished Fixed positive; Auto Go private pending/retry; Game lane group 2/4 absent; global WFP/DNS/WinForms Applied unqualified. Staging S3fabfaf aligns mask to real Normal only, adds same DLL five-mode bounded Go test, replaces Fixed-specific run with shared Rust Windows owner regression and authentic two-OS normal product smoke. Current native Action40409529074 in progress; no production or multi-mode PASS.",
+  "done_when": "One coherent public native Windows→Linux end-to-end original Go TLS/Rust owner/data/feedback/FEC2/Auto/Game + genuine Npcap/Wintun/WFP/WAL/GUI OS/readback and owned Stop, effective mode-specific Normal/off Fixed Auto Game2/4 honest capabilities, bidirectional original application UDP/TCP; positive per-mode SOURCE/negative, no manufactured Applied. PLAN021 opens verified modes for opt-in functional trials. WL-N0/N1/N5 performance & physical/global conditions separate later gates; do not make Fixed6 single-purpose performance/test task.",
+  "next_action": "Settle already running exact-source 3fabfaf Actions40409529074 (shared original Windows native owner regression, actual DLL mode gates, real Windows/Linux Normal/off UDP/TCP/owned Stop); if red read first precise native log/artifact before another run. Then complete next currently missing cross-cutting Linux→Windows owner/native I/O interface by tracing already proven Linux implementation (Auto shared M2 sender vs Windows Go private retry, Game authentic lane group, WAL/GUI lifecycle), perform one bounded integrated functional Actions batch. No standalone Fixed6 public test, premature capability mask promotion, repeated WL-N0 10Mbps or security weakening.",
   "unverified": true,
-  "last_tested_source": "19db3a812c50a87d2c70618d18314a919cf831cb",
+  "last_tested_source": "01d8b7291d0d675a8e1ee8c56e0aa28c2422dd88",
   "evidence_refs": [
+    "docs/devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md",
     "docs/evidence/M0/PLAN024-S880-WL-N0-exact-original-failure-20261026.json",
     "docs/devlog/M0/PLAN024-W168-Fixed6-admission-recovery-20261027.md",
     "docs/devlog/M0/PLAN024-W168-Fixed6-resumed-Linux-wide-reuse-intent-20261027.md",
@@ -22,6 +23,8 @@
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md",
+    "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
+    "docs/handoff/CURRENT_INTEGRATION.md",
     "docs/testing/NETWORK_TRIAGE.md",
     "docs/architecture/modules/01-CONTROL-BRIDGE.md",
     "docs/devlog/M0/PLAN024-S880-WL-N0-original-windows-rust-seq-mismatch-20261026.md",
@@ -32,5 +35,5 @@
     "docs/architecture/modules/08-RECOVERY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H277 source-locked Fixed6 recovery: HEAD code01d8b729, latest Action40379315293 Windows feature7 unit PASS, genuine real WSL2/NPF source job in progress; 19db public Fixed6 feedback before READY FAIL remains, 2d581c/71e7fab Go diagnostic fmt compile FAIL retained; 01d8 corrected compiler. All Windows design follows tested Linux. Existing main registry rev3 M0 epoch1 and main H274 unaffected; performance WL-N0/N1/N5 still NOT_RUN."
+  "partial_summary": "H278 isolated integration candidate S3fabfaf (not main); authoritative M0 task refreshed main4cf8af67 H275 to all Windows product wiring, not Fixed6. Native run40409529074 IN_PROGRESS on S3fab. Completed source01d8 Action40379315293 FAIL at public WSL step (logs inaccessible, no detailed root), Linux/Windows build and units PASS; separate older source4fb true Normal scoped PASS, Fixed source19db reverse feedback FAIL, main WL-N0 +103B FAIL. Windows Fixed/Auto/Game/GUI global OS and performance NOT_RUN/UNWIRED; no permission/epoch/worker change, PR28 still Draft."
 }
