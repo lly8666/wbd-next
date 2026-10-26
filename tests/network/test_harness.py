@@ -51,7 +51,7 @@ class Contracts(unittest.TestCase):
             "valid_records=80","valid_records=900")))
         self.assertIsNone(public_game_rx_multimsg(row.replace(
             "limit_per_syscall=4","limit_per_syscall=32")))
-        self.assertIsNone(public_game_rx_multimsg(row+"\\n"+row))
+        self.assertIsNone(public_game_rx_multimsg(row+"\n"+row))
         r=request()
         r["owner"]="fec-network-work"
         r["product"].update(mode="game4",game_fec="fixed6")
