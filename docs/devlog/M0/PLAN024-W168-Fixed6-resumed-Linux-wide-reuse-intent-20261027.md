@@ -31,3 +31,11 @@
 ## Recovery from diagnostic compile red, before correction
 - [40378794358/1](https://github.com/lly8666/wbd-next/actions/runs/40378794358) at `2d581c810dfbd38c56e0aac680407648f436e4cb` **FAIL**: Linux source build PASS, Windows original Go build FAIL with `bridge_v4_windows_scoped_client.go:295/304/319/320: undefined: fmt`. This diagnostic-only compile regression was introduced at `83259143` by adding bounded failure-path `fmt.Errorf` without import. Windows Rust native tests/product NOT_RUN in this run. It does **not** replace the older Fixed6 M2 refusal evidence. Earlier `40378710506` and latest `40378830835` may also retain this red; settle independently.
 - Before changing read current scoped Go bridge import list (lines8–15), `NextBoundOriginalM2Feedback` (lines289–323), Rust `m2_next_feedback_entry` and `v4_owner_crypto::seal_original_authenticated_receipt`, plus recent `19db3a8` Fixed6 native red. **Intent**: add exactly one stdlib `fmt` import; no policy/ABI/FEC/daemon behavior changes. Native-source locked workflow test is the only execution path.
+
+## Feature catalog evidence correction
+
+- Exact Windows Fixed6 source `19db3a812c50a87d2c70618d18314a919cf831cb` trial [40376199812/1](https://github.com/lly8666/wbd-next/actions/runs/40376199812) now has an explicit `FAIL` evidence row in `docs/features/entries/fec-fixed.json`; the separate full Fixed6 Applied+parity+cross-OS data+Stop `NOT_RUN` row is retained. `01d8b729` new diagnostic/M2-source-locked test run remains only a candidate until its result completes. Normal/off old green cannot promote this product capability.
+
+```feature-impact
+{"kind":"updated","ids":["fec-fixed"],"reason":"恢复中源锁证明Windows Fixed6真机尝试在原始M2反向反馈阶段FAIL；已登记独立Windows FAIL，同时保留完整Fixed6 Applied/parity/Stop未验证条目和FEC默认OFF。"}
+```
