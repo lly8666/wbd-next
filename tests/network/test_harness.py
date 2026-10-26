@@ -36,6 +36,33 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_game_four_slot_native_recvmmsg_receipt_and_scope(self):
+        from tools.network_harness.runner import (
+            product_marker_line, public_game_rx_multimsg)
+        row=("M0_GAME_M4_RX_MULTIMSG socket_calls=50 observed_records=89 "
+             "full_4_batches=13 rejected_untrusted=9 valid_records=80 "
+             "limit_per_syscall=4")
+        self.assertTrue(product_marker_line(row))
+        self.assertEqual(public_game_rx_multimsg(row)["observed_records"],89)
+        self.assertIsNone(public_game_rx_multimsg(""))
+        self.assertIsNone(public_game_rx_multimsg(row.replace(
+            "observed_records=89","observed_records=40")))
+        self.assertIsNone(public_game_rx_multimsg(row.replace(
+            "valid_records=80","valid_records=900")))
+        self.assertIsNone(public_game_rx_multimsg(row.replace(
+            "limit_per_syscall=4","limit_per_syscall=32")))
+        self.assertIsNone(public_game_rx_multimsg(row+"\\n"+row))
+        r=request()
+        r["owner"]="fec-network-work"
+        r["product"].update(mode="game4",game_fec="fixed6")
+        r["bundles"]["A"]["require_game_rx_multimsg"]=True
+        validate(r)
+        r["product"]["mode"]="normal"
+        with self.assertRaises(Unsupported): validate(r)
+        r["product"]["mode"]="game4"
+        r["bundles"]["A"]["require_game_rx_multimsg"]=1
+        with self.assertRaises(ValueError): validate(r)
+
     def test_common_go_receive_kernel_handoff_marker_is_mode_scoped(self):
         from tools.network_harness.runner import (
             public_go_rx_handoff, product_marker_line)
