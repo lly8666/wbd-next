@@ -921,6 +921,92 @@ mod tests{
         }
     }
     #[test]
+    fn w143_lane_opener_single_replay_owner_before_shared_tun_commit(){
+        for n in [2,4]{
+            let mut tx=build(n);
+            let mut rx=build(n);
+            let key=tx.offer(b"w143-lane-owned",MonoNs(1)).unwrap();
+            let mut copies=Vec::new();
+            assert_eq!(tx.drain(MonoNs(2),|lane,_,_,wire|{
+                copies.push((lane,wire.to_vec()));true
+            }),n);
+            let owner=rx.receiver_handle();
+            let (lane0,mut wire0)=copies.remove(0);
+            let (lane1,mut wire1)=copies.remove(0);
+            let mut opener0=owner.lock().unwrap().take_lane_for_worker(lane0)
+                .unwrap();
+            let mut opener1=owner.lock().unwrap().take_lane_for_worker(lane1)
+                .unwrap();
+            assert!(matches!(owner.lock().unwrap().take_lane_for_worker(lane0),
+                Err(Error::Unauthorized)),"same replay state cannot be detached twice");
+            let mut broken=wire0.clone();
+            *broken.last_mut().unwrap()^=1;
+            assert!(matches!(opener0.open(&mut broken),Err(Error::Crypto)));
+            let (id,payload)=opener0.open(&mut wire0).unwrap();
+            assert_eq!(id,key);
+            let mut candidate=owner.lock().unwrap()
+                .prepare_opened_receive(lane0,id,payload).unwrap().unwrap();
+            assert_eq!(candidate.payload(),b"w143-lane-owned");
+            assert!(matches!(opener0.open(&mut wire0),Err(Error::Duplicate)));
+            let (other_id,other_payload)=opener1.open(&mut wire1).unwrap();
+            assert_eq!(other_id,key);
+            assert!(owner.lock().unwrap().prepare_opened_receive(
+                lane1,other_id,other_payload).unwrap().is_none(),
+                "pending source suppresses parallel cross-lane delivery");
+            owner.lock().unwrap().finish_receive(candidate,false).unwrap();
+            if n==4 {
+                let (lane2,mut wire2)=copies.remove(0);
+                let mut opener2=owner.lock().unwrap().take_lane_for_worker(lane2)
+                    .unwrap();
+                let (third_id,third_payload)=opener2.open(&mut wire2).unwrap();
+                let received=owner.lock().unwrap().prepare_opened_receive(
+                    lane2,third_id,third_payload).unwrap().unwrap();
+                owner.lock().unwrap().finish_receive(received,true).unwrap();
+                let (lane3,mut wire3)=copies.remove(0);
+                let mut opener3=owner.lock().unwrap().take_lane_for_worker(lane3)
+                    .unwrap();
+                let (id3,payload3)=opener3.open(&mut wire3).unwrap();
+                assert!(owner.lock().unwrap().prepare_opened_receive(
+                    lane3,id3,payload3).unwrap().is_none(),
+                    "after TUN-success commit another fully authenticated copy must be deduped");
+            }
+            tx.stop();rx.stop();
+        }
+    }
+    #[cfg(feature="fec2_product_record")]
+    #[test]
+    fn w143_lane_opener_fixed6_shared_decoder_partial_tun_failure_recovery(){
+        let mut tx=build(4);
+        let mut rx=build(4);
+        tx.enable_game_fec(6,false).unwrap();
+        rx.enable_game_fec(6,true).unwrap();
+        tx.offer(&[0x65;128],MonoNs(10)).unwrap();
+        let mut copies=Vec::new();
+        tx.drain(MonoNs(11),|lane,_,_,wire|{
+            copies.push((lane,wire.to_vec()));true
+        });
+        assert_eq!(copies.len(),4);
+        let owner=rx.receiver_handle();
+        let (lane0,mut wire0)=copies.remove(0);
+        let (lane1,mut wire1)=copies.remove(0);
+        let mut opener0=owner.lock().unwrap().take_lane_for_worker(lane0).unwrap();
+        let mut opener1=owner.lock().unwrap().take_lane_for_worker(lane1).unwrap();
+        let (id,payload)=opener0.open(&mut wire0).unwrap();
+        let batch=owner.lock().unwrap().prepare_opened_fec_batch(
+            lane0,id,payload,MonoNs(11)).unwrap().unwrap();
+        assert!(!batch.frames().is_empty());
+        owner.lock().unwrap().finish_fec_batch(batch,false).unwrap();
+        // Failed TUN write must release the shared logical reservation;
+        // next fully authenticated independent copy can still be accepted.
+        let (other_id,other_payload)=opener1.open(&mut wire1).unwrap();
+        let recovered=owner.lock().unwrap().prepare_opened_fec_batch(
+            lane1,other_id,other_payload,MonoNs(12)).unwrap();
+        if let Some(batch)=recovered {
+            owner.lock().unwrap().finish_fec_batch(batch,true).unwrap();
+        }
+        tx.stop();rx.stop();
+    }
+    #[test]
     fn game_pending_tun_write_suppresses_concurrent_duplicate_without_early_commit(){
         let mut game=build(4);
         game.offer(b"inflight",MonoNs(1)).unwrap();
