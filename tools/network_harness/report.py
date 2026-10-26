@@ -154,6 +154,20 @@ def cross_business_hol(config, client, server):
     return out, failures, limits
 
 
+def loss_exceeds_acceptance(loss_pct, limit_pct, config):
+    """Game4 FEC <0.1% is exclusive; existing <= gates stay unchanged.
+
+    Compare measured application residual (not netem loss and not the
+    surviving-packet p99). A measurement exactly at the user limit FAILS.
+    """
+    if loss_pct is None:
+        return False
+    strict=(config.get("owner")=="fec-network-work" and
+            config.get("product",{}).get("mode")=="game4" and
+            limit_pct==0.1)
+    return loss_pct>=limit_pct if strict else loss_pct>limit_pct
+
+
 def summarize(config, client, server, telemetry, host):
     failures, limits, observed, warnings = [], [], [], []
     phases = [{"name": "warmup", "seconds": config["warmup_s"], "rate_scale": 1}] + config["phases"]
@@ -200,7 +214,7 @@ def summarize(config, client, server, telemetry, host):
                 if (loss is not None and "max_loss_pct" in a
                     and ph["name"] in a.get("loss_gate_phases",
                         [p["name"] for p in config["phases"]])
-                    and loss > a["max_loss_pct"]):
+                    and loss_exceeds_acceptance(loss,a["max_loss_pct"],config)):
                     failures.append(tag + ": declared loss allowance exceeded")
                 if "max_p99_ms" in a and rx["latency"]["n"]:
                     if rx["latency"]["p99_ms"] is None or rx["latency"]["p99_ms"] > a["max_p99_ms"]:
@@ -273,7 +287,7 @@ def summarize(config, client, server, telemetry, host):
                 if (loss is not None and "max_small_udp_loss_pct" in a
                     and ph["name"] in a.get("loss_gate_phases",
                         [p["name"] for p in config["phases"]])
-                    and loss>a["max_small_udp_loss_pct"]):
+                    and loss_exceeds_acceptance(loss,a["max_small_udp_loss_pct"],config)):
                     failures.append(tag+": small UDP residual exceeds allowance")
                 p99=stat["first_arrival_ms"]["p99_ms"]
                 if "max_small_udp_p99_ms" in a and (p99 is None or p99>a["max_small_udp_p99_ms"]):

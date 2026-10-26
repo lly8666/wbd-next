@@ -1000,6 +1000,27 @@ class FecBurstLossGateContracts(unittest.TestCase):
         q=copy.deepcopy(r);q["acceptance"].pop("max_loss_pct")
         with self.assertRaises(ValueError):validate(q)
 
+class FecGame4StrictLossBoundaryContracts(unittest.TestCase):
+    def test_fec_game4_exact_0p1_is_not_a_pass(self):
+        from tools.network_harness.report import loss_exceeds_acceptance
+        q=copy.deepcopy(request())
+        q["owner"]="fec-network-work"
+        q["product"]["mode"]="game4"
+        self.assertTrue(loss_exceeds_acceptance(0.1,0.1,q))
+        self.assertTrue(loss_exceeds_acceptance(0.101,0.1,q))
+        self.assertFalse(loss_exceeds_acceptance(0.099,0.1,q))
+        self.assertFalse(loss_exceeds_acceptance(0,0.1,q))
+        self.assertFalse(loss_exceeds_acceptance(None,0.1,q))
+        q["product"]["mode"]="game2"
+        self.assertFalse(loss_exceeds_acceptance(0.1,0.1,q))
+        q["product"]["mode"]="game4"
+        q["owner"]="network-matrix"
+        self.assertFalse(loss_exceeds_acceptance(0.1,0.1,q))
+        q["owner"]="fec-network-work"
+        self.assertFalse(loss_exceeds_acceptance(1.0,1.0,q))
+        self.assertTrue(loss_exceeds_acceptance(1.001,1.0,q))
+
+
 class FecGame4LongCopyScheduleContracts(unittest.TestCase):
     def test_bounded_optin_wide_game4_only(self):
         r=copy.deepcopy(request())
