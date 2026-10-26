@@ -42,7 +42,8 @@ type V4LinuxGameProduct struct{
 }
 func newV4LinuxGameProduct(cfg V4LinuxGameProductConfig,server bool)(*V4LinuxGameProduct,error){
     if cfg.GameFecEnabled&&cfg.GameFecProfile>6{return nil,ErrAdmissionParams}
-    if cfg.Game4CopyStagger&&cfg.GameFecEnabled{return nil,ErrAdmissionUnsupported}
+    // Game4 fixed FEC is explicitly allowed with the default stagger;
+    // native per-group profile and copy schedule are both installed before M4.
     if cfg.NetworkInterface==""||cfg.NetworkIfIndex==0||cfg.Tun==nil||
        cfg.TunName==""||len(cfg.TunName)>15||cfg.CleanupOwnedNetwork==nil||
        (server&&cfg.Epochs==nil){return nil,ErrAdmissionParams}

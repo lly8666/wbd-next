@@ -108,13 +108,23 @@ impl GameFecTx{
     /// At most one 4-row SIMD quantum per call; never wait for a second group,
     /// never allocate a separate timer or stall a fresh source.
     pub(crate) fn poll<F>(&mut self,now:MonoNs,
-        game_tx_empty:bool,mut submit:F)->Result<usize,GameError>
+        _game_tx_empty:bool,mut submit:F)->Result<usize,GameError>
     where F:FnMut(&[u8])->Result<LogicalPacketId,GameError>{
         self.owner.on_due(now).map_err(|_|GameError::Invalid)?;
-        // Never retire a parity owner while any of its immutable logical
-        // Game M4 records is still queued for actual kernel copy.
-        if !game_tx_empty&&self.in_flight.as_ref().is_some_and(|f|!f.rows.is_empty()){
-            return Ok(0)
+        // GameTx owns its immutable encrypted-symbol input after submit()
+        // (unique slab, never borrowing the FEC encoding workspace). Waiting
+        // for the entire 60ms stagger queue to go empty would starve parity
+        // production under constant business load. Only the actual native
+        // acknowledgement of THIS parity quantum matters for advancing it.
+        // Uncredited rows have a strict owner expiry; never wait forever.
+        if let Some(f)=self.in_flight.as_ref(){
+            if !f.rows.is_empty(){
+                if f.rows.iter().all(|(_,credited)|*credited){
+                    self.in_flight.as_mut().unwrap().rows.clear();
+                }else if now.0<=f.job.expire_at.0{
+                    return Ok(0)
+                }
+            }
         }
         if self.in_flight.is_none(){
             let Some(mut job)=self.owner.take_parity(now)
@@ -167,14 +177,17 @@ impl GameFecTx{
         }
     }
     pub(crate) fn settle_when_quiet(&mut self,game_tx_empty:bool){
-        if !game_tx_empty{return}
         if let Some(f)=self.in_flight.as_mut(){
-            // Every queued lane copy is now definitely completed or dropped;
-            // retain only the independently acknowledged copied count.
-            f.rows.clear();
+            // Delayed GameTx copies own independent slabs: the FEC encoder
+            // can complete when each parity row was credited by >=1 lane.
+            // If the whole TX is empty with uncredited rows, those copies
+            // have been locally dropped and the owner must still retire.
+            if f.rows.iter().all(|(_,credited)|*credited)||game_tx_empty{
+                f.rows.clear();
+            }
         }
         if self.in_flight.as_ref().is_some_and(|f|
-            f.prepared.remaining_rows()==0){
+            f.rows.is_empty()&&f.prepared.remaining_rows()==0){
             let f=self.in_flight.take().unwrap();
             self.math_scratch=f.prepared.into_workspace();
             self.owner.finish_parity(f.job,f.copied,true);

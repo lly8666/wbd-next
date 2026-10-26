@@ -104,17 +104,19 @@ impl GameTx {
     pub fn next_due_ns(&self)->Option<u64>{
         self.lanes.iter().filter_map(|l|l.q.front().map(|p|p.due.0)).min()
     }
-    // 3Mbps worst-case 64B: ~5859pps *65ms =381 jobs.
-    // 1024 has burst headroom; higher rates must pass capacity validation.
+    // 80Mbps target with reference weighted 654B mixed application packets:
+    // ~15300pps*(60ms+5ms)=~995 retained logical jobs. 4096 slots give
+    // ~4x headroom for bursts. This is NOT an 80Mbps all-64B guarantee
+    // (~10156 concurrent source jobs; must pressure-stop by its counters).
     pub fn configure_game4_stagger(&mut self)->Result<(),GameError>{
         if self.stopped||self.staggered||self.lanes.len()!=4||
            self.used!=0||self.free.len()!=self.limits.jobs||
            self.counters.logical_jobs!=0{return Err(GameError::WrongMode)}
-        let old=self.limits.jobs;let jobs=1024;
+        let old=self.limits.jobs;let jobs=4096;
         self.slots.resize_with(jobs,||None);
         self.free.extend((old..jobs).rev());
-        self.limits.jobs=jobs;self.limits.logical_bytes=2*1024*1024;
-        self.limits.lane_slots=1024;self.limits.lane_bytes=2*1024*1024;
+        self.limits.jobs=jobs;self.limits.logical_bytes=8*1024*1024;
+        self.limits.lane_slots=4096;self.limits.lane_bytes=8*1024*1024;
         self.copy_offsets_ns=[0,4_000_000,20_000_000,60_000_000];
         self.staggered=true;Ok(())
     }

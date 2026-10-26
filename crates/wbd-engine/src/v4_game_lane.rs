@@ -439,8 +439,10 @@ impl GameAdapter{
     pub fn configure_game4_stagger(&mut self)->Result<(),Error>{
         if self.stopped||self.lanes.len()!=4{return Err(Error::Invalid)}
         #[cfg(feature="fec2_product_record")]
-        if self.fec.is_some(){return Err(Error::Invalid)}
-        let arena=Arena::new(905,1024,2048,1024,4*1024*1024)
+        // Game4 fixed FEC symbols are deep-copied into an independently
+        // owned GameTx slab before the encoder can retire a block. Their
+        // +60ms data-copy lifetime does NOT pin the encoder's source arena.
+        let arena=Arena::new(905,4096,2048,4096,16*1024*1024)
             .map_err(|_|Error::Capacity)?;
         self.rx_owner.lock().map_err(|_|Error::Stopped)?.rx
             .widen_delivery_window_before_start(65536).map_err(Error::Game)?;
@@ -592,26 +594,25 @@ mod tests{
     fn game4_stagger_capacity_evicts_old_refs_to_admit_new_first(){
         let mut game=build(4);
         game.configure_game4_stagger().unwrap();
-        // No draining: exceed the exact 1024-job/1024-arena cap. This
-        // deliberately saturates the scheduler but must not starve a NEW
-        // logical first; only queued old copies may be sacrificed.
-        for i in 0..1024u32{
+        // No draining: fill the exact 4096-job and backing slab cap.
+        // Only queued older refs can be canceled to admit the new first.
+        for i in 0..4096u32{
             let id=game.offer(&[(i&255) as u8;64],MonoNs(1_000_000)).unwrap();
             assert_eq!(id.0,i as u64);
         }
-        assert_eq!(game.tx.in_use().0,1024);
+        assert_eq!(game.tx.in_use().0,4096);
         let id=game.offer(&[0x91;64],MonoNs(1_000_000)).unwrap();
-        assert_eq!(id.0,1024);
+        assert_eq!(id.0,4096);
         let c=game.game4_copy_schedule().unwrap();
-        assert_eq!(c.scheduled,[1025;4]);
+        assert_eq!(c.scheduled,[4097;4]);
         assert!(c.abandoned.iter().sum::<u64>()>=4);
-        assert_eq!(game.tx.in_use().0,1024);
+        assert_eq!(game.tx.in_use().0,4096);
         let mut fresh_first=false;
         // Fair bounded turns progress all lane1 first copies; keep now=T0
         // to isolate capacity vs due scheduling, no wall clock sleeps.
-        for _ in 0..33{
+        for _ in 0..129{
             game.drain(MonoNs(1_000_000),|lane,pid,_,_|{
-                if pid.0==1024&&lane.slot==1{fresh_first=true;}
+                if pid.0==4096&&lane.slot==1{fresh_first=true;}
                 true
             });
         }
