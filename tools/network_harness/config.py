@@ -322,7 +322,7 @@ def validate(raw):
         raise ValueError("bundles must contain A, optionally B")
     for label, b in bundles.items():
         keys(b, ["source", "run_id", "attempt", "artifact_id", "sha256",
-                 "step_attested_failure", "recovery_policy", "diagnostic_10x", "repair_enabled", "game4_copy_schedule", "require_go_rx_handoff", "require_game_rx_multimsg", "enable_game_rx_lock_sample", "enable_game_tx_multimsg"], f"bundle {label}")
+                 "step_attested_failure", "recovery_policy", "diagnostic_10x", "repair_enabled", "game4_copy_schedule", "require_go_rx_handoff", "require_game_rx_multimsg", "enable_game_rx_lock_sample"], f"bundle {label}")
         if "step_attested_failure" in b and type(b["step_attested_failure"]) is not bool:
             raise ValueError("step_attested_failure must be boolean")
         if "diagnostic_10x" in b and type(b["diagnostic_10x"]) is not bool:
@@ -341,11 +341,6 @@ def validate(raw):
                 raise ValueError("enable_game_rx_lock_sample must be boolean")
             if b["enable_game_rx_lock_sample"] and p["mode"] not in ("game2","game4"):
                 raise Unsupported("Game RX shared-lock timing probe requires Game2/4")
-        if "enable_game_tx_multimsg" in b:
-            if type(b["enable_game_tx_multimsg"]) is not bool:
-                raise ValueError("enable_game_tx_multimsg must be boolean")
-            if b["enable_game_tx_multimsg"] and p["mode"] not in ("game2","game4"):
-                raise Unsupported("real Game sendmmsg requires Game2/4")
         copy_setting=b.get("game4_copy_schedule",p["game4_copy_schedule"])
         if copy_setting not in ("immediate","stagger-4-20-60"):
             raise ValueError("bundle game4_copy_schedule invalid")
