@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W114_W123R_GAME4_OFF_STAGGER_SCOPED; CPU_OVERHEAD_MEASURED; OPTIONAL_NOT_DEFAULT; W124_PRESSURE_SOURCE_SMOKE_PENDING",
+  "phase": "GAME4_FEC_OFF_STAGGER_SINGLE_CANDIDATE_FINAL_OPTIONAL; W114_123R_MATCHED_DAMAGE_88EC; W124_NATIVE_CAPACITY_CLEAN_4B390; NO_MAIN_MERGE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -18,17 +18,22 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
-    "build_run": 40273336095,
+    "source": "4b390154b9f24e76b1592e4acb27565a00ea8113",
+    "build_run": 40276313079,
     "attempt": 1,
-    "artifact_id": 12629261825,
-    "zip_sha256": "65b6a6c34e3115f53c90c71274f48c39bf4e2230e10206353c8b936ffbaa3f90",
+    "artifact_id": 12630800961,
+    "zip_sha256": "0019ab8203daa09c4e3e273190a94d0db54d7ef439823baed9ec3d15137b5244",
     "platform": "linux-aarch64",
-    "mode": "Game4 FEC OFF original TLS; immediate default / stagger-4-20-60 optional",
-    "qualification": "W115-W123R_SCOPED_MATCHED_AB; original Game2/Normal and Fixed6 qualification are separate; source does not restore Game+FEC.",
-    "history_old_stagger_broken": "205c557841525356a6c5a639d4fa8c689235fb27",
-    "next_capacity_candidate": "4b390154b9f24e76b1592e4acb27565a00ea8113",
-    "windows": "TEMP_SKIPPED"
+    "mode": "Game4 FEC OFF original-Go TLS; copy schedule immediate DEFAULT / stagger-4-20-60 opt-in",
+    "qualification": "NATIVE_1024_SLOT_BOUNDED_FIRST_ADMISSION_TEST_PASS and W124_NOLOSS_MATCHED_AB_PASS_SCOPED; W115-W123R weaknet evidence for 88ec PREVIOUS PRODUCT, not retested on 4b390",
+    "real_game4_clean_action": 40276707466,
+    "real_game4_clean_artifact": 12630397812,
+    "real_game4_clean_artifact_sha256": "ce6dc3544304550b7cc3d2df99b8a4ce4d8f4564b438d5bc6a32f5bed22ad506",
+    "historical_88ec_source": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
+    "historical_broken_205c_source": "205c557841525356a6c5a639d4fa8c689235fb27",
+    "original_normal_Game2_GameFEC": "PRESERVED_NOT_REQUALIFIED_BY_GAME4_CHANGE",
+    "windows": "TEMP_SKIPPED",
+    "UI": "NOT_SUPPORTED"
   },
   "open_requests": [
     {
@@ -632,7 +637,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Game4 OFF 0/4/20/60ms single candidate: finalize only W124 exact 4b390 ARM64 matched clean A/B (Action40276707466) after successful native 1024-slot saturation regression Action40276313079; default must remain immediate. Preserve strict W114 failed candidate and W123 analyzer false-red. Do not start new matrix, Game+FEC, Game Auto, Windows, 100Mbps extreme PPS, or main merge.",
+  "next_action": "Bounded Game4 stagger single candidate W114-W124 complete. Decision: keep default immediate, allow 0/4/20/60ms only explicit Game4 FEC-OFF opt-in. 4b390 capacity guard passed native 1024-slot test and W124 real matched lossless A/B. W115–W123R impaired model benefits remain exact earlier 88ec proof, not directly retested on 4b390. Stop matrix and high-PPS pressure; preserve historic FEC fixed6 Game+FEC failures, no Game Auto, no Windows/UI claims. Do not merge main.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6695,12 +6700,12 @@
     "windows": "NOT_RUN/TEMP_SKIPPED"
   },
   "game4_copy_schedule_20261026": {
-    "decision": "OPTIONAL_ANTI_BURST_MODE; KEEP_DEFAULT_IMMEDIATE",
+    "decision": "OPTIONAL_BURST_RESILIENCE; DEFAULT_IMMEDIATE; NO_AUTOTUNE",
     "source_qualified": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
     "new_capacity_guard_source": "4b390154b9f24e76b1592e4acb27565a00ea8113",
     "new_guard_native_action": 40276313079,
     "new_guard_network_action": 40276707466,
-    "new_guard_network_result": "PENDING",
+    "new_guard_network_result": "BOTH_PASS_SCOPED_CLEAN3MBPS",
     "scope": "Game4 FEC OFF, outer DATA retry OFF, no Game Auto, no client GUI; Linux ARM64 only",
     "A_immediate": "0/0/0/0ms",
     "B_stagger": "0/4/20/60ms from each T0",
@@ -6720,6 +6725,17 @@
     "time_blackout": "20/50ms B final UDP missing0;100ms outside full protection",
     "cpu_cost": "clean +17.9%; IID5 +25.7%",
     "capacity_stop": true,
-    "evidence": "docs/evidence/fec-network-work/20261026-W114-W120-Game4-FECOFF-stagger-single-candidate-AB.json"
+    "evidence": "docs/evidence/fec-network-work/20261026-W114-W120-Game4-FECOFF-stagger-single-candidate-AB.json",
+    "new_guard_network_result_artifact": 12630397812,
+    "new_guard_network_zip_sha256": "ce6dc3544304550b7cc3d2df99b8a4ce4d8f4564b438d5bc6a32f5bed22ad506",
+    "source_current": "4b390154b9f24e76b1592e4acb27565a00ea8113",
+    "source_impairment_tests": "88ecda8b348eb319a0eb4cb282da2a6a01649a90"
+  },
+  "product_historical_88ec_game4_qualified": {
+    "source": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
+    "build_run": 40273336095,
+    "artifact_id": 12629261825,
+    "zip_sha256": "65b6a6c34e3115f53c90c71274f48c39bf4e2230e10206353c8b936ffbaa3f90",
+    "scope": "W115–W123R full real network no-loss/IID5/shared GE/wall blackholes/sparse/one-way/lane1 blackout; after native bug fix; never confuse with invalid old205c stagger."
   }
 }

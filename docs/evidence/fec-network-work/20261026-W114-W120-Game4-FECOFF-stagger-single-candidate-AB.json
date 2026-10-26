@@ -506,6 +506,82 @@
         14.8
       ],
       "stop_drained": true
+    },
+    "W124": {
+      "run_id": 40276707466,
+      "attempt": 1,
+      "artifact": 12630397812,
+      "zip_sha256": "ce6dc3544304550b7cc3d2df99b8a4ce4d8f4564b438d5bc6a32f5bed22ad506",
+      "source": "4b390154b9f24e76b1592e4acb27565a00ea8113",
+      "build_run": 40276313079,
+      "build_artifact": 12630800961,
+      "binary_zip_sha256": "0019ab8203daa09c4e3e273190a94d0db54d7ef439823baed9ec3d15137b5244",
+      "result": "A_B_PASS_SCOPED_CLEAN3MBPS_AFTER_CAPACITY_FIX",
+      "udp_sent_A_both": [
+        11008,
+        11008
+      ],
+      "udp_sent_B_both": [
+        11009,
+        11009
+      ],
+      "udp_tcp_missing_all": 0,
+      "first_udp_p50_p95_p99_A_ms": [
+        76.4,
+        77.2,
+        77.5
+      ],
+      "first_udp_p50_p95_p99_B_ms": [
+        75.3,
+        75.5,
+        75.5
+      ],
+      "B_client_planned": [
+        21837,
+        21837,
+        21837,
+        21837
+      ],
+      "B_client_sent": [
+        21837,
+        21835,
+        21835,
+        21835
+      ],
+      "B_server_planned": [
+        21847,
+        21847,
+        21847,
+        21847
+      ],
+      "B_server_sent": [
+        21847,
+        21845,
+        21845,
+        21845
+      ],
+      "B_abandoned_all": 0,
+      "B_mean_due_late_us_client": [
+        0,
+        449,
+        488,
+        508
+      ],
+      "CPU_s_A_B": [
+        4.54,
+        5.29
+      ],
+      "RSS_peak_MiB_A_client_server": [
+        36.37,
+        35.82
+      ],
+      "RSS_peak_MiB_B_client_server": [
+        38.21,
+        37.94
+      ],
+      "Stop_drained": true,
+      "outer_DATA_retransmits": 0,
+      "qualification": "NEW native 1024-saturation regression + matched clean business only; do NOT infer W117/W118-W120 impairment re-ran on 4b390 source"
     }
   },
   "integrity": "W115-W120 current product actual outer DATA retransmits=0 both endpoints, FEC OFF, source TUN and owned fq root drops0, application TCP genuine and no high-phase backpressure, Stop drained; W117 packet_GE and wall-time blackout are distinct models; W118-W120 blackhole events record actual monotonic begin/end per direction and command uncertainty (~2-3ms). Copied but intentionally abandoned future lane work is PRODUCT-side abandonment not line loss; no claim all copy planned always sent under blackout.",
@@ -516,9 +592,10 @@
     "CDF all-offered denom sampled to 1ms precision through250ms, threshold uses same VM A clean baseline p50 and floors ms. Never only survivor denominator",
     "Old W114 Action green but unacceptable native copy send contract; retained negative",
     "W121 sparse, W122 one-way, W123R disabled lane1 all A/B exact-source 88ec native PASS; original W123 strict parser false-negative preserved.",
-    "4b390 native pressure-first guard is a NEW product binary. Earlier network results do not qualify it before W124 same-binary smoke."
+    "4b390 native pressure-first guard is a NEW product binary. Earlier network results do not qualify it before W124 same-binary smoke.",
+    "Capacity-guard 4b390 source requalified on exact W124 lossless A/B, NOT rerun shared GE or 20/50/100ms damage matrix. Such unchanged hotpath function behavior remains 88ec's source-specific evidence, not direct new-source measurements."
   ],
-  "intended_decision": "RETAIN_AS_OPTIONAL_ANTI_CORRELATED_BURST; DEFAULT_IMMEDIATE_0_0_0_0; NOT_AUTOMATIC_DEFAULT; NO_MAIN_MERGE",
+  "intended_decision": "RETAIN_042060_AS_OPTIONAL_ANTI_CORRELATED_BURST; KEEP_DEFAULT_IMMEDIATE_0000; NO_MAIN_MERGE; NO_AUTO_TUNE",
   "devlog": "docs/devlog/fec-network-work/20261026-Game4-FECoff-copy-stagger-candidate-W114-W120.md",
   "capacity_stop": true,
   "merge_ready": false,
@@ -528,6 +605,10 @@
     "build_artifact": 12630800961,
     "build_zip_sha256": "0019ab8203daa09c4e3e273190a94d0db54d7ef439823baed9ec3d15137b5244",
     "result": "ARM64_NATIVE_BUILD_AND_1024_SLOT_SATURATION_REGRESSION_PASS; W124_EXACT_SOURCE_NO_LOSS_AB_IN_PROGRESS",
-    "notes": "Only Game4 stagger capacity-limit branch: cancel oldest queued duplicate references from four FIFO heads before allocating a new logical first, accounted as local abandon; no normal-traffic loop scan."
+    "notes": "Only Game4 stagger capacity-limit branch: cancel oldest queued duplicate references from four FIFO heads before allocating a new logical first, accounted as local abandon; no normal-traffic loop scan.",
+    "status": "ARM64_NATIVE_CAPACITY_REGRESSION_AND_W124_EXACT_SOURCE_CLEAN_AB_PASS_SCOPED",
+    "network_run": 40276707466,
+    "network_artifact": 12630397812,
+    "network_zip_sha256": "ce6dc3544304550b7cc3d2df99b8a4ce4d8f4564b438d5bc6a32f5bed22ad506"
   }
 }
