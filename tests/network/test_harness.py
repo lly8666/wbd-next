@@ -302,7 +302,7 @@ class Contracts(unittest.TestCase):
             w.sel.close()
         # Synthetic 10ms patterns exercise analysis, not product success.
         cfg={"warmup_s":10,"phases":[{"name":"steady","seconds":10}],
-             "traffic":{"tcp_flows":2}}
+             "traffic":{"tcp_flows":2,"c2s_mbps":1,"s2c_mbps":1}}
         n=2600
         def endpoint():
             a=[1]*n
