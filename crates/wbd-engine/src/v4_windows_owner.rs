@@ -94,13 +94,19 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
     let all=(RecordPn(0),RecordPn(u64::MAX));
     let route=ReceiptRouteScope::checked(lane,lane,outbound,epoch,all,all)
         .map_err(|_|INVALID)?;
-    let shadow=ReceiptState::new(lane,ReceiptConfig{
-        max_shadow_entries:MAX_M2_FROZEN,pto_ns:80_000_000,
-        reorder_window_ns:15_000_000,
+    // Windows original Go/Npcap M2 uses W168's *same opportunistic-v3*
+    // policy, not pre-freeze PTO/RACK blind two-repair retries. The verified
+    // original sender still has the explicit 1536 immutable M2 shadow cap.
+    let mut shadow=ReceiptState::new(lane,ReceiptConfig{
+        max_shadow_entries:MAX_M2_FROZEN,pto_ns:810_000_000,
+        reorder_window_ns:20_000_000,
     }).map_err(|_|INVALID)?;
+    shadow.enable_adaptive_timing(600_000_000,50_000_000)
+        .map_err(|_|BAD_STAGE)?;
+    shadow.enable_opportunistic_v3().map_err(|_|BAD_STAGE)?;
     let feedback=RxFeedbackState::new(RxFeedbackConfig{
-        max_retained_pages:8,max_pages_per_report:8,
-        retention_ns:100_000_000,srtt_ns:8_000_000,
+        max_retained_pages:512,max_pages_per_report:8,
+        retention_ns:2_000_000_000,srtt_ns:600_000_000,
     }).map_err(|_|INVALID)?;
     let now=m2_clock();
     let mut g=m2_global().lock().map_err(|_|BAD_STAGE)?;
@@ -109,7 +115,8 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         max_repair_bytes_per_epoch:65_536,max_pending_reservations:128,
         max_pending_bytes:131_072,io_timeout_ns:100_000_000,
     },now).map_err(|_|BAD_STAGE)?;
-    if g.bind_receipt_route(direction,route,now).is_err(){
+    if g.enable_opportunistic_v3(direction).is_err() ||
+        g.bind_receipt_route(direction,route,now).is_err(){
         let _=g.retire_tunnel(lane.tunnel,now);
         return Err(BAD_STAGE)
     }
@@ -1394,7 +1401,10 @@ mod tests {
     }
 
     #[test]
-    fn m0_windows_m2_original_frozen_two_repair_global_budget_and_abandoned(){
+    fn m0_windows_m2_v3_no_unsolicited_pto_repair_and_owned_stop(){
+        // Original-Windows feature3 owner, real frozen firstsend and M2
+        // shadow. W168 opportunistic-v3 MUST NOT turn an elapsed PTO into
+        // plaintext refresh, new PN, fabricated ACK, or two blind repairs.
         use std::time::Duration;
         let mut r=Registry{generation:399,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
         let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
@@ -1405,46 +1415,32 @@ mod tests {
         let mut ipv4=[0u8;90];ipv4[0]=0x45;
         ipv4[2..4].copy_from_slice(&90u16.to_be_bytes());
         ipv4[8]=64;ipv4[9]=17;
-        let mut original=[0u8;2048];
+        let mut wire=[0u8;2048];
         {
             let mut entry=r.entries[&h].lock().unwrap();
             assert!(m2_arm_entry(&mut entry,epoch,91,19).is_ok());
+            assert!(entry.m2.as_ref().unwrap().shadow.timing_snapshot().is_some());
+            assert_eq!(entry.m2.as_ref().unwrap().shadow.policy_limits().1,MAX_M2_FROZEN);
         }
-        let (used,seq,pn)=v3_seal_one(&r,h,epoch,91,19,&ipv4,&mut original)
-            .unwrap();
+        let (used,seq,pn)=v3_seal_one(&r,h,epoch,91,19,&ipv4,&mut wire).unwrap();
         assert_eq!(pn,0);
         {
-            let mut entry=r.entries[&h].lock().unwrap();
-            assert_eq!(m2_kernel_firstsend_entry(
-                &mut entry,epoch,91,19,pn,seq,used,1),Ok(1));
-        }
-        for attempt in 0..2 {
-            std::thread::sleep(Duration::from_millis(95));
-            let mut same=[0u8;2048];
-            let mut entry=r.entries[&h].lock().unwrap();
-            let retry=m2_next_repair_entry(&mut entry,epoch,91,19,&mut same)
-                .unwrap().expect("original frozen M1 same-PN M2 repair due");
-            assert_eq!(retry,(used,seq,pn));
-            assert_eq!(&same[..used],&original[..used]);
-            assert_eq!(m2_complete_repair_entry(
-                &mut entry,epoch,91,19,pn,1),Ok(1));
-            let m=entry.m2.as_ref().unwrap();
-            assert_eq!(m.shadow.outstanding(),1);
-            assert!(m.in_flight.is_none());
-            assert_eq!(attempt<2,true);
+            let mut e=r.entries[&h].lock().unwrap();
+            assert_eq!(m2_kernel_firstsend_entry(&mut e,epoch,91,19,pn,seq,used,1),Ok(1));
         }
         std::thread::sleep(Duration::from_millis(95));
-        let mut after=[0u8;2048];
-        let mut entry=r.entries[&h].lock().unwrap();
-        assert!(m2_next_repair_entry(&mut entry,epoch,91,19,&mut after)
-            .unwrap().is_none(),"third M2 repair was illegally issued");
-        assert_eq!(entry.m2.as_ref().unwrap().shadow.outstanding(),1);
-        drop(entry);
+        let mut candidate=[0u8;2048];
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            assert!(m2_next_repair_entry(&mut e,epoch,91,19,&mut candidate)
+                .unwrap().is_none(),"W168 v3 must not invent PTO repair without authenticated mature negative");
+            assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),1);
+            assert!(e.m2.as_ref().unwrap().in_flight.is_none());
+        }
         assert_eq!(quiesce_wintun(&mut r,h,epoch,91,19),OK);
         assert_eq!(stop(&mut r,h),OK);
         assert_eq!(release(&mut r,h),OK);
-        // No resurrection of original M1 ciphertext across Stop generation.
-        assert_eq!(v3_seal_one(&r,h,epoch,91,19,&ipv4,&mut original),Err(UNKNOWN));
+        assert_eq!(v3_seal_one(&r,h,epoch,91,19,&ipv4,&mut wire),Err(UNKNOWN));
     }
 
     #[cfg(feature="fec2_product_record")]

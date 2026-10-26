@@ -246,6 +246,8 @@ jobs:
           # Native Rust-only regression: a too-short reverse-M2 draft buffer
           # cannot burn one PN/TCP span and silently misalign original Go.
           & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_windows_m2_short_feedback_output_does_not_burn_original_tx_sequence -- --nocapture
+          if($LASTEXITCODE -ne 0){throw 'original reverse M2 PN/SEQ preflight regression'}
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_windows_m2_v3_no_unsolicited_pto_repair_and_owned_stop -- --nocapture
           if($LASTEXITCODE -ne 0){throw 'M0 original Rust M2 feedback TX sequence transaction unit FAIL'}
           & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_windows_original_m1_2048_slots_and_m2_1536_shadow_contract -- --nocapture
           if($LASTEXITCODE -ne 0){throw 'M0 original Windows M1=2048 M2=1536 exact runtime contract FAIL'}
