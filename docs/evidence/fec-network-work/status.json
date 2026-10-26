@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W143_GAME_P2_LANE_OWNED_AEAD_NATIVE_PASS_NEAR_CAPACITY_10MBPS_AB_PENDING; W137_DEADLINE_SCOPED_PASS; P1A_NATIVE80_NEGATIVE_REVERTED; CAPACITY_STOP",
+  "phase": "W143_W144_GAME_P2_LANE_AEAD_10MBPS_ABBA_PASS_SMALL_CPU_GAIN; W145_INCREMENTAL_15MBPS_NEAR_CAPACITY_RUNNING; FIVE_MODE_P0_PREVIOUS_6C38; CAPACITY_STOP_NO_MAIN_MERGE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -678,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W143 Game P2 per-lane unique AEAD/replay ownership implementation native fully PASS exact bb8e8249c2adba9c7dab72bf07da2dbe0bce3b82 Action40300070389, zip artifact12639832584 hash0073e5ad..., original Go TLS/ISA-L and 20 Game Rust unit tests passed including unique PN, TUN false and shared fixed6. Dedicated near-limit Game4 fixed6 real IID30 each10Mbps sameVM AB old e400 source vs new bb8 Action40300583654 IN_PROGRESS; strict original parity 0/4/20/60 and CPU/RSS PSI stop. W126 original Game4 20Mbps PSI mean33.24 peak42.04, W134 10Mbps peak27.7; do not increase beyond near edge, certainly no Game4 full80. Last fully 5-mode qualified source6c38 remains; W137 e400 only scoped Game. P1a four-slot recvmmsg rolled back after real BA/AB CPU regressions and 80Mbps native ABBA+3.567%; W142 sampled lock wait~1.4us/hold~3us. Continue only if real W143 qualifies; if small CPU change one reverse BA at same condition; no other network owner state edits, no Windows, no main.",
+  "next_action": "W143 Game P2 new source bb8e8249 native ARM64 Action40300070389 PASS artifact12639832584 SHA256 0073e5ad..., lane AEAD/replay moved once per worker before shared dedup+FEC/TUN after authenticated ID. Real W143 Game4 fixed6 IID30 10Mbps AB Action40300583654 PASS old30.99/new30.15 CPU-s (-2.71%) PSI4.526/4.235; reverse W144 BA Action40301283287 PASS old33.15/new32.77 (-1.15%) PSI4.95/4.97; zero business missing, original parity and 0/4/20/60 copies all truly sent, no TUN drops, outerDATA0, Go duplicates0, clean Stop. Small CPU savings alone not conclusive. User requests near-limit test, incremental W145 15Mbps each direction true Game4 fixed6 IID30 sameVM AB Action40302001410 launched; only if W145 actual delivery/PSI/CPU headroom qualifies proceed, no automatic 20/80 pressure. Game2 near-edge protective and Game4 OFF independent only after W145 decision; Normal OFF Fixed Auto last original 6c38 qualification unchanged. P1a 80Mbps synthetic 64B native 156250pps ABBA negative+3.567% CPU and real W135/W136 failed CPU, reverted. W137 Game deadline e400 scoped. W142 owner lock measured~1.4us wait/3us hold. Windows NOT_RUN, capacity_stop true, no main or original network state edit.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -7233,12 +7233,45 @@
     "action": 40300583654,
     "request": "tests/network/fec-work/W143-Game4-fixed6-IID30-UDP10Mbps-P2-lane-AEAD-sameVM-AB-nearPSI-cap-ARM64.json",
     "request_commit": "c140ac0e9fa2e7bb832e6e5c68e07dbd2a23eb79",
-    "action_result": "IN_PROGRESS_NOT_QUALIFIED",
+    "action_result": "W143_40300583654_PASS_SCOPED_10MBPS_AB; W144_40301283287_PASS_SCOPED_10MBPS_BA",
     "scenario": "Game4 fixed6, each direction 10Mbps, each lane independent 30% IID, 75ms one-way, real UDP weighted packet sizes with 100Hz small UDP, default 0/4/20/60ms, old e400 then new bb8 on same VM",
     "rate_selection": "Near prior observed safe capacity edge: Game4 at10Mbps W134 host PSI peak27.7% (16% samples >20), 20Mbps W126 PSI mean33.24 peak42.04 and hard stop. Never assume 80Mbps qualifying.",
     "next": "Check exact W143 Action 40300583654 final artifact, two-sided real injection/first TUN delivery and end missing, p95/p99, host busy/CPU PSI/steal, process CPU-s & RSS, native 4 copies and all parity planned vs true kernel sent, Go afterhandoff copied0, outer DATA retrans0, Stop/clean memory. If near host capacity knee or loss worsens mark unqualified and STOP, don't increase to20; if small CPU difference <=few% at safe PSI at most one reverse BA, no matrix.",
     "capacity_stop": true,
     "merge_ready": false,
-    "windows": "NOT_RUN/TEMP_SKIPPED"
+    "windows": "NOT_RUN/TEMP_SKIPPED",
+    "reverse_action": 40301283287,
+    "observed_game4_cpu_old_new_s": {
+      "W143_AB": [
+        30.99,
+        30.15
+      ],
+      "W144_BA": [
+        33.15,
+        32.77
+      ]
+    },
+    "observed_cpu_reduction_pct": {
+      "W143_AB": 2.7106,
+      "W144_BA": 1.1463
+    },
+    "host_psi_mean_old_new_pct": {
+      "W143_AB": [
+        4.526,
+        4.2352
+      ],
+      "W144_BA": [
+        4.9498,
+        4.9736
+      ]
+    },
+    "actual_udp_delivery": "All offered and delivered both directions, zero final missing each leg; p99 damaged 83.6–83.7ms; fixed6 parity and original Game4 0/4/20/60 all true sent/none abandoned, Go posthandoff full copy0, outerDATA retry0, Stop clean",
+    "evidence": "docs/evidence/fec-network-work/20261026-W143-W144-Game-P2-lane-owned-AEAD-IID30-10Mbps-ABBA.json",
+    "higher_bandwidth_action": 40302001410,
+    "higher_bandwidth_request": "tests/network/fec-work/W145-Game4-fixed6-IID30-UDP15Mbps-P2-lane-AEAD-near-capacity-AB-ARM64.json",
+    "higher_bandwidth_commit": "189db3eba61e5b02b6de740357ac5852ccd2334e",
+    "higher_bandwidth_result": "IN_PROGRESS_AT_STATUS_CHECK",
+    "retention_decision": "SMALL_POSITIVE_ABBA_BUT_COMPLEXITY_BENEFIT_NOT_YET_FINAL; AWAIT_SINGLE_15MBPS_BOUNDED_SCENARIO",
+    "last_five_mode_qualified_source": "6c38ed0df9da3547c7bd604b51f13443d6863181"
   }
 }
