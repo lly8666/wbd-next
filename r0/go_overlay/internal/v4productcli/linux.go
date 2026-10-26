@@ -26,7 +26,6 @@ import (
     "os/signal"
     "strconv"
     "strings"
-    "sync"
     "sync/atomic"
     "syscall"
     "time"
@@ -622,6 +621,8 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     }
     errs:=make(chan error,1)
     admitted:=make(chan struct{},1)
+    var handoffCommitted atomic.Bool
+    var goPostHandoffDataCopies atomic.Uint64
     go func(){
         for {
             seg,_,readErr:=raw.ReadSegment()
@@ -632,7 +633,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             }
             if seg.DstPort!=c.localPort{continue}
             if faketcp.IsInitialSYN(seg){
-                if *connected{continue}
+                if handoffCommitted.Load(){continue}
                 isn,e:=originalRandomISN()
                 if e!=nil{select{case errs<-e:default:};return}
                 assoc,e:=table.AddSYN(seg,isn,time.Second)
@@ -652,6 +653,9 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                 // in-flight FakeTCP write: sender ACK/window updates MUST
                 // continue. Skipping all non-nil transitions deadlocked the
                 // server before it could publish the real Rust owner.
+                if handoffCommitted.Load()&&len(seg.Payload)!=0{
+                    goPostHandoffDataCopies.Add(1)
+                }
                 continue
             }
             outcome,e:=assoc.HandleSegment(seg,time.Now())
@@ -668,18 +672,38 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                 select{case admitted<-struct{}{}:
                     go func(){
                         _,e:=product.AcceptAuthenticatedPeer(ctx,assoc,reply)
-                        if e!=nil{select{case errs<-e:default:{}}}
+                        if e==nil&&ctx.Err()!=nil{e=errors.Join(ctx.Err(),product.Close())}
                         if e==nil{
-                            *connected=true
-                            log.Printf("V4_ORIGINAL_GO_SERVER_NATIVE_READY role=server Rust_owner=active real_raw_tun=1")
-                            startV3ProductTimeline(ctx,"server",product.OriginalLoopPulse,product.OriginalOuterCounters)
+                            state,exists:=assoc.TransitionState()
+                            if !exists||state!=faketcp.TransitionDetached{
+                                e=errors.Join(fmt.Errorf("Normal server Rust M4 started without FakeTCP detach"),product.Close())
+                            }else{
+                                flow:=assoc.Flow()
+                                if flow.ServerIP!=c.localIP.As4()||flow.ServerPort!=c.localPort{
+                                    e=errors.Join(fmt.Errorf("Normal server detached flow scope mismatch"),product.Close())
+                                }else if filterErr:=raw.ExcludeDetachedData(flow.ClientIP,flow.ClientPort);filterErr!=nil{
+                                    e=errors.Join(fmt.Errorf("Normal server receive ownership handoff: %w",filterErr),product.Close())
+                                }
+                            }
                         }
+                        if e!=nil{
+                            select{case errs<-e:default:}
+                            return
+                        }
+                        handoffCommitted.Store(true)
+                        log.Printf("V4_PUBLIC_GO_RX_HANDOFF role=server mode=%s filtered=1 rust_ready=1 original_send_fd_open=1",c.fecMode)
+                        log.Printf("V4_ORIGINAL_GO_SERVER_NATIVE_READY role=server Rust_owner=active real_raw_tun=1")
+                        startV3ProductTimeline(ctx,"server",product.OriginalLoopPulse,product.OriginalOuterCounters)
                     }()
                 default:}
             }
         }
     }()
     select{case <-ctx.Done():case err=<-errs:}
+    // The public product's authenticated readiness is published atomically
+    // by the admission worker; only this caller writes the lifecycle flag.
+    *connected=handoffCommitted.Load()
+    log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=server mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())
     if *connected{
         counters,countErr:=product.OriginalOuterCounters()
         logAuthenticOuter("server",counters,countErr)
