@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W110_GAME_ALL_OFF_FIXED0_TO6_OUTER_DATA_OFF_REPRESENTATIVE_REAL_LINUX_ARM64_PASS_SCOPED; W109_ONEWAY_QUIET_MTU_PASS; W102_SHARED_LONG_GE_RESIDUAL_AND_CAPACITY_STOP",
+  "phase": "W111_GAME4_FIXED6_QUIET_TAIL_PASS_SCOPED; W112_GAME2_W113_GAME4_FIXED6_SHARED_GE15_STRICT_1PCT_FAIL; W103_W110_LINUX_FIXED_SCOPE_RETAINED; CAPACITY_STOP",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -634,7 +634,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Representative fixed0..6/Off Game Linux + actual outer DATA OFF + W109 one-way/quiet-tail/sparse near-MTU and W110 Normal fixed2 all PASS_SCOPED. Avoid adding high pressure or Game Auto (unsupported). If future operator requests integration: investigate W102 correlated shared long GE 2.43/2.56% residual and high host PSI; bounded final-quantum loss-at-silence edge and Game4 tail/Windows/physical NOT_RUN, not silently waived. Keep merge_ready=false until scoped boundary accepted; leave original network next_action untouched. Fixed3 runner PSI35% and W109 quiet PSI38.49% => capacity_stop=true.",
+  "next_action": "GameMode fixed only per explicit user 2026-10-26 (NO Game Auto). W111 latest Game4 fixed6 true quiet-tail PASS_SCOPED; W112 latest Game2 and W113 latest Game4 shared long GE strict 1% damaged-service gates FAIL (Game2 4.533/4.316% UDP, Game4 0.888/1.051%), while clean recovery and native true outer DATA OFF/parity/TCP/Stop pass; no host PSI headroom problem observed at 1Mbps, but prior capacity_stop remains. Preserve negative artifacts; no random-seed repeats, no higher load and no unproven decoder fix. If specific missing-source last-quantum erasure diagnosis becomes justified, first inspect existing bounded per-block arrival/TTL evidence and isolate single relevant functional regression. Windows temporarily skipped, no main or network role changes, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6581,5 +6581,104 @@
     "merge_ready": false,
     "capacity_stop": true,
     "network_role_state_unchanged": true
+  },
+  "game_mode_auto_required": false,
+  "game_mode_auto_scope": "OUT_OF_SCOPE_PER_USER_20261026; no Game Auto development/testing; Normal FEC Auto existing task and evidence unaffected",
+  "w111_w113_bounded_fixed6": {
+    "status": "COMPLETE_EXACT_ARM64_ORIGINAL_FIXED6_SCENARIOS__W111_SUCCESS_W112_W113_STRICT_BUSINESS_FAIL",
+    "source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "build_run": 40260662919,
+    "build_artifact_id": 12623678360,
+    "build_sha256": "04d209b7ef1e887af6599622aaf71efc34381451c847e844cf18c2006ae9708f",
+    "native_outer_repair_off_both": true,
+    "native_outer_data_retransmitted_all": 0,
+    "actual_parity_planned_sent_all": true,
+    "runner": "aarch64 GitHub Actions, each performance run one job, independent VM each; 1Mbps/dir; 75ms one way; no new binaries/no Game Auto",
+    "w111": {
+      "mode": "Game4 fixed6 clean tail",
+      "run": 40268464615,
+      "attempt": 1,
+      "conclusion": "SUCCESS",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "artifact_id": 12627347851,
+      "zip_sha256": "d5b6ae332298d66e0f304fb18fd57e1b3084dac43b1f557ec1872aba17e7dbec",
+      "source_tun_drop": 0,
+      "real_udp_tcp_all_offered_before_after_delivered": true,
+      "true_quiet_probe_hz": 0,
+      "quiet_s": 12,
+      "host_psi_peak_pct": 2
+    },
+    "w112": {
+      "mode": "Game2 fixed6 shared GE15Long",
+      "run": 40268468985,
+      "attempt": 1,
+      "conclusion": "FAILURE",
+      "result": "FAIL_STRICT_1PCT_UDP_AND_SMALL_BOTH_DIRECTIONS",
+      "artifact_id": 12627552490,
+      "zip_sha256": "3e37acd7166a9186ee81fea2bbf15daee29c64cbce05e1b62d1ea9ea063a33e8",
+      "missing_udp": [
+        250,
+        238
+      ],
+      "sent_udp": [
+        5515,
+        5515
+      ],
+      "residual_pct": [
+        4.533091568449683,
+        4.315503173164098
+      ],
+      "small_udp_residual_pct": [
+        2.48447,
+        2.8667
+      ],
+      "parity_planned_sent": [
+        33285,
+        33305
+      ],
+      "source_tun_drop": 0,
+      "host_psi_peak_pct": 0.56,
+      "clean_before_after_udp_missing": 0,
+      "tcp_backpressure": 0
+    },
+    "w113": {
+      "mode": "Game4 fixed6 shared GE15Long",
+      "run": 40268472555,
+      "attempt": 1,
+      "conclusion": "FAILURE",
+      "result": "FAIL_STRICT_1PCT_S2C_UDP; C2S_UNDER_1PCT_SINGLE_RUN",
+      "artifact_id": 12627647120,
+      "zip_sha256": "006b1ed3d4f5b5a720ef5a494ca207004d1c343b9567768215b336f6f24f56a8",
+      "missing_udp": [
+        49,
+        58
+      ],
+      "sent_udp": [
+        5516,
+        5516
+      ],
+      "residual_pct": [
+        0.8883248730964467,
+        1.0514865844815084
+      ],
+      "small_udp_residual_pct": [
+        0.2866698518872432,
+        0.5733397037744864
+      ],
+      "parity_planned_sent": [
+        33345,
+        33350
+      ],
+      "source_tun_drop": 0,
+      "host_psi_peak_pct": 1.2,
+      "clean_before_after_udp_missing": 0,
+      "tcp_backpressure": 0
+    },
+    "evidence": "docs/evidence/fec-network-work/20261026-W111-W113-original-Game-fixed6-outeroff-bounded-ARM64-results.json",
+    "devlog": "docs/devlog/fec-network-work/20261026-W111-W113-original-Game-fixed6-bounded-actions-intent.md",
+    "remaining": "Shared correlated long GE strict1pct fails at latest exact product despite no local host capacity loss; do not infer codec correctable erasure leak without per-block timely trace. 1Mbps not 3Mbps comparable, Game4 tiny 0.0515pp S2C miss not full PASS. Windows TEMP_SKIPPED, sparse 10ms cross HOL and deliberately damaged final FEC block not qualified.",
+    "no_auto_game": true,
+    "host_capacity_stop": true,
+    "merge_ready": false
   }
 }
