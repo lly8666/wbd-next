@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "date": "2026-10-24",
+  "branch": "experiment/fec-network-tuning",
+  "parents": [
+    "9cfd72968e21a63834f455a96afc71a5d35737db",
+    "040741820b2f917b5868c285c438d4cc21c6193a"
+  ],
+  "common_ancestor": "45325c9c965e56080f2035bafcf235aa02a1a6c0",
+  "qualification": "MERGED_SOURCE_NOT_YET_ACTIONS_VERIFIED",
+  "policy_default": "outer-opportunistic-v3",
+  "off_expected": {
+    "outer_data_retransmit": 0,
+    "shadow_outstanding": 0,
+    "candidate_first": 0,
+    "candidate_retry": 0,
+    "parity": "INDEPENDENT",
+    "authentic_feedback": "RETAINED"
+  },
+  "conflicts": [
+    ".github/workflows/network-arm64-product-build.yml",
+    ".github/workflows/network-harness.yml",
+    "START_HERE.md",
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go",
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "tests/network/test_harness.py",
+    "tools/network_harness/config.py",
+    "tools/network_harness/runner.py"
+  ],
+  "v3_upstream_fec_pending_references": [
+    "docs/evidence/network-matrix-work/V3-all-Linux-modes-owned-fq600-20261024.json",
+    "docs/evidence/network-matrix-work/V3-Auto-FEC-fq0-vs-default600-sameVM-20261024.json"
+  ],
+  "old_artifact_excluded": true
+}

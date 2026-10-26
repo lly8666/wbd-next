@@ -8,6 +8,34 @@ use crate::link_fec_wire::LINK_HEADER;
             tcp_header_len:20, peer_mss:Some((outer-40) as u16),
             record_wire_limit:MAX_WIRE_LEN,fec,game:false }
     }
+    #[test]
+    fn v3_fec2_dynamic_cold_envelope_matches_go_1500_1400_1280(){
+        for (outer,wire,normal,fec,game,game_fec) in [
+            (1500,1460,1429,1415,1413,1399),
+            (1400,1360,1329,1315,1313,1299),
+            (1280,1240,1209,1195,1193,1179),
+        ] {
+            for (choice,is_game,want) in [
+                (FecReservation::FixedOff,false,normal),
+                (FecReservation::V3Fec2Fixed,false,fec),
+                (FecReservation::V3Fec2Adaptive,false,fec),
+                (FecReservation::FixedOff,true,game),
+                (FecReservation::V3Fec2Fixed,true,game_fec),
+            ] {
+                let mut i=input(outer,choice);
+                i.game=is_game;
+                let b=FrameBudget::derive(i).unwrap();
+                assert_eq!(b.record_wire_mtu,wire);
+                assert_eq!(b.single_business_payload_mtu,want);
+                assert_eq!(b.max_fec_wire_datagram(),wire-31);
+            }
+        }
+        let mut i=input(1500,FecReservation::FixedOff);
+        i.peer_mss=Some(1360);
+        assert_eq!(FrameBudget::derive(i).unwrap().single_business_payload_mtu,1329);
+        i.peer_mss=Some(1460); i.record_wire_limit=1280;
+        assert_eq!(FrameBudget::derive(i).unwrap().single_business_payload_mtu,1249);
+    }
     /// Literal pinned Go oracle, NOT computed from Rust implementation.
     #[test]
     fn r1_budget_go_six_mtu_oracle_and_exact_overheads() {

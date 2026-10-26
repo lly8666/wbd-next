@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "id": "P1-TUN-preloan-root-cause-fix-20261023",
+  "prior_run": 39911913234,
+  "prior_artifact": 12483556117,
+  "product_source_before": "99042008e8f42f334ed635df92945e00e53c45dd",
+  "prior_result": "FAIL real 2pct UDP loss client->server144/5884 (2.4473%), server->client153/5884 (2.6003%)",
+  "direction_counts": {
+    "client": {
+      "tun_udp": 9498,
+      "staged_udp": 9395,
+      "tun_tcp": 11349,
+      "staged_tcp": 11225,
+      "post_read_failed": 227,
+      "udp_delta": 103,
+      "tcp_delta": 124
+    },
+    "server": {
+      "tun_udp": 9487,
+      "staged_udp": 9374,
+      "tun_tcp": 11393,
+      "staged_tcp": 11272,
+      "post_read_failed": 234,
+      "udp_delta": 113,
+      "tcp_delta": 121
+    }
+  },
+  "identity": "Client 103+124=227, server 113+121=234. This is a proven product TUN-consumed/arena-full drop boundary before any authenticated record. Outbound success and inbound real receiver TUN counts cover warmup/steady/drain, not directly comparable to 60s steady cohort.",
+  "occupancy_model": "First copy ~206 records/s over approx 100s incl warmup+drain, measured RTT~408ms implies ~84 flight slots before extra outstanding control/repair/32-frame batch; 128 slab ceiling has only ~44 remaining and in fact exhausted",
+  "fix": [
+    "Reserve bounded original owner slab before destructive TUN kernel read. Defer without consuming if NoCapacity; avoid idle spin by <=1ms sleep only if no other ready work",
+    "Reuse existing feature7 Linux bounded 512-slot 2048B M1 pool for Normal/off, about 1.1MiB/session; not 131072 payload prealloc nor 500Mbps proof",
+    "Preserve single repair, earned 10% quota, immutability, original RX, Stop and MTU; export pre_read_deferred separately from legacy post_read_arena_failed"
+  ],
+  "status": "NATIVE_ACTION_NOT_YET_RECONCILED"
+}

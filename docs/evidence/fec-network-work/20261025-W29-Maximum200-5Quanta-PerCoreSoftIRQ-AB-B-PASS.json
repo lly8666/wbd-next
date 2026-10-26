@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "owner": "fec-network-work",
+  "id": "FEC-W29-Maximum200-5Quanta-M4Slots-IrqDiag-SameVM-AB-ARM64",
+  "scenario": "Fixed Maximum6, 200Mbps each, 30% IID loss, 300ms one-way, outer DATA retrans OFF and real M2 reverse",
+  "request": "tests/network/fec-work/W29-maximum200-m4-fivequanta-percore-softirq-AB-arm64.json",
+  "request_commit": "0f3c1b43cb99285cf1f78180e47047a11e828844",
+  "action": 40144809020,
+  "attempt": 1,
+  "conclusion": "FAIL_OVERALL_ONLY_BECAUSE_A_OLD_FAIL_B_OPTIMIZED_PASS",
+  "artifact_id": 12580009264,
+  "sha256": "786088a21a27c70623b344e2cfef5249c587005d2b103daf58a4a7b4600910a8",
+  "product": {
+    "A": {
+      "source": "564490bc7a8f61c9ab06be58add8138212306393",
+      "build_run": 40109847848,
+      "artifact": 12566326717
+    },
+    "B": {
+      "source": "6246aa82df5140807914545b2fc9343b8c70a1aa",
+      "build_run": 40144596602,
+      "artifact": 12579619244,
+      "sha256": "f6baae3d9ca042d80b854fff1b217da8a11a2d8ce4aaf852935f2b641fdfcb7c"
+    }
+  },
+  "baseline_A": {
+    "result": "FAIL",
+    "delivered_mbps": {
+      "c2s": 191.52673466666667,
+      "s2c": 190.44067733333335
+    },
+    "residual_pct": {
+      "c2s": 4.2709677200031955,
+      "s2c": 4.8129023924290735
+    },
+    "p99_ms": {
+      "c2s": 312.1,
+      "s2c": 312.1
+    },
+    "client_parity": {
+      "planned": 1106049,
+      "sent": 916875,
+      "expired_jobs": 5872,
+      "seal_failure": 5949,
+      "unknown_capacity": 8701
+    },
+    "server_parity": {
+      "planned": 1106089,
+      "sent": 899841,
+      "expired_jobs": 6537,
+      "seal_failure": 5673,
+      "unknown_capacity": 9326
+    },
+    "cpu_s_30": {
+      "client": 28.04,
+      "server": 28.74
+    },
+    "host_cpu_psi_pct": {
+      "mean": 37.77633333333333,
+      "peak": 40.84
+    },
+    "per_core_nonidle_pct": [
+      74.67,
+      72.65,
+      77.73,
+      72.78
+    ],
+    "per_core_softirq_cpu_pct": [
+      9.97,
+      9.48,
+      11.2,
+      9.53
+    ]
+  },
+  "optimized_B": {
+    "result": "PASS_SCOPED_OBSERVATION",
+    "delivered_mbps": {
+      "c2s": 199.54592746666665,
+      "s2c": 199.59397733333336
+    },
+    "residual_pct": {
+      "c2s": 0.23915190310183587,
+      "s2c": 0.22011156852013639
+    },
+    "p99_ms": {
+      "c2s": 309.9,
+      "s2c": 309.3
+    },
+    "client_parity": {
+      "planned": 1106174,
+      "sent": 1099275,
+      "expired_jobs": 330,
+      "seal_failure": 0,
+      "unknown_capacity": 72
+    },
+    "server_parity": {
+      "planned": 1106169,
+      "sent": 1099573,
+      "expired_jobs": 310,
+      "seal_failure": 0,
+      "unknown_capacity": 72
+    },
+    "cpu_s_30": {
+      "client": 30.61,
+      "server": 30.38
+    },
+    "host_cpu_psi_pct": {
+      "mean": 42.23533333333333,
+      "peak": 45.3
+    },
+    "per_core_nonidle_pct": [
+      76.55,
+      76.9,
+      78.02,
+      76.16
+    ],
+    "per_core_softirq_cpu_pct": [
+      10.54,
+      9.95,
+      10.85,
+      10.1
+    ],
+    "per_core_NET_RX_events": [
+      448058,
+      437217,
+      477315,
+      447350
+    ],
+    "per_core_NET_TX_events": [
+      522217,
+      510686,
+      548083,
+      519130
+    ],
+    "guest_steal_cpu_pct": 0,
+    "hardirq_cpu_pct": 0,
+    "cgroup_cpu_stat_delta": {
+      "nr_throttled": 0,
+      "throttled_usec": 0,
+      "nr_periods": 0
+    },
+    "cgroup_cpu_max": "UNAVAILABLE",
+    "src_tun_drops": 0,
+    "root_qdisc_drops": 0,
+    "rx_capacity_reject": 0,
+    "rx_pressure_evicted": 0,
+    "original_outer_DATA_retransmitted": 0,
+    "owned_stop_drained": true
+  },
+  "artifacts_note": "Artifact host-samples.json per A/B has every original 1Hz core/softirq/thread sample. No per-packet capture or memory source content saved.",
+  "verification": {
+    "build_product": "SUCCESS_REAL_ARM64_NATIVE_FIXED_AUTO",
+    "maximum20_contract": "SUCCESS_RUN_40144596591",
+    "harness_contract": "SUCCESS_RUN_40144596705",
+    "AB_order": "A_then_B_same_VM_single_scenario",
+    "warmup_s": 15,
+    "measure_s": 30,
+    "drain_s": 30,
+    "netem_outer_mbps_each": 600,
+    "netem_loss_iid_pct": 30,
+    "netem_oneway_ms": 300,
+    "static_owned_neighbors": true,
+    "original_fq600": true
+  },
+  "limitations": [
+    "User-mode + network kernel + netem + injector co-located on four-core shared Actions VM, no extrapolation to physical deployment",
+    "CPU PSI B increases because parity delivery B increases; no CPU savings claimed",
+    "No single CPU hardirq or softirq saturated in 1Hz sample, but subsecond bottlenecks or scheduling/cgroup partitioning unobserved",
+    "CPU cgroup cpu.max inaccessible but cpu.stat observed zero throttling; no claim unlimited CPU quota",
+    "Single unseeded netem AB without BA repeatability; fixed maximum Linux only",
+    "DO NOT escalate higher than200 while host CPU PSI>20 all samples; Auto true dynamic not qualified"
+  ]
+}

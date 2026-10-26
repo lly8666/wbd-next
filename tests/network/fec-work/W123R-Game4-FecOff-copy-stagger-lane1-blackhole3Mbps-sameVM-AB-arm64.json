@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "id": "FEC-W123R-Game4-OFF-Stagger-Lane1Blackhole-ScopedNativeAB",
+  "owner": "fec-network-work",
+  "seed": 8211124,
+  "policy": "outer-opportunistic-v3",
+  "product": {
+    "mode": "game4",
+    "fec_profile": 1,
+    "game_fec": "off",
+    "repair_enabled": false,
+    "game4_copy_schedule": "immediate"
+  },
+  "traffic": {
+    "c2s_mbps": 3,
+    "s2c_mbps": 3,
+    "udp_share": 0.96,
+    "sizes": [
+      [
+        64,
+        6
+      ],
+      [
+        96,
+        8
+      ],
+      [
+        160,
+        10
+      ],
+      [
+        255,
+        8
+      ],
+      [
+        256,
+        6
+      ],
+      [
+        257,
+        7
+      ],
+      [
+        512,
+        10
+      ],
+      [
+        900,
+        15
+      ],
+      [
+        1287,
+        30
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "deadline_ms": 6000,
+    "burst_ms": 0,
+    "max_packets": 5000000,
+    "allow_fragmentation": false,
+    "observe_size_classes": true,
+    "observe_independent_flows": true
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "independent",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded",
+    "owned_veth_static_neighbour": true
+  },
+  "warmup_s": 15,
+  "drain_s": 30,
+  "phases": [
+    {
+      "name": "clean_before",
+      "seconds": 15,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      }
+    },
+    {
+      "name": "lane1_blackhole",
+      "seconds": 30,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50,
+        "blackhole_lanes": [
+          1
+        ]
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50,
+        "blackhole_lanes": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "clean_after",
+      "seconds": 15,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false,
+    "max_loss_pct": 1,
+    "max_small_udp_loss_pct": 1,
+    "max_small_udp_p99_ms": 800,
+    "loss_gate_phases": [
+      "clean_before",
+      "lane1_blackhole",
+      "clean_after"
+    ],
+    "require_zero_source_tun_drops_full_run": true,
+    "require_zero_tun_root_qdisc_drops_full_run": true,
+    "cross_business_hol": true
+  },
+  "bundles": {
+    "A": {
+      "source": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
+      "run_id": 40273336095,
+      "attempt": 1,
+      "artifact_id": 12629261825,
+      "sha256": "65b6a6c34e3115f53c90c71274f48c39bf4e2230e10206353c8b936ffbaa3f90",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false,
+      "game4_copy_schedule": "immediate"
+    },
+    "B": {
+      "source": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
+      "run_id": 40273336095,
+      "attempt": 1,
+      "artifact_id": 12629261825,
+      "sha256": "65b6a6c34e3115f53c90c71274f48c39bf4e2230e10206353c8b936ffbaa3f90",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false,
+      "game4_copy_schedule": "stagger-4-20-60"
+    }
+  },
+  "order": "AB"
+}

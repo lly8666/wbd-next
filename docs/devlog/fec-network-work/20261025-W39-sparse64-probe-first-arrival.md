@@ -1,0 +1,3 @@
+# W39 sparse 64B 20Hz probe first-arrival measurement
+
+W38 mixed 200Mbps already has real UDP application payload size groups, 35% count <=256B and 2 real TCP streams; per-size p99 and 10ms holes. New W39 opt-in FEC-only harness additionally records distinct 64B sparse 20Hz UDP probe first-arrival **before** sending reverse echo: actual one-way p99 and missing count paired with sender probe_sent, plus existing reverse RTT. No probe resends or protocol synthetic parity, no TCP wire packet attribution. This distinguishes per-packet high-frequency small cohort from independently paced genuinely sparse small datagrams. Unobserved is UNQUALIFIED, never quietly filled by RTT estimate.

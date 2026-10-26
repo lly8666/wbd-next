@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "request_id": "arm64-off-duplex-mixed-10m-lossless-90s",
+  "run_id": 39760409329,
+  "attempt": 1,
+  "harness_source": "814b6b7aef48c82153e51986c2b5406915298dcf",
+  "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+  "product_build_run": 39759842150,
+  "product_artifact_id": 12417786567,
+  "workflow_result": "FAIL",
+  "failure_stage": "product_cli_startup_before_READY",
+  "steps": {
+    "artifact_provenance_and_native_elf": "PASS",
+    "os_dependencies": "PASS",
+    "business": "NOT_RUN",
+    "stop_product": "NOT_MEASURED",
+    "owned_namespace_cleanup": true
+  },
+  "result_artifact_id": 12418065932,
+  "host": {
+    "machine": "aarch64",
+    "logical_cpus": 4,
+    "kernel": "7.0.0-1017-azure"
+  },
+  "metrics": {
+    "actual_injection": "NOT_RUN",
+    "delivery": "NOT_RUN",
+    "p99": "NOT_RUN",
+    "cpu": "NOT_RUN",
+    "fec_kr": "NOT_OBSERVED"
+  },
+  "no_retry_same_request": true
+}

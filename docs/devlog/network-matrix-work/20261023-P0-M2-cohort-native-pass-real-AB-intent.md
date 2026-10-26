@@ -1,0 +1,7 @@
+# P0 M2 cohort native PASS → one real same-VM A/B
+
+Native ARM64 [39889364428](https://github.com/lly8666/wbd-next/actions/runs/39889364428) source `18860b9dfe4931d8aba05943fad484677590571c` completed SUCCESS. Product artifact `12474012306` SHA256 `dd103f8db5e9eb07b9f795c3118ecb0e09d939b3ecb75f6cbb7f47f0e61850cf`; new M2 clean-cohort release unit PASS; existing nine native MTU/DF/Stop cases PASS with artifact `12474426593`. This is functional evidence, not business qualification.
+
+**This next Action distinguishes exactly one hypothesis:** old source a58d already has parity seal fixed and delivered the exact Fixed2% workload well but client stayed requested1/applied0. New source changes only Fixed M2 qualification to an authenticated matured clean cohort, preserves historical UNKNOWN evidence and strict censor/scope, removes global FEC-idle/all-era catch-up requirements, and enlarges bounded M2 metadata 4096→8192. Run same ARM64 VM sequential A=a58d → B=18860, same seed/load/loss/delay. Result decides whether P0 Fixed readback closes. No H500, no parameter search, no alternate seed.
+
+If B is applied on both sides with zero integrity/Stop defects, preserve actual M2 counters even if historical UNKNOWN remains; that is expected evidence, not erased. If B remains pending, do not loosen gate again: inspect exact capacity/error censor origin.

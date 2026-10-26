@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "owner": "fec-network-work",
+  "test": "W25_Maximum150_TwoQuantaSameM4_AB",
+  "run": 40109234114,
+  "attempt": 1,
+  "result_artifact": 12565917569,
+  "result_sha256": "6dae0f82569e28a8c72785c126c1d18a3c6d322538a250b1f287d6f331705683",
+  "request_commit": "8748e7e2d81c6af8827c75065303607c2a969c7a",
+  "request_path": "tests/network/fec-work/W25-maximum150-two-quanta-sameM4-AB-arm64.json",
+  "order": "AB",
+  "runner": "single ubuntu-24.04-arm same performance job",
+  "old": {
+    "source": "cf00a47c9564d67b15409d50178a956416227a8a",
+    "build_run": 40105262367,
+    "product_artifact": 12564910143,
+    "outcome": "FAIL_RESIDUAL_BOTH_OVER_1PCT",
+    "business": {
+      "c2s": {
+        "delivered_mbps": 147.1225176,
+        "residual_loss_pct": 1.950799424369129,
+        "p99_ms": 311.3
+      },
+      "s2c": {
+        "delivered_mbps": 147.37922746666666,
+        "residual_loss_pct": 1.7737841635317046,
+        "p99_ms": 311.2
+      }
+    },
+    "native": {
+      "client": {
+        "planned": 830066,
+        "sent": 745874,
+        "queued_expired": 985,
+        "unknown_capacity": 8049,
+        "parity_seal_failure": 19
+      },
+      "server": {
+        "planned": 830066,
+        "sent": 753112,
+        "queued_expired": 848,
+        "unknown_capacity": 7399,
+        "parity_seal_failure": 21
+      }
+    },
+    "cpu_s_30s": {
+      "client": 24.24,
+      "server": 24.06
+    },
+    "rss_peak_bytes": {
+      "client": 49840128,
+      "server": 49618944
+    },
+    "outer_virtual_tx_bytes_30s": {
+      "client": 918168288,
+      "server": 924435961
+    },
+    "psi_peak_pct": 27.42,
+    "psi_mean_pct": 25.35533333333333
+  },
+  "optimized": {
+    "source": "ab7ea894100f245d6a510137282736781bd017ce",
+    "build_run": 40108972702,
+    "build_result": "SUCCESS_NATIVE_FIXED_AUTO_REAL_TUN_RECOVERY_AND_TWO_QUANTA_M4",
+    "product_artifact": 12565424535,
+    "product_zip_sha256": "9bf5b07eee3e90a37a69844b23fb08834c38a9d5781f0f1635c27543bbba7067",
+    "outcome": "PASS_SCOPED_OBSERVATION_BOTH_DIRECTIONS_150MBPS",
+    "business": {
+      "c2s": {
+        "delivered_mbps": 149.9383544,
+        "residual_loss_pct": 0.054163569447214316,
+        "p99_ms": 303.3
+      },
+      "s2c": {
+        "delivered_mbps": 149.95313093333334,
+        "residual_loss_pct": 0.048497924107547545,
+        "p99_ms": 303.2
+      }
+    },
+    "native": {
+      "client": {
+        "planned": 830367,
+        "sent": 829702,
+        "queued_expired": 15,
+        "unknown_capacity": 51,
+        "parity_seal_failure": 69
+      },
+      "server": {
+        "planned": 830361,
+        "sent": 829936,
+        "queued_expired": 8,
+        "unknown_capacity": 31,
+        "parity_seal_failure": 87
+      }
+    },
+    "cpu_s_30s": {
+      "client": 24.85,
+      "server": 24.58
+    },
+    "rss_peak_bytes": {
+      "client": 50122752,
+      "server": 49778688
+    },
+    "outer_virtual_tx_bytes_30s": {
+      "client": 973795739,
+      "server": 974450102
+    },
+    "psi_peak_pct": 29.61,
+    "psi_mean_pct": 26.99866666666667
+  },
+  "conditions": {
+    "app_rate_mbps_each": 150,
+    "loss_iid_pct": 30,
+    "actual_netem_loss_pct_A": {
+      "client": 30.052925129589045,
+      "server": 30.063846302720542
+    },
+    "actual_netem_loss_pct_B": {
+      "client": 30.032591257002377,
+      "server": 29.979100098073335
+    },
+    "one_way_delay_ms": 300,
+    "warmup_s": 15,
+    "measurement_s": 30,
+    "drain_s": 30,
+    "mode": "Fixed Maximum profile6 both applied",
+    "outer_repair": "OFF real 0 bytes both legs",
+    "static_owned_veth_neighbors": true,
+    "original_tun_fq600_unchanged": true,
+    "RX_pressure_evictions_both_zero": true,
+    "RX_decoder_reject_both_zero": true,
+    "source_TUN_drops_both_zero": true,
+    "Stop_drained": true
+  },
+  "verdict": "AB_OVERALL_FAILURE_BECAUSE_OLD_A_FAILS; NEW_B_150MBPS_SCOPED_PASS",
+  "limitations": [
+    "B CPU seconds higher because it emits materially more genuine parity; no aggregate CPU speedup proven.",
+    "Host PSI remains high and runner cannot authorize 175 Mbps or 350 Mbps pressure.",
+    "Single sequential AB, unseeded netem, no BA replication or 150 stable-product qualification.",
+    "Old/new outer interface byte measurements include DATA, real FEC parity and control. Zero outer DATA retrans; do not add 45s native wire ledger.",
+    "Auto dynamic live step changes, authenticated RTT age, Windows/physical, combined outer ON qualification remain unproven."
+  ]
+}

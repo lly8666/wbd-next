@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "branch": "experiment/fec-network-tuning",
+  "source": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57",
+  "qualification": "BUILD_AND_NATIVE_UNIT_PASS_NOT_FEC_ONLY_RUNTIME",
+  "actions": {
+    "build": {
+      "run_id": 39915080968,
+      "conclusion": "success",
+      "artifact_id": 12484770973,
+      "sha256": "fd22c47a4f57fe5968f4ffb927ba7e284217c0a3fd2b3a3271ab583b600d98f4",
+      "arch": "arm64",
+      "build_source": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57"
+    },
+    "harness": {
+      "run_id": 39915081006,
+      "conclusion": "success"
+    },
+    "maximum_native_row": {
+      "run_id": 39915080946,
+      "conclusion": "success"
+    }
+  },
+  "request": {
+    "id": "FEC-W1-fixed-max-outeroff-baseline-loss5-arm64",
+    "path": "tests/network/fec-work/W1-fixed-max-off-loss5-arm64.json",
+    "bundle": {
+      "source": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57",
+      "run_id": 39915080968,
+      "attempt": 1,
+      "artifact_id": 12484770973,
+      "sha256": "fd22c47a4f57fe5968f4ffb927ba7e284217c0a3fd2b3a3271ab583b600d98f4",
+      "recovery_policy": "outer-single-repair-v2"
+    },
+    "repair_enabled": false
+  },
+  "limits": [
+    "No runtime double-sided switch readback until W1",
+    "No product FEC-only recovery or CPU/RSS qualification until W1",
+    "Game/Windows switch not wired"
+  ]
+}

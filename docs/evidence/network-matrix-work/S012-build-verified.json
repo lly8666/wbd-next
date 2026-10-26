@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "product_source": "e63d38bd20466575675ca8b493a45882ec815a52",
+  "run_id": 39773479071,
+  "attempt": 1,
+  "conclusion": "success",
+  "artifact_id": 12423960905,
+  "zip_sha256": "595c39801e80c9ded03dd4673236fdc1a3bfddc9e68ffc9e275f8ab87b0ba64f",
+  "manifest_sha256": "171d710fe594dc53d44fd9cf7b4b05711001501ac4cb367f1b0f0973ae734a9c",
+  "architecture": "aarch64",
+  "source_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "source_isal": "c387163fcbca62701d646149564c550c78a4f985",
+  "binaries": {
+    "wbd-v4-client": "7452c78a3e13607be39c19e551ebd4eed0d223eead2698ac700d35828ea8a69e",
+    "wbd-v4-server": "ad385273a3ce4c1f0338b1b81647224dd309c0cc0de5f4d624d4b5b20f78d54b",
+    "libwbd_engine.so": "effc6f5bbf089111a6739562aeda06ef27bc71af317c27a48ac847c940552ce9"
+  },
+  "hash_verified": true,
+  "elf_machine": 183,
+  "native_isa_backend_runtime": "NOT_OBSERVED"
+}

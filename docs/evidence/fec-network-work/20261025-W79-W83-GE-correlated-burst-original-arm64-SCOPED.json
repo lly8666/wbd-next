@@ -1,0 +1,578 @@
+{
+  "schema": "FEC_ORIGINAL_ARM64_GILBERT_ELLIOTT_FINITE_W79_W83_V1",
+  "date_utc": "2026-10-25",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "frozen_product_source": "7ad0ba91b656ff8e9ee965d0c093a18e048971fb",
+  "frozen_build_action": 40185113624,
+  "frozen_build_artifact": 12596370712,
+  "frozen_build_zip_sha256": "ab1407ccc5dd85c3a66c885cd410dbdd27fa7059461f18647d8ca6b41ce7384e",
+  "scope": "original TLS-bound Linux ARM64 FEC-owned Normal two directions, true M2 authenticated reverse, M3 parity, M4 kernel copied + true TUN recovery, 8Mbps each direction mixed96%UDP4% two TCP flows plus independent 64B probes; real outer DATA retransmission fully OFF",
+  "model_reference": "tc-netem(8) loss gemodel P R (1-H) (1-K): P good→bad, R bad→good, (1-H)=100% in bad, (1-K)=0% in good. Approximate theoretical steady BAD fraction P/(P+R); mean bad run 100/R packets.",
+  "runtime_verification_common": {
+    "native_original_outer_data_retransmitted": 0,
+    "source_tun_tx_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "tun_root_qdisc_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "native_fec_rx_capacity_rejected": {
+      "client": 0,
+      "server": 0
+    },
+    "native_fec_rx_pressure_evicted": {
+      "client": 0,
+      "server": 0
+    },
+    "native_decoder_rejected": {
+      "client": 0,
+      "server": 0
+    },
+    "native_parity_expired": 0,
+    "original_native_M2_positive_and_reverse": true,
+    "tcp_missing_after_drain_all_runs_both": 0,
+    "clean_recovery_udp_missing_after_drain_all_fixed_runs_both": 0,
+    "original_stop_drained_owned_namespaces_clean": true
+  },
+  "runs": [
+    {
+      "case": "W79",
+      "request_commit": "4114df2b8f04683034b9f3fbe84dce5e6af732e8",
+      "request": "tests/network/fec-work/W79-fixed-medium-burst5-arm64.json",
+      "contract_action": 40191027061,
+      "performance_action": 40191027046,
+      "performance_conclusion": "success",
+      "artifact_id": 12598012117,
+      "zip_sha256": "7e61bc3a674c2012e5c1966d704629a4d8313087bf88e78ced15bb79f4eef764",
+      "real_harness_result": "PASS_SCOPED_OBSERVATION_WITH_LOOSE_DIAGNOSTIC_LOSS_GATES_NOT_1PCT_SERVICE_PASS",
+      "mode": "fixed",
+      "grade": 2,
+      "loss_model": {
+        "gemodel": [
+          1,
+          19,
+          100,
+          0
+        ],
+        "expected_bad_fraction_pct": 5,
+        "expected_bad_burst_length_packets": 5.2632
+      },
+      "netem_loss_pct": {
+        "client": 5.2711456343,
+        "server": 5.0928579815
+      },
+      "stress_udp": {
+        "c2s": {
+          "sent": 88132,
+          "missing": 2511,
+          "residual_loss_pct": 2.8491,
+          "p99_ms": 84.9
+        },
+        "s2c": {
+          "sent": 88134,
+          "missing": 2466,
+          "residual_loss_pct": 2.798,
+          "p99_ms": 83.6
+        }
+      },
+      "small_udp_stress_missing": {
+        "c2s": [
+          1008,
+          33478
+        ],
+        "s2c": [
+          954,
+          33480
+        ]
+      },
+      "sparse64_stress_missing": {
+        "c2s": [
+          14,
+          1190
+        ],
+        "s2c": [
+          15,
+          1191
+        ]
+      },
+      "native_fixed_applied_both": "requested1 applied1 profile2 pendingfalse",
+      "parity_planned_sent": {
+        "client": [
+          84457,
+          84457
+        ],
+        "server": [
+          84385,
+          84385
+        ]
+      },
+      "native_rx_fec_recovered_tun": {
+        "client": 2244,
+        "server": 2341
+      },
+      "native_m2_positive_samples": {
+        "client": 195491,
+        "server": 195575
+      }
+    },
+    {
+      "case": "W80",
+      "request_commit": "396b015726e2a27503d031cc84be0376c47e5c1b",
+      "request": "tests/network/fec-work/W80-fixed-maximum-burst15-arm64.json",
+      "contract_action": 40191030712,
+      "performance_action": 40191030800,
+      "performance_conclusion": "failure",
+      "artifact_id": 12598395699,
+      "zip_sha256": "b0035e6581ba3a01a3851e93e3f8cae0e11603bba6b99c4f778f22ab9aea781e",
+      "real_harness_result": "FAIL_BOTH_DIRECTIONS_MAIN_UDP_OVER_1PCT_UNDER_LONG_CORRELATED_BURSTS",
+      "failures": [
+        "c2s/udp/correlated_burst: declared loss allowance exceeded",
+        "s2c/udp/correlated_burst: declared loss allowance exceeded"
+      ],
+      "other_failures": [],
+      "mode": "fixed",
+      "grade": 6,
+      "loss_model": {
+        "gemodel": [
+          3,
+          17,
+          100,
+          0
+        ],
+        "expected_bad_fraction_pct": 15,
+        "expected_bad_burst_length_packets": 5.8824
+      },
+      "netem_loss_pct": {
+        "client": 14.8049483315,
+        "server": 14.9372183082
+      },
+      "stress_udp": {
+        "c2s": {
+          "sent": 88132,
+          "missing": 1182,
+          "residual_loss_pct": 1.3412,
+          "p99_ms": 91.7
+        },
+        "s2c": {
+          "sent": 88135,
+          "missing": 1349,
+          "residual_loss_pct": 1.5306,
+          "p99_ms": 91.8
+        }
+      },
+      "small_udp_stress_missing": {
+        "c2s": [
+          457,
+          33478
+        ],
+        "s2c": [
+          500,
+          33480
+        ]
+      },
+      "sparse64_stress_missing": {
+        "c2s": [
+          14,
+          1190
+        ],
+        "s2c": [
+          29,
+          1189
+        ]
+      },
+      "native_fixed_applied_both": "requested1 applied1 profile6 pendingfalse",
+      "parity_planned_sent": {
+        "client": [
+          273057,
+          273057
+        ],
+        "server": [
+          273244,
+          273244
+        ]
+      },
+      "native_rx_fec_recovered_tun": {
+        "client": 12796,
+        "server": 12393
+      },
+      "native_m2_positive_samples": {
+        "client": 186937,
+        "server": 186514
+      }
+    },
+    {
+      "case": "W81",
+      "request_commit": "11403913d7f03a733b4ceb0fa4613b8f2149f47b",
+      "request": "tests/network/fec-work/W81-auto-asym-burst15-recover-arm64.json",
+      "contract_action": 40191033813,
+      "performance_action": 40191033811,
+      "performance_conclusion": "success",
+      "artifact_id": 12597737779,
+      "zip_sha256": "d57bdf687b4dcf097d588b2966561bd0f0a36d47da6f9aae6aa53a4be00c30e0",
+      "real_harness_result": "PASS_SCOPED_AUTO_AUTHENTIC_RISE_FALL_WITH_ALLOWED_TRANSITION_LOSS",
+      "mode": "auto",
+      "loss_model": {
+        "c2s_burst_gemodel": [
+          3,
+          17,
+          100,
+          0
+        ],
+        "s2c_high_iid_loss_pct": 1
+      },
+      "netem_loss_pct_high": {
+        "client_c2s": 14.6484986021,
+        "server_s2c": 0.9815666133
+      },
+      "stress_udp": {
+        "c2s": {
+          "sent": 88162,
+          "missing": 2688,
+          "residual_loss_pct": 3.049,
+          "p99_ms": 91.6
+        },
+        "s2c": {
+          "sent": 88163,
+          "missing": 3,
+          "residual_loss_pct": 0.0034,
+          "p99_ms": 76.7
+        }
+      },
+      "recovery_udp": {
+        "c2s": {
+          "sent": 176235,
+          "missing": 1,
+          "p99_ms": 79
+        },
+        "s2c": {
+          "sent": 176234,
+          "missing": 0,
+          "p99_ms": 75.8
+        }
+      },
+      "small_udp_stress_missing": {
+        "c2s": [
+          1116,
+          33516
+        ],
+        "s2c": [
+          0,
+          33516
+        ]
+      },
+      "sparse64_stress_missing": {
+        "c2s": [
+          25,
+          1190
+        ],
+        "s2c": [
+          1,
+          1190
+        ]
+      },
+      "auto_client_grade_sequence": [
+        5,
+        4,
+        3,
+        4,
+        6,
+        5,
+        4,
+        3,
+        2,
+        1,
+        0
+      ],
+      "auto_server_grade_sequence": [
+        5,
+        4,
+        3,
+        2,
+        1,
+        0
+      ],
+      "auto_rise_evidence": "VALID two fast-rising windows at revision3 to grade4 and revision4 to grade6; no fake ACK/UNKNOWN as clean",
+      "quality_windows": {
+        "client": {
+          "VALID": 95,
+          "UNKNOWN": 45
+        },
+        "server": {
+          "VALID": 102,
+          "UNKNOWN": 31
+        }
+      },
+      "native_final": {
+        "client": {
+          "requested": 11,
+          "applied": 11,
+          "profile": 0,
+          "pending": false
+        },
+        "server": {
+          "requested": 6,
+          "applied": 6,
+          "profile": 0,
+          "pending": false
+        }
+      },
+      "parity_planned_sent": {
+        "client": [
+          262438,
+          262438
+        ],
+        "server": [
+          112753,
+          112753
+        ]
+      },
+      "native_rx_fec_recovered_tun": {
+        "client": 934,
+        "server": 13727
+      },
+      "native_m2_positive_samples": {
+        "client": 326595,
+        "server": 343103
+      }
+    },
+    {
+      "case": "W82",
+      "request_commit": "9afa31c717e554ae86da4ca737b08a0063e0e72c",
+      "request": "tests/network/fec-work/W82-fixed-maximum15-GE-shorter-burst-arm64.json",
+      "contract_action": 40191413955,
+      "performance_action": 40191413910,
+      "performance_conclusion": "success",
+      "artifact_id": 12597892896,
+      "zip_sha256": "f0b984a473f201df60447783257424e4b734daf489b90be58aef0a3e35daa443",
+      "real_harness_result": "PASS_SCOPED_1PCT_MAIN_3PCT_SMALL_GATES",
+      "mode": "fixed",
+      "grade": 6,
+      "loss_model": {
+        "gemodel": [
+          6,
+          34,
+          100,
+          0
+        ],
+        "expected_bad_fraction_pct": 15,
+        "expected_bad_burst_length_packets": 2.9412
+      },
+      "netem_loss_pct": {
+        "client": 14.935154052,
+        "server": 14.982108994
+      },
+      "stress_udp": {
+        "c2s": {
+          "sent": 88131,
+          "missing": 143,
+          "residual_loss_pct": 0.1623,
+          "p99_ms": 91.7
+        },
+        "s2c": {
+          "sent": 88132,
+          "missing": 193,
+          "residual_loss_pct": 0.219,
+          "p99_ms": 91.6
+        }
+      },
+      "small_udp_stress_missing": {
+        "c2s": [
+          62,
+          33478
+        ],
+        "s2c": [
+          88,
+          33478
+        ]
+      },
+      "sparse64_stress_missing": {
+        "c2s": [
+          9,
+          1189
+        ],
+        "s2c": [
+          8,
+          1190
+        ]
+      },
+      "native_fixed_applied_both": "requested1 applied1 profile6 pendingfalse",
+      "parity_planned_sent": {
+        "client": [
+          273334,
+          273334
+        ],
+        "server": [
+          273291,
+          273291
+        ]
+      },
+      "native_rx_fec_recovered_tun": {
+        "client": 14124,
+        "server": 14139
+      }
+    },
+    {
+      "case": "W83",
+      "request_commit": "59a63bbbc253aa59a95acbba855aeca6ce08267f",
+      "request": "tests/network/fec-work/W83-fixed-Maximum15-GE-long-short-sameVM-waveform-arm64.json",
+      "contract_action": 40191820769,
+      "performance_action": 40191819998,
+      "performance_conclusion": "success",
+      "artifact_id": 12598148292,
+      "zip_sha256": "e64479fb524f0a3d92c4b21472cd46c97cb2e2e070b2976aef94cf07dae9423c",
+      "real_harness_result": "PASS_SCOPED_SHORT_BURST_LOSS_GATE_ONLY; LONG_BURST_OVER_1PCT_EXPLICIT",
+      "mode": "fixed",
+      "grade": 6,
+      "cohort_context": "SAME original native product process, SAME ARM64 VM; 15s clean→45s long GE→15s clean gap→45s short GE→30s clean, sequential unseeded netem epochs",
+      "loss_models": {
+        "long": {
+          "gemodel": [
+            3,
+            17,
+            100,
+            0
+          ],
+          "expected_bad_fraction_pct": 15,
+          "expected_bad_burst_length_packets": 5.8824
+        },
+        "short": {
+          "gemodel": [
+            6,
+            34,
+            100,
+            0
+          ],
+          "expected_bad_fraction_pct": 15,
+          "expected_bad_burst_length_packets": 2.9412
+        }
+      },
+      "actual_netem_loss_pct": {
+        "long": {
+          "client": 14.5842730416,
+          "server": 14.6778665986
+        },
+        "short": {
+          "client": 15.0905616769,
+          "server": 15.0058663614
+        }
+      },
+      "udp": {
+        "long": {
+          "c2s": {
+            "sent": 66100,
+            "missing": 873,
+            "residual_loss_pct": 1.3207,
+            "p99_ms": 91.6
+          },
+          "s2c": {
+            "sent": 66100,
+            "missing": 861,
+            "residual_loss_pct": 1.3026,
+            "p99_ms": 91.7
+          }
+        },
+        "short": {
+          "c2s": {
+            "sent": 66099,
+            "missing": 142,
+            "residual_loss_pct": 0.2148,
+            "p99_ms": 91.7
+          },
+          "s2c": {
+            "sent": 66099,
+            "missing": 132,
+            "residual_loss_pct": 0.1997,
+            "p99_ms": 91.7
+          }
+        }
+      },
+      "small_udp_missing": {
+        "long": {
+          "c2s": [
+            347,
+            25118
+          ],
+          "s2c": [
+            324,
+            25118
+          ]
+        },
+        "short": {
+          "c2s": [
+            46,
+            25118
+          ],
+          "s2c": [
+            40,
+            25118
+          ]
+        }
+      },
+      "sparse64_missing": {
+        "long": {
+          "c2s": [
+            19,
+            892
+          ],
+          "s2c": [
+            14,
+            893
+          ]
+        },
+        "short": {
+          "c2s": [
+            6,
+            892
+          ],
+          "s2c": [
+            4,
+            893
+          ]
+        }
+      },
+      "tcp_missing_both_all_stages": 0,
+      "clean_before_gap_after_udp_missing_both": 0,
+      "native_fixed_applied_both": "requested1 applied1 profile6 pendingfalse",
+      "parity_planned_sent": {
+        "client": [
+          333680,
+          333680
+        ],
+        "server": [
+          333321,
+          333321
+        ]
+      },
+      "native_rx_fec_recovered_tun": {
+        "client": 19910,
+        "server": 19980
+      },
+      "acceptance_loss_gate_phases": [
+        "short_burst15"
+      ],
+      "notes": [
+        "Action green applies <=1% only to short_burst15; long_burst15 measured1.32/1.30%, explicitly NOT a pass.",
+        "Same VM and same process removes between-VM binary/host difference but does not randomize order or prove a universal causal percentage."
+      ]
+    }
+  ],
+  "decision": "W80 LONG_GE_BURST_15PCT_MAXIMUM_MEASURED_GT1PCT_NEGATIVE_SERVICE_GATE; W83 SAME_PROCESS_LONG1P32_TO_SHORT0P20_AT_NEAR15PCT_WIRE_LOSS; W81 GENUINE_AUTO_UP_DOWN_SCOPED_PASS; NO_UNJUSTIFIED_FEC_PRODUCT_CODE_CHANGE",
+  "interpretation": "Physical finite parity cannot universally recover arbitrarily long correlated erasure strings, unlike separate IID 30% target; FEC Maximum W80 exceeded the 1% goal for long modeled bursts. The shorter burst case and same-process waveform hit <1%, with full parity/healthy host capacity, supporting genuine burst-length limit rather than proving encoder/decoder bug.",
+  "caveats": [
+    "GE bad-run length figures are model expectations, not measured individual burst lengths; qdisc reports only aggregate actual drop percentages.",
+    "W79 Action PASS_SCOPED uses diagnostic 100% loss gates: not a 1% service pass; measured UDP 2.85/2.80%.",
+    "W80 Action FAILURE solely for both directions >1% main UDP residual, do not erase it or retune acceptance.",
+    "W81 Auto green is scoped actual VALID rise and native applied/down, but C2S high transition residual3.05%; this is not 1% high-phase business certification.",
+    "W82 long/short comparison uses different Actions VMs; no causal CPU or same-VM benchmarking. W83 phases within same process/VM have fixed order and unseeded probabilistic loss; controlled diagnostic, not universal rate guarantee.",
+    "Some independent 64B probes miss even when TCP and clean phases deliver; never claim universal zero packet loss.",
+    "No deterministic always-recoverable timely group was shown to be undelivered, nor decoder rejection or true RX capacity pressure; no product patch justified here.",
+    "Still unqualified: sustained remote receiver overload falsely interpreted as path loss, actual 65KiB FEC-through-TUN, Windows/Game full product, W49/W50 historical 100Mbps mixed TCP postburst, exact combined-source integration with outer ON."
+  ],
+  "merge_ready": false,
+  "capacity_stop": true,
+  "scoped_integration_review_ready": true,
+  "stop_more_high_load_testing": true
+}

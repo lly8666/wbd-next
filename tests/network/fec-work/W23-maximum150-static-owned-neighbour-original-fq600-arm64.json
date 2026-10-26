@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "id": "FEC-W23-Maximum150-Static-veth-NUD-Original-fq600",
+  "owner": "fec-network-work",
+  "seed": 8150,
+  "policy": "outer-opportunistic-v3",
+  "product": {
+    "mode": "fec-fixed",
+    "fec_profile": 6,
+    "repair_enabled": false
+  },
+  "traffic": {
+    "c2s_mbps": 150,
+    "s2c_mbps": 150,
+    "udp_share": 1,
+    "sizes": [
+      [
+        64,
+        1
+      ],
+      [
+        1287,
+        99
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "deadline_ms": 5000,
+    "burst_ms": 0,
+    "max_packets": 5000000,
+    "allow_fragmentation": false
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "shared",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded",
+    "fec_egress_diagnostic": false,
+    "owned_veth_static_neighbour": true
+  },
+  "warmup_s": 15,
+  "drain_s": 30,
+  "phases": [
+    {
+      "name": "capacity_150",
+      "seconds": 30,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 300,
+        "loss_pct": 30,
+        "rate_mbps": 600
+      },
+      "s2c": {
+        "delay_ms": 300,
+        "loss_pct": 30,
+        "rate_mbps": 600
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false,
+    "max_loss_pct": 1,
+    "require_zero_source_tun_drops_full_run": true,
+    "require_zero_tun_root_qdisc_drops_full_run": true
+  },
+  "bundles": {
+    "A": {
+      "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+      "run_id": 40099179830,
+      "attempt": 1,
+      "artifact_id": 12562092730,
+      "sha256": "e3509e34a11f4763011c08312d02270e560ac7d04f5136ad22f76b5990f4cda5",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false
+    }
+  },
+  "order": "A"
+}

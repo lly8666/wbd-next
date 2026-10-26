@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "request_id": "V3-B-1500-MTU-1401B-UDP-no-fragment",
+  "kind": "NATIVE_ARM64_REAL_PUBLIC_NORMAL_OFF_1500_MTU_SINGLE_UDP_APP_1401",
+  "request_source": "2ddc9772848f2495bb06ebab062187dcac3a8202",
+  "run": 39983912729,
+  "attempt": 1,
+  "conclusion": "success",
+  "artifact_id": 12515760162,
+  "artifact_zip_sha256": "0d4e81b52d32801860bc26174336c50050a5c169e8d5486b2e1320b95a73665b",
+  "product_source": "bb9a036873d186a84ca9e64727df342d68e59df0",
+  "native_build_run": 39981175602,
+  "product_artifact_id": 12513677330,
+  "scenario": {
+    "outer_mtu": 1500,
+    "normal_off_tun_mtu": 1429,
+    "udp_application_payload": 1401,
+    "no_fragmentation": true,
+    "one_way_ms": 200,
+    "loss_pct": 0,
+    "app_offered_mbps_each_direction": 10,
+    "steady_s": 60
+  },
+  "observed": {
+    "result": "PASS_SCOPED_OBSERVATION",
+    "c2s_mbps": 10.0000892,
+    "s2c_mbps": 10.0000892,
+    "missing_udp_client_server": [
+      0,
+      0
+    ],
+    "tun_source_drop_steady_client_server": [
+      0,
+      0
+    ],
+    "first_arrival_p99_ms_client_server": [
+      200.2,
+      200.2
+    ],
+    "cpu_psi_peak": 0,
+    "product_peak_rss_client_server_bytes": [
+      20877312,
+      21774336
+    ]
+  },
+  "caveats": [
+    "Only Native ARM64 Normal/off, no UDP fragmentation; fixed/auto parity and asymmetric path were not verified by this business test.",
+    "Historical 9 MTU functional probes passed in the matched native build; not a substitute for all Windows/real-path MTU changes.",
+    "Single-source functional result; not a same-VM old/new CPU comparison."
+  ]
+}

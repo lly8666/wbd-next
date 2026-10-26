@@ -1,0 +1,153 @@
+{
+  "schema": 1,
+  "event": "S026",
+  "kind": "ORIGINAL_ARM64_FIXED30_AUTHENTIC_M4_IP_CLASSIFICATION",
+  "result": "FAIL",
+  "action": {
+    "run_id": 39793159261,
+    "attempt": 1,
+    "conclusion": "failure",
+    "artifact_id": 12432471447,
+    "zip_sha256": "19a9d0a42be87861e403aa1d14e6f4e529661c3e11296bc6e3f82212c49bc41a",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39793159261"
+  },
+  "product": {
+    "source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
+    "build_run": 39792252773,
+    "build_attempt": 1,
+    "artifact_id": 12432315624,
+    "zip_sha256": "a106160d88dbe85cb2d90d36110ada897f0b623abc936e0071aad49fb130a41b",
+    "manifest_arch": "aarch64",
+    "all_hashes_verified": true
+  },
+  "harness_source": "d2c7c25e6f3dbbeaab02875b6433d1540129d1b2",
+  "scenario": {
+    "mode": "fec-fixed",
+    "profile": 6,
+    "per_direction_app_mbps": 2,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "one_way_delay_ms": 300,
+    "loss_pct": 30,
+    "steady_s": 120,
+    "warmup_s": 15,
+    "drain_s": 30,
+    "netem_rng": "unseeded_recorded"
+  },
+  "observed": {
+    "netem_loss_pct": {
+      "client": 29.677625200947368,
+      "server": 29.874127957496462
+    },
+    "udp": {
+      "c2s": {
+        "sent": 20751,
+        "unique": 14045,
+        "missing": 6706,
+        "missing_pct": 32.31651486675341,
+        "duplicates": 0,
+        "p99_ms": 330
+      },
+      "s2c": {
+        "sent": 20751,
+        "unique": 13939,
+        "missing": 6812,
+        "missing_pct": 32.827333622476026,
+        "duplicates": 0,
+        "p99_ms": 370.8
+      }
+    },
+    "tcp": {
+      "client_warmup_full_frames": 256,
+      "server_warmup_full_frames": 256,
+      "steady_full_frames_both": 0,
+      "steady_delivered_both": 0,
+      "client_kernel_acked_steady_start_end": [
+        4840,
+        4840
+      ],
+      "server_kernel_acked_steady_start_end": [
+        4836,
+        4836
+      ],
+      "four_established_each": true,
+      "kernel_cwnd_sum_each": 4,
+      "kernel_rto_max_ms": 120000
+    },
+    "fec_rx_ip_class": {
+      "client": {
+        "sys_udp": 15214,
+        "rec_udp": 5668,
+        "sys_tcp": 56,
+        "rec_tcp": 22,
+        "tcp_ack_only": 41,
+        "tcp_data": 37,
+        "tcp_other": 0,
+        "other_ip": 0
+      },
+      "server": {
+        "sys_udp": 15216,
+        "rec_udp": 5795,
+        "sys_tcp": 61,
+        "rec_tcp": 21,
+        "tcp_ack_only": 41,
+        "tcp_data": 37,
+        "tcp_other": 4,
+        "other_ip": 0
+      }
+    },
+    "fec_rx_m4": {
+      "client": {
+        "source_tun": 15270,
+        "recovered_tun": 5690,
+        "tun_failed": 0
+      },
+      "server": {
+        "source_tun": 15277,
+        "recovered_tun": 5816,
+        "tun_failed": 0
+      }
+    },
+    "kernel_udp": {
+      "client_in_datagrams_drain": 20882,
+      "server_in_datagrams_drain": 21011,
+      "client_in_csum_errors": 0,
+      "server_in_csum_errors": 0,
+      "client_rcvbuf_errors": 0,
+      "server_rcvbuf_errors": 0
+    },
+    "tun_tx_total_drain": {
+      "client": 28790,
+      "server": 28802
+    },
+    "fec_tx_accepted": {
+      "client": 21676,
+      "server": 21726
+    },
+    "mode": {
+      "client": "fixed requested1 applied0 pending",
+      "server": "fixed requested1 applied1"
+    },
+    "original_m2_client": {
+      "unknown_2s": 228,
+      "covered_2s": 21427,
+      "authenticated_reverse_reports": 11965,
+      "first_censored": 1,
+      "cover_censored": 1
+    },
+    "stop_drained_both": true,
+    "owned_namespace_cleanup": true,
+    "host_cpu_psi_mean_pct": 0.00625,
+    "invalid_payloads": 0,
+    "udp_duplicates": 0
+  },
+  "accounting": "Native Linux kernel UDP InDatagrams at drain exactly matches successful original M4 sys_udp+rec_udp on both roles: 20882 and 21011; no checksum errors. This disproves bulk recovered UDP dropping after successful TUN write. These are cumulative for warmup+steady+drain and include probes/echo; they are not the steady application UDP cohort. TCP count ~78/82 IP packets including 41 ACK-only per side, consistent with independent inner TCP ACK stall. TUN outbound tx packets 28790/28802 vs FEC accepted21676/21726; not identical scope, so 7114/7076 is an accounting GAP, NOT proved ingress loss. Original background_tun_once reads kernel TUN packet and may fail pre-stage Arena::allocate; currently cannot distinguish ingress loss/idle/control/classification or other admission outcomes. Next per-turn scalar source counter targeted; no buffer bump. No guest host PSI cap. Partial FEC k1 dominates; maximum full-block <=1% ideal cannot be applied to these partial mixed cohorts without actual grouped timely k/r.",
+  "not_observed": [
+    "Exact true TX M1 successful TUN read vs pre-stage arena allocation failures and stage rejection",
+    "Per-cohort application UDP first-delivery recovered correlation",
+    "Runtime ISA-L backend selector",
+    "True repair-wire-byte ratio"
+  ],
+  "qualification": "OVERALL_FAIL (Fixed client pending, zero steady TCP, high residual; integrity/Stop hard gates PASS)",
+  "source_of_attestation": "GitHub public Actions preserved ZIP; content reviewed without packet bodies"
+}

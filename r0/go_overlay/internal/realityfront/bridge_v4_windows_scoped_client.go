@@ -283,62 +283,6 @@ func(s *V4WindowsAuthenticatedClientOwner) ReportOriginalM2NpcapFirstsend(
     return outstanding,err
 }
 
-// One canonical kind1 from original Rust M3-unique reverse DATA PNs,
-// sealed with the SAME TLS-bound M1 PN/sequence and exact live Wintun Hold.
-// Empty output is a legitimate bounded feedback scheduler idle turn.
-func(s *V4WindowsAuthenticatedClientOwner) NextBoundOriginalM2Feedback(
- ctx context.Context,capacity int,
-)([]byte,uint32,uint64,error){
- if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
-  s.bridge.feedbackDueProc==nil||capacity<128||capacity>2048||
-  capacity>s.device.maxIPv4+31{return nil,0,0,errV4WindowsOwner}
- if err:=ctx.Err();err!=nil{return nil,0,0,err}
- if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-  return nil,0,0,errors.Join(errV4WindowsOwner,err)
- }
- state,err:=s.OriginalOwnerReadback()
- if err!=nil||!state.OwnerActive||!state.DeviceBound||
-  state.DeviceQuiesced||state.ProductApplied||state.ServerSide{
-  return nil,0,0,errV4WindowsOwner
- }
- output:=make([]byte,capacity)
- var used uintptr
- var seq uint32
- var pn uint64
- err=winOwnerCall(s.bridge.feedbackDueProc,
-  uintptr(s.bridge.handle),
-  uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
-  uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
-  uintptr(unsafe.Pointer(&output[0])),uintptr(capacity),
-  uintptr(unsafe.Pointer(&used)),uintptr(unsafe.Pointer(&seq)),
-  uintptr(unsafe.Pointer(&pn)))
- runtime.KeepAlive(output);runtime.KeepAlive(s.bridge.epoch)
- if err!=nil||used>uintptr(capacity){return nil,0,0,errors.Join(errV4WindowsOwner,err)}
- if used==0{return nil,0,0,nil}
- if used<51{return nil,0,0,errV4WindowsOwner}
- return output[:used],seq,pn,nil
-}
-// Confirm only whether Npcap accepted the original Rust M1 control bytes.
-// False is NotSent, never M2 acknowledgment or success from TCP presentation.
-func(s *V4WindowsAuthenticatedClientOwner) CompleteBoundOriginalM2Feedback(
- ctx context.Context,pn uint64,npcapSent bool,
-)error{
- if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
-  s.bridge.feedbackResultProc==nil{return errV4WindowsOwner}
- if err:=ctx.Err();err!=nil{return err}
- if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-  return errors.Join(errV4WindowsOwner,err)
- }
- var copied uintptr
- if npcapSent{copied=1}
- err:=winOwnerCall(s.bridge.feedbackResultProc,
-  uintptr(s.bridge.handle),
-  uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
-  uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
-  uintptr(pn),copied)
- runtime.KeepAlive(s.bridge.epoch)
- return err
-}
 // OpenBoundOriginalNormalOrKind1 calls the ONE original Rust M1/M3 AEAD+PN
 // opener and returns verified kind=1 IPv4 or kind=2 canonical staged M2
 // receipt. The latter has NO Wintun packet and is NOT an M2 ACK/repair

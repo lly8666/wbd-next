@@ -1,0 +1,88 @@
+{
+  "schema": "W110_NORMAL_FIXED2_OUTER_OFF_REAL_CLEAN_COMMON_CLI_REGRESSION",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "owner": "fec-network-work",
+  "product": {
+    "source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "build_run": 40260662919,
+    "bundle_artifact_id": 12623678360,
+    "sha256": "04d209b7ef1e887af6599622aaf71efc34381451c847e844cf18c2006ae9708f"
+  },
+  "run": 40264926353,
+  "request_commit": "29bd94ef54b91b7001e98cc5005ee789ac619467",
+  "artifact": 12626326056,
+  "zip_sha256": "453c4d0393b725ce369a24e03a8559cd0dd100ef559a1d25cb7f2cf1dd258de6",
+  "result": "PASS_SCOPED_OBSERVATION",
+  "scenario": "Original Go TLS Normal Fixed profile2 outer DATA OFF; 1Mbps each way actual UDP/TCP mix, loss0, 75ms one way",
+  "native_policy": {
+    "fec_mode": "fixed",
+    "requested_applied": [
+      1,
+      1
+    ],
+    "fixed_profile": 2,
+    "pending": false,
+    "outer_repair_enabled": [
+      0,
+      0
+    ],
+    "original_frozen_retransmitted": [
+      0,
+      0
+    ],
+    "candidate_first": [
+      0,
+      0
+    ],
+    "candidate_retry": [
+      0,
+      0
+    ],
+    "shadow_outstanding": [
+      0,
+      0
+    ],
+    "first_wire_bytes": [
+      8463570,
+      8465646
+    ],
+    "original_first_copy": [
+      12278,
+      12284
+    ],
+    "readback_verified": true
+  },
+  "business": {
+    "actual_udp_tcp_all_injected_delivered": true,
+    "udp_tcp_missing": 0,
+    "udp_p99_ms": [
+      75.5,
+      75.5
+    ],
+    "tcp_p99_ms": [
+      75.7,
+      75.7
+    ],
+    "stop_drained": true
+  },
+  "cost": {
+    "client_server_cpu_s": [
+      0.61,
+      0.62
+    ],
+    "cpu_s_per_effective_GiB": [
+      261.97,
+      266.27
+    ],
+    "host_cpu_psi_peak_pct": 0
+  },
+  "scope": "Common Go CLI/game switch did not break an original Normal fixed and native outer OFF readback. Clean does NOT attest feedback quality under loss or Normal Auto transitions; existing prior Normal FEC evidence retained.",
+  "limitations": [
+    "No paired CPU comparison",
+    "Only Linux ARM64",
+    "Not a redo of Normal fixed/auto damaged network matrix"
+  ],
+  "merge_ready": false,
+  "capacity_stop": true
+}

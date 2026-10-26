@@ -86,6 +86,13 @@ func realOriginalGoFec2LinuxMode(t *testing.T,mode FecV2Mode){
     peer,err:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_TCP)
     if err!=nil{t.Fatal(err)}
     defer syscall.Close(peer)
+    // The original TLS peer IP intentionally becomes local only after
+    // the independent CLIENT TUN is created. Binding the observer before
+    // then requires Linux IP_FREEBIND, not a preinstalled local address
+    // that could bypass the actual missing-source->parity->TUN route.
+    if err:=syscall.SetsockoptInt(peer,syscall.SOL_IP,15,1);err!=nil{
+        t.Fatalf("raw peer IP_FREEBIND: %v",err)
+    }
     if err:=syscall.Bind(peer,&syscall.SockaddrInet4{Addr:b.originalFlow.ClientIP});err!=nil{
         t.Fatal(err)
     }
@@ -234,6 +241,15 @@ func realOriginalGoFec2LinuxMode(t *testing.T,mode FecV2Mode){
     if e:=syscall.SetsockoptInt(rawFeedback,syscall.IPPROTO_IP,
         syscall.IP_HDRINCL,1);e!=nil{t.Fatal(e)}
     c2sPacket:=v4RawC2STestPacket(draft.Ciphertext,b.rxBoundary,b.originalFlow)
+    // Same-netns test only: server original IP is nonlocal until the
+    // authenticated M2 reverse turn. Install a local kernel route *after*
+    // the real original systematic/parity TX and client TUN UDP delivery,
+    // never a synthetic receipt or extra independent decryptor.
+    serverAddress:=net.IP(b.originalFlow.ServerIP[:]).String()
+    if out,e:=exec.Command("ip","route","replace","local",
+        serverAddress+"/32","dev","lo").CombinedOutput();e!=nil{
+        t.Fatalf("isolated reverse M2 local route: %v %s",e,out)
+    }
     if e:=syscall.Sendto(rawFeedback,c2sPacket,0,
         &syscall.SockaddrInet4{Addr:b.originalFlow.ServerIP});e!=nil{
         t.Fatalf("client authenticated FEC M2 kernel TX: %v",e)

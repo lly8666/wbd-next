@@ -1,0 +1,3 @@
+# W37 FEC real small UDP app-size cohorts
+
+FEC-only `traffic.observe_size_classes` samples actual UDP payload-size delivery: 64-256B / 257-899B / >=900B, counts, bytes, true first arrival p99, send lag, late and per-small 10ms tx/rx packet bins (netem delay aligned for descriptive continuous delivery gap). TCP framed application record size cohorts separate and never represented as wire packets. No packet logs, addresses, payload or synthetic FEC; 64B RTT probes remain independent. Strict optional max_small_udp_loss_pct=1 and max_small_udp_p99_ms=500 can be enabled independently of total UDP qualification. Existing non-FEC test defaults unchanged. This optional shared-harness measurement only modifies tools/network_harness in addition to FEC-owned scenario files.

@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "kind": "RECOVERED_S027_NATIVE_BUILD_FAILURE",
+  "failed_run": 39797003870,
+  "attempt": 1,
+  "source": "e2f833211ebf3fee678feba80028eda9b610176e",
+  "status": "completed",
+  "conclusion": "failure",
+  "job": 119886687977,
+  "step": "Exact source native ARM64 original Go and Rust bundle",
+  "failure_category": "RUST_SYNTAX_PARSE",
+  "message": "error: mismatched closing delimiter: `]`",
+  "path": "crates/wbd-engine/src/v4_embedded_go.rs",
+  "lines": [
+    4648,
+    4650
+  ],
+  "root_cause": "Missing ')' in #[cfg(all(feature=\"fec2_product_record\",target_os=\"linux\",any(target_arch...),any(target_env...))] on new authentic M1 ingress FFI.",
+  "last_valid_bundle": {
+    "source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
+    "build_run": 39792252773,
+    "artifact_id": 12432315624
+  },
+  "product_artifact": "NONE",
+  "product_network_validation": "NOT_RUN",
+  "harness_contract": {
+    "run_id": 39797003708,
+    "source": "e2f833211ebf3fee678feba80028eda9b610176e",
+    "conclusion": "success"
+  },
+  "fix": "One punctuation ')' inserted in Rust cfg only, new SOURCE build required; no old-source rebuild.",
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/39797003870"
+}

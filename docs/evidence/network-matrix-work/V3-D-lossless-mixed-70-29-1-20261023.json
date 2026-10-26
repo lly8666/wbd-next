@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "kind": "REAL_NATIVE_ARM64_NORMAL_OFF_TWO_WAY_MIXED_NO_LOSS",
+  "request_id": "V3-D-lossless-TCP2-UDP70-29-1-mixed",
+  "request_source": "3032e000aa363dd6a958b262aed95e204e5db0b3",
+  "run": 39985073396,
+  "attempt": 1,
+  "conclusion": "success",
+  "artifact_id": 12515571537,
+  "artifact_zip_sha256": "c8b881ec8aab3897406fed992ad2929f95c2f41e39f582f34ccf380d1b72f10a",
+  "artifact_zip_sha256_locally_verified": true,
+  "product_source": "bb9a036873d186a84ca9e64727df342d68e59df0",
+  "build_run": 39981175602,
+  "scenario": {
+    "mode": "normal",
+    "fec": "off",
+    "outer_mtu": 1500,
+    "loss_pct": 0,
+    "one_way_ms": 200,
+    "seed": 6514,
+    "steady_s": 60,
+    "warmup_s": 10,
+    "drain_s": 30,
+    "app_offered_mbps_each_direction": 15,
+    "traffic_split": "TCP 70% application bytes, UDP 30%; across both approximately 1% bytes are small 64B by cycle weights [64,18],[1401,82]; 2 TCP sockets per direction",
+    "tcp_flows_per_direction": 2,
+    "udp_application_max_size": 1401
+  },
+  "result": {
+    "status": "PASS_SCOPED_OBSERVATION",
+    "client_to_server_udp_mbps": 4.4998776,
+    "client_to_server_tcp_mbps": 10.500163866666668,
+    "server_to_client_udp_mbps": 4.5000644,
+    "server_to_client_tcp_mbps": 10.4999012,
+    "missing_all_protocol_direction": 0,
+    "source_tun_drops_steady_both": 0,
+    "kernel_tcp_retrans_steady_both": 0,
+    "outer_repair_accepted_both": 0,
+    "outer_repair_first_wire_bytes_client_server": [
+      158159419,
+      158213092
+    ],
+    "firstarrival_p99_ms_c2s_udp": 200.4,
+    "firstarrival_p99_ms_s2c_udp": 200.4,
+    "firstarrival_p99_ms_c2s_tcp": 200.5,
+    "firstarrival_p99_ms_s2c_tcp": 200.5,
+    "product_cpu_s_client_server_steady": [
+      10.03,
+      9.68
+    ],
+    "host_cpu_psi_peak": 1,
+    "stop_drained_both": true,
+    "phase_ten_ms_delivery_nonempty_bins": {
+      "source": "A/client-traffic.json and A/server-traffic.json rx_bins_10ms",
+      "steady_window_seconds": [
+        11,
+        69
+      ],
+      "receiver_client": {
+        "udp_max_empty_ms": 0,
+        "tcp_aggregate_max_empty_ms": 0,
+        "both_max_common_empty_ms": 0
+      },
+      "receiver_server": {
+        "udp_max_empty_ms": 0,
+        "tcp_aggregate_max_empty_ms": 0,
+        "both_max_common_empty_ms": 0
+      }
+    }
+  },
+  "caveats": [
+    "Sustained aggregate TCP per direction includes two independent streams but 10ms bins are aggregated across streams; per-stream progress requires additional instrumentation if failure evidence appears.",
+    "The raw active_zero_delivery_ms counter includes startup propagation and drain/idle; the [11s,69s] trimmed steady 10ms bins are used for product common-zero check, avoiding a false >100ms HOL classification.",
+    "No deliberate loss or TCP blockage in this run, so it proves representative simultaneous delivery at this load, not the separate highloss and cross-flow impairment test.",
+    "Result is one native Linux ARM64 scenario, not native Windows or TCP500 application throughput qualification."
+  ]
+}

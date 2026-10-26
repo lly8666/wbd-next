@@ -1,0 +1,121 @@
+{
+  "id": "FEC-W52-MainlineAuto-AuthenticM2Latency-AsymRiseRecover-8Mbps",
+  "request": "tests/network/fec-work/W52-real-auto-M2-confirmation-asym-rise-recover-8Mbps-arm64.json",
+  "request_commit": "83d91b5d836a1fb21fa4795feadce851abf91bc3",
+  "branch": "experiment/fec-network-tuning",
+  "base": "3af257cd1a353a47d424094a689fa5179b198a07",
+  "product_source": "e446fa1cf09ebfb259da3d764abf8f8ed8d4211f",
+  "product_run": 40167423967,
+  "product_artifact": 12588789024,
+  "product_zip_sha256": "3bac82b33642335ed3691c763d66c3c556c575f38f92fd635073fc9673ea1cb4",
+  "action": 40168045298,
+  "action_status": "SUCCESS",
+  "result": "PASS_SCOPED_OBSERVATION",
+  "artifact_id": 12589925435,
+  "zip_sha256": "22a5b1de99366e172d11fd3f9e47dabf70a47e874b18ec0e4e3152f373dbcf04",
+  "scenario": "Real original Go authenticated TLS Linux ARM64 product Auto 8Mbps UDP each; 64B1%/1287B99% UDP count, independent64B20Hz true probes. 2%IID C2S 30s, 20%IID C2S60s, 1%IID C2S60s; S2C0/1/0%; netem75ms one-way each with outer DATA retrans truly disabled; warmup15s and drain30s; NOT mixed TCP or 100Mbps",
+  "observation": {
+    "client_positive_samples": 118931,
+    "client_mean_confirmation_us": 153665,
+    "client_reverse_reports": 38413,
+    "client_unknown_2s": 3,
+    "client_first_censored": 1,
+    "client_coverage_censored": 1,
+    "server_positive_samples": 129400,
+    "server_mean_confirmation_us": 154241,
+    "server_reverse_reports": 33050,
+    "server_unknown_2s": 54,
+    "server_first_censored": 1,
+    "server_coverage_censored": 1,
+    "final_native": {
+      "client": {
+        "mode": "auto",
+        "requested": 2,
+        "applied": 2,
+        "profile": 6,
+        "pending": false
+      },
+      "server": {
+        "mode": "auto",
+        "requested": 3,
+        "applied": 3,
+        "profile": 3,
+        "pending": false
+      }
+    },
+    "actual_stages": {
+      "c2s": [
+        {
+          "time_UTC": "2026-10-25T06:09:58Z",
+          "prev_profile": 5,
+          "new_profile": 6,
+          "requested_revision": 2,
+          "validity": "VALID",
+          "reason": "two valid rising fast windows",
+          "during": "C2S_20pct_loss"
+        }
+      ],
+      "s2c": [
+        {
+          "time_UTC": "2026-10-25T06:10:39Z",
+          "prev_profile": 5,
+          "new_profile": 4,
+          "requested_revision": 2,
+          "validity": "VALID",
+          "reason": "10s and 4096 valid sources",
+          "during": "S2C_1pct_loss"
+        },
+        {
+          "time_UTC": "2026-10-25T06:11:42Z",
+          "prev_profile": 4,
+          "new_profile": 3,
+          "requested_revision": 3,
+          "validity": "VALID",
+          "reason": "10s and 4096 valid sources",
+          "during": "S2C_0pct_loss"
+        }
+      ]
+    },
+    "impairment_wall_clock_UTC": {
+      "pre_low": "2026-10-25T06:09:22.691Z",
+      "asym_high": "2026-10-25T06:09:52.691Z",
+      "recover_low": "2026-10-25T06:10:52.691Z"
+    },
+    "app_udp_residual_pct": {
+      "c2s_pre_low": 0,
+      "c2s_asym_high": 0.0148720999405116,
+      "c2s_recover_low": 0,
+      "s2c_pre_low": 0,
+      "s2c_asym_high": 0,
+      "s2c_recover_low": 0
+    },
+    "app_udp_first_p99_ms": {
+      "c2s_pre_low": 84.7,
+      "c2s_asym_high": 92,
+      "c2s_recover_low": 79.2,
+      "s2c_pre_low": 78.1,
+      "s2c_asym_high": 78.3,
+      "s2c_recover_low": 77.4
+    },
+    "parity": {
+      "client": {
+        "planned": 167271,
+        "sent": 167271,
+        "expired": 0
+      },
+      "server": {
+        "planned": 121021,
+        "sent": 121021,
+        "expired": 0
+      }
+    },
+    "source_tun_warmup_steady_drops": 0,
+    "outer_data_retransmitted": 0,
+    "stop_drained_both": true,
+    "owned_namespaces_absent": true
+  },
+  "caveat": "W52 confirms authentic C2S rise to Maximum and S2C per-direction downward steps, but NO C2S step down during 60s 1%-loss recovery on exact current source. Auto full rise-and-fall in this run NOT OBSERVED, despite W45 prior-source one positive return. FecV2Step requires predicted next lower profile residual <=0.0005 plus 10s/4096 actual valid sources; cannot force down merely from netem truth or zero app UDP loss. Some Go AUTO_QUALITY windows remain UNKNOWN due missing auth sample/actual-k hist and native M2 first_censored/cover_censored=1; never manufacture healthy samples.",
+  "capability": "ARM64 real product Auto independent directional stages, actual positive M2 measured, source TUN+Parity true, scoped real UDP business. NOT full Auto return qualification, no TCP mixed, no high-rate or Game/Windows, not main branch.",
+  "merge_ready": false,
+  "capacity_stop": true
+}

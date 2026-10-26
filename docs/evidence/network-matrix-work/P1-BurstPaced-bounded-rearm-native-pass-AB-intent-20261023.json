@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "id": "P1-BurstPaced-bounded-rearm-native-pass-AB-intent-20261023",
+  "native": {
+    "run_id": 39897775082,
+    "attempt": 1,
+    "source": "396c5ae6434c18eecb16599f5966574716c604a9",
+    "conclusion": "success",
+    "product_artifact_id": 12477318789,
+    "product_sha256": "0070cc62106aac883817f7600a1dc0f82340d8463a6fd38c797148c7cde1c1ea",
+    "mtu_artifact_id": 12477796736,
+    "mtu_sha256": "c0b57d5a5b0d20aafbf16409e1afe03bf2f6751f25a37a73fe84636924340efe",
+    "units": {
+      "burstpaced_short_rearm": "PASS",
+      "adaptive_rtt": "PASS",
+      "retirement_diagnostics": "PASS",
+      "fixed_m2": "PASS"
+    },
+    "mtu9": "PASS",
+    "runtime_native_dispatch": "NOT_OBSERVED"
+  },
+  "mechanism": "BurstPaced only: one short re-index at the existing candidate dispatch_by/<=20ms queue lifetime for each repair-attempt stage. No network attempt is charged for pacing rejection. If paced again at the same stage, fall back to original PTO. Actual repair attempts remain <=2; no quota/burst cap increase, no extra payload queue, no reliable ordering or fresh wait.",
+  "experiment": {
+    "id": "P1-Normal2pct-BurstPaced-short-rearm-old-new-AB-60s",
+    "order": "AB",
+    "same_vm": true,
+    "A": {
+      "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
+      "run_id": 39896777307,
+      "attempt": 1,
+      "artifact_id": 12476734780,
+      "sha256": "4e5e3248b489877eb50eece577719c780e16b31add1bca2c76d407f04196628f"
+    },
+    "B": {
+      "source": "396c5ae6434c18eecb16599f5966574716c604a9",
+      "run_id": 39897775082,
+      "attempt": 1,
+      "artifact_id": 12477318789,
+      "sha256": "0070cc62106aac883817f7600a1dc0f82340d8463a6fd38c797148c7cde1c1ea"
+    },
+    "scenario": "Normal 2Mbps/direction, 50/50 UDP/TCP, 99%1287B, IID2%, one-way200ms, 60s steady, seed5205",
+    "decision": "B should convert transient BurstPaced blocks into bounded short deferrals, materially reduce expired0/UDP residual, and avoid repair storm/CPU/Stop regressions."
+  },
+  "scope": "Native functional gate PASS only; business P1 qualification pending this one AB."
+}

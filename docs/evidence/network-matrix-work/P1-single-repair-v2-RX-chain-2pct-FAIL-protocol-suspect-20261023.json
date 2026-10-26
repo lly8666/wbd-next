@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "id": "P1-single-repair-v2-RX-chain-2pct-FAIL-protocol-suspect-20261023",
+  "exact_run_id": 39910493761,
+  "artifact_id": 12482169974,
+  "artifact_zip_sha256": "NOT_YET_EXTRACTED",
+  "request_source": "660472e5666f2e1972d4110008d36b43da83f31e",
+  "product_source": "3701f49a42248a9c9d454050c6ef50a2f24f11ec",
+  "native_run": 39909891952,
+  "native_pass": "75/75_RECOVERY_MTU9",
+  "policy": "outer-single-repair-v2",
+  "business": {
+    "c2s_udp": {
+      "sent": 5884,
+      "missing": 126,
+      "loss_pct": 2.141400407885792
+    },
+    "s2c_udp": {
+      "sent": 5884,
+      "missing": 120,
+      "loss_pct": 2.0394289598912305
+    },
+    "v2_loss_target_pct": 0.25,
+    "result": "FAIL"
+  },
+  "record_chain": {
+    "c2s": {
+      "tx_first": 20460,
+      "rx_normal_unique": 20444,
+      "nominal_diff": 16,
+      "late_unique_over32": 393
+    },
+    "s2c": {
+      "tx_first": 20555,
+      "rx_normal_unique": 20534,
+      "nominal_diff": 21,
+      "late_unique_over32": 415
+    },
+    "rx_link_malformed": 0,
+    "rx_link_discarded": 0,
+    "tun_write_failed": 0,
+    "interpretation": "Protocol-mixed totals are NOT a bijection to inner UDP datagrams. RX late unique supports repair efficacy, but cannot independently identify a repair packet."
+  },
+  "feedback": {
+    "rx_feedback_dropped_client": 222,
+    "rx_feedback_dropped_server": 231,
+    "interpretation": "Includes definite NotSent feedback attempts and dirty page expiry; NOT equivalent to lost authenticated ACKs or lost business."
+  },
+  "disposition": "Do not tune quota; trace UDP/TCP TUN before source sealing and RX TUN write by protocol, then correlate application source/destination counts."
+}

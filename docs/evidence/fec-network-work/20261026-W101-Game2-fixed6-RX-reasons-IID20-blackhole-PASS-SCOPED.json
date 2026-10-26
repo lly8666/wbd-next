@@ -1,0 +1,103 @@
+{
+  "schema": "W101_GAME2_FIXED6_REAL_RX_REJECT_CLASSIFICATION_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "owner": "fec-network-work",
+  "exact_source": {
+    "source": "8afc2b8f443dd59edc912fef24b5fffa92e3a6d7",
+    "build_run": 40257758450,
+    "build_status": "SUCCESS_NATIVE_GO_ALL",
+    "build_artifact": 12622774367,
+    "build_sha256": "80f65de67e9a89ba961f3d18a722c53cee8911ce19f0a1315f98d448713f9772",
+    "native_unit": "w101_original_game_fec_decoder_rejections_have_separate_causes PASS"
+  },
+  "real_action": {
+    "run": 40258049780,
+    "request_commit": "7174f585237b4a7895b9b8fbce048c8fda41009a",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "artifact_id": 12623382997,
+    "zip_sha256": "ba75b84371f43d6b7b664dccfdd863a41bc98ac388b500cb7c90e72d9d77e51f"
+  },
+  "workload": "Same original W99 Game2 fixed6 3Mbps each direction 96% UDP + 2 TCP flows, 75ms one-way, 15s clean→30s independent20 per lane→30s lane1 blackhole→15s clean recovery; recorded-unseeded netem RNG; one scenario per Action",
+  "observed": {
+    "genuine_udp_tcp_injected_equals_delivered_all_phases_both": true,
+    "business_missing_udp_tcp": 0,
+    "tcp_backpressure": 0,
+    "source_tun_drops": 0,
+    "max_udp_p99_ms": 83.3,
+    "max_tcp_p99_ms": 85.1,
+    "active_zero_delivery_ms": {
+      "udp": 70,
+      "tcp": 80
+    },
+    "stop_drained_both": true,
+    "cpu_s_client_server": [
+      9.91,
+      10
+    ],
+    "cpu_per_effective_GiB": [
+      315.2826,
+      318.146
+    ],
+    "rss_peak_bytes": [
+      26828800,
+      26693632
+    ],
+    "cpu_psi_peak_pct": 2.86,
+    "outer_interface_tx_bytes": [
+      155862745,
+      155810373
+    ],
+    "shared_hol_rx_gap_ms_peak": 10
+  },
+  "native_fec_proof": {
+    "client": {
+      "source_offered": 65460,
+      "parity_planned": 89489,
+      "parity_offered": 89489,
+      "parity_m4_copied": 89489,
+      "parity_sent": 89489,
+      "systematic_candidate": 64707,
+      "recovered_candidate": 741,
+      "expired": 0,
+      "failed": 102,
+      "rx_invalid": 73,
+      "rx_conflict": 29,
+      "rx_capacity": 0,
+      "rx_codec": 0,
+      "rx_state": 0,
+      "rx_frame": 0,
+      "aead_auth_rejected": 0
+    },
+    "server": {
+      "source_offered": 65450,
+      "parity_planned": 89358,
+      "parity_offered": 89358,
+      "parity_m4_copied": 89358,
+      "parity_sent": 89358,
+      "systematic_candidate": 64659,
+      "recovered_candidate": 799,
+      "expired": 0,
+      "failed": 100,
+      "rx_invalid": 78,
+      "rx_conflict": 22,
+      "rx_capacity": 0,
+      "rx_codec": 0,
+      "rx_state": 0,
+      "rx_frame": 0,
+      "aead_auth_rejected": 0
+    }
+  },
+  "interpretation": "The original W99 aggregate failed=89/92 cannot be labeled AEAD nor codec/capacity. New real W101 count shows all counted decoder failures are Invalid or ConflictingBlock, while codec, capacity, state, frame and genuine AEAD=0. Invalid contains old/retired, parse/identity and temporal cases; conflict can be already-delivered source/repair row; exact sub-reason not proven. This is NOT proof all invalid errors are harmless; traffic-delivery evidence is independently positive.",
+  "limitations": [
+    "W101 same workload as W99 but a distinct VM/run, CPU percentages are NOT a causal paired A/B",
+    "Per-source recovered_candidate counted before TUN, but actual workload independently 100% delivered",
+    "Queue peak/age not exposed; no synthesized number",
+    "Shared correlated long GE and silent tail after highest FEC profile NOT_RUN on this exact source",
+    "Only Game2 W101 diagnostic; Game4 W99 fixed6 already real PASS but exact W101 telemetry not rerun",
+    "Game original --outer-repair=off explicitly unsupported; do not assert FEC-only retransmission off for Game",
+    "Windows/physical devices TEMP_SKIPPED_NOT_RUN"
+  ],
+  "capacity_stop": true,
+  "merge_ready": false
+}

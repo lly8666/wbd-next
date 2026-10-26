@@ -1,0 +1,149 @@
+{
+  "schema": 1,
+  "id": "P2-Normaloff-10Mbps-2pct-4flow-INCONCLUSIVE-20261023",
+  "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+  "run": 39923334085,
+  "attempt": 1,
+  "artifact_id": 12488855638,
+  "artifact_sha256": "5439a875ff9b506b3bbb3d667cf63ba1b2ab6b722e830ec5995a1e908e726489",
+  "request_source": "6e60982b20c703c544aa07a222f4414828d8f76b",
+  "scope": "Normal/off, no FEC, 10Mbps/dir (UDP5/TCP5), 4 TCP streams, 2% netem, 200ms one-way, 60s steady, 99%1287B UDP payload",
+  "result": "INCONCLUSIVE_TCP_BACKPRESSURED_UDP_CORRECT",
+  "app": {
+    "c2s": {
+      "udp_offered": 29417,
+      "udp_missing": 24,
+      "udp_loss_pct": 0.08158547778495427,
+      "tcp_target_mbps": 5,
+      "tcp_injected_mbps": 3.8740996,
+      "tcp_backpressure": 6561,
+      "tcp_p99_ms": 4585.3
+    },
+    "s2c": {
+      "udp_offered": 29417,
+      "udp_missing": 15,
+      "udp_loss_pct": 0.05099092361559643,
+      "tcp_target_mbps": 5,
+      "tcp_injected_mbps": 4.978557066666666,
+      "tcp_backpressure": 125,
+      "tcp_p99_ms": 13978.9
+    }
+  },
+  "native": {
+    "m1": {
+      "client": {
+        "peak_loaned": 699,
+        "slots": 1024,
+        "charged_bytes": 2195456
+      },
+      "server": {
+        "peak_loaned": 733,
+        "slots": 1024,
+        "charged_bytes": 2195456
+      }
+    },
+    "source_tun_read_equals_staged_both": true,
+    "rx_tun_malformed_discard_failed": 0,
+    "feedback_drop_both": 0,
+    "pre_read_deferred_both": 0,
+    "repair_packets": 4049,
+    "quota_denied": {
+      "client": 144,
+      "server": 238
+    },
+    "udp_kernel_errors": 0,
+    "tun_kernel_tx_drop_both": 0
+  },
+  "resource": {
+    "steady60s_product_cpu_s": {
+      "client": 6.08,
+      "server": 6.1
+    },
+    "rss_peak_bytes": {
+      "client": 19005440,
+      "server": 19689472
+    },
+    "generator_cpu_s_including_setup": {
+      "client": 5.78,
+      "server": 5.93
+    },
+    "host_psi_peak": 0,
+    "host_steal_peak": 0,
+    "netem_loss_pct": {
+      "client": 2.062761603034017,
+      "server": 1.9860392796885855
+    }
+  },
+  "kernel_tcp": {
+    "client": {
+      "before_steady": {
+        "cwnd_sum": 105,
+        "notsent_bytes": 846638,
+        "retrans_total": 74
+      },
+      "measurement_end": {
+        "cwnd_sum": 205,
+        "notsent_bytes": 588956,
+        "retrans_total": 474,
+        "rto_max_ms": 1721
+      }
+    },
+    "server": {
+      "before_steady": {
+        "cwnd_sum": 1551,
+        "notsent_bytes": 851834,
+        "retrans_total": 105
+      },
+      "measurement_end": {
+        "cwnd_sum": 174,
+        "notsent_bytes": 1967740,
+        "retrans_total": 719,
+        "rto_max_ms": 1680
+      }
+    },
+    "measurement_retrans_increment": {
+      "client": 400,
+      "server": 614
+    },
+    "warning": "At before-steady, server cwnd_sum1551 includes transient single-socket cwnd1420; use steady end value and per-flow distribution cautiously."
+  },
+  "model": {
+    "rtt_ms": 410.8,
+    "mss_bytes": 1289,
+    "target_tcp_mbps_per_direction": 5,
+    "aggregate_tcp_bdp_bytes": 256750,
+    "udp_average_application_bytes": 1274.77,
+    "four_flows": {
+      "bdp_bytes_per_flow": 64187.5,
+      "needed_segments": 49.79635376260667,
+      "with_25pct_headroom_segments": 62.24544220325834
+    },
+    "eight_flows": {
+      "bdp_bytes_per_flow": 32093.75,
+      "needed_segments": 24.898176881303336,
+      "with_25pct_headroom_segments": 31.12272110162917
+    },
+    "udp_missing_frac_observed": [
+      0.0008158547778495428,
+      0.0005099092361559643
+    ],
+    "illustrative_reno_equivalent_window_segments": [
+      42.878461959356706,
+      54.23744094258135
+    ],
+    "qualification": "Analytical sensitivity model only; kernel uses actual Linux congestion control. This is not measured TCP delivery or a qualified Reno prediction."
+  },
+  "old_project_comparison": {
+    "source": "lly8666/wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984 internal/platformflow/tcp_reliability.go",
+    "design": "Separate application-layer TCPTransmit reliability window defaults MaxInFlight16 chunks, RTO500ms, MaxRetransmits8, MaxReorderBytes16*MaxPayload. Older fast repair uses cumulative SACK/RACK witness and genuine reordering window.",
+    "decision": "Do not port that second ordered reliable transport into current Linux TUN of native TCP. Keep Linux TCP ownership and one outer same-PN repair; distinguish transport congestion via 8-flow realistic high-RTT workload before changing product retry/quota."
+  },
+  "important_limits": [
+    "2% observed UDP residual is not necessarily identical to inner TCP segment loss probability; Reno sqrt is illustrative only",
+    "Host and product no loss after TUN read does not imply inner TCP unaffected by residual outer loss or reordering",
+    "Do not increase M1/MTU/netem queues: 699/733 peak of1024 and no source drops",
+    "Do not silently raise retry allowance or relax original UDP 0.25%",
+    "Cross-VM flow4 vs flow8 CPU not causal; compare only independent capacity qualification"
+  ],
+  "next_decision": "One distinct flow8 mixed Normal business Action on same frozen product, same loss/delay/rate and source; report actual TCP goodput/cwnd/notsent/p99 and CPU/RSS. Stop pressure ladder if flow8 fails to meet actual injection target."
+}

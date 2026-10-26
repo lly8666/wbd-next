@@ -1,0 +1,99 @@
+{
+  "owner": "fec-network-work",
+  "source": "564490bc7a8f61c9ab06be58add8138212306393",
+  "build_run": 40109847848,
+  "product_artifact": 12566326717,
+  "product_zip_sha256": "a1ce0b81738a9a74ac04835546479ada398e99718fd5086775c0b765625f649c",
+  "host": "GitHub Actions ubuntu-24.04-arm aarch64 4 logical CPU",
+  "fec_profile": "fixed maximum 6 both true applied",
+  "loss_iid_pct": 30,
+  "oneway_delay_ms": 300,
+  "outer_rate_limit_mbps_each": 600,
+  "original_fq600": true,
+  "owned_veth_permanent_neighbour": true,
+  "outer_data_retransmission": "OFF native verified 0 packets",
+  "authenticated_reverse_feedback_real": true,
+  "warmup_s": 15,
+  "measurement_s": 30,
+  "drain_s": 30,
+  "no_source_tun_drops": true,
+  "no_source_fq_root_qdisc_drops": true,
+  "no_RX_capacity_pressure_evictions": true,
+  "no_RX_decoder_capacity_rejects": true,
+  "stop_owned_drained": true,
+  "verdict_scope": "single-arm64-VM original public Linux TUN; not persistent/physical/Windows capacity qualification",
+  "id": "FEC-W27-Maximum175-W26DirectArena-Fixed-OuterOff-ARM64",
+  "request_path": "tests/network/fec-work/W27-maximum175-W26single-static-owned-fq600-arm64.json",
+  "request_commit": "3a694dea12653eebe24bf5174f9c0c57e1cf533a",
+  "run_id": 40127642866,
+  "attempt": 1,
+  "result_artifact": 12573724068,
+  "artifact_sha256": "00722004b9fbd1fc59e244b69045ff95ca0cdbe8ab008d4df1aa4bc9a5b0b7a0",
+  "result": "PASS_SCOPED_OBSERVATION",
+  "stop_heavier_resource_cases": false,
+  "rate_mbps_each": 175,
+  "c2s": {
+    "injected_mbps": 175.0007688,
+    "delivered_mbps": 174.8223824,
+    "residual_loss_pct": 0.11868663813784355,
+    "p99_ms": 306,
+    "missing_after_drain": 611
+  },
+  "s2c": {
+    "injected_mbps": 175.0021416,
+    "delivered_mbps": 174.7458848,
+    "residual_loss_pct": 0.16608230300793506,
+    "p99_ms": 306.7,
+    "missing_after_drain": 855
+  },
+  "outer_actual_netem_loss_pct": {
+    "client": 29.970403425646055,
+    "server": 29.960447298282926
+  },
+  "cpu_s_30s": {
+    "client": 27.11,
+    "server": 27.53
+  },
+  "host_psi_some_pct": {
+    "mean": 32.998,
+    "peak": 35.51,
+    "over20_fraction": 1
+  },
+  "native_parity": {
+    "client": {
+      "rplanned": 968003,
+      "rsent": 965077,
+      "queued_expired": 69,
+      "unknown_capacity": 116,
+      "parity_seal_fail": 750,
+      "pressure_jobs": 0,
+      "pressure_sources": 0
+    },
+    "server": {
+      "rplanned": 967928,
+      "rsent": 964020,
+      "queued_expired": 96,
+      "unknown_capacity": 172,
+      "parity_seal_fail": 833,
+      "pressure_jobs": 0,
+      "pressure_sources": 0
+    }
+  },
+  "RX_peak_active": {
+    "client": 183,
+    "server": 183
+  },
+  "RX_peak_bytes": {
+    "client": 6784981,
+    "server": 6862107
+  },
+  "native_TUN_recovered": {
+    "client": 230911,
+    "server": 231416
+  },
+  "rss_peak_bytes": {
+    "client": 53522432,
+    "server": 53735424
+  },
+  "interpretation": "Single 175 Mbps both directions meets <=1% residual while host CPU PSI remains high; no direct evidence that 200 Mbps will pass."
+}

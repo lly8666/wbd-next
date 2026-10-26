@@ -1,0 +1,164 @@
+{
+  "schema": "FEC_W137_W140_GAME_DEADLINE_SCOPED_PROTECTION_V1",
+  "branch": "experiment/fec-network-tuning",
+  "date": "2026-10-26",
+  "owner": "fec-network-work",
+  "candidate": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+  "build_run": 40293838787,
+  "build_artifact_id": 12636808494,
+  "build_zip_sha256": "d60386779b56b0c091721f444c96c53c309cebe56140b9e0d9308720d278280a",
+  "baseline": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+  "cases": [
+    {
+      "id": "W137",
+      "action": 40294316915,
+      "scenario": "Game4 fixed6 1Mbps real TCP UDP mixed clean→12s true quiet→resume 75ms",
+      "ordering": "AB",
+      "artifact_id": 12637373657,
+      "zip_sha256": "fbdcb92503f6a6c77e26f936a18c06b6e76ad4169c7bbba4e31ddd86a3b19322",
+      "old_cpu_both_s": 5.77,
+      "new_cpu_both_s": 6.06,
+      "host_psi_both_zero": true,
+      "real_loss_both_zero": true,
+      "first_p99_old_new_ms": [
+        75.5,
+        75.5
+      ],
+      "fec_parity_planned_sent_both": true,
+      "original_copy_due_preserved": true,
+      "outer_data_retrans_zero": true,
+      "go_full_copies_new_both_zero": true,
+      "result": "PASS_SCOPED_LATENCY_GAIN_NOT_SHOWN_CPU_PLUS_5P0_PERCENT"
+    },
+    {
+      "id": "W138",
+      "action": 40295019331,
+      "scenario": "Game4 fixed6 real TCP UDP mixed sparse80Kbps IID30% independent each lane, 75ms",
+      "ordering": "BA",
+      "artifact_id": 12637758164,
+      "zip_sha256": "8c1a08f5e24c9f2447b7d49f818824d467d1d2a3693c00a68f3d2f47cef44842",
+      "old_cpu_both_s": 1.16,
+      "new_cpu_both_s": 1.16,
+      "old_psi_mean_peak_pct": [
+        0.628,
+        17.04
+      ],
+      "new_psi_mean_peak_pct": [
+        0,
+        0
+      ],
+      "real_udp_delivery_each_direction": "414/414 old and new",
+      "real_tcp_delivery_each_direction": "9/9 old and new",
+      "damaged_first_p99_ms": {
+        "old_c2s": 79.6,
+        "old_s2c": 83.6,
+        "new_c2s": 79.6,
+        "new_s2c": 81.7
+      },
+      "old_recovered_candidate_client_server": [
+        233,
+        212
+      ],
+      "new_recovered_candidate_client_server": [
+        330,
+        350
+      ],
+      "old_parity_planned_sent_client_server": [
+        2476,
+        2474
+      ],
+      "new_parity_planned_sent_client_server": [
+        2476,
+        2475
+      ],
+      "all_parity_sent": true,
+      "outer_data_retrans_zero": true,
+      "go_after_handoff_full_copies_zero_both": true,
+      "stop_clean": true,
+      "caveats": "Each cohort 414 UDP and 9 TCP per direction; netem actual trajectories differ. Greater decoder recovered candidates do not prove causal 1.9ms latency benefit or reduced erasures. Last two ranks show small end-of-Stop unprocessed tail; no invented send success.",
+      "result": "PASS_SCOPED_DAMAGE_ZERO_MISSING_NO_CPU_REGRESSION"
+    },
+    {
+      "id": "W139_Game2_protection",
+      "action": 40295923116,
+      "scenario": "Game2 fixed6 3Mbps mixed TCP UDP clean 75ms",
+      "artifact_id": 12638391148,
+      "zip_sha256": "a34fc85ae2189d76cd02d8106e1751f874ff0181ed25a0045b59190468bd8cee",
+      "source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+      "cpu_client_server_s": [
+        2.52,
+        2.52
+      ],
+      "psi_mean_peak_pct": [
+        0,
+        0
+      ],
+      "udp_delivered_per_direction": 11009,
+      "tcp_delivered_per_direction": 449,
+      "missing": 0,
+      "first_p99_udp_ms": 76.2,
+      "parity_actual_client": "29426/29426",
+      "parity_actual_server": "29472/29472",
+      "outer_data_retrans": 0,
+      "go_posthandoff_full_copies_both": 0,
+      "stop_clean": true,
+      "result": "PASS_SCOPED_GAME2_PROTECTION"
+    },
+    {
+      "id": "W140_Game4_OFF_protection",
+      "action": 40295931353,
+      "scenario": "Game4 FEC OFF default 0/4/20/60 stagger 1Mbps mixed TCP UDP clean 75ms",
+      "artifact_id": 12637968544,
+      "zip_sha256": "3074fe2ae23bf497672e82bbfdc9baf7df0b17f5c51cda96f5ad87d79077515a",
+      "source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+      "cpu_client_server_s": [
+        1.39,
+        1.38
+      ],
+      "psi_mean_peak_pct": [
+        0,
+        0
+      ],
+      "udp_delivered_per_direction": 3683,
+      "tcp_delivered_per_direction": 136,
+      "missing": 0,
+      "first_p99_udp_ms": 75.5,
+      "copy_abandoned_client": [
+        0,
+        0,
+        1,
+        1
+      ],
+      "copy_abandoned_server": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "note": "Some late copies abandoned at deadline, not false claimed planned==sent; no first-delivery business missing",
+      "outer_data_retrans": 0,
+      "go_posthandoff_full_copies_both": 0,
+      "stop_clean": true,
+      "result": "PASS_SCOPED_GAME4_OFF_GUARD"
+    }
+  ],
+  "native_regression": {
+    "test": "w137_sparse_fixed6_fec_close_preempts_game4_20ms_copy",
+    "assertions": [
+      "one sparse original FEC group closes before copy+20ms",
+      "original logical symbol third physical source copy still sent at due+20ms",
+      "full parity credit/TUN lifecycle and M0 original Go tests pass"
+    ]
+  },
+  "decision": "KEEP_W137_GAME_FEC_EARLIEST_DEADLINE_AS_SCHEDULING_CORRECTNESS_SCOPED_NOT_CPU_WIN",
+  "limitations": [
+    "No conclusive clean or IID first arrival p99 benefit (sparse cohort tiny)",
+    "Normal OFF Fixed Auto real workloads on new SOURCE not separately repeated: unchanged functional code except read-only shared FEC ready accessor; prior 6c38 qualification stays prior source",
+    "No in-process reconnect stress or Windows native qualification",
+    "Do not infer highrate 20-80Mbps; host PSI capacity hard stop remains"
+  ],
+  "P1A_native_80_mbps_receipt": "docs/evidence/fec-network-work/20261026-P1a-80Mbps-64B-native-RX-ABBA-capacity-gated.json",
+  "capacity_stop": true,
+  "merge_ready": false,
+  "windows": "NOT_RUN/TEMP_SKIPPED"
+}

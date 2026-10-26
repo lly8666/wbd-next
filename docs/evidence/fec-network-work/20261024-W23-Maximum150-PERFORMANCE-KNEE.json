@@ -1,0 +1,97 @@
+{
+  "run": 40102994265,
+  "result_artifact": 12563149315,
+  "artifact_sha256": "f64b606746b3a7b317e81fb5fb8849447ceed1cc21607624508743567c01f9c4",
+  "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+  "exact_native_artifact": 12562092730,
+  "mode": "fec-fixed Maximum6",
+  "outer_data_repair": "OFF 0 packet 0 bytes",
+  "qdisc": "original fq600 on both owned TUN",
+  "owned_test_veth_neighbour": "PERMANENT BOTH",
+  "loss_iid_pct": 30,
+  "oneway_delay_ms": 300,
+  "business_mbps_each": 150,
+  "measured_seconds": 30,
+  "result": "BUSINESS_SCOPED_PASS_WITH_FIRST_PARITY_CPU_PSI_PERFORMANCE_KNEE",
+  "business": {
+    "c2s": {
+      "injected": 150.00015893333332,
+      "delivered": 148.869036,
+      "missing": 3426,
+      "loss_pct": 0.7540811565646788,
+      "p99_ms": 311
+    },
+    "s2c": {
+      "injected": 150.00050213333333,
+      "delivered": 148.89309226666668,
+      "missing": 3336,
+      "loss_pct": 0.7382707730420046,
+      "p99_ms": 310.9
+    }
+  },
+  "actual_outer_veth_30s": {
+    "client_tx_bytes": 952710407,
+    "server_tx_bytes": 953387605,
+    "client_mbps": 254.05610853333334,
+    "server_mbps": 254.23669466666666,
+    "combined_mbps": 508.2928032,
+    "note": "All actual first DATA+fresh FEC parity+control+any genuine retransmission recorded, not native 45s firstsend counter; netem postloss interface not physical L1."
+  },
+  "cpu_s_30s": {
+    "client": 24.2,
+    "server": 24.33
+  },
+  "rss_peak_bytes": {
+    "client": 50233344,
+    "server": 50417664
+  },
+  "host_cpu_psi": {
+    "peak": 30.62,
+    "over20_fraction": 1
+  },
+  "rx": {
+    "client": {
+      "peak_active": 163,
+      "peak_bytes": 5828926,
+      "pressure": 0,
+      "decoder_reject": 0,
+      "recovered_tun": 194296
+    },
+    "server": {
+      "peak_active": 163,
+      "peak_bytes": 5847056,
+      "pressure": 0,
+      "decoder_reject": 0,
+      "recovered_tun": 194436
+    }
+  },
+  "native_fec_tx": {
+    "client": {
+      "rplanned": 830246,
+      "rsent": 800359,
+      "unsent": 29887,
+      "gap_pct": 3.5997764517986237,
+      "unknown_capacity": 2983,
+      "parity_seal": 48
+    },
+    "server": {
+      "rplanned": 830265,
+      "rsent": 799115,
+      "unsent": 31150,
+      "gap_pct": 3.7518141798100606,
+      "unknown_capacity": 3054,
+      "parity_seal": 63
+    }
+  },
+  "native_source_TUN_drop_both": 0,
+  "actual_netem_loss_pct": {
+    "client": 30.03915524848989,
+    "server": 29.958184443077197
+  },
+  "stopped_and_drained_both": true,
+  "limits": [
+    "CPU PSI host-scope, cannot identify individual thread from this alone",
+    "Parity planned/sent counts are 45s native owner aggregate, not 30s interface bytes; missed planned rows not equivalent to lost app packets",
+    "Unseeded netem and single standalone measurement cannot assert invariant throughput for all runs"
+  ]
+}

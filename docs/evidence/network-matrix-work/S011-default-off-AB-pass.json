@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "scenario": "S011-default-Normal-off-mixed-lossless-90s-same-job-AB",
+  "result": "PASS_SCOPED_OBSERVATION",
+  "action": {
+    "run_id": 39771806641,
+    "attempt": 1,
+    "conclusion": "success",
+    "artifact_id": 12422916708,
+    "artifact_zip_sha256": "7f0eb6e2d6aa3e059dbbebea1990d8935c92cc1b4f7937603bc54b506b1a4eee"
+  },
+  "harness_source": "2f0bdee88a2392b11e3704f1c66664b54a75014a",
+  "order": "AB",
+  "each_direction": {
+    "traffic_mbps": 10,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "duration_s": 90,
+    "loss_pct": 0
+  },
+  "legs": {
+    "A": {
+      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+      "run_id": 39759842150,
+      "artifact_id": 12417786567,
+      "conclusion": "PASS_SCOPED_OBSERVATION",
+      "udp_rx_loss": 0,
+      "tcp_rx_loss": 0,
+      "duplicates": 0,
+      "udp_surviving_p99_ms": 0.5,
+      "tcp_surviving_p99_ms": 0.6,
+      "phase_cpu_s": {
+        "client": 14.48,
+        "server": 14.52
+      },
+      "rss_peak_bytes": {
+        "client": 16588800,
+        "server": 16343040
+      },
+      "psi_mean_pct": 2.9092,
+      "steal_peak_pct": 0,
+      "outer_tx_bytes": {
+        "client": 149537228,
+        "server": 149462222
+      },
+      "stop_cleanup": true
+    },
+    "B": {
+      "source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
+      "run_id": 39770495489,
+      "artifact_id": 12422077765,
+      "conclusion": "PASS_SCOPED_OBSERVATION",
+      "udp_rx_loss": 0,
+      "tcp_rx_loss": 0,
+      "duplicates": 0,
+      "udp_surviving_p99_ms": 0.5,
+      "tcp_surviving_p99_ms": 0.6,
+      "phase_cpu_s": {
+        "client": 14.71,
+        "server": 14.62
+      },
+      "rss_peak_bytes": {
+        "client": 16187392,
+        "server": 16125952
+      },
+      "psi_mean_pct": 2.9089,
+      "steal_peak_pct": 0,
+      "outer_tx_bytes": {
+        "client": 149513629,
+        "server": 149498640
+      },
+      "stop_cleanup": true
+    }
+  },
+  "assessment": "Both legs valid sequential within same ARM64 measurement job, independent cleanup, identical achieved 4.999996Mbps per direction/protocol with zero missing/duplicate. CPU B-A +0.23s client +0.10s server (~1.6%/+0.7%) on 90s; single AB noise cannot resolve instrumentation CPU regression; no p99 change and no gross RSS or wire regression. Default diagnosis off, FEC TX counters unobserved by design in mode off. New instrumentation not qualified for all modes; S010 remains hard FAIL."
+}

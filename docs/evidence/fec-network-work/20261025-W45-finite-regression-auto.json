@@ -1,0 +1,106 @@
+{
+  "branch": "experiment/fec-network-tuning",
+  "source": "23da99f0de04afe17756542f5176f2759e318747",
+  "product_build_run": 40153525640,
+  "product_artifact_id": 12583149711,
+  "product_sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
+  "arm64": true,
+  "outer_DATA_retransmission_enabled": false,
+  "original_M4": true,
+  "id": "W45",
+  "mode": "fec-auto",
+  "case": "authentic_M2_asymmetric_8Mbps_each_2to20to1_loss_c2s_0to1to0_s2c_delay75ms",
+  "commit": "1dc3171212a0082b756d6d329f7be898b8760eb6",
+  "request": "tests/network/fec-work/W45-auto-m2-asym-rise-recover-8-W40-arm64.json",
+  "run": 40156921978,
+  "artifact": 12584856579,
+  "sha256": "8e09b19dde8cd99ff805497b41f88bb3fbc6fef0a63b0304db70ada9119c9394",
+  "result": "PASS_SCOPED_OBSERVATION",
+  "impairment_wallclock_UTC": {
+    "pre_low": "2026-10-25T03:06:25.456Z",
+    "asym_high": "2026-10-25T03:06:55.456Z",
+    "recover_low": "2026-10-25T03:07:55.456Z"
+  },
+  "original_go_quality_stages": {
+    "c2s": [
+      {
+        "time_utc": "2026-10-25T03:06:54Z",
+        "from": 5,
+        "to": 4,
+        "revision": 2,
+        "stage_reason": "10s and 4096 valid sources; one-step down",
+        "phase": "pre_low"
+      },
+      {
+        "time_utc": "2026-10-25T03:07:15Z",
+        "from": 4,
+        "to": 6,
+        "revision": 3,
+        "stage_reason": "two valid rising fast windows",
+        "phase": "asym_high"
+      },
+      {
+        "time_utc": "2026-10-25T03:08:43Z",
+        "from": 6,
+        "to": 5,
+        "revision": 4,
+        "stage_reason": "10s and 4096 valid sources; one-step down",
+        "phase": "recover_low"
+      }
+    ],
+    "s2c": [
+      {
+        "time_utc": "2026-10-25T03:07:33Z",
+        "from": 5,
+        "to": 4,
+        "revision": 2,
+        "stage_reason": "10s and 4096 valid sources; one-step down",
+        "phase": "asym_high"
+      }
+    ]
+  },
+  "final_original_native_readback": {
+    "client": {
+      "mode": "auto",
+      "requested": 4,
+      "applied": 4,
+      "profile": 5,
+      "pending": false
+    },
+    "server": {
+      "mode": "auto",
+      "requested": 2,
+      "applied": 2,
+      "profile": 4,
+      "pending": false
+    }
+  },
+  "true_data_rtt_horizon": "original 2s/8s matured encrypted reverse M2 owner counters; validity=VALID at stage; missing-feedback and actual-k incomplete periods remain UNKNOWN",
+  "app_per_phase": {
+    "c2s_pre_low_missing": 0,
+    "c2s_asym_high_missing": 47,
+    "c2s_asym_high_first_arrivals": 47019,
+    "c2s_asym_high_residual_pct": 0.09985977138486381,
+    "c2s_recover_low_missing": 0,
+    "s2c_all_three_missing": 0
+  },
+  "native_parity_planned_sent_client": [
+    155998,
+    155998
+  ],
+  "native_parity_planned_sent_server": [
+    121187,
+    121187
+  ],
+  "parity_jobs_expired_both": 0,
+  "source_TUN_drops": 0,
+  "outer_DATA_retransmission_count": 0,
+  "recovered_tun_client": 527,
+  "recovered_tun_server": 11106,
+  "process_cpu_s_client_server": [
+    15.07,
+    15.11
+  ],
+  "telemetry_gap": "automated auto_runtime_curve is NOT_OBSERVED_FINAL_READBACK_ONLY, but saved ORIGINAL client/server-auto-quality.log and impairment-events.json independently prove requested stages, VALID input and temporal phases; final readback proves applied revision. Do not mislabel summary curve fully automatic.",
+  "qualification": "valid one real asymmetric stage-up/return product instance, not all Auto curves/policies/platforms"
+}

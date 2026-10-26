@@ -51,6 +51,10 @@ pub struct MatureWindow {
     /// No authentic bitmap coverage by the maturity deadline: UNKNOWN.
     pub uncovered:u64,
     pub uncovered_wire_bytes:u64,
+    /// Authenticated positive first-copy confirmation latency. Includes
+    /// feedback schedule; not a fabricated repair-shadow RTT sample.
+    pub positive_confirmation_lag_ns:u64,
+    pub positive_confirmation_samples:u64,
 }
 impl MatureWindow {
     /// Must hold for both packet counts and wire bytes; if coverage is
@@ -80,6 +84,12 @@ impl MatureWindow {
         } else if received {
             self.unambiguous_positive=self.unambiguous_positive.saturating_add(1);
             self.positive_wire_bytes=self.positive_wire_bytes.saturating_add(e.wire_bytes);
+            if let Some(at)=e.positive_at {
+                self.positive_confirmation_lag_ns=self.positive_confirmation_lag_ns
+                    .saturating_add(at.saturating_sub(e.first_at));
+                self.positive_confirmation_samples=self.positive_confirmation_samples
+                    .saturating_add(1);
+            }
         } else if missing {
             self.covered_missing=self.covered_missing.saturating_add(1);
             self.missing_wire_bytes=self.missing_wire_bytes.saturating_add(e.wire_bytes);
@@ -440,6 +450,10 @@ mod tests {
         assert_eq!(a.window_2s.repaired_or_ambiguous,2);
         assert_eq!(a.window_2s.positive_wire_bytes,100);
         assert_eq!(a.window_2s.ambiguous_wire_bytes,200);
+        // Exactly one unambiguous verified first-copy positive; previous
+        // possible FEC/repair receipt is not a valid RTT/quality sample.
+        assert_eq!(a.window_2s.positive_confirmation_samples,1);
+        assert_eq!(a.window_2s.positive_confirmation_lag_ns,1_000_000_000);
         assert!(a.window_2s.conserved());
     }
 

@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "date": "2026-10-24",
+  "run": 40089406842,
+  "artifact": 12558900477,
+  "zip_sha256": "9780c422df5bc319954a84494d44958d8c45cb2c21556382b98c6d913d7e1343",
+  "same_vm_order": "AB",
+  "native_outer_repair_both": false,
+  "profile": 6,
+  "netem_loss_pct": 30,
+  "oneway_delay_ms": 300,
+  "business_mbps_per_direction": 50,
+  "measurement_s": 30,
+  "A": {
+    "source": "a969217e1edd3577ae41df81c38aa7ac84a4a484",
+    "app_delivered_mbps": {
+      "c2s": 47.9869,
+      "s2c": 47.96776
+    },
+    "missing": {
+      "c2s": 5908,
+      "s2c": 5958
+    },
+    "native_rx_rejected": {
+      "client": 19688,
+      "server": 18368
+    },
+    "measurement_cpu_s": {
+      "client": 12.52,
+      "server": 12.67
+    }
+  },
+  "B": {
+    "source": "ec344557fa8cbf4d717a81833d36f92584263478",
+    "app_delivered_mbps": {
+      "c2s": 43.88279,
+      "s2c": 49.99944
+    },
+    "missing": {
+      "c2s": 18025,
+      "s2c": 43
+    },
+    "native_rx_rejected": {
+      "client": 0,
+      "server": 0
+    },
+    "native_RX_capacity": {
+      "client": {
+        "peak_active": 58,
+        "peak_bytes": 1921203,
+        "pressure_evicted": 0,
+        "age_evicted": 15268,
+        "reorder_evicted": 0,
+        "reject_capacity": 0,
+        "reject_codec": 0
+      },
+      "server": {
+        "peak_active": 59,
+        "peak_bytes": 1941753,
+        "pressure_evicted": 0,
+        "age_evicted": 14496,
+        "reorder_evicted": 55,
+        "reject_capacity": 0,
+        "reject_codec": 0
+      }
+    },
+    "outer_interface_tx_bytes_measurement": {
+      "client": 286886952,
+      "server": 326114835
+    },
+    "native_FEC_TX_rsent": {
+      "client": 279164,
+      "server": 279144
+    },
+    "native_FEC_TX_failures_all_zero": true,
+    "meas_cpu_s": {
+      "client": 12.78,
+      "server": 12.08
+    },
+    "rss_peak_bytes": {
+      "client": 29720576,
+      "server": 29462528
+    }
+  },
+  "interpretation": "RX rejection capacity eliminated but B C2S original interface emitted 39MB less during measurement while source TUN and FEC M4 copy counts nearly equal; no local TUN root qdisc drops, no tx fail. Do not infer kernel cause yet, and do not make CPU tradeoff claims. Single B-only comparison is next.",
+  "status": "FAIL_USER_BUSINESS"
+}

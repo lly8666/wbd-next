@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "id": "P1-first-repair-priority-AB-quota-carry-intent-20261023",
+  "action": {
+    "run_id": 39900235569,
+    "attempt": 1,
+    "harness_source": "429e33b41ad7d03b679e6ea38b10045ffc94a3d7",
+    "artifact_id": 12478751133,
+    "artifact_sha256": "af966f146df169d80f2ec16055dea80966167a15658cb9d5df0c9586c9e1c348",
+    "conclusion": "failure"
+  },
+  "scenario": {
+    "same_vm": true,
+    "order": "AB",
+    "mode": "normal",
+    "loss_pct": 2,
+    "one_way_ms": 200,
+    "steady_s": 60,
+    "seed": 5205
+  },
+  "A": {
+    "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
+    "netem_loss_pct": {
+      "client": 1.8651745270450306,
+      "server": 2.1195725081608012
+    },
+    "udp_missing": {
+      "c2s": 188,
+      "s2c": 143
+    },
+    "udp_loss_pct": {
+      "c2s": 3.195105370496261,
+      "s2c": 2.4303195105370494
+    },
+    "tcp_p99_ms": {
+      "c2s": 4550.6,
+      "s2c": 4455.6
+    },
+    "client": {
+      "repair": 685,
+      "blocked_burst": 244,
+      "blocked_quota": 12,
+      "expired0": 110,
+      "candidate_first": 807,
+      "candidate_retry": 134
+    },
+    "server": {
+      "repair": 726,
+      "blocked_burst": 254,
+      "blocked_quota": 10,
+      "expired0": 109,
+      "candidate_first": 843,
+      "candidate_retry": 150
+    },
+    "cpu_s": {
+      "client": 2.27,
+      "server": 2.31
+    },
+    "stop": true
+  },
+  "B": {
+    "source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
+    "netem_loss_pct": {
+      "client": 1.9765314772676572,
+      "server": 2.0538810349426515
+    },
+    "udp_missing": {
+      "c2s": 128,
+      "s2c": 154
+    },
+    "udp_loss_pct": {
+      "c2s": 2.175390890550646,
+      "s2c": 2.617267165193746
+    },
+    "tcp_p99_ms": {
+      "c2s": 5356.4,
+      "s2c": 3861.5
+    },
+    "client": {
+      "repair": 602,
+      "blocked_burst": 21,
+      "blocked_quota": 351,
+      "expired0": 146,
+      "candidate_first": 894,
+      "candidate_retry": 80
+    },
+    "server": {
+      "repair": 593,
+      "blocked_burst": 22,
+      "blocked_quota": 361,
+      "expired0": 155,
+      "candidate_first": 898,
+      "candidate_retry": 78
+    },
+    "cpu_s": {
+      "client": 2.36,
+      "server": 2.37
+    },
+    "stop": true
+  },
+  "conclusion": "First-stage pacer bypass works mechanically (BurstPaced collapses 244/254 ->21/22) but exposes strict wall-clock epoch quota bunching (QuotaExhausted 12/10 ->351/361), reducing actual repairs and increasing expired0. UDP remains >1%; first-priority alone is not qualified.",
+  "diagnosis": "Per-epoch unused repair allowance is discarded at each 1s boundary. Authenticated receipt/PTO wakes are phase-bunched, so one second hits quota while adjacent seconds leave allowance unused. This is an aliasing artifact, not evidence to raise long-run 10% rate.",
+  "next_change": "Keep first-repair priority. Carry at most min(previous_unused,32KiB) across ONE adjacent epoch only. Current effective limit remains capped by max_repair_bytes_per_epoch; skipped epochs and second-generation carry are zero. Combined charged bytes over adjacent epochs cannot exceed the sum of their original base allowances."
+}

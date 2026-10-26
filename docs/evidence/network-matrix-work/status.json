@@ -1,0 +1,394 @@
+{
+  "schema": 1,
+  "branch": "experiment/network-matrix-tuning",
+  "phase": "V3_CROSS_BUSINESS_HOL_NATIVE_LOW1_FULL_MIXED_PASS_LOW2_HIGH30_UDP_NO_SHARED_GAP_TCP_OWN_BACKPRESSURE_OPEN",
+  "current_plan": {
+    "decision": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
+    "policy": "outer-opportunistic-v3",
+    "status": "Linux public V4 five modes native fq600 flow256 actual kernel applied all; Normal mixed PASS, Fixed5 lossless PASS, Game2/4 PASS; Fixed5 5pct and Auto healthy/lossy have genuine FEC applied-revision pending. No all-green claim."
+  },
+  "restoration": {
+    "remote_main_at_resume": "d8ba2cf270ff6ca5cadae6dab778c49c32636ef6",
+    "task_head_at_resume": "396d7f7f50abb0500e08d597f5466358fd91b9dd",
+    "behind_main": 0,
+    "ahead_main": 427,
+    "legacy_snapshot": "docs/evidence/network-matrix-work/status-before-owned-fq-20261024.json",
+    "devlog": "docs/devlog/network-matrix-work/20261024-owned-fq600-product-intent.md",
+    "recovered_finished_actions": [
+      40047976746,
+      40048710703
+    ],
+    "no_duplicate_dispatch": true
+  },
+  "last_verified_native_bundle": {
+    "source": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
+    "action": 40044879144,
+    "artifact": 12540624073,
+    "sha256": "f52f3c67749b399fa6778e9031e83a0f93f1fe4780d6836d7d120928b9fed763",
+    "platform": "aarch64"
+  },
+  "new_product_changes": {
+    "go_cli": "cf7800bf71e8a6241f7af9b0b9f2bcfca32ade4f",
+    "build_trigger": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
+    "harness": "c2c905a7e5dcbfae8ff3bdb96ca28b667ba7e176",
+    "contracts_fix": "38ba0f3b8d0d52ad64731bc1c68f7e87d9563fca",
+    "scope": "Linux owned ephemeral TUN fq per-flow maxrate 600mbit explicit opt-in Normal/off only; 0 original default; fail closed kernel readback; not global nor TCP app knob",
+    "native_build": {
+      "run": 40053179394,
+      "attempt": 1,
+      "status": "SUCCESS",
+      "source": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
+      "artifact": 12543904263,
+      "zip_sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749"
+    }
+  },
+  "open_requests": [],
+  "recent_evidence": [
+    {
+      "id": "v3 default fq600 original source8d highloss30",
+      "run": 40055272532,
+      "result": "PASS R/F 8.833/8.757 R/C6.424/6.369 each with genuine 50Mbps line/30% IID, kernel TUN/qdisc drops0",
+      "file": "V3-A-default-fq600-30pct-line50-real-20261024.json"
+    },
+    {
+      "id": "v3 default fq600 original source8d lossless mixed",
+      "run": 40055680062,
+      "result": "PASS dual 15Mbps each, TCP70/UDP30/small ~1% bytes, 10ms common zero bins0, source/qdisc0",
+      "file": "V3-D-default-fq600-mixed-70TCP30UDP-20261024.json"
+    },
+    {
+      "id": "v3 H500 original source8d root flow limit",
+      "run": 40055236284,
+      "result": "REAL FAIL two root fq startup drops from flows_plimit2/flow_limit100, sourceTUN0, CPU host PSI9.89%; fixed bounded flow256; failure preserved",
+      "file": "V3-H500-default-fq600-flow100-root-qdisc-FAIL-20261024.json"
+    },
+    {
+      "id": "v3 exact source601e flow256 H500 original counterexample retest",
+      "run": 40056093313,
+      "artifact": 12545397787,
+      "result": "PASS_SCOPED 370.014Mbps business offered,363.434 delivered,500Mbps outer line 2%/200ms, 0 source/root drops",
+      "file": "V3-H500-default-fq600-flow256-2pct-recheck-PASS-20261024.json"
+    },
+    {
+      "id": "v3 exact source601e flow256 TCP500 cold default",
+      "run": 40056105730,
+      "artifact": 12545700555,
+      "result": "PASS_SCOPED 500Mbps business one inner TCP 0loss RTT400 p99203.3ms startup+steady TUN/root0",
+      "file": "V3-C-default-fq600-flow256-native-TCP500-PASS-20261024.json"
+    },
+    {
+      "id": "recovered non-business harness preflight",
+      "runs": [
+        40055969268,
+        40055987386
+      ],
+      "result": "FAIL BEFORE BUSINESS because tc -d options were multiline; corrected parser c0f94f6 and harness contracts40056048217 PASS; no false product failure claim"
+    },
+    {
+      "id": "intermediate_partial_commit_generic_contract_failure",
+      "actions": [
+        40060864256,
+        40060875613,
+        40061035463
+      ],
+      "result": "Generic contracts temporarily inherited Fixed5 fec_profile for Auto mode or partial product and runner updates. Isolated generic profile in test source ce90a06b. These are not native product failure; perf actions run separately."
+    },
+    {
+      "id": "all_mode_real_native_summary",
+      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+      "runs": [
+        40061090616,
+        40061035456,
+        40061487976,
+        40061047243,
+        40061499022,
+        40061387213,
+        40061402339,
+        40061749129
+      ],
+      "result": "Default fq600 + flow256 live kernel PASS all five; Normal/Fixed0/Game PASS scoped; Fixed5 loss FEC pending, Auto including sameVM off/on FEC pending",
+      "file": "V3-all-Linux-modes-owned-fq600-20261024.json"
+    },
+    {
+      "id": "V3-HOL-duplex-UDP-and-two-independent-TCP-streams",
+      "mode": "normal/off",
+      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+      "runs": [
+        40065824207,
+        40065834480,
+        40066158628
+      ],
+      "results": [
+        "INCONCLUSIVE_TCP_BACKPRESSURE_PROTECTED_UDP_0ms",
+        "INCONCLUSIVE_TCP_BACKPRESSURE_PROTECTED_UDP_0ms",
+        "PASS_SCOPED_LOW1_FULL_MIXED_10ms_UDP_OR_SHARED_MAX"
+      ],
+      "files": [
+        "V3-D-cross-business-HOL-2pct-30pct-20261024.json",
+        "V3-D-cross-business-HOL-low1-50ms-full-mixed-PASS-20261024.json"
+      ]
+    }
+  ],
+  "open_issues": [
+    "FEC Auto: 0loss and asymmetric1-20-1 real FEC requested1 but applied0 pending true. SameVM A explicit fq0 ALSO had server pending; B default fq600 BOTH pending. Underlying issue not solely fq, effect of fq not proven absent; retain FEC native integration OPEN.",
+    "FEC Fixed profile5 5% IID: server applied0 pending true while healthy0loss both applied1 PASS; full lossy Fixed mode not qualified.",
+    "Game2/4 native lane duplication is not Normal single-lane V3 DATA ledger; original red Actions were invalid-applicability harness errors, later corrected Game Actions passed. Game2 under independent5% had real residual UDP packets.",
+    "All five Linux modes native Go/kernel owned fq600 default; Windows/physical/no global OS-level native paced default, high-rate duplex and full FEC Auto not qualified. CPU-s reported, no proof of optimization vs other VM.",
+    "Under 2% loss RTT400 and especially 30% loss RTT600 the two inner TCP streams are independently measured but suffer substantial own in-order retrans HOL/backpressure, full requested TCP10.5/23.59Mbps per direction NOT achieved. Protected UDP remains active every 10ms bin, so cross-business UDP HOL is not observed, but no blanket TCP↔TCP fairness or full throughput qualification. One distinct low1 RTT50 control achieved both TCP + UDP offered/received target; no more blind seeds."
+  ],
+  "next_action": "SCOPED_DELIVERY_COMPLETE: all three strict native cross-business cases settled Actions40065824207 low2 and40065834480 high30 both INCONCLUSIVE for inner TCP target but positive independently measured UDP protection, 40066158628 low1 RTT50 PASS_SCOPED full TCPx2+UDP with true <=10ms protected/shared gap. No in-flight Actions or duplicate dispatch, all artifacts and CPU/kernel/Stop evidence in final-report/20261024-cross-business-HOL devlog and 2 evidence JSON. Preserve FEC Auto/Fixed lossy revision OPEN from prior task, no main merge/deployment. Further extreme TCP rate would be separate congestion investigation, not claim from this cross-business scope.",
+  "current_source_verified": {
+    "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+    "platform": "native Linux ARM64",
+    "build": {
+      "run": 40060850580,
+      "artifact": 12546779978,
+      "zip_sha256": "6ee4a55d14a4a7f01e49a95b3654a79af1498aeca878b0c2ba9454ec2a9100e5",
+      "status": "SUCCESS"
+    },
+    "owned_fq": {
+      "rate_mbps": 600,
+      "flow_limit_packets": 256,
+      "global_limit_packets": 10000,
+      "default_in_modes": [
+        "normal",
+        "fec-fixed",
+        "fec-auto",
+        "game2",
+        "game4"
+      ],
+      "rollback": "--tun-fq-maxrate-mbps=0",
+      "live_Go_and_kernel_readback_all_five": true
+    },
+    "evidence": "docs/evidence/network-matrix-work/V3-all-Linux-modes-owned-fq600-20261024.json"
+  },
+  "current_policy_addendum": {
+    "authorization": "user 2026-10-24: 默认启动fq600，然后继续跑其他工况内容",
+    "scope": "newly-owned Linux Normal/off TUN startup fq maxrate 600Mbps per-flow; omitted CLI value uses600, explicit0 disables; other FEC/Game modes retain0 until independent true-native qualification; no global sysctl, or alteration to repair/UDP acceptance",
+    "source": "8d5bbdbca636e129481393fdbfa10b2c0e31e999",
+    "build_runs": [
+      40054986786,
+      40054986784
+    ],
+    "harness_source": "1d5d34954535fc8e40606888f1ec4c16164f5180",
+    "harness_contract_run": 40055025852,
+    "harness_contract_result": "SUCCESS",
+    "latest_doc": "docs/testing/NETWORK_HARNESS.md",
+    "native_bundle": {
+      "source": "8d5bbdbca636e129481393fdbfa10b2c0e31e999",
+      "run": 40054986786,
+      "attempt": 1,
+      "artifact": 12545077578,
+      "sha256": "1b4f8f2a02a9758caae40ea09d91acfab9242811192e1b52f019a396d2162732",
+      "result": "SUCCESS_NATIVE_AARCH64"
+    },
+    "concurrency_fix": {
+      "source": "d67c09a2528fd9479c00c77fb6264dd3c7472499",
+      "reason": "Existing group by request path automatically cancelled never-executed pending highloss40055207569 when later 500M2pct was queued; new workflow groups by frozen github.sha + path so independent committed requests do not evict."
+    },
+    "fq_bounded_flow_fix": {
+      "source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
+      "build_run": 40055776896,
+      "artifact": 12545850127,
+      "sha256": "b631975bd4f70db690f5dcd7acfa122f191675950bd8c835ec0c5185a16ae261",
+      "reason": "Run40055236284 370Mbps app/outer500/2pct measured root fq drops2 warmup, kernel flows_plimit2, flow_limit100, sourceTUN0, PSI9.89%; raise only owned per-flow fq queue to256 packets, global max10000 same, 600Mbps rate same.",
+      "harness_readback_source": "c0f94f659978915f1443496ed781946636e28152",
+      "harness_preflight_false_fail": [
+        40055969268,
+        40055987386
+      ],
+      "preflight_fail_reason": "tc -d fq options split lines and 256p suffix; no business samples; corrected to separate text fq root/maxrate + JSON numeric flow_limit==256; new contract40056048217 PASS"
+    }
+  },
+  "new_all_modes_default": {
+    "authorized": "2026-10-24 user fq600默认在所有工况生效 然后继续跑其他测试",
+    "scope": [
+      "normal",
+      "fec-fixed",
+      "fec-auto",
+      "game2",
+      "game4"
+    ],
+    "product_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+    "default_owned_tun_mbps_per_flow": 600,
+    "owned_fq_flow_limit_packets": 256,
+    "global_fq_limit_packets_unchanged": 10000,
+    "rollback": "--tun-fq-maxrate-mbps=0",
+    "no_windows_native_tc_claim": true,
+    "harness_contract": {
+      "run": 40060895860,
+      "source": "fbc4e2df8464290534831e46afb6cd199b8437aa",
+      "result": "SUCCESS"
+    },
+    "builds": [
+      {
+        "run": 40060850580,
+        "status": "SUCCESS",
+        "artifact": 12546779978,
+        "sha256": "6ee4a55d14a4a7f01e49a95b3654a79af1498aeca878b0c2ba9454ec2a9100e5"
+      },
+      {
+        "run": 40060850790,
+        "status": "SUCCESS_SEPARATE_AUTO_SAME_SOURCE_NOT_CONSUMED"
+      }
+    ],
+    "devlog": "docs/devlog/network-matrix-work/20261024-all-modes-fq600-matrix.md",
+    "updated_contract_source": "ce90a06b5aeeb743b25c8fd156a9fc429ed508d4",
+    "product_go_kernel_all_modes_verified": true,
+    "harness_last_corrected_contract": {
+      "run": 40061361983,
+      "result": "SUCCESS",
+      "source": "827d433f5ec311a1396318d4eb11ffdc78098a17"
+    },
+    "first_five_exact_results": [
+      {
+        "mode": "fec-fixed",
+        "run": 40061035456,
+        "artifact": 12547447656,
+        "result": "FAIL_FEC_CLIENT_applied1_SERVER_applied0_pending_true_BUT_PRODUCT_NATIVE_FQ600_BOTH_SOURCE_TUN_ROOT0_BUSINESS_~12MBPS"
+      },
+      {
+        "mode": "fec-auto",
+        "run": 40061047243,
+        "artifact": 12546474541,
+        "result": "FAIL_FEC_CLIENT_applied0_pending_true_SERVER_applied1_BUT_PRODUCT_NATIVE_FQ600_BOTH_SOURCE_TUN_ROOT0_REAL_1_20_1UDP"
+      },
+      {
+        "mode": "game2",
+        "run": 40061064744,
+        "artifact": 12546928377,
+        "result": "OVERALL_FAIL_TEST_HARNESS_OLD_SINGLE_LANE_V3_RECEIPT_NOT_APPLICABLE_GAMELANES; TRUE_GAME_KERNEL_COUNTERS_GO_KERNEL_FQ600_BOTH"
+      },
+      {
+        "mode": "game4",
+        "run": 40061078908,
+        "artifact": 12546964879,
+        "result": "OVERALL_FAIL_TEST_HARNESS_OLD_SINGLE_LANE_V3_RECEIPT_NOT_APPLICABLE; TRUE_GAME_1_LANE_BLACKHOLE_WITH_0BUSINESS_MISSING_AND_OWNED_FQ600_BOTH"
+      },
+      {
+        "mode": "normal",
+        "run": 40061090616,
+        "artifact": 12546813359,
+        "sha256": "8e7a7301bfa20e84eb9c7435a1d99a26e8337b3c5058e257c453ec03c81e41ac",
+        "result": "SUCCESS_15MBPS_PER_DIRECTION_TCP70_UDP30_ZERO_MISSING_P99_200.4_200.5_TUN_ROOT0_Stop"
+      }
+    ],
+    "frozen_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+    "last_scoped_results": {
+      "normal": {
+        "action": 40061090616,
+        "result": "PASS_SCOPED 15Mbps/dir TCP70 UDP30 0loss TUN/root0",
+        "artifact": 12546813359
+      },
+      "fixed0loss": {
+        "action": 40061487976,
+        "result": "PASS_SCOPED Fixed5 FEC applied1 both 0% loss 12Mbps/dir TUN/root0",
+        "artifact": 12547458439
+      },
+      "fixed5pct": {
+        "action": 40061035456,
+        "result": "FAIL server FEC applied0 pendingtrue under 5% IID though TUN/root0 and owned fq600 works",
+        "artifact": 12547447656
+      },
+      "auto1_20_1": {
+        "action": 40061047243,
+        "result": "FAIL client FEC applied0 pendingtrue asymmetric loss though real UDP near target TUN/root0",
+        "artifact": 12546474541
+      },
+      "auto0loss": {
+        "action": 40061499022,
+        "result": "FAIL both client and server FEC applied0 pendingtrue even healthy while 10Mbps/dir delivered and TUN/root0",
+        "artifact": 12547443507
+      },
+      "game2": {
+        "action": 40061387213,
+        "result": "PASS_SCOPED genuine 2 Game lanes independent5% loss, residual146/133 packets, p9927.4, native Game counters, TUN/root0",
+        "artifact": 12547756255
+      },
+      "game4": {
+        "action": 40061402339,
+        "result": "PASS_SCOPED genuine 4 Game lanes one dead30s zero app missing, p9927.5, Game counters, TUN/root0",
+        "artifact": 12547358796
+      }
+    },
+    "game_harness_mode_fix": "043e76c871e1ea6901d0beb2d39ff5ade901331d",
+    "evidence_file": "docs/evidence/network-matrix-work/V3-all-Linux-modes-owned-fq600-20261024.json",
+    "status": "ALL_FIVE_NATIVE_KERNEL_READBACK_PASS_MODE_BUSINESS_SCOPED",
+    "current_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+    "FEC_causal_AB": {
+      "run": 40061749129,
+      "artifact": 12547319636,
+      "sha256": "ed142c2c991324bed43ffc102b59164192784fafc0962703929047a9764abb07",
+      "A": "explicit0, FEC server pending=true, client applied1",
+      "B": "omitted native fq600, FEC both pending=true",
+      "result": "FAIL BOTH mode qualification, root/source all0 Stop; A failure disproves fq-exclusive root cause, B may still have interaction due host PSI",
+      "file": "V3-Auto-FEC-fq0-vs-default600-sameVM-20261024.json"
+    }
+  },
+  "latest_resume": {
+    "date": "2026-10-24",
+    "main": "d8ba2cf270ff6ca5cadae6dab778c49c32636ef6",
+    "task_at_resume": "c1469b3815d02d6463f0cbd1f6c5cd862ed2d649",
+    "no_active_actions_on_resume": true,
+    "request": "recover after interruption, verify low/high loss cross-business delivery/HOL",
+    "native_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+    "native_bundle": {
+      "run": 40060850580,
+      "artifact": 12546779978,
+      "sha256": "6ee4a55d14a4a7f01e49a95b3654a79af1498aeca878b0c2ba9454ec2a9100e5"
+    },
+    "harness_contract": {
+      "run": 40065718805,
+      "result": "SUCCESS",
+      "source": "4f83c80f961d2ad097425d9722273155e131662d"
+    },
+    "new_hol_telemetry": {
+      "flow_source": "1bd1e2ffd81132c4640d991ec4715bf417a2eca7",
+      "gate_source": "d1d4c486b0bae3fea76c6db84ccd6533bd266d28",
+      "purpose": "Actual two independent TCP socket 10ms unique receipts + protected UDP/any-business progress despite another TCP's own retrans HOL; guard phase boundary 2s and 1s, source UDP 95% offered, recipient shared/protected<=100ms; strict true kernel TUN/fq drops and Stop."
+    },
+    "initial_pre_business_invalid": [
+      {
+        "run": 40065674297,
+        "source": "788a4bf5566ac244fb31644c1ced74266f4fb710",
+        "reason": "unsupported 12s bounded startup TUN diagnostic (only 10,15,20); NO ACTUAL BUSINESS",
+        "artifact": 12549352090,
+        "zip_sha256": "6d14d092237b4dff2db4fc8382bcb70b741374577f6fcce56acd236924a1e43c"
+      },
+      {
+        "run": 40065688564,
+        "source": "9ad1bd9a864f138995ef23d4f565f43710273c59",
+        "reason": "same unsupported12s startup TUN diagnostic; NO BUSINESS",
+        "artifact": 12548643287,
+        "zip_sha256": "2863daac441da5e098a5545cf1abbdba6af3845e735d310b630c5fa1c6d97221"
+      }
+    ],
+    "plan": "docs/devlog/network-matrix-work/20261024-cross-business-hol-loss-low-high.md",
+    "low2_actual": {
+      "run": 40065824207,
+      "source": "2fc0462c97f78be05ca2c7bd7a93f870961a3994",
+      "artifact": 12549401409,
+      "zip_sha256": "e67345784e69923f19a59855a7a65d7328227665b7bd19f72c467a1833971e46",
+      "result": "INCONCLUSIVE_TCP_BACKPRESSURE: 2% IID UDP continuity 5700/5700 bins each direction 0ms max while two TCP socket longest self gap930..1630ms; TUN/root all 0 Stop PASS, TCP under target."
+    },
+    "high30_actual": {
+      "run": 40065834480,
+      "source": "6290e9f5cffdd9e8f90178ecfefae56ab926a8b6",
+      "artifact": 12549063771,
+      "zip_sha256": "4f91411c7c1775f22ba03b4f4d744728aaeba19c4f3956f02b6b3e92b0adc748",
+      "result": "INCONCLUSIVE_TCP_BACKPRESSURE: 30% IID UDP 10.11Mbps offered 7.68/7.65 delivered with 5700/5700 bins every10ms per direction, no cross business common gap; independent two TCP sockets own stalls7.86-27.54s and severe capacity collapse, TUN/root0 Stop true; R/F8.76<=10 but R/C1.94 not canonical UDP highloss."
+    },
+    "evidence": "docs/evidence/network-matrix-work/V3-D-cross-business-HOL-2pct-30pct-20261024.json",
+    "low1_full_mixed_pass": {
+      "run": 40066158628,
+      "attempt": 1,
+      "request_source": "b52cd0dfdc1465edda54a9524407499cfd2048a5",
+      "artifact": 12549905062,
+      "zip_sha256": "adee8bdc3ea6652d8a8916a7111e311a2fcf50eef2e3a866e55d869874eb9411",
+      "conclusion": "PASS_SCOPED 1% IID RTT50ms duplex6Mbps app/dir TCP70 UDP30: real two TCP sockets/dir delivered4.187/4.125Mbps close to4.2 request, TCP missing0 after drain, UDP delivered1.789/1.792Mbps close to1.8, UDP firstarrival p9925.9ms, max UDP gap10ms both dirs, max all-business shared gap0/10ms, all-phase TUN/root drops0 Go+kernel fq600 flow256 StopPASS.",
+      "evidence": "docs/evidence/network-matrix-work/V3-D-cross-business-HOL-low1-50ms-full-mixed-PASS-20261024.json",
+      "contract_run": 40066158640
+    },
+    "actual_cross_business_qualification": "Real Linux ARM64 Normal/off shared fq600 source1c43b69: LOW1 1% RTT50 full TCPx2+UDP offered/delivered PASS_SCOPED with <=10ms protected/shared delivery gap, LOW2 2% RTT400 and HIGH30 30% RTT600 protected UDP with 0ms max simultaneous or UDP gaps in both directions despite each TCP own seconds-long HOL; low2/high30 capacity INCONCLUSIVE not all businesses target PASS."
+  }
+}

@@ -1,5 +1,7 @@
 # Windows客户端→Linux服务端：先打通产品，再扩网络矩阵
 
+2026-10-23共享外层策略与MTU改按[机会式v3](../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)。旧“两次”、低损快速恢复与平台私有DATA PTO不得恢复；Windows消费同一恢复/预算语义，保持现有冷层与原生网络功能。本次计划不冒充Windows已接线/已测，不阻塞可用Linux路径。
+
 2026-10-22用户后续授权的执行收口。审阅main `1857e781dc3d5d1acb7a99d8d7f588773585a4e4`，产品最新相关SOURCE `a22c4e09baf7c42a39b4eab1d7c3febffc5a6836`。这是待执行计划，不是已接通声明；并入PR22，由当前M0集成并更新既有任务/next_action，不修改其他活跃作者的cursor。场景/数学门继续读[矩阵](NETWORK_MATRIX_20261022.md)，定位与修复前复习继续读[手册](NETWORK_TRIAGE.md)。
 
 ## 1. 当前真正卡住的地方

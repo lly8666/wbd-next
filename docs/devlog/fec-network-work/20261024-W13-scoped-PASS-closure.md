@@ -1,0 +1,9 @@
+# Temporary closure: FEC Maximum 50Mbps bounded RX, W12/W13 evidence
+
+2026-10-24 source ec344557fa8cbf4d717a81833d36f92584263478, native build run40087393299 successful artifact12558215058. New bounded RX 96 blocks / 8MiB, unchanged 150ms and reorder128, premature complete-block retirement REVERTED. Rust and real missing-source authenticated parity-to-TUN regression PASS.
+
+W12 sameVM AB Action40089406842 / result12558900477: B RX reject0, capacity0, peak58/59 active1.92/1.94MiB, BUT client→server missing18025/147xxx (~12.23%), server→client missing43. B client output to netem veth measured286886952 bytes against server326114835 despite native FEC TX r_sent279164/279144, M1 queued222353/222327 and no M4 uncopied. Not proven kernel cause; B failed. Historical W11 B aggressive early-retire FAILED and is REVERTED.
+
+W13 standalone Action40090193642 / result12559170488 sha256 aeea1dd50cce86e0a9b0f1a89ad7e5f8e62a5b680e79df47fb9f354067e9c42f: SAME exact bounded-RX ARM64 source; true 50Mbps each, 30% IID, 300ms, 30s. C→S sent147083 delivered147007 missing76 loss0.05167%, S→C sent147087 delivered147014 missing73 loss0.04963%; native RX decoder reject0/0, capacity reject0/0, pressure0/0, peak57/58blocks 1.92MiB, recovered-TUN 67115(client) 66417(server), outer retransmit0, repair OFF readback, native both Fixed Maximum applied1 pendingfalse; genuine M2 reverse reports12753/12633, p99 304.6/304.7ms, CPU12.54/12.67 CPU-s, RSS29.72/29.57MB, source TUN/root qdisc drops0, stop drained.
+
+FEC RX known original capacity bottleneck is corrected for the standalone W13 representative, but W12 second-leg local interface under-submission remains unresolved; do not certify sameVM causality or 75+/Auto dynamic. All W8/W9/W11/W12 failures retained. No pressure escalation, no new Action after W13. Independent branch only; no main merge, no network position updates.

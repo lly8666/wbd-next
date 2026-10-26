@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "id": "FEC-W65-client-CPU-loss-test0-ARM64",
+  "owner": "fec-network-work",
+  "seed": 821065,
+  "policy": "outer-opportunistic-v3",
+  "product": {
+    "mode": "fec-auto",
+    "fec_profile": 1,
+    "repair_enabled": false
+  },
+  "traffic": {
+    "c2s_mbps": 8,
+    "s2c_mbps": 8,
+    "udp_share": 0.96,
+    "sizes": [
+      [
+        64,
+        6
+      ],
+      [
+        96,
+        8
+      ],
+      [
+        160,
+        10
+      ],
+      [
+        256,
+        11
+      ],
+      [
+        512,
+        15
+      ],
+      [
+        900,
+        20
+      ],
+      [
+        1287,
+        30
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "deadline_ms": 5000,
+    "burst_ms": 0,
+    "max_packets": 5000000,
+    "allow_fragmentation": false,
+    "observe_size_classes": true,
+    "observe_independent_flows": true
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "shared",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded",
+    "fec_egress_diagnostic": false,
+    "owned_veth_static_neighbour": true
+  },
+  "warmup_s": 15,
+  "drain_s": 30,
+  "phases": [
+    {
+      "name": "clean_before",
+      "seconds": 30,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      }
+    },
+    {
+      "name": "client_cpu_starved",
+      "seconds": 60,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      },
+      "product_cpu_stress": {
+        "role": "client",
+        "competitors": 32
+      }
+    },
+    {
+      "name": "clean_recover",
+      "seconds": 90,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false,
+    "max_loss_pct": 100,
+    "require_zero_source_tun_drops_full_run": false,
+    "require_zero_tun_root_qdisc_drops_full_run": false,
+    "max_small_udp_loss_pct": 100,
+    "max_small_udp_p99_ms": 500,
+    "require_native_m2_positive_confirmation": true
+  },
+  "bundles": {
+    "A": {
+      "source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+      "run_id": 40173359338,
+      "attempt": 1,
+      "artifact_id": 12590822815,
+      "sha256": "cdc5d4eb68621321f7f918b6667ff16c0a166bfe6b509ded310afc467294a97f",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false
+    }
+  },
+  "order": "A"
+}

@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+  "build": {
+    "run": 40078403217,
+    "artifact": 12554277143,
+    "zip_sha256": "552a9c19ca4b9045cabe08abeed4f80e440f73f8fcc34a5f06670f4450d9fde6"
+  },
+  "id": "FEC-W4-V3-Auto-OuterOff-Clean-FirstApplied",
+  "path": "tests/network/fec-work/W4-v3-auto-outeroff-clean-applied-arm64.json",
+  "mode": "auto",
+  "conditions": "no line loss, 2Mbps UDP each direction, source/parity should really transmit, both revision applied=1",
+  "expected": "both outer OFF and genuine M2 receipt, no fake zero, first TUN delivery and resource evidence",
+  "status": "INTENT"
+}

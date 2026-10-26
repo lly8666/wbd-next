@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "id": "P0-kind3-native-boundary-pass-AB-intent-20261023",
+  "repo": "lly8666/wbd-next",
+  "branch": "experiment/network-matrix-tuning",
+  "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
+  "run_id": 39886303564,
+  "attempt": 1,
+  "status": "success",
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/39886303564",
+  "artifact": {
+    "id": 12473520038,
+    "name": "arm64-public-go-rust-39886303564-1",
+    "digest_sha256": "1ce3cd189c309a79a30743563ff0fc8fbc400d33789b368323943b4100d2c7d6",
+    "reported_size_bytes": 11310170,
+    "arch": "aarch64",
+    "manifest_file_hashes": "TO_BE_VERIFIED_BY_AB_PREPARE"
+  },
+  "native": {
+    "build": "success",
+    "test": "m0_fec2_kind3_full_mtu_repair_budget_invariant PASS 1/1",
+    "mtu_functional": {
+      "passed": 9,
+      "total": 9,
+      "modes": [
+        "normal:1500:1500",
+        "fec-fixed:1500:1500",
+        "fec-auto:1500:1500",
+        "normal:1280:1280",
+        "fec-fixed:1280:1280",
+        "fec-auto:1280:1280",
+        "fec-fixed:1500:1280",
+        "game2:1500:1500",
+        "game4:1280:1280"
+      ],
+      "result_artifact_id": 12472463984,
+      "result_zip_sha256": "c15e853eec3e0f0861668f3bedd2ab578e63e4a7401181999ae5180f8576cf3c"
+    }
+  },
+  "performance": "NOT_YET_TESTED",
+  "hypothesis": "Only FEC repair seal rejection is corrected; M2 applied and TCP tail remain independent hard/open gates.",
+  "single_next_experiment": {
+    "request_path": "tests/network/request.json",
+    "order": "AB",
+    "A": {
+      "source": "d64be28591c3752af06be399ff598266ecf4d664",
+      "run_id": 39881938976,
+      "artifact_id": 12470698437,
+      "zip_sha256": "7886619049f0c458e3bf53b02657f96d79533a98eb6f63a9a689af2fbf5622ef",
+      "build_status": "success",
+      "architecture": "aarch64",
+      "scope": "native-verified-plus-9-MTU-functional"
+    },
+    "B": {
+      "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
+      "run_id": 39886303564,
+      "attempt": 1,
+      "artifact_id": 12473520038,
+      "zip_sha256": "1ce3cd189c309a79a30743563ff0fc8fbc400d33789b368323943b4100d2c7d6",
+      "build_status": "success",
+      "architecture": "aarch64",
+      "scope": "native Go/Rust + 1 repair budget Rust unit + 9/9 MTU functions (not mixed traffic)",
+      "runtime_isa": "NOT_OBSERVED"
+    },
+    "seed": 5205,
+    "one_job": true,
+    "unmodified_load": "Fixed profile6, 2Mbps each way, 99% 1287 UDP+1%64, 50/50 UDP/TCP, 4 TCP, 2% IID, RTT400ms, 120s steady",
+    "decision": "If parity seal becomes near zero and UDP residual materially improves, separate M2 applied, k/r and TCP tail; otherwise inspect precise first failed stage instead of increasing buffers."
+  },
+  "scope": "No delivery/FEC throughput qualification from this build; no Windows, 500Mbps, Game mixed or runtime SIMD attestation"
+}

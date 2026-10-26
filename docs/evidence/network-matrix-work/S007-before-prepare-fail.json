@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "kind": "RECOVERED_S007_PREPARATION_FAILURE",
+  "run_id": 39766933430,
+  "artifact_id": 12419974547,
+  "artifact_sha256": "8189281f0445694bb2250a0c6d5893c207d4367c5be04833608e6274a3b3ab63",
+  "request_id": "arm64-fixed-max-30pct-old-new-AB-hardcase",
+  "harness_source": "69491fe0ebe3f6c16358fcbe460f3fb7b781d22e",
+  "old_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+  "new_source": "df64bab1d60ae684429a4330e5f09d06ff851019",
+  "stage": "Fetch existing exact source binaries; verify ZIP, manifest and all binary hashes",
+  "error": "ValueError: GitHub build run SHA/attempt/status mismatch",
+  "action_status": "completed_failure",
+  "execution": "NO_MEASUREMENT",
+  "cause": "S006 new product source build run overall FAIL due appended shell unit misquoted, even though exact product native build and artifact upload steps SUCCESS; strict GH workflow status guard rejected B",
+  "narrow_exception": "Only verify exact successful original public ARM64 build + upload steps, exact optional failed test step, skipped smoke, failed workflow preserved; retain GH run attempt, source, ZIP digest, all declared binary hashes, native ELF"
+}

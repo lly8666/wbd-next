@@ -1,0 +1,96 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_SAME_VM_SEQUENTIAL_TCP500_AB_ONE_HOTPATH_POLL_REMOVAL",
+  "request_id": "V3-C-TCP1-500M-remove-redundant-TUN-poll-AB-qualified",
+  "request_source": "38101d188586000b03e7a8f470fe4856db0ff068",
+  "run": 39999237272,
+  "attempt": 1,
+  "action_conclusion": "failure",
+  "cause": "Both legs INCONCLUSIVE due TCP_BACKPRESSURED and SOURCE_TUN_TX_DROPS",
+  "artifact_id": 12521577219,
+  "artifact_zip_sha256": "2bdd37245bc533e2822aa2938c0478750004076918b9d5660c1498ba27567b8a",
+  "artifact_zip_sha256_locally_verified": true,
+  "previous_preflight_only_invalid": {
+    "run": 39998892067,
+    "reason": "second build Action incomplete when request was checked; no performance was executed",
+    "not_a_product_failure": true
+  },
+  "scenario": {
+    "mode": "Normal/off",
+    "one_tcp_stream_c2s": true,
+    "app_target_mbps": 500,
+    "app_reverse_mbps": 0,
+    "one_way_ms": 200,
+    "outer_limit_mbps_each_direction": 700,
+    "loss_pct": 0,
+    "inner_mtu": 1429,
+    "client_inner_tcp_mss": 1377,
+    "tun_txqlen_client_packets": 500,
+    "namespace_TCP_rmem_wmem_max": 67108864,
+    "warmup_s": 20,
+    "steady_s": 60,
+    "drain_s": 30,
+    "order": "AB",
+    "native_timeline": true
+  },
+  "A": {
+    "source": "63adb210f724d4b2812d75a292617103ac735b53",
+    "native_build_run": 39992871952,
+    "product_artifact_id": 12517549925,
+    "actual_application_c2s_mbps": 201.70233173333332,
+    "app_tcp_backpressure_events": 68273,
+    "firstarrival_p99_ms": 2556.1,
+    "source_tun_kernel_drop_client_steady": 5074,
+    "source_tun_kernel_drop_client_warmup": 3024,
+    "source_tun_kernel_drop_total": 8098,
+    "tun_txqlen": 500,
+    "client_m1_peak": 32,
+    "client_pre_read_deferred": 0,
+    "host_CPU_PSI_peak": 6.87,
+    "product_CPU_seconds_client_server_steady": [
+      18.17,
+      27.48
+    ],
+    "tcp_cwnd_median_mss": 7361,
+    "tcp_notsent_median_bytes": 29095830,
+    "result": "INCONCLUSIVE"
+  },
+  "B": {
+    "source": "31e3c9f7d987a8e188cae290f8c7851068fee6b3",
+    "native_build_run": 39998272925,
+    "product_artifact_id": 12520568152,
+    "product_artifact_sha256": "7cf0f88aa8c2440540463a9192513b7b6a428d576c5fcff0f84ef3c34f8e47b1",
+    "change": "delete redundant loop_readiness(tun_fd, stop,0) after TunSink.read_ready_batch already internally polls O_NONBLOCK fd; no ARQ/budget/cipher/MTU/memory change",
+    "actual_application_c2s_mbps": 251.64076373333333,
+    "app_tcp_backpressure_events": 56845,
+    "firstarrival_p99_ms": 2064,
+    "source_tun_kernel_drop_client_steady": 9189,
+    "source_tun_kernel_drop_client_warmup": 5578,
+    "source_tun_kernel_drop_total": 14767,
+    "tun_txqlen": 500,
+    "client_m1_peak": 32,
+    "client_pre_read_deferred": 0,
+    "host_CPU_PSI_peak": 14.25,
+    "product_CPU_seconds_client_server_steady": [
+      20.47,
+      33.31
+    ],
+    "tcp_cwnd_median_mss": 9598,
+    "tcp_notsent_median_bytes": 21854061,
+    "result": "INCONCLUSIVE"
+  },
+  "delta": {
+    "observed_actual_c2s_mbps_increase": 49.938432,
+    "observed_actual_c2s_pct_change": 24.76,
+    "backpressure_decrease_absolute": 11428,
+    "source_kernel_drop_steady_increase_absolute": 4115,
+    "p99_firstarrival_ms_change": -492.1
+  },
+  "interpretation": [
+    "Native ARM64 A/B uses exact independent built artifacts sequentially in ONE job/VM. B received more application packets in same duration but local TUN drops also increased: throughput alone does not prove correctness, nor product TCP500.",
+    "The presence of drops in both legs and inner cwnd below25MB BDP precludes product500 qualification. CPU totals increased while more work was done; no direct CPU efficiency reduction can be claimed without PPS/byte normalization.",
+    "The source TUN queue remains only 500 packets in both cases, circa11ms at target packet-rate. A subsequent TEST-ONLY same-VM diagnostic uses independently bounded 500 vs1024 packet queue to distinguish burst-buffer insufficiency from sustained native TX processing limit, rather than raising defaults blindly.",
+    "Original NATIVE shared M1 remains2048 slots, max loans32, observed pre-read deferred0, no outer repair storm; preserve 0loss 10Mbps TUN prior fix."
+  ],
+  "qualification": "TARGET_TCP500_UNQUALIFIED; ISOLATED_POLL_REMOVAL_MAY_HELP_PACKET_PROGRESS_BUT_DOES_NOT_SOLVE_LOCAL_SOURCE_DROP"
+}

@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_SAME_VM_SEQUENTIAL_AB_SAME_WBD_PRODUCT_PER_SENDER_SOCKET_PACING_ONLY",
+  "run": 40047976746,
+  "attempt": 1,
+  "request_source": "31d5a2d1c5cfe5b21b8cbb5b94a679d81d53ed32",
+  "action_conclusion": "failure",
+  "why": "A has real local TUN kernel startup drops, B is PASS_SCOPED_OBSERVATION",
+  "artifact_id": 12542740290,
+  "artifact_zip_sha256": "545e32ba8b7bb9618f3f5b0e364c7d90d259c1aee7c715088e78e63975ee7dd0",
+  "zip_sha256_verified_locally": true,
+  "product_source_A_B": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
+  "native_build_run": 40044879144,
+  "product_artifact_id": 12540624073,
+  "scenario": {
+    "normal_off": true,
+    "one_inner_TCP_C2S": true,
+    "app_target_mbps": 500,
+    "outer_line_limit_mbps_each_direction": 700,
+    "one_way_ms": 200,
+    "loss_pct": 0,
+    "tun_mtu": 1429,
+    "TCP_MSS": 1377,
+    "tun_txqlen": 1024,
+    "tun_qdisc": "fq",
+    "startup_tun_sampler": "25ms first2s 100ms remaining warmup20s; pre-start200ms",
+    "warmup_s": 20,
+    "steady_s": 60,
+    "drain_s": 30,
+    "same_vm_order": "AB",
+    "same_product_binary": true,
+    "real_business_offered_rate_identical": true
+  },
+  "A": {
+    "TCP_socket_max_pacing_rate_setting": "OS_DEFAULT",
+    "TCP_socket_max_pacing_rate_readback": "NOT_SET",
+    "result": "FAIL_SOURCE_TUN_WARMUP_ZERO_DROP_REQUIRED",
+    "client_source_TUN_kernel_drop_warmup": 6131,
+    "client_source_TUN_kernel_drop_steady": 0,
+    "TUN_fq_qdisc_drops_full_run": 0,
+    "app_injected_mbps": 499.99598933333334,
+    "app_delivered_mbps": 499.99598933333334,
+    "app_missing_after_drain": 0,
+    "tcp_sender_backpressure": 0,
+    "first_arrival_p99_ms": 203,
+    "product_CPU_steady_client_server_s": [
+      45.47,
+      62.58
+    ],
+    "kernel_TCP_RetransSegs_steady_client_server": [
+      0,
+      0
+    ],
+    "policy_readback": true,
+    "stop_clean": true
+  },
+  "B": {
+    "TCP_socket_max_pacing_rate_setting": "600Mbps",
+    "TCP_socket_max_pacing_rate_readback_bytes_per_s": 75000000,
+    "real_sockopt": "SO_MAX_PACING_RATE",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "client_source_TUN_kernel_drop_warmup": 0,
+    "client_source_TUN_kernel_drop_steady": 0,
+    "TUN_fq_qdisc_drops_full_run": 0,
+    "app_injected_mbps": 500.0047274666666,
+    "app_delivered_mbps": 500.0047274666666,
+    "app_missing_after_drain": 0,
+    "tcp_sender_backpressure": 0,
+    "first_arrival_p99_ms": 203,
+    "product_CPU_steady_client_server_s": [
+      46.28,
+      64.17
+    ],
+    "kernel_TCP_RetransSegs_steady_client_server": [
+      0,
+      0
+    ],
+    "policy_readback": true,
+    "stop_clean": true
+  },
+  "interpretation": [
+    "One sameVM same product binary, same qlen1024 fq and same actual500Mbps inner TCP, A default sender Socket causes genuine local TUN kernel dropped6131 warmup, B readback-verified sender-only pacing cap600Mbps achieves no local TUN kernel drops during full warmup and steady.",
+    "No hidden TUN fq qdisc loss in either arm (root fq drops0 at all snapshots); B thus does not move packet drops into qdisc. B firstarrival p99 remains203ms and achieved offered business500Mbps without app-level warmup throttle.",
+    "The single changed factor is a per-socket test harness setting. Therefore this causally supports TCP startup pacing as the upstream microburst suppressor; it does NOT show VPN/WBD controls arbitrary inner application TCP sockets. No global TCP sysctls, WBD byte quota, external repair, auth or MTU changed.",
+    "Product process CPU increased with paced arm by +0.81/+1.59 CPU-s over60s; both do similar delivered bytes, so no CPU optimization claim. Action overall failure due A, while B individually passes."
+  ],
+  "qualification": {
+    "test_only_socket_pacing_mitigation": "PASS_NATIVE_ARM64_SCOPED",
+    "generic_product_TCP500_startup_zero_drop": "STILL_NOT_QUALIFIED",
+    "next_step": "Evaluate bounded per-interface fq maxrate (netns-owned TUN qdisc) or another actual product-owner pace mechanism with strict TUN AND qdisc zero-drop gates; cannot require user apps set SO_MAX_PACING_RATE universally."
+  }
+}

@@ -1,0 +1,188 @@
+{
+  "schema": "network-matrix-evidence-v1",
+  "evidence_date": "2026-10-24",
+  "capability": "V3-C single inner Linux TCP at 500Mbps 0% loss RTT400ms, Normal/off product-owned fq600 option",
+  "scope": "Native ARM64 Ubuntu24.04 public original Go TLS FakeTCP raw/TUN to authenticated Rust owner, single connection one direction, NOT Windows/Game/FEC/physical/bidirectional or default option qualification",
+  "source": {
+    "request_commit": "4cecde55daf10d2213d25e4af77ba5377395b174",
+    "request": "tests/network/request.json",
+    "product_source": "81881a1df69e6bf0b5fd3f3076e2433bfb442d96",
+    "product_code_change": "cf7800bf71e8a6241f7af9b0b9f2bcfca32ade4f",
+    "native_build": {
+      "run": 40053179394,
+      "attempt": 1,
+      "artifact": 12543904263,
+      "zip_sha256": "5564a28f4016caba002a38130393cc0e7c13862b631980a8ce7d4eb8611ce749",
+      "status": "success",
+      "arch": "aarch64",
+      "go": "1.23.12",
+      "rust": "1.85.1"
+    },
+    "business": {
+      "run": 40053396971,
+      "attempt": 1,
+      "artifact": 12543608967,
+      "zip_sha256": "e94d703d1d699ae3d5a4b5224aa2fbeeeebbb23010ba2ffdc62a7ae5b8c94375",
+      "source_bundle_manifest_verified": true
+    }
+  },
+  "test": {
+    "comparison": "same VM sequential A then B same product exact native bytes",
+    "inner_TCP_flows": 1,
+    "direction": "client->server",
+    "app_injection_target_mbps": 500,
+    "outer_line_capacity_mbps_each_dir": 700,
+    "outer_mtu": 1500,
+    "normal_off_TUN_readback_mtu_bytes": 1429,
+    "inner_TCP_MSS_readback_bytes": 1377,
+    "one_way_netem_ms": 200,
+    "RTT_ms_approx": 401,
+    "netem_loss_pct": 0,
+    "txqlen": 1024,
+    "warmup_seconds": 20,
+    "steady_seconds": 60,
+    "drain_seconds": 30,
+    "application_write_bytes": 32768,
+    "app_tcp_window_auto_max_bytes": 67108864,
+    "actual_TCP_socket_rcvbuf_bytes": 4194304,
+    "actual_TCP_socket_sndbuf_bytes": 4194304,
+    "actual_peer_snd_wnd_median_bytes": 40108032,
+    "app_socket_pacing_rate": "NOT_SET",
+    "require_full_run_source_TUN_drop_zero": true,
+    "require_root_qdisc_drop_zero": true,
+    "app_deliver_band_min_mbps": 475,
+    "p99_limit_ms": 400
+  },
+  "results": {
+    "A": {
+      "configuration": "original Go --tun-fq-maxrate-mbps=0, harness external root fq unlimited both TUNs",
+      "product_fq_readback": "kernel default; test qdisc readback fq without maxrate",
+      "injected_mbps": 500.0003584,
+      "delivered_mbps": 500.0003584,
+      "app_missing_after_drain": 0,
+      "p99_ms": 203,
+      "source_TUN_kernel_drop_warmup": {
+        "client": 6613,
+        "server": 0
+      },
+      "source_TUN_kernel_drop_steady": {
+        "client": 0,
+        "server": 0
+      },
+      "source_TUN_root_qdisc_drop_snapshots_client": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_TUN_root_qdisc_drop_snapshots_server": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "netem_drop_steady": 0,
+      "kernel_TCP_retrans_segs_steady": 0,
+      "repair_packets": 0,
+      "policy_readback": true,
+      "Stop_and_owned_cleanup": true,
+      "process_cpu_seconds_steady60": {
+        "client": 47.48,
+        "server": 64.29,
+        "total": 111.77
+      },
+      "server_CPU_s_per_received_app_GiB": 18.4082166356,
+      "comparison_verdict": "FAIL",
+      "failure": "SOURCE_TUN_WARMUP_ZERO_DROP_REQUIRED"
+    },
+    "B": {
+      "configuration": "original Go Linux Normal/off --tun-fq-maxrate-mbps=600 client and server; NO test-only qdisc replacement",
+      "product_log_and_kernel_readback": {
+        "client": "owned_normal_fq_600Mbit",
+        "server": "owned_normal_fq_600Mbit",
+        "root_fq_kernel_maxrate_bytes_per_sec": 75000000
+      },
+      "injected_mbps": 500.0003584,
+      "delivered_mbps": 500.0003584,
+      "app_packets_sent": 114441,
+      "app_packets_unique_delivered": 114441,
+      "app_missing_after_drain": 0,
+      "p99_ms": 203.2,
+      "source_TUN_kernel_drop_warmup": {
+        "client": 0,
+        "server": 0
+      },
+      "source_TUN_kernel_drop_steady": {
+        "client": 0,
+        "server": 0
+      },
+      "source_TUN_root_qdisc_drop_snapshots_client": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_TUN_root_qdisc_drop_snapshots_server": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "netem_drop_steady": 0,
+      "kernel_TCP_retrans_segs_steady": 0,
+      "repair_packets": 0,
+      "policy_readback": true,
+      "Stop_and_owned_cleanup": true,
+      "process_cpu_seconds_steady60": {
+        "client": 48.66,
+        "server": 64.33,
+        "total": 112.99
+      },
+      "server_CPU_s_per_received_app_GiB": 18.4196698736,
+      "process_peak_RSS_bytes": {
+        "client": 68431872,
+        "server": 44425216
+      },
+      "host_CPU_PSI_peak_pct": 30.13,
+      "host_steal_pct_peak": 0,
+      "comparison_verdict": "PASS_SCOPED_OBSERVATION",
+      "caveat": "Host CPU contention ~30% PSI some; no independent CPU efficiency win claimed; user-visible app offered and delivered full target"
+    }
+  },
+  "Action_result": "FAIL due to A, not a misreport of B",
+  "interpretation": "Native owned Go TUN fq600 opt-in enables qualified lossless single inner TCP 500Mbps in this 400ms RTT/sameVM scenario with zero fullrun source TUN/root qdisc loss; default path still FAIL cold-start 6613 TUN drops. This does not set default=600 and does not imply >600 per-flow support. Product source modified only qdisc opt-in; existing v3-A/B/D scoped successes separately retained. No blind increasing queue or blaming VM.",
+  "CPU_interpretation": "B 48.66+64.33=112.99 process CPU-s/60s vs A 47.48+64.29=111.77; A failed kernel source warmup, so it cannot be used as a successful cheaper CPU baseline. Product CPU and host contention remain disclosed; no claimed CPU reduction. Server received-business denominator 18.420 CPU-s/GiB, client one-way receive denominator unavailable. Netem qdisc ~700Mbps outer capacity is not 500Mbps application rate or L1 NIC measurement.",
+  "prior_causal_support": [
+    {
+      "run": 40047976746,
+      "artifact": 12542740290,
+      "kind": "test-only inner TCP socket pacing600 B pass source drops0"
+    },
+    {
+      "run": 40048710703,
+      "artifact": 12542646899,
+      "kind": "test-only TUN fq maxrate600 B pass source drops0"
+    }
+  ],
+  "current_plan_policy": "docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md",
+  "checks": {
+    "harness_contract": {
+      "run": 40053463038,
+      "source": "92ea70abb34c99fe6ea789a9d500b7db8da6f380",
+      "result": "success"
+    },
+    "reused_highloss30_budget_run": 40046784480,
+    "reused_mtu1280_run": 40037686584,
+    "design_review": true,
+    "unmodified_M3_M4_and_Stop": true
+  },
+  "not_qualified": [
+    "default Linux Normal/off cold-start source TUN drop gate",
+    "Windows real product performance",
+    "FEC fixed/auto and Game independent native capability",
+    "multi-business 500Mbps/no-cross-HOL at this load",
+    "dual-direction simultaneous single500Mbps",
+    "physical deployment and product-wide CPU/resource envelope"
+  ],
+  "next_action": "Conclude scoped native Linux Normal/off opt-in capability with delivered500Mbps and zero real startup/source/root qdisc drops. Default behavior still FAIL/OPEN and should only be revisited with new first-send traffic evidence or a policy decision; do not auto-promote opt-in to default. Do not dispatch new Actions without new useful discriminating question, no main merge."
+}

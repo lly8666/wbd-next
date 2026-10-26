@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_V3_OPPORTUNISTIC_30PCT_STANDARD_REGRESSION_LATEST_NONBLOCK_TUN_DRIVER",
+  "run": 40038668625,
+  "attempt": 1,
+  "action_conclusion": "success",
+  "artifact_id": 12537983762,
+  "artifact_zip_sha256": "e007781f087358270d8c968dd06791d530d9bfdeaf9d51589361de42c644729c",
+  "verified_zip_sha256_locally": true,
+  "request_source": "930f5febbc8d8e9deb6cde68bbad7f8987ce968c",
+  "product_source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+  "native_build_run": 40001498261,
+  "scope": {
+    "mode": "Normal/off",
+    "one_way_ms": 300,
+    "loss_pct": 30,
+    "outer_line_mbps_per_direction": 50,
+    "app_offered_udp_mbps_per_direction": 33.7,
+    "app_udp_size_weights": [
+      [
+        64,
+        1
+      ],
+      [
+        1287,
+        99
+      ]
+    ],
+    "netem_randomness": "unseeded_recorded",
+    "warmup_s": 10,
+    "steady_s": 60,
+    "drain_s": 30,
+    "thresholds": {
+      "max_repair_over_fresh_pct": 10,
+      "min_repair_over_line_pct": 6
+    }
+  },
+  "observed": {
+    "result": "PASS_SCOPED_OBSERVATION",
+    "c2s_injected_app_mbps": 33.6997708,
+    "c2s_delivered_app_mbps": 25.6707108,
+    "s2c_injected_app_mbps": 33.700114,
+    "s2c_delivered_app_mbps": 25.678372133333333,
+    "firstarrival_p99_ms_c2s_s2c": [
+      944,
+      943.9
+    ],
+    "m4_repair_accepted_wire_bytes_c2s_s2c": [
+      28245744,
+      28246638
+    ],
+    "m4_first_wire_bytes_c2s_s2c": [
+      318181454,
+      318188464
+    ],
+    "repair_over_fresh_pct_c2s_s2c": [
+      8.877243989211262,
+      8.877329380489419
+    ],
+    "repair_over_line_pct_c2s_s2c": [
+      6.456170057142857,
+      6.4563744
+    ],
+    "source_tun_drops_steady_client_server": [
+      0,
+      0
+    ],
+    "process_cpu_seconds_steady_client_server": [
+      12.26,
+      12.21
+    ],
+    "action_limits": [],
+    "action_failures": [],
+    "owned_cleanup": true
+  },
+  "interpretation": [
+    "Latest native platform TunSink O_NONBLOCK read source b8df preserves exact V3 standard highloss authenticated receipt-based one-repair traffic: full warmup+phase M4 byte R/F both<10% and directional line capacity R/C both>6%; genuine 30% netem loss and no source TUN kernel drops.",
+    "This is regression evidence for changed read hotpath, not a hard goodput guarantee: app33.7 offered each direction and UDP ~25.67/25.68 delivered as expected at 30% IID with ~9% repair.",
+    "CPU cost measured at this highloss load but not a matched same-VM 0loss CPU AB or native Windows qualification."
+  ],
+  "qualification": "V3_A_HIGHLOSS_30PCT_6_AND_10_BOTH_DIRECTIONS_PASS_LATEST_NATIVE_SOURCE"
+}

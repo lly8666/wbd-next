@@ -1,0 +1,11 @@
+# W98 | TLS protected fixed Game2/Game4 product trial candidate
+
+Parent `f113cc82245fcf4be800bdb21e08a691845aad5e`. W98 split Game shared FEC TX/RX native [40254464042](https://github.com/lly8666/wbd-next/actions/runs/40254464042) PASS, original Linux M4 multi-source TUN batch native [40255014279](https://github.com/lly8666/wbd-next/actions/runs/40255014279) PASS. **Neither is genuine Game+FEC real product certification.** W91–W97 real Game OFF correctness and W90 six failed fixed real runs retained without rewriting.
+
+This stage intentionally reuses ONLY the previously unit-verified W90 original-Go TLS Game FEC profile/CLI/MTU/harness changes, not the W90 combined GameAdapter mutex, source delay or M4 RX implementation. Original pre-W90 `d4759a1d` and current post-W97 Go/harness blob SHA matched for all eight files (verified individually before commit). Explicit `--game-fec=off|fixed0..fixed6` is required identically on both ends; Go TLS-protected Game extension refuses mismatch. Only explicit Game fixed, no Game Auto. Configure before M4 worker start; default OFF retains known product.
+
+One negotiated record/TUN MTU calculation deducts 31B original record +16B Game logical+15B inner FEC; no 1280 fallback or duplicate reservation. Parity remains initial redundancy, NOT outer DATA retransmission. Original Game `--outer-repair=off` still explicitly unsupported (multi-lane original outer DATA ledger not proven); cannot claim FEC-only outer DATA repair OFF from this candidate.
+
+C-ABI summary reads source/parity from TX FEC owner and authenticated recovered/systematic candidate from separate RX decoder owner, not mixed obsolete W90 state. Linux M4 writes every recovered original packet individually to TUN; a partially failed batch fail-closes without falsely committing all sources. Potential residual decoder-consumed-before-failed-TUN-write is an explicitly open edge, not a tested guarantee.
+
+NEXT: exact Linux ARM64 Go/Crypto/unit action. If and only if build green, one 3Mbps/dir real TCP+UDP no artificial loss Game2 fixed6 and one Game4 fixed6 in separate one-scenario Actions; check actual injected/delivered, p99, Stop, Game TLS fixed6 applied, parity planned/sent and native TUN write counters. W90 six genuine failures remain negative until repaired by THIS source. No high-load/weaknet before clean, no Windows, no merge main.

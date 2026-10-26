@@ -7,6 +7,12 @@ package realityfront
 #include <stddef.h>
 extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32_t,uint64_t *);
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
+extern int32_t wbd_fec_network_game_group_fixed_configure(uint64_t,uint32_t);
+extern int32_t wbd_fec_network_game_group_outer_policy_set(uint64_t,uint32_t);
+extern int32_t wbd_fec_network_game4_copy_schedule_set(uint64_t,uint32_t);
+extern int32_t wbd_fec_network_game4_copy_schedule_read(uint64_t,uint64_t *,size_t);
+extern int32_t wbd_fec_network_game_group_outer_policy_read(uint64_t,uint64_t *,size_t);
+extern int32_t wbd_fec_network_game_group_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_game_group_stop(uint64_t);
 extern int32_t wbd_m0_embedded_go_game_group_release(uint64_t);
 extern int32_t wbd_m0_embedded_go_game_group_loop_start(uint64_t,
@@ -88,6 +94,56 @@ func (g *v4NativeGameJoined) originalCryptoState()(lanes uint32,drivers bool,err
     if rc!=0{return 0,false,fmt.Errorf("%w: native Game state=%d",errV4Embedded,int(rc))}
     return uint32(n),ready!=0,nil
 }
+// Single explicit authorization boundary for fixed Game FEC. This is NOT
+// exposed by the unauthenticated cold snapshot or by a direct Go key grant.
+// The native original group still verifies all committed TLS lane identities.
+func (g *v4NativeGameJoined) configureFixedFEC(profile uint8)error{
+    if g==nil||g.handle==0||g.stopped||g.verified==nil||profile>6{
+        return ErrAdmissionParams
+    }
+    rc:=C.wbd_fec_network_game_group_fixed_configure(
+        C.uint64_t(g.handle),C.uint32_t(profile))
+    if rc!=0{return fmt.Errorf("%w: Game fixed FEC setup=%d",errV4Embedded,int(rc))}
+    return nil
+}
+func (g *v4NativeGameJoined) configureGame4CopyStagger()error{
+    if g==nil||g.handle==0||g.stopped||g.verified==nil||
+       len(g.laneOwners)!=4{return ErrAdmissionUnsupported}
+    rc:=C.wbd_fec_network_game4_copy_schedule_set(C.uint64_t(g.handle),1)
+    if rc!=0{return fmt.Errorf("%w: Game4 stagger setup=%d",errV4Embedded,int(rc))}
+    return nil
+}
+func (g *v4NativeGameJoined) copyScheduleRead()([21]uint64,error){
+    var out [21]uint64
+    if g==nil||g.handle==0||g.stopped{return out,ErrAdmissionUnsupported}
+    var raw [21]C.uint64_t
+    rc:=C.wbd_fec_network_game4_copy_schedule_read(
+        C.uint64_t(g.handle),&raw[0],21)
+    if rc!=0{return out,fmt.Errorf("%w: Game4 readback=%d",errV4Embedded,int(rc))}
+    for i:=range out{out[i]=uint64(raw[i])}
+    return out,nil
+}
+type V4GameOuterPolicy struct {
+    RepairEnabled bool
+    DataRetransmitted,BlockedDuplicate,FirstLaneCopied uint64
+}
+func (g *v4NativeGameJoined) configureOuterRepair(enabled bool)error{
+    if g==nil||g.handle==0||g.stopped||g.verified==nil{return ErrAdmissionUnsupported}
+    var value C.uint32_t
+    if enabled {value=1}
+    rc:=C.wbd_fec_network_game_group_outer_policy_set(C.uint64_t(g.handle),value)
+    if rc!=0{return fmt.Errorf("%w: Game native outer policy=%d",errV4Embedded,int(rc))}
+    return nil
+}
+func (g *v4NativeGameJoined) originalGameOuterPolicy()(V4GameOuterPolicy,error){
+    if g==nil||g.handle==0||g.stopped{return V4GameOuterPolicy{},ErrAdmissionUnsupported}
+    var data [4]C.uint64_t
+    rc:=C.wbd_fec_network_game_group_outer_policy_read(C.uint64_t(g.handle),&data[0],4)
+    if rc!=0{return V4GameOuterPolicy{},fmt.Errorf("%w: Game outer M4 readback=%d",errV4Embedded,int(rc))}
+    return V4GameOuterPolicy{RepairEnabled:data[0]!=0,
+        DataRetransmitted:uint64(data[1]),BlockedDuplicate:uint64(data[2]),
+        FirstLaneCopied:uint64(data[3])},nil
+}
 // Real original-Go M4 raw/TUN worker install. The actual Go owner
 // supplies its nonzero current ifindex and a real /dev/net/tun FD; Rust
 // verifies the device and retains a DUPLICATED fd until group Stop.
@@ -134,6 +190,29 @@ func (g *v4NativeGameJoined) originalM4Counters()(V4GameKernelCounters,error){
     },nil
 }
 
+type V4GameFecCounters struct{
+    SourceOffered,ParityOffered,ParityKernelCopied uint64
+    SourceCandidate,RecoveredCandidate,Expired,Failed uint64
+    Planned,Sent,RetainedBytes uint64
+    RxInvalid,RxConflict,RxCapacity,RxCodec,RxState,RxFrame uint64
+}
+func (g *v4NativeGameJoined) originalGameFecCounters()(V4GameFecCounters,error){
+    if g==nil||g.handle==0||g.stopped{return V4GameFecCounters{},ErrAdmissionUnsupported}
+    var values [16]C.uint64_t
+    rc:=C.wbd_fec_network_game_group_counters(
+        C.uint64_t(g.handle),&values[0],16)
+    if rc!=0{return V4GameFecCounters{},fmt.Errorf("%w: native Game FEC counters=%d",errV4Embedded,int(rc))}
+    return V4GameFecCounters{
+        SourceOffered:uint64(values[0]),ParityOffered:uint64(values[1]),
+        ParityKernelCopied:uint64(values[2]),SourceCandidate:uint64(values[3]),
+        RecoveredCandidate:uint64(values[4]),Expired:uint64(values[5]),
+        Failed:uint64(values[6]),Planned:uint64(values[7]),
+        Sent:uint64(values[8]),RetainedBytes:uint64(values[9]),
+        RxInvalid:uint64(values[10]),RxConflict:uint64(values[11]),
+        RxCapacity:uint64(values[12]),RxCodec:uint64(values[13]),
+        RxState:uint64(values[14]),RxFrame:uint64(values[15]),
+    },nil
+}
 // A joined crypto-only group must Stop BEFORE per-lane original Go owner
 // release. Callers must separately prove original M4 drivers and then
 // clean owned Go kernel state; this method itself NEVER claims product ON.

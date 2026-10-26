@@ -1,0 +1,49 @@
+{
+  "branch": "experiment/fec-network-tuning",
+  "source": "23da99f0de04afe17756542f5176f2759e318747",
+  "product_build_run": 40153525640,
+  "product_artifact_id": 12583149711,
+  "product_sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
+  "arm64": true,
+  "outer_DATA_retransmission_enabled": false,
+  "original_M4": true,
+  "id": "W43",
+  "mode": "normal",
+  "case": "fec_off_sparse_2Mbps_each_loss0_delay25ms",
+  "commit": "b1fd495029df79153a0a4bfa425398919a4f8841",
+  "request": "tests/network/fec-work/W43-normal-FECoff-outeroff-sparseSmall2-arm64.json",
+  "run": 40156880680,
+  "artifact": 12585645415,
+  "sha256": "1659cb0203e9ef114e4458be773ddf7e178e074617ffc4e777a463006ade92af",
+  "result": "PASS_SCOPED_OBSERVATION",
+  "mode_applied": "Normal, FEC OFF, outer-repair OFF",
+  "udp_c2s_mbps": 1.92,
+  "udp_s2c_mbps": 1.92,
+  "tcp_c2s_mbps": 0.08,
+  "tcp_s2c_mbps": 0.08,
+  "small_loss_pct": [
+    0,
+    0
+  ],
+  "small_p99_ms": [
+    25.4,
+    25.3
+  ],
+  "sparse_received_by_sent": [
+    [
+      597,
+      597
+    ],
+    [
+      597,
+      597
+    ]
+  ],
+  "source_TUN_drops": 0,
+  "root_fq_drops": 0,
+  "process_cpu_s_client_server": [
+    1.27,
+    1.29
+  ],
+  "qualification": "one standalone arm64 product success; no old/new CPU comparison here"
+}

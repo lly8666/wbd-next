@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "event": "S031-build-verified-recovery",
+  "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",
+  "run_id": 39807984023,
+  "result": "PASS_BUILD_ONLY",
+  "artifact_id": 12438592249,
+  "zip_sha256": "7fb49eb7cb3727f754f0174005dec4dd40c43b2c9590fa8daa76faaa08cb52eb",
+  "manifest_arch": "aarch64",
+  "all_ELF_machine": 183,
+  "all_file_hashes_verified": true,
+  "original_native_go_tests": "PASS",
+  "native_rust_units": "PASS",
+  "runtime_product_result": "NOT_RUN_IN_BUILDER",
+  "note": "Original S031 status said workflow finalizing; live Actions endpoint now completed SUCCESS. S030 old oversize7074/7068 hard FAIL preserved."
+}

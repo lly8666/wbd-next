@@ -1,0 +1,105 @@
+{
+  "schema": 1,
+  "id": "P1-one-epoch-carry-AB-fail-quota-abandon-intent-20261023",
+  "action": {
+    "run_id": 39901422471,
+    "attempt": 1,
+    "harness_source": "48708cd64b327f1f588eb0a773554b953c6e1081",
+    "artifact_id": 12478987197,
+    "artifact_sha256": "f182081b27c8f9af43d082f967eefe6c5ab6fddebf8c4e83f2f0dae4b5f52bae",
+    "conclusion": "failure"
+  },
+  "scenario": {
+    "same_vm": true,
+    "order": "AB",
+    "mode": "normal",
+    "loss_pct": 2,
+    "one_way_ms": 200,
+    "steady_s": 60,
+    "seed": 5205
+  },
+  "A": {
+    "source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
+    "netem_loss_pct": {
+      "client": 2.031962459604232,
+      "server": 1.8994908124861634
+    },
+    "udp_missing": {
+      "c2s": 159,
+      "s2c": 186
+    },
+    "udp_loss_pct": {
+      "c2s": 2.7022433718558805,
+      "s2c": 3.161114887831407
+    },
+    "tcp_p99_ms": {
+      "c2s": 5421.3,
+      "s2c": 7040.8
+    },
+    "client": {
+      "repair": 640,
+      "blocked_burst": 28,
+      "blocked_quota": 326,
+      "expired0": 126,
+      "candidate_first": 878,
+      "candidate_retry": 116
+    },
+    "server": {
+      "repair": 580,
+      "blocked_burst": 28,
+      "blocked_quota": 343,
+      "expired0": 138,
+      "candidate_first": 839,
+      "candidate_retry": 112
+    },
+    "cpu_s": {
+      "client": 2.21,
+      "server": 2.26
+    },
+    "stop": true
+  },
+  "B": {
+    "source": "a05e059600d6970a91d5d8f9e6fd3851e6745233",
+    "netem_loss_pct": {
+      "client": 1.9270995593929414,
+      "server": 1.9247866287339972
+    },
+    "udp_missing": {
+      "c2s": 138,
+      "s2c": 157
+    },
+    "udp_loss_pct": {
+      "c2s": 2.345343303874915,
+      "s2c": 2.6682528891910264
+    },
+    "tcp_p99_ms": {
+      "c2s": 5616.7,
+      "s2c": 6855.3
+    },
+    "client": {
+      "repair": 559,
+      "blocked_burst": 21,
+      "blocked_quota": 352,
+      "expired0": 151,
+      "candidate_first": 845,
+      "candidate_retry": 87
+    },
+    "server": {
+      "repair": 580,
+      "blocked_burst": 21,
+      "blocked_quota": 356,
+      "expired0": 148,
+      "candidate_first": 881,
+      "candidate_retry": 76
+    },
+    "cpu_s": {
+      "client": 2.34,
+      "server": 2.36
+    },
+    "stop": true,
+    "warning": "HOST_CONTENTION_OBSERVED"
+  },
+  "conclusion": "One-epoch carry did not reduce QuotaExhausted or expired0; hypothesis falsified. Do not retain carry.",
+  "diagnosis": "Hard quota demand is persistent because a QuotaExhausted candidate is currently treated as NotSent and rearmed by PTO without consuming an actual repair attempt. The same unrepaired shadow can repeatedly contend in later epochs until hard expiry, contrary to the explicit bounded-Abandoned rule and starving newer first-loss work.",
+  "next_change": "Revert budget carry to 6746. Add ReceiptState repair_abandoned metadata. Exact QuotaExhausted clears queued candidate and disables all future repair wakes for that record while retaining shadow for authenticated ACK/hard expiry and leaving repair_attempts unchanged. Other errors preserve old behavior."
+}

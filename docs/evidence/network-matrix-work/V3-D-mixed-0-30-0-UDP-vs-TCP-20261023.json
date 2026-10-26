@@ -1,0 +1,204 @@
+{
+  "schema": 1,
+  "scope": "NATIVE_ARM64_NORMAL_OFF_SINGLE_VM_ONE_PREDECLARED_0_30_0_MIXED_WAVE",
+  "kind": "SCOPED_UDP_NO_CROSS_BUSINESS_HOL_TP_EVIDENCE_NOT_FULL_TCP_PERF_PASS",
+  "request_id": "V3-D-30pct-mixed-UDP-progress-against-TCP-degradation",
+  "product_source": "bb9a036873d186a84ca9e64727df342d68e59df0",
+  "request_source": "b21c96454968c6a5e7a461dca2fd57d949e111d8",
+  "run": 39986170337,
+  "attempt": 1,
+  "action_conclusion": "failure",
+  "reason": "TCP_BACKPRESSURED in loss30 and recovered_zero, limits not performance pass, no product failures",
+  "artifact_id": 12515203305,
+  "artifact_zip_sha256": "afdcb1224c5a1f5eb117f271256a87484bca8e0e628584784508b41abbcbc6ee",
+  "artifact_zip_sha256_locally_verified": true,
+  "preflight_rejection": {
+    "run": 39985836341,
+    "attempt": 1,
+    "result": "INVALID_REQUEST_DRAIN_S_40_EXCEEDS_30_NO_TRAFFIC_EXECUTED",
+    "corrected_drain_s": 30
+  },
+  "scenario": {
+    "outer_line_mbps_each_direction": 50,
+    "offered_app_mbps_each_direction": 5,
+    "app_tcp_share": 0.7,
+    "app_udp_share": 0.3,
+    "small_share_bytes_approx": 0.01,
+    "tcp_flows_each_direction": 2,
+    "one_way_ms": 300,
+    "phase_seconds": [
+      20,
+      60,
+      20
+    ],
+    "phase_loss_pct": [
+      0,
+      30,
+      0
+    ],
+    "warmup_s": 10,
+    "drain_s": 30,
+    "network": "iid unseeded recorded",
+    "normal_fec_off": true
+  },
+  "observations": {
+    "run_result": "INCONCLUSIVE",
+    "app_phase_udp": {
+      "healthy_before": {
+        "c2s_offered_mbps": 1.4998056,
+        "c2s_delivered_mbps": 1.4998056,
+        "s2c_offered_mbps": 1.4998056,
+        "s2c_delivered_mbps": 1.4998056
+      },
+      "loss30": {
+        "c2s_offered_mbps": 1.4999592,
+        "c2s_delivered_mbps": 1.1655798666666668,
+        "s2c_offered_mbps": 1.4999592,
+        "s2c_delivered_mbps": 1.1755494666666666,
+        "missing_udp_app_packets_c2s_s2c": [
+          2146,
+          2064
+        ],
+        "first_arrival_p99_ms_c2s_s2c": [
+          978.5,
+          980.7
+        ]
+      },
+      "recovered_zero": {
+        "c2s_offered_mbps": 1.500366,
+        "c2s_delivered_mbps": 1.4998056,
+        "s2c_offered_mbps": 1.500366,
+        "s2c_delivered_mbps": 1.500366,
+        "missing_udp_app_packets_c2s_s2c": [
+          1,
+          0
+        ],
+        "p99_ms_c2s_s2c": [
+          311,
+          303.7
+        ]
+      }
+    },
+    "app_phase_tcp": {
+      "healthy_before": {
+        "offered_mbps_each_direction": 3.5,
+        "delivered_mbps_each_direction": 3.5,
+        "backpressure_events_each_direction": 0
+      },
+      "loss30": {
+        "offered_mbps_c2s_s2c": [
+          0.6540536,
+          0.8126884
+        ],
+        "delivered_mbps_c2s_s2c": [
+          0.6540536,
+          0.8126884
+        ],
+        "target_mbps_each_direction": 3.5,
+        "backpressure_events_c2s_s2c": [
+          15235,
+          14386
+        ]
+      },
+      "recovered_zero": {
+        "actual_mbps_c2s_s2c": [
+          2.038836,
+          1.859346
+        ],
+        "target_mbps_each_direction": 3.5,
+        "backpressure_events_c2s_s2c": [
+          2608,
+          2928
+        ],
+        "p99_ms_c2s_s2c": [
+          6069.9,
+          1544.2
+        ]
+      }
+    },
+    "source_tun_kernel_drops_steady_client_server": [
+      0,
+      0
+    ],
+    "authentic_v3_repair_wire_bytes_client_server": [
+      1968005,
+      1972875
+    ],
+    "v3_repair_over_fresh_pct_c2s_s2c": [
+      3.7661955566,
+      3.69285017785
+    ],
+    "repair_over_line_pct_full_wave_c2s_s2c": [
+      0.2862552727,
+      0.2869636364
+    ],
+    "host_cpu_psi_peak": 0.92,
+    "host_steal_peak_pct": 0,
+    "product_cpu_seconds_client_server_during_measured_window": [
+      4.44,
+      4.44
+    ],
+    "stopped_and_cleaned_both": true,
+    "real_rx_bin_analysis": {
+      "bin_width_ms": 10,
+      "window_phase_loss30_trimmed_seconds_from_scenario_start": [
+        31,
+        89
+      ],
+      "source_files": [
+        "A/client-traffic.json",
+        "A/server-traffic.json"
+      ],
+      "receiver_client": {
+        "tcp_aggregate_longest_zero_ms": 2790,
+        "udp_longest_zero_ms": 40,
+        "udp_seconds_with_zero_deliveries": 0
+      },
+      "receiver_server": {
+        "tcp_aggregate_longest_zero_ms": 1990,
+        "udp_longest_zero_ms": 50,
+        "udp_seconds_with_zero_deliveries": 0
+      },
+      "note": "TCP bins aggregate two streams per receiver; no unsupported per-TCP-stream conclusion"
+    }
+  },
+  "qualification": {
+    "udp_independent_progress_during_tcp_loss": "PASS_SCOPED_NO_SHARED_MULTI_BUSINESS_STALL",
+    "full_mixed_throughput": "INCONCLUSIVE_TCP_BACKPRESSURED_EXPECTED_FROM_INNER_TCP_HIGH_LOSS",
+    "line_repair_min6_pct": "NOT_APPLICABLE_LOW_FIRSTSEND_LOAD_AND_MULTIPHASE",
+    "near_zero_lossless_udp_after_stress": "ONE_RECOVERED_PHASE_MISSING_PACKET_C2S_REMAINS_OPEN_AT_PHASE_BOUNDARY",
+    "tcp500": "NOT_TESTED"
+  },
+  "caveats": [
+    "Only one native ARM64 same-VM waveform, independent netem IID30%. Per-flow TCP fine-grained progression not individually classified.",
+    "Lossless recovered phase has one UDP missing in C2S; do not convert to literal zero-drop PASS. Transition overlap/last report not classified.",
+    "The 6% R/C rule is restricted to the standard saturated 30% waveform; at only ~5Mbps app per direction over a 50Mbps line, it is mathematically impossible and not applied.",
+    "The Action conclusion is failure due valid TCP_BACKPRESSURED performance-limit observation, not a failed UDP firstsend integrity gate."
+  ],
+  "additional_automatic_same_source_run": {
+    "run": 39986429782,
+    "attempt": 1,
+    "source": "b21c96454968c6a5e7a461dca2fd57d949e111d8",
+    "event": "push",
+    "not_manually_redispatched": true,
+    "artifact_id": 12515029240,
+    "github_artifact_digest": "sha256:f95ed4a5b46d90373dc45dd4460ee8bb714e7a75a764e04b540611c722f6991d",
+    "sha256_locally_verified": false,
+    "action": "failure",
+    "leg": "INCONCLUSIVE",
+    "limits": "TCP_BACKPRESSURED during loss30 and recovered_zero both directions",
+    "loss30_udp_delivered_c2s_s2c_mbps": [
+      1.1727142666666666,
+      1.1729693333333333
+    ],
+    "loss30_tcp_delivered_c2s_s2c_mbps": [
+      0.7368268,
+      0.6411976
+    ],
+    "recovered_udp_missing_c2s_s2c": [
+      6,
+      4
+    ],
+    "interpretation": "A second automatic push event for the exact same request source occurred without new user dispatch; it does NOT change the scoped verdict. DO NOT trigger another identical scenario."
+  }
+}

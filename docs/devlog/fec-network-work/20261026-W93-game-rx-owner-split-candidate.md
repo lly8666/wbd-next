@@ -1,0 +1,11 @@
+# W93｜Game OFF TX / shared RX owner split — candidate
+
+SOURCE parent: `bc15506ecc3b6a571f2b5fc40d8eb11e89009000`. W91/Game2,Game4 clean each-direction 3Mbps real TCP/UDP passed on original OFF; W92 exact kernel tuple filter ARM64 Action40213234927 and same-VM Game2 40213467037 / Game4 40213471471 clean PASS, with Game4 CPU ~10% lower; BA reverse Action40213802360 running when authored.
+
+Issue: TX currently holds entire `GameAdapter` during real raw send syscalls while every RX waits on the same mutex, potentially causing FIFO head-of-line unrelated to transport. The W90 FEC-Fixed public candidate was explicitly withdrawn after six real Linux failures; do not reintroduce it as a side effect.
+
+Change: maintain **one** `GameTx` state and independent per-lane TX AEAD under original TX adapter mutex; put **one** cross-lane `GameRx` dedup + each lane independent replay/AEAD + bounded RX Arena into a private `Arc<Mutex<GameReceiveOwner>>`, cloned **once** per RX worker at start; no per-packet Arc clone, no thread pool, no unsafe. Linux worker acquires RX-only mutex, performs authenticated first-delivery and releases before TUN write, without acquiring TX adapter lock. Go synchronous `GameAdapter::receive` API delegates to same owner; original stop owns and stops both arenas after kernel joins workers. Test holds TX adapter mutex while peer RX worker authenticates/delivers, with deterministic bounded timeout and stop.
+
+Arena total budget increases by an independently bounded 256x2048 RX slab pool so TX pressure cannot consume RX buffers; resource delta requires real measurement. This is stage B candidate ONLY, not a proved win. TX source copied flag still based on actual raw send callback. Kernel socket prefilter and distinct per-lane PN/AEAD preserved. FEC2 shared Normal path unchanged. Windows skipped by user; no fresh Game fixed6 exposure.
+
+Verification gate: this exact SOURCE ARM64 native/Go tests, then clean Game2 and Game4 3Mbps UDP/TCP at unchanged load in separate Actions. A/B compare to W92 exact source on same VM; if RX owner split loses correctness, revert only the candidate. No increase beyond known capacity, no fake performance benefit from old broken FEC baseline.

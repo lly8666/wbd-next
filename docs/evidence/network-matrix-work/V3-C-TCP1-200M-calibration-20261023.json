@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_SINGLE_TCP_200M_CALIBRATION_NOT_500M_QUALIFICATION",
+  "request_id": "V3-C-lossless-TCP1-200M-400ms-early-capacity",
+  "request_source": "d05043ec4159b1b377a0f8b3c5caf68939e3f150",
+  "run": 39983733109,
+  "attempt": 1,
+  "action_conclusion": "failure",
+  "artifact_id": 12515485281,
+  "artifact_zip_sha256": "24ca56ad370cc29c6480f953abd1690f137e964b47c3bd6003946517e478e232",
+  "artifact_zip_sha256_locally_verified": true,
+  "product_source": "bb9a036873d186a84ca9e64727df342d68e59df0",
+  "build_run": 39981175602,
+  "scenario": {
+    "mode": "Normal/off",
+    "one_way_ms": 200,
+    "outer_line_cap_mbps_each_direction": 700,
+    "loss_pct": 0,
+    "app_c2s_target_mbps": 200,
+    "app_s2c_target_mbps": 0,
+    "one_inner_tcp_stream": true,
+    "window_profile": "bdp500",
+    "namespaced_tcp_rmem_wmem_max": 67108864,
+    "actual_socket_buffers_initial_readback": 4194304,
+    "steady_s": 60,
+    "warmup_s": 15,
+    "drain_s": 30,
+    "app_write_size": 32768
+  },
+  "observed": {
+    "result": "INCONCLUSIVE_TCP_BACKPRESSURED",
+    "c2s_injected_mbps": 175.10782293333332,
+    "c2s_delivered_mbps": 175.10782293333332,
+    "c2s_missing": 0,
+    "c2s_tcp_backpressure_events": 5698,
+    "c2s_first_arrival_p99_ms": 2567.8,
+    "source_tun_tx_drops_steady_client_server": [
+      0,
+      0
+    ],
+    "source_tun_tx_drops_warmup_client_server": [
+      8446,
+      0
+    ],
+    "tcp_retrans_steady_client_server": [
+      0,
+      0
+    ],
+    "outer_repair_accepted_total": 0,
+    "m1_peak_loaned_client_server": [
+      32,
+      32
+    ],
+    "tun_pre_read_deferred_client_server": [
+      0,
+      0
+    ],
+    "host_cpu_psi_peak": 19.82,
+    "host_steal_peak_pct": 0,
+    "client_product_cpu_s_steady": 16.52,
+    "server_product_cpu_s_steady": 25.25,
+    "client_tcp_cwnd_median_mss": 10315,
+    "client_tcp_advmss": 1377,
+    "client_tcp_snd_wnd_median_bytes": 33816576,
+    "client_tcp_notsent_median_bytes": 27648155,
+    "client_tcp_notsent_max_bytes": 38175599,
+    "netem_qdisc_drops_client_server": [
+      0,
+      0
+    ],
+    "end_netem_qlen_client_server": [
+      3688,
+      1527
+    ],
+    "stop_drained_both": true
+  },
+  "interpretation": [
+    "Warmup client TUN kernel TX drops 8446 means NOT an entire-run zero-local-drop qualification; steady source TUN delta zero. Do not hide preheat drops.",
+    "Zero outer netem loss, no accepted repairs, all sent inner TCP application records arrived after drain. 175.1Mbps offered and delivered below 200Mbps target; kernel TCP notsent/backpressure >0, firstarrival p99 2.57s.",
+    "Window observations show cwnd 10315*1377=14.2MB, receive advertised snd_wnd 33.8MB, so neither is obviously below 200Mbps*RTT400ms=10MB; exact bottleneck not isolated. Host PSI peak19.82, steal0, not proof of either VM bottleneck or product efficiency.",
+    "The test designated stop_heavier_resource_cases=true; do NOT run 500Mbps before differentiating injector/socket backlog, receiver product and netem queue/CPU. More representative diagnostics may be needed, not repeated blind queues."
+  ],
+  "disposition": "INCONCLUSIVE_PRODUCT_OR_GENERATOR_CAPACITY; TCP500_PROJECTED_NOT_TESTED; DO_NOT_DISPATCH_HEAVIER"
+}

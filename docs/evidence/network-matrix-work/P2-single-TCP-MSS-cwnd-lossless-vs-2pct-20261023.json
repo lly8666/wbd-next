@@ -1,0 +1,175 @@
+{
+  "schema": 1,
+  "id": "P2-single-TCP-MSS-cwnd-lossless-vs-2pct-20261023",
+  "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+  "contrasts": {
+    "lossy": {
+      "run": 39932398428,
+      "artifact_id": 12492127816,
+      "artifact_sha256": "1c4bb0fcc1083ffb4a1aad6b6d2ed49bbde250881de4d25c58ac7cc564b022b3",
+      "result": "INCONCLUSIVE",
+      "one_way_ms": 200,
+      "netem_loss_pct": 2,
+      "tcp_flows": 1,
+      "target_mbps_each": 10,
+      "throughput_mbps": {
+        "c2s": 1.0084818666666666,
+        "s2c": 1.1269541333333333
+      },
+      "backpressure": {
+        "c2s": 52398,
+        "s2c": 69483
+      },
+      "tcp_cwnd_mss_end": {
+        "client": 43,
+        "server": 49
+      },
+      "tcp_retrans_steady": {
+        "client": 152,
+        "server": 136
+      },
+      "tcp_rto_ms_end": {
+        "client": 1743,
+        "server": 1188
+      },
+      "outer_PTO_ms": {
+        "client": 445.869,
+        "server": 442.547
+      },
+      "native_m1_peak": {
+        "client": 222,
+        "server": 143
+      },
+      "m1_capacity": 1024,
+      "owner_data_deferrals": {
+        "client": 0,
+        "server": 0
+      },
+      "outer_repair_candidates": {
+        "client": 499,
+        "server": 500
+      },
+      "outer_repair_accepted": {
+        "client": 382,
+        "server": 337
+      },
+      "outer_quota_abandoned": {
+        "client": 117,
+        "server": 163
+      },
+      "feedback_dropped": 0,
+      "host_psi_peak": 0
+    },
+    "lossless": {
+      "run": 39937279597,
+      "artifact_id": 12493294457,
+      "artifact_sha256": "4a983544bf4881a28f56029794933047190e2b4b63b280d0da8be049b44b96b7",
+      "result": "PASS_SCOPED_OBSERVATION_BUT_TUN_TX_DROP_HIDDEN",
+      "one_way_ms": 200,
+      "netem_loss_pct": 0,
+      "tcp_flows": 1,
+      "target_mbps_each": 10,
+      "throughput_mbps": {
+        "c2s": 10.0000312,
+        "s2c": 10.0000312
+      },
+      "backpressure": {
+        "c2s": 0,
+        "s2c": 0
+      },
+      "tun_mtu": 1329,
+      "actual_tcp_mss": 1277,
+      "actual_advmss": 1277,
+      "outer_record_wire": 1360,
+      "outer_mtu": 1500,
+      "tcp_cc": "cubic",
+      "kernel_available_cc": "reno cubic",
+      "tcp_window_scaling": true,
+      "tcp_sack": true,
+      "tcp_timestamps": true,
+      "tcp_cwnd_median": {
+        "client": 787,
+        "server": 2874
+      },
+      "tcp_cwnd_min": {
+        "client": 607,
+        "server": 602
+      },
+      "tcp_snd_wnd_median_bytes": {
+        "client": 3667968,
+        "server": 3152896
+      },
+      "tcp_rtt_ms_min": {
+        "client": 400.183,
+        "server": 403.602
+      },
+      "native_m1_peak": {
+        "client": 1009,
+        "server": 1009
+      },
+      "m1_capacity": 1024,
+      "owner_data_deferrals": {
+        "client": 9700,
+        "server": 4249
+      },
+      "tun_kernel_tx_drops_at_steady_begin": {
+        "client": 264,
+        "server": 0
+      },
+      "tun_kernel_tx_drops_at_steady_end": {
+        "client": 396,
+        "server": 359
+      },
+      "tun_kernel_tx_drops_steady": {
+        "client": 132,
+        "server": 359
+      },
+      "kernel_tcp_retrans_steady": {
+        "client": 97,
+        "server": 303
+      },
+      "cpu_seconds_per_steady60": {
+        "client": 5.21,
+        "server": 4.83
+      },
+      "peak_rss_bytes": {
+        "client": 21905408,
+        "server": 21999616
+      },
+      "no_product_tun_post_read_error": true,
+      "zero_outer_netem": true,
+      "stop_and_owned_cleanup": true
+    }
+  },
+  "model": {
+    "one_way_ms": 200,
+    "nominal_rtt_ms": 400,
+    "app_target_tcp_mbps": 10,
+    "path_mtu": 1329,
+    "mss_with_timestamp": 1277,
+    "bdp_bytes": 500000,
+    "needed_mss_inflight": 391.54267815191855,
+    "lossy_real_end_cwnd_fraction_of_needed": {
+      "client": 0.109822,
+      "server": 0.125146
+    },
+    "classic_sqrt_TCP_at_p0_0004_Mbps": 1.5639992007670591,
+    "heuristic_only": "Ideal once repaired IID p² not proven to equal real inner TCP event loss; Linux CUBIC cwnd/ACK feedback not the Reno formula."
+  },
+  "analysis": [
+    "MSS is ~1277 because TUN MTU1329 minus IPv4 20, TCP20 and negotiated timestamps12; 12% less than Ethernet1460 cannot cause 10x throughput collapse.",
+    "Source matches, outer netem loss is the experimental difference. Lossless can pass actual10Mbps each, with CUBIC cwnd 787/2874 median vs lossy snapshot43/49. Thus main lossy 1Mbps factor is inner TCP loss/reorder/congestion response, not CPU or tiny MSS.",
+    "Lossless scoped PASS hides real source TUN TX drops132/359 and owner deferral9700/4249; pool highwater1009/1024 is censored near 16 receipt reserve. Address this separate correctness/perf limit in next genuine Normal-only change, no FEC shared buffer modification.",
+    "Lossy native 999 recovery candidates, 719 sent, 280 quota abandoned. Candidate not the same as useful repair/lost inner TCP segment; no evidence to increase 10% budget blindly.",
+    "Outer RACK needs authentic subsequent receipts (~RTT), retransmitted outer data adds one-way delay; inner TCP can enter fast recovery before repaired data arrives. This is plausible mechanistic coupling, still needs class-specific DATA-vs-ACK authenticated timing evidence."
+  ],
+  "disposition": {
+    "MSS_INCOMPATIBLE": "NO",
+    "CPU_CAPACITY": "NO_FOR_LOSSY",
+    "RX_WINDOW": "NOT_PRIMARY_LOSSY;zero_loss_median_millions_of_bytes",
+    "outer_PTO_TOO_LATE_FOR_INNER_TCP": "PLAUSIBLE_NOT_YET_CLASS_ATTESTED",
+    "TUN_SRC_OVERFLOW_AT_10M_LOSSLESS": "PROVEN_KERNEL_COUNTER_AND_M1_PRESSURE",
+    "BBR": "NOT_AVAILABLE_IN_KERNEL_CC_LIST_WITHOUT_MODULE_LOADING;DO_NOT_CHANGE_GLOBAL_HOST"
+  },
+  "next": "Do not rerun same samples. Gate TUN source TX drop in future harness validity. Apply isolated bounded Normal-only M1 capacity change to prevent hidden zero-loss drops; no FEC test. Independently instrument TCP ACK/data first arrival and repair lateness and correlate with inner cwnd/RTO before changing repair logic. No change to one network repair,10pct bytes,1.5s hard cap."
+}

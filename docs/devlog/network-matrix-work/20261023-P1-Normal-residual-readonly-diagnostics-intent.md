@@ -1,0 +1,9 @@
+# 2026-10-23 P1 timing AB improves storm; residual requires read-only classifier
+
+Same-VM Action39892580264 old18860→P1 source2a388 proves the timing mechanism is directionally correct but Normal is still not qualified. A→B per-role actual outer repairs collapse ~12k→665/631 and quota/capacity blocks ~61k→258/287; product CPU falls 2.30/2.34s→1.97/2.01s; c2s TCP backpressure727→0 and p99 8.52s→4.34s (s2c 6.62s→4.54s). Stop remains PASS. Underlay loss differs modestly between sequential legs, so no exact loss delta is attributed solely to product.
+
+B UDP still misses125/149 (2.12%/2.53%), above the 1% gate. More important: retired_total-authenticated_ack is261/264, same order as the business misses. Current telemetry cannot say whether these shadows never formed a repair candidate, expired after one repair, or survived both immutable repairs without a timely authenticated ACK.
+
+This commit therefore changes **no behavior**. ReceiptState adds bounded integer counters for candidate first/retry, ACK retirement by0/1/2 attempts, hard expiry by0/1/2 attempts, late-positive-after-expiry, plus the already-owned adaptive SRTT/RTTVAR/recent RTT/W/PTO/Tcache snapshot. One slow pre-Stop public numeric readback extends the existing `V4_PUBLIC_M2_OUTER` marker; no payload/address/identity is logged and harness parsing already accepts numeric keys. Native unit creates one no-repair ACK, one ACK after first repair, one two-repair expiry and one zero-repair expiry.
+
+After native+9MTU PASS, run only new product B at the exact Normal2pct point. Do not waste another old A leg: the timing causal comparison is already established. Use the buckets to choose the next bottleneck, not another seed or knob search.

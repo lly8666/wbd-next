@@ -1,0 +1,83 @@
+{
+  "run": 40090193642,
+  "result_artifact": 12559170488,
+  "artifact_zip_sha256": "aeea1dd50cce86e0a9b0f1a89ad7e5f8e62a5b680e79df47fb9f354067e9c42f",
+  "product_source": "ec344557fa8cbf4d717a81833d36f92584263478",
+  "product_build_run": 40087393299,
+  "product_artifact": 12558215058,
+  "order": "A_ONLY",
+  "scenario": "Fixed Maximum profile6 outer_repair OFF true ARM64 netns, bidirectional 50Mbps, IID30%, one-way300ms, 15s warmup+30s measured+30s drain",
+  "pass": "PASS_SCOPED_OBSERVATION",
+  "business": {
+    "c2s": {
+      "injected_mbps": 49.999143466666666,
+      "delivered_mbps": 49.9851272,
+      "sent": 147083,
+      "delivered": 147007,
+      "missing": 76,
+      "loss_pct": 0.051671505204544374,
+      "p99_ms": 304.6
+    },
+    "s2c": {
+      "injected_mbps": 50.000516266666665,
+      "delivered_mbps": 49.98981253333333,
+      "sent": 147087,
+      "delivered": 147014,
+      "missing": 73,
+      "loss_pct": 0.04963049079796311,
+      "p99_ms": 304.7
+    }
+  },
+  "netem_actual_drop_pct": {
+    "client": 29.995676485847696,
+    "server": 30.0577151489293
+  },
+  "native_rx": {
+    "client": {
+      "decoder_rejected": 0,
+      "pressure_evicted": 0,
+      "reject_capacity": 0,
+      "reject_codec": 0,
+      "peak_active": 57,
+      "peak_bytes": 1922278,
+      "recovered_tun": 67115
+    },
+    "server": {
+      "decoder_rejected": 0,
+      "pressure_evicted": 0,
+      "reject_capacity": 0,
+      "reject_codec": 0,
+      "peak_active": 58,
+      "peak_bytes": 1922935,
+      "recovered_tun": 66417
+    }
+  },
+  "native_readback": {
+    "both_fixed_requested_applied": "1/1",
+    "both_profile": 6,
+    "both_pending": false,
+    "both_outer_repair_off": true,
+    "outer_data_retransmit": 0,
+    "true_auth_reverse_reports": {
+      "client": 12753,
+      "server": 12633
+    },
+    "stopped_and_drained_both": true
+  },
+  "resource": {
+    "measurement_cpu_s": {
+      "client": 12.54,
+      "server": 12.67
+    },
+    "rss_peak_bytes": {
+      "client": 29724672,
+      "server": 29569024
+    },
+    "root_qdisc_drop_client": 0,
+    "root_qdisc_drop_server": 0,
+    "source_tun_drop_client": 0,
+    "source_tun_drop_server": 0,
+    "host_cpu_psi_peak_pct": 8.83
+  },
+  "limitation": "W12 preceding same-VM second-leg B failed C2S ~12.23%; standalone PASS doesn't erase performance repeatability ambiguity; 75Mbps not retested"
+}

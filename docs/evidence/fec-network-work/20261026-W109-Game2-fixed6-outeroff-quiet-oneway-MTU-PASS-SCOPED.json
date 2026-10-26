@@ -1,0 +1,180 @@
+{
+  "schema": "W109_GAME2_FIXED6_OUTER_OFF_TAIL_ONEWAY_MTU_REAL_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "owner": "fec-network-work",
+  "product": {
+    "source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "build_run": 40260662919,
+    "bundle_artifact_id": 12623678360,
+    "sha256": "04d209b7ef1e887af6599622aaf71efc34381451c847e844cf18c2006ae9708f"
+  },
+  "fixture_fix": {
+    "source": "c55dd515ed7ba5dc19df3cc5fc8f98cf6e1d22e2",
+    "harness_contract_run": 40264695385,
+    "result": "SUCCESS",
+    "reason": "Zero-offered application phase has no first-arrival p99; passive TUN can emit real reverse TCP ACK; strong outer DATA OFF check retained. Sparse near-MTU 1Mbps cannot prove continuous 10ms cross-business HOL, explicitly scoped out in MTU fixture.",
+    "previous_real_actions": [
+      40262822362,
+      40262924578,
+      40262931200,
+      40262989978
+    ],
+    "previous_outcome": "FAIL/INCONCLUSIVE from incorrect harness scoping, original product delivered all offered app and native outer OFF remained valid; previous failure not erased"
+  },
+  "runs": {
+    "both_directions_quiet": {
+      "run": 40264740280,
+      "artifact": 12626380529,
+      "sha256": "fcc3cc21bfb42edfdee321de35bdfea033a8057f8cfaca13bce9d83adb2d5af6",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "phases": [
+        "active_before_tail",
+        "genuine_no_probe_quiet_tail",
+        "resume_after_tail"
+      ],
+      "quiet_secs": 10,
+      "probe_hz": 0,
+      "quiet_udp_tcp_offered_delivered": 0,
+      "active_resume_true_tcp_udp_missing": 0,
+      "active_resume_max_p99_ms": 77.6,
+      "native_outer_repair_enabled": [
+        0,
+        0
+      ],
+      "actual_data_retransmitted": [
+        0,
+        0
+      ],
+      "fec_parity_planned_sent_client_server": [
+        17694,
+        17709
+      ],
+      "fec_expired_failed": 0,
+      "retained_fec_bytes_terminal_before_stop": [
+        0,
+        0
+      ],
+      "cpu_s": [
+        2.21,
+        2.26
+      ],
+      "rss_peak_bytes": [
+        26505216,
+        25821184
+      ],
+      "host_cpu_psi_peak_pct": 38.49,
+      "stop": true
+    },
+    "c2s_one_way": {
+      "run": 40264746765,
+      "artifact": 12625714922,
+      "sha256": "95a573d23990c084dad2deaf6d0781a64bcec5b4d816b3ac3629e8b546e0f6c4",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "traffic_mbps": [
+        1,
+        0
+      ],
+      "genuine_offered_active_side_delivered_all": true,
+      "passive_inner_tcp_ack_native_first_copies": 2264,
+      "quiet_secs": 10,
+      "native_outer_repair_enabled": [
+        0,
+        0
+      ],
+      "actual_data_retransmitted": [
+        0,
+        0
+      ],
+      "fec_parity_planned_sent_client_server": [
+        16184,
+        754
+      ],
+      "fec_expired_failed": 0,
+      "cpu_s": [
+        0.56,
+        1.55
+      ],
+      "host_cpu_psi_peak_pct": 0,
+      "stop": true
+    },
+    "s2c_one_way": {
+      "run": 40264755348,
+      "artifact": 12625089052,
+      "sha256": "491c38e9c5708d7ac93b1eb139be9a539d2a29d28ecd757151eebd4bf1325fac",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "traffic_mbps": [
+        0,
+        1
+      ],
+      "genuine_offered_active_side_delivered_all": true,
+      "passive_inner_tcp_ack_native_first_copies": 2274,
+      "quiet_secs": 10,
+      "native_outer_repair_enabled": [
+        0,
+        0
+      ],
+      "actual_data_retransmitted": [
+        0,
+        0
+      ],
+      "fec_parity_planned_sent_client_server": [
+        757,
+        16188
+      ],
+      "fec_expired_failed": 0,
+      "cpu_s": [
+        1.44,
+        0.53
+      ],
+      "host_cpu_psi_peak_pct": 0,
+      "stop": true
+    },
+    "mtu_sparse": {
+      "run": 40264760875,
+      "artifact": 12626490125,
+      "sha256": "0f814b1502645e9fc4cfdf99fb7a19c167277123fbecd0f7347ab01d9b42d06e",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "traffic_mbps_each_way": 1,
+      "app_packet_sizes_bytes": [
+        64,
+        1370
+      ],
+      "udp_nonfragmented": true,
+      "outer_interface_mtu": 1500,
+      "actual_mtu_derived": "1398 reported fixture target, genuine on-wire/TUN and app delivery tested; not a universal multi-OS MTU proof",
+      "real_tcp_udp_missing": 0,
+      "max_p99_ms": 77.8,
+      "native_outer_repair_enabled": [
+        0,
+        0
+      ],
+      "actual_data_retransmitted": [
+        0,
+        0
+      ],
+      "fec_parity_planned_sent_client_server": [
+        10162,
+        10178
+      ],
+      "fec_expired_failed": 0,
+      "product_cpu_s": [
+        1.17,
+        1.18
+      ],
+      "host_cpu_psi_peak_pct": 0.75,
+      "stop": true,
+      "cross_business_hol": "NOT_QUALIFIED_SPARSE_1MBPS_10MS_SEND_BINS; no inferred HOL pass"
+    }
+  },
+  "interpretation": "At original fixed6 M4, FEC source/parity remain independent of outer DATA OFF and genuine one-way reverse TCP ACK/TUN packets are not duplicated application offered bytes. The true idle phase has no probes and no injected TCP/UDP, a null p99 is correct. Actual kernel accounting + first arrival in active phases remain checked.",
+  "boundaries": [
+    "High host CPU PSI 38.49% in bidirectional quiet-tail sample; do not use CPU delta as performance gain",
+    "No forced loss exactly at block's final incomplete repair quantum: expired0 under clean tail, not a universal burst-damage tail guarantee",
+    "No Game4 quiet tail on this exact source (prior Game4 fixed6 clean/weaknet verified)",
+    "MTU 1398 1Mbps sparse first arrival validated, continuous cross-business HOL not qualified",
+    "Windows physical NOT_RUN"
+  ],
+  "merge_ready": false,
+  "capacity_stop": true
+}

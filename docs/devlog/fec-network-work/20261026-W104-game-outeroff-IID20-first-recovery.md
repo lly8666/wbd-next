@@ -1,0 +1,3 @@
+# W104 Game outer retransmit OFF plus real FEC recovery
+
+Immutable SOURCE `e8b41fb49a74648e405bf23e4600e23c618596fe`, native build40260662919. Game2 Action40261223312 and Game4 Action40261228792 both scoped PASS with 3Mbps each direction, real TCP+UDP, 20% independent loss and lane1 blackout, zero missing business/TCP backpressure, native live M4 outer policy off0 retransmitted0, parity planned==copied==sent, recovered candidates Game2 765/789 Game4 60/72, zero codec/capacity/expiry, Stop clean. Runner CPU PSI2.88/6.1%; no new load beyond existing envelope. Details in W104 evidence JSON, W103 clean receipt; W105 fixed1/2 in progress. No Game Auto; Normal outer algorithm unchanged; Windows TEMP_SKIPPED, merge_ready=false.

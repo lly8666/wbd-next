@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "id": "FEC-W56-GenuineM2KWindow-SameVM-AB-8Mbps",
+  "branch": "experiment/fec-network-tuning",
+  "request": "tests/network/fec-work/W56-auto-k-guard-down90-sameVM-AB-arm64.json",
+  "request_commit": "9ec341e6b25816e63f9ca9dc97988038e69d0098",
+  "action": 40173582990,
+  "attempt": 1,
+  "conclusion": "success",
+  "result": "PASS_SCOPED_OBSERVATION_BOTH",
+  "artifact_id": 12591456771,
+  "zip_sha256": "1bc9dfade3a26016e5d80dd610da1801a6d6e291c1322aea9517b47e302487ce",
+  "same_vm_sequential": "AB",
+  "frozen_product": {
+    "A": {
+      "source": "f3b9e8a5a6ac226d13066fc7ccc780cb5f94fa85",
+      "build_run": 40171595909,
+      "artifact_id": 12590711550
+    },
+    "B": {
+      "source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+      "build_run": 40173359338,
+      "artifact_id": 12590822815,
+      "zip_sha256": "cdc5d4eb68621321f7f918b6667ff16c0a166bfe6b509ded310afc467294a97f"
+    }
+  },
+  "scenario": "ARM64 native Go original TLS, FEC Auto; UDP8Mbps per direction size64B1% 1287B99%, 75ms one-way; C2S IID2%30s->20%60s->1%90s S2C0/1/0%; outer DATA repair OFF both",
+  "observed": {
+    "A": {
+      "c2s_stage": [
+        "5->6 2026-10-25T07:40:49Z",
+        "6->5 2026-10-25T07:42:12Z",
+        "5->4 2026-10-25T07:42:42Z"
+      ],
+      "s2c_stage": [
+        "5->4 2026-10-25T07:40:43Z",
+        "4->3 2026-10-25T07:41:26Z",
+        "3->2 2026-10-25T07:42:06Z"
+      ],
+      "client_quality_valid": 41,
+      "client_quality_unknown": 64,
+      "c2s_app_missing": [
+        0,
+        6,
+        0
+      ],
+      "c2s_p99_ms": [
+        83.4,
+        92,
+        79.1
+      ],
+      "cpu_s": {
+        "client": 17.42,
+        "server": 17.63
+      },
+      "rss_peak_bytes": {
+        "client": 21737472,
+        "server": 21647360
+      },
+      "m2_mean_us": {
+        "client": 153592,
+        "server": 154077
+      }
+    },
+    "B": {
+      "c2s_stage": [
+        "5->4 2026-10-25T07:44:35Z",
+        "4->3 2026-10-25T07:44:47Z",
+        "3->6 2026-10-25T07:44:56Z",
+        "6->5 2026-10-25T07:46:16Z",
+        "5->4 2026-10-25T07:46:29Z",
+        "4->3 2026-10-25T07:46:42Z",
+        "3->2 2026-10-25T07:46:55Z",
+        "2->1 2026-10-25T07:47:07Z",
+        "1->0 2026-10-25T07:47:19Z"
+      ],
+      "s2c_stage": [
+        "5->4 2026-10-25T07:44:34Z",
+        "4->3 2026-10-25T07:44:47Z",
+        "3->2 2026-10-25T07:45:00Z",
+        "2->1 2026-10-25T07:45:12Z",
+        "1->0 2026-10-25T07:45:25Z"
+      ],
+      "client_quality_valid": 75,
+      "client_quality_unknown": 31,
+      "c2s_app_missing": [
+        1,
+        62,
+        0
+      ],
+      "c2s_p99_ms": [
+        83,
+        92,
+        79.1
+      ],
+      "cpu_s": {
+        "client": 16.54,
+        "server": 17.02
+      },
+      "rss_peak_bytes": {
+        "client": 21344256,
+        "server": 21970944
+      },
+      "m2_mean_us": {
+        "client": 153454,
+        "server": 153914
+      }
+    },
+    "both": {
+      "outer_native_repair_enabled": false,
+      "outer_accepted_retrans_wire_bytes": 0,
+      "true_M2_positive": true,
+      "FEC_parity_native_seen_positive": true,
+      "FEC_original_tun_source_drops": 0,
+      "stop_owned_namespaces_absent": true,
+      "high_loss_model_qualification_pct": 1,
+      "host_capacity_not_limited": true
+    }
+  },
+  "interpretation": "Current exact source supports genuine rapid upward stage under 20% and complete original C2S 6->0 steady 1%-loss return inside 90s with each real lower stage and S2C independent. Satisfies user's revised <=2-3min per-grade, cumulative grades allowed. Different netem random traces/profiles, no CPU superiority or zero-loss claim. No TCP in this case; common W58-60 separately.",
+  "capacity_stop": true,
+  "merge_ready": false
+}

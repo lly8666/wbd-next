@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "kind": "VERIFIED_BUILD_AND_CONTRACT",
+  "source": "caba3883fe499c5e05c1d65770a7d5d4d2d6abf8",
+  "build": {
+    "run_id": 39780156107,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "artifact_id": 12426721086,
+    "artifact_zip_sha256": "725e00e1bfe440a890034359d36f8de27fe634bd988e8533f01a13a8bbaf8dc8",
+    "manifest_sha256": "e6817df9b7fff8db8ec00149f35bdd3dbaf4fb163509534f42e87f889f39b3b1",
+    "arch": "aarch64",
+    "ELF_machine": 183,
+    "binaries_sha256": {
+      "client": "8dc69a08a2f597bc142452c0e6ca79154c885bfe0847ea69c724b7623fb5209e",
+      "server": "8bdd08362584258e8e1eaea003d2774ecb043ca9180137bec2dab45e27b78404",
+      "engine": "242a98dcd8adc3c6293ffb3834f3c0c4f85e3aa47ab680b4975fdd53326f4c1f"
+    },
+    "exact_manifest_and_SHA256SUMS_match": true,
+    "product_network_status": "NOT_RUN_BUILD_ONLY"
+  },
+  "harness_contract": {
+    "run_id": 39780496810,
+    "result": "success",
+    "tests": "strict numeric original M2 parser, missing/censored negative, independent TCP state aggregate plus existing harness checks"
+  },
+  "scope": "read-only, no original firstsend, control, FEC RX decode, replay, hard gates or Stop modified"
+}

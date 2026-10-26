@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_REAL_WBD_NORMAL_OFF_TRUE_IDLE_AND_WAKE",
+  "run": 40000054306,
+  "attempt": 1,
+  "conclusion": "success",
+  "artifact_id": 12522050736,
+  "artifact_zip_sha256": "d718caa3a4cdacfea7bd042ecfd23b7943d933d5ee48e02e0b3d9349cc0959bc",
+  "artifact_verified_locally": true,
+  "request_source": "628d8d6e92e68e714341a964bededa97e0aef9c6",
+  "product_source": "31e3c9f7d987a8e188cae290f8c7851068fee6b3",
+  "scenario": {
+    "mode": "Normal/off",
+    "both_directions": true,
+    "one_way_ms": 200,
+    "loss_pct": 0,
+    "outer_mtu": 1500,
+    "app_mbps_each_direction_after_wake": 2,
+    "app_probe_hz": 0,
+    "warmup_s": 10,
+    "real_idle_s": 30,
+    "data_after_wake_s": 30,
+    "drain_s": 30,
+    "udp_payload_bytes": 256,
+    "outer_data_repair_single_attempt": true
+  },
+  "observed": {
+    "run_result": "PASS_SCOPED_OBSERVATION",
+    "idle_application_injected_mbps_c2s_s2c": [
+      0,
+      0
+    ],
+    "idle_application_delivered_mbps_c2s_s2c": [
+      0,
+      0
+    ],
+    "idle_application_missing_packets_c2s_s2c": [
+      0,
+      0
+    ],
+    "wake_udp_injected_mbps_c2s_s2c": [
+      2.0000085333333333,
+      2.0000768
+    ],
+    "wake_udp_delivered_mbps_c2s_s2c": [
+      2.0000085333333333,
+      2.0000768
+    ],
+    "wake_udp_missing_packets_c2s_s2c": [
+      0,
+      0
+    ],
+    "wake_udp_firstarrival_p99_ms_c2s_s2c": [
+      200.8,
+      200.8
+    ],
+    "source_tun_kernel_drops_steady_client_server": [
+      0,
+      0
+    ],
+    "real_product_stopped_and_cleaned_both": true
+  },
+  "contract_caveat": {
+    "contracts_run": 40000054439,
+    "conclusion": "failure",
+    "why": "A mutable-request-derived queue estimate test assumed nonzero phase rate_scale and failed when active legitimate true-idle=0. It is not a product idle/wake failure; corrected independent model fixture commit a54ae40630c4283f81986032876e3052bdc4ad5b, subsequent contract run required."
+  },
+  "qualification": "V3_D_NATIVE_TRUE_NO_SYNTHETIC_PROBE_IDLE30_AND_WAKE30_NORMAL_OFF_SCOPED_PASS; not full rotation, Windows or blackhole reliability guarantee"
+}

@@ -1,18 +1,27 @@
 # 可复用真实网络 Actions 夹具
+**2026-10-26 新授权更新 Game4 错时默认与 Fixed6 组合（覆盖下文“只能FEC OFF”和“默认immediate”的历史描述）：** Linux original-Go TLS `--mode=game4` 默认 `--game4-copy-schedule=stagger-4-20-60`，相对每业务 T0 的物理 lane1/2/3/4 = 0/4/20/60ms，支持 Game4 `--game-fec=fixed6`；配置 `--game4-copy-schedule=immediate` 显式回退四份立即发送；`game2` 默认仍立即且可用 fixed6。CLI 默认不等于 UI/Windows/其他客户端默认。测试夹具 `product.game4_copy_schedule` 省略时随 Game4 默认 stagger，Game2/Normal 即 immediate，A/B 配置可覆盖（仅同源码，同VM顺序）。现在测试目标为双向20Mbps纯UDP真实大小包混合和30%各lane独立随机损伤，再根据真实本机容量余量依次10Mbps升档至最多80Mbps，**任何失败或PSI瓶颈停止而不是加压**；每个性能Action一个场景/测量job。版本/源码/容量预算/修补理由见 [Game4+Fixed6新范围](../devlog/fec-network-work/20261026-Game4-default-fixed6-Game2-Game4-IID30-20-to-80-capacity.md)。
 
-2026-10-21 用户直接授权实现。入口：`.github/workflows/network-harness.yml`；请求格式示例 `tests/network/request.json`；预置工况 `tests/network/scenarios.json`。PR #21最初实现只增加测试工具，没有修改产品、M0工作游标、权限或生产开关；这不是后续任务的“产品只读”限制。2026-10-22独立实验任务可按[NETWORK_AUTONOMOUS_WORK](NETWORK_AUTONOMOUS_WORK.md)在本分支修产品和必要观测。接入正式客户端/服务端 `wbd-v4-client/server`，复用成熟 Go TLS 和真实 Rust raw/TUN owner；**不借测试 helper 伪造数据路径、认证、ACK 或应用交付**。
+
+**2026-10-26 Game4 FEC-OFF 错时副本最新接线（覆盖下文过时的 Game 全部 FEC OFF 单一能力描述）：** 仅原 Linux Go TLS `--mode=game4 --game-fec=off` 可选择 `--game4-copy-schedule=immediate|stagger-4-20-60`，默认 `immediate`（0/0/0/0ms），后者从每个业务逻辑 T0 起按物理 lane1..4 的绝对 0/4/20/60ms 到期，第一份立即；必须在客户端和服务端分别设置，认证后 native readback `V4_PUBLIC_GAME4_COPY_SCHEDULE` 严格核对真实 planned/sent/abandoned/late_mean_us/late_max_us。这里不支持 Game2/Normal/Go Windows CLI/UI 或 Game+FEC（包括 fixed）；不做 Game Auto。只修改已认证 Game M4 数据复制，不延迟 Go TLS 建链/控制。测试专用 `product.game4_copy_schedule` 或 `bundles.A/B.game4_copy_schedule` 允许同一个 frozen SOURCE 在一台 VM 上顺序 A/B 切换；不用不同 VM CPU 对比。原生 `GameTx` 每个原始业务只存一份共享载荷，延迟队列仅保存引用、lane/FIFO 与绝对 deadline，按 due 后真实超时；新增位置 native 计数两端必须有界，不能拿最终0业务丢失掩盖副本被误删。
+
+**容量和限制：** 3Mbps、64B 最坏约 5859pps，65ms 保留窗口 `5859*0.065≈381` 并发逻辑工作，错时专用上限 1024任务/每 lane1024槽、2MiB 共享逻辑字节、1024×2048B 复用 slab（现有 Arena 构造时有界预分配）；100Mbps 全64B `195312.5pps*0.065≈12695` 大于当前槽限，因此不得声明100Mbps高PPS已适用。去重位窗口由4096扩至65536（仅该可选模式，8KiB标记空间），不让 60ms 有效迟到副本因逻辑位推进被判旧。网络 `wall_blackouts_ms` 仅本独立 Game4 FEC OFF 测试夹具：阶段内声明最多三项 `{"offset_ms":7023,"duration_ms":20}`，合法时长20/50/100ms，以真实单调时间而非 netem 包状态触发双方 owned `WBN_LOSS` TCP DROP，记录每方向 rule 命令开始结束与不确定性；命令偏差过大结果为 INCONCLUSIVE，不伪装完美同步黑洞。旧 W89 `gemodel[3,17,100,0]` 仍按报文推进，二者不可混算。准时交付分母必须是全部送出业务（含丢失），新 `traffic.py` 的1ms截断250ms累计生存到达计数用于与同VM无损A基准计算 base+10/30/60/100ms；幸存包p99独立列出。Game4 错时测试真实 Action/失败在本岗位 `docs/evidence/fec-network-work/` 留痕，默认策略选择在验证全部指定模型后决定。
+
+
+**2026-10-23当前策略**：[机会式v3](../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)要求新请求/双端readback显式 `policy=outer-opportunistic-v3`，只重传一次、成熟认证缺口触发、data_pto=false及真实MTU预算版本。工具接线尚待实施：不能只改label；旧outer-single-repair-v2请求继续按旧标准保存。新UDP上界/无下限、0损近零修复、30%充分负载至少6%线路修复、TCP500应用目标及CPU口径全部按v3，不再套p²恢复门。
+
+2026-10-21 用户直接授权实现。入口：`.github/workflows/network-harness.yml`；请求格式示例 `tests/network/request.json`；预置工况 `tests/network/scenarios.json`。PR21最初只增加测试工具，这是历史实现范围，不是后续岗位的产品只读限制。当前独立岗位按[永久说明](NETWORK_AUTONOMOUS_WORK.md)和[当前计划](NETWORK_CURRENT_PLAN.md)自主修复相关产品、配置、观测与夹具，不等待M0；不改他人游标或接管其他岗位任务。接入正式客户端/服务端 `wbd-v4-client/server`，复用成熟 Go TLS 和真实 Rust raw/TUN owner；**不借测试 helper 伪造数据路径、认证、ACK 或应用交付**。
 
 这落实 `docs/architecture/TEST_PLAN.md` 的持续业务、产物复用、单场景 Actions 和理论允许带原则，不替代它。已有小回显夹具继续作为便宜的功能回归。
 
 ## 开始一次实验
 
-1. 使用已有 `m0-plan012-combined-functional` 构建产物，填 `bundles.A` 的完整产品 SOURCE、build run、attempt、artifact ID 和下载 ZIP SHA256。不要用当前文档 HEAD 冒充编译 SOURCE。示例产物会过期；过期时需要真正重新构建，不能只改编号/hash。
+1. 从任务status选择同源码、目标架构匹配且可核验的已有构建产物，填 `bundles.A` 的完整产品 SOURCE、build run、attempt、artifact ID 和下载 ZIP SHA256。当前适配器支持x86_64的fixed-build与ARM64的原生bundle格式，均须核manifest、文件hash和native runner；按目标选择现有构建流程，不锁定历史workflow。不要用文档 HEAD 冒充产品 SOURCE，产物过期须真正重建，不能只改编号/hash。
 2. 复制 `tests/network/request.json`，或用 `python3 -m tools.network_harness.request off-iid5-rtt50 --output tests/network/off5.json` 展开一个预置工况。这是生成配置，不是本地执行测试。检查产物、速率、损伤、允许带并提交文件。
 3. GitHub Actions → **Public V4 network scenario** → Run workflow，选择包含夹具/请求的分支，`request=tests/network/off5.json`。请求必须是该提交中存在的 JSON，不接受任意脚本或 shell 参数。
 4. 看 job summary 和 `network-<run>-<attempt>` artifact：`result.json`、每 leg `summary.md`、`client/server-traffic.json`、网络快照、损伤变更时刻、进程/宿主采样、产品计数。
-5. 在现有角色 devlog/evidence/cursor 记录本次 run/attempt、精确二进制 SOURCE、夹具 SOURCE、结果和限制；不要另建交接系统。没有产品变化或新故障假设，不重复已完成工况。
+5. 独立岗位在既有 `docs/evidence/network-matrix-work/status.json` 及对应devlog/evidence记录本次run/attempt、产品和夹具SOURCE、结果和限制；正式角色才用其cursor，不要求独立岗位登记角色或创建第二份状态。没有产品变化或新故障假设，不重复已完成工况。
 
-**一个 performance Action 只有一个测量 job、一条预声明工况/seed。** 三阶段损伤波形属于同一场景；没有跨配置矩阵并发。`bundles.B` 加入另一完整产物后，设置 `order=AB` 或 `BA`，两份产物在同 job 顺序运行，前一 leg 停止、销毁独立 namespace 后重建。需要反向顺序时另开一条 BA Action；不能把两台 VM 的 CPU 百分比直接对比。不能在本夹具测量 job 重新编译产品。
+**一个 performance Action 只有一个测量 job、一条预声明工况/seed。** 三阶段损伤波形属于同一场景；不同独立场景可分不同Action并行，不在同runner并发压力。`bundles.B` 加入另一完整产物后，设置 `order=AB` 或 `BA`，两份产物在同 job 顺序运行，前一 leg 停止、销毁独立 namespace 后重建。需要反向顺序时另开一条 BA Action；不能把两台 VM 的 CPU 百分比直接对比。不能在本夹具测量 job 重新编译产品。
 
 ## 已实现的能力和边界
 
@@ -40,9 +49,9 @@
 
 **当前 Game CLI 明确设置 FEC off。** 夹具不能将它标为 Game+FEC strong，也不能把 profile 参数被忽略当作档位生效。请求 Game FEC-on、cipher选择、重传开关/比例会明确拒绝为 UNSUPPORTED，直到产品暴露真实参数和 readback。不要为跑测试修改这条实际语义，更不能偷偷回到旧 Go 数据面。
 
-PR #21接入时的产品日志有 Normal/M2 首发、认证 ACK、修复次数、uncertain、blocked，以及 Game copied/delivered/raw_received/auth_rejected；修复字节预算、有效/多余重传、修复延迟、FEC实际k/r/等待年龄、实时自动档曲线、owner锁等待等公开观测不足。执行时核当前源码，缺项仍填 NOT_OBSERVED；最终 applied 不证明中间升降曲线。缺项影响当前异常归因时，由本任务执行者在授权分支按低成本观测方式导出必要计数并补解析，不等M0，也不为不相关字段建全套监控。本夹具不反向调用测试 ABI 或另造自适应控制器。
+当前分支已有Normal/M2与Game基础计数、外层policy回读、原始TX/RX收支、M1池峰值，以及部分FEC TX和M2/M3/M4证据解析。每次以精确SOURCE的实际字段为准：修复字节预算、有效/多余修复和延迟、完整FEC恢复/队列年龄、auto过程曲线等缺项仍记NOT_OBSERVED，不能由包数或最后一次applied推断。缺项影响当前归因时，本岗位自主补低成本计数/有界抽样和解析，不等待M0，也不先建齐全套监控；FEC专项按当前计划交由独立FEC分支继续。本夹具不反向调用测试ABI或另造自适应控制器。
 
-不支持的后续工况：Windows原生、ARM本机、真实外网、DNS互备/路由/UI、换代/休眠控制、cipher/repair运行时切换、外观抓包、DF超限拒绝的专门功能资格。这些继续用已有产品生命周期/物理夹具。本夹具的 `rate_scale=0` **仍有 RTT 探针**，不能冒充无真实 payload 的 idle 验收；黑洞恢复也不自动等于 lane重建功能通过。
+Linux ARM64 hosted runner已具备原生产物校验和真实业务路径，资格范围读status及精确证据，不再列为未支持；它不代表ARM物理机通过。Windows原生整链路、真实外网、DNS/路由/UI、换代/休眠控制、cipher/repair运行时切换、外观抓包和DF超限等能力须分别核当前公共接线及既有专项证据，不能用本夹具未覆盖等同全项目未实现。未接线如实记UNSUPPORTED/NOT_RUN，在授权范围可补；不绕过readback假跑。本夹具的 `rate_scale=0` **仍有 RTT 探针**，不能冒充无真实payload的idle验收；黑洞恢复也不自动等于lane重建通过。
 
 ## 结果判断，不刷零丢包
 
@@ -50,30 +59,44 @@ PR #21接入时的产品日志有 Normal/M2 首发、认证 ACK、修复次数�
 
 - `PASS_SCOPED_OBSERVATION`：本场景已完整观测且满足声明门槛，不等于所有功能或性能验收完成。
 - `FAIL`：产品业务/完整性/Stop/配置回执/明确允许带失败。保留失败，不由 aggregate 换成通过。
-- `INCONCLUSIVE`：注入不足、夹具丢包、阶段时刻偏差等使本次实验结论不能成立。单次宿主PSI峰值单列警告，不自动否定已经真实完成的业务；持续争用令 `performance_comparison=INCONCLUSIVE_HOST_CONTENTION`，不凭一个CPU/PSI数字宣布容量不足。
+- `INCONCLUSIVE`：夹具/注入器能力不足、阶段时刻偏差或缺测使相应结论不能成立，不一概废弃其他有效观测。TCP自身背压按下段解释。单次宿主PSI峰值单列警告；持续争用令 `performance_comparison=INCONCLUSIVE_HOST_CONTENTION`，不凭一个CPU/PSI数字宣布容量不足。
 - `UNSUPPORTED` / `INVALID_REQUEST`：当前真实入口不支持或请求错误，不能填产品 PASS。
 
-UDP实际发送率默认允许±3%偏差，不以一个 skipped slot 判无效；TCP由于自身拥塞控制出现发送反压要单列 `TCP_BACKPRESSURED`，不直接归咎生成器。未交付通过 `missing_after_drain` 报告，超 deadline 包加未交付包一起统计。p99仅是已到包分布，不能丢掉慢/未到包后宣布低延迟成功。大 UDP 丢一个碎片即可丢整报文，不能与小包同用固定零损门。
+UDP实际发送率默认允许±3%偏差，不以一个skipped slot判无效；TCP自身背压单列 `TCP_BACKPRESSURED`，是该条件下业务目标未达的有效观测，不直接归咎生成器。旧分析器的INCONCLUSIVE及原始结果保留，解释中说明未达目标与缺测/夹具故障的区别；单TCP与多流资格分开，多流跑满不能替代单流。未交付通过 `missing_after_drain` 报告，超deadline包加未交付包一起统计。p99仅是已到包分布，TCP时间还包含应用send前后排队和内核按序交付，不能全算隧道HOL；既不能隐藏未到包，也不能用最终收齐掩盖秒级停顿。大UDP丢一个碎片即可丢整报文，不能与小包同用固定零损门。
 
 `cohort_delivered_app_mbps` 按发送阶段归属，包含 drain 内迟到交付，**不是阶段内即时 goodput**；`arrival_window_app_mbps` 和10ms首到字节桶另报实际时段交付，不能用drain掩盖阶段停顿。总进程CPU（处理双向）按本进程收到业务归一化 CPU-s/GiB 和 CPU-s/Mrecords，并公开分母；需与交付数量、发送比例一同对比。接口外层字节含控制/修复/冗余，但不能把总包数除首发包数当“重传字节超过10%”。稀疏业务还另有比例豁免。
 
-理论参考只解释，不充当万能门槛：IID下两次重传的理想残余为p³，期望修复为p+p²；p=5%时分别0.0125%、5.25%。系统性RS实际(k,r)的单源残余为 `p*P[Bin(k+r-1,p)>=r]`，不是简单“丢包低于r/(k+r)就全恢复”。真实模型还要代入短块分布、及时发送的parity、相关性、多lane共享编码结构。Game独立复制和同时黑洞分别测，不拿p⁴解释相关黑洞。实际修复时序未观测时不能宣称已达到模型。
+理论参考只解释：[机会式v3](../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)使用实际成功修复量计算，不强求p²；无修复也不是UDP失败的充分理由，必须看真实线路与本地额外损失。旧p²/p³仅解释历史policy。FEC仍使用实际(k,r)和及时到达符号，Game区分独立/共同损伤；不能用理论输出或换policy标签替代真实接线/readback。
 
 ## 有限测试顺序与容量停止
 
-1. 先跑示例 Normal/off、10Mbps/方向、lossless，确认生成器和实际产品有容量。需要业务混合，再跑相同速率真实多连接TCP+UDP。
+后续按 [包长与极限容量补充](NETWORK_CAPACITY_ENVELOPE.md) 选择少量代表点，覆盖同维度后可跳过中间档。prepare生成 `capacity-envelope.json`（UDP份额、FEC满组/单源组与netem队列估算），不在测量循环计算、不自动改队列或PASS门。TCP分段和分片另需真实统计。模型可单独用 `python3 -m tools.network_harness.envelope --request tests/network/request.json` 读取。
+
+以下是按当前计划选择的场景类别，不是每次接班必做清单。外层岗位接续自己的status；FEC-only固定/auto专项由独立FEC分支执行，不重复dispatch，组合资格留到集成后定向验证。
+
+1. 复用适用的Normal/off无损容量证据；缺少时补一个有余量的基线，确认生成器和实际产品路径。单TCP、多TCP和UDP混合按待查问题选，不靠增加流数消除单流未达结论。
 2. off 的1%、5%与双向非对称；RTT50/150/600ms，优先实际常用点。高损20%只要求新包不被修复拖死和预算可解释，别强求零丢包。
 3. 固定档以实际支持档位覆盖，选常用strong和低档弱网代表；auto跑低→高→低及上下行不对称，实时档位遥测未接入时保留曲线未验。
 4. Game2/4逻辑3Mbps，独立随机损伤与共享黑洞分开。Game+FEC等产品接线后再扩，不假跑。
 5. 同一源码再做MTU内边界、IPv4大UDP分片、TCP大write、突发发送和限速恢复；延迟/丢包幅度按目标模型解释，不穷举全部笛卡尔积。
-6. 有余量才10→50→100→200→500Mbps，每个点一个独立 Action。小包PPS另列，FEC/Game先算外层膨胀。发现注入器/宿主/内核容量不足就停止更重工况，写 PROJECTED_NOT_TESTED 与依据。产品单核/锁饱和仍是 DATAPLANE_BOTTLENECK 候选，不能以总CPU未到100%掩盖。
+6. 10/50/100/200/500Mbps是可选容量点，不要求逐级跑满。已有低点校准后计算有余量的高点，只有需定位拐点时补中间点；每个性能点一个Action。小包PPS另列，FEC/Game先算外层膨胀。注入器/宿主受限时停止同瓶颈的更重工况，写PROJECTED_NOT_TESTED与依据。产品单核/锁/缓冲导致的内核drop仍是DATAPLANE_BOTTLENECK候选，不能以总CPU未到100%或出现drop就免责。
 
 同VM AB不能消除随时间变化的宿主争用；两leg都要有效且业务交付/冗余语义一致才能比较。当前报告保留成本原数，不自动宣布“优化X%”：由agent先核观测边界、背景PSI、丢包和队列，再给结论。如果数据不足，只补能区分原因的一项观测，别重新跑整套。
 
 `unseeded_recorded` 的损伤是同分布统计比较，**不是同一逐包丢包轨迹**；即使不同环境都支持seed，产品改变发包顺序/速率也会改变哪包被丢。比较结论必须看实测损伤计数/流量，不能把相同请求seed称逐包精确重放。确定性黑洞的时间表和规则另行记录。
 
-## 已执行范围（2026-10-22）
+## 历史已执行范围（2026-10-22，不是当前进度）
 
 夹具 `38c7e2f` 的8项自检及真实内核选项检查已通过。固定产品 `bdcd66c` 的双向10Mbps lossless UDP大小包通过；同产品1% loss / 50ms RTT的UDP+TCP混合场景真实完成但为INCONCLUSIVE：TCP反压使请求的5Mbps/TCP未达到，尾延迟也需继续定位。不是全矩阵PASS，也不是Windows或物理机资格。
 
-精确run、计数、失败解释与artifact hash见 [验收开发日志](../devlog/network-harness-20261021.md) 和 [结构化证据目录](../evidence/network-harness-20261021/)。接班优先复用已暴露的混合业务问题，不无目的追加更高负载。
+上述历史run、计数、失败解释与artifact hash见[验收开发日志](../devlog/network-harness-20261021.md)和[结构化证据目录](../evidence/network-harness-20261021/)。当前进度和下一步只读任务status及后续证据，不从这份历史快照重启任务。
+
+### Linux Normal/off product-owned TUN fq600 default (2026-10-24 decision)
+
+User authorized **default-enable 600Mbps per-flow fq** on the newly owned ephemeral Linux Normal/off TUN. Omitting `--tun-fq-maxrate-mbps` on Normal/off now selects **600**; `--tun-fq-maxrate-mbps=0` explicitly disables it and restores the former kernel default qdisc, and `=600` remains an equivalent explicit configuration. Fixed/Auto/Game keep their old mode-specific default0 because the Linux Normal/off scope alone has product evidence; explicit600 is not yet supported on these modes. The product configures `tc qdisc replace dev OWNED_TUN root fq maxrate 600mbit`, verifies real kernel `tc -d` readback and fails closed when unavailable; Stop removes the ephemeral interface and its qdisc. No host-global sysctls, TCP application socket changes or physical interface qdisc modification. The cap applies **per flow**; evaluate aggregate UDP/TCP coexistence, not a global business500Mbps throttle. In the later H500/2% default600 native run40055236284, kernel fq unexpectedly discarded exactly 2 packets during warmup with the explicit counters `flows_plimit=2`, `drops=2`, `flow_limit=100`, root qdisc `limit=10000` and TUN ingress dropped0. The product-owned fq now also configures `flow_limit 256` (max ~384KiB near-MTU backlog per active flow, global limit10000 unchanged) and checks Go plus kernel `tc -d -j`/`tc -d` readback; this is a **new SOURCE** and must re-qualify the exact original failing H500/2% and TCP500 cold-start rather than relabeling the old run. Do not suppress true local qdisc loss or loosen the zero-drop gate.
+
+Harness `network.product_tun_fq_maxrate_mbps_profiles` values `0` and `600` are **explicit Go CLI overrides**, and absence of a leg means **omit the flag** to exercise the product's actual mode-specific default (600 Normal/off, 0 otherwise). The runner validates product marker, kernel fq600 AND `flow_limit=256` whenever the selected effective rate is600; older source outputs with flow_limit100 remain historical and are not post-change qualification. External test qdisc replacement `tun_qdisc_profiles` / `tun_fq_maxrate_mbps_profiles` cannot replace an enabled product fq in that same leg. For A/B compare explicit0 A vs omitted-default B in one VM, same exact binary/artifact/hash, then report full startup+steady TUN and qdisc losses, app delivered/first/late, p99, outer utilization, repair budgets, CPU denominator and Stop. The previous [opt-in B source evidence](../evidence/network-matrix-work/V3-C-owned-Linux-TUN-fq600-TCP500-real-AB-20261024.json) demonstrates the kernel mechanism but **does not itself qualify the new default SOURCE**, nor FEC/Game/Windows/physical deployments. New requests in v3 only; never reinterpret old experiment outcomes.
+
+### 2026-10-24 newer user decision: ALL Linux public V4 modes owned fq600 default
+
+This supersedes the earlier Normal/off-only paragraph immediately above. For the original Go Linux public CLI, omission of `--tun-fq-maxrate-mbps` must now install `fq maxrate 600mbit flow_limit 256` on **the ephemeral product-owned TUN** before any authenticated Rust owner starts, in `normal`, `fec-fixed`, `fec-auto`, `game2`, and `game4`. The explicit flag value `0` remains a cross-mode rollback. Kernel `tc -d -j qdisc` numeric `options.flow_limit==256`, textual fq600, and the real Go product marker are mandatory on both endpoints. Never replace a product-enabled root qdisc through test-only `tun_qdisc_profiles`; an omitted product profile means default 600 in every mode, not the test-only 0. Keep global fq limit10000, full warmup+steady source TUN and root fq drop accounting, close/Stop cleanup. This is a **Linux networking mechanism**, not a Windows `tc` config; Windows still needs separate appropriate OS native pacing wiring if requested. Strict per-mode real V4 traffic Action results qualify only that mode and SOURCE; no v3 repair, FEC/Game recovery, MTU, fairness, physical or Windows claims can be inferred from a CLI-default switch alone.

@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "id": "P2-Normaloff-10Mbps-lossless-flight-vs-repair-isolation-60s",
+  "reason": "Independent lossless 10Mbps/dir vs 6Mbps/2pct PASS and inaccessible 10Mbps/2pct INCONCLUSIVE: isolate RTT/owner slab flight saturation from loss-repair budget, with new stdout numeric digest. No FEC experiments or rebuild.",
+  "request": {
+    "version": 1,
+    "id": "P2-Normaloff-10Mbps-lossless-flight-vs-repair-isolation-60s",
+    "owner": "network-matrix-work",
+    "seed": 5206,
+    "product": {
+      "mode": "normal",
+      "fec_profile": 1
+    },
+    "traffic": {
+      "c2s_mbps": 10,
+      "s2c_mbps": 10,
+      "udp_share": 0.5,
+      "sizes": [
+        [
+          64,
+          1
+        ],
+        [
+          1287,
+          99
+        ]
+      ],
+      "tcp_flows": 4,
+      "probe_hz": 20,
+      "deadline_ms": 3000,
+      "burst_ms": 0,
+      "max_packets": 20000000,
+      "allow_fragmentation": false
+    },
+    "network": {
+      "outer_mtu": 1500,
+      "lane_loss": "shared",
+      "queue_packets": 32768,
+      "netem_rng": "unseeded_recorded"
+    },
+    "warmup_s": 10,
+    "drain_s": 30,
+    "phases": [
+      {
+        "name": "steady",
+        "seconds": 60,
+        "rate_scale": 1,
+        "c2s": {
+          "delay_ms": 200,
+          "jitter_ms": 0,
+          "loss_pct": 0,
+          "duplicate_pct": 0,
+          "reorder_pct": 0,
+          "rate_mbps": 0,
+          "blackhole_lanes": []
+        },
+        "s2c": {
+          "delay_ms": 200,
+          "jitter_ms": 0,
+          "loss_pct": 0,
+          "duplicate_pct": 0,
+          "reorder_pct": 0,
+          "rate_mbps": 0,
+          "blackhole_lanes": []
+        }
+      }
+    ],
+    "acceptance": {
+      "injection_tolerance_pct": 3,
+      "max_loss_pct": 0.25,
+      "require_retransmission": false
+    },
+    "bundles": {
+      "A": {
+        "source": "de55a1322b4580c60e77322d2d38843caefeec79",
+        "run_id": 39913063383,
+        "attempt": 1,
+        "artifact_id": 12483243411,
+        "sha256": "8a6a8c240430b32f4270085c45569245f65476ba1fb6ff987942a2169a813479",
+        "recovery_policy": "outer-single-repair-v2"
+      }
+    },
+    "order": "A",
+    "policy": "outer-single-repair-v2"
+  },
+  "baseline_evidence": "P2-Normaloff-6Mbps-measured-PASS-20261023",
+  "previous_inconclusive_run": 39915315299,
+  "comparison_scope": "NOT_SAME_VM_AB; do not subtract per-VM CPU causally",
+  "source_bundle_artifact": 12483243411,
+  "hard_monitor": [
+    "per role product/worker CPU/RSS",
+    "actual injector sent rate vs target and TCP backpressure",
+    "TUN pre_read_deferred/arena_failed, source staged vs receiver TUN",
+    "kernel/qdisc backlog and host steal/PSI",
+    "TCP p99 and UDP p99",
+    "Stop/cleanup"
+  ]
+}

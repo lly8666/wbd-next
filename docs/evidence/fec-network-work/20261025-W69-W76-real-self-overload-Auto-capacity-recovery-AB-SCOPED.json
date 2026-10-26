@@ -1,0 +1,384 @@
+{
+  "evidence_schema": "fec-network-work-self-host-overload-v1",
+  "timestamp_utc_date": "2026-10-25",
+  "owner": "fec-network-work",
+  "repository": "lly8666/wbd-next",
+  "branch": "experiment/fec-network-tuning",
+  "final_source_sha": "7ad0ba91b656ff8e9ee965d0c093a18e048971fb",
+  "frozen_arm64_build": {
+    "action_run": 40185113624,
+    "action_conclusion": "success",
+    "artifact_id": 12596370712,
+    "zip_sha256": "ab1407ccc5dd85c3a66c885cd410dbdd27fa7059461f18647d8ca6b41ce7384e",
+    "product": "original Go+Rust FEC2 normal outer repair OFF"
+  },
+  "test_contract": "one performance Action per scenario, same prebuilt source each run; old/new sequential on SAME ARM64 VM for W71/W73/W75; real TLS original M1 M2 authenticated reverse, M3 parity, M4 copied and source TUN; both directions, 75ms one-way; no fake ACK or synthetic HOST_CAPACITY",
+  "wire_conditions": {
+    "original_outer_data_retransmitted": 0,
+    "host_overload_netem_loss_pct": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "load": "6Mbps 30s ->60Mbps 60s ->6Mbps 90s EACH direction; 96% UDP,4% TCP two streams, small 64B60%/256B30%/900B10% by count, probe20Hz; 15s warmup,30s drain",
+    "netem_rate_limit_mbps": 500
+  },
+  "runs": [
+    {
+      "case": "W69",
+      "run": 40179143633,
+      "source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+      "artifact_id": 12593946020,
+      "sha256": "947384b95c0a6bb253de06145d7ce3036a605925da9c74016d8ed36be80597ce",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "condition": "6→18→36→6Mbps each",
+      "business_udp_missing_both": 0,
+      "source_tun_drop_both": 0,
+      "auto_up_both": 0,
+      "end_applied": "Light0 both",
+      "qualification": "did NOT cause true own-host-loss"
+    },
+    {
+      "case": "W70",
+      "run": 40179596226,
+      "source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+      "artifact_id": 12593656927,
+      "sha256": "d0bb36f52d342a9dfb40745c9b858b03dbb4bede68e6e9b591b5849e2b5363f3",
+      "result": "INCONCLUSIVE_due_to_actual_source_TUN_drop",
+      "source_tun_drop": {
+        "client": 774,
+        "server": 1153
+      },
+      "stress_main_udp_missing": {
+        "c2s": 2466,
+        "s2c": 1923
+      },
+      "recover_udp_missing": {
+        "c2s": 0,
+        "s2c": 0
+      },
+      "auto_up_both": 0,
+      "end_applied": "Strong5 both; lifetime cumulative HOST_CAPACITY incorrectly froze genuine healthy-down"
+    },
+    {
+      "case": "W71",
+      "run": 40180341171,
+      "artifact_id": 12593703755,
+      "sha256": "02465d7ce1471f102774fe6c548b4cc8363e78ee1ec661b0818ba33af2cf3464",
+      "order": "AB same VM",
+      "A": {
+        "source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+        "result": "INCONCLUSIVE own-host-drop and lifetime capacity freeze"
+      },
+      "B": {
+        "source": "ca56932a2a95b1a15d4bda939166985446960b5e",
+        "result": "FAIL genuine DOWN requested 2, but native applied 1 pending true both",
+        "stress_udp_missing": {
+          "c2s": 3876,
+          "s2c": 3228
+        },
+        "recovery_udp_missing": {
+          "c2s": 0,
+          "s2c": 0
+        }
+      },
+      "conclusion": "Go recent-capacity delta addressed permanent HOST validity, exposed separate native APPLIED gate"
+    },
+    {
+      "case": "W72",
+      "run": 40180375088,
+      "artifact_id": 12593843118,
+      "sha256": "93c78088614988e55eb546db5b66353753bece232a31b45a16019ad721e3b03e",
+      "source": "ca56932a2a95b1a15d4bda939166985446960b5e",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "condition": "genuine C2S IID 2→20→1% and S2C0→1→0%",
+      "genuine_auto_c2s_up": "Balanced3→Maximum6",
+      "end_applied": "Light0 both"
+    },
+    {
+      "case": "W73",
+      "run": 40183965888,
+      "artifact_id": 12595970410,
+      "sha256": "08681bd94fb01dd339f097d073213b1b626b10fdb5fc968e1107a16e1d830c24",
+      "order": "AB same VM",
+      "A": {
+        "source": "ca56932a2a95b1a15d4bda939166985446960b5e",
+        "result": "FAIL pending native"
+      },
+      "B": {
+        "source": "57c80f9fadd274876e168b1a7dc6fa58a031b2b3",
+        "result": "FAIL pending native applied old1 requested2 both; native parity switch already new-grade but M2 APPLIED lifetime capacity check still rejected"
+      },
+      "conclusion": "native first-source/quiescence change insufficient; historical capacity_censored==0 in native witness was another persistent veto"
+    },
+    {
+      "case": "W74",
+      "run": 40183982270,
+      "artifact_id": 12595266940,
+      "sha256": "340f2bdd136547621095839cd03a23aba579835812f7d478daa9708786aa3bc0",
+      "source": "57c80f9fadd274876e168b1a7dc6fa58a031b2b3",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "genuine_link_c2s_up": "Balanced3→Maximum6",
+      "end_native_applied": {
+        "client": "revision10 Light0 pendingfalse",
+        "server": "revision6 Light0 pendingfalse"
+      }
+    },
+    {
+      "case": "W75",
+      "run": 40185308539,
+      "action_conclusion": "failure_due_to_old_A",
+      "artifact_id": 12595962862,
+      "sha256": "78e34676494447068c194778fbbb86a9829e8a48c86ccf7381d6decbf8eb34da",
+      "order": "AB same ARM64 VM, frozen binaries",
+      "A": {
+        "source": "57c80f9fadd274876e168b1a7dc6fa58a031b2b3",
+        "product_result": "FAIL",
+        "reason": "native still requested2 applied1 profile4 pendingtrue BOTH",
+        "stress_udp_missing": {
+          "c2s": 937,
+          "s2c": 511
+        },
+        "recovery_udp_missing": {
+          "c2s": 0,
+          "s2c": 0
+        },
+        "steady_source_tun_tx_drops": {
+          "client": 497,
+          "server": 129
+        },
+        "warmup_source_tun_tx_drops": {
+          "client": 133,
+          "server": 185
+        },
+        "auto_up_count": {
+          "client": 0,
+          "server": 0
+        },
+        "auto_down_requested_count": {
+          "client": 1,
+          "server": 1
+        },
+        "cpu_seconds_180s_measurement": {
+          "client": 76.09,
+          "server": 76.42
+        }
+      },
+      "B": {
+        "source": "7ad0ba91b656ff8e9ee965d0c093a18e048971fb",
+        "product_result": "INCONCLUSIVE_due_to_REAL_source_TUN_host_drop; NO harness_failures",
+        "scoped_policy_verdict": "PASS_BOTH_ENDPOINTS_NO_FALSE_UP_AND_VALID_NATIVE_FULL_DOWN_APPLIED",
+        "stress_udp_missing": {
+          "c2s": 426,
+          "s2c": 485
+        },
+        "recovery_udp_missing": {
+          "c2s": 0,
+          "s2c": 0
+        },
+        "stress_udp_first_arrival_p99_ms": {
+          "c2s": 85.8,
+          "s2c": 85.2
+        },
+        "steady_source_tun_tx_drops": {
+          "client": 55,
+          "server": 92
+        },
+        "warmup_source_tun_tx_drops": {
+          "client": 1034,
+          "server": 185
+        },
+        "auto_up_count": {
+          "client": 0,
+          "server": 0
+        },
+        "auto_down_requested_count": {
+          "client": 5,
+          "server": 5
+        },
+        "auto_down_grade_sequence": {
+          "client": [
+            5,
+            4,
+            3,
+            2,
+            1,
+            0
+          ],
+          "server": [
+            5,
+            4,
+            3,
+            2,
+            1,
+            0
+          ]
+        },
+        "original_native_final_readback": {
+          "client": {
+            "mode": "auto",
+            "requested_revision": 6,
+            "applied_revision": 6,
+            "profile": 0,
+            "pending": false
+          },
+          "server": {
+            "mode": "auto",
+            "requested_revision": 6,
+            "applied_revision": 6,
+            "profile": 0,
+            "pending": false
+          }
+        },
+        "quality_tick_counts": {
+          "client": {
+            "HOST_CAPACITY": 48,
+            "VALID": 47,
+            "UNKNOWN": 25
+          },
+          "server": {
+            "HOST_CAPACITY": 51,
+            "VALID": 44,
+            "UNKNOWN": 24
+          }
+        },
+        "genuine_m2": {
+          "client": {
+            "positive_samples": 1666768,
+            "positive_mean_us": 155965,
+            "reverse_reports": 73077,
+            "historical_capacity_censored": 1
+          },
+          "server": {
+            "positive_samples": 1667046,
+            "positive_mean_us": 155905,
+            "reverse_reports": 72920,
+            "historical_capacity_censored": 1
+          }
+        },
+        "fec_m1_source_queued": {
+          "client": 3191062,
+          "server": 3186885
+        },
+        "fec_parity_planned_sent": {
+          "client": [
+            2456365,
+            2446920
+          ],
+          "server": [
+            2463098,
+            2452273
+          ]
+        },
+        "fec_recovered_tun": {
+          "client": 735,
+          "server": 370
+        },
+        "original_fec_rx_capacity": {
+          "client": {
+            "rejected_capacity": 0,
+            "pressure_evicted": 0
+          },
+          "server": {
+            "rejected_capacity": 0,
+            "pressure_evicted": 0
+          }
+        },
+        "native_outer_data_retransmitted": 0,
+        "stop_drained_and_owned_namespace_clean": true,
+        "cpu_seconds_180s_measurement": {
+          "client": 75.04,
+          "server": 75.73
+        },
+        "rss_peak_bytes": {
+          "client": 53194752,
+          "server": 53297152
+        }
+      },
+      "precision": [
+        "A vs B independent sequential trials on same VM, host PSI/traffic random variance not causally controlled, do NOT claim percentage performance win",
+        "source TUN drops are upstream of original FEC source, FEC cannot recover them",
+        "warmup drops are present and must not be combined with measured steady counts as a zero-drop gate"
+      ]
+    },
+    {
+      "case": "W76",
+      "run": 40185321854,
+      "artifact_id": 12596107096,
+      "sha256": "79706d9bf5fb2884be1a3c1e2db2f9e34f471ae0beb675ed9bfa2518c9dd6615",
+      "source": "7ad0ba91b656ff8e9ee965d0c093a18e048971fb",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "condition": "genuine link C2S IID2%30s→20%60s→1%90s; S2C0%→1%→0%, 8Mbps each",
+      "C2S_up": "Balanced3→Maximum6 in authentic VALID window",
+      "client_grade_sequence": "5→4→3→6→5→4→3→2→1→0",
+      "server_grade_sequence": "5→4→3→2→1→0",
+      "native_final": {
+        "client": {
+          "requested": 10,
+          "applied": 10,
+          "profile": 0,
+          "pending": false
+        },
+        "server": {
+          "requested": 6,
+          "applied": 6,
+          "profile": 0,
+          "pending": false
+        }
+      },
+      "app_main_udp_missing_c2s_phase": [
+        0,
+        108,
+        0
+      ],
+      "app_main_udp_missing_s2c_phase": [
+        0,
+        5,
+        0
+      ],
+      "source_tun_tx_drops": {
+        "client": 0,
+        "server": 0
+      },
+      "genuine_m2_positive_samples": {
+        "client": 143386,
+        "server": 154122
+      },
+      "native_tun_recovered": {
+        "client": 489,
+        "server": 11270
+      },
+      "original_outer_data_retransmitted": 0,
+      "stop_drained_and_clean": true
+    }
+  ],
+  "fixes": [
+    {
+      "sha": "ca56932a2a95b1a15d4bda939166985446960b5e",
+      "scope": "Go FEC Auto original M2 raw11 latest16s authentic increment not lifetime raw11!=0, preserve saturated/reset as failclosed"
+    },
+    {
+      "sha": "7586374c5f84a91546e6161382ca64b5317c513a",
+      "scope": "Rust FEC owner seamless old-open-block seal, prior parity revision original matrix and monotone IDs, immediate new source without waiting all classes empty"
+    },
+    {
+      "sha": "57c80f9fadd274876e168b1a7dc6fa58a031b2b3",
+      "scope": "Per-M4 FEC revision attribution; old genuine parity cannot testify as NEW APPLIED"
+    },
+    {
+      "sha": "7ad0ba91b656ff8e9ee965d0c093a18e048971fb",
+      "scope": "Native M2 APPLIED capacity guard genuine finite16s quiet-time + post-capacity first-send positive and authenticated reverse M2, no clearing native lifetime counters; real-time MonoNs call. FEC-only code and tests."
+    }
+  ],
+  "caveats": [
+    "W75 performance Action failure includes deliberate old version A failure, B is INCONCLUSIVE for host source TUN loss, NOT an unqualified full service PASS.",
+    "No false UP observed in tested symmetric own-host sender overload; sender authentic M2 capacity censorship is LOCAL only. Cannot guarantee sustained PEER RX CPU/queue drops misclassified as wire; peer authenticated host-health channel not qualified.",
+    "No general 60Mbps all-user losslessness or host throughput capacity guarantee; small UDP high stage B still missing 426/485 and source TUN steady 55/92.",
+    "W76 genuine real link 20% tests rapid UP while normal loss transitions allowed; no fake ACK or unknown-to-clean, only authentic original M2.",
+    "W73 fixed-native stream stage alone did not resolve applied; W75 adds authentic native M2 capacity thaw, preserving real source and parity witnesses.",
+    "These FEC-only isolated Actions do not qualify Windows, Game, actual jumbo65KiB FEC-through-TUN, 100Mbps mixed high-loss TCP recovery or merged exact source."
+  ],
+  "scoped_integration_review_ready": true,
+  "merge_ready": false,
+  "capacity_stop": true,
+  "new_expensive_performance_ladder": "STOP"
+}

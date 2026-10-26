@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "date": "2026-10-24",
+  "branch": "experiment/fec-network-tuning",
+  "product_source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+  "build_run": 40078403217,
+  "build_artifact": 12554277143,
+  "W6": {
+    "run": 40079302195,
+    "artifact": 12554018197,
+    "sha256": "cf93894ae288f3435b6334c0583f933ab0f863a967efbe9e835b7db3b558a94b",
+    "same_vm_order": "AB",
+    "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+    "mode": "normal",
+    "loss_pct": 2,
+    "mbps_per_direction": 2,
+    "ON": {
+      "native_enabled_both": 1,
+      "retransmitted": {
+        "client": 131,
+        "server": 127
+      },
+      "repair_accepted_wire_bytes": {
+        "client": 147322,
+        "server": 150339
+      },
+      "missing": {
+        "c2s": 95,
+        "s2c": 90
+      },
+      "p99_ms": {
+        "c2s": 25.5,
+        "s2c": 25.4
+      },
+      "cpu_s_total_run": {
+        "client": 1.39,
+        "server": 1.43
+      }
+    },
+    "OFF": {
+      "native_enabled_both": 0,
+      "retransmitted": {
+        "client": 0,
+        "server": 0
+      },
+      "candidate_both": 0,
+      "shadow_outstanding_both": 0,
+      "missing": {
+        "c2s": 212,
+        "s2c": 182
+      },
+      "p99_ms": {
+        "c2s": 25.2,
+        "s2c": 25.2
+      },
+      "cpu_s_total_run": {
+        "client": 1.29,
+        "server": 1.32
+      }
+    },
+    "result": "PASS_NATIVE_SWITCH_SEMANTICS_SCOPED"
+  },
+  "W7": {
+    "run": 40079564452,
+    "artifact": 12554836370,
+    "sha256": "f0d6d2456dd4b4f4ac83b024015a6a02eaa06246d94737a1a5e6d701e2be2dab",
+    "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+    "mode": "auto",
+    "netem_phases": [
+      "c2s2% s2c0%",
+      "c2s20% s2c1%",
+      "c2s1% s2c0%"
+    ],
+    "actual_readback_both": "mode=auto requested=1 applied=1 profile=5 pending=false",
+    "real_adaptive_profile_changes": 0,
+    "outer_data_retransmitted_both": 0,
+    "recovered_tun": {
+      "client": 511,
+      "server": 10929
+    },
+    "app_missing_high": {
+      "c2s": 10,
+      "s2c": 0
+    },
+    "app_missing_high_c2s_pct": 0.021246308453906133,
+    "first_p99_high_c2s_ms": 92.9,
+    "measurement_cpu_s": {
+      "client": 15.53,
+      "server": 15.16
+    },
+    "rss_peak_bytes": {
+      "client": 21291008,
+      "server": 20668416
+    },
+    "result": "PASS_STATIC_STRONG_FEC_BUSINESS_FAIL_DYNAMIC_AUTO_WIRING"
+  },
+  "qualification": "SCOPE_ONLY_FIXED_AND_SWITCH_READY_FULL_FEC_AUTO_NOT_READY"
+}

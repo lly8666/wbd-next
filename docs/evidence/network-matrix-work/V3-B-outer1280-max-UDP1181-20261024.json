@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_REAL_NORMAL_OFF_OUTER1280_UNFRAGMENTED_UDP_BOUNDARY",
+  "run": 40037686584,
+  "attempt": 1,
+  "conclusion": "success",
+  "artifact_id": 12538465372,
+  "artifact_zip_sha256": "3853f9085b779249ea1f4bb1f2a35c396c60518471967a6987e35773a3ad14fb",
+  "artifact_zip_sha256_locally_verified": true,
+  "request_source": "00f09878c536367accf5632a410143ad56ac4702",
+  "product_source": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+  "native_build_run": 40001498261,
+  "scenario": {
+    "outer_mtu": 1280,
+    "normal_off": true,
+    "udp_application_payload_bytes": 1181,
+    "ipv4_udp_headers_bytes": 28,
+    "expected_and_observed_tun_mtu_bytes": 1209,
+    "allow_fragmentation": false,
+    "loss_pct": 0,
+    "one_way_ms": 200,
+    "app_offered_mbps_each_direction": 10,
+    "warmup_s": 10,
+    "steady_s": 60,
+    "drain_s": 30
+  },
+  "observed": {
+    "result": "PASS_SCOPED_OBSERVATION",
+    "actual_tun_mtu_readback_client_server": [
+      1209,
+      1209
+    ],
+    "application_delivered_mbps_c2s": 10.000078133333332,
+    "application_delivered_mbps_s2c": 9.999920666666666,
+    "udp_missing_packets_client_server": [
+      0,
+      0
+    ],
+    "source_TUN_steady_kernel_drops_client_server": [
+      0,
+      0
+    ],
+    "firstarrival_p99_ms_c2s_s2c": [
+      200.3,
+      200.3
+    ],
+    "stop_cleanup": "PASS"
+  },
+  "qualification": "V3_B_1280_UDP1181_REAL_NO_FRAGMENT_NORMAL_OFF_BOTH_DIR_PASS; complements prior 1500/1401, not all MTUs or Windows/asymmetric peer constraints"
+}

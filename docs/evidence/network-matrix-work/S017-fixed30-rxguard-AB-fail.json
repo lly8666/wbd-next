@@ -1,0 +1,175 @@
+{
+  "schema": 1,
+  "kind": "SAME_VM_TRUE_FIXED30_AB",
+  "status": "completed",
+  "result": "FAIL_BOTH",
+  "action": {
+    "run_id": 39777563504,
+    "attempt": 1,
+    "conclusion": "failure",
+    "artifact_id": 12425452887,
+    "zip_sha256": "e826263635d1a308342678d76422afba97c0db7abe0ea29bd7aba16b27f893d1",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39777563504"
+  },
+  "harness_source": "24e02709066da736468947fb8772709d0f3c47a6",
+  "scene": {
+    "fec": "fixed",
+    "profile": 6,
+    "one_way_delay_ms": 300,
+    "netem_iid_loss_pct": 30,
+    "per_direction_input_mbps": 2,
+    "udp_share": 0.5,
+    "steady_s": 120,
+    "warmup_s": 15,
+    "drain_s": 30,
+    "seed": 5205,
+    "netem_rng": "unseeded_recorded"
+  },
+  "legs": {
+    "A": {
+      "source": "4d739d957fdc0a7e2db7ecb27b84e26b880f10ae",
+      "build": 39775271407,
+      "artifact": 12424665752,
+      "netem_pct": {
+        "client": 30.324007904450603,
+        "server": 30.015002541752942
+      },
+      "udp": {
+        "c2s": {
+          "sent": 20751,
+          "unique": 13849,
+          "duplicate": 1,
+          "survivor_p99_ms": 379.6
+        },
+        "s2c": {
+          "sent": 20751,
+          "unique": 13892,
+          "duplicate": 1,
+          "survivor_p99_ms": 330.6
+        }
+      },
+      "tcp_delivered": 0,
+      "tcp_backpressure_slots": {
+        "c2s": 234374,
+        "s2c": 234375
+      },
+      "fixed_readback": {
+        "client": "requested1 applied0 pending",
+        "server": "requested1 applied1"
+      },
+      "real_fec_failure_buckets": {
+        "client": {
+          "source_arena": 19,
+          "parity_arena": 60,
+          "source_m4_noncopy": 1,
+          "parity_m4_noncopy": 2,
+          "source_seal": 0,
+          "parity_seal": 0
+        },
+        "server": {
+          "source_arena": 4,
+          "parity_arena": 22,
+          "source_m4_noncopy": 46,
+          "parity_m4_noncopy": 64,
+          "source_seal": 0,
+          "parity_seal": 0
+        }
+      },
+      "fec_sent_planned": {
+        "client": [
+          31929,
+          35109
+        ],
+        "server": [
+          32145,
+          35171
+        ]
+      },
+      "measured_cpu_s": {
+        "client": 4.49,
+        "server": 4.69
+      },
+      "outer_tx_bytes": {
+        "client": 23615110,
+        "server": 23912723
+      },
+      "cpu_psi_mean_pct": 0.0003333333333333333,
+      "stop": true,
+      "cleanup": true,
+      "result": "FAIL"
+    },
+    "B": {
+      "source": "66838c313ff9def6d4febedb61a018c372986154",
+      "build": 39776576033,
+      "artifact": 12424288230,
+      "netem_pct": {
+        "client": 29.976701719035326,
+        "server": 30.013817359628188
+      },
+      "udp": {
+        "c2s": {
+          "sent": 20751,
+          "unique": 13915,
+          "duplicate": 0,
+          "survivor_p99_ms": 330.5
+        },
+        "s2c": {
+          "sent": 20751,
+          "unique": 14003,
+          "duplicate": 0,
+          "survivor_p99_ms": 330.6
+        }
+      },
+      "tcp_delivered": 0,
+      "tcp_backpressure_slots": {
+        "c2s": 234373,
+        "s2c": 234376
+      },
+      "fixed_readback": {
+        "client": "requested1 applied0 pending",
+        "server": "requested1 applied1"
+      },
+      "real_fec_failure_buckets": {
+        "client": {
+          "source_arena": 0,
+          "parity_arena": 0,
+          "source_m4_noncopy": 0,
+          "parity_m4_noncopy": 0,
+          "source_seal": 0,
+          "parity_seal": 0
+        },
+        "server": {
+          "source_arena": 0,
+          "parity_arena": 0,
+          "source_m4_noncopy": 0,
+          "parity_m4_noncopy": 0,
+          "source_seal": 0,
+          "parity_seal": 0
+        }
+      },
+      "fec_sent_planned": {
+        "client": [
+          31957,
+          35171
+        ],
+        "server": [
+          32267,
+          35198
+        ]
+      },
+      "measured_cpu_s": {
+        "client": 4.4,
+        "server": 4.56
+      },
+      "outer_tx_bytes": {
+        "client": 23950453,
+        "server": 24062851
+      },
+      "cpu_psi_mean_pct": 4.938666666666666,
+      "stop": true,
+      "cleanup": true,
+      "result": "FAIL"
+    }
+  },
+  "qualification": "Both FAIL: B systematic/late-parity duplicate hard gate PASS (0 both), but client Fixed applied pending and no TCP delivery; no full Fixed qualification. S017 B CPU PSI ~4.94% vs A ~0% confounds small cost deltas, cannot claim perf gain. UDP survivor-only p99 excludes missing; effective downstream app UDP still ~67% despite heavy FEC redundancy. Actual k/r, peer RX recovered and M2 maturity reasons missing; next instrument cheapest real boundary, do not tune blindly."
+}

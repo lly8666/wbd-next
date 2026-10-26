@@ -1,0 +1,140 @@
+{
+  "schema": 1,
+  "id": "P2-Normaloff-10Mbps-zero-loss-feedback-reserve-AB-60s",
+  "status": "ONE_SAME_VM_AB_AUTO_ACTION_INTENT",
+  "native": {
+    "run_id": 39918681489,
+    "product_sha": "1605c32d5f5bdc99da792959dde99294a13cec77",
+    "bundle_artifact_id": 12486896723,
+    "bundle_zip_sha256": "28a2f6270fcaa8fa4675822b8455579d571ae8abc661df5fd6dc15ef59465804",
+    "mtu9_artifact": 12486996617,
+    "mtu_zip_sha256": "940f7df13f9d73e1b2a1b1275652e140c5fe68dc885c5e774509e438ae1e3d36",
+    "library": "75/75_PASS",
+    "mtu": "nine PASS"
+  },
+  "old_failed": {
+    "run_id": 39917051708,
+    "artifact_id": 12484844980,
+    "result": "FAIL",
+    "netem_loss_pct": 0,
+    "send_valid_UDP_mbps": 5,
+    "old_client": {
+      "feedback_drop": 278718,
+      "duplicate": 13960,
+      "pre_read_deferred": 69837,
+      "process_cpu_s": 2.61,
+      "rss_bytes": 18018304
+    },
+    "old_server": {
+      "feedback_drop": 282025,
+      "duplicate": 13837,
+      "pre_read_deferred": 64629,
+      "process_cpu_s": 2.79,
+      "rss_bytes": 18157568
+    },
+    "udp_missing": {
+      "c2s": 333,
+      "s2c": 533
+    },
+    "tcp_tail_p99_ms": {
+      "c2s": 3325.8,
+      "s2c": 4406.4
+    }
+  },
+  "changed_code": {
+    "commit": "1605c32d5f5bdc99da792959dde99294a13cec77",
+    "scope": "Only data TUN allocation uses Arena.allocate_preserving(16) if Normal RX feedback live; actual original receipt still uses unrestricted allocate and existing authenticated send/Stop; fixed and FEC admissions unchanged",
+    "total_arena_slots": 512,
+    "control_reserved_slots": 16
+  },
+  "request": {
+    "version": 1,
+    "id": "P2-Normaloff-10Mbps-zero-loss-feedback-reserve-AB-60s",
+    "owner": "network-matrix-work",
+    "seed": 5206,
+    "product": {
+      "mode": "normal",
+      "fec_profile": 1
+    },
+    "traffic": {
+      "c2s_mbps": 10,
+      "s2c_mbps": 10,
+      "udp_share": 0.5,
+      "sizes": [
+        [
+          64,
+          1
+        ],
+        [
+          1287,
+          99
+        ]
+      ],
+      "tcp_flows": 4,
+      "probe_hz": 20,
+      "deadline_ms": 3000,
+      "burst_ms": 0,
+      "max_packets": 20000000,
+      "allow_fragmentation": false
+    },
+    "network": {
+      "outer_mtu": 1500,
+      "lane_loss": "shared",
+      "queue_packets": 32768,
+      "netem_rng": "unseeded_recorded"
+    },
+    "warmup_s": 10,
+    "drain_s": 30,
+    "phases": [
+      {
+        "name": "steady",
+        "seconds": 60,
+        "rate_scale": 1,
+        "c2s": {
+          "delay_ms": 200,
+          "jitter_ms": 0,
+          "loss_pct": 0,
+          "duplicate_pct": 0,
+          "reorder_pct": 0,
+          "rate_mbps": 0,
+          "blackhole_lanes": []
+        },
+        "s2c": {
+          "delay_ms": 200,
+          "jitter_ms": 0,
+          "loss_pct": 0,
+          "duplicate_pct": 0,
+          "reorder_pct": 0,
+          "rate_mbps": 0,
+          "blackhole_lanes": []
+        }
+      }
+    ],
+    "acceptance": {
+      "injection_tolerance_pct": 3,
+      "max_loss_pct": 0.25,
+      "require_retransmission": false
+    },
+    "bundles": {
+      "A": {
+        "source": "de55a1322b4580c60e77322d2d38843caefeec79",
+        "run_id": 39913063383,
+        "attempt": 1,
+        "artifact_id": 12483243411,
+        "sha256": "8a6a8c240430b32f4270085c45569245f65476ba1fb6ff987942a2169a813479",
+        "recovery_policy": "outer-single-repair-v2"
+      },
+      "B": {
+        "source": "1605c32d5f5bdc99da792959dde99294a13cec77",
+        "run_id": 39918681489,
+        "attempt": 1,
+        "artifact_id": 12486896723,
+        "sha256": "28a2f6270fcaa8fa4675822b8455579d571ae8abc661df5fd6dc15ef59465804",
+        "recovery_policy": "outer-single-repair-v2"
+      }
+    },
+    "order": "AB",
+    "policy": "outer-single-repair-v2"
+  },
+  "gate": "No FEC scenario, no unsupported CPU causal claim without same VM, zero-loss netem and real source readbacks required"
+}

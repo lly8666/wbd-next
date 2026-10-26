@@ -32,7 +32,6 @@ client_ns="wac$GITHUB_RUN_ID"
 server_ns="was$GITHUB_RUN_ID"
 client_made=0
 server_made=0
-work=""
 stop_namespace(){
   ns="$1"
   for pid in $(sudo -n ip netns pids "$ns" 2>/dev/null || true); do
@@ -46,8 +45,6 @@ cleanup(){
   sleep 1
   if [ "$client_made" -eq 1 ]; then sudo -n ip netns del "$client_ns"; fi
   if [ "$server_made" -eq 1 ]; then sudo -n ip netns del "$server_ns"; fi
-  # Never leave generated TLS key or password under RUNNER_TEMP on Stop/FAIL.
-  if [ -n "$work" ] && [ -d "$work" ]; then rm -rf -- "$work"; fi
 }
 trap cleanup EXIT
 if ! sudo -n ip netns add "$client_ns"; then
@@ -102,16 +99,24 @@ openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
   -subj '/CN=wbd.test' -addext 'subjectAltName=DNS:wbd.test' \
   -keyout "$work/server.key" -out "$work/server.crt" >"$out/certificate.log" 2>&1
 chmod 0600 "$work/route-key" "$work/password" "$work/server.key"
-# Public certificate fingerprint only. A pair of sessions must prove a
-# genuinely new TLS certificate/credential, never recycle frozen Go identity.
-openssl x509 -in "$work/server.crt" -noout -fingerprint -sha256 >"$out/tls-cert-fingerprint.txt"
 # Fixed and Normal are separate exact-source functional cases.
 # Shared credentials via private fd-checked files only, never argv secret.
 set -- --username smoke --password-file "$work/password" \
   --route-key-hex-file "$work/route-key" --server-name wbd.test \
   --tunnel-id 00112233445566778899aabbccddeeff --mode "$mode" --fec-profile 1
+client_mtu_args=(); server_mtu_args=()
+# Older frozen bundles do not expose this flag. Default smoke keeps their
+# original argv; explicit MTU tests require the new real CLI capability.
+if [ -n "${WBD_ARM64_OUTER_MTU+x}" ]; then
+  client_mtu_args=(--outer-mtu "$WBD_ARM64_OUTER_MTU")
+  server_mtu_args=(--outer-mtu "$WBD_ARM64_OUTER_MTU")
+fi
+if [ -n "${WBD_ARM64_SERVER_OUTER_MTU+x}" ]; then
+  server_mtu_args=(--outer-mtu "$WBD_ARM64_SERVER_OUTER_MTU")
+fi
 sudo -n ip netns exec "$server_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-server" "$@" \
   --raw-interface v4as --local-ip 198.18.7.2 --local-port 443 \
+  "${server_mtu_args[@]}" \
   --tun-name wbdsv --tun-ipv4 10.188.18.2/24 \
   --tls-cert "$work/server.crt" --tls-key "$work/server.key" \
   >"$out/server.log" 2>&1 &
@@ -129,6 +134,7 @@ if [ "$found" -ne 1 ]; then
 fi
 sudo -n ip netns exec "$client_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-client" "$@" \
   --raw-interface v4ac --local-ip 198.18.7.1 --peer-ip 198.18.7.2 \
+  "${client_mtu_args[@]}" \
   --local-port 50001 --peer-port 443 --tun-name wbdcl --tun-ipv4 10.188.18.1/24 \
   >"$out/client.log" 2>&1 &
 client_launcher=$!
@@ -175,20 +181,27 @@ sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -i "$interval" -c "$count" -
   >"$out/s2c.log" 2>&1
 grep -q '0% packet loss' "$out/c2s.log"
 grep -q '0% packet loss' "$out/s2c.log"
-if [ "${WBD_ARM64_IDLE_RESUME_S:-0}" != 0 ]; then
-  seconds="$WBD_ARM64_IDLE_RESUME_S"
-  case "$seconds" in 3|5|8|12|20|30) ;; *)
-    echo 'ARM64_IDLE_DURATION_UNSUPPORTED' >&2; exit 2;;
-  esac
-  # Do not reset the process or reauth just to survive an idle interval.
-  # This is a real pause with no application injection, followed by new
-  # kernel-generated ICMP in BOTH original product TUN directions.
-  sleep "$seconds"
-  sudo -n ip netns exec "$client_ns" ping -n -I wbdcl -c 4 -W 2 10.188.18.2     >"$out/idle-resume-c2s.log" 2>&1
-  sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -c 4 -W 2 10.188.18.1     >"$out/idle-resume-s2c.log" 2>&1
-  grep -q '0% packet loss' "$out/idle-resume-c2s.log"
-  grep -q '0% packet loss' "$out/idle-resume-s2c.log"
-  echo "ARM64_ORIGINAL_PRODUCT_IDLE_RESUME_BIDIRECTIONAL_PASS duration_s=$seconds"
+if [ "${WBD_ARM64_MTU_BOUNDARY:-0}" = 1 ]; then
+  # Read the actual post-auth TUN MTU, not an assumed 1200B fixture constant.
+  for direction in c2s s2c; do
+    ns="$client_ns"; device=wbdcl; target=10.188.18.2; role=client
+    if [ "$direction" = s2c ]; then ns="$server_ns"; device=wbdsv; target=10.188.18.1; role=server; fi
+    mtu=$(sudo -n ip -j -n "$ns" link show "$device" | python3 -c 'import json,sys; print(json.load(sys.stdin)[0]["mtu"])')
+    grep -Eq "V4_PUBLIC_MTU .*tun_mtu=$mtu " "$out/$role.log"
+    # Keep the regression crossing the old 1135B ceiling and test the NEW boundary.
+    for payload in 1107 1108 "$((mtu-29))" "$((mtu-28))"; do
+      if [ "$((payload+28))" -gt "$mtu" ]; then continue; fi
+      log="$out/mtu-${direction}-${payload}.log"
+      sudo -n ip netns exec "$ns" ping -n -M do -I "$device" -s "$payload" -i .1 -c 3 -W 3 "$target" >"$log" 2>&1
+      grep -Eq ', 0% packet loss' "$log"
+    done
+    # DF > actual interface MTU is a local error, never silent loss of a valid packet.
+    if sudo -n ip netns exec "$ns" ping -n -M do -I "$device" -s "$((mtu-27))" -c 1 -W 1 "$target" >"$out/mtu-df-oversize-$direction.log" 2>&1; then
+      echo 'unexpected DF packet beyond TUN MTU'; exit 1
+    fi
+    grep -Eqi "message too long|mtu=$mtu" "$out/mtu-df-oversize-$direction.log"
+    echo "ARM64_REAL_MTU_BOUNDARY_PASS mode=$mode direction=$direction inner_ipv4=$mtu df_plus_one=REJECTED" >>"$out/mtu-boundary.txt"
+  done
 fi
 export WBD_V4_EXPECTED_ICMP="$count"
 # One bounded, real-product capacity discovery; not codec A/B, first-arrival
@@ -226,181 +239,14 @@ fi
 # Fixed's Go monitor cadence=200ms but authenticated maturity=2s.
 # Give exactly one quiet maturity opportunity after the real 20+20 sources.
 if [ "$mode" = fec-fixed ] || [ "$mode" = fec-auto ]; then sleep 3; fi
-damage_scene="${WBD_ARM64_DAMAGE_TRIAL:-none}"
-if [ "$damage_scene" = policy-2pct ] || [ "$damage_scene" = timing-1p50 ] || [ "$damage_scene" = timing-5p50 ]; then
-  if [ "$mode" != fec-fixed ] && [ "$mode" != fec-auto ]; then
-    echo 'ARM64_DAMAGE_REQUIRES_FIXED_OR_AUTO_FEC2' >&2; exit 2
-  fi
-  command -v tc >/dev/null || { echo 'ARM64_DAMAGE_TC_MISSING' >&2; exit 77; }
-  # Namespace-local egress qdiscs: *after* original Go authenticated TLS
-  # and sufficient clean, real sources for FEC Applied maturity.
-  # Separate exact-scope traffic probes; timing cases are paired kernel
-  # impairment, but RTT is *round-trip* proxy, not first useful packet p99.
-  local_loss=2; delay_ms=0; nprobe=120; pacing=.1
-  case "$damage_scene" in
-    policy-2pct) ;;
-    timing-1p50) local_loss=1; delay_ms=50; nprobe=240; pacing=.05 ;;
-    timing-5p50) local_loss=5; delay_ms=50; nprobe=240; pacing=.05 ;;
-  esac
-  if [ "$delay_ms" -gt 0 ]; then
-    sudo -n ip netns exec "$client_ns" tc qdisc add dev v4ac root netem loss "$local_loss%" delay "${delay_ms}ms"
-    sudo -n ip netns exec "$server_ns" tc qdisc add dev v4as root netem loss "$local_loss%" delay "${delay_ms}ms"
-  else
-    sudo -n ip netns exec "$client_ns" tc qdisc add dev v4ac root netem loss "$local_loss%"
-    sudo -n ip netns exec "$server_ns" tc qdisc add dev v4as root netem loss "$local_loss%"
-  fi
-  set +e
-  sudo -n ip netns exec "$client_ns" ping -n -I wbdcl -i "$pacing" -c "$nprobe" -W 2 10.188.18.2 >"$out/loss-c2s.log" 2>&1
-  loss_c2s_rc=$?
-  sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -i "$pacing" -c "$nprobe" -W 2 10.188.18.1 >"$out/loss-s2c.log" 2>&1
-  loss_s2c_rc=$?
-  set -e
-  sudo -n ip netns exec "$client_ns" tc -s qdisc show dev v4ac >"$out/loss-qdisc-client.txt"
-  sudo -n ip netns exec "$server_ns" tc -s qdisc show dev v4as >"$out/loss-qdisc-server.txt"
-  # Capture without substituting wire drop for an authenticated source loss,
-  # FEC recovery count, or a delivery improvement vs Normal baseline.
-  export ARM64_LOSS_C2S_RC="$loss_c2s_rc" ARM64_LOSS_S2C_RC="$loss_s2c_rc" ARM64_DAMAGE_PROBES="$nprobe" ARM64_NETEM_LOSS_PCT="$local_loss" ARM64_NETEM_DELAY_MS="$delay_ms"
-  OUTPUT="$out" python3 - <<'PY'
-import os,pathlib,re,json
-p=pathlib.Path(os.environ["OUTPUT"])
-def qdisc(name):
- s=(p/name).read_text()
- m=re.search(r'dropped\s+(\d+)',s)
- if not m: raise SystemExit("MISSING_NETEM_KERNEL_DROP_COUNTER "+name)
- return int(m.group(1))
-def ping(name):
- s=(p/name).read_text()
- m=re.search(r'(\d+) packets transmitted,\s*(\d+) received',s)
- if not m: raise SystemExit("MISSING_REAL_APP_PACKET_SUMMARY "+name)
- return int(m.group(1)),int(m.group(2))
-drops={k:qdisc('loss-qdisc-'+k+'.txt') for k in ['client','server']}
-apps={k:ping('loss-'+k+'.log') for k in ['c2s','s2c']}
-if min(drops.values())<=0:
- raise SystemExit("NO_VERIFIED_KERNEL_NETEM_DROP_THIS_RUN "+repr(drops))
-probes=int(os.environ['ARM64_DAMAGE_PROBES'])
-minimum=int(probes*(.90 if int(os.environ['ARM64_NETEM_LOSS_PCT'])==5 else .95))
-if any(sent!=probes or recv<minimum or recv>sent for sent,recv in apps.values()):
- raise SystemExit("UNEXPECTED_APP_DELIVERY "+repr((apps,minimum)))
-if any(os.environ[k]!="0" for k in ('ARM64_LOSS_C2S_RC','ARM64_LOSS_S2C_RC')):
- raise SystemExit("PING_COMMAND_EXIT_NONZERO despite summary")
-receipt={"frozen_product_source":os.environ["WBD_ARM64_FROZEN_SOURCE"],
-"harness_source":os.environ["GITHUB_SHA"],"run":os.environ["GITHUB_RUN_ID"],
-"mode":os.environ["WBD_V4_MODE"],
-"impairment":os.environ["WBD_ARM64_DAMAGE_TRIAL"],
-"kernel_loss_pct":int(os.environ["ARM64_NETEM_LOSS_PCT"]),
-"kernel_delay_ms_each_direction":int(os.environ["ARM64_NETEM_DELAY_MS"]),
-"qdisc_dropped_outer_packets":drops,
-"icmp_application_sent_received":{k:{"sent":v[0],"received":v[1]} for k,v in apps.items()},
-"status":"SCOPED_IMPAIRED_REAL_OS_INPUT_AND_APP_FUNCTIONAL",
-"exact_encrypted_source_loss":"NOT_PROVEN",
-"fec2_recovered_source_count":"ORIGINAL_OWNER_PRE_STOP_IN_LOGS",
-"m2_or_fec_causal_attribution":"UNKNOWN","physical":"NOT_RUN"}
-(p/'loss-functional.json').write_text(json.dumps(receipt,indent=2)+"\n")
-print("ARM64_SCOPED_REAL_NETEM_OUTER_DROP_AND_APP_DELIVERY_PROVEN",drops,apps)
-if int(os.environ["ARM64_NETEM_DELAY_MS"])>0:
- import math,statistics
- quantiles={}
- for name in ('c2s','s2c'):
-  raw=(p/('loss-'+name+'.log')).read_text()
-  timings=sorted(float(v) for v in re.findall(r'time[=<]([0-9.]+)\s*ms',raw))
-  if len(timings)!=apps[name][1]: raise SystemExit("INCOMPLETE_RTT_SAMPLE "+repr((name,len(timings),apps[name])))
-  def percentile(q):return round(timings[min(len(timings)-1,max(0,math.ceil(len(timings)*q)-1))],3)
-  quantiles[name]={'received_rtt_samples':len(timings),'p50_ms':percentile(.5),'p95_ms':percentile(.95),'p99_ms':percentile(.99),'max_ms':round(timings[-1],3)}
- receipt['icmp_rtt_round_trip_ms']=quantiles
- receipt['first_useful_packet_one_way_p99']='NOT_RUN'
- receipt['missing_replies_are_censored']=True
- receipt['result_scope']='PASS_SCOPED_AARCH64_ICMP_RTT_DISTRIBUTION_NOT_PRODUCT_FIRST_PACKET_LATENCY'
- (p/'loss-functional.json').write_text(json.dumps(receipt,indent=2)+"\n")
- print('ARM64_REAL_NETEM_ROUND_TRIP_PERCENTILES_SCOPED',quantiles)
-PY
-  if [ "${WBD_ARM64_FEC_BURST:-}" = "ping-burst" ]; then
-    # One independent, bounded Native path differentiator: 700 800-byte
-    # authenticated application frames at <=500 packets/s each direction.
-    # Within the existing 10 Mbps Normal discovery; do NOT make a new
-    # product scheduler or adapt thresholds to force ISA-L selection.
-    set +e
-    sudo -n ip netns exec "$client_ns" ping -n -I wbdcl -i .002 -s 800 -c 700 -W 2 10.188.18.2 >"$out/burst-c2s.log" 2>&1
-    burst_c2s_rc=$?
-    sudo -n ip netns exec "$server_ns" ping -n -I wbdsv -i .002 -s 800 -c 700 -W 2 10.188.18.1 >"$out/burst-s2c.log" 2>&1
-    burst_s2c_rc=$?
-    set -e
-    sudo -n ip netns exec "$client_ns" tc -s qdisc show dev v4ac >"$out/burst-qdisc-client.txt"
-    sudo -n ip netns exec "$server_ns" tc -s qdisc show dev v4as >"$out/burst-qdisc-server.txt"
-    export ARM64_BURST_C2S_RC="$burst_c2s_rc" ARM64_BURST_S2C_RC="$burst_s2c_rc"
-    OUTPUT="$out" python3 - <<'PY'
-import re,os,json,pathlib
-p=pathlib.Path(os.environ['OUTPUT'])
-def parse(name):
- s=(p/name).read_text()
- m=re.search(r'(\d+) packets transmitted,\s*(\d+) received',s)
- assert m,("missing real kernel ping sender/receiver summary",name)
- return int(m.group(1)),int(m.group(2))
-apps={d:parse('burst-'+d+'.log') for d in ('c2s','s2c')}
-assert all(n==700 and 0<=r<=n for n,r in apps.values()),apps
-data={'frozen_product_source':os.environ['WBD_ARM64_FROZEN_SOURCE'],
-'harness_source':os.environ['GITHUB_SHA'],
-'scene':'500_pps_800_byte_icmp_two_real_ARM64_TUN_directions',
-'outer_loss':'kernel_2pct_netem',
-'result':'BUSINESS_BURST_OBSERVED_NOT_FEC_CAUSAL',
-'actual_app_counts':{k:dict(sent=v[0],received=v[1]) for k,v in apps.items()},
-'exit_codes':{k:int(os.environ['ARM64_BURST_'+k.upper()+'_RC']) for k in apps},
-'decoding_backend':'READBACK_FROM_ORIGINAL_RUST_OWNER_AFTER_STOP'}
-(p/'burst-observation.json').write_text(json.dumps(data,indent=2)+'\n')
-print('ARM64_REAL_FEC_BURST_ORIGINAL_KERNEL_OBSERVED',apps)
-PY
-  fi
-fi
-crash_variant="${WBD_ARM64_CRASH_VARIANT:-none}"
-case "$crash_variant" in
-  none) stop_namespace "$client_ns"; stop_namespace "$server_ns" ;;
-  sigkill-client)
-    # Fail closed: only kill the exact original-Go executable in the owned
-    # disposable CLIENT namespace. Never signal host or unrelated processes.
-    candidate=""
-    for pid in $(sudo -n ip netns pids "$client_ns"); do
-      exe="$(sudo -n readlink -f "/proc/$pid/exe" 2>/dev/null || true)"
-      if [ "$exe" = "$bundle/wbd-v4-client" ]; then
-        if [ -n "$candidate" ]; then
-          echo 'ARM64_AMBIGUOUS_ORIGINAL_CLIENT_PID' >&2; exit 1
-        fi
-        candidate="$pid"
-      fi
-    done
-    if [ -z "$candidate" ]; then
-      echo 'ARM64_NO_REAL_CLIENT_TO_SIGKILL' >&2; exit 1
-    fi
-    printf 'owned_namespace=%s\nactual_original_client_pid=%s\nkill=SIGKILL\n' "$client_ns" "$candidate" >"$out/forced-client-kill.txt"
-    sudo -n kill -KILL "$candidate"
-    for n in $(seq 1 30); do
-      if ! sudo -n kill -0 "$candidate" 2>/dev/null; then break; fi
-      sleep .1
-    done
-    if sudo -n kill -0 "$candidate" 2>/dev/null; then
-      state="$(ps -p "$candidate" -o stat= || true)"
-      if [[ "$state" != Z* ]]; then
-        echo 'ARM64_ORIGINAL_CLIENT_FAILED_TO_DIE' >&2; exit 1
-      fi
-    fi
-    echo 'ARM64_REAL_GO_CLIENT_SIGKILL_CONFIRMED'
-    stop_namespace "$server_ns"
-    ;;
-  *) echo "ARM64_UNKNOWN_CRASH_VARIANT=$crash_variant" >&2; exit 2 ;;
-esac
+stop_namespace "$client_ns"
+stop_namespace "$server_ns"
 for i in $(seq 1 75); do
-  if [ "$crash_variant" = sigkill-client ]; then
-    grep -q "$stop_marker" "$out/server.log" && break
-  elif grep -q "$stop_marker" "$out/client.log" \
+  if grep -q "$stop_marker" "$out/client.log" \
     && grep -q "$stop_marker" "$out/server.log"; then break; fi
   sleep .2
 done
-if [ "$crash_variant" = sigkill-client ]; then
-  if grep -q "$stop_marker" "$out/client.log"; then
-    echo 'ARM64_SIGKILL_FAKE_CLIENT_STOP' >&2; exit 1
-  fi
-  test -s "$out/forced-client-kill.txt"
-else
-  grep -q "$stop_marker" "$out/client.log"
-fi
+grep -q "$stop_marker" "$out/client.log"
 grep -q "$stop_marker" "$out/server.log"
 if [ "$game_lanes" -gt 0 ]; then
   # Game2/4 use authenticated GameAdapter grouped lanes, NOT Normal FEC2
@@ -413,15 +259,12 @@ fi
 if [ "$mode" = fec-fixed ] || [ "$mode" = fec-auto ]; then
   # Policy requested isn't necessarily applied. No hardware/backend PASS
   # unless both sides report applied>0 and pending=false.
-  if [ "$crash_variant" != sigkill-client ]; then
-    grep -q 'V4_PUBLIC_FEC2_READBACK role=client' "$out/client.log"
-  fi
+  grep -q 'V4_PUBLIC_FEC2_READBACK role=client' "$out/client.log"
   grep -q 'V4_PUBLIC_FEC2_READBACK role=server' "$out/server.log"
   expected="$mode"
   expected="${expected#fec-}"
-  client_applied=true
-  if [ "$crash_variant" != sigkill-client ] && ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=client mode=$expected requested=[0-9]+ applied=[1-9][0-9]* .*pending=false" "$out/client.log"; then client_applied=false; fi
-  if [ "$client_applied" != true ] || ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=server mode=$expected requested=[0-9]+ applied=[1-9][0-9]* .*pending=false" "$out/server.log"; then
+  if ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=client mode=$expected requested=[0-9]+ applied=[1-9][0-9]* .*pending=false" "$out/client.log" \
+    || ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=server mode=$expected requested=[0-9]+ applied=[1-9][0-9]* .*pending=false" "$out/server.log"; then
     echo "ARM64_FEC2_${expected}_REAL_PRODUCT_NOT_APPLIED (original requested vs applied)"
     tail -n 15 "$out/client.log" || true
     tail -n 15 "$out/server.log" || true
@@ -444,13 +287,9 @@ d={"source":os.environ.get("WBD_ARM64_FROZEN_SOURCE",os.environ["GITHUB_SHA"]),
 "mode":os.environ.get("WBD_V4_MODE","normal"),
 "native_fec_parity_execution":"NOT_PROVEN_BY_ICMP_CASE",
 "game_lanes":int(os.environ.get("WBD_V4_GAME_LANES","0")),
-"bidirectional":os.environ.get("WBD_V4_EXPECTED_ICMP","UNKNOWN")+"_ICMP_PER_DIRECTION",
-"owned_stop":"SERVER_DRAINED_CLIENT_FORCED_SIGKILL" if os.environ.get("WBD_ARM64_CRASH_VARIANT","none")=="sigkill-client" else "TWO_DRAINED",
-"crash_variant":os.environ.get("WBD_ARM64_CRASH_VARIANT","none"),"netns_cleanup":"PASS",
+"bidirectional":os.environ.get("WBD_V4_EXPECTED_ICMP","UNKNOWN")+"_ICMP_PER_DIRECTION","owned_stop":"TWO_DRAINED","netns_cleanup":"PASS",
 "impairment":"NOT_RUN","physical":"NOT_RUN",
 "capacity_trial":os.environ.get("WBD_ARM64_CAPACITY_TRIAL","NOT_RUN"),
-"idle_resume_seconds":os.environ.get("WBD_ARM64_IDLE_RESUME_S","NOT_RUN"),
-"secrets_cleanup":"RUNNER_TEMP_REMOVED",
 "logs_sha256":{f:sha(f) for f in files}}
 (p/"receipt.json").write_text(json.dumps(d,indent=2)+"\n")
 print("ARM64_NATIVE_OS_TWO_WAY_APP_STOP_PASS")

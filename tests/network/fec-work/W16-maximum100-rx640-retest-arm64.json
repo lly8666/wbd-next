@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "id": "FEC-W16-Maximum100-RX640-Original-Stop-Counterexample-ARM64",
+  "owner": "fec-network-work",
+  "seed": 8100,
+  "policy": "outer-opportunistic-v3",
+  "product": {
+    "mode": "fec-fixed",
+    "fec_profile": 6,
+    "repair_enabled": false
+  },
+  "traffic": {
+    "c2s_mbps": 100,
+    "s2c_mbps": 100,
+    "udp_share": 1,
+    "sizes": [
+      [
+        64,
+        1
+      ],
+      [
+        1287,
+        99
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "deadline_ms": 5000,
+    "burst_ms": 0,
+    "max_packets": 5000000,
+    "allow_fragmentation": false
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "shared",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded"
+  },
+  "warmup_s": 15,
+  "drain_s": 30,
+  "phases": [
+    {
+      "name": "capacity_100",
+      "seconds": 30,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 300,
+        "loss_pct": 30,
+        "rate_mbps": 400
+      },
+      "s2c": {
+        "delay_ms": 300,
+        "loss_pct": 30,
+        "rate_mbps": 400
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false,
+    "max_loss_pct": 1,
+    "require_zero_source_tun_drops_full_run": true,
+    "require_zero_tun_root_qdisc_drops_full_run": true
+  },
+  "bundles": {
+    "A": {
+      "source": "8ec552bdd146cf33233130c4779ed5339e27a3c7",
+      "run_id": 40097251707,
+      "attempt": 1,
+      "artifact_id": 12561755643,
+      "sha256": "866aae86f355e76b8269ea86a72fd15748ee0448d4095085a374695678f45674",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false
+    }
+  },
+  "order": "A"
+}

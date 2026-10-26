@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "id": "P1-authRTT-native-pass-AB-intent-20261023",
+  "native": {
+    "run_id": 39892105601,
+    "attempt": 1,
+    "source": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
+    "conclusion": "success",
+    "product_artifact_id": 12475695809,
+    "product_sha256": "ce6768331557890b37c8d158e847a108dc54a90cdf54247605f9fd7ef31dab17",
+    "mtu_artifact_id": 12475681205,
+    "mtu_sha256": "86a8c940fa376bf9dd149be21938e35c3fdfbb325ad69ffe1c5328096102f9f5",
+    "adaptive_timing_unit": "PASS",
+    "fixed_m2_unit": "PASS",
+    "mtu_cases": [
+      "normal:1500:1500",
+      "fec-fixed:1500:1500",
+      "fec-auto:1500:1500",
+      "normal:1280:1280",
+      "fec-fixed:1280:1280",
+      "fec-auto:1280:1280",
+      "fec-fixed:1500:1280",
+      "game2:1500:1500",
+      "game4:1280:1280"
+    ],
+    "runtime_native_dispatch": "NOT_OBSERVED"
+  },
+  "experiment": {
+    "request_id": "P1-Normal2pct-authRTT-old-new-AB-60s",
+    "order": "AB",
+    "same_vm": true,
+    "A": {
+      "source": "18860b9dfe4931d8aba05943fad484677590571c",
+      "run_id": 39889364428,
+      "attempt": 1,
+      "artifact_id": 12474012306,
+      "sha256": "dd103f8db5e9eb07b9f795c3118ecb0e09d939b3ecb75f6cbb7f47f0e61850cf"
+    },
+    "B": {
+      "source": "2a388f743cde0ab6d69fb47e2c3f6cd9a6127301",
+      "run_id": 39892105601,
+      "attempt": 1,
+      "artifact_id": 12475695809,
+      "sha256": "ce6768331557890b37c8d158e847a108dc54a90cdf54247605f9fd7ef31dab17"
+    },
+    "decision": "B must materially reduce spurious original_frozen_retransmitted/quota_or_capacity_blocked versus A and recover UDP below1% without Stop/config regressions; compare TCP p99/backpressure and CPU. One seed only."
+  },
+  "scope": "Native release/function gate PASS only; business P1 qualification pending this A/B. Shadow remains4096; no H500 claim."
+}

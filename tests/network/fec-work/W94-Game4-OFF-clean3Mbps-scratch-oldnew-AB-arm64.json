@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "id": "FEC-W94-Game4-OFF-BoundedScratch-RxInplace-Clean3Mbps-AB",
+  "owner": "fec-network-work",
+  "seed": 8210944,
+  "policy": "outer-opportunistic-v3",
+  "product": {
+    "mode": "game4",
+    "fec_profile": 1,
+    "game_fec": "off"
+  },
+  "traffic": {
+    "c2s_mbps": 3,
+    "s2c_mbps": 3,
+    "udp_share": 0.96,
+    "sizes": [
+      [
+        64,
+        6
+      ],
+      [
+        96,
+        8
+      ],
+      [
+        160,
+        10
+      ],
+      [
+        255,
+        8
+      ],
+      [
+        256,
+        6
+      ],
+      [
+        257,
+        7
+      ],
+      [
+        512,
+        10
+      ],
+      [
+        900,
+        15
+      ],
+      [
+        1287,
+        30
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "deadline_ms": 6000,
+    "burst_ms": 0,
+    "max_packets": 5000000,
+    "allow_fragmentation": false,
+    "observe_size_classes": true,
+    "observe_independent_flows": true
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "independent",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded",
+    "owned_veth_static_neighbour": true
+  },
+  "warmup_s": 15,
+  "drain_s": 30,
+  "phases": [
+    {
+      "name": "clean_baseline",
+      "seconds": 20,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false,
+    "max_loss_pct": 1,
+    "max_small_udp_loss_pct": 1,
+    "max_small_udp_p99_ms": 800,
+    "loss_gate_phases": [
+      "clean_baseline"
+    ],
+    "require_zero_source_tun_drops_full_run": true,
+    "require_zero_tun_root_qdisc_drops_full_run": true,
+    "cross_business_hol": true
+  },
+  "bundles": {
+    "A": {
+      "source": "221bb440563258d72636abd2ba4f8c0bd537e893",
+      "run_id": 40214123744,
+      "attempt": 1,
+      "artifact_id": 12607041955,
+      "sha256": "a8eb92d818016f8804347d5a39cf31328663cacffb0136fbaf04ad55f76aa6d6",
+      "recovery_policy": "outer-opportunistic-v3"
+    },
+    "B": {
+      "source": "fb65d8136c32e3e2182a09425f517cd7b98162ce",
+      "run_id": 40214830539,
+      "attempt": 1,
+      "artifact_id": 12607335802,
+      "sha256": "1e5afba4a73968228ebf1d7085a7b5e0ca874c5dd77c22cc9f0ec42b6b7cc310",
+      "recovery_policy": "outer-opportunistic-v3"
+    }
+  },
+  "order": "AB"
+}

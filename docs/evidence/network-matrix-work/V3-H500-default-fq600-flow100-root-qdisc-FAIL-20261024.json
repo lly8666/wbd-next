@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "kind": "true-native H500 500Mbps OUTER line UDP one direction 2% actual netem strict FAIL",
+  "product_source": "8d5bbdbca636e129481393fdbfa10b2c0e31e999",
+  "action": {
+    "run": 40055236284,
+    "attempt": 1,
+    "request_source": "dbffcdfd672ba4ece9dc29638a22b46600f0c5c2",
+    "artifact": 12544894146,
+    "zip_sha256": "0e863ad289573c61c55039624c77b6cfe3b37ba82bd95e9d5c15cdb9ec624cec",
+    "locally_verified": true,
+    "result": "FAIL_SOURCE_TUN_FQ_ROOT_QDISC_DROP_OR_MISSING_REQUIRED"
+  },
+  "scenario": {
+    "app_c2s_mbps": 370,
+    "outer_config_line_mbps_per_direction": 500,
+    "netem_loss_pct": 2,
+    "oneway_ms": 200,
+    "udp_size_packet_weights": [
+      [
+        64,
+        1
+      ],
+      [
+        1401,
+        99
+      ]
+    ],
+    "projected_outer_fresh_mbps": 396.3975,
+    "measured_outer_firstwire_bytes_horizon": 3716776458,
+    "warmup_s": 15,
+    "steady_s": 60,
+    "drain_s": 30
+  },
+  "observed": {
+    "app_injected_mbps": 370.0083193333,
+    "app_delivered_mbps": 363.4338774666,
+    "app_missing": 35552,
+    "first_arrival_survivors_p99_ms": 201.8,
+    "actual_netem_drop_steady_pct": 2.0000726358,
+    "first_wire_bytes": 3716776458,
+    "accepted_outer_repair_bytes": 8400780,
+    "R_over_F_pct": 0.2260233,
+    "R_over_C_pct": 0.17921664,
+    "source_TUN_kernel_drop_warmup_steady": [
+      0,
+      0
+    ],
+    "original_source_TUN_read_equals_staged": 2502778,
+    "arena_failed": 0,
+    "pre_read_deferred": 0,
+    "netem_kernel_UDP_sendrecv_errors": 0,
+    "CPU_steady_seconds_client_server": [
+      31.09,
+      33.48
+    ],
+    "host_psi_some_peak_pct": 9.89,
+    "host_steal_pct": 0,
+    "stop_cleanup": true
+  },
+  "causal_kernel_owning_tun_qdisc": {
+    "phase_warmup_start": {
+      "drops": 0,
+      "flows_plimit": 0
+    },
+    "phase_before_steady": {
+      "drops": 2,
+      "flows_plimit": 2,
+      "overlimits": 0,
+      "backlog": 0,
+      "qlen": 0,
+      "packets": 500984,
+      "throttled": 238840
+    },
+    "phase_measurement_end": {
+      "drops": 2,
+      "flows_plimit": 2,
+      "overlimits": 0,
+      "qlen": 0,
+      "packets": 2502774,
+      "throttled": 1192420
+    },
+    "root_fq_rate_bytes_sec": 75000000,
+    "kernel_fq_flow_limit_packets": 100,
+    "kernel_fq_global_limit_packets": 10000,
+    "reason": "exact equality drops=flows_plimit=2 proves bounded per-flow fq queue rejection during warmup, not line 2% netem nor insufficient CPU throughput"
+  },
+  "remedy": {
+    "new_native_source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
+    "scope": "owned Linux Normal/off fq600 flow_limit256, total fq global limit unchanged10000",
+    "new_max_near_mtu_bytes_per_flow": 384000,
+    "extra_max_near_mtu_bytes_per_flow": 234000,
+    "remain_strict_local_drop_gate": true,
+    "measure_again": "Action40056093313 after harness JSON readback correction; no projection as PASS"
+  },
+  "preflight_not_product_failures": [
+    {
+      "action": 40055969268,
+      "artifact": 12545107445,
+      "reason": "harness tc -d multiline text format false rejection before any business"
+    },
+    {
+      "action": 40055987386,
+      "reason": "same harness pre-business parser false rejection, no true TCP500 execution"
+    }
+  ],
+  "not_claimed": [
+    "500Mbps application business throughput (app offered370)",
+    "H500/2% product PASS",
+    "CPU optimization vs failed source",
+    "Windows/physical native"
+  ]
+}

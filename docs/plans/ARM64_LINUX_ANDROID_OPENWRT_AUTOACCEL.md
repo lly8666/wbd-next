@@ -1,16 +1,6 @@
 # Linux ARM64 first: native client/server, hardware-auto FEC and product verification
 
-## Mainline integration (2026-10-22)
-
-User authorized integrating feature SOURCE `e94c08e6fd4939b78c4573b07da39f090a873aa1` into main. The precise merge/regression state is [here](../evidence/arm64-main-integration-20261022.json). Main's `arm64-public-go-build.yml` now builds the current SOURCE on native AArch64 with pinned ISA-L **by default**, then runs genuine Go TLS/Rust/raw/TUN/Stop. `arm64-platform-acceleration.yml` checks ARM64 plus x64 backend regression; these are functional jobs, not performance comparisons. Product/backend selection is PreferNative with eligible Scalar fallback, not RequireNative. Bare Cargo builds without the native feature remain portable Scalar. FEC mode defaults are unchanged; Game+FEC, complete auto/lifecycle, network-matrix failures and physical qualification retain their independent boundaries.
-
-Physical qualification below is future work, not a prerequisite to merge already scoped Actions-qualified support. Do not automatically deploy or wait for two physical ARM devices to consume main. Android/OpenWrt remain deferred and their workflows manual-only. The dated records below preserve their original SOURCE and FAIL/NOT_RUN scope; they do not override newer receipts.
-
-**Latest parallel closure:** two independent native AArch64 network impairment jobs (Fixed 1%/50ms, Auto 5%/50ms) PASS on original TLS/Rust/TUN, 240/240 ICMP each direction and real kernel drop counters; scoped RTT p99 is **not** product first-useful-packet p99. Client SIGKILL + server Stop + new-credential TLS rejoin PASS. See [evidence](../evidence/arm64-linux-native-checkpoint-20261022.md). Remaining hard gate: **two real physical ARM64 Linux devices** plus authenticated source-specific loss cause and product delivery p99. Run [physical test checklist](../testing/ARM64_PHYSICAL_LINUX_2HOST.md); no false physical PASS.
-
-**Latest 2026-10-22 update:** Same product's original Go/Rust TX and RX ISA-L use has positive evidence; [two real OS process generations + 8s idle-resume PASS](https://github.com/lly8666/wbd-next/actions/runs/39764396868). [Native-first and deliberate no-ISA-L Scalar-only builds + real Fixed 2% FEC source-recovery/TUN PASS](https://github.com/lly8666/wbd-next/actions/runs/39764728463), with independent [Native-first build regression PASS](https://github.com/lly8666/wbd-next/actions/runs/39764728263). See [precise evidence](../evidence/arm64-linux-native-checkpoint-20261022.md). Physical two hosts and per-ciphertext source-loss association NOT_RUN. Android/OpenWrt deferred.
-
-**Latest same-source checkpoint:** [Linux ARM64 native evidence](../evidence/arm64-linux-native-checkpoint-20261022.md). Normal/Fixed/Auto/Game4 kernel functional and Normal 60-second 10 Mbps discovery passed; Game2 scoped logs passed but workflow failed its final harness predicate. Now verified: 15.8–15.9× scoped codec encode / 15.6× scoped decode CPU, Fixed+Auto 2% kernel loss and complete app delivery, authenticated original Go/Rust FEC2 recovery in TUN, actual original-TX Native **400** and Scalar **564** encoding quanta, original-RX Native **53** and Scalar **7** decoding calls on the same product SOURCE. Remaining: ciphertext-specific loss causality, product latency p99 and physical Linux ARM64; these are NOT_RUN. Android and OpenWrt remain deferred.
+**Latest same-source checkpoint:** [Linux ARM64 native evidence](../evidence/arm64-linux-native-checkpoint-20261022.md). Normal/Fixed/Auto/Game4 kernel functional and Normal 60-second 10 Mbps discovery passed; Game2 scoped logs passed but workflow failed its final harness predicate. Remaining: actual FEC loss recovery, hardware backend CPU A/B, physical Linux ARM64. Android and OpenWrt remain deferred.
 
 ## Recovery update — Linux ARM64 scoped product functional
 - ARM64 genuine original Go + Rust + pinned ISA-L **BUILD PASS**: Action [39751199619](https://github.com/lly8666/wbd-next/actions/runs/39751199619), SOURCE `34f89d303710f7c0e1d9c1c89cfff038c9839b54`, artifact manifest contains two Go binaries, Rust shared engine, SHA256 hashes.
@@ -26,7 +16,7 @@ Physical qualification below is future work, not a prerequisite to merge already
 - Deferred clients remain Android/OpenWrt; no new work on them until Linux ARM64 product priorities close.
 
 
-**Active scope (2026-10-22): Linux ARM64 client AND server only.** Android and OpenWrt clients have been explicitly deferred by the user. Their source and scoped BUILD receipts are preserved; do not add more Android/OpenWrt features, jobs, packages, or release qualifications during the Linux phase. Windows ARM64 is out of scope. The separate feature branch is now an integration source; continued tasks consume main or their authorized experiment branch, without changing other workers' registry/cursors.
+**Active scope (2026-10-22): Linux ARM64 client AND server only.** Android and OpenWrt clients have been explicitly deferred by the user. Their previously committed source and scoped BUILD receipts are preserved; do not add more Android/OpenWrt features, jobs, packages, or release qualifications during the Linux phase. Windows ARM64 is out of scope. This is a separate feature branch; do not alter the main registry, role cursor, or other workers' files.
 
 ## Exact recovery and evidence
 - Starting branch HEAD at reprioritization: `b9bf7cc7f6a422b3566cf17e2cb409daf6698556`. This is **not** a product PASS.
@@ -63,4 +53,4 @@ Physical qualification below is future work, not a prerequisite to merge already
 - OpenWrt musl .ipk/procd client, SDK/real-router interoperability.
 - Any new Android/OpenWrt Actions are **manual only**, not part of Linux ARM64 required gates. Existing build-only results remain historical and are not OS or product-qualified.
 
-**Next action:** exact original owner ciphertext-source-to-qdisc-drop identity with preserved AEAD/PN and no packet logs unless strictly diagnostic, OR two physical Linux ARM64 devices if available. Native-first, scalar-only fallback, actual product native encode/decode, full TUN FEC recovery, and two-stop/restart-with-idle qualified in scoped native Actions; avoid re-running. Android/OpenWrt remain deferred.
+**Next action:** bounded ARM64 scalar/native FEC2 same-job CPU evidence and/or one specifically dropped-source recovery proof, without repeating already successful kernel samples.

@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+  "request": "tests/network/fec-work/W5-v3-fixed-max30-outeroff-50m-300ms-arm64.json",
+  "run": 40079244149,
+  "artifact": 12554751036,
+  "zip_sha256": "3262bde8142031d02e4cc6034cabcdfda26153250780359ddf1f82b011ff2fe4",
+  "result": "PASS_SCOPED_OBSERVATION",
+  "config": {
+    "source_mbps_each": 12,
+    "outer_rate_mbps_each": 50,
+    "one_way_delay_ms": 300,
+    "loss_target_pct": 30,
+    "mode": "fixed",
+    "profile": "maximum",
+    "r_by_k": "ceil(1.25*k)",
+    "outer_repair_enabled": false
+  },
+  "actual": {
+    "native_applied": {
+      "client": 1,
+      "server": 1
+    },
+    "repair_copies": {
+      "client": 0,
+      "server": 0
+    },
+    "source_packets": {
+      "c2s": 70602,
+      "s2c": 70601
+    },
+    "delivered": {
+      "c2s": 70545,
+      "s2c": 70556
+    },
+    "missing": {
+      "c2s": 57,
+      "s2c": 45
+    },
+    "residual_pct": {
+      "c2s": 0.08073425681992012,
+      "s2c": 0.06373847395929236
+    },
+    "netem_actual_pct": {
+      "client": 29.96929364454935,
+      "server": 29.94033895341849
+    },
+    "fec_r_sent": {
+      "client": 116159,
+      "server": 116106
+    },
+    "full_k16_blocks": {
+      "client": 5442,
+      "server": 5442
+    },
+    "k1_blocks": {
+      "client": 2501,
+      "server": 2372
+    },
+    "partial_blocks": {
+      "client": 3184,
+      "server": 3117
+    },
+    "recovered_tun": {
+      "client": 27035,
+      "server": 27247
+    },
+    "native_fec_tx_unknown_capacity": {
+      "client": 1,
+      "server": 1
+    },
+    "fec_tx_policy_failure_and_m4_failure": {
+      "client": 0,
+      "server": 0
+    },
+    "p99_ms": {
+      "c2s": 315.3,
+      "s2c": 315.2
+    },
+    "cpu_s": {
+      "client": 7.92,
+      "server": 7.84
+    },
+    "rss_peak_bytes": {
+      "client": 22425600,
+      "server": 21905408
+    },
+    "tun_source_drop_both": 0,
+    "host_psi_warning": false,
+    "stop": true
+  },
+  "model": {
+    "full_16_20_pct_at_iid30": 0.02282576,
+    "note": "True mixed k/r exact weighted binomial q NOT OBSERVED because TX native only exposes bucket hist; partial and realistic delay/correlation may explain deviation. No claim of exact model fit."
+  },
+  "target": "both residual <=1%",
+  "judgement": "PASS_SCOPED, not cross-platform or Auto"
+}

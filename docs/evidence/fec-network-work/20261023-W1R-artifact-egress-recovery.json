@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "failed_run": 39915779256,
+  "job_id": 120288928597,
+  "failed_step": "Fetch existing exact source binaries; verify ZIP, manifest and all binary hashes",
+  "exception": "HTTP Error 503: Egress is over the account limit",
+  "on": "GitHub Actions artifact archive_download_url redirect",
+  "before_product": true,
+  "plan": "First-party actions/download-artifact to immutable pinned source run; verify published GitHub digest, exact run/source/attempt, manifest and each ELF SHA; ZIP digest not independently rehashed in prefetched path",
+  "retry_case": "tests/network/fec-work/W1RR-fixed-max-off-loss5-arm64.json",
+  "source": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57",
+  "build_artifact": 12484770973
+}

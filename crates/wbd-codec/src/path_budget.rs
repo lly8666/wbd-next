@@ -19,11 +19,16 @@ pub enum FecReservation {
     Fixed { parity_shards: u8 },
     /// Reserve the full FEC header even if adaptive is currently off.
     Adaptive { maximum_parity_shards: u8 },
+    /// V3 product FEC2 reserves the largest wire repair headroom: source10,
+    /// repair14. This is not the historical FEC v1 56-byte header.
+    V3Fec2Fixed,
+    V3Fec2Adaptive,
 }
 impl FecReservation {
     fn overhead(self) -> Result<usize, BudgetError> {
         let r = match self {
             Self::FixedOff => return Ok(0),
+            Self::V3Fec2Fixed | Self::V3Fec2Adaptive => return Ok(14),
             Self::Fixed { parity_shards } => parity_shards,
             Self::Adaptive { maximum_parity_shards } => maximum_parity_shards,
         };

@@ -1,0 +1,118 @@
+{
+  "schema": "W103_GAME2_GAME4_FIXED6_REAL_CLEAN_OUTER_DATA_OFF_V1",
+  "date": "2026-10-26",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "source": {
+    "sha": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "build_run": 40260662919,
+    "artifact_id": 12623678360,
+    "sha256": "04d209b7ef1e887af6599622aaf71efc34381451c847e844cf18c2006ae9708f",
+    "native_game_off_guard": "PASS",
+    "native_game_fec_math": "PASS"
+  },
+  "config": {
+    "game_fec": "fixed6",
+    "outer_repair_enabled": false,
+    "lanes": [
+      2,
+      4
+    ],
+    "each_direction_mbps": 3,
+    "udp_share": 0.96,
+    "real_tcp_flows": 2,
+    "one_way_ms": 75,
+    "netem_loss": 0,
+    "scenario_one_per_action": true
+  },
+  "game2": {
+    "run": 40260913377,
+    "request_commit": "f6a2245cc041282f74edb88c8347865c1cb0d56a",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "artifact": 12624044407,
+    "zip_sha256": "e7f4dd518ed4e000d3d01fab87c0a78a4e493a3c1d6a6a1ef6c788c9284095b4",
+    "repair_enabled_native": [
+      0,
+      0
+    ],
+    "outer_data_retransmitted": [
+      0,
+      0
+    ],
+    "blocked_duplicate": [
+      0,
+      0
+    ],
+    "first_lane_copied": [
+      103586,
+      103486
+    ],
+    "fec_parity_sent_client_server": [
+      29935,
+      29906
+    ],
+    "genuine_udp_tcp_injected_equals_delivered_both": true,
+    "loss": 0,
+    "max_p99_udp_tcp_ms": 78.2,
+    "cpu_s": [
+      2.69,
+      2.67
+    ],
+    "rss_peak_bytes": [
+      26497024,
+      26513408
+    ],
+    "cpu_psi_peak_pct": 2.9,
+    "stop_drained": true
+  },
+  "game4": {
+    "run": 40260918778,
+    "request_commit": "197214d9bd3de4b55683607b47c0c97a2a08571e",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "artifact": 12623938052,
+    "zip_sha256": "8d9f8176706bdc6e9e548b74305fb64784783560846911a7cacce2fcae474559",
+    "repair_enabled_native": [
+      0,
+      0
+    ],
+    "outer_data_retransmitted": [
+      0,
+      0
+    ],
+    "blocked_duplicate": [
+      0,
+      0
+    ],
+    "first_lane_copied": [
+      207020,
+      206468
+    ],
+    "fec_parity_sent_client_server": [
+      29907,
+      29816
+    ],
+    "genuine_udp_tcp_injected_equals_delivered_both": true,
+    "loss": 0,
+    "max_p99_udp_tcp_ms": 78.2,
+    "cpu_s": [
+      4.1,
+      4.17
+    ],
+    "rss_peak_bytes": [
+      40120320,
+      40095744
+    ],
+    "cpu_psi_peak_pct": 31.09,
+    "host_warning": "PSI spike, no high-rate escalation",
+    "stop_drained": true
+  },
+  "boundaries": [
+    "Proves explicit Game outer DATA retry policy M4 real readback + no same-lane retransmit on clean; genuine damaged traffic W104 in progress",
+    "An independent copy on each lane is a FIRST copy, not outer DATA retransmit",
+    "FEC parity sends are new logical IDs, not counted as DATA retry",
+    "Game ON remains legacy no one-lane V3 repair ledger, no claim active ON retransmit implementation",
+    "No Windows/physical device, skip remains"
+  ],
+  "capacity_stop": true,
+  "merge_ready": false
+}

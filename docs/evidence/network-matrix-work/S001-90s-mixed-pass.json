@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "request": "arm64-off-duplex-mixed-10m-after-exec-fix-90s",
+  "run_id": 39761756907,
+  "attempt": 1,
+  "artifact_id": 12417973654,
+  "artifact_sha256": "2824cfd6d55ac3c661e9dc3d4d2ecd3f27ce275a3b794daa9a5100cc8d5924d9",
+  "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+  "product_build_run": 39759842150,
+  "product_artifact": 12417786567,
+  "harness_source": "3f918ddce1b234ba57f104f9ccc997fc9692bc48",
+  "result": "PASS_SCOPED_OBSERVATION",
+  "scope": "native ARM64 ubuntu24.04 one kernel namespaces, no impairment, 90s each direction 10Mbps total (5 UDP + 5 TCP), independent duplex, 4 TCP flows",
+  "traffic": [
+    {
+      "direction": "c2s",
+      "protocol": "udp",
+      "offered_mbps": 5,
+      "injected_mbps": 4.999962311111111,
+      "delivered_mbps": 4.999962311111111,
+      "sent": 77822,
+      "delivered": 77822,
+      "missing": 0,
+      "p99_ms": 0.5
+    },
+    {
+      "direction": "c2s",
+      "protocol": "tcp",
+      "offered_mbps": 5,
+      "injected_mbps": 4.999962311111111,
+      "delivered_mbps": 4.999962311111111,
+      "sent": 77822,
+      "delivered": 77822,
+      "missing": 0,
+      "p99_ms": 0.6
+    },
+    {
+      "direction": "s2c",
+      "protocol": "udp",
+      "offered_mbps": 5,
+      "injected_mbps": 4.999962311111111,
+      "delivered_mbps": 4.999962311111111,
+      "sent": 77822,
+      "delivered": 77822,
+      "missing": 0,
+      "p99_ms": 0.5
+    },
+    {
+      "direction": "s2c",
+      "protocol": "tcp",
+      "offered_mbps": 5,
+      "injected_mbps": 4.999962311111111,
+      "delivered_mbps": 4.999962311111111,
+      "sent": 77822,
+      "delivered": 77822,
+      "missing": 0,
+      "p99_ms": 0.6
+    }
+  ],
+  "host": {
+    "machine": "aarch64",
+    "logical_cpus": 4,
+    "kernel": "7.0.0-1017-azure",
+    "cpu_psi_mean": 2.8965555555555556,
+    "cpu_psi_peak": 3,
+    "steal_pct_peak": 0,
+    "local_netem_drops": 0,
+    "kernel_udp_rcvbuf_errors": 0,
+    "kernel_tcp_retrans_segments": 0
+  },
+  "product": {
+    "cpu_s_measured": {
+      "client": 14.21,
+      "server": 13.98
+    },
+    "rss_peak_bytes_including_warmup": {
+      "client": 16355328,
+      "server": 16437248
+    },
+    "native_fec_runtime_selection": "NOT_OBSERVED",
+    "repair_packets_total_including_warmup_drain": 172,
+    "repair_wire_bytes_and_10pct_budget": "NOT_OBSERVED",
+    "fec_k_r": "NOT_OBSERVED",
+    "stop_drained_both": true
+  },
+  "injectors": {
+    "cpu_s_observed_including_warmup_setup_drain": {
+      "client": 12.62,
+      "server": 12.7
+    },
+    "rss_peak_bytes": {
+      "client": 22949888,
+      "server": 22974464
+    }
+  },
+  "cleanup": {
+    "owned_namespaces_absent": true
+  },
+  "limitations": [
+    "native ARM64 one GitHub host, not physical, Windows, Game or impaired link",
+    "per-protocol p99 only delivered packet cohort; missing separate (zero here)",
+    "CPU costs product process includes two directions each and are NOT same-job old/new comparison",
+    "No runtime native-vs-scalar selector evidence; compiled feature only",
+    "No repair-byte 10 percent budget proof"
+  ]
+}

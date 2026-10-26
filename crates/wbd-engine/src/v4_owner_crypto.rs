@@ -55,6 +55,15 @@ pub(crate) enum ProtectedCryptoError {
     Early(EarlyError),
 }
 
+// Genuine codec REPAIR_HEADER is 12 bytes; its body includes a protected
+// 2-byte source length. RECORD_RESERVATION=14 applies to original-source
+// admission, NOT to a second check of the already-parsed repair body.
+// Keep this in the product owner seal path, not a test-only acceptance rule.
+#[cfg(feature="fec2_product_record")]
+fn original_fec2_repair_symbol_fits(body_len:usize,record_budget:usize)->bool{
+    body_len<=record_budget.saturating_sub(wbd_codec::fec_v2::REPAIR_HEADER)
+}
+
 /// The scoped owner still owns dispatch, generation, driver leases and Stop.
 /// This is the reusable AEAD/PN half of that owner; no payload is delivered.
 pub(crate) struct ProtectedScopedCrypto {
@@ -91,11 +100,10 @@ impl ProtectedScopedCrypto {
         };
         let tx = LaneTxCrypto::new_for_suite(tx_keys, usize::from(tx_limit), suite)
             .map_err(|_| ProtectedCryptoError::Tx)?;
-        // Bounded preliminary replay parameters; NOT a production throughput
-        // selection. Effective values must be recorded before qualification.
+        // Bounded high-rate envelope; real AEAD still precedes replay.
         let replay = ReplayWindowConfig {
-            pn_per_second: 1000, cache_horizon_ms: 3000,
-            fec_horizon_ms: 0, rtt_ms: 500, metadata_budget_bytes: 8192,
+            pn_per_second: 100_000, cache_horizon_ms: 3000,
+            fec_horizon_ms: 0, rtt_ms: 600, metadata_budget_bytes: 256*1024,
         };
         let rx = ReplayProtectedLaneRx::new_for_suite(
             rx_keys, usize::from(rx_limit), suite, replay,
@@ -303,25 +311,65 @@ pub(crate) struct BackgroundRxReceipt{
     pub(crate) pending:u32,
     pub(crate) invalid:u32,
     pub(crate) failed:u32,
-    #[cfg(feature="fec2_product_record")]
-    pub(crate) fec2_accepted_source:u32,
-    #[cfg(feature="fec2_product_record")]
-    pub(crate) fec2_accepted_repair:u32,
-    #[cfg(feature="fec2_product_record")]
-    pub(crate) fec2_delivered_source:u32,
-    #[cfg(feature="fec2_product_record")]
-    pub(crate) fec2_delivered_recovered:u32,
-    #[cfg(feature="fec2_product_record")]
-    pub(crate) fec2_decode_native:u32,
-    #[cfg(feature="fec2_product_record")]
-    pub(crate) fec2_decode_scalar:u32,
+    // Diagnostic-only bounded aggregates; no PN, IP, payload or per-packet
+    // logging leaves the RX owner. All are after the original M4 tuple gate.
+    pub(crate) open_duplicate:u32,
+    pub(crate) open_retired:u32,
+    pub(crate) open_invalid:u32,
+    pub(crate) normal_unique:u32,
+    pub(crate) normal_late_unique:u32,
+    pub(crate) normal_completed:u32,
+    pub(crate) normal_malformed:u32,
+    pub(crate) normal_discarded:u32,
+    pub(crate) normal_udp_delivered:u32,
+    pub(crate) normal_tcp_delivered:u32,
+    pub(crate) normal_other_delivered:u32,
     // Exact peer data PN, only after this SAME protected original M3
     // opener consumed an authentic, unique normal/FEC business record.
     // Never acknowledge unauthenticated tuples, replay or malformed LINK.
     pub(crate) authenticated_data_pn:Option<u64>,
     // Only created after the SAME moved original M3 AEAD + unique PN opener.
     pub(crate) reverse_kind1:Option<AuthenticatedNormalKind1>,
+    // Genuine original AEAD/PN FEC counts only: source seen/accepted 0,1;
+    // parity seen/accepted 2,3; systematic/recovered candidates 4,5;
+    // actual TUN writes 6,7; TUN failure 8, FEC reject 9, disabled 10.
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec_rx:[u32;11],
+    // Successful real M4 TUN-write classification, no packet metadata stored.
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fec_rx_ip:[u32;8],
 }
+// Bounded numeric classification ONLY after authentic first delivery reaches
+// original M4 TUN. Do not retain addresses, ports, seq, ACK or payload.
+#[cfg(feature="fec2_product_record")]
+fn original_fec_tun_ip_class(frame:&[u8],recovered:bool,tally:&mut [u32;8]){
+    let index=usize::from(recovered);
+    if frame.len()<20 || frame[0]>>4!=4 {
+        tally[4]=tally[4].saturating_add(1);return
+    }
+    match frame[9]{
+        17=>tally[index]=tally[index].saturating_add(1),
+        6=>{
+            tally[2+index]=tally[2+index].saturating_add(1);
+            let ihl=usize::from(frame[0]&0x0f)*4;
+            if ihl<20||frame.len()<ihl+20{
+                tally[7]=tally[7].saturating_add(1);return
+            }
+            let tcp_h=usize::from(frame[ihl+12]>>4)*4;
+            let total=usize::from(u16::from_be_bytes([frame[2],frame[3]]));
+            if tcp_h<20||total>frame.len()||total<ihl+tcp_h{
+                tally[7]=tally[7].saturating_add(1);return
+            }
+            let data_len=total-ihl-tcp_h;
+            if data_len>0{tally[6]=tally[6].saturating_add(1)}
+            else if frame[ihl+13]&0x10!=0{
+                tally[5]=tally[5].saturating_add(1);
+            }else{tally[7]=tally[7].saturating_add(1)}
+        },
+        _=>tally[4]=tally[4].saturating_add(1),
+    }
+}
+
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[derive(Debug)]
 pub(crate) struct AuthenticatedNormalKind1{
@@ -330,6 +378,11 @@ pub(crate) struct AuthenticatedNormalKind1{
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 impl ProtectedBackgroundRx{
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fn fec2_capacity_report(&self)->
+        Option<crate::v4_fec2_live_rx::Fec2RxCapacityReport>{
+        self.fec2.as_ref().map(|(blocks,_,_)|blocks.capacity_report())
+    }
     #[cfg(feature="fec2_product_record")]
     pub(crate) fn arm_fec2_original_go_only(
         &mut self,
@@ -355,6 +408,10 @@ impl ProtectedBackgroundRx{
         let mut receipt=BackgroundRxReceipt::default();
         if tun.generation()!=self.generation||tun.is_stopping()
             ||len==0||len>slab.writable().len(){return receipt}
+        // Diagnostic high-water BEFORE unique admission. A legitimate
+        // backward PN beyond 32 source records is a late first arrival,
+        // consistent with either network reordering or a useful repair.
+        let rx_high_before=self.rx.max_seen();
         // Under the opt-in release feature, both kind1 and FEC kinds2/3
         // consume the SAME moved original Go-authenticated replay window.
         #[cfg(feature="fec2_product_record")]
@@ -366,42 +423,46 @@ impl ProtectedBackgroundRx{
         let open_result=self.rx.open_unique_in_place(&mut slab.writable()[..len]);
         let opened=match open_result{
             Ok(opened)=>opened,
-            Err(_)=>return receipt,
+            Err(wbd_codec::record_replay::UniqueOpenError::Duplicate)=>{
+                receipt.open_duplicate=1;
+                return receipt
+            },
+            Err(wbd_codec::record_replay::UniqueOpenError::Retired)=>{
+                receipt.open_retired=1;
+                return receipt
+            },
+            Err(wbd_codec::record_replay::UniqueOpenError::InvalidRecord(_))=>{
+                receipt.open_invalid=1;
+                return receipt
+            },
         };
         #[cfg(feature="fec2_product_record")]
         if opened.kind==2||opened.kind==3{
             use std::sync::atomic::Ordering;
+            if opened.kind==2{receipt.fec_rx[0]+=1}else{receipt.fec_rx[2]+=1}
             let Some((blocks,exact,enabled))=self.fec2.as_mut()else{
                 receipt.invalid=1;return receipt
             };
             // Only original Go's verified Fixed APPLIED (after real
             // kernel copy), not pending/control metadata, enables RX.
             if !enabled.load(Ordering::Acquire){
-                receipt.invalid=1;return receipt
+                receipt.invalid=1;receipt.fec_rx[10]+=1;return receipt
             }
             receipt.authenticated_link=1;
-            let before=blocks.decode_backend_calls();
             match blocks.accept_authenticated(*exact,opened.kind,opened.payload,now){
                 Ok(deliveries)=>{
+                    if opened.kind==2{receipt.fec_rx[1]+=1}else{receipt.fec_rx[3]+=1}
                     receipt.authenticated_data_pn=Some(opened.pn);
-                    if opened.kind==2{receipt.fec2_accepted_source=1}
-                    else{receipt.fec2_accepted_repair=1}
-                    let after=blocks.decode_backend_calls();
-                    receipt.fec2_decode_native=u32::try_from(after.0.saturating_sub(before.0))
-                        .unwrap_or(u32::MAX);
-                    receipt.fec2_decode_scalar=u32::try_from(after.1.saturating_sub(before.1))
-                        .unwrap_or(u32::MAX);
                     if deliveries.is_empty(){receipt.pending=1}
                     for first in deliveries{
+                        if first.recovered{receipt.fec_rx[5]+=1}else{receipt.fec_rx[4]+=1}
                         if tun.write_authenticated_ipv4(self.generation,&first.frame)
                             .ok()==Some(first.frame.len()){
                             receipt.delivered=receipt.delivered.saturating_add(1);
-                            if first.recovered{
-                                receipt.fec2_delivered_recovered=receipt.fec2_delivered_recovered.saturating_add(1);
-                            }else{
-                                receipt.fec2_delivered_source=receipt.fec2_delivered_source.saturating_add(1);
-                            }
+                            if first.recovered{receipt.fec_rx[7]+=1}else{receipt.fec_rx[6]+=1}
+                            original_fec_tun_ip_class(&first.frame,first.recovered,&mut receipt.fec_rx_ip);
                         }else{
+                            receipt.fec_rx[8]+=1;
                             // A well-formed FEC symbol is not necessarily
                             // a valid business IPv4 frame. M4 remains final
                             // validator; no app delivery is inferred.
@@ -409,7 +470,11 @@ impl ProtectedBackgroundRx{
                         }
                     }
                 }
-                Err(_)=>receipt.invalid=1,
+                Err(reason)=>{
+                    blocks.record_rejection(reason);
+                    receipt.invalid=1;
+                    receipt.fec_rx[9]+=1;
+                },
             }
             return receipt
         }
@@ -436,15 +501,28 @@ impl ProtectedBackgroundRx{
         }
         if opened.kind!=AUTHENTICATED_LINK_KIND{return receipt}
         receipt.authenticated_link=1;
+        receipt.normal_unique=1;
+        receipt.normal_late_unique=u32::from(rx_high_before.is_some_and(
+            |high|high.saturating_sub(opened.pn)>32 && opened.pn<high));
         let mut link_report=NormalOffReport::default();
         self.normal.accept_authenticated_link(
             opened.pn,opened.payload,now.0/1_000_000,
             &mut |_pn,business|{
                 if tun.write_authenticated_ipv4(self.generation,business).is_ok(){
                     receipt.delivered+=1;
+                    if business.len()>9{
+                        match business[9]{
+                            17=>receipt.normal_udp_delivered+=1,
+                            6=>receipt.normal_tcp_delivered+=1,
+                            _=>receipt.normal_other_delivered+=1,
+                        }
+                    }
                 }else{receipt.failed+=1}
             },&mut link_report);
         receipt.pending=link_report.pending;
+        receipt.normal_completed=link_report.completed;
+        receipt.normal_malformed=link_report.malformed;
+        receipt.normal_discarded=link_report.discarded;
         receipt.invalid=link_report.malformed.saturating_add(link_report.discarded);
         if receipt.invalid==0 && receipt.failed==0 {
             receipt.authenticated_data_pn=Some(opened.pn);
@@ -511,9 +589,13 @@ impl ProtectedScopedOwner {
         }
         // Construct all resources locally; NONE is published on half failure.
         let crypto=ProtectedScopedCrypto::prepare_from_protected_go(cold,expected)?;
-        let wire=usize::from(cold.identity().server_limit);
+        // Limits name the RECEIVER. The client receives up to client_limit,
+        // not server_limit; unequal authenticated MTUs must remain directional.
+        let id=cold.identity();
+        let wire=usize::from(if expected.server{id.server_limit}else{id.client_limit});
+        let tx_wire=usize::from(if expected.server{id.client_limit}else{id.server_limit});
         let limits=QueueLimits {
-            slots:32,bytes:wire.saturating_mul(32),max_age_ns:50_000_000,
+            slots:32,bytes:tx_wire.saturating_mul(32),max_age_ns:50_000_000,
         };
         let rx_limits=QueueLimits {
             slots:64,bytes:wire.saturating_mul(64),max_age_ns:50_000_000,
@@ -532,9 +614,7 @@ impl ProtectedScopedOwner {
             rx_tx,token,crypto,state:OwnerPhase::Prepared,
             generation:expected.owner_generation,go_lane:expected.go_lane_id,
             epoch:expected.logical_epoch,rx_wire_limit:wire,
-            tx_wire_limit:usize::from(if expected.server {
-                cold.identity().client_limit
-            }else{cold.identity().server_limit}),
+            tx_wire_limit:tx_wire,
             peer_mss,peer_mss_advertised,
             next_tx_seq:None,server:expected.server,
             #[cfg(feature="m0_fec2_owner_probe")]
@@ -970,7 +1050,9 @@ impl ProtectedScopedOwner {
                 let rep=wbd_codec::fec_v2::parse_repair(
                     frame,budget.record_payload_mtu)
                     .map_err(|_|ProtectedCryptoError::Tx)?;
-                if rep.body.len()>budget.record_payload_mtu-14{
+                if !original_fec2_repair_symbol_fits(
+                    rep.body.len(),budget.record_payload_mtu
+                ){
                     return Err(ProtectedCryptoError::Tx)
                 }
             }
@@ -1060,6 +1142,7 @@ impl ProtectedScopedOwner {
     /// original active lane AEAD/PN and M1 frozen kernel queue as real DATA.
     /// Control does not create another sealer or another epoch, and never
     /// authorizes an FEC APPLIED revision by itself.
+    #[cfg(feature="fec2_product_record")]
     pub(crate) fn seal_original_authenticated_receipt(
         &mut self,mut slab:UniqueBuffer,tlv:&[u8],budget:FrameBudget,
         carrier_snapshot:u64,now:MonoNs,
@@ -1570,6 +1653,32 @@ impl ProtectedScopedOwner {
     }
 }
 
+
+#[cfg(all(test,feature="fec2_product_record"))]
+mod m0_fec_rx_ip_class_contract {
+    use super::original_fec_tun_ip_class;
+    #[test]
+    fn m0_original_fec_tun_classifies_only_post_m4_ipv4_protocol(){
+        let mut c=[0u32;8];
+        let mut udp=[0u8;28];udp[0]=0x45;
+        udp[2..4].copy_from_slice(&28u16.to_be_bytes());udp[9]=17;
+        original_fec_tun_ip_class(&udp,false,&mut c);
+        original_fec_tun_ip_class(&udp,true,&mut c);
+        let mut tcp=[0u8;40];tcp[0]=0x45;
+        tcp[2..4].copy_from_slice(&40u16.to_be_bytes());
+        tcp[9]=6;tcp[32]=0x50;tcp[33]=0x10;
+        original_fec_tun_ip_class(&tcp,false,&mut c);
+        let mut data=tcp.to_vec();data.push(123);
+        data[2..4].copy_from_slice(&41u16.to_be_bytes());
+        original_fec_tun_ip_class(&data,true,&mut c);
+        let mut other=udp;other[9]=1;
+        original_fec_tun_ip_class(&other,false,&mut c);
+        assert_eq!(c,[1,1,1,1,1,1,1,0]);
+        original_fec_tun_ip_class(&[],true,&mut c);
+        assert_eq!(c[4],2);
+    }
+}
+
 #[cfg(test)]
 mod m0_tx_seq64_contract {
     #[test]
@@ -1583,5 +1692,36 @@ mod m0_tx_seq64_contract {
         // Wire projection must not shrink the monotone owner offset.
         assert!(first>u64::from(u32::MAX) && next>first);
         assert_eq!(u64::MAX.checked_add(1),None);
+    }
+}
+
+
+#[cfg(all(test,feature="fec2_product_record"))]
+mod m0_fec2_full_mtu_repair_body_contract {
+    use super::original_fec2_repair_symbol_fits;
+    use wbd_codec::fec_v2::{
+        parse_repair,BackendChoice,Profile,Rs16,RECORD_RESERVATION,REPAIR_HEADER,
+    };
+    #[test]
+    fn m0_fec2_kind3_full_mtu_repair_budget_invariant(){
+        // Outer 1500 / auth record budget for Fixed: one genuine near-TUN-MTU
+        // source reaches maximum, and protected repair length adds 2B.
+        let record_budget=1329usize;
+        let frame=vec![0x6a;record_budget-RECORD_RESERVATION];
+        let (encoded,_)=Rs16::new().encode_owned(
+            1,&[frame.as_slice()],Profile::Maximum,0,1,
+            record_budget,BackendChoice::Scalar,
+        ).expect("actual codec encodes in-budget full-sized source");
+        let rep=parse_repair(&encoded[0],record_budget).expect(
+            "real codec accepts repair length exactly at record budget"
+        );
+        assert_eq!(encoded[0].len(),record_budget);
+        assert_eq!(rep.body.len(),record_budget-REPAIR_HEADER);
+        assert!(original_fec2_repair_symbol_fits(rep.body.len(),record_budget));
+        // Source's fourteen-byte reservation cannot be charged again to
+        // this already-encoded body. Still reject any truly oversized body.
+        assert!(rep.body.len()>record_budget-RECORD_RESERVATION);
+        assert!(!original_fec2_repair_symbol_fits(rep.body.len()+1,record_budget));
+        assert!(!original_fec2_repair_symbol_fits(1,0));
     }
 }
