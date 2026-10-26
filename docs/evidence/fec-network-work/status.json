@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W143_W145_GAME4_P2_AEAD_ABBA_10M_AND_15M_SCOPED_PASS_SMALL_CPU_GAIN; W146_GAME2_20M_RUNNING; W147_GAME4_20M_KNEE_RUNNING; W130_W134_5MODES_6C38_LAST",
+  "phase": "P2_GAME_LANE_AEAD_REPLAY_RETAIN_SCOPED_PASS_W143_W149; W150_GAME_FIXED6_REAL_MIXED_IID30_PENDING; P3A_WBG4_DIRECT_ARENA_ENCODE_NATIVE_PENDING; CAPACITY_STOP_NO_MAIN_MERGE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -678,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W143 P2 per-lane unique AEAD/replay SOURCE bb8e8249 native Action40300070389 artifact12639832584 success. Game4 exact real IID30 AB/BA 10Mbps W14340300583654 old30.99 new30.15 CPU-s -2.71%, W14440301283287 old33.15 new32.77 -1.15%; Game4 15Mbps W14540302001410 PASS old45.08 new44.56 CPU-s -1.15%, host PSI mean7.65/7.57 peak<9, all real UDP injected/delivered no loss, parity and four copies sent, outerDATA0, Go clones0, Stop clean. Since 15Mbps host still clear, one +5Mbps Game4 20Mbps capacity-knee sameVM AB Action40302726486 launched, DO NOT advance above20 without capacity proof. Game2 fixed6 near original30Mbps knee at20Mbps sameVM BA Action40302321280 launched independently; both one Action one scenario, immutable binary hashes. Need harvest their artifact IDs/SHA256, PSI/product CPU-s, real delivery, parity/copies/Stop. If CPU gain remains only~1-3% with added complexity, withdraw or describe benefit uncertain, do not promise faster. Last all-5-mode product source6c38 remains; Windows skipped, outerDATA off, capacity_stop true, merge_ready false, no main.",
+  "next_action": "P2 Game unique lane AEAD/replay source bb8e8249c2adba9c7dab72bf07da2dbe0bce3b82 retained within Game limit: W143/W144 true Game4 fixed6 IID30 10Mbps ABBA CPU -2.71/-1.15%; W145 at15Mbps -1.15%; W147 at20Mbps -3.56%; W146 Game2 20Mbps -4.19%; W148 Game2 30Mbps BA -0.64%; W149 Game4 OFF real clean mixed TCP/UDP10Mbps -2.01%, but 2 tail scheduled copies per endpoint not sent at Stop, no business loss. Complete W150 fixed6 real damaged TCP/UDP15Mbps AB Action40307513185 (running, must check actual send/deliver loss, TCP HOL, p95/p99, host PSI/RSS, fixed6 parity/copy, outerDATA0 Go copies0, Stop) before asserting mixed recovery. Independent W151 P3a direct WBG4 encode_into source08b1cad native ARM64 build40307947902 running: no Vec temporary per symbol; do not promote without native + real sameVM near-edge comparison, rollback P3a if no gain while KEEP P2. One Action one scenario, capacity stop on PSI pressure, no 80Mbps as prior. Cross-five-mode product last source6c38 and Windows TEMP_SKIPPED, merge_ready false, no main or original network role next_action edits.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -7271,7 +7271,7 @@
     "higher_bandwidth_request": "tests/network/fec-work/W145-Game4-fixed6-IID30-UDP15Mbps-P2-lane-AEAD-near-capacity-AB-ARM64.json",
     "higher_bandwidth_commit": "189db3eba61e5b02b6de740357ac5852ccd2334e",
     "higher_bandwidth_result": "W145 40302001410 PASS_SCOPED 15Mbps IID30: old CPU45.08 new44.56 (-1.15%), mean host PSI7.646/7.5674, peak8.92/8.74, true UDP zero missing, all parity and Game4 copies sent, no outerDATA retries, Go cloned DATA0, Stop clean.",
-    "retention_decision": "P2 CPU reduction small 2.71/1.15/1.15pct at10/10/15, code complexity vs CPU still under review pending near-knee real W146/W147",
+    "retention_decision": "KEEP_P2_AS_GAME_SCOPED_LOWER_RX_MUTEX_COMPLEXITY_STABLE_DELIVERY_WITH_MODEST_CPU_BENEFITS; do not advertise fixed universal percent, full80Mbps, Windows, or Normal requalification. W150 real Game4 fixed6 TCP+UDP mixed IID30 still pending.",
     "last_five_mode_qualified_source": "6c38ed0df9da3547c7bd604b51f13443d6863181",
     "higher_bandwidth_artifact_id": 12641256273,
     "higher_bandwidth_zip_sha256": "3189ca69f65667d63ff62a2c57c7ac97831685ca6a93e291dbc6041cdbf2aee2",
@@ -7283,6 +7283,43 @@
     "game4_capacity_knee_request": "tests/network/fec-work/W147-Game4-fixed6-IID30-UDP20Mbps-P2-capacity-knee-sameVM-AB-ARM64.json",
     "game4_capacity_knee_commit": "a0b002c430269c2076966363999ecf174dd8a65e",
     "game4_capacity_knee_result": "IN_PROGRESS_AT_CHECKPOINT",
-    "capacity_escalation_reason": "W145 at15Mbps zero business misses, full parity/copies, host PSI peak<9% both A/B, justifies a single +5Mbps 20Mbps original W126 historical knee recheck on exact newer P2 and P0; no 80Mbps request"
+    "capacity_escalation_reason": "W145 at15Mbps zero business misses, full parity/copies, host PSI peak<9% both A/B, justifies a single +5Mbps 20Mbps original W126 historical knee recheck on exact newer P2 and P0; no 80Mbps request",
+    "game2_30Mbps_action": 40303019107,
+    "game2_30Mbps_result": "W148 PASS_SCOPED 30Mbps true UDP IID30 BA old45.65 vs new45.36 CPU-s -0.64pct, host PSI mean7.96/7.93 peak9.09/9.16, zero business missing both directions, all fixed6 parity sent, outer retrans0, Go copies0, Stop clean.",
+    "game2_30Mbps_artifact": 12640693802,
+    "game2_30Mbps_zip_sha256": "76f6693d93a6165b48a00595c26e83b18c996248ba523bed9a098fa71aefdc94",
+    "game4_20Mbps_action": 40302726486,
+    "game4_20Mbps_result": "W147 PASS_SCOPED 20Mbps true UDP IID30 AB old61.19 vs new59.01 CPU-s -3.56pct, host PSI mean14.00/13.05 peak15.93/14.97, true business zero loss, full Game4 source/repair copies sent, Go copied0, outer DATA0, Stop clean.",
+    "game4_20Mbps_artifact": 12641028357,
+    "game4_20Mbps_zip_sha256": "d6b593fa35b8054599629720495a5b17d3764ec0e450d0f47161cc88cce40645",
+    "game4_OFF_clean_mixed_action": 40303530595,
+    "game4_OFF_clean_mixed_result": "W149 PASS_SCOPED at10Mbps mixed TCP 10pct/UDP90pct OFF Game4 stagger AB old9.47 new9.28 CPU-s -2.01pct; no UDP/TCP lost, p99~75.5ms, Go copy0, outer DATA0, no FEC parity OFF; tiny uncredited pending 2 delayed copies per server/client at Stop correctly retained NOT full planned sent.",
+    "game4_OFF_clean_mixed_artifact": 12640509603,
+    "game4_OFF_clean_mixed_zip_sha256": "e08c924e0ae9387955a472904f828812f678c574faabdb4c559f6622d60960d1",
+    "other_action_evidence": "docs/evidence/fec-network-work/20261026-W148-W149-Game-P2-limit-30Mbps-and-OFF-mixed-real-Action.json"
+  },
+  "w150_game_fixed6_mixed_iid30": {
+    "request_commit": "5529d9a93aa51bf15e1f25ada42a6725f949ddb2",
+    "action": 40307513185,
+    "status": "IN_PROGRESS_AT_STATUS_CHECK",
+    "request": "tests/network/fec-work/W150-Game4-fixed6-IID30-mixed-TCPUDP-15Mbps-P2-AB-ARM64.json",
+    "scenario": "Game4 fixed6, genuine TCP10pct UDP90pct per direction15Mbps, IID30 per physical lane 75ms one-way, 0/4/20/60ms original copies, old e400 vs P2 bb8 sameVM AB",
+    "purpose": "Distinguish damaged fixed6 true mixed high bandwidth (prior W143–148 mainly true UDP) from W149 FEC OFF clean mixed; no inferred success before artifacts.",
+    "last_safe_game4_measured_20mbps": true,
+    "capacity_stop": true
+  },
+  "w151_game_p3a_direct_wbg4_encode": {
+    "source_candidate": "08b1cad121e35eadce252af132e9347861a145f1",
+    "native_build_action": 40307947902,
+    "native_status": "IN_PROGRESS_NOT_QUALIFIED",
+    "changes": [
+      "wbd-codec::encode_game_into writes exact 16B WBG4 header and source bytes directly into caller-owned slice with error-before-write invariant",
+      "GameAdapter::enqueue uses existing unique bounded GameTx slab directly for both FEC source and parity symbols, avoids per-logical-symbol temporary Vec and second copy",
+      "No FEC owner group lifetime changes, no borrowed source kept beyond callback or copied across lanes, no Game4 time schedule changes"
+    ],
+    "scope": "GAME ONLY; shared wbd-codec new API but Normal data path still original, mandatory Normal OFF/Fixed/Auto existing regression tests and explicit qualification boundaries",
+    "real_performance": "NOT_RUN_PENDING_NATIVE_BUILD",
+    "capacity_stop": true,
+    "merge_ready": false
   }
 }
