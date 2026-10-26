@@ -165,7 +165,7 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
   // the peer's cumulative TCP-appearance ACK. Fresh resumes on an
   // authenticated kind1 receipt even with an earlier carrier gap.
   outstanding,e:=p.owner.BoundOriginalM2Outstanding(ctx)
-  if e!=nil{return false,e}
+  if e!=nil{return false,fmt.Errorf("M0 original M2 outstanding query: %w",e)}
   p.mu.Lock();p.pendingCount=int(outstanding);p.mu.Unlock()
   if outstanding>=m0V4M2ShadowCredit{return false,nil}
  }else if len(p.pending)>=m0V4TxPendingMax{return false,nil}
@@ -198,7 +198,7 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
   ciphertext,seq,_,err=p.owner.SealBoundOriginalFEC2Source(
    ctx,p.blockID,0,p.scratch[:n])
  }
- if err!=nil{return false,err} // exact generation/cipher failure: Stop
+ if err!=nil{return false,fmt.Errorf("M0 native original M3 seal mode=%s: %w",p.mode,err)} // original fail-closed Stop
 
  if seq!=p.sendNext{return false,fmt.Errorf("%w: native normal TX sequence mismatch expected=%d got=%d",windowsclient.ErrN4NativeGuard,p.sendNext,seq)}
  err=p.sendCarrier(seq,p.recvNext,ciphertext)
@@ -209,7 +209,7 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
   count,receiptErr:=p.owner.ReportOriginalM2NpcapFirstsend(
    ctx,pn,seq,len(ciphertext),err==nil)
   if receiptErr!=nil{
-   return false,errors.Join(windowsclient.ErrN4NativeGuard,err,receiptErr)
+   return false,fmt.Errorf("M0 original M2 Npcap firstsend: %w",errors.Join(windowsclient.ErrN4NativeGuard,err,receiptErr))
   }
   p.mu.Lock();p.pendingCount=int(count);p.mu.Unlock()
  }
@@ -279,7 +279,7 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
    // It must not enter Wintun or impersonate an ordinary TCP ACK.
    frames=nil
    count,countErr:=p.owner.BoundOriginalM2Outstanding(ctx)
-   if countErr!=nil{return countErr}
+   if countErr!=nil{return fmt.Errorf("M0 original M2 authenticated receipt outstanding query: %w",countErr)}
    p.mu.Lock();p.pendingCount=int(count);p.mu.Unlock()
   }else{return fmt.Errorf("%w: native Rust M3 authenticated record kind=%d",windowsclient.ErrN4NativeGuard,kind)}
  }else{
@@ -334,7 +334,7 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
 func(p *m0NativeV4Peer) rustFeedbackOne(ctx context.Context)(bool,error){
  if p.mode!=m0WinModeNormal||p.stopped(){return false,nil}
  wire,seq,pn,err:=p.owner.NextBoundOriginalM2Feedback(ctx,p.maxIPv4+31)
- if err!=nil{return false,err}
+ if err!=nil{return false,fmt.Errorf("M0 original M2 reverse-kind1 feedback draft: %w",err)}
  if len(wire)==0{return false,nil}
  if seq!=p.sendNext{
   settle:=p.owner.CompleteBoundOriginalM2Feedback(ctx,pn,false)
@@ -344,7 +344,7 @@ func(p *m0NativeV4Peer) rustFeedbackOne(ctx context.Context)(bool,error){
  sentErr:=p.sendCarrier(seq,p.recvNext,wire)
  settleErr:=p.owner.CompleteBoundOriginalM2Feedback(ctx,pn,sentErr==nil)
  if sentErr!=nil||settleErr!=nil{
-  return false,errors.Join(sentErr,settleErr)
+  return false,fmt.Errorf("M0 original M2 reverse-kind1 feedback complete: %w",errors.Join(sentErr,settleErr))
  }
  p.sendNext=seq+uint32(len(wire))
  p.mu.Lock();p.feedbackSent++;p.mu.Unlock()
@@ -358,11 +358,11 @@ func(p *m0NativeV4Peer) rustRepairOne(ctx context.Context)(bool,error){
  if p.mode!=m0WinModeNormal{return false,nil}
  if p.stopped(){return false,nil}
  wire,seq,pn,err:=p.owner.NextBoundOriginalM2Repair(ctx,p.maxIPv4+31)
- if err!=nil{return false,err}
+ if err!=nil{return false,fmt.Errorf("M0 original M2 immutable repair candidate: %w",err)}
  if len(wire)==0{return false,nil}
  sentErr:=p.sendCarrier(seq,p.recvNext,wire)
  count,settleErr:=p.owner.CompleteBoundOriginalM2Repair(ctx,pn,sentErr==nil)
- if settleErr!=nil{return false,errors.Join(windowsclient.ErrN4NativeGuard,sentErr,settleErr)}
+ if settleErr!=nil{return false,fmt.Errorf("M0 original M2 immutable repair completion: %w",errors.Join(windowsclient.ErrN4NativeGuard,sentErr,settleErr))}
  p.mu.Lock()
  p.pendingCount=int(count)
  if sentErr==nil{p.retries++}
