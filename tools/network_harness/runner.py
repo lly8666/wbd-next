@@ -68,7 +68,7 @@ def verify_native_game_counters(lanes,counters):
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |GAME_FEC_APPLIED |GAME_FEC_COUNTERS |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |GAME_FEC_APPLIED |GAME_FEC_COUNTERS |GAME_OUTER |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
@@ -1102,6 +1102,16 @@ class LinuxExperiment:
         # V4_PUBLIC_M2_OUTER. Never claim a v3 outer repair receipt for Game.
         game_verified = None
         game_fec_proof={}
+        # Independent native Game policy: no Normal M2 one-lane retry
+        # ledger is claimed. Only real per-lane first sends and an OFF
+        # duplicate logical-ID prohibition establish DATA retry OFF.
+        game_outer_policy={}
+        if self.lanes > 1:
+            for role,log in logs.items():
+                rows=[v for v in log.splitlines() if "V4_PUBLIC_GAME_OUTER " in v]
+                if len(rows)==1:
+                    game_outer_policy[role]={k:int(v) for k,v in
+                        re.findall(r"([a-z_]+)=(\d+)",rows[0])}
         if self.lanes > 1:
             game_verified = verify_native_game_counters(self.lanes,counters)
             policy_verified = None  # Explicitly N/A, not green for v3 repair.
@@ -1137,7 +1147,22 @@ class LinuxExperiment:
         repair = sum(v["original_frozen_retransmitted"] for v in counters.values()) if all("original_frozen_retransmitted" in v for v in counters.values()) else None
         requested_repair = requested_outer_repair(self.config, self.label)
         repair_readback_verified = None
-        if requested_repair is not None:
+        if requested_repair is not None and self.lanes > 1:
+            required=("repair_enabled","outer_data_retransmitted",
+                      "blocked_duplicate","first_lane_copied","parity_separate")
+            repair_readback_verified=(len(game_outer_policy)==2 and all(
+                all(k in p for k in required) and
+                p["repair_enabled"]==int(requested_repair) and
+                p["parity_separate"]==1 and p["first_lane_copied"]>0 and
+                (requested_repair or p["outer_data_retransmitted"]==0)
+                for p in game_outer_policy.values()))
+            if not repair_readback_verified:
+                verified=False
+            if repair_readback_verified and requested_repair is False:
+                # Verified initial multi-lane copies and FEC parity are
+                # NOT DATA retransmits.
+                repair=0
+        elif requested_repair is not None:
             repair_readback_verified = len(counters) == 2 and all(
                 v.get("repair_enabled") == int(requested_repair)
                 for v in counters.values())
@@ -1178,6 +1203,7 @@ class LinuxExperiment:
                 "recovery_policy_applicability": ("NOT_APPLICABLE_GAME_MULTILANE"
                     if self.lanes > 1 else "REQUIRED_SINGLE_LANE"),
                 "game_native_counters_verified": game_verified,
+                "game_outer_policy":game_outer_policy if game_outer_policy else "NOT_OBSERVED",
                 "game_fec_native_proof": game_fec_proof if game_fec_proof else "NOT_APPLICABLE_OR_NOT_OBSERVED",
                 "recovery_policy_expected": requested_policy or "NOT_DECLARED",
                 "repair_packets": repair,
