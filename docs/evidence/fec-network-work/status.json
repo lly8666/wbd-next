@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W105_GAME2_GAME4_ALL_FIXED1_TO5_OUTER_DATA_OFF_REAL_CLEAN_PASS; W104_FIXED6_OUTER_OFF_IID20_BLACKHOLE_PASS; W106_IDLE_AND_FIXED0_GAMEOFF_PENDING",
+  "phase": "W110_GAME_ALL_OFF_FIXED0_TO6_OUTER_DATA_OFF_REPRESENTATIVE_REAL_LINUX_ARM64_PASS_SCOPED; W109_ONEWAY_QUIET_MTU_PASS; W102_SHARED_LONG_GE_RESIDUAL_AND_CAPACITY_STOP",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -25,7 +25,7 @@
     "sha256": "04d209b7ef1e887af6599622aaf71efc34381451c847e844cf18c2006ae9708f",
     "platform": "aarch64",
     "mode": "Game2/Game4 fixed6 with explicit outer DATA OFF (ON default unchanged), no Game Auto",
-    "qualification": "W103 original Go TLS Game2/4 fixed6 actual native outer DATA OFF clean real UDP/TCP PASS; W104 IID20 20% each lane+lane1 blackout real UDP/TCP 3Mbps zero application missing and actual outer DATA copied retrans0 per endpoint, recovered FEC candidate positive. W105 fixed1/2 clean pending. No Game Auto.",
+    "qualification": "EXACT Game original TLS e8b41fb: W103 fixed6 clean both Game2/4, W104 fixed6 independent20+single-lane blackout both, W105 Game2/4 fixed1..5 real clean, W106 Game2/4 FEC OFF & fixed0 real clean; all with outer DATA OFF native readback=0 and actual retransmitted=0. W109 Game2 fixed6 quiet10s, one-way each direction and MTU1398 sparse real PASS_SCOPED. Normal fixed2 outeroff clean W110 protects common CLI. W102 2.43%-2.56% residual shared GE persists; no Windows/physical.",
     "real_clean_game2_action": 40255806409,
     "real_clean_game4_action": 40255813118,
     "actual_parity": "both directions rplanned=rsent=kernel copied, expired0; recovered0 under no-loss",
@@ -634,7 +634,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W106: reuse immutable e8b41fb arm64 build40260662919 artifact12623678360 only; Game2/4 fixed0+outeroff real clean1Mbps, Game2 fixed6 1Mbps both-way active→genuine no-probe quiet tail→resume, Game OFF outeroff baseline and separately one-way. Each action one scenario, positive native OFF readback/retransmitted0 and frozen artifact hash, true UDP/TCP and Stop; resource constrained fixed3 runner PSI35%, no higher traffic. Game Auto does not exist, no Windows/physical; capacity_stop true, merge_ready false.",
+  "next_action": "Representative fixed0..6/Off Game Linux + actual outer DATA OFF + W109 one-way/quiet-tail/sparse near-MTU and W110 Normal fixed2 all PASS_SCOPED. Avoid adding high pressure or Game Auto (unsupported). If future operator requests integration: investigate W102 correlated shared long GE 2.43/2.56% residual and high host PSI; bounded final-quantum loss-at-silence edge and Game4 tail/Windows/physical NOT_RUN, not silently waived. Keep merge_ready=false until scoped boundary accepted; leave original network next_action untouched. Fixed3 runner PSI35% and W109 quiet PSI38.49% => capacity_stop=true.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6517,5 +6517,50 @@
     "cpu_crossVM_causal": false,
     "capacity_stop": true,
     "evidence": "docs/evidence/fec-network-work/20261026-W105-Game2-Game4-fixed1to5-outerDATAoff-real-clean-PASS.json"
+  },
+  "w106_game0_fixed0_clean": {
+    "status": "4_REAL_GAME_OFF_OR_FIXED0_OUTER_OFF_1MBPS_CLEAN_PASS_SCOPED",
+    "run_ids": [
+      40262793675,
+      40262800093,
+      40262808050,
+      40262814726
+    ],
+    "source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "evidence": "docs/evidence/fec-network-work/20261026-W106-Game2-Game4-fixed0-off-outerDATAoff-clean-PASS.json",
+    "outer_data_retransmit_all": 0,
+    "real_tcp_udp_zero_loss": true,
+    "capacity_stop": true
+  },
+  "w109_game_fixed6_tail_oneway_mtu": {
+    "status": "4_REAL_ONEWAY_QUIET_TAIL_SPARSE_MTU_OUTER_OFF_PASS_SCOPED",
+    "run_ids": [
+      40264740280,
+      40264746765,
+      40264755348,
+      40264760875
+    ],
+    "source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "native_readback_off": true,
+    "retransmitted_zero": true,
+    "business_all_delivered": true,
+    "quiet_nonprobing": true,
+    "all_parity_planned_sent": true,
+    "all_fec_failed_expired_zero": true,
+    "host_psi_tail_peak_pct": 38.49,
+    "mtu_cross_business_HOL": "NOT_QUALIFIED_SPARSE",
+    "evidence": "docs/evidence/fec-network-work/20261026-W109-Game2-fixed6-outeroff-quiet-oneway-MTU-PASS-SCOPED.json",
+    "capacity_stop": true
+  },
+  "w110_normal_common_smoke": {
+    "status": "ORIGINAL_NORMAL_FIXED2_OUTER_OFF_REAL_CLEAN_PASS_SCOPED",
+    "source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "run_id": 40264926353,
+    "artifact_id": 12626326056,
+    "outer_data_retransmits": 0,
+    "native_applied_fixed_profile": 2,
+    "real_udp_tcp_zero_loss": true,
+    "capacity_stop": true,
+    "evidence": "docs/evidence/fec-network-work/20261026-W110-Normal-fixed2-outeroff-clean-regression-PASS.json"
   }
 }

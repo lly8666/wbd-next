@@ -1,0 +1,97 @@
+{
+  "schema": "W106_GAME_OFF_FIXED0_REAL_OUTER_OFF_CLEAN_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "owner": "fec-network-work",
+  "product": {
+    "source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "build_run": 40260662919,
+    "bundle_artifact_id": 12623678360,
+    "sha256": "04d209b7ef1e887af6599622aaf71efc34381451c847e844cf18c2006ae9708f"
+  },
+  "scenario": "One distinct 1Mbps each-direction real 96% UDP+2 TCP flows / 75ms one-way netem zero loss per Action; explicit Game outer DATA OFF",
+  "runs": {
+    "game2_fixed0": {
+      "run": 40262793675,
+      "artifact": 12625336044,
+      "artifact_sha256": "3cc230bd9bb717ff66efc1834d1485991ce1554595d2845ad7628f4d274365f4",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "tcp_udp_zero_missing": true,
+      "cpu_s": [
+        1.19,
+        1.21
+      ],
+      "rss_peak_bytes": [
+        26038272,
+        25800704
+      ],
+      "host_cpu_psi_peak_pct": 0.84
+    },
+    "game4_fixed0": {
+      "run": 40262800093,
+      "artifact": 12625256158,
+      "artifact_sha256": "4612459fa370e5d8a0a7fcf9e5e3de67bd676ee172e8136450c13b548aeb1f46",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "tcp_udp_zero_missing": true,
+      "cpu_s": [
+        1.69,
+        1.74
+      ],
+      "rss_peak_bytes": [
+        38854656,
+        38658048
+      ],
+      "host_cpu_psi_peak_pct": 7.57
+    },
+    "game2_off": {
+      "run": 40262808050,
+      "artifact": 12624758455,
+      "artifact_sha256": "d3051bf55eeff0731c397e9dd4a6b69e5d99a2ce02e6c0206fdd984c78efd01e",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "tcp_udp_zero_missing": true,
+      "cpu_s": [
+        0.74,
+        0.76
+      ],
+      "rss_peak_bytes": [
+        25128960,
+        25161728
+      ],
+      "host_cpu_psi_peak_pct": 0
+    },
+    "game4_off": {
+      "run": 40262814726,
+      "artifact": 12624987616,
+      "artifact_sha256": "66287618712bb1bdf0d2e9c66349b7a7469666af55f7f61c8fd91ac6ebecd720",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "tcp_udp_zero_missing": true,
+      "cpu_s": [
+        1.01,
+        1.05
+      ],
+      "rss_peak_bytes": [
+        37089280,
+        36958208
+      ],
+      "host_cpu_psi_peak_pct": 0.96
+    }
+  },
+  "shared_verified": {
+    "native_outer_repair_enabled_both": 0,
+    "actual_outer_data_retransmitted_both": 0,
+    "stop_drained_both": true,
+    "real_tcp_bootstrap_and_delivery": true,
+    "udp_p99_ms_range": [
+      77.4,
+      77.6
+    ]
+  },
+  "constraints": [
+    "Not same-VM CPU paired comparison",
+    "No FEC math parity when Game FEC OFF",
+    "All original TLS 2/4 lane engine, not Normal",
+    "Windows TEMP_SKIPPED"
+  ],
+  "merge_ready": false,
+  "capacity_stop": true
+}
