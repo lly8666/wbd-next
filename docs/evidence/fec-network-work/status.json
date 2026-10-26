@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W111_GAME4_FIXED6_QUIET_TAIL_PASS_SCOPED; W112_GAME2_W113_GAME4_FIXED6_SHARED_GE15_STRICT_1PCT_FAIL; W103_W110_LINUX_FIXED_SCOPE_RETAINED; CAPACITY_STOP",
+  "phase": "W114_W123R_GAME4_OFF_STAGGER_SCOPED; CPU_OVERHEAD_MEASURED; OPTIONAL_NOT_DEFAULT; W124_PRESSURE_SOURCE_SMOKE_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -18,19 +18,17 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
-    "run_id": 40260662919,
+    "source": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
+    "build_run": 40273336095,
     "attempt": 1,
-    "artifact_id": 12623678360,
-    "sha256": "04d209b7ef1e887af6599622aaf71efc34381451c847e844cf18c2006ae9708f",
-    "platform": "aarch64",
-    "mode": "Game2/Game4 fixed6 with explicit outer DATA OFF (ON default unchanged), no Game Auto",
-    "qualification": "EXACT Game original TLS e8b41fb: W103 fixed6 clean both Game2/4, W104 fixed6 independent20+single-lane blackout both, W105 Game2/4 fixed1..5 real clean, W106 Game2/4 FEC OFF & fixed0 real clean; all with outer DATA OFF native readback=0 and actual retransmitted=0. W109 Game2 fixed6 quiet10s, one-way each direction and MTU1398 sparse real PASS_SCOPED. Normal fixed2 outeroff clean W110 protects common CLI. W102 2.43%-2.56% residual shared GE persists; no Windows/physical.",
-    "real_clean_game2_action": 40255806409,
-    "real_clean_game4_action": 40255813118,
-    "actual_parity": "both directions rplanned=rsent=kernel copied, expired0; recovered0 under no-loss",
-    "outer_retransmit": "Game explicit --outer-repair=off now native readback repair_enabled0, actual same-lane DATA retrans copied0 in W103/W104; unique per-lane first copies and fresh FEC parity allowed; not the Normal one-lane V3 ON ledger.",
-    "windows": "NOT_RUN/TEMP_SKIPPED"
+    "artifact_id": 12629261825,
+    "zip_sha256": "65b6a6c34e3115f53c90c71274f48c39bf4e2230e10206353c8b936ffbaa3f90",
+    "platform": "linux-aarch64",
+    "mode": "Game4 FEC OFF original TLS; immediate default / stagger-4-20-60 optional",
+    "qualification": "W115-W123R_SCOPED_MATCHED_AB; original Game2/Normal and Fixed6 qualification are separate; source does not restore Game+FEC.",
+    "history_old_stagger_broken": "205c557841525356a6c5a639d4fa8c689235fb27",
+    "next_capacity_candidate": "4b390154b9f24e76b1592e4acb27565a00ea8113",
+    "windows": "TEMP_SKIPPED"
   },
   "open_requests": [
     {
@@ -634,7 +632,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "GameMode fixed only per explicit user 2026-10-26 (NO Game Auto). W111 latest Game4 fixed6 true quiet-tail PASS_SCOPED; W112 latest Game2 and W113 latest Game4 shared long GE strict 1% damaged-service gates FAIL (Game2 4.533/4.316% UDP, Game4 0.888/1.051%), while clean recovery and native true outer DATA OFF/parity/TCP/Stop pass; no host PSI headroom problem observed at 1Mbps, but prior capacity_stop remains. Preserve negative artifacts; no random-seed repeats, no higher load and no unproven decoder fix. If specific missing-source last-quantum erasure diagnosis becomes justified, first inspect existing bounded per-block arrival/TTL evidence and isolate single relevant functional regression. Windows temporarily skipped, no main or network role changes, merge_ready=false.",
+  "next_action": "Game4 OFF 0/4/20/60ms single candidate: finalize only W124 exact 4b390 ARM64 matched clean A/B (Action40276707466) after successful native 1024-slot saturation regression Action40276313079; default must remain immediate. Preserve strict W114 failed candidate and W123 analyzer false-red. Do not start new matrix, Game+FEC, Game Auto, Windows, 100Mbps extreme PPS, or main merge.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6680,5 +6678,48 @@
     "no_auto_game": true,
     "host_capacity_stop": true,
     "merge_ready": false
+  },
+  "product_historical_fixed6_before_game4_stagger": {
+    "source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "run_id": 40260662919,
+    "attempt": 1,
+    "artifact_id": 12623678360,
+    "sha256": "04d209b7ef1e887af6599622aaf71efc34381451c847e844cf18c2006ae9708f",
+    "platform": "aarch64",
+    "mode": "Game2/Game4 fixed6 with explicit outer DATA OFF (ON default unchanged), no Game Auto",
+    "qualification": "EXACT Game original TLS e8b41fb: W103 fixed6 clean both Game2/4, W104 fixed6 independent20+single-lane blackout both, W105 Game2/4 fixed1..5 real clean, W106 Game2/4 FEC OFF & fixed0 real clean; all with outer DATA OFF native readback=0 and actual retransmitted=0. W109 Game2 fixed6 quiet10s, one-way each direction and MTU1398 sparse real PASS_SCOPED. Normal fixed2 outeroff clean W110 protects common CLI. W102 2.43%-2.56% residual shared GE persists; no Windows/physical.",
+    "real_clean_game2_action": 40255806409,
+    "real_clean_game4_action": 40255813118,
+    "actual_parity": "both directions rplanned=rsent=kernel copied, expired0; recovered0 under no-loss",
+    "outer_retransmit": "Game explicit --outer-repair=off now native readback repair_enabled0, actual same-lane DATA retrans copied0 in W103/W104; unique per-lane first copies and fresh FEC parity allowed; not the Normal one-lane V3 ON ledger.",
+    "windows": "NOT_RUN/TEMP_SKIPPED"
+  },
+  "game4_copy_schedule_20261026": {
+    "decision": "OPTIONAL_ANTI_BURST_MODE; KEEP_DEFAULT_IMMEDIATE",
+    "source_qualified": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
+    "new_capacity_guard_source": "4b390154b9f24e76b1592e4acb27565a00ea8113",
+    "new_guard_native_action": 40276313079,
+    "new_guard_network_action": 40276707466,
+    "new_guard_network_result": "PENDING",
+    "scope": "Game4 FEC OFF, outer DATA retry OFF, no Game Auto, no client GUI; Linux ARM64 only",
+    "A_immediate": "0/0/0/0ms",
+    "B_stagger": "0/4/20/60ms from each T0",
+    "W114_old_failed": "205c557841525356a6c5a639d4fa8c689235fb27",
+    "W115_to_W123R_actions": [
+      40273831715,
+      40274218131,
+      40274222187,
+      40274484806,
+      40274488003,
+      40274491798,
+      40275115928,
+      40275119203,
+      40275737023
+    ],
+    "packet_GE_loss_A_vs_B_pct": "8.5 vs ~0.06-0.09",
+    "time_blackout": "20/50ms B final UDP missing0;100ms outside full protection",
+    "cpu_cost": "clean +17.9%; IID5 +25.7%",
+    "capacity_stop": true,
+    "evidence": "docs/evidence/fec-network-work/20261026-W114-W120-Game4-FECOFF-stagger-single-candidate-AB.json"
   }
 }

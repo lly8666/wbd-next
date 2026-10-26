@@ -423,6 +423,89 @@
         99.58,
         99.608
       ]
+    },
+    "W121": {
+      "run_id": 40275115928,
+      "artifact": 12630011779,
+      "sha256": "09a46593d31c7ba8fa419065673cd1dbfc6308d187f0679b0517a71ca8720b14",
+      "result": "A_B_PASS_SCOPED",
+      "scenario": "80Kbps sparse each direction",
+      "udp_offered_each": 350,
+      "udp_missing_both": 0,
+      "udp_p99_A_B_ms": [
+        [
+          77.5,
+          77.5
+        ],
+        [
+          75.6,
+          75.6
+        ]
+      ],
+      "native_B_abandoned": 0,
+      "cpu_total_A_B_s": [
+        0.49,
+        0.61
+      ]
+    },
+    "W122": {
+      "run_id": 40275119203,
+      "artifact": 12629083925,
+      "sha256": "c0e1786c110859b9d23f73196f24ec031d3aebb2b8a46faf06ede32081468e83",
+      "result": "A_B_PASS_SCOPED",
+      "scenario": "unilateral 3Mbps C2S (reverse application payload zero; TCP ACK real)",
+      "udp_missing_both": 0,
+      "udp_p99_A_B_ms": [
+        77.5,
+        75.5
+      ],
+      "native_B_abandoned": 0,
+      "cpu_total_A_B_s": [
+        2.56,
+        2.73
+      ]
+    },
+    "W123": {
+      "run_id": 40275123558,
+      "artifact": 12629374866,
+      "result": "ANALYZER_FALSE_NEGATIVE_B_NATIVE_ABANDONED_EXPECTED_BLACKHOLE_LANE1",
+      "note": "A and B UDP/TCP delivered without missing; old universal 98% copy success gate incorrectly rejects intentional kernel failure of physically blocked lane1. Original failure retained."
+    },
+    "W123R": {
+      "run_id": 40275737023,
+      "artifact": 12630705647,
+      "sha256": "6653e5fe16c542dbdf4fd9eddf4601c788ab457ef0fcafc1b3b7b52c0ab2f899",
+      "result": "A_B_PASS_SCOPED",
+      "scenario": "lane1 blackhole while other 3 independent lanes usable, native gate exception limited exclusively to explicitly blocked physical lane",
+      "udp_missing_both": 0,
+      "udp_p99_A_B_ms": [
+        [
+          77.5,
+          77.5
+        ],
+        [
+          80.4,
+          80.4
+        ]
+      ],
+      "B_abandoned_client": [
+        18688,
+        0,
+        0,
+        0
+      ],
+      "B_abandoned_server": [
+        18674,
+        0,
+        0,
+        0
+      ],
+      "B_lanes_2_to_4_valid": true,
+      "cpu_total_A_B_s": [
+        13.11,
+        14.8
+      ],
+      "stop_drained": true
     }
   },
   "integrity": "W115-W120 current product actual outer DATA retransmits=0 both endpoints, FEC OFF, source TUN and owned fq root drops0, application TCP genuine and no high-phase backpressure, Stop drained; W117 packet_GE and wall-time blackout are distinct models; W118-W120 blackhole events record actual monotonic begin/end per direction and command uncertainty (~2-3ms). Copied but intentionally abandoned future lane work is PRODUCT-side abandonment not line loss; no claim all copy planned always sent under blackout.",
@@ -432,10 +515,19 @@
     "W119 host PSI A 34.56% warns against CPU gain causal claim",
     "CDF all-offered denom sampled to 1ms precision through250ms, threshold uses same VM A clean baseline p50 and floors ms. Never only survivor denominator",
     "Old W114 Action green but unacceptable native copy send contract; retained negative",
-    "Additional W121-123 sparse, one-way, single lane independent protection requested; not yet included here"
+    "W121 sparse, W122 one-way, W123R disabled lane1 all A/B exact-source 88ec native PASS; original W123 strict parser false-negative preserved.",
+    "4b390 native pressure-first guard is a NEW product binary. Earlier network results do not qualify it before W124 same-binary smoke."
   ],
-  "intended_decision": "RETAIN_AS_OPT_IN_ANTI_BURST_CANDIDATE; DEFAULT_IMMEDIATE; final decision after bounded W121-W123 scope review",
+  "intended_decision": "RETAIN_AS_OPTIONAL_ANTI_CORRELATED_BURST; DEFAULT_IMMEDIATE_0_0_0_0; NOT_AUTOMATIC_DEFAULT; NO_MAIN_MERGE",
   "devlog": "docs/devlog/fec-network-work/20261026-Game4-FECoff-copy-stagger-candidate-W114-W120.md",
   "capacity_stop": true,
-  "merge_ready": false
+  "merge_ready": false,
+  "latest_capacity_guard": {
+    "source": "4b390154b9f24e76b1592e4acb27565a00ea8113",
+    "build_run": 40276313079,
+    "build_artifact": 12630800961,
+    "build_zip_sha256": "0019ab8203daa09c4e3e273190a94d0db54d7ef439823baed9ec3d15137b5244",
+    "result": "ARM64_NATIVE_BUILD_AND_1024_SLOT_SATURATION_REGRESSION_PASS; W124_EXACT_SOURCE_NO_LOSS_AB_IN_PROGRESS",
+    "notes": "Only Game4 stagger capacity-limit branch: cancel oldest queued duplicate references from four FIFO heads before allocating a new logical first, accounted as local abandon; no normal-traffic loop scan."
+  }
 }
