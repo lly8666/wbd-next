@@ -638,7 +638,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "BOTH real Game2/Game4 fixed6 at20Mbps UDP 30% IID pass; Game2 +10 rung30Mbps also passes. NO HIGHER LOAD on current ARM64 host due Game4 CPU PSI avg33.2 peak42% at20 and Game2 avg18.7 peak21% at30. Current exact verified product fe7de9da, Game4 stagger default; preserve proof and old failures. For 80Mbps capacity work: optimize measured per-thread Game4 TX/4 RX/Go scheduling and reduce native CPU or select a demonstrably non-congested larger ARM64 test host; include explicit per-lane FEC rate/buffer/PSI budget and then retest first failing rung BEFORE any additional +10MHz. Never mark 80 as passed. No Game Auto/Windows/UI, no main merge.",
+  "next_action": "W128 Game4 fixed6 CPU bounded optimization under declared capacity stop: build exact f484a4 candidate Action40281581736 (native tests incl parity credit). If PASS use same-source manifest/hash to schedule ONE 10Mbps/dir Game4 30%IID UDP original fe7de9da vs f484a4 SAME VM sequential AB; retain outer DATA off, real FEC planned/sent and four native copy positions, source TUN0, stage loss and actual CPU-s/PSI. No Game4 30+ or Game2 40+ until measurable CPU headroom and fresh 20/30 step qualification; do not mark previous exact build revised. 80Mbps is only model target. No main merge.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6821,5 +6821,19 @@
     },
     "capacity_target_80_unqualified": true,
     "optimization_diag": "Existing 1Hz native /proc task thread CPU approx 50s: Game4 20 client RX15.1s/TX13.24s/Go10.97s vs Game2 20 RX8.23s/TX4.72s/Go5.09s; CPU distributed across actual 4-lane duplicate crypto + RX and Go, not just timer wake. Single TX worker expected to approach 1 core at 80 even if scaling linearly; real hardware cannot currently support ladder."
+  },
+  "w128_game4_fixed6_cpu_hotpath": {
+    "status": "NATIVE_BUILD_AND_10MBPS_SAMEVM_AB_PENDING",
+    "legacy_source": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce",
+    "legacy_build_run": 40278857619,
+    "legacy_artifact": 12631645713,
+    "legacy_sha256": "c34b8121ef817294a889f5f0f06eca1ef8e1ddcda3c7a9bf8244a85fb75abfc8",
+    "optimized_candidate_source": "f484a4c34e08dcbdfa16beef590d285e9db1ee5f",
+    "native_action": 40281581736,
+    "design": "constant-time outside-parity-ID-range native credit fast reject and slot-indexed authenticated Game4 M4 TX lane selection; no fewer packets, no FEC changes",
+    "plan": "same VM sequential old/new Game4 fixed6 30percent independent loss real UDP 10Mbps each direction, exact native hashes before W128; stop on capacity or business regression",
+    "why_no_30_40": "previous exact Game4 20 Mbps PSI mean33.2pct peak42pct, Game2 30 mean18.7 peak20.96",
+    "documentation": "docs/devlog/fec-network-work/20261026-W128-Game4-Fixed6-CPU-first-hotpath-capacity-guard.md",
+    "current_product_still": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce_until_AB_qualification"
   }
 }
