@@ -701,7 +701,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_windows_v4_native_capabilities_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_windows_v4_native_capabilities_windows_test.go",
-      "result_blob": "e1b51b33832c7462e03da2ded2ada13c2e8975c0"
+      "result_blob": "2d89a1959cbd900e7f95d440f343cf0f8a14c394"
     },
     {
       "kind": "create",

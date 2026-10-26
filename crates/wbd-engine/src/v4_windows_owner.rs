@@ -813,9 +813,14 @@ pub extern "C" fn wbd_m0_win_owner_v1_release(h:u64)->i32{
     release(&mut r,h)
 }
 
-// This read-only ABI binds public Windows mode claims to the actual native
-// dataplane implementation. Bits: Normal=1, Fixed=2, Auto=4, Game2=8,
-// Game4=16. Linux feature tests do not enable Windows modes.
+// This read-only ABI binds public Windows mode claims to the actual
+// END-TO-END native owner contract, not to isolated Rust codecs or a
+// half-wired Windows CLI mode selector. Bits: Normal=1, Fixed=2,
+// Auto=4, Game2=8, Game4=16. Source-locked Windows/Linux Normal/off
+// kernel UDP/TCP and owned Stop have positive product evidence;
+// Fixed/Auto/Game lack their independent public mode-positive proof.
+// Reuse Linux shared architecture before promoting another bit.
+// Never use an advertised mode mask as an FEC2 feature/test switch.
 #[repr(C)]
 pub struct WbdWindowsV4ModeCapabilities {
     pub version:u32,
@@ -832,7 +837,7 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_mode_capabilities(
         return INVALID
     }
     unsafe{out.write(WbdWindowsV4ModeCapabilities{
-        version:4,size,supported_modes:3,authenticated_lanes:1,reserved:0,
+        version:4,size,supported_modes:1,authenticated_lanes:1,reserved:0,
     })};
     OK
 }

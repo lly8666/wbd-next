@@ -8,4 +8,10 @@
 
 **容量**：Windows native Normal M2 shadow **1536**、M1 **2048 slots/5MB**；embedded Go Windows Normal M1 也是2048/5MB。Linux原FEC/Game配置不改。**未收口**：Windows原M2旧80ms/PTO双重重传已经由 `4fb263dd` 改为 W168 `outer-opportunistic-v3` 并取得上述原生功能PASS；但真实弱网和新策略预算性能未测，不能推广为全部修复资格。Fixed/Auto真实M2 Applied及parity，Game2/Game4真实2/4独立TLS/Npcap lanes及Stop，仍未得到Windows公开模式功能资格，Rust mask不可空开。历史WL-N0 +103字节10Mbps高载 FAIL 不因低速PASS取消，用户暂停性能矩阵。W168旧状态 `merge_ready=false`、`capacity_stop=true` 与AMD64高压INCONCLUSIVE历史原样保留。
 
-**接续**：已核准 `4fb263dd` 原生 Normal TCP+UDP+Stop 及 Windows M2 outer-v3 → 在 #28 独立候选继续 Fixed/Auto→Game2/Game4 七格测试全部通过才合 #28 到 Windows W 分支；之后按 main 保护及治理合 #27，不 squash/不强推。历史找 [W168/Win索引](../history/2026-10-26-W168-WINDOWS-INTEGRATION-INDEX.md)，文件级合同见 [集成审查](../integration/M0-W168-FROZEN-ARCH-WINDOWS-ADAPTER-STAGED-INTEGRATION-20261026.md)。其他旧日志不用开局全读。
+**2026-10-27 权威任务更正**：用户明确先前 Fixed6 是笔误。当前 M0 的同一任务是**完整 Windows 客户端↔Linux 服务端产品接线**，Windows 各阶段以 Linux 已验证的 Go TLS/Detach、M1/M2/M3、opportunistic-v3、共享 FEC2/Auto/Game、原生驱动及 Stop 为蓝本；不得擅自单独设计恢复/调度。权威现已落在 main registry 与 PLAN020，rev3/epoch1/同一任务编号不变。Fixed6 各次历史 FAIL 保留，但不再是单独执行优先项，也不强制独立网络测试。
+
+**刚结算的中断项**：源码 01d8b7291d0d675a8e1ee8c56e0aa28c2422dd88 的 [Actions 40379315293/1](https://github.com/lly8666/wbd-next/actions/runs/40379315293) **FAIL**；Linux/Windows 同源原生编译与 Windows 原 Rust/Go 回归和驱动准备 PASS，真实双系统入口未完成，job detail 日志 BlobNotFound、未上传 Windows 报告，首个失败原因 **UNKNOWN**，绝不可继承先前 Fixed6/M2 的错误原因或声称通过。历史 main WL-N0 +103B 失败及 N1/N5 NOT_RUN 保留。
+
+**实际横向接线审查**：Windows 公开能力 ABI 曾返回 supported_modes=3（Normal+Fixed），虽然只有 Normal/off 曾获完整真实两端业务/Stop 正例；Windows Auto 非 Normal/Fixed 分支仍用 Go pending+retries，Game2/4 入口拒绝多条真正 TLS+Npcap lane，Fixed 则只具独立模块单测而缺整条核通路；OS /1 全局 WFP/DNS 及 GUI 原生 Applied 不由 TEST-NET scoped 业务证明。因此只保留已真实资格的公开能力，下一工作应复用 Linux 的共享接口一次补整个路径依赖，不能凭能力位/单模式单测报 PASS。详见 [本次全链路恢复与差异清单](../devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md)。
+
+**当前接续**：隔离 PR #28 继续 Linux→Windows 原 Go 建连、原 Rust owner、双向网络、FEC/Auto/Game、原生 WFP/WAL/GUI/Stop 的连续产品接线；现有功能 Actions 聚合跨模块原生回归、五模式能力拒绝门和已接通的 Normal 双向业务，不再附加独立 Fixed6 真网络实验。后续仅在各有效模式完成实链路时增加该模式到同一个可核验功能批次；WL-N0/N1/N5 和物理仍各自资格门。保留 W168 F 双亲合并祖先、PR Draft、不 squash/force push、不贸然合 main。历史索引仍见 [W168/Win 索引](../history/2026-10-26-W168-WINDOWS-INTEGRATION-INDEX.md)。
