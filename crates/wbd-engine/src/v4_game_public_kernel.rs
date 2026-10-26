@@ -378,7 +378,7 @@ impl GameKernelOwner{
                                         all_written=false;
                                         tun_failed.fetch_add(1,Ordering::Relaxed);
                                         recv_rejected.fetch_add(1,Ordering::Relaxed);
-                                        break 'rx_loop
+                                        break
                                     }
                                 }
                                 let committed=match receiver_owner.lock(){
