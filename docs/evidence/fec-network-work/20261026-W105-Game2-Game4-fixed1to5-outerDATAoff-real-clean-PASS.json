@@ -1,0 +1,325 @@
+{
+  "schema": "W105_ALL_MIDDLE_GAME_FIXED1_TO_FIXED5_OUTER_OFF_REAL_CLEAN_V1",
+  "owner": "fec-network-work",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+  "build_run": 40260662919,
+  "build_artifact_id": 12623678360,
+  "build_sha256": "04d209b7ef1e887af6599622aaf71efc34381451c847e844cf18c2006ae9708f",
+  "scenario": {
+    "game_modes": [
+      "game2",
+      "game4"
+    ],
+    "profiles": [
+      "fixed1",
+      "fixed2",
+      "fixed3",
+      "fixed4",
+      "fixed5"
+    ],
+    "one_action_per_case": true,
+    "same_binary": true,
+    "each_direction_mbps": 3,
+    "udp_share": 0.96,
+    "real_tcp_flows": 2,
+    "one_way_ms": 75,
+    "loss_pct": 0,
+    "real_outer_data_repair": "off",
+    "no_game_auto": true
+  },
+  "cases": [
+    {
+      "mode": "game2",
+      "profile": "fixed1",
+      "action": 40261651100,
+      "artifact_id": 12624534755,
+      "zip_sha256": "0f435a635d758dcb978603b41aa65f5d608a89b1d896b583a1ed1b49bee69f2c",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "actual_native_outer_repair_enabled_client_server": [
+        0,
+        0
+      ],
+      "outer_retransmitted_both": 0,
+      "first_copies_positive": true,
+      "fec_parity_copied_sent_client_server": [
+        8129,
+        8127
+      ],
+      "fec_failed_expired_both": 0,
+      "real_udp_tcp_injected_delivered_both": true,
+      "business_missing": 0,
+      "maximum_p99_ms": 77.7,
+      "client_server_cpu_s": [
+        2.04,
+        2.08
+      ],
+      "host_psi_peak_pct": 2.24,
+      "stop_drained": true
+    },
+    {
+      "mode": "game4",
+      "profile": "fixed1",
+      "action": 40261656542,
+      "artifact_id": 12625060477,
+      "zip_sha256": "34c72f2111bfb48a03e45eedb1059d4eb9d26a25e8560b333d2b33bd8707b9e0",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "actual_native_outer_repair_enabled_client_server": [
+        0,
+        0
+      ],
+      "outer_retransmitted_both": 0,
+      "first_copies_positive": true,
+      "fec_parity_copied_sent_client_server": [
+        8032,
+        8035
+      ],
+      "fec_failed_expired_both": 0,
+      "real_udp_tcp_injected_delivered_both": true,
+      "business_missing": 0,
+      "maximum_p99_ms": 77.7,
+      "client_server_cpu_s": [
+        2.99,
+        3.07
+      ],
+      "host_psi_peak_pct": 4.86,
+      "stop_drained": true
+    },
+    {
+      "mode": "game2",
+      "profile": "fixed2",
+      "action": 40261661650,
+      "artifact_id": 12624469945,
+      "zip_sha256": "108f7a16ec7893bbdf90c2ba3d785b6d915816e6e5f1f9c04a95ac126d5323fc",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "actual_native_outer_repair_enabled_client_server": [
+        0,
+        0
+      ],
+      "outer_retransmitted_both": 0,
+      "first_copies_positive": true,
+      "fec_parity_copied_sent_client_server": [
+        12301,
+        12321
+      ],
+      "fec_failed_expired_both": 0,
+      "real_udp_tcp_injected_delivered_both": true,
+      "business_missing": 0,
+      "maximum_p99_ms": 77.6,
+      "client_server_cpu_s": [
+        2.26,
+        2.28
+      ],
+      "host_psi_peak_pct": 2.88,
+      "stop_drained": true
+    },
+    {
+      "mode": "game4",
+      "profile": "fixed2",
+      "action": 40261667093,
+      "artifact_id": 12624741403,
+      "zip_sha256": "5bd969c6cf517ea0e892f1d514403fbce829e2a2b457724afc4f20272255243d",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "actual_native_outer_repair_enabled_client_server": [
+        0,
+        0
+      ],
+      "outer_retransmitted_both": 0,
+      "first_copies_positive": true,
+      "fec_parity_copied_sent_client_server": [
+        12235,
+        12223
+      ],
+      "fec_failed_expired_both": 0,
+      "real_udp_tcp_injected_delivered_both": true,
+      "business_missing": 0,
+      "maximum_p99_ms": 77.6,
+      "client_server_cpu_s": [
+        3.18,
+        3.21
+      ],
+      "host_psi_peak_pct": 4.94,
+      "stop_drained": true
+    },
+    {
+      "mode": "game2",
+      "profile": "fixed3",
+      "action": 40262003415,
+      "artifact_id": 12625140940,
+      "zip_sha256": "255e6ef91f31578f81bbb38615e794c2d232d36093c8c966b6ede7c4879e9519",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "actual_native_outer_repair_enabled_client_server": [
+        0,
+        0
+      ],
+      "outer_retransmitted_both": 0,
+      "first_copies_positive": true,
+      "fec_parity_copied_sent_client_server": [
+        13233,
+        13248
+      ],
+      "fec_failed_expired_both": 0,
+      "real_udp_tcp_injected_delivered_both": true,
+      "business_missing": 0,
+      "maximum_p99_ms": 77.6,
+      "client_server_cpu_s": [
+        2.32,
+        2.32
+      ],
+      "host_psi_peak_pct": 35.53,
+      "stop_drained": true
+    },
+    {
+      "mode": "game4",
+      "profile": "fixed3",
+      "action": 40262008834,
+      "artifact_id": 12624831525,
+      "zip_sha256": "31e7cba6151f5f7961b7e8c02cd12f9ad78711eced29ff76885eaa63579b735f",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "actual_native_outer_repair_enabled_client_server": [
+        0,
+        0
+      ],
+      "outer_retransmitted_both": 0,
+      "first_copies_positive": true,
+      "fec_parity_copied_sent_client_server": [
+        13152,
+        13148
+      ],
+      "fec_failed_expired_both": 0,
+      "real_udp_tcp_injected_delivered_both": true,
+      "business_missing": 0,
+      "maximum_p99_ms": 77.7,
+      "client_server_cpu_s": [
+        3.23,
+        3.28
+      ],
+      "host_psi_peak_pct": 34.69,
+      "stop_drained": true
+    },
+    {
+      "mode": "game2",
+      "profile": "fixed4",
+      "action": 40262014682,
+      "artifact_id": 12624698590,
+      "zip_sha256": "048a3bc3326485998bd7d7adc025e2a735b64841024105e6b171993604aaf762",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "actual_native_outer_repair_enabled_client_server": [
+        0,
+        0
+      ],
+      "outer_retransmitted_both": 0,
+      "first_copies_positive": true,
+      "fec_parity_copied_sent_client_server": [
+        19402,
+        19394
+      ],
+      "fec_failed_expired_both": 0,
+      "real_udp_tcp_injected_delivered_both": true,
+      "business_missing": 0,
+      "maximum_p99_ms": 77.8,
+      "client_server_cpu_s": [
+        2.49,
+        2.47
+      ],
+      "host_psi_peak_pct": 2.89,
+      "stop_drained": true
+    },
+    {
+      "mode": "game4",
+      "profile": "fixed4",
+      "action": 40262021170,
+      "artifact_id": 12625235755,
+      "zip_sha256": "11720a036cb067bdc6ef80c2101488c85b477efa86c9dae4e60e6241eceb4a30",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "actual_native_outer_repair_enabled_client_server": [
+        0,
+        0
+      ],
+      "outer_retransmitted_both": 0,
+      "first_copies_positive": true,
+      "fec_parity_copied_sent_client_server": [
+        19278,
+        19235
+      ],
+      "fec_failed_expired_both": 0,
+      "real_udp_tcp_injected_delivered_both": true,
+      "business_missing": 0,
+      "maximum_p99_ms": 78.1,
+      "client_server_cpu_s": [
+        4.14,
+        4.21
+      ],
+      "host_psi_peak_pct": 6.93,
+      "stop_drained": true
+    },
+    {
+      "mode": "game2",
+      "profile": "fixed5",
+      "action": 40262025973,
+      "artifact_id": 12623864673,
+      "zip_sha256": "2a891ab9430fcec8287242494a75b7d4242767de54e42144681335b8ae80f908",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "actual_native_outer_repair_enabled_client_server": [
+        0,
+        0
+      ],
+      "outer_retransmitted_both": 0,
+      "first_copies_positive": true,
+      "fec_parity_copied_sent_client_server": [
+        21845,
+        21834
+      ],
+      "fec_failed_expired_both": 0,
+      "real_udp_tcp_injected_delivered_both": true,
+      "business_missing": 0,
+      "maximum_p99_ms": 77.8,
+      "client_server_cpu_s": [
+        2.67,
+        2.64
+      ],
+      "host_psi_peak_pct": 2.9,
+      "stop_drained": true
+    },
+    {
+      "mode": "game4",
+      "profile": "fixed5",
+      "action": 40262032077,
+      "artifact_id": 12625330489,
+      "zip_sha256": "a92eb5cfa62d1ca61062200ef4e2d32ca89c4a5e800ce26613c2b0998a1374e5",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "actual_native_outer_repair_enabled_client_server": [
+        0,
+        0
+      ],
+      "outer_retransmitted_both": 0,
+      "first_copies_positive": true,
+      "fec_parity_copied_sent_client_server": [
+        21853,
+        21842
+      ],
+      "fec_failed_expired_both": 0,
+      "real_udp_tcp_injected_delivered_both": true,
+      "business_missing": 0,
+      "maximum_p99_ms": 78,
+      "client_server_cpu_s": [
+        3.5,
+        3.53
+      ],
+      "host_psi_peak_pct": 5.17,
+      "stop_drained": true
+    }
+  ],
+  "assessment": "All five previously unqualified middle fixed Game FEC profiles now real Linux ARM64 original TLS and actual M4/TUN clean-qualified in both 2 and 4 lanes with genuine outer DATA off. W103+W104 separately fixed6 real loss recovery, W100 fixed0 historical ON clean only. CPU-s crossVM not causal; fixed3 PSI 35%+ signals contention, no heavier stress.",
+  "limitations": [
+    "Missing fixed0 with outer OFF real product verification",
+    "One-way/pause tail and MTU edges still outstanding",
+    "Only clean non-loss for fixed1-5; no ten-profile high-loss matrix deliberately",
+    "Native Game Auto unsupported and not added",
+    "Linux ARM64 not Windows/physical",
+    "capacity stop on raising load due PSI peaks"
+  ],
+  "capacity_stop": true,
+  "merge_ready": false
+}
