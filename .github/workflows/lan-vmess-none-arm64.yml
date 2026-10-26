@@ -1,0 +1,53 @@
+name: Minimal VMess NONE vs WBD hidden PN XOR arm64
+on:
+  push:
+    branches: [experiment/lan-vmess-none-compare]
+    paths: [".github/workflows/lan-vmess-none-arm64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: minimal-vmess-none-arm64
+  cancel-in-progress: true
+jobs:
+  native-bench:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.x"
+          cache: false
+      - name: One identical native Go compiler and real architecture, byte-exact roundtrip checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "aarch64"
+          mkdir -p vmess-none-ab
+          go version | tee vmess-none-ab/go_version.txt
+          lscpu > vmess-none-ab/cpu.txt
+          go test -v tools/lan_vmess_none_vs_wbd_test.go -run '^Test' -count=1 \
+            | tee vmess-none-ab/tests.txt
+          printf 'source=%s\narch=%s\nVMESS_REF=v2fly_v2ray_core_master_sha12ed3758ca2bf322cc3bf61bd97a4238ec041aed\n' \
+            "$GITHUB_SHA" "$(uname -m)" > vmess-none-ab/scope.txt
+      - name: Native 5 modes x 5 replicates x 100 original 1345B packets full encode and decode
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GOMAXPROCS=1
+          go test tools/lan_vmess_none_vs_wbd_test.go \
+             -run '^$' -bench '^Benchmark' -benchtime=1s \
+             -count=5 -benchmem -cpu=1 \
+             | tee vmess-none-ab/benchmark.txt
+          python3 -m py_compile tools/lan_vmess_none_vs_wbd_analyze.py
+          python3 tools/lan_vmess_none_vs_wbd_analyze.py \
+            --input vmess-none-ab/benchmark.txt \
+            --output vmess-none-ab/summary.json \
+            | tee vmess-none-ab/summary_stdout.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: vmess-none-wbd-arm64-native
+          path: vmess-none-ab/
+          retention-days: 30
+          if-no-files-found: warn
