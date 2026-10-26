@@ -47,6 +47,7 @@ type m0NativeV4Peer struct {
  pending []m0NativeV4Outbound
  sent,opened,sentAfterOpen,retries,duplicates,rejected,oversize,feedbackSent uint64
  pendingCount int
+ fixedApplied bool
  oldestUnackedAt time.Time
  lastRXAt time.Time
  maxRXInterdeliveryMs int64
@@ -104,7 +105,7 @@ func(p *m0NativeV4Peer) BindNativeRing(
  // Register the single Rust M2 recovery direction ONLY when the live
  // original Go credential TLS and the same M4-created Wintun are bound.
  // Do not arm parallel FEC2 until its genuine public M2 mode is approved.
- if p.mode==m0WinModeNormal{
+ if p.mode==m0WinModeNormal||p.mode==m0WinModeFixed{
   if err:=p.owner.ArmBoundOriginalM2(ctx);err!=nil{return err}
  }
  p.ring=ring;p.identity=id;p.sendNext=send;p.recvNext=recv
@@ -160,7 +161,7 @@ func(p *m0NativeV4Peer) sendACK()error{
 }
 func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
  if p.stopped(){return false,context.Canceled}
- if p.mode==m0WinModeNormal{
+ if p.mode==m0WinModeNormal||p.mode==m0WinModeFixed{
   // This bounded status is from ORIGINAL Rust M2 frozen shadows, never
   // the peer's cumulative TCP-appearance ACK. Fresh resumes on an
   // authenticated kind1 receipt even with an earlier carrier gap.
@@ -186,6 +187,9 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
  var pn uint64
  if p.mode==m0WinModeNormal {
   ciphertext,seq,pn,err=p.owner.SealBoundOriginalNormalOff(ctx,p.scratch[:n])
+ }else if p.mode==m0WinModeFixed {
+  // Frozen Linux FixedStream assigns block/index and deferred parity.
+  ciphertext,seq,pn,err=p.owner.SealBoundOriginalFixedSource(ctx,p.scratch[:n])
  }else{
   if n>p.maxIPv4||p.blockID==0||p.blockID==^uint64(0){
    p.mu.Lock();p.oversize++;p.mu.Unlock()
@@ -202,7 +206,7 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
 
  if seq!=p.sendNext{return false,fmt.Errorf("%w: native normal TX sequence mismatch expected=%d got=%d",windowsclient.ErrN4NativeGuard,p.sendNext,seq)}
  err=p.sendCarrier(seq,p.recvNext,ciphertext)
- if p.mode==m0WinModeNormal{
+ if p.mode==m0WinModeNormal||p.mode==m0WinModeFixed{
   // A valid original NPF pcap_sendpacket return is the ONLY new M2
   // data firstsend event. Negative error is NOT peer receipt or a
   // definite acknowledgement; a failed callback fences this owner.
@@ -214,18 +218,18 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
   p.mu.Lock();p.pendingCount=int(count);p.mu.Unlock()
  }
  if err!=nil{return false,err}
- if p.mode!=m0WinModeNormal{
+ if p.mode!=m0WinModeNormal&&p.mode!=m0WinModeFixed{
   p.pending=append(p.pending,m0NativeV4Outbound{
    // Non-Normal remains unqualified and never substitutes TCP retry for M2.
    seq:seq,wire:ciphertext,sentAt:time.Now(),lastSent:time.Now(),
   })
  }
  p.sendNext=seq+uint32(len(ciphertext))
- if p.mode!=m0WinModeNormal{p.blockID++}
+ if p.mode==m0WinModeAuto{p.blockID++}
  p.mu.Lock()
  p.sent++
  if p.opened>0{p.sentAfterOpen++}
- if p.mode!=m0WinModeNormal{
+ if p.mode!=m0WinModeNormal&&p.mode!=m0WinModeFixed{
   p.pendingCount=len(p.pending)
   if len(p.pending)>0{p.oldestUnackedAt=p.pending[0].sentAt}
  }
@@ -250,7 +254,7 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
   // Presentation TCP bitmap remains fixed 256 entries / 128KiB. After
   // true Rust M2 arming, a later record can be AEAD/PN-authenticated
   // despite an old cumulative ACK hole, WITHOUT granting a fake ACK.
-  independent=p.mode==m0WinModeNormal &&
+  independent=(p.mode==m0WinModeNormal||p.mode==m0WinModeFixed) &&
    p.rx.IndependentAEADCandidate(seg.Seq,len(seg.Payload))
   if !independent{
    p.mu.Lock();p.rejected++;p.mu.Unlock()
@@ -307,7 +311,7 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
   if ackErr!=nil{return ackErr}
   p.recvNext=ack
  }
- if p.mode==m0WinModeNormal{
+ if p.mode==m0WinModeNormal||p.mode==m0WinModeFixed{
   // This is AFTER the real Rust M3 unique opener and successful owned
   // Wintun copies (or authenticated kind1 handling), never raw TCP seq.
   p.rx.NoteAuthenticated(seg.Seq,len(seg.Payload))
@@ -332,7 +336,7 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
 // the SAME original Rust authenticated owner. Exactly one original M1
 // ciphertext/seq is copied through NPF; no TCP-ACK-derived M2 receipt.
 func(p *m0NativeV4Peer) rustFeedbackOne(ctx context.Context)(bool,error){
- if p.mode!=m0WinModeNormal||p.stopped(){return false,nil}
+ if (p.mode!=m0WinModeNormal&&p.mode!=m0WinModeFixed)||p.stopped(){return false,nil}
  wire,seq,pn,err:=p.owner.NextBoundOriginalM2Feedback(ctx,p.maxIPv4+31)
  if err!=nil{return false,fmt.Errorf("M0 original M2 reverse-kind1 feedback draft: %w",err)}
  if len(wire)==0{return false,nil}
@@ -355,9 +359,11 @@ func(p *m0NativeV4Peer) rustFeedbackOne(ctx context.Context)(bool,error){
 // ciphertext byte-exact through the same original Npcap endpoint; no new
 // PN, seal call, or independent 750ms/8 retries can reach the Normal worker.
 func(p *m0NativeV4Peer) rustRepairOne(ctx context.Context)(bool,error){
- if p.mode!=m0WinModeNormal{return false,nil}
+ if p.mode!=m0WinModeNormal&&p.mode!=m0WinModeFixed{return false,nil}
  if p.stopped(){return false,nil}
- wire,seq,pn,err:=p.owner.NextBoundOriginalM2Repair(ctx,p.maxIPv4+31)
+ cap:=p.maxIPv4+31
+ if p.mode==m0WinModeFixed{cap+=14}
+ wire,seq,pn,err:=p.owner.NextBoundOriginalM2Repair(ctx,cap)
  if err!=nil{return false,fmt.Errorf("M0 original M2 immutable repair candidate: %w",err)}
  if len(wire)==0{return false,nil}
  sentErr:=p.sendCarrier(seq,p.recvNext,wire)
@@ -368,6 +374,29 @@ func(p *m0NativeV4Peer) rustRepairOne(ctx context.Context)(bool,error){
  if sentErr==nil{p.retries++}
  p.mu.Unlock()
  if sentErr!=nil{return false,sentErr}
+ return true,nil
+}
+
+func(p *m0NativeV4Peer) rustFixedParityOne(ctx context.Context)(bool,error){
+ if p.mode!=m0WinModeFixed||p.stopped(){return false,nil}
+ rows,err:=p.owner.NextBoundOriginalFixedParity(ctx)
+ if err!=nil{return false,err}
+ if len(rows)==0{return false,nil}
+ copied:=uint32(0)
+ for _,row:=range rows{
+  if row.Seq!=p.sendNext{
+   _=p.owner.CompleteBoundOriginalFixedParity(ctx,copied,uint32(len(rows))-copied,0)
+   return false,fmt.Errorf("%w: W168 Fixed parity TX sequence mismatch expected=%d got=%d",
+    windowsclient.ErrN4NativeGuard,p.sendNext,row.Seq)
+  }
+  if err=p.sendCarrier(row.Seq,p.recvNext,row.Wire);err!=nil{
+   _=p.owner.CompleteBoundOriginalFixedParity(ctx,copied,uint32(len(rows))-copied,0)
+   return false,err
+  }
+  p.sendNext=row.Seq+uint32(len(row.Wire))
+  copied++
+ }
+ if err=p.owner.CompleteBoundOriginalFixedParity(ctx,copied,0,0);err!=nil{return false,err}
  return true,nil
 }
 func(p *m0NativeV4Peer) retryOne(now time.Time)(bool,error){
@@ -432,12 +461,20 @@ func(p *m0NativeV4Peer) pulse(ctx context.Context)(int,error){
  if ctx.Err()==nil&&!p.stopped(){
   var retried bool
   var err error
-  if p.mode==m0WinModeNormal{
+  if p.mode==m0WinModeNormal||p.mode==m0WinModeFixed{
    // Feedback is deadline-driven and never waits for a Go TCP presentation ACK.
    acknowledged,feedbackErr:=p.rustFeedbackOne(ctx)
    if feedbackErr!=nil{return done,feedbackErr}
    if acknowledged{done++}
    retried,err=p.rustRepairOne(ctx)
+   if p.mode==m0WinModeFixed && err==nil{
+    sent,parityErr:=p.rustFixedParityOne(ctx)
+    if parityErr!=nil{return done,parityErr}
+    if sent{done++}
+    state,readErr:=p.owner.ReadBoundOriginalFixedMature(ctx)
+    if readErr!=nil{return done,readErr}
+    p.mu.Lock();p.fixedApplied=state.Applied==1;p.mu.Unlock()
+   }
   }else{
    retried,err=p.retryOne(time.Now())
   }
