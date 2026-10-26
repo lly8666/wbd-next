@@ -42,6 +42,9 @@ pub(crate) struct GameKernelOwner{
     rx_mutex_acquired:Arc<AtomicU64>,rx_authenticated_some:Arc<AtomicU64>,
     rx_dedup_none:Arc<AtomicU64>,rx_tun_failed:Arc<AtomicU64>,
     rx_delivery_commit_failed:Arc<AtomicU64>,
+    // One aggregated report at Stop; no per-packet tracing or channel.
+    rx_mmsg_calls:Arc<AtomicU64>,rx_mmsg_observed:Arc<AtomicU64>,
+    rx_mmsg_full:Arc<AtomicU64>,rx_mmsg_untrusted:Arc<AtomicU64>,
     outer_blocked_duplicate:Arc<AtomicU64>,
     outer_repeated_copy_sent:Arc<AtomicU64>,
 }
@@ -101,6 +104,10 @@ impl GameKernelOwner{
         let rx_dedup_none=Arc::new(AtomicU64::new(0));
         let rx_tun_failed=Arc::new(AtomicU64::new(0));
         let rx_delivery_commit_failed=Arc::new(AtomicU64::new(0));
+        let rx_mmsg_calls=Arc::new(AtomicU64::new(0));
+        let rx_mmsg_observed=Arc::new(AtomicU64::new(0));
+        let rx_mmsg_full=Arc::new(AtomicU64::new(0));
+        let rx_mmsg_untrusted=Arc::new(AtomicU64::new(0));
         let outer_blocked_duplicate=Arc::new(AtomicU64::new(0));
         let outer_repeated_copy_sent=Arc::new(AtomicU64::new(0));
         let mut lanes=Vec::new();
@@ -293,6 +300,10 @@ impl GameKernelOwner{
             let rx_none=Arc::clone(&rx_dedup_none);
             let tun_failed=Arc::clone(&rx_tun_failed);
             let commit_failed=Arc::clone(&rx_delivery_commit_failed);
+            let mmsg_calls=Arc::clone(&rx_mmsg_calls);
+            let mmsg_observed=Arc::clone(&rx_mmsg_observed);
+            let mmsg_full=Arc::clone(&rx_mmsg_full);
+            let mmsg_untrusted=Arc::clone(&rx_mmsg_untrusted);
             let rx_start=epoch_clock;
             let builder=thread::Builder::new().name(format!("wbd-v4-game-rx-{}",i+1));
             let worker=builder.spawn(move||{
@@ -308,6 +319,7 @@ impl GameKernelOwner{
                 // an extra worker/channel; source delivery stays first-ready.
                 let mut wires=[[0u8;2048];4];
                 'rx_loop: while !rx_stop.load(Ordering::Acquire){
+                    mmsg_calls.fetch_add(1,Ordering::Relaxed);
                     let batch={
                         let [a,b,c,d]=&mut wires;
                         let mut slots:[&mut [u8];4]=[
@@ -325,6 +337,8 @@ impl GameKernelOwner{
                             continue
                         }
                     };
+                    mmsg_observed.fetch_add(batch.observed as u64,Ordering::Relaxed);
+                    if batch.observed==4{mmsg_full.fetch_add(1,Ordering::Relaxed);}
                     if batch.observed==0{
                         if batch.status==RawReadyStatus::Interrupted{continue}
                         if !matches!(batch.status,RawReadyStatus::WouldBlock|
@@ -350,6 +364,7 @@ impl GameKernelOwner{
                                 RawReadyEntry::Truncated{..}|
                                 RawReadyEntry::Unauthenticated{..}|
                                 RawReadyEntry::Unused)|None=>{
+                                mmsg_untrusted.fetch_add(1,Ordering::Relaxed);
                                 recv_rejected.fetch_add(1,Ordering::Relaxed);
                                 continue
                             }
@@ -495,7 +510,9 @@ impl GameKernelOwner{
             raw_received,rx_reject,
             rx_driver_timeout,rx_driver_other,rx_mutex_acquired,
             rx_authenticated_some,rx_dedup_none,rx_tun_failed,
-            rx_delivery_commit_failed,outer_blocked_duplicate,
+            rx_delivery_commit_failed,
+            rx_mmsg_calls,rx_mmsg_observed,rx_mmsg_full,rx_mmsg_untrusted,
+            outer_blocked_duplicate,
             outer_repeated_copy_sent})
     }
     pub(crate) fn outer_policy_counters(&self)->(u64,u64,u64){
@@ -540,6 +557,12 @@ impl GameKernelOwner{
             self.rx_tun_failed.load(Ordering::Relaxed),
             self.rx_delivery_commit_failed.load(Ordering::Relaxed),
             self.delivered.load(Ordering::Relaxed));
+        eprintln!("M0_GAME_M4_RX_MULTIMSG socket_calls={} observed_records={} full_4_batches={} rejected_untrusted={} valid_records={} limit_per_syscall=4",
+            self.rx_mmsg_calls.load(Ordering::Relaxed),
+            self.rx_mmsg_observed.load(Ordering::Relaxed),
+            self.rx_mmsg_full.load(Ordering::Relaxed),
+            self.rx_mmsg_untrusted.load(Ordering::Relaxed),
+            self.raw_received.load(Ordering::Relaxed));
         self.tun.begin_stop();
         for x in &self.tx{x.begin_stop()}
         for x in &self.rx{x.begin_stop()}
