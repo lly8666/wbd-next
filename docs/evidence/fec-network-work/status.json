@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "P1A_NATIVE80_PPS_NEGATIVE_REVERT_CONFIRMED_W137_GAME_DEADLINE_SCOPED_KEEP_W142_P2_SAMPLED_LOCK_NATIVE_PASS_BUSINESS_PENDING",
+  "phase": "P1A_NATIVE80_CPU_REGRESSION_KEEP_REVERT; W137_GAME_FEC_DEADLINE_SCOPED_PASS; W142_SHARED_RX_LOCK_WAIT_MEASURED_P2_REFACTOR_NOT_YET; CAPACITY_STOP",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -678,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W142 next: exact SOURCE 8bc31fb0 native ARM64 build40297407378 SUCCESS artifact12639325846 SHA256 d2a1d3bd..., harness contract40297604695 PASS. Real independent Game4 fixed6 IID30 UDP5Mbps AB Action40297884296 IN_PROGRESS; only new B env WBD_GAME_RX_LOCK_SAMPLE=1, every128 records measure shared RX lock wait/held during authentic per-lane AEAD/replay+GameFEC prepare, observe first delivery, full parity, Stop, host PSI. Do not move AEAD outside mutex until measured. P1a highPPS 80Mbps native loopback ABBA Action40296519037 no CPU win +3.567% with all312500 packets each leg, full real Game4 80 still capacity_stop. W137 fixed6 deadline e400 scoped Game2/4 passed W137-140 with unchanged Normal data path; previous five-mode P0 SOURCE6c38 retained as last cross-mode qualified. P1b native TX batching requires exact partial/FEC copied semantics, P3 shared changes require separate Normal+Game tests. Windows NOT_RUN, merge_ready false, no main.",
+  "next_action": "W142 Game4 shared RX mutex contention sampled exact SOURCE8bc31fb native build40297407378 artifact12639325846 sha d2a1d3..., real W142 Action40297884296 PASS artifact12638344905 sha c4e3..., 5Mbps per direction IID30: client 4259 samples wait1.400us hold2.998us max wait249.5us; server4258 wait1.418us hold3.070us max207.2us. Sampled prepare/AEAD/FEC shared mutex only, excludes finish/commit; baseline total CPU22.68 vs instrumented23.55 CPU-s (+3.8%) with all UDP delivered, parity/scheduled copies all sent, zero outerDATA retrans, Stop clean. P2 next candidate (separate commit) move one existing AEAD/replay state per lane out of shared owner only after preserving single acceptance of each PN, Game first-delivery dedup authenticated first, one shared FEC and actual TUN success confirmation including multi-source partial failure; verify native before sameVM 5/10Mbps A/B. Do not prematurely equate wait~1.4us to guaranteed CPU gain. User-requested high PPS 80Mbps 64B native P1a ABBA Action40296519037 was real156250pps, kernel-only CPU+3.567%, P1a reverted; full Game4 80Mbps still NOT_RUN capacity stop (W12620Mbps PSI33.24/42.04). W137 new deadline e400 Game scoped proven W137/138/139/140, previous cross-mode fully qualified6c38 untouched. Keep Windows NOT_RUN, capacity_stop true, no main merge/no other owner next_action.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -7179,11 +7179,44 @@
     "performance_action": 40297884296,
     "request": "tests/network/fec-work/W142-Game4-fixed6-IID30-UDP5Mbps-P2-shared-RX-lock-sampling-sameVM-AB-ARM64.json",
     "request_commit": "31474d27220181333a10220b76411bd8e9eb9048",
-    "status": "NATIVE_PASS_PERFORMANCE_ACTION_RUNNING_AT_CHECKPOINT",
+    "status": "REAL_ARM64_W142_PASS_SCOPED_SAMPLED_LOCK_WAIT_MEASURED_NO_PERFORMANCE_WIN",
     "measure": "WBD_GAME_RX_LOCK_SAMPLE only bundle B; real authenticated received packet every128 samples RX shared owner wait and prepare hold, no per-packet clock normal path; one Stop aggregate per endpoint",
     "next": "Inspect 40297884296 real deliveries/CPU/PSI/lock wait hold; no P2 decrypt state movement before actual proof",
     "windows": "NOT_RUN",
     "capacity_stop": true,
-    "merge_ready": false
+    "merge_ready": false,
+    "action_conclusion": "SUCCESS",
+    "performance_artifact_id": 12638344905,
+    "performance_zip_sha256": "c4e3c8c3a70b8c0ddcd6e5f3d3f67283766e50a107a8889f9966e02bc4f3bfff",
+    "data": {
+      "client": {
+        "samples": 4259,
+        "wait_mean_ns": 1400.038,
+        "hold_mean_ns": 2998.188,
+        "max_wait_ns": 249519
+      },
+      "server": {
+        "samples": 4258,
+        "wait_mean_ns": 1417.504,
+        "hold_mean_ns": 3069.723,
+        "max_wait_ns": 207222
+      },
+      "two_endpoints_cpu_old_new_s": [
+        22.68,
+        23.55
+      ],
+      "host_psi_mean_old_new_pct": [
+        1.5766,
+        1.7546
+      ],
+      "true_game4_udp_missing": 0,
+      "parity_planned_equals_sent_both": true,
+      "stagger_copies_all_sent": true,
+      "outer_retrans_zero": true,
+      "go_posthandoff_copies_zero": true,
+      "stop_drained": true
+    },
+    "evidence": "docs/evidence/fec-network-work/20261026-W142-Game4-fixed6-shared-RX-lock-sampled-IID30-UDP5Mbps-AB.json",
+    "decision": "P2 shared RX mutex wait proven ~1.4us/sample vs prepare held~3us; instrumented candidate has no CPU optimization and ~3.8% higher total measured CPU. Do not claim a specific possible saving; next separate P2 product state ownership refactor only with proper native/TUN/Stop tests."
   }
 }
