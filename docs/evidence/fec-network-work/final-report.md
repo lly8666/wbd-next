@@ -2,6 +2,8 @@
 
 ## 最新用户追加 W159–W163：真实大包与 Game4 <0.1% 长损伤有限验收
 
+**W164 验收门精确补核（不重测业务）：** [网络夹具契约40327433128](https://github.com/lly8666/wbd-next/actions/runs/40327433128) SUCCESS。FEC-owned Game4 `0.1%` 阈值现在按严格 `<0.1%` 判定，恰好 `0.100%` 会 FAIL；其余模式/传统阈值保留原行为，修复只涉及 `tools/network_harness/report.py` 和 `tests/network/test_harness.py`（commit `4dfc15dc`）。既有 W162=0/5888、W163=0/8280 与1/8280 实测本来就严格低于0.1%，无需重测或更改原Action。详情 [W164只读补核](20261026-W164-Game4-Strict-Loss-Boundary-Audit.json)。
+
 **复用已冻结原始 Linux ARM64 Go TLS + Rust FEC 产品，outer DATA 实际 OFF，parity 独立，Stop 有界。** [W159 原始大包 Action40321814718](https://github.com/lly8666/wbd-next/actions/runs/40321814718) Normal fixed6，真实双向各2Mbps、1370B/4KiB/16KiB/60KiB UDP分片 + TCP 大帧：每方向 UDP **311/311**、TCP **204/204** 真正送达，无发送错误/背压/TUN drops/外层 DATA retrans，然而旧夹具误要求**实际没有配置的 <=256B 小 UDP 样本**，因此 Action **FAIL**，保留原始红灯和峰值 PSI43%，不回写成绿灯。修正**仅限该请求**不启用不适用 size-class 小包门并降负载至1Mbps，[W159R 40325360992](https://github.com/lly8666/wbd-next/actions/runs/40325360992) **SUCCESS**，UDP/TCP真实两向零缺失、TUN/Stop/外层OFF正确、host PSI峰0%；没有为“刷绿”把大包伪装成小包，亦不增加高载压力。
 
 Game4 fixed6 用户明确将长相关损伤双向真实业务残余门设为 **严格 <0.1%**。旧默认 0/4/20/60ms 先复用精确产品 Source `8ae002d0`：[W160 GE15%共享45秒 40321822324](https://github.com/lly8666/wbd-next/actions/runs/40321822324) 成功，C→S/S→C 各 UDP **8280/8280、8280/8280**，TCP正常，底层实际净丢14.88%/14.90%，外层DATA0、实际 parity 真实发送。随后 [W161](https://github.com/lly8666/wbd-next/actions/runs/40322366557) 只是旧夹具只允许 FEC OFF 100ms墙钟黑洞造成的**PREP UNSUPPORTED**，并非产品失败；修正 FEC 独立测试夹具限域及负例断言 Action40322747922 PASS 后，[W161R 40322777858](https://github.com/lly8666/wbd-next/actions/runs/40322777858) **真失败**：三次实际约105–106ms全lane共同黑洞、受损期每方向5888发，C→S缺24（0.4076%）、S→C缺23（0.3906%），TCP无丢、host PSI0，原因是旧最后一份原始副本 T0+60ms 无法跨越100ms故障，不嫁祸于codec/宿主。

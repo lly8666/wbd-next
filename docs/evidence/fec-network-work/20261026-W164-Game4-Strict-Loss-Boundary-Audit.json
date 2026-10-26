@@ -1,0 +1,106 @@
+{
+  "schema": "FEC_W164_GAME4_EXCLUSIVE_0P1_LOSS_GATE_AUDIT_20261026_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "reason": "Original Game4 loss acceptance uses > 0.1%, which would treat EXACT equality as success contrary to explicit strict <0.1% user requirement.",
+  "fix": {
+    "commit": "4dfc15dcc57cd11e5837cd0d4ee8e228087c34ec",
+    "source_paths": [
+      "tools/network_harness/report.py",
+      "tests/network/test_harness.py"
+    ],
+    "rule": "When owner=fec-network-work and mode=game4 and max_loss_pct/max_small_udp_loss_pct=0.1, exact equality now fails; lower limits preserve their legacy inclusive meaning for other owners/modes.",
+    "cases": [
+      "0.099% succeeds",
+      "0.100% fails",
+      "0.101% fails",
+      "legacy Game2 and default >=1% gates are unchanged"
+    ],
+    "harness_action": 40327433128,
+    "harness_action_result": "SUCCESS",
+    "product_or_outer_algorithm_changes": false,
+    "new_performance_actions": 0,
+    "previous_request_files_or_raw_actions_rewritten": false
+  },
+  "reused_measured_receipts": {
+    "source_new": "8f85e0ba495070c925504452d3848aa90a5d2c20",
+    "W159R": {
+      "run": 40325360992,
+      "result": "PASS_SCOPED",
+      "genuine_udp_tcp_big_payload_both_missing": 0,
+      "host_psi_peak_pct": 0
+    },
+    "W162": {
+      "run": 40324751265,
+      "result": "PASS_SCOPED",
+      "shared_blackouts_ms_observed_client": [
+        107.26,
+        104.509,
+        102.466
+      ],
+      "damaged_udp_each": {
+        "c2s": [
+          5888,
+          5888
+        ],
+        "s2c": [
+          5888,
+          5888
+        ]
+      },
+      "actual_outer_data_retransmits": 0,
+      "mode_readback_both": 2
+    },
+    "W163": {
+      "run": 40325393000,
+      "result": "PASS_SCOPED",
+      "GE_45s_actual_underlay_loss_pct": [
+        15.4121,
+        15.1338
+      ],
+      "damaged_udp_each": {
+        "c2s": [
+          8280,
+          8280
+        ],
+        "s2c": [
+          8280,
+          8279
+        ]
+      },
+      "real_app_loss_pct": [
+        0,
+        0.012077294685990338
+      ],
+      "TCP_missing": 0,
+      "actual_outer_data_retransmits": 0,
+      "mode_readback_both": 2,
+      "host_psi_peak_pct": 0.01
+    },
+    "W161R": {
+      "run": 40322777858,
+      "result": "FAIL_STRICT_0P1",
+      "damaged_udp_each": {
+        "c2s": [
+          5888,
+          5864
+        ],
+        "s2c": [
+          5888,
+          5865
+        ]
+      },
+      "actual_outer_data_retransmits": 0
+    }
+  },
+  "source_integrity": "Only fixtures/evidence/docs were added between product source 8f85e0ba and report head 2b8a7c70; this W164 change also only touches harness loss evaluator/unit tests.",
+  "boundaries": [
+    "Measured W162/W163 values were strictly BELOW 0.1% before this evaluator correction; earlier green Actions need not be re-run or relabeled.",
+    "This is a semantics audit, not a new real business measurement or proof of universal loss probability.",
+    "Game4 25Mbps host PSI capacity STOP remains; wide 25/80Mbps, Windows, and latest full five-mode source not qualified.",
+    "W162 real native parity/copy may be abandoned under blocked outputs; do not infer planned==sent.",
+    "Normal external network worker status/next_action unchanged."
+  ],
+  "capacity_stop": true,
+  "merge_ready": false
+}

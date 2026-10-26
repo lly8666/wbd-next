@@ -7723,5 +7723,15 @@
     "no_universal_loss_guarantee": true,
     "same_VM_CPU_performance_gain": "NOT_CLAIMED_DIFFERENT_ACTIONS",
     "merge_ready": false
+  },
+  "w164_game4_strict_boundary_audit": {
+    "audit_evidence": "docs/evidence/fec-network-work/20261026-W164-Game4-Strict-Loss-Boundary-Audit.json",
+    "guard_source_commit": "4dfc15dcc57cd11e5837cd0d4ee8e228087c34ec",
+    "contract_action": 40327433128,
+    "contract_conclusion": "SUCCESS",
+    "regression_scope": "FEC-owned Game4 0.1pct strict boundary only; existing W162/W163 observations already strictly below target",
+    "new_business_action": "NONE_REUSE_EXISTING",
+    "merge_ready": false,
+    "capacity_stop": true
   }
 }
