@@ -524,46 +524,6 @@ impl GameAdapter{
     }
     /// Each ready lane gets a distinct AEAD nonce/PN and cipher buffer;
     /// network copy acknowledgement is supplied by the M0 kernel driver.
-    /// P1b opt-in raw TX integration: prepare already-DUE immutable records
-    /// for a bounded synchronous kernel sendmmsg. This stage does NOT credit
-    /// Game sent or FEC parity copied; finish_staged is mandatory after the
-    /// kernel-reported per-lane exact accepted prefixes are known.
-    pub(crate) fn stage_ready<F>(&mut self,now:MonoNs,mut stage:F)->usize
-    where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
-        if self.stopped{return 0}
-        let lanes=&mut self.lanes;
-        let scratch=&mut self.wire_scratch;
-        self.tx.drain_ready(now,8,|view|{
-            let Some(id)=view.logical_id else{return DispatchOutcome::PressureDrop};
-            let Some(lane)=lanes.iter_mut().find(|l|l.key==view.lane)
-                else{return DispatchOutcome::PressureDrop};
-            let len=view.common_payload.len();
-            let Some(end)=31usize.checked_add(len)else{
-                return DispatchOutcome::PressureDrop
-            };
-            if end>scratch.len(){return DispatchOutcome::PressureDrop}
-            let wire=&mut scratch[..end];
-            wire[14..14+len].copy_from_slice(view.common_payload);
-            let Ok((pn,n))=lane.tx.seal_in_place(1,wire,len,0)
-                else{return DispatchOutcome::PressureDrop};
-            if stage(view.lane,id,pn,&wire[..n]){
-                DispatchOutcome::Deferred
-            }else{DispatchOutcome::PressureDrop}
-        })
-    }
-    pub(crate) fn finish_staged(&mut self,accepted:&[bool],
-        ids:&[LogicalPacketId])->Result<(),Error>{
-        if accepted.len()!=ids.len(){return Err(Error::Invalid)}
-        self.tx.finish_deferred(accepted).map_err(Error::Game)?;
-        #[cfg(feature="fec2_product_record")]
-        if let Some(f)=self.fec.as_mut(){
-            for (&ok,&id) in accepted.iter().zip(ids.iter()){
-                if ok {f.copied(id)}
-            }
-            f.settle_when_quiet(self.tx.in_use().0==0);
-        }
-        Ok(())
-    }
     pub fn drain<F>(&mut self,now:MonoNs,mut kernel_copy:F)->usize
     where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
         if self.stopped{return 0}
@@ -630,80 +590,6 @@ mod tests{
                 generation:7},mss:1400},
             tx:keys((i+1) as u8),rx:keys((i+1) as u8)
         }).collect(),RecordSuite::ChaCha20Poly1305).unwrap()
-    }
-    #[test]
-    fn w155_p1b_deferred_kernel_prefix_ack_and_stop_fail_closed(){
-        let mut game=build(4);
-        game.configure_game4_stagger().unwrap();
-        let origin=1_000_000u64;
-        for i in 0..3u8{game.offer(&[i;128],MonoNs(origin)).unwrap();}
-        let mut ids=Vec::new();
-        let mut copied=Vec::new();
-        let count=game.stage_ready(MonoNs(origin),|lane,id,pn,wire|{
-            assert_eq!(lane.slot,1);
-            assert!(pn<1000);
-            assert!(!wire.is_empty());
-            ids.push(id);
-            copied.push(wire.to_vec());true
-        });
-        assert_eq!(count,3);
-        assert_eq!(ids.len(),3);
-        assert_eq!(game.tx.deferred_count(),3);
-        let before=game.game4_copy_schedule().unwrap();
-        assert_eq!(before.sent[0],0,"staging is not a kernel send");
-        assert_eq!(game.stage_ready(MonoNs(origin),|_,_,_,_|{
-            panic!("cannot overlap unacknowledged sendmmsg");
-        }),0);
-        // Exactly one kernel-copied positive prefix; unaccepted suffix
-        // must NOT be credited, even if its nonce was already sealed.
-        game.finish_staged(&[true,false,false],&ids).unwrap();
-        assert_eq!(game.tx.deferred_count(),0);
-        let after=game.game4_copy_schedule().unwrap();
-        assert_eq!(after.sent[0],1);
-        assert_eq!(after.abandoned[0],2);
-        assert_eq!(after.scheduled[0],3);
-        // Prior encrypted slabs remain independent during native syscall;
-        // subsequent physical lanes retain the original 4/20/60ms plan.
-        assert_eq!(game.game4_next_due_ns(),Some(origin+4_000_000));
-        assert_eq!(game.stage_ready(MonoNs(origin+4_000_000),
-            |lane,_,_,_|lane.slot==2),3);
-        assert_eq!(game.tx.deferred_count(),3);
-        game.stop();
-        assert_eq!(game.tx.deferred_count(),0);
-        let c=game.game4_copy_schedule().unwrap();
-        assert_eq!(c.abandoned[1],3,"Stop cannot forge kernel receipts");
-        assert_eq!(game.drain(MonoNs(origin+60_000_000),|_,_,_,_|true),0);
-    }
-    #[cfg(feature="fec2_product_record")]
-    #[test]
-    fn w155_p1b_fixed6_parity_only_credited_after_actual_kernel_prefix(){
-        let mut tx=build(4);
-        tx.enable_game_fec(6,false).unwrap();
-        tx.configure_game4_stagger().unwrap();
-        let now=MonoNs(1_000_000);
-        tx.offer(&[0x31;128],now).unwrap();
-        let mut ids=Vec::new();
-        tx.stage_ready(now,|_,id,_,_|{ids.push(id);true});
-        assert_eq!(ids.len(),1);
-        let original=tx.game_fec_counters().unwrap().0.parity_kernel_copied;
-        tx.finish_staged(&[true],&ids).unwrap();
-        assert_eq!(tx.game_fec_counters().unwrap().0.parity_kernel_copied,original);
-        tx.poll_game_fec(MonoNs(9_000_000)).unwrap();
-        let mut parity=Vec::new();
-        tx.stage_ready(MonoNs(9_000_000),|_,id,_,_|{
-            parity.push(id);true
-        });
-        let planned=tx.game_fec_counters().unwrap().0.parity_kernel_copied;
-        assert_eq!(planned,original);
-        if !parity.is_empty(){
-            let mut result=vec![false;parity.len()];
-            result[0]=true;
-            tx.finish_staged(&result,&parity).unwrap();
-            let actual=tx.game_fec_counters().unwrap().0.parity_kernel_copied;
-            assert!(actual>=planned);
-            assert!(actual<=planned+1);
-        }
-        tx.stop();
     }
     #[test]
     fn game4_stagger_due_fifo_source_immediate_and_tail_not_5ms_expired(){
