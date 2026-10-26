@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "P2_GAME_LANE_AEAD_REPLAY_RETAIN_WITH_10_15_20_30_MBPS_SCOPED_AND_REAL_MIXED; P3A_WBG4_DIRECT_ARENA_NATIVE_PASS_REAL_GAME4_20M_AB_RUNNING; CAPACITY_STOP_NO_MAIN_MERGE",
+  "phase": "P2_GAME_SCOPED_RETAIN_W143_W150; P3A_W151_REAL_20MBPS_PASS_SMALL_CPU_GAIN_W152_REVERSE_BA_RUNNING; CAPACITY_STOP_NO_MAIN_MERGE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -678,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "P2 retained ONLY Game scoped: bb8e8249 original lane-only AEAD/replay, one shared GameRx/FEC, real 10/15/20Mbps Game4, 20/30Mbps Game2, W149 Game4 OFF clean genuine TCP/UDP and W150 fixed6 damaged true TCP/UDP 15Mbps Action40307513185 all PASS. W148 Game2 30Mbps CPU45.65→45.36 (-0.64%), W149 Game4 OFF mixed CPU9.47→9.28 (-2.01%), W150 fixed6 damage mixed CPU48.20→47.82 (-0.79%), TCP and UDP zero missing, zero HOL and all parity sent; W149/W150 few 20/60ms Stop tails NOT sent, no false copied. Keep architecture despite modest noisy CPU, no universal % claim. New isolated W151 Game-only P3a direct WBG4 encode_into bounded GameTx arena source08b1cad121e35eadce252af132e9347861a145f1 ARM64 native build40307947902 PASS artifact12643457917 SHA256 a9e2b381...; previous exact P2 bb8 BINARY artifact12639832584. W151 true Game4 fixed6 20Mbps each direction IID30 sameVM AB Action40308448415 IN_PROGRESS, must inspect actual TUN delivery/parity/physical copy, CPU/GiB RSS PSI Stop before deciding P3a keep or code-only revert (retain P2). No Game4 >20Mbps or Game2 >30Mbps on this runner pending capacity safety. Previous W130–134 five-mode cross-normal SOURCE6c38 not falsely upgraded; Windows NOT_RUN/TEMP_SKIPPED; no main merge nor original network owner next_action modifications.",
+  "next_action": "P2 Game lane-owned AEAD/replay bb8e8249 independently RETAIN after real W143–W150. P3a new exact SOURCE08b1cad native ARM64 build40307947902 PASS, client/server/Rust SHA256, WBG4 golden atomic-failure, original Normal FEC/Game TUN Stop. Direct GameTx arena removes one temporary heap Vec and full envelope copy per logical source/parity symbol, no source group/60ms physical copy life changes. Real W151 Game4 fixed6 iid30 20Mbps each direction sameVM AB Action40308448415 SUCCESS artifact12643995772 hashf7fb..., old P2 59.01 vs new P3a 58.53 CPU-s (-0.81%), host PSI mean13.27 vs12.72 peak15.47 vs14.77, all true business delivered, all 0/4/20/60 original copies and fixed6 parity actually sent, outerDATA0, Go full DATA clones0, Stop clean. Single reverse BA same rate W152 Action40309128193 currently running; inspect final CPU+host/RSS/true delivery+parity+memory and decide KEEP P3a if no regressions and structurally meaningful allocation removal vs REVERT only P3a if CPU persistently worsens. No more pressure/repeated actions beyond one reverse, never revive P1a recvmmsg. Five-mode all-current-source full qualification remains 6c38, Game P2 only scoped bb8, Windows skipped, capacity stop true, no main merge/other role state.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -7357,6 +7357,37 @@
     "performance_request": "tests/network/fec-work/W151-Game4-fixed6-IID30-UDP20Mbps-P3a-direct-GameArena-AB-ARM64.json",
     "performance_commit": "3e32f9b3f6624e86e219ddf1b22bcba7140c0fd9",
     "docs": "docs/devlog/fec-network-work/20261026-W151-Game-P3a-direct-WBG4-encode-into-bounded-arena.md",
-    "last_scoped_qualified_game_source": "bb8e8249c2adba9c7dab72bf07da2dbe0bce3b82"
+    "last_scoped_qualified_game_source": "bb8e8249c2adba9c7dab72bf07da2dbe0bce3b82",
+    "performance_status": "W151_SUCCESS_PASS_SCOPED_GAME4_FIXED6_IID30_20MBPS_OLD59P01_NEW58P53_CPU_S_MINUS0P81_PCT",
+    "performance_artifact_id": 12643995772,
+    "performance_zip_sha256": "f7fb928512a2b90f97727f41212db22959cface9432fa8131c212a09b474957f",
+    "observed_AB": {
+      "old_cpu_s": 59.01,
+      "new_cpu_s": 58.53,
+      "new_cpu_change_pct": -0.8134,
+      "host_psi_mean_old_new_pct": [
+        13.2678,
+        12.7214
+      ],
+      "host_psi_peak_old_new_pct": [
+        15.47,
+        14.77
+      ],
+      "damaged_udp_c2s_injected_delivered_old": "114759/114759",
+      "damaged_udp_c2s_injected_delivered_new": "114772/114772",
+      "damaged_udp_s2c_injected_delivered_old": "114761/114761",
+      "damaged_udp_s2c_injected_delivered_new": "114777/114777",
+      "damaged_first_p99_old_new_ms": "83.6/83.5-83.6",
+      "copy_0_4_20_60_planned_equals_sent_both": true,
+      "actual_fixed6_parity_planned_equals_sent_both": true,
+      "outer_retransmitted_zero": true,
+      "go_full_copies_after_handoff_zero_both": true,
+      "stop_drained": true
+    },
+    "reverse_action": 40309128193,
+    "reverse_request_commit": "a52ac854ba6795ca5b531e5162408fd999fe8dc3",
+    "reverse_request": "tests/network/fec-work/W152-Game4-fixed6-IID30-UDP20Mbps-P3a-direct-GameArena-BA-ARM64.json",
+    "reverse_status": "RUNNING_AT_CHECKPOINT",
+    "retention_decision": "NOT_FINAL_TINY_CPU_GAIN_NEEDS_ONLY_ONE_REVERSE_AT_IDENTICAL_20MBPS; P2_KEPT_UNCONDITIONALLY"
   }
 }
