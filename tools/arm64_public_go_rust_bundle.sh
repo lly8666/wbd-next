@@ -95,7 +95,40 @@ mkdir -p arm64-public-bundle
 export CGO_ENABLED=1 GOOS=linux GOARCH=arm64 GOTOOLCHAIN=local
 export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
 export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
-(cd legacy && go test ./internal/faketcp -run '^TestDetachedDataKernelFilterPreservesHandshakeAndControl
+(cd legacy && go test ./internal/faketcp -run '^TestDetachedDataKernelFilterPreservesHandshakeAndControl(cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product   -o "$GITHUB_WORKSPACE/arm64-public-bundle/wbd-v4-client" ./cmd/wbd-v4-client)
+(cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product   -o "$GITHUB_WORKSPACE/arm64-public-bundle/wbd-v4-server" ./cmd/wbd-v4-server)
+cp target/release/libwbd_engine.so arm64-public-bundle/libwbd_engine.so
+(cd arm64-public-bundle && sha256sum wbd-v4-client wbd-v4-server libwbd_engine.so > SHA256SUMS)
+python3 - <<'PY'
+import os,json,pathlib,platform
+d={"source":os.environ["GITHUB_SHA"],"go_source":"a7a82db31fe736ffedee330795a3234d358f1984",
+   "isa_source":"c387163fcbca62701d646149564c550c78a4f985",
+   "rust":"1.85.1","go":"1.23.12",
+   "architecture":platform.machine(),"backend_requested":"native_fec_acceleration (pinned ISA-L static)",
+   "scope":"NATIVE_ARM64_BINARY_BUILD_ONLY",
+   "raw_tun_tls_app_stop":"NOT_RUN","android_vpn":"NOT_RUN","openwrt_device":"NOT_RUN"}
+pathlib.Path("arm64-public-bundle/manifest.json").write_text(json.dumps(d,indent=2)+"\n")
+PY
+echo ARM64_PUBLIC_GO_RUST_SOURCE_LOCKED_BUILD_ONLY_PASS
+ -count=1)
+(cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli)
+(cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product   -o "$GITHUB_WORKSPACE/arm64-public-bundle/wbd-v4-client" ./cmd/wbd-v4-client)
+(cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product   -o "$GITHUB_WORKSPACE/arm64-public-bundle/wbd-v4-server" ./cmd/wbd-v4-server)
+cp target/release/libwbd_engine.so arm64-public-bundle/libwbd_engine.so
+(cd arm64-public-bundle && sha256sum wbd-v4-client wbd-v4-server libwbd_engine.so > SHA256SUMS)
+python3 - <<'PY'
+import os,json,pathlib,platform
+d={"source":os.environ["GITHUB_SHA"],"go_source":"a7a82db31fe736ffedee330795a3234d358f1984",
+   "isa_source":"c387163fcbca62701d646149564c550c78a4f985",
+   "rust":"1.85.1","go":"1.23.12",
+   "architecture":platform.machine(),"backend_requested":"native_fec_acceleration (pinned ISA-L static)",
+   "scope":"NATIVE_ARM64_BINARY_BUILD_ONLY",
+   "raw_tun_tls_app_stop":"NOT_RUN","android_vpn":"NOT_RUN","openwrt_device":"NOT_RUN"}
+pathlib.Path("arm64-public-bundle/manifest.json").write_text(json.dumps(d,indent=2)+"\n")
+PY
+echo ARM64_PUBLIC_GO_RUST_SOURCE_LOCKED_BUILD_ONLY_PASS
+ -count=1)
+(cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli)
 (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product   -o "$GITHUB_WORKSPACE/arm64-public-bundle/wbd-v4-client" ./cmd/wbd-v4-client)
 (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product   -o "$GITHUB_WORKSPACE/arm64-public-bundle/wbd-v4-server" ./cmd/wbd-v4-server)
 cp target/release/libwbd_engine.so arm64-public-bundle/libwbd_engine.so
