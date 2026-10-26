@@ -246,7 +246,6 @@ impl GameFecRx{
         Ok(out)
     }
     #[cfg(test)]
-    #[test]
     fn w101_original_game_fec_decoder_rejections_have_separate_causes(){
         let epoch=VerifiedReceiveEpoch{
             generation:7,epoch:[7;16],negotiated_features:7,
@@ -266,4 +265,11 @@ impl GameFecRx{
         fec.stop();
     }
     pub(crate) fn stop(&mut self){self.rx.stop();}
+}
+
+#[cfg(test)]
+#[test]
+fn w101_original_game_fec_decoder_rejections_have_separate_causes(){
+    // Rust #[test] must be free-standing, never an associated impl fn.
+    GameFecRx::w101_original_game_fec_decoder_rejections_have_separate_causes();
 }
