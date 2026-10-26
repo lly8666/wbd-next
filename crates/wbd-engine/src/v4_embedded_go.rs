@@ -2519,6 +2519,61 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_state(
     // installation ONLY, not a positive M4 kernel/TUN product readiness.
     OK
 }
+// Called ONLY after all original-Go TLS Game lane handles have committed and
+// before real Game M4 drivers start. Both endpoint operators must select the
+// same fixed profile; no automatic Game FEC mode or anonymous grant.
+/// Post-M4 native Game FEC proof. Counters are per ORIGINAL group:
+/// [sources offered,parity offered,parity copied on >=1 lane,
+///  systematic candidate,recovered candidate,expired jobs,failures,
+///  M1 parity planned,M1 parity copied,retained source bytes].
+/// Candidate is NOT yet actual TUN delivered; final delivery uses native
+/// V4_PUBLIC_GAME_KERNEL.delivered on the ORIGINAL kernel sink.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_fec_network_game_group_counters(
+    group:u64,out:*mut u64,len:usize
+)->i32{
+    if out.is_null()||len!=10{return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
+    if e.stopped{return BAD_STAGE}
+    let Ok(game)=e.adapter.lock()else{return BAD_STAGE};
+    let Some((c,m1))=game.game_fec_counters()else{return INVALID};
+    let planned=m1.classes.iter().map(|s|s.r_planned).sum();
+    let sent=m1.classes.iter().map(|s|s.r_sent).sum();
+    // Shared Game RX owner is separate from TX after W98. Neither decoded
+    // candidate nor parity copied counter implies successful TUN delivery.
+    let rx=game.game_fec_rx_counters().unwrap_or_default();
+    let values=[
+        c.source_offered,c.parity_offered,c.parity_kernel_copied,
+        rx.source_first_candidate,rx.recovered_candidate,c.expired,
+        c.failed+rx.failed,planned,sent,m1.charged_bytes as u64,
+    ];
+    unsafe{std::ptr::copy_nonoverlapping(values.as_ptr(),out,values.len())}
+    OK
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_fec_network_game_group_fixed_configure(
+    group:u64,profile:u32
+)->i32{
+    if profile>6{return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
+    if e.stopped||e.stopping{return BAD_STAGE}
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+    if e.drivers.is_some(){return BAD_STAGE}
+    let Ok(mut adapter)=e.adapter.lock()else{return BAD_STAGE};
+    if adapter.enable_game_fec(profile as u8,e.server).is_err(){
+        return INVALID
+    }
+    OK
+}
+
 #[cfg(feature="fec2_product_record")]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{

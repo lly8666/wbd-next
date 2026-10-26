@@ -84,6 +84,8 @@ type config struct{
     fecMode realityfront.FecV2Mode
     fecProfile realityfront.FecV2Profile
     gameLanes uint8
+    gameFecEnabled bool
+    gameFecProfile uint8
     outerMTU int
     disableOuterRepair bool
     recordLimit uint16
@@ -112,7 +114,8 @@ func parse(role string,args []string)(config,error){
     routeFile:=flags.String("route-key-hex-file","","mode-0600 route key hex file, no symlinks")
     tunnel:=flags.String("tunnel-id","","original logical 16B hex tunnel id")
     mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4")
-    profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for fixed; auto uses strong startup")
+    profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for normal fixed; auto uses strong startup")
+    gameFec:=flags.String("game-fec","off","Game2/4 inner fixed FEC: off or fixed0..fixed6; BOTH authenticated endpoints must match; no Game Auto")
     outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and actual receipt feedback remain enabled")
     outerMTU:=flags.Int("outer-mtu",1500,"outer IPv4 packet MTU; inner TUN MTU is derived automatically and clamped to device/peer limits")
     tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
@@ -138,6 +141,14 @@ func parse(role string,args []string)(config,error){
     default:return c,fmt.Errorf("V4 mode %q not installed in native public owner",*mode)
     }
     if *profile>6{return c,fmt.Errorf("fec-profile must be 0..6")}
+    if *gameFec!="off"{
+        if c.gameLanes==0||len(*gameFec)!=6||!strings.HasPrefix(*gameFec,"fixed")||
+           (*gameFec)[5]<'0'||(*gameFec)[5]>'6'{
+            return c,fmt.Errorf("game-fec must be off or fixed0..fixed6 on game2/game4")
+        }
+        c.gameFecEnabled=true
+        c.gameFecProfile=uint8((*gameFec)[5]-'0')
+    }
     if *outerMTU<576||*outerMTU>9000{return c,fmt.Errorf("outer-mtu must be 576..9000")}
     // User authorized product-owned fq600 for ALL Linux public modes:
     // Normal/off, FEC Fixed/Auto, Game2/Game4. It is applied only after
@@ -278,6 +289,8 @@ func Run(role string,args []string)error{
     cfg.recordLimit,cfg.innerMTU,err=deriveMTUBudget(cfg.outerMTU,iface.MTU,
         uint16(publicMSS),0,cfg.fecMode,cfg.gameLanes!=0)
     if err!=nil{return err}
+    cfg.innerMTU,err=gameFecBudget(cfg,cfg.innerMTU)
+    if err!=nil{return err}
     log.Printf("V4_PUBLIC_MTU_PREPARE role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d record_offer=%d tun_planned=%d",cfg.role,cfg.outerMTU,iface.MTU,publicMSS,cfg.recordLimit,cfg.innerMTU)
     tun,err:=openTun(cfg.tunName,cfg.tunCIDR,cfg.innerMTU)
     if err!=nil{return err}
@@ -399,6 +412,15 @@ func deriveMTUBudget(outer,device int,peerMSS,recordLimit uint16,
     if inner<576 {return 0,0,fmt.Errorf("effective inner MTU %d below product minimum 576 after framing; unsupported path budget",inner)}
     return uint16(wire),inner,nil
 }
+// A Game-FEC source uses one typed symbol byte and M3's 14-byte
+// reservation INSIDE the original 16B Game envelope. Both cold and
+// authenticated MTU must subtract exactly once; off path stays unchanged.
+func gameFecBudget(c config,inner int)(int,error){
+    if !c.gameFecEnabled{return inner,nil}
+    inner-=15
+    if inner<576{return 0,fmt.Errorf("Game+FEC inner MTU %d below 576",inner)}
+    return inner,nil
+}
 // Called with authenticated record limits before Rust begins reading TUN.
 // Multiple Game lanes can only lower the shared TUN MTU. No per-packet work.
 func configureTunnelMTU(c config,tun *ownedTun)func(uint16,uint16,uint16)error{
@@ -408,6 +430,8 @@ func configureTunnelMTU(c config,tun *ownedTun)func(uint16,uint16,uint16)error{
         limit:=min(clientLimit,serverLimit)
         if limit==0{return fmt.Errorf("missing authenticated record limit")}
         wire,inner,err:=deriveMTUBudget(c.outerMTU,iface.MTU,peerMSS,limit,c.fecMode,c.gameLanes!=0)
+        if err!=nil{return err}
+        inner,err=gameFecBudget(c,inner)
         if err!=nil{return err}
         if inner<tun.mtu {
             if err=runIP("link","set","dev",tun.name,"mtu",strconv.Itoa(inner));err!=nil{return err}
