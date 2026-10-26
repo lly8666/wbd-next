@@ -368,13 +368,13 @@
       "kind": "create",
       "path": "internal/realityfront/fec_v2_policy.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
-      "result_blob": "733656ec92c2e2848c3913606c1f9f56cc8747b7"
+      "result_blob": "6292280ded99da0bbf94aed704caa851c13a02da"
     },
     {
       "kind": "create",
       "path": "internal/realityfront/fec_v2_policy_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go",
-      "result_blob": "7ad3bf27365b0f5f04a180b11a686888623f22cb"
+      "result_blob": "b9ef571fdbe523ca18ff807b7eb73d19c48f8967"
     },
     {
       "kind": "replace",

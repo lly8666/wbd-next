@@ -19,6 +19,7 @@ import(
  "os/signal"
  "path/filepath"
  "sync"
+ "sync/atomic"
  "syscall"
  "time"
 
@@ -66,11 +67,27 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   parsedMAC,macErr:=net.ParseMAC(guestMAC)
   guestIP,ipErr:=netip.ParseAddr(os.Getenv("WBD_PLAN024_NATIVE_VERIFIED_GUEST_IP4"))
   sourceIP,srcErr:=netip.ParseAddr(os.Getenv("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4"))
+  // Runtime identities are only diagnostic here; the same exact guard
+  // remains fail-closed. This is the real public product run, not a unit
+  // fixture; a mismatched original route must never be silently replaced.
+  // Genuine Windows2025+WSL2 full product SOURCE e75c37d proved that
+  // GetIpForwardTable may return the Windows vEthernet OWN IPv4 as the
+  // original underlay next hop for the Linux guest. Only treat that as
+  // an on-link WSL guest route when SendARP also resolved the next hop
+  // to the ORIGINAL Windows source MAC. The caller already verified
+  // actual Linux eth0 IP/MAC and exact Windows ifindex/source via OS
+  // readback; third-party proxy/gateway MACs MUST continue to fail.
+  onLinkGuest:=guestIP==underlay.NextHop4
+  verifiedHostSelfNextHop:=underlay.NextHop4==underlay.Source4&&
+   ncfg.NextHopMAC==ncfg.SourceMAC
   if parseErr!=nil||macErr!=nil||ipErr!=nil||srcErr!=nil||
    len(parsedMAC)!=6||uint32(idx)!=underlay.InterfaceIndex||
-   guestIP!=o.ServerIP||guestIP!=underlay.NextHop4||
+   guestIP!=o.ServerIP||(!onLinkGuest&&!verifiedHostSelfNextHop)||
    sourceIP!=underlay.Source4{
-    return fmt.Errorf("%w: refused unscoped Windows original Npcap guest MAC override",windowsclient.ErrN4NativeGuard)
+    return fmt.Errorf("%w: refused unscoped Windows original Npcap guest MAC override verified_ifindex=%d original_ifindex=%d verified_guest=%s original_peer=%s original_next_hop=%s verified_source=%s original_source=%s verified_mac=%s parse_if=%v parse_mac=%v parse_guest=%v parse_source=%v",
+     windowsclient.ErrN4NativeGuard,idx,underlay.InterfaceIndex,
+     guestIP,o.ServerIP,underlay.NextHop4,sourceIP,underlay.Source4,
+     guestMAC,parseErr,macErr,ipErr,srcErr)
   }
   var actual [6]byte
   copy(actual[:],parsedMAC)
@@ -83,6 +100,9 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   // acceptable. Any third, unverified Ethernet next hop remains denied.
   if ncfg.NextHopMAC!=ncfg.SourceMAC&&ncfg.NextHopMAC!=actual{
    return fmt.Errorf("%w: original Npcap next-hop differs from verified WSL guest",windowsclient.ErrN4NativeGuard)
+  }
+  if verifiedHostSelfNextHop&&!onLinkGuest{
+   fmt.Printf("WBD_PLAN024_NATIVE_WSL_GUEST_MAC_OVER_HOST_SELF_NEXTHOP_VERIFIED ifindex=%d guest=%s host_gateway=%s original_self_mac=%x\\n",idx,guestIP,underlay.NextHop4,ncfg.SourceMAC)
   }
   ncfg.NextHopMAC=actual
   fmt.Printf("WBD_PLAN024_NATIVE_ORIGINAL_NPCAP_NEXT_HOP_BOUND ifindex=%d guest_ip=%s mac=%s source=verified_WSL2_eth0\\n",idx,guestIP,guestMAC)
@@ -105,6 +125,8 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  defer assoc.Close()
  failure:=make(chan error,2)
  nativeFrames:=make(chan faketcp.Segment,64)
+ // Explicit local pre-auth carrier pressure, not WAN loss or authenticated success.
+ var ingressLocalDrops atomic.Uint64
  var readers sync.WaitGroup
  readers.Add(1)
  go func(){
@@ -112,15 +134,20 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   for{
    seg,_,e:=endpoint.ReadSegment(1)
    if e!=nil{
-    select{case failure<-e:default:}
+    select{case failure<-fmt.Errorf("native NPF ReadSegment failed: %w",e):default:}
     return
    }
    if assoc.State()==faketcp.ClientAssociationDetached{
-    // Verified original TLS hands the bounded real TCP frame to Rust M3.
+    // Fixed 64-slot original NPF ingress, Rust M3 remains the sole authenticator.
+    // A full pre-auth queue is an explicit LOCAL packet drop, not a valid
+    // Rust receipt, TCP carrier acknowledgement or connection-wide Stop.
     select{case nativeFrames<-seg:
     default:
-     select{case failure<-windowsclient.ErrN4NativeGuard:default:}
-     return
+     if seg.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{
+      select{case failure<-fmt.Errorf("%w: real peer FIN/RST on saturated original NPF ingress",windowsclient.ErrN4NativeGuard):default:}
+      return
+     }
+     ingressLocalDrops.Add(1)
     }
     continue
    }
@@ -203,6 +230,17 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  // instead of a separate pre-binding that could outlive OS WAL.
  physical,e:=underlay.PhysicalPath()
  if e!=nil{return e}
+ // Original Go GetIpForwardTable on actual WSL2 returned the host's own
+ // vEthernet IPv4 as the next hop; the same scoped OS verified guest-MAC
+ // handoff above has already proved real guest IP, source, ifindex and L2
+ // identity. For THIS verified route only, use the real guest's IPv4
+ // for the Windows persistent underlay /32 escape; never install a route
+ // with Windows' own source IP as its gateway. The actual Npcap original
+ // link already emits genuine authenticated TCP443 frames to the guest.
+ if guestMAC!="" && physical.NextHop4==underlay.Source4{
+  physical.NextHop4=o.ServerIP
+  fmt.Printf("WBD_PLAN024_NATIVE_WSL_PUBLIC_OS_ROUTE_GUEST_NEXT_HOP scope=verified_guest_ethernet guest=%s ifindex=%d\\n",o.ServerIP,physical.InterfaceIndex)
+ }
  plan,e:=windowsclient.BuildCompactNetworkPlan(windowsclient.Config{
   AdapterAlias:o.AdapterAlias,TunnelMTU:o.TunnelMTU,
   Lease4:o.Lease4,Server4:o.ServerIP,Physical:physical,
@@ -252,13 +290,22 @@ waitNative:
  for{
   select{
   case <-ctx.Done():break waitNative
-  case runtimeErr=<-failure:break waitNative
-  case runtimeErr=<-transport.Errors():break waitNative
+  case runtimeErr=<-failure:runtimeErr=fmt.Errorf("native NPF reader: %w",runtimeErr);break waitNative
+  case runtimeErr=<-transport.Errors():runtimeErr=fmt.Errorf("native original Rust peer worker: %w",runtimeErr);break waitNative
   case <-metricsTicker.C:
-   if line,mErr:=json.Marshal(transport.Stats());mErr==nil{
+   metrics:=transport.Stats()
+   metrics.NPFIngressLocalDrops=ingressLocalDrops.Load()
+   if line,mErr:=json.Marshal(metrics);mErr==nil{
     fmt.Println("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY "+string(line))
    }
   }
+ }
+ if runtimeErr!=nil{
+  metrics:=transport.Stats()
+  metrics.NPFIngressLocalDrops=ingressLocalDrops.Load()
+  if snapshot,marshalErr:=json.Marshal(metrics);marshalErr==nil{
+   fmt.Println("WBD_WINDOWS_NATIVE_FAILURE_SOURCE "+runtimeErr.Error()+" stats="+string(snapshot))
+  }else{fmt.Println("WBD_WINDOWS_NATIVE_FAILURE_SOURCE "+runtimeErr.Error())}
  }
  stopErr:=cleanup()
  if stopErr!=nil{return errors.Join(runtimeErr,stopErr)}
