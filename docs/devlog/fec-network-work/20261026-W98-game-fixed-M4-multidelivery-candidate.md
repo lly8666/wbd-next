@@ -1,0 +1,9 @@
+# W98 stage 2 — original Game M4 exact FEC batch, no public CLI grant yet
+
+Parent c1c6546c958388b933fec0e8eb7580bab56f36ff. Source W98 stage1 [40254464042](https://github.com/lly8666/wbd-next/actions/runs/40254464042) native Game2+Game4 split-TX/shared-RX owner success, artifact 12621508896 ZIP sha256 d4a836df98ccf5e4dde674ef8c355abc8823d345791bd326165bd44ee410fee4. W90 six real clean Game fixed failures retained. No hidden upgrade from Game OFF.
+
+New scoped M4 branch executes only when original already-authenticated GameAdapter fixed FEC is explicitly enabled, which is **NOT** yet exposed in current CLI. RX lane-specific AEAD+replay → shared Game logical candidate → one FEC decoder → a bounded batch of up to 16 distinct recovered original frames → release lock and write each to real TUN → mark logical symbol only after all TUN writes succeed. A failed batch stops partial-write ambiguity; no fake TUN delivery. All FEC source/parity remains independent of outer DATA retransmit. Game OFF original code path preserved.
+
+TX uses original one owner: real new business source drains to M4 before any parity, then max four bounded FEC SIMD quanta in the same turn; when TUN is idle continue limited due work before waiting2ms, no lock-held sleep. No concurrent per-lane encoders, no new math, no single-socket refactor. RX clock shares owner epoch. Accurate FEC stage error counters/report still require product Go/M4 logging.
+
+Risks requiring native/real tests: RX inner decoder may have consumed an FEC symbol before actual TUN batch failure; fallback on a redundant lane cannot be assumed. Higher profile full parity could expire on heavily loaded M4; must observe planned vs copied and source delay; queue age and long no-delivery gaps need genuine product tests. Next: ARM64 split-owner M4 batch unit then Go authenticated fixed0..6/MTU readback, actual Game2/Game4 fixed6 no-loss3Mbps UDP+TCP before any weaknet. Windows TEMP_SKIPPED, merge_ready false.

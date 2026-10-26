@@ -38,6 +38,19 @@ impl PreparedGameDelivery{
         &self.slab.writable()[14..14+self.len]
     }
 }
+
+/// One logical Game FEC symbol may yield MULTIPLE distinct recovered IP
+/// frames. Keep every candidate alive until all corresponding TUN writes
+/// resolve; the logical symbol is committed only if ALL writes succeed.
+#[cfg(feature="fec2_product_record")]
+pub(crate) struct PreparedGameFecBatch{
+    id:LogicalPacketId,lane:LaneKey,slab:UniqueBuffer,
+    frames:Vec<Vec<u8>>,
+}
+#[cfg(feature="fec2_product_record")]
+impl PreparedGameFecBatch{
+    pub(crate) fn frames(&self)->&[Vec<u8>]{&self.frames}
+}
 pub(crate) struct GameReceiveOwner{
     rx:GameRx,rx_scope:GameScope,lanes:Vec<RxLane>,
     arena:Arena,stopped:bool,inner_mtu:usize,
@@ -92,6 +105,58 @@ impl GameReceiveOwner{
         if !tun_written{return Ok(())}
         self.rx.first_delivery(self.rx_scope,prepared.lane,
             prepared.id,prepared.slab).map(|_|())
+            .map_err(|(e,_)|Error::Game(e))
+    }
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fn fec_active(&self)->bool{self.fec.is_some()}
+    /// This is the Linux Game+FEC receive entry, distinct from Game OFF.
+    /// All AEAD/replay and logical ID precheck happen before one shared FEC
+    /// decoder; a bounded batch is handed to the M4 writer without a lock.
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fn prepare_fec_batch(&mut self,lane_key:LaneKey,
+        wire:&mut [u8],now:MonoNs)->Result<Option<PreparedGameFecBatch>,Error>{
+        if self.stopped||self.fec.is_none(){return Err(Error::Invalid)}
+        let lane=self.lanes.iter_mut().find(|l|l.key==lane_key)
+            .ok_or(Error::Unauthorized)?;
+        let opened=lane.rx.open_unique_in_place(wire).map_err(|e|match e{
+            UniqueOpenError::InvalidRecord(CryptoError::Authentication)=>Error::Crypto,
+            UniqueOpenError::InvalidRecord(_)=>Error::Invalid,
+            UniqueOpenError::Duplicate=>Error::Duplicate,
+            UniqueOpenError::Retired=>Error::Stale,
+        })?;
+        if opened.kind!=1{return Err(Error::Invalid)}
+        let (id,payload)=wbd_codec::decode_game(opened.payload,self.inner_mtu+16)
+            .map_err(|_|Error::Invalid)?;
+        if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
+        match self.rx.first_delivery_candidate(self.rx_scope,lane_key,id){
+            Ok(true)=>{},
+            Ok(false)=>return Ok(None),
+            Err(e)=>return Err(Error::Game(e))
+        }
+        if self.pending.contains(&id){return Ok(None)}
+        if self.pending.len()>=self.lanes.len(){return Err(Error::Capacity)}
+        // Reserve GameRx commit slab BEFORE modifying inner FEC cache.
+        let mut slab=self.arena.allocate().map_err(|_|Error::Capacity)?;
+        slab.writable()[14..14+payload.len()].copy_from_slice(payload);
+        let frames=self.fec.as_mut().unwrap().receive(payload,now)?;
+        if frames.len()>16||frames.iter().any(|f|f.is_empty()||
+                f.len()>self.inner_mtu.saturating_sub(15)){
+            return Err(Error::Invalid)
+        }
+        self.pending.push(id);
+        Ok(Some(PreparedGameFecBatch{id,lane:lane_key,slab,frames}))
+    }
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fn finish_fec_batch(&mut self,batch:PreparedGameFecBatch,
+        all_tun_writes_succeeded:bool)->Result<(),Error>{
+        let Some(pos)=self.pending.iter().position(|id|*id==batch.id)
+            else{return Err(Error::Invalid)};
+        self.pending.swap_remove(pos);
+        if !all_tun_writes_succeeded{return Ok(())}
+        // Empty parity candidate also retires the authenticated Game symbol
+        // after successful native decoder acceptance; no TUN write required.
+        self.rx.first_delivery(self.rx_scope,batch.lane,
+            batch.id,batch.slab).map(|_|())
             .map_err(|(e,_)|Error::Game(e))
     }
     /// Native/test stage of shared FEC RX after original lane AEAD/replay.
@@ -299,6 +364,12 @@ impl GameAdapter{
     pub(crate) fn receiver_handle(&self)->Arc<Mutex<GameReceiveOwner>>{
         Arc::clone(&self.rx_owner)
     }
+    pub(crate) fn has_game_fec(&self)->bool{
+        #[cfg(feature="fec2_product_record")]
+        {self.fec.is_some()}
+        #[cfg(not(feature="fec2_product_record"))]
+        {false}
+    }
     /// Only the original Go TLS-protected BOTH-endpoint fixed profile may
     /// call this BEFORE the network workers start. Game Auto is excluded.
     /// TX and RX FEC remain independent owners, both use one logical FEC
@@ -440,6 +511,53 @@ mod tests{
                 generation:7},mss:1400},
             tx:keys((i+1) as u8),rx:keys((i+1) as u8)
         }).collect(),RecordSuite::ChaCha20Poly1305).unwrap()
+    }
+    #[cfg(feature="fec2_product_record")]
+    #[test]
+    fn w98_shared_fixed_native_m4_batch_commits_all_restored_after_success(){
+        for n in [2,4]{
+            let mut tx=build(n);
+            let mut rx=build(n);
+            tx.enable_game_fec(6,false).unwrap();
+            rx.enable_game_fec(6,true).unwrap();
+            let mut delivered=Vec::new();
+            for i in 0..16u8{
+                let msg=vec![i;128];
+                let now=MonoNs(100+u64::from(i));
+                tx.offer(&msg,now).unwrap();
+                tx.drain(now,|lane,id,_,wire|{
+                    if id.0>=2&&lane.slot==1{
+                        let mut packet=wire.to_vec();
+                        let recv=rx.receiver_handle();
+                        let mut owner=recv.lock().unwrap();
+                        let batch=owner.prepare_fec_batch(lane,&mut packet,now)
+                            .unwrap().unwrap();
+                        delivered.extend(batch.frames().iter().cloned());
+                        owner.finish_fec_batch(batch,true).unwrap();
+                    }
+                    true
+                });
+            }
+            assert_eq!(delivered.len(),14);
+            assert_eq!(tx.poll_game_fec(MonoNs(120)).unwrap(),4);
+            tx.drain(MonoNs(121),|lane,_,_,wire|{
+                if lane.slot==1{
+                    let mut packet=wire.to_vec();
+                    let recv=rx.receiver_handle();
+                    let mut owner=recv.lock().unwrap();
+                    if let Some(batch)=owner.prepare_fec_batch(lane,&mut packet,MonoNs(121))
+                        .unwrap(){
+                        delivered.extend(batch.frames().iter().cloned());
+                        owner.finish_fec_batch(batch,true).unwrap();
+                    }
+                }
+                true
+            });
+            assert_eq!(delivered.len(),16);
+            assert_eq!(delivered.iter().filter(|f|*f==&vec![0;128]).count(),1);
+            assert_eq!(delivered.iter().filter(|f|*f==&vec![1;128]).count(),1);
+            tx.stop();rx.stop();
+        }
     }
     #[cfg(feature="fec2_product_record")]
     #[test]

@@ -94,15 +94,17 @@ impl GameKernelOwner{
         let tx_tun=Arc::clone(&tun);
         let tx_copy=Arc::clone(&copied);
         let tx_rejected=Arc::clone(&rejected);
-        let (inner_mtu,rx_owner)={
+        #[allow(unused_variables)]
+        let (inner_mtu,rx_owner,fec_enabled)={
             let game=adapter.lock().map_err(|_|())?;
-            (game.inner_mtu(),game.receiver_handle())
+            (game.inner_mtu(),game.receiver_handle(),game.has_game_fec())
         };
+        let epoch_clock=Instant::now();
         let tx_worker=thread::Builder::new().name("wbd-v4-game-tx".into())
             .spawn(move||{
                 let Ok(mut arena)=Arena::new(generation^0x4000_0000,64,2048,64,1_000_000)
                     else{return};
-                let start=Instant::now();
+                let start=epoch_clock;
                 let mut inbound=[0u8;2048];
                 while !tx_stop.load(Ordering::Acquire){
                     // Never hold the TUN device's shared serialized mutex
@@ -110,80 +112,105 @@ impl GameKernelOwner{
                     // needs the SAME device mutex for first-delivery write.
                     // Ready-only poll(0) holds it only for an actual read.
                     let mut slots:[&mut [u8];1]=[&mut inbound];
-                    let len=match tx_tun.read_ready_batch(generation,&mut slots){
+                    let size=match tx_tun.read_ready_batch(generation,&mut slots){
                         Ok(batch)=>match batch.entry(0){
-                            Some(TunReadyEntry::UntrustedIpv4{len})=>len,
+                            Some(TunReadyEntry::UntrustedIpv4{len})=>Some(len),
                             Some(TunReadyEntry::Rejected)=>{
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
-                                continue
+                                None
                             },
-                            _=>{
-                                // Bounded 2ms idle wait yields to peer RX/TUN
-                                // and limits empty-device wakes to <=500/s.
-                                thread::sleep(Duration::from_millis(2));
-                                continue
-                            }
+                            _=>None
                         },
                         Err(_)=>{
                             if tx_stop.load(Ordering::Acquire){break}
                             tx_rejected.fetch_add(1,Ordering::Relaxed);
-                            thread::sleep(Duration::from_millis(2));
-                            continue
+                            None
                         }
                     };
-                    if len==0||len>inner_mtu{
-                        tx_rejected.fetch_add(1,Ordering::Relaxed);continue
-                    }
                     let now=MonoNs(start.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
                     let Ok(mut game)=tx_adapter.lock()else{break};
-                    if game.offer(&inbound[..len],now).is_err(){
-                        tx_rejected.fetch_add(1,Ordering::Relaxed);continue
+                    let mut did_business=false;
+                    if let Some(len)=size{
+                        if len>0&&len<=inner_mtu{
+                            did_business=true;
+                            if game.offer(&inbound[..len],now).is_err(){
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);
+                            }
+                        }else if len!=0{
+                            tx_rejected.fetch_add(1,Ordering::Relaxed);
+                        }
                     }
-                    game.drain(now,|lane,_,pn,wire|{
-                        let Some(item)=lanes.iter_mut().find(|x|x.key==lane) else{
-                            tx_rejected.fetch_add(1,Ordering::Relaxed);
-                            return false
-                        };
-                        let Ok(mut slab)=arena.allocate()else{
-                            tx_rejected.fetch_add(1,Ordering::Relaxed);
-                            return false
-                        };
-                        if wire.len()>slab.writable().len(){
-                            tx_rejected.fetch_add(1,Ordering::Relaxed);
-                            return false
+                    // Single TX owner first drains source copies to M4 before
+                    // any FEC parity quantum can enqueue additional work.
+                    let mut flush=|game:&mut GameAdapter|{
+                        game.drain(now,|lane,_,pn,wire|{
+                            let Some(item)=lanes.iter_mut().find(|x|x.key==lane) else{
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                return false
+                            };
+                            let Ok(mut slab)=arena.allocate()else{
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                return false
+                            };
+                            if wire.len()>slab.writable().len(){
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                return false
+                            }
+                            slab.writable()[..wire.len()].copy_from_slice(wire);
+                            let Ok(frozen)=slab.freeze(0..wire.len(),FrozenMetadata{
+                                lane,seq:SeqOffset(item.seq),pn:RecordPn(pn),
+                                carrier_snapshot:1
+                            })else{
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                return false
+                            };
+                            let f=item.flow;
+                            let (src,dst,sp,dp)=if server{
+                                (f.server_ip,f.client_ip,f.server_port,f.client_port)
+                            }else{
+                                (f.client_ip,f.server_ip,f.client_port,f.server_port)
+                            };
+                            let tuple=Ipv4Tuple{
+                                src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp
+                            };
+                            let presentation=Presentation{
+                                ack32:1,advertised_window:4096,ip_id:(pn as u16).wrapping_add(75),
+                                persona:PacketPersona::Legacy
+                            };
+                            let ok=item.raw.send_one(generation,&frozen,tuple,presentation)
+                                .is_ok();
+                            if ok {
+                                item.seq=item.seq.saturating_add(wire.len() as u64);
+                                tx_copy.fetch_add(1,Ordering::Relaxed);
+                                true
+                            }else{
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                false
+                            }
+                        });
+                    };
+                    flush(&mut game);
+                    let mut parity_ready=false;
+                    #[cfg(feature="fec2_product_record")]
+                    if fec_enabled{
+                        // Fixed FEC can close a block/partial due even when
+                        // TUN becomes silent. Process bounded 4 SIMD quanta;
+                        // no sleep while this owner has ready parity work.
+                        for _ in 0..4{
+                            match game.poll_game_fec(now){
+                                Ok(0)=>break,
+                                Ok(_)=>{parity_ready=true;flush(&mut game);}
+                                Err(_)=>{
+                                    tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                    break
+                                }
+                            }
                         }
-                        slab.writable()[..wire.len()].copy_from_slice(wire);
-                        let Ok(frozen)=slab.freeze(0..wire.len(),FrozenMetadata{
-                            lane,seq:SeqOffset(item.seq),pn:RecordPn(pn),
-                            carrier_snapshot:1
-                        })else{
-                            tx_rejected.fetch_add(1,Ordering::Relaxed);
-                            return false
-                        };
-                        let f=item.flow;
-                        let (src,dst,sp,dp)=if server{
-                            (f.server_ip,f.client_ip,f.server_port,f.client_port)
-                        }else{
-                            (f.client_ip,f.server_ip,f.client_port,f.server_port)
-                        };
-                        let tuple=Ipv4Tuple{
-                            src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp
-                        };
-                        let presentation=Presentation{
-                            ack32:1,advertised_window:4096,ip_id:(pn as u16).wrapping_add(75),
-                            persona:PacketPersona::Legacy
-                        };
-                        let ok=item.raw.send_one(generation,&frozen,tuple,presentation)
-                            .is_ok();
-                        if ok {
-                            item.seq=item.seq.saturating_add(wire.len() as u64);
-                            tx_copy.fetch_add(1,Ordering::Relaxed);
-                            true
-                        }else{
-                            tx_rejected.fetch_add(1,Ordering::Relaxed);
-                            false
-                        }
-                    });
+                    }
+                    drop(flush);drop(game);
+                    if !did_business&&!parity_ready{
+                        thread::sleep(Duration::from_millis(2));
+                    }
                     arena.drain_returns();
                 }
             }).map_err(|_|())?;
@@ -206,6 +233,7 @@ impl GameKernelOwner{
             let rx_none=Arc::clone(&rx_dedup_none);
             let tun_failed=Arc::clone(&rx_tun_failed);
             let commit_failed=Arc::clone(&rx_delivery_commit_failed);
+            let rx_start=epoch_clock;
             let builder=thread::Builder::new().name(format!("wbd-v4-game-rx-{}",i+1));
             let worker=builder.spawn(move||{
                 let (src,dst,sp,dp)=if server{
@@ -231,6 +259,68 @@ impl GameKernelOwner{
                     };
                     if rx_stop.load(Ordering::Acquire){break}
                     raw_seen.fetch_add(1,Ordering::Relaxed);
+                    #[cfg(feature="fec2_product_record")]
+                    if fec_enabled{
+                        let now=MonoNs(rx_start.elapsed().as_nanos()
+                            .min(u128::from(u64::MAX)) as u64);
+                        let decoded={
+                            let Ok(mut receiver)=receiver_owner.lock()else{break};
+                            rx_held.fetch_add(1,Ordering::Relaxed);
+                            receiver.prepare_fec_batch(lane,&mut wire[..len],now)
+                        };
+                        match decoded{
+                            Ok(Some(batch))=>{
+                                rx_some.fetch_add(1,Ordering::Relaxed);
+                                let mut all_written=true;
+                                let mut wrote_count=0u64;
+                                for frame in batch.frames(){
+                                    if rx_tun.write_authenticated_ipv4(generation,frame).is_ok(){
+                                        wrote_count+=1;
+                                    }else{
+                                        all_written=false;
+                                        tun_failed.fetch_add(1,Ordering::Relaxed);
+                                        recv_rejected.fetch_add(1,Ordering::Relaxed);
+                                        break
+                                    }
+                                }
+                                let committed=match receiver_owner.lock(){
+                                    Ok(mut rx)=>rx.finish_fec_batch(batch,all_written),
+                                    Err(_)=>{
+                                        commit_failed.fetch_add(1,Ordering::Relaxed);
+                                        rx_stop.store(true,Ordering::Release);
+                                        break
+                                    }
+                                };
+                                if all_written&&committed.is_ok(){
+                                    recv_count.fetch_add(wrote_count,Ordering::Relaxed);
+                                }else if committed.is_err()||wrote_count>0{
+                                    // Partial batch cannot be rolled back after
+                                    // a TUN syscall: fail closed, no false success.
+                                    commit_failed.fetch_add(1,Ordering::Relaxed);
+                                    rx_stop.store(true,Ordering::Release);
+                                    break
+                                }
+                            },
+                            Ok(None)=>{rx_none.fetch_add(1,Ordering::Relaxed);},
+                            Err(reason)=>{
+                                let counter=match reason{
+                                    GameAdapterError::Crypto=>&classified.aead,
+                                    GameAdapterError::Invalid=>&classified.invalid,
+                                    GameAdapterError::Duplicate=>&classified.duplicate,
+                                    GameAdapterError::Stale=>&classified.stale,
+                                    GameAdapterError::Capacity=>&classified.capacity,
+                                    GameAdapterError::Unauthorized=>&classified.scope,
+                                    GameAdapterError::Stopped=>&classified.stopped,
+                                    GameAdapterError::Game(GameError::Capacity|GameError::ByteBudget)=>
+                                        &classified.capacity,
+                                    GameAdapterError::Game(_)=>&classified.game,
+                                };
+                                counter.fetch_add(1,Ordering::Relaxed);
+                                recv_rejected.fetch_add(1,Ordering::Relaxed);
+                            }
+                        }
+                        continue
+                    }
                     let received={
                         let Ok(mut receiver)=receiver_owner.lock()else{break};
                         rx_held.fetch_add(1,Ordering::Relaxed);
