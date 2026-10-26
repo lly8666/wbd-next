@@ -453,6 +453,13 @@ impl GameAdapter{
         self.tx.staggered().then_some(self.tx.counters())
     }
     pub fn game4_next_due_ns(&self)->Option<u64>{self.tx.next_due_ns()}
+    pub(crate) fn game_fec_next_due_ns(&self,now:MonoNs)->Option<u64>{
+        #[cfg(feature="fec2_product_record")]
+        {self.fec.as_ref().and_then(|fec|fec.next_due_ns(now))}
+        #[cfg(not(feature="fec2_product_record"))]
+        {let _=now;None}
+    }
+
     pub fn game4_stagger_enabled(&self)->bool{self.tx.staggered()}
     pub fn offer(&mut self,data:&[u8],now:MonoNs)->Result<LogicalPacketId,Error>{
         if self.stopped{return Err(Error::Stopped)}
