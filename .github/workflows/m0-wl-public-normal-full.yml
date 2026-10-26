@@ -247,6 +247,8 @@ jobs:
           # cannot burn one PN/TCP span and silently misalign original Go.
           & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_windows_m2_short_feedback_output_does_not_burn_original_tx_sequence -- --nocapture
           if($LASTEXITCODE -ne 0){throw 'M0 original Rust M2 feedback TX sequence transaction unit FAIL'}
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_windows_original_m1_2048_slots_and_m2_1536_shadow_contract -- --nocapture
+          if($LASTEXITCODE -ne 0){throw 'M0 original Windows M1=2048 M2=1536 exact runtime contract FAIL'}
           Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
           Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe
       - name: Verify Windows bound authenticated RX high-water without false TCP ACK

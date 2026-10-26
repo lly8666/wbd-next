@@ -1214,6 +1214,34 @@ mod tests {
         a[26]=1;a
     }
     #[test]
+    fn m0_windows_original_m1_2048_slots_and_m2_1536_shadow_contract(){
+        // This is a REAL Windows-only original M1 ownership fixture. It is
+        // never an OS/product or 10Mbps performance qualification.
+        assert_eq!(MAX_M2_FROZEN,1536,
+            "original Npcap frozen-M2 limit must match Go admission");
+        let mut r=Registry{generation:711,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        {
+            let e=r.entries[&h].lock().unwrap();
+            assert_eq!(e.arena.capacity(),2048,
+                "Normal feature3 original Windows M1 slabs cannot regress");
+            assert!(e.m2.is_none());
+        }
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        let epoch=[2u8;16];
+        assert_eq!(bind_wintun(&mut r,h,epoch,91,19),OK);
+        assert!(set_path_mtu(&mut r,h,epoch,91,19,1400).is_ok());
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            assert!(m2_arm_entry(&mut e,epoch,91,19).is_ok());
+            assert_eq!(e.arena.capacity(),2048);
+            assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),0);
+        }
+        assert_eq!(quiesce_wintun(&mut r,h,epoch,91,19),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+    #[test]
     fn m0_windows_owner_real_native_prepare_commit_stop_generation_scoped(){
         let mut r=Registry{generation:11,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
         let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
