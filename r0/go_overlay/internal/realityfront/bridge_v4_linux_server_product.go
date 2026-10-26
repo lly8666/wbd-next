@@ -23,7 +23,14 @@ import (
 // The original Go caller retains the TUN fd; Rust duplicates it under the
 // credential-bound generation. Cleanup is called ONLY after Rust Stop drains
 // both M4 drivers, pending slab loans and owner worker threads.
+// Strict original Go authenticated-session expected sender envelope.
+type V4PublicNativePeerPersona uint32
+const (
+    V4PeerLegacy V4PublicNativePeerPersona=iota
+    V4PeerWindows11
+)
 type V4LinuxServerProductConfig struct {
+    PeerPersona V4PublicNativePeerPersona
     Epochs *V4EpochStore
     NetworkInterface string
     NetworkIfIndex uint32
@@ -52,6 +59,7 @@ type V4LinuxServerProduct struct {
 // loopback hardcoded developer test path. It does not grant any session before
 // credential-protected EstablishServerV4 succeeds on a real association.
 func NewV4LinuxServerProduct(cfg V4LinuxServerProductConfig)(*V4LinuxServerProduct,error){
+    if cfg.PeerPersona>V4PeerWindows11{return nil,ErrAdmissionParams}
     if cfg.Epochs==nil||cfg.Tun==nil||cfg.CleanupOwnedNetwork==nil||
        cfg.NetworkIfIndex==0||cfg.NetworkInterface==""||len(cfg.TunName)==0||
        len(cfg.TunName)>15 {
@@ -130,7 +138,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
         p.fec,err=v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,verified)
     }
     if err==nil{err=bridge.configureOriginalOuterRepair(!p.cfg.DisableOuterRepair)}
-    if err==nil{err=bridge.armOriginalPublicM2Feedback()}
+    if err==nil{err=bridge.armOriginalPublicM2Feedback(uint32(p.cfg.PeerPersona))}
     if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
     if err!=nil{
         shutdown:=p.closeLocked()
