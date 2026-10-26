@@ -269,8 +269,14 @@ impl Fec2LiveRx{
         self.stored=self.stored.saturating_add(charge);
         b.bytes=b.bytes.saturating_add(charge);
         if let Some(k)=b.actual_k {
-            let live=b.sources.iter().take(k as usize)
-                .map(Option::as_deref).collect::<Vec<_>>();
+            // P3b: fixed protocol k<=16. The prior collect::<Vec<_>> on
+            // every authenticated post-k source/parity lookup allocated a
+            // transient reference list; keep the exact ordered borrowed
+            // source windows on the stack. Actual frame ownership, touched
+            // retirement, W11 late-source and TUN commit remain unchanged.
+            let source_refs:[Option<&[u8]>;fec_v2::MAX_K]=
+                std::array::from_fn(|i|b.sources[i].as_deref());
+            let live=&source_refs[..k as usize];
             let missing=live.iter().filter(|v|v.is_none()).count();
             if missing>0&&b.repairs.len()>=missing{
                 // Owned parity remains bound to this exact authenticated
