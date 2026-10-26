@@ -48,6 +48,17 @@ class Histogram:
 
     def result(self):
         out = {"n": self.count, "overflow_over_30s": self.overflow, "max_ms": self.maximum_ms}
+        # Evidence only at end-of-run, no new packet-hotpath work. Fixed 1ms
+        # cumulative counts support arbitrary matched lossless baseline
+        # +10/+30/+60/+100ms comparisons. Normalize by ALL offered packets
+        # in report analysis; never divide by only survivors.
+        pairs=sorted(self.bins.items())
+        cumulative=[];accepted=0;index=0
+        for ms in range(251):
+            while index<len(pairs) and pairs[index][0]<=ms*10:
+                accepted+=pairs[index][1];index+=1
+            cumulative.append(accepted)
+        out["cdf_1ms_through_250"]=cumulative
         for name, q in [("p50_ms", .5), ("p95_ms", .95), ("p99_ms", .99), ("p999_ms", .999)]:
             remaining = math.ceil(self.count * q)
             out[name] = None
