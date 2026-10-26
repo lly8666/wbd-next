@@ -62,6 +62,16 @@ fn seal_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
         let ready=e.owner.checked_tx_ready(&batch).map_err(|_|BAD_STAGE)?;
         if ready.len()!=1||ready[0].record.bytes().len()!=used ||
            used>out.len(){return Err(BAD_STAGE)}
+        if kind==2{
+            if let Some(m)=e.m2.as_mut(){
+                let record=&ready[0].record;
+                if record.metadata().pn!=RecordPn(pn) ||
+                    record.metadata().seq.0 as u32!=seq ||
+                    m.pending.insert(RecordPn(pn),record.clone()).is_some(){
+                    return Err(BAD_STAGE)
+                }
+            }
+        }
         out[..used].copy_from_slice(ready[0].record.bytes());
         Ok((used,seq,pn))
     })();
@@ -97,13 +107,16 @@ fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
         .map_err(|_|INVALID)?;
     let mut result=Vec::new();
     let mut failed=false;
+    let mut unique_data_pn=None;
+    let mut unique_receipt=None;
     // Split the actual Entry fields, not the MutexGuard deref, so Rust
     // guarantees one unique RX owner and distinct bounded RS16 decoder.
     let entry:&mut Entry=e;
     let decoder=entry.fec2_rx.as_mut().ok_or(BAD_STAGE)?;
     let rx_storage=std::mem::take(&mut entry.rx_scratch);
     let draining=entry.owner.drain_windows_authenticated_fec2(
-        MonoNs(0),rx_storage,|_pn,kind,plain|{
+        m2_clock(),rx_storage,|pn,kind,plain|{
+            unique_data_pn=Some(pn);
             match decoder.accept_authenticated(scope,kind,plain,MonoNs(0)){
                 Ok(deliveries)=>{
                     for d in deliveries {
@@ -122,15 +135,26 @@ fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
                 },
                 Err(_)=>failed=true,
             }
-        }
+        },|pn,receipt|{unique_receipt=Some((pn,receipt))}
     );
     let (storage,report)=match draining{
         Ok(v)=>v,
         Err((_,scratch))=>{entry.rx_scratch=scratch;return Err(BAD_STAGE)}
     };
     entry.rx_scratch=storage;
-    if failed||report.rejected!=0||report.link_ready!=1||
-        report.control_ready!=0{return Err(INVALID)}
+    if failed||report.rejected!=0||
+        report.link_ready.saturating_add(report.control_ready)!=1 {
+        return Err(INVALID)
+    }
+    if let Some((pn,receipt))=unique_receipt{
+        if e.m2.is_some(){m2_authenticated_kind1_entry(e,pn,&receipt)?}
+        else{return Err(BAD_STAGE)}
+    }
+    if let Some(pn)=unique_data_pn{
+        if let Some(m)=e.m2.as_mut(){
+            m.feedback.on_authenticated_data(RecordPn(pn),m2_clock());
+        }
+    }
     e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);
     Ok(result)
 }
@@ -269,6 +293,205 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_fec2_open(
         },
         _=>INVALID,
     }
+}
+
+
+#[repr(C)]
+#[derive(Clone,Copy)]
+pub struct WindowsFixedParityRow {
+    pub used:u32,pub seq:u32,pub pn:u64,pub wire:[u8;2048],
+}
+#[repr(C)]
+#[derive(Clone,Copy)]
+pub struct WindowsFixedParityBatch {
+    pub count:u32,pub reserved:u32,pub rows:[WindowsFixedParityRow;4],
+}
+fn empty_parity_row()->WindowsFixedParityRow{
+    WindowsFixedParityRow{used:0,seq:0,pn:0,wire:[0;2048]}
+}
+fn stage_fixed_source_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+    ifindex:u32,frame:&[u8],out:&mut [u8]
+)->Result<(usize,u32,u64),i32>{
+    use crate::v4_fixed_stream::FixedStream;
+    if !v3_ready(e,epoch,luid,ifindex)||!e.feature7||e.m2.is_none()||
+        frame.len()<20||frame[0]>>4!=4||frame[0]&15<5{
+        return Err(BAD_STAGE)
+    }
+    let budget=normal_off_windows_budget(e)?;
+    if frame.len()>budget.record_payload_mtu.saturating_sub(14)||
+        out.len()<frame.len()+41{return Err(INVALID)}
+    let mut stream=e.fec2_tx.take().ok_or(BAD_STAGE)?;
+    let mut input=e.arena.allocate().map_err(|_|FULL)?;
+    input.writable()[14..14+frame.len()].copy_from_slice(frame);
+    let mut result=None;
+    let mut error=None;
+    let offered=stream.offer_source(
+        input,14..14+frame.len(),m2_clock(),|ticket,plain|{
+            let attempt=(||->Result<(usize,u32,u64),i32>{
+                if ticket.revision!=stream_revision_placeholder(){return Err(BAD_STAGE)}
+                let mut source=[0u8;2048];
+                let used=fec_v2::source_into(
+                    ticket.block_id,ticket.index,plain,budget.record_payload_mtu,&mut source
+                ).map_err(|_|INVALID)?;
+                seal_symbol_entry(e,epoch,luid,ifindex,2,&source[..used],out)
+            })();
+            match attempt{
+                Ok(v)=>{result=Some(v);true},
+                Err(err)=>{error=Some(err);false},
+            }
+        }
+    );
+    e.fec2_tx=Some(stream);
+    if let Some(err)=error{return Err(err)}
+    let accepted=offered.map_err(|_|BAD_STAGE)?;
+    if !accepted.source_enqueued{return Err(BAD_STAGE)}
+    result.ok_or(BAD_STAGE)
+}
+#[inline]
+fn stream_revision_placeholder()->wbd_types::ConfigRevision{
+    wbd_types::ConfigRevision(1)
+}
+fn stage_fixed_parity_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+    ifindex:u32
+)->Result<WindowsFixedParityBatch,i32>{
+    use crate::v4_fixed_stream::DriverProof;
+    if !v3_ready(e,epoch,luid,ifindex)||!e.feature7||e.m2.is_none(){
+        return Err(BAD_STAGE)
+    }
+    let mut stream=e.fec2_tx.take().ok_or(BAD_STAGE)?;
+    let mut out=WindowsFixedParityBatch{
+        count:0,reserved:0,rows:[empty_parity_row();4],
+    };
+    let mut err=None;
+    let result=stream.poll_parity(m2_clock(),|parity,_block,_row,revision|{
+        if revision.0!=1 || out.count>=4{
+            err=Some(BAD_STAGE);return DriverProof::NotSent
+        }
+        let item=&mut out.rows[out.count as usize];
+        match seal_symbol_entry(e,epoch,luid,ifindex,3,parity,&mut item.wire){
+            Ok((used,seq,pn))=>{
+                item.used=used as u32;item.seq=seq;item.pn=pn;
+                out.count+=1;DriverProof::Staged
+            }
+            Err(code)=>{err=Some(code);DriverProof::NotSent}
+        }
+    });
+    e.fec2_tx=Some(stream);
+    if let Some(code)=err{return Err(code)}
+    result.map_err(|_|BAD_STAGE)?;
+    Ok(out)
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_stage_source(
+    h:u64,ep:*const u8,ep_len:usize,luid:u64,ifindex:u32,
+    plain:*const u8,n:usize,out:*mut u8,cap:usize,
+    used:*mut usize,seq:*mut u32,pn:*mut u64
+)->i32{
+    if plain.is_null()||out.is_null()||used.is_null()||seq.is_null()||
+        pn.is_null()||n<20||n>2048||cap<n+41||cap>2048{return INVALID}
+    let Some(epoch)=v3_epoch(ep,ep_len)else{return INVALID};
+    if (plain as usize).checked_add(n).is_none_or(|end|
+        (out as usize)<end&&(plain as usize)<(out as usize).saturating_add(cap)){
+        return INVALID
+    }
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(entry)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(entry)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    let src=unsafe{std::slice::from_raw_parts(plain,n)};
+    let output=unsafe{std::slice::from_raw_parts_mut(out,cap)};
+    match stage_fixed_source_entry(&mut e,epoch,luid,ifindex,src,output){
+        Ok((length,s,p))=>{unsafe{used.write(length);seq.write(s);pn.write(p)};OK},
+        Err(code)=>code,
+    }
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_parity_due(
+    h:u64,ep:*const u8,ep_len:usize,luid:u64,ifindex:u32,
+    out:*mut WindowsFixedParityBatch,size:u32
+)->i32{
+    if out.is_null()||size!=std::mem::size_of::<WindowsFixedParityBatch>() as u32{
+        return INVALID
+    }
+    let Some(epoch)=v3_epoch(ep,ep_len)else{return INVALID};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(entry)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(entry)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    match stage_fixed_parity_entry(&mut e,epoch,luid,ifindex){
+        Ok(value)=>{unsafe{out.write(value)};OK},Err(code)=>code
+    }
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_parity_result(
+    h:u64,ep:*const u8,ep_len:usize,luid:u64,ifindex:u32,
+    copied:u32,not_sent:u32,uncertain:u32
+)->i32{
+    if copied+not_sent+uncertain==0||copied+not_sent+uncertain>4{
+        return INVALID
+    }
+    let Some(epoch)=v3_epoch(ep,ep_len)else{return INVALID};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(entry)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(entry)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    if !v3_ready(&e,epoch,luid,ifindex)||!e.feature7{return BAD_STAGE}
+    let Some(ref mut tx)=e.fec2_tx else{return BAD_STAGE};
+    if tx.settle_staged(copied as u8,not_sent as u8,uncertain as u8).is_err(){
+        return BAD_STAGE
+    }
+    if copied>0{
+        let Some(ref mut m)=e.m2 else{return BAD_STAGE};
+        m.fec_copied_parity=m.fec_copied_parity.saturating_add(copied as u64);
+    }
+    OK
+}
+#[repr(C)]
+pub struct WindowsFixedMatureReadback {
+    pub version:u32,pub size:u32,pub applied:u32,pub censored:u32,
+    pub copied_source:u64,pub copied_parity:u64,
+    pub reverse_reports:u64,pub positive_2s:u64,pub covered_2s:u64,
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_mature_readback(
+    h:u64,ep:*const u8,ep_len:usize,luid:u64,ifindex:u32,
+    out:*mut WindowsFixedMatureReadback,size:u32
+)->i32{
+    if out.is_null()||size!=std::mem::size_of::<WindowsFixedMatureReadback>() as u32{
+        return INVALID
+    }
+    let Some(epoch)=v3_epoch(ep,ep_len)else{return INVALID};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(entry)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(entry)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    if !v3_ready(&e,epoch,luid,ifindex)||!e.feature7{return BAD_STAGE}
+    let Some(m)=e.m2.as_mut()else{return BAD_STAGE};
+    let Some(mature)=m.mature.as_mut()else{return BAD_STAGE};
+    let Ok(poll)=mature.on_due(m2_clock())else{return BAD_STAGE};
+    m.fec_positive_2s=m.fec_positive_2s.saturating_add(
+        poll.window_2s.unambiguous_positive);
+    m.fec_covered_2s=m.fec_covered_2s.saturating_add(
+        poll.window_2s.covered());
+    m.fec_censored |= poll.capacity_limited||mature.counters().capacity_censored>0;
+    let applied=!m.fec_censored && m.fec_copied_source>0&&
+        m.fec_copied_parity>0&&m.fec_positive_2s>0&&
+        m.fec_covered_2s>0&&m.fec_reverse_reports>0;
+    unsafe{out.write(WindowsFixedMatureReadback{
+        version:1,size,applied:u32::from(applied),
+        censored:u32::from(m.fec_censored),
+        copied_source:m.fec_copied_source,copied_parity:m.fec_copied_parity,
+        reverse_reports:m.fec_reverse_reports,positive_2s:m.fec_positive_2s,
+        covered_2s:m.fec_covered_2s,
+    })};OK
 }
 
 #[cfg(test)]

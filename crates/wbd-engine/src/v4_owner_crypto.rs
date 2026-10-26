@@ -1552,11 +1552,12 @@ impl ProtectedScopedOwner {
     /// No independent second PN bitmap is created; callbacks receive only
     /// authenticated payloads. This alone is NOT a verified Go M2 APPLIED.
     #[cfg(all(target_os="windows",feature="fec2_product_record"))]
-    pub(crate) fn drain_windows_authenticated_fec2<F>(
+    pub(crate) fn drain_windows_authenticated_fec2<F,G>(
         &mut self,now:MonoNs,storage:Vec<RxPacket>,mut accept:F,
+        mut accept_kind1:G,
     )->Result<(Vec<RxPacket>,AuthenticatedRxReport),
                (ProtectedCryptoError,Vec<RxPacket>)>
-    where F:FnMut(u64,u8,&[u8]){
+    where F:FnMut(u64,u8,&[u8]),G:FnMut(u64,wbd_codec::Receipt){
         if self.state!=OwnerPhase::Active {
             return Err((ProtectedCryptoError::Inactive,storage))
         }
@@ -1574,7 +1575,22 @@ impl ProtectedScopedOwner {
                     accept(record.pn,record.kind,record.payload);
                     report.link_ready+=1;
                 },
-                Ok(_)=>report.control_ready+=1,
+                Ok(record) if record.kind==
+                    wbd_codec::record_frame::AUTHENTICATED_HEALTH_KIND=>{
+                    if record.payload.len()>512 {
+                        report.rejected+=1;continue
+                    }
+                    match wbd_codec::decode_control(record.payload,512){
+                        Ok(mut items) if items.len()==1=>{
+                            if let wbd_codec::ControlTlv::Receipt(receipt)=items.remove(0){
+                                accept_kind1(record.pn,receipt);
+                                report.control_ready+=1;
+                            }else{report.rejected+=1}
+                        },
+                        _=>report.rejected+=1,
+                    }
+                },
+                Ok(_)=>report.rejected+=1,
                 Err(_)=>report.rejected+=1,
             }
         }
