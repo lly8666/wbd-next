@@ -89,7 +89,29 @@ def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
         r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |GAME_FEC_APPLIED |GAME_FEC_COUNTERS |GAME_OUTER |GAME4_COPY_SCHEDULE |GO_RX_HANDOFF |GO_RX_POST_HANDOFF |GAME_GO_RX_HANDOFF |GAME_GO_RX_POST_HANDOFF |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
-        line))
+        line) or "M0_GAME_M4_RX_MULTIMSG " in line)
+
+
+def public_game_rx_multimsg(log_text):
+    """Unprivileged parser for actual Linux recvmmsg syscall/slot counters.
+    A missing or incoherent report is NOT_OBSERVED, never zero.
+    """
+    rows=[line for line in log_text.splitlines() if "M0_GAME_M4_RX_MULTIMSG " in line]
+    if len(rows)!=1: return None
+    required=("socket_calls","observed_records","full_4_batches",
+              "rejected_untrusted","valid_records","limit_per_syscall")
+    values={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=([0-9]+)",rows[0])}
+    if not all(k in values for k in required): return None
+    calls=values["socket_calls"]
+    seen=values["observed_records"]
+    full=values["full_4_batches"]
+    dropped=values["rejected_untrusted"]
+    valid=values["valid_records"]
+    if (values["limit_per_syscall"]!=4 or calls<=0 or seen<=0 or
+        valid<=0 or full>calls or full*4>seen or seen>calls*4 or
+        dropped+valid>seen):
+        return None
+    return values
 
 
 def public_go_rx_handoff(log_text, role):
@@ -1115,12 +1137,14 @@ class LinuxExperiment:
             # long Auto run produces more than 40 normal numeric readbacks.
             handoff=[line for line in lines if
                      "GO_RX_HANDOFF role=" in line or
-                     "GO_RX_POST_HANDOFF role=" in line]
+                     "GO_RX_POST_HANDOFF role=" in line or
+                     "M0_GAME_M4_RX_MULTIMSG " in line]
             other=[line for line in lines if "V4_PUBLIC_TIMELINE " not in line
                    and "V4_PUBLIC_FEC2_AUTO_QUALITY " not in line
                    and "GO_RX_HANDOFF role=" not in line
-                   and "GO_RX_POST_HANDOFF role=" not in line]
-            logs[role] = "\n".join(handoff[-2:]+other[-40:])
+                   and "GO_RX_POST_HANDOFF role=" not in line
+                   and "M0_GAME_M4_RX_MULTIMSG " not in line]
+            logs[role] = "\n".join(handoff[-3:]+other[-40:])
             (self.out / (role + "-product-markers.log")).write_text(logs[role] + "\n")
         return logs
 
@@ -1139,6 +1163,15 @@ class LinuxExperiment:
             v is not None and v["kernel_filtered_lanes"]==self.lanes and
             v["go_data_full_copies_after_handoff"]<=32
             for v in go_handoff.values())) if need_go_handoff else None
+        game_multimsg={role:public_game_rx_multimsg(log)
+                      for role,log in logs.items()}
+        need_game_multimsg=self.config["bundles"][self.label].get(
+            "require_game_rx_multimsg",False)
+        game_multimsg_verified=(len(game_multimsg)==2 and all(
+            v is not None for v in game_multimsg.values())
+            ) if need_game_multimsg else None
+        if need_game_multimsg and not game_multimsg_verified:
+            verified=False
         if need_go_handoff and not go_handoff_verified:
             verified=False
         if mode in ["fec-fixed", "fec-auto"]:
@@ -1344,7 +1377,9 @@ class LinuxExperiment:
             (sum(fec_ip[role][k] for k in ("sys_udp","rec_udp","sys_tcp","rec_tcp","other_ip")) ==
              fec_rx[role]["systematic_tun"]+fec_rx[role]["recovered_tun"])
             for role in logs)
-        return {"go_receive_handoff": go_handoff if all(v is not None for v in go_handoff.values()) else "NOT_OBSERVED",
+        return {"game_rx_multimsg": game_multimsg if all(v is not None for v in game_multimsg.values()) else "NOT_OBSERVED",
+                 "game_rx_multimsg_verified":game_multimsg_verified,
+                 "go_receive_handoff": go_handoff if all(v is not None for v in go_handoff.values()) else "NOT_OBSERVED",
                  "go_receive_handoff_verified": go_handoff_verified,
                  "stop_drained_both": all(("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED" if self.lanes > 1 else "V4_PUBLIC_NATIVE_STOP_DRAINED") in s for s in logs.values()),
                 "effective_config_verified": verified, "fec_final_readback": applied, "counters": counters,
