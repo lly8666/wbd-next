@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "GAME4_FEC_OFF_STAGGER_SINGLE_CANDIDATE_FINAL_OPTIONAL; W114_123R_MATCHED_DAMAGE_88EC; W124_NATIVE_CAPACITY_CLEAN_4B390; NO_MAIN_MERGE",
+  "phase": "W125_GAME2_W126_GAME4_FIXED6_UDP20MBPS_IID30_REAL_ACTIONS_STARTED; GAME4_STAGGER_DEFAULT; HIGHER_10MBPS_STEPS_HELD_PENDING_20_CAPACITY_GATE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -18,22 +18,18 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "4b390154b9f24e76b1592e4acb27565a00ea8113",
-    "build_run": 40276313079,
+    "source": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce",
+    "build_run": 40278857619,
     "attempt": 1,
-    "artifact_id": 12630800961,
-    "zip_sha256": "0019ab8203daa09c4e3e273190a94d0db54d7ef439823baed9ec3d15137b5244",
+    "artifact_id": 12631645713,
+    "zip_sha256": "c34b8121ef817294a889f5f0f06eca1ef8e1ddcda3c7a9bf8244a85fb75abfc8",
     "platform": "linux-aarch64",
-    "mode": "Game4 FEC OFF original-Go TLS; copy schedule immediate DEFAULT / stagger-4-20-60 opt-in",
-    "qualification": "NATIVE_1024_SLOT_BOUNDED_FIRST_ADMISSION_TEST_PASS and W124_NOLOSS_MATCHED_AB_PASS_SCOPED; W115-W123R weaknet evidence for 88ec PREVIOUS PRODUCT, not retested on 4b390",
-    "real_game4_clean_action": 40276707466,
-    "real_game4_clean_artifact": 12630397812,
-    "real_game4_clean_artifact_sha256": "ce6dc3544304550b7cc3d2df99b8a4ce4d8f4564b438d5bc6a32f5bed22ad506",
-    "historical_88ec_source": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
-    "historical_broken_205c_source": "205c557841525356a6c5a639d4fa8c689235fb27",
-    "original_normal_Game2_GameFEC": "PRESERVED_NOT_REQUALIFIED_BY_GAME4_CHANGE",
-    "windows": "TEMP_SKIPPED",
-    "UI": "NOT_SUPPORTED"
+    "mode": "Game4 original-Go TLS default 0/4/20/60ms; explicit immediate rollback; fixed6 allowed; Game2 original immediate fixed6",
+    "qualification": "EXACT_NATIVE_PRODUCT_BUILD_AND_UNIT_REGRESSION_PASS_ONLY; W125_W126_REAL20MBPS_30PCT_IID_UDP_RUNNING_NOT_YET_QUALIFIED",
+    "prior_Game4_OFF_real_source": "4b390154b9f24e76b1592e4acb27565a00ea8113",
+    "old_gameFEC_fixed_source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "GameAuto": "OUT_OF_SCOPE",
+    "Windows_UI": "NOT_QUALIFIED"
   },
   "open_requests": [
     {
@@ -637,7 +633,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Bounded Game4 stagger single candidate W114-W124 complete. Decision: keep default immediate, allow 0/4/20/60ms only explicit Game4 FEC-OFF opt-in. 4b390 capacity guard passed native 1024-slot test and W124 real matched lossless A/B. W115–W123R impaired model benefits remain exact earlier 88ec proof, not directly retested on 4b390. Stop matrix and high-PPS pressure; preserve historic FEC fixed6 Game+FEC failures, no Game Auto, no Windows/UI claims. Do not merge main.",
+  "next_action": "Read own W125 Game2 Action40279255953 and W126 Game4 Action40279262382 result ZIPs when completed; strict genuine UDP IID30 at20Mbps/dir, FEC fixed6, outer DATA retrans OFF, Game4 stagger native DEFAULT. Evaluate actual injection and first delivery, loss denominator, FEC parity planned/copied vs recovery, Game4 planned/sent/abandoned and lateness, TUN/root drops, CPU-s/RSS and host CPU PSI. Capacity stop if 20 fails or host pressure; only if both pass and have spare headroom progress 30/40/50/60/70/80Mbps +10 per step, one Action per scene, no unbounded matrix. No Game Auto, no Windows/UI, no main merge.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6700,7 +6696,7 @@
     "windows": "NOT_RUN/TEMP_SKIPPED"
   },
   "game4_copy_schedule_20261026": {
-    "decision": "OPTIONAL_BURST_RESILIENCE; DEFAULT_IMMEDIATE; NO_AUTOTUNE",
+    "decision": "GAME4_DEFAULT_STAGGER_0_4_20_60; explicit immediate rollback; fixed6 allowed after native per-quantum FEC scheduler correction; Game2 immediate",
     "source_qualified": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
     "new_capacity_guard_source": "4b390154b9f24e76b1592e4acb27565a00ea8113",
     "new_guard_native_action": 40276313079,
@@ -6728,8 +6724,9 @@
     "evidence": "docs/evidence/fec-network-work/20261026-W114-W120-Game4-FECOFF-stagger-single-candidate-AB.json",
     "new_guard_network_result_artifact": 12630397812,
     "new_guard_network_zip_sha256": "ce6dc3544304550b7cc3d2df99b8a4ce4d8f4564b438d5bc6a32f5bed22ad506",
-    "source_current": "4b390154b9f24e76b1592e4acb27565a00ea8113",
-    "source_impairment_tests": "88ecda8b348eb319a0eb4cb282da2a6a01649a90"
+    "source_current": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce",
+    "source_impairment_tests": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
+    "previous_user_decision": "HISTORICAL_OPTIONAL_ONLY_OVERRIDDEN_BY_NEW_USER"
   },
   "product_historical_88ec_game4_qualified": {
     "source": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
@@ -6737,5 +6734,50 @@
     "artifact_id": 12629261825,
     "zip_sha256": "65b6a6c34e3115f53c90c71274f48c39bf4e2230e10206353c8b936ffbaa3f90",
     "scope": "W115–W123R full real network no-loss/IID5/shared GE/wall blackholes/sparse/one-way/lane1 blackout; after native bug fix; never confuse with invalid old205c stagger."
+  },
+  "product_pre_20261026_game4_stagger_default": {
+    "source": "4b390154b9f24e76b1592e4acb27565a00ea8113",
+    "build_run": 40276313079,
+    "attempt": 1,
+    "artifact_id": 12630800961,
+    "zip_sha256": "0019ab8203daa09c4e3e273190a94d0db54d7ef439823baed9ec3d15137b5244",
+    "platform": "linux-aarch64",
+    "mode": "Game4 FEC OFF original-Go TLS; copy schedule immediate DEFAULT / stagger-4-20-60 opt-in",
+    "qualification": "NATIVE_1024_SLOT_BOUNDED_FIRST_ADMISSION_TEST_PASS and W124_NOLOSS_MATCHED_AB_PASS_SCOPED; W115-W123R weaknet evidence for 88ec PREVIOUS PRODUCT, not retested on 4b390",
+    "real_game4_clean_action": 40276707466,
+    "real_game4_clean_artifact": 12630397812,
+    "real_game4_clean_artifact_sha256": "ce6dc3544304550b7cc3d2df99b8a4ce4d8f4564b438d5bc6a32f5bed22ad506",
+    "historical_88ec_source": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
+    "historical_broken_205c_source": "205c557841525356a6c5a639d4fa8c689235fb27",
+    "original_normal_Game2_GameFEC": "PRESERVED_NOT_REQUALIFIED_BY_GAME4_CHANGE",
+    "windows": "TEMP_SKIPPED",
+    "UI": "NOT_SUPPORTED"
+  },
+  "game4_fixed6_capacity_ladder_20261026": {
+    "authorization": "NEW_USER_ALLOWANCE_20261026",
+    "product_source": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce",
+    "source_build_run": 40278857619,
+    "source_build_artifact": 12631645713,
+    "source_zip_sha256": "c34b8121ef817294a889f5f0f06eca1ef8e1ddcda3c7a9bf8244a85fb75abfc8",
+    "real20": [
+      {
+        "id": "W125",
+        "mode": "Game2 fixed6",
+        "run": 40279255953,
+        "request": "tests/network/fec-work/W125-Game2-fixed6-staggerDefault-IID30-20Mbps-UDPOnly-ARM64.json",
+        "status": "RUNNING_NOT_YET_QUALIFIED"
+      },
+      {
+        "id": "W126",
+        "mode": "Game4 fixed6 stagger DEFAULT",
+        "run": 40279262382,
+        "request": "tests/network/fec-work/W126-Game4-fixed6-staggerDefault-IID30-20Mbps-UDPOnly-ARM64.json",
+        "status": "QUEUED_NOT_YET_QUALIFIED"
+      }
+    ],
+    "traffic": "20Mbps C2S +20Mbps S2C, UDP only, weighted actual 64..1287 app sizes, 100Hz small probes, 75ms one-way, per lane independently 30% netem, strict 1% residual gate each damaged phase, source TUN/root drop0",
+    "capacity_model": "At 80Mbps weighted app-size≈654B, 15.3kpps, 65ms retained≈995 logical jobs; Game4 4096 slots ~4x burst margin, 8MiB logical bytes, ~8MiB reused source slabs, 4x4096 lane queue. 100%64B at80Mbps >10156 jobs is NOT within 4096; stop on capacity. Game2 slots128 and FEC owner pending64/source arena128 remain possible bottlenecks until measured.",
+    "code_fix": "Advance Game FEC parity quantum when those parity rows have actual native kernel-copy credit, not only when entire GameTx 60ms queue empties; parity symbols independently deep-copied into GameTx arena, original receipt/TUN delivery unchanged.",
+    "next": "Do not increase beyond 20Mb/s until BOTH real 20Mb/s actions checked including delivered/injected, native parity, outer OFF, lane send abandon, owner queue, CPU-s/RSS and host PSI. If 20 fails isolate first capacity boundary, optimize minimally then retest affected 20 action. If both pass and VM spare, step +10Mb/s separate Action each to at most80. Never seed-churn."
   }
 }
