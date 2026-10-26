@@ -25,7 +25,7 @@
     "sha256": "85e50a70ef44306fe5a6f913010d57568cc01b652830be09d473cbd7b2248ac6",
     "platform": "aarch64",
     "mode": "Original Go TLS Game2/Game4 fixed6 (explicit, shared TX/RX fixed FEC); default Game OFF retained",
-    "qualification": "W98 real clean netem0 mixed 3Mbps both directions UDP+real TCP PASS_SCOPED; W99 damaged network actions 40256521889/40256529112 NOT_YET_VERIFIED",
+    "qualification": "W98 exact Game2/4 fixed6 real clean UDP/TCP PASS and W99 real IID20/one-lane-blackhole+restore both directions 3Mbps PASS_SCOPED; fixed0 real clean W100 PASS on same original source. FEC recovered_candidate positive but not per-frame TUN recovered proof. W101 low-frequency rejection classification pending.",
     "real_clean_game2_action": 40255806409,
     "real_clean_game4_action": 40255813118,
     "actual_parity": "both directions rplanned=rsent=kernel copied, expired0; recovered0 under no-loss",
@@ -634,7 +634,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W101: Preserve Game OFF W91-W97, new original Go TLS fixed0 W100 clean and fixed6 W98 clean+W99 20% independent per lane/one blackhole true TCP/UDP and FEC recovery PASS_SCOPED. Avoid new high load. Diagnose low-frequency aggregate W99 FEC RX failed counts Game2 89/92 Game4 267/263 with minimal categorized counters (normal stale/duplicate vs malformed/codec/capacity); do not treat as AEAD. Then one minimal same-source damaged Game2 or Game4 positive trace to validate classification and no regression if necessary; no forced GE matrix. Report outer Game --outer-repair=off is still explicit UNSUPPORTED, Normal FEC-only off separate; no main merge, Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
+  "next_action": "W101 inspect exact ARM64 build40257758450 and categorized native RX test; if PASS reuse frozen artifact for one unchanged 3Mbps Game2 fixed6 W99-style IID20/blackhole trace, recording rx_invalid/conflict/capacity/codec/state/frame and true TCP/UDP. W98 fixed6 clean, W99 fixed6 IID20/blackhole PASS_SCOPED; W100 fixed0 clean PASS_SCOPED. No extra high pressure, no generic shared GE matrix until classification. Game --outer-repair=off explicitly unsupported and not FEC-only retrans disabled; Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6227,15 +6227,62 @@
     "normal_fec_verification": "HISTORICAL SEPARATE FEC ONLY; do not conflate with Game source"
   },
   "w99_game_fixed_weaknet": {
-    "status": "RUNNING_NOT_VERIFIED",
-    "exact_product_source": "c18de0fa79f529c349b6546635f3c6b62aa01b1c",
+    "status": "EXACT_GAME2_GAME4_FIXED6_REAL_ARM64_IID20_LANE1_BLACKHOLE_PASS_SCOPED",
+    "source": "c18de0fa79f529c349b6546635f3c6b62aa01b1c",
     "build_run": 40255431613,
     "game2_run": 40256521889,
     "game4_run": 40256529112,
-    "mode": "fixed6",
-    "scenarios": "each lane IID20%, lane1 blackout, clean restore, 3Mbps each way UDP+real TCP",
+    "genuine_udp_tcp": "Complete injected=delivered both directions for clean, 20% independent loss, one lane blackhole and clean restore",
+    "fec_recovered_candidates": {
+      "game2_client_server": [
+        776,
+        810
+      ],
+      "game4_client_server": [
+        84,
+        87
+      ]
+    },
+    "fec_rx_failed_aggregate": {
+      "game2_client_server": [
+        89,
+        92
+      ],
+      "game4_client_server": [
+        267,
+        263
+      ]
+    },
+    "fec_rx_fail_cause": "W101 native reclassification build 40257758450 running; old total not AEAD",
+    "fec_parity": "both directions scheduled=actually copied and sent; expires0",
+    "cpu_s": {
+      "game2_client_server": [
+        9.65,
+        9.69
+      ],
+      "game4_client_server": [
+        17.49,
+        17.64
+      ]
+    },
+    "rss_peak_bytes": {
+      "game2_client_server": [
+        26693632,
+        26902528
+      ],
+      "game4_client_server": [
+        39505920,
+        38801408
+      ]
+    },
+    "max_active_zero_delivery_ms": {
+      "udp": 70,
+      "tcp": 80
+    },
+    "stop": true,
     "capacity_stop": true,
-    "merge_ready": false
+    "evidence": "docs/evidence/fec-network-work/20261026-W99-Game2-Game4-fixed6-real-IID20-blackhole-PASS-SCOPED.json",
+    "windows": "TEMP_SKIPPED_USER_20261025"
   },
   "w99_game_fixed6_real_damage": {
     "status": "EXACT_REAL_GAME2_GAME4_3MBPS_IID20_BLACKHOLE_PASS_SCOPED_WITH_TRUE_FEC_RECOVERED_CANDIDATES",
@@ -6283,6 +6330,20 @@
     "fec_failed": 0,
     "delivered_tcp_udp": "EXACT_ON_BOTH_DIRECTIONS",
     "evidence": "docs/evidence/fec-network-work/20261026-W100-Game2-Game4-fixed0-real-clean-PASS-SCOPED.json",
+    "capacity_stop": true
+  },
+  "w101_game_fixed_fec_rejection_reason": {
+    "status": "EXACT_ARM64_NATIVE_RUNNING_NOT_PASS",
+    "candidate_source": "8afc2b8f443dd59edc912fef24b5fffa92e3a6d7",
+    "build_run": 40257758450,
+    "previous_failed_source": "24c5b7ec49edccc8bee276a4e800f954912e37e4",
+    "previous_compile_fail_runs": [
+      40257476029,
+      40257476050
+    ],
+    "previous_compile_failure": "Rust #[test] on impl associated fn, fixed by free test wrapper",
+    "changes": "Classify RX invalid/conflict/capacity/codec/state/frame errors in terminal one-line FEC proof; no FEC math/TUN/source schedule changes",
+    "live_qualified": false,
     "capacity_stop": true
   }
 }
