@@ -85,27 +85,34 @@ def validate_entry(root, path):
     for key in ("name", "summary", "owner"):
         need(nonempty(item.get(key)), f"{fid}: missing {key}")
     need(item.get("stage") in {"experimental", "formal", "retired"}, f"{fid}: invalid stage")
+    rows = item.get("verification")
+    need(isinstance(rows, list) and rows and all(isinstance(x, dict) for x in rows),
+         f"{fid}: verification must declare untested scopes too")
+    planned = item["stage"] == "experimental" and all(x.get("status") == "PLANNED" for x in rows)
     branch = item.get("development_branch")
     need(branch_ok(branch), f"{fid}: invalid development branch")
     if item["stage"] == "experimental" and not branch.startswith("experiment/"):
         need(nonempty(item.get("legacy_branch_reason")),
              f"{fid}: new experiments belong in experiment/**; historical exceptions need a reason")
     locations = item.get("available_on")
-    need(isinstance(locations, list) and locations and all(branch_ok(x) for x in locations),
+    need(isinstance(locations, list) and all(branch_ok(x) for x in locations)
+         and (locations or planned or item["stage"] == "retired"),
          f"{fid}: list actual available branches")
+    need(not planned or not locations, f"{fid}: planned-only features are not yet available")
     need(len(set(locations)) == len(locations), f"{fid}: duplicate branch")
     need(isinstance(item.get("defaults"), dict), f"{fid}: defaults must be explicit (empty allowed)")
     need(isinstance(item.get("usage"), dict), f"{fid}: missing usage")
     for surface in ("cli", "config", "gui"):
         need(nonempty(item["usage"].get(surface)), f"{fid}: {surface} usage or non-applicability required")
     for key in ("code_refs", "doc_refs"):
-        need(isinstance(item.get(key), list) and item[key], f"{fid}: missing {key}")
+        need(isinstance(item.get(key), list) and (item[key] or (key == "code_refs" and planned)),
+             f"{fid}: missing {key}")
         for ref in item[key]:
             source_ref(root, ref)
     need(isinstance(item.get("limitations"), list) and all(nonempty(x) for x in item["limitations"]),
          f"{fid}: limitations must be a list")
-    rows = item.get("verification")
-    need(isinstance(rows, list) and rows, f"{fid}: verification must declare untested scopes too")
+    if item["stage"] == "retired":
+        need(item["limitations"], f"{fid}: record retirement reason/replacement")
     scopes = set()
     for row in rows:
         need(isinstance(row, dict), f"{fid}: verification row must be an object")
@@ -231,7 +238,7 @@ def check_change(root, changed, items):
     return "DECLARED_UPDATED" if ids else "DECLARED_NO_FEATURE_IMPACT"
 
 
-def render(state, items, query=""):
+def render(state, items, query="", source=None):
     lines = ["# 当前分支功能索引", "",
              f"盘点状态：{state['status']}；范围：`{state['scope_branch']}`。不是全平台 PASS。", "",
              "| 功能 | 性质 | 开发分支 | 已存在分支 | 验证范围 |", "|---|---|---|---|---|"]
@@ -240,7 +247,8 @@ def render(state, items, query=""):
             continue
         clean = lambda s: str(s).replace("|", "/").replace("\n", " ")
         proof = "; ".join(f"{x['platform']} {x['scope']}: {x['status']}" for x in item["verification"])
-        lines.append(f"| [{clean(item['name'])}](entries/{fid}.json) | {item['stage']} | {clean(item['development_branch'])} | {clean(', '.join(item['available_on']))} | {clean(proof)} |")
+        link = f"https://github.com/lly8666/wbd-next/blob/{source}/{CATALOG}{fid}.json" if source else f"entries/{fid}.json"
+        lines.append(f"| [{clean(item['name'])}]({link}) | {item['stage']} | {clean(item['development_branch'])} | {clean(', '.join(item['available_on']))} | {clean(proof)} |")
     if not items:
         lines.append("\n尚未初始化产品功能条目；不得据此认定产品没有功能。")
     return "\n".join(lines) + "\n"
@@ -255,7 +263,7 @@ def main():
     args = parser.parse_args()
     state, items = read_catalog(ROOT)
     if args.command == "list":
-        rendered = render(state, items, args.query)
+        rendered = render(state, items, args.query, git(ROOT, "rev-parse", "HEAD"))
         if args.output:
             Path(args.output).parent.mkdir(parents=True, exist_ok=True)
             Path(args.output).write_text(rendered, encoding="utf-8")

@@ -73,6 +73,18 @@ class FeatureCatalogTests(unittest.TestCase):
         self.entry["verification"][0].update(status="FUNCTIONAL_PASS", source_sha="a" * 40, evidence="docs/proof.json")
         f.validate_entry(self.root, self.card())
 
+    def test_planned_and_retired_do_not_invent_available_code(self):
+        self.entry["verification"][0]["status"] = "PLANNED"
+        self.entry.update(available_on=[], code_refs=[])
+        f.validate_entry(self.root, self.card())
+        self.entry["available_on"] = ["experiment/demo"]
+        with self.assertRaises(f.CatalogError):
+            f.validate_entry(self.root, self.card())
+        self.entry.update(stage="retired", available_on=[], code_refs=["crates/demo.rs"],
+                          limitations=["Withdrawn; historical code linked for traceability"])
+        self.entry["verification"][0]["status"] = "NOT_RUN"
+        f.validate_entry(self.root, self.card())
+
     def test_pass_requires_source_and_existing_evidence(self):
         self.entry["verification"][0]["status"] = "BUILD_PASS"
         with self.assertRaises(f.CatalogError):
