@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "id": "FEC-W101-Game2-Fixed6-Readback-Decoder-Reasons-IID20-Blackhole",
+  "owner": "fec-network-work",
+  "seed": 8210952,
+  "policy": "outer-opportunistic-v3",
+  "product": {
+    "mode": "game2",
+    "fec_profile": 1,
+    "game_fec": "fixed6"
+  },
+  "traffic": {
+    "c2s_mbps": 3,
+    "s2c_mbps": 3,
+    "udp_share": 0.96,
+    "sizes": [
+      [
+        64,
+        6
+      ],
+      [
+        96,
+        8
+      ],
+      [
+        160,
+        10
+      ],
+      [
+        255,
+        8
+      ],
+      [
+        256,
+        6
+      ],
+      [
+        257,
+        7
+      ],
+      [
+        512,
+        10
+      ],
+      [
+        900,
+        15
+      ],
+      [
+        1287,
+        30
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "deadline_ms": 6000,
+    "burst_ms": 0,
+    "max_packets": 5000000,
+    "allow_fragmentation": false,
+    "observe_size_classes": true,
+    "observe_independent_flows": true
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "independent",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded",
+    "owned_veth_static_neighbour": true
+  },
+  "warmup_s": 15,
+  "drain_s": 30,
+  "phases": [
+    {
+      "name": "clean_before",
+      "seconds": 15,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      }
+    },
+    {
+      "name": "independent20",
+      "seconds": 30,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 20,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 20,
+        "rate_mbps": 50
+      }
+    },
+    {
+      "name": "lane1_blackhole",
+      "seconds": 30,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50,
+        "blackhole_lanes": [
+          1
+        ]
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50,
+        "blackhole_lanes": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "clean_after",
+      "seconds": 15,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false,
+    "max_loss_pct": 1,
+    "max_small_udp_loss_pct": 1,
+    "max_small_udp_p99_ms": 800,
+    "loss_gate_phases": [
+      "clean_before",
+      "clean_after"
+    ],
+    "require_zero_source_tun_drops_full_run": true,
+    "require_zero_tun_root_qdisc_drops_full_run": true,
+    "cross_business_hol": true
+  },
+  "bundles": {
+    "A": {
+      "source": "8afc2b8f443dd59edc912fef24b5fffa92e3a6d7",
+      "run_id": 40257758450,
+      "attempt": 1,
+      "artifact_id": 12622774367,
+      "sha256": "80f65de67e9a89ba961f3d18a722c53cee8911ce19f0a1315f98d448713f9772",
+      "recovery_policy": "outer-opportunistic-v3"
+    }
+  },
+  "order": "A"
+}
