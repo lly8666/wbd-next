@@ -82,8 +82,8 @@ def validate(raw):
         raise Unsupported("Game FEC must be fixed0..fixed6 on public game2/game4; no Auto or other mode")
     copy_mode=p.setdefault("game4_copy_schedule",
                            "stagger-4-20-60" if p["mode"]=="game4" else "immediate")
-    if copy_mode not in ("immediate","stagger-4-20-60"):
-        raise ValueError("game4_copy_schedule must be immediate or stagger-4-20-60")
+    if copy_mode not in ("immediate","stagger-4-20-60","stagger-4-50-140"):
+        raise ValueError("game4_copy_schedule invalid: immediate/stagger-4-20-60/stagger-4-50-140")
     if copy_mode!="immediate" and p["mode"]!="game4":
         raise Unsupported("staggered copy requires Game4")
     if any(k in p for k in ["cipher", "repair_ratio"]):
@@ -345,7 +345,7 @@ def validate(raw):
             if b["enable_game_rx_lock_sample"] and p["mode"] not in ("game2","game4"):
                 raise Unsupported("Game RX shared-lock timing probe requires Game2/4")
         copy_setting=b.get("game4_copy_schedule",p["game4_copy_schedule"])
-        if copy_setting not in ("immediate","stagger-4-20-60"):
+        if copy_setting not in ("immediate","stagger-4-20-60","stagger-4-50-140"):
             raise ValueError("bundle game4_copy_schedule invalid")
         if copy_setting!="immediate" and p["mode"]!="game4":
             raise Unsupported("Game4 staggered copy is only supported for Game4")

@@ -1000,6 +1000,22 @@ class FecBurstLossGateContracts(unittest.TestCase):
         q=copy.deepcopy(r);q["acceptance"].pop("max_loss_pct")
         with self.assertRaises(ValueError):validate(q)
 
+class FecGame4LongCopyScheduleContracts(unittest.TestCase):
+    def test_bounded_optin_wide_game4_only(self):
+        r=copy.deepcopy(request())
+        r["owner"]="fec-network-work"
+        r["product"]["mode"]="game4"
+        r["product"]["game_fec"]="fixed6"
+        r["product"]["repair_enabled"]=False
+        r["product"]["game4_copy_schedule"]="stagger-4-50-140"
+        r["network"]["lane_loss"]="shared"
+        self.assertEqual(validate(r)["product"]["game4_copy_schedule"],"stagger-4-50-140")
+        q=copy.deepcopy(r);q["product"]["mode"]="game2"
+        with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["product"]["game4_copy_schedule"]="stagger-4-140-50"
+        with self.assertRaises(ValueError):validate(q)
+
+
 class FecGame4SharedWallBlackoutScope(unittest.TestCase):
     def test_fixed6_real_outer_off_allowed_without_relaxing_other_modes(self):
         r=copy.deepcopy(request())

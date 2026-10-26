@@ -106,10 +106,11 @@ func (g *v4NativeGameJoined) configureFixedFEC(profile uint8)error{
     if rc!=0{return fmt.Errorf("%w: Game fixed FEC setup=%d",errV4Embedded,int(rc))}
     return nil
 }
-func (g *v4NativeGameJoined) configureGame4CopyStagger()error{
+func (g *v4NativeGameJoined) configureGame4CopyStagger(mode uint32)error{
     if g==nil||g.handle==0||g.stopped||g.verified==nil||
        len(g.laneOwners)!=4{return ErrAdmissionUnsupported}
-    rc:=C.wbd_fec_network_game4_copy_schedule_set(C.uint64_t(g.handle),1)
+    if mode!=1&&mode!=2{return ErrAdmissionParams}
+    rc:=C.wbd_fec_network_game4_copy_schedule_set(C.uint64_t(g.handle),C.uint32_t(mode))
     if rc!=0{return fmt.Errorf("%w: Game4 stagger setup=%d",errV4Embedded,int(rc))}
     return nil
 }

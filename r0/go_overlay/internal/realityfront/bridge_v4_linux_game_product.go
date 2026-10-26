@@ -26,7 +26,8 @@ type V4LinuxGameProductConfig struct {
     GameFecEnabled bool // explicit BOTH-endpoint fixed FEC, never Auto
     GameFecProfile uint8 // 0..6; only used when GameFecEnabled
     DisableOuterRepair bool // Game M4 first copy only, no Normal M2 DATA repair
-    Game4CopyStagger bool // explicit opt-in only FEC OFF
+    Game4CopyStagger bool // pre-start 4-lane delayed physical copies
+    Game4CopyWideStagger bool // longer opt-in T0+50ms/+140ms tail
 }
 type V4LinuxGameProduct struct{
     mu sync.Mutex
@@ -42,6 +43,7 @@ type V4LinuxGameProduct struct{
 }
 func newV4LinuxGameProduct(cfg V4LinuxGameProductConfig,server bool)(*V4LinuxGameProduct,error){
     if cfg.GameFecEnabled&&cfg.GameFecProfile>6{return nil,ErrAdmissionParams}
+    if cfg.Game4CopyWideStagger&&!cfg.Game4CopyStagger{return nil,ErrAdmissionParams}
     // Game4 fixed FEC is explicitly allowed with the default stagger;
     // native per-group profile and copy schedule are both installed before M4.
     if cfg.NetworkInterface==""||cfg.NetworkIfIndex==0||cfg.Tun==nil||
@@ -80,7 +82,9 @@ func (p *V4LinuxGameProduct) commitGroupedOwnerLocked()error{
     }
     if p.cfg.Game4CopyStagger{
         if len(p.bridges)!=4{return ErrAdmissionUnsupported}
-        if err=p.native.configureGame4CopyStagger();err!=nil{return err}
+        mode:=uint32(1)
+        if p.cfg.Game4CopyWideStagger{mode=2}
+        if err=p.native.configureGame4CopyStagger(mode);err!=nil{return err}
     }
     if err=p.native.configureOuterRepair(!p.cfg.DisableOuterRepair);err!=nil{return err}
     if err=p.native.startNativeM4(

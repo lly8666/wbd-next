@@ -2584,7 +2584,7 @@ pub extern "C" fn wbd_fec_network_game_group_fixed_configure(
     any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub extern "C" fn wbd_fec_network_game4_copy_schedule_set(group:u64,mode:u32)->i32{
-    if mode>1{return INVALID}
+    if mode>2{return INVALID}
     let Ok(r)=registry().lock()else{return BAD_STAGE};
     let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
     if e.stopped||e.stopping||e.drivers.is_some()||e.handles.len()!=4{
@@ -2592,7 +2592,7 @@ pub extern "C" fn wbd_fec_network_game4_copy_schedule_set(group:u64,mode:u32)->i
     }
     if mode==0{return OK}
     let Ok(mut adapter)=e.adapter.lock()else{return BAD_STAGE};
-    if adapter.configure_game4_stagger().is_err(){return INVALID}
+    if adapter.configure_game4_stagger_mode(mode).is_err(){return INVALID}
     OK
 }
 // Native readback: mode, scheduled4, actually copied4, abandoned4,
@@ -2611,7 +2611,7 @@ pub unsafe extern "C" fn wbd_fec_network_game4_copy_schedule_read(
     let Ok(adapter)=e.adapter.lock()else{return BAD_STAGE};
     let mut values=[0u64;21];
     if let Some(c)=adapter.game4_copy_schedule(){
-        values[0]=1;
+        values[0]=adapter.game4_copy_schedule_mode() as u64;
         for i in 0..4{
             values[1+i]=c.scheduled[i];values[5+i]=c.sent[i];
             values[9+i]=c.abandoned[i];

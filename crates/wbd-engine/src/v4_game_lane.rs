@@ -487,6 +487,10 @@ impl GameAdapter{
         fec.poll(now,quiet,|symbol|Self::enqueue(tx,arena,symbol,mtu,now))
     }
     pub fn configure_game4_stagger(&mut self)->Result<(),Error>{
+        self.configure_game4_stagger_mode(1)
+    }
+    pub fn configure_game4_stagger_mode(&mut self,mode:u32)->Result<(),Error>{
+        if mode!=1&&mode!=2{return Err(Error::Invalid)}
         if self.stopped||self.lanes.len()!=4{return Err(Error::Invalid)}
         #[cfg(feature="fec2_product_record")]
         // Game4 fixed FEC symbols are deep-copied into an independently
@@ -496,9 +500,13 @@ impl GameAdapter{
             .map_err(|_|Error::Capacity)?;
         self.rx_owner.lock().map_err(|_|Error::Stopped)?.rx
             .widen_delivery_window_before_start(65536).map_err(Error::Game)?;
-        self.tx.configure_game4_stagger().map_err(Error::Game)?;
+        let offsets=if mode==2{
+            [0,4_000_000,50_000_000,140_000_000]
+        }else{[0,4_000_000,20_000_000,60_000_000]};
+        self.tx.configure_game4_stagger_offsets(offsets).map_err(Error::Game)?;
         self.arena=arena;Ok(())
     }
+    pub fn game4_copy_schedule_mode(&self)->u32{self.tx.copy_schedule_mode()}
     pub fn game4_copy_schedule(&self)->Option<GameCounters>{
         self.tx.staggered().then_some(self.tx.counters())
     }
@@ -623,6 +631,34 @@ mod tests{
         assert_eq!(proof.abandoned,[0;4]);
         assert_eq!(game.game4_next_due_ns(),None);
         game.stop();
+    }
+    #[test]
+    fn game4_stagger_wide_50_140_preserves_immediate_source_and_bounded_tail(){
+        let mut game=build(4);
+        game.configure_game4_stagger_mode(2).unwrap();
+        assert_eq!(game.game4_copy_schedule_mode(),2);
+        let t=1_000_000u64;
+        let id=game.offer(&[0x41;128],MonoNs(t)).unwrap();
+        let mut got=Vec::new();
+        assert_eq!(game.drain(MonoNs(t),|lane,copy,_,_|{
+            got.push((lane.slot,copy.0));true
+        }),1);
+        for (before,due) in [(3_999_999,4_000_000),
+                             (49_999_999,50_000_000),
+                             (139_999_999,140_000_000)]{
+            assert_eq!(game.drain(MonoNs(t+before),|_,_,_,_|true),0);
+            assert_eq!(game.drain(MonoNs(t+due),|lane,copy,_,_|{
+                got.push((lane.slot,copy.0));true
+            }),1);
+        }
+        assert_eq!(got,vec![(1,id.0),(2,id.0),(3,id.0),(4,id.0)]);
+        let proof=game.game4_copy_schedule().unwrap();
+        assert_eq!(proof.scheduled,[1;4]);
+        assert_eq!(proof.sent,[1;4]);
+        assert_eq!(proof.abandoned,[0;4]);
+        assert_eq!(game.game4_next_due_ns(),None);
+        game.stop();
+        assert_eq!(game.tx.in_use().0,0);
     }
     #[test]
     fn game4_stagger_lanes_fifo_burst_capacity_and_stop(){

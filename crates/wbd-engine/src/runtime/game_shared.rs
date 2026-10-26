@@ -101,6 +101,9 @@ impl GameTx {
     }
     pub fn counters(&self)->GameCounters{self.counters}
     pub fn staggered(&self)->bool{self.staggered}
+    pub fn copy_schedule_mode(&self)->u32{
+        if !self.staggered{0}else if self.copy_offsets_ns[3]==140_000_000{2}else{1}
+    }
     pub fn next_due_ns(&self)->Option<u64>{
         self.lanes.iter().filter_map(|l|l.q.front().map(|p|p.due.0)).min()
     }
@@ -114,6 +117,13 @@ impl GameTx {
     // all-64B patterns may exceed 4096 by a wide margin. Pressure-stop,
     // never infer 80Mbps capacity from this nominal slot count.
     pub fn configure_game4_stagger(&mut self)->Result<(),GameError>{
+        self.configure_game4_stagger_offsets([0,4_000_000,20_000_000,60_000_000])
+    }
+    pub fn configure_game4_stagger_offsets(&mut self,offsets:[u64;4])->Result<(),GameError>{
+        if offsets!=[0,4_000_000,20_000_000,60_000_000]&&
+           offsets!=[0,4_000_000,50_000_000,140_000_000]{
+            return Err(GameError::WrongMode)
+        }
         if self.stopped||self.staggered||self.lanes.len()!=4||
            self.used!=0||self.free.len()!=self.limits.jobs||
            self.counters.logical_jobs!=0{return Err(GameError::WrongMode)}
@@ -122,7 +132,7 @@ impl GameTx {
         self.free.extend((old..jobs).rev());
         self.limits.jobs=jobs;self.limits.logical_bytes=8*1024*1024;
         self.limits.lane_slots=4096;self.limits.lane_bytes=8*1024*1024;
-        self.copy_offsets_ns=[0,4_000_000,20_000_000,60_000_000];
+        self.copy_offsets_ns=offsets;
         self.staggered=true;Ok(())
     }
     /// Admit a new Game4 first copy when the finite work arena is full.

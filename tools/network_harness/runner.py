@@ -1291,7 +1291,7 @@ class LinuxExperiment:
                      "abandoned":vals[2],"late_max_us":vals[3],
                      "late_mean_us":vals[4]}
                 game4_copy_readback[role]=row
-                expected=int(requested_game_copy=="stagger-4-20-60")
+                expected={"immediate":0,"stagger-4-20-60":1,"stagger-4-50-140":2}[requested_game_copy]
                 if (row["mode"]!=expected or any(
                     row["sent"][i]>row["planned"][i] for i in range(4))):
                     verified=False

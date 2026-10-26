@@ -52,11 +52,12 @@ func logGameOuterRepair(role string,n int,p *realityfront.V4LinuxGameProduct,off
         proof.DataRetransmitted,proof.BlockedDuplicate,proof.FirstLaneCopied)
     return nil
 }
-func logGame4CopySchedule(role string,p *realityfront.V4LinuxGameProduct,enabled bool)error{
+func logGame4CopySchedule(role string,p *realityfront.V4LinuxGameProduct,enabled,wide bool)error{
     row,err:=p.CopyScheduleRead()
     if err!=nil{return err}
     want:=uint64(0)
     if enabled{want=1}
+    if wide{want=2}
     if row[0]!=want{return realityfront.ErrAdmissionUnsupported}
     log.Printf("V4_PUBLIC_GAME4_COPY_SCHEDULE role=%s mode=%d planned=%d,%d,%d,%d sent=%d,%d,%d,%d abandoned=%d,%d,%d,%d late_max_us=%d,%d,%d,%d late_mean_us=%d,%d,%d,%d",
         role,row[0],row[1],row[2],row[3],row[4],
@@ -131,6 +132,7 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
             DisableOuterRepair:c.disableOuterRepair,
             Game4CopyStagger:c.game4CopyStagger,
+            Game4CopyWideStagger:c.game4CopyWideStagger,
         })
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
@@ -178,7 +180,7 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     }
     if c.gameFecEnabled{logOriginalGameFec("client",n,native)}
     if n==4{
-        if e:=logGame4CopySchedule("client",native,c.game4CopyStagger);e!=nil{return e}
+        if e:=logGame4CopySchedule("client",native,c.game4CopyStagger,c.game4CopyWideStagger);e!=nil{return e}
     }
     closeErr:=native.Close()
     if closeErr==nil{log.Printf("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=%d",n)}
@@ -198,6 +200,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
             DisableOuterRepair:c.disableOuterRepair,
             Game4CopyStagger:c.game4CopyStagger,
+            Game4CopyWideStagger:c.game4CopyWideStagger,
             Epochs:store,
         })
     if err!=nil{return err}
@@ -342,7 +345,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     }
     if c.gameFecEnabled{logOriginalGameFec("server",n,native)}
     if n==4{
-        if e:=logGame4CopySchedule("server",native,c.game4CopyStagger);e!=nil{return e}
+        if e:=logGame4CopySchedule("server",native,c.game4CopyStagger,c.game4CopyWideStagger);e!=nil{return e}
     }
     closeErr:=native.Close()
     if closeErr==nil{log.Printf("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server lanes=%d",n)}
