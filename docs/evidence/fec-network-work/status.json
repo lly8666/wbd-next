@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W130_COMMON_GO_RX_P0_NORMAL_OFF_FIXED_AUTO_AND_GAME2_GAME4_CODE_CANDIDATE_ARM64_ACTION_40287767024_PENDING; W128_LAST_QUALIFIED; CAPACITY_STOP",
+  "phase": "W130_COMMON_GO_RX_P0_NORMAL_OFF_FIXED_AUTO_GAME2_GAME4_CODE_CANDIDATE_6C38_NATIVE_ACTION_40288528399_RUNNING; 074_NATIVE_SUBTESTS_PASS_UPLOAD_TIMEOUT_NO_BINARY; W128_LAST_VERIFIED; CAPACITY_STOP",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -640,7 +640,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W130 common Go DATA RX ownership for Linux Normal OFF/Fixed/Auto plus Game2/Game4 BOTH client/server. Candidate exact code SOURCE 0747769c2eae241c131e3b6f25f3b6e81d90705a, native ARM64 push build Action40287767024 in-progress at last audit; do not qualify until SUCCESS + verified artifact. It retains authenticated TLS, control SYN/ACK/FIN/RST, dedicated Go sendFD and Rust M4 exact RX; installs shared ExcludeDetachedData kernel filter only after native-ready. Previous W129 source 59a5 build40284640114 and four intermediate build Actions failed due malformed shell Go BPF test quote and duplicated script tail before Go compilation. Script repaired, content-count inspected. If build passes: separate scenarios Actions each one condition, Normal OFF W46 pattern 2Mbps mixed sameVM old W128 f484/new W130 A/B, Normal Fixed3 W47 8Mbps IID2 mixed AB/BA, Normal Auto M2 W45/W60 independent regression, Game2 low-load lifecycle, Game4 W128 IID30 UDP10Mbps sameVM AB. Reuse old build40281581736 artifact12633025294 and only exact new SUCCESS artifact/manifest. Track Go posthandoff DATA copies, real delivery, parity, retrans0, p99, CPU/RSS, PSI, Stop/reconnect. P1/P2 Game-specific; shared FEC P3 requires Normal+Game checks. Do not pressure more than existing safe modes; Game4 20 PSI33.24/42.04 stop, no 80Mbps. Windows TEMP_SKIPPED, merge_ready=false.",
+  "next_action": "Latest shared Normal OFF/Fixed/Auto and Game2/Game4 client/server P0 code SOURCE 6c38ed0df9da3547c7bd604b51f13443d6863181, ARM64 automatic build Action40288528399 pending result/artifact. Prior 0747769 source Action40287767024 successfully built binaries and original Go Fixed+Auto real netns tests but workflow FAILED only due GitHub ArtifactService CreateArtifact timeout; never reuse missing ZIP. Earlier W129 script quote/tail failures retained. New 6c38 allows same-IP loopback correctly and adds public ARM64 trigger for common r0/go_overlay/internal/faketcp/**. DO NOT launch perf until latest exact successful build plus SHA256 artifact. Then one Action per scenario: Normal OFF W46 shape sameVM old f484→new6c, Normal Fixed3 W47 shape sameVM BA/AB, Normal Auto W45/W60 independently, Game2 lowrate fixed/OFF lifecycle, Game4 W128 10Mbps IID30 sameVM AB. Verify Go post-handoff DATA copies, inject/delivery, true TCP, FEC parity, M2, outer retrans0, Stop/ reconnect, CPU/RSS/PSI. Game P1 mmsg, P2 locks, deadlines separate; shared FEC P3 requires both Normal/Game. Preserve capacity_stop true/merge_ready false and Windows NOT_RUN.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6826,11 +6826,11 @@
   },
   "w130_common_go_rx_handoff_p0": {
     "owner": "fec-network-work",
-    "source": "0747769c2eae241c131e3b6f25f3b6e81d90705a",
+    "source": "6c38ed0df9da3547c7bd604b51f13443d6863181",
     "source_qualified": false,
     "verified_predecessor": "f484a4c34e08dcbdfa16beef590d285e9db1ee5f",
-    "build_action": 40287767024,
-    "build_status": "IN_PROGRESS_AT_LAST_AUDIT_NOT_PASS",
+    "build_action": 40288528399,
+    "build_status": "IN_PROGRESS_AS_LAST_CHECK_NOT_PASS",
     "build_artifact": null,
     "notes": "Build patch eliminates malformed quoted Go test and repeated script tail. Earlier push builds failed before any verified Go product; retain failures.",
     "historical_failed_action_ids": [
@@ -6866,7 +6866,15 @@
     "docs": "docs/devlog/fec-network-work/20261026-W130-common-Go-RX-handoff-Normal-Game-implementation.md",
     "capacity_stop": true,
     "merge_ready": false,
-    "windows": "NOT_RUN/TEMP_SKIPPED_USER_20261025"
+    "windows": "NOT_RUN/TEMP_SKIPPED_USER_20261025",
+    "superseded_source": "0747769c2eae241c131e3b6f25f3b6e81d90705a",
+    "prior_build": {
+      "run_id": 40287767024,
+      "result": "FAIL_ARTIFACTSERVICE_UPLOAD_TIMEOUT_AFTER_NATIVE_RUST_GO_ORIGINAL_FIXED_AUTO_TESTS_PASS",
+      "artifact": null
+    },
+    "loopback_same_ip_fix": "0db4bc7005d99f014f6eb9c584a3a9623c582079",
+    "workflow_common_filter_trigger": "6c38ed0df9da3547c7bd604b51f13443d6863181"
   },
   "w129_go_rx_handoff_p0": {
     "source": "59a5e894fb443a2f2e59814edc02fd92f54f8ea4",
