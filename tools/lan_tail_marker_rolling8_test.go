@@ -9,6 +9,7 @@ import (
  "bytes"
  "crypto/aes"
  "crypto/cipher"
+ "errors"
  "crypto/subtle"
  "encoding/binary"
  "math/bits"
@@ -101,7 +102,7 @@ func (c *coder) seal(w,inner []byte,retrans bool,seq uint64,roll tailMask,forceA
 }
 func (c *coder) open(w,out []byte,seq uint64,roll tailMask)(bool,[]byte,error){
  if len(w)<7||w[0]!=0x17||w[1]!=3||w[2]!=3||
-  int(binary.BigEndian.Uint16(w[3:5]))!=len(w)-5{return false,nil,cipher.ErrOpen}
+  int(binary.BigEndian.Uint16(w[3:5]))!=len(w)-5{return false,nil,errors.New("bad TLS-like outer header")}
  // Undo only tail XOR, on a reusable scratch copy so caller wire is unchanged.
  // Bench output buffer must be >= total for this variant.
  copy(out,w)
@@ -109,6 +110,9 @@ func (c *coder) open(w,out []byte,seq uint64,roll tailMask)(bool,[]byte,error){
  maskRolling(b,seq,roll)
  m:=binary.BigEndian.Uint16(b[len(b)-2:])
  fallback:=m>=0xf000
+ // Counter-synchronized marker validation, NOT cryptographic authenticity.
+ // Network loss/reordering and outer TCP retrans must NOT desynchronize it.
+ if m!=marker(seq,fallback){return fallback,nil,errors.New("counter/marker mismatch")}
  payload:=b[5:len(b)-2]
  if fallback{
   p,e:=c.aead.Open(b[5:5],c.nonce(seq),payload,c.makeAAD(b[:5],m,seq))
@@ -171,17 +175,18 @@ func TestTrailerFingerprintAndUnauthenticatedFast(t *testing.T){
  flip[24]^=1
  aes,p,e:=c.open(flip,out[:],18,maskOneByte)
  if e!=nil||aes||bytes.Equal(p,tls23){t.Fatal("fast mode unexpectedly authenticated")}
- // AES tag authenticated against mode marker, but downgrading the marker
- // causes the unauthenticated fast decoder to interpret AES ciphertext.
+ // The test-only deterministic marker allows a single-byte mode downgrade
+ // to be rejected, but remains publicly computable, not authentication.
  other:=otherFixture()
  wa:=c.seal(wire[:],other,false,19,maskOneByte,false)
  tampered:=append([]byte(nil),wa...)
  tampered[len(tampered)-2]=0x20 // clear high-byte mode downgrade
  aes,p,e=c.open(tampered,out[:],19,maskOneByte)
- if e!=nil||aes||bytes.Equal(p,other){t.Fatal("AES downgrade wrongly rejected by fast parser")}
+ if e==nil{t.Fatal("AES downgrade should fail marker consistency")}
+ _=aes;_=p
  // Reordering different sequence counters loses implicit rolling state.
- _,bad,e:=c.open(w,out[:],20,maskOneByte)
- if e==nil&&bytes.Equal(bad,tls23){t.Fatal("implicit counter changed without effect")}
+ _,_,e=c.open(w,out[:],20,maskOneByte)
+ if e==nil{t.Fatal("implicit counter mismatch should be rejected")}
 }
 func (c *coder) sealOldFullXOR(w,inner []byte,seq uint64)[]byte{
  n:=5+8+len(inner)
