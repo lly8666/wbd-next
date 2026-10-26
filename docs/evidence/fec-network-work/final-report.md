@@ -1,4 +1,6 @@
-# FEC-only 独立岗位｜2026-10-25 限域合并审查索引
+# FEC-only 独立岗位｜2026-10-26 限域合并审查索引
+
+**2026-10-26 W110 之后的最新远端复核入口（优先于下文 2026-10-25 W83 历史索引）：** [Git/Actions 逐项审查、精确原始产品与限域合并边界](20261026-post-W110-git-actions-scoped-merge-audit.md)。最新已验证 Game/Normal 公共 Go TLS/FEC 原始 ARM64 二进制源为 `e8b41fb49a74648e405bf23e4600e23c618596fe`（构建 [40260662919](https://github.com/lly8666/wbd-next/actions/runs/40260662919)，artifact `12623678360`），当前分支证据提交在此之后不修改 Rust/Go 产品数据面。W103–W110 分模式限定通过，W102 更早 SOURCE 的共享长 GE 2.43–2.56% 仍是风险，**不是 e8 上的新长 GE 通过**；Game Auto/Windows/物理机/FEC+outer ON 仍未认证。保持 `scoped_integration_review_ready=true`、`merge_ready=false`、`capacity_stop=true`，不加压、不合 main。旧历史源码、失败 Actions 与反例不得删改。
 
 **当前交付状态：** `scoped_integration_review_ready=true`；**`merge_ready=false`，`capacity_stop=true`**。以下只为已跑原生 Linux ARM64、真实外层 DATA repair OFF 的 FEC 功能/业务性能**限域审查**，不是全平台、不是与 main/新外层 ON 组合的整机合并资格。入库前的证据审查基线 `084e7215f48c0d96a55b92a5a3691aa346dcdda2`（2026-10-25 12:17 UTC，W83 文档收口）；后续源码或分支变化必须重新核证，不能把 HEAD 直接当作已运行的产品二进制。
 
