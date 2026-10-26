@@ -227,10 +227,13 @@ def validate(raw):
         number(ph["rate_scale"], 0, 1, "rate_scale")
         wall=ph.get("wall_blackouts_ms",[])
         if wall:
+            # Keep the real all-lane wall-clock loss tool FEC-owned.
+            # Authenticated fixed6 is explicitly admitted for bounded
+            # original-TLS Game4 outer-DATA-OFF recovery verification.
             if (r.get("owner")!="fec-network-work" or p["mode"]!="game4" or
-                game_fec!="off" or n["lane_loss"]!="shared" or
-                not isinstance(wall,list) or len(wall)>3):
-                raise Unsupported("wall-clock blackhole only scoped Game4 FEC OFF shared underlay")
+                game_fec not in ("off","fixed6") or p.get("repair_enabled") is not False or
+                n["lane_loss"]!="shared" or not isinstance(wall,list) or len(wall)>3):
+                raise Unsupported("wall-clock blackhole requires Game4 OFF/fixed6, outer DATA off, shared underlay")
             until=0
             for blackout in wall:
                 keys(blackout,["offset_ms","duration_ms"],"wall_blackout")

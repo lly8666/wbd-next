@@ -1000,5 +1000,29 @@ class FecBurstLossGateContracts(unittest.TestCase):
         q=copy.deepcopy(r);q["acceptance"].pop("max_loss_pct")
         with self.assertRaises(ValueError):validate(q)
 
+class FecGame4SharedWallBlackoutScope(unittest.TestCase):
+    def test_fixed6_real_outer_off_allowed_without_relaxing_other_modes(self):
+        r=copy.deepcopy(request())
+        r["owner"]="fec-network-work"
+        r["product"]["mode"]="game4"
+        r["product"]["game_fec"]="fixed6"
+        r["product"]["repair_enabled"]=False
+        r["product"]["game4_copy_schedule"]="stagger-4-20-60"
+        r["network"]["lane_loss"]="shared"
+        r["phases"]=[{"name":"pulse","seconds":12,
+                      "wall_blackouts_ms":[{"offset_ms":3000,"duration_ms":100}]}]
+        validated=validate(r)
+        self.assertEqual(validated["phases"][0]["wall_blackouts_ms"][0]["duration_ms"],100)
+        for key,value in (("game_fec","fixed5"),("repair_enabled",True)):
+            q=copy.deepcopy(r);q["product"][key]=value
+            with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["product"]["mode"]="game2"
+        with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["network"]["lane_loss"]="independent"
+        with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["phases"][0]["c2s"]={"loss_pct":1}
+        with self.assertRaises(ValueError):validate(q)
+
+
 if __name__ == "__main__":
     unittest.main()
