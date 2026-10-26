@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 275,
-  "checkpoint_sha": "19db3a812c50a87d2c70618d18314a919cf831cb",
+  "sequence": 276,
+  "checkpoint_sha": "01d8b7291d0d675a8e1ee8c56e0aa28c2422dd88",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 W168 integration candidate Windows Fixed6: maintain genuine Linux-architecture reuse across ALL Windows product wiring; Normal/off exact Windows↔Linux UDP/TCP/Stop remains native PASS at 8e248f... (Actions40369270150), Fixed6 is not yet product qualified. New 19db3a... original Go V3 carrier4 + FEC2 Maximum6 dual-selector fix is in-flight (40376199812); older 3b19caf / 00738fe original native Fixed6 admission FAIL preserved.",
-  "why_now": "Recovered interrupted W168 HEAD00738fe run40372774560/1 FAIL Fixed6 before TLS (`realityfront: invalid admission parameters`); Linux/Windows build and Normal/off real native duplex/Stop PASS in same run. Checked original Go pinned main_windows.go pre-dispatch PolicyForClientWithInitialAndCipher: old harness fixed with parity0 was invalid. Fixed source d3811b fixed V3 fixed4; subsequent current runtimeentry RegisterFEC2ProductFlags review exposed missing separate `--fec.mode fixed --fec.profile maximum`. Exact source 19db3a adds both and fail-closed requested-profile, same source-locked Actions; latest results not yet confirmed, no WL-N0 pressure. User clarified global Windows wiring reuse Linux tested architecture, recorded in existing PLAN020.",
+  "current_task": "PLAN024 source-lock W168 Fixed6 Windows product wiring reusing Linux current design. Exact source 19db3a... Actions40376199812 full native Normal/off PASS but Fixed6 genuine feature7 reverse-kind1 M2 draft refused before public READY; 40378794358 and 40378830835 are new diagnostic-only Go fmt compile FAIL, corrected by 01d8b729 (new Action40379315293 IN_PROGRESS).",
+  "why_now": "M0 recovered 40375634021 original V3 selector FAIL, 40376199812 genuine Fixed6 Go reverse M2 due generic refusal, and 40378794358/40378830835 Go compile FAIL missing stdlib fmt after diagnostic. Read current Linux RxFeedbackState/MatureFirstSend and Rust v4 owner and Go preflight call chain; kept native security, AEAD/PN, verified Wintun and Stop. 832591 added fail-only stages, 2d581c feature7 same-owner authenticated source→kind1 receipt native test, 71e7fab source-locked test invocation; 01d8b729 only fixed fmt import.",
   "done_when": "Registry unchanged: exact public Windows→Linux Normal/off sustained 10Mbps+0%/300ms kernel bidirectional 60s, authentic M2 bounded two repair/Abandoned and >256 carrier ACK gap, owned Stop. Only after valid N0, distinct N1 1%/50ms and N5 5%/50ms Actions. Fixed/Auto/Game/global WFP/DNS/GUI/physical own distinct gate; default FEC2 OFF.",
-  "next_action": "Settle in-flight Actions 40375634021 source d3811b and 40376199812 source 19db3a with job/artifact details (plus 40376211452 contracts PASS); first inspect earliest failed native boundary if any, fix only source-proven issue after targeted Linux design/source review, else record true Fixed6 Applied/UDP/TCP/Stop exact proof and close Fixed6 functional only. Keep WL-N0/N1/N5 and all Auto/Game/physical unverified unless distinct proof; no repeat identical load.",
+  "next_action": "Settle exact-source Actions 40379315293/1 for 01d8b729 after Linux/Windows build and focused Rust feature7 reverse-kind1 unit; inspect first failing output/code if red, compare current Linux source/Go native state, fix only evidenced boundary and run one discriminating functional batch. Do not run WL-N0/N1/N5 or expand Auto/Game/physical until Fixed6 genuine parity, authenticated M2 Applied, two-OS UDP/TCP and owned Stop PASS.",
   "unverified": true,
-  "last_tested_source": "00738fe75b7b685bf9a1a0b0cce51d3282ff8548",
+  "last_tested_source": "19db3a812c50a87d2c70618d18314a919cf831cb",
   "evidence_refs": [
     "docs/evidence/M0/PLAN024-S880-WL-N0-exact-original-failure-20261026.json",
     "docs/devlog/M0/PLAN024-W168-Fixed6-admission-recovery-20261027.md",
@@ -31,5 +31,5 @@
     "docs/architecture/modules/08-RECOVERY.md"
   ],
   "open_requests": [],
-  "partial_summary": "Recovered W168 integration branch HEAD19db3a dual original-Go V3 vs FEC2 Fixed6 flag fix; latest 40376199812 not yet complete, contracts 40376211452 PASS. Prior Windows/Linux normal 8e248f 40369270150 PASS, d3811b 40375634021 still executing, 00738fe 40372774560 FAIL before TLS; historical WL-N0 10Mbps 0%/300ms seq+103B failure remains and N1/N5 NOT_RUN. Broad Windows product layer must reuse measured Linux architecture, without Linux-specific OS syscalls or bypass. No extra workstations/epochs, main untouched."
+  "partial_summary": "H276 integration work paused safely if interrupted: exact current code01d8b729, test40379315293 in progress, prior red Fixed6 original Go M2 feedback (19db) + new fmt compile reds (2d581c/71e7fab) preserved. User corrected ALL Windows product wiring to use Linux measured architecture. No M0 new task/epoch, no main merge, no performance tests."
 }
