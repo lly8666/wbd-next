@@ -46,12 +46,13 @@ try:
      "-keyout",result+"/key.pem","-out",result+"/cert.pem","-subj","/CN=wbd-v4.example.test",
      "-addext","subjectAltName=DNS:wbd-v4.example.test")
  linux=out/"start-linux.sh"
- # Match the immutable source-locked Linux Rust parser: the fresh original
- # server supports explicit expected Windows11 persona, historical frozen
- # Linux does NOT. This is a caller declaration, NEVER observed success.
- fresh_linux=os.environ["LINUX_BINARY_SRC"]==os.environ["GITHUB_SHA"]
- peer_persona=" --peer-persona windows11" if fresh_linux else ""
- report["expected_original_tcp_persona"]="windows11" if fresh_linux else "legacy"
+ # W168 froze an original-Go Linux public CLI WITHOUT --peer-persona.
+ # The old test option made the genuine Linux service exit before Go TLS;
+ # do not recreate that retired CLI interface or forge peer acceptance.
+ # Failed run 40356214832 observed genuine Windows SYNs on Linux eth0,
+ # while the server printed: flag provided but not defined: -peer-persona.
+ peer_persona=""
+ report["expected_original_tcp_persona"]="FROZEN_W168_LINUX_CLI_DEFAULT"
  linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode normal"+peer_persona+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
