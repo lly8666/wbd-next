@@ -169,7 +169,17 @@ impl GameKernelOwner{
                     // any FEC parity quantum can enqueue additional work.
                     let mut flush=|game:&mut GameAdapter|{
                         game.drain(now,|lane,id,pn,wire|{
-                            let Some(item)=lanes.iter_mut().find(|x|x.key==lane) else{
+                            // The genuine original TLS group builds
+                            // physical lanes in slots 1..N. Avoid a
+                            // linear scan on each Game4 × fixed6 copy,
+                            // but still validate the entire scoped lane
+                            // key (generation/epoch/slot) before dispatch.
+                            let Some(index)=lane.slot.checked_sub(1)
+                                .map(|v|v as usize)else{
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                return false
+                            };
+                            let Some(item)=lanes.get_mut(index).filter(|v|v.key==lane)else{
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                                 return false
                             };

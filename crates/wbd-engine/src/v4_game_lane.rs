@@ -622,6 +622,32 @@ mod tests{
     }
     #[cfg(feature="fec2_product_record")]
     #[test]
+    fn game4_fixed6_parity_credit_ignores_unrelated_source_ids(){
+        let mut tx=build(4);
+        tx.enable_game_fec(6,false).unwrap();
+        tx.configure_game4_stagger().unwrap();
+        for i in 0..16u8{
+            let t=MonoNs(1_000+u64::from(i));
+            tx.offer(&[i;128],t).unwrap();
+            tx.drain(t,|lane,_,_,_|lane.slot==1);
+        }
+        assert!(tx.poll_game_fec(MonoNs(1_030)).unwrap()>0);
+        tx.drain(MonoNs(1_031),|_,_,_,_|true);
+        let credited=tx.game_fec_counters().unwrap().0.parity_kernel_copied;
+        assert!(credited>0);
+        // Source IDs later than the active parity quantum must not
+        // inflate the parity credit, nor prevent the next real quantum.
+        for i in 0..4u8{
+            tx.offer(&[i;128],MonoNs(1_032+u64::from(i))).unwrap();
+        }
+        tx.drain(MonoNs(1_036),|_,_,_,_|true);
+        assert_eq!(tx.game_fec_counters().unwrap().0.parity_kernel_copied,credited);
+        assert!(tx.poll_game_fec(MonoNs(1_037)).unwrap()>0);
+        tx.stop();
+        assert_eq!(tx.game_fec_counters().unwrap().1.charged_bytes,0);
+    }
+    #[cfg(feature="fec2_product_record")]
+    #[test]
     fn game4_fixed6_stagger_parity_does_not_wait_for_all_60ms_copies(){
         let mut game=build(4);
         // Original public config order: authenticated fixed6 first, then

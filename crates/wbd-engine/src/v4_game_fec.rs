@@ -168,6 +168,14 @@ impl GameFecTx{
     }
     pub(crate) fn copied(&mut self,id:LogicalPacketId){
         let Some(flight)=self.in_flight.as_mut()else{return};
+        // Every source/future-copy calls copied() after a genuine M4
+        // send. Parity rows are assigned monotonically increasing logical
+        // IDs; most source packets belong OUTSIDE the tiny in-flight parity
+        // interval. Reject them in O(1), rather than scanning up to 20 rows
+        // on each of four physical Game4 lane copies.
+        let Some((low,_))=flight.rows.first()else{return};
+        let Some((high,_))=flight.rows.last()else{return};
+        if id.0<low.0||id.0>high.0{return}
         if let Some((_,credited))=flight.rows.iter_mut()
             .find(|(row,_)|*row==id){
             if !*credited{
