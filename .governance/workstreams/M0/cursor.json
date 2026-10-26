@@ -4,28 +4,32 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 274,
-  "checkpoint_sha": "c6866577e1d2326dd169fdbddf9acda1eb93ac86",
+  "sequence": 275,
+  "checkpoint_sha": "19db3a812c50a87d2c70618d18314a919cf831cb",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 original-Go credential TLS Rust Windows Npcap/Wintun ↔ Linux raw/TUN Normal/off current S879 source f11b6e7 scoped native public two-way warmup/kernel300ms tc/owned Stop functional works, but 10Mbps WL-N0 sustained fails due exact Windows original Rust/Go outbound seq mismatch +103 bytes after ~12s. S872 60s delivery rate failed, S875 E0308 failed, S877 original owner failed after4s, all preserved. N1/N5 NOT_RUN.",
-  "why_now": "User authorized rapid Win→Linux blockers. S871 intent→S872 actual tc/IFB 300ms 0% 10Mbps both directions full60s run40291751850/1 workflow green but WL-N0 deliveries FAILED. S873/S874 read current module design/real call chain and noted M1/M2 bounded flight; S875 resized only original Normal/off M1/Rust shadow and Go authenticated RX high-water but compiler E0308 run40294153223/1; S876 intent+S877 fixed shadowed NormalOffReceive compiler and native Linux build/Windows Go high-water unit PASSED, public run40294472503/1 FAILED Windows owner after4.2s; S878 intent+S879 error origin labels yielded precise native mismatch expected1472781435 got1472781538 at sourcef11b6e7 run40295748769/1. Exact artifacts & old FAIL archived S880 evidence/docs. No production gate bypass; main Governance40297124252/1 PASS after S880.",
+  "current_task": "PLAN024 W168 integration candidate Windows Fixed6: maintain genuine Linux-architecture reuse across ALL Windows product wiring; Normal/off exact Windows↔Linux UDP/TCP/Stop remains native PASS at 8e248f... (Actions40369270150), Fixed6 is not yet product qualified. New 19db3a... original Go V3 carrier4 + FEC2 Maximum6 dual-selector fix is in-flight (40376199812); older 3b19caf / 00738fe original native Fixed6 admission FAIL preserved.",
+  "why_now": "Recovered interrupted W168 HEAD00738fe run40372774560/1 FAIL Fixed6 before TLS (`realityfront: invalid admission parameters`); Linux/Windows build and Normal/off real native duplex/Stop PASS in same run. Checked original Go pinned main_windows.go pre-dispatch PolicyForClientWithInitialAndCipher: old harness fixed with parity0 was invalid. Fixed source d3811b fixed V3 fixed4; subsequent current runtimeentry RegisterFEC2ProductFlags review exposed missing separate `--fec.mode fixed --fec.profile maximum`. Exact source 19db3a adds both and fail-closed requested-profile, same source-locked Actions; latest results not yet confirmed, no WL-N0 pressure. User clarified global Windows wiring reuse Linux tested architecture, recorded in existing PLAN020.",
   "done_when": "Registry unchanged: exact public Windows→Linux Normal/off sustained 10Mbps+0%/300ms kernel bidirectional 60s, authentic M2 bounded two repair/Abandoned and >256 carrier ACK gap, owned Stop. Only after valid N0, distinct N1 1%/50ms and N5 5%/50ms Actions. Fixed/Auto/Game/global WFP/DNS/GUI/physical own distinct gate; default FEC2 OFF.",
-  "next_action": "In original Rust v4_windows_owner.rs::m2_next_feedback_entry/v3_seal_entry and Go r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go::rustFeedbackOne/transmitOne, source-lock a cheap bounded regression that identifies which genuine M1/M2 control reservation produces the observed +103-byte Go/Rust TX sequence discrepancy; keep strict sequence guard and authenticated PN/WAL/Stop; correct only proven transaction and then re-run one real WL-N0. Do not dispatch N1/N5 or another full N0 without new discriminating evidence.",
+  "next_action": "Settle in-flight Actions 40375634021 source d3811b and 40376199812 source 19db3a with job/artifact details (plus 40376211452 contracts PASS); first inspect earliest failed native boundary if any, fix only source-proven issue after targeted Linux design/source review, else record true Fixed6 Applied/UDP/TCP/Stop exact proof and close Fixed6 functional only. Keep WL-N0/N1/N5 and all Auto/Game/physical unverified unless distinct proof; no repeat identical load.",
   "unverified": true,
-  "last_tested_source": "f11b6e7a13dafc7203a2630a92957ab80be48ff9",
+  "last_tested_source": "00738fe75b7b685bf9a1a0b0cce51d3282ff8548",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN024-S880-WL-N0-exact-original-failure-20261026.json"
+    "docs/evidence/M0/PLAN024-S880-WL-N0-exact-original-failure-20261026.json",
+    "docs/devlog/M0/PLAN024-W168-Fixed6-admission-recovery-20261027.md",
+    "docs/devlog/M0/PLAN024-W168-Fixed6-resumed-Linux-wide-reuse-intent-20261027.md"
   ],
   "context_refs": [
+    "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md",
+    "docs/testing/NETWORK_TRIAGE.md",
+    "docs/architecture/modules/01-CONTROL-BRIDGE.md",
     "docs/devlog/M0/PLAN024-S880-WL-N0-original-windows-rust-seq-mismatch-20261026.md",
     "docs/evidence/M0/PLAN024-S872-WL-N0-first-public-kernel-tc-20261026.json",
     "docs/devlog/M0/PLAN024-S874-WL-N0-source-locked-capacity-bottleneck-intent-20261026.md",
     "docs/devlog/M0/PLAN024-S876-fix-native-Linux-E0308-intent-20261026.md",
     "docs/devlog/M0/PLAN024-S878-WL-N0-native-owner-refusal-operation-intent-20261026.md",
-    "docs/testing/NETWORK_TRIAGE.md",
     "docs/architecture/modules/08-RECOVERY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H274 recovery complete for S871–S880. Source8dd51 run40291751850/1 public feature duplex Stop PASS but 60s WL-N0 throughput FAIL Windows0.059Mbps Linux1.717Mbps; S875 source8642 run40294153223/1 native Linux E0308 original FAIL; S877 sourceb4ed run40294472503/1 Linux source build/Go native unit PASS, Windows public sustained FAIL after4.2s (auth owner refused); S879 sourcef11b run40295748769/1 native Linux build/WAL/Go unit PASS, public startup/auth duplex kernel tc PASS but sustained FAIL after11.875s: authenticated Rust owner TX seq103B ahead of Go, original owner correctly Stop/owned cleanup PASS, artifacts in S880. No full N0 PASS, N1/N5/two-repair/Abandoned/physical/global OS NOT_RUN; strict auth/sequence validation retained."
+  "partial_summary": "Recovered W168 integration branch HEAD19db3a dual original-Go V3 vs FEC2 Fixed6 flag fix; latest 40376199812 not yet complete, contracts 40376211452 PASS. Prior Windows/Linux normal 8e248f 40369270150 PASS, d3811b 40375634021 still executing, 00738fe 40372774560 FAIL before TLS; historical WL-N0 10Mbps 0%/300ms seq+103B failure remains and N1/N5 NOT_RUN. Broad Windows product layer must reuse measured Linux architecture, without Linux-specific OS syscalls or bypass. No extra workstations/epochs, main untouched."
 }
