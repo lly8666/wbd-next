@@ -151,7 +151,7 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             _=native.Close()
             return fmt.Errorf("Game client lane %d not detached at M4 handoff",i+1)
         }
-        if e:=r.ExcludeDetachedGameData(flows[i].PeerIP,flows[i].PeerPort);e!=nil{
+        if e:=r.ExcludeDetachedData(flows[i].PeerIP,flows[i].PeerPort);e!=nil{
             _=native.Close()
             return fmt.Errorf("Game client lane %d kernel RX handoff: %w",i+1,e)
         }
@@ -315,7 +315,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             _=native.Close()
             return fmt.Errorf("Game server lane %d kernel RX scope mismatch",i+1)
         }
-        if e:=r.ExcludeDetachedGameData(flow.ClientIP,flow.ClientPort);e!=nil{
+        if e:=r.ExcludeDetachedData(flow.ClientIP,flow.ClientPort);e!=nil{
             _=native.Close()
             return fmt.Errorf("Game server lane %d kernel RX handoff: %w",i+1,e)
         }
