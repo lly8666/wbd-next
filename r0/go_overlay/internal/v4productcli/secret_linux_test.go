@@ -100,3 +100,37 @@ func TestV3PublicDynamicRecordWireBudget(t *testing.T){
         }
     }
 }
+
+
+func TestGame4Fixed6StaggerDefaultAndGame2Unchanged(t *testing.T){
+    dir:=t.TempDir()
+    pass:=filepath.Join(dir,"password")
+    route:=filepath.Join(dir,"route")
+    if e:=os.WriteFile(pass,[]byte("test-password\n"),0600);e!=nil{t.Fatal(e)}
+    if e:=os.WriteFile(route,[]byte(strings.Repeat("ab",32)+"\n"),0600);e!=nil{t.Fatal(e)}
+    base:=[]string{
+      "--raw-interface","lo","--local-ip","192.0.2.10",
+      "--peer-ip","192.0.2.11","--local-port","50001","--peer-port","443",
+      "--tun-name","wbd4","--tun-ipv4","10.188.0.2/24",
+      "--server-name","test.example","--username","test",
+      "--password-file",pass,"--route-key-hex-file",route,
+      "--tunnel-id","000102030405060708090a0b0c0d0e0f",
+    }
+    cases:=[]struct{name string;flags []string;enabled bool;valid bool}{
+      {"game4_default_fixed6",[]string{"--mode","game4","--game-fec","fixed6"},true,true},
+      {"game4_default_off",[]string{"--mode","game4","--game-fec","off"},true,true},
+      {"game4_explicit_immediate",[]string{"--mode","game4","--game-fec","fixed6","--game4-copy-schedule","immediate"},false,true},
+      {"game2_fixed6_unchanged",[]string{"--mode","game2","--game-fec","fixed6"},false,true},
+      {"normal_unchanged",[]string{"--mode","normal"},false,true},
+      {"game2_reject_stagger",[]string{"--mode","game2","--game4-copy-schedule","stagger-4-20-60"},false,false},
+    }
+    for _,tc:=range cases{
+        t.Run(tc.name,func(t *testing.T){
+            cfg,err:=parse("client",append(append([]string(nil),base...),tc.flags...))
+            if (err==nil)!=tc.valid {t.Fatalf("valid=%v err=%v",tc.valid,err)}
+            if err==nil&&cfg.game4CopyStagger!=tc.enabled {
+                t.Fatalf("got stagger=%v expected=%v",cfg.game4CopyStagger,tc.enabled)
+            }
+        })
+    }
+}
