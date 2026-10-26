@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "P2_GAME_RETAINED_P1A_P1B_P3A_CPU_NEGATIVE_REVERTED; W157_COMMON_FEC_RS16_STACK_NATIVE_PASS_NORMAL_AND_GAME_REAL_AB_RUNNING; GAME4_25M_HOST_PRESSURE_STOP_NO_MAIN_MERGE",
+  "phase": "P2_GAME_RETAINED; P1A_P1B_P3A_CPU_ABBA_NEGATIVE_ROLLBACK; W157_NORMAL_15M_W158_GAME4_20M_COMMON_RS16_P3B_NO_CPU_GAIN_EXACT_REVERT_NATIVE_PASS; GAME4_25M_HOST_PSI_PRESSURE_STOP_NO_MAIN_MERGE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -678,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Latest W157 shared Fec2LiveRx RS16 k<=16 temporary reference Vec removal exact SOURCE194985bba, ARM64 build40316189069 SUCCESS, artifact12645919440 sha 8e343dec... original Go/ISA and 3 binary SHA256 checked. One real Normal fixed3 15Mbps each direction TCP/UDP mixed shared IID2% Action40316698229 and one real Game4 fixed6 20Mbps each direction independent lane IID30% Action40316706348 IN_PROGRESS, both harness contracts PASS. Must harvest true per-role first TUN delivery/UDP TCP loss, first p95/p99, two-process CPU-s per GiB, host CPU PSI/busy/steal and generator overhead, peak RSS, parity actual/planned, copy actual/planned (Stop tails honest), Go DATA full clone0, outer DATA retrans0, drops and bounded Stop. If only ~1-3pct ambiguous or opposite, at most ONE reverse BA for relevant mode; then revert W157 FEC source-only if not clearly worthwhile, do not rerun full weak-net matrix. Previous all-five-mode qualification SOURCE6c38 unchanged. Game P2 only scoped bb8, native rollback6d518 PASS; true P1b sendmmsg W155/W156 opposite CPU ABBA rejected and EXACT rolled back, don't retry. Game4 25Mbps W153 PSI mean>18% and >20 fraction18-28%, so stop higher Game4/80; Game2 35Mbps W154 TRUE UDP PASS only. Windows NOT_RUN; capacity_stop true, merge_ready false; do not merge main or modify original network role next_action.",
+  "next_action": "W157 common FEC P3b bounded [Option<&[u8]>;16] vs vec on each authenticated post-k symbol true SOURCE194985bb native40316189069 PASS. Separate real W157 Normal fixed3 15Mbps 2pct shared loss mixed TCP/UDP Action40316698229 PASS old9.14 new9.25 CPU-s (+1.20pct), W158 Game4 fixed6 IID30 20Mbps Action40316706348 PASS old57.98 new58.02 CPU-s (+0.07pct). Both real business zero loss, authentic FEC source/parity and actual TUN recovery, zero outer DATA and Go copied DATA, no source/TUN drops, Stop clean. This per-call ref allocation elimination did not produce any CPU gain and was REVERTED exactly one v4_fec2_live_rx.rs file to pretrial P2 blob a5320a9b6 at commit8ae002d0; final ARM64 native build40317413835 SUCCESS artifact12647711084 sha05de4ff..., source/Go/ISA manifest+three inner hashes verified. Do not re-run seeds on P3b. P2 Game RX unique per-lane AEAD/replay remains retained and scoped qualified bb8e source, W137 deadline kept. All five-mode last fully qualified old product source6c38; Normal OFF Fixed Auto not requalified on recent Game source, Windows NOT_RUN. Game4 25Mbps W153 host PSI mean19.2/18.3 peak21.9 with >20pct 28/18pct samples stops further Game4/80 pressure on this ARM64 VM; Game2 35Mbps W154 true UDP PASS only. Next optimization requires low-rate sampled allocations/CPU profile of shared FEC inverse/owned-frame hot functions and clear causal cost evidence before new allocation/copy restructuring, avoid early group reclaim W11. No original network role next_action edits, no main merge, capacity_stop true, merge_ready false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -7640,16 +7640,33 @@
     "normal_contract_result": "SUCCESS",
     "normal_request": "tests/network/fec-work/W157-Normal-fixed3-IID2-mixed15Mbps-P3b-RS16-stack-AB-ARM64.json",
     "normal_commit": "99d414f69003d471badc9bc10d3bb9cb3f649b1b",
-    "normal_result": "IN_PROGRESS_AT_STATUS_CHECK",
+    "normal_result": "W157 SUCCESS/PASS_SCOPED, 15Mbps both ways real TCP4pct UDP96pct shared 2pct loss; all per-cohort sent==delivered, Normal fixed3 FEC actual recovery client2456/server2421 old vs2351/2428 new; CPU old9.14 new9.25 (+1.20pct), PSI mean0.919/0.911 pct; no outerDATA/Go copies/drops, Stop clean.",
     "game_action": 40316706348,
     "game_contract_action": 40316706479,
     "game_contract_result": "SUCCESS",
     "game_request": "tests/network/fec-work/W158-Game4-fixed6-IID30-UDP20Mbps-P3b-RS16-stack-AB-ARM64.json",
     "game_commit": "14ba083859f547b7119e50e5012f71f38a0930ae",
-    "game_result": "IN_PROGRESS_AT_STATUS_CHECK",
+    "game_result": "W158 SUCCESS/PASS_SCOPED, Game4 fixed6 each direction20Mbps IID30 true UDP, real damage cohorts zero missing, original 0/4/20/60 copy planned==sent each rank, parity planned==true sent client305643→305696 server305673→305657, outerDATA0 Go clones0 Stop clean; CPU old57.98 new58.02 (+0.07pct), host PSI mean12.484/12.461 peak14.26/14.24 no >20pct samples.",
     "decide": "Only retain if real comparable net CPU/delivery gains for both Normal fixed and Game fixed; if noise/negative, revert one FEC source-only file, preserve P2.",
     "capacity_stop": true,
     "merge_ready": false,
-    "windows": "NOT_RUN/TEMP_SKIPPED"
+    "windows": "NOT_RUN/TEMP_SKIPPED",
+    "normal_artifact": 12646678619,
+    "normal_zip_sha256": "2b70e27682163a0292e3f2310cb3e69a4eac52b18c9e326a774015c5285907da",
+    "game_artifact": 12647691070,
+    "game_zip_sha256": "81094617d572ccd136b15de3ca4f329db33166af9f667be06ab4266977fd017e",
+    "evidence": "docs/evidence/fec-network-work/20261026-W157-W158-CommonFEC-RS16-stack-NormalGame-AB-rejected.json",
+    "retention_decision": "REJECT P3b AS NO REPEATABLE NET CPU BENEFIT, despite proven removal of short-lived source reference Vec; normal +1.20pct CPU, game +0.07pct CPU. Never rewrite decoder memory lifetime for this.",
+    "revert": {
+      "commit": "8ae002d0b6892664b9d34b415ab3dfeb8186d8ad",
+      "path": "crates/wbd-engine/src/v4_fec2_live_rx.rs",
+      "byte_exact_prior_blob": "a5320a9b60cfe795db2a7649055d68b459c52e24",
+      "blob_verified": true,
+      "native_action": 40317413835,
+      "native_result": "SUCCESS",
+      "native_artifact_id": 12647711084,
+      "native_zip_sha256": "05de4ff845bb5d4de3bef112183cfcbd48f68d04343385beca96e6824146ee47",
+      "manifest_source_aarch64_original_go_isa_inner3_hashes_verified": true
+    }
   }
 }
