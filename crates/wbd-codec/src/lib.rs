@@ -232,31 +232,18 @@ pub fn decode_control(input: &[u8], budget: usize) -> Result<Vec<ControlTlv>, Co
 
 /// WBG4 goes before LINK fragmentation/FEC, with a shared logical packet ID.
 /// This is a wire codec, not a cross-lane deduplicator or authentication step.
-/// Identical WBG4 bytes, written directly into a pre-owned buffer.
-/// Validates all sizes BEFORE writing, so insufficient capacity cannot leave
-/// a partially valid authenticated Game envelope. Does not reserve any PN.
-pub fn encode_game_into(
-    id: LogicalPacketId, payload: &[u8], budget: usize, out: &mut [u8],
-) -> Result<usize, CodecError> {
-    if payload.len() > u16::MAX as usize { return Err(CodecError::InvalidLength); }
-    let total = GAME_HEADER.checked_add(payload.len()).ok_or(CodecError::InvalidLength)?;
-    if total > budget { return Err(CodecError::BudgetExceeded); }
-    if total > out.len() { return Err(CodecError::Truncated); }
-    out[..4].copy_from_slice(GAME_MAGIC);
-    out[4..12].copy_from_slice(&id.0.to_be_bytes());
-    out[12..14].copy_from_slice(&(payload.len() as u16).to_be_bytes());
-    out[14..16].fill(0);
-    out[GAME_HEADER..total].copy_from_slice(payload);
-    Ok(total)
-}
 pub fn encode_game(
     id: LogicalPacketId, payload: &[u8], budget: usize,
 ) -> Result<Vec<u8>, CodecError> {
     if payload.len() > u16::MAX as usize { return Err(CodecError::InvalidLength); }
     let total = GAME_HEADER.checked_add(payload.len()).ok_or(CodecError::InvalidLength)?;
     if total > budget { return Err(CodecError::BudgetExceeded); }
-    let mut out = vec![0u8;total];
-    encode_game_into(id,payload,budget,&mut out)?;
+    let mut out = Vec::with_capacity(total);
+    out.extend_from_slice(GAME_MAGIC);                     // 0..4
+    out.extend_from_slice(&id.0.to_be_bytes());             // 4..12
+    out.extend_from_slice(&(payload.len() as u16).to_be_bytes()); // 12..14
+    out.extend_from_slice(&[0, 0]);                         // flags at 14..16
+    out.extend_from_slice(payload);
     Ok(out)
 }
 
@@ -315,39 +302,6 @@ mod tests {
         bytes
     }
 
-    #[test]
-    fn w151_game_encode_into_exact_goldens_all_lengths_no_partial_write(){
-        let id=LogicalPacketId(0x0102_0304_0506_0708);
-        for len in [0usize,1,3,16,64,1287,2001]{
-            let payload=vec![0xA5;len];
-            let original=encode_game(id,&payload,16+len).unwrap();
-            let mut scratch=[0xCFu8;2048];
-            let n=encode_game_into(id,&payload,16+len,&mut scratch).unwrap();
-            assert_eq!(n,16+len);
-            assert_eq!(&scratch[..n],original.as_slice());
-            assert!(scratch[n..].iter().all(|c|*c==0xCF),
-                "must not overwrite next packet's arena region");
-            assert_eq!(decode_game(&scratch[..n],16+len).unwrap(),
-                (id,payload.as_slice()));
-            if n>0 {
-                let mut untouched=[0xCFu8;2048];
-                assert_eq!(encode_game_into(id,&payload,16+len,
-                    &mut untouched[..n-1]),Err(CodecError::Truncated));
-                assert!(untouched.iter().all(|c|*c==0xCF));
-                let mut untouched=[0xCFu8;2048];
-                assert_eq!(encode_game_into(id,&payload,n-1,
-                    &mut untouched),Err(CodecError::BudgetExceeded));
-                assert!(untouched.iter().all(|c|*c==0xCF));
-            }
-        }
-        let payload=vec![0x5Au8;u16::MAX as usize+1];
-        let mut scratch=[0xCF;2048];
-        assert_eq!(encode_game_into(id,&payload,usize::MAX,
-            &mut scratch),Err(CodecError::InvalidLength));
-        assert!(scratch.iter().all(|c|*c==0xCF));
-        assert_eq!(&encode_game(id,&[0xde,0xad,0xbe],19).unwrap()[..],
-            GOLDEN_GAME);
-    }
     #[test]
     fn r0_wbc4_golden_receipt_exact_wire_and_roundtrip() {
         let r = example_receipt();
