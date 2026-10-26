@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "kind": "RECOVERED_SOURCE_LOCKED_RESULT",
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "repository": "lly8666/wbd-next",
+  "staging_branch": "integration/w168-freeze-windows-adapter-20261026",
+  "main_registry_branch": "main",
+  "main_cursor_sequence": 274,
+  "staging_head_before_recovery": "4fb263dd38b68e6a1763e7d79f5654b611f4ac8b",
+  "freeze_source": "254cf4110c1df3878c7bd0e782145fc381189b8f",
+  "actual_two_parent_merge": "fea9cd94a8cabcb6ef3d6958f9ba8db8300721d5",
+  "original_scope": "Windows original credential TLS/Npcap/Wintun ↔ WSL2 Linux genuine Go/Rust raw/TUN Normal/off, bounded M2 v3",
+  "exact_source": "4fb263dd38b68e6a1763e7d79f5654b611f4ac8b",
+  "run": {
+    "id": 40362898805,
+    "attempt": 1,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40362898805",
+    "head_sha": "4fb263dd38b68e6a1763e7d79f5654b611f4ac8b",
+    "event": "push",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 121712790204,
+        "conclusion": "success",
+        "scope": "exact-source Linux native build; artifact m0-plan024-linux-product id 12667779905"
+      },
+      {
+        "id": 121713772541,
+        "conclusion": "success",
+        "scope": "Windows native release DLL, original Go overlay and OS driver, Rust native M2 regression, WSL2 real two-OS public duplex and Stop; artifact m0-wl-full-public-normal-direct id 12670021695"
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 12667779905,
+        "name": "m0-plan024-linux-product"
+      },
+      {
+        "id": 12670021695,
+        "name": "m0-wl-full-public-normal-direct",
+        "sha256": "23844f2de52928b886f7410af119c396c90d8cb0ebf44d7613043446e2c9faba"
+      }
+    ]
+  },
+  "asserted_from_job_logs": {
+    "rust_windows_m2_short_feedback_does_not_burn_original_tx_sequence": "PASS 1/1",
+    "rust_windows_m2_v3_no_unsolicited_pto_repair_and_owned_stop": "PASS 1/1",
+    "windows_linux_public_normal_off": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE",
+    "real_app_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "real_app_tcp": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "stop": "PASS_BOTH_OWNED",
+    "scoped_firewall_removed": true,
+    "native_npcap_cleanup": "WBD_NPCAP_DRIVER_CI_CLEANUP_PASS"
+  },
+  "compared_prior": {
+    "source": "fbb281c7c8531a1e242c8368c0b11ca9545be730",
+    "run": 40361251070,
+    "scope": "prior native Normal/off functional PASS, not substituted for latest v3-source"
+  },
+  "preserved_failures": [
+    {
+      "source": "9137f27b9a10f6818a870bb6efed3ea1375a58d7",
+      "run": 40357841232,
+      "result": "FAIL_LINUX_RX_ZERO"
+    },
+    {
+      "source": "6e271c1e01aefadb4266eed44646d51806f88d49",
+      "run": 40360124961,
+      "result": "WrongPersona_Windows11_TTL128_against_Legacy64"
+    },
+    {
+      "source": "f11b6e7a13dafc7203a2630a92957ab80be48ff9",
+      "run": 40295748769,
+      "result": "FAIL_old_10Mbps_WL_N0_plus103_byte_sequence_mismatch"
+    }
+  ],
+  "exclusions": {
+    "WL_N0": "NOT_RUN_latest_4fb",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN",
+    "Windows_Fixed6": "UNWIRED_NOT_RUN",
+    "Windows_Auto": "UNWIRED_NOT_RUN",
+    "Windows_Game2_4": "UNWIRED_NOT_RUN",
+    "physical": "NOT_RUN",
+    "global_WFP_DNS_GUI": "NOT_RUN",
+    "main_integration": "NOT_DONE",
+    "highload_seq_root": "NOT_RETESTED"
+  },
+  "recovery": {
+    "official_main_cursor": "main HEAD 7a6a289147d423c20b949697b0bcd4d8d70aaade is only H274 after checkpoint c6866577e1d2326dd169fdbddf9acda1eb93ac86; official M0 branch remains main",
+    "staging": "Staging contains true F two-parent merge; twelve first-parent commits from W baseline 05d25fade4768feb4a6e2ad8109aa89cbf94e6c7 including planning commit and v3 source. main checkpoint ancestry compare has 1227 F/branch historic commits; this focused result review is NOT a claim of all-commit G2 scope qualification.",
+    "branch_actions": "20 workflow runs found on staging: all completed, none currently in_progress/queued; existing latest source run 40362898805 had been launched before this handoff and is now recovered, not re-dispatched."
+  },
+  "security": "Earlier Linux WrongPersona was fixed by TLS-session-scoped Windows11 peer identity, keeping strict TTL, TCP tuple, AEAD/PN checks. CI Hyper-V/WSL scoped per-flow firewall rule was removed on owned Stop; NO global security bypass.",
+  "qualification": "OPEN_FOR_NETWORK_TEST_NORMAL_OFF_FUNCTIONAL_ONLY; not performance, Windows Fixed/Auto/Game, main or physical product PASS",
+  "next_action": "Source-lock W168 fixed stream/FEC and original-Go feature7 Windows call graph; implement real authenticated Fixed6 M2 Applied + source grouping/parity before any mode mask promotion, then run one new native functional batch."
+}
