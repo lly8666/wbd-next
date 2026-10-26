@@ -1,0 +1,221 @@
+{
+  "schema": "FEC_W137_W140_GAME_FEC_SPARSE_DUE_SCOPED_RECEIPT_V1",
+  "date": "2026-10-26",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+  "source_native_build": {
+    "run": 40293838787,
+    "result": "SUCCESS",
+    "artifact": 12636808494,
+    "zip_sha256": "d60386779b56b0c091721f444c96c53c309cebe56140b9e0d9308720d278280a",
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "original_ISAL": "c387163fcbca62701d646149564c550c78a4f985",
+    "manifest_verified": true
+  },
+  "scope": "Game original TLS/Rust native scheduling ONLY; Fec2Owner next_deadline and ready parity read-only. Game4 default 0,4,20,60ms and independent lane crypto unchanged; Game2 immediate copy; Normal unchanged; outer DATA retransmit OFF; parity preserved.",
+  "old_source": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+  "baseline": {
+    "build": 40288528399,
+    "artifact": 12635510007,
+    "sha256": "d3eaaceb84666ed7f754a13e4078559d06a7c369441da32c245e2fdfbf67bb0f"
+  },
+  "native": {
+    "sparse_test": "w137_sparse_fixed6_fec_close_preempts_game4_20ms_copy_PASS",
+    "initial_bad_test_run": 40293770445,
+    "result": "SUCCESS",
+    "corrected_source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+    "corrected_run": 40293838787
+  },
+  "real_actions": [
+    {
+      "case": "W137",
+      "run": 40294316915,
+      "request_commit": "d8bad95d1f3be8c63339de3c0a5f924a6ccbf08b",
+      "artifact": 12637373657,
+      "zip_sha256": "fbdcb92503f6a6c77e26f936a18c06b6e76ad4169c7bbba4e31ddd86a3b19322",
+      "order": "AB",
+      "condition": "true Game4 fixed6 mixed TCP+UDP 1Mbps each, clean 75ms underlay, active18s -> fully quiet12s -> resume15s",
+      "result": "PASS_SCOPED_OBSERVATION_A_B",
+      "first_p99_udp_ms": "75.5 old = 75.5 new",
+      "CPU_s_both_old_new": [
+        5.77,
+        6.06
+      ],
+      "host_PSI_mean_old_new_pct": [
+        0,
+        0
+      ],
+      "auth_go_copy_after_handoff": "0 client+server on both legs",
+      "outer_DATA_retx": "0 both legs",
+      "FEC_parity_all_kernel_sent": true,
+      "loss_udp_tcp": "0 each leg",
+      "stop_drained": true,
+      "conclusion": "No clean p99 benefit and +5.0% CPU in one low-load sameVM sample; deterministic sparse native timing fix must not be sold as CPU win",
+      "detail": "docs/evidence/fec-network-work/20261026-W137-Game4-FEC-sparse-deadline-clean-AB.json"
+    },
+    {
+      "case": "W138",
+      "run": 40295019331,
+      "request_commit": "29b7ff840ea1e0a1010ba439486c871a8e608fdc",
+      "artifact": 12637758164,
+      "zip_sha256": "8c1a08f5e24c9f2447b7d49f818824d467d1d2a3693c00a68f3d2f47cef44842",
+      "order": "BA",
+      "condition": "true Game4 fixed6 mixed TCP+UDP 0.08Mbps each, independent IID30% lane loss, 75ms baseline, 30s",
+      "result": "PASS_SCOPED_OBSERVATION_B_A",
+      "udp_p95_old_new_c2s_ms": [
+        79.6,
+        77.6
+      ],
+      "udp_p95_old_new_s2c_ms": [
+        79.6,
+        77.6
+      ],
+      "udp_p99_old_new_s2c_ms": [
+        83.6,
+        81.7
+      ],
+      "cpu_s_both_old_new": [
+        1.16,
+        1.16
+      ],
+      "real_udp_each_direction": "414 injected=414 delivered in each A and B",
+      "real_tcp_each_direction": "9=9 delivered in each A and B",
+      "fec_recovered_candidate_old_client_server": [
+        233,
+        212
+      ],
+      "fec_recovered_candidate_new_client_server": [
+        330,
+        350
+      ],
+      "fec_rx_conflict_old_client_server": [
+        423,
+        391
+      ],
+      "fec_rx_conflict_new_client_server": [
+        684,
+        734
+      ],
+      "rx_conflict_caveat": "WBD Game FEC 'failed' sums RX failed and TX failed; all new failure classified as already authenticated ConflictingBlock, often late source after recovery or repeated repair. Different netem trajectories mean not proven all benign; monitor.",
+      "fec_parity_planned_equals_actual_both": true,
+      "game4_abandoned_all_zero": true,
+      "outer_data_retx": "0 each leg",
+      "go_data_copies": "0 each leg and role",
+      "stop_drained": true,
+      "detail": "docs/evidence/fec-network-work/20261026-W138-Game4-fixed6-sparse80kbps-IID30-BA.json",
+      "conclusion": "Weak positive sparse first-arrival p95 ~2ms, real recovery intact, unchanged measured CPU; not deterministic overall latency gain"
+    },
+    {
+      "case": "W139",
+      "run": 40295923116,
+      "artifact": 12638391148,
+      "zip_sha256": "a34fc85ae2189d76cd02d8106e1751f874ff0181ed25a0045b59190468bd8cee",
+      "order": "A",
+      "request_commit": "f3ae14e18bcc5020bcb240acb5374ba0fa2f272b",
+      "condition": "Game2 fixed6 genuine mixed TCP+UDP clean 3Mbps each, 75ms baseline",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "udp_each_direction": "11009 injected/11009 delivered, 0 missing",
+      "tcp_each_direction": "449/449, 0 missing",
+      "p99_udp_ms": 76.2,
+      "fec_parity": {
+        "client_planned_sent": "29426/29426",
+        "server_planned_sent": "29472/29472"
+      },
+      "fec_rx_error": 0,
+      "outer_data_retx": 0,
+      "post_handoff_go_data_copies": {
+        "client": 0,
+        "server": 0
+      },
+      "cpu_s_client_server": [
+        2.52,
+        2.52
+      ],
+      "host_psi_peak_pct": 0,
+      "stop_drained": true,
+      "conclusion": "Game2 changed native FEC wake logic does not regress immediate real business"
+    },
+    {
+      "case": "W140",
+      "run": 40295931353,
+      "artifact": 12637968544,
+      "zip_sha256": "3074fe2ae23bf497672e82bbfdc9baf7df0b17f5c51cda96f5ad87d79077515a",
+      "order": "A",
+      "request_commit": "e65638f05e57d740d7148eaa7a34d239207a290f",
+      "condition": "Game4 FEC OFF genuine mixed TCP+UDP clean 1Mbps each, 75ms, 0/4/20/60ms stagger",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "udp_each_direction": "3683/3683, 0 missing",
+      "tcp_each_direction": "136/136, 0 missing",
+      "p99_udp_ms": 75.5,
+      "stagger_planned_client": [
+        8310,
+        8310,
+        8310,
+        8310
+      ],
+      "stagger_sent_client": [
+        8310,
+        8310,
+        8307,
+        8307
+      ],
+      "stagger_abandoned_client": [
+        0,
+        0,
+        1,
+        1
+      ],
+      "stagger_abandoned_server": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "stop_tail_note": "Few delayed copies were abandoned by the bounded Stop window; do not falsely say all physical copies sent or zero abandoned",
+      "outer_data_retx": 0,
+      "go_post_handoff_data_copies": {
+        "client": 0,
+        "server": 0
+      },
+      "cpu_s_client_server": [
+        1.39,
+        1.38
+      ],
+      "host_psi_peak_pct": 0,
+      "stop_drained": true
+    }
+  ],
+  "in_code_capacity_comment_correction": {
+    "comment_only_source": "6ef329879fcd821812fe47c38823089d28c676db",
+    "native_action": 40295129966,
+    "native_status": "SUCCESS",
+    "source_pps_model": 15300,
+    "source_jobs_model": 995,
+    "observed_W126_source": 241112,
+    "observed_W126_parity": 305688,
+    "total_symbols_multiplier": 2.268,
+    "logical_jobs_model": 2257,
+    "physical_slots": 4096,
+    "theoretical_headroom_x": 1.81,
+    "capacity_at80Mbps": "NOT_QUALIFIED",
+    "runtime_capacities_changed": false
+  },
+  "scope_decision": "KEEP_W137_EARLIEST_FEC_DEADLINE_AS_SCOPED_LINUX_ARM64_GAME_FIXED6_TIMING_CORRECTNESS_WITH_STANDALONE_GAME_OFF_PROTECTION; Do not claim measured CPU saving, lower memory, sustained higher bandwidth or full cross-platform ready",
+  "still_missing": [
+    "High-load Game4 20/80Mbps qualification",
+    "Game4 comparable high-rate true TCP mix",
+    "in-process reconnection after authenticated detach",
+    "Normal Auto complete upward-step curve",
+    "Windows original product",
+    "P1b transactional sendmmsg TX",
+    "P2 per-lane AEAD RX mutex rework",
+    "P3 shared Normal/Game FEC allocator",
+    "More detailed authenticated RX conflict subclass attribution"
+  ],
+  "outer_data_retransmission": "OFF_UNCHANGED",
+  "fec_parity": "SEPARATE_VERIFIED",
+  "capacity_stop": true,
+  "merge_ready": false,
+  "windows": "NOT_RUN/TEMP_SKIPPED_USER_20261025"
+}
