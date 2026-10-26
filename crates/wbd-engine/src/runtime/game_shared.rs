@@ -53,12 +53,12 @@ pub enum GameError{
     TooLarge,Duplicate,Stale,Stopped,Overflow,WrongMode,
 }
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
-pub enum DispatchOutcome {Accepted,PressureDrop,Deferred}
+pub enum DispatchOutcome {Accepted,PressureDrop}
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub struct SendView<'a>{
     pub scope:GameScope,pub lane:LaneKey,pub mode:Mode,
     pub logical_id:Option<LogicalPacketId>,pub block:Option<BlockIdExt>,
-    pub common_payload:&'a [u8],pub due_position:u8,pub lateness_ns:u64,
+    pub common_payload:&'a [u8],
 }
 #[derive(Clone,Copy,Debug,Default,Eq,PartialEq)]
 pub struct GameCounters{
@@ -74,8 +74,6 @@ struct Job{
 }
 #[derive(Clone,Copy)]
 struct Pending {slot:usize,wire_bytes:usize,due:MonoNs,position:u8}
-#[derive(Clone,Copy)]
-struct DeferredReceipt{position:u8,late:u64}
 struct LaneReady{
     info:QualifiedLane,active:bool,
     q:VecDeque<Pending>,bytes:usize,
@@ -85,7 +83,6 @@ pub struct GameTx{
     slots:Vec<Option<Job>>,free:Vec<usize>,used:usize,
     cursor:usize,next_packet:u64,stopped:bool,
     copy_offsets_ns:[u64;4],staggered:bool,counters:GameCounters,
-    deferred:Vec<DeferredReceipt>,
 }
 impl GameTx {
     pub fn new(snapshot:ActiveLaneSnapshot,limits:GameLimits)->Option<Self>{
@@ -100,38 +97,9 @@ impl GameTx {
         let free=(0..limits.jobs).rev().collect();
         Some(Self{scope,limits,lanes,slots,free,used:0,cursor:0,
             next_packet:0,stopped:false,copy_offsets_ns:[0;4],staggered:false,
-            counters:GameCounters::default(),deferred:Vec::with_capacity(8)})
+            counters:GameCounters::default()})
     }
     pub fn counters(&self)->GameCounters{self.counters}
-    /// The original ready queue may release its long-lived source arena
-    /// after the caller seals ciphertext into a separate frozen slab. This
-    /// ledger is ONLY the bounded kernel send receipt debt, never a packet
-    /// payload or retransmission queue. A second stage cannot overlap.
-    pub fn deferred_count(&self)->usize{self.deferred.len()}
-    pub fn finish_deferred(&mut self,actual_kernel_copied:&[bool])
-        ->Result<(),GameError>{
-        if self.stopped||actual_kernel_copied.len()!=self.deferred.len(){
-            return Err(GameError::InvalidWindow)
-        }
-        for (due,accepted) in self.deferred.drain(..)
-            .zip(actual_kernel_copied.iter().copied()){
-            let i=due.position as usize;
-            if accepted{
-                self.counters.lane_dispatch+=1;
-                if self.staggered{
-                    self.counters.sent[i]+=1;
-                    self.counters.late_total_ns[i]=
-                        self.counters.late_total_ns[i].saturating_add(due.late);
-                    self.counters.late_max_ns[i]=
-                        self.counters.late_max_ns[i].max(due.late);
-                }
-            }else{
-                self.counters.lane_copy_drop+=1;
-                if self.staggered{self.counters.abandoned[i]+=1;}
-            }
-        }
-        Ok(())
-    }
     pub fn staggered(&self)->bool{self.staggered}
     pub fn next_due_ns(&self)->Option<u64>{
         self.lanes.iter().filter_map(|l|l.q.front().map(|p|p.due.0)).min()
@@ -323,7 +291,7 @@ impl GameTx {
     /// independently seal/dispatch this lane. No all-lane barrier.
     pub fn drain_ready<F:FnMut(SendView<'_>)->DispatchOutcome>(
         &mut self,now:MonoNs,budget:usize,mut dispatch:F)->usize{
-        if self.stopped||self.lanes.is_empty()||!self.deferred.is_empty(){return 0;}
+        if self.stopped||self.lanes.is_empty(){return 0;}
         let mut processed=0;
         while processed<budget.min(32){
             let mut selected=None;
@@ -348,8 +316,7 @@ impl GameTx {
                 let view=SendView{
                     scope:self.scope,lane:self.lanes[index].info.key,
                     mode:job.mode,logical_id:job.packet_id,block:job.block,
-                    common_payload:&job.buffer.writable()[job.wire.clone()],
-                    due_position:entry.position,lateness_ns:late
+                    common_payload:&job.buffer.writable()[job.wire.clone()]
                 };
                 match dispatch(view){
                     DispatchOutcome::Accepted=>{
@@ -360,11 +327,6 @@ impl GameTx {
                                 self.counters.late_total_ns[pos].saturating_add(late);
                             self.counters.late_max_ns[pos]=self.counters.late_max_ns[pos].max(late);
                         }
-                    },
-                    DispatchOutcome::Deferred=>{
-                        // One explicit native copied-prefix receipt will
-                        // settle this item before another TX drain may start.
-                        self.deferred.push(DeferredReceipt{position:entry.position,late});
                     },
                     DispatchOutcome::PressureDrop=>{
                         self.counters.lane_copy_drop+=1;
@@ -381,10 +343,6 @@ impl GameTx {
     }
     pub fn stop(&mut self)->usize{
         if self.stopped{return self.counters.stop_canceled as usize;}
-        // STOP never credits a staged-but-unacknowledged ciphertext. Normally
-        // synchronous sendmmsg is already finished before stop is called.
-        let pending=vec![false;self.deferred.len()];
-        let _=self.finish_deferred(&pending);
         self.stopped=true;
         let mut canceled=0;
         for lane in &mut self.lanes{
