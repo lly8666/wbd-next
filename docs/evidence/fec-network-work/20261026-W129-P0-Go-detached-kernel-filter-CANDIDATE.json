@@ -1,0 +1,54 @@
+{
+  "schema": "FEC_W129_P0_GO_RX_DETACH_KERNEL_FILTER_CANDIDATE_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "current_documented_head_before_receipt": "9ddadd37d2dcf9caaa115eab5ad30a5c4046781c",
+  "base_last_verified_product_source": "f484a4c34e08dcbdfa16beef590d285e9db1ee5f",
+  "previous_qualified_game4_10mbps_action": 40281920399,
+  "p0_candidate_code_source": "59a5e894fb443a2f2e59814edc02fd92f54f8ea4",
+  "change_commits": [
+    "e50663eb78f6dff770e6ab20d23c396de5ea7f98",
+    "4d448fba39a884f7f1454ac9367c15ce03248851",
+    "3456afd2d450c9b1dbd399b94a953452828fdd00",
+    "59a5e894fb443a2f2e59814edc02fd92f54f8ea4"
+  ],
+  "changed_paths": [
+    "r0/go_overlay/internal/faketcp/raw_game_detach_linux.go",
+    "r0/go_overlay/internal/faketcp/raw_game_detach_linux_test.go",
+    "tools/arm64_public_go_rust_bundle.sh",
+    "r0/go_overlay/internal/v4productcli/game_linux.go"
+  ],
+  "issue": "On pinned Go a7a82db original AF_PACKET ReadSegment parses, allocates, copies complete IP packet even after Rust M4 takes steady DATA delivery; detached check occurs after ReadSegment",
+  "kernel_filter": "Per-lane scoped AF_PACKET SO_ATTACH_FILTER replacement only after authenticated Rust ready and group transition detached; exact peer IP/port gate rejects matching payload DATA before Go recv, retains original destination port/IP gate and control/other peer packets",
+  "preserved": [
+    "independent Go raw send FD",
+    "new SYN/control socket processing",
+    "Rust exact tuple RX",
+    "Go TLS authentication",
+    "FEC fixed6 parity",
+    "Game4 0/4/20/60ms schedule",
+    "outer DATA retransmit OFF",
+    "TUN success commit and replay"
+  ],
+  "work_state": "CODE_COMMITTED_UNVERIFIED",
+  "tests": {
+    "go_bpf_vm": "WIRED_NOT_RUN",
+    "original_tls": "NOT_RUN_ON_CANDIDATE",
+    "native_arm64": "NOT_RUN_ON_CANDIDATE",
+    "real_product": "NOT_RUN_ON_CANDIDATE",
+    "same_vm_game4_fixed6_10mbps": "NOT_RUN_ON_CANDIDATE",
+    "stop_reconnect": "NOT_RUN_ON_CANDIDATE"
+  },
+  "actions": [],
+  "build_artifact": null,
+  "zip_sha256": null,
+  "go_full_copies_after_handoff": null,
+  "cpu_s_gain_pct": null,
+  "delivery": "NOT_OBSERVED_ON_CANDIDATE",
+  "host_capacity_stop": true,
+  "merge_ready": false,
+  "previous_20mbps_game4_psi_mean_pct": 33.24,
+  "previous_20mbps_game4_psi_peak_pct": 42.04,
+  "next": "Exact-source ARM64 native build incl BPF VM test -> authenticated real Game4 fixed6 each dir 10Mbps 30pct independent lane loss sameVM old/new A/B -> low load Game2/OFF stop reconnect. Stop on compile, safety or host pressure; do not run 80Mbps.",
+  "details": "docs/devlog/fec-network-work/20261026-W129-Game-Go-RX-detached-kernel-BPF-candidate.md"
+}
