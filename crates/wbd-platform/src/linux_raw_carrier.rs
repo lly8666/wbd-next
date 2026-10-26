@@ -720,7 +720,29 @@ impl ScopedRawIpv4Rx {
                             slot.copy_within(begin..len,0);
                             RawReadyEntry::Unauthenticated{cipher_len:n,seq32}
                         },
-                        Err(_)=>RawReadyEntry::Rejected,
+                        Err(reason)=>{
+                            // TEST DIAGNOSTIC ONLY: bounded numeric/header-only
+                            // evidence to distinguish W168 exact tuple/persona
+                            // failures. Does not admit, authenticate, decrypt,
+                            // copy, or touch accepted packet ownership.
+                            static ENABLED:std::sync::OnceLock<bool>=std::sync::OnceLock::new();
+                            static COUNT:std::sync::atomic::AtomicUsize=
+                                std::sync::atomic::AtomicUsize::new(0);
+                            if *ENABLED.get_or_init(||std::env::var("WBD_WL_RX_TUPLE_DIAG")
+                                .ok().as_deref()==Some("1")) &&
+                                COUNT.fetch_add(1,std::sync::atomic::Ordering::Relaxed)<12 {
+                                let ihl=usize::from(slot[0]&0x0f)*4;
+                                let observed=if len>=ihl+4 && ihl>=20 {
+                                    format!("ip={:?}->{:?} ports={}->{} flags={:#x} ihl={} len={}",
+                                        &slot[12..16],&slot[16..20],
+                                        u16::from_be_bytes([slot[ihl],slot[ihl+1]]),
+                                        u16::from_be_bytes([slot[ihl+2],slot[ihl+3]]),
+                                        slot.get(ihl+13).copied().unwrap_or(0),ihl,len)
+                                }else{format!("malformed_header ihl={} len={}",ihl,len)};
+                                eprintln!("WBD_WL_RX_TUPLE_REJECT reason={reason:?} expected={tuple:?} observed={observed}");
+                            }
+                            RawReadyEntry::Rejected
+                        },
                     }
                 }
                 _=>RawReadyEntry::Unused,
