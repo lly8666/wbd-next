@@ -36,6 +36,37 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_common_go_receive_kernel_handoff_marker_is_mode_scoped(self):
+        from tools.network_harness.runner import (
+            public_go_rx_handoff, product_marker_line)
+        cases=(
+            ("V4_PUBLIC_GO_RX_HANDOFF role=client mode=off filtered=1 rust_ready=1 original_send_fd_open=1",
+             "V4_PUBLIC_GO_RX_POST_HANDOFF role=client mode=off go_data_full_copies=0",1),
+            ("V4_PUBLIC_GO_RX_HANDOFF role=server mode=auto filtered=1 rust_ready=1 original_send_fd_open=1",
+             "V4_PUBLIC_GO_RX_POST_HANDOFF role=server mode=auto go_data_full_copies=2",1),
+            ("V4_PUBLIC_GAME_GO_RX_HANDOFF role=client lanes=4 filtered=4 rust_ready=1 original_send_fd_open=1",
+             "V4_PUBLIC_GAME_GO_RX_POST_HANDOFF role=client lanes=4 go_data_full_copies=0",4),
+            ("V4_PUBLIC_GAME_GO_RX_HANDOFF role=server lanes=2 filtered=2 rust_ready=1 original_send_fd_open=1",
+             "V4_PUBLIC_GAME_GO_RX_POST_HANDOFF role=server lanes=2 go_data_full_copies=1",2),
+        )
+        for begin,end,count in cases:
+            self.assertTrue(product_marker_line(begin))
+            self.assertTrue(product_marker_line(end))
+            role="server" if "role=server" in begin else "client"
+            val=public_go_rx_handoff(begin+"\\n"+end,role)
+            self.assertIsNotNone(val)
+            self.assertEqual(val["kernel_filtered_lanes"],count)
+            self.assertEqual(val["rust_ready"],1)
+            self.assertEqual(val["go_send_fd_retained"],1)
+            self.assertLessEqual(val["go_data_full_copies_after_handoff"],32)
+            self.assertIsNone(public_go_rx_handoff(begin,role))
+            self.assertIsNone(public_go_rx_handoff(begin+"\\n"+end, "server" if role=="client" else "client"))
+        r=request()
+        r["bundles"]["A"]["require_go_rx_handoff"]=True
+        self.assertTrue(validate(r)["bundles"]["A"]["require_go_rx_handoff"])
+        r["bundles"]["A"]["require_go_rx_handoff"]=1
+        with self.assertRaises(ValueError): validate(r)
+
     def test_test_only_owned_veth_static_neighbour_requires_boolean(self):
         # A/B control keeps original dynamic ARP by default. Explicit true
         # pins only the direct peer inside disposable namespaces, no host
