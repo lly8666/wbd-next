@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "verified_at": "2026-10-26",
+  "active_branch": "experiment/lan-tail-single8-wbd-wiring-design",
+  "status": "SOURCE_AND_REPORTS_ARCHIVED; NOT_FULL_CHAT_OR_BINARY_ARTIFACT_ARCHIVE; PRODUCT_NOT_WIRED",
+  "source_tree_scanned": true,
+  "consolidated_index": "docs/evidence/lan-experiment-history/INDEX.md",
+  "discussion_summary": "docs/evidence/lan-experiment-history/DECISIONS_AND_GAPS.md",
+  "current_integration_design": "docs/evidence/lan-tail-single8-wbd-integration/DESIGN.md",
+  "current_wire_model": "one-existing-TLS23-header + 2B marker + rolling last8BYTES; AES128-GCM fallback + one new 5B TLSlike header",
+  "abandoned_wire_models": [
+    "clear mode plus PN",
+    "HP masked top bit of PN",
+    "double TLS-like header for original TLS23",
+    "tail last8BITS not bytes"
+  ],
+  "live_complete_project_code": false,
+  "main_modified": false,
+  "experiments_reported_in_index": [
+    "lan-xor-tlslike",
+    "lan-xor-word-optim",
+    "lan-xor-pn-mask",
+    "lan-hybrid-tls-xor",
+    "lan-fastgate-mixed-wire",
+    "lan-fastgate-99pct",
+    "lan-gated-boundary-pad",
+    "lan-flowstart-no-synth-retrans",
+    "lan-hp-mode-cost",
+    "lan-vmess-none-compare",
+    "lan-pnxor-optimized",
+    "lan-tail-marker-rolling8-cost",
+    "lan-tail-one-header-8byte",
+    "lan-tail-single8-pcap",
+    "lan-tail-single8-wbd-integration"
+  ],
+  "external_artifacts_not_git": [
+    {
+      "type": "actual_tcpdump_pcap_and_tshark_logs",
+      "run": 40268297939,
+      "artifact_id": 12627636543,
+      "original_pcap_size_B": 201449,
+      "storage": "GitHub Actions; workflow retention-days 30"
+    },
+    {
+      "type": "passive_tshark_auto_vs_forced",
+      "run": 40268945000,
+      "artifact_id": 12626843821,
+      "storage": "GitHub Actions; workflow retention-days 30"
+    }
+  ],
+  "not_archived": [
+    "full verbatim chat transcript",
+    "all transient local generated files",
+    "actual raw PCAP or ZIP in Git",
+    "full Actions raw logs and benchmark artifacts indefinitely",
+    "a physical two-host LAN capture",
+    "production Rust codec and Go/WBD/RAW integration"
+  ],
+  "future_maintenance": "For every new experiment record commit, tests, Go/Rust versions, runs, scope, raw evidence retention, decisions and unresolved limitations"
+}
