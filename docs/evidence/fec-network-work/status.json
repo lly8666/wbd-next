@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W104_GAME2_GAME4_FIXED6_GAME_OUTER_DATA_OFF_REAL_CLEAN_AND_IID20_BLACKHOLE_PASS_SCOPED; W105_FIXED1_FIXED2_CLEAN_RUNNING",
+  "phase": "W105_GAME2_GAME4_ALL_FIXED1_TO5_OUTER_DATA_OFF_REAL_CLEAN_PASS; W104_FIXED6_OUTER_OFF_IID20_BLACKHOLE_PASS; W106_IDLE_AND_FIXED0_GAMEOFF_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -634,7 +634,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W105 reconcile four fixed1/2 3Mbps real clean Actions 40261651100/40261656542/40261661650/40261667093; if no loss/p99/Stop/outer off and PSI healthy, continue Game2/4 fixed3..5 at unchanged load one scenario per Action. Then one one-direction idle-tail fixed6 Game2, one Game OFF repair off clean, and a minimal Normal regression if resource permits. High GE Game4 stays capacity_stopped after W102 warning; no Game Auto, Windows TEMP_SKIPPED, merge_ready false.",
+  "next_action": "W106: reuse immutable e8b41fb arm64 build40260662919 artifact12623678360 only; Game2/4 fixed0+outeroff real clean1Mbps, Game2 fixed6 1Mbps both-way active→genuine no-probe quiet tail→resume, Game OFF outeroff baseline and separately one-way. Each action one scenario, positive native OFF readback/retransmitted0 and frozen artifact hash, true UDP/TCP and Stop; resource constrained fixed3 runner PSI35%, no higher traffic. Game Auto does not exist, no Windows/physical; capacity_stop true, merge_ready false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6491,20 +6491,31 @@
     "capacity_stop": true
   },
   "w105_game_fixed_middle_clean": {
-    "status": "GAME2_AND_GAME4_FIXED1_FIXED2_FOUR_REAL_ARM64_ACTIONS_IN_PROGRESS_NOT_ATTESTED",
+    "status": "TEN_EXACT_GAME2_GAME4_FIXED1_TO5_CLEAN_REAL_ARM64_PASS_SCOPED",
     "source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
     "build_run": 40260662919,
-    "profiles": [
-      "fixed1",
-      "fixed2"
-    ],
     "run_ids": {
       "game2_fixed1": 40261651100,
       "game4_fixed1": 40261656542,
       "game2_fixed2": 40261661650,
-      "game4_fixed2": 40261667093
+      "game4_fixed2": 40261667093,
+      "game2_fixed3": 40262003415,
+      "game4_fixed3": 40262008834,
+      "game2_fixed4": 40262014682,
+      "game4_fixed4": 40262021170,
+      "game2_fixed5": 40262025973,
+      "game4_fixed5": 40262032077
     },
-    "others_fixed3_to5": "PENDING_CONTINUE_AFTER_CAPACITY_REVIEW",
-    "capacity_stop": true
+    "outer_retransmitted_data_all": 0,
+    "real_tcp_udp_all_delivered": true,
+    "fec_parity_planned_copied_sent": true,
+    "fec_failed_expired_all": 0,
+    "host_contention_fixed3_psi_peak_pct": [
+      35.53,
+      34.69
+    ],
+    "cpu_crossVM_causal": false,
+    "capacity_stop": true,
+    "evidence": "docs/evidence/fec-network-work/20261026-W105-Game2-Game4-fixed1to5-outerDATAoff-real-clean-PASS.json"
   }
 }
