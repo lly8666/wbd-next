@@ -155,5 +155,42 @@
   "capacity_stop": true,
   "merge_ready": false,
   "windows": "NOT_RUN/TEMP_SKIPPED_USER_20261025",
-  "detail": "docs/devlog/fec-network-work/20261026-W130-common-Go-RX-handoff-Normal-Game-implementation.md"
+  "detail": "docs/devlog/fec-network-work/20261026-W130-common-Go-RX-handoff-Normal-Game-implementation.md",
+  "resolution": {
+    "historical_candidate": true,
+    "resolved_at": "2026-10-26",
+    "resolved_full_native_source": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+    "native_build": {
+      "action": 40288528399,
+      "result": "SUCCESS",
+      "attempt": 1,
+      "artifact_id": 12635510007,
+      "zip_sha256": "d3eaaceb84666ed7f754a13e4078559d06a7c369441da32c245e2fdfbf67bb0f",
+      "arch": "aarch64"
+    },
+    "fulfillment": {
+      "normal_off": {
+        "run": 40289408758,
+        "status": "PASS_SCOPED_SAMEVM_AB"
+      },
+      "normal_fixed": {
+        "run": 40289416487,
+        "status": "PASS_SCOPED_SAMEVM_BA"
+      },
+      "normal_auto": {
+        "run": 40289421675,
+        "status": "PASS_SCOPED_AUTH_M2_DOWN"
+      },
+      "game2": {
+        "run": 40289428390,
+        "status": "PASS_SCOPED_MIXED_CLEAN"
+      },
+      "game4": {
+        "run": 40289434334,
+        "status": "PASS_SCOPED_IID30_UDP10_SAMEVM_AB"
+      }
+    },
+    "replacement_evidence": "docs/evidence/fec-network-work/20261026-W130-W134-Go-Rust-RX-handoff-real-five-mode-Actions.json",
+    "original_candidate_fields_scope": "Historical pre-run snapshot retained; consult replacement_evidence and status.json for current qualification. Avoid interpreting original NOT_RUN as latest."
+  }
 }
