@@ -17,10 +17,10 @@ test "$(git -C legacy rev-parse HEAD)" = "$GO_SOURCE"
 # original DefaultMSS remains the fallback for old callers and tests.
 mkdir -p legacy/internal/faketcp
 cp r0/go_overlay/internal/faketcp/public_v4_mss.go legacy/internal/faketcp/public_v4_mss.go
-# P0: authenticated Game handoff must replace the AF_PACKET port filter,
+# P0 shared: authenticated Normal/Game handoff replaces the AF_PACKET port filter,
 # not merely discard cloned data after ReadSegment.
-cp r0/go_overlay/internal/faketcp/raw_game_detach_linux.go legacy/internal/faketcp/raw_game_detach_linux.go
-cp r0/go_overlay/internal/faketcp/raw_game_detach_linux_test.go legacy/internal/faketcp/raw_game_detach_linux_test.go
+cp r0/go_overlay/internal/faketcp/raw_detached_data_linux.go legacy/internal/faketcp/raw_detached_data_linux.go
+cp r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go legacy/internal/faketcp/raw_detached_data_linux_test.go
 python3 - <<'PY'
 from pathlib import Path
 patches={
@@ -95,7 +95,7 @@ mkdir -p arm64-public-bundle
 export CGO_ENABLED=1 GOOS=linux GOARCH=arm64 GOTOOLCHAIN=local
 export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
 export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
-(cd legacy && go test ./internal/faketcp -run '^TestDetachedGameDataKernelFilterPreservesHandshakeAndControl
+(cd legacy && go test ./internal/faketcp -run '^TestDetachedDataKernelFilterPreservesHandshakeAndControl
 (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product   -o "$GITHUB_WORKSPACE/arm64-public-bundle/wbd-v4-client" ./cmd/wbd-v4-client)
 (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product   -o "$GITHUB_WORKSPACE/arm64-public-bundle/wbd-v4-server" ./cmd/wbd-v4-server)
 cp target/release/libwbd_engine.so arm64-public-bundle/libwbd_engine.so
