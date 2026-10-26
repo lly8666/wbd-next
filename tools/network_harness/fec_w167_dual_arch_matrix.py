@@ -113,7 +113,7 @@ def analyze(case_dir,leg):
             "outer_retransmission_fraction":ratio,
             "process_measurement_cpu_s":leg.get("measurement_cost",{}).get(role,{}).get("cpu_s"),
             "process_peak_rss_bytes":leg.get("host",{}).get("processes",{}).get(role,{}).get("rss_peak_bytes"),
-            "rust_thread_cpu":timeline_cpu(case_dir/"A"/f"{role}-v3-timeline.log"),
+            "rust_thread_cpu":timeline_cpu(case_dir/f"{role}-v3-timeline.log"),
         }
     return {"case_result":leg.get("result"),"phase_seconds":leg.get("measurement_seconds"),
             "actual":leg.get("observed",[]),"cpu_memory_outer":per,

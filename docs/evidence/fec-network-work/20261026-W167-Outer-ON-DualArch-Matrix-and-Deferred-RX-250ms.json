@@ -103,7 +103,52 @@
     "cpu": "Per client/server process measurement cpu seconds; Rust RX+TX thread cpu ns 250ms sampled whole phase (NOT all Rust). Actual Go vs Rust CPU ownership not exactly derivable from process/thread alone.",
     "memory": "Per process RSS_peak_bytes and native existing M1/FEC queue proof only; Go heap and Rust allocator submodule disaggregation NOT_OBSERVED, requires new alloc profiling.",
     "retrans": "One-lane authentic first_wire_bytes, repair_accepted_wire_bytes, repair_uncertain_wire_bytes available at STOP; fraction charged/(first+charged) includes whole run, not exactly only 20s and not L1/L2 full-line.",
-    "game": "NO v3 DATA retrans byte ledger; report NOT_APPLICABLE_GAME_MULTI_LANE, do not call its physical copied first sends retries."
+    "game": "NO v3 DATA retrans byte ledger; report NOT_APPLICABLE_GAME_MULTI_LANE, do not call its physical copied first sends retries.",
+    "preliminary_arm64_normal_off_20261026": {
+      "source_run": 40339594067,
+      "artifact_id": 12657653945,
+      "artifact_sha256": "82601a0bdb258e34c84864c4298f4e45cca3314d6c877b0355da5b3ff",
+      "qualifier": "EARLIER_PRELIMINARY_100Mbit_UNDERLAY_ONLY; Normal OFF 10Mbps each dir 1/5/15% IID captured before run cancelled, NOT final 500Mbps matrix; does not qualify other modes or 250Mbps",
+      "observations": [
+        {
+          "loss_pct": 1,
+          "result": "PASS_SCOPED_OBSERVATION",
+          "client_cpu_measure_s": 1.53,
+          "server_cpu_measure_s": 1.58,
+          "client_rss_peak_MiB": 17.02,
+          "server_rss_peak_MiB": 17.39,
+          "client_rust_workers_over_proc_cpu_pct": 96.3,
+          "server_rust_workers_over_proc_cpu_pct": 96.4,
+          "client_outer_data_repair_fraction_pct": 0.4703,
+          "server_outer_data_repair_fraction_pct": 0.4964
+        },
+        {
+          "loss_pct": 5,
+          "result": "PASS_SCOPED_OBSERVATION",
+          "client_cpu_measure_s": 1.63,
+          "server_cpu_measure_s": 1.63,
+          "client_rss_peak_MiB": 16.89,
+          "server_rss_peak_MiB": 17.45,
+          "client_rust_workers_over_proc_cpu_pct": 96.8,
+          "server_rust_workers_over_proc_cpu_pct": 96.6,
+          "client_outer_data_repair_fraction_pct": 2.3646,
+          "server_outer_data_repair_fraction_pct": 2.3541
+        },
+        {
+          "loss_pct": 15,
+          "result": "INCONCLUSIVE_TCP_BACKPRESSURE",
+          "client_cpu_measure_s": 1.65,
+          "server_cpu_measure_s": 1.62,
+          "client_rss_peak_MiB": 17.27,
+          "server_rss_peak_MiB": 17.52,
+          "client_rust_workers_over_proc_cpu_pct": 96.7,
+          "server_rust_workers_over_proc_cpu_pct": 96.4,
+          "client_outer_data_repair_fraction_pct": 7.0083,
+          "server_outer_data_repair_fraction_pct": 7.0812
+        }
+      ],
+      "limits": "Rust worker clocks cover near full run while process CPU measurement window is only iid phase; percentages computed versus process whole-run including setup/drain, NOT percent all Rust code, includes worker-thread execution and possible time-window difference. full link outer share not measured."
+    }
   },
   "highrate_execution": {
     "capacity_stop": true,

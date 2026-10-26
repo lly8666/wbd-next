@@ -38,6 +38,20 @@ class W167MatrixContracts(unittest.TestCase):
             self.assertEqual(out["status"],"RUST_NATIVE_RX_TX_THREADS_ONLY_WHOLE_TIMELINE")
             self.assertAlmostEqual(out["rust_rx_tx_sum_cpu_s"],3)
 
+    def test_analysis_reads_real_harness_timeline_in_case_directory(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)
+            (p/"client-v3-timeline.log").write_text(
+                "V4_PUBLIC_TIMELINE rust_rx_cpu_ns=100 rust_tx_cpu_ns=200\n"
+                "V4_PUBLIC_TIMELINE rust_rx_cpu_ns=1000000100 rust_tx_cpu_ns=2000000200\n")
+            leg={"result":"PASS_SCOPED_OBSERVATION",
+                 "request_id":"W167_arm64_normal_off_1IID",
+                 "telemetry":{"counters":{}}}
+            parsed=analyze(p,leg)["cpu_memory_outer"]["client"]["rust_thread_cpu"]
+            self.assertEqual(parsed["status"],
+                             "RUST_NATIVE_RX_TX_THREADS_ONLY_WHOLE_TIMELINE")
+            self.assertAlmostEqual(parsed["rust_rx_tx_sum_cpu_s"],3)
+
     def test_outer_wire_data_fraction_excludes_game_copies(self):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d)
