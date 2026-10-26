@@ -462,16 +462,21 @@ impl GameAdapter{
         inner_mtu:usize,now:MonoNs)->Result<LogicalPacketId,Error>{
         if bytes.is_empty()||bytes.len()>inner_mtu{return Err(Error::Invalid)}
         let id=tx.next_packet().ok_or(Error::Stopped)?;
-        let packet=wbd_codec::encode_game(id,bytes,inner_mtu+16)
-            .map_err(|_|Error::Invalid)?;
-        // Evict only overdue retained copies at the explicit Game4 capacity
-        // boundary BEFORE borrowing a source slab. A fresh first cannot be
-        // blocked simply because an old packet holds 60ms future duplicates.
-        tx.reserve_game4_first(packet.len(),31+packet.len());
+        // P3a: exact same 16B WBG4 header, but directly in the existing
+        // unique bounded GameTx arena. Avoid the per-logical-symbol Vec
+        // allocation and its additional temporary-to-arena full copy.
+        // Source and parity symbols both take this path, while ownership
+        // of 0/4/20/60ms delayed physical copies remains unchanged.
+        let len=bytes.len().checked_add(16).ok_or(Error::Invalid)?;
+        if len>inner_mtu+16{return Err(Error::Invalid)}
+        // Evict only overdue retained copies before borrowing the slab.
+        tx.reserve_game4_first(len,31+len);
         let mut slab=arena.allocate().map_err(|_|Error::Capacity)?;
-        let end=14+packet.len();
-        slab.writable()[14..end].copy_from_slice(&packet);
-        let offered=tx.offer(slab,14..end,Mode::Game,31+packet.len(),
+        let end=14+len;
+        let count=wbd_codec::encode_game_into(id,bytes,inner_mtu+16,
+            &mut slab.writable()[14..end]).map_err(|_|Error::Invalid)?;
+        if count!=len{return Err(Error::Invalid)}
+        let offered=tx.offer(slab,14..end,Mode::Game,31+len,
             None,now).map_err(|(e,_)|Error::Game(e))?;
         if offered!=Some(id){return Err(Error::Invalid)}
         Ok(id)
