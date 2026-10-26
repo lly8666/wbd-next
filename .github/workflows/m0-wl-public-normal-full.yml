@@ -256,7 +256,7 @@ jobs:
           # Whole native M1/M2/M3/FEC2/Game-owner module regressions as
           # one bounded suite. Do not promote isolated Fixed6 samples or
           # run a dedicated profile6 public Windows/Linux sequence.
-          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib v4_windows_owner -- --nocapture
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib v4_windows_owner -- --test-threads=1 --nocapture
           if($LASTEXITCODE -ne 0){throw 'Windows native original owner full-module functional regression FAIL'}
           Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
           Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe
