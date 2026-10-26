@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W128_GAME4_FIXED6_10MBPS_SAMEVM_OLDNEW_PASS_SCOPED_SMALL_CPU_GAIN; PREVIOUS_GAME4_20_AND_GAME2_30_HOST_CAPACITY_STOP; 80MBPS_MODEL_ONLY",
+  "phase": "W129_P0_GO_RX_DETACHED_KERNEL_BPF_CODE_CANDIDATE_NATIVE_ACTIONS_NOT_RUN; W128_10MBPS_SAMEVM_OLDNEW_PASS_ONLY; CAPACITY_STOP_AND_NO_MAIN_MERGE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -640,7 +640,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Current scoped SOURCE f484a4 fully native compiled and W128 Game4 fixed6 10Mbps 30%IID sameVM old/new real A/B PASS, ~1.9% indicative CPU-s reduction. Retain Game4 stagger default and fixed6; Game2 immediate fixed6. On existing ARM64 runner preserve capacity_stop: previous Game4 20 host CPU PSI33.2 peak42 and Game2 30 mean18.7 peak20.96. Do NOT start Game4 30 or Game2 40 to80, nor transfer old source high-load qualifications to f484. Next authorized optimization stage would target genuine Game4 RX shared mutex/decoder CPU and Go/raw M4 send costs, preserving authenticate-before-dedup and TUN-success commit; validate on low-headroom-safe sameVM 10Mbps first, only return to first stopped rung with actual CPU margin, no main merge.",
+  "next_action": "W129 P0 code candidate exact SOURCE 59a5e894fb443a2f2e59814edc02fd92f54f8ea4 (NOT native-validated); source of last verified ARM64 product remains f484a4c34e08dcbdfa16beef590d285e9db1ee5f. Existing original Go pinned a7a82db AF_PACKET read/parse/full-copy after detached; scoped BPF now applied only after original authenticated Rust M4 ready on each Game lane; new Go send FD and SYN/control pass retained, failure closes native; offline bpf test wired to allowlist build. NEXT: one exact 59a5 ARM64 build with Go BPF test and native regression, then sameVM sequential old f484→new 59a5 Game4 fixed6 10Mbps each IID30 UDP (one Action/one scenario, reuse prior immutable bundle) and low-pressure Game2/OFF/Stop/reconnect checks. Go post-handoff DATA copies, delivered/injected, FEC parity/sends, outer retrans0, host PSI, CPU/RSS must be measured. No Action has yet run for W129; no claimed CPU saving. W126 prior Game4 20Mbps PSI high and W127 Game2 30 near stop; DO NOT load-escalate to 80 or merge main. P1/P2/P3 are separately gated behind P0.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6823,6 +6823,27 @@
     },
     "capacity_target_80_unqualified": true,
     "optimization_diag": "Existing 1Hz native /proc task thread CPU approx 50s: Game4 20 client RX15.1s/TX13.24s/Go10.97s vs Game2 20 RX8.23s/TX4.72s/Go5.09s; CPU distributed across actual 4-lane duplicate crypto + RX and Go, not just timer wake. Single TX worker expected to approach 1 core at 80 even if scaling linearly; real hardware cannot currently support ladder."
+  },
+  "w129_go_rx_handoff_p0": {
+    "source": "59a5e894fb443a2f2e59814edc02fd92f54f8ea4",
+    "predecessor_verified": "f484a4c34e08dcbdfa16beef590d285e9db1ee5f",
+    "code_commits": [
+      "e50663eb78f6dff770e6ab20d23c396de5ea7f98",
+      "4d448fba39a884f7f1454ac9367c15ce03248851",
+      "3456afd2d450c9b1dbd399b94a953452828fdd00",
+      "59a5e894fb443a2f2e59814edc02fd92f54f8ea4"
+    ],
+    "path": "r0/go_overlay/internal/faketcp/raw_game_detach_linux.go",
+    "build_wiring": "tools/arm64_public_go_rust_bundle.sh",
+    "evidence": "docs/devlog/fec-network-work/20261026-W129-Game-Go-RX-detached-kernel-BPF-candidate.md",
+    "status": "CODE_CANDIDATE_NOT_ARM64_BUILT_NOT_PRODUCT_TESTED",
+    "bpf_unit": "GO_TEST_WIRED_NOT_RUN",
+    "actions": [],
+    "cpu_savings_pct": null,
+    "post_handoff_go_data_copies": null,
+    "behavior": "After native authenticated Game M4 ready, apply kernel receive-only BPF to detached exact peer DATA; keep SYN and control, send FD and Rust RX",
+    "capacity_stop": true,
+    "merge_ready": false
   },
   "w128_game4_fixed6_cpu_hotpath": {
     "status": "COMPLETE_NATIVE_BUILD_PASS_AND_OLDNEW_SAMEVM_REAL_UDP_AB_BOTH_PASS",
