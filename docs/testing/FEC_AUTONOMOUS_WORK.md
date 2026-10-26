@@ -1,5 +1,8 @@
 # FEC独立岗位：关闭外层重传后验证与修复
 
+**W168 2026-10-26 新的最高优先用户指令（覆盖W167测试配置）：** 恢复GitHub HEAD并执行 **纯UDP业务、无外层tc速率限速** 的原生 ARM64/AMD64 ×7个公开Normal/Game组合×IID1/5/15/30%×20s×双向10Mbps，原Go TLS仍正常握手但不主动造应用TCP流。以前W167的CPU PSI/steal性能阈值不得使本W168矩阵提前停止：逐例独立VM、性能指标只记录，真实错误标红。原先独立250Mbps/每向Fixed6 IID30%用户请求本次也在独立VM各架构一例，历史全局capacity_stop=true不擦除，仅登记用户此次W168指定隔离测试例外；不得宣称资格通过直到实际跑出。记录CPU core%与Rust M4 RX+TX线程占进程CPU近似比例、其他CPU、每进程RSS MiB、FEC容量与外层DATA retry/全外层TX占比；M4 Game多lane复制不是DATA重传，Go/Rust内部内存无法真实分摊。报告和机器证据`docs/evidence/fec-network-work/20261026-W168-UDP-only-No-Rate-No-PerfStop-DualArch-20s-Matrix.json`；不得改原网络岗位next_action、不得合main。
+
+
 **W167 2026-10-26新用户授权：** 先保存Normal RX 150→250ms、1024→2048的300Mbps缓存评估为**DESIGN ONLY**；外层DATA修复公共Go默认already ON但显式OFF保留，新增七公开组合单测和两个原生ARM64/AMD64×(Normal OFF/Fixed6/Auto、Game2 OFF/Fixed6、Game4 OFF/Fixed6)×IID1/5/15/30%×20s×双向10Mbps的隔离测试workflow，真实FEC最高档只选Fixed6，不进入Game Auto。必须如实记录Go+Rust共进程CPU/RSS无法直接拆分、Normal M2 DATA外层repair分母与全部链路不同、Game2/4无v3 DATA repair账本。250Mbps/dir FEC最高档30%压力子项虽然用户提出，但当前`capacity_stop=true`未撤销，必须明确NOT_RUN而不绕过高压保护。见`docs/evidence/fec-network-work/20261026-W167-Outer-ON-DualArch-Matrix-and-Deferred-RX-250ms.json`。所有未跑或失败必须留红，所有原网络岗位next_action不可改。
 
 

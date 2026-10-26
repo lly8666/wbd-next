@@ -21,10 +21,23 @@ class W167MatrixContracts(unittest.TestCase):
                     self.assertEqual(c["phases"][0]["c2s"]["loss_pct"],loss)
                     self.assertEqual(c["phases"][0]["s2c"]["loss_pct"],loss)
                     self.assertEqual(c["network"]["lane_loss"],"shared")
-                    self.assertEqual(c["phases"][0]["c2s"]["rate_mbps"],500)
-                    self.assertEqual(c["phases"][0]["s2c"]["rate_mbps"],500)
+                    self.assertEqual(c["traffic"]["udp_share"],1.0)
+                    self.assertFalse(c["acceptance"]["cross_business_hol"])
+                    self.assertEqual(c["phases"][0]["c2s"]["rate_mbps"],0)
+                    self.assertEqual(c["phases"][0]["s2c"]["rate_mbps"],0)
                     self.assertEqual(c["bundles"]["A"]["source"],"a"*40)
                     self.assertNotIn("artifact_id",c["bundles"]["A"])
+
+    def test_250mbps_case_is_udp_only_fixed6_unlimited_outer(self):
+        c=_config("normal_maximum6","fec-fixed","off",6,30,"a"*40,123456,"amd64",traffic_mbps=250)
+        self.assertEqual(c["traffic"]["c2s_mbps"],250)
+        self.assertEqual(c["traffic"]["s2c_mbps"],250)
+        self.assertEqual(c["traffic"]["udp_share"],1.0)
+        self.assertEqual(c["phases"][0]["c2s"]["rate_mbps"],0)
+        self.assertEqual(c["phases"][0]["s2c"]["rate_mbps"],0)
+        self.assertEqual(c["traffic"]["sizes"],[[1200,100]])
+        self.assertEqual(c["product"]["fec_profile"],6)
+        self.assertTrue(c["product"]["repair_enabled"])
 
     def test_rust_thread_cpu_is_partial_not_go_rust_split(self):
         with tempfile.TemporaryDirectory() as d:

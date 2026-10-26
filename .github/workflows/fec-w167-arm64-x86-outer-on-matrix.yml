@@ -1,5 +1,5 @@
-name: FEC W167 native ARM64 x86 outer repair ON 20s IID matrix
-run-name: "FEC-W167|native-dual-arch|${{ github.sha }}"
+name: FEC W168 native ARM64 x86 UDP-only outer ON 20s IID matrix
+run-name: "FEC-W168-UDP-independent-cases|${{ github.sha }}"
 on:
   push:
     branches: [experiment/fec-network-tuning]
@@ -9,27 +9,27 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: fec-w167-${{ github.ref }}
+  group: fec-w168-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  native-20s-scenarios:
+  native-build:
     strategy:
       fail-fast: false
       matrix:
         arch: [arm64, amd64]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
-    timeout-minutes: 120
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with: {go-version: '1.23.12', check-latest: false, cache: false}
-      - name: Install native build and netns dependencies
+      - name: Install fixed native compile dependencies
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm iproute2 iptables openssl ethtool
-      - name: Build original Go TLS + Rust M1/M3/M4 native exact-source bundle
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm
+      - name: Build pinned original Go TLS and Rust native product once per arch
         shell: bash
         run: |
           set -euo pipefail
@@ -39,11 +39,11 @@ jobs:
             echo "BUNDLE=arm64-public-bundle" >> "$GITHUB_ENV"
           else
             test "$(uname -m)" = x86_64
-            sed -e 's/aarch64/x86_64/g' -e 's/arm64/amd64/g' tools/arm64_public_go_rust_bundle.sh > "$RUNNER_TEMP/w167-native-amd64.sh"
-            bash "$RUNNER_TEMP/w167-native-amd64.sh"
+            sed -e 's/aarch64/x86_64/g' -e 's/arm64/amd64/g' tools/arm64_public_go_rust_bundle.sh > "$RUNNER_TEMP/w168-native-amd64.sh"
+            bash "$RUNNER_TEMP/w168-native-amd64.sh"
             echo "BUNDLE=amd64-public-bundle" >> "$GITHUB_ENV"
           fi
-      - name: Assert real Go public outer DATA repair default and Game4 fallback
+      - name: Native Go public outer-on defaults, rollback and Game4 schedule
         shell: bash
         run: |
           set -euo pipefail
@@ -54,28 +54,152 @@ jobs:
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release"
           (cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run 'TestPublicOuterDataRepairDefaultsOnAcrossAllModes|TestGame4PublicDefaultWideStaggerAndExplicitFallbacks' ./internal/v4productcli -count=1 -v)
-      - name: Execute seven original product modes times four IID levels 20s
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: w168-native-${{ matrix.arch }}
+          path: "${{ env.BUNDLE }}"
+          retention-days: 14
+          if-no-files-found: error
+  one-independent-20s-scenario:
+    name: "20s observational ${{ matrix.arch }} ${{ matrix.variant }} IID ${{ matrix.loss }}%"
+    needs: native-build
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        arch: [arm64, amd64]
+        variant: [normal_off, normal_maximum6, normal_auto, game2_off, game2_fixed6, game4_off, game4_fixed6]
+        loss: [1, 5, 15, 30]
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: w168-native-${{ matrix.arch }}
+          path: native-bundle
+      - name: Strict native frozen bundle provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s native-bundle/manifest.json
+          test -s native-bundle/wbd-v4-client
+          test -s native-bundle/wbd-v4-server
+          test -s native-bundle/libwbd_engine.so
+          (cd native-bundle && sha256sum -c SHA256SUMS)
+          python3 - <<'PY'
+          import json,os,platform
+          x=json.load(open('native-bundle/manifest.json'))
+          assert x['source']==os.environ['GITHUB_SHA']
+          assert x['architecture']==platform.machine()
+          PY
+          chmod +x native-bundle/wbd-v4-client native-bundle/wbd-v4-server
+      - name: Install isolated kernel network namespace utilities
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+      - name: Original TLS Rust M4 TUN 20s UDP only 10Mbps per direction no external rate cap
         shell: bash
         run: |
           set -euo pipefail
           sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB \
             python3 -m tools.network_harness.fec_w167_dual_arch_matrix \
-            --bundle "$GITHUB_WORKSPACE/$BUNDLE" \
-            --output "$GITHUB_WORKSPACE/w167-matrix-${{ matrix.arch }}" \
-            --arch "${{ matrix.arch }}"
-      - name: Preserve cases and capacity-stop receipts
+            --bundle "$GITHUB_WORKSPACE/native-bundle" \
+            --output "$GITHUB_WORKSPACE/w168-case" \
+            --arch "${{ matrix.arch }}" --case "${{ matrix.variant }}" --loss "${{ matrix.loss }}" --traffic-mbps 10
+      - name: Surface actual per-case result, including failures and capacity warnings
         if: always()
         run: |
-          echo "W167 native ${{ matrix.arch }} complete/incomplete; inspect attached progress and STOP_CAPACITY." >> "$GITHUB_STEP_SUMMARY"
-          if [[ -s w167-matrix-${{ matrix.arch }}/progress.json ]]; then
-            python3 -c 'import json; p="w167-matrix-${{ matrix.arch }}/progress.json"; d=json.load(open(p)); print("W167_PROGRESS",p,d["completed"],"/",d["total_10mbps_cases"])'
+          if [[ -f w168-case/progress.json ]]; then
+            python3 - <<'PY'
+          import json
+          d=json.load(open('w168-case/progress.json'))
+          for x in d['cases']:
+              print('W167_REAL_OBSERVATION',x['id'],x['case_result'],x['limits'],x['failures'])
+          PY
           fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: fec-w167-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: w168-result-${{ matrix.arch }}-${{ matrix.variant }}-IID${{ matrix.loss }}
           path: |
-            w167-matrix-${{ matrix.arch }}/**
-            !w167-matrix-${{ matrix.arch }}/bundle-A/**
+            w168-case/**
+            !w168-case/bundle-A/**
+          retention-days: 14
+          if-no-files-found: warn
+
+  isolated-250mbps-maximum6:
+    name: "High-rate ${{ matrix.arch }} Normal Fixed6 IID30 250Mbps 20s UDP"
+    needs: native-build
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, amd64]
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: w168-native-${{ matrix.arch }}
+          path: native-bundle
+      - name: Validate exact native Go Rust architecture and hashes
+        run: |
+          set -euo pipefail
+          (cd native-bundle && sha256sum -c SHA256SUMS)
+          python3 - <<'PY'
+          import os,json,platform
+          m=json.load(open('native-bundle/manifest.json'))
+          assert m['source']==os.environ['GITHUB_SHA']
+          assert m['architecture']==platform.machine()
+          PY
+          chmod +x native-bundle/wbd-v4-client native-bundle/wbd-v4-server
+      - name: Install isolated kernel network namespace utilities
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+      - name: Run user-approved separate 250Mbps per direction FEC6 outer on pure UDP no rate cap
+        run: |
+          set -euo pipefail
+          sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB             python3 -m tools.network_harness.fec_w167_dual_arch_matrix             --bundle "$GITHUB_WORKSPACE/native-bundle"             --output "$GITHUB_WORKSPACE/w168-high"             --arch "${{ matrix.arch }}" --case normal_maximum6 --loss 30 --traffic-mbps 250
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: w168-high-${{ matrix.arch }}
+          path: |
+            w168-high/**
+            !w168-high/bundle-A/**
+          retention-days: 14
+          if-no-files-found: warn
+  aggregate:
+    needs: [native-build, one-independent-20s-scenario, isolated-250mbps-maximum6]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: w168-result-*
+          path: w168-collection
+          merge-multiple: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: w168-high-*
+          path: w168-collection
+          merge-multiple: false
+      - name: Aggregate all 56 genuine cases plus 2 independent high-rate cases
+        run: |
+          python3 -m tools.network_harness.fec_w167_aggregate --root w168-collection --output w168-summary
+          cat w168-summary/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: w168-aggregate
+          path: w168-summary/**
           retention-days: 14
           if-no-files-found: warn

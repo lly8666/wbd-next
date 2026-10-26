@@ -7790,5 +7790,25 @@
     "test_workflow": ".github/workflows/fec-w167-arm64-x86-outer-on-matrix.yml",
     "capacity_stop": true,
     "merge_ready": false
+  },
+  "w168_udp_only_no_limit_complete_matrix": {
+    "evidence": "docs/evidence/fec-network-work/20261026-W168-UDP-only-No-Rate-No-PerfStop-DualArch-20s-Matrix.json",
+    "arch": [
+      "arm64",
+      "amd64"
+    ],
+    "tenMbps_UDP_only_cases": 56,
+    "separate_250Mbps_UDP_only_cases": 2,
+    "seconds_each": 20,
+    "outer_rate_limit": "NONE",
+    "cpu_psi_performance_autostop": "DISABLED_USER_W168",
+    "outer_data_repair_default": "ON_ORIGINAL_CLI",
+    "cpu_report": "one_core_product_cpu_pct_plus_rust_rx_tx_share_pct_approx",
+    "rss": "Go_Rust_combined_MiB",
+    "design_250ms_receiver": "DEFERRED_UNCHANGED",
+    "capacity_stop": true,
+    "w168_scoped_user_exception": "separate independent isolated jobs",
+    "merge_ready": false,
+    "results": "PENDING_ACTION"
   }
 }

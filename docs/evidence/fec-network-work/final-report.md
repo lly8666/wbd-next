@@ -1,5 +1,13 @@
 # FEC-only 独立岗位｜2026-10-26 限域合并审查索引
 
+## 2026-10-26 W168｜连接恢复：纯UDP、去外层速率限制、不再按PSI提前停止，补全双架构56+2测试
+
+用户明确覆盖 W167 的混合TCP/UDP和资源自动停机要求。本轮业务**100%真实UDP**（原 TLS 控制连接仍必然使用 TCP），双向各10Mbps、20秒、IID 1/5/15/30%，七个公开产品组合×原生 ARM64/AMD64，**56个独立 GitHub Actions VM 工况**；另外双架构各独立跑 250Mbps/方向、Fixed6、30%IID、20秒，合计**58个工况**。netem只加随机损伤和75ms基础延迟，`rate_mbps=0` 即**不加任何额外tc rate限速**。性能 PSI/steal 只观测、不因旧峰值超过20%自动停止下一例；历史`capacity_stop=true`全局状态仍保留、此次用户授权仅对隔离W168工况例外，基础作业/清理/进程失败仍保持真实FAIL。全量逐项收据待Action真正结束，不得造绿。
+
+每例保留20s进程Go+Rust共进程CPU秒和单核心100%基准占比、峰值RSS MiB、250ms数字 Rust M4 RX/TX线程CPU及其对齐后的近似CPU占比、源UDP投递/残余、真实 netem drop、宿主PSI；Normal/Fixed/Auto的外层DATA retry有 `(accepted+uncertain)/(first+repair)` 精确产品账本，以及`(accepted+uncertain)/全部外层veth TX`近似账本（统计终点不同明确注明）。Game2/4初发副本、FEC parity绝不计作DATA retry；其同等产品DATA retry占比目前缺失，不宣称真实零。RSS只可获得整体进程数值，**不可硬拆为Go与Rust内存**。本次W167旧Action40340185196在ARM64第3项和AMD64第4项因人工PSI停机，旧结果不作本次完整资格。单独证据 [W168](20261026-W168-UDP-only-No-Rate-No-PerfStop-DualArch-20s-Matrix.json)。
+
+
+
 ## 2026-10-26 W167｜保存Normal 250ms缓存设计；外层DATA重传默认ON及双架构20s矩阵
 
 新授权要求已记为独立执行和证据，不与W166先前Normal三批FEC产品实施混用。**待实施Normal专用RX缓存设计**：150ms last-touch→250ms、block-ID reordering 1024→2048；在300Mbps/单方向额外100ms意味着原始字节3.75MB，满k16/r20所有符号缓存理想增量8.4375MB，CPU/RSS开销未实测；2048是ID跨度并不是1024块预分配，动态索引内存只能估数量级。现受640个活跃块/48MiB硬容量限制、短包高速可提前淘汰。**本项仅存设计，不改产品常量。**
