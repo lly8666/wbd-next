@@ -88,10 +88,27 @@ def verify_native_game_counters(lanes,counters,traffic=None):
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |GAME_FEC_APPLIED |GAME_FEC_COUNTERS |GAME_OUTER |GAME4_COPY_SCHEDULE |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |GAME_FEC_APPLIED |GAME_FEC_COUNTERS |GAME_OUTER |GAME4_COPY_SCHEDULE |GO_RX_HANDOFF |GO_RX_POST_HANDOFF |GAME_GO_RX_HANDOFF |GAME_GO_RX_POST_HANDOFF |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
+def public_go_rx_handoff(log_text, role):
+    """One authenticated Go->Rust kernel receive gate and bounded post-gate
+    userspace full-packet copies. Missing proof is NOT_OBSERVED, not zero.
+    Accepted packet volume and actual Rust TUN delivery remain separate.
+    """
+    pattern=r"V4_PUBLIC_(?:GAME_)?GO_RX_HANDOFF role="+re.escape(role)+r" [^\\n]*filtered=(\\d+) rust_ready=(\\d+) original_send_fd_open=(\\d+)"
+    end_pattern=r"V4_PUBLIC_(?:GAME_)?GO_RX_POST_HANDOFF role="+re.escape(role)+r" [^\\n]*go_data_full_copies=(\\d+)"
+    pre=re.findall(pattern,log_text)
+    post=re.findall(end_pattern,log_text)
+    if len(pre)!=1 or len(post)!=1: return None
+    filtered,ready,send_open=map(int,pre[0])
+    copies=int(post[0])
+    if not 1<=filtered<=4 or ready!=1 or send_open!=1:
+        return None
+    return {"kernel_filtered_lanes":filtered,"rust_ready":ready,
+            "go_send_fd_retained":send_open,
+            "go_data_full_copies_after_handoff":copies}
 
 
 def public_fec_m1_stage(log_text):
@@ -1094,9 +1111,16 @@ class LinuxExperiment:
             # Neither direction receives netem truth, keys or packet data.
             (self.out / (role+"-auto-quality.log")).write_text(
                 "\n".join(auto_events[-160:])+"\n")
-            logs[role] = "\n".join(
-                [line for line in lines if "V4_PUBLIC_TIMELINE " not in line and
-                 "V4_PUBLIC_FEC2_AUTO_QUALITY " not in line][-40:])
+            # Preserve the two lifecycle ownership markers even when a
+            # long Auto run produces more than 40 normal numeric readbacks.
+            handoff=[line for line in lines if
+                     "GO_RX_HANDOFF role=" in line or
+                     "GO_RX_POST_HANDOFF role=" in line]
+            other=[line for line in lines if "V4_PUBLIC_TIMELINE " not in line
+                   and "V4_PUBLIC_FEC2_AUTO_QUALITY " not in line
+                   and "GO_RX_HANDOFF role=" not in line
+                   and "GO_RX_POST_HANDOFF role=" not in line]
+            logs[role] = "\n".join(handoff[-2:]+other[-40:])
             (self.out / (role + "-product-markers.log")).write_text(logs[role] + "\n")
         return logs
 
@@ -1109,6 +1133,14 @@ class LinuxExperiment:
             if matches:
                 applied[role] = matches[-1]
         verified = True
+        go_handoff={role:public_go_rx_handoff(log,role) for role,log in logs.items()}
+        need_go_handoff=self.config["bundles"][self.label].get("require_go_rx_handoff",False)
+        go_handoff_verified=(len(go_handoff)==2 and all(
+            v is not None and v["kernel_filtered_lanes"]==self.lanes and
+            v["go_data_full_copies_after_handoff"]<=32
+            for v in go_handoff.values())) if need_go_handoff else None
+        if need_go_handoff and not go_handoff_verified:
+            verified=False
         if mode in ["fec-fixed", "fec-auto"]:
             verified = len(applied) == 2 and all(v[0] == ("fixed" if mode == "fec-fixed" else "auto") and v[1] == v[2]
                 and int(v[2]) > 0 and v[4] == "false" and (mode != "fec-fixed" or int(v[3]) == self.config["product"]["fec_profile"])
@@ -1312,7 +1344,9 @@ class LinuxExperiment:
             (sum(fec_ip[role][k] for k in ("sys_udp","rec_udp","sys_tcp","rec_tcp","other_ip")) ==
              fec_rx[role]["systematic_tun"]+fec_rx[role]["recovered_tun"])
             for role in logs)
-        return {"stop_drained_both": all(("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED" if self.lanes > 1 else "V4_PUBLIC_NATIVE_STOP_DRAINED") in s for s in logs.values()),
+        return {"go_receive_handoff": go_handoff if all(v is not None for v in go_handoff.values()) else "NOT_OBSERVED",
+                 "go_receive_handoff_verified": go_handoff_verified,
+                 "stop_drained_both": all(("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED" if self.lanes > 1 else "V4_PUBLIC_NATIVE_STOP_DRAINED") in s for s in logs.values()),
                 "effective_config_verified": verified, "fec_final_readback": applied, "counters": counters,
                 "recovery_policy_readback": recovery_policy,
                 "outer_repair_requested": requested_repair if requested_repair is not None else "NOT_DECLARED",
