@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "status": "COMPLETE_NATIVE_VM_E_SS_NONE_VS_WBD_HIDDEN_PN_XOR",
+  "branch": "experiment/lan-vmess-none-compare",
+  "main_modified": false,
+  "production_wired": false,
+  "merge_ready": false,
+  "report": "docs/evidence/lan-vmess-none-compare/FINAL_REPORT.md",
+  "source": "v2fly/v2ray-core SHAKE128 chunk-size masking, default NONE TCP stream",
+  "payload_bytes": 1345,
+  "packets_per_cycle": 100,
+  "replicates_per_mode": 5,
+  "x86_64": {
+    "run": 40257276765,
+    "conclusion": "success",
+    "artifact": 12622907753,
+    "ns_per_100": {
+      "VMessZero": 2831.2,
+      "VMessNoneSHAKE128": 5246.4,
+      "WBDClearPNXOR": 25077.8,
+      "WBDHiddenPNXOR": 26481
+    },
+    "ratio": 5.047461116193962
+  },
+  "arm64": {
+    "run": 40257280780,
+    "conclusion": "success",
+    "artifact": 12622483653,
+    "ns_per_100": {
+      "VMessZero": 7704,
+      "VMessNoneSHAKE128": 10533,
+      "WBDClearPNXOR": 35181.8,
+      "WBDHiddenPNXOR": 37659.2
+    },
+    "ratio": 3.5753536504319756
+  },
+  "limitations": [
+    "No actual V2Fly runtime or WBD Rust product; Go-only minimal cost",
+    "VMess NONE leaves entire payload plaintext, WBD public XOR is still invertible and unauthenticated"
+  ]
+}
