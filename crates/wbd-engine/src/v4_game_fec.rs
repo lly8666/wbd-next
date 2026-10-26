@@ -183,7 +183,7 @@ impl GameFecTx{
         }
         for row in &mut self.repair_scratch{row.fill(0);row.clear();}
         self.math_scratch.fill(0);self.math_scratch.clear();
-        self.owner.stop();self.rx.stop();self.source_arena.stop();
+        self.owner.stop();self.source_arena.stop();
         self.source_arena.drain_returns();
     }
 }
