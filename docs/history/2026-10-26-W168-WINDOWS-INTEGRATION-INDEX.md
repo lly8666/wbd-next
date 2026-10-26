@@ -11,6 +11,11 @@
 | Windows 原始 TCP/UDP/Stop PASS | `docs/evidence/M0/PLAN024-S881-WIN-LINUX-ORIGINAL-FUNCTIONAL-TCP-UDP-PASS-20261026.json`；源码 `0dc7b58d`；[Run 40311271021](https://github.com/lly8666/wbd-next/actions/runs/40311271021)。独立 Windows branch `fix/m0-windows-functional-wiring-20261026`；PR #27。 |
 | Windows 历史红灯 +103B | `docs/evidence/M0/PLAN024-S880-WL-N0-exact-original-failure-20261026.json`；[Run 40295748769](https://github.com/lly8666/wbd-next/actions/runs/40295748769)。S869–S880 M0 历史文档在 `docs/devlog/M0/` 原路径全保留。 |
 | 第一轮错误的 copied-tree 评审 | PR #26、`docs/integration/M0-FEC-GAME-TUN-ROLLING-MERGE-CONTRACT-20261026.md`；不能作为真实 merge ancestry。 |
-| 当前真实 Git merge + 接线计划 | [Draft PR #28](https://github.com/lly8666/wbd-next/pull/28)；双亲提交 `fea9cd94`；`docs/integration/M0-W168-FROZEN-ARCH-WINDOWS-ADAPTER-STAGED-INTEGRATION-20261026.md`。本分支测试需新源码证据。 |
+| 当前真实 Git merge + 接线计划 | [Draft PR #28](https://github.com/lly8666/wbd-next/pull/28)；双亲提交 `fea9cd94`；`docs/integration/M0-W168-FROZEN-ARCH-WINDOWS-ADAPTER-STAGED-INTEGRATION-20261026.md`。该候选原生 Normal/off 同源功能现已通过，更多模式仍未获得 Windows 资格。 |
 
 **原件存放规则**：不迁移既有 URL/文件（避免 SHA/链接断裂）；阶段结束时只在本索引追加 1 段近期汇总，不向 `START_HERE.md` 搬运全文；最新原生 Actions 记录写 `docs/evidence/M0/` 并引用准确 SOURCE；中性旧工位上下文原文放 `docs/history/handoff/`，新任务文档只链接。负面数据保持其原文件和判定。
+
+## 最新验证与失败查找（2026-10-26）
+
+- 真双亲候选 Normal/off [40361251070](https://github.com/lly8666/wbd-next/actions/runs/40361251070)，SOURCE `fbb281c7c8531a1e242c8368c0b11ca9545be730`，真实 TLS/Npcap/Wintun+Linux TUN 双向 UDP/TCP/Stop PASS；前一版 [40360805219](https://github.com/lly8666/wbd-next/actions/runs/40360805219) SOURCE `1b037131` 也 PASS。独立具体收据 [W168/Windows Normal 功能](../evidence/M0/PLAN024-W168-INTEGRATION-WINDOWS-NORMAL-FUNCTIONAL-20261026.json)。
+- [40357841232](https://github.com/lly8666/wbd-next/actions/runs/40357841232) SOURCE `9137f27` 真实 Linux 反向 UDP 失败：Rust raw观察到546帧但tuple完成0；[40360124961](https://github.com/lly8666/wbd-next/actions/runs/40360124961) SOURCE `6e271c1` 原始限制12次的 Rust帧拒绝诊断 `WrongPersona`，原始 Action artifact ID 12667403997，合并时丢失了Windows11 TTL128与Legacy TTL64的TLS范围区分。原始红灯永久可查，不算 Game/FEC 产品错误。
