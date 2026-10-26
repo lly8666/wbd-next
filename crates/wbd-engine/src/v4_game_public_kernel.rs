@@ -27,6 +27,21 @@ struct TxLane{
     last_initial_id:Option<u64>
 }
 #[derive(Default)]
+struct RxLockSample {
+    samples:AtomicU64,wait_total_ns:AtomicU64,
+    hold_total_ns:AtomicU64,wait_max_ns:AtomicU64,
+}
+impl RxLockSample{
+    fn record(&self,wait:Duration,held:Duration){
+        let ns=|d:Duration|d.as_nanos().min(u128::from(u64::MAX)) as u64;
+        let wait_ns=ns(wait);
+        self.samples.fetch_add(1,Ordering::Relaxed);
+        self.wait_total_ns.fetch_add(wait_ns,Ordering::Relaxed);
+        self.hold_total_ns.fetch_add(ns(held),Ordering::Relaxed);
+        self.wait_max_ns.fetch_max(wait_ns,Ordering::Relaxed);
+    }
+}
+#[derive(Default)]
 struct RxRejectReasons {
     aead:AtomicU64,invalid:AtomicU64,duplicate:AtomicU64,
     stale:AtomicU64,capacity:AtomicU64,scope:AtomicU64,
@@ -42,6 +57,7 @@ pub(crate) struct GameKernelOwner{
     rx_mutex_acquired:Arc<AtomicU64>,rx_authenticated_some:Arc<AtomicU64>,
     rx_dedup_none:Arc<AtomicU64>,rx_tun_failed:Arc<AtomicU64>,
     rx_delivery_commit_failed:Arc<AtomicU64>,
+    rx_lock_sample:Arc<RxLockSample>,
     outer_blocked_duplicate:Arc<AtomicU64>,
     outer_repeated_copy_sent:Arc<AtomicU64>,
 }
@@ -101,6 +117,7 @@ impl GameKernelOwner{
         let rx_dedup_none=Arc::new(AtomicU64::new(0));
         let rx_tun_failed=Arc::new(AtomicU64::new(0));
         let rx_delivery_commit_failed=Arc::new(AtomicU64::new(0));
+        let rx_lock_sample=Arc::new(RxLockSample::default());
         let outer_blocked_duplicate=Arc::new(AtomicU64::new(0));
         let outer_repeated_copy_sent=Arc::new(AtomicU64::new(0));
         let mut lanes=Vec::new();
@@ -309,6 +326,7 @@ impl GameKernelOwner{
             let rx_none=Arc::clone(&rx_dedup_none);
             let tun_failed=Arc::clone(&rx_tun_failed);
             let commit_failed=Arc::clone(&rx_delivery_commit_failed);
+            let lock_sample=Arc::clone(&rx_lock_sample);
             let rx_start=epoch_clock;
             let builder=thread::Builder::new().name(format!("wbd-v4-game-rx-{}",i+1));
             let worker=builder.spawn(move||{
@@ -319,6 +337,9 @@ impl GameKernelOwner{
                 };
                 let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp};
                 let mut wire=[0u8;2048];
+                let sample_lock=std::env::var("WBD_GAME_RX_LOCK_SAMPLE")
+                    .as_deref()==Ok("1");
+                let mut sampled_sequence=0u64;
                 while !rx_stop.load(Ordering::Acquire){
                     let (len,_)=match raw.recv_one_into(
                         generation,&mut wire,tuple,PacketPersona::Legacy
@@ -335,14 +356,25 @@ impl GameKernelOwner{
                     };
                     if rx_stop.load(Ordering::Acquire){break}
                     raw_seen.fetch_add(1,Ordering::Relaxed);
+                    sampled_sequence=sampled_sequence.wrapping_add(1);
+                    // The two real RX preparation paths each own exactly one
+                    // scoped shared lock. Do not time every packet, and do
+                    // not add any clock call to ordinary performance runs.
+                    let timing=sample_lock&&(sampled_sequence&127)==0;
+                    let before_lock=timing.then(Instant::now);
                     #[cfg(feature="fec2_product_record")]
                     if fec_enabled{
                         let now=MonoNs(rx_start.elapsed().as_nanos()
                             .min(u128::from(u64::MAX)) as u64);
                         let decoded={
                             let Ok(mut receiver)=receiver_owner.lock()else{break};
+                            let acquired=timing.then(Instant::now);
                             rx_held.fetch_add(1,Ordering::Relaxed);
-                            receiver.prepare_fec_batch(lane,&mut wire[..len],now)
+                            let value=receiver.prepare_fec_batch(lane,&mut wire[..len],now);
+                            if let (Some(start),Some(held))=(before_lock,acquired){
+                                lock_sample.record(held.duration_since(start),held.elapsed());
+                            }
+                            value
                         };
                         match decoded{
                             Ok(Some(batch))=>{
@@ -399,10 +431,15 @@ impl GameKernelOwner{
                     }
                     let received={
                         let Ok(mut receiver)=receiver_owner.lock()else{break};
+                        let acquired=timing.then(Instant::now);
                         rx_held.fetch_add(1,Ordering::Relaxed);
                         // In-place authenticated record; original 2048B RX
                         // scratch remains exclusively held until output is owned.
-                        receiver.prepare_receive(lane,&mut wire[..len])
+                        let value=receiver.prepare_receive(lane,&mut wire[..len]);
+                        if let (Some(start),Some(held))=(before_lock,acquired){
+                            lock_sample.record(held.duration_since(start),held.elapsed());
+                        }
+                        value
                     };
                     match received{
                         Ok(Some(mut prepared))=>{
@@ -472,7 +509,7 @@ impl GameKernelOwner{
             raw_received,rx_reject,
             rx_driver_timeout,rx_driver_other,rx_mutex_acquired,
             rx_authenticated_some,rx_dedup_none,rx_tun_failed,
-            rx_delivery_commit_failed,outer_blocked_duplicate,
+            rx_delivery_commit_failed,rx_lock_sample,outer_blocked_duplicate,
             outer_repeated_copy_sent})
     }
     pub(crate) fn outer_policy_counters(&self)->(u64,u64,u64){
@@ -517,6 +554,16 @@ impl GameKernelOwner{
             self.rx_tun_failed.load(Ordering::Relaxed),
             self.rx_delivery_commit_failed.load(Ordering::Relaxed),
             self.delivered.load(Ordering::Relaxed));
+        // Diagnostic-only, one aggregate at Stop. Samples are not estimates
+        // of full CPU cost, and exclude the second finish/commit lock.
+        let sample_count=self.rx_lock_sample.samples.load(Ordering::Relaxed);
+        if sample_count>0{
+            eprintln!("M0_GAME_M4_RX_LOCK_SAMPLE samples={} wait_total_ns={} hold_total_ns={} wait_max_ns={} sample_stride=128 includes_commit=0",
+                sample_count,
+                self.rx_lock_sample.wait_total_ns.load(Ordering::Relaxed),
+                self.rx_lock_sample.hold_total_ns.load(Ordering::Relaxed),
+                self.rx_lock_sample.wait_max_ns.load(Ordering::Relaxed));
+        }
         self.tun.begin_stop();
         for x in &self.tx{x.begin_stop()}
         for x in &self.rx{x.begin_stop()}
