@@ -655,6 +655,38 @@ mod tests{
     }
     #[cfg(feature="fec2_product_record")]
     #[test]
+    fn w137_sparse_fixed6_fec_close_preempts_game4_20ms_copy(){
+        let mut game=build(4);
+        game.enable_game_fec(6,false).unwrap();
+        game.configure_game4_stagger().unwrap();
+        let start=1_000_000_000u64;
+        game.offer(&[0x31;128],MonoNs(start)).unwrap();
+        // Genuine first business copy goes immediately, second at 4ms.
+        assert_eq!(game.drain(MonoNs(start),|lane,_,_,_|{
+            assert_eq!(lane.slot,1);true
+        }),1);
+        assert_eq!(game.drain(MonoNs(start+4_000_000),|lane,_,_,_|{
+            assert_eq!(lane.slot,2);true
+        }),1);
+        let next_copy=game.game4_next_due_ns().unwrap();
+        assert_eq!(next_copy,start+20_000_000);
+        let fec_due=game.game_fec_next_due_ns(MonoNs(start+4_000_000))
+            .expect("one sparse source must retain FEC close deadline");
+        assert!(fec_due>start && fec_due<next_copy,
+            "sparse FEC must close before Game4 20ms copy");
+        let before=game.game_fec_counters().unwrap().0.parity_offered;
+        assert_eq!(game.poll_game_fec(MonoNs(fec_due-1)).unwrap(),0);
+        assert!(game.poll_game_fec(MonoNs(fec_due)).unwrap()>0,
+            "one source group must close at its original owner deadline");
+        assert!(game.game_fec_counters().unwrap().0.parity_offered>before);
+        // No copy schedule reconfiguration: later 20/60ms positions remain.
+        game.drain(MonoNs(fec_due),|_,_,_,_|true);
+        assert_eq!(game.game4_next_due_ns(),Some(next_copy));
+        game.stop();
+        assert_eq!(game.game_fec_counters().unwrap().1.charged_bytes,0);
+    }
+    #[cfg(feature="fec2_product_record")]
+    #[test]
     fn game4_fixed6_stagger_parity_does_not_wait_for_all_60ms_copies(){
         let mut game=build(4);
         // Original public config order: authenticated fixed6 first, then
