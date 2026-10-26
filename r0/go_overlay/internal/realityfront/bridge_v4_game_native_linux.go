@@ -152,12 +152,13 @@ type V4GameFecCounters struct{
     SourceOffered,ParityOffered,ParityKernelCopied uint64
     SourceCandidate,RecoveredCandidate,Expired,Failed uint64
     Planned,Sent,RetainedBytes uint64
+    RxInvalid,RxConflict,RxCapacity,RxCodec,RxState,RxFrame uint64
 }
 func (g *v4NativeGameJoined) originalGameFecCounters()(V4GameFecCounters,error){
     if g==nil||g.handle==0||g.stopped{return V4GameFecCounters{},ErrAdmissionUnsupported}
-    var values [10]C.uint64_t
+    var values [16]C.uint64_t
     rc:=C.wbd_fec_network_game_group_counters(
-        C.uint64_t(g.handle),&values[0],10)
+        C.uint64_t(g.handle),&values[0],16)
     if rc!=0{return V4GameFecCounters{},fmt.Errorf("%w: native Game FEC counters=%d",errV4Embedded,int(rc))}
     return V4GameFecCounters{
         SourceOffered:uint64(values[0]),ParityOffered:uint64(values[1]),
@@ -165,6 +166,9 @@ func (g *v4NativeGameJoined) originalGameFecCounters()(V4GameFecCounters,error){
         RecoveredCandidate:uint64(values[4]),Expired:uint64(values[5]),
         Failed:uint64(values[6]),Planned:uint64(values[7]),
         Sent:uint64(values[8]),RetainedBytes:uint64(values[9]),
+        RxInvalid:uint64(values[10]),RxConflict:uint64(values[11]),
+        RxCapacity:uint64(values[12]),RxCodec:uint64(values[13]),
+        RxState:uint64(values[14]),RxFrame:uint64(values[15]),
     },nil
 }
 // A joined crypto-only group must Stop BEFORE per-lane original Go owner

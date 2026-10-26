@@ -34,10 +34,12 @@ func logOriginalGameFec(role string,n int,p *realityfront.V4LinuxGameProduct){
         log.Printf("V4_PUBLIC_GAME_FEC_COUNTERS_NOT_AVAILABLE role=%s error=%v",role,err)
         return
     }
-    log.Printf("V4_PUBLIC_GAME_FEC_COUNTERS role=%s lanes=%d source_offered=%d parity_offered=%d parity_copied=%d systematic_candidate=%d recovered_candidate=%d expired=%d failed=%d rplanned=%d rsent=%d retained_bytes=%d",
+    log.Printf("V4_PUBLIC_GAME_FEC_COUNTERS role=%s lanes=%d source_offered=%d parity_offered=%d parity_copied=%d systematic_candidate=%d recovered_candidate=%d expired=%d failed=%d rplanned=%d rsent=%d retained_bytes=%d fec_rx_invalid=%d fec_rx_conflict=%d fec_rx_capacity=%d fec_rx_codec=%d fec_rx_state=%d fec_rx_frame=%d",
         role,n,proof.SourceOffered,proof.ParityOffered,
         proof.ParityKernelCopied,proof.SourceCandidate,proof.RecoveredCandidate,
-        proof.Expired,proof.Failed,proof.Planned,proof.Sent,proof.RetainedBytes)
+        proof.Expired,proof.Failed,proof.Planned,proof.Sent,proof.RetainedBytes,
+        proof.RxInvalid,proof.RxConflict,proof.RxCapacity,
+        proof.RxCodec,proof.RxState,proof.RxFrame)
 }
 func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,connected *bool)error{
     n:=int(c.gameLanes)

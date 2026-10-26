@@ -7,7 +7,7 @@ use crate::runtime::fec2_owner::{
     Fec2Owner,FecMode,Profile as OwnerProfile,Limits,ParityJob,OwnerReport
 };
 use crate::fec2_staged::StagedParity;
-use crate::v4_fec2_live_rx::{Fec2LiveRx,VerifiedReceiveEpoch};
+use crate::v4_fec2_live_rx::{Fec2LiveRx,VerifiedReceiveEpoch,ReceiveError};
 use crate::v4_game_lane::Error as GameError;
 use wbd_codec::fec_v2::{self,Profile as CodecProfile,Rs16,BackendChoice,MAX_BATCH_ROWS};
 use wbd_types::{ConfigRevision,MonoNs,LogicalPacketId};
@@ -18,6 +18,10 @@ pub(crate) struct GameFecCounters{
     pub source_offered:u64,pub parity_offered:u64,
     pub parity_kernel_copied:u64,pub recovered_candidate:u64,
     pub source_first_candidate:u64,pub expired:u64,pub failed:u64,
+    // RX FEC decoder error classes are AFTER original lane AEAD/PN and
+    // MUST NOT be conflated with a cryptographic tag failure.
+    pub rx_invalid:u64,pub rx_conflict:u64,pub rx_capacity:u64,
+    pub rx_codec:u64,pub rx_state:u64,pub rx_frame:u64,
 }
 struct Flight{
     job:ParityJob,prepared:StagedParity,copied:u8,
@@ -207,16 +211,30 @@ impl GameFecRx{
         ->Result<Vec<Vec<u8>>,GameError>{
         let Some((&kind,body))=data.split_first() else{
             self.counters.failed+=1;
+            self.counters.rx_frame+=1;
             return Err(GameError::Invalid)
         };
         // FEC source(2)/parity(3) is already behind lane-specific AEAD+replay
         // and one shared authenticated cross-lane Game logical ID precheck.
         let delivered=self.rx.accept_authenticated(self.scope,kind,body,now)
-            .map_err(|_|{self.counters.failed+=1;GameError::Invalid})?;
+            .map_err(|reason|{
+                self.counters.failed+=1;
+                match reason{
+                    ReceiveError::Invalid=>self.counters.rx_invalid+=1,
+                    ReceiveError::ConflictingBlock=>self.counters.rx_conflict+=1,
+                    ReceiveError::Capacity=>self.counters.rx_capacity+=1,
+                    ReceiveError::Codec=>self.counters.rx_codec+=1,
+                    ReceiveError::Authorization|ReceiveError::Stopped|
+                    ReceiveError::ReplayOrAuthentication=>self.counters.rx_state+=1,
+                }
+                GameError::Invalid
+            })?;
         let mut out=Vec::with_capacity(delivered.len());
         for value in delivered{
             if value.frame.is_empty()||value.frame.len()>self.budget-14{
-                self.counters.failed+=1;return Err(GameError::Invalid)
+                self.counters.failed+=1;
+                self.counters.rx_frame+=1;
+                return Err(GameError::Invalid)
             }
             if value.recovered{
                 self.counters.recovered_candidate+=1
@@ -226,6 +244,26 @@ impl GameFecRx{
             out.push(value.frame)
         }
         Ok(out)
+    }
+    #[cfg(test)]
+    #[test]
+    fn w101_original_game_fec_decoder_rejections_have_separate_causes(){
+        let epoch=VerifiedReceiveEpoch{
+            generation:7,epoch:[7;16],negotiated_features:7,
+            direction_s2c:true
+        };
+        let mut fec=GameFecRx::new(6,epoch,1353).unwrap();
+        assert!(fec.receive(&[],MonoNs(0)).is_err());
+        assert!(fec.receive(&[0xff,1,2],MonoNs(1)).is_err());
+        let c=fec.counters();
+        assert_eq!(c.failed,2);
+        assert_eq!(c.rx_frame,1);
+        assert_eq!(c.rx_invalid,1);
+        assert_eq!(c.rx_conflict,0);
+        assert_eq!(c.rx_capacity,0);
+        assert_eq!(c.rx_codec,0);
+        assert_eq!(c.rx_state,0);
+        fec.stop();
     }
     pub(crate) fn stop(&mut self){self.rx.stop();}
 }

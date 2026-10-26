@@ -2535,7 +2535,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_state(
 pub unsafe extern "C" fn wbd_fec_network_game_group_counters(
     group:u64,out:*mut u64,len:usize
 )->i32{
-    if out.is_null()||len!=10{return INVALID}
+    if out.is_null()||len!=16{return INVALID}
     let Ok(r)=registry().lock()else{return BAD_STAGE};
     let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
     if e.stopped{return BAD_STAGE}
@@ -2550,6 +2550,8 @@ pub unsafe extern "C" fn wbd_fec_network_game_group_counters(
         c.source_offered,c.parity_offered,c.parity_kernel_copied,
         rx.source_first_candidate,rx.recovered_candidate,c.expired,
         c.failed+rx.failed,planned,sent,m1.charged_bytes as u64,
+        rx.rx_invalid,rx.rx_conflict,rx.rx_capacity,rx.rx_codec,
+        rx.rx_state,rx.rx_frame,
     ];
     unsafe{std::ptr::copy_nonoverlapping(values.as_ptr(),out,values.len())}
     OK
