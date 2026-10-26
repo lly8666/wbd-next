@@ -7668,5 +7668,11 @@
       "native_zip_sha256": "05de4ff845bb5d4de3bef112183cfcbd48f68d04343385beca96e6824146ee47",
       "manifest_source_aarch64_original_go_isa_inner3_hashes_verified": true
     }
+  },
+  "git_actions_audit_20261026": {
+    "audit_evidence": "docs/evidence/fec-network-work/20261026-P2-Git-Actions-HEAD-audit-reuse-capacity-stop.json",
+    "audited_head": "fbe64bcabbc959601bab0570fcecef9413a8334f",
+    "final_native_rollback_run": 40317413835,
+    "note": "RECOVERED cross-source-path/action artifact audit. No new product/source verification; historical W10/W11/W14/W19 PENDING rows are not active rerun requests. Keep capacity_stop=true and merge_ready=false; no next_action change."
   }
 }
