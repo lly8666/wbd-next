@@ -69,6 +69,27 @@ impl GameFecTx{
     }
     pub(crate) fn counters(&self)->GameFecCounters{self.counters}
     pub(crate) fn owner_report(&self)->OwnerReport{self.owner.report()}
+    /// Earliest work that can wake the existing Game M4 TX owner. Sparse
+    /// source groups close on the REAL FEC deadline, not the later Game4
+    /// 20/60ms copy due. Ready queued parity or the next settled SIMD quantum
+    /// must not sleep; an uncredited in-flight row waits only until expiry.
+    /// No per-packet timer or new source-group ownership is created.
+    pub(crate) fn next_due_ns(&self,now:MonoNs)->Option<u64>{
+        if self.in_flight.is_none() && self.owner.has_ready_parity(){
+            return Some(now.0)
+        }
+        let mut earliest=self.owner.next_deadline().map(|at|at.0);
+        if let Some(f)=self.in_flight.as_ref(){
+            if f.prepared.remaining_rows()>0 &&
+                (f.rows.is_empty() || f.rows.iter().all(|(_,ok)|*ok)){
+                return Some(now.0)
+            }
+            let expiry=f.job.expire_at.0.saturating_add(1);
+            earliest=Some(earliest.map_or(expiry,|at|at.min(expiry)));
+        }
+        earliest
+    }
+
     /// The callback submits a logical Game symbol to the existing GameTx.
     /// Caller immediately drains first source copies before any parity.
     pub(crate) fn offer<F>(&mut self,frame:&[u8],now:MonoNs,
