@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "P1A_HIGH_PPS_80MBPS_NATIVE_ABBA_MEASURED_NEGATIVE_KEEP_REVERT; W137_GAME_FIXED6_SPARSE_FEC_DEADLINE_SCOPED_PASS_AND_GAME2_OFF_GUARDS; W130_W134_LAST_FIVE_MODE_VERIFIED; CAPACITY_STOP",
+  "phase": "P1A_NATIVE80_PPS_NEGATIVE_REVERT_CONFIRMED_W137_GAME_DEADLINE_SCOPED_KEEP_W142_P2_SAMPLED_LOCK_NATIVE_PASS_BUSINESS_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -678,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "User-requested P1a high PPS 80Mbps 64B bounded ARM64 native syscall-only ABBA Action40296519037 SUCCESS artifact12638970145, 156250 offered pps & zero missing, 4-slot recvmmsg reduces calls25.65% but raises receiver thread CPU+3.567%, backing real W135/136 negative CPU and product reverted. Do NOT run full Game4 fixed6 80Mbps on 4-core runner: W126 Game4 20Mbps PSI mean33.24 peak42.04%, W134 new10Mbps peak27.7%; 80Mbps weighted estimates 15301 source PPS, 34699 FEC symbols PPS,138800 physical sends PPS/endpoint, all64B~1.4175m/endpoint; 4096 Game4 slots insufficient for all64B (23030 jobs). W137 e400 Game FEC deadline structural fix retained as scoped real W137 clean 1Mbps AB Action40294316915, W138 sparse damaged 80Kbps BA Action40295019331, W139 Game2 fixed6 Action40295923116, W140 Game4 OFF Action40295931353 all PASS scoped, no unearned CPU gain. Continue P2 ONLY after bounded opt-in sampled real RX lock wait/hold proof, or assess P1b true TX mmsg completion/partial parity-credit semantics as independent candidate; shared P3 Normal+Game separate gates. Keep outerDATA retry OFF, genuine feedback, copies & parity unchanged; do not alter other network owner next_action, keep Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
+  "next_action": "W142 next: exact SOURCE 8bc31fb0 native ARM64 build40297407378 SUCCESS artifact12639325846 SHA256 d2a1d3bd..., harness contract40297604695 PASS. Real independent Game4 fixed6 IID30 UDP5Mbps AB Action40297884296 IN_PROGRESS; only new B env WBD_GAME_RX_LOCK_SAMPLE=1, every128 records measure shared RX lock wait/held during authentic per-lane AEAD/replay+GameFEC prepare, observe first delivery, full parity, Stop, host PSI. Do not move AEAD outside mutex until measured. P1a highPPS 80Mbps native loopback ABBA Action40296519037 no CPU win +3.567% with all312500 packets each leg, full real Game4 80 still capacity_stop. W137 fixed6 deadline e400 scoped Game2/4 passed W137-140 with unchanged Normal data path; previous five-mode P0 SOURCE6c38 retained as last cross-mode qualified. P1b native TX batching requires exact partial/FEC copied semantics, P3 shared changes require separate Normal+Game tests. Windows NOT_RUN, merge_ready false, no main.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -7161,5 +7161,29 @@
     "decision": "P1A_PRODUCT_ROLLBACK_CONFIRMED; GAME4_80MBPS_REAL_PRODUCT_NOT_RUN_CAPACITY_STOP",
     "evidence": "docs/evidence/fec-network-work/20261026-P1a-80Mbps-64B-native-RX-ABBA-capacity-gated.json",
     "note": "Also avoid confusing 80Kbps sparse W138 with 80Mbps P1a native benchmark or older Game2 protection case named W139."
+  },
+  "w142_game_p2_shared_rx_lock_probe": {
+    "code_source": "8bc31fb0a56200bb62d75de0709e2c2522f25aeb",
+    "source_last_scoped_game": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+    "native_build_action": 40297407378,
+    "native_build_result": "SUCCESS",
+    "native_artifact_id": 12639325846,
+    "native_zip_sha256": "d2a1d3bd22d230c064600d173575570fdb176a44f335ed55dcc1f2e0309a9f1e",
+    "harness_latest_contract_action": 40297604695,
+    "harness_contract_result": "SUCCESS",
+    "failed_harness_contract_actions": [
+      40297500759,
+      40297540773
+    ],
+    "scenario": "Game4 fixed6, real UDP 5Mbps each, IID30 per physical lane, 75ms one way; sameVM A=e400 original B=8bc diagnostic sampled",
+    "performance_action": 40297884296,
+    "request": "tests/network/fec-work/W142-Game4-fixed6-IID30-UDP5Mbps-P2-shared-RX-lock-sampling-sameVM-AB-ARM64.json",
+    "request_commit": "31474d27220181333a10220b76411bd8e9eb9048",
+    "status": "NATIVE_PASS_PERFORMANCE_ACTION_RUNNING_AT_CHECKPOINT",
+    "measure": "WBD_GAME_RX_LOCK_SAMPLE only bundle B; real authenticated received packet every128 samples RX shared owner wait and prepare hold, no per-packet clock normal path; one Stop aggregate per endpoint",
+    "next": "Inspect 40297884296 real deliveries/CPU/PSI/lock wait hold; no P2 decrypt state movement before actual proof",
+    "windows": "NOT_RUN",
+    "capacity_stop": true,
+    "merge_ready": false
   }
 }
