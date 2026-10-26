@@ -528,6 +528,62 @@ mod tests{
             tx:keys((i+1) as u8),rx:keys((i+1) as u8)
         }).collect(),RecordSuite::ChaCha20Poly1305).unwrap()
     }
+    #[test]
+    fn game4_stagger_due_fifo_source_immediate_and_tail_not_5ms_expired(){
+        let mut game=build(4);
+        game.configure_game4_stagger().unwrap();
+        assert!(game.game4_stagger_enabled());
+        assert_eq!(game.game4_next_due_ns(),None);
+        let start=1_000_000u64;
+        let first=game.offer(&[0x42;128],MonoNs(start)).unwrap();
+        assert_eq!(first.0,0);
+        let mut observed=Vec::new();
+        assert_eq!(game.drain(MonoNs(start),|lane,id,_,_|{
+            observed.push((lane.slot,id.0));true
+        }),1); // T0 first copy: zero intentional wait
+        assert_eq!(game.drain(MonoNs(start+3_999_999),|_,_,_,_|true),0);
+        assert_eq!(game.drain(MonoNs(start+4_000_000),|lane,id,_,_|{
+            observed.push((lane.slot,id.0));true
+        }),1);
+        assert_eq!(game.drain(MonoNs(start+19_999_999),|_,_,_,_|true),0);
+        assert_eq!(game.drain(MonoNs(start+20_000_000),|lane,id,_,_|{
+            observed.push((lane.slot,id.0));true
+        }),1);
+        assert_eq!(game.drain(MonoNs(start+59_999_999),|_,_,_,_|true),0);
+        assert_eq!(game.drain(MonoNs(start+60_000_000),|lane,id,_,_|{
+            observed.push((lane.slot,id.0));true
+        }),1);
+        assert_eq!(observed.len(),4);
+        let proof=game.game4_copy_schedule().unwrap();
+        assert_eq!(proof.scheduled,[1;4]);
+        assert_eq!(proof.sent,[1;4]);
+        assert_eq!(proof.abandoned,[0;4]);
+        assert_eq!(game.game4_next_due_ns(),None);
+        game.stop();
+    }
+    #[test]
+    fn game4_stagger_lanes_fifo_burst_capacity_and_stop(){
+        let mut game=build(4);
+        game.configure_game4_stagger().unwrap();
+        // Multiple overlapping jobs share ONE arena source apiece.
+        for i in 0..32u8{
+            game.offer(&[i;128],MonoNs(1_000_000+u64::from(i)*1000)).unwrap();
+        }
+        let mut last=[None;4];
+        for now in [1_031_000,5_031_000,21_031_000,61_031_000]{
+            game.drain(MonoNs(now),|lane,id,_,_|{
+                let pos=(lane.slot-1) as usize;
+                if let Some(prev)=last[pos]{assert!(id.0>prev);}
+                last[pos]=Some(id.0);true
+            });
+        }
+        assert_eq!(game.game4_copy_schedule().unwrap().abandoned,[0;4]);
+        // Stop cancels a pending future copy; it must never outlive generation.
+        game.offer(&[0x55;128],MonoNs(70_000_000)).unwrap();
+        game.drain(MonoNs(70_000_000),|_,_,_,_|true);
+        game.stop();
+        assert_eq!(game.drain(MonoNs(150_000_000),|_,_,_,_|true),0);
+    }
     #[cfg(feature="fec2_product_record")]
     #[test]
     fn w98_shared_fixed_native_m4_batch_commits_all_restored_after_success(){
