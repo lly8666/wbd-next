@@ -524,6 +524,46 @@ impl GameAdapter{
     }
     /// Each ready lane gets a distinct AEAD nonce/PN and cipher buffer;
     /// network copy acknowledgement is supplied by the M0 kernel driver.
+    /// P1b opt-in raw TX integration: prepare already-DUE immutable records
+    /// for a bounded synchronous kernel sendmmsg. This stage does NOT credit
+    /// Game sent or FEC parity copied; finish_staged is mandatory after the
+    /// kernel-reported per-lane exact accepted prefixes are known.
+    pub(crate) fn stage_ready<F>(&mut self,now:MonoNs,mut stage:F)->usize
+    where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
+        if self.stopped{return 0}
+        let lanes=&mut self.lanes;
+        let scratch=&mut self.wire_scratch;
+        self.tx.drain_ready(now,8,|view|{
+            let Some(id)=view.logical_id else{return DispatchOutcome::PressureDrop};
+            let Some(lane)=lanes.iter_mut().find(|l|l.key==view.lane)
+                else{return DispatchOutcome::PressureDrop};
+            let len=view.common_payload.len();
+            let Some(end)=31usize.checked_add(len)else{
+                return DispatchOutcome::PressureDrop
+            };
+            if end>scratch.len(){return DispatchOutcome::PressureDrop}
+            let wire=&mut scratch[..end];
+            wire[14..14+len].copy_from_slice(view.common_payload);
+            let Ok((pn,n))=lane.tx.seal_in_place(1,wire,len,0)
+                else{return DispatchOutcome::PressureDrop};
+            if stage(view.lane,id,pn,&wire[..n]){
+                DispatchOutcome::Deferred
+            }else{DispatchOutcome::PressureDrop}
+        })
+    }
+    pub(crate) fn finish_staged(&mut self,accepted:&[bool],
+        ids:&[LogicalPacketId])->Result<(),Error>{
+        if accepted.len()!=ids.len(){return Err(Error::Invalid)}
+        self.tx.finish_deferred(accepted).map_err(Error::Game)?;
+        #[cfg(feature="fec2_product_record")]
+        if let Some(f)=self.fec.as_mut(){
+            for (&ok,&id) in accepted.iter().zip(ids.iter()){
+                if ok {f.copied(id)}
+            }
+            f.settle_when_quiet(self.tx.in_use().0==0);
+        }
+        Ok(())
+    }
     pub fn drain<F>(&mut self,now:MonoNs,mut kernel_copy:F)->usize
     where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
         if self.stopped{return 0}
