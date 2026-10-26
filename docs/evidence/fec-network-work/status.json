@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W137-W140_GAME_FEC_SPARSE_CLOSE_DEADLINE_LINUX_ARM64_SCOPED_PASS; W135-W136_REAL_RECVMMSG_CPU_NEGATIVE_REVERTED; W130-W134_FIVE_MODE_P0_QUALIFIED_BASE; CAPACITY_STOP_NO_MAIN_MERGE",
+  "phase": "P1A_HIGH_PPS_80MBPS_NATIVE_ABBA_MEASURED_NEGATIVE_KEEP_REVERT; W137_GAME_FIXED6_SPARSE_FEC_DEADLINE_SCOPED_PASS_AND_GAME2_OFF_GUARDS; W130_W134_LAST_FIVE_MODE_VERIFIED; CAPACITY_STOP",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -678,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Latest code SOURCE 6ef329879fcd821812fe47c38823089d28c676db is W137 e40098f0d238adc362ab096b5bd6e5b3b4fa852e + COMMENT-ONLY 80Mbps repair-inclusive capacity correction; both exact native Actions e400 run40293838787 and 6ef run40295129966 SUCCESS. W137 Game-only earliest FEC group close/ready parity or Game4 copy due scheduling native unit PASS, protected by four independent real ARM64 Actions: W137 mixed1Mbps clean true quiet-tail sameVM AB run40294316915 both pass, CPU old5.77 new6.06 (NO CPU WIN), p99 both75.5; W138 sparse IID30 mixed0.08Mbps sameVM BA run40295019331 both pass, c2s/s2c p95 79.6->77.6ms, s2c p99 83.6->81.7ms, CPU both1.16, real recovery and parity, but RX authenticated ConflictingBlock NEW684/734 vs OLD423/391 must monitor (does not mean parity TX failed); W139 Game2 fixed6 mixed3Mbps run40295923116 PASS; W140 Game4 OFF stagger mixed1Mbps run40295931353 PASS (some Stop-tail copies abandoned). All GO post-detach DATA copies0 and outer DATA retrans0; copy 0/4/20/60 unchanged. Baseline five-mode Normal+Game source 6c38 remains product_current last ALL-MODE full qualification, while Game-specific W137 exact e400 is separately SCOPED PASS only. W135 W136 recvmmsg attempts rejected/rolled back due +3.43 and +2.09% CPU. Hypothetical Game4 80Mbps 4096/2257 =~1.8x (not 4x), DO NOT qualify pressure. NEXT: separate P1b TX genuine sendmmsg must have atomic prefix/FEC kernel copied proof; P2 RX shared lock only after contention timings; P3 shared FEC allocation must test BOTH Normal & Game; W137 FEC conflict provenance, Stop/reconnect and Windows remain unqualified. capacity_stop=true, merge_ready=false, no main merge or original network owner next_action edits.",
+  "next_action": "User-requested P1a high PPS 80Mbps 64B bounded ARM64 native syscall-only ABBA Action40296519037 SUCCESS artifact12638970145, 156250 offered pps & zero missing, 4-slot recvmmsg reduces calls25.65% but raises receiver thread CPU+3.567%, backing real W135/136 negative CPU and product reverted. Do NOT run full Game4 fixed6 80Mbps on 4-core runner: W126 Game4 20Mbps PSI mean33.24 peak42.04%, W134 new10Mbps peak27.7%; 80Mbps weighted estimates 15301 source PPS, 34699 FEC symbols PPS,138800 physical sends PPS/endpoint, all64B~1.4175m/endpoint; 4096 Game4 slots insufficient for all64B (23030 jobs). W137 e400 Game FEC deadline structural fix retained as scoped real W137 clean 1Mbps AB Action40294316915, W138 sparse damaged 80Kbps BA Action40295019331, W139 Game2 fixed6 Action40295923116, W140 Game4 OFF Action40295931353 all PASS scoped, no unearned CPU gain. Continue P2 ONLY after bounded opt-in sampled real RX lock wait/hold proof, or assess P1b true TX mmsg completion/partial parity-credit semantics as independent candidate; shared P3 Normal+Game separate gates. Keep outerDATA retry OFF, genuine feedback, copies & parity unchanged; do not alter other network owner next_action, keep Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6882,7 +6882,7 @@
   "w137_game_fec_sparse_deadline": {
     "source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
     "last_qualified": "6c38ed0df9da3547c7bd604b51f13443d6863181",
-    "status": "SCOPED_LINUX_ARM64_GAME4_SPARSE_DUE_FIX_WITH_GAME2_AND_GAME4_OFF_PROTECTION_PASS; NO_CPU_GAIN_CLAIM",
+    "status": "NATIVE_ARM64_SUCCESS_AND_W137_W140_REAL_ARM64_PASS_SCOPED_KEEP_AS_DEADLINE_CORRECTNESS_NOT_CPU_OPT",
     "native_action": 40293838787,
     "artifact": 12636808494,
     "changes": [
@@ -6958,7 +6958,23 @@
       "W138 authenticated FEC RX ConflictingBlock increased; cause classes include late already-delivered systematic vs repair conflict, subclass unknown",
       "W140 few physical position copies abandoned at Stop cutoff",
       "New full-rate traffic has not been qualified; W134 host PSI peak27.7 at 10Mbps"
-    ]
+    ],
+    "native_zip_sha256": "d60386779b56b0c091721f444c96c53c309cebe56140b9e0d9308720d278280a",
+    "real_actions": {
+      "Game4_fixed6_clean_quiet_tail_AB": 40294316915,
+      "Game4_fixed6_sparse_IID30_BA": 40295019331,
+      "Game2_fixed6_clean": 40295923116,
+      "Game4_FEC_OFF_stagger_clean": 40295931353
+    },
+    "real_evidence": "docs/evidence/fec-network-work/20261026-W138-W140-W137-sparse-damage-and-protection-final.json",
+    "performance_decision": "New FEC due correctness confirmed; clean 1Mbps CPU5.77 old vs6.06 new (not a saving); sparse IID30 CPU1.16/1.16, p99 difference not causal; zero missing and parity/Stop guards. Not certified Game80.",
+    "mode_limitations": {
+      "normal_off_fixed_auto": "Last real qualified 6c38; read-only common FEC accessor no changed normal data path, not requalified new SOURCE",
+      "game2": "W139 real fixed6 mixed PASS e400",
+      "game4_fixed": "W137/138 clean+IID PASS e400",
+      "game4_off": "W140 real mixed OFF PASS e400",
+      "windows": "NOT_RUN"
+    }
   },
   "w135_game_p1a_recvmmsg_rx": {
     "scope": "Game2+Game4 RX worker ONLY",
@@ -7133,5 +7149,17 @@
     "source_model": "W126 actual source241112 parity305688",
     "notes": "100 percent64B at80Mbps ~23030 retained Game4 fixed6 logical jobs, NOT QUALIFIED; Game2 still128 jobs/64lane slots; no proof of80Mbps",
     "evidence": "docs/evidence/fec-network-work/20261026-W128-80Mbps-corrected-parity-aware-capacity-budget.md"
+  },
+  "p1a_high_pps_80mbps_native": {
+    "source": "cf6a84365c15a91a9c8ab3c4e1b3ebe60602ec27",
+    "action": 40296519037,
+    "conclusion": "SUCCESS",
+    "artifact_id": 12638970145,
+    "zip_sha256": "a984044557b90577b6c64effb77fc7d5aa28b9b2a01b1cdb40729b77313e4d08",
+    "workload": "single unprivileged native UDP loopback socket, 64-byte bodies at measured80.0006 Mbps =156250 offered pps, ABBA old recvfrom vs four-slot recvmmsg; RX syscall-only NO Game4+FEC/TLS/TUN",
+    "results": "4/4 legs received312500 of312500 packets, no loss; old average RX threadCPU0.473648s vs recvmmsg0.490541s +3.567%; syscall attempts -25.65%; host PSI avg10 <=0.65%; real product W135/136 both CPU-negative",
+    "decision": "P1A_PRODUCT_ROLLBACK_CONFIRMED; GAME4_80MBPS_REAL_PRODUCT_NOT_RUN_CAPACITY_STOP",
+    "evidence": "docs/evidence/fec-network-work/20261026-P1a-80Mbps-64B-native-RX-ABBA-capacity-gated.json",
+    "note": "Also avoid confusing 80Kbps sparse W138 with 80Mbps P1a native benchmark or older Game2 protection case named W139."
   }
 }
