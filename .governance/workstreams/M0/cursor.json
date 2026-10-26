@@ -4,31 +4,25 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 275,
-  "checkpoint_sha": "4cf8af67a3c550df0c6e2af837e00f821d14d233",
+  "sequence": 276,
+  "checkpoint_sha": "e868e2820b83b5faeab437da75fa79d8d9c0ddfb",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "Existing R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025 is whole original Windows↔Linux product integration, not a Fixed6 subtask. Main registry/PLAN020 user correction source 4cf8af67a3c550df0c6e2af837e00f821d14d233 gives current authority; integrate actual Linux Go TLS→Rust M1/M2/M3/FEC2/Auto/Game owner, Windows native Npcap/Wintun/WFP/WAL/WinForms and real bidirectional packet/OS lifecycle, with authentic positive/negative gates. Isolated W168 PR28 not main code.",
-  "why_now": "User corrected prior Fixed6 wording as typo. Recovered isolation source01d8b729 Windows/Linux workflow40379315293/1 completed failure after both native builds and Windows unit, but public job's detail logs unavailable (BlobNotFound); exact first functional failure UNKNOWN and Fixed6 is not priority. Main sourcef11b6e7 10Mbps WL-N0 +103 byte sequence FAIL remains; earlier cross-OS functional Normal/off integration source4fb263dd Action40362898805 PASS scoped. Task authority corrected on main registry and existing PLAN020 G2 decision, no epoch/permissions changed.",
-  "done_when": "Source-specific coherent full Windows↔Linux original product path: original Go TLS/Detach, Rust authenticated native owners/feedback/repair/FEC2/Auto/Game as genuinely wired, Windows OS Npcap/Wintun/WFP/route/DNS/WAL GUI and owned Stop/Recover; truthful functional effective modes Normal/off Fixed Auto Game2/4 and negative/unwired status, independent real bidirectional UDP/TCP and OS readback. Functional PASS unlocks opt-in tests, then independent 10Mbps WL-N0/N1/N5/physical performance; do not block cross-cutting integration on dedicated Fixed6 smoke, or claim unretested modes/OS PASS.",
-  "next_action": "On existing isolated W168 integration branch, produce one Linux→Windows end-to-end call-chain/gap audit for original Go TLS, M1/M2/M3, sender/receiver, FEC/Auto/Game, GUI/WFP/WAL and Stop with exact existing evidence; wire first confirmed shared owner/native IO interface gap and dispatch ONE coherent Windows↔Linux functional Actions batch, not separate Fixed6 nor premature 10Mbps stress. Preserve all prior FAIL/NOT_RUN and keep Draft PR28.",
+  "current_task": "Existing M0 task: WHOLE Windows↔Linux native product wiring, using proven Linux original-Go TLS/Detach, Rust M1/M2/M3/FEC2/Auto/Game/Stop and genuine Windows Npcap/Wintun/WFP/WAL/GUI. Earlier Fixed6-only wording was user typo. Formal main registry/PLAN020 corrected; W168 implementation isolated in Draft PR28, not merged main.",
+  "why_now": "Recovery: integration code01d8b729 Action40379315293 native builds and unit PASS but public two-OS step FAIL; job logs BlobNotFound/no Windows artifact, earliest error UNKNOWN. Original integration4fb263 Action40362898805 real scoped Normal/off duplex/Stop PASS. Main WL-N0 f11b6e7+103B TX-SEQ FAIL unchanged. Main Governance red after expanded cursor/registry: hot bytes33128, unbounded context_refs and invalid cross-source evidence; shorten/repair instead of relaxing policy.",
+  "done_when": "One honest whole Windows original-Go→Rust→native OS→Linux public product path, bidirectional UDP/TCP, effective per-mode Normal/Fixed/Auto/Game2/4 positive or UNWIRED/NOT_RUN/FAIL, WFP/WAL/GUI readback/Stop. No dedicated Fixed6-only test, fake capability, or new recovery algorithm; validated modes then opt-in network trial, separate WL-N0/N1/N5 and physical later.",
+  "next_action": "Settle integration Actions40409529074 on full native owner/capability and real two-OS Normal functional scope; use recovered Linux→Windows call-chain audit to wire next shared owner/native OS interface as a coherent product batch; preserve historical reds and avoid repeated Fixed6 or 10Mbps pressure.",
   "unverified": true,
   "last_tested_source": "01d8b7291d0d675a8e1ee8c56e0aa28c2422dd88",
-  "evidence_refs": [
-    "docs/evidence/M0/PLAN024-S880-WL-N0-exact-original-failure-20261026.json",
-    "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md"
-  ],
+  "evidence_refs": [],
   "context_refs": [
+    "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md",
+    "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
+    "docs/evidence/M0/PLAN024-S880-WL-N0-exact-original-failure-20261026.json",
     "docs/devlog/M0/PLAN024-S880-WL-N0-original-windows-rust-seq-mismatch-20261026.md",
-    "docs/evidence/M0/PLAN024-S872-WL-N0-first-public-kernel-tc-20261026.json",
-    "docs/devlog/M0/PLAN024-S874-WL-N0-source-locked-capacity-bottleneck-intent-20261026.md",
-    "docs/devlog/M0/PLAN024-S876-fix-native-Linux-E0308-intent-20261026.md",
-    "docs/devlog/M0/PLAN024-S878-WL-N0-native-owner-refusal-operation-intent-20261026.md",
     "docs/testing/NETWORK_TRIAGE.md",
-    "docs/architecture/modules/08-RECOVERY.md",
-    "docs/handoff/CURRENT_INTEGRATION.md",
-    "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md"
+    "docs/handoff/CURRENT_INTEGRATION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H275 main task authority updated, NOT product qualification: user-wide Windows/Linux wiring overrides erroneous Fixed6-only priority. Integration PR28 code remains separate. Source01d8b729 run40379315293 native build/unit PASS, full Windows-Linux functional FAIL (log endpoint unavailable); original 4fb263dd run40362898805 scoped Normal/off success; old main f11b6e7 WL-N0 +103B FAIL, WL-N1/N5 and missing modes/OS/physical NOT_RUN. No new role/epoch; first audit entire call chain and integrate per Linux design."
+  "partial_summary": "H276 main task correction only; source3fabfaf Windows integration CI40409529074 in progress on isolated branch. Source01d8 native public FAIL unknown log; source4fb old Normal cross-OS PASS; main f11b high-load FAIL; Fixed/Auto/Game/OS global/physical/performance not promoted. Repaired cursor references under original hard bounds; no new epoch, reservation or worker, all historical evidence kept in context."
 }
