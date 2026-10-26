@@ -615,6 +615,9 @@ class LinuxExperiment:
         self.child_env.pop("WBD_GAME_RX_LOCK_SAMPLE",None)
         if config["bundles"].get(label,{}).get("enable_game_rx_lock_sample",False):
             self.child_env["WBD_GAME_RX_LOCK_SAMPLE"]="1"
+        self.child_env.pop("WBD_GAME_TX_MMSG",None)
+        if config["bundles"].get(label,{}).get("enable_game_tx_multimsg",False):
+            self.child_env["WBD_GAME_TX_MMSG"]="1"
 
     def nscommand(self, role, args, check=True):
         return command(["ip", "netns", "exec", self.ns[role], *args], check)
