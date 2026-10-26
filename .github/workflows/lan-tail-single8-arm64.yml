@@ -1,0 +1,50 @@
+name: Corrected single-header TLS23 last 8 bytes A/B arm64
+on:
+  push:
+    branches: [experiment/lan-tail-marker-one-header-8byte]
+    paths: [".github/workflows/lan-tail-single8-arm64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: lan-tail-single8-arm64
+  cancel-in-progress: true
+jobs:
+  native:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.25.x", cache: false}
+      - name: Verify single TLS header and inner AES-GCM authentic record restored
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "aarch64"
+          mkdir -p single-header-report
+          go version | tee single-header-report/go_version.txt
+          lscpu > single-header-report/cpu.txt
+          go test -v tools/lan_tail_single_header_8bytes_test.go -run '^Test' -count=1 \
+            | tee single-header-report/unit.txt
+      - name: Same CPU 9 A/B configurations x 5 replicas encode and decode
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GOMAXPROCS=1
+          go test tools/lan_tail_single_header_8bytes_test.go \
+            -run '^$' -bench '^Benchmark' -benchtime=1s -count=5 \
+            -benchmem -cpu=1 | tee single-header-report/bench.txt
+          python3 -m py_compile tools/lan_tail_single_header_analyze.py
+          python3 tools/lan_tail_single_header_analyze.py \
+            --input single-header-report/bench.txt \
+            --output single-header-report/summary.json \
+            | tee single-header-report/summary_stdout.txt
+          grep -q 'PASS' single-header-report/unit.txt
+          grep -q 'PASS' single-header-report/bench.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: lan-tail-single-header-arm64-native
+          path: single-header-report/
+          retention-days: 30
+          if-no-files-found: warn
