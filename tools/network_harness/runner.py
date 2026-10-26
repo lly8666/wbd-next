@@ -90,7 +90,25 @@ def product_marker_line(line):
     return bool(re.search(
         r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |GAME_FEC_APPLIED |GAME_FEC_COUNTERS |GAME_OUTER |GAME4_COPY_SCHEDULE |GO_RX_HANDOFF |GO_RX_POST_HANDOFF |GAME_GO_RX_HANDOFF |GAME_GO_RX_POST_HANDOFF |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
         line) or "M0_GAME_M4_RX_MULTIMSG " in line or
-        "M0_GAME_M4_RX_LOCK_SAMPLE " in line)
+        "M0_GAME_M4_RX_LOCK_SAMPLE " in line or
+        "M0_GAME_M4_TX_MMSG " in line)
+
+
+def public_game_tx_multimsg(log_text):
+    rows=[line for line in log_text.splitlines()
+          if "M0_GAME_M4_TX_MMSG " in line]
+    if len(rows)!=1:return None
+    values={k:int(v) for k,v in re.findall(
+        r"([a-z0-9_]+)=([0-9]+)",rows[0])}
+    keys=("native_calls","native_records","native_confirmed",
+          "native_partial","singleton_calls","unsent","largest")
+    if any(k not in values for k in keys):return None
+    if (values["native_calls"]<=0 or values["largest"]<2 or
+        values["native_records"]<2*values["native_calls"] or
+        values["native_confirmed"]>values["native_records"] or
+        values["native_partial"]>values["native_calls"]):
+        return None
+    return values
 
 
 def public_game_rx_lock_sample(log_text):
@@ -1164,14 +1182,16 @@ class LinuxExperiment:
                      "GO_RX_HANDOFF role=" in line or
                      "GO_RX_POST_HANDOFF role=" in line or
                      "M0_GAME_M4_RX_MULTIMSG " in line or
-                     "M0_GAME_M4_RX_LOCK_SAMPLE " in line]
+                     "M0_GAME_M4_RX_LOCK_SAMPLE " in line or
+                     "M0_GAME_M4_TX_MMSG " in line]
             other=[line for line in lines if "V4_PUBLIC_TIMELINE " not in line
                    and "V4_PUBLIC_FEC2_AUTO_QUALITY " not in line
                    and "GO_RX_HANDOFF role=" not in line
                    and "GO_RX_POST_HANDOFF role=" not in line
                    and "M0_GAME_M4_RX_MULTIMSG " not in line
-                   and "M0_GAME_M4_RX_LOCK_SAMPLE " not in line]
-            logs[role] = "\n".join(handoff[-4:]+other[-40:])
+                   and "M0_GAME_M4_RX_LOCK_SAMPLE " not in line
+                   and "M0_GAME_M4_TX_MMSG " not in line]
+            logs[role] = "\n".join(handoff[-8:]+other[-40:])
             (self.out / (role + "-product-markers.log")).write_text(logs[role] + "\n")
         return logs
 
@@ -1198,6 +1218,15 @@ class LinuxExperiment:
             v is not None for v in lock_sample.values())
             ) if need_lock_sample else None
         if need_lock_sample and not lock_sample_verified:
+            verified=False
+        tx_multimsg={role:public_game_tx_multimsg(log)
+                     for role,log in logs.items()}
+        need_tx_multimsg=self.config["bundles"][self.label].get(
+            "enable_game_tx_multimsg",False)
+        tx_multimsg_verified=(len(tx_multimsg)==2 and all(
+            v is not None and v["native_calls"]>0
+            for v in tx_multimsg.values())) if need_tx_multimsg else None
+        if need_tx_multimsg and not tx_multimsg_verified:
             verified=False
         game_multimsg={role:public_game_rx_multimsg(log)
                       for role,log in logs.items()}
@@ -1413,7 +1442,10 @@ class LinuxExperiment:
             (sum(fec_ip[role][k] for k in ("sys_udp","rec_udp","sys_tcp","rec_tcp","other_ip")) ==
              fec_rx[role]["systematic_tun"]+fec_rx[role]["recovered_tun"])
             for role in logs)
-        return {"game_rx_lock_sample": lock_sample if all(
+        return {"game_tx_multimsg":tx_multimsg if all(
+                     v is not None for v in tx_multimsg.values()) else "NOT_OBSERVED",
+                 "game_tx_multimsg_verified":tx_multimsg_verified,
+                 "game_rx_lock_sample": lock_sample if all(
                      v is not None for v in lock_sample.values()) else "NOT_OBSERVED",
                  "game_rx_lock_sample_verified":lock_sample_verified,
                  "game_rx_multimsg": game_multimsg if all(v is not None for v in game_multimsg.values()) else "NOT_OBSERVED",
