@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "status": "COMPLETE_NATIVE_A_B_SAME_WIRE_OPTIMIZATION_AND_PREFIX_COST_STUDY",
+  "branch": "experiment/lan-pnxor-optimized",
+  "report": "docs/evidence/lan-pnxor-optimized/FINAL_REPORT.md",
+  "test": "tools/lan_pnxor_opt_test.go",
+  "base_sha": "9efbd288ae25182c6f6b182188750a8a683f7070",
+  "main_modified": false,
+  "production_wired": false,
+  "all_unit_tests_passed": true,
+  "bytes_equal_full_variants": true,
+  "prefix_tail_unprotected": true,
+  "modes": [
+    "FullBaseline",
+    "FullUnroll4",
+    "FullSubtleXOR",
+    "Prefix64",
+    "Prefix128",
+    "Prefix256"
+  ],
+  "input_payload_B": 1345,
+  "batch_packet_count": 100,
+  "native_reps_each_mode": 5,
+  "allocation_B_per_100": 0,
+  "heap_allocations_per_100": 0,
+  "measure": "Go microbenchmark encode+decode ns per 100 original packets; no real Rust WBD throughput",
+  "x86_64": {
+    "run": 40259222110,
+    "conclusion": "success",
+    "artifact_id": 12624151131,
+    "ns_per_100": {
+      "FullBaseline": 42845.4,
+      "FullUnroll4": 37449.2,
+      "FullSubtleXOR": 25478.4,
+      "Prefix64": 10034.4,
+      "Prefix128": 11759.6,
+      "Prefix256": 14767.8
+    },
+    "fullSubtle_improvement_pct": 40.53410634513857
+  },
+  "arm64": {
+    "run": 40259225987,
+    "conclusion": "success",
+    "artifact_id": 12624166057,
+    "ns_per_100": {
+      "FullBaseline": 34906.8,
+      "FullUnroll4": 32679.6,
+      "FullSubtleXOR": 29821.2,
+      "Prefix64": 11718.2,
+      "Prefix128": 12805.4,
+      "Prefix256": 15344.2
+    },
+    "fullSubtle_improvement_pct": 14.569081095946924
+  },
+  "security_limits": [
+    "PUBLIC PN-XOR is reversible and malleable",
+    "mode header protection does not authenticate XOR payload",
+    "prefix-only wire differs and exposes raw tail",
+    "no classification TLS Finished or product negotiator",
+    "not a full WBD CPU benchmark"
+  ]
+}
