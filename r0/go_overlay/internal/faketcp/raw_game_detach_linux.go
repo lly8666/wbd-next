@@ -10,13 +10,14 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// detachedGameDataFilter starts with the existing receive-port filter. Before
+// detachedDataKernelFilter starts with the existing receive-port filter. Before
 // an authenticated ownership transfer, the original Go listener must see
 // every TLS/bootstrap DATA packet. Afterwards ONLY payload-bearing packets
 // from the detached four-tuple are excluded at socket ingress; new SYNs,
 // pure ACK/FIN/RST, and other peers on the listening port remain visible.
-// Rust has a separately opened exact-tuple raw receiver before this is armed.
-func detachedGameDataFilter(local [4]byte, port uint16, peer [4]byte, peerPort uint16) []unix.SockFilter {
+// Both Normal and Game Rust M4 owners have independently opened exact-tuple
+// raw receivers before this gate is armed.
+func detachedDataKernelFilter(local [4]byte, port uint16, peer [4]byte, peerPort uint16) []unix.SockFilter {
 	filters := rawReceivePortFilter(local, port)
 	// Port-filter accept (instruction 14) continues to the tuple/data gate.
 	// Its original reject at 15 remains the target of all earlier branches.
@@ -71,23 +72,23 @@ func detachedGameDataFilter(local [4]byte, port uint16, peer [4]byte, peerPort u
 	return filters
 }
 
-// ExcludeDetachedGameData is called only after the complete, authenticated
-// Go->Rust Game handoff reports success. Fail closed if the original listener
+// ExcludeDetachedData is called only after the complete, authenticated
+// Go->Rust Normal or Game M4 handoff reports success. Fail closed if the original listener
 // has no exact kernel receive-port filter; never silently pay Go DATA CPU.
 // The separate raw send FD is deliberately left open for control/cleanup.
-func (e *RawIPv4Endpoint) ExcludeDetachedGameData(peerIP [4]byte, peerPort uint16) error {
+func (e *RawIPv4Endpoint) ExcludeDetachedData(peerIP [4]byte, peerPort uint16) error {
 	if e == nil {
-		return errors.New("faketcp: nil detached Game endpoint")
+		return errors.New("faketcp: nil detached original TLS endpoint")
 	}
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if e.closed {
 		return net.ErrClosed
 	}
-	if !e.kernelPortFilter || e.receivePort == 0 || peerPort == 0 || peerIP == ([4]byte{}) {
-		return errors.New("faketcp: detached Game requires exact kernel port and peer scope")
+	if !e.kernelPortFilter || e.receivePort == 0 || peerPort == 0 || peerIP == ([4]byte{}) || peerIP == e.localIP {
+		return errors.New("faketcp: detached original TLS requires exact kernel port and peer scope")
 	}
-	ins := detachedGameDataFilter(e.localIP, e.receivePort, peerIP, peerPort)
+	ins := detachedDataKernelFilter(e.localIP, e.receivePort, peerIP, peerPort)
 	program := unix.SockFprog{Len: uint16(len(ins)), Filter: &ins[0]}
 	return unix.SetsockoptSockFprog(e.recvFD, unix.SOL_SOCKET, unix.SO_ATTACH_FILTER, &program)
 }
