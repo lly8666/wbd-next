@@ -51,6 +51,13 @@
     },
     {
       "platform": "windows/x64",
+      "scope": "Fixed6 original Go TLS feature7 native cross-OS positive attempt: admitted genuine guest NPF route but Windows original M2 reverse-kind1 feedback draft refused before product READY; Normal/off and Rust module-only PASS do NOT count as Fixed6",
+      "status": "FAIL",
+      "source_sha": "19db3a812c50a87d2c70618d18314a919cf831cb",
+      "evidence": "docs/devlog/M0/PLAN024-W168-Fixed6-resumed-Linux-wide-reuse-intent-20261027.md"
+    },
+    {
+      "platform": "windows/x64",
       "scope": "真实M2 Fixed6 Applied/parity/Stop",
       "status": "NOT_RUN",
       "source_sha": null,
@@ -69,7 +76,8 @@
     "FEC parity与外层DATA修复是不同机制。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "Windows Fixed6 现行入口保留原Go fixed4 carrier admission 与共享Rust FEC2 Maximum6，不从旧Go FEC shard计数推断Rust Applied；源码00738fe Actions40372774560原入场参数固定0 FAIL，新候选未获产品验证。",
-    "原Windows Fixed6 先前两个Actions 40371148050、40372774560 入场FAIL；d3811b…已修V3 fixed4但测试参数仍遗漏独立 --fec.mode fixed 与 --fec.profile maximum；本次修正后才有新候选，保留其旧FAIL。"
+    "原Windows Fixed6 先前两个Actions 40371148050、40372774560 入场FAIL；d3811b…已修V3 fixed4但测试参数仍遗漏独立 --fec.mode fixed 与 --fec.profile maximum；本次修正后才有新候选，保留其旧FAIL。",
+    "Windows Fixed6 真实网络尝试 19db3a8 Actions40376199812 在原始反向M2反馈环节FAIL，后续01d8b729针对失败路径诊断/原生单测的完整产品测试仍在运行，不能提前转PASS。"
   ],
   "promotion": null
 }
