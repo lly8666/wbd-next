@@ -100,10 +100,12 @@
     "merge_ready": false,
     "windows": "NOT_RUN/TEMP_SKIPPED",
     "game_auto_required": false,
-    "outer_DATA_retransmission_enabled": false,
     "new_performance_dispatch": false,
     "new_native_build": false,
-    "original_network_status_or_next_action_touched": false
+    "original_network_status_or_next_action_touched": false,
+    "recorded_W157_W158_outer_DATA_retransmission_enabled": false,
+    "product_default_outer_repair_policy_unchanged": true,
+    "recorded_W157_W158_FEC_parity_independent_from_outer_DATA": true
   },
   "evidence_refs": {
     "prior": "docs/evidence/fec-network-work/20261026-W157-W158-CommonFEC-RS16-stack-NormalGame-AB-rejected.json",
