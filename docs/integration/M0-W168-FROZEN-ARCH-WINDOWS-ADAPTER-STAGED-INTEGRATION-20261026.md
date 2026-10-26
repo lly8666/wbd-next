@@ -1,6 +1,6 @@
 # W168 冻结架构 → Windows 测试分支 → main：分阶段真实合并合同（2026-10-26）
 
-> **状态：PLAN / STAGING BRANCH ONLY。本文件不代表实验代码已经合入本测试分支，不代表 Windows Fixed/Auto/Game 功能 PASS，不批准合 main。** 按最新用户指令：实验已完成并冻结，允许取此固定版本进入独立 Windows 功能集成；Windows adapter 适配实验架构及 **W168 最终外层重传策略**，不得倒退实验核心。产品安全/真实驱动/Stop 严格不降级。性能测量暂不做，主线原验证门不删除。
+> **状态：真实双亲 Git 合并已进入独立 staging PR #28，Windows/Linux 合并后功能资格未确认，绝不批准合 main。** 实际 merge commit `fea9cd94a8cabcb6ef3d6958f9ba8db8300721d5`，parent1 `9c1ad625334339d7971ef8a19efb158e2dd8cb7f`（继承 W），parent2 `254cf4110c1df3878c7bd0e782145fc381189b8f`（W168 F）；新同源码真实 Actions [40354611434](https://github.com/lly8666/wbd-next/actions/runs/40354611434) 的结果必须核实。** 按最新用户指令：实验已完成并冻结，允许取此固定版本进入独立 Windows 功能集成；Windows adapter 适配实验架构及 **W168 最终外层重传策略**，不得倒退实验核心。产品安全/真实驱动/Stop 严格不降级。性能测量暂不做，主线原验证门不删除。
 
 ## 1. 两个真实 source 与已有证据（先锁定后合）
 
@@ -26,7 +26,7 @@ main M -------------------- (held until Windows mode-gates)
 F freeze/fec-linux-w168-20261026 -----------/
 ```
 
-**当前仅创建了独立集成分支作为 W 的后裔。真正的 `merge --no-ff`/双亲提交尚未构造。** 不允许直接更新/强推实验 F、现有 W、main。正式首次 merge 对候选源码必须包含 F 的真实 parent ancestry，不能复制 700+ 文件、不能 squash/rebase 破坏以后 F_n→F_(n+1) 的 merge-base；检验 `git merge-base --is-ancestor F final-candidate`、`git cat-file -p <merge-sha>` 双亲及 tree SHA。一旦 final binary SOURCE 与 tested SHA 不同，重新执行相应 Actions。
+**本分支已建立真实双亲 merge commit `fea9cd94`：未做最终七模式代码接线/资格测试。** 不允许直接更新/强推实验 F、现有 W、main。正式首次 merge 对候选源码必须包含 F 的真实 parent ancestry，不能复制 700+ 文件、不能 squash/rebase 破坏以后 F_n→F_(n+1) 的 merge-base；检验 `git merge-base --is-ancestor F final-candidate`、`git cat-file -p <merge-sha>` 双亲及 tree SHA。一旦 final binary SOURCE 与 tested SHA 不同，重新执行相应 Actions。
 
 PR #26 是过时的只读大型冲突审查，绝不作为主线晋级；PR #27 是最后的 Windows→main Draft，保持不提前合。候选可单独 Draft PR 指向 **Windows W 测试分支**，待真正 merge 且 CI 功能门全部合格，再通过 merge commit 引入 W；随后 PR #27 对 main 也必须使用 merge commit（不 squash）。
 
@@ -72,4 +72,4 @@ PR #26 是过时的只读大型冲突审查，绝不作为主线晋级；PR #27 
 - 候选必须有**真实** F 冻结祖先（最终 two-parent commit ancestry 可查）；测试工作流合 W 的 native functional 约束、全部 Rust feature/API 同源编译、manifest真实hash无错、7组合每个 native proof、每模式 readback 和 Stop。
 - 完成后**先 merge commit 到 Windows 测试分支 W**；重新核这次 W head 精确 source 的 CI/模式是否全部通过；继续保留 PR #27 Draft，直到复核 main 保护规则、M0 writer 最新 cursor/主线变化和验收约束，再走不丢实验 ancestry 的 merge commit。
 - PR #26 copied files 审查基线和过时的 FEC-only OFF 文字禁止被再次拿作合并标准。遇独立实验历史上红灯、W168 AMD64高压 INCONCLUSIVE，完整保留；不回写实验 F 的 status/cursor，也不主动向原实验分支 push。
-- 现有 `integration/w168-freeze-windows-adapter-20261026` **只完成起始基线与本计划**，无大规模冲突 resolution，无产品合并、无合并后 Action。不允许把本 staging 分支当前状态报告为 “已经合并冻结版”。
+- 现有 `integration/w168-freeze-windows-adapter-20261026` **已经完成源锁定双亲候选树，含 F 原生核心、W 原生 adapter 和历史证据保留；尚未取得合并后真实 Windows 七模式 PASS**。不允许把本 staging 分支当前状态报告为 “已经合并冻结版”。

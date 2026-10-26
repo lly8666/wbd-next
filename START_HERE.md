@@ -1,12 +1,10 @@
 # WBD Next｜新 agent 唯一启动入口
 
-**独立 FEC 合并岗位**：只在 `experiment/fec-network-tuning` 读取 [FEC_AUTONOMOUS_WORK](docs/testing/FEC_AUTONOMOUS_WORK.md)、`docs/evidence/fec-network-work/status.json` 并按 FEC 的外层 DATA repair OFF 目标推进。已同步网络冻结点的 V3 公用代码，不执行/覆盖网络岗位的 `next_action`、status 或 main。分支 FEC-only 验收仍必须用合并后源码 Actions 独立证明。
+> **2026-10-26 W168/Windows 临时集成状态**：只需另读 [当前跨分支热摘要](docs/handoff/CURRENT_INTEGRATION.md)（约2KB），不把旧 devlog、七十页 FEC final-report 或 PR #26 copied snapshot 一次性装入上下文。功能/红灯以精确 SOURCE + 原生 Actions 为准。实验冻结源码已经在隔离 PR #28 形成真实双亲合并，但尚未获得合并后 Windows 产品资格；main/W test 尚未晋级。FEC 岗位历史 `merge_ready=false` 不覆盖用户现已授权的*隔离集成*；不可改写原 F 状态。W168 的外层 DATA repair 默认 ON，旧“FEC 一律 OFF”备忘已过时。
 
 仓库 `lly8666/wbd-next`；控制分支 `main`，其他工位分支由 main 的 `.governance/registry.json` 授权。**先刷新远端，不相信聊天、旧提示词、目录中的某个日期或本地缓存。**
 
 ## 最小热读取（不超过 8 文件）
-
-**用户直接授权的独立网络测试任务例外**：按 [NETWORK_AUTONOMOUS_WORK](docs/testing/NETWORK_AUTONOMOUS_WORK.md)读取任务分支的当前计划与 `docs/evidence/network-matrix-work/status.json`，不领取M0–M4身份、不创建正式角色cursor、不等待registry派单。下列正式角色流程仅用于避冲突，不覆盖该独立任务已有的自主修复与Actions授权。
 
 1. `AGENTS.md`、`PROJECT_CHARTER.md`。
 2. main 的 `.governance/project.json`、`.governance/registry.json`。
@@ -23,7 +21,7 @@ CLEAN 后依 main registry 的 **assigned_task** 与角色 cursor.next_action �
 
 写入：先 S（代码/收据/文档），精确 SOURCE Actions 验证，后 H（**只修改自己的 cursor**）；再次刷新远端确认。工作分支不得修改 main 的登记权限，不 force push，不擅自开展下一包。每个性能 Action 单一场景；AB/BA 必须同 job/VM。无新增信息的重复失败先缩小复现，不刷 seed。
 
-**产品保守默认**：FEC2 **OFF**；只有测试专用的真正内核 FEC2 链路与组件组合部分通过。缺少的 M1 正式调度、M2 反向认证收据、Go applied CLI/GUI、跨端及遗留 Stop/MTU/150ms/大 UDP/p99 均需读取最新证据，不以热索引自动判关。旧提示词/历史归档与原 evidence 永久可查：`docs/history/INDEX.md`。
+**模式与平台**：FEC2默认 **OFF**；公开Linux的Normal/Fixed/Auto/Game已有各自范围的Actions证据，不能再按旧快照断言仅有测试helper，也不能推广到所有配置或物理环境。ARM64公共构建默认native-first加速，实际编译/运行后端及主线集成资格读 `docs/evidence/arm64-main-integration-20261022.json`。Windows、完整自动档/生命周期、MTU/大UDP/p99等按各自最新证据；网络实验分支的失败/修复不因ARM合并自动关闭。历史仍见 `docs/history/INDEX.md`。
 
 说明：若 main registry 和 worker cursor 记录的任务不同，**权限/本轮任务以 main registry 为准**，从决策/证据理解变更，不让旧 cursor 抢权限。治理细则 `docs/GOVERNANCE.md`；中央 Scope 唯一 G2 完整分页来源，旧64规则只用于独立恢复诊断。
 
