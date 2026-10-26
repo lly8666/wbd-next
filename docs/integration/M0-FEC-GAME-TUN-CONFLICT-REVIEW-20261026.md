@@ -1,3 +1,5 @@
+> **2026-10-26 用户新指令：本页旧建议已被 [持续双分支集成合同](M0-FEC-GAME-TUN-ROLLING-MERGE-CONTRACT-20261026.md) 覆盖。实验分支（含外层重传策略）作为架构权威；main Windows 接线作为 adapter。下面七路径旧主从表只作历史审查记录，禁止按旧方案直接集成。**
+
 # M0 integration review — source-locked experimental FEC / Game / TUN (2026-10-26)
 
 > **Unmerged integration candidate only**. Not a qualified public Windows/Linux build. No silent replacement of main-owned shared components; no historical evidence, FAIL or retired workflow deleted.
