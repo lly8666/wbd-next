@@ -622,7 +622,7 @@ mod tests{
     }
     #[cfg(feature="fec2_product_record")]
     #[test]
-    fn game4_fixed6_parity_credit_ignores_unrelated_source_ids(){
+    fn game4_stagger_fixed6_parity_credit_ignores_unrelated_source_ids(){
         let mut tx=build(4);
         tx.enable_game_fec(6,false).unwrap();
         tx.configure_game4_stagger().unwrap();
