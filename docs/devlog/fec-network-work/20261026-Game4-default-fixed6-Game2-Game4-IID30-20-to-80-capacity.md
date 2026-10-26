@@ -1,5 +1,8 @@
 # 2026-10-26 new explicit scope: Game4 stagger DEFAULT + Game2/Game4 fixed6 capacity ladder
 
+**2026-10-26 80Mbps capacity model correction (supersedes source-only slot margin below):** At W126 the genuine native Game4 source/parity symbols were 241112 / 305688 per endpoint, giving a **2.268× fixed6 logical-symbol multiplier**. At hypothetical weighted 80Mbps (~15301 original source PPS), actual GameTx would schedule ~34699 total source+parity symbols/s; 65ms due+after-due retention requires **~2255 slots**, so current4096 slots have **~1.82×**, NOT 4× headroom. Four lane native encryption/copy work rises proportionally. See the [dedicated corrected source/parity-aware 80Mbps budget](../../evidence/fec-network-work/20261026-W128-80Mbps-corrected-parity-aware-capacity-budget.md). All 80Mbps math remains DESIGN ONLY: Game4 @20Mbps host CPU PSI already avg33.24% peak42.04%, so **NO** escalating to Game4 30 or Game2 40 until fixed measured headroom.
+
+
 Owner: `fec-network-work`. Work branch only `experiment/fec-network-tuning`, no main merge, no Windows/UI claim, no Game Auto.
 
 ## User's newer decision overrides previous optional-only conclusion
