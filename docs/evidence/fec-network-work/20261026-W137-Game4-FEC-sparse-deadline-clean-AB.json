@@ -69,11 +69,13 @@
     },
     "fec_parity": {
       "client_planned": 17478,
-      "client_sent": 17478
+      "client_sent": 17478,
+      "server_planned": 17467,
+      "server_sent": 17467
     },
     "source_group_jobs": {
       "client": 9473,
-      "server": 9470
+      "server": 9471
     },
     "game4_copy_abandoned_all_zero": true,
     "last_physical_lane_cutoff_unsent": {
