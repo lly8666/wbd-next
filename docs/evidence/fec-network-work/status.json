@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W103_GAME2_GAME4_FIXED6_REAL_NATIVE_OUTER_DATA_OFF_CLEAN_PASS; W104_IID20_BLACKHOLE_PENDING",
+  "phase": "W104_GAME2_GAME4_FIXED6_GAME_OUTER_DATA_OFF_REAL_CLEAN_AND_IID20_BLACKHOLE_PASS_SCOPED; W105_FIXED1_FIXED2_CLEAN_RUNNING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -25,11 +25,11 @@
     "sha256": "04d209b7ef1e887af6599622aaf71efc34381451c847e844cf18c2006ae9708f",
     "platform": "aarch64",
     "mode": "Game2/Game4 fixed6 with explicit outer DATA OFF (ON default unchanged), no Game Auto",
-    "qualification": "W103 real clean 3Mbps both directions actual native Game repair_enabled=0 and outer DATA retransmit=0, genuine TCP/UDP complete; damaged proof W104 pending",
+    "qualification": "W103 original Go TLS Game2/4 fixed6 actual native outer DATA OFF clean real UDP/TCP PASS; W104 IID20 20% each lane+lane1 blackout real UDP/TCP 3Mbps zero application missing and actual outer DATA copied retrans0 per endpoint, recovered FEC candidate positive. W105 fixed1/2 clean pending. No Game Auto.",
     "real_clean_game2_action": 40255806409,
     "real_clean_game4_action": 40255813118,
     "actual_parity": "both directions rplanned=rsent=kernel copied, expired0; recovered0 under no-loss",
-    "outer_retransmit": "Game outer-repair=off NOT_WIRED, so DO NOT claim FEC-only retrans disabled for Game; Normal remains separate",
+    "outer_retransmit": "Game explicit --outer-repair=off now native readback repair_enabled0, actual same-lane DATA retrans copied0 in W103/W104; unique per-lane first copies and fresh FEC parity allowed; not the Normal one-lane V3 ON ledger.",
     "windows": "NOT_RUN/TEMP_SKIPPED"
   },
   "open_requests": [
@@ -634,7 +634,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W104 inspect exact real Game2 Action40261223312 and Game4 Action40261228792, immutable e8b41fb build40260662919 with both native outer repair_enabled0, outer_data_retransmitted0 and FEC parity sent >0. If PASS, cover still-unmeasured Game fixed1..5 at same 3Mbps separately and high-FEC quiet-tail; stop on capacity warning/high p99, do not add Auto Game, Normal still separate. Windows temporarily skipped, merge_ready=false.",
+  "next_action": "W105 reconcile four fixed1/2 3Mbps real clean Actions 40261651100/40261656542/40261661650/40261667093; if no loss/p99/Stop/outer off and PSI healthy, continue Game2/4 fixed3..5 at unchanged load one scenario per Action. Then one one-direction idle-tail fixed6 Game2, one Game OFF repair off clean, and a minimal Normal regression if resource permits. High GE Game4 stays capacity_stopped after W102 warning; no Game Auto, Windows TEMP_SKIPPED, merge_ready false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6453,11 +6453,58 @@
     "evidence": "docs/evidence/fec-network-work/20261026-W103-Game2-Game4-fixed6-outerDATAoff-real-clean-PASS.json"
   },
   "w104_game_outer_off_damage": {
-    "status": "TWO_ACTIONS_RUNNING_UNVERIFIED",
+    "status": "EXACT_GAME2_GAME4_FIXED6_REAL_NATIVE_OUTER_OFF_IID20_BLACKHOLE_PASS",
     "source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "build_run": 40260662919,
     "game2_run": 40261223312,
     "game4_run": 40261228792,
-    "workload": "3Mbps 75ms 20% independent each lane then lane1 blackout then clean",
+    "actual_outer_retransmitted_both": 0,
+    "actual_native_repair_enabled_both": 0,
+    "first_lane_copy_real": true,
+    "positive_fec_recovered_candidates": {
+      "game2": [
+        765,
+        789
+      ],
+      "game4": [
+        60,
+        72
+      ]
+    },
+    "actual_udp_tcp_all_phases_injected_delivered_both": true,
+    "fec_parity_plan_send_equals": true,
+    "codec_capacity": 0,
+    "stop_drained": true,
+    "game2_cpu_s": [
+      9.81,
+      9.87
+    ],
+    "game4_cpu_s": [
+      16.73,
+      16.97
+    ],
+    "cpu_psi_peaks_pct": [
+      2.88,
+      6.1
+    ],
+    "evidence": "docs/evidence/fec-network-work/20261026-W104-Game2-Game4-fixed6-outerDATAoff-IID20-blackhole-PASS.json",
+    "capacity_stop": true
+  },
+  "w105_game_fixed_middle_clean": {
+    "status": "GAME2_AND_GAME4_FIXED1_FIXED2_FOUR_REAL_ARM64_ACTIONS_IN_PROGRESS_NOT_ATTESTED",
+    "source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "build_run": 40260662919,
+    "profiles": [
+      "fixed1",
+      "fixed2"
+    ],
+    "run_ids": {
+      "game2_fixed1": 40261651100,
+      "game4_fixed1": 40261656542,
+      "game2_fixed2": 40261661650,
+      "game4_fixed2": 40261667093
+    },
+    "others_fixed3_to5": "PENDING_CONTINUE_AFTER_CAPACITY_REVIEW",
     "capacity_stop": true
   }
 }
