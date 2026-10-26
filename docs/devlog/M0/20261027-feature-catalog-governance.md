@@ -29,6 +29,16 @@ main/work 原有身份和范围门保持；实验分支仅运行功能目录门�
 用户最新要求：本次只合入最新 integration/w168-freeze-windows-adapter-20261026，
 main 暂不修改。后续随该分支合并继承治理工作流；旧分支未同步新文件前不声称自动覆盖。
 
+最终工具 SOURCE 5dd2ac3f20f44b58f3d5b0568bad9a1df57aa4cc：
+- [Governance 40368000934](https://github.com/lly8666/wbd-next/actions/runs/40368000934)
+  Feature catalog、19项目录/原治理定向测试、workflow语法和仓库结构检查 PASS；原工位 job 在实验分支 SKIPPED。
+- [Maintenance 40368000850](https://github.com/lly8666/wbd-next/actions/runs/40368000850)
+  执行224项测试，热读取预算问题已修复，剩余仅旧 frozen manifest 的上述两条子断言失败。
+  maintenance 整体保持 FAIL，不删除断言、不改冻结产品文件、不宣称全回归通过。
+- 只改治理代码、测试和文档。目录工具代码已验证；产品功能盘点仍 NOT_INITIALIZED，产品/物理测试 NOT_RUN。
+  结构化留痕见 docs/evidence/feature-catalog-governance-20261027.json。
+- PR #29 目标是用户指定最新集成分支，保留其并行 Windows 产品提交；main 保持原样。
+
 ```feature-impact
 {"kind":"none","ids":[],"reason":"本次只补产品功能登记/发现/声明检查与长期接班规则，未改变产品数据路径、配置默认或平台功能；已有功能的一次性盘点另行执行。"}
 ```
