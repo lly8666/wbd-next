@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W98_GAME2_GAME4_FIXED6_LINUX_TRUE_TCP_UDP_NOLOSS_PASS_SCOPED; W99_GAME_FIXED_WEAKNET_NOT_YET_QUALIFIED",
+  "phase": "W100_GAME2_GAME4_FIXED0_CLEAN_AND_W99_FIXED6_INDEPENDENT20_BLACKHOLE_REAL_ARM64_PASS_SCOPED; FEC_FAILURE_REASONS_AND_OUTER_GAME_OFF_NOT_QUALIFIED",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -634,7 +634,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W99: inspect original Actions 40256521889(Game2 fixed6) and 40256529112(Game4 fixed6) logs/artifacts, not just workflow green. Check genuine injected/delivered UDP/TCP phase rates, recovered original TUN candidates, parity offered/planned/kerncopied/sent and expires, p95/p99, CPU-s/RSS, AEA/replay rejection, queue age/gaps and Stop. If fail, smallest stage-specific fix on Game FEC only and rerun netem0 before damage. Game --outer-repair=off not wired, cannot claim FEC-only no outer replay. Normal independent, Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
+  "next_action": "W101: Preserve Game OFF W91-W97, new original Go TLS fixed0 W100 clean and fixed6 W98 clean+W99 20% independent per lane/one blackhole true TCP/UDP and FEC recovery PASS_SCOPED. Avoid new high load. Diagnose low-frequency aggregate W99 FEC RX failed counts Game2 89/92 Game4 267/263 with minimal categorized counters (normal stale/duplicate vs malformed/codec/capacity); do not treat as AEAD. Then one minimal same-source damaged Game2 or Game4 positive trace to validate classification and no regression if necessary; no forced GE matrix. Report outer Game --outer-repair=off is still explicit UNSUPPORTED, Normal FEC-only off separate; no main merge, Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6236,5 +6236,53 @@
     "scenarios": "each lane IID20%, lane1 blackout, clean restore, 3Mbps each way UDP+real TCP",
     "capacity_stop": true,
     "merge_ready": false
+  },
+  "w99_game_fixed6_real_damage": {
+    "status": "EXACT_REAL_GAME2_GAME4_3MBPS_IID20_BLACKHOLE_PASS_SCOPED_WITH_TRUE_FEC_RECOVERED_CANDIDATES",
+    "source": "c18de0fa79f529c349b6546635f3c6b62aa01b1c",
+    "game2_run": 40256521889,
+    "game4_run": 40256529112,
+    "independent20_udp_missing_both_modes_both_directions": 0,
+    "lane1_blackhole_udp_missing_both_modes_both_directions": 0,
+    "tcp_real_all_phases": "PASS_NO_BACKPRESSURE",
+    "native_recovered_candidates_game2": [
+      776,
+      810
+    ],
+    "native_recovered_candidates_game4": [
+      84,
+      87
+    ],
+    "parity_offered_eq_copied_eq_sent": true,
+    "expired_zero": true,
+    "decoder_failed_game2": [
+      89,
+      92
+    ],
+    "decoder_failed_game4": [
+      267,
+      263
+    ],
+    "failed_reason": "UNCLASSIFIED_PARTIAL_RX_REJECT; do not falsely count as AEAD, zero or normal replay",
+    "evidence": "docs/evidence/fec-network-work/20261026-W99-Game2-Game4-fixed6-IID20-blackhole-PASS-SCOPED.json",
+    "capacity_stop": true
+  },
+  "w100_game_fixed0_clean": {
+    "status": "EXACT_REAL_GAME2_GAME4_FIXED0_CLEAN_3MBPS_PASS_SCOPED",
+    "source": "c18de0fa79f529c349b6546635f3c6b62aa01b1c",
+    "game2_run": 40256692692,
+    "game4_run": 40256700110,
+    "raw_parity_game2": [
+      7042,
+      7015
+    ],
+    "raw_parity_game4": [
+      6920,
+      6913
+    ],
+    "fec_failed": 0,
+    "delivered_tcp_udp": "EXACT_ON_BOTH_DIRECTIONS",
+    "evidence": "docs/evidence/fec-network-work/20261026-W100-Game2-Game4-fixed0-real-clean-PASS-SCOPED.json",
+    "capacity_stop": true
   }
 }
