@@ -32,8 +32,8 @@
       "platform": "linux/amd64",
       "scope": "历史真实Go LINK fragment/TUN 单场景老SOURCE",
       "status": "FUNCTIONAL_PASS",
-      "source_sha": "821962b7fc204facf5e1e5599a0b3fead3c3a58",
-      "evidence": "docs/evidence/M0/M0-023-real-go-link-fragment-821962b7fc204facf5e1e5599a0b3fead3c3a58.json"
+      "source_sha": "821962b7fc204facf5e1e5599a0b3fead3c3a58c",
+      "evidence": "docs/evidence/M0/M0-023-real-go-link-fragment-821962b7fc204facf5e1e5599a0b3fead3c3a58c.json"
     },
     {
       "platform": "windows/x64",
