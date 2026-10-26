@@ -95,7 +95,8 @@ mkdir -p arm64-public-bundle
 export CGO_ENABLED=1 GOOS=linux GOARCH=arm64 GOTOOLCHAIN=local
 export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
 export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
-(cd legacy && go test ./internal/faketcp -run '^TestDetachedDataKernelFilterPreservesHandshakeAndControl(cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product   -o "$GITHUB_WORKSPACE/arm64-public-bundle/wbd-v4-client" ./cmd/wbd-v4-client)
+(cd legacy && go test ./internal/faketcp -run TestDetachedDataKernelFilterPreservesHandshakeAndControl -count=1)
+(cd legacy && go test -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli)
 (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product   -o "$GITHUB_WORKSPACE/arm64-public-bundle/wbd-v4-server" ./cmd/wbd-v4-server)
 cp target/release/libwbd_engine.so arm64-public-bundle/libwbd_engine.so
 (cd arm64-public-bundle && sha256sum wbd-v4-client wbd-v4-server libwbd_engine.so > SHA256SUMS)
