@@ -85,7 +85,7 @@ func (e *RawIPv4Endpoint) ExcludeDetachedData(peerIP [4]byte, peerPort uint16) e
 	if e.closed {
 		return net.ErrClosed
 	}
-	if !e.kernelPortFilter || e.receivePort == 0 || peerPort == 0 || peerIP == ([4]byte{}) || peerIP == e.localIP {
+	if !e.kernelPortFilter || e.receivePort == 0 || peerPort == 0 || peerIP == ([4]byte{}) {
 		return errors.New("faketcp: detached original TLS requires exact kernel port and peer scope")
 	}
 	ins := detachedDataKernelFilter(e.localIP, e.receivePort, peerIP, peerPort)
