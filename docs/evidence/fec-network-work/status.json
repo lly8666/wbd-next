@@ -634,7 +634,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W98: do NOT re-open completed Game OFF CPU work. Reconcile W90 raw evidence and current split Game TX/RX ownership/MTU/authenticated Go profile; implement minimal per-direction shared fixed FEC, no old direct cherry-pick. Compile original ARM64/Go tests then separate Game2/Game4 fixed6 netem0 real 3Mbps TCP/UDP, no damage until both start and fully deliver. Keep W90 six FAIL, Normal FEC-only source/readback independent, Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
+  "next_action": "W98: inspect exact 0c1161e native ARM64 Action40254464042, distinguish build/Go/native regressions; if pass, wire only original Go TLS-protected fixed profile and bounded multi-delivery M4/TUN commit with first source actual send before parity, idle deadline-budget parity, negotiated MTU once. Then Game2+Game4 fixed6 no artificial loss 3Mbps real TCP/UDP per separate Actions; do not test damage or claim product PASS before both clean. If failures, inspect stage counters rather than VM capacity. Keep W90 six failed cases, Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6188,14 +6188,19 @@
     "capacity_stop": true
   },
   "w98_game_fixed_reintegration": {
-    "status": "TARGET_DESIGN_ONLY_NOT_COMPILED_NOT_PRODUCT_QUALIFIED",
-    "base_off_product_source": "44455afb819572ed75689cab28ffc66d1b1c7640",
-    "stage": "CHECK_MTU_AUTH_PROFILE_TX_RX_OWNER_BEFORE_CODING",
-    "historical_fixed_candidate": "ad9eaab88b93501e3de64efdc8fabc89f087e51e",
-    "historical_negative": "W90 six real Game2/4 fixed0/fixed6 failures, source rollback retained",
-    "scope": "Only explicitly configured Game fixed; no Game Auto, no new lanes, no outer recovery changes; native and real netem0 3Mbps TCP+UDP required",
-    "merge_ready": false,
+    "status": "NATIVE_SPLIT_TX_RX_OWNER_CANDIDATE_PENDING_EXACT_ARM64_RESULT; PUBLIC_FIXED_NOT_WIRED",
+    "source": "0c1161ef54a10b75bca8fe22067ac3f108e2fe04",
+    "native_action": 40254464042,
+    "initial_code_source": "f11e2223acfb394e772504633510a382595cc0fe",
+    "first_failed_native_action": 40254290157,
+    "second_failed_native_action": 40254323146,
+    "first_failure": "E0609 orphan old self.rx stop after RX-owner split, source 6daf059 fixes",
+    "build_trigger": "v4_game_fec.rs added to native workflow path allowlist at 0c1161e",
+    "scope": "Test gated W98 shared RS16 TX and single shared Fec2LiveRx RX, independently authenticated original lanes, native test missing-one-of-16 and source-before-parity",
+    "production": "NOT_WIRED_NO_GO_PROFILE_NO_MULTI_FRAME_TUN_COMMIT_NO_REAL_GAME_FIXED_ACTION",
+    "known_w90_failures": 6,
     "capacity_stop": true,
-    "windows": "TEMP_SKIPPED_USER_20261025"
+    "merge_ready": false,
+    "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN"
   }
 }
