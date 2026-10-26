@@ -11,10 +11,10 @@ import (
 
 // No privileged raw socket is needed: execute precisely the proposed classic
 // BPF program over complete AF_PACKET-shaped frames, including IP/TCP options.
-func TestDetachedGameDataKernelFilterPreservesHandshakeAndControl(t *testing.T) {
+func TestDetachedDataKernelFilterPreservesHandshakeAndControl(t *testing.T) {
 	local := [4]byte{192, 0, 2, 8}
 	peer := [4]byte{198, 51, 100, 9}
-	filters := detachedGameDataFilter(local, 443, peer, 51000)
+	filters := detachedDataKernelFilter(local, 443, peer, 51000)
 	raw := make([]bpf.RawInstruction, len(filters))
 	for i, f := range filters {
 		raw[i] = bpf.RawInstruction{Op: f.Code, Jt: f.Jt, Jf: f.Jf, K: f.K}
