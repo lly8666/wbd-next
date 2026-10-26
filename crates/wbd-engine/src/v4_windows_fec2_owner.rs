@@ -147,7 +147,7 @@ fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
         return Err(INVALID)
     }
     if let Some((pn,receipt))=unique_receipt{
-        if e.m2.is_some(){m2_authenticated_kind1_entry(e,pn,&receipt)?}
+        if e.m2.is_some(){m2_authenticated_kind1_entry(e,pn,&receipt)?;}
         else{return Err(BAD_STAGE)}
     }
     if let Some(pn)=unique_data_pn{
@@ -312,7 +312,6 @@ fn empty_parity_row()->WindowsFixedParityRow{
 fn stage_fixed_source_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,frame:&[u8],out:&mut [u8]
 )->Result<(usize,u32,u64),i32>{
-    use crate::v4_fixed_stream::FixedStream;
     if !v3_ready(e,epoch,luid,ifindex)||!e.feature7||e.m2.is_none()||
         frame.len()<20||frame[0]>>4!=4||frame[0]&15<5{
         return Err(BAD_STAGE)
@@ -629,6 +628,77 @@ mod tests{
         assert_eq!(release(&mut registry,c),OK);
         assert_eq!(release(&mut registry,peer),OK);
         assert_eq!(PRODUCT_APPLIED,0);
+    }
+
+    #[test]
+    fn m0_windows_fixed6_frozen_linux_stream_same_block_parity_npf_maturity_fence(){
+        // Native Windows scoped crypto+M1/M2 unit; not a genuine NPF syscall
+        // or two-OS product run. The latter must remain separately NOT_RUN.
+        let mut r=Registry{generation:800,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let tx=setup(&mut r,false,731,73);
+        let rx=setup(&mut r,true,732,74);
+        let ep=[2;16];
+        {
+            let mut e=r.entries[&tx].lock().unwrap();
+            m2_arm_entry(&mut e,ep,731,73).expect("only protected feature7 and bound device may arm");
+            assert_eq!(e.fec2_tx.as_ref().unwrap().revision().0,1);
+        }
+        let mut shared_block=None;
+        let mut last_end=600u32;
+        for i in 0..16u8{
+            let plain=data(i.saturating_add(1));
+            let (record,seq,pn)={
+                let mut e=r.entries[&tx].lock().unwrap();
+                let mut bytes=[0u8;2048];
+                let (used,seq,pn)=stage_fixed_source_entry(
+                    &mut e,ep,731,73,&plain,&mut bytes
+                ).expect("W168 full-block source");
+                assert_eq!(seq,last_end);
+                let outstanding=m2_kernel_firstsend_entry(
+                    &mut e,ep,731,73,pn,seq,used,1
+                ).expect("real native driver callback shape, unit simulated");
+                assert_eq!(outstanding,u32::from(i)+1);
+                last_end=seq+used as u32;
+                (bytes[..used].to_vec(),seq,pn)
+            };
+            assert_eq!(pn,u64::from(i));
+            let delivered=open_symbol(&mut r,rx,ep,732,74,seq,&record).unwrap();
+            assert_eq!(delivered.len(),1);
+            let actual=&delivered[0];
+            assert_eq!(actual.index,u32::from(i));
+            assert_eq!(&actual.frame[..actual.length as usize],plain.as_slice());
+            match shared_block{
+                None=>shared_block=Some(actual.block_id),
+                Some(old)=>assert_eq!(old,actual.block_id,"single frozen M1 block not source0/new-ID")
+            }
+        }
+        let parity={
+            let mut e=r.entries[&tx].lock().unwrap();
+            stage_fixed_parity_entry(&mut e,ep,731,73).expect("frozen W168 staged parity quantum")
+        };
+        assert_eq!(parity.count,4);
+        let mut prev=last_end;
+        for row in &parity.rows[..parity.count as usize]{
+            assert!(row.used>51);
+            assert_eq!(row.seq,prev,"independent original immutable M1 sequence");
+            prev=prev.wrapping_add(row.used);
+            assert!(row.pn>=16,"parity burns its own authentic M3 PN");
+        }
+        {
+            let mut e=r.entries[&tx].lock().unwrap();
+            e.fec2_tx.as_mut().unwrap().settle_staged(4,0,0).unwrap();
+            let m=e.m2.as_mut().unwrap();
+            m.fec_copied_parity=4;
+            assert_eq!(m.fec_copied_source,16);
+            assert_eq!(m.fec_reverse_reports,0);
+            assert_eq!(m.fec_positive_2s,0,"no invented APPLIED on local copy");
+        }
+        assert_eq!(quiesce_wintun(&mut r,tx,ep,731,73),OK);
+        assert_eq!(quiesce_wintun(&mut r,rx,ep,732,74),OK);
+        assert_eq!(stop(&mut r,tx),OK);
+        assert_eq!(stop(&mut r,rx),OK);
+        assert_eq!(release(&mut r,tx),OK);
+        assert_eq!(release(&mut r,rx),OK);
     }
 
 }

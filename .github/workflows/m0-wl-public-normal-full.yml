@@ -256,6 +256,8 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'M0 original Rust M2 feedback TX sequence transaction unit FAIL'}
           & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_windows_original_m1_2048_slots_and_m2_1536_shadow_contract -- --nocapture
           if($LASTEXITCODE -ne 0){throw 'M0 original Windows M1=2048 M2=1536 exact runtime contract FAIL'}
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_windows_fixed6_frozen_linux_stream_same_block_parity_npf_maturity_fence -- --nocapture
+          if($LASTEXITCODE -ne 0){throw 'frozen W168 Fixed6 original Windows M1/M2 native stream contract FAIL'}
           Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
           Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe
       - name: Verify Windows bound authenticated RX high-water without false TCP ACK
