@@ -14,7 +14,7 @@ use crate::v4_protected_handoff::GoFlow;
 use crate::memory::Arena;
 use wbd_types::{MonoNs,RecordPn,SeqOffset,LaneKey,TunnelKey};
 use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable};
-use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx};
+use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx,RawReadyEntry,RawReadyStatus};
 use wbd_platform::linux_tun_sink::{ScopedTunSink,TunReadyEntry};
 use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
 use wbd_platform::r1::StopResult;
@@ -302,29 +302,67 @@ impl GameKernelOwner{
                     (flow.server_ip,flow.client_ip,flow.server_port,flow.client_port)
                 };
                 let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp};
-                let mut wire=[0u8;2048];
-                while !rx_stop.load(Ordering::Acquire){
-                    let (len,_)=match raw.recv_one_into(
-                        generation,&mut wire,tuple,PacketPersona::Legacy
-                    ){
-                        Ok(data)=>data,
-                        Err(wbd_platform::linux_raw_carrier::RawTxError::Kernel(110))=>{
-                            rx_err_timeout.fetch_add(1,Ordering::Relaxed);
-                            continue
-                        },
+                // P1a: four already-ready kernel packets per real recvmmsg.
+                // Each is copied directly into its independent stack slot.
+                // Never wait to fill four slots or hand off authentication to
+                // an extra worker/channel; source delivery stays first-ready.
+                let mut wires=[[0u8;2048];4];
+                'rx_loop: while !rx_stop.load(Ordering::Acquire){
+                    let batch={
+                        let [a,b,c,d]=&mut wires;
+                        let mut slots:[&mut [u8];4]=[
+                            &mut a[..],&mut b[..],&mut c[..],&mut d[..]];
+                        raw.receive_kernel_multimsg(
+                            generation,&mut slots,tuple,PacketPersona::Legacy)
+                    };
+                    let batch=match batch{
+                        Ok(b)=>b,
                         Err(_)=>{
+                            if rx_stop.load(Ordering::Acquire){break}
                             rx_err_other.fetch_add(1,Ordering::Relaxed);
+                            // A failed scoped receiver must not burn a core.
+                            thread::sleep(Duration::from_millis(2));
                             continue
                         }
                     };
-                    if rx_stop.load(Ordering::Acquire){break}
-                    raw_seen.fetch_add(1,Ordering::Relaxed);
+                    if batch.observed==0{
+                        if batch.status==RawReadyStatus::Interrupted{continue}
+                        if !matches!(batch.status,RawReadyStatus::WouldBlock|
+                            RawReadyStatus::Empty|RawReadyStatus::Ready){
+                            rx_err_other.fetch_add(1,Ordering::Relaxed);
+                        }
+                        // Readiness-only 20ms cap: no timeout inside recvmmsg,
+                        // low idle CPU, bounded Stop and immediate new DATA.
+                        let mut pfd=GamePollFd{
+                            fd:raw.readiness_fd(),events:1,revents:0};
+                        let rc=unsafe{poll(&mut pfd,1,20)};
+                        if rc==0{rx_err_timeout.fetch_add(1,Ordering::Relaxed);}
+                        if rc<0{rx_err_other.fetch_add(1,Ordering::Relaxed);}
+                        continue
+                    }
+                    // Processing bound is FOUR independent records per turn.
+                    // This prevents one hot lane from monopolizing Game RX.
+                    for slot_idx in 0..batch.observed{
+                        let len=match batch.entry(slot_idx){
+                            Some(RawReadyEntry::Unauthenticated{cipher_len,..})
+                                if cipher_len>0=>cipher_len,
+                            Some(RawReadyEntry::Rejected|
+                                RawReadyEntry::Truncated{..}|
+                                RawReadyEntry::Unauthenticated{..}|
+                                RawReadyEntry::Unused)|None=>{
+                                recv_rejected.fetch_add(1,Ordering::Relaxed);
+                                continue
+                            }
+                        };
+                        if rx_stop.load(Ordering::Acquire){break 'rx_loop}
+                        let wire=&mut wires[slot_idx];
+                        raw_seen.fetch_add(1,Ordering::Relaxed);
                     #[cfg(feature="fec2_product_record")]
                     if fec_enabled{
                         let now=MonoNs(rx_start.elapsed().as_nanos()
                             .min(u128::from(u64::MAX)) as u64);
                         let decoded={
-                            let Ok(mut receiver)=receiver_owner.lock()else{break};
+                            let Ok(mut receiver)=receiver_owner.lock()else{break 'rx_loop};
                             rx_held.fetch_add(1,Ordering::Relaxed);
                             receiver.prepare_fec_batch(lane,&mut wire[..len],now)
                         };
@@ -340,7 +378,7 @@ impl GameKernelOwner{
                                         all_written=false;
                                         tun_failed.fetch_add(1,Ordering::Relaxed);
                                         recv_rejected.fetch_add(1,Ordering::Relaxed);
-                                        break
+                                        break 'rx_loop
                                     }
                                 }
                                 let committed=match receiver_owner.lock(){
@@ -348,7 +386,7 @@ impl GameKernelOwner{
                                     Err(_)=>{
                                         commit_failed.fetch_add(1,Ordering::Relaxed);
                                         rx_stop.store(true,Ordering::Release);
-                                        break
+                                        break 'rx_loop
                                     }
                                 };
                                 if all_written&&committed.is_ok(){
@@ -358,7 +396,7 @@ impl GameKernelOwner{
                                     // a TUN syscall: fail closed, no false success.
                                     commit_failed.fetch_add(1,Ordering::Relaxed);
                                     rx_stop.store(true,Ordering::Release);
-                                    break
+                                    break 'rx_loop
                                 }
                             },
                             Ok(None)=>{rx_none.fetch_add(1,Ordering::Relaxed);},
@@ -382,7 +420,7 @@ impl GameKernelOwner{
                         continue
                     }
                     let received={
-                        let Ok(mut receiver)=receiver_owner.lock()else{break};
+                        let Ok(mut receiver)=receiver_owner.lock()else{break 'rx_loop};
                         rx_held.fetch_add(1,Ordering::Relaxed);
                         // In-place authenticated record; original 2048B RX
                         // scratch remains exclusively held until output is owned.
@@ -400,7 +438,7 @@ impl GameKernelOwner{
                                 Err(_)=>{
                                     commit_failed.fetch_add(1,Ordering::Relaxed);
                                     rx_stop.store(true,Ordering::Release);
-                                    break
+                                    break 'rx_loop
                                 }
                             };
                             if !written{
@@ -414,7 +452,7 @@ impl GameKernelOwner{
                                 commit_failed.fetch_add(1,Ordering::Relaxed);
                                 recv_rejected.fetch_add(1,Ordering::Relaxed);
                                 rx_stop.store(true,Ordering::Release);
-                                break
+                                break 'rx_loop
                             }
                         },
                         Ok(None)=>{
@@ -440,6 +478,7 @@ impl GameKernelOwner{
                             counter.fetch_add(1,Ordering::Relaxed);
                             recv_rejected.fetch_add(1,Ordering::Relaxed);
                         }
+                    }
                     }
                 }
             });
