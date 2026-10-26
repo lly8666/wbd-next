@@ -6562,5 +6562,24 @@
     "real_udp_tcp_zero_loss": true,
     "capacity_stop": true,
     "evidence": "docs/evidence/fec-network-work/20261026-W110-Normal-fixed2-outeroff-clean-regression-PASS.json"
+  },
+  "post_w110_git_actions_audit": {
+    "status": "COMPLETED_REMOTE_RECONCILIATION_NO_NEW_PERFORMANCE_RUNS",
+    "date": "2026-10-26",
+    "head_before_audit": "8a26b61fdd6934a21b47626dc491b6a7af20eee8",
+    "exact_product_source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "native_arm64_build_run": 40260662919,
+    "native_bundle_artifact_id": 12623678360,
+    "native_zip_sha256": "04d209b7ef1e887af6599622aaf71efc34381451c847e844cf18c2006ae9708f",
+    "post_product_commit_change_scope": "37 commits, 42 paths to audited head; only harness/tests/evidence, no crates/ or r0/ product changes",
+    "action_check": "W103/W104 selected native clean/damage, all W105 10 middle-mode clean, W106 4 OFF/fixed0 clean, W109 4 quiet/oneway/MTU, W110 Normal smoke; all sampled and full W105/W106 IDs completed success attempt1; W109/W110 verified one performance job/run and downloadable artifact",
+    "no_unfinished_recent_actions": "last 100 branch Actions at audit none unfinished",
+    "fix_or_load": "NONE: capacity_stop maintained; W102 shared GE failure not retested at exact e8, no provable timely-erasure repair cause to patch",
+    "scope": "SCOPED_LINUX_ARM64_ONLY; GAME_AUTO_UNSUPPORTED; WINDOWS_TEMP_SKIPPED; W102_OLDER_SOURCE_LONG_GE_GT1PCT; NO_CURRENT_OUTER_ON_COMBINATION",
+    "evidence": "docs/evidence/fec-network-work/20261026-post-W110-git-actions-scoped-merge-audit.md",
+    "scoped_integration_review_ready": true,
+    "merge_ready": false,
+    "capacity_stop": true,
+    "network_role_state_unchanged": true
   }
 }
