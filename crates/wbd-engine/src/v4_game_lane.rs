@@ -622,6 +622,46 @@ mod tests{
     }
     #[cfg(feature="fec2_product_record")]
     #[test]
+    fn game4_fixed6_stagger_parity_does_not_wait_for_all_60ms_copies(){
+        let mut game=build(4);
+        // Original public config order: authenticated fixed6 first, then
+        // apply default 0/4/20/60ms copies before the M4 kernel starts.
+        game.enable_game_fec(6,false).unwrap();
+        game.configure_game4_stagger().unwrap();
+        for i in 0..16u8{
+            let now=MonoNs(100+u64::from(i));
+            game.offer(&[i;128],now).unwrap();
+            // Only immediate physical lane1 should dispatch so far.
+            assert_eq!(game.drain(now,|lane,_,_,_|{
+                assert_eq!(lane.slot,1);true
+            }),1);
+        }
+        // The other three ranks still hold their own GameTx source slabs,
+        // so the global GameTx queue CANNOT be empty under steady load.
+        assert!(game.tx.in_use().0>=16);
+        let first=game.poll_game_fec(MonoNs(120)).unwrap();
+        assert!(first>0,"fixed6 first quantum must issue");
+        let dispatched=game.drain(MonoNs(121),|lane,_,_,_|{
+            assert_eq!(lane.slot,1);true
+        });
+        assert!(dispatched>0);
+        let proof=game.game_fec_counters().unwrap().0;
+        assert!(proof.parity_kernel_copied>0);
+        assert!(game.tx.in_use().0>=16);
+        // This is the previously blocked case: a second parity quantum
+        // must progress although the 60ms GameTx copy tails remain queued.
+        let second=game.poll_game_fec(MonoNs(122)).unwrap();
+        assert!(second>0,"parity blocked by unrelated delayed GameTx refs");
+        game.drain(MonoNs(123),|_,_,_,_|true);
+        // T+60ms is not misinterpreted as a 5ms-old source deadline.
+        game.drain(MonoNs(60_000_200),|_,_,_,_|true);
+        assert!(game.game4_copy_schedule().unwrap().sent[3]>0);
+        game.stop();
+        assert_eq!(game.tx.in_use().0,0);
+        assert_eq!(game.game_fec_counters().unwrap().1.charged_bytes,0);
+    }
+    #[cfg(feature="fec2_product_record")]
+    #[test]
     fn w98_shared_fixed_native_m4_batch_commits_all_restored_after_success(){
         for n in [2,4]{
             let mut tx=build(n);
