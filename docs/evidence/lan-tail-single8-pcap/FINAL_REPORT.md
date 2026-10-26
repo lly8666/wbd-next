@@ -59,3 +59,21 @@ Independent parser assertions:
 - Local LAN has fewer middlebox/policy constraints than the public Internet but is not automatically a trusted threat-free network (untrusted hosts, Wi-Fi, switch abuse); if confidentiality/authenticity are requirements, prefer real mutually authenticated TLS or AEAD on every record. Do NOT claim standard TLS1.3 indistinguishability/security from appearance of the outer five bytes.
 
 **Disposition: successful verified on-wire loopback capture and correctness, but not product LAN qualification, no WBD Rust wire merge.**
+
+
+## Passive automatic Wireshark/TShark recognition, WITHOUT decode-as
+
+Second successful independent workflow: https://github.com/lly8666/wbd-next/actions/runs/40268945000, archived result artifact 12626843821. This workflow downloads the exact original 201449-byte PCAP from run 40268297939, verifies exact file length and archives sha256, then runs TShark both (a) no TLS decode hints and (b) explicitly forced TLS decode on the custom/true TLS13 ports.
+
+**Passive TShark auto identification from actual raw PCAP:**
+
+| TCP flow | Auto protocol column | Auto recognized TLS record header/length | Forced TLS protocol column |
+|---|---|---:|---|
+| Custom singleheader last8 rolling, 100 client-to-server data-bearing packets | TLSv1.2 on ALL 100 | ALL 100 content-type23 and all 100 body lengths | TLSv1.2 on ALL 100 |
+| Actual Go TLS 1.3 control (34 TCP packets with client-to-server data) | TLSv1 for 1 initial ClientHello packet, TLSv1.3 on 33 other TCP packets | 34 record lengths; only two plaintext record content types surfaced, because remaining records were encrypted | Same result |
+
+This is **automatic recognition as TLS at the RECORD SYNTAX level**, not confirmation of a valid TLS handshake/session or TLS1.2 encryption. The 0x0303 legacy record version is normal for TLS 1.3 encrypted records too; absent an observed negotiated handshake, TShark cannot distinguish a TLS 1.3 steady-state stream simply from the record's 5-byte header. The custom fixture's TCP connection begins directly with content-type23 without the negotiated TLS handshake present in the genuine control flow. A different production connection with a real prior handshake could be labeled differently; this experiment does not measure that.
+
+The auto/forced files, all 100 and 34 per-packet TShark protocol labels and summary are in the separate native artifact 12626843821. No application crypto secret was used to parse the custom marker: the rolling final 8B XOR and 2B marker are both publicly reversible/counter-derived. Neither passive recognition nor forced dissection proves cryptographic indistinguishability.
+
+**Final interpreted result:** Outer TLS framing similarity is HIGH, and prior doubled-header bug is definitively absent. Genuine authenticated negotiated TLS 1.3 connection similarity is LOW for the isolated steady-state-only fixture, and an independent wire format cannot claim standards-equivalent TLS. Actual passive tool did label the custom stream as TLSv1.2 (not TLSv1.3), which is an important measurable distinction.
