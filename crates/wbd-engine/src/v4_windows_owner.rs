@@ -145,6 +145,13 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
             &[wbd_codec::ControlTlv::Receipt(msg)],512
         ).map_err(|_|INVALID)?;
         let budget=normal_off_windows_budget(e)?;
+        // Preflight the *actual encoded receipt* against the caller's
+        // C ABI output BEFORE spending an AEAD PN and original TCP sequence.
+        // A short buffer is backpressure, not a silently emitted control:
+        // returning Ok(None) after seal would strand exactly one ciphertext
+        // length in Rust's stream while Go's sendNext stayed unchanged.
+        let needed=tlv.len().checked_add(FIXED_WIRE_OVERHEAD).ok_or(FULL)?;
+        if needed>out.len(){return Err(FULL)}
         let slab=e.arena.allocate().map_err(|_|FULL)?;
         let (pn,seq,used)=e.owner.seal_original_authenticated_receipt(
             slab,&tlv,budget,15,now
@@ -164,7 +171,10 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                 ready[0].record.metadata().seq.0 as u32!=seq {
                 return Err(BAD_STAGE)
             }
-            if used>out.len(){return Err(FULL)}
+            // Should be impossible after preflight. Never demote a
+            // post-seal inconsistency to optional/no-feedback (FULL):
+            // the Rust PN/sequence has already advanced and Go must Stop.
+            if used!=needed || used>out.len(){return Err(BAD_STAGE)}
             out[..used].copy_from_slice(ready[0].record.bytes());
             Ok((used,seq,pn))
         })();
@@ -1571,6 +1581,52 @@ mod tests {
         assert_eq!(quiesce_wintun(&mut r,server,epoch,9,13),OK);
         assert_eq!(stop(&mut r,server),OK);
         assert_eq!(release(&mut r,server),OK);
+    }
+
+    #[test]
+    fn m0_windows_m2_short_feedback_output_does_not_burn_original_tx_sequence(){
+        // A deterministic real-M1 sealing boundary, no fake peer delivery.
+        // The previous code sealed kind1 BEFORE discovering that out was too
+        // short, returned Ok(None), and silently skipped one TCP wire span.
+        let mut r=Registry{generation:590,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        let epoch=[2u8;16];
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        assert_eq!(bind_wintun(&mut r,h,epoch,91,19),OK);
+        assert!(set_path_mtu(&mut r,h,epoch,91,19,1400).is_ok());
+        let mut ipv4=[0u8;90];ipv4[0]=0x45;
+        ipv4[2..4].copy_from_slice(&90u16.to_be_bytes());
+        ipv4[8]=64;ipv4[9]=17;
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            assert!(m2_arm_entry(&mut e,epoch,91,19).is_ok());
+        }
+        let mut first=[0u8;2048];
+        let (first_len,first_seq,_pn)=v3_seal_one(
+            &r,h,epoch,91,19,&ipv4,&mut first).unwrap();
+        // Inject a verified-M3 DATA observation *only* into this internal
+        // unit fixture's feedback state. This is not an OS product PASS.
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            e.m2.as_mut().unwrap().feedback.on_authenticated_data(
+                RecordPn(19),m2_clock());
+        }
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        let mut short=[0u8;64]; // encoded kind1 (one page) cannot fit
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            assert_eq!(m2_next_feedback_entry(
+                &mut e,epoch,91,19,&mut short),Ok(None));
+            assert!(e.m2.as_ref().unwrap().feedback_pending.is_none());
+        }
+        let mut second=[0u8;2048];
+        let (_second_len,second_seq,_)=v3_seal_one(
+            &r,h,epoch,91,19,&ipv4,&mut second).unwrap();
+        assert_eq!(second_seq,first_seq.wrapping_add(first_len as u32),
+            "unsent M2 draft must never create a hidden Rust/Go seq gap");
+        assert_eq!(quiesce_wintun(&mut r,h,epoch,91,19),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
     }
 
     #[test]

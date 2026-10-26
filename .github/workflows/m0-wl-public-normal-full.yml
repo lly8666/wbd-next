@@ -2,7 +2,7 @@ name: M0 actual public Windows Linux Normal off WL-N0
 run-name: M0-WL-N0-PUBLIC-NATIVE-REALSOURCE
 on:
   push:
-    branches: [main]
+    branches: [main, fix/m0-windows-functional-wiring-20261026]
     paths:
       - .github/workflows/m0-wl-public-normal-full.yml
       - tools/m0_wl_public_normal_e2e.py
@@ -101,7 +101,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
       LINUX_BINARY_SRC: ${{ github.sha }}
-      WBD_WL_RUN_N0: "1"
+      WBD_WL_RUN_N0: "0" # TEMP functional-only: no throughput/netem/60s N0 in this wiring branch
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -215,6 +215,10 @@ jobs:
           & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_embedded_go,fec2_product_record
           if($LASTEXITCODE -ne 0){throw 'actual Windows Rust M2 production library build failed'}
           New-Item -ItemType Directory -Force result/wl-public | Out-Null
+          # Native Rust-only regression: a too-short reverse-M2 draft buffer
+          # cannot burn one PN/TCP span and silently misalign original Go.
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_windows_m2_short_feedback_output_does_not_burn_original_tx_sequence -- --nocapture
+          if($LASTEXITCODE -ne 0){throw 'M0 original Rust M2 feedback TX sequence transaction unit FAIL'}
           Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
           Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe
       - name: Verify Windows bound authenticated RX high-water without false TCP ACK
