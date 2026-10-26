@@ -57,13 +57,25 @@ def verify_outer_recovery_policy(expected, observed):
     return len(observed) == 2 and all(verified(v) for v in observed.values())
 
 
-def verify_native_game_counters(lanes,counters):
-    """Real Game lane public kernel counters; no fabricated v3 single-lane DATA repair."""
-    return lanes in (2,4) and len(counters)==2 and all(
-        c.get("lanes")==lanes and c.get("copied",0)>0
-        and c.get("delivered",0)>0 and c.get("raw_received",0)>0
-        and c.get("auth_rejected")==0
-        for c in counters.values())
+def verify_native_game_counters(lanes,counters,traffic=None):
+    """Native M4 counters. An explicitly idle direction has no fake TX/RX."""
+    if lanes not in (2,4) or set(counters)!={"client","server"}:
+        return False
+    for role,c in counters.items():
+        if c.get("lanes")!=lanes or c.get("auth_rejected")!=0:
+            return False
+        sending=(traffic is None or traffic["c2s_mbps" if role=="client" else "s2c_mbps"]>0)
+        receiving=(traffic is None or traffic["s2c_mbps" if role=="client" else "c2s_mbps"]>0)
+        if sending:
+            if c.get("copied",0)<=0: return False
+        elif c.get("copied")!=0:
+            return False
+        if receiving:
+            if c.get("delivered",0)<=0 or c.get("raw_received",0)<=0:
+                return False
+        elif c.get("delivered")!=0:
+            return False
+    return True
 
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
@@ -1113,7 +1125,8 @@ class LinuxExperiment:
                     game_outer_policy[role]={k:int(v) for k,v in
                         re.findall(r"([a-z_]+)=(\d+)",rows[0])}
         if self.lanes > 1:
-            game_verified = verify_native_game_counters(self.lanes,counters)
+            game_verified = verify_native_game_counters(self.lanes,counters,
+                self.config["traffic"])
             policy_verified = None  # Explicitly N/A, not green for v3 repair.
             if not game_verified:
                 verified = False
@@ -1134,9 +1147,14 @@ class LinuxExperiment:
                         verified=False;continue
                     counts={k:int(v) for k,v in re.findall(r"(\w+)=(\d+)",observed[0][2])}
                     game_fec_proof[role]=counts
-                    if (counts.get("source_offered",0)==0 or
-                        counts.get("parity_copied",0)==0 or
-                        counts.get("parity_offered",0)<counts.get("parity_copied",0) or
+                    sending=self.config["traffic"]["c2s_mbps" if role=="client" else "s2c_mbps"]>0
+                    if (counts.get("source_offered",0)==0 if sending else
+                        counts.get("source_offered",-1)!=0):
+                        verified=False
+                    if (counts.get("parity_copied",0)==0 if sending else
+                        counts.get("parity_copied",-1)!=0):
+                        verified=False
+                    if (counts.get("parity_offered",0)<counts.get("parity_copied",0) or
                         counts.get("rsent",0)>counts.get("rplanned",0)):
                         verified=False
         else:
@@ -1153,9 +1171,12 @@ class LinuxExperiment:
             repair_readback_verified=(len(game_outer_policy)==2 and all(
                 all(k in p for k in required) and
                 p["repair_enabled"]==int(requested_repair) and
-                p["parity_separate"]==1 and p["first_lane_copied"]>0 and
+                p["parity_separate"]==1 and
+                (p["first_lane_copied"]>0 if
+                 self.config["traffic"]["c2s_mbps" if role=="client" else "s2c_mbps"]>0
+                 else p["first_lane_copied"]==0) and
                 (requested_repair or p["outer_data_retransmitted"]==0)
-                for p in game_outer_policy.values()))
+                for role,p in game_outer_policy.items()))
             if not repair_readback_verified:
                 verified=False
             if repair_readback_verified and requested_repair is False:
