@@ -11,7 +11,7 @@ use std::time::{Instant,Duration};
 use crate::v4_game_lane::{GameAdapter,Error as GameAdapterError};
 use crate::runtime::game_shared::GameError;
 use crate::v4_protected_handoff::GoFlow;
-use crate::memory::{Arena,FrozenRecord};
+use crate::memory::Arena;
 use wbd_types::{MonoNs,RecordPn,SeqOffset,LaneKey,TunnelKey};
 use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable};
 use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx};
@@ -25,12 +25,6 @@ unsafe extern "C" {fn poll(fds:*mut GamePollFd,nfds:usize,timeout:i32)->i32;}
 struct TxLane{
     key:LaneKey,flow:GoFlow,seq:u64,raw:Arc<ScopedRawIpv4Tx>,
     last_initial_id:Option<u64>
-}
-#[derive(Default)]
-struct TxBatchSample {
-    native_calls:AtomicU64,native_records:AtomicU64,
-    native_confirmed:AtomicU64,native_partial:AtomicU64,
-    singleton_calls:AtomicU64,unsent:AtomicU64,largest:AtomicU64,
 }
 #[derive(Default)]
 struct RxLockSample {
@@ -64,7 +58,6 @@ pub(crate) struct GameKernelOwner{
     rx_dedup_none:Arc<AtomicU64>,rx_tun_failed:Arc<AtomicU64>,
     rx_delivery_commit_failed:Arc<AtomicU64>,
     rx_lock_sample:Arc<RxLockSample>,
-    tx_batch_sample:Arc<TxBatchSample>,
     outer_blocked_duplicate:Arc<AtomicU64>,
     outer_repeated_copy_sent:Arc<AtomicU64>,
 }
@@ -125,7 +118,6 @@ impl GameKernelOwner{
         let rx_tun_failed=Arc::new(AtomicU64::new(0));
         let rx_delivery_commit_failed=Arc::new(AtomicU64::new(0));
         let rx_lock_sample=Arc::new(RxLockSample::default());
-        let tx_batch_sample=Arc::new(TxBatchSample::default());
         let outer_blocked_duplicate=Arc::new(AtomicU64::new(0));
         let outer_repeated_copy_sent=Arc::new(AtomicU64::new(0));
         let mut lanes=Vec::new();
@@ -142,7 +134,6 @@ impl GameKernelOwner{
         let tx_tun=Arc::clone(&tun);
         let tx_copy=Arc::clone(&copied);
         let tx_rejected=Arc::clone(&rejected);
-        let tx_sample=Arc::clone(&tx_batch_sample);
         let outer_denied=Arc::clone(&outer_blocked_duplicate);
         let outer_repeated=Arc::clone(&outer_repeated_copy_sent);
         #[allow(unused_variables)]
@@ -170,12 +161,6 @@ impl GameKernelOwner{
                     else{return};
                 let start=epoch_clock;
                 let mut inbound=[0u8;2048];
-                // Explicit diagnostic pilot only. All ordinary product
-                // performance cases keep the qualified send_one path.
-                // Actual Linux sendmmsg is used for >=2 due same-lane records;
-                // no wait to build batches and all source firsts send ASAP.
-                let p1b_batch=std::env::var("WBD_GAME_TX_MMSG")
-                    .as_deref()==Ok("1");
                 while !tx_stop.load(Ordering::Acquire){
                     // Never hold the TUN device's shared serialized mutex
                     // during a 750ms missing-app poll: authenticated RX
@@ -213,124 +198,6 @@ impl GameKernelOwner{
                     // Single TX owner first drains source copies to M4 before
                     // any FEC parity quantum can enqueue additional work.
                     let mut flush=|game:&mut GameAdapter,due_now:MonoNs|{
-                        if p1b_batch{
-                            struct Staged {
-                                index:usize,id:wbd_types::LogicalPacketId,
-                                pn:u64,len:usize,record:FrozenRecord
-                            }
-                            let mut staged:Vec<Staged>=Vec::with_capacity(8);
-                            let mut seq:Vec<u64>=lanes.iter().map(|l|l.seq).collect();
-                            let mut last:Vec<Option<u64>>=lanes.iter()
-                                .map(|l|l.last_initial_id).collect();
-                            game.stage_ready(due_now,|lane,id,pn,wire|{
-                                let Some(index)=lane.slot.checked_sub(1)
-                                    .map(|v|v as usize)else{
-                                    tx_rejected.fetch_add(1,Ordering::Relaxed);
-                                    return false
-                                };
-                                if lanes.get(index).is_none_or(|l|l.key!=lane)||
-                                    (!outer_repair_enabled&&
-                                    !game_first_lane_copy(last[index],id.0)){
-                                    tx_rejected.fetch_add(1,Ordering::Relaxed);
-                                    return false
-                                }
-                                let Ok(mut slab)=arena.allocate()else{
-                                    tx_rejected.fetch_add(1,Ordering::Relaxed);
-                                    return false
-                                };
-                                if wire.len()>slab.writable().len(){
-                                    tx_rejected.fetch_add(1,Ordering::Relaxed);
-                                    return false
-                                }
-                                slab.writable()[..wire.len()].copy_from_slice(wire);
-                                let Ok(record)=slab.freeze(0..wire.len(),FrozenMetadata{
-                                    lane,seq:SeqOffset(seq[index]),pn:RecordPn(pn),
-                                    carrier_snapshot:1
-                                })else{
-                                    tx_rejected.fetch_add(1,Ordering::Relaxed);
-                                    return false
-                                };
-                                let Some(next)=seq[index].checked_add(wire.len() as u64)
-                                    else{return false};
-                                seq[index]=next;
-                                last[index]=Some(id.0);
-                                staged.push(Staged{index,id,pn,len:wire.len(),record});
-                                true
-                            });
-                            // EXACT N staged records -> EXACT N kernel copy
-                            // decisions, with no Game/FEC credits before
-                            // sendmmsg returns its known accepted prefix.
-                            let mut accepted=vec![false;staged.len()];
-                            let ids:Vec<_>=staged.iter().map(|s|s.id).collect();
-                            for index in 0..lanes.len(){
-                                let selected:Vec<_>=staged.iter().enumerate()
-                                    .filter(|(_,s)|s.index==index)
-                                    .map(|(i,_)|i).collect();
-                                if selected.is_empty(){continue}
-                                let item=&mut lanes[index];
-                                let frames:Vec<FrozenRecord>=selected.iter()
-                                    .map(|&i|staged[i].record.clone()).collect();
-                                let presentations:Vec<Presentation>=selected.iter()
-                                    .map(|&i|Presentation{
-                                        ack32:1,advertised_window:4096,
-                                        ip_id:(staged[i].pn as u16).wrapping_add(75),
-                                        persona:PacketPersona::Legacy
-                                    }).collect();
-                                let f=item.flow;
-                                let (src,dst,sp,dp)=if server{
-                                    (f.server_ip,f.client_ip,f.server_port,f.client_port)
-                                }else{
-                                    (f.client_ip,f.server_ip,f.client_port,f.server_port)
-                                };
-                                let tuple=Ipv4Tuple{
-                                    src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp
-                                };
-                                // Single ready copy goes without waiting to
-                                // fill, preserving Game first arrival.
-                                let prefix=if frames.len()==1{
-                                    tx_sample.singleton_calls.fetch_add(1,Ordering::Relaxed);
-                                    usize::from(item.raw.send_one(generation,&frames[0],
-                                        tuple,presentations[0]).is_ok())
-                                }else{
-                                    tx_sample.native_calls.fetch_add(1,Ordering::Relaxed);
-                                    tx_sample.native_records.fetch_add(
-                                        frames.len() as u64,Ordering::Relaxed);
-                                    tx_sample.largest.fetch_max(
-                                        frames.len() as u64,Ordering::Relaxed);
-                                    let receipt=item.raw.send_kernel_multimsg(
-                                        generation,&frames,tuple,&presentations);
-                                    let n=receipt.outcome.accepted_prefix.min(frames.len());
-                                    tx_sample.native_confirmed.fetch_add(n as u64,
-                                        Ordering::Relaxed);
-                                    if n<frames.len(){
-                                        tx_sample.native_partial.fetch_add(1,Ordering::Relaxed);
-                                    }
-                                    n
-                                };
-                                tx_sample.unsent.fetch_add(
-                                    (frames.len()-prefix) as u64,Ordering::Relaxed);
-                                for (rank,&staged_idx) in selected.iter().enumerate(){
-                                    let candidate=&staged[staged_idx];
-                                    if rank<prefix{
-                                        accepted[staged_idx]=true;
-                                        item.seq=item.seq.saturating_add(candidate.len as u64);
-                                        if !game_first_lane_copy(item.last_initial_id,candidate.id.0){
-                                            outer_repeated.fetch_add(1,Ordering::Relaxed);
-                                        }
-                                        item.last_initial_id=Some(candidate.id.0);
-                                        tx_copy.fetch_add(1,Ordering::Relaxed);
-                                    }else{
-                                        tx_rejected.fetch_add(1,Ordering::Relaxed);
-                                    }
-                                }
-                            }
-                            // Stop/loan ownership: all frozen clones dropped
-                            // only AFTER each synchronous kernel syscall.
-                            if game.finish_staged(&accepted,&ids).is_err(){
-                                tx_rejected.fetch_add(1,Ordering::Relaxed);
-                            }
-                            return;
-                        }
                         game.drain(due_now,|lane,id,pn,wire|{
                             // The genuine original TLS group builds
                             // physical lanes in slots 1..N. Avoid a
@@ -667,7 +534,7 @@ impl GameKernelOwner{
             raw_received,rx_reject,
             rx_driver_timeout,rx_driver_other,rx_mutex_acquired,
             rx_authenticated_some,rx_dedup_none,rx_tun_failed,
-            rx_delivery_commit_failed,rx_lock_sample,tx_batch_sample,outer_blocked_duplicate,
+            rx_delivery_commit_failed,rx_lock_sample,outer_blocked_duplicate,
             outer_repeated_copy_sent})
     }
     pub(crate) fn outer_policy_counters(&self)->(u64,u64,u64){
@@ -721,17 +588,6 @@ impl GameKernelOwner{
                 self.rx_lock_sample.wait_total_ns.load(Ordering::Relaxed),
                 self.rx_lock_sample.hold_total_ns.load(Ordering::Relaxed),
                 self.rx_lock_sample.wait_max_ns.load(Ordering::Relaxed));
-        }
-        let group_calls=self.tx_batch_sample.native_calls.load(Ordering::Relaxed);
-        if group_calls>0||self.tx_batch_sample.singleton_calls.load(Ordering::Relaxed)>0{
-            eprintln!("M0_GAME_M4_TX_MMSG native_calls={} native_records={} native_confirmed={} native_partial={} singleton_calls={} unsent={} largest={}",
-                group_calls,
-                self.tx_batch_sample.native_records.load(Ordering::Relaxed),
-                self.tx_batch_sample.native_confirmed.load(Ordering::Relaxed),
-                self.tx_batch_sample.native_partial.load(Ordering::Relaxed),
-                self.tx_batch_sample.singleton_calls.load(Ordering::Relaxed),
-                self.tx_batch_sample.unsent.load(Ordering::Relaxed),
-                self.tx_batch_sample.largest.load(Ordering::Relaxed));
         }
         self.tun.begin_stop();
         for x in &self.tx{x.begin_stop()}
