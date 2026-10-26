@@ -36,6 +36,23 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_p1b_real_native_sendmmsg_receipt_parser_is_strict(self):
+        from tools.network_harness.runner import public_game_tx_multimsg
+        row=("M0_GAME_M4_TX_MMSG native_calls=200 native_records=700 "
+             "native_confirmed=699 native_partial=1 singleton_calls=400 "
+             "unsent=1 largest=8")
+        v=public_game_tx_multimsg(row)
+        self.assertEqual(v["native_calls"],200)
+        self.assertEqual(v["native_confirmed"],699)
+        self.assertIsNone(public_game_tx_multimsg(""))
+        self.assertIsNone(public_game_tx_multimsg(row+"\n"+row))
+        self.assertIsNone(public_game_tx_multimsg(row.replace(
+            "native_confirmed=699","native_confirmed=900")))
+        self.assertIsNone(public_game_tx_multimsg(row.replace(
+            "largest=8","largest=1")))
+        self.assertIsNone(public_game_tx_multimsg(row.replace(
+            "native_partial=1","native_partial=201")))
+
     def test_p1b_native_tx_multimsg_bundle_opt_in_only_game_modes(self):
         r=request()
         self.assertFalse(r["bundles"]["A"].get("enable_game_tx_multimsg",False))
