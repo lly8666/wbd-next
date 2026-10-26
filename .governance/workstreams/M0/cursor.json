@@ -4,26 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 272,
-  "checkpoint_sha": "2da97ed98bc7c8ad97aec2aeb2c5061113057e0e",
+  "sequence": 273,
+  "checkpoint_sha": "28b5cd13544f1d5c09ddc7727b10bd7d2be26993",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 original Windows Npcap/Wintun ↔ Linux raw/TUN Normal/off; H271 recovered S868 native Actions. At public SOURCE3e5 original M2 authenticated_ack=3 plus two-way UDP/Stop PASS_SCOPED; same SOURCE default Windows ABI FAIL remains. Source83ad native feature-off ABI PASS; sourcebcf2 scoped WAL PASS; full sourcebcf2 public run39802119726 still in progress. WL-N0/N1/N5 NOT_RUN.",
-  "why_now": "S868 recovered log and exact source-separated evidence 2da97 after one H271 cursor-only checkpoint delta. Previously unrecorded Action39801422682 at 3e5 is genuine Windows↔Linux public Normal UDP Stop success, server authenticated_ack3 / retransmitted177 / max_retransmits2. Preserved 3e5 default ABI E0599 fail, 83ad corrected default Windows ABI success39802457636 with artifact12437895170, bcf2 WAL native scoped success39802119861 with artifact12435529641. bcf2 full run39802119726 Windows native job still running, no new source-wide M2 promotion or performance evidence.",
-  "done_when": "Registry unchanged: exact public original Go credential TLS Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional, shared genuine M2 receipt/2 repair/Abandoned and fresh >256 lost carrier ACK, true native kernel netem and Stop. Only after public PASS run separate WL-N0 0%/300ms, WL-N1 1%/50ms, WL-N5 5%/50ms each 10Mbps 60s both directions, else NOT_RUN.",
-  "next_action": "Consume existing SOURCEbcf2 full Windows→Linux original product Action39802119726 final job119906092650 and complete artifact; compare its true Linux authenticated M2 ACK and duplex owned Stop to frozen SOURCE3e5 artifact12436866360. If failure, follow NETWORK_TRIAGE with design+call-chain+recent fix review before one discriminating correction; otherwise preserve positive scope then target >256 ACK gap/two-repair/Abandoned, before separate WL-N0/N1/N5.",
+  "current_task": "PLAN024 public original-Go TLS Windows Npcap/Wintun↔Linux raw/TUN Normal/off: H273 recovered SOURCEbcf2 run39802119726 actual native duplex UDP, authenticated M2 ACK3 and both owned Stop PASS_SCOPED; H272 governance source-mismatch original FAIL recorded and evidence indexing corrected. >256 ACK gap, induced two-repair/Abandoned, netem WL0/1/5 still NOT_RUN.",
+  "why_now": "H272 checkpoint→main d8ba had exactly one cursor-only commit; S869 intent dfa60, S870 evidence/devlog 28b5 recovered Action39802119726/1 complete SUCCESS sourcebcf2, job119906092650 and artifact12438420113 sha256 19e24f31…; report Windows25/22 Linux88/24, Linux server ACK3/retrans175/max2, no measured 10Mbps/60s. Downloaded original H272 Governance39805008919/1 artifact12437452011: FAIL 'evidence is for a different SOURCE' caused mixed hot evidence refs, now historical citations moved to context_refs with sole sourcebcf2 hot evidence. No product code/test rerun in recovery.",
+  "done_when": "Registry PLAN024 unchanged: true public original-Go credential TLS/Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional plus shared authentic M2 receipt/at-most-two repair/Abandoned, fresh after >256 carrier ACK gap, real netem and owned Stop. Only after functional gates distinct WL-N0 (0%/300ms), WL-N1 (1%/50ms), WL-N5 (5%/50ms), each 10Mbps bidirectional 60s; otherwise NOT_RUN.",
+  "next_action": "First confirm post-H exact main Governance conclusion; then use current low-cost Windows/Linux M2+pending/fresh telemetry to isolate earliest >256 carrier ACK gap wait. Before any fix re-read current 02/04/08 design, real Windows pending/TUN→Rust owner→Linux feedback/Stop call chain and recent related patches, leave brief intent; implement one bounded functional batch for fresh-with-gap/two-repair/Abandoned, only then schedule independent WL-N0/N1/N5.",
   "unverified": true,
-  "last_tested_source": "83ad73ee791ae983309cb415c797ffafc03b996a",
+  "last_tested_source": "bcf2fff7175bd711e6f98177499c5c0451c4eefc",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN024-S868-H271-recovered-M2-Actions-20261022.json",
-    "docs/evidence/M0/PLAN024-S864-real-Windows11-Linux-Normal-duplex-owned-Stop-20261022.json"
+    "docs/evidence/M0/PLAN024-S870-H272-recovered-bcf2-public-and-governance-20261026.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/PLAN024-S868-H271-recovered-native-Actions-20261022.md",
+    "docs/devlog/M0/PLAN024-S870-H272-recovered-bcf2-public-and-governance-20261026.md",
+    "docs/evidence/M0/PLAN024-S868-H271-recovered-M2-Actions-20261022.json",
+    "docs/evidence/M0/PLAN024-S864-real-Windows11-Linux-Normal-duplex-owned-Stop-20261022.json",
     "docs/evidence/M0/PLAN024-S866-S867-Normal-Health-M2-owner-native-validation-20261022.json",
     "docs/architecture/modules/08-RECOVERY.md",
-    "docs/testing/NETWORK_TRIAGE.md"
+    "docs/testing/NETWORK_TRIAGE.md",
+    "docs/devlog/M0/PLAN024-S869-H272-recovery-intent-20261026.md"
   ],
   "open_requests": [],
-  "partial_summary": "H272 recovered (no product code modification): exact 3e5 public source Action39801422682 genuine bidirectional original Windows↔Linux Normal/off UDP Stop PASS and Linux M2 ACK3; same source 39801422162 default ABI FAIL preserved. Source83ad Windows native feature-off owner ABI39802457636 PASS; bcf2 native WAL39802119861 PASS_SCOPED, full cross-OS Action39802119726 in flight. Two repair/Abandoned, >256 ACK gap, netem WL0/1/5, global OS UI and physical NOT_RUN."
+  "partial_summary": "H273 recovered Action39802119726 exact SOURCEbcf2 and artifact12438420113, genuine two-OS public original Normal/off UDP25/22 W and88/24 L, Stop PASS, server M2 ACK3/retrans175/max2. Corrected mixed-SOURCE hot evidence causing H272 Governance39805008919 FAIL without removing failure. Original 3e5 E0599 FAIL preserved; 83ad feature-off ABI and bcf2 WAL scoped PASS preserved. No new code or rerun. >256 ACK gap, causal second repair/Abandoned, netem WL0/1/5, host-global OS/GUI, physical NOT_RUN."
 }
