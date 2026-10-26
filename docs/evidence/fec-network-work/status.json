@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "P2_GAME_RETAINED; P1A_P1B_P3A_CPU_ABBA_NEGATIVE_ROLLBACK; W157_NORMAL_15M_W158_GAME4_20M_COMMON_RS16_P3B_NO_CPU_GAIN_EXACT_REVERT_NATIVE_PASS; GAME4_25M_HOST_PSI_PRESSURE_STOP_NO_MAIN_MERGE",
+  "phase": "W159R_REAL_JUMBO_UDP_TCP_PASS; W160_GAME4_DEFAULT_SHAREDGE15_PASS; W161R_DEFAULT_100MS_0P1_FAIL; W162_OPTIN_WIDE_140MS_BLACKOUT_PASS; W163_WIDE_SHAREDGE15_LT0P1_PASS; GAME4_CAPACITY_STOP; MERGE_READY_FALSE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -678,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W157 common FEC P3b bounded [Option<&[u8]>;16] vs vec on each authenticated post-k symbol true SOURCE194985bb native40316189069 PASS. Separate real W157 Normal fixed3 15Mbps 2pct shared loss mixed TCP/UDP Action40316698229 PASS old9.14 new9.25 CPU-s (+1.20pct), W158 Game4 fixed6 IID30 20Mbps Action40316706348 PASS old57.98 new58.02 CPU-s (+0.07pct). Both real business zero loss, authentic FEC source/parity and actual TUN recovery, zero outer DATA and Go copied DATA, no source/TUN drops, Stop clean. This per-call ref allocation elimination did not produce any CPU gain and was REVERTED exactly one v4_fec2_live_rx.rs file to pretrial P2 blob a5320a9b6 at commit8ae002d0; final ARM64 native build40317413835 SUCCESS artifact12647711084 sha05de4ff..., source/Go/ISA manifest+three inner hashes verified. Do not re-run seeds on P3b. P2 Game RX unique per-lane AEAD/replay remains retained and scoped qualified bb8e source, W137 deadline kept. All five-mode last fully qualified old product source6c38; Normal OFF Fixed Auto not requalified on recent Game source, Windows NOT_RUN. Game4 25Mbps W153 host PSI mean19.2/18.3 peak21.9 with >20pct 28/18pct samples stops further Game4/80 pressure on this ARM64 VM; Game2 35Mbps W154 true UDP PASS only. Next optimization requires low-rate sampled allocations/CPU profile of shared FEC inverse/owned-frame hot functions and clear causal cost evidence before new allocation/copy restructuring, avoid early group reclaim W11. No original network role next_action edits, no main merge, capacity_stop true, merge_ready false.",
+  "next_action": "W159R Linux ARM64 real 1370/4096/16384/60000B UDP+TCP original fixed6 all delivery PASS Action40325360992; W159 2Mbps true delivery all PASS but Action40321814718 FAIL only because incorrectly requested nonexistent <=256B small cohort, preserve. Game4 default 0/4/20/60 fixed6 W160 shared GE15 45sec 0/8280 per direction missing PASS strict<0.1; W161R same default 3x actual ~105ms shared all-lane wall-clock blackouts REAL FAIL: C2S24/5888 S2C23/5888 missing. Therefore added opt-in Game4 0/4/50/140 variant mode2 (CLI+Go/native FFI+Rust bounded GameTx+readback), source8f85e0ba native ARM64 build40324330469 SUCCESS art12650034658 sha3f3c867d. W162 opt-in same 100ms blackout Action40324751265 SUCCESS 0/5888 UDP missing each, no TCP missing, outerDATA 0, P99/Stop/CPU PSI clean. W163 opt-in shared GE15 long45 Action40325393000 SUCCESS C2S UDP0/8280 missing S2C1/8280 missing (0.0121%<0.1%), TCP all delivered, original parity and lane2 mode true, native outerDATA 0 Stop clean, 0.01% host PSI. Different VMs prevent CPU gain claims. Keep Game4 default 0/4/20/60 unchanged and existing immediate rollback; new variant opt-in only, no Game2/Normal or outer DATA algorithm change. Capacity stop remains at prior Game4 25Mbps host PSI; new wide 25/80Mbps NOT_RUN. Windows TEMP_SKIPPED; old Normal all-five-mode latest full SOURCE6c38 not requalified at new source. No new tests or seed-churn necessary. Scoped merge report updated; merge_ready false, do not merge main, do not touch original network role next_action.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -7674,5 +7674,54 @@
     "audited_head": "fbe64bcabbc959601bab0570fcecef9413a8334f",
     "final_native_rollback_run": 40317413835,
     "note": "RECOVERED cross-source-path/action artifact audit. No new product/source verification; historical W10/W11/W14/W19 PENDING rows are not active rerun requests. Keep capacity_stop=true and merge_ready=false; no next_action change."
+  },
+  "w159_w163_game4_long_loss_new_target": {
+    "user_criterion": "Game4 4lane long-loss residual UDP/TCP application loss STRICTLY LESS THAN 0.1%; real jumbo UDP/TCP simply actually delivered without loss-percent hard requirement",
+    "evidence": "docs/evidence/fec-network-work/20261026-W159-W163-Jumbo-Game4-Wide-Stagger-results.json",
+    "source_old": "8ae002d0b6892664b9d34b415ab3dfeb8186d8ad",
+    "source_new": "8f85e0ba495070c925504452d3848aa90a5d2c20",
+    "build_action": 40324330469,
+    "build_artifact": 12650034658,
+    "build_artifact_sha256": "3f3c867d8a3ca26f56cc0c14ffd94d1a14f6fd1365b0b25d0a9cf0eff610955c",
+    "default_game4_schedule": "stagger-4-20-60",
+    "optin_game4_schedule": "stagger-4-50-140",
+    "original_W159_nonproduct_small_udp_false_gate": 40321814718,
+    "normal_large_pass": 40325360992,
+    "game4_default_GE15_pass": 40321822324,
+    "game4_default_100ms_strict_fail": 40322777858,
+    "game4_optin_100ms_pass": 40324751265,
+    "game4_optin_GE15_pass": 40325393000,
+    "new_mode_readback": 2,
+    "blackout_new_damaged_udp_sent_delivered_both": [
+      [
+        5888,
+        5888
+      ],
+      [
+        5888,
+        5888
+      ]
+    ],
+    "shared_GE_new_damaged_udp_sent_delivered_both": [
+      [
+        8280,
+        8280
+      ],
+      [
+        8280,
+        8279
+      ]
+    ],
+    "shared_GE_new_UDP_missing_loss_pct_each": [
+      0,
+      0.012077294685990338
+    ],
+    "native_outer_DATA_retrans_zero_all": true,
+    "game4_capacity_stop": true,
+    "target_80mbps": "NOT_RUN_HOST_PRESSURE_STOP",
+    "windows": "NOT_RUN/TEMP_SKIPPED_USER_20261025",
+    "no_universal_loss_guarantee": true,
+    "same_VM_CPU_performance_gain": "NOT_CLAIMED_DIFFERENT_ACTIONS",
+    "merge_ready": false
   }
 }
