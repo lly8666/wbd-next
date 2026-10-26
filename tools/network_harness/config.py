@@ -322,13 +322,15 @@ def validate(raw):
         raise ValueError("bundles must contain A, optionally B")
     for label, b in bundles.items():
         keys(b, ["source", "run_id", "attempt", "artifact_id", "sha256",
-                 "step_attested_failure", "recovery_policy", "diagnostic_10x", "repair_enabled", "game4_copy_schedule"], f"bundle {label}")
+                 "step_attested_failure", "recovery_policy", "diagnostic_10x", "repair_enabled", "game4_copy_schedule", "require_go_rx_handoff"], f"bundle {label}")
         if "step_attested_failure" in b and type(b["step_attested_failure"]) is not bool:
             raise ValueError("step_attested_failure must be boolean")
         if "diagnostic_10x" in b and type(b["diagnostic_10x"]) is not bool:
             raise ValueError("diagnostic_10x must be boolean")
         if "repair_enabled" in b and type(b["repair_enabled"]) is not bool:
             raise ValueError("bundle repair_enabled must be boolean")
+        if "require_go_rx_handoff" in b and type(b["require_go_rx_handoff"]) is not bool:
+            raise ValueError("require_go_rx_handoff must be boolean")
         copy_setting=b.get("game4_copy_schedule",p["game4_copy_schedule"])
         if copy_setting not in ("immediate","stagger-4-20-60"):
             raise ValueError("bundle game4_copy_schedule invalid")
