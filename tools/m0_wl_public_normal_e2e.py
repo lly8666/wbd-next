@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Run two actual public executables, then true Windows/WSL2 UDP, then Stop."""
+"""Run actual original-TLS Windows and Linux native public UDP/TCP, then Stop."""
 import os,sys,subprocess,time,json,hashlib,pathlib,re
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
-report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINUX_BINARY_SRC"],"normal_public":"NOT_RUN","windows_ready":"NOT_RUN","linux_ready":"NOT_RUN","app_duplex":"NOT_RUN","stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN"}
+report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINUX_BINARY_SRC"],"normal_public":"NOT_RUN","windows_ready":"NOT_RUN","linux_ready":"NOT_RUN","app_duplex":"NOT_RUN","tcp_duplex":"NOT_RUN","stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN"}
 def run(a,timeout=30):
  p=subprocess.run(a,capture_output=True,text=True,timeout=timeout)
  if p.returncode:raise RuntimeError(str(a[:4])+": "+(p.stderr or p.stdout)[-600:])
@@ -28,7 +28,7 @@ def stop_windows(p):
    p.terminate()
    try:p.wait(timeout=4)
    except subprocess.TimeoutExpired:p.kill()
-w=s=wa=la=None;logs=[]
+w=s=wa=la=wt=lt=None;logs=[]
 try:
  cli=out/"wbd-client-embedded.exe";lib=out/"wbd_engine.dll"
  for f in (cli,lib,out/"wintun.dll",root/"linux-product"/"wbd-v4-server",root/"linux-product"/"libwbd_engine.so"):
@@ -146,6 +146,81 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  report["actual_kernel_udp"]=real
  report["app_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_UDP"
  report["initial_smoke"]="PASS_REAL_TWO_OS_UDP_BEFORE_MEASUREMENT"
+
+ # Functional-only *real TCP* over the same original authenticated public
+ # Wintun/TUN: each OS binds one TCP listener and dials the other. Two
+ # independently established IPv4 streams must echo exact application bytes.
+ # This is NOT a throughput/RTT/packet-loss measurement or fake carrier ACK.
+ tcpapp=out/"tcp-functional.py"
+ tcpapp.write_text(r"""import json,socket,sys,threading,time
+local,remote=sys.argv[1:3]
+port=45902
+marker=("WBD-TCP-NATIVE-"+local+"-to-"+remote).encode()
+listener=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+listener.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+listener.bind((local,port));listener.listen(1);listener.settimeout(16)
+result={"local":local,"remote":remote,"server_received":0,"client_echo":False}
+issues=[]
+def serve():
+ try:
+  conn,peer=listener.accept()
+  with conn:
+   conn.settimeout(8)
+   if peer[0]!=remote:raise RuntimeError("unexpected TCP peer")
+   data=conn.recv(2048)
+   if not data.startswith(b"WBD-TCP-NATIVE-"):raise RuntimeError("invalid real peer marker")
+   conn.sendall(data)
+   result["server_received"]=len(data)
+ except Exception as e:issues.append(str(e))
+thread=threading.Thread(target=serve,daemon=True);thread.start()
+deadline=time.monotonic()+14
+while time.monotonic()<deadline:
+ try:
+  with socket.create_connection((remote,port),timeout=1.5) as conn:
+   conn.settimeout(5);conn.sendall(marker)
+   echoed=b""
+   while len(echoed)<len(marker):
+    chunk=conn.recv(2048)
+    if not chunk:break
+    echoed+=chunk
+   if echoed!=marker:raise RuntimeError("TCP echo bytes mismatch")
+   result["client_echo"]=True
+   break
+ except (OSError,TimeoutError):
+  time.sleep(.1)
+thread.join(timeout=16);listener.close()
+if thread.is_alive() or issues or not result["client_echo"] or result["server_received"]<=0:
+ print(json.dumps({"FAIL_REAL_TCP":result,"issues":issues}),flush=True)
+ sys.exit(9)
+result["tcp"]="PASS_REAL_KERNEL_BIDIRECTIONAL_STREAM"
+print(json.dumps(result),flush=True)
+""")
+ ltlog=(out/"linux-tcp-app.log").open("w");logs.append(ltlog)
+ wtlog=(out/"windows-tcp-app.log").open("w");logs.append(wtlog)
+ lt=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(tcpapp),"10.66.0.1","10.66.0.2"],
+     stdout=ltlog,stderr=subprocess.STDOUT)
+ wt=subprocess.Popen([sys.executable,str(tcpapp),"10.66.0.2","10.66.0.1"],
+     stdout=wtlog,stderr=subprocess.STDOUT)
+ until=time.monotonic()+40
+ while lt.poll() is None or wt.poll() is None:
+  if w.poll() is not None or s.poll() is not None:
+   raise RuntimeError("actual original Windows/Linux owner exited during TCP")
+  if time.monotonic()>until:
+   raise RuntimeError("real TCP duplex deadline; windows="+(out/"windows-tcp-app.log").read_text(errors="replace")[-450:]+
+      " linux="+(out/"linux-tcp-app.log").read_text(errors="replace")[-450:])
+  time.sleep(.1)
+ if wt.returncode or lt.returncode:
+  raise RuntimeError("real public TCP apps failed; windows="+(out/"windows-tcp-app.log").read_text(errors="replace")[-400:]+
+     " linux="+(out/"linux-tcp-app.log").read_text(errors="replace")[-400:])
+ tcp={}
+ for role in ("windows","linux"):
+  line=(out/(role+"-tcp-app.log")).read_text().strip().splitlines()[-1]
+  observed=json.loads(line)
+  if observed["tcp"]!="PASS_REAL_KERNEL_BIDIRECTIONAL_STREAM" or not observed["client_echo"] or observed["server_received"]<=0:
+   raise RuntimeError("invalid real TCP native "+role+" "+repr(observed))
+  tcp[role]=observed
+ report["actual_kernel_tcp"]=tcp
+ report["tcp_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_TCP"
  if os.environ.get("WBD_WL_RUN_N0")=="1":
   # One declared measurement scenario, not a mixed matrix. Genuine Linux
   # egress and eth0-ingress→IFB kernel tc, not an in-app drop/latency shim.
@@ -229,7 +304,7 @@ except Exception as e:
  print("WBD_WL_TRUE_PUBLIC_NORMAL_OFF_FAIL: "+str(e),file=sys.stderr)
  raise
 finally:
- for p in (wa,la):
+ for p in (wa,la,wt,lt):
   if p is not None and p.poll() is None:p.terminate()
  stop_windows(w);stop_linux()
  if s and s.poll() is None:
