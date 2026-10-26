@@ -82,6 +82,12 @@ def cross_business_hol(config, client, server):
             continue
         for direction,tx,rx in (("c2s",client,server),("s2c",server,client)):
             tag=direction+"/"+ph["name"]
+            # Declared idle generation is not an offered-business HOL test.
+            if (ph.get("rate_scale",1)==0 or
+                config["traffic"]["c2s_mbps" if direction=="c2s" else "s2c_mbps"]==0):
+                out[tag]={"scope":"DECLARED_IDLE_NO_BUSINESS_HOL_GATE",
+                          "udp_tx_active_bins":0}
+                continue
             src=tx["tx_bins_10ms"]["udp"]
             dst=rx["rx_bins_10ms"]["udp"]
             sent_tcp=tx.get("tcp_flow_tx_bins_10ms")
@@ -251,6 +257,16 @@ def summarize(config, client, server, telemetry, host):
                                         "rx_packets":rx[pi][name]["rx_packets"],
                                         "p99_ms":rx[pi][name]["latency"]["p99_ms"]}
                                       for name in ("small_64_256","medium_257_899","large_900_plus")}}
+                if (ph.get("rate_scale",1)==0 or
+                    config["traffic"]["c2s_mbps" if direction=="c2s" else "s2c_mbps"]==0):
+                    # A true quiet interval has no new packet cohort. Treat
+                    # unexpected SEND as an integrity failure, not a missing
+                    # p99 where no packet could have a timestamp.
+                    stat["qualification"]="DECLARED_IDLE_NO_FIRST_ARRIVAL"
+                    small_udp[tag]=stat
+                    if sent!=0 or delivered!=0:
+                        failures.append(tag+": unexpected offered/received quiet cohort")
+                    continue
                 small_udp[tag]=stat
                 if sent==0 or missing<0:
                     failures.append(tag+": small UDP cohort missing or nonconserving")
