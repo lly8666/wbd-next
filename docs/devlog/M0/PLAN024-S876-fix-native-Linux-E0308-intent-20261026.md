@@ -1,0 +1,6 @@
+# PLAN024 S876 — first exact native Actions E0308 correction intent (2026-10-26)
+
+- M0 registry remains task R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025, revision3/epoch1. S875 SOURCE 8642ad4ac05ac280282b33201af12c4615cf980b.
+- First new SOURCE cross-OS Action40294153223 attempt1 Linux source build job121476012338 FAIL (Rust E0308 at crates/wbd-engine/src/v4_embedded_go.rs:561): introduced local `let normal=handoff.negotiated_features==3` shadows existing `let normal=NormalOffReceive::new_for_owner(...)`; Entry constructor then receives bool instead of NormalOffReceive. Same-source Normal Common40294153125 FAIL same compiler error. Windows original owner ABI job still independent, no WL-N0 execution occurred in failed new SOURCE.
+- Re-read current code actual `prepare_side` lines 540–562: receiver must remain typed NormalOffReceive and owned/replay state unchanged. Only rename newly-added Boolean to `normal_off_m1` at both conditional arena slots/budget. Do not modify M2, ACK, auth, interface, release logic; preserve original E0308 FAIL as native BUILD_FAIL_NOT_PERF.
+- Before action: this intent records source, run, first real blocker, scoped fix and one new exact-source Actions verification. Do not retry identical failed SHA, do not launch N1/N5; all execution validation in GitHub Actions.
