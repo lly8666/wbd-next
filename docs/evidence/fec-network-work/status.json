@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "P2_GAME_SCOPED_RETAINED; W153_GAME4_25M_HOST_PSI_LIMIT_W154_GAME2_35M_PASS; P1B_W155_W156_TRUE_SENDMMSG_NO_REPEATABLE_CPU_WIN_EXACT_SIX_FILE_ROLLBACK; CAPACITY_STOP_NO_MAIN_MERGE",
+  "phase": "P2_GAME_SCOPED_RETAINED; W153_25M_GAME4_HOST_PSI_STOP_AND_W154_35M_GAME2_PASS; P1B_W155_W156_NATIVE_SENDMMSG_ABBA_NEGATIVE_EXACT_ROLLBACK_ARM64_NATIVE_SUCCESS; NO_MAIN_MERGE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -678,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "P1b true Linux sendmmsg Game TX opt-in was built, native receipt instrumented and genuinely tested W155 20Mbps AB Action40312815163 and reverse W156 BA Action40313701729; W156 proves ~483k actual native multi-record sendmmsg per endpoint, ~1.83m kernel-copied records each, 8 max, 0 partial/unsent, fixed6 parity, source copies and true TUN delivery all correct. But process CPU W155 old70.05/new69.54 (-0.73%) and W156 old69.84/new70.30 (+0.66%) not repeatable, and lateness of delayed copies ~+70-82us. Rejected and six prod/harness files byte-for-byte restored to baseline4c2f7bd P2 scope in f952/2f039/6d518/d5bc/7c088/7a87; interim CI failures on mixed mid-rollbacks expected, final harness contracts Action40314510655 SUCCESS, final ARM64 native Action40314448395 STILL RUNNING, inspect artifact sha and inner source then record. Keep independent W155/W156 request fixtures and evidence artifact IDs for audit. Higher-stress W153 Game4 25Mbps source P2 PASS actual business zero loss, but PSI over20 for18–28% samples and mean18–19=> capacity_stop Game4>25; W154 Game2 35Mbps PASS zero loss PSI11/12.6, true UDP-only, not TCP/80 proof. P2 retained as previous Game version, last five-mode Normal OFF/Fixed/Auto/Game2/Game4 product fully qualified6c38. NO further P1b ABBA, avoid complexity. Windows NOT_RUN, capacity_stop true, merge_ready false, no main/other owner's next_action.",
+  "next_action": "P1b true native sendmmsg kernel TX was fully implemented and tested two real Actions W15540312815163 and W15640313701729. W156 actual native calls client483777/server482946, records ~1.832m each, max batch8, no short/unsent; real Game4 fixed6 independent IID30 at20Mbps each direction zero business missing, all physical copies and parity actually copied, outerDATA0 Go copy0, Stop clean. But CPU old70.05/new69.54 (-0.73%) AB and old69.84/new70.30 (+0.66%) BA, plus 20/60ms copy lateness increased ~70–82us: P1b not justified, all 6 prod/harness files restored EXACT Git blob to before P1b, interim CI failed on mixed intermediate revert commit snapshots and are logged; FINAL native Action40314448395 SUCCESS, artifact12646950297 SHA256 043de414... verified original Go/ISA manifest and three inner binaries; FINAL harness contracts Action40314510655 SUCCESS. Prior P2 unique-lane AEAD/replay retained with real Game2/4 correctness and modest variable CPU benefits, no main merge; older full five-mode Normal OFF/Fixed/Auto/Game2/4 product source6c38 stays qualified. High-pressure W153 Game4 fixed6 25Mbps PASS real UDP zero missing but CPU PSI mean~19.2/18.3 peak~21.9 and >20 for28/18pct samples=>capacity_stop for Game4 >25 including80; W154 Game2 35Mbps true UDP PASS PSI mean~11 with zero business missing, not analogous to 80Mbps Game4 or real TCP mixed. Next candidate should focus evidence-guided shared Normal+Game FEC allocations and small fixes rather than TX batching without gain. Windows NOT_RUN/TEMP_SKIPPED, capacity_stop=true, merge_ready=false, no original network role next_action modified.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -7605,7 +7605,7 @@
       "harness_test": "7a87dd317bfbb96d2f2a4ecc5e9a1aa89be54061"
     },
     "rollback_build_action": 40314448395,
-    "rollback_build_status": "IN_PROGRESS_NATIVE_AFTER_EXACT_ALL_THREE_ENGINE_CODE_BLOBS_RESTORED",
+    "rollback_build_status": "SUCCESS_NATIVE_ARM64_AFTER_EXACT_THREE_PRODUCT_BLOBS_RESTORED",
     "intermediate_failed_rollbacks": {
       "native": [
         40314410045,
@@ -7619,6 +7619,11 @@
     },
     "final_harness_contract_action": 40314510655,
     "final_harness_contract_result": "SUCCESS",
-    "evidence": "docs/evidence/fec-network-work/20261026-W155-W156-Game-P1b-true-kernel-sendmmsg-ABBA-rejected.json"
+    "evidence": "docs/evidence/fec-network-work/20261026-W155-W156-Game-P1b-true-kernel-sendmmsg-ABBA-rejected.json",
+    "rollback_build_source": "6d51817768aa795db13c817b4785cf7924638a91",
+    "rollback_build_artifact": 12646950297,
+    "rollback_build_zip_sha256": "043de4146925d219b7ce2f0340666baf301bc47831ffdb1843d1705159023f02",
+    "rollback_build_inner_client_server_so_SHA256_verified": true,
+    "rollback_all_six_files_exact_base_blob_verified": true
   }
 }
