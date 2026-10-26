@@ -107,7 +107,7 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         p.fec,err=v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,cold)
     }
     if err==nil{err=bridge.configureOriginalOuterRepair(!p.cfg.DisableOuterRepair)}
-    if err==nil{err=bridge.armOriginalPublicM2Feedback()}
+    if err==nil{err=bridge.armOriginalPublicM2Feedback(0)} // public Linux client always expects original Legacy peer
     if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
     if err!=nil{
         shutdown:=p.closeLocked()
