@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W143_W144_GAME_P2_LANE_AEAD_10MBPS_ABBA_PASS_SMALL_CPU_GAIN; W145_INCREMENTAL_15MBPS_NEAR_CAPACITY_RUNNING; FIVE_MODE_P0_PREVIOUS_6C38; CAPACITY_STOP_NO_MAIN_MERGE",
+  "phase": "W143_W145_GAME4_P2_AEAD_ABBA_10M_AND_15M_SCOPED_PASS_SMALL_CPU_GAIN; W146_GAME2_20M_RUNNING; W147_GAME4_20M_KNEE_RUNNING; W130_W134_5MODES_6C38_LAST",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -678,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W143 Game P2 new source bb8e8249 native ARM64 Action40300070389 PASS artifact12639832584 SHA256 0073e5ad..., lane AEAD/replay moved once per worker before shared dedup+FEC/TUN after authenticated ID. Real W143 Game4 fixed6 IID30 10Mbps AB Action40300583654 PASS old30.99/new30.15 CPU-s (-2.71%) PSI4.526/4.235; reverse W144 BA Action40301283287 PASS old33.15/new32.77 (-1.15%) PSI4.95/4.97; zero business missing, original parity and 0/4/20/60 copies all truly sent, no TUN drops, outerDATA0, Go duplicates0, clean Stop. Small CPU savings alone not conclusive. User requests near-limit test, incremental W145 15Mbps each direction true Game4 fixed6 IID30 sameVM AB Action40302001410 launched; only if W145 actual delivery/PSI/CPU headroom qualifies proceed, no automatic 20/80 pressure. Game2 near-edge protective and Game4 OFF independent only after W145 decision; Normal OFF Fixed Auto last original 6c38 qualification unchanged. P1a 80Mbps synthetic 64B native 156250pps ABBA negative+3.567% CPU and real W135/W136 failed CPU, reverted. W137 Game deadline e400 scoped. W142 owner lock measured~1.4us wait/3us hold. Windows NOT_RUN, capacity_stop true, no main or original network state edit.",
+  "next_action": "W143 P2 per-lane unique AEAD/replay SOURCE bb8e8249 native Action40300070389 artifact12639832584 success. Game4 exact real IID30 AB/BA 10Mbps W14340300583654 old30.99 new30.15 CPU-s -2.71%, W14440301283287 old33.15 new32.77 -1.15%; Game4 15Mbps W14540302001410 PASS old45.08 new44.56 CPU-s -1.15%, host PSI mean7.65/7.57 peak<9, all real UDP injected/delivered no loss, parity and four copies sent, outerDATA0, Go clones0, Stop clean. Since 15Mbps host still clear, one +5Mbps Game4 20Mbps capacity-knee sameVM AB Action40302726486 launched, DO NOT advance above20 without capacity proof. Game2 fixed6 near original30Mbps knee at20Mbps sameVM BA Action40302321280 launched independently; both one Action one scenario, immutable binary hashes. Need harvest their artifact IDs/SHA256, PSI/product CPU-s, real delivery, parity/copies/Stop. If CPU gain remains only~1-3% with added complexity, withdraw or describe benefit uncertain, do not promise faster. Last all-5-mode product source6c38 remains; Windows skipped, outerDATA off, capacity_stop true, merge_ready false, no main.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -7270,8 +7270,19 @@
     "higher_bandwidth_action": 40302001410,
     "higher_bandwidth_request": "tests/network/fec-work/W145-Game4-fixed6-IID30-UDP15Mbps-P2-lane-AEAD-near-capacity-AB-ARM64.json",
     "higher_bandwidth_commit": "189db3eba61e5b02b6de740357ac5852ccd2334e",
-    "higher_bandwidth_result": "IN_PROGRESS_AT_STATUS_CHECK",
-    "retention_decision": "SMALL_POSITIVE_ABBA_BUT_COMPLEXITY_BENEFIT_NOT_YET_FINAL; AWAIT_SINGLE_15MBPS_BOUNDED_SCENARIO",
-    "last_five_mode_qualified_source": "6c38ed0df9da3547c7bd604b51f13443d6863181"
+    "higher_bandwidth_result": "W145 40302001410 PASS_SCOPED 15Mbps IID30: old CPU45.08 new44.56 (-1.15%), mean host PSI7.646/7.5674, peak8.92/8.74, true UDP zero missing, all parity and Game4 copies sent, no outerDATA retries, Go cloned DATA0, Stop clean.",
+    "retention_decision": "P2 CPU reduction small 2.71/1.15/1.15pct at10/10/15, code complexity vs CPU still under review pending near-knee real W146/W147",
+    "last_five_mode_qualified_source": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+    "higher_bandwidth_artifact_id": 12641256273,
+    "higher_bandwidth_zip_sha256": "3189ca69f65667d63ff62a2c57c7ac97831685ca6a93e291dbc6041cdbf2aee2",
+    "game2_near_cap_action": 40302321280,
+    "game2_near_cap_request": "tests/network/fec-work/W146-Game2-fixed6-IID30-UDP20Mbps-P2-lane-AEAD-near-capacity-BA-ARM64.json",
+    "game2_near_cap_commit": "4da6e636600ef021a16f3561ef6eadc1bbb321d1",
+    "game2_near_cap_result": "IN_PROGRESS_AT_CHECKPOINT",
+    "game4_capacity_knee_action": 40302726486,
+    "game4_capacity_knee_request": "tests/network/fec-work/W147-Game4-fixed6-IID30-UDP20Mbps-P2-capacity-knee-sameVM-AB-ARM64.json",
+    "game4_capacity_knee_commit": "a0b002c430269c2076966363999ecf174dd8a65e",
+    "game4_capacity_knee_result": "IN_PROGRESS_AT_CHECKPOINT",
+    "capacity_escalation_reason": "W145 at15Mbps zero business misses, full parity/copies, host PSI peak<9% both A/B, justifies a single +5Mbps 20Mbps original W126 historical knee recheck on exact newer P2 and P0; no 80Mbps request"
   }
 }
