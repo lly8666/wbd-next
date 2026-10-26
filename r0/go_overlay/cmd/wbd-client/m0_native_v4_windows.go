@@ -183,7 +183,10 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   policy,err=realityfront.FixedPolicyForClient(1,0)
  case m0WinModeFixed:
   policy,err=realityfront.PolicyForClientWithInitialAndCipher(
-   1,"fixed",6,6,20,realityfront.CipherChaCha)
+   // Frozen Linux original-Go V3 carrier envelope uses fixed parity 4;
+   // this is NOT W168 FEC2 Maximum profile 6. Native Rust FixedStream
+   // independently selects profile6 under authenticated feature7.
+   1,"fixed",4,4,20,realityfront.CipherChaCha)
  case m0WinModeAuto:
   policy,err=realityfront.PolicyForClientWithInitialAndCipher(
    1,"auto",0,4,20,realityfront.CipherChaCha)
