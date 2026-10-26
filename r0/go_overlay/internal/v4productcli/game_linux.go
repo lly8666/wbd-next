@@ -111,7 +111,6 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
             DisableOuterRepair:c.disableOuterRepair,
-            DisableOuterRepair:c.disableOuterRepair,
         })
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
@@ -159,6 +158,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
+            DisableOuterRepair:c.disableOuterRepair,
             Epochs:store,
         })
     if err!=nil{return err}
