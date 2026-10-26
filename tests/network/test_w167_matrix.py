@@ -21,6 +21,8 @@ class W167MatrixContracts(unittest.TestCase):
                     self.assertEqual(c["phases"][0]["c2s"]["loss_pct"],loss)
                     self.assertEqual(c["phases"][0]["s2c"]["loss_pct"],loss)
                     self.assertEqual(c["network"]["lane_loss"],"shared")
+                    self.assertEqual(c["phases"][0]["c2s"]["rate_mbps"],500)
+                    self.assertEqual(c["phases"][0]["s2c"]["rate_mbps"],500)
                     self.assertEqual(c["bundles"]["A"]["source"],"a"*40)
                     self.assertNotIn("artifact_id",c["bundles"]["A"])
 

@@ -94,7 +94,10 @@
     "stop_on_steal_pct_gt": 5,
     "stop_on_namespace_cleanup_failure": true,
     "not_yet_finished": "GITHUB_ACTIONS_RUNS_WILL_CARRY_RESULT",
-    "honest_result_policy": "Each scenario saved, failed/unsupported are NOT green."
+    "honest_result_policy": "Each scenario saved, failed/unsupported are NOT green.",
+    "outer_impairment_rate_mbps_per_direction": 500,
+    "earlier_nonfinal_run_note": "Run40339594067 used initial100Mbps outer netem rate; Game4+Fixed6 may hit link bottleneck. Superseded by exact-source 500Mbps outer link, initial run preliminary.",
+    "ci_workflow_concurrency": "latest branch W167 push cancels previous W167 workflow run, preserving available artifacts"
   },
   "telemetry": {
     "cpu": "Per client/server process measurement cpu seconds; Rust RX+TX thread cpu ns 250ms sampled whole phase (NOT all Rust). Actual Go vs Rust CPU ownership not exactly derivable from process/thread alone.",
