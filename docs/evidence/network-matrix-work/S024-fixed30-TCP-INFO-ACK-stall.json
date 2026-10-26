@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "event": "S024",
+  "kind": "REAL_ARM64_FIXED30_TCPSOCKET_INFO",
+  "result": "FAIL",
+  "action": {
+    "run_id": 39788742492,
+    "attempt": 1,
+    "conclusion": "failure",
+    "artifact_id": 12430711286,
+    "digest_sha256": "6656546012ee79e47ac081415128a6e83d15a4b783d17561f80395ceb86900ea",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39788742492"
+  },
+  "source": "370eb534621d76deda7888599bd089acc163acac",
+  "harness_source": "230231140cbb0500dc870e6ea61d652b0a1e94e5",
+  "build": {
+    "run_id": 39783512063,
+    "attempt": 1,
+    "artifact_id": 12427229903,
+    "zip_sha256": "e9ea6e661aa2801b081fe9101f3694927815871c8279c13d47ab8e868a27b3c6",
+    "arch": "aarch64",
+    "manifest_verified": true
+  },
+  "scenario": {
+    "mode": "fec-fixed",
+    "profile": 6,
+    "offered_mbps_each": 2,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "steady_s": 120,
+    "warmup_s": 15,
+    "drain_s": 30,
+    "one_way_ms": 300,
+    "iid_loss_pct": 30,
+    "business_seed": 5205,
+    "netem_rng": "unseeded_recorded"
+  },
+  "observed": {
+    "netem_loss_pct": {
+      "client": 29.92021440074745,
+      "server": 30.207376133118093
+    },
+    "udp": {
+      "c2s": {
+        "sent": 20751,
+        "delivered": 13945,
+        "missing": 6806,
+        "loss_pct": 32.79841935328418,
+        "duplicates": 0,
+        "invalid": 0,
+        "arrived_p99_ms": 369.1
+      },
+      "s2c": {
+        "sent": 20751,
+        "delivered": 13716,
+        "missing": 7035,
+        "loss_pct": 33.90198062743964,
+        "duplicates": 0,
+        "invalid": 0,
+        "arrived_p99_ms": 330.6
+      }
+    },
+    "tcp": {
+      "warmup_full_frames_submitted": {
+        "client": 261,
+        "server": 256
+      },
+      "warmup_full_frames_received": {
+        "client": 9,
+        "server": 9
+      },
+      "steady_full_frames_submitted": {
+        "client": 0,
+        "server": 0
+      },
+      "steady_received": {
+        "client": 0,
+        "server": 0
+      },
+      "steady_scheduled": {
+        "client": 14649,
+        "server": 234375
+      },
+      "nonblocking_pending_at_deadline_each": 4,
+      "state": "ESTAB 4 each at before-steady and end",
+      "socket_kernel_info": {
+        "client": {
+          "before_steady": {
+            "acked_sum": 4840,
+            "bytes_sent_sum": 77072,
+            "notsent_sum": 135412,
+            "unacked_sum": 63,
+            "cwnd_sum": 4,
+            "rto_max_ms": 14440,
+            "tcp_retrans_total_sum": 28
+          },
+          "measurement_end": {
+            "acked_sum": 4840,
+            "bytes_sent_sum": 92856,
+            "notsent_sum": 135412,
+            "unacked_sum": 63,
+            "cwnd_sum": 4,
+            "rto_max_ms": 116992,
+            "tcp_retrans_total_sum": 42
+          }
+        },
+        "server": {
+          "before_steady": {
+            "acked_sum": 4836,
+            "bytes_sent_sum": 82684,
+            "notsent_sum": 130396,
+            "unacked_sum": 67,
+            "cwnd_sum": 4,
+            "rto_max_ms": 14640,
+            "tcp_retrans_total_sum": 29
+          },
+          "measurement_end": {
+            "acked_sum": 4836,
+            "bytes_sent_sum": 97316,
+            "notsent_sum": 130396,
+            "unacked_sum": 67,
+            "cwnd_sum": 4,
+            "rto_max_ms": 117248,
+            "tcp_retrans_total_sum": 42
+          }
+        }
+      }
+    },
+    "fec_rx": {
+      "client": {
+        "source_accepted": 14996,
+        "parity_accepted": 23491,
+        "recovered_tun": 5699,
+        "tun_failed": 0,
+        "decoder_rejected": 4278,
+        "admission_disabled": 0
+      },
+      "server": {
+        "source_accepted": 15257,
+        "parity_accepted": 23885,
+        "recovered_tun": 5700,
+        "tun_failed": 0,
+        "decoder_rejected": 4274,
+        "admission_disabled": 0
+      }
+    },
+    "m2": {
+      "client": {
+        "authenticated_reverse_reports": 11614,
+        "unknown_2s": 293,
+        "censored": 0
+      },
+      "server": {
+        "authenticated_reverse_reports": 11733,
+        "unknown_2s": 227,
+        "censored": 1
+      }
+    },
+    "fec_config": {
+      "client": "fixed requested1 applied0 pending",
+      "server": "fixed requested1 applied1"
+    },
+    "host": {
+      "cpu_psi_mean_pct": 0.5475,
+      "cpu_psi_over20_fraction": 0.008333333333333333,
+      "steal_peak_pct": 0,
+      "socket_udp_errors": 0
+    },
+    "both": {
+      "stop_drained": true,
+      "owned_namespace_cleanup": true,
+      "application_invalid": 0,
+      "application_duplicate": 0
+    }
+  },
+  "interpretation": "First real kernel TCP_INFO diagnostic: four established sockets each side, warmup sends ~260 fully submitted frames but only 9 received, then no full frames 120s steady. Cumulative bytes_acked sum freezes client 4840/server 4836 from steady start to end; cwnd each 1, RTO balloons to 117s and notsent sums remain >130KiB with no ACK progress. Kernel bytes_sent still rises from retransmissions. This is genuine TCP send/ACK stall, not startup connect failure or reporting-only full-frame counter; cannot attribute definitively to FEC, a global lock, random host, or FEC ACK policy without class-specific post-M4 TCP ACK/data receipts. Original underlay fakeTCP causes many Tcp.OutRsts; aggregate SNMP TCP OutRsts cannot be used as a count of inner TCP RSTs. Fixed mode client pending; strict FAIL preserved. 0.55% mean host CPU PSI and small bursts are not a demonstrated host ceiling."
+}

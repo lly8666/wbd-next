@@ -1,0 +1,190 @@
+{
+  "schema": "FEC_W84_W81_GE_AUTO_PHASE_REANALYSIS_ONLY_V1",
+  "date_utc": "2026-10-25",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "purpose": "Distinguish Auto upgrade transition loss from sustained Maximum residual using EXISTING native ARM64 GitHub Actions artifacts only; no new test or product patch.",
+  "frozen_product_source": "7ad0ba91b656ff8e9ee965d0c093a18e048971fb",
+  "artifacts": [
+    {
+      "case": "W81",
+      "action": 40191033811,
+      "artifact_id": 12597737779,
+      "zip_sha256": "d57bdf687b4dcf097d588b2966561bd0f0a36d47da6f9aae6aa53a4be00c30e0"
+    },
+    {
+      "case": "W80",
+      "action": 40191030800,
+      "artifact_id": 12598395699,
+      "zip_sha256": "b0035e6581ba3a01a3851e93e3f8cae0e11603bba6b99c4f778f22ab9aea781e"
+    },
+    {
+      "case": "W83",
+      "action": 40191819998,
+      "artifact_id": 12598148292,
+      "zip_sha256": "e64479fb524f0a3d92c4b21472cd46c97cb2e2e070b2976aef94cf07dae9423c"
+    }
+  ],
+  "primary_source_paths": [
+    "A/impairment-events.json",
+    "A/client-traffic.json",
+    "A/server-traffic.json",
+    "A/client-auto-quality.log",
+    "A/client-product-markers.log",
+    "A/result.json"
+  ],
+  "methodology": "W81 same-host monotonic clock: client TX UDP tx_bins_10ms versus server RX UDP rx_bins_10ms. Stress loss begins t=45.000073 s after traffic.start_ns and ends t=105.000074 s. For a nominal window [a,b), sum source TX bins [a*100,b*100) and receiver-arrival RX bins [(a+0.08)*100,(b+0.08)*100); 80ms shift is approximate 75ms path delay + processing. Compare RX shifts 0,60,80,100,120,160ms. These are arrival-bin deficits, NOT exact packet-ID-matched cohort loss; window-edge carryover and FEC late recovery cause differences vs authoritative whole-phase cohort counters. Stage wall-log times are second-rounded and represent requests, NOT exact APPLIED timestamps.",
+  "W81": {
+    "impairment": {
+      "direction": "c2s",
+      "tc_gemodel": [
+        3,
+        17,
+        100,
+        0
+      ],
+      "wire_drop_pct": 14.6484986021,
+      "duration_s": 60
+    },
+    "baseline_before_loss_grade": 3,
+    "stage_requests_since_loss_s": [
+      {
+        "grade": 4,
+        "at_s": 6.4,
+        "revision": 4
+      },
+      {
+        "grade": 6,
+        "at_s": 29.4,
+        "revision": 5
+      }
+    ],
+    "observation_gap": "Following grade4 requested at +6.4s, client auto quality at approx +9s to +24s showed UNKNOWN/missing feedback, then valid again; do not treat that as clean or as exact APPLIED latency.",
+    "exact_whole_phase_udp": {
+      "sent": 88162,
+      "missing": 2688,
+      "loss_pct": 3.0489326467
+    },
+    "windows": {
+      "transition_first_30s": {
+        "traffic_relative_s": [
+          45,
+          75
+        ],
+        "tx": 44082,
+        "shifted_rx": 41920,
+        "arrival_bin_deficit": 2162,
+        "deficit_pct": 4.9045,
+        "shift_sensitivity_pct_min": 4.8319,
+        "shift_sensitivity_pct_max": 4.9431
+      },
+      "maximum_request_last_30s": {
+        "traffic_relative_s": [
+          75,
+          105
+        ],
+        "tx": 44080,
+        "shifted_rx": 43534,
+        "arrival_bin_deficit": 546,
+        "deficit_pct": 1.2387,
+        "shift_sensitivity_pct_min": 1.2387,
+        "shift_sensitivity_pct_max": 1.3657
+      },
+      "plateau_interior_20s": {
+        "traffic_relative_s": [
+          80,
+          100
+        ],
+        "tx": 29361,
+        "shifted_rx": 28927,
+        "arrival_bin_deficit": 434,
+        "deficit_pct": 1.4782,
+        "shift_sensitivity_pct_min": 1.3079,
+        "shift_sensitivity_pct_max": 1.4782
+      },
+      "plateau_interior_24s": {
+        "traffic_relative_s": [
+          78,
+          102
+        ],
+        "tx": 35272,
+        "shifted_rx": 34795,
+        "arrival_bin_deficit": 477,
+        "deficit_pct": 1.3523,
+        "shift_sensitivity_pct_min": 1.3523,
+        "shift_sensitivity_pct_max": 1.4884
+      }
+    },
+    "approximate_transition_share_pct_of_binned_deficit": 79.84,
+    "approximate_maximum_share_pct_of_binned_deficit": 20.16,
+    "quality": "Real authenticated positive M2, separate C2S/S2C; final native applied client requested11 applied11 profile0 pendingfalse; no precise per-revision applied timestamps in captured artifact.",
+    "source_tun_drops": 0,
+    "netem_tun_root_drops": 0,
+    "native_rx_capacity_rejected": 0,
+    "native_decoder_rejected": 0,
+    "native_parity_expired": 0,
+    "parity_planned_sent_client": [
+      262438,
+      262438
+    ],
+    "parity_planned_sent_server": [
+      112753,
+      112753
+    ],
+    "outer_data_retransmitted": 0,
+    "host_cpu_psi_some_mean": 2.6983,
+    "host_cpu_psi_some_peak": 32.88
+  },
+  "independent_fixed_maximum": {
+    "W80_long_GE": {
+      "gemodel": [
+        3,
+        17,
+        100,
+        0
+      ],
+      "main_udp_c2s_pct": 1.3412,
+      "main_udp_s2c_pct": 1.5306,
+      "cpu_psi_some_peak": 1.99,
+      "strict_1pct_gate": "FAIL"
+    },
+    "W83_same_VM_long": {
+      "gemodel": [
+        3,
+        17,
+        100,
+        0
+      ],
+      "main_udp_c2s_pct": 1.3207,
+      "main_udp_s2c_pct": 1.3026,
+      "cpu_psi_some_peak": 1.98,
+      "strict_1pct_gate": "NOT_PASSED"
+    },
+    "W83_same_VM_short": {
+      "gemodel": [
+        6,
+        34,
+        100,
+        0
+      ],
+      "main_udp_c2s_pct": 0.2148,
+      "main_udp_s2c_pct": 0.1997,
+      "strict_1pct_gate": "PASS"
+    }
+  },
+  "illustrative_math": {
+    "description": "Two-state Markov model with steady bad=0.15, good->bad=0.03, bad->good=0.17, bad erases each symbol and good delivers; hypothetical uninterrupted k=16 source then r=20 parity with ideal MDS and timely completion; exact dynamic-program sum over erased sources and total erased>20.",
+    "illustrative_per_source_residual_pct": 1.77347,
+    "scope": "NOT measured actual-k, class, scheduling, packet interleaving, netem true run-length trace, or guaranteed lower bound; expected bad run=5.8824 packets."
+  },
+  "decision": "MAINLY_TRANSITION_BUT_NONZERO_SUSTAINED_MAXIMUM_BURST_RESIDUAL; NOT_AUTO_WRONG_GRADE_OR_PROVEN_CODEC_BUG; DO_NOT_CALL_LONG_GE_1PCT_PASS; NO_PRODUCT_PATCH_WITHOUT_BURST_LAYOUT_TRACE",
+  "followup": "Optional if <=1% is mandatory for this exact long-correlated GE scenario: capture per-block k, planned/sent r, actual parity/source departure and receiver timely erasure bitmaps in bounded aggregate Actions run, same frozen product/load; then compare same-VM fixed Maximum versus minimally time-diversified parity interleave without increasing parity, source latency, codec allocations, or outer retransmissions. No capacity escalation; do not assert a patch works before evidence.",
+  "caveats": [
+    "Client source first-send versus server RX wall-clock arrivals cannot exactly attribute phase-border cohorts; 60s whole-phase authoritative 2688 not equal shifted-bin deficits 2708.",
+    "Maximum at +29.4s is an intent request time; final native applied confirmed but exact individual APPLIED timestamp is missing.",
+    "W81 host CPU PSI transiently peaked 32.88%; fixed W80/W83 low-PSI corroboration argues against host as sole mechanism but does not prove zero host influence.",
+    "W80/W83 and W81 have different unseeded GE random traces and directions; consistency is corroboration not strict paired causality.",
+    "No per-block timely-erasure trace to distinguish mathematically undecodable erasures from rarer recoverable-but-late outputs; cannot justify encoder or scheduler code patch on these aggregate data.",
+    "User allows transition loss; stable ~1.3-1.5% exceeds 1% reference narrowly, not 3% sustained, and correlated-burst case is not the original IID30% service contract."
+  ]
+}

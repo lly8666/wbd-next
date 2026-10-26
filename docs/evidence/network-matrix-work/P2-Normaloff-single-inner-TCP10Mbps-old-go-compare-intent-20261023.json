@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "id": "P2-Normal-TCP1-10M-2pct-200ms",
+  "question": "Why allegedly old Go single TCP 10Mbps/2% would pass while new Rust not; distinguish outer single FakeTCP vs one Linux inner TCP, packet/retry, evidence and latency tradeoff.",
+  "old_comparison": {
+    "old_repo": "lly8666/wobuzhidao",
+    "old_code_reference": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "single_flow_meaning": "one OUTER public fakeTCP association with DATAGRAM-first delivery after bootstrap; NOT single inner kernel TCP throughput",
+    "documented_tcp_counterexample": {
+      "run_id": 37762364098,
+      "product": "bf11fbfbe64d518e7ba189d51bfb4512df4df733",
+      "result": "FAIL",
+      "sample": "4 long TCP +300 short +20 HTTP/HTTPS; LOSS0, one-way300ms, 10Mbps/dir target, delivered7.713/7.715Mbps"
+    },
+    "old_app_tcp": {
+      "path": "internal/platformflow/tcp_reliability.go",
+      "max_inflight": 16,
+      "rto_ms": 500,
+      "max_retransmits": 8,
+      "mechanism": "application-layer TCPTransmit different from Linux kernel TCP in new product"
+    },
+    "exact_old_one_inner_tcp10Mbps2pct_200ms_evidence": "NOT_FOUND; do not infer pass"
+  },
+  "new_product": {
+    "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+    "bundle_artifact": 12486939897,
+    "policy": "outer-single-repair-v2",
+    "outer_repair_attempts": 1,
+    "max_residual_udp_loss_pct_at_2pct": 0.25,
+    "healthy_8_inner_tcp_mixed_run": 39927659556
+  },
+  "scenario": {
+    "version": 1,
+    "id": "P2-Normal-TCP1-10M-2pct-200ms",
+    "owner": "network-matrix-work",
+    "seed": 5213,
+    "product": {
+      "mode": "normal",
+      "fec_profile": 1
+    },
+    "traffic": {
+      "c2s_mbps": 10,
+      "s2c_mbps": 10,
+      "udp_share": 0,
+      "sizes": [
+        [
+          64,
+          1
+        ],
+        [
+          1287,
+          99
+        ]
+      ],
+      "tcp_flows": 1,
+      "probe_hz": 20,
+      "deadline_ms": 3000,
+      "burst_ms": 0,
+      "max_packets": 20000000,
+      "allow_fragmentation": false
+    },
+    "network": {
+      "outer_mtu": 1500,
+      "lane_loss": "shared",
+      "queue_packets": 32768,
+      "netem_rng": "unseeded_recorded"
+    },
+    "warmup_s": 10,
+    "drain_s": 30,
+    "phases": [
+      {
+        "name": "steady",
+        "seconds": 60,
+        "rate_scale": 1,
+        "c2s": {
+          "delay_ms": 200,
+          "jitter_ms": 0,
+          "loss_pct": 2,
+          "duplicate_pct": 0,
+          "reorder_pct": 0,
+          "rate_mbps": 0,
+          "blackhole_lanes": []
+        },
+        "s2c": {
+          "delay_ms": 200,
+          "jitter_ms": 0,
+          "loss_pct": 2,
+          "duplicate_pct": 0,
+          "reorder_pct": 0,
+          "rate_mbps": 0,
+          "blackhole_lanes": []
+        }
+      }
+    ],
+    "acceptance": {
+      "injection_tolerance_pct": 3,
+      "max_loss_pct": 0.25,
+      "require_retransmission": true
+    },
+    "bundles": {
+      "A": {
+        "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+        "run_id": 39921718042,
+        "attempt": 1,
+        "artifact_id": 12486939897,
+        "sha256": "637ca5d47d06e0aea0674d535821dcfc2e1f055f3fb5201b82deab1a64217f11",
+        "recovery_policy": "outer-single-repair-v2"
+      }
+    },
+    "order": "A",
+    "policy": "outer-single-repair-v2"
+  },
+  "model": {
+    "rtt_ms": 400,
+    "inner_tcp_target_mbps": 10,
+    "mss_estimate_bytes": 1289,
+    "required_inflight_bytes": 500000,
+    "required_inflight_mss": 387.8975950349108,
+    "one_repair_IID_ideal_residual": 0.0004,
+    "reno_heuristic_w_at_ideal": 61.237243569579455,
+    "reno_heuristic_max_goodput_mbps": 1.5786961392237584,
+    "heuristic_only": true
+  },
+  "hard_rules": [
+    "Actual causal comparison requires same path/RTT/loss/inner flow counts; old Action not available",
+    "No FEC performance tests",
+    "No repeated dispatch, stay Normal/off",
+    "Do not relax acceptance or enable 8 repair attempts"
+  ]
+}

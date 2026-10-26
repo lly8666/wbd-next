@@ -2,7 +2,7 @@ name: M0 actual public Windows Linux Normal off WL-N0
 run-name: M0-WL-N0-PUBLIC-NATIVE-REALSOURCE
 on:
   push:
-    branches: [main, fix/m0-windows-functional-wiring-20261026]
+    branches: [main, fix/m0-windows-functional-wiring-20261026, integration/w168-freeze-windows-adapter-20261026]
     paths:
       - .github/workflows/m0-wl-public-normal-full.yml
       - tools/m0_wl_public_normal_e2e.py

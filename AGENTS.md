@@ -1,9 +1,11 @@
 # WBD Next：所有 agent 的共同入口
 
+**当前分支的独立FEC授权**：用户2026-10-23指定 `experiment/fec-network-tuning` 在关闭外层数据重传时独立修复/验证FEC。该岗位按 `docs/testing/FEC_AUTONOMOUS_WORK.md` 和自己的 `docs/evidence/fec-network-work/status.json` 接续；不是M0–M4，也不执行原network-matrix-work的next_action。可自主做相关FEC、最小开关接线和Actions，不等外层恢复岗位；不得覆盖其分支/状态或并行重写外层算法。
+
 1. 用户最新明确要求优先；根章程定义产品目的与硬约束。设计入口为 `docs/architecture/README.md`；按角色正式分配开工；已实现/已测范围以当前证据为准，不把方案或组件 PASS 当产品资格。
 2. 每个新聊天、恢复轮次、上下文压缩后，先读 `START_HERE.md`，刷新远端 main 的 registry 和自己精确工作分支的 cursor。不要依赖旧聊天或缓存 ref。
 3. 先核 Git 提交、Actions 与未结束 intent，再继续；遗漏日志须事实重建，注明 recovered，不猜原作者意图。
-4. 正式工位按远端 main 登记的 active 角色范围写入。用户直接授权的独立网络实验任务按 `docs/testing/NETWORK_AUTONOMOUS_WORK.md` 在自己的分支自主开发/修复，不需登记为 M0–M4，也不改他人的权限或游标。普通接班不自增 epoch；正式角色撤销/重新分配由集成者完成。拒绝 force push，不覆盖竞争写入。
+4. 只有远端 main 登记的 active 角色可以写入其范围。普通接班不自增 epoch；撤销/重新分配由集成者完成。拒绝 force push，不覆盖竞争写入。
 5. 实质工作 S 与 cursor-only 确认 H 分开。没有变化不制造空提交。WIP 可以推到隔离分支，但如实记 partial/unverified。
 6. 代码/决定/测试请求/结果记录保存在 GitHub。未推送内容无法保证恢复。不要要求用户复述已留痕上下文。
 7. 每个性能 Action 一个配置/seed/场景、一个测量 job。新旧对比允许且必须在同 job/VM 顺序 A/B 或 B/A，声明两个精确 SOURCE/产物；禁止跨 job 冒充同机。先在 Actions 编译再复用产物；容量不足停止更重工况，估算不冒充实测。所有执行验证在 Actions。

@@ -1,0 +1,134 @@
+{
+  "schema": 1,
+  "scope": "Native Linux ARM64 Normal/off original-Go TLS/raw + Rust authenticated TUN single inner TCP 500Mbps/RTT400/0loss; default fq600 proof, NOT Windows/FEC/physical/multi-service",
+  "product": {
+    "source": "8d5bbdbca636e129481393fdbfa10b2c0e31e999",
+    "native_build_run": 40054986786,
+    "bundle_id": 12545077578,
+    "bundle_zip_sha256": "1b4f8f2a02a9758caae40ea09d91acfab9242811192e1b52f019a396d2162732",
+    "feature": "Normal/off omitted CLI product fq600 default, explicit0 rollback"
+  },
+  "action": {
+    "run": 40055169119,
+    "attempt": 1,
+    "request_source": "c37310a38b17696efaf6234db335229cafe70425",
+    "artifact_id": 12544784157,
+    "artifact_zip_sha256": "e787e0d879494900212b1040f1ad888d1cea4f0f9f42c315e2dd76f42692b152",
+    "sha256_download_verified": true,
+    "conclusion": "failure because explicit-rollback A had real cold source TUN kernel loss; default B PASS_SCOPED_OBSERVATION"
+  },
+  "scenario": {
+    "same_VM": true,
+    "same_native_bundle_both": true,
+    "order": "AB",
+    "single_inner_tcp_application_c2s_target_mbps": 500,
+    "actual_inner_TCP_MSS_bytes": 1377,
+    "outer_line_mbps_per_direction": 700,
+    "outer_mtu_bytes": 1500,
+    "TUN_mtu_bytes": 1429,
+    "netem_oneway_ms": 200,
+    "RTT_approx_ms": 401,
+    "netem_loss_pct": 0,
+    "tun_queue_len": 1024,
+    "phase_warmup_s": 20,
+    "phase_steady_s": 60,
+    "phase_drain_s": 30,
+    "SO_MAX_PACING_RATE": "NOT_SET both",
+    "window_profile": "bdp500 64MiB max auto",
+    "strict_fullrun_source_tun_drop_zero": true,
+    "strict_root_qdisc_drop_zero": true
+  },
+  "results": {
+    "A": {
+      "cli": "--tun-fq-maxrate-mbps=0",
+      "test_qdisc": "fq root unlimited explicitly test-selected",
+      "real_app_injected_mbps": 499.9959893,
+      "real_app_delivered_mbps": 499.9959893,
+      "first_arrival_p99_ms": 240.9,
+      "warmup_source_TUN_kernel_drops_client_server": [
+        8098,
+        0
+      ],
+      "steady_source_TUN_kernel_drops_client_server": [
+        0,
+        0
+      ],
+      "TUN_root_qdisc_drops_client_server": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "product_CPU_steady60s_client_server": [
+        47.5,
+        63.23
+      ],
+      "result": "FAIL_SOURCE_TUN_WARMUP_ZERO_DROP_REQUIRED"
+    },
+    "B": {
+      "cli": "OMITTED_USE_NATIVE_DEFAULT",
+      "applied_product_fq_maxrate_mbps": 600,
+      "go_and_kernel_readback": {
+        "client": "owned_normal_fq_600Mbit",
+        "server": "owned_normal_fq_600Mbit"
+      },
+      "external_qdisc_override": "NONE",
+      "real_app_injected_mbps": 500.0003584,
+      "real_app_delivered_mbps": 500.0003584,
+      "app_missing": 0,
+      "first_arrival_p99_ms": 203.1,
+      "warmup_source_TUN_kernel_drops_client_server": [
+        0,
+        0
+      ],
+      "steady_source_TUN_kernel_drops_client_server": [
+        0,
+        0
+      ],
+      "TUN_root_qdisc_drops_client_server": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "netem_drops": 0,
+      "kernel_TCP_retrans_steady": 0,
+      "v3_outer_repair_packets": 0,
+      "Stop_and_owned_cleanup": true,
+      "product_CPU_steady60s_client_server": [
+        48.06,
+        64.21
+      ],
+      "server_CPU_s_per_received_GiB": 18.385310159820346,
+      "process_peak_RSS_bytes_client_server": [
+        68870144,
+        43425792
+      ],
+      "host_CPU_PSI_some_peak_pct": 29.76,
+      "result": "PASS_SCOPED_OBSERVATION"
+    }
+  },
+  "analysis": "B's Go flag omission is independently verified from request and effective-config.json; both native Go startup marker and kernel tc -d root fq readback600 checked by Actions runner. B meets app delivery/latency and full source TUN/qdisc drop0, Stop. A's dropped startup source traffic cannot serve as successful lower-CPU baseline despite A steady app500. A/B PSI about30% some; no CPU reduction claim. Whole A/B run FAIL by A required negative control. No changing repair or UDP policy.",
+  "remaining": [
+    "Linux default fq600 multi-business continuous noHOL still needs source-specific scope",
+    "Windows/FEC/Game not enabled by Normal/off policy",
+    "Highloss30 and outer500/2% independently measured in other Actions",
+    "No main merge or physical deployment"
+  ]
+}

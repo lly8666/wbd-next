@@ -1,0 +1,289 @@
+{
+  "schema": "FEC_W89_GAME2_GAME4_REAL_ORIGINAL_LINUX_SHARED_GE15_LONG_BURST_SERVICE_HIGHLOSS_DIAGNOSTIC_V1",
+  "date": "2026-10-25",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "product": {
+    "source": "4322a811fd63e096458f202767faa2f097a587c0",
+    "build_action": 40203220219,
+    "artifact_id": 12602931174,
+    "zip_sha256": "0ae0939bdd4c02932a6452260fa65f4e1851bf37bd79d7485c28e1895022f125",
+    "game_fec": "off",
+    "outer_data_repair": "NOT_APPLICABLE_GAME_MULTILANE",
+    "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN"
+  },
+  "scenario": {
+    "workload": "3Mbps app/dir, UDP96%, real TCP2 flows4%, 64..1287B mixed, sparse64/20Hz",
+    "one_way_ms": 75,
+    "per_direction_shared_qdisc_rate_mbps": 50,
+    "lane_loss": "shared_root_qdisc_single_netem_loss_state_per_ejected_outer_packet",
+    "ge_gemodel": [
+      3,
+      17,
+      100,
+      0
+    ],
+    "GE_bad_run_expected_packets": 5.8824,
+    "phases": [
+      {
+        "name": "clean_before",
+        "s": 15
+      },
+      {
+        "name": "shared_long_GE15",
+        "s": 45
+      },
+      {
+        "name": "clean_after",
+        "s": 15
+      }
+    ],
+    "warmup_s": 15,
+    "drain_s": 30,
+    "netem_rng": "unseeded_recorded",
+    "acceptance": "Strict UDP total and small <=1% ONLY in clean_before and clean_after. Long shared GE is diagnostic, NOT declared <=1% pass; no changing historical FEC/GE gates.",
+    "one_performance_action_per_mode_one_measurement_job": true
+  },
+  "results": {
+    "game2": {
+      "request": "tests/network/fec-work/W89-Game2-shared-GE15Long-original-arm64.json",
+      "request_commit": "71f30298da9b9ecd2d30e1241f15fda5d59b28b9",
+      "action": 40206930859,
+      "contract_action": 40206930868,
+      "artifact_id": 12604730245,
+      "zip_sha256": "776ac80984e38ee91b709a8479c91ac8994e09ec0ce119d3afcd53bb23beab31",
+      "action_conclusion": "SUCCESS",
+      "harness_result": "PASS_SCOPED_OBSERVATION",
+      "business_long_GE_strict_one_pct": "FAIL_MEASURED_HIGHLOSS_NOT_A_GATED_PASS",
+      "actual_wire_drop_pct": {
+        "client": 15.98,
+        "server": 15.71
+      },
+      "UDP": {
+        "clean_before": {
+          "c2s": [
+            8277,
+            8277
+          ],
+          "s2c": [
+            8277,
+            8277
+          ]
+        },
+        "shared_long_GE15": {
+          "c2s": {
+            "sent": 24785,
+            "delivered": 21475,
+            "missing": 3310,
+            "loss_pct": 13.3549,
+            "p99_survivors_ms": 77.4
+          },
+          "s2c": {
+            "sent": 24785,
+            "delivered": 21526,
+            "missing": 3259,
+            "loss_pct": 13.1491,
+            "p99_survivors_ms": 77.4
+          }
+        },
+        "clean_after": {
+          "c2s": [
+            8244,
+            8244
+          ],
+          "s2c": [
+            8244,
+            8244
+          ]
+        }
+      },
+      "TCP": {
+        "shared_long_GE15": {
+          "c2s": {
+            "sent": 1061,
+            "delivered": 1061,
+            "p99_ms": 2787.1,
+            "backpressure": 0
+          },
+          "s2c": {
+            "sent": 1061,
+            "delivered": 1061,
+            "p99_ms": 2345.1,
+            "backpressure": 0
+          }
+        },
+        "clean_after": {
+          "c2s": {
+            "sent": 327,
+            "delivered": 327,
+            "p99_ms": 178.5
+          },
+          "s2c": {
+            "sent": 327,
+            "delivered": 327,
+            "p99_ms": 179.3
+          }
+        }
+      },
+      "native": {
+        "client": {
+          "lanes": 2,
+          "copied": 111742,
+          "delivered": 52169,
+          "raw_received": 102914,
+          "auth_rejected": 0
+        },
+        "server": {
+          "lanes": 2,
+          "copied": 111682,
+          "delivered": 52146,
+          "raw_received": 102823,
+          "auth_rejected": 0
+        },
+        "readback": true,
+        "stop_drained": true,
+        "source_TUN_drops": 0,
+        "root_qdisc_drops": 0,
+        "app_udp_duplicates": 0
+      },
+      "resources": {
+        "client_CPU_s": 5.23,
+        "server_CPU_s": 5.13,
+        "client_CPU_s_per_delivered_GiB": 216.12,
+        "server_CPU_s_per_delivered_GiB": 212.59,
+        "client_RSS_peak_B": 25276416,
+        "server_RSS_peak_B": 25391104,
+        "host_PSI_mean_pct": 0.2889,
+        "host_PSI_peak_pct": 0.5
+      }
+    },
+    "game4": {
+      "request": "tests/network/fec-work/W89-Game4-shared-GE15Long-original-arm64.json",
+      "request_commit": "6828d50e101b6c14b6ba924c5b95570b8d7806c4",
+      "action": 40206935735,
+      "contract_action": 40206935795,
+      "artifact_id": 12603719684,
+      "zip_sha256": "20a6168b7bb68cc98cdf00e09cee4ee9b6712ddd4592f565289e80ba24eaaaef",
+      "action_conclusion": "SUCCESS",
+      "harness_result": "PASS_SCOPED_OBSERVATION",
+      "business_long_GE_strict_one_pct": "FAIL_MEASURED_HIGHLOSS_NOT_A_GATED_PASS",
+      "actual_wire_drop_pct": {
+        "client": 14.92,
+        "server": 15.09
+      },
+      "UDP": {
+        "clean_before": {
+          "c2s": [
+            8278,
+            8278
+          ],
+          "s2c": [
+            8277,
+            8277
+          ]
+        },
+        "shared_long_GE15": {
+          "c2s": {
+            "sent": 24784,
+            "delivered": 22724,
+            "missing": 2060,
+            "loss_pct": 8.3118,
+            "p99_survivors_ms": 77.5
+          },
+          "s2c": {
+            "sent": 24785,
+            "delivered": 22662,
+            "missing": 2123,
+            "loss_pct": 8.5657,
+            "p99_survivors_ms": 77.6
+          }
+        },
+        "clean_after": {
+          "c2s": [
+            8244,
+            8244
+          ],
+          "s2c": [
+            8244,
+            8244
+          ]
+        }
+      },
+      "TCP": {
+        "shared_long_GE15": {
+          "c2s": {
+            "sent": 1061,
+            "delivered": 1061,
+            "p99_ms": 651.8,
+            "backpressure": 0
+          },
+          "s2c": {
+            "sent": 1061,
+            "delivered": 1061,
+            "p99_ms": 620.2,
+            "backpressure": 0
+          }
+        },
+        "clean_after": {
+          "c2s": {
+            "sent": 327,
+            "delivered": 327,
+            "p99_ms": 190.3
+          },
+          "s2c": {
+            "sent": 327,
+            "delivered": 327,
+            "p99_ms": 180.1
+          }
+        }
+      },
+      "native": {
+        "client": {
+          "lanes": 4,
+          "copied": 224276,
+          "delivered": 53587,
+          "raw_received": 206940,
+          "auth_rejected": 0
+        },
+        "server": {
+          "lanes": 4,
+          "copied": 223812,
+          "delivered": 53719,
+          "raw_received": 207515,
+          "auth_rejected": 0
+        },
+        "readback": true,
+        "stop_drained": true,
+        "source_TUN_drops": 0,
+        "root_qdisc_drops": 0,
+        "app_udp_duplicates": 0
+      },
+      "resources": {
+        "client_CPU_s": 12.47,
+        "server_CPU_s": 12.58,
+        "client_CPU_s_per_delivered_GiB": 498.95,
+        "server_CPU_s_per_delivered_GiB": 504.76,
+        "client_RSS_peak_B": 36868096,
+        "server_RSS_peak_B": 37261312,
+        "host_PSI_mean_pct": 4.3555,
+        "host_PSI_peak_pct": 4.85
+      }
+    }
+  },
+  "interpretation": "Game2 and Game4 real original public Linux products each had TRUE native multi-lane copied/delivered/readback and healthy clean phases, despite ~15% correlated shared root netem GE. Under correlated outer packet-state erasures, Game2 residual 13.35/13.15%, Game4 8.31/8.57%, both far exceed 1% if that service criterion were applied; do not pretend the Actions green (which gates clean only) means long correlated service succeeds. Shared root qdisc uses one GE state over sequential outer packet egress, NOT proof that every copy of every logical source sees precisely same erasure. Duplicated lane copies cannot be modeled as independent under this common impairment. TCP survived but incurred multi-RTT p99; surviving UDP p99~77ms by itself omits missing. Game4 offered more lane copies and consumed more product CPU and RSS in its separate native VM; no causal across-VM CPU ratio. Both returned to zero UDP missing on clean phase, no source TUN drop, auth reject or Stop leak.",
+  "qualified": "PASS_SCOPED_LINUX_AUTHENTIC_PUBLIC_GAME_AND_RECOVERY_CLEAN_ONLY",
+  "business_shared_GE_below_1pct": false,
+  "uncovered": [
+    "Game+FEC unsupported publicly",
+    "Windows Game skip",
+    "Game outer DATA repair OFF native switch unsupported",
+    "real cross-device network paths",
+    "common-mode full blackhole all lanes",
+    "at-capacity high load by prior stop",
+    "FEC 65KiB inner TUN",
+    "FEC long GE Strict1% still fails separately",
+    "full product merge"
+  ],
+  "capacity_stop": true,
+  "merge_ready": false
+}

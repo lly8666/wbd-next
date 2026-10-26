@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "id": "P1-Normal2pct-block-reasons-result-pacing-rearm-intent-20261023",
+  "action": {
+    "run_id": 39897262285,
+    "attempt": 1,
+    "harness_source": "ade70e5b6324a6cade37d208d09f877d5af45506",
+    "artifact_id": 12477427307,
+    "artifact_sha256": "f4a015b855a863f66f5bd7fac09f35f4f6c84ef9ccf4ce970e274e5b2aedd861",
+    "conclusion": "failure"
+  },
+  "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
+  "scenario": {
+    "mode": "normal",
+    "loss_pct": 2,
+    "one_way_ms": 200,
+    "steady_s": 60,
+    "seed": 5205
+  },
+  "observed": {
+    "udp_missing": {
+      "c2s": 146,
+      "s2c": 165
+    },
+    "udp_loss_pct": {
+      "c2s": 2.4813,
+      "s2c": 2.8042
+    },
+    "tcp_missing": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "tcp_p99_ms": {
+      "c2s": 7949.3,
+      "s2c": 5362.8
+    },
+    "client": {
+      "blocked": 265,
+      "blocked_burst": 256,
+      "blocked_quota": 9,
+      "blocked_other_sum": 0,
+      "expired0": 107,
+      "expired1": 51,
+      "expired2": 114,
+      "repair": 704,
+      "pto_us": 436182,
+      "cache_us": 922364
+    },
+    "server": {
+      "blocked": 262,
+      "blocked_burst": 258,
+      "blocked_quota": 4,
+      "blocked_other_sum": 0,
+      "expired0": 112,
+      "expired1": 43,
+      "expired2": 106,
+      "repair": 711,
+      "pto_us": 435372,
+      "cache_us": 920745
+    },
+    "reason_sums_match_aggregate": true,
+    "stop": true,
+    "host_warning": false
+  },
+  "diagnosis": "Transient local BurstPaced is 96.6%/98.5% of all blocked. Quota is only9/4 and fresh-global/fresh-shadow/grant/capacity/stale/local-other/global-other/invariant are all zero. The bug is fallback semantics: BurstPaced was immediately settled NotSent and rearmed by full ~435ms PTO, consuming most of ~921ms cache before first actual repair.",
+  "change_intent": "For BurstPaced only, preserve zero network-attempt charge and allow one short re-index per actual repair stage at candidate.dispatch_by (existing <=20ms queue lifetime). If same stage is paced again, use original PTO. Max actual repair attempts remains2; no quota/burst cap increase, no queued payload, no reliable ordering or fresh wait.",
+  "validation": {
+    "native_run_id": 39897775082,
+    "source": "396c5ae6434c18eecb16599f5966574716c604a9",
+    "status": "QUEUED",
+    "unit": "r2_burstpaced_candidate_gets_one_20ms_deferral_per_attempt_without_extra_repair"
+  }
+}

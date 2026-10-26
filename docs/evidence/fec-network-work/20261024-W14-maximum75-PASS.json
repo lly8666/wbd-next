@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "source": "ec344557fa8cbf4d717a81833d36f92584263478",
+  "run": 40091124249,
+  "artifact_id": 12559275827,
+  "digest": "sha256:b897193008c3203ca9014d826b27bc1a306261d1d7e298eb35c5db7ce819fad7",
+  "profile": 6,
+  "outer_repair": false,
+  "app_mbps_each": 75,
+  "outer_link_cap_mbps_each": 300,
+  "netem_loss_pct": {
+    "client": 29.947557111726915,
+    "server": 30.011124250671642
+  },
+  "business": {
+    "c2s": {
+      "delivered_mbps": 74.96737493333333,
+      "missing": 119,
+      "p99_ms": 303.5
+    },
+    "s2c": {
+      "delivered_mbps": 74.97887306666667,
+      "missing": 92,
+      "p99_ms": 303.5
+    }
+  },
+  "rx": {
+    "client": {
+      "active_peak": 83,
+      "stored_peak": 2843941,
+      "decoder_rejected": 0,
+      "pressure_evicted": 0,
+      "recovered_tun": 99625
+    },
+    "server": {
+      "active_peak": 83,
+      "stored_peak": 2873610,
+      "decoder_rejected": 0,
+      "pressure_evicted": 0,
+      "recovered_tun": 99396
+    }
+  },
+  "cpu_s": {
+    "client": 16.79,
+    "server": 16.93
+  },
+  "rss_peak_bytes": {
+    "client": 34443264,
+    "server": 35098624
+  },
+  "source_TUN_drops_both": 0,
+  "outer_data_retransmitted_both": 0,
+  "stop": true,
+  "result": "PASS_SCOPED_OBSERVATION",
+  "note": "W12 sequential second leg egress asymmetry remains unresolved."
+}

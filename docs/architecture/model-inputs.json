@@ -1,18 +1,60 @@
 {
-  "schema_version": 1,
+  "schema_version": 3,
   "scope": "THEORY_ONLY_NOT_PRODUCT_QUALIFICATION",
   "inner_ip_mbps_per_direction": 500,
-  "packet_bytes": [1200, 512, 128],
-  "rtt_ms": [150, 300],
+  "packet_bytes": [
+    1200,
+    512,
+    128
+  ],
+  "rtt_ms": [
+    150,
+    300,
+    400,
+    600
+  ],
   "rttvar_ms": 5,
   "feedback_ms": 10,
   "headroom_factor": 1.25,
   "descriptor_bytes": 96,
-  "slab_bytes": [1536, 768, 256],
+  "slab_bytes": [
+    1536,
+    768,
+    256
+  ],
   "fec_k": 20,
-  "fec_parity": [4, 8, 10, 12, 16, 20],
-  "loss_probabilities": [0.01, 0.03, 0.05, 0.08, 0.1, 0.2, 0.3],
+  "fec_parity": [
+    4,
+    8,
+    10,
+    12,
+    16,
+    20
+  ],
+  "loss_probabilities": [
+    0.01,
+    0.02,
+    0.03,
+    0.05,
+    0.08,
+    0.1,
+    0.2,
+    0.3
+  ],
   "record_overhead": 31,
   "ip_tcp_overhead": 40,
-  "fec_header": 56
+  "fec_header": 56,
+  "policy": "outer-opportunistic-v3",
+  "repair_attempt_limit": 1,
+  "max_one_way_ms_design": 300,
+  "loss_trigger": "authenticated_mature_gap",
+  "data_pto": false,
+  "candidate_fraction": 0.5,
+  "candidate_pps_cap": 32768,
+  "repair_pps_cap": 8192,
+  "repair_credit_fraction": 0.09,
+  "repair_hard_fraction": 0.1,
+  "shadow_process_slots": 65536,
+  "repair_payload_mib": 128,
+  "fec2_wire_reservation_bytes": 14
 }

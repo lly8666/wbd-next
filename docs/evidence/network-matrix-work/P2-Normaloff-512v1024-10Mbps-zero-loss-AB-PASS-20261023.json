@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "id": "P2-Normaloff-512v1024-10Mbps-zero-loss-AB-PASS-20261023",
+  "run_id": 39922365049,
+  "attempt": 1,
+  "overall_workflow": "FAIL_A_OLD_B_NEW_PASS",
+  "artifact_id": 12488186644,
+  "artifact_zip_sha256": "a36ed46434f2d4066468b1f30f7c793b16ac729fa04d6848915b0f1f5aee61bb",
+  "native_B": {
+    "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+    "run": 39921718042,
+    "bundle_artifact_id": 12486939897,
+    "bundle_zip_sha256": "637ca5d47d06e0aea0674d535821dcfc2e1f055f3fb5201b82deab1a64217f11",
+    "library": "75/75_PASS",
+    "mtu9": "PASS",
+    "mtu_artifact_id": 12487457929,
+    "mtu_zip_sha256": "4e9050affda7d0a911b937187606353b11ff8b6cf0de38d5fa78a6b365358588"
+  },
+  "scenario": {
+    "mode": "Normal/off",
+    "rate_mbps_each_direction": 10,
+    "udp_share": 0.5,
+    "udp_sizes_packet_weights": [
+      [
+        64,
+        1
+      ],
+      [
+        1287,
+        99
+      ]
+    ],
+    "loss_pct": 0,
+    "one_way_delay_ms": 200,
+    "steady_s": 60,
+    "seed": 5206
+  },
+  "A": {
+    "source": "1605c32d5f5bdc99da792959dde99294a13cec77",
+    "slots": 512,
+    "control_reserve": 16,
+    "result": "FAIL",
+    "UDP_missing": {
+      "c2s": 352,
+      "s2c": 186,
+      "each_offered": 29417
+    },
+    "TCP_p99_ms": {
+      "c2s": 1896.1,
+      "s2c": 2866.4
+    },
+    "Tun_dropped_steady": {
+      "client": 1028,
+      "server": 570
+    },
+    "pre_read_deferred": {
+      "client": 11114,
+      "server": 11103
+    },
+    "feedback_drop": {
+      "client": 0,
+      "server": 0
+    },
+    "cpu_s_steady": {
+      "client": 2.71,
+      "server": 2.75
+    },
+    "rss_peak_bytes": {
+      "client": 18014208,
+      "server": 18296832
+    }
+  },
+  "B": {
+    "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+    "slots": 1024,
+    "control_reserve": 16,
+    "result": "PASS_SCOPED_OBSERVATION",
+    "UDP_missing": {
+      "c2s": 0,
+      "s2c": 0,
+      "each_offered": 29417
+    },
+    "TCP_missing": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "first_arrival_p99_ms": {
+      "udp_c2s": 200.3,
+      "udp_s2c": 200.3,
+      "tcp_c2s": 200.4,
+      "tcp_s2c": 200.4
+    },
+    "Tun_dropped_steady": {
+      "client": 0,
+      "server": 0
+    },
+    "pre_read_deferred": {
+      "client": 0,
+      "server": 0
+    },
+    "arena_failed": {
+      "client": 0,
+      "server": 0
+    },
+    "feedback_drop": {
+      "client": 0,
+      "server": 0
+    },
+    "peak_loaned": {
+      "client": 846,
+      "server": 845
+    },
+    "charged_bytes_per_end": 2195456,
+    "cpu_s_steady": {
+      "client": 5.84,
+      "server": 5.86
+    },
+    "rss_peak_bytes": {
+      "client": 20410368,
+      "server": 20910080
+    },
+    "original_tun_protocol_conserved": true,
+    "rx_tun_failures": 0,
+    "repair_packets_total": 209,
+    "stop_both": true,
+    "namespace_clean": true
+  },
+  "interpretation": [
+    "Identical VM sequential A/B with zero netem, valid injector and host PSI0, no kernel UDP errors; B's zero TUN tx drops with 0 owner defers plus zero application UDP missing supports causal capacity fix",
+    "B peak loaned 846/845 of 1024 and immutable shadow +16 control reserve; fixed upper bound genuinely sufficient at this specific rate, RTT and workload",
+    "B CPU doubles but authentic fresh processing/real TCP TUN packet count is substantially higher than old congested A, cannot claim absolute CPU optimization",
+    "512MiB endpoint aggregate and 500Mbps not tested; 2% netem remains a separate condition. Linux ARM64 Normal/off only; FEC not separately tested for throughput."
+  ],
+  "verdict": "B_REAL_NORMALOFF_10MBPS_ZERO_LOSS_200MS_SCOPED_PASS"
+}

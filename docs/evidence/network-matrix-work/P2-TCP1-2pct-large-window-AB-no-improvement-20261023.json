@@ -1,0 +1,119 @@
+{
+  "schema": 1,
+  "id": "P2-TCP1-2pct-large-window-AB-no-improvement-20261023",
+  "action_run": 39940890996,
+  "artifact_id": 12496675342,
+  "artifact_zip_sha256": "d40cb68dd72e9a8a75dfbeb5d599a9c6a3c69248353263b523a0d0357b7ae227",
+  "run_result": "FAIL_BOTH_BIZ_COARSE",
+  "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+  "scenario": {
+    "tcp_flows_each_direction": 1,
+    "target_mbps_each_direction": 10,
+    "outer_loss_pct": 2,
+    "one_way_ms": 200,
+    "steady_s": 60,
+    "order": "AB",
+    "host": "same_VM_ARM64",
+    "run_A": "baseline_TCP",
+    "run_B": "tcp_wmem_tcp_rmem_max16MiB_SO_SNDBUF_SO_RCVBUF_requested8MiB"
+  },
+  "A": {
+    "result": "INCONCLUSIVE_TCP_BACKPRESSURED",
+    "c2s_mbps": 0.9919997333333332,
+    "s2c_mbps": 1.0143248,
+    "source_tun_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "socket_effective": {
+      "sndbuf": 46080,
+      "rcvbuf": 131072
+    },
+    "tcp_cwnd_median": {
+      "client": 43,
+      "server": 42
+    },
+    "tcp_snd_wnd_median": {
+      "client": 279552,
+      "server": 526336
+    },
+    "tcp_rto_ms_median": {
+      "client": 1279,
+      "server": 1106
+    },
+    "tcp_retrans_steady": {
+      "client": 141,
+      "server": 112
+    },
+    "product_CPU60s": {
+      "client": 1.29,
+      "server": 1.34
+    },
+    "product_peak_RSS_bytes": {
+      "client": 16572416,
+      "server": 17440768
+    },
+    "netem_pct": {
+      "client": 2.1828195311975285,
+      "server": 2.048305310915399
+    }
+  },
+  "B": {
+    "result": "INCONCLUSIVE_TCP_BACKPRESSURED",
+    "c2s_mbps": 0.9312277333333333,
+    "s2c_mbps": 1.0414461333333334,
+    "source_tun_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "socket_effective": {
+      "sndbuf": 425984,
+      "rcvbuf": 2097152
+    },
+    "tcp_wmem": "4096 4194304 16777216",
+    "tcp_rmem": "4096 4194304 16777216",
+    "rmem_max": 1048576,
+    "wmem_max": 212992,
+    "tcp_cwnd_median": {
+      "client": 37,
+      "server": 45
+    },
+    "tcp_snd_wnd_median": {
+      "client": 1153824,
+      "server": 1153824
+    },
+    "tcp_rto_ms_median": {
+      "client": 1217,
+      "server": 1175
+    },
+    "tcp_retrans_steady": {
+      "client": 132,
+      "server": 139
+    },
+    "product_CPU60s": {
+      "client": 1.27,
+      "server": 1.3
+    },
+    "product_peak_RSS_bytes": {
+      "client": 16703488,
+      "server": 17211392
+    },
+    "netem_pct": {
+      "client": 2.174354805933753,
+      "server": 2.0666886761307364
+    }
+  },
+  "preceding_failed_prepare": {
+    "run": 39940459163,
+    "reason": "net.core.rmem_max after attempted namespaced sysctl write failed strict readback, B no real business. Never count B as product loss. Corrected to net.ipv4.tcp_rmem/wmem only.",
+    "artifact": 12495533171
+  },
+  "conclusion": "Measured socket sndbuf 9.2x and rcvbuf16x, snd_wnd median 2.2-4.1x and well above single-flow 500KB BDP on B. CUBIC cwnd remains 37-45MSS and actual TCP only ~1Mbps; increasing socket/receive buffers is NOT the rate limiter. B actual SO buffers capped by net.core host max; requested8MiB did not take effect as8MiB. Mean about2% IID netem per run; same VM but stochastic drop pattern differs, small differences not causal improvement.",
+  "hypothesis_next": "Carefully isolate Linux inner TCP reordering tolerance vs outer once-only repair arrival; default early duplicate ACK may trigger congestion before authenticated external retrans arrives RTT+oneway (~600ms). A test-only per-netns higher tcp_reordering may alter inner cwnd; warn it can delay actual loss recovery and worsen p99. No production default without comparative result; no FEC test.",
+  "hard_rules": [
+    "No per-host net.core sysctl settings; no FEC tests.",
+    "No increase one repair/10pct quota and no pretend TCP throughput qualification.",
+    "No new engine buffering for this low-throughput sample: M1 peaks under200 and source TUN drops0.",
+    "Cannot prove cause of every repaired TCP segment without class-specific timing counters."
+  ]
+}

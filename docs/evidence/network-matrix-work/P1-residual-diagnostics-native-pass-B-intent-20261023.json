@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "id": "P1-residual-diagnostics-native-pass-B-intent-20261023",
+  "native": {
+    "run_id": 39893574791,
+    "attempt": 1,
+    "source": "21b1a9c1001c93497376de9cd052e37d0d7f2aec",
+    "conclusion": "success",
+    "product_artifact_id": 12475394629,
+    "product_sha256": "029af2ffe2b49da194e6265a3e1212c94b54ae02ffe0d98dd55cace977704120",
+    "mtu_artifact_id": 12475647710,
+    "mtu_sha256": "f4a37337215f9ad5ea24d1052cd5e90dacb7c64c3487666bd2541d7f496e2547",
+    "diagnostic_unit": "PASS",
+    "adaptive_timing_unit": "PASS",
+    "fixed_m2_unit": "PASS",
+    "mtu9": "PASS"
+  },
+  "experiment": {
+    "request_id": "P1-Normal2pct-residual-diagnostics-B-60s",
+    "single_product": true,
+    "behavior_delta_from_2a388": "READ_ONLY_DIAGNOSTICS_ONLY",
+    "decision": "Read candidate_first/retry, acked0/1/2, expired0/1/2, late_positive_expired, learned timing and shadow outstanding. No parameter adjustment from this run itself."
+  },
+  "scope": "Diagnostic observation only; no new qualification claim from counters alone."
+}

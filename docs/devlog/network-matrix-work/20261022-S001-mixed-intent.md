@@ -1,0 +1,7 @@
+# S001 — first sustained native ARM64 duplex mixed request intent
+
+Frozen product SOURCE: `3604d8e18f7fa6758444bc82c1b7f5f1bb546966`. Native product build [39759842150](https://github.com/lly8666/wbd-next/actions/runs/39759842150), attempt 1, SUCCESS, artifact `12417786567` (`network-arm64-public-39759842150-1`), SHA256 ZIP `2942307ef2d432ed7d70b779cd5a4acb5dfef18bbae051e7be7421f80999a06b`. Compiled native acceleration requested, runtime backend **NOT_OBSERVED**. Fresh build is reused; subsequent harness SOURCE changes do not recompile product.
+
+One measurement Action: Normal/off, ARM64 native VM, real Go public TLS↔Rust raw/TUN; 10Mbps each way 50% UDP/50% TCP byte mix, 4 TCP flows, UDP app sizes 64/256/1024/1172 at weights 2/2/3/3, 20Hz probes, 15s warmup+90s steady+15s drain, no artificial impairment. UDP average payload under packet-weighting about 722.8B; UDP 5Mbps/dir implies roughly 865 logical UDP packets/s/dir (before probes and framing), not a 500Mbps claim. Product/traffic injector/host separate CPU and RSS, real TUN and qdisc readback, p99, logical first delivery, missing/late/Stop per leg.
+
+One-file request push is dispatch mechanism because connected GitHub interface exposes repository writes but not workflow_dispatch. No request has yet been issued at this intent commit; do not assume one if branch Action list is empty. Remaining: actual result, packet size/MTU check, host capacities and stored failure if any. Later cases depend on first scoped evidence rather than repeating ping.

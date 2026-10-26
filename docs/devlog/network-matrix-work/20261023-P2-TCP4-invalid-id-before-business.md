@@ -1,0 +1,3 @@
+# 2026-10-23 recovery: TCP-only request guard
+
+Action [39928595426](https://github.com/lly8666/wbd-next/actions/runs/39928595426) and harness contracts [39928595502](https://github.com/lly8666/wbd-next/actions/runs/39928595502) both failed before real business because proposed request ID exceeded `[A-Za-z0-9_.-]{1,64}`. Exact Rust SOURCE and environment were never exercised. No performance conclusion, no build or product failure. Correct new ID to P2-Normal-TCP4-only-5M-2pct-200ms; traffic config, policy, acceptance and exact frozen artifact unchanged, one replacement auto Action. No FEC scenarios.

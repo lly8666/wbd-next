@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "id": "P1-Normal2pct-residual-diagnostics-result-burstfix-intent-20261023",
+  "action": {
+    "run_id": 39894058072,
+    "attempt": 1,
+    "harness_source": "1942cd062176fc966cfe9a52cbb697b472a322e0",
+    "artifact_id": 12475982496,
+    "artifact_sha256": "f06226aa2739137ec1e003c759db11f7f3da5e470c90b5343cc408bf80e820d4",
+    "conclusion": "failure"
+  },
+  "source": "21b1a9c1001c93497376de9cd052e37d0d7f2aec",
+  "scenario": {
+    "mode": "normal",
+    "outer_mtu": 1500,
+    "app_mbps_per_direction": 2,
+    "udp_share": 0.5,
+    "loss_pct": 2,
+    "one_way_ms": 200,
+    "steady_s": 60,
+    "seed": 5205
+  },
+  "observed": {
+    "netem_loss_pct": {
+      "client": 2.0195729537366547,
+      "server": 2.0144972650864945
+    },
+    "udp_missing": {
+      "c2s": 155,
+      "s2c": 132
+    },
+    "udp_loss_pct": {
+      "c2s": 2.634262406526173,
+      "s2c": 2.2433718558803535
+    },
+    "tcp_missing": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "tcp_p99_ms": {
+      "c2s": 5194.7,
+      "s2c": 4507.5
+    },
+    "client": {
+      "candidate_first": 840,
+      "candidate_retry": 137,
+      "repair_sent": 710,
+      "blocked": 267,
+      "expired0": 108,
+      "expired1": 51,
+      "expired2": 104,
+      "acked0": 19096,
+      "acked1": 449,
+      "acked2": 1,
+      "srtt_us": 406412,
+      "rttvar_us": 10694,
+      "recent_rtt_us": 400182,
+      "reorder_us": 12700,
+      "pto_us": 459191,
+      "cache_us": 968382,
+      "timing_samples": 5056,
+      "driver_uncertain": 0,
+      "late_positive_expired": 0,
+      "shadow_outstanding": 4
+    },
+    "server": {
+      "candidate_first": 832,
+      "candidate_retry": 138,
+      "repair_sent": 706,
+      "blocked": 264,
+      "expired0": 110,
+      "expired1": 44,
+      "expired2": 111,
+      "acked0": 19016,
+      "acked1": 436,
+      "acked2": 2,
+      "srtt_us": 404055,
+      "rttvar_us": 7228,
+      "recent_rtt_us": 400186,
+      "reorder_us": 12626,
+      "pto_us": 442969,
+      "cache_us": 935939,
+      "timing_samples": 5037,
+      "driver_uncertain": 0,
+      "late_positive_expired": 0,
+      "shadow_outstanding": 4
+    },
+    "stop": true,
+    "host_warning": false
+  },
+  "diagnosis": "Earliest evidenced residual stage is pre-first-repair local pacing/capacity rejection. candidate_first minus actual retransmit is 130/126; expired0 is108/110, same order as UDP missing155/132. Current 1500B local pacer burst is 8*MTU=12,000B while one indexed wake may expose <=32 candidates. Budget-declined NotSent re-arms by a full ~443-459ms PTO and can reach ~936-968ms cache before first actual repair. Driver uncertainty is zero and learned RTT is coherent.",
+  "change": "RepairBudget instantaneous burst=min(max_repair_epoch,max(8*MTU,32KiB sparse floor)); epoch_limit=max(fresh/10,32KiB) and long-run pace_rate unchanged. No extra retransmit attempts, queues, reliable ordering, auth changes, or fresh blocking.",
+  "validation": {
+    "native_run_id": 39895511143,
+    "attempt": 1,
+    "source": "dce9d23009b8803ac67484df9b6d0608b3641801",
+    "status": "IN_PROGRESS",
+    "unit": "r2_budget_sparse_floor_burst_absorbs_batched_auth_loss_without_raising_epoch_quota",
+    "mtu9": "PENDING"
+  },
+  "next": "If native succeeds, one same-VM AB old diagnostic source21b1 vs new dce9 at exact Normal2pct60s; no concurrent timing/seed changes."
+}

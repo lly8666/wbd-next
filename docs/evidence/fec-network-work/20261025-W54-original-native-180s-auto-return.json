@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "id": "FEC-W54-180s-old-Auto-return-authentic-source",
+  "source": "946346bbd84ff88910ed169037330e8eae13cea3",
+  "run_id": 40170625652,
+  "attempt": 1,
+  "artifact_id": 12590265917,
+  "artifact_sha256": "093784ec4b7e3b30b1b5d4cee77c3654b044b37d22995cf3dabc3faaef8457d4",
+  "bundle_build_run": 40169455103,
+  "bundle_artifact": 12590097082,
+  "product": "original Go TLS/native Rust aarch64",
+  "mode": "fec-auto",
+  "policy": "outer-opportunistic-v3",
+  "outer_repair_enabled": false,
+  "scenario": "8Mbps each UDP, 64B1% and 1287B99%; loss C2S 2%30s->20%60s->1%180s, S2C 0->1->0%; one-way75ms, no TCP",
+  "results": {
+    "qualification": "PASS_SCOPED_BUSINESS",
+    "missing": {
+      "c2s_pre": 0,
+      "c2s_high": 26,
+      "c2s_recovery": 0,
+      "s2c_all": 0
+    },
+    "first_p99_ms": {
+      "c2s_pre": 83.7,
+      "c2s_high": 92,
+      "c2s_recovery": 78.9,
+      "s2c_recovery": 76.5
+    },
+    "cpu_s": {
+      "client": 27.71,
+      "server": 28.4
+    },
+    "outer_data_retrans_both": 0,
+    "parity": {
+      "client_planned_sent": 232096,
+      "server_planned_sent": 131345,
+      "expired_both": 0
+    },
+    "native_recovered_tun": {
+      "client": 493,
+      "server": 12134
+    },
+    "client_final": {
+      "requested": 6,
+      "applied": 6,
+      "profile": 3,
+      "pending": false
+    },
+    "server_final": {
+      "requested": 6,
+      "applied": 6,
+      "profile": 0,
+      "pending": false
+    },
+    "real_positive_m2_mean_us": {
+      "client": 153615,
+      "server": 153979
+    }
+  },
+  "low_started_utc": "2026-10-25T06:54:23.491Z",
+  "stages": {
+    "c2s": [
+      [
+        "2026-10-25T06:53:45Z",
+        6,
+        "rise"
+      ],
+      [
+        "2026-10-25T06:54:47Z",
+        5,
+        "down"
+      ],
+      [
+        "2026-10-25T06:56:25Z",
+        4,
+        "down"
+      ],
+      [
+        "2026-10-25T06:56:56Z",
+        3,
+        "down"
+      ]
+    ],
+    "s2c": [
+      [
+        "2026-10-25T06:53:20Z",
+        4
+      ],
+      [
+        "2026-10-25T06:54:07Z",
+        3
+      ],
+      [
+        "2026-10-25T06:55:23Z",
+        2
+      ],
+      [
+        "2026-10-25T06:55:53Z",
+        1
+      ],
+      [
+        "2026-10-25T06:56:51Z",
+        0
+      ]
+    ]
+  },
+  "notes": [
+    "C2S 6->3 takes 152.5s after 1%-loss start; falls eventually but 30-60s user preference NOT MET",
+    "After every APPLIED revision old monitor clears its 20s finite history, causing about16s M2/k re-maturity before next DOWN; actual-k cohort nonalignment UNKNOWN further delays",
+    "Actual k and mature original M2 are genuine; no netem truth is fed to policy",
+    "No high-rate extension; capacity_stop true"
+  ],
+  "quality_log_sha256": {
+    "client": "5276dab21e5884defc8e3b43c2e36891eaf6574f3ae4688a28d09ef6deedc5dd",
+    "server": "2e44825c105b1ed1b095cca8cac2a672e2581f5344ef7acdee9752e8831945f9"
+  },
+  "merge_ready": false,
+  "capacity_stop": true
+}

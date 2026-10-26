@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "scope": "Linux ARM64 native Normal/off owned-TUN fq600 default true Go TLS->Rust TUN mixed fresh delivery two directions",
+  "product_source": "8d5bbdbca636e129481393fdbfa10b2c0e31e999",
+  "native_build": {
+    "run": 40054986786,
+    "artifact": 12545077578,
+    "digest_sha256": "1b4f8f2a02a9758caae40ea09d91acfab9242811192e1b52f019a396d2162732"
+  },
+  "action": {
+    "run": 40055680062,
+    "attempt": 1,
+    "request_source": "08efac96e14a01e26da22ffbf7963d5a2b35db6a",
+    "artifact": 12545570785,
+    "artifact_zip_sha256": "eb42154bbe49fbca45a88649e5bbc3d94591515b69c1f57080f6a83c110cc8ba",
+    "sha256_locally_verified": true,
+    "conclusion": "success"
+  },
+  "scenario": {
+    "app_mbps_per_direction": 15,
+    "tcp_share_bytes": 0.7,
+    "udp_share_bytes": 0.3,
+    "udp_sizes_packet_weights": [
+      [
+        64,
+        18
+      ],
+      [
+        1401,
+        82
+      ]
+    ],
+    "small_bytes_approx_pct": 1,
+    "inner_tcp_flows_per_direction": 2,
+    "outer_mtu": 1500,
+    "tun_mtu": 1429,
+    "one_way_ms": 200,
+    "netem_loss_pct": 0,
+    "warmup_s": 10,
+    "steady_s": 60,
+    "drain_s": 30,
+    "one_VM_one_scene": true
+  },
+  "readback": {
+    "product_cli_flag": "OMITTED_USE_NATIVE_DEFAULT",
+    "product_and_kernel_tun_fq_maxrate_mbps": 600,
+    "client": "owned_normal_fq_600Mbit",
+    "server": "owned_normal_fq_600Mbit",
+    "other_tun_qdisc_override": "NONE",
+    "mode": "normal",
+    "fec": "off"
+  },
+  "observations": {
+    "c2s": {
+      "tcp_injected_delivered_mbps": 10.500088,
+      "udp_injected_delivered_mbps": 4.5000644,
+      "p99_first_tcp_ms": 200.6,
+      "p99_first_udp_ms": 200.4,
+      "tcp_udp_missing": 0
+    },
+    "s2c": {
+      "tcp_injected_delivered_mbps": 10.500088,
+      "udp_injected_delivered_mbps": 4.5000644,
+      "p99_first_tcp_ms": 200.6,
+      "p99_first_udp_ms": 200.4,
+      "tcp_udp_missing": 0
+    },
+    "steady_ten_ms_bins_window_seconds": [
+      11,
+      69
+    ],
+    "receiver_client_max_udp_zero_ms": 0,
+    "receiver_client_max_tcp_aggregate_zero_ms": 0,
+    "receiver_client_max_shared_zero_ms": 0,
+    "receiver_server_max_udp_zero_ms": 0,
+    "receiver_server_max_tcp_aggregate_zero_ms": 0,
+    "receiver_server_max_shared_zero_ms": 0,
+    "source_TUN_kernel_drops_warmup_client_server": [
+      0,
+      0
+    ],
+    "source_TUN_kernel_drops_steady_client_server": [
+      0,
+      0
+    ],
+    "root_fq_drops_all_snapshots": {
+      "client": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "server": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "outer_repair_packets": 0,
+    "CPU_steady_seconds_client_server": [
+      10.39,
+      10.22
+    ],
+    "product_peak_RSS_bytes_client_server": [
+      26304512,
+      26034176
+    ],
+    "injector_CPU_seconds_including_setup": [
+      10.21,
+      10.45
+    ],
+    "owned_stop_cleanup": true
+  },
+  "result": "PASS_SCOPED_OBSERVATION",
+  "caveats": [
+    "10ms histograms aggregate both TCP streams: per individual TCP stream progress not proven",
+    "No engineered block/30% impairment in this mixed run, only lossless concurrent progress qualified",
+    "15Mbps per direction mixed is not 500Mbps mixed/noHOL qualification",
+    "Prior 2026-10-24 flow_limit100 source: bounded flow_limit256 product fix subsequently changes owned fq; revalidate affected high-rate H500 and zero loss TCP500, do not extend this exact source to subsequent revisions."
+  ],
+  "follows_prior_run": 39985073396
+}

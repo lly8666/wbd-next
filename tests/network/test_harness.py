@@ -5,14 +5,16 @@ import os
 import subprocess
 import sys
 import tempfile
+import stat
 import time
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from tools.network_harness.config import Unsupported, fec_residual, netem_args, validate
 from tools.network_harness.report import active_gap, summarize
-from tools.network_harness.traffic import Histogram, HEADER, UDP, Worker
-from tools.network_harness.artifacts import verify, sha
+from tools.network_harness.traffic import Histogram, HEADER, UDP, TCP, Worker
+from tools.network_harness.artifacts import verify, sha, attested_recovered_product_build
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -34,8 +36,550 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_game_rx_lock_128th_packet_sampling_is_strict_and_off_by_default(self):
+        from tools.network_harness.runner import public_game_rx_lock_sample
+        line=("M0_GAME_M4_RX_LOCK_SAMPLE samples=90 wait_total_ns=250000 "
+              "hold_total_ns=630000 wait_max_ns=8000 "
+              "sample_stride=128 includes_commit=0")
+        self.assertEqual(public_game_rx_lock_sample(line)["samples"],90)
+        self.assertIsNone(public_game_rx_lock_sample(""))
+        self.assertIsNone(public_game_rx_lock_sample(line+"\n"+line))
+        self.assertIsNone(public_game_rx_lock_sample(line.replace(
+            "sample_stride=128","sample_stride=1")))
+        self.assertIsNone(public_game_rx_lock_sample(line.replace(
+            "wait_max_ns=8000","wait_max_ns=999999")))
+        r=request()
+        self.assertFalse(r["bundles"]["A"].get("enable_game_rx_lock_sample",False))
+        r["product"].update(mode="game4",game_fec="fixed6")
+        r["bundles"]["A"]["enable_game_rx_lock_sample"]=True
+        self.assertTrue(validate(r)["bundles"]["A"]["enable_game_rx_lock_sample"])
+        r["bundles"]["A"]["enable_game_rx_lock_sample"]=1
+        with self.assertRaises(ValueError): validate(r)
+        r["bundles"]["A"]["enable_game_rx_lock_sample"]=True
+        r["product"]["mode"]="normal"
+        with self.assertRaises(Unsupported): validate(r)
+
+    def test_game_four_slot_native_recvmmsg_receipt_and_scope(self):
+        from tools.network_harness.runner import (
+            product_marker_line, public_game_rx_multimsg)
+        row=("M0_GAME_M4_RX_MULTIMSG socket_calls=50 observed_records=89 "
+             "full_4_batches=13 rejected_untrusted=9 valid_records=80 "
+             "limit_per_syscall=4")
+        self.assertTrue(product_marker_line(row))
+        self.assertEqual(public_game_rx_multimsg(row)["observed_records"],89)
+        self.assertIsNone(public_game_rx_multimsg(""))
+        self.assertIsNone(public_game_rx_multimsg(row.replace(
+            "observed_records=89","observed_records=40")))
+        self.assertIsNone(public_game_rx_multimsg(row.replace(
+            "valid_records=80","valid_records=900")))
+        self.assertIsNone(public_game_rx_multimsg(row.replace(
+            "limit_per_syscall=4","limit_per_syscall=32")))
+        self.assertIsNone(public_game_rx_multimsg(row+"\n"+row))
+        r=request()
+        r["owner"]="fec-network-work"
+        r["product"].update(mode="game4",game_fec="fixed6")
+        r["bundles"]["A"]["require_game_rx_multimsg"]=True
+        validate(r)
+        r["product"]["mode"]="normal"
+        with self.assertRaises(Unsupported): validate(r)
+        r["product"]["mode"]="game4"
+        r["bundles"]["A"]["require_game_rx_multimsg"]=1
+        with self.assertRaises(ValueError): validate(r)
+
+    def test_common_go_receive_kernel_handoff_marker_is_mode_scoped(self):
+        from tools.network_harness.runner import (
+            public_go_rx_handoff, product_marker_line)
+        cases=(
+            ("V4_PUBLIC_GO_RX_HANDOFF role=client mode=off filtered=1 rust_ready=1 original_send_fd_open=1",
+             "V4_PUBLIC_GO_RX_POST_HANDOFF role=client mode=off go_data_full_copies=0",1),
+            ("V4_PUBLIC_GO_RX_HANDOFF role=server mode=auto filtered=1 rust_ready=1 original_send_fd_open=1",
+             "V4_PUBLIC_GO_RX_POST_HANDOFF role=server mode=auto go_data_full_copies=2",1),
+            ("V4_PUBLIC_GAME_GO_RX_HANDOFF role=client lanes=4 filtered=4 rust_ready=1 original_send_fd_open=1",
+             "V4_PUBLIC_GAME_GO_RX_POST_HANDOFF role=client lanes=4 go_data_full_copies=0",4),
+            ("V4_PUBLIC_GAME_GO_RX_HANDOFF role=server lanes=2 filtered=2 rust_ready=1 original_send_fd_open=1",
+             "V4_PUBLIC_GAME_GO_RX_POST_HANDOFF role=server lanes=2 go_data_full_copies=1",2),
+        )
+        for begin,end,count in cases:
+            self.assertTrue(product_marker_line(begin))
+            self.assertTrue(product_marker_line(end))
+            role="server" if "role=server" in begin else "client"
+            val=public_go_rx_handoff(begin+"\\n"+end,role)
+            self.assertIsNotNone(val)
+            self.assertEqual(val["kernel_filtered_lanes"],count)
+            self.assertEqual(val["rust_ready"],1)
+            self.assertEqual(val["go_send_fd_retained"],1)
+            self.assertLessEqual(val["go_data_full_copies_after_handoff"],32)
+            self.assertIsNone(public_go_rx_handoff(begin,role))
+            self.assertIsNone(public_go_rx_handoff(begin+"\\n"+end, "server" if role=="client" else "client"))
+        r=request()
+        r["bundles"]["A"]["require_go_rx_handoff"]=True
+        self.assertTrue(validate(r)["bundles"]["A"]["require_go_rx_handoff"])
+        r["bundles"]["A"]["require_go_rx_handoff"]=1
+        with self.assertRaises(ValueError): validate(r)
+
+    def test_test_only_owned_veth_static_neighbour_requires_boolean(self):
+        # A/B control keeps original dynamic ARP by default. Explicit true
+        # pins only the direct peer inside disposable namespaces, no host
+        # sysctl / forwarding / repair policy changes.
+        r=request()
+        self.assertFalse(validate(r)["network"]["owned_veth_static_neighbour"])
+        r["network"]["owned_veth_static_neighbour"]=True
+        self.assertTrue(validate(r)["network"]["owned_veth_static_neighbour"])
+        for bad in ("yes",1,None):
+            r["network"]["owned_veth_static_neighbour"]=bad
+            with self.assertRaises(ValueError):
+                validate(r)
+
+    def test_fec_cpu_stress_only_auto_outer_off_and_zero_netem(self):
+        r=request()
+        r["owner"]="fec-network-work"
+        r["product"].update(mode="fec-auto",fec_profile=1,repair_enabled=False)
+        r["phases"][0]["c2s"]={"loss_pct":0}
+        r["phases"][0]["s2c"]={"loss_pct":0}
+        r["phases"][0]["product_cpu_stress"]={"role":"client","competitors":8}
+        self.assertEqual(validate(r)["phases"][0]["product_cpu_stress"]["competitors"],8)
+        bad=copy.deepcopy(r);bad["owner"]="network-matrix"
+        with self.assertRaises(Unsupported): validate(bad)
+        bad=copy.deepcopy(r);bad["product"]["repair_enabled"]=True
+        with self.assertRaises(Unsupported): validate(bad)
+        bad=copy.deepcopy(r);bad["phases"][0]["c2s"]["loss_pct"]=1
+        with self.assertRaises(ValueError): validate(bad)
+        bad=copy.deepcopy(r);bad["phases"][0]["product_cpu_stress"]["role"]="all"
+        with self.assertRaises(ValueError): validate(bad)
+        bad=copy.deepcopy(r);bad["phases"][0]["product_cpu_stress"]["competitors"]=49
+        with self.assertRaises(ValueError): validate(bad)
+        bad=copy.deepcopy(r)
+        bad["phases"][0]["product_cpu_stress"].update(pause_offset_seconds=18,pause_seconds=7)
+        self.assertEqual(validate(bad)["phases"][0]["product_cpu_stress"]["pause_seconds"],7)
+        bad["phases"][0]["product_cpu_stress"]["pause_seconds"]=100
+        with self.assertRaises(ValueError): validate(bad)
+
+    def test_full_run_source_tun_zero_drop_gate_and_snapshot_delta(self):
+        from tools.network_harness.runner import source_tun_tx_drops_by_role
+        request_data=request()
+        request_data["acceptance"]["require_zero_source_tun_drops_full_run"]=True
+        self.assertTrue(validate(request_data)["acceptance"]
+                        ["require_zero_source_tun_drops_full_run"])
+        request_data["acceptance"]["require_zero_source_tun_drops_full_run"]="true"
+        with self.assertRaises(ValueError):
+            validate(request_data)
+        def snapshot(client,server):
+            return {"network":{
+                "client":{"links":[{"ifname":"wbntun0",
+                    "stats64":{"tx":{"dropped":client}}}]},
+                "server":{"links":[{"ifname":"wbntun0",
+                    "stats64":{"tx":{"dropped":server}}}]}
+            }}
+        self.assertEqual(source_tun_tx_drops_by_role(
+            snapshot(0,0),snapshot(7471,0)),{"client":7471,"server":0})
+        self.assertEqual(source_tun_tx_drops_by_role(
+            snapshot(7471,0),snapshot(7471,0)),{"client":0,"server":0})
+        self.assertEqual(source_tun_tx_drops_by_role(
+            snapshot(0,0),{"network":{}}),
+            {"client":"NOT_OBSERVED","server":"NOT_OBSERVED"})
+
+    def test_testonly_tun_fq_perflow_rate_and_full_run_qdisc_zero_contract(self):
+        r=request()
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]={"A":0,"B":0}
+        r["network"]["tun_qdisc_profiles"]={"A":"fq","B":"fq"}
+        r["network"]["tun_fq_maxrate_mbps_profiles"]={"A":0,"B":600}
+        r["acceptance"]["require_zero_tun_root_qdisc_drops_full_run"]=True
+        got=validate(r)
+        self.assertEqual(got["network"]["tun_fq_maxrate_mbps_profiles"],
+                         {"A":0,"B":600})
+        self.assertTrue(got["acceptance"]["require_zero_tun_root_qdisc_drops_full_run"])
+        r["network"]["tun_fq_maxrate_mbps_profiles"]["B"]=1000
+        with self.assertRaises(ValueError):
+            validate(r)
+        r["network"]["tun_fq_maxrate_mbps_profiles"]["B"]=600
+        r["network"]["tun_qdisc_profiles"]["B"]="fq_codel"
+        with self.assertRaises(ValueError):
+            validate(r)
+        r["network"]["tun_qdisc_profiles"]["B"]="fq"
+        r["acceptance"]["require_zero_tun_root_qdisc_drops_full_run"]="true"
+        with self.assertRaises(ValueError):
+            validate(r)
+
+    def test_normal_default_fq600_and_explicit_zero_semantics(self):
+        from tools.network_harness.runner import LinuxExperiment
+        r=request()
+        r["network"]["tun_qdisc_profiles"]={}
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]={"A":0}
+        validated=validate(r)
+        a=LinuxExperiment(validated,"/does-not-exist","/tmp/wbd-default-fq-A","A")
+        b=LinuxExperiment(validated,"/does-not-exist","/tmp/wbd-default-fq-B","B")
+        try:
+            self.assertTrue(a.product_tun_fq_explicit)
+            self.assertEqual(a.product_tun_fq_maxrate_mbps,0)
+            self.assertFalse(b.product_tun_fq_explicit)
+            self.assertEqual(b.product_tun_fq_maxrate_mbps,600)
+        finally:
+            a.temp.cleanup()
+            b.temp.cleanup()
+            # TemporaryDirectory(out) is not auto-owned by experiment.
+            import shutil
+            shutil.rmtree("/tmp/wbd-default-fq-A",ignore_errors=True)
+            shutil.rmtree("/tmp/wbd-default-fq-B",ignore_errors=True)
+
+    def test_product_owned_fq_cannot_be_test_overridden_any_mode(self):
+        r=request()
+        r["network"]["tun_qdisc_profiles"]={"A":"fq"}
+        r["network"]["tun_fq_maxrate_mbps_profiles"]={}
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]={"A":0,"B":600}
+        self.assertEqual(validate(r)["network"]["product_tun_fq_maxrate_mbps_profiles"],
+                         {"A":0,"B":600})
+        r["network"]["tun_qdisc_profiles"]["B"]="fq"
+        with self.assertRaises(ValueError):
+            validate(r)
+        del r["network"]["tun_qdisc_profiles"]["B"]
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]["B"]=500
+        with self.assertRaises(ValueError):
+            validate(r)
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]["B"]=600
+        for mode in ("normal","fec-fixed","fec-auto","game2","game4"):
+            r["product"]["mode"]=mode
+            r["product"]["fec_profile"]=1  # Auto startup is independently product-controlled.
+            self.assertEqual(validate(r)["network"]["product_tun_fq_maxrate_mbps_profiles"]["B"],600)
+
+    def test_game_native_counters_and_no_false_single_lane_v3_receipt(self):
+        from tools.network_harness.runner import verify_native_game_counters, verify_outer_recovery_policy
+        good={r:{"lanes":4,"copied":268620,"delivered":75212,
+                  "raw_received":268616,"rejected":32228,"auth_rejected":0}
+              for r in ("client","server")}
+        self.assertTrue(verify_native_game_counters(4,good))
+        self.assertFalse(verify_native_game_counters(2,good))
+        self.assertFalse(verify_native_game_counters(4,{"client":good["client"]}))
+        self.assertFalse(verify_native_game_counters(4,{**good,"server":{**good["server"],"auth_rejected":1}}))
+        # One-way app traffic still drives real reverse TCP ACKs through
+        # the opposite TUN and Game FEC. Those are not fake app injection.
+        reverse={"client":{**good["client"],"copied":100,"delivered":2000},
+                 "server":{**good["server"],"copied":50,"delivered":1000}}
+        self.assertTrue(verify_native_game_counters(4,reverse,
+            {"c2s_mbps":1,"s2c_mbps":0}))
+        self.assertFalse(verify_native_game_counters(4,{
+            **reverse,"server":{**reverse["server"],"auth_rejected":1}},
+            {"c2s_mbps":1,"s2c_mbps":0}))
+        # Game does not have the Normal v3 repair ledger: the absence must
+        # never be reclassified as v3 readback PASS.
+        self.assertFalse(verify_outer_recovery_policy("outer-opportunistic-v3",{}))
+
+    def test_all_linux_public_modes_default_product_fq600_or_rollback0(self):
+        from tools.network_harness.runner import LinuxExperiment
+        import shutil
+        with tempfile.TemporaryDirectory() as tmp:
+            for mode in ("normal","fec-fixed","fec-auto","game2","game4"):
+                r=request()
+                r["product"]["mode"]=mode
+                r["product"]["fec_profile"]=1  # Not inherited from a Fixed5 request.
+                r["network"]["tun_qdisc_profiles"]={}
+                r["network"]["tun_fq_maxrate_mbps_profiles"]={}
+                r["network"]["product_tun_fq_maxrate_mbps_profiles"]={"B":0}
+                validated=validate(r)
+                a=LinuxExperiment(validated,"/unused",str(Path(tmp)/(mode+"-A")),"A")
+                b=LinuxExperiment(validated,"/unused",str(Path(tmp)/(mode+"-B")),"B")
+                try:
+                    self.assertFalse(a.product_tun_fq_explicit)
+                    self.assertEqual(a.product_tun_fq_maxrate_mbps,600)
+                    self.assertTrue(b.product_tun_fq_explicit)
+                    self.assertEqual(b.product_tun_fq_maxrate_mbps,0)
+                finally:
+                    a.temp.cleanup()
+                    b.temp.cleanup()
+                    shutil.rmtree(str(Path(tmp)/(mode+"-A")),ignore_errors=True)
+                    shutil.rmtree(str(Path(tmp)/(mode+"-B")),ignore_errors=True)
+                # A native default fq root must not be swapped by diagnostic tc.
+                conflict=copy.deepcopy(r)
+                conflict["network"]["product_tun_fq_maxrate_mbps_profiles"]={}
+                conflict["network"]["tun_qdisc_profiles"]={"A":"fq_codel"}
+                with self.assertRaises(ValueError):
+                    validate(conflict)
+
+    def test_testonly_tun_root_qdisc_fq_pacing_vs_fqcodel_strict(self):
+        r=request()
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]={"A":0,"B":0}
+        r["network"]["tun_qdisc_profiles"]={"A":"fq_codel","B":"fq"}
+        # This legacy qdisc-name contract is independent of the prior request's
+        # optional test-only maxrate, which requires fq on both legs.
+        r["network"]["tun_fq_maxrate_mbps_profiles"]={}
+        self.assertEqual(validate(r)["network"]["tun_qdisc_profiles"],
+                         {"A":"fq_codel","B":"fq"})
+        r["network"]["tun_qdisc_profiles"]["B"]="pfifo_fast"
+        with self.assertRaises(ValueError):
+            validate(r)
+        r["network"]["tun_qdisc_profiles"]={"C":"fq"}
+        with self.assertRaises(ValueError):
+            validate(r)
+
+    def test_warmup_rate_is_isolated_and_does_not_mutate_steady_offer(self):
+        r=request()
+        r["network"]["warmup_rate_scale_profiles"]={"A":1,"B":0.30}
+        self.assertEqual(validate(r)["network"]["warmup_rate_scale_profiles"],
+                         {"A":1,"B":0.30})
+        r["network"]["warmup_rate_scale_profiles"]["B"]=1.4
+        with self.assertRaises(ValueError):
+            validate(r)
+        r["network"]["warmup_rate_scale_profiles"]={"C":0.30}
+        with self.assertRaises(ValueError):
+            validate(r)
+
+    def test_testonly_per_socket_TCP_pacing_is_bounded_without_global_sysctl(self):
+        r=request()
+        r["network"]["tcp_socket_pacing_mbps_profiles"]={"A":0,"B":600}
+        self.assertEqual(validate(r)["network"]["tcp_socket_pacing_mbps_profiles"],
+                         {"A":0,"B":600})
+        r["network"]["tcp_socket_pacing_mbps_profiles"]["B"]=1000
+        with self.assertRaises(ValueError):
+            validate(r)
+        r["network"]["tcp_socket_pacing_mbps_profiles"]={"C":600}
+        with self.assertRaises(ValueError):
+            validate(r)
+
+    def test_optional_bounded_original_tun_startup_timeline_contract(self):
+        r=request()
+        r["network"]["startup_tun_drop_timeline"]=True
+        self.assertTrue(validate(r)["network"]["startup_tun_drop_timeline"])
+        r["network"]["startup_tun_drop_timeline"]=0
+        with self.assertRaises(ValueError):
+            validate(r)
+        r["network"]["startup_tun_drop_timeline"]="true"
+        with self.assertRaises(ValueError):
+            validate(r)
+
+    def test_native_tun_ring_profile_is_bound_and_per_leg(self):
+        q=request()
+        q["network"]["tun_txqlen_profiles"]={"A":500,"B":1024}
+        self.assertEqual(validate(q)["network"]["tun_txqlen_profiles"],
+                         {"A":500,"B":1024})
+        q["network"]["tun_txqlen_profiles"]["B"]=2048
+        self.assertEqual(validate(q)["network"]["tun_txqlen_profiles"]["B"],2048)
+        q["network"]["tun_txqlen_profiles"]["B"]=8192
+        with self.assertRaises(ValueError):
+            validate(q)
+        q["network"]["tun_txqlen_profiles"]={"C":500}
+        with self.assertRaises(ValueError):
+            validate(q)
+
+    def test_cross_business_hol_per_real_tcp_socket_receipts_and_gates(self):
+        from tools.network_harness.report import cross_business_hol
+        from tools.network_harness.traffic import Worker
+        r=request()
+        r["product"]={"mode":"normal","fec_profile":1}
+        r["traffic"].update(udp_share=.3,tcp_flows=2,
+                            observe_independent_flows=True)
+        r["acceptance"]["cross_business_hol"]=True
+        r["network"]["tun_qdisc_profiles"]={}
+        r["network"]["tun_fq_maxrate_mbps_profiles"]={}
+        r["network"]["product_tun_fq_maxrate_mbps_profiles"]={}
+        valid=validate(r)
+        self.assertTrue(valid["acceptance"]["cross_business_hol"])
+        invalid=copy.deepcopy(valid)
+        invalid["traffic"]["tcp_flows"]=1
+        with self.assertRaises(ValueError): validate(invalid)
+        invalid=copy.deepcopy(valid)
+        invalid["traffic"]["observe_independent_flows"]=False
+        with self.assertRaises(ValueError): validate(invalid)
+        # The same input frame becomes a unique received business record
+        # attributed to the actual TCP socket, not an aggregate TCP group.
+        with tempfile.TemporaryDirectory() as tmp:
+            w=Worker(valid,"client","127.0.0.1","127.0.0.2",45800,
+                     str(Path(tmp)/"worker.json"),1)
+            frame=w.packet(TCP,0,0,64,1)
+            w.sent("tcp",0,64,1,0)
+            w.receive(frame,10_000_001,"tcp",0)
+            self.assertEqual(w.tcp_flow_stats[0]["tx_packets"],1)
+            self.assertEqual(w.tcp_flow_stats[0]["rx_packets"],1)
+            self.assertEqual(w.tcp_flow_stats[1]["rx_packets"],0)
+            w.sel.close()
+        # Synthetic 10ms patterns exercise analysis, not product success.
+        cfg={"warmup_s":10,"phases":[{"name":"steady","seconds":10}],
+             "traffic":{"tcp_flows":2,"c2s_mbps":1,"s2c_mbps":1}}
+        n=2600
+        def endpoint():
+            a=[1]*n
+            return {"tx_bins_10ms":{"udp":a[:]},
+                    "rx_bins_10ms":{"udp":a[:]},
+                    "tcp_flow_tx_bins_10ms":[[int(i%5==0) for i in range(n)],
+                                              [int(i%5==2) for i in range(n)]],
+                    "tcp_flow_rx_bins_10ms":[[int(i%5==0) for i in range(n)],
+                                              [int(i%5==2) for i in range(n)]]}
+        sender,receiver=endpoint(),endpoint()
+        healthy,fail,limits=cross_business_hol(cfg,sender,receiver)
+        self.assertEqual(fail,[])
+        self.assertEqual(limits,[])
+        self.assertEqual(healthy["c2s/steady"]["longest_ALL_business_receiver_zero_while_udp_offered_ms"],0)
+        for i in range(1500,1512):
+            receiver["rx_bins_10ms"]["udp"][i]=0
+        blocked,fail,limits=cross_business_hol(cfg,sender,receiver)
+        self.assertTrue(any("protected UDP blocked" in f for f in fail))
+        self.assertEqual(blocked["c2s/steady"]["longest_udp_receiver_zero_while_offered_ms"],120)
+        self.assertLess(blocked["c2s/steady"]["longest_ALL_business_receiver_zero_while_udp_offered_ms"],100)
+
+    def test_true_idle_phase_has_no_synthetic_probe_sends(self):
+        r=request()
+        # This isolated idle contract is intentionally not a mixed-business
+        # cross-HOL test, even if the current committed scenario is.
+        r["acceptance"]["cross_business_hol"]=False
+        r["traffic"]["probe_hz"]=0
+        r["traffic"]["udp_share"]=1
+        r["phases"][0]["rate_scale"]=0
+        q=validate(r)
+        self.assertEqual(q["traffic"]["probe_hz"],0)
+        self.assertEqual(q["phases"][0]["rate_scale"],0)
+        r["traffic"]["probe_hz"]=-1
+        with self.assertRaises(ValueError):
+            validate(r)
+
+    def test_opt_in_v3_owner_timeline_strict_and_privacy_whitelist(self):
+        from tools.network_harness.runner import product_marker_line
+        good = request()
+        good["network"]["v3_timeline"] = True
+        self.assertTrue(validate(good)["network"]["v3_timeline"])
+        good["network"]["v3_timeline"] = "true"
+        with self.assertRaises(ValueError):
+            validate(good)
+        self.assertTrue(product_marker_line(
+            "2026/10/24 V4_PUBLIC_TIMELINE role=client unix_ns=42 rx_records=3 tx_records=9"))
+        self.assertTrue(product_marker_line(
+            "2026/10/24 V4_PUBLIC_WORKER_CPU role=server rx_thread_cpu_ns=123 tx_thread_cpu_ns=34"))
+        self.assertFalse(product_marker_line("TOKEN secret=DO_NOT_UPLOAD"))
+        self.assertFalse(product_marker_line("V4_PRIVATE_TLS_PASSWORD secret=DO_NOT_UPLOAD"))
+        # Exact original TLS-scoped Go Auto readback is a numeric-only
+        # bounded control marker. Never whitelist arbitrary TLS material.
+        self.assertTrue(product_marker_line(
+            'V4_PUBLIC_FEC2_AUTO_QUALITY direction=c2s revision=2 profile=3 validity=VALID '
+            'reason="mature first-send evidence" fast_first=900 fast_observed=899 '
+            'fast_missing=18 fast_unknown=1 slow_first=3700 slow_observed=3697 '
+            'slow_missing=74 slow_unknown=3 actual_k_sources=3600 '
+            'reverse_confirm_lag_us=80001 target_profile=4 request=true'))
+        self.assertTrue(product_marker_line(
+            "V4_PUBLIC_FEC2_AUTO_STAGE mode=auto direction=c2s requested=2 "
+            "profile=4 validity=VALID reason=two valid rising fast windows"))
+        self.assertFalse(product_marker_line("V4_PRIVATE_AUTO_KEY=NO_LEAK"))
+
+    def test_capacity_action_digest_source_fields_and_no_raw_body(self):
+        from tools.network_harness.runner import capacity_action_digest
+        leg = {"label": "A", "result": "INCONCLUSIVE",
+               "limits": ["c2s: INVALID_INJECTOR_RATE"],
+               "observed": [{"direction": "c2s", "protocol": "udp",
+                   "phase": "steady", "target_app_mbps": 3.0,
+                   "injected_app_mbps": 2.5, "send_lag_ms": {"p99_ms": 4.0},
+                   "first_arrival_ms": {"p99_ms": 600},
+                   "payload_secret": "DO_NOT_EXPOSE"}],
+               "host": {"cpu_psi_some_peak": 0.0, "processes":
+                   {"client": {"rss_peak_bytes": 17000000}}},
+               "telemetry": {"original_tx_chain": {"client":
+                   {"arena_failed": 0, "pre_read_deferred": 8}}}}
+        report = capacity_action_digest(leg)
+        self.assertEqual(report["observed"][0]["injected_mbps"], 2.5)
+        self.assertEqual(report["host"]["processes"]["client"]["peak_rss_bytes"], 17000000)
+        self.assertEqual(report["original_tx_chain"]["client"]["pre_read_deferred"], 8)
+        self.assertNotIn("DO_NOT_EXPOSE", json.dumps(report))
+
+    def test_isolated_tcp_window_profiles_and_source_tun_loss(self):
+        from tools.network_harness.runner import source_tun_tx_drops_by_role
+        a = request()
+        a["network"]["tcp_window_profiles"]={"A":"large"}
+        self.assertEqual(validate(a)["network"]["tcp_window_profiles"],{"A":"large"})
+        a["network"]["tcp_window_profiles"]={"A":"huge"}
+        with self.assertRaises(ValueError):
+            validate(a)
+        a["network"]["tcp_window_profiles"]={"C":"large"}
+        with self.assertRaises(ValueError):
+            validate(a)
+        def snap(x,y):
+            return {"network":{"client":{"links":[{"ifname":"wbntun0",
+                "stats64":{"tx":{"dropped":x}}}]},
+                "server":{"links":[{"ifname":"wbntun0",
+                "stats64":{"tx":{"dropped":y}}}]}}}
+        self.assertEqual(source_tun_tx_drops_by_role(snap(30,90),snap(45,90)),
+            {"client":15,"server":0})
+        self.assertEqual(source_tun_tx_drops_by_role(snap(30,90),snap(29,95)),
+            {"client":"NOT_OBSERVED","server":5})
+        self.assertEqual(source_tun_tx_drops_by_role({"network":{}},snap(0,0)),
+            {"client":"NOT_OBSERVED","server":"NOT_OBSERVED"})
+
+    def test_tcp_reordering_profile_is_bounded_test_only(self):
+        r=request()
+        r["network"]["tcp_reordering_profiles"]={"A":"baseline","B":"outer_repair_tolerant"}
+        r["bundles"]["B"]=dict(r["bundles"]["A"])
+        r["order"]="AB"
+        self.assertEqual(validate(r)["network"]["tcp_reordering_profiles"]["B"],
+                         "outer_repair_tolerant")
+        r["network"]["tcp_reordering_profiles"]["B"]="unbounded"
+        with self.assertRaises(ValueError): validate(r)
+
+    def test_fec_only_outer_switch_requires_real_boolean_and_allows_explicit_game(self):
+        base = request()
+        for mode in ("normal", "fec-fixed", "fec-auto"):
+            trial = copy.deepcopy(base)
+            trial["product"]["mode"] = mode
+            trial["product"]["repair_enabled"] = False
+            trial["product"]["fec_profile"] = 1
+            self.assertIs(validate(trial)["product"]["repair_enabled"], False)
+        for value in (0, 1, "false", None):
+            trial = request()
+            trial["product"]["repair_enabled"] = value
+            with self.assertRaises(ValueError):
+                validate(trial)
+        # W103 Game's real native M4 policy is now configurable; it
+        # is NOT the Normal V3 DATA shadow/accounting.
+        for mode in ("game2", "game4"):
+            trial = request()
+            trial["product"]["mode"] = mode
+            trial["product"]["repair_enabled"] = False
+            trial["product"]["game_fec"] = "fixed6"
+            self.assertIs(validate(trial)["product"]["repair_enabled"], False)
+            trial["bundles"]["A"]["repair_enabled"] = False
+            self.assertIs(validate(trial)["bundles"]["A"]["repair_enabled"], False)
+            trial["product"]["game_fec"] = "auto"
+            with self.assertRaises(Unsupported):
+                validate(trial)
+
+    def test_same_vm_frozen_legacy_on_and_new_off_have_distinct_real_flags(self):
+        from tools.network_harness.runner import requested_outer_repair
+        ab = request()
+        ab["product"].pop("repair_enabled", None)
+        ab["bundles"]["B"] = dict(ab["bundles"]["A"], repair_enabled=False)
+        ab["order"] = "AB"
+        v = validate(ab)
+        self.assertIsNone(requested_outer_repair(v, "A"))
+        self.assertIs(requested_outer_repair(v, "B"), False)
+        ab["bundles"]["B"]["repair_enabled"] = "false"
+        with self.assertRaises(ValueError):
+            validate(ab)
+
+    def test_same_vm_legacy_new_policy_checked_per_frozen_bundle(self):
+        from tools.network_harness.runner import verify_outer_recovery_policy
+        expected = "outer-single-repair-v2"
+        native = {role: {"policy": expected, "repair_attempt_limit": 1,
+                          "shadow_limit": 131072, "retain_cap_us": 1500000}
+                  for role in ("client", "server")}
+        self.assertTrue(verify_outer_recovery_policy(expected, native))
+        self.assertFalse(verify_outer_recovery_policy(expected, {"client": native["client"]}))
+        self.assertFalse(verify_outer_recovery_policy(expected, {
+            **native, "server": {**native["server"], "repair_attempt_limit": 2}}))
+        self.assertIsNone(verify_outer_recovery_policy("legacy-two-repair-v1", {}))
+        ab = request()
+        ab["policy"] = expected
+        ab["bundles"]["A"]["recovery_policy"] = "legacy-two-repair-v1"
+        ab["bundles"]["B"] = dict(ab["bundles"]["A"], recovery_policy=expected)
+        ab["order"] = "AB"  # Independent of current committed A-only observation request.
+        valid = validate(ab)
+        self.assertEqual(valid["bundles"]["A"]["recovery_policy"], "legacy-two-repair-v1")
+        self.assertEqual(valid["bundles"]["B"]["recovery_policy"], expected)
+        ab["bundles"]["B"]["recovery_policy"] = "unproven"
+        with self.assertRaises(ValueError):
+            validate(ab)
+
     def test_presets_are_complete_and_valid(self):
         base = request()
+        # Preset suite exercises actual global Linux mode default fq600.
+        # A different request may be a paired explicit0-vs-default test
+        # with an A-only external qdisc: do not inherit any of that
+        # single-request diagnostic state into unrelated preset contracts.
+        base["network"]["product_tun_fq_maxrate_mbps_profiles"]={}
+        base["network"]["tun_qdisc_profiles"]={}
+        base["network"]["tun_fq_maxrate_mbps_profiles"]={}
         catalog = json.loads((ROOT / "tests/network/scenarios.json").read_text())
         for case in catalog.values():
             r = copy.deepcopy(base)
@@ -81,6 +625,234 @@ class Contracts(unittest.TestCase):
             with self.assertRaises(ValueError):
                 verify(root, wrong)
 
+    def test_arm_native_manifest_sha256sums_and_source_provenance(self):
+        b = request()["bundles"]["A"]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            names = ["wbd-v4-client", "wbd-v4-server", "libwbd_engine.so"]
+            hashes = {}
+            for name in names:
+                p = root / name
+                p.write_bytes(b"\x7fELF\x02\x01" + bytes(12) + b"\xb7\x00")
+                hashes[name] = sha(p)
+            (root / "SHA256SUMS").write_text("".join(
+                hashes[n] + "  " + n + "\n" for n in names))
+            manifest = {"source": b["source"], "architecture": "aarch64",
+                        "go_source": "1"*40, "isa_source": "2"*40,
+                        "backend_requested": "native_fec_acceleration (pinned ISA-L static)"}
+            (root / "manifest.json").write_text(json.dumps(manifest))
+            (root / "_verified-origin.json").write_text(json.dumps({
+                "source": b["source"], "run_id": b["run_id"], "attempt": b["attempt"],
+                "artifact_id": b["artifact_id"]}))
+            with patch("tools.network_harness.artifacts.platform.machine", return_value="aarch64"):
+                verify(root, b)
+                (root / "fixed-build").mkdir()
+                for name in names:
+                    (root / "fixed-build" / name).write_bytes((root / name).read_bytes())
+                verify(root, b)
+                for name in names:
+                    self.assertTrue((root / "fixed-build" / name).stat().st_mode & stat.S_IXUSR,
+                                    "ARM64 normalized binary must remain executable after hash verification")
+                (root / "fixed-build" / names[0]).write_bytes(b"tamper")
+                with self.assertRaises(ValueError):
+                    verify(root, b)
+                (root / "fixed-build" / names[0]).write_bytes((root / names[0]).read_bytes())
+                with self.assertRaises(ValueError):
+                    verify(root, dict(b, source="0"*40))
+            if sys.platform == "linux" and os.uname().machine != "aarch64":
+                with self.assertRaises(ValueError):
+                    verify(root, b)  # Native ARM64 cannot pass on x86_64 runner
+
+    def test_failed_builder_must_prove_only_optional_unit_failed(self):
+        run = {"path": ".github/workflows/arm64-public-go-build.yml",
+               "head_branch": "experiment/network-matrix-tuning",
+               "event": "push", "status": "completed", "conclusion": "failure"}
+        required = [
+            {"name": "Exact source native ARM64 original Go and Rust bundle", "conclusion": "success"},
+            {"name": "Verify product parity maximum row 0..19 on native ARM64", "conclusion": "failure"},
+            {"name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+             "conclusion": "success"},
+        ]
+        jobs = {"total_count": 2, "jobs": [
+            {"name": "native-go-rust-bundle", "conclusion": "failure",
+             "steps": required + [{"name": "Run actions/checkout@x", "conclusion": "success"}]},
+            {"name": "native-linux-netns", "conclusion": "skipped"}]}
+        self.assertTrue(attested_recovered_product_build(run, jobs))
+        broken = copy.deepcopy(jobs)
+        broken["jobs"][0]["steps"][0]["conclusion"] = "failure"
+        self.assertFalse(attested_recovered_product_build(run, broken))
+        broken = copy.deepcopy(jobs)
+        broken["jobs"][0]["steps"].append({"name": "another hidden failure", "conclusion": "failure"})
+        self.assertFalse(attested_recovered_product_build(run, broken))
+        self.assertFalse(attested_recovered_product_build({**run, "path": "unexpected.yml"}, jobs))
+        self.assertFalse(attested_recovered_product_build({**run, "conclusion": "success"}, jobs))
+        bad = request()
+        # A legitimate single-source scenario need not contain bundle B.
+        # Construct an independent B for this schema-negative test.
+        bad["bundles"]["B"] = dict(bad["bundles"]["A"])
+        bad["bundles"]["B"]["step_attested_failure"] = "true"
+        with self.assertRaises(ValueError):
+            validate(bad)
+
+    def test_real_fec_tx_pre_stop_marker_conserves_counts(self):
+        from tools.network_harness.runner import public_fec_tx_snapshot
+        row=("V4_PUBLIC_FEC2_TX role=server accepted=6 notready=0 "
+             "full=1 partial=1 k1=1 k2_4=0 k5_12=0 k13_16=1 "
+             "rplanned=22 rsent=20 expired=0 pressure_jobs=0 "
+             "pressure_sources=0 unknown_capacity=0")
+        self.assertEqual(public_fec_tx_snapshot(row)["k13_16"],1)
+        # The sanitized product marker whitelist must preserve the numeric
+        # FEC sender snapshot rather than treating a real result as unknown.
+        from tools.network_harness.runner import product_marker_line
+        self.assertTrue(product_marker_line(row))
+        self.assertTrue(product_marker_line("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client"))
+        self.assertFalse(product_marker_line("password=secret role=client"))
+        self.assertIsNone(public_fec_tx_snapshot(""))
+        self.assertIsNone(public_fec_tx_snapshot(row.replace("rsent=20","rsent=23")))
+        self.assertIsNone(public_fec_tx_snapshot(row.replace("k1=1","k1=0")))
+
+    def test_original_fec_m1_postloan_stage_exact_causal_split(self):
+        from tools.network_harness.runner import public_fec_m1_stage,product_marker_line
+        row=("V4_PUBLIC_FEC2_M1_STAGE role=client attempted=120 "
+             "queued=100 not_ready=4 error=16 oversize=12 mode_skipped=3")
+        self.assertTrue(product_marker_line(row))
+        self.assertEqual(public_fec_m1_stage(row)["oversize"],12)
+        self.assertIsNone(public_fec_m1_stage(""))
+        self.assertIsNone(public_fec_m1_stage(row.replace("oversize=12","no_size=12")))
+        self.assertIsNone(public_fec_m1_stage(row.replace("attempted=120","attempted=300")))
+        self.assertEqual(public_fec_m1_stage(row.replace("attempted=120","attempted=119"))["queued"],100)
+        # No endpoint, packet size, ack number or original plaintext appears.
+        self.assertNotIn("secret",str(public_fec_m1_stage(row)))
+
+    def test_original_fec_m1_tun_ingress_real_numeric_contract(self):
+        from tools.network_harness.runner import public_fec_m1_ingress,product_marker_line
+        row=("V4_PUBLIC_FEC2_M1_INGRESS role=client read_ipv4=1200 "
+             "small_loaned=1170 small_arena_fail=28 jumbo=2 rejected=5")
+        self.assertTrue(product_marker_line(row))
+        self.assertEqual(public_fec_m1_ingress(row)["small_arena_fail"],28)
+        self.assertIsNone(public_fec_m1_ingress(""))
+        self.assertIsNone(public_fec_m1_ingress(row.replace("read_ipv4=1200","read_ipv4=20")))
+        self.assertIsNone(public_fec_m1_ingress(row.replace("small_loaned=1170","bad_loan=1170")))
+        self.assertEqual(public_fec_m1_ingress(row.replace("read_ipv4=1200","read_ipv4=1199"))["read_ipv4"],1199)
+
+    def test_original_m4_ipv4_packet_class_proof_not_business_goodput(self):
+        from tools.network_harness.runner import public_fec_rx_ip_class,product_marker_line
+        line=("V4_PUBLIC_FEC2_RX_IP_CLASS role=client sys_udp=12 rec_udp=8 "
+              "sys_tcp=3 rec_tcp=7 other_ip=0 tcp_ack_only=6 "
+              "tcp_data=4 tcp_other=0")
+        self.assertTrue(product_marker_line(line))
+        self.assertEqual(public_fec_rx_ip_class(line)["rec_tcp"],7)
+        self.assertEqual(public_fec_rx_ip_class(line)["tcp_ack_only"],6)
+        self.assertIsNone(public_fec_rx_ip_class(""))
+        self.assertIsNone(public_fec_rx_ip_class(line.replace("rec_udp=8","missing=8")))
+        self.assertIsNone(public_fec_rx_ip_class(line.replace("tcp_ack_only=6","tcp_ack_only=12")))
+        self.assertNotIn("private",str(public_fec_rx_ip_class(line)))
+
+    def test_original_fec_m3_m4_rx_numeric_receipt_contract(self):
+        from tools.network_harness.runner import public_fec_rx_proof,product_marker_line
+        row=("V4_PUBLIC_FEC2_RX_PROOF role=server source_seen=1809 "
+             "source_accepted=1710 parity_seen=2800 parity_accepted=2710 "
+             "systematic_candidate=1710 recovered_candidate=49 "
+             "systematic_tun=1690 recovered_tun=47 tun_failed=22 "
+             "decoder_rejected=111 admission_disabled=78")
+        self.assertTrue(product_marker_line(row))
+        self.assertEqual(public_fec_rx_proof(row)["recovered_tun"],47)
+        self.assertIsNone(public_fec_rx_proof(""))
+        self.assertIsNone(public_fec_rx_proof(row.replace("recovered_tun=47","renamed=47")))
+        self.assertIsNone(public_fec_rx_proof(row.replace("recovered_tun=47","recovered_tun=50")))
+        self.assertIsNone(public_fec_rx_proof(row.replace("source_seen=1809","source_seen=9")))
+        self.assertIsNone(public_fec_rx_proof(row.replace("admission_disabled=78","admission_disabled=90000")))
+
+    def test_tcp_kernel_cwnd_unacked_byte_progress_aggregates_without_endpoints(self):
+        from tools.network_harness.runner import tcp_kernel_progress_counts
+        input_text=(
+            "ESTAB 0 0 secret-client:5901 secret-server:5902\n"
+            "  cubic rto:804 cwnd:3 unacked:2 notsent:900 bytes_sent:1200 "
+            "bytes_acked:200 bytes_received:5 retrans:1/4 snd_wnd:1000\n"
+            "ESTAB 0 0 secret-client:5903 secret-server:5904\n"
+            "  cubic rto:402 cwnd:7 unacked:1 notsent:300 bytes_sent:500 "
+            "bytes_acked:400 retrans:0/2 snd_wnd:2000\n"
+        )
+        x=tcp_kernel_progress_counts(input_text)
+        self.assertEqual(x["established"],2)
+        self.assertEqual(x["bytes_sent"],{"sampled_sockets":2,"sum":1700,"max":1200})
+        self.assertEqual(x["bytes_acked"]["sum"],600)
+        self.assertEqual(x["notsent"]["sum"],1200)
+        self.assertEqual(x["unacked"]["sum"],3)
+        self.assertEqual(x["retrans"]["total_sum"],6)
+        self.assertEqual(x["bytes_received"]["sampled_sockets"],1)
+        self.assertNotIn("secret-",str(x))
+        missing=tcp_kernel_progress_counts("ESTAB 0 0 private:1 private:2\n")
+        self.assertEqual(missing["established"],1)
+        self.assertEqual(missing["bytes_acked"],"NOT_OBSERVED")
+        self.assertEqual(tcp_kernel_progress_counts(""),{"established":0,
+            **{k:"NOT_OBSERVED" for k in ("bytes_sent","bytes_acked",
+                "bytes_received","notsent","unacked","cwnd","snd_wnd","rto",
+                "mss","advmss","pmtu","rcvmss","ssthresh","reordering",
+                "rcv_space","dsack_dups","retrans","rtt_ms",
+                "congestion_algorithm_counts")}})
+        enriched=tcp_kernel_progress_counts(
+            "ESTAB 0 0 sensitive:111 sensitive:222\n"
+            "  cubic wscale:7,7 rtt:401.4/3.5 mss:1289 pmtu:1329 "
+            "advmss:1289 cwnd:43 unacked:49 snd_wnd:539648 "
+            "ssthresh:24 reordering:3 rto:1743\n")
+        self.assertEqual(enriched["mss"]["sum"],1289)
+        self.assertEqual(enriched["pmtu"]["max"],1329)
+        self.assertEqual(enriched["rtt_ms"]["max"],401.4)
+        self.assertEqual(enriched["congestion_algorithm_counts"],{"cubic":1})
+        self.assertNotIn("sensitive",str(enriched))
+
+    def test_original_m2_numeric_proof_and_tcp_state_only_no_addresses(self):
+        from tools.network_harness.runner import (
+            public_fec_m2_proof, product_marker_line, tcp_socket_state_counts)
+        row=("V4_PUBLIC_FEC2_M2_PROOF role=client accepted=113 not_sent=2 "
+             "uncertain=1 unknown_2s=17 unknown_8s=25 covered_2s=88 "
+             "covered_8s=74 reverse_reports=31 first_censored=0 cover_censored=1")
+        self.assertTrue(product_marker_line(row))
+        self.assertEqual(public_fec_m2_proof(row)["unknown_2s"], 17)
+        self.assertIsNone(public_fec_m2_proof(""))
+        self.assertIsNone(public_fec_m2_proof(row.replace("reverse_reports=31","no_report=31")))
+        self.assertIsNone(public_fec_m2_proof(row.replace("cover_censored=1","cover_censored=3")))
+        # Genuine W51 original M2 positive receipt lag is a separate
+        # read-only field, never the OFF outer shadow fallback SRTT.
+        valid=row+" positive_lag_ns=1207000000 positive_samples=2 positive_mean_us=603500 positive_mean_known=true"
+        value=public_fec_m2_proof(valid)
+        self.assertEqual(value["positive_mean_us"],603500)
+        self.assertTrue(value["positive_mean_known"])
+        self.assertIn("NOT_shadow_RTT",value["positive_lag_qualification"])
+        unknown=row+" positive_lag_ns=0 positive_samples=0 positive_mean_us=0 positive_mean_known=false"
+        self.assertFalse(public_fec_m2_proof(unknown)["positive_mean_known"])
+        self.assertIsNone(public_fec_m2_proof(valid.replace("positive_mean_us=603500","positive_mean_us=600000")))
+        self.assertIsNone(public_fec_m2_proof(valid.replace("positive_samples=2","positive_samples=0")))
+        self.assertIsNone(public_fec_m2_proof(valid.replace("positive_mean_known=true","positive_mean_known=false")))
+        self.assertIsNone(public_fec_m2_proof(valid.replace("positive_mean_known=true","positive_mean_known=UNKNOWN")))
+        # Older exact-source product logs remain readable without a
+        # fabricated zero-value count or new field.
+        self.assertNotIn("positive_mean_known",public_fec_m2_proof(row))
+        counts=tcp_socket_state_counts("SYN-SENT 0 1 private:333 private:444\n"
+                                       "ESTAB 0 0 private:333 private:444\n"
+                                       "ESTAB 0 0 private:333 private:444\n")
+        self.assertEqual(counts, {"SYN-SENT":1, "ESTAB":2})
+        self.assertNotIn("private", str(counts))
+
+    def test_real_fec_failure_reasons_negative_unknown(self):
+        from tools.network_harness.runner import public_fec_failure_reasons,product_marker_line
+        row=("V4_PUBLIC_FEC2_FAILURE role=client source_payload=0 source_arena=7 "
+             "source_seal=1 parity_policy=0 parity_arena=15 parity_seal=0 "
+             "parity_m4_noncopy=2 source_m4_noncopy=3")
+        self.assertTrue(product_marker_line(row))
+        self.assertEqual(public_fec_failure_reasons(row)["source_arena"],7)
+        self.assertIsNone(public_fec_failure_reasons(""))
+        self.assertIsNone(public_fec_failure_reasons(row.replace("source_arena=7","no_data=7")))
+
+    def test_safe_startup_failure_diagnostic_redacts_private_input(self):
+        from tools.network_harness.runner import startup_diagnostic
+        raw = "password=secret_value route-key=do-not-persist\nerror: no such device"
+        d = startup_diagnostic(raw)
+        self.assertIn("KERNEL_NO_DEVICE", d["safe_failure_classes"])
+        self.assertNotIn("secret_value", json.dumps(d))
+        self.assertNotIn("do-not-persist", json.dumps(d))
+
     def test_histogram_empty_overflow_and_sparse_gap(self):
         h = Histogram()
         self.assertIsNone(h.result()["p99_ms"])
@@ -107,6 +879,14 @@ class Contracts(unittest.TestCase):
     def test_independent_udp_tcp_duplex_and_real_missing_accounting(self):
         r = request()
         r.update(warmup_s=1, drain_s=1, phases=[{"name": "test", "seconds": 2}])
+        # A 2s cheap socket selfcheck cannot exercise the independent
+        # 2s+1s guarded 60s HOL phase; these are separate tests/Actions.
+        r["acceptance"]["cross_business_hol"]=False
+        # Synthetic socket selfcheck has no product or retransmission receipt.
+        # Do not inherit pressure-request repair gates into this independent contract.
+        r["acceptance"]["require_retransmission"] = False
+        r["acceptance"].pop("max_p99_ms", None)
+        r["acceptance"].pop("max_active_gap_ms", None)
         r["traffic"].update(c2s_mbps=1, s2c_mbps=1, udp_share=.5, sizes=[[64, 1], [800, 1]])
         r = validate(r)
         with tempfile.TemporaryDirectory() as tmp:
@@ -145,6 +925,156 @@ class Contracts(unittest.TestCase):
             report = summarize(r, c, s, tele, {})
             self.assertEqual(report["result"], "FAIL")
             self.assertTrue(any(x["missing_after_drain"] == 2 for x in report["observed"]))
+
+
+
+class FecSizeClassContracts(unittest.TestCase):
+    def test_actual_size_class_math_and_owner_scope(self):
+        from tools.network_harness.traffic import size_class, SIZE_CLASSES
+        self.assertEqual([size_class(n) for n in (64,96,256,257,899,900,1287)],
+                         [SIZE_CLASSES[0]]*3+[SIZE_CLASSES[1]]*2+[SIZE_CLASSES[2]]*2)
+        r=request()
+        r["owner"]="fec-network-work"
+        r["traffic"]["observe_size_classes"]=True
+        r["acceptance"]["max_small_udp_loss_pct"]=1
+        r["acceptance"]["max_small_udp_p99_ms"]=500
+        self.assertTrue(validate(r)["traffic"]["observe_size_classes"])
+        r["traffic"]["observe_size_classes"]=False
+        with self.assertRaises(ValueError): validate(r)
+        r["traffic"]["observe_size_classes"]=True
+        r["owner"]="network-matrix"
+        with self.assertRaises(ValueError): validate(r)
+
+    def test_true_small_udp_tx_rx_10ms_and_phase_counter(self):
+        from tools.network_harness.traffic import Worker
+        cfg=request()
+        cfg["owner"]="fec-network-work"
+        cfg["traffic"]["observe_size_classes"]=True
+        w=Worker(validate(cfg),"client","127.0.0.1","127.0.0.2",45901,
+                 "/tmp/wbd-size-test.json",1_000_000_000)
+        w.sent("udp",1,96,1_001_000_000)
+        self.assertEqual(w.size_stats["udp"][1]["small_64_256"]["tx_packets"],1)
+        self.assertEqual(sum(w.small_udp_tx_bins),1)
+        w.sent("udp",1,1287,1_002_000_000)
+        self.assertEqual(w.size_stats["udp"][1]["large_900_plus"]["tx_packets"],1)
+        self.assertEqual(sum(w.small_udp_tx_bins),1)
+
+
+class FecNativePositiveM2GateContracts(unittest.TestCase):
+
+    def test_native_m2_positive_gate_owner_and_modes(self):
+        r=copy.deepcopy(request())
+        r["owner"]="fec-network-work"
+        r["product"]["mode"]="fec-fixed"
+        r["product"]["fec_profile"]=3
+        r["acceptance"]["require_native_m2_positive_confirmation"]=True
+        validate(r)
+        for mode in ("normal","game2","game4"):
+            q=copy.deepcopy(r);q["product"]["mode"]=mode
+            if mode.startswith("game"):q["product"]["repair_enabled"]=True
+            with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["owner"]="network-matrix"
+        with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["acceptance"]["require_native_m2_positive_confirmation"]=1
+        with self.assertRaises(ValueError):validate(q)
+
+
+class FecBurstLossGateContracts(unittest.TestCase):
+    def test_burst_step_loss_scope_only_fec_owner(self):
+        r=copy.deepcopy(request())
+        r["owner"]="fec-network-work"
+        r["traffic"]["observe_size_classes"]=True
+        r["phases"]=[
+            {"name":"pre10","seconds":30,"c2s":{"loss_pct":10},"s2c":{"loss_pct":10}},
+            {"name":"peak30","seconds":60,"c2s":{"loss_pct":30},"s2c":{"loss_pct":30}},
+            {"name":"recover10","seconds":30,"c2s":{"loss_pct":10},"s2c":{"loss_pct":10}}]
+        r["acceptance"]["max_loss_pct"]=1
+        r["acceptance"]["max_small_udp_loss_pct"]=1
+        r["acceptance"]["loss_gate_phases"]=["pre10","recover10"]
+        self.assertEqual(validate(r)["acceptance"]["loss_gate_phases"],["pre10","recover10"])
+        for bad in ([],["invalid"],["pre10","pre10"]):
+            q=copy.deepcopy(r);q["acceptance"]["loss_gate_phases"]=bad
+            with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["owner"]="network-matrix"
+        with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["acceptance"].pop("max_loss_pct")
+        with self.assertRaises(ValueError):validate(q)
+
+class FecGame4StrictLossBoundaryContracts(unittest.TestCase):
+    def test_fec_game4_exact_0p1_is_not_a_pass(self):
+        from tools.network_harness.report import loss_exceeds_acceptance
+        q=copy.deepcopy(request())
+        q["owner"]="fec-network-work"
+        q["product"]["mode"]="game4"
+        self.assertTrue(loss_exceeds_acceptance(0.1,0.1,q))
+        self.assertTrue(loss_exceeds_acceptance(0.101,0.1,q))
+        self.assertFalse(loss_exceeds_acceptance(0.099,0.1,q))
+        self.assertFalse(loss_exceeds_acceptance(0,0.1,q))
+        self.assertFalse(loss_exceeds_acceptance(None,0.1,q))
+        q["product"]["mode"]="game2"
+        self.assertFalse(loss_exceeds_acceptance(0.1,0.1,q))
+        q["product"]["mode"]="game4"
+        q["owner"]="network-matrix"
+        self.assertFalse(loss_exceeds_acceptance(0.1,0.1,q))
+        q["owner"]="fec-network-work"
+        self.assertFalse(loss_exceeds_acceptance(1.0,1.0,q))
+        self.assertTrue(loss_exceeds_acceptance(1.001,1.0,q))
+
+
+class FecGame4LongCopyScheduleContracts(unittest.TestCase):
+    def test_implicit_game4_default_is_wide_and_legacy_rollback_preserved(self):
+        r=copy.deepcopy(request())
+        r["owner"]="fec-network-work"
+        r["product"]["mode"]="game4"
+        r["product"]["game_fec"]="fixed6"
+        r["product"]["repair_enabled"]=False
+        r["product"].pop("game4_copy_schedule",None)
+        self.assertEqual(validate(r)["product"]["game4_copy_schedule"],"stagger-4-50-140")
+        for schedule in ("stagger-4-20-60","immediate"):
+            q=copy.deepcopy(r)
+            q["product"]["game4_copy_schedule"]=schedule
+            self.assertEqual(validate(q)["product"]["game4_copy_schedule"],schedule)
+        q=copy.deepcopy(r)
+        q["product"]["mode"]="game2"
+        self.assertEqual(validate(q)["product"]["game4_copy_schedule"],"immediate")
+
+    def test_bounded_optin_wide_game4_only(self):
+        r=copy.deepcopy(request())
+        r["owner"]="fec-network-work"
+        r["product"]["mode"]="game4"
+        r["product"]["game_fec"]="fixed6"
+        r["product"]["repair_enabled"]=False
+        r["product"]["game4_copy_schedule"]="stagger-4-50-140"
+        r["network"]["lane_loss"]="shared"
+        self.assertEqual(validate(r)["product"]["game4_copy_schedule"],"stagger-4-50-140")
+        q=copy.deepcopy(r);q["product"]["mode"]="game2"
+        with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["product"]["game4_copy_schedule"]="stagger-4-140-50"
+        with self.assertRaises(ValueError):validate(q)
+
+
+class FecGame4SharedWallBlackoutScope(unittest.TestCase):
+    def test_fixed6_real_outer_off_allowed_without_relaxing_other_modes(self):
+        r=copy.deepcopy(request())
+        r["owner"]="fec-network-work"
+        r["product"]["mode"]="game4"
+        r["product"]["game_fec"]="fixed6"
+        r["product"]["repair_enabled"]=False
+        r["product"]["game4_copy_schedule"]="stagger-4-20-60"
+        r["network"]["lane_loss"]="shared"
+        r["phases"]=[{"name":"pulse","seconds":12,
+                      "wall_blackouts_ms":[{"offset_ms":3000,"duration_ms":100}]}]
+        validated=validate(r)
+        self.assertEqual(validated["phases"][0]["wall_blackouts_ms"][0]["duration_ms"],100)
+        for key,value in (("game_fec","fixed5"),("repair_enabled",True)):
+            q=copy.deepcopy(r);q["product"][key]=value
+            with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["product"]["mode"]="game2"
+        with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["network"]["lane_loss"]="independent"
+        with self.assertRaises(ValueError):validate(q)
+        q=copy.deepcopy(r);q["phases"][0]["c2s"]={"loss_pct":1}
+        with self.assertRaises(ValueError):validate(q)
 
 
 if __name__ == "__main__":

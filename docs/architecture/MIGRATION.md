@@ -48,6 +48,8 @@ Windows运行时去PowerShell按[PLAN-010](../decisions/M0-windows-native-migrat
 
 R0从原 `docs/PARAMETERS.json` 导入当时有效配置为单一迁移账本，逐项标 reuse/adapter/new/deferred 和CLI/配置/UI适用面；包括服务端按客户端接受cipher/FEC意图、Normal上下行auto独立、Game固定档、lane随机rotation区间、idle宽松余量、DNS/分流/IPv6默认值。不能仅移植本表列的源码而漏掉用户已有开关。旧参数重命名需要读取兼容/明确迁移说明；不悄悄改变默认值。
 
+2026-10-23 MTU定向增量：Linux公开V4两端 `--outer-mtu` 默认1500，内层TUN按封装/MSS/已认证双端record限制自动推导，见 [容量/MTU规则§3](../testing/NETWORK_CAPACITY_ENVELOPE.md#3-内层mtu随外层配置自动计算)。适用CLI/help与启动 `V4_PUBLIC_MTU` readback；Windows CLI/GUI另一路由M0迁入同语义，当前未声明接线或PASS。Auto不逐档改变TUN，LINK分片不向所有正常包重复收取头开销。
+
 ## 阶段与退出条件
 
 | 阶段 | 有界交付 | 必要验证；达到即进入下一步 |

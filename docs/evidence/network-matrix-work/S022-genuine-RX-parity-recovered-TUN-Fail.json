@@ -1,0 +1,179 @@
+{
+  "schema": 1,
+  "event": "S022",
+  "kind": "TRUE_PUBLIC_FEC_RX_SAME_ORIGINAL_M3_M4_DIAG",
+  "result": "FAIL",
+  "action": {
+    "run_id": 39784149202,
+    "attempt": 1,
+    "conclusion": "failure",
+    "artifact_id": 12427433885,
+    "zip_sha256": "ae4797d07807475c2453d3360b6257ed104eb892db1efc6b279c012b9c08d172",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39784149202"
+  },
+  "product": {
+    "source": "370eb534621d76deda7888599bd089acc163acac",
+    "build_run": 39783512063,
+    "artifact_id": 12427229903,
+    "zip_sha256": "e9ea6e661aa2801b081fe9101f3694927815871c8279c13d47ab8e868a27b3c6"
+  },
+  "harness_source": "2425431d5a3739bb3ba052da707d912559731046",
+  "conditions": {
+    "mode": "fec-fixed",
+    "profile": 6,
+    "requested_app_mbps_per_direction": 2,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "one_way_ms": 300,
+    "loss_iid_pct": 30,
+    "steady_s": 120,
+    "warmup_s": 15,
+    "drain_s": 30,
+    "netem_unseeded": true,
+    "arch": "aarch64",
+    "kernel": "6.17.0-1022-azure",
+    "logical_cpus": 4
+  },
+  "actual": {
+    "netem_loss_pct": {
+      "c2s": 29.98463597165089,
+      "s2c": 29.94116256794915
+    },
+    "udp": {
+      "c2s": {
+        "sent": 20751,
+        "unique": 13883,
+        "missing": 6868,
+        "loss_pct": 33.09720013493325,
+        "duplicates": 0,
+        "first_arrival_p99_ms": 330.6
+      },
+      "s2c": {
+        "sent": 20751,
+        "unique": 13874,
+        "missing": 6877,
+        "loss_pct": 33.14057153872103,
+        "duplicates": 0,
+        "first_arrival_p99_ms": 386.5
+      }
+    },
+    "tcp": {
+      "steady_completed_sent_each": 0,
+      "steady_completed_received_each": 0,
+      "backpressure_slots": {
+        "c2s": 12799,
+        "s2c": 234377
+      },
+      "established_four_each_during_steady": true
+    },
+    "rx": {
+      "client": {
+        "source_seen": 17448,
+        "source_accepted": 15228,
+        "parity_seen": 25607,
+        "parity_accepted": 23488,
+        "systematic_candidate": 15228,
+        "recovered_candidate": 5669,
+        "systematic_tun": 15228,
+        "recovered_tun": 5669,
+        "tun_failed": 0,
+        "decoder_rejected": 4339,
+        "admission_disabled": 0,
+        "tun_iface_rx_total_at_drain": 20897
+      },
+      "server": {
+        "source_seen": 17393,
+        "source_accepted": 15180,
+        "parity_seen": 25624,
+        "parity_accepted": 23579,
+        "systematic_candidate": 15180,
+        "recovered_candidate": 5714,
+        "systematic_tun": 15180,
+        "recovered_tun": 5714,
+        "tun_failed": 0,
+        "decoder_rejected": 4258,
+        "admission_disabled": 0,
+        "tun_iface_rx_total_at_drain": 20894
+      }
+    },
+    "tx_fec": {
+      "client": {
+        "accepted": 21717,
+        "k1": 8262,
+        "k2_4": 5417,
+        "k5_12": 7,
+        "k13_16": 0,
+        "rplanned": 35410,
+        "rsent": 32936,
+        "source_arena": 11,
+        "parity_arena": 27,
+        "parity_m4_noncopy": 237,
+        "source_m4_noncopy": 148,
+        "unknown_capacity": 503
+      },
+      "server": {
+        "accepted": 21658,
+        "k1": 8098,
+        "k2_4": 5554,
+        "k5_12": 6,
+        "k13_16": 0,
+        "rplanned": 35322,
+        "rsent": 32711,
+        "source_arena": 41,
+        "parity_arena": 191,
+        "parity_m4_noncopy": 0,
+        "source_m4_noncopy": 0,
+        "unknown_capacity": 505
+      }
+    },
+    "m2": {
+      "client": {
+        "authenticated_reverse_reports": 11769,
+        "accepted": 21558,
+        "not_sent": 148,
+        "unknown_2s": 206,
+        "covered_2s": 21352,
+        "first_censored": 1,
+        "cover_censored": 1
+      },
+      "server": {
+        "authenticated_reverse_reports": 11860,
+        "accepted": 21617,
+        "not_sent": 0,
+        "unknown_2s": 189,
+        "covered_2s": 21214,
+        "first_censored": 1,
+        "cover_censored": 1
+      }
+    },
+    "mode": {
+      "client": "requested1 applied0 pending",
+      "server": "requested1 applied1"
+    },
+    "stop_drained_both": true,
+    "owned_namespace_cleanup": true,
+    "invalid_payloads": 0,
+    "kernel": {
+      "udp_rcvbuf_errors": 0,
+      "udp_sndbuf_errors": 0,
+      "udp_checksum_errors": 0,
+      "ip_discard_errors": 0,
+      "tun_rx_exact_matches_systematic_plus_recovered": true
+    },
+    "host": {
+      "cpu_psi_mean_pct": 0.0215,
+      "steal_peak_pct": 0,
+      "product_phase_cpu_s": {
+        "client": 4.47,
+        "server": 4.62
+      }
+    }
+  },
+  "interpretation": "Actual original FEC RX does accept thousands of parity and produce 5669/5714 uniquely reconstructed candidate packets; all are accepted by original M4 TUN sink and TUN interface RX packets equal systematic+recovered counts. Thus 'parity not decoded or TUN failed' hypotheses disproven. Nevertheless application UDP unique delivery remains 66.9%/66.9%, no TCP steady completed and client fixed pending. RX systematic/parity accepted includes warmup+steady+drain, while application UDP cohort counted only steady; do not subtract them directly to derive recovery efficiency or claim all reconstructed bytes were UDP. Actual k histogram heavily partial (k1 majority), 4k+ FEC decoder rejected, underlay≈30%, possible receiver bounded age/class/cross-traffic. Need next discriminating observation for decoder reject split and inner TCP cwnd/bytes-in-flight rather than guessing algorithm/boosting caches. Original static M2 maturity predicate uses cumulative unknown and censor, not safe to waive. Old S017 full FAIL and S018 normal off PASS preserved.",
+  "not_observed": [
+    "FEC decoder per-reason rejected and recovered by UDP/TCP business cohort",
+    "native ISA-L selected runtime",
+    "outer FEC repair byte ratios/usefulness",
+    "true TCP congestion window and in-flight bytes"
+  ]
+}

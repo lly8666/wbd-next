@@ -22,6 +22,14 @@ from pathlib import Path
 HEADER = struct.Struct("!4sBBHQQII")  # magic, version, kind, phase, seq, sent_ns, size, CRC
 MAGIC = b"WBN1"
 UDP, PROBE, ECHO, TCP = 0, 1, 2, 3
+SIZE_CLASSES = ("small_64_256", "medium_257_899", "large_900_plus")
+
+def size_class(size):
+    return SIZE_CLASSES[0 if size<=256 else (1 if size<900 else 2)]
+
+def fresh_size_stat():
+    return {"tx_packets":0,"tx_bytes":0,"rx_packets":0,"rx_bytes":0,
+            "late":0,"latency":Histogram(),"send_lag":Histogram()}
 
 
 class Histogram:
@@ -40,6 +48,17 @@ class Histogram:
 
     def result(self):
         out = {"n": self.count, "overflow_over_30s": self.overflow, "max_ms": self.maximum_ms}
+        # Evidence only at end-of-run, no new packet-hotpath work. Fixed 1ms
+        # cumulative counts support arbitrary matched lossless baseline
+        # +10/+30/+60/+100ms comparisons. Normalize by ALL offered packets
+        # in report analysis; never divide by only survivors.
+        pairs=sorted(self.bins.items())
+        cumulative=[];accepted=0;index=0
+        for ms in range(251):
+            while index<len(pairs) and pairs[index][0]<=ms*10:
+                accepted+=pairs[index][1];index+=1
+            cumulative.append(accepted)
+        out["cdf_1ms_through_250"]=cumulative
         for name, q in [("p50_ms", .5), ("p95_ms", .95), ("p99_ms", .99), ("p999_ms", .999)]:
             remaining = math.ceil(self.count * q)
             out[name] = None
@@ -65,8 +84,9 @@ def fresh_stats():
     return {"tx_packets": 0, "tx_bytes": 0, "rx_packets": 0, "rx_bytes": 0,
             "send_errors": 0, "emsgsize": 0, "backpressure": 0, "duplicates": 0,
             "invalid": 0, "late": 0, "reordered": 0, "scheduled": 0,
-            "probe_sent": 0, "probe_received": 0,
-            "latency": Histogram(), "send_lag": Histogram(), "rtt": Histogram()}
+            "probe_sent": 0, "probe_received": 0, "probe_rx_first_arrival": 0,
+            "latency": Histogram(), "send_lag": Histogram(), "rtt": Histogram(),
+            "sparse_probe_oneway": Histogram()}
 
 
 class Worker:
@@ -75,7 +95,8 @@ class Worker:
         self.port, self.output, self.start_ns = port, Path(output), start_ns
         self.peer_port = port if peer_port is None else peer_port
         self.sel = selectors.DefaultSelector()
-        self.phases = [{"name": "warmup", "seconds": config["warmup_s"], "rate_scale": 1}] + config["phases"]
+        self.phases = [{"name": "warmup", "seconds": config["warmup_s"],
+                        "rate_scale": config["traffic"].get("warmup_rate_scale",1)}] + config["phases"]
         self.ends, elapsed = [], 0
         for ph in self.phases:
             elapsed += ph["seconds"]
@@ -83,6 +104,10 @@ class Worker:
         self.end_ns = self.ends[-1]
         self.stats = {proto: [fresh_stats() for _ in self.phases] for proto in ["udp", "tcp"]}
         t = config["traffic"]
+        self.observe_sizes=t.get("observe_size_classes",False)
+        self.size_stats=({p:[{band:fresh_size_stat() for band in SIZE_CLASSES}
+                             for _ in self.phases] for p in ("udp","tcp")}
+                         if self.observe_sizes else {})
         self.cycle = [size for size, weight in t["sizes"] for _ in range(weight)]
         self.body = bodies(set(self.cycle) | {64}, config["seed"])
         self.seq = {"udp": 0, "tcp": 0}
@@ -93,6 +118,20 @@ class Worker:
         self.rx_bins = {p: array.array("I", [0]) * count for p in self.seq}
         self.tx_byte_bins = {p: array.array("I", [0]) * count for p in self.seq}
         self.rx_byte_bins = {p: array.array("I", [0]) * count for p in self.seq}
+        self.small_udp_tx_bins=(array.array("I",[0])*count if self.observe_sizes else None)
+        self.small_udp_rx_bins=(array.array("I",[0])*count if self.observe_sizes else None)
+        # Opt-in bounded per-TCP-socket evidence: independent framed
+        # business streams (not just an aggregate "TCP" histogram).
+        # Keep the established global seq+CRC integrity and no per-frame IO.
+        self.observe_independent = t.get("observe_independent_flows", False)
+        self.stream_index = {}
+        self.tcp_flow_tx_bins = ([array.array("I", [0]) * count for _ in range(t["tcp_flows"])]
+                                 if self.observe_independent else [])
+        self.tcp_flow_rx_bins = ([array.array("I", [0]) * count for _ in range(t["tcp_flows"])]
+                                 if self.observe_independent else [])
+        self.tcp_flow_stats = ([{"tx_packets":0,"tx_bytes":0,"rx_packets":0,"rx_bytes":0,
+                                 "latency":Histogram()} for _ in range(t["tcp_flows"])]
+                               if self.observe_independent else [])
         # Windows Winsock offers no Linux SO_RXQ_OVFL ancillary counter;
         # missing host queue drop telemetry is UNKNOWN, never asserted zero.
         self.socket_drops = 0 if os.name == 'posix' else None
@@ -129,12 +168,20 @@ class Worker:
         self.sel.register(s, selectors.EVENT_READ, key)
         return s
 
+    def tcp_preconnect_buffers(self, sock):
+        # Apply before SYN/accept so window-scale negotiation sees desired RX size.
+        # Normal baseline deliberately leaves socket defaults untouched.
+        if self.config["network"].get("tcp_window_profile_selected")=="large":
+            sock.setsockopt(socket.SOL_SOCKET,socket.SO_SNDBUF,8*1024*1024)
+            sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,8*1024*1024)
+
     def connect_streams(self):
         if self.config["traffic"]["udp_share"] == 1:
             return
         if self.role == "server":
             listen = socket.socket()
             listen.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.tcp_preconnect_buffers(listen)
             listen.bind((self.local, self.port + 2))
             listen.listen(32)
             listen.settimeout(15)
@@ -147,6 +194,17 @@ class Worker:
                 deadline = time.monotonic() + 15
                 while True:
                     s = socket.socket()
+                    self.tcp_preconnect_buffers(s)
+                    # Bounded A/B diagnostic only: force one Linux TCP
+                    # socket pacing ceiling without editing any TCP sysctl,
+                    # the WBD product, normal app rate, or other sockets.
+                    pacing=self.config["network"].get("tcp_socket_pacing_mbps_selected",0)
+                    if pacing:
+                        opt=getattr(socket,"SO_MAX_PACING_RATE",47)
+                        limit=pacing*1_000_000//8  # Linux option uses bytes/s
+                        s.setsockopt(socket.SOL_SOCKET,opt,limit)
+                        if s.getsockopt(socket.SOL_SOCKET,opt)!=limit:
+                            raise RuntimeError("per-socket pace readback mismatch")
                     s.bind((self.local, 0))
                     s.settimeout(1)
                     try:
@@ -158,8 +216,16 @@ class Worker:
                         if time.monotonic() > deadline:
                             raise
                         time.sleep(.1)
+        self.stream_index = {s:i for i,s in enumerate(self.streams)}
         for s in self.streams:
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            profile=self.config["network"].get("tcp_socket_pacing_mbps_selected",0)
+            self.effective_buffers.setdefault("tcp",[]).append({
+                "sndbuf":s.getsockopt(socket.SOL_SOCKET,socket.SO_SNDBUF),
+                "rcvbuf":s.getsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF),
+                "SO_MAX_PACING_RATE_bytes_s":(
+                    s.getsockopt(socket.SOL_SOCKET,getattr(socket,"SO_MAX_PACING_RATE",47))
+                    if profile and self.role=="client" else "NOT_SET")})
             s.setblocking(False)
             self.sel.register(s, selectors.EVENT_READ, "tcp")
             self.read_buffers[s] = bytearray()
@@ -171,14 +237,27 @@ class Worker:
     def bucket(self, now):
         return min(len(self.tx_bins["udp"]) - 1, max(0, (now - self.start_ns) // 10000000))
 
-    def sent(self, proto, phase, size, now):
+    def sent(self, proto, phase, size, now, flow_index=None):
         st = self.stats[proto][phase]
         st["tx_packets"] += 1
         st["tx_bytes"] += size
-        self.tx_bins[proto][self.bucket(now)] += 1
-        self.tx_byte_bins[proto][self.bucket(now)] += size
+        bucket = self.bucket(now)
+        self.tx_bins[proto][bucket] += 1
+        self.tx_byte_bins[proto][bucket] += size
+        if self.observe_sizes:
+            cls=self.size_stats[proto][phase][size_class(size)]
+            cls["tx_packets"]+=1
+            cls["tx_bytes"]+=size
+            if proto=="udp" and size<=256:
+                self.small_udp_tx_bins[bucket]+=1
+        if proto=="tcp" and self.observe_independent:
+            if flow_index is None or not 0 <= flow_index < len(self.tcp_flow_tx_bins):
+                raise ValueError("TCP flow identity not observed at send")
+            self.tcp_flow_tx_bins[flow_index][bucket] += 1
+            self.tcp_flow_stats[flow_index]["tx_packets"] += 1
+            self.tcp_flow_stats[flow_index]["tx_bytes"] += size
 
-    def receive(self, data, now, proto):
+    def receive(self, data, now, proto, flow_index=None):
         fallback = self.stats[proto][min(len(self.phases)-1, bisect.bisect_right(self.ends, now))]
         if len(data) < HEADER.size:
             fallback["invalid"] += 1
@@ -190,6 +269,12 @@ class Worker:
             fallback["invalid"] += 1
             return
         if kind == PROBE:
+            # A genuine sparse 64B application UDP datagram arrived across
+            # the real TUN/FEC path. Unlike an echo-only RTT, this first
+            # arrival measures the small incoming packet before reply loss.
+            probe=self.stats["udp"][phase]
+            probe["probe_rx_first_arrival"]+=1
+            probe["sparse_probe_oneway"].add((now-sent)/1e6)
             try:
                 self.probe.sendto(self.packet(ECHO, phase, seq, size, sent), (self.peer, self.peer_port + 1))
             except OSError:
@@ -219,8 +304,24 @@ class Worker:
         delay = (now - sent) / 1e6
         st["latency"].add(delay)
         st["late"] += int(delay > self.config["traffic"]["deadline_ms"])
-        self.rx_bins[proto][self.bucket(now)] += 1
-        self.rx_byte_bins[proto][self.bucket(now)] += size
+        bucket = self.bucket(now)
+        self.rx_bins[proto][bucket] += 1
+        self.rx_byte_bins[proto][bucket] += size
+        if self.observe_sizes:
+            cls=self.size_stats[proto][phase][size_class(size)]
+            cls["rx_packets"]+=1
+            cls["rx_bytes"]+=size
+            cls["latency"].add(delay)
+            cls["late"]+=int(delay>self.config["traffic"]["deadline_ms"])
+            if proto=="udp" and size<=256:
+                self.small_udp_rx_bins[bucket]+=1
+        if proto=="tcp" and self.observe_independent:
+            if flow_index is None or not 0 <= flow_index < len(self.tcp_flow_rx_bins):
+                raise ValueError("TCP flow identity not observed at receive")
+            self.tcp_flow_rx_bins[flow_index][bucket] += 1
+            self.tcp_flow_stats[flow_index]["rx_packets"] += 1
+            self.tcp_flow_stats[flow_index]["rx_bytes"] += size
+            self.tcp_flow_stats[flow_index]["latency"].add(delay)
 
     def flush_tcp(self, s, now):
         if s not in self.pending:
@@ -230,7 +331,7 @@ class Worker:
             n = s.send(memoryview(data)[offset:])
             offset += n
             if offset == len(data):
-                self.sent("tcp", phase, size, now)
+                self.sent("tcp", phase, size, now, self.stream_index[s])
                 del self.pending[s]
                 self.sel.modify(s, selectors.EVENT_READ, "tcp")
             else:
@@ -264,7 +365,8 @@ class Worker:
                                 raise ValueError("invalid TCP application frame length")
                             if len(b) < size + 4:
                                 break
-                            self.receive(bytes(b[4:4+size]), time.monotonic_ns(), "tcp")
+                            self.receive(bytes(b[4:4+size]), time.monotonic_ns(), "tcp",
+                                         self.stream_index[s])
                             del b[:4+size]
                     else:
                         if os.name == "posix":
@@ -296,7 +398,9 @@ class Worker:
         rate = t["c2s_mbps" if self.role == "client" else "s2c_mbps"] * 1e6 / 8
         shares = {"udp": t["udp_share"], "tcp": 1-t["udp_share"]}
         due = {p: self.start_ns for p in shares}
-        probe_due = self.start_ns
+        # Explicit 0Hz is a genuine idle/keepalive experiment: no
+        # application probing packets anywhere in its observation horizon.
+        probe_due = self.start_ns if t["probe_hz"] else (1 << 63) - 1
         while time.monotonic_ns() < self.end_ns + int(self.config["drain_s"] * 1e9):
             now = time.monotonic_ns()
             phase = bisect.bisect_right(self.ends, now)
@@ -329,6 +433,9 @@ class Worker:
                         st = self.stats[proto][phase]
                         st["scheduled"] += 1
                         st["send_lag"].add(max(0, now - due[proto]) / 1e6)
+                        if self.observe_sizes:
+                            self.size_stats[proto][phase][size_class(size)]["send_lag"].add(
+                                max(0,now-due[proto])/1e6)
                         interval = size / bps * 1e9
                         due[proto] += max(1, int(interval))
                         data = self.packet(UDP if proto == "udp" else TCP, phase, seq, size, now)
@@ -370,6 +477,23 @@ class Worker:
                   "socket_drops": self.socket_drops, "effective_buffers": self.effective_buffers,
                   "errors": self.errors, "capacity_exceeded": self.capacity_exceeded,
                   "tcp_pending_at_deadline": len(self.pending)}
+        if self.observe_sizes:
+            result["size_classes"]={
+                proto:[{band:{key:(value.result() if isinstance(value,Histogram) else value)
+                                for key,value in metrics.items()}
+                        for band,metrics in phase.items()}
+                       for phase in phases]
+                for proto,phases in self.size_stats.items()
+            }
+            result["small_udp_tx_bins_10ms"]=self.small_udp_tx_bins
+            result["small_udp_rx_bins_10ms"]=self.small_udp_rx_bins
+            result["size_class_semantics"]="real application payloads: UDP packet, TCP framed record NOT wire packet; probes separate"
+        if self.observe_independent:
+            result["tcp_flow_tx_bins_10ms"] = self.tcp_flow_tx_bins
+            result["tcp_flow_rx_bins_10ms"] = self.tcp_flow_rx_bins
+            result["tcp_flow_stats"] = [
+                {k:(v.result() if isinstance(v,Histogram) else v) for k,v in row.items()}
+                for row in self.tcp_flow_stats]
         for proto, rows in self.stats.items():
             result["stats"][proto] = []
             for phase, st in zip(self.phases, rows):

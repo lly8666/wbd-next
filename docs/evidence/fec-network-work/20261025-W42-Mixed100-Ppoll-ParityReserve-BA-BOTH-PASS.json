@@ -1,0 +1,136 @@
+{
+  "owner": "fec-network-work",
+  "scenario": "Mixed 100Mbps app each side: UDP96% 35% small<=256B by packet count, 2 real TCP flows4%, 20Hz genuine sparse64B, Fixed Maximum6, outer DATA repair OFF, 30%IID/300ms, fq600, 15s warmup/30 measure/30 drain",
+  "source_A": "861f0396264734f97658243156060f13e6a2f74f",
+  "source_B": "23da99f0de04afe17756542f5176f2759e318747",
+  "source_B_build": {
+    "action": 40153525640,
+    "artifact_id": 12583149711,
+    "zip_sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
+    "result": "SUCCESS_REAL_NATIVE_ARM64_FIXED_AUTO_MISSING_SOURCE_TUN_ORIGINAL_M4_SOURCE_PARITY_FEC_MATH"
+  },
+  "native_maximum_contract_action": 40153525653,
+  "id": "FEC-W42-Mixed100-NativePpoll-BoundedParityFeedback-SameVM-BA",
+  "request": "tests/network/fec-work/W42-mixed100-native-ppoll-boundedParityFB-sameVM-BA-arm64.json",
+  "request_commit": "df587f44af2179251866df9f18cacde6cdd3f6e7",
+  "action": 40154125275,
+  "order": "BA",
+  "result": "PASS_SCOPED_OBSERVATION_BOTH",
+  "artifact_id": 12583383213,
+  "zip_sha256": "89a4b0014e590b0a66d8492efd817efe354909f875121a54e425065f94b2fa49",
+  "B": {
+    "cpu_seconds": {
+      "client": 23.92,
+      "server": 24.05,
+      "combined": 47.97
+    },
+    "host_cpu_psi_mean_pct": 29.104,
+    "host_cpu_psi_peak_pct": 31.35,
+    "udp_loss_pct": {
+      "c2s": 0.02891384837500291,
+      "s2c": 0.04657345507117006
+    },
+    "small_loss_pct": {
+      "c2s": 0.05600066535443986,
+      "s2c": 0.05877297552050123
+    },
+    "small_p99_ms": {
+      "c2s": 307.7,
+      "s2c": 307.7
+    },
+    "tcp_delivered_mbps": {
+      "c2s": 3.9999096,
+      "s2c": 3.9999536
+    },
+    "tcp_first_p99_ms": {
+      "c2s": 925.8,
+      "s2c": 947
+    },
+    "sparse_64B": {
+      "c2s": {
+        "sent": 596,
+        "received": 595,
+        "p99_ms": 306
+      },
+      "s2c": {
+        "sent": 596,
+        "received": 594,
+        "p99_ms": 306.5
+      }
+    },
+    "parity": {
+      "client": [
+        1021935,
+        1021935,
+        0
+      ],
+      "server": [
+        1019385,
+        1019385,
+        0
+      ]
+    }
+  },
+  "A": {
+    "cpu_seconds": {
+      "client": 30.5,
+      "server": 30.7,
+      "combined": 61.2
+    },
+    "host_cpu_psi_mean_pct": 36.69133333333333,
+    "host_cpu_psi_peak_pct": 39.36,
+    "udp_loss_pct": {
+      "c2s": 0.029496349826708946,
+      "s2c": 0.038422503944128245
+    },
+    "small_loss_pct": {
+      "c2s": 0.05101050705552937,
+      "s2c": 0.06209974771977489
+    },
+    "small_p99_ms": {
+      "c2s": 308.2,
+      "s2c": 308.3
+    },
+    "tcp_delivered_mbps": {
+      "c2s": 3.9999122666666667,
+      "s2c": 4.000044
+    },
+    "tcp_first_p99_ms": {
+      "c2s": 958.2,
+      "s2c": 945.3
+    },
+    "sparse_64B": {
+      "c2s": {
+        "sent": 596,
+        "received": 596,
+        "p99_ms": 306.6
+      },
+      "s2c": {
+        "sent": 596,
+        "received": 594,
+        "p99_ms": 306.1
+      }
+    },
+    "parity": {
+      "client": [
+        1019654,
+        1019654,
+        0
+      ],
+      "server": [
+        1022695,
+        1022695,
+        0
+      ]
+    }
+  },
+  "both_actual": {
+    "source_tun_warmup_steady_drops": 0,
+    "source_fq_root_drops": 0,
+    "outer_DATA_retransmitted": 0,
+    "tcp_backpressure": 0,
+    "native_parity_expired_jobs": 0,
+    "owned_Stop_cleanup": true
+  },
+  "observed_process_cpu_reduction_pct": 21.617647058823536
+}

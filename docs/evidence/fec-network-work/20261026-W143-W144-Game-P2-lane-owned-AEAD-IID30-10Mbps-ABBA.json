@@ -1,0 +1,153 @@
+{
+  "schema": "FEC_W143_W144_GAME_P2_LANE_OWNED_AEAD_ABBA_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "owner": "fec-network-work",
+  "source_old": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+  "source_new": "bb8e8249c2adba9c7dab72bf07da2dbe0bce3b82",
+  "new_build": {
+    "action": 40300070389,
+    "result": "SUCCESS",
+    "artifact_id": 12639832584,
+    "zip_sha256": "0073e5ad7c1f4ac3cf86e0234cdffa0fe6f34d13af6d5826551263b87bd87cef",
+    "manifest_source_arch_sha_verified": true,
+    "go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "isa_source": "c387163fcbca62701d646149564c550c78a4f985"
+  },
+  "superseded_failed_unit_action": 40299623694,
+  "code_scope": [
+    "move single existing per-lane AEAD+replay owner to unique RX worker before worker starts; no clone",
+    "in-place authenticated/decrypted Game typed ID before global shared lock",
+    "retain exactly one Game logical dedup/FEC/RX slab/TUN actual delivery-then-commit and bounded source/repair memory",
+    "retain original Game4 0/4/20/60 timing, fixed6 source/parity rate, outer DATA retrans disabled, Go kernel detached DATA filter"
+  ],
+  "workload": "Single scenario per Action: Game4 10Mbps each direction UDP weighted 64..1287B + 100Hz tiny probes, each physical lane IID30 percent loss, 75ms one-way, clean-before 10s + damage30s + clean-after10s, warmup10s, drain30s. Same immutable native ZIP both legs sequentially on same VM.",
+  "runs": [
+    {
+      "case": "W143",
+      "run": 40300583654,
+      "request": "tests/network/fec-work/W143-Game4-fixed6-IID30-UDP10Mbps-P2-lane-AEAD-sameVM-AB-nearPSI-cap-ARM64.json",
+      "request_commit": "c140ac0e9fa2e7bb832e6e5c68e07dbd2a23eb79",
+      "order": "AB",
+      "artifact_id": 12640362388,
+      "zip_sha256": "6878379b218b7fbb1ea734d0c66ccf55963dcb28fda7c9408d76ac2a107e1cc2",
+      "conclusion": "SUCCESS_PASS_SCOPED",
+      "old": {
+        "cpu_client_s": 15.53,
+        "cpu_server_s": 15.46,
+        "cpu_total_s": 30.99,
+        "host_cpu_psi_mean_pct": 4.526,
+        "host_cpu_psi_peak_pct": 5.16,
+        "host_psi_over20_fraction": 0,
+        "damaged_p99_ms": [
+          83.6,
+          83.6
+        ],
+        "damaged_udp_c2s": "57384/57384",
+        "damaged_udp_s2c": "57385/57385",
+        "parity_sent_client": "162930/162930",
+        "parity_sent_server": "162836/162836",
+        "recovered_candidates_client_server": [
+          12268,
+          12187
+        ]
+      },
+      "new": {
+        "cpu_client_s": 15.18,
+        "cpu_server_s": 14.97,
+        "cpu_total_s": 30.15,
+        "host_cpu_psi_mean_pct": 4.2352,
+        "host_cpu_psi_peak_pct": 5.04,
+        "host_psi_over20_fraction": 0,
+        "damaged_p99_ms": [
+          83.6,
+          83.6
+        ],
+        "damaged_udp_c2s": "57385/57385",
+        "damaged_udp_s2c": "57384/57384",
+        "parity_sent_client": "162933/162933",
+        "parity_sent_server": "162902/162902",
+        "recovered_candidates_client_server": [
+          12287,
+          12362
+        ]
+      },
+      "new_cpu_change_pct": -2.71055
+    },
+    {
+      "case": "W144",
+      "run": 40301283287,
+      "request": "tests/network/fec-work/W144-Game4-fixed6-IID30-UDP10Mbps-P2-lane-AEAD-sameVM-BA-nearPSI-cap-ARM64.json",
+      "request_commit": "8c879b6eb8624886de547da14e490401d0a4730f",
+      "order": "BA",
+      "artifact_id": 12640816082,
+      "zip_sha256": "c089b9c878d2dad5b5ba22ef40f3b65b8a02ef9cebf198c7596a1be7453ad639",
+      "conclusion": "SUCCESS_PASS_SCOPED",
+      "old": {
+        "cpu_client_s": 16.45,
+        "cpu_server_s": 16.7,
+        "cpu_total_s": 33.15,
+        "host_cpu_psi_mean_pct": 4.9498,
+        "host_cpu_psi_peak_pct": 5.76,
+        "host_psi_over20_fraction": 0,
+        "damaged_p99_ms": [
+          83.7,
+          83.6
+        ],
+        "damaged_udp_c2s": "57384/57384",
+        "damaged_udp_s2c": "57385/57385",
+        "parity_sent_client": "162769/162769",
+        "parity_sent_server": "162802/162802",
+        "recovered_candidates_client_server": [
+          12413,
+          12364
+        ]
+      },
+      "new": {
+        "cpu_client_s": 16.49,
+        "cpu_server_s": 16.28,
+        "cpu_total_s": 32.77,
+        "host_cpu_psi_mean_pct": 4.9736,
+        "host_cpu_psi_peak_pct": 5.78,
+        "host_psi_over20_fraction": 0,
+        "damaged_p99_ms": [
+          83.7,
+          83.7
+        ],
+        "damaged_udp_c2s": "57385/57385",
+        "damaged_udp_s2c": "57385/57385",
+        "parity_sent_client": "162769/162769",
+        "parity_sent_server": "162811/162811",
+        "recovered_candidates_client_server": [
+          12381,
+          12253
+        ]
+      },
+      "new_cpu_change_pct": -1.1463
+    }
+  ],
+  "all_safety_contracts": {
+    "each_leg_game4_planned_each_physical_position_equals_sent": true,
+    "abandoned_all_zero": true,
+    "parity_planned_equals_sent_both": true,
+    "positive_fec_recovery_candidate_both": true,
+    "source_tun_root_fq_drops_all_zero": true,
+    "outer_data_retransmitted_all_zero": true,
+    "go_data_full_copies_after_handoff_client_server_all_zero": true,
+    "stop_drained": true,
+    "first_delivery_actual_business_missing_all_zero": true,
+    "packet_loss_random_trajectory_same_seed_not_identical": true
+  },
+  "performance_assessment": "Small directionally repeatable observed CPU gain 2.71% then 1.15%; not sufficient to promise significant universal speedup or 20-80Mbps. 10Mbps host PSI mean4.2–5.0 peak<5.8, enough evidence for a single 15Mbps incremental attempt, not for direct 20-80.",
+  "followup": {
+    "case": "W145",
+    "request": "tests/network/fec-work/W145-Game4-fixed6-IID30-UDP15Mbps-P2-lane-AEAD-near-capacity-AB-ARM64.json",
+    "request_commit": "189db3eba61e5b02b6de740357ac5852ccd2334e",
+    "status_at_recording": "IN_PROGRESS_NOT_QUALIFIED",
+    "capacity_gate": "Stop on host PSI/input/copy/FEC overflow; do not attempt20 or80 if 15 shows capacity pressure"
+  },
+  "decision": "PROVISIONAL_SCOPED_GAME4_KEEP_UNTIL_W145_NEAR_CAPACITY_RESULT; last five mode verified source6c38 remains",
+  "merge_ready": false,
+  "capacity_stop": true,
+  "windows": "NOT_RUN/TEMP_SKIPPED"
+}

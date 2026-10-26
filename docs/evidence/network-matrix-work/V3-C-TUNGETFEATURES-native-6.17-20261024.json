@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_HOST_ONLY_TUNGETFEATURES_READBACK_NO_PRODUCT_TRAFFIC",
+  "run": 40043592393,
+  "attempt": 1,
+  "workflow_source": "fea40ee3d15aa86fb3314ae366cad8c647a387ca",
+  "action_conclusion": "success",
+  "artifact_id": 12540287492,
+  "artifact_zip_sha256": "3a043613b649fb00fab28440a8cacb2c4ae86fbae7b5a0c01ee2e19a845849a6",
+  "artifact_zip_sha256_verified_locally": true,
+  "result": {
+    "machine": "aarch64",
+    "kernel": "6.17.0-1022-azure",
+    "ioctl": "TUNGETFEATURES",
+    "feature_mask_hex": "0x7173",
+    "feature_mask_int": 29043,
+    "IFF_BACKPRESSURE_bit_hex": "0x0080",
+    "backpressure_supported": false,
+    "tun_created": false,
+    "any_network_or_kernel_settings_changed": false
+  },
+  "conclusion": "IFF_BACKPRESSURE was not advertised on the actual Actions host. Must not set or assume it; bounded source user-space admission and TUN work partition remain current migration path. On newer kernels require same real feature readback and TUNGETIFF for any opt-in. This readback is not a throughput test."
+}

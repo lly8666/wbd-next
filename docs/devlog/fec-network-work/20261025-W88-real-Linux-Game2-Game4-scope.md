@@ -1,0 +1,40 @@
+# W88｜FEC 已限域收口后的原生 Linux Game2/Game4 业务资格审查
+
+日期 2026-10-25；工作分支仅 `experiment/fec-network-tuning`。**本条审查不重新启用 Windows 测试，也不修改 M0 所属 Game/Windows 工程。**
+
+## 是否基本完工
+
+已刷新独立工位入口、`status.json`、最新 GitHub Actions、实际原生 Game 模式/验证门。进入本次前最新 HEAD `b80b91c5ba07cf584e0ac7af8f831440ea228f3f`；FEC Linux ARM64 固定/自动真实外层 DATA OFF 有覆盖 W77–W87 及明确负例，`scoped_integration_review_ready=true`，但**不是整体已完成**：`merge_ready=false` / `capacity_stop=true`。W80/W83/W85 的长相关 GE 最高档仍超过 1% 参考门且双组已就绪 parity 交错负结果回滚；W86 Balanced3 在 IID30% 低负载 TCP 恢复 inconclusive，W87 Maximum6 低负载 TCP PASS_SCOPED。高负载 W49/W50 混合 TCP、FEC 实际 65KiB TUN（现 Fixed/Auto 拒绝非单帧 jumbo）、远端接收端持续宿主过载信号、全新组合 outer ON+FEC 仍未重验。所有历史失败均不刷绿。
+
+## Game 产品真实能力（勿与 Game+FEC 混淆）
+
+`tools/network_harness/config.py` 公开的产品 mode 为 `game2` 和 `game4`，其 `game_fec` 只允许 `off`。产品没有公开 Game+FEC 编码开关与验证组合；配置 `--outer-repair=off` 对 Game 也显式 UNSUPPORTED，因为 Game 多 lane native duplicate 路径不等于一条 Normal/FEC v3 DATA repair 回路，不能伪造单 lane 零修复政策或 M2/repair_byte ledger。真实 Game 必须提供两端 `V4_ORIGINAL_GO_GAME_NATIVE_READY`，每端 `V4_PUBLIC_GAME_KERNEL` 的 copied/delivered/raw_received/auth_rejected，Stop `V4_PUBLIC_GAME_NATIVE_STOP_DRAINED`，业务双向包序列去重、源 TUN/root drop。已有 `crates/wbd-engine/src/v4_game_kernel_linux_tests.rs` 为真实 Go TLS→native M4 raw/TUN 内核首交与坏 lane 不阻健康 lane 的**组件**覆盖，但不顶替本文业务性能。
+
+## 预声明有限 Linux 原生业务（每 Action 一种配置/一个测量 job）
+
+复用**已经构建**的 product exact source `4322a811fd63e096458f202767faa2f097a587c0`，ARM64 Action [40203220219](https://github.com/lly8666/wbd-next/actions/runs/40203220219) product ZIP artifact `12602931174` SHA256 `0ae0939bdd4c02932a6452260fa65f4e1851bf37bd79d7485c28e1895022f125`。单端3Mbps、有序 TCP 两流占4%、UDP占96%、混合64..1287B、75ms单程，15s Clean前→30s独立每lane IID20%→30s第1lane黑洞其余健康→15s Clean后，warmup15s/drain30s。Game2/4 均使用 test netem `lane_loss=independent`，每lane各50Mbps，不把它叫“共享50Mbps”。真实 netem `unseeded_recorded`，不挑seed；严格1% UDP/小包门仅在Clean前后，受损段保留实际 UDP/TCP/p99/真实源/CPU/PSI 和 lane 计数。高损和黑洞段**没有虚假的全业务零loss门**，按复制通道逻辑和正常通道可达性解释。
+
+- [Game2 单场景](../../../tests/network/fec-work/W88-Game2-independent20-lane1-blackhole-original-arm64.json)，提交 `1ff936793f4c08b54a00ad560e5659e0cdf49d65`；Action [40206528368](https://github.com/lly8666/wbd-next/actions/runs/40206528368)。
+- [Game4 单场景](../../../tests/network/fec-work/W88-Game4-independent20-lane1-blackhole-original-arm64.json)，提交 `9376214919dcc8451e8c659cfe9d70fe707dd0df`；Action [40206531539](https://github.com/lly8666/wbd-next/actions/runs/40206531539)。
+
+Windows Game x64/Go/Wintun/GUI/packaging 依上轮用户要求保持本工位 `TEMP_SKIPPED_USER_20261025 / NOT_RUN`，**不改变 M0 Windows Tasks/CI**。不新增 Mode/FEC 协议协商、不加 Linux 压力负载、不用单 lane v3 字节账本冒充 Game 复制。结构化范围见 [W88 预声明收据](../../evidence/fec-network-work/20261025-W88-linux-gamemode2-game4-scope-and-intent.json)。当前仅预声明，必须拿到原始 Action artifact 后再赋予业务资格与完整结果。
+
+## W88 原生独立损伤真实结果：两个公开 Game 模式均通过限定业务门
+
+- **Game2** [Action 40206528368](https://github.com/lly8666/wbd-next/actions/runs/40206528368)，合同 [40206528303](https://github.com/lly8666/wbd-next/actions/runs/40206528303) **SUCCESS**，原始 artifact `12603594529` ZIP SHA256 `06bdb69fdce8b0dc2952aeeda0b97f9ac5860d0df1c7f7476139e1d0eaec0058`。真实每 lane IID20% 双向 C→S UDP 658/16515 **3.9843%**，S→C 682/16516 **4.1293%**（并非 1%业务门PASS）；第1lane blackhole 仅 C→S 缺2/16513、S→C缺0/16512，两向 TCP 最终到齐、0 backpressure，TCP p99 独立损伤 C→S 668.2ms/S→C 370.6ms，单lane黑洞164.7/164.8ms。两组 clean 无 UDP 缺失，真实独立流无整业务 HOL，native Game2 两端 copied112349/112271、实际 delivered64687/64739、auth_rejected0，Source TUN/root drop0，Stop清理。**宿主 contention warning**：PSI mean6.42%、peak34.98%、>20%采样11.11%，CPU measurement client6.08s/server6.17s，RSS峰25.20/25.06MB。
+- **Game4** [Action 40206531539](https://github.com/lly8666/wbd-next/actions/runs/40206531539)，合同 [40206531579](https://github.com/lly8666/wbd-next/actions/runs/40206531579) **SUCCESS**，artifact `12603269226` SHA256 `83297d2cc27b7984fa5663a9b70faab778bc821dd748a5adfbfc18db855256e5`。各 lane IID20%，C→S UDP 32/16516 **0.1938%**，S→C 23/16515 **0.1393%**；第1lane blackhole 两向 UDP缺0、TCP 0 backpressure，TCP p99 独立损伤132.1/206.0ms、黑洞77.6/77.7ms。clean 两向 UDP0缺，native Game4 copied243289/243242、业务delivered65452/65453、auth_rejected0、Source TUN/root drops0，Stop清理。测量CPU client10.74/server10.83s，RSS峰37.40/37.46MB，host PSI mean4.16%/peak4.69%。两 VM 不一致且 Game2 宿主有争用，CPU只能逐组报事实，**不能通过跨VM比例叫做精确CPU代价或加速**。
+- 两者真实应用 UDP/序号 **duplicate0**，幸存UDP的 p99 约77.4–77.5ms（仅是幸存包；已把损失单列），TCP无业务记录最终缺失。iptable 第1通道黑洞经独立 netem per-lane 真实落地，不伪造为业务0 missing。Game duplicated outer payload ≠ FEC repair；**FEC矩阵/k/r/parity及 outer-repair=off readback 对 Game皆 N/A**。Game2 独立20%的约4%丢包反例保留，不把限定 harness clean PASS 宣称“全阶段服务≤1%”。
+- 本批次只有真实 Linux public `game2/game4`，不是 Windows、Game+FEC、真实共享线路、物理设备或全项目资格。客观数字与 Action/hash 独立收据在 [W88 original Game2/4](../../evidence/fec-network-work/20261025-W88-original-Linux-Game2-Game4-independent20-lane1-blackhole-PASS-SCOPED.json)。由于独立通道正例不能推断共享相关损伤，另开有限同流量共享 GE 对照 W89；不为通过率刷不同 seed。
+
+## W89 有限共享相关损伤（非随机挑选通过用例）
+
+两次独立20%对 Game4 有利，但用户可能遇到共享出口。单独提交 Game2 [W89 request](../../../tests/network/fec-work/W89-Game2-shared-GE15Long-original-arm64.json)（提交 `71f30298da9b9ecd2d30e1241f15fda5d59b28b9`，Action [40206930859](https://github.com/lly8666/wbd-next/actions/runs/40206930859)），Game4 [W89 request](../../../tests/network/fec-work/W89-Game4-shared-GE15Long-original-arm64.json)（提交 `6828d50e101b6c14b6ba924c5b95570b8d7806c4`，Action [40206935735](https://github.com/lly8666/wbd-next/actions/runs/40206935735)）。每种模式一个性能 Action、唯一测量job、复用原先 source `4322a811`。共享一个 netem root queue 的 long GE `[3,17,100,0]`（预计约15%稳态、坏段~5.88packet）仅45s，前后15s净路；3Mbps/方向、75ms/方向、共享总50Mbps each、IIDs/GE未固定随机轨迹且记录实际 loss。**明确只对两个 clean 期 UDP/小包使用1% strict 门，GE高损相位是诊断，不是给它偷偷刷绿**。共用根 qdisc 按包推进，不应在没有实际擦除相关 trace 时声称所有 Game 副本必定同时损坏。结果需保留 TCP回压、业务丢包/小包p99、native Game readback、Stop、host PSI/CPU/RSS，以及不适用的 FEC修复行/outer v3 字节账本。
+
+## W89 真实结果：共享长相关 GE 业务高损，不能把组件 Green 当 GE 服务通过
+
+两个 Action 均真正完成一个 Linux ARM64 测量 job，所有 native TLS Game kernel/Stop/clean 门通过 **PASS_SCOPED_OBSERVATION**；但用户必须能看见高损反例，因为 `loss_gate_phases` **原本只包含 clean_before / clean_after，不能把绿 Action 解释成受损相位也满足1%业务残余**。
+
+- Game2 [40206930859](https://github.com/lly8666/wbd-next/actions/runs/40206930859)，artifact `12604730245` SHA256 `776ac80984e38ee91b709a8479c91ac8994e09ec0ce119d3afcd53bb23beab31`：共用 root 长 GE 真实外层损伤 client15.98%/server15.71%；高损 C→S UDP **3310/24785=13.3549%**、S→C **3259/24785=13.1491%**，绝不是1%通过。TCP 45s期间目标0.12Mbps继续注入、两向1061/1061业务记录均达，p99分别 **2787.1/2345.1ms**、backpressure0。清洁恢复 C→S/S→C UDP均8244/8244，TCP恢复p99 178.5/179.3ms；Game native copied111742/111682, delivered52169/52146, auth_rejected0, Source TUN/root drop0, Stop清理。测量 client/server CPU-s **5.23/5.13**，每有效GiB CPU-s **216.12/212.59**，RSS峰25.28/25.39MB，host PSI peak0.5%。
+- Game4 [40206935735](https://github.com/lly8666/wbd-next/actions/runs/40206935735)，artifact `12603719684` SHA256 `20a6168b7bb68cc98cdf00e09cee4ee9b6712ddd4592f565289e80ba24eaaaef`：真实外层 client14.92%/server15.09%；长 GE C→S UDP **2060/24784=8.3118%**、S→C **2123/24785=8.5657%**，也远大于1%。TCP双向1061/1061、p99 **651.8/620.2ms**、backpressure0；恢复 UDP双向零缺失、TCP p99 190.3/180.1ms；native Game copied224276/223812, delivered53587/53719, auth_rejected0, Source TUN/root drop0, Stop清理。测量 CPU-s **12.47/12.58**，每有效GiB CPU-s **498.95/504.76**，RSS峰36.87/37.26MB，host PSI peak4.85%。
+- 两个 Action `netem_rng=unseeded_recorded`、不同 VM；Game4有更多复制并总体更高工作量，但**不能跨独立 VM断言 CPU 绝对比例是因果提升/代价**。一个共享根 GE 按每个发出的 outer packet 推进，不代表每份copy精确经历相同坏状态；但是它足以证明 copy 的逻辑擦除非IID独立，不能用 `p^2`/`p^4`外推共享长突发可靠性。高损 UDP幸存 p99均近77ms，但大量 missing 必须并列列出。
+- 原始结构化复核见 [W89 Game2/Game4 共享 GE 限域反例](../../evidence/fec-network-work/20261025-W89-original-Linux-Game2-Game4-shared-GE15Long-SCOPED-HIGHLOSS.json)。本次 **4个性能 Action（W88 game2/game4、W89 game2/game4），每 Action 一个产品场景和一个测量 job**，均复用同一 original Go/Rust ARM64 build，没有加负载、没有 Windows Actions、没有 Game+FEC 新接线、没有改 FEC产品代码。收口裁定：Linux Game2/4 **限域功能正常**，但共享相关损伤并不具备低残余保证；Windows/Game+FEC/本机不足场景仍开放，不能自行合并main。

@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_DIRECT_TCP500_HOST_CONTROL_MATCH_PRODUCT_VETH_OFFLOAD_STATE",
+  "run": 40001002971,
+  "attempt": 1,
+  "action_conclusion": "success",
+  "artifact_id": 12522525878,
+  "artifact_zip_sha256": "ef71d84514a1d8b94f5528bdc9ea09bc5d851182bbda865903e493e60e3670c6",
+  "artifact_sha256_locally_verified": true,
+  "workflow_source": "94525888ad16f768ebba3465124845375f54cd93",
+  "scope": {
+    "host_arch": "aarch64",
+    "one_native_TCP_stream": true,
+    "veth_separate_namespaces": true,
+    "no_wbd_product": true,
+    "rtt_ms": 400,
+    "one_way_ms": 200,
+    "inner_MTUb": 1429,
+    "advmss_b": 1377,
+    "line_cap_mbps_each_direction": 700,
+    "netem_loss_pct": 0,
+    "target_mbps": 500,
+    "initial_socket_buffers_bytes": [
+      4194304,
+      4194304
+    ],
+    "namespaced_tcp_rmem_wmem_max_bytes": 67108864,
+    "offloads_disabled_both_peers": [
+      "GRO",
+      "GSO",
+      "TSO"
+    ],
+    "offload_readback": "ethtool -k each namespace verified all off",
+    "steady_s": 60
+  },
+  "actual": {
+    "sender_mbps": 500.0003584,
+    "receiver_mbps": 500.0003584,
+    "missing_bytes": 0,
+    "nonblocking_send_backpressure_count": 2369
+  },
+  "comparison": {
+    "previous_untested_offload_direct_control_run": 39999139775,
+    "initial_500_control_mbps": 500.0003584,
+    "correction": "Old control had NOT verified offload disabled; both now aligned to native WBD harness GRO/GSO/TSO off, direct control still passes500."
+  },
+  "interpretation": [
+    "This rules out a simple single host network/UDP/TCP capacity limitation at 500Mbps under a comparable veth+netem offload state, but STILL cannot isolate product vs virtualized raw/TUN-specific overhead without staged native counters.",
+    "Exact inner TCP app stream actual result is host-control NOT product500 PASS."
+  ],
+  "qualification": "DIRECT_HOST_TCP500_OFFLOAD_PARITY_PASS; WBD_PRODUCT_500_STILL_UNQUALIFIED"
+}

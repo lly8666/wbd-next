@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_DIRECT_TCP500_HOST_CAPACITY_CONTROL_NOT_WBD_PRODUCT",
+  "run": 39999139775,
+  "attempt": 1,
+  "action_conclusion": "success",
+  "workflow": ".github/workflows/network-v3-direct-tcp500-control.yml",
+  "workflow_source": "23fe61141b124f0fd35010a4e09acdadec0bee20",
+  "artifact_id": 12521137388,
+  "artifact_zip_sha256": "98cceba850d2847cc9756c39fbc3356923c4cd09cdb32287ba7511fd36211596",
+  "locally_verified_zip_sha256": true,
+  "scenario": {
+    "host_arch": "aarch64",
+    "topology": "separate network namespaces direct veth IPv4 TCP no WBD",
+    "one_tcp_stream": true,
+    "app_c2s_target_mbps": 500,
+    "one_way_ms": 200,
+    "rtt_ms": 400,
+    "mtu": 1429,
+    "advmss_bytes": 1377,
+    "netem_rate_mbps_each_direction": 700,
+    "loss_pct": 0,
+    "warmup_s": 15,
+    "steady_s": 60,
+    "socket_sndbuf_rcvbuf_bytes": [
+      4194304,
+      4194304
+    ],
+    "netns_tcp_rmem_wmem_max_bytes": 67108864
+  },
+  "observed": {
+    "sender_payload_mbps": 500.0003584,
+    "receiver_payload_mbps": 500.0003584,
+    "sender_steady_payload_bytes": 3750002688,
+    "receiver_steady_payload_bytes": 3750002688,
+    "sender_nonblocking_write_backpressure_attempts": 2288,
+    "receiver_data_missing_bytes": 0,
+    "client_ss_at_5seconds": {
+      "cwnd_mss": 40774,
+      "mss_bytes": 1377,
+      "cwnd_bytes": 56140998,
+      "send_window_bytes": 49545216,
+      "rtt_ms": 400.415,
+      "unacked_mss": 18312,
+      "pacing_rate_bps": 1346100464,
+      "delivery_rate_bps": 671624416
+    }
+  },
+  "comparison": {
+    "wbd_source": "63adb210f724d4b2812d75a292617103ac735b53",
+    "wbd_run": 39997296538,
+    "wbd_mbps": 292.55707306666665,
+    "wbd_TUN_kernel_drop_steady": 11283,
+    "wbd_m1_pool_peak_loans": 32,
+    "wbd_evidence": "V3-C-TCP1-500M-first-native-0loss-20261024.json"
+  },
+  "interpretation": [
+    "Direct host control has enough observed native TCP and veth/netem capacity to carry a single inner flow 500Mbps at 400ms RTT with comparable MSS and window settings.",
+    "It bypasses actual product raw/TUN encryption and cannot certify WBD500. WBD's source TUN kernel tx drops and reduced inner TCP cwnd are real local product topology constraints on that separate VM; not proof that all hardware/VMs behave identically.",
+    "Matched product old/new poll removal one native VM AB is currently predeclared and will be interpreted independently of direct-only source timing."
+  ],
+  "qualification": "DIRECT_NATIVE_TCP500_HOST_CONTROL_PASS; PRODUCT_TCP500_REMAINS_UNQUALIFIED"
+}

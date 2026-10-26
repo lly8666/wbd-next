@@ -1,0 +1,7 @@
+# 2026-10-24 Priority switch to Maximum highrate RX bounded capacity
+
+User temporarily pauses independent Auto live W10 and asks to fix verified W8/W9 highrate Maximum first. No edits to common outer retransmit code nor other network job status.
+
+Root-cause hypothesis with exact units: 50Mbps/(8*1287B)/k16=303.52 blocks/s, 150ms active identity window ~45.53 groups against hard 32, 1MiB, reorder span128; 75Mbps ~68.29. More significantly completed FEC blocks linger until expiry and consume capacity though already authenticated M4 first-delivered. Old W8 Action40082173102 application residual 4.36/3.91%; W9 Action40082494664 residual 11.52/10.42%; decoder rejected 18.8/19.0k ->71.2/71.2k but not yet root-cause classified. No higher load.
+
+Candidate source patch: reclaim complete blocks at first real actual_k/full delivery, retain retired identity; bound active96, stored8MiB, reorder span512, unchanged age150ms; classify capacity eviction and reject reasons once at Stop, no per-packet logging. Built-in FEC native regression validates 56 missing-source blocks with adequate real RS parity/recovered first candidates and zero retained bytes; preservation tests assert Stop, AEAD replay and late source cannot redeliver. Performance original 50Mbps case only after successful new ARM64 exact-source bundle, never old b601. This note and status describe UNVERIFIED code until Actions confirm.

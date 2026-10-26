@@ -1,0 +1,181 @@
+{
+  "schema": "FEC_W138_GAME4_FIXED6_SPARSE80K_IID30_BA_V1",
+  "date": "2026-10-26",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "candidate_source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+  "prior_verified_source": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+  "native": {
+    "run": 40293838787,
+    "artifact_id": 12636808494,
+    "sha256": "d60386779b56b0c091721f444c96c53c309cebe56140b9e0d9308720d278280a",
+    "unit": "w137_sparse_fixed6_fec_close_preempts_game4_20ms_copy PASS"
+  },
+  "scenario": {
+    "action": 40295019331,
+    "request_commit": "29b7ff840ea1e0a1010ba439486c871a8e608fdc",
+    "request": "tests/network/fec-work/W138-Game4-fixed6-IID30-sparse80Kbps-FEC-deadline-sameVM-BA-ARM64.json",
+    "artifact_id": 12637758164,
+    "zip_sha256": "8c1a08f5e24c9f2447b7d49f818824d467d1d2a3693c00a68f3d2f47cef44842",
+    "action_result": "SUCCESS",
+    "real_result_each": [
+      "B_PASS_SCOPED_OBSERVATION",
+      "A_PASS_SCOPED_OBSERVATION"
+    ],
+    "order": "BA",
+    "workload": "Game4 fixed6 default physical 0/4/20/60ms true UDP/TCP small64/large1287 each direction 0.08Mbps, independent each lane IID30%, one-way75ms, 30s damage, Go DATA retransmission disabled"
+  },
+  "B_new": {
+    "both_process_cpu_s": 1.16,
+    "client_cpu_s": 0.58,
+    "server_cpu_s": 0.58,
+    "host_cpu_psi_mean_pct": 0,
+    "host_cpu_psi_peak_pct": 0,
+    "host_steal_peak_pct": 0,
+    "rss_peak_bytes": {
+      "client": 40914944,
+      "server": 41816064
+    },
+    "go_post_handoff_data_full_copies": {
+      "client": 0,
+      "server": 0
+    },
+    "outer_data_retransmitted": {
+      "client": 0,
+      "server": 0
+    },
+    "tun_stop_clean": true,
+    "actual_business": {
+      "udp_c2s_sent": 414,
+      "udp_c2s_delivered": 414,
+      "udp_s2c_sent": 414,
+      "udp_s2c_delivered": 414,
+      "tcp_c2s_sent": 9,
+      "tcp_c2s_delivered": 9,
+      "tcp_s2c_sent": 9,
+      "tcp_s2c_delivered": 9,
+      "missing": 0,
+      "udp_c2s_p95_ms": 77.6,
+      "udp_s2c_p95_ms": 77.6,
+      "udp_c2s_p99_ms": 79.6,
+      "udp_s2c_p99_ms": 81.7,
+      "zero_delivery_max_ms": {
+        "c2s_udp": 80,
+        "s2c_udp": 80
+      }
+    },
+    "parity": {
+      "client_planned": 2476,
+      "client_sent": 2476,
+      "server_planned": 2475,
+      "server_sent": 2475
+    },
+    "fec_recovered_candidate": {
+      "client": 330,
+      "server": 350
+    },
+    "fec_rx_conflict": {
+      "client": 684,
+      "server": 734
+    },
+    "fec_rx_invalid": {
+      "client": 0,
+      "server": 0
+    },
+    "fec_rx_codec_or_capacity": 0,
+    "game4_planned_physical_each": {
+      "client": [
+        3727,
+        3727,
+        3727,
+        3727
+      ],
+      "server": [
+        3724,
+        3724,
+        3724,
+        3724
+      ]
+    },
+    "game4_abandoned_all_zero": true
+  },
+  "A_old": {
+    "both_process_cpu_s": 1.16,
+    "client_cpu_s": 0.58,
+    "server_cpu_s": 0.58,
+    "host_cpu_psi_mean_pct": 0.628,
+    "host_cpu_psi_peak_pct": 17.04,
+    "host_steal_peak_pct": 0,
+    "rss_peak_bytes": {
+      "client": 40906752,
+      "server": 41029632
+    },
+    "go_post_handoff_data_full_copies": {
+      "client": 0,
+      "server": 0
+    },
+    "outer_data_retransmitted": {
+      "client": 0,
+      "server": 0
+    },
+    "tun_stop_clean": true,
+    "actual_business": {
+      "udp_c2s_sent": 414,
+      "udp_c2s_delivered": 414,
+      "udp_s2c_sent": 414,
+      "udp_s2c_delivered": 414,
+      "tcp_c2s_sent": 9,
+      "tcp_c2s_delivered": 9,
+      "tcp_s2c_sent": 9,
+      "tcp_s2c_delivered": 9,
+      "missing": 0,
+      "udp_c2s_p95_ms": 79.6,
+      "udp_s2c_p95_ms": 79.6,
+      "udp_c2s_p99_ms": 79.6,
+      "udp_s2c_p99_ms": 83.6,
+      "zero_delivery_max_ms": {
+        "c2s_udp": 80,
+        "s2c_udp": 80
+      }
+    },
+    "parity": {
+      "client_planned": 2476,
+      "client_sent": 2476,
+      "server_planned": 2474,
+      "server_sent": 2474
+    },
+    "fec_recovered_candidate": {
+      "client": 233,
+      "server": 212
+    },
+    "fec_rx_conflict": {
+      "client": 423,
+      "server": 391
+    },
+    "fec_rx_invalid": {
+      "client": 1,
+      "server": 1
+    },
+    "fec_rx_codec_or_capacity": 0,
+    "game4_planned_physical_each": {
+      "client": [
+        3727,
+        3727,
+        3727,
+        3727
+      ],
+      "server": [
+        3723,
+        3723,
+        3723,
+        3723
+      ]
+    },
+    "game4_abandoned_all_zero": true
+  },
+  "interpretation": "New due scheduling passes rare sparse lost-source FEC recovery and earlier p95 (~2ms) at unchanged 1.16 process CPU-s; native deterministic sparse close confirms timing ordering. One BA and different netem event paths cannot establish a guaranteed causal latency gain; sample has only 414 UDP and 9 TCP per direction, not a large-sample p99 proof. FEC failed metric is c.failed + rx.failed; in these sparse damaged runs RX ConflictingBlock is the entire new failure count and nearly all old. Fec2LiveRx marks authenticated sources seen after prior recovery or repairs with conflicting metadata as ConflictingBlock (see v4_fec2_live_rx.rs), so this must not be mistaken for parity TX send loss; exact per-cause breakdown is not available. New rejected_conflict 684/734 vs old423/391 is a real changed admission order and needs monitoring; no business missing or codec/capacity rejection observed.",
+  "decision": "W137_GAME4_SPARSE_DEADLINE_SCOPED_CORRECTNESS_POSITIVE_FIRST_LATENCY_INDICATION; retain only after protective Game2 and OFF regression; do not claim CPU decrease or larger capacity.",
+  "capacity_stop": true,
+  "merge_ready": false,
+  "windows": "NOT_RUN"
+}

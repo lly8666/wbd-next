@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "event": "S025",
+  "kind": "NATIVE_ARM64_ORIGINAL_CLASS_COUNTER_BUILD",
+  "run_id": 39792252773,
+  "attempt": 1,
+  "status": "completed",
+  "conclusion": "success",
+  "source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
+  "artifact_id": 12432315624,
+  "digest": "sha256:a106160d88dbe85cb2d90d36110ada897f0b623abc936e0071aad49fb130a41b",
+  "zip_sha256": "a106160d88dbe85cb2d90d36110ada897f0b623abc936e0071aad49fb130a41b",
+  "manifest": {
+    "source": "0909249f1d6dcee62c67381d9c2127e526c04b7b",
+    "go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "isa_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "architecture": "aarch64",
+    "runtime_backend": "NOT_OBSERVED"
+  },
+  "binaries_sha256": {
+    "client": "644408f5529dc81f1503749ae7c53e6032b4be4527cb0e06672a887436890f04",
+    "server": "376bf3e058dc9fc895e14879a0e5d28fee19720c1620025dc0abc013c6322b3f",
+    "engine": "876158a4f6d1d8887e50a50506b089453499fd012fc6473a10f5ecb6929b0c99"
+  },
+  "elf_machine": 183,
+  "all_file_hashes_match": true,
+  "unit_tests": {
+    "rust_native": "success",
+    "tests": [
+      "m0_public_fixed_maximum_all_20_rows_supported",
+      "m0_fec2_live_rx_same_turn_age_retirement_cannot_redeliver_k1",
+      "m0_original_fec_tun_classifies_only_post_m4_ipv4_protocol"
+    ],
+    "source": "same builder job"
+  },
+  "harness_contract": {
+    "run_id": 39792252941,
+    "result": "success",
+    "checks": "strict class marker, missing/reject conditions, no endpoint/payload persistence"
+  },
+  "product_network_qualification": "NOT_RUN_BUILD_ONLY",
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/39792252773"
+}

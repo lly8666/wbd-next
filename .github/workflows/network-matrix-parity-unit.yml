@@ -1,0 +1,36 @@
+name: ARM64 product FEC2 maximum row contract
+on:
+  push:
+    branches: [experiment/network-matrix-tuning, experiment/fec-network-tuning]
+    paths:
+      - .github/workflows/network-matrix-parity-unit.yml
+      - crates/wbd-engine/src/v4_embedded_go.rs
+      - crates/wbd-engine/src/v4_fixed_stream.rs
+      - crates/wbd-codec/src/fec_v2.rs
+permissions: {contents: read}
+jobs:
+  native-fixed-maximum-row:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Run actual public Fixed Maximum row 0..19 Rust unit, no product compilation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record m0_public_fixed_maximum_all_20_rows_supported -- --nocapture
+          # Keep the old strict 2s quality gate for loss estimation, test
+          # that actual mature authenticated positive witnesses remain valid
+          # for FEC APPLIED even if other source observations are UNKNOWN.
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record m0_original_fixed_m2_continuous_clean_cohort_unknown_resets_without_forgery -- --nocapture
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record m0_original_wbc4_authenticated_kind1_m2_covered_vs_uncovered_and_replay_boundary -- --nocapture
+          # W57 finite original-branch FEC/COMMON_PATH functional closure:
+          # no performance scenario, product rebuild, netem or outer recovery.
+          cargo +1.85.1 test --locked -p wbd-codec r1_f2_odd_size_mtu_dirty_outputs_and_direct_borrowed -- --nocapture
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record m0_fec2_live_rx_interleaved_four_blocks_3_ciphers_no_hol_and_stop -- --nocapture
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record m0_fec2_live_rx_same_turn_age_retirement_cannot_redeliver_k1 -- --nocapture
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record m0_pending_jumbo_midflight_scope_stop_prefix_matrix -- --nocapture
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record m0_background_owned_jumbo_persists_65k_generation_32_16_nohol_mtu_stop -- --nocapture

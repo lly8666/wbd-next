@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "id": "arm64-P0-merged-MTU-normal-large99-smoke-90s",
+  "run_id": 39884432309,
+  "attempt": 1,
+  "conclusion": "success",
+  "result": "PASS_SCOPED_OBSERVATION",
+  "artifact_id": 12471833189,
+  "result_zip_sha256": "ea2cbc0de8007259935d8b19c133e5446ef4cfa8f76a6e8726f866fe27a1022c",
+  "harness_contract_run_id": 39884431923,
+  "product_source": "d64be28591c3752af06be399ff598266ecf4d664",
+  "product_build_run": 39881938976,
+  "product_artifact_id": 12470698437,
+  "product_zip_sha256": "7886619049f0c458e3bf53b02657f96d79533a98eb6f63a9a689af2fbf5622ef",
+  "architecture": "aarch64",
+  "scenario": {
+    "mode": "normal",
+    "outer_mtu": 1500,
+    "readback_inner_mtu_client": 1329,
+    "readback_inner_mtu_server": 1329,
+    "udp_sizes_packet_weight": [
+      [
+        64,
+        1
+      ],
+      [
+        1301,
+        99
+      ]
+    ],
+    "warmup_s": 15,
+    "steady_s": 90,
+    "drain_s": 15,
+    "app_mbps_per_direction": 10,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "netem_loss_pct": 0,
+    "netem_delay_ms": 0
+  },
+  "observed": {
+    "c2s_udp": {
+      "sent": 43652,
+      "delivered": 43652,
+      "missing": 0,
+      "duplicates": 0,
+      "p99_first_arrival_ms": 0.3
+    },
+    "c2s_tcp": {
+      "sent": 43652,
+      "delivered": 43652,
+      "missing": 0,
+      "duplicates": 0,
+      "p99_first_arrival_ms": 0.4
+    },
+    "s2c_udp": {
+      "sent": 43651,
+      "delivered": 43651,
+      "missing": 0,
+      "duplicates": 0,
+      "p99_first_arrival_ms": 0.3
+    },
+    "s2c_tcp": {
+      "sent": 43651,
+      "delivered": 43651,
+      "missing": 0,
+      "duplicates": 0,
+      "p99_first_arrival_ms": 0.4
+    },
+    "tcp_backpressure_slots": 0,
+    "emsgsize": 0,
+    "udp_kernel_errors": 0,
+    "netem_drops": 0,
+    "stop_drained": true,
+    "owned_namespace_cleanup": true,
+    "product_cpu_s_measurement": {
+      "client": 12.09,
+      "server": 11.76
+    },
+    "product_peak_rss_bytes": {
+      "client": 15908864,
+      "server": 15994880
+    },
+    "host_cpu_psi_mean_pct": 1.9436666666666667,
+    "host_psi_over20_fraction": 0,
+    "host_steal_peak_pct": 0
+  },
+  "scope": "No-loss Normal/off 10Mbps each way 90s only; no FEC high loss, Game mixed, Auto runtime, H500 capacity, native SIMD runtime or Windows qualification."
+}

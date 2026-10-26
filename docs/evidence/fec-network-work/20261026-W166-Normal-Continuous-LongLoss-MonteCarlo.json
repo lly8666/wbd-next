@@ -1,0 +1,256 @@
+{
+  "schema": "FEC_W166_NORMAL_CONTINUOUS_LONGLOSS_FEC_MATH_ONLY_20261026_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "owner": "fec-network-work",
+  "context": "User correctly rejected prior k16-total-erasure-only inference; wants continuous traffic, overall unrecovered original packet rate, >=3 parity send rounds search.",
+  "current_frozen_product": {
+    "latest_git_source_head": "e7d0c1b4848a9d29362179f2855951e8abdcce60",
+    "normal_current_maximum": "profile6 for actual k=1..16, r=min(20,ceil(5k/4)); original data immediately sent; no delayed profile exists",
+    "game4_default": "stagger-4-50-140",
+    "game4_default_source": "eb16f9ff85e1bffa127ab5139da6da54dfa7c7ca",
+    "native_default_build_action": 40329401996
+  },
+  "model_scope": {
+    "qualification": "OFFLINE_IDEAL_MDS_RECONSTRUCTION_ONLY_NOT_NATIVE_PRODUCT_TEST",
+    "source_packet_mix": "continuous paced 128B(38%),384B(17%),1200B(45%) by count, FEC Small/Medium/Mtu separate deadlines at RTT=150ms; full k16 or dynamic timer",
+    "rates_mbps": [
+      1,
+      5,
+      15
+    ],
+    "real_k_mean_per_rate_approx": [
+      2.2,
+      8.8,
+      15.2
+    ],
+    "full_k16_parity_count": 20,
+    "parity_per_actual_k": "ceil(5*k/4); partial group allocation largest-remainder exactly r; no parity additions",
+    "search_allocation_candidates": 2300,
+    "train_seeds": 4,
+    "selection_holdout_seeds": 5,
+    "postselection_independent_seeds": 12,
+    "postselection_seconds_per_rate_and_seed": 24,
+    "packet_netem_exact_state_validation_seeds": 10,
+    "packet_netem_seconds_per_rate_and_seed": 30,
+    "packet_netem_total_original_source_packets_per_candidate": 1204756,
+    "per_packet_ge": {
+      "arguments": [
+        3,
+        17,
+        100,
+        0
+      ],
+      "transition_per": "EACH OUTPUT SOURCE OR PARITY PACKET IN TIME ORDER",
+      "long_run_bad_state_probability": 0.15,
+      "expected_consecutive_lost_packet_run": 5.88235294117647,
+      "assumed_no_send_queue_pressure": true
+    },
+    "temporal_models": [
+      "IID 15%",
+      "packet-rate-based continuous-time GE proxy15%",
+      "time-domain bad mean25ms 15%",
+      "time-domain bad mean65ms15%",
+      "repeating50ms shared blackout every2s +2% IID",
+      "repeating100ms shared blackout every2s +2% IID"
+    ],
+    "time_models_weights_not_measured": {
+      "iid15": 0.1,
+      "ge_packet_proxy15": 0.2,
+      "ge_time15_25ms": 0.2,
+      "ge_time15_65ms": 0.15,
+      "blackout50_every2s": 0.15,
+      "blackout100_every2s": 0.2
+    },
+    "time_resolution_ms": 0.25,
+    "ideal_parity_row_serialization_ms": 0.1,
+    "source_tun_rtt_queue_aead_not_simulated": true,
+    "actual_rx_ttl_reorder_and_pressure_not_simulated": true
+  },
+  "results": [
+    {
+      "schedule_ms": [
+        0,
+        30,
+        100
+      ],
+      "full_k16_parity_rows": [
+        20,
+        0,
+        0
+      ],
+      "label": "old_immediate_maximum",
+      "packet_index_GE15_residual_pct": 0.8057,
+      "temporal_mix_residual_pct": 5.9676
+    },
+    {
+      "schedule_ms": [
+        0,
+        30,
+        100
+      ],
+      "full_k16_parity_rows": [
+        0,
+        10,
+        10
+      ],
+      "label": "user_original_two_rounds",
+      "packet_index_GE15_residual_pct": 0.202,
+      "temporal_mix_residual_pct": 2.6488
+    },
+    {
+      "schedule_ms": [
+        0,
+        30,
+        100
+      ],
+      "full_k16_parity_rows": [
+        2,
+        0,
+        18
+      ],
+      "label": "earlier_assistant_2_then18_not_optimum",
+      "packet_index_GE15_residual_pct": 0.3766,
+      "temporal_mix_residual_pct": 1.4531
+    },
+    {
+      "schedule_ms": [
+        0,
+        40,
+        100
+      ],
+      "full_k16_parity_rows": [
+        4,
+        6,
+        10
+      ],
+      "label": "packet_index_GE_preferred",
+      "packet_index_GE15_residual_pct": 0.1697,
+      "temporal_mix_residual_pct": 2.5586
+    },
+    {
+      "schedule_ms": [
+        0,
+        60,
+        110
+      ],
+      "full_k16_parity_rows": [
+        1,
+        3,
+        16
+      ],
+      "label": "long_burst_practical_first_candidate",
+      "packet_index_GE15_residual_pct": 0.2854,
+      "temporal_mix_residual_pct": 1.3342
+    },
+    {
+      "schedule_ms": [
+        0,
+        50,
+        110
+      ],
+      "full_k16_parity_rows": [
+        1,
+        2,
+        17
+      ],
+      "label": "100ms_blackout_late17_option",
+      "packet_index_GE15_residual_pct": 0.3351,
+      "temporal_mix_residual_pct": 1.3902
+    },
+    {
+      "schedule_ms": [
+        0,
+        60,
+        120
+      ],
+      "full_k16_parity_rows": [
+        1,
+        3,
+        16
+      ],
+      "label": "time_loss_ideal_reference_risky_receive_age_margin",
+      "packet_index_GE15_residual_pct": 0.2802,
+      "temporal_mix_residual_pct": 1.2911
+    },
+    {
+      "schedule_ms": [
+        0,
+        60,
+        120
+      ],
+      "full_k16_parity_rows": [
+        1,
+        2,
+        17
+      ],
+      "label": "aggressive_late17_reference",
+      "packet_index_GE15_residual_pct": 0.3327,
+      "temporal_mix_residual_pct": 1.3417
+    }
+  ],
+  "postselection_time_mix_seed_bootstrap_95pct": {
+    "old_immediate": [
+      5.7937,
+      6.1562
+    ],
+    "user_original_10_10": [
+      2.5148,
+      2.7831
+    ],
+    "earlier_2_18": [
+      1.3618,
+      1.5379
+    ],
+    "packet_GE_4_6_10": [
+      2.4313,
+      2.685
+    ],
+    "long_1_3_16_110": [
+      1.2464,
+      1.4154
+    ],
+    "long_1_3_16_120": [
+      1.2118,
+      1.3663
+    ],
+    "warning": "seed-level bootstrap describes randomness WITHIN THE SPECIFIED MODEL only; it excludes scenario-weight and omitted physical-system uncertainty"
+  },
+  "packet_index_GE_quality": "Per-packet GE optimum among limited independent validation choices 4/6/10 at 0/40/100; 0.1697 vs old0.8057; runner does not recreate exact tc qdisc or queue.",
+  "time_mix_quality": "Across 12 independent new held-out random seeds, continuous-time synthetic mixture favored 1/3/16 at0/60/120 (1.2911%); 1/3/16 at0/60/110 was 1.3342%; weights are illustrative, not field-fitted.",
+  "actual_100ms_blackout_model": {
+    "old_immediate_residual_pct": 4.583,
+    "user_10_10_residual_pct": 2.825,
+    "packet_GE_4_6_10_residual_pct": 2.812,
+    "long_1_3_16_110_residual_pct": 0.277,
+    "late17_1_2_17_110_residual_pct": 0.083,
+    "note": "Temporary ideal time-gated model with 2% IID background; not actual Normal user loss SLA."
+  },
+  "receiver_safety": {
+    "actual_source_cold_job_post_close_expiry_ms": 10,
+    "rx_block_touched_age_limit_ms": 150,
+    "rx_block_reorder_span": 1024,
+    "rx_active_blocks_max": 640,
+    "rx_stored_bytes_max": 50331648,
+    "block_deadline_cap_ms_normal": 24,
+    "conservative_age_budget": "When last successfully received symbol is near the first source, block-close can be +24ms, latest parity+120ms (plus serialization and jitter) leaves only ~4-6ms before RX 150ms timeout.",
+    "conservative_plus10ms_sender_lateness_exposure": "Simulation static upper bound (>150ms since first source without intermediate RX touches) occurred in about 66% of 1Mbps groups and 99% of 5Mbps groups for 120ms late schedule. NOT an observed loss rate; real successful middle symbols reset touched.",
+    "safer_110ms": "At +110ms tail and conservative +10ms egress lateness this static age bound did not exceed150ms on modeled rates. Still requires native receive-pressure and latency tests."
+  },
+  "recommended_next_real_trial": [
+    "Prototype manual Normal-only wide-burst profile with three rounds 1/3/16 at +0/+60/+110ms, equal r for each actual k using deterministic allocation; compare same-VM to fixed6 and user 10/10.",
+    "Add second comparator 4/6/10 at +0/+40/+100ms for realistic netem packet-index GE, and optionally 1/2/17 at 0/50/110 to reduce simulated complete 100ms blackout residual.",
+    "Keep original data immediate; encode parity promptly before original 10ms job expiry; preserve separate bounded delayed queue; seal AEAD PN only when due; never extend original owner silently.",
+    "Enforce RX TTL/reorder admissibility, stop drain, genuine row planned/sent, parity overhead identity, CPU/RSS/pressure_stop; no added DATA repair, no Normal Auto integration; start low rate same-VM ARM64 only after design review."
+  ],
+  "decision": "No unique universal mathematically minimal three-round schedule without measured loss duration distribution, rate mix and recovery deadline. Two candidate families are Pareto alternatives. Earlier unconditional 2/18 recommendation SUPERSEDED. PRODUCT NOT CHANGED.",
+  "claims": {
+    "real_network_fec_test": "NOT_RUN",
+    "normal_new_manual_profile": "NOT_IMPLEMENTED",
+    "game4_default": "UNCHANGED_ALREADY_SET",
+    "capacity_stop": true,
+    "merge_ready": false,
+    "main_merge": false,
+    "other_role_next_action_touched": false
+  }
+}

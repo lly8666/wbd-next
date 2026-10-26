@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "id": "FEC-W163-GAME4-F6-WIDE140-GE15-1M-STRICT0P1",
+  "owner": "fec-network-work",
+  "seed": 8211160,
+  "policy": "outer-opportunistic-v3",
+  "product": {
+    "mode": "game4",
+    "fec_profile": 1,
+    "game_fec": "fixed6",
+    "repair_enabled": false,
+    "game4_copy_schedule": "stagger-4-50-140"
+  },
+  "traffic": {
+    "c2s_mbps": 1,
+    "s2c_mbps": 1,
+    "udp_share": 0.96,
+    "sizes": [
+      [
+        64,
+        6
+      ],
+      [
+        96,
+        8
+      ],
+      [
+        160,
+        10
+      ],
+      [
+        255,
+        8
+      ],
+      [
+        256,
+        6
+      ],
+      [
+        257,
+        7
+      ],
+      [
+        512,
+        10
+      ],
+      [
+        900,
+        15
+      ],
+      [
+        1287,
+        30
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "deadline_ms": 6000,
+    "burst_ms": 0,
+    "max_packets": 5000000,
+    "allow_fragmentation": false,
+    "observe_size_classes": true,
+    "observe_independent_flows": true
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "shared",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded",
+    "owned_veth_static_neighbour": true
+  },
+  "warmup_s": 10,
+  "drain_s": 30,
+  "phases": [
+    {
+      "name": "clean_before",
+      "seconds": 10,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      }
+    },
+    {
+      "name": "shared_long_GE15",
+      "seconds": 45,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50,
+        "gemodel": [
+          3,
+          17,
+          100,
+          0
+        ]
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50,
+        "gemodel": [
+          3,
+          17,
+          100,
+          0
+        ]
+      }
+    },
+    {
+      "name": "clean_after",
+      "seconds": 10,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false,
+    "max_loss_pct": 0.1,
+    "max_small_udp_loss_pct": 0.1,
+    "max_small_udp_p99_ms": 800,
+    "loss_gate_phases": [
+      "clean_before",
+      "shared_long_GE15",
+      "clean_after"
+    ],
+    "require_zero_source_tun_drops_full_run": true,
+    "require_zero_tun_root_qdisc_drops_full_run": true,
+    "cross_business_hol": false
+  },
+  "bundles": {
+    "A": {
+      "source": "8f85e0ba495070c925504452d3848aa90a5d2c20",
+      "run_id": 40324330469,
+      "attempt": 1,
+      "artifact_id": 12650034658,
+      "sha256": "3f3c867d8a3ca26f56cc0c14ffd94d1a14f6fd1365b0b25d0a9cf0eff610955c",
+      "repair_enabled": false,
+      "require_go_rx_handoff": true,
+      "game4_copy_schedule": "stagger-4-50-140",
+      "recovery_policy": "outer-opportunistic-v3"
+    }
+  },
+  "order": "A"
+}

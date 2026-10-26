@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "kind": "ACTUAL_S013_AFTER_FAIL_RECOVERY",
+  "product_source": "e63d38bd20466575675ca8b493a45882ec815a52",
+  "harness_source": "34d6ce497302f204d59d48ff156a9761af876236",
+  "action": {
+    "run": 39774071158,
+    "attempt": 1,
+    "conclusion": "failure",
+    "artifact_id": 12423014943,
+    "zip_sha256": "04d35892d65b9bfd182d9d044e76bdab5011eef2239ae11934cd1b868e551987",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39774071158"
+  },
+  "frozen_build": {
+    "run": 39773479071,
+    "attempt": 1,
+    "artifact_id": 12423960905,
+    "zip_sha256": "595c39801e80c9ded03dd4673236fdc1a3bfddc9e68ffc9e275f8ab87b0ba64f"
+  },
+  "scenario": {
+    "mode": "fec-fixed",
+    "profile": 6,
+    "one_way_ms": 300,
+    "netem_iid_pct": 30,
+    "offered_mbps_each_direction": 2,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "steady_s": 120,
+    "drain_s": 30,
+    "netem_unseeded": true
+  },
+  "netem_actual_pct": {
+    "client": 30.222322254732788,
+    "server": 30.256333904067098
+  },
+  "traffic": {
+    "c2s_udp": {
+      "sent": 20751,
+      "unique": 6439,
+      "duplicate": 4,
+      "missing": 14312,
+      "one_way_arrived_p99_ms": 1225.1
+    },
+    "s2c_udp": {
+      "sent": 20751,
+      "unique": 6392,
+      "duplicate": 3,
+      "missing": 14359,
+      "one_way_arrived_p99_ms": 1242.3
+    },
+    "tcp_c2s_sent": 28,
+    "tcp_s2c_sent": 0,
+    "tcp_delivery": 0,
+    "tcp_backpressure_both": true
+  },
+  "fixed_readback": {
+    "client": "requested1 applied0 pending=true",
+    "server": "requested1 applied0 pending=true"
+  },
+  "stop_drained": true,
+  "namespaces_absent": true,
+  "udp_kernel_buffer_errors": 0,
+  "host_cpu_psi_mean_pct": 0,
+  "steal_peak_pct": 0,
+  "fec_tx": {
+    "client": {
+      "accepted": 14950,
+      "notready": 5166,
+      "k1": 9431,
+      "k13_16": 0,
+      "rplanned": 26994,
+      "rsent": 8185,
+      "expired": 53,
+      "source_payload": 0,
+      "source_arena": 5166,
+      "source_seal": 0,
+      "parity_policy": 0,
+      "parity_arena": 18701,
+      "parity_seal": 0,
+      "parity_m4_noncopy": 0,
+      "source_m4_noncopy": 0
+    },
+    "server": {
+      "accepted": 14875,
+      "notready": 5130,
+      "k1": 9406,
+      "k13_16": 0,
+      "rplanned": 26877,
+      "rsent": 8202,
+      "expired": 53,
+      "source_payload": 0,
+      "source_arena": 5130,
+      "source_seal": 0,
+      "parity_policy": 0,
+      "parity_arena": 18563,
+      "parity_seal": 0,
+      "parity_m4_noncopy": 0,
+      "source_m4_noncopy": 0
+    }
+  },
+  "diagnosis": "Both sides have repeated bounded M1 Arena::allocate NoCapacity at source callback and parity callback; zero source/parity seal, parity policy and M4 noncopy failures. In current original Rust source, session TX Arena::new(generation,128,2048,128,1000000), FEC2 stores plaintext slabs briefly and M2 shadow retains immutable copies up to 2s. Candidate bounded FEC-only preallocation 512*2048B with 1.2MB charged allowance; not a claim that hard duplicate/readback defects are fixed. No same-machine A/B yet.",
+  "qualification": "FAIL (duplicate UDP, both fixed pending, TCP no steady delivery, ~69pct app missing). High-loss residual acceptance not unconditional 1%. Further heavier Fixed/Auto modes PAUSED."
+}

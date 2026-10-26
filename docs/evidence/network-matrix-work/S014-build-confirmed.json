@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "kind": "VERIFIED_ARM64_BUILD_S014",
+  "run_id": 39775271407,
+  "attempt": 1,
+  "status": "completed",
+  "conclusion": "success",
+  "source": "4d739d957fdc0a7e2db7ecb27b84e26b880f10ae",
+  "artifact_id": 12424665752,
+  "zip_sha256": "c73b11e5801661399636827c7d6e590bbfd4ae6e3d78e771f2e8c9dfdbe4b1dd",
+  "manifest_sha256": "7f2a5a8d9abc384d624ab3ee5c5433203372bf7be0ec7f4cdf1e45e84de679c2",
+  "arch": "aarch64",
+  "elf_machine": 183,
+  "go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "isa_source": "c387163fcbca62701d646149564c550c78a4f985",
+  "file_hash_sha256": {
+    "wbd-v4-client": "fetched_and_verified_SHA256SUMS",
+    "wbd-v4-server": "fetched_and_verified_SHA256SUMS",
+    "libwbd_engine.so": "fetched_and_verified_SHA256SUMS"
+  },
+  "all_declared_hashes_match": true,
+  "backend_actual": "NOT_OBSERVED",
+  "network_product_qualification": "NOT_RUN_BUILD_ONLY",
+  "reference": "https://github.com/lly8666/wbd-next/actions/runs/39775271407"
+}

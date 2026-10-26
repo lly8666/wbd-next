@@ -1,0 +1,211 @@
+{
+  "schema": "W99_GAME2_GAME4_FIXED6_TRUE_ARM64_WEAKNET_RECOVERY_V1",
+  "owner": "fec-network-work",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "product": {
+    "source": "c18de0fa79f529c349b6546635f3c6b62aa01b1c",
+    "build_run": 40255431613,
+    "artifact": 12621844471,
+    "sha256": "85e50a70ef44306fe5a6f913010d57568cc01b652830be09d473cbd7b2248ac6"
+  },
+  "scenario": {
+    "mode": [
+      "game2",
+      "game4"
+    ],
+    "game_fec": "fixed6",
+    "each_direction_mbps": 3,
+    "udp_share": 0.96,
+    "tcp_flows": 2,
+    "one_way_ms": 75,
+    "phases": [
+      [
+        "clean_before",
+        15
+      ],
+      [
+        "independent20_each_lane",
+        30
+      ],
+      [
+        "lane1_blackhole",
+        30
+      ],
+      [
+        "clean_after",
+        15
+      ]
+    ],
+    "one_scenario_per_action": true,
+    "load_not_increased": true
+  },
+  "game2": {
+    "run": 40256521889,
+    "request_commit": "bc8dc27fbf2883fc059e4c596fead8b36d12ad53",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "all_phase_actual_udp_tcp_injected_equals_delivered_both_directions": true,
+    "udp_missing_by_phase_c2s_s2c": {
+      "clean_before": [
+        0,
+        0
+      ],
+      "independent20": [
+        0,
+        0
+      ],
+      "lane1_blackhole": [
+        0,
+        0
+      ],
+      "clean_after": [
+        0,
+        0
+      ]
+    },
+    "iid20_p99_udp_c2s_s2c_ms": [
+      83,
+      83.2
+    ],
+    "iid20_p99_tcp_c2s_s2c_ms": [
+      84.6,
+      85.3
+    ],
+    "longest_delivery_gap_reported_ms_c2s_udp_tcp_s2c_udp_tcp": [
+      70,
+      80,
+      70,
+      80
+    ],
+    "cpu_s_client_server": [
+      9.65,
+      9.69
+    ],
+    "cpu_per_delivered_gib_client_server": [
+      307.0108,
+      308.2834
+    ],
+    "rss_peak_bytes_client_server": [
+      26693632,
+      26902528
+    ],
+    "cpu_psi_peak_pct": 2.7,
+    "outer_tx_mbps_client_server": [
+      13.8551,
+      13.8456
+    ],
+    "source_tun_drops_both": 0,
+    "tcp_backpressure": 0,
+    "stop_drained_both": true,
+    "client_native": {
+      "source_offered": 65436,
+      "parity_offered_and_copied_and_sent": 89182,
+      "recovered_candidate": 776,
+      "systematic_candidate": 64652,
+      "expired": 0,
+      "failed": 89,
+      "auth_rejected": 0
+    },
+    "server_native": {
+      "source_offered": 65430,
+      "parity_offered_and_copied_and_sent": 89223,
+      "recovered_candidate": 810,
+      "systematic_candidate": 64624,
+      "expired": 0,
+      "failed": 92,
+      "auth_rejected": 0
+    },
+    "zip_artifact_id": 12623270751,
+    "zip_sha256": "bc5449649ee8371e1e15ec690f33da2fa37a42d41096ab487e4fbe241426a247"
+  },
+  "game4": {
+    "run": 40256529112,
+    "request_commit": "b8c503320c2246baa57e3a97d31b5e2ef39cbdac",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "all_phase_actual_udp_tcp_injected_equals_delivered_both_directions": true,
+    "udp_missing_by_phase_c2s_s2c": {
+      "clean_before": [
+        0,
+        0
+      ],
+      "independent20": [
+        0,
+        0
+      ],
+      "lane1_blackhole": [
+        0,
+        0
+      ],
+      "clean_after": [
+        0,
+        0
+      ]
+    },
+    "iid20_p99_udp_c2s_s2c_ms": [
+      77.7,
+      77.6
+    ],
+    "iid20_p99_tcp_c2s_s2c_ms": [
+      77.8,
+      77.9
+    ],
+    "longest_delivery_gap_reported_ms_c2s_udp_tcp_s2c_udp_tcp": [
+      70,
+      80,
+      70,
+      80
+    ],
+    "cpu_s_client_server": [
+      17.49,
+      17.64
+    ],
+    "cpu_per_delivered_gib_client_server": [
+      556.4373,
+      561.2095
+    ],
+    "rss_peak_bytes_client_server": [
+      39505920,
+      38801408
+    ],
+    "cpu_psi_peak_pct": 6.78,
+    "outer_tx_mbps_client_server": [
+      30.7497,
+      30.7569
+    ],
+    "source_tun_drops_both": 0,
+    "tcp_backpressure": 0,
+    "stop_drained_both": true,
+    "client_native": {
+      "source_offered": 65436,
+      "parity_offered_and_copied_and_sent": 89284,
+      "recovered_candidate": 84,
+      "systematic_candidate": 65376,
+      "expired": 0,
+      "failed": 267,
+      "auth_rejected": 0
+    },
+    "server_native": {
+      "source_offered": 65462,
+      "parity_offered_and_copied_and_sent": 89352,
+      "recovered_candidate": 87,
+      "systematic_candidate": 65347,
+      "expired": 0,
+      "failed": 263,
+      "auth_rejected": 0
+    },
+    "zip_artifact_id": 12622607660,
+    "zip_sha256": "624e7866ba12cfa656b1a20618cb38e965379e1563e83882bf711c5db5f1d266"
+  },
+  "interpretation": "Positive authentic recovered original source candidates at receiver with real original TUN business full delivery. W98 no-loss fixed6 and W99 independent20/lane1 blackhole preserved, no HOL evidence in scoped low-load. W99 internal GameFecRx.failed aggregate remains unclassified (89/92 and 267/263); NOT zero and NOT automatically AEAD/corruption; instrument classification before stronger claim. Separate VMs so no cross-VM CPU gain claim. Fixed6 parity/copy costs remain large.",
+  "limits": [
+    "Decoder recovered_candidate != direct exact recovered_tun counter; app full delivery + native TUN overall positive corroborates, but no individual recovered symbol TUN receipt",
+    "Shared correlated GE long bursts NOT_RUN on W98 source",
+    "W99 Game2 and Game4 each have separate VMs and no sameVM OFF/fixed CPU A/B",
+    "Game original --outer-repair=off unsupported; no FEC-only no outer retrans claim",
+    "Windows/physical NOT_RUN",
+    "FEC Auto is Normal-only",
+    "capacity_stop=true"
+  ],
+  "capacity_stop": true,
+  "merge_ready": false
+}

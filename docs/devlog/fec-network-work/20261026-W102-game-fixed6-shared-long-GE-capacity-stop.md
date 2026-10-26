@@ -1,0 +1,7 @@
+# W102 | Game2 fixed6 long shared GE original Linux (bounded 3Mbps)
+
+Source `8afc2b8f443dd59edc912fef24b5fffa92e3a6d7`, ARM64 native [40257758450](https://github.com/lly8666/wbd-next/actions/runs/40257758450), artifact12622774367 reused. One performance Action [40258651816](https://github.com/lly8666/wbd-next/actions/runs/40258651816) runs the exact original W89 Game2 GE15 long waveform (clean15, GE45, clean15) at 3Mbps each direction, 96% UDP and real TCP, 75ms one way. No extra load or matrix.
+
+Genuine shared burst UDP loss **434/438** (~2.558/2.427%), clean recovery zero; TCP all phases fully delivered, no backpressure, GE TCP p99 290.7/402ms and post-clean p99 110.3/165.6ms. Original native FEC recovered_candidate 3057/3037, planned/copied/sent 76859/76679, expired0 failed0, AEAD reject0, all classified FEC rejects0. Source TUN drops0, stopped/drained both. CPU8.18/8.01s, RSS26.6/27.2MB, outer network ~154MB each; HOST CPU PSI **33.81% peak**, >20% 12% of samples, product load 3Mbps did not intentionally increase. Capacity warning means STOP additional heavier/parallel Game4 damage; avoid declaring jitter causal without runner diagnosis.
+
+W89 original Game OFF 13.35/13.15% shared GE missing in separate unseeded run is historical context, NOT sameVM paired causal FEC percentage saving. Correlated GE residual >1%, so clear damage boundary; do not present as zero-loss product certification. Windows TEMP_SKIPPED; Game outer DATA retrans `--outer-repair=off` unsupported; merge_ready false and no main merge.

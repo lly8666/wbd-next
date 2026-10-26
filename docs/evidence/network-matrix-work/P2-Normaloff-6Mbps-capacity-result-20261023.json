@@ -1,0 +1,143 @@
+{
+  "schema": 1,
+  "id": "P2-Normaloff-6Mbps-measured-PASS-20261023",
+  "product_source": "de55a1322b4580c60e77322d2d38843caefeec79",
+  "request_source": "bec53e280d633ed413694c659b798320881b3647",
+  "action": {
+    "run_id": 39916201119,
+    "attempt": 1,
+    "result": "PASS_SCOPED_OBSERVATION",
+    "artifact_id": 12484269045,
+    "zip_sha256": "d90dd39eb2586a87820b30480fa8268fc237c0f41d6e98200994d8ae6747defe"
+  },
+  "contracts": {
+    "run_id": 39916201312,
+    "result": "success"
+  },
+  "scenario": {
+    "mode": "normal-off-no-FEC",
+    "rate_mbps_each_direction": 6,
+    "udp_share": 0.5,
+    "udp_sizes_packet_weights": [
+      [
+        64,
+        1
+      ],
+      [
+        1287,
+        99
+      ]
+    ],
+    "one_way_ms": 200,
+    "netem_loss_pct": 2,
+    "steady_s": 60,
+    "warmup_s": 10,
+    "drain_s": 30,
+    "seed": 5205
+  },
+  "observed": {
+    "c2s": {
+      "udp": {
+        "sent": 17650,
+        "received": 17645,
+        "missing": 5,
+        "missing_pct": 0.0283286,
+        "first_p99_ms": 615.8,
+        "target_mbps": 3,
+        "injected_mbps": 3.0000403
+      },
+      "tcp": {
+        "sent": 17405,
+        "received": 17405,
+        "missing": 0,
+        "p99_ms": 5868.8,
+        "injected_mbps": 2.9583244,
+        "target_mbps": 3,
+        "backpressure": 243
+      }
+    },
+    "s2c": {
+      "udp": {
+        "sent": 17650,
+        "received": 17641,
+        "missing": 9,
+        "missing_pct": 0.0509915,
+        "first_p99_ms": 616.1,
+        "target_mbps": 3,
+        "injected_mbps": 3.0000403
+      },
+      "tcp": {
+        "sent": 17650,
+        "received": 17650,
+        "missing": 0,
+        "p99_ms": 3067.2,
+        "injected_mbps": 2.9998772,
+        "target_mbps": 3,
+        "backpressure": 0
+      }
+    },
+    "client": {
+      "product_cpu_steady_s": 4.84,
+      "product_cpu_s_per_received_app_GiB": 115.5182,
+      "product_rss_peak_bytes": 17645568,
+      "injector_cpu_whole_s": 4.49,
+      "injector_rss_peak_bytes": 24076288,
+      "outer_veth_tx_bytes_steady": 55797337,
+      "tun_udp_read": 23368,
+      "tun_udp_staged": 23368,
+      "tun_tcp_read": 45887,
+      "tun_tcp_staged": 45887,
+      "arena_failed": 0,
+      "pre_read_deferred": 0,
+      "receiver_feedback_dropped": 0
+    },
+    "server": {
+      "product_cpu_steady_s": 4.95,
+      "product_cpu_s_per_received_app_GiB": 118.9508,
+      "product_rss_peak_bytes": 17985536,
+      "injector_cpu_whole_s": 4.2,
+      "injector_rss_peak_bytes": 24334336,
+      "outer_veth_tx_bytes_steady": 55324575,
+      "tun_udp_read": 23366,
+      "tun_udp_staged": 23366,
+      "tun_tcp_read": 45904,
+      "tun_tcp_staged": 45904,
+      "arena_failed": 0,
+      "pre_read_deferred": 0,
+      "receiver_feedback_dropped": 0
+    },
+    "host": {
+      "machine": "aarch64",
+      "logical_cpus": 4,
+      "kernel": "6.17.0-1022-azure",
+      "cpu_psi_some_peak": 0,
+      "steal_pct_peak": 0,
+      "cgroup_cpu_max": "UNAVAILABLE",
+      "client_netem_drops_pct": 1.933233,
+      "server_netem_drops_pct": 2.028355,
+      "netem_end_queue_packets": {
+        "client": 239,
+        "server": 235
+      },
+      "kernel_udp_errors": 0
+    },
+    "product_policy": "outer-single-repair-v2",
+    "authenticated_recovery": true,
+    "stop_drained_both": true,
+    "namespace_cleanup": true
+  },
+  "verdict": "PASS_REAL_NORMAL_OFF_6MBPS_2PCT_LOSS_SCOPED_WITH_TCP_TAIL_WARNING",
+  "warnings": [
+    "TCP C2S p99 5.8688s, S2C p99 3.0672s; do NOT claim low-tail or no HOL from scoped PASS",
+    "C2S TCP injected 2.9583 of targeted3 Mbps, within 3% tolerance; 243 backpressure slots. Injection rate and TCP congestion require causal isolation before higher claim.",
+    "10Mbps/2pct prior Action39915315299 INCONCLUSIVE with artifact access unavailable; cannot label root from theoretical M1 slots.",
+    "CPU is per-product process over steady 60s; injector CPU is warmup+setup+drain and must not be directly summed as a comparable 60s sample."
+  ],
+  "capacity_bound": {
+    "fixed_m1_slots_per_end": 512,
+    "design_m1_bytes_approx": 1200000,
+    "projected_10Mbps_RTT400_flight_slots_from_2Mbps_trajectory": 625,
+    "model_not_qualification": true
+  },
+  "no_fec_scenarios": true
+}

@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "id": "FEC-W136-GAME4-FIXED6-P1A-RECVMMSG-IID30-UDP5MBPS-AB",
+  "owner": "fec-network-work",
+  "seed": 8211135,
+  "policy": "outer-opportunistic-v3",
+  "product": {
+    "mode": "game4",
+    "fec_profile": 1,
+    "game_fec": "fixed6",
+    "repair_enabled": false,
+    "game4_copy_schedule": "stagger-4-20-60"
+  },
+  "traffic": {
+    "c2s_mbps": 5,
+    "s2c_mbps": 5,
+    "udp_share": 1,
+    "sizes": [
+      [
+        64,
+        6
+      ],
+      [
+        96,
+        8
+      ],
+      [
+        160,
+        10
+      ],
+      [
+        255,
+        8
+      ],
+      [
+        256,
+        6
+      ],
+      [
+        257,
+        7
+      ],
+      [
+        512,
+        10
+      ],
+      [
+        900,
+        15
+      ],
+      [
+        1287,
+        30
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 100,
+    "deadline_ms": 6000,
+    "burst_ms": 0,
+    "max_packets": 5000000,
+    "allow_fragmentation": false,
+    "observe_size_classes": true,
+    "observe_independent_flows": false
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "independent",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded",
+    "owned_veth_static_neighbour": true
+  },
+  "warmup_s": 10,
+  "drain_s": 30,
+  "phases": [
+    {
+      "name": "clean_before",
+      "seconds": 10,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 300
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 300
+      }
+    },
+    {
+      "name": "independent30",
+      "seconds": 30,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 30,
+        "rate_mbps": 300
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 30,
+        "rate_mbps": 300
+      }
+    },
+    {
+      "name": "clean_after",
+      "seconds": 10,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 300
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 300
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false,
+    "max_loss_pct": 1,
+    "max_small_udp_loss_pct": 1,
+    "max_small_udp_p99_ms": 800,
+    "loss_gate_phases": [
+      "clean_before",
+      "independent30",
+      "clean_after"
+    ],
+    "require_zero_source_tun_drops_full_run": true,
+    "require_zero_tun_root_qdisc_drops_full_run": true,
+    "cross_business_hol": false
+  },
+  "bundles": {
+    "A": {
+      "source": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+      "run_id": 40288528399,
+      "attempt": 1,
+      "artifact_id": 12635510007,
+      "sha256": "d3eaaceb84666ed7f754a13e4078559d06a7c369441da32c245e2fdfbf67bb0f",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false,
+      "require_go_rx_handoff": true
+    },
+    "B": {
+      "source": "bbee28fbef8ad07314886221e9d6e2e738d0e167",
+      "run_id": 40291663296,
+      "attempt": 1,
+      "artifact_id": 12636154049,
+      "sha256": "e4366408b311db2d8364d1e6540b0e3e167c62d8cf494f8c471ce6835c6ed742",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false,
+      "require_go_rx_handoff": true,
+      "require_game_rx_multimsg": true
+    }
+  },
+  "order": "AB"
+}

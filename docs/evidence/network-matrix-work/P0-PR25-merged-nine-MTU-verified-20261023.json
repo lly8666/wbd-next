@@ -1,0 +1,146 @@
+{
+  "schema": 1,
+  "event": "P0-PR25-merged-experiment-native-nine-MTU",
+  "classification": "SUCCESS_SCOPED_MTU_FUNCTIONAL_ONLY",
+  "repo": "lly8666/wbd-next",
+  "branch": "experiment/network-matrix-tuning",
+  "merged_pr25_commit": "ce70f53b6ed26fc431d427ba9a9062aa63380a68",
+  "merged_parents": [
+    "b169ad07c5b293168925af2a65f1b7fed41338af",
+    "ae73332d4814edc1c8669a44cbe38fc1b134c367"
+  ],
+  "native_action": {
+    "run_id": 39881938976,
+    "attempt": 1,
+    "source": "d64be28591c3752af06be399ff598266ecf4d664",
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39881938976",
+    "jobs": {
+      "native_arm64_go_rust_bundle": "success",
+      "rust_parity_unit": "success",
+      "nine_real_mtu_cases": "success",
+      "other_smoke": "skipped"
+    }
+  },
+  "bundles": {
+    "product_artifact_id": 12470698437,
+    "product_zip_sha256": "7886619049f0c458e3bf53b02657f96d79533a98eb6f63a9a689af2fbf5622ef",
+    "mtu_artifact_id": 12470328990,
+    "mtu_zip_sha256": "1e1d160de62203fb85068eb5ee443c62ad2d66149e2ca19311fad8dca1bb4820",
+    "exact_github_digest_match": true,
+    "manifest": {
+      "source": "d64be28591c3752af06be399ff598266ecf4d664",
+      "go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "isa_source": "c387163fcbca62701d646149564c550c78a4f985",
+      "arch": "aarch64",
+      "backend_requested": "native_fec_acceleration (pinned ISA-L static)"
+    },
+    "ELF_machine": 183,
+    "file_sha256_verified": {
+      "wbd-v4-client": "df95d080eee9f47b07ae832ada677ff297edda773f1493c44897d6781c39797e",
+      "wbd-v4-server": "558c2cebfb98de844f3f9f4127d1b3e9da49a0bf39b7843aa1a22037c1421161",
+      "libwbd_engine.so": "dd7cdfd633be27b8c676cf63c035d5379eb62ab27a2bb7431fca521e224beadc"
+    }
+  },
+  "cases": [
+    {
+      "mode": "normal",
+      "outer_client_mtu": 1500,
+      "outer_server_mtu": 1500,
+      "inner_ipv4": 1329,
+      "lower_1_and_boundary": "PASS_BOTH_DIRECTIONS",
+      "df_mtu_plus_1": "REJECTED_BOTH_DIRECTIONS",
+      "stop": "DRAINED_AND_NAMESPACE_CLEANED",
+      "scope": "20_ICMP_PER_DIRECTION_EXCEPT_NORMAL_3"
+    },
+    {
+      "mode": "normal",
+      "outer_client_mtu": 1280,
+      "outer_server_mtu": 1280,
+      "inner_ipv4": 1209,
+      "lower_1_and_boundary": "PASS_BOTH_DIRECTIONS",
+      "df_mtu_plus_1": "REJECTED_BOTH_DIRECTIONS",
+      "stop": "DRAINED_AND_NAMESPACE_CLEANED",
+      "scope": "20_ICMP_PER_DIRECTION_EXCEPT_NORMAL_3"
+    },
+    {
+      "mode": "fec-fixed",
+      "outer_client_mtu": 1500,
+      "outer_server_mtu": 1500,
+      "inner_ipv4": 1315,
+      "lower_1_and_boundary": "PASS_BOTH_DIRECTIONS",
+      "df_mtu_plus_1": "REJECTED_BOTH_DIRECTIONS",
+      "stop": "DRAINED_AND_NAMESPACE_CLEANED",
+      "scope": "20_ICMP_PER_DIRECTION_EXCEPT_NORMAL_3"
+    },
+    {
+      "mode": "fec-fixed",
+      "outer_client_mtu": 1280,
+      "outer_server_mtu": 1280,
+      "inner_ipv4": 1195,
+      "lower_1_and_boundary": "PASS_BOTH_DIRECTIONS",
+      "df_mtu_plus_1": "REJECTED_BOTH_DIRECTIONS",
+      "stop": "DRAINED_AND_NAMESPACE_CLEANED",
+      "scope": "20_ICMP_PER_DIRECTION_EXCEPT_NORMAL_3"
+    },
+    {
+      "mode": "fec-fixed",
+      "outer_client_mtu": 1500,
+      "outer_server_mtu": 1280,
+      "inner_ipv4": 1195,
+      "lower_1_and_boundary": "PASS_BOTH_DIRECTIONS",
+      "df_mtu_plus_1": "REJECTED_BOTH_DIRECTIONS",
+      "stop": "DRAINED_AND_NAMESPACE_CLEANED",
+      "scope": "20_ICMP_PER_DIRECTION_EXCEPT_NORMAL_3"
+    },
+    {
+      "mode": "fec-auto",
+      "outer_client_mtu": 1500,
+      "outer_server_mtu": 1500,
+      "inner_ipv4": 1315,
+      "lower_1_and_boundary": "PASS_BOTH_DIRECTIONS",
+      "df_mtu_plus_1": "REJECTED_BOTH_DIRECTIONS",
+      "stop": "DRAINED_AND_NAMESPACE_CLEANED",
+      "scope": "20_ICMP_PER_DIRECTION_EXCEPT_NORMAL_3"
+    },
+    {
+      "mode": "fec-auto",
+      "outer_client_mtu": 1280,
+      "outer_server_mtu": 1280,
+      "inner_ipv4": 1195,
+      "lower_1_and_boundary": "PASS_BOTH_DIRECTIONS",
+      "df_mtu_plus_1": "REJECTED_BOTH_DIRECTIONS",
+      "stop": "DRAINED_AND_NAMESPACE_CLEANED",
+      "scope": "20_ICMP_PER_DIRECTION_EXCEPT_NORMAL_3"
+    },
+    {
+      "mode": "game2",
+      "outer_client_mtu": 1500,
+      "outer_server_mtu": 1500,
+      "inner_ipv4": 1313,
+      "lower_1_and_boundary": "PASS_BOTH_DIRECTIONS",
+      "df_mtu_plus_1": "REJECTED_BOTH_DIRECTIONS",
+      "stop": "DRAINED_AND_NAMESPACE_CLEANED",
+      "scope": "20_ICMP_PER_DIRECTION_EXCEPT_NORMAL_3"
+    },
+    {
+      "mode": "game4",
+      "outer_client_mtu": 1280,
+      "outer_server_mtu": 1280,
+      "inner_ipv4": 1193,
+      "lower_1_and_boundary": "PASS_BOTH_DIRECTIONS",
+      "df_mtu_plus_1": "REJECTED_BOTH_DIRECTIONS",
+      "stop": "DRAINED_AND_NAMESPACE_CLEANED",
+      "scope": "20_ICMP_PER_DIRECTION_EXCEPT_NORMAL_3"
+    }
+  ],
+  "cases_passed": 9,
+  "cases_total": 9,
+  "hard_gate_clarification": "Only ICMP/MTU boundary, DF rejection, Stop and namespace cleanup proven. No continuous UDP/TCP, FEC parity high-loss, real capacity, Game mixed traffic or runtime accelerator dispatch proven by this Action.",
+  "preserve": [
+    "prior integrated build39878062135 FAIL unbound Bash features",
+    "second integration build39881519475 FAIL duplicate Go realityfront import",
+    "S032 same VM old/new Fixed30 both FAIL with client requested/applied mismatch and arena pressure",
+    "PR25 branch-only successful Action39875959734 remains separate different SOURCE"
+  ]
+}

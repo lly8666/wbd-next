@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "id": "P1-first-repair-priority-native-pass-AB-intent-20261023",
+  "native": {
+    "run_id": 39899738046,
+    "attempt": 1,
+    "source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
+    "conclusion": "success",
+    "product_artifact_id": 12477859860,
+    "product_sha256": "114de9c9a3b7c074d527273009ce369eee2508202323619cbc06189c0b68be40",
+    "mtu_artifact_id": 12478243408,
+    "mtu_sha256": "b42a82e60f7eb299a69e9f295cb9b1ab26030cb173d6dbb83ff33a08a94c2d4b",
+    "units": {
+      "first_repair_priority": "PASS",
+      "adaptive_rtt": "PASS",
+      "retirement_diagnostics": "PASS",
+      "block_reason_classifier": "PASS",
+      "fixed_m2": "PASS"
+    },
+    "mtu9": "PASS",
+    "runtime_native_dispatch": "NOT_OBSERVED"
+  },
+  "mechanism": "Owner RepairCandidate carries actual repair_attempt_stage and preflight requires exact stage match. Stage0 may pass empty smoothing tokens only after existing local epoch quota and global capacity/grant gates pass; it debits available tokens without going negative and NotSent refunds exact debit only. Stage1 remains BurstPaced. Max actual repairs remains2; failed 20ms rearm product path reverted.",
+  "experiment": {
+    "id": "P1-Normal2pct-first-repair-priority-old-new-AB-60s",
+    "order": "AB",
+    "same_vm": true,
+    "A": {
+      "source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
+      "run_id": 39896777307,
+      "attempt": 1,
+      "artifact_id": 12476734780,
+      "sha256": "4e5e3248b489877eb50eece577719c780e16b31add1bca2c76d407f04196628f"
+    },
+    "B": {
+      "source": "6746e32e27a555cbcd250e980a1f1337d92f0b60",
+      "run_id": 39899738046,
+      "attempt": 1,
+      "artifact_id": 12477859860,
+      "sha256": "114de9c9a3b7c074d527273009ce369eee2508202323619cbc06189c0b68be40"
+    },
+    "scenario": "Normal 2Mbps/direction 50/50 UDP/TCP 99%1287B IID2% one-way200ms 60s seed5205",
+    "decision": "B should reduce first-stage pacing loss/expired0 and UDP residual while keeping total repair bounded by unchanged epoch/global quotas, CPU and Stop."
+  },
+  "scope": "Native functional PASS only; business qualification pending AB."
+}

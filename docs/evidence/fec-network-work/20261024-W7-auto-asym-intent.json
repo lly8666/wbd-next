@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+  "run": "PENDING",
+  "id": "FEC-W7-V3-Auto-Asym-OuterOff-RiseRecover-ARM64",
+  "path": "tests/network/fec-work/W7-v3-auto-asym-rise-recover-off-arm64.json",
+  "category": "Auto actual startup applied and asymmetric quality, NOT dynamic-controller qualification",
+  "phases": [
+    "c2s 2% vs s2c0% 30s",
+    "c2s20% vs s2c1% 60s",
+    "c2s1% vs s2c0% 60s"
+  ],
+  "architecture": "arm64",
+  "product_artifact": 12554277143,
+  "outer_off": true,
+  "criterion": "both sides actual applied, no DATA repair, parity TX/recovered TUN and CPU/RSS, no host saturation, source code Auto profile transitions currently not wired"
+}

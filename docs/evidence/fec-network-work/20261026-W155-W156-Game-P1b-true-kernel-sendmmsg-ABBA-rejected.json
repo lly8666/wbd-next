@@ -1,0 +1,175 @@
+{
+  "schema": "FEC_W155_W156_GAME_P1B_TRUE_SENDMMSG_ABBA_REJECTION_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "owner": "fec-network-work",
+  "original_qualified_P2": "bb8e8249c2adba9c7dab72bf07da2dbe0bce3b82",
+  "trial_source_without_receipt": "a206745b5e973cdd9ab3e10ba5e394cf775eed0d",
+  "trial_with_native_receipt": "f2d304514a7675d4caf7bc774ec44e67b4c7a18f",
+  "native_builds": [
+    {
+      "run": 40312320321,
+      "conclusion": "SUCCESS",
+      "artifact_id": 12645451621,
+      "sha256": "fe9deb5ba7b58d345c4332099d1170b499a6c6f5403c932924f84aaf65db9d3b"
+    },
+    {
+      "run": 40313151012,
+      "conclusion": "SUCCESS",
+      "artifact_id": 12645737134,
+      "sha256": "da4df371de5bcabe1abb0e5fb68b75d06f235b1bde5398c87c4ef3b0c9df2707"
+    }
+  ],
+  "source_manifest": {
+    "architecture": "aarch64",
+    "original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "pinned_isa": "c387163fcbca62701d646149564c550c78a4f985",
+    "client_server_Rust_inner_sha256_verified_both": true
+  },
+  "design": "Bounded 8 due-only records, same-lane original tuple; exact frozen per-lane AEAD/PN, send_one first if lone, genuinely one sendmmsg scatter syscall for 2+ same-lane records; callback GameTx staged debt accepted only after proven synchronous copied prefix, failed suffix abandoned and no PN reuse, FEC parity credited only for definite kernel copies. 20/60ms original due and Go ownership unchanged; no extra threads or queues. Explicit opt-in bundle B only. All code rolled back after no repeatable benefit.",
+  "run_AB": {
+    "id": "W155",
+    "action": 40312815163,
+    "result": "SUCCESS_PASS_SCOPED",
+    "order": "AB",
+    "artifact_id": 12645313624,
+    "zip_sha256": "f4ae0a604a327a45fa65bfb1382bc0e7c37d94f2ae561b5ed0a3ded58b85271e",
+    "request_commit": "fd6d48d12bda2ac5cfed2c922b2b1471ca789d31",
+    "old_total_cpu_s": 70.05,
+    "new_total_cpu_s": 69.54,
+    "new_cpu_change_pct": -0.728,
+    "old_host_psi_mean_peak_pct": [
+      12.738,
+      14.37
+    ],
+    "new_host_psi_mean_peak_pct": [
+      12.1528,
+      14.06
+    ],
+    "damaged_p99_ms": "83.5–83.6",
+    "business_missing_all_zero": true,
+    "copy_four_ranks_planned_actual_equal": true,
+    "parity_planned_sent_equal": true,
+    "go_full_data_copies_after_handoff_zero_both": true,
+    "outer_data_retransmitted_zero": true,
+    "source_tun_fq_root_drops_zero": true,
+    "stop_drained_both": true,
+    "native_group_count": "NOT_OBSERVED_THIS_BINARY"
+  },
+  "run_BA": {
+    "id": "W156",
+    "action": 40313701729,
+    "result": "SUCCESS_PASS_SCOPED",
+    "order": "BA",
+    "artifact_id": 12646501119,
+    "zip_sha256": "1cd5b2c31e277327fa1d9d7b89131ccff3ed7a0a4a26c11d29bbfc6ca2707d83",
+    "request_commit": "12c79acc6179599849e8a74c6dbb245161a378d7",
+    "old_total_cpu_s": 69.84,
+    "new_total_cpu_s": 70.3,
+    "new_cpu_change_pct": 0.659,
+    "old_host_psi_mean_peak_pct": [
+      16.2294,
+      26.07
+    ],
+    "old_host_psi_over20_fraction": "NONZERO_HOST_CONTENTION_OBSERVED",
+    "new_host_psi_mean_peak_pct": [
+      12.1908,
+      14.06
+    ],
+    "damaged_p99_old_new_ms": "83.5/83.4–83.5",
+    "business_missing_all_zero": true,
+    "copy_four_ranks_planned_actual_equal": true,
+    "parity_planned_sent_equal": true,
+    "go_full_data_copies_after_handoff_zero_both": true,
+    "outer_data_retransmitted_zero": true,
+    "source_tun_fq_root_drops_zero": true,
+    "stop_drained_both": true,
+    "native_mmsg_verified_both": true,
+    "per_role_stats": {
+      "client": {
+        "native_calls": 483777,
+        "native_records": 1831620,
+        "native_confirmed": 1831620,
+        "native_partial": 0,
+        "singleton_calls": 355448,
+        "unsent": 0,
+        "largest": 8
+      },
+      "server": {
+        "native_calls": 482946,
+        "native_records": 1832353,
+        "native_confirmed": 1832353,
+        "native_partial": 0,
+        "singleton_calls": 354651,
+        "unsent": 0,
+        "largest": 8
+      }
+    },
+    "delay_copy_due_late_mean_us": {
+      "old_A_client": [
+        3,
+        326,
+        317,
+        331
+      ],
+      "old_A_server": [
+        3,
+        324,
+        319,
+        329
+      ],
+      "new_B_client": [
+        5,
+        401,
+        390,
+        410
+      ],
+      "new_B_server": [
+        5,
+        402,
+        390,
+        412
+      ]
+    },
+    "interpretation": "Genuine high-frequency multirecord sendmmsg (averaging ~3.8 records/call) is proven; near-identical CPU or slight regression in opposite order, delayed copy lateness worsens ~70–82us for positions 2–4, no business p99 regression, one old VM cohort host PSI outlier so no strong improvement attribution"
+  },
+  "common": {
+    "mode": "Game4 fixed6 default stagger 0/4/20/60",
+    "each_direction_mbps": 20,
+    "loss": "independent 30% each physical lane",
+    "one_way_base_ms": 75,
+    "real_udp_only": true,
+    "no_game80_claim": true,
+    "normal_OFF_fixed_auto_new_source_not_qualified": true,
+    "windows": "NOT_RUN/TEMP_SKIPPED"
+  },
+  "decision": "REJECT_P1B_TRUE_NATIVE_MMSG_PERFORMANCE_CANDIDATE_REVERT_SOURCE_AND_HARNESS_KEEP_RETAINED_P2",
+  "reason": "No reproducible CPU improvement after AB/BA, and delayed-copy due lateness rises; extra deferred send ledger, staging and per-lane batch pipeline not justified by this workload. Exact current source files restored to before P1b so no active opt-in surface; actions and immutable frozen artifacts kept for audit.",
+  "rollback_baseline_commit": "4c2f7bd6238ec2253afbd2ca5cec5ccf3051327f",
+  "rollback_commits": {
+    "game_tx_shared": "f952493ea5c1aa9775e78d397d66e7aadd2bec6e",
+    "game_adapter": "2f039407042d30af7fea21025e0bf4a8cdb79d1d",
+    "game_kernel": "6d51817768aa795db13c817b4785cf7924638a91",
+    "harness_config": "d5bc79aacbc7d3cd257601aa3ce69ea8d09a3386",
+    "harness_runner": "7c088884d00cf0e53d55fa36f1dd94610a6180e5",
+    "harness_tests": "7a87dd317bfbb96d2f2a4ecc5e9a1aa89be54061"
+  },
+  "all_rollback_blobs_exact_match_pre_P1B_verified": true,
+  "capacity": {
+    "game4_25_psimean_old_new_pct": [
+      19.2,
+      18.33
+    ],
+    "game4_25_peak_pct": 21.93,
+    "game4_25_over20_fraction": [
+      0.28,
+      0.18
+    ],
+    "stop_higher_Game4": true,
+    "game2_35_pass_UDP_only": true,
+    "game80_NOT_QUALIFIED": true
+  },
+  "next": "Independent shared Normal+Game FEC allocator hotspot sampling only when supported by CPU profile; if needed P1b future redesign should reduce staging/grouping allocation and wait while retaining exact true kernel prefixes, otherwise no repeat. No more trial runs of this P1b candidate.",
+  "merge_ready": false,
+  "capacity_stop": true
+}

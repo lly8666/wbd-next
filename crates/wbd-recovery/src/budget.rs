@@ -92,6 +92,9 @@ struct Pending {
     key: CandidateKey,
     epoch: u64,
     wire_bytes: u64,
+    // Exact token debit, which may be < wire_bytes only for the first
+    // latency-priority repair. NotSent must never mint pacer credit.
+    pacer_debit: u64,
     timeout: MonoNs,
 }
 /// Intentionally O(number_of_pending_reservations) only for rare completion
@@ -111,6 +114,7 @@ pub struct RepairBudget {
     /// epochs until this ledger is retired, never turned into free credit.
     overdue_uncertain_bytes: u64,
     overdue_uncertain_count: u64,
+    opportunistic_v3: bool,
 }
 impl RepairBudget {
     pub fn new(direction: BudgetDirection, cfg: RepairBudgetConfig, now: MonoNs)
@@ -129,13 +133,19 @@ impl RepairBudget {
             pending: BTreeMap::new(), pending_bytes: 0, next_id: 0,
             last_now: now, fractional_token_ns: 0,
             overdue_uncertain_bytes: 0, overdue_uncertain_count: 0,
+            opportunistic_v3: false,
         })
     }
 
+    /// Switch to v3 9% byte credit; the independent historical 10% cap
+    /// remains a strict upper bound (except the explicit sparse floor).
+    pub fn enable_opportunistic_v3(&mut self) { self.opportunistic_v3 = true; }
     fn burst_cap(&self) -> u64 { self.cfg.outer_mtu * 8 }
     fn epoch_limit(&self) -> u64 {
         // The 32KiB sparse allowance is a floor, not an additional bonus.
-        (self.current.fresh / 10)
+        (if self.opportunistic_v3 {
+            self.current.fresh.saturating_mul(9)/100
+        }else{self.current.fresh/10})
             .max(SPARSE_FLOOR_BYTES)
             .min(self.cfg.max_repair_bytes_per_epoch)
     }
@@ -144,7 +154,8 @@ impl RepairBudget {
         // its unused byte allowance into the new epoch.
         let recent_f = self.previous.map_or(self.current.fresh,
             |e| e.fresh.max(self.current.fresh));
-        (recent_f / 10).max(SPARSE_FLOOR_BYTES)
+        (if self.opportunistic_v3 {recent_f.saturating_mul(9)/100}
+            else{recent_f/10}).max(SPARSE_FLOOR_BYTES)
     }
 
     fn advance(&mut self, now: MonoNs) -> Result<(), BudgetError> {
@@ -235,15 +246,25 @@ impl RepairBudget {
         if outer_wire_bytes > available.saturating_sub(self.current.charged) {
             return Err(BudgetError::QuotaExhausted);
         }
-        if outer_wire_bytes > self.tokens { return Err(BudgetError::BurstPaced); }
+        // First-delivery repair outranks smoothing: a stage-0 candidate may
+        // use the already-authorized epoch quota even when the token bucket
+        // is temporarily empty. It drains whatever tokens exist but never
+        // creates token debt. Retry-stage repairs remain strictly paced.
+        let pacer_debit=if candidate.repair_attempt_stage()==0 {
+            self.tokens.min(outer_wire_bytes)
+        }else{
+            if outer_wire_bytes > self.tokens { return Err(BudgetError::BurstPaced); }
+            outer_wire_bytes
+        };
         let id = self.next_id.checked_add(1).ok_or(BudgetError::IdExhausted)?;
         self.next_id = id;
         self.current.charged += outer_wire_bytes; // bounded by the epoch cap
-        self.tokens -= outer_wire_bytes;
+        self.tokens -= pacer_debit;
         self.pending_bytes += outer_wire_bytes; // bounded by configured pending limit
         let timeout = MonoNs(now.0.saturating_add(self.cfg.io_timeout_ns));
         self.pending.insert(ReservationId(id), Pending {
-            key, epoch: self.current.number, wire_bytes: outer_wire_bytes, timeout,
+            key, epoch: self.current.number, wire_bytes: outer_wire_bytes,
+            pacer_debit, timeout,
         });
         Ok(ReservationId(id))
     }
@@ -263,8 +284,9 @@ impl RepairBudget {
             } else if let Some(prev) = &mut self.previous {
                 if p.epoch == prev.number { prev.charged -= p.wire_bytes; }
             }
-            // Returned pacer credit is bounded; no new epoch quota is gained.
-            self.tokens = self.tokens.saturating_add(p.wire_bytes)
+            // Refund only tokens actually debited. A stage-0 priority
+            // reservation made with an empty bucket cannot mint new credit.
+            self.tokens = self.tokens.saturating_add(p.pacer_debit)
                 .min(self.burst_cap());
         }
         Ok(())
@@ -417,22 +439,26 @@ mod tests {
         assert_eq!(b.snapshot().charged_repair_bytes, 1500);
     }
     #[test]
-    fn r2_budget_pacer_eight_mtu_and_unreported_fresh_not_blocked() {
-        let mut b = ledger(1500, 0);
-        for i in 0..8 {
-            let c = candidate(i, 1);
-            let id = b.reserve(&c, 1500, MonoNs(1)).unwrap();
-            b.on_send_result(id, RepairSendResult::Accepted, MonoNs(1)).unwrap();
+    fn r2_budget_single_repair_stage_uses_existing_epoch_quota_without_second_stage(){
+        let mut b=ledger(1500,0);
+        let mut reserved=0usize;
+        for i in 0..21 {
+            let c=candidate(i,2);
+            assert_eq!(c.repair_attempt_stage(),0);
+            let id=b.reserve(&c,1500,MonoNs(2)).unwrap();
+            b.on_send_result(id,RepairSendResult::Accepted,MonoNs(2)).unwrap();
+            reserved+=1;
         }
-        let extra = candidate(8, 1);
-        assert_eq!(b.reserve(&extra, 1500, MonoNs(1)), Err(BudgetError::BurstPaced));
-        b.on_fresh_accepted(5_000_000, MonoNs(2)).unwrap(); // no repair dependency
-        assert_eq!(b.snapshot().fresh_confirmed_bytes, 5_000_000);
-        b.on_timer(MonoNs(5_000_002)).unwrap();
-        assert!(b.snapshot().pacer_tokens <= 12_000);
-        let id = b.reserve(&extra, 1500, MonoNs(5_000_002)).unwrap();
-        b.on_send_result(id, RepairSendResult::Accepted, MonoNs(5_000_002)).unwrap();
+        assert_eq!(reserved,21);
+        assert_eq!(b.snapshot().charged_repair_bytes,31_500);
+        let extra=candidate(99,2);
+        assert_eq!(extra.repair_attempt_stage(),0);
+        assert_eq!(b.reserve(&extra,1500,MonoNs(2)),Err(BudgetError::QuotaExhausted));
+        // Repair accounting never blocks fresh credit acquisition.
+        b.on_fresh_accepted(100,MonoNs(3)).unwrap();
+        assert_eq!(b.snapshot().fresh_confirmed_bytes,100);
     }
+
     #[test]
     fn r2_budget_capacity_timeout_conservative_debt_and_clock_reversal() {
         let mut cfg = cfg(1500);

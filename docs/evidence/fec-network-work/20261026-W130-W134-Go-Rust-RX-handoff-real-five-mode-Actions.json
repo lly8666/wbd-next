@@ -1,0 +1,286 @@
+{
+  "schema": "FEC_W130_W134_GO_RUST_RX_HANDOFF_REAL_ARM64_ACTIONS_V1",
+  "date": "2026-10-26",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "implementation_source": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+  "verified_build": {
+    "run": 40288528399,
+    "attempt": 1,
+    "conclusion": "success",
+    "artifact_id": 12635510007,
+    "zip_sha256": "d3eaaceb84666ed7f754a13e4078559d06a7c369441da32c245e2fdfbf67bb0f",
+    "architecture": "aarch64",
+    "manifest_source_verified": true,
+    "sha256sums_verified": true,
+    "source_of_pinned_original_go": "a7a82db31fe736ffedee330795a3234d358f1984"
+  },
+  "old_compared_source": "f484a4c34e08dcbdfa16beef590d285e9db1ee5f",
+  "old_bundle": {
+    "run": 40281581736,
+    "artifact_id": 12633025294,
+    "zip_sha256": "c22e14a118e29c625f60ec1a60b1b61f2fd2e688ec557afd6ff3b6ba6a5d3d8d"
+  },
+  "cases": [
+    {
+      "id": "W130",
+      "mode": "normal-off",
+      "role_scope": "client+server",
+      "action": 40289408758,
+      "request": "tests/network/fec-work/W130-normal-off-mixed2-common-goRX-oldnew-AB-arm64.json",
+      "request_commit": "5168dac7179680de526bb8fbeb1eacb8f5a30688",
+      "artifact_id": 12635735499,
+      "zip_sha256": "3abda4a7a01d7333f8a9b034cda86c6325915e7c075e8e17f36fae4091346432",
+      "action_conclusion": "success",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "workload": "2Mbps each direction true mixed UDP/TCP, sparse small, clean 25ms one-way, 30s",
+      "order": "AB",
+      "old": {
+        "combined_process_cpu_s": 2.48,
+        "client_cpu_s": 1.23,
+        "server_cpu_s": 1.25,
+        "host_cpu_psi_mean_pct": 17.7633,
+        "host_cpu_psi_peak_pct": 38.83,
+        "host_over20_fraction": 0.3333,
+        "post_handoff_go_data_copies": "NOT_OBSERVED_OLD_SOURCE"
+      },
+      "new": {
+        "combined_process_cpu_s": 1.28,
+        "client_cpu_s": 0.64,
+        "server_cpu_s": 0.64,
+        "host_cpu_psi_mean_pct": 0.0067,
+        "host_cpu_psi_peak_pct": 0.03,
+        "post_handoff_go_data_copies": {
+          "client": 0,
+          "server": 0
+        },
+        "kernel_filtered_lanes_each": 1
+      },
+      "observed_cpu_change_pct": -48.39,
+      "delivered": {
+        "both_phases_udp_injected_delivered_each_direction": "10305/10305",
+        "tcp_injected_delivered_each_direction": "417/417",
+        "business_missing": 0
+      },
+      "outer_data_retransmitted": 0,
+      "stop_clean_both": true,
+      "risk": "Old A host PSI much higher; large observed CPU-s reduction is environment-confounded, not universal 48.4% causal pledge."
+    },
+    {
+      "id": "W131",
+      "mode": "normal-fixed3",
+      "role_scope": "client+server",
+      "action": 40289416487,
+      "request": "tests/network/fec-work/W131-normal-fixed3-IID2-mixed8-common-goRX-newold-BA-arm64.json",
+      "request_commit": "69f83ca8f3ff133094c5f952d7cf4dd0831e751b",
+      "artifact_id": 12635970691,
+      "zip_sha256": "d84c167092f0f00ee7225ab50aba79e22f5db3d3310a492e08bb448e620da78e",
+      "action_conclusion": "success",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "workload": "8Mbps each direction mixed UDP/TCP, IID2% loss, 75ms one-way, 30s",
+      "order": "BA",
+      "old": {
+        "combined_process_cpu_s": 8.25,
+        "client_cpu_s": 4.15,
+        "server_cpu_s": 4.1,
+        "host_cpu_psi_mean_pct": 0.9107,
+        "host_cpu_psi_peak_pct": 0.98,
+        "post_handoff_go_data_copies": "NOT_OBSERVED_OLD_SOURCE"
+      },
+      "new": {
+        "combined_process_cpu_s": 5.44,
+        "client_cpu_s": 2.71,
+        "server_cpu_s": 2.73,
+        "host_cpu_psi_mean_pct": 0,
+        "host_cpu_psi_peak_pct": 0,
+        "post_handoff_go_data_copies": {
+          "client": 0,
+          "server": 0
+        },
+        "kernel_filtered_lanes_each": 1,
+        "real_fec_recovered_to_tun": {
+          "client": 1288,
+          "server": 1386
+        },
+        "fec_tun_write_failed": 0
+      },
+      "observed_cpu_change_pct": -34.06,
+      "delivered": {
+        "udp_c2s": "41224/41224",
+        "udp_s2c": "41223/41223",
+        "tcp_each": "1710/1710",
+        "business_missing": 0
+      },
+      "outer_data_retransmitted": 0,
+      "stop_clean_both": true,
+      "risk": "Counterpart sameVM reverse-order result supports efficiency; stochastic netem and differing host conditions remain, not a guaranteed 34% for other rates."
+    },
+    {
+      "id": "W132",
+      "mode": "normal-auto",
+      "role_scope": "client+server",
+      "action": 40289421675,
+      "request": "tests/network/fec-work/W132-normal-auto-M2-1-5-1-mixed8-common-goRX-arm64.json",
+      "request_commit": "88c14e4973b9bfa489902adf919a6ce0bb3b3fce",
+      "artifact_id": 12636540757,
+      "zip_sha256": "362a65f26712d8a0e182dce28631da05c88ed34a71302999f19abc1786d99171",
+      "action_conclusion": "success",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "workload": "8Mbps each direction true mixed UDP/TCP, real 1%30s->5%60s->1%120s one-way75ms",
+      "order": "A",
+      "new": {
+        "combined_process_cpu_s": 35.43,
+        "client_cpu_s": 17.93,
+        "server_cpu_s": 17.5,
+        "host_cpu_psi_mean_pct": 0,
+        "host_cpu_psi_peak_pct": 0,
+        "post_handoff_go_data_copies": {
+          "client": 0,
+          "server": 0
+        },
+        "kernel_filtered_lanes_each": 1,
+        "real_authenticated_m2_positive_samples": {
+          "client": 315441,
+          "server": 315373
+        },
+        "real_fec_recovered_to_tun": {
+          "client": 6901,
+          "server": 6838
+        },
+        "fec_tun_write_failed": 0,
+        "auto_final": "client/server requested=applied=6 pending=false; profile0 (Light0)",
+        "observed_auto_stage": "one-step successive downward transitions",
+        "rise_observed": false
+      },
+      "delivered": {
+        "tcp_all_phases_missing": 0,
+        "udp_c2s_missing_1_5_1": [
+          0,
+          6,
+          13
+        ],
+        "udp_s2c_missing_1_5_1": [
+          0,
+          0,
+          18
+        ]
+      },
+      "outer_data_retransmitted": 0,
+      "stop_clean_both": true,
+      "risk": "Functional basic feedback/recover/downshift PASS; a distinct rise curve is not demonstrated by this scenario; no sameVM CPU A/B."
+    },
+    {
+      "id": "W133",
+      "mode": "game2-fixed6",
+      "role_scope": "client+server",
+      "action": 40289428390,
+      "request": "tests/network/fec-work/W133-game2-fixed6-clean3-common-goRX-arm64.json",
+      "request_commit": "54e9b3ac461e8d4319e7ce77d20b339204a12232",
+      "artifact_id": 12635309403,
+      "zip_sha256": "7dae8339b22a00a8b56f77bf33e4981064901f82905d0abc8ec62cc96126228b",
+      "action_conclusion": "success",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "workload": "3Mbps each direction true mixed UDP/TCP 75ms clean, 20s",
+      "order": "A",
+      "new": {
+        "combined_process_cpu_s": 2.92,
+        "client_cpu_s": 1.48,
+        "server_cpu_s": 1.44,
+        "host_cpu_psi_mean_pct": 0.0805,
+        "host_cpu_psi_peak_pct": 0.19,
+        "post_handoff_go_data_copies": {
+          "client": 0,
+          "server": 0
+        },
+        "kernel_filtered_lanes_each": 2,
+        "parity_planned_equals_kernel_sent": {
+          "client": "29950/29950",
+          "server": "29939/29939"
+        },
+        "recovered_candidate": 0
+      },
+      "delivered": {
+        "udp_c2s": "11008/11008",
+        "udp_s2c": "11008/11008",
+        "udp_p99_ms_approx": 77.7,
+        "business_missing": 0
+      },
+      "outer_data_retransmitted": 0,
+      "stop_clean_both": true,
+      "risk": "No old/new Game2 CPU comparison; clean FEC parity planned=sent, recovered=0 is expected, not damage recovery qualification."
+    },
+    {
+      "id": "W134",
+      "mode": "game4-fixed6-default-stagger",
+      "role_scope": "client+server",
+      "action": 40289434334,
+      "request": "tests/network/fec-work/W134-game4-fixed6-IID30-10m-common-goRX-oldnew-AB-arm64.json",
+      "request_commit": "243b6f9269b0bc232e538c0238b886ea1c4c56d3",
+      "artifact_id": 12635895602,
+      "zip_sha256": "903171fd4bc209e8811097bbf43aa65dde6b4b45110bb00dfb6fa27d16210ba5",
+      "action_conclusion": "success",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "workload": "10Mbps each direction true UDP 75ms one-way, 30% independent per lane loss, 30s damaged with clean before/after, Game4 0/4/20/60ms",
+      "order": "AB",
+      "old": {
+        "combined_process_cpu_s": 46.46,
+        "client_cpu_s": 23.16,
+        "server_cpu_s": 23.3,
+        "host_cpu_psi_mean_pct": 13.641,
+        "host_cpu_psi_peak_pct": 15.38,
+        "post_handoff_go_data_copies": "NOT_OBSERVED_OLD_SOURCE"
+      },
+      "new": {
+        "combined_process_cpu_s": 31.2,
+        "client_cpu_s": 15.58,
+        "server_cpu_s": 15.62,
+        "host_cpu_psi_mean_pct": 11.572,
+        "host_cpu_psi_peak_pct": 27.7,
+        "host_over20_fraction": 0.16,
+        "post_handoff_go_data_copies": {
+          "client": 0,
+          "server": 0
+        },
+        "kernel_filtered_lanes_each": 4,
+        "physical_positions_planned_equals_sent": true,
+        "physical_copy_abandoned_all": 0,
+        "parity_planned_equals_sent": {
+          "client": "162836/162836",
+          "server": "162848/162848"
+        },
+        "recovered_candidates": {
+          "client": 12353,
+          "server": 12201
+        },
+        "damaged_first_p99_ms": {
+          "c2s": 83.7,
+          "s2c": 83.7
+        }
+      },
+      "observed_cpu_change_pct": -32.85,
+      "delivered": {
+        "damaged_c2s": "57384/57384",
+        "damaged_s2c": "57384/57384",
+        "business_missing": 0
+      },
+      "outer_data_retransmitted": 0,
+      "stop_clean_both": true,
+      "risk": "New B host PSI peak27.7, 16% measurement samples >20; no new 20Mbps or 80Mbps qualification. No TCP mixed at Game4 10Mbps (W133 Game2 clean mixed only)."
+    }
+  ],
+  "checks": {
+    "physical_go_full_packet_redundancy_removed_in_kernel": true,
+    "post_handoff_copies_new_all_modes_zero": true,
+    "outer_data_retransmit_off_new_all": true,
+    "correctness_per_mode_scoped": true,
+    "windows": "NOT_RUN/TEMP_SKIPPED_USER_20261025",
+    "in_process_reconnect_after_detach": "NOT_RUN_SEPARATE_PROCESS_AB_ONLY",
+    "same_tcp_mixed_20mbps": "NOT_RUN",
+    "game4_new_source_20mbps": "NOT_RUN_CAPACITY_STOP",
+    "game2_new_source_30mbps": "NOT_RUN_CAPACITY_STOP",
+    "target_80mbps": "MODEL_ONLY_NOT_QUALIFIED",
+    "rise_curve_normal_auto": "NOT_OBSERVED_THIS_RUN"
+  },
+  "method": "Each Action one concrete scenario; independent VM per Action, two bundles executed sequentially inside AB or BA; stochastic netem trajectories differ even at same seed, host PSI varies. Old A does not emit new readback and must remain NOT_OBSERVED rather than fabricated zero.",
+  "decision": "P0 COMMON GO_RX_HANDOFF KEEP_SCOPED_ARM64_NORMAL_OFF_FIXED_AUTO_GAME2_GAME4; capacity_stop=true; merge_ready=false; P1/P2 Game-only; P3 shared FEC needs Normal and Game evidence."
+}

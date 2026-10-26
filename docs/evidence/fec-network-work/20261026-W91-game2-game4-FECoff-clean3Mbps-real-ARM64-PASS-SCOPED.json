@@ -1,0 +1,138 @@
+{
+  "schema": "W91_GAME_OFF_CLEAN3MBPS_REALS_V1",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "source": "84f3166081350290a6d0f07e4b70ccace09fa44f",
+  "build": {
+    "run": 40212344161,
+    "result": "SUCCESS",
+    "artifact_id": 12605554651,
+    "zip_sha256": "71b9169b320dce1a76b40b79d80261c4d9afd387881038af7dee735636a10f39",
+    "native_game_aead_replay_malformed": "PASS",
+    "fec_native_and_go": "PASS"
+  },
+  "scenario": {
+    "modes": [
+      "game2",
+      "game4"
+    ],
+    "fec": "off",
+    "outer_game_m2_repair": "NOT_APPLICABLE",
+    "each_direction_mbps": 3,
+    "udp_share": 0.96,
+    "tcp_flows": 2,
+    "phase": "clean_baseline",
+    "phase_s": 20,
+    "one_way_ms": 75,
+    "netem_loss_pct": 0,
+    "one_action_per_scenario": true
+  },
+  "game2": {
+    "run": 40212643000,
+    "request_commit": "b56f0f69999b3f2641839cbde98c421ccd5536ab",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "udp_c2s_injected_delivered_mbps": [
+      2.8803412,
+      2.8803412
+    ],
+    "udp_s2c_injected_delivered_mbps": [
+      2.8798264,
+      2.8798264
+    ],
+    "tcp_c2s_injected_delivered_mbps": [
+      0.1198944,
+      0.1198944
+    ],
+    "tcp_s2c_injected_delivered_mbps": [
+      0.1198944,
+      0.1198944
+    ],
+    "p99_ms_udp_c2s_s2c": [
+      77.4,
+      77.4
+    ],
+    "p99_ms_tcp_c2s_s2c": [
+      77.5,
+      77.5
+    ],
+    "cpu_s_client_server": [
+      1.57,
+      1.56
+    ],
+    "cpu_per_effective_GiB_client_server": [
+      224.7909,
+      223.3208
+    ],
+    "rss_peak_bytes_client_server": [
+      25186304,
+      24510464
+    ],
+    "outer_mbps_client_server": [
+      7.3353,
+      7.3318
+    ],
+    "cpu_psi_peak_pct": 0.96,
+    "zero_source_tun_drop": true,
+    "no_tcp_backpressure": true,
+    "stop_drained": true
+  },
+  "game4": {
+    "run": 40212646332,
+    "request_commit": "9bf696d7be14158407b322cf8c8c4b0e68ebad30",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "udp_c2s_injected_delivered_mbps": [
+      2.8803412,
+      2.8803412
+    ],
+    "udp_s2c_injected_delivered_mbps": [
+      2.8798264,
+      2.8798264
+    ],
+    "tcp_c2s_injected_delivered_mbps": [
+      0.1198944,
+      0.1198944
+    ],
+    "tcp_s2c_injected_delivered_mbps": [
+      0.1198944,
+      0.1198944
+    ],
+    "p99_ms_udp_c2s_s2c": [
+      77.6,
+      77.5
+    ],
+    "p99_ms_tcp_c2s_s2c": [
+      77.6,
+      77.7
+    ],
+    "cpu_s_client_server": [
+      2.81,
+      2.82
+    ],
+    "cpu_per_effective_GiB_client_server": [
+      402.3327,
+      403.6952
+    ],
+    "rss_peak_bytes_client_server": [
+      37376000,
+      37261312
+    ],
+    "outer_mbps_client_server": [
+      14.6582,
+      14.6562
+    ],
+    "cpu_psi_peak_pct": 5.09,
+    "zero_source_tun_drop": true,
+    "no_tcp_backpressure": true,
+    "stop_drained": true
+  },
+  "limitations": [
+    "Different VMs: CPU seconds not a valid causal Game2 vs Game4 comparison",
+    "FEC fixed6 public product withdrawn after W90 six genuine failures; NOT_RUN on this new code",
+    "No current Game+FEC product clean qualification",
+    "Windows TEMP_SKIPPED_USER_20261025",
+    "FEC OFF old duplication is not outer repair ledger proof",
+    "No extended disorder/blackhole W91 repeat; original W88 verified on exact older source"
+  ],
+  "capacity_stop": true,
+  "merge_ready": false
+}

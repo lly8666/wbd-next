@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "id": "arm64-off-startup-diagnostic-12s",
+  "run_id": 39761391815,
+  "attempt": 1,
+  "product_source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+  "harness_source": "850042ee8b6e30eb6ca29ba75038f925e5f71e5d",
+  "artifact_id": 12418840250,
+  "artifact_digest": "sha256:13af314cb3ee1e41de6581b89312cef27e30d67a65ece838d9c90ea1e803ce92",
+  "result": "FAIL",
+  "step": "BEFORE_READY",
+  "exit_codes": {
+    "client": 126,
+    "server": 126
+  },
+  "safe_startup_diagnostics": {
+    "client": {
+      "safe_failure_classes": [
+        "KERNEL_DENIED"
+      ],
+      "tun_present": false
+    },
+    "server": {
+      "safe_failure_classes": [
+        "KERNEL_DENIED"
+      ],
+      "tun_present": false
+    }
+  },
+  "interpretation": "Artifact downloaded and hashes verified; chmod 0700 applied to ARM source files but shutil.copyfile to normalized fixed-build recreated 0644 file without exec permission; both processes exit 126. This is a fixture handoff defect, not product throughput evidence.",
+  "cleanup": {
+    "owned_namespaces_absent": true
+  },
+  "next": "fix verified ARM normalized exec mode, regression asserting IXUSR; repeat original sustained case exactly once after fix, no product recompile"
+}

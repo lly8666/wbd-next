@@ -1,0 +1,174 @@
+{
+  "schema": "FEC_W135_W136_GAME_P1A_REAL_RECVMMSG_ABBA_REJECTION_V1",
+  "date": "2026-10-26",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "verified_baseline_source": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+  "trial_source": "bbee28fbef8ad07314886221e9d6e2e738d0e167",
+  "trial_build": {
+    "run": 40291663296,
+    "result": "SUCCESS",
+    "artifact": 12636154049,
+    "zip_sha256": "e4366408b311db2d8364d1e6540b0e3e167c62d8cf494f8c471ce6835c6ed742",
+    "internal_manifest_source_verified": true
+  },
+  "baseline_build": {
+    "run": 40288528399,
+    "result": "SUCCESS",
+    "artifact": 12635510007,
+    "zip_sha256": "d3eaaceb84666ed7f754a13e4078559d06a7c369441da32c245e2fdfbf67bb0f"
+  },
+  "algorithm": "Game4 scoped original Rust per-lane raw RX replaces recv_one_into with real recvmmsg(MSG_DONTWAIT) four 2048-byte stack slots; each result is still separately AEAD/replay-checked and unique TUN delivery-confirmed; no change to TX/PN/parity/copy timing or Go shared handoff",
+  "trials": [
+    {
+      "id": "W135",
+      "run": 40292104571,
+      "request": "tests/network/fec-work/W135-Game4-fixed6-IID30-UDP5Mbps-P1a-RXrecvmmsg-sameVM-BA-ARM64.json",
+      "source_request_commit": "363932ba899be1d9208fb46a3baee2a648f137de",
+      "artifact": 12636900650,
+      "zip_sha256": "c087a7d2cbbd6cc3413faf22e600c635908c05debebf5a84ae484f1b6e9eaa87",
+      "run_result": "PASS_SCOPED_OBSERVATION",
+      "order": "BA",
+      "old": {
+        "cpu_s_both": 19.26,
+        "cpu_s_client": 9.7,
+        "cpu_s_server": 9.56,
+        "peak_rss_bytes": {
+          "client": 41832448,
+          "server": 42795008
+        },
+        "host_cpu_psi_mean_pct": 1.9726,
+        "host_cpu_psi_peak_pct": 2.45
+      },
+      "new": {
+        "cpu_s_both": 19.92,
+        "cpu_s_client": 9.96,
+        "cpu_s_server": 9.96,
+        "peak_rss_bytes": {
+          "client": 41820160,
+          "server": 42356736
+        },
+        "host_cpu_psi_mean_pct": 2.1206,
+        "host_cpu_psi_peak_pct": 2.43,
+        "recvmmsg": {
+          "client_calls": 719406,
+          "server_calls": 718234,
+          "client_observed": 545447,
+          "server_observed": 545389,
+          "client_full4": 23564,
+          "server_full4": 23517,
+          "client_invalid": 0,
+          "server_invalid": 0
+        }
+      },
+      "new_cpu_change_pct": 3.4268,
+      "game4_stagger": {
+        "all_physical_positions_planned_equals_sent": true,
+        "all_abandoned_zero": true
+      },
+      "fec": {
+        "actual_parity_planned_equals_sent_both": true,
+        "positive_recovery_both": true
+      },
+      "business": {
+        "mode": "real UDP-only",
+        "Mbps_each_direction": 5,
+        "damage": "iid30% each lane 75ms one way",
+        "total_missing_both_legs": 0,
+        "damage_first_p99_ms": "83.6–83.7",
+        "outer_data_retransmits": 0,
+        "go_handoff_copies_new_both": 0,
+        "stop_drained_both": true
+      },
+      "interpretation": "Actual native syscall and slot counters show batch mostly does not fill; slightly increased CPU, small PSI difference."
+    },
+    {
+      "id": "W136",
+      "run": 40292711305,
+      "request": "tests/network/fec-work/W136-Game4-fixed6-IID30-UDP5Mbps-P1a-RXrecvmmsg-sameVM-AB-ARM64.json",
+      "source_request_commit": "2074969ff2999782dd786bc6f6e49f8195c63ab9",
+      "artifact": 12636831871,
+      "zip_sha256": "9bf7795e836c15bf7554b211ad21fec83a02855f6763826678251276b1f3eaae",
+      "run_result": "PASS_SCOPED_OBSERVATION",
+      "order": "AB",
+      "old": {
+        "cpu_s_both": 17.25,
+        "cpu_s_client": 8.6,
+        "cpu_s_server": 8.65,
+        "peak_rss_bytes": {
+          "client": 42418176,
+          "server": 42225664
+        },
+        "host_cpu_psi_mean_pct": 1.3674,
+        "host_cpu_psi_peak_pct": 1.75
+      },
+      "new": {
+        "cpu_s_both": 17.61,
+        "cpu_s_client": 8.81,
+        "cpu_s_server": 8.8,
+        "peak_rss_bytes": {
+          "client": 42602496,
+          "server": 41558016
+        },
+        "host_cpu_psi_mean_pct": 1.3108,
+        "host_cpu_psi_peak_pct": 1.73,
+        "recvmmsg": {
+          "client_calls": 757433,
+          "server_calls": 758424,
+          "client_observed": 545018,
+          "server_observed": 545334,
+          "client_full4": 19043,
+          "server_full4": 19114,
+          "client_invalid": 0,
+          "server_invalid": 0
+        }
+      },
+      "new_cpu_change_pct": 2.087,
+      "game4_stagger": {
+        "all_physical_positions_planned_equals_sent": true,
+        "all_abandoned_zero": true
+      },
+      "fec": {
+        "actual_parity_planned_equals_sent_both": true,
+        "positive_recovery_both": true
+      },
+      "business": {
+        "mode": "real UDP-only",
+        "Mbps_each_direction": 5,
+        "damage": "iid30% each lane 75ms one way",
+        "total_missing_both_legs": 0,
+        "damage_first_p99_ms": "83.6–83.8",
+        "outer_data_retransmits": 0,
+        "go_handoff_copies_new_both": 0,
+        "stop_drained_both": true
+      },
+      "interpretation": "Reverse order shows again small CPU regression with nearly same low host CPU PSI; one ABBA pair only."
+    }
+  ],
+  "measured_summary": {
+    "new_game_rx_kernel_calls_w135_total": 1437640,
+    "new_game_rx_observed_w135_total": 1090836,
+    "new_full_four_w135_total": 47081,
+    "new_full_four_w135_call_fraction": 0.03275,
+    "new_game_rx_kernel_calls_w136_total": 1515857,
+    "new_game_rx_observed_w136_total": 1090352,
+    "new_full_four_w136_total": 38157,
+    "new_full_four_w136_call_fraction": 0.02517,
+    "outer_retransmitted_both": 0
+  },
+  "decision": "REJECT_P1A_REVERT_PRODUCT_DATA_PATH",
+  "revert_commit": "3a2a4518b3b5227f55fd2cc4e874c90f4941b2f4",
+  "revert_content_sha": "eee3889ca97bc5d94d0d72884baf96f582e600c7",
+  "reason": "Repeated small CPU regressions +2.1..3.4% with equal first/final business delivery, identical FEC parity and Go handshake. Few full batches; added complexity/stack slots/runtime accounting not compensated. No further P1a rate-pressure tests or speculative 80Mbps.",
+  "harness_note": "Optional historical recvmmsg receipt parser and tests retained for audit of immutable W135/W136; NOT a production RX behavior change after revert.",
+  "qualifications": {
+    "normal_off_fixed_auto": "W130-W132 unchanged qualified product 6c38 scoped",
+    "game2": "W133 unchanged qualified product 6c38 scoped",
+    "game4": "W134 unchanged qualified product 6c38 scoped",
+    "new_game20Mbps": "NOT_QUALIFIED",
+    "windows": "NOT_RUN"
+  },
+  "next": "Move on to Game FEC sparse-close deadline using existing Fec2Owner::next_deadline() and separate low-rate sparse/tail tests; P1 TX sendmmsg requires first resolving exact per-frame kernel accepted prefix and parity copied acknowledgement; P2 independent lane decryption needs shared-lock timing, not assumed root cause.",
+  "host_capacity_stop": true,
+  "merge_ready": false
+}

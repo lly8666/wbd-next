@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "date": "2026-10-24",
+  "prior_w2": {
+    "run": 40077795567,
+    "result": "FAIL_ONE_PENDING",
+    "artifact": 12554116413
+  },
+  "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+  "build": {
+    "run": 40078403217,
+    "artifact": 12554277143,
+    "sha256": "552a9c19ca4b9045cabe08abeed4f80e440f73f8fcc34a5f06670f4450d9fde6",
+    "conclusion": "success"
+  },
+  "prior_native_max_row": {
+    "run": 40078403227,
+    "conclusion": "success"
+  },
+  "case": {
+    "path": "tests/network/fec-work/W3-v3-fixed5-outeroff-mature-witness-arm64.json",
+    "id": "FEC-W3-V3-Fixed5-OuterOff-Clean-Loss5-MatureWitness",
+    "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+    "model": "identical lower-load W2 request except id/source and M2 strict proof bugfix; 2Mbps each, 0 then 5% IID, outer off"
+  },
+  "native_unit_regression": "updated existing ARM64 FEC maximum row workflow with two selected M2 tests",
+  "result": "INTENT"
+}

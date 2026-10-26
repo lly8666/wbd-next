@@ -1,0 +1,95 @@
+{
+  "owner": "fec-network-work",
+  "source": "564490bc7a8f61c9ab06be58add8138212306393",
+  "build_run": 40109847848,
+  "product_artifact": 12566326717,
+  "product_zip_sha256": "a1ce0b81738a9a74ac04835546479ada398e99718fd5086775c0b765625f649c",
+  "host": "GitHub Actions ubuntu-24.04-arm aarch64 4 logical CPU",
+  "fec_profile": "fixed maximum 6 both true applied",
+  "loss_iid_pct": 30,
+  "oneway_delay_ms": 300,
+  "outer_rate_limit_mbps_each": 600,
+  "original_fq600": true,
+  "owned_veth_permanent_neighbour": true,
+  "outer_data_retransmission": "OFF native verified 0 packets",
+  "authenticated_reverse_feedback_real": true,
+  "warmup_s": 15,
+  "measurement_s": 30,
+  "drain_s": 30,
+  "no_source_tun_drops": true,
+  "no_source_fq_root_qdisc_drops": true,
+  "no_RX_capacity_pressure_evictions": true,
+  "no_RX_decoder_capacity_rejects": true,
+  "stop_owned_drained": true,
+  "verdict_scope": "single-arm64-VM original public Linux TUN; not persistent/physical/Windows capacity qualification",
+  "id": "FEC-W28-Maximum200-W26DirectArena-Fixed-OuterOff-ARM64",
+  "request_path": "tests/network/fec-work/W28-maximum200-W26single-static-owned-fq600-arm64.json",
+  "request_commit": "11774fb26d720f99f3c8801c5dfb843498f5dae8",
+  "run_id": 40127866107,
+  "attempt": 1,
+  "result_artifact": 12573539799,
+  "artifact_sha256": "a5937ac9939a1d51c3693099b6a05163e09b2d5fbe9c8fe7c89efe0c4f7d9f53",
+  "result": "FAIL_BOTH_DIRECTIONS_RESIDUAL_GT_1PCT",
+  "stop_heavier_resource_cases": false,
+  "rate_mbps_each": 200,
+  "c2s": {
+    "injected_mbps": 199.995,
+    "delivered_mbps": 191.462,
+    "residual_loss_pct": 4.302,
+    "p99_ms": 312,
+    "missing_after_drain": 25310
+  },
+  "s2c": {
+    "injected_mbps": 199.994,
+    "delivered_mbps": 190.519,
+    "residual_loss_pct": 4.7652,
+    "p99_ms": 312,
+    "missing_after_drain": 28035
+  },
+  "outer_actual_netem_loss_pct": {
+    "client": 29.976035038426577,
+    "server": 29.943933759796554
+  },
+  "cpu_s_30s": {
+    "client": 28.64,
+    "server": 29.08
+  },
+  "host_psi_some_pct": {
+    "mean": 38.376,
+    "peak": 41.19,
+    "over20_fraction": 1
+  },
+  "native_parity": {
+    "client": {
+      "rplanned": 1106096,
+      "rsent": 913794,
+      "queued_expired": 5864,
+      "unknown_capacity": 9320,
+      "parity_seal_fail": 5277,
+      "pressure_jobs": 0,
+      "pressure_sources": 0
+    },
+    "server": {
+      "rplanned": 1106095,
+      "rsent": 893380,
+      "queued_expired": 6541,
+      "unknown_capacity": 10186,
+      "parity_seal_fail": 4945,
+      "pressure_jobs": 0,
+      "pressure_sources": 0
+    }
+  },
+  "RX_peak_active": {
+    "client": 209,
+    "server": 210
+  },
+  "RX_peak_bytes": {
+    "client": 7601833,
+    "server": 7678919
+  },
+  "failures": [
+    "c2s/udp/capacity_200: declared loss allowance exceeded",
+    "s2c/udp/capacity_200: declared loss allowance exceeded"
+  ],
+  "interpretation": "200Mbps/side is not qualified. Parity deadlines under high sender/host CPU contention are the leading directly observed mechanism (17.4/19.2% rows not sent, thousands of expired jobs), not RX pressure or lost source ingress. Single ARM64 shared runner cannot attribute entire cause to engine alone. Stop higher pressure; do not relax loss thresholds."
+}

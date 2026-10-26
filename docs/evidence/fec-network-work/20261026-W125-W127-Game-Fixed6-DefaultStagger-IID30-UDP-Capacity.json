@@ -1,0 +1,265 @@
+{
+  "schema": "W125_W127_GAME_FIXED6_DEFAULT_STAGGER_IID30_CAPACITY_STOP_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "product": {
+    "source": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce",
+    "build_run": 40278857619,
+    "attempt": 1,
+    "binary_artifact": 12631645713,
+    "zip_sha256": "c34b8121ef817294a889f5f0f06eca1ef8e1ddcda3c7a9bf8244a85fb75abfc8",
+    "architecture": "linux-arm64",
+    "game4_schedule_default": "stagger-4-20-60",
+    "game4_rollback": "immediate",
+    "game2_schedule": "immediate",
+    "game_fec": "fixed6 authenticated at BOTH peers",
+    "outer_DATA_retransmission": "OFF verified native 0",
+    "Game_Auto": "OUT_OF_SCOPE",
+    "main_merge": false
+  },
+  "model": {
+    "traffic": "UDP only, each direction offered at rate_mbps_each; actual payload weights 64:6,96:8,160:10,255:8,256:6,257:7,512:10,900:15,1287:30; independent 100Hz small UDP",
+    "path": "75ms one-way; each physical lane independently has 30% random loss; phases clean10s→IID30s→clean10s, warmup10s, drain30s",
+    "envelope": "one immutable request and measurement job per Action; 300Mbps physical lane ceiling to avoid artificial carrier shaping",
+    "gates": "actual app final UDP miss<=1%, real native parity sent, TUN/root drops0, no unauthenticated shortcut; lossless clean before/after"
+  },
+  "results": [
+    {
+      "id": "W125",
+      "mode": "game2",
+      "rate_mbps_each": 20,
+      "run": 40279255953,
+      "artifact_id": 12631142041,
+      "zip_sha256": "4157177755726ea82a7b52dd4dbbdfd6d975c836ae9c10b2d85f1b7ab78d2fc6",
+      "damaged_udp_sent_c2s_s2c": [
+        114758,
+        114760
+      ],
+      "damaged_udp_missing_c2s_s2c": [
+        0,
+        0
+      ],
+      "first_arrival_p99_ms_c2s_s2c": [
+        85,
+        85
+      ],
+      "host_cpu_psi_mean_peak_pct": [
+        11.511,
+        13.16
+      ],
+      "host_cpu_psi_over20_fraction": 0,
+      "process_cpu_s_client_server": [
+        18.3,
+        18.38
+      ],
+      "cpu_s_per_delivered_GiB_client_server": [
+        157.196,
+        157.883
+      ],
+      "rss_peak_MiB_client_server": [
+        26.77,
+        26.81
+      ],
+      "parity_planned_sent_client_server": [
+        305699,
+        305722
+      ],
+      "native_outer_data_retransmitted": 0,
+      "source_TUN_and_root_fq_drops": 0,
+      "native_stop_drained": true,
+      "all_offered_within_clean_p50_plus10_pct_c2s_s2c": [
+        99.715,
+        99.722
+      ]
+    },
+    {
+      "id": "W126",
+      "mode": "game4",
+      "rate_mbps_each": 20,
+      "run": 40279262382,
+      "artifact_id": 12631161973,
+      "zip_sha256": "bb57b3cde6ad00c4daa457af5c51e63b7fec128b091ba729d1b25e5ea7d5041a",
+      "damaged_udp_sent_c2s_s2c": [
+        114778,
+        114763
+      ],
+      "damaged_udp_missing_c2s_s2c": [
+        0,
+        0
+      ],
+      "first_arrival_p99_ms_c2s_s2c": [
+        83.7,
+        83.7
+      ],
+      "host_cpu_psi_mean_peak_pct": [
+        33.2352,
+        42.04
+      ],
+      "host_cpu_psi_over20_fraction": 1,
+      "process_cpu_s_client_server": [
+        39.89,
+        41.04
+      ],
+      "cpu_s_per_delivered_GiB_client_server": [
+        342.66,
+        352.53
+      ],
+      "rss_peak_MiB_client_server": [
+        47.61,
+        49.14
+      ],
+      "parity_planned_sent_client_server": [
+        305688,
+        305672
+      ],
+      "native_outer_data_retransmitted": 0,
+      "source_TUN_and_root_fq_drops": 0,
+      "native_stop_drained": true,
+      "game4_stagger_readback_mode": 1,
+      "game4_native_per_position_scheduled_client_server": [
+        546800,
+        546770
+      ],
+      "game4_native_per_position_sent_client_server": [
+        546800,
+        546770
+      ],
+      "game4_native_per_position_abandoned": 0,
+      "game4_max_lateness_us_client": [
+        0,
+        2832,
+        2940,
+        3069
+      ],
+      "all_offered_within_clean_p50_plus10_pct_c2s_s2c": [
+        99.951,
+        99.939
+      ],
+      "qualification": "PASS_DELIVERY_BUT_HOST_CAPACITY_STOP"
+    },
+    {
+      "id": "W127",
+      "mode": "game2",
+      "rate_mbps_each": 30,
+      "run": 40279738491,
+      "artifact_id": 12631337369,
+      "zip_sha256": "5a61a39bcf0e23dd04ad4e5e1e6335fd6a26000221a08741d2afc66d44c485b5",
+      "damaged_udp_sent_c2s_s2c": [
+        172115,
+        172116
+      ],
+      "damaged_udp_missing_c2s_s2c": [
+        0,
+        0
+      ],
+      "first_arrival_p99_ms_c2s_s2c": [
+        85.3,
+        85.4
+      ],
+      "host_cpu_psi_mean_peak_pct": [
+        18.7362,
+        20.96
+      ],
+      "host_cpu_psi_over20_fraction": 0.08,
+      "process_cpu_s_client_server": [
+        25.68,
+        25.98
+      ],
+      "cpu_s_per_delivered_GiB_client_server": [
+        147.058,
+        148.779
+      ],
+      "rss_peak_MiB_client_server": [
+        27.34,
+        27.57
+      ],
+      "parity_planned_sent_client_server": [
+        448691,
+        448703
+      ],
+      "native_outer_data_retransmitted": 0,
+      "source_TUN_and_root_fq_drops": 0,
+      "native_stop_drained": true,
+      "qualification": "PASS_DELIVERY_BUT_NEAR_HOST_CAPACITY_KNEE_STOP"
+    }
+  ],
+  "pressure": {
+    "decision": "STOP_LOAD_ESCALATION_FOR_THIS_RUNNER",
+    "first_observed": "Game4 at 20Mbps measured host CPU PSI avg33.2352 peak42.04 with 100% of time samples above20%; Game2 at30Mbps mean18.736 peak20.96 and 8% time >20%; despite real full delivery no extra capacity certification",
+    "not_observed": "No Game4 copy abandonment, source TUN or root fq drop, parity missing, native codec reject or stop leak; nonzero FEC RX invalid/conflict NOT equivalent to AEAD failure",
+    "thread_cpu_s_approximately_measured_50s": {
+      "game2_20_client": {
+        "rx_pool": 8.23,
+        "tx_worker": 4.72,
+        "go_process_other_threads": 5.09
+      },
+      "game4_20_client": {
+        "rx_pool": 15.1,
+        "tx_worker": 13.24,
+        "go_process_other_threads": 10.97
+      },
+      "game2_30_client": {
+        "rx_pool": 11.56,
+        "tx_worker": 6.79,
+        "go_process_other_threads": 6.9
+      }
+    },
+    "diagnostic_method": "Existing 1Hz /proc/pid/task CPU ticks, first/last observations in 50s measured stage; non-hotpath numeric data, no packet contents; counts approximate due sampling."
+  },
+  "capacity_design_target_80_NOT_QUALIFIED": {
+    "weighted_sample_size_bytes": 653.57,
+    "estimated_business_pps_at80mbps": 15299,
+    "hold_time_ms": "60ms absolute +5ms after due",
+    "estimated_outstanding_jobs_at80": 995,
+    "Game4_scheduler_job_slots": 4096,
+    "Game4_each_lane_slots": 4096,
+    "Game4_logical_byte_budget": 8388608,
+    "Game4_slab_2048B_count": 4096,
+    "dedup_window_bits": 65536,
+    "all_64B_at80mbps_jobs_needed": 10156,
+    "all_64B_within_this_bound": false,
+    "estimated_game4_raw_copy_pps_at80": "~140k/endpoint from 20Mbps native 4x scaling, projected not measured",
+    "cpu_projection": "20Mbps Game4 ~40 CPU-s/endpoint over50s; naive 80Mbps 4x ~160 CPU-s/endpoint over50s plus Go/host/OS; current VM fails first at 20Mbps host PSI. Need batch/owner synchronization/per-lane work profile on higher-capacity hosts, not blind knob increases.",
+    "unverified_next_bottlenecks": [
+      "Single Game4 TX owner serializes AEAD, 4 independent raw M4 copies and staged parity",
+      "Four Game4 RX workers share authenticated dedup/FEC RX owner mutex despite TUN write split",
+      "Go outer runtime CPU doubles vs Game2 at same business load",
+      "FEC owner pending_jobs64/source_arena128 and actual codec pressure must be rechecked at higher rate, not assumed fit",
+      "Game2 128 slots/lane64 unchanged, zero observed local drops up to30Mbps; do not enlarge blindly"
+    ],
+    "proven_not_bottlenecks_at20": [
+      "Game4 stagger late max <=3.1ms with 0 copy abandon",
+      "Parities rplanned=rsent, recovered candidates positive, no FEC encoder global Game queue starvation",
+      "Actual per-direction UDP total delivered equals offered; small UDP cohorts intact",
+      "TUN and owned Linux fq qdisc drops 0; clean Stop"
+    ]
+  },
+  "tested_steps": [
+    {
+      "mode": "game2",
+      "rate_mbps_each": 20,
+      "action": 40279255953,
+      "actual_delivery": "PASS",
+      "cpu_headroom": "sufficient_only_for_next_30_step"
+    },
+    {
+      "mode": "game4",
+      "rate_mbps_each": 20,
+      "action": 40279262382,
+      "actual_delivery": "PASS",
+      "cpu_headroom": "PASS_DELIVERY_BUT_HOST_CAPACITY_STOP"
+    },
+    {
+      "mode": "game2",
+      "rate_mbps_each": 30,
+      "action": 40279738491,
+      "actual_delivery": "PASS",
+      "cpu_headroom": "PASS_DELIVERY_BUT_NEAR_HOST_CAPACITY_KNEE_STOP"
+    }
+  ],
+  "not_run_due_host_pressure": [
+    "Game4 30–80Mbps",
+    "Game2 40–80Mbps"
+  ],
+  "next_action": "Retain Game4 default 0/4/20/60 with fixed6; no new load on host until CPU/scheduler bottleneck optimized and capacity margin shown; use current exact source/Actions and focused profiling before any further +10Mbps."
+}

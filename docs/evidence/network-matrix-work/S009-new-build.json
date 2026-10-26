@@ -1,0 +1,12 @@
+{
+  "source": "11e9e27e674af92af85cf8e13e41e47ce9e324b4",
+  "run_id": 39770495489,
+  "attempt": 1,
+  "artifact_id": 12422077765,
+  "sha256": "40d06411b4b431882fdb727012e3b859d2cca58932e85ecd0325f8807e321b3b",
+  "manifest_sha256": "5f8d09144cfb9b48f0a394704de7d6000fd4a40e1bec9506209c213b270dcf32",
+  "architecture": "aarch64",
+  "all_binary_hashes_checked": true,
+  "build_conclusion": "success",
+  "scope": "read-only product FEC TX class stats; no hot-path modification"
+}

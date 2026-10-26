@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "scope": "Native Linux ARM64 Normal/off original-Go TLS/raw to Rust authenticated TUN single-inner-TCP 500Mbps application with zero artificial loss RTT400ms",
+  "product_source": "601eab251d4819ec82721d05c71e9cea20c11c0b",
+  "native_build": {
+    "run": 40055776896,
+    "artifact": 12545850127,
+    "sha256": "b631975bd4f70db690f5dcd7acfa122f191675950bd8c835ec0c5185a16ae261"
+  },
+  "action": {
+    "run": 40056105730,
+    "attempt": 1,
+    "request_source": "32e40a6b27beedfcc8196dc0f9fc9feca6fa114d",
+    "artifact": 12545700555,
+    "zip_sha256": "1fe5b395b2cbfc80528de07548f149029e025fbe049b132a3880672cee9ea75d",
+    "locally_verified": true,
+    "result": "success"
+  },
+  "scenario": {
+    "app_business_c2s_target_mbps": 500,
+    "configured_outer_line_capacity_per_direction_mbps": 700,
+    "loss_pct": 0,
+    "oneway_ms": 200,
+    "RTT_ms": 400,
+    "warmup_s": 20,
+    "steady_s": 60,
+    "drain_s": 30,
+    "TUN_txqlen": 1024,
+    "outer_mtu_bytes": 1500,
+    "TUN_mtu_bytes": 1429,
+    "TCP_MSS_bytes": 1377,
+    "actual_TCP_socket_pacing": "NOT_SET",
+    "tcp_autotune_max_bytes": 67108864,
+    "strict_full_run_source_TUN_drop_zero": true,
+    "strict_root_fq_drop_zero": true
+  },
+  "readback": {
+    "product_cli": "OMITTED_USE_NATIVE_DEFAULT",
+    "client": "owned_normal_fq_600Mbit_flow_limit256",
+    "server": "owned_normal_fq_600Mbit_flow_limit256",
+    "fq_maxrate_bytes_sec": 75000000,
+    "fq_flow_limit_packets": 256,
+    "fq_global_limit_packets": 10000
+  },
+  "observed": {
+    "injected_app_mbps": 500.0003584,
+    "delivered_app_mbps": 500.0003584,
+    "missing": 0,
+    "p99_first_arrival_ms": 203.3,
+    "tcp_backpressure": 0,
+    "source_TUN_kernel_drops_warmup_client_server": [
+      0,
+      0
+    ],
+    "source_TUN_kernel_drops_steady_client_server": [
+      0,
+      0
+    ],
+    "root_qdisc_drop_samples_client_server": [
+      [
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "netem_drop_pct": 0,
+    "kernel_TCP_steady_retrans": 0,
+    "outer_repair_bytes": 0,
+    "original_ingress_stage_tcp_records_c2s": 3451998,
+    "source_ingress_loss": 0,
+    "product_CPU_steady60_seconds_client_server": [
+      47.14,
+      63.29
+    ],
+    "server_product_CPU_seconds_per_received_app_GiB": 18.12188568782,
+    "product_peak_RSS_bytes_client_server": [
+      68972544,
+      45510656
+    ],
+    "host_CPU_PSI_peak_pct": 29.33,
+    "host_steal_pct": 0,
+    "Stop_owned_cleanup": true
+  },
+  "result": "PASS_SCOPED_OBSERVATION",
+  "history": "Older flow_limit100 product source8d5 run40055169119 default B passed same TCP500. New flow_limit256 source601e independently preserved this target; no sameVM CPU optimization claim. First flow256 test Action40055987386 was pre-business invalid harness text parsing, not product FAIL.",
+  "not_qualified": [
+    "Linux dual-direction simultaneous500 app",
+    "Windows/physical performance",
+    "FEC fixed/auto/Game",
+    "CPU reduction claim",
+    "500Mbps payload under 2% lossy network"
+  ],
+  "next": "Retain single TCP500 0loss scoped qualification; highloss30 and mixed scoped evidence at prior default flow100 source8d preserved, not auto-promoted to flow256. No extra matrix without a concrete remaining requirement or failure."
+}

@@ -1,0 +1,50 @@
+# W139 deliberately isolated *native receive syscall* 80Mbps/64B pps proxy.
+# Not Game4+fixed6 80Mbps: that full product failed host capacity guard at20.
+# Same ARM64 Actions runner class; one condition, sequential old/new ABBA.
+name: FEC P1a native 80Mbps RX diagnosis
+run-name: "FEC P1a 80Mbps native recvfrom/recvmmsg at ${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/fec-network-tuning]
+    paths:
+      - "crates/wbd-platform/tests/fec_p1a_rx80_diag.rs"
+      - ".github/workflows/fec-p1a-native-rx80-diagnostic.yml"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  rx80-single-condition:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Exact architecture and native four-slot syscall contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --release --locked -p wbd-platform --test fec_p1a_rx80_diag \
+            w139_p1a_native_recvfrom_vs_recvmmsg_80mbps -- --ignored --nocapture \
+            | tee w139-native-rx80.log
+          grep -E 'W139_(SUMMARY|CAPACITY_STOP)' w139-native-rx80.log
+      - name: Persist exact test and host evidence
+        if: always()
+        shell: bash
+        run: |
+          {
+            printf 'source=%s\narchitecture=%s\n' "$GITHUB_SHA" "$(uname -m)"
+            printf 'kernel=%s\n' "$(uname -r)"
+            cat /proc/pressure/cpu
+          } > w139-host.txt
+          sha256sum w139-native-rx80.log w139-host.txt > w139-sha256sums.txt 2>/dev/null || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: "fec-p1a-native-rx80-${{ github.run_id }}-${{ github.run_attempt }}"
+          path: |
+            w139-native-rx80.log
+            w139-host.txt
+            w139-sha256sums.txt
+          retention-days: 30
+          if-no-files-found: warn

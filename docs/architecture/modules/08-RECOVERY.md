@@ -1,5 +1,9 @@
 # 08 真确认、影子缓存与有限快速修复
 
+**当前覆盖规则**：[机会式v3](../../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)已替代本文旧DATA快速恢复、全量shadow、RACK/PTO及残余SLA。只复用真实receipt/质量/固定密文/安全退役/Stop等正确性模块；不要为维持旧实现形式保留无用热路径。当前数值与任务按v3，下面旧实现契约只作历史追溯。
+
+**2026-10-23覆盖说明**：[一次修复决策](../../decisions/NETWORK-ONE-REPAIR-20261023.md)替换本页第二轮修复、动态容量扩缩和旧验收。原始record最多一次实际/不确定网络修复；之后删除修复资格、移交I/O并安全释放payload，不等ACK、不伪造RECEIVED。固定容量上限+按需pool，receipt/质量/外观的最小元数据独立保留。下文旧第二轮条款仅作历史设计，实施者不得重新加回；其余wire、竞态、预算和真实首次交付契约保持。
+
 ## 保存什么
 
 一个lane方向一组ShadowRing（扩容时至多两代），slot按完整PN验证，payload指向FrozenRecord。Entry状态`Ready/Flight/RepairQueued/RepairSending/Received/Abandoned`；终态释放一次。两次上限由实际/不确定提交次数维护，不能仅按进入队列次数增加，也不能syscall不确定时当0次。

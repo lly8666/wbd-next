@@ -1,0 +1,614 @@
+{
+  "schema": "W114_W120_GAME4_FEC_OFF_COPY_STAGGER_AB_SCOPED_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "owner": "fec-network-work",
+  "user_policy": {
+    "scope": "Game4 original-Go TLS, FEC OFF, no Game Auto, outer DATA retrans OFF",
+    "variant_A": "same binary 0/0/0/0ms",
+    "variant_B": "same binary 0/4/20/60ms absolute T0 by fixed physical lane1..4",
+    "default": "immediate unchanged",
+    "windows": "TEMP_SKIPPED",
+    "merge_ready": false,
+    "capacity_stop": true
+  },
+  "product": {
+    "candidate_initial_failed": "205c557841525356a6c5a639d4fa8c689235fb27",
+    "initial_build": 40272713879,
+    "initial_artifact": 12627984275,
+    "initial_zip_sha256": "f26333d3625b40b38b6f0b7dedd1cf14234ced355cf6a2273ab073ebfe81175f",
+    "corrected_source": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
+    "corrected_native_arm64_build": 40273336095,
+    "attempt": 1,
+    "corrected_artifact": 12629261825,
+    "corrected_zip_sha256": "65b6a6c34e3115f53c90c71274f48c39bf4e2230e10206353c8b936ffbaa3f90",
+    "modified_code": "Game4 data-replica due-time 4 FIFO heads, stable physical lane rank; shared payload and 1024 bounded arena, native 21-field copy readback; no Game2/Normal/Go TLS/crypto/protocol/outer recovery change",
+    "native_contracts": "88ec build full native including 2 Game4 stagger exact synthetic due/Stop/FIFO tests, existing TUN-after-write commit tests PASS; dfb383 predecessor build 40273277427 FAILED overlapping FIFO/abandon regression due previous rotating lane bug",
+    "no_extra_product_build_in_measurement": true
+  },
+  "work_harness": {
+    "one_performance_action_one_scenario_job": true,
+    "one_vm_AB": true,
+    "order": "AB",
+    "rate_mbps_each_direction": 3,
+    "underlay_one_way_ms": 75,
+    "traffic": "96% UDP plus two real inner TCP streams, mixed sizes and 20Hz independent sparse probe",
+    "native_off_both": true,
+    "outer_retransmitted_actual_zero": true,
+    "game_auto": false,
+    "no_fec_parity": true
+  },
+  "results": {
+    "W114": {
+      "run_id": 40273064043,
+      "source": "205c557841525356a6c5a639d4fa8c689235fb27",
+      "artifact": 12629480875,
+      "zip_sha256": "2e1e07d20c503fba0b68ff37be49c5200ae4cd9253f0993b3bcbadbfe547e88e",
+      "github_conclusion": "success",
+      "true_qualification": "FAIL_FALSE_GREEN_NATIVE_COPY_DEADLINE",
+      "A_udp_p99_ms": [
+        77.5,
+        77.5
+      ],
+      "B_udp_p99_ms": [
+        136.4,
+        136.4
+      ],
+      "B_client_planned_each": 21677,
+      "B_client_sent": [
+        12,
+        8,
+        109,
+        21675
+      ],
+      "B_client_abandoned": [
+        21665,
+        21668,
+        21568,
+        0
+      ],
+      "reason": "rotating physical rank creates per-lane inverted due; unacceptable even if final business missing=0",
+      "do_not_reuse": true
+    },
+    "W115": {
+      "run_id": 40273831715,
+      "artifact": 12628764755,
+      "zip_sha256": "de79088da5fd8add4fe370b9a51ecf02fdf0eed5a604993aff423480159e9871",
+      "both": "PASS_SCOPED",
+      "no_loss_udp_tcp_missing_both": 0,
+      "udp_first_p99_ms_A_B": [
+        [
+          77.5,
+          77.5
+        ],
+        [
+          75.5,
+          75.5
+        ]
+      ],
+      "B_client_planned": [
+        21859,
+        21859,
+        21859,
+        21859
+      ],
+      "B_client_sent": [
+        21859,
+        21857,
+        21857,
+        21857
+      ],
+      "B_abandoned_all": 0,
+      "mean_due_lateness_us_B": [
+        0,
+        439,
+        492,
+        498
+      ],
+      "max_late_us_B": [
+        0,
+        1175,
+        1157,
+        1192
+      ],
+      "measurement_cpu_s_A_B": [
+        [
+          2.25,
+          2.28
+        ],
+        [
+          2.65,
+          2.69
+        ]
+      ],
+      "cpu_cost_combined_pct_increase": 17.9,
+      "rss_peak_bytes_A_client_server": [
+        37675008,
+        37949440
+      ],
+      "rss_peak_bytes_B_client_server": [
+        40292352,
+        39911424
+      ],
+      "host_psi_peak_A_B_pct": [
+        3.84,
+        1.92
+      ]
+    },
+    "W116": {
+      "run_id": 40274218131,
+      "artifact": 12629293510,
+      "zip_sha256": "ff8a4bb89b70824e2d7613fa983cb7d99fdc288b0dd9e030617edd9bae000313",
+      "both": "PASS_SCOPED",
+      "model": "each lane IID5%, clean-before/hit/clean-after",
+      "udp_tcp_missing_all_phases_both": 0,
+      "damaged_udp_p99_A_B_ms": [
+        [
+          77.5,
+          77.5
+        ],
+        [
+          80.1,
+          80.2
+        ]
+      ],
+      "B_all_positions_abandoned": 0,
+      "measurement_cpu_sum_A_B_s": [
+        13.31,
+        16.73
+      ],
+      "cpu_increase_pct": 25.7,
+      "rss_peak_bytes_A": [
+        38125568,
+        38047744
+      ],
+      "rss_peak_bytes_B": [
+        39653376,
+        39870464
+      ],
+      "interpretation": "No observed IID final delivery gain, delayed recovery cost and extra CPU"
+    },
+    "W117": {
+      "run_id": 40274222187,
+      "artifact": 12629293605,
+      "zip_sha256": "d2d0dc8bad4b1fef77875bc6223def8a5822f6c275804faf721fbc66df5a0f54",
+      "both": "PASS_SCOPED_CLEAN_AND_NATIVE; GE high loss explicitly observational strict1pct exceeded A only",
+      "model": "one shared root packet-driven GE [3,17,100,0], 45s, both directions, 3Mbps",
+      "udp_damaged_A_missing_sent": [
+        [
+          2122,
+          24784
+        ],
+        [
+          2097,
+          24785
+        ]
+      ],
+      "udp_damaged_B_missing_sent": [
+        [
+          22,
+          24785
+        ],
+        [
+          14,
+          24785
+        ]
+      ],
+      "udp_damaged_A_loss_pct": [
+        8.56198,
+        8.46076
+      ],
+      "udp_damaged_B_loss_pct": [
+        0.08876,
+        0.05649
+      ],
+      "B_native_planned_sent_equal_all_positions": true,
+      "B_abandoned": 0,
+      "tcp_damaged_p99_A_ms": [
+        1052.6,
+        623.5
+      ],
+      "tcp_damaged_p99_B_ms": [
+        97,
+        135.8
+      ],
+      "measurement_cpu_sum_A_B_s": [
+        16.64,
+        17.68
+      ],
+      "rss_peak_A": [
+        37949440,
+        37224448
+      ],
+      "rss_peak_B": [
+        40177664,
+        40177664
+      ],
+      "host_psi_peak_A_B_pct": [
+        1.91,
+        1.14
+      ],
+      "clean_baseline_A_udp_p50_ms": [
+        76.5,
+        76.4
+      ],
+      "all_offered_udp_timely_pct": {
+        "base_plus10_ms": {
+          "A": [
+            91.438,
+            91.539
+          ],
+          "B": [
+            96.817,
+            96.688
+          ]
+        },
+        "base_plus30_ms": {
+          "A": [
+            91.438,
+            91.539
+          ],
+          "B": [
+            99.58,
+            99.471
+          ]
+        },
+        "base_plus60_ms": {
+          "A": [
+            91.438,
+            91.539
+          ],
+          "B": [
+            99.75,
+            99.754
+          ]
+        },
+        "base_plus100_ms": {
+          "A": [
+            91.438,
+            91.539
+          ],
+          "B": [
+            99.911,
+            99.944
+          ]
+        }
+      },
+      "qualification_scope": "Unseeded actual netem GE trajectories not identical even same VM; do not claim bit-for-bit replay nor real-time 50ms blackout equivalent"
+    },
+    "W118": {
+      "run_id": 40274484806,
+      "artifact": 12629179249,
+      "zip_sha256": "5c300cc69691d39f435f316a687a902e9bee4d82a0c783cf4a0601a9eb845066",
+      "both": "PASS_SCOPED",
+      "model": "wall-clock 20ms commanded shared all-lane blackouts, 3 pulses / leg, actual kernel-rule observed interval ~22.5..25.45ms",
+      "udp_damage_A_missing": [
+        54,
+        48
+      ],
+      "udp_damage_B_missing": [
+        0,
+        0
+      ],
+      "B_client_abandoned": [
+        49,
+        52,
+        32,
+        32
+      ],
+      "B_server_abandoned": [
+        48,
+        52,
+        36,
+        35
+      ],
+      "measurement_cpu_sum_A_B_s": [
+        12.25,
+        13.3
+      ],
+      "host_psi_peak_A_B_pct": [
+        1.67,
+        1
+      ],
+      "all_offered_plus10_pct_A": [
+        [
+          99.693,
+          99.727
+        ]
+      ],
+      "all_offered_plus10_pct_B": [
+        [
+          99.796,
+          99.796
+        ]
+      ],
+      "all_offered_plus30_pct_B": [
+        [
+          100,
+          100
+        ]
+      ]
+    },
+    "W119": {
+      "run_id": 40274488003,
+      "artifact": 12630106027,
+      "zip_sha256": "917c1f49663d2935eead6b797cb73fec17618a8b6f240035f1ad6322f938313a",
+      "both": "PASS_SCOPED_WITH_HOST_WARNING_A",
+      "model": "wall-clock 50ms commanded, actual observed ~51.99..59.32ms",
+      "udp_damage_A_missing": [
+        96,
+        89
+      ],
+      "udp_damage_B_missing": [
+        0,
+        0
+      ],
+      "B_client_abandoned": [
+        94,
+        94,
+        96,
+        70
+      ],
+      "B_server_abandoned": [
+        93,
+        95,
+        95,
+        70
+      ],
+      "measurement_cpu_sum_A_B_s": [
+        12.74,
+        13.36
+      ],
+      "host_psi_peak_A_B_pct": [
+        34.56,
+        1.16
+      ],
+      "cpu_causal_comparison": "INCONCLUSIVE_HOST_SPIKE_A",
+      "all_offered_plus10_pct_A": [
+        99.455,
+        99.495
+      ],
+      "all_offered_plus10_pct_B": [
+        99.574,
+        99.58
+      ],
+      "all_offered_plus100_pct_B": [
+        100,
+        100
+      ]
+    },
+    "W120": {
+      "run_id": 40274491798,
+      "artifact": 12629049570,
+      "zip_sha256": "5d3e526fd42007172722f01625504a6b9b9fa259da98fb7512d9558836a8faec",
+      "both": "PASS_SCOPED; >60ms blackhole OUTSIDE guaranteed coverage",
+      "model": "wall-clock 100ms commanded, actual observed ~104.26..109.64ms",
+      "udp_damage_A_missing": [
+        169,
+        174
+      ],
+      "udp_damage_B_missing": [
+        74,
+        69
+      ],
+      "B_client_abandoned": [
+        186,
+        193,
+        194,
+        167
+      ],
+      "B_server_abandoned": [
+        180,
+        191,
+        193,
+        166
+      ],
+      "measurement_cpu_sum_A_B_s": [
+        13.03,
+        13.34
+      ],
+      "host_psi_peak_A_B_pct": [
+        1.93,
+        1
+      ],
+      "all_offered_plus10_pct_A": [
+        99.04,
+        99.012
+      ],
+      "all_offered_plus10_pct_B": [
+        99.024,
+        99.052
+      ],
+      "all_offered_plus100_pct_B": [
+        99.58,
+        99.608
+      ]
+    },
+    "W121": {
+      "run_id": 40275115928,
+      "artifact": 12630011779,
+      "sha256": "09a46593d31c7ba8fa419065673cd1dbfc6308d187f0679b0517a71ca8720b14",
+      "result": "A_B_PASS_SCOPED",
+      "scenario": "80Kbps sparse each direction",
+      "udp_offered_each": 350,
+      "udp_missing_both": 0,
+      "udp_p99_A_B_ms": [
+        [
+          77.5,
+          77.5
+        ],
+        [
+          75.6,
+          75.6
+        ]
+      ],
+      "native_B_abandoned": 0,
+      "cpu_total_A_B_s": [
+        0.49,
+        0.61
+      ]
+    },
+    "W122": {
+      "run_id": 40275119203,
+      "artifact": 12629083925,
+      "sha256": "c0e1786c110859b9d23f73196f24ec031d3aebb2b8a46faf06ede32081468e83",
+      "result": "A_B_PASS_SCOPED",
+      "scenario": "unilateral 3Mbps C2S (reverse application payload zero; TCP ACK real)",
+      "udp_missing_both": 0,
+      "udp_p99_A_B_ms": [
+        77.5,
+        75.5
+      ],
+      "native_B_abandoned": 0,
+      "cpu_total_A_B_s": [
+        2.56,
+        2.73
+      ]
+    },
+    "W123": {
+      "run_id": 40275123558,
+      "artifact": 12629374866,
+      "result": "ANALYZER_FALSE_NEGATIVE_B_NATIVE_ABANDONED_EXPECTED_BLACKHOLE_LANE1",
+      "note": "A and B UDP/TCP delivered without missing; old universal 98% copy success gate incorrectly rejects intentional kernel failure of physically blocked lane1. Original failure retained."
+    },
+    "W123R": {
+      "run_id": 40275737023,
+      "artifact": 12630705647,
+      "sha256": "6653e5fe16c542dbdf4fd9eddf4601c788ab457ef0fcafc1b3b7b52c0ab2f899",
+      "result": "A_B_PASS_SCOPED",
+      "scenario": "lane1 blackhole while other 3 independent lanes usable, native gate exception limited exclusively to explicitly blocked physical lane",
+      "udp_missing_both": 0,
+      "udp_p99_A_B_ms": [
+        [
+          77.5,
+          77.5
+        ],
+        [
+          80.4,
+          80.4
+        ]
+      ],
+      "B_abandoned_client": [
+        18688,
+        0,
+        0,
+        0
+      ],
+      "B_abandoned_server": [
+        18674,
+        0,
+        0,
+        0
+      ],
+      "B_lanes_2_to_4_valid": true,
+      "cpu_total_A_B_s": [
+        13.11,
+        14.8
+      ],
+      "stop_drained": true
+    },
+    "W124": {
+      "run_id": 40276707466,
+      "attempt": 1,
+      "artifact": 12630397812,
+      "zip_sha256": "ce6dc3544304550b7cc3d2df99b8a4ce4d8f4564b438d5bc6a32f5bed22ad506",
+      "source": "4b390154b9f24e76b1592e4acb27565a00ea8113",
+      "build_run": 40276313079,
+      "build_artifact": 12630800961,
+      "binary_zip_sha256": "0019ab8203daa09c4e3e273190a94d0db54d7ef439823baed9ec3d15137b5244",
+      "result": "A_B_PASS_SCOPED_CLEAN3MBPS_AFTER_CAPACITY_FIX",
+      "udp_sent_A_both": [
+        11008,
+        11008
+      ],
+      "udp_sent_B_both": [
+        11009,
+        11009
+      ],
+      "udp_tcp_missing_all": 0,
+      "first_udp_p50_p95_p99_A_ms": [
+        76.4,
+        77.2,
+        77.5
+      ],
+      "first_udp_p50_p95_p99_B_ms": [
+        75.3,
+        75.5,
+        75.5
+      ],
+      "B_client_planned": [
+        21837,
+        21837,
+        21837,
+        21837
+      ],
+      "B_client_sent": [
+        21837,
+        21835,
+        21835,
+        21835
+      ],
+      "B_server_planned": [
+        21847,
+        21847,
+        21847,
+        21847
+      ],
+      "B_server_sent": [
+        21847,
+        21845,
+        21845,
+        21845
+      ],
+      "B_abandoned_all": 0,
+      "B_mean_due_late_us_client": [
+        0,
+        449,
+        488,
+        508
+      ],
+      "CPU_s_A_B": [
+        4.54,
+        5.29
+      ],
+      "RSS_peak_MiB_A_client_server": [
+        36.37,
+        35.82
+      ],
+      "RSS_peak_MiB_B_client_server": [
+        38.21,
+        37.94
+      ],
+      "Stop_drained": true,
+      "outer_DATA_retransmits": 0,
+      "qualification": "NEW native 1024-saturation regression + matched clean business only; do NOT infer W117/W118-W120 impairment re-ran on 4b390 source"
+    }
+  },
+  "integrity": "W115-W120 current product actual outer DATA retransmits=0 both endpoints, FEC OFF, source TUN and owned fq root drops0, application TCP genuine and no high-phase backpressure, Stop drained; W117 packet_GE and wall-time blackout are distinct models; W118-W120 blackhole events record actual monotonic begin/end per direction and command uncertainty (~2-3ms). Copied but intentionally abandoned future lane work is PRODUCT-side abandonment not line loss; no claim all copy planned always sent under blackout.",
+  "boundaries": [
+    "Only Linux ARM64 original TLS and fixed 3Mbps/side mixed; NOT Windows/physical/UI",
+    "100Mbps 64B PPS exceeds present 1024 logical work cap; no extra high load due capacity_stop",
+    "W119 host PSI A 34.56% warns against CPU gain causal claim",
+    "CDF all-offered denom sampled to 1ms precision through250ms, threshold uses same VM A clean baseline p50 and floors ms. Never only survivor denominator",
+    "Old W114 Action green but unacceptable native copy send contract; retained negative",
+    "W121 sparse, W122 one-way, W123R disabled lane1 all A/B exact-source 88ec native PASS; original W123 strict parser false-negative preserved.",
+    "4b390 native pressure-first guard is a NEW product binary. Earlier network results do not qualify it before W124 same-binary smoke.",
+    "Capacity-guard 4b390 source requalified on exact W124 lossless A/B, NOT rerun shared GE or 20/50/100ms damage matrix. Such unchanged hotpath function behavior remains 88ec's source-specific evidence, not direct new-source measurements."
+  ],
+  "intended_decision": "RETAIN_042060_AS_OPTIONAL_ANTI_CORRELATED_BURST; KEEP_DEFAULT_IMMEDIATE_0000; NO_MAIN_MERGE; NO_AUTO_TUNE",
+  "devlog": "docs/devlog/fec-network-work/20261026-Game4-FECoff-copy-stagger-candidate-W114-W120.md",
+  "capacity_stop": true,
+  "merge_ready": false,
+  "latest_capacity_guard": {
+    "source": "4b390154b9f24e76b1592e4acb27565a00ea8113",
+    "build_run": 40276313079,
+    "build_artifact": 12630800961,
+    "build_zip_sha256": "0019ab8203daa09c4e3e273190a94d0db54d7ef439823baed9ec3d15137b5244",
+    "result": "ARM64_NATIVE_BUILD_AND_1024_SLOT_SATURATION_REGRESSION_PASS; W124_EXACT_SOURCE_NO_LOSS_AB_IN_PROGRESS",
+    "notes": "Only Game4 stagger capacity-limit branch: cancel oldest queued duplicate references from four FIFO heads before allocating a new logical first, accounted as local abandon; no normal-traffic loop scan.",
+    "status": "ARM64_NATIVE_CAPACITY_REGRESSION_AND_W124_EXACT_SOURCE_CLEAN_AB_PASS_SCOPED",
+    "network_run": 40276707466,
+    "network_artifact": 12630397812,
+    "network_zip_sha256": "ce6dc3544304550b7cc3d2df99b8a4ce4d8f4564b438d5bc6a32f5bed22ad506"
+  }
+}

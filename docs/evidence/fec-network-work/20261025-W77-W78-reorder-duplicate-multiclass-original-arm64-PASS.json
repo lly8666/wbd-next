@@ -1,0 +1,261 @@
+{
+  "schema": "FEC_BOUNDED_POST_SELF_OVERLOAD_REGRESSION_W77_W78",
+  "date_utc": "2026-10-25",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "scope": "original Linux ARM64 Fixed medium with authenticated TLS native FEC, no mainline merge, real outer DATA repair OFF",
+  "decision": "W77_TRUE_MIXED_REORDER_DUPLICATE_ODD_LENGTH_PASS_SCOPED_AND_W78_MULTI_CLASS_NATIVE_REVISION_TEST_PASS",
+  "w77": {
+    "request": "tests/network/fec-work/W77-fixed-medium5-reorder-duplicate-oddsize-arm64.json",
+    "request_commit": "89e7ffb64e9e04230ff0c4ed366740bf82f4add9",
+    "contract_action": 40189681393,
+    "contract_result": "success",
+    "performance_action": 40189681443,
+    "action_result": "success",
+    "artifact_id": 12597329553,
+    "artifact_zip_sha256": "efd73dc976e16e96ce3d9df2c39329ce3620deb3cff967806920eef3ea89bbc4",
+    "native_product_source": "7ad0ba91b656ff8e9ee965d0c093a18e048971fb",
+    "native_build_run": 40185113624,
+    "native_build_artifact": 12596370712,
+    "native_build_sha256": "ab1407ccc5dd85c3a66c885cd410dbdd27fa7059461f18647d8ca6b41ce7384e",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "failure_list": [],
+    "warning_list": [
+      "HOST_CONTENTION_OBSERVED; no CPU capacity conclusion from one PSI sample"
+    ],
+    "host_arch": "aarch64",
+    "measured_seconds": 110,
+    "app_rate_mbps_each": 8,
+    "udp_fraction": 0.96,
+    "tcp_fraction": 0.04,
+    "real_TCP_sockets_per_direction": 2,
+    "app_sizes_bytes": [
+      64,
+      65,
+      127,
+      255,
+      256,
+      257,
+      511,
+      512,
+      513,
+      899,
+      900,
+      901,
+      1287
+    ],
+    "sparse_64B_probe_hz": 20,
+    "network_phases": [
+      {
+        "name": "clean_before",
+        "s": 20,
+        "oneway_delay_ms": 75,
+        "netem_random_loss_pct": 0
+      },
+      {
+        "name": "reorder_duplicate_loss",
+        "s": 60,
+        "oneway_delay_ms": 75,
+        "jitter_ms": 15,
+        "netem_loss_pct": 5,
+        "reorder_pct": 10,
+        "duplicate_pct": 2,
+        "actual_netem_loss_pct": {
+          "client": 4.89457796937578,
+          "server": 4.842722222475818
+        }
+      },
+      {
+        "name": "clean_after",
+        "s": 30,
+        "oneway_delay_ms": 75,
+        "netem_loss_pct": 0
+      }
+    ],
+    "udp_delivery": {
+      "c2s": [
+        {
+          "sent": 41468,
+          "missing": 0,
+          "p99_ms": 76.3
+        },
+        {
+          "sent": 124328,
+          "missing": 6,
+          "p99_ms": 98.9
+        },
+        {
+          "sent": 62186,
+          "missing": 0,
+          "p99_ms": 76.4
+        }
+      ],
+      "s2c": [
+        {
+          "sent": 41469,
+          "missing": 0,
+          "p99_ms": 76.4
+        },
+        {
+          "sent": 124327,
+          "missing": 2,
+          "p99_ms": 98.3
+        },
+        {
+          "sent": 62186,
+          "missing": 0,
+          "p99_ms": 76.3
+        }
+      ]
+    },
+    "tcp_delivery": {
+      "c2s": {
+        "all_phases_missing": 0,
+        "stress_p99_ms": 164.1,
+        "sustained_app_mbps": 0.32
+      },
+      "s2c": {
+        "all_phases_missing": 0,
+        "stress_p99_ms": 189.8,
+        "sustained_app_mbps": 0.32
+      }
+    },
+    "small_udp_stress": {
+      "c2s": {
+        "sent": 52206,
+        "missing": 3,
+        "p99_ms": 98.5
+      },
+      "s2c": {
+        "sent": 52206,
+        "missing": 0,
+        "p99_ms": 97.6
+      }
+    },
+    "independent_sparse64_stress": {
+      "c2s": {
+        "sent": 1190,
+        "missing": 0
+      },
+      "s2c": {
+        "sent": 1191,
+        "missing": 1
+      }
+    },
+    "actual_application_duplicate_deliveries": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "actual_application_reordered_udp_stress": {
+      "c2s": 112298,
+      "s2c": 112224
+    },
+    "native_fixed_readback": {
+      "client": {
+        "requested": 1,
+        "applied": 1,
+        "profile": 2,
+        "pending": false
+      },
+      "server": {
+        "requested": 1,
+        "applied": 1,
+        "profile": 2,
+        "pending": false
+      }
+    },
+    "native_parity_planned_sent": {
+      "client": [
+        108449,
+        108449
+      ],
+      "server": [
+        108504,
+        108504
+      ]
+    },
+    "native_fec_RX_recovered_and_TUN_delivered": {
+      "client": 9374,
+      "server": 9510
+    },
+    "native_RX_capacity": {
+      "client": {
+        "reject_capacity": 0,
+        "pressure_evicted": 0,
+        "reject_conflict": 2913,
+        "age_evicted": 21957,
+        "peak_stored_bytes": 295970
+      },
+      "server": {
+        "reject_capacity": 0,
+        "pressure_evicted": 0,
+        "reject_conflict": 2883,
+        "age_evicted": 21875,
+        "peak_stored_bytes": 294289
+      }
+    },
+    "original_native_m2": {
+      "client": {
+        "positive_samples": 251588,
+        "positive_mean_us": 138565,
+        "reverse_reports": 40519
+      },
+      "server": {
+        "positive_samples": 251807,
+        "positive_mean_us": 138525,
+        "reverse_reports": 40629
+      }
+    },
+    "sender_source_tun_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "root_tun_qdisc_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "outer_data_retransmitted": 0,
+    "real_stop_drain_clean": true,
+    "measured_process_cpu_s_110s": {
+      "client": 19.28,
+      "server": 19.27
+    },
+    "peak_rss_bytes": {
+      "client": 23875584,
+      "server": 23977984
+    }
+  },
+  "w78": {
+    "source_commit": "4a77104b23363bc1d1802223643d6ab441d7f019",
+    "changed_paths": [
+      "crates/wbd-engine/src/v4_fixed_stream.rs"
+    ],
+    "test_name": "m0_auto_prior_three_classes_sealed_same_owner_no_cross_revision_parity",
+    "native_maxrow_and_fixed_stream_tests_action": 40189755295,
+    "tests_result": "success",
+    "native_full_arm64_build_action": 40189755361,
+    "build_result": "success",
+    "build_artifact_id": 12596464645,
+    "build_artifact_zip_sha256": "2a02a7398f9d716243f8172d918789ead98220d9805e3c1e25676407067b072f",
+    "assertions": [
+      "3 simultaneously open original FEC classes with sizes65/300/1100 preserve old Strong rev10 parity under reprofile rev11",
+      "second rev12 cannot cross undrained old rev10 parity and returns Busy",
+      "new fresh source after rev11 retains next monotonic owner block ID4",
+      "each original old parity row uses old rev10 and actual_k1, not rev11/12 matrix",
+      "after old parity drains rev12 legal and rev11 parity remains rev11",
+      "idempotent Stop and original arena loan_count0"
+    ],
+    "product_runtime_changed_by_W78": false
+  },
+  "qualifications": [
+    "W77 true netem duplicate/reorder plus code-genuine FEC RX rejects 2913/2883 conflicting/duplicate candidates; do NOT claim native reject_conflict zero or infer data corruption. No duplicate application delivery observed.",
+    "W77 receiver age eviction 21957/21875 is time-based bounded retirement, NOT capacity pressure; capacity and pressure-eviction counters stay zero.",
+    "These are 8Mbps representative original Linux ARM64 only. W77 uses FEC prior frozen source7ad0; W78 build source4a77 contains additional unit test, not a new comparative product candidate.",
+    "W77 stresses stochastic IID 5% plus reorder/jitter/dup; it is NOT a Gilbert-Elliott correlated-loss trial, nor real 65KiB FEC TUN, Windows or Game product integration.",
+    "Existing W75 own-host load policy PASS is separate from W77 product no-loss service; no universal capacity or remote receiver-overrun guarantee.",
+    "Full merge-ready false; capacity_stop true; no main/other owner code touched."
+  ],
+  "merge_ready": false,
+  "capacity_stop": true,
+  "scoped_integration_review_ready": true
+}

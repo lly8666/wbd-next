@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "id": "P1-Normal2pct-sparseburst-AB-negative-blockreason-intent-20261023",
+  "action": {
+    "run_id": 39896018098,
+    "attempt": 1,
+    "harness_source": "cfac7d71745bc99aba04418740651bd168549521",
+    "artifact_id": 12476398356,
+    "artifact_sha256": "634e8d3ca55d730c94b214b4fccaa7815c9b195d55ad86ab73100cd4a17de93b",
+    "conclusion": "failure"
+  },
+  "scenario": {
+    "same_vm": true,
+    "order": "AB",
+    "mode": "normal",
+    "loss_pct": 2,
+    "one_way_ms": 200,
+    "steady_s": 60,
+    "seed": 5205
+  },
+  "A": {
+    "source": "21b1a9c1001c93497376de9cd052e37d0d7f2aec",
+    "udp_missing": {
+      "c2s": 150,
+      "s2c": 139
+    },
+    "udp_loss_pct": {
+      "c2s": 2.5493,
+      "s2c": 2.3623
+    },
+    "tcp_p99_ms": {
+      "c2s": 4543.3,
+      "s2c": 4281.3
+    },
+    "repair": {
+      "client": 681,
+      "server": 661
+    },
+    "blocked": {
+      "client": 268,
+      "server": 280
+    },
+    "expired0": {
+      "client": 109,
+      "server": 114
+    },
+    "cpu_s": {
+      "client": 2.12,
+      "server": 2.16
+    },
+    "stop": true
+  },
+  "B": {
+    "source": "dce9d23009b8803ac67484df9b6d0608b3641801",
+    "udp_missing": {
+      "c2s": 137,
+      "s2c": 146
+    },
+    "udp_loss_pct": {
+      "c2s": 2.3283,
+      "s2c": 2.4813
+    },
+    "tcp_p99_ms": {
+      "c2s": 5325.4,
+      "s2c": 6269.1
+    },
+    "repair": {
+      "client": 671,
+      "server": 605
+    },
+    "blocked": {
+      "client": 312,
+      "server": 326
+    },
+    "expired0": {
+      "client": 112,
+      "server": 119
+    },
+    "cpu_s": {
+      "client": 2.12,
+      "server": 2.15
+    },
+    "stop": true
+  },
+  "conclusion": "32KiB instantaneous burst did not reduce UDP residual, expired0 or aggregate blocked; hypothesis falsified. Do not retain/tune burst upward. Aggregate blocked is itself ambiguous because it includes fresh ledger/shadow registration, grant, reserve, invariant failures.",
+  "corrective_source": "d9dc8c8646e1513be4e6638c97d5e0e50af7af70",
+  "corrective_behavior": "reverts burst behavior to prior 8MTU; retains recovery CI path; adds read-only exact block reason buckets only",
+  "next": "Native verify d9dc then one B-only exact scenario to read blocked_fresh_global/fresh_shadow/grant/burst/quota/capacity/stale/local_other/global_other/invariant."
+}

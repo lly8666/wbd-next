@@ -24,10 +24,14 @@ extern int32_t wbd_m0_embedded_go_raw_to_tun(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
     uint64_t *,uint32_t *,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
-extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t);
+extern int32_t wbd_m0_embedded_go_set_public_outer_repair(uint64_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_read_public_outer_repair(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_public_outer_counters(uint64_t,uint64_t *,size_t);
-extern int32_t wbd_m0_embedded_go_public_fec2_rx_counters(uint64_t,uint64_t *,size_t);
-extern int32_t wbd_m0_embedded_go_public_fec2_tx_backend(uint64_t,uint64_t *,size_t);
+extern int32_t wbd_m0_embedded_go_public_outer_diagnostics(uint64_t,uint64_t *,size_t);
+extern int32_t wbd_m0_embedded_go_public_fec2_tx_snapshot(uint64_t,uint64_t *,size_t);
+extern int32_t wbd_m0_embedded_go_public_fec2_mature_quality(uint64_t,uint64_t *,size_t);
+extern int32_t wbd_m0_embedded_go_public_fec2_tx_failures(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2_coverage(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
@@ -286,64 +290,126 @@ func (b *v4EmbeddedNativeBridge) tunToKernelRaw(ifindex uint32)(uint64,uint32,ui
 // Original public CLI exposes only Rust's post-kernel, post-AEAD M2
 // counters. These are facts, NOT a synthetic readiness or APPLIED grant.
 type V4PublicOuterCounters struct{
+    OuterRepairEnabled bool
     FirstKernelCopied uint64
     AuthenticatedAckRetired uint64
     OriginalFrozenRepaired uint64
     DriverUncertain uint64
     BudgetOrCapacityBlocked uint64
     RetiredTotal uint64
-}
-// One low-cost end-of-session snapshot, never a success/repair prediction.
-type V4PublicFecRxCounters struct {
-    AuthenticatedSource,AuthenticatedRepair uint64
-    TunDeliveredSource,TunDeliveredRecovered uint64
-    NativeDecodeCalls,ScalarDecodeCalls uint64
-}
-// Encoder call counters belong to the original M1/M3 parity quantum.
-type V4PublicFecTxBackend struct{NativeQuanta,ScalarQuanta uint64}
-func (b *v4EmbeddedNativeBridge) originalPublicFecTxBackend()(V4PublicFecTxBackend,error){
-    var empty V4PublicFecTxBackend
-    if b==nil||!b.committed||b.stopped||b.handle==0{return empty,errV4Embedded}
-    var counts [2]C.uint64_t
-    rc:=C.wbd_m0_embedded_go_public_fec2_tx_backend(C.uint64_t(b.handle),&counts[0],2)
-    if rc!=0{return empty,fmt.Errorf("%w: FEC2 TX encoder backend=%d",errV4Embedded,int(rc))}
-    return V4PublicFecTxBackend{NativeQuanta:uint64(counts[0]),ScalarQuanta:uint64(counts[1])},nil
-}
-func (b *v4EmbeddedNativeBridge) originalPublicFecRxCounters()(V4PublicFecRxCounters,error){
-    var zero V4PublicFecRxCounters
-    if b==nil||!b.committed||b.stopped||b.handle==0{return zero,errV4Embedded}
-    var v [6]C.uint64_t
-    rc:=C.wbd_m0_embedded_go_public_fec2_rx_counters(C.uint64_t(b.handle),&v[0],6)
-    if rc!=0{return zero,fmt.Errorf("%w: native FEC2 RX counters=%d",errV4Embedded,int(rc))}
-    return V4PublicFecRxCounters{
-        AuthenticatedSource:uint64(v[0]),AuthenticatedRepair:uint64(v[1]),
-        TunDeliveredSource:uint64(v[2]),TunDeliveredRecovered:uint64(v[3]),
-        NativeDecodeCalls:uint64(v[4]),ScalarDecodeCalls:uint64(v[5]),
-    },nil
+    CandidateFirst,CandidateRetry uint64
+    AckedAttempt0,AckedAttempt1,AckedAttempt2 uint64
+    ExpiredAttempt0,ExpiredAttempt1,ExpiredAttempt2 uint64
+    LatePositiveExpired uint64
+    TimingSamples,SRTTus,RTTVarus,RecentRTTus,Reorderus,PTOus,Cacheus uint64
+    ShadowOutstanding uint64
+    BlockedFreshGlobal,BlockedFreshShadow,BlockedGrant uint64
+    BlockedBurst,BlockedQuota,BlockedCapacity,BlockedStale uint64
+    BlockedLocalOther,BlockedGlobalOther,BlockedInvariant uint64
+    RepairAcceptedRetired,RepairUncertainRetired,RepairAbandonedRetired uint64
+    MaxQueueAgeus,RepairAttemptLimit,ShadowLimit,RetainCapus uint64
+    FirstWireBytes,RepairAcceptedWireBytes,RepairUncertainWireBytes uint64
 }
 func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCounters,error){
     var zero V4PublicOuterCounters
     if b==nil||!b.committed||b.stopped||b.handle==0{return zero,errV4Embedded}
-    var values [6]C.uint64_t
+    var values [9]C.uint64_t
     rc:=C.wbd_m0_embedded_go_public_outer_counters(
-        C.uint64_t(b.handle),&values[0],6)
+        C.uint64_t(b.handle),&values[0],9)
     if rc!=0{return zero,fmt.Errorf("%w: native original M2 stats=%d",errV4Embedded,int(rc))}
+    var d [34]C.uint64_t
+    rc=C.wbd_m0_embedded_go_public_outer_diagnostics(
+        C.uint64_t(b.handle),&d[0],34)
+    if rc!=0{return zero,fmt.Errorf("%w: native original M2 diagnostics=%d",errV4Embedded,int(rc))}
+    var enabled C.uint32_t
+    rc=C.wbd_m0_embedded_go_read_public_outer_repair(C.uint64_t(b.handle),&enabled)
+    if rc!=0||enabled>1{return zero,fmt.Errorf("%w: outer repair readback=%d",errV4Embedded,int(rc))}
     return V4PublicOuterCounters{
+        OuterRepairEnabled:enabled==1,
         FirstKernelCopied:uint64(values[0]),
         AuthenticatedAckRetired:uint64(values[1]),
         OriginalFrozenRepaired:uint64(values[2]),
         DriverUncertain:uint64(values[3]),
         BudgetOrCapacityBlocked:uint64(values[4]),
         RetiredTotal:uint64(values[5]),
+        FirstWireBytes:uint64(values[6]),
+        RepairAcceptedWireBytes:uint64(values[7]),
+        RepairUncertainWireBytes:uint64(values[8]),
+        CandidateFirst:uint64(d[0]),CandidateRetry:uint64(d[1]),
+        AckedAttempt0:uint64(d[2]),AckedAttempt1:uint64(d[3]),AckedAttempt2:uint64(d[4]),
+        ExpiredAttempt0:uint64(d[5]),ExpiredAttempt1:uint64(d[6]),ExpiredAttempt2:uint64(d[7]),
+        LatePositiveExpired:uint64(d[8]),TimingSamples:uint64(d[9]),
+        SRTTus:uint64(d[10]),RTTVarus:uint64(d[11]),RecentRTTus:uint64(d[12]),
+        Reorderus:uint64(d[13]),PTOus:uint64(d[14]),Cacheus:uint64(d[15]),
+        ShadowOutstanding:uint64(d[16]),
+        BlockedFreshGlobal:uint64(d[17]),BlockedFreshShadow:uint64(d[18]),
+        BlockedGrant:uint64(d[19]),BlockedBurst:uint64(d[20]),
+        BlockedQuota:uint64(d[21]),BlockedCapacity:uint64(d[22]),
+        BlockedStale:uint64(d[23]),BlockedLocalOther:uint64(d[24]),
+        BlockedGlobalOther:uint64(d[25]),BlockedInvariant:uint64(d[26]),
+        RepairAcceptedRetired:uint64(d[27]),RepairUncertainRetired:uint64(d[28]),
+        RepairAbandonedRetired:uint64(d[29]),MaxQueueAgeus:uint64(d[30]),
+        RepairAttemptLimit:uint64(d[31]),ShadowLimit:uint64(d[32]),
+        RetainCapus:uint64(d[33]),
     },nil
 }
-func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback(peerPersona uint32)error{
+// Read-only original Rust worker stats under the authenticated owner scope.
+type V4PublicFecTxSnapshot struct{
+    Accepted,SourceNotReady,Full,Partial uint64
+    K1,K2To4,K5To12,K13To16 uint64
+    RPlanned,RSent,ExpiredJobs,PressureJobs,PressureSources,UnknownCapacity uint64
+}
+func (b *v4EmbeddedNativeBridge) originalPublicFecTxSnapshot()(V4PublicFecTxSnapshot,error){
+    var zero V4PublicFecTxSnapshot
+    if b==nil||!b.committed||b.stopped||b.handle==0{return zero,errV4Embedded}
+    var v [14]C.uint64_t
+    rc:=C.wbd_m0_embedded_go_public_fec2_tx_snapshot(C.uint64_t(b.handle),&v[0],14)
+    if rc!=0{return zero,fmt.Errorf("%w: FEC TX snapshot=%d",errV4Embedded,int(rc))}
+    return V4PublicFecTxSnapshot{
+        Accepted:uint64(v[0]),SourceNotReady:uint64(v[1]),
+        Full:uint64(v[2]),Partial:uint64(v[3]),
+        K1:uint64(v[4]),K2To4:uint64(v[5]),K5To12:uint64(v[6]),
+        K13To16:uint64(v[7]),RPlanned:uint64(v[8]),RSent:uint64(v[9]),
+        ExpiredJobs:uint64(v[10]),PressureJobs:uint64(v[11]),
+        PressureSources:uint64(v[12]),UnknownCapacity:uint64(v[13]),
+    },nil
+}
+// Real generation-local failure reasons, never a guessed cause from aggregate M2.
+type V4PublicFecTxFailures struct{
+    SourcePayload,SourceArena,SourceSeal uint64
+    ParityPolicy,ParityArena,ParitySeal,ParityM4Noncopy,SourceM4Noncopy uint64
+}
+func (b *v4EmbeddedNativeBridge) originalPublicFecTxFailures()(V4PublicFecTxFailures,error){
+    var zero V4PublicFecTxFailures
+    if b==nil||!b.committed||b.stopped||b.handle==0{return zero,errV4Embedded}
+    var v [8]C.uint64_t
+    rc:=C.wbd_m0_embedded_go_public_fec2_tx_failures(C.uint64_t(b.handle),&v[0],8)
+    if rc!=0{return zero,fmt.Errorf("%w: FEC TX failure reasons=%d",errV4Embedded,int(rc))}
+    return V4PublicFecTxFailures{SourcePayload:uint64(v[0]),SourceArena:uint64(v[1]),
+        SourceSeal:uint64(v[2]),ParityPolicy:uint64(v[3]),ParityArena:uint64(v[4]),
+        ParitySeal:uint64(v[5]),ParityM4Noncopy:uint64(v[6]),SourceM4Noncopy:uint64(v[7])},nil
+}
+// Strict post-auth, pre-worker native policy; a Go-only toggle is invalid.
+func (b *v4EmbeddedNativeBridge) configureOriginalOuterRepair(enabled bool)error{
+    if b==nil||!b.committed||b.stopped||b.handle==0{return errV4Embedded}
+    value:=C.uint32_t(0)
+    if enabled{value=1}
+    rc:=C.wbd_m0_embedded_go_set_public_outer_repair(C.uint64_t(b.handle),value)
+    if rc!=0{return fmt.Errorf("%w: set native outer repair=%d",errV4Embedded,int(rc))}
+    var applied C.uint32_t
+    rc=C.wbd_m0_embedded_go_read_public_outer_repair(C.uint64_t(b.handle),&applied)
+    if rc!=0||applied!=value{
+        return fmt.Errorf("%w: native outer repair mismatch requested=%d actual=%d code=%d",
+            errV4Embedded,uint32(value),uint32(applied),int(rc))
+    }
+    return nil
+}
+func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback()error{
     if b==nil||!b.committed||b.stopped||b.handle==0||
-        b.protectedEpoch==[16]byte{}||peerPersona>1||
-        (peerPersona==1&&!b.serverSide){return errV4Embedded}
+        b.protectedEpoch==[16]byte{} {return errV4Embedded}
     rc:=C.wbd_m0_embedded_go_arm_public_original_m2_feedback(
         C.uint64_t(b.handle),
-        (*C.uchar)(unsafe.Pointer(&b.protectedEpoch[0])),C.size_t(16),C.uint32_t(peerPersona))
+        (*C.uchar)(unsafe.Pointer(&b.protectedEpoch[0])),C.size_t(16))
     if rc!=0{return fmt.Errorf("%w: original public M2 feedback bind=%d",errV4Embedded,int(rc))}
     return nil
 }
@@ -394,6 +460,18 @@ func (b *v4EmbeddedNativeBridge) rustOwnerNormalM2Firstsend()(v4NormalM2Firstsen
      if rc!=0{return z,fmt.Errorf("%w: normal M2 authentic reverse coverage=%d",errV4Embedded,int(rc))}
      return v4NormalM2Coverage{uint64(a),uint64(b8),uint64(reports),c!=0},nil
  }
+// Full original native source-only quality readback. No copied parity,
+// repair-shadow RTT or inferred netem loss enters these 30 monotone counts.
+func (b *v4EmbeddedNativeBridge) rustOwnerFec2MatureQuality()([30]uint64,error){
+    var out [30]uint64
+    if b==nil||!b.committed||b.handle==0||b.stopped{return out,errV4Embedded}
+    var native [30]C.uint64_t
+    rc:=C.wbd_m0_embedded_go_public_fec2_mature_quality(
+        C.uint64_t(b.handle),&native[0],C.size_t(len(native)))
+    if rc!=0{return out,fmt.Errorf("%w: native FEC M2 quality=%d",errV4Embedded,int(rc))}
+    for i,v:=range native {out[i]=uint64(v)}
+    return out,nil
+}
 // Developer-only feature-gated barrier. This is not a product scheduler,
 // data-plane syscall, or authorization to enable FEC2.
 func (b *v4EmbeddedNativeBridge) rustOwnerDebugJumboPause(enabled bool)(bool,uint32,error){
@@ -407,6 +485,34 @@ func (b *v4EmbeddedNativeBridge) rustOwnerDebugJumboPause(enabled bool)(bool,uin
     return paused!=0,uint32(loaned),nil
 }
 
+// One readback on stop/diagnostic only: native Linux per-thread CPU time,
+// kept separate from total Go+Rust process CPU in the Actions monitor.
+type V4PublicWorkerCPU struct{RxNs,TxNs uint64}
+// Low-frequency terminal or explicitly enabled diagnostic only. This method
+// queries real native worker completion counters and CPU; no packet or
+// authentication path is redirected to Go.
+type V4PublicLoopPulse struct{
+    RxRecords,TxRecords,RxErrors,TxErrors uint64
+    RxThreadCPUns,TxThreadCPUns uint64
+}
+func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,error){
+    if b==nil||!b.committed||b.stopped||b.handle==0 {
+        return V4PublicLoopPulse{},errV4Embedded
+    }
+    stats,err:=b.rustOwnerLoopStats()
+    if err!=nil{return V4PublicLoopPulse{},err}
+    rx,tx,err:=b.rustOwnerWorkerCPU()
+    if err!=nil{return V4PublicLoopPulse{},err}
+    return V4PublicLoopPulse{
+        RxRecords:stats.RxOK,TxRecords:stats.TxOK,
+        RxErrors:stats.RxErr,TxErrors:stats.TxErr,
+        RxThreadCPUns:rx,TxThreadCPUns:tx,
+    },nil
+}
+func (b *v4EmbeddedNativeBridge) originalPublicWorkerCPU()(V4PublicWorkerCPU,error){
+    rx,tx,err:=b.rustOwnerWorkerCPU()
+    return V4PublicWorkerCPU{RxNs:rx,TxNs:tx},err
+}
 func (b *v4EmbeddedNativeBridge) rustOwnerWorkerCPU()(uint64,uint64,error){
     if !b.committed||b.handle==0{return 0,0,errV4Embedded}
     var rx,tx C.uint64_t

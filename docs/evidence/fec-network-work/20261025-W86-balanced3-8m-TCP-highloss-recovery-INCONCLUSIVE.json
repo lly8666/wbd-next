@@ -1,0 +1,270 @@
+{
+  "schema": "FEC_W86_LOWLOAD_BALANCED3_MIXED_TCP_AFTER_IID30_REPAIR_OFF_INCONCLUSIVE_V1",
+  "date": "2026-10-25",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "request": "tests/network/fec-work/W86-balanced3-8m-TCP-recovery-original-arm64.json",
+  "request_commit": "77c94060f25880aab5ccec85db47bd86a3bd83eb",
+  "contract_action": 40204401670,
+  "contract_conclusion": "SUCCESS",
+  "network_action": 40204401717,
+  "attempt": 1,
+  "measure_jobs": 1,
+  "network_action_conclusion": "FAILURE",
+  "harness_result": "INCONCLUSIVE_TCP_BACKPRESSURED",
+  "artifact_id": 12603890171,
+  "artifact_zip_sha256": "785c061807f17df193121bed8c8621bf575614d8bdb45329f6f0465518721f3c",
+  "exact_product_source": "4322a811fd63e096458f202767faa2f097a587c0",
+  "build_action": 40203220219,
+  "build_artifact_id": 12602931174,
+  "build_zip_sha256": "0ae0939bdd4c02932a6452260fa65f4e1851bf37bd79d7485c28e1895022f125",
+  "scenario": {
+    "mode": "fec-fixed",
+    "profile": 3,
+    "original_outer_data_retransmission": "OFF_CONFIRMED_BOTH",
+    "app_mbps_each_direction": 8,
+    "udp_share": 0.96,
+    "tcp_flows": 2,
+    "packet_lengths_B": [
+      [
+        64,
+        6
+      ],
+      [
+        96,
+        8
+      ],
+      [
+        160,
+        10
+      ],
+      [
+        256,
+        11
+      ],
+      [
+        512,
+        15
+      ],
+      [
+        900,
+        20
+      ],
+      [
+        1287,
+        30
+      ]
+    ],
+    "one_way_delay_ms": 300,
+    "phase_seconds": {
+      "baseline10": 30,
+      "peak30": 60,
+      "recover10": 30
+    },
+    "iid_losses_pct": [
+      10,
+      30,
+      10
+    ],
+    "netem_rng": "unseeded_recorded",
+    "outer_rate_mbps_each": 600,
+    "netem_queue_packets": 32768,
+    "strict_UDP_loss_gate_pct": 1,
+    "strict_small_udp_loss_gate_pct": 1,
+    "loss_gate_phases": [
+      "baseline10",
+      "recover10"
+    ],
+    "mixed_TCP_target_mbps_each": 0.32
+  },
+  "outcomes": {
+    "baseline10": {
+      "netem_actual_pct": [
+        10.07,
+        10.1
+      ],
+      "udp_delivered_mbps": [
+        7.676,
+        7.679
+      ],
+      "udp_missing": [
+        29,
+        10
+      ],
+      "tcp_injected_mbps": [
+        0.32012,
+        0.32012
+      ],
+      "tcp_p99_ms": [
+        933.1,
+        1017.5
+      ],
+      "tcp_backpressure_slots": [
+        0,
+        0
+      ]
+    },
+    "peak30": {
+      "netem_actual_pct": [
+        29.9365,
+        29.8863
+      ],
+      "udp_delivered_mbps": [
+        6.8317,
+        6.8173
+      ],
+      "udp_missing": [
+        8975,
+        9197
+      ],
+      "tcp_injected_mbps": [
+        0.1457,
+        0.1547
+      ],
+      "tcp_target_mbps": [
+        0.32,
+        0.32
+      ],
+      "tcp_p99_ms": [
+        21477,
+        16942.8
+      ],
+      "tcp_backpressure_slots": [
+        2186,
+        1233
+      ],
+      "tcp_missing_after_drain": [
+        0,
+        0
+      ],
+      "tcp_kernel_RetransSegs": [
+        115,
+        126
+      ]
+    },
+    "recover10": {
+      "netem_actual_pct": [
+        9.9713,
+        9.9967
+      ],
+      "udp_delivered_mbps": [
+        7.6795,
+        7.6778
+      ],
+      "udp_missing": [
+        11,
+        19
+      ],
+      "small_udp_missing": [
+        11,
+        11
+      ],
+      "small_udp_p99_ms": [
+        316.3,
+        316.3
+      ],
+      "tcp_injected_mbps": [
+        0.3095,
+        0.277
+      ],
+      "tcp_target_mbps": [
+        0.32,
+        0.32
+      ],
+      "tcp_p99_ms": [
+        7454.7,
+        2902.8
+      ],
+      "tcp_backpressure_slots": [
+        30,
+        179
+      ],
+      "tcp_missing_after_drain": [
+        0,
+        0
+      ]
+    },
+    "fixed_profile_native_applied": {
+      "client": "requested1=applied1 profile3 pendingfalse",
+      "server": "requested1=applied1 profile3 pendingfalse"
+    },
+    "authentic_m2": {
+      "client": {
+        "reverse_reports": 34483,
+        "positive_samples": 150151
+      },
+      "server": {
+        "reverse_reports": 34329,
+        "positive_samples": 150109
+      }
+    },
+    "native_parity_planned_sent": {
+      "client": [
+        101972,
+        101972
+      ],
+      "server": [
+        102162,
+        102162
+      ]
+    },
+    "original_outer_data_retransmitted": [
+      0,
+      0
+    ],
+    "source_tun_drop": [
+      0,
+      0
+    ],
+    "source_root_qdisc_drop": [
+      0,
+      0
+    ],
+    "native_capacity_reject": [
+      0,
+      0
+    ],
+    "native_tun_failed": [
+      0,
+      0
+    ],
+    "native_decode_reject": [
+      0,
+      1
+    ],
+    "native_rx_conflict_reject": [
+      0,
+      1
+    ],
+    "note_on_single_reject": "One rejected conflicting FEC source on server out of 160720; not counted as 0 and insufficient per-block trace to conclude a decodable source was lost or codec bug.",
+    "native_recovered_tun": {
+      "client": 27316,
+      "server": 27441
+    },
+    "cpu_measurement_seconds": 120,
+    "cpu_s": {
+      "client": 13.35,
+      "server": 13.28
+    },
+    "cpu_s_per_delivered_GiB": {
+      "client": 127.85481,
+      "server": 127.00329
+    },
+    "rss_peak_B": {
+      "client": 22777856,
+      "server": 22962176
+    },
+    "host_CPU_PSI": {
+      "mean_pct": 0.1006,
+      "peak_pct": 0.42,
+      "above20_fraction": 0
+    },
+    "stop_owned_namespaces_absent": true,
+    "stop_drained_both": true
+  },
+  "analysis": "At 8Mbps each direction far below previously bounded 100Mbps case, real host CPU PSI peak only 0.42% yet under IID30% Balanced3 TCP dropped injection to ~0.146/~0.155 Mbps vs .32 target with 17-21s tail; after IID10% restored s2c still .277Mbps/179 backpressure. Thus W49/W50 high-loss TCP symptoms cannot be explained solely by 100Mbps host exhaustion. This does NOT prove an outer TCP code bug: Balanced3 UDP residual is ~11% under IID30%, and inner TCP loss recovery/congestion can explain HOL. No fabricated TCP packet missing after drain. Retain current Frozen Fixed3 status INCONCLUSIVE, don't weaken 1% gate or make TCP pass.",
+  "bounded_followup": "One fixed Maximum6 8Mbps same phases separate Actions W87; determine if stronger FEC and unchanged host conditions avoid these symptoms, without making causal CPU cross-VM comparison or rerunning 100Mbps. If severe TCP persists under Maximum despite healthy host, inspect native per-block and TCP cwnd/RTT rather than adding more load.",
+  "windows": "TEMP_SKIPPED_USER_20261025_ONLY_ROLE",
+  "capacity_stop": true,
+  "merge_ready": false
+}

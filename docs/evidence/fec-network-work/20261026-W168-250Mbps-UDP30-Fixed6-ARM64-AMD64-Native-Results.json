@@ -1,0 +1,121 @@
+{
+  "schema": "W168_TRUE_250MBPS_MAX6_UDP30_ARM64_AMD64_RESULTS_20261026_V1",
+  "source": "0776fc4ede72fabd711e8333568eb88a58e8a6ea",
+  "branch": "experiment/fec-network-tuning",
+  "test_action": 40345202316,
+  "request": "Single VM per architecture, original Go TLS->Rust M4/TUN, normal fec-fixed6, outer DATA repair ON, UDP-only, 250Mbps per direction, IID random loss 30%, no tc outer rate, 20 seconds; 2s warmup, 4s drain",
+  "proof": "Native both ends effective_config_verified=true outer_repair_native_verified=true stop_drained_both=true. Actual network loss29.94%-29.99%. No matching hardware guarantee; individual GitHub runner.",
+  "result": {
+    "arm64": {
+      "artifact_id": 12661505649,
+      "artifact_sha256": "f44f2d584f9ab09de77453a1a0b67f78e105bbe1f7966e1f78707cdf81cc28a7",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "udp_c2s": {
+        "sent": 520818,
+        "delivered": 520701,
+        "missing": 117,
+        "residual_loss_pct": 0.022464661359630426,
+        "throughput_mbps": 249.93648
+      },
+      "udp_s2c": {
+        "sent": 520827,
+        "delivered": 520768,
+        "missing": 59,
+        "residual_loss_pct": 0.011328137750155043,
+        "throughput_mbps": 249.96864
+      },
+      "client": {
+        "product_cpu_s_20s": 18.91,
+        "cpu_pct_one_core": 94.55,
+        "rust_rx_tx_share_pct_approx": 100.171,
+        "product_rss_peak_mib": 62.14,
+        "FEC_rplanned": 717835,
+        "FEC_rsent": 717835,
+        "FEC_job_expired": 0,
+        "FEC_rx_peak_bytes": 9621028,
+        "FEC_rx_peak_active_blocks": 266,
+        "FEC_pressure_evicted": 0,
+        "outer_data_repair_pct_of_first_plus_repair": 8.21873974191073
+      },
+      "server": {
+        "product_cpu_s_20s": 18.85,
+        "cpu_pct_one_core": 94.25,
+        "rust_rx_tx_share_pct_approx": 99.911,
+        "product_rss_peak_mib": 62.91,
+        "FEC_rplanned": 717883,
+        "FEC_rsent": 717883,
+        "FEC_job_expired": 0,
+        "FEC_rx_peak_bytes": 10095342,
+        "FEC_rx_peak_active_blocks": 281,
+        "FEC_pressure_evicted": 0,
+        "outer_data_repair_pct_of_first_plus_repair": 8.199124599072942
+      },
+      "host_cpu_psi_peak_pct": 24.84,
+      "limits": [],
+      "failures": []
+    },
+    "amd64": {
+      "artifact_id": 12661756005,
+      "artifact_sha256": "01f6bcd31a29f01cdb0e206ee656273791e44853b08d4ae9d7bd7f611f84f61e",
+      "result": "INCONCLUSIVE",
+      "udp_c2s": {
+        "sent": 504488,
+        "delivered": 424400,
+        "missing": 80088,
+        "residual_loss_pct": 15.875105057008293,
+        "throughput_mbps": 203.712
+      },
+      "udp_s2c": {
+        "sent": 501896,
+        "delivered": 423631,
+        "missing": 78265,
+        "residual_loss_pct": 15.593868052345506,
+        "throughput_mbps": 203.34288
+      },
+      "client": {
+        "product_cpu_s_20s": 21.28,
+        "cpu_pct_one_core": 106.4,
+        "rust_rx_tx_share_pct_approx": 98.661,
+        "product_rss_peak_mib": 64.77,
+        "FEC_rplanned": 682661,
+        "FEC_rsent": 363432,
+        "FEC_job_expired": 13781,
+        "FEC_rx_peak_bytes": 7999122,
+        "FEC_rx_peak_active_blocks": 295,
+        "FEC_pressure_evicted": 0,
+        "outer_data_repair_pct_of_first_plus_repair": 8.163808115958231
+      },
+      "server": {
+        "product_cpu_s_20s": 21.12,
+        "cpu_pct_one_core": 105.6,
+        "rust_rx_tx_share_pct_approx": 98.778,
+        "product_rss_peak_mib": 65.87,
+        "FEC_rplanned": 681935,
+        "FEC_rsent": 354529,
+        "FEC_job_expired": 14190,
+        "FEC_rx_peak_bytes": 8748546,
+        "FEC_rx_peak_active_blocks": 293,
+        "FEC_pressure_evicted": 0,
+        "outer_data_repair_pct_of_first_plus_repair": 8.159345714210378
+      },
+      "host_cpu_psi_peak_pct": 36.32,
+      "limits": [
+        "client pacing_catchup_limited 30",
+        "server pacing_catchup_limited 36",
+        "SOURCE_TUN_TX_DROPS kernel upstream before product"
+      ],
+      "failures": []
+    }
+  },
+  "interpretation": {
+    "product_cpu_source": "Process thread CPU per 20s can exceed 100% if multi-core; Rust worker time sampled 250ms with <=800ms boundary error. ARM 100.171% indicates window uncertainty, not physical invalid share. Go v Rust per-module instructions not directly profiled.",
+    "product_rss_source": "Entire Go+Rust product process RSS, not per-language RSS; Rust RX live FEC peak is only a subset of resident allocations.",
+    "arch_variation": "Different physical ARM64/x86 GitHub runners and ISA-L performance; not a controlled matched hardware A/B. Infer x86 sending timing pressure from authentic rsent<rplanned, expiry, unknown capacity, TUN drop, PSI; not demonstrated RS decode bug.",
+    "outer_retry_full_link_fraction": "NOT_OBSERVED_TRUE_DENOMINATOR; native accepted+uncertain DATA repair bytes counted pre-netem, veth interface TX bytes counted post-netem, cannot divide. Earlier automatically derived 11.5%-11.6% figures from unlike stage counters were INVALID and must not be quoted. DATA-only first+repair fractions 8.16%-8.22% are genuine numeric.",
+    "outer_payload_budget": "No extra tc rate. Last queue netem may delay but no imposed bandwidth rate. No guarantee line good for all high PPS mixes.",
+    "all_56_regular_10mbps_status": "STILL_IN_PROGRESS_ON_SAME_ACTION_AT_THIS_RECEIPT_TIME"
+  },
+  "capacity_stop_historical": true,
+  "w168_highcase_user_scoped_override": true,
+  "main_merge": false
+}

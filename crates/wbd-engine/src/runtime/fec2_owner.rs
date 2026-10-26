@@ -269,10 +269,23 @@ impl Fec2Owner {
         self.expire(now);
         Ok(closed)
     }
+    /// O(1) readiness-only hint for a bounded live sender poll turn.
+    /// No parity job is moved or credited until take_parity/finish_parity.
+    /// Shared Normal+Game owner semantics remain unchanged.
+    pub fn has_ready_parity(&self)->bool{
+        !self.pending.is_empty()
+    }
     pub fn next_deadline(&self) -> Option<MonoNs> {
         self.open.iter().filter_map(|o| o.as_ref().map(|b|b.deadline))
             .chain(self.pending.front().map(|b|MonoNs(b.expire_at.0.saturating_add(1))))
             .min_by_key(|t|t.0)
+    }
+    // Called ONLY on the already authenticated, single M4 owner when its
+    // synchronous previous kernel batch has fully settled. A new FEC
+    // revision can seal old open blocks into genuine same-revision parity
+    // without dropping them, and still admit the next fresh source at once.
+    pub fn pending_revision(&self,revision:ConfigRevision)->bool{
+        self.pending.iter().any(|job|job.revision==revision)
     }
     pub fn change_policy(&mut self,mode:FecMode,profile:Profile,revision:ConfigRevision,
         max_frame:usize,now:MonoNs)->Result<(),FecError> {

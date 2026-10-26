@@ -28,20 +28,22 @@ class ModelTests(unittest.TestCase):
     def test_2020_at_30_percent_is_not_zero(self):
         self.assertAlmostEqual(m.fec_residual(20, 20, .3), .00130108, places=8)
 
-    def test_repair_enumerated_expected_transmissions(self):
+    def test_single_repair_enumerated_expected_transmissions(self):
         p = .05
         expected = 0
         residual = 0
-        for lost in itertools.product((False, True), repeat=3):
+        for lost in itertools.product((False, True), repeat=2):
             probability = math.prod(p if item else 1-p for item in lost)
-            expected += (int(lost[0]) + int(lost[0] and lost[1])) * probability
-            residual += int(all(lost)) * probability
+            expected += int(lost[0]) * probability
+            residual += int(lost[0] and lost[1]) * probability
         self.assertAlmostEqual(m.repair_iid(p)["extra_per_fresh"], expected)
         self.assertAlmostEqual(m.repair_iid(p)["residual"], residual)
+        self.assertEqual(m.repair_iid(p)["repair_attempt_limit"], 1)
 
     def test_rtt_and_one_way_are_not_interchangeable(self):
-        self.assertEqual(m.timers(150, 5, 10)["cache_ms"], 410)
-        self.assertEqual(m.timers(300, 5, 10)["cache_ms"], 710)
+        self.assertAlmostEqual(m.timers(150, 5, 10)["retain_ms"], 287.5)
+        self.assertAlmostEqual(m.timers(300, 5, 10)["retain_ms"], 475)
+        self.assertAlmostEqual(m.timers(600, 5, 10)["retain_ms"], 850)
         self.assertTrue(m.timers(2000, 5, 10)["horizon_capped"])
 
     def test_capacity_scale_and_small_packet_memory_limit(self):

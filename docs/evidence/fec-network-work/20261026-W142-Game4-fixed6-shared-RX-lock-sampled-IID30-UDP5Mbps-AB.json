@@ -1,0 +1,126 @@
+{
+  "schema": "FEC_W142_GAME_RX_SHARED_MUTEX_SAMPLED_REAL_ARM64_V1",
+  "date": "2026-10-26",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "baseline_source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+  "sampled_source": "8bc31fb0a56200bb62d75de0709e2c2522f25aeb",
+  "sampled_native_build": {
+    "action": 40297407378,
+    "conclusion": "SUCCESS",
+    "artifact_id": 12639325846,
+    "zip_sha256": "d2a1d3bd22d230c064600d173575570fdb176a44f335ed55dcc1f2e0309a9f1e",
+    "manifest_and_client_server_rust_hashes_verified": true
+  },
+  "harness_contract": {
+    "final_action": 40297604695,
+    "result": "SUCCESS",
+    "historical_failed_actions": [
+      40297500759,
+      40297540773
+    ],
+    "reason": "Optional harness B could be absent in synthetic contract; fixed with bundles.get(label,{})"
+  },
+  "scenario": {
+    "action": 40297884296,
+    "conclusion": "SUCCESS",
+    "artifact_id": 12638344905,
+    "zip_sha256": "c4e3c8c3a70b8c0ddcd6e5f3d3f67283766e50a107a8889f9966e02bc4f3bfff",
+    "request_commit": "31474d27220181333a10220b76411bd8e9eb9048",
+    "request": "tests/network/fec-work/W142-Game4-fixed6-IID30-UDP5Mbps-P2-shared-RX-lock-sampling-sameVM-AB-ARM64.json",
+    "mode": "Game4 fixed6 per physical lane IID30, true UDP each direction 5Mbps, 75ms one-way, clean/IID30/clean",
+    "order": "AB",
+    "one_scenario_per_action": true
+  },
+  "scope": "Real worker lock around AEAD/replay + original Game first-delivery dedup + single FEC prepare, 1 in 128 packet samples per lane, default OFF; TUN writes and finish/commit lock excluded",
+  "old_A": {
+    "source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+    "product_process_cpu_s": {
+      "client": 11.35,
+      "server": 11.33,
+      "total": 22.68
+    },
+    "host_cpu_psi_mean_peak_pct": [
+      1.5766,
+      1.86
+    ],
+    "game_rx_lock_sample": "NOT_OBSERVED_OLD_PRODUCT",
+    "udp_business_missing": 0,
+    "damaged_udp_p99_ms": {
+      "c2s": 83.7,
+      "s2c": 83.6
+    },
+    "game4_four_positions_planned_equals_sent": true,
+    "game4_copy_abandoned_all_zero": true,
+    "parity_actual_planned_equals_sent_both": true,
+    "go_posthandoff_data_copies_each": [
+      0,
+      0
+    ],
+    "outer_data_retransmitted": 0,
+    "stop_drained": true
+  },
+  "new_B": {
+    "source": "8bc31fb0a56200bb62d75de0709e2c2522f25aeb",
+    "product_process_cpu_s": {
+      "client": 11.78,
+      "server": 11.77,
+      "total": 23.55
+    },
+    "host_cpu_psi_mean_peak_pct": [
+      1.7546,
+      1.92
+    ],
+    "udp_business_missing": 0,
+    "damaged_udp_p99_ms": {
+      "c2s": 83.6,
+      "s2c": 83.6
+    },
+    "game4_four_positions_planned_equals_sent": true,
+    "game4_copy_abandoned_all_zero": true,
+    "parity_actual_planned_equals_sent_both": true,
+    "go_posthandoff_data_copies_each": [
+      0,
+      0
+    ],
+    "outer_data_retransmitted": 0,
+    "stop_drained": true,
+    "lock_sample": {
+      "client": {
+        "samples": 4259,
+        "wait_total_ns": 5962762,
+        "hold_total_ns": 12769283,
+        "wait_max_ns": 249519,
+        "wait_mean_ns": 1400.038,
+        "hold_mean_ns": 2998.188
+      },
+      "server": {
+        "samples": 4258,
+        "wait_total_ns": 6035734,
+        "hold_total_ns": 13070881,
+        "wait_max_ns": 207222,
+        "wait_mean_ns": 1417.504,
+        "hold_mean_ns": 3069.723
+      },
+      "sample_stride": 128,
+      "includes_commit": false,
+      "valid_both_roles": true
+    }
+  },
+  "observed_cpu_change_pct": 3.836,
+  "interpretation": [
+    "Real shared mutex contention exists in sampled Game4 5Mbps IID30: wait mean ~1.4us, prepare hold mean ~3.0us, rare max wait ~0.21–0.25ms",
+    "This is a 1/128 biased sample of one receipt, not full CPU-time attribution; excludes finish/commit locks and TUN writes",
+    "Diagnostic leg has ~3.8% higher combined CPU; sampling and test ordering/host differences confound, and no optimized AEAD split exists yet",
+    "No regression in business delivery, original Game4 physical schedule, fixed6 parity, external DATA retransmission, Go ownership or Stop",
+    "Do not claim a 47% CPU win merely because average sampled wait is 47% of sampled hold; thread/lock scheduling, other overhead remain"
+  ],
+  "decision": "P2_LOCK_CONTENTION_MEASURED; NEXT_ISOLATE_SINGLE_LANE_OWNED_AEAD_SPLIT_IN_NEW_SOURCE_WITH_TESTS; DO_NOT_PROMOTE_DIAGNOSTIC_AS_PERFORMANCE_GAIN",
+  "hard_limits": {
+    "capacity_stop": true,
+    "full_game80mbps_not_run": true,
+    "windows": "NOT_RUN/TEMP_SKIPPED_USER_20261025",
+    "merge_ready": false
+  },
+  "related_p1a_80mbps": "docs/evidence/fec-network-work/20261026-P1a-80Mbps-64B-native-RX-ABBA-capacity-gated.json"
+}

@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "date": "2026-10-24",
+  "branch": "experiment/fec-network-tuning",
+  "request": {
+    "id": "FEC-W12-Maximum50-RX-CapacityOnly-CloseSource-AB-ARM64",
+    "path": "tests/network/fec-work/W12-maximum50-rx-capacityonly-close-source-AB-arm64.json",
+    "order": "AB",
+    "same_vm": true,
+    "one_measurement_job": true
+  },
+  "source": {
+    "A": {
+      "source": "a969217e1edd3577ae41df81c38aa7ac84a4a484",
+      "run_id": 40083030170,
+      "attempt": 1,
+      "artifact_id": 12555524616,
+      "sha256": "2013372c5555180ea75a9c06d2f980fcb211a992e3c71470de984b1b98b62fb4",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false
+    },
+    "B": {
+      "source": "ec344557fa8cbf4d717a81833d36f92584263478",
+      "run_id": 40087393299,
+      "attempt": 1,
+      "artifact_id": 12558215058,
+      "sha256": "bd22744ae29bcb0ec8b57cba9bdcc7b10228911e9af628791501ff7623b008d3",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false
+    }
+  },
+  "configuration": {
+    "business_mbps_per_direction": 50,
+    "netem_loss_pct": 30,
+    "oneway_delay_ms": 300,
+    "network_rate_mbps_each": 200,
+    "measurement_seconds": 30,
+    "outer_data_repair": false,
+    "profile": 6,
+    "packet_mix": [
+      [
+        64,
+        1
+      ],
+      [
+        1287,
+        99
+      ]
+    ]
+  },
+  "source_difference": "Newer a969 baseline has same Auto native/Go origin as ec344; latter changes RX bounded capacity + Stop typed evidence and FEC-only devlog. A/B is sequential same VM but netem not identical seeded drop realization.",
+  "gates": [
+    "B two directions business residual <=1%",
+    "both real native outer OFF/repair 0",
+    "actual FEC parity and recovered TUN positive",
+    "host capacity and source TUN + qdisc no saturation",
+    "per-side RX_CAP classifier present in B",
+    "p99 CPU RSS and accuracy of netem preserved"
+  ],
+  "result": "INTENT_ONLY_PENDING_ACTION"
+}

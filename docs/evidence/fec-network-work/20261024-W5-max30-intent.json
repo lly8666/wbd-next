@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+  "case_id": "FEC-W5-V3-Max30-OuterOff-C50-OneWay300-ARM64",
+  "request_path": "tests/network/fec-work/W5-v3-fixed-max30-outeroff-50m-300ms-arm64.json",
+  "build": {
+    "run": 40078403217,
+    "artifact": 12554277143,
+    "zip_sha256": "552a9c19ca4b9045cabe08abeed4f80e440f73f8fcc34a5f06670f4450d9fde6"
+  },
+  "math": "at p=0.30, MDS 16:20 q=0.02282576%, 8:10 q=0.38078174%, 4:5 q=1.73902950%, 1:2 q=2.7%; actual weighted k/r unknown until run",
+  "capacity_precheck": "12 Mbps application each direction mostly 1287B; 16:20 parity 125% plus outer framing predicts roughly 31 Mbps wire per direction below configured C=50M; measured product/host on W3 @2Mbps had CPU <2s per60s and peak RSS~20MB. Stop if injection/drop or product queues overrun.",
+  "target": "maximum steady IID30 300ms one-way residual <=1%, no FEC-only outer DATA retransmits",
+  "result": "INTENT_NOT_OBSERVED"
+}

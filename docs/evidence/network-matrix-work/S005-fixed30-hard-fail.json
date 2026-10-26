@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "kind": "REAL_PRODUCT_HARD_FAIL",
+  "scenario": "arm64-fixed-maximum-30pct-rtt600-mixed-120s",
+  "action": {
+    "run_id": 39764730978,
+    "attempt": 1,
+    "conclusion": "failure",
+    "artifact_id": 12419054697,
+    "zip_sha256": "7eaeb1ad01fb939a901006d58ea7db76ac05329bb916d819ed74e6575a895a29",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39764730978"
+  },
+  "sources": {
+    "product": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+    "harness": "07b6d3241a5d4b651ee07293bb0030b102096574",
+    "product_build_run": 39759842150,
+    "product_build_attempt": 1,
+    "product_artifact_id": 12417786567,
+    "product_zip_sha256": "2942307ef2d432ed7d70b779cd5a4acb5dfef18bbae051e7be7421f80999a06b"
+  },
+  "scene": {
+    "mode": "fec-fixed",
+    "profile": 6,
+    "requested_application_mbps_each_direction": 2,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "steady_s": 120,
+    "warmup_s": 15,
+    "drain_s": 30,
+    "netem_iid_pct": 30,
+    "one_way_ms": 300,
+    "mtu": 1500,
+    "business_seed": 5205,
+    "netem_rng": "unseeded_recorded"
+  },
+  "observed": {
+    "netem_pct": {
+      "c2s": 29.899454875832827,
+      "s2c": 29.891463772367263
+    },
+    "fec_effective": {
+      "client": {
+        "mode": "fixed",
+        "requested_revision": 1,
+        "applied_revision": 0,
+        "profile": 6,
+        "pending": true
+      },
+      "server": {
+        "mode": "fixed",
+        "requested_revision": 1,
+        "applied_revision": 1,
+        "profile": 6,
+        "pending": false
+      }
+    },
+    "c2s_udp": {
+      "sent": 20751,
+      "received_unique": 6256,
+      "missing": 14495,
+      "loss_pct": 69.85205532263505,
+      "duplicates": 7,
+      "invalid": 0,
+      "received_app_mbps": 0.24036266666666667,
+      "surviving_p99_ms": 1053
+    },
+    "s2c_udp": {
+      "sent": 20751,
+      "received_unique": 6283,
+      "missing": 14468,
+      "loss_pct": 69.72194111127175,
+      "duplicates": 8,
+      "invalid": 0,
+      "received_app_mbps": 0.24159146666666667,
+      "surviving_p99_ms": 1315.9
+    },
+    "tcp": {
+      "c2s": {
+        "steady_sent": 0,
+        "steady_received": 0,
+        "backpressure_slots": 12798,
+        "pending_at_deadline": 4
+      },
+      "s2c": {
+        "steady_sent": 0,
+        "steady_received": 0,
+        "backpressure_slots": 12798,
+        "pending_at_deadline": 4
+      }
+    },
+    "product_counters_pre_stop": {
+      "client": {
+        "real_first_copy": 18086,
+        "authenticated_ack": 14105,
+        "retransmitted": 18471,
+        "quota_or_capacity_blocked": 121286,
+        "driver_uncertain": 0
+      },
+      "server": {
+        "real_first_copy": 17951,
+        "authenticated_ack": 13946,
+        "retransmitted": 18189,
+        "quota_or_capacity_blocked": 121603,
+        "driver_uncertain": 61
+      }
+    },
+    "host": {
+      "psi_cpu_some_mean_pct": 0,
+      "steal_peak_pct": 0,
+      "udp_socket_errors": 0,
+      "product_cpu_s_observed_setup_included": {
+        "client": 3.18,
+        "server": 3.37
+      },
+      "rss_peak_bytes": {
+        "client": 15138816,
+        "server": 14802944
+      }
+    },
+    "stop_drained_both": true,
+    "owned_namespaces_absent": true,
+    "actual_fec_k_r": "NOT_OBSERVED",
+    "repair_wire_bytes": "NOT_OBSERVED",
+    "repair_effective": "NOT_OBSERVED",
+    "repair_blocked_breakdown": "NOT_OBSERVED",
+    "gates": [
+      "HARD_FAIL_DUPLICATE_UDP_DELIVERY",
+      "FAIL_FIXED_REQUESTED_NOT_APPLIED_ON_CLIENT",
+      "FAIL_UDP_DATA_DELIVERY_OVER_69PCT",
+      "TCP_BACKPRESSURE_NO_STEADY_TX",
+      "NOT_QUALIFIED_MAXIMUM_FEC30",
+      "NOT_QUALIFIED_50MBPS_OUTER"
+    ]
+  },
+  "interpretation": "Asymmetric fixed applied and verified application duplicates prevent any positive FEC product qualification. netem matched 30%; no observable host saturation but real product has massive cumulative blocked counts. Do not attribute source duplicate cause without reading actual FEC recovery, M3 unique/replay and LINK/TUN final-delivery dedupe; original packet payload integrity never failed. Keep the FAIL and pause Fixed/Auto qualification until hard gate fixed, no seed retries. Do not interpret pre-Stop packet retransmit counts as byte budget."
+}

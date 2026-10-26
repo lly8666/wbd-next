@@ -1,0 +1,117 @@
+{
+  "schema": "W97_LINUX_GAME_FEC_OFF_POST_TUN_COMMIT_DAMAGE_V1",
+  "date": "2026-10-26",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "source": "44455afb819572ed75689cab28ffc66d1b1c7640",
+  "build_run": 40246704747,
+  "artifact_id": 12618184955,
+  "zip_sha256": "f33f2c28f1936de3cfc35a5743f2378d7ee5ef5a8ac45c741ecfffedd82d9baa",
+  "scenario": {
+    "game_modes": [
+      "game2",
+      "game4"
+    ],
+    "fec": "off",
+    "each_direction_mbps": 3,
+    "udp_share": 0.96,
+    "real_tcp_flows": 2,
+    "one_way_ms": 75,
+    "warmup_s": 15,
+    "phases": "clean15 → per-lane IID20 30s → lane1 blackhole30s → clean15",
+    "netem_rng": "unseeded_recorded",
+    "request_seed_same_as_W95": true,
+    "one_action_per_mode": true
+  },
+  "game2": {
+    "run": 40247215239,
+    "request_commit": "a08e3451b6e5e37b1d9e77d2aa25fa31c02f4797",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "iid20_udp_missing_c2s_s2c": [
+      665,
+      678
+    ],
+    "iid20_udp_delivered_mbps_c2s_s2c": [
+      2.761784,
+      2.7591418667
+    ],
+    "iid20_udp_injected_mbps": 2.880304,
+    "blackhole_udp_missing_c2s_s2c": [
+      2,
+      0
+    ],
+    "before_clean_missing_both": 0,
+    "after_clean_missing_both": 0,
+    "all_phase_tcp_genuinely_injected_delivered": true,
+    "iid20_tcp_p99_ms_c2s_s2c": [
+      787.5,
+      526.6
+    ],
+    "blackhole_tcp_p99_c2s_s2c": [
+      153.3,
+      166.8
+    ],
+    "tcp_backpressure": 0,
+    "source_tun_drop": 0,
+    "client_cpu_s": 6.17,
+    "server_cpu_s": 6.28,
+    "client_cpu_per_gib": 198.9747,
+    "server_cpu_per_gib": 202.4775,
+    "rss_peak_client_server": [
+      25776128,
+      25415680
+    ],
+    "host_psi_peak_pct": 1.83,
+    "stop_drained": true
+  },
+  "game4": {
+    "run": 40247219774,
+    "request_commit": "4171e75f3d24239f50725c220cd010b92afd1490",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "iid20_udp_missing_c2s_s2c": [
+      20,
+      20
+    ],
+    "iid20_udp_delivered_mbps_c2s_s2c": [
+      2.87698,
+      2.8764474667
+    ],
+    "iid20_udp_injected_mbps_c2s_s2c": [
+      2.880064,
+      2.8797208
+    ],
+    "blackhole_udp_missing_c2s_s2c": [
+      0,
+      0
+    ],
+    "before_clean_missing_both": 0,
+    "after_clean_missing_both": 0,
+    "all_phase_tcp_genuinely_injected_delivered": true,
+    "iid20_tcp_p99_ms_c2s_s2c": [
+      128.5,
+      77.7
+    ],
+    "tcp_backpressure": 0,
+    "source_tun_drop": 0,
+    "client_cpu_s": 9.47,
+    "server_cpu_s": 9.6,
+    "client_cpu_per_gib": 301.3938,
+    "server_cpu_per_gib": 305.5248,
+    "rss_peak_client_server": [
+      37638144,
+      38244352
+    ],
+    "host_psi_peak_pct": 3.8,
+    "stop_drained": true
+  },
+  "interpretation": "After transactional TUN commit source, real clean/restore phases preserve correct first delivery and no apparent internal amplification under iid20/one-lane blackout. Game2 2 missed UDP during blackhole are retained as genuine nonzero residual. Independent p^N is reference, not Game FEC correction. Long shared GE stress not rerun; old W89 failure remains.",
+  "remaining": [
+    "No fixed/Auto Game+FEC public product, W90 fixed6/fixed0 six failure cases and atomic rollback preserved",
+    "No transactional guarantee for FEC-recovered multi-source symbol (not current public Game mode)",
+    "No Windows or physical devices",
+    "Original Normal FEC Fixed/Auto/outer-repair OFF evidence retained separately",
+    "Game2 787ms IID20 TCP p99 merits attention but did not backpressure; unpaired W95 different-VM/run cannot isolate code effect"
+  ],
+  "merge_ready": false,
+  "capacity_stop": true
+}

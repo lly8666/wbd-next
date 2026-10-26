@@ -214,6 +214,23 @@ impl GlobalRepairAllocator {
         Ok(())
     }
 
+    /// Scoped post-registration switch: only the new product path uses v3.
+    pub fn enable_opportunistic_v3(&mut self, direction:BudgetDirection)
+        ->Result<(),GlobalRepairError>{
+        let account=self.accounts.get_mut(&DirectionId::new(direction))
+            .ok_or(GlobalRepairError::NotRegistered)?;
+        account.local.enable_opportunistic_v3();
+        Ok(())
+    }
+
+    /// One full firstsend completion batch updates credits ONCE, avoiding
+    /// per-record account/expiry/grant scans. The caller must sum only the
+    /// definite M4 copied prefix in the SAME epoch.
+    pub fn on_fresh_accepted_batch(&mut self, direction:BudgetDirection,
+        wire_bytes:u64,now:MonoNs)->Result<(),GlobalRepairError>{
+        self.on_fresh_accepted(direction,wire_bytes,now)
+    }
+
     /// Fresh has no reference to grants or repair capacity; it always updates
     /// the local first-transmission ledger, even with all repair quota held.
     pub fn on_fresh_accepted(&mut self, direction: BudgetDirection,

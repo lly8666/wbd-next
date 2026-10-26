@@ -1,0 +1,77 @@
+{
+  "owner": "fec-network-work",
+  "user_instruction": "User declares the latest FEC branch at 3af257cd1a353a47d424094a689fa5179b198a07 is the functional mainline. Close temporary W48-W50, continue only FEC branch follow-up tasks. Do NOT merge, re-import, cherry-pick, or restore code from main or experiment/network-matrix-tuning.",
+  "original_fec_base": "3af257cd1a353a47d424094a689fa5179b198a07",
+  "source": "e446fa1cf09ebfb259da3d764abf8f8ed8d4211f",
+  "branch": "experiment/fec-network-tuning",
+  "product_build_action": 40167423967,
+  "product_artifact_id": 12588789024,
+  "product_zip_sha256": "3bac82b33642335ed3691c763d66c3c556c575f38f92fd635073fc9673ea1cb4",
+  "harness_contract_actions": [
+    40167596889,
+    40167677632
+  ],
+  "action": 40167733514,
+  "result": "PASS_SCOPED_OBSERVATION",
+  "artifact_id": 12588149669,
+  "result_zip_sha256": "bec3f9384f16a52356a443aac2e4d30f60edd250bce0321a332596991dd25485",
+  "test_case": "FEC-W51-OriginalM2NativePositiveConfirmationFixed3-8Mbps",
+  "request": "tests/network/fec-work/W51-real-original-m2-confirmation-age-fixed3-8Mbps-arm64.json",
+  "scope": "actual original-Go TLS Rust FEC fixed3 2%IID/75ms oneway each, app8Mbps/dir 96% UDP two real TCP flow4%, 35% small by count, sparse64B20Hz, outer DATA repair truly OFF, genuine original M4 first-copy and M3 authenticated M2, no new feedback packet",
+  "real_positive_m2": {
+    "client": {
+      "samples": 53875,
+      "positive_lag_ns": 8241048743812,
+      "mean_us": 152966,
+      "reverse_reports": 11346,
+      "uncovered_2s": 161,
+      "uncovered_8s": 161,
+      "first_censored": true,
+      "cover_censored": true
+    },
+    "server": {
+      "samples": 53938,
+      "positive_lag_ns": 8249165558731,
+      "mean_us": 152937,
+      "reverse_reports": 11400,
+      "uncovered_2s": 175,
+      "uncovered_8s": 175,
+      "first_censored": true,
+      "cover_censored": true
+    }
+  },
+  "traffic": {
+    "client_to_server": {
+      "udp_mbps": 7.68,
+      "tcp_mbps": 0.32,
+      "udp_loss_pct": 0,
+      "small_udp_loss_pct": 0,
+      "small_udp_p99_ms": 89.1
+    },
+    "server_to_client": {
+      "udp_mbps": 7.68,
+      "tcp_mbps": 0.32,
+      "udp_loss_pct": 0,
+      "small_udp_loss_pct": 0,
+      "small_udp_p99_ms": 89.4
+    }
+  },
+  "parity": {
+    "client": {
+      "planned": 34699,
+      "sent": 34699,
+      "expired": 0
+    },
+    "server": {
+      "planned": 34710,
+      "sent": 34710,
+      "expired": 0
+    }
+  },
+  "actual_product_readback": "both fixed3, requested=applied=1, pending=false, real original Stop success, TUN source dropped0, outer DATA retransmitted0",
+  "interpretation": "mean first copied DATA to genuine authenticated positive receipt including feedback cadence; not one-way, not p99, not outer shadow RTT. Residual UNKNOWN and censored flags preserved, no claim clean global M2 quality.",
+  "main_unmodified": true,
+  "network_matrix_unmodified": true,
+  "capacity_stop": true,
+  "merge_ready": false
+}

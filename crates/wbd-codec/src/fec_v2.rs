@@ -16,6 +16,17 @@ pub const MAX_ORIGINAL_LEN: usize = MAX_SYMBOL_LEN - 2;
 pub const DECODE_CACHE_LIMIT: usize = 64;
 pub const MAX_BATCH_ROWS: usize = 4;
 
+// The native coefficient table depends ONLY on (k, row offset, row count),
+// never on source bytes, wire length, epoch, direction, or revision.
+// Immutable lazy slots avoid rebuilding the five ISA-L tables for every
+// k16/r20 Maximum block. Fixed max: 1280 slots, <=777600 table payload
+// bytes across all valid shapes (k>=2), no hot-path global mutex.
+#[cfg(feature="native-isal")]
+static SHARED_ENCODE_TABLES:
+    [std::sync::OnceLock<Option<wbd_isal_safe::Tables>>;
+     MAX_K*MAX_R*MAX_BATCH_ROWS] =
+    [const { std::sync::OnceLock::new() }; MAX_K*MAX_R*MAX_BATCH_ROWS];
+
 /// Record kinds are reserved; these are not wired into the public AEAD kind
 /// selector or negotiated admission feature. M0 alone activates them.
 pub const AUTHENTICATED_FEC2_SOURCE_KIND: u8 = 2;
@@ -224,32 +235,47 @@ struct CacheKey {k:u8, missing:u16, selected_rows:u32}
 /// fresh first-send/AEAD ownership. Reusable by <=4-row encoding quanta, so
 /// ISA-L does NOT pad/copy k full source symbols for each quantum.
 pub struct PreparedBlock {
-    symbols: Vec<Vec<u8>>,
+    // One reusable contiguous k*symbol_len source workspace. No k tiny
+    // allocations, and zero-tail/prefix are identical to the previous
+    // per-frame Vec representation.
+    symbols: Vec<u8>,
+    k: usize,
     symbol_len: usize,
     #[cfg(feature="native-isal")]
-    native_tables: BTreeMap<(usize,usize),wbd_isal_safe::Tables>,
+    // Immutable shared native coefficient tables indexed by bounded
+    // (first_row,row_count) references. No per-block BTreeMap nodes.
+    native_tables: [Option<&'static wbd_isal_safe::Tables>;MAX_R*MAX_BATCH_ROWS],
 }
 impl PreparedBlock {
     pub fn from_frames(frames:&[&[u8]],record_payload_budget:usize)->Result<Self,Error> {
+        Self::from_frames_with_workspace(frames,record_payload_budget,Vec::new())
+    }
+    /// The workspace is owned by the one in-flight FixedStream job and only
+    /// returned after the original M4 copied-prefix is settled. This cannot
+    /// overlap another block's codec use or an M1 source slab loan.
+    pub fn from_frames_with_workspace(frames:&[&[u8]],
+        record_payload_budget:usize,mut symbols:Vec<u8>)->Result<Self,Error> {
         let len=Rs16::validate_sources(frames,record_payload_budget)?;
-        let symbols=frames.iter().map(|frame|{
-            let mut out=vec![0u8;len];
+        let bytes=len.checked_mul(frames.len()).ok_or(Error::BudgetExceeded)?;
+        symbols.resize(bytes,0);
+        for (frame,out) in frames.iter().zip(symbols.chunks_exact_mut(len)){
+            out.fill(0); // zero tail when this buffer previously held longer frames
             out[..2].copy_from_slice(&(frame.len() as u16).to_be_bytes());
             out[2..2+frame.len()].copy_from_slice(frame);
-            out
-        }).collect();
-        Ok(Self{symbols,symbol_len:len,
+        }
+        Ok(Self{symbols,k:frames.len(),symbol_len:len,
             #[cfg(feature="native-isal")]
-            native_tables:BTreeMap::new(),
+            native_tables:[None;MAX_R*MAX_BATCH_ROWS],
         })
     }
-    pub fn k(&self)->usize{self.symbols.len()}
+    pub fn into_workspace(self)->Vec<u8>{self.symbols}
+    pub fn k(&self)->usize{self.k}
     pub fn symbol_len(&self)->usize{self.symbol_len}
-    /// Native GFTables retained within this one block only; no unbounded global
-    /// cache and no cross-owner implicit sharing.
+    /// Native table references used by this block; matrix allocation is
+    /// independent of authenticated source symbols and bounded globally.
     pub fn cached_native_tables(&self)->usize {
         #[cfg(feature="native-isal")]
-        {self.native_tables.len()}
+        {self.native_tables.iter().filter(|v|v.is_some()).count()}
         #[cfg(not(feature="native-isal"))]
         {0}
     }
@@ -410,8 +436,8 @@ impl Rs16 {
     }
     /// Block-reusable encoder: consumes a PreparedBlock built once. The
     /// prepared symbol already includes original_len:u16 and zero tail.
-    /// Produces exact final 12B+L repair slices; native GF tables cached per
-    /// (first_row,row_count) for this block, bounded by 20 possible rows.
+    /// Produces exact final 12B+L repair slices. Native immutable coefficients
+    /// are shared only for the validated (k, first_row, row_count) shape.
     pub fn encode_prepared_into(&self, block_id:u64,prepared:&mut PreparedBlock,
         profile:Profile,first_row:usize,outputs:&mut [&mut [u8]],
         record_payload_budget:usize,backend:BackendChoice)->Result<BackendUsed,Error> {
@@ -434,21 +460,40 @@ impl Rs16 {
         if native_ok {
             #[cfg(feature="native-isal")]
             {
-                let cache_key=(first_row,outputs.len());
-                if !prepared.native_tables.contains_key(&cache_key) {
-                    let mut coeff=Vec::with_capacity(k*outputs.len());
-                    for row in first_row..first_row+outputs.len() {
-                        for col in 0..k {coeff.push(self.coefficient(row,col,k)?);}
-                    }
-                    let tables=wbd_isal_safe::Tables::new(k,outputs.len(),&coeff)
-                        .map_err(|_|Error::NativeFailure)?;
-                    prepared.native_tables.insert(cache_key,tables);
+                let shape=first_row*MAX_BATCH_ROWS+outputs.len()-1;
+                if prepared.native_tables[shape].is_none() {
+                    // Source bytes and FEC epoch never enter coefficient
+                    // identity; the shared slot includes the verified k.
+                    let slot=((k-1)*MAX_R+first_row)*MAX_BATCH_ROWS+outputs.len()-1;
+                    let table=SHARED_ENCODE_TABLES[slot].get_or_init(|| {
+                        let mut coeff=Vec::with_capacity(k*outputs.len());
+                        for row in first_row..first_row+outputs.len() {
+                            for col in 0..k {
+                                let Ok(c)=self.coefficient(row,col,k) else {return None};
+                                coeff.push(c);
+                            }
+                        }
+                        wbd_isal_safe::Tables::new(k,outputs.len(),&coeff).ok()
+                    }).as_ref().ok_or(Error::NativeFailure)?;
+                    prepared.native_tables[shape]=Some(table);
                 }
-                let tables=prepared.native_tables.get(&cache_key).ok_or(Error::NativeFailure)?;
-                let src=prepared.symbols.iter().map(Vec::as_slice).collect::<Vec<_>>();
-                let mut dest=outputs.iter_mut().map(|o|&mut o[REPAIR_HEADER..])
-                    .collect::<Vec<_>>();
-                tables.encode(&src,&mut dest).map_err(|_|Error::NativeFailure)?;
+                let tables=prepared.native_tables[shape].ok_or(Error::NativeFailure)?;
+                // Native k<=16, rows<=4: pass stack-backed borrowed views,
+                // eliminating two short-lived per-quantum Vec allocations.
+                let mut src:[&[u8];MAX_K]=[&[];MAX_K];
+                for (dst,sym) in src.iter_mut().zip(
+                    prepared.symbols.chunks_exact(prepared.symbol_len)
+                ){ *dst=sym; }
+                let mut e0=[];let mut e1=[];let mut e2=[];let mut e3=[];
+                let mut dest:[&mut [u8];MAX_BATCH_ROWS]=[
+                    &mut e0,&mut e1,&mut e2,&mut e3
+                ];
+                let row_count=outputs.len();
+                for (dst,out) in dest.iter_mut().zip(outputs.iter_mut()) {
+                    *dst=&mut out[REPAIR_HEADER..];
+                }
+                tables.encode(&src[..k],&mut dest[..row_count])
+                    .map_err(|_|Error::NativeFailure)?;
                 used=BackendUsed::NativeIsaL;
             }
         }
@@ -456,7 +501,7 @@ impl Rs16 {
             for (i,o) in outputs.iter_mut().enumerate() {
                 let dst=&mut o[REPAIR_HEADER..];
                 dst.fill(0);
-                for (col,src) in prepared.symbols.iter().enumerate() {
+                for (col,src) in prepared.symbols.chunks_exact(len).enumerate() {
                     let c=self.coefficient(first_row+i,col,k)?;
                     for (b,&x) in dst.iter_mut().zip(src.iter()) {
                         *b^=if c==1{x}else{self.gf.mul(c,x)};

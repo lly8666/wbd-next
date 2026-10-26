@@ -1,0 +1,129 @@
+{
+  "schema": "W100_GAME2_GAME4_FIXED0_REAL_CLEAN_ARM64_V1",
+  "owner": "fec-network-work",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "product": {
+    "source": "c18de0fa79f529c349b6546635f3c6b62aa01b1c",
+    "build_run": 40255431613,
+    "artifact": 12621844471,
+    "sha256": "85e50a70ef44306fe5a6f913010d57568cc01b652830be09d473cbd7b2248ac6"
+  },
+  "scenario": {
+    "each_direction_mbps": 3,
+    "udp_share": 0.96,
+    "real_tcp_flows": 2,
+    "one_way_ms": 75,
+    "phase_s": 20,
+    "artificial_loss_pct": 0,
+    "game_fec": "fixed0",
+    "same_business_packet_distribution_as_W98_fixed6": true,
+    "one_scenario_per_action": true
+  },
+  "game2": {
+    "run": 40256692692,
+    "request_commit": "2e18c1c9efde5354297d1cd2e1bc1ee2d8a923af",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "c2s_s2c_real_udp_mbps": [
+      2.8803412,
+      2.8803412
+    ],
+    "c2s_s2c_real_tcp_mbps": [
+      0.1198944,
+      0.1198944
+    ],
+    "tcp_udp_all_injected_delivered": true,
+    "p99_max_udp_ms": 77.5,
+    "p99_max_tcp_ms": 77.7,
+    "client_server_cpu_s": [
+      2.01,
+      2.06
+    ],
+    "cpu_per_gib_client_server": [
+      287.7402,
+      294.8979
+    ],
+    "rss_peak_bytes_client_server": [
+      25993216,
+      26243072
+    ],
+    "psi_peak_pct": 1.98,
+    "parity_copied_sent_client_server": [
+      7042,
+      7015
+    ],
+    "fec_failed_client_server": [
+      0,
+      0
+    ],
+    "fec_expired_client_server": [
+      0,
+      0
+    ],
+    "pending_retained_bytes_client_server_before_stop": [
+      4320,
+      0
+    ],
+    "actual_game_fixed_profile_both_authenticated": 0,
+    "source_tun_drops": 0,
+    "tcp_backpressure": 0,
+    "stop_drained": true,
+    "zip_artifact": 12623435019,
+    "sha256": "17327db8564e660ab465be99a107a76c1e12a8f8276ad88f33ff6ade4d29ce63"
+  },
+  "game4": {
+    "run": 40256700110,
+    "request_commit": "ab60e30d85dda390fac063a6da792d3044ea749a",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "c2s_s2c_real_udp_mbps": [
+      2.8803412,
+      2.8803412
+    ],
+    "c2s_s2c_real_tcp_mbps": [
+      0.1198944,
+      0.1198944
+    ],
+    "tcp_udp_all_injected_delivered": true,
+    "p99_max_udp_ms": 77.5,
+    "p99_max_tcp_ms": 77.6,
+    "client_server_cpu_s": [
+      2.89,
+      2.93
+    ],
+    "cpu_per_gib_client_server": [
+      413.716,
+      419.442
+    ],
+    "rss_peak_bytes_client_server": [
+      38428672,
+      39297024
+    ],
+    "psi_peak_pct": 4.81,
+    "parity_copied_sent_client_server": [
+      6920,
+      6913
+    ],
+    "fec_failed_client_server": [
+      0,
+      0
+    ],
+    "fec_expired_client_server": [
+      0,
+      0
+    ],
+    "pending_retained_bytes_client_server_before_stop": [
+      0,
+      0
+    ],
+    "actual_game_fixed_profile_both_authenticated": 0,
+    "source_tun_drops": 0,
+    "tcp_backpressure": 0,
+    "stop_drained": true,
+    "zip_artifact": 12622308440,
+    "sha256": "60f6dd521b00908e91347dafe7bce4ade51ee10fb17b6c453ae7e7f50610a9b4"
+  },
+  "interpretation": "Old W90 fixed0 failed genuine clean/TCP Game2/4, W100 new split Game fixed0 genuine both passed with matching rplanned/r_copied/rsent and original TLS configuration; not tested under impairment; lower profile CPU less in different VMs but no sameVM CPU claim.",
+  "caveat": "One Game2 pre-Stop status snapshot retained 4320B live FEC bytes; successful Stop drained/owned cleanup, do not mislabel pre-Stop nonzero as leak.",
+  "capacity_stop": true,
+  "merge_ready": false
+}

@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "kind": "PR25_CAPACITY_AUTOMTU_VERIFIED_EXTERNAL_BASELINE",
+  "pr": 25,
+  "state": "open",
+  "integrated_branch": "experiment/network-matrix-tuning",
+  "integrated_fix_commit": "ae73332d4814edc1c8669a44cbe38fc1b134c367",
+  "experimental_parent": "b169ad07c5b293168925af2a65f1b7fed41338af",
+  "source_in_PR_native_run": "b42b8fa2dd1793a056a6242ec4d349cc9e8a250a",
+  "action_39875959734": {
+    "conclusion": "success",
+    "jobs": {
+      "native-go-rust-bundle": "success",
+      "native-linux-netns": "success",
+      "native-mtu-boundary": "success"
+    },
+    "artifact_ids": [
+      12467804521,
+      12468238963,
+      12468995426
+    ],
+    "artifact_digests": [
+      "sha256:f04d3f93da9b79657c98a2b58a818c9501cbac0fe81acf27345106c843e1cbe9",
+      "sha256:69254395243ad822fb1afecffa02080b16dcfc2e7e80b940576c9a3d7bf60152",
+      "sha256:46ff84f2a7afc115641955375f5b1a95d3c3bdeb7b8ae9b2c9e4282378fab7df"
+    ],
+    "coverage": "nine native ARM MTU/DF boundary mode combinations, product prior bugs listed in PR devlog preserved"
+  },
+  "harness_contract_39875964598": "success",
+  "combined_product_source": "PENDING_SOURCE_COMMIT",
+  "combined_native_p0_result": "NOT_RUN",
+  "S032_source": "b169ad07c5b293168925af2a65f1b7fed41338af",
+  "S032_run": 39877362034,
+  "notes": "PR25 product run PASS does not qualify network Fixed30 or auto curves, and S032 old/new comparison is pinned to earlier native bundles; preserve experiment status and corrections."
+}
