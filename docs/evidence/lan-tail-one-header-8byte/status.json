@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "status": "COMPLETE_ONE_EXISTING_TLS_HEADER_ROLLING_LAST8_BYTES_NATIVE_5X",
+  "branch": "experiment/lan-tail-marker-one-header-8byte",
+  "main_modified": false,
+  "production_wired": false,
+  "report": "docs/evidence/lan-tail-one-header-8byte/FINAL_REPORT.md",
+  "test": "tools/lan_tail_single_header_8bytes_test.go",
+  "analyzer": "tools/lan_tail_single_header_analyze.py",
+  "scope": "native Go minimum encode+decode 100x1345B records, verified fixture of TLS-like inner AEAD; independent implicit counter; not real WBD",
+  "fast_record_original_bytes": 1345,
+  "fast_single_wire_bytes": 1347,
+  "fast_double_wire_bytes": 1352,
+  "aes_wire_bytes": 1368,
+  "single_header_only_fast": true,
+  "rolling_xor_last_bytes": 8,
+  "native_x86": {
+    "run_id": 40266693532,
+    "conclusion": "success",
+    "artifact_id": 12625998188,
+    "ns_per_100": {
+      "single99tail8word": 7712.4,
+      "single99tail8loop": 8771.6,
+      "single99notail": 6967.8,
+      "single99tail1": 7632.8,
+      "single95tail8word": 10980.6,
+      "single80tail8word": 23135.4,
+      "single100AES": 87967,
+      "oldDoubleHeader99": 7668.8,
+      "oldFullXOR": 20327.6
+    }
+  },
+  "native_arm64": {
+    "run_id": 40266697434,
+    "conclusion": "success",
+    "artifact_id": 12626815966,
+    "ns_per_100": {
+      "single99tail8word": 9907.8,
+      "single99tail8loop": 10747.8,
+      "single99notail": 9530,
+      "single99tail1": 9676.2,
+      "single95tail8word": 13236,
+      "single80tail8word": 25745.8,
+      "single100AES": 91861.6,
+      "oldDoubleHeader99": 9677.6,
+      "oldFullXOR": 24372.4
+    }
+  },
+  "repetitions_per_mode": 5,
+  "all_test_pass": true,
+  "heap_allocs_per_100": 0,
+  "important_caveats": [
+    "outer existing TLS length modified +2 and last6 original ciphertext/tag bytes modified; receiver must restore original length and bytes before TLS AEAD decryption",
+    "not standards-compliant TLS1.3 record in transit",
+    "fast unkeyed no MAC, marker is publicly predictable and exposed by reverse XOR",
+    "fast selection uses trusted test oracle not actual TLS1.3 Finished or TCP retransmission state",
+    "implicit per-record counter synchronization is assumed",
+    "not Rust WBD full process"
+  ]
+}
