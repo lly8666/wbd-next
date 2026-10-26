@@ -175,8 +175,12 @@ impl GameTx {
         }
         let mut choices=[usize::MAX;MAX_LANES];
         let mut count=0;
+        // Stagger uses stable physical lane rank, not rotating first lane:
+        // otherwise a later logical source could be due before an earlier
+        // source on the SAME lane and violate FIFO/5ms after-due allowance.
+        let first=if mode==Mode::Game&&self.staggered{0}else{self.cursor};
         for offset in 0..self.lanes.len(){
-            let index=(self.cursor+offset)%self.lanes.len();
+            let index=(first+offset)%self.lanes.len();
             let lane=&self.lanes[index];
             if !lane.active {continue;}
             if predicted_wire>lane.info.mss{
@@ -217,7 +221,9 @@ impl GameTx {
         }
         // First qualified lane rotates per logical input, not per duplicated
         // Game copy; no lane is permanently the first during Normal overlap.
-        self.cursor=(choices[0]+1)%self.lanes.len();
+        if !self.staggered{
+            self.cursor=(choices[0]+1)%self.lanes.len();
+        }
         self.counters.logical_jobs+=1;
         self.counters.common_bytes+=bytes as u64;
         Ok(packet_id)
