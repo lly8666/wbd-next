@@ -291,7 +291,9 @@ func(s *V4WindowsAuthenticatedClientOwner) NextBoundOriginalM2Feedback(
 )([]byte,uint32,uint64,error){
  if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
   s.bridge.feedbackDueProc==nil||capacity<128||capacity>2048||
-  capacity>s.device.maxIPv4+31{return nil,0,0,errV4WindowsOwner}
+  capacity>s.device.maxIPv4+31{
+   return nil,0,0,fmt.Errorf("%w: bounded reverse M2 due stage=preflight cap=%d max=%d",errV4WindowsOwner,capacity,s.device.maxIPv4+31)
+  }
  if err:=ctx.Err();err!=nil{return nil,0,0,err}
  if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
   return nil,0,0,errors.Join(errV4WindowsOwner,err)
@@ -299,7 +301,8 @@ func(s *V4WindowsAuthenticatedClientOwner) NextBoundOriginalM2Feedback(
  state,err:=s.OriginalOwnerReadback()
  if err!=nil||!state.OwnerActive||!state.DeviceBound||
   state.DeviceQuiesced||state.ProductApplied||state.ServerSide{
-  return nil,0,0,errV4WindowsOwner
+  return nil,0,0,fmt.Errorf("%w: bounded reverse M2 due stage=owner_readback active=%t bound=%t quiesced=%t applied=%t server=%t readback=%v",
+    errV4WindowsOwner,state.OwnerActive,state.DeviceBound,state.DeviceQuiesced,state.ProductApplied,state.ServerSide,err)
  }
  output:=make([]byte,capacity)
  var used uintptr
@@ -313,7 +316,8 @@ func(s *V4WindowsAuthenticatedClientOwner) NextBoundOriginalM2Feedback(
   uintptr(unsafe.Pointer(&used)),uintptr(unsafe.Pointer(&seq)),
   uintptr(unsafe.Pointer(&pn)))
  runtime.KeepAlive(output);runtime.KeepAlive(s.bridge.epoch)
- if err!=nil||used>uintptr(capacity){return nil,0,0,errors.Join(errV4WindowsOwner,err)}
+ if err!=nil{return nil,0,0,fmt.Errorf("%w: bounded reverse M2 due stage=native_abi %v",errV4WindowsOwner,err)}
+ if used>uintptr(capacity){return nil,0,0,fmt.Errorf("%w: bounded reverse M2 due stage=length used=%d cap=%d",errV4WindowsOwner,used,capacity)}
  if used==0{return nil,0,0,nil}
  if used<51{return nil,0,0,errV4WindowsOwner}
  return output[:used],seq,pn,nil
