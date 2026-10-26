@@ -1,5 +1,8 @@
 # FEC独立岗位：关闭外层重传后验证与修复
 
+**2026-10-26 W166连续流量数学模型复核：** 用户指出仅凭全16源丢失极端模型无法选最低整体业务损失，W165对2即发+18迟发的无条件推荐已撤回。离线持续1/5/15Mbps、真实k≤16/r=ceil(5k/4)、2,300个两批/三批候选和真实netem逐包GE(3,17,100,0)、时间GE/50-100ms黑洞双重模型证明没有不依赖故障分布的普适最优。候选仅限手动Normal且不进Auto：A 4/6/10@0/40/100(按包GE)，B 1/3/16@0/60/110(时间长突发)；120ms尾批受现RX150ms与24ms成块期限挤压。还未实现产品或真实重测。详细证据 `docs/evidence/fec-network-work/20261026-W166-Normal-Continuous-LongLoss-MonteCarlo.json`。所有原容量停止、主线合并禁令和独立岗位边界继续成立。
+
+
 **W165用户授权：** 原始 Linux Game4 `0/4/50/140ms` 改为默认，老 `0/4/20/60ms` 与 `immediate` 仅显式回退；Normal 特殊手动长突发修补档只先数学评估，不进入Auto、不立即改FEC实现。参见 `docs/evidence/fec-network-work/20261026-W165-Game4-default-Normal-delayed-Maximum-math.json`；保留原独立容量停止/外层DATA OFF测试策略。
 
 
