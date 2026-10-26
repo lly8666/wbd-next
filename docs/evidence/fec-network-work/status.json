@@ -631,7 +631,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W97: reconcile Game2/4 original W95-class (unchanged 3Mbps independent20 / lane1 blackhole / clean restore) Actions for exact W96 44455afb source: request commits a08e3451b6/4171e75f3d. If genuine UDP/TCP and Stop good, close Game OFF architecture scope with W92 raw kernel BPF (~10% Game4 CPU sameVM AB/BA) and W96 TUN-commit correctness; no fixed Game+FEC pass claim. Subsequent fixed FEC must be independently reimplemented/validated after six failed W90 Actions, not resurrected blindly. Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
+  "next_action": "W98 candidate: Game OFF Stage A-D Linux baseline is scoped complete (W91-W97), W92 Game4 raw RX prefilter ~9-10% CPU sameVM AB/BA; W96 TUN-commit fixed. Game+fixed FEC remains explicitly unsupported after six W90 real failures; before re-enabling, use fresh cross-owner separate FEC TX/RX architecture and verify exact MTU/Go negotiated profile, FEC parity scheduling; first complete no-loss Game2/Game4 mixed TCP/UDP 3Mbps and only then impairment. No blind W90 cherry-pick, no heavier load, no new architecture. Preserve outer data retransmission OFF for FEC-only Normal, real feedback; Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6155,14 +6155,33 @@
     "capacity_stop": true
   },
   "w97_game_tun_weaknet": {
-    "status": "TWO_REAL_ACTIONS_DISPATCHED_UNVERIFIED",
+    "status": "EXACT_W96_GAME2_GAME4_REAL_ARM64_PASS_SCOPED",
     "source": "44455afb819572ed75689cab28ffc66d1b1c7640",
     "build_run": 40246704747,
-    "game2_request": "tests/network/fec-work/W97-Game2-OFF-tunCommit-IID20-lane1blackhole-arm64.json",
-    "game4_request": "tests/network/fec-work/W97-Game4-OFF-tunCommit-IID20-lane1blackhole-arm64.json",
-    "game2_commit": "a08e3451b6e5e37b1d9e77d2aa25fa31c02f4797",
-    "game4_commit": "4171e75f3d24239f50725c220cd010b92afd1490",
-    "run_ids": "PENDING_RECONCILE_FROM_ACTIONS",
+    "game2_run": 40247215239,
+    "game4_run": 40247219774,
+    "game2_iid20_missing": [
+      665,
+      678
+    ],
+    "game4_iid20_missing": [
+      20,
+      20
+    ],
+    "game2_blackhole_missing": [
+      2,
+      0
+    ],
+    "game4_blackhole_missing": [
+      0,
+      0
+    ],
+    "true_tcp_all_phases": true,
+    "zero_source_tun_drops": true,
+    "stop_drained_both": true,
+    "cpu": "C/S Game2 6.17/6.28s, Game4 9.47/9.60s on DIFFERENT VMs; not causal CPU comparison",
+    "evidence": "docs/evidence/fec-network-work/20261026-W97-Game2-Game4-TUN-commit-damage-PASS-SCOPED.json",
+    "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN",
     "capacity_stop": true
   }
 }
