@@ -1,0 +1,159 @@
+{
+  "schema": "FEC_W130_COMMON_GO_TO_RUST_RX_P0_V1",
+  "owner": "fec-network-work",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "implementation_source": "0747769c2eae241c131e3b6f25f3b6e81d90705a",
+  "last_verified_source": "f484a4c34e08dcbdfa16beef590d285e9db1ee5f",
+  "mode_paths": {
+    "normal_off": {
+      "client": "runClient",
+      "server": "runServer",
+      "bpf_api": "ExcludeDetachedData",
+      "verified": "NOT_RUN_NEW_SOURCE"
+    },
+    "normal_fixed": {
+      "client": "runClient",
+      "server": "runServer",
+      "bpf_api": "ExcludeDetachedData",
+      "verified": "NOT_RUN_NEW_SOURCE"
+    },
+    "normal_auto": {
+      "client": "runClient",
+      "server": "runServer",
+      "bpf_api": "ExcludeDetachedData",
+      "verified": "NOT_RUN_NEW_SOURCE",
+      "real_m2_feedback": "PRESERVED_IN_CODE_NOT_RUN"
+    },
+    "game2": {
+      "client": "runGameClient",
+      "server": "runGameServer",
+      "bpf_api": "ExcludeDetachedData",
+      "verified": "NOT_RUN_NEW_SOURCE"
+    },
+    "game4": {
+      "client": "runGameClient",
+      "server": "runGameServer",
+      "bpf_api": "ExcludeDetachedData",
+      "verified": "NOT_RUN_NEW_SOURCE",
+      "copy_schedule": "0,4,20,60ms_UNCHANGED"
+    }
+  },
+  "implementation_files": [
+    "r0/go_overlay/internal/faketcp/raw_detached_data_linux.go",
+    "r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go",
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "r0/go_overlay/internal/v4productcli/game_linux.go",
+    "tools/arm64_public_go_rust_bundle.sh"
+  ],
+  "per_lane_reception": "Go AF_PACKET receive, Rust separate exact-tuple raw RX after authenticated M4 owner install. Kernel filter drops only payload DATA of detached original authenticated peer.",
+  "preserved": [
+    "original TLS handshake/prepared transition",
+    "new peer SYN and control ACK FIN RST",
+    "Go raw send FD",
+    "Rust AEAD/PN/replay",
+    "Normal Auto real M2 reports",
+    "FEC parity separate from outer DATA retransmission",
+    "Game4 copy due times",
+    "TUN write-success commit",
+    "MTU, generation and Stop owner"
+  ],
+  "discarded_prior_runs": [
+    {
+      "action": 40284640114,
+      "source": "59a5e894fb443a2f2e59814edc02fd92f54f8ea4",
+      "result": "FAIL_SCRIPT_QUOTE_EOF_NO_NEW_BINARY"
+    },
+    {
+      "action": 40287160899,
+      "source": "1b34e89b03d8d8593a897167631dc25401e50596",
+      "result": "FAIL_SCRIPT_QUOTE_EOF_NO_NEW_BINARY"
+    },
+    {
+      "action": 40287251597,
+      "source": "09b986c167ebee0efa9661676078148233f156ac",
+      "result": "FAIL_SCRIPT_QUOTE_EOF_NO_NEW_BINARY"
+    },
+    {
+      "action": 40287275408,
+      "source": "f50fafb95a6ab6c8293ea74ef72b936b43ee0e3c",
+      "result": "FAIL_SCRIPT_QUOTE_EOF_NO_NEW_BINARY"
+    },
+    {
+      "action": 40287335050,
+      "source": "4f90bfbf6928604ed92d8eedb8b1b12dc4b00c7a",
+      "result": "FAIL_SCRIPT_QUOTE_EOF_NO_NEW_BINARY"
+    },
+    {
+      "action": 40287612578,
+      "source": "30d325b370d5aac796d865048f1e407a76738441",
+      "result": "FAIL_SCRIPT_TAIL_DUPLICATION"
+    },
+    {
+      "action": 40287654830,
+      "source": "75ad2d86506fbb9de06122649cb4a72eca66b24b",
+      "result": "FAIL_SCRIPT_TAIL_DUPLICATION"
+    }
+  ],
+  "current_build": {
+    "action": 40287767024,
+    "source": "0747769c2eae241c131e3b6f25f3b6e81d90705a",
+    "status": "IN_PROGRESS_AT_LAST_AUDIT",
+    "artifact_id": null,
+    "zip_sha256": null,
+    "binaries_verified": false
+  },
+  "scenarios": [
+    {
+      "name": "NORMAL_OFF_CLEAN_SMALL_MIXED",
+      "template": "W46",
+      "performance": "SAME_VM_AB_OLD_NEW",
+      "old_source": "f484a4c3...",
+      "new_source": "0747769c...",
+      "status": "NOT_RUN"
+    },
+    {
+      "name": "NORMAL_FIXED3_IID2_SMALL_MIXED",
+      "template": "W47",
+      "performance": "SAME_VM_BA_OR_AB_OLD_NEW",
+      "old_source": "f484a4c3...",
+      "new_source": "0747769c...",
+      "status": "NOT_RUN"
+    },
+    {
+      "name": "NORMAL_AUTO_AUTH_M2_RISE_RETURN",
+      "template": "W45/W60",
+      "performance": "INDEPENDENT_FUNCTIONAL",
+      "new_source": "0747769c...",
+      "status": "NOT_RUN"
+    },
+    {
+      "name": "GAME2_LOWLOAD_STOP_RECONNECTION",
+      "template": "W103/W106",
+      "performance": "INDEPENDENT_FUNCTIONAL",
+      "new_source": "0747769c...",
+      "status": "NOT_RUN"
+    },
+    {
+      "name": "GAME4_FIXED6_IID30_UDP10",
+      "template": "W128",
+      "performance": "SAME_VM_AB_OLD_NEW",
+      "old_source": "f484a4c3...",
+      "new_source": "0747769c...",
+      "status": "NOT_RUN"
+    }
+  ],
+  "common_fec_review": [
+    "Fec2Owner owner and StagedParity shared; Normal wrapper v4_fixed_stream, Game wrapper v4_game_fec; Fec2LiveRx shared",
+    "P0 does not change FEC allocator or decode; any later common P3 requires Normal + Game separate checks"
+  ],
+  "game_only_later": [
+    "P1 sendmmsg/recvmmsg",
+    "P2 lane RX decrypt outside owner mutex",
+    "stagger and FEC deadline"
+  ],
+  "capacity_stop": true,
+  "merge_ready": false,
+  "windows": "NOT_RUN/TEMP_SKIPPED_USER_20261025",
+  "detail": "docs/devlog/fec-network-work/20261026-W130-common-Go-RX-handoff-Normal-Game-implementation.md"
+}
