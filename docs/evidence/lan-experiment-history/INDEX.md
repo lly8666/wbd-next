@@ -1,6 +1,6 @@
 # LAN TLS-like / XOR / AES 混合传输：系列实验总索引
 
-日期：2026-10-26。当前分支：experiment/lan-tail-single8-wbd-wiring-design。此处是经过源码检查后建立的**统一资料入口**，不是聊天逐字稿，也不意味着功能已接入 WBD main。
+日期：2026-10-26。**归档与后续开发的项目分支：experiment/selective-tls-crypto。** 已从 experiment/lan-tail-single8-wbd-wiring-design 原样快进同步完整继承历史；此处是经过源码检查后建立的**统一资料入口**，不是聊天逐字稿，也不意味着功能已接入 WBD main。同步来历见 [SYNC_TO_PROJECT_BRANCH.md](SYNC_TO_PROJECT_BRANCH.md)。
 
 ## 已核对的归档事实
 

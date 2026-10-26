@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "verified_at": "2026-10-26",
-  "active_branch": "experiment/lan-tail-single8-wbd-wiring-design",
+  "active_branch": "experiment/selective-tls-crypto",
   "status": "SOURCE_AND_REPORTS_ARCHIVED; NOT_FULL_CHAT_OR_BINARY_ARTIFACT_ARCHIVE; PRODUCT_NOT_WIRED",
   "source_tree_scanned": true,
   "consolidated_index": "docs/evidence/lan-experiment-history/INDEX.md",
@@ -56,5 +56,16 @@
     "a physical two-host LAN capture",
     "production Rust codec and Go/WBD/RAW integration"
   ],
-  "future_maintenance": "For every new experiment record commit, tests, Go/Rust versions, runs, scope, raw evidence retention, decisions and unresolved limitations"
+  "future_maintenance": "For every new experiment record commit, tests, Go/Rust versions, runs, scope, raw evidence retention, decisions and unresolved limitations",
+  "project_branch": "experiment/selective-tls-crypto",
+  "synced_from_branch": "experiment/lan-tail-single8-wbd-wiring-design",
+  "base_before_sync": "ca72b345de5846a5c58f28d6be24b4e2fcd057b1",
+  "fast_forwarded_to": "6137f4c8e6d2100740a96c5340173214ce2feafc",
+  "sync_verified_changes": {
+    "commits": 185,
+    "additions_files": 110,
+    "existing_files_modified": 0,
+    "existing_files_deleted": 0
+  },
+  "canonical_sync_log": "docs/evidence/lan-experiment-history/SYNC_TO_PROJECT_BRANCH.md"
 }
