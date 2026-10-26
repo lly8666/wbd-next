@@ -1,5 +1,13 @@
 # W130 common Go-to-Rust receive ownership: Normal OFF / Fixed / Auto and Game2 / Game4
 
+## Native Actions factual update (after original candidate checkpoint)
+
+- Exact candidate `0747769c2eae241c131e3b6f25f3b6e81d90705a` [Action 40287767024](https://github.com/lly8666/wbd-next/actions/runs/40287767024) is **workflow FAILURE only at artifact upload**: 17 Game native tests, 6 FEC RX tests, pinned original Go client/server build and Go tests ran; real original Go netns deterministic Fixed and Auto FEC2 Source+Parity/M2/TUN/Stop passed in the job log. `actions/upload-artifact` retried five times and failed `ArtifactService/CreateArtifact Request timeout`; no reusable ZIP/manifest. Do **not** mark this action PASS or use its missing binaries in A/B. No performance scenario run.
+- A scope audit found a wrongly restrictive `peerIP == e.localIP` rejection introduced in the common filter. Same-IP loopback with different TCP ports is valid; removed without changing the exact peer port / kernel BPF gate at [0db4bc7005d99f014f6eb9c584a3a9623c582079](https://github.com/lly8666/wbd-next/commit/0db4bc7005d99f014f6eb9c584a3a9623c582079).
+- `network-arm64-product-build.yml` previously did not listen to `r0/go_overlay/internal/faketcp/**` pushes, even though its bundle script copies the filter into original pinned Go. [6c38ed0df9da3547c7bd604b51f13443d6863181](https://github.com/lly8666/wbd-next/commit/6c38ed0df9da3547c7bd604b51f13443d6863181) adds the dedicated own-branch build trigger so a filter-only change cannot evade original product tests. **Latest complete implementation SOURCE = `6c38ed0df9da3547c7bd604b51f13443d6863181`**; [ARM64 Action 40288528399](https://github.com/lly8666/wbd-next/actions/runs/40288528399) was in progress at audit. It supersedes `0747769c`; no qualifications transfer until action/bundle verified.
+- The original malformed script failures and subsequent artifact-service upload failure have **different causes**. Both stay in the evidence; Rust+Go successful substeps are not equivalent to complete product artifact success. No new Normal/Game data-path p99/CPU/A/B results yet.
+
+
 Date: 2026-10-26; branch `experiment/fec-network-tuning`, FEC-only owner. **Latest source candidate `0747769c2eae241c131e3b6f25f3b6e81d90705a` — ARM64 Action [40287767024](https://github.com/lly8666/wbd-next/actions/runs/40287767024) initially in progress, not a PASS at this timestamp.** Last real qualified product is `f484a4c34e08dcbdfa16beef590d285e9db1ee5f` (W128 Game4 10Mbps CPU AB). No previous higher-rate UDP qualification transfers automatically.
 
 ## User's scope update / source proof
