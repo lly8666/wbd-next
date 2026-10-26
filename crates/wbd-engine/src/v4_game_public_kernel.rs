@@ -141,6 +141,19 @@ impl GameKernelOwner{
             let game=adapter.lock().map_err(|_|())?;
             (game.inner_mtu(),game.receiver_handle(),game.has_game_fec())
         };
+        // Take the ORIGINAL per-lane replay state exactly once, before
+        // either TX or RX worker starts. Failed admission cannot create an
+        // unauthenticated receive window or a parallel duplicate PN acceptor.
+        let lane_openers={
+            let mut owner=rx_owner.lock().map_err(|_|())?;
+            let mut taken=Vec::with_capacity(n);
+            for i in 0..n{
+                taken.push(owner.take_lane_for_worker(lanes_key(generation,i))
+                    .map_err(|_|())?);
+            }
+            taken
+        };
+        let mut lane_openers=lane_openers.into_iter();
         let epoch_clock=Instant::now();
         let tx_worker=thread::Builder::new().name("wbd-v4-game-tx".into())
             .spawn(move||{
@@ -310,6 +323,7 @@ impl GameKernelOwner{
         let mut threads=vec![tx_worker];
         for i in 0..n{
             let lane=lanes_key(generation,i);
+            let mut lane_opener=lane_openers.next().ok_or(())?;
             let flow=flows[i];
             let raw=Arc::clone(&rx[i]);
             let receiver_owner=Arc::clone(&rx_owner);
@@ -361,20 +375,28 @@ impl GameKernelOwner{
                     // scoped shared lock. Do not time every packet, and do
                     // not add any clock call to ordinary performance runs.
                     let timing=sample_lock&&(sampled_sequence&127)==0;
+                    // AEAD tag, unique PN/replay and logical Game header
+                    // decode are done solely by THIS physical lane worker,
+                    // with no shared GameReceiveOwner lock and no extra copy.
+                    let opened=lane_opener.open(&mut wire[..len]);
                     let before_lock=timing.then(Instant::now);
                     #[cfg(feature="fec2_product_record")]
                     if fec_enabled{
                         let now=MonoNs(rx_start.elapsed().as_nanos()
                             .min(u128::from(u64::MAX)) as u64);
-                        let decoded={
-                            let Ok(mut receiver)=receiver_owner.lock()else{break};
-                            let acquired=timing.then(Instant::now);
-                            rx_held.fetch_add(1,Ordering::Relaxed);
-                            let value=receiver.prepare_fec_batch(lane,&mut wire[..len],now);
-                            if let (Some(start),Some(held))=(before_lock,acquired){
-                                lock_sample.record(held.duration_since(start),held.elapsed());
-                            }
-                            value
+                        let decoded=match opened{
+                            Ok((id,payload))=>{
+                                let Ok(mut receiver)=receiver_owner.lock()else{break};
+                                let acquired=timing.then(Instant::now);
+                                rx_held.fetch_add(1,Ordering::Relaxed);
+                                let value=receiver.prepare_opened_fec_batch(
+                                    lane,id,payload,now);
+                                if let (Some(start),Some(held))=(before_lock,acquired){
+                                    lock_sample.record(held.duration_since(start),held.elapsed());
+                                }
+                                value
+                            },
+                            Err(e)=>Err(e)
                         };
                         match decoded{
                             Ok(Some(batch))=>{
@@ -429,17 +451,20 @@ impl GameKernelOwner{
                         }
                         continue
                     }
-                    let received={
-                        let Ok(mut receiver)=receiver_owner.lock()else{break};
-                        let acquired=timing.then(Instant::now);
-                        rx_held.fetch_add(1,Ordering::Relaxed);
-                        // In-place authenticated record; original 2048B RX
-                        // scratch remains exclusively held until output is owned.
-                        let value=receiver.prepare_receive(lane,&mut wire[..len]);
-                        if let (Some(start),Some(held))=(before_lock,acquired){
-                            lock_sample.record(held.duration_since(start),held.elapsed());
-                        }
-                        value
+                    let received=match opened{
+                        Ok((id,payload))=>{
+                            let Ok(mut receiver)=receiver_owner.lock()else{break};
+                            let acquired=timing.then(Instant::now);
+                            rx_held.fetch_add(1,Ordering::Relaxed);
+                            // Authenticated ID only: one global logical dedup
+                            // and one TUN-success reservation still shared.
+                            let value=receiver.prepare_opened_receive(lane,id,payload);
+                            if let (Some(start),Some(held))=(before_lock,acquired){
+                                lock_sample.record(held.duration_since(start),held.elapsed());
+                            }
+                            value
+                        },
+                        Err(e)=>Err(e)
                     };
                     match received{
                         Ok(Some(mut prepared))=>{
