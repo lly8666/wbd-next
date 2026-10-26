@@ -678,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "P2 per-lane unique Game AEAD/replay owner bb8e8249 RETAINED; old native compiled source reused after exact P3a rollback. Real Game fixed6/OFF 10-30Mbps safe scoped Actions W143–W150 incl damaged true TCP/UDP mixed W150 and original 0/4/20/60 physical + parity checks; CPU reductions small variable 0.6–4.2%, no promised uniform %. P3a Game WBG4 direct arena encode_into exact source08b1cad native SUCCESS but 20Mbps W151 AB process CPU59.01→58.53 (-0.81%) and reverse W152 BA old57.77→new58.13 (+0.62%) both correctness PASS: NO REPEATABLE BENEFIT, two production code files byte-for-byte reverted to bb8 P2 in commits932bc190/1c02c47c; strict evidence in 20261026-W151-W152-Game-P3a-direct-WBG4-arena-20Mbps-ABBA-rejected.json. Avoid more ABBA/seeds on this candidate. NEXT: independent P1b TX true kernel sendmmsg partial-prefix, sealed PN and FEC parity copied-confirmation design only if bounded implementable; alternative common P3 allocation changes must first measure shared Normal+Game hotspots and protect both modes. Last all-five-mode true Normal OFF/Fixed/Auto/Game2/4 SOURCE6c38 verified W130–W134; DON'T promote new Game-only qualification to Normal. Game4>20Mbps and Game2>30Mbps NOT_QUALIFIED runner capacity; full Game4 80Mbps NOT_RUN. Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false; no main merge or original network role next_action edit.",
+  "next_action": "P2 RETAIN source code exact bb8e8249 original lane-owned AEAD/replay; P3a direct encode rejected after W151 AB at20Mbps old59.01/new58.53 CPU-s -0.81pct and W152 BA old57.77/new58.13 CPU-s +0.62pct with identical physical Game4 copies, full fixed6 parity, zero real UDP missing, outer DATA0, Go posthandoff DATA cloned0, STOP safe. P3a codec and Game lane files byte-identical restored to bb8 blobs in commits932bc190/1c02c47c. Reverted source itself additionally rebuilt ARM64 ACTION40309847957 SUCCESS artifact12644491948 SHA256 c376c1..., manifest source1c02c47c exact Go/ISA, 3 internal hashes match; reuse existing full Game product native+real P2 evidence W143–W150, don't rerun identical matrix. Retain P2 Game2 fixed6 20/30Mbps, Game4 fixed6 10/15/20Mbps IID30 and Game4 fixed6 damaged genuine TCP/UDP15Mbps, OFF clean genuine TCP/UDP10Mbps, gains small 0.6–4.2pct not universal. Next separate P1b truly transactional kernel sendmmsg prefix success, PN and parity copied only kernel confirmed or shared P3 alloc diagnostic for Normal and Game if samples warrant; no bundled redesign. Last 5-mode cross Normal OFF/Fixed/Auto source6c38 W130–134 is not silently updated; Windows TEMP_SKIPPED, capacity_stop true, merge_ready false, no main merge nor original network role next_action.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -7419,7 +7419,20 @@
       "game_lane_content_sha": "14c2825ec5f32e7ed62a9b732cefaf6a22ca1fe1",
       "both_exactly_identical_to_pre_P3a_P2_qualified_blob": true
     },
-    "result_evidence": "docs/evidence/fec-network-work/20261026-W151-W152-Game-P3a-direct-WBG4-arena-20Mbps-ABBA-rejected.json"
+    "result_evidence": "docs/evidence/fec-network-work/20261026-W151-W152-Game-P3a-direct-WBG4-arena-20Mbps-ABBA-rejected.json",
+    "rollback_build": {
+      "run": 40309847957,
+      "result": "SUCCESS",
+      "source_commit": "1c02c47c5213fa6e8e6b43b5ee8b4a5131f47334",
+      "artifact_id": 12644491948,
+      "zip_sha256": "c376c1a11ca4d9443d1d204d3ace1250b041ac53313352acaa2ad675bc3d9d7e",
+      "manifest_go_original": "a7a82db31fe736ffedee330795a3234d358f1984",
+      "manifest_isa_original": "c387163fcbca62701d646149564c550c78a4f985",
+      "arch": "aarch64",
+      "client_server_rust_internal_SHA256_verified": true,
+      "source_files_exact_match_P2_blobs": true,
+      "native_only_no_new_real_business_claim": true
+    }
   },
   "game_scoped_current": {
     "source": "bb8e8249c2adba9c7dab72bf07da2dbe0bce3b82",
@@ -7446,6 +7459,11 @@
     },
     "capacity_stop": true,
     "merge_ready": false,
-    "windows": "NOT_RUN/TEMP_SKIPPED"
+    "windows": "NOT_RUN/TEMP_SKIPPED",
+    "rollback_native_build_action": 40309847957,
+    "rollback_native_source": "1c02c47c5213fa6e8e6b43b5ee8b4a5131f47334",
+    "rollback_native_artifact_id": 12644491948,
+    "rollback_native_zip_sha256": "c376c1a11ca4d9443d1d204d3ace1250b041ac53313352acaa2ad675bc3d9d7e",
+    "rollback_native_result": "SUCCESS exact P2 code blobs; new native binary manifest source differs due historical commit, not a new all-mode real-product qualification."
   }
 }
