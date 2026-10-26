@@ -78,6 +78,7 @@ class W167MatrixContracts(unittest.TestCase):
                                                    "repair_uncertain_wire_bytes":0}}}}
             x=analyze(p,leg)
             self.assertEqual(x["cpu_memory_outer"]["client"]["outer_retransmission_fraction"]["repair_over_first_plus_repair_pct"],10)
+            self.assertIsNone(x["cpu_memory_outer"]["client"]["outer_retransmission_fraction"]["repair_over_full_veth_tx_pct_approx"])
             leg["request_id"]="W167_arm64_game4_fixed6_30IID"
             x=analyze(p,leg)
             self.assertEqual(x["cpu_memory_outer"]["client"]["outer_retransmission_fraction"]["status"],

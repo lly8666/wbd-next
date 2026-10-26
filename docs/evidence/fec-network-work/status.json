@@ -7810,5 +7810,18 @@
     "w168_scoped_user_exception": "separate independent isolated jobs",
     "merge_ready": false,
     "results": "PENDING_ACTION"
+  },
+  "w168_250mbps_true_dualarch_first_receipt": {
+    "evidence": "docs/evidence/fec-network-work/20261026-W168-250Mbps-UDP30-Fixed6-ARM64-AMD64-Native-Results.json",
+    "action": 40345202316,
+    "arm64": "PASS_SCOPED_OBSERVATION",
+    "amd64": "INCONCLUSIVE",
+    "arm64_artifact": 12661505649,
+    "amd64_artifact": 12661756005,
+    "required_full_outer_ratio": "NOT_OBSERVED_UNLIKE_COUNTER_STAGES",
+    "normal_data_only_retry_pct": "~8.16-8.22% per sender high",
+    "regular_56": "IN_PROGRESS_AT_RECEIPT",
+    "capacity_stop": true,
+    "merge_ready": false
   }
 }

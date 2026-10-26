@@ -164,10 +164,10 @@ def analyze(case_dir,leg):
                        "repair_over_first_plus_repair_pct":
                            100*(good+uncertain)/(first+good+uncertain),
                        "outer_veth_tx_bytes_all_classes":outer_link_tx_bytes(case_dir,role),
-                       "repair_over_full_veth_tx_pct_approx":(
-                           100*(good+uncertain)/outer_link_tx_bytes(case_dir,role)
-                           if outer_link_tx_bytes(case_dir,role) is not None else None),
-                       "outer_link_fraction_note":"Approximate whole warmup-to-drain native retry bytes / actual all-class interface TX bytes. Native ledger final counters and end snapshot may differ by teardown, no physical L1.",
+                       # The retry ledger is pre-netem; veth TX is after
+                       # actual random losses. Ratios mix different stages.
+                       "repair_over_full_veth_tx_pct_approx":None,
+                       "outer_link_fraction_note":"NOT_COMPARABLE_PRE_NETEM_REPAIR_VS_POST_NETEM_VETH; preserve raw counters without fabricating a whole-outer percentage. Native DATA-only share remains measured.",
                        "repair_definitely_sent_pct":
                            100*good/(first+good+uncertain),
                        "note":"Product outer DATA ledger, includes warmup+measurement+drain; not entire veth link incl parity, ACK, TLS control and retransmitted L2."}

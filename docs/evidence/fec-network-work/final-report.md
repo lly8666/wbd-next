@@ -1,5 +1,15 @@
 # FEC-only 独立岗位｜2026-10-26 限域合并审查索引
 
+## 2026-10-26 W168｜250Mbps/方向 30%IID fixed6 纯UDP双架构原生实测（非完整56项矩阵）
+
+本轮原始TLS→Rust→TUN，外层重传双方 native readback=ON，`tc netem` **仅75ms时延+30%丢包，无rate限速**，每向250Mbps、20秒+2s热身+4s排空。Action [40345202316](https://github.com/lly8666/wbd-next/actions/runs/40345202316) 中 ARM64 子工况 **PASS_SCOPED_OBSERVATION**：UDP C2S缺117/520818=0.02246%、S2C缺59/520827=0.01133%，真实到达约250Mbps/向。产品client/server CPU分别18.91/18.85 core·s（94.55%/94.25%单核）、RSS峰62.14/62.91MiB，原生Rust RX/TX线程占进程CPU近似100.17%/99.91%（采样边界误差），FEC修补717835/717835和717883/717883确实全部发送，无repair job expired，FEC RX peak9.18/9.63MiB无capacity evicted。主机PSI peak24.84%。
+
+**AMD64高压实测并非通过：INCONCLUSIVE**，尽管GitHub job完成上传，C2S缺80088/504488=15.875%、S2C缺78265/501896=15.594%，到达仅203Mbps/向；进程CPU21.28/21.12core·s（106.4%/105.6%单核），RSS64.77/65.87MiB，Rust RX/TX线程近似98.66%/98.78%；FEC parity planned/sent client 682661/363432、server 681935/354529，expiry13781/14190，另有真实SOURCE_TUN_TX_DROPS、pacing_catchup_limited与PSI36.32%。**这提示发送侧时序/负载压力，不能用本数据断言解码数学缺陷。** 两边都没有FEC RX capacity evicted。
+
+原生Normal outer DATA账本 `(repair_accepted+repair_uncertain)/(first+repair)` 在ARM64约8.20–8.22%、AMD64约8.16%；**不是包含FEC/control/ACK的真正全外层速率占比。** 旧W168自动将**前netem的repair计数**除以**后netem的veth已发字节**得11.5–11.6%，这属于**不同观测边界的错误比例，不可引用**；已添加机器汇总纠偏策略：全外层精确占比标`NOT_OBSERVED`，保留每个真实原始计数供复核。完整 [W168 high结构化收据](20261026-W168-250Mbps-UDP30-Fixed6-ARM64-AMD64-Native-Results.json)。其余56个10Mbps纯UDP工况仍在进行，绝不从这两例猜其成功率；继续不合main。
+
+
+
 ## 2026-10-26 W168｜连接恢复：纯UDP、去外层速率限制、不再按PSI提前停止，补全双架构56+2测试
 
 用户明确覆盖 W167 的混合TCP/UDP和资源自动停机要求。本轮业务**100%真实UDP**（原 TLS 控制连接仍必然使用 TCP），双向各10Mbps、20秒、IID 1/5/15/30%，七个公开产品组合×原生 ARM64/AMD64，**56个独立 GitHub Actions VM 工况**；另外双架构各独立跑 250Mbps/方向、Fixed6、30%IID、20秒，合计**58个工况**。netem只加随机损伤和75ms基础延迟，`rate_mbps=0` 即**不加任何额外tc rate限速**。性能 PSI/steal 只观测、不因旧峰值超过20%自动停止下一例；历史`capacity_stop=true`全局状态仍保留、此次用户授权仅对隔离W168工况例外，基础作业/清理/进程失败仍保持真实FAIL。全量逐项收据待Action真正结束，不得造绿。
