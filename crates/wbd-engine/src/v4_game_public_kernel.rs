@@ -40,6 +40,7 @@ pub(crate) struct GameKernelOwner{
     rx_dedup_none:Arc<AtomicU64>,rx_tun_failed:Arc<AtomicU64>,
     rx_delivery_commit_failed:Arc<AtomicU64>,
     outer_blocked_duplicate:Arc<AtomicU64>,
+    outer_repeated_copy_sent:Arc<AtomicU64>,
 }
 // Each lane FIFO delivers the first independent AEAD copy of a logical
 // source or parity symbol. Reappearance cannot become outer DATA repair.
@@ -98,6 +99,7 @@ impl GameKernelOwner{
         let rx_tun_failed=Arc::new(AtomicU64::new(0));
         let rx_delivery_commit_failed=Arc::new(AtomicU64::new(0));
         let outer_blocked_duplicate=Arc::new(AtomicU64::new(0));
+        let outer_repeated_copy_sent=Arc::new(AtomicU64::new(0));
         let mut lanes=Vec::new();
         for i in 0..n{
             lanes.push(TxLane{
@@ -113,6 +115,7 @@ impl GameKernelOwner{
         let tx_copy=Arc::clone(&copied);
         let tx_rejected=Arc::clone(&rejected);
         let outer_denied=Arc::clone(&outer_blocked_duplicate);
+        let outer_repeated=Arc::clone(&outer_repeated_copy_sent);
         #[allow(unused_variables)]
         let (inner_mtu,rx_owner,fec_enabled)={
             let game=adapter.lock().map_err(|_|())?;
@@ -206,6 +209,13 @@ impl GameKernelOwner{
                                 .is_ok();
                             if ok {
                                 item.seq=item.seq.saturating_add(wire.len() as u64);
+                                // Count ACTUAL successful same-lane repeat
+                                // sends, not a fake zero returned by FFI.
+                                // OFF rejects this situation before send_one;
+                                // another lane's independent first is valid.
+                                if !game_first_lane_copy(item.last_initial_id,id.0){
+                                    outer_repeated.fetch_add(1,Ordering::Relaxed);
+                                }
                                 item.last_initial_id=Some(id.0);
                                 tx_copy.fetch_add(1,Ordering::Relaxed);
                                 true
@@ -422,10 +432,12 @@ impl GameKernelOwner{
             raw_received,rx_reject,
             rx_driver_timeout,rx_driver_other,rx_mutex_acquired,
             rx_authenticated_some,rx_dedup_none,rx_tun_failed,
-            rx_delivery_commit_failed,outer_blocked_duplicate})
+            rx_delivery_commit_failed,outer_blocked_duplicate,
+            outer_repeated_copy_sent})
     }
-    pub(crate) fn outer_policy_counters(&self)->(u64,u64){
-        (self.outer_blocked_duplicate.load(Ordering::Relaxed),
+    pub(crate) fn outer_policy_counters(&self)->(u64,u64,u64){
+        (self.outer_repeated_copy_sent.load(Ordering::Relaxed),
+         self.outer_blocked_duplicate.load(Ordering::Relaxed),
          self.copied.load(Ordering::Relaxed))
     }
     pub(crate) fn counters(&self)->(u64,u64,u64){

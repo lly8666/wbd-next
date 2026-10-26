@@ -2611,8 +2611,8 @@ pub unsafe extern "C" fn wbd_fec_network_game_group_outer_policy_read(
     let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
     if e.stopped{return BAD_STAGE}
     let Some(driver)=e.drivers.as_ref()else{return BAD_STAGE};
-    let (blocked,first)=driver.outer_policy_counters();
-    let values=[u64::from(e.outer_repair_enabled),0,blocked,first];
+    let (repeated,blocked,first)=driver.outer_policy_counters();
+    let values=[u64::from(e.outer_repair_enabled),repeated,blocked,first];
     unsafe{std::ptr::copy_nonoverlapping(values.as_ptr(),out,4)};
     OK
 }

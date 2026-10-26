@@ -58,6 +58,15 @@ jobs:
           cargo +1.85.1 test --locked -p wbd-engine \
             --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
             --lib game_reused_tx_scratch_mixed_lengths_across_lanes_and_rx_duplicate_precheck -- --nocapture
+      - name: W103 Game native outer OFF accepts first lane and fresh parity but blocks retry
+        shell: bash
+        run: |
+          set -euo pipefail
+          WBD_ISAL_PREFIX="$RUNNER_TEMP/wbd-isal-arm64-public" \
+          WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985 \
+          cargo +1.85.1 test --locked -p wbd-engine \
+            --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
+            --lib w103_game_outer_off_blocks_reused_logical_ids_but_keeps_new_parity -- --nocapture
       - name: W101 classify authenticated Game FEC RX decoder refusal causes once per product
         shell: bash
         run: |
