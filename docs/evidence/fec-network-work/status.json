@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "P2_GAME_LANE_AEAD_REPLAY_RETAINED_W143_W150_REAL_NEAR_LIMIT_AND_MIXED; P3A_W151_W152_ABBA_NO_REPRO_CPU_GAIN_REVERTED_EXACT_P2_SOURCE; CAPACITY_STOP_NO_MAIN_MERGE",
+  "phase": "P2_RETAINED_GAME; W153_GAME4_25MBPS_HOST_PSI_NEAR_LIMIT_NO_ESCALATION; W154_GAME2_35MBPS_SCOPED_PASS; P1B_OPTIN_TRUE_TX_SENDMMSG_W155_REAL_PASS_NATIVE_COUNTERS_W156_PENDING; CAPACITY_STOP_NO_MAIN_MERGE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -678,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "P2 RETAIN source code exact bb8e8249 original lane-owned AEAD/replay; P3a direct encode rejected after W151 AB at20Mbps old59.01/new58.53 CPU-s -0.81pct and W152 BA old57.77/new58.13 CPU-s +0.62pct with identical physical Game4 copies, full fixed6 parity, zero real UDP missing, outer DATA0, Go posthandoff DATA cloned0, STOP safe. P3a codec and Game lane files byte-identical restored to bb8 blobs in commits932bc190/1c02c47c. Reverted source itself additionally rebuilt ARM64 ACTION40309847957 SUCCESS artifact12644491948 SHA256 c376c1..., manifest source1c02c47c exact Go/ISA, 3 internal hashes match; reuse existing full Game product native+real P2 evidence W143–W150, don't rerun identical matrix. Retain P2 Game2 fixed6 20/30Mbps, Game4 fixed6 10/15/20Mbps IID30 and Game4 fixed6 damaged genuine TCP/UDP15Mbps, OFF clean genuine TCP/UDP10Mbps, gains small 0.6–4.2pct not universal. Next separate P1b truly transactional kernel sendmmsg prefix success, PN and parity copied only kernel confirmed or shared P3 alloc diagnostic for Normal and Game if samples warrant; no bundled redesign. Last 5-mode cross Normal OFF/Fixed/Auto source6c38 W130–134 is not silently updated; Windows TEMP_SKIPPED, capacity_stop true, merge_ready false, no main merge nor original network role next_action.",
+  "next_action": "Game P2 bb8e kept with W143–W150 real tests. New W153 Game4 25Mbps each dir fixed6 IID30 ACTION40311062427 PASS zero loss, but host CPU PSI old mean19.20 peak21.93 over20 28pct, P2 new mean18.33 peak21.92 over20 18pct: stop increasing Game4 on this VM. W154 Game2 35Mbps ACTION40311074186 PASS zero loss, PSI~11 mean, not same as 80Mbps Game4 or TCP mixed qualification. P1b true TX sendmmsg implemented opt-in explicit per-bundle Game only with <=8 due-only sealed records grouped by lane, 1 first ASAP, exact native accepted-prefix ledger and FEC copied only confirmed, EAGAIN/uncertain suffix dropped, PN monotonic/no reseal, Stop debt cleared. New a206 native build40312320321 PASS artifact12645451621 inner manifest hashes verified. W155 real Game4 fixed6 iid30 each dir20Mbps old P2 source bb8 vs B opt-in a206 Action40312815163 PASS true UDP zero missing, parity and 0/4/20/60 planned=sent, outer retrans0/Go duplicates0/stop clean; CPU old70.05 new69.54 (-0.73%, NO proven benefit). To VERIFY real mmsg group>=2 not just one-send, f2d source with one Stop aggregate native_calls/records/confirmed/partial/singleton/unsent/maximum compiled action40313151012 IN_PROGRESS; harness strict receipt config committed4054a9a5. Need exact bundle artifact then W156 single near-limited scenario before retention. Never claim 80Mbps Game4 qualified, Windows still NOT_RUN, capacity_stop true, merge_ready false, no main merge or other role state.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -7465,5 +7465,85 @@
     "rollback_native_artifact_id": 12644491948,
     "rollback_native_zip_sha256": "c376c1a11ca4d9443d1d204d3ace1250b041ac53313352acaa2ad675bc3d9d7e",
     "rollback_native_result": "SUCCESS exact P2 code blobs; new native binary manifest source differs due historical commit, not a new all-mode real-product qualification."
+  },
+  "w153_w154_incremental_capacity": {
+    "game4_25": {
+      "action": 40311062427,
+      "artifact": 12644178173,
+      "sha256": "56c566fac64185fa9bcfa2b08cab3eec30228ee2cf8cdc1e3729c18c47ad6146",
+      "old_cpu_s": 87.58,
+      "p2_cpu_s": 86.6,
+      "host_psi_mean_old_new_pct": [
+        19.2026,
+        18.3322
+      ],
+      "host_psi_peak_old_new_pct": [
+        21.93,
+        21.92
+      ],
+      "host_psi_over20_fraction_old_new": [
+        0.28,
+        0.18
+      ],
+      "udp_missing_both": 0,
+      "full_game4_stagger_and_parity": true,
+      "decision": "PRESSURE_STOP_GAME4_25_DO_NOT_ESCALATE30_OR80_ON_THIS_VM"
+    },
+    "game2_35": {
+      "action": 40311074186,
+      "artifact": 12643704430,
+      "sha256": "4f50330edd51c543cb52dc1809d200acb468b63a7f67420754ab6d611c6468bd",
+      "old_cpu_s": 63.47,
+      "p2_cpu_s": 61.8,
+      "host_psi_mean_old_new_pct": [
+        11.0444,
+        10.7916
+      ],
+      "host_psi_peak_old_new_pct": [
+        12.58,
+        12.31
+      ],
+      "udp_missing_both": 0,
+      "fec_parity_all": true,
+      "decision": "PASS_SCOPED_35MBPS_GAME2_UDP_ONLY"
+    },
+    "evidence": "docs/evidence/fec-network-work/20261026-W153-W154-P2-incremental-25M35M-capacity-stop.json"
+  },
+  "w155_game_p1b_native_tx_sendmmsg": {
+    "source_candidate": "a206745b5e973cdd9ab3e10ba5e394cf775eed0d",
+    "native_build_action": 40312320321,
+    "native_build_result": "SUCCESS",
+    "native_artifact": 12645451621,
+    "native_sha256": "fe9deb5ba7b58d345c4332099d1170b499a6c6f5403c932924f84aaf65db9d3b",
+    "manifest_arch_original_go_isa_internal_hash_verified": true,
+    "original_scope": "Opt-in only WBD_GAME_TX_MMSG=1, grouped same-lane due ready <=8; single sends immediately, native kernel sendmmsg for groups >=2; `GameTx` staged debt confirmed accepted-prefix only, never optimistic FEC parity copied, unsent tail bounded dropped and PN not reused, Stop settled.",
+    "first_real_action": 40312815163,
+    "first_real_result": "SUCCESS_PASS_SCOPED_20MBPS_UDP_IID30",
+    "first_real_artifact": 12645313624,
+    "first_real_zip_sha256": "f4ae0a604a327a45fa65bfb1382bc0e7c37d94f2ae561b5ed0a3ded58b85271e",
+    "first_real_old_new_cpu_s": [
+      70.05,
+      69.54
+    ],
+    "first_real_host_psi_mean_old_new_pct": [
+      12.738,
+      12.1528
+    ],
+    "first_real_udp_missing": 0,
+    "first_real_game4_all_stagger_planned_sent": true,
+    "first_real_fixed6_parity_planned_sent": true,
+    "first_real_go_handoff_copies_zero": true,
+    "first_real_outer_retransmits_zero": true,
+    "first_real_stop_clean": true,
+    "first_real_caveat": "No native multi-record syscall count in first compiled source; CPU -0.73% one AB too small, not enough for retention claim.",
+    "receipt_instrument_source": "f2d304514a7675d4caf7bc774ec44e67b4c7a18f",
+    "receipt_build_action": 40313151012,
+    "receipt_build_status": "IN_PROGRESS",
+    "harness_contract_source": "4054a9a5f09e52399652d45189227a331f130b4c",
+    "receipt_required": "both roles M0_GAME_M4_TX_MMSG native_calls>0 largest>=2 with native_records, confirmed, partial, singleton, unsent only if B enables",
+    "next": "Only after f2d native ARM64 PASS with verified manifest/hash, run one sameVM near-knee 20Mbps or lower opt-in AB/BA to prove true batches and effective CPU with full parity; NO GAME4 >25 due host PSI >20 observed. If no repeatable CPU benefit/reliability, revert ONLY P1b source/harness while keeping P2.",
+    "capacity_stop": true,
+    "merge_ready": false,
+    "windows": "NOT_RUN"
   }
 }
