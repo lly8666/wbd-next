@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 273,
-  "checkpoint_sha": "28b5cd13544f1d5c09ddc7727b10bd7d2be26993",
+  "sequence": 274,
+  "checkpoint_sha": "c6866577e1d2326dd169fdbddf9acda1eb93ac86",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 public original-Go TLS Windows Npcap/Wintun↔Linux raw/TUN Normal/off: H273 recovered SOURCEbcf2 run39802119726 actual native duplex UDP, authenticated M2 ACK3 and both owned Stop PASS_SCOPED; H272 governance source-mismatch original FAIL recorded and evidence indexing corrected. >256 ACK gap, induced two-repair/Abandoned, netem WL0/1/5 still NOT_RUN.",
-  "why_now": "H272 checkpoint→main d8ba had exactly one cursor-only commit; S869 intent dfa60, S870 evidence/devlog 28b5 recovered Action39802119726/1 complete SUCCESS sourcebcf2, job119906092650 and artifact12438420113 sha256 19e24f31…; report Windows25/22 Linux88/24, Linux server ACK3/retrans175/max2, no measured 10Mbps/60s. Downloaded original H272 Governance39805008919/1 artifact12437452011: FAIL 'evidence is for a different SOURCE' caused mixed hot evidence refs, now historical citations moved to context_refs with sole sourcebcf2 hot evidence. No product code/test rerun in recovery.",
-  "done_when": "Registry PLAN024 unchanged: true public original-Go credential TLS/Rust Windows Npcap/Wintun→Linux raw/TUN Normal/off sustained bidirectional plus shared authentic M2 receipt/at-most-two repair/Abandoned, fresh after >256 carrier ACK gap, real netem and owned Stop. Only after functional gates distinct WL-N0 (0%/300ms), WL-N1 (1%/50ms), WL-N5 (5%/50ms), each 10Mbps bidirectional 60s; otherwise NOT_RUN.",
-  "next_action": "First confirm post-H exact main Governance conclusion; then use current low-cost Windows/Linux M2+pending/fresh telemetry to isolate earliest >256 carrier ACK gap wait. Before any fix re-read current 02/04/08 design, real Windows pending/TUN→Rust owner→Linux feedback/Stop call chain and recent related patches, leave brief intent; implement one bounded functional batch for fresh-with-gap/two-repair/Abandoned, only then schedule independent WL-N0/N1/N5.",
+  "current_task": "PLAN024 original-Go credential TLS Rust Windows Npcap/Wintun ↔ Linux raw/TUN Normal/off current S879 source f11b6e7 scoped native public two-way warmup/kernel300ms tc/owned Stop functional works, but 10Mbps WL-N0 sustained fails due exact Windows original Rust/Go outbound seq mismatch +103 bytes after ~12s. S872 60s delivery rate failed, S875 E0308 failed, S877 original owner failed after4s, all preserved. N1/N5 NOT_RUN.",
+  "why_now": "User authorized rapid Win→Linux blockers. S871 intent→S872 actual tc/IFB 300ms 0% 10Mbps both directions full60s run40291751850/1 workflow green but WL-N0 deliveries FAILED. S873/S874 read current module design/real call chain and noted M1/M2 bounded flight; S875 resized only original Normal/off M1/Rust shadow and Go authenticated RX high-water but compiler E0308 run40294153223/1; S876 intent+S877 fixed shadowed NormalOffReceive compiler and native Linux build/Windows Go high-water unit PASSED, public run40294472503/1 FAILED Windows owner after4.2s; S878 intent+S879 error origin labels yielded precise native mismatch expected1472781435 got1472781538 at sourcef11b6e7 run40295748769/1. Exact artifacts & old FAIL archived S880 evidence/docs. No production gate bypass; main Governance40297124252/1 PASS after S880.",
+  "done_when": "Registry unchanged: exact public Windows→Linux Normal/off sustained 10Mbps+0%/300ms kernel bidirectional 60s, authentic M2 bounded two repair/Abandoned and >256 carrier ACK gap, owned Stop. Only after valid N0, distinct N1 1%/50ms and N5 5%/50ms Actions. Fixed/Auto/Game/global WFP/DNS/GUI/physical own distinct gate; default FEC2 OFF.",
+  "next_action": "In original Rust v4_windows_owner.rs::m2_next_feedback_entry/v3_seal_entry and Go r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go::rustFeedbackOne/transmitOne, source-lock a cheap bounded regression that identifies which genuine M1/M2 control reservation produces the observed +103-byte Go/Rust TX sequence discrepancy; keep strict sequence guard and authenticated PN/WAL/Stop; correct only proven transaction and then re-run one real WL-N0. Do not dispatch N1/N5 or another full N0 without new discriminating evidence.",
   "unverified": true,
-  "last_tested_source": "bcf2fff7175bd711e6f98177499c5c0451c4eefc",
+  "last_tested_source": "f11b6e7a13dafc7203a2630a92957ab80be48ff9",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN024-S870-H272-recovered-bcf2-public-and-governance-20261026.json"
+    "docs/evidence/M0/PLAN024-S880-WL-N0-exact-original-failure-20261026.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/PLAN024-S870-H272-recovered-bcf2-public-and-governance-20261026.md",
-    "docs/evidence/M0/PLAN024-S868-H271-recovered-M2-Actions-20261022.json",
-    "docs/evidence/M0/PLAN024-S864-real-Windows11-Linux-Normal-duplex-owned-Stop-20261022.json",
-    "docs/evidence/M0/PLAN024-S866-S867-Normal-Health-M2-owner-native-validation-20261022.json",
-    "docs/architecture/modules/08-RECOVERY.md",
+    "docs/devlog/M0/PLAN024-S880-WL-N0-original-windows-rust-seq-mismatch-20261026.md",
+    "docs/evidence/M0/PLAN024-S872-WL-N0-first-public-kernel-tc-20261026.json",
+    "docs/devlog/M0/PLAN024-S874-WL-N0-source-locked-capacity-bottleneck-intent-20261026.md",
+    "docs/devlog/M0/PLAN024-S876-fix-native-Linux-E0308-intent-20261026.md",
+    "docs/devlog/M0/PLAN024-S878-WL-N0-native-owner-refusal-operation-intent-20261026.md",
     "docs/testing/NETWORK_TRIAGE.md",
-    "docs/devlog/M0/PLAN024-S869-H272-recovery-intent-20261026.md"
+    "docs/architecture/modules/08-RECOVERY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H273 recovered Action39802119726 exact SOURCEbcf2 and artifact12438420113, genuine two-OS public original Normal/off UDP25/22 W and88/24 L, Stop PASS, server M2 ACK3/retrans175/max2. Corrected mixed-SOURCE hot evidence causing H272 Governance39805008919 FAIL without removing failure. Original 3e5 E0599 FAIL preserved; 83ad feature-off ABI and bcf2 WAL scoped PASS preserved. No new code or rerun. >256 ACK gap, causal second repair/Abandoned, netem WL0/1/5, host-global OS/GUI, physical NOT_RUN."
+  "partial_summary": "H274 recovery complete for S871–S880. Source8dd51 run40291751850/1 public feature duplex Stop PASS but 60s WL-N0 throughput FAIL Windows0.059Mbps Linux1.717Mbps; S875 source8642 run40294153223/1 native Linux E0308 original FAIL; S877 sourceb4ed run40294472503/1 Linux source build/Go native unit PASS, Windows public sustained FAIL after4.2s (auth owner refused); S879 sourcef11b run40295748769/1 native Linux build/WAL/Go unit PASS, public startup/auth duplex kernel tc PASS but sustained FAIL after11.875s: authenticated Rust owner TX seq103B ahead of Go, original owner correctly Stop/owned cleanup PASS, artifacts in S880. No full N0 PASS, N1/N5/two-repair/Abandoned/physical/global OS NOT_RUN; strict auth/sequence validation retained."
 }
