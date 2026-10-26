@@ -36,6 +36,29 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_game_rx_lock_128th_packet_sampling_is_strict_and_off_by_default(self):
+        from tools.network_harness.runner import public_game_rx_lock_sample
+        line=("M0_GAME_M4_RX_LOCK_SAMPLE samples=90 wait_total_ns=250000 "
+              "hold_total_ns=630000 wait_max_ns=8000 "
+              "sample_stride=128 includes_commit=0")
+        self.assertEqual(public_game_rx_lock_sample(line)["samples"],90)
+        self.assertIsNone(public_game_rx_lock_sample(""))
+        self.assertIsNone(public_game_rx_lock_sample(line+"\n"+line))
+        self.assertIsNone(public_game_rx_lock_sample(line.replace(
+            "sample_stride=128","sample_stride=1")))
+        self.assertIsNone(public_game_rx_lock_sample(line.replace(
+            "wait_max_ns=8000","wait_max_ns=999999")))
+        r=request()
+        self.assertFalse(r["bundles"]["A"].get("enable_game_rx_lock_sample",False))
+        r["product"].update(mode="game4",game_fec="fixed6")
+        r["bundles"]["A"]["enable_game_rx_lock_sample"]=True
+        self.assertTrue(validate(r)["bundles"]["A"]["enable_game_rx_lock_sample"])
+        r["bundles"]["A"]["enable_game_rx_lock_sample"]=1
+        with self.assertRaises(ValueError): validate(r)
+        r["bundles"]["A"]["enable_game_rx_lock_sample"]=True
+        r["product"]["mode"]="normal"
+        with self.assertRaises(Unsupported): validate(r)
+
     def test_game_four_slot_native_recvmmsg_receipt_and_scope(self):
         from tools.network_harness.runner import (
             product_marker_line, public_game_rx_multimsg)

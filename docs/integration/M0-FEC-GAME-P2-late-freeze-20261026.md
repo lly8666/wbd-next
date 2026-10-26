@@ -1,0 +1,5 @@
+# S884 — latest experimental late-freeze snapshot 6852734 (2026-10-26)
+
+After S883 initial frozen `de8cbc563ea3ac284ae6f58d953548ceb8f156bf`, experimental branch continued with six commits through `6852734cc1968b03706bbd38f4ce4a13fad775a6`. Three runtime/test-side paths and STATUS/harness were refreshed to exact final blobs in this review branch: `crates/wbd-engine/src/v4_game_public_kernel.rs`, `tools/network_harness/{config.py,runner.py}`, `tests/network/test_harness.py`, `docs/evidence/fec-network-work/status.json`.
+
+New P2 shared RX owner lock 1/128 sampling is opt-in / diagnostic-only and is **not** a CPU/performance success claim or an accepted Game optimization yet. It must be kept off by default, verified in real native Actions, and only enabled for a bounded profile; P1a real Game `recvmmsg` reverted remains reverted. No change to the previously listed seven main-versus-experiment conflicts or main original WL-N0 failure. Later live experimental branch commits remain outside this exact source freeze until independently reviewed.
