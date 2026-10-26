@@ -1198,17 +1198,26 @@ class LinuxExperiment:
                     row["sent"][i]>row["planned"][i] for i in range(4))):
                     verified=False
                 if expected:
-                    # A green application result MUST NOT hide a scheduler
-                    # that only sends the last 60ms lane (the first candidate
-                    # did that before stable physical-lane rank was fixed).
-                    # With bounded <=3Mbps each copy must be attempted;
-                    # network loss is measured downstream.
-                    if (not all(n>0 for n in row["planned"]) or
-                        any(row["sent"][i]*100 < row["planned"][i]*98
-                            for i in range(4)) or
-                        any(row["abandoned"][i]*100 > row["planned"][i]*2
-                            for i in range(4))):
+                    # Only a declared PHYSICAL lane blackhole may abandon its
+                    # matching staggered position; the other THREE healthy
+                    # positions stay strictly gated, so W114's rotated bug
+                    # remains FAIL. This is not an outer retransmission loss.
+                    blocked={lane-1 for ph in self.config["phases"]
+                             for direction in ("c2s","s2c")
+                             for lane in ph[direction]["blackhole_lanes"]}
+                    if not all(n>0 for n in row["planned"]):
                         verified=False
+                    for i in range(4):
+                        planned=row["planned"][i]
+                        sent=row["sent"][i]
+                        abandoned=row["abandoned"][i]
+                        if (sent+abandoned>planned or
+                            (i in blocked and
+                             (sent+abandoned)*100 < planned*98) or
+                            (i not in blocked and
+                             (sent*100 < planned*98 or
+                              abandoned*100 > planned*2))):
+                            verified=False
         # Independent native Game policy: no Normal M2 one-lane retry
         # ledger is claimed. Only real per-lane first sends and an OFF
         # duplicate logical-ID prohibition establish DATA retry OFF.
