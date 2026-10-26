@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "id": "gui-config-feedback",
+  "name": "配置/CLI/WinForms状态回执",
+  "summary": "区分requested/pending/applied/rejected与本地保存，真实OS Applied前不得宣称ready。",
+  "owner": "M0 takeover/历史M4",
+  "stage": "experimental",
+  "development_branch": "work/m4-r1-platform",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "FEC mode": "off生产默认",
+    "GUI-ready": "必须有真实OS_APPLIED"
+  },
+  "usage": {
+    "cli": "原Go Windows --native-v4-product与Linux --mode是不同平台入口，不合并假统一CLI",
+    "config": "旧Go fec.mode/fec.profile/fec.auto_policy/auto_start_profile与V4 CLI不完全映射",
+    "gui": "WinForms存在打包和测试child状态验证，真人real OS Applied/Disconnect缺同源证据"
+  },
+  "code_refs": [
+    "r0/go_overlay/assembly/manifest.json",
+    "r0/go_overlay/windows/gui/M0Plan020GUIAuthorityHarness.cs",
+    "r0/go_overlay/internal/configfile/fec2_product_test.go"
+  ],
+  "doc_refs": [
+    "docs/evidence/M0/PLAN020-source-locked-native-WinForms-V4-Go-Rust-M3-signed-Wintun-portable-S636-20261021.json",
+    "docs/architecture/MIGRATION.md"
+  ],
+  "verification": [
+    {
+      "platform": "windows/2022",
+      "scope": "真实WinForms构建+FAKE child状态机，非UI全栈功能",
+      "status": "BUILD_PASS",
+      "source_sha": "249b7af42fdcc84d6e064ada36a2b7ec331c12d3",
+      "evidence": "docs/evidence/M0/PLAN020-source-locked-native-WinForms-V4-Go-Rust-M3-signed-Wintun-portable-S636-20261021.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "GUI真实TLS/驱动/操作系统应用与断开",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/amd64",
+      "scope": "Linux CLI无本GUI适用入口",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "保存或校验成功不是Native FEC Applied；组装后的旧GUI配置完整参数未逐个核验。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

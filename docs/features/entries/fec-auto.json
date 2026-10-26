@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "id": "fec-auto",
+  "name": "Normal 自动FEC2",
+  "summary": "按可信成熟M2反馈调整FEC冗余强度，区分启动应用与实际动态调整。",
+  "owner": "M0/M2/M3 + FEC实验",
+  "stage": "experimental",
+  "development_branch": "experiment/fec-network-tuning",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "mode": "fec-auto",
+    "startup": "strong（源码注释）",
+    "production": "off"
+  },
+  "usage": {
+    "cli": "Linux --mode fec-auto；需检查requested/pending/applied的真实回执",
+    "config": "旧配置键fec.mode/fec.auto_policy/fec.auto_start_profile有测试；公开Linux CLI非同一组开关",
+    "gui": "GUI可显示选项，不等于Windows Auto已被Rust M2应用"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
+    "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller.go",
+    "crates/wbd-engine/src/runtime/fec2_owner.rs"
+  ],
+  "doc_refs": [
+    "docs/architecture/FEC_V2_BALANCED.md",
+    "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
+  ],
+  "verification": [
+    {
+      "platform": "linux/amd64",
+      "scope": "原Go TLS与Rust真实raw/TUN：Auto启动初始revision Applied与UDP/Stop，非完整升降档（旧L源码，非本次审阅SHA）",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
+      "evidence": "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
+    },
+    {
+      "platform": "linux/arm64",
+      "scope": "W132原始M2有限动态窗口及降档观测，旧F源码",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+      "evidence": "docs/evidence/fec-network-work/20261026-W130-W134-Go-Rust-RX-handoff-real-five-mode-Actions.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "Auto真正联动、Applied、全生命周期",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "长窗口和自适应质量",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "历史启动Applied不可推广为所有升/降档场景PASS。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+  ],
+  "promotion": null
+}

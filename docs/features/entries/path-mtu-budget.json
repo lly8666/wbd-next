@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "id": "path-mtu-budget",
+  "name": "MTU/MSS/record预算",
+  "summary": "统一计算外层IPv4、MSS、record及Game/FEC开销，派生内层TUN MTU与安全失败。",
+  "owner": "M3/M4 + FEC实验",
+  "stage": "experimental",
+  "development_branch": "experiment/fec-network-tuning",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "--outer-mtu": "1500（默认）",
+    "allowed": "576..9000",
+    "tun-mtu": "自动按接口/peer MSS/记录上限派生"
+  },
+  "usage": {
+    "cli": "Linux --outer-mtu N，观察 V4_PUBLIC_MTU_PREPARE；不使用旧1180/1280硬帽",
+    "config": "原Go pathmtu与V4公共选项并非天然同一配置实现",
+    "gui": "Windows GUI未验证完整MTU预算/回执"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "crates/wbd-codec/src/path_budget.rs",
+    "crates/wbd-platform/src/linux_mtu_scope.rs"
+  ],
+  "doc_refs": [
+    "docs/architecture/MIGRATION.md",
+    "docs/testing/NETWORK_CAPACITY_ENVELOPE.md"
+  ],
+  "verification": [
+    {
+      "platform": "windows/x64",
+      "scope": "W168大UDP、中途PMTU与复杂MSS适配",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/arm64",
+      "scope": "9000上限真实Jumbo与中途路径变化",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "真实宽带MTU黑洞恢复",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "CLI 9000上界是输入合法范围，绝非已验证9k实际互通。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+  ],
+  "promotion": null
+}
