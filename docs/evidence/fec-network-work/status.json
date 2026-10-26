@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W135_GAME_P1A_RECVMMSG_REAL_RX_CODE_NATIVE_ARM64_PASS_PERF_40292104571_RUNNING; W130-W134_COMMON_P0_LAST_QUALIFIED; CAPACITY_STOP_NO_MAIN_MERGE",
+  "phase": "W135-W136_GAME_RECVMMSG_CPU_REGRESSION_REVERTED; W137_GAME_FEC_SPARSE_DEADLINE_NATIVE_CANDIDATE_E400_ACTION_40293838787_PENDING; W130-W134_P0_LAST_QUALIFIED; CAPACITY_STOP",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -678,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W135 Game-only P1a real four-slot per-lane Linux recvmmsg available on product exact SOURCE bbee28fbef8ad07314886221e9d6e2e738d0e167, native ARM64 build40291663296 SUCCESS artifact12636154049 SHA256 e4366408..., new original Go Rust FEC/Stop tests passed; harness negative duplicate fixture first failed run40291781580 then corrected run40291906614 SUCCESS. Single Game4 fixed6 IID30 each5Mbps safe BA per-source request commit363932ba, Action40292104571 RUNNING/NOT QUALIFIED at this checkpoint. Must inspect real two-sided deliveries, 0/4/20/60 and parity receipts, new native RX recvmmsg calls/valid/full4 counts, Go posthandoff copies0, outer retrans0, CPU/RSS/PSI and Stop. Old A is last qualified6c38 build40288528399; B is P1a bbee28. No Game TX sendmmsg yet; implementing needs transactional copied-prefix FEC confirmation and separate commit. P2/P3/sparse deadline not mixed. If no throughput-safe CPU benefit, mark uncertain/revert instead of broad matrix. capacity_stop=true, merge_ready=false, Windows NOT_RUN.",
+  "next_action": "W135/136 P1a 4-slot real recvmmsg tests both real Game4 fixed6 IID30 UDP5Mbps with preserved delivery/FEC/outerDATA0, but CPU old->new BA19.26->19.92 (+3.43%) and reverse AB17.25->17.61 (+2.09%) at low host PSI. Reject and restore v4_game_public_kernel.rs exact qualified 6c38 blob sha eee3889... via commit3a2a4518. Native ARM64 reversion Action40293326840 PASS. Retain W135 Action40292104571 and W136 Action40292711305 artifacts/evidence; no more RX mmsg trials or speculative pressure. New W137 isolated Game4 FEC sparse close/copy earliest deadline candidate exact code/source e40098f0d238adc362ab096b5bd6e5b3b4fa852e, Action40293838787 native in progress; use Fec2Owner::next_deadline plus has_ready_parity O(1), min with Game4 next due and fresh now at bounded FEC turns, no new timer, unchanged 0/4/20/60 and real parity/copied/TUN semantics. Gate a sparse/tail Game4 fixed6 low-rate sameVM AB only after exact build+manifest PASS; compare p99 tail/FEC parity due, source first, CPU, Go handoff, outer retrans0, host PSI. Keep product_current old 6c38 until W137 real full scope. P1 TX sendmmsg and P2 shared RX lock not implemented; P3 common code requires Normal+Game checks. No Windows validation, no main merge, keep capacity stop.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6862,10 +6862,29 @@
     "capacity_target_80_unqualified": true,
     "optimization_diag": "Existing 1Hz native /proc task thread CPU approx 50s: Game4 20 client RX15.1s/TX13.24s/Go10.97s vs Game2 20 RX8.23s/TX4.72s/Go5.09s; CPU distributed across actual 4-lane duplicate crypto + RX and Go, not just timer wake. Single TX worker expected to approach 1 core at 80 even if scaling linearly; real hardware cannot currently support ladder."
   },
+  "w137_game_fec_sparse_deadline": {
+    "source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+    "last_qualified": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+    "status": "CODE_CANDIDATE_NATIVE_ARM64_IN_PROGRESS_REAL_SCENARIO_NOT_RUN",
+    "native_action": 40293838787,
+    "artifact": null,
+    "changes": [
+      "Shared Fec2Owner read-only has_ready_parity O(1) (no algorithm change)",
+      "GameFecTx next_due_ns earliest original owner group close/repair expiry or ready parity",
+      "GameAdapter expose Game FEC deadline",
+      "Game M4 TX wait min(copy due,FEC due) and refresh time each parity quantum",
+      "New sparse fixed6 unit checks parity close before 20ms copy and still original 20ms copy"
+    ],
+    "test": "w137_sparse_fixed6_fec_close_preempts_game4_20ms_copy",
+    "scenarios": "One quiet-tail sparse Game4 fixed6 sameVM old→new (at or below1Mbps) after build; do not add pressure",
+    "capacity_stop": true,
+    "merge_ready": false,
+    "windows": "NOT_RUN"
+  },
   "w135_game_p1a_recvmmsg_rx": {
     "scope": "Game2+Game4 RX worker ONLY",
     "source": "bbee28fbef8ad07314886221e9d6e2e738d0e167",
-    "status": "NATIVE_ARM64_PASS_REAL_BUSINESS_PERF_PENDING",
+    "status": "REJECTED_REVERTED_AFTER_BA_AND_AB",
     "prior_verified": "6c38ed0df9da3547c7bd604b51f13443d6863181",
     "native_action": 40291663296,
     "native_artifact_id": 12636154049,
@@ -6874,7 +6893,7 @@
     "performance_action": 40292104571,
     "performance_request": "tests/network/fec-work/W135-Game4-fixed6-IID30-UDP5Mbps-P1a-RXrecvmmsg-sameVM-BA-ARM64.json",
     "performance_request_commit": "363932ba899be1d9208fb46a3baee2a648f137de",
-    "performance_result": "NOT_RUN_TO_COMPLETION_AT_STATUS_CHECK",
+    "performance_result": "W135_BA_PASS_DELIVERY_CPU_REGRESSED_OLD19P26_NEW19P92; W136_AB_PASS_DELIVERY_CPU_REGRESSED_OLD17P25_NEW17P61",
     "host_capacity_stop": true,
     "mode_scope": {
       "normal_off": "UNCHANGED_QUALIFIED_6c38",
@@ -6888,7 +6907,15 @@
     "shared_fec_allocator": "NOT_IMPLEMENTED",
     "docs": "docs/devlog/fec-network-work/20261026-W135-Game-P1a-real-recvmmsg-RX.md",
     "merge_ready": false,
-    "windows": "NOT_RUN"
+    "windows": "NOT_RUN",
+    "reverse_action": 40292711305,
+    "reverse_artifact_id": 12636831871,
+    "first_artifact_id": 12636900650,
+    "evidence": "docs/evidence/fec-network-work/20261026-W135-W136-Game-P1a-real-recvmmsg-BA-AB-rejected.json",
+    "revert_commit": "3a2a4518b3b5227f55fd2cc4e874c90f4941b2f4",
+    "revert_file_content_sha": "eee3889ca97bc5d94d0d72884baf96f582e600c7",
+    "revert_build_action": 40293326840,
+    "decision": "DO_NOT_KEEP_GAME_RECVMMSG_RX_NO_REPEATABLE_CPU_BENEFIT"
   },
   "w130_common_go_rx_handoff_p0": {
     "owner": "fec-network-work",
