@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "id": "game-lanes",
+  "name": "Game2/Game4 多通道",
+  "summary": "双/四条原Go TLS认证lane，共享真实Rust数据链，分lane AEAD/PN与跨lane首到处理。",
+  "owner": "M0/M1/M4 + FEC实验",
+  "stage": "experimental",
+  "development_branch": "experiment/fec-network-tuning",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "modes": "game2/game4",
+    "game-fec": "off（默认）",
+    "game2-copies": "immediate"
+  },
+  "usage": {
+    "cli": "Linux --mode game2|game4；真实不同lane必须分别建立认证",
+    "config": "V4命令行明确；旧Game config完整映射未检证",
+    "gui": "Windows模式解析存在但原生ModeMask没有真实Game资格"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "r0/go_overlay/internal/v4productcli/game_linux.go",
+    "crates/wbd-engine/src/v4_game_lane.rs",
+    "crates/wbd-engine/src/v4_game_public_kernel.rs",
+    "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go"
+  ],
+  "doc_refs": [
+    "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
+    "docs/handoff/CURRENT_INTEGRATION.md"
+  ],
+  "verification": [
+    {
+      "platform": "linux/amd64",
+      "scope": "原Go TLS与Rust真实raw/TUN：Game2/4真实各2/4 lane、UDP单lane受损、Stop（旧L源码，非本次审阅SHA）",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
+      "evidence": "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
+    },
+    {
+      "platform": "linux/arm64 + linux/amd64",
+      "scope": "F实验分支W168：Game相关限定case范围观察，仅观察/特定case通过，非全平台质量门",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "0776fc4ede72fabd711e8333568eb88a58e8a6ea",
+      "evidence": "docs/evidence/fec-network-work/20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "真实2/4独立Npcap/TLS lanes和Stop",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "多链路质量",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "Linux特定case PASS不是Windows Game产品PASS；Game副本不等同外层DATA重传。"
+  ],
+  "promotion": null
+}

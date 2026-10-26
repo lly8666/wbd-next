@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "id": "android-vpn-shell",
+  "name": "Android VpnService系统壳（尚不可连接）",
+  "summary": "VPN权限与owned service入口的拒绝式占位边界，缺原Go JNI认证不能建立数据通路。",
+  "owner": "M4/集成",
+  "stage": "experimental",
+  "development_branch": "integration/w168-freeze-windows-adapter-20261026",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "connect": "NOT YET CONNECTABLE",
+    "consent": "VpnService.prepare()需要用户许可"
+  },
+  "usage": {
+    "cli": "Android Activity应先请求用户同意；当前ACTION_CONNECT不是真实连接",
+    "config": "未实现可用authenticated native owner配置绑定",
+    "gui": "Android组件是Service壳，非可用完整连接GUI"
+  },
+  "code_refs": [
+    "android/app/src/main/java/org/wbdnext/android/WbdVpnService.kt",
+    "android/app/src/main/AndroidManifest.xml"
+  ],
+  "doc_refs": [
+    "android/README.md"
+  ],
+  "verification": [
+    {
+      "platform": "android/arm64",
+      "scope": "真实JNI/原Go TLS认证/TUN VPN通路",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "Android后台、权限、DNS/IPv6",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "README明确NOT YET CONNECTABLE；仅可构建OS边界，不将其写成产品PASS。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

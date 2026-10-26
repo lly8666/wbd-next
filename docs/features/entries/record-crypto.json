@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "id": "record-crypto",
+  "name": "记录AEAD/HP与三套密码",
+  "summary": "独立Rust保护记录ChaCha20-Poly1305、AES128/256-GCM，需从原Go授权会话取得密钥。",
+  "owner": "M3/M0",
+  "stage": "experimental",
+  "development_branch": "work/m3-r1-codec",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "record-suites": "ChaCha20-Poly1305、AES-128-GCM、AES-256-GCM",
+    "default": "取决于冷层TLS/配置协商，V4 CLI未固定单一套件"
+  },
+  "usage": {
+    "cli": "需原Go认证TLS冷层；公开V4 CLI没有直接 --cipher 选项",
+    "config": "原Go cipher策略/Go↔Rust完整映射需按组装核验",
+    "gui": "GUI选项不能代替三套真正Rust public实际运行PASS"
+  },
+  "code_refs": [
+    "crates/wbd-codec/src/record_crypto.rs",
+    "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "crates/wbd-codec/src/record_replay.rs",
+    "r0/go_overlay/internal/realityfront/admission_v4.go"
+  ],
+  "doc_refs": [
+    "docs/architecture/MIGRATION.md",
+    "docs/evidence/M0/PLAN020-credential-Rust-AEAD-real-Windows-UDP-socket-S603-20261021.json"
+  ],
+  "verification": [
+    {
+      "platform": "windows/x64",
+      "scope": "旧S645真实Go TLS/Rust AEAD签名Wintun单平台应用范围",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "dfb371104a42c39b29f27e46726838bc9392fcb2",
+      "evidence": "docs/evidence/M0/PLAN020-same-SOURCE-real-Windows-Rust-signed-Wintun-native-WAL-pinned-ghost-terminal-PASS-S645-20261021.json"
+    },
+    {
+      "platform": "linux/arm64",
+      "scope": "每个套件及所有硬件后端公共产品逐项",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "三套cipher各自独立产品正向",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "codec实现不等于所有套件都已逐一在当前公网产品跑通；Rust记录不是TLS wire。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

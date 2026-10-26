@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "game4-copy-stagger",
+  "name": "Game4 四副本错峰",
+  "summary": "可选即时/短/宽错峰，默认四lane的stagger-4-50-140；Game2不使用。",
+  "owner": "M0/M1 + FEC实验",
+  "stage": "experimental",
+  "development_branch": "experiment/fec-network-tuning",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "game4": "stagger-4-50-140（默认）",
+    "rollback": "immediate",
+    "legacy": "stagger-4-20-60"
+  },
+  "usage": {
+    "cli": "Linux --mode game4 --game4-copy-schedule immediate|stagger-4-20-60|stagger-4-50-140",
+    "config": "V4命令行参数；原Go保存的配置对应关系未证实",
+    "gui": "无已验证的GUI同步错峰控制"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "crates/wbd-engine/src/v4_game_lane.rs",
+    "r0/go_overlay/internal/v4productcli/game4_copy_default_linux_test.go"
+  ],
+  "doc_refs": [
+    "docs/evidence/fec-network-work/20261026-W114-W120-Game4-FECOFF-stagger-single-candidate-AB.json"
+  ],
+  "verification": [
+    {
+      "platform": "linux/arm64",
+      "scope": "旧F分支Game4单候选错峰定时/A-B限定样本",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "88ecda8b348eb319a0eb4cb282da2a6a01649a90",
+      "evidence": "docs/evidence/fec-network-work/20261026-W114-W120-Game4-FECOFF-stagger-single-candidate-AB.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "Game4默认错峰产品连接",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "延迟与黑洞全场景",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "曾发生部分实际netem轨迹差异与严格损失失败，不能宣称普遍增益。",
+    "W85已撤销的双ready parity交错不是本功能。"
+  ],
+  "promotion": null
+}

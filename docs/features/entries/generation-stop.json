@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "id": "generation-stop",
+  "name": "世代隔离与owned Stop",
+  "summary": "按代隔离数据与驱动借用，Stop保证owner关闭及有限安全恢复回执。",
+  "owner": "M1/M4/M0",
+  "stage": "experimental",
+  "development_branch": "integration/w168-freeze-windows-adapter-20261026",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "stop": "仅owned资源，禁止清理外来状态",
+    "generation": "隐式，旧代不能重新使用"
+  },
+  "usage": {
+    "cli": "Linux SIGINT/Stop；Windows --recover-network --state-path针对owned WAL",
+    "config": "Windows状态/WAL为事务性恢复，不接管任意旧脚本文件",
+    "gui": "GUI Disconnect须看独立OS回执，不能单凭界面已关闭"
+  },
+  "code_refs": [
+    "crates/wbd-engine/src/runtime/generation.rs",
+    "crates/wbd-engine/src/runtime/loan_stop.rs",
+    "r0/go_overlay/internal/windowsclient/native_unified_network_transaction.go",
+    "r0/go_overlay/internal/windowsclient/native_product_status_windows.go"
+  ],
+  "doc_refs": [
+    "docs/handoff/CURRENT_INTEGRATION.md",
+    "docs/evidence/M0/PLAN020-S659-exact-Windows2022-native-TESTNET-WFP-and-guard-crash-PASS_SCOPED-20261021.json"
+  ],
+  "verification": [
+    {
+      "platform": "windows/x64 + WSL2/linux",
+      "scope": "原生 Normal/off：真实双系统Stop及临时防火墙清除；此结果仅旧W源码，不是盘点HEAD的重新测试",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "4fb263dd38b68e6a1763e7d79f5654b611f4ac8b",
+      "evidence": "docs/evidence/M0/PLAN024-W168-recovered-Windows-v3-native-run-20261027.json"
+    },
+    {
+      "platform": "windows/2022",
+      "scope": "原生TEST-NET范围WFP/CAS与部分WAL、非全机",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "e3e193edb0e8383a9db2c962e5bb5618bae31764",
+      "evidence": "docs/evidence/M0/PLAN020-S659-exact-Windows2022-native-TESTNET-WFP-and-guard-crash-PASS_SCOPED-20261021.json"
+    },
+    {
+      "platform": "physical",
+      "scope": "真实崩溃/恢复与各驱动组合",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "gone ghost端点可安全终结WAL但不能声称已恢复不存在的MTU；Stop合格范围≠整个GUI/OS生命周期PASS。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

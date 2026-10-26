@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "id": "first-arrival-dedup",
+  "name": "首到交付、乱序与去重",
+  "summary": "收到第一份经验证的业务数据即交付，后续副本/重放/旧generation拒绝。",
+  "owner": "M1/M3/M4",
+  "stage": "experimental",
+  "development_branch": "integration/w168-freeze-windows-adapter-20261026",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "delivery": "first valid wins",
+    "state": "有界去重和世代隔离"
+  },
+  "usage": {
+    "cli": "公开V4所有数据模式内部语义，无独立CLI开关",
+    "config": "内部协议行为，无独立可调配置键",
+    "gui": "无独立GUI设置"
+  },
+  "code_refs": [
+    "crates/wbd-engine/src/runtime/early_rx.rs",
+    "crates/wbd-engine/src/v4_game_lane.rs",
+    "crates/wbd-codec/src/record_replay.rs",
+    "crates/wbd-codec/src/fec_auth_gate.rs"
+  ],
+  "doc_refs": [
+    "docs/architecture/MIGRATION.md",
+    "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
+  ],
+  "verification": [
+    {
+      "platform": "linux/amd64",
+      "scope": "原Go TLS与Rust真实raw/TUN：Game受损lane正向应用交付和无HOL的场景（旧L源码，非本次审阅SHA）",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
+      "evidence": "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
+    },
+    {
+      "platform": "windows/x64 + WSL2/linux",
+      "scope": "原生 Normal/off：Normal真实UDP/TCP以及Stop；不能推广Game去重；此结果仅旧W源码，不是盘点HEAD的重新测试",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "4fb263dd38b68e6a1763e7d79f5654b611f4ac8b",
+      "evidence": "docs/evidence/M0/PLAN024-W168-recovered-Windows-v3-native-run-20261027.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "Game2/4跨lane重排/重复完整产品",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "长时回放和连续业务",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "单次内核APP交付不等于所有乱序/seq回绕场景都已测。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

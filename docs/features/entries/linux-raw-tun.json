@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "id": "linux-raw-tun",
+  "name": "Linux Raw IPv4/TUN产品驱动",
+  "summary": "原Go authenticated控制层与Rust绑定真实IPv4 raw/TUN；owned TUN可配置fq maxrate。",
+  "owner": "M4/M0 + FEC实验",
+  "stage": "experimental",
+  "development_branch": "experiment/fec-network-tuning",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "--tun-name": "wbdv40",
+    "--tun-fq-maxrate-mbps": "600（0禁用）",
+    "IPv6": "在owned Linux V4 TUN禁用"
+  },
+  "usage": {
+    "cli": "Linux --raw-interface --local-ip --tun-ipv4 --tun-name；需要CAP_NET_RAW和/dev/net/tun",
+    "config": "公开CLI拥有TUN及FQ；不是通用Go配置字段",
+    "gui": "无官方Linux V4前端GUI本次同源证据"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "crates/wbd-platform/src/linux_raw_carrier.rs",
+    "crates/wbd-platform/src/linux_tun_sink.rs"
+  ],
+  "doc_refs": [
+    "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
+    "docs/architecture/MIGRATION.md"
+  ],
+  "verification": [
+    {
+      "platform": "linux/amd64",
+      "scope": "原Go TLS与Rust真实raw/TUN：真实Linux TUN/raw产品Game/Fixed/Auto组合（旧L源码，非本次审阅SHA）",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
+      "evidence": "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
+    },
+    {
+      "platform": "linux/arm64 + linux/amd64",
+      "scope": "F实验分支W168：F实验 ARM64/AMD64 受限真内核观测，仅观察/特定case通过，非全平台质量门",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "0776fc4ede72fabd711e8333568eb88a58e8a6ea",
+      "evidence": "docs/evidence/fec-network-work/20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json"
+    },
+    {
+      "platform": "linux/arm64",
+      "scope": "物理发行版权限/多路由IPv6",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "原生路由器用户应用",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "仅修改自己新建的TUN，不自动改宿主全局网络；内核write成功≠对端送达。"
+  ],
+  "promotion": null
+}

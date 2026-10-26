@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "link-fragment-reassembly",
+  "name": "LINK分片与重组",
+  "summary": "超过封装预算的IPv4业务帧进行有界分片；经AEAD后同scope重组，拒绝冲突。",
+  "owner": "M3/M4",
+  "stage": "experimental",
+  "development_branch": "work/m3-r1-codec",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "fast-path": "非分片直达",
+    "max-assemblies": "16（代码常量）"
+  },
+  "usage": {
+    "cli": "在V4数据路径根据MTU隐式触发；无公开单独fragment开关",
+    "config": "仅接收有效MTU预算；无独立用户配置",
+    "gui": "GUI无分片单独开关"
+  },
+  "code_refs": [
+    "crates/wbd-codec/src/link_fec_wire.rs",
+    "crates/wbd-codec/src/link_reassembly.rs",
+    "crates/wbd-codec/src/path_budget.rs"
+  ],
+  "doc_refs": [
+    "docs/architecture/MIGRATION.md",
+    "docs/architecture/modules/06-LINK-MTU.md"
+  ],
+  "verification": [
+    {
+      "platform": "linux/amd64",
+      "scope": "历史真实Go LINK fragment/TUN 单场景老SOURCE",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "821962b7fc204facf5e1e5599a0b3fead3c3a58",
+      "evidence": "docs/evidence/M0/M0-023-real-go-link-fragment-821962b7fc204facf5e1e5599a0b3fead3c3a58.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "W168 65K UDP片丢/乱序边界",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "真实PMTU变化",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "历史旧源码单场景不保证当前所有大包压力PASS。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

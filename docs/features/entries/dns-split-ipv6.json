@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "id": "dns-split-ipv6",
+  "name": "DNS、分流和IPv6接线",
+  "summary": "追踪旧网络用户功能在新V4/Linux/Windows原生事务的真实平台资格。",
+  "owner": "M0 takeover/历史M4",
+  "stage": "experimental",
+  "development_branch": "work/m4-r1-platform",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "linux": "公开V4 IPv4-only且disable_ipv6",
+    "windows": "局部DNS/MTU WAL支持，全局DNS/分流未验"
+  },
+  "usage": {
+    "cli": "Linux V4 CLI没有独立DNS/IPv6选项，不沿用旧Go未证实帮助",
+    "config": "旧Go配置由装配manifest引用；新V4完整分流/IPv6实际应用未知",
+    "gui": "WinForms旧网络选项不能证明真实全局DNS/IPv6可用"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "r0/go_overlay/assembly/manifest.json",
+    "r0/go_overlay/internal/windowsclient/native_unified_network_transaction.go",
+    "r0/go_overlay/internal/windowsclient/native_orphan_ghost_dns_windows.go"
+  ],
+  "doc_refs": [
+    "docs/architecture/MIGRATION.md",
+    "docs/handoff/CURRENT_INTEGRATION.md"
+  ],
+  "verification": [
+    {
+      "platform": "windows/2022",
+      "scope": "旧S645原生签名Wintun局部IP/MTU/DNS/WAL，非全局",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "dfb371104a42c39b29f27e46726838bc9392fcb2",
+      "evidence": "docs/evidence/M0/PLAN020-same-SOURCE-real-Windows-Rust-signed-Wintun-native-WAL-pinned-ghost-terminal-PASS-S645-20261021.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "全局路由分流/DNS漏出/IPv6宿主安全",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/amd64",
+      "scope": "公开V4 IPv6未接线",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "旧迁移表列出需要保留的功能不等于全部完成；Windows主机全局门仍关闭。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "windows-portable",
+  "name": "Windows便携版原生装配",
+  "summary": "固定原Go客户端、Rust DLL、签名Wintun与WinForms构建成source-locked portable并附hash。",
+  "owner": "M0 takeover/历史M4",
+  "stage": "experimental",
+  "development_branch": "work/m4-r1-platform",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "build": "按锁定旧Go原始源与依赖",
+    "installation": "不触碰实际用户主机"
+  },
+  "usage": {
+    "cli": "经Actions组装并获取source receipt；不是发放可立即启用的全局代理",
+    "config": "Portable管理配置/owned WAL；故障恢复仅native Go接口",
+    "gui": "历史WinForms已生成EXE，真实GUI应用全机链路仍未跑"
+  },
+  "code_refs": [
+    "r0/go_overlay/assembly/manifest.json",
+    "r0/go_overlay/assembly/assemble.py",
+    "r0/go_overlay/scripts/fec2_windows_gui_smoke.ps1"
+  ],
+  "doc_refs": [
+    "docs/evidence/M0/PLAN020-source-locked-native-WinForms-V4-Go-Rust-M3-signed-Wintun-portable-S636-20261021.json",
+    "docs/handoff/CURRENT_INTEGRATION.md"
+  ],
+  "verification": [
+    {
+      "platform": "windows/2022",
+      "scope": "历史固定源签名驱动/Rust DLL/WinForms portable打包",
+      "status": "BUILD_PASS",
+      "source_sha": "249b7af42fdcc84d6e064ada36a2b7ec331c12d3",
+      "evidence": "docs/evidence/M0/PLAN020-source-locked-native-WinForms-V4-Go-Rust-M3-signed-Wintun-portable-S636-20261021.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "真实安装升级与全局OS代理功能",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "分发签名、卸载/回滚",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "Build PASS只能证实产物生成，不能当Windows产品功能PASS。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

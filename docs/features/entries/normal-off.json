@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "id": "normal-off",
+  "name": "Normal / FEC OFF 原生通道",
+  "summary": "原Go认证TLS冷层交给Rust数据面，以真实raw/TUN实现独立包首到交付，默认不开FEC。",
+  "owner": "M0/M1/M3/M4",
+  "stage": "experimental",
+  "development_branch": "integration/w168-freeze-windows-adapter-20261026",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "--mode": "normal（Linux V4默认）",
+    "FEC2": "off"
+  },
+  "usage": {
+    "cli": "wbd-v4-client/server --mode normal；另需raw-interface、本地/对端IP、真实TLS与owned TUN选项",
+    "config": "本Linux V4公开入口是CLI，原Go配置与完整V4映射尚未逐键验证",
+    "gui": "Windows V4模式选择源码存在；真GUI完整OS Applied尚未验证"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "crates/wbd-platform/src/linux_raw_carrier.rs",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go"
+  ],
+  "doc_refs": [
+    "docs/handoff/CURRENT_INTEGRATION.md",
+    "docs/architecture/MIGRATION.md"
+  ],
+  "verification": [
+    {
+      "platform": "windows/x64 + WSL2/linux",
+      "scope": "原生 Normal/off：双向真实UDP/TCP、M2回归、owned Stop；此结果仅旧W源码，不是盘点HEAD的重新测试",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "4fb263dd38b68e6a1763e7d79f5654b611f4ac8b",
+      "evidence": "docs/evidence/M0/PLAN024-W168-recovered-Windows-v3-native-run-20261027.json"
+    },
+    {
+      "platform": "linux/amd64",
+      "scope": "盘点HEAD本次独立产品Normal验证没有运行",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "物理运行、低损持续/大包/p99",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "Windows W168 功能PASS只限Normal/off，不含WL-N0/N1/N5、GUI、Fixed/Auto/Game。",
+    "Linux公开V4 IPv4-only；未提供与旧V3数据面互通资格。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

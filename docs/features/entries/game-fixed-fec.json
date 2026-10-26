@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "game-fixed-fec",
+  "name": "Game内层固定FEC2",
+  "summary": "在Game2/4真实lane上按固定级别生成FEC源与修复数据，与纯副本隔离计数。",
+  "owner": "M0/M3 + FEC实验",
+  "stage": "experimental",
+  "development_branch": "experiment/fec-network-tuning",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "--game-fec": "off（默认）",
+    "alternatives": "fixed0..fixed6，Game Auto不支持"
+  },
+  "usage": {
+    "cli": "Linux --mode game2|game4 --game-fec fixed0..fixed6，双方保持一致",
+    "config": "仅V4 Linux CLI明确，旧Go配置映射未逐项核验",
+    "gui": "Windows GUI中对应Native Applied未获得正向证据"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "r0/go_overlay/internal/v4productcli/game_linux.go",
+    "crates/wbd-engine/src/v4_game_fec.rs",
+    "crates/wbd-codec/src/fec_v2.rs"
+  ],
+  "doc_refs": [
+    "docs/architecture/FEC_V2_BALANCED.md",
+    "docs/evidence/fec-network-work/20261026-W103-Game2-Game4-fixed6-outerDATAoff-real-clean-PASS.json"
+  ],
+  "verification": [
+    {
+      "platform": "linux/arm64",
+      "scope": "Game2/4 fixed6内层FEC真实kernel范围，旧F源码",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+      "evidence": "docs/evidence/fec-network-work/20261026-W130-W134-Go-Rust-RX-handoff-real-five-mode-Actions.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "真实Game+FEC Applied和Stop",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "所有级别高损组合",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "已执行干净/损伤范围不代表所有级别强损残余为零。"
+  ],
+  "promotion": null
+}
