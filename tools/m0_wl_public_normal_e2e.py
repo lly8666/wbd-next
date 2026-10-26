@@ -167,8 +167,13 @@ def serve():
   with conn:
    conn.settimeout(8)
    if peer[0]!=remote:raise RuntimeError("unexpected TCP peer")
-   data=conn.recv(2048)
-   if not data.startswith(b"WBD-TCP-NATIVE-"):raise RuntimeError("invalid real peer marker")
+   expected=("WBD-TCP-NATIVE-"+remote+"-to-"+local).encode()
+   data=b""
+   while len(data)<len(expected):
+    chunk=conn.recv(2048)
+    if not chunk:break
+    data+=chunk
+   if data!=expected:raise RuntimeError("invalid or incomplete genuine TCP peer marker")
    conn.sendall(data)
    result["server_received"]=len(data)
  except Exception as e:issues.append(str(e))

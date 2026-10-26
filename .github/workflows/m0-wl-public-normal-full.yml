@@ -101,7 +101,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
       LINUX_BINARY_SRC: ${{ github.sha }}
-      WBD_WL_RUN_N0: "0" # TEMP functional-only: no throughput/netem/60s N0 in this wiring branch
+      WBD_WL_RUN_N0: ${{ github.ref == 'refs/heads/main' && '1' || '0' }} # main full gate preserved; isolated wiring branch functional only
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -367,6 +367,26 @@ jobs:
           $env:WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4=[string]$source[0].IPAddress
           $env:WBD_PLAN024_NATIVE_VERIFIED_IFINDEX=[string]$nic[0].InterfaceIndex
           Write-Output 'WL_REAL_ORIGINAL_GO_SCOPED_LINUX_GUEST_MAC_FFI_HANDOFF_ARMED'
+          # Functional TCP test uses a genuine Windows TCP listener on the
+          # created Wintun's 10.66.0.2:45902. Windows host firewall may
+          # independently deny new inbound SYNs even when authenticated Rust
+          # M3 delivered the packet. Admit ONLY Linux TUN 10.66.0.1 to this
+          # single testing listener; NEVER disable global firewall/WFP.
+          # The rule is owned by this exact run and deleted in finally.
+          $tcpRuleName='WBD-M0-WL-TCP-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT
+          if(Get-NetFirewallRule -Name $tcpRuleName -ErrorAction SilentlyContinue){throw 'foreign scoped TCP listener firewall rule'}
+          New-NetFirewallRule -Name $tcpRuleName -DisplayName $tcpRuleName -Direction Inbound -Action Allow -Enabled True -Profile Any -Protocol TCP -LocalAddress '10.66.0.2' -RemoteAddress '10.66.0.1' -LocalPort 45902 -ErrorAction Stop | Out-Null
+          $tcpRule=Get-NetFirewallRule -Name $tcpRuleName -ErrorAction Stop
+          $tcpPort=Get-NetFirewallPortFilter -AssociatedNetFirewallRule $tcpRule -ErrorAction Stop
+          $tcpIP=Get-NetFirewallAddressFilter -AssociatedNetFirewallRule $tcpRule -ErrorAction Stop
+          if($tcpRule.Action -ne 'Allow' -or $tcpRule.Direction -ne 'Inbound' -or
+             [string]$tcpPort.LocalPort -ne '45902' -or [string]$tcpPort.Protocol -notin @('TCP','6') -or
+             [string]$tcpIP.LocalAddress -ne '10.66.0.2' -or [string]$tcpIP.RemoteAddress -ne '10.66.0.1'){
+            throw 'scoped WinTun TCP test listener firewall rule readback mismatch'
+          }
+          [ordered]@{name=$tcpRuleName;local='10.66.0.2';remote='10.66.0.1';port=45902;type='OWNED_FUNCTIONAL_TCP_LISTENER_NOT_PRODUCT_FIREWALL_POLICY'} |
+            ConvertTo-Json | Set-Content result/wl-public/functional-tcp-firewall-owned.json
+          Write-Output 'WL_REAL_WINDOWS_WINTUN_TCP_FUNCTIONAL_LISTENER_RULE_SCOPED_READBACK'
           # Passive wire witness observes THIS SAME real public handshake, never injects traffic.
           $drive=$PWD.Path.Substring(0,1).ToLowerInvariant()
           $traceScript='/mnt/'+$drive+'/'+$PWD.Path.Substring(3).Replace('\','/')+'/tools/m0_wl_public_native_wire_trace.py'
@@ -388,6 +408,11 @@ jobs:
               Tee-Object result/wl-public/direct-full.log
             $e2eExit=$LASTEXITCODE
           } finally {
+            Remove-NetFirewallRule -Name $tcpRuleName -ErrorAction Stop
+            if(Get-NetFirewallRule -Name $tcpRuleName -ErrorAction SilentlyContinue){
+              throw 'owned TCP test firewall rule survived scoped cleanup'
+            }
+            Write-Output 'WL_REAL_WINDOWS_WINTUN_TCP_FUNCTIONAL_LISTENER_RULE_REMOVED'
             foreach($p in @($witness,$npf)){
               if($null -ne $p -and -not $p.HasExited){Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue}
             }
