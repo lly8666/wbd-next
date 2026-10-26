@@ -414,6 +414,10 @@ impl GameAdapter{
         let id=tx.next_packet().ok_or(Error::Stopped)?;
         let packet=wbd_codec::encode_game(id,bytes,inner_mtu+16)
             .map_err(|_|Error::Invalid)?;
+        // Evict only overdue retained copies at the explicit Game4 capacity
+        // boundary BEFORE borrowing a source slab. A fresh first cannot be
+        // blocked simply because an old packet holds 60ms future duplicates.
+        tx.reserve_game4_first(packet.len(),31+packet.len());
         let mut slab=arena.allocate().map_err(|_|Error::Capacity)?;
         let end=14+packet.len();
         slab.writable()[14..end].copy_from_slice(&packet);
@@ -583,6 +587,37 @@ mod tests{
         game.drain(MonoNs(70_000_000),|_,_,_,_|true);
         game.stop();
         assert_eq!(game.drain(MonoNs(150_000_000),|_,_,_,_|true),0);
+    }
+    #[test]
+    fn game4_stagger_capacity_evicts_old_refs_to_admit_new_first(){
+        let mut game=build(4);
+        game.configure_game4_stagger().unwrap();
+        // No draining: exceed the exact 1024-job/1024-arena cap. This
+        // deliberately saturates the scheduler but must not starve a NEW
+        // logical first; only queued old copies may be sacrificed.
+        for i in 0..1024u32{
+            let id=game.offer(&[(i&255) as u8;64],MonoNs(1_000_000)).unwrap();
+            assert_eq!(id.0,i as u64);
+        }
+        assert_eq!(game.tx.in_use().0,1024);
+        let id=game.offer(&[0x91;64],MonoNs(1_000_000)).unwrap();
+        assert_eq!(id.0,1024);
+        let c=game.game4_copy_schedule().unwrap();
+        assert_eq!(c.scheduled,[1025;4]);
+        assert!(c.abandoned.iter().sum::<u64>()>=4);
+        assert_eq!(game.tx.in_use().0,1024);
+        let mut fresh_first=false;
+        // Fair bounded turns progress all lane1 first copies; keep now=T0
+        // to isolate capacity vs due scheduling, no wall clock sleeps.
+        for _ in 0..33{
+            game.drain(MonoNs(1_000_000),|lane,pid,_,_|{
+                if pid.0==1024&&lane.slot==1{fresh_first=true;}
+                true
+            });
+        }
+        assert!(fresh_first);
+        game.stop();
+        assert_eq!(game.tx.in_use().0,0);
     }
     #[cfg(feature="fec2_product_record")]
     #[test]

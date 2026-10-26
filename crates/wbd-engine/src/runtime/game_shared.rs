@@ -118,6 +118,46 @@ impl GameTx {
         self.copy_offsets_ns=[0,4_000_000,20_000_000,60_000_000];
         self.staggered=true;Ok(())
     }
+    /// Admit a new Game4 first copy when the finite work arena is full.
+    /// Pressure is resolved by canceling the OLDEST queued logical job's
+    /// outstanding refs, never by waiting for its 60ms due. The four FIFO
+    /// heads identify that job; no unbounded queue walk or per-job timer.
+    /// An older unsent first is droppable only on genuine saturation.
+    /// All cancellations are PRODUCT abandonments, not carrier loss.
+    pub fn reserve_game4_first(&mut self,new_bytes:usize,predicted_wire:usize){
+        if !self.staggered||self.stopped{return}
+        for _ in 0..4{
+            let full=self.free.is_empty()||
+                new_bytes>self.limits.logical_bytes.saturating_sub(self.used)||
+                self.lanes.iter().any(|l|l.active &&
+                    (l.q.len()>=self.limits.lane_slots||
+                     predicted_wire>self.limits.lane_bytes.saturating_sub(l.bytes)));
+            if !full{break}
+            let oldest=self.lanes.iter().filter_map(|lane|{
+                let p=lane.q.front()?;
+                let id=self.slots[p.slot].as_ref()?.packet_id?.0;
+                Some(id)
+            }).min();
+            let Some(oldest)=oldest else{break};
+            let mut dropped=[usize::MAX;MAX_LANES];
+            let mut count=0usize;
+            for lane in &mut self.lanes{
+                let old=lane.q.front().is_some_and(|p|
+                    self.slots[p.slot].as_ref().and_then(|job|job.packet_id)
+                    .is_some_and(|id|id.0==oldest));
+                if old{
+                    let p=lane.q.pop_front().expect("oldest queued");
+                    lane.bytes-=p.wire_bytes;
+                    dropped[count]=p.slot;
+                    count+=1;
+                    self.counters.lane_copy_drop+=1;
+                    self.counters.abandoned[p.position as usize]+=1;
+                }
+            }
+            if count==0{break}
+            for &slot in &dropped[..count]{self.release(slot);}
+        }
+    }
     pub fn in_use(&self)->(usize,usize){
         (self.limits.jobs-self.free.len(),self.used)
     }
