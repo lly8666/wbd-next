@@ -15,6 +15,7 @@ on:
       - "crates/wbd-engine/src/v4_fec2_live_rx.rs"
       - "crates/wbd-engine/src/runtime/fec2_owner*"
       - "crates/wbd-codec/src/fec*"
+      - "r0/go_overlay/internal/faketcp/**"
       - "r0/go_overlay/internal/v4productcli/**"
       - "r0/go_overlay/internal/v4productcli/linux.go"
       - "r0/go_overlay/internal/realityfront/bridge_v4_*"
