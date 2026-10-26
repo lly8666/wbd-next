@@ -2,8 +2,10 @@
 package main
 
 import (
+ "flag"
  "testing"
  "github.com/lly8666/wobuzhidao/internal/realityfront"
+ "github.com/lly8666/wobuzhidao/internal/runtimeentry"
 )
 
 // Keep BOTH frozen Linux namespaces: original credential-TLS V3 fixed4
@@ -16,9 +18,17 @@ func TestM0PLAN024WindowsFixed6OriginalGoAdmissionBeforeNative(t *testing.T){
   p.DesiredLanes!=1||p.Cipher!=realityfront.CipherChaCha{
   t.Fatalf("original TLS V3 fixed envelope mismatch: %+v",p)
  }
- if got,e:=m0ParseWindowsV4Mode(1,"fixed","fixed",4);e!=nil||got!=m0WinModeFixed{
-  t.Fatalf("fixed6 after same Go V3 preflight got=%s err=%v",got,e)
+ opts:=flag.NewFlagSet("fixed6",flag.ContinueOnError)
+ fec2:=runtimeentry.RegisterFEC2ProductFlags(opts)
+ if e:=opts.Parse([]string{"--fec.mode=fixed","--fec.profile=maximum"});e!=nil {
+  t.Fatalf("native FEC2 operator flags: %v",e)
  }
+ if e:=fec2.Validate(1);e!=nil{t.Fatalf("native fixed6 profile admission: %v",e)}
+ if got,e:=m0ParseWindowsV4Mode(1,*fec2.Mode,"fixed",4);e!=nil||got!=m0WinModeFixed{
+  t.Fatalf("fixed6 after Go V3+FEC2 preflight got=%s err=%v",got,e)
+ }
+ if e:=opts.Set("fec.profile","strong");e!=nil{t.Fatal(e)}
+ if e:=fec2.Validate(1);e==nil{t.Fatal("Fixed6 cannot silently apply profile strong")}
  // Old broken harness must be rejected rather than masquerade as Applied.
  if _,e:=realityfront.PolicyForClientWithInitialAndCipher(
   1,"fixed",0,4,20,realityfront.CipherChaCha);e==nil{

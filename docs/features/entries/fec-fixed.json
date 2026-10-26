@@ -15,8 +15,8 @@
     "production": "FEC OFF"
   },
   "usage": {
-    "cli": "Linux --mode fec-fixed --fec-profile 0..6；Windows隔离候选 --native-v4-product --lanes 1 --fec-mode fixed --fec-parity 4，原Go TLS V3 carrier4 与 Rust FEC2 Maximum6 分层，真实 Fixed6 M2 Applied 尚未通过",
-    "config": "Windows原Go V3 fixed4 是TLS握手前仅用于入场/MTU envelope；独立Rust FixedStream profile6才是新FEC2矩阵，不能把前者用作后者。默认仍 OFF",
+    "cli": "Linux --mode fec-fixed --fec-profile 0..6；Windows当前仅隔离 Fixed6 候选：--native-v4-product --lanes 1 --fec-mode fixed --fec-parity 4（原Go V3 carrier）和 --fec.mode fixed --fec.profile maximum（Rust新FEC2），任一缺失/错配必须拒绝；Windows真实Applied未通过",
+    "config": "原Go V3 carrier fixed4 只属旧TLS入场/MSS预算；FEC2 Fixed6 profile maximum=6 由同一Rust FixedStream实现。Windows其余profile未接线，绝不能静默代用 Maximum；Linux可选0..6。默认FEC2 OFF",
     "gui": "Windows WinForms Fixed6 完整 Applied/Disconnect UI 仍 NOT_RUN，网络原生模式仍须通过独立 Fixed6 公开功能门"
   },
   "code_refs": [
@@ -27,7 +27,8 @@
     "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go",
     "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
     "r0/go_overlay/internal/realityfront/bridge_v4_windows_fixed_stream.go",
-    "crates/wbd-engine/src/v4_windows_owner.rs"
+    "crates/wbd-engine/src/v4_windows_owner.rs",
+    "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go"
   ],
   "doc_refs": [
     "docs/architecture/FEC_V2_BALANCED.md",
@@ -67,7 +68,8 @@
     "旧L来源的Fixed功能不自动证明现在HEAD所有模式或Windows可用。",
     "FEC parity与外层DATA修复是不同机制。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
-    "Windows Fixed6 现行入口保留原Go fixed4 carrier admission 与共享Rust FEC2 Maximum6，不从旧Go FEC shard计数推断Rust Applied；源码00738fe Actions40372774560原入场参数固定0 FAIL，新候选未获产品验证。"
+    "Windows Fixed6 现行入口保留原Go fixed4 carrier admission 与共享Rust FEC2 Maximum6，不从旧Go FEC shard计数推断Rust Applied；源码00738fe Actions40372774560原入场参数固定0 FAIL，新候选未获产品验证。",
+    "原Windows Fixed6 先前两个Actions 40371148050、40372774560 入场FAIL；d3811b…已修V3 fixed4但测试参数仍遗漏独立 --fec.mode fixed 与 --fec.profile maximum；本次修正后才有新候选，保留其旧FAIL。"
   ],
   "promotion": null
 }
