@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W97_GAME2_GAME4_FEC_OFF_LINUX_REAL_NATIVE_AND_DAMAGE_PASS_SCOPED; W98_GAME_SHARED_FIXED_FEC_REINTEGRATION_NOT_QUALIFIED",
+  "phase": "W97_GAME2_GAME4_FEC_OFF_LINUX_PASS_SCOPED; W98_SHARED_FIXED_GAME_FEC_NATIVE_SPLIT_AND_M4_BATCH_PASS_GO_PRODUCT_REAL_PENDING",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -634,7 +634,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W98: inspect exact 0c1161e native ARM64 Action40254464042, distinguish build/Go/native regressions; if pass, wire only original Go TLS-protected fixed profile and bounded multi-delivery M4/TUN commit with first source actual send before parity, idle deadline-budget parity, negotiated MTU once. Then Game2+Game4 fixed6 no artificial loss 3Mbps real TCP/UDP per separate Actions; do not test damage or claim product PASS before both clean. If failures, inspect stage counters rather than VM capacity. Keep W90 six failed cases, Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
+  "next_action": "W98: inspect exact 233361e ARM64 Go original public Game+FEC TLS profile Action40255456429 first. If green, use frozen artifact in two independently dispatched netem0 Game2 fixed6 and Game4 fixed6 each direction3Mbps UDP96%+real TCP4%, same W91 packet sizes/MTU. First check TCP injection, actual delivery, AEAD/duplicate/error stages and parity planned/copied before loss. If any fail, localize with stage evidence and minimal fix; no higher load or losses. Keep game OFF product_current=44455afb and W90 six historical failures. Game outer-repair-off unsupported until real readback, Windows skipped, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6188,19 +6188,44 @@
     "capacity_stop": true
   },
   "w98_game_fixed_reintegration": {
-    "status": "NATIVE_SPLIT_TX_RX_OWNER_CANDIDATE_PENDING_EXACT_ARM64_RESULT; PUBLIC_FIXED_NOT_WIRED",
-    "source": "0c1161ef54a10b75bca8fe22067ac3f108e2fe04",
-    "native_action": 40254464042,
-    "initial_code_source": "f11e2223acfb394e772504633510a382595cc0fe",
-    "first_failed_native_action": 40254290157,
-    "second_failed_native_action": 40254323146,
-    "first_failure": "E0609 orphan old self.rx stop after RX-owner split, source 6daf059 fixes",
-    "build_trigger": "v4_game_fec.rs added to native workflow path allowlist at 0c1161e",
-    "scope": "Test gated W98 shared RS16 TX and single shared Fec2LiveRx RX, independently authenticated original lanes, native test missing-one-of-16 and source-before-parity",
-    "production": "NOT_WIRED_NO_GO_PROFILE_NO_MULTI_FRAME_TUN_COMMIT_NO_REAL_GAME_FIXED_ACTION",
-    "known_w90_failures": 6,
+    "status": "NATIVE_SPLIT_TX_RX_AND_M4_MULTI_DELIVERY_PASS; ORIGINAL_GO_TLS_FIXED_PROFILE_TRIAL_SOURCE_ARM64_RUNNING_NOT_PRODUCT_QUALIFIED",
+    "working_game_off_product": "44455afb819572ed75689cab28ffc66d1b1c7640",
+    "split_native_source": "0c1161ef54a10b75bca8fe22067ac3f108e2fe04",
+    "split_native_action": 40254464042,
+    "split_native_result": "SUCCESS",
+    "split_native_artifact": 12621508896,
+    "split_native_sha256": "d4a836df98ccf5e4dde674ef8c355abc8823d345791bd326165bd44ee410fee4",
+    "m4_multidelivery_source": "f113cc82245fcf4be800bdb21e08a691845aad5e",
+    "m4_multidelivery_action": 40255014279,
+    "m4_multidelivery_result": "SUCCESS",
+    "m4_multidelivery_artifact": 12622391188,
+    "m4_multidelivery_sha256": "6be1f2a862426496a77272b89ed5cda18d7e989189c25557c5ac2381168b181b",
+    "go_public_trial_source": "233361eab32ef4cc9efc68d417527e83bd71910c",
+    "go_public_trial_action": 40255456429,
+    "go_public_trial": "PENDING_NATIVE_AND_PROTECTED_TLS_TEST",
+    "go_profile": "Explicit off|fixed0..fixed6 BOTH authenticated Go TLS endpoints must agree; no Auto",
+    "m4": "one shared TX FEC encoder, one shared cross-lane RX FEC decoder; original per-lane AEAD, source-first actual M4 send; bounded 16 recovered frames per symbol delivered separately; no lock across TUN syscall, commit after successful batch",
+    "risks": [
+      "FEC decoder internal acceptance may precede a TUN write failure; not full retransmission failover guarantee",
+      "W90 six failed real Game fixed Actions not overturned",
+      "Potential idle-tail scheduler requires real k/r expiration and source wait evidence",
+      "Go Game --outer-repair=off still not wired; do not assert FEC-only DATA retrans OFF for Game",
+      "Windows TEMP_SKIPPED_USER_20261025_NOT_RUN",
+      "Actual Game2/Game4 fixed6 3Mbps netem0 TCP+UDP NOT YET RUN"
+    ],
+    "build_error_history": [
+      {
+        "source": "f11e2223acfb394e772504633510a382595cc0fe",
+        "run": 40254290157,
+        "result": "COMPILE_FAIL_E0609_TX_OLD_RX_FIELD"
+      },
+      {
+        "source": "a9076b10940951cd53f91efe569bd0272055a96f",
+        "run": 40254323146,
+        "result": "COMPILE_FAIL_E0609_TX_OLD_RX_FIELD"
+      }
+    ],
     "capacity_stop": true,
-    "merge_ready": false,
-    "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN"
+    "merge_ready": false
   }
 }
