@@ -1,0 +1,96 @@
+name: Actual loopback TCP PCAP - one TLS header tail8 rolling
+on:
+  push:
+    branches: [experiment/lan-tail-single8-pcap-audit]
+    paths:
+      - ".github/workflows/lan-tail-single8-pcap.yml"
+permissions: {contents: read}
+jobs:
+  real-loopback-socket-packet-capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.25.x", cache: false}
+      - name: Install actual tcpdump and Wireshark CLI packet dissector
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v tcpdump >/dev/null || ! command -v tshark >/dev/null; then
+            sudo apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tcpdump tshark
+          fi
+          mkdir -p pcap-evidence
+          tcpdump --version | head -1 | tee pcap-evidence/tcpdump_version.txt
+          tshark --version | head -1 | tee pcap-evidence/tshark_version.txt
+          go version | tee pcap-evidence/go_version.txt
+          uname -a | tee pcap-evidence/system.txt
+          ip link show lo > pcap-evidence/loopback_link.txt
+      - name: Sniff actual loopback IPv4 TCP packets while Go TLS13 and custom frames traverse sockets
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo tcpdump -i lo -n -U -s 0 \
+            -w pcap-evidence/actual_tcp_loopback.pcap \
+            '(tcp port 38443 or tcp port 38444)' \
+            > pcap-evidence/tcpdump_stdout_stderr.txt 2>&1 &
+          sleep 2
+          export WBD_PACKET_CAPTURE=1
+          go test -v -timeout 90s \
+            tools/lan_tail_single_header_8bytes_test.go \
+            tools/lan_tail_single_header_capture_test.go \
+            -run '^TestLoopbackPacketCapture$' -count=1 \
+            | tee pcap-evidence/go_actual_socket_test.txt
+          sudo killall -INT tcpdump || true
+          sleep 2
+          sudo chmod 644 pcap-evidence/actual_tcp_loopback.pcap
+          test -s pcap-evidence/actual_tcp_loopback.pcap
+          grep -q CAPTURE_CUSTOM_PASS pcap-evidence/go_actual_socket_test.txt
+          grep -q CAPTURE_TLS13_REFERENCE_PASS pcap-evidence/go_actual_socket_test.txt
+      - name: Independently reassemble genuine captured TCP packets and validate marker/header and TLS reference
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/lan_tail_single8_pcap_analyze.py \
+            --pcap pcap-evidence/actual_tcp_loopback.pcap \
+            --output pcap-evidence/independent_pcap_analysis.json \
+            | tee pcap-evidence/independent_pcap_stdout.json
+          python3 - <<'PY'
+          import json,pathlib
+          s=json.loads(pathlib.Path('pcap-evidence/independent_pcap_analysis.json').read_text())
+          assert s['custom']['record_count']==100
+          assert s['custom']['known_mode_counts']=={'PASS_THROUGH':80,'AES_FALLBACK':20}
+          assert s['custom']['byte5_nested_tls_header_count']==0
+          assert s['real_go_tls13_reference']['genuine_TLS13_handshake_was_performed_by_Go_tls']
+          print('PASS independent full TCP stream reassembly and TLS real-control comparison')
+          PY
+      - name: Wireshark/TShark forced-TLS record dissection of both real TCP flows
+        shell: bash
+        run: |
+          set -euo pipefail
+          tshark -r pcap-evidence/actual_tcp_loopback.pcap \
+            -d tcp.port==38443,tls -d tcp.port==38444,tls \
+            -Y 'tcp.dstport==38443 && tcp.len > 0' \
+            -T fields -e frame.number -e tcp.seq -e tcp.len \
+            -e tls.record.content_type -e tls.record.length \
+            -e _ws.expert.message \
+            > pcap-evidence/tshark_custom_tls_fields.tsv
+          tshark -r pcap-evidence/actual_tcp_loopback.pcap \
+            -d tcp.port==38443,tls -d tcp.port==38444,tls \
+            -Y 'tcp.dstport==38444 && tcp.len > 0' \
+            -T fields -e frame.number -e tcp.seq -e tcp.len \
+            -e tls.record.content_type -e tls.record.length \
+            -e _ws.expert.message \
+            > pcap-evidence/tshark_real_tls13_fields.tsv
+          tshark -r pcap-evidence/actual_tcp_loopback.pcap \
+            -q -z conv,tcp > pcap-evidence/tshark_tcp_conversations.txt
+          wc -l pcap-evidence/tshark_*tsv | tee pcap-evidence/tshark_row_counts.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: tail-single-header-8byte-actual-pcap-with-real-tls13-control
+          path: pcap-evidence/
+          retention-days: 30
+          if-no-files-found: warn
