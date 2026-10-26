@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W97_GAME2_GAME4_FEC_OFF_LINUX_PASS_SCOPED; W98_SHARED_FIXED_GAME_FEC_NATIVE_SPLIT_AND_M4_BATCH_PASS_GO_PRODUCT_REAL_PENDING",
+  "phase": "W98_GAME2_GAME4_FIXED6_LINUX_TRUE_TCP_UDP_NOLOSS_PASS_SCOPED; W99_GAME_FIXED_WEAKNET_NOT_YET_QUALIFIED",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -634,7 +634,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W98: inspect exact 233361e ARM64 Go original public Game+FEC TLS profile Action40255456429 first. If green, use frozen artifact in two independently dispatched netem0 Game2 fixed6 and Game4 fixed6 each direction3Mbps UDP96%+real TCP4%, same W91 packet sizes/MTU. First check TCP injection, actual delivery, AEAD/duplicate/error stages and parity planned/copied before loss. If any fail, localize with stage evidence and minimal fix; no higher load or losses. Keep game OFF product_current=44455afb and W90 six historical failures. Game outer-repair-off unsupported until real readback, Windows skipped, merge_ready=false.",
+  "next_action": "W99: W98 exact Game2 fixed6 Action40255806409 and Game4 fixed6 40255813118 genuine no-loss TCP+UDP SUCCESS, original per-end TLS applied and parity M4 copied. Reuse frozen c18de0fa bundle build40255431613 artifact12621844471 for bounded 3Mbps independent20/lane1-blackhole/clean recovery one Game2 and one Game4 per Action, unchanged W97 fixtures. Inspect native recovered_candidate, planned/sent expiry, real TCP injection and TUN deliver, p99/stop; if service fails, diagnose stage, do not increase capacity. Game original outer-repair off NOT_WIRED, cannot claim FEC-only outer retrans0, Normal FEC-only distinct; Windows TEMP_SKIPPED, capacity_stop=true merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6188,43 +6188,26 @@
     "capacity_stop": true
   },
   "w98_game_fixed_reintegration": {
-    "status": "NATIVE_SPLIT_TX_RX_AND_M4_MULTI_DELIVERY_PASS; ORIGINAL_GO_TLS_FIXED_PROFILE_TRIAL_SOURCE_ARM64_RUNNING_NOT_PRODUCT_QUALIFIED",
-    "working_game_off_product": "44455afb819572ed75689cab28ffc66d1b1c7640",
-    "split_native_source": "0c1161ef54a10b75bca8fe22067ac3f108e2fe04",
-    "split_native_action": 40254464042,
-    "split_native_result": "SUCCESS",
-    "split_native_artifact": 12621508896,
-    "split_native_sha256": "d4a836df98ccf5e4dde674ef8c355abc8823d345791bd326165bd44ee410fee4",
-    "m4_multidelivery_source": "f113cc82245fcf4be800bdb21e08a691845aad5e",
-    "m4_multidelivery_action": 40255014279,
-    "m4_multidelivery_result": "SUCCESS",
-    "m4_multidelivery_artifact": 12622391188,
-    "m4_multidelivery_sha256": "6be1f2a862426496a77272b89ed5cda18d7e989189c25557c5ac2381168b181b",
-    "go_public_trial_source": "233361eab32ef4cc9efc68d417527e83bd71910c",
-    "go_public_trial_action": 40255456429,
-    "go_public_trial": "PENDING_NATIVE_AND_PROTECTED_TLS_TEST",
-    "go_profile": "Explicit off|fixed0..fixed6 BOTH authenticated Go TLS endpoints must agree; no Auto",
-    "m4": "one shared TX FEC encoder, one shared cross-lane RX FEC decoder; original per-lane AEAD, source-first actual M4 send; bounded 16 recovered frames per symbol delivered separately; no lock across TUN syscall, commit after successful batch",
-    "risks": [
-      "FEC decoder internal acceptance may precede a TUN write failure; not full retransmission failover guarantee",
-      "W90 six failed real Game fixed Actions not overturned",
-      "Potential idle-tail scheduler requires real k/r expiration and source wait evidence",
-      "Go Game --outer-repair=off still not wired; do not assert FEC-only DATA retrans OFF for Game",
-      "Windows TEMP_SKIPPED_USER_20261025_NOT_RUN",
-      "Actual Game2/Game4 fixed6 3Mbps netem0 TCP+UDP NOT YET RUN"
+    "status": "NATIVE_GO_TLS_AND_GAME2_GAME4_REAL_FIXED6_CLEAN_PASS_SCOPED_WEAKNET_NOT_RUN",
+    "product_source": "c18de0fa79f529c349b6546635f3c6b62aa01b1c",
+    "build_run": 40255431613,
+    "build_artifact_id": 12621844471,
+    "build_zip_sha256": "85e50a70ef44306fe5a6f913010d57568cc01b652830be09d473cbd7b2248ac6",
+    "protected_go_tls_test_run": 40255724717,
+    "game2_clean_run": 40255806409,
+    "game4_clean_run": 40255813118,
+    "genuine_udp_tcp": "C2S and S2C both complete, netem0 zero business loss, TCP startup+data success, 75ms one-way, p99 UDP77.5-77.9ms TCP <=78.2ms",
+    "parity": "Both endpoints original native Game2/4 fixed6 applied; planned == copied == sent, zero expiry/failed, recovered candidate0 no loss",
+    "mtu": "record_wire1460 less31 record less16 Game less15 FEC -> inner TUN1398",
+    "outer_game_off_policy": "UNSUPPORTED; cannot assert FEC-only no outer DATA replay",
+    "build_failed_intermediate_runs": [
+      40254290157,
+      40254323146,
+      40255456429
     ],
-    "build_error_history": [
-      {
-        "source": "f11e2223acfb394e772504633510a382595cc0fe",
-        "run": 40254290157,
-        "result": "COMPILE_FAIL_E0609_TX_OLD_RX_FIELD"
-      },
-      {
-        "source": "a9076b10940951cd53f91efe569bd0272055a96f",
-        "run": 40254323146,
-        "result": "COMPILE_FAIL_E0609_TX_OLD_RX_FIELD"
-      }
-    ],
+    "history": "W90 six actual real failure cases preserved without downgrading",
+    "evidence": "docs/evidence/fec-network-work/20261026-W98-Game2-Game4-fixed6-real-clean-ARM64-PASS-SCOPED.json",
+    "windows": "TEMP_SKIPPED_USER_20261025",
     "capacity_stop": true,
     "merge_ready": false
   }
