@@ -1,0 +1,66 @@
+name: PN XOR full-equivalent optimization and prefix-cost A/B arm64
+on:
+  push:
+    branches: [experiment/lan-pnxor-optimized]
+    paths: [".github/workflows/lan-pnxor-opt-arm64.yml"]
+permissions: {contents: read}
+concurrency:
+  group: pn-xor-opt-arm64
+  cancel-in-progress: true
+jobs:
+  native:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.x"
+          cache: false
+      - name: Check original full PN XOR bytes exactly match both optimized variants
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "aarch64"
+          mkdir -p pnxor-opt
+          go version > pnxor-opt/go_version.txt
+          lscpu > pnxor-opt/cpu.txt
+          go test -v tools/lan_pnxor_opt_test.go -run '^Test' -count=1 \
+            | tee pnxor-opt/tests.txt
+      - name: Benchmark six candidate modes native five 1s iterations each
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GOMAXPROCS=1
+          go test tools/lan_pnxor_opt_test.go \
+            -run '^$' -bench '^Benchmark' -benchtime=1s -count=5 \
+            -benchmem -cpu=1 | tee pnxor-opt/bench.txt
+          grep -q 'PASS' pnxor-opt/bench.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,json,statistics
+          text=Path('pnxor-opt/bench.txt').read_text()
+          names=['FullBaseline','FullUnroll4','FullSubtleXOR','Prefix64','Prefix128','Prefix256']
+          measurements={name:[] for name in names}
+          for line in text.splitlines():
+              m=re.search(r'Benchmark([A-Za-z0-9]+)(?:-\d+)?\s+\d+\s+([\d.]+) ns/op.*?(\d+) B/op\s+(\d+) allocs/op',line)
+              if m:
+                  name,ns,allocated,allocs=m.groups()
+                  if name not in measurements: raise RuntimeError(name)
+                  measurements[name].append([float(ns),int(allocated),int(allocs)])
+          assert all(len(v)==5 for v in measurements.values()),{k:len(v) for k,v in measurements.items()}
+          assert all(not row[1] and not row[2] for v in measurements.values() for row in v)
+          avg={name:statistics.mean(row[0] for row in v) for name,v in measurements.items()}
+          base=avg['FullBaseline']
+          out={'status':'SUCCESS','scope':'Go native encode+decode 100 original 1345B packets','five_rep_mean_ns_per_100':avg,'pct_change_against_full_baseline':{k:(v/base-1)*100 for k,v in avg.items()},'samples':measurements,'heap_allocations_all_zero':True,'prefix_payload_plaintext_tail_visible':True,'full_unroll_and_subtle_bytes_equal_original':True}
+          Path('pnxor-opt/summary.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps({'ns_per_100':avg,'delta_pct':out['pct_change_against_full_baseline']},indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: pnxor-opt-arm64-native
+          path: pnxor-opt/
+          retention-days: 30
+          if-no-files-found: warn
