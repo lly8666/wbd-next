@@ -1,0 +1,192 @@
+{
+  "schema": "W99_GAME_FIXED6_REAL_ARM64_IID20_LANE1BLACKHOLE_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "owner": "fec-network-work",
+  "product": {
+    "source": "c18de0fa79f529c349b6546635f3c6b62aa01b1c",
+    "build_run": 40255431613,
+    "artifact_id": 12621844471,
+    "sha256": "85e50a70ef44306fe5a6f913010d57568cc01b652830be09d473cbd7b2248ac6",
+    "type": "original-Go TLS-protected Game fixed6"
+  },
+  "scenario": {
+    "mbps_each_direction": 3,
+    "one_way_ms": 75,
+    "udp_share": 0.96,
+    "tcp_flows": 2,
+    "phases": [
+      [
+        "clean_before",
+        15
+      ],
+      [
+        "independent20_each_lane",
+        30
+      ],
+      [
+        "lane1_blackhole",
+        30
+      ],
+      [
+        "clean_after",
+        15
+      ]
+    ],
+    "netem_rng": "unseeded_recorded",
+    "one_performance_action_one_Game_mode": true,
+    "seed_game2": 8210952,
+    "seed_game4": 8210954
+  },
+  "game2": {
+    "run": 40256521889,
+    "artifact": 12623270751,
+    "zip_sha256": "bc5449649ee8371e1e15ec690f33da2fa37a42d41096ab487e4fbe241426a247",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "udp_missing_each_phase_both": 0,
+    "real_tcp_injected_equals_delivered_all_phases": true,
+    "udp_p99_iid20_ms_c2s_s2c": [
+      83,
+      83.2
+    ],
+    "tcp_p99_iid20_ms_c2s_s2c": [
+      84.6,
+      85.3
+    ],
+    "maximum_observed_zero_delivery_ms": {
+      "udp": 70,
+      "tcp": 80
+    },
+    "cpu_s_client_server": [
+      9.65,
+      9.69
+    ],
+    "cpu_per_effective_GiB_client_server": [
+      307.0108,
+      308.2834
+    ],
+    "rss_peak_bytes_client_server": [
+      26693632,
+      26902528
+    ],
+    "host_psi_peak_pct": 2.7,
+    "outer_interface_tx_bytes_client_server": [
+      155870025,
+      155762665
+    ],
+    "native_rx": {
+      "client": {
+        "systematic_candidate": 64652,
+        "recovered_candidate": 776,
+        "failed": 89,
+        "auth_rejected": 0
+      },
+      "server": {
+        "systematic_candidate": 64624,
+        "recovered_candidate": 810,
+        "failed": 92,
+        "auth_rejected": 0
+      }
+    },
+    "native_parity": {
+      "client": {
+        "source": 65436,
+        "offered": 89182,
+        "planned": 89182,
+        "copied": 89182,
+        "sent": 89182,
+        "expired": 0
+      },
+      "server": {
+        "source": 65430,
+        "offered": 89223,
+        "planned": 89223,
+        "copied": 89223,
+        "sent": 89223,
+        "expired": 0
+      }
+    },
+    "stop_drained_both": true
+  },
+  "game4": {
+    "run": 40256529112,
+    "artifact": 12622607660,
+    "zip_sha256": "624e7866ba12cfa656b1a20618cb38e965379e1563e83882bf711c5db5f1d266",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "udp_missing_each_phase_both": 0,
+    "real_tcp_injected_equals_delivered_all_phases": true,
+    "udp_p99_iid20_ms_c2s_s2c": [
+      77.7,
+      77.6
+    ],
+    "tcp_p99_iid20_ms_c2s_s2c": [
+      77.8,
+      77.9
+    ],
+    "maximum_observed_zero_delivery_ms": {
+      "udp": 70,
+      "tcp": 80
+    },
+    "cpu_s_client_server": [
+      17.49,
+      17.64
+    ],
+    "cpu_per_effective_GiB_client_server": [
+      556.4373,
+      561.2095
+    ],
+    "rss_peak_bytes_client_server": [
+      39505920,
+      38801408
+    ],
+    "host_psi_peak_pct": 6.78,
+    "outer_interface_tx_bytes_client_server": [
+      345933744,
+      346015649
+    ],
+    "native_rx": {
+      "client": {
+        "systematic_candidate": 65376,
+        "recovered_candidate": 84,
+        "failed": 267,
+        "auth_rejected": 0
+      },
+      "server": {
+        "systematic_candidate": 65347,
+        "recovered_candidate": 87,
+        "failed": 263,
+        "auth_rejected": 0
+      }
+    },
+    "native_parity": {
+      "client": {
+        "source": 65436,
+        "offered": 89284,
+        "planned": 89284,
+        "copied": 89284,
+        "sent": 89284,
+        "expired": 0
+      },
+      "server": {
+        "source": 65462,
+        "offered": 89352,
+        "planned": 89352,
+        "copied": 89352,
+        "sent": 89352,
+        "expired": 0
+      }
+    },
+    "stop_drained_both": true
+  },
+  "decision": "Real mixed TCP/UDP and first delivery from Game fixed6 clean, per-lane IID20 and lane1-blackout phases all PASS_SCOPED. Positive authenticated FEC recovered_candidate counters + actual complete business output; recovered count is pre-TUN candidate, not an individually attested TUN recovery count. No parity work expiration. No claim shared GE or CPU gain.",
+  "open_issues": [
+    "GameFec failed nonzero Game2 RX89/92 Game4 RX267/263; aggregated causes not distinguished; auth_rejected0, cannot equate with AEAD",
+    "Queue peak and age not exposed, no claimed bounded age measurement",
+    "Game outer-repair=off not wired; FEC-only outer retrans0 NOT_VERIFIED for Game",
+    "No real long shared correlated GE in this candidate yet",
+    "Windows/physical devices NOT_RUN",
+    "Cross-VM CPU-s cannot be causal comparison"
+  ],
+  "merge_ready": false,
+  "capacity_stop": true
+}
