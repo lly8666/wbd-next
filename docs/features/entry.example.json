@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "id": "example-feature",
+  "name": "替换为功能名称",
+  "summary": "一句话说明对用户或长期运行行为的作用",
+  "owner": "实际模块/工位；不以此字段授予权限",
+  "stage": "experimental",
+  "development_branch": "experiment/replace-with-real-branch",
+  "available_on": ["experiment/replace-with-real-branch"],
+  "defaults": {"参数名": "真实默认值；内部功能可以为空对象"},
+  "usage": {
+    "cli": "真实参数和示例，或明确未接线/不适用原因",
+    "config": "真实配置键、可用范围，或不适用原因",
+    "gui": "真实界面入口，或未接线/不适用原因"
+  },
+  "code_refs": ["填写仓库内实际实现路径"],
+  "doc_refs": ["填写当前方案或使用说明路径"],
+  "verification": [
+    {"platform": "linux/arm64", "scope": "具体模式和验证范围", "status": "NOT_RUN", "source_sha": null, "evidence": null}
+  ],
+  "limitations": ["尚未确认的边界和配置限制；没有限制也须审查后再留空"],
+  "promotion": null
+}

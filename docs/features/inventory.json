@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "status": "NOT_INITIALIZED",
+  "scope_branch": "integration/w168-freeze-windows-adapter-20261026",
+  "baseline_source": "6e271c1e01aefadb4266eed44646d51806f88d49",
+  "inventory_source": null,
+  "review_ref": null,
+  "gaps": ["待新 agent 按冻结源码一次性盘点当前集成分支的产品功能、参数、平台与证据。"],
+  "next_action": "按 docs/prompts/FEATURE_INVENTORY_INIT.md 初始化，不开发产品新功能，不把框架检查 PASS 当盘点完成。"
+}
