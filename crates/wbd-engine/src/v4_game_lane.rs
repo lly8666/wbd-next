@@ -942,12 +942,14 @@ mod tests{
             let mut broken=wire0.clone();
             *broken.last_mut().unwrap()^=1;
             assert!(matches!(opener0.open(&mut broken),Err(Error::Crypto)));
+            let mut sealed_replay=wire0.clone();
             let (id,payload)=opener0.open(&mut wire0).unwrap();
             assert_eq!(id,key);
             let mut candidate=owner.lock().unwrap()
                 .prepare_opened_receive(lane0,id,payload).unwrap().unwrap();
             assert_eq!(candidate.payload(),b"w143-lane-owned");
-            assert!(matches!(opener0.open(&mut wire0),Err(Error::Duplicate)));
+            assert!(matches!(opener0.open(&mut sealed_replay),Err(Error::Duplicate)),
+                "replay MUST present unchanged sealed ciphertext");
             let (other_id,other_payload)=opener1.open(&mut wire1).unwrap();
             assert_eq!(other_id,key);
             assert!(owner.lock().unwrap().prepare_opened_receive(
@@ -988,7 +990,7 @@ mod tests{
         assert_eq!(copies.len(),4);
         let owner=rx.receiver_handle();
         let (lane0,mut wire0)=copies.remove(0);
-        let (lane1,mut wire1)=copies.remove(0);
+        let (lane1,_wire1)=copies.remove(0);
         let mut opener0=owner.lock().unwrap().take_lane_for_worker(lane0).unwrap();
         let mut opener1=owner.lock().unwrap().take_lane_for_worker(lane1).unwrap();
         let (id,payload)=opener0.open(&mut wire0).unwrap();
@@ -996,14 +998,28 @@ mod tests{
             lane0,id,payload,MonoNs(11)).unwrap().unwrap();
         assert!(!batch.frames().is_empty());
         owner.lock().unwrap().finish_fec_batch(batch,false).unwrap();
-        // Failed TUN write must release the shared logical reservation;
-        // next fully authenticated independent copy can still be accepted.
-        let (other_id,other_payload)=opener1.open(&mut wire1).unwrap();
-        let recovered=owner.lock().unwrap().prepare_opened_fec_batch(
-            lane1,other_id,other_payload,MonoNs(12)).unwrap();
-        if let Some(batch)=recovered {
-            owner.lock().unwrap().finish_fec_batch(batch,true).unwrap();
+        // Failed TUN write MUST NOT mark the logical Game symbol
+        // delivered; that does not imply an already-mutated FEC decoder
+        // must accept the exact same source symbol a second time.
+        {
+            let shared=owner.lock().unwrap();
+            assert!(shared.rx.first_delivery_candidate(
+                shared.rx_scope,lane0,id).unwrap());
         }
+        // A fresh unique symbol on lane1 still enters one shared FEC owner.
+        tx.offer(&[0x66;128],MonoNs(13)).unwrap();
+        let mut fresh=None;
+        tx.drain(MonoNs(14),|lane,_,_,wire|{
+            if lane==lane1 {fresh=Some(wire.to_vec());}
+            true
+        });
+        let mut sealed=fresh.expect("fresh source on second physical lane");
+        let (fresh_id,fresh_payload)=opener1.open(&mut sealed).unwrap();
+        assert_ne!(fresh_id,id);
+        let batch=owner.lock().unwrap().prepare_opened_fec_batch(
+            lane1,fresh_id,fresh_payload,MonoNs(14)).unwrap().unwrap();
+        assert!(!batch.frames().is_empty());
+        owner.lock().unwrap().finish_fec_batch(batch,true).unwrap();
         tx.stop();rx.stop();
     }
     #[test]
