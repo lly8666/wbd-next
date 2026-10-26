@@ -660,7 +660,7 @@ mod tests{
         game.enable_game_fec(6,false).unwrap();
         game.configure_game4_stagger().unwrap();
         let start=1_000_000_000u64;
-        game.offer(&[0x31;128],MonoNs(start)).unwrap();
+        let original=game.offer(&[0x31;128],MonoNs(start)).unwrap();
         // Genuine first business copy goes immediately, second at 4ms.
         assert_eq!(game.drain(MonoNs(start),|lane,_,_,_|{
             assert_eq!(lane.slot,1);true
@@ -681,7 +681,15 @@ mod tests{
         assert!(game.game_fec_counters().unwrap().0.parity_offered>before);
         // No copy schedule reconfiguration: later 20/60ms positions remain.
         game.drain(MonoNs(fec_due),|_,_,_,_|true);
-        assert_eq!(game.game4_next_due_ns(),Some(next_copy));
+        let mut original_third=false;
+        for _ in 0..4{
+            game.drain(MonoNs(start+20_000_000),|lane,id,_,_|{
+                if id==original&&lane.slot==3{original_third=true;}
+                true
+            });
+        }
+        assert!(original_third,
+            "repair parity must not steal or reschedule the original 20ms copy");
         game.stop();
         assert_eq!(game.game_fec_counters().unwrap().1.charged_bytes,0);
     }
