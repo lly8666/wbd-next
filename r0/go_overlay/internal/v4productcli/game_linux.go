@@ -11,6 +11,7 @@ import (
     "errors"
     "fmt"
     "log"
+    "sync/atomic"
     "time"
     "github.com/lly8666/wobuzhidao/internal/faketcp"
     "github.com/lly8666/wobuzhidao/internal/realityfront"
@@ -69,6 +70,9 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     if err!=nil{return err}
     raws:=make([]*faketcp.RawIPv4Endpoint,0,n)
     assocs:=make([]*faketcp.ClientAssociation,0,n)
+    flows:=make([]faketcp.ClientFlow,0,n)
+    var handoffCommitted atomic.Bool
+    var goPostHandoffDataCopies atomic.Uint64
     defer func(){
         for _,raw:=range raws{raw.Close()}
         for _,a:=range assocs{a.Close()}
@@ -88,6 +92,7 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
         emit:=func(seg faketcp.Segment)error{_,e:=raw.WriteSegment(seg);return e}
         flow:=faketcp.ClientFlow{LocalIP:c.localIP.As4(),PeerIP:c.peerIP.As4(),
             LocalPort:local,PeerPort:remote}
+        flows=append(flows,flow)
         isn,e:=originalRandomISN()
         if e!=nil{return e}
         assoc,e:=faketcp.NewClientAssociation(flow,isn,time.Second,emit)
@@ -107,6 +112,8 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
                        !errors.Is(err,faketcp.ErrClientDetached){
                         select{case fail<-err:default:}
                     }
+                }else if len(seg.Payload)!=0 && handoffCommitted.Load(){
+                    goPostHandoffDataCopies.Add(1)
                 }
             }
         }(assoc,raw,flow)
@@ -136,7 +143,21 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     dialCtx,cancel:=context.WithTimeout(ctx,60*time.Second)
     err=native.ConnectClientGame(dialCtx,assocs,cfg)
     cancel()
-    if err!=nil{return err}
+    if err!=nil{_ = native.Close();return err}
+    // Never filter Go TLS/bootstrap before the authenticated Rust receiver
+    // and ownership transfer have both completed.
+    for i,r:=range raws{
+        if assocs[i].State()!=faketcp.ClientAssociationDetached{
+            _=native.Close()
+            return fmt.Errorf("Game client lane %d not detached at M4 handoff",i+1)
+        }
+        if e:=r.ExcludeDetachedGameData(flows[i].PeerIP,flows[i].PeerPort);e!=nil{
+            _=native.Close()
+            return fmt.Errorf("Game client lane %d kernel RX handoff: %w",i+1,e)
+        }
+    }
+    handoffCommitted.Store(true)
+    log.Printf("V4_PUBLIC_GAME_GO_RX_HANDOFF role=client lanes=%d filtered=%d rust_ready=1 original_send_fd_open=1",n,n)
     *connected=true
     log.Printf("V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=%d original_tls=1 rust_m4=1",n)
     if c.gameFecEnabled{
@@ -145,6 +166,7 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
         log.Printf("V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=%d mode=off profile=0 auth_original_tls=1 original_M4=1",n)
     }
     select{case <-ctx.Done():case err=<-fail:}
+    log.Printf("V4_PUBLIC_GAME_GO_RX_POST_HANDOFF role=client lanes=%d go_data_full_copies=%d",n,goPostHandoffDataCopies.Load())
     counters,countErr:=native.KernelCounters()
     if countErr==nil{
         log.Printf("V4_PUBLIC_GAME_KERNEL role=client lanes=%d copied=%d delivered=%d rejected=%d raw_received=%d auth_rejected=%d",
@@ -182,6 +204,8 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     raws:=make([]*faketcp.RawIPv4Endpoint,0,n)
     defer func(){for _,r:=range raws{r.Close()}}()
     assocs:=make([]*faketcp.ServerAssociation,n)
+    var handoffCommitted atomic.Bool
+    var goPostHandoffDataCopies atomic.Uint64
     admitted:=make(chan int,n)
     failed:=make(chan error,n)
     for i:=0;i<n;i++{
@@ -222,7 +246,12 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
                 a,ok:=table.GetSegment(seg)
                 if !ok||a.State()==faketcp.ServerAssociationClosed{continue}
                 if state,exists:=a.TransitionState();exists&&
-                   state==faketcp.TransitionDetached{continue}
+                   state==faketcp.TransitionDetached{
+                    if len(seg.Payload)!=0 && handoffCommitted.Load(){
+                        goPostHandoffDataCopies.Add(1)
+                    }
+                    continue
+                }
                 outcome,e:=a.HandleSegment(seg,time.Now())
                 if e!=nil{
                     if !errors.Is(e,faketcp.ErrHandshakeState){
@@ -269,7 +298,30 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     admitCtx,cancelAdmission:=context.WithTimeout(ctx,60*time.Second)
     err=native.AcceptServerGame(admitCtx,assocs,reply)
     cancelAdmission()
-    if err!=nil{return err}
+    if err!=nil{_ = native.Close();return err}
+    for i,r:=range raws{
+        if assocs[i]==nil{
+            _=native.Close()
+            return fmt.Errorf("Game server lane %d missing at M4 handoff",i+1)
+        }
+        state,exists:=assocs[i].TransitionState()
+        if !exists||state!=faketcp.TransitionDetached{
+            _=native.Close()
+            return fmt.Errorf("Game server lane %d not detached at M4 handoff",i+1)
+        }
+        flow:=assocs[i].Flow()
+        port,e:=gamePort(c.localPort,i)
+        if e!=nil||flow.ServerIP!=c.localIP.As4()||flow.ServerPort!=port{
+            _=native.Close()
+            return fmt.Errorf("Game server lane %d kernel RX scope mismatch",i+1)
+        }
+        if e:=r.ExcludeDetachedGameData(flow.ClientIP,flow.ClientPort);e!=nil{
+            _=native.Close()
+            return fmt.Errorf("Game server lane %d kernel RX handoff: %w",i+1,e)
+        }
+    }
+    handoffCommitted.Store(true)
+    log.Printf("V4_PUBLIC_GAME_GO_RX_HANDOFF role=server lanes=%d filtered=%d rust_ready=1 original_send_fd_open=1",n,n)
     *connected=true
     log.Printf("V4_ORIGINAL_GO_GAME_NATIVE_READY role=server lanes=%d original_tls=1 rust_m4=1",n)
     if c.gameFecEnabled{
@@ -278,6 +330,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
         log.Printf("V4_PUBLIC_GAME_FEC_APPLIED role=server lanes=%d mode=off profile=0 auth_original_tls=1 original_M4=1",n)
     }
     select{case <-ctx.Done():case err=<-failed:}
+    log.Printf("V4_PUBLIC_GAME_GO_RX_POST_HANDOFF role=server lanes=%d go_data_full_copies=%d",n,goPostHandoffDataCopies.Load())
     counters,countErr:=native.KernelCounters()
     if countErr==nil{
         log.Printf("V4_PUBLIC_GAME_KERNEL role=server lanes=%d copied=%d delivered=%d rejected=%d raw_received=%d auth_rejected=%d",
