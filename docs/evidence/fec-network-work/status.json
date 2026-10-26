@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W130-W134_COMMON_GO_RX_P0_LINUX_ARM64_ALL_FIVE_MODES_PASS_SCOPED; NORMAL_OFF_AND_FIXED3_SAMEVM_CPU_REDUCTIONS; GAME4_10M_SAMEVM_CPU_GAIN; AUTO_REAL_M2_PASS; CAPACITY_STOP_NO_MAIN_MERGE",
+  "phase": "W135_GAME_P1A_RECVMMSG_REAL_RX_CODE_NATIVE_ARM64_PASS_PERF_40292104571_RUNNING; W130-W134_COMMON_P0_LAST_QUALIFIED; CAPACITY_STOP_NO_MAIN_MERGE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -678,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "P0 common Go->Rust takeover now scoped-qualified on exact Linux ARM64 SOURCE 6c38ed0df9da3547c7bd604b51f13443d6863181: build40288528399 artifact12635510007 hash d3eaaceb...; five separate Actions W130 40289408758 Normal OFF sameVM AB CPU2.48->1.28; W131 40289416487 Fixed3 sameVM BA 8.25->5.44, W132 40289421675 Auto mixed real M2+downshift, W133 40289428390 Game2 fixed6 mixed, W134 40289434334 Game4 fixed6 IID30 UDP10Mbps AB46.46->31.20; all scenarios pass, both endpoints Go posthandoff DATA copies=0, outer DATA retrans0, parity and original app/TUN integrity preserved. Old Normal OFF A host PSI avg17.76 peak38.83 so observed -48.4% confounded; Game4 new B peak PSI27.7 (16% samples >20), capacity_stop continues, no80 load. Remaining must be separately qualified: in-process repeated connections/Stop/rebuild; Auto full upward curve; new20Mbps Game4; Windows TEMP_SKIPPED. Next prioritize Game-only P1 actual sendmmsg/recvmmsg with bounded partial/EAGAIN semantics and separate 10Mbps sameVM AB, P2 per-lane AEAD outside lock only after timing evidence, P3 shared FEC only after Normal+Game profiles. Do not change network owner next_action or reenable outer DATA retrans, never merge main without full qualification.",
+  "next_action": "W135 Game-only P1a real four-slot per-lane Linux recvmmsg available on product exact SOURCE bbee28fbef8ad07314886221e9d6e2e738d0e167, native ARM64 build40291663296 SUCCESS artifact12636154049 SHA256 e4366408..., new original Go Rust FEC/Stop tests passed; harness negative duplicate fixture first failed run40291781580 then corrected run40291906614 SUCCESS. Single Game4 fixed6 IID30 each5Mbps safe BA per-source request commit363932ba, Action40292104571 RUNNING/NOT QUALIFIED at this checkpoint. Must inspect real two-sided deliveries, 0/4/20/60 and parity receipts, new native RX recvmmsg calls/valid/full4 counts, Go posthandoff copies0, outer retrans0, CPU/RSS/PSI and Stop. Old A is last qualified6c38 build40288528399; B is P1a bbee28. No Game TX sendmmsg yet; implementing needs transactional copied-prefix FEC confirmation and separate commit. P2/P3/sparse deadline not mixed. If no throughput-safe CPU benefit, mark uncertain/revert instead of broad matrix. capacity_stop=true, merge_ready=false, Windows NOT_RUN.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6861,6 +6861,34 @@
     },
     "capacity_target_80_unqualified": true,
     "optimization_diag": "Existing 1Hz native /proc task thread CPU approx 50s: Game4 20 client RX15.1s/TX13.24s/Go10.97s vs Game2 20 RX8.23s/TX4.72s/Go5.09s; CPU distributed across actual 4-lane duplicate crypto + RX and Go, not just timer wake. Single TX worker expected to approach 1 core at 80 even if scaling linearly; real hardware cannot currently support ladder."
+  },
+  "w135_game_p1a_recvmmsg_rx": {
+    "scope": "Game2+Game4 RX worker ONLY",
+    "source": "bbee28fbef8ad07314886221e9d6e2e738d0e167",
+    "status": "NATIVE_ARM64_PASS_REAL_BUSINESS_PERF_PENDING",
+    "prior_verified": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+    "native_action": 40291663296,
+    "native_artifact_id": 12636154049,
+    "native_zip_sha256": "e4366408b311db2d8364d1e6540b0e3e167c62d8cf494f8c471ce6835c6ed742",
+    "native_manifest_verified": true,
+    "performance_action": 40292104571,
+    "performance_request": "tests/network/fec-work/W135-Game4-fixed6-IID30-UDP5Mbps-P1a-RXrecvmmsg-sameVM-BA-ARM64.json",
+    "performance_request_commit": "363932ba899be1d9208fb46a3baee2a648f137de",
+    "performance_result": "NOT_RUN_TO_COMPLETION_AT_STATUS_CHECK",
+    "host_capacity_stop": true,
+    "mode_scope": {
+      "normal_off": "UNCHANGED_QUALIFIED_6c38",
+      "normal_fixed": "UNCHANGED_QUALIFIED_6c38",
+      "normal_auto": "UNCHANGED_QUALIFIED_6c38",
+      "game2": "NATIVE_PASS_REAL_NEW_PERF_NOT_RUN",
+      "game4": "NATIVE_PASS_PERF_RUNNING"
+    },
+    "tx_sendmmsg": "NOT_IMPLEMENTED",
+    "rx_lock_split": "NOT_IMPLEMENTED",
+    "shared_fec_allocator": "NOT_IMPLEMENTED",
+    "docs": "docs/devlog/fec-network-work/20261026-W135-Game-P1a-real-recvmmsg-RX.md",
+    "merge_ready": false,
+    "windows": "NOT_RUN"
   },
   "w130_common_go_rx_handoff_p0": {
     "owner": "fec-network-work",
