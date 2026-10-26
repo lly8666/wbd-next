@@ -81,7 +81,7 @@ def validate(raw):
         game_fec not in tuple("fixed"+str(n) for n in range(7))):
         raise Unsupported("Game FEC must be fixed0..fixed6 on public game2/game4; no Auto or other mode")
     copy_mode=p.setdefault("game4_copy_schedule",
-                           "stagger-4-20-60" if p["mode"]=="game4" else "immediate")
+                           "stagger-4-50-140" if p["mode"]=="game4" else "immediate")
     if copy_mode not in ("immediate","stagger-4-20-60","stagger-4-50-140"):
         raise ValueError("game4_copy_schedule invalid: immediate/stagger-4-20-60/stagger-4-50-140")
     if copy_mode!="immediate" and p["mode"]!="game4":

@@ -119,7 +119,7 @@ func parse(role string,args []string)(config,error){
     mode:=flags.String("mode","normal","V4 normal, fec-fixed, fec-auto, game2, game4")
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for normal fixed; auto uses strong startup")
     gameFec:=flags.String("game-fec","off","Game2/4 inner fixed FEC: off or fixed0..fixed6; BOTH authenticated endpoints must match; no Game Auto")
-    game4Copy:=flags.String("game4-copy-schedule","","Game4 default stagger-4-20-60; opt-in stagger-4-50-140 for long shared outages or explicit immediate; Game2 unchanged")
+    game4Copy:=flags.String("game4-copy-schedule","","Game4 default stagger-4-50-140; explicit stagger-4-20-60 legacy fallback or immediate rollback; Game2 unchanged")
     outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and actual receipt feedback remain enabled")
     outerMTU:=flags.Int("outer-mtu",1500,"outer IPv4 packet MTU; inner TUN MTU is derived automatically and clamped to device/peer limits")
     tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
@@ -154,7 +154,7 @@ func parse(role string,args []string)(config,error){
         c.gameFecProfile=uint8((*gameFec)[5]-'0')
     }
     if *game4Copy=="" {
-        if c.gameLanes==4 {*game4Copy="stagger-4-20-60"
+        if c.gameLanes==4 {*game4Copy="stagger-4-50-140"
         } else {*game4Copy="immediate"}
     }
     switch *game4Copy{

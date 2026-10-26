@@ -1022,6 +1022,22 @@ class FecGame4StrictLossBoundaryContracts(unittest.TestCase):
 
 
 class FecGame4LongCopyScheduleContracts(unittest.TestCase):
+    def test_implicit_game4_default_is_wide_and_legacy_rollback_preserved(self):
+        r=copy.deepcopy(request())
+        r["owner"]="fec-network-work"
+        r["product"]["mode"]="game4"
+        r["product"]["game_fec"]="fixed6"
+        r["product"]["repair_enabled"]=False
+        r["product"].pop("game4_copy_schedule",None)
+        self.assertEqual(validate(r)["product"]["game4_copy_schedule"],"stagger-4-50-140")
+        for schedule in ("stagger-4-20-60","immediate"):
+            q=copy.deepcopy(r)
+            q["product"]["game4_copy_schedule"]=schedule
+            self.assertEqual(validate(q)["product"]["game4_copy_schedule"],schedule)
+        q=copy.deepcopy(r)
+        q["product"]["mode"]="game2"
+        self.assertEqual(validate(q)["product"]["game4_copy_schedule"],"immediate")
+
     def test_bounded_optin_wide_game4_only(self):
         r=copy.deepcopy(request())
         r["owner"]="fec-network-work"
