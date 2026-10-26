@@ -7766,5 +7766,29 @@
     "limits": "W166 numerical residual are ideal MDS offline figures, NOT native product, not empirical business target, scenario weights artificial",
     "capacity_stop": true,
     "merge_ready": false
+  },
+  "w167_outer_repair_dual_arch_matrix": {
+    "evidence": "docs/evidence/fec-network-work/20261026-W167-Outer-ON-DualArch-Matrix-and-Deferred-RX-250ms.json",
+    "source_before_w167": "cdf3d361351a39895805b0771a25b2bfe8c8ae94",
+    "arch": [
+      "arm64",
+      "amd64"
+    ],
+    "modes": 7,
+    "random_loss_pct": [
+      1,
+      5,
+      15,
+      30
+    ],
+    "measure_s_per_case": 20,
+    "rate_mbps_per_direction": 10,
+    "expected_case_count": 56,
+    "outer_data_repair_default": "ALREADY_ON_GO_PRODUCT_NEW_NATIVE_PARSE_ASSERTION",
+    "normal_250ms_receiver_design": "DEFERRED_NOT_APPLIED",
+    "highrate_250_mbps_30pct": "NOT_RUN_CAPACITY_STOP",
+    "test_workflow": ".github/workflows/fec-w167-arm64-x86-outer-on-matrix.yml",
+    "capacity_stop": true,
+    "merge_ready": false
   }
 }

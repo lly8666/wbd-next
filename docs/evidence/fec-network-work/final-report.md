@@ -1,5 +1,17 @@
 # FEC-only 独立岗位｜2026-10-26 限域合并审查索引
 
+## 2026-10-26 W167｜保存Normal 250ms缓存设计；外层DATA重传默认ON及双架构20s矩阵
+
+新授权要求已记为独立执行和证据，不与W166先前Normal三批FEC产品实施混用。**待实施Normal专用RX缓存设计**：150ms last-touch→250ms、block-ID reordering 1024→2048；在300Mbps/单方向额外100ms意味着原始字节3.75MB，满k16/r20所有符号缓存理想增量8.4375MB，CPU/RSS开销未实测；2048是ID跨度并不是1024块预分配，动态索引内存只能估数量级。现受640个活跃块/48MiB硬容量限制、短包高速可提前淘汰。**本项仅存设计，不改产品常量。**
+
+**外层DATA修复默认**：公共原 Go Linux CLI早已 `--outer-repair=on`，现增七个公开组合/explicit off回退单测。此次矩阵显式传`repair_enabled=true`两端并用原生回读核实。Normal/Fixed/Auto M2 genuine outer frozen DATA retry才有具体 `repair_accepted_wire_bytes`; Game2/4允许开关和原生 readback，但首发lane复制/FEC parity不是可量化的Normal M2外层DATA retry，当前它的retry占比仍 `NOT_APPLICABLE`，不能当作测得零。
+
+**原生矩阵设计/Action**：ARM64 + AMD64，七种产品组合[Normal OFF / Normal Fixed6 / Normal Auto / Game2 OFF&Fixed6 / Game4 OFF&Fixed6] × IID 1/5/15/30% ×20秒，单向业务均为10Mbps、双向96%UDP+4%真实TCP, RFC原Go TLS→Rust→TUN, 新独立 workflow `.github/workflows/fec-w167-arm64-x86-outer-on-matrix.yml`。每个结果展示真实丢包、收发、CPU/RSS、Native Rust rx/tx线程CPU局部证据、Normal outer repair DATA比率；不能凭同一进程RSS将Go/Rust内存拆账。真实外层“全部链路字节”与DATA账本有不同分母，区分不可归因内容。不把低速业务测试误记为高负荷容量资格。
+
+**250Mbps每方向、30%IID、Normal Fixed6单独测试**：用户新提出，但FEC旧`capacity_stop=true`对共享VM高压测试仍有严格停止标志，本期明确 `NOT_RUN_CAPACITY_STOP`、不伪造通过；需独立安全容量许可/硬实时终止钩子再执行。Windows继续临时跳过，`merge_ready=false`且不改网络岗位全局`next_action`。机器可审计收据：[`W167`](20261026-W167-Outer-ON-DualArch-Matrix-and-Deferred-RX-250ms.json)。
+
+
+
 ## 2026-10-26 W166｜Normal 长突发档改为连续流量 2,300 方案搜索（纯模拟，纠正 W165 单一极端条件模型）
 
 用户指出 W165 的“16源全丢且早发修补全丢”只是条件极端事件，不足以推荐整体业务配置，**这一纠正成立，W165 无条件倾向 2即发+18迟发的建议撤回**。复核真实 Normal 固定Maximum：各真实k≤16独立成块，r=min(20,ceil(5k/4))，原始数据始终立即首交，修补行数不加量；持续发送按实际128/384/1200B大小和1/5/15Mbps三路流量、有期限封块（k均值约2.2/8.8/15.2），先后搜了**2,300种**两批/三批时刻与行数，再用训练外种子验证。两个**不相同**的模型：①严格按真实 `tc netem gemodel 3 17 100 0`逐个实际发送符号推进坏/好状态（Pbad=15%、平均坏段5.88包），10种子×30秒×各流速，共**1,204,756个源包/候选**；②真正以时间为单位的平均25/65ms坏段、IID和周期性50/100ms黑洞混合，模型权重由设计者明示，**不是线上观测分布**，另12种子×24秒×各流速复核。

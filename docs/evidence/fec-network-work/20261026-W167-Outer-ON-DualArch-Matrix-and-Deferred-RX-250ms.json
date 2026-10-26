@@ -1,0 +1,118 @@
+{
+  "schema": "FEC_W167_USER_ORDER_RX_LATE_DESIGN_HOLD_OUTER_DEFAULT_ON_DUAL_ARCH_MATRIX_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "source_before_commit": "cdf3d361351a39895805b0771a25b2bfe8c8ae94",
+  "user_requirements": {
+    "archive_rx_design": "300Mbps one direction; 150->250ms and BLOCK_REORDER_SPAN1024->2048 retain as DESIGN ONLY.",
+    "outer_tcp_default": "All public product modes outer DATA repair enabled by default; retain explicit OFF rollback.",
+    "lowrate_matrix": "ARM64 and native x86_64, seven actual product combinations, IID loss 1,5,15,30%, 10Mbps each direction, twenty seconds per case, TCP/UDP mixed, fixed FEC only maximum6.",
+    "highrate": "One separate Normal FEC maximum6 250Mbps per direction, IID30%, 20s.",
+    "cpu_memory": "Inspect real process CPU+peak RSS and Rust native worker thread counters; truthful missing Go vs Rust split.",
+    "outer_repair_bandwidth": "Compute accepted+uncertain retransmitted DATA wire bytes / total original DATA (first+repair), and distinguish entire outer link bandwidth including FEC/ACK/control."
+  },
+  "deferred_memory_design": {
+    "implemented": false,
+    "normal_only": true,
+    "receiver_last_touched_age_current_ms": 150,
+    "proposed_ms": 250,
+    "receiver_block_reorder_span_current": 1024,
+    "proposed": 2048,
+    "current_max_active_blocks": 640,
+    "current_max_stored_bytes": 50331648,
+    "at_300Mbps_source_100ms_increment_bytes": 3750000,
+    "at_maximum_k16_r20_both_source_and_repair_cached_increment_bytes_ideal": 8437500,
+    "index_span_double_allocation": "No preallocation for 1024 block IDs; BTreeMap/BTreeSet nodes grow on demand; exact extra RSS NOT_OBSERVED; order-of-tens-kilobytes if historical ID set expands ~1024 entries.",
+    "risk": "At 300Mbps 654B mean source and full k16 ~896 blocks/250ms, >640; short traffic may exceed2048 ID span; 250ms since last touch can extend retention beyond 250ms from first source; RSS actual unknown. Deferred pending new authorization."
+  },
+  "outer_default_existing": {
+    "go_public_CLI": "--outer-repair default on, current branch already had on before W167",
+    "normal_off_fixed_auto": "Native original M2 authentic DATA outer retry policy can be applied; verified via native readback; actual retry bandwidth may be zero at 1%.",
+    "game2_game4": "Can set and read repair_enabled=1; do NOT conflate four-lane fresh copies, FEC parity, or Game counters with Normal v3 DATA outer retransmission ledger. Game actual DATA retry fraction NOT_APPLICABLE with current public proof.",
+    "test_contract": "r0/go_overlay/internal/v4productcli/outer_repair_default_linux_test.go",
+    "explicit_off_manual_rollback": true,
+    "changed_native_product_default": false
+  },
+  "matrix": {
+    "workflow": ".github/workflows/fec-w167-arm64-x86-outer-on-matrix.yml",
+    "harness": "tools/network_harness/fec_w167_dual_arch_matrix.py",
+    "test_contract": "tests/network/test_w167_matrix.py",
+    "arch": [
+      "arm64",
+      "amd64"
+    ],
+    "product_modes": [
+      "normal",
+      "fec-fixed(profile6)",
+      "fec-auto",
+      "game2(off)",
+      "game2(fixed6)",
+      "game4(off)",
+      "game4(fixed6)"
+    ],
+    "loss_pct": [
+      1,
+      5,
+      15,
+      30
+    ],
+    "per_loss_seconds": 20,
+    "offered_c2s_mbps": 10,
+    "offered_s2c_mbps": 10,
+    "udp_share": 0.96,
+    "tcp_share": 0.04,
+    "sizes": [
+      [
+        64,
+        6
+      ],
+      [
+        128,
+        8
+      ],
+      [
+        255,
+        6
+      ],
+      [
+        512,
+        10
+      ],
+      [
+        900,
+        20
+      ],
+      [
+        1200,
+        50
+      ]
+    ],
+    "one_way_delay_ms": 75,
+    "both_sides_outer_repair_requested": true,
+    "go_rust_tls_tun": "REAL_NATIVE_BUNDLE_ON_EACH_RUNNER",
+    "stop_on_cpu_psi_some_peak_gt_pct": 20,
+    "stop_on_steal_pct_gt": 5,
+    "stop_on_namespace_cleanup_failure": true,
+    "not_yet_finished": "GITHUB_ACTIONS_RUNS_WILL_CARRY_RESULT",
+    "honest_result_policy": "Each scenario saved, failed/unsupported are NOT green."
+  },
+  "telemetry": {
+    "cpu": "Per client/server process measurement cpu seconds; Rust RX+TX thread cpu ns 250ms sampled whole phase (NOT all Rust). Actual Go vs Rust CPU ownership not exactly derivable from process/thread alone.",
+    "memory": "Per process RSS_peak_bytes and native existing M1/FEC queue proof only; Go heap and Rust allocator submodule disaggregation NOT_OBSERVED, requires new alloc profiling.",
+    "retrans": "One-lane authentic first_wire_bytes, repair_accepted_wire_bytes, repair_uncertain_wire_bytes available at STOP; fraction charged/(first+charged) includes whole run, not exactly only 20s and not L1/L2 full-line.",
+    "game": "NO v3 DATA retrans byte ledger; report NOT_APPLICABLE_GAME_MULTI_LANE, do not call its physical copied first sends retries."
+  },
+  "highrate_execution": {
+    "capacity_stop": true,
+    "result": "NOT_RUN_CAPACITY_STOP",
+    "reason": "Existing FEC role-specific status explicitly forbids new high-PSI shared ARM host heavy testing. User's new requested scenario recorded, not silently run, and not falsely passed. Need a deliberate safe capacity override/isolated runner with live resource abort before executing this separate stress case."
+  },
+  "scope": {
+    "original_network_next_action_unchanged": true,
+    "source_may_build_new_test_harness": true,
+    "normal_FEC_delayed_three_round_profile_remains": "DESIGN_ONLY",
+    "windows": "TEMP_SKIPPED",
+    "merge_ready": false,
+    "capacity_stop": true
+  }
+}

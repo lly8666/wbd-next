@@ -1,5 +1,8 @@
 # FEC独立岗位：关闭外层重传后验证与修复
 
+**W167 2026-10-26新用户授权：** 先保存Normal RX 150→250ms、1024→2048的300Mbps缓存评估为**DESIGN ONLY**；外层DATA修复公共Go默认already ON但显式OFF保留，新增七公开组合单测和两个原生ARM64/AMD64×(Normal OFF/Fixed6/Auto、Game2 OFF/Fixed6、Game4 OFF/Fixed6)×IID1/5/15/30%×20s×双向10Mbps的隔离测试workflow，真实FEC最高档只选Fixed6，不进入Game Auto。必须如实记录Go+Rust共进程CPU/RSS无法直接拆分、Normal M2 DATA外层repair分母与全部链路不同、Game2/4无v3 DATA repair账本。250Mbps/dir FEC最高档30%压力子项虽然用户提出，但当前`capacity_stop=true`未撤销，必须明确NOT_RUN而不绕过高压保护。见`docs/evidence/fec-network-work/20261026-W167-Outer-ON-DualArch-Matrix-and-Deferred-RX-250ms.json`。所有未跑或失败必须留红，所有原网络岗位next_action不可改。
+
+
 **2026-10-26 W166连续流量数学模型复核：** 用户指出仅凭全16源丢失极端模型无法选最低整体业务损失，W165对2即发+18迟发的无条件推荐已撤回。离线持续1/5/15Mbps、真实k≤16/r=ceil(5k/4)、2,300个两批/三批候选和真实netem逐包GE(3,17,100,0)、时间GE/50-100ms黑洞双重模型证明没有不依赖故障分布的普适最优。候选仅限手动Normal且不进Auto：A 4/6/10@0/40/100(按包GE)，B 1/3/16@0/60/110(时间长突发)；120ms尾批受现RX150ms与24ms成块期限挤压。还未实现产品或真实重测。详细证据 `docs/evidence/fec-network-work/20261026-W166-Normal-Continuous-LongLoss-MonteCarlo.json`。所有原容量停止、主线合并禁令和独立岗位边界继续成立。
 
 
