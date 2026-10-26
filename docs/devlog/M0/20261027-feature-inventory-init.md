@@ -22,3 +22,9 @@
 ```feature-impact
 {"kind":"updated","ids":["link-fragment-reassembly"],"reason":"recovered历史真实LINK收据的精确40位SOURCE及文档边界；未修改产品源码、配置或测试结论。"}
 ```
+
+## 2026-10-27 全卡片与逐次push审阅声明恢复
+
+- 原LINK收据已按仓库原有40位SOURCE复核。另一次 [40371225001](https://github.com/lly8666/wbd-next/actions/runs/40371225001) 因devlog原始24个ID声明与该次只变动1卡不匹配而FAIL，属于本次文档声明范围问题，不是产品功能FAIL。
+- 本推送在同一提交中对全部24张卡添加审阅源与旧Actions正向边界说明；保留最初完整24个ID的 `feature-impact updated` 声明与纠正LINK的额外声明，两者的ID均在本次变更卡片中。不动功能/默认/产品逻辑，不触发性能矩阵。
+- Gate最终结果以本提交的独立experiment推送Workflow为准，不将之前红灯改写为PASS。

@@ -61,7 +61,8 @@
     }
   ],
   "limitations": [
-    "Linux特定case PASS不是Windows Game产品PASS；Game副本不等同外层DATA重传。"
+    "Linux特定case PASS不是Windows Game产品PASS；Game副本不等同外层DATA重传。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
   ],
   "promotion": null
 }
