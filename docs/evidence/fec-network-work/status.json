@@ -18,19 +18,19 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "44455afb819572ed75689cab28ffc66d1b1c7640",
-    "run_id": 40246704747,
+    "source": "c18de0fa79f529c349b6546635f3c6b62aa01b1c",
+    "run_id": 40255431613,
     "attempt": 1,
-    "artifact_id": 12618184955,
-    "sha256": "f33f2c28f1936de3cfc35a5743f2378d7ee5ef5a8ac45c741ecfffedd82d9baa",
+    "artifact_id": 12621844471,
+    "sha256": "85e50a70ef44306fe5a6f913010d57568cc01b652830be09d473cbd7b2248ac6",
     "platform": "aarch64",
-    "mode": "Game2/Game4 ORIGINAL TLS/FEC OFF",
-    "qualification": "W96 original public Game FEC OFF real mixed TCP+UDP clean AB and W97 independent20/lane1 blackout PASS_SCOPED, not fixed Game FEC",
-    "real_clean_game2_action": 40246931539,
-    "real_clean_game4_action": 40246935612,
-    "real_damage_game2_action": 40247215239,
-    "real_damage_game4_action": 40247219774,
-    "normal_fec_verification": "HISTORICAL SEPARATE FEC ONLY; do not conflate with Game source"
+    "mode": "Original Go TLS Game2/Game4 fixed6 (explicit, shared TX/RX fixed FEC); default Game OFF retained",
+    "qualification": "W98 real clean netem0 mixed 3Mbps both directions UDP+real TCP PASS_SCOPED; W99 damaged network actions 40256521889/40256529112 NOT_YET_VERIFIED",
+    "real_clean_game2_action": 40255806409,
+    "real_clean_game4_action": 40255813118,
+    "actual_parity": "both directions rplanned=rsent=kernel copied, expired0; recovered0 under no-loss",
+    "outer_retransmit": "Game outer-repair=off NOT_WIRED, so DO NOT claim FEC-only retrans disabled for Game; Normal remains separate",
+    "windows": "NOT_RUN/TEMP_SKIPPED"
   },
   "open_requests": [
     {
@@ -634,7 +634,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W99: W98 exact Game2 fixed6 Action40255806409 and Game4 fixed6 40255813118 genuine no-loss TCP+UDP SUCCESS, original per-end TLS applied and parity M4 copied. Reuse frozen c18de0fa bundle build40255431613 artifact12621844471 for bounded 3Mbps independent20/lane1-blackhole/clean recovery one Game2 and one Game4 per Action, unchanged W97 fixtures. Inspect native recovered_candidate, planned/sent expiry, real TCP injection and TUN deliver, p99/stop; if service fails, diagnose stage, do not increase capacity. Game original outer-repair off NOT_WIRED, cannot claim FEC-only outer retrans0, Normal FEC-only distinct; Windows TEMP_SKIPPED, capacity_stop=true merge_ready=false.",
+  "next_action": "W99: inspect original Actions 40256521889(Game2 fixed6) and 40256529112(Game4 fixed6) logs/artifacts, not just workflow green. Check genuine injected/delivered UDP/TCP phase rates, recovered original TUN candidates, parity offered/planned/kerncopied/sent and expires, p95/p99, CPU-s/RSS, AEA/replay rejection, queue age/gaps and Stop. If fail, smallest stage-specific fix on Game FEC only and rerun netem0 before damage. Game --outer-repair=off not wired, cannot claim FEC-only no outer replay. Normal independent, Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6208,6 +6208,32 @@
     "history": "W90 six actual real failure cases preserved without downgrading",
     "evidence": "docs/evidence/fec-network-work/20261026-W98-Game2-Game4-fixed6-real-clean-ARM64-PASS-SCOPED.json",
     "windows": "TEMP_SKIPPED_USER_20261025",
+    "capacity_stop": true,
+    "merge_ready": false
+  },
+  "product_last_verified_fec_off": {
+    "source": "44455afb819572ed75689cab28ffc66d1b1c7640",
+    "run_id": 40246704747,
+    "attempt": 1,
+    "artifact_id": 12618184955,
+    "sha256": "f33f2c28f1936de3cfc35a5743f2378d7ee5ef5a8ac45c741ecfffedd82d9baa",
+    "platform": "aarch64",
+    "mode": "Game2/Game4 ORIGINAL TLS/FEC OFF",
+    "qualification": "W96 original public Game FEC OFF real mixed TCP+UDP clean AB and W97 independent20/lane1 blackout PASS_SCOPED, not fixed Game FEC",
+    "real_clean_game2_action": 40246931539,
+    "real_clean_game4_action": 40246935612,
+    "real_damage_game2_action": 40247215239,
+    "real_damage_game4_action": 40247219774,
+    "normal_fec_verification": "HISTORICAL SEPARATE FEC ONLY; do not conflate with Game source"
+  },
+  "w99_game_fixed_weaknet": {
+    "status": "RUNNING_NOT_VERIFIED",
+    "exact_product_source": "c18de0fa79f529c349b6546635f3c6b62aa01b1c",
+    "build_run": 40255431613,
+    "game2_run": 40256521889,
+    "game4_run": 40256529112,
+    "mode": "fixed6",
+    "scenarios": "each lane IID20%, lane1 blackout, clean restore, 3Mbps each way UDP+real TCP",
     "capacity_stop": true,
     "merge_ready": false
   }
