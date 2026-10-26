@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "RECOVERED_COMPLETED_ACTIONS_AFTER_H272",
+  "source_sha": "bcf2fff7175bd711e6f98177499c5c0451c4eefc",
+  "result": "PASS_SCOPED_WITH_OPEN_GATES",
+  "artifact_verified": true,
+  "qualification": "FUNCTIONAL_CI_PASS_OPEN_FOR_NETWORK_TEST_NORMAL_OFF_ONLY",
+  "recovery": {
+    "main_head_at_recovery": "d8ba2cf270ff6ca5cadae6dab778c49c32636ef6",
+    "cursor_sequence": 272,
+    "cursor_checkpoint": "2da97ed98bc7c8ad97aec2aeb2c5061113057e0e",
+    "delta": [
+      {
+        "sha": "d8ba2cf270ff6ca5cadae6dab778c49c32636ef6",
+        "paths": [
+          ".governance/workstreams/M0/cursor.json"
+        ],
+        "classification": "CURSOR_ONLY_H272"
+      }
+    ],
+    "open_requests": []
+  },
+  "public_normal_off": {
+    "run_id": 39802119726,
+    "run_attempt": 1,
+    "workflow": "M0-WL-FULL-PUBLIC-NORMAL-REALSOURCE",
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "bcf2fff7175bd711e6f98177499c5c0451c4eefc",
+    "finished_at": "2026-10-22T15:29:56Z",
+    "jobs": [
+      {
+        "job_id": 119905374742,
+        "conclusion": "success",
+        "scope": "original_go_linux_rust_peer_build"
+      },
+      {
+        "job_id": 119906092650,
+        "conclusion": "success",
+        "scope": "windows2025_signed_npcap_wintun_actual_wsl2_linux_raw_tun_public_normal_off_owned_stop"
+      }
+    ],
+    "artifact": {
+      "id": 12438420113,
+      "name": "m0-wl-full-public-normal-direct",
+      "sha256": "19e24f31621b0362e3a251af6929a4fe57c98d635c4bba01392ad1532fcfaa1d",
+      "expires_at": "2026-11-21T15:29:39Z",
+      "verified_files": [
+        "report.json",
+        "server.log",
+        "client.log",
+        "windows-app.log",
+        "linux-app.log",
+        "native-windows-npf.log",
+        "native-link-tcp443.log"
+      ]
+    },
+    "linux_build_artifact": {
+      "id": 12435962549,
+      "name": "m0-plan024-linux-product",
+      "sha256": "3dababf9a3dc316e919d3f5a8b7c18e1fdc3951539ba958af8f3141551ec6b4d"
+    },
+    "report": {
+      "windows_sent": 25,
+      "windows_received": 22,
+      "linux_sent": 88,
+      "linux_received": 24,
+      "windows_kernel_bind": "PASS",
+      "linux_kernel_bind": "PASS",
+      "public_normal": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE",
+      "app_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+      "stop": "PASS_BOTH_OWNED",
+      "windows_cli_sha256": "672c06e3a2d344714dc9cca591e562907bb9ffa8d4f0d3d5d586acfda17560ef",
+      "linux_server_sha256": "9c0ba1be6e58457d9c9230bae75ece3e542e81350a4657c53a82cdbfd1383b1e"
+    },
+    "server_log": {
+      "real_first_copy": 89,
+      "authenticated_ack": 3,
+      "original_frozen_retransmitted": 175,
+      "driver_uncertain": 0,
+      "quota_or_capacity_blocked": 0,
+      "retired_total": 80,
+      "max_retransmits": 2
+    },
+    "windows_telemetry": {
+      "npcap_ingress_local_drops": 128,
+      "tx_records": 34,
+      "rx_first_delivered_ipv4": 27,
+      "frozen_ciphertext_retransmits": 45,
+      "original_authenticated_m2_reverse_controls_sent": 10,
+      "duplicate_tcp_carriers": 43,
+      "rejected_or_invalid_carriers": 0,
+      "oversize_rejects": 0,
+      "pending_original_rust_frozen_or_unacked_legacy_carrier_records": 24
+    },
+    "caveats": [
+      "Not 10Mbps or 60s continuous impairment test",
+      "server max_retransmits=2 is a bound, not a complete two-repair and Abandoned causal assertion",
+      "linux-app logs show initial delayed reception; no earliest-bottleneck inference without discriminating instrumentation",
+      "local Npcap ingress drops=128 must not be erased or interpreted as network-loss result"
+    ]
+  },
+  "preserved_history": [
+    {
+      "source_sha": "3e5c8dc592d116834a858e41c08d6bb5a4baf153",
+      "run_id": 39801422682,
+      "attempt": 1,
+      "artifact_id": 12436866360,
+      "conclusion": "success",
+      "scope": "public_normal_off_authentic_M2_ACK3_duplex_Stop"
+    },
+    {
+      "source_sha": "3e5c8dc592d116834a858e41c08d6bb5a4baf153",
+      "run_id": 39801422162,
+      "attempt": 1,
+      "job_id": 119902841676,
+      "conclusion": "failure",
+      "reason": "Windows default FEC2-off ABI E0599"
+    },
+    {
+      "source_sha": "83ad73ee791ae983309cb415c797ffafc03b996a",
+      "run_id": 39802457636,
+      "attempt": 1,
+      "artifact_id": 12437895170,
+      "conclusion": "success",
+      "scope": "Windows default FEC2-off owner ABI"
+    },
+    {
+      "source_sha": "bcf2fff7175bd711e6f98177499c5c0451c4eefc",
+      "run_id": 39802119861,
+      "attempt": 1,
+      "artifact_id": 12435529641,
+      "conclusion": "success",
+      "scope": "scoped Windows WAL"
+    }
+  ],
+  "governance_failure": {
+    "source_sha": "d8ba2cf270ff6ca5cadae6dab778c49c32636ef6",
+    "run_id": 39805008919,
+    "attempt": 1,
+    "job_id": 119915760099,
+    "conclusion": "failure",
+    "artifact_id": 12437452011,
+    "artifact_sha256": "c250687e05d8236a5d23de112aba0653f67685026b73209328e51309141098ee",
+    "structure_result": "BLOCKED",
+    "structure_reason": "evidence is for a different SOURCE",
+    "cause": "H272 evidence_refs combine multiple historical SOURCE and recovered S868 evidence missing same top-level source_sha; governance.py validate lines 331-333 require each hot evidence file source_sha identical to cursor.last_tested_source",
+    "scope": "governance_structure_not_network_protocol"
+  },
+  "still_not_run": [
+    ">256 missing carrier ACK gap fresh delivery",
+    "induced-loss two-repair and Abandoned causal outcomes",
+    "true kernel netem directional calibrated impairment",
+    "WL-N0 0pct/300ms 10Mbps/60s bidirectional",
+    "WL-N1 1pct/50ms 10Mbps/60s bidirectional",
+    "WL-N5 5pct/50ms 10Mbps/60s bidirectional",
+    "host_global_WFP_DNS_GUI",
+    "physical"
+  ],
+  "future_action": "Correct cursor evidence_refs to only this bcf2 exact SOURCE, keep old evidence in context_refs; verify post-H Governance. Then use existing telemetry to isolate >256 carrier ACK gap freshness in one functionality batch before WL-N0/N1/N5. No test rerun during recovery."
+}
