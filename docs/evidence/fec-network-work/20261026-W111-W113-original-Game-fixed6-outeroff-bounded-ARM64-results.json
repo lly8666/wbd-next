@@ -1,0 +1,254 @@
+{
+  "schema": "FEC_W111_W113_BOUNDED_GAME_FIXED6_ARM64_ORIGINAL_SOURCE_V1",
+  "owner": "fec-network-work",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "user_scope": "Continue GameMode fixed FEC testing; GameMode Auto is NOT required. Normal Auto stays separate.",
+  "product": {
+    "source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "build_run": 40260662919,
+    "build_attempt": 1,
+    "artifact_id": 12623678360,
+    "zip_sha256": "04d209b7ef1e887af6599622aaf71efc34381451c847e844cf18c2006ae9708f",
+    "platform": "Linux ARM64 aarch64",
+    "public_tls": "original Go TLS",
+    "game_fec": "fixed6",
+    "fec_profile": 1,
+    "outer_data_repair": "OFF_NATIVE_BOTH_PEERS",
+    "game_auto": "OUT_OF_SCOPE_NO_IMPLEMENTATION",
+    "post_source_changes": "harness/fixtures/evidence only; not new Rust/Go product binary"
+  },
+  "principle": "Each performance Action is one immutable source, one scenario/one ARM64 job; different Actions are different VMs and netem RNG trajectories; no causal cross-mode CPU or exact loss rate A/B.",
+  "capacity_stop": true,
+  "results": {
+    "W111": {
+      "mode": "game4",
+      "case": "12s true quiet no probe after18s active then15s resume; shared 1Mbps each direction; 75ms single way; clean network",
+      "request": "tests/network/fec-work/W111-Game4-fixed6-outeroff-real-quiet-tail-1Mbps-arm64.json",
+      "request_sha": "79fca037c8d1c931c2f6663ac80f31b34a5aa887",
+      "run_id": 40268464615,
+      "attempt": 1,
+      "job_count": 1,
+      "conclusion": "SUCCESS",
+      "product_qualification": "PASS_SCOPED_OBSERVATION",
+      "artifact_id": 12627347851,
+      "artifact_zip_sha256": "d5b6ae332298d66e0f304fb18fd57e1b3084dac43b1f557ec1872aba17e7dbec",
+      "business": {
+        "quiet_offered_udp_tcp": 0,
+        "quiet_arrival_cohort_udp_tcp": 0,
+        "clean_before_missing_udp_tcp_both_directions": 0,
+        "resume_missing_udp_tcp_both_directions": 0,
+        "udp_first_arrival_p99_ms": [
+          77.5,
+          77.5
+        ],
+        "tcp_first_arrival_p99_ms": [
+          77.5,
+          77.5
+        ],
+        "tcp_backpressure": 0,
+        "tail_last_parity_loss": "NOT_INJECTED",
+        "continuous_10ms_cross_business_hol": "NOT_QUALIFIED_SPARSE"
+      },
+      "native": {
+        "repair_enabled_client_server": [
+          0,
+          0
+        ],
+        "outer_data_retransmitted_client_server": [
+          0,
+          0
+        ],
+        "parity_planned_sent_client_server": [
+          17666,
+          17674
+        ],
+        "recovered_candidate_client_server": [
+          0,
+          0
+        ],
+        "fec_failed_expired_codec_capacity": 0,
+        "source_tun_drop": 0,
+        "stop_drained": true
+      },
+      "cost": {
+        "measurement_cpu_s_client_server": [
+          3.07,
+          3.15
+        ],
+        "rss_peak_bytes_client_server": [
+          39489536,
+          39178240
+        ],
+        "host_cpu_psi_peak_pct": 2,
+        "host_cpu_psi_over20_fraction": 0
+      }
+    },
+    "W112": {
+      "mode": "game2",
+      "case": "clean15->30s shared root GE [3,17,100,0]->clean15; 1Mbps each direction; 75ms one way, fixed6 outer DATA OFF",
+      "request": "tests/network/fec-work/W112-Game2-fixed6-outeroff-shared-GE15Long-1Mbps-arm64.json",
+      "request_sha": "81bbb0127def5b0fd4781d51a008fd6f07b9859a",
+      "run_id": 40268468985,
+      "attempt": 1,
+      "job_count": 1,
+      "conclusion": "FAILURE",
+      "product_qualification": "FAIL_STRICT_1PCT_DAMAGED_UDP_BOTH_DIRECTIONS_AND_SMALL_UDP",
+      "artifact_id": 12627552490,
+      "artifact_zip_sha256": "3e37acd7166a9186ee81fea2bbf15daee29c64cbce05e1b62d1ea9ea063a33e8",
+      "business": {
+        "shared_ge_udp_c2s": {
+          "sent": 5515,
+          "missing": 250,
+          "loss_pct": 4.533091568449683,
+          "p99_survivors_ms": 79.3
+        },
+        "shared_ge_udp_s2c": {
+          "sent": 5515,
+          "missing": 238,
+          "loss_pct": 4.315503173164098,
+          "p99_survivors_ms": 79.3
+        },
+        "small_udp_loss_pct_c2s_s2c": [
+          2.48447,
+          2.8667
+        ],
+        "clean_before_after_udp_missing_both": 0,
+        "tcp_each_direction_no_missing_all_phases": true,
+        "tcp_high_ge_p99_ms_c2s_s2c": [
+          742.8,
+          369.2
+        ],
+        "tcp_backpressure": 0
+      },
+      "native": {
+        "repair_enabled_client_server": [
+          0,
+          0
+        ],
+        "outer_data_retransmitted_client_server": [
+          0,
+          0
+        ],
+        "parity_planned_sent_client_server": [
+          33285,
+          33305
+        ],
+        "recovered_candidate_client_server": [
+          654,
+          607
+        ],
+        "fec_invalid_conflict_codec_capacity_expired": 0,
+        "source_tun_drop": 0,
+        "stop_drained": true
+      },
+      "cost": {
+        "measurement_cpu_s_client_server": [
+          3.84,
+          3.82
+        ],
+        "rss_peak_bytes_client_server": [
+          26587136,
+          25923584
+        ],
+        "host_cpu_psi_peak_pct": 0.56,
+        "host_cpu_psi_over20_fraction": 0
+      }
+    },
+    "W113": {
+      "mode": "game4",
+      "case": "clean15->30s shared root GE [3,17,100,0]->clean15; 1Mbps each direction; 75ms one way, fixed6 outer DATA OFF",
+      "request": "tests/network/fec-work/W113-Game4-fixed6-outeroff-shared-GE15Long-1Mbps-arm64.json",
+      "request_sha": "3290f2da010fac740a53ce28924306e50e6f8923",
+      "run_id": 40268472555,
+      "attempt": 1,
+      "job_count": 1,
+      "conclusion": "FAILURE",
+      "product_qualification": "FAIL_STRICT_1PCT_DAMAGED_S2C_UDP_ONLY_C2S_UNDER_GATE_SINGLE_RUN",
+      "artifact_id": 12627647120,
+      "artifact_zip_sha256": "006b1ed3d4f5b5a720ef5a494ca207004d1c343b9567768215b336f6f24f56a8",
+      "business": {
+        "shared_ge_udp_c2s": {
+          "sent": 5516,
+          "missing": 49,
+          "loss_pct": 0.8883248730964467,
+          "p99_survivors_ms": 79.4
+        },
+        "shared_ge_udp_s2c": {
+          "sent": 5516,
+          "missing": 58,
+          "loss_pct": 1.0514865844815084,
+          "p99_survivors_ms": 79.4
+        },
+        "small_udp_loss_pct_c2s_s2c": [
+          0.2866698518872432,
+          0.5733397037744864
+        ],
+        "clean_before_after_udp_missing_both": 0,
+        "tcp_each_direction_no_missing_all_phases": true,
+        "tcp_high_ge_p99_ms_c2s_s2c": [
+          333,
+          125.5
+        ],
+        "tcp_backpressure": 0
+      },
+      "native": {
+        "repair_enabled_client_server": [
+          0,
+          0
+        ],
+        "outer_data_retransmitted_client_server": [
+          0,
+          0
+        ],
+        "parity_planned_sent_client_server": [
+          33345,
+          33350
+        ],
+        "recovered_candidate_client_server": [
+          539,
+          541
+        ],
+        "fec_invalid_conflict_codec_capacity_expired": 0,
+        "source_tun_drop": 0,
+        "stop_drained": true
+      },
+      "cost": {
+        "measurement_cpu_s_client_server": [
+          6.3,
+          6.36
+        ],
+        "rss_peak_bytes_client_server": [
+          39198720,
+          38215680
+        ],
+        "host_cpu_psi_peak_pct": 1.2,
+        "host_cpu_psi_over20_fraction": 0
+      }
+    }
+  },
+  "verification": {
+    "action_jobs": "each exactly one measurement job; W111 success W112/W113 fail at genuine scenario business acceptance, artifacts uploaded despite failure",
+    "original_product_byte_hash": "all fetched exact reused 40260662919 build and manifest checks in Action",
+    "host_psis": "W111 2.0%; W112 0.56%; W113 1.2%; no local CPU host capacity bottleneck witnessed",
+    "no_outer_data_repair": "both native OFF; actual 0 across each case; FEC parity and distinct first per-lane DATA copied",
+    "limits": [
+      "Shared GE is correlated across lanes; do not use p^L IID theory to predict residual",
+      "Per-mode Actions distinct VM and non-seeded GE trajectories; no causal performance comparison or direct W102 baseline improvement/regression at 3Mbps",
+      "Small 1Mbps is intentionally less host pressure than previous 3Mbps; cannot generalize to medium/high capacity",
+      "Recovery candidates are native candidates, not proven individually committed-to-TUN reconstruction; real UDP outcomes are authoritative",
+      "Delivered-only p99 excludes missing records and cannot override business loss",
+      "Clean tail has no forced last-block loss, and sparse 1Mbps not continuous cross-business HOL",
+      "Game Auto explicitly not required, no Game Auto",
+      "Windows this station NOT_RUN/TEMP_SKIPPED_USER_20261025",
+      "No FEC code fix without timely per-block erasure/arrival evidence; preserve failures, no seed churn/no stress increase"
+    ],
+    "capacity_stop": true,
+    "merge_ready": false,
+    "scoped_integration_review_ready": true
+  },
+  "links": {
+    "devlog": "docs/devlog/fec-network-work/20261026-W111-W113-original-Game-fixed6-bounded-actions-intent.md",
+    "final_report": "docs/evidence/fec-network-work/final-report.md"
+  }
+}
