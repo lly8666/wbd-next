@@ -1,5 +1,19 @@
 # FEC-only 独立岗位｜2026-10-26 限域合并审查索引
 
+**2026-10-26 W135–W140 最新接续（仅独立 FEC 工作，优先于下文较早 W130–W134 的时间状态）：** 上一组 P0 Go→Rust 双端接收所有权优化产品 **`6c38ed0df9da3547c7bd604b51f13443d6863181` 仍是 Normal OFF/Fixed/Auto+Game2/Game4 五模式共同验证的基线**。本轮首先真正接入四槽 `recvmmsg`（Game RX P1a）并以两份 immutable 二进制做 Game4 fixed6 5Mbps IID30 同VM [W135 BA 40292104571](https://github.com/lly8666/wbd-next/actions/runs/40292104571) 与反序 [W136 AB 40292711305](https://github.com/lly8666/wbd-next/actions/runs/40292711305)。真实业务、TUN、0/4/20/60副本、parity、外层 DATA retry0 均通过，**但两次新版 CPU 分别+3.43%和+2.09%**，实际 full-4 批次占比仅约2.5–3.3%；因此 **拒绝 P1a 并通过 `3a2a4518` 精确恢复老产品 RX 文件**，再次 ARM64 [40293326840](https://github.com/lly8666/wbd-next/actions/runs/40293326840) PASS。 [W135–W136 负收益机器留痕](20261026-W135-W136-Game-P1a-real-recvmmsg-BA-AB-rejected.json)，不能把功能 PASS 说成节约 CPU。
+
+接着**独立**实现 W137 Game FEC 稀疏源关组下一截止时间：利用现有 `Fec2Owner::next_deadline` +只读 parity-ready，在 TX TUN、新Game4错峰副本和真实 FEC deadline 中取最早唤醒；每个有界 FEC quantum 刷新 now，不建定时线程或逐包timer，不改 fixed6/密钥/独立PN/FEC parity/TUN确认。精确实际业务 SOURCE `e40098f0d238adc362ab096b5bd6e5b3b4fa852e`，原生 [40293838787](https://github.com/lly8666/wbd-next/actions/runs/40293838787) SUCCESS，artifact12636808494 SHA256 `d60386779b56b0c091721f444c96c53c309cebe56140b9e0d9308720d278280a`，原生测试确认稀疏 FEC 关组早于本源+20ms副本但本源复制时间不被改。四个**互不混用工况**的真实 ARM64 Action 均 PASS、ZIP SHA256 留痕：
+
+| 独立验收 | 核查结果与边界 |
+|---|---|
+| [W137 40294316915](https://github.com/lly8666/wbd-next/actions/runs/40294316915)，Game4 fixed6、各1Mbps真TCP/UDP，无损 active→完全静默→resume，旧→新同VM | 双向业务无缺失、两端GO重复复制0、parity计划=实发、外层DATA重传0，UDP p99两版均75.5ms；CPU-s旧5.77→新6.06（+5%，**没有 CPU 收益**），宿主PSI皆0 |
+| [W138 40295019331](https://github.com/lly8666/wbd-next/actions/runs/40295019331)，Game4 fixed6、各80**Kbps**、四lane独立IID30%/75ms，真正稀疏真TCP/UDP，新→旧同VM | UDP两向各414/414、TCP各9/9，零缺失；UDP c2s/s2c p95旧79.6→新77.6ms，s2c p99旧83.6→新81.7ms，双端CPU-s均1.16，真实修复符号收发完整；**差异可能有随机损伤混杂**。新版FEC认证后RX `ConflictingBlock` 684/734 对旧423/391，有明显增加，虽业务/实际parity不缺失，不能忽视或误当TX失败 |
+| [W139 40295923116](https://github.com/lly8666/wbd-next/actions/runs/40295923116)，Game2 fixed6 各3Mbps真实混合 clean | UDP各11009/11009、TCP各449/449、parity全部实际发送、GO复制0、外层重传0、Stop OK |
+| [W140 40295931353](https://github.com/lly8666/wbd-next/actions/runs/40295931353)，Game4 FEC OFF stagger 各1Mbps真实混合 clean | UDP各3683/3683、TCP各136/136、p99 75.5ms、Go复制0、Stop OK；**部分 Stop 尾部的延迟副本被放弃**，不能报告四位置零放弃 |
+
+整体结论：**保留 W137 作为 Game 稀疏 FEC deadline 正确性修复与低率弱网首达改善迹象（SCOPED PASS），不把它宣传成 CPU 优化成功或保证2ms收益。** 源码 HEAD 另有独立注释-only 容量纠错 `6ef329879fcd821812fe47c38823089d28c676db` 原生 [40295129966](https://github.com/lly8666/wbd-next/actions/runs/40295129966) PASS：80Mbps设计需计算约995源组保留工作×W126实测 source+parity倍率2.268≈2257共享逻辑job，4096槽**约1.8倍非4倍余量**，短k/字节/每lane引用须分别计，80Mbps仍 **NOT_QUALIFIED**。当前独立最终证据 [W137–W140精确Actions/SOURCE/Hash收据](20261026-W137-W140-Game-FEC-sparse-due-qualified.json)、[W137 devlog](../../devlog/fec-network-work/20261026-W137-Game-FEC-sparse-group-close-deadline.md)；`STATUS` 明确区分五模式共用P0 `6c38` 与本轮 Game-only `e400`。Normal 未因 Game PASS 被自动升级、Windows仍 NOT_RUN，P1b真正TX sendmmsg（需半批成功及FEC确认）、P2共享RX锁按采样拆分、P3 Normal+Game共用FEC分配均未合格。`capacity_stop=true`、`merge_ready=false`、main不合并、其他网络岗位状态未修改。
+
+
 **2026-10-26 W130–W134 公共 Go→Rust 稳态收包去重交付（最新实测，优先于下文 W130 运行中旧时点）：** 最新**Linux ARM64 限域合格**产品精确 SOURCE `6c38ed0df9da3547c7bd604b51f13443d6863181`，原生 [ARM64 build40288528399](https://github.com/lly8666/wbd-next/actions/runs/40288528399) SUCCESS，artifact12635510007 ZIP SHA256 `d3eaaceb84666ed7f754a13e4078559d06a7c369441da32c245e2fdfbf67bb0f`，manifest 与二进制哈希核验。单一共享 `ExcludeDetachedData` AF_PACKET 内核 BPF 在 Rust 已ready+完成 TLS 认证 Detach 后对该连接丢弃重复 DATA，但**保留** Go 独立发送 FD、SYN/ACK/FIN/RST、其他连接 TLS、Normal Auto 原生 M2；覆盖 **Normal OFF、Fixed、Auto、Game2、Game4 的客户端及服务端**。五项真业务 Actions 仅各一场景、一测量 job、不同场景可并行；需要比较的版本在同 VM **顺序** AB/BA，无同 VM 并发业务实例；新源两端交接后 Go 完整 DATA复制均为 **0**，外层 DATA重传均 **0**，所有原生交付/Stop/scoped 业务门 PASS。
 
 | 本轮独立模式/真实 Actions | 业务与原生限域通过 | 两端进程测量 CPU-s 旧→新 | 交付和资格边界 |
