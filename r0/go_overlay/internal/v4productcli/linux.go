@@ -26,6 +26,8 @@ import (
     "os/signal"
     "strconv"
     "strings"
+    "sync"
+    "sync/atomic"
     "syscall"
     "time"
     "unsafe"
@@ -466,6 +468,8 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if err!=nil{return err}
     defer assoc.Close()
     errs:=make(chan error,1)
+    var handoffCommitted atomic.Bool
+    var goPostHandoffDataCopies atomic.Uint64
     go func(){
         for {
             seg,_,readErr:=raw.ReadSegment()
@@ -480,6 +484,8 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                    !errors.Is(e,faketcp.ErrClientDetached){
                     select{case errs<-e:default:}
                 }
+            }else if handoffCommitted.Load()&&len(seg.Payload)!=0{
+                goPostHandoffDataCopies.Add(1)
             }
         }
     }()
@@ -511,6 +517,18 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         ClientLimit:c.recordLimit,DesiredLanes:1,LaneID:1,Policy:policy,
     }
     if _,err=native.ConnectAuthenticatedPeer(dialCtx,assoc,cfg);err!=nil{return err}
+    // Existing client product returns only after authenticated TLS detach,
+    // exact Rust M4 RX attachment and native loop start.
+    if assoc.State()!=faketcp.ClientAssociationDetached{
+        _=native.Close()
+        return fmt.Errorf("Normal client Rust M4 started without FakeTCP detach")
+    }
+    if e:=raw.ExcludeDetachedData(flow.PeerIP,flow.PeerPort);e!=nil{
+        _=native.Close()
+        return fmt.Errorf("Normal client receive ownership handoff: %w",e)
+    }
+    handoffCommitted.Store(true)
+    log.Printf("V4_PUBLIC_GO_RX_HANDOFF role=client mode=%s filtered=1 rust_ready=1 original_send_fd_open=1",c.fecMode)
     *connected=true
     log.Printf("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client Rust_owner=active real_raw_tun=1")
     startV3ProductTimeline(ctx,"client",native.OriginalLoopPulse,native.OriginalOuterCounters)
@@ -518,6 +536,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     case <-ctx.Done():
     case err=<-errs:
     }
+    log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=client mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())
     counters,countErr:=native.OriginalOuterCounters()
     logAuthenticOuter("client",counters,countErr)
     cpu,cpuErr:=native.OriginalWorkerCPU()
