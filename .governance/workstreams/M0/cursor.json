@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 276,
+  "sequence": 277,
   "checkpoint_sha": "e868e2820b83b5faeab437da75fa79d8d9c0ddfb",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
   "current_task": "Existing M0 task: WHOLE Windows↔Linux native product wiring, using proven Linux original-Go TLS/Detach, Rust M1/M2/M3/FEC2/Auto/Game/Stop and genuine Windows Npcap/Wintun/WFP/WAL/GUI. Earlier Fixed6-only wording was user typo. Formal main registry/PLAN020 corrected; W168 implementation isolated in Draft PR28, not merged main.",
-  "why_now": "Recovery: integration code01d8b729 Action40379315293 native builds and unit PASS but public two-OS step FAIL; job logs BlobNotFound/no Windows artifact, earliest error UNKNOWN. Original integration4fb263 Action40362898805 real scoped Normal/off duplex/Stop PASS. Main WL-N0 f11b6e7+103B TX-SEQ FAIL unchanged. Main Governance red after expanded cursor/registry: hot bytes33128, unbounded context_refs and invalid cross-source evidence; shorten/repair instead of relaxing policy.",
+  "why_now": "Recovered exact Action40379315293 product FAIL without retrievable job log; main old WL-N0 sequence FAIL independent. Corrected user task on main PLAN020/registry without privilege changes. Governance 40410057918 structure FAIL traced by exact artifact12691849462/structure.json to missing main-only cursor ref docs/handoff/CURRENT_INTEGRATION.md (this exists on staging, NOT main). Remove this cross-branch reference from main cursor; keep historical evidence/source qualified and all bounds. Prior hot/readset and evidence-list issues fixed.",
   "done_when": "One honest whole Windows original-Go→Rust→native OS→Linux public product path, bidirectional UDP/TCP, effective per-mode Normal/Fixed/Auto/Game2/4 positive or UNWIRED/NOT_RUN/FAIL, WFP/WAL/GUI readback/Stop. No dedicated Fixed6-only test, fake capability, or new recovery algorithm; validated modes then opt-in network trial, separate WL-N0/N1/N5 and physical later.",
-  "next_action": "Settle integration Actions40409529074 on full native owner/capability and real two-OS Normal functional scope; use recovered Linux→Windows call-chain audit to wire next shared owner/native OS interface as a coherent product batch; preserve historical reds and avoid repeated Fixed6 or 10Mbps pressure.",
+  "next_action": "Settle isolated staging S3fabfaf whole native owner+five-mode truthful capability/public Normal Windows-Linux Action40409529074; consume source-locked first real failure or pass and then wire the next Linux-designed shared Windows interface, not Fixed6-only rerun. Keep main and PR28 separate, performance untouched.",
   "unverified": true,
   "last_tested_source": "01d8b7291d0d675a8e1ee8c56e0aa28c2422dd88",
   "evidence_refs": [],
@@ -20,9 +20,8 @@
     "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
     "docs/evidence/M0/PLAN024-S880-WL-N0-exact-original-failure-20261026.json",
     "docs/devlog/M0/PLAN024-S880-WL-N0-original-windows-rust-seq-mismatch-20261026.md",
-    "docs/testing/NETWORK_TRIAGE.md",
-    "docs/handoff/CURRENT_INTEGRATION.md"
+    "docs/testing/NETWORK_TRIAGE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H276 main task correction only; source3fabfaf Windows integration CI40409529074 in progress on isolated branch. Source01d8 native public FAIL unknown log; source4fb old Normal cross-OS PASS; main f11b high-load FAIL; Fixed/Auto/Game/OS global/physical/performance not promoted. Repaired cursor references under original hard bounds; no new epoch, reservation or worker, all historical evidence kept in context."
+  "partial_summary": "H277 main task whole Windows/Linux product wire-up. Main Governance artifact identified only absent staging-only context path after hot refs fix, removed exactly that ref, no policy weakening. Staging 3fabfaf Actions40409529074 running; old source01d8 public FAIL first cause unavailable, old source4fb real Normal PASS, main WL-N0 +103B FAIL. No Fixed6 standalone trials or new roles."
 }
