@@ -82,8 +82,6 @@ def validate(raw):
         raise Unsupported("Game FEC must be fixed0..fixed6 on public game2/game4; no Auto or other mode")
     if any(k in p for k in ["cipher", "repair_ratio"]):
         raise Unsupported("no caller-selected cipher or repair ratio on original Go TLS public CLI")
-    if p.get("repair_enabled") is False and p["mode"] in ("game2", "game4"):
-        raise Unsupported("outer repair off not wired to public Game")
     if p["mode"] == "fec-auto" and p["fec_profile"] != 1:
         raise Unsupported("auto startup is product-controlled; fec_profile cannot set it")
     lanes = {"game2": 2, "game4": 4}.get(p["mode"], 1)
@@ -305,8 +303,6 @@ def validate(raw):
             raise ValueError("diagnostic_10x must be boolean")
         if "repair_enabled" in b and type(b["repair_enabled"]) is not bool:
             raise ValueError("bundle repair_enabled must be boolean")
-        if b.get("repair_enabled") is False and p["mode"] in ("game2", "game4"):
-            raise Unsupported("outer repair off not wired to public Game")
         if "recovery_policy" in b and b["recovery_policy"] not in ("legacy-two-repair-v1", "outer-single-repair-v2", "outer-opportunistic-v3"):
             raise ValueError("invalid per-bundle recovery policy")
         for k, length in [("source", 40), ("sha256", 64)]:

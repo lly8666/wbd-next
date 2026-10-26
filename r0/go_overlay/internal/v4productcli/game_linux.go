@@ -41,6 +41,16 @@ func logOriginalGameFec(role string,n int,p *realityfront.V4LinuxGameProduct){
         proof.RxInvalid,proof.RxConflict,proof.RxCapacity,
         proof.RxCodec,proof.RxState,proof.RxFrame)
 }
+func logGameOuterRepair(role string,n int,p *realityfront.V4LinuxGameProduct,off bool)error{
+    proof,err:=p.OuterPolicy()
+    if err!=nil{return err}
+    if proof.RepairEnabled==off{return realityfront.ErrAdmissionUnsupported}
+    if off&&proof.DataRetransmitted!=0{return realityfront.ErrAdmissionUnsupported}
+    log.Printf("V4_PUBLIC_GAME_OUTER role=%s lanes=%d repair_enabled=%d outer_data_retransmitted=%d blocked_duplicate=%d first_lane_copied=%d parity_separate=1",
+        role,n,func()int{if proof.RepairEnabled{return 1};return 0}(),
+        proof.DataRetransmitted,proof.BlockedDuplicate,proof.FirstLaneCopied)
+    return nil
+}
 func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,connected *bool)error{
     n:=int(c.gameLanes)
     policy,err:=realityfront.FixedPolicyForClient(int(c.gameLanes),4)
@@ -100,6 +110,8 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
+            DisableOuterRepair:c.disableOuterRepair,
+            DisableOuterRepair:c.disableOuterRepair,
         })
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
@@ -126,6 +138,9 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
         log.Printf("V4_PUBLIC_GAME_KERNEL role=client lanes=%d copied=%d delivered=%d rejected=%d raw_received=%d auth_rejected=%d",
             n,counters.Copied,counters.Delivered,counters.Rejected,
             counters.RawReceived,counters.AuthenticatedRejected)
+    }
+    if errOuter:=logGameOuterRepair("client",n,native,c.disableOuterRepair);errOuter!=nil{
+        err=errors.Join(err,errOuter)
     }
     if c.gameFecEnabled{logOriginalGameFec("client",n,native)}
     closeErr:=native.Close()
@@ -251,6 +266,9 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
         log.Printf("V4_PUBLIC_GAME_KERNEL role=server lanes=%d copied=%d delivered=%d rejected=%d raw_received=%d auth_rejected=%d",
             n,counters.Copied,counters.Delivered,counters.Rejected,
             counters.RawReceived,counters.AuthenticatedRejected)
+    }
+    if errOuter:=logGameOuterRepair("server",n,native,c.disableOuterRepair);errOuter!=nil{
+        err=errors.Join(err,errOuter)
     }
     if c.gameFecEnabled{logOriginalGameFec("server",n,native)}
     closeErr:=native.Close()

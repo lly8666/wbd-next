@@ -162,9 +162,6 @@ func parse(role string,args []string)(config,error){
     case "off":c.disableOuterRepair=true
     default:return c,fmt.Errorf("outer-repair must be on or off")
     }
-    if c.disableOuterRepair&&c.gameLanes!=0{
-        return c,fmt.Errorf("outer-repair=off currently not wired to public Game")
-    }
     c.outerMTU=*outerMTU
     c.fecProfile=realityfront.FecV2Profile(*profile)
     if *iface==""||len(*tunName)==0||len(*tunName)>15||

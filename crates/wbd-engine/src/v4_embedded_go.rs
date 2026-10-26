@@ -603,6 +603,8 @@ struct Entry{
 struct GameGroupNative{
     adapter:Arc<Mutex<crate::v4_game_lane::GameAdapter>>,
     handles:Vec<u64>,stopped:bool,stopping:bool,
+    // M4 Game never registers Normal's outer M2 shadow/repair timer.
+    outer_repair_enabled:bool,
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     server:bool,
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -2474,7 +2476,7 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
     };
     r.game_groups.insert(group_handle,GameGroupNative{
         adapter:Arc::new(Mutex::new(adapter)),handles:ids,
-        stopped:false,stopping:false,
+        stopped:false,stopping:false,outer_repair_enabled:true,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         server,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -2576,6 +2578,44 @@ pub extern "C" fn wbd_fec_network_game_group_fixed_configure(
     OK
 }
 
+// Explicitly configure the original TLS committed Game group before M4.
+// Off cannot create Normal M2 DATA repair shadows; the M4 send path
+// independently blocks a repeated Game logical ID on the same lane.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_fec_network_game_group_outer_policy_set(
+    group:u64,enabled:u32
+)->i32{
+    if enabled>1{return INVALID}
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+    if e.stopped||e.stopping||e.drivers.is_some(){return BAD_STAGE}
+    e.outer_repair_enabled=enabled!=0;
+    OK
+}
+// Readback is from the real installed Game M4 driver, not the CLI flag.
+// [enabled, outer DATA retry copies, rejected duplicate logical copies,
+//  accepted first lane copies including independently generated FEC parity].
+// No outer retransmit producer exists for Game; Normal V3 remains untouched.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_fec_network_game_group_outer_policy_read(
+    group:u64,out:*mut u64,n:usize
+)->i32{
+    if out.is_null()||n!=4{return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
+    if e.stopped{return BAD_STAGE}
+    let Some(driver)=e.drivers.as_ref()else{return BAD_STAGE};
+    let (blocked,first)=driver.outer_policy_counters();
+    let values=[u64::from(e.outer_repair_enabled),0,blocked,first];
+    unsafe{std::ptr::copy_nonoverlapping(values.as_ptr(),out,4)};
+    OK
+}
 #[cfg(feature="fec2_product_record")]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
@@ -2632,7 +2672,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
     if e.stopped||e.stopping||e.drivers.is_some(){return BAD_STAGE}
     let owner=crate::v4_game_public_kernel::GameKernelOwner::start(
         Arc::clone(&e.adapter),e.flows.clone(),e.tx_seqs.clone(),e.server,
-        ifname,ifindex,dup,tunname,(group>>32) as u32
+        ifname,ifindex,dup,tunname,(group>>32) as u32,
+        e.outer_repair_enabled
     );
     let Ok(owner)=owner else{return BAD_STAGE};
     e.drivers=Some(owner);

@@ -25,6 +25,7 @@ type V4LinuxGameProductConfig struct {
     Epochs *V4EpochStore // mandatory only for actual server group
     GameFecEnabled bool // explicit BOTH-endpoint fixed FEC, never Auto
     GameFecProfile uint8 // 0..6; only used when GameFecEnabled
+    DisableOuterRepair bool // Game M4 first copy only, no Normal M2 DATA repair
 }
 type V4LinuxGameProduct struct{
     mu sync.Mutex
@@ -74,6 +75,7 @@ func (p *V4LinuxGameProduct) commitGroupedOwnerLocked()error{
     if p.cfg.GameFecEnabled{
         if err=p.native.configureFixedFEC(p.cfg.GameFecProfile);err!=nil{return err}
     }
+    if err=p.native.configureOuterRepair(!p.cfg.DisableOuterRepair);err!=nil{return err}
     if err=p.native.startNativeM4(
         p.cfg.NetworkInterface,p.cfg.NetworkIfIndex,p.cfg.Tun,p.cfg.TunName,
     );err!=nil{return err}
@@ -181,6 +183,22 @@ func (p *V4LinuxGameProduct) AcceptServerGame(
         return errors.Join(err,p.abortLocked())
     }
     return nil
+}
+func (p *V4LinuxGameProduct) OuterPolicy()(V4GameOuterPolicy,error){
+    if p==nil{return V4GameOuterPolicy{},ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    if !p.connected||p.stopped||p.native==nil{
+        return V4GameOuterPolicy{},ErrAdmissionUnsupported
+    }
+    policy,err:=p.native.originalGameOuterPolicy()
+    if err!=nil{return policy,err}
+    if policy.RepairEnabled==p.cfg.DisableOuterRepair{
+        return V4GameOuterPolicy{},ErrAdmissionUnsupported
+    }
+    if p.cfg.DisableOuterRepair&&policy.DataRetransmitted!=0{
+        return V4GameOuterPolicy{},ErrAdmissionUnsupported
+    }
+    return policy,nil
 }
 func (p *V4LinuxGameProduct) KernelCounters()(V4GameKernelCounters,error){
     if p==nil{return V4GameKernelCounters{},ErrAdmissionParams}

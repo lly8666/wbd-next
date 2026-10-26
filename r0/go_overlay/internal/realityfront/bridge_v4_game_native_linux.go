@@ -8,6 +8,8 @@ package realityfront
 extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32_t,uint64_t *);
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_fec_network_game_group_fixed_configure(uint64_t,uint32_t);
+extern int32_t wbd_fec_network_game_group_outer_policy_set(uint64_t,uint32_t);
+extern int32_t wbd_fec_network_game_group_outer_policy_read(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_fec_network_game_group_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_game_group_stop(uint64_t);
 extern int32_t wbd_m0_embedded_go_game_group_release(uint64_t);
@@ -101,6 +103,27 @@ func (g *v4NativeGameJoined) configureFixedFEC(profile uint8)error{
         C.uint64_t(g.handle),C.uint32_t(profile))
     if rc!=0{return fmt.Errorf("%w: Game fixed FEC setup=%d",errV4Embedded,int(rc))}
     return nil
+}
+type V4GameOuterPolicy struct {
+    RepairEnabled bool
+    DataRetransmitted,BlockedDuplicate,FirstLaneCopied uint64
+}
+func (g *v4NativeGameJoined) configureOuterRepair(enabled bool)error{
+    if g==nil||g.handle==0||g.stopped||g.verified==nil{return ErrAdmissionUnsupported}
+    var value C.uint32_t
+    if enabled {value=1}
+    rc:=C.wbd_fec_network_game_group_outer_policy_set(C.uint64_t(g.handle),value)
+    if rc!=0{return fmt.Errorf("%w: Game native outer policy=%d",errV4Embedded,int(rc))}
+    return nil
+}
+func (g *v4NativeGameJoined) originalGameOuterPolicy()(V4GameOuterPolicy,error){
+    if g==nil||g.handle==0||g.stopped{return V4GameOuterPolicy{},ErrAdmissionUnsupported}
+    var data [4]C.uint64_t
+    rc:=C.wbd_fec_network_game_group_outer_policy_read(C.uint64_t(g.handle),&data[0],4)
+    if rc!=0{return V4GameOuterPolicy{},fmt.Errorf("%w: Game outer M4 readback=%d",errV4Embedded,int(rc))}
+    return V4GameOuterPolicy{RepairEnabled:data[0]!=0,
+        DataRetransmitted:uint64(data[1]),BlockedDuplicate:uint64(data[2]),
+        FirstLaneCopied:uint64(data[3])},nil
 }
 // Real original-Go M4 raw/TUN worker install. The actual Go owner
 // supplies its nonzero current ifindex and a real /dev/net/tun FD; Rust

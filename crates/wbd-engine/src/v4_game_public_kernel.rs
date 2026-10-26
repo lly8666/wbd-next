@@ -20,7 +20,8 @@ use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
 use wbd_platform::r1::StopResult;
 
 struct TxLane{
-    key:LaneKey,flow:GoFlow,seq:u64,raw:Arc<ScopedRawIpv4Tx>
+    key:LaneKey,flow:GoFlow,seq:u64,raw:Arc<ScopedRawIpv4Tx>,
+    last_initial_id:Option<u64>
 }
 #[derive(Default)]
 struct RxRejectReasons {
@@ -38,12 +39,27 @@ pub(crate) struct GameKernelOwner{
     rx_mutex_acquired:Arc<AtomicU64>,rx_authenticated_some:Arc<AtomicU64>,
     rx_dedup_none:Arc<AtomicU64>,rx_tun_failed:Arc<AtomicU64>,
     rx_delivery_commit_failed:Arc<AtomicU64>,
+    outer_blocked_duplicate:Arc<AtomicU64>,
+}
+// Each lane FIFO delivers the first independent AEAD copy of a logical
+// source or parity symbol. Reappearance cannot become outer DATA repair.
+fn game_first_lane_copy(last:Option<u64>,id:u64)->bool{
+    last.is_none_or(|old|id>old)
+}
+#[cfg(test)]
+#[test]
+fn w103_game_outer_off_blocks_reused_logical_ids_but_keeps_new_parity(){
+    assert!(game_first_lane_copy(None,0));
+    assert!(!game_first_lane_copy(Some(0),0));
+    assert!(!game_first_lane_copy(Some(15),9));
+    assert!(game_first_lane_copy(Some(15),16)); // fresh parity symbol
+    assert!(game_first_lane_copy(None,9)); // independent first on lane2
 }
 impl GameKernelOwner{
     pub(crate) fn start(
         adapter:Arc<Mutex<GameAdapter>>,flows:Vec<GoFlow>,seqs:Vec<u64>,
         server:bool,ifname:&str,ifindex:u32,fd:OwnedFd,tun_name:&str,
-        generation:u32,
+        generation:u32,outer_repair_enabled:bool,
     )->Result<Self,()>{
         let n=flows.len();
         if !matches!(n,2|4)||seqs.len()!=n||generation==0||
@@ -81,12 +97,14 @@ impl GameKernelOwner{
         let rx_dedup_none=Arc::new(AtomicU64::new(0));
         let rx_tun_failed=Arc::new(AtomicU64::new(0));
         let rx_delivery_commit_failed=Arc::new(AtomicU64::new(0));
+        let outer_blocked_duplicate=Arc::new(AtomicU64::new(0));
         let mut lanes=Vec::new();
         for i in 0..n{
             lanes.push(TxLane{
                 key:LaneKey{tunnel:TunnelKey{slot:14,generation},
                     slot:i as u32+1,generation},
-                flow:flows[i],seq:seqs[i],raw:Arc::clone(&tx[i])
+                flow:flows[i],seq:seqs[i],raw:Arc::clone(&tx[i]),
+                last_initial_id:None
             });
         }
         let tx_adapter=Arc::clone(&adapter);
@@ -94,6 +112,7 @@ impl GameKernelOwner{
         let tx_tun=Arc::clone(&tun);
         let tx_copy=Arc::clone(&copied);
         let tx_rejected=Arc::clone(&rejected);
+        let outer_denied=Arc::clone(&outer_blocked_duplicate);
         #[allow(unused_variables)]
         let (inner_mtu,rx_owner,fec_enabled)={
             let game=adapter.lock().map_err(|_|())?;
@@ -143,11 +162,17 @@ impl GameKernelOwner{
                     // Single TX owner first drains source copies to M4 before
                     // any FEC parity quantum can enqueue additional work.
                     let mut flush=|game:&mut GameAdapter|{
-                        game.drain(now,|lane,_,pn,wire|{
+                        game.drain(now,|lane,id,pn,wire|{
                             let Some(item)=lanes.iter_mut().find(|x|x.key==lane) else{
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                                 return false
                             };
+                            if !outer_repair_enabled &&
+                                !game_first_lane_copy(item.last_initial_id,id.0){
+                                outer_denied.fetch_add(1,Ordering::Relaxed);
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                return false
+                            }
                             let Ok(mut slab)=arena.allocate()else{
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                                 return false
@@ -181,6 +206,7 @@ impl GameKernelOwner{
                                 .is_ok();
                             if ok {
                                 item.seq=item.seq.saturating_add(wire.len() as u64);
+                                item.last_initial_id=Some(id.0);
                                 tx_copy.fetch_add(1,Ordering::Relaxed);
                                 true
                             }else{
@@ -396,7 +422,11 @@ impl GameKernelOwner{
             raw_received,rx_reject,
             rx_driver_timeout,rx_driver_other,rx_mutex_acquired,
             rx_authenticated_some,rx_dedup_none,rx_tun_failed,
-            rx_delivery_commit_failed})
+            rx_delivery_commit_failed,outer_blocked_duplicate})
+    }
+    pub(crate) fn outer_policy_counters(&self)->(u64,u64){
+        (self.outer_blocked_duplicate.load(Ordering::Relaxed),
+         self.copied.load(Ordering::Relaxed))
     }
     pub(crate) fn counters(&self)->(u64,u64,u64){
         (self.copied.load(Ordering::Relaxed),
