@@ -12,3 +12,13 @@
 ```feature-impact
 {"kind":"updated","ids":["normal-off","fec-fixed","fec-auto","game-lanes","game-fixed-fec","game4-copy-stagger","outer-opportunistic-repair","first-arrival-dedup","record-crypto","native-crypto-backends","path-mtu-budget","link-fragment-reassembly","tls-auth-multiclient","generation-stop","idle-rotation-keepalive","linux-raw-tun","windows-native-transport","windows-network-wal","gui-config-feedback","dns-split-ipv6","windows-portable","arm64-targets","openwrt-package","android-vpn-shell"],"reason":"本次仅初始化现有功能、历史证据和未验证范围的结构化文档；没有修改产品逻辑、默认参数、GUI/CLI实现或平台资格。"}
 ```
+
+## 2026-10-27 Governance 逐次push恢复记录
+
+- 首推 `249640a6884938bee5cd546e3285c50b2ba96f4e` 的 Feature catalog [40370663484](https://github.com/lly8666/wbd-next/actions/runs/40370663484) FAIL：LINK历史SHA误抄成39位。
+- 第二推 `ac0b672387cff87f38d1d4fe9ef4c695d9eb9844` [40370952313](https://github.com/lly8666/wbd-next/actions/runs/40370952313) FAIL：该次push仅改卡片未在同一push改devlog，因此门拒绝逐次变更声明；原初始化声明依然存在。
+- recovered：原历史LINK源确实为 `821962b7fc204facf5e1e5599a0b3fead3c3a58c`，收据 `docs/evidence/M0/M0-023-real-go-link-fragment-821962b7fc204facf5e1e5599a0b3fead3c3a58c.json`，非本次新产品测试；仅更正文档来源文字。
+
+```feature-impact
+{"kind":"updated","ids":["link-fragment-reassembly"],"reason":"recovered历史真实LINK收据的精确40位SOURCE及文档边界；未修改产品源码、配置或测试结论。"}
+```
