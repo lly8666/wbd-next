@@ -169,6 +169,15 @@ class Contracts(unittest.TestCase):
         self.assertFalse(verify_native_game_counters(2,good))
         self.assertFalse(verify_native_game_counters(4,{"client":good["client"]}))
         self.assertFalse(verify_native_game_counters(4,{**good,"server":{**good["server"],"auth_rejected":1}}))
+        # One-way app traffic still drives real reverse TCP ACKs through
+        # the opposite TUN and Game FEC. Those are not fake app injection.
+        reverse={"client":{**good["client"],"copied":100,"delivered":2000},
+                 "server":{**good["server"],"copied":50,"delivered":1000}}
+        self.assertTrue(verify_native_game_counters(4,reverse,
+            {"c2s_mbps":1,"s2c_mbps":0}))
+        self.assertFalse(verify_native_game_counters(4,{
+            **reverse,"server":{**reverse["server"],"auth_rejected":1}},
+            {"c2s_mbps":1,"s2c_mbps":0}))
         # Game does not have the Normal v3 repair ledger: the absence must
         # never be reclassified as v3 readback PASS.
         self.assertFalse(verify_outer_recovery_policy("outer-opportunistic-v3",{}))

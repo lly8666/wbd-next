@@ -58,7 +58,12 @@ def verify_outer_recovery_policy(expected, observed):
 
 
 def verify_native_game_counters(lanes,counters,traffic=None):
-    """Native M4 counters. An explicitly idle direction has no fake TX/RX."""
+    """Genuine Game M4 activity (includes inner TCP ACKs in passive direction).
+
+    No generated application workload in one direction does not prohibit
+    kernel TUN reverse acknowledgements. Never require zero on that side.
+    Still require real send/receive for an actively offered direction.
+    """
     if lanes not in (2,4) or set(counters)!={"client","server"}:
         return False
     for role,c in counters.items():
@@ -68,13 +73,12 @@ def verify_native_game_counters(lanes,counters,traffic=None):
         receiving=(traffic is None or traffic["s2c_mbps" if role=="client" else "c2s_mbps"]>0)
         if sending:
             if c.get("copied",0)<=0: return False
-        elif c.get("copied")!=0:
-            return False
         if receiving:
             if c.get("delivered",0)<=0 or c.get("raw_received",0)<=0:
                 return False
-        elif c.get("delivered")!=0:
-            return False
+        # When application rate=0, native first copies / TUN receipts
+        # may still contain authentic TCP reverse ACKs or device control.
+        # Actual outer retransmits must be checked separately (exact=0).
     return True
 
 def product_marker_line(line):
@@ -1148,12 +1152,11 @@ class LinuxExperiment:
                     counts={k:int(v) for k,v in re.findall(r"(\w+)=(\d+)",observed[0][2])}
                     game_fec_proof[role]=counts
                     sending=self.config["traffic"]["c2s_mbps" if role=="client" else "s2c_mbps"]>0
-                    if (counts.get("source_offered",0)==0 if sending else
-                        counts.get("source_offered",-1)!=0):
+                    if sending and (counts.get("source_offered",0)==0 or
+                                    counts.get("parity_copied",0)==0):
                         verified=False
-                    if (counts.get("parity_copied",0)==0 if sending else
-                        counts.get("parity_copied",-1)!=0):
-                        verified=False
+                    # Reverse TCP ACK/TUN output may legitimately enter the
+                    # shared Game FEC encoder despite app offered rate=0.
                     if (counts.get("parity_offered",0)<counts.get("parity_copied",0) or
                         counts.get("rsent",0)>counts.get("rplanned",0)):
                         verified=False
@@ -1174,7 +1177,7 @@ class LinuxExperiment:
                 p["parity_separate"]==1 and
                 (p["first_lane_copied"]>0 if
                  self.config["traffic"]["c2s_mbps" if role=="client" else "s2c_mbps"]>0
-                 else p["first_lane_copied"]==0) and
+                 else p["first_lane_copied"]>=0) and
                 (requested_repair or p["outer_data_retransmitted"]==0)
                 for role,p in game_outer_policy.items()))
             if not repair_readback_verified:
