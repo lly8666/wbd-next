@@ -1,5 +1,10 @@
 # 可复用真实网络 Actions 夹具
 
+**2026-10-26 Game4 FEC-OFF 错时副本最新接线（覆盖下文过时的 Game 全部 FEC OFF 单一能力描述）：** 仅原 Linux Go TLS `--mode=game4 --game-fec=off` 可选择 `--game4-copy-schedule=immediate|stagger-4-20-60`，默认 `immediate`（0/0/0/0ms），后者从每个业务逻辑 T0 起按物理 lane1..4 的绝对 0/4/20/60ms 到期，第一份立即；必须在客户端和服务端分别设置，认证后 native readback `V4_PUBLIC_GAME4_COPY_SCHEDULE` 严格核对真实 planned/sent/abandoned/late_mean_us/late_max_us。这里不支持 Game2/Normal/Go Windows CLI/UI 或 Game+FEC（包括 fixed）；不做 Game Auto。只修改已认证 Game M4 数据复制，不延迟 Go TLS 建链/控制。测试专用 `product.game4_copy_schedule` 或 `bundles.A/B.game4_copy_schedule` 允许同一个 frozen SOURCE 在一台 VM 上顺序 A/B 切换；不用不同 VM CPU 对比。原生 `GameTx` 每个原始业务只存一份共享载荷，延迟队列仅保存引用、lane/FIFO 与绝对 deadline，按 due 后真实超时；新增位置 native 计数两端必须有界，不能拿最终0业务丢失掩盖副本被误删。
+
+**容量和限制：** 3Mbps、64B 最坏约 5859pps，65ms 保留窗口 `5859*0.065≈381` 并发逻辑工作，错时专用上限 1024任务/每 lane1024槽、2MiB 共享逻辑字节、1024×2048B 复用 slab（现有 Arena 构造时有界预分配）；100Mbps 全64B `195312.5pps*0.065≈12695` 大于当前槽限，因此不得声明100Mbps高PPS已适用。去重位窗口由4096扩至65536（仅该可选模式，8KiB标记空间），不让 60ms 有效迟到副本因逻辑位推进被判旧。网络 `wall_blackouts_ms` 仅本独立 Game4 FEC OFF 测试夹具：阶段内声明最多三项 `{"offset_ms":7023,"duration_ms":20}`，合法时长20/50/100ms，以真实单调时间而非 netem 包状态触发双方 owned `WBN_LOSS` TCP DROP，记录每方向 rule 命令开始结束与不确定性；命令偏差过大结果为 INCONCLUSIVE，不伪装完美同步黑洞。旧 W89 `gemodel[3,17,100,0]` 仍按报文推进，二者不可混算。准时交付分母必须是全部送出业务（含丢失），新 `traffic.py` 的1ms截断250ms累计生存到达计数用于与同VM无损A基准计算 base+10/30/60/100ms；幸存包p99独立列出。Game4 错时测试真实 Action/失败在本岗位 `docs/evidence/fec-network-work/` 留痕，默认策略选择在验证全部指定模型后决定。
+
+
 **2026-10-23当前策略**：[机会式v3](../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)要求新请求/双端readback显式 `policy=outer-opportunistic-v3`，只重传一次、成熟认证缺口触发、data_pto=false及真实MTU预算版本。工具接线尚待实施：不能只改label；旧outer-single-repair-v2请求继续按旧标准保存。新UDP上界/无下限、0损近零修复、30%充分负载至少6%线路修复、TCP500应用目标及CPU口径全部按v3，不再套p²恢复门。
 
 2026-10-21 用户直接授权实现。入口：`.github/workflows/network-harness.yml`；请求格式示例 `tests/network/request.json`；预置工况 `tests/network/scenarios.json`。PR21最初只增加测试工具，这是历史实现范围，不是后续岗位的产品只读限制。当前独立岗位按[永久说明](NETWORK_AUTONOMOUS_WORK.md)和[当前计划](NETWORK_CURRENT_PLAN.md)自主修复相关产品、配置、观测与夹具，不等待M0；不改他人游标或接管其他岗位任务。接入正式客户端/服务端 `wbd-v4-client/server`，复用成熟 Go TLS 和真实 Rust raw/TUN owner；**不借测试 helper 伪造数据路径、认证、ACK 或应用交付**。
