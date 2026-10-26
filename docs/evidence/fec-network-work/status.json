@@ -631,7 +631,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W96: inspect Action40246704747 exact ARM64 build/native; if PASS reuse frozen artifact in isolated Game2 & Game4 FEC OFF clean3Mbps sameVM A=W94 fb65d813 vs B=W96 44455afb; assert actual UDP+TCP, no loss, Stop, CPU/RSS/p99; if not PASS, fix exact source or withdraw. W95 IID20/one-lane-blackhole passes on W94, record 40246424032/40246427496. Only after foundation, re-qualify Game fixed6 as a separate candidate with netem0 startup first. No Windows; capacity_stop=true, merge_ready=false.",
+  "next_action": "W97: reconcile Game2/4 original W95-class (unchanged 3Mbps independent20 / lane1 blackhole / clean restore) Actions for exact W96 44455afb source: request commits a08e3451b6/4171e75f3d. If genuine UDP/TCP and Stop good, close Game OFF architecture scope with W92 raw kernel BPF (~10% Game4 CPU sameVM AB/BA) and W96 TUN-commit correctness; no fixed Game+FEC pass claim. Subsequent fixed FEC must be independently reimplemented/validated after six failed W90 Actions, not resurrected blindly. Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6140,14 +6140,29 @@
     "capacity_stop": true
   },
   "w96_game_tun_commit": {
-    "status": "SOURCE_CANDIDATE_ARM64_BUILD_RUNNING",
+    "status": "EXACT_ARM64_NATIVE_AND_GAME2_GAME4_CLEAN_SAMEVM_AB_PASS_SCOPED",
     "source": "44455afb819572ed75689cab28ffc66d1b1c7640",
     "build_run": 40246704747,
-    "change": "single shared RX owner bounded pending id per lane, only commit GameRx logical dedup after actual TUN write",
-    "tests": "failure-then-alternate-lane, pending duplicate while write unresolved",
-    "clean_real": "NOT_YET_RUN",
-    "game_fixed": "UNSUPPORTED_W90_WITHDRAWN",
-    "capacity_stop": true,
-    "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN"
+    "build_artifact_id": 12618184955,
+    "build_zip_sha256": "f33f2c28f1936de3cfc35a5743f2378d7ee5ef5a8ac45c741ecfffedd82d9baa",
+    "game2_ab_run": 40246931539,
+    "game4_ab_run": 40246935612,
+    "correctness": "Genuine each-direction UDP/TCP 3Mbps zero loss/backpressure, p99~77.6ms, Stop clean; synthetic TUN failure fallback over alternate lane PASS",
+    "cpu": "Game2 +4-5% CPU and Game4 neutral at same output; correct commit cost not advertised as perf gain",
+    "remaining": "W97 exact same source old W95 independent20/lane1blackhole pending. Game+fixed FEC unsupported pending isolated qualification",
+    "evidence": "docs/evidence/fec-network-work/20261026-W96-Game2-Game4-TUN-commit-sameVM-AB-PASS-SCOPED.json",
+    "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN",
+    "capacity_stop": true
+  },
+  "w97_game_tun_weaknet": {
+    "status": "TWO_REAL_ACTIONS_DISPATCHED_UNVERIFIED",
+    "source": "44455afb819572ed75689cab28ffc66d1b1c7640",
+    "build_run": 40246704747,
+    "game2_request": "tests/network/fec-work/W97-Game2-OFF-tunCommit-IID20-lane1blackhole-arm64.json",
+    "game4_request": "tests/network/fec-work/W97-Game4-OFF-tunCommit-IID20-lane1blackhole-arm64.json",
+    "game2_commit": "a08e3451b6e5e37b1d9e77d2aa25fa31c02f4797",
+    "game4_commit": "4171e75f3d24239f50725c220cd010b92afd1490",
+    "run_ids": "PENDING_RECONCILE_FROM_ACTIONS",
+    "capacity_stop": true
   }
 }

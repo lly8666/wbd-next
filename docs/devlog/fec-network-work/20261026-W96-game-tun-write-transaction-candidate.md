@@ -14,3 +14,9 @@ Parent: `1208c069d1fd2ca8828b99d1206846d2e0bb7f94`. W94 exact source `fb65d8136c
 
 ## Gate
 Exact SOURCE ARM64 native unit + real Linux bounded clean 3Mbps Game2/Game4 OFF, then representative independent20+lane1blackhole after earlier W95 evidence; compare actual injection/delivery/p99, CPU/RSS, errors and Stop. No upgrade in load; record unresolved Windows and Game fixed separately. This candidate is NOT product-verified at commit time.
+
+## Exact validation results
+- Exact SOURCE `44455afb819572ed75689cab28ffc66d1b1c7640`, ARM64 product [40246704747](https://github.com/lly8666/wbd-next/actions/runs/40246704747) **SUCCESS**, artifact12618184955 ZIP SHA256 `f33f2c28f1936de3cfc35a5743f2378d7ee5ef5a8ac45c741ecfffedd82d9baa`; both focused synthetic TUN-failure/alternate-lane and concurrent pending duplicate tests PASS, Normal FEC native regression PASS.
+- Game2 off same-VM A=W94 / B=W96 [40246931539](https://github.com/lly8666/wbd-next/actions/runs/40246931539) both **PASS_SCOPED**: client/server CPU1.55/1.58→1.62/1.65 CPU-s (4–5% extra cost), true UDP/TCP injected=delivered every direction, p99 max77.6ms, zero TUN drops/backpressure, Stop clean.
+- Game4 off same-VM [40246935612](https://github.com/lly8666/wbd-next/actions/runs/40246935612) both **PASS_SCOPED**: CPU client/server2.27/2.33→2.31/2.32 CPU-s, true UDP/TCP complete, p99 max77.6ms and Stop clean.
+- Retain correctness fix despite small Game2 CPU increase; no claim that CPU improved. W97 real IID20/lane1-blackhole on exactly W96 source dispatched to separately confirm damage/Stop path. No Game fixed FEC public qualification; Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.
