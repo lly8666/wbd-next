@@ -1,11 +1,13 @@
-name: M0 actual full public Windows Linux Normal off
-run-name: M0-WL-FULL-PUBLIC-NORMAL-REALSOURCE
+name: M0 actual public Windows Linux Normal off WL-N0
+run-name: M0-WL-N0-PUBLIC-NATIVE-REALSOURCE
 on:
   push:
     branches: [main]
     paths:
       - .github/workflows/m0-wl-public-normal-full.yml
       - tools/m0_wl_public_normal_e2e.py
+      - tools/m0_wl_netem.py
+      - tools/m0_wl_public_rate_app.py
       - tools/m0_wl_real_wsl2_guest_probe.py
       - tools/m0_wl_public_native_wire_trace.py
       - r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go
@@ -99,6 +101,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
       LINUX_BINARY_SRC: ${{ github.sha }}
+      WBD_WL_RUN_N0: "1"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -433,13 +436,16 @@ jobs:
         run: |
           if(Test-Path result/wl-public/report.json){Get-Content result/wl-public/report.json}
           else {Write-Output 'WL_PUBLIC_WINDOWS_LINUX_NORMAL_OFF=NOT_RUN_OR_FAILED_BEFORE_START'}
-          Write-Output 'WL_N0_N1_N5=NOT_RUN'
+          if(Test-Path result/wl-public/report.json){Write-Output ('WL_N0='+$result.WL_N0)}
+          Write-Output 'WL_N1_N5=NOT_RUN'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: m0-wl-full-public-normal-direct
           path: |
             result/wl-public/report.json
+            result/wl-public/wl-n0-*-app.json
+            result/wl-public/wl-n0-netem-*.json
             result/wl-public/assembly.json
             result/wl-public/*log
             result/wl-public/*.pid

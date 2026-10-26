@@ -145,6 +145,78 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   real[role]=data
  report["actual_kernel_udp"]=real
  report["app_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_UDP"
+ report["initial_smoke"]="PASS_REAL_TWO_OS_UDP_BEFORE_MEASUREMENT"
+ if os.environ.get("WBD_WL_RUN_N0")=="1":
+  # One declared measurement scenario, not a mixed matrix. Genuine Linux
+  # egress and eth0-ingress→IFB kernel tc, not an in-app drop/latency shim.
+  # It is deliberately after functional warmup, before both owned Stop.
+  def netem(action):
+   cmd=["wsl.exe","-d","Ubuntu","-u","root","--","python3",
+        unix(root/"tools"/"m0_wl_netem.py"),action,unix(out)]
+   return run(cmd,timeout=35)
+  owned=out/"wl-n0-netem-owned.json"
+  try:
+   report["WL_N0"]="ENVIRONMENT_OR_PRODUCT_NOT_YET_VERIFIED"
+   print(netem("arm"),flush=True)
+   (out/"wl-n0-start.flag").unlink(missing_ok=True)
+   rate=unix(root/"tools"/"m0_wl_public_rate_app.py")
+   output=unix(out)
+   lrate=(out/"wl-n0-linux-app.log").open("w");logs.append(lrate)
+   wrate=(out/"wl-n0-windows-app.log").open("w");logs.append(wrate)
+   linuxrate=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+       "python3","-u",rate,"10.66.0.1","10.66.0.2",
+       "linux",unix(out/"wl-n0-start.flag"),output],stdout=lrate,stderr=subprocess.STDOUT)
+   windowsrate=subprocess.Popen([sys.executable,"-u",str(root/"tools"/"m0_wl_public_rate_app.py"),
+       "10.66.0.2","10.66.0.1","windows",str(out/"wl-n0-start.flag"),str(out)],
+       stdout=wrate,stderr=subprocess.STDOUT)
+   try:
+    ready(out/"wl-n0-linux-app.log",'"phase": "bound"',linuxrate,25)
+    ready(out/"wl-n0-windows-app.log",'"phase": "bound"',windowsrate,25)
+    (out/"wl-n0-start.flag").write_text("REAL_TWO_OS_KERNEL_APPLICATIONS_BOUND\n")
+    # Poll process liveness, never relay/transform tested traffic.
+    until=time.monotonic()+85
+    while linuxrate.poll() is None or windowsrate.poll() is None:
+     if w.poll() is not None or s.poll() is not None:
+      raise RuntimeError("real public product exited during WL-N0")
+     if time.monotonic()>until:
+      raise RuntimeError("bounded WL-N0 60s native app duration exceeded")
+     time.sleep(.2)
+    if linuxrate.returncode or windowsrate.returncode:
+     raise RuntimeError("real kernel generator error windows="+str(windowsrate.returncode)+
+                        " linux="+str(linuxrate.returncode))
+   finally:
+    for p in (linuxrate,windowsrate):
+     if p.poll() is None:p.terminate()
+   print(netem("snapshot"),flush=True)
+   wl={}
+   for role in ("windows","linux"):
+    wl[role]=json.loads((out/("wl-n0-"+role+"-app.json")).read_text())
+   report["wl_n0_measured"]=wl
+   report["wl_n0_tc_after"]="wl-n0-netem-after.json"
+   after=json.loads((out/"wl-n0-netem-after.json").read_text())
+   def count_packets(qdiscs):
+    def find_counts(obj):
+     if isinstance(obj,dict):
+      if "packets" in obj and isinstance(obj["packets"],int):
+       return [obj["packets"]]
+      return sum((find_counts(v) for v in obj.values()),[])
+     if isinstance(obj,list):
+      return sum((find_counts(v) for v in obj),[])
+     return []
+    return max(find_counts(qdiscs) or [0])
+   if count_packets(after["eth0"])==0 or count_packets(after["ifb"])==0:
+    report["WL_N0"]="INCONCLUSIVE_KERNEL_TC_DIRECTION_COUNTS_UNOBSERVED"
+   elif min(x["sent_payload_mbps"] for x in wl.values())<9.7:
+    report["WL_N0"]="HOST_OR_GENERATOR_OR_PRODUCT_CAPACITY_LIMITED"
+   elif min(wl["windows"]["received_first_packets"]/max(wl["linux"]["sent_packets"],1),
+            wl["linux"]["received_first_packets"]/max(wl["windows"]["sent_packets"],1))<.999:
+    report["WL_N0"]="VALID_OBSERVATION_LOSSLESS_DELIVERY_BELOW_99_9_PCT"
+   else:
+    report["WL_N0"]="PASS_SCOPED_300MS_0PCT_10MBPS_60S_BOTH_DIRECTIONS"
+   print("WL_N0_TRUE_KERNEL_MEASUREMENT "+report["WL_N0"],flush=True)
+  finally:
+   if owned.exists():
+    print(netem("cleanup"),flush=True)
  stop_windows(w)
  if w.returncode!=0 or "WBD_WINDOWS_NATIVE_DISCONNECTED_V1" not in (out/"client.log").read_text():raise RuntimeError("Windows native owned WAL Stop missing")
  stop_linux();s.wait(timeout=10)
