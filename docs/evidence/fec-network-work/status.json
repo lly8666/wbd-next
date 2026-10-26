@@ -634,7 +634,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W101 inspect exact ARM64 build40257758450 and categorized native RX test; if PASS reuse frozen artifact for one unchanged 3Mbps Game2 fixed6 W99-style IID20/blackhole trace, recording rx_invalid/conflict/capacity/codec/state/frame and true TCP/UDP. W98 fixed6 clean, W99 fixed6 IID20/blackhole PASS_SCOPED; W100 fixed0 clean PASS_SCOPED. No extra high pressure, no generic shared GE matrix until classification. Game --outer-repair=off explicitly unsupported and not FEC-only retrans disabled; Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
+  "next_action": "W101: inspect original Game2 fixed6 retest Action40258049780, exact source 8afc2b8f 3Mbps W99 unchanged IID20/blackhole/clean; read FEC rx_invalid/conflict/capacity/codec/state/frame per side from actual ZIP before attributing W99 aggregate; independently assert UDP+real TCP throughput/p99/Stop and capacity. No new load or Game4 matrix until reviewed. W98/99 fixed6 real positive recovery, W100 fixed0 clean PASS_SCOPED; outer Game DATA repair off not wired and NOT_VERIFIED; Windows TEMP_SKIPPED, merge_ready=false capacity_stop=true.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6333,7 +6333,7 @@
     "capacity_stop": true
   },
   "w101_game_fixed_fec_rejection_reason": {
-    "status": "EXACT_ARM64_NATIVE_RUNNING_NOT_PASS",
+    "status": "EXACT_ARM64_NATIVE_ALL_PASS; REAL_GAME2_FIXED6_IID20_BLACKHOLE_IN_PROGRESS",
     "candidate_source": "8afc2b8f443dd59edc912fef24b5fffa92e3a6d7",
     "build_run": 40257758450,
     "previous_failed_source": "24c5b7ec49edccc8bee276a4e800f954912e37e4",
@@ -6344,6 +6344,11 @@
     "previous_compile_failure": "Rust #[test] on impl associated fn, fixed by free test wrapper",
     "changes": "Classify RX invalid/conflict/capacity/codec/state/frame errors in terminal one-line FEC proof; no FEC math/TUN/source schedule changes",
     "live_qualified": false,
-    "capacity_stop": true
+    "capacity_stop": true,
+    "build_conclusion": "SUCCESS",
+    "artifact_id": 12622774367,
+    "zip_sha256": "80f65de67e9a89ba961f3d18a722c53cee8911ce19f0a1315f98d448713f9772",
+    "retest_run": 40258049780,
+    "retest_request_commit": "7174f585237b4a7895b9b8fbce048c8fda41009a"
   }
 }
