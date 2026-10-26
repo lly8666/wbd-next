@@ -12,6 +12,8 @@ on:
       - tools/m0_wl_public_native_wire_trace.py
       - r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go
       - r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go
+      - r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go
+      - r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection_test.go
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner.go
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_scoped_client.go
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_fixed_stream.go
@@ -267,8 +269,8 @@ jobs:
           $ErrorActionPreference='Stop'
           Push-Location legacy
           try {
-            & go test -count=1 -tags wbd_v4_embedded_go -run '^TestM0PLAN024AuthenticatedHighWater' ./cmd/wbd-client
-            if($LASTEXITCODE -ne 0){throw 'native Windows public peer bound M3 RX ledger regression FAIL'}
+            & go test -count=1 -tags wbd_v4_embedded_go -run '^TestM0PLAN(023WindowsNativeV4FiveModes|024WindowsFixed6OriginalGoAdmissionBeforeNative|024AuthenticatedHighWater)' ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'native Windows original-Go V3 carrier4 versus FEC2 Fixed6 admission, mode or M3 RX regression FAIL'}
           } finally {Pop-Location}
           Write-Output 'WL_PUBLIC_AUTHENTICATED_HIGHWATER_4M_GAP_WINDOWS_UNIT_PASS_SCOPED'
       - name: Full public-run signed original Npcap and Wintun driver install

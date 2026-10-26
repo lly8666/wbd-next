@@ -15,15 +15,19 @@
     "production": "FEC OFF"
   },
   "usage": {
-    "cli": "Linux --mode fec-fixed --fec-profile 0..6，两端核实际Applied revision",
-    "config": "旧Go有fec.mode/fec.profile配置；保存不表示Rust Native Applied，V4映射另查",
-    "gui": "原Go/WinForms配置选项可能可见；Windows真实Fixed6尚未接线认证"
+    "cli": "Linux --mode fec-fixed --fec-profile 0..6；Windows隔离候选 --native-v4-product --lanes 1 --fec-mode fixed --fec-parity 4，原Go TLS V3 carrier4 与 Rust FEC2 Maximum6 分层，真实 Fixed6 M2 Applied 尚未通过",
+    "config": "Windows原Go V3 fixed4 是TLS握手前仅用于入场/MTU envelope；独立Rust FixedStream profile6才是新FEC2矩阵，不能把前者用作后者。默认仍 OFF",
+    "gui": "Windows WinForms Fixed6 完整 Applied/Disconnect UI 仍 NOT_RUN，网络原生模式仍须通过独立 Fixed6 公开功能门"
   },
   "code_refs": [
     "r0/go_overlay/internal/v4productcli/linux.go",
     "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
     "crates/wbd-engine/src/v4_fixed_stream.rs",
-    "crates/wbd-codec/src/fec_v2.rs"
+    "crates/wbd-codec/src/fec_v2.rs",
+    "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_fixed_stream.go",
+    "crates/wbd-engine/src/v4_windows_owner.rs"
   ],
   "doc_refs": [
     "docs/architecture/FEC_V2_BALANCED.md",
@@ -62,7 +66,8 @@
   "limitations": [
     "旧L来源的Fixed功能不自动证明现在HEAD所有模式或Windows可用。",
     "FEC parity与外层DATA修复是不同机制。",
-    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "Windows Fixed6 现行入口保留原Go fixed4 carrier admission 与共享Rust FEC2 Maximum6，不从旧Go FEC shard计数推断Rust Applied；源码00738fe Actions40372774560原入场参数固定0 FAIL，新候选未获产品验证。"
   ],
   "promotion": null
 }

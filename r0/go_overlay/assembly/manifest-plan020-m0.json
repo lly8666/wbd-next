@@ -683,13 +683,13 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_windows_v4_mode_selection.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go",
-      "result_blob": "0ce3d5d22b75989d629f6da30be1e1f87176b1d0"
+      "result_blob": "5d4e9a6630f6a97c79062d448d261b10203a8fa9"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_windows_v4_mode_selection_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection_test.go",
-      "result_blob": "155e95d41eb06ba143d9b2212f8f6479fb0058ce"
+      "result_blob": "d0e33f68a217d57676382dd2cad51f06ad1fdc58"
     },
     {
       "kind": "create",
