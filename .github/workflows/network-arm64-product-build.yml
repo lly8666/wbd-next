@@ -58,6 +58,14 @@ jobs:
           cargo +1.85.1 test --locked -p wbd-engine \
             --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration \
             --lib game_reused_tx_scratch_mixed_lengths_across_lanes_and_rx_duplicate_precheck -- --nocapture
+      - name: W98 original Go TLS protected fixed Game profile mismatch fail-closed
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd legacy
+          go test -tags wbd_v4_embedded_go,wbd_v4_native_probe,wbd_v4_fec2_owner_probe,wbd_v4_fec2_product \
+            -run 'TestFECGameProtectedTLSRejectsDifferentFixedProfilesBeforeOwner|TestFECGameProtectedV4ProfileWireOffAndFailClosed' \
+            ./internal/realityfront -v
       - name: W98 original Game fixed M4 batch preserves every recovered source
         shell: bash
         run: |
