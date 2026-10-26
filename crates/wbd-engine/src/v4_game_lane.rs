@@ -23,6 +23,25 @@ use wbd_codec::record_crypto::CryptoError;
 pub struct ScopedKeys{pub lane:QualifiedLane,pub tx:DirectionKeys,pub rx:DirectionKeys}
 struct TxLane{key:LaneKey,tx:LaneTxCrypto}
 struct RxLane{key:LaneKey,rx:ReplayProtectedLaneRx}
+/// One original per-lane AEAD/replay owner, moved (not cloned) into its
+/// sole authenticated Linux worker before any DATA can be delivered.
+pub(crate) struct GameLaneOpener{lane:RxLane,inner_mtu:usize}
+impl GameLaneOpener{
+    pub(crate) fn open<'a>(&mut self,wire:&'a mut [u8])
+        ->Result<(LogicalPacketId,&'a [u8]),Error>{
+        let opened=self.lane.rx.open_unique_in_place(wire).map_err(|e|match e{
+            UniqueOpenError::InvalidRecord(CryptoError::Authentication)=>Error::Crypto,
+            UniqueOpenError::InvalidRecord(_)=>Error::Invalid,
+            UniqueOpenError::Duplicate=>Error::Duplicate,
+            UniqueOpenError::Retired=>Error::Stale,
+        })?;
+        if opened.kind!=1{return Err(Error::Invalid)}
+        let (id,payload)=wbd_codec::decode_game(opened.payload,self.inner_mtu+16)
+            .map_err(|_|Error::Invalid)?;
+        if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
+        Ok((id,payload))
+    }
+}
 #[derive(Debug,PartialEq,Eq)]
 pub enum Error{Unauthorized,Invalid,Capacity,Stopped,Duplicate,Stale,Crypto,Game(GameError)}
 /// One bounded RX owner for all authenticated Game lanes; independent of the
@@ -53,7 +72,7 @@ impl PreparedGameFecBatch{
 }
 pub(crate) struct GameReceiveOwner{
     rx:GameRx,rx_scope:GameScope,lanes:Vec<RxLane>,
-    arena:Arena,stopped:bool,inner_mtu:usize,
+    arena:Arena,stopped:bool,inner_mtu:usize,lane_count:usize,
     // At most one in-flight TUN write per RX lane, no per-packet HashSet.
     // A pending entry suppresses a concurrent duplicate but does not set
     // shared delivery bits until the genuine TUN write succeeds.
@@ -62,6 +81,17 @@ pub(crate) struct GameReceiveOwner{
     fec:Option<GameFecRx>,
 }
 impl GameReceiveOwner{
+    /// Remove exactly one replay owner; repeated handoff is unauthorized.
+    /// Shared GameRx still validates lane key, generation and epoch.
+    pub(crate) fn take_lane_for_worker(&mut self,lane_key:LaneKey)
+        ->Result<GameLaneOpener,Error>{
+        if self.stopped{return Err(Error::Stopped)}
+        let at=self.lanes.iter().position(|l|l.key==lane_key)
+            .ok_or(Error::Unauthorized)?;
+        Ok(GameLaneOpener{
+            lane:self.lanes.swap_remove(at),inner_mtu:self.inner_mtu
+        })
+    }
     pub(crate) fn prepare_receive(&mut self,lane_key:LaneKey,wire:&mut [u8])
         ->Result<Option<PreparedGameDelivery>,Error>{
         if self.stopped{return Err(Error::Stopped)}
@@ -79,6 +109,16 @@ impl GameReceiveOwner{
         let (id,payload)=wbd_codec::decode_game(opened.payload,self.inner_mtu+16)
             .map_err(|_|Error::Invalid)?;
         if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
+        self.prepare_opened_receive(lane_key,id,payload)
+    }
+    /// Only callable after authentic original lane AEAD/replay open.
+    pub(crate) fn prepare_opened_receive(&mut self,lane_key:LaneKey,
+        id:LogicalPacketId,payload:&[u8])
+        ->Result<Option<PreparedGameDelivery>,Error>{
+        if self.stopped{return Err(Error::Stopped)}
+        #[cfg(feature="fec2_product_record")]
+        if self.fec.is_some(){return Err(Error::Invalid)}
+        if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
         // Duplicate/stale after AEAD, BEFORE allocating the owned frame.
         match self.rx.first_delivery_candidate(self.rx_scope,lane_key,id){
             Ok(true)=>{},
@@ -86,7 +126,7 @@ impl GameReceiveOwner{
             Err(e)=>return Err(Error::Game(e)),
         }
         if self.pending.contains(&id){return Ok(None)}
-        if self.pending.len()>=self.lanes.len(){
+        if self.pending.len()>=self.lane_count{
             return Err(Error::Capacity)
         }
         let mut slab=self.arena.allocate().map_err(|_|Error::Capacity)?;
@@ -128,13 +168,23 @@ impl GameReceiveOwner{
         let (id,payload)=wbd_codec::decode_game(opened.payload,self.inner_mtu+16)
             .map_err(|_|Error::Invalid)?;
         if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
+        self.prepare_opened_fec_batch(lane_key,id,payload,now)
+    }
+    /// Shared cross-lane GameRX and ONE FEC recovery owner. Only AEAD
+    /// authenticated payloads are supplied by the unique RX worker.
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fn prepare_opened_fec_batch(&mut self,lane_key:LaneKey,
+        id:LogicalPacketId,payload:&[u8],now:MonoNs)
+        ->Result<Option<PreparedGameFecBatch>,Error>{
+        if self.stopped||self.fec.is_none(){return Err(Error::Invalid)}
+        if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
         match self.rx.first_delivery_candidate(self.rx_scope,lane_key,id){
             Ok(true)=>{},
             Ok(false)=>return Ok(None),
             Err(e)=>return Err(Error::Game(e))
         }
         if self.pending.contains(&id){return Ok(None)}
-        if self.pending.len()>=self.lanes.len(){return Err(Error::Capacity)}
+        if self.pending.len()>=self.lane_count{return Err(Error::Capacity)}
         // Reserve GameRx commit slab BEFORE modifying inner FEC cache.
         let mut slab=self.arena.allocate().map_err(|_|Error::Capacity)?;
         slab.writable()[14..14+payload.len()].copy_from_slice(payload);
@@ -275,7 +325,7 @@ impl GameAdapter{
             .map_err(|_|Error::Capacity)?;
         let lane_count=rx_lanes.len();
         let rx_owner=Arc::new(Mutex::new(GameReceiveOwner{
-            rx,rx_scope,lanes:rx_lanes,arena:rx_arena,stopped:false,inner_mtu,
+            rx,rx_scope,lanes:rx_lanes,arena:rx_arena,stopped:false,inner_mtu,lane_count,
             pending:Vec::with_capacity(lane_count),
             #[cfg(feature="fec2_product_record")]
             fec:None
