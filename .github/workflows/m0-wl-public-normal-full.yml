@@ -217,6 +217,17 @@ jobs:
           New-Item -ItemType Directory -Force result/wl-public | Out-Null
           Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
           Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe
+      - name: Verify Windows bound authenticated RX high-water without false TCP ACK
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $ErrorActionPreference='Stop'
+          Push-Location legacy
+          try {
+            & go test -count=1 -tags wbd_v4_embedded_go -run '^TestM0PLAN024AuthenticatedHighWater' ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'native Windows public peer bound M3 RX ledger regression FAIL'}
+          } finally {Pop-Location}
+          Write-Output 'WL_PUBLIC_AUTHENTICATED_HIGHWATER_4M_GAP_WINDOWS_UNIT_PASS_SCOPED'
       - name: Full public-run signed original Npcap and Wintun driver install
         shell: pwsh
         timeout-minutes: 8

@@ -112,3 +112,50 @@ func TestM0PLAN024WindowsBoundedPresentationACKLedgerFullMissingHeadReleases(t *
  }
  if w.Pending()!=0 {t.Fatalf("late gap ACK did not drain bounded ledger %d",w.Pending())}
 }
+
+
+func TestM0PLAN024AuthenticatedHighWaterFreshBeyondFourMiBOldCarrierHole(t *testing.T){
+ // One old lost presentation-only carrier byte may never be ACKed.
+ // Future valid independent M3 records must still be offered without
+ // inventing a TCP ACK or allocating a 4MiB Go receipt map.
+ const base=uint32(10000)
+ w:=newM0V4RxWindow(base)
+ first:=base+m0V4RxAheadMax+2048
+ // A raw/untrusted jump cannot self-advance the authenticated high-water.
+ if w.IndependentAEADCandidate(first+2*m0V4IndependentAEADLookahead,1024){
+  t.Fatal("unauthenticated far carrier bypassed M3 proximity bound")
+ }
+ for i:=0;i<6000;i++{
+  seq:=first+uint32(i)*1024
+  if !w.IndependentAEADCandidate(seq,1024){
+   t.Fatalf("fresh seq blocked behind old cumulative ACK after %d valid records",i)
+  }
+  // This callback represents the sole M3-verified+Wintun-accepted path;
+  // production calls it only after actual Rust verification.
+  w.NoteAuthenticated(seq,1024)
+ }
+ if w.Ack()!=base||w.Pending()!=0{
+  t.Fatalf("old carrier gap forged ACK or grew map ack=%d pending=%d",w.Ack(),w.Pending())
+ }
+ if w.IndependentAEADCandidate(first+uint32(6000*1024)+m0V4IndependentAEADLookahead,1024){
+  t.Fatal("far unauthenticated packet admitted outside moving M3 bound")
+ }
+ if w.IndependentAEADCandidate(first+uint32(6000*1024),3000){
+  t.Fatal("oversize packet admitted after genuine M3 progress")
+ }
+}
+func TestM0PLAN024AuthenticatedHighWaterGapSpanningTCP32Wrap(t *testing.T){
+ start:=^uint32(0)-uint32(m0V4RxAheadMax/2)
+ w:=newM0V4RxWindow(start)
+ first:=start+uint32(m0V4RxAheadMax+2048)
+ for i:=0;i<5000;i++{
+  seq:=first+uint32(i)*1024
+  if !w.IndependentAEADCandidate(seq,1024){
+   t.Fatalf("real wrap candidate blocked after %d authenticated ahead",i)
+  }
+  w.NoteAuthenticated(seq,1024)
+ }
+ if w.Ack()!=start||w.Pending()!=0{
+  t.Fatal("authenticated independent wrap forged original carrier ACK")
+ }
+}

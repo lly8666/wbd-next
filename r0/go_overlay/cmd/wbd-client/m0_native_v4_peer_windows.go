@@ -21,7 +21,7 @@ const (
  m0V4IdlePoll=time.Millisecond
  m0V4RetxAfter=750*time.Millisecond
  m0V4TxPendingMax=256 // non-Normal legacy carrier path only
- m0V4M2ShadowCredit=768 // Rust original M1 arena1024 for 300ms each-way BDP
+ m0V4M2ShadowCredit=1536 // Rust original Normal M1 arena2048, 10Mbps/RTT600ms bounded
 )
 type m0NativeV4Outbound struct {
  seq uint32
@@ -306,6 +306,11 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
   ack,ackErr:=p.rx.Copied(seg.Seq,len(seg.Payload))
   if ackErr!=nil{return ackErr}
   p.recvNext=ack
+ }
+ if p.mode==m0WinModeNormal{
+  // This is AFTER the real Rust M3 unique opener and successful owned
+  // Wintun copies (or authenticated kind1 handling), never raw TCP seq.
+  p.rx.NoteAuthenticated(seg.Seq,len(seg.Payload))
  }
  p.mu.Lock()
  if len(frames)>0{

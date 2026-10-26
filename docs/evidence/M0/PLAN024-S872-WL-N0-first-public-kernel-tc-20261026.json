@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "EXACT_SOURCE_PUBLIC_WL_N0_FIRST_SCOPED_NETWORK_OBSERVATION",
+  "source_sha": "8dd51f10dd9f2b299abab34390ee214a4bee81a9",
+  "result": "FAIL_SCOPED_NETWORK_DELIVERY",
+  "functional": "PASS_SCOPED_ORIGINAL_WINDOWS_NPCAP_WINTUN_LINUX_RAW_TUN_OWNED_STOP",
+  "run_id": 40291751850,
+  "run_attempt": 1,
+  "source_build_job_id": 121468200805,
+  "native_product_job_id": 121468755196,
+  "workflow_conclusion": "success",
+  "artifact_id": 12636459485,
+  "artifact_zip_sha256": "1eff6232ac06788c6485eb953a10105d5dbd1e4381b98d896490d59e3d25360d",
+  "scenario": {
+    "name": "WL-N0",
+    "linux_tc_egress_delay_ms": 300,
+    "linux_tc_ingress_ifb_delay_ms": 300,
+    "loss_percent": 0,
+    "requested_payload_rate_mbps_per_direction": 10,
+    "measurement_seconds": 60,
+    "drain_seconds": 5,
+    "host": "Windows2025 with genuine WSL2 Ubuntu Linux"
+  },
+  "apps": {
+    "windows": {
+      "sent_packets": 113436,
+      "sent_payload_bytes": 74981196,
+      "sent_payload_mbps": 9.9975,
+      "received_first_packets": 1407,
+      "received_first_payload_bytes": 442240,
+      "received_payload_mbps": 0.059
+    },
+    "linux": {
+      "sent_packets": 113463,
+      "sent_payload_bytes": 74998504,
+      "sent_payload_mbps": 9.9998,
+      "received_first_packets": 26841,
+      "received_first_payload_bytes": 12875128,
+      "received_payload_mbps": 1.717
+    }
+  },
+  "linux_kernel_tc": {
+    "egress_packets": 10301,
+    "ingress_ifb_packets": 39773,
+    "effective_delay_ms_each_direction": 300,
+    "netem_owned_stop": "PASS"
+  },
+  "native_original_m2": {
+    "windows_shadow_credit": 768,
+    "windows_shadow_pending_late": 764,
+    "windows_tx_records": 27301,
+    "windows_rx_first": 3004,
+    "windows_rejected_carriers": 14282,
+    "windows_oversize_carrier_reject": 1821,
+    "windows_frozen_retransmit": 9014,
+    "linux_authentic_m2_ack": 274,
+    "linux_original_first_copy": 4176,
+    "linux_original_retransmitted": 6338,
+    "linux_quota_or_capacity_blocked": 35983,
+    "linux_max_retransmits": 2
+  },
+  "qualification": "GOOD_FUNCTIONAL_NOT_10MBPS_OR_PERF_PASS",
+  "known_limitations": [
+    "No cross-OS one-way latency p99 due to clocks",
+    "N1/N5 NOT_RUN",
+    "Original Linux firstsend M1 arena128 and Windows M2 shadow768 are bounded-flight design chokepoints at 10Mbps/600ms RTT",
+    "Actual >256 gap induced test NOT_RUN; source-level 4MiB old carrier ACK dependency found",
+    "No physical field qualification"
+  ],
+  "preserved_separate_failure": {
+    "run_id": 40291751926,
+    "source_window": "49943d727fe80603d4b0ec8e17f7f33a577597b9",
+    "source_linux": "621bc733becbb4bbcf23bc4b10c6150d22b3a073",
+    "conclusion": "failure",
+    "reason": "Frozen old Windows build native crash-persistent DNS/IPv6 guard required; never bypass"
+  },
+  "devlog_ref": "docs/devlog/M0/PLAN024-S874-WL-N0-source-locked-capacity-bottleneck-intent-20261026.md"
+}

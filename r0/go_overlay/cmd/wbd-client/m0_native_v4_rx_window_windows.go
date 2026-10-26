@@ -15,10 +15,14 @@ const m0V4RxSlots = 256
 var errM0V4RxWindow = errors.New("native V4 TCP sequence outside bounded verified receipt window")
 type m0V4RxWindow struct {
  cumulative uint32
+ // Independent progress is trusted only after Rust M3 AEAD+unique-PN,
+ // and after all DATA has actually reached the owned Wintun sink.
+ // Never feed this to the TCP cumulative ACK / Rust M2 receipt.
+ authenticatedHigh uint32
  received map[uint32]uint32
 }
 func newM0V4RxWindow(start uint32)*m0V4RxWindow{
- return &m0V4RxWindow{cumulative:start,received:make(map[uint32]uint32,m0V4RxSlots)}
+ return &m0V4RxWindow{cumulative:start,authenticatedHigh:start,received:make(map[uint32]uint32,m0V4RxSlots)}
 }
 // Check returns false for old/duplicate/overlapping ciphertext: never
 // feed that record into the native Rust owner twice, and never mistake a
@@ -66,5 +70,21 @@ const m0V4IndependentAEADLookahead = 4 * 1024 * 1024
 func(w *m0V4RxWindow) IndependentAEADCandidate(seq uint32,n int)bool{
  if w==nil||n<51||n>m0V4RxRecordMax{return false}
  ahead:=int32(seq-w.cumulative)
- return ahead>=0&&uint64(ahead)+uint64(n)<=m0V4IndependentAEADLookahead
+ if ahead<0{return false}
+ if uint64(ahead)+uint64(n)<=m0V4IndependentAEADLookahead{return true}
+ // A lost control carrier can keep the *presentation* ACK at one old hole
+ // forever: Rust M2 never fabricates ACK for it. Past 4MiB, only proximity
+ // to previously M3-authenticated unique ciphertext opens the bounded
+ // window for another try by that SAME Rust opener. This is NOT an ACK.
+ near:=int64(int32(seq-w.authenticatedHigh))
+ return near>=-m0V4IndependentAEADLookahead &&
+        near+int64(n)<=m0V4IndependentAEADLookahead
+}
+// Call only AFTER authentic M3 open and complete owned Wintun business copy,
+// or successful authentic kind1 control handling. No untrusted TCP field,
+// rejected AEAD or duplicate record may advance this serial high-water.
+func(w *m0V4RxWindow) NoteAuthenticated(seq uint32,n int){
+ if w==nil||n<51||n>m0V4RxRecordMax{return}
+ end:=seq+uint32(n)
+ if int32(end-w.authenticatedHigh)>0{w.authenticatedHigh=end}
 }

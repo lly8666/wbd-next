@@ -36,7 +36,7 @@ const MAX_SESSIONS:usize=16;
 const MAX_AUTHENTICATED_KIND1:usize=32;
 // Original M1 arena has 64 slots: hold at most 48 DATA shadows + one
 // pending first-send while leaving room for RX and authentic control.
-const MAX_M2_FROZEN:usize=768; // bounded ~600-packet 10Mbps / 300ms one-way BDP + headroom
+const MAX_M2_FROZEN:usize=1536; // bounded 10Mbps mixed-source RTT600ms (~1135 records) + headroom
 const M2_HARD_EXPIRY_NS:u64=2_000_000_000;
 const MAX_EARLY:u32=32;
 const PH_PREPARED:u32=1;
@@ -407,8 +407,13 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
     // requires ~586 immutable in-flight records, not a 48-slot smoke pool.
     // This is only safe after the authenticated M2 receipt+global repair
     // actor is bound; no public bit is promoted, and all memory is bounded.
-    let slots=if handoff.negotiated_features==3{1024}else{64};
-    let arena=Arena::new(generation,slots,2048,64,3_000_000)
+    // Normal/off negotiated inside ORIGINAL protected Go TLS. A 600ms
+    // RTT at 10Mbps and 661B mean-symbol needs ~1135 immutable in-flight
+    // M1 records. Bounded 2048 slots/5MB; other features keep prior cap.
+    let normal=handoff.negotiated_features==3;
+    let slots=if normal{2048}else{64};
+    let bytes=if normal{5_000_000}else{3_000_000};
+    let arena=Arena::new(generation,slots,2048,64,bytes)
         .map_err(|_|FULL)?;
     let rx_limit=if server{parsed.identity().server_limit}
         else{parsed.identity().client_limit};

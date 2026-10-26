@@ -547,7 +547,15 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         .checked_sub(FIXED_WIRE_OVERHEAD).ok_or(INVALID)?;
     let normal=NormalOffReceive::new_for_owner(&owner,link_mtu,link_mtu)
         .map_err(|_|INVALID)?;
-    let arena=Arena::new(generation,128,2048,128,1_000_000)
+    // Genuine original-Go TLS Normal/off data M1 loans were limited to
+    // 128 despite the 4096-slot shared M2 receipt shadow. Under real
+    // 10Mbps/RTT600ms mixed packets this starved fresh *before* repair.
+    // Bounded 2048 slots/5MB for negotiated feature3; other modes retain
+    // their previous 128-slot/1MB memory footprint. No budget relaxation.
+    let normal=handoff.negotiated_features==3;
+    let arena=Arena::new(generation,
+        if normal{2048}else{128},2048,128,
+        if normal{5_000_000}else{1_000_000})
         .map_err(|_|FULL)?;
     r.entries.insert(handle,Arc::new(Mutex::new(Entry{
         generation,server_side,owner,normal:Some(normal),arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
