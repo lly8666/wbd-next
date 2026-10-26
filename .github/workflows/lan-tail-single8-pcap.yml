@@ -43,8 +43,10 @@ jobs:
             tools/lan_tail_single_header_capture_test.go \
             -run '^TestLoopbackPacketCapture$' -count=1 \
             | tee pcap-evidence/go_actual_socket_test.txt
+          sleep 5 # let kernel pcap packet ring drain BEFORE sending SIGINT
           sudo killall -INT tcpdump || true
           sleep 2
+          cat pcap-evidence/tcpdump_stdout_stderr.txt || true
           sudo chmod 644 pcap-evidence/actual_tcp_loopback.pcap
           test -s pcap-evidence/actual_tcp_loopback.pcap
           grep -q CAPTURE_CUSTOM_PASS pcap-evidence/go_actual_socket_test.txt
