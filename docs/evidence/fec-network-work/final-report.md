@@ -1,5 +1,21 @@
 # FEC-only 独立岗位｜2026-10-26 限域合并审查索引
 
+**2026-10-26 最新用户覆盖决定与当前产品：Game4 4-lane 默认使用 0/4/20/60ms 错时复制，明确允许并重新接入 Game 固定 FEC 最高档 `fixed6`；Game2 维持原立即发送，Game Auto 仍不开发。** 当前最新已验证真实产品 SOURCE **`fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce`**，原生 [ARM64 构建40278857619](https://github.com/lly8666/wbd-next/actions/runs/40278857619) attempt1 PASS，artifact `12631645713` ZIP SHA256 `c34b8121ef817294a889f5f0f06eca1ef8e1ddcda3c7a9bf8244a85fb75abfc8`。这是原 Go TLS → Rust Game M4 → 真实 Linux TUN 的同一二进制，配套 CLI/native fixed6、Game4默认错时/显式immediate回退、Game2原行为与定向 ABI+生命周期测试 PASS；不涉及 Windows/UI，不合并 main。旧 2026-10-25 W90 失败回滚、旧 W111–W113 长共享 GE 失败及 W114 首版错时误删仍是历史旧源码反例，**不得覆盖成此新源码的测试结论**。
+
+**本轮单场景/Action 真正30%每lane独立随机丢包，双向20/30Mbps纯 UDP、64–1287B真实大小包权重 + 100Hz 真小包独立收据、75ms单程、FEC fixed6、外层 DATA retrans native0：**
+
+| 档位与真实 Actions | 30%受损阶段 C→S/S→C 实发 UDP 包 | 实际最终业务缺失 | 受损首次p99 | 测量产品CPU-s client/server | 宿主CPU PSI mean/peak |
+|---|---:|---:|---:|---:|---:|
+| [W125 Game2 fixed6 双向各20Mbps](https://github.com/lly8666/wbd-next/actions/runs/40279255953) | 114758 / 114760 | **0 / 0** | 85.0 / 85.0ms | 18.30 / 18.38s | 11.51% / 13.16% |
+| [W126 Game4 fixed6+默认错时 双向各20Mbps](https://github.com/lly8666/wbd-next/actions/runs/40279262382) | 114778 / 114763 | **0 / 0** | 83.7 / 83.7ms | 39.89 / 41.04s | **33.24% / 42.04%** |
+| [W127 Game2 fixed6 双向各30Mbps](https://github.com/lly8666/wbd-next/actions/runs/40279738491) | 172115 / 172116 | **0 / 0** | 85.3 / 85.4ms | 25.68 / 25.98s | **18.74% / 20.96%** |
+
+三例 Action、完整原始 result ZIP + SHA256、每方向 FEC source/parity、M4、copy lateness/abandon、输入/交付、容量与编译 SHA、明细 CPU/GiB及80Mbps设计预算均在 [W125–W127 结构化真实证据](20261026-W125-W127-Game-Fixed6-DefaultStagger-IID30-UDP-Capacity.json) 和 [开发/容量日志](../../devlog/fec-network-work/20261026-Game4-default-fixed6-Game2-Game4-IID30-20-to-80-capacity.md)。Game4 双端各四个位置约54.68万个已计划副本都真正成功 kernel 发送，主动放弃0；实际 FEC parity 每端约30.57万与计划完全相等，恢复候选为正，TUN源与根fq实际drop0、外层 DATA重发0，正常Stop。所有受损阶段按**全部注入 UDP**作分母，Game4无损基准+10ms内~99.95%/99.94%完成，+30/60/100ms皆100%；真实小UDP 10ms接收空洞最大10ms，不用幸存包p99掩盖丢失。
+
+**容量结论（不是功能失败，也不是80Mbps验收）：** 20Mbps 的 Game4 宿主CPU PSI 每个测量样本都超过20%（平均33.24%、峰42.04%），而30Mbps的 Game2 亦接近拐点（平均18.74%、峰20.96%，8%样本超过20%）。按容量停止条件**不继续 Game4 30–80 或 Game2 40–80**；不能因为20/30业务零缺失就声称宿主有余量。既有1Hz numeric `/proc/<pid>/task` 样本定位 Game4 20单端约50s CPU：TX owner13.24、四 RX 合计15.10、Go其它线程10.97 CPU-s（Game2 20 分别4.72/8.23/5.09），压力来自四lane × fixed6的真实发送/认证/接收处理和宿主调度，不是 Game4 假过期或 FEC parity排队。当前Game4扩为4096 jobs/4096 lane slots、8MiB预算和65536 bit去重窗；按本次样本加权654B、80Mbps≈15.3k业务PPS、65ms≈995并发逻辑包，设计预留约4倍，但**80Mbps全64B约10156并发超出槽限且 CPU 无资格**。必须先在足够CPU余量的平台定向优化 TX批次、RX共享owner锁争用、Go/Rust raw收发成本，并按失败边界复验，才可继续+10Mbps梯子；不刷随机seed/不无界加压。保持 `capacity_stop=true`、`merge_ready=false`、无 main 合并。
+
+
+
 **2026-10-26 W111–W113 用户指定继续 GameMode fixed 测试（此节为最新 Game 结论）：GameMode 不需要 Auto，明确移出 Game 范围，Normal Auto 不变。** 真实 exact native `e8b41fb49a74648e405bf23e4600e23c618596fe`、build [40260662919](https://github.com/lly8666/wbd-next/actions/runs/40260662919) 的同一 frozen aarch64 二进制复用三个独立 Action（每个一个测试VM/一个性能job，`--outer-repair=off`、fixed6，未改 Rust/Go 产品算法，1Mbps/方向低负载、75ms 单程）。源/原生读数、每一条原失败、ZIP SHA256/CPU/RSS和 Gate 见 [W111–W113 机器收据](20261026-W111-W113-original-Game-fixed6-outeroff-bounded-ARM64-results.json)、[行动日志](../../devlog/fec-network-work/20261026-W111-W113-original-Game-fixed6-bounded-actions-intent.md)。
 
 - **W111 Game4 真静默恢复 [Action 40268464615](https://github.com/lly8666/wbd-next/actions/runs/40268464615) `SUCCESS/PASS_SCOPED`**：双向1Mbps原 TCP+UDP active18s→12s `probe_hz=0` 无业务→resume15s，前后两向真 TCP/UDP各零缺失，resume p99 UDP/TCP ~77.5ms；安静阶段 injected=0，p99 null 无需虚造。两端 native `repair_enabled=0`、真实 DATA retrans0，parity planned=sent `17666/17674`、retained0/expired0、Stop 正常；测量 CPU client/server 3.07/3.15 CPU-s，RSS39.49/39.18MB，宿主 PSI peak2%。不能宣称已故意丢最后一组FEC量子或连续10ms跨业务HOL。
