@@ -701,4 +701,61 @@ mod tests{
         assert_eq!(release(&mut r,rx),OK);
     }
 
+
+    #[test]
+    fn m0_windows_fixed6_native_authenticated_m2_reverse_feedback_same_owner(){
+        // The genuine feature7 original-M3 source opener must emit a
+        // canonical M2 kind1 through the SAME Rust M1 PN/SEQ owner.
+        // NPF send disposition is simulated here, so no OS Applied claim.
+        let mut r=Registry{generation:850,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let client=setup(&mut r,false,821,82);
+        let server=setup(&mut r,true,822,83);
+        let epoch=[2;16];
+        {
+            let mut e=r.entries[&client].lock().unwrap();
+            m2_arm_entry(&mut e,epoch,821,82).unwrap();
+        }
+        {
+            let mut e=r.entries[&server].lock().unwrap();
+            m2_arm_entry(&mut e,epoch,822,83).unwrap();
+        }
+        let original=data(7);
+        let payload={
+            let e=r.entries[&server].lock().unwrap();
+            let b=normal_off_windows_budget(&e).unwrap();
+            fec_v2::source_owned(75,0,&original,b.record_payload_mtu).unwrap()
+        };
+        let (wire,seq,pn)=send(&mut r,server,822,83,2,&payload);
+        {
+            let mut e=r.entries[&server].lock().unwrap();
+            assert_eq!(m2_kernel_firstsend_entry(&mut e,epoch,822,83,
+                pn,seq,wire.len(),1),Ok(1));
+        }
+        let delivered=open_symbol(&mut r,client,epoch,821,82,seq,&wire).unwrap();
+        assert_eq!(delivered.len(),1);
+        assert_eq!(&delivered[0].frame[..delivered[0].length as usize],original.as_slice());
+        std::thread::sleep(std::time::Duration::from_millis(12));
+        let (receipt,feedback_seq)={
+            let mut e=r.entries[&client].lock().unwrap();
+            let mut out=[0u8;2048];
+            let (used,seq,pn)=m2_next_feedback_entry(
+                &mut e,epoch,821,82,&mut out
+            ).expect("original feature7 reverse kind1 draft rejected")
+             .expect("actual verified source must cause due kind1 receipt");
+            assert!(used>=51&&used<=2048);
+            m2_finish_feedback_entry(&mut e,epoch,821,82,pn,1).unwrap();
+            (out[..used].to_vec(),seq)
+        };
+        let got=open_symbol(&mut r,server,epoch,822,83,feedback_seq,&receipt)
+            .expect("same genuine M3 unique-PN opener must parse scoped M2");
+        assert!(got.is_empty(),"authenticated kind1 is not business Wintun data");
+        assert_eq!(r.entries[&server].lock().unwrap().m2.as_ref().unwrap()
+            .shadow.outstanding(),0,"only genuine receipt may retire source");
+        for (h,luid,index) in [(client,821,82),(server,822,83)]{
+            assert_eq!(quiesce_wintun(&mut r,h,epoch,luid,index),OK);
+            assert_eq!(stop(&mut r,h),OK);
+            assert_eq!(release(&mut r,h),OK);
+        }
+    }
+
 }
