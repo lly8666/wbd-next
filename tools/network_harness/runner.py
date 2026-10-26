@@ -613,7 +613,7 @@ class LinuxExperiment:
         # Explicit bundle-only diagnostic switch; ordinary measured legs do
         # not incur per-packet clock sampling. Never inherit an ambient probe.
         self.child_env.pop("WBD_GAME_RX_LOCK_SAMPLE",None)
-        if config["bundles"][label].get("enable_game_rx_lock_sample",False):
+        if config["bundles"].get(label,{}).get("enable_game_rx_lock_sample",False):
             self.child_env["WBD_GAME_RX_LOCK_SAMPLE"]="1"
 
     def nscommand(self, role, args, check=True):
