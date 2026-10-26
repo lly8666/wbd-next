@@ -1,0 +1,211 @@
+{
+  "schema": "FEC_W148_W149_P2_GAME_LIMIT_AND_OFF_MIXED_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "owner": "fec-network-work",
+  "baseline_product_source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+  "new_game_p2_source": "bb8e8249c2adba9c7dab72bf07da2dbe0bce3b82",
+  "compiled_exact_new_action": 40300070389,
+  "new_native_artifact_id": 12639832584,
+  "new_native_zip_sha256": "0073e5ad7c1f4ac3cf86e0234cdffa0fe6f34d13af6d5826551263b87bd87cef",
+  "native_source_sha_arch_verified": true,
+  "mechanism": "Move existing unique per-lane ReplayProtectedLaneRx into sole RX worker; AEAD+PN/replay performed in-place BEFORE shared logical GameRx dedup or shared FEC. Preserve one shared GameRx, one FEC, bounded slab, authenticated-first, TUN kernel-write success→commit; no new threads/channels or replicated PN state.",
+  "actions": [
+    {
+      "case": "W148",
+      "run": 40303019107,
+      "request_commit": "57c3cfa4a999ee362977d76f5da304c494ab2b90",
+      "request": "tests/network/fec-work/W148-Game2-fixed6-IID30-UDP30Mbps-P2-capacity-knee-sameVM-BA-ARM64.json",
+      "result": "SUCCESS_PASS_SCOPED_OBSERVATION",
+      "artifact_id": 12640693802,
+      "artifact_sha256": "76f6693d93a6165b48a00595c26e83b18c996248ba523bed9a098fa71aefdc94",
+      "order": "BA",
+      "scenario": "Game2 fixed6, each direction 30Mbps real UDP weighted 64..1287 bytes, 75ms one-way, each physical lane independent IID30%, clean10s/damaged30s/clean10s, same VM sequential B-new then A-old",
+      "old_A": {
+        "source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+        "cpu_client_s": 22.89,
+        "cpu_server_s": 22.76,
+        "cpu_total_s": 45.65,
+        "host_cpu_psi_mean_pct": 7.9586,
+        "host_cpu_psi_peak_pct": 9.09,
+        "peak_rss_client_bytes": 24530944,
+        "peak_rss_server_bytes": 24444928,
+        "damaged_udp_c2s": {
+          "sent": 172118,
+          "delivered": 172118,
+          "p95_ms": 76.7,
+          "p99_ms": 83.5
+        },
+        "damaged_udp_s2c": {
+          "sent": 172116,
+          "delivered": 172116,
+          "p95_ms": 76.6,
+          "p99_ms": 83.5
+        },
+        "fec_parity_client": "448904 planned/448904 sent",
+        "fec_parity_server": "448923 planned/448923 sent",
+        "outer_data_retransmitted": 0,
+        "go_posthandoff_full_data_copies_client_server": [
+          0,
+          0
+        ]
+      },
+      "new_B": {
+        "source": "bb8e8249c2adba9c7dab72bf07da2dbe0bce3b82",
+        "cpu_client_s": 22.48,
+        "cpu_server_s": 22.88,
+        "cpu_total_s": 45.36,
+        "host_cpu_psi_mean_pct": 7.9328,
+        "host_cpu_psi_peak_pct": 9.16,
+        "peak_rss_client_bytes": 25178112,
+        "peak_rss_server_bytes": 24137728,
+        "damaged_udp_c2s": {
+          "sent": 172116,
+          "delivered": 172116,
+          "p95_ms": 76.6,
+          "p99_ms": 83.4
+        },
+        "damaged_udp_s2c": {
+          "sent": 172117,
+          "delivered": 172117,
+          "p95_ms": 76.6,
+          "p99_ms": 83.4
+        },
+        "fec_parity_client": "448941 planned/448941 sent",
+        "fec_parity_server": "448867 planned/448867 sent",
+        "outer_data_retransmitted": 0,
+        "go_posthandoff_full_data_copies_client_server": [
+          0,
+          0
+        ]
+      },
+      "cpu_new_vs_old_pct": -0.6353,
+      "stop_drained_both": true,
+      "source_tun_fq_root_drop_all_zero": true,
+      "host_psi_over20_fraction": 0,
+      "steal_peak_pct": 0,
+      "mode_limit": "30Mbps true UDP only; not proof equivalent TCP mixed 30Mbps; FEC decoder failed and conflict/invalid counts are actual, not fake zero"
+    },
+    {
+      "case": "W149",
+      "run": 40303530595,
+      "request_commit": "3a46d4159cf6030658d2ca4065413fbb24df730b",
+      "request": "tests/network/fec-work/W149-Game4-FECoff-stagger-clean10Mbps-mixed-TCPUDP-P2-AB-ARM64.json",
+      "result": "SUCCESS_PASS_SCOPED_OBSERVATION",
+      "artifact_id": 12640509603,
+      "artifact_sha256": "e08c924e0ae9387955a472904f828812f678c574faabdb4c559f6622d60960d1",
+      "order": "AB",
+      "scenario": "Game4 FEC OFF default stagger 0/4/20/60ms, 10Mbps each direction genuine TCP/UDP mixed 90%/10%, 75ms clean, one VM sequential old then new, TCP/UDP first-delivery and HOL accounting",
+      "old_A": {
+        "source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+        "cpu_client_s": 4.76,
+        "cpu_server_s": 4.71,
+        "cpu_total_s": 9.47,
+        "host_cpu_psi_mean_pct": 2.0603,
+        "host_cpu_psi_peak_pct": 2.4,
+        "peak_rss_client_bytes": 40914944,
+        "peak_rss_server_bytes": 40775680,
+        "udp_c2s": "51626/51626",
+        "udp_s2c": "51626/51626",
+        "tcp_c2s": "5745/5745",
+        "tcp_s2c": "5745/5745",
+        "p99_ms": 75.5,
+        "copy_client_planned": [
+          89990,
+          89990,
+          89990,
+          89990
+        ],
+        "copy_client_sent": [
+          89990,
+          89990,
+          89990,
+          89988
+        ],
+        "copy_server_planned": [
+          90005,
+          90005,
+          90005,
+          90005
+        ],
+        "copy_server_sent": [
+          90005,
+          90005,
+          90005,
+          90003
+        ],
+        "copy_abandoned_all_zero": true,
+        "outer_data_retransmitted": 0,
+        "go_posthandoff_full_data_copies_client_server": [
+          0,
+          0
+        ]
+      },
+      "new_B": {
+        "source": "bb8e8249c2adba9c7dab72bf07da2dbe0bce3b82",
+        "cpu_client_s": 4.64,
+        "cpu_server_s": 4.64,
+        "cpu_total_s": 9.28,
+        "host_cpu_psi_mean_pct": 1.979,
+        "host_cpu_psi_peak_pct": 1.99,
+        "peak_rss_client_bytes": 40636416,
+        "peak_rss_server_bytes": 41046016,
+        "udp_c2s": "51626/51626",
+        "udp_s2c": "51625/51625",
+        "tcp_c2s": "5745/5745",
+        "tcp_s2c": "5746/5746",
+        "p99_ms": 75.5,
+        "copy_client_planned": [
+          89991,
+          89991,
+          89991,
+          89991
+        ],
+        "copy_client_sent": [
+          89991,
+          89991,
+          89989,
+          89989
+        ],
+        "copy_server_planned": [
+          89999,
+          89999,
+          89999,
+          89999
+        ],
+        "copy_server_sent": [
+          89999,
+          89999,
+          89997,
+          89997
+        ],
+        "copy_abandoned_all_zero": true,
+        "outer_data_retransmitted": 0,
+        "go_posthandoff_full_data_copies_client_server": [
+          0,
+          0
+        ]
+      },
+      "cpu_new_vs_old_pct": -2.0063,
+      "host_psi_over20_fraction": 0,
+      "steal_peak_pct": 0,
+      "longest_all_business_zero_while_udp_offered_ms": 0,
+      "stop_drained_both": true,
+      "source_tun_fq_root_drop_all_zero": true,
+      "mode_limit": "FEC OFF; no parity; clean TCP/UDP at10Mbps. Physical rank end-of-stop not fully sent: tiny 2-per-lane tail, abandoned counter zero. Do not pretend all planned sent."
+    }
+  ],
+  "decision": "KEEP_P2_GAME_LANE_AEAD_AS_SCOPED_ARCHITECTURE_CORRECTNESS_AND_SMALL_OBSERVED_CPU_SAVINGS; avoid over-claiming generic throughput, Normal source qualification, 80Mbps or Windows.",
+  "limitations": [
+    "W148 +0.29 CPU-s reduction only 0.64%, within measurement variance",
+    "Go data handoff and outer DATA retransmit unchanged; FEC parity separate",
+    "normal OFF fixed auto no fresh exact bb8 product actions, previous full 5-mode qualification remains 6c38",
+    "Game fixed6 actual high-rate W143–W148 mainly UDP; W150 near-edge independent30 TCP/UDP fixed6 planned separately",
+    "P1a four-slot recvmmsg rejected from genuine CPU negative results, product remains recv_one_into",
+    "Game4 higher rates beyond20 and Game2 beyond30 not qualified, capacity_stop=true",
+    "Windows NOT_RUN/TEMP_SKIPPED"
+  ],
+  "next_action": "Check W150 Game4 fixed6 mixed UDP90/TCP10 at15Mbps and independent per lane IID30, then retain P2 or identify precise regression. Next separate optimization P1b real sendmmsg transaction/prefix/PN or shared P3 Normal+Game FEC low-copy, not bundled into this source.",
+  "capacity_stop": true,
+  "merge_ready": false
+}
