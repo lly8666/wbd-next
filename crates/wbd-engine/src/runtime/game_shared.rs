@@ -141,9 +141,10 @@ impl GameTx {
             let Some(oldest)=oldest else{break};
             let mut dropped=[usize::MAX;MAX_LANES];
             let mut count=0usize;
+            let slots=&self.slots;
             for lane in &mut self.lanes{
                 let old=lane.q.front().is_some_and(|p|
-                    self.slots[p.slot].as_ref().and_then(|job|job.packet_id)
+                    slots[p.slot].as_ref().and_then(|job|job.packet_id)
                     .is_some_and(|id|id.0==oldest));
                 if old{
                     let p=lane.q.pop_front().expect("oldest queued");
