@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "status": "PASS_REAL_LOOPBACK_TCP_PCAP_AND_GENUINE_TLS13_REFERENCE",
+  "branch": "experiment/lan-tail-single8-pcap-audit",
+  "main_modified": false,
+  "production_integration": false,
+  "run_id": 40268297939,
+  "job_id": 121395392701,
+  "conclusion": "success",
+  "artifact_id": 12627636543,
+  "pcap_original_bytes": 201449,
+  "tcpdump_packets_captured": 266,
+  "tcpdump_packets_dropped_kernel": 0,
+  "custom": {
+    "records": 100,
+    "application_data_type23": 100,
+    "valid_framing": 100,
+    "no_second_tls_header": 100,
+    "fast": 80,
+    "aes": 20,
+    "single_fast_wire_B": 1347,
+    "aes_wire_B": 1368,
+    "total_tcp_stream_B": 135120,
+    "capture_lost_tcp_B": 0,
+    "real_ipv4_packet_B": {
+      "fast": 1399,
+      "aes": 1420
+    },
+    "mode_marker_recovered_from_public_tail_XOR": 100
+  },
+  "real_go_TLS13_reference": {
+    "handshake_negotiated": true,
+    "app_write_records": 30,
+    "total_client_to_server_TLS_records": 35,
+    "outer_content_types": {
+      "handshake_22": 1,
+      "ccs_20": 1,
+      "application_data_23": 33
+    },
+    "capture_lost_tcp_B": 0
+  },
+  "limitations": [
+    "actual native loopback TCP PCAP, not independent two-host LAN",
+    "synthetic genuine AESGCM-shaped inner TLS record, not a real negotiated end to end app flow",
+    "Wireshark parses syntax but custom record is not ordinary TLS1.3 AEAD",
+    "no actual WBD Rust TUN or classifier integration",
+    "public mode suffix reverses without a secret and can fingerprint",
+    "implicit independent counter and original TLS record restoration required"
+  ],
+  "report": "docs/evidence/lan-tail-single8-pcap/FINAL_REPORT.md"
+}
