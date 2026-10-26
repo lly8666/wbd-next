@@ -418,7 +418,7 @@ class Contracts(unittest.TestCase):
         r["network"]["tcp_reordering_profiles"]["B"]="unbounded"
         with self.assertRaises(ValueError): validate(r)
 
-    def test_fec_only_outer_switch_requires_real_boolean_and_rejects_game(self):
+    def test_fec_only_outer_switch_requires_real_boolean_and_allows_explicit_game(self):
         base = request()
         for mode in ("normal", "fec-fixed", "fec-auto"):
             trial = copy.deepcopy(base)
@@ -431,10 +431,17 @@ class Contracts(unittest.TestCase):
             trial["product"]["repair_enabled"] = value
             with self.assertRaises(ValueError):
                 validate(trial)
+        # W103 Game's real native M4 policy is now configurable; it
+        # is NOT the Normal V3 DATA shadow/accounting.
         for mode in ("game2", "game4"):
             trial = request()
             trial["product"]["mode"] = mode
             trial["product"]["repair_enabled"] = False
+            trial["product"]["game_fec"] = "fixed6"
+            self.assertIs(validate(trial)["product"]["repair_enabled"], False)
+            trial["bundles"]["A"]["repair_enabled"] = False
+            self.assertIs(validate(trial)["bundles"]["A"]["repair_enabled"], False)
+            trial["product"]["game_fec"] = "auto"
             with self.assertRaises(Unsupported):
                 validate(trial)
 
