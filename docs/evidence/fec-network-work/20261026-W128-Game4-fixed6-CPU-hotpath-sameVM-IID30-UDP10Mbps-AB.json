@@ -1,0 +1,204 @@
+{
+  "schema": "FEC_W128_GAME4_FIXED6_HOTPATH_SAMEVM_AB_V1",
+  "owner": "fec-network-work",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "mode": "Game4 fixed6, default original TLS physical 0/4/20/60ms stagger, outer DATA retry OFF, two directions each 10Mbps genuine mixed-size UDP, 30percent independent per-lane random loss, 75ms one-way",
+  "limiting_source": "previous original high-bandwidth exact fe7de9da Game4 20Mbps host PSI avg33.24 peak42.04; capacity stop=true; no higher rung",
+  "action": 40281920399,
+  "attempt": 1,
+  "status": "completed",
+  "conclusion": "success",
+  "performance_job_count": 1,
+  "artifact_id": 12632950602,
+  "zip_sha256": "c5e2952afa5235adab5800ead1df044511dd0940f9779974ddc8de5190184590",
+  "test_request": "tests/network/fec-work/W128-Game4-fixed6-stagger-default-IID30-UDP10Mbps-oldnew-sameVM-AB-ARM64.json",
+  "same_vm_order": "AB",
+  "old_source": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce",
+  "old_build_run": 40278857619,
+  "old_artifact_id": 12631645713,
+  "old_zip_sha256": "c34b8121ef817294a889f5f0f06eca1ef8e1ddcda3c7a9bf8244a85fb75abfc8",
+  "new_source": "f484a4c34e08dcbdfa16beef590d285e9db1ee5f",
+  "new_build_run": 40281581736,
+  "new_build_attempt": 1,
+  "new_artifact_id": 12633025294,
+  "new_build_zip_sha256": "c22e14a118e29c625f60ec1a60b1b61f2fd2e688ec557afd6ff3b6ba6a5d3d8d",
+  "native_build_status": "ARM64_PRODUCT_AND_FIXED6_STAGGER_FIFO_PARITY_CREDIT_TUN_CONTRACT_PASS",
+  "changes": [
+    "GameFecTx::copied parity min/max logical ID early reject for unrelated real source-copy IDs; preserve real credit/no double counting",
+    "M4 Go-authenticated Game public TX slot-1 direct original scoped lane lookup with full LaneKey equality",
+    "no packet/FEC/crypto/protocol/worker-count or planned due-time change"
+  ],
+  "results": {
+    "A": {
+      "status": "PASS_SCOPED_OBSERVATION",
+      "source": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce",
+      "independent30_udp": {
+        "c2s": {
+          "sent": 57384,
+          "delivered": 57384,
+          "missing": 0,
+          "first_p99_ms": 83.8
+        },
+        "s2c": {
+          "sent": 57385,
+          "delivered": 57385,
+          "missing": 0,
+          "first_p99_ms": 83.7
+        }
+      },
+      "clean_before_first_p50_ms": [
+        75.4,
+        75.4
+      ],
+      "all_offered_baseline_plus10_pct": [
+        99.97735,
+        99.96515
+      ],
+      "all_offered_baseline_plus30_60_100_pct": 100,
+      "product_cpu_s": {
+        "client": 23.77,
+        "server": 24.14,
+        "total": 47.91
+      },
+      "cpu_s_per_delivered_gib": {
+        "client": 408.3641772044861,
+        "server": 414.7207083599619
+      },
+      "host_psi_some_mean_pct": 14.2424,
+      "host_psi_some_peak_pct": 15.85,
+      "psi_over20_fraction": 0,
+      "peak_rss_bytes": {
+        "client": 49913856,
+        "server": 48910336
+      },
+      "client": {
+        "mode": 1,
+        "planned_each": 289185,
+        "sent_each": 289185,
+        "abandoned_each": 0,
+        "parity_planned_sent": 162909,
+        "recovered_candidate": 12091,
+        "source_offered": 126276,
+        "mean_late_us": [
+          0,
+          418,
+          435,
+          426
+        ]
+      },
+      "server": {
+        "mode": 1,
+        "planned_each": 289096,
+        "sent_each": 289096,
+        "abandoned_each": 0,
+        "parity_planned_sent": 162820,
+        "recovered_candidate": 12369,
+        "source_offered": 126276,
+        "mean_late_us": [
+          0,
+          414,
+          436,
+          424
+        ]
+      }
+    },
+    "B": {
+      "status": "PASS_SCOPED_OBSERVATION",
+      "source": "f484a4c34e08dcbdfa16beef590d285e9db1ee5f",
+      "independent30_udp": {
+        "c2s": {
+          "sent": 57385,
+          "delivered": 57385,
+          "missing": 0,
+          "first_p99_ms": 83.8
+        },
+        "s2c": {
+          "sent": 57384,
+          "delivered": 57384,
+          "missing": 0,
+          "first_p99_ms": 83.8
+        }
+      },
+      "clean_before_first_p50_ms": [
+        75.4,
+        75.4
+      ],
+      "all_offered_baseline_plus10_pct": [
+        99.98257,
+        99.97735
+      ],
+      "all_offered_baseline_plus30_60_100_pct": 100,
+      "product_cpu_s": {
+        "client": 23.37,
+        "server": 23.64,
+        "total": 47.01
+      },
+      "cpu_s_per_delivered_gib": {
+        "client": 401.49225163099874,
+        "server": 406.13080139310273
+      },
+      "host_psi_some_mean_pct": 13.7,
+      "host_psi_some_peak_pct": 15.42,
+      "psi_over20_fraction": 0,
+      "peak_rss_bytes": {
+        "client": 49262592,
+        "server": 49491968
+      },
+      "client": {
+        "mode": 1,
+        "planned_each": 289034,
+        "sent_each": 289034,
+        "abandoned_each": 0,
+        "parity_planned_sent": 162754,
+        "recovered_candidate": 12168,
+        "source_offered": 126280,
+        "mean_late_us": [
+          0,
+          416,
+          441,
+          429
+        ]
+      },
+      "server": {
+        "mode": 1,
+        "planned_each": 289114,
+        "sent_each": 289114,
+        "abandoned_each": 0,
+        "parity_planned_sent": 162834,
+        "recovered_candidate": 12274,
+        "source_offered": 126280,
+        "mean_late_us": [
+          0,
+          415,
+          440,
+          428
+        ]
+      }
+    }
+  },
+  "cpu_total_s_reduction_pct": 1.8785222291797181,
+  "unqualified_performance_claims": [
+    "Different netem RNG trajectories even on same VM, AB warmup/order and host differences can affect CPU; single-run 1.9% observed saving is indicative, not universal",
+    "No proof that CPU optimization removes RX shared owner or Go/raw M4 other costs",
+    "Game4 previous20Mbps PSI avg33.235pct peak42.04pct on prior source still triggers capacity_stop",
+    "No Game4 30Mbps, Game2 40Mbps, or any80Mbps new-source Action",
+    "RX FEC invalid/conflict aggregate positive are native decoder rejection classes, not AEAD cryptographic failures; actual UDP zero missing",
+    "All offered deadline uses 1ms CDF relative to this run's clean-before p50, not survivors-only denominator",
+    "10ms active_zero_delivery bucket raw ~70ms includes propagation, not continuous tunnel HOL proof"
+  ],
+  "native_contract": {
+    "outer_data_retry_enabled": 0,
+    "actual_outer_data_retrans": 0,
+    "authentic_parity_planned_equals_sent": true,
+    "all_four_physical_positions_planned_equals_kernel_sent": true,
+    "local_copy_abandoned_all": 0,
+    "source_tun_drop": 0,
+    "root_fq_drop": 0,
+    "native_rx_capacity_codec_state_failures": 0,
+    "stop_clean": true,
+    "product_source_verified_both": true
+  },
+  "decision": "KEEP_MICRO_OPTIMIZATION_AS_CURRENT_SCOPED_10MBPS_BUILD; CAPACITY_STOP_TRUE; NO_BANDWIDTH_ESCALATION; DEFAULT_GAME4_STAGGER_AND_FIXED6_PRESERVED; NOT_MAIN_MERGE",
+  "capacity_model": "docs/evidence/fec-network-work/20261026-W128-80Mbps-corrected-parity-aware-capacity-budget.md"
+}

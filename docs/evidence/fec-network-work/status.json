@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "GAME4_STAGGER_DEFAULT_FIXED6_INTEGRATED; W125_GAME2_20_W126_GAME4_20_W127_GAME2_30_IID30_REAL_UDP_PASS_SCOPED; HOST_PSI_CAPACITY_STOP_GAME4_AT20_GAME2_AT30",
+  "phase": "W128_GAME4_FIXED6_10MBPS_SAMEVM_OLDNEW_PASS_SCOPED_SMALL_CPU_GAIN; PREVIOUS_GAME4_20_AND_GAME2_30_HOST_CAPACITY_STOP; 80MBPS_MODEL_ONLY",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -18,23 +18,25 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce",
-    "build_run": 40278857619,
-    "attempt": 1,
-    "artifact_id": 12631645713,
-    "zip_sha256": "c34b8121ef817294a889f5f0f06eca1ef8e1ddcda3c7a9bf8244a85fb75abfc8",
+    "source": "f484a4c34e08dcbdfa16beef590d285e9db1ee5f",
+    "build_run": 40281581736,
+    "build_attempt": 1,
+    "artifact_id": 12633025294,
+    "zip_sha256": "c22e14a118e29c625f60ec1a60b1b61f2fd2e688ec557afd6ff3b6ba6a5d3d8d",
     "platform": "linux-aarch64",
-    "mode": "Game4 original-Go TLS default 0/4/20/60ms; explicit immediate rollback; fixed6 allowed; Game2 original immediate fixed6",
-    "qualification": "NATIVE_FEC_STAGGER_BUILD_PASS; REAL_30PCT_INDEPENDENT_UDP_W125_GAME2_20_W126_GAME4_20_W127_GAME2_30_PASS_SCOPED; HOST_CPU_PSI_LIMITS_FURTHER_VM_LOAD",
-    "prior_Game4_OFF_real_source": "4b390154b9f24e76b1592e4acb27565a00ea8113",
-    "old_gameFEC_fixed_source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
-    "GameAuto": "OUT_OF_SCOPE",
-    "Windows_UI": "NOT_QUALIFIED",
-    "representative_actions": [
-      40279255953,
-      40279262382,
-      40279738491
-    ]
+    "mode": "Game4 original Go TLS default stagger 0/4/20/60ms with fixed6 supported; Game2 remains immediate fixed6",
+    "qualification": "NATIVE_ARM64_FIXED6_STAGGER_ALL_TESTS_PASS; W128_EXACT_BUILD_TRUE_UDP_GAME4_IID30_10MBPS_SAMEVM_OLDNEW_AB_BOTH_PASS; HIGHER_BANDWIDTH_PROOF_STAYS_ON_PREVIOUS_FE7DE9DA",
+    "same_vm_action": 40281920399,
+    "perf_artifact_id": 12632950602,
+    "perf_zip_sha256": "c5e2952afa5235adab5800ead1df044511dd0940f9779974ddc8de5190184590",
+    "previous_20_30_source": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce",
+    "cpu_s_A_B": [
+      47.91,
+      47.01
+    ],
+    "capacity_stop": true,
+    "merge_ready": false,
+    "windows_gui": "NOT_QUALIFIED"
   },
   "open_requests": [
     {
@@ -638,7 +640,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W128 Game4 fixed6 CPU bounded optimization under declared capacity stop: build exact f484a4 candidate Action40281581736 (native tests incl parity credit). If PASS use same-source manifest/hash to schedule ONE 10Mbps/dir Game4 30%IID UDP original fe7de9da vs f484a4 SAME VM sequential AB; retain outer DATA off, real FEC planned/sent and four native copy positions, source TUN0, stage loss and actual CPU-s/PSI. No Game4 30+ or Game2 40+ until measurable CPU headroom and fresh 20/30 step qualification; do not mark previous exact build revised. 80Mbps is only model target. No main merge.",
+  "next_action": "Current scoped SOURCE f484a4 fully native compiled and W128 Game4 fixed6 10Mbps 30%IID sameVM old/new real A/B PASS, ~1.9% indicative CPU-s reduction. Retain Game4 stagger default and fixed6; Game2 immediate fixed6. On existing ARM64 runner preserve capacity_stop: previous Game4 20 host CPU PSI33.2 peak42 and Game2 30 mean18.7 peak20.96. Do NOT start Game4 30 or Game2 40 to80, nor transfer old source high-load qualifications to f484. Next authorized optimization stage would target genuine Game4 RX shared mutex/decoder CPU and Go/raw M4 send costs, preserving authenticate-before-dedup and TUN-success commit; validate on low-headroom-safe sameVM 10Mbps first, only return to first stopped rung with actual CPU margin, no main merge.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6823,17 +6825,56 @@
     "optimization_diag": "Existing 1Hz native /proc task thread CPU approx 50s: Game4 20 client RX15.1s/TX13.24s/Go10.97s vs Game2 20 RX8.23s/TX4.72s/Go5.09s; CPU distributed across actual 4-lane duplicate crypto + RX and Go, not just timer wake. Single TX worker expected to approach 1 core at 80 even if scaling linearly; real hardware cannot currently support ladder."
   },
   "w128_game4_fixed6_cpu_hotpath": {
-    "status": "NATIVE_BUILD_AND_10MBPS_SAMEVM_AB_PENDING",
-    "legacy_source": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce",
-    "legacy_build_run": 40278857619,
-    "legacy_artifact": 12631645713,
-    "legacy_sha256": "c34b8121ef817294a889f5f0f06eca1ef8e1ddcda3c7a9bf8244a85fb75abfc8",
-    "optimized_candidate_source": "f484a4c34e08dcbdfa16beef590d285e9db1ee5f",
-    "native_action": 40281581736,
-    "design": "constant-time outside-parity-ID-range native credit fast reject and slot-indexed authenticated Game4 M4 TX lane selection; no fewer packets, no FEC changes",
-    "plan": "same VM sequential old/new Game4 fixed6 30percent independent loss real UDP 10Mbps each direction, exact native hashes before W128; stop on capacity or business regression",
-    "why_no_30_40": "previous exact Game4 20 Mbps PSI mean33.2pct peak42pct, Game2 30 mean18.7 peak20.96",
-    "documentation": "docs/devlog/fec-network-work/20261026-W128-Game4-Fixed6-CPU-first-hotpath-capacity-guard.md",
-    "current_product_still": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce_until_AB_qualification"
+    "status": "COMPLETE_NATIVE_BUILD_PASS_AND_OLDNEW_SAMEVM_REAL_UDP_AB_BOTH_PASS",
+    "evidence": "docs/evidence/fec-network-work/20261026-W128-Game4-fixed6-CPU-hotpath-sameVM-IID30-UDP10Mbps-AB.json",
+    "action_id": 40281920399,
+    "attempt": 1,
+    "artifact_id": 12632950602,
+    "artifact_zip_sha256": "c5e2952afa5235adab5800ead1df044511dd0940f9779974ddc8de5190184590",
+    "old_source": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce",
+    "new_source": "f484a4c34e08dcbdfa16beef590d285e9db1ee5f",
+    "old_cpu_total_s": 47.91,
+    "new_cpu_total_s": 47.01,
+    "observed_reduction_pct": 1.8785222291797181,
+    "host_psi_mean_old_new": [
+      14.2424,
+      13.7
+    ],
+    "business_missing_both": 0,
+    "source_tun_drop": 0,
+    "outer_data_retrans": 0,
+    "parity_planned_equals_sent": true,
+    "game4_copy_planned_equals_sent": true,
+    "copy_abandon": 0,
+    "notes": "Small CPU savings at10Mbps does not qualify Game4 next bandwidth step; previous source 20Mbps PSI 33.2% remains hard stop. Different netem RNG and AB order may confound gain."
+  },
+  "product_prev_highbandwidth_20261026": {
+    "source": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce",
+    "build_run": 40278857619,
+    "attempt": 1,
+    "artifact_id": 12631645713,
+    "zip_sha256": "c34b8121ef817294a889f5f0f06eca1ef8e1ddcda3c7a9bf8244a85fb75abfc8",
+    "platform": "linux-aarch64",
+    "mode": "Game4 original-Go TLS default 0/4/20/60ms; explicit immediate rollback; fixed6 allowed; Game2 original immediate fixed6",
+    "qualification": "NATIVE_FEC_STAGGER_BUILD_PASS; REAL_30PCT_INDEPENDENT_UDP_W125_GAME2_20_W126_GAME4_20_W127_GAME2_30_PASS_SCOPED; HOST_CPU_PSI_LIMITS_FURTHER_VM_LOAD",
+    "prior_Game4_OFF_real_source": "4b390154b9f24e76b1592e4acb27565a00ea8113",
+    "old_gameFEC_fixed_source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "GameAuto": "OUT_OF_SCOPE",
+    "Windows_UI": "NOT_QUALIFIED",
+    "representative_actions": [
+      40279255953,
+      40279262382,
+      40279738491
+    ]
+  },
+  "w128_80mbps_corrected_design": {
+    "source_only_slots_at_80": 995,
+    "source_plus_parity_slots_at_80": 2255,
+    "game4_slots": 4096,
+    "effective_headroom_x": 1.82,
+    "base_observed_fec_symbol_multiplier": 2.268,
+    "source_model": "W126 actual source241112 parity305688",
+    "notes": "100 percent64B at80Mbps ~23030 retained Game4 fixed6 logical jobs, NOT QUALIFIED; Game2 still128 jobs/64lane slots; no proof of80Mbps",
+    "evidence": "docs/evidence/fec-network-work/20261026-W128-80Mbps-corrected-parity-aware-capacity-budget.md"
   }
 }
