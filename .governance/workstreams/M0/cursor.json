@@ -4,18 +4,19 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 274,
-  "checkpoint_sha": "c6866577e1d2326dd169fdbddf9acda1eb93ac86",
+  "sequence": 275,
+  "checkpoint_sha": "4cf8af67a3c550df0c6e2af837e00f821d14d233",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN024 original-Go credential TLS Rust Windows Npcap/Wintun ↔ Linux raw/TUN Normal/off current S879 source f11b6e7 scoped native public two-way warmup/kernel300ms tc/owned Stop functional works, but 10Mbps WL-N0 sustained fails due exact Windows original Rust/Go outbound seq mismatch +103 bytes after ~12s. S872 60s delivery rate failed, S875 E0308 failed, S877 original owner failed after4s, all preserved. N1/N5 NOT_RUN.",
-  "why_now": "User authorized rapid Win→Linux blockers. S871 intent→S872 actual tc/IFB 300ms 0% 10Mbps both directions full60s run40291751850/1 workflow green but WL-N0 deliveries FAILED. S873/S874 read current module design/real call chain and noted M1/M2 bounded flight; S875 resized only original Normal/off M1/Rust shadow and Go authenticated RX high-water but compiler E0308 run40294153223/1; S876 intent+S877 fixed shadowed NormalOffReceive compiler and native Linux build/Windows Go high-water unit PASSED, public run40294472503/1 FAILED Windows owner after4.2s; S878 intent+S879 error origin labels yielded precise native mismatch expected1472781435 got1472781538 at sourcef11b6e7 run40295748769/1. Exact artifacts & old FAIL archived S880 evidence/docs. No production gate bypass; main Governance40297124252/1 PASS after S880.",
-  "done_when": "Registry unchanged: exact public Windows→Linux Normal/off sustained 10Mbps+0%/300ms kernel bidirectional 60s, authentic M2 bounded two repair/Abandoned and >256 carrier ACK gap, owned Stop. Only after valid N0, distinct N1 1%/50ms and N5 5%/50ms Actions. Fixed/Auto/Game/global WFP/DNS/GUI/physical own distinct gate; default FEC2 OFF.",
-  "next_action": "In original Rust v4_windows_owner.rs::m2_next_feedback_entry/v3_seal_entry and Go r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go::rustFeedbackOne/transmitOne, source-lock a cheap bounded regression that identifies which genuine M1/M2 control reservation produces the observed +103-byte Go/Rust TX sequence discrepancy; keep strict sequence guard and authenticated PN/WAL/Stop; correct only proven transaction and then re-run one real WL-N0. Do not dispatch N1/N5 or another full N0 without new discriminating evidence.",
+  "current_task": "Existing R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025 is whole original Windows↔Linux product integration, not a Fixed6 subtask. Main registry/PLAN020 user correction source 4cf8af67a3c550df0c6e2af837e00f821d14d233 gives current authority; integrate actual Linux Go TLS→Rust M1/M2/M3/FEC2/Auto/Game owner, Windows native Npcap/Wintun/WFP/WAL/WinForms and real bidirectional packet/OS lifecycle, with authentic positive/negative gates. Isolated W168 PR28 not main code.",
+  "why_now": "User corrected prior Fixed6 wording as typo. Recovered isolation source01d8b729 Windows/Linux workflow40379315293/1 completed failure after both native builds and Windows unit, but public job's detail logs unavailable (BlobNotFound); exact first functional failure UNKNOWN and Fixed6 is not priority. Main sourcef11b6e7 10Mbps WL-N0 +103 byte sequence FAIL remains; earlier cross-OS functional Normal/off integration source4fb263dd Action40362898805 PASS scoped. Task authority corrected on main registry and existing PLAN020 G2 decision, no epoch/permissions changed.",
+  "done_when": "Source-specific coherent full Windows↔Linux original product path: original Go TLS/Detach, Rust authenticated native owners/feedback/repair/FEC2/Auto/Game as genuinely wired, Windows OS Npcap/Wintun/WFP/route/DNS/WAL GUI and owned Stop/Recover; truthful functional effective modes Normal/off Fixed Auto Game2/4 and negative/unwired status, independent real bidirectional UDP/TCP and OS readback. Functional PASS unlocks opt-in tests, then independent 10Mbps WL-N0/N1/N5/physical performance; do not block cross-cutting integration on dedicated Fixed6 smoke, or claim unretested modes/OS PASS.",
+  "next_action": "On existing isolated W168 integration branch, produce one Linux→Windows end-to-end call-chain/gap audit for original Go TLS, M1/M2/M3, sender/receiver, FEC/Auto/Game, GUI/WFP/WAL and Stop with exact existing evidence; wire first confirmed shared owner/native IO interface gap and dispatch ONE coherent Windows↔Linux functional Actions batch, not separate Fixed6 nor premature 10Mbps stress. Preserve all prior FAIL/NOT_RUN and keep Draft PR28.",
   "unverified": true,
-  "last_tested_source": "f11b6e7a13dafc7203a2630a92957ab80be48ff9",
+  "last_tested_source": "01d8b7291d0d675a8e1ee8c56e0aa28c2422dd88",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN024-S880-WL-N0-exact-original-failure-20261026.json"
+    "docs/evidence/M0/PLAN024-S880-WL-N0-exact-original-failure-20261026.json",
+    "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md"
   ],
   "context_refs": [
     "docs/devlog/M0/PLAN024-S880-WL-N0-original-windows-rust-seq-mismatch-20261026.md",
@@ -24,8 +25,10 @@
     "docs/devlog/M0/PLAN024-S876-fix-native-Linux-E0308-intent-20261026.md",
     "docs/devlog/M0/PLAN024-S878-WL-N0-native-owner-refusal-operation-intent-20261026.md",
     "docs/testing/NETWORK_TRIAGE.md",
-    "docs/architecture/modules/08-RECOVERY.md"
+    "docs/architecture/modules/08-RECOVERY.md",
+    "docs/handoff/CURRENT_INTEGRATION.md",
+    "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H274 recovery complete for S871–S880. Source8dd51 run40291751850/1 public feature duplex Stop PASS but 60s WL-N0 throughput FAIL Windows0.059Mbps Linux1.717Mbps; S875 source8642 run40294153223/1 native Linux E0308 original FAIL; S877 sourceb4ed run40294472503/1 Linux source build/Go native unit PASS, Windows public sustained FAIL after4.2s (auth owner refused); S879 sourcef11b run40295748769/1 native Linux build/WAL/Go unit PASS, public startup/auth duplex kernel tc PASS but sustained FAIL after11.875s: authenticated Rust owner TX seq103B ahead of Go, original owner correctly Stop/owned cleanup PASS, artifacts in S880. No full N0 PASS, N1/N5/two-repair/Abandoned/physical/global OS NOT_RUN; strict auth/sequence validation retained."
+  "partial_summary": "H275 main task authority updated, NOT product qualification: user-wide Windows/Linux wiring overrides erroneous Fixed6-only priority. Integration PR28 code remains separate. Source01d8b729 run40379315293 native build/unit PASS, full Windows-Linux functional FAIL (log endpoint unavailable); original 4fb263dd run40362898805 scoped Normal/off success; old main f11b6e7 WL-N0 +103B FAIL, WL-N1/N5 and missing modes/OS/physical NOT_RUN. No new role/epoch; first audit entire call chain and integrate per Linux design."
 }
