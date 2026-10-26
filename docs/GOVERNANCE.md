@@ -118,13 +118,17 @@ runner CPU/ISA、架构、配额、PSI/steal、注入与内核/队列 drop 是�
 
 阶段完成、约 20–30 项变更或接近预算时整理。旧结果稳定路径保留，摘要以 precise refs 指向原件；不能删除失败、吞掉 OPEN 或把历史 next_action 搬回热状态。
 
-修复经验只记录容易复发的非显然行为，不给每个 helper 创建卡片。功能语义归属只在 registry 维护，不再建立第二套能力登记。
+修复经验只记录容易复发的非显然行为，不给每个 helper 创建卡片。工位权限和功能语义归属只在 registry 维护；产品能力、配置入口、分支位置和适用资格统一记入 `docs/features/`，两者不是重复权限系统。
 
 网络测试优化按[诊断与接班手册](testing/NETWORK_TRIAGE.md)使用有界记忆：同一M0可由全新聊天接任，先核真实增量和在途run；修复前必须按问题回读相关现行设计、真实调用链及最近修复，引用留在原devlog。热状态不复制完整矩阵和历史，具体实施仍按当前registry包授权。这是既有恢复/开发步骤，不新增工位、审批或平行进度系统。
 
 ## 8. 完成与集成
 
-worker ready_for_integration 前：接口行为、正确性证据、适用配置/CLI/GUI/catalog、资源成本、未验范围、回退方式齐全。M0 重新核实际 SOURCE，集成后跑必要组合回归；模块通过不等于产品通过。
+worker ready_for_integration 前：接口行为、正确性证据、适用配置/CLI/GUI、`docs/features/`卡片、资源成本、未验范围、回退方式齐全。M0 重新核实际 SOURCE，集成后跑必要组合回归；模块通过不等于产品通过。
+
+2026-10-27 功能登记闭环：新能力先在 `experiment/<topic>` 开发，声明 experimental 和实际分支；work保留已有模块授权，integration只做隔离集成。每次产品代码变化在原devlog写 feature-impact：更新列出的卡片，或解释没有产品功能影响。卡片由同一个稳定ID维护；配置、默认值、平台/模式接线、删除/回退都不能漏记。formal 需要实际 main 集成、明确晋级决定和适用产品证据，不能因合并或单测绿灯自动晋级。完整规则和格式在 `docs/features/README.md`。
+
+Governance push覆盖 main、work/**、experiment/**。三类分支都执行 Feature catalog 检查；旧main/work角色身份、路径、证据门完整保留。实验job仅做功能登记契约，不伪造M0身份、不修改registry授权，不声称产品通过。integration不加入自动push范围。工作包若需新增卡片写路径，由集成者一次授予相应文档范围，不能变成逐功能审批。目录变更先在本分支可见；集成者消费实验登记时可先合文档，不必合产品代码。
 
 没有新改动、反例或必需集成影响时不反复跑同一测试。两次同失败无新信息就做更小定位。工具演练不能冒充真正全新聊天验收；二者分别留状态。
 

@@ -8,7 +8,7 @@
 
 1. `AGENTS.md`、`PROJECT_CHARTER.md`。
 2. main 的 `.governance/project.json`、`.governance/registry.json`。
-3. **`docs/handoff/README.md`**：五工位概览、产品硬门与证据导航（这是带日期的索引，非实时权威）。
+3. **`docs/features/README.md`**：产品功能唯一入口；先看盘点完整性，再运行 `python tools/feature_catalog.py list` 只读当前索引，按任务读卡片。正式/实验、开发分支、可用分支、配置和平台资格分开。`docs/handoff/README.md` 的工位与历史索引仅在需要时读，不增加固定热读取量。
 4. main 的 `docs/prompts/<role>.md`：永不过期的角色责任与停止条件；**在 registry 指定的角色分支**读取 `.governance/workstreams/<role>/cursor.json`。
 
 ## 开工/恢复（同一 agent 与全新 agent 完全一致）
@@ -16,6 +16,8 @@
 先确认 role/active/branch/task_id、reservation_revision、assignment_epoch；核对 cursor.checkpoint_sha 是远端 HEAD 的祖先，**逐个提交**检查 changed paths。检查 cursor 中 open_requests 与已提交 Actions 的精确 run/attempt/artifact；失败、403、超时或未跑均不能隐去。判 `CLEAN`（事实交接完整，非产品 PASS）、`RECOVERY_REQUIRED`（先补事实）或 `BLOCKED`（身份/证据/权限冲突）。
 
 CLEAN 后依 main registry 的 **assigned_task** 与角色 cursor.next_action 推进一项完整能力批次（可同时跑许多便宜功能断言）；M0 的共享集成不需要等所有工位齐活。必要时按角色只读 `docs/architecture/modules/README.md`、`docs/architecture/TEST_PLAN.md` 和冻结 FEC2 规范，勿一次加载历史文档。
+
+新功能试验进入 `experiment/**`；开发先登记，交付更新功能卡和现有 devlog 的 feature-impact，明确配置/CLI/GUI是否接线。意外中断先恢复遗漏登记。main 合并不会自动把 experimental 改成 formal。跨分支待发现的实验登记应随交接同步给集成者，不能声称未发布的分支变化已被其他 agent 自动知晓。
 
 **任务发现**：registry的`goal`应引用当前任务决策文件和本角色章节，详细验收读那里；`docs/prompts/<role>.md`仅是长期启动说明，不发布具体任务。新包由M0一次更新registry+决策发布，工位补旧事实后自行接续；不需要每轮给用户换初始提示词。缺引用由M0补入口，禁止从历史日期猜任务。详见GOVERNANCE第3节。
 

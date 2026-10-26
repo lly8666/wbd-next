@@ -19,7 +19,7 @@
     ".governance/project.json",
     ".governance/registry.json",
     "START_HERE.md",
-    "docs/handoff/README.md"
+    "docs/features/README.md"
   ],
   "history_index": "docs/history/INDEX.md"
 }
