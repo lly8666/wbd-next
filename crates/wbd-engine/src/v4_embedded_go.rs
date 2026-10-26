@@ -552,10 +552,10 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
     // 10Mbps/RTT600ms mixed packets this starved fresh *before* repair.
     // Bounded 2048 slots/5MB for negotiated feature3; other modes retain
     // their previous 128-slot/1MB memory footprint. No budget relaxation.
-    let normal=handoff.negotiated_features==3;
+    let normal_off_m1=handoff.negotiated_features==3;
     let arena=Arena::new(generation,
-        if normal{2048}else{128},2048,128,
-        if normal{5_000_000}else{1_000_000})
+        if normal_off_m1{2048}else{128},2048,128,
+        if normal_off_m1{5_000_000}else{1_000_000})
         .map_err(|_|FULL)?;
     r.entries.insert(handle,Arc::new(Mutex::new(Entry{
         generation,server_side,owner,normal:Some(normal),arena,phase:PH_PREPARED,rx_boundary:handoff.rx_boundary,
