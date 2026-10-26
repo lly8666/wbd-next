@@ -7733,5 +7733,22 @@
     "new_business_action": "NONE_REUSE_EXISTING",
     "merge_ready": false,
     "capacity_stop": true
+  },
+  "game4_default_normal_latefec_design_20261026": {
+    "evidence": "docs/evidence/fec-network-work/20261026-W165-Game4-default-Normal-delayed-Maximum-math.json",
+    "game4_default": "stagger-4-50-140",
+    "explicit_rollbacks": [
+      "stagger-4-20-60",
+      "immediate"
+    ],
+    "commit": "eb16f9ff85e1bffa127ab5139da6da54dfa7c7ca",
+    "native_build_run": 40329401996,
+    "native_build_result": "SUCCESS",
+    "native_artifact_id": 12655175507,
+    "network_harness_contract_run": 40329401979,
+    "normal_manual_delayed_maximum": "MATHEMATICAL_MODEL_ONLY_NOT_IMPLEMENTED",
+    "recommended_trial": "2 parity immediate +18 at Tclose+100ms vs user 10 at30 and10 at100, total remains r20 full group",
+    "capacity_stop": true,
+    "merge_ready": false
   }
 }

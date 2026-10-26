@@ -1,5 +1,8 @@
 # FEC独立岗位：关闭外层重传后验证与修复
 
+**W165用户授权：** 原始 Linux Game4 `0/4/50/140ms` 改为默认，老 `0/4/20/60ms` 与 `immediate` 仅显式回退；Normal 特殊手动长突发修补档只先数学评估，不进入Auto、不立即改FEC实现。参见 `docs/evidence/fec-network-work/20261026-W165-Game4-default-Normal-delayed-Maximum-math.json`；保留原独立容量停止/外层DATA OFF测试策略。
+
+
 **2026-10-26 最新独立授权 W159–W163：** 用户要求简单验证真实 UDP/TCP 大包交付，不对该大包场景增加丢包率硬门；Game4 4lane 长丢包真实双向业务最终残余必须 **严格低于千分之一（<0.1%）**，必要时增加 lane3/4 延迟并同步核实队列、到期与配置 readback。新独立 Game4 可选档 `--game4-copy-schedule=stagger-4-50-140` 已在原生 Linux ARM64 SOURCE `8f85e0ba` 完整构建 SUCCESS、同一 Action 一个场景实际验证：旧默认 `0/4/20/60ms` 在 W161R 三次实测 102–107ms 共用黑洞下受损期 UDP 24/5888、23/5888 缺失（FAIL）；可选新 `0/4/50/140ms` W162 同类黑洞双向 5888/5888 UDP 真首达成功（0%）；W163 新可选档共享长 GE15% 45秒双向 8280/8280 与 8279/8280（0%/0.0121%），<0.1% PASS。旧 W160 默认档 GE 45秒双方零缺失。**这是指定 Linux ARM64 1Mbps/方向/给定损伤的限域资格，不是所有长黑洞的普适保证；不同 Actions VM 不构成严格 CPU 配对。** 真实 Normal fixed6 大包1370B、4/16/60KiB真 UDP 分片及 TCP frame W159 全交付但旧不适用小包验收产生 Action FAIL，保留原反例；去掉不存在的“小 UDP 队列”门、降低到1Mbps 后 W159R 真交付 Action PASS。默认仍是 `stagger-4-20-60`、`immediate` 回退保留，不影响 Game2/Normal；**外层 DATA retry 仍实际OFF、FEC parity独立、真实反馈仍在**。Game4 25Mbps 旧宿主 PSI 容量 STOP 不解除，80Mbps/新宽档高负载/Windows 不宣称测试通过，不强刷seed、不可合main。完整 [W159–W163收据](../evidence/fec-network-work/20261026-W159-W163-Jumbo-Game4-Wide-Stagger-results.json) 和 [合并报告](../evidence/fec-network-work/final-report.md)。
 
 

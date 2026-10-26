@@ -1,5 +1,14 @@
 # FEC-only 独立岗位｜2026-10-26 限域合并审查索引
 
+## 2026-10-26 W165｜Game4新默认与Normal长丢包档纯数学设计
+
+**Game4 Linux 正式默认 0/4/50/140ms**（CLI省略参数即 `stagger-4-50-140`）；`stagger-4-20-60` 和 `immediate` 均保留显式回退。源 [`eb16f9ff85e1`](https://github.com/lly8666/wbd-next/commit/eb16f9ff85e1bffa127ab5139da6da54dfa7c7ca) 原始 Go TLS/ARM64 [build40329401996](https://github.com/lly8666/wbd-next/actions/runs/40329401996) PASS，公共 Go CLI 默认/回退单测 PASS，网络夹具 [40329401979](https://github.com/lly8666/wbd-next/actions/runs/40329401979) PASS；不重复W162/W163真实弱网资格，Game2/Normal现有代码行为未改。
+
+**Normal新增手动“长丢包”档当前仅数学模型、尚未实现，绝不进入Auto。** 当前最高档 Full `k=16,r=20`，对任意真实k用 `r=min(20,ceil(5k/4))`，修补字节满组约为源的125%（总码流2.25倍，未含封装）。用户10行 Tclose+30ms/10行 Tclose+100ms 确实不增加修补总行数，但若16源包与前10修补包同时黑洞，剩10修补行不够恢复整组16包。建议优先评估 **2行立即+18行 Tclose+100ms**，同样20行，短损坏1–2包可立即恢复，晚18行具备“至少16行有效”的容错空间；4+16晚16行无丢失裕量、0+20晚行更耐损但所有修复更慢。假定早行/全部源均丢、晚行各自独立额外丢5%，Late18中至少16送达概率为**94.187%**（Late16为44.013%，Late20为99.743%；Late10恒0）。上述是**强条件的数学模型，绝非业务<0.1%保证**。
+
+**不能只延迟现有 FEC owner 发送：** 闭组修补作业仅10ms寿命，接收块最后触碰150ms年龄、1024块重排窗口及640块/48MiB资源约束；需单独有界已编码待发队列、在真正发送时封包AEAD/PN、保障原始数据立即交付和真实反馈/Stop，并以同VM低速真实长GE/黑洞观察来决定实施与否。100Mbps源的修补行平均待发缓冲粗估：10@30+10@100约**1.016MB**，2@0+18@100约**1.406MB**（不含排队峰值、头部等，非实测容量）。详见 [W165数学与源码约束收据](20261026-W165-Game4-default-Normal-delayed-Maximum-math.json)。容量停止和不合main不变。
+
+
 ## 最新用户追加 W159–W163：真实大包与 Game4 <0.1% 长损伤有限验收
 
 **W164 验收门精确补核（不重测业务）：** [网络夹具契约40327433128](https://github.com/lly8666/wbd-next/actions/runs/40327433128) SUCCESS。FEC-owned Game4 `0.1%` 阈值现在按严格 `<0.1%` 判定，恰好 `0.100%` 会 FAIL；其余模式/传统阈值保留原行为，修复只涉及 `tools/network_harness/report.py` 和 `tests/network/test_harness.py`（commit `4dfc15dc`）。既有 W162=0/5888、W163=0/8280 与1/8280 实测本来就严格低于0.1%，无需重测或更改原Action。详情 [W164只读补核](20261026-W164-Game4-Strict-Loss-Boundary-Audit.json)。
