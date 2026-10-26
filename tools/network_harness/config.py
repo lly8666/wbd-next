@@ -68,7 +68,7 @@ def validate(raw):
             raise ValueError(f"invalid {k}")
     integer(r.get("seed"), 1, 2147483000, "seed")
     p = r["product"]
-    keys(p, ["mode", "fec_profile", "game_fec", "cipher", "repair_enabled", "repair_ratio"], "product")
+    keys(p, ["mode", "fec_profile", "game_fec", "game4_copy_schedule", "cipher", "repair_enabled", "repair_ratio"], "product")
     if p.get("mode") not in ["normal", "fec-fixed", "fec-auto", "game2", "game4"]:
         raise Unsupported("public V4 adapter has no such mode")
     p.setdefault("fec_profile", 1)
@@ -80,6 +80,11 @@ def validate(raw):
     if game_fec!="off" and (p["mode"] not in ("game2","game4") or
         game_fec not in tuple("fixed"+str(n) for n in range(7))):
         raise Unsupported("Game FEC must be fixed0..fixed6 on public game2/game4; no Auto or other mode")
+    copy_mode=p.setdefault("game4_copy_schedule","immediate")
+    if copy_mode not in ("immediate","stagger-4-20-60"):
+        raise ValueError("game4_copy_schedule must be immediate or stagger-4-20-60")
+    if copy_mode!="immediate" and (p["mode"]!="game4" or game_fec!="off"):
+        raise Unsupported("staggered copy requires Game4 FEC OFF")
     if any(k in p for k in ["cipher", "repair_ratio"]):
         raise Unsupported("no caller-selected cipher or repair ratio on original Go TLS public CLI")
     if p["mode"] == "fec-auto" and p["fec_profile"] != 1:
@@ -296,13 +301,18 @@ def validate(raw):
         raise ValueError("bundles must contain A, optionally B")
     for label, b in bundles.items():
         keys(b, ["source", "run_id", "attempt", "artifact_id", "sha256",
-                 "step_attested_failure", "recovery_policy", "diagnostic_10x", "repair_enabled"], f"bundle {label}")
+                 "step_attested_failure", "recovery_policy", "diagnostic_10x", "repair_enabled", "game4_copy_schedule"], f"bundle {label}")
         if "step_attested_failure" in b and type(b["step_attested_failure"]) is not bool:
             raise ValueError("step_attested_failure must be boolean")
         if "diagnostic_10x" in b and type(b["diagnostic_10x"]) is not bool:
             raise ValueError("diagnostic_10x must be boolean")
         if "repair_enabled" in b and type(b["repair_enabled"]) is not bool:
             raise ValueError("bundle repair_enabled must be boolean")
+        copy_setting=b.get("game4_copy_schedule",p["game4_copy_schedule"])
+        if copy_setting not in ("immediate","stagger-4-20-60"):
+            raise ValueError("bundle game4_copy_schedule invalid")
+        if copy_setting!="immediate" and (p["mode"]!="game4" or game_fec!="off"):
+            raise Unsupported("Game4 staggered copy is only supported for FEC OFF")
         if "recovery_policy" in b and b["recovery_policy"] not in ("legacy-two-repair-v1", "outer-single-repair-v2", "outer-opportunistic-v3"):
             raise ValueError("invalid per-bundle recovery policy")
         for k, length in [("source", 40), ("sha256", 64)]:

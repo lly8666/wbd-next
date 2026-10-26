@@ -33,6 +33,10 @@ def requested_outer_repair(config, label):
     return config["bundles"][label].get(
         "repair_enabled", config["product"].get("repair_enabled"))
 
+def requested_game4_copy_schedule(config,label):
+    return config["bundles"][label].get(
+        "game4_copy_schedule",config["product"].get("game4_copy_schedule","immediate"))
+
 
 def verify_outer_recovery_policy(expected, observed):
     """Only single-repair sources can prove the v2 readback.
@@ -84,7 +88,7 @@ def verify_native_game_counters(lanes,counters,traffic=None):
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |GAME_FEC_APPLIED |GAME_FEC_COUNTERS |GAME_OUTER |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |GAME_FEC_APPLIED |GAME_FEC_COUNTERS |GAME_OUTER |GAME4_COPY_SCHEDULE |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
         line))
 
 
@@ -645,6 +649,9 @@ class LinuxExperiment:
             game_fec=self.config["product"].get("game_fec","off")
             if game_fec!="off":
                 args += ["--game-fec",game_fec]
+            if self.config["product"]["mode"]=="game4":
+                args += ["--game4-copy-schedule",
+                    requested_game4_copy_schedule(self.config,self.label)]
             repair_switch = requested_outer_repair(self.config, self.label)
             if repair_switch is not None:
                 args += ["--outer-repair", "on" if repair_switch else "off"]
@@ -1118,6 +1125,34 @@ class LinuxExperiment:
         # V4_PUBLIC_M2_OUTER. Never claim a v3 outer repair receipt for Game.
         game_verified = None
         game_fec_proof={}
+        game4_copy_readback={}
+        requested_game_copy=requested_game4_copy_schedule(self.config,self.label)
+        if self.config["product"]["mode"]=="game4":
+            for role,log in logs.items():
+                lines=[v for v in log.splitlines()
+                       if "V4_PUBLIC_GAME4_COPY_SCHEDULE " in v]
+                if len(lines)!=1:
+                    verified=False
+                    continue
+                m=re.search(r"role=(\w+) mode=(\d+) planned=([\d,]+) sent=([\d,]+) abandoned=([\d,]+) late_max_us=([\d,]+) late_mean_us=([\d,]+)",lines[0])
+                if not m or m[1]!=role:
+                    verified=False
+                    continue
+                vals=[[int(q) for q in m[i].split(",")] for i in range(3,8)]
+                if any(len(v)!=4 for v in vals):
+                    verified=False
+                    continue
+                row={"mode":int(m[2]),"planned":vals[0],"sent":vals[1],
+                     "abandoned":vals[2],"late_max_us":vals[3],
+                     "late_mean_us":vals[4]}
+                game4_copy_readback[role]=row
+                expected=int(requested_game_copy=="stagger-4-20-60")
+                if (row["mode"]!=expected or any(
+                    row["sent"][i]>row["planned"][i] for i in range(4))):
+                    verified=False
+                if expected and (not all(n>0 for n in row["planned"]) or
+                    not all(n>0 for n in row["sent"])):
+                    verified=False
         # Independent native Game policy: no Normal M2 one-lane retry
         # ledger is claimed. Only real per-lane first sends and an OFF
         # duplicate logical-ID prohibition establish DATA retry OFF.
@@ -1229,6 +1264,8 @@ class LinuxExperiment:
                 "game_native_counters_verified": game_verified,
                 "game_outer_policy":game_outer_policy if game_outer_policy else "NOT_OBSERVED",
                 "game_fec_native_proof": game_fec_proof if game_fec_proof else "NOT_APPLICABLE_OR_NOT_OBSERVED",
+                "game4_copy_schedule_requested":requested_game_copy,
+                "game4_copy_schedule_readback":game4_copy_readback if game4_copy_readback else "NOT_APPLICABLE_OR_NOT_OBSERVED",
                 "recovery_policy_expected": requested_policy or "NOT_DECLARED",
                 "repair_packets": repair,
                 "original_m2_authenticated_coverage": fec_m2 if all(v is not None for v in fec_m2.values()) else "NOT_OBSERVED",
