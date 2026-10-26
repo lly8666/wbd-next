@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W90_GAME_FEC_REAL_LINUX_PRODUCT_FAILED_AND_ATOMIC_ROLLBACK; PREVIOUS_W89_SCOPED_GAME_ONLY",
+  "phase": "W97_GAME2_GAME4_FEC_OFF_LINUX_REAL_NATIVE_AND_DAMAGE_PASS_SCOPED; W98_GAME_SHARED_FIXED_FEC_REINTEGRATION_NOT_QUALIFIED",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -18,16 +18,19 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "4322a811fd63e096458f202767faa2f097a587c0",
-    "run_id": 40203220219,
+    "source": "44455afb819572ed75689cab28ffc66d1b1c7640",
+    "run_id": 40246704747,
     "attempt": 1,
-    "artifact_id": 12602931174,
-    "sha256": "0ae0939bdd4c02932a6452260fa65f4e1851bf37bd79d7485c28e1895022f125",
+    "artifact_id": 12618184955,
+    "sha256": "f33f2c28f1936de3cfc35a5743f2378d7ee5ef5a8ac45c741ecfffedd82d9baa",
     "platform": "aarch64",
-    "policy": "outer-opportunistic-v3",
-    "build_action": "SUCCESS",
-    "native_fixed_auto_kernel_functional": "PASS_SCOPED_ARM64_40203220219_REVERTED_ORIGINAL_FEC_PREW85; AUTO_NOT_REAL_NET_RETESTED_W87",
-    "runtime_fec_only": "W86_FIXED_BALANCED3_IID30_TCP8M_INCONCLUSIVE; W87_FIXED_MAXIMUM6_IID30_TCP8M_PASS_SCOPED; HISTORICAL_W77_W79_W83_ON_7ad0ba91; W85_INTERLEAVE_NEGATIVE_ROLLBACK"
+    "mode": "Game2/Game4 ORIGINAL TLS/FEC OFF",
+    "qualification": "W96 original public Game FEC OFF real mixed TCP+UDP clean AB and W97 independent20/lane1 blackout PASS_SCOPED, not fixed Game FEC",
+    "real_clean_game2_action": 40246931539,
+    "real_clean_game4_action": 40246935612,
+    "real_damage_game2_action": 40247215239,
+    "real_damage_game4_action": 40247219774,
+    "normal_fec_verification": "HISTORICAL SEPARATE FEC ONLY; do not conflate with Game source"
   },
   "open_requests": [
     {
@@ -631,7 +634,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W98 candidate: Game OFF Stage A-D Linux baseline is scoped complete (W91-W97), W92 Game4 raw RX prefilter ~9-10% CPU sameVM AB/BA; W96 TUN-commit fixed. Game+fixed FEC remains explicitly unsupported after six W90 real failures; before re-enabling, use fresh cross-owner separate FEC TX/RX architecture and verify exact MTU/Go negotiated profile, FEC parity scheduling; first complete no-loss Game2/Game4 mixed TCP/UDP 3Mbps and only then impairment. No blind W90 cherry-pick, no heavier load, no new architecture. Preserve outer data retransmission OFF for FEC-only Normal, real feedback; Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
+  "next_action": "W98: do NOT re-open completed Game OFF CPU work. Reconcile W90 raw evidence and current split Game TX/RX ownership/MTU/authenticated Go profile; implement minimal per-direction shared fixed FEC, no old direct cherry-pick. Compile original ARM64/Go tests then separate Game2/Game4 fixed6 netem0 real 3Mbps TCP/UDP, no damage until both start and fully deliver. Keep W90 six FAIL, Normal FEC-only source/readback independent, Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6183,5 +6186,16 @@
     "evidence": "docs/evidence/fec-network-work/20261026-W97-Game2-Game4-TUN-commit-damage-PASS-SCOPED.json",
     "windows": "TEMP_SKIPPED_USER_20261025_NOT_RUN",
     "capacity_stop": true
+  },
+  "w98_game_fixed_reintegration": {
+    "status": "TARGET_DESIGN_ONLY_NOT_COMPILED_NOT_PRODUCT_QUALIFIED",
+    "base_off_product_source": "44455afb819572ed75689cab28ffc66d1b1c7640",
+    "stage": "CHECK_MTU_AUTH_PROFILE_TX_RX_OWNER_BEFORE_CODING",
+    "historical_fixed_candidate": "ad9eaab88b93501e3de64efdc8fabc89f087e51e",
+    "historical_negative": "W90 six real Game2/4 fixed0/fixed6 failures, source rollback retained",
+    "scope": "Only explicitly configured Game fixed; no Game Auto, no new lanes, no outer recovery changes; native and real netem0 3Mbps TCP+UDP required",
+    "merge_ready": false,
+    "capacity_stop": true,
+    "windows": "TEMP_SKIPPED_USER_20261025"
   }
 }
