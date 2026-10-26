@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W101_GAME2_FIXED6_REAL_FEC_REJECT_CATEGORIZED_PASS; W99_GAME2_GAME4_FIXED6_IID20_BLACKHOLE_AND_W100_FIXED0_CLEAN_PASS_SCOPED; OUTER_GAME_DATA_REPAIR_OFF_NOT_QUALIFIED",
+  "phase": "W102_FIXED6_GAME2_SHARED_LONG_GE_PASS_CLEAN_WITH_2P43_TO_2P56PCT_CORRELATED_RESIDUAL_AND_HOST_CONTENTION_STOP; W99_FIXED6_IID20_BLACKHOLE_AND_W100_FIXED0_CLEAN_PASS_SCOPED",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -634,7 +634,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "W102: W101 exact Game2 fixed6 native+real categorized RX proof PASS and zero capacity/codec/AEAD fails; invalid73/78 may include retired/old packets, conflict29/22, not definitively malformed. Reuse frozen W101 source 8afc2b8f native artifact12622774367 for ONE 3Mbps Game2 fixed6 old W89 shared long GE representative (75ms, 15/45/15s), not high load or matrix; inspect true TCP/UDP, actual FEC recovery, p99, lasting gaps, parity planned/copied/expired, RX category and Stop. Stop if capacity or true correctness regression. Game --outer-repair=off UNSUPPORTED: do not claim FEC-only retrans0; Normal historical OFF separate. Windows TEMP_SKIPPED, merge_ready=false capacity_stop=true.",
+  "next_action": "W102 scoped close: Game2 fixed6 long shared GE 3Mbps passes clean/TCP recovery but correlated burst UDP still 2.56/2.43% missing; historical Game OFF 13% unpaired stochastic waveform is not a causal performance AB. Host PSI peak33.81% / >20 fraction12% => STOP more pressure/Game4 highloss. Preserve W98 W99 fixed6 0%+independent20+lane1 blackhole and W100 fixed0 clean, W101 RX invalid/conflict breakdown. Do not claim FEC-only outer-data retrans disabled for Game: CLI --outer-repair=off explicitly unsupported; separate minimal owner policy proof needed, no outer recovery rewrite. If later resuming, inspect original Game Tx/Go policy source and prove real outer DATA retransmit=0 before changing config; no heavy VM action until host capacity analyzed. Windows TEMP_SKIPPED, merge_ready=false, capacity_stop=true.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6400,5 +6400,43 @@
       "cpu_comparison": "W99 distinct VM; cannot infer CPU uplift from 9.65/9.69 vs 9.91/10"
     },
     "evidence": "docs/evidence/fec-network-work/20261026-W101-Game2-fixed6-RX-reasons-IID20-blackhole-PASS-SCOPED.json"
+  },
+  "w102_game_fixed_shared_ge": {
+    "status": "EXACT_SOURCE_ONE_REAL_GAME2_FIXED6_SHARED_LONG_GE15_PASS_CLEAN_GATES; CORRELATED_DAMAGE_RESIDUAL_ABOVE_1PCT",
+    "source": "8afc2b8f443dd59edc912fef24b5fffa92e3a6d7",
+    "build_run": 40257758450,
+    "game2_run": 40258651816,
+    "artifact_id": 12623970569,
+    "artifact_sha256": "69774b68d0bfe41192c24489ff59a833c44d9d075f53768af2274a8391514ba1",
+    "correlated_ge_udp_loss_pct_c2s_s2c": [
+      2.558,
+      2.427
+    ],
+    "correlated_ge_udp_missing_c2s_s2c": [
+      434,
+      438
+    ],
+    "clean_before_after_zero_udp_loss": true,
+    "tcp_injected_delivered_both": true,
+    "tcp_p99_ge_ms_c2s_s2c": [
+      290.7,
+      402
+    ],
+    "auth_rejected": 0,
+    "client_server_fec_recovered_candidates": [
+      3057,
+      3037
+    ],
+    "fec_planned_equals_copied_sent": true,
+    "fec_failed_expired": 0,
+    "stop_drained": true,
+    "host_cpu_psi_peak_pct": 33.81,
+    "host_cpu_psi_over20_fraction": 0.12,
+    "host_contention_warning": true,
+    "no_further_load": true,
+    "evidence": "docs/evidence/fec-network-work/20261026-W102-Game2-fixed6-sharedGE15Long-real-PASS-CLEAN-with-residual.json",
+    "capacity_stop": true,
+    "windows": "TEMP_SKIPPED_USER_20261025",
+    "merge_ready": false
   }
 }
