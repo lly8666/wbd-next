@@ -48,6 +48,7 @@ type m0NativeV4Peer struct {
  sent,opened,sentAfterOpen,retries,duplicates,rejected,oversize,feedbackSent uint64
  pendingCount int
  fixedApplied bool
+ lastFixedRead time.Time
  oldestUnackedAt time.Time
  lastRXAt time.Time
  maxRXInterdeliveryMs int64
@@ -471,9 +472,20 @@ func(p *m0NativeV4Peer) pulse(ctx context.Context)(int,error){
     sent,parityErr:=p.rustFixedParityOne(ctx)
     if parityErr!=nil{return done,parityErr}
     if sent{done++}
-    state,readErr:=p.owner.ReadBoundOriginalFixedMature(ctx)
-    if readErr!=nil{return done,readErr}
-    p.mu.Lock();p.fixedApplied=state.Applied==1;p.mu.Unlock()
+    if time.Since(p.lastFixedRead)>=100*time.Millisecond{
+     p.lastFixedRead=time.Now()
+     state,readErr:=p.owner.ReadBoundOriginalFixedMature(ctx)
+     if readErr!=nil{return done,readErr}
+     p.mu.Lock()
+     prior:=p.fixedApplied
+     p.fixedApplied=state.Applied==1
+     p.mu.Unlock()
+     if state.Applied==1&&!prior{
+      // Single original-M2 mature and authentic readback transition, not Go intent.
+      fmt.Printf("WBD_WINDOWS_FIXED6_M2_APPLIED_REAL source=%d parity=%d reverse=%d positive2s=%d covered2s=%d\n",
+       state.CopiedSource,state.CopiedParity,state.ReverseReports,state.Positive2s,state.Covered2s)
+     }
+    }
    }
   }else{
    retried,err=p.retryOne(time.Now())

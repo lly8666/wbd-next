@@ -653,13 +653,13 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "6e1e2ee25ac8ca52f04268be3cd3c8a6096b594b"
+      "result_blob": "6e6c2d2e3fb473b5ec7ba94fed026d842b59a2b9"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
-      "result_blob": "0457d5bf3941dfa890a5e5428537aab8350691d4"
+      "result_blob": "4e81b3dcdd595f21273ad80a4164542a578f54fe"
     },
     {
       "kind": "create",

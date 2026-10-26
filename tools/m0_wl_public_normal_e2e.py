@@ -2,7 +2,8 @@
 """Run actual original-TLS Windows and Linux native public UDP/TCP, then Stop."""
 import os,sys,subprocess,time,json,hashlib,pathlib,re
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
-report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINUX_BINARY_SRC"],"normal_public":"NOT_RUN","windows_ready":"NOT_RUN","linux_ready":"NOT_RUN","app_duplex":"NOT_RUN","tcp_duplex":"NOT_RUN","stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN"}
+fixed6=os.environ.get("WBD_WL_FIXED6")=="1"
+report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINUX_BINARY_SRC"],"mode":"Fixed6" if fixed6 else "Normal/off","fixed6_public":"NOT_RUN","normal_public":"NOT_RUN","windows_ready":"NOT_RUN","linux_ready":"NOT_RUN","app_duplex":"NOT_RUN","tcp_duplex":"NOT_RUN","stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN"}
 def run(a,timeout=30):
  p=subprocess.run(a,capture_output=True,text=True,timeout=timeout)
  if p.returncode:raise RuntimeError(str(a[:4])+": "+(p.stderr or p.stdout)[-600:])
@@ -51,11 +52,11 @@ try:
  # Frozen-unadapted run 40357841232 rejected 546 original NPF frames.
  peer_persona=" --peer-persona windows11"
  report["expected_original_tcp_persona"]="windows11_original_go_server"
- linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1 '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode normal"+peer_persona+"\n").encode("utf-8"))
+ linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1 '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+("fec-fixed --fec-profile 6" if fixed6 else "normal")+peer_persona+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
  # Linux server authenticated READY only AFTER the genuine Windows TLS client starts.
- args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex",route,"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu","1400","--lanes","1","--fec-mode","off","--fec-parity","0","--route-mode","bypass-lan"]
+ args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex",route,"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu","1400","--lanes","1","--fec-mode",("fixed" if fixed6 else "off"),"--fec-parity","0","--route-mode","bypass-lan"]
  log=(out/"client.log").open("w");logs.append(log)
  w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,text=True)
  # Launch true independent Windows/Wintun and Linux/TUN kernel applications
@@ -301,10 +302,17 @@ print(json.dumps(result),flush=True)
  stop_linux();s.wait(timeout=10)
  if s.returncode or "V4_PUBLIC_NATIVE_STOP_DRAINED role=server" not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
  report["stop"]="PASS_BOTH_OWNED"
- report["normal_public"]="PASS_ACTUAL_WINDOWS_LINUX_NATIVE"
- print("WBD_WL_TRUE_PUBLIC_NORMAL_OFF_WIN_LINUX_DUPLEX_STOP_PASS")
+ if fixed6:
+  applied="WBD_WINDOWS_FIXED6_M2_APPLIED_REAL" in (out/"client.log").read_text(errors="replace")
+  report["fixed6_applied_m2"]=applied
+  if not applied:raise RuntimeError("Fixed6 original Rust mature authenticated M2 Applied absent")
+  report["fixed6_public"]="PASS_ACTUAL_WINDOWS_LINUX_NATIVE_FIXED6"
+  print("WBD_WL_TRUE_PUBLIC_FIXED6_WIN_LINUX_DUPLEX_STOP_PASS")
+ else:
+  report["normal_public"]="PASS_ACTUAL_WINDOWS_LINUX_NATIVE"
+  print("WBD_WL_TRUE_PUBLIC_NORMAL_OFF_WIN_LINUX_DUPLEX_STOP_PASS")
 except Exception as e:
- report["normal_public"]="FAIL_TRUE_PUBLIC_EXECUTION";report["error"]=str(e)[-1100:]
+ report["fixed6_public" if fixed6 else "normal_public"]="FAIL_TRUE_PUBLIC_EXECUTION";report["error"]=str(e)[-1100:]
  print("WBD_WL_TRUE_PUBLIC_NORMAL_OFF_FAIL: "+str(e),file=sys.stderr)
  raise
 finally:

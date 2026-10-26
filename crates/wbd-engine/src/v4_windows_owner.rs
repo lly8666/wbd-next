@@ -146,9 +146,10 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
     if e.feature7 {
         let budget=normal_off_windows_budget(e)?;
         // Exactly the Linux frozen M1 source grouping / staged-parity owner.
-        // Fixed profile High=4 is the authenticated current fixed policy.
+        // Fixed6 equals Linux W168 Maximum profile 6; same class grouping,
+        // k<=16, r<=20, no alternative Windows FEC scheduler.
         e.fec2_tx=Some(crate::v4_fixed_stream::FixedStream::new(
-            4,1,budget.record_payload_mtu
+            6,1,budget.record_payload_mtu
         ).ok_or(BAD_STAGE)?);
     }
     e.m2=Some(WindowsOriginalM2{

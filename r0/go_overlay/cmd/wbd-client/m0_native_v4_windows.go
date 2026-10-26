@@ -183,7 +183,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   policy,err=realityfront.FixedPolicyForClient(1,0)
  case m0WinModeFixed:
   policy,err=realityfront.PolicyForClientWithInitialAndCipher(
-   1,"fixed",4,4,20,realityfront.CipherChaCha)
+   1,"fixed",6,6,20,realityfront.CipherChaCha)
  case m0WinModeAuto:
   policy,err=realityfront.PolicyForClientWithInitialAndCipher(
    1,"auto",0,4,20,realityfront.CipherChaCha)
