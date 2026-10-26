@@ -26,6 +26,7 @@ type V4LinuxGameProductConfig struct {
     GameFecEnabled bool // explicit BOTH-endpoint fixed FEC, never Auto
     GameFecProfile uint8 // 0..6; only used when GameFecEnabled
     DisableOuterRepair bool // Game M4 first copy only, no Normal M2 DATA repair
+    Game4CopyStagger bool // explicit opt-in only FEC OFF
 }
 type V4LinuxGameProduct struct{
     mu sync.Mutex
@@ -41,6 +42,7 @@ type V4LinuxGameProduct struct{
 }
 func newV4LinuxGameProduct(cfg V4LinuxGameProductConfig,server bool)(*V4LinuxGameProduct,error){
     if cfg.GameFecEnabled&&cfg.GameFecProfile>6{return nil,ErrAdmissionParams}
+    if cfg.Game4CopyStagger&&cfg.GameFecEnabled{return nil,ErrAdmissionUnsupported}
     if cfg.NetworkInterface==""||cfg.NetworkIfIndex==0||cfg.Tun==nil||
        cfg.TunName==""||len(cfg.TunName)>15||cfg.CleanupOwnedNetwork==nil||
        (server&&cfg.Epochs==nil){return nil,ErrAdmissionParams}
@@ -74,6 +76,10 @@ func (p *V4LinuxGameProduct) commitGroupedOwnerLocked()error{
     if err!=nil{return err}
     if p.cfg.GameFecEnabled{
         if err=p.native.configureFixedFEC(p.cfg.GameFecProfile);err!=nil{return err}
+    }
+    if p.cfg.Game4CopyStagger{
+        if len(p.bridges)!=4{return ErrAdmissionUnsupported}
+        if err=p.native.configureGame4CopyStagger();err!=nil{return err}
     }
     if err=p.native.configureOuterRepair(!p.cfg.DisableOuterRepair);err!=nil{return err}
     if err=p.native.startNativeM4(
@@ -183,6 +189,15 @@ func (p *V4LinuxGameProduct) AcceptServerGame(
         return errors.Join(err,p.abortLocked())
     }
     return nil
+}
+func (p *V4LinuxGameProduct) CopyScheduleRead()([21]uint64,error){
+    var empty [21]uint64
+    if p==nil{return empty,ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    if !p.connected||p.stopped||p.native==nil||len(p.bridges)!=4{
+        return empty,ErrAdmissionUnsupported
+    }
+    return p.native.copyScheduleRead()
 }
 func (p *V4LinuxGameProduct) OuterPolicy()(V4GameOuterPolicy,error){
     if p==nil{return V4GameOuterPolicy{},ErrAdmissionParams}

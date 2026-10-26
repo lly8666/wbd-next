@@ -432,6 +432,22 @@ impl GameAdapter{
         let quiet=tx.in_use().0==0;
         fec.poll(now,quiet,|symbol|Self::enqueue(tx,arena,symbol,mtu,now))
     }
+    pub fn configure_game4_stagger(&mut self)->Result<(),Error>{
+        if self.stopped||self.lanes.len()!=4{return Err(Error::Invalid)}
+        #[cfg(feature="fec2_product_record")]
+        if self.fec.is_some(){return Err(Error::Invalid)}
+        let arena=Arena::new(905,1024,2048,1024,4*1024*1024)
+            .map_err(|_|Error::Capacity)?;
+        self.rx_owner.lock().map_err(|_|Error::Stopped)?.rx
+            .widen_delivery_window_before_start(65536).map_err(Error::Game)?;
+        self.tx.configure_game4_stagger().map_err(Error::Game)?;
+        self.arena=arena;Ok(())
+    }
+    pub fn game4_copy_schedule(&self)->Option<GameCounters>{
+        self.tx.staggered().then_some(self.tx.counters())
+    }
+    pub fn game4_next_due_ns(&self)->Option<u64>{self.tx.next_due_ns()}
+    pub fn game4_stagger_enabled(&self)->bool{self.tx.staggered()}
     pub fn offer(&mut self,data:&[u8],now:MonoNs)->Result<LogicalPacketId,Error>{
         if self.stopped{return Err(Error::Stopped)}
         #[cfg(feature="fec2_product_record")]

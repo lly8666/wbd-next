@@ -64,6 +64,8 @@ pub struct SendView<'a>{
 pub struct GameCounters{
     pub logical_jobs:u64,pub common_bytes:u64,pub lane_copy_drop:u64,
     pub lane_dispatch:u64,pub stop_canceled:u64,
+    pub scheduled:[u64;4],pub sent:[u64;4],pub abandoned:[u64;4],
+    pub late_max_ns:[u64;4],pub late_total_ns:[u64;4],
 }
 struct Job{
     buffer:UniqueBuffer,wire:Range<usize>,mode:Mode,
@@ -71,7 +73,7 @@ struct Job{
     pending:usize,
 }
 #[derive(Clone,Copy)]
-struct Pending {slot:usize,wire_bytes:usize,at:MonoNs}
+struct Pending {slot:usize,wire_bytes:usize,due:MonoNs,position:u8}
 struct LaneReady{
     info:QualifiedLane,active:bool,
     q:VecDeque<Pending>,bytes:usize,
@@ -80,7 +82,7 @@ pub struct GameTx{
     scope:GameScope,limits:GameLimits,lanes:Vec<LaneReady>,
     slots:Vec<Option<Job>>,free:Vec<usize>,used:usize,
     cursor:usize,next_packet:u64,stopped:bool,
-    counters:GameCounters,
+    copy_offsets_ns:[u64;4],staggered:bool,counters:GameCounters,
 }
 impl GameTx {
     pub fn new(snapshot:ActiveLaneSnapshot,limits:GameLimits)->Option<Self>{
@@ -94,9 +96,28 @@ impl GameTx {
         slots.resize_with(limits.jobs,||None);
         let free=(0..limits.jobs).rev().collect();
         Some(Self{scope,limits,lanes,slots,free,used:0,cursor:0,
-            next_packet:0,stopped:false,counters:GameCounters::default()})
+            next_packet:0,stopped:false,copy_offsets_ns:[0;4],staggered:false,
+            counters:GameCounters::default()})
     }
     pub fn counters(&self)->GameCounters{self.counters}
+    pub fn staggered(&self)->bool{self.staggered}
+    pub fn next_due_ns(&self)->Option<u64>{
+        self.lanes.iter().filter_map(|l|l.q.front().map(|p|p.due.0)).min()
+    }
+    // 3Mbps worst-case 64B: ~5859pps *65ms =381 jobs.
+    // 1024 has burst headroom; higher rates must pass capacity validation.
+    pub fn configure_game4_stagger(&mut self)->Result<(),GameError>{
+        if self.stopped||self.staggered||self.lanes.len()!=4||
+           self.used!=0||self.free.len()!=self.limits.jobs||
+           self.counters.logical_jobs!=0{return Err(GameError::WrongMode)}
+        let old=self.limits.jobs;let jobs=1024;
+        self.slots.resize_with(jobs,||None);
+        self.free.extend((old..jobs).rev());
+        self.limits.jobs=jobs;self.limits.logical_bytes=2*1024*1024;
+        self.limits.lane_slots=1024;self.limits.lane_bytes=2*1024*1024;
+        self.copy_offsets_ns=[0,4_000_000,20_000_000,60_000_000];
+        self.staggered=true;Ok(())
+    }
     pub fn in_use(&self)->(usize,usize){
         (self.limits.jobs-self.free.len(),self.used)
     }
@@ -182,10 +203,17 @@ impl GameTx {
         self.slots[slot]=Some(Job{
             buffer,wire:range,mode,packet_id,block,pending:count
         });
-        for &idx in &choices[..count]{
+        for (position,&idx) in choices[..count].iter().enumerate(){
             let l=&mut self.lanes[idx];
-            l.q.push_back(Pending{slot,wire_bytes:predicted_wire,at:now});
+            let delay=if mode==Mode::Game&&self.staggered{
+                self.copy_offsets_ns[position]
+            }else{0};
+            l.q.push_back(Pending{slot,wire_bytes:predicted_wire,
+                due:MonoNs(now.0.saturating_add(delay)),position:position as u8});
             l.bytes+=predicted_wire;
+            if mode==Mode::Game&&self.staggered{
+                self.counters.scheduled[position]+=1;
+            }
         }
         // First qualified lane rotates per logical input, not per duplicated
         // Game copy; no lane is permanently the first during Normal overlap.
@@ -215,15 +243,20 @@ impl GameTx {
             let mut selected=None;
             for offset in 0..self.lanes.len(){
                 let idx=(self.cursor+offset)%self.lanes.len();
-                if !self.lanes[idx].q.is_empty(){selected=Some(idx);break;}
+                if self.lanes[idx].q.front().is_some_and(|p|p.due.0<=now.0){
+                    selected=Some(idx);break;
+                }
             }
             let Some(index)=selected else{break;};
             let entry=self.lanes[index].q.pop_front().expect("not empty");
             self.lanes[index].bytes-=entry.wire_bytes;
             self.cursor=(index+1)%self.lanes.len();
-            let expired=now.elapsed_since(entry.at)>self.limits.max_age_ns;
+            let late=now.elapsed_since(entry.due);
+            let expired=late>self.limits.max_age_ns;
+            let pos=entry.position as usize;
             if expired{
                 self.counters.lane_copy_drop+=1;
+                if self.staggered{self.counters.abandoned[pos]+=1;}
             }else{
                 let job=self.slots[entry.slot].as_mut().expect("queued job exists");
                 let view=SendView{
@@ -232,8 +265,19 @@ impl GameTx {
                     common_payload:&job.buffer.writable()[job.wire.clone()]
                 };
                 match dispatch(view){
-                    DispatchOutcome::Accepted=>self.counters.lane_dispatch+=1,
-                    DispatchOutcome::PressureDrop=>self.counters.lane_copy_drop+=1,
+                    DispatchOutcome::Accepted=>{
+                        self.counters.lane_dispatch+=1;
+                        if self.staggered{
+                            self.counters.sent[pos]+=1;
+                            self.counters.late_total_ns[pos]=
+                                self.counters.late_total_ns[pos].saturating_add(late);
+                            self.counters.late_max_ns[pos]=self.counters.late_max_ns[pos].max(late);
+                        }
+                    },
+                    DispatchOutcome::PressureDrop=>{
+                        self.counters.lane_copy_drop+=1;
+                        if self.staggered{self.counters.abandoned[pos]+=1;}
+                    },
                 }
             }
             self.release(entry.slot);
@@ -305,6 +349,15 @@ impl GameRx{
             used:0,limit:limits,stopped:false,
             #[cfg(test)]
             dedup_clear_word_ops:0})
+    }
+    pub fn widen_delivery_window_before_start(&mut self,width:usize)
+        ->Result<(),GameError>{
+        if self.stopped||self.base!=0||self.delivered.iter().any(|w|*w!=0)||
+           width<=self.limit.delivered_window||width>65536{
+            return Err(GameError::WrongMode)
+        }
+        self.delivered.resize(width.div_ceil(64),0);
+        self.limit.delivered_window=width;Ok(())
     }
     pub fn add_lane(&mut self,scope:GameScope,lane:LaneKey)->Result<(),GameError>{
         if scope!=self.scope{return Err(GameError::Scope);}

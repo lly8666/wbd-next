@@ -2578,6 +2578,52 @@ pub extern "C" fn wbd_fec_network_game_group_fixed_configure(
     OK
 }
 
+// Authenticated original-TLS Game4 ONLY, before driver start.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_fec_network_game4_copy_schedule_set(group:u64,mode:u32)->i32{
+    if mode>1{return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
+    if e.stopped||e.stopping||e.drivers.is_some()||e.handles.len()!=4{
+        return BAD_STAGE
+    }
+    if mode==0{return OK}
+    let Ok(mut adapter)=e.adapter.lock()else{return BAD_STAGE};
+    if adapter.configure_game4_stagger().is_err(){return INVALID}
+    OK
+}
+// Native readback: mode, scheduled4, actually copied4, abandoned4,
+// max due-lateness us4, mean due-lateness us4.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_fec_network_game4_copy_schedule_read(
+    group:u64,out:*mut u64,n:usize
+)->i32{
+    if out.is_null()||n!=21{return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
+    if e.stopped||e.handles.len()!=4||e.drivers.is_none(){return BAD_STAGE}
+    let Ok(adapter)=e.adapter.lock()else{return BAD_STAGE};
+    let mut values=[0u64;21];
+    if let Some(c)=adapter.game4_copy_schedule(){
+        values[0]=1;
+        for i in 0..4{
+            values[1+i]=c.scheduled[i];values[5+i]=c.sent[i];
+            values[9+i]=c.abandoned[i];
+            values[13+i]=c.late_max_ns[i]/1000;
+            values[17+i]=if c.sent[i]==0{0}else{
+                c.late_total_ns[i]/c.sent[i]/1000
+            };
+        }
+    }
+    unsafe{std::ptr::copy_nonoverlapping(values.as_ptr(),out,21)};
+    OK
+}
 // Explicitly configure the original TLS committed Game group before M4.
 // Off cannot create Normal M2 DATA repair shadows; the M4 send path
 // independently blocks a repeated Game logical ID on the same lane.

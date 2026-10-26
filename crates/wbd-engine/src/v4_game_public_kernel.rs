@@ -18,6 +18,9 @@ use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx};
 use wbd_platform::linux_tun_sink::{ScopedTunSink,TunReadyEntry};
 use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
 use wbd_platform::r1::StopResult;
+#[repr(C)]
+struct GamePollFd {fd:i32,events:i16,revents:i16}
+unsafe extern "C" {fn poll(fds:*mut GamePollFd,nfds:usize,timeout:i32)->i32;}
 
 struct TxLane{
     key:LaneKey,flow:GoFlow,seq:u64,raw:Arc<ScopedRawIpv4Tx>,
@@ -243,8 +246,19 @@ impl GameKernelOwner{
                             }
                         }
                     }
+                    let next_due=game.game4_next_due_ns();
+                    let stagger=game.game4_stagger_enabled();
                     drop(flush);drop(game);
-                    if !did_business&&!parity_ready{
+                    if stagger{
+                        // One readiness/deadline wait, no per-copy timer or
+                        // busy spin. Stop is bounded by a 10ms poll cap.
+                        let remain=next_due.map_or(10_000_000u64,|due|
+                            due.saturating_sub(start.elapsed().as_nanos()
+                                .min(u128::from(u64::MAX)) as u64));
+                        let timeout=((remain.min(10_000_000)+999_999)/1_000_000) as i32;
+                        let mut pfd=GamePollFd{fd:tx_tun.readiness_fd(),events:1,revents:0};
+                        let _=unsafe{poll(&mut pfd,1,timeout)};
+                    }else if !did_business&&!parity_ready{
                         thread::sleep(Duration::from_millis(2));
                     }
                     arena.drain_returns();

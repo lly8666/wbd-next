@@ -9,6 +9,8 @@ extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_fec_network_game_group_fixed_configure(uint64_t,uint32_t);
 extern int32_t wbd_fec_network_game_group_outer_policy_set(uint64_t,uint32_t);
+extern int32_t wbd_fec_network_game4_copy_schedule_set(uint64_t,uint32_t);
+extern int32_t wbd_fec_network_game4_copy_schedule_read(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_fec_network_game_group_outer_policy_read(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_fec_network_game_group_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_game_group_stop(uint64_t);
@@ -103,6 +105,23 @@ func (g *v4NativeGameJoined) configureFixedFEC(profile uint8)error{
         C.uint64_t(g.handle),C.uint32_t(profile))
     if rc!=0{return fmt.Errorf("%w: Game fixed FEC setup=%d",errV4Embedded,int(rc))}
     return nil
+}
+func (g *v4NativeGameJoined) configureGame4CopyStagger()error{
+    if g==nil||g.handle==0||g.stopped||g.verified==nil||
+       len(g.laneOwners)!=4{return ErrAdmissionUnsupported}
+    rc:=C.wbd_fec_network_game4_copy_schedule_set(C.uint64_t(g.handle),1)
+    if rc!=0{return fmt.Errorf("%w: Game4 stagger setup=%d",errV4Embedded,int(rc))}
+    return nil
+}
+func (g *v4NativeGameJoined) copyScheduleRead()([21]uint64,error){
+    var out [21]uint64
+    if g==nil||g.handle==0||g.stopped{return out,ErrAdmissionUnsupported}
+    var raw [21]C.uint64_t
+    rc:=C.wbd_fec_network_game4_copy_schedule_read(
+        C.uint64_t(g.handle),&raw[0],21)
+    if rc!=0{return out,fmt.Errorf("%w: Game4 readback=%d",errV4Embedded,int(rc))}
+    for i:=range out{out[i]=uint64(raw[i])}
+    return out,nil
 }
 type V4GameOuterPolicy struct {
     RepairEnabled bool
