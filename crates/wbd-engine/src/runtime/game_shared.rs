@@ -104,10 +104,15 @@ impl GameTx {
     pub fn next_due_ns(&self)->Option<u64>{
         self.lanes.iter().filter_map(|l|l.q.front().map(|p|p.due.0)).min()
     }
-    // 80Mbps target with reference weighted 654B mixed application packets:
-    // ~15300pps*(60ms+5ms)=~995 retained logical jobs. 4096 slots give
-    // ~4x headroom for bursts. This is NOT an 80Mbps all-64B guarantee
-    // (~10156 concurrent source jobs; must pressure-stop by its counters).
+    // 80Mbps is DESIGN-ONLY, NOT QUALIFIED. At weighted 654B/frame it is
+    // ~15,300 source pps and (60ms+5ms) retention ~995 source symbols.
+    // W126 measured 241,112 FEC sources plus 305,688 repairs: 2.268 total
+    // logical symbols per source => ~2,257 retained GameTx jobs, not 995.
+    // 4096 shared logical slots imply only ~1.8x theoretical headroom.
+    // Per-lane pending refs/bytes are accounted SEPARATELY (not jobs x4);
+    // parity rows may cost more bytes than mean sources. Sparse short-k and
+    // all-64B patterns may exceed 4096 by a wide margin. Pressure-stop,
+    // never infer 80Mbps capacity from this nominal slot count.
     pub fn configure_game4_stagger(&mut self)->Result<(),GameError>{
         if self.stopped||self.staggered||self.lanes.len()!=4||
            self.used!=0||self.free.len()!=self.limits.jobs||
