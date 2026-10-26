@@ -36,6 +36,18 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate(r)
 
+    def test_p1b_native_tx_multimsg_bundle_opt_in_only_game_modes(self):
+        r=request()
+        self.assertFalse(r["bundles"]["A"].get("enable_game_tx_multimsg",False))
+        r["product"].update(mode="game4",game_fec="fixed6")
+        r["bundles"]["A"]["enable_game_tx_multimsg"]=True
+        self.assertTrue(validate(r)["bundles"]["A"]["enable_game_tx_multimsg"])
+        r["bundles"]["A"]["enable_game_tx_multimsg"]=1
+        with self.assertRaises(ValueError):validate(r)
+        r["bundles"]["A"]["enable_game_tx_multimsg"]=True
+        r["product"]["mode"]="normal"
+        with self.assertRaises(Unsupported):validate(r)
+
     def test_game_rx_lock_128th_packet_sampling_is_strict_and_off_by_default(self):
         from tools.network_harness.runner import public_game_rx_lock_sample
         line=("M0_GAME_M4_RX_LOCK_SAMPLE samples=90 wait_total_ns=250000 "
