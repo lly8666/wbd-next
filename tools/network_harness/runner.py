@@ -97,8 +97,8 @@ def public_go_rx_handoff(log_text, role):
     userspace full-packet copies. Missing proof is NOT_OBSERVED, not zero.
     Accepted packet volume and actual Rust TUN delivery remain separate.
     """
-    pattern=r"V4_PUBLIC_(?:GAME_)?GO_RX_HANDOFF role="+re.escape(role)+r" [^\\n]*filtered=(\\d+) rust_ready=(\\d+) original_send_fd_open=(\\d+)"
-    end_pattern=r"V4_PUBLIC_(?:GAME_)?GO_RX_POST_HANDOFF role="+re.escape(role)+r" [^\\n]*go_data_full_copies=(\\d+)"
+    pattern=r"V4_PUBLIC_(?:GAME_)?GO_RX_HANDOFF role="+re.escape(role)+r" .*filtered=([0-9]+) rust_ready=([0-9]+) original_send_fd_open=([0-9]+)"
+    end_pattern=r"V4_PUBLIC_(?:GAME_)?GO_RX_POST_HANDOFF role="+re.escape(role)+r" .*go_data_full_copies=([0-9]+)"
     pre=re.findall(pattern,log_text)
     post=re.findall(end_pattern,log_text)
     if len(pre)!=1 or len(post)!=1: return None
