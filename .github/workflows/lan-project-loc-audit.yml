@@ -1,0 +1,135 @@
+name: One-time exact WBD project source line audit
+on:
+  push:
+    branches: [experiment/loc-audit-20261026]
+    paths: [".github/workflows/lan-project-loc-audit.yml"]
+permissions: {contents: read}
+jobs:
+  precise-git-tracked-loc:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Checkout exact current canonical project commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 13c21fa9cfdc86b983431c04a8ac1927ac69d7c5
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Count physical source code and nonblank lines, compare main
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 13c21fa9cfdc86b983431c04a8ac1927ac69d7c5
+          git worktree add --detach /tmp/wbd-main-audit d8ba2cf270ff6ca5cadae6dab778c49c32636ef6
+          mkdir -p loc-audit
+          python3 - <<'PY' | tee loc-audit/summary_stdout.json
+          import collections, json, os, pathlib, subprocess
+          SOURCE_EXT={
+            ".rs":"Rust", ".go":"Go", ".py":"Python",
+            ".c":"C", ".h":"C headers", ".cc":"C++",
+            ".cpp":"C++", ".hpp":"C++ headers",
+            ".kt":"Kotlin", ".kts":"Kotlin build scripts",
+            ".cs":"C#", ".sh":"Shell", ".ps1":"PowerShell",
+            ".js":"JavaScript", ".jsx":"JSX", ".ts":"TypeScript",
+            ".tsx":"TSX", ".rb":"Ruby", ".java":"Java",
+            ".swift":"Swift", ".lua":"Lua"
+          }
+          WORKFLOW_EXT={".yml",".yaml"}
+          CONFIG_EXT={".toml",".json",".xml",".properties",".ini",".conf",".config",".gradle",".lock"}
+          def count(root):
+              root=pathlib.Path(root)
+              tracked=subprocess.check_output(["git","-C",str(root),"ls-files","-z"]).split(b'\0')
+              result={
+                "tracked_files":0,"tracked_nonbinary_files":0,
+                "all_text_physical_lines":0,"all_text_nonblank_lines":0,
+                "source_files":0,"source_physical_lines":0,"source_nonblank_lines":0,
+                "source_by_language":{},"source_by_top_dir":{},"source_by_role":{},
+                "ci_workflow_files":0,"ci_workflow_physical_lines":0,"ci_workflow_nonblank_lines":0,
+                "documentation_markdown_files":0,"documentation_markdown_physical_lines":0,
+                "structured_config_json_files":0,"structured_config_json_physical_lines":0,
+                "other_text_files":0,
+                "excluded_as_non_source":"Markdown, JSON, YAML, TOML, lockfiles, ordinary configuration and image/data files",
+                "interpretation":"physical = splitlines including comments/blank; nonblank excludes whitespace-only; Rust inline test modules remain within Rust source",
+              }
+              langs=collections.defaultdict(lambda:{"files":0,"physical":0,"nonblank":0})
+              dirs=collections.defaultdict(lambda:{"files":0,"physical":0,"nonblank":0})
+              roles=collections.defaultdict(lambda:{"files":0,"physical":0,"nonblank":0})
+              for raw_name in tracked:
+                  if not raw_name:continue
+                  name=os.fsdecode(raw_name)
+                  result["tracked_files"]+=1
+                  p=root/name
+                  if not p.is_file() or p.is_symlink():continue
+                  data=p.read_bytes()
+                  if b'\0' in data:continue
+                  try: txt=data.decode("utf-8")
+                  except UnicodeDecodeError:continue
+                  lines=txt.splitlines()
+                  physical=len(lines)
+                  nonblank=sum(bool(x.strip()) for x in lines)
+                  result["tracked_nonbinary_files"]+=1
+                  result["all_text_physical_lines"]+=physical
+                  result["all_text_nonblank_lines"]+=nonblank
+                  suffix=pathlib.Path(name).suffix.lower()
+                  if suffix in SOURCE_EXT:
+                      lang=SOURCE_EXT[suffix]
+                      top=name.split("/",1)[0]
+                      file_name=name.rsplit("/",1)[-1]
+                      if name.startswith("tests/") or "/tests/" in name or file_name.endswith("_test.go") or file_name.startswith("test_") or file_name.endswith("_test.py"):
+                          role="tests"
+                      elif name.startswith("tools/") or "/examples/" in name:
+                          role="experiments_and_tools"
+                      else:
+                          role="core_and_support"
+                      result["source_files"]+=1
+                      result["source_physical_lines"]+=physical
+                      result["source_nonblank_lines"]+=nonblank
+                      for dest,k in ((langs,lang),(dirs,top),(roles,role)):
+                          dest[k]["files"]+=1
+                          dest[k]["physical"]+=physical
+                          dest[k]["nonblank"]+=nonblank
+                  elif suffix in WORKFLOW_EXT and name.startswith(".github/workflows/"):
+                      result["ci_workflow_files"]+=1
+                      result["ci_workflow_physical_lines"]+=physical
+                      result["ci_workflow_nonblank_lines"]+=nonblank
+                  elif suffix==".md":
+                      result["documentation_markdown_files"]+=1
+                      result["documentation_markdown_physical_lines"]+=physical
+                  elif suffix==".json":
+                      result["structured_config_json_files"]+=1
+                      result["structured_config_json_physical_lines"]+=physical
+                  else:
+                      result["other_text_files"]+=1
+              result["source_by_language"]=dict(sorted(langs.items(),key=lambda kv:-kv[1]["physical"]))
+              result["source_by_top_dir"]=dict(sorted(dirs.items(),key=lambda kv:-kv[1]["physical"]))
+              result["source_by_role"]=dict(sorted(roles.items(),key=lambda kv:-kv[1]["physical"]))
+              assert sum(v["physical"] for v in langs.values())==result["source_physical_lines"]
+              assert sum(v["nonblank"] for v in langs.values())==result["source_nonblank_lines"]
+              return result
+          project=count(".")
+          main=count("/tmp/wbd-main-audit")
+          delta={}
+          for k in ("tracked_files","all_text_physical_lines","all_text_nonblank_lines",
+                    "source_files","source_physical_lines","source_nonblank_lines",
+                    "ci_workflow_files","ci_workflow_physical_lines",
+                    "documentation_markdown_files","documentation_markdown_physical_lines"):
+              delta[k]=project[k]-main[k]
+          summary={
+            "status":"PASS_TRACKED_SOURCE_LINE_COUNT",
+            "project_branch":"experiment/selective-tls-crypto",
+            "project_sha":"13c21fa9cfdc86b983431c04a8ac1927ac69d7c5",
+            "main_sha":"d8ba2cf270ff6ca5cadae6dab778c49c32636ef6",
+            "method":"git ls-files; tracked files UTF8 only; exact Python splitlines; blank whitespace rows excluded for nonblank; sources per extension not autogenerated syntax parsing",
+            "project":project,"main":main,"delta_vs_main":delta
+          }
+          with open("loc-audit/lines.json","w",encoding="utf-8") as f:json.dump(summary,f,indent=2,ensure_ascii=False)
+          print(json.dumps(summary,indent=2,ensure_ascii=False))
+          PY
+          grep -q '"status": "PASS_TRACKED_SOURCE_LINE_COUNT"' loc-audit/lines.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: exact-wbd-selective-tls-crypto-source-loc-audit
+          path: loc-audit/
+          retention-days: 30
+          if-no-files-found: warn
