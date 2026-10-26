@@ -1,0 +1,73 @@
+name: Tail marker archived x86 ARM benchmark audit
+on:
+  push:
+    branches: [experiment/lan-tail-marker-rolling8-cost]
+    paths: [".github/workflows/lan-tail-marker-artifact-audit.yml"]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  independent-native-evidence-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Download original five-repeat native x86 and ARM results
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p native/x64 native/arm64 audit
+          gh run download 40265434221 -R "$GITHUB_REPOSITORY" \
+             -n lan-tail-marker-x64-native -D native/x64
+          gh run download 40265437976 -R "$GITHUB_REPOSITORY" \
+             -n lan-tail-marker-arm64-native -D native/arm64
+          for arch in x64 arm64; do
+            test -s "native/$arch/bench.txt"
+            test -s "native/$arch/unit.txt"
+            grep -q PASS "native/$arch/bench.txt"
+            grep -q PASS "native/$arch/unit.txt"
+            sha256sum "native/$arch/bench.txt" > "audit/$arch.sha256"
+          done
+      - name: Strict postprocess all 35 benchmark measurements per architecture
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/lan_tail_marker_analyze.py
+          for arch in x64 arm64; do
+            python3 tools/lan_tail_marker_analyze.py \
+              --input "native/$arch/bench.txt" \
+              --output "audit/$arch.summary.json" \
+              | tee "audit/$arch.stdout.json"
+          done
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path
+          x=json.loads(p('audit/x64.summary.json').read_text())
+          a=json.loads(p('audit/arm64.summary.json').read_text())
+          names=('Hybrid99NoTailXOR','Hybrid99Last8Bits','Hybrid99Last8Bytes',
+                 'Hybrid95Last8Bits','Hybrid80Last8Bits','AlwaysAESLast8Bits',
+                 'PreviousOptimizedFullXOR')
+          for ar in (x,a):
+            assert ar["status"].startswith("PASS_5X")
+            assert all(len(ar['timings_ns'][n]['sample_ns_per_100'])==5 for n in names)
+            assert all(ar['timings_ns'][n]['allocations_per_100']==0 for n in names)
+            assert ar['timings_ns']['Hybrid99Last8Bits']['mean_ns_per_100']>0
+            assert ar['timings_ns']['AlwaysAESLast8Bits']['mean_ns_per_100']>ar['timings_ns']['Hybrid99Last8Bits']['mean_ns_per_100']
+          p('audit/combined.json').write_text(json.dumps({
+            'status':'VERIFIED_ORIGINAL_NATIVE_X86_ARM',
+            'original_native_runs':{'x64':40265434221,'arm64':40265437976},
+            'provenance':'Original native Go tests and bench both PASS; first Action failure was missing analyzer in checked-out early commit',
+            'x86_64':x['timings_ns'],'arm64':a['timings_ns'],
+            'not_product':True,'main_unchanged':True,
+          },indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: tail-marker-rolling8-audited-native-replicates
+          path: audit/
+          retention-days: 30
+          if-no-files-found: warn
