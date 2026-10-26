@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W125_GAME2_W126_GAME4_FIXED6_UDP20MBPS_IID30_REAL_ACTIONS_STARTED; GAME4_STAGGER_DEFAULT; HIGHER_10MBPS_STEPS_HELD_PENDING_20_CAPACITY_GATE",
+  "phase": "GAME4_STAGGER_DEFAULT_FIXED6_INTEGRATED; W125_GAME2_20_W126_GAME4_20_W127_GAME2_30_IID30_REAL_UDP_PASS_SCOPED; HOST_PSI_CAPACITY_STOP_GAME4_AT20_GAME2_AT30",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -25,11 +25,16 @@
     "zip_sha256": "c34b8121ef817294a889f5f0f06eca1ef8e1ddcda3c7a9bf8244a85fb75abfc8",
     "platform": "linux-aarch64",
     "mode": "Game4 original-Go TLS default 0/4/20/60ms; explicit immediate rollback; fixed6 allowed; Game2 original immediate fixed6",
-    "qualification": "EXACT_NATIVE_PRODUCT_BUILD_AND_UNIT_REGRESSION_PASS_ONLY; W125_W126_REAL20MBPS_30PCT_IID_UDP_RUNNING_NOT_YET_QUALIFIED",
+    "qualification": "NATIVE_FEC_STAGGER_BUILD_PASS; REAL_30PCT_INDEPENDENT_UDP_W125_GAME2_20_W126_GAME4_20_W127_GAME2_30_PASS_SCOPED; HOST_CPU_PSI_LIMITS_FURTHER_VM_LOAD",
     "prior_Game4_OFF_real_source": "4b390154b9f24e76b1592e4acb27565a00ea8113",
     "old_gameFEC_fixed_source": "e8b41fb49a74648e405bf23e4600e23c618596fe",
     "GameAuto": "OUT_OF_SCOPE",
-    "Windows_UI": "NOT_QUALIFIED"
+    "Windows_UI": "NOT_QUALIFIED",
+    "representative_actions": [
+      40279255953,
+      40279262382,
+      40279738491
+    ]
   },
   "open_requests": [
     {
@@ -633,7 +638,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Read own W125 Game2 Action40279255953 and W126 Game4 Action40279262382 result ZIPs when completed; strict genuine UDP IID30 at20Mbps/dir, FEC fixed6, outer DATA retrans OFF, Game4 stagger native DEFAULT. Evaluate actual injection and first delivery, loss denominator, FEC parity planned/copied vs recovery, Game4 planned/sent/abandoned and lateness, TUN/root drops, CPU-s/RSS and host CPU PSI. Capacity stop if 20 fails or host pressure; only if both pass and have spare headroom progress 30/40/50/60/70/80Mbps +10 per step, one Action per scene, no unbounded matrix. No Game Auto, no Windows/UI, no main merge.",
+  "next_action": "BOTH real Game2/Game4 fixed6 at20Mbps UDP 30% IID pass; Game2 +10 rung30Mbps also passes. NO HIGHER LOAD on current ARM64 host due Game4 CPU PSI avg33.2 peak42% at20 and Game2 avg18.7 peak21% at30. Current exact verified product fe7de9da, Game4 stagger default; preserve proof and old failures. For 80Mbps capacity work: optimize measured per-thread Game4 TX/4 RX/Go scheduling and reduce native CPU or select a demonstrably non-congested larger ARM64 test host; include explicit per-lane FEC rate/buffer/PSI budget and then retest first failing rung BEFORE any additional +10MHz. Never mark 80 as passed. No Game Auto/Windows/UI, no main merge.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6765,19 +6770,56 @@
         "mode": "Game2 fixed6",
         "run": 40279255953,
         "request": "tests/network/fec-work/W125-Game2-fixed6-staggerDefault-IID30-20Mbps-UDPOnly-ARM64.json",
-        "status": "RUNNING_NOT_YET_QUALIFIED"
+        "status": "COMPLETED_PASS_SCOPED_HOST_PSI_MEAN11P51_PEAK13P16",
+        "artifact_id": 12631142041,
+        "result_zip_sha256": "4157177755726ea82a7b52dd4dbbdfd6d975c836ae9c10b2d85f1b7ab78d2fc6"
       },
       {
         "id": "W126",
         "mode": "Game4 fixed6 stagger DEFAULT",
         "run": 40279262382,
         "request": "tests/network/fec-work/W126-Game4-fixed6-staggerDefault-IID30-20Mbps-UDPOnly-ARM64.json",
-        "status": "QUEUED_NOT_YET_QUALIFIED"
+        "status": "COMPLETED_PASS_SCOPED_HOST_PSI_MEAN33P24_PEAK42P04_CAPACITY_STOP",
+        "artifact_id": 12631161973,
+        "result_zip_sha256": "bb57b3cde6ad00c4daa457af5c51e63b7fec128b091ba729d1b25e5ea7d5041a"
       }
     ],
     "traffic": "20Mbps C2S +20Mbps S2C, UDP only, weighted actual 64..1287 app sizes, 100Hz small probes, 75ms one-way, per lane independently 30% netem, strict 1% residual gate each damaged phase, source TUN/root drop0",
     "capacity_model": "At 80Mbps weighted app-size≈654B, 15.3kpps, 65ms retained≈995 logical jobs; Game4 4096 slots ~4x burst margin, 8MiB logical bytes, ~8MiB reused source slabs, 4x4096 lane queue. 100%64B at80Mbps >10156 jobs is NOT within 4096; stop on capacity. Game2 slots128 and FEC owner pending64/source arena128 remain possible bottlenecks until measured.",
     "code_fix": "Advance Game FEC parity quantum when those parity rows have actual native kernel-copy credit, not only when entire GameTx 60ms queue empties; parity symbols independently deep-copied into GameTx arena, original receipt/TUN delivery unchanged.",
-    "next": "Do not increase beyond 20Mb/s until BOTH real 20Mb/s actions checked including delivered/injected, native parity, outer OFF, lane send abandon, owner queue, CPU-s/RSS and host PSI. If 20 fails isolate first capacity boundary, optimize minimally then retest affected 20 action. If both pass and VM spare, step +10Mb/s separate Action each to at most80. Never seed-churn."
+    "next": "Do not increase beyond 20Mb/s until BOTH real 20Mb/s actions checked including delivered/injected, native parity, outer OFF, lane send abandon, owner queue, CPU-s/RSS and host PSI. If 20 fails isolate first capacity boundary, optimize minimally then retest affected 20 action. If both pass and VM spare, step +10Mb/s separate Action each to at most80. Never seed-churn.",
+    "real30": [
+      {
+        "id": "W127",
+        "mode": "Game2 fixed6",
+        "run": 40279738491,
+        "artifact_id": 12631337369,
+        "result_zip_sha256": "5a61a39bcf0e23dd04ad4e5e1e6335fd6a26000221a08741d2afc66d44c485b5",
+        "result": "COMPLETED_PASS_SCOPED_REAL_BUSINESS_0_MISSING; HOST_PSI_MEAN18P74_PEAK20P96_NO_MORE_LOAD"
+      }
+    ],
+    "status": "BOUNDED_REAL_ACTIONS_COMPLETE; NO_HIGHER_LOAD_ON_THIS_VM_DUE_HOST_CPU_PSI",
+    "first_capacity_knee": "Game4 20Mbps/dir 30% IID CPU PSI avg33.2% peak42.04% every measured sample >20%; Game2 30Mbps/dir avg18.74% peak20.96% 8% samples >20%. Application throughput still full, all FEC parity planned=sent, zero Game4 delayed-copy abandonment/TUN/root drops. CPU headroom is first found bottleneck, not loss of correct FEC function.",
+    "evidence": "docs/evidence/fec-network-work/20261026-W125-W127-Game-Fixed6-DefaultStagger-IID30-UDP-Capacity.json",
+    "rates_not_run": {
+      "game4_mbps_each": [
+        30,
+        40,
+        50,
+        60,
+        70,
+        80
+      ],
+      "game2_mbps_each": [
+        40,
+        50,
+        60,
+        70,
+        80
+      ],
+      "reason": "HOST_CPU_PSI_CAPACITY_STOP_NO_RANDOM_SEED_CHURN"
+    },
+    "capacity_target_80_unqualified": true,
+    "optimization_diag": "Existing 1Hz native /proc task thread CPU approx 50s: Game4 20 client RX15.1s/TX13.24s/Go10.97s vs Game2 20 RX8.23s/TX4.72s/Go5.09s; CPU distributed across actual 4-lane duplicate crypto + RX and Go, not just timer wake. Single TX worker expected to approach 1 core at 80 even if scaling linearly; real hardware cannot currently support ladder."
   }
 }
