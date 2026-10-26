@@ -1,0 +1,73 @@
+name: Passive Tshark auto-detection on archived TCP capture
+on:
+  push:
+    branches: [experiment/lan-tail-single8-pcap-audit]
+    paths: [".github/workflows/lan-tail-single8-passive-tshark.yml"]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  passive-dissector:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Get original tcpdump capture and Wireshark CLI
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tshark
+          mkdir -p original auto
+          gh run download 40268297939 -R "$GITHUB_REPOSITORY" \
+            -n tail-single-header-8byte-actual-pcap-with-real-tls13-control \
+            -D original
+          test "$(stat -c %s original/actual_tcp_loopback.pcap)" = 201449
+          sha256sum original/actual_tcp_loopback.pcap > auto/original_capture_sha256.txt
+      - name: Compare auto versus forced TLS dissector for custom and actual TLS13
+        shell: bash
+        run: |
+          set -euo pipefail
+          for pair in "38443 custom" "38444 true_go_tls13"; do
+            set -- $pair
+            port="$1"
+            label="$2"
+            tshark -r original/actual_tcp_loopback.pcap \
+              -Y "tcp.dstport == $port && tcp.len > 0" \
+              -T fields -e frame.number -e _ws.col.Protocol \
+              -e tls.record.content_type -e tls.record.length \
+              > "auto/$label-AUTO.tsv"
+            tshark -r original/actual_tcp_loopback.pcap \
+              -d "tcp.port==$port,tls" \
+              -Y "tcp.dstport == $port && tcp.len > 0" \
+              -T fields -e frame.number -e _ws.col.Protocol \
+              -e tls.record.content_type -e tls.record.length \
+              > "auto/$label-FORCED.tsv"
+          done
+          python3 - <<'PY'
+          import collections,json
+          from pathlib import Path
+          out={}
+          for label in ('custom','true_go_tls13'):
+            out[label]={}
+            for kind in ('AUTO','FORCED'):
+              rows=[s.split('\t') for s in Path(f'auto/{label}-{kind}.tsv').read_text().splitlines()]
+              assert len(rows)==(100 if label=='custom' else 34),(label,kind,len(rows))
+              out[label][kind]={
+                'TCP_data_segments':len(rows),
+                'protocol_columns':dict(collections.Counter(r[1] for r in rows)),
+                'nonempty_tls_content_type_fields':sum(len(r)>2 and bool(r[2]) for r in rows),
+                'nonempty_tls_record_length_fields':sum(len(r)>3 and bool(r[3]) for r in rows)}
+          Path('auto/summary.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: singleheader-capture-auto-versus-forced-tshark
+          path: auto/
+          retention-days: 30
+          if-no-files-found: warn
