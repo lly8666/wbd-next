@@ -167,8 +167,8 @@ impl GameKernelOwner{
                     }
                     // Single TX owner first drains source copies to M4 before
                     // any FEC parity quantum can enqueue additional work.
-                    let mut flush=|game:&mut GameAdapter|{
-                        game.drain(now,|lane,id,pn,wire|{
+                    let mut flush=|game:&mut GameAdapter,due_now:MonoNs|{
+                        game.drain(due_now,|lane,id,pn,wire|{
                             // The genuine original TLS group builds
                             // physical lanes in slots 1..N. Avoid a
                             // linear scan on each Game4 × fixed6 copy,
@@ -238,7 +238,7 @@ impl GameKernelOwner{
                             }
                         });
                     };
-                    flush(&mut game);
+                    flush(&mut game,now);
                     let mut parity_ready=false;
                     #[cfg(feature="fec2_product_record")]
                     if fec_enabled{
@@ -246,9 +246,19 @@ impl GameKernelOwner{
                         // TUN becomes silent. Process bounded 4 SIMD quanta;
                         // no sleep while this owner has ready parity work.
                         for _ in 0..4{
-                            match game.poll_game_fec(now){
+                            // Refresh the actual clock at every bounded FEC
+                            // quantum, not only once before a potentially
+                            // long continuous TX/parity round.
+                            let fec_now=MonoNs(start.elapsed().as_nanos()
+                                .min(u128::from(u64::MAX)) as u64);
+                            match game.poll_game_fec(fec_now){
                                 Ok(0)=>break,
-                                Ok(_)=>{parity_ready=true;flush(&mut game);}
+                                Ok(_)=>{
+                                    parity_ready=true;
+                                    let flush_now=MonoNs(start.elapsed().as_nanos()
+                                        .min(u128::from(u64::MAX)) as u64);
+                                    flush(&mut game,flush_now);
+                                }
                                 Err(_)=>{
                                     tx_rejected.fetch_add(1,Ordering::Relaxed);
                                     break
@@ -256,12 +266,18 @@ impl GameKernelOwner{
                             }
                         }
                     }
-                    let next_due=game.game4_next_due_ns();
+                    let clock_ns=start.elapsed().as_nanos()
+                        .min(u128::from(u64::MAX)) as u64;
+                    let copy_due=game.game4_next_due_ns();
+                    let fec_due=game.game_fec_next_due_ns(MonoNs(clock_ns));
+                    let next_due=copy_due.into_iter().chain(fec_due).min();
                     let stagger=game.game4_stagger_enabled();
                     drop(flush);drop(game);
-                    if stagger{
-                        // One readiness/deadline wait, no per-copy timer or
-                        // busy spin. Stop is bounded by a 10ms poll cap.
+                    if stagger||fec_enabled{
+                        // Earliest of ready new TUN bytes (poll wake-up),
+                        // staggered copies and authentic FEC close/expiry.
+                        // A sparse ~8ms FEC tail must not sleep until the
+                        // 20ms Game4 copy or the generic 10ms idle cap.
                         let remain=next_due.map_or(10_000_000u64,|due|
                             due.saturating_sub(start.elapsed().as_nanos()
                                 .min(u128::from(u64::MAX)) as u64));
