@@ -7,6 +7,7 @@ on:
       - ".github/workflows/network-arm64-product-build.yml"
       - "crates/wbd-engine/src/v4_embedded_go.rs"
       - "crates/wbd-engine/src/v4_game_lane.rs"
+      - "crates/wbd-engine/src/v4_game_fec.rs"
       - "crates/wbd-engine/src/runtime/game_shared.rs"
       - "crates/wbd-engine/src/v4_game_public_kernel.rs"
       - "crates/wbd-platform/src/linux_raw_carrier.rs"
