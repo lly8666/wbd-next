@@ -550,6 +550,9 @@ class LinuxExperiment:
         self.egress_thread=None
         self.lanes = {"game2": 2, "game4": 4}.get(config["product"]["mode"], 1)
         self.config_events, self.snapshots = [], []
+        self.wall_blackout_events=[]
+        self.wall_blackout_failure=None
+        self.wall_blackout_thread=None
         self.child_env = {k: v for k, v in os.environ.items() if k not in ["GH_TOKEN", "GITHUB_TOKEN"]}
 
     def nscommand(self, role, args, check=True):
@@ -937,6 +940,50 @@ class LinuxExperiment:
         event["end_ns"] = time.monotonic_ns()
         event["wall_end_ns"] = time.time_ns()
         self.config_events.append(event)
+
+    def run_wall_blackouts(self,phase,start_ns):
+        # Test-owned OUTPUT chain installed before any product M4 process.
+        # Two distinct netns receive matching all-lane TCP DROP rules.
+        # Apply concurrently to minimize cross-direction switch skew.
+        # This is wall-clock scheduling, NOT netem's per-packet GE model.
+        def switch(active):
+            op=["-I","WBN_LOSS","1"] if active else ["-D","WBN_LOSS"]
+            rows=[]
+            for role in ("client","server"):
+                cmd=["ip","netns","exec",self.ns[role],"iptables",*op,
+                    "-p","tcp","-j","DROP"]
+                begun=time.monotonic_ns()
+                proc=subprocess.Popen(cmd,stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
+                rows.append((role,begun,proc))
+            result={}
+            for role,begun,proc in rows:
+                out,err=proc.communicate(timeout=3)
+                ended=time.monotonic_ns()
+                if proc.returncode:
+                    raise RuntimeError("wall blackhole iptables failed: "+role+
+                                       " "+err.decode(errors="replace")[:160])
+                result[role]={"begin_ns":begun,"end_ns":ended,
+                              "uncertainty_ms":(ended-begun)/1e6}
+            return result
+        try:
+            for pulse in phase["wall_blackouts_ms"]:
+                target=start_ns+int(pulse["offset_ms"]*1e6)
+                while time.monotonic_ns()<target:
+                    time.sleep(min(.01,max(0,(target-time.monotonic_ns())/1e9)))
+                entry={"phase":phase["name"],"target_on_ns":target,
+                       "duration_ms":pulse["duration_ms"],
+                       "start":None,"end":None}
+                try:
+                    entry["start"]=switch(True)
+                    off_due=target+int(pulse["duration_ms"]*1e6)
+                    while time.monotonic_ns()<off_due:
+                        time.sleep(min(.002,max(0,(off_due-time.monotonic_ns())/1e9)))
+                finally:
+                    entry["end"]=switch(False)
+                    self.wall_blackout_events.append(entry)
+        except Exception as ex:
+            self.wall_blackout_failure=str(ex)
 
     def egress_sampling_loop(self):
         """Optional 500ms numeric counters, one owned netns read per edge.
@@ -1366,7 +1413,21 @@ class LinuxExperiment:
                 self.set_product_cpu_stress(phase)
                 self.config_events[-1]["scheduled_start_ns"] = boundary
                 self.snapshot("before-" + phase["name"])
+                if phase.get("wall_blackouts_ms"):
+                    self.wall_blackout_thread=threading.Thread(
+                        target=self.run_wall_blackouts,args=(phase,boundary),
+                        name="scoped-game4-wall-clock-blackhole",daemon=True)
+                    self.wall_blackout_thread.start()
                 boundary += int(phase["seconds"] * 1e9)
+                if self.wall_blackout_thread is not None:
+                    self.wait_until(boundary)
+                    self.wall_blackout_thread.join(timeout=4)
+                    if self.wall_blackout_thread.is_alive():
+                        raise RuntimeError("wall-clock blackhole worker did not terminate")
+                    self.wall_blackout_thread=None
+                    if self.wall_blackout_failure:
+                        raise RuntimeError("wall-clock blackhole failure: "+
+                                           self.wall_blackout_failure)
             self.wait_until(boundary)
             self.snapshot("measurement-end")
             if self.egress_thread is not None:
@@ -1395,6 +1456,27 @@ class LinuxExperiment:
             result = summarize(self.config, json.loads((self.out / "client-traffic.json").read_text()),
                                json.loads((self.out / "server-traffic.json").read_text()), self.telemetry(), host)
             result["network_accounting"] = network_accounting(self.snapshots)
+            if self.wall_blackout_events:
+                result["wall_blackout_events"]=self.wall_blackout_events
+                timing_issues=[]
+                for pulse in self.wall_blackout_events:
+                    on=pulse["start"];off=pulse["end"]
+                    if on is None or off is None:
+                        timing_issues.append("missing blackout timing");continue
+                    for role in ("client","server"):
+                        on_end=on[role]["end_ns"]
+                        off_end=off[role]["end_ns"]
+                        target_end=pulse["target_on_ns"]+round(pulse["duration_ms"]*1e6)
+                        # User explicitly asked real wall-clock duration, not
+                        # rule-command BEGIN=kernel effect. Bound uncertainty.
+                        if (abs(on_end-pulse["target_on_ns"])>15_000_000 or
+                            abs(off_end-target_end)>15_000_000 or
+                            on[role]["uncertainty_ms"]>15 or
+                            off[role]["uncertainty_ms"]>15):
+                            timing_issues.append(role+": unqualified wall-clock command skew")
+                if timing_issues:
+                    result["limits"].extend(timing_issues)
+                    if result["result"]!="FAIL":result["result"]="INCONCLUSIVE"
             if self.config["network"].get("fec_egress_diagnostic",False):
                 result["fec_egress_trace"]={
                     "filename":"egress-trace.json","samples":len(self.egress_trace),
@@ -1572,6 +1654,8 @@ class LinuxExperiment:
                     (self.out / (role + "-traffic.log")).write_text(text[-12000:])
             dump(self.out / "network-snapshots.json", self.snapshots)
             dump(self.out / "impairment-events.json", self.config_events)
+            if self.wall_blackout_events:
+                dump(self.out / "wall-blackout-events.json",self.wall_blackout_events)
             result.update(label=self.label, monotonic_start_ns=started, monotonic_end_ns=time.monotonic_ns(),
                           host=host, source=self.config["bundles"][self.label]["source"],
                           request_id=self.config["id"], cleanup=self.cleanup_result)

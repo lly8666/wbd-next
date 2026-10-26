@@ -217,13 +217,29 @@ def validate(raw):
         raise ValueError("phases: 1..16 declared stages of ONE scenario")
     seen = set()
     for ph in r["phases"]:
-        keys(ph, ["name", "seconds", "c2s", "s2c", "rate_scale", "product_cpu_stress"], "phase")
+        keys(ph, ["name", "seconds", "c2s", "s2c", "rate_scale", "product_cpu_stress", "wall_blackouts_ms"], "phase")
         if not re.fullmatch(r"[A-Za-z0-9_-]{1,32}", ph.get("name", "")) or ph["name"] in seen:
             raise ValueError("invalid/duplicate phase name")
         seen.add(ph["name"])
         number(ph["seconds"], 0.05, 600, "phase seconds")
         ph.setdefault("rate_scale", 1)
         number(ph["rate_scale"], 0, 1, "rate_scale")
+        wall=ph.get("wall_blackouts_ms",[])
+        if wall:
+            if (r.get("owner")!="fec-network-work" or p["mode"]!="game4" or
+                game_fec!="off" or n["lane_loss"]!="shared" or
+                not isinstance(wall,list) or len(wall)>3):
+                raise Unsupported("wall-clock blackhole only scoped Game4 FEC OFF shared underlay")
+            until=0
+            for blackout in wall:
+                keys(blackout,["offset_ms","duration_ms"],"wall_blackout")
+                offset=integer(blackout.get("offset_ms"),1000,600000,"wall offset ms")
+                duration=integer(blackout.get("duration_ms"),20,100,"wall duration ms")
+                if duration not in (20,50,100) or offset<until+2000:
+                    raise ValueError("blackout durations 20/50/100ms, >=2s healthy gaps")
+                until=offset+duration
+            if until>ph["seconds"]*1000-2000:
+                raise ValueError("wall blackout must end >=2s before phase boundary")
         # FEC-owned 0%-netem test-only product CPU contention. Never affects
         # other jobs, a production knob, a traffic injector or the host globally.
         stress=ph.get("product_cpu_stress")
@@ -243,6 +259,10 @@ def validate(raw):
                 raise ValueError("pause_offset_seconds requires pause_seconds")
         for direction in ["c2s", "s2c"]:
             ph[direction] = impairment(ph.get(direction, {}), lanes)
+            if wall and (ph[direction]["loss_pct"] or
+                "gemodel" in ph[direction] or
+                ph[direction]["blackhole_lanes"]):
+                raise ValueError("wall-clock blackhole must not combine netem GE/loss")
             if stress is not None and (ph[direction]["loss_pct"]!=0 or
                 ph[direction]["duplicate_pct"]!=0 or ph[direction]["reorder_pct"]!=0 or
                 ph[direction]["blackhole_lanes"]):
