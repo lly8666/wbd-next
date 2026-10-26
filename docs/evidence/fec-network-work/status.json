@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "experiment/fec-network-tuning",
-  "phase": "W130_COMMON_GO_RX_P0_NORMAL_OFF_FIXED_AUTO_GAME2_GAME4_CODE_CANDIDATE_6C38_NATIVE_ACTION_40288528399_RUNNING; 074_NATIVE_SUBTESTS_PASS_UPLOAD_TIMEOUT_NO_BINARY; W128_LAST_VERIFIED; CAPACITY_STOP",
+  "phase": "W130-W134_COMMON_GO_RX_P0_LINUX_ARM64_ALL_FIVE_MODES_PASS_SCOPED; NORMAL_OFF_AND_FIXED3_SAMEVM_CPU_REDUCTIONS; GAME4_10M_SAMEVM_CPU_GAIN; AUTO_REAL_M2_PASS; CAPACITY_STOP_NO_MAIN_MERGE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",
   "upstream_snapshot": {
     "branch": "experiment/network-matrix-tuning",
@@ -18,25 +18,63 @@
   "required_policy": "FEC_ONLY_OUTER_DATA_REPAIR_OFF",
   "outer_repair_disabled_verified": true,
   "product_current": {
-    "source": "f484a4c34e08dcbdfa16beef590d285e9db1ee5f",
-    "build_run": 40281581736,
+    "source": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+    "build_run": 40288528399,
     "build_attempt": 1,
-    "artifact_id": 12633025294,
-    "zip_sha256": "c22e14a118e29c625f60ec1a60b1b61f2fd2e688ec557afd6ff3b6ba6a5d3d8d",
+    "artifact_id": 12635510007,
+    "zip_sha256": "d3eaaceb84666ed7f754a13e4078559d06a7c369441da32c245e2fdfbf67bb0f",
     "platform": "linux-aarch64",
-    "mode": "Game4 original Go TLS default stagger 0/4/20/60ms with fixed6 supported; Game2 remains immediate fixed6",
-    "qualification": "NATIVE_ARM64_FIXED6_STAGGER_ALL_TESTS_PASS; W128_EXACT_BUILD_TRUE_UDP_GAME4_IID30_10MBPS_SAMEVM_OLDNEW_AB_BOTH_PASS; HIGHER_BANDWIDTH_PROOF_STAYS_ON_PREVIOUS_FE7DE9DA",
-    "same_vm_action": 40281920399,
-    "perf_artifact_id": 12632950602,
-    "perf_zip_sha256": "c5e2952afa5235adab5800ead1df044511dd0940f9779974ddc8de5190184590",
-    "previous_20_30_source": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce",
-    "cpu_s_A_B": [
-      47.91,
-      47.01
-    ],
+    "mode": "Original Go TLS->authenticated Rust M4 DATA receive ownership: Normal OFF/Fixed/Auto, Game2/Game4 clients+servers; Go low-rate controls and independent sendFD retained; FEC parity separate; Game4 default 0/4/20/60ms",
+    "qualification": "W130-W134 five independent true Linux ARM64 actions pass scoped: Normal OFF mixed2 and Fixed3 mixed8 sameVM old/new, Normal Auto true M2 mixed8 1->5->1, Game2 fixed6 clean mixed3, Game4 fixed6 IID30 UDP10 sameVM old/new; Go post-handoff DATA copies=0 both ends all five; no full platform / 80Mbps / new source Game4 20Mbps",
+    "scope_source_old": "f484a4c34e08dcbdfa16beef590d285e9db1ee5f",
+    "higher_rung_old_source": "fe7de9da4c6a3e2d5360458f099fb7c3a6f118ce",
+    "mode_actions": {
+      "normal_off": 40289408758,
+      "normal_fixed": 40289416487,
+      "normal_auto": 40289421675,
+      "game2": 40289428390,
+      "game4": 40289434334
+    },
+    "same_vm_cpu_old_new_s": {
+      "normal_off": [
+        2.48,
+        1.28
+      ],
+      "normal_fixed": [
+        8.25,
+        5.44
+      ],
+      "game4": [
+        46.46,
+        31.2
+      ]
+    },
+    "go_post_handoff_copies_new_each_role": {
+      "normal_off": [
+        0,
+        0
+      ],
+      "normal_fixed": [
+        0,
+        0
+      ],
+      "normal_auto": [
+        0,
+        0
+      ],
+      "game2": [
+        0,
+        0
+      ],
+      "game4": [
+        0,
+        0
+      ]
+    },
+    "evidence": "docs/evidence/fec-network-work/20261026-W130-W134-Go-Rust-RX-handoff-real-five-mode-Actions.json",
     "capacity_stop": true,
     "merge_ready": false,
-    "windows_gui": "NOT_QUALIFIED"
+    "windows_gui": "NOT_RUN/TEMP_SKIPPED_USER_20261025"
   },
   "open_requests": [
     {
@@ -640,7 +678,7 @@
     "Game outer-off and public Windows GUI/OS FEC wiring not qualified; independent common network 2% mixed RX conservation not retested here. No external main merge.",
     "Previous download failures 39915604295,39915779256,39916080164 remain retained; never replay old 7ad7 binary as merged SOURCE."
   ],
-  "next_action": "Latest shared Normal OFF/Fixed/Auto and Game2/Game4 client/server P0 code SOURCE 6c38ed0df9da3547c7bd604b51f13443d6863181, ARM64 automatic build Action40288528399 pending result/artifact. Prior 0747769 source Action40287767024 successfully built binaries and original Go Fixed+Auto real netns tests but workflow FAILED only due GitHub ArtifactService CreateArtifact timeout; never reuse missing ZIP. Earlier W129 script quote/tail failures retained. New 6c38 allows same-IP loopback correctly and adds public ARM64 trigger for common r0/go_overlay/internal/faketcp/**. DO NOT launch perf until latest exact successful build plus SHA256 artifact. Then one Action per scenario: Normal OFF W46 shape sameVM old f484→new6c, Normal Fixed3 W47 shape sameVM BA/AB, Normal Auto W45/W60 independently, Game2 lowrate fixed/OFF lifecycle, Game4 W128 10Mbps IID30 sameVM AB. Verify Go post-handoff DATA copies, inject/delivery, true TCP, FEC parity, M2, outer retrans0, Stop/ reconnect, CPU/RSS/PSI. Game P1 mmsg, P2 locks, deadlines separate; shared FEC P3 requires both Normal/Game. Preserve capacity_stop true/merge_ready false and Windows NOT_RUN.",
+  "next_action": "P0 common Go->Rust takeover now scoped-qualified on exact Linux ARM64 SOURCE 6c38ed0df9da3547c7bd604b51f13443d6863181: build40288528399 artifact12635510007 hash d3eaaceb...; five separate Actions W130 40289408758 Normal OFF sameVM AB CPU2.48->1.28; W131 40289416487 Fixed3 sameVM BA 8.25->5.44, W132 40289421675 Auto mixed real M2+downshift, W133 40289428390 Game2 fixed6 mixed, W134 40289434334 Game4 fixed6 IID30 UDP10Mbps AB46.46->31.20; all scenarios pass, both endpoints Go posthandoff DATA copies=0, outer DATA retrans0, parity and original app/TUN integrity preserved. Old Normal OFF A host PSI avg17.76 peak38.83 so observed -48.4% confounded; Game4 new B peak PSI27.7 (16% samples >20), capacity_stop continues, no80 load. Remaining must be separately qualified: in-process repeated connections/Stop/rebuild; Auto full upward curve; new20Mbps Game4; Windows TEMP_SKIPPED. Next prioritize Game-only P1 actual sendmmsg/recvmmsg with bounded partial/EAGAIN semantics and separate 10Mbps sameVM AB, P2 per-lane AEAD outside lock only after timing evidence, P3 shared FEC only after Normal+Game profiles. Do not change network owner next_action or reenable outer DATA retrans, never merge main without full qualification.",
   "evidence_directory": "docs/evidence/fec-network-work/",
   "devlog_directory": "docs/devlog/fec-network-work/",
   "wiring_intent": {
@@ -6827,11 +6865,11 @@
   "w130_common_go_rx_handoff_p0": {
     "owner": "fec-network-work",
     "source": "6c38ed0df9da3547c7bd604b51f13443d6863181",
-    "source_qualified": false,
+    "source_qualified": true,
     "verified_predecessor": "f484a4c34e08dcbdfa16beef590d285e9db1ee5f",
     "build_action": 40288528399,
-    "build_status": "IN_PROGRESS_AS_LAST_CHECK_NOT_PASS",
-    "build_artifact": null,
+    "build_status": "SUCCESS_NATIVE_AND_GO_WITH_ARCH_SHA_VERIFIED",
+    "build_artifact": 12635510007,
     "notes": "Build patch eliminates malformed quoted Go test and repeated script tail. Earlier push builds failed before any verified Go product; retain failures.",
     "historical_failed_action_ids": [
       40284640114,
@@ -6850,11 +6888,11 @@
       "game4/client+server"
     ],
     "mode_verification": {
-      "normal_off": "NOT_RUN",
-      "normal_fixed": "NOT_RUN",
-      "normal_auto": "NOT_RUN",
-      "game2": "NOT_RUN",
-      "game4": "NOT_RUN"
+      "normal_off": "W130_PASS_SCOPED_SAMEVM_AB_OLD2P48_NEW1P28_CPU_S_REAL_MIXED",
+      "normal_fixed": "W131_PASS_SCOPED_SAMEVM_BA_OLD8P25_NEW5P44_CPU_S_IID2_REAL_MIXED",
+      "normal_auto": "W132_PASS_SCOPED_REAL_M2_DOWN_AUTH_RECOVERY_MIXED_NO_UPSHIFT_CURVE",
+      "game2": "W133_PASS_SCOPED_FIXED6_CLEAN_REAL_MIXED_GO_RX_ZERO",
+      "game4": "W134_PASS_SCOPED_FIXED6_IID30_REAL_UDP_10MBPS_SAMEVM_AB_OLD46P46_NEW31P20_CPU_S"
     },
     "test_matrix": [
       "Normal OFF W46-template sameVM A/B",
@@ -6874,7 +6912,19 @@
       "artifact": null
     },
     "loopback_same_ip_fix": "0db4bc7005d99f014f6eb9c584a3a9623c582079",
-    "workflow_common_filter_trigger": "6c38ed0df9da3547c7bd604b51f13443d6863181"
+    "workflow_common_filter_trigger": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+    "build_zip_sha256": "d3eaaceb84666ed7f754a13e4078559d06a7c369441da32c245e2fdfbf67bb0f",
+    "build_attempt": 1,
+    "five_mode_result": "PASS_SCOPED_REAL_BUSINESS; No new-source highrate qualification",
+    "actions": {
+      "normal_off": 40289408758,
+      "normal_fixed": 40289416487,
+      "normal_auto": 40289421675,
+      "game2": 40289428390,
+      "game4": 40289434334
+    },
+    "result_evidence": "docs/evidence/fec-network-work/20261026-W130-W134-Go-Rust-RX-handoff-real-five-mode-Actions.json",
+    "remaining": "Game4 new PSI peak27.7 under10Mbps, no20Mbps requalification; no in-process reconnect; Normal Auto new rising curve not observed; no Windows or full platform"
   },
   "w129_go_rx_handoff_p0": {
     "source": "59a5e894fb443a2f2e59814edc02fd92f54f8ea4",
