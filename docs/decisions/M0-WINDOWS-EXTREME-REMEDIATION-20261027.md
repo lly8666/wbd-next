@@ -180,3 +180,11 @@ off普通一包一record允许`q_app <= p_data + max(0.002,3sqrt(p(1-p)/N))`，�
 交付一个表：修复项/精确SOURCE/实际生效参数/功能与性能run/剩余缺口；源状态沿用M0 cursor，功能变化同步原feature卡和devlog，不新建任务系统。Go是否仍热路径、FFI/包、OS验证/包、分配/包和CPU归因unknown都明确写出。已达目标不为全Rust或零拷贝继续开大工程。
 
 四个结果分别标：FUNCTIONAL_PASS、PERF_PASS_SCOPED、CAPACITY_LIMITED（environment/product分项）、NOT_RUN/UNWIRED/FAIL。修复完成并取得适用证据后再启动上一轮认证/单端口多客户端/生命周期产品补齐；历史80s、物理机和全局GUI/WFP/DNS资格不会被本批自动冲掉。
+
+## 2026-10-28 用户更新：自然 Auto 升降档接受边界（覆盖旧时间门）
+
+本整改包沿用同一个已认证原 Go TLS→Go 冷控制层 FecV2Step→Rust M2 Applied 的 Auto 接线。用户最新明确：**升档迅速即可，升档过渡期间出现业务丢包允许；在持续真实可判定的较好线路条件下，降档 2 分钟以内实际降低一档即可**。此项覆盖本文件/旧 FEC_V2_BALANCED §7 与旧矩阵内要求降档 20s/级、53s 内降档和过渡期极低丢包的冲突性验收硬时限；不把最小20s/级硬门追着产品设置，也不要求一次在2分钟内从 Strong 降到底。
+
+- **升级**：可信真实业务丢包/成熟缺口触发后应尽快提升保护等级，评估周期沿用现行2s、现有升档参考范围4–30s；计量的是确已 **Applied** 的档位和修复包，而不是仅 requested。没有真实受损链路/有效上行压力证据时标 NOT_RUN，不能声称快速升级。升级期间有残余丢包不因此 FAIL；认证、序号、首次交付、非阻塞 fresh、每方向唯一revision、真实性及最终 Stop 仍为硬门。
+- **降级**：从稳定可判定的健康、足量成熟 M2/actual-k 观察开始计时，**120秒以内至少实际降低1档并获得同generation有效 Applied 读回**；不是仅降低目标/启动档，更不强制降到底。若被真实 host 压力、数据源不足、未覆盖反馈、censored 等导致 VALID 样本不成立，记录 INVALID_INPUT/INCONCLUSIVE 与最早不足处，不能伪造0loss/512或删除旧 FAIL。原实现保守的10s+4096真实样本候选允许早于120s完成，无需为了“放宽验收”故意放慢。
+- **验证**：同 SOURCE 自然业务及有效参数证据优先，先将 Windows 原生 Npcap/Wintun↔Linux WSL/TUN 自然降一级的真实动作和双方UDP/TCP/Stop分开记；升级需有独立真实线路劣化到档位 Applied 的正例。性能仍按一 Action 一场景、同job顺序AB/BA；不可把自然Auto功能回执算成极限容量或CPU通过。任何失败保留原 run/ SOURCE，改参数/夹具须精确留痕。
