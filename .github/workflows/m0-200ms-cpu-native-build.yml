@@ -1,0 +1,32 @@
+name: M0 200ms FEC-max CPU exact ARM64 source build
+run-name: M0-200MS-CPU-BUILD|${{ github.sha }}
+on:
+  push:
+    branches: [experiment/m0-200ms-fecmax-cpu-20261027]
+    paths: [.github/workflows/m0-200ms-cpu-native-build.yml]
+permissions: {contents: read}
+jobs:
+  native-build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Exact original TLS Go/Rust shared FEC2 native build and owner regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm
+          bash tools/arm64_public_go_rust_bundle.sh
+          test -s arm64-public-bundle/manifest.json
+          (cd arm64-public-bundle && sha256sum -c SHA256SUMS)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: network-arm64-public-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-public-bundle/
+          retention-days: 14
+          if-no-files-found: error
