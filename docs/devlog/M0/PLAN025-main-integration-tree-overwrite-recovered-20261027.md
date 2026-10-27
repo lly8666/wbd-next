@@ -275,6 +275,12 @@ Original S37 windows Rust owner Action40531229974 first compiled the real 1.85.1
 
 ## S39 — Windows Rust Game4 stagger expiry truth from compiled 27/28 owner run
 S38 source fcd110ed exact native Windows Go+Rust core Action40532719624 completed FAIL: Go assembly/Windows production+test compile PASS and Rust DLL compiled, 27 of 28 original owner tests PASS, only Game4 stagger fixture failed because a synthetic 180ms leap crossed real GameTx `limits.max_age_ns` after-due expiry for distinct +4ms,+50ms,+140ms encrypted copies; GameTx correctly counted them as abandoned, so no native firstsend exists. Updated ONLY the Game4 protected Rust test to advance live monotonic owner to +5ms,+51ms,+141ms (each within real queue's after-due deadline), require exactly one native staged lane per turn, report actual original M4 copy to the same group, and verify four distinct lanes with no staged residue across Stop. No production packet TTL relaxation, no forged M2/Golang ACK, no threshold changes; historical 27/28 red remains. Re-run exact Windows owner 28 tests.
-```feature-impact
+```json
 {"kind":"none","ids":[],"reason":"Match actual shared Linux GameTx finite stagger due expiry in native Windows source-locked unit fixture; preserve production loss/cancellation and real NPF/Stop contracts."}
+```
+
+## S40/S41 — original Game4 monotonic test deadline and mandatory feature-impact declaration
+Actual Windows Rust owner Action40533879023 on S39 43da192e: compiled original Rust M1/M3/FEC2 successfully, 27/28 scoped core tests PASS and exactly Game4 delayed-copy native test FAIL, due to using group-created wall clock instead of genuine source-offer GameTx deadline. S40 a05142f uses actual queued GameTx next_due_ns() to exercise +4/+50/+140ms copies inside existing finite after-due age. This changes ONLY the negative/positive test schedule, does not widen production lane-copy TTL, bypass original M4 NPF receipt, dilute natural Auto, or replace Rust shared GameTx. S40 Governance40535358686 FAIL before governance job: source change lacked feature-impact declaration in changed devlog. This S41 addendum is the exact required declaration and preserves the red record; compile status must be read from S40 preflight40535358313 before any PASS claim.
+```feature-impact
+{"kind":"none","ids":[],"reason":"S40 only adjusts Game4 Rust native owner regression timing against genuine shared GameTx offer-relative deadlines; no product mode, feature, MTU, cipher or expiry policy changes."}
 ```
