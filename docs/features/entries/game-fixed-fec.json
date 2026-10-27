@@ -14,9 +14,9 @@
     "alternatives": "fixed0..fixed6，Game Auto不支持"
   },
   "usage": {
-    "cli": "Linux --mode game2|game4 --game-fec fixed0..fixed6，双方保持一致",
-    "config": "仅V4 Linux CLI明确，旧Go配置映射未逐项核验",
-    "gui": "Windows GUI中对应Native Applied未获得正向证据"
+    "cli": "Linux --mode fec-fixed --fec-profile 0..6；Windows隔离候选 --native-v4-product --lanes 1 --fec.mode fixed --fec.profile <级别>，旧Go V3入场参数和Rust共享FEC2由原TLS桥统一绑定；全档端到端资格仍未通过",
+    "config": "原Go V3 fixed4 carrier仅是入场包络，Rust FixedStream本身支持profile 0..6和revision；不是单独Fixed6测试活动，默认FEC2 OFF",
+    "gui": "Windows真实WinForms Applied/Disconnect仍NOT_RUN，不从CLI或M2组件PASS推断"
   },
   "code_refs": [
     "r0/go_overlay/internal/v4productcli/linux.go",
@@ -43,10 +43,10 @@
     },
     {
       "platform": "windows/x64",
-      "scope": "真实Game+FEC Applied和Stop",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
+      "scope": "undefined；候选源 8e0daba5，不是Linux或Normal的通过",
+      "status": "FAIL",
+      "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
+      "evidence": "docs/devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md"
     },
     {
       "platform": "physical",
