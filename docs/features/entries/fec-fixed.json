@@ -107,7 +107,8 @@
     "Exact SOURCE350199f native Actions40445098497 remains FAIL for Windows original FEC2 reverse first delivery; Linux raw/TUN sender works, Windows still rejected first incoming 103B record before Ready. Subsequent source82ec native FEC2 diagnostic candidate has no inherited PASS; retained as partial.",
     "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible.",
     "2026-10-27 user-authorized exact development-tree main overwrite f6469a: implementation code is now present on main but remains experimental, with no new main-SOURCE native/product/global/physical PASS or formal promotion; previous exact-SOURCE PASS/FAIL unchanged.",
-    "2026-10-27 experimental Windows M0 A2/A3 source and tests only: not integrated, not Actions tested, not a new performance qualification."
+    "2026-10-27 experimental Windows M0 A2/A3 source and tests only: not integrated, not Actions tested, not a new performance qualification.",
+    "2026-10-27 experimental Windows B2: private native FEC DLL procs cached within bound owner; Rust full 8KiB parity batch buffers reused with deep-copy before pool return; only Go-vs-Rust FFI overhead candidate, NOT_RUN actual Windows product/performance. OS device Identity still checked per packet, B1 lease batching remains OPEN."
   ],
   "promotion": null
 }

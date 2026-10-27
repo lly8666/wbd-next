@@ -17,6 +17,9 @@ import (
     "github.com/lly8666/wobuzhidao/internal/realityfront"
 )
 var ErrNativeDeviceNotOwned=errors.New("original-Go authenticated Windows created Wintun not owned")
+// IP Helper's native DLL/Proc binding is immutable process-wide; only the
+// actual OS identity and M4 reservation remain dynamic and verified.
+var convertLuidToGuid=syscall.NewLazyDLL("iphlpapi.dll").NewProc("ConvertInterfaceLuidToGuid")
 type CreatedWintun struct{
     TUN *windowsclient.TUN
 }
@@ -32,10 +35,9 @@ func(d CreatedWintun) Identity(
     if err!=nil{return zero,errors.Join(ErrNativeDeviceNotOwned,err)}
     if !actual.CreatedByProcess||actual.Index==0||actual.LUID==0||
         d.TUN.Name()==""{return zero,ErrNativeDeviceNotOwned}
-    proc:=syscall.NewLazyDLL("iphlpapi.dll").NewProc("ConvertInterfaceLuidToGuid")
-    if err:=proc.Find();err!=nil{return zero,errors.Join(ErrNativeDeviceNotOwned,err)}
+    if err:=convertLuidToGuid.Find();err!=nil{return zero,errors.Join(ErrNativeDeviceNotOwned,err)}
     var guid windows.GUID
-    rc,_,_:=proc.Call(uintptr(unsafe.Pointer(&actual.LUID)),
+    rc,_,_:=convertLuidToGuid.Call(uintptr(unsafe.Pointer(&actual.LUID)),
         uintptr(unsafe.Pointer(&guid)))
     if rc!=0{return zero,fmt.Errorf("%w: IP Helper GUID errno=%d",ErrNativeDeviceNotOwned,rc)}
     return realityfront.V4WindowsNativeDeviceIdentity{

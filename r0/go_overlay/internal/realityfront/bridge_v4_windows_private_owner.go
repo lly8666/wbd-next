@@ -12,6 +12,7 @@ import (
     "fmt"
     "path/filepath"
     "runtime"
+    "sync"
     "syscall"
     "unsafe"
 
@@ -21,6 +22,9 @@ import (
 var errV4WindowsOwner=errors.New("original-Go private Windows Rust owner refused")
 type v4WindowsNativeOwnerBridge struct {
     dll *syscall.DLL
+    // Cold-resolved private FEC symbols; no per-packet GetProcAddress.
+    // sync.Map covers simultaneous FX and RX/Stop method callers.
+    fixedProcCache sync.Map
     prepareProc,stageProc,commitProc,abortProc,stateProc,stopProc,releaseProc *syscall.Proc
     bindWintunProc,quiesceWintunProc,deviceStateProc *syscall.Proc
     sealNormalProc,openNormalProc,openKind1Proc,armM2Proc,reportM2Proc,prepareRepairProc,finishRepairProc,queryM2Proc,feedbackDueProc,feedbackResultProc *syscall.Proc
@@ -70,6 +74,19 @@ func newV4WindowsPrivateOwnerBridge(absoluteLibrary string)(*v4WindowsNativeOwne
         *entry.out=p
     }
     return b,nil
+}
+// This cache is bound to the already verified, absolute DLL loaded for
+// the one private owner. Missing symbols still fail closed; nothing resolves
+// DLL paths from untrusted traffic or reuses a stale owner handle.
+func(b *v4WindowsNativeOwnerBridge) fixedProc(name string)(*syscall.Proc,error){
+    if b==nil||b.dll==nil{return nil,errV4WindowsOwner}
+    if cached,ok:=b.fixedProcCache.Load(name);ok{
+        return cached.(*syscall.Proc),nil
+    }
+    proc,err:=b.dll.FindProc(name)
+    if err!=nil{return nil,err}
+    winner,_:=b.fixedProcCache.LoadOrStore(name,proc)
+    return winner.(*syscall.Proc),nil
 }
 func winOwnerCall(proc *syscall.Proc,args ...uintptr)error{
     if proc==nil{return errV4WindowsOwner}

@@ -14,7 +14,7 @@ Recovered M0 H288 cursor now acknowledges the overwritten main, uses exactly one
 
 No local execution tests. Push Actions on the repaired SOURCE are required; any initial FAIL remains a FAIL for its own SOURCE. Do not re-run native Windows natural Auto solely to refresh old green, do not relax M2 strict SEQ, authentication, WAL or Stop, and do not assert unmeasured performance.
 
-```feature-impact
+```json
 {"kind":"updated","ids":["fec-auto","fec-fixed","game-fixed-fec","game-lanes"],"reason":"Recovered the true main availability of code following the user's complete dev-tree overwrite; all four entries remain experimental. Rust non-FEC cfg compile and native test-count harness repairs do not change selectors/defaults or prove new product qualification."}
 ```
 
@@ -33,12 +33,19 @@ PR32 merged to main as 4e6d9d634bee75c965594dea51cf7bca87408a8b. Main registry r
 Pre-edit re-read latest Rust Windows FEC2 source5ff5da and prior 9d2362d/ca0a7a9, original M2 owner source7f9e4 and Go window sourcec1e98830 recent 8642ad4. Source A2 Arena.allocate after fec2_tx.take discards stream on capacity error. Go A3 uses stale cumulative int32 negative before authentic owner verification; target half-wrap/full-wrap replay boundary.
 S1: preallocate before FixedStream ownership take and assert full->release->same-generation actual firstsend. Detach stale Go presentation ACK after genuine M3-verified far-window arrival and allow independently authenticated serial near moving high across half/full wrap. Strict AEAD, Wintun copy and no fake ACK retained. Updated active PLAN020 assembly manifest exact Go bytes. Remaining A1 and C1 through E are OPEN, no full product Actions until entire batch frozen.
 
-```feature-impact
+```json
 {"kind":"updated","ids":["normal-off","fec-fixed"],"reason":"Experimental Windows FEC state capacity recovery and authenticated half/full serial wrap; no new product or performance PASS or default changes."}
 ```
 
 ## Isolated Windows remediation S2 (C1 fresh / optional repair)
 Re-read current Windows original M2 trusted NPF completion and GlobalRepairAllocator::on_fresh_accepted contract, ReceiptState::on_sent and current v3 opportunities. Original Go queried shadow outstanding on *every* packet and paused fresh at1536, despite independent repair cache meaning. Rust v3_seal duplicated gate. Both are removed, while exact accepted M4 result still feeds F credit and only optional immutable cache is abandoned at saturation. New native-scoped Rust regression makes >1536 actual first sends with shadow fixed<=1536, same generation; original ciphertext/peer ACK remain protected. This is not proof of 500Mbps or total memory envelope. Repair budget C2 and Auto C3 remain open.
-```feature-impact
+```json
 {"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Experimental Windows v3 firstsend no longer gated by optional 1536-entry repair shadow; product performance requires future exact frozen SOURCE native Actions."}
+```
+
+## Windows extreme remediation S3 (narrow B1/B2 cold-proc and FEC parity buffer cost)
+Reviewed original Windows PrivateOwnerBridge single absolute source-pinned loaded DLL, Fixed stream FFI caller and live original M4 CreatedWintun.Identity. Implemented owner-local concurrent cached proc lookup instead of each Fixed call FindProc; still rejects absent symbols. Cached immutable iphlpapi ConvertInterfaceLuidToGuid LazyProc but kept actual current native Identity/holder Verify for now (protected session lease coalescing NOT YET DONE). Replaced 8KiB per-poll Go parity batch allocation with sync.Pool while preserving complete Rust C struct overwrite and per-row deep-copied ciphertext before return. Added Windows-only real DLL proc cache negative/positive test to existing authoritative product assembly prepare helper.
+This is a low-cost partial optimization hypothesis and not measured CPU improvement. All formal product and extreme A/B results remain NOT_RUN; no test dispatch until entire batch source frozen. Prior S1/S2 feature-impact blocks remain archived as JSON factual records of their source commits, not falsely reasserted as current diff.
+```feature-impact
+{"kind":"updated","ids":["fec-fixed"],"reason":"Experimental Windows FEC native DLL lookup and parity buffer reuse optimization, no new config/default or claimed CPU/product qualification."}
 ```
