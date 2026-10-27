@@ -446,7 +446,14 @@ jobs:
               Tee-Object result/wl-public/direct-full.log
             $e2eExit=$LASTEXITCODE
             if($e2eExit -ne 0){throw 'real Windows-to-Linux public original Go TLS/Rust M1-M3/native I/O path failed'}
-            Copy-Item result/wl-public/normal-report.json result/wl-public/report.json -Force
+            if($env:WBD_WL_PUBLIC_MODES -eq 'auto-revision'){
+              # Genuine target mode has its OWN source-locked report.
+              # A missing Normal report from a NOT_RUN Normal mode is
+              # not a false failure nor a claim of Normal revalidation.
+              Copy-Item result/wl-public/auto-revision-report.json result/wl-public/report.json -Force
+            } else {
+              Copy-Item result/wl-public/normal-report.json result/wl-public/report.json -Force
+            }
             # Other effective public modes remain UNWIRED/NOT_RUN until
             # they use the genuine shared Linux owner/lane/lifecycle ABI.
             # No separate Fixed6-only public Action or repeated WSL2 startup.
@@ -465,7 +472,19 @@ jobs:
           }
           if($e2eExit -ne 0){throw 'true public Windows Go TLS Rust Npcap Wintun to Linux raw/TUN direct chain FAILED'}
           $result=Get-Content result/wl-public/report.json -Raw | ConvertFrom-Json
-          if($result.normal_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE'){throw 'real public product proof not emitted'}
+          if($env:WBD_WL_PUBLIC_MODES -eq 'auto-revision'){
+            if($result.mode -ne 'auto-revision' -or
+               $result.mode_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE_auto-revision' -or
+               $result.auto_revision_applied -ne $true -or
+               $result.app_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
+               $result.tcp_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP' -or
+               $result.stop -ne 'PASS_BOTH_OWNED'){
+              throw 'actual Windows original M2 Auto revision2 native both-OS delivery/Stop proof missing'
+            }
+            Write-Output 'WL_ACTUAL_AUTO_REVISION2_NATIVE_TWO_OS_AND_STOP_PASS'
+          } elseif($result.normal_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE'){
+            throw 'real public original Normal product proof not emitted'
+          }
       - name: Restore Linux raw FakeTCP fixture RST rule after product Stop
         if: always()
         shell: pwsh
