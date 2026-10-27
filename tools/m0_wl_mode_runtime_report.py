@@ -125,3 +125,34 @@ def summarize_auto_udp_progress(path:pathlib.Path)->dict:
         "max_socket_sent_per_observation":max(deltas) if deltas else None,
         "last_four":rows[-4:],
         "owner_m2_2s8s_denominator":"NOT_MEASURED_BY_APP"}
+
+def native_auto_true_applied_snapshots(snapshots:list[dict])->list[dict]:
+    """Read only real Go Auto M2-Applied telemetry, not requested-only state.
+
+    Original Go m0NativeV4PacketStats encodes AutoPending with omitempty:
+    a missing `auto_revision_pending` denotes FALSE, not unknown/TRUE,
+    but only when nonzero requested and actual Rust-backed Applied revision
+    are BOTH present and identical. No synthetic ack/quality is produced.
+    """
+    verified=[]
+    for i,row in enumerate(snapshots):
+        if not isinstance(row,dict) or row.get("mode")!="fec-auto":
+            continue
+        requested=row.get("auto_requested_revision")
+        applied=row.get("auto_applied_revision")
+        desired=row.get("auto_requested_profile")
+        pending=row.get("auto_revision_pending",False)
+        if type(requested) is not int or type(applied) is not int or (
+            type(desired) is not int) or type(pending) is not bool:
+            continue
+        if requested<2 or applied<2 or applied!=requested or pending:
+            continue
+        if desired<0 or desired>=5 or row.get("auto_policy_error"):
+            continue
+        verified.append({
+            "snapshot_index":i,
+            "auto_requested_revision":requested,
+            "auto_applied_revision":applied,
+            "auto_requested_profile":desired,
+        })
+    return verified

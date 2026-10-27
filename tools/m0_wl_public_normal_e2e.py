@@ -2,7 +2,7 @@
 """Run actual original-TLS Windows and Linux native public UDP/TCP, then Stop."""
 import os,sys,subprocess,time,json,hashlib,pathlib,re,threading
 from m0_wl_native_resource_sampler import sample_windows_original_process
-from m0_wl_mode_runtime_report import source_locked_observability,summarize_auto_udp_progress
+from m0_wl_mode_runtime_report import source_locked_observability,summarize_auto_udp_progress,native_auto_true_applied_snapshots
 from m0_wl_native_mtu_contract import configured_native_test_mtu
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
@@ -339,11 +339,10 @@ print(json.dumps(result),flush=True)
    if "WBD_WINDOWS_NATIVE_PACKET_TELEMETRY " in line:
     try:snapshots.append(json.loads(line.split("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY ",1)[1]))
     except json.JSONDecodeError:pass
-  good=[row for row in snapshots if
-      row.get("auto_requested_revision",0)>=2
-      and row.get("auto_applied_revision",0)>=2
-      and row.get("auto_requested_profile",7)<5
-      and not row.get("auto_revision_pending",True)]
+  # Real original-Go packet-stats AutoPending uses Go JSON omitempty:
+  # missing key means bool false, but ONLY matching positive native M2
+  # applied==requested revisions count; a pending request never qualifies.
+  good=native_auto_true_applied_snapshots(snapshots)
   report["auto_adaptive_applied"]=bool(good)
   report["auto_adaptive_observations_1hz"]=len(snapshots)
   report["auto_adaptive_last_revisions"]=[
@@ -351,6 +350,7 @@ print(json.dumps(result),flush=True)
   if not good:
    raise RuntimeError("native FecV2Step natural Auto downshift NOT_APPLIED: "+
       repr(snapshots[-5:]))
+  report["auto_adaptive_first_genuine_applied_snapshot_index"]=good[0]["snapshot_index"]
   report["auto_adaptive_native_revision"]=good[-1]["auto_applied_revision"]
   report["auto_adaptive_native_profile"]=good[-1]["auto_requested_profile"]
   print("WBD_WL_REAL_AUTO_NATURAL_SHARED_POLICY_M2_2S8S_APPLIED_AFTER_KERNEL_UDP",flush=True)

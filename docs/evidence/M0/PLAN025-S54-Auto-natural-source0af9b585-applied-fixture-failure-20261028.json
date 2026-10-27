@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "kind": "windows_original_go_auto_native_applied_positive_but_fixture_false_negative",
+  "role": "M0",
+  "source_sha": "0af9b5859c282a6efa0bda6c8d0c9fa01c14d9f1",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "run_id": 40553530258,
+  "run_attempt": 1,
+  "job_id": 122365529711,
+  "conclusion": "failure",
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/40553530258",
+  "artifact": {
+    "id": 12756438389,
+    "name": "m0-wl-full-public-normal-direct",
+    "zip_sha256": "706ed5294fd4dbb3f9e37f5babc082b9712f3c95cb97fc57d47fdbdaa572c82f",
+    "zip_verified": true
+  },
+  "actual": {
+    "signed_original_windows_linux_ready": "PASS",
+    "initial_bidirectional_udp": "PASS",
+    "initial_bidirectional_tcp": "PASS",
+    "windows_source_udp_sent": 79320,
+    "linux_source_udp_sent": 39668,
+    "windows_source_first_received": 39622,
+    "linux_source_first_received": 79236,
+    "genuine_windows_auto_steps": [
+      {
+        "requested_revision": 2,
+        "applied_revision": 2,
+        "profile": 4
+      },
+      {
+        "requested_revision": 3,
+        "applied_revision": 3,
+        "profile": 3
+      },
+      {
+        "requested_revision": 4,
+        "applied_revision": 4,
+        "profile": 2
+      }
+    ],
+    "first_genuine_applied_revision2_telemetry_snapshot_index": 38,
+    "window_quality_logs": 46,
+    "actual_k_to_mature_slow_outside_low_90_pct": 0,
+    "actual_k_to_mature_slow_within_valid_ratio": 22,
+    "actual_k_to_mature_slow_above_high_105_pct": 24,
+    "cohort_sample_spans_msec": "Mostly 8000 and 10000 on same real pair; some invalid windows on revision changes; original policy conservatively UNKNOWN without false downgrade.",
+    "normal_owned_stop": "NOT_RUN_AFTER_TEST_ASSERTION_FAIL",
+    "test_failure": "Original Go AutoPending bool has `json:omitempty`; false is omitted from JSON, while harness row.get(auto_revision_pending, True) wrongly treated absence as pending. Row auto_requested_revision==auto_applied_revision ==4 and profile2 demonstrates actual Rust M2 Applied via Go readback; the full harness nevertheless reported False.",
+    "true_downshift_fast_on_healthy_path": "OBSERVED_AUTHENTICATED_NATIVE_APPLIED_WITHIN_120S",
+    "full_mode_native_end_to_end": "FAIL_FIXTURE"
+  },
+  "prior": {
+    "s52_natural_run": 40550358765,
+    "s52_result": "FAIL_PRODUCT_NO_DOWN",
+    "s48_startup_run": 40546243971,
+    "s48_result": "FUNCTIONAL_PASS_SCOPED"
+  },
+  "limitations": {
+    "normal_stop": "NOT_RUN",
+    "natural_loss_upshift": "NOT_RUN",
+    "wl_n0_n1_n5": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "global_gui_wfp": "NOT_RUN"
+  },
+  "next_fix": "A preflight-tested parser recognizing missing AutoPending as false only with exact nonzero applied==requested, plus one source-locked native Auto acceptance incl owned Stop; do not modify Go product, M2 gates or score S54 Action SUCCESS."
+}

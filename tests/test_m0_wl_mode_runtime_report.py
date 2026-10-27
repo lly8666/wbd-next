@@ -83,3 +83,29 @@ class SourceLockedModeResourceTests(unittest.TestCase):
                 json.dumps({"phase":"udp_1hz","sent":3,"received":2})+"\n")
    self.assertEqual(summarize_auto_udp_progress(p)["result"],
                     "NOT_MEASURED_AUTO_SOURCE_COUNTER_RESET")
+
+ def test_native_auto_omitempty_false_is_true_m2_applied_only_with_matching_revision(self):
+  from tools.m0_wl_mode_runtime_report import native_auto_true_applied_snapshots
+  row=lambda req,applied,profile,**more:dict(mode="fec-auto",
+   auto_requested_revision=req,auto_applied_revision=applied,
+   auto_requested_profile=profile,**more)
+  samples=[
+   row(2,1,4,auto_revision_pending=True),  # pending is NOT Applied
+   row(2,2,4),                             # omitted because Go bool:false
+   row(3,2,3),                             # omitted but revision mismatch
+   row(3,3,3,auto_revision_pending=True),  # explicit pending rejects
+   row(4,4,2,auto_revision_pending=False), # explicit false also valid
+   row(2,2,5),                             # not one grade down from Strong
+   row(1,1,4),                             # startup not dynamic revision
+   row(3,3,4,auto_policy_error="readback failed"),
+   {"mode":"fec-auto","auto_requested_revision":3,"auto_requested_profile":4},
+   {"mode":"fec-auto","auto_requested_revision":3,
+    "auto_applied_revision":3,"auto_requested_profile":4,
+    "auto_revision_pending":"false"},      # malformed type cannot pass
+   row(3,3,4,auto_revision_pending=False),
+  ]
+  good=native_auto_true_applied_snapshots(samples)
+  self.assertEqual([x["snapshot_index"] for x in good],[1,4,10])
+  self.assertEqual([x["auto_applied_revision"] for x in good],[2,4,3])
+  self.assertTrue(all(x["auto_applied_revision"]==x["auto_requested_revision"]
+                      and x["auto_requested_profile"]<5 for x in good))

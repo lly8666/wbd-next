@@ -124,6 +124,13 @@
       "status": "FAIL",
       "source_sha": "1b33e4a4bb4543961957124ac0c49b63d7e3cab0",
       "evidence": "docs/evidence/M0/PLAN025-S52-Auto-natural-source1b33e4a-failure-20261028.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "S54 real signed original Auto 119s source0af9b: Windows authentic Rust M2 rev2 High4, rev3 Balanced3, rev4 Medium2 Applied (first rev2 by 1Hz snapshot38) on 79,320 real Windows kernel UDP packets, 39,668 Linux. Original native full Action FAIL because e2e harness treated omitted JSON bool auto_revision_pending=false as pending, so full native Stop NOT_RUN; true sub-capability Applied observed within 120s but not full mode PASS.",
+      "status": "FAIL",
+      "source_sha": "0af9b5859c282a6efa0bda6c8d0c9fa01c14d9f1",
+      "evidence": "docs/evidence/M0/PLAN025-S54-Auto-natural-source0af9b585-applied-fixture-failure-20261028.json"
     }
   ],
   "limitations": [
@@ -147,7 +154,8 @@
     "S51 next scoped natural Auto test adds bounded parser for genuine Windows/Linux 1Hz socket sends and first receive counts (not M2 2s/8s denominator); exact source and native result still NOT_RUN until Actions. Historical 9d2362d natural 428B control SEQ mismatch FAIL and 67ed source underoffered fast 512 inputs preserved; thresholds/current controller unchanged.",
     "2026-10-28 user supersedes old natural Auto 20s/grade and 53s fixture deadline: true one-step native downshift within 120s of valid healthy traffic is accepted; fast valid-loss upshift remains desirable and its transition may drop packets. S52 adjusts ONLY fixture 119s sustained genuine Windows/Linux UDP plus 150s process guard, retains >=512 fast/slow and 4096 true samples, actual applied revision/profile and authenticated feedback. No S52 positive mode/native evidence until exact Actions. Latest governing decision docs/decisions/M0-WINDOWS-EXTREME-REMEDIATION-20261027.md §2026-10-28.",
     "S53 experimental Windows-only Auto mature-k cohort timing fix: share real ticker-interval count between 8s mature first-send and the preceding actual-k source-close histogram; preserve legacy 90%/20%, actual M2 receipts, >=512/4096, close/send/epoch and Rust applied. Includes a jittered 12-observation regression and one native auto-natural-only action; result remains NOT_RUN until full exact S53 SOURCE terminal.",
-    "S53 sourcece4f8ce Action40553300600 FAIL cheap source-lock preflight only: changed Windows Auto Go source blob65f6d4b was not updated in the single original-Go assembly manifest (still old3cee40e); Windows Go/Rust and native functional jobs SKIPPED, no S53 functional qualification. S54 updates only manifest result_blob to exact code blob, preserving typed race-safe Windows sampler and no extra GO copies; next target native Actions must prove result."
+    "S53 sourcece4f8ce Action40553300600 FAIL cheap source-lock preflight only: changed Windows Auto Go source blob65f6d4b was not updated in the single original-Go assembly manifest (still old3cee40e); Windows Go/Rust and native functional jobs SKIPPED, no S53 functional qualification. S54 updates only manifest result_blob to exact code blob, preserving typed race-safe Windows sampler and no extra GO copies; next target native Actions must prove result.",
+    "S55 corrects a false-negative ONLY in Windows/Linux Auto fixture: Go AutoPending bool has json:omitempty, field omitted when FALSE; positive requires both nonzero requested+native applied revisions >=2, equal and profile lower than Strong, and neither present true pending nor policy error. Historical S54 exact-source Action40553530258 remains FAILURE despite positive Rust M2 Applied proof; full owned Stop and natural loss upshift require explicit new native Action. No product algorithm change."
   ],
   "promotion": null
 }
