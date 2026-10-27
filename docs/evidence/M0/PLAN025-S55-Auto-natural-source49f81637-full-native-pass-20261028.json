@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "49f816375a9e69bd1cde41df2543b15b58066313",
+  "kind": "signed_native_windows_linux_auto_natural_exact_full_functional_success",
+  "run_id": 40556191100,
+  "attempt": 1,
+  "run_conclusion": "success",
+  "job_id": 122374962254,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/40556191100",
+  "artifact": {
+    "id": 12758561678,
+    "name": "m0-wl-full-public-normal-direct",
+    "sha256": "82b91aedfd68cdecc69a5b24349cb4c4d9c8042bff5a2ef24645c6cf936cc0e6",
+    "zip_independently_verified": true
+  },
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "actual": {
+    "mode": "auto-adaptive",
+    "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+    "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+    "udp_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "tcp_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "owned_stop": "PASS_BOTH_OWNED",
+    "first_native_m2_applied_revision2_snapshot_index": 37,
+    "initial_profile": 5,
+    "final_applied_profile": 2,
+    "final_requested_revision": 4,
+    "final_applied_revision": 4,
+    "windows_udp_sent": 79334,
+    "linux_udp_sent": 39668,
+    "windows_udp_first_received": 39627,
+    "linux_udp_first_received": 79261,
+    "real_windows_1hz_socket_delta_min": 666,
+    "real_windows_1hz_socket_delta_max": 667,
+    "windows_process_sample": {
+      "duration_s": 128.735,
+      "cpu_seconds": 12.5781,
+      "peak_rss_bytes": 44691456,
+      "attribution": "WHOLE_GO_RUST_AND_KERNEL_NOT_LANGUAGE_SCOPED"
+    }
+  },
+  "scope": "REAL_WINDOWS_ORIGINAL_GO_TLS_SIGNED_NPCAP_WINTUN_WAL_LINUX_WSL2_RAW_TUN_NATURAL_DOWNGRADE_WITHIN_120S",
+  "not_qualified": {
+    "loss_driven_rapid_upshift": "NOT_RUN",
+    "wl_n0_n1_n5": "NOT_RUN",
+    "scored_cpu_p99": "NOT_RUN",
+    "dynamic_mtu": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "global_gui_wfp_dns_ipv6": "NOT_RUN"
+  },
+  "historical_failures_unchanged": [
+    40550358765,
+    40553530258
+  ],
+  "no_perf_promotion": true
+}

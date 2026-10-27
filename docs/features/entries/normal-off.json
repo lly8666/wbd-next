@@ -8,7 +8,8 @@
   "development_branch": "integration/w168-freeze-windows-adapter-20261026",
   "available_on": [
     "integration/w168-freeze-windows-adapter-20261026",
-    "experiment/windows-wiring-arm64-native-parallel-20261028"
+    "experiment/windows-wiring-arm64-native-parallel-20261028",
+    "experiment/windows-wiring-n0-normal-parallel-20261028"
   ],
   "defaults": {
     "--mode": "normal（Linux V4默认）",
@@ -57,13 +58,21 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
       "evidence": "docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "Normal original Go signed native Windows/Linux WL-N0 300ms both-direction 0% injected loss/10Mbps target: initial real UDP/TCP and tc/IFB owned readback PASS but product Normal Rust/Go kind1 owner refused after29s, safe cleanup and failed normal owned Stop. Actual 4.87Mbps sent,4.78Mbps received only before termination. N0 FAIL, source is independent frozen product copy.",
+      "status": "FAIL",
+      "source_sha": "aa93183d7183681efd5408f3cb2e1a0d1e32fada",
+      "evidence": "docs/evidence/M0/PLAN025-N0-normal-sourceaa93183d-owner-failure-20261028.json"
     }
   ],
   "limitations": [
     "Windows W168 功能PASS只限Normal/off，不含WL-N0/N1/N5、GUI、Fixed/Auto/Game。",
     "Linux公开V4 IPv4-only；未提供与旧V3数据面互通资格。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
-    "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637."
+    "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637.",
+    "Action40557095692 exact sourceaa93183d Normal WL-N0 300ms 10Mbps target/0% tc loss FAIL due untyped native Normal M1/M3 owner failure. 4.87Mbps attempted until early Stop, not a scored peak or proven host cap. Pause N1/N5/higher pending root, preserve older functional positives."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

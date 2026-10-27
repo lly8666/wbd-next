@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "aa93183d7183681efd5408f3cb2e1a0d1e32fada",
+  "parent_product_source": "49f816375a9e69bd1cde41df2543b15b58066313",
+  "kind": "one_normal_zero_loss_300ms_two_os_n0_scenario_fail",
+  "run_id": 40557095692,
+  "attempt": 1,
+  "run_conclusion": "failure",
+  "job_id": 122378001581,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/40557095692",
+  "artifact": {
+    "id": 12756749498,
+    "name": "m0-wl-full-public-normal-direct",
+    "sha256": "8ce1f6dbf831e36cacbe5e5195606f8ff25739027d90aebd1911142d268fb4b8",
+    "zip_independently_verified": true
+  },
+  "mode": "normal",
+  "requested": {
+    "business_mbps": 10,
+    "linux_kernel_tc_each_direction_ms": 300,
+    "configured_loss_pct": 0,
+    "tc_ifb": "APPLIED_AND_READBACK",
+    "one_scenario_per_action": true
+  },
+  "actual": {
+    "startup_udp_duplex": "PASS",
+    "startup_tcp_duplex": "PASS",
+    "last_sustained_windows_udp_mbps": 4.8722,
+    "last_received_mbps": 4.7779,
+    "run_stopped_after_s": 29.25,
+    "wnd_cpu_seconds": 9.1719,
+    "process_sample_seconds": 40.282,
+    "process_avg_one_core_pct": 22.8,
+    "local_npcap_drop_snapshot": 17,
+    "normal_owned_stop": "NOT_RUN_PRODUCT_EXIT",
+    "original_owner_fault": "original Normal M1/M3 open owner failure: original-Go private Windows Rust owner refused",
+    "specific_native_abi_rc": "NOT_REPORTED",
+    "socket_followon_error": "WinError 10051",
+    "os_wal_rollback": "OBSERVED",
+    "netem_cleanup": "PASS",
+    "wl_n0": "ENVIRONMENT_OR_PRODUCT_NOT_YET_VERIFIED"
+  },
+  "conclusion_interpretation": "N0 FAIL from original Windows Rust owner/Go normal opener during valid load; not enough evidence to label host-limited nor product capacity before distinguishing actual untyped preflight vs fatal ABI; hold N1/N5 and heavier.",
+  "historical_positive_functional_normal": "a2594eba2dea88d3cea0e1fb02cf777300709a1a",
+  "next": "Review exact Go Normal kind1 opener preconditions / borrowHot / Rust C ABI and return first typed failure; one bounded differential regression; no replay same host load unchanged."
+}

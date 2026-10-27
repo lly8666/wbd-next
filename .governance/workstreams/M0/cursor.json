@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 305,
-  "checkpoint_sha": "56d2dc3e4cf9b3c000ac466a7a161fa9f503ce85",
+  "sequence": 306,
+  "checkpoint_sha": "c50ee70d1fd33da0885166fe610c2894de01d460",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "M0 PLAN025: ARM64 frozen product parent49f816 native original Go TLS↔Rust real raw/TUN two-netns and 9/9 MTU boundary functional tests PASS on exact test ref f7ee097e Action40557336142. S55 original signed Windows Auto native Action40556191100 and independent Normal WL-N0 Action40557095692 still running; do not change product/claimed modes until final receipts.",
-  "why_now": "ARM64 Actions40557336142 completed SUCCESS: Go1.23.12/Rust1.85.1 native ARM64 bundle verified SHA, actual original Go credential TLS with Rust raw/TUN Normal ICMP both dirs and Stop/cleanup, nine mode/MTU 1280/1500/asymmetric DF+1 boundaries all PASS_SCOPED; genuine FEC recovery/perf/Windows NOT_RUN. All three artifacts independently ZIP SHA-verified. Experiment S55 current docs S57 source9b4fa30 governance SUCCESS; original S55 native remains frozen source49f with no duplication. Normal N0 independent sourceaa93183d on own runner still in progress; S54 prior full-run failure and Auto M2 Applied retained.",
+  "current_task": "PLAN025 S55 genuine signed Windows↔Linux source49f81637 natural Auto complete UDP/TCP+Rust M2 Applied downshift <=120s+owned Stop PASS scoped Actions40556191100; independent N0 normal 300ms sourceaa93183d FAIL full run40557095692 from untyped Go native Normal open guard while actual tc applied; native ARM64 9/9 MTU PASS sourcef7ee. Main product integration review remains, not yet merged.",
+  "why_now": "S55 completed SUCCESS native job122374962254; artifact12758561678 ZIP SHA256 82b91aedfd68cdecc69a5b24349cb4c4d9c8042bff5a2ef24645c6cf936cc0e6 verified; authentic Auto Rust Applied rev2 by 1Hz index37, final rev4 profile2, real Windows79334/Linux39668 socket sends, UDP/TCP and Stop PASS. This fully resolves earlier S54 fixture STOP gap at new SOURCE, not historical FAIL. N0 separate original sourceaa93183d run40557095692 FAIL at real 300ms tc under load: Windows Normal M1/M3 opener returned generic owner refused without C ABI status, then Go safe Stop; delivered ~4.78Mbps of requested10 due early process termination, not proof host capacity. All worse N1/N5 stress paused; first error/provenance before changed policy. ARM64 f7ee9 fully passed and H305 Governance40558977058 SUCCESS. No damage-driven Auto fast upshift/scored perf qualification.",
   "done_when": "Whole original-Go TLS→shared Rust M1/M2/M3 FEC2 Fixed/Auto & 2/4 real Game lanes→original Windows Npcap/Wintun/WFP/route/DNS/WAL/GUI↔Linux raw/TUN and both-owned Stop across true applicable config/lifecycle. 4977f source seven initial functional mode core PASS; remaining dynamic Auto/GUI/global/lifecycle and weak-network use their own exact evidence. No fake Applied or independent Windows FEC owner.",
-  "next_action": "Settle S55 original signed Windows/Linux Auto run40556191100 and N0 one-scenario Action40557095692; if N0 shows capacity failure, stop N1/N5/higher in same runner and investigate first bottleneck. After final, freeze product code + audit merge main without copying isolated test branch-specific workflows. Continue genuine loss-triggered fast Auto rise as a distinct functional test, then N1/N5 and paired same-VM cost only where capacity and native correctness allow. Preserve old FAIL and exact platform labels.",
+  "next_action": "Diagnose N0 earliest untyped Windows Normal open failure from sourceaa93183d: read current Go scoped-client::OpenBoundOriginalNormalOrKind1, Rust v5 kind1 API, OS hot lease and last relevant commits; preserve hard native fatal, add bounded first-event error provenance+regression to independent N0 branch, single discriminating native trial at bounded offered load (not qualifying N0 10Mbps if reduced). In parallel audit integrating S55 entire known-good code/assembler/test bundle onto main while keeping user 2026-10-28 decision, main cursor/evidence/feature registry and experiment-only N0/ARM64 workflow selectors out. Once merged source exact build+scoped native regression and no silent pass. Do not run N1/N5/heavier until capacity explained.",
   "unverified": true,
-  "last_tested_source": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
+  "last_tested_source": "49f816375a9e69bd1cde41df2543b15b58066313",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"
+    "docs/evidence/M0/PLAN025-S55-Auto-natural-source49f81637-full-native-pass-20261028.json"
   ],
   "context_refs": [
     "docs/architecture/TEST_PLAN.md",
@@ -28,5 +28,5 @@
     "docs/evidence/windows-main-audit-20261027.json"
   ],
   "open_requests": [],
-  "partial_summary": "ARM64 native sourcef7ee original TLS Rust real two netns Normal small ICMP + Stop PASS and 9/9 MTU boundary with DF+1 reject PASS; not FEC recovery or CPU/throughput. S54 Windows true M2 Auto rev2/3/4 by 120s observed but entire runner FAIL fixture, Stop not run. S55 native and N0 300ms native in flight; S55 docs-only S57 governance green. No product code merged main; historical source a259 six modes PASS and Auto FAIL unaffected."
+  "partial_summary": "H306 S55 original signed Win/Linux Auto 119s natural grade 5→4→3→2 authentic M2 Applied by 1Hz index37, two OS bidirectional UDP/TCP and both owned Stop PASS Action40556191100, exact source49f81637 artifact12758561678 ZIP verified. N0 10Mbps/300ms zero injected loss FAIL after ~29s due generic Normal owner opening fatal, not host proved; Action40557095692. Native ARM64 sourcef7ee on two netns and 9 MTU tests all scoped PASS. Unqualified loss-driven upshift, N1/N5, scored CPU/p99, physical/global. Preserve S52/S54 exact red."
 }
