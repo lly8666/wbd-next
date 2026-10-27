@@ -56,7 +56,8 @@
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "2026-10-27 isolated Game D/A4: exact original Go joined TLS+owned OS, Rust effective packet MTU readback and for Game2/4 off+FEC real per-lane NPF completion callback; per-lane NPF/FIN failure isolates healthy lanes, all failed terminates. Positive native functional, 30%/burst, FEC parity/p99, physical and WinForms NOT_RUN. No single public-port change.",
     "2026-10-27 experimental Windows M2 v9 protected Rust ABI and 1Hz Go readback of actual effective path/business MTU and source/repair/capacity; does not prove dynamic mid-session path rotation nor cross-platform perf.",
-    "2026-10-27 S23 experimental Game2/4: original Go native 1Hz protected Rust Game MTU readback updates actual Wintun scratch/explicit oversize drop accounting; correct owned OS MTU changes and cross-platform effective path reconfiguration NOT YET QUALIFIED. No sampled product performance result."
+    "2026-10-27 S23 experimental Game2/4: original Go native 1Hz protected Rust Game MTU readback updates actual Wintun scratch/explicit oversize drop accounting; correct owned OS MTU changes and cross-platform effective path reconfiguration NOT YET QUALIFIED. No sampled product performance result.",
+    "2026-10-27 experimental S32: original five-stage M4 WFP/route/MTU CAS WAL 1Hz verified exact interface IPv4 MTU before native runtime M3, invalid drift causes hard Stop and retains WAL; only separate authentic full new sessions at 1280/1400/1500 are allowed, dynamic in-place OS MTU change remains explicitly UNSUPPORTED until durable WAL schema and exact recovery are qualified. Win/Linux real Actions NOT_RUN."
   ],
   "promotion": null
 }

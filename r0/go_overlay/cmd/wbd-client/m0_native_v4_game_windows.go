@@ -151,7 +151,14 @@ outer:
   case <-ctx.Done():break outer
   case runtimeErr=<-packet.Errors():break outer
   case runtimeErr=<-failed:break outer
-  case <-ticker.C:fmt.Println("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY "+packet.Stats())
+  case <-ticker.C:
+   currentMTU,mtuErr:=product.RuntimeMTU(ctx)
+   if mtuErr!=nil||currentMTU!=o.TunnelMTU{
+    runtimeErr=fmt.Errorf("Game original M4 OS MTU drift/invalid WAL expected=%d actual=%d: %w",
+     o.TunnelMTU,currentMTU,errors.Join(windowsclient.ErrN4NativeGuard,mtuErr))
+    break outer
+   }
+   fmt.Println("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY "+packet.Stats())
   }
  }
  stopErr:=stop()

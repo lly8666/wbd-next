@@ -12,6 +12,8 @@ on:
       - tools/m0_wl_netem.py
       - tools/m0_wl_public_rate_app.py
       - tools/m0_wl_mode_runtime_report.py
+      - tools/m0_wl_native_mtu_contract.py
+      - tests/test_m0_wl_native_mtu_contract.py
       - tests/test_m0_wl_mode_runtime_report.py
       - tools/m0_wl_business_latency.py
       - tools/m0_wl_real_wsl2_guest_probe.py
@@ -72,6 +74,7 @@ jobs:
       - run: python -m unittest tests.test_delivery_ci -v
       - run: python -m unittest tests.test_m0_wl_mode_evidence -v
       - run: python -m unittest tests.test_m0_wl_mode_runtime_report -v
+      - run: python -m unittest tests.test_m0_wl_native_mtu_contract -v
       - run: python tools/prepare_windows_wiring.py --check-only
       - name: Enforce functional seven modes or exactly one scoped N0 before any native build
         env:
@@ -85,7 +88,7 @@ jobs:
           modes=select_source_locked_modes(os.environ['PUBLIC_MODE'],os.environ['RUN_N0']=='1')
           print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'])
           PY
-      - run: python -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_resource_sampler.py
+      - run: python -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
 
   windows-compile-preflight:
     name: Windows Go production and test compilation only

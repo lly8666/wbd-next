@@ -370,6 +370,12 @@ waitNative:
      state.RequestedRevision,state.Desired)
    }
   case <-metricsTicker.C:
+   actualMTU,mtuErr:=product.RuntimeMTU(ctx)
+   if mtuErr!=nil||actualMTU!=o.TunnelMTU{
+    runtimeErr=fmt.Errorf("original M4 OS interface MTU drift/invalid WAL expected=%d actual=%d: %w",
+     o.TunnelMTU,actualMTU,errors.Join(windowsclient.ErrN4NativeGuard,mtuErr))
+    break waitNative
+   }
    if readErr:=transport.RefreshEffective(ctx);readErr!=nil{
     runtimeErr=fmt.Errorf("original Rust M2 effective readback: %w",readErr)
     break waitNative
