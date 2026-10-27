@@ -34,6 +34,7 @@ type originalTLSLiveProductProof struct{
  tun *windowsclient.TUN
  client *realityfront.V4WindowsAuthenticatedClientOwner
  packet N4NativeAuthenticatedPeerTraffic
+ game *realityfront.V4WindowsAuthenticatedGameGroup
  id windowsclient.N4UnifiedIdentity
 }
 func(p *originalTLSLiveProductProof) VerifyOriginalNativeHold(
@@ -90,6 +91,13 @@ func(p *originalTLSLiveProductProof) FinishOriginalNativeStop(
  ctx context.Context,id windowsclient.N4UnifiedIdentity,
 )error{
  if err:=p.VerifyOriginalNativeHold(ctx,id);err!=nil{return err}
+ if p.game!=nil{
+  // Native OS/WAL restore and the shared Wintun ring have ALREADY
+  // drained. Linux's grouped Rust Stop now retires every 2/4 lane.
+  err:=p.game.StopCryptoAfterDriverDrain(ctx)
+  if err==nil{p.scoped.bound=false}
+  return err
+ }
  return p.scoped.StopRustScoped(ctx)
 }
 
@@ -112,6 +120,26 @@ func PrepareOriginalTLSNativeProduct(
   return nil,ErrNativeDeviceNotOwned
  }
  // REAL original TLS Rust owner+Win32 PnP Hold first, before OS mutation.
+ return prepareOriginalTLSNativeProduct(ctx,client,nil,tun,plan,install,epoch,packet)
+}
+// Game reuses the SAME one signed Wintun, five-stage WAL and real OS
+// readback; one group rather than n private per-lane OS installations.
+func PrepareOriginalTLSNativeGameProduct(
+ ctx context.Context,game *realityfront.V4WindowsAuthenticatedGameGroup,
+ tun *windowsclient.TUN,plan windowsclient.NetworkPlan,
+ install,epoch [16]byte,packet N4NativeAuthenticatedPeerTraffic,
+)(*OriginalTLSNativeProductSession,error){
+ if game==nil{return nil,ErrNativeDeviceNotOwned}
+ return prepareOriginalTLSNativeProduct(ctx,game.FirstOriginalOwner(),
+  game,tun,plan,install,epoch,packet)
+}
+func prepareOriginalTLSNativeProduct(
+ ctx context.Context,client *realityfront.V4WindowsAuthenticatedClientOwner,
+ game *realityfront.V4WindowsAuthenticatedGameGroup,
+ tun *windowsclient.TUN,plan windowsclient.NetworkPlan,
+ install,epoch [16]byte,packet N4NativeAuthenticatedPeerTraffic,
+)(*OriginalTLSNativeProductSession,error){
+ if ctx==nil||client==nil||tun==nil||packet==nil{return nil,ErrNativeDeviceNotOwned}
  scoped,err:=ConnectScopedOriginalTLSWintun(ctx,client,tun,install,epoch)
  if err!=nil{return nil,err}
  id,err:=windowsclient.N4OriginalCurrentPinnedWintunIdentity(
@@ -120,7 +148,7 @@ func PrepareOriginalTLSNativeProduct(
   return nil,errors.Join(err,scoped.StopRustScoped(context.Background()))
  }
  proof:=&originalTLSLiveProductProof{
-  scoped:scoped,tun:tun,client:client,packet:packet,id:id,
+  scoped:scoped,tun:tun,client:client,packet:packet,game:game,id:id,
  }
  product,err:=windowsclient.N4PrepareRealWindowsProduct(
   ctx,tun,plan,id,proof)

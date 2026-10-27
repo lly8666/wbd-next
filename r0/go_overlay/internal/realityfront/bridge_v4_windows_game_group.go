@@ -124,7 +124,14 @@ func(g *V4WindowsAuthenticatedGameGroup) BindAndJoinOriginalWintun(
    !s.bridge.committed||s.bridge.epoch!=g.epoch{
    return errV4WindowsOwner
   }
-  if err:=s.BindOriginalM4NativeDevice(ctx,device,id);err!=nil{return err}
+  // The real five-stage native OS product has already acquired the
+  // first lane's exact Wintun hold. The group only binds remaining
+  // original TLS lanes and then joins all 2/4 protected Rust owners.
+  if s.device==nil{
+   if err:=s.BindOriginalM4NativeDevice(ctx,device,id);err!=nil{return err}
+  }else if s.device.identity!=id{
+   return errV4WindowsOwner
+  }
   state,err:=s.OriginalOwnerReadback()
   if err!=nil||!state.OwnerActive||!state.DeviceBound||
    state.DeviceQuiesced||state.ProductApplied{return errV4WindowsOwner}
@@ -262,4 +269,25 @@ func(g *V4WindowsAuthenticatedGameGroup) StopCryptoAfterDriverDrain(
  }
  g.closed=true;g.joined=0
  return nil
+}
+
+// FirstOriginalOwner anchors the existing one-Wintun native OS/WAL lease.
+// It does not substitute the first lane for the authenticated Game group.
+func(g *V4WindowsAuthenticatedGameGroup) FirstOriginalOwner()*V4WindowsAuthenticatedClientOwner{
+ if g==nil{return nil}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||len(g.members)<2{return nil}
+ return g.members[0]
+}
+func(g *V4WindowsAuthenticatedGameGroup) OriginalGameTCPBoundaries()([][2]uint32,error){
+ if g==nil{return nil,errV4WindowsOwner}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||len(g.members)<2{return nil,errV4WindowsOwner}
+ v:=make([][2]uint32,0,len(g.members))
+ for _,o:=range g.members{
+  tx,rx,err:=o.OriginalVerifiedTCPBoundaries()
+  if err!=nil{return nil,err}
+  v=append(v,[2]uint32{tx,rx})
+ }
+ return v,nil
 }
