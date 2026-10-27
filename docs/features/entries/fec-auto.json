@@ -8,7 +8,8 @@
   "development_branch": "experiment/fec-network-tuning",
   "available_on": [
     "integration/w168-freeze-windows-adapter-20261026",
-    "main"
+    "main",
+    "experiment/windows-wiring-arm64-native-parallel-20261028"
   ],
   "defaults": {
     "mode": "fec-auto",
@@ -123,6 +124,13 @@
       "status": "FAIL",
       "source_sha": "0af9b5859c282a6efa0bda6c8d0c9fa01c14d9f1",
       "evidence": "docs/evidence/M0/PLAN025-S54-Auto-natural-source0af9b585-applied-fixture-failure-20261028.json"
+    },
+    {
+      "platform": "linux/aarch64 native GitHub-hosted two-netns raw/TUN",
+      "scope": "ARM64 original TLS Rust Auto startup genuine two-netns 20 ICMP per direction, owned Stop; MTU1280/1500 budgets1195/1415 DF+1 rejected; dynamic natural grade NOT_RUN",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
+      "evidence": "docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"
     }
   ],
   "limitations": [
@@ -140,7 +148,8 @@
     "Recovered 2026-10-28 S48 source772b8b3 actual Auto initial Strong5 signed Win/Linux original Go TLS native UDP/TCP+owned Stop PASS Action40546243971 artifact12754660102 SHA256 f8b8899b...; historical S45 sourcea2594eba Auto FAIL preserved. User-authorized fast-rise/downgrade<=120s decision 054f18c; exact S52 source1b33e4a4 natural Action40550358765 was RUNNING as of main H302 and is NOT a current PASS; N0/physical/global still NOT_RUN.",
     "S52 source1b33e4a Action40550358765 natural Auto 119s FAIL with actual source pacing enough and quality k-hist versus M2 mature firstsend 0.6/0.8/1.25 ratios due mismatched 8/16s sampling spans; latest user <=120s actual one-step not met. Historical 9d SEQ FAIL and S48 startup PASS remain separate. Investigate Windows Go ticker historical cohort alignment, not actual FEC loss gate.",
     "H303 governance declaration scope (2026-10-28): Actions40553017297 and 40554072482 historical Feature catalog FAIL from multi-card original devlog feature-impact changed-file inventory. This main commit refreshes all four historically declared cards coherently; no executable product/default/verification status changes. Source1b33e4a failed **only** genuine Windows natural Auto one-step Applied, while earlier Fixed and Game scoped PASS stay attached to their own exact SOURCE. Current natural Auto correction source0af9b... remains experiment and NOT main product qualification.",
-    "H304 S54 source0af9b585 authentic natural Auto one or more Applied downgrade before120s observed; full Action40553530258 FAIL from omitempty harness and owned Stop NOT_RUN, not an entire mode PASS. S55 49f81637 native retest in flight; exact loss-triggered rise, scored N0, ARM64 source native, physical/global remain pending and retain earlier FAIL."
+    "H304 S54 source0af9b585 authentic natural Auto one or more Applied downgrade before120s observed; full Action40553530258 FAIL from omitempty harness and owned Stop NOT_RUN, not an entire mode PASS. S55 49f81637 native retest in flight; exact loss-triggered rise, scored N0, ARM64 source native, physical/global remain pending and retain earlier FAIL.",
+    "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637."
   ],
   "promotion": null
 }

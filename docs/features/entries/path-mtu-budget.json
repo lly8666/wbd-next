@@ -7,7 +7,8 @@
   "stage": "experimental",
   "development_branch": "experiment/fec-network-tuning",
   "available_on": [
-    "integration/w168-freeze-windows-adapter-20261026"
+    "integration/w168-freeze-windows-adapter-20261026",
+    "experiment/windows-wiring-arm64-native-parallel-20261028"
   ],
   "defaults": {
     "--outer-mtu": "1500（默认）",
@@ -49,11 +50,19 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "linux/aarch64 native GitHub-hosted two-netns raw/TUN",
+      "scope": "ARM64 original TLS Rust actual Linux TUN nine native mode/outer MTU 1280/1500/asymmetric1500:1280 boundary cases, each both directions budget-1/= pass DF+1 rejected; not in-place MTU mutation or Windows.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
+      "evidence": "docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"
     }
   ],
   "limitations": [
     "CLI 9000上界是输入合法范围，绝非已验证9k实际互通。",
-    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637."
   ],
   "promotion": null
 }

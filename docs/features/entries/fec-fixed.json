@@ -8,7 +8,8 @@
   "development_branch": "experiment/fec-network-tuning",
   "available_on": [
     "integration/w168-freeze-windows-adapter-20261026",
-    "main"
+    "main",
+    "experiment/windows-wiring-arm64-native-parallel-20261028"
   ],
   "defaults": {
     "mode": "fec-fixed",
@@ -93,6 +94,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
       "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json"
+    },
+    {
+      "platform": "linux/aarch64 native GitHub-hosted two-netns raw/TUN",
+      "scope": "ARM64 original TLS Rust FEC-Fixed mode genuine two-netns 20 ICMP per direction, owned Stop; inner budget1195/1415 at MTU1280/1500 and asymmetric outer1500/server1280 boundary DF+1 rejected (parity recovery NOT_PROVEN)",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
+      "evidence": "docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"
     }
   ],
   "limitations": [
@@ -108,7 +116,8 @@
     "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible.",
     "2026-10-27 user-authorized exact development-tree main overwrite f6469a: implementation code is now present on main but remains experimental, with no new main-SOURCE native/product/global/physical PASS or formal promotion; previous exact-SOURCE PASS/FAIL unchanged.",
     "H303 scope clarification (2026-10-28): source 1b33e4a4bb4543961957124ac0c49b63d7e3cab0 Actions40550358765/1 is a Windows original Auto **natural dynamic downshift FAIL only**. This result is not evidence of a Fixed or Game mode regression, new main-source mode qualification, nor loss of the historical scoped native Fixed/Game positive source a2594eba and 4977f12; their original PASS/FAIL/NOT_RUN entries remain unchanged. No mode default or formal promotion was changed.",
-    "H303 governance declaration scope (2026-10-28): Actions40553017297 and 40554072482 historical Feature catalog FAIL from multi-card original devlog feature-impact changed-file inventory. This main commit refreshes all four historically declared cards coherently; no executable product/default/verification status changes. Source1b33e4a failed **only** genuine Windows natural Auto one-step Applied, while earlier Fixed and Game scoped PASS stay attached to their own exact SOURCE. Current natural Auto correction source0af9b... remains experiment and NOT main product qualification."
+    "H303 governance declaration scope (2026-10-28): Actions40553017297 and 40554072482 historical Feature catalog FAIL from multi-card original devlog feature-impact changed-file inventory. This main commit refreshes all four historically declared cards coherently; no executable product/default/verification status changes. Source1b33e4a failed **only** genuine Windows natural Auto one-step Applied, while earlier Fixed and Game scoped PASS stay attached to their own exact SOURCE. Current natural Auto correction source0af9b... remains experiment and NOT main product qualification.",
+    "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637."
   ],
   "promotion": null
 }

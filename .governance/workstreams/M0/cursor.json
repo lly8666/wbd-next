@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 304,
-  "checkpoint_sha": "7c30b7003f58bbdf48f664b09435cd0c15ed579c",
+  "sequence": 305,
+  "checkpoint_sha": "56d2dc3e4cf9b3c000ac466a7a161fa9f503ce85",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN025 S54 source0af9b585 genuine Windows native Auto one-grade Applied by 38th 1Hz sample, full run40553530258 FAIL from JSON omitempty fixture and owned Stop NOT_RUN. S55 49f81637 fixes fixture; frozen Auto run40556191100 in flight. Independent N0 normal 300ms run40557095692 and native ARM64 run40557336142 in flight on separate test-only branches.",
-  "why_now": "Checkpoint H303->latest main audited: main H303 feature catalog passed at 7c30b700; S54 40553530258 terminal FAIL, original artifact12756438389 sha256 706ed5294fd4dbb3f9e37f5babc082b9712f3c95cb97fc57d47fdbdaa572c82f independently rechecked. Auto authentic Rust M2 revisions2/3/4 profile4/3/2 after Windows 79320 real UDP; helper wrongly treated omitted bool:false as pending. S55 source49f in Actions and governance feature card size FAIL (>16KB), native result pending. User requested independent scenarios parallel. N0 first branch 4089 Actions40556823589 preflight FAIL/manual-input contract; corrected aa93183d Actions40557095692 static PASS. ARM64 f7ee097e Actions40557336142 active. No main product integration yet.",
+  "current_task": "M0 PLAN025: ARM64 frozen product parent49f816 native original Go TLS↔Rust real raw/TUN two-netns and 9/9 MTU boundary functional tests PASS on exact test ref f7ee097e Action40557336142. S55 original signed Windows Auto native Action40556191100 and independent Normal WL-N0 Action40557095692 still running; do not change product/claimed modes until final receipts.",
+  "why_now": "ARM64 Actions40557336142 completed SUCCESS: Go1.23.12/Rust1.85.1 native ARM64 bundle verified SHA, actual original Go credential TLS with Rust raw/TUN Normal ICMP both dirs and Stop/cleanup, nine mode/MTU 1280/1500/asymmetric DF+1 boundaries all PASS_SCOPED; genuine FEC recovery/perf/Windows NOT_RUN. All three artifacts independently ZIP SHA-verified. Experiment S55 current docs S57 source9b4fa30 governance SUCCESS; original S55 native remains frozen source49f with no duplication. Normal N0 independent sourceaa93183d on own runner still in progress; S54 prior full-run failure and Auto M2 Applied retained.",
   "done_when": "Whole original-Go TLS→shared Rust M1/M2/M3 FEC2 Fixed/Auto & 2/4 real Game lanes→original Windows Npcap/Wintun/WFP/route/DNS/WAL/GUI↔Linux raw/TUN and both-owned Stop across true applicable config/lifecycle. 4977f source seven initial functional mode core PASS; remaining dynamic Auto/GUI/global/lifecycle and weak-network use their own exact evidence. No fake Applied or independent Windows FEC owner.",
-  "next_action": "Settle exact S55 Auto run40556191100 with native Stop and artifact; independently settle N0 sourceaa93183d run40557095692 (only normal 0%-300ms; distinguish host capacity) and ARM64 f7ee097e run40557336142 (native Go/Rust bundle+real TUN Stop). Preserve every FAIL. Before any further product fix re-read real present call chain and recent changes. Fix experimental Auto feature-card >16KiB without discarding old evidence; then integrate reviewed full candidate onto main in one source-locked batch retaining H304/current main decision, followed by scoped normal N1/N5/CPU AB tests only when capacity supported.",
+  "next_action": "Settle S55 original signed Windows/Linux Auto run40556191100 and N0 one-scenario Action40557095692; if N0 shows capacity failure, stop N1/N5/higher in same runner and investigate first bottleneck. After final, freeze product code + audit merge main without copying isolated test branch-specific workflows. Continue genuine loss-triggered fast Auto rise as a distinct functional test, then N1/N5 and paired same-VM cost only where capacity and native correctness allow. Preserve old FAIL and exact platform labels.",
   "unverified": true,
-  "last_tested_source": "0af9b5859c282a6efa0bda6c8d0c9fa01c14d9f1",
+  "last_tested_source": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN025-S54-Auto-natural-source0af9b585-applied-fixture-failure-20261028.json"
+    "docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"
   ],
   "context_refs": [
     "docs/architecture/TEST_PLAN.md",
@@ -28,5 +28,5 @@
     "docs/evidence/windows-main-audit-20261027.json"
   ],
   "open_requests": [],
-  "partial_summary": "S45 six modes native PASS and Auto FAIL exact a259; S48 Auto starter+Stop PASS exact772b8b3; S52 real 119s no downshift FAIL 1b33e4a; S54 genuine native M2 Applied rev2/3/4 within120s at 0af9b585 but fixture false-negative stopped before full owned Stop, so whole Action FAIL. S55 fixture correction and independent normal N0/ARM64 native runs active. N0 older preflight red kept. No PERF_PASS, physical/global GUI or loss-driven fast rise claims; original S54 error not relabeled SUCCESS."
+  "partial_summary": "ARM64 native sourcef7ee original TLS Rust real two netns Normal small ICMP + Stop PASS and 9/9 MTU boundary with DF+1 reject PASS; not FEC recovery or CPU/throughput. S54 Windows true M2 Auto rev2/3/4 by 120s observed but entire runner FAIL fixture, Stop not run. S55 native and N0 300ms native in flight; S55 docs-only S57 governance green. No product code merged main; historical source a259 six modes PASS and Auto FAIL unaffected."
 }
