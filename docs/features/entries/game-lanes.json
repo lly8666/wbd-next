@@ -24,7 +24,10 @@
     "r0/go_overlay/internal/v4productcli/game_linux.go",
     "crates/wbd-engine/src/v4_game_lane.rs",
     "crates/wbd-engine/src/v4_game_public_kernel.rs",
-    "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go"
+    "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_group.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_server_group.go",
+    "crates/wbd-engine/src/v4_windows_game_owner.rs"
   ],
   "doc_refs": [
     "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
@@ -62,7 +65,8 @@
   ],
   "limitations": [
     "Linux特定case PASS不是Windows Game产品PASS；Game副本不等同外层DATA重传。",
-    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "Windows W168已有Game2/4受TLS认证的私有Go分组及Rust共享GameAdapter；真实独立Npcap/TLS驱动、持续发送与Stop未完成，ABI单测和Normal公网PASS不能当Game公开功能PASS。"
   ],
   "promotion": null
 }

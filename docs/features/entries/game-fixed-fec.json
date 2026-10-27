@@ -22,7 +22,12 @@
     "r0/go_overlay/internal/v4productcli/linux.go",
     "r0/go_overlay/internal/v4productcli/game_linux.go",
     "crates/wbd-engine/src/v4_game_fec.rs",
-    "crates/wbd-codec/src/fec_v2.rs"
+    "crates/wbd-codec/src/fec_v2.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_group.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_server_group.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_fec_batch.go",
+    "crates/wbd-engine/src/v4_windows_game_owner.rs",
+    "crates/wbd-engine/src/v4_game_lane.rs"
   ],
   "doc_refs": [
     "docs/architecture/FEC_V2_BALANCED.md",
@@ -53,7 +58,8 @@
   ],
   "limitations": [
     "已执行干净/损伤范围不代表所有级别强损残余为零。",
-    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "Windows W168隔离分支已开始按Linux共享GameAdapter、TLS GameFec和GameFecTx/Rx原生接口接线；目前仅可信原始Go TLS分组、FFI缓冲/真实kernel发送结果回报合同。Windows原生多lane Npcap+Wintun、定时parity回调、完整App恢复/Stop/GUI仍未形成同源公开正向证据；Windows NOT_RUN不变。"
   ],
   "promotion": null
 }
