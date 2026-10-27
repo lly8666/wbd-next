@@ -206,6 +206,12 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     if err!=nil{return err}
     raws:=make([]*faketcp.RawIPv4Endpoint,0,n)
     defer func(){for _,r:=range raws{r.Close()}}()
+    // Same original Go Windows11 pre-TLS packet envelope as the proved
+    // Normal peer; Linux↔Linux Game keeps its existing Legacy default.
+    rawPersona:=faketcp.PacketPersonaLegacy
+    if c.peerPersona==realityfront.V4PeerWindows11 {
+        rawPersona=faketcp.PacketPersonaWindows11
+    }
     assocs:=make([]*faketcp.ServerAssociation,n)
     var handoffCommitted atomic.Bool
     var goPostHandoffDataCopies atomic.Uint64
@@ -215,7 +221,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
         port,e:=gamePort(c.localPort,i)
         if e!=nil{return e}
         raw,e:=faketcp.OpenRawIPv4EndpointWithOptions(
-            c.rawInterface,c.localIP.As4(),faketcp.PacketPersonaLegacy,
+            c.rawInterface,c.localIP.As4(),rawPersona,
             faketcp.RawIPv4EndpointOptions{ReceivePort:port},
         )
         if e!=nil{return e}
