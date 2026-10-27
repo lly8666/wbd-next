@@ -7,8 +7,7 @@
   "stage": "experimental",
   "development_branch": "experiment/fec-network-tuning",
   "available_on": [
-    "integration/w168-freeze-windows-adapter-20261026",
-    "main"
+    "integration/w168-freeze-windows-adapter-20261026"
   ],
   "defaults": {
     "mode": "fec-auto",
@@ -114,8 +113,7 @@
     "Only Auto startup Strong profile5 completed real Windows bidirectional business; no positive dynamic up/down revision or late GUI profile Applied receipt in this run.",
     "Latest exact source a0c8eeb Actions40457048399 genuine Windows↔Linux kernel UDP after Auto operator revision2 via shared FecV2Step/FixedStream, M2 mature exact revision2 and owned Stop SUCCESS. This does NOT test automatic periodic 2s/8s policy-driven grade selection, all 0..6, WinForms Applied, global OS or physical. Older 80e5289 Actions40455980911 job FAIL at stale harness normal-report file is preserved.",
     "Source6707bd52 moved original Linux auto downshift sampling-history rule into shared Go policy and gates automatic adaptation on authenticated M2 Applied; source6707 native-independent Windows Go production/test compile preflight Action40462558630 PASS, native mode not rerun. Source99a Action40462738560 FAIL only because PowerShell split unquoted Go -test.run; source072a19e7 fixes the PowerShell test argument and Actions40463122392 PASS for source-pinned assembly, original Windows Go production/test compile and the already compiled TestF2ControlAutoPendingM2CannotEvaluateOrStackNativeRevisions. Full native job SKIPPED by new policy. This implementation is NOT proof of natural 2s/8s loss-driven Auto mode change.",
-    "Native source67ed Actions40465641281 real Auto natural 2s/8s target FAIL: 53s Windows→Linux 3393 source sends, original Rust mature fast 128..268 <512, genuine Linux-shared policy rightly does not downshift. No algorithm/safety-bypass permitted; real kernel UDP/TCP and previously scoped Auto operator revision positive still stand. Sourcea3bb is only paced genuine-UDP fixture repair and NOT_RUN until outcome.",
-    "2026-10-27 main 02a9d938 双亲源码合入仅说明代码可用，非正式产品晋级；Windows Auto 自然 M2 2s/8s 源9d2362d Action40476182202 FAIL，GUI/主机全局WFP及高负载网络性能依然待各自精确源码验收。"
+    "Native source67ed Actions40465641281 real Auto natural 2s/8s target FAIL: 53s Windows→Linux 3393 source sends, original Rust mature fast 128..268 <512, genuine Linux-shared policy rightly does not downshift. No algorithm/safety-bypass permitted; real kernel UDP/TCP and previously scoped Auto operator revision positive still stand. Sourcea3bb is only paced genuine-UDP fixture repair and NOT_RUN until outcome."
   ],
   "promotion": null
 }
