@@ -437,6 +437,11 @@ jobs:
           $npf=Start-Process -FilePath python -ArgumentList @('-u','tools/m0_wl_public_native_npf_trace.py') -PassThru -RedirectStandardOutput result/wl-public/native-windows-npf.log -RedirectStandardError result/wl-public/native-windows-npf-stderr.log
           Start-Sleep -Milliseconds 800
           try {
+            # A code-source-tagged Auto revision candidate saves costly
+            # replay of seven already source-proven startup modes.
+            if((& git log -1 --format=%B) -like '*auto-revision-only*'){
+              $env:WBD_WL_PUBLIC_MODES='auto-revision'
+            }
             & python tools/m0_wl_public_modes_e2e.py 2>&1 |
               Tee-Object result/wl-public/direct-full.log
             $e2eExit=$LASTEXITCODE

@@ -3,7 +3,7 @@
 import os,sys,subprocess,time,json,hashlib,pathlib,re
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
-if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec"):
+if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec","auto-revision"):
  raise RuntimeError("unknown exact native Windows public mode "+mode)
 fixed6=mode=="fixed"
 is_game=mode.startswith("game")
@@ -11,10 +11,10 @@ game_fixed=mode.endswith("-fec")
 game_mode=mode[:5] if is_game else ""
 lanes=int(game_mode[-1]) if is_game else 1
 server_mode=("fec-fixed --fec-profile 6" if fixed6 else
-             "fec-auto" if mode=="auto" else
+             "fec-auto" if mode.startswith("auto") else
              game_mode+(" --game-fec fixed6" if game_fixed else " --game-fec off") if is_game
              else "normal")
-client_fec="fixed" if fixed6 or game_fixed else "auto" if mode=="auto" else "off"
+client_fec="fixed" if fixed6 or game_fixed else "auto" if mode.startswith("auto") else "off"
 report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINUX_BINARY_SRC"],"mode":mode,
  "mode_public":"NOT_RUN","normal_public":"NOT_RUN","windows_ready":"NOT_RUN",
  "linux_ready":"NOT_RUN","app_duplex":"NOT_RUN","tcp_duplex":"NOT_RUN",
@@ -83,6 +83,7 @@ try:
  app=out/"app.py"
  app.write_text(r"""import socket,sys,time,json,pathlib
 local,remote,ready_file=sys.argv[1:4]
+hold=float(sys.argv[4]) if len(sys.argv)>4 else 2.
 sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 bind_deadline=time.monotonic()+30
 while True:
@@ -123,7 +124,7 @@ while time.monotonic()<deadline:
  if pathlib.Path(ready_file).is_file():
   if ready_since is None:ready_since=now
   # Keep both genuine generators active beyond authenticated Apply.
-  if sent>=24 and len(seen)>=12 and now-ready_since>=2.:break
+  if sent>=24 and len(seen)>=12 and now-ready_since>=hold:break
  time.sleep(.03)
 print(json.dumps({'local':local,'remote':remote,'sent':sent,'received':len(seen),'kernel_bind':'PASS','public_ready_seen':ready_since is not None}),flush=True)
 sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
@@ -244,6 +245,41 @@ print(json.dumps(result),flush=True)
   tcp[role]=observed
  report["actual_kernel_tcp"]=tcp
  report["tcp_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_TCP"
+ if mode=="auto-revision":
+  # Exact original Go TLS→Linux FecV2Step→Rust quiescent revision.
+  # No alternate first-send ACK, kernel shortcut or fake Applied marker.
+  w.stdin.write("fec.profile=light\\n");w.stdin.flush()
+  ready(out/"client.log","WBD_WINDOWS_AUTO_REVISION_REQUESTED_NOT_APPLIED revision=2 profile=0",w,15)
+  report["auto_revision_requested"]="PASS_REAL_RUST_OPERATOR_REVISION2_PENDING"
+  again=[]
+  for name in ("windows","linux"):
+   f=(out/("auto-revision-"+name+"-udp.log")).open("w");logs.append(f);again.append(f)
+  wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1",str(done),"12"],
+    stdout=again[0],stderr=subprocess.STDOUT)
+  la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",
+    unix(app),"10.66.0.1","10.66.0.2",unix(done),"12"],
+    stdout=again[1],stderr=subprocess.STDOUT)
+  until=time.monotonic()+75
+  while wa.poll() is None or la.poll() is None:
+   if w.poll() is not None or s.poll() is not None:
+    raise RuntimeError("original Windows/Linux TLS owner exited during Auto revision")
+   if time.monotonic()>until:raise RuntimeError("real Auto revision2 kernel UDP timed out")
+   time.sleep(.2)
+  if wa.returncode or la.returncode:raise RuntimeError("true two-OS revision2 UDP FAIL")
+  for name in ("windows","linux"):
+   data=json.loads((out/("auto-revision-"+name+"-udp.log")).read_text().splitlines()[-1])
+   if data["kernel_bind"]!="PASS" or data["sent"]<24 or data["received"]<12:
+    raise RuntimeError("Auto revision2 original kernel UDP "+name+": "+repr(data))
+   report["auto_revision_"+name]=data
+  snapshots=[]
+  for line in (out/"client.log").read_text(errors="replace").splitlines():
+   if "WBD_WINDOWS_NATIVE_PACKET_TELEMETRY " in line:
+    try:snapshots.append(json.loads(line.split("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY ",1)[1]))
+    except json.JSONDecodeError:pass
+  applied=any(row.get("auto_applied_revision",0)>=2 for row in snapshots)
+  report["auto_revision_applied"]=applied
+  if not applied:raise RuntimeError("original mature M2 revision2 not Applied "+repr(snapshots[-3:]))
+  print("WBD_WL_REAL_AUTO_DYNAMIC_REVISION2_APPLIED_AFTER_TWO_OS_KERNEL_UDP",flush=True)
  if os.environ.get("WBD_WL_RUN_N0")=="1":
   # One declared measurement scenario, not a mixed matrix. Genuine Linux
   # egress and eth0-ingress→IFB kernel tc, not an in-app drop/latency shim.
