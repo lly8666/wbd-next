@@ -83,6 +83,11 @@ struct WindowsOriginalM2 {
     fec_covered_2s:u64,
     #[cfg(feature="fec2_product_record")]
     fec_censored:bool,
+    // Same Linux M2 first-send 2s/8s and closed-block k histogram
+    // exported to the one shared Go FecV2Step Auto policy. These are
+    // CUMULATIVE, not fabricated success from TCP appearance ACK.
+    #[cfg(feature="fec2_product_record")]
+    auto_quality:[u64;30],
 }
 fn m2_clock()->MonoNs{
     static START:OnceLock<Instant>=OnceLock::new();
@@ -169,6 +174,8 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         fec_covered_2s:0,
         #[cfg(feature="fec2_product_record")]
         fec_censored:false,
+        #[cfg(feature="fec2_product_record")]
+        auto_quality:[0;30],
     });
     Ok(())
 }

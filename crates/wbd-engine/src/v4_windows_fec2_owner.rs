@@ -545,6 +545,76 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_parity_result(
     }
     OK
 }
+// Exact Linux Auto 30-field native M2 quality layout, not a second
+// Windows loss estimator. Only mature original first-send M2 observations
+// and actual-k completed FEC2 groups enter these cumulative counters.
+fn accumulate_original_auto_quality(
+    m:&mut WindowsOriginalM2,poll:wbd_recovery::MaturityPoll,
+    capacity_censored:u64,
+){
+    for (part,window) in [poll.window_2s,poll.window_8s].iter().enumerate(){
+        let offset=part*5;
+        for (i,value) in [
+            window.first_sent,window.unambiguous_positive,
+            window.covered_missing,window.repaired_or_ambiguous,
+            window.uncovered,
+        ].iter().enumerate(){
+            m.auto_quality[offset+i]=m.auto_quality[offset+i].saturating_add(*value);
+        }
+    }
+    m.auto_quality[10]=m.fec_reverse_reports;
+    m.auto_quality[11]=m.auto_quality[11].max(capacity_censored);
+    m.auto_quality[12]=m.auto_quality[12].saturating_add(
+        poll.window_8s.positive_confirmation_lag_ns);
+    m.auto_quality[13]=m.auto_quality[13].saturating_add(
+        poll.window_8s.positive_confirmation_samples);
+}
+#[repr(C)]
+pub struct WindowsFEC2AutoQuality {
+    pub version:u32,pub size:u32,pub revision:u64,
+    pub counters:[u64;30],
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v8_fec2_auto_quality(
+    h:u64,ep:*const u8,ep_len:usize,luid:u64,ifindex:u32,
+    out:*mut WindowsFEC2AutoQuality,size:u32,
+)->i32{
+    if out.is_null()||size!=std::mem::size_of::<WindowsFEC2AutoQuality>() as u32{
+        return INVALID
+    }
+    let Some(epoch)=v3_epoch(ep,ep_len)else{return INVALID};
+    let entry={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(entry)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(entry)
+    };
+    let Ok(mut e)=entry.lock()else{return BAD_STAGE};
+    if !v3_ready(&e,epoch,luid,ifindex)||!e.feature7||e.game_group.is_some(){
+        return BAD_STAGE
+    }
+    let (revision,histogram)={
+        let Some(tx)=e.fec2_tx.as_ref()else{return BAD_STAGE};
+        let report=tx.report();
+        let mut h=[0u64;16];
+        for (i,slot) in h.iter_mut().enumerate(){
+            for class in report.classes {
+                *slot=slot.saturating_add(class.k_hist[i+1]);
+            }
+        }
+        (tx.revision().0,h)
+    };
+    let Some(m)=e.m2.as_mut()else{return BAD_STAGE};
+    let Some(mature)=m.mature.as_mut()else{return BAD_STAGE};
+    let Ok(poll)=mature.on_due(m2_clock())else{return BAD_STAGE};
+    let cap=mature.counters().capacity_censored;
+    accumulate_original_auto_quality(m,poll,cap);
+    for (i,k) in histogram.into_iter().enumerate(){
+        m.auto_quality[14+i]=k;
+    }
+    unsafe{out.write(WindowsFEC2AutoQuality{
+        version:1,size,revision,counters:m.auto_quality,
+    })};OK
+}
 #[repr(C)]
 pub struct WindowsFixedMatureReadback {
     pub version:u32,pub size:u32,pub applied:u32,pub censored:u32,
@@ -574,7 +644,9 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_mature_readback(
         poll.window_2s.unambiguous_positive);
     m.fec_covered_2s=m.fec_covered_2s.saturating_add(
         poll.window_2s.covered());
-    m.fec_censored |= poll.capacity_limited||mature.counters().capacity_censored>0;
+    let cap=mature.counters().capacity_censored;
+    m.fec_censored |= poll.capacity_limited||cap>0;
+    accumulate_original_auto_quality(m,poll,cap);
     let applied=!m.fec_censored && m.fec_copied_source>0&&
         m.fec_copied_parity>0&&m.fec_positive_2s>0&&
         m.fec_covered_2s>0&&m.fec_reverse_reports>0;
