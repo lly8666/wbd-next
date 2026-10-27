@@ -1,5 +1,9 @@
 # 开发治理协议 v2
 
+**2026-10-27 效率优先修订**：以真实可用能力为进度，不以提交/Action/日志数量为进度。
+下面的批次规则覆盖旧历史记录里“每步intent→S→完整测试→H”的频率解释；权限、真实源码和产品正确性不变。
+本轮不增加角色/表单/审批。实施与CI入口见 `docs/architecture/TEST_PLAN.md` 第0节。
+
 ## 1. 三种状态不能混为一谈
 
 | 轴 | 权威 | 含义 |
@@ -18,6 +22,11 @@
 当前任务必须能解释：原子动作如何推进模块目标、阶段目标和项目主旨。只把这条关系的简洁结论留痕，不保存私人推理或每轮长篇自述。
 
 每项任务有 task_id、why_now、done_when、一个 next_action。达到 done_when 就停止打磨；没有新证据，不重开历史方案比赛。需要新增接口或资源时记录目的、成本、所有者、失败行为、上界与删除条件。
+
+next_action写一项端到端能力，例如“Game2公开入口两条真实lane双向交付并Stop”，
+不要写“再加一个ABI/再跑Normal看看”。先画最短依赖链，连续实现调用方、被调用方、配置/GUI、测试和装配清单。
+正常路径所需回滚/所有权不删，但新防御性机制须对应已知缺陷、具体回归风险或既有硬门；不为假想多实例/恶意使用扩建框架。
+NOT_RUN/UNWIRED是如实披露，不是目标能力已完成；达到当前批次正例即可进入后续网络测试，未授权的全矩阵/物理不挡当前交付。
 
 “原子任务”按可验收能力划分，可包含多项实现和相关反例；不是每包、每断言、每个参数值或每轮聊天各立任务。next_action 表示下一项完整交付，可内含顺序步骤；授权范围内做完这些步骤无需反复等新分配。测试推进唯一细则见 `docs/architecture/TEST_PLAN.md` 第 0 节。不要另建逐断言审批表或治理计数门。
 
@@ -64,7 +73,11 @@ epoch/检查器是工程约束，不是恶意同账号写入者的安全隔离�
 
 S：代码、文档、请求、结果等实质工作提交。H：单独一次只更新本角色 cursor 的提交。
 
-S→H 是事实恢复边界，不是强制每个内部小步骤停工交接。一个能力批次可以有多个必要代码提交，结果尽量汇总为一份日志/证据并做一次 H；实际暂停、交付或中断恢复仍及时 H，外部动作前仍先留 intent。不得为省记录隐瞒失败或长时间积攒未推送工作。
+S→H 是事实恢复边界，不是每个内部步骤的检查站。一个批次一次简短intent，可与第一份代码S同提交；
+包内正常修复沿用此intent，实际SOURCE由Actions事件/产物固定，不为每次小修另建intent提交。
+代码、测试、装配清单和适用功能卡作为完整改动提交；必要WIP可推送，保持partial。
+阶段交付、暂停或恢复结束再做一次H。测试结果在同一日志/证据汇总，不反复抄写到registry/project/cursor。
+新的外部影响或超出原intent范围须先补记录；失败仍留痕，不长时间积攒未推送工作。
 
 H.checkpoint_sha 指向已核对的 S，避免试图把一个提交自己的 SHA 写进自己。H 的 diff 只能包含登记的 cursor 文件。
 
@@ -88,7 +101,9 @@ checkpoint_sha 与 last_tested_source 独立：前者表示交接覆盖到哪里
 
 所有执行验证在 Actions。聊天只依靠 GitHub 也能开工，不需要本地 git、常驻进程或 agent 间消息。
 
-每次外部动作前先推 intent。Actions 使用稳定 request_id、role_id、task_id、source_sha、harness_sha、config_sha256、scenario、seed、kind。只有明确没有同一请求的已有 run，才能 dispatch；网络超时不是“没执行”的证明。
+外部动作须有已推送的适用批次intent，不能把此条理解成每个自动push检查必须另写一份intent。
+自动CI按event+SOURCE认领；正式手动请求继续使用现有request_id、role_id、task_id、source_sha、harness_sha、config_sha256、scenario、seed、kind。
+先查同SOURCE/同范围在途或已完成run再dispatch；网络超时不是“没执行”。同批次诊断与修复不新增任务编号或权限审批。
 
 记录 run_id、run_attempt、workflow、job、实际 checkout SOURCE、配置 hash、产物 hash 与环境。相同 request_id 出现两条 run 时标记重复，不能挑更好的一条；重跑用新的 request_id 并引用 supersedes_request。
 

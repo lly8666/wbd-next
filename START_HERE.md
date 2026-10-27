@@ -15,13 +15,13 @@
 
 先确认 role/active/branch/task_id、reservation_revision、assignment_epoch；核对 cursor.checkpoint_sha 是远端 HEAD 的祖先，**逐个提交**检查 changed paths。检查 cursor 中 open_requests 与已提交 Actions 的精确 run/attempt/artifact；失败、403、超时或未跑均不能隐去。判 `CLEAN`（事实交接完整，非产品 PASS）、`RECOVERY_REQUIRED`（先补事实）或 `BLOCKED`（身份/证据/权限冲突）。
 
-CLEAN 后依 main registry 的 **assigned_task** 与角色 cursor.next_action 推进一项完整能力批次（可同时跑许多便宜功能断言）；M0 的共享集成不需要等所有工位齐活。必要时按角色只读 `docs/architecture/modules/README.md`、`docs/architecture/TEST_PLAN.md` 和冻结 FEC2 规范，勿一次加载历史文档。
+CLEAN 后按assigned_task推进完整能力：公开入口→真实业务→关闭。源码、调用方、测试、装配清单一起改；便宜预检先行，完整原生流程按批次触发。旧cursor里的helper/重复Normal验证不是新任务。详见TEST_PLAN第0节；M0不等齐所有工位，按需读模块，勿全量历史。
 
 新功能试验进入 `experiment/**`；开发先登记，交付更新功能卡和现有 devlog 的 feature-impact，明确配置/CLI/GUI是否接线。意外中断先恢复遗漏登记。main 合并不会自动把 experimental 改成 formal。跨分支待发现的实验登记应随交接同步给集成者，不能声称未发布的分支变化已被其他 agent 自动知晓。
 
 **任务发现**：registry的`goal`应引用当前任务决策文件和本角色章节，详细验收读那里；`docs/prompts/<role>.md`仅是长期启动说明，不发布具体任务。新包由M0一次更新registry+决策发布，工位补旧事实后自行接续；不需要每轮给用户换初始提示词。缺引用由M0补入口，禁止从历史日期猜任务。详见GOVERNANCE第3节。
 
-写入：先 S（代码/收据/文档），精确 SOURCE Actions 验证，后 H（**只修改自己的 cursor**）；再次刷新远端确认。工作分支不得修改 main 的登记权限，不 force push，不擅自开展下一包。每个性能 Action 单一场景；AB/BA 必须同 job/VM。无新增信息的重复失败先缩小复现，不刷 seed。
+写入：一份批次intent可与代码S同提交，普通包内修复连续推进；交付/暂停/恢复边界再H（只改自己的cursor）。不逐helper交接，不为文档更新重验产品。权限、精确SOURCE、性能单Action单场景/同机AB保持；失败先定位、不刷seed。
 
 **模式与平台**：FEC2默认 **OFF**；公开Linux的Normal/Fixed/Auto/Game已有各自范围的Actions证据，不能再按旧快照断言仅有测试helper，也不能推广到所有配置或物理环境。ARM64公共构建默认native-first加速，实际编译/运行后端及主线集成资格读 `docs/evidence/arm64-main-integration-20261022.json`。Windows、完整自动档/生命周期、MTU/大UDP/p99等按各自最新证据；网络实验分支的失败/修复不因ARM合并自动关闭。历史仍见 `docs/history/INDEX.md`。
 

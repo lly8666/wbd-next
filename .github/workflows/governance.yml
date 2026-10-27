@@ -47,7 +47,7 @@ jobs:
         run: |
           python -m pip install PyYAML==6.0.2
           python tools/check_workflows.py
-          python -m unittest tests.test_feature_catalog tests.test_governance_ci -v
+          python -m unittest tests.test_feature_catalog tests.test_governance_ci tests.test_delivery_ci -v
           python tools/governance.py validate > out/structure.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
