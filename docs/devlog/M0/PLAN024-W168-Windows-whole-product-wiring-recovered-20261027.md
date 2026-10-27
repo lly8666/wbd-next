@@ -40,3 +40,12 @@ Retire the existing workflow's **automatic second full WSL2/Npcap Fixed6-only pu
 ```feature-impact
 {"kind":"none","ids":[],"reason":"既有Linux共享Game+FEC2认证/profile和Rust owner桥接阶段的未完成产品接线；保留Windows公开模式未接通与全链路NOT_RUN，不提前提升Game资格。"}
 ```
+
+## W168 Game+FEC2 native TX first-copy receipt (recovered continuity)
+- Linux source `v4_game_lane.rs::GameAdapter::drain` credits `GameFecTx::copied` ONLY for real kernel-success callback; Windows private Game staging MUST NOT claim NPF copied. Source `e494c584d55ada6f1fbd9bd13a967171b9d5a687` introduced `stage_for_windows_native` preserving Linux `drain`. Source `4707c4505af0187b003c5c5a562b42c7542ace06` introduced Windows group-scoped immutable (lane,logicalID,PN) staged tickets, due parity polling from the Linux GameFecTx and real native M4 send result ABI. This S binds those actual C-ABI entrypoints to BOTH credential-verified original Go Game client and server group methods, with current-Wintun identity/readback and strictly copied/not-copied input.
+- This is **part of whole product wiring including Game FEC2**, not separate Fixed6. **Public Game2/Game4 remains UNWIRED** until the per-lane Npcap driver actually calls these methods after pcap_sendpacket, RX writes all recovered frames to real Wintun and calls finish, shared scheduled parity drains independent live lanes, original CLI/WinForms/OS Applied/Stop verified in genuine Windows↔Linux Actions. Do not flip public native mode mask=1 or mark product PASS from Rust unit/Go assembly builds alone. Windows Fixed/Auto separate end-to-end gaps still remain, including authentic M2 Applied and revision.
+- Previous source-specific full native successful builds/Normal functionality: `a111247` [40424978591](https://github.com/lly8666/wbd-next/actions/runs/40424978591), `83bf095` [40425684642](https://github.com/lly8666/wbd-next/actions/runs/40425684642), `0af5e11` [40425742413](https://github.com/lly8666/wbd-next/actions/runs/40425742413): all reported overall SUCCESS at last check, but **Normal only** functional; earlier YAML-invalid 0c644/267ec red remains. Current partial Game stage source must be tested separately and is not inherited those green proofs.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"该阶段新增Windows与Linux共享Game FEC2的Native NPF成功回报和限额parity到期接口，仍未提供Game2/4公开真实多lane驱动与Windows产品通过资格。"}
+```

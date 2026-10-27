@@ -86,3 +86,83 @@ func(g *V4WindowsAuthenticatedGameServerGroup) CompleteGameFecBatch(
  if err:=g.active(ctx);err!=nil{return err}
  return winGameFecFinish(g.fecFinishProc,g.joined,lane,allCopied)
 }
+
+// All ticket accounting is scoped to genuine same-process native Wintun
+// and independently authenticated Game2/4 Npcap lanes. The returned
+// ciphertext is STAGED, never proof that the Windows kernel copied it.
+// Neither API sends a packet itself or claims product/GUI Applied.
+func winGameFecParityDue(proc *syscall.Proc,group uint64,capacity uint32)(
+ []V4WindowsGameRecord,error,
+){
+ if proc==nil||group==0||capacity==0||capacity>16{
+  return nil,errV4WindowsOwner
+ }
+ rows:=make([]v4WindowsGameRawRecord,capacity)
+ var count uint32
+ err:=winOwnerCall(proc,uintptr(group),
+  uintptr(unsafe.Pointer(&rows[0])),uintptr(capacity),
+  uintptr(unsafe.Pointer(&count)))
+ runtime.KeepAlive(rows)
+ if err!=nil||count>capacity{return nil,errors.Join(errV4WindowsOwner,err)}
+ out:=make([]V4WindowsGameRecord,0,count)
+ for _,r:=range rows[:count]{
+  if r.Lane==0||r.Lane>4||r.Length<32||r.Length>1536{
+   return nil,errV4WindowsOwner
+  }
+  out=append(out,V4WindowsGameRecord{
+   Lane:r.Lane,Length:r.Length,PacketNumber:r.PacketNumber,
+   LogicalID:r.LogicalID,Wire:append([]byte(nil),r.Wire[:r.Length]...),
+  })
+ }
+ return out,nil
+}
+func winGameFecM4SendResult(proc *syscall.Proc,group uint64,
+ lane uint32,logicalID,pn uint64,kernelCopied bool)error{
+ if proc==nil||group==0||lane==0||lane>4{return errV4WindowsOwner}
+ var copied uintptr
+ if kernelCopied{copied=1}
+ return winOwnerCall(proc,uintptr(group),uintptr(lane),
+  uintptr(logicalID),uintptr(pn),copied)
+}
+// DueGameFecParity returns a bounded batch from the SAME shared Rust
+// GameFecTx timed owner used by Linux. Only use after real native
+// Npcap has reported all earlier staged send tickets.
+func(g *V4WindowsAuthenticatedGameGroup) DueGameFecParity(
+ ctx context.Context,capacity uint32,
+)([]V4WindowsGameRecord,error){
+ if g==nil{return nil,errV4WindowsOwner}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.gameFec==0{return nil,errV4WindowsOwner}
+ if err:=g.verifyLive(ctx);err!=nil{return nil,err}
+ return winGameFecParityDue(g.fecParityProc,g.joined,capacity)
+}
+func(g *V4WindowsAuthenticatedGameGroup) ReportGameFecNpcapCopy(
+ ctx context.Context,record V4WindowsGameRecord,copied bool,
+)error{
+ if g==nil{return errV4WindowsOwner}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.gameFec==0{return errV4WindowsOwner}
+ if err:=g.verifyLive(ctx);err!=nil{return err}
+ // The real per-lane pcap_sendpacket callback must be the sole caller.
+ return winGameFecM4SendResult(g.fecM4SendProc,g.joined,
+  record.Lane,record.LogicalID,record.PacketNumber,copied)
+}
+func(g *V4WindowsAuthenticatedGameServerGroup) DueGameFecParity(
+ ctx context.Context,capacity uint32,
+)([]V4WindowsGameRecord,error){
+ if g==nil{return nil,errV4WindowsOwner}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.gameFec==0{return nil,errV4WindowsOwner}
+ if err:=g.active(ctx);err!=nil{return nil,err}
+ return winGameFecParityDue(g.fecParityProc,g.joined,capacity)
+}
+func(g *V4WindowsAuthenticatedGameServerGroup) ReportGameFecNpcapCopy(
+ ctx context.Context,record V4WindowsGameRecord,copied bool,
+)error{
+ if g==nil{return errV4WindowsOwner}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.gameFec==0{return errV4WindowsOwner}
+ if err:=g.active(ctx);err!=nil{return err}
+ return winGameFecM4SendResult(g.fecM4SendProc,g.joined,
+  record.Lane,record.LogicalID,record.PacketNumber,copied)
+}

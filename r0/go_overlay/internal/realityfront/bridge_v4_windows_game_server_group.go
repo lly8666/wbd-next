@@ -22,6 +22,7 @@ type V4WindowsAuthenticatedGameServerGroup struct{
  joined uint64
  stageProc,openProc,joinProc,stopProc *syscall.Proc
  fecOpenProc,fecFinishProc *syscall.Proc
+ fecParityProc,fecM4SendProc *syscall.Proc
  gameFec uint8 // protected client/server GameFec, same for all independent TLS lanes
  closed bool
 }
@@ -125,11 +126,17 @@ func(g *V4WindowsAuthenticatedGameServerGroup) BindAndJoinOriginalWintun(
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   finish,err:=dll.FindProc("wbd_m0_win_owner_v4_game_finish_fec")
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  parity,err:=dll.FindProc("wbd_m0_win_owner_v4_game_fec_parity_due")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  receipt,err:=dll.FindProc("wbd_m0_win_owner_v4_game_m4_send_result")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   fec,err:=dll.FindProc("wbd_m0_win_owner_v4_game_fec_enable")
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   if err=winOwnerCall(fec,uintptr(group),uintptr(g.gameFec-1));err!=nil{return err}
   g.fecOpenProc=open
   g.fecFinishProc=finish
+  g.fecParityProc=parity
+  g.fecM4SendProc=receipt
  }
  return nil
 }

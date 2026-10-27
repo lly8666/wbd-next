@@ -24,6 +24,8 @@ on:
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_game_group_test.go
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_game_fec_batch.go
       - crates/wbd-engine/src/v4_windows_game_owner.rs
+      - crates/wbd-engine/src/v4_game_lane.rs
+      - crates/wbd-engine/src/v4_game_fec.rs
       - crates/wbd-engine/src/v4_windows_fec2_owner.rs
       - crates/wbd-engine/src/v4_fixed_stream.rs
       - crates/wbd-engine/src/v4_windows_owner.rs
