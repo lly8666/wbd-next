@@ -19,6 +19,7 @@ import(
  "os"
  "os/signal"
  "path/filepath"
+ "runtime"
  "sync"
  "sync/atomic"
  "strings"
@@ -369,7 +370,26 @@ waitNative:
      state.RequestedRevision,state.Desired)
    }
   case <-metricsTicker.C:
+   actualMTU,mtuErr:=product.RuntimeMTU(ctx)
+   if mtuErr!=nil||actualMTU!=o.TunnelMTU{
+    runtimeErr=fmt.Errorf("original M4 OS interface MTU drift/invalid WAL expected=%d actual=%d: %w",
+     o.TunnelMTU,actualMTU,errors.Join(windowsclient.ErrN4NativeGuard,mtuErr))
+    break waitNative
+   }
+   if readErr:=transport.RefreshEffective(ctx);readErr!=nil{
+    runtimeErr=fmt.Errorf("original Rust M2 effective readback: %w",readErr)
+    break waitNative
+   }
    metrics:=transport.Stats()
+   // Precisely one Go runtime heap/GC snapshot per second. These
+   // counters DO NOT represent Rust DLL or kernel allocator activity:
+   // the same original Windows EXE process CPU/RSS is sampled separately.
+   var goHeap runtime.MemStats
+   runtime.ReadMemStats(&goHeap)
+   metrics.GoHeapAllocBytes=goHeap.HeapAlloc
+   metrics.GoHeapObjects=goHeap.HeapObjects
+   metrics.GoMallocsTotal=goHeap.Mallocs
+   metrics.GoNumGC=goHeap.NumGC
    metrics.NPFIngressLocalDrops=ingressLocalDrops.Load()
    if line,mErr:=json.Marshal(metrics);mErr==nil{
     fmt.Println("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY "+string(line))

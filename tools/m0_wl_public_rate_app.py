@@ -12,6 +12,7 @@ import socket
 import struct
 import sys
 import time
+from m0_wl_business_latency import summarize_rtt
 
 local, remote, side, start_flag, output_dir = sys.argv[1:6]
 out = pathlib.Path(output_dir)
@@ -29,11 +30,21 @@ while not pathlib.Path(start_flag).exists():
     time.sleep(.015)
 
 prefix=b"WBD-WL-N0/"
+probe_request=b"WBD-WL-RTT-Q/"
+probe_reply=b"WBD-WL-RTT-R/"
+probe_interval=.1 # ≤10 probes/s, separate from the original 10Mbps rate denominator
+probes_sent=0
+probe_next=None
+probe_pending={}
+probe_delivered=set()
+probe_rtt_ms=[]
+probe_send_errors=0
 sizes=(96, 288, 1060, 1200) # true UDP payload bytes; no fake TCP ACK/FEC record.
 rate_bytes_per_sec=1_250_000
 duration=60.0
 drain=5.0
 start=time.monotonic()
+probe_next=start
 last_credit=start
 last_heartbeat=start
 credit=0.0
@@ -69,12 +80,41 @@ while True:
         if err: break
     else:
         last_credit=now
+    # A sparse real UDP request/reply shares the EXACT same original
+    # Windows Wintun/Linux TUN business path during sustained load. Both
+    # sides measure RTT on their own monotonic clock; no cross-OS offsets.
+    if now<start+duration and now>=probe_next:
+        seq=probes_sent
+        try:
+            n=sock.sendto(probe_request+struct.pack("!Q",seq),
+                          (remote,45903))
+            if n!=len(probe_request)+8:raise RuntimeError("partial probe")
+            probe_pending[seq]=now
+            probes_sent+=1
+        except (OSError,RuntimeError):
+            probe_send_errors+=1
+        probe_next=now+probe_interval
     # Drain ready packets without blocking the sender. Count first arrival
     # only and keep 10ms first-delivery buckets.
     for _ in range(160):
         try: payload,peer=sock.recvfrom(1600)
         except BlockingIOError: break
-        if peer[0]!=remote or not payload.startswith(prefix) or len(payload)<len(prefix)+8:
+        if peer[0]!=remote:
+            invalid+=1
+            continue
+        if payload.startswith(probe_request) and len(payload)==len(probe_request)+8:
+            # Genuine application echo, not a transport/FEC M2 ACK.
+            try:sock.sendto(probe_reply+payload[len(probe_request):],peer)
+            except OSError:probe_send_errors+=1
+            continue
+        if payload.startswith(probe_reply) and len(payload)==len(probe_reply)+8:
+            seq=struct.unpack("!Q",payload[len(probe_reply):])[0]
+            sent_at=probe_pending.pop(seq,None)
+            if sent_at is not None and seq not in probe_delivered:
+                probe_delivered.add(seq)
+                probe_rtt_ms.append((time.monotonic()-sent_at)*1000)
+            continue
+        if not payload.startswith(prefix) or len(payload)<len(prefix)+8:
             invalid+=1
             continue
         seq=struct.unpack("!Q",payload[len(prefix):len(prefix)+8])[0]
@@ -111,6 +151,8 @@ result={
     "duplicate_packets":duplicate,"invalid_packets":invalid,
     "max_interdelivery_ms":max_interdelivery_ms,
     "arrival_10ms_bucket_counts":bins,
+    "business_udp_rtt":summarize_rtt(probe_rtt_ms,probes_sent),
+    "business_udp_rtt_send_errors":probe_send_errors,
     "application_oneway_p99":"NOT_MEASURED_UNCALIBRATED_WINDOWS_LINUX_CLOCKS",
     "sender_error":err
 }

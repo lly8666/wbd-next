@@ -69,6 +69,65 @@ func(s *V4WindowsAuthenticatedClientOwner) OriginalOwnerReadback()(V4WindowsScop
     },nil
 }
 
+// B2 zero-wait bounded original Wintun ready-prefix SOURCE stage ABI.
+// The caller owns both buffers for one fair 2ms native turn; neither
+// a staged Go array nor Rust AEAD seal means a native NPF kernel copy.
+type V4WindowsOriginalSourceInput struct{
+ Length,Reserved uint32
+ IPv4 [2048]byte
+}
+type V4WindowsOriginalSourceOutput struct{
+ Used,Seq uint32
+ PN uint64
+ Wire [2048]byte
+}
+const V4WindowsOriginalSourceBatchMax=4
+func(s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalSourceBatch(
+ ctx context.Context,inputs []V4WindowsOriginalSourceInput,
+ outputs []V4WindowsOriginalSourceOutput,
+)(uint32,error){
+ if ctx==nil||s==nil||s.bridge==nil||s.device==nil||
+    s.bridge.stageSourceBatchProc==nil||
+    len(inputs)==0||len(inputs)>V4WindowsOriginalSourceBatchMax||
+    len(outputs)!=len(inputs)||
+    unsafe.Sizeof(V4WindowsOriginalSourceInput{})!=2056||
+    unsafe.Sizeof(V4WindowsOriginalSourceOutput{})!=2064{
+    return 0,errV4WindowsOwner
+ }
+ if err:=ctx.Err();err!=nil{return 0,err}
+ maxIPv4:=s.device.maxIPv4
+ for i:=range inputs{
+  n:=inputs[i].Length
+  if inputs[i].Reserved!=0||n<20||n>2048||
+     int(n)>maxIPv4||inputs[i].IPv4[0]>>4!=4||
+     inputs[i].IPv4[0]&15<5{
+    return 0,errV4WindowsOwner
+  }
+ }
+ release,err:=s.device.borrowHot(ctx)
+ if err!=nil{return 0,errors.Join(errV4WindowsOwner,err)}
+ defer release()
+ var produced uint32
+ err=winOwnerCall(s.bridge.stageSourceBatchProc,
+  uintptr(s.bridge.handle),uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+  uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
+  uintptr(unsafe.Pointer(&inputs[0])),uintptr(len(inputs)),
+  uintptr(unsafe.Pointer(&outputs[0])),uintptr(len(outputs)),
+  uintptr(unsafe.Pointer(&produced)))
+ runtime.KeepAlive(inputs);runtime.KeepAlive(outputs)
+ runtime.KeepAlive(s.bridge.epoch)
+ if produced>uint32(len(inputs)){return 0,errV4WindowsOwner}
+ // Any partial native error after a seal may have burned original M1
+ // PN/SEQ. Return the truthful prefix but do not submit it as a second
+ // attempt; the enclosing original Go owner must Stop.
+ if err!=nil{return produced,errors.Join(errV4WindowsOwner,err)}
+ if produced!=uint32(len(inputs)){return produced,errV4WindowsOwner}
+ for i:=range outputs{
+  n:=outputs[i].Used
+  if n<=31||n>2048{return produced,errV4WindowsOwner}
+ }
+ return produced,nil
+}
 // SealBoundOriginalNormalOff is callable only AFTER original-Go verified
 // credential TLS, successful Rust commit and the same live M4-created native
 // Wintun Hold. It asks the SAME Rust M1 owner for a single immutable M3 AEAD
@@ -82,14 +141,12 @@ func (s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalNormalOff(
         return nil,0,0,errV4WindowsOwner
     }
     if err:=ctx.Err();err!=nil{return nil,0,0,err}
-    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-        return nil,0,0,errors.Join(errV4WindowsOwner,err)
-    }
-    owner,err:=s.OriginalOwnerReadback()
-    if err!=nil||!owner.OwnerActive||!owner.DeviceBound||
-        owner.DeviceQuiesced||owner.ProductApplied{
-        return nil,0,0,errV4WindowsOwner
-    }
+    borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
+    // Current M4 borrowHot above guards original TLS/generation and Stop.
+    // Rust v3_ready under this same seal call independently asserts
+    // ACTIVE, authentic epoch, LUID and interface index.
     // 31 is the original M3 fixed on-wire record overhead. The v3 Rust
     // authority also computes its own conservative 576B budget and rejects
     // oversize data before consuming a PN.
@@ -97,7 +154,7 @@ func (s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalNormalOff(
     var used uintptr
     var seq uint32
     var pn uint64
-    err=winOwnerCall(s.bridge.sealNormalProc,
+    err:=winOwnerCall(s.bridge.sealNormalProc,
         uintptr(s.bridge.handle),
         uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
         uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
@@ -128,9 +185,9 @@ func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalNormalOff(
         return nil,errV4WindowsOwner
     }
     if err:=ctx.Err();err!=nil{return nil,err}
-    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-        return nil,errors.Join(errV4WindowsOwner,err)
-    }
+    borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
     state,err:=s.OriginalOwnerReadback()
     if err!=nil||!state.OwnerActive||!state.DeviceBound||
         state.DeviceQuiesced||state.ProductApplied||state.ServerSide{
@@ -198,9 +255,9 @@ func(s *V4WindowsAuthenticatedClientOwner) NextBoundOriginalM2Repair(
             s!=nil&&s.device!=nil,s!=nil&&s.bridge!=nil&&s.bridge.prepareRepairProc!=nil)
     }
     if err:=ctx.Err();err!=nil{return nil,0,0,err}
-    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-        return nil,0,0,errors.Join(errV4WindowsOwner,err)
-    }
+    borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
     wire:=make([]byte,maxWire)
     var used uintptr
     var seq uint32
@@ -273,9 +330,9 @@ func(s *V4WindowsAuthenticatedClientOwner) ReportOriginalM2NpcapFirstsend(
         return 0,errV4WindowsOwner
     }
     if err:=ctx.Err();err!=nil{return 0,err}
-    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil {
-        return 0,errors.Join(errV4WindowsOwner,err)
-    }
+    borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return 0,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
     var yes uintptr
     if sent{yes=1}
     var outstanding uint32
@@ -286,6 +343,50 @@ func(s *V4WindowsAuthenticatedClientOwner) ReportOriginalM2NpcapFirstsend(
         uintptr(unsafe.Pointer(&outstanding)))
     runtime.KeepAlive(s.bridge.epoch)
     return outstanding,err
+}
+
+// Typed unchanged Rust M1 PN/SEQ and real NPF syscall completions.
+// One batch is bounded by the same 32-record/2ms owner fair turn;
+// staged bytes in Go are never equivalent to native copied/p2p delivery.
+type V4WindowsM2FirstsendResult struct {
+ PN uint64
+ Seq,WireLen,Outcome,Reserved uint32
+}
+const V4WindowsM2FirstsendBatchMax=32
+func(s *V4WindowsAuthenticatedClientOwner) ReportOriginalM2NpcapFirstsendBatch(
+ ctx context.Context,rows []V4WindowsM2FirstsendResult,
+)(uint32,uint32,error){
+ if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
+  s.bridge.reportM2BatchProc==nil||len(rows)==0||
+  len(rows)>V4WindowsM2FirstsendBatchMax||
+  unsafe.Sizeof(V4WindowsM2FirstsendResult{})!=24{
+  return 0,0,errV4WindowsOwner
+ }
+ if err:=ctx.Err();err!=nil{return 0,0,err}
+ var next uint32
+ for i,row:=range rows {
+  if row.Reserved!=0||row.Outcome>2||row.WireLen<31||row.WireLen>2048||
+   (i>0&&row.Seq!=next){return 0,0,errV4WindowsOwner}
+  for j:=0;j<i;j++{
+   if rows[j].PN==row.PN{return 0,0,errV4WindowsOwner}
+  }
+  next=row.Seq+row.WireLen
+ }
+ release,err:=s.device.borrowHot(ctx)
+ if err!=nil{return 0,0,errors.Join(errV4WindowsOwner,err)}
+ defer release()
+ var settled,outstanding uint32
+ err=winOwnerCall(s.bridge.reportM2BatchProc,
+  uintptr(s.bridge.handle),uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+  uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
+  uintptr(unsafe.Pointer(&rows[0])),uintptr(len(rows)),
+  uintptr(unsafe.Pointer(&settled)),uintptr(unsafe.Pointer(&outstanding)))
+ runtime.KeepAlive(rows);runtime.KeepAlive(s.bridge.epoch)
+ if err!=nil{return settled,outstanding,err}
+ if settled!=uint32(len(rows)){
+  return settled,outstanding,errV4WindowsOwner
+ }
+ return settled,outstanding,nil
 }
 
 // One canonical kind1 from original Rust M3-unique reverse DATA PNs,
@@ -300,20 +401,17 @@ func(s *V4WindowsAuthenticatedClientOwner) NextBoundOriginalM2Feedback(
    return nil,0,0,fmt.Errorf("%w: bounded reverse M2 due stage=preflight cap=%d max=%d",errV4WindowsOwner,capacity,s.device.maxIPv4+31)
   }
  if err:=ctx.Err();err!=nil{return nil,0,0,err}
- if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-  return nil,0,0,errors.Join(errV4WindowsOwner,err)
- }
- state,err:=s.OriginalOwnerReadback()
- if err!=nil||!state.OwnerActive||!state.DeviceBound||
-  state.DeviceQuiesced||state.ProductApplied||state.ServerSide{
-  return nil,0,0,fmt.Errorf("%w: bounded reverse M2 due stage=owner_readback active=%t bound=%t quiesced=%t applied=%t server=%t readback=%v",
-    errV4WindowsOwner,state.OwnerActive,state.DeviceBound,state.DeviceQuiesced,state.ProductApplied,state.ServerSide,err)
- }
- output:=make([]byte,capacity)
+ borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
+ // Original protected M4 lease is borrowed through the FFI and Rust
+ // feedback_due again checks epoch/LUID/index/phase under Entry lock.
+ // Avoid the redundant two status FFIs on each due scheduler turn.
+  output:=make([]byte,capacity)
  var used uintptr
  var seq uint32
  var pn uint64
- err=winOwnerCall(s.bridge.feedbackDueProc,
+ err:=winOwnerCall(s.bridge.feedbackDueProc,
   uintptr(s.bridge.handle),
   uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
   uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
@@ -335,9 +433,9 @@ func(s *V4WindowsAuthenticatedClientOwner) CompleteBoundOriginalM2Feedback(
  if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
   s.bridge.feedbackResultProc==nil{return errV4WindowsOwner}
  if err:=ctx.Err();err!=nil{return err}
- if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-  return errors.Join(errV4WindowsOwner,err)
- }
+ borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
  var copied uintptr
  if npcapSent{copied=1}
  err:=winOwnerCall(s.bridge.feedbackResultProc,
@@ -361,19 +459,16 @@ func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalNormalOrKind1(
         return nil,0,0,errV4WindowsOwner
     }
     if err:=ctx.Err();err!=nil{return nil,0,0,err}
-    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil {
-        return nil,0,0,errors.Join(errV4WindowsOwner,err)
-    }
-    state,err:=s.OriginalOwnerReadback()
-    if err!=nil||!state.OwnerActive||!state.DeviceBound||
-        state.DeviceQuiesced||state.ProductApplied||state.ServerSide{
-        return nil,0,0,errV4WindowsOwner
-    }
-    plaintext:=make([]byte,len(wire))
+    borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
+    // Same M4 protected hot borrow + Rust v3_ready/AEAD/unique-PN:
+    // no need to fetch two more mutable status snapshots per packet.
+        plaintext:=make([]byte,len(wire))
     var used uintptr
     var kind uint32
     var pn uint64
-    err=winOwnerCall(s.bridge.openKind1Proc,
+    err:=winOwnerCall(s.bridge.openKind1Proc,
         uintptr(s.bridge.handle),
         uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
         uintptr(s.device.identity.LUID),

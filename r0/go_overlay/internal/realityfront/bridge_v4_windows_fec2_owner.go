@@ -84,9 +84,9 @@ func winFec2Sealer(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
   return nil,0,0,errV4WindowsOwner
  }
  if err:=ctx.Err();err!=nil{return nil,0,0,err}
- if err:=device.device.VerifyCurrentNative(ctx,device.identity);err!=nil{
-  return nil,0,0,errors.Join(errV4WindowsOwner,err)
- }
+ borrowRelease,borrowErr:=device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
  proc,err:=bridge.dll.FindProc("wbd_m0_win_owner_v4_fec2_seal")
  if err!=nil{return nil,0,0,err}
  wire:=make([]byte,len(symbol)+31)
@@ -104,6 +104,19 @@ func winFec2Sealer(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
  if err!=nil||used!=uintptr(len(wire)){return nil,0,0,errors.Join(errV4WindowsOwner,err)}
  return wire,seq,pn,nil
 }
+// Preserve the exact Rust ABI status across the Go FEC2 RX boundary.
+// INVALID(1) is a packet rejection in the existing transport contract;
+// a missing DLL, unknown owner, capacity, phase or Stop fault remains fatal.
+// A prior rc=%v wrapper erased the typed code and killed real Auto traffic.
+func winFec2OpenCallStatus(count uint32, callErr error) error{
+ if callErr!=nil{
+  return fmt.Errorf("%w: FEC2 original native count=%d rc=%w",errV4WindowsOwner,count,callErr)
+ }
+ if count>16{
+  return fmt.Errorf("%w: FEC2 original native delivery count=%d exceeds 16",errV4WindowsOwner,count)
+ }
+ return nil
+}
 func winFec2Opener(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
  device *v4WindowsRealDeviceLease,seq uint32,wire []byte,
 )([]V4WindowsFEC2Delivery,error){
@@ -112,9 +125,9 @@ func winFec2Opener(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
   return nil,fmt.Errorf("%w: FEC2 opener preflight input=%d device=%t",errV4WindowsOwner,len(wire),device!=nil)
  }
  if err:=ctx.Err();err!=nil{return nil,err}
- if err:=device.device.VerifyCurrentNative(ctx,device.identity);err!=nil{
-  return nil,errors.Join(errV4WindowsOwner,err)
- }
+ borrowRelease,borrowErr:=device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
  proc,err:=bridge.dll.FindProc("wbd_m0_win_owner_v4_fec2_open")
  if err!=nil{return nil,fmt.Errorf("original Rust FEC2 open ABI missing: %w",err)}
  raw:=make([]winFec2RawDelivery,16)
@@ -126,8 +139,8 @@ func winFec2Opener(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
   uintptr(unsafe.Pointer(&raw[0])),uintptr(len(raw)),
   uintptr(unsafe.Pointer(&count)))
  runtime.KeepAlive(bridge.epoch);runtime.KeepAlive(wire);runtime.KeepAlive(raw)
- if err!=nil||count>16{
-  return nil,fmt.Errorf("%w: FEC2 original native count=%d rc=%v",errV4WindowsOwner,count,err)
+ if statusErr:=winFec2OpenCallStatus(count,err);statusErr!=nil{
+  return nil,statusErr
  }
  out:=make([]V4WindowsFEC2Delivery,0,count)
  for i:=uint32(0);i<count;i++{
@@ -157,9 +170,9 @@ func(s *V4WindowsAuthenticatedClientOwner) EncodeBoundOriginalFEC2Repair(
   return nil,errV4WindowsOwner
  }
  if err:=ctx.Err();err!=nil{return nil,err}
- if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-  return nil,errors.Join(errV4WindowsOwner,err)
- }
+ borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
  state,err:=s.OriginalOwnerReadback()
  if err!=nil||!state.OwnerActive||!state.DeviceBound||
   state.DeviceQuiesced||state.ServerSide{return nil,errV4WindowsOwner}
@@ -206,10 +219,9 @@ func(s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalFEC2Source(
  ctx context.Context,blockID uint64,index uint8,ipv4 []byte,
 )([]byte,uint32,uint64,error){
  if s==nil||s.bridge==nil||s.device==nil{return nil,0,0,errV4WindowsOwner}
- scope,err:=s.OriginalOwnerReadback()
- if err!=nil||!scope.OwnerActive||!scope.DeviceBound||
-  scope.DeviceQuiesced||scope.ServerSide{return nil,0,0,errV4WindowsOwner}
- symbol,err:=winFec2Source(blockID,index,ipv4,s.device.maxIPv4)
+ // winFec2Sealer borrows the genuine M4 lease. Rust checks PH_ACTIVE,
+ // epoch/generation/LUID/index on the same FFI, so pre-readback is redundant.
+  symbol,err:=winFec2Source(blockID,index,ipv4,s.device.maxIPv4)
  if err!=nil{return nil,0,0,err}
  return winFec2Sealer(ctx,s.bridge,s.device,2,symbol)
 }
@@ -217,14 +229,9 @@ func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalFEC2(
  ctx context.Context,seq uint32,wire []byte,
 )([]V4WindowsFEC2Delivery,error){
  if s==nil||s.bridge==nil||s.device==nil{return nil,errV4WindowsOwner}
- scope,err:=s.OriginalOwnerReadback()
- if err!=nil||!scope.OwnerActive||!scope.DeviceBound||
-  scope.DeviceQuiesced||scope.ServerSide{
-  return nil,fmt.Errorf("%w: original FEC2 client owner readback active=%t bound=%t quiesced=%t server=%t rc=%v",
-   errV4WindowsOwner,scope.OwnerActive,scope.DeviceBound,
-   scope.DeviceQuiesced,scope.ServerSide,err)
- }
- return winFec2Opener(ctx,s.bridge,s.device,seq,wire)
+ // winFec2Opener borrows authentic session lease and Rust repeats
+ // v3_ready plus M3 crypto/replay. No status-snapshot FFI per RX record.
+  return winFec2Opener(ctx,s.bridge,s.device,seq,wire)
 }
 func(s *V4WindowsAuthenticatedServerOwner) SealBoundOriginalFEC2Source(
  ctx context.Context,blockID uint64,index uint8,ipv4 []byte,

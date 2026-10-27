@@ -74,6 +74,7 @@ impl RxFeedbackState {
             retired_all:false, largest:None, next_seq:0, next_token:1,
             pending:None, feedback_drop:0})
     }
+    pub fn config(&self)->RxFeedbackConfig{self.cfg}
     fn repeat_ns(&self) -> u64 {
         (self.cfg.srtt_ns / 4).clamp(MIN_PAGE_NS,20_000_000)
     }

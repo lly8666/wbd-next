@@ -49,7 +49,27 @@ class DeliveryCiTests(unittest.TestCase):
         self.assertEqual(len(cleanups), 4)
         self.assertTrue(all(x.get("if") == "always()" for x in cleanups))
         self.assertNotIn("continue-on-error", job)
-        self.assertIn("github.ref == 'refs/heads/main'", job["env"]["WBD_WL_RUN_N0"])
+        # N0 is a performance scenario, not an implicit main seven-mode
+        # startup requirement. Keep strong delivery checks and require
+        # explicit one-mode selection/true on-wire N0 PASS before promotion.
+        self.assertEqual(job["env"]["WBD_WL_RUN_N0"],
+                         "${{ inputs.run_n0 == true && '1' || '0' }}")
+        self.assertIn("inputs.public_mode || 'all'",
+                      job["env"]["WBD_WL_PUBLIC_MODES"])
+        self.assertIn("PASS_SCOPED_", scripts)
+        self.assertIn("selected same-SOURCE native public mode", scripts)
+
+    def test_performance_one_scenario_rejected_before_any_native_build(self):
+        inputs = self.workflow["on"]["workflow_dispatch"]["inputs"]
+        self.assertEqual(inputs["public_mode"]["default"], "all")
+        self.assertEqual(inputs["run_n0"]["default"], "false")
+        self.assertEqual(inputs["run_n0"]["type"], "boolean")
+        self.assertIn("normal", inputs["public_mode"]["options"])
+        self.assertIn("game4-fec", inputs["public_mode"]["options"])
+        checks = "\n".join(x.get("run", "") for x in
+                           self.workflow["jobs"]["wiring-contract"]["steps"])
+        self.assertIn("select_source_locked_modes", checks)
+        self.assertIn("RUN_N0", checks)
 
     def test_both_paths_use_same_assembly_and_pinned_original(self):
         for name in ("windows-compile-preflight", "native-public-two-os"):

@@ -12,6 +12,7 @@ import (
     "fmt"
     "path/filepath"
     "runtime"
+    "sync"
     "syscall"
     "unsafe"
 
@@ -21,9 +22,12 @@ import (
 var errV4WindowsOwner=errors.New("original-Go private Windows Rust owner refused")
 type v4WindowsNativeOwnerBridge struct {
     dll *syscall.DLL
+    // Cold-resolved private FEC symbols; no per-packet GetProcAddress.
+    // sync.Map covers simultaneous FX and RX/Stop method callers.
+    fixedProcCache sync.Map
     prepareProc,stageProc,commitProc,abortProc,stateProc,stopProc,releaseProc *syscall.Proc
     bindWintunProc,quiesceWintunProc,deviceStateProc *syscall.Proc
-    sealNormalProc,openNormalProc,openKind1Proc,armM2Proc,reportM2Proc,prepareRepairProc,finishRepairProc,queryM2Proc,feedbackDueProc,feedbackResultProc *syscall.Proc
+    sealNormalProc,openNormalProc,openKind1Proc,armM2Proc,reportM2Proc,reportM2BatchProc,stageSourceBatchProc,prepareRepairProc,finishRepairProc,queryM2Proc,feedbackDueProc,feedbackResultProc *syscall.Proc
     handle uint64
     epoch [16]byte
     serverSide bool
@@ -58,6 +62,8 @@ func newV4WindowsPrivateOwnerBridge(absoluteLibrary string)(*v4WindowsNativeOwne
         {"wbd_m0_win_owner_v5_open_data_or_kind1",&b.openKind1Proc},
         {"wbd_m0_win_owner_v6_arm_original_m2",&b.armM2Proc},
         {"wbd_m0_win_owner_v6_report_npcap_firstsend",&b.reportM2Proc},
+        {"wbd_m0_win_owner_v10_report_npcap_firstsend_batch",&b.reportM2BatchProc},
+        {"wbd_m0_win_owner_v11_stage_original_sources_batch",&b.stageSourceBatchProc},
         {"wbd_m0_win_owner_v6_next_frozen_repair",&b.prepareRepairProc},
         {"wbd_m0_win_owner_v6_finish_frozen_repair",&b.finishRepairProc},
         {"wbd_m0_win_owner_v6_m2_outstanding",&b.queryM2Proc},
@@ -71,11 +77,41 @@ func newV4WindowsPrivateOwnerBridge(absoluteLibrary string)(*v4WindowsNativeOwne
     }
     return b,nil
 }
+// This cache is bound to the already verified, absolute DLL loaded for
+// the one private owner. Missing symbols still fail closed; nothing resolves
+// DLL paths from untrusted traffic or reuses a stale owner handle.
+func(b *v4WindowsNativeOwnerBridge) fixedProc(name string)(*syscall.Proc,error){
+    if b==nil||b.dll==nil{return nil,errV4WindowsOwner}
+    if cached,ok:=b.fixedProcCache.Load(name);ok{
+        return cached.(*syscall.Proc),nil
+    }
+    proc,err:=b.dll.FindProc(name)
+    if err!=nil{return nil,err}
+    winner,_:=b.fixedProcCache.LoadOrStore(name,proc)
+    return winner.(*syscall.Proc),nil
+}
+// Native ABI error retains the exact Rust return code through any Go
+// errors.Join wrapping. INVALID(1) may mean untrusted packet rejection;
+// UNKNOWN/BAD_STAGE/FULL/STOP_INCOMPLETE are owner failures, not bad tags.
+type v4WindowsNativeABIError struct{ Code uintptr }
+func(e *v4WindowsNativeABIError)Error()string{
+ return fmt.Sprintf("%v: C ABI rc=%d",errV4WindowsOwner,e.Code)
+}
+func(e *v4WindowsNativeABIError)Unwrap()error{return errV4WindowsOwner}
+// Missing/native transport error without an ABI code also fails closed.
+// INVALID remains an explicit ambiguous legacy packet rejection; the
+// pre-bound M4 authentic lease and Rust v3_ready are never bypassed.
+func V4WindowsNativeOwnerFatal(err error)bool{
+ if err==nil{return false}
+ var native *v4WindowsNativeABIError
+ if errors.As(err,&native){return native.Code!=1}
+ return true
+}
 func winOwnerCall(proc *syscall.Proc,args ...uintptr)error{
-    if proc==nil{return errV4WindowsOwner}
-    status,_,_:=proc.Call(args...)
-    if status!=0{return fmt.Errorf("%w: C ABI rc=%d",errV4WindowsOwner,status)}
-    return nil
+ if proc==nil{return errV4WindowsOwner}
+ status,_,_:=proc.Call(args...)
+ if status!=0{return &v4WindowsNativeABIError{Code:status}}
+ return nil
 }
 func (b *v4WindowsNativeOwnerBridge) prepare(
     snapshot V4ColdSessionSnapshot,rxBoundary uint32,peer v4PeerTransport,

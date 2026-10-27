@@ -191,6 +191,18 @@ func(s *N4RealWindowsProduct) Stop(ctx context.Context)error{
  return nil
 }
 
+// RuntimeMTU is at most a 1Hz call from the original client's existing
+// telemetry timer. The entire original M4 WAL + live same-generation OS
+// interface MTU must still match, or the product stops and retains its
+// owned recovery state. This is NOT a dynamic reconfiguration write.
+func(s *N4RealWindowsProduct) RuntimeMTU(ctx context.Context)(uint32,error){
+ if s==nil||ctx==nil{return 0,ErrN4NativeGuard}
+ s.mu.Lock();defer s.mu.Unlock()
+ if !s.applied||s.stopped||s.controller==nil||s.owner==nil||
+   s.controller.txn==nil{return 0,ErrN4NativeGuard}
+ if err:=s.owner.VerifyOriginalNativeHold(ctx,s.identity);err!=nil{return 0,err}
+ return s.controller.txn.LiveConfiguredMTU(ctx)
+}
 // LiveReceipt is the last actual complete OS readback, NOT a cached Go
 // process-ready line. It cannot certify real current host state without
 // checking under the transaction machine gate again.

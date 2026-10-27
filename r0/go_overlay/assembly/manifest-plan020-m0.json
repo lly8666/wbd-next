@@ -623,19 +623,19 @@
       "kind": "create",
       "path": "internal/windowsclient/native_real_product_service_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go",
-      "result_blob": "60bbe4992b537417d02f3a8b6afc99d3aef027ee"
+      "result_blob": "7ab79fcde1e080babc096db2b7194b560a838a6c"
     },
     {
       "kind": "create",
       "path": "internal/windowsownerlease/original_tls_native_product_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go",
-      "result_blob": "5cdbb871b4a99b251a698a0c41567d31fe4e5ebe"
+      "result_blob": "dab0206c949de9b0fcb4b7f9a2cccb527ed966d8"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_udp_kernel_driver_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
-      "result_blob": "3235254d846624653765beb408fbee25a38445be"
+      "result_blob": "dc70501597b3249edc5a14b3e55b052e14cf03d4"
     },
     {
       "kind": "create",
@@ -653,13 +653,13 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "008c73b19b6c64a18c1db739c3f9c04f587e68cc"
+      "result_blob": "cac2f3efaa849c1ac75c322e1890f6df1615e25e"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
-      "result_blob": "8861e02a5c539980d0a920b52f25d805f7cc51f2"
+      "result_blob": "8a5a26585ef7a39df7c70eca618c75276ca5dfa7"
     },
     {
       "kind": "create",
@@ -707,31 +707,31 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_rx_window_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rx_window_windows.go",
-      "result_blob": "c1e98830d6d7e118fb17d9900704ee147867dd3b"
+      "result_blob": "242e6266696712389076cb8de21eb9178ba3c142"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_rx_window_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rx_window_windows_test.go",
-      "result_blob": "09569ebfcb314f2a5bea2ab0104c1d9948bc4c37"
+      "result_blob": "243ae9872a52cffa4cea54dc2febabe2ae3a4018"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_peer_windows.go",
-      "result_blob": "8bc8d271845f3dc51b0312d3c307eeb1c6c2c2c9"
+      "result_blob": "9cc6a9036b928723138c0d5fdebb652ac7264c7b"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "bb735f1118d37fa85e9f7fc2f4a9d1d211e9cf51"
+      "result_blob": "c13128f1714391c01a7850eb3ea0d88e09434106"
     },
     {
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_auto_controller.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_auto_controller.go",
-      "result_blob": "b234a6266208e41a9d5ea9c128278c5471fb9806"
+      "result_blob": "65f6d4b468e8026852e8a52267b7a649c42d78ae"
     },
     {
       "kind": "create",
@@ -744,6 +744,24 @@
       "path": "internal/realityfront/fec_v2_runtime_controller_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller_test.go",
       "result_blob": "b02b47b847dd356b5b3f1787503900993394c70f"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_udp_kernel_driver_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows_test.go",
+      "result_blob": "1efdc4ff0e42138f99390484f79088d0b2a115a4"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_m0_runtime_mtu_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_m0_runtime_mtu_windows.go",
+      "result_blob": "7637114c43e9513a5df3bf079bd099e82f5505a5"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_m0_runtime_mtu_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_m0_runtime_mtu_windows_test.go",
+      "result_blob": "86eab20d783fdebeb7ddfb56c4da4f987d7e86a7"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

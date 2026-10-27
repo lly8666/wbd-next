@@ -12,6 +12,7 @@ import (
     "io"
     "sync"
     "syscall"
+    "time"
     "unsafe"
 )
 
@@ -44,6 +45,11 @@ type N4OriginalKernelPacketLease struct{
     holder N4WindowsCreatedWintunReservation
     id N4UnifiedIdentity
     stopped bool
+    // The exact real M4-owned TUN/generation and Stop are serialized on
+    // every ring op. The expensive GUID/LUID/PnP OS proof is reaudited at
+    // most once per second; a failed refresh permanently fences this lease.
+    lastVerifiedAt time.Time
+    identityRevoked bool
     received,copied,rejected uint64
     // Serializes only one finite kernel ring call. No goroutine blocks in
     // ReadPacket's unbounded wait while holding this lease's lock.
@@ -67,13 +73,34 @@ func n4CreateOriginalKernelPacketLease(ctx context.Context,tun *TUN,id N4Unified
         return nil,ErrN4NativeGuard
     }
     n4OriginalRingOwners.held[tun]=id
-    return &N4OriginalKernelPacketLease{tun:tun,id:id,holder:holder},nil
+    return &N4OriginalKernelPacketLease{
+        tun:tun,id:id,holder:holder,lastVerifiedAt:time.Now(),
+    },nil
+}
+// Called only while d.mu is held, so Stop and all ring I/O are mutually
+// exclusive and no native Wintun loan crosses a revalidation boundary.
+func n4RealOriginalWintunAuditDue(last,now time.Time)bool{
+    return last.IsZero()||now.Before(last)||now.Sub(last)>=time.Second
 }
 func (d *N4OriginalKernelPacketLease) check(ctx context.Context)error{
     if d==nil||ctx==nil{return ErrN4NativeGuard}
     if err:=ctx.Err();err!=nil{return err}
-    if d.stopped{return ErrN4NativeGuard}
-    return d.holder.Verify(ctx,d.id)
+    if d.stopped||d.identityRevoked||d.tun==nil||
+       d.id.Generation==[16]byte{}||d.id.Installation==[16]byte{}{
+        return ErrN4NativeGuard
+    }
+    now:=time.Now()
+    if !n4RealOriginalWintunAuditDue(d.lastVerifiedAt,now){
+        return nil
+    }
+    if err:=d.holder.Verify(ctx,d.id);err!=nil{
+        // Even if a transient PnP reappearance later uses the same alias,
+        // this original protected Rust/TLS epoch must Stop and re-establish.
+        d.identityRevoked=true
+        return errors.Join(ErrN4NativeGuard,err)
+    }
+    d.lastVerifiedAt=now
+    return nil
 }
 // n4DeliverAuthenticatedIPv4 is deliberately NOT exported. Caller must
 // hold M0 original-Go TLS+Rust AEAD first-delivery receipt; this method
@@ -154,6 +181,63 @@ func (d *N4OriginalKernelPacketLease) n4ReceiveReadyIPv4(
     // More than eight unrelated frames do not monopolize the caller.
     // A later explicit poll can still receive the queued real IPv4 packet.
     return 0,ErrN4NativeNoPacket
+}
+// One original signed Wintun kernel event, shared by Normal/Fixed/Auto
+// and Game. A separate original client observer waits here ONLY when the
+// real packet pump is idle. It does not acquire a second Wintun session,
+// copy a packet, invent a native completion or confer product Applied.
+// WaitForMultipleObjects is capped at 20ms to observe Go cancellation even
+// if the original process-created Win32 close event has not yet fired.
+const n4OriginalRingWaitTimeout uintptr=0x102
+func n4BoundedOriginalWaitMillis(duration time.Duration)uintptr{
+ if duration<=0{return 1}
+ ms:=duration.Milliseconds()
+ if ms<1{return 1}
+ if ms>20{return 20}
+ return uintptr(ms)
+}
+func (d *N4OriginalKernelPacketLease) WaitReadReady(
+ ctx context.Context,limit time.Duration,
+)(bool,error){
+ if d==nil{return false,ErrN4NativeGuard}
+ d.mu.Lock()
+ if err:=d.check(ctx);err!=nil{
+  d.mu.Unlock();return false,err
+ }
+ tun:=d.tun
+ if !tun.beginCall(){
+  d.mu.Unlock();return false,ErrN4NativeGuard
+ }
+ // Keep the exact original Win32 session/event handles valid across the
+ // bounded wait while allowing concurrent native Wintun reads and Stop.
+ readEvt,closeEvt:=tun.readEvt,tun.closeEvt
+ d.mu.Unlock()
+ defer tun.endCall()
+ if readEvt==0||closeEvt==0{return false,ErrN4NativeGuard}
+ handles:=[2]uintptr{readEvt,closeEvt}
+ status,_,callErr:=waitForMultipleObjects.Call(
+  2,uintptr(unsafe.Pointer(&handles[0])),0,
+  n4BoundedOriginalWaitMillis(limit))
+ if ctx.Err()!=nil{return false,ctx.Err()}
+ switch status{
+ case waitObject0:
+  // Revalidate Stop/generation after a real event; the read-ready
+  // signal is NOT a packet, so normal ReceiveReadyIPv4 still owns
+  // real WintunReceivePacket/ReleaseReceivePacket.
+  d.mu.Lock()
+  err:=d.check(ctx)
+  d.mu.Unlock()
+  if err!=nil{return false,err}
+  return true,nil
+ case waitObject0+1:
+  return false,io.EOF
+ case n4OriginalRingWaitTimeout:
+  return false,nil
+ case waitFailed:
+  return false,wintunCallError("WaitForMultipleObjects(original ring)",callErr,nil)
+ default:
+  return false,ErrN4NativeGuard
+ }
 }
 func (d *N4OriginalKernelPacketLease) Counts()(N4RealKernelPacketCounts,error){
     if d==nil{return N4RealKernelPacketCounts{},ErrN4NativeGuard}

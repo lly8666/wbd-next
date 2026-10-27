@@ -22,7 +22,9 @@ func(s *V4WindowsAuthenticatedClientOwner) ReadBoundOriginalAutoQuality(
 )(V4WindowsAutoQuality,error){
  var v V4WindowsAutoQuality
  if ctx==nil||s==nil||s.bridge==nil||s.device==nil{return v,errV4WindowsOwner}
- if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{return v,err}
+ borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return v,borrowErr}
+ defer borrowRelease()
  proc,err:=s.bridge.dll.FindProc("wbd_m0_win_owner_v8_fec2_auto_quality")
  if err!=nil{return v,err}
  err=winOwnerCall(proc,uintptr(s.bridge.handle),
@@ -97,6 +99,33 @@ func winAutoWindow(now,then [30]uint64,start int)(FecV2Window,bool){
   FirstSent:d[0],Observed:d[1]+d[2],Missing:d[2],Unknown:d[3]+d[4],
  },d[0]==d[1]+d[2]+d[3]+d[4]
 }
+// winAutoAlignedMatureCohorts pairs the truly sampled 8s mature
+// first-send cohort with the immediately preceding actual-k close cohort.
+// Independent floor(now-8s) and floor(now-16s) selected 8/10s versus
+// 6/8/10s windows on a 2s jittered Windows scheduler (S52): a real
+// no-loss source was repeatedly misclassified UNKNOWN. Matching actual
+// sampled tick distances fixes the provenance, NOT the policy thresholds.
+// Under missing, nonmonotonic or insufficient samples we return UNKNOWN.
+func winAutoAlignedMatureCohorts(points []winAutoPoint,now time.Duration)(
+ fast,slow,hist winAutoPoint,ok bool){
+ n:=len(points)
+ if n<3||points[n-1].at!=now{return}
+ indexAtOrBefore:=func(age time.Duration)int{
+  for i:=n-1;i>=0;i--{
+   if points[i].at<=now-age{return i}
+  }
+  return -1
+ }
+ fastIndex:=indexAtOrBefore(2*time.Second)
+ slowIndex:=indexAtOrBefore(8*time.Second)
+ if fastIndex<0||slowIndex<0{return}
+ steps:=n-1-slowIndex
+ histIndex:=slowIndex-steps
+ if steps<=0||histIndex<0{return}
+ if points[histIndex].at>=points[slowIndex].at||
+  points[slowIndex].at>=now{return}
+ return points[fastIndex],points[slowIndex],points[histIndex],true
+}
 func(b *winAutoBackend) Observe(epoch [16]byte,client string,
  direction FecV2Direction,now time.Duration)(FecV2Snapshot,error){
  s:=FecV2Snapshot{Client:client,Direction:direction,At:now,Validity:FecV2Unknown}
@@ -105,16 +134,9 @@ func(b *winAutoBackend) Observe(epoch [16]byte,client string,
  if err!=nil{return s,err}
  b.history=append(b.history,winAutoPoint{now,q})
  if len(b.history)>12{b.history=b.history[len(b.history)-12:]}
- floor:=func(age time.Duration)([30]uint64,bool){
-  for i:=len(b.history)-1;i>=0;i--{
-   if b.history[i].at<=now-age{return b.history[i].v.Counters,true}
-  }
-  return [30]uint64{},false
- }
- fast,okFast:=floor(2*time.Second)
- slow,okSlow:=floor(8*time.Second)
- hist,okHist:=floor(16*time.Second)
- if !okFast||!okSlow||!okHist{return s,nil}
+ fastPoint,slowPoint,histPoint,aligned:=winAutoAlignedMatureCohorts(b.history,now)
+ if !aligned{return s,nil}
+ fast,slow,hist:=fastPoint.v.Counters,slowPoint.v.Counters,histPoint.v.Counters
  raw:=q.Counters
  var ok bool
  s.Fast,ok=winAutoWindow(raw,fast,0);if !ok{return s,nil}
@@ -135,10 +157,11 @@ func(b *winAutoBackend) Observe(epoch [16]byte,client string,
  s.SRTT=time.Duration(lag/count);s.Validity=FecV2Valid
  var actualKSources uint64
  for k,n:=range s.ActualK{actualKSources+=uint64(k+1)*n}
- log.Printf("WBD_WINDOWS_AUTO_M2_2S8S_QUALITY fast_sent=%d fast_obs=%d fast_missing=%d slow_sent=%d slow_obs=%d slow_missing=%d actual_k_sources=%d srtt_us=%d native_profile=%d native_revision=%d",
+ log.Printf("WBD_WINDOWS_AUTO_M2_2S8S_QUALITY fast_sent=%d fast_obs=%d fast_missing=%d slow_sent=%d slow_obs=%d slow_missing=%d actual_k_sources=%d srtt_us=%d native_profile=%d native_revision=%d slow_sample_ms=%d actual_k_sample_ms=%d",
   s.Fast.FirstSent,s.Fast.Observed,s.Fast.Missing,
   s.Slow.FirstSent,s.Slow.Observed,s.Slow.Missing,
-  actualKSources,s.SRTT.Microseconds(),b.profile,b.revision)
+  actualKSources,s.SRTT.Microseconds(),b.profile,b.revision,
+  (now-slowPoint.at).Milliseconds(),(slowPoint.at-histPoint.at).Milliseconds())
  return s,nil
 }
 

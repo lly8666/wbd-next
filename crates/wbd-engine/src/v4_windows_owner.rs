@@ -4,7 +4,7 @@
 //! cold248/WBGH bytes alone are NOT credentials or a kernel driver lease.
 //! This module reuses the normal M1/M3 ProtectedScopedOwner, not fake crypto.
 #![cfg(all(target_os="windows",feature="m0_v4_embedded_go"))]
-use std::collections::{BTreeMap,VecDeque};
+use std::collections::{BTreeMap,BTreeSet,VecDeque};
 use std::sync::{Arc,Mutex,OnceLock};
 use std::time::Instant;
 use crate::cold_v4::{UntrustedColdV4,COLD_V4_LEN};
@@ -83,6 +83,10 @@ struct WindowsOriginalM2 {
     fec_covered_2s:u64,
     #[cfg(feature="fec2_product_record")]
     fec_censored:bool,
+    // A temporary quality metadata shortage is interval UNKNOWN, never
+    // a permanent dead session or a forged line-loss measurement.
+    #[cfg(feature="fec2_product_record")]
+    fec_last_capacity_at:Option<MonoNs>,
     // Same Linux M2 first-send 2s/8s and closed-block k histogram
     // exported to the one shared Go FecV2Step Auto policy. These are
     // CUMULATIVE, not fabricated success from TCP appearance ACK.
@@ -103,9 +107,12 @@ fn m2_global()->&'static Mutex<GlobalRepairAllocator>{
     static GLOBAL:OnceLock<Mutex<GlobalRepairAllocator>>=OnceLock::new();
     GLOBAL.get_or_init(||Mutex::new(GlobalRepairAllocator::new(
         GlobalRepairConfig{
-            max_bytes_per_epoch:131_072,max_directions:32,
-            max_grant_bytes:32_768,max_grant_lifetime_ns:50_000_000,
-            max_pending:128,max_pending_bytes:131_072,
+            // Absolute safety caps above 9% v3 credit for simultaneous
+            // 500Mbps outer C2S + S2C; v3 share and actual first-send
+            // receipt remain the authoritative *lower* ceilings.
+            max_bytes_per_epoch:14_000_000,max_directions:32,
+            max_grant_bytes:262_144,max_grant_lifetime_ns:50_000_000,
+            max_pending:256,max_pending_bytes:524_288,
         },MonoNs(0)).expect("bounded M2 process allocator")))
 }
 fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>{
@@ -131,15 +138,15 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         .map_err(|_|BAD_STAGE)?;
     shadow.enable_opportunistic_v3().map_err(|_|BAD_STAGE)?;
     let feedback=RxFeedbackState::new(RxFeedbackConfig{
-        max_retained_pages:512,max_pages_per_report:8,
+        max_retained_pages:1024,max_pages_per_report:8,
         retention_ns:2_000_000_000,srtt_ns:600_000_000,
     }).map_err(|_|INVALID)?;
     let now=m2_clock();
     let mut g=m2_global().lock().map_err(|_|BAD_STAGE)?;
     g.register(direction,RepairBudgetConfig{
         outer_mtu:u64::from(e.path_mtu).saturating_add(54),
-        max_repair_bytes_per_epoch:65_536,max_pending_reservations:128,
-        max_pending_bytes:131_072,io_timeout_ns:100_000_000,
+        max_repair_bytes_per_epoch:7_000_000,max_pending_reservations:256,
+        max_pending_bytes:524_288,io_timeout_ns:100_000_000,
     },now).map_err(|_|BAD_STAGE)?;
     if g.enable_opportunistic_v3(direction).is_err() ||
         g.bind_receipt_route(direction,route,now).is_err(){
@@ -149,7 +156,7 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
     #[cfg(feature="fec2_product_record")]
     let mature=if e.feature7 {
         Some(wbd_recovery::MatureFirstSend::new(
-            route,wbd_recovery::MaturityConfig{max_live_data:131_072},now
+            route,wbd_recovery::MaturityConfig{max_live_data:524_288},now
         ).map_err(|_|BAD_STAGE)?)
     }else{None};
     #[cfg(feature="fec2_product_record")]
@@ -179,6 +186,8 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         fec_covered_2s:0,
         #[cfg(feature="fec2_product_record")]
         fec_censored:false,
+        #[cfg(feature="fec2_product_record")]
+        fec_last_capacity_at:None,
         #[cfg(feature="fec2_product_record")]
         auto_quality:[0;30],
         #[cfg(feature="fec2_product_record")]
@@ -281,7 +290,9 @@ fn m2_finish_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
 fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,pn:u64,seq:u32,wire_len:usize,sent:u32,
 )->Result<u32,i32>{
-    if !v3_ready(e,epoch,luid,ifindex)||sent>1{return Err(INVALID)}
+    // 2 is explicit unknown driver completion, not definitely NotSent:
+    // burn the original PN without fabricating peer delivery or fresh F.
+    if !v3_ready(e,epoch,luid,ifindex)||sent>2{return Err(INVALID)}
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
     let key=RecordPn(pn);
     let row=m.pending.get(&key).ok_or(INVALID)?;
@@ -291,25 +302,44 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     #[cfg(feature="fec2_product_record")]
     if let Some(mature)=m.mature.as_mut(){
         let (lane,_) = e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
-        let observation=if sent==1{
-            wbd_recovery::FirstSendOutcome::Accepted{
+        let observation=match sent {
+            1=>wbd_recovery::FirstSendOutcome::Accepted{
                 pn:key,wire_bytes:(wire_len as u64).saturating_add(54)
-            }
-        }else{wbd_recovery::FirstSendOutcome::DefinitelyNotSent{pn:key}};
-        if mature.on_first_send(
+            },
+            2=>wbd_recovery::FirstSendOutcome::Uncertain{
+                pn:key,wire_bytes:(wire_len as u64).saturating_add(54)
+            },
+            _=>wbd_recovery::FirstSendOutcome::DefinitelyNotSent{pn:key},
+        };
+        match mature.on_first_send(
             lane,wbd_recovery::FirstSendKind::Data,observation,m2_clock()
-        ).is_err(){m.fec_censored=true;return Err(BAD_STAGE)}
+        ){
+            Ok(())=>{},
+            // Auto quality metadata is optional to fresh M4 delivery.
+            // A saturated observer counts censored capacity but cannot
+            // convert a real NPF firstsend into a fatal DATA-path error.
+            Err(wbd_recovery::MaturityError::CapacityLimited)=>{
+                m.fec_last_capacity_at=Some(m2_clock());
+            },
+            Err(_)=>{m.fec_censored=true;return Err(BAD_STAGE)},
+        }
         if sent==1{m.fec_copied_source=m.fec_copied_source.saturating_add(1)}
     }
-    if sent==0{return Ok(0)}
+    if sent!=1{return Ok(m.shadow.outstanding() as u32)}
     // The caller's synchronous pcap_sendpacket success is a copied
     // kernel submission, NEVER proof of remote peer delivery.
     let now=m2_clock();
     let bytes=wire_len.checked_add(54).ok_or(INVALID)? as u64;
     let mut global=m2_global().lock().map_err(|_|BAD_STAGE)?;
     global.on_fresh_accepted(m.direction,bytes,now).map_err(|_|BAD_STAGE)?;
-    m.shadow.on_sent(frozen,now,MonoNs(now.0.saturating_add(M2_HARD_EXPIRY_NS)))
-        .map_err(|_|FULL)?;
+    // Every successful NPF submission counts as a first send. Repair
+    // retention is optional under v3, not an ACK window or DATA credit.
+    // Keep a bounded immutable shadow while there is room; once saturated,
+    // release only the optional copy, never reject accepted fresh traffic.
+    if m.shadow.outstanding()<MAX_M2_FROZEN {
+        // Trusted RTT-derived v3 residency, not an old fixed 2s shadow.
+        m.shadow.on_sent_adaptive(frozen,now).map_err(|_|BAD_STAGE)?;
+    }
     Ok(m.shadow.outstanding() as u32)
 }
 // Poll is owner-time-only; an actual repair remains byte-exact from its
@@ -885,21 +915,21 @@ fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         return Err(INVALID)
     }
     let budget=normal_off_windows_budget(e)?;
-    if e.m2.as_ref().is_some_and(|m|
-        m.shadow.outstanding()+m.pending.len()>=MAX_M2_FROZEN) {
-        return Err(FULL)
-    }
     if ipv4.len()>budget.single_business_payload_mtu ||
         ipv4[0]&15<5{return Err(INVALID)}
     let mut slab=e.arena.allocate().map_err(|_|FULL)?;
     slab.writable()[14..14+ipv4.len()].copy_from_slice(ipv4);
+    // The same original M1 TX owner also seals M2 kind1 controls at
+    // m2_clock(): stale zero time after a genuine control deadline can
+    // reverse its clock and reject an otherwise valid first DATA packet.
+    let now=m2_clock();
     let (pn,seq,used)=e.owner.seal_normal_off_one(
-        slab,ipv4.len(),budget,0,MonoNs(0)).map_err(|_|BAD_STAGE)?;
+        slab,ipv4.len(),budget,0,now).map_err(|_|BAD_STAGE)?;
     // Copy only the SAME M1 immutable FrozenRecord into the caller's bounded
     // carrier buffer while its genuine LoanBatch remains borrowed; recycle
     // generation-scoped loans on *every* path, including rejected batches.
     let tx_storage=std::mem::take(&mut e.tx_scratch);
-    let batch=match e.owner.drain_tx(MonoNs(0),tx_storage){
+    let batch=match e.owner.drain_tx(now,tx_storage){
         Ok(batch)=>batch,
         Err((_,storage))=>{e.tx_scratch=storage;return Err(BAD_STAGE)}
     };
@@ -921,6 +951,118 @@ fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     })();
     e.tx_scratch=batch.recycle();
     accepted
+}
+// One bounded zero-wait staged SOURCE batch (not a kernel submission).
+// Native Go captures a maximum of four actually ready Wintun frames and
+// holds its real M4 lease while one Rust M1 Entry lock seals each original
+// contiguous PN/SEQ. No cipher, packet receipt or fresh F is forged here.
+#[repr(C)]
+#[derive(Clone,Copy)]
+pub struct WbdWindowsOriginalSourceInput {
+    pub length:u32,pub reserved:u32,pub ipv4:[u8;2048],
+}
+#[repr(C)]
+#[derive(Clone,Copy)]
+pub struct WbdWindowsOriginalSourceOutput {
+    pub used:u32,pub seq:u32,pub pn:u64,pub wire:[u8;2048],
+}
+const MAX_WINDOWS_SOURCE_BATCH:usize=4;
+fn original_source_batch_entry(
+    e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
+    rows:&[WbdWindowsOriginalSourceInput],
+    outputs:&mut [WbdWindowsOriginalSourceOutput],
+)->(i32,u32){
+    if !v3_ready(e,epoch,luid,ifindex)||
+        rows.is_empty()||rows.len()>MAX_WINDOWS_SOURCE_BATCH||
+        rows.len()!=outputs.len()||e.m2.is_none(){
+        return (BAD_STAGE,0)
+    }
+    let budget=match normal_off_windows_budget(e){
+        Ok(v)=>v,Err(code)=>return (code,0),
+    };
+    // Preflight ALL original IPv4 bounds and the expected 31/45-byte
+    // wire budget before spending even one Rust AEAD nonce/TCP serial.
+    let max=if e.feature7{
+        #[cfg(feature="fec2_product_record")]
+        {if e.fec2_tx.is_none(){return (BAD_STAGE,0)};}
+        #[cfg(not(feature="fec2_product_record"))]
+        {return (BAD_STAGE,0);}
+        budget.record_payload_mtu.saturating_sub(14)
+    }else{budget.single_business_payload_mtu};
+    for row in rows{
+        let n=row.length as usize;
+        if row.reserved!=0||n<20||n>max||n>2048||
+           row.ipv4[0]>>4!=4||row.ipv4[0]&15<5||
+           n.checked_add(if e.feature7{45}else{31})
+             .is_none_or(|wire|wire>2048){
+            return (INVALID,0)
+        }
+    }
+    let mut produced=0u32;
+    for (row,out) in rows.iter().zip(outputs.iter_mut()){
+        let ipv4=&row.ipv4[..row.length as usize];
+        let result=if e.feature7{
+            #[cfg(feature="fec2_product_record")]
+            {fec2::stage_fixed_source_entry(e,epoch,luid,ifindex,
+                ipv4,&mut out.wire)}
+            #[cfg(not(feature="fec2_product_record"))]
+            {Err(BAD_STAGE)}
+        }else{
+            v3_seal_entry(e,epoch,luid,ifindex,ipv4,&mut out.wire)
+        };
+        match result{
+            Ok((used,seq,pn))=>{
+                out.used=used as u32;
+                out.seq=seq;
+                out.pn=pn;
+                produced+=1;
+            },
+            // Partial post-seal failure is terminal. Go cannot call this
+            // C ABI again for the same Wintun source, and must Stop the
+            // whole epoch without inventing a compensating TCP sequence.
+            Err(code)=>return (code,produced),
+        }
+    }
+    (OK,produced)
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v11_stage_original_sources_batch(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    inputs:*const WbdWindowsOriginalSourceInput,count:u32,
+    outputs:*mut WbdWindowsOriginalSourceOutput,capacity:u32,
+    produced:*mut u32,
+)->i32{
+    if inputs.is_null()||outputs.is_null()||produced.is_null()||
+       count==0||count as usize>MAX_WINDOWS_SOURCE_BATCH||
+       capacity!=count||
+       (inputs as usize)%std::mem::align_of::<WbdWindowsOriginalSourceInput>()!=0||
+       (outputs as usize)%std::mem::align_of::<WbdWindowsOriginalSourceOutput>()!=0{
+        return INVALID
+    }
+    // No mutable alias of caller's encrypted output and immutable source.
+    let in_start=inputs as usize;
+    let out_start=outputs as usize;
+    let in_end=in_start.checked_add(
+        count as usize*std::mem::size_of::<WbdWindowsOriginalSourceInput>());
+    let out_end=out_start.checked_add(
+        count as usize*std::mem::size_of::<WbdWindowsOriginalSourceOutput>());
+    if in_end.is_none_or(|end|out_start<end&&in_start<out_end.unwrap_or(0))||
+       out_end.is_none(){
+        return INVALID
+    }
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let input=unsafe{std::slice::from_raw_parts(inputs,count as usize)};
+    let output=unsafe{std::slice::from_raw_parts_mut(outputs,count as usize)};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    let (status,n)=original_source_batch_entry(
+        &mut e,exact,luid,ifindex,input,output);
+    unsafe{produced.write(n)}
+    status
 }
 // Unfold exact captured TCP serial bytes against this original-Go-verified
 // owner only. No arbitrary wrapped seq can claim a different generation.
@@ -955,7 +1097,8 @@ fn v5_open_record_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let mut slab=e.arena.allocate().map_err(|_|FULL)?;
     slab.writable()[..wire.len()].copy_from_slice(wire);
     let unfolded=m0_tcp_unwrap(e,seq,wire.len())?;
-    e.owner.offer_after_active(slab,0..wire.len(),unfolded,MonoNs(0))
+    let now=m2_clock();
+    e.owner.offer_after_active(slab,0..wire.len(),unfolded,now)
         .map_err(|_|INVALID)?;
     let mut len=0usize;
     let mut valid=false;
@@ -963,7 +1106,7 @@ fn v5_open_record_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let mut opened_kind1=None;
     let rx_storage=std::mem::take(&mut e.rx_scratch);
     let draining=e.owner.drain_windows_authenticated_kind1(
-        MonoNs(0),rx_storage,|pn,link|{
+        now,rx_storage,|pn,link|{
             // No unauthenticated DATA, replay, HEALTH or fragmented LINK
             // can reach a Windows kernel packet sink from this v3 boundary.
             // Fragmentation will be installed with the complete M3 table.
@@ -1167,6 +1310,72 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v6_m2_outstanding(
     unsafe{out.write(m.shadow.outstanding() as u32)};OK
 }
 
+// Source-locked runtime-effective M2 bounds, not CLI-requested defaults or
+// a claim of product/OS Applied. C ABI cannot expose mutable Rust owners.
+#[repr(C)]
+#[derive(Clone,Copy,Debug)]
+pub struct WbdWindowsM2Effective {
+    pub version:u32,pub size:u32,
+    pub path_mtu:u32,pub business_ipv4_mtu:u32,
+    pub shadow_limit:u32,pub feedback_page_limit:u32,
+    pub mature_live_limit:u32,pub v3_enabled:u32,
+    pub process_repair_hard_cap:u64,
+    pub direction_epoch_limit:u64,
+    pub direction_fresh_confirmed:u64,
+    pub process_charged_repairs:u64,
+    pub process_pending_bytes:u64,
+}
+fn m2_effective_entry(e:&Entry,epoch:[u8;16],luid:u64,ifindex:u32)
+    ->Result<WbdWindowsM2Effective,i32>{
+    if !v3_ready(e,epoch,luid,ifindex){return Err(INVALID)}
+    let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
+    let budget=normal_off_windows_budget(e)?;
+    let mtu=if e.feature7{
+        budget.record_payload_mtu.saturating_sub(14)
+    }else{budget.single_business_payload_mtu};
+    if mtu<20||mtu>2048{return Err(INVALID)}
+    let g=m2_global().lock().map_err(|_|BAD_STAGE)?;
+    let dir=g.local_snapshot(m.direction).ok_or(BAD_STAGE)?;
+    let process=g.snapshot();
+    Ok(WbdWindowsM2Effective{
+        version:1,size:std::mem::size_of::<WbdWindowsM2Effective>() as u32,
+        path_mtu:u32::from(e.path_mtu),
+        business_ipv4_mtu:mtu as u32,
+        shadow_limit:m.shadow.policy_limits().1 as u32,
+        feedback_page_limit:m.feedback.config().max_retained_pages as u32,
+        mature_live_limit:{
+            #[cfg(feature="fec2_product_record")]
+            {m.mature.as_ref().map_or(0,|x|x.max_live_data() as u32)}
+            #[cfg(not(feature="fec2_product_record"))]
+            {0}
+        },
+        v3_enabled:u32::from(m.shadow.is_opportunistic_v3()),
+        process_repair_hard_cap:process.hard_cap,
+        direction_epoch_limit:dir.epoch_repair_limit,
+        direction_fresh_confirmed:dir.fresh_confirmed_bytes,
+        process_charged_repairs:process.charged_repairs,
+        process_pending_bytes:process.pending_bytes as u64,
+    })
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v9_m2_effective(
+    h:u64,ep:*const u8,ep_len:usize,luid:u64,ifindex:u32,
+    out:*mut WbdWindowsM2Effective,size:u32,
+)->i32{
+    if out.is_null()||size!=std::mem::size_of::<WbdWindowsM2Effective>() as u32{
+        return INVALID
+    }
+    let Some(epoch)=v3_epoch(ep,ep_len)else{return INVALID};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(e)=lane.lock()else{return BAD_STAGE};
+    match m2_effective_entry(&e,epoch,luid,ifindex){
+        Ok(v)=>{unsafe{out.write(v)};OK},Err(code)=>code
+    }
+}
 // V6 firstsend callback is valid only for the SAME activated, OS Wintun
 // epoch. Every callback matches exact original frozen PN/SEQ/len. Status 1
 // means actual Npcap pcap_sendpacket returned success, not remote Applied.
@@ -1208,6 +1417,82 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v6_report_npcap_firstsend(
     }
 }
 
+// Complete up to 32 already-accepted native firstsend outcomes under ONE
+// original generation/Entry lock and one real TLS-bound Wintun lease.
+// Every row is untrusted until matched to immutable pending Rust M1 PN/SEQ.
+#[repr(C)]
+#[derive(Clone,Copy)]
+pub struct WbdWindowsM2FirstsendResult{
+    pub pn:u64,pub seq:u32,pub wire_len:u32,pub outcome:u32,pub reserved:u32,
+}
+const MAX_WINDOWS_M2_COMPLETIONS:usize=32;
+fn m2_kernel_firstsend_batch_entry(
+    e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
+    rows:&[WbdWindowsM2FirstsendResult],
+)->(i32,u32,u32){
+    if !v3_ready(e,epoch,luid,ifindex)||
+        rows.is_empty()||rows.len()>MAX_WINDOWS_M2_COMPLETIONS{
+        return (INVALID,0,0)
+    }
+    let Some(m)=e.m2.as_ref()else{return (BAD_STAGE,0,0)};
+    let mut unique=BTreeSet::new();
+    let mut next=None;
+    // Check every original immutable PN/SEQ/length and all consecutive
+    // byte ranges BEFORE removing any pending M1 handle. On preflight
+    // failure no staged record is lost, nor is any peer receipt forged.
+    for row in rows{
+        if row.reserved!=0||row.outcome>2||
+            (row.wire_len as usize)<FIXED_WIRE_OVERHEAD||
+            row.wire_len>2048||!unique.insert(row.pn)||
+            next.is_some_and(|prior:u32|prior!=row.seq){return (INVALID,0,0)}
+        let Some(original)=m.pending.get(&RecordPn(row.pn))else{
+            return (INVALID,0,0)
+        };
+        if original.metadata().pn!=RecordPn(row.pn)||
+            original.metadata().seq.0 as u32!=row.seq||
+            original.bytes().len()!=row.wire_len as usize{
+            return (INVALID,0,0)
+        }
+        next=Some(row.seq.wrapping_add(row.wire_len));
+    }
+    let mut settled=0u32;
+    let mut outstanding=m.shadow.outstanding() as u32;
+    for row in rows{
+        // If a post-NPF internal owner failure occurs, report the exact
+        // already-settled prefix and fail closed. Neither the remaining
+        // accepted NPF rows nor the settled prefix may be blindly retried.
+        match m2_kernel_firstsend_entry(e,epoch,luid,ifindex,row.pn,
+            row.seq,row.wire_len as usize,row.outcome){
+            Ok(left)=>{settled+=1;outstanding=left},
+            Err(code)=>return (code,settled,outstanding),
+        }
+    }
+    (OK,settled,outstanding)
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v10_report_npcap_firstsend_batch(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    rows:*const WbdWindowsM2FirstsendResult,count:u32,
+    settled:*mut u32,outstanding:*mut u32,
+)->i32{
+    if rows.is_null()||settled.is_null()||outstanding.is_null()||
+        count==0||count as usize>MAX_WINDOWS_M2_COMPLETIONS||
+        (rows as usize)%std::mem::align_of::<WbdWindowsM2FirstsendResult>()!=0 {
+        return INVALID
+    }
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let rows=unsafe{std::slice::from_raw_parts(rows,count as usize)};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    let (status,n,m)=m2_kernel_firstsend_batch_entry(
+        &mut e,exact,luid,ifindex,rows);
+    unsafe{settled.write(n);outstanding.write(m)}
+    status
+}
 // Bounded C ABI only through the exact credential-checked Go native owner,
 // current Wintun LUID/index and one original Rust M1/PN sender. No callback
 // indicates remote delivery: success here means ciphertext was staged.
@@ -1338,6 +1623,35 @@ mod tests {
             assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),0);
         }
         assert_eq!(quiesce_wintun(&mut r,h,epoch,91,19),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+    #[test]
+    fn m0_windows_original_m2_effective_readback_is_actual_runtime_budget(){
+        let mut r=Registry{generation:712,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        let ep=[2u8;16];
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        assert_eq!(bind_wintun(&mut r,h,ep,93,21),OK);
+        let bound=set_path_mtu(&mut r,h,ep,93,21,1400).unwrap();
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_arm_entry(&mut e,ep,93,21).unwrap();
+            let actual=m2_effective_entry(&e,ep,93,21).unwrap();
+            assert_eq!(actual.version,1);
+            assert_eq!(actual.size,std::mem::size_of::<WbdWindowsM2Effective>() as u32);
+            assert_eq!(actual.path_mtu,1400);
+            assert_eq!(actual.business_ipv4_mtu,bound);
+            assert_eq!(actual.shadow_limit,MAX_M2_FROZEN as u32);
+            assert_eq!(actual.feedback_page_limit,1024);
+            assert_eq!(actual.mature_live_limit,0);
+            assert_eq!(actual.v3_enabled,1);
+            assert_eq!(actual.process_repair_hard_cap,14_000_000);
+            assert_eq!(actual.direction_fresh_confirmed,0);
+            assert!(actual.direction_epoch_limit>0);
+            assert_eq!(m2_effective_entry(&e,[9;16],93,21).map(|_|()),Err(INVALID));
+        }
+        assert_eq!(quiesce_wintun(&mut r,h,ep,93,21),OK);
         assert_eq!(stop(&mut r,h),OK);
         assert_eq!(release(&mut r,h),OK);
     }
@@ -1746,6 +2060,153 @@ mod tests {
         assert_eq!(release(&mut r,h),OK);
     }
 
+    #[test]
+    fn m0_windows_native_original_source_batch_preflights_all_then_contiguous_m1(){
+        assert_eq!(std::mem::size_of::<WbdWindowsOriginalSourceInput>(),2056);
+        assert_eq!(std::mem::size_of::<WbdWindowsOriginalSourceOutput>(),2064);
+        let mut r=Registry{generation:611,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        let ep=[2u8;16];
+        assert_eq!(bind_wintun(&mut r,h,ep,81,18),OK);
+        assert!(set_path_mtu(&mut r,h,ep,81,18,1400).is_ok());
+        let mut e=r.entries[&h].lock().unwrap();
+        m2_arm_entry(&mut e,ep,81,18).unwrap();
+        let make=|seed:u8|{
+            let mut ipv4=[0u8;2048];
+            ipv4[0]=0x45;
+            ipv4[2..4].copy_from_slice(&90u16.to_be_bytes());
+            ipv4[8]=64;ipv4[9]=17;
+            ipv4[20]=seed;
+            WbdWindowsOriginalSourceInput{
+                length:90,reserved:0,ipv4,
+            }
+        };
+        let inputs=[make(1),make(2),make(3),make(4)];
+        let empty=||WbdWindowsOriginalSourceOutput{
+            used:0,seq:0,pn:0,wire:[0;2048],
+        };
+        let mut out=[empty(),empty(),empty(),empty()];
+        let mut invalid=inputs;
+        invalid[3].reserved=1;
+        assert_eq!(original_source_batch_entry(
+            &mut e,ep,81,18,&invalid,&mut out),(INVALID,0));
+        assert!(e.m2.as_ref().unwrap().pending.is_empty(),
+            "batch input error may not spend even first original PN");
+        let (status,n)=original_source_batch_entry(
+            &mut e,ep,81,18,&inputs,&mut out);
+        assert_eq!((status,n),(OK,4));
+        let mut distinct=BTreeSet::new();
+        for (i,row) in out.iter().enumerate(){
+            assert_eq!(row.used,121);
+            assert!(distinct.insert(row.pn));
+            if i>0{
+                assert_eq!(row.seq,
+                    out[i-1].seq.wrapping_add(out[i-1].used));
+            }
+        }
+        assert_eq!(e.m2.as_ref().unwrap().pending.len(),4,
+            "only genuine future NPF firstsend callbacks can give F credit");
+        assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),0);
+        // Explicitly settle original pending PNs as Uncertain for this
+        // native unit: no fake Accepted/F credit, no frozen staging
+        // retained into owned Stop, and no reusable nonce/SEQ.
+        for row in &out{
+            m2_kernel_firstsend_entry(&mut e,ep,81,18,
+                row.pn,row.seq,row.used as usize,2).unwrap();
+        }
+        assert!(e.m2.as_ref().unwrap().pending.is_empty());
+        assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),0);
+        drop(e);
+        assert_eq!(quiesce_wintun(&mut r,h,ep,81,18),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+    #[test]
+    fn m0_windows_m2_batch_validates_entire_original_seq_and_uncertain_once(){
+        assert_eq!(std::mem::size_of::<WbdWindowsM2FirstsendResult>(),24);
+        let mut r=Registry{generation:601,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        let ep=[2u8;16];
+        assert_eq!(bind_wintun(&mut r,h,ep,81,18),OK);
+        assert!(set_path_mtu(&mut r,h,ep,81,18,1400).is_ok());
+        let mut e=r.entries[&h].lock().unwrap();
+        m2_arm_entry(&mut e,ep,81,18).unwrap();
+        let mut frame=[0u8;90];frame[0]=0x45;
+        frame[2..4].copy_from_slice(&90u16.to_be_bytes());
+        frame[8]=64;frame[9]=17;
+        let mut dst=[0u8;2048];
+        let (n1,seq1,pn1)=v3_seal_entry(
+            &mut e,ep,81,18,&frame,&mut dst).unwrap();
+        let (n2,seq2,pn2)=v3_seal_entry(
+            &mut e,ep,81,18,&frame,&mut dst).unwrap();
+        assert_eq!(seq2,seq1.wrapping_add(n1 as u32));
+        let a=WbdWindowsM2FirstsendResult{
+            pn:pn1,seq:seq1,wire_len:n1 as u32,outcome:1,reserved:0};
+        let b=WbdWindowsM2FirstsendResult{
+            pn:pn2,seq:seq2,wire_len:n2 as u32,outcome:2,reserved:0};
+        assert_eq!(m2_kernel_firstsend_batch_entry(
+            &mut e,ep,81,18,&[a,a]),(INVALID,0,0));
+        assert_eq!(m2_kernel_firstsend_batch_entry(
+            &mut e,ep,81,18,&[a,WbdWindowsM2FirstsendResult{
+                seq:seq2.wrapping_add(1),..b}]),(INVALID,0,0));
+        assert_eq!(e.m2.as_ref().unwrap().pending.len(),2,
+            "invalid batch must not consume any original pending PN");
+        let (status,settled,count)=m2_kernel_firstsend_batch_entry(
+            &mut e,ep,81,18,&[a,b]);
+        assert_eq!((status,settled,count),(OK,2,1));
+        assert!(e.m2.as_ref().unwrap().pending.is_empty());
+        assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),1,
+            "only actually copied NPF row earns retained immutable repair");
+        assert_eq!(m2_kernel_firstsend_batch_entry(
+            &mut e,ep,81,18,&[a]),(INVALID,0,0),
+            "same PN cannot be reported as an additional fresh send");
+        drop(e);
+        assert_eq!(quiesce_wintun(&mut r,h,ep,81,18),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+    #[test]
+    fn m0_windows_original_source_after_real_clock_feedback_has_contiguous_seq(){
+        // A real M2 receipt is sealed at monotonic time, then a new
+        // original-Go TLS DATA must NOT rewind the exact same M1 owner
+        // clock by presenting synthetic MonoNs(0).
+        let mut r=Registry{generation:701,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        let ep=[2u8;16];
+        assert_eq!(bind_wintun(&mut r,h,ep,91,19),OK);
+        assert!(set_path_mtu(&mut r,h,ep,91,19,1400).is_ok());
+        let mut first=[0u8;2048];
+        let mut frame=[0u8;90];
+        frame[0]=0x45;frame[2..4].copy_from_slice(&90u16.to_be_bytes());
+        frame[8]=64;frame[9]=17;
+        let (n1,s1,_)=v3_seal_one(&r,h,ep,91,19,&frame,&mut first).unwrap();
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            assert!(m2_arm_entry(&mut e,ep,91,19).is_ok());
+            e.m2.as_mut().unwrap().feedback.on_authenticated_data(
+                RecordPn(89),m2_clock());
+        }
+        std::thread::sleep(std::time::Duration::from_millis(21));
+        let mut wire=[0u8;2048];
+        let (nc,sc,_pn)={
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_next_feedback_entry(&mut e,ep,91,19,&mut wire)
+                .unwrap().expect("actual original M2 authenticated draft")
+        };
+        assert_eq!(sc,s1.wrapping_add(n1 as u32));
+        let (n2,s2,_)=v3_seal_one(&r,h,ep,91,19,&frame,&mut first)
+            .expect("fresh DATA after kind1 must keep monotonic owner clock");
+        assert_eq!(s2,sc.wrapping_add(nc as u32));
+        assert!(n2>51);
+        assert_eq!(quiesce_wintun(&mut r,h,ep,91,19),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
     #[test]
     fn m0_windows_tcp_sequence_unwrap_gap_wrap_and_future_reject(){
         let mut r=Registry{generation:3,entries:BTreeMap::new(),game_groups:BTreeMap::new()};

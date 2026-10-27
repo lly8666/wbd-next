@@ -2,8 +2,11 @@
 """Run actual original-TLS Windows and Linux native public UDP/TCP, then Stop."""
 import os,sys,subprocess,time,json,hashlib,pathlib,re,threading
 from m0_wl_native_resource_sampler import sample_windows_original_process
+from m0_wl_mode_runtime_report import source_locked_observability,summarize_auto_udp_progress,native_auto_true_applied_snapshots
+from m0_wl_native_mtu_contract import configured_native_test_mtu
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
+configured_mtu=configured_native_test_mtu()
 if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec","auto-revision","auto-adaptive"):
  raise RuntimeError("unknown exact native Windows public mode "+mode)
 fixed6=mode=="fixed"
@@ -19,7 +22,9 @@ client_fec="fixed" if fixed6 or game_fixed else "auto" if mode.startswith("auto"
 report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINUX_BINARY_SRC"],"mode":mode,
  "mode_public":"NOT_RUN","normal_public":"NOT_RUN","windows_ready":"NOT_RUN",
  "linux_ready":"NOT_RUN","app_duplex":"NOT_RUN","tcp_duplex":"NOT_RUN",
- "stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN"}
+ "stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN",
+ "requested_original_win_mtu":configured_mtu,
+ "runtime_os_mtu_guard":"ORIGINAL_NATIVE_M4_1HZ_FAIL_CLOSED"}
 def run(a,timeout=30):
  p=subprocess.run(a,capture_output=True,text=True,timeout=timeout)
  if p.returncode:raise RuntimeError(str(a[:4])+": "+(p.stderr or p.stdout)[-600:])
@@ -73,7 +78,7 @@ try:
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
  # Linux server authenticated READY only AFTER the genuine Windows TLS client starts.
- args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex",route,"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu","1400","--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
+ args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex",route,"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
   "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode","bypass-lan"]
  log=(out/"client.log").open("w");logs.append(log)
@@ -298,6 +303,10 @@ print(json.dumps(result),flush=True)
  if mode=="auto-adaptive":
   # Real original Go credential TLS / Rust M2 mature first-send
   # / ALREADY shared Linux FecV2Step Auto decisions. No operator write,
+  # New 2026-10-28 acceptance: first true one-grade native Applied within
+  # 120s of sustained healthy business is sufficient. Source traffic holds
+  # 119s after real READY to distinguish slow honest downshift from FAIL;
+  # correct M2 sample/coverage gates and fail-closed SEQ remain unchanged.
   # injected loss/ACK or synthetic kernel/OS state. Low Mbps, enough PPS
   # for the Linux 512-sample and 4096-source genuinely VALID evidence.
   outputs=[]
@@ -305,11 +314,11 @@ print(json.dumps(result),flush=True)
    f=(out/("auto-adaptive-"+name+"-udp.log")).open("w")
    logs.append(f);outputs.append(f)
   wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1",
-    str(done),"53",".0015"],stdout=outputs[0],stderr=subprocess.STDOUT)
+    str(done),"119",".0015"],stdout=outputs[0],stderr=subprocess.STDOUT)
   la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
-    "python3",unix(app),"10.66.0.1","10.66.0.2",unix(done),"53",".003"],
+    "python3",unix(app),"10.66.0.1","10.66.0.2",unix(done),"119",".003"],
     stdout=outputs[1],stderr=subprocess.STDOUT)
-  until=time.monotonic()+100
+  until=time.monotonic()+150
   while wa.poll() is None or la.poll() is None:
    if w.poll() is not None or s.poll() is not None:
     raise RuntimeError("native TLS/Rust Auto owner exited before mature natural 2s/8s policy")
@@ -330,11 +339,10 @@ print(json.dumps(result),flush=True)
    if "WBD_WINDOWS_NATIVE_PACKET_TELEMETRY " in line:
     try:snapshots.append(json.loads(line.split("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY ",1)[1]))
     except json.JSONDecodeError:pass
-  good=[row for row in snapshots if
-      row.get("auto_requested_revision",0)>=2
-      and row.get("auto_applied_revision",0)>=2
-      and row.get("auto_requested_profile",7)<5
-      and not row.get("auto_revision_pending",True)]
+  # Real original-Go packet-stats AutoPending uses Go JSON omitempty:
+  # missing key means bool false, but ONLY matching positive native M2
+  # applied==requested revisions count; a pending request never qualifies.
+  good=native_auto_true_applied_snapshots(snapshots)
   report["auto_adaptive_applied"]=bool(good)
   report["auto_adaptive_observations_1hz"]=len(snapshots)
   report["auto_adaptive_last_revisions"]=[
@@ -342,6 +350,7 @@ print(json.dumps(result),flush=True)
   if not good:
    raise RuntimeError("native FecV2Step natural Auto downshift NOT_APPLIED: "+
       repr(snapshots[-5:]))
+  report["auto_adaptive_first_genuine_applied_snapshot_index"]=good[0]["snapshot_index"]
   report["auto_adaptive_native_revision"]=good[-1]["auto_applied_revision"]
   report["auto_adaptive_native_profile"]=good[-1]["auto_requested_profile"]
   print("WBD_WL_REAL_AUTO_NATURAL_SHARED_POLICY_M2_2S8S_APPLIED_AFTER_KERNEL_UDP",flush=True)
@@ -450,4 +459,19 @@ finally:
   try:s.wait(timeout=4)
   except subprocess.TimeoutExpired:s.terminate()
  for log in logs:log.close()
+ if mode=="auto-adaptive":
+  # On both PASS and FAIL, retain actual host socket progress per source.
+  # These are application samples only, never synthetic M2 maturity.
+  report["auto_adaptive_real_source_progress"]={
+    name:summarize_auto_udp_progress(out/("auto-adaptive-"+name+"-udp.log"))
+    for name in ("windows","linux")}
+ # Preserve first error/Stop outcome, and attach only measured original
+ # owner and whole Go+Rust EXE resource observations from THIS mode.
+ # Absence remains typed NOT_MEASURED; no readiness/p99 fabricated.
+ try:
+  report["runtime_observability"]=source_locked_observability(out)
+ except Exception as sample_error:
+  report["runtime_observability"]={
+   "result":"NOT_MEASURED_DIAGNOSTIC_PARSER_ERROR",
+   "type":type(sample_error).__name__}
  (out/"report.json").write_text(json.dumps(report,indent=2)+"\n")

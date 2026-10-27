@@ -6,6 +6,7 @@ import (
  "context"
  "errors"
  "runtime"
+ "sync"
  "unsafe"
 )
 type V4WindowsFixedMatureReadback struct{
@@ -26,6 +27,12 @@ type winFec2NativeParityBatch struct{
  Count,Reserved uint32
  Rows [4]winFec2NativeParityRow
 }
+// The native Rust entry writes the COMPLETE 4-row C struct each call,
+// including unused rows. Reuse this 8KiB output allocation; returned
+// independent record slices are deep-copied before releasing the buffer.
+var winFec2ParityPool=sync.Pool{New:func()any{
+ return new(winFec2NativeParityBatch)
+}}
 func(s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalFixedSource(
  ctx context.Context,ipv4 []byte,
 )([]byte,uint32,uint64,error){
@@ -34,10 +41,10 @@ func(s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalFixedSource(
   return nil,0,0,errV4WindowsOwner
  }
  if err:=ctx.Err();err!=nil{return nil,0,0,err}
- if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-  return nil,0,0,errors.Join(errV4WindowsOwner,err)
- }
- proc,err:=s.bridge.dll.FindProc("wbd_m0_win_owner_v8_fixed_stage_source")
+ borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
+ proc,err:=s.bridge.fixedProc("wbd_m0_win_owner_v8_fixed_stage_source")
  if err!=nil{return nil,0,0,err}
  wire:=make([]byte,len(ipv4)+41)
  var used uintptr
@@ -61,16 +68,17 @@ func(s *V4WindowsAuthenticatedClientOwner) NextBoundOriginalFixedParity(
 )([]V4WindowsFixedParity,error){
  if s==nil||s.bridge==nil||s.device==nil||ctx==nil{return nil,errV4WindowsOwner}
  if err:=ctx.Err();err!=nil{return nil,err}
- if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-  return nil,errors.Join(errV4WindowsOwner,err)
- }
- proc,err:=s.bridge.dll.FindProc("wbd_m0_win_owner_v8_fixed_parity_due")
+ borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
+ proc,err:=s.bridge.fixedProc("wbd_m0_win_owner_v8_fixed_parity_due")
  if err!=nil{return nil,err}
- var batch winFec2NativeParityBatch
+ batch:=winFec2ParityPool.Get().(*winFec2NativeParityBatch)
+ defer winFec2ParityPool.Put(batch)
  err=winOwnerCall(proc,uintptr(s.bridge.handle),
   uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
   uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
-  uintptr(unsafe.Pointer(&batch)),uintptr(unsafe.Sizeof(batch)))
+  uintptr(unsafe.Pointer(batch)),uintptr(unsafe.Sizeof(*batch)))
  runtime.KeepAlive(s.bridge.epoch)
  if err!=nil||batch.Count>4||batch.Reserved!=0{return nil,errors.Join(errV4WindowsOwner,err)}
  out:=make([]V4WindowsFixedParity,0,batch.Count)
@@ -90,7 +98,7 @@ func(s *V4WindowsAuthenticatedClientOwner) CompleteBoundOriginalFixedParity(
   return errV4WindowsOwner
  }
  if err:=ctx.Err();err!=nil{return err}
- proc,err:=s.bridge.dll.FindProc("wbd_m0_win_owner_v8_fixed_parity_result")
+ proc,err:=s.bridge.fixedProc("wbd_m0_win_owner_v8_fixed_parity_result")
  if err!=nil{return err}
  err=winOwnerCall(proc,uintptr(s.bridge.handle),
   uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
@@ -105,7 +113,7 @@ func(s *V4WindowsAuthenticatedClientOwner) ReadBoundOriginalFixedMature(
  var out V4WindowsFixedMatureReadback
  if s==nil||s.bridge==nil||s.device==nil||ctx==nil{return out,errV4WindowsOwner}
  if err:=ctx.Err();err!=nil{return out,err}
- proc,err:=s.bridge.dll.FindProc("wbd_m0_win_owner_v8_fixed_mature_readback")
+ proc,err:=s.bridge.fixedProc("wbd_m0_win_owner_v8_fixed_mature_readback")
  if err!=nil{return out,err}
  err=winOwnerCall(proc,uintptr(s.bridge.handle),
   uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
@@ -140,7 +148,7 @@ func(s *V4WindowsAuthenticatedClientOwner) RequestBoundOriginalFEC2Revision(
   state.DeviceQuiesced||state.ProductApplied{
   return errV4WindowsOwner
  }
- proc,err:=s.bridge.dll.FindProc("wbd_m0_win_owner_v8_fixed_change_revision")
+ proc,err:=s.bridge.fixedProc("wbd_m0_win_owner_v8_fixed_change_revision")
  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
  err=winOwnerCall(proc,uintptr(s.bridge.handle),
   uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
@@ -170,7 +178,7 @@ func(s *V4WindowsAuthenticatedClientOwner) SelectBoundOriginalFEC2Initial(
   state.DeviceQuiesced||state.ProductApplied{
   return errV4WindowsOwner
  }
- proc,err:=s.bridge.dll.FindProc("wbd_m0_win_owner_v8_fixed_select_initial")
+ proc,err:=s.bridge.fixedProc("wbd_m0_win_owner_v8_fixed_select_initial")
  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
  err=winOwnerCall(proc,uintptr(s.bridge.handle),
   uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,

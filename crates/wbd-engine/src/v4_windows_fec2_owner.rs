@@ -50,11 +50,14 @@ fn seal_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     if !valid{return Err(INVALID)}
     let mut slab=e.arena.allocate().map_err(|_|FULL)?;
     slab.writable()[14..14+frame.len()].copy_from_slice(frame);
+    // Coherently advance the shared M1 owner clock used by DATA, parity
+    // and original Rust M2 control; never offer source at synthetic t=0.
+    let now=m2_clock();
     let (pn,seq,used)=e.owner.seal_fec2_product_one(
-        slab,frame.len(),kind,budget,0,epoch,MonoNs(0)
+        slab,frame.len(),kind,budget,0,epoch,now
     ).map_err(|_|BAD_STAGE)?;
     let scratch=std::mem::take(&mut e.tx_scratch);
-    let batch=match e.owner.drain_tx(MonoNs(0),scratch){
+    let batch=match e.owner.drain_tx(now,scratch){
         Ok(batch)=>batch,
         Err((_,scratch))=>{e.tx_scratch=scratch;return Err(BAD_STAGE)}
     };
@@ -314,7 +317,7 @@ pub struct WindowsFixedParityBatch {
 fn empty_parity_row()->WindowsFixedParityRow{
     WindowsFixedParityRow{used:0,seq:0,pn:0,wire:[0;2048]}
 }
-fn stage_fixed_source_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+pub(super) fn stage_fixed_source_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,frame:&[u8],out:&mut [u8]
 )->Result<(usize,u32,u64),i32>{
     if !v3_ready(e,epoch,luid,ifindex)||!e.feature7||e.m2.is_none()||
@@ -324,13 +327,15 @@ fn stage_fixed_source_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let budget=normal_off_windows_budget(e)?;
     if frame.len()>budget.record_payload_mtu.saturating_sub(14)||
         out.len()<frame.len()+41{return Err(INVALID)}
+    // Fallible Arena allocation MUST precede taking the only FEC stream:
+    // capacity errors cannot discard profile/revision for this generation.
+    let mut input=e.arena.allocate().map_err(|_|FULL)?;
+    input.writable()[14..14+frame.len()].copy_from_slice(frame);
     let mut stream=e.fec2_tx.take().ok_or(BAD_STAGE)?;
     // Linux FixedStream is the sole revision source of truth. The old
     // Windows ==1 placeholder silently rejected every Auto/FEC policy
     // transition despite carrying a correctly authenticated ticket.
     let active_revision=stream.revision();
-    let mut input=e.arena.allocate().map_err(|_|FULL)?;
-    input.writable()[14..14+frame.len()].copy_from_slice(frame);
     let mut result=None;
     let mut error=None;
     let offered=stream.offer_source(
@@ -442,7 +447,7 @@ fn fixed_change_revision_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let now=m2_clock();
     let route=e.m2.as_ref().ok_or(BAD_STAGE)?.route;
     let fresh=wbd_recovery::MatureFirstSend::new(
-        route,wbd_recovery::MaturityConfig{max_live_data:131_072},now
+        route,wbd_recovery::MaturityConfig{max_live_data:524_288},now
     ).map_err(|_|BAD_STAGE)?;
     e.fec2_tx.as_mut().ok_or(BAD_STAGE)?
         .quiescent_change(profile,revision,now)
@@ -461,6 +466,7 @@ fn fixed_change_revision_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     m.fec_positive_2s=0;
     m.fec_covered_2s=0;
     m.fec_censored=false;
+    m.fec_last_capacity_at=None;
     Ok(())
 }
 #[no_mangle]
@@ -578,6 +584,12 @@ fn accumulate_original_auto_quality(
         poll.window_8s.positive_confirmation_samples);
 }
 
+fn original_m2_recent_capacity(at:Option<MonoNs>,now:MonoNs)->bool{
+    // Affected 8-second quality cohorts remain UNKNOWN. Once they mature,
+    // a later clean window can qualify without erasing cumulative censorship.
+    at.is_some_and(|at|now.0.saturating_sub(at.0)<8_000_000_000)
+}
+
 // One Linux MatureFirstSend expiry batch is 64 independent deadlines, but
 // each real M4 DATA needs TWO: 2s and 8s. Windows' 100ms readback previously
 // consumed only 64 per tick (<=320 DATA/s); real Npcap had >660 DATA/s.
@@ -587,7 +599,14 @@ fn accumulate_original_auto_quality(
 fn drain_original_auto_mature_due(
     m:&mut WindowsOriginalM2,now:MonoNs,
 )->Result<(),i32>{
+    // Every call is one time/budget-limited owner turn. No long historical
+    // drain can hold the Entry mutex while incoming DATA waits.
+    let started=Instant::now();
+    let mut handled=0usize;
     loop {
+        if handled>=256 || started.elapsed()>=std::time::Duration::from_micros(200) {
+            return Ok(());
+        }
         let (poll,capacity_censored)={
             let mature=m.mature.as_mut().ok_or(BAD_STAGE)?;
             let poll=mature.on_due(now).map_err(|_|BAD_STAGE)?;
@@ -598,9 +617,15 @@ fn drain_original_auto_mature_due(
             poll.window_2s.unambiguous_positive);
         m.fec_covered_2s=m.fec_covered_2s.saturating_add(
             poll.window_2s.covered());
-        m.fec_censored |= poll.capacity_limited||capacity_censored>0;
+        // MatureFirstSend reports cumulative capacity forever. Keep the
+        // count cumulative for source-backed Auto history, but gate current
+        // Fixed quality only during its actual 8s uncertain cohort.
+        if capacity_censored>m.auto_quality[11]{
+            m.fec_last_capacity_at=Some(now);
+        }
         let has_due=poll.next_deadline.is_some_and(|deadline|deadline.0<=now.0);
         let progressed=poll.processed>0;
+        handled=handled.saturating_add(poll.processed);
         accumulate_original_auto_quality(m,poll,capacity_censored);
         if !has_due{return Ok(())}
         if !progressed{return Err(BAD_STAGE)}
@@ -673,12 +698,15 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_mature_readback(
     if !v3_ready(&e,epoch,luid,ifindex)||!e.feature7{return BAD_STAGE}
     let Some(m)=e.m2.as_mut()else{return BAD_STAGE};
     if drain_original_auto_mature_due(m,m2_clock()).is_err(){return BAD_STAGE}
-    let applied=!m.fec_censored && m.fec_copied_source>0&&
+    let recently_censored=original_m2_recent_capacity(
+        m.fec_last_capacity_at,m2_clock());
+    let censored=m.fec_censored||recently_censored;
+    let applied=!censored && m.fec_copied_source>0&&
         m.fec_copied_parity>0&&m.fec_positive_2s>0&&
         m.fec_covered_2s>0&&m.fec_reverse_reports>0;
     unsafe{out.write(WindowsFixedMatureReadback{
         version:1,size,applied:u32::from(applied),
-        censored:u32::from(m.fec_censored),
+        censored:u32::from(censored),
         copied_source:m.fec_copied_source,copied_parity:m.fec_copied_parity,
         reverse_reports:m.fec_reverse_reports,positive_2s:m.fec_positive_2s,
         covered_2s:m.fec_covered_2s,
@@ -729,6 +757,15 @@ mod tests{
         let (n,seq,pn)=seal_symbol(r,h,[2;16],luid,ifindex,kind,plain,&mut out)
             .expect("genuine original Rust M1 immutable M3 FEC AEAD");
         (out[..n].to_vec(),seq,pn)
+    }
+    #[test]
+    fn m0_windows_auto_capacity_unknown_is_recent_only_without_lying_about_history(){
+        let before=Some(MonoNs(2_000_000_000));
+        assert!(!original_m2_recent_capacity(None,MonoNs(3_000_000_000)));
+        assert!(original_m2_recent_capacity(before,MonoNs(9_999_999_999)));
+        assert!(!original_m2_recent_capacity(before,MonoNs(10_000_000_000)));
+        // A future timestamp is never proof that capacity censorship expired.
+        assert!(original_m2_recent_capacity(before,MonoNs(1_000_000_000)));
     }
     #[test]
     fn m0_windows_native_fec2_original_owner_aead_first_delivery_rs16_and_stop(){
@@ -828,6 +865,119 @@ mod tests{
     }
 
     #[test]
+    fn m0_windows_fec2_source_arena_full_keeps_stream_and_recovers_same_epoch(){
+        let mut r=Registry{generation:131,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=setup(&mut r,false,911,91);
+        let ep=[2;16];
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_arm_entry(&mut e,ep,911,91).unwrap();
+            let revision=e.fec2_tx.as_ref().unwrap().revision();
+            let mut held=Vec::new();
+            while let Ok(slab)=e.arena.allocate(){held.push(slab);}
+            assert!(!held.is_empty());
+            assert_eq!(stage_fixed_source_entry(
+                &mut e,ep,911,91,&data(7),&mut [0u8;2048]),Err(FULL));
+            assert_eq!(e.fec2_tx.as_ref().unwrap().revision(),revision);
+            drop(held);
+            let (n,seq,pn)=stage_fixed_source_entry(
+                &mut e,ep,911,91,&data(8),&mut [0u8;2048])
+                .expect("released arena must restore original fixed owner");
+            assert!(n>51);
+            m2_kernel_firstsend_entry(&mut e,ep,911,91,pn,seq,n,1)
+                .expect("actual first-send settlement on recovered owner");
+        }
+        assert_eq!(quiesce_wintun(&mut r,h,ep,911,91),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+    #[test]
+    fn m0_windows_fresh_firstsend_outlives_optional_m2_shadow_full(){
+        let mut r=Registry{generation:200,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=setup(&mut r,false,991,99);
+        let ep=[2;16];
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_arm_entry(&mut e,ep,991,99).unwrap();
+            for i in 0..(MAX_M2_FROZEN+4) {
+                let mut out=[0u8;2048];
+                let (n,seq,pn)=v3_seal_entry(
+                    &mut e,ep,991,99,&data((i%250) as u8),&mut out)
+                    .expect("fresh seal must not depend on optional repair occupancy");
+                let cached=m2_kernel_firstsend_entry(
+                    &mut e,ep,991,99,pn,seq,n,1)
+                    .expect("actual NPF copy must not fail due to repair-cache cap");
+                assert!(cached as usize<=MAX_M2_FROZEN);
+            }
+            assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),
+                MAX_M2_FROZEN);
+            assert!(e.m2.as_ref().unwrap().pending.is_empty());
+        }
+    }
+    #[test]
+    fn m0_windows_fixed_source_then_true_kind1_control_then_parity_seq_is_contiguous(){
+        // Reproduces the source/control/parity interleaving of the historic
+        // natural Auto 428-byte control mismatch at original Rust M1.
+        // This is a deterministic *unit*, not proof of the failing NPF run.
+        let mut r=Registry{generation:911,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=setup(&mut r,false,811,81);
+        let ep=[2;16];
+        let mut last=600u32;
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_arm_entry(&mut e,ep,811,81).unwrap();
+            // Authenticated reverse M2 data can precede this new outbound
+            // full FEC block. Make its real 20ms feedback timer mature
+            // BEFORE the block is sealed, so parity doesn't expire while
+            // the test sleeps (real original worker would poll meanwhile).
+            e.m2.as_mut().unwrap().feedback.on_authenticated_data(
+                RecordPn(711),m2_clock());
+        }
+        std::thread::sleep(std::time::Duration::from_millis(21));
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            for i in 0..16u8 {
+                let mut wire=[0u8;2048];
+                let (n,seq,pn)=stage_fixed_source_entry(
+                    &mut e,ep,811,81,&data(i+1),&mut wire).unwrap();
+                assert_eq!(seq,last);
+                last=seq.wrapping_add(n as u32);
+                m2_kernel_firstsend_entry(&mut e,ep,811,81,pn,seq,n,1)
+                    .expect("exact typed copy of freshly sealed M1 DATA");
+            }
+        }
+        let (control_seq,control_len,control_pn)={
+            let mut e=r.entries[&h].lock().unwrap();
+            let mut wire=[0u8;2048];
+            let (n,seq,pn)=m2_next_feedback_entry(
+                &mut e,ep,811,81,&mut wire).unwrap().unwrap();
+            assert_eq!(seq,last,"M2 kind1 must not skip prior source");
+            m2_finish_feedback_entry(&mut e,ep,811,81,pn,1).unwrap();
+            (seq,n,pn)
+        };
+        assert!(control_len>FIXED_WIRE_OVERHEAD && control_pn>=16);
+        last=control_seq.wrapping_add(control_len as u32);
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            let parity=stage_fixed_parity_entry(&mut e,ep,811,81)
+                .expect("deferred shared FEC quantum after M2 control");
+            assert!(parity.count>0 && parity.count<=4);
+            for row in &parity.rows[..parity.count as usize] {
+                assert_eq!(row.seq,last,"parity must follow control exactly");
+                last=last.wrapping_add(row.used);
+            }
+            e.fec2_tx.as_mut().unwrap().settle_staged(
+                parity.count as u8,0,0).unwrap();
+        }
+        assert_eq!(quiesce_wintun(&mut r,h,ep,811,81),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+
+    #[test]
     fn m0_windows_fixed6_frozen_linux_stream_same_block_parity_npf_maturity_fence(){
         // Native Windows scoped crypto+M1/M2 unit; not a genuine NPF syscall
         // or two-OS product run. The latter must remain separately NOT_RUN.
@@ -924,7 +1074,13 @@ mod tests{
                 ).unwrap();
             }
             let due=MonoNs(start.0+9_200_000_000);
-            drain_original_auto_mature_due(m,due).unwrap();
+            // One real owner turn is intentionally capped at 256 due
+            // deadlines / 200us. A delayed 9.2s backlog must catch up
+            // over bounded subsequent turns, never monopolize fresh DATA.
+            for _ in 0..16{
+                drain_original_auto_mature_due(m,due).unwrap();
+                if m.auto_quality[0]==700 && m.auto_quality[5]==700{break}
+            }
             assert_eq!(m.auto_quality[0],700,
                 "all actual first-source 2s deadlines must mature");
             assert_eq!(m.auto_quality[5],700,

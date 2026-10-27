@@ -173,6 +173,14 @@ func(s *OriginalTLSNativeProductSession) LiveReceipt(
  }
  return s.product.LiveReceipt(ctx)
 }
+// RuntimeMTU exposes only a genuine M4 WAL+Win32 OS interface readback.
+// No caller may use it to mutate the original Rust or kernel state.
+func(s *OriginalTLSNativeProductSession) RuntimeMTU(
+ ctx context.Context,
+)(uint32,error){
+ if s==nil||s.product==nil{return 0,ErrNativeDeviceNotOwned}
+ return s.product.RuntimeMTU(ctx)
+}
 func(s *OriginalTLSNativeProductSession) Stop(ctx context.Context)error{
  if s==nil||s.product==nil{return ErrNativeDeviceNotOwned}
  return s.product.Stop(ctx)

@@ -35,7 +35,8 @@ type V4WindowsAuthenticatedGameGroup struct{
  sessions []*V4ClientSession
  epoch [16]byte
  joined uint64
- stageProc,receiveProc,joinProc,stopProc *syscall.Proc
+ stageProc,receiveProc,joinProc,stopProc,effectiveMtuProc *syscall.Proc
+ maxIPv4 int
  fecOpenProc,fecFinishProc *syscall.Proc
  fecParityProc,fecM4SendProc *syscall.Proc
  gameFec uint8 // authenticated TLS GameFec=1..7 -> shared fixed profile0..6
@@ -143,6 +144,9 @@ func(g *V4WindowsAuthenticatedGameGroup) BindAndJoinOriginalWintun(
   {"wbd_m0_win_owner_v4_game_stage",&g.stageProc},
   {"wbd_m0_win_owner_v4_game_receive",&g.receiveProc},
   {"wbd_m0_win_owner_v4_game_stop",&g.stopProc},
+  {"wbd_m0_win_owner_v4_game_effective_mtu",&g.effectiveMtuProc},
+  {"wbd_m0_win_owner_v4_game_m4_send_result",&g.fecM4SendProc},
+  {"wbd_m0_win_owner_v4_game_fec_parity_due",&g.fecParityProc},
  }{
   p,err:=b.dll.FindProc(item.name)
   if err!=nil{return fmt.Errorf("%w: native Game group ABI %s missing",errV4WindowsOwner,item.name)}
@@ -161,32 +165,70 @@ func(g *V4WindowsAuthenticatedGameGroup) BindAndJoinOriginalWintun(
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   finish,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_finish_fec")
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
-  parity,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_fec_parity_due")
-  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
-  receipt,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_m4_send_result")
-  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   fec,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_fec_enable")
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   if err=winOwnerCall(fec,uintptr(group),uintptr(g.gameFec-1));err!=nil{return err}
   g.fecOpenProc=open
   g.fecFinishProc=finish
-  g.fecParityProc=parity
-  g.fecM4SendProc=receipt
  }
+ // The real Rust joined-owner and OS readback narrow one immutable
+ // effective payload bound shared by WinTun ring, Game crypto and CLI.
+ var max uint32
+ if err:=winOwnerCall(g.effectiveMtuProc,uintptr(g.joined),
+  uintptr(unsafe.Pointer(&max)));err!=nil{return err}
+ if max<20||max>1536{return errV4WindowsOwner}
+ g.maxIPv4=int(max)
  return nil
 }
-func(g *V4WindowsAuthenticatedGameGroup) verifyLive(ctx context.Context)error{
- if ctx==nil||g==nil||g.closed||g.joined==0{return errV4WindowsOwner}
- if err:=ctx.Err();err!=nil{return err}
+func(g *V4WindowsAuthenticatedGameGroup) EffectiveGamePayloadMTU()(int,error){
+ if g==nil{return 0,errV4WindowsOwner}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||g.joined==0||g.maxIPv4<20{return 0,errV4WindowsOwner}
+ return g.maxIPv4,nil
+}
+// One true current per-lane Rust budget snapshot, under the original
+// live M4-created Wintun lease and the same native Game group. Call only
+// at low frequency or an owned path-reconfiguration boundary, never on
+// every logical Game/NPF source packet. Does not edit OS MTU/route/WFP.
+func(g *V4WindowsAuthenticatedGameGroup) RefreshGamePayloadMTU(
+ ctx context.Context,
+)(int,error){
+ if g==nil||ctx==nil{return 0,errV4WindowsOwner}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||g.joined==0||g.effectiveMtuProc==nil{return 0,errV4WindowsOwner}
+ release,err:=g.holdLive(ctx)
+ if err!=nil{return 0,err}
+ defer release()
+ var cap uint32
+ err=winOwnerCall(g.effectiveMtuProc,uintptr(g.joined),
+  uintptr(unsafe.Pointer(&cap)))
+ if err!=nil||cap<20||cap>1536-31-16{
+  return 0,errors.Join(errV4WindowsOwner,err)
+ }
+ g.maxIPv4=int(cap)
+ return int(cap),nil
+}
+// The only OS lease validation occurs during the genuine TLS+M4 Hold and
+// on Stop/reconfiguration. A group packet borrows each pinned lane until
+// the Rust Game owner has consumed it. That owner still independently
+// enforces group/generation/phase and rejects any revocation or stale PN.
+func(g *V4WindowsAuthenticatedGameGroup) holdLive(ctx context.Context)(func(),error){
+ if ctx==nil||g==nil||g.closed||g.joined==0{return nil,errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return nil,err}
+ var releases [4]func()
+ held:=0
+ giveBack:=func(){
+  for held>0{held--;releases[held]();releases[held]=nil}
+ }
  for _,s:=range g.members{
   if s==nil||s.device==nil||s.bridge==nil||
-   s.bridge.epoch!=g.epoch{return errV4WindowsOwner}
-  if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{return err}
-  state,err:=s.OriginalOwnerReadback()
-  if err!=nil||!state.OwnerActive||!state.DeviceBound||
-   state.DeviceQuiesced||state.ProductApplied{return errV4WindowsOwner}
+   s.bridge.epoch!=g.epoch{giveBack();return nil,errV4WindowsOwner}
+  release,err:=s.device.borrowHot(ctx)
+  if err!=nil{giveBack();return nil,err}
+  if held>=len(releases){release();giveBack();return nil,errV4WindowsOwner}
+  releases[held]=release;held++
  }
- return nil
+ return giveBack,nil
 }
 // StageGameRecords copies genuine per-lane Rust AEAD records into bounded
 // caller buffers. A Go M4 packet driver MUST actually send and account for
@@ -196,8 +238,10 @@ func(g *V4WindowsAuthenticatedGameGroup) StageGameRecords(
 )([]V4WindowsGameRecord,error){
  if g==nil{return nil,errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
- if err:=g.verifyLive(ctx);err!=nil{return nil,err}
- if len(ipv4)<20||len(ipv4)>1200||ipv4[0]>>4!=4{return nil,errV4WindowsOwner}
+ loanRelease,loanErr:=g.holdLive(ctx)
+ if loanErr!=nil{return nil,loanErr}
+ defer loanRelease()
+ if len(ipv4)<20||len(ipv4)>g.maxIPv4||ipv4[0]>>4!=4{return nil,errV4WindowsOwner}
  raw:=make([]v4WindowsGameRawRecord,len(g.members))
  var count uint32
  err:=winOwnerCall(g.stageProc,uintptr(g.joined),
@@ -205,11 +249,25 @@ func(g *V4WindowsAuthenticatedGameGroup) StageGameRecords(
   uintptr(unsafe.Pointer(&raw[0])),uintptr(len(raw)),
   uintptr(unsafe.Pointer(&count)))
  runtime.KeepAlive(ipv4);runtime.KeepAlive(raw)
- if err!=nil||int(count)!=len(raw){return nil,errors.Join(errV4WindowsOwner,err)}
+ if err!=nil||count>uint32(len(raw)){return nil,errors.Join(errV4WindowsOwner,err)}
+ // The shared Rust Game4 owner may return only first-due replicas;
+ // later copies remain scheduled without blocking the logical source.
+ return decodeOriginalGameStagedRecords(raw,count)
+}
+// A source acceptance is not proof that every Linux Game4 scheduled copy
+// is due in this same 2ms turn. Validate only returned native rows without
+// inventing the other lanes or claiming their original NPF copied tickets.
+func decodeOriginalGameStagedRecords(raw []v4WindowsGameRawRecord,
+ count uint32)([]V4WindowsGameRecord,error){
+ if count>uint32(len(raw))||len(raw)>4{return nil,errV4WindowsOwner}
  out:=make([]V4WindowsGameRecord,0,count)
- for _,record:=range raw{
+ var mask uint8
+ for _,record:=range raw[:count]{
   if record.Lane==0||int(record.Lane)>len(raw)||
    record.Length<32||record.Length>1536{return nil,errV4WindowsOwner}
+  bit:=uint8(1)<<(record.Lane-1)
+  if mask&bit!=0{return nil,errV4WindowsOwner}
+  mask|=bit
   out=append(out,V4WindowsGameRecord{
    Lane:record.Lane,Length:record.Length,
    PacketNumber:record.PacketNumber,LogicalID:record.LogicalID,
@@ -225,7 +283,9 @@ func(g *V4WindowsAuthenticatedGameGroup) OpenGameRecord(
 )([]byte,error){
  if g==nil{return nil,errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
- if err:=g.verifyLive(ctx);err!=nil{return nil,err}
+ loanRelease,loanErr:=g.holdLive(ctx)
+ if loanErr!=nil{return nil,loanErr}
+ defer loanRelease()
  if g.gameFec!=0{return nil,errV4WindowsOwner}
  if lane==0||int(lane)>len(g.members)||len(wire)<32||len(wire)>1536{
   return nil,errV4WindowsOwner
@@ -239,7 +299,7 @@ func(g *V4WindowsAuthenticatedGameGroup) OpenGameRecord(
  runtime.KeepAlive(wire);runtime.KeepAlive(out)
  if err!=nil{return nil,err}
  if used==0{return nil,nil}
- if used<20||used>1200||out[0]>>4!=4||out[0]&15<5{return nil,errV4WindowsOwner}
+ if used<20||used>uintptr(g.maxIPv4)||out[0]>>4!=4||out[0]&15<5{return nil,errV4WindowsOwner}
  return out[:used],nil
 }
 // The caller MUST join all M4 native socket and kernel packet workers BEFORE

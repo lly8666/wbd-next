@@ -55,3 +55,33 @@ func TestM0WindowsGameOriginalV3CarrierPolicyMatchesLinuxFixedFour(t *testing.T)
   }
  }
 }
+
+func TestM0WindowsGame4StaggeredNativeStageBoundedPartialNoInventedLane(t *testing.T){
+ var rows [4]v4WindowsGameRawRecord
+ rows[0].Lane=1
+ rows[0].Length=51
+ rows[0].PacketNumber=2
+ rows[0].LogicalID=8
+ rows[0].Wire[0]=0x10
+ partial,err:=decodeOriginalGameStagedRecords(rows[:],1)
+ if err!=nil||len(partial)!=1||partial[0].Lane!=1||len(partial[0].Wire)!=51 {
+  t.Fatalf("delayed Game4 group forced all four copies: %v %#v",err,partial)
+ }
+ // The first due record gets independent private caller bytes.
+ rows[0].Wire[0]=0xaa
+ if partial[0].Wire[0]!=0x10{t.Fatal("borrowed unsafe native staged buffer")}
+ empty,err:=decodeOriginalGameStagedRecords(rows[:],0)
+ if err!=nil||len(empty)!=0{t.Fatal("no due record is not a real error")}
+ if _,err=decodeOriginalGameStagedRecords(rows[:],5);err==nil{
+  t.Fatal("native over-limit result was accepted")
+ }
+ rows[1]=rows[0]
+ if _,err=decodeOriginalGameStagedRecords(rows[:],2);err==nil{
+  t.Fatal("same lane counted twice in one real NPF batch")
+ }
+ rows[1].Lane=2
+ records,err:=decodeOriginalGameStagedRecords(rows[:],2)
+ if err!=nil||len(records)!=2||records[1].Lane!=2{
+  t.Fatal("independently due lane must be accepted",err)
+ }
+}

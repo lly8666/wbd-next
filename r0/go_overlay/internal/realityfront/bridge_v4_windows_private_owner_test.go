@@ -55,3 +55,26 @@ func TestM0WindowsOriginalGoPrivateCallbackInvalidBeforeAuthenticatedTLS(t *test
     }
     if b.handle!=0||b.committed||b.stopped {t.Fatal("unauthorized early owner created")}
 }
+
+func TestM0WindowsNativeABIReturnCodeDistinguishesHardOwnerFault(t *testing.T){
+ for _,tc:=range []struct{code uintptr;fatal bool}{
+  {1,false}, // legacy M3 auth/duplicate/invalid packet
+  {2,true},  // unknown Rust handle
+  {3,true},  // bad owner/generation phase
+  {4,true},  // actual owner capacity, NOT a forged tag
+  {5,true},  // Stop has not completed
+ }{
+  native:=&v4WindowsNativeABIError{Code:tc.code}
+  joined:=errors.Join(errV4WindowsOwner,native)
+  if !errors.Is(joined,errV4WindowsOwner){
+   t.Fatalf("native owner error lost C ABI provenance %d",tc.code)
+  }
+  if got:=V4WindowsNativeOwnerFatal(joined);got!=tc.fatal{
+   t.Fatalf("native return code %d fatal=%v wanted=%v",tc.code,got,tc.fatal)
+  }
+ }
+ if V4WindowsNativeOwnerFatal(nil)||
+    !V4WindowsNativeOwnerFatal(errors.New("missing DLL/native handle")){
+  t.Fatal("untyped missing native owner was made benign")
+ }
+}
