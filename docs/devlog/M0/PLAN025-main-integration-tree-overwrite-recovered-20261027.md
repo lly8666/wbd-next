@@ -162,6 +162,12 @@ Read v4WindowsRealDeviceLease.borrowHot and Windows Rust v3_ready, original Norm
 
 ## S19 — receipt fixture true ready-prefix prerequisite, no fake fresh credit
 Reviewed the post-v3 corrected S13 R2 original receipt test against wbd-platform::r1::submit_ready and actual native callback semantics. The test previously credited a distinct second M1 PN's fresh confirmed bytes without first proving any M4 sink accepted that PN. Both PN0 and PN1 now explicitly pass through the bounded ready-only test sink and assert exact byte-equal accepted_prefix=1 before budget.on_fresh_accepted. The first NotSent and second Uncertain *repair* results still earn zero fresh credit, return/charge appropriately, and retain all no-retry and immutable cipher assertions. This is a unit receiver/driver mock, not real Npcap or a new product PASS.
-```feature-impact
+```json
 {"kind":"none","ids":[],"reason":"Ensure each synthetic R2 native ready-prefix fixture proves actual accepted driver-shaped initial copy before granting F; no product source or policy change."}
+```
+
+## S20 — source-locked per-mode evidence boundary (draft, not product PASS)
+Previous sequential seven-mode runner could re-archive a stale prior-mode log because all modes share result/wl-public. Added pre-mode shared-file snapshot and changed-file copying; always-on original Linux raw/WSL witness, Windows NPF witness and native Go+Rust process telemetry are sliced only after the new mode begins when append-only, while truncated/replaced logs are captured entirely. Unmodified stale log is not relabeled and is explicitly listed; no password/keys/scripts are included. Tests preserve first mode original error and prove second mode copied only its new NPF/resource suffix. Original workflow already uploads `mode-results/`, so no redundant runner/checkout job added. All live network/perf qualification NOT_RUN.
+```feature-impact
+{"kind":"none","ids":[],"reason":"Bounded source/mode evidence snapshot and first-error isolation; no product feature/default change."}
 ```

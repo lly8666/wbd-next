@@ -6,7 +6,7 @@ Never derive product PASS from compile or a different mode. A failed
 mode remains a FAIL with its exact original source and report.
 """
 import os,sys,json,subprocess,pathlib
-from m0_wl_mode_evidence import archive_mode_evidence
+from m0_wl_mode_evidence import archive_mode_evidence,capture_mode_evidence_baseline
 root=pathlib.Path.cwd()
 out=root/"result"/"wl-public"
 modes=["normal","fixed","auto","game2","game4","game2-fec","game4-fec"]
@@ -23,6 +23,7 @@ for mode in modes:
  env["WBD_WL_PUBLIC_MODE"]=mode
  # Never reinterpret the preceding mode's report as this mode's result.
  (out/"report.json").unlink(missing_ok=True)
+ baseline=capture_mode_evidence_baseline(out)
  print("WL_PUBLIC_REAL_MODE_START "+mode,flush=True)
  child=subprocess.run([sys.executable,"tools/m0_wl_public_normal_e2e.py"],env=env)
  report=out/"report.json"
@@ -31,7 +32,7 @@ for mode in modes:
  (out/(mode+"-report.json")).write_text(json.dumps(result,indent=2)+"\n")
  # Per-mode allowlisted redacted logs and sampled resource files survive
  # later uses of the same WSL2/Npcap/Go+Rust native runner.
- evidence=archive_mode_evidence(out,mode,os.environ["GITHUB_SHA"],result,child.returncode)
+ evidence=archive_mode_evidence(out,mode,os.environ["GITHUB_SHA"],result,child.returncode,baseline=baseline)
  passed=child.returncode==0 and result.get("mode_public","").startswith("PASS_ACTUAL_")
  results[mode]={"result":"PASS" if passed else "FAIL",
    "error":result.get("error"),"report":mode+"-report.json",
