@@ -152,7 +152,7 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
     #[cfg(feature="fec2_product_record")]
     let mature=if e.feature7 {
         Some(wbd_recovery::MatureFirstSend::new(
-            route,wbd_recovery::MaturityConfig{max_live_data:131_072},now
+            route,wbd_recovery::MaturityConfig{max_live_data:524_288},now
         ).map_err(|_|BAD_STAGE)?)
     }else{None};
     #[cfg(feature="fec2_product_record")]

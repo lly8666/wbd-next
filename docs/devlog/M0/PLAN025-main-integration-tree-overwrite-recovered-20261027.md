@@ -53,6 +53,12 @@ This is a low-cost partial optimization hypothesis and not measured CPU improvem
 ## Windows extreme remediation S4 (C2 repair absolute safety caps, v3 RTT cache)
 Reviewed wbd_recovery::budget v3 epoch credit (9% of definitely M4-accepted fresh) and GlobalRepairAllocator hard cap. Original Windows hard limits 65,536B/s per direction and 131,072B/s process could not support 50M/30% or dual 500M lines irrespective of proportional policy; 32KiB grant was also only one safety cap, NOT itself a periodic 50ms rate. Updated max direction7MB/s, process14MB/s, per grant262144B and outstanding reservation pool524288B/256. All percentage shares and actual accepted send accounting remain unchanged. Shadow uses already-enabled adaptive RTT-derived expiry capped by shared R2 logic, no unconditional 2s payload retention.
 These are safety envelopes, not startup allocation, guaranteed throughput or performance PASS. FEC/Go product and high-load matrix remain NOT_RUN; C3 quality memory index, batch FFI and verified effective readback still OPEN.
-```feature-impact
+```json
 {"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Experimental Windows v3 repair absolute process/direction caps above intended bidirectional workload, retaining all relative firstsend and per-origin correctness limits; no product PASS."}
+```
+
+## Windows extreme remediation S5 (C3 maturity debt / constant-cost indexes)
+Re-read current MatureFirstSend firstsend/check_clock, deadline on_due and Windows original FEC2 drain/readback hot path. Replaced two per-data BTreeSet time indexes with FIFO VecDeque ordered by genuine monotonic firstsend time; PN lookup still BTreeMap (no sampling of denominator). Original Windows deadline drain now bounded to 256 events or 200us per owner call instead of drain-until-empty under Entry lock; native Go requests due at most every 2ms fair pulse, not 100ms. Rust owner max quality live entries raised to 524288 lazily, no 8s payload caching. Existing 64-per-call M2 deadline API and 512 firstsend threshold unchanged; actual service rate/capacity and natural Auto remain NOT_RUN pending full candidate Actions.
+```feature-impact
+{"kind":"updated","ids":["fec-auto"],"reason":"Experimental Windows Auto due service and indexing cost bounded without relaxing mature firstsend denominator or claiming natural dynamic Applied PASS."}
 ```

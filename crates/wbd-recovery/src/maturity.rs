@@ -3,7 +3,7 @@
 //! M0 supplies only reverse-control facts AFTER real AEAD/open and replay
 //! validation. Never infer sent count from RX, kernel Accepted != peer receipt.
 //! Mature event-time windows are 2s and 8s. Unknown is not zero loss.
-use std::collections::{BTreeMap,BTreeSet};
+use std::collections::{BTreeMap,VecDeque};
 use wbd_types::{LaneKey,MonoNs,RecordPn};
 use crate::receipt::{ReceiptRouteScope,ScopedAuthenticatedReceipt};
 const SHORT_NS:u64=2_000_000_000;
@@ -134,8 +134,10 @@ pub struct MatureFirstSend {
     route:ReceiptRouteScope,
     cfg:MaturityConfig,
     entries:BTreeMap<RecordPn,Entry>,
-    short:BTreeSet<(u64,RecordPn)>,
-    long:BTreeSet<(u64,RecordPn)>,
+    // Monotonic first-send time guarantees sorted expiry timestamps.
+    // FIFO indexes avoid per-packet BTreeSet insertion/allocation cost.
+    short:VecDeque<(u64,RecordPn)>,
+    long:VecDeque<(u64,RecordPn)>,
     clock:u64,
     retired_high:Option<RecordPn>,
     report_seq:Option<u32>,
@@ -145,11 +147,11 @@ pub struct MatureFirstSend {
 impl MatureFirstSend {
     pub fn new(route:ReceiptRouteScope,cfg:MaturityConfig,start:MonoNs)
         ->Result<Self,MaturityError>{
-        if cfg.max_live_data==0||cfg.max_live_data>200_000{
+        if cfg.max_live_data==0||cfg.max_live_data>524_288{
             return Err(MaturityError::InvalidConfig);
         }
-        Ok(Self{route,cfg,entries:BTreeMap::new(),short:BTreeSet::new(),
-            long:BTreeSet::new(),clock:start.0,retired_high:None,
+        Ok(Self{route,cfg,entries:BTreeMap::new(),short:VecDeque::new(),
+            long:VecDeque::new(),clock:start.0,retired_high:None,
             report_seq:None,counters:ObservationCounters::default(),stopped:false})
     }
     fn check_clock(&mut self,now:MonoNs)->Result<(),MaturityError>{
@@ -162,7 +164,7 @@ impl MatureFirstSend {
     pub fn live_records(&self)->usize{self.entries.len()}
     pub fn timer_nodes(&self)->usize{self.short.len()+self.long.len()}
     pub fn next_deadline(&self)->Option<MonoNs>{
-        [self.short.first().map(|&(t,_)|t),self.long.first().map(|&(t,_)|t)]
+        [self.short.front().map(|&(t,_)|t),self.long.front().map(|&(t,_)|t)]
             .into_iter().flatten().min().map(MonoNs)
     }
     /// Never called for repair/fec copy, and only after local kernel has
@@ -206,8 +208,8 @@ impl MatureFirstSend {
                     first_at:now.0,wire_bytes,positive_at:None,negative_at:None,
                     possible_recovery_at:None,short_done:false
                 });
-                self.short.insert((end2,pn));
-                self.long.insert((end8,pn));
+                self.short.push_back((end2,pn));
+                self.long.push_back((end8,pn));
                 Ok(())
             }
         }
@@ -259,19 +261,19 @@ impl MatureFirstSend {
         self.check_clock(now)?;
         let mut out=MaturityPoll{capacity_limited:self.counters.capacity_censored!=0,..MaturityPoll::default()};
         for _ in 0..MAX_DUE_PER_POLL{
-            let a=self.short.first().copied().map(|(t,pn)|(t,pn,true));
-            let b=self.long.first().copied().map(|(t,pn)|(t,pn,false));
+            let a=self.short.front().copied().map(|(t,pn)|(t,pn,true));
+            let b=self.long.front().copied().map(|(t,pn)|(t,pn,false));
             let Some((due,pn,is_short))=[a,b].into_iter().flatten()
                 .min_by_key(|&(t,p,short)|(t,p,!short)) else {break;};
             if due>now.0{break;}
             if is_short {
-                assert!(self.short.remove(&(due,pn)));
+                assert_eq!(self.short.pop_front(),Some((due,pn)));
                 let e=self.entries.get_mut(&pn).expect("short index owner");
                 debug_assert!(!e.short_done);
                 e.short_done=true;
                 out.window_2s.add(e,due);
             }else {
-                assert!(self.long.remove(&(due,pn)));
+                assert_eq!(self.long.pop_front(),Some((due,pn)));
                 let e=self.entries.remove(&pn).expect("long index owner");
                 // on_due must not erase an entry whose 2s window remains.
                 debug_assert!(e.short_done);

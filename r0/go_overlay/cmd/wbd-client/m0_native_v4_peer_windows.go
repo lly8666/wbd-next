@@ -485,7 +485,10 @@ func(p *m0NativeV4Peer) pulse(ctx context.Context)(int,error){
     sent,parityErr:=p.rustFixedParityOne(ctx)
     if parityErr!=nil{return done,parityErr}
     if sent{done++}
-    if time.Since(p.lastFixedRead)>=100*time.Millisecond{
+    // Each fair pulse already processes at most 32 packets/2ms.
+    // At 45k source PPS this 2ms bounded maturity turn supplies up to
+    // 128k expiries/s without starving fresh or holding one unbounded lock.
+    if time.Since(p.lastFixedRead)>=2*time.Millisecond{
      p.lastFixedRead=time.Now()
      state,readErr:=p.owner.ReadBoundOriginalFixedMature(ctx)
      if readErr!=nil{return done,readErr}

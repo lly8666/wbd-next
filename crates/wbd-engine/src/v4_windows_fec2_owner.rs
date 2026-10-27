@@ -589,7 +589,14 @@ fn accumulate_original_auto_quality(
 fn drain_original_auto_mature_due(
     m:&mut WindowsOriginalM2,now:MonoNs,
 )->Result<(),i32>{
+    // Every call is one time/budget-limited owner turn. No long historical
+    // drain can hold the Entry mutex while incoming DATA waits.
+    let started=Instant::now();
+    let mut handled=0usize;
     loop {
+        if handled>=256 || started.elapsed()>=std::time::Duration::from_micros(200) {
+            return Ok(());
+        }
         let (poll,capacity_censored)={
             let mature=m.mature.as_mut().ok_or(BAD_STAGE)?;
             let poll=mature.on_due(now).map_err(|_|BAD_STAGE)?;
@@ -603,6 +610,7 @@ fn drain_original_auto_mature_due(
         m.fec_censored |= poll.capacity_limited||capacity_censored>0;
         let has_due=poll.next_deadline.is_some_and(|deadline|deadline.0<=now.0);
         let progressed=poll.processed>0;
+        handled=handled.saturating_add(poll.processed);
         accumulate_original_auto_quality(m,poll,capacity_censored);
         if !has_due{return Ok(())}
         if !progressed{return Err(BAD_STAGE)}

@@ -659,7 +659,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
-      "result_blob": "7518fd8a632311d3a59eb3d1b1641a0692ca3a6f"
+      "result_blob": "de3e4b49a3daf7fff53ac3204fff68308a176759"
     },
     {
       "kind": "create",
