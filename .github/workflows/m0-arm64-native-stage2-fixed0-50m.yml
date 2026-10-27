@@ -1,0 +1,61 @@
+name: M0 ARM64 stage2 fixed0-50m
+run-name: "M0 ARM64 fixed0-50m native prebuilt 60s"
+on:
+  push:
+    branches: [experiment/m0-arm64-grade-capacity-20261028]
+    paths: ['.github/workflows/m0-arm64-native-stage2-fixed0-50m.yml']
+permissions: {contents: read, actions: read}
+jobs:
+  single-native-scenario:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    env:
+      WBD_ARM64_FROZEN_SOURCE: f7ee097e116ab813f9ba23514df01a3f0f9d342a
+      WBD_ARM64_CAPACITY_TRIAL: grade-stress
+      WBD_V4_MODE: fec-fixed
+      WBD_STRESS_PROFILE: '0'
+      WBD_STRESS_MBIT: '50'
+      WBD_STRESS_SECONDS: '60'
+      WBD_STRESS_NAME: fixed0-50m
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 40557336142
+          name: arm64-public-go-rust-40557336142-1
+          github-token: ${{ github.token }}
+          path: arm64-public-bundle
+      - name: Verify original Go/Rust, ISA-L and per-file binary SHA256
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git hash-object tools/arm64_linux_netns_smoke.sh)" = 28bee73a83907de2302b51b3732090ef389fc8d5
+          (cd arm64-public-bundle && sha256sum -c SHA256SUMS)
+          python3 - <<'PY'
+          import json,os,pathlib
+          m=json.loads(pathlib.Path("arm64-public-bundle/manifest.json").read_text())
+          assert m["source"]==os.environ["WBD_ARM64_FROZEN_SOURCE"]
+          assert m["architecture"]=="aarch64"
+          assert m["go_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["isa_source"]=="c387163fcbca62701d646149564c550c78a4f985"
+          print("M0_ARM64_SHA_LOCKED_COMPILED_BINARY_REUSED")
+          PY
+      - name: Actual native original Go TLS Rust grade with 60s traffic and monitoring
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iputils-ping openssl iptables iperf3
+          bash tools/m0-arm64-grade-stress-prebuilt.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-grade-fixed0-50m-${{ github.run_id }}-${{ github.run_attempt }}
+          path: arm64-netns-result/
+          if-no-files-found: warn
+          retention-days: 30
+
+# S7 fixed host cgroup optional measurement: fixed0 exact frozen original product, one scene.
