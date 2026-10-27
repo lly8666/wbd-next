@@ -14,7 +14,7 @@
     "alternatives": "fixed0..fixed6，Game Auto不支持"
   },
   "usage": {
-    "cli": "Linux --mode fec-fixed --fec-profile 0..6；Windows隔离候选 --native-v4-product --lanes 1 --fec.mode fixed --fec.profile <级别>，旧Go V3入场参数和Rust共享FEC2由原TLS桥统一绑定；全档端到端资格仍未通过",
+    "cli": "Windows isolated --native-v4-product --lanes 2|4 --fec.mode fixed --fec.profile 0..6 names, protected original TLS GameFec=profile+1; Game auto unsupported.",
     "config": "原Go V3 fixed4 carrier仅是入场包络，Rust FixedStream本身支持profile 0..6和revision；不是单独Fixed6测试活动，默认FEC2 OFF",
     "gui": "Windows真实WinForms Applied/Disconnect仍NOT_RUN，不从CLI或M2组件PASS推断"
   },
@@ -54,12 +54,20 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "Windows Game2/4 fixed6 protected GameFec original TLS native kernel parity and real Wintun success/Stop",
+      "status": "FAIL",
+      "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
+      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source8e0daba-20261027.json"
     }
   ],
   "limitations": [
     "已执行干净/损伤范围不代表所有级别强损残余为零。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
-    "Windows W168隔离分支已开始按Linux共享GameAdapter、TLS GameFec和GameFecTx/Rx原生接口接线；目前仅可信原始Go TLS分组、FFI缓冲/真实kernel发送结果回报合同。Windows原生多lane Npcap+Wintun、定时parity回调、完整App恢复/Stop/GUI仍未形成同源公开正向证据；Windows NOT_RUN不变。"
+    "Game2/4 original Windows FEC2 shared Rust parity due/per-lane NPF copy/receiver batch Wintun completion ABI exists in Draft. Source8e real Win↔Linux stopped before authenticated lane1; no successful Game+FEC public product Applied.",
+    "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS."
   ],
   "promotion": null
 }

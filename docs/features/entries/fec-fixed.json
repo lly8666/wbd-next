@@ -15,7 +15,7 @@
     "production": "FEC OFF"
   },
   "usage": {
-    "cli": "Linux --mode fec-fixed --fec-profile 0..6；Windows隔离候选 --native-v4-product --lanes 1 --fec.mode fixed --fec.profile <级别>，旧Go V3入场参数和Rust共享FEC2由原TLS桥统一绑定；全档端到端资格仍未通过",
+    "cli": "Windows isolated candidate --native-v4-product --lanes 1 --fec-mode fixed --fec-parity 4 --fec.mode fixed --fec.profile light|mild|medium|balanced|high|strong|maximum; original carrier fixed4 separate from Rust FEC2 selection. Public Fixed still FAIL.",
     "config": "原Go V3 fixed4 carrier仅是入场包络，Rust FixedStream本身支持profile 0..6和revision；不是单独Fixed6测试活动，默认FEC2 OFF",
     "gui": "Windows真实WinForms Applied/Disconnect仍NOT_RUN，不从CLI或M2组件PASS推断"
   },
@@ -28,7 +28,9 @@
     "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
     "r0/go_overlay/internal/realityfront/bridge_v4_windows_fixed_stream.go",
     "crates/wbd-engine/src/v4_windows_owner.rs",
-    "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go"
+    "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
+    "crates/wbd-engine/src/v4_windows_fec2_owner.rs"
   ],
   "doc_refs": [
     "docs/architecture/FEC_V2_BALANCED.md",
@@ -69,6 +71,13 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "real Windows original Go TLS / Rust FEC2 initial Fixed profile, parity firstsend, M2 recovery + Stop",
+      "status": "FAIL",
+      "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
+      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source8e0daba-20261027.json"
     }
   ],
   "limitations": [
@@ -77,7 +86,9 @@
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "Windows原始Go fixed4 carrier与共享Rust FixedStream支持FEC2 0..6隔离候选；源码8e0d真实双系统Fixed在原Rust M2 frozen repair失败，全部profile产品资格需新的实际正例。",
     "原Windows Fixed6 先前两个Actions 40371148050、40372774560 入场FAIL；d3811b…已修V3 fixed4但测试参数仍遗漏独立 --fec.mode fixed 与 --fec.profile maximum；本次修正后才有新候选，保留其旧FAIL。",
-    "Windows Fixed6 真实网络尝试 19db3a8 Actions40376199812 在原始反向M2反馈环节FAIL，后续01d8b729针对失败路径诊断/原生单测的完整产品测试仍在运行，不能提前转PASS。"
+    "Windows Fixed6 真实网络尝试 19db3a8 Actions40376199812 在原始反向M2反馈环节FAIL，后续01d8b729针对失败路径诊断/原生单测的完整产品测试仍在运行，不能提前转PASS。",
+    "Windows W168 now selects the full Linux FEC2 0..6 range using original Rust FixedStream; original source8e full native first-send M2 repair failed before READY, not product PASS.",
+    "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS."
   ],
   "promotion": null
 }
