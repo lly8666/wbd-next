@@ -118,3 +118,35 @@ func(s *V4WindowsAuthenticatedClientOwner) ReadBoundOriginalFixedMature(
  }
  return out,nil
 }
+
+// RequestBoundOriginalFEC2Revision reuses the ORIGINAL Linux FixedStream
+// profile/revision transition. Only the protected, committed Go TLS owner
+// and SAME M4-created live Wintun can issue a private pending request.
+// The request itself is never an Applied acknowledgment: the independent
+// mature M2 + copied source/parity + native Stop gates remain mandatory.
+// Auto policy decisions MUST come from the shared Linux FecV2 controller,
+// never an invented Windows periodic scheduler.
+func(s *V4WindowsAuthenticatedClientOwner) RequestBoundOriginalFEC2Revision(
+ ctx context.Context,profile FecV2Profile,revision uint64,
+)error{
+ if ctx==nil||s==nil||s.bridge==nil||s.device==nil||
+  !profile.Valid()||revision==0{return errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return err}
+ if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
+  return errors.Join(errV4WindowsOwner,err)
+ }
+ state,err:=s.OriginalOwnerReadback()
+ if err!=nil||!state.OwnerActive||!state.DeviceBound||
+  state.DeviceQuiesced||state.ProductApplied{
+  return errV4WindowsOwner
+ }
+ proc,err:=s.bridge.dll.FindProc("wbd_m0_win_owner_v8_fixed_change_revision")
+ if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+ err=winOwnerCall(proc,uintptr(s.bridge.handle),
+  uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+  uintptr(s.device.identity.LUID),
+  uintptr(s.device.identity.InterfaceIndex),
+  uintptr(profile),uintptr(revision))
+ runtime.KeepAlive(s.bridge.epoch)
+ return err
+}

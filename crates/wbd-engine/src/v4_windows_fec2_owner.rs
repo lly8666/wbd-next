@@ -320,6 +320,10 @@ fn stage_fixed_source_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if frame.len()>budget.record_payload_mtu.saturating_sub(14)||
         out.len()<frame.len()+41{return Err(INVALID)}
     let mut stream=e.fec2_tx.take().ok_or(BAD_STAGE)?;
+    // Linux FixedStream is the sole revision source of truth. The old
+    // Windows ==1 placeholder silently rejected every Auto/FEC policy
+    // transition despite carrying a correctly authenticated ticket.
+    let active_revision=stream.revision();
     let mut input=e.arena.allocate().map_err(|_|FULL)?;
     input.writable()[14..14+frame.len()].copy_from_slice(frame);
     let mut result=None;
@@ -327,7 +331,7 @@ fn stage_fixed_source_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let offered=stream.offer_source(
         input,14..14+frame.len(),m2_clock(),|ticket,plain|{
             let attempt=(||->Result<(usize,u32,u64),i32>{
-                if ticket.revision!=stream_revision_placeholder(){return Err(BAD_STAGE)}
+                if ticket.revision!=active_revision{return Err(BAD_STAGE)}
                 let mut source=[0u8;2048];
                 let used=fec_v2::source_into(
                     ticket.block_id,ticket.index,plain,budget.record_payload_mtu,&mut source
@@ -346,10 +350,6 @@ fn stage_fixed_source_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if !accepted.source_enqueued{return Err(BAD_STAGE)}
     result.ok_or(BAD_STAGE)
 }
-#[inline]
-fn stream_revision_placeholder()->wbd_types::ConfigRevision{
-    wbd_types::ConfigRevision(1)
-}
 fn stage_fixed_parity_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32
 )->Result<WindowsFixedParityBatch,i32>{
@@ -358,12 +358,15 @@ fn stage_fixed_parity_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         return Err(BAD_STAGE)
     }
     let mut stream=e.fec2_tx.take().ok_or(BAD_STAGE)?;
+    let active_revision=stream.revision();
+    let previous_revision=stream.prior_parity_revision();
     let mut out=WindowsFixedParityBatch{
         count:0,reserved:0,rows:[empty_parity_row();4],
     };
     let mut err=None;
     let result=stream.poll_parity(m2_clock(),|parity,_block,_row,revision|{
-        if revision.0!=1 || out.count>=4{
+        if (revision!=active_revision&&Some(revision)!=previous_revision)
+            || out.count>=4{
             err=Some(BAD_STAGE);return DriverProof::NotSent
         }
         let item=&mut out.rows[out.count as usize];
@@ -379,6 +382,56 @@ fn stage_fixed_parity_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if let Some(code)=err{return Err(code)}
     result.map_err(|_|BAD_STAGE)?;
     Ok(out)
+}
+// Same Linux FixedStream quiescent profile/revision transition, scoped to
+// the original Go-credential-TLS Rust generation and the original M4
+// Wintun hold. Does NOT grant Windows product mode/GUI Applied. A new
+// revision must produce fresh kernel-copy source/parity and mature M2
+// evidence; old revision counters cannot qualify the new one.
+fn fixed_change_revision_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+    ifindex:u32,profile:u8,revision:u64)->Result<(),i32>{
+    if profile>6||revision==0{return Err(INVALID)}
+    if !v3_ready(e,epoch,luid,ifindex)||!e.feature7||
+        e.game_group.is_some()||e.m2.is_none(){return Err(BAD_STAGE)}
+    let now=m2_clock();
+    let route=e.m2.as_ref().ok_or(BAD_STAGE)?.route;
+    let fresh=wbd_recovery::MatureFirstSend::new(
+        route,wbd_recovery::MaturityConfig{max_live_data:131_072},now
+    ).map_err(|_|BAD_STAGE)?;
+    e.fec2_tx.as_mut().ok_or(BAD_STAGE)?
+        .quiescent_change(profile,revision,now)
+        .map_err(|err|match err{
+            crate::v4_fixed_stream::StreamError::StaleRevision |
+            crate::v4_fixed_stream::StreamError::Invalid=>INVALID,
+            _=>BAD_STAGE,
+        })?;
+    let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+    m.mature=Some(fresh);
+    m.fec_copied_source=0;
+    m.fec_copied_parity=0;
+    m.fec_reverse_reports=0;
+    m.fec_positive_2s=0;
+    m.fec_covered_2s=0;
+    m.fec_censored=false;
+    Ok(())
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_change_revision(
+    h:u64,ep:*const u8,ep_len:usize,luid:u64,ifindex:u32,
+    profile:u32,revision:u64,
+)->i32{
+    if profile>6||revision==0{return INVALID}
+    let Some(epoch)=v3_epoch(ep,ep_len)else{return INVALID};
+    let entry={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(entry)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(entry)
+    };
+    let Ok(mut e)=entry.lock()else{return BAD_STAGE};
+    match fixed_change_revision_entry(&mut e,epoch,luid,ifindex,
+        profile as u8,revision){
+        Ok(())=>OK,Err(code)=>code,
+    }
 }
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_stage_source(
@@ -701,6 +754,45 @@ mod tests{
         assert_eq!(release(&mut r,rx),OK);
     }
 
+
+    #[test]
+    fn m0_windows_fec2_revision_change_uses_linux_quiescent_and_new_m2_maturity(){
+        let mut r=Registry{generation:987,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=setup(&mut r,false,951,95);
+        let ep=[2;16];
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_arm_entry(&mut e,ep,951,95).unwrap();
+            assert_eq!(e.fec2_tx.as_ref().unwrap().revision().0,1);
+            assert_eq!(fixed_change_revision_entry(&mut e,ep,951,95,7,2),Err(INVALID));
+            assert_eq!(fixed_change_revision_entry(&mut e,ep,951,95,2,1),Err(INVALID));
+            assert_eq!(fixed_change_revision_entry(&mut e,ep,951,95,2,2),Ok(()));
+            assert_eq!(e.fec2_tx.as_ref().unwrap().revision().0,2);
+            let m=e.m2.as_ref().unwrap();
+            assert_eq!(m.fec_copied_source,0);
+            assert_eq!(m.fec_copied_parity,0);
+            assert_eq!(m.fec_positive_2s,0);
+            assert_eq!(m.fec_reverse_reports,0);
+            // Real public Applied remains UNKNOWN: a new revision's
+            // TLS-bound sender has NOT yet received M4 or mature M2 proof.
+            let mut out=[0u8;2048];
+            let frame=data(11);
+            let (used,seq,pn)=stage_fixed_source_entry(
+                &mut e,ep,951,95,&frame,&mut out
+            ).expect("non-1 authenticated revision source must remain live");
+            assert!(used>51);
+            assert_eq!(seq,600);
+            assert_eq!(pn,0);
+            assert_eq!(m2_kernel_firstsend_entry(
+                &mut e,ep,951,95,pn,seq,used,1),Ok(1));
+            assert_eq!(e.m2.as_ref().unwrap().fec_copied_source,1);
+            assert_eq!(e.m2.as_ref().unwrap().fec_copied_parity,0);
+        }
+        assert_eq!(quiesce_wintun(&mut r,h,ep,951,95),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
 
     #[test]
     fn m0_windows_fixed6_native_authenticated_m2_reverse_feedback_same_owner(){
