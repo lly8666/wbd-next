@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 303,
-  "checkpoint_sha": "73617b582f6829d5f967c2567854ddbf10cc8828",
+  "sequence": 304,
+  "checkpoint_sha": "7c30b7003f58bbdf48f664b09435cd0c15ed579c",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN025 remediation exact S52 1b33e4a natural Auto 119s signed Win/Linux source-locked workflow40550358765 concluded FAIL: native original TLS, initial real two-OS UDP/TCP okay and genuine high sustained OS UDP packet source, but Windows native Auto requested/applied stayed revision1 Strong5; Linux s2c downgraded. Main user criterion <=120s one-grade not met. S53 focused Windows 2s/8s actual-k timing-cohort alignment required, no threshold weakening.",
-  "why_now": "Recovered artifact12756320281 exact sha256 473785c7d053b905b03077803fa40240b9b41b93f74b0f42a9b1a893f4495487; Windows 79299 and Linux 39669 real UDP source sent over 119s, Windows 51 quality ticks: 27 k/slow <0.90 and 9 >1.05 vs only 15 inside, even though fast/slow local maturity observed==firstsend and zero missing. Windows stage revision1 only; Linux controller s2c revised to profile Light0. Independent 2/8/16 wall age floors pick unequal sized 6/8/10s cohorts, conservative FecV2Step refuses UNKNOWN as designed. Earliest fault now sampling alignment candidate, not packet-generator underoffer nor provable old 428B sequence root. Native owned Stop normal assertion not reached; cleanup still ran. Old negative receipt/SEQ held.",
+  "current_task": "PLAN025 S54 source0af9b585 genuine Windows native Auto one-grade Applied by 38th 1Hz sample, full run40553530258 FAIL from JSON omitempty fixture and owned Stop NOT_RUN. S55 49f81637 fixes fixture; frozen Auto run40556191100 in flight. Independent N0 normal 300ms run40557095692 and native ARM64 run40557336142 in flight on separate test-only branches.",
+  "why_now": "Checkpoint H303->latest main audited: main H303 feature catalog passed at 7c30b700; S54 40553530258 terminal FAIL, original artifact12756438389 sha256 706ed5294fd4dbb3f9e37f5babc082b9712f3c95cb97fc57d47fdbdaa572c82f independently rechecked. Auto authentic Rust M2 revisions2/3/4 profile4/3/2 after Windows 79320 real UDP; helper wrongly treated omitted bool:false as pending. S55 source49f in Actions and governance feature card size FAIL (>16KB), native result pending. User requested independent scenarios parallel. N0 first branch 4089 Actions40556823589 preflight FAIL/manual-input contract; corrected aa93183d Actions40557095692 static PASS. ARM64 f7ee097e Actions40557336142 active. No main product integration yet.",
   "done_when": "Whole original-Go TLS→shared Rust M1/M2/M3 FEC2 Fixed/Auto & 2/4 real Game lanes→original Windows Npcap/Wintun/WFP/route/DNS/WAL/GUI↔Linux raw/TUN and both-owned Stop across true applicable config/lifecycle. 4977f source seven initial functional mode core PASS; remaining dynamic Auto/GUI/global/lifecycle and weak-network use their own exact evidence. No fake Applied or independent Windows FEC owner.",
-  "next_action": "On experiment windows-wiring source 1b33e4a, re-read current FecV2 §7 and modules/10, actual winAutoBackend.Observe floor fast2/slow8/hist16 calls/quality and latest W52/W56 k skew fixes; add SAME number-of-real-sample interval selection for current mature slow and prior actual-k cohort, keep packet/gen/M2 thresholds intact. Add jittered timestamps deterministic Windows Go regression source-locked test and assembler entry; then one [wiring-full] [auto-natural-only] native differentiating Action, preserve S52 FAIL and earlier S48 startup PASS. Main integration only after exact source result; N0/parallel loads not before.",
+  "next_action": "Settle exact S55 Auto run40556191100 with native Stop and artifact; independently settle N0 sourceaa93183d run40557095692 (only normal 0%-300ms; distinguish host capacity) and ARM64 f7ee097e run40557336142 (native Go/Rust bundle+real TUN Stop). Preserve every FAIL. Before any further product fix re-read real present call chain and recent changes. Fix experimental Auto feature-card >16KiB without discarding old evidence; then integrate reviewed full candidate onto main in one source-locked batch retaining H304/current main decision, followed by scoped normal N1/N5/CPU AB tests only when capacity supported.",
   "unverified": true,
-  "last_tested_source": "1b33e4a4bb4543961957124ac0c49b63d7e3cab0",
+  "last_tested_source": "0af9b5859c282a6efa0bda6c8d0c9fa01c14d9f1",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN025-S52-Auto-natural-source1b33e4a-failure-20261028.json"
+    "docs/evidence/M0/PLAN025-S54-Auto-natural-source0af9b585-applied-fixture-failure-20261028.json"
   ],
   "context_refs": [
     "docs/architecture/TEST_PLAN.md",
@@ -28,5 +28,5 @@
     "docs/evidence/windows-main-audit-20261027.json"
   ],
   "open_requests": [],
-  "partial_summary": "H303 S52 native natural first source 79299 Windows/39669 Linux with both initial UDP/TCP PASS, final Windows Auto revision1 profile5 (FAIL one-grade by120s), Linux counterpart genuinely lowered to profile0; artifact12756320281 hash verified. Window ratio actual-k/slow mature oscillates 0.6/0.8/1.0/1.25 because independently selected 2s/8s/16s counter snapshots; low cost one bug hypothesis, no product repair yet. S48 Auto startup native PASS scoped, S45 six-mode PASS scoped, S51 preflight FAIL. No new main product code or stress qualifier."
+  "partial_summary": "S45 six modes native PASS and Auto FAIL exact a259; S48 Auto starter+Stop PASS exact772b8b3; S52 real 119s no downshift FAIL 1b33e4a; S54 genuine native M2 Applied rev2/3/4 within120s at 0af9b585 but fixture false-negative stopped before full owned Stop, so whole Action FAIL. S55 fixture correction and independent normal N0/ARM64 native runs active. N0 older preflight red kept. No PERF_PASS, physical/global GUI or loss-driven fast rise claims; original S54 error not relabeled SUCCESS."
 }
