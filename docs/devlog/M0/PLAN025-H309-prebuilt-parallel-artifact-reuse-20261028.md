@@ -22,3 +22,11 @@ Job success may only qualify *its own binary SOURCE and scenario*. ARM64 iperf's
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Fix only isolated Actions shallow-checkout script blob assertion with literal exact source-derived Git object SHA; product artifacts and both test scenarios unchanged."}
 ```
+
+## S3 only the independently failed Linux loss1 scenario
+- S2 exact Actions40566061984 sourcec59f3d32: Linux x86_64 source33ed original already-compiled Go client/server and Rust `.so` **all SHA+manifest verification PASS**, no compilation. Its one-percent real-kernel script then **FAIL** at `tools/m0-v4-public-real-linux-netns.sh` line144 because the old harness unconditionally redirects logs into the not-created `fixed-kernel-result/` directory. It emitted `No such file or directory`, no usable business result or owned Stop receipt; this is a test entry/setup failure and cannot be relabeled loss behavior. ARM64 independent 10Mbps 60s job **remained in progress** in original S2 run and is NOT restarted.
+- S3 new isolated workflow `.github/workflows/m0-prebuilt-linux-onepct-only.yml` includes only the Linux x64 loss1 original functional job: exactly the same S61 compiled Linux artifact run40562809565 / manifest SHA check and the same unchanged source-bound kernel netns script, with sole precondition `mkdir -p fixed-kernel-result`. The initial combined workflow is unmodified, and its paths trigger is restricted to its own YAML; S3 edit does not fire a duplicate ARM64 capacity trial. Original red and true 1% test qualification still pending, no product/default/throughput change.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Repair missing output directory only in one Linux precompiled-binary loss1 test wrapper; do not repeat ARM64 capacity job, modify product code, or relax original real Stop/result assertions."}
+```
