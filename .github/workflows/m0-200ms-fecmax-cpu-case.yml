@@ -1,0 +1,89 @@
+name: M0 exact 200ms 30pct FEC-max CPU one scenario
+run-name: M0-CPU-200MS|${{ github.sha }}
+on:
+  push:
+    branches: [experiment/m0-200ms-fecmax-cpu-20261027]
+    paths:
+      - tests/network/m0-cpu-200ms-*.json
+permissions: {contents: read, actions: read}
+concurrency:
+  group: m0-one-scenario-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  measure:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 2}
+      - name: Exactly ONE committed high-loss performance request
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t reqs < <(git diff --diff-filter=A --name-only HEAD^ HEAD -- 'tests/network/m0-cpu-200ms-*.json')
+          test "${#reqs[@]}" -eq 1
+          printf 'REQUEST=%s\n' "${reqs[0]}" >> "$GITHUB_ENV"
+          python3 - "${reqs[0]}" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          assert r["owner"]=="m0-cpu-recovery"
+          assert r["policy"]=="outer-opportunistic-v3"
+          assert r["order"]=="A" and list(r["bundles"])==["A"]
+          assert r["product"]["mode"] in ("fec-fixed","game4")
+          assert (r["product"].get("game_fec")=="fixed6") if r["product"]["mode"]=="game4" else (r["product"]["fec_profile"]==6)
+          assert r["traffic"]["udp_share"]==1
+          assert len(r["phases"])==1 and r["phases"][0]["seconds"]==30
+          for direct in ("c2s","s2c"):
+              assert r["phases"][0][direct]["delay_ms"]==200
+              assert r["phases"][0][direct]["loss_pct"]==30
+          assert r["traffic"]["c2s_mbps"]==r["traffic"]["s2c_mbps"]
+          assert r["traffic"]["c2s_mbps"] in (20,150,200)
+          assert r["network"]["lane_loss"]=="independent"
+          assert r["network"]["netem_rng"]=="unseeded_recorded"
+          PY
+      - name: Freeze requested build run and first-party artifact name
+        id: source
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,os
+          x=json.load(open(os.environ["REQUEST"]))["bundles"]["A"]
+          with open(os.environ["GITHUB_OUTPUT"],"a") as f:
+              print(f"name=network-arm64-public-{x['run_id']}-{x['attempt']}",file=f)
+              print(f"run={x['run_id']}",file=f)
+          PY
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.source.outputs.run }}
+          name: ${{ steps.source.outputs.name }}
+          github-token: ${{ github.token }}
+          path: network-result/bundle-A/arm64-public-bundle
+      - name: Verify exact original Go/Rust binaries hashes, run, SOURCE, ELF ISA
+        run: python3 -m tools.network_harness.runner prepare --request "$REQUEST" --directory network-result
+      - name: Native Linux netns utilities outside measurement
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+      - name: Real two-ended Linux original Go TLS Rust raw/TUN one 30 second performance scenario
+        run: |
+          sudo -n --preserve-env=GITHUB_ACTIONS,GITHUB_SHA,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,GITHUB_JOB,RUNNER_NAME,RUNNER_TEMP \
+            python3 -m tools.network_harness.runner run --request "$REQUEST" --directory network-result
+      - name: Explain actual offered/received performance and resource limits
+        if: always()
+        run: |
+          test ! -f network-result/summary.md || cat network-result/summary.md >> "$GITHUB_STEP_SUMMARY"
+          test ! -f network-result/result.json || python3 - <<'PY'
+          import json
+          p=json.load(open("network-result/result.json"))
+          print("MEASURED_RESULT",p.get("result"),p.get("reason"))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-200ms-cpu-${{ github.run_id }}-${{ github.run_attempt }}
+          path: network-result
+          retention-days: 14
+          if-no-files-found: warn
