@@ -235,3 +235,29 @@ func TestM0RemediationTXSequenceBoundedAuditNoWireDisclosure(t *testing.T){
   t.Fatal("diagnostic contains sensitive wire")
  }
 }
+
+func TestM0RemediationBatchNativeFirstsendFailedOwnerCannotReplay(t *testing.T){
+ p:=&m0NativeV4Peer{}
+ p.m2ResultsCount=2
+ p.m2Results[0]=realityfront.V4WindowsM2FirstsendResult{
+  PN:9,Seq:100,WireLen:123,Outcome:1}
+ p.m2Results[1]=realityfront.V4WindowsM2FirstsendResult{
+  PN:10,Seq:223,WireLen:121,Outcome:2}
+ // No authenticated device is configured. This MUST fail closed,
+ // discard the entire pending Go-owned metadata array, and never retry
+ // possibly already consumed original Rust NPF completion receipts.
+ if err:=p.flushOriginalFirstsend(context.Background());err==nil{
+  t.Fatal("unbound M4 original device reported native NPF copy")
+ }
+ if p.m2ResultsCount!=0{
+  t.Fatal("partially returned batch must be fenced, not resubmitted")
+ }
+ for _,row:=range p.m2Results[:2]{
+  if row!=(realityfront.V4WindowsM2FirstsendResult{}){
+   t.Fatal("bounded completed metadata buffer leaked across Stop")
+  }
+ }
+ if err:=p.flushOriginalFirstsend(context.Background());err!=nil{
+  t.Fatal("already fenced failed packet must never be submitted twice",err)
+ }
+}

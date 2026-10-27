@@ -1317,37 +1317,45 @@ const MAX_WINDOWS_M2_COMPLETIONS:usize=32;
 fn m2_kernel_firstsend_batch_entry(
     e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     rows:&[WbdWindowsM2FirstsendResult],
-)->Result<(u32,u32),i32>{
+)->(i32,u32,u32){
     if !v3_ready(e,epoch,luid,ifindex)||
         rows.is_empty()||rows.len()>MAX_WINDOWS_M2_COMPLETIONS{
-        return Err(INVALID)
+        return (INVALID,0,0)
     }
-    let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
+    let Some(m)=e.m2.as_ref()else{return (BAD_STAGE,0,0)};
     let mut unique=BTreeSet::new();
     let mut next=None;
-    // Fail atomically for forged/duplicate/noncontiguous descriptors BEFORE
-    // moving a single original FrozenRecord out of the Rust owner.
+    // Check every original immutable PN/SEQ/length and all consecutive
+    // byte ranges BEFORE removing any pending M1 handle. On preflight
+    // failure no staged record is lost, nor is any peer receipt forged.
     for row in rows{
         if row.reserved!=0||row.outcome>2||
             (row.wire_len as usize)<FIXED_WIRE_OVERHEAD||
             row.wire_len>2048||!unique.insert(row.pn)||
-            next.is_some_and(|prior:u32|prior!=row.seq){return Err(INVALID)}
-        let original=m.pending.get(&RecordPn(row.pn)).ok_or(INVALID)?;
+            next.is_some_and(|prior:u32|prior!=row.seq){return (INVALID,0,0)}
+        let Some(original)=m.pending.get(&RecordPn(row.pn))else{
+            return (INVALID,0,0)
+        };
         if original.metadata().pn!=RecordPn(row.pn)||
             original.metadata().seq.0 as u32!=row.seq||
             original.bytes().len()!=row.wire_len as usize{
-            return Err(INVALID)
+            return (INVALID,0,0)
         }
         next=Some(row.seq.wrapping_add(row.wire_len));
     }
-    let mut outstanding=0;
+    let mut settled=0u32;
+    let mut outstanding=m.shadow.outstanding() as u32;
     for row in rows{
-        // A true internal post-validation error is terminal. The caller
-        // must Stop and MUST NOT re-submit any observed kernel-complete row.
-        outstanding=m2_kernel_firstsend_entry(e,epoch,luid,ifindex,row.pn,
-            row.seq,row.wire_len as usize,row.outcome)?;
+        // If a post-NPF internal owner failure occurs, report the exact
+        // already-settled prefix and fail closed. Neither the remaining
+        // accepted NPF rows nor the settled prefix may be blindly retried.
+        match m2_kernel_firstsend_entry(e,epoch,luid,ifindex,row.pn,
+            row.seq,row.wire_len as usize,row.outcome){
+            Ok(left)=>{settled+=1;outstanding=left},
+            Err(code)=>return (code,settled,outstanding),
+        }
     }
-    Ok((rows.len() as u32,outstanding))
+    (OK,settled,outstanding)
 }
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_win_owner_v10_report_npcap_firstsend_batch(
@@ -1368,10 +1376,10 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v10_report_npcap_firstsend_batch(
         Arc::clone(lane)
     };
     let Ok(mut e)=lane.lock()else{return BAD_STAGE};
-    match m2_kernel_firstsend_batch_entry(&mut e,exact,luid,ifindex,rows){
-        Ok((n,m))=>{unsafe{settled.write(n);outstanding.write(m)};OK},
-        Err(code)=>{unsafe{settled.write(0);outstanding.write(0)};code}
-    }
+    let (status,n,m)=m2_kernel_firstsend_batch_entry(
+        &mut e,exact,luid,ifindex,rows);
+    unsafe{settled.write(n);outstanding.write(m)}
+    status
 }
 // Bounded C ABI only through the exact credential-checked Go native owner,
 // current Wintun LUID/index and one original Rust M1/PN sender. No callback
@@ -1940,6 +1948,52 @@ mod tests {
         assert_eq!(release(&mut r,h),OK);
     }
 
+    #[test]
+    fn m0_windows_m2_batch_validates_entire_original_seq_and_uncertain_once(){
+        assert_eq!(std::mem::size_of::<WbdWindowsM2FirstsendResult>(),24);
+        let mut r=Registry{generation:601,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        let ep=[2u8;16];
+        assert_eq!(bind_wintun(&mut r,h,ep,81,18),OK);
+        assert!(set_path_mtu(&mut r,h,ep,81,18,1400).is_ok());
+        let mut e=r.entries[&h].lock().unwrap();
+        m2_arm_entry(&mut e,ep,81,18).unwrap();
+        let mut frame=[0u8;90];frame[0]=0x45;
+        frame[2..4].copy_from_slice(&90u16.to_be_bytes());
+        frame[8]=64;frame[9]=17;
+        let mut dst=[0u8;2048];
+        let (n1,seq1,pn1)=v3_seal_entry(
+            &mut e,ep,81,18,&frame,&mut dst).unwrap();
+        let (n2,seq2,pn2)=v3_seal_entry(
+            &mut e,ep,81,18,&frame,&mut dst).unwrap();
+        assert_eq!(seq2,seq1.wrapping_add(n1 as u32));
+        let a=WbdWindowsM2FirstsendResult{
+            pn:pn1,seq:seq1,wire_len:n1 as u32,outcome:1,reserved:0};
+        let b=WbdWindowsM2FirstsendResult{
+            pn:pn2,seq:seq2,wire_len:n2 as u32,outcome:2,reserved:0};
+        assert_eq!(m2_kernel_firstsend_batch_entry(
+            &mut e,ep,81,18,&[a,a]),(INVALID,0,0));
+        assert_eq!(m2_kernel_firstsend_batch_entry(
+            &mut e,ep,81,18,&[a,WbdWindowsM2FirstsendResult{
+                seq:seq2.wrapping_add(1),..b}]),(INVALID,0,0));
+        assert_eq!(e.m2.as_ref().unwrap().pending.len(),2,
+            "invalid batch must not consume any original pending PN");
+        let (status,settled,count)=m2_kernel_firstsend_batch_entry(
+            &mut e,ep,81,18,&[a,b]);
+        assert_eq!((status,settled,count),(OK,2,1));
+        assert!(e.m2.as_ref().unwrap().pending.is_empty());
+        assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),1,
+            "only actually copied NPF row earns retained immutable repair");
+        assert_eq!(m2_kernel_firstsend_batch_entry(
+            &mut e,ep,81,18,&[a]),(INVALID,0,0),
+            "same PN cannot be reported as an additional fresh send");
+        drop(e);
+        assert_eq!(quiesce_wintun(&mut r,h,ep,81,18),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
     #[test]
     fn m0_windows_original_source_after_real_clock_feedback_has_contiguous_seq(){
         // A real M2 receipt is sealed at monotonic time, then a new

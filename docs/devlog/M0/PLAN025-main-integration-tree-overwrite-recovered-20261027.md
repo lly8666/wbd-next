@@ -134,6 +134,12 @@ Re-read the current FixedStream source/poll and original m2_next_feedback_entry 
 ## S15 — original Windows NPF completion batch across FFI (NOT_RUN)
 Read current Windows M0 original NPF pulse and ReportOriginalM2NpcapFirstsend, original M1/M2 rust owner, bounded Go original Wintun lease. Up to 4 source records per fair <=2ms turn are sent through genuine original NPF then reported as one <=32 descriptor firstsend completion ABI. Rust v10 validates all PN, contiguous SEQ, original immutable M1 ciphertext lengths, epoch/LUID/index and nonduplicated metadata BEFORE consuming pending records. Rust 0=definitely NotSent, 1=accepted kernel copy, 2=uncertain driver error; the Go failing syscall uses Uncertain and still fails closed. Correct previous single ABI remains for exact old callers. A batch error fences owner; no hidden automatic re-report or invented peer delivery. M2 feedback/peer auth sees completed results before RX dispatch.
 Still pending build/test source freeze: Rust global accounting currently per row inside one Rust Entry lock; TX source seal across FFI remains per record. This is a real boundary optimization candidate, NOT a measured throughput/p99 result or natural Auto root-cause closure.
-```feature-impact
+```json
 {"kind":"updated","ids":["windows-native-transport","outer-opportunistic-repair"],"reason":"Experimental typed original NPF firstsend completion batch FFI, authentic Rust PN/SEQ and uncertain error handling; no formal product qualification."}
+```
+
+## S16 — preflight atomicity and native copied-prefix ABI tests (not yet run)
+Completed the batch status return to report exactly how many already accepted firstsend rows were settled, even on a terminal internal error, instead of claiming that an actual prefix was zero. Rust batch fixture first verifies bad duplicate/stale/noncontiguous PN/SEQ rejects with both real M1 pending records untouched; then validates Accepted PN0/Uncertain PN1 accounts exactly one optional immutable repair shadow and burns both PN without fabricated fresh credit; replay of same metadata is rejected. Go original DLL ABI exact C 24B size/offsets and bounded max32, and error-path original-Go firstsend descriptors may never be submitted twice. Updated original Go assembly manifest for both tests; no native test dispatch before whole batch SOURCE freeze.
+```feature-impact
+{"kind":"none","ids":[],"reason":"Native Rust/Go batch firstsend source-locked negative and layout regression tests plus exact existing assembly manifest; no public selector/feature promotion."}
 ```
