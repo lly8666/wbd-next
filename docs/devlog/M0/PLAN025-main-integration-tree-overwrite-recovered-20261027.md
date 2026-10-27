@@ -127,6 +127,13 @@ Recovered exact original Action40483279229 source6d35857 receipt job122119010582
 
 ## S14 — original Rust M1/FEC2 sequence interleave protection
 Re-read the current FixedStream source/poll and original m2_next_feedback_entry (real m2_clock), stage_fixed_parity_entry callback and settled immutable output. Added a same-epoch deterministic interleave of 16 actual FEC source seals with truthful original M2 firstsend, authenticated-data-scoped reverse control, completion, then due FEC parity. Every emitted SEQ must equal the prior accepted descriptor end and every PN is nonduplicated. The historical 9d natural Auto 428B mismatch remains FAIL until exact native Actions after the full batch, and this does not conceal burned/incomplete packets by advancing Go expectations.
-```feature-impact
+```json
 {"kind":"none","ids":[],"reason":"Additional deterministic source/control/parity sequence order protection for existing experimental A1 clock fix, no product default or formal qualification change."}
+```
+
+## S15 — original Windows NPF completion batch across FFI (NOT_RUN)
+Read current Windows M0 original NPF pulse and ReportOriginalM2NpcapFirstsend, original M1/M2 rust owner, bounded Go original Wintun lease. Up to 4 source records per fair <=2ms turn are sent through genuine original NPF then reported as one <=32 descriptor firstsend completion ABI. Rust v10 validates all PN, contiguous SEQ, original immutable M1 ciphertext lengths, epoch/LUID/index and nonduplicated metadata BEFORE consuming pending records. Rust 0=definitely NotSent, 1=accepted kernel copy, 2=uncertain driver error; the Go failing syscall uses Uncertain and still fails closed. Correct previous single ABI remains for exact old callers. A batch error fences owner; no hidden automatic re-report or invented peer delivery. M2 feedback/peer auth sees completed results before RX dispatch.
+Still pending build/test source freeze: Rust global accounting currently per row inside one Rust Entry lock; TX source seal across FFI remains per record. This is a real boundary optimization candidate, NOT a measured throughput/p99 result or natural Auto root-cause closure.
+```feature-impact
+{"kind":"updated","ids":["windows-native-transport","outer-opportunistic-repair"],"reason":"Experimental typed original NPF firstsend completion batch FFI, authentic Rust PN/SEQ and uncertain error handling; no formal product qualification."}
 ```

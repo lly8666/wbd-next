@@ -288,6 +288,50 @@ func(s *V4WindowsAuthenticatedClientOwner) ReportOriginalM2NpcapFirstsend(
     return outstanding,err
 }
 
+// Typed unchanged Rust M1 PN/SEQ and real NPF syscall completions.
+// One batch is bounded by the same 32-record/2ms owner fair turn;
+// staged bytes in Go are never equivalent to native copied/p2p delivery.
+type V4WindowsM2FirstsendResult struct {
+ PN uint64
+ Seq,WireLen,Outcome,Reserved uint32
+}
+const V4WindowsM2FirstsendBatchMax=32
+func(s *V4WindowsAuthenticatedClientOwner) ReportOriginalM2NpcapFirstsendBatch(
+ ctx context.Context,rows []V4WindowsM2FirstsendResult,
+)(uint32,uint32,error){
+ if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
+  s.bridge.reportM2BatchProc==nil||len(rows)==0||
+  len(rows)>V4WindowsM2FirstsendBatchMax||
+  unsafe.Sizeof(V4WindowsM2FirstsendResult{})!=24{
+  return 0,0,errV4WindowsOwner
+ }
+ if err:=ctx.Err();err!=nil{return 0,0,err}
+ var next uint32
+ for i,row:=range rows {
+  if row.Reserved!=0||row.Outcome>2||row.WireLen<31||row.WireLen>2048||
+   (i>0&&row.Seq!=next){return 0,0,errV4WindowsOwner}
+  for j:=0;j<i;j++{
+   if rows[j].PN==row.PN{return 0,0,errV4WindowsOwner}
+  }
+  next=row.Seq+row.WireLen
+ }
+ release,err:=s.device.borrowHot(ctx)
+ if err!=nil{return 0,0,errors.Join(errV4WindowsOwner,err)}
+ defer release()
+ var settled,outstanding uint32
+ err=winOwnerCall(s.bridge.reportM2BatchProc,
+  uintptr(s.bridge.handle),uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+  uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
+  uintptr(unsafe.Pointer(&rows[0])),uintptr(len(rows)),
+  uintptr(unsafe.Pointer(&settled)),uintptr(unsafe.Pointer(&outstanding)))
+ runtime.KeepAlive(rows);runtime.KeepAlive(s.bridge.epoch)
+ if err!=nil{return settled,outstanding,err}
+ if settled!=uint32(len(rows)){
+  return settled,outstanding,errV4WindowsOwner
+ }
+ return settled,outstanding,nil
+}
+
 // One canonical kind1 from original Rust M3-unique reverse DATA PNs,
 // sealed with the SAME TLS-bound M1 PN/sequence and exact live Wintun Hold.
 // Empty output is a legitimate bounded feedback scheduler idle turn.

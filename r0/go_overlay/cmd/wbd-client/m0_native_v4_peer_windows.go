@@ -64,6 +64,10 @@ type m0NativeV4Peer struct {
  scratch []byte // one retained true kernel ring copy buffer for all pulses
  maxIPv4 int
  pending []m0NativeV4Outbound
+ // One original-NPF copied-prefix completion batch. The same Rust PN/SEQ
+ // remains pending/frozen until a bounded synchronous batch report after I/O.
+ m2Results [m0V4BatchPackets]realityfront.V4WindowsM2FirstsendResult
+ m2ResultsCount int
  sent,opened,sentAfterOpen,retries,duplicates,rejected,oversize,feedbackSent uint64
  pendingCount int
  effective realityfront.V4WindowsM2Effective
@@ -269,12 +273,19 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
   // A valid original NPF pcap_sendpacket return is the ONLY new M2
   // data firstsend event. Negative error is NOT peer receipt or a
   // definite acknowledgement; a failed callback fences this owner.
-  count,receiptErr:=p.owner.ReportOriginalM2NpcapFirstsend(
-   ctx,pn,seq,len(ciphertext),err==nil)
-  if receiptErr!=nil{
-   return false,fmt.Errorf("M0 original M2 Npcap firstsend: %w",errors.Join(windowsclient.ErrN4NativeGuard,err,receiptErr))
+  if p.m2ResultsCount>=m0V4BatchPackets{
+   return false,fmt.Errorf("%w: native firstsend completion descriptors exhausted",windowsclient.ErrN4NativeGuard)
   }
-  p.mu.Lock();p.pendingCount=int(count);p.mu.Unlock()
+  outcome:=uint32(1)
+  if err!=nil{
+   // An NPF syscall error is not positive proof that the driver did not
+   // attempt a copy. It consumes this PN as Uncertain with no F credit.
+   outcome=2
+  }
+  p.m2Results[p.m2ResultsCount]=realityfront.V4WindowsM2FirstsendResult{
+   PN:pn,Seq:seq,WireLen:uint32(len(ciphertext)),Outcome:outcome,
+  }
+  p.m2ResultsCount++
  }
  if err!=nil{return false,err}
  if p.mode!=m0WinModeNormal&&p.mode!=m0WinModeFixed&&p.mode!=m0WinModeAuto{
@@ -493,12 +504,47 @@ func(p *m0NativeV4Peer) retryOne(now time.Time)(bool,error){
  }
  return false,nil
 }
+// A copied NPF prefix is settled exactly once. Errors fence this owner:
+// do not re-report any descriptor after a partial or invalid Rust callback.
+func(p *m0NativeV4Peer) flushOriginalFirstsend(ctx context.Context)error{
+ if p==nil{return windowsclient.ErrN4NativeGuard}
+ n:=p.m2ResultsCount
+ if n==0{return nil}
+ if n>m0V4BatchPackets{return windowsclient.ErrN4NativeGuard}
+ settled,outstanding,e:=p.owner.ReportOriginalM2NpcapFirstsendBatch(
+  ctx,p.m2Results[:n])
+ // Regardless of the returned code, this batch cannot be tried again:
+ // after NPF completion a Rust partial internal failure requires Stop.
+ for i:=0;i<n;i++{p.m2Results[i]=realityfront.V4WindowsM2FirstsendResult{}}
+ p.m2ResultsCount=0
+ if e!=nil||settled!=uint32(n){
+  return fmt.Errorf("%w: actual original NPF M2 batch completed=%d expected=%d: %v",
+   windowsclient.ErrN4NativeGuard,settled,n,e)
+ }
+ p.mu.Lock();p.pendingCount=int(outstanding);p.mu.Unlock()
+ return nil
+}
 // Bounded fair drain. A continuously busy Wintun cannot starve peer RX,
 // and a busy peer cannot starve native kernel output. No fixed 4ms per packet.
-func(p *m0NativeV4Peer) pulse(ctx context.Context)(int,error){
+func(p *m0NativeV4Peer) pulse(ctx context.Context)(done int,err error){
  if p==nil||p.ring==nil||p.rx==nil{return 0,windowsclient.ErrN4NativeGuard}
+ // If cancellation or a kernel error stops this round after real NPF
+ // copies, finish their truthful Rust PN outcomes while the original M4
+ // session is still borrowed. Stop must join this pulse first.
+ defer func(){
+  if p.m2ResultsCount==0{return}
+  flushCtx:=ctx
+  if ctx.Err()!=nil{
+   var cancel context.CancelFunc
+   flushCtx,cancel=context.WithTimeout(context.Background(),2*time.Second)
+   defer cancel()
+  }
+  if flushErr:=p.flushOriginalFirstsend(flushCtx);flushErr!=nil{
+   err=errors.Join(err,flushErr)
+  }
+ }()
  start:=time.Now()
- done:=0
+ done=0
  for done<m0V4BatchPackets&&time.Since(start)<m0V4BatchCPU{
   if err:=ctx.Err();err!=nil{return done,err}
   if p.stopped(){return done,context.Canceled}
@@ -515,10 +561,19 @@ func(p *m0NativeV4Peer) pulse(ctx context.Context)(int,error){
    }
   }
   if done<m0V4BatchPackets{
-   tx,err:=p.transmitOne(ctx)
-   if err!=nil{return done,err}
-   if tx{done++;changed=true}
+   // Up to four ready source packets, no waiting to fill the burst.
+   // A busy RX lane gets another turn within the same <=2ms CPU budget.
+   for burst:=0;burst<4&&done<m0V4BatchPackets&&
+       time.Since(start)<m0V4BatchCPU;burst++{
+    tx,txErr:=p.transmitOne(ctx)
+    if txErr!=nil{return done,txErr}
+    if !tx{break}
+    done++;changed=true
+   }
   }
+  // An authenticated reverse kind1 may arrive next. Settle the genuine
+  // NPF copied prefix into Rust M2 BEFORE it can receive a peer receipt.
+  if flushErr:=p.flushOriginalFirstsend(ctx);flushErr!=nil{return done,flushErr}
   if done<m0V4BatchPackets{
    select{
    case seg,ok:=<-p.inbound:

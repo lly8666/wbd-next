@@ -27,7 +27,7 @@ type v4WindowsNativeOwnerBridge struct {
     fixedProcCache sync.Map
     prepareProc,stageProc,commitProc,abortProc,stateProc,stopProc,releaseProc *syscall.Proc
     bindWintunProc,quiesceWintunProc,deviceStateProc *syscall.Proc
-    sealNormalProc,openNormalProc,openKind1Proc,armM2Proc,reportM2Proc,prepareRepairProc,finishRepairProc,queryM2Proc,feedbackDueProc,feedbackResultProc *syscall.Proc
+    sealNormalProc,openNormalProc,openKind1Proc,armM2Proc,reportM2Proc,reportM2BatchProc,prepareRepairProc,finishRepairProc,queryM2Proc,feedbackDueProc,feedbackResultProc *syscall.Proc
     handle uint64
     epoch [16]byte
     serverSide bool
@@ -62,6 +62,7 @@ func newV4WindowsPrivateOwnerBridge(absoluteLibrary string)(*v4WindowsNativeOwne
         {"wbd_m0_win_owner_v5_open_data_or_kind1",&b.openKind1Proc},
         {"wbd_m0_win_owner_v6_arm_original_m2",&b.armM2Proc},
         {"wbd_m0_win_owner_v6_report_npcap_firstsend",&b.reportM2Proc},
+        {"wbd_m0_win_owner_v10_report_npcap_firstsend_batch",&b.reportM2BatchProc},
         {"wbd_m0_win_owner_v6_next_frozen_repair",&b.prepareRepairProc},
         {"wbd_m0_win_owner_v6_finish_frozen_repair",&b.finishRepairProc},
         {"wbd_m0_win_owner_v6_m2_outstanding",&b.queryM2Proc},

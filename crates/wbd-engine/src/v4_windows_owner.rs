@@ -4,7 +4,7 @@
 //! cold248/WBGH bytes alone are NOT credentials or a kernel driver lease.
 //! This module reuses the normal M1/M3 ProtectedScopedOwner, not fake crypto.
 #![cfg(all(target_os="windows",feature="m0_v4_embedded_go"))]
-use std::collections::{BTreeMap,VecDeque};
+use std::collections::{BTreeMap,BTreeSet,VecDeque};
 use std::sync::{Arc,Mutex,OnceLock};
 use std::time::Instant;
 use crate::cold_v4::{UntrustedColdV4,COLD_V4_LEN};
@@ -290,7 +290,9 @@ fn m2_finish_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
 fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,pn:u64,seq:u32,wire_len:usize,sent:u32,
 )->Result<u32,i32>{
-    if !v3_ready(e,epoch,luid,ifindex)||sent>1{return Err(INVALID)}
+    // 2 is explicit unknown driver completion, not definitely NotSent:
+    // burn the original PN without fabricating peer delivery or fresh F.
+    if !v3_ready(e,epoch,luid,ifindex)||sent>2{return Err(INVALID)}
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
     let key=RecordPn(pn);
     let row=m.pending.get(&key).ok_or(INVALID)?;
@@ -300,11 +302,15 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     #[cfg(feature="fec2_product_record")]
     if let Some(mature)=m.mature.as_mut(){
         let (lane,_) = e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
-        let observation=if sent==1{
-            wbd_recovery::FirstSendOutcome::Accepted{
+        let observation=match sent {
+            1=>wbd_recovery::FirstSendOutcome::Accepted{
                 pn:key,wire_bytes:(wire_len as u64).saturating_add(54)
-            }
-        }else{wbd_recovery::FirstSendOutcome::DefinitelyNotSent{pn:key}};
+            },
+            2=>wbd_recovery::FirstSendOutcome::Uncertain{
+                pn:key,wire_bytes:(wire_len as u64).saturating_add(54)
+            },
+            _=>wbd_recovery::FirstSendOutcome::DefinitelyNotSent{pn:key},
+        };
         match mature.on_first_send(
             lane,wbd_recovery::FirstSendKind::Data,observation,m2_clock()
         ){
@@ -319,7 +325,7 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         }
         if sent==1{m.fec_copied_source=m.fec_copied_source.saturating_add(1)}
     }
-    if sent==0{return Ok(0)}
+    if sent!=1{return Ok(m.shadow.outstanding() as u32)}
     // The caller's synchronous pcap_sendpacket success is a copied
     // kernel submission, NEVER proof of remote peer delivery.
     let now=m2_clock();
@@ -1299,6 +1305,74 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v6_report_npcap_firstsend(
     }
 }
 
+// Complete up to 32 already-accepted native firstsend outcomes under ONE
+// original generation/Entry lock and one real TLS-bound Wintun lease.
+// Every row is untrusted until matched to immutable pending Rust M1 PN/SEQ.
+#[repr(C)]
+#[derive(Clone,Copy)]
+pub struct WbdWindowsM2FirstsendResult{
+    pub pn:u64,pub seq:u32,pub wire_len:u32,pub outcome:u32,pub reserved:u32,
+}
+const MAX_WINDOWS_M2_COMPLETIONS:usize=32;
+fn m2_kernel_firstsend_batch_entry(
+    e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
+    rows:&[WbdWindowsM2FirstsendResult],
+)->Result<(u32,u32),i32>{
+    if !v3_ready(e,epoch,luid,ifindex)||
+        rows.is_empty()||rows.len()>MAX_WINDOWS_M2_COMPLETIONS{
+        return Err(INVALID)
+    }
+    let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
+    let mut unique=BTreeSet::new();
+    let mut next=None;
+    // Fail atomically for forged/duplicate/noncontiguous descriptors BEFORE
+    // moving a single original FrozenRecord out of the Rust owner.
+    for row in rows{
+        if row.reserved!=0||row.outcome>2||
+            (row.wire_len as usize)<FIXED_WIRE_OVERHEAD||
+            row.wire_len>2048||!unique.insert(row.pn)||
+            next.is_some_and(|prior:u32|prior!=row.seq){return Err(INVALID)}
+        let original=m.pending.get(&RecordPn(row.pn)).ok_or(INVALID)?;
+        if original.metadata().pn!=RecordPn(row.pn)||
+            original.metadata().seq.0 as u32!=row.seq||
+            original.bytes().len()!=row.wire_len as usize{
+            return Err(INVALID)
+        }
+        next=Some(row.seq.wrapping_add(row.wire_len));
+    }
+    let mut outstanding=0;
+    for row in rows{
+        // A true internal post-validation error is terminal. The caller
+        // must Stop and MUST NOT re-submit any observed kernel-complete row.
+        outstanding=m2_kernel_firstsend_entry(e,epoch,luid,ifindex,row.pn,
+            row.seq,row.wire_len as usize,row.outcome)?;
+    }
+    Ok((rows.len() as u32,outstanding))
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v10_report_npcap_firstsend_batch(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    rows:*const WbdWindowsM2FirstsendResult,count:u32,
+    settled:*mut u32,outstanding:*mut u32,
+)->i32{
+    if rows.is_null()||settled.is_null()||outstanding.is_null()||
+        count==0||count as usize>MAX_WINDOWS_M2_COMPLETIONS||
+        (rows as usize)%std::mem::align_of::<WbdWindowsM2FirstsendResult>()!=0 {
+        return INVALID
+    }
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let rows=unsafe{std::slice::from_raw_parts(rows,count as usize)};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    match m2_kernel_firstsend_batch_entry(&mut e,exact,luid,ifindex,rows){
+        Ok((n,m))=>{unsafe{settled.write(n);outstanding.write(m)};OK},
+        Err(code)=>{unsafe{settled.write(0);outstanding.write(0)};code}
+    }
+}
 // Bounded C ABI only through the exact credential-checked Go native owner,
 // current Wintun LUID/index and one original Rust M1/PN sender. No callback
 // indicates remote delivery: success here means ciphertext was staged.
