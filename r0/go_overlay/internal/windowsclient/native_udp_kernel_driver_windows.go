@@ -12,6 +12,7 @@ import (
     "io"
     "sync"
     "syscall"
+    "time"
     "unsafe"
 )
 
@@ -44,6 +45,11 @@ type N4OriginalKernelPacketLease struct{
     holder N4WindowsCreatedWintunReservation
     id N4UnifiedIdentity
     stopped bool
+    // The exact real M4-owned TUN/generation and Stop are serialized on
+    // every ring op. The expensive GUID/LUID/PnP OS proof is reaudited at
+    // most once per second; a failed refresh permanently fences this lease.
+    lastVerifiedAt time.Time
+    identityRevoked bool
     received,copied,rejected uint64
     // Serializes only one finite kernel ring call. No goroutine blocks in
     // ReadPacket's unbounded wait while holding this lease's lock.
@@ -67,13 +73,34 @@ func n4CreateOriginalKernelPacketLease(ctx context.Context,tun *TUN,id N4Unified
         return nil,ErrN4NativeGuard
     }
     n4OriginalRingOwners.held[tun]=id
-    return &N4OriginalKernelPacketLease{tun:tun,id:id,holder:holder},nil
+    return &N4OriginalKernelPacketLease{
+        tun:tun,id:id,holder:holder,lastVerifiedAt:time.Now(),
+    },nil
+}
+// Called only while d.mu is held, so Stop and all ring I/O are mutually
+// exclusive and no native Wintun loan crosses a revalidation boundary.
+func n4RealOriginalWintunAuditDue(last,now time.Time)bool{
+    return last.IsZero()||now.Before(last)||now.Sub(last)>=time.Second
 }
 func (d *N4OriginalKernelPacketLease) check(ctx context.Context)error{
     if d==nil||ctx==nil{return ErrN4NativeGuard}
     if err:=ctx.Err();err!=nil{return err}
-    if d.stopped{return ErrN4NativeGuard}
-    return d.holder.Verify(ctx,d.id)
+    if d.stopped||d.identityRevoked||d.tun==nil||
+       d.id.Generation==[16]byte{}||d.id.Installation==[16]byte{}{
+        return ErrN4NativeGuard
+    }
+    now:=time.Now()
+    if !n4RealOriginalWintunAuditDue(d.lastVerifiedAt,now){
+        return nil
+    }
+    if err:=d.holder.Verify(ctx,d.id);err!=nil{
+        // Even if a transient PnP reappearance later uses the same alias,
+        // this original protected Rust/TLS epoch must Stop and re-establish.
+        d.identityRevoked=true
+        return errors.Join(ErrN4NativeGuard,err)
+    }
+    d.lastVerifiedAt=now
+    return nil
 }
 // n4DeliverAuthenticatedIPv4 is deliberately NOT exported. Caller must
 // hold M0 original-Go TLS+Rust AEAD first-delivery receipt; this method

@@ -401,3 +401,26 @@ func TestM0PLAN020RealSignedWintunNativeKernelUDPFirstDeliveryStop(t *testing.T)
     receipt["result"]="PASS_SCOPED_REAL_WIN_KERNEL_BIDIRECTIONAL_UDP_NO_CREDENTIAL_OWNER"
     t.Log("M0_PLAN020_REAL_SIGNED_WINTUN_TO_ACTUAL_WINDOWS_UDP_APPLICATION_PASS kernel_copy=1 app=1 reverse_ring=1 stale_denied=1 real_scoped_WFP_persistent=1 full_global_WFP_NOT_RUN=1")
 }
+
+func TestM0WindowsOriginalN4RingOneSecondOSAuditWithImmediateStopFence(t *testing.T){
+ now:=time.Now()
+ if !n4RealOriginalWintunAuditDue(time.Time{},now)||
+    n4RealOriginalWintunAuditDue(now,now.Add(999*time.Millisecond))||
+    !n4RealOriginalWintunAuditDue(now,now.Add(time.Second))||
+    !n4RealOriginalWintunAuditDue(now,now.Add(-time.Millisecond)){
+  t.Fatal("real native PnP identity verification has unbounded/stale refresh")
+ }
+ // An expired or stopped original native ring cannot use a recent OS
+ // audit to bypass generation exclusion, even before one second passes.
+ d:=&N4OriginalKernelPacketLease{
+  stopped:true,lastVerifiedAt:now,
+ }
+ if err:=d.check(context.Background());!errors.Is(err,ErrN4NativeGuard){
+  t.Fatalf("owned Stop fence was skipped: %v",err)
+ }
+ d.stopped=false
+ d.identityRevoked=true
+ if err:=d.check(context.Background());!errors.Is(err,ErrN4NativeGuard){
+  t.Fatalf("external OS identity rejection was not sticky: %v",err)
+ }
+}

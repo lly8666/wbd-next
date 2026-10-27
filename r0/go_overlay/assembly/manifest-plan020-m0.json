@@ -635,7 +635,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_udp_kernel_driver_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
-      "result_blob": "3235254d846624653765beb408fbee25a38445be"
+      "result_blob": "ab10bcf6ecdcd5556777151fc60b9a004975887b"
     },
     {
       "kind": "create",
@@ -744,6 +744,12 @@
       "path": "internal/realityfront/fec_v2_runtime_controller_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller_test.go",
       "result_blob": "b02b47b847dd356b5b3f1787503900993394c70f"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_udp_kernel_driver_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows_test.go",
+      "result_blob": "c451a69629a7706a5918e88cc60181ab1b47e18b"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
