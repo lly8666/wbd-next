@@ -4,24 +4,22 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 283,
-  "checkpoint_sha": "a610e5590b2545f45d93d519c309b71da314ef68",
+  "sequence": 284,
+  "checkpoint_sha": "84214a36eaecebe1808d4e35beda932f206608e7",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "Existing M0 PLAN008 whole Windows original product: source4977f Actions40449519463 7/7 real authenticated Windows↔Linux Normal/Fixed6/Auto-start Strong/Game2/4 off+FEC6 bidirectional UDP/TCP Stop PASS. Continue only unproven dynamic Auto actual revision/2s-8s policy, other FEC profile0-6, real WinForms/global-WFP-WAL and lifecycle. No unnecessary safety expansion: reuse Linux and retain TLS/AEAD/PN, native kernel completion, owned WAL/Stop.",
-  "why_now": "After reconnect, isolated PR28 refreshed at HEAD40e9d; main M0 registry rev3/epoch1 unchanged. S d45c typed operator profile→existing original Linux FecV2Step/Rust quiescent owner+Auto telemetry, stale Go test import resolved in S bade, exact-source assembly blob restored in S 5ae, preflight Actions40455270198 SUCCESS. S 5d targeted authentic Auto revision2 was corrected by SOURCE80e5289: actual stdin newline and line-delimited logs. Native full Actions40455980911 SOURCE80e preflight Go/Linux PASS, signed Windows/WSL native stage in_progress. Earlier SOURCE5d native Actions40455789442 in_progress, known old stdin newline defect; do not inherit PASS. S a610e docs+fec-auto catalog records intent and NOT_RUN until native terminal. Existing 7-mode positive source4977f remains, not rerun by targeted test.",
+  "current_task": "M0 existing single PLAN008 full Windows↔Linux wiring with seven functional modes already original Windows Go TLS/Rust native verified at exact source4977f, Auto operator-triggered revision2 real M2 Applied/duplex UDP/Stop at exact sourcea0c8eeb; remaining native mature 2s/8s automatic policy up/down, more profiles, real WinForms lifecycle/global OS/WAL/rotation/idle/blackhole remain unverified. No standalone Fixed6 or independent Windows algorithm.",
+  "why_now": "Recovered true remote W168 HEAD after multiple interruptions: sourcea0c8eeb Actions40457048399 terminal SUCCESS for actual Windows Auto live operator Light revision2 after initial Strong plus original M2 Applied and genuine two-OS kernel UDP/both Stop. Earlier source80e Actions40455980911 remained FAIL from stale auto-only harness normal-report. Evidence sourcea0 stored in docs/evidence/M0/PLAN024-W168-Windows-Auto-live-revision2-sourcea0c8eeb-20261027.json and feature card updated at S c74bab. New S6707bd uses Linux shared FecV2Step pending-M2 Applied before dynamic evaluation and moves actual Linux history-retention function into common Go policy; preflight40462558630 SUCCESS. Directed precompiled Windows Go test harness source99a Actions40462738560 failed before assertions from split PowerShell -test.run; source072a19e fixed quoting and Actions40463122392 SUCCESS assembly/Go products/unit. Target native WSL2 job intentionally skipped. S84214 locked all facts in feature and exact JSON evidence. PR28 Draft, main authority unchanged.",
   "done_when": "Whole original-Go TLS→shared Rust M1/M2/M3 FEC2 Fixed/Auto & 2/4 real Game lanes→original Windows Npcap/Wintun/WFP/route/DNS/WAL/GUI↔Linux raw/TUN and both-owned Stop across true applicable config/lifecycle. 4977f source seven initial functional mode core PASS; remaining dynamic Auto/GUI/global/lifecycle and weak-network use their own exact evidence. No fake Applied or independent Windows FEC owner.",
-  "next_action": "Settle source80e5289 [40455980911] native targeted ORIGINAL Windows Auto revision2 live operator control, second two-OS genuine UDP, 1Hz native Rust mature M2 actual auto_applied_revision>=2 and both OS/WAL Stop. On failure read first exact native job error/result and fix proven source/ABI/policy seam, run cheap preflight then one targeted full on LAST code commit only; don't re-run prior 7 positive modes or weaken TLS/auth/Wintun/WFP/WAL. Source5d older native run40455789442 had known stdout/stdin escaped newline and no authority to certify source80e. After positive, update exact JSON evidence/card and candidate source, then tackle true automatic 2s/8s Auto adaptation, other profile0-6/WinForms global and lifecycle individually. Keep WL-N0 and physical not-run.",
+  "next_action": "Next complete capability: extend the existing real signed Windows↔Linux native Auto functional harness only for naturally chosen FecV2Step grade transitions using actual mature 2s/8s Rust original M2 windows and authentic k/feedback (not operator stdin), and verify new requested revision against native applied, current kernel UDP/TCP and owned Stop. Reuse Linux policy/helper and avoid any separate Windows scheduler. Run ordinary cheap source-pinned assembly/Go compile+targeted units while wiring; trigger exactly one [wiring-full] actual Auto adaptive native case only when complete. Then real WinForms Applies/Disconnect/current native OS/WFP/DNS/WAL scope and rotation/idle/blackhole; preserve all historical red and source-limited seven-mode PASS. Do not rerun seven normal modes/performance or bypass TLS/AEAD/PN, true NPF/ Wintun, M2 maturity and Stop merely to save resources.",
   "unverified": true,
-  "last_tested_source": "80e5289ab4b4c47adf55740632b0960f8319dfef",
+  "last_tested_source": "072a19e7af0169c29063cfd93003552f4bd63617",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN024-W168-Windows-Auto-live-revision2-sourcea0c8eeb-20261027.json",
+    "docs/evidence/M0/PLAN024-W168-Windows-Auto-pending-M2-source072a19e-20261027.json",
     "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json",
-    "docs/devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md",
-    "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json",
-    "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source8e0daba-20261027.json",
     "docs/evidence/M0/PLAN024-S880-WL-N0-exact-original-failure-20261026.json",
-    "docs/features/entries/fec-auto.json",
-    "docs/features/entries/game-fixed-fec.json"
+    "docs/devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md"
   ],
   "context_refs": [
     "docs/architecture/TEST_PLAN.md",
@@ -34,5 +32,5 @@
     "docs/devlog/M0/PLAN024-S880-WL-N0-original-windows-rust-seq-mismatch-20261026.md"
   ],
   "open_requests": [],
-  "partial_summary": "H283 real seven modes already complete source4977f; this batch expands authentic Windows Auto LIVE operator revision via Linux shared FecV2Step→FixedStream and typed original M2 readback. SOURCE80e code+real targeted native Action40455980911 in progress after static manifest, original Windows Go production/tests and Linux build PASS. No dynamic revision product PASS yet, supported main authority/PR28 Draft unchanged. New feature catalog/devlog S a610e saved exact scoped NOT_RUN. No user-selected relaxation of TLS/M2/WFP/WAL/generation Stop; skip redundant seven-mode tests and performance."
+  "partial_summary": "H284 recovered and advanced: seven verified Windows/Linux public functional configurations exact4977f native SUCCESS Action40449519463; Auto live operator revision2 mature M2 Applied plus post-change genuine 2OS UDP and owned Stop exacta0c8eeb Action40457048399 SUCCESS; evidence and card S c74bab/84214. Rust/Go shared Auto code S6707bd now skips un-applied rev sampling and shares proven Linux cohort-retention rule; source072a19e Actions40463122392 PASS for exact Windows Go product+test compilation and real precompiled pending-M2 Auto regression only, full native SKIPPED per TEST_PLAN0. Source99a harness flag FAIL preserved. Natural 2s/8s network-triggered grade changes, profile grade coverage, GUI/global OS/lifecycle/performance NOT_RUN, PR28 Draft/main unchanged."
 }
