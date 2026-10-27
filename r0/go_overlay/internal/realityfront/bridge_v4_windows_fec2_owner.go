@@ -206,10 +206,9 @@ func(s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalFEC2Source(
  ctx context.Context,blockID uint64,index uint8,ipv4 []byte,
 )([]byte,uint32,uint64,error){
  if s==nil||s.bridge==nil||s.device==nil{return nil,0,0,errV4WindowsOwner}
- scope,err:=s.OriginalOwnerReadback()
- if err!=nil||!scope.OwnerActive||!scope.DeviceBound||
-  scope.DeviceQuiesced||scope.ServerSide{return nil,0,0,errV4WindowsOwner}
- symbol,err:=winFec2Source(blockID,index,ipv4,s.device.maxIPv4)
+ // winFec2Sealer borrows the genuine M4 lease. Rust checks PH_ACTIVE,
+ // epoch/generation/LUID/index on the same FFI, so pre-readback is redundant.
+  symbol,err:=winFec2Source(blockID,index,ipv4,s.device.maxIPv4)
  if err!=nil{return nil,0,0,err}
  return winFec2Sealer(ctx,s.bridge,s.device,2,symbol)
 }
@@ -217,14 +216,9 @@ func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalFEC2(
  ctx context.Context,seq uint32,wire []byte,
 )([]V4WindowsFEC2Delivery,error){
  if s==nil||s.bridge==nil||s.device==nil{return nil,errV4WindowsOwner}
- scope,err:=s.OriginalOwnerReadback()
- if err!=nil||!scope.OwnerActive||!scope.DeviceBound||
-  scope.DeviceQuiesced||scope.ServerSide{
-  return nil,fmt.Errorf("%w: original FEC2 client owner readback active=%t bound=%t quiesced=%t server=%t rc=%v",
-   errV4WindowsOwner,scope.OwnerActive,scope.DeviceBound,
-   scope.DeviceQuiesced,scope.ServerSide,err)
- }
- return winFec2Opener(ctx,s.bridge,s.device,seq,wire)
+ // winFec2Opener borrows authentic session lease and Rust repeats
+ // v3_ready plus M3 crypto/replay. No status-snapshot FFI per RX record.
+  return winFec2Opener(ctx,s.bridge,s.device,seq,wire)
 }
 func(s *V4WindowsAuthenticatedServerOwner) SealBoundOriginalFEC2Source(
  ctx context.Context,blockID uint64,index uint8,ipv4 []byte,

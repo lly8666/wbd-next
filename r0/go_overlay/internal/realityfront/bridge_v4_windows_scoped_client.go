@@ -85,11 +85,9 @@ func (s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalNormalOff(
     borrowRelease,borrowErr:=s.device.borrowHot(ctx)
  if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
  defer borrowRelease()
-    owner,err:=s.OriginalOwnerReadback()
-    if err!=nil||!owner.OwnerActive||!owner.DeviceBound||
-        owner.DeviceQuiesced||owner.ProductApplied{
-        return nil,0,0,errV4WindowsOwner
-    }
+    // Current M4 borrowHot above guards original TLS/generation and Stop.
+    // Rust v3_ready under this same seal call independently asserts
+    // ACTIVE, authentic epoch, LUID and interface index.
     // 31 is the original M3 fixed on-wire record overhead. The v3 Rust
     // authority also computes its own conservative 576B budget and rejects
     // oversize data before consuming a PN.
@@ -97,7 +95,7 @@ func (s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalNormalOff(
     var used uintptr
     var seq uint32
     var pn uint64
-    err=winOwnerCall(s.bridge.sealNormalProc,
+    err:=winOwnerCall(s.bridge.sealNormalProc,
         uintptr(s.bridge.handle),
         uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
         uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
@@ -347,17 +345,14 @@ func(s *V4WindowsAuthenticatedClientOwner) NextBoundOriginalM2Feedback(
  borrowRelease,borrowErr:=s.device.borrowHot(ctx)
  if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
  defer borrowRelease()
- state,err:=s.OriginalOwnerReadback()
- if err!=nil||!state.OwnerActive||!state.DeviceBound||
-  state.DeviceQuiesced||state.ProductApplied||state.ServerSide{
-  return nil,0,0,fmt.Errorf("%w: bounded reverse M2 due stage=owner_readback active=%t bound=%t quiesced=%t applied=%t server=%t readback=%v",
-    errV4WindowsOwner,state.OwnerActive,state.DeviceBound,state.DeviceQuiesced,state.ProductApplied,state.ServerSide,err)
- }
- output:=make([]byte,capacity)
+ // Original protected M4 lease is borrowed through the FFI and Rust
+ // feedback_due again checks epoch/LUID/index/phase under Entry lock.
+ // Avoid the redundant two status FFIs on each due scheduler turn.
+  output:=make([]byte,capacity)
  var used uintptr
  var seq uint32
  var pn uint64
- err=winOwnerCall(s.bridge.feedbackDueProc,
+ err:=winOwnerCall(s.bridge.feedbackDueProc,
   uintptr(s.bridge.handle),
   uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
   uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
@@ -408,16 +403,13 @@ func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalNormalOrKind1(
     borrowRelease,borrowErr:=s.device.borrowHot(ctx)
  if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
  defer borrowRelease()
-    state,err:=s.OriginalOwnerReadback()
-    if err!=nil||!state.OwnerActive||!state.DeviceBound||
-        state.DeviceQuiesced||state.ProductApplied||state.ServerSide{
-        return nil,0,0,errV4WindowsOwner
-    }
-    plaintext:=make([]byte,len(wire))
+    // Same M4 protected hot borrow + Rust v3_ready/AEAD/unique-PN:
+    // no need to fetch two more mutable status snapshots per packet.
+        plaintext:=make([]byte,len(wire))
     var used uintptr
     var kind uint32
     var pn uint64
-    err=winOwnerCall(s.bridge.openKind1Proc,
+    err:=winOwnerCall(s.bridge.openKind1Proc,
         uintptr(s.bridge.handle),
         uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
         uintptr(s.device.identity.LUID),

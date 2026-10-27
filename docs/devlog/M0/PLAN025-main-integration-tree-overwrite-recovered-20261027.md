@@ -148,6 +148,13 @@ Completed the batch status return to report exactly how many already accepted fi
 ## S17 — native Windows Normal/FEC2 open typed fatal-status boundary (isolated pre-freeze)
 Before edit re-read original v5_open_record_entry, rust v3_ready, actual M4 borrowHot, Go scopedclient opener, and Native winOwnerCall. Previously all original Normal/FEC2 Rust open errors became a simple bad-packet count, so a real BAD_STAGE, FULL, retired handle, or unreleased Stop was hidden as loss. Preserve Rust exact C ABI 1=INVALID (ambiguous crypto/replay/packet) as the existing native rejection, but all other C ABI statuses and untyped missing native session errors now terminate owner with the original exception intact, not fake network loss. The shared Rust v3_ready epoch/device/generation and authenticated Wintun lease remain mandatory on every open. Add source-locked Windows typed ABI error unwrap/return-code test; do not synthesize a packet or change replay acceptance. INVALID remains ambiguous until Rust per-cause typing is added and a real native test runs.
  
-```feature-impact
+```json
 {"kind":"updated","ids":["windows-native-transport","normal-off","fec-fixed"],"reason":"Experimental Windows original M1/M3 native error provenance separates fatal owner/arena/state failures from packet-invalid return; preserves existing authentication/replay hard gates and DOES NOT claim an Actions product PASS."}
+```
+
+
+## S18 — one authentic M4 lease and Rust v3_ready instead of hot redundant readbacks
+Read v4WindowsRealDeviceLease.borrowHot and Windows Rust v3_ready, original Normal seal / kind1 open / M2 reverse feedback, and Windows Fixed/Auto FEC source/open wrappers. M4 native created-Wintun session keeps authentic generation and Stop RW-lock with periodic real OS identity audit. Rust seal/open/due C ABI takes same epoch/LUID/ifindex and checks PH_ACTIVE/nonquiesced device under owner Entry mutex. Removed only duplicate two extra owner-state FFIs per hot call, retaining original borrowHot and Rust validation, M1/M2/M3, AEAD/replay and copy/Stop semantics. Setup, M2 arm, WFP/WAL and protected reconfiguration still do strong readbacks. This is an unmeasured CPU-cost change, NOT_RUN native and perf. No source-level performance qualification.
+```feature-impact
+{"kind":"updated","ids":["windows-native-transport"],"reason":"Experimental native Windows hot-owner redundant state FFI elimination, authentic current M4 lease and exact Rust v3_ready still mandatory, no claimed native product or CPU PASS."}
 ```
