@@ -90,7 +90,7 @@ jobs:
             if($LASTEXITCODE -ne 0){throw 'Windows bridge TEST compile preflight FAIL'}
             # Execute the already-compiled original Go shared controller,
             # no second build, signed driver, WSL or Normal full-path run.
-            & ../result/realityfront.test.exe -test.run TestF2ControlAutoPendingM2CannotEvaluateOrStackNativeRevisions -test.count=1
+            & ../result/realityfront.test.exe '-test.run=TestF2ControlAutoPendingM2CannotEvaluateOrStackNativeRevisions' '-test.count=1'
             if($LASTEXITCODE -ne 0){throw 'Linux shared Auto pending-original-M2 functional regression FAIL'}
           } finally {Pop-Location}
           @{source=$env:GITHUB_SHA;scope='GO_COMPILE_ONLY';result='PASS';native_product='NOT_RUN'} |
