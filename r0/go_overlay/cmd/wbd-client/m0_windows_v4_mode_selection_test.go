@@ -28,7 +28,7 @@ func TestM0PLAN024WindowsFixed6OriginalGoAdmissionBeforeNative(t *testing.T){
   t.Fatalf("fixed6 after Go V3+FEC2 preflight got=%s err=%v",got,e)
  }
  if e:=opts.Set("fec.profile","strong");e!=nil{t.Fatal(e)}
- if e:=fec2.Validate(1);e==nil{t.Fatal("Fixed6 cannot silently apply profile strong")}
+ if e:=fec2.Validate(1);e!=nil{t.Fatalf("shared Linux FixedStream must permit Strong5: %v",e)}
  // Old broken harness must be rejected rather than masquerade as Applied.
  if _,e:=realityfront.PolicyForClientWithInitialAndCipher(
   1,"fixed",0,4,20,realityfront.CipherChaCha);e==nil{
@@ -42,6 +42,8 @@ func TestM0PLAN023WindowsNativeV4FiveModes(t *testing.T){
   {1,"auto","auto",0,m0WinModeAuto},
   {2,"off","off",0,m0WinModeGame2},
   {4,"off","off",0,m0WinModeGame4},
+  {2,"fixed","off",0,m0WinModeGame2},
+  {4,"fixed","off",0,m0WinModeGame4},
  }
  // Native V4 parser must also honor original legacy/off empty-context tests;
  // independent Rust capability gate still rejects unfinished Auto/Game.
@@ -54,7 +56,7 @@ func TestM0PLAN023WindowsNativeV4FiveModes(t *testing.T){
  }
  invalid:=[]struct{lanes int;fec2,legacy string;parity int}{
   {3,"off","legacy",0},
-  {2,"fixed","fixed",4},
+
   {4,"auto","legacy",0},
   {1,"off","auto",0},
   {1,"off","legacy",4},

@@ -87,8 +87,14 @@ func runM0NativeV4WindowsGame(
   InstallationID:o.Installation[:],Username:o.Username,Password:o.Password,
   TunnelID:o.TunnelID[:],ClientLimit:1400,Policy:policy,
  }
+ fecMode:=uint8(0)
+ if o.FEC2Mode=="fixed"{
+  profile,e:=m0WindowsV4Profile(o.FEC2Profile)
+  if e!=nil{return e}
+  fecMode=uint8(profile)+1 // Linux GameFec=profile+1, TLS protected
+ }
  group,err:=realityfront.V4WindowsEstablishOriginalGameClientGroup(
-  ctx,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),assocs,cfg,0)
+  ctx,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),assocs,cfg,fecMode)
  if err!=nil{return err}
  tun,err:=windowsclient.OpenTUN(o.AdapterAlias)
  if err!=nil{return err}
@@ -96,7 +102,7 @@ func runM0NativeV4WindowsGame(
  plan,err:=makePlan()
  if err!=nil{return err}
  packet:=&m0NativeV4GamePeer{
-  group:group,first:group.FirstOriginalOwner(),tun:tun,
+  group:group,first:group.FirstOriginalOwner(),tun:tun,fec:fecMode!=0,
   lanes:lanes,inbound:inbound,stop:make(chan struct{}),done:make(chan struct{}),
   errors:make(chan error,1),
  }
@@ -115,7 +121,7 @@ func runM0NativeV4WindowsGame(
  if err!=nil||!live.AllNativeOSApplied{
   return errors.Join(err,windowsclient.ErrN4NativeGuard,stop())
  }
- fmt.Printf("WBD_WINDOWS_GAME_NATIVE_APPLIED lanes=%d tls=1 rust=1 native_os_wal=1\n",count)
+ fmt.Printf("WBD_WINDOWS_GAME_NATIVE_APPLIED lanes=%d fec=%d tls=1 rust=1 native_os_wal=1\n",count,fecMode)
  fmt.Println("WBD_WINDOWS_OS_APPLIED")
  fmt.Println("WBD_WINDOWS_CLIENT_READY")
  ticker:=time.NewTicker(time.Second);defer ticker.Stop()

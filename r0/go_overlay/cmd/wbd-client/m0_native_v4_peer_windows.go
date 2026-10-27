@@ -34,6 +34,7 @@ type m0NativeV4Peer struct {
  mu sync.Mutex
  owner *realityfront.V4WindowsAuthenticatedClientOwner
  mode m0WindowsV4Mode
+ initialProfile realityfront.FecV2Profile
  endpoint *faketcp.NpcapEndpoint
  flow faketcp.ClientFlow
  inbound <-chan faketcp.Segment
@@ -77,7 +78,7 @@ func newM0NativeV4PeerForMode(
  }
  if err:=flow.Validate();err!=nil{return nil,err}
  return &m0NativeV4Peer{
-  owner:owner,mode:mode,
+  owner:owner,mode:mode,initialProfile:realityfront.FecV2Maximum,
   endpoint:endpoint,flow:flow,inbound:inbound,
   stop:make(chan struct{}),done:make(chan struct{}),
   failure:make(chan error,1),
@@ -107,12 +108,11 @@ func(p *m0NativeV4Peer) BindNativeRing(
  // Do not arm parallel FEC2 until its genuine public M2 mode is approved.
  if p.mode==m0WinModeNormal||p.mode==m0WinModeFixed||p.mode==m0WinModeAuto{
   if err:=p.owner.ArmBoundOriginalM2(ctx);err!=nil{return err}
-  if p.mode==m0WinModeAuto{
-   // Linux's proven Auto initial profile is Strong=5, not a new
-   // Go blockID-per-packet FEC source or maximum default. The verified
-   // original TLS Rust/M4 generation is the sole private setter.
+  if p.mode==m0WinModeFixed||p.mode==m0WinModeAuto{
+   // One Linux M1 FixedStream selection, before any real NPF first
+   // send. Auto's native revision control retains the same M2 owner.
    if err:=p.owner.SelectBoundOriginalFEC2Initial(
-    ctx,realityfront.FecV2Strong);err!=nil{return err}
+    ctx,p.initialProfile);err!=nil{return err}
   }
  }
  p.ring=ring;p.identity=id;p.sendNext=send;p.recvNext=recv

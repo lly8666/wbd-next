@@ -46,12 +46,9 @@ func (p *FEC2ProductFlags) Validate(lanes int) error {
     switch *p.Mode {
     case "off":
     case "fixed":
-        // This Windows public native adapter currently implements Fixed6
-        // only: other profiles MUST NOT be silently reported as applied.
-        // The frozen Linux CLI retains its full independent 0..6 selector.
-        if *p.Profile!="maximum" {
-            return errors.New("Windows V4 native Fixed requires fec.profile=maximum (FEC2 Fixed6)")
-        }
+        // Linux's one shared FEC2 seven-profile selector; Game2/4
+        // negotiates this in the protected V4 GameFec TLV, while Normal
+        // uses the original feature7 TLS/M2 FixedStream after Detach.
     case "auto":
         if lanes>1 {return errors.New("Game auto FEC2 is unsupported")}
     default:

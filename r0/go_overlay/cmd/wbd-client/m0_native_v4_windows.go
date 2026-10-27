@@ -275,6 +275,17 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  if plan.StatePath==""{return windowsclient.ErrN4NativeGuard}
  transport,e:=newM0NativeV4PeerForMode(owner,endpoint,flow,nativeFrames,o.Mode)
  if e!=nil{return e}
+ if o.Mode==m0WinModeAuto||o.Mode==m0WinModeFixed{
+  if o.Mode==m0WinModeFixed{
+   transport.initialProfile,e=m0WindowsV4Profile(o.FEC2Profile)
+  }else{
+   transport.initialProfile,e=m0WindowsV4Profile(o.FEC2AutoStartProfile)
+   if e==nil&&o.FEC2AutoPolicy=="aggressive"&&transport.initialProfile<realityfront.FecV2Maximum{
+    transport.initialProfile++
+   }
+  }
+  if e!=nil{return e}
+ }
  product,e:=windowsownerlease.PrepareOriginalTLSNativeProduct(
   ctx,owner,tun,plan,o.Installation,session.Epoch,transport)
  if e!=nil{return e}
@@ -333,4 +344,17 @@ waitNative:
  if stopErr!=nil{return errors.Join(runtimeErr,stopErr)}
  fmt.Println("WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1")
  return runtimeErr
+}
+
+func m0WindowsV4Profile(name string)(realityfront.FecV2Profile,error){
+ switch name{
+ case "light":return realityfront.FecV2Light,nil
+ case "mild":return realityfront.FecV2Mild,nil
+ case "medium":return realityfront.FecV2Medium,nil
+ case "balanced":return realityfront.FecV2Balanced,nil
+ case "high":return realityfront.FecV2High,nil
+ case "strong":return realityfront.FecV2Strong,nil
+ case "maximum":return realityfront.FecV2Maximum,nil
+ default:return 0,fmt.Errorf("unsupported original Linux FEC2 profile %q",name)
+ }
 }

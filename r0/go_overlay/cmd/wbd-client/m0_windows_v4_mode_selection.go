@@ -35,9 +35,9 @@ func m0ParseWindowsV4Mode(lanes int,fec2,legacy string,parity int)(m0WindowsV4Mo
   case "auto":return m0WinModeAuto,nil
   }
  case 2:
-  if fec2=="off" {return m0WinModeGame2,nil}
+  if fec2=="off"||fec2=="fixed"{return m0WinModeGame2,nil}
  case 4:
-  if fec2=="off" {return m0WinModeGame4,nil}
+  if fec2=="off"||fec2=="fixed"{return m0WinModeGame4,nil}
  }
  return "",fmt.Errorf("unsupported native V4 lanes=%d fec2=%s",lanes,fec2)
 }
