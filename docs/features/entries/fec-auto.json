@@ -15,7 +15,7 @@
     "production": "off"
   },
   "usage": {
-    "cli": "Windows native --native-v4-product --fec.mode auto --fec.auto_policy normal|aggressive --fec.auto_start_profile light|mild|medium|balanced|high|strong|maximum; source4977f Auto initial Strong duplex+Stop PASS, Linux FecV2Step dynamic adaptive applied revision NOT_RUN.",
+    "cli": "Windows native --native-v4-product --fec.mode auto --fec.auto_policy normal|aggressive --fec.auto_start_profile light|mild|medium|balanced|high|strong|maximum; source4977f Auto initial Strong duplex+Stop PASS, Linux FecV2Step dynamic adaptive applied revision NOT_RUN. Runtime Auto profile revisions now accept stdin `fec.profile=light|mild|medium|balanced|high|strong|maximum` on explicit --control-stdin, before `stop`; prints REQUESTED_NOT_APPLIED until the authenticated native M2 Applied readback; exact source80e5289 Windows native target Actions40455980911 pending, no dynamic PASS inferred.",
     "config": "原Go V3 fixed4 carrier仅是入场包络，Rust FixedStream本身支持profile 0..6和revision；不是单独Fixed6测试活动，默认FEC2 OFF",
     "gui": "Windows真实WinForms Applied/Disconnect仍NOT_RUN，不从CLI或M2组件PASS推断"
   },
@@ -80,6 +80,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
       "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "Windows original Go Auto live operator profile revision2 via Linux FecV2Step, Rust quiescent_change, real signed Npcap/Wintun UDP both ways and authenticated mature M2 Applied; exact-source native targeted action currently in flight, not a positive evidence yet.",
+      "status": "NOT_RUN",
+      "source_sha": "80e5289ab4b4c47adf55740632b0960f8319dfef",
+      "evidence": null
     }
   ],
   "limitations": [
