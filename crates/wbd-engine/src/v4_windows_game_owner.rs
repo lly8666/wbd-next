@@ -729,9 +729,24 @@ mod tests{
             // Exercise each due deadline as original Wintun/NPF worker
             // would, then settle its real firstsend before the next.
             let mut later=Vec::new();
-            for elapsed in [5u64,51,141]{
+            // The actual first offer is stamped AFTER group construction.
+            // An absolute test offset of 5/51/141ms from group creation
+            // may miss the finite 5ms post-due window under a loaded CI
+            // runner. Drive only the exact queued GameTx deadlines.
+            let first_due=game.adapter.game4_next_due_ns()
+                .expect("first queued delayed copy is authentic");
+            assert!(first_due>=4_000_000);
+            let original_offer=first_due-4_000_000;
+            for offset in [4_000_000u64,50_000_000,140_000_000]{
+                let next_due=game.adapter.game4_next_due_ns()
+                    .expect("next delayed lane remains in shared GameTx");
+                assert_eq!(next_due.saturating_sub(original_offer),offset,
+                    "must preserve original 4/50/140ms Linux Game4 schedule");
+                // One real after-due millisecond; never widen a deadline,
+                // reclaim expired source or synthesize a copied M4 ticket.
                 game.started=std::time::Instant::now()
-                    -std::time::Duration::from_millis(elapsed);
+                    -std::time::Duration::from_nanos(
+                        next_due.saturating_add(1_000_000));
                 let due=game_fec_poll_group(&mut game,c,16)
                     .expect("off stagger uses same native due ABI");
                 assert_eq!(due.len(),1,
