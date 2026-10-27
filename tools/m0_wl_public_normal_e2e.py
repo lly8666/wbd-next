@@ -2,6 +2,7 @@
 """Run actual original-TLS Windows and Linux native public UDP/TCP, then Stop."""
 import os,sys,subprocess,time,json,hashlib,pathlib,re,threading
 from m0_wl_native_resource_sampler import sample_windows_original_process
+from m0_wl_mode_runtime_report import source_locked_observability
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
 if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec","auto-revision","auto-adaptive"):
@@ -450,4 +451,13 @@ finally:
   try:s.wait(timeout=4)
   except subprocess.TimeoutExpired:s.terminate()
  for log in logs:log.close()
+ # Preserve first error/Stop outcome, and attach only measured original
+ # owner and whole Go+Rust EXE resource observations from THIS mode.
+ # Absence remains typed NOT_MEASURED; no readiness/p99 fabricated.
+ try:
+  report["runtime_observability"]=source_locked_observability(out)
+ except Exception as sample_error:
+  report["runtime_observability"]={
+   "result":"NOT_MEASURED_DIAGNOSTIC_PARSER_ERROR",
+   "type":type(sample_error).__name__}
  (out/"report.json").write_text(json.dumps(report,indent=2)+"\n")
