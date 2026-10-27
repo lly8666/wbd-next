@@ -325,3 +325,11 @@ S44 exact parent SOURCE `7d0f6462a4712d6c57e38339a7137731dc179f18`: Windows orig
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Fix only Windows original-Go test assembler inclusion: isolate an existing ABI error classification test from a native TLS fixture with an unavailable helper. No product/runtime/config/selector behavior changes; S47 product fix stays experimental."}
 ```
+
+## S49 feature-catalog repair for S48 original-Go test isolation (2026-10-28)
+- S48 `772b8b3` source Governance `40546243537/1` FAIL: Feature catalog checked full changed devlog containing S47 `feature-impact updated fec-auto`, while S48 had not modified the referenced existing fec-auto card. Maintenance `40546243397/1` PASS, unrelated to functional Auto. This is an audit correctness failure, not a product build failure. Keep both actual results.
+- Update the **existing** `fec-auto` catalog limitations with exact S47 original Go test compile fail and exact S48 in-flight scoped native gate; do not create a second card, alter governance checker semantics, add a PASS without a terminal native run, or change CLI/defaults. This is card reconciliation only; S48 executable SOURCE is unchanged and its run must be attributed to S48. Follow-up normal catalog event is NOT another native capability proof.
+
+```feature-impact
+{"kind":"updated","ids":["fec-auto"],"reason":"Reconcile the S48 original Go test assembly fix with the stable Auto feature card: preserve actual S47 compilation FAIL and distinguish pending S48 native acceptance from product success, with no product code, CLI or policy change."}
+```
