@@ -63,3 +63,10 @@ No local execution tests. Push Actions on the repaired SOURCE are required; any 
 ```feature-impact
 {"kind":"updated","ids":["fec-auto","fec-fixed","game-fixed-fec","game-lanes"],"reason":"Reconcile the historical four-card integration declaration and H303 source-specific Auto natural failure with explicit unaffected Fixed/Game mode scope; preserves all source-locked positive/negative qualification and changes neither executable product nor feature promotion."}
 ```
+
+## H303 feature-catalog complete four-card reconciliation (2026-10-28)
+- Previous main `78690b7a19ca245355f34cd81ef05d5100088ad1` Governance Action`40554072482/1` **FAIL** Feature catalog (`declared feature card not updated: fec-auto`), governance structure PASS. Its four-card historical declaration in this same edited devlog requires all four current cards to change in one push, not only Fixed/Game. Preserve the exact original FAIL of 40553017297/1 (`fec-fixed`) and 40554072482/1 (`fec-auto`); no checker weakening. Current sync updates existing fec-auto, fec-fixed, game-fixed-fec and game-lanes cards with an explicit historical scope note. No new product behavior, auth gate or positive qualification, so do not promote.
+
+```feature-impact
+{"kind":"updated","ids":["fec-auto","fec-fixed","game-fixed-fec","game-lanes"],"reason":"Complete one-push changed-file parity for the historical four-card M0 integration declaration and source-specific S52 Auto natural FAIL, without modifying functionality or rewriting original Fixed/Game source statuses."}
+```
