@@ -629,7 +629,7 @@
       "kind": "create",
       "path": "internal/windowsownerlease/original_tls_native_product_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go",
-      "result_blob": "b081a32086ba152da675d1b781f23fcd6a08081d"
+      "result_blob": "5cdbb871b4a99b251a698a0c41567d31fe4e5ebe"
     },
     {
       "kind": "create",
