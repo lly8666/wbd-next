@@ -23,7 +23,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "f7896888e7c5d6779298bde834d5c04835ef59f1",
+      "result_blob": "c2e03021aadc46ac23bcab34c72eaa4abc2a9c9b",
       "patches": [
         {
           "find": "\tflag.Parse()",
