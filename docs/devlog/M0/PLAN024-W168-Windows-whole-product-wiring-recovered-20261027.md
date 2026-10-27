@@ -130,3 +130,12 @@ Retire the existing workflow's **automatic second full WSL2/Npcap Fixed6-only pu
 ```feature-impact
 {"kind":"updated","ids":["fec-auto"],"reason":"terminal exact SOURCE072a19e7 original Windows Go compile + shared Auto M2-pending module regression PASS, while full WSL2/driver intentionally skipped; no automatic adaptive network/GUI promotion."}
 ```
+
+## 2026-10-27 recovery after H284: one-source natural Auto adaptation validation
+- Latest S84214a + H6bb17 (main authority unchanged). Source4977f Actions40449519463 seven exact startup native 2OS modes PASS; sourcea0c8eeb Actions40457048399 REAL operator Auto revision2 Light M2 Applied+UDP+owned Stop PASS. Natural Auto 2s/8s policy NOT_RUN before this candidate.
+- New functional candidate uses actual concurrently running native Windows Wintun and Linux TUN UDP app at ~sub-1Mbps sufficient for ≥512 observed 2s/8s and mature actual-k cohorts; NO operator profile command, synthetic M2 feedback, bypassed driver, fake Applied or performance claim. The existing original Go→Rust M2 quality data, shared Linux FecV2Step, original FixedStream quiescent switch and 1Hz native readback MUST independently choose and positively Apply a weaker revision. Native app must still receive real packets both ways; previously proven native TCP/Stop are reused in the same target workflow. One [wiring-full] [auto-natural-only] code commit, not seven repeated startup-mode runs.
+- Whether the target qualifies is determined by the precise Actions artifact; preflight/compile or same-source previous operator PASS alone does not settle it. Old FAIL history retained.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only target original Windows natural Linux-shared FecV2Step M2 2s/8s native functionality qualification; product Auto policy/CLI/default/GUI not changed. Existing feature catalog still states natural Auto NOT_RUN until exact-source native real evidence."}
+```

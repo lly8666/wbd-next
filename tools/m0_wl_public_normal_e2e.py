@@ -3,7 +3,7 @@
 import os,sys,subprocess,time,json,hashlib,pathlib,re
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
-if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec","auto-revision"):
+if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec","auto-revision","auto-adaptive"):
  raise RuntimeError("unknown exact native Windows public mode "+mode)
 fixed6=mode=="fixed"
 is_game=mode.startswith("game")
@@ -84,6 +84,7 @@ try:
  app.write_text(r"""import socket,sys,time,json,pathlib
 local,remote,ready_file=sys.argv[1:4]
 hold=float(sys.argv[4]) if len(sys.argv)>4 else 2.
+cadence=float(sys.argv[5]) if len(sys.argv)>5 else .09
 sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 bind_deadline=time.monotonic()+30
 while True:
@@ -99,13 +100,13 @@ sock.setblocking(False)
 seen=set()
 sent=0
 start=time.monotonic()
-deadline=start+35
+deadline=start+max(35.,hold+9.)
 last_send=0.
 last_diag=start
 ready_since=None
 while time.monotonic()<deadline:
  now=time.monotonic()
- if now-last_send>=.09:
+ if now-last_send>=cadence:
   last_send=now
   try:
    sock.sendto(('WBD-PUBLIC-NORMAL-%s-%06d'%(local,sent)).encode(),(remote,45901))
@@ -125,7 +126,7 @@ while time.monotonic()<deadline:
   if ready_since is None:ready_since=now
   # Keep both genuine generators active beyond authenticated Apply.
   if sent>=24 and len(seen)>=12 and now-ready_since>=hold:break
- time.sleep(.03)
+ time.sleep(min(.03,cadence))
 print(json.dumps({'local':local,'remote':remote,'sent':sent,'received':len(seen),'kernel_bind':'PASS','public_ready_seen':ready_since is not None}),flush=True)
 sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
 """)
@@ -280,6 +281,56 @@ print(json.dumps(result),flush=True)
   report["auto_revision_applied"]=applied
   if not applied:raise RuntimeError("original mature M2 revision2 not Applied "+repr(snapshots[-3:]))
   print("WBD_WL_REAL_AUTO_DYNAMIC_REVISION2_APPLIED_AFTER_TWO_OS_KERNEL_UDP",flush=True)
+ if mode=="auto-adaptive":
+  # Real original Go credential TLS / Rust M2 mature first-send
+  # / ALREADY shared Linux FecV2Step Auto decisions. No operator write,
+  # injected loss/ACK or synthetic kernel/OS state. Low Mbps, enough PPS
+  # for the Linux 512-sample and 4096-source genuinely VALID evidence.
+  outputs=[]
+  for name in ("windows","linux"):
+   f=(out/("auto-adaptive-"+name+"-udp.log")).open("w")
+   logs.append(f);outputs.append(f)
+  wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1",
+    str(done),"53",".0015"],stdout=outputs[0],stderr=subprocess.STDOUT)
+  la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+    "python3",unix(app),"10.66.0.1","10.66.0.2",unix(done),"53",".0015"],
+    stdout=outputs[1],stderr=subprocess.STDOUT)
+  until=time.monotonic()+100
+  while wa.poll() is None or la.poll() is None:
+   if w.poll() is not None or s.poll() is not None:
+    raise RuntimeError("native TLS/Rust Auto owner exited before mature natural 2s/8s policy")
+   if time.monotonic()>=until:
+    raise RuntimeError("bounded real kernel Auto 2s/8s traffic deadline")
+   time.sleep(.25)
+  if wa.returncode or la.returncode:
+   raise RuntimeError("genuine Windows/Linux natural Auto kernel UDP failed: "+
+       (out/"auto-adaptive-windows-udp.log").read_text(errors="replace")[-420:]+
+       (out/"auto-adaptive-linux-udp.log").read_text(errors="replace")[-420:])
+  for name in ("windows","linux"):
+   data=json.loads((out/("auto-adaptive-"+name+"-udp.log")).read_text().splitlines()[-1])
+   if not data["public_ready_seen"] or data["kernel_bind"]!="PASS" or data["received"]<512:
+    raise RuntimeError("native "+name+" Auto first-source cohort insufficient: "+repr(data))
+   report["auto_adaptive_"+name]=data
+  snapshots=[]
+  for line in (out/"client.log").read_text(errors="replace").splitlines():
+   if "WBD_WINDOWS_NATIVE_PACKET_TELEMETRY " in line:
+    try:snapshots.append(json.loads(line.split("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY ",1)[1]))
+    except json.JSONDecodeError:pass
+  good=[row for row in snapshots if
+      row.get("auto_requested_revision",0)>=2
+      and row.get("auto_applied_revision",0)>=2
+      and row.get("auto_requested_profile",7)<5
+      and not row.get("auto_revision_pending",True)]
+  report["auto_adaptive_applied"]=bool(good)
+  report["auto_adaptive_observations_1hz"]=len(snapshots)
+  report["auto_adaptive_last_revisions"]=[
+     row.get("auto_requested_revision",0) for row in snapshots[-8:]]
+  if not good:
+   raise RuntimeError("native FecV2Step natural Auto downshift NOT_APPLIED: "+
+      repr(snapshots[-5:]))
+  report["auto_adaptive_native_revision"]=good[-1]["auto_applied_revision"]
+  report["auto_adaptive_native_profile"]=good[-1]["auto_requested_profile"]
+  print("WBD_WL_REAL_AUTO_NATURAL_SHARED_POLICY_M2_2S8S_APPLIED_AFTER_KERNEL_UDP",flush=True)
  if os.environ.get("WBD_WL_RUN_N0")=="1":
   # One declared measurement scenario, not a mixed matrix. Genuine Linux
   # egress and eth0-ingress→IFB kernel tc, not an in-app drop/latency shim.

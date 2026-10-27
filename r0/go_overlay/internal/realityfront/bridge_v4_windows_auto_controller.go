@@ -7,6 +7,7 @@ import(
  "context"
  "errors"
  "fmt"
+ "log"
  "runtime"
  "time"
  "unsafe"
@@ -63,6 +64,7 @@ func(b *winAutoBackend) Stage(epoch [16]byte,intent FecV2Intent)error{
   }
  }
  b.revision,b.profile=intent.Revision,intent.Profile
+ log.Printf("WBD_WINDOWS_AUTO_SHARED_POLICY_STAGE_PENDING revision=%d profile=%d validity=%s reason=%q",intent.Revision,intent.Profile,intent.Validity,intent.Reason)
  return nil
 }
 func(b *winAutoBackend) Readback(epoch [16]byte,client string,
@@ -131,6 +133,12 @@ func(b *winAutoBackend) Observe(epoch [16]byte,client string,
  count,valid:=winAutoDiff(slow[13],raw[13])
  if !valid||count==0||lag/count>uint64((1<<63)-1){return s,nil}
  s.SRTT=time.Duration(lag/count);s.Validity=FecV2Valid
+ var actualKSources uint64
+ for k,n:=range s.ActualK{actualKSources+=uint64(k+1)*n}
+ log.Printf("WBD_WINDOWS_AUTO_M2_2S8S_QUALITY fast_sent=%d fast_obs=%d fast_missing=%d slow_sent=%d slow_obs=%d slow_missing=%d actual_k_sources=%d srtt_us=%d native_profile=%d native_revision=%d",
+  s.Fast.FirstSent,s.Fast.Observed,s.Fast.Missing,
+  s.Slow.FirstSent,s.Slow.Observed,s.Slow.Missing,
+  actualKSources,s.SRTT.Microseconds(),b.profile,b.revision)
  return s,nil
 }
 

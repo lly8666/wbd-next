@@ -9,8 +9,8 @@ import os,sys,json,subprocess,pathlib,shutil
 root=pathlib.Path.cwd()
 out=root/"result"/"wl-public"
 modes=["normal","fixed","auto","game2","game4","game2-fec","game4-fec"]
-if os.environ.get("WBD_WL_PUBLIC_MODES")=="auto-revision":
- modes=["auto-revision"]
+if os.environ.get("WBD_WL_PUBLIC_MODES") in ("auto-revision","auto-adaptive"):
+ modes=[os.environ["WBD_WL_PUBLIC_MODES"]]
 results={}
 failed=[]
 for mode in modes:
