@@ -532,7 +532,20 @@ impl GameAdapter{
     }
     /// Each ready lane gets a distinct AEAD nonce/PN and cipher buffer;
     /// network copy acknowledgement is supplied by the M0 kernel driver.
-    pub fn drain<F>(&mut self,now:MonoNs,mut kernel_copy:F)->usize
+    /// Real Linux M4 kernel copy reports directly through drain().
+    /// Windows original Go must FIRST stage immutable ciphertext, then
+    /// report the actual Npcap syscall result by scoped Game logical ID.
+    pub fn drain<F>(&mut self,now:MonoNs,kernel_copy:F)->usize
+    where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
+        self.drain_dispatch(now,true,kernel_copy)
+    }
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fn stage_for_windows_native<F>(&mut self,now:MonoNs,stage:F)->usize
+    where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
+        self.drain_dispatch(now,false,stage)
+    }
+    fn drain_dispatch<F>(&mut self,now:MonoNs,
+        copied_by_native_kernel:bool,mut kernel_copy:F)->usize
     where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
         if self.stopped{return 0}
         let lanes=&mut self.lanes;
@@ -548,23 +561,37 @@ impl GameAdapter{
                 return DispatchOutcome::PressureDrop
             };
             if end>scratch.len(){return DispatchOutcome::PressureDrop}
-            // Final synchronous record is resealed per lane with independent
-            // PN/key; scratch cannot outlive kernel_copy's successful return.
             let wire=&mut scratch[..end];
             wire[14..14+len].copy_from_slice(view.common_payload);
             let Ok((pn,n))=lane.tx.seal_in_place(1,wire,len,0)
             else{return DispatchOutcome::PressureDrop};
             if kernel_copy(view.lane,id,pn,&wire[..n]){
                 #[cfg(feature="fec2_product_record")]
-                if let Some(f)=fec.as_mut(){f.copied(id);}
+                if copied_by_native_kernel {
+                    if let Some(f)=fec.as_mut(){f.copied(id);}
+                }
                 DispatchOutcome::Accepted
             }else{DispatchOutcome::PressureDrop}
         });
         #[cfg(feature="fec2_product_record")]
+        if copied_by_native_kernel {
+            if let Some(f)=self.fec.as_mut(){
+                f.settle_when_quiet(self.tx.in_use().0==0);
+            }
+        }
+        #[cfg(not(feature="fec2_product_record"))]
+        let _=copied_by_native_kernel;
+        processed
+    }
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fn note_windows_native_m4_copy(&mut self,id:LogicalPacketId){
+        if let Some(f)=self.fec.as_mut(){f.copied(id);}
+    }
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fn settle_windows_native_m4_batch(&mut self){
         if let Some(f)=self.fec.as_mut(){
             f.settle_when_quiet(self.tx.in_use().0==0);
         }
-        processed
     }
     /// Synchronous adapter callers preserve the original API. The Linux
     /// worker instead keeps the RX handle once and NEVER takes TX mutex.
