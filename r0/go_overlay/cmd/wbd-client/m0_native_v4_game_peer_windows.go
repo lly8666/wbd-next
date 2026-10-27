@@ -149,17 +149,20 @@ func(p *m0NativeV4GamePeer) receive(ctx context.Context,in m0GameInbound)error{
   if len(ipv4)>0{frames=[][]byte{ipv4}}
  }
  if e!=nil{return nil} // Rust AEAD/PN/auth rejection, never OS copy
- copiedAll:=true
+ copiedPrefix:=uint32(0)
  for _,ipv4:=range frames{
   n,e:=p.ring.WriteAuthenticatedIPv4(ctx,ipv4)
-  if e!=nil||n!=len(ipv4){copiedAll=false;break}
+  if e!=nil||n!=len(ipv4){break}
+  copiedPrefix++
  }
  if pending{
-  // Linux GameFecRx finish one logical batch only AFTER all REAL
-  // Wintun kernel-copy outcomes; failed copies remain uncommitted.
-  if e:=p.group.CompleteGameFecBatch(ctx,uint32(in.lane+1),copiedAll);e!=nil{return e}
+  // One authenticated symbol can emit multiple recovered IPv4 packets.
+  // Report only the TRUE successful Wintun prefix, not a false all/none
+  // claim after earlier writes already reached the native kernel.
+  if e:=p.group.CompleteGameFecBatch(ctx,uint32(in.lane+1),copiedPrefix);e!=nil{return e}
  }
- if !copiedAll{return windowsclient.ErrN4NativeGuard}
+ p.mu.Lock();p.opened+=uint64(copiedPrefix);p.mu.Unlock()
+ if copiedPrefix!=uint32(len(frames)){return windowsclient.ErrN4NativeGuard}
  if independent{
   l.ack=l.rx.Ack()
  }else{
@@ -168,7 +171,6 @@ func(p *m0NativeV4GamePeer) receive(ctx context.Context,in m0GameInbound)error{
   l.ack=ack
  }
  l.rx.NoteAuthenticated(seg.Seq,len(seg.Payload))
- p.mu.Lock();p.opened+=uint64(len(frames));p.mu.Unlock()
  if err:=p.acknowledge(in.lane);err!=nil{
   return p.retireLane(in.lane,err)
  }

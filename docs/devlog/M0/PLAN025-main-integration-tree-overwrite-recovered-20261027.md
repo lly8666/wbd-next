@@ -91,6 +91,14 @@ Reviewed original Go private owner bridge, windowsownerlease.CreatedWintun.HoldC
 
 This is an optimization hypothesis, not measured CPU/GUI/physical product PASS; no stand-alone native Actions before full source freeze.
 
-```feature-impact
+```json
 {"kind":"updated","ids":["windows-native-transport"],"reason":"Experimental authentic Win32 verified Wintun session lease borrowing for Rust FFI; native/runtime/CPU still unverified."}
+```
+
+## Windows extreme remediation S10 (Game FEC real Wintun completed-prefix accounting)
+Reviewed shared GameReceiveOwner PreparedGameFecBatch (one authentic Game symbol can produce multiple recovered IPv4 frames), original rust finish_fec_group, Go native ring WriteAuthenticatedIPv4 loop and bridge ABI. The former allCopied bool suppressed the fact that some earlier frames had already reached Wintun when a later write failed. Replaced ABI with validated exact prefix count bounded by real staged output length; invalid oversized counts cannot consume pending batch state, a partial result cannot commit full Game logical first delivery, and the Go native per-mode receipt counts only genuinely copied IPv4 prefix before failing closed. Preserve AEAD/replay, generation, Stop, original multi-lane dependency isolation. Rust scoped negative tests cover valid 0/partial/full/oversized prefixes; prior zero-copy and full-copy unit paths updated. Actual loss/recovery and p99 remain NOT_RUN.
+
+This is exact completion accounting, not an implementation of suffix requeue; on partial Wintun failure the worker still exits explicitly rather than rerunning already copied frames. Future resume would require new authenticated staged suffix contract; do not fake it as done.
+```feature-impact
+{"kind":"updated","ids":["game-fixed-fec"],"reason":"Experimental Windows GameFEC Wintun multiple-frame completion now uses exact authenticated successful prefix, prevents all-or-nothing false accounting; no formal product pass."}
 ```

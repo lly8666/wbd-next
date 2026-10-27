@@ -361,15 +361,26 @@ pub(super) fn receive_fec_group(
     Ok((frames,true))
 }
 #[cfg(feature="fec2_product_record")]
+fn valid_fec_kernel_prefix(copied:u32,total:usize)->Result<bool,i32>{
+    if copied as usize>total{return Err(INVALID)}
+    Ok(copied as usize==total)
+}
 pub(super) fn finish_fec_group(
-    game:&mut WinGameGroup,lane:u32,all_kernel_tun_copied:bool,
+    game:&mut WinGameGroup,lane:u32,copied_prefix:u32,
 )->i32{
     let Some(idx)=usize::try_from(lane).ok().and_then(|v|v.checked_sub(1))
         .filter(|&v|v<game.fec_pending.len())else{return INVALID};
+    // The real kernel writer reports the exact successful prefix. Invalid
+    // claims cannot consume pending state. Partial prefixes never falsely
+    // commit the entire logical Game FEC batch.
+    let Some(prepared)=game.fec_pending[idx].as_ref()else{return BAD_STAGE};
+    let all_copied=match valid_fec_kernel_prefix(copied_prefix,prepared.frames().len()){
+        Ok(ok)=>ok,Err(code)=>return code,
+    };
     let Some(batch)=game.fec_pending[idx].take()else{return BAD_STAGE};
     let handle=game.adapter.receiver_handle();
     let Ok(mut rx)=handle.lock()else{return BAD_STAGE};
-    if rx.finish_fec_batch(batch,all_kernel_tun_copied).is_err(){return BAD_STAGE}
+    if rx.finish_fec_batch(batch,all_copied).is_err(){return BAD_STAGE}
     OK
 }
 #[cfg(feature="fec2_product_record")]
@@ -419,16 +430,16 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_game_receive_fec(
 #[cfg(feature="fec2_product_record")]
 #[no_mangle]
 pub extern "C" fn wbd_m0_win_owner_v4_game_finish_fec(
-    group:u64,lane:u32,all_kernel_tun_copied:u32,
+    group:u64,lane:u32,copied_prefix:u32,
 )->i32{
-    if all_kernel_tun_copied>1{return INVALID}
+    if copied_prefix>16{return INVALID}
     let owned={
         let Ok(r)=registry().lock()else{return BAD_STAGE};
         let Some(owned)=r.game_groups.get(&group)else{return UNKNOWN};
         Arc::clone(owned)
     };
     let Ok(mut game)=owned.lock()else{return BAD_STAGE};
-    finish_fec_group(&mut game,lane,all_kernel_tun_copied==1)
+    finish_fec_group(&mut game,lane,copied_prefix)
 }
 
 #[no_mangle]
@@ -568,6 +579,17 @@ mod tests{
         hs
     }
     #[test]
+    fn m0_windows_game_tun_partial_prefix_never_claims_full_kernel_copy(){
+        assert_eq!(valid_fec_kernel_prefix(0,3),Ok(false));
+        assert_eq!(valid_fec_kernel_prefix(1,3),Ok(false));
+        assert_eq!(valid_fec_kernel_prefix(2,3),Ok(false));
+        assert_eq!(valid_fec_kernel_prefix(3,3),Ok(true));
+        assert_eq!(valid_fec_kernel_prefix(4,3),Err(INVALID));
+        // A native parity frame can yield no IP payload, so zero is a
+        // fully settled empty batch, without invented Wintun writes.
+        assert_eq!(valid_fec_kernel_prefix(0,0),Ok(true));
+    }
+    #[test]
     fn m0_windows_native_game_two_four_original_owner_aead_no_hol_and_stop(){
         for n in [2,4]{
             let mut r=Registry{
@@ -701,7 +723,8 @@ mod tests{
                 &wire.wire[..wire.length as usize]).unwrap();
             assert!(pending);
             assert_eq!(frames,vec![ipv4.to_vec()]);
-            assert_eq!(finish_fec_group(&mut receiver,wire.lane,false),OK);
+            assert_eq!(finish_fec_group(&mut receiver,wire.lane,2),INVALID);
+            assert_eq!(finish_fec_group(&mut receiver,wire.lane,0),OK);
             drop(receiver);
             // Failed genuine TUN copy has NOT committed this logical ID;
             // an independently sealed fresh source on a different lane
@@ -720,8 +743,8 @@ mod tests{
                 &next.wire[..next.length as usize]).unwrap();
             assert!(pending);
             assert_eq!(frames,vec![ipv4.to_vec()]);
-            assert_eq!(finish_fec_group(&mut receiver,next.lane,true),OK);
-            assert_eq!(finish_fec_group(&mut receiver,next.lane,true),BAD_STAGE);
+            assert_eq!(finish_fec_group(&mut receiver,next.lane,1),OK);
+            assert_eq!(finish_fec_group(&mut receiver,next.lane,1),BAD_STAGE);
             drop(receiver);
             // Advance only the PRIVATE unit clock past Linux's real
             // closed-block FEC deadline. No kernel-copy or public Applied

@@ -44,11 +44,11 @@ func winGameFecOpen(proc *syscall.Proc,group uint64,lane uint32,wire []byte)(
  }
  return frames,out.Pending==1,nil
 }
-func winGameFecFinish(proc *syscall.Proc,group uint64,lane uint32,allCopied bool)error{
- if proc==nil||group==0||lane==0{return errV4WindowsOwner}
- var success uintptr
- if allCopied{success=1}
- return winOwnerCall(proc,uintptr(group),uintptr(lane),success)
+func winGameFecFinish(proc *syscall.Proc,group uint64,lane uint32,copiedPrefix uint32)error{
+ if proc==nil||group==0||lane==0||copiedPrefix>16{return errV4WindowsOwner}
+ // Exact prefix count, not an ambiguous all/none boolean. The native
+ // Rust owner checks it against the true staged batch before settlement.
+ return winOwnerCall(proc,uintptr(group),uintptr(lane),uintptr(copiedPrefix))
 }
 func(g *V4WindowsAuthenticatedGameGroup) OpenGameFecBatch(
  ctx context.Context,lane uint32,wire []byte,
@@ -62,7 +62,7 @@ func(g *V4WindowsAuthenticatedGameGroup) OpenGameFecBatch(
  return winGameFecOpen(g.fecOpenProc,g.joined,lane,wire)
 }
 func(g *V4WindowsAuthenticatedGameGroup) CompleteGameFecBatch(
- ctx context.Context,lane uint32,allCopied bool,
+ ctx context.Context,lane uint32,copiedPrefix uint32,
 )error{
  if g==nil{return errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
@@ -70,7 +70,7 @@ func(g *V4WindowsAuthenticatedGameGroup) CompleteGameFecBatch(
  loanRelease,loanErr:=g.holdLive(ctx)
  if loanErr!=nil{return loanErr}
  defer loanRelease()
- return winGameFecFinish(g.fecFinishProc,g.joined,lane,allCopied)
+ return winGameFecFinish(g.fecFinishProc,g.joined,lane,copiedPrefix)
 }
 func(g *V4WindowsAuthenticatedGameServerGroup) OpenGameFecBatch(
  ctx context.Context,lane uint32,wire []byte,
@@ -82,13 +82,13 @@ func(g *V4WindowsAuthenticatedGameServerGroup) OpenGameFecBatch(
  return winGameFecOpen(g.fecOpenProc,g.joined,lane,wire)
 }
 func(g *V4WindowsAuthenticatedGameServerGroup) CompleteGameFecBatch(
- ctx context.Context,lane uint32,allCopied bool,
+ ctx context.Context,lane uint32,copiedPrefix uint32,
 )error{
  if g==nil{return errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
  if g.gameFec==0{return errV4WindowsOwner}
  if err:=g.active(ctx);err!=nil{return err}
- return winGameFecFinish(g.fecFinishProc,g.joined,lane,allCopied)
+ return winGameFecFinish(g.fecFinishProc,g.joined,lane,copiedPrefix)
 }
 
 // All ticket accounting is scoped to genuine same-process native Wintun
