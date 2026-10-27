@@ -76,7 +76,10 @@ def archive_mode_evidence(out:pathlib.Path, mode:str, source:str,
     stale.append(name)
     continue
    with path.open("rb") as f:
-    prefix=f.read(256)
+    # Use the original baseline's prefix width. Reading a full 256B
+    # after a short (<256B) log is appended would include NEW data in
+    # the digest, incorrectly treating append as a replacement.
+    prefix=f.read(min(256,old_size))
     same_prefix=hashlib.sha256(prefix).hexdigest()==old_hash
     # Preserve only NEW WSL/NPF/telemetry bytes appended to the
     # original open file; truncated/rotated files use their whole

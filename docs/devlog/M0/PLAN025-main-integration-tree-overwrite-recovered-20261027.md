@@ -174,6 +174,13 @@ Previous sequential seven-mode runner could re-archive a stale prior-mode log be
 
 ## S21 — Game4 original Windows native staggered copy staging and due poll
 Checked existing Linux GameAdapter::offer/stage_for_windows_native and Game4 4/20/60ms or 4/50/140ms stagger, real MonoNs next_due and original protected M4 copy callbacks. Native Windows previously required exactly all lanes in one offer; legitimate deferred Game4 copies caused BAD_STAGE, while no-FEC group never polled the due owner. Reused existing GameFec parity native due ABI for Game4 off or FEC without creating a parallel Go scheduler; removed all-lanes-immediate assumption while retaining one shared Rust logical source, independent per-lane M3 PN/seal and genuine NPF copy result. Every due copy stays scoped to original TLS joined group and Stop. Game4 test explicitly activates Linux mode2 schedule, requires first partial output, advances unit monotonic clock, checks unique lanes and that exactly remaining copies settle later. Go decoder validates bounded count and nonduplicated lane and owns returned ciphertext bytes. Dynamic configuration effective readback and NAT/TUN actual UX remain open; no performance PASS or new forced stagger mode.
-```feature-impact
+```json
 {"kind":"updated","ids":["game-lanes","game-fixed-fec"],"reason":"Experimental Windows Game4 accepts real Linux GameAdapter delayed replica staging/polling, keeps independent per-lane native NPF send results and replay/Stop guarantees. Scoped tests only; no product qualification."}
+```
+
+
+## S22 — precise S20 native witness short-file append regression fix
+Latest experimental source943ccd3f Governance Action40512442796 SUCCESS, mandatory maintenance Action40512442792 FAIL 1 of 238: test_shared_previous_mode_log_is_not_laundered_into_new_mode. Recovered exact trace: small original link log was shorter than 256B, so comparing full 256B prefix after append included new bytes, falsely inferred rotation and copied stale previous mode. Compare only original min(256,old_size) prefix while independently comparing old inode/current size; preserve all existing redaction/mode boundary and long-file logic. Added second long-file append fixture. No native Windows/Linux product or performance Actions dispatched; the red run remains historical until new source-governance maintenance receipt.
+```feature-impact
+{"kind":"none","ids":[],"reason":"Restore precise source-locked mode evidence isolation across append to both short and long live witness logs; no product feature change."}
 ```

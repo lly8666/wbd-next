@@ -45,6 +45,17 @@ class ModeEvidenceTests(unittest.TestCase):
    self.assertEqual((second.parent/"native-link-tcp443.log").read_text(),"mode2-global\\n")
    self.assertEqual((second.parent/"windows-original-go-rust-process-1hz.jsonl").read_text(),'{"cpu_s":2}\\n')
    self.assertEqual((first.parent/"client.log").read_text(),"first-failure-only\\n")
+ def test_long_append_does_not_copy_older_mode_witness_prefix(self):
+  with tempfile.TemporaryDirectory() as d:
+   out=pathlib.Path(d)
+   prefix="a"*600+"\\n"
+   (out/"native-windows-npf.log").write_text(prefix)
+   snap=capture_mode_evidence_baseline(out)
+   with (out/"native-windows-npf.log").open("a") as f:
+    f.write("second-correct-mode-failure\\n")
+   result=archive_mode_evidence(out,"auto",SHA,{"error":"exact"},1,baseline=snap)
+   self.assertIn("native-windows-npf.log",json.loads(result.read_text())["preserved_allowlist"])
+   self.assertEqual((result.parent/"native-windows-npf.log").read_text(),"second-correct-mode-failure\\n")
  def test_unknown_source_and_mode_rejected(self):
   with tempfile.TemporaryDirectory() as d:
    out=pathlib.Path(d)
