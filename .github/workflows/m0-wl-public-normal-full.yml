@@ -11,6 +11,7 @@ on:
       - tools/m0_wl_native_resource_sampler.py
       - tools/m0_wl_netem.py
       - tools/m0_wl_public_rate_app.py
+      - tools/m0_wl_business_latency.py
       - tools/m0_wl_real_wsl2_guest_probe.py
       - tools/m0_wl_public_native_wire_trace.py
       - r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go
@@ -81,7 +82,7 @@ jobs:
           modes=select_source_locked_modes(os.environ['PUBLIC_MODE'],os.environ['RUN_N0']=='1')
           print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'])
           PY
-      - run: python -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_mode_evidence.py tools/m0_wl_native_resource_sampler.py
+      - run: python -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_native_resource_sampler.py
 
   windows-compile-preflight:
     name: Windows Go production and test compilation only

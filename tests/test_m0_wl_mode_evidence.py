@@ -4,6 +4,7 @@ import pathlib
 import tempfile
 import unittest
 from tools.m0_wl_mode_evidence import archive_mode_evidence,capture_mode_evidence_baseline,select_source_locked_modes
+from tools.m0_wl_business_latency import summarize_rtt
 
 SHA="a"*40
 class ModeEvidenceTests(unittest.TestCase):
@@ -67,6 +68,20 @@ class ModeEvidenceTests(unittest.TestCase):
    if invalid=="":continue # no selector means seven functional modes
    with self.assertRaises(ValueError):
     select_source_locked_modes(invalid,False)
+ def test_native_business_rtt_p99_uses_same_monotonic_origin_and_reports_missing(self):
+  values=[1.5]*197+[4.0,4.0,9.0]
+  result=summarize_rtt(values,205)
+  self.assertEqual(result["p99_ms"],4.0)
+  self.assertEqual(result["not_returned"],5)
+  self.assertEqual(result["real_replied"],200)
+  self.assertEqual(result["late_over_2s"],0)
+  self.assertIn("ROUNDTRIP_NOT_ONEWAY",result["measurement"])
+  partial=summarize_rtt([1.5]*199,201)
+  self.assertIsInstance(partial["p99_ms"],str)
+  self.assertEqual(partial["not_returned"],2)
+  late=summarize_rtt([100.0]*199+[2400.0],200)
+  self.assertEqual(late["late_over_2s"],1)
+  with self.assertRaises(ValueError):summarize_rtt([1.0,2.0],1)
  def test_unknown_source_and_mode_rejected(self):
   with tempfile.TemporaryDirectory() as d:
    out=pathlib.Path(d)
