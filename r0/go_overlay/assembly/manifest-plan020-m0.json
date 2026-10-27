@@ -635,7 +635,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_udp_kernel_driver_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
-      "result_blob": "ab10bcf6ecdcd5556777151fc60b9a004975887b"
+      "result_blob": "3fdba807a21487ff76c0d09019c2ff4b352abbdb"
     },
     {
       "kind": "create",
@@ -659,7 +659,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
-      "result_blob": "c31b738dfe5a0c2ee544c1ad68da57311f77a1b9"
+      "result_blob": "8a5a26585ef7a39df7c70eca618c75276ca5dfa7"
     },
     {
       "kind": "create",
@@ -713,13 +713,13 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_rx_window_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rx_window_windows_test.go",
-      "result_blob": "2d5f522a31b252d8d63db870677db43af8bbce4d"
+      "result_blob": "243ae9872a52cffa4cea54dc2febabe2ae3a4018"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_peer_windows.go",
-      "result_blob": "588fbbd4fb8dac0e72193f2b53000bf9b41477b2"
+      "result_blob": "9cc6a9036b928723138c0d5fdebb652ac7264c7b"
     },
     {
       "kind": "create",
@@ -749,7 +749,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_udp_kernel_driver_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows_test.go",
-      "result_blob": "c451a69629a7706a5918e88cc60181ab1b47e18b"
+      "result_blob": "1efdc4ff0e42138f99390484f79088d0b2a115a4"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

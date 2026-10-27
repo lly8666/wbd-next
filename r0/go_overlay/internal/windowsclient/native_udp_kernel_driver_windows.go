@@ -182,6 +182,63 @@ func (d *N4OriginalKernelPacketLease) n4ReceiveReadyIPv4(
     // A later explicit poll can still receive the queued real IPv4 packet.
     return 0,ErrN4NativeNoPacket
 }
+// One original signed Wintun kernel event, shared by Normal/Fixed/Auto
+// and Game. A separate original client observer waits here ONLY when the
+// real packet pump is idle. It does not acquire a second Wintun session,
+// copy a packet, invent a native completion or confer product Applied.
+// WaitForMultipleObjects is capped at 20ms to observe Go cancellation even
+// if the original process-created Win32 close event has not yet fired.
+const n4WaitTimeout uintptr=0x102
+func n4BoundedOriginalWaitMillis(duration time.Duration)uintptr{
+ if duration<=0{return 1}
+ ms:=duration.Milliseconds()
+ if ms<1{return 1}
+ if ms>20{return 20}
+ return uintptr(ms)
+}
+func (d *N4OriginalKernelPacketLease) WaitReadReady(
+ ctx context.Context,limit time.Duration,
+)(bool,error){
+ if d==nil{return false,ErrN4NativeGuard}
+ d.mu.Lock()
+ if err:=d.check(ctx);err!=nil{
+  d.mu.Unlock();return false,err
+ }
+ tun:=d.tun
+ if !tun.beginCall(){
+  d.mu.Unlock();return false,ErrN4NativeGuard
+ }
+ // Keep the exact original Win32 session/event handles valid across the
+ // bounded wait while allowing concurrent native Wintun reads and Stop.
+ readEvt,closeEvt:=tun.readEvt,tun.closeEvt
+ d.mu.Unlock()
+ defer tun.endCall()
+ if readEvt==0||closeEvt==0{return false,ErrN4NativeGuard}
+ handles:=[2]uintptr{readEvt,closeEvt}
+ status,_,callErr:=waitForMultipleObjects.Call(
+  2,uintptr(unsafe.Pointer(&handles[0])),0,
+  n4BoundedOriginalWaitMillis(limit))
+ if ctx.Err()!=nil{return false,ctx.Err()}
+ switch status{
+ case waitObject0:
+  // Revalidate Stop/generation after a real event; the read-ready
+  // signal is NOT a packet, so normal ReceiveReadyIPv4 still owns
+  // real WintunReceivePacket/ReleaseReceivePacket.
+  d.mu.Lock()
+  err:=d.check(ctx)
+  d.mu.Unlock()
+  if err!=nil{return false,err}
+  return true,nil
+ case waitObject0+1:
+  return false,io.EOF
+ case n4WaitTimeout:
+  return false,nil
+ case waitFailed:
+  return false,wintunCallError("WaitForMultipleObjects(original ring)",callErr,nil)
+ default:
+  return false,ErrN4NativeGuard
+ }
+}
 func (d *N4OriginalKernelPacketLease) Counts()(N4RealKernelPacketCounts,error){
     if d==nil{return N4RealKernelPacketCounts{},ErrN4NativeGuard}
     d.mu.Lock();defer d.mu.Unlock()

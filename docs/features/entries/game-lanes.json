@@ -105,7 +105,8 @@
     "2026-10-27 user-authorized exact development-tree main overwrite f6469a: implementation code is now present on main but remains experimental, with no new main-SOURCE native/product/global/physical PASS or formal promotion; previous exact-SOURCE PASS/FAIL unchanged.",
     "2026-10-27 isolated Game D/A4: exact original Go joined TLS+owned OS, Rust effective packet MTU readback and for Game2/4 off+FEC real per-lane NPF completion callback; per-lane NPF/FIN failure isolates healthy lanes, all failed terminates. Positive native functional, 30%/burst, FEC parity/p99, physical and WinForms NOT_RUN. No single public-port change.",
     "2026-10-27 experimental S21 Game4 genuine Linux shared monotonic due scheduling: staged initial native M1 AEAD copies may be 0..4 and later independent copies poll when due; each lane copy remains NPF-confirmed, no invented FEC delivery or product PASS. Correctness/performance native Actions NOT_RUN.",
-    "2026-10-27 S23 experimental Game2/4: original Go native 1Hz protected Rust Game MTU readback updates actual Wintun scratch/explicit oversize drop accounting; correct owned OS MTU changes and cross-platform effective path reconfiguration NOT YET QUALIFIED. No sampled product performance result."
+    "2026-10-27 S23 experimental Game2/4: original Go native 1Hz protected Rust Game MTU readback updates actual Wintun scratch/explicit oversize drop accounting; correct owned OS MTU changes and cross-platform effective path reconfiguration NOT YET QUALIFIED. No sampled product performance result.",
+    "2026-10-27 experimental S30: true signed Wintun original read/close Win32 event + Npcap inbound notification wake Normal/Fixed/Auto and Game, with 5ms bounded recovery/repair deadline fallback. Event wait is 20ms cancellable with active handle loan, no per-packet OS requery; real native/CPU/p99 evidence NOT_RUN."
   ],
   "promotion": null
 }

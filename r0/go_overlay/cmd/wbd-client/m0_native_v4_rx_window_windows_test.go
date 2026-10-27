@@ -9,6 +9,7 @@ import (
  "time"
  "github.com/lly8666/wobuzhidao/internal/faketcp"
  "github.com/lly8666/wobuzhidao/internal/realityfront"
+ "github.com/lly8666/wobuzhidao/internal/windowsclient"
 )
 
 func TestM0PLAN025WindowsNativeV4OutOfOrderFirstAndRealCumulativeACK(t *testing.T){
@@ -309,5 +310,25 @@ func TestM0RemediationOriginalGoSourceBatchObservabilityIsNotFakeGoodput(t *test
  }
  if got.GoHeapAllocBytes!=0||got.GoNumGC!=0{
   t.Fatal("generic Stats must not fake a Go runtime sample")
+ }
+}
+
+func TestM0WindowsNativeRingWaitObserverCanceledNoOrphanWake(t *testing.T){
+ ctx,cancel:=context.WithCancel(context.Background())
+ cancel()
+ ready:=make(chan error)
+ done:=make(chan struct{})
+ go func(){
+  m0V4ObserveRingReady(ctx,&windowsclient.N4OriginalKernelPacketLease{},ready)
+  close(done)
+ }()
+ select{
+ case <-done:
+ case <-time.After(time.Second):
+  t.Fatal("event waiter failed to join owned cancel")
+ }
+ select{
+ case <-ready:t.Fatal("canceled owner emitted fake real Wintun wake")
+ default:
  }
 }

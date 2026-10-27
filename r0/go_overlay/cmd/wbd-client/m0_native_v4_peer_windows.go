@@ -18,11 +18,33 @@ import (
 const (
  m0V4BatchPackets=32
  m0V4BatchCPU=2*time.Millisecond
- m0V4IdlePoll=time.Millisecond
+ // All packet readiness is event-driven; this is ONLY a bounded
+ // protocol feedback/repair deadline fallback, not the 1ms RX poll.
+ m0V4IdlePoll=5*time.Millisecond
  m0V4RetxAfter=750*time.Millisecond
  m0V4TxPendingMax=256 // non-Normal legacy carrier path only
  m0V4M2ShadowCredit=1536 // Rust original Normal M1 arena2048, 10Mbps/RTT600ms bounded
 )
+// A single 20ms Win32 read-wait observer wakes the already existing
+// serialized Rust+Npcap packet pump; a zero-buffer channel means an event
+// cannot accumulate an unbounded queue or spin while the ring is unread.
+// The original Wintun TUN read/close event is protected by its active loan.
+// Existing original Npcap inbound channel wakes the same pump immediately.
+func m0V4ObserveRingReady(ctx context.Context,
+ ring *windowsclient.N4OriginalKernelPacketLease,
+ awake chan<- error){
+ if ctx==nil||ring==nil{return}
+ for ctx.Err()==nil{
+  ready,err:=ring.WaitReadReady(ctx,20*time.Millisecond)
+  if err!=nil{
+   if ctx.Err()!=nil{return}
+   select{case awake<-err:case <-ctx.Done():}
+   return
+  }
+  if !ready{continue}
+  select{case awake<-nil:case <-ctx.Done():return}
+ }
+}
 type m0NativeV4Outbound struct {
  seq uint32
  wire []byte // immutable Rust FrozenRecord ciphertext, reused byte-exact on retry
@@ -747,6 +769,8 @@ func(p *m0NativeV4Peer) VerifyPeerFirstAndReverse(
  timeout,cancel:=context.WithTimeout(ctx,20*time.Second)
  defer cancel()
  idle:=time.NewTicker(m0V4IdlePoll);defer idle.Stop()
+ ringAwake:=make(chan error)
+ go m0V4ObserveRingReady(timeout,p.ring,ringAwake)
  for {
   if err:=timeout.Err();err!=nil{
    // SOURCE-locked real Windows Wintun/NPF outcome, not a Go/TCP/FEC
@@ -772,6 +796,8 @@ func(p *m0NativeV4Peer) VerifyPeerFirstAndReverse(
   case seg,ok:=<-p.inbound:
    if !ok{return fmt.Errorf("%w: original NPF peer ingress queue closed during first-reverse",windowsclient.ErrN4NativeGuard)}
    if err:=p.receiveOne(timeout,seg);err!=nil{return err}
+  case waitErr:=<-ringAwake:
+   if waitErr!=nil{return fmt.Errorf("%w: original native Wintun wait: %v",windowsclient.ErrN4NativeGuard,waitErr)}
   case <-idle.C:
   }
  }
@@ -780,6 +806,8 @@ func(p *m0NativeV4Peer) VerifyPeerFirstAndReverse(
  go func(){
   defer close(p.done);defer workerCancel()
   ticker:=time.NewTicker(m0V4IdlePoll);defer ticker.Stop()
+  awake:=make(chan error)
+  go m0V4ObserveRingReady(workerCtx,p.ring,awake)
   for {
    work,err:=p.pulse(workerCtx)
    if err!=nil{
@@ -796,6 +824,11 @@ func(p *m0NativeV4Peer) VerifyPeerFirstAndReverse(
     if !ok{select{case p.failure<-fmt.Errorf("%w: original NPF peer ingress queue closed after Ready",windowsclient.ErrN4NativeGuard):default:};return}
     if err:=p.receiveOne(workerCtx,seg);err!=nil{
      if workerCtx.Err()==nil{select{case p.failure<-err:default:}}
+     return
+    }
+   case waitErr:=<-awake:
+    if waitErr!=nil{
+     if workerCtx.Err()==nil{select{case p.failure<-fmt.Errorf("%w: original Wintun native ready event failed: %v",windowsclient.ErrN4NativeGuard,waitErr):default:}}
      return
     }
    case <-ticker.C:

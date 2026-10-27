@@ -252,6 +252,8 @@ func(p *m0NativeV4GamePeer) VerifyPeerFirstAndReverse(
  probe,cancel:=context.WithTimeout(ctx,25*time.Second)
  defer cancel()
  tick:=time.NewTicker(m0V4IdlePoll);defer tick.Stop()
+ readyEvent:=make(chan error)
+ go m0V4ObserveRingReady(probe,p.ring,readyEvent)
  for{
   done,err:=p.pulse(probe)
   if err!=nil{return err}
@@ -269,6 +271,8 @@ func(p *m0NativeV4GamePeer) VerifyPeerFirstAndReverse(
   case in,ok:=<-p.inbound:
    if !ok{return windowsclient.ErrN4NativeGuard}
    if err=p.receive(probe,in);err!=nil{return err}
+  case readErr:=<-readyEvent:
+   if readErr!=nil{return fmt.Errorf("%w: Game original Wintun ready event: %v",windowsclient.ErrN4NativeGuard,readErr)}
   case <-tick.C:
   }
  }
@@ -277,6 +281,8 @@ func(p *m0NativeV4GamePeer) VerifyPeerFirstAndReverse(
  go func(){
   defer close(p.done);defer stop()
   timer:=time.NewTicker(m0V4IdlePoll);defer timer.Stop()
+  awake:=make(chan error)
+  go m0V4ObserveRingReady(background,p.ring,awake)
   for{
    done,err:=p.pulse(background)
    if err!=nil{
@@ -290,6 +296,11 @@ func(p *m0NativeV4GamePeer) VerifyPeerFirstAndReverse(
    case in,ok:=<-p.inbound:
     if !ok{select{case p.errors<-windowsclient.ErrN4NativeGuard:default:};return}
     if e:=p.receive(background,in);e!=nil{select{case p.errors<-e:default:};return}
+   case readErr:=<-awake:
+    if readErr!=nil{
+     if background.Err()==nil{select{case p.errors<-fmt.Errorf("%w: Game native Wintun wait event failed: %v",windowsclient.ErrN4NativeGuard,readErr):default:}}
+     return
+    }
    case <-timer.C:
    }
   }

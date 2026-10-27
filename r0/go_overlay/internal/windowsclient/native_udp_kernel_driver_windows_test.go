@@ -424,3 +424,26 @@ func TestM0WindowsOriginalN4RingOneSecondOSAuditWithImmediateStopFence(t *testin
   t.Fatalf("external OS identity rejection was not sticky: %v",err)
  }
 }
+
+func TestM0WindowsNativeWintunReadWaitTimeoutIsBounded(t *testing.T){
+ for _,tc:=range []struct{d time.Duration;want uintptr}{
+  {-time.Second,1},{0,1},{500*time.Microsecond,1},
+  {time.Millisecond,1},{19*time.Millisecond,19},
+  {20*time.Millisecond,20},{500*time.Millisecond,20},
+ }{
+  if got:=n4BoundedOriginalWaitMillis(tc.d);got!=tc.want{
+   t.Fatalf("original Wintun event deadline %v: got %d, want %d",
+    tc.d,got,tc.want)
+  }
+ }
+ stopped:=&N4OriginalKernelPacketLease{stopped:true}
+ if _,err:=stopped.WaitReadReady(context.Background(),time.Second);
+   !errors.Is(err,ErrN4NativeGuard){
+  t.Fatalf("original native Wintun Stop must deny event wait: %v",err)
+ }
+ revoked:=&N4OriginalKernelPacketLease{identityRevoked:true}
+ if _,err:=revoked.WaitReadReady(context.Background(),time.Second);
+   !errors.Is(err,ErrN4NativeGuard){
+  t.Fatalf("revoked generation must deny OS readiness: %v",err)
+ }
+}
