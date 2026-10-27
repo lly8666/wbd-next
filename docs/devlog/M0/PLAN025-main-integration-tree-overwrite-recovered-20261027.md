@@ -34,7 +34,7 @@ No local execution tests. Push Actions on the repaired SOURCE are required; any 
 - Pre-fix review (no code change in this recovery commit): `docs/testing/NETWORK_TRIAGE.md` §§3–4, `docs/architecture/modules/07-FEC.md` (superseded v1), `docs/architecture/modules/10-LIFECYCLE-QUALITY.md`, `docs/architecture/FEC_V2_BALANCED.md` current authority, `r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go::receiveOne`, `r0/go_overlay/internal/realityfront/bridge_v4_windows_fec2_owner.go::winFec2Opener`, `bridge_v4_windows_private_owner.go::V4WindowsNativeOwnerFatal`, Rust `v4_windows_fec2_owner.rs::open_symbol_entry`; S17 `5d9aedc` typed ABI classification. The current experimental opener formats the typed native `err` using `%v`, so `errors.As` cannot see `INVALID(1)` and the peer escalates to fatal. This is a falsifiable source-level explanation, **not yet new Actions qualification**. Preserve hard owner failures as fatal and distinguish invalid packet from genuine lifecycle/arena defects.
 
 ```feature-impact
-{"kind":"none","reason":"Recovery of a terminal Action and frozen source history only; no executable product behavior or configuration changed in this commit. Auto and six-mode qualifiers remain exact-SOURCE and no feature was promoted."}
+{"kind":"none","ids":[],"reason":"Recovery of a terminal Action and frozen source history only; no executable product behavior or configuration changed in this commit. Auto and six-mode qualifiers remain exact-SOURCE and no feature was promoted."}
 ```
 
 ## H302 recovered accepted Auto startup & latest user acceptance (2026-10-28)
@@ -44,3 +44,6 @@ No local execution tests. Push Actions on the repaired SOURCE are required; any 
 ```feature-impact
 {"kind":"updated","ids":["fec-auto"],"reason":"Recover first exact-source Windows/Linux native Auto Strong5 startup bidirectional UDP/TCP/owned Stop positive and record the new user-approved 120s one-step Auto acceptance with independent natural qualification still pending. Does not change product code or formal status."}
 ```
+
+## H302 metadata-only governance red recovery (2026-10-28)
+- Original main `f674bcf4f73c0257a2b5fb606cc7e3936357d4f5` Governance Action`40551550578/1` **FAIL**: feature-catalog `invalid feature-impact IDs` because prior S46 `none` lacked required `ids:[]`; governance structure `evidence is for a different SOURCE` because H302 evidence_refs mixed historical S45 a2594eba with current last_tested_source S48 772b8b3. Exact original artifact `12754873173`, SHA256 `a6f18325e4c627d1adaa1bfcf56a7c126a645e1a20230876f2e26c1df19d5ed9`. Preserve these FAIL outcomes. Fix only legacy `none` JSON shape and point cursor evidence_refs exclusively to S48 source772b8b3 actual main evidence; S45 history remains in devlog/standalone S45 evidence. No test result, product/target/source/epoch changed, same H302 checkpoint.
