@@ -86,6 +86,13 @@
       "status": "PERFORMANCE_PASS",
       "source_sha": "dd0767abfc076c97bc42304083f42105a514cda1",
       "evidence": "docs/evidence/M0/PLAN025-H309-WL-N0-dd0767-PASS-previous-FAIL-20261028.json"
+    },
+    {
+      "platform": "linux/amd64 original-Go TLS Rust real two-netns raw/TUN",
+      "scope": "Exact product SOURCE33ed20b4 reused original Go/Rust binary artifact12760744437 with test harness fb653d01; real 1% netem both dirs actual drop16, independent 512 offered UDP, 508 unique echoed, 4 missing, 0 duplicate; Rust M2 firstsend1023, authenticated ACK547, original frozen retransmitted4; both native owned Stop PASS. Diagnostic band <=20 of512, not a formal loss-recovery/p99 or Windows result.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
+      "evidence": "docs/evidence/M0/PLAN025-H312-source33ed-linux-loss1-512-genuine-20261028.json"
     }
   ],
   "limitations": [
@@ -97,7 +104,8 @@
     "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
     "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
     "S61 main integrates sourcee8acbb validated tiny Rust cfg-only module fix for old default original-Go FEC2-off Linux build, while preserving all FEC2-enabled code and historical main sourceb6b964a signed seven-mode functional PASS. S60 Action40561871984 exact Rust ordinary, no-FEC2, opt-in FEC2/Game module checks PASS; this new main SOURCE not yet native-qualified and original NORMAL-COMMON Action40560287464 FAIL remains.",
-    "H311 provenance index: H309 main33ed seven-mode native PASS; N0dd0767 independent one-sample PASS while aa931 FAIL remains; ARM64f7ee prebuilt 10M capacity success; Linux33ed loss1 old serial-echo FAIL."
+    "H311 provenance index: H309 main33ed seven-mode native PASS; N0dd0767 independent one-sample PASS while aa931 FAIL remains; ARM64f7ee prebuilt 10M capacity success; Linux33ed loss1 old serial-echo FAIL.",
+    "Linux 1% original-Go product source33ed Action40587653027 now source-locked native 512 offered/508 unique received/4 residual via non-stop-and-wait, both Stop PASS; old source33ed harness Action40566375977 FAIL remains. No equivalence with physical Windows or FEC2/Game loss tests."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

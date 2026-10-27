@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
+  "harness_source_sha": "fb653d01301e0eef5111d770c454b6ae63edb1ba",
+  "kind": "actual_linux_x64_original_go_tls_rust_tun_normal_loss1_kernel_netem_unique_udp_first_delivery",
+  "qualification": "FUNCTIONAL_PASS_SCOPED_DIAGNOSTIC_NOT_PERFORMANCE",
+  "run_id": 40587653027,
+  "run_attempt": 1,
+  "run_conclusion": "success",
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40587653027",
+  "artifact": {
+    "id": 12772488447,
+    "name": "m0-prebuilt-linux-loss1-40587653027-1",
+    "sha256": "008a277fb2597b5821693ebd4e5f3e4fb38b64534ff9b17761650969228e5573"
+  },
+  "compiled_reuse": {
+    "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
+    "from_run_id": 40562809565,
+    "artifact_id": 12760744437,
+    "artifact_zip_sha256": "b0caeea1d953076480a8dd30fb63612194e09668e3b0af41ab6b8f80755e3439",
+    "manifest_and_binary_hashes": "PASS",
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "recompiled_go_or_rust": false
+  },
+  "actual": {
+    "architecture": "linux/amd64 independent 2 namespace original Go TLS Rust raw TUN",
+    "mode": "normal",
+    "underlay_loss_pct_each_direction": 1,
+    "real_netem_dropped": 16,
+    "app_udp_offered": 512,
+    "app_udp_unique_echoed": 508,
+    "app_udp_missing": 4,
+    "app_udp_duplicates": 0,
+    "missing_first20": [
+      39,
+      112,
+      444,
+      471
+    ],
+    "original_m2_first_copied": 1023,
+    "original_m2_authenticated_ack": 547,
+    "original_m2_frozen_retransmitted": 4,
+    "owned_stop": "PASS_BOTH",
+    "netns_cleanup": "PASS"
+  },
+  "limit": "coarse max20/512 two-path diagnostic, non-stop-and-wait actual kernel offered/delivered, not formal statistical loss/p99/Windows qualification; repaired count cannot be equated to same business packet actually recovered",
+  "not_qualified": [
+    "Windows native impaired-line",
+    "loss-driven Auto upshift",
+    "FEC parity repair",
+    "oneway_p99",
+    "scored_cpu",
+    "0% loss physical",
+    "N1/N5/500Mbps"
+  ],
+  "historic_red": {
+    "run_id": 40566375977,
+    "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
+    "harness_sha": "6eafe4c58fdefeab11e03c0fc470622f5cd7b766",
+    "status": "FAIL",
+    "reason": "old stop-and-wait all-echo fixture halts offering after actual dropped packet; both Stop succeeded"
+  }
+}
