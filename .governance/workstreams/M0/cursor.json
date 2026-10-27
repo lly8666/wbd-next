@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 279,
-  "checkpoint_sha": "0185eaa6c82850d502853927ade242d2b3d09e0a",
+  "sequence": 280,
+  "checkpoint_sha": "f9ee051a39a93fd945564067c9980139387ed008",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "Same M0 R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025: full original Windows↔Linux public product wire-up aligned to tested Linux Go TLS→Rust M1/M2/M3/Auto/FEC2/Game native OS/WFP/WAL/GUI/Stop, NOT isolated Fixed6. Main registry goal and PLAN020 updated at 4cf8af67, main H277 Governance 40410283152 SUCCESS. Isolated PR28 remains Draft.",
-  "why_now": "Recovered missing source01d8 native workflow40379315293 FAIL with detailed job log unavailable, no public Windows report; scoped Normal old PASS. Staging 3fabfaf corrected over-advertised Fixed mode bit, removed automatic standalone Fixed6 native run, added genuine same-source DLL five-mode capability negative and combined Windows owner module. Action40409529074 source3fabfaf Linux build PASS; native Rust owner suite FAILED 14/15 at shared M2 process-global budget registration from parallel tests; no real two-OS step started. Source0185eaa only changes existing whole owner unit runner to --test-threads=1, production Rust/Go/Linux unchanged, Actions40410520859 queued.",
-  "done_when": "Whole original-Go TLS/Rust→actual Windows Npcap/Wintun/WFP/route/DNS/WAL/WinForms→Linux raw/TUN effective product function, real two-way UDP/TCP, shared M2/FEC2/Auto/Game and owned Stop; modes independently actual positive or denied/unwired/NOT_RUN. No standalone Fixed6 public test or mode mask without qualification; PLAN021 applies to proven scope, separate WL-N0/N1/N5 and physical later.",
-  "next_action": "Settle already queued full-path same-source Actions40410520859 after S0185eaa: combined shared Windows owner 15-test sequential native suite, Go actual DLL five-mode public capability/owner high-water negative, genuine Windows↔Linux Normal UDP/TCP/Stop and OS owned cleanup. On failure inspect first exact stage/log and Linux architecture reference, fix only evidenced cross-cutting owner/IO seam; then progress overall Auto/Game/GUI OS missing paths without Fixed-only reruns or performance.",
+  "current_task": "One existing M0 PLAN008 whole Windows product wiring task: reuse actual proven Linux Go credential TLS→shared Rust M1/M2/M3 FEC2 Fixed/Auto and Game2/4 lane/OS lifecycle, with genuine Windows Npcap/Wintun/WFP/WAL/WinForms, real two-OS delivery and Stop. User's Fixed6 mention was a typo; work by complete capability, no independently fabricated retransmit/FEC/defenses.",
+  "why_now": "Recovered new [2026-10-27] AGENTS.md and TEST_PLAN §0 at isolated source1b0d4bcc (merged governance PR31). New staged pushes require only exact Git assembly and original Windows Go production/test compile; costly native full run exclusively last source-containing implementation commit [wiring-full] or dispatch. Prior native source91cfe0 Action40430514115 FAIL due stale assembly blob, sourcee950 Action40432270310 FAIL separately preserved. New preflight source1b0d4b Action40435046850 correctly FAILED client TEST compile on stale p.blockID in m0_native_v4_rx_window_windows_test.go; production removed private Go blockID in favor of shared Linux FixedStream. Fixed test assertion and atomically updated assembly manifest at source f9ee051a. Exact same-source Actions40435568150 preflight SUCCESS (assembly, original Windows Go CLI/product and test caller compile). Native full was correctly SKIPPED, not a mode PASS. Historical source31022b Action40429781308 only Normal/off full native positive, Fixed/Auto/Game2/4 still unqualified.",
+  "done_when": "Original Go credential TLS and exact configured Fixed/Auto/Game2/4 public mode reach the same Linux shared Rust FEC2/M2+Game owner over genuine Windows per-lane Npcap/Wintun, bidirectional UDP/TCP fresh delivery, protected FEC revision, OS/WAL GUI readback, owned Stop. Per-mode unverified stays EXPOSED_NOT_WIRED/NOT_RUN/FAIL. Functional positive exact-source native Action opens opt-in test; physical/WL-N0 performance separately.",
+  "next_action": "Implement one complete current-data-mode capability batch on top of preflight-green source f9ee051a: use Linux FixedStream M1/M2/M3+FEC2 Auto immutable first-send/parity/policy revisions and authentic receipts; finish real Windows Game2/4 per-lane original TLS/Npcap native TX/RX including staged parity and kernel-copy finish, Wintun delivery, config/CLI GUI/Stop. Synchronize feature catalog, tests and exact-source assembly in same batch. Push ordinary edits for cheap preflight, rectify first error; only after target effective mode end-to-end path is wired, mark the FINAL code commit [wiring-full], or dispatch, not both. Verify actual bidirectional UDP/TCP and owned Stop; do not reuse Normal green as Fixed/Auto/Game PASS or run WL-N0 performance yet.",
   "unverified": true,
-  "last_tested_source": "3fabfaf493a1fbed00d354bfe736b7fdc6433fec",
+  "last_tested_source": "f9ee051a39a93fd945564067c9980139387ed008",
   "evidence_refs": [
     "docs/devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md",
     "docs/evidence/M0/PLAN024-S880-WL-N0-exact-original-failure-20261026.json",
@@ -22,15 +22,15 @@
     "docs/features/entries/fec-fixed.json"
   ],
   "context_refs": [
+    "docs/architecture/TEST_PLAN.md",
+    "docs/features/README.md",
     "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md",
     "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
     "docs/handoff/CURRENT_INTEGRATION.md",
     "docs/testing/NETWORK_TRIAGE.md",
     "docs/architecture/modules/01-CONTROL-BRIDGE.md",
-    "docs/devlog/M0/PLAN024-S880-WL-N0-original-windows-rust-seq-mismatch-20261026.md",
-    "docs/evidence/M0/PLAN024-S872-WL-N0-first-public-kernel-tc-20261026.json",
-    "docs/devlog/M0/PLAN024-S874-WL-N0-source-locked-capacity-bottleneck-intent-20261026.md"
+    "docs/devlog/M0/PLAN024-S880-WL-N0-original-windows-rust-seq-mismatch-20261026.md"
   ],
   "open_requests": [],
-  "partial_summary": "H279 full Windows product task, not Fixed6. New source0185eaa CI40410520859 queued. Completed 3fabfaf native Windows Rust owner regression FAIL (parallel global M2 actor test collision; 14/15), Linux build PASS and real two-OS NOT_RUN; historical source01d8 public FAIL unknown log, source4fb real Normal scoped PASS, main f11b +103B high-load FAIL, Fixed/Auto/Game/global GUI OS and perf unqualified. Main formal registry/decision/H277 up-to-date, Governance 40410283152 PASS. No authorization/epoch/workflow bypass, PR Draft."
+  "partial_summary": "H280 recovered current integration HEAD f9ee051a. New AGENTS/TEST_PLAN §0 read and obeyed; source1b0d early Windows test preflight red p.blockID was stale since Rust FixedStream migration; f9ee fixed test + same-source assembly manifest, Actions40435568150 SUCCESS for YAML/manifest plus Go production+test compilation only. Full native job SKIPPED on purpose. Earlier source31022b full native Actions40429781308 Normal/off scoped SUCCESS; no Fixed/Auto/Game native product PASS or global GUI/OS/perf claim. Continue one complete multi-mode data-plane wiring batch with Linux design, cheap preflight then precisely one new full candidate after public mode actually wired; PR28 Draft, main registry/epoch/rev unchanged."
 }
