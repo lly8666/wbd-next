@@ -86,6 +86,15 @@ fn original(a:&mut Arena,pn_expected:u64)->FrozenRecord{
     let mut tx=LaneTxCrypto::new(data_keys(),536).unwrap();
     let mut b=a.allocate().unwrap();
     b.writable()[14..14+business.len()].copy_from_slice(business);
+    // This fixture may construct a *new, distinct* authenticated PN after
+    // a terminal one-opportunity repair. Burn prior non-published PN in
+    // the test crypto owner; never re-use a previously sealed nonce.
+    for _ in 0..pn_expected {
+        let mut unpublished=[0u8;64];
+        unpublished[14..14+business.len()].copy_from_slice(business);
+        tx.seal_in_place(AUTHENTICATED_LINK_KIND,&mut unpublished,
+            business.len(),0).unwrap();
+    }
     let (pn,n)=tx.seal_in_place(AUTHENTICATED_LINK_KIND,b.writable(),business.len(),0).unwrap();
     assert_eq!(pn,pn_expected);
     b.freeze(0..n,FrozenMetadata{
@@ -222,10 +231,12 @@ fn r2_m0_bad_lane_epoch_or_key_never_authorizes_receipt() {
 
 #[test]
 fn r2_m0_repair_result_maps_ready_driver_without_new_cipher_or_false_ack(){
-    let mut arena=Arena::new(88,1,256,1,60_000).unwrap();
+    let mut arena=Arena::new(88,2,256,1,60_000).unwrap();
     let frozen=original(&mut arena,0);
-    let sealed=frozen.bytes().to_vec();
+    let second_frozen=original(&mut arena,1); // distinct true PN
+    let sealed=second_frozen.bytes().to_vec();
     let wire=outer_wire_bytes(&frozen);
+    let wire2=outer_wire_bytes(&second_frozen);
     let mut budget=budget();
     // Only the M4-confirmed FIRST send earns F credit; neither receipt nor
     // control and neither Uncertain repair creates fresh bytes.
@@ -239,27 +250,36 @@ fn r2_m0_repair_result_maps_ready_driver_without_new_cipher_or_false_ack(){
     let mut wouldblock=Sink{mode:1,..Sink::default()};
     assert!(matches!(submit_test(&mut shadow,&mut budget,&first,&mut wouldblock,MonoNs(100)),
         Ok(RepairSendResult::NotSent)));
-    assert_eq!(shadow.outstanding(),1);
+    // v3 is one opportunity: proven NotSent returns the optional frozen
+    // shadow immediately, but does NOT invent a peer receipt or F credit.
+    assert_eq!(shadow.outstanding(),0);
+    assert!(!shadow.preflight(&first,MonoNs(101)));
     assert_eq!(budget.snapshot().charged_repair_bytes,0); // definite EAGAIN refund
     assert_eq!(budget.snapshot().pending_count,0);
-    let noimmediate=shadow.on_timer(MonoNs(101));
-    assert!(noimmediate.candidates.is_empty());
-    let second=shadow.on_timer(MonoNs(200)).candidates.remove(0);
+    assert!(shadow.on_timer(MonoNs(101)).candidates.is_empty());
+    // A *new* original M1 PN can still enter the recovery budget after
+    // the old candidate retired; it is not a second retry of PN0.
+    shadow.on_sent(second_frozen.clone(),MonoNs(101),MonoNs(1101)).unwrap();
+    budget.on_fresh_accepted(wire2,MonoNs(101)).unwrap();
+    let second=shadow.on_timer(MonoNs(300)).candidates.remove(0);
     let mut short=Sink{mode:2,..Sink::default()};
-    assert!(matches!(submit_test(&mut shadow,&mut budget,&second,&mut short,MonoNs(200)),
+    assert!(matches!(submit_test(&mut shadow,&mut budget,&second,&mut short,MonoNs(300)),
         Ok(RepairSendResult::Uncertain)));
-    assert!(matches!(submit_test(&mut shadow,&mut budget,&second,&mut short,MonoNs(200)),
+    assert!(matches!(submit_test(&mut shadow,&mut budget,&second,&mut short,MonoNs(300)),
         Err(ReceiptIngressError::StaleCandidate)));
-    assert_eq!(frozen.bytes(),sealed);
-    assert_eq!(budget.snapshot().charged_repair_bytes,wire);
+    assert_eq!(second_frozen.bytes(),sealed);
+    assert_eq!(budget.snapshot().charged_repair_bytes,wire2);
     assert_eq!(budget.snapshot().pending_count,0);
-    assert_eq!(budget.snapshot().fresh_confirmed_bytes,wire);
+    assert_eq!(budget.snapshot().fresh_confirmed_bytes,wire+wire2);
     assert_eq!(short.datagrams.len(),1);
-    assert_valid_packet(&short.datagrams[0],&frozen,40);
+    assert_valid_packet(&short.datagrams[0],&second_frozen,40);
     assert_eq!(&short.datagrams[0][40..],sealed.as_slice());
-    assert_eq!(shadow.outstanding(),1); // unknown syscall outcome is NOT receipt
-    drop(first);drop(second);drop(shadow);drop(frozen);
-    assert_eq!(arena.drain_returns(),1);
+    // An uncertain kernel syscall is NOT a receipt: all charged bytes
+    // remain charged, while optional one-chance ciphertext retention ends.
+    assert_eq!(shadow.outstanding(),0);
+    assert!(!shadow.preflight(&second,MonoNs(301)));
+    drop(first);drop(second);drop(shadow);drop(frozen);drop(second_frozen);
+    assert_eq!(arena.drain_returns(),2);
 }
 
 
@@ -382,7 +402,8 @@ fn r2_m0_budget_real_frozen_m4_accepted_charges_exact_outer_wire_without_ack(){
     assert_eq!(budget.snapshot().charged_repair_bytes,wire);
     assert_eq!(budget.snapshot().fresh_confirmed_bytes,0); // repair does NOT earn F
     assert_eq!(budget.snapshot().pending_count,0);
-    assert_eq!(shadow.outstanding(),1); // M4 copied != authenticated peer ACK
+    assert_eq!(shadow.outstanding(),0); // one optional repair completed; not peer ACK
+    assert!(!shadow.preflight(&candidate,MonoNs(101)));
     assert!(matches!(submit_test(
         &mut shadow,&mut budget,&candidate,&mut sink,MonoNs(100)),
         Err(ReceiptIngressError::StaleCandidate)));
@@ -445,7 +466,8 @@ fn r2_m0_m4_actual_ipv4_tcp_options_wire_bytes_budget_and_checksum(){
     assert_valid_packet(&sink.datagrams[0],&frozen,56);
     assert_eq!(budget.snapshot().charged_repair_bytes,measure.required as u64);
     assert_eq!(budget.snapshot().fresh_confirmed_bytes,0);
-    assert_eq!(shadow.outstanding(),1);
+    assert_eq!(shadow.outstanding(),0);
+    assert!(!shadow.preflight(&candidate,MonoNs(101))); // no duplicate repair
     drop(candidate);drop(shadow);drop(frozen);
     assert_eq!(arena.drain_returns(),1);
 }
@@ -561,7 +583,9 @@ fn r2_m0_global_sparse_exact_outer_bytes_multi_tunnel_direction_and_notsent(){
  assert_eq!(&uncertain.datagrams[0][40..],second_bytes);
  assert_eq!(first.bytes(),first_bytes);
  assert_eq!(second.bytes(),second_bytes);
- assert_eq!(s2.outstanding(),1); // syscall copy/short != peer receipt
+ assert_eq!(s1.outstanding(),0); // definitely NotSent retired PN0 opportunity
+ assert_eq!(s2.outstanding(),0); // Uncertain charged, one chance finished
+ assert!(!s2.preflight(&c2,MonoNs(104))); // cannot double-charge/reseal
  // Confirmed F on the process owner is never blocked by repair caps:
  global.on_fresh_accepted(dir1,first_wire,MonoNs(104)).unwrap();
  assert_eq!(global.local_snapshot(dir1).unwrap().fresh_confirmed_bytes,first_wire);

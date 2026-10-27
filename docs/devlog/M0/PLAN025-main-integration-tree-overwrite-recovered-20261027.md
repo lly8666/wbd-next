@@ -114,6 +114,12 @@ No claims for actual Windows product or high-rate CPU/performance: this is isola
 ## S12 (A1 original M1/M2 hot-path clock coherence; historical TX fail remains)
 Before patch: re-read exact active Rust v3_seal_entry, v5_open_record_entry, Windows FEC seal_symbol_entry, m2_next_feedback_entry and true original-Go NPF completion with S7 last64 metadata. Fresh Normal/Fixed source paths called M1 at MonoNs(0) even after original M2 due control sealed with m2_clock(). Change TX seal and its drain to use one m2_clock() snapshot, and Normal RX offer/drain similarly, without modifying replay, PN, carrier sequence, ACK, private device/generation guard or stop. Add a deterministic original source→authenticated M2 feedback→source test that ensures contiguous Rust TX sequence and non-reversed logical time.
 This is a root-cause hypothesis for observed Normal seal rejection, NOT PROOF that natural Auto 428B gap is fixed. No product Actions dispatched before complete freeze.
-```feature-impact
+```json
 {"kind":"updated","ids":["normal-off","fec-fixed"],"reason":"Source-locked experimental Windows original M1 time continuity across DATA/parity/control TX and RX, with explicit interleaving unit test; still no native product PASS."}
+```
+
+## S13 — source-locked R2 receipt regressions brought to current v3 one-opportunity contract
+Recovered exact original Action40483279229 source6d35857 receipt job122119010582: 7 PASS, 4 FAIL. Every failing assertion expected shadow.outstanding() 1 but actual 0 after a terminal repair. Re-read current wbd-recovery/receipt.rs on_send_result: Accepted, Uncertain and NotSent each remove the single optional shadow after real driver disposition; repeat must be stale. Updated only those four historical tests with new equal-strength assertions: no second PN0 repair, immutable exact ciphertext, real accepted F credit, definite NotSent refund, Uncertain still charged, no duplicate socket send, correct independent authentic new PN1 after old NotSent, distinct tunnels and clean Arena reclamation. No shared production repair policy changed or historical FAIL erased. Execution remains NOT_RUN until whole candidate SOURCE freeze.
+```feature-impact
+{"kind":"none","ids":[],"reason":"Historical native receipt assertion fixtures updated to shared v3 terminal one-opportunity accounting; no product code or public feature change."}
 ```
