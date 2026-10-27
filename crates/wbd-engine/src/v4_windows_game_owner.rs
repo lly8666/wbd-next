@@ -661,6 +661,39 @@ mod tests{
             assert_eq!(finish_fec_group(&mut receiver,next.lane,true),OK);
             assert_eq!(finish_fec_group(&mut receiver,next.lane,true),BAD_STAGE);
             drop(receiver);
+            // Advance only the PRIVATE unit clock past Linux's real
+            // closed-block FEC deadline. No kernel-copy or public Applied
+            // credit is minted from a staged parity ciphertext.
+            let parity={
+                let mut game=client_group.lock().unwrap();
+                game.started=std::time::Instant::now()
+                    -std::time::Duration::from_millis(12);
+                game_fec_poll_group(&mut game,c,16)
+                    .expect("same Linux fixed Game2/4 FEC parity due")
+            };
+            assert!(!parity.is_empty(),
+                "actual shared Linux GameFecTx must close sparse blocks");
+            {
+                let mut game=client_group.lock().unwrap();
+                let old=game.adapter.game_fec_counters().unwrap().0
+                    .parity_kernel_copied;
+                let first=&parity[0];
+                assert_eq!(game_m4_result_group(&mut game,c,
+                    first.lane,first.logical_id,first.pn,false),OK);
+                assert_eq!(game.adapter.game_fec_counters().unwrap().0
+                    .parity_kernel_copied,old,
+                    "NPF rejected ciphertext cannot count parity copied");
+                assert_eq!(game_m4_result_group(&mut game,c,
+                    first.lane,first.logical_id,first.pn,true),BAD_STAGE);
+                for ticket in parity.iter().skip(1){
+                    assert_eq!(game_m4_result_group(&mut game,c,
+                        ticket.lane,ticket.logical_id,ticket.pn,true),OK);
+                }
+                assert!(game.adapter.game_fec_counters().unwrap().0
+                    .parity_kernel_copied>old,
+                    "only real-positive NPF callback credits parity");
+                assert!(game.staged.is_empty());
+            }
             // Distinct per-lane encrypted source, one shared Linux FEC
             // owner. Receiving FEC recovered frame(s) still requires a
             // batched TUN-success commit ABI and physical kernel workers.
