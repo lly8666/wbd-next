@@ -147,3 +147,10 @@ Retire the existing workflow's **automatic second full WSL2/Npcap Fixed6-only pu
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Native functional fixture's Windows scheduled real UDP business source pacing only, after exact first-error readback; no new product profile, policy, default, algorithm or GUI change. Natural Auto mode still unqualified until new native revision Applied."}
 ```
+
+## 2026-10-27 feature evidence: real native natural Auto sample insufficiency, not an algorithm regression
+- Existing `fec-auto` feature now records exact source67ed/run40465641281 **FAIL** for automatic 2s/8s native downshift; artifact ID12716414874, real Windows fast first-sent M2 128..268 <512 and no natural revision increment, notwithstanding real UDP/TCP success. The fix sourcea3bb/run40466952896 is in flight and is not granted PASS in advance.
+
+```feature-impact
+{"kind":"update","ids":["fec-auto"],"reason":"Add original-Git-source-locked real native automatic grade failure and exact M2 2s/8s sample observations to existing FEC Auto verification. No public qualification or default changes."}
+```

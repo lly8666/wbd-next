@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "native_original_windows_auto_natural_2s8s_first_source_below_mature_threshold",
+  "source_sha": "67ed412e9075ad95f863d4e042f119d81dce407a",
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "run_id": 40465641281,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40465641281",
+  "run_conclusion": "failure",
+  "artifact": {
+    "id": 12716414874,
+    "digest": "sha256:792197b15b758e0b28f6cb978526d577106ac76efa85805e5bfbdfd29c30528d"
+  },
+  "completed": {
+    "shared_source_assembly": "PASS",
+    "windows_go_product_compile": "PASS",
+    "linux_original_go_rust_build": "PASS",
+    "windows_original_rust_native": "PASS",
+    "original_go_tls_native_kernel_udp_tcp_initial": "PASS",
+    "real_53s_auto_natural_windows_udp": {
+      "sent": 3393,
+      "received": 16480,
+      "kernel_bind": "PASS"
+    },
+    "real_53s_auto_natural_linux_udp": {
+      "sent": 16508,
+      "received": 3387,
+      "kernel_bind": "PASS"
+    }
+  },
+  "failing_assertion": {
+    "target": "Linux shared FecV2Step automatic downshift to weaker profile with native original M2 revision>=2 Applied",
+    "observed_revision": 1,
+    "observed_profile": 5,
+    "fast_window_first_sent_min": 128,
+    "fast_window_first_sent_max": 268,
+    "fast_missing": 0,
+    "linux_pure_policy_min_valid_fast_first_sent": 512,
+    "reason": "REAL_FIRST_SEND_SAMPLE_BELOW_MATURE_WINDOW; Python Windows one send per 1.5ms nominal wake only ~64 sends/s, not a FEC algorithm failure",
+    "outcome": "FAIL"
+  },
+  "candidate_fix": {
+    "source_sha": "a3bbf2fad17d9d38a8f19c117988cf242a47f40f",
+    "run_id": 40466952896,
+    "scope": "test fixture monotonic paced genuine per-packet kernel UDP sends, independent actual M2 requirements unchanged",
+    "status": "IN_PROGRESS"
+  },
+  "unverified": [
+    "natural Auto positive",
+    "full default-route/WFP/DNS/WinForms lifecycle",
+    "rotation/idle/blackhole",
+    "WL-N0/N1/N5",
+    "physical/global/other profiles"
+  ]
+}
