@@ -17,3 +17,8 @@ No local execution tests. Push Actions on the repaired SOURCE are required; any 
 ```feature-impact
 {"kind":"updated","ids":["fec-auto","fec-fixed","game-fixed-fec","game-lanes"],"reason":"Recovered the true main availability of code following the user's complete dev-tree overwrite; all four entries remain experimental. Rust non-FEC cfg compile and native test-count harness repairs do not change selectors/defaults or prove new product qualification."}
 ```
+
+## Recovered Actions from repaired source `6d358570793fb31490279925c3054cf50552f8ae`
+- Main Governance `40483279152/1` **SUCCESS** (not product PASS); FEC2 native ISAL exact 15-test `40483279168/1` **SUCCESS**; r0 cross ABI `40483279285/1` and native ABI `40483279423/1` **SUCCESS** scoped.
+- Governance maintenance `40483279301/1` **FAIL** in historical `test_m4_frozen_windows_main_import.py`: frozen M4 34-file test compared three post-PLAN020 M0-owned modified live files to old M4 blobs. Frozen original `assembly/manifest.json` is still pinned; active `manifest-plan020-m0.json` correctly pins the three current exact blobs. This follow-on changes only the test comparison to assert **both** frozen historical manifest and active M0 manifest, and retains byte equality on every unchanged M4 path. No original-Go source was reverted, no skip added.
+- `40483279381` G2 bootstrap FAIL `G2 registry revision changed` (needs its own source-aware contract review); native functional receipt `40483279229` FAILED four genuine r2 budget/repair cases while other named subsets passed; PLAN012 PREENABLE `40483279286` FAIL, not product PASS. Windows preflight `40483279255` still in progress at this recovery observation. These independent failures remain open; do not suppress or infer success from Governance green.

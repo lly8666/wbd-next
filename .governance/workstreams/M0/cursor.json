@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 288,
-  "checkpoint_sha": "f6469a3468839efcba1242ccdeaa7ea86d6d67c2",
+  "sequence": 289,
+  "checkpoint_sha": "6d358570793fb31490279925c3054cf50552f8ae",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "User-authorized full integration/w168-freeze-windows-adapter-20261026 branch tree overwrite to main completed as exact tree 553d50ad via f6469a (parent 7a1932, source dev 9d2362d). This batch only repairs governance/fixture and Rust non-FEC cfg compilation. Formal product remains partial.",
-  "why_now": "H287 handoff was superseded only by explicit new user merge request. Recovered H286 stale natural Auto pending: SOURCE9d2362d Action40476182202/1 terminal FAIL; original TLS and two-OS kernel UDP/TCP positive partial, but client original M2 control TX seq expected2744012027 got2744012455, early owner exit, Stop full target NOT_RUN. f6469a Governance40482476244 FAIL for mixed-SOURCE evidence cursor and feature-impact missing; G2 bootstrap40482476243 FAIL Rust E0425 at v4_game_lane.rs:507; exact old FEC native run40479993126 executed 15/15 tests but workflow expected13. Full host global/WinForms/physical/performance not qualified.",
+  "current_task": "User requested entire integration branch tree overwrite main, completed at f6469a. Restored authoritative M0 task, exact failing Auto9d evidence, source lock, feature availability; subsequent source6d35857 CI showed governance PASS and native ISAL PASS but historic M4 frozen-vs-live provenance test FAIL; adjusting only historical test to require both manifests. Product remains partial.",
+  "why_now": "Governance and native FEC run receipts from exact 6d35857 recovered in devlog. Scope governance PASS 40483279152 and FEC2 native15/15 PASS 40483279168. Old M4 snapshot maintenance FAIL 40483279301 occurs on three M0-owned changed live source files; historic manifest unchanged, current PLAN020 manifest already pins actual blobs. This H289 repairs only test provenance. G2 bootstrap registry rev mismatch and R2 receipt four-case actual failures remain OPEN.",
   "done_when": "Whole original-Go TLS→shared Rust M1/M2/M3 FEC2 Fixed/Auto & 2/4 real Game lanes→original Windows Npcap/Wintun/WFP/route/DNS/WAL/GUI↔Linux raw/TUN and both-owned Stop across true applicable config/lifecycle. 4977f source seven initial functional mode core PASS; remaining dynamic Auto/GUI/global/lifecycle and weak-network use their own exact evidence. No fake Applied or independent Windows FEC owner.",
-  "next_action": "Verify this exact governance/compilation repair SOURCE via triggered Actions. Native Windows natural Auto failure remains OPEN: do not turn previous seven-mode or operator-change source PASSES into current SOURCE PASS; only a separately authorized exact native product test may qualify it. Host-global GUI/WFP and WL-N0/N1/N5 remain NOT_RUN.",
+  "next_action": "Check exact this follow-on SOURCE maintenance/Governance Actions. Other product tests G2/R2/Windows are independent OPEN/NOT_RUN/FAIL, no fake upgrade. Natural Auto source9d original M2 seq mismatch remains unfixed and requires focused product patch only if resuming capability development.",
   "unverified": true,
   "last_tested_source": "9d2362d30bead0e2a36dd19233a798ec1fb2b3ae",
   "evidence_refs": [
@@ -26,5 +26,5 @@
     "docs/devlog/M0/PLAN025-main-integration-tree-overwrite-recovered-20261027.md"
   ],
   "open_requests": [],
-  "partial_summary": "Main f6469a exactly replicated dev tree preserving all ancestor history; user-authorized governance-only and narrowly observed compile/CI fixes thereafter. Genuine historical 4977f seven-mode Action40449519463 SUCCESS and a0c8eeb operator Auto Action40457048399 SUCCESS remain scoped old-source. Natural Auto9d Action40476182202 FAIL original M2 control seq mismatch after kernel traffic; current main SOURCE native product NOT_RUN. f646 governance/G2 FAIL retained. No product promotion."
+  "partial_summary": "Authorized full dev tree to main exact at f6469a, then admin/compile repair 6d35857. Four experimental cards available_on main, no formal promotion. Main governance Action40483279152 SUCCESS, native FEC2 ISAL15 test Action40483279168 SUCCESS; historical M4 freeze test failed at altered PLAN020 live paths, addressed by exact dual-manifest SHA assertions in this follow-on. G2 40483279381 and native R2 40483279229 FAILED; Windows target pending when logged. Auto natural source9d remains FAIL, other platform/global/perf gates NOT_RUN."
 }

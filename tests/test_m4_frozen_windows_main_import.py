@@ -44,6 +44,12 @@ PINNED_FILES = {
     "r0/go_overlay/scripts/fec2_windows_gui_smoke.ps1": "c2617fedd954c75c7d4809fad42dba265611f599"
 }
 
+M0_AUTHORIZED_CURRENT = {
+    "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go": "948ff4c1456af24aa9ea845c1b6d866b9dd25bb8",
+    "r0/go_overlay/internal/realityfront/fec_v2_policy.go": "76a707bf71abbcbed58c37c8cf7b2965e069da30",
+    "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go": "b9ef571fdbe523ca18ff807b7eb73d19c48f8967",
+}
+
 def object_sha(data):
     header = b"blob " + str(len(data)).encode("ascii") + bytes([0])
     return hashlib.sha1(header + data).hexdigest()
@@ -55,7 +61,10 @@ class M4FrozenOverlay(unittest.TestCase):
             with self.subTest(path=relative):
                 path = ROOT / relative
                 self.assertTrue(path.is_file())
-                self.assertEqual(object_sha(path.read_bytes()), expected)
+                # M4 frozen sha remains immutable in PINNED_FILES. M0 later
+                # explicitly superseded the live path after PLAN020 ownership transfer.
+                self.assertEqual(object_sha(path.read_bytes()),
+                                 M0_AUTHORIZED_CURRENT.get(relative, expected))
 
     def test_original_go_manifest_and_guard_remain_exact(self):
         obj = json.loads((ROOT / "r0/go_overlay/assembly/manifest.json").read_text())
@@ -63,14 +72,28 @@ class M4FrozenOverlay(unittest.TestCase):
         self.assertEqual(len(obj["operations"]), 37)
         creates = [x for x in obj["operations"] if x["kind"] == "create"]
         self.assertEqual(len(creates), 17)
+        live = json.loads((ROOT / "r0/go_overlay/assembly/manifest-plan020-m0.json").read_text())
+        self.assertEqual(live["legacy_source"], ORIGINAL_GO)
+        live_creates = {x["overlay_path"]: x for x in live["operations"]
+                        if x["kind"] == "create"}
+        self.assertEqual(set(M0_AUTHORIZED_CURRENT) & set(PINNED_FILES),
+                         {"r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go"})
         for row in creates:
             with self.subTest(path=row["overlay_path"]):
-                self.assertEqual(object_sha((ROOT / row["overlay_path"]).read_bytes()),
-                                 row["result_blob"])
+                path = row["overlay_path"]
+                # The original M4 result_blob remains exact in the unchanged
+                # manifest; PLAN020 assembly uses a separately pinned M0
+                # overlay blob only for these three superseded live files.
+                if path in M0_AUTHORIZED_CURRENT:
+                    self.assertIn(path, live_creates)
+                    self.assertEqual(live_creates[path]["result_blob"],
+                                     M0_AUTHORIZED_CURRENT[path])
+                expected = M0_AUTHORIZED_CURRENT.get(path, row["result_blob"])
+                self.assertEqual(object_sha((ROOT / path).read_bytes()), expected)
         native = (ROOT / "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go").read_text()
         self.assertIn("func N4NativeNetworkReady(", native)
         self.assertIn("production native WFP Apply and authenticated Stop have not been qualified", native)
-        print("M0_PLAN014_MAIN_IMPORT_34_M4_GIT_BLOBS_PASS_NETWORK_NOT_RUN")
+        print("M0_PLAN014_34_HISTORIC_M4_SHA_PINS_AND_3_EXACT_M0_CURRENT_OVERRIDES_PASS_NETWORK_NOT_RUN")
 
 if __name__ == "__main__":
     unittest.main()
