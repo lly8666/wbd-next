@@ -201,7 +201,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
             DisableOuterRepair:c.disableOuterRepair,
             Game4CopyStagger:c.game4CopyStagger,
             Game4CopyWideStagger:c.game4CopyWideStagger,
-            Epochs:store,
+            Epochs:store,PeerPersona:c.peerPersona,
         })
     if err!=nil{return err}
     raws:=make([]*faketcp.RawIPv4Endpoint,0,n)

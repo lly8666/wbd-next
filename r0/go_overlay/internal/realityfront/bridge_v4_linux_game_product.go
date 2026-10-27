@@ -28,6 +28,7 @@ type V4LinuxGameProductConfig struct {
     DisableOuterRepair bool // Game M4 first copy only, no Normal M2 DATA repair
     Game4CopyStagger bool // pre-start 4-lane delayed physical copies
     Game4CopyWideStagger bool // longer opt-in T0+50ms/+140ms tail
+    PeerPersona V4PublicNativePeerPersona // original-Go server only
 }
 type V4LinuxGameProduct struct{
     mu sync.Mutex
@@ -87,6 +88,9 @@ func (p *V4LinuxGameProduct) commitGroupedOwnerLocked()error{
         if err=p.native.configureGame4CopyStagger(mode);err!=nil{return err}
     }
     if err=p.native.configureOuterRepair(!p.cfg.DisableOuterRepair);err!=nil{return err}
+    if p.server{
+        if err=p.native.configurePeerPersona(p.cfg.PeerPersona);err!=nil{return err}
+    }
     if err=p.native.startNativeM4(
         p.cfg.NetworkInterface,p.cfg.NetworkIfIndex,p.cfg.Tun,p.cfg.TunName,
     );err!=nil{return err}

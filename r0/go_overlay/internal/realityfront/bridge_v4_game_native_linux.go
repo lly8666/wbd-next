@@ -9,6 +9,7 @@ extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_fec_network_game_group_fixed_configure(uint64_t,uint32_t);
 extern int32_t wbd_fec_network_game_group_outer_policy_set(uint64_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_game_group_peer_persona_set(uint64_t,uint32_t);
 extern int32_t wbd_fec_network_game4_copy_schedule_set(uint64_t,uint32_t);
 extern int32_t wbd_fec_network_game4_copy_schedule_read(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_fec_network_game_group_outer_policy_read(uint64_t,uint64_t *,size_t);
@@ -144,6 +145,23 @@ func (g *v4NativeGameJoined) originalGameOuterPolicy()(V4GameOuterPolicy,error){
     return V4GameOuterPolicy{RepairEnabled:data[0]!=0,
         DataRetransmitted:uint64(data[1]),BlockedDuplicate:uint64(data[2]),
         FirstLaneCopied:uint64(data[3])},nil
+}
+// The already validated Linux original-Go peer persona is shared by
+// all authenticated Game lanes; no new Game packet encoder is added.
+func (g *v4NativeGameJoined) configurePeerPersona(persona V4PublicNativePeerPersona)error{
+    if g==nil||g.handle==0||g.stopped||g.verified==nil{
+        return ErrAdmissionUnsupported
+    }
+    var kind C.uint32_t
+    switch persona{
+    case V4PeerLegacy:kind=0
+    case V4PeerWindows11:kind=1
+    default:return ErrAdmissionParams
+    }
+    rc:=C.wbd_m0_embedded_go_game_group_peer_persona_set(
+        C.uint64_t(g.handle),kind)
+    if rc!=0{return fmt.Errorf("%w: Game native original-Go peer persona=%d",errV4Embedded,int(rc))}
+    return nil
 }
 // Real original-Go M4 raw/TUN worker install. The actual Go owner
 // supplies its nonzero current ifindex and a real /dev/net/tun FD; Rust

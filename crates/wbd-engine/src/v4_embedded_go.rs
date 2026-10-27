@@ -608,6 +608,11 @@ struct GameGroupNative{
     handles:Vec<u64>,stopped:bool,stopping:bool,
     // M4 Game never registers Normal's outer M2 shadow/repair timer.
     outer_repair_enabled:bool,
+    // The SAME original-Go server-selected peer persona as Normal, for
+    // authentic Windows11 kernel TCP envelopes across 2/4 Game lanes.
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")))]
+    peer_persona:PacketPersona,
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     server:bool,
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -2490,6 +2495,9 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
     r.game_groups.insert(group_handle,GameGroupNative{
         adapter:Arc::new(Mutex::new(adapter)),handles:ids,
         stopped:false,stopping:false,outer_repair_enabled:true,
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+            any(target_env="gnu",target_env="musl")))]
+        peer_persona:PacketPersona::Legacy,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         server,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -2640,6 +2648,25 @@ pub unsafe extern "C" fn wbd_fec_network_game4_copy_schedule_read(
 // Explicitly configure the original TLS committed Game group before M4.
 // Off cannot create Normal M2 DATA repair shadows; the M4 send path
 // independently blocks a repeated Game logical ID on the same lane.
+// A verified Linux server's original Go --peer-persona applies to all
+// 2/4 Game lanes BEFORE the native Rust M4 starts. It is not client
+// authentication, does not modify crypto/FEC, and defaults to Legacy.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_game_group_peer_persona_set(
+    group:u64,kind:u32,
+)->i32{
+    if kind>1{return INVALID}
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+    if !e.server||e.stopped||e.stopping||e.drivers.is_some(){return BAD_STAGE}
+    e.peer_persona=if kind==1{
+        PacketPersona::Windows11
+    }else{PacketPersona::Legacy};
+    OK
+}
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),
     any(target_env="gnu",target_env="musl")))]
@@ -2732,7 +2759,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
     let owner=crate::v4_game_public_kernel::GameKernelOwner::start(
         Arc::clone(&e.adapter),e.flows.clone(),e.tx_seqs.clone(),e.server,
         ifname,ifindex,dup,tunname,(group>>32) as u32,
-        e.outer_repair_enabled
+        e.outer_repair_enabled,e.peer_persona
     );
     let Ok(owner)=owner else{return BAD_STAGE};
     e.drivers=Some(owner);

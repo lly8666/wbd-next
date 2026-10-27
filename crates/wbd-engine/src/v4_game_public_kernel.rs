@@ -80,6 +80,7 @@ impl GameKernelOwner{
         adapter:Arc<Mutex<GameAdapter>>,flows:Vec<GoFlow>,seqs:Vec<u64>,
         server:bool,ifname:&str,ifindex:u32,fd:OwnedFd,tun_name:&str,
         generation:u32,outer_repair_enabled:bool,
+        peer_persona:PacketPersona,
     )->Result<Self,()>{
         let n=flows.len();
         if !matches!(n,2|4)||seqs.len()!=n||generation==0||
@@ -246,7 +247,7 @@ impl GameKernelOwner{
                             };
                             let presentation=Presentation{
                                 ack32:1,advertised_window:4096,ip_id:(pn as u16).wrapping_add(75),
-                                persona:PacketPersona::Legacy
+                                persona:peer_persona
                             };
                             let ok=item.raw.send_one(generation,&frozen,tuple,presentation)
                                 .is_ok();
@@ -356,7 +357,7 @@ impl GameKernelOwner{
                 let mut sampled_sequence=0u64;
                 while !rx_stop.load(Ordering::Acquire){
                     let (len,_)=match raw.recv_one_into(
-                        generation,&mut wire,tuple,PacketPersona::Legacy
+                        generation,&mut wire,tuple,peer_persona
                     ){
                         Ok(data)=>data,
                         Err(wbd_platform::linux_raw_carrier::RawTxError::Kernel(110))=>{
