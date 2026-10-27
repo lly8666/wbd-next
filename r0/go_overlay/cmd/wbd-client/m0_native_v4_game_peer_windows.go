@@ -122,7 +122,9 @@ func(p *m0NativeV4GamePeer) transmit(ctx context.Context)(bool,error){
  if n<20||n>p.maxIPv4{return false,windowsclient.ErrN4NativeGuard}
  records,err:=p.group.StageGameRecords(ctx,p.scratch[:n])
  if err!=nil{return false,err}
- if len(records)!=len(p.lanes){return false,windowsclient.ErrN4NativeGuard}
+ if len(records)>len(p.lanes){return false,windowsclient.ErrN4NativeGuard}
+ // Zero/partial immediate records are legitimate scheduled Game4
+ // replicas; the same Rust owner emits remaining due copies on poll.
  for _,rec:=range records{
   if err=p.send(ctx,rec);err!=nil{return false,err}
  }
@@ -193,15 +195,14 @@ func(p *m0NativeV4GamePeer) pulse(ctx context.Context)(int,error){
   if sent{done++;continue}
   break
  }
- if p.fec{
-  // Rust FEC2 owner alone decides when sparse or closed-block parity
-  // is due; no Windows Go-side deadline, profile or extra ciphertext.
-  parity,err:=p.group.DueGameFecParity(ctx,16)
-  if err!=nil{return done,err}
-  for _,rec:=range parity{
-   if err=p.send(ctx,rec);err!=nil{return done,err}
-   done++
-  }
+ // Rust Game4 may delay its remaining copies even in off mode.
+ // The one existing due ABI also polls shared GameFecTx parity, with
+ // original M4 kernel I/O completion for every per-lane staged ticket.
+ due,err:=p.group.DueGameFecParity(ctx,16)
+ if err!=nil{return done,err}
+ for _,rec:=range due{
+  if err=p.send(ctx,rec);err!=nil{return done,err}
+  done++
  }
  return done,nil
 }

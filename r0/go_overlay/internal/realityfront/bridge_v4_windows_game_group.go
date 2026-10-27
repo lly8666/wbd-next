@@ -146,6 +146,7 @@ func(g *V4WindowsAuthenticatedGameGroup) BindAndJoinOriginalWintun(
   {"wbd_m0_win_owner_v4_game_stop",&g.stopProc},
   {"wbd_m0_win_owner_v4_game_effective_mtu",&g.effectiveMtuProc},
   {"wbd_m0_win_owner_v4_game_m4_send_result",&g.fecM4SendProc},
+  {"wbd_m0_win_owner_v4_game_fec_parity_due",&g.fecParityProc},
  }{
   p,err:=b.dll.FindProc(item.name)
   if err!=nil{return fmt.Errorf("%w: native Game group ABI %s missing",errV4WindowsOwner,item.name)}
@@ -164,14 +165,11 @@ func(g *V4WindowsAuthenticatedGameGroup) BindAndJoinOriginalWintun(
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   finish,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_finish_fec")
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
-  parity,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_fec_parity_due")
-  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   fec,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_fec_enable")
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   if err=winOwnerCall(fec,uintptr(group),uintptr(g.gameFec-1));err!=nil{return err}
   g.fecOpenProc=open
   g.fecFinishProc=finish
-  g.fecParityProc=parity
  }
  // The real Rust joined-owner and OS readback narrow one immutable
  // effective payload bound shared by WinTun ring, Game crypto and CLI.
@@ -229,11 +227,25 @@ func(g *V4WindowsAuthenticatedGameGroup) StageGameRecords(
   uintptr(unsafe.Pointer(&raw[0])),uintptr(len(raw)),
   uintptr(unsafe.Pointer(&count)))
  runtime.KeepAlive(ipv4);runtime.KeepAlive(raw)
- if err!=nil||int(count)!=len(raw){return nil,errors.Join(errV4WindowsOwner,err)}
+ if err!=nil||count>uint32(len(raw)){return nil,errors.Join(errV4WindowsOwner,err)}
+ // The shared Rust Game4 owner may return only first-due replicas;
+ // later copies remain scheduled without blocking the logical source.
+ return decodeOriginalGameStagedRecords(raw,count)
+}
+// A source acceptance is not proof that every Linux Game4 scheduled copy
+// is due in this same 2ms turn. Validate only returned native rows without
+// inventing the other lanes or claiming their original NPF copied tickets.
+func decodeOriginalGameStagedRecords(raw []v4WindowsGameRawRecord,
+ count uint32)([]V4WindowsGameRecord,error){
+ if count>uint32(len(raw))||len(raw)>4{return nil,errV4WindowsOwner}
  out:=make([]V4WindowsGameRecord,0,count)
- for _,record:=range raw{
+ var mask uint8
+ for _,record:=range raw[:count]{
   if record.Lane==0||int(record.Lane)>len(raw)||
    record.Length<32||record.Length>1536{return nil,errV4WindowsOwner}
+  bit:=uint8(1)<<(record.Lane-1)
+  if mask&bit!=0{return nil,errV4WindowsOwner}
+  mask|=bit
   out=append(out,V4WindowsGameRecord{
    Lane:record.Lane,Length:record.Length,
    PacketNumber:record.PacketNumber,LogicalID:record.LogicalID,

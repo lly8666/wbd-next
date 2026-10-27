@@ -168,6 +168,12 @@ Reviewed the post-v3 corrected S13 R2 original receipt test against wbd-platform
 
 ## S20 — source-locked per-mode evidence boundary (draft, not product PASS)
 Previous sequential seven-mode runner could re-archive a stale prior-mode log because all modes share result/wl-public. Added pre-mode shared-file snapshot and changed-file copying; always-on original Linux raw/WSL witness, Windows NPF witness and native Go+Rust process telemetry are sliced only after the new mode begins when append-only, while truncated/replaced logs are captured entirely. Unmodified stale log is not relabeled and is explicitly listed; no password/keys/scripts are included. Tests preserve first mode original error and prove second mode copied only its new NPF/resource suffix. Original workflow already uploads `mode-results/`, so no redundant runner/checkout job added. All live network/perf qualification NOT_RUN.
-```feature-impact
+```json
 {"kind":"none","ids":[],"reason":"Bounded source/mode evidence snapshot and first-error isolation; no product feature/default change."}
+```
+
+## S21 — Game4 original Windows native staggered copy staging and due poll
+Checked existing Linux GameAdapter::offer/stage_for_windows_native and Game4 4/20/60ms or 4/50/140ms stagger, real MonoNs next_due and original protected M4 copy callbacks. Native Windows previously required exactly all lanes in one offer; legitimate deferred Game4 copies caused BAD_STAGE, while no-FEC group never polled the due owner. Reused existing GameFec parity native due ABI for Game4 off or FEC without creating a parallel Go scheduler; removed all-lanes-immediate assumption while retaining one shared Rust logical source, independent per-lane M3 PN/seal and genuine NPF copy result. Every due copy stays scoped to original TLS joined group and Stop. Game4 test explicitly activates Linux mode2 schedule, requires first partial output, advances unit monotonic clock, checks unique lanes and that exactly remaining copies settle later. Go decoder validates bounded count and nonduplicated lane and owns returned ciphertext bytes. Dynamic configuration effective readback and NAT/TUN actual UX remain open; no performance PASS or new forced stagger mode.
+```feature-impact
+{"kind":"updated","ids":["game-lanes","game-fixed-fec"],"reason":"Experimental Windows Game4 accepts real Linux GameAdapter delayed replica staging/polling, keeps independent per-lane native NPF send results and replay/Stop guarantees. Scoped tests only; no product qualification."}
 ```

@@ -136,7 +136,8 @@ func(g *V4WindowsAuthenticatedGameGroup) DueGameFecParity(
 )([]V4WindowsGameRecord,error){
  if g==nil{return nil,errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
- if g.gameFec==0{return nil,errV4WindowsOwner}
+ // Same native due-poll ABI handles postponed Game4 off replicas and
+ // GameFec parity. The original per-lane NPF result remains mandatory.
  loanRelease,loanErr:=g.holdLive(ctx)
  if loanErr!=nil{return nil,loanErr}
  defer loanRelease()

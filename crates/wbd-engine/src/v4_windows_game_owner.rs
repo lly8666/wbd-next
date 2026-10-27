@@ -196,8 +196,11 @@ fn offer_group(
     // A previous real-NPF completion receipt must settle staged copies for
     // both Game/off and Game+FEC, never count a Go-array copy as M4 copied.
     if !game.staged.is_empty(){return Err(BAD_STAGE)}
-    game.tick=game.tick.checked_add(2).ok_or(FULL)?;
-    let now=if fec{game_monotonic_now(game)}else{MonoNs(game.tick)};
+    // Game4's shared Linux stagger and GameFec both use real monotonic
+    // deadlines. Synthetic +2ns per Wintun packet makes valid delayed
+    // replicas eternally non-due on a quiet Windows original worker.
+    game.tick=game.tick.checked_add(1).ok_or(FULL)?;
+    let now=game_monotonic_now(game);
     game.adapter.offer(payload,now).map_err(|_|INVALID)?;
     let mut out=Vec::with_capacity(game.handles.len());
     #[cfg(feature="fec2_product_record")]
@@ -214,7 +217,10 @@ fn offer_group(
                 out.push(record);true
             }else{false}
         });
-    if sent!=game.handles.len()||out.len()!=sent{return Err(BAD_STAGE)}
+    // Linux Game4 may stage only its immediate replicas. Remaining
+    // independently encrypted lanes are due in a later native poll;
+    // requiring all lanes here creates a false group-level HOL failure.
+    if sent>game.handles.len()||out.len()!=sent{return Err(BAD_STAGE)}
     #[cfg(feature="fec2_product_record")]
     game.staged.extend(out.iter().map(|r|WinGameStagedRecord{
         lane:r.lane,id:r.logical_id,pn:r.pn,
@@ -225,7 +231,7 @@ fn offer_group(
 fn game_fec_poll_group(
     game:&mut WinGameGroup,h:u64,capacity:usize,
 )->Result<Vec<WbdWindowsGameRecordV4>,i32>{
-    if !game.adapter.has_game_fec()||capacity==0||capacity>16{
+    if capacity==0||capacity>16{
         return Err(INVALID)
     }
     if game.lanes.iter().any(|lane|lane.lock().ok().is_none_or(|e|
@@ -235,7 +241,9 @@ fn game_fec_poll_group(
     // driver must finish all previous lane tickets first.
     if !game.staged.is_empty(){return Ok(Vec::new())}
     let now=game_monotonic_now(game);
-    game.adapter.poll_game_fec(now).map_err(|_|BAD_STAGE)?;
+    if game.adapter.has_game_fec(){
+        game.adapter.poll_game_fec(now).map_err(|_|BAD_STAGE)?;
+    }
     let mut out=Vec::with_capacity(capacity);
     let _=game.adapter.stage_for_windows_native(
         MonoNs(now.0.saturating_add(1)),|lane,id,pn,wire|{
@@ -676,6 +684,61 @@ mod tests{
             assert_eq!(PRODUCT_APPLIED,0);
         }
     }
+    #[test]
+    fn m0_windows_game4_native_stagger_first_then_delayed_no_group_hol(){
+        // Actual Linux GameAdapter's 140ms Game4 copy schedule; neither
+        // first-source stage nor a quiet Windows NPF poll may require four
+        // simultaneous results. All results consume authentic distinct PNs.
+        let mut r=Registry{generation:77,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let clients=setup(&mut r,4,false);
+        let c=join(&mut r,&clients,false).unwrap();
+        let g=r.game_groups[&c].clone();
+        {
+            let mut game=g.lock().unwrap();
+            game.adapter.configure_game4_stagger_mode(2).unwrap();
+        }
+        let mut frame=[0u8;40];
+        frame[0]=0x45;frame[2..4].copy_from_slice(&40u16.to_be_bytes());
+        frame[8]=64;frame[9]=17;
+        let immediate=offer_records(&r,c,&frame,4).unwrap();
+        assert!(!immediate.is_empty()&&immediate.len()<4,
+            "staggered first delivery must not require all lanes");
+        let first_id=immediate[0].logical_id;
+        {
+            let mut game=g.lock().unwrap();
+            for ticket in &immediate {
+                assert_eq!(game_m4_result_group(&mut game,c,
+                    ticket.lane,ticket.logical_id,ticket.pn,true),OK);
+            }
+            game.started=std::time::Instant::now()
+                -std::time::Duration::from_millis(180);
+            let later=game_fec_poll_group(&mut game,c,16)
+                .expect("off stagger uses same poll ABI, no extra FEC");
+            assert_eq!(later.len()+immediate.len(),4,
+                "all due original Game4 lanes must drain separately");
+            let mut distinct=std::collections::BTreeSet::new();
+            for ticket in immediate.iter().chain(later.iter()){
+                assert_eq!(ticket.logical_id,first_id);
+                assert!(distinct.insert(ticket.lane));
+            }
+            for ticket in &later{
+                assert_eq!(game_m4_result_group(&mut game,c,
+                    ticket.lane,ticket.logical_id,ticket.pn,true),OK);
+            }
+            assert!(game.staged.is_empty());
+        }
+        for h in &clients{
+            let d=r.entries[h].lock().unwrap().device.unwrap();
+            assert_eq!(quiesce_wintun(&mut r,*h,[2;16],d.luid,d.ifindex),OK);
+        }
+        assert_eq!(stopped_group(&mut r,c),OK);
+        for h in &clients{
+            assert_eq!(stop(&mut r,*h),OK);
+            assert_eq!(release(&mut r,*h),OK);
+        }
+    }
+
     #[test]
     fn m0_windows_game_two_four_shared_linux_fec2_fixed_profile_before_public_driver(){
         // Authenticated/protected owner+feature7 already supplied by setup.
