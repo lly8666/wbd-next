@@ -287,6 +287,12 @@ Actual Windows Rust owner Action40533879023 on S39 43da192e: compiled original R
 
 ## S42 — parallel Windows/Linux full Rust library nonproduct CI
 S40 original Windows DLL+Go preflight Action40535358313 SUCCESS, 28/28 original Windows Rust owner scoped tests; S41 Governance40536216118 SUCCESS after feature declaration, permanent experiment fast-forwarded S38→S41. Expand existing original Windows Rust source-locked scoped unit test to all wbd-engine library tests with same m0_v4_embedded_go,fec2_product_record features; add separate Linux Rust library test in Ubuntu with m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record features. Both parallel after cheap wiring/assembly gate. Original Windows Go production and test compile independent. No signed Wintun, Npcap, host routes, actual Linux TUN or seven-mode product/performance. First real new core FAIL, if any, must be preserved. Existing full native product job remains strictly gated.
-```feature-impact
+```json
 {"kind":"none","ids":[],"reason":"Expand nonproduct Windows/Linux source-locked Rust all-library core regression, no Go/Rust product algorithm change, no native two-OS or scored performance run."}
+```
+
+## S43 — genuine M0 16s native capacity clock and explicit M1 special-test separation
+S42 Action40536901046: Windows original Go compile PASS, Windows broad Rust library 208 PASS/2 FAIL, Linux broad Rust library 206 PASS/2 FAIL. One shared failure is M1 pinned-rtrb nested git workspace specialized provenance, not standalone M0 CI, and second Windows failure is M1 release benchmark requiring Linux executable path and sha256sum. Generic Windows and Linux broad source-locked libraries now explicitly --skip exact M1 special test names and mark special M1 proofs NOT_RUN, preserving original M1 frozen source and original dedicated qualification responsibilities; no fake M1 PASS. Linux remaining M0 W71 actual native firstsend capacity witness increased at exact MonoNs(200) when PN8 failed, NOT at subsequent 2s maturity poll. Fixture now asserts real recorded timestamp, holds from that instant for full 16s, and admits only newer real PN9 mature positive and authenticated reverse report after it. No product Auto, cipher/receipt, M2 maturity or capacity policy adjusted. Broad regression needs new Actions and cannot claim pass until then.
+```feature-impact
+{"kind":"none","ids":[],"reason":"Align bounded capacity witness unit fixture with real M4 failed-firstsend event timestamp and explicitly separate hosted M1 special proofs from broad library CI without weakening them."}
 ```

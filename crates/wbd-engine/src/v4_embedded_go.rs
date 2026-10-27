@@ -6038,7 +6038,8 @@ mod tests{
         m.on_real_kernel_turn(&[(RecordPn(8),1000)],copied,MonoNs(200));
         m.poll(MonoNs(2_000_000_300));
         assert_eq!(m.capacity_last_total,1);
-        assert!(!m.has_verified_fixed_m2_witness(MonoNs(17_000_000_000)));
+        assert_eq!(m.capacity_last_change.map(|at|at.0),Some(200));
+        assert!(!m.has_verified_fixed_m2_witness(MonoNs(15_900_000_000)));
         // Mature the old resident source at its real long deadline so a
         // NEW same-generation first source can safely enter M2 capacity.
         m.poll(MonoNs(8_000_000_300));
@@ -6054,8 +6055,10 @@ mod tests{
         assert_eq!(m.capacity_last_total,1); // never erase original loss
         assert!(m.positive_2s>m.capacity_positive_at_change);
         assert!(m.authenticated_reverse_reports>m.capacity_reverse_at_change);
-        assert!(!m.has_verified_fixed_m2_witness(MonoNs(17_900_000_000)));
-        assert!(m.has_verified_fixed_m2_witness(MonoNs(18_000_000_300)));
+        // Capacity increase is stamped at original M4 firstsend failure
+        // MonoNs(200), not later at its first 2s maturity poll.
+        assert!(!m.has_verified_fixed_m2_witness(MonoNs(16_000_000_100)));
+        assert!(m.has_verified_fixed_m2_witness(MonoNs(16_000_000_300)));
         m.capacity_ever_reset=true;
         assert!(!m.has_verified_fixed_m2_witness(MonoNs(60_000_000_000)));
         m.capacity_ever_reset=false;
