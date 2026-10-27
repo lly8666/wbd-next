@@ -383,6 +383,47 @@ fn stage_fixed_parity_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     result.map_err(|_|BAD_STAGE)?;
     Ok(out)
 }
+// Original-Go TLS-bound initial Fixed/Auto profile. Linux's exact
+// FixedStream starts at revision1 with an explicitly selected profile.
+// No source, staged ciphertext, M2 feedback, or parity may exist yet.
+fn fixed_initial_profile_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+    ifindex:u32,profile:u8)->Result<(),i32>{
+    if profile>6{return Err(INVALID)}
+    if !v3_ready(e,epoch,luid,ifindex)||!e.feature7||
+        e.game_group.is_some(){return Err(BAD_STAGE)}
+    let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
+    if !m.pending.is_empty()||m.shadow.outstanding()!=0||
+        m.feedback_pending.is_some()||m.fec_copied_source!=0||
+        m.fec_copied_parity!=0||m.fec_reverse_reports!=0{
+        return Err(BAD_STAGE)
+    }
+    let tx=e.fec2_tx.as_ref().ok_or(BAD_STAGE)?;
+    if tx.revision().0!=1||tx.next_deadline().is_some()||
+       tx.report().outstanding_jobs!=0{return Err(BAD_STAGE)}
+    let budget=normal_off_windows_budget(e)?;
+    let new=crate::v4_fixed_stream::FixedStream::new(
+        profile,1,budget.record_payload_mtu
+    ).ok_or(BAD_STAGE)?;
+    if let Some(mut old)=e.fec2_tx.replace(new){old.stop()}
+    Ok(())
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_select_initial(
+    h:u64,ep:*const u8,ep_len:usize,luid:u64,ifindex:u32,
+    profile:u32,
+)->i32{
+    if profile>6{return INVALID}
+    let Some(epoch)=v3_epoch(ep,ep_len)else{return INVALID};
+    let entry={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(entry)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(entry)
+    };
+    let Ok(mut e)=entry.lock()else{return BAD_STAGE};
+    match fixed_initial_profile_entry(&mut e,epoch,luid,ifindex,profile as u8){
+        Ok(())=>OK,Err(code)=>code,
+    }
+}
 // Same Linux FixedStream quiescent profile/revision transition, scoped to
 // the original Go-credential-TLS Rust generation and the original M4
 // Wintun hold. Does NOT grant Windows product mode/GUI Applied. A new
@@ -764,6 +805,9 @@ mod tests{
         {
             let mut e=r.entries[&h].lock().unwrap();
             m2_arm_entry(&mut e,ep,951,95).unwrap();
+            assert_eq!(e.fec2_tx.as_ref().unwrap().revision().0,1);
+            assert_eq!(fixed_initial_profile_entry(&mut e,ep,951,95,7),Err(INVALID));
+            assert_eq!(fixed_initial_profile_entry(&mut e,ep,951,95,5),Ok(()));
             assert_eq!(e.fec2_tx.as_ref().unwrap().revision().0,1);
             assert_eq!(fixed_change_revision_entry(&mut e,ep,951,95,7,2),Err(INVALID));
             assert_eq!(fixed_change_revision_entry(&mut e,ep,951,95,2,1),Err(INVALID));

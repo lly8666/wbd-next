@@ -150,3 +150,32 @@ func(s *V4WindowsAuthenticatedClientOwner) RequestBoundOriginalFEC2Revision(
  runtime.KeepAlive(s.bridge.epoch)
  return err
 }
+
+// SelectBoundOriginalFEC2Initial binds the actual selected Linux FEC2
+// Fixed/Auto profile at protected revision1 BEFORE any M4 NPF DATA stage.
+// In particular Auto starts at Linux Strong=5 rather than hardcoded
+// Maximum=6; neither the selection nor a profile change grants Applied.
+func(s *V4WindowsAuthenticatedClientOwner) SelectBoundOriginalFEC2Initial(
+ ctx context.Context,profile FecV2Profile,
+)error{
+ if ctx==nil||s==nil||s.bridge==nil||s.device==nil||!profile.Valid(){
+  return errV4WindowsOwner
+ }
+ if err:=ctx.Err();err!=nil{return err}
+ if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
+  return errors.Join(errV4WindowsOwner,err)
+ }
+ state,err:=s.OriginalOwnerReadback()
+ if err!=nil||!state.OwnerActive||!state.DeviceBound||
+  state.DeviceQuiesced||state.ProductApplied{
+  return errV4WindowsOwner
+ }
+ proc,err:=s.bridge.dll.FindProc("wbd_m0_win_owner_v8_fixed_select_initial")
+ if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+ err=winOwnerCall(proc,uintptr(s.bridge.handle),
+  uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+  uintptr(s.device.identity.LUID),
+  uintptr(s.device.identity.InterfaceIndex),uintptr(profile))
+ runtime.KeepAlive(s.bridge.epoch)
+ return err
+}
