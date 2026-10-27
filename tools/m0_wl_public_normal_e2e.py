@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run actual original-TLS Windows and Linux native public UDP/TCP, then Stop."""
-import os,sys,subprocess,time,json,hashlib,pathlib,re
+import os,sys,subprocess,time,json,hashlib,pathlib,re,threading
+from m0_wl_native_resource_sampler import sample_windows_original_process
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
 if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec","auto-revision","auto-adaptive"):
@@ -45,6 +46,7 @@ def stop_windows(p):
    try:p.wait(timeout=4)
    except subprocess.TimeoutExpired:p.kill()
 w=s=wa=la=wt=lt=None;logs=[]
+resource_stop=threading.Event();resource_worker=None
 try:
  cli=out/"wbd-client-embedded.exe";lib=out/"wbd_engine.dll"
  for f in (cli,lib,out/"wintun.dll",root/"linux-product"/"wbd-v4-server",root/"linux-product"/"libwbd_engine.so"):
@@ -76,6 +78,11 @@ try:
   "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode","bypass-lan"]
  log=(out/"client.log").open("w");logs.append(log)
  w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,text=True)
+ resource_worker=threading.Thread(
+  target=sample_windows_original_process,
+  args=(w,out/"windows-original-go-rust-process-1hz.jsonl",resource_stop),
+  daemon=True)
+ resource_worker.start()
  # Launch true independent Windows/Wintun and Linux/TUN kernel applications
  # CONCURRENTLY with original authenticated client Apply. That product
  # requires first, reverse and a post-reverse packet BEFORE emitting READY.
@@ -434,6 +441,8 @@ except Exception as e:
  print("WBD_WL_TRUE_PUBLIC_MODE_FAIL "+mode+": "+str(e),file=sys.stderr)
  raise
 finally:
+ resource_stop.set()
+ if resource_worker is not None:resource_worker.join(timeout=3)
  for p in (wa,la,wt,lt):
   if p is not None and p.poll() is None:p.terminate()
  stop_windows(w);stop_linux()

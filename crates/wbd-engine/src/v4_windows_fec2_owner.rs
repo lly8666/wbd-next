@@ -936,6 +936,10 @@ mod tests{
             // A second readback at the same owner time is idempotent.
             drain_original_auto_mature_due(m,due).unwrap();
             assert_eq!(m.auto_quality[5],700);
+            // Test advances only the pure M2 clock by 9.2s. The native
+            // Wintun/Stop owner retains real wall time; relinquish this
+            // synthetic clock before verifying production Stop.
+            m.mature=None;
         }
         assert_eq!(quiesce_wintun(&mut r,h,epoch,953,95),OK);
         assert_eq!(stop(&mut r,h),OK);
