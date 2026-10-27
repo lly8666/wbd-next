@@ -324,8 +324,8 @@ jobs:
       # The main/push workflow qualifies the seven public functions first.
       # A one-scenario throughput case is an explicit separate manual
       # Action selecting exactly one mode on a single reused VM/build.
-      WBD_WL_PUBLIC_MODES: ${{ (github.event_name == 'push' && contains(github.event.head_commit.message, '[wl-n0-normal-only]')) && 'normal' || (inputs.public_mode || 'all') }}
-      WBD_WL_RUN_N0: ${{ ((github.event_name == 'push' && contains(github.event.head_commit.message, '[wl-n0-normal-only]')) || inputs.run_n0 == true) && '1' || '0' }}
+      WBD_WL_PUBLIC_MODES: ${{ inputs.public_mode || 'all' }}
+      WBD_WL_RUN_N0: ${{ inputs.run_n0 == true && '1' || '0' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -559,6 +559,18 @@ jobs:
           $npf=Start-Process -FilePath python -ArgumentList @('-u','tools/m0_wl_public_native_npf_trace.py') -PassThru -RedirectStandardOutput result/wl-public/native-windows-npf.log -RedirectStandardError result/wl-public/native-windows-npf-stderr.log
           Start-Sleep -Milliseconds 800
           try {
+            # N0 push is restricted to this isolated measurement ref;
+            # retain original workflow_dispatch/default N0 contract intact.
+            if($env:GITHUB_EVENT_NAME -eq 'push' -and
+               $env:GITHUB_REF_NAME -eq 'experiment/windows-wiring-n0-normal-parallel-20261028' -and
+               ((& git log -1 --format=%B) -like '*[[]wl-n0-normal-only[]]*')){
+              if($env:WBD_WL_PUBLIC_MODES -ne 'all' -or $env:WBD_WL_RUN_N0 -ne '0'){
+                throw 'independent N0 trigger cannot override nondefault mode or pre-armed performance'
+              }
+              $env:WBD_WL_PUBLIC_MODES='normal'
+              $env:WBD_WL_RUN_N0='1'
+              Write-Output 'WL_N0_ISOLATED_PUSH_SELECTED_ONE_NORMAL_PERFORMANCE_SCENARIO'
+            }
             # A code-source-tagged Auto revision candidate saves costly
             # replay of seven already source-proven startup modes.
             if($env:GITHUB_EVENT_NAME -eq 'push' -and

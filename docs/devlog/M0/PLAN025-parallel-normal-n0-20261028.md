@@ -11,3 +11,11 @@ No new registry task, assignment epoch, or worker. Same M0 PLAN025 authority and
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Source-frozen independent one-scenario Actions dispatcher and intent only; no application mode, ABI, feature default, OS product, or runtime changes."}
 ```
+
+## N0 S2 fail-closed preflight recovery (2026-10-28)
+- First independent branch source `4089a88525f64e46a0aba2fa0805e8db091f1b63` Action`40556823589/1` **FAIL** before any Windows/Linux build: `tests.test_delivery_ci.test_native_success_and_cleanup_contracts_retained` requires the original source-pinned native `WBD_WL_RUN_N0` workflow_dispatch expression, but the N0 branch initially altered that global env expression. Native product, N0 and Stop were SKIPPED. Governance`40556823443/1` also **FAIL** (inherited source feature catalog bounded card red); not a performance measurement.
+- Correction keeps all original manual `WBD_WL_RUN_N0` and public_mode env semantics unchanged. Only on this named isolated branch + labeled push after cheap one-mode N0 guard, a fixed PowerShell selection sets one `normal` and N0=1, with nondefault state refused. Same code path retains strict real TC readback, N0 scoped pass, actual UDP/TCP and Stop assertions. A new static regression asserts manual contract unchanged AND exactly scoped branch selection. No application source, FEC policy, generated traffic or measured load altered. S55 parent frozen. The next one push provides a distinct exact SOURCE for a single N0 scenario; prior FAIL retained.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Fix only experiment-specific N0 push selection to preserve existing manual entry and static fail-closed assertions, plus a regression. Product/runtime/default mode and performance target unchanged."}
+```

@@ -59,6 +59,21 @@ class DeliveryCiTests(unittest.TestCase):
         self.assertIn("PASS_SCOPED_", scripts)
         self.assertIn("selected same-SOURCE native public mode", scripts)
 
+    def test_isolated_n0_push_does_not_change_manual_run_n0_contract(self):
+        job = self.workflow["jobs"]["native-public-two-os"]
+        self.assertEqual(job["env"]["WBD_WL_RUN_N0"],
+                         "${{ inputs.run_n0 == true && '1' || '0' }}")
+        scripts = "\\n".join(x.get("run", "") for x in job["steps"])
+        self.assertIn("experiment/windows-wiring-n0-normal-parallel-20261028", scripts)
+        self.assertIn("[[]wl-n0-normal-only[]]", scripts)
+        self.assertIn("WL_N0_ISOLATED_PUSH_SELECTED_ONE_NORMAL_PERFORMANCE_SCENARIO", scripts)
+        self.assertIn("$env:WBD_WL_PUBLIC_MODES='normal'", scripts)
+        self.assertIn("$env:WBD_WL_RUN_N0='1'", scripts)
+        checks = "\\n".join(x.get("run", "") for x in
+                           self.workflow["jobs"]["wiring-contract"]["steps"])
+        self.assertIn("select_source_locked_modes", checks)
+        self.assertIn("RUN_N0", checks)
+
     def test_performance_one_scenario_rejected_before_any_native_build(self):
         inputs = self.workflow["on"]["workflow_dispatch"]["inputs"]
         self.assertEqual(inputs["public_mode"]["default"], "all")
