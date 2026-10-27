@@ -57,7 +57,7 @@ func V4WindowsEstablishOriginalGameServerGroup(
   validate:=cfg.ValidateRequest
   scoped.PolicyAllow=func(policy AdmissionPolicy)error{
    if policy.Transport!=TransportGame||policy.DesiredLanes!=uint8(n)||
-    policy.FECMode!=FECOff{return ErrAdmissionUnsupported}
+    policy.SupportedNow()!=nil{return ErrAdmissionUnsupported}
    if allow!=nil{return allow(policy)}
    return nil
   }

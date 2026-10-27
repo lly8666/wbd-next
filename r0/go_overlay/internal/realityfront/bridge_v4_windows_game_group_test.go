@@ -38,3 +38,20 @@ func TestM0WindowsGameFecProtectedExtensionBounds(t *testing.T){
   t.Fatalf("multiple conflicting Game2 server FEC profiles admitted: %v",err)
  }
 }
+
+func TestM0WindowsGameOriginalV3CarrierPolicyMatchesLinuxFixedFour(t *testing.T){
+ for _,lanes:=range []int{2,4}{
+  policy,err:=FixedPolicyForClient(lanes,4)
+  if err!=nil{t.Fatalf("Linux original V3 Game%d policy: %v",lanes,err)}
+  // With missing actual associations we must reach the original
+  // authenticated per-lane association check, not reject the legitimate
+  // V3 fixed4 outer carrier before original TLS can even begin.
+  cfg:=ClientAdmissionConfig{Policy:policy,DesiredLanes:uint8(lanes)}
+  clients:=make([]*faketcp.ClientAssociation,lanes)
+  _,err=V4WindowsEstablishOriginalGameClientGroup(
+   context.Background(),"",clients,cfg,0)
+  if !errors.Is(err,ErrAdmissionParams){
+   t.Fatalf("original Game%d fixed4 V3 policy rejected before TLS: %v",lanes,err)
+  }
+ }
+}

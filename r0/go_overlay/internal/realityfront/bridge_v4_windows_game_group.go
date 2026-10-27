@@ -63,7 +63,7 @@ func V4WindowsEstablishOriginalGameClientGroup(
  if negotiatedFec>7{return nil,ErrAdmissionUnsupported}
  if ctx==nil||(n!=2&&n!=4)||base.Policy.Transport!=TransportGame||
   int(base.Policy.DesiredLanes)!=n||int(base.DesiredLanes)!=n||
-  base.Policy.FECMode!=FECOff{return nil,ErrAdmissionUnsupported}
+  base.Policy.SupportedNow()!=nil{return nil,ErrAdmissionUnsupported}
  g:=&V4WindowsAuthenticatedGameGroup{gameFec:negotiatedFec}
  // Mirror Linux's abortLocked and the Windows server group's rollback:
  // a late lane TLS failure cannot strand previously authenticated Rust
