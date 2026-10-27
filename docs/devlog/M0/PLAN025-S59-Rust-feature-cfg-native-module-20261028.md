@@ -9,3 +9,10 @@ Repair gates the FEC2-only constants, classifier, struct and impl exactly like t
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Repair Rust optional compilation feature/cfg compatibility only, preserving verified FEC2-enabled product and all safety/default behavior; no feature promotion."}
 ```
+
+## S60 fail-closed Rust cfg delimiter recovery (2026-10-28)
+- S59 source49a7dc2be6e7e37e3a95c2e08ac2a09d52cbf2d3 Actions40561126519/1 FAIL in first Rust compile (mismatched closing delimiter in four newly inserted cfg attributes, no module positive). Governance S59 PASS, no functionality/native run. First error reviewed from original Actions job122390114793: four lines `any(target_env="gnu",target_env="musl"))]` miss final `)` of cfg and should end `)))]`. S60 changes **only four closing delimiters**, not the gating predicates/type resolution, compiles both no-FEC and FEC2 options via exactly one further narrow Actions, S59 red preserved. No original Go/Rust runtime, ABI, packet semantics, TLS/Wintun/WAL/Stop or user policy change.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Fix only four malformed Rust cfg closing delimiters after cheap compiler FAIL; keep source-scoped result and run original optional-module checks without product behavior change."}
+```

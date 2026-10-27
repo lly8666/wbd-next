@@ -401,10 +401,10 @@ enum OriginalRepairBlockReason{
     Capacity=5,Stale=6,LocalOther=7,GlobalOther=8,Invariant=9,
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 const ORIGINAL_REPAIR_BLOCK_REASON_COUNT:usize=10;
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn original_repair_reserve_block_reason(
     err:wbd_recovery::GlobalRepairError
 )->OriginalRepairBlockReason{
@@ -451,7 +451,7 @@ fn v3_send_pps_permit(now:MonoNs)->bool{
     v3_pps_permit(&REPAIRS,now,8192)
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct OriginalOuterRepair{
     shadow:wbd_recovery::ReceiptState<crate::memory::FrozenRecord>,
     direction:wbd_recovery::BudgetDirection,
@@ -468,7 +468,7 @@ struct OriginalOuterRepair{
     retired:u64,
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 impl OriginalOuterRepair{
     fn note_block(&mut self,reason:OriginalRepairBlockReason){
         self.repair_blocked=self.repair_blocked.saturating_add(1);
