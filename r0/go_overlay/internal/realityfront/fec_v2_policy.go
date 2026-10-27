@@ -484,3 +484,18 @@ func FecV2Apply(s FecV2State,a FecV2Ack) (FecV2State,bool,error) {
     s.AppliedRevision,s.AppliedProfile,s.AppliedOff=a.Revision,a.Profile,a.Off
     return s,true,nil
 }
+
+// Shared Linux/Windows native Auto history contract: preserve mature
+// original first-send cohorts only across an exact same-generation,
+// same-controller one-step downgrade. A new operator config, startup,
+// upshift or old Applied receipt begins a new native observation window.
+func v4FecAutoKeepHistoryAfterApplied(before,after FecV2State) bool {
+    return before.Initialized && after.Initialized &&
+        before.Mode==FecV2Auto && after.Mode==FecV2Auto &&
+        before.Client==after.Client && before.Direction==after.Direction &&
+        before.ConfigRevision==after.ConfigRevision &&
+        before.RequestedRevision==after.AppliedRevision &&
+        before.AppliedRevision<after.AppliedRevision &&
+        after.AppliedProfile<before.AppliedProfile &&
+        !after.AppliedOff
+}

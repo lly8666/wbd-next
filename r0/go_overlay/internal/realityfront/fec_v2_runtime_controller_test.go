@@ -13,12 +13,14 @@ type f2RuntimeFake struct {
     staged []FecV2Intent
     ack FecV2Ack
     observeError bool
+    observed int
     stageError bool
     stageEntered chan struct{}
     stageRelease chan struct{}
 }
 func (f *f2RuntimeFake) Observe(epoch [16]byte,client string,dir FecV2Direction,now time.Duration)(FecV2Snapshot,error){
     if epoch!=f.epoch{return FecV2Snapshot{},ErrFecV2Scope}
+    f.observed++
     if f.observeError{return FecV2Snapshot{},errors.New("no mature source")}
     return FecV2Snapshot{Client:client,Direction:dir,At:now,Validity:FecV2Unknown},nil
 }
@@ -38,6 +40,38 @@ func (f *f2RuntimeFake) Readback(epoch [16]byte,client string,dir FecV2Direction
     if epoch!=f.epoch{return FecV2Ack{},ErrFecV2Scope}
     if f.ack.Client==""{return FecV2Ack{},errors.New("no original applied receipt")}
     return f.ack,nil
+}
+
+
+func TestF2ControlAutoPendingM2CannotEvaluateOrStackNativeRevisions(t *testing.T){
+ var epoch [16]byte
+ epoch[0]=93
+ cfg:=f2Config("original-rust-Auto",FecV2C2S,FecV2Auto,FecV2Conservative)
+ backend:=&f2RuntimeFake{epoch:epoch}
+ run,e:=newFecV2ControlRuntime(cfg,epoch,backend)
+ if e!=nil{t.Fatal(e)}
+ if e=run.Tick(time.Second);e!=nil{t.Fatal(e)}
+ if backend.observed!=1||len(backend.staged)!=1{
+  t.Fatalf("first real Auto native intent: observes=%d stage=%d",
+   backend.observed,len(backend.staged))
+ }
+ for _,now:=range []time.Duration{3*time.Second,19*time.Second,39*time.Second}{
+  if e=run.Tick(now);e!=nil{t.Fatal(e)}
+ }
+ if backend.observed!=1||len(backend.staged)!=1{
+  t.Fatalf("unapplied native revision sampled as real FEC quality observes=%d stage=%d",
+   backend.observed,len(backend.staged))
+ }
+ wanted:=backend.staged[0]
+ backend.ack=FecV2Ack{Client:cfg.Client,Direction:cfg.Direction,
+  Revision:wanted.Revision,Profile:wanted.Profile,Applied:true}
+ if e=run.Tick(41*time.Second);e!=nil{t.Fatal(e)}
+ state,_:=run.Snapshot()
+ if backend.observed!=2||state.AppliedRevision!=wanted.Revision{
+  t.Fatalf("authentic original M2 must unblock Auto sampler %+v observed=%d",
+   state,backend.observed)
+ }
+ run.Stop()
 }
 
 func TestF2ControlRuntimeAutoCadenceUnknownAndOriginalAppliedAck(t *testing.T){

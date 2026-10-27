@@ -234,16 +234,6 @@ func (m *v4ProductFecMonitor)autoObserve(bridge *v4EmbeddedNativeBridge,
 // the pure Go policy still needs 10s/4096 genuinely VALID sources and native
 // APPLIED, and fail-closed v4FecAutoDiff rejects counter reset/censorship.
 // Startup, rise, config change and stale/scope mismatches hard-reset history.
-func v4FecAutoKeepHistoryAfterApplied(before,after FecV2State) bool {
-    return before.Initialized && after.Initialized &&
-        before.Mode==FecV2Auto && after.Mode==FecV2Auto &&
-        before.Client==after.Client && before.Direction==after.Direction &&
-        before.ConfigRevision==after.ConfigRevision &&
-        before.RequestedRevision==after.AppliedRevision &&
-        before.AppliedRevision<after.AppliedRevision &&
-        after.AppliedProfile<before.AppliedProfile &&
-        !after.AppliedOff
-}
 func (m *v4ProductFecMonitor)tick(
     bridge *v4EmbeddedNativeBridge,now time.Duration,
 ){

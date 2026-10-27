@@ -133,6 +133,16 @@ func(b *winAutoBackend) Observe(epoch [16]byte,client string,
  s.SRTT=time.Duration(lag/count);s.Validity=FecV2Valid
  return s,nil
 }
+
+// OnAppliedTransition uses the IDENTICAL shared Linux observation-history
+// retention rule, not Windows' own new FEC control logic. Exactly one
+// proven same-config downshift retains honest old first-send cohorts.
+func(b *winAutoBackend) OnAppliedTransition(before,after FecV2State){
+ if !v4FecAutoKeepHistoryAfterApplied(before,after){
+  b.history=b.history[:0]
+ }
+}
+
 type V4WindowsOriginalFEC2AutoController struct{
  core *fecV2ControlRuntime
  started time.Time
