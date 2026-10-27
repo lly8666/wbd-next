@@ -8,6 +8,9 @@ use super::*;
 use crate::v4_game_lane::GameAdapter;
 use wbd_types::{MonoNs,LaneKey,TunnelKey};
 
+#[cfg(feature="fec2_product_record")]
+#[derive(Clone,Copy)]
+struct WinGameStagedRecord{lane:u32,id:u64,pn:u64}
 pub(super) struct WinGameGroup {
     adapter:GameAdapter,
     handles:Vec<u64>,
@@ -18,6 +21,8 @@ pub(super) struct WinGameGroup {
     role_server:bool,
     started:std::time::Instant,
     fec_pending:Vec<Option<crate::v4_game_lane::PreparedGameFecBatch>>,
+    #[cfg(feature="fec2_product_record")]
+    staged:Vec<WinGameStagedRecord>,
 }
 #[repr(C)]
 #[derive(Clone,Copy)]
@@ -84,6 +89,8 @@ pub(super) fn join(
         epoch:scope.ok_or(INVALID)?,tick:0,role_server:server,
         started:std::time::Instant::now(),
         fec_pending:(0..handles.len()).map(|_|None).collect(),
+        #[cfg(feature="fec2_product_record")]
+        staged:Vec::with_capacity(16),
     })));
     Ok(group)
 }
@@ -94,6 +101,8 @@ fn stopped_group(r:&mut Registry,h:u64)->i32{
         e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
         !e.device.is_some_and(|d|d.quiesced))){return STOP_INCOMPLETE}
     if game.fec_pending.iter().any(Option::is_some){return STOP_INCOMPLETE}
+    #[cfg(feature="fec2_product_record")]
+    if !game.staged.is_empty(){return STOP_INCOMPLETE}
     game.adapter.stop();
     for lane in &game.lanes{
         let Ok(mut e)=lane.lock()else{return STOP_INCOMPLETE};
@@ -141,6 +150,19 @@ pub(super) fn offer_records(
     let mut game=group.lock().map_err(|_|BAD_STAGE)?;
     offer_group(&mut game,h,payload,max)
 }
+fn game_monotonic_now(game:&WinGameGroup)->MonoNs{
+    MonoNs(game.started.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64)
+}
+fn game_record(lane:LaneKey,id:wbd_types::LogicalPacketId,
+    pn:u64,wire:&[u8])->Option<WbdWindowsGameRecordV4>{
+    if wire.len()>1536{return None}
+    let mut record=WbdWindowsGameRecordV4{
+        lane:lane.slot,length:wire.len() as u32,pn,
+        logical_id:id.0,wire:[0;1536]
+    };
+    record.wire[..wire.len()].copy_from_slice(wire);
+    Some(record)
+}
 fn offer_group(
     game:&mut WinGameGroup,h:u64,payload:&[u8],max:usize,
 )->Result<Vec<WbdWindowsGameRecordV4>,i32>{
@@ -151,24 +173,129 @@ fn offer_group(
     if game.lanes.iter().any(|lane|lane.lock().ok().is_none_or(|e|
         e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
         !e.device.is_some_and(|d|!d.quiesced))){return Err(BAD_STAGE)}
+    let fec=game.adapter.has_game_fec();
+    #[cfg(feature="fec2_product_record")]
+    if fec && !game.staged.is_empty(){return Err(BAD_STAGE)}
     game.tick=game.tick.checked_add(2).ok_or(FULL)?;
-    let now=MonoNs(game.tick);
+    let now=if fec{game_monotonic_now(game)}else{MonoNs(game.tick)};
     game.adapter.offer(payload,now).map_err(|_|INVALID)?;
-    let mut staged=Vec::with_capacity(game.handles.len());
-    let copied=game.adapter.drain(MonoNs(game.tick+1),|lane,id,pn,wire|{
-        if wire.len()>1536{return false}
-        let mut record=WbdWindowsGameRecordV4{
-            lane:lane.slot,length:wire.len() as u32,pn,
-            logical_id:id.0,wire:[0;1536]
-        };
-        record.wire[..wire.len()].copy_from_slice(wire);
-        staged.push(record);
-        true // bounded staging copy, NOT a kernel copy or Applied grant
-    });
-    if copied!=game.handles.len()||staged.len()!=copied{
-        return Err(BAD_STAGE)
+    let mut out=Vec::with_capacity(game.handles.len());
+    #[cfg(feature="fec2_product_record")]
+    let sent=if fec{
+        game.adapter.stage_for_windows_native(MonoNs(now.0.saturating_add(1)),
+            |lane,id,pn,wire|{
+                if let Some(record)=game_record(lane,id,pn,wire){
+                    out.push(record);true
+                }else{false}
+            })
+    }else{
+        game.adapter.drain(MonoNs(now.0.saturating_add(1)),
+            |lane,id,pn,wire|{
+                if let Some(record)=game_record(lane,id,pn,wire){
+                    out.push(record);true
+                }else{false}
+            })
+    };
+    #[cfg(not(feature="fec2_product_record"))]
+    let sent=game.adapter.drain(MonoNs(now.0.saturating_add(1)),
+        |lane,id,pn,wire|{
+            if let Some(record)=game_record(lane,id,pn,wire){
+                out.push(record);true
+            }else{false}
+        });
+    if sent!=game.handles.len()||out.len()!=sent{return Err(BAD_STAGE)}
+    #[cfg(feature="fec2_product_record")]
+    if fec {
+        game.staged.extend(out.iter().map(|r|WinGameStagedRecord{
+            lane:r.lane,id:r.logical_id,pn:r.pn,
+        }));
     }
-    Ok(staged)
+    Ok(out)
+}
+#[cfg(feature="fec2_product_record")]
+fn game_fec_poll_group(
+    game:&mut WinGameGroup,h:u64,capacity:usize,
+)->Result<Vec<WbdWindowsGameRecordV4>,i32>{
+    if !game.adapter.has_game_fec()||capacity==0||capacity>16{
+        return Err(INVALID)
+    }
+    if game.lanes.iter().any(|lane|lane.lock().ok().is_none_or(|e|
+        e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
+        !e.device.is_some_and(|d|!d.quiesced))){return Err(BAD_STAGE)}
+    // Don't consider a staged copy a completed native send. The real
+    // driver must finish all previous lane tickets first.
+    if !game.staged.is_empty(){return Ok(Vec::new())}
+    let now=game_monotonic_now(game);
+    game.adapter.poll_game_fec(now).map_err(|_|BAD_STAGE)?;
+    let mut out=Vec::with_capacity(capacity);
+    let _=game.adapter.stage_for_windows_native(
+        MonoNs(now.0.saturating_add(1)),|lane,id,pn,wire|{
+            if out.len()>=capacity{return false}
+            if let Some(record)=game_record(lane,id,pn,wire){
+                out.push(record);true
+            }else{false}
+        });
+    game.staged.extend(out.iter().map(|r|WinGameStagedRecord{
+        lane:r.lane,id:r.logical_id,pn:r.pn,
+    }));
+    Ok(out)
+}
+#[cfg(feature="fec2_product_record")]
+fn game_m4_result_group(game:&mut WinGameGroup,h:u64,lane:u32,
+    logical_id:u64,pn:u64,sent:bool)->i32{
+    if !game.adapter.has_game_fec() ||
+       game.lanes.iter().any(|member|member.lock().ok().is_none_or(|e|
+        e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
+        !e.device.is_some_and(|d|!d.quiesced))){return BAD_STAGE}
+    let Some(pos)=game.staged.iter().position(|r|
+        r.lane==lane&&r.id==logical_id&&r.pn==pn)else{return BAD_STAGE};
+    game.staged.swap_remove(pos);
+    if sent {
+        game.adapter.note_windows_native_m4_copy(
+            wbd_types::LogicalPacketId(logical_id));
+    }
+    if game.staged.is_empty(){game.adapter.settle_windows_native_m4_batch();}
+    OK
+}
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v4_game_fec_parity_due(
+    group:u64,out:*mut WbdWindowsGameRecordV4,
+    capacity:u32,count:*mut u32,
+)->i32{
+    if out.is_null()||count.is_null()||capacity==0||capacity>16{
+        return INVALID
+    }
+    let group_ref={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
+        Arc::clone(g)
+    };
+    let Ok(mut g)=group_ref.lock()else{return BAD_STAGE};
+    match game_fec_poll_group(&mut g,group,capacity as usize){
+        Ok(rows)=>{
+            for (i,r) in rows.iter().enumerate(){
+                unsafe{out.add(i).write(*r)}
+            }
+            unsafe{count.write(rows.len() as u32)};
+            OK
+        },
+        Err(err)=>err,
+    }
+}
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_win_owner_v4_game_m4_send_result(
+    group:u64,lane:u32,logical_id:u64,pn:u64,sent:u32,
+)->i32{
+    if sent>1{return INVALID}
+    let group_ref={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
+        Arc::clone(g)
+    };
+    let Ok(mut g)=group_ref.lock()else{return BAD_STAGE};
+    game_m4_result_group(&mut g,group,lane,logical_id,pn,sent==1)
 }
 pub(super) fn receive_record(
     r:&Registry,h:u64,lane:u32,wire:&[u8],
@@ -489,6 +616,20 @@ mod tests{
             ipv4[8]=64;ipv4[9]=17;ipv4[20..].fill(0x72);
             let staged=offer_records(&r,c,&ipv4,n).unwrap();
             assert_eq!(staged.len(),n);
+            let client_group=r.game_groups[&c].clone();
+            {
+                let mut group=client_group.lock().unwrap();
+                assert_eq!(game_fec_poll_group(&mut group,c,16).unwrap().len(),0,
+                    "parity cannot pass staged kernel source");
+                for record in &staged{
+                    assert_eq!(game_m4_result_group(&mut group,c,
+                        record.lane,record.logical_id,record.pn,true),OK);
+                }
+                assert_eq!(game_m4_result_group(&mut group,c,
+                    staged[0].lane,staged[0].logical_id,staged[0].pn,true),
+                    BAD_STAGE,"same NPF ticket cannot be credited twice");
+            }
+
             assert!(staged.iter().all(|x|x.length>=63));
             assert!(staged.windows(2).all(|x|x[0].wire!=x[1].wire));
             let wire=&staged[1];
@@ -504,6 +645,13 @@ mod tests{
             // an independently sealed fresh source on a different lane
             // must still be deliverable.
             let newer=offer_records(&r,c,&ipv4,n).unwrap();
+            {
+                let mut group=client_group.lock().unwrap();
+                for record in &newer{
+                    assert_eq!(game_m4_result_group(&mut group,c,
+                        record.lane,record.logical_id,record.pn,true),OK);
+                }
+            }
             let next=&newer[0];
             let mut receiver=server_group.lock().unwrap();
             let (frames,pending)=receive_fec_group(&mut receiver,s,next.lane,
