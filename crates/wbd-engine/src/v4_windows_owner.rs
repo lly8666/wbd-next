@@ -913,13 +913,17 @@ fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         ipv4[0]&15<5{return Err(INVALID)}
     let mut slab=e.arena.allocate().map_err(|_|FULL)?;
     slab.writable()[14..14+ipv4.len()].copy_from_slice(ipv4);
+    // The same original M1 TX owner also seals M2 kind1 controls at
+    // m2_clock(): stale zero time after a genuine control deadline can
+    // reverse its clock and reject an otherwise valid first DATA packet.
+    let now=m2_clock();
     let (pn,seq,used)=e.owner.seal_normal_off_one(
-        slab,ipv4.len(),budget,0,MonoNs(0)).map_err(|_|BAD_STAGE)?;
+        slab,ipv4.len(),budget,0,now).map_err(|_|BAD_STAGE)?;
     // Copy only the SAME M1 immutable FrozenRecord into the caller's bounded
     // carrier buffer while its genuine LoanBatch remains borrowed; recycle
     // generation-scoped loans on *every* path, including rejected batches.
     let tx_storage=std::mem::take(&mut e.tx_scratch);
-    let batch=match e.owner.drain_tx(MonoNs(0),tx_storage){
+    let batch=match e.owner.drain_tx(now,tx_storage){
         Ok(batch)=>batch,
         Err((_,storage))=>{e.tx_scratch=storage;return Err(BAD_STAGE)}
     };
@@ -975,7 +979,8 @@ fn v5_open_record_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let mut slab=e.arena.allocate().map_err(|_|FULL)?;
     slab.writable()[..wire.len()].copy_from_slice(wire);
     let unfolded=m0_tcp_unwrap(e,seq,wire.len())?;
-    e.owner.offer_after_active(slab,0..wire.len(),unfolded,MonoNs(0))
+    let now=m2_clock();
+    e.owner.offer_after_active(slab,0..wire.len(),unfolded,now)
         .map_err(|_|INVALID)?;
     let mut len=0usize;
     let mut valid=false;
@@ -983,7 +988,7 @@ fn v5_open_record_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let mut opened_kind1=None;
     let rx_storage=std::mem::take(&mut e.rx_scratch);
     let draining=e.owner.drain_windows_authenticated_kind1(
-        MonoNs(0),rx_storage,|pn,link|{
+        now,rx_storage,|pn,link|{
             // No unauthenticated DATA, replay, HEALTH or fragmented LINK
             // can reach a Windows kernel packet sink from this v3 boundary.
             // Fragmentation will be installed with the complete M3 table.
@@ -1861,6 +1866,44 @@ mod tests {
         assert_eq!(release(&mut r,h),OK);
     }
 
+    #[test]
+    fn m0_windows_original_source_after_real_clock_feedback_has_contiguous_seq(){
+        // A real M2 receipt is sealed at monotonic time, then a new
+        // original-Go TLS DATA must NOT rewind the exact same M1 owner
+        // clock by presenting synthetic MonoNs(0).
+        let mut r=Registry{generation:701,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        let ep=[2u8;16];
+        assert_eq!(bind_wintun(&mut r,h,ep,91,19),OK);
+        assert!(set_path_mtu(&mut r,h,ep,91,19,1400).is_ok());
+        let mut first=[0u8;2048];
+        let mut frame=[0u8;90];
+        frame[0]=0x45;frame[2..4].copy_from_slice(&90u16.to_be_bytes());
+        frame[8]=64;frame[9]=17;
+        let (n1,s1,_)=v3_seal_one(&r,h,ep,91,19,&frame,&mut first).unwrap();
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            assert!(m2_arm_entry(&mut e,ep,91,19).is_ok());
+            e.m2.as_mut().unwrap().feedback.on_authenticated_data(
+                RecordPn(89),m2_clock());
+        }
+        std::thread::sleep(std::time::Duration::from_millis(21));
+        let mut wire=[0u8;2048];
+        let (nc,sc,_pn)={
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_next_feedback_entry(&mut e,ep,91,19,&mut wire)
+                .unwrap().expect("actual original M2 authenticated draft")
+        };
+        assert_eq!(sc,s1.wrapping_add(n1 as u32));
+        let (n2,s2,_)=v3_seal_one(&r,h,ep,91,19,&frame,&mut first)
+            .expect("fresh DATA after kind1 must keep monotonic owner clock");
+        assert_eq!(s2,sc.wrapping_add(nc as u32));
+        assert!(n2>51);
+        assert_eq!(quiesce_wintun(&mut r,h,ep,91,19),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
     #[test]
     fn m0_windows_tcp_sequence_unwrap_gap_wrap_and_future_reject(){
         let mut r=Registry{generation:3,entries:BTreeMap::new(),game_groups:BTreeMap::new()};

@@ -50,11 +50,14 @@ fn seal_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     if !valid{return Err(INVALID)}
     let mut slab=e.arena.allocate().map_err(|_|FULL)?;
     slab.writable()[14..14+frame.len()].copy_from_slice(frame);
+    // Coherently advance the shared M1 owner clock used by DATA, parity
+    // and original Rust M2 control; never offer source at synthetic t=0.
+    let now=m2_clock();
     let (pn,seq,used)=e.owner.seal_fec2_product_one(
-        slab,frame.len(),kind,budget,0,epoch,MonoNs(0)
+        slab,frame.len(),kind,budget,0,epoch,now
     ).map_err(|_|BAD_STAGE)?;
     let scratch=std::mem::take(&mut e.tx_scratch);
-    let batch=match e.owner.drain_tx(MonoNs(0),scratch){
+    let batch=match e.owner.drain_tx(now,scratch){
         Ok(batch)=>batch,
         Err((_,scratch))=>{e.tx_scratch=scratch;return Err(BAD_STAGE)}
     };
