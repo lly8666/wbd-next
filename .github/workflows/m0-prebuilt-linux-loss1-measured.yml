@@ -1,0 +1,66 @@
+name: M0 Linux prebuilt genuine loss1 UDP independent delivery
+run-name: "M0 Linux prebuilt Normal loss1 offered delivered | ${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/m0-prebuilt-linux-arm64-parallel-20261028]
+    paths:
+      - ".github/workflows/m0-prebuilt-linux-loss1-measured.yml"
+      - "tools/m0-prebuilt-linux-loss1-delivery-diagnostic.sh"
+permissions:
+  contents: read
+  actions: read
+jobs:
+  linux-x64-normal-onepct-real-kernel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    env:
+      FROZEN_PRODUCT_SOURCE: 33ed20b4717dac23a2d70c02da170a57daeb02e1
+      WBD_V4_PUBLIC_MODE: normal
+      WBD_V4_PUBLIC_KERNEL_LOSS: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Download exact existing Linux original Go Rust compiled artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 40562809565
+          github-token: ${{ github.token }}
+          name: m0-plan024-linux-product
+          path: precompiled-linux/
+      - name: Fail closed source SHA and every prebuilt binary digest
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object tools/m0-v4-public-real-linux-netns.sh)" = "471d41579153d3e6ca70cc4d9c30af0e8c01efb9"
+          python3 - <<'PY'
+          import json,hashlib,pathlib,os
+          p=pathlib.Path('precompiled-linux');j=json.loads((p/'manifest.json').read_text())
+          assert j['source_sha']==os.environ['FROZEN_PRODUCT_SOURCE'],j
+          assert j['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
+          expected={'wbd-v4-client':'dd427dd7cc024584132ab2307917d9a495addf487876d12c6026833efcdf34e0',
+                    'wbd-v4-server':'7bbd33c5420728571ff7f2ffe05f3711f4c331067192279dac4fa7a4ffe5dcee',
+                    'libwbd_engine.so':'ebc4212acec05a5f812419531c06c9257bbd87fae0dbb231a41dd1d33adfd5de'}
+          assert j['sha256']==expected,(j['sha256'],expected)
+          for name,sha in expected.items():
+            assert hashlib.sha256((p/name).read_bytes()).hexdigest()==sha,name
+          print('M0_REUSED_BINARY_LINUX_X64_SOURCE_SHA256_VERIFIED')
+          PY
+          chmod 0755 precompiled-linux/wbd-v4-client precompiled-linux/wbd-v4-server
+      - name: Real original Go Rust Normal 1 percent kernel netem 512-packet and owned Stop
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iputils-ping iptables openssl
+          mkdir -p fixed-kernel-result
+          WBD_PREBUILT_LOSS_DIAGNOSTIC=1 bash tools/m0-prebuilt-linux-loss1-delivery-diagnostic.sh "$PWD/precompiled-linux"
+          echo M0_PREBUILT_NORMAL_1PCT_UNIQUE_DELIVERY_AND_OWNED_STOP_RECORDED
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-prebuilt-linux-loss1-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fixed-kernel-result/
+          if-no-files-found: warn
+          retention-days: 30
+
