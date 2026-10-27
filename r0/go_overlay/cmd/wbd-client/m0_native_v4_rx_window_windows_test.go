@@ -295,3 +295,19 @@ func TestM0RemediationNativeSourceBatchAlwaysRequiresRealM4Owner(t *testing.T){
   t.Fatal("zero-capacity stage admitted")
  }
 }
+
+func TestM0RemediationOriginalGoSourceBatchObservabilityIsNotFakeGoodput(t *testing.T){
+ p:=&m0NativeV4Peer{}
+ p.sourceBatchCounts[1]=2
+ p.sourceBatchCounts[4]=3
+ p.maxM2CompletionBatch=4
+ p.sourceBatchStageFailures=1
+ got:=p.Stats()
+ if got.SourceBatchCounts[1]!=2||got.SourceBatchCounts[4]!=3||
+  got.MaxM2CompletionBatch!=4||got.SourceBatchStageFailures!=1{
+  t.Fatal("bounded batch observability missing exact source owner counters")
+ }
+ if got.GoHeapAllocBytes!=0||got.GoNumGC!=0{
+  t.Fatal("generic Stats must not fake a Go runtime sample")
+ }
+}

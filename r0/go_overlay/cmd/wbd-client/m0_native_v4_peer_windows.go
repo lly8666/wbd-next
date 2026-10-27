@@ -68,6 +68,9 @@ type m0NativeV4Peer struct {
  // remains pending/frozen until a bounded synchronous batch report after I/O.
  m2Results [m0V4BatchPackets]realityfront.V4WindowsM2FirstsendResult
  m2ResultsCount int
+ sourceBatchCounts [5]uint64 // truthful 1..4 ready originals, not target fill rate
+ sourceBatchStageFailures uint64
+ maxM2CompletionBatch uint32
  // Fixed capacity, reused every fair TX turn. Go does not allocate a
  // fresh ciphertext slice or make four separate Rust FFI transitions.
  sourceInputs [realityfront.V4WindowsOriginalSourceBatchMax]realityfront.V4WindowsOriginalSourceInput
@@ -270,6 +273,10 @@ func(p *m0NativeV4Peer) transmitReadySourceBatch(
  if ready==0{return dropped,nil}
  count,err:=p.owner.SealBoundOriginalSourceBatch(
   ctx,p.sourceInputs[:ready],p.sourceOutputs[:ready])
+ p.mu.Lock()
+ p.sourceBatchCounts[ready]++
+ if err!=nil||count!=uint32(ready){p.sourceBatchStageFailures++}
+ p.mu.Unlock()
  if err!=nil||count!=uint32(ready){
   // Already allocated nonces/serials in Rust, if any, cannot be replayed
   // or bridged by Go. A hard owner stop protects the entire generation.
@@ -612,6 +619,9 @@ func(p *m0NativeV4Peer) flushOriginalFirstsend(ctx context.Context)error{
  // after NPF completion a Rust partial internal failure requires Stop.
  for i:=0;i<n;i++{p.m2Results[i]=realityfront.V4WindowsM2FirstsendResult{}}
  p.m2ResultsCount=0
+ p.mu.Lock()
+ if uint32(n)>p.maxM2CompletionBatch{p.maxM2CompletionBatch=uint32(n)}
+ p.mu.Unlock()
  if e!=nil||settled!=uint32(n){
   return fmt.Errorf("%w: actual original NPF M2 batch completed=%d expected=%d: %v",
    windowsclient.ErrN4NativeGuard,settled,n,e)
@@ -869,6 +879,15 @@ type m0NativeV4PacketStats struct{
  AutoPolicyError string `json:"auto_policy_error,omitempty"`
  OldestPendingMS int64 `json:"oldest_unacked_carrier_ms"`
  MaxInterdeliveryMS int64 `json:"max_observed_interdelivery_ms"`
+ SourceBatchCounts [5]uint64 `json:"original_source_batch_counts_0_to_4"`
+ SourceBatchStageFailures uint64 `json:"original_source_stage_failures"`
+ MaxM2CompletionBatch uint32 `json:"original_m2_firstsend_batch_peak"`
+ // Only Go runtime memory fields; Rust DLL/OS allocations are in
+ // the separate process WorkingSet/PrivateBytes sampler.
+ GoHeapAllocBytes uint64 `json:"go_runtime_heap_alloc_bytes_1hz,omitempty"`
+ GoHeapObjects uint64 `json:"go_runtime_heap_objects_1hz,omitempty"`
+ GoMallocsTotal uint64 `json:"go_runtime_mallocs_total_1hz,omitempty"`
+ GoNumGC uint32 `json:"go_runtime_num_gc_1hz,omitempty"`
 }
 func(p *m0NativeV4Peer) Stats()m0NativeV4PacketStats{
  if p==nil{return m0NativeV4PacketStats{}}
@@ -884,6 +903,9 @@ func(p *m0NativeV4Peer) Stats()m0NativeV4PacketStats{
   ExplicitOversize:p.oversize,PendingRecords:p.pendingCount,
   EffectiveM2:p.effective,
   OldestPendingMS:age,MaxInterdeliveryMS:p.maxRXInterdeliveryMs,
+  SourceBatchCounts:p.sourceBatchCounts,
+  SourceBatchStageFailures:p.sourceBatchStageFailures,
+  MaxM2CompletionBatch:p.maxM2CompletionBatch,
  }
  if p.autoController!=nil{
   state,err:=p.autoController.Snapshot()

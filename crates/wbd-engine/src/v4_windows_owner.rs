@@ -984,9 +984,9 @@ fn original_source_batch_entry(
     // wire budget before spending even one Rust AEAD nonce/TCP serial.
     let max=if e.feature7{
         #[cfg(feature="fec2_product_record")]
-        {if e.fec2_tx.is_none(){return (BAD_STAGE,0)}}
+        {if e.fec2_tx.is_none(){return (BAD_STAGE,0)};}
         #[cfg(not(feature="fec2_product_record"))]
-        {return (BAD_STAGE,0)}
+        {return (BAD_STAGE,0);}
         budget.record_payload_mtu.saturating_sub(14)
     }else{budget.single_business_payload_mtu};
     for row in rows{
