@@ -213,8 +213,8 @@ if [ "$WBD_ARM64_CAPACITY_TRIAL" = grade-stress ]; then
   case "$rate" in 3|10|50|100|200|500) ;; *) exit 2;; esac
   case "$duration" in 60|120) ;; *) exit 2;; esac
   printf '%s\n' "$WBD_STRESS_NAME $mode fixed_grade=$profile rate=$rate duration=$duration" >"$out/stress-effective.txt"
-  (uname -a; cat /sys/fs/cgroup/cpu.max; cat /sys/fs/cgroup/memory.max) >"$out/host-system.txt"
-  (cat /proc/pressure/cpu; cat /proc/pressure/memory) >"$out/host-psi-before.txt"
+  (uname -a; for f in /sys/fs/cgroup/cpu.max /sys/fs/cgroup/cpu/cpu.cfs_quota_us /sys/fs/cgroup/memory.max /sys/fs/cgroup/memory/memory.limit_in_bytes; do if [ -r "$f" ]; then printf "HOST_CGROUP_FOUND %s " "$f"; cat "$f"; else printf "HOST_CGROUP_UNAVAILABLE %s\n" "$f"; fi; done) >"$out/host-system.txt"
+  (for f in /proc/pressure/cpu /proc/pressure/memory; do if [ -r "$f" ]; then cat "$f"; else echo "PSI_UNAVAILABLE $f"; fi; done) >"$out/host-psi-before.txt"
   sudo -n ip netns exec "$client_ns" tc -s qdisc show dev v4ac >"$out/underlay-client-qdisc-before.txt"
   sudo -n ip netns exec "$server_ns" tc -s qdisc show dev v4as >"$out/underlay-server-qdisc-before.txt"
   touch "$out/sampling-active"
@@ -241,7 +241,7 @@ if [ "$WBD_ARM64_CAPACITY_TRIAL" = grade-stress ]; then
   wait "$rtt" || true
   rm -f "$out/sampling-active"
   wait "$monitor" || true
-  (cat /proc/pressure/cpu; cat /proc/pressure/memory) >"$out/host-psi-after.txt"
+  (for f in /proc/pressure/cpu /proc/pressure/memory; do if [ -r "$f" ]; then cat "$f"; else echo "PSI_UNAVAILABLE $f"; fi; done) >"$out/host-psi-after.txt"
   sudo -n ip netns exec "$client_ns" tc -s qdisc show dev v4ac >"$out/underlay-client-qdisc-after.txt"
   sudo -n ip netns exec "$server_ns" tc -s qdisc show dev v4as >"$out/underlay-server-qdisc-after.txt"
   sudo -n ip -s -n "$client_ns" link show v4ac >"$out/underlay-client-interface-after.txt"

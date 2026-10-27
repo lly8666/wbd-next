@@ -57,3 +57,5 @@ jobs:
           path: arm64-netns-result/
           if-no-files-found: warn
           retention-days: 30
+
+# S7 fixed host cgroup optional measurement: fixed0 exact frozen original product, one scene.

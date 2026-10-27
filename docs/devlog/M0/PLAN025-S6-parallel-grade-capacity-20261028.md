@@ -9,3 +9,11 @@ Per-action screen: actual receiver >=95% target in both directions, measured UDP
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Test-only ten independent source-pinned ARM64 native stress/monitor Actions and batch intent; no product mode, algorithm, default, ABI, Windows/GUI or feature promotion."}
 ```
+
+## S7 first preflight failure recovery, all ten originals retained
+- S6 exact source `94aedaf5ca186dd619b10b896db9ba316ac64c03` original ten Actions 40601561489/40601561409/40601561445/40601561398/40601561357/40601561411/40601561452/40601561355/40601561481/40601561491 **FAIL**, before actual iperf UDP measurement. Primary first error from original hosted ARM64 jobs: `cat: /sys/fs/cgroup/cpu.max: No such file or directory`. Reused Go/Rust exact binary SHA256SUMS PASS, native two-netns original TLS and 20 authentic FEC ICMP each direction through Rust passed in sampled artifacts, native Stop PASS. The host uses a cgroup variant without cgroup-v2 `cpu.max`, so this is solely a new test monitor environment compatibility error; all ten workload test statuses are NOT_RUN, cannot be claimed product FAIL or capacity.
+- S7 only makes cpu/memory quota file + PSI optional/read-only, recording exact `HOST_CGROUP_UNAVAILABLE`/ `PSI_UNAVAILABLE` text in artifact; never substitutes a fake zero, does not suppress real owner/app/Stop, profile readback or throughput errors. Same exact compiled product and per-file hashes, same ten fixed scene descriptors/rates/durations, no Go/Rust recompilation and no increased load. Each workflow comment below is a unique push-trigger declaration for its independent Action. Original ten red stay in history.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Repair only hosted runner cgroup v1/v2 optional CPU/PSI capture; preserve exact product and security, same ten single-scenario performance measurements."}
+```
