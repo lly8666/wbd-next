@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "recovered_terminal_original_go_windows_linux_signed_native_seven_mode_functional",
+  "source_sha": "a2594eba2dea88d3cea0e1fb02cf777300709a1a",
+  "source_branches": [
+    "experiment/windows-wiring-s33-source-locked-preflight-20261027",
+    "experiment/windows-extreme-remediation-implementation-20261027"
+  ],
+  "run_id": 40540082915,
+  "run_attempt": 1,
+  "workflow": "m0-wl-public-normal-full.yml",
+  "run_status": "completed",
+  "run_conclusion": "failure",
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40540082915",
+  "job_id": 122318180222,
+  "artifact": {
+    "id": 12750502480,
+    "name": "m0-wl-full-public-normal-direct",
+    "digest": "sha256:4b114f1f11b9b06568a3bff6256f66ec0ee082e4ec9807250b4e381358a41e7a",
+    "verified_zip_sha256": true
+  },
+  "windows_original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "mode_results": {
+    "normal": {
+      "result": "PASS_SCOPED",
+      "kernel_udp": "PASS",
+      "kernel_tcp": "PASS",
+      "owned_stop": "PASS"
+    },
+    "fixed": {
+      "result": "PASS_SCOPED",
+      "kernel_udp": "PASS",
+      "kernel_tcp": "PASS",
+      "owned_stop": "PASS"
+    },
+    "game2": {
+      "result": "PASS_SCOPED",
+      "kernel_udp": "PASS",
+      "kernel_tcp": "PASS",
+      "owned_stop": "PASS"
+    },
+    "game4": {
+      "result": "PASS_SCOPED",
+      "kernel_udp": "PASS",
+      "kernel_tcp": "PASS",
+      "owned_stop": "PASS"
+    },
+    "game2-fec": {
+      "result": "PASS_SCOPED",
+      "kernel_udp": "PASS",
+      "kernel_tcp": "PASS",
+      "owned_stop": "PASS"
+    },
+    "game4-fec": {
+      "result": "PASS_SCOPED",
+      "kernel_udp": "PASS",
+      "kernel_tcp": "PASS",
+      "owned_stop": "PASS"
+    },
+    "auto": {
+      "result": "FAIL",
+      "kernel_udp_tcp_duplex": "NOT_RUN",
+      "full_owned_stop": "NOT_RUN",
+      "old_os_wal_rollback": "OBSERVED",
+      "error": "FEC2 original native count=0 rc=1"
+    }
+  },
+  "evidence_limitations": {
+    "natural_auto_revision": "NOT_APPLIED",
+    "wl_n0": "NOT_RUN",
+    "wl_n1": "NOT_RUN",
+    "wl_n5": "NOT_RUN",
+    "global_wfp_gui_dns_ipv6": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN",
+    "m1_special_hosted_tests": "NOT_RUN"
+  },
+  "first_error": "Auto Windows original Go FEC2 open failed with rc=1, propagated as fatal native owner failure after ready; source log contains original Rust M1/M3 open owner failure; actual Linux/Windows app setup visible but full duplex/Stop not completed",
+  "followup_code_hypothesis": "Source-locked Go FEC2 opener uses fmt.Errorf rc=%v rather than rc=%w, dropping v4WindowsNativeABIError; V4WindowsNativeOwnerFatal cannot recover INVALID(1) classification. Must verify with Actions; other Rust rejection origins not yet proven.",
+  "captured_at_utc": "2026-10-27T16:33:21Z",
+  "recovered_at": "2026-10-28",
+  "qualification": "SCOPED_FUNCTIONAL_ONLY",
+  "root_cause_status": "SOURCE_HYPOTHESIS_NOT_YET_REGRESSION_TESTED"
+}

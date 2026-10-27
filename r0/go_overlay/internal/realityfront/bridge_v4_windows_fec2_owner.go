@@ -104,6 +104,19 @@ func winFec2Sealer(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
  if err!=nil||used!=uintptr(len(wire)){return nil,0,0,errors.Join(errV4WindowsOwner,err)}
  return wire,seq,pn,nil
 }
+// Preserve the exact Rust ABI status across the Go FEC2 RX boundary.
+// INVALID(1) is a packet rejection in the existing transport contract;
+// a missing DLL, unknown owner, capacity, phase or Stop fault remains fatal.
+// A prior rc=%v wrapper erased the typed code and killed real Auto traffic.
+func winFec2OpenCallStatus(count uint32, callErr error) error{
+ if callErr!=nil{
+  return fmt.Errorf("%w: FEC2 original native count=%d rc=%w",errV4WindowsOwner,count,callErr)
+ }
+ if count>16{
+  return fmt.Errorf("%w: FEC2 original native delivery count=%d exceeds 16",errV4WindowsOwner,count)
+ }
+ return nil
+}
 func winFec2Opener(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
  device *v4WindowsRealDeviceLease,seq uint32,wire []byte,
 )([]V4WindowsFEC2Delivery,error){
@@ -126,8 +139,8 @@ func winFec2Opener(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
   uintptr(unsafe.Pointer(&raw[0])),uintptr(len(raw)),
   uintptr(unsafe.Pointer(&count)))
  runtime.KeepAlive(bridge.epoch);runtime.KeepAlive(wire);runtime.KeepAlive(raw)
- if err!=nil||count>16{
-  return nil,fmt.Errorf("%w: FEC2 original native count=%d rc=%v",errV4WindowsOwner,count,err)
+ if statusErr:=winFec2OpenCallStatus(count,err);statusErr!=nil{
+  return nil,statusErr
  }
  out:=make([]V4WindowsFEC2Delivery,0,count)
  for i:=uint32(0);i<count;i++{
