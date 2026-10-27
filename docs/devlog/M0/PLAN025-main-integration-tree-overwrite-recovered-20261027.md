@@ -120,6 +120,13 @@ This is a root-cause hypothesis for observed Normal seal rejection, NOT PROOF th
 
 ## S13 — source-locked R2 receipt regressions brought to current v3 one-opportunity contract
 Recovered exact original Action40483279229 source6d35857 receipt job122119010582: 7 PASS, 4 FAIL. Every failing assertion expected shadow.outstanding() 1 but actual 0 after a terminal repair. Re-read current wbd-recovery/receipt.rs on_send_result: Accepted, Uncertain and NotSent each remove the single optional shadow after real driver disposition; repeat must be stale. Updated only those four historical tests with new equal-strength assertions: no second PN0 repair, immutable exact ciphertext, real accepted F credit, definite NotSent refund, Uncertain still charged, no duplicate socket send, correct independent authentic new PN1 after old NotSent, distinct tunnels and clean Arena reclamation. No shared production repair policy changed or historical FAIL erased. Execution remains NOT_RUN until whole candidate SOURCE freeze.
-```feature-impact
+```json
 {"kind":"none","ids":[],"reason":"Historical native receipt assertion fixtures updated to shared v3 terminal one-opportunity accounting; no product code or public feature change."}
+```
+
+
+## S14 — original Rust M1/FEC2 sequence interleave protection
+Re-read the current FixedStream source/poll and original m2_next_feedback_entry (real m2_clock), stage_fixed_parity_entry callback and settled immutable output. Added a same-epoch deterministic interleave of 16 actual FEC source seals with truthful original M2 firstsend, authenticated-data-scoped reverse control, completion, then due FEC parity. Every emitted SEQ must equal the prior accepted descriptor end and every PN is nonduplicated. The historical 9d natural Auto 428B mismatch remains FAIL until exact native Actions after the full batch, and this does not conceal burned/incomplete packets by advancing Go expectations.
+```feature-impact
+{"kind":"none","ids":[],"reason":"Additional deterministic source/control/parity sequence order protection for existing experimental A1 clock fix, no product default or formal qualification change."}
 ```

@@ -917,6 +917,60 @@ mod tests{
         }
     }
     #[test]
+    fn m0_windows_fixed_source_then_true_kind1_control_then_parity_seq_is_contiguous(){
+        // Reproduces the source/control/parity interleaving of the historic
+        // natural Auto 428-byte control mismatch at original Rust M1.
+        // This is a deterministic *unit*, not proof of the failing NPF run.
+        let mut r=Registry{generation:911,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=setup(&mut r,false,811,81);
+        let ep=[2;16];
+        let mut last=600u32;
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_arm_entry(&mut e,ep,811,81).unwrap();
+            for i in 0..16u8 {
+                let mut wire=[0u8;2048];
+                let (n,seq,pn)=stage_fixed_source_entry(
+                    &mut e,ep,811,81,&data(i+1),&mut wire).unwrap();
+                assert_eq!(seq,last);
+                last=seq.wrapping_add(n as u32);
+                m2_kernel_firstsend_entry(&mut e,ep,811,81,pn,seq,n,1)
+                    .expect("exact typed copy of freshly sealed M1 DATA");
+            }
+            e.m2.as_mut().unwrap().feedback.on_authenticated_data(
+                RecordPn(711),m2_clock());
+        }
+        std::thread::sleep(std::time::Duration::from_millis(21));
+        let (control_seq,control_len,control_pn)={
+            let mut e=r.entries[&h].lock().unwrap();
+            let mut wire=[0u8;2048];
+            let (n,seq,pn)=m2_next_feedback_entry(
+                &mut e,ep,811,81,&mut wire).unwrap().unwrap();
+            assert_eq!(seq,last,"M2 kind1 must not skip prior source");
+            m2_finish_feedback_entry(&mut e,ep,811,81,pn,1).unwrap();
+            (seq,n,pn)
+        };
+        assert!(control_len>FIXED_WIRE_OVERHEAD && control_pn>=16);
+        last=control_seq.wrapping_add(control_len as u32);
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            let parity=stage_fixed_parity_entry(&mut e,ep,811,81)
+                .expect("deferred shared FEC quantum after M2 control");
+            assert!(parity.count>0 && parity.count<=4);
+            for row in &parity.rows[..parity.count as usize] {
+                assert_eq!(row.seq,last,"parity must follow control exactly");
+                last=last.wrapping_add(row.used);
+            }
+            e.fec2_tx.as_mut().unwrap().settle_staged(
+                parity.count as u8,0,0).unwrap();
+        }
+        assert_eq!(quiesce_wintun(&mut r,h,ep,811,81),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+
+    #[test]
     fn m0_windows_fixed6_frozen_linux_stream_same_block_parity_npf_maturity_fence(){
         // Native Windows scoped crypto+M1/M2 unit; not a genuine NPF syscall
         // or two-OS product run. The latter must remain separately NOT_RUN.
