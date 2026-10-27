@@ -16,6 +16,8 @@ pub(super) struct WinGameGroup {
     epoch:[u8;16],
     tick:u64,
     role_server:bool,
+    started:std::time::Instant,
+    fec_pending:Vec<Option<crate::v4_game_lane::PreparedGameFecBatch>>,
 }
 #[repr(C)]
 #[derive(Clone,Copy)]
@@ -80,6 +82,8 @@ pub(super) fn join(
     r.game_groups.insert(group,Arc::new(Mutex::new(WinGameGroup{
         adapter,handles:ids,lanes,generation,
         epoch:scope.ok_or(INVALID)?,tick:0,role_server:server,
+        started:std::time::Instant::now(),
+        fec_pending:(0..handles.len()).map(|_|None).collect(),
     })));
     Ok(group)
 }
@@ -89,6 +93,7 @@ fn stopped_group(r:&mut Registry,h:u64)->i32{
     if game.lanes.iter().any(|lane|lane.lock().ok().is_none_or(|e|
         e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
         !e.device.is_some_and(|d|d.quiesced))){return STOP_INCOMPLETE}
+    if game.fec_pending.iter().any(Option::is_some){return STOP_INCOMPLETE}
     game.adapter.stop();
     for lane in &game.lanes{
         let Ok(mut e)=lane.lock()else{return STOP_INCOMPLETE};
@@ -188,6 +193,107 @@ fn receive_group(
     };
     game.adapter.receive(key,wire.to_vec()).map_err(|_|INVALID)
 }
+
+#[cfg(feature="fec2_product_record")]
+pub(super) fn receive_fec_group(
+    game:&mut WinGameGroup,h:u64,lane:u32,wire:&[u8],
+)->Result<(Vec<Vec<u8>>,bool),i32>{
+    if !game.adapter.has_game_fec()||wire.len()<32||wire.len()>1536{
+        return Err(BAD_STAGE)
+    }
+    let idx=usize::try_from(lane).ok().and_then(|v|v.checked_sub(1))
+        .filter(|&v|v<game.handles.len()).ok_or(INVALID)?;
+    if game.fec_pending[idx].is_some(){return Err(BAD_STAGE)}
+    if game.lanes.iter().any(|member|member.lock().ok().is_none_or(|e|
+        e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
+        !e.device.is_some_and(|d|!d.quiesced))){return Err(BAD_STAGE)}
+    let key=LaneKey{tunnel:TunnelKey{slot:14,generation:game.generation},
+        slot:lane,generation:game.generation};
+    let handle=game.adapter.receiver_handle();
+    let mut rx=handle.lock().map_err(|_|BAD_STAGE)?;
+    let mut encrypted=wire.to_vec();
+    let now=MonoNs(game.started.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
+    let batch=rx.prepare_fec_batch(key,&mut encrypted,now)
+        .map_err(|_|INVALID)?;
+    drop(rx);
+    let Some(batch)=batch else{return Ok((Vec::new(),false))};
+    if batch.frames().len()>16||batch.frames().iter().any(|f|
+        f.len()<20||f.len()>2048){return Err(INVALID)}
+    let frames=batch.frames().to_vec();
+    game.fec_pending[idx]=Some(batch);
+    Ok((frames,true))
+}
+#[cfg(feature="fec2_product_record")]
+pub(super) fn finish_fec_group(
+    game:&mut WinGameGroup,lane:u32,all_kernel_tun_copied:bool,
+)->i32{
+    let Some(idx)=usize::try_from(lane).ok().and_then(|v|v.checked_sub(1))
+        .filter(|&v|v<game.fec_pending.len())else{return INVALID};
+    let Some(batch)=game.fec_pending[idx].take()else{return BAD_STAGE};
+    let handle=game.adapter.receiver_handle();
+    let Ok(mut rx)=handle.lock()else{return BAD_STAGE};
+    if rx.finish_fec_batch(batch,all_kernel_tun_copied).is_err(){return BAD_STAGE}
+    OK
+}
+#[cfg(feature="fec2_product_record")]
+#[repr(C)]
+#[derive(Clone,Copy)]
+pub struct WbdWindowsGameFecFrame{
+    pub length:u32,pub bytes:[u8;2048],
+}
+#[cfg(feature="fec2_product_record")]
+#[repr(C)]
+pub struct WbdWindowsGameFecBatch{
+    pub count:u32,pub pending:u32,
+    pub frames:[WbdWindowsGameFecFrame;16],
+}
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v4_game_receive_fec(
+    group:u64,lane:u32,wire:*const u8,len:usize,
+    out:*mut WbdWindowsGameFecBatch,size:usize,
+)->i32{
+    if wire.is_null()||out.is_null()||
+        len<32||len>1536||size!=std::mem::size_of::<WbdWindowsGameFecBatch>(){
+        return INVALID
+    }
+    let bytes=unsafe{std::slice::from_raw_parts(wire,len)};
+    let owned={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(owned)=r.game_groups.get(&group)else{return UNKNOWN};
+        Arc::clone(owned)
+    };
+    let Ok(mut game)=owned.lock()else{return BAD_STAGE};
+    let Ok((frames,pending))=receive_fec_group(&mut game,group,lane,bytes)
+        else{return INVALID};
+    // Zero-filled batch; no uninitialized bytes or multiple logical-source
+    // delivery hidden inside one frame. OS TUN writes happen AFTER return.
+    let mut value=WbdWindowsGameFecBatch{
+        count:frames.len() as u32,pending:u32::from(pending),
+        frames:[WbdWindowsGameFecFrame{length:0,bytes:[0;2048]};16]
+    };
+    for (i,frame) in frames.iter().enumerate(){
+        value.frames[i].length=frame.len() as u32;
+        value.frames[i].bytes[..frame.len()].copy_from_slice(frame);
+    }
+    unsafe{out.write(value)};
+    OK
+}
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_win_owner_v4_game_finish_fec(
+    group:u64,lane:u32,all_kernel_tun_copied:u32,
+)->i32{
+    if all_kernel_tun_copied>1{return INVALID}
+    let owned={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(owned)=r.game_groups.get(&group)else{return UNKNOWN};
+        Arc::clone(owned)
+    };
+    let Ok(mut game)=owned.lock()else{return BAD_STAGE};
+    finish_fec_group(&mut game,lane,all_kernel_tun_copied==1)
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_win_owner_v4_game_join(
     handles:*const u64,count:usize,server:u32,out:*mut u64,
@@ -385,6 +491,28 @@ mod tests{
             assert_eq!(staged.len(),n);
             assert!(staged.iter().all(|x|x.length>=63));
             assert!(staged.windows(2).all(|x|x[0].wire!=x[1].wire));
+            let wire=&staged[1];
+            let server_group=r.game_groups[&s].clone();
+            let mut receiver=server_group.lock().unwrap();
+            let (frames,pending)=receive_fec_group(&mut receiver,s,wire.lane,
+                &wire.wire[..wire.length as usize]).unwrap();
+            assert!(pending);
+            assert_eq!(frames,vec![ipv4.to_vec()]);
+            assert_eq!(finish_fec_group(&mut receiver,wire.lane,false),OK);
+            drop(receiver);
+            // Failed genuine TUN copy has NOT committed this logical ID;
+            // an independently sealed fresh source on a different lane
+            // must still be deliverable.
+            let newer=offer_records(&r,c,&ipv4,n).unwrap();
+            let next=&newer[0];
+            let mut receiver=server_group.lock().unwrap();
+            let (frames,pending)=receive_fec_group(&mut receiver,s,next.lane,
+                &next.wire[..next.length as usize]).unwrap();
+            assert!(pending);
+            assert_eq!(frames,vec![ipv4.to_vec()]);
+            assert_eq!(finish_fec_group(&mut receiver,next.lane,true),OK);
+            assert_eq!(finish_fec_group(&mut receiver,next.lane,true),BAD_STAGE);
+            drop(receiver);
             // Distinct per-lane encrypted source, one shared Linux FEC
             // owner. Receiving FEC recovered frame(s) still requires a
             // batched TUN-success commit ABI and physical kernel workers.
