@@ -52,8 +52,8 @@ func TestM0PLAN026WindowsNativeV4ParallelModeDoesNotDowngradeAndStalledCarrierFa
  }
  for _,mode:=range []m0WindowsV4Mode{m0WinModeNormal,m0WinModeFixed,m0WinModeAuto}{
   p,e:=newM0NativeV4PeerForMode(owner,ep,flow,inbound,mode)
-  if e!=nil||p==nil||p.mode!=mode||p.blockID!=1{
-   t.Fatalf("original TLS peer mode selection incorrect %s error %v",mode,e)
+  if e!=nil||p==nil||p.mode!=mode||len(p.pending)!=0{
+   t.Fatalf("original TLS peer selection must not pre-create legacy Go FEC source blocks %s error %v",mode,e)
   }
   p.pending=append(p.pending,m0NativeV4Outbound{
    seq:500,wire:[]byte{1,2,3},sentAt:time.Now().Add(-5*time.Second),
