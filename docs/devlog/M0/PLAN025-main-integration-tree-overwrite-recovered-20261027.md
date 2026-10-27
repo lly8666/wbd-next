@@ -251,6 +251,12 @@ Inspected pinned original Go five-stage network plan/MTU writer/WAL: `n4WindowsM
 
 ## S33 — exact immutable M4 SHA fence recovered after S32 red maintenance
 S32 exact source8fa4495 Governance40527991769 SUCCESS, maintenance40527992196 FAIL 2 tests: frozen imported M4 native_unified_network_transaction.go and native_unified_assembly_windows_test.go had been changed despite explicit M4 original source blob pins. This is a HARD governance constraint, not a harmless CI expectation. Reverted BOTH original M4 files byte-for-byte to SHA1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f and f9f48f9412cf3699a3d4cd773943d7e96da1efe7, restored their original manifest pins, and moved M0's new real WAL runtime MTU read-only method plus cold native negative test into TWO additive Windows-only M0-specific Go files; exact hashes registered as new create operations. The same original protected M4 owner/gate/guard still owns all OS decisions; a new same-package method does not authorize external OS writes. Preserve S32 red Action history; no native product/perf qualification or in-place MTU write asserted.
-```feature-impact
+```json
 {"kind":"none","ids":[],"reason":"Restore immutable M4 code SHA without losing M0 additive native live-WAL MTU guard or negative tests."}
+```
+
+## S35 — exact assembly preflight repaired after genuine compile gate red
+S34 exact SOURCE1d82717 GitHub Action40529451023 returned FAIL at cheap `tools/prepare_windows_wiring.py --check-only` before any native Go compile. Original manifest had exactly ONE stale `create` overlay path after comparing all 65 operations against full source tree: `r0/go_overlay/internal/realityfront/bridge_v4_windows_auto_controller.go` actual blob3cee40e963cd4a95bcd310ba163ad723d7df0631, manifest stale b234a6266208e41a9d5ea9c128278c5471fb9806. All other existing overlay entries exact; historic `replace` ops intentionally contain original blob only, no overlay path. Updated one manifest result_blob without touching frozen original M4 or Rust semantics, preserving first-red action. Re-run exact compile-only workflow on new source; zero real two-OS product/perf dispatch.
+```feature-impact
+{"kind":"none","ids":[],"reason":"Pin exact current original M0 auto-controller overlay blob in original-Go immutable assembly manifest; no product algorithm change."}
 ```
