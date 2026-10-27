@@ -102,6 +102,13 @@
       "status": "FAIL",
       "source_sha": "67ed412e9075ad95f863d4e042f119d81dce407a",
       "evidence": "docs/evidence/M0/PLAN024-W168-Windows-Auto-natural-M2-source67ed-failure-20261027.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "Original Go credential TLS original Rust FEC2 Auto initial Strong5 native Windows signed Npcap/Wintun and Linux raw/TUN, genuine bidirectional UDP/TCP and both-owned Stop; source772b8b3 narrow starter only, natural feedback grade and performance NOT_RUN",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "772b8b3af48ee8f8600b16baaf2ddc3c53e84c37",
+      "evidence": "docs/evidence/M0/PLAN025-S48-Auto-start-native-source772b8b3-success-20261028.json"
     }
   ],
   "limitations": [
@@ -115,7 +122,8 @@
     "Latest exact source a0c8eeb Actions40457048399 genuine Windows↔Linux kernel UDP after Auto operator revision2 via shared FecV2Step/FixedStream, M2 mature exact revision2 and owned Stop SUCCESS. This does NOT test automatic periodic 2s/8s policy-driven grade selection, all 0..6, WinForms Applied, global OS or physical. Older 80e5289 Actions40455980911 job FAIL at stale harness normal-report file is preserved.",
     "Source6707bd52 moved original Linux auto downshift sampling-history rule into shared Go policy and gates automatic adaptation on authenticated M2 Applied; source6707 native-independent Windows Go production/test compile preflight Action40462558630 PASS, native mode not rerun. Source99a Action40462738560 FAIL only because PowerShell split unquoted Go -test.run; source072a19e7 fixes the PowerShell test argument and Actions40463122392 PASS for source-pinned assembly, original Windows Go production/test compile and the already compiled TestF2ControlAutoPendingM2CannotEvaluateOrStackNativeRevisions. Full native job SKIPPED by new policy. This implementation is NOT proof of natural 2s/8s loss-driven Auto mode change.",
     "Native source67ed Actions40465641281 real Auto natural 2s/8s target FAIL: 53s Windows→Linux 3393 source sends, original Rust mature fast 128..268 <512, genuine Linux-shared policy rightly does not downshift. No algorithm/safety-bypass permitted; real kernel UDP/TCP and previously scoped Auto operator revision positive still stand. Sourcea3bb is only paced genuine-UDP fixture repair and NOT_RUN until outcome.",
-    "2026-10-27 user-authorized exact development-tree main overwrite f6469a: implementation code is now present on main but remains experimental, with no new main-SOURCE native/product/global/physical PASS or formal promotion; previous exact-SOURCE PASS/FAIL unchanged."
+    "2026-10-27 user-authorized exact development-tree main overwrite f6469a: implementation code is now present on main but remains experimental, with no new main-SOURCE native/product/global/physical PASS or formal promotion; previous exact-SOURCE PASS/FAIL unchanged.",
+    "Recovered 2026-10-28 S48 source772b8b3 actual Auto initial Strong5 signed Win/Linux original Go TLS native UDP/TCP+owned Stop PASS Action40546243971 artifact12754660102 SHA256 f8b8899b...; historical S45 sourcea2594eba Auto FAIL preserved. User-authorized fast-rise/downgrade<=120s decision 054f18c; exact S52 source1b33e4a4 natural Action40550358765 was RUNNING as of main H302 and is NOT a current PASS; N0/physical/global still NOT_RUN."
   ],
   "promotion": null
 }

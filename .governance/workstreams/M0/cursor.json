@@ -4,18 +4,19 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 301,
-  "checkpoint_sha": "6f0212832fb9cc7e3ea6e5dc81085ecb5f62e5f0",
+  "sequence": 302,
+  "checkpoint_sha": "054f18ce6294ed3826d5cc2840400b018ada0689",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "PLAN025 / Windows extreme remediation: S1–S45 native implementation source a2594eba; S46 main recovered terminal receipt, S47 ABI error-provenance fix and S48 isolated original-Go regression source 772b8b3af48ee8f8600b16baaf2ddc3c53e84c37 in experiment/windows-wiring-s33-source-locked-preflight-20261027. Experiment/windows-extreme-remediation-implementation-20261027 still points to a2594eba; do not assume both heads now equal.",
-  "why_now": "Recovered exact S45 signed Win↔Linux seven-mode Action40540082915: Normal, Fixed, Game2, Game4, Game2-FEC, Game4-FEC PASS scoped native first delivery/UDP/TCP/Stop; Auto FAIL Rust C ABI INVALID(1) mis-escalated by Go error text wrapper, full Auto duplex/Stop NOT_RUN. S47 Action40544962861 FAIL original Go bridge test fixture undefined v4PairWithPrivateBridgeCipher, native SKIPPED. S48 only adjusts test fixture; Windows/Linux Rust and one-mode original Go compile/native Action40546243971 in flight at H301. S48 governance40546243537 FAIL because devlog updated feature ID fec-auto without card changed; maintenance40546243397 PASS. Prior source 9d2362d natural Auto SEQ FAIL and original four receipt FAIL remain historical, not retconned.",
+  "current_task": "M0 PLAN025 authorized Windows extreme remediation S1-S52. Six source-a2594eba real native modes PASS scoped, its Auto FAIL unchanged; source772b8b3 original Go native Auto starter + two-OS real UDP/TCP and Stop PASS Action40546243971/1, full source f8b...artifact. New user Auto acceptance decision 054f18c now controls: rising rapid with transition packet loss allowed; healthy one-step downgrade by 120 seconds, genuine M2 Applied. S51 artifact/parser preflight FAILED 40549008961; exact S52 1b33e4a4 source natural Auto full Action40550358765 in flight; Governance S52 PASS. Native Windows/Linux & ARM64/physical/perf independent qualifications remain scoped.",
+  "why_now": "S48 source772b8b3 actions40546243971 native job122339783712 SUCCESS original Windows TLS Wintun Npcap WAL ↔ Linux WSL2 TUN UDP/TCP/owned Stop; artifact12754660102 exact SHA256 f8b8899b3d989221526bc8a84b99a615a315b7461a26dbdd89f107e016fe6562 independently verified. S51 sourcea623c37 Action40549008961 FAIL in new Python parser test (literal newline), all native SKIPPED. S52 source1b33e4a4 fixes true fixture newlines and extends honest steady natural observation to119s under new <=120s user rule. S52 initial Python/Go/Rust compile PASS, Linux product build PASS and original signed native Windows job active, no claim of natural Applied yet.",
   "done_when": "Whole original-Go TLS→shared Rust M1/M2/M3 FEC2 Fixed/Auto & 2/4 real Game lanes→original Windows Npcap/Wintun/WFP/route/DNS/WAL/GUI↔Linux raw/TUN and both-owned Stop across true applicable config/lifecycle. 4977f source seven initial functional mode core PASS; remaining dynamic Auto/GUI/global/lifecycle and weak-network use their own exact evidence. No fake Applied or independent Windows FEC owner.",
-  "next_action": "Close exact S48 Actions40546243971/1: inspect final first failure and artifacts; preserve any FAIL. Resolve S48 Feature catalog declaration/card coherence without weakening checks, then if Windows compile now passes, diagnose only real Auto first-delivery issue and attempt exact-source scoped native acceptance; no replay of six accepted modes, no performance or natural Auto claim from startup PASS. Before next CODE change recheck module/real call chain/recent fix. Once scoped Auto succeeds, run natural 2s/8s as separate genuine workload then single-scene paired performance/MTU/capacity Actions per remediation plan; global physical/GUI still NOT_RUN.",
+  "next_action": "Settle source1b33e4a4 exact Actions40550358765/1 terminal and original mode artifact first error; keep both old 9d source M2 SEQ and S51 Python red. If native natural one-step Applied <=120s succeeds, record exact positive and separately design one bounded loss-driven rapid upshift scenario with transition-loss permitted; if fails, first locate offered socket PPS versus M2 valid fast/slow/actual-k versus Go/Rust native state/SEQ, follow NETWORK_TRIAGE readback and do one distinguishing fix. After functional gate consolidate experiment into main retaining current user decision+cursor, then same-source paired one-scenario N0 etc per plan. Do not repeat six accepted startup modes and do not issue parallel performance stress while natural Auto unresolved.",
   "unverified": true,
-  "last_tested_source": "a2594eba2dea88d3cea0e1fb02cf777300709a1a",
+  "last_tested_source": "772b8b3af48ee8f8600b16baaf2ddc3c53e84c37",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN025-S45-seven-mode-source-a2594eba-recovered-20261028.json"
+    "docs/evidence/M0/PLAN025-S45-seven-mode-source-a2594eba-recovered-20261028.json",
+    "docs/evidence/M0/PLAN025-S48-Auto-start-native-source772b8b3-success-20261028.json"
   ],
   "context_refs": [
     "docs/architecture/TEST_PLAN.md",
@@ -28,5 +29,5 @@
     "docs/evidence/windows-main-audit-20261027.json"
   ],
   "open_requests": [],
-  "partial_summary": "S46 recovered exact S45 result from same SHA artifact: six genuine Win/Linux native modes PASS scoped and Auto FAIL; six green cannot be used for natural Auto/performance. Full S1–S45 remediation experiment source not merged into main. S47 Go FEC2 errors.As/%w repair unqualified; S48 in-flight Actions and governance declaration red, previous S47 compile red. M1 specialized hosted, real Auto 2s/8s, WL-N0/N1/N5, ARM64 native/performance, physical/global GUI/WFP remain NOT_RUN as applicable."
+  "partial_summary": "S45 a2594eba six modes authentic Win/Linux PASS scoped and Auto FAIL; S48 772b8b3 Auto starter native duplex UDP/TCP/owned Stop PASS. S51 Python fixture preflight FAIL, native skipped. S52 1b33e4a4 natural Auto 119s + 120s user criterion in Actions40550358765 RUNNING; do not claim natural or high-loss rise PASS. Old 9d seq FAIL, independent N0/N1/N5/physical/global GUI/ARM64 remained NOT_RUN. No product code merged into main yet; exact branch source and task epoch unchanged."
 }

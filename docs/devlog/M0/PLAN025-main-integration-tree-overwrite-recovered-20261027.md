@@ -36,3 +36,11 @@ No local execution tests. Push Actions on the repaired SOURCE are required; any 
 ```feature-impact
 {"kind":"none","reason":"Recovery of a terminal Action and frozen source history only; no executable product behavior or configuration changed in this commit. Auto and six-mode qualifiers remain exact-SOURCE and no feature was promoted."}
 ```
+
+## H302 recovered accepted Auto startup & latest user acceptance (2026-10-28)
+- S48 experiment SOURCE `772b8b3af48ee8f8600b16baaf2ddc3c53e84c37`, original Windows Go TLS→Rust FEC2 private owner→signed Npcap/Wintun OS route/WAL↔Linux WSL2 raw/TUN, Action `40546243971/1` native job122339783712 **SUCCESS**, real both-way UDP+TCP and both-owned Stop PASS at Auto startup Strong5/revision1. Original exact artifact12754660102 SHA256 `f8b8899b3d989221526bc8a84b99a615a315b7461a26dbdd89f107e016fe6562` independently verified against ZIP, source receipt `docs/evidence/M0/PLAN025-S48-Auto-start-native-source772b8b3-success-20261028.json`. S45 sourcea2594eba Auto FAIL and six remaining modes' scoped PASS unchanged, startup is not natural revision/perf/global UI pass.
+- User latest requirement in main decision 054f18ce: rapid real Auto upshift (may lose packets during transition), valid healthy downshift **one actual Applied grade within 120 seconds** sufficient, no forced reduction to lowest. All sample, authenticated M2 Applied, generation, first delivery, seq, Stop safety gates intact. S51 sourcea623c37 Action40549008961 **FAIL** cheap NDJSON parser unit (literal `\\n`); native SKIPPED; S52 source1b33e4a4 corrected it and 119s genuine dual-OS natural workload. Source1b33e4a4 Action40550358765 **in flight** at H302, Python/Go/Rust preflight and Linux product build PASS, native final and true Auto one-step Applied NOT_RUN until terminal. This H records a recovery boundary, not merging source candidate; no re-dispatch of same run.
+
+```feature-impact
+{"kind":"updated","ids":["fec-auto"],"reason":"Recover first exact-source Windows/Linux native Auto Strong5 startup bidirectional UDP/TCP/owned Stop positive and record the new user-approved 120s one-step Auto acceptance with independent natural qualification still pending. Does not change product code or formal status."}
+```
