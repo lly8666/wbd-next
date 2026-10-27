@@ -722,21 +722,25 @@ mod tests{
                 assert_eq!(game_m4_result_group(&mut game,c,
                     ticket.lane,ticket.logical_id,ticket.pn,true),OK);
             }
-            game.started=std::time::Instant::now()
-                -std::time::Duration::from_millis(180);
-            // Shared GameTx stages one independently scheduled lane copy
-            // per fair due poll. A 180ms jump does NOT imply one native
-            // polling turn may claim all three NPF copies at once.
+            // Shared GameTx enforces a finite after-due age for every
+            // independent encrypted lane. Jumping to 180ms discards
+            // genuine +4/+50/+140ms copies as expired; that is NOT a
+            // product bug and must not be hidden by widening expiry.
+            // Exercise each due deadline as original Wintun/NPF worker
+            // would, then settle its real firstsend before the next.
             let mut later=Vec::new();
-            for _ in 0..4{
+            for elapsed in [5u64,51,141]{
+                game.started=std::time::Instant::now()
+                    -std::time::Duration::from_millis(elapsed);
                 let due=game_fec_poll_group(&mut game,c,16)
-                    .expect("off stagger uses same poll ABI, no extra FEC");
+                    .expect("off stagger uses same native due ABI");
+                assert_eq!(due.len(),1,
+                    "one live Game4 copy at each authentic stagger deadline");
                 for ticket in &due{
                     assert_eq!(game_m4_result_group(&mut game,c,
                         ticket.lane,ticket.logical_id,ticket.pn,true),OK);
                 }
                 later.extend(due);
-                if later.len()+immediate.len()==4{break}
             }
             assert_eq!(later.len()+immediate.len(),4,
                 "all real Game4 scheduled lanes must drain by finite due turns");
