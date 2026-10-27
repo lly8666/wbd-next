@@ -41,9 +41,9 @@ func(s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalFixedSource(
   return nil,0,0,errV4WindowsOwner
  }
  if err:=ctx.Err();err!=nil{return nil,0,0,err}
- if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-  return nil,0,0,errors.Join(errV4WindowsOwner,err)
- }
+ borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
  proc,err:=s.bridge.fixedProc("wbd_m0_win_owner_v8_fixed_stage_source")
  if err!=nil{return nil,0,0,err}
  wire:=make([]byte,len(ipv4)+41)
@@ -68,9 +68,9 @@ func(s *V4WindowsAuthenticatedClientOwner) NextBoundOriginalFixedParity(
 )([]V4WindowsFixedParity,error){
  if s==nil||s.bridge==nil||s.device==nil||ctx==nil{return nil,errV4WindowsOwner}
  if err:=ctx.Err();err!=nil{return nil,err}
- if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-  return nil,errors.Join(errV4WindowsOwner,err)
- }
+ borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
  proc,err:=s.bridge.fixedProc("wbd_m0_win_owner_v8_fixed_parity_due")
  if err!=nil{return nil,err}
  batch:=winFec2ParityPool.Get().(*winFec2NativeParityBatch)

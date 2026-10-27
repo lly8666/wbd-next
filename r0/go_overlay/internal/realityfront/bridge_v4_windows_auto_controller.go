@@ -22,7 +22,9 @@ func(s *V4WindowsAuthenticatedClientOwner) ReadBoundOriginalAutoQuality(
 )(V4WindowsAutoQuality,error){
  var v V4WindowsAutoQuality
  if ctx==nil||s==nil||s.bridge==nil||s.device==nil{return v,errV4WindowsOwner}
- if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{return v,err}
+ borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return v,borrowErr}
+ defer borrowRelease()
  proc,err:=s.bridge.dll.FindProc("wbd_m0_win_owner_v8_fec2_auto_quality")
  if err!=nil{return v,err}
  err=winOwnerCall(proc,uintptr(s.bridge.handle),

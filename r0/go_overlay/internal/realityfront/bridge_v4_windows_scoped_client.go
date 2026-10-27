@@ -82,9 +82,9 @@ func (s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalNormalOff(
         return nil,0,0,errV4WindowsOwner
     }
     if err:=ctx.Err();err!=nil{return nil,0,0,err}
-    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-        return nil,0,0,errors.Join(errV4WindowsOwner,err)
-    }
+    borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
     owner,err:=s.OriginalOwnerReadback()
     if err!=nil||!owner.OwnerActive||!owner.DeviceBound||
         owner.DeviceQuiesced||owner.ProductApplied{
@@ -128,9 +128,9 @@ func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalNormalOff(
         return nil,errV4WindowsOwner
     }
     if err:=ctx.Err();err!=nil{return nil,err}
-    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-        return nil,errors.Join(errV4WindowsOwner,err)
-    }
+    borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
     state,err:=s.OriginalOwnerReadback()
     if err!=nil||!state.OwnerActive||!state.DeviceBound||
         state.DeviceQuiesced||state.ProductApplied||state.ServerSide{
@@ -198,9 +198,9 @@ func(s *V4WindowsAuthenticatedClientOwner) NextBoundOriginalM2Repair(
             s!=nil&&s.device!=nil,s!=nil&&s.bridge!=nil&&s.bridge.prepareRepairProc!=nil)
     }
     if err:=ctx.Err();err!=nil{return nil,0,0,err}
-    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-        return nil,0,0,errors.Join(errV4WindowsOwner,err)
-    }
+    borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
     wire:=make([]byte,maxWire)
     var used uintptr
     var seq uint32
@@ -273,9 +273,9 @@ func(s *V4WindowsAuthenticatedClientOwner) ReportOriginalM2NpcapFirstsend(
         return 0,errV4WindowsOwner
     }
     if err:=ctx.Err();err!=nil{return 0,err}
-    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil {
-        return 0,errors.Join(errV4WindowsOwner,err)
-    }
+    borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return 0,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
     var yes uintptr
     if sent{yes=1}
     var outstanding uint32
@@ -300,9 +300,9 @@ func(s *V4WindowsAuthenticatedClientOwner) NextBoundOriginalM2Feedback(
    return nil,0,0,fmt.Errorf("%w: bounded reverse M2 due stage=preflight cap=%d max=%d",errV4WindowsOwner,capacity,s.device.maxIPv4+31)
   }
  if err:=ctx.Err();err!=nil{return nil,0,0,err}
- if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-  return nil,0,0,errors.Join(errV4WindowsOwner,err)
- }
+ borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
  state,err:=s.OriginalOwnerReadback()
  if err!=nil||!state.OwnerActive||!state.DeviceBound||
   state.DeviceQuiesced||state.ProductApplied||state.ServerSide{
@@ -335,9 +335,9 @@ func(s *V4WindowsAuthenticatedClientOwner) CompleteBoundOriginalM2Feedback(
  if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
   s.bridge.feedbackResultProc==nil{return errV4WindowsOwner}
  if err:=ctx.Err();err!=nil{return err}
- if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-  return errors.Join(errV4WindowsOwner,err)
- }
+ borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
  var copied uintptr
  if npcapSent{copied=1}
  err:=winOwnerCall(s.bridge.feedbackResultProc,
@@ -361,9 +361,9 @@ func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalNormalOrKind1(
         return nil,0,0,errV4WindowsOwner
     }
     if err:=ctx.Err();err!=nil{return nil,0,0,err}
-    if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil {
-        return nil,0,0,errors.Join(errV4WindowsOwner,err)
-    }
+    borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
     state,err:=s.OriginalOwnerReadback()
     if err!=nil||!state.OwnerActive||!state.DeviceBound||
         state.DeviceQuiesced||state.ProductApplied||state.ServerSide{

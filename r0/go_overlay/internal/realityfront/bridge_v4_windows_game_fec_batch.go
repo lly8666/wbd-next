@@ -56,7 +56,9 @@ func(g *V4WindowsAuthenticatedGameGroup) OpenGameFecBatch(
  if g==nil{return nil,false,errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
  if g.gameFec==0{return nil,false,errV4WindowsOwner}
- if err:=g.verifyLive(ctx);err!=nil{return nil,false,err}
+ loanRelease,loanErr:=g.holdLive(ctx)
+ if loanErr!=nil{return nil,false,loanErr}
+ defer loanRelease()
  return winGameFecOpen(g.fecOpenProc,g.joined,lane,wire)
 }
 func(g *V4WindowsAuthenticatedGameGroup) CompleteGameFecBatch(
@@ -65,7 +67,9 @@ func(g *V4WindowsAuthenticatedGameGroup) CompleteGameFecBatch(
  if g==nil{return errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
  if g.gameFec==0{return errV4WindowsOwner}
- if err:=g.verifyLive(ctx);err!=nil{return err}
+ loanRelease,loanErr:=g.holdLive(ctx)
+ if loanErr!=nil{return loanErr}
+ defer loanRelease()
  return winGameFecFinish(g.fecFinishProc,g.joined,lane,allCopied)
 }
 func(g *V4WindowsAuthenticatedGameServerGroup) OpenGameFecBatch(
@@ -133,7 +137,9 @@ func(g *V4WindowsAuthenticatedGameGroup) DueGameFecParity(
  if g==nil{return nil,errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
  if g.gameFec==0{return nil,errV4WindowsOwner}
- if err:=g.verifyLive(ctx);err!=nil{return nil,err}
+ loanRelease,loanErr:=g.holdLive(ctx)
+ if loanErr!=nil{return nil,loanErr}
+ defer loanRelease()
  return winGameFecParityDue(g.fecParityProc,g.joined,capacity)
 }
 func(g *V4WindowsAuthenticatedGameGroup) ReportGameFecNpcapCopy(
@@ -143,7 +149,9 @@ func(g *V4WindowsAuthenticatedGameGroup) ReportGameFecNpcapCopy(
  g.mu.Lock();defer g.mu.Unlock()
  // All Game2/4 copy outcomes are authentic NPF kernel callback receipts,
  // including Game/off. Staging into a Go output array cannot grant credit.
- if err:=g.verifyLive(ctx);err!=nil{return err}
+ loanRelease,loanErr:=g.holdLive(ctx)
+ if loanErr!=nil{return loanErr}
+ defer loanRelease()
  // The real per-lane pcap_sendpacket callback must be the sole caller.
  return winGameFecM4SendResult(g.fecM4SendProc,g.joined,
   record.Lane,record.LogicalID,record.PacketNumber,copied)

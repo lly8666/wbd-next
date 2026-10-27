@@ -11,6 +11,9 @@ import (
     "net"
     "fmt"
     "runtime"
+    "sync"
+    "sync/atomic"
+    "time"
     "unsafe"
 )
 
@@ -35,6 +38,12 @@ type V4WindowsCurrentNativeDevice interface{
 // An M4-facing wrapper can only be instantiated through genuine original
 // Go credential TLS; it does NOT implement a full Windows product owner.
 type v4WindowsRealDeviceLease struct{
+    // Initial OS-verified M4 Hold pins the genuine Wintun handle for the
+    // entire epoch. Hot callers borrow this session under RLock; owned Stop
+    // revokes it under Lock and waits for every in-flight FFI/packet call.
+    mu sync.RWMutex
+    invalid atomic.Bool
+    lastAuditNS atomic.Int64
     bridge *v4WindowsNativeOwnerBridge
     device V4WindowsCurrentNativeDevice
     identity V4WindowsNativeDeviceIdentity
@@ -109,6 +118,7 @@ func (b *v4WindowsNativeOwnerBridge) holdOriginalCreatedWintun(
         return nil,fmt.Errorf("%w: native FrameBudget original MTU/peer MSS: %v",errV4WindowsOwner,bindErr)
     }
     lease:=&v4WindowsRealDeviceLease{bridge:b,device:device,identity:id,release:release,maxIPv4:int(maxIPv4)}
+    lease.lastAuditNS.Store(time.Now().UnixNano())
     bound,err=b.realNativeDeviceState()
     if err!=nil||bound.Bound!=1||bound.Quiesced!=0||
         bound.LUID!=id.LUID||bound.IfIndex!=id.InterfaceIndex{
@@ -117,10 +127,39 @@ func (b *v4WindowsNativeOwnerBridge) holdOriginalCreatedWintun(
     }
     return lease,nil
 }
+// borrowHot never upgrades authority: the original native M4
+// HoldCurrentNative validated Win32 LUID/index/GUID and pinned the actual
+// created handle at setup. Recheck generation every call; periodic OS
+// identity audit detects external adapter invalidation without per-packet
+// IP Helper/kernel queries. A real kernel I/O failure still stops the owner.
+func (lease *v4WindowsRealDeviceLease) borrowHot(ctx context.Context)(func(),error){
+    if lease==nil||ctx==nil{return nil,errV4WindowsOwner}
+    if err:=ctx.Err();err!=nil{return nil,err}
+    lease.mu.RLock()
+    b:=lease.bridge
+    if lease.stopped||lease.release==nil||lease.device==nil||b==nil||
+       b.handle==0||!b.committed||b.stopped||
+       b.epoch!=lease.identity.Generation||lease.invalid.Load(){
+        lease.mu.RUnlock()
+        return nil,errV4WindowsOwner
+    }
+    now:=time.Now().UnixNano()
+    previous:=lease.lastAuditNS.Load()
+    if now-previous>=int64(time.Second) && lease.lastAuditNS.CompareAndSwap(previous,now) {
+        if err:=lease.device.VerifyCurrentNative(ctx,lease.identity);err!=nil{
+            lease.invalid.Store(true)
+            lease.mu.RUnlock()
+            return nil,errors.Join(errV4WindowsOwner,err)
+        }
+    }
+    return lease.mu.RUnlock,nil
+}
 func (lease *v4WindowsRealDeviceLease) quiesceAndStopRustOnly(ctx context.Context)error{
     if lease==nil||lease.bridge==nil||ctx==nil{return errV4WindowsOwner}
-    if lease.stopped{return nil}
     if err:=ctx.Err();err!=nil{return err}
+    lease.mu.Lock()
+    defer lease.mu.Unlock()
+    if lease.stopped{return nil}
     b:=lease.bridge
     if b.handle==0||!b.committed||lease.release==nil{return errV4WindowsOwner}
     if err:=lease.device.VerifyCurrentNative(ctx,lease.identity);err!=nil{
@@ -134,6 +173,7 @@ func (lease *v4WindowsRealDeviceLease) quiesceAndStopRustOnly(ctx context.Contex
         state.Applied!=0||state.LUID!=lease.identity.LUID||
         state.IfIndex!=lease.identity.InterfaceIndex{return errV4WindowsOwner}
     if err:=b.stopRustOwnerOnly();err!=nil{return err}
+    lease.invalid.Store(true)
     lease.release()
     lease.release=nil
     lease.stopped=true

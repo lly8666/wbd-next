@@ -84,9 +84,9 @@ func winFec2Sealer(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
   return nil,0,0,errV4WindowsOwner
  }
  if err:=ctx.Err();err!=nil{return nil,0,0,err}
- if err:=device.device.VerifyCurrentNative(ctx,device.identity);err!=nil{
-  return nil,0,0,errors.Join(errV4WindowsOwner,err)
- }
+ borrowRelease,borrowErr:=device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,0,0,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
  proc,err:=bridge.dll.FindProc("wbd_m0_win_owner_v4_fec2_seal")
  if err!=nil{return nil,0,0,err}
  wire:=make([]byte,len(symbol)+31)
@@ -112,9 +112,9 @@ func winFec2Opener(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
   return nil,fmt.Errorf("%w: FEC2 opener preflight input=%d device=%t",errV4WindowsOwner,len(wire),device!=nil)
  }
  if err:=ctx.Err();err!=nil{return nil,err}
- if err:=device.device.VerifyCurrentNative(ctx,device.identity);err!=nil{
-  return nil,errors.Join(errV4WindowsOwner,err)
- }
+ borrowRelease,borrowErr:=device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
  proc,err:=bridge.dll.FindProc("wbd_m0_win_owner_v4_fec2_open")
  if err!=nil{return nil,fmt.Errorf("original Rust FEC2 open ABI missing: %w",err)}
  raw:=make([]winFec2RawDelivery,16)
@@ -157,9 +157,9 @@ func(s *V4WindowsAuthenticatedClientOwner) EncodeBoundOriginalFEC2Repair(
   return nil,errV4WindowsOwner
  }
  if err:=ctx.Err();err!=nil{return nil,err}
- if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
-  return nil,errors.Join(errV4WindowsOwner,err)
- }
+ borrowRelease,borrowErr:=s.device.borrowHot(ctx)
+ if borrowErr!=nil{return nil,errors.Join(errV4WindowsOwner,borrowErr)}
+ defer borrowRelease()
  state,err:=s.OriginalOwnerReadback()
  if err!=nil||!state.OwnerActive||!state.DeviceBound||
   state.DeviceQuiesced||state.ServerSide{return nil,errV4WindowsOwner}

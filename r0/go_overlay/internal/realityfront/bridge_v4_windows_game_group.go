@@ -188,18 +188,27 @@ func(g *V4WindowsAuthenticatedGameGroup) EffectiveGamePayloadMTU()(int,error){
  if g.closed||g.joined==0||g.maxIPv4<20{return 0,errV4WindowsOwner}
  return g.maxIPv4,nil
 }
-func(g *V4WindowsAuthenticatedGameGroup) verifyLive(ctx context.Context)error{
- if ctx==nil||g==nil||g.closed||g.joined==0{return errV4WindowsOwner}
- if err:=ctx.Err();err!=nil{return err}
+// The only OS lease validation occurs during the genuine TLS+M4 Hold and
+// on Stop/reconfiguration. A group packet borrows each pinned lane until
+// the Rust Game owner has consumed it. That owner still independently
+// enforces group/generation/phase and rejects any revocation or stale PN.
+func(g *V4WindowsAuthenticatedGameGroup) holdLive(ctx context.Context)(func(),error){
+ if ctx==nil||g==nil||g.closed||g.joined==0{return nil,errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return nil,err}
+ var releases [4]func()
+ held:=0
+ giveBack:=func(){
+  for held>0{held--;releases[held]();releases[held]=nil}
+ }
  for _,s:=range g.members{
   if s==nil||s.device==nil||s.bridge==nil||
-   s.bridge.epoch!=g.epoch{return errV4WindowsOwner}
-  if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{return err}
-  state,err:=s.OriginalOwnerReadback()
-  if err!=nil||!state.OwnerActive||!state.DeviceBound||
-   state.DeviceQuiesced||state.ProductApplied{return errV4WindowsOwner}
+   s.bridge.epoch!=g.epoch{giveBack();return nil,errV4WindowsOwner}
+  release,err:=s.device.borrowHot(ctx)
+  if err!=nil{giveBack();return nil,err}
+  if held>=len(releases){release();giveBack();return nil,errV4WindowsOwner}
+  releases[held]=release;held++
  }
- return nil
+ return giveBack,nil
 }
 // StageGameRecords copies genuine per-lane Rust AEAD records into bounded
 // caller buffers. A Go M4 packet driver MUST actually send and account for
@@ -209,7 +218,9 @@ func(g *V4WindowsAuthenticatedGameGroup) StageGameRecords(
 )([]V4WindowsGameRecord,error){
  if g==nil{return nil,errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
- if err:=g.verifyLive(ctx);err!=nil{return nil,err}
+ loanRelease,loanErr:=g.holdLive(ctx)
+ if loanErr!=nil{return nil,loanErr}
+ defer loanRelease()
  if len(ipv4)<20||len(ipv4)>g.maxIPv4||ipv4[0]>>4!=4{return nil,errV4WindowsOwner}
  raw:=make([]v4WindowsGameRawRecord,len(g.members))
  var count uint32
@@ -238,7 +249,9 @@ func(g *V4WindowsAuthenticatedGameGroup) OpenGameRecord(
 )([]byte,error){
  if g==nil{return nil,errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
- if err:=g.verifyLive(ctx);err!=nil{return nil,err}
+ loanRelease,loanErr:=g.holdLive(ctx)
+ if loanErr!=nil{return nil,loanErr}
+ defer loanRelease()
  if g.gameFec!=0{return nil,errV4WindowsOwner}
  if lane==0||int(lane)>len(g.members)||len(wire)<32||len(wire)>1536{
   return nil,errV4WindowsOwner

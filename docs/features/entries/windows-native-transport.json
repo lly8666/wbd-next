@@ -53,7 +53,8 @@
   ],
   "limitations": [
     "旧Windows修复失败仍需保留；cannot infer Windows modes from Linux or native code mask.",
-    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "2026-10-27 isolated experimental B1: per-session original Win32-verified M4 Wintun Hold now uses RW guarded in-flight Rust owner call borrows, OS revalidation roughly 1Hz and on setup/reconfigure/Stop; initial native handle remains pinned until owned stop. Requires exact Windows Actions verification; no perf/GUI/global qualification."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

@@ -20,7 +20,8 @@ EXTRA_BRIDGES = {
         "bridge_v4_windows_game_group.go", "bridge_v4_windows_game_server_group.go",
         "bridge_v4_windows_game_fec_batch.go", "bridge_v4_windows_game_group_test.go",
         "bridge_v4_windows_fec2_owner.go", "bridge_v4_windows_fixed_stream.go", "bridge_v4_windows_fixed_stream_test.go",
-        "bridge_v4_windows_wintun_lease.go", "bridge_v4_windows_scoped_client.go",
+        "bridge_v4_windows_wintun_lease.go", "bridge_v4_windows_wintun_lease_test.go",
+        "bridge_v4_windows_scoped_client.go",
     ),
     "windowsownerlease": (
         "created_wintun_windows.go", "scoped_original_tls_native_wintun_windows.go",

@@ -82,6 +82,15 @@ Re-read exact 9d2362d failing source M2 control TX mismatch expected2744012027 g
 Recovered the old source6d Action40483279255 final FAIL and exact audit in merged PR32; original mode-batch.json and fixed/game mode reports existed during run but the workflow uploaded only normal-report and report. Preserved the *first failure* and independent 1Hz Windows Go-process-with-Rust-DLL resource JSONL, UDP/TCP app logs and native link witness into allowlisted per-mode artifacts under mode-results/<mode>/, with SECRET argument and JSON-field redaction. Explicitly NO copied TLS keys, launch scripts, IP/route key, WAL credentials or private config. New helper/source-scoped unit checks verify redaction, no cross-mode overwrites and missing capture status. Artifact uploader now includes every mode's report and mode-batch, and excludes raw unredacted per-mode logs. Real functional batch remains one compiled artifact reuse; optional WL-N0 measurement requires exactly ONE selected mode per Action.
 
 These are fixture delivery corrections only; no current Windows performance claims, runner platform result or interval-latency measurements. Exact end-to-end SOURCE native run is still NOT_RUN.
-```feature-impact
+```json
 {"kind":"none","ids":[],"reason":"Mode artifact/monitoring and upload-only changes; no product selector/default/qualification or public feature changed."}
+```
+
+## Windows extreme remediation S9 (B1 authentic M4 Wintun lease, not forged OS identity)
+Reviewed original Go private owner bridge, windowsownerlease.CreatedWintun.HoldCurrentNative (validates current NativeIdentity/IP Helper and M4 reservation Hold), exact TLS/generation fenced v4WindowsRealDeviceLease and quiesceAndStopRustOnly ordering. The original lease pins an authentic native adapter throughout the session; B1 adds RW in-flight borrow guard rather than inventing a device token. Owned Stop takes write lock, drains active calls and revokes before hold release. Per-packet Normal/Fixed/Auto/FEC/Game use guarded session borrow through actual Rust FFI, while establishment/bind, protected reconfiguration and Stop retain full OS validation. A roughly 1Hz OS audit invalidates the session on external identity changes; original driver errors remain fatal. Rust generation/device and Game lane assertions stay active. Unit test covers in-flight borrowing vs revocation and no per-packet syscall for the pinned adapter. Existing prepare_windows_wiring.py list includes the test.
+
+This is an optimization hypothesis, not measured CPU/GUI/physical product PASS; no stand-alone native Actions before full source freeze.
+
+```feature-impact
+{"kind":"updated","ids":["windows-native-transport"],"reason":"Experimental authentic Win32 verified Wintun session lease borrowing for Rust FFI; native/runtime/CPU still unverified."}
 ```
