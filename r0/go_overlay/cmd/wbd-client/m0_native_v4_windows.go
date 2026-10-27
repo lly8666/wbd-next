@@ -35,9 +35,6 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
  // own 2/4-lane original TLS socket group; do not run Normal by mistake.
  if err:=m0CheckWindowsV4NativeMode(o.Mode,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"));err!=nil{return err}
- if o.Mode==m0WinModeGame2||o.Mode==m0WinModeGame4{
-  return fmt.Errorf("%w: public Windows Game group requires 2/4 genuine simultaneous Npcap/TLS lanes and OS Stop; single-owner runtime is forbidden",windowsclient.ErrN4NativeGuard)
- }
  if !o.ServerIP.Is4()||o.ServerPort==0||o.SourcePort==0||
   o.ServerName==""||len(o.RouteKey)<16||o.Username==""||o.Password==""||
   o.TunnelID==([16]byte{})||o.Installation==([16]byte{})||
@@ -106,6 +103,28 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   }
   ncfg.NextHopMAC=actual
   fmt.Printf("WBD_PLAN024_NATIVE_ORIGINAL_NPCAP_NEXT_HOP_BOUND ifindex=%d guest_ip=%s mac=%s source=verified_WSL2_eth0\\n",idx,guestIP,guestMAC)
+ }
+ if o.Mode==m0WinModeGame2||o.Mode==m0WinModeGame4{
+  open:=func(local,remote uint16)(*faketcp.NpcapEndpoint,error){
+   config,e:=underlay.NpcapConfig(local,remote,1,faketcp.PacketPersonaWindows11)
+   if e!=nil{return nil,e}
+   config.NextHopMAC=ncfg.NextHopMAC
+   return faketcp.OpenNpcapEndpoint(config)
+  }
+  planForGame:=func()(windowsclient.NetworkPlan,error){
+   physical,e:=underlay.PhysicalPath()
+   if e!=nil{return windowsclient.NetworkPlan{},e}
+   if guestMAC!=""&&physical.NextHop4==underlay.Source4{physical.NextHop4=o.ServerIP}
+   return windowsclient.BuildCompactNetworkPlan(windowsclient.Config{
+    AdapterAlias:o.AdapterAlias,TunnelMTU:o.TunnelMTU,
+    Lease4:o.Lease4,Server4:o.ServerIP,Physical:physical,
+    DNSServers4:append([]netip.Addr(nil),o.DNSServers4...),
+    Direct4:append([]netip.Prefix(nil),o.Direct4...),
+    Bypass4:append([]netip.Prefix(nil),o.Bypass4...),
+    StatePath:o.StatePath,
+   })
+  }
+  return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),open,planForGame)
  }
  endpoint,err:=faketcp.OpenNpcapEndpoint(ncfg)
  if err!=nil{return err}

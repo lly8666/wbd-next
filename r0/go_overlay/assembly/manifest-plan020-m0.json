@@ -653,7 +653,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "72afd6a3941d6e26016afd90305c1dc259090bc2"
+      "result_blob": "0758ca8d8d23764b8068db623a21812ed48bbc4d"
     },
     {
       "kind": "create",
@@ -714,6 +714,18 @@
       "path": "cmd/wbd-client/m0_native_v4_rx_window_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rx_window_windows_test.go",
       "result_blob": "f7108099976fcadbab425348c02c9e045aa77eba"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_native_v4_game_peer_windows.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_peer_windows.go",
+      "result_blob": "8bc8d271845f3dc51b0312d3c307eeb1c6c2c2c9"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
+      "result_blob": "572a872f5d1f4183f9b7994ed21ab9a38a8cc225"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
