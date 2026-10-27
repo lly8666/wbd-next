@@ -103,9 +103,12 @@ fn m2_global()->&'static Mutex<GlobalRepairAllocator>{
     static GLOBAL:OnceLock<Mutex<GlobalRepairAllocator>>=OnceLock::new();
     GLOBAL.get_or_init(||Mutex::new(GlobalRepairAllocator::new(
         GlobalRepairConfig{
-            max_bytes_per_epoch:131_072,max_directions:32,
-            max_grant_bytes:32_768,max_grant_lifetime_ns:50_000_000,
-            max_pending:128,max_pending_bytes:131_072,
+            // Absolute safety caps above 9% v3 credit for simultaneous
+            // 500Mbps outer C2S + S2C; v3 share and actual first-send
+            // receipt remain the authoritative *lower* ceilings.
+            max_bytes_per_epoch:14_000_000,max_directions:32,
+            max_grant_bytes:262_144,max_grant_lifetime_ns:50_000_000,
+            max_pending:256,max_pending_bytes:524_288,
         },MonoNs(0)).expect("bounded M2 process allocator")))
 }
 fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>{
@@ -138,8 +141,8 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
     let mut g=m2_global().lock().map_err(|_|BAD_STAGE)?;
     g.register(direction,RepairBudgetConfig{
         outer_mtu:u64::from(e.path_mtu).saturating_add(54),
-        max_repair_bytes_per_epoch:65_536,max_pending_reservations:128,
-        max_pending_bytes:131_072,io_timeout_ns:100_000_000,
+        max_repair_bytes_per_epoch:7_000_000,max_pending_reservations:256,
+        max_pending_bytes:524_288,io_timeout_ns:100_000_000,
     },now).map_err(|_|BAD_STAGE)?;
     if g.enable_opportunistic_v3(direction).is_err() ||
         g.bind_receipt_route(direction,route,now).is_err(){
@@ -313,8 +316,8 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     // Keep a bounded immutable shadow while there is room; once saturated,
     // release only the optional copy, never reject accepted fresh traffic.
     if m.shadow.outstanding()<MAX_M2_FROZEN {
-        m.shadow.on_sent(frozen,now,MonoNs(now.0.saturating_add(M2_HARD_EXPIRY_NS)))
-            .map_err(|_|BAD_STAGE)?;
+        // Trusted RTT-derived v3 residency, not an old fixed 2s shadow.
+        m.shadow.on_sent_adaptive(frozen,now).map_err(|_|BAD_STAGE)?;
     }
     Ok(m.shadow.outstanding() as u32)
 }

@@ -46,6 +46,13 @@ Re-read current Windows original M2 trusted NPF completion and GlobalRepairAlloc
 ## Windows extreme remediation S3 (narrow B1/B2 cold-proc and FEC parity buffer cost)
 Reviewed original Windows PrivateOwnerBridge single absolute source-pinned loaded DLL, Fixed stream FFI caller and live original M4 CreatedWintun.Identity. Implemented owner-local concurrent cached proc lookup instead of each Fixed call FindProc; still rejects absent symbols. Cached immutable iphlpapi ConvertInterfaceLuidToGuid LazyProc but kept actual current native Identity/holder Verify for now (protected session lease coalescing NOT YET DONE). Replaced 8KiB per-poll Go parity batch allocation with sync.Pool while preserving complete Rust C struct overwrite and per-row deep-copied ciphertext before return. Added Windows-only real DLL proc cache negative/positive test to existing authoritative product assembly prepare helper.
 This is a low-cost partial optimization hypothesis and not measured CPU improvement. All formal product and extreme A/B results remain NOT_RUN; no test dispatch until entire batch source frozen. Prior S1/S2 feature-impact blocks remain archived as JSON factual records of their source commits, not falsely reasserted as current diff.
-```feature-impact
+```json
 {"kind":"updated","ids":["fec-fixed"],"reason":"Experimental Windows FEC native DLL lookup and parity buffer reuse optimization, no new config/default or claimed CPU/product qualification."}
+```
+
+## Windows extreme remediation S4 (C2 repair absolute safety caps, v3 RTT cache)
+Reviewed wbd_recovery::budget v3 epoch credit (9% of definitely M4-accepted fresh) and GlobalRepairAllocator hard cap. Original Windows hard limits 65,536B/s per direction and 131,072B/s process could not support 50M/30% or dual 500M lines irrespective of proportional policy; 32KiB grant was also only one safety cap, NOT itself a periodic 50ms rate. Updated max direction7MB/s, process14MB/s, per grant262144B and outstanding reservation pool524288B/256. All percentage shares and actual accepted send accounting remain unchanged. Shadow uses already-enabled adaptive RTT-derived expiry capped by shared R2 logic, no unconditional 2s payload retention.
+These are safety envelopes, not startup allocation, guaranteed throughput or performance PASS. FEC/Go product and high-load matrix remain NOT_RUN; C3 quality memory index, batch FFI and verified effective readback still OPEN.
+```feature-impact
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Experimental Windows v3 repair absolute process/direction caps above intended bidirectional workload, retaining all relative firstsend and per-origin correctness limits; no product PASS."}
 ```
