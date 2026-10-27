@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 291,
-  "checkpoint_sha": "b305e29c0ee750c4f3c73a81d20b4f1174c299eb",
+  "sequence": 292,
+  "checkpoint_sha": "4e6d9d634bee75c965594dea51cf7bca87408a8b",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "2026-10-27 user-authorized full branch tree overwrite from integration/w168-freeze-windows-adapter-20261026 to main and related governance conflict repairs COMPLETE AS INTEGRATION. Exact user-requested tree f6469a matches dev9d2362d; subsequent governed repairs end at b305e29c. Whole Windows/Linux product formal qualification remains PARTIAL/UNVERIFIED, with natural Auto original M2 control sequence FAIL not hidden.",
-  "why_now": "Integration branch source9d2362d exact tree 553d50ad overwritten fast-forward f6469a (main predecessor7a1932); later admin scoped main sources6d35857,24c480bd,b305e29c restored rev3 M0 registry/feature-impact, single-source evidence and fixed Rust non-FEC cfg, native ISAL harness 15 tests, M4 frozen-vs-PLAN020 live blob assertions and G2 bootstrap rev3/M4 reserved identity. Exact b305e29c Actions40484407149 Governance SUCCESS,40484407189 governance-maintenance SUCCESS,40484407148 G2 scoped bootstrap SUCCESS. Old source6d Windows preflight Action40483279255 still in_progress on last checked, not a PASS; native receipt tests four genuine failures40483279229, original product natural Auto9d run40476182202 FAIL.",
+  "current_task": "PLAN025 existing M0 product vertical integration; 2026-10-27 user-authorized Windows extreme remediation PR32 accepted and isolated source work S1–S19 staged at experiment/windows-extreme-remediation-implementation-20261027 HEAD ce79252dedcefaf5a585db42762123d432da080f. Entire code/caller/test/readback/fixture package is NOT YET FROZEN and has NOT received product functional/performance Actions. Do not recreate experiment branch, duplicate S1–S19 or advance epoch.",
+  "why_now": "After H291, PR32 docs merged to main at 4e6d9d. Recovered terminal exact 6d35857 Windows Action40483279255 FAIL and receipt Action40483279229 FAIL (7 passed, 4 failed), prior 9d2362d natural Auto M2 control TX 428-byte mismatch FAIL. No running/queued Actions at recovery. Isolated experiment S1–S19 commits saved including FEC arena state, serial unwrap, fresh/optional repair separation, Game lane+prefix, M4 hot lease, actual effective M2 readback, v3 receipt correction, original PN/SEQ and FFI batch, original TX/M2 monotonic source, typed fatal owner error and redundant hot FFI cleanup. Governance on latest ce79252d Action40509993350 SUCCESS only; no native product PASS inferred.",
   "done_when": "Whole original-Go TLS→shared Rust M1/M2/M3 FEC2 Fixed/Auto & 2/4 real Game lanes→original Windows Npcap/Wintun/WFP/route/DNS/WAL/GUI↔Linux raw/TUN and both-owned Stop across true applicable config/lifecycle. 4977f source seven initial functional mode core PASS; remaining dynamic Auto/GUI/global/lifecycle and weak-network use their own exact evidence. No fake Applied or independent Windows FEC owner.",
-  "next_action": "CLOSED temporary overwrite/governance assignment, no further automatic source changes. If resuming existing broader PLAN025 product task, settle terminal 6d Windows preflight40483279255 before dispatch; diagnose exact natural Auto M2 original control TX expected2744012027 got2744012455 (source9d FAIL) and honest native R2 receipt failures separately. Only exact SOURCE Actions qualify new product runtime; preserve global GUI/WFP/physical/WL/performance NOT_RUN.",
+  "next_action": "Continue the same experiment branch at exact ce79252d, reading current design and hot call path before modifications. Finish remaining original source/control/parity post-seal disposition, full B2 bounded stage batch and B3 wake/sampling feasibility, actual dynamic mid-session MTU and E diagnostic/functional fixtures; maintain Go assembly manifest and feature-impact. Freeze one exact entire SOURCE with complete acceptance intent, run one core/build and real seven-mode Windows/Linux functional batch (natural Auto actual quality change) before one-scenario-per-Action A/B performance. Preserve history-native FAIL and NOT_RUN, do not merge to main or promote features until qualifying evidence.",
   "unverified": true,
   "last_tested_source": "9d2362d30bead0e2a36dd19233a798ec1fb2b3ae",
   "evidence_refs": [
@@ -23,8 +23,11 @@
     "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md",
     "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
     "docs/testing/NETWORK_TRIAGE.md",
-    "docs/devlog/M0/PLAN025-main-integration-tree-overwrite-recovered-20261027.md"
+    "docs/devlog/M0/PLAN025-main-integration-tree-overwrite-recovered-20261027.md",
+    "docs/decisions/M0-WINDOWS-EXTREME-REMEDIATION-20261027.md",
+    "docs/prompts/M0_WINDOWS_REMEDIATION_EXECUTION.md",
+    "docs/evidence/windows-main-audit-20261027.json"
   ],
   "open_requests": [],
-  "partial_summary": "No-force parent-preserving exact dev-tree main overwrite f6469a; final authored source b305e29c only governance, feature cards, scoped Rust cfg/CI and historic fixture corrections. On exact b305e29c, Governance40484407149/1, maintenance40484407189/1, G2 bootstrap40484407148/1 all SUCCESS. Historical 4977f seven-mode and a0c8eeb operator Auto scoped PASS retained; natural Auto9d Action40476182202/1 FAIL owner M2 TX SEQ; R2 receipts on 6d FAIL 4; original WL-N0 performance FAIL, WL-N1/N5 and global/GUI/physical NOT_RUN. Source6d Windows preflight40483279255 in_progress at last observation, no product PASS."
+  "partial_summary": "Recovered exact main4e6d PR32 and experimental ce79252d S1–S19 with no uncommitted source in branch. Exact experimental Governance latest40509993350 SUCCESS; experimental product native/cross Linux/ARM64 performance NOT_RUN; main product formal PARTIAL. Rust FEC capacity restoration, original sequence tests, 32-batch NPF receipt, typed native owner fault, M4 guarded lease, Game partial prefix and readback staged only. Historical Auto9d Action40476182202 FAIL control TX expected2744012027 got2744012455; historical Windows6d Action40483279255 FAIL Normal/Game; native R2 receipt6d 7 PASS/4 FAIL. No physical/GUI/WFP/global/perf qualification, do not inherit operator Auto PASSES."
 }
