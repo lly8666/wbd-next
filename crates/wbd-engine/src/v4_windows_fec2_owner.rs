@@ -929,6 +929,16 @@ mod tests{
         {
             let mut e=r.entries[&h].lock().unwrap();
             m2_arm_entry(&mut e,ep,811,81).unwrap();
+            // Authenticated reverse M2 data can precede this new outbound
+            // full FEC block. Make its real 20ms feedback timer mature
+            // BEFORE the block is sealed, so parity doesn't expire while
+            // the test sleeps (real original worker would poll meanwhile).
+            e.m2.as_mut().unwrap().feedback.on_authenticated_data(
+                RecordPn(711),m2_clock());
+        }
+        std::thread::sleep(std::time::Duration::from_millis(21));
+        {
+            let mut e=r.entries[&h].lock().unwrap();
             for i in 0..16u8 {
                 let mut wire=[0u8;2048];
                 let (n,seq,pn)=stage_fixed_source_entry(
@@ -938,10 +948,7 @@ mod tests{
                 m2_kernel_firstsend_entry(&mut e,ep,811,81,pn,seq,n,1)
                     .expect("exact typed copy of freshly sealed M1 DATA");
             }
-            e.m2.as_mut().unwrap().feedback.on_authenticated_data(
-                RecordPn(711),m2_clock());
         }
-        std::thread::sleep(std::time::Duration::from_millis(21));
         let (control_seq,control_len,control_pn)={
             let mut e=r.entries[&h].lock().unwrap();
             let mut wire=[0u8;2048];
@@ -1067,7 +1074,13 @@ mod tests{
                 ).unwrap();
             }
             let due=MonoNs(start.0+9_200_000_000);
-            drain_original_auto_mature_due(m,due).unwrap();
+            // One real owner turn is intentionally capped at 256 due
+            // deadlines / 200us. A delayed 9.2s backlog must catch up
+            // over bounded subsequent turns, never monopolize fresh DATA.
+            for _ in 0..16{
+                drain_original_auto_mature_due(m,due).unwrap();
+                if m.auto_quality[0]==700 && m.auto_quality[5]==700{break}
+            }
             assert_eq!(m.auto_quality[0],700,
                 "all actual first-source 2s deadlines must mature");
             assert_eq!(m.auto_quality[5],700,

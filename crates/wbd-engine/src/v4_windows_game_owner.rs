@@ -661,6 +661,17 @@ mod tests{
             assert!(receive_record(&mut r,s,lane2.lane,
                 &lane2.wire[..lane2.length as usize]).is_err());
             let records=offer_records(&mut r,c,&ipv4,n).unwrap();
+            // This third original NPF copy batch is real M4-complete
+            // even though the receiver's separately mutated copy has
+            // a bad authentication tag. Never leave fake staged traffic
+            // outstanding across genuine group Stop.
+            {
+                let mut group=r.game_groups[&c].lock().unwrap();
+                for rec in &records{
+                    assert_eq!(game_m4_result_group(&mut group,c,rec.lane,
+                        rec.logical_id,rec.pn,true),OK);
+                }
+            }
             let lane_last=records.last().unwrap();
             let mut corrupt=lane_last.wire[..lane_last.length as usize].to_vec();
             *corrupt.last_mut().unwrap()^=1;
@@ -713,19 +724,29 @@ mod tests{
             }
             game.started=std::time::Instant::now()
                 -std::time::Duration::from_millis(180);
-            let later=game_fec_poll_group(&mut game,c,16)
-                .expect("off stagger uses same poll ABI, no extra FEC");
+            // Shared GameTx stages one independently scheduled lane copy
+            // per fair due poll. A 180ms jump does NOT imply one native
+            // polling turn may claim all three NPF copies at once.
+            let mut later=Vec::new();
+            for _ in 0..4{
+                let due=game_fec_poll_group(&mut game,c,16)
+                    .expect("off stagger uses same poll ABI, no extra FEC");
+                for ticket in &due{
+                    assert_eq!(game_m4_result_group(&mut game,c,
+                        ticket.lane,ticket.logical_id,ticket.pn,true),OK);
+                }
+                later.extend(due);
+                if later.len()+immediate.len()==4{break}
+            }
             assert_eq!(later.len()+immediate.len(),4,
-                "all due original Game4 lanes must drain separately");
+                "all real Game4 scheduled lanes must drain by finite due turns");
             let mut distinct=std::collections::BTreeSet::new();
             for ticket in immediate.iter().chain(later.iter()){
                 assert_eq!(ticket.logical_id,first_id);
                 assert!(distinct.insert(ticket.lane));
             }
-            for ticket in &later{
-                assert_eq!(game_m4_result_group(&mut game,c,
-                    ticket.lane,ticket.logical_id,ticket.pn,true),OK);
-            }
+            // All later native rows were already settled at each genuine
+            // due poll; don't double-complete their one allowed M4 credit.
             assert!(game.staged.is_empty());
         }
         for h in &clients{
