@@ -1,0 +1,13 @@
+# M0 S12 staged 200M Fixed and separate still-unmeasured Auto100/Game20 diagnostic
+
+One main M0 PLAN025 task/epoch unchanged; source-locked ARM64 original Go/TLS Rust native f7ee binary manifest hash unchanged, prior artifact12757832935. Per accepted stage1 original 10Mbps and stage2 50Mbps, S10 100Mbps Actions on exact source240b8589 Fixed0/1/2/3/6 passed 60s genuine each-direction 99.976–99.998Mbps; Fixed0 nonzero UDP receive loss0.008% and0.022%, other four receivers zero loss in these finite samples, exact Applied on both endpoints/owned Stop PASS. Go+Rust process observed CPU peak 31.7%–48.6% and RSS peak below40MiB per VM, not an A/B or stable fleet guarantee. Therefore 5 *separate* new 200Mbps single-scene Actions are within next bounded capacity rung; no 500 until exact new data.
+
+S10 Auto100 Action40602987974 FAILED before stress original FakeTCP handshake at 20s client context deadline with ~10/9 real veth control packets; same source Auto50 Action40602478472 passed and authentic profile 2 Applied on both sides. Auto100 is still NOT_RUN, cannot claim capacity cap or erase the genuine FAIL. New Auto100 Actions uses already-written Fixed4 targeted 5-snapshot handshake progression to discriminate first boundary before unchanged 100Mbps60s native Go/Rust product. No policy change, no threshold simplification.
+
+S10 Game2/Game4 attempted 20Mbps each in Actions40602987631 and40602987628 and both FAILED exit2 before load because shared test-only rate allowlist recognized 3,10,50,100,200,500 but omitted 20. No real Game20 result or product failure. Copy of S7 original benchmark script in tools/m0-arm64-grade-stress-game20.sh only adds numeric 20 to allowed scenario inputs, preserving same mode, per-file source, auth, output/Stop/monitor. Two independent new Game2/Game4 20Mbps each one Action with one scenario. Historical exit2 FAIL retained, no old re-run/Go compile.
+
+S11 Fixed4/5 50M with authenticated Go FakeTCP veth snapshot also in-flight separately; do not escalate those until grounded success. Each measured independent GH ARM64 hosted VM consumes the exact original prebuilt artifact source f7ee/Go pinned Go SHA, no rebuild. Same per-second iperf, RTT, CPU/RSS/PSI, effective Applied and owned Stop. Limit/qualifier for 200 remains hosted native ARM64 capacity only, not global Windows 500M/30% or calibrated business p99.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Test-only source-pinned five 200Mbps native Fixed, two Game20 numeric test-selector repairs and one Auto100 first-handshake diagnostic. No product/feature/default/ABI changes."}
+```
