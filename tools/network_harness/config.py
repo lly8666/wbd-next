@@ -295,7 +295,7 @@ def validate(raw):
     if "loss_gate_phases" in a:
         gate=a["loss_gate_phases"]
         names={p["name"] for p in r["phases"]}
-        if (r.get("owner")!="fec-network-work" or not isinstance(gate,list)
+        if (r.get("owner") not in ("fec-network-work","m0-cpu-recovery") or not isinstance(gate,list)
             or not gate or any(not isinstance(p,str) for p in gate)
             or len(set(gate))!=len(gate) or not set(gate)<=names):
             raise ValueError("loss_gate_phases must name distinct FEC-owned phases")
