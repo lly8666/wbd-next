@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "kind": "lossy_linux_only_normal_original_go_tls_rust_prebuilt_authentic_1pct_v3_legacy_harness_failure",
+  "binary_source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
+  "harness_source_sha": "6eafe4c58fdefeab11e03c0fc470622f5cd7b766",
+  "reused_artifact_id": 12760744437,
+  "reused_artifact_sha256": "b0caeea1d953076480a8dd30fb63612194e09668e3b0af41ab6b8f80755e3439",
+  "run_id": 40566375977,
+  "conclusion": "failure",
+  "artifact_id": 12762698156,
+  "artifact_sha256": "167cf54480ca74ae2c09b257ec6d6974119c408763285e1beab64e3435faafce",
+  "zip_verified": true,
+  "mode": "normal",
+  "kernel_netem": "1% loss both Linux namespace directions; 1 actual qdisc drop client, 0 server",
+  "app": "Sequential 0..68 first echo passes, next missing, stop-and-wait timeout, later source never offered",
+  "native_readback": {
+    "real_first_copy_client": 70,
+    "real_first_copy_server": 69,
+    "authenticated_receipts_client": 35,
+    "authenticated_receipts_server": 35,
+    "original_frozen_retransmitted": 0
+  },
+  "native_stop": "BOTH_DRAINED",
+  "interpretation": "Real residual loss with bounded opportunistic repair (50% admission); legacy every-single-UDP-echo required before next send and at least one repair expectation cannot represent current v3 contract. FAIL retained, not a product crash and not proof of official steady-state residual."
+}

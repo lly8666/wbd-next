@@ -56,6 +56,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
       "evidence": "docs/evidence/M0/PLAN025-H307-main-source-b6b964-seven-mode-native-20261028.json"
+    },
+    {
+      "platform": "windows/x64 signed Npcap Wintun ↔ linux/amd64 WSL2 true kernel",
+      "scope": "Main S61 exact signed Windows Npcap/Wintun Go TLS Rust native 7/7 real Linux WSL2 duplex UDP/TCP owned Stop",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
+      "evidence": "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
     }
   ],
   "limitations": [

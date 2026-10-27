@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
+  "kind": "main_signed_win_linux_complete_7_native_modes",
+  "run_id": 40562809565,
+  "run_conclusion": "success",
+  "jobs": "6 of 6 success",
+  "artifact_id": 12762088201,
+  "artifact_sha256": "a27d0537d114c809a0be2c02971cd987c09c54c7e66cc8018608b9febb2f2b70",
+  "zip_verified": true,
+  "modes": [
+    {
+      "mode": "normal",
+      "duplex_udp": "PASS",
+      "duplex_tcp": "PASS",
+      "owned_stop": "PASS"
+    },
+    {
+      "mode": "fixed",
+      "duplex_udp": "PASS",
+      "duplex_tcp": "PASS",
+      "owned_stop": "PASS"
+    },
+    {
+      "mode": "auto",
+      "duplex_udp": "PASS",
+      "duplex_tcp": "PASS",
+      "owned_stop": "PASS"
+    },
+    {
+      "mode": "game2",
+      "duplex_udp": "PASS",
+      "duplex_tcp": "PASS",
+      "owned_stop": "PASS"
+    },
+    {
+      "mode": "game4",
+      "duplex_udp": "PASS",
+      "duplex_tcp": "PASS",
+      "owned_stop": "PASS"
+    },
+    {
+      "mode": "game2-fec",
+      "duplex_udp": "PASS",
+      "duplex_tcp": "PASS",
+      "owned_stop": "PASS"
+    },
+    {
+      "mode": "game4-fec",
+      "duplex_udp": "PASS",
+      "duplex_tcp": "PASS",
+      "owned_stop": "PASS"
+    }
+  ],
+  "real_original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "scope": "true Windows signed Npcap/Wintun OS WAL and Linux WSL2 raw/TUN public original-Go TLS Rust",
+  "exclusions": [
+    "Auto natural gradient separate S55 source49f81637",
+    "WL-N0/N1/N5 not in this Action",
+    "scored performance",
+    "loss-driven rise",
+    "physical GUI WFP DNS"
+  ]
+}

@@ -146,6 +146,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
       "evidence": "docs/evidence/M0/PLAN025-H307-main-source-b6b964-seven-mode-native-20261028.json"
+    },
+    {
+      "platform": "windows/x64 signed Npcap Wintun ↔ linux/amd64 WSL2 true kernel",
+      "scope": "Main S61 exact true native Auto initial grade mode duplex UDP/TCP and Stop; natural 120s downgrade still separately S55; loss-driven rise unrun",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
+      "evidence": "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
     }
   ],
   "limitations": [
@@ -157,7 +164,7 @@
     "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible.",
     "Only Auto startup Strong profile5 completed real Windows bidirectional business; no positive dynamic up/down revision or late GUI profile Applied receipt in this run.",
     "Latest exact source a0c8eeb Actions40457048399 genuine Windows↔Linux kernel UDP after Auto operator revision2 via shared FecV2Step/FixedStream, M2 mature exact revision2 and owned Stop SUCCESS. This does NOT test automatic periodic 2s/8s policy-driven grade selection, all 0..6, WinForms Applied, global OS or physical. Older 80e5289 Actions40455980911 job FAIL at stale harness normal-report file is preserved.",
-    "Source6707bd52 moved original Linux auto downshift sampling-history rule into shared Go policy and gates automatic adaptation on authenticated M2 Applied; source6707 native-independent Windows Go production/test compile preflight Action40462558630 PASS, native mode not rerun. Source99a Action40462738560 FAIL only because PowerShell split unquoted Go -test.run; source072a19e7 fixes the PowerShell test argument and Actions40463122392 PASS for source-pinned assembly, original Windows Go production/test compile and the already compiled TestF2ControlAutoPendingM2CannotEvaluateOrStackNativeRevisions. Full native job SKIPPED by new policy. This implementation is NOT proof of natural 2s/8s loss-driven Auto mode change.",
+    "Historical source6707bd52 original Linux Auto Go sampling/true M2 gate; Windows SOURCE6707 compiled PASS40462558630, test argv S99a FAIL40462738560, repaired S072a preflight PASS40463122392, full original native NOT_RUN. Details and unchanged status in prior M0 devlog/verification.",
     "Native source67ed Actions40465641281 real Auto natural 2s/8s target FAIL: 53s Windows→Linux 3393 source sends, original Rust mature fast 128..268 <512, genuine Linux-shared policy rightly does not downshift. No algorithm/safety-bypass permitted; real kernel UDP/TCP and previously scoped Auto operator revision positive still stand. Sourcea3bb is only paced genuine-UDP fixture repair and NOT_RUN until outcome.",
     "2026-10-27 user-authorized exact development-tree main overwrite f6469a: implementation code is now present on main but remains experimental, with no new main-SOURCE native/product/global/physical PASS or formal promotion; previous exact-SOURCE PASS/FAIL unchanged.",
     "Recovered 2026-10-28 S48 source772b8b3 actual Auto initial Strong5 signed Win/Linux original Go TLS native UDP/TCP+owned Stop PASS Action40546243971 artifact12754660102 SHA256 f8b8899b...; historical S45 sourcea2594eba Auto FAIL preserved. User-authorized fast-rise/downgrade<=120s decision 054f18c; exact S52 source1b33e4a4 natural Action40550358765 was RUNNING as of main H302 and is NOT a current PASS; N0/physical/global still NOT_RUN.",

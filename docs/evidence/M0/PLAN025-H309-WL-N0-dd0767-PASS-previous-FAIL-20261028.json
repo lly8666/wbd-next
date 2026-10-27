@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "kind": "standalone_normal_300ms_zero_injected_loss_60s_scoped_capacity",
+  "source_sha": "dd0767abfc076c97bc42304083f42105a514cda1",
+  "parent_product_source": "49f816375a9e69bd1cde41df2543b15b58066313",
+  "run_id": 40561743731,
+  "run_conclusion": "success",
+  "artifact_id": 12762323257,
+  "artifact_sha256": "dac1af3889870785018650b7c92bdf2116879ac9f2ff4a6d7b6084421f92b648",
+  "zip_verified": true,
+  "tc_kernel": "300ms each way, 0% loss configured and read back",
+  "duration_s": 60,
+  "windows": {
+    "sent_mbps": 9.9952,
+    "received_mbps": 9.9939,
+    "sent_packets": 113411,
+    "received_packets": 113389,
+    "local_npcap_drop_cumulative": 137,
+    "application_oneway_p99": "NOT_MEASURED_UNCALIBRATED_CLOCKS"
+  },
+  "linux": {
+    "sent_mbps": 10,
+    "received_mbps": 9.9952,
+    "sent_packets": 113465,
+    "received_packets": 113411
+  },
+  "duplex_udp_tcp": "PASS",
+  "owned_stop": "PASS",
+  "status": "PERF_PASS_SCOPED_ONE_SAMPLE_WITH_STABILITY_OPEN",
+  "previous_fail": {
+    "source_sha": "aa93183d7183681efd5408f3cb2e1a0d1e32fada",
+    "run_id": 40557095692,
+    "status": "FAIL",
+    "reason": "original Normal M1/M3 owner refused after 29s"
+  },
+  "interpretation": "A later one-sample success with added error provenance does not explain prior untyped owner failure; Npcap local drops are nonzero, CPU and clock-normalized one-way p99 unqualified; no N1/N5 escalation solely from one green."
+}

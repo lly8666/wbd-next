@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "kind": "reuse_existing_arm64_original_go_rust_native_bundle_one_normal_bidir_10mbps_capacity_trial",
+  "binary_source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
+  "harness_source_sha": "c59f3d33269e7f805e3417b10b268d9cc21d4086",
+  "artifact_reused": {
+    "from_run_id": 40557336142,
+    "artifact_id": 12757832935,
+    "sha256": "a6c2f17d6282e0d9817236357b62adb119a9d6d22143daa117458b789872ea45",
+    "exact_manifest_and_sha256s_verified": true
+  },
+  "run_id": 40566061984,
+  "whole_run_conclusion": "failure",
+  "capacity_job_conclusion": "success",
+  "artifact_id": 12762174701,
+  "artifact_sha256": "5aba341d432a98dea3cb4a9a224d34b93ab89a175b816406203a674c269818e8",
+  "zip_verified": true,
+  "mode": "normal",
+  "architecture": "aarch64 native Linux two netns",
+  "duration_s": 60,
+  "iperf3": {
+    "forward_received_bps": 9999791.8348911,
+    "reverse_received_bps": 9999791.8348911,
+    "forward_udp_packets": 74999,
+    "forward_udp_lost": 0,
+    "reverse_udp_packets": 74999,
+    "reverse_udp_lost": 0
+  },
+  "original_go_tls_rust_tun_stop": "PASS_BOTH",
+  "netns_cleanup": "PASS",
+  "qualification": "CAPACITY_PASS_SCOPED_10MBPS_60S_ONLY",
+  "not_run": [
+    "old/new A/B",
+    "Windows 300ms",
+    "p99",
+    "500 Mbps",
+    "FEC parity recovery",
+    "physical/global"
+  ]
+}
