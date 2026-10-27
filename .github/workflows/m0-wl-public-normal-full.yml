@@ -1,6 +1,7 @@
 name: M0 Windows Linux original native whole-wiring capability and functional entry
 # S45 frozen original M0 source candidate: one real seven-mode functional batch.
-# Explicit [wiring-full] push only; manual N0 disabled, no extreme performance.
+# Only the isolated N0 branch opts into one true Normal N0 by commit marker.
+# This does not affect the Auto branch or launch N1/N5 or A/B comparisons.
 # Every built Go/Rust DLL/WSL artifact is labeled GITHUB_SHA. Tests are
 # actual original Wintun+Npcap/Go TLS and independent Linux TUN native I/O.
 # Source-locked first compile gate on an experiment/windows-wiring-* branch:
@@ -84,8 +85,8 @@ jobs:
       - run: python tools/prepare_windows_wiring.py --check-only
       - name: Enforce functional seven modes or exactly one scoped N0 before any native build
         env:
-          PUBLIC_MODE: ${{ inputs.public_mode || 'all' }}
-          RUN_N0: ${{ inputs.run_n0 == true && '1' || '0' }}
+          PUBLIC_MODE: ${{ (github.event_name == 'push' && contains(github.event.head_commit.message, '[wl-n0-normal-only]')) && 'normal' || (inputs.public_mode || 'all') }}
+          RUN_N0: ${{ ((github.event_name == 'push' && contains(github.event.head_commit.message, '[wl-n0-normal-only]')) || inputs.run_n0 == true) && '1' || '0' }}
         shell: bash
         run: |
           python - <<'PY'
@@ -323,8 +324,8 @@ jobs:
       # The main/push workflow qualifies the seven public functions first.
       # A one-scenario throughput case is an explicit separate manual
       # Action selecting exactly one mode on a single reused VM/build.
-      WBD_WL_PUBLIC_MODES: ${{ inputs.public_mode || 'all' }}
-      WBD_WL_RUN_N0: ${{ inputs.run_n0 == true && '1' || '0' }}
+      WBD_WL_PUBLIC_MODES: ${{ (github.event_name == 'push' && contains(github.event.head_commit.message, '[wl-n0-normal-only]')) && 'normal' || (inputs.public_mode || 'all') }}
+      WBD_WL_RUN_N0: ${{ ((github.event_name == 'push' && contains(github.event.head_commit.message, '[wl-n0-normal-only]')) || inputs.run_n0 == true) && '1' || '0' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
