@@ -952,6 +952,118 @@ fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     e.tx_scratch=batch.recycle();
     accepted
 }
+// One bounded zero-wait staged SOURCE batch (not a kernel submission).
+// Native Go captures a maximum of four actually ready Wintun frames and
+// holds its real M4 lease while one Rust M1 Entry lock seals each original
+// contiguous PN/SEQ. No cipher, packet receipt or fresh F is forged here.
+#[repr(C)]
+#[derive(Clone,Copy)]
+pub struct WbdWindowsOriginalSourceInput {
+    pub length:u32,pub reserved:u32,pub ipv4:[u8;2048],
+}
+#[repr(C)]
+#[derive(Clone,Copy)]
+pub struct WbdWindowsOriginalSourceOutput {
+    pub used:u32,pub seq:u32,pub pn:u64,pub wire:[u8;2048],
+}
+const MAX_WINDOWS_SOURCE_BATCH:usize=4;
+fn original_source_batch_entry(
+    e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
+    rows:&[WbdWindowsOriginalSourceInput],
+    outputs:&mut [WbdWindowsOriginalSourceOutput],
+)->(i32,u32){
+    if !v3_ready(e,epoch,luid,ifindex)||
+        rows.is_empty()||rows.len()>MAX_WINDOWS_SOURCE_BATCH||
+        rows.len()!=outputs.len()||e.m2.is_none(){
+        return (BAD_STAGE,0)
+    }
+    let budget=match normal_off_windows_budget(e){
+        Ok(v)=>v,Err(code)=>return (code,0),
+    };
+    // Preflight ALL original IPv4 bounds and the expected 31/45-byte
+    // wire budget before spending even one Rust AEAD nonce/TCP serial.
+    let max=if e.feature7{
+        #[cfg(feature="fec2_product_record")]
+        {if e.fec2_tx.is_none(){return (BAD_STAGE,0)}}
+        #[cfg(not(feature="fec2_product_record"))]
+        {return (BAD_STAGE,0)}
+        budget.record_payload_mtu.saturating_sub(14)
+    }else{budget.single_business_payload_mtu};
+    for row in rows{
+        let n=row.length as usize;
+        if row.reserved!=0||n<20||n>max||n>2048||
+           row.ipv4[0]>>4!=4||row.ipv4[0]&15<5||
+           n.checked_add(if e.feature7{45}else{31})
+             .is_none_or(|wire|wire>2048){
+            return (INVALID,0)
+        }
+    }
+    let mut produced=0u32;
+    for (row,out) in rows.iter().zip(outputs.iter_mut()){
+        let ipv4=&row.ipv4[..row.length as usize];
+        let result=if e.feature7{
+            #[cfg(feature="fec2_product_record")]
+            {fec2::stage_fixed_source_entry(e,epoch,luid,ifindex,
+                ipv4,&mut out.wire)}
+            #[cfg(not(feature="fec2_product_record"))]
+            {Err(BAD_STAGE)}
+        }else{
+            v3_seal_entry(e,epoch,luid,ifindex,ipv4,&mut out.wire)
+        };
+        match result{
+            Ok((used,seq,pn))=>{
+                out.used=used as u32;
+                out.seq=seq;
+                out.pn=pn;
+                produced+=1;
+            },
+            // Partial post-seal failure is terminal. Go cannot call this
+            // C ABI again for the same Wintun source, and must Stop the
+            // whole epoch without inventing a compensating TCP sequence.
+            Err(code)=>return (code,produced),
+        }
+    }
+    (OK,produced)
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v11_stage_original_sources_batch(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    inputs:*const WbdWindowsOriginalSourceInput,count:u32,
+    outputs:*mut WbdWindowsOriginalSourceOutput,capacity:u32,
+    produced:*mut u32,
+)->i32{
+    if inputs.is_null()||outputs.is_null()||produced.is_null()||
+       count==0||count as usize>MAX_WINDOWS_SOURCE_BATCH||
+       capacity!=count||
+       (inputs as usize)%std::mem::align_of::<WbdWindowsOriginalSourceInput>()!=0||
+       (outputs as usize)%std::mem::align_of::<WbdWindowsOriginalSourceOutput>()!=0{
+        return INVALID
+    }
+    // No mutable alias of caller's encrypted output and immutable source.
+    let in_start=inputs as usize;
+    let out_start=outputs as usize;
+    let in_end=in_start.checked_add(
+        count as usize*std::mem::size_of::<WbdWindowsOriginalSourceInput>());
+    let out_end=out_start.checked_add(
+        count as usize*std::mem::size_of::<WbdWindowsOriginalSourceOutput>());
+    if in_end.is_none_or(|end|out_start<end&&in_start<out_end.unwrap_or(0))||
+       out_end.is_none(){
+        return INVALID
+    }
+    let Some(exact)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let input=unsafe{std::slice::from_raw_parts(inputs,count as usize)};
+    let output=unsafe{std::slice::from_raw_parts_mut(outputs,count as usize)};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    let (status,n)=original_source_batch_entry(
+        &mut e,exact,luid,ifindex,input,output);
+    unsafe{produced.write(n)}
+    status
+}
 // Unfold exact captured TCP serial bytes against this original-Go-verified
 // owner only. No arbitrary wrapped seq can claim a different generation.
 fn m0_tcp_unwrap(e:&Entry,seq:u32,len:usize)->Result<u64,i32>{
@@ -1948,6 +2060,69 @@ mod tests {
         assert_eq!(release(&mut r,h),OK);
     }
 
+    #[test]
+    fn m0_windows_native_original_source_batch_preflights_all_then_contiguous_m1(){
+        assert_eq!(std::mem::size_of::<WbdWindowsOriginalSourceInput>(),2056);
+        assert_eq!(std::mem::size_of::<WbdWindowsOriginalSourceOutput>(),2064);
+        let mut r=Registry{generation:611,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        let ep=[2u8;16];
+        assert_eq!(bind_wintun(&mut r,h,ep,81,18),OK);
+        assert!(set_path_mtu(&mut r,h,ep,81,18,1400).is_ok());
+        let mut e=r.entries[&h].lock().unwrap();
+        m2_arm_entry(&mut e,ep,81,18).unwrap();
+        let make=|seed:u8|{
+            let mut ipv4=[0u8;2048];
+            ipv4[0]=0x45;
+            ipv4[2..4].copy_from_slice(&90u16.to_be_bytes());
+            ipv4[8]=64;ipv4[9]=17;
+            ipv4[20]=seed;
+            WbdWindowsOriginalSourceInput{
+                length:90,reserved:0,ipv4,
+            }
+        };
+        let inputs=[make(1),make(2),make(3),make(4)];
+        let empty=||WbdWindowsOriginalSourceOutput{
+            used:0,seq:0,pn:0,wire:[0;2048],
+        };
+        let mut out=[empty(),empty(),empty(),empty()];
+        let mut invalid=inputs;
+        invalid[3].reserved=1;
+        assert_eq!(original_source_batch_entry(
+            &mut e,ep,81,18,&invalid,&mut out),(INVALID,0));
+        assert!(e.m2.as_ref().unwrap().pending.is_empty(),
+            "batch input error may not spend even first original PN");
+        let (status,n)=original_source_batch_entry(
+            &mut e,ep,81,18,&inputs,&mut out);
+        assert_eq!((status,n),(OK,4));
+        let mut distinct=BTreeSet::new();
+        for (i,row) in out.iter().enumerate(){
+            assert_eq!(row.used,121);
+            assert!(distinct.insert(row.pn));
+            if i>0{
+                assert_eq!(row.seq,
+                    out[i-1].seq.wrapping_add(out[i-1].used));
+            }
+        }
+        assert_eq!(e.m2.as_ref().unwrap().pending.len(),4,
+            "only genuine future NPF firstsend callbacks can give F credit");
+        assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),0);
+        // Explicitly settle original pending PNs as Uncertain for this
+        // native unit: no fake Accepted/F credit, no frozen staging
+        // retained into owned Stop, and no reusable nonce/SEQ.
+        for row in &out{
+            m2_kernel_firstsend_entry(&mut e,ep,81,18,
+                row.pn,row.seq,row.used as usize,2).unwrap();
+        }
+        assert!(e.m2.as_ref().unwrap().pending.is_empty());
+        assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),0);
+        drop(e);
+        assert_eq!(quiesce_wintun(&mut r,h,ep,81,18),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
     #[test]
     fn m0_windows_m2_batch_validates_entire_original_seq_and_uncertain_once(){
         assert_eq!(std::mem::size_of::<WbdWindowsM2FirstsendResult>(),24);

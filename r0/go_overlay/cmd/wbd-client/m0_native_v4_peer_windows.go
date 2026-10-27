@@ -68,6 +68,10 @@ type m0NativeV4Peer struct {
  // remains pending/frozen until a bounded synchronous batch report after I/O.
  m2Results [m0V4BatchPackets]realityfront.V4WindowsM2FirstsendResult
  m2ResultsCount int
+ // Fixed capacity, reused every fair TX turn. Go does not allocate a
+ // fresh ciphertext slice or make four separate Rust FFI transitions.
+ sourceInputs [realityfront.V4WindowsOriginalSourceBatchMax]realityfront.V4WindowsOriginalSourceInput
+ sourceOutputs [realityfront.V4WindowsOriginalSourceBatchMax]realityfront.V4WindowsOriginalSourceOutput
  sent,opened,sentAfterOpen,retries,duplicates,rejected,oversize,feedbackSent uint64
  pendingCount int
  effective realityfront.V4WindowsM2Effective
@@ -227,6 +231,86 @@ func(p *m0NativeV4Peer) sendACK()error{
   Seq:p.sendNext,Ack:p.recvNext,Flags:faketcp.FlagACK,Window:65535,
  })
  return err
+}
+// Read up to four ALREADY-ready native Wintun frames with zero batching
+// wait, seal all in the one original Rust M1/FixedStream owner, then send
+// each fully authenticated packet through its original pcap endpoint.
+// Stop is the ONLY recovery from a post-seal error or partial driver copy.
+func(p *m0NativeV4Peer) transmitReadySourceBatch(
+ ctx context.Context,limit int,
+)(int,error){
+ if p==nil||p.ring==nil||p.owner==nil||p.stopped(){
+  return 0,windowsclient.ErrN4NativeGuard
+ }
+ if limit<=0||limit>realityfront.V4WindowsOriginalSourceBatchMax{
+  return 0,windowsclient.ErrN4NativeGuard
+ }
+ ready,dropped:=0,0
+ for slot:=0;slot<limit;slot++{
+  n,err:=p.ring.ReceiveReadyIPv4(ctx,p.scratch)
+  if errors.Is(err,windowsclient.ErrN4NativeNoPacket){break}
+  if err!=nil{
+   if errors.Is(err,context.Canceled){return dropped,err}
+   if n==0{
+    p.mu.Lock();p.rejected++;p.mu.Unlock()
+    dropped++;continue
+   }
+   return dropped,err
+  }
+  if n<20||n>p.maxIPv4||n>2048{
+   p.mu.Lock();p.oversize++;p.mu.Unlock()
+   dropped++;continue
+  }
+  in:=&p.sourceInputs[ready]
+  in.Length=uint32(n)
+  in.Reserved=0
+  copy(in.IPv4[:n],p.scratch[:n])
+  ready++
+ }
+ if ready==0{return dropped,nil}
+ count,err:=p.owner.SealBoundOriginalSourceBatch(
+  ctx,p.sourceInputs[:ready],p.sourceOutputs[:ready])
+ if err!=nil||count!=uint32(ready){
+  // Already allocated nonces/serials in Rust, if any, cannot be replayed
+  // or bridged by Go. A hard owner stop protects the entire generation.
+  return dropped,fmt.Errorf("%w: original M1 source stage batch produced=%d ready=%d: %v",
+   windowsclient.ErrN4NativeGuard,count,ready,err)
+ }
+ for i:=0;i<ready;i++{
+  row:=&p.sourceOutputs[i]
+  n:=int(row.Used)
+  if n<=31||n>len(row.Wire)||row.Seq!=p.sendNext{
+   p.noteTX("source-batch",row.Seq,p.sendNext,row.PN,n,"SEQ_OR_LENGTH_MISMATCH")
+   return dropped+i,fmt.Errorf(
+    "%w: original source stage batch contiguous TX expected=%d got=%d used=%d; recent=%s",
+    windowsclient.ErrN4NativeGuard,p.sendNext,row.Seq,n,p.txTrace())
+  }
+  wire:=row.Wire[:n]
+  sentErr:=p.sendCarrier(row.Seq,p.recvNext,wire)
+  if sentErr==nil{
+   p.noteTX("source-batch",row.Seq,p.sendNext,row.PN,n,"NPF_COPIED")
+  }else{
+   p.noteTX("source-batch",row.Seq,p.sendNext,row.PN,n,"NPF_UNCERTAIN")
+  }
+  if p.m2ResultsCount>=m0V4BatchPackets{
+   return dropped+i,fmt.Errorf(
+    "%w: original NPF M2 completion buffer full",
+    windowsclient.ErrN4NativeGuard)
+  }
+  outcome:=uint32(1)
+  if sentErr!=nil{outcome=2} // Uncertain, no fresh F credit
+  p.m2Results[p.m2ResultsCount]=realityfront.V4WindowsM2FirstsendResult{
+   PN:row.PN,Seq:row.Seq,WireLen:uint32(n),Outcome:outcome,
+  }
+  p.m2ResultsCount++
+  if sentErr!=nil{return dropped+i,sentErr}
+  p.sendNext=row.Seq+uint32(n)
+  p.mu.Lock()
+  p.sent++
+  if p.opened>0{p.sentAfterOpen++}
+  p.mu.Unlock()
+ }
+ return dropped+ready,nil
 }
 func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
  if p.stopped(){return false,context.Canceled}
@@ -571,16 +655,18 @@ func(p *m0NativeV4Peer) pulse(ctx context.Context)(done int,err error){
    default:
    }
   }
-  if done<m0V4BatchPackets{
-   // Up to four ready source packets, no waiting to fill the burst.
-   // A busy RX lane gets another turn within the same <=2ms CPU budget.
-   for burst:=0;burst<4&&done<m0V4BatchPackets&&
-       time.Since(start)<m0V4BatchCPU;burst++{
-    tx,txErr:=p.transmitOne(ctx)
-    if txErr!=nil{return done,txErr}
-    if !tx{break}
-    done++;changed=true
+  if done<m0V4BatchPackets&&time.Since(start)<m0V4BatchCPU{
+   // One original Rust entry-lock + DLL FFI for <=4 ALREADY-ready
+   // Wintun sources. Never wait to fill; finish and credit every real
+   // NPF copied prefix before accepting reverse peer receipts.
+   batch:=m0V4BatchPackets-done
+   if batch>realityfront.V4WindowsOriginalSourceBatchMax{
+    batch=realityfront.V4WindowsOriginalSourceBatchMax
    }
+   txCount,txErr:=p.transmitReadySourceBatch(ctx,batch)
+   if txErr!=nil{return done,txErr}
+   done+=txCount
+   if txCount>0{changed=true}
   }
   // An authenticated reverse kind1 may arrive next. Settle the genuine
   // NPF copied prefix into Rust M2 BEFORE it can receive a peer receipt.

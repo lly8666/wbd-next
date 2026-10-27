@@ -69,6 +69,65 @@ func(s *V4WindowsAuthenticatedClientOwner) OriginalOwnerReadback()(V4WindowsScop
     },nil
 }
 
+// B2 zero-wait bounded original Wintun ready-prefix SOURCE stage ABI.
+// The caller owns both buffers for one fair 2ms native turn; neither
+// a staged Go array nor Rust AEAD seal means a native NPF kernel copy.
+type V4WindowsOriginalSourceInput struct{
+ Length,Reserved uint32
+ IPv4 [2048]byte
+}
+type V4WindowsOriginalSourceOutput struct{
+ Used,Seq uint32
+ PN uint64
+ Wire [2048]byte
+}
+const V4WindowsOriginalSourceBatchMax=4
+func(s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalSourceBatch(
+ ctx context.Context,inputs []V4WindowsOriginalSourceInput,
+ outputs []V4WindowsOriginalSourceOutput,
+)(uint32,error){
+ if ctx==nil||s==nil||s.bridge==nil||s.device==nil||
+    s.bridge.stageSourceBatchProc==nil||
+    len(inputs)==0||len(inputs)>V4WindowsOriginalSourceBatchMax||
+    len(outputs)!=len(inputs)||
+    unsafe.Sizeof(V4WindowsOriginalSourceInput{})!=2056||
+    unsafe.Sizeof(V4WindowsOriginalSourceOutput{})!=2064{
+    return 0,errV4WindowsOwner
+ }
+ if err:=ctx.Err();err!=nil{return 0,err}
+ maxIPv4:=s.device.maxIPv4
+ for i:=range inputs{
+  n:=inputs[i].Length
+  if inputs[i].Reserved!=0||n<20||n>2048||
+     int(n)>maxIPv4||inputs[i].IPv4[0]>>4!=4||
+     inputs[i].IPv4[0]&15<5{
+    return 0,errV4WindowsOwner
+  }
+ }
+ release,err:=s.device.borrowHot(ctx)
+ if err!=nil{return 0,errors.Join(errV4WindowsOwner,err)}
+ defer release()
+ var produced uint32
+ err=winOwnerCall(s.bridge.stageSourceBatchProc,
+  uintptr(s.bridge.handle),uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+  uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),
+  uintptr(unsafe.Pointer(&inputs[0])),uintptr(len(inputs)),
+  uintptr(unsafe.Pointer(&outputs[0])),uintptr(len(outputs)),
+  uintptr(unsafe.Pointer(&produced)))
+ runtime.KeepAlive(inputs);runtime.KeepAlive(outputs)
+ runtime.KeepAlive(s.bridge.epoch)
+ if produced>uint32(len(inputs)){return 0,errV4WindowsOwner}
+ // Any partial native error after a seal may have burned original M1
+ // PN/SEQ. Return the truthful prefix but do not submit it as a second
+ // attempt; the enclosing original Go owner must Stop.
+ if err!=nil{return produced,errors.Join(errV4WindowsOwner,err)}
+ if produced!=uint32(len(inputs)){return produced,errV4WindowsOwner}
+ for i:=range outputs{
+  n:=outputs[i].Used
+  if n<=31||n>2048{return produced,errV4WindowsOwner}
+ }
+ return produced,nil
+}
 // SealBoundOriginalNormalOff is callable only AFTER original-Go verified
 // credential TLS, successful Rust commit and the same live M4-created native
 // Wintun Hold. It asks the SAME Rust M1 owner for a single immutable M3 AEAD

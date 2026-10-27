@@ -317,7 +317,7 @@ pub struct WindowsFixedParityBatch {
 fn empty_parity_row()->WindowsFixedParityRow{
     WindowsFixedParityRow{used:0,seq:0,pn:0,wire:[0;2048]}
 }
-fn stage_fixed_source_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+pub(super) fn stage_fixed_source_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,frame:&[u8],out:&mut [u8]
 )->Result<(usize,u32,u64),i32>{
     if !v3_ready(e,epoch,luid,ifindex)||!e.feature7||e.m2.is_none()||

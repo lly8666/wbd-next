@@ -285,3 +285,13 @@ func TestM0RemediationGameNativeEffectiveMTUShrinkGrowWithoutOwnerReset(t *testi
   t.Fatal("nil authenticated Rust Game group must not assert MTU readback")
  }
 }
+
+func TestM0RemediationNativeSourceBatchAlwaysRequiresRealM4Owner(t *testing.T){
+ var p m0NativeV4Peer
+ if _,err:=p.transmitReadySourceBatch(context.Background(),4);err==nil{
+  t.Fatal("cold Go owner cannot stage original Rust source batch")
+ }
+ if _,err:=p.transmitReadySourceBatch(context.Background(),0);err==nil{
+  t.Fatal("zero-capacity stage admitted")
+ }
+}

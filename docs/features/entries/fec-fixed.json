@@ -110,7 +110,8 @@
     "2026-10-27 experimental Windows M0 A2/A3 source and tests only: not integrated, not Actions tested, not a new performance qualification.",
     "2026-10-27 experimental Windows B2: private native FEC DLL procs cached within bound owner; Rust full 8KiB parity batch buffers reused with deep-copy before pool return; only Go-vs-Rust FFI overhead candidate, NOT_RUN actual Windows product/performance. OS device Identity still checked per packet, B1 lease batching remains OPEN.",
     "2026-10-27 experimental Windows A1 Fixed source/parity seal and drain now use same real monotonic timeline as original M2 control; the observed 428B natural Auto mismatch is not declared repaired without actual native evidence.",
-    "2026-10-27 S17 experimental: Windows Rust C ABI UNKNOWN/BAD_STAGE/FULL/STOP_INCOMPLETE in native Normal/FEC2 open now terminal owner errors, not disguised as benign unauthenticated packet loss; rc=INVALID remains an ambiguous legacy packet rejection with original session-bound lease/Rust guard intact. No real Windows/native Actions qualification yet."
+    "2026-10-27 S17 experimental: Windows Rust C ABI UNKNOWN/BAD_STAGE/FULL/STOP_INCOMPLETE in native Normal/FEC2 open now terminal owner errors, not disguised as benign unauthenticated packet loss; rc=INVALID remains an ambiguous legacy packet rejection with original session-bound lease/Rust guard intact. No real Windows/native Actions qualification yet.",
+    "2026-10-27 experimental S24 original Windows Normal/Fixed/Auto SOURCE zero-wait bounded 1–4 real Wintun frames per Rust owner/FFI, fixed 2056B/2064B C descriptor layouts, existing M1 PN/SEQ unchanged, only real NPF firstsend receipts grant F. Rust/Go native tests, full product/p99/CPU Actions NOT_RUN."
   ],
   "promotion": null
 }

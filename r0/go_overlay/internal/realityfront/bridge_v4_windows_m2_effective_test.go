@@ -22,3 +22,18 @@ func TestM0WindowsOriginalM2BatchFirstsendABIExactCLayout(t *testing.T){
   t.Fatal("unbounded original M2 batch")
  }
 }
+
+func TestM0WindowsOriginalSourceBatchABIExactLayoutAndBound(t *testing.T){
+ var in V4WindowsOriginalSourceInput
+ var out V4WindowsOriginalSourceOutput
+ if unsafe.Sizeof(in)!=2056||unsafe.Sizeof(out)!=2064||
+  unsafe.Offsetof(in.Length)!=0||unsafe.Offsetof(in.Reserved)!=4||
+  unsafe.Offsetof(in.IPv4)!=8||
+  unsafe.Offsetof(out.Used)!=0||unsafe.Offsetof(out.Seq)!=4||
+  unsafe.Offsetof(out.PN)!=8||unsafe.Offsetof(out.Wire)!=16{
+   t.Fatal("Rust M1 source batch wire C ABI offsets changed")
+ }
+ if V4WindowsOriginalSourceBatchMax!=4{
+  t.Fatal("native latency batch must remain bounded and no-wait")
+ }
+}
