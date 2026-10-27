@@ -577,6 +577,35 @@ fn accumulate_original_auto_quality(
     m.auto_quality[13]=m.auto_quality[13].saturating_add(
         poll.window_8s.positive_confirmation_samples);
 }
+
+// One Linux MatureFirstSend expiry batch is 64 independent deadlines, but
+// each real M4 DATA needs TWO: 2s and 8s. Windows' 100ms readback previously
+// consumed only 64 per tick (<=320 DATA/s); real Npcap had >660 DATA/s.
+// Reuse the SAME mature owner and its 64-entry bounded batch until the
+// already-due records are exhausted. No Go timer/FEC estimator, shadow
+// resampling, 512-source threshold or native kernel result is changed.
+fn drain_original_auto_mature_due(
+    m:&mut WindowsOriginalM2,now:MonoNs,
+)->Result<(),i32>{
+    loop {
+        let (poll,capacity_censored)={
+            let mature=m.mature.as_mut().ok_or(BAD_STAGE)?;
+            let poll=mature.on_due(now).map_err(|_|BAD_STAGE)?;
+            let capacity_censored=mature.counters().capacity_censored;
+            (poll,capacity_censored)
+        };
+        m.fec_positive_2s=m.fec_positive_2s.saturating_add(
+            poll.window_2s.unambiguous_positive);
+        m.fec_covered_2s=m.fec_covered_2s.saturating_add(
+            poll.window_2s.covered());
+        m.fec_censored |= poll.capacity_limited||capacity_censored>0;
+        let has_due=poll.next_deadline.is_some_and(|deadline|deadline.0<=now.0);
+        let progressed=poll.processed>0;
+        accumulate_original_auto_quality(m,poll,capacity_censored);
+        if !has_due{return Ok(())}
+        if !progressed{return Err(BAD_STAGE)}
+    }
+}
 #[repr(C)]
 pub struct WindowsFEC2AutoQuality {
     pub version:u32,pub size:u32,pub revision:u64,
@@ -612,10 +641,7 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v8_fec2_auto_quality(
         (tx.revision().0,h)
     };
     let Some(m)=e.m2.as_mut()else{return BAD_STAGE};
-    let Some(mature)=m.mature.as_mut()else{return BAD_STAGE};
-    let Ok(poll)=mature.on_due(m2_clock())else{return BAD_STAGE};
-    let cap=mature.counters().capacity_censored;
-    accumulate_original_auto_quality(m,poll,cap);
+    if drain_original_auto_mature_due(m,m2_clock()).is_err(){return BAD_STAGE}
     for (i,k) in histogram.into_iter().enumerate(){
         m.auto_quality[14+i]=k;
     }
@@ -646,15 +672,7 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_mature_readback(
     let Ok(mut e)=lane.lock()else{return BAD_STAGE};
     if !v3_ready(&e,epoch,luid,ifindex)||!e.feature7{return BAD_STAGE}
     let Some(m)=e.m2.as_mut()else{return BAD_STAGE};
-    let Some(mature)=m.mature.as_mut()else{return BAD_STAGE};
-    let Ok(poll)=mature.on_due(m2_clock())else{return BAD_STAGE};
-    m.fec_positive_2s=m.fec_positive_2s.saturating_add(
-        poll.window_2s.unambiguous_positive);
-    m.fec_covered_2s=m.fec_covered_2s.saturating_add(
-        poll.window_2s.covered());
-    let cap=mature.counters().capacity_censored;
-    m.fec_censored |= poll.capacity_limited||cap>0;
-    accumulate_original_auto_quality(m,poll,cap);
+    if drain_original_auto_mature_due(m,m2_clock()).is_err(){return BAD_STAGE}
     let applied=!m.fec_censored && m.fec_copied_source>0&&
         m.fec_copied_parity>0&&m.fec_positive_2s>0&&
         m.fec_covered_2s>0&&m.fec_reverse_reports>0;
@@ -880,6 +898,49 @@ mod tests{
         assert_eq!(release(&mut r,rx),OK);
     }
 
+
+    #[test]
+    fn m0_windows_auto_mature_667pps_drains_all_real_2s8s_deadlines(){
+        // Original Rust M2 has TWO independent maturations per real DATA,
+        // each shared batch stays 64. A delayed Windows readback must not
+        // throttle 667/s actual kernel source throughput down to 320/s.
+        let mut r=Registry{generation:986,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=setup(&mut r,false,953,95);
+        let epoch=[2;16];
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_arm_entry(&mut e,epoch,953,95).unwrap();
+            let lane=e.owner.normal_firstsend_identity().unwrap().0;
+            let m=e.m2.as_mut().unwrap();
+            let start=m2_clock();
+            for pn in 0..700u64{
+                m.mature.as_mut().unwrap().on_first_send(
+                    lane,wbd_recovery::FirstSendKind::Data,
+                    wbd_recovery::FirstSendOutcome::Accepted{
+                        pn:RecordPn(pn),wire_bytes:135
+                    },
+                    MonoNs(start.0+pn*1_500_000)
+                ).unwrap();
+            }
+            let due=MonoNs(start.0+9_200_000_000);
+            drain_original_auto_mature_due(m,due).unwrap();
+            assert_eq!(m.auto_quality[0],700,
+                "all actual first-source 2s deadlines must mature");
+            assert_eq!(m.auto_quality[5],700,
+                "all actual first-source 8s deadlines must mature");
+            assert_eq!(m.auto_quality[9],700,
+                "without genuine M3 feedback, every sample is UNKNOWN");
+            assert_eq!(m.fec_positive_2s,0,
+                "kernel-first-send alone must never grant an M2 Applied");
+            // A second readback at the same owner time is idempotent.
+            drain_original_auto_mature_due(m,due).unwrap();
+            assert_eq!(m.auto_quality[5],700);
+        }
+        assert_eq!(quiesce_wintun(&mut r,h,epoch,953,95),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
 
     #[test]
     fn m0_windows_fec2_revision_change_uses_linux_quiescent_and_new_m2_maturity(){
