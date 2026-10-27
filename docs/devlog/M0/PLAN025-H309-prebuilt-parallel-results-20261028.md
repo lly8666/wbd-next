@@ -13,3 +13,11 @@ Additional old main S61 red: legacy FIXED-KERNEL Action40562809787 FAIL linker w
 ```feature-impact
 {"kind":"updated","ids":["normal-off","fec-fixed","fec-auto","game-lanes","game-fixed-fec","windows-native-transport"],"reason":"Record exact main source33ed native seven-mode full positive and separate source-dd0767 N0 scoped success while preserving original aa931 failure; register distinct ARM64 reused-binary 10M capacity pass and real Linux one-percent lost-packet legacy test fail without fabricating repair/performance qualification."}
 ```
+
+## H310 schema-only fail-closed registration correction
+- H309 main source8689737046ab1f500258490c9bcec3a5297ac1f2 Governance Actions40567667085/1 **FAIL**, Feature catalog rejected `normal-off` verification status `PERF_PASS_SCOPED` because schema allows `PERFORMANCE_PASS` only; runtime scope and existing positive/negative reports unchanged. Governance `tools/governance.py validate` emitted `BLOCKED: evidence is for a different SOURCE`, since cursor `last_tested_source=33ed20b4` but the cursor evidence_refs included N0dd0767 and ARM64f7ee foreign binary sources; those remain separate independent evidence files, not the cursor's exact-source root proof. No product runtime test failed in these docs-only Actions.
+- H310 applies the existing valid `PERFORMANCE_PASS` enum for the *single SOURCE dd0767 300ms/10Mbps/60s test* with explicit previous aa931 FAIL and 137 local Npcap drops in its scope. It keeps cursor evidence_refs only H309 main S61 seven-mode evidence whose `source_sha` matches `last_tested_source=33ed`; the N0, ARM64 and Linux loss1 evidence paths remain reachable in H309 devlog and feature cards, with original SHA/Action/ZIP intact. No binaries, product implementation, policy, tests or permissions changed. Do not re-run native Actions because this is a schema-only source.
+
+```feature-impact
+{"kind":"updated","ids":["normal-off"],"reason":"Replace schema-unknown scoped status alias with supported PERFORMANCE_PASS and retain scope; source-lock cursor evidence_refs to its exact main binary while preserving independent N0/ARM64/loss receipts elsewhere."}
+```

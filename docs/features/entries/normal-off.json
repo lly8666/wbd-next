@@ -83,7 +83,7 @@
     {
       "platform": "windows/x64 ↔ linux/amd64 WSL2",
       "scope": "Isolated exact dd0767 300ms each direction 0%-loss configured, 60s real UDP10Mbps each dir and Stop PASS once; older aa931 same N0 owner failure unresolved; Windows Npcap local drop137, no calibrated p99.",
-      "status": "PERF_PASS_SCOPED",
+      "status": "PERFORMANCE_PASS",
       "source_sha": "dd0767abfc076c97bc42304083f42105a514cda1",
       "evidence": "docs/evidence/M0/PLAN025-H309-WL-N0-dd0767-PASS-previous-FAIL-20261028.json"
     }
