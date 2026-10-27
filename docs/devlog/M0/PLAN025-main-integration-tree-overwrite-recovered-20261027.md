@@ -257,6 +257,12 @@ S32 exact source8fa4495 Governance40527991769 SUCCESS, maintenance40527992196 FA
 
 ## S35 — exact assembly preflight repaired after genuine compile gate red
 S34 exact SOURCE1d82717 GitHub Action40529451023 returned FAIL at cheap `tools/prepare_windows_wiring.py --check-only` before any native Go compile. Original manifest had exactly ONE stale `create` overlay path after comparing all 65 operations against full source tree: `r0/go_overlay/internal/realityfront/bridge_v4_windows_auto_controller.go` actual blob3cee40e963cd4a95bcd310ba163ad723d7df0631, manifest stale b234a6266208e41a9d5ea9c128278c5471fb9806. All other existing overlay entries exact; historic `replace` ops intentionally contain original blob only, no overlay path. Updated one manifest result_blob without touching frozen original M4 or Rust semantics, preserving first-red action. Re-run exact compile-only workflow on new source; zero real two-OS product/perf dispatch.
-```feature-impact
+```json
 {"kind":"none","ids":[],"reason":"Pin exact current original M0 auto-controller overlay blob in original-Go immutable assembly manifest; no product algorithm change."}
+```
+
+## S37 — source-locked Windows Rust original M1/M3 owner compile gate before real product Actions
+Go preflight source d8adbda4 Action40530341741 SUCCESS both cheap assembly contracts and real Windows original-Go production/Test compile, Linux+Win actual product correctly SKIPPED. Added separate Windows Rust 1.85.1 target compile+core v4_windows_owner library regression job, after exact Windows Go compile, with original FEC2 Rust feature flags from native full-job. Build/check and unit tests only: no authenticated real Windows↔Linux kernel product, full scenario run or performance. Preserve same workflow artifact source and support failure diagnosis without full WSL/Npcap/route writes. Existing native-public-two-os launch gate unchanged.
+```feature-impact
+{"kind":"none","ids":[],"reason":"Add source-locked Windows Rust M1/M3 owner and FEC2 core compile/unit CI before native two-OS product qualification."}
 ```

@@ -138,6 +138,35 @@ jobs:
           path: result/*.json
           retention-days: 14
           if-no-files-found: warn
+  windows-rust-contract-preflight:
+    name: Windows Rust DLL original owner compile and core tests only
+    needs: [windows-compile-preflight]
+    runs-on: windows-2025
+    timeout-minutes: 25
+    env:
+      AWS_LC_SYS_PREBUILT_NASM: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Windows native Rust M1/M3 source and FEC2 owner compile+unit regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib v4_windows_owner -- --test-threads=1
+          if($LASTEXITCODE -ne 0){throw 'original Windows Rust M1/M3 crypto/MTU/FEC2 owner unit regression FAIL'}
+          New-Item -ItemType Directory -Force -Path result | Out-Null
+          @{source=$env:GITHUB_SHA;scope='WINDOWS_RUST_OWNER_CORE_ONLY';result='PASS';native_product='NOT_RUN';real_two_os='NOT_RUN'} |
+            ConvertTo-Json | Set-Content result/rust-owner-contract.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: rust-owner-compile-preflight-${{ github.run_id }}
+          path: result/rust-owner-contract.json
+          retention-days: 14
+          if-no-files-found: warn
+
   linux-source-locked-public:
     # Ordinary staging pushes stop after compile preflight. A complete
     # capability batch opts in; main's existing qualification remains intact.
