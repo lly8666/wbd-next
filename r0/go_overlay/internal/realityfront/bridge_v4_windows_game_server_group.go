@@ -40,8 +40,10 @@ func V4WindowsEstablishOriginalGameServerGroup(
  fail:=func(cause error)(*V4WindowsAuthenticatedGameServerGroup,error){
   cleanup,cancel:=context.WithTimeout(context.Background(),15*1000000000)
   defer cancel()
-  for _,o:=range g.owners{
-   if o!=nil{cause=errors.Join(cause,o.StopScopedOwner(cleanup))}
+  for i:=len(g.owners)-1;i>=0;i--{
+   if o:=g.owners[i];o!=nil{
+    cause=errors.Join(cause,o.StopScopedOwner(cleanup))
+   }
   }
   return nil,cause
  }
@@ -74,10 +76,17 @@ func V4WindowsEstablishOriginalGameServerGroup(
   if e!=nil{return fail(e)}
   st,e:=owner.state()
   if e!=nil||st.phase!=2||st.server!=1||st.generation==0||
-   st.applied!=0||!owner.committed{return fail(errV4WindowsOwner)}
+   st.applied!=0||!owner.committed{
+   // A post-TLS owner may be ACTIVE but not yet added to the full
+   // authenticated group. Do not leak it on a readback mismatch.
+   if owner.committed{
+    return fail(errors.Join(errV4WindowsOwner,owner.stopRustOwnerOnly()))
+   }
+   return fail(errV4WindowsOwner)
+  }
   if i==0{g.epoch=session.Epoch}
   if session.Epoch!=g.epoch||g.epoch==[16]byte{}{
-   return fail(ErrAdmissionUnsupported)
+   return fail(errors.Join(ErrAdmissionUnsupported,owner.stopRustOwnerOnly()))
   }
   g.owners=append(g.owners,&V4WindowsAuthenticatedServerOwner{bridge:owner})
   g.sessions=append(g.sessions,session)
