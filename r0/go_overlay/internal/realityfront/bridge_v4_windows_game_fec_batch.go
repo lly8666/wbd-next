@@ -141,7 +141,8 @@ func(g *V4WindowsAuthenticatedGameGroup) ReportGameFecNpcapCopy(
 )error{
  if g==nil{return errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
- if g.gameFec==0{return errV4WindowsOwner}
+ // All Game2/4 copy outcomes are authentic NPF kernel callback receipts,
+ // including Game/off. Staging into a Go output array cannot grant credit.
  if err:=g.verifyLive(ctx);err!=nil{return err}
  // The real per-lane pcap_sendpacket callback must be the sole caller.
  return winGameFecM4SendResult(g.fecM4SendProc,g.joined,

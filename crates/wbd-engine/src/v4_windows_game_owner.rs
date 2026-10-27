@@ -163,10 +163,28 @@ fn game_record(lane:LaneKey,id:wbd_types::LogicalPacketId,
     record.wire[..wire.len()].copy_from_slice(wire);
     Some(record)
 }
+// Protected original TLS MSS + actual owned Wintun's effective MTU are
+// the only source of the public Game packet budget, not an arbitrary 1200B
+// temporary test fixture. Both native output and TCP MSS remain capped.
+fn game_effective_payload_mtu(game:&WinGameGroup,h:u64)->Result<usize,i32>{
+    let mut cap=game.adapter.inner_mtu().min(1536-31-16);
+    if game.adapter.has_game_fec(){cap=cap.saturating_sub(14);}
+    for lane in &game.lanes{
+        let e=lane.lock().map_err(|_|BAD_STAGE)?;
+        if e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
+            !e.device.is_some_and(|d|!d.quiesced)||e.path_mtu==0{
+            return Err(BAD_STAGE)
+        }
+        cap=cap.min(usize::from(e.path_mtu));
+    }
+    if cap<20{return Err(INVALID)}
+    Ok(cap)
+}
 fn offer_group(
     game:&mut WinGameGroup,h:u64,payload:&[u8],max:usize,
 )->Result<Vec<WbdWindowsGameRecordV4>,i32>{
-    if payload.len()<20||payload.len()>1200||payload[0]>>4!=4||
+    let cap=game_effective_payload_mtu(game,h)?;
+    if payload.len()<20||payload.len()>cap||payload[0]>>4!=4||
         payload[0]&15<5||max<2||max>4||max<game.handles.len(){
         return Err(INVALID)
     }
@@ -175,27 +193,20 @@ fn offer_group(
         !e.device.is_some_and(|d|!d.quiesced))){return Err(BAD_STAGE)}
     let fec=game.adapter.has_game_fec();
     #[cfg(feature="fec2_product_record")]
-    if fec && !game.staged.is_empty(){return Err(BAD_STAGE)}
+    // A previous real-NPF completion receipt must settle staged copies for
+    // both Game/off and Game+FEC, never count a Go-array copy as M4 copied.
+    if !game.staged.is_empty(){return Err(BAD_STAGE)}
     game.tick=game.tick.checked_add(2).ok_or(FULL)?;
     let now=if fec{game_monotonic_now(game)}else{MonoNs(game.tick)};
     game.adapter.offer(payload,now).map_err(|_|INVALID)?;
     let mut out=Vec::with_capacity(game.handles.len());
     #[cfg(feature="fec2_product_record")]
-    let sent=if fec{
-        game.adapter.stage_for_windows_native(MonoNs(now.0.saturating_add(1)),
-            |lane,id,pn,wire|{
-                if let Some(record)=game_record(lane,id,pn,wire){
-                    out.push(record);true
-                }else{false}
-            })
-    }else{
-        game.adapter.drain(MonoNs(now.0.saturating_add(1)),
-            |lane,id,pn,wire|{
-                if let Some(record)=game_record(lane,id,pn,wire){
-                    out.push(record);true
-                }else{false}
-            })
-    };
+    let sent=game.adapter.stage_for_windows_native(
+        MonoNs(now.0.saturating_add(1)),|lane,id,pn,wire|{
+            if let Some(record)=game_record(lane,id,pn,wire){
+                out.push(record);true
+            }else{false}
+        });
     #[cfg(not(feature="fec2_product_record"))]
     let sent=game.adapter.drain(MonoNs(now.0.saturating_add(1)),
         |lane,id,pn,wire|{
@@ -205,11 +216,9 @@ fn offer_group(
         });
     if sent!=game.handles.len()||out.len()!=sent{return Err(BAD_STAGE)}
     #[cfg(feature="fec2_product_record")]
-    if fec {
-        game.staged.extend(out.iter().map(|r|WinGameStagedRecord{
-            lane:r.lane,id:r.logical_id,pn:r.pn,
-        }));
-    }
+    game.staged.extend(out.iter().map(|r|WinGameStagedRecord{
+        lane:r.lane,id:r.logical_id,pn:r.pn,
+    }));
     Ok(out)
 }
 #[cfg(feature="fec2_product_record")]
@@ -243,18 +252,19 @@ fn game_fec_poll_group(
 #[cfg(feature="fec2_product_record")]
 fn game_m4_result_group(game:&mut WinGameGroup,h:u64,lane:u32,
     logical_id:u64,pn:u64,sent:bool)->i32{
-    if !game.adapter.has_game_fec() ||
-       game.lanes.iter().any(|member|member.lock().ok().is_none_or(|e|
+    if game.lanes.iter().any(|member|member.lock().ok().is_none_or(|e|
         e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
         !e.device.is_some_and(|d|!d.quiesced))){return BAD_STAGE}
     let Some(pos)=game.staged.iter().position(|r|
         r.lane==lane&&r.id==logical_id&&r.pn==pn)else{return BAD_STAGE};
     game.staged.swap_remove(pos);
-    if sent {
+    if sent && game.adapter.has_game_fec() {
         game.adapter.note_windows_native_m4_copy(
             wbd_types::LogicalPacketId(logical_id));
     }
-    if game.staged.is_empty(){game.adapter.settle_windows_native_m4_batch();}
+    if game.staged.is_empty()&&game.adapter.has_game_fec(){
+        game.adapter.settle_windows_native_m4_batch();
+    }
     OK
 }
 #[cfg(feature="fec2_product_record")]
@@ -435,13 +445,31 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_game_join(
         Err(e)=>e,
     }
 }
+/// Readback after ALL original Go TLS lanes were joined and authenticated
+/// Wintun/OS MTU was installed. Never infer a requested MTU as effective.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v4_game_effective_mtu(
+    group:u64,out:*mut u32,
+)->i32{
+    if out.is_null(){return INVALID}
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(v)=r.game_groups.get(&group)else{return UNKNOWN};
+        Arc::clone(v)
+    };
+    let Ok(game)=lane.lock()else{return BAD_STAGE};
+    match game_effective_payload_mtu(&game,group){
+        Ok(n)=>{unsafe{out.write(n as u32)};OK},
+        Err(e)=>e,
+    }
+}
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_win_owner_v4_game_stage(
     group:u64,ipv4:*const u8,len:usize,
     out:*mut WbdWindowsGameRecordV4,capacity:u32,count:*mut u32,
 )->i32{
     if ipv4.is_null()||out.is_null()||count.is_null()||
-        len<20||len>1200||capacity<2||capacity>4{return INVALID}
+        len<20||len>1536||capacity<2||capacity>4{return INVALID}
     let data=unsafe{std::slice::from_raw_parts(ipv4,len)};
     let owned={
         let Ok(r)=registry().lock()else{return BAD_STAGE};
@@ -466,7 +494,7 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_game_receive(
     out:*mut u8,capacity:usize,used:*mut usize,
 )->i32{
     if wire.is_null()||out.is_null()||used.is_null()||
-        len<32||len>1536||capacity<1200||capacity>65535{return INVALID}
+        len<32||len>1536||capacity<20||capacity>65535{return INVALID}
     let bytes=unsafe{std::slice::from_raw_parts(wire,len)};
     let owned={
         let Ok(r)=registry().lock()else{return BAD_STAGE};
@@ -532,6 +560,9 @@ mod tests{
                 .expect("feature7 original TLS owner candidate");
             assert_eq!(commit(r,h,0,0,600),OK);
             assert_eq!(bind_wintun(r,h,[2;16],101+lane as u64,11+lane as u32),OK);
+            // Actual original M4-owned Wintun/route readback is mandatory
+            // before dynamic Game budget can be applied.
+            assert!(set_path_mtu(r,h,[2;16],101+lane as u64,11+lane as u32,1400).is_ok());
             hs.push(h);
         }
         hs
@@ -555,8 +586,39 @@ mod tests{
             let mut ipv4=[0u8;40];ipv4[0]=0x45;
             ipv4[2..4].copy_from_slice(&40u16.to_be_bytes());
             ipv4[8]=64;ipv4[9]=17;ipv4[20..].fill(0x6a);
+            {
+                let group=r.game_groups[&c].lock().unwrap();
+                let effective=game_effective_payload_mtu(&group,c).unwrap();
+                assert!(effective>1200 && effective<=1353,
+                    "protected MSS/path budget must replace old 1200 ceiling");
+            }
+            let mut larger=vec![0x4au8;1300];
+            larger[0]=0x45;
+            larger[2..4].copy_from_slice(&1300u16.to_be_bytes());
+            let long_records=offer_records(&mut r,c,&larger,n)
+                .expect("legal 1300B IPv4 must not be killed by old Go test cap");
+            assert_eq!(long_records.len(),n);
+            #[cfg(feature="fec2_product_record")]
+            {
+                let mut group=r.game_groups[&c].lock().unwrap();
+                for rec in &long_records {
+                    assert_eq!(game_m4_result_group(&mut group,c,rec.lane,
+                        rec.logical_id,rec.pn,true),OK);
+                }
+            }
             let records=offer_records(&mut r,c,&ipv4,n).unwrap();
             assert_eq!(records.len(),n);
+            #[cfg(feature="fec2_product_record")]
+            {
+                let mut group=r.game_groups[&c].lock().unwrap();
+                for (i,rec) in records.iter().enumerate(){
+                    // Real first NPF lane write failed; the other good lanes
+                    // still settle M4 once, preserving per-lane crypto scope.
+                    assert_eq!(game_m4_result_group(&mut group,c,rec.lane,
+                        rec.logical_id,rec.pn,i!=0),OK);
+                }
+                assert!(group.staged.is_empty());
+            }
             assert!(records.iter().all(|a|a.length>31));
             assert!(records.windows(2).all(|pair|pair[0].wire!=pair[1].wire));
             // A stalled first lane cannot block an independently

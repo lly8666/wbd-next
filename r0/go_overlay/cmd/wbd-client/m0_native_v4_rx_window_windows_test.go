@@ -202,3 +202,22 @@ func TestM0RemediationHalfAndFullWrapUnauthenticatedNeverForgesCarrierACK(t *tes
   }
  }
 }
+
+func TestM0RemediationGameSingleLaneNativeFailureIsIsolated(t *testing.T){
+ p:=&m0NativeV4GamePeer{lanes:make([]m0GameLane,4)}
+ if e:=p.retireLane(0,context.DeadlineExceeded);e!=nil{
+  t.Fatalf("first bad lane killed healthy group: %v",e)
+ }
+ if !p.lanes[0].failed||p.lanes[1].failed||p.laneFailed!=1{
+  t.Fatal("failed native lane contaminated independent siblings")
+ }
+ for _,i:=range []int{1,2}{
+  if e:=p.retireLane(i,context.DeadlineExceeded);e!=nil{
+   t.Fatalf("single failing lane killed remaining sibling: %v",e)
+  }
+ }
+ if e:=p.retireLane(3,context.DeadlineExceeded);e==nil{
+  t.Fatal("all dead native lanes falsely reported healthy group")
+ }
+ if p.laneFailed!=4{t.Fatalf("lane failure count=%d",p.laneFailed)}
+}

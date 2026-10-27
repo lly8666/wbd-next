@@ -53,7 +53,8 @@
   ],
   "limitations": [
     "CLI 9000上界是输入合法范围，绝非已验证9k实际互通。",
-    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "2026-10-27 isolated Game D/A4: exact original Go joined TLS+owned OS, Rust effective packet MTU readback and for Game2/4 off+FEC real per-lane NPF completion callback; per-lane NPF/FIN failure isolates healthy lanes, all failed terminates. Positive native functional, 30%/burst, FEC parity/p99, physical and WinForms NOT_RUN. No single public-port change."
   ],
   "promotion": null
 }

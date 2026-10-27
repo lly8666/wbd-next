@@ -713,13 +713,13 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_rx_window_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rx_window_windows_test.go",
-      "result_blob": "7ee88b9f8e0a24757c627176a45d774cf18e5939"
+      "result_blob": "4be093761c7a1a2b859c4cb12f03738f4b6569b6"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_peer_windows.go",
-      "result_blob": "8bc8d271845f3dc51b0312d3c307eeb1c6c2c2c9"
+      "result_blob": "1b44b69da7f45e506b48d92a1847827045f1ba45"
     },
     {
       "kind": "create",

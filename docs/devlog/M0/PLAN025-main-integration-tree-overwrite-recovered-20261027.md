@@ -59,6 +59,14 @@ These are safety envelopes, not startup allocation, guaranteed throughput or per
 
 ## Windows extreme remediation S5 (C3 maturity debt / constant-cost indexes)
 Re-read current MatureFirstSend firstsend/check_clock, deadline on_due and Windows original FEC2 drain/readback hot path. Replaced two per-data BTreeSet time indexes with FIFO VecDeque ordered by genuine monotonic firstsend time; PN lookup still BTreeMap (no sampling of denominator). Original Windows deadline drain now bounded to 256 events or 200us per owner call instead of drain-until-empty under Entry lock; native Go requests due at most every 2ms fair pulse, not 100ms. Rust owner max quality live entries raised to 524288 lazily, no 8s payload caching. Existing 64-per-call M2 deadline API and 512 firstsend threshold unchanged; actual service rate/capacity and natural Auto remain NOT_RUN pending full candidate Actions.
-```feature-impact
+```json
 {"kind":"updated","ids":["fec-auto"],"reason":"Experimental Windows Auto due service and indexing cost bounded without relaxing mature firstsend denominator or claiming natural dynamic Applied PASS."}
+```
+
+## Windows extreme remediation S6 (A4/D Game real copy accounting and fail isolation)
+Reviewed actual GameAdapter::inner_mtu, original independently protected lane TCP MSS, WinGameGroup bound Wintun path_mtu, Rust stage/drain and native NPF callback flow, and latest shared GameFEC M4 receipt code. Original code capped all Windows Game modes at 1200B and treated off Game packet transfer to Go stage callback as if kernel-copied; Game local send error and one FIN/RST killed entire 2/4-lane group.
+Current isolated fix: private wbd_m0_win_owner_v4_game_effective_mtu is measured from TLS MSS, existing owned Wintun path MTU and actual 1536 wire ABI, reserving 31 record +16 Game and optional 14 FEC bytes. Go reads exact Rust effective MTU once after all joined/qualified lanes, sizes packet ring and open/stage validation; Rust test now includes legitimate 1300B IPv4 and insists actual Wintun set_path_mtu before group join. For FEC-feature product binary both Game/off and Game fixed now STAGE ciphertext without pretending Go array accepted it; every real NPF success/failure settles a unique Rust staged ticket; original per-lane FEC copied count only on real success. First failed/FIN lane is retired locally without blocking healthy siblings, and all-lane loss stops group. Startup positive still requires actual send >=2 on each lane, not just global count. Added scoped failed-copy/healthy follow-on Rust and native Go unit checks.
+Remaining: currently one effective MTU snapshot per live group, not true dynamic mid-session path MTU rotation; Game FEC Wintun batch still all-copied or not (partial prefix not implemented), ETW/performance not measured. This partial is NOT a completed package and no product Actions were run.
+```feature-impact
+{"kind":"updated","ids":["game-lanes","path-mtu-budget","game-fixed-fec"],"reason":"Experimental Windows Game payload budget from trusted shared Rust readback and per-lane actual NPF outcomes / local failure isolation; no complete public or extreme-network PASS."}
 ```

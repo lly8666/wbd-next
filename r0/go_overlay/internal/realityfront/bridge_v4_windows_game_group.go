@@ -35,7 +35,8 @@ type V4WindowsAuthenticatedGameGroup struct{
  sessions []*V4ClientSession
  epoch [16]byte
  joined uint64
- stageProc,receiveProc,joinProc,stopProc *syscall.Proc
+ stageProc,receiveProc,joinProc,stopProc,effectiveMtuProc *syscall.Proc
+ maxIPv4 int
  fecOpenProc,fecFinishProc *syscall.Proc
  fecParityProc,fecM4SendProc *syscall.Proc
  gameFec uint8 // authenticated TLS GameFec=1..7 -> shared fixed profile0..6
@@ -143,6 +144,8 @@ func(g *V4WindowsAuthenticatedGameGroup) BindAndJoinOriginalWintun(
   {"wbd_m0_win_owner_v4_game_stage",&g.stageProc},
   {"wbd_m0_win_owner_v4_game_receive",&g.receiveProc},
   {"wbd_m0_win_owner_v4_game_stop",&g.stopProc},
+  {"wbd_m0_win_owner_v4_game_effective_mtu",&g.effectiveMtuProc},
+  {"wbd_m0_win_owner_v4_game_m4_send_result",&g.fecM4SendProc},
  }{
   p,err:=b.dll.FindProc(item.name)
   if err!=nil{return fmt.Errorf("%w: native Game group ABI %s missing",errV4WindowsOwner,item.name)}
@@ -163,17 +166,27 @@ func(g *V4WindowsAuthenticatedGameGroup) BindAndJoinOriginalWintun(
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   parity,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_fec_parity_due")
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
-  receipt,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_m4_send_result")
-  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   fec,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_fec_enable")
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   if err=winOwnerCall(fec,uintptr(group),uintptr(g.gameFec-1));err!=nil{return err}
   g.fecOpenProc=open
   g.fecFinishProc=finish
   g.fecParityProc=parity
-  g.fecM4SendProc=receipt
  }
+ // The real Rust joined-owner and OS readback narrow one immutable
+ // effective payload bound shared by WinTun ring, Game crypto and CLI.
+ var max uint32
+ if err:=winOwnerCall(g.effectiveMtuProc,uintptr(g.joined),
+  uintptr(unsafe.Pointer(&max)));err!=nil{return err}
+ if max<20||max>1536{return errV4WindowsOwner}
+ g.maxIPv4=int(max)
  return nil
+}
+func(g *V4WindowsAuthenticatedGameGroup) EffectiveGamePayloadMTU()(int,error){
+ if g==nil{return 0,errV4WindowsOwner}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||g.joined==0||g.maxIPv4<20{return 0,errV4WindowsOwner}
+ return g.maxIPv4,nil
 }
 func(g *V4WindowsAuthenticatedGameGroup) verifyLive(ctx context.Context)error{
  if ctx==nil||g==nil||g.closed||g.joined==0{return errV4WindowsOwner}
@@ -197,7 +210,7 @@ func(g *V4WindowsAuthenticatedGameGroup) StageGameRecords(
  if g==nil{return nil,errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
  if err:=g.verifyLive(ctx);err!=nil{return nil,err}
- if len(ipv4)<20||len(ipv4)>1200||ipv4[0]>>4!=4{return nil,errV4WindowsOwner}
+ if len(ipv4)<20||len(ipv4)>g.maxIPv4||ipv4[0]>>4!=4{return nil,errV4WindowsOwner}
  raw:=make([]v4WindowsGameRawRecord,len(g.members))
  var count uint32
  err:=winOwnerCall(g.stageProc,uintptr(g.joined),
@@ -239,7 +252,7 @@ func(g *V4WindowsAuthenticatedGameGroup) OpenGameRecord(
  runtime.KeepAlive(wire);runtime.KeepAlive(out)
  if err!=nil{return nil,err}
  if used==0{return nil,nil}
- if used<20||used>1200||out[0]>>4!=4||out[0]&15<5{return nil,errV4WindowsOwner}
+ if used<20||used>uintptr(g.maxIPv4)||out[0]>>4!=4||out[0]&15<5{return nil,errV4WindowsOwner}
  return out[:used],nil
 }
 // The caller MUST join all M4 native socket and kernel packet workers BEFORE

@@ -25,6 +25,8 @@ type m0GameLane struct {
  flow faketcp.ClientFlow
  tx,ack uint32
  rx *m0V4RxWindow
+ failed bool
+ sent uint64
 }
 type m0NativeV4GamePeer struct {
  group *realityfront.V4WindowsAuthenticatedGameGroup
@@ -36,12 +38,14 @@ type m0NativeV4GamePeer struct {
  ring *windowsclient.N4OriginalKernelPacketLease
  identity windowsclient.N4UnifiedIdentity
  scratch []byte
+ maxIPv4 int
  stop,done chan struct{}
  cancel context.CancelFunc
  running,stopping bool
  errors chan error
  mu sync.Mutex
  sent,opened,after uint64
+ laneFailed uint64
 }
 func(p *m0NativeV4GamePeer) BindNativeRing(
  ctx context.Context,ring *windowsclient.N4OriginalKernelPacketLease,
@@ -52,11 +56,13 @@ func(p *m0NativeV4GamePeer) BindNativeRing(
  deviceID,err:=native.Identity(ctx,id.Installation,id.Generation)
  if err!=nil{return err}
  if err=p.group.BindAndJoinOriginalWintun(ctx,native,deviceID);err!=nil{return err}
+ mtu,err:=p.group.EffectiveGamePayloadMTU()
+ if err!=nil||mtu<20{return windowsclient.ErrN4NativeGuard}
  boundaries,err:=p.group.OriginalGameTCPBoundaries()
  if err!=nil||len(boundaries)!=len(p.lanes){return windowsclient.ErrN4NativeGuard}
  p.mu.Lock();defer p.mu.Unlock()
  if p.ring!=nil{return windowsclient.ErrN4NativeGuard}
- p.ring=ring;p.identity=id;p.scratch=make([]byte,1200)
+ p.ring=ring;p.identity=id;p.maxIPv4=mtu;p.scratch=make([]byte,mtu)
  for i,v:=range boundaries{
   p.lanes[i].tx=v[0];p.lanes[i].ack=v[1]
   p.lanes[i].rx=newM0V4RxWindow(v[1])
@@ -82,19 +88,30 @@ func(p *m0NativeV4GamePeer) acknowledge(i int)error{
  })
  return err
 }
+// One lane's real NPF error or authenticated FIN/RST must not hold the
+// healthy siblings hostage. Exact Rust staged tickets are always settled,
+// including failed copies; no fabricated per-lane kernel credit.
+func(p *m0NativeV4GamePeer) retireLane(i int,cause error)error{
+ if p.lanes[i].failed{return nil}
+ p.lanes[i].failed=true
+ p.mu.Lock();p.laneFailed++;p.mu.Unlock()
+ for j:=range p.lanes{if !p.lanes[j].failed{return nil}}
+ return fmt.Errorf("%w: all original Game lanes unavailable after lane%d: %v",
+  windowsclient.ErrN4NativeGuard,i+1,cause)
+}
 func(p *m0NativeV4GamePeer) send(ctx context.Context,rec realityfront.V4WindowsGameRecord)error{
  if rec.Lane==0||int(rec.Lane)>len(p.lanes){return windowsclient.ErrN4NativeGuard}
  i:=int(rec.Lane)-1;l:=&p.lanes[i]
- err:=p.carrier(i,l.tx,l.ack,rec.Wire)
- if p.fec{
-  // Record metadata belongs to the shared Rust Game M4 owner and is
-  // settled using this EXACT NPF kernel send result, never Go staging.
-  if e:=p.group.ReportGameFecNpcapCopy(ctx,rec,err==nil);e!=nil{
-   return errors.Join(err,e)
-  }
+ var sentErr error
+ if !l.failed{sentErr=p.carrier(i,l.tx,l.ack,rec.Wire)}
+ // Off and fixed FEC both settle exact Rust staged M4 tickets.
+ // A previously dead lane reports NotSent, never another successful copy.
+ if e:=p.group.ReportGameFecNpcapCopy(ctx,rec,!l.failed&&sentErr==nil);e!=nil{
+  return errors.Join(sentErr,e)
  }
- if err!=nil{return err}
- l.tx+=uint32(len(rec.Wire))
+ if l.failed{return nil}
+ if sentErr!=nil{return p.retireLane(i,sentErr)}
+ l.tx+=uint32(len(rec.Wire));l.sent++
  p.mu.Lock();p.sent++;if p.opened>0{p.after++};p.mu.Unlock()
  return nil
 }
@@ -102,7 +119,7 @@ func(p *m0NativeV4GamePeer) transmit(ctx context.Context)(bool,error){
  n,err:=p.ring.ReceiveReadyIPv4(ctx,p.scratch)
  if errors.Is(err,windowsclient.ErrN4NativeNoPacket){return false,nil}
  if err!=nil{return false,err}
- if n<20||n>1200{return false,windowsclient.ErrN4NativeGuard}
+ if n<20||n>p.maxIPv4{return false,windowsclient.ErrN4NativeGuard}
  records,err:=p.group.StageGameRecords(ctx,p.scratch[:n])
  if err!=nil{return false,err}
  if len(records)!=len(p.lanes){return false,windowsclient.ErrN4NativeGuard}
@@ -115,9 +132,10 @@ func(p *m0NativeV4GamePeer) receive(ctx context.Context,in m0GameInbound)error{
  if in.lane<0||in.lane>=len(p.lanes){return windowsclient.ErrN4NativeGuard}
  l:=&p.lanes[in.lane];seg:=in.segment
  if seg.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{
-  return fmt.Errorf("%w: real Game%d lane%d FIN/RST",windowsclient.ErrN4NativeGuard,len(p.lanes),in.lane+1)
+  return p.retireLane(in.lane,fmt.Errorf("real Game%d lane%d FIN/RST",
+   len(p.lanes),in.lane+1))
  }
- if len(seg.Payload)==0{return nil}
+ if l.failed||len(seg.Payload)==0{return nil}
  ok,e:=l.rx.Check(seg.Seq,len(seg.Payload))
  independent:=e!=nil&&l.rx.IndependentAEADCandidate(seg.Seq,len(seg.Payload))
  if !ok&&!independent{return nil}
@@ -151,7 +169,10 @@ func(p *m0NativeV4GamePeer) receive(ctx context.Context,in m0GameInbound)error{
  }
  l.rx.NoteAuthenticated(seg.Seq,len(seg.Payload))
  p.mu.Lock();p.opened+=uint64(len(frames));p.mu.Unlock()
- return p.acknowledge(in.lane)
+ if err:=p.acknowledge(in.lane);err!=nil{
+  return p.retireLane(in.lane,err)
+ }
+ return nil
 }
 func(p *m0NativeV4GamePeer) pulse(ctx context.Context)(int,error){
  if p==nil||p.ring==nil{return 0,windowsclient.ErrN4NativeGuard}
@@ -196,7 +217,11 @@ func(p *m0NativeV4GamePeer) VerifyPeerFirstAndReverse(
   done,err:=p.pulse(probe)
   if err!=nil{return err}
   p.mu.Lock()
-  ready:=p.sent>=uint64(2*len(p.lanes))&&p.opened>=1&&p.after>=uint64(len(p.lanes))
+  ready:=p.sent>=uint64(2*len(p.lanes))&&p.opened>=1&&
+   p.after>=uint64(len(p.lanes))
+  for i:=range p.lanes{
+   ready=ready&&!p.lanes[i].failed&&p.lanes[i].sent>=2
+  }
   p.mu.Unlock()
   if ready{break}
   if done>0{runtime.Gosched();continue}
@@ -255,6 +280,7 @@ func(p *m0NativeV4GamePeer) Stats()string{
  s,_:=json.Marshal(map[string]any{
   "mode":fmt.Sprintf("game%d",len(p.lanes)),
   "tx_records":p.sent,"rx_first_delivered_ipv4":p.opened,
+  "failed_lanes":p.laneFailed,"effective_payload_mtu":p.maxIPv4,
  })
  return string(s)
 }
