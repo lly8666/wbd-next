@@ -122,3 +122,11 @@ Retire the existing workflow's **automatic second full WSL2/Npcap Fixed6-only pu
 ```feature-impact
 {"kind":"updated","ids":["fec-auto"],"reason":"reused Linux shared Auto Applied gating and Linux history retention after real revision; added directed native-independent regression and preserved historical FAIL. No natural Auto networking/GUI/physical scope promoted."}
 ```
+
+### S 072a19e7 cheap shared Auto correctness test terminal
+- Exact code SOURCE `072a19e7af0169c29063cfd93003552f4bd63617` [Actions40463122392](https://github.com/lly8666/wbd-next/actions/runs/40463122392) **SUCCESS**. Same-source Git assembly check PASS, pinned original-Go Windows product/test compilation PASS, precompiled `realityfront.test.exe -test.run=TestF2ControlAutoPendingM2CannotEvaluateOrStackNativeRevisions -test.count=1` emitted `PASS`. Rust DLL, signed driver and WSL2 were **SKIPPED by revised TEST_PLAN §0**. Previous harness-only source99a [40462738560](https://github.com/lly8666/wbd-next/actions/runs/40462738560) remains FAIL.
+- **Functional scope**: shared Linux/Windows `FecV2Step` cannot evaluate yet-unapplied revisions; Windows reapplies existing Linux cohort-retention semantics. No fresh real natural automatic up/down grade functional evidence. Earlier exact native source a0c8eeb operator revision2 PASS and source4977f seven-mode native PASS remain separate.
+
+```feature-impact
+{"kind":"updated","ids":["fec-auto"],"reason":"terminal exact SOURCE072a19e7 original Windows Go compile + shared Auto M2-pending module regression PASS, while full WSL2/driver intentionally skipped; no automatic adaptive network/GUI promotion."}
+```

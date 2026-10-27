@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "original_go_native_independent_shared_auto_pending_controller_regression",
+  "source_sha": "072a19e7af0169c29063cfd93003552f4bd63617",
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "run_id": 40463122392,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40463122392",
+  "conclusion": "success",
+  "assembly": "PASS",
+  "windows_go_product_and_test_compile": "PASS",
+  "scoped_unit": "TestF2ControlAutoPendingM2CannotEvaluateOrStackNativeRevisions",
+  "scoped_unit_result": "PASS",
+  "full_native_windows_linux": "SKIPPED_TEST_PLAN_0",
+  "limitations": [
+    "Source-specific module regression only",
+    "No natural-loss-driven 2s/8s Auto grade positive",
+    "No new Windows GUI/global OS/physical qualification"
+  ],
+  "historical_job_red": {
+    "source": "99a1ce99acbf3eeceaf38ba9320a3a27cf9a9c91",
+    "run_id": 40462738560,
+    "first_error": "PowerShell split -test.run into unrecognized -test before any test assertions"
+  }
+}
