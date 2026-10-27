@@ -50,8 +50,8 @@ jobs:
                     "r1_f2_full_profiles_all_k_and_every_erasure_count",
                      "r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact",
                      "r1_f2_decode_workspace_cache_65_distinct_keys_and_eviction"}
-          assert len(names)==13 and required.issubset(names),(len(names),names)
-          assert re.search(r"test result: ok\. 13 passed; 0 failed;",log)
+          assert len(names)==15 and required.issubset(names),(len(names),names)
+          assert re.search(r"test result: ok\. 15 passed; 0 failed;",log)
           h=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           inputs=["crates/wbd-codec/src/fec_v2.rs",
                   "crates/wbd-codec/src/fec_v2_tests.rs",

@@ -1,0 +1,19 @@
+# M0 PLAN025 — recovered exact full development-tree overwrite and governance/CI repair (2026-10-27)
+
+## User override, source integrity
+User instructed `integration/w168-freeze-windows-adapter-20261026` **fully overwrite** `main`, with temporary integration authority, and resolve governance conflicts. Prior main HEAD `7a193226df20924fd3a5c52c8587c31547877b16`, source branch HEAD `9d2362d30bead0e2a36dd19233a798ec1fb2b3ae`. The developer source is already main ancestry through the existing two-parent merge. Commit `f6469a3468839efcba1242ccdeaa7ea86d6d67c2` was fast-forwarded onto main, without force; its **exact tree SHA** `553d50ad7f996559bd739b391beb10d7325724da` equals the developer branch tree. Older main-only handoff docs remain in Git history; no evidence was invalidated by deletion from the active tree.
+
+## Recovered terminal facts before code changes
+- SOURCE `9d2362d...` `40476182202/1` FAIL, artifact `12721601306` digest `sha256:be6564e470c58cba87798654a5e890d2f681a7cc5b57bf298568f8c412fdfb36`: original TLS, two-OS signed Npcap/Wintun↔Linux raw/TUN genuine bidirectional kernel UDP/TCP passed within observed scope; client at ~29s exited with **original M2 control TX sequence mismatch expected=2744012027 got=2744012455**. Dynamic 2s/8s Auto and owned full Stop target FAIL/NOT_RUN, not a product positive. New exact record `docs/evidence/M0/PLAN025-W168-Auto-natural-source9d2362d-failure-recovered-20261027.json`; root cause UNKNOWN.
+- Previously source `4977f120...` `40449519463` PASS seven individually effective native modes and `a0c8eeb...` `40457048399` PASS user-requested revision2 only. Not natural quality-driven Auto, global WinForms/WFP/IPv6, 150/200Mbps, or this new main SOURCE qualification.
+- The prior main merge SOURCE `02a9d938...` multiple push Actions failed Rust `E0425` (`v4_game_lane.rs:507`, non-FEC build has undefined `arena`), while FEC native `40479993126` executed **15 passed 0 failed** but its workflow incorrectly asserted exactly 13. Original FAILs not erased.
+- Exact overwrite SOURCE `f6469a...`: governance Action `40482476244/1` FAIL with `evidence is for a different SOURCE` in old cursor and missing changed-devlog feature-impact; g2-scoped native `40482476243/1` FAIL same Rust `E0425`; both evidence separate from product test.
+
+## Narrow repair, no redesign
+Recovered M0 H288 cursor now acknowledges the overwritten main, uses exactly one failing SOURCE-specific JSON evidence rather than mixing historical PASS and FAIL in current evidence_refs; main registry resumes the already authorized full product task and unchanged rev3/epoch1. Four existing **experimental** feature cards mark code `available_on` main (not formal promotion). Correct a Rust `#[cfg(feature="fec2_product_record")]` binding/use imbalance in Game4 arena setup; FEC mode keeps the previous arena allocation/assignment, off build no longer references its absent local. Adjust the native ISAL harness count to the actual 15 named real tests, retain all five separately named mandatory checks. This is a compile/harness repair, not an additional product feature.
+
+No local execution tests. Push Actions on the repaired SOURCE are required; any initial FAIL remains a FAIL for its own SOURCE. Do not re-run native Windows natural Auto solely to refresh old green, do not relax M2 strict SEQ, authentication, WAL or Stop, and do not assert unmeasured performance.
+
+```feature-impact
+{"kind":"updated","ids":["fec-auto","fec-fixed","game-fixed-fec","game-lanes"],"reason":"Recovered the true main availability of code following the user's complete dev-tree overwrite; all four entries remain experimental. Rust non-FEC cfg compile and native test-count harness repairs do not change selectors/defaults or prove new product qualification."}
+```

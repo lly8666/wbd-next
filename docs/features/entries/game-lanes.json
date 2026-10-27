@@ -7,7 +7,8 @@
   "stage": "experimental",
   "development_branch": "experiment/fec-network-tuning",
   "available_on": [
-    "integration/w168-freeze-windows-adapter-20261026"
+    "integration/w168-freeze-windows-adapter-20261026",
+    "main"
   ],
   "defaults": {
     "modes": "game2/game4",
@@ -100,7 +101,8 @@
     "Game2/4 Windows original NPF+TLS/one native Wintun OS-WAL pump is now assembled on Draft W168. First native seven-mode source8e failed before lane1 SYN and subsequent 2/4 mode qualification, so NOT OPEN_FOR_NETWORK_TEST.",
     "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS.",
     "Exact SOURCE350199f native Actions40445098497 proves genuine Game2/4 two-OS kernel UDP/TCP and owned Stop for the listed modes (Game fixed FEC2 profile6 only); this does NOT qualify all FEC profiles, physical network, host-global WFP/IPv6 or real WinForms GUI. Earlier 8e0d Game FAIL remains historical.",
-    "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible."
+    "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible.",
+    "2026-10-27 user-authorized exact development-tree main overwrite f6469a: implementation code is now present on main but remains experimental, with no new main-SOURCE native/product/global/physical PASS or formal promotion; previous exact-SOURCE PASS/FAIL unchanged."
   ],
   "promotion": null
 }

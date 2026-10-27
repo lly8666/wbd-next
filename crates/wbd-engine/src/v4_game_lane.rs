@@ -504,7 +504,9 @@ impl GameAdapter{
             [0,4_000_000,50_000_000,140_000_000]
         }else{[0,4_000_000,20_000_000,60_000_000]};
         self.tx.configure_game4_stagger_offsets(offsets).map_err(Error::Game)?;
-        self.arena=arena;Ok(())
+        #[cfg(feature="fec2_product_record")]
+        {self.arena=arena;}
+        Ok(())
     }
     pub fn game4_copy_schedule_mode(&self)->u32{self.tx.copy_schedule_mode()}
     pub fn game4_copy_schedule(&self)->Option<GameCounters>{

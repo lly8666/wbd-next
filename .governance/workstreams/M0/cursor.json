@@ -4,34 +4,27 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 286,
-  "checkpoint_sha": "cdc9c862b1bbbb16ec467f917720505856620b4c",
+  "sequence": 288,
+  "checkpoint_sha": "f6469a3468839efcba1242ccdeaa7ea86d6d67c2",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "Existing M0 PLAN008 original Windows↔Linux FULL product wire-up, Linux-shared Rust M1/M2/M3/FEC2/Auto/Game2/4, native per-lane kernel/owned OS/WAL and WinForms lifecycle. Source4977f seven real native modes PASSED; sourcea0c8eeb genuine operator-triggered Auto revision2 native M2 Applied PASSED. Target next is natural shared Linux FecV2Step M2 2s/8s quality-driven grade, without operator or fake ACK, then GUI/lifecycle/global-network.",
-  "why_now": "After H285 settled exact native Auto natural SOURCE67ed412 Action40465641281 FAIL: real 2OS UDP/TCP and 53s 3393 Windows C2S/16508 Linux S2C UDP but Auto shared Linux FecV2Step held authentic requested/applied revision1 because Rust mature fast firstsent 128..268/2s <512 (fast_missing0), Windows Python 1.5ms one-send-per-wake only ~64pps. Artifact ID12716414874 digest sha256:792197b15b758e0b28f6cb978526d577106ac76efa85805e5bfbdfd29c30528d. This is real kernel source load deficiency, not license to weaken M2/AEAD/512/4096 or promote product. Next S a3bbf only revises native functional app's monotonic per-wake <=16 real OS UDP sends and keeps Linux reverse ~300pps; Action40466952896 same-source assembly/W YAML Python PASS, Windows original Go product/test compile PASS, Linux original Go/Rust build in progress at H286, native WSL2 pending. S cdc9 wrote historical FAIL to exact JSON evidence, feature card fec-auto, devlog with feature-impact; Network harness contracts40467193106 SUCCESS. No additional functional PASS claimed.",
+  "current_task": "User-authorized full integration/w168-freeze-windows-adapter-20261026 branch tree overwrite to main completed as exact tree 553d50ad via f6469a (parent 7a1932, source dev 9d2362d). This batch only repairs governance/fixture and Rust non-FEC cfg compilation. Formal product remains partial.",
+  "why_now": "H287 handoff was superseded only by explicit new user merge request. Recovered H286 stale natural Auto pending: SOURCE9d2362d Action40476182202/1 terminal FAIL; original TLS and two-OS kernel UDP/TCP positive partial, but client original M2 control TX seq expected2744012027 got2744012455, early owner exit, Stop full target NOT_RUN. f6469a Governance40482476244 FAIL for mixed-SOURCE evidence cursor and feature-impact missing; G2 bootstrap40482476243 FAIL Rust E0425 at v4_game_lane.rs:507; exact old FEC native run40479993126 executed 15/15 tests but workflow expected13. Full host global/WinForms/physical/performance not qualified.",
   "done_when": "Whole original-Go TLS→shared Rust M1/M2/M3 FEC2 Fixed/Auto & 2/4 real Game lanes→original Windows Npcap/Wintun/WFP/route/DNS/WAL/GUI↔Linux raw/TUN and both-owned Stop across true applicable config/lifecycle. 4977f source seven initial functional mode core PASS; remaining dynamic Auto/GUI/global/lifecycle and weak-network use their own exact evidence. No fake Applied or independent Windows FEC owner.",
-  "next_action": "FIRST settle exact run40466952896 source a3bbf2f: required real signed Windows Npcap/Wintun↔WSL Linux UDP/TCP, naturally determined Linux FecV2Step revision >=2 weaker than Strong and genuinely readback Applied from Rust original mature M2 2s/8s actual-k, owned Stop. On fail fetch native artifact client.log WBD_WINDOWS_AUTO_M2_2S8S_QUALITY and first genuine source/feedback/host cap error; fix exactly evidenced original data path or fixture only, no random retries, no seven-mode repeat. If PASS create exact positive JSON + fec-auto card and H follow-on; then GUI/OS-global/lifecycle. Do not interpret old seven-mode source4977f, operator sourcea0c8eeb or compile PRECHECK as natural Auto PASS.",
+  "next_action": "Verify this exact governance/compilation repair SOURCE via triggered Actions. Native Windows natural Auto failure remains OPEN: do not turn previous seven-mode or operator-change source PASSES into current SOURCE PASS; only a separately authorized exact native product test may qualify it. Host-global GUI/WFP and WL-N0/N1/N5 remain NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "a3bbf2fad17d9d38a8f19c117988cf242a47f40f",
+  "last_tested_source": "9d2362d30bead0e2a36dd19233a798ec1fb2b3ae",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN024-W168-Windows-Auto-natural-M2-source67ed-failure-20261027.json",
-    "docs/evidence/M0/PLAN024-W168-Windows-Auto-live-revision2-sourcea0c8eeb-20261027.json",
-    "docs/evidence/M0/PLAN024-W168-Windows-Auto-pending-M2-source072a19e-20261027.json",
-    "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json",
-    "docs/evidence/M0/PLAN024-S880-WL-N0-exact-original-failure-20261026.json",
-    "docs/devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md"
+    "docs/evidence/M0/PLAN025-W168-Auto-natural-source9d2362d-failure-recovered-20261027.json"
   ],
   "context_refs": [
     "docs/architecture/TEST_PLAN.md",
     "docs/features/README.md",
     "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md",
     "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
-    "docs/handoff/CURRENT_INTEGRATION.md",
     "docs/testing/NETWORK_TRIAGE.md",
-    "docs/architecture/modules/01-CONTROL-BRIDGE.md",
-    "docs/devlog/M0/PLAN024-S880-WL-N0-original-windows-rust-seq-mismatch-20261026.md"
+    "docs/devlog/M0/PLAN025-main-integration-tree-overwrite-recovered-20261027.md"
   ],
   "open_requests": [],
-  "partial_summary": "H286 authoritative M0 still PLAN008 full Windows whole product. Seven original Windows→Linux signed native modes first startup source4977f Action40449519463 SUCCESS. Auto operator Strong5→Light0 revision2 original M2 Applied with two-OS UDP/Stop sourcea0c8eeb Action40457048399 SUCCESS. First NATURAL 53s Windows/LINUX Auto source67ed Action40465641281 failed target exclusively because original Rust 2s/8s fast source firstsent 128..268<512 due Windows genuine test generator wake rate, not a FEC algorithm failure; real kernel UDP/TCP succeeded. Documented precise FAIL in docs/evidence/M0/PLAN024-W168-Windows-Auto-natural-M2-source67ed-failure-20261027.json and card. S a3bbf2f repaired only Python monotonic OS UDP send pacing, keeps Linux reverse under 1Mbps; target Actions40466952896 in progress; preflight and Windows Go compile PASS, full native NOT YET QUALIFIED. Main task/epoch/mode masks unaffected, PR28 Draft."
+  "partial_summary": "Main f6469a exactly replicated dev tree preserving all ancestor history; user-authorized governance-only and narrowly observed compile/CI fixes thereafter. Genuine historical 4977f seven-mode Action40449519463 SUCCESS and a0c8eeb operator Auto Action40457048399 SUCCESS remain scoped old-source. Natural Auto9d Action40476182202 FAIL original M2 control seq mismatch after kernel traffic; current main SOURCE native product NOT_RUN. f646 governance/G2 FAIL retained. No product promotion."
 }

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "recovered_exact_native_windows_linux_original_auto_natural_failure",
+  "source_sha": "9d2362d30bead0e2a36dd19233a798ec1fb2b3ae",
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "result": "FAIL",
+  "run_id": 40476182202,
+  "run_attempt": 1,
+  "run_conclusion": "failure",
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40476182202",
+  "artifact": {
+    "id": 12721601306,
+    "digest": "sha256:be6564e470c58cba87798654a5e890d2f681a7cc5b57bf298568f8c412fdfb36"
+  },
+  "observed": {
+    "windows_go_compile": "PASS_SCOPED",
+    "linux_go_rust_build": "PASS_SCOPED",
+    "windows_native_owner_tests": "PASS_SCOPED",
+    "signed_npcap_wintun_setup": "PASS_SCOPED",
+    "tls_wintun_npcap_linux_raw_tun_udp_tcp": "PASS_SCOPED",
+    "natural_auto_revision": "NOT_APPLIED",
+    "owner_lifetime": "FAIL",
+    "full_owned_stop": "NOT_RUN",
+    "actual_error": "original M2 control TX sequence mismatch expected=2744012027 got=2744012455",
+    "kernel_traffic_first_delivery": "PASS_SCOPED",
+    "wal_restored_in_exit_log": true
+  },
+  "root_cause": "NOT_YET_ESTABLISHED; precise client.log observed seq mismatch after ongoing original bidirectional traffic; do not downgrade hard validator or guess race",
+  "regression_status": "NOT_RUN",
+  "other": {
+    "wl_n0": "NOT_RUN",
+    "wl_n1": "NOT_RUN",
+    "wl_n5": "NOT_RUN",
+    "host_global_gui_wfp_ipv6": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "performance": "NOT_RUN"
+  },
+  "artifact_verified": false
+}
