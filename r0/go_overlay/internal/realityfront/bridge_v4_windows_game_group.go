@@ -10,6 +10,7 @@ import (
  "fmt"
  "runtime"
  "sync"
+ "time"
  "syscall"
  "unsafe"
  "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -64,22 +65,41 @@ func V4WindowsEstablishOriginalGameClientGroup(
   int(base.Policy.DesiredLanes)!=n||int(base.DesiredLanes)!=n||
   base.Policy.FECMode!=FECOff{return nil,ErrAdmissionUnsupported}
  g:=&V4WindowsAuthenticatedGameGroup{gameFec:negotiatedFec}
+ // Mirror Linux's abortLocked and the Windows server group's rollback:
+ // a late lane TLS failure cannot strand previously authenticated Rust
+ // owners or leave their exporter-derived keys live across reconnect.
+ fail:=func(cause error)(*V4WindowsAuthenticatedGameGroup,error){
+  cleanup,cancel:=context.WithTimeout(context.Background(),15*time.Second)
+  defer cancel()
+  for i:=len(g.members)-1;i>=0;i--{
+   if o:=g.members[i];o!=nil{
+    cause=errors.Join(cause,o.StopScopedOwner(cleanup))
+   }
+  }
+  return nil,cause
+ }
  for i,assoc:=range associations{
-  if assoc==nil||assoc.BootstrapConn()==nil{return nil,ErrAdmissionParams}
+  if assoc==nil||assoc.BootstrapConn()==nil{return fail(ErrAdmissionParams)}
   b,e:=newV4WindowsPrivateOwnerBridge(dll)
-  if e!=nil{return nil,e}
+  if e!=nil{return fail(e)}
   cfg:=base
   cfg.LaneID=uint8(i+1)
   session,e:=EstablishClientV4(ctx,assoc.BootstrapConn(),cfg,
    V4ClientOptions{DataPlaneReady:true,Epoch:g.epoch,
     fec2Product:true,GameFec:g.gameFec})
-  if e!=nil{return nil,e}
+  if e!=nil{return fail(e)}
   if i==0{g.epoch=session.Epoch}
-  if session.Epoch!=g.epoch||g.epoch==[16]byte{}{return nil,ErrAdmissionUnsupported}
+  if session.Epoch!=g.epoch||g.epoch==[16]byte{}{return fail(ErrAdmissionUnsupported)}
   handoff,e:=assoc.Detach()
-  if e!=nil{return nil,e}
+  if e!=nil{return fail(e)}
   if e=b.prepareAuthenticatedClient(session,handoff,assoc.Flow());e!=nil{
-   return nil,fmt.Errorf("Game lane %d authentic Rust owner: %w",i+1,e)
+   // A successful first lane is not a right to retain uncommitted
+   // later-lane transport material. Original bridge aborts a failed
+   // commit itself; if this lane reached ACTIVE, stop it explicitly.
+   if b.committed{
+    e=errors.Join(e,b.stopRustOwnerOnly())
+   }
+   return fail(fmt.Errorf("Game lane %d authentic Rust owner: %w",i+1,e))
   }
   g.members=append(g.members,&V4WindowsAuthenticatedClientOwner{bridge:b})
   g.sessions=append(g.sessions,session)
