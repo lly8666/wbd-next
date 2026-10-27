@@ -281,6 +281,12 @@ S38 source fcd110ed exact native Windows Go+Rust core Action40532719624 complete
 
 ## S40/S41 — original Game4 monotonic test deadline and mandatory feature-impact declaration
 Actual Windows Rust owner Action40533879023 on S39 43da192e: compiled original Rust M1/M3/FEC2 successfully, 27/28 scoped core tests PASS and exactly Game4 delayed-copy native test FAIL, due to using group-created wall clock instead of genuine source-offer GameTx deadline. S40 a05142f uses actual queued GameTx next_due_ns() to exercise +4/+50/+140ms copies inside existing finite after-due age. This changes ONLY the negative/positive test schedule, does not widen production lane-copy TTL, bypass original M4 NPF receipt, dilute natural Auto, or replace Rust shared GameTx. S40 Governance40535358686 FAIL before governance job: source change lacked feature-impact declaration in changed devlog. This S41 addendum is the exact required declaration and preserves the red record; compile status must be read from S40 preflight40535358313 before any PASS claim.
-```feature-impact
+```json
 {"kind":"none","ids":[],"reason":"S40 only adjusts Game4 Rust native owner regression timing against genuine shared GameTx offer-relative deadlines; no product mode, feature, MTU, cipher or expiry policy changes."}
+```
+
+## S42 — parallel Windows/Linux full Rust library nonproduct CI
+S40 original Windows DLL+Go preflight Action40535358313 SUCCESS, 28/28 original Windows Rust owner scoped tests; S41 Governance40536216118 SUCCESS after feature declaration, permanent experiment fast-forwarded S38→S41. Expand existing original Windows Rust source-locked scoped unit test to all wbd-engine library tests with same m0_v4_embedded_go,fec2_product_record features; add separate Linux Rust library test in Ubuntu with m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record features. Both parallel after cheap wiring/assembly gate. Original Windows Go production and test compile independent. No signed Wintun, Npcap, host routes, actual Linux TUN or seven-mode product/performance. First real new core FAIL, if any, must be preserved. Existing full native product job remains strictly gated.
+```feature-impact
+{"kind":"none","ids":[],"reason":"Expand nonproduct Windows/Linux source-locked Rust all-library core regression, no Go/Rust product algorithm change, no native two-OS or scored performance run."}
 ```
