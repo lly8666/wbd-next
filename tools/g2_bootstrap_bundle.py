@@ -42,13 +42,34 @@ def sha(path):
 
 def identity():
     registry=json.loads(Path(".governance/registry.json").read_text())
-    if registry["reservation_revision"]!=2:
+    # PLAN020 rev3 transfer is authoritative: M4's rev2 cursor stays frozen,
+    # but its registry lease is revoked (reserved, epoch2, zero write scope).
+    if registry["reservation_revision"]!=3:
         raise ValueError("G2 registry revision changed")
-    workers=[r for r in registry["roles"] if r["id"]!="M0"]
-    if len(workers)!=4 or any(r["state"]!="active" or r["assignment_epoch"]!=1 for r in workers):
+    roles={r["id"]:r for r in registry["roles"]}
+    if set(roles)!={"M0","M1","M2","M3","M4"}:
+        raise ValueError("G2 role set changed")
+    m0=roles["M0"]
+    if (m0["state"]!="active" or m0["branch"]!="main" or
+            m0["assignment_epoch"]!=1 or not m0["global_writer"]):
+        raise ValueError("M0 integrator assignment changed")
+    active=[roles[x] for x in ("M1","M2","M3")]
+    if any(r["state"]!="active" or r["assignment_epoch"]!=1 or r["global_writer"]
+           for r in active):
         raise ValueError("worker active metadata missing")
-    if not all(json.loads(Path(f".governance/workstreams/{r['id']}/cursor.json").read_text())["reservation_revision"]==2 for r in workers):
-        raise ValueError("bootstrap cursor revision mismatch")
+    m4=roles["M4"]
+    if (m4["state"]!="reserved" or m4["assignment_epoch"]!=2 or
+            m4["allowed_paths"] or m4["owned_semantics"]):
+        raise ValueError("M4 revoked lease changed")
+    for r in active:
+        snap=json.loads(Path(f".governance/workstreams/{r['id']}/cursor.json").read_text())
+        if (snap["role_id"]!=r["id"] or snap["assignment_epoch"]!=r["assignment_epoch"] or
+                not 1<=snap["reservation_revision"]<=registry["reservation_revision"]):
+            raise ValueError("bootstrap active cursor snapshot mismatch")
+    frozen=json.loads(Path(".governance/workstreams/M4/cursor.json").read_text())
+    if (frozen["role_id"]!="M4" or frozen["assignment_epoch"]!=1 or
+            frozen["reservation_revision"]!=2):
+        raise ValueError("M4 historic cursor was rewritten")
     lock=json.loads(Path("r0/source-lock.json").read_text())
     if set(lock["rust"]["crates"]) != {"wbd-types","wbd-codec","wbd-engine","wbd-platform","wbd-recovery"}:
         raise ValueError("five-crate pin missing")
@@ -103,7 +124,8 @@ def consume(a):
       "binary_sha256":x["sha256"],"test_log_sha256":sha(out/"test.log"),
       "test_count":1 if ok else 0,
       "scope":"RECOVERY_CRATE_SCAFFOLD_NO_PRODUCT_ENGINE",
-      "registry_active_workers":4,
+      "registry_active_workers":3,
+      "M4_status":"reserved_rev3_epoch2_historic_cursor_rev2",
       "real_recovery":"NOT_IMPLEMENTED","real_engine":"NOT_IMPLEMENTED",
       "rust_record_aead":"NOT_IMPLEMENTED","product":"NOT_RUN",
       "performance":"NOT_RUN","physical":"NOT_RUN","production_v4":"DISABLED",

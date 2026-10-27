@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 289,
-  "checkpoint_sha": "6d358570793fb31490279925c3054cf50552f8ae",
+  "sequence": 290,
+  "checkpoint_sha": "24c480bdf5b8dab757dab08e6c1a41768cc80ca2",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "User requested entire integration branch tree overwrite main, completed at f6469a. Restored authoritative M0 task, exact failing Auto9d evidence, source lock, feature availability; subsequent source6d35857 CI showed governance PASS and native ISAL PASS but historic M4 frozen-vs-live provenance test FAIL; adjusting only historical test to require both manifests. Product remains partial.",
-  "why_now": "Governance and native FEC run receipts from exact 6d35857 recovered in devlog. Scope governance PASS 40483279152 and FEC2 native15/15 PASS 40483279168. Old M4 snapshot maintenance FAIL 40483279301 occurs on three M0-owned changed live source files; historic manifest unchanged, current PLAN020 manifest already pins actual blobs. This H289 repairs only test provenance. G2 bootstrap registry rev mismatch and R2 receipt four-case actual failures remain OPEN.",
+  "current_task": "User-authorized exact full W168 development-tree main overwrite f6469a done, approved-source admin/compile + historical freeze provenance fixes completed. Remaining obsolete G2 rev2 bootstrap identity fixture corrected in this batch; pending CI exact SOURCE, no product promotion.",
+  "why_now": "24c source governance 40483931968 and governance-maintenance 40483931609 both SUCCESS; prior 6d G2 40483279381 FAIL after compiling because obsolete tools/g2_bootstrap_bundle.py expects rev2 four active workers, whereas main registry rev3 M4 reserved epoch2 and untouched M1..M4 old snapshot rev2. Repair the distinct G2 gate with explicit rev3 role checks and new negative unit tests; preserve independent genuine product FAILs.",
   "done_when": "Whole original-Go TLS→shared Rust M1/M2/M3 FEC2 Fixed/Auto & 2/4 real Game lanes→original Windows Npcap/Wintun/WFP/route/DNS/WAL/GUI↔Linux raw/TUN and both-owned Stop across true applicable config/lifecycle. 4977f source seven initial functional mode core PASS; remaining dynamic Auto/GUI/global/lifecycle and weak-network use their own exact evidence. No fake Applied or independent Windows FEC owner.",
-  "next_action": "Check exact this follow-on SOURCE maintenance/Governance Actions. Other product tests G2/R2/Windows are independent OPEN/NOT_RUN/FAIL, no fake upgrade. Natural Auto source9d original M2 seq mismatch remains unfixed and requires focused product patch only if resuming capability development.",
+  "next_action": "Check this exact source G2 bootstrap and maintenance/Governance results; do not expand into original R2 budget failing cases, Auto M2 sequence bug or global/GUI/physical product absent separate actual implementation/test evidence. All earlier FAILs retained.",
   "unverified": true,
   "last_tested_source": "9d2362d30bead0e2a36dd19233a798ec1fb2b3ae",
   "evidence_refs": [
@@ -26,5 +26,5 @@
     "docs/devlog/M0/PLAN025-main-integration-tree-overwrite-recovered-20261027.md"
   ],
   "open_requests": [],
-  "partial_summary": "Authorized full dev tree to main exact at f6469a, then admin/compile repair 6d35857. Four experimental cards available_on main, no formal promotion. Main governance Action40483279152 SUCCESS, native FEC2 ISAL15 test Action40483279168 SUCCESS; historical M4 freeze test failed at altered PLAN020 live paths, addressed by exact dual-manifest SHA assertions in this follow-on. G2 40483279381 and native R2 40483279229 FAILED; Windows target pending when logged. Auto natural source9d remains FAIL, other platform/global/perf gates NOT_RUN."
+  "partial_summary": "Exact W168 dev-source full tree replaced main at f6469a without force/history loss. 6d35857 Governance PASS + FEC native15 PASS; 24c480b Governance+maintenance PASS (historical M4 vs current PLAN020 M0 blobs asserted). G2 prior FAIL due obsolete rev2 fixture now targeted, R2 4 receipt tests FAIL independent, Auto source9d native FAIL exact control SEQ, Windows full and global/perf NOT_RUN."
 }
