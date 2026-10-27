@@ -296,7 +296,18 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
  }else{
   delivered,openErr:=p.owner.OpenBoundOriginalFEC2(ctx,seg.Seq,seg.Payload)
   if openErr!=nil{
-   p.mu.Lock();p.rejected++;p.mu.Unlock()
+   p.mu.Lock()
+   p.rejected++
+   first:=p.rejected==1
+   p.mu.Unlock()
+   // One exact original Rust/Go native error per generation, not
+   // packet logging or another decoder. The prior whole-mode real NPF
+   // run had >500 failed reverse FEC2 opens but the caller discarded
+   // the actual rejection status, hiding the first cause.
+   if first{
+    fmt.Printf("WBD_WINDOWS_FEC2_FIRST_NATIVE_OPEN_REJECTION mode=%s seq=%d wire_bytes=%d error=%v\n",
+     p.mode,seg.Seq,len(seg.Payload),openErr)
+   }
    return nil
   }
   frames=make([][]byte,0,len(delivered))
