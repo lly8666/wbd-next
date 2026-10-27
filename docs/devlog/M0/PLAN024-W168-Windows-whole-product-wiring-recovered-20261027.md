@@ -101,3 +101,13 @@ Retire the existing workflow's **automatic second full WSL2/Npcap Fixed6-only pu
 ```feature-impact
 {"kind":"updated","ids":["fec-auto"],"reason":"Windows Auto live operator profile change now connected through shared Linux FecV2Step/Rust FixedStream to original M2 native Applied readback; correct compiler/scoped status, exact revision2 real 2OS action still NOT_RUN until terminal source80e result; no new Windows FEC controller."}
 ```
+
+## 2026-10-27 recovered genuine Windows Auto operator revision2 exact native PASS
+- Resolved source `a0c8eeb29796aa41d0f41e76798d3d00c672adaf`, [Actions 40457048399](https://github.com/lly8666/wbd-next/actions/runs/40457048399) terminal **SUCCESS**, native job `122033786983`, actual original pinned Go/Rust and signed Npcap/Wintun↔WSL2 Linux raw/TUN; source-specific artifact `12712887451`, SHA256 `5196a033594ab70d1b99d1d42b49c7d8bfe4ae78071dee2e0fe3d69df7738dd3`.
+- Original-Go protected TLS Auto started Strong5; actual live `--control-stdin` operator requested Light0 revision2 using existing shared `FecV2Step` and Rust `FixedStream.quiescent_change`; authentic Rust M2 reported `auto_applied_revision>=2` **after** real two-OS signed-kernel UDP. Post-revision Windows sender 126/receiver 121; Linux sender 122/receiver 124; native functional UDP and both owned Stop PASS. Pre-revision two-way UDP/TCP also qualified. Do not misread asymmetrical app counts as packet loss qualification (this is a finite functional probe, no network-loss claim).
+- The earlier source80e5289 [Actions40455980911](https://github.com/lly8666/wbd-next/actions/runs/40455980911) job was **FAIL** solely when the full-harness wrapper demanded an absent `normal-report.json` during `auto-revision-only`, despite dynamic functional-positive inner results; keep literal original job conclusion red. Source a0c8eeb corrected the wrapper and repeated the genuine targeted native test successfully.
+- Source-scoped PLAN021 explicit network tests now allowed for operator-requested Auto revision2 within the tested native conditions. **NOT_RUN** remains for unprompted policy-driven automatic up/down 2s/8s feedback, all FEC grades, real WinForms Applied/Disconnect, Windows host-global WFP/default routes/DNS/IPv6, longer lifecycle/physical/WL-N0/N1/N5. PR28 stays Draft, no main promotion. Detailed source-locked evidence `docs/evidence/M0/PLAN024-W168-Windows-Auto-live-revision2-sourcea0c8eeb-20261027.json`.
+
+```feature-impact
+{"kind":"updated","ids":["fec-auto"],"reason":"sourcea0c8eeb genuine Windows↔Linux Auto operator revision2 via shared Linux controller+Rust FEC2 mature M2 Applied and real kernel two-way post-revision UDP/Stop PASS, earlier job-red retained; natural auto policy/GUI/global/physical NOT_RUN."}
+```

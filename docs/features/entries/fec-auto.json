@@ -15,7 +15,7 @@
     "production": "off"
   },
   "usage": {
-    "cli": "Windows native --native-v4-product --fec.mode auto --fec.auto_policy normal|aggressive --fec.auto_start_profile light|mild|medium|balanced|high|strong|maximum; source4977f Auto initial Strong duplex+Stop PASS, Linux FecV2Step dynamic adaptive applied revision NOT_RUN. Runtime Auto profile revisions now accept stdin `fec.profile=light|mild|medium|balanced|high|strong|maximum` on explicit --control-stdin, before `stop`; prints REQUESTED_NOT_APPLIED until the authenticated native M2 Applied readback; exact source80e5289 Windows native target Actions40455980911 pending, no dynamic PASS inferred.",
+    "cli": "Windows native --native-v4-product --fec.mode auto --fec.auto_policy normal|aggressive --fec.auto_start_profile light|mild|medium|balanced|high|strong|maximum; source4977f Auto initial Strong duplex+Stop PASS, Linux FecV2Step dynamic adaptive applied revision NOT_RUN. Runtime Auto profile revisions now accept stdin `fec.profile=light|mild|medium|balanced|high|strong|maximum` on explicit --control-stdin, before `stop`; prints REQUESTED_NOT_APPLIED until the authenticated native M2 Applied readback; exact source a0c8eeb native Actions40457048399 operator-requested revision2 Light0 real two-OS UDP/M2-APPLIED/Stop FUNCTIONAL_PASS; natural 2s/8s network-driven auto up/down still NOT_RUN.",
     "config": "原Go V3 fixed4 carrier仅是入场包络，Rust FixedStream本身支持profile 0..6和revision；不是单独Fixed6测试活动，默认FEC2 OFF",
     "gui": "Windows真实WinForms Applied/Disconnect仍NOT_RUN，不从CLI或M2组件PASS推断"
   },
@@ -87,6 +87,13 @@
       "status": "NOT_RUN",
       "source_sha": "80e5289ab4b4c47adf55740632b0960f8319dfef",
       "evidence": null
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "Exact source a0c8eeb original credential-TLS signed Npcap/Wintun Auto start Strong5 → operator selected Light0 revision2 via existing Linux FecV2Step + Rust FixedStream quiescent change, real Windows/Linux kernel UDP both directions after change, authenticated mature M2 auto_applied_revision>=2 and owned Stop. NOT natural automatic 2s/8s loss-feedback choice.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "a0c8eeb29796aa41d0f41e76798d3d00c672adaf",
+      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-Auto-live-revision2-sourcea0c8eeb-20261027.json"
     }
   ],
   "limitations": [
@@ -96,7 +103,8 @@
     "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS.",
     "Exact SOURCE350199f native Actions40445098497 remains FAIL for Windows original FEC2 reverse first delivery; Linux raw/TUN sender works, Windows still rejected first incoming 103B record before Ready. Subsequent source82ec native FEC2 diagnostic candidate has no inherited PASS; retained as partial.",
     "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible.",
-    "Only Auto startup Strong profile5 completed real Windows bidirectional business; no positive dynamic up/down revision or late GUI profile Applied receipt in this run."
+    "Only Auto startup Strong profile5 completed real Windows bidirectional business; no positive dynamic up/down revision or late GUI profile Applied receipt in this run.",
+    "Latest exact source a0c8eeb Actions40457048399 genuine Windows↔Linux kernel UDP after Auto operator revision2 via shared FecV2Step/FixedStream, M2 mature exact revision2 and owned Stop SUCCESS. This does NOT test automatic periodic 2s/8s policy-driven grade selection, all 0..6, WinForms Applied, global OS or physical. Older 80e5289 Actions40455980911 job FAIL at stale harness normal-report file is preserved."
   ],
   "promotion": null
 }
