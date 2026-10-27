@@ -88,6 +88,11 @@ struct WindowsOriginalM2 {
     // CUMULATIVE, not fabricated success from TCP appearance ACK.
     #[cfg(feature="fec2_product_record")]
     auto_quality:[u64;30],
+    // The native revision-local MatureFirstSend resets on a real profile
+    // change. Keep only genuinely M3-authenticated reverse reports
+    // cumulative for Linux FecV2Step's monotone 8s delta projection.
+    #[cfg(feature="fec2_product_record")]
+    auto_reverse_base:u64,
 }
 fn m2_clock()->MonoNs{
     static START:OnceLock<Instant>=OnceLock::new();
@@ -176,6 +181,8 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         fec_censored:false,
         #[cfg(feature="fec2_product_record")]
         auto_quality:[0;30],
+        #[cfg(feature="fec2_product_record")]
+        auto_reverse_base:0,
     });
     Ok(())
 }

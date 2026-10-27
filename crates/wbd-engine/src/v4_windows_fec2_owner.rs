@@ -450,6 +450,8 @@ fn fixed_change_revision_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     m.mature=Some(fresh);
     m.fec_copied_source=0;
     m.fec_copied_parity=0;
+    m.auto_reverse_base=m.auto_reverse_base
+        .saturating_add(m.fec_reverse_reports);
     m.fec_reverse_reports=0;
     m.fec_positive_2s=0;
     m.fec_covered_2s=0;
@@ -562,7 +564,8 @@ fn accumulate_original_auto_quality(
             m.auto_quality[offset+i]=m.auto_quality[offset+i].saturating_add(*value);
         }
     }
-    m.auto_quality[10]=m.fec_reverse_reports;
+    m.auto_quality[10]=m.auto_reverse_base
+        .saturating_add(m.fec_reverse_reports);
     m.auto_quality[11]=m.auto_quality[11].max(capacity_censored);
     m.auto_quality[12]=m.auto_quality[12].saturating_add(
         poll.window_8s.positive_confirmation_lag_ns);
@@ -883,6 +886,9 @@ mod tests{
             assert_eq!(e.fec2_tx.as_ref().unwrap().revision().0,1);
             assert_eq!(fixed_change_revision_entry(&mut e,ep,951,95,7,2),Err(INVALID));
             assert_eq!(fixed_change_revision_entry(&mut e,ep,951,95,2,1),Err(INVALID));
+            // Simulate an actual M3-authenticated kind1 original event
+            // before the new profile revision, not an outer TCP ACK.
+            e.m2.as_mut().unwrap().fec_reverse_reports=3;
             assert_eq!(fixed_change_revision_entry(&mut e,ep,951,95,2,2),Ok(()));
             assert_eq!(e.fec2_tx.as_ref().unwrap().revision().0,2);
             let m=e.m2.as_ref().unwrap();
@@ -890,6 +896,7 @@ mod tests{
             assert_eq!(m.fec_copied_parity,0);
             assert_eq!(m.fec_positive_2s,0);
             assert_eq!(m.fec_reverse_reports,0);
+            assert_eq!(m.auto_reverse_base,3);
             // Real public Applied remains UNKNOWN: a new revision's
             // TLS-bound sender has NOT yet received M4 or mature M2 proof.
             let mut out=[0u8;2048];
