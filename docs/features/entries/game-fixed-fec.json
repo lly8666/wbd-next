@@ -75,6 +75,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
       "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "Game2 and Game4 (2/4 genuine TLS/NPF lanes) plus shared Rust GameFecTx/Rx fixed profile6, authenticated GameFec TLV=7, parity NPF kernel-copy receipt and Wintun delivery, real Windows↔Linux duplex UDP/TCP plus owned Stop; both modes PASS in seven-mode Actions40449519463.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
+      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json"
     }
   ],
   "limitations": [
@@ -82,7 +89,8 @@
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "Game2/4 original Windows FEC2 shared Rust parity due/per-lane NPF copy/receiver batch Wintun completion ABI exists in Draft. Source8e real Win↔Linux stopped before authenticated lane1; no successful Game+FEC public product Applied.",
     "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS.",
-    "Exact SOURCE350199f native Actions40445098497 proves genuine Game2/4 two-OS kernel UDP/TCP and owned Stop for the listed modes (Game fixed FEC2 profile6 only); this does NOT qualify all FEC profiles, physical network, host-global WFP/IPv6 or real WinForms GUI. Earlier 8e0d Game FAIL remains historical."
+    "Exact SOURCE350199f native Actions40445098497 proves genuine Game2/4 two-OS kernel UDP/TCP and owned Stop for the listed modes (Game fixed FEC2 profile6 only); this does NOT qualify all FEC profiles, physical network, host-global WFP/IPv6 or real WinForms GUI. Earlier 8e0d Game FAIL remains historical.",
+    "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible."
   ],
   "promotion": null
 }

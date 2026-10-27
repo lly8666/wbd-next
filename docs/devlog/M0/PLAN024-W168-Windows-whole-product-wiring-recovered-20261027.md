@@ -78,3 +78,14 @@ Retire the existing workflow's **automatic second full WSL2/Npcap Fixed6-only pu
 ```feature-impact
 {"kind":"updated","ids":["game-lanes","game-fixed-fec","fec-fixed","fec-auto"],"reason":"七模式整批原生失败中分项认定精确source350199f的Game2/Game4及各自profile6 FEC2双向UDP/TCP+Stop正例，Fixed/Auto反向FEC2首到仍FAIL，历史不抹除，WinForms/global/quality未跑。"}
 ```
+
+## 2026-10-27 recovered complete seven-mode same-SOURCE real Windows/Linux functional PASS
+- **Exact product SOURCE** `4977f1200daec7c9f9fb6fd47810a1a372fd1e78` contains the original Windows FEC2 M1 offer/drain clock bug fix in `crates/wbd-engine/src/v4_windows_fec2_owner.rs` (S `6d75c7ee9a90f3da52e90a85353717aa7bb07c0d`) and the real elapsed-TLS regression, not a separate FEC codec/Go retry engine.
+- **Full native Action [40449519463](https://github.com/lly8666/wbd-next/actions/runs/40449519463) terminal SUCCESS**: original Windows Go production/test compile and pinned assembly PASS; Linux original-Go/Rust build PASS; Windows Rust owner **17/17**; actual signed Npcap/Wintun and WSL2 Linux raw/TUN executed. Native job `122009854546`, artifact `12710097108`, digest `sha256:1ba75d2683f4fa23a326e768873ddf9454febba8730d324b71d400bb46808e89`.
+- Exact-source functional-mode results: **normal, fixed (profile6), auto (initial Strong profile5), game2, game4, game2-fec (inner profile6), game4-fec (inner profile6) ALL PASS**. Each reported **real bidirectional Windows↔Linux kernel UDP/TCP and both owned Stop**. Fixed run additionally required `WBD_WINDOWS_FEC2_M2_MATURE_SCOPED mode=fec-fixed`; Game inner-FEC server recorded protected profile6 readback. The previous Fixed/Auto 103B first reverse C-ABI error was absent in this source.
+- **PLAN021**: explicit `OPEN_FOR_NETWORK_TEST` for **only those exact executed functional configurations and SOURCE**; isolated PR #28 remains Draft, main not promoted. **NOT_RUN** still for Auto up/down authenticated revision, other FEC profiles, real WinForms Applied/Disconnect, host-global WFP/default-route/DNS/IPv6 combinations, rotation/idle/blackhole, WL-N0/N1/N5 load, physical and p99; do not turn any of those into PASS from this Action. Historical source350199f/82ec all red modes preserved.
+- Detailed evidence: `docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json`. Updated same four stable feature IDs; no revalidation of product on docs-only commit.
+
+```feature-impact
+{"kind":"updated","ids":["fec-fixed","fec-auto","game-lanes","game-fixed-fec"],"reason":"recovered exact source4977f seven-mode real Windows↔Linux kernel UDP/TCP and both-owned Stop PASS, genuine Fixed mature M2 and Game2/4 inner fixed6; Auto startup Strong only, dynamic revision/WinForms/global OS/performance still NOT_RUN. Earlier FAIL remains unchanged."}
+```

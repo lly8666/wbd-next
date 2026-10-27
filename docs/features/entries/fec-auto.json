@@ -15,7 +15,7 @@
     "production": "off"
   },
   "usage": {
-    "cli": "Windows isolated native --fec.mode auto --fec.auto_policy normal|aggressive --fec.auto_start_profile light|mild|medium|balanced|high|strong|maximum; Rust original M2 quality→same Linux FecV2Step controller candidate, not Applied.",
+    "cli": "Windows native --native-v4-product --fec.mode auto --fec.auto_policy normal|aggressive --fec.auto_start_profile light|mild|medium|balanced|high|strong|maximum; source4977f Auto initial Strong duplex+Stop PASS, Linux FecV2Step dynamic adaptive applied revision NOT_RUN.",
     "config": "原Go V3 fixed4 carrier仅是入场包络，Rust FixedStream本身支持profile 0..6和revision；不是单独Fixed6测试活动，默认FEC2 OFF",
     "gui": "Windows真实WinForms Applied/Disconnect仍NOT_RUN，不从CLI或M2组件PASS推断"
   },
@@ -73,6 +73,13 @@
       "status": "FAIL",
       "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
       "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "Original Go protected TLS→shared Rust FixedStream initial Auto Strong(profile5), live two-OS native duplex UDP/TCP and owned Stop. Linux shared FecV2Step dynamic control exists in source but genuine Auto adaptive revision positive NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
+      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json"
     }
   ],
   "limitations": [
@@ -80,7 +87,9 @@
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "Windows original Rust auto-quality 30-field mature M2/cumulative actual-k and same Linux FecV2Step controller are wired in Draft branch; dynamic actual revision and GUI Applied still require exact-source real Windows product positive.",
     "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS.",
-    "Exact SOURCE350199f native Actions40445098497 remains FAIL for Windows original FEC2 reverse first delivery; Linux raw/TUN sender works, Windows still rejected first incoming 103B record before Ready. Subsequent source82ec native FEC2 diagnostic candidate has no inherited PASS; retained as partial."
+    "Exact SOURCE350199f native Actions40445098497 remains FAIL for Windows original FEC2 reverse first delivery; Linux raw/TUN sender works, Windows still rejected first incoming 103B record before Ready. Subsequent source82ec native FEC2 diagnostic candidate has no inherited PASS; retained as partial.",
+    "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible.",
+    "Only Auto startup Strong profile5 completed real Windows bidirectional business; no positive dynamic up/down revision or late GUI profile Applied receipt in this run."
   ],
   "promotion": null
 }

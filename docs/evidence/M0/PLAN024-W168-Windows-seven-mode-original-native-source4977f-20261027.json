@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "native_original_windows_linux_public_seven_mode_functional",
+  "source_sha": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "integration_branch": "integration/w168-freeze-windows-adapter-20261026",
+  "workflow_run_id": 40449519463,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/40449519463",
+  "run_conclusion": "success",
+  "run_attempt": 1,
+  "native_job_id": 122009854546,
+  "native_artifact": {
+    "id": 12710097108,
+    "name": "m0-wl-full-public-normal-direct",
+    "digest": "sha256:1ba75d2683f4fa23a326e768873ddf9454febba8730d324b71d400bb46808e89"
+  },
+  "preflight": {
+    "original_windows_go_product_and_test_compile": "PASS",
+    "current_assembly_bytes": "PASS",
+    "linux_original_go_rust_build": "PASS",
+    "windows_rust_native_owner_tests": "PASS_17_OF_17",
+    "windows_signed_npcap_wintun_install": "PASS"
+  },
+  "modes": {
+    "normal": {
+      "status": "PASS",
+      "actual_bidirectional_udp_tcp": true,
+      "owned_stop": true
+    },
+    "fixed": {
+      "status": "PASS",
+      "profile": 6,
+      "original_credential_tls": true,
+      "actual_bidirectional_udp_tcp": true,
+      "owned_stop": true,
+      "windows_authenticated_mature_m2": "PASS_SCOPED"
+    },
+    "auto": {
+      "status": "PASS",
+      "initial_profile": 5,
+      "scope": "startup Strong only; dynamic 2s/8s grade transition NOT_RUN",
+      "actual_bidirectional_udp_tcp": true,
+      "owned_stop": true,
+      "dynamic_revision": "NOT_RUN"
+    },
+    "game2": {
+      "status": "PASS",
+      "authenticated_lanes": 2,
+      "game_fec": "off",
+      "actual_bidirectional_udp_tcp": true,
+      "owned_stop": true
+    },
+    "game4": {
+      "status": "PASS",
+      "authenticated_lanes": 4,
+      "game_fec": "off",
+      "actual_bidirectional_udp_tcp": true,
+      "owned_stop": true
+    },
+    "game2-fec": {
+      "status": "PASS",
+      "authenticated_lanes": 2,
+      "game_fec": "fixed",
+      "profile": 6,
+      "protected_game_fec_tlv": 7,
+      "actual_bidirectional_udp_tcp": true,
+      "owned_stop": true
+    },
+    "game4-fec": {
+      "status": "PASS",
+      "authenticated_lanes": 4,
+      "game_fec": "fixed",
+      "profile": 6,
+      "protected_game_fec_tlv": 7,
+      "actual_bidirectional_udp_tcp": true,
+      "owned_stop": true
+    }
+  },
+  "public_trial_eligibility": "OPEN_FOR_NETWORK_TEST_EXACT_SOURCE_SCOPE_ONLY",
+  "formal_main_release": "NOT_PROMOTED_DRAFT_PR28",
+  "limitations": {
+    "auto_dynamic_revision": "NOT_RUN",
+    "all_fec_profiles_0_through_6": "NOT_RUN",
+    "windows_real_winforms_applied_disconnect": "NOT_RUN",
+    "windows_host_global_wfp_default_routes_dns_ipv6": "NOT_RUN",
+    "rotation_idle_keepalive_blackhole_recovery": "NOT_RUN",
+    "WL_N0": "NOT_RUN",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "latency_p99_and_high_load": "NOT_RUN"
+  },
+  "fix": {
+    "source_sha": "6d75c7ee9a90f3da52e90a85353717aa7bb07c0d",
+    "test_source_sha": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
+    "file": "crates/wbd-engine/src/v4_windows_fec2_owner.rs",
+    "detail": "Original Windows FEC2 M1 offer+drain+shared RS16 acceptance now use the SAME original monotonic Rust clock rather than 0 at offer and real m2_clock at drain; retain original explicit C ABI error status, no alternate crypto/recovery design."
+  },
+  "historical_native_failures_preserved": [
+    {
+      "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
+      "run": 40445098497,
+      "qualified_modes": [
+        "normal",
+        "game2",
+        "game4",
+        "game2-fec",
+        "game4-fec"
+      ],
+      "failed_modes": [
+        "fixed",
+        "auto"
+      ]
+    },
+    {
+      "source_sha": "82ec429ecdec617fb7c861e649905ed8b1e81476",
+      "run": 40446331703,
+      "qualified_modes": [
+        "normal",
+        "game2",
+        "game4",
+        "game2-fec"
+      ],
+      "failed_modes": [
+        "fixed",
+        "auto",
+        "game4-fec"
+      ]
+    }
+  ]
+}
