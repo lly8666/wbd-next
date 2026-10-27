@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "P0-M2-cohort-native-compiler-recovery-20261023",
+  "previous_action": 39889123489,
+  "previous_source": "4ffeb875fc2ccac3ed3a35a2c79ad0caefb07293",
+  "conclusion": "failure",
+  "job": 120204352588,
+  "first_failure": "Rust unclosed delimiter at crates/wbd-engine/src/v4_embedded_go.rs:5577, originated missing } at if !covered{return BAD_STAGE in gated commit path near 4662",
+  "native_success": false,
+  "artifact": "NONE",
+  "mtu_cases": "SKIPPED",
+  "corrective_scope": "ONLY close brace; no criterion change",
+  "next": "automatic one ARM64 release build on task branch, not manual dispatch"
+}

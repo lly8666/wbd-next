@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "id": "FEC-W74-OldParityCutover-Authentic20PctRise-ARM64",
+  "owner": "fec-network-work",
+  "seed": 821074,
+  "policy": "outer-opportunistic-v3",
+  "product": {
+    "mode": "fec-auto",
+    "fec_profile": 1,
+    "repair_enabled": false
+  },
+  "traffic": {
+    "c2s_mbps": 8,
+    "s2c_mbps": 8,
+    "udp_share": 1,
+    "sizes": [
+      [
+        64,
+        1
+      ],
+      [
+        1287,
+        99
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "deadline_ms": 4000,
+    "burst_ms": 0,
+    "max_packets": 5000000,
+    "allow_fragmentation": false
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "shared",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded",
+    "owned_veth_static_neighbour": true
+  },
+  "warmup_s": 15,
+  "drain_s": 30,
+  "phases": [
+    {
+      "name": "pre_low",
+      "seconds": 30,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 2,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      }
+    },
+    {
+      "name": "asym_high",
+      "seconds": 60,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 20,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 1,
+        "rate_mbps": 50
+      }
+    },
+    {
+      "name": "recover_low",
+      "seconds": 90,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 1,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 50
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false,
+    "max_loss_pct": 1,
+    "require_native_m2_positive_confirmation": true
+  },
+  "bundles": {
+    "A": {
+      "source": "57c80f9fadd274876e168b1a7dc6fa58a031b2b3",
+      "run_id": 40183751779,
+      "attempt": 1,
+      "artifact_id": 12594554570,
+      "sha256": "f0ba1d6c26a2ba2ab5fa195aa332ebf62e57196ffac169ff0a88552110fff0f3",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false
+    }
+  },
+  "order": "A"
+}

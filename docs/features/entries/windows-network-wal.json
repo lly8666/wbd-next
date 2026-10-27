@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "id": "windows-network-wal",
+  "name": "Windows owned WAL/WFP/网络恢复",
+  "summary": "原生Wintun、WFP、DNS与路由的owned事务意图记录、故障安全和有限恢复。",
+  "owner": "M0 takeover/历史M4",
+  "stage": "experimental",
+  "development_branch": "work/m4-r1-platform",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "preflight": "ready=false、wfp_install_qualified=false，强制门",
+    "recover": "只恢复自身WAL，无产品PowerShell兜底"
+  },
+  "usage": {
+    "cli": "Windows --recover-network --state-path；--native-state-json / --native-preflight-json仅诊断",
+    "config": "原Go状态文件是owned WAL；不解释为一般系统快照",
+    "gui": "GUI恢复/只读网络检查有装配补丁，全局真正应用未验证"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/windowsclient/native_unified_network_transaction.go",
+    "r0/go_overlay/internal/windowsclient/native_product_preflight_windows.go",
+    "r0/go_overlay/internal/windowsclient/native_wfp_exact_arm_windows.go",
+    "r0/go_overlay/internal/windowsclient/native_orphan_ghost_terminal_windows.go"
+  ],
+  "doc_refs": [
+    "docs/evidence/M0/PLAN020-S659-exact-Windows2022-native-TESTNET-WFP-and-guard-crash-PASS_SCOPED-20261021.json",
+    "docs/handoff/CURRENT_INTEGRATION.md"
+  ],
+  "verification": [
+    {
+      "platform": "windows/2022",
+      "scope": "历史真实TEST-NET WFP精确Arm/CAS/Stop与部分WAL",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "e3e193edb0e8383a9db2c962e5bb5618bae31764",
+      "evidence": "docs/evidence/M0/PLAN020-S659-exact-Windows2022-native-TESTNET-WFP-and-guard-crash-PASS_SCOPED-20261021.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "全局默认路由/WFP、IPv6/DNS及所有rollback",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "崩溃下完整原生主机恢复",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "TEST-NET可用不代表host-global生产资格；preflight硬门不得解除。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

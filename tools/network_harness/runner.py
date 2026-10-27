@@ -4,6 +4,7 @@ Linux namespaces are the adapter; the actual Go CLI owns TLS and Rust raw/TUN.
 This file never synthesizes transport packets, ACKs, FEC or product readiness.
 """
 import argparse
+import copy
 import json
 import os
 import platform
@@ -21,9 +22,371 @@ from pathlib import Path
 from .artifacts import fetch, sha, verify
 from .config import Unsupported, netem_args, validate
 from .report import markdown, summarize, network_accounting
+from .envelope import request_envelope
 
 ROOT = Path(__file__).resolve().parents[2]
 TRAFFIC = Path(__file__).with_name("traffic.py")
+TUN_STARTUP_SAMPLER = Path(__file__).with_name("tun_startup_sampler.py")
+
+def requested_outer_repair(config, label):
+    # Frozen legacy binaries must never receive flags they did not ship.
+    return config["bundles"][label].get(
+        "repair_enabled", config["product"].get("repair_enabled"))
+
+def requested_game4_copy_schedule(config,label):
+    return config["bundles"][label].get(
+        "game4_copy_schedule",config["product"].get("game4_copy_schedule","immediate"))
+
+
+def verify_outer_recovery_policy(expected, observed):
+    """Only single-repair sources can prove the v2 readback.
+
+    Historical legacy bundles lack this native marker: never certify them as
+    v2, but do not invalidate an otherwise useful same-VM AB control.
+    """
+    if expected not in ("outer-single-repair-v2", "outer-opportunistic-v3"):
+        return None
+    def verified(v):
+        if v.get("policy") != expected or v.get("repair_attempt_limit") != 1 or v.get("retain_cap_us") != 1500000:
+            return False
+        if expected == "outer-single-repair-v2":
+            return v.get("shadow_limit") == 131072
+        return (v.get("shadow_limit") == 65536
+                and v.get("loss_trigger") == "authenticated_mature_gap"
+                and v.get("data_pto") == "false"
+                and all(v.get(k) == n for k,n in (
+                    ("shadow_sampling_numerator",1),("shadow_sampling_denominator",2),
+                    ("admission_pps",32768),("repair_pps",8192),
+                    ("byte_credit_pct",9),("byte_cap_pct",10))))
+    return len(observed) == 2 and all(verified(v) for v in observed.values())
+
+
+def verify_native_game_counters(lanes,counters,traffic=None):
+    """Genuine Game M4 activity (includes inner TCP ACKs in passive direction).
+
+    No generated application workload in one direction does not prohibit
+    kernel TUN reverse acknowledgements. Never require zero on that side.
+    Still require real send/receive for an actively offered direction.
+    """
+    if lanes not in (2,4) or set(counters)!={"client","server"}:
+        return False
+    for role,c in counters.items():
+        if c.get("lanes")!=lanes or c.get("auth_rejected")!=0:
+            return False
+        sending=(traffic is None or traffic["c2s_mbps" if role=="client" else "s2c_mbps"]>0)
+        receiving=(traffic is None or traffic["s2c_mbps" if role=="client" else "c2s_mbps"]>0)
+        if sending:
+            if c.get("copied",0)<=0: return False
+        if receiving:
+            if c.get("delivered",0)<=0 or c.get("raw_received",0)<=0:
+                return False
+        # When application rate=0, native first copies / TUN receipts
+        # may still contain authentic TCP reverse ACKs or device control.
+        # Actual outer retransmits must be checked separately (exact=0).
+    return True
+
+def product_marker_line(line):
+    """Only documented public numeric/status marker families enter artifacts."""
+    return bool(re.search(
+        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |GAME_FEC_APPLIED |GAME_FEC_COUNTERS |GAME_OUTER |GAME4_COPY_SCHEDULE |GO_RX_HANDOFF |GO_RX_POST_HANDOFF |GAME_GO_RX_HANDOFF |GAME_GO_RX_POST_HANDOFF |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
+        line) or "M0_GAME_M4_RX_MULTIMSG " in line or
+        "M0_GAME_M4_RX_LOCK_SAMPLE " in line)
+
+
+def public_game_rx_lock_sample(log_text):
+    rows=[line for line in log_text.splitlines()
+          if "M0_GAME_M4_RX_LOCK_SAMPLE " in line]
+    if len(rows)!=1: return None
+    values={k:int(v) for k,v in re.findall(
+        r"([a-z0-9_]+)=([0-9]+)",rows[0])}
+    required=("samples","wait_total_ns","hold_total_ns","wait_max_ns",
+              "sample_stride","includes_commit")
+    if any(k not in values for k in required): return None
+    if (values["samples"]<=0 or values["sample_stride"]!=128 or
+        values["includes_commit"]!=0 or
+        values["wait_max_ns"]>values["wait_total_ns"]):
+        return None
+    return values
+
+
+def public_game_rx_multimsg(log_text):
+    """Unprivileged parser for actual Linux recvmmsg syscall/slot counters.
+    A missing or incoherent report is NOT_OBSERVED, never zero.
+    """
+    rows=[line for line in log_text.splitlines() if "M0_GAME_M4_RX_MULTIMSG " in line]
+    if len(rows)!=1: return None
+    required=("socket_calls","observed_records","full_4_batches",
+              "rejected_untrusted","valid_records","limit_per_syscall")
+    values={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=([0-9]+)",rows[0])}
+    if not all(k in values for k in required): return None
+    calls=values["socket_calls"]
+    seen=values["observed_records"]
+    full=values["full_4_batches"]
+    dropped=values["rejected_untrusted"]
+    valid=values["valid_records"]
+    if (values["limit_per_syscall"]!=4 or calls<=0 or seen<=0 or
+        valid<=0 or full>calls or full*4>seen or seen>calls*4 or
+        dropped+valid>seen):
+        return None
+    return values
+
+
+def public_go_rx_handoff(log_text, role):
+    """One authenticated Go->Rust kernel receive gate and bounded post-gate
+    userspace full-packet copies. Missing proof is NOT_OBSERVED, not zero.
+    Accepted packet volume and actual Rust TUN delivery remain separate.
+    """
+    pattern=r"V4_PUBLIC_(?:GAME_)?GO_RX_HANDOFF role="+re.escape(role)+r" .*filtered=([0-9]+) rust_ready=([0-9]+) original_send_fd_open=([0-9]+)"
+    end_pattern=r"V4_PUBLIC_(?:GAME_)?GO_RX_POST_HANDOFF role="+re.escape(role)+r" .*go_data_full_copies=([0-9]+)"
+    pre=re.findall(pattern,log_text)
+    post=re.findall(end_pattern,log_text)
+    if len(pre)!=1 or len(post)!=1: return None
+    filtered,ready,send_open=map(int,pre[0])
+    copies=int(post[0])
+    if not 1<=filtered<=4 or ready!=1 or send_open!=1:
+        return None
+    return {"kernel_filtered_lanes":filtered,"rust_ready":ready,
+            "go_send_fd_retained":send_open,
+            "go_data_full_copies_after_handoff":copies}
+
+
+def public_fec_m1_stage(log_text):
+    """Original Fixed M1 handoff after successful TUN loan, numeric only.
+
+    A missing or malformed native readback remains NOT_OBSERVED, never zero.
+    Staging worker owns one 32-packet turn, so individual atomic readbacks
+    permit at most 32 in-flight count differences.
+    """
+    fields=("attempted","queued","not_ready","error","oversize","mode_skipped")
+    rows=[line for line in log_text.splitlines()
+          if "V4_PUBLIC_FEC2_M1_STAGE role=" in line]
+    if not rows:
+        return None
+    d={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
+    if any(k not in d for k in fields):
+        return None
+    actual=d["queued"]+d["not_ready"]+d["error"]
+    if abs(d["attempted"]-actual)>32 or d["oversize"]>d["error"]+32:
+        return None
+    return {k:d[k] for k in fields}
+
+
+def public_fec_m1_ingress(log_text):
+    """True native pre-stage TUN receipt counts, never imply source delivery."""
+    fields=("read_ipv4","small_loaned","small_arena_fail","jumbo","rejected")
+    rows=[line for line in log_text.splitlines()
+          if "V4_PUBLIC_FEC2_M1_INGRESS role=" in line]
+    if not rows:
+        return None
+    values={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
+    if any(k not in values for k in fields):
+        return None
+    # Worker atomics are observed concurrently (not a transaction);
+    # bounded one-turn in-flight counts may differ by <=32.
+    done=(values["small_loaned"]+values["small_arena_fail"]+values["jumbo"])
+    if abs(values["read_ipv4"]-done)>32:
+        return None
+    return {k:values[k] for k in fields}
+
+
+def public_fec_rx_ip_class(log_text):
+    """Original after-M4-write protocol/ACK type counts, never inferred."""
+    fields=("sys_udp","rec_udp","sys_tcp","rec_tcp","other_ip",
+            "tcp_ack_only","tcp_data","tcp_other")
+    rows=[line for line in log_text.splitlines()
+          if "V4_PUBLIC_FEC2_RX_IP_CLASS role=" in line]
+    if not rows:
+        return None
+    d={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)", rows[-1])}
+    if any(k not in d for k in fields):
+        return None
+    if (d["tcp_ack_only"]+d["tcp_data"]+d["tcp_other"] !=
+        d["sys_tcp"]+d["rec_tcp"]):
+        return None
+    return {k:d[k] for k in fields}
+
+
+def public_fec_rx_proof(log_text):
+    """Strict numeric original AEAD/Pn→FEC decoder→M4 TUN, never default zero."""
+    fields=("source_seen","source_accepted","parity_seen","parity_accepted",
+            "systematic_candidate","recovered_candidate","systematic_tun",
+            "recovered_tun","tun_failed","decoder_rejected",
+            "admission_disabled")
+    rows=[line for line in log_text.splitlines()
+          if "V4_PUBLIC_FEC2_RX_PROOF role=" in line]
+    if not rows:
+        return None
+    values={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
+    if any(k not in values for k in fields):
+        return None
+    if (values["source_accepted"]>values["source_seen"] or
+        values["parity_accepted"]>values["parity_seen"] or
+        values["systematic_tun"]>values["systematic_candidate"] or
+        values["recovered_tun"]>values["recovered_candidate"] or
+        values["tun_failed"]>
+            values["systematic_candidate"]+values["recovered_candidate"] or
+        values["admission_disabled"]>
+            values["source_seen"]+values["parity_seen"] or
+        values["decoder_rejected"]>
+            values["source_seen"]+values["parity_seen"]):
+        return None
+    return {k:values[k] for k in fields}
+
+
+def public_fec_rx_capacity(log_text):
+    """One bounded original-Rust RX owner Stop readback, NEVER fake zero.
+    Keeps late authenticated parity/old block rejection distinct from codec.
+    """
+    fields=("peak_active","peak_bytes","pressure_evicted","age_evicted",
+            "reorder_evicted","invalid_retired","refused_bytes",
+            "reject_invalid","reject_capacity","reject_conflict","reject_codec")
+    rows=[line for line in log_text.splitlines()
+          if "V4_PUBLIC_FEC2_RX_CAP role=" in line]
+    if not rows:
+        return None
+    d={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
+    if any(k not in d for k in fields):return None
+    if d["peak_active"]>640 or d["peak_bytes"]>48*1024*1024:
+        return None
+    return {k:d[k] for k in fields}
+
+
+def public_fec_m2_proof(log_text):
+    """Only true original Go/Rust M2 counters once pre-Stop, never infer zero."""
+    fields=("accepted","not_sent","uncertain","unknown_2s","unknown_8s",
+            "covered_2s","covered_8s","reverse_reports","first_censored",
+            "cover_censored")
+    rows=[line for line in log_text.splitlines()
+          if "V4_PUBLIC_FEC2_M2_PROOF role=" in line]
+    if not rows:
+        return None
+    values={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
+    if any(k not in values for k in fields):
+        return None
+    if values["first_censored"] not in (0,1) or values["cover_censored"] not in (0,1):
+        return None
+    result={k:values[k] for k in fields}
+    # W51 makes the existing original FEC-only native 8s mature M2
+    # positive lag public. Old exact-source artifacts stay readable; but
+    # a partially emitted or mathematically invalid new marker fails
+    # closed instead of silently inventing a zero-lag RTT.
+    lag_fields=("positive_lag_ns","positive_samples","positive_mean_us")
+    if any(k+"=" in rows[-1] for k in lag_fields) or "positive_mean_known=" in rows[-1]:
+        match=re.search(r"positive_mean_known=(true|false)(?:\s|$)",rows[-1])
+        if not match or any(k not in values for k in lag_fields):
+            return None
+        lag,samples,mean=(values[k] for k in lag_fields)
+        known=(match.group(1)=="true")
+        if (known != (samples>0) or
+            mean != (lag//samples//1000 if samples else 0)):
+            return None
+        result.update({k:values[k] for k in lag_fields})
+        result["positive_mean_known"]=known
+        result["positive_lag_qualification"]=(
+            "native_mature_8s_unambiguous_firstsend_authenticated_M2_confirmation_age_NOT_shadow_RTT")
+    return result
+
+
+def public_fec_failure_reasons(log_text):
+    """Read only the genuine pre-Stop counters, never infer missing as zero."""
+    fields=("source_payload","source_arena","source_seal","parity_policy",
+            "parity_arena","parity_seal","parity_m4_noncopy","source_m4_noncopy")
+    rows=[line for line in log_text.splitlines() if "V4_PUBLIC_FEC2_FAILURE role=" in line]
+    if not rows:
+        return None
+    values={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)", rows[-1])}
+    if not all(k in values for k in fields):
+        return None
+    return {k:values[k] for k in fields}
+
+
+def public_fec_tx_snapshot(log_text):
+    """Parse complete original-Go pre-Stop owner marker or mark unknown."""
+    fields = ("accepted","notready","full","partial","k1","k2_4",
+              "k5_12","k13_16","rplanned","rsent","expired",
+              "pressure_jobs","pressure_sources","unknown_capacity")
+    rows = [line for line in log_text.splitlines()
+            if "V4_PUBLIC_FEC2_TX role=" in line]
+    if not rows:
+        return None
+    values = {k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
+    if not all(k in values for k in fields):
+        return None
+    if values["full"]+values["partial"] != sum(values[k] for k in ("k1","k2_4","k5_12","k13_16")):
+        return None
+    if values["rsent"]>values["rplanned"]:
+        return None
+    return {k:values[k] for k in fields}
+
+
+
+
+
+def tcp_socket_state_counts(output):
+    """Only count TCP states, never persist inner addresses/ports or payload."""
+    allowed={"LISTEN","SYN-SENT","SYN-RECV","ESTAB","FIN-WAIT-1",
+             "FIN-WAIT-2","CLOSE-WAIT","CLOSING","LAST-ACK","TIME-WAIT","CLOSED"}
+    result={}
+    for line in output.splitlines():
+        cols=line.split()
+        if cols and cols[0].upper() in allowed:
+            state=cols[0].upper()
+            result[state]=result.get(state,0)+1
+    return result
+
+
+def tcp_kernel_progress_counts(raw):
+    """From ss -H -tin: aggregate kernel TCP_INFO numbers; NEVER retain peers.
+
+    A field absent from the kernel output is NOT_OBSERVED, not numeric zero.
+    Per-socket endpoint lines are read only in memory and immediately dropped.
+    """
+    fields=("bytes_sent","bytes_acked","bytes_received","notsent",
+            "unacked","cwnd","snd_wnd","rto","mss","advmss","pmtu",
+            "rcvmss","ssthresh","reordering","rcv_space","dsack_dups")
+    blocks=[]
+    current=None
+    for line in raw.splitlines():
+        if line.startswith("ESTAB ") or line.startswith("ESTAB\t"):
+            if current is not None:
+                blocks.append(current)
+            current=[]
+        elif current is not None and line[:1].isspace():
+            current.append(line)
+        else:
+            if current is not None:
+                blocks.append(current)
+            current=None
+    if current is not None:
+        blocks.append(current)
+    out={"established":len(blocks)}
+    values={k:[] for k in fields}
+    retrans=[]
+    rtts=[]
+    cc_counts={}
+    for block in blocks:
+        details=" ".join(block)
+        cc=re.match(r"\s*(cubic|reno|bbr|bbr2|vegas|westwood|htcp)\b",details)
+        if cc: cc_counts[cc.group(1)]=cc_counts.get(cc.group(1),0)+1
+        matched_rtt=re.search(r"(?<![a-zA-Z0-9_])rtt:(\d+(?:\.\d+)?)/(\d+(?:\.\d+)?)",details)
+        if matched_rtt: rtts.append(float(matched_rtt.group(1)))
+        for name in fields:
+            found=re.search(r"(?<![a-zA-Z0-9_])"+name+r":(\d+)(?![0-9])",details)
+            if found:
+                values[name].append(int(found.group(1)))
+        match=re.search(r"(?<![a-zA-Z0-9_])retrans:(\d+)/(\d+)",details)
+        if match:
+            retrans.append((int(match.group(1)),int(match.group(2))))
+    for name in fields:
+        v=values[name]
+        out[name]={"sampled_sockets":len(v),"sum":sum(v),"max":max(v)} if v else "NOT_OBSERVED"
+    out["retrans"]={"sampled_sockets":len(retrans),
+                    "in_flight_sum":sum(a for a,_ in retrans),
+                    "total_sum":sum(b for _,b in retrans)} if retrans else "NOT_OBSERVED"
+    out["rtt_ms"]={"sampled_sockets":len(rtts),
+                   "max":max(rtts),"mean":sum(rtts)/len(rtts)} if rtts else "NOT_OBSERVED"
+    out["congestion_algorithm_counts"]=cc_counts if cc_counts else "NOT_OBSERVED"
+    return out
 
 
 def dump(path, value):
@@ -55,19 +418,78 @@ def process(pid):
         return None
 
 
+def fec_cpu_irq_snapshot(products):
+    """1 Hz, FEC-only numeric proc counters; no addresses or product payloads."""
+    stat=read("/proc/stat")
+    cpus={}
+    for line in stat.splitlines():
+        parts=line.split()
+        if len(parts)>1 and re.fullmatch(r"cpu[0-9]+",parts[0]):
+            try: cpus[parts[0]]=[int(v) for v in parts[1:11]]
+            except ValueError: pass
+    irq={}
+    for line in read("/proc/softirqs").splitlines():
+        if ":" not in line: continue
+        key,counts=line.strip().split(":",1)
+        if key not in ("NET_RX","NET_TX","TIMER","SCHED","RCU","HI","TASKLET"): continue
+        try: irq[key]=[int(v) for v in counts.split()]
+        except ValueError: pass
+    tasks={}
+    for role,proc in products.items():
+        if role not in ("client","server"): continue
+        rows=[]
+        try:
+            for entry in Path(f"/proc/{proc.pid}/task").iterdir():
+                try:
+                    raw=read(str(entry/"stat"))
+                    tail=raw.rsplit(")",1)[1].split()
+                    # Linux /proc/TID/stat indexes: utime=14 stime=15,
+                    # processor=39. The tail begins at field 3.
+                    if len(tail)<37: continue
+                    rows.append({"tid":int(entry.name),
+                        "cpu_ticks":int(tail[11])+int(tail[12]),
+                        "processor":int(tail[36]),
+                        "name":raw.split("(",1)[1].split(")",1)[0][:32]})
+                except (OSError,ValueError,IndexError): pass
+        except OSError: pass
+        tasks[role]=rows
+    return {"per_core_cpu":cpus,"per_core_softirqs":irq,
+        "cpu_cgroup_stat":read("/sys/fs/cgroup/cpu.stat"),
+        "cpu_cgroup_max":read("/sys/fs/cgroup/cpu.max"),
+        "product_threads":tasks}
+
+
 class Monitor:
-    def __init__(self, products, output):
+    def __init__(self, products, output, tcp_namespaces=None, fec_irq_diag=False):
         self.products, self.output = products, output
+        self.tcp_namespaces=tcp_namespaces or {}
+        self.fec_irq_diag=fec_irq_diag
         self.samples, self.stop = [], threading.Event()
+        self.last_tcp_poll_ns=0
         self.thread = threading.Thread(target=self.run, daemon=True)
 
     def run(self):
         while not self.stop.is_set():
             fields = read("/proc/stat").splitlines()[0].split()[1:]
-            self.samples.append({"ns": time.monotonic_ns(), "cpu": list(map(int, fields)),
-                "psi_cpu": read("/proc/pressure/cpu"),
-                "psi_memory": read("/proc/pressure/memory"),
-                "processes": {name: process(p.pid) for name, p in self.products.items()}})
+            now=time.monotonic_ns()
+            sample={"ns":now,"cpu":list(map(int,fields)),
+                    "psi_cpu":read("/proc/pressure/cpu"),
+                    "psi_memory":read("/proc/pressure/memory"),
+                    "processes":{name:process(p.pid) for name,p in self.products.items()}}
+            if self.fec_irq_diag:
+                sample["fec_cpu_irq"]=fec_cpu_irq_snapshot(self.products)
+            # Numeric TCP_INFO every 2s. Never persist raw addresses, ports,
+            # payloads or secret-bearing socket output.
+            if self.tcp_namespaces and now-self.last_tcp_poll_ns>=2_000_000_000:
+                self.last_tcp_poll_ns=now
+                sample["tcp"]={}
+                for role,ns in self.tcp_namespaces.items():
+                    try:
+                        raw=command(["ip","netns","exec",ns,"ss","-H","-tin"],False)
+                        sample["tcp"][role]=tcp_kernel_progress_counts(raw)
+                    except (OSError,subprocess.SubprocessError):
+                        sample["tcp"][role]="NOT_OBSERVED"
+            self.samples.append(sample)
             self.stop.wait(1)
 
     def finish(self, window=None):
@@ -93,14 +515,75 @@ class Monitor:
             if points:
                 costs[name] = {"cpu_s_observed_including_warmup_setup_drain": points[-1]["cpu_s"]-points[0]["cpu_s"],
                                "rss_peak_bytes": max(p["rss_bytes"] for p in points)}
+        tcp_summary={}
+        for role in self.tcp_namespaces:
+            rows=[p["tcp"][role] for p in samples
+                  if isinstance(p.get("tcp",{}).get(role),dict)
+                  and p["tcp"][role].get("established",0)>0]
+            v={"samples":len(rows)}
+            for key in ("cwnd","snd_wnd","notsent","mss","advmss","pmtu",
+                        "ssthresh","unacked","rto","reordering"):
+                vals=[p[key]["sum"] for p in rows if isinstance(p.get(key),dict)]
+                if vals:
+                    sorted_vals=sorted(vals)
+                    v[key]={"min":sorted_vals[0],
+                            "median":sorted_vals[len(sorted_vals)//2],
+                            "max":sorted_vals[-1]}
+                else: v[key]="NOT_OBSERVED"
+            rtt=[p["rtt_ms"]["mean"] for p in rows if isinstance(p.get("rtt_ms"),dict)]
+            v["rtt_ms"]={"min":min(rtt),"max":max(rtt)} if rtt else "NOT_OBSERVED"
+            cc={}
+            for p in rows:
+                d=p.get("congestion_algorithm_counts")
+                if isinstance(d,dict):
+                    for name,n in d.items(): cc[name]=cc.get(name,0)+n
+            v["congestion_algorithm_counts"]=cc if cc else "NOT_OBSERVED"
+            tcp_summary[role]=v
         return {"cpu_psi_some_peak": peak_psi, "cpu_psi_some_mean": sum(psi)/len(psi) if psi else None,
                 "cpu_psi_over20_fraction": sum(v > 20 for v in psi)/len(psi) if psi else None,
-                "samples_in_measurement": len(samples), "steal_pct_peak": peak_steal, "processes": costs}
+                "samples_in_measurement": len(samples), "steal_pct_peak": peak_steal,
+                "processes": costs, "tcp_window_summary": tcp_summary or "NOT_OBSERVED"}
 
+
+def startup_diagnostic(log_text):
+    """Never persist CLI stdout/stderr or secret-bearing argv: fixed labels only."""
+    tokens = {
+        "CLI_UNKNOWN_FLAG": "flag provided but not defined",
+        "CLI_BAD_ARGUMENTS": "missing/invalid real original v4 tls/raw/tun settings",
+        "CLI_BAD_ROUTE_KEY": "invalid tls route key",
+        "CLI_BAD_TUNNEL_ID": "invalid tunnel-id",
+        "RUNTIME_MISSING_SHARED_LIBRARY": "error while loading shared libraries",
+        "RUNTIME_MISSING_SYMBOL": "undefined symbol",
+        "KERNEL_NO_DEVICE": "no such device",
+        "KERNEL_TUN_UNAVAILABLE": "/dev/net/tun",
+        "KERNEL_PERMISSION": "operation not permitted",
+        "KERNEL_DENIED": "permission denied",
+        "KERNEL_ADDRESS_BUSY": "address already in use",
+        "KERNEL_INVALID_ARGUMENT": "invalid argument",
+        "KERNEL_NO_SUCH_FILE": "no such file or directory",
+        "NETWORK_CONNECT_REFUSED": "connection refused",
+        "NETWORK_TIMED_OUT": "i/o timeout",
+        "GO_PANIC": "panic:",
+    }
+    text = log_text.lower()
+    reasons = [label for label, token in tokens.items() if token in text]
+    return {"safe_failure_classes": reasons or ["UNCLASSIFIED_NO_RAW_LOG_PERSISTED"],
+            "log_lines_present": min(len(log_text.splitlines()), 100000)}
 
 class LinuxExperiment:
     def __init__(self, config, bundle_dir, out, label):
-        self.config, self.bundle = config, Path(bundle_dir) / "fixed-build"
+        self.config=copy.deepcopy(config)
+        self.tcp_profile=config["network"].get("tcp_window_profiles",{}).get(label,"baseline")
+        self.tcp_reorder_profile=config["network"].get("tcp_reordering_profiles",{}).get(label,"baseline")
+        self.tcp_socket_pacing_mbps=config["network"].get("tcp_socket_pacing_mbps_profiles",{}).get(label,0)
+        selected_fq=config["network"].get("product_tun_fq_maxrate_mbps_profiles",{})
+        self.product_tun_fq_explicit=label in selected_fq
+        self.product_tun_fq_maxrate_mbps=selected_fq.get(label,600)
+        self.config["network"]["tcp_window_profile_selected"]=self.tcp_profile
+        self.config["network"]["tcp_reordering_profile_selected"]=self.tcp_reorder_profile
+        self.config["network"]["tcp_socket_pacing_mbps_selected"]=self.tcp_socket_pacing_mbps
+        self.config["network"]["product_tun_fq_maxrate_mbps_selected"]=self.product_tun_fq_maxrate_mbps
+        self.bundle = Path(bundle_dir) / "fixed-build"
         self.out, self.label = Path(out), label
         self.out.mkdir(parents=True, exist_ok=False)
         self.temp = tempfile.TemporaryDirectory(prefix="wbd-net-", dir=os.environ.get("RUNNER_TEMP"))
@@ -110,12 +593,28 @@ class LinuxExperiment:
         self.iface = {"client": "wbnc0", "server": "wbns0"}
         self.ip = {"client": "10.25.0.2", "server": "10.25.0.1"}
         self.inner = {"client": "10.66.0.2", "server": "10.66.0.1"}
-        self.products, self.workers, self.handles = {}, {}, []
+        self.products, self.workers, self.samplers, self.handles = {}, {}, {}, []
         self.created = []
         self.monitor = None
+        self.cpu_stress_workers=[]
+        self.cpu_pause_worker=None
+        self.cpu_pause_stop=threading.Event()
+        self.cpu_stress_affinity={}
+        self.cpu_stress_events=[]
+        self.egress_trace=[]
+        self.egress_stop=threading.Event()
+        self.egress_thread=None
         self.lanes = {"game2": 2, "game4": 4}.get(config["product"]["mode"], 1)
         self.config_events, self.snapshots = [], []
+        self.wall_blackout_events=[]
+        self.wall_blackout_failure=None
+        self.wall_blackout_thread=None
         self.child_env = {k: v for k, v in os.environ.items() if k not in ["GH_TOKEN", "GITHUB_TOKEN"]}
+        # Explicit bundle-only diagnostic switch; ordinary measured legs do
+        # not incur per-packet clock sampling. Never inherit an ambient probe.
+        self.child_env.pop("WBD_GAME_RX_LOCK_SAMPLE",None)
+        if config["bundles"].get(label,{}).get("enable_game_rx_lock_sample",False):
+            self.child_env["WBD_GAME_RX_LOCK_SAMPLE"]="1"
 
     def nscommand(self, role, args, check=True):
         return command(["ip", "netns", "exec", self.ns[role], *args], check)
@@ -130,6 +629,29 @@ class LinuxExperiment:
         for ns in self.ns.values():
             command(["ip", "netns", "add", ns])
             self.created.append(ns)
+        if self.tcp_profile in ("large","bdp500"):
+            # Restrict writes to per-netns IPv4 TCP autotuning limits.
+            # Do NOT attempt net.core *mem_max writes: the ARM runner failed
+            # that readback before business; user socket SO_*BUF is clamped,
+            # so report actual getsockopt bytes instead of claiming 8MiB.
+            max_window=67108864 if self.tcp_profile=="bdp500" else 16777216
+            settings=(("net.ipv4.tcp_rmem",f"4096 4194304 {max_window}"),
+                      ("net.ipv4.tcp_wmem",f"4096 4194304 {max_window}"))
+            for role in self.ns:
+                for k,value in settings:
+                    self.nscommand(role,["sysctl","-w",k+"="+value])
+                    actual=self.nscommand(role,["sysctl","-n",k]).strip()
+                    if actual.split()!=value.split():
+                        raise RuntimeError("namespaced TCP window readback mismatch "+k)
+        if self.tcp_reorder_profile=="outer_repair_tolerant":
+            # Experimental per-netns Linux TCP threshold. Not product default.
+            # At 10Mbps/MSS1277, 192 in-flight segments span ~196ms,
+            # comparable to the extra forward path of one outer repair.
+            for role in self.ns:
+                key="net.ipv4.tcp_reordering"
+                self.nscommand(role,["sysctl","-w",key+"=192"])
+                if self.nscommand(role,["sysctl","-n",key]).strip()!="192":
+                    raise RuntimeError("namespaced TCP reordering readback mismatch")
         # Create veth inside the owned namespace, never touch host routes/firewall.
         self.nscommand("client", ["ip", "link", "add", "wbnc0", "type", "veth", "peer", "name", "wbns0"])
         self.nscommand("client", ["ip", "link", "set", "wbns0", "netns", self.ns["server"]])
@@ -142,30 +664,76 @@ class LinuxExperiment:
             self.nscommand(role, ["iptables", "-A", "OUTPUT", "-p", "tcp", "--tcp-flags", "RST", "RST", "-j", "DROP"])
             self.nscommand(role, ["iptables", "-N", "WBN_LOSS"])
             self.nscommand(role, ["iptables", "-I", "OUTPUT", "1", "-j", "WBN_LOSS"])
+        # Opt-in diagnostic/fix for owned test-only namespaces. Netem is
+        # installed AFTER this, with exactly the same real DATA loss, queue
+        # and delay. Do not alter product fq600, kernels outside namespaces,
+        # or install host IP/ARP state. Verify both reciprocal peer MACs.
+        if self.config["network"].get("owned_veth_static_neighbour",False):
+            link={}
+            for role in self.ns:
+                rows=json.loads(self.nscommand(role,["ip","-j","link","show",
+                                                     "dev",self.iface[role]]))
+                if len(rows)!=1:raise RuntimeError("owned veth link disappeared "+role)
+                mac=rows[0].get("address","").lower()
+                if not re.fullmatch(r"[0-9a-f]{2}(?::[0-9a-f]{2}){5}",mac):
+                    raise RuntimeError("owned veth MAC missing "+role)
+                link[role]=mac
+            for role in self.ns:
+                peer_role="server" if role=="client" else "client"
+                self.nscommand(role,["ip","neigh","replace",self.ip[peer_role],
+                    "lladdr",link[peer_role],"dev",self.iface[role],
+                    "nud","permanent"])
+                neighbours=json.loads(self.nscommand(role,["ip","-j",
+                    "neigh","show","to",self.ip[peer_role],
+                    "dev",self.iface[role]]))
+                match=[n for n in neighbours
+                    if n.get("dst")==self.ip[peer_role] and
+                    n.get("lladdr","").lower()==link[peer_role] and
+                    "PERMANENT" in (
+                        [n.get("state")] if isinstance(n.get("state"),str)
+                        else n.get("state",[]))]
+                if len(match)!=1:
+                    raise RuntimeError("owned veth permanent neighbour not applied "+role)
         command(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-sha256", "-days", "1", "-nodes",
                  "-keyout", self.private / "key.pem", "-out", self.private / "cert.pem",
                  "-subj", "/CN=wbd-v4.example.test", "-addext", "subjectAltName=DNS:wbd-v4.example.test"])
         (self.private / "key.pem").chmod(0o600)
         route, password, tunnel = secrets.token_hex(32), secrets.token_hex(16), secrets.token_hex(16)
         for role in ["server", "client"]:
-            args = ["env", "LD_LIBRARY_PATH=" + str(self.bundle), str(self.bundle / ("wbd-v4-" + role)),
+            args = ["env", "LD_LIBRARY_PATH=" + str(self.bundle),
+                *(["WBD_V3_TIMELINE=1"] if self.config["network"].get("v3_timeline",False) else []),
+                *(["WBD_FEC_EGRESS_DIAG=1"] if self.config["network"].get("fec_egress_diagnostic",False) else []),
+                str(self.bundle / ("wbd-v4-" + role)),
                 "--raw-interface", self.iface[role], "--local-ip", self.ip[role],
                 "--local-port", "443" if role == "server" else "41031",
                 "--tun-name", "wbntun0", "--tun-ipv4", self.inner[role] + "/24",
                 "--server-name", "wbd-v4.example.test", "--route-key-hex", route,
                 "--username", "ephemeral-harness", "--password", password, "--tunnel-id", tunnel,
                 "--mode", self.config["product"]["mode"], "--fec-profile", str(self.config["product"]["fec_profile"])]
+            game_fec=self.config["product"].get("game_fec","off")
+            if game_fec!="off":
+                args += ["--game-fec",game_fec]
+            if self.config["product"]["mode"]=="game4":
+                args += ["--game4-copy-schedule",
+                    requested_game4_copy_schedule(self.config,self.label)]
+            repair_switch = requested_outer_repair(self.config, self.label)
+            if repair_switch is not None:
+                args += ["--outer-repair", "on" if repair_switch else "off"]
             if role == "server":
                 args += ["--tls-cert", str(self.private / "cert.pem"), "--tls-key", str(self.private / "key.pem")]
             else:
                 args += ["--peer-ip", self.ip["server"], "--peer-port", "443"]
+            if self.product_tun_fq_explicit:
+                # Explicit0 is rollback for any mode; omission proves the
+                # native Linux product default=600 in ALL supported modes.
+                args.extend(["--tun-fq-maxrate-mbps",str(self.product_tun_fq_maxrate_mbps)])
             self.products[role] = self.spawn(role, args, role + ".log")
             if role == "server":
                 time.sleep(.5)
         deadline = time.monotonic() + 30
         while time.monotonic() < deadline:
             if any(p.poll() is not None for p in self.products.values()):
-                raise RuntimeError("public CLI exited before readiness; see bounded markers")
+                raise RuntimeError("public CLI exited before readiness: " + repr({r:p.poll() for r,p in self.products.items()}))
             if self.lanes > 1:
                 ready = all(f"V4_ORIGINAL_GO_GAME_NATIVE_READY role={r} lanes={self.lanes}" in read(self.private / (r + ".log")) for r in self.ns)
             else:
@@ -175,18 +743,234 @@ class LinuxExperiment:
             time.sleep(.1)
         else:
             raise RuntimeError("real native READY timeout")
+        qlen_profile=self.config["network"].get("tun_txqlen_profiles",{}).get(self.label)
+        if qlen_profile is not None:
+            # Strict namespace-only, matched one-leg A/B diagnostic. No host
+            # sysctl and no production default change. Apply before warmup.
+            for role in self.ns:
+                self.nscommand(role,["ip","link","set","dev","wbntun0",
+                                     "txqueuelen",str(qlen_profile)])
+        qdisc_profile=self.config["network"].get("tun_qdisc_profiles",{}).get(self.label)
+        fq_rate=self.config["network"].get("tun_fq_maxrate_mbps_profiles",{}).get(self.label)
+        if qdisc_profile is not None:
+            for role in self.ns:
+                args=["tc","qdisc","replace","dev","wbntun0","root",qdisc_profile]
+                if fq_rate:
+                    args.extend(["maxrate",str(fq_rate)+"mbit"])
+                self.nscommand(role,args)
         self.effective = {"mode": self.config["product"]["mode"], "lanes": self.lanes,
-                          "game_fec": "off (public CLI explicitly sets off)", "inner_links": {}}
+                          "owned_veth_neighbour_policy": (
+                              "PERMANENT_BOTH_VERIFIED_TEST_ONLY" if self.config["network"].get(
+                                  "owned_veth_static_neighbour",False)
+                              else "KERNEL_DYNAMIC_ARP_UNMODIFIED"),
+                          "game_fec": self.config["product"].get("game_fec","off"), "inner_links": {}}
         for role in self.ns:
             links = json.loads(self.nscommand(role, ["ip", "-j", "link", "show", "wbntun0"]))
             self.effective["inner_links"][role] = links
+            if qlen_profile is not None and links[0].get("txqlen")!=qlen_profile:
+                raise RuntimeError("diagnostic TUN queue readback mismatch "+role)
             if (not self.config["traffic"]["allow_fragmentation"] and self.config["traffic"]["udp_share"]
                     and max(s for s, _ in self.config["traffic"]["sizes"]) + 28 > links[0]["mtu"]):
                 raise Unsupported("UDP payload+28 exceeds actual TUN MTU; explicitly allow_fragmentation or use a separate rejection case")
+        self.effective["test_only_tun_qdisc_profile"]=(
+            qdisc_profile if qdisc_profile is not None else "product_default")
+        if qdisc_profile is not None:
+            observed={}
+            for role in self.ns:
+                readback=json.loads(self.nscommand(role,["tc","-j","qdisc","show",
+                                                       "dev","wbntun0"]))
+                if not any(z.get("kind")==qdisc_profile and z.get("root")
+                           for z in readback):
+                    raise RuntimeError("diagnostic TUN qdisc root readback mismatch "+role)
+                if fq_rate:
+                    # The actual kernel qdisc, NOT an intent/strategy label:
+                    # iproute2 uses e.g. 'maxrate 600Mbit' in -d readback.
+                    detail=self.nscommand(role,["tc","-d","qdisc","show",
+                                                "dev","wbntun0"])
+                    if not re.search(r"\bmaxrate\s+600Mbit\b",detail,re.I):
+                        raise RuntimeError("TUN fq maxrate readback mismatch "+role+
+                                           " (expected 600Mbit actual kernel qdisc)")
+                observed[role]=qdisc_profile
+            self.effective["test_only_tun_qdisc_readback"]=observed
+        self.effective["product_tun_fq_maxrate_mbps"]=self.product_tun_fq_maxrate_mbps
+        self.effective["product_tun_fq_cli_override"]=(
+            str(self.product_tun_fq_maxrate_mbps) if self.product_tun_fq_explicit else "OMITTED_USE_NATIVE_DEFAULT")
+        if self.product_tun_fq_maxrate_mbps:
+            product_readback={}
+            for role in self.ns:
+                marker=("V4_PUBLIC_TUN_FQ role="+role+
+                        " interface=wbntun0 maxrate_mbps=600 flow_limit_packets=256 readback=kernel_fq_600Mbit")
+                if marker not in read(self.private / (role+".log")):
+                    raise RuntimeError("real product TUN fq readback marker missing "+role)
+                detail=self.nscommand(role,["tc","-d","qdisc","show","dev","wbntun0"])
+                actual=json.loads(self.nscommand(role,["tc","-d","-j","qdisc","show",
+                                                       "dev","wbntun0"]))
+                # iproute2 may format fq root/flow_limit/maxrate across
+                # separate detail lines, and print 256p with a suffix.
+                # Verify root and maxrate across the whole detail record;
+                # kernel -d -j options.flow_limit is the numeric source of truth.
+                if not any(line.startswith("qdisc fq ") and " root " in line
+                           for line in detail.splitlines()) or not re.search(
+                           r"\bmaxrate\s+600Mbit\b",detail,re.I):
+                    raise RuntimeError("real product TUN fq kernel readback mismatch "+role)
+                if not any(q.get("kind")=="fq" and q.get("root") and
+                           q.get("options",{}).get("flow_limit")==256
+                           for q in actual):
+                    raise RuntimeError("real product TUN fq kernel flow_limit readback mismatch "+role)
+                product_readback[role]="owned_"+self.config["product"]["mode"]+"_fq_600Mbit_flow_limit256"
+            self.effective["product_tun_fq_kernel_readback"]=product_readback
+        self.effective["test_only_tun_fq_maxrate_mbps"]=(
+            fq_rate if fq_rate is not None else "NO_TEST_OVERRIDE")
+        self.effective["test_only_tun_txqlen_profile"]=(
+            qlen_profile if qlen_profile is not None else "product_default")
+        self.effective["outer_repair_requested"]=requested_outer_repair(self.config,self.label)
+        self.effective["outer_repair_applied"]="NOT_OBSERVED_UNTIL_NATIVE_STOP"
+        self.effective["v3_timeline_enabled"]=self.config["network"].get("v3_timeline",False)
+        self.effective["startup_tun_drop_timeline_enabled"]=self.config["network"].get("startup_tun_drop_timeline",False)
+        self.effective["tcp_window_profile"]=self.tcp_profile
+        self.effective["tcp_reordering_profile"]=self.tcp_reorder_profile
+        self.effective["test_only_inner_tcp_socket_max_pacing_mbps"]=self.tcp_socket_pacing_mbps
+        self.effective["tcp_window_override"]=(
+            "namespaced tcp_[rw]mem 64MiB max; NO SO_*BUF override; preserve Linux TCP autotuning, read actual TCP_INFO and advertised window"
+            if self.tcp_profile=="bdp500" else (
+            "namespaced tcp_[rw]mem 16MiB max; socket requested 8MiB but SO_*BUF may be kernel-clamped (read back)"
+            if self.tcp_profile=="large" else "untouched baseline"))
         dump(self.out / "effective-config.json", self.effective)
+        inner = min(links[0]["mtu"] for links in self.effective["inner_links"].values())
+        dump(self.out / "capacity-envelope-observed-mtu.json", request_envelope(self.config, inner))
+
+    def stop_product_cpu_stress(self):
+        # Resume the original process unconditionally on phase switch/teardown:
+        # test-only SIGSTOP must never leak to real product Stop/owned cleanup.
+        self.cpu_pause_stop.set()
+        for role in self.cpu_stress_affinity:
+            try: os.kill(self.products[role].pid,signal.SIGCONT)
+            except ProcessLookupError: pass
+        if self.cpu_pause_worker is not None:
+            self.cpu_pause_worker.join(timeout=3)
+            self.cpu_pause_worker=None
+        # End-of-phase proof: other worker threads must not have escaped
+        # confinement when the burn started; record evidence before cleanup.
+        if self.cpu_stress_affinity and self.cpu_stress_events:
+            event=self.cpu_stress_events[-1]
+            role=event["role"]
+            pid=self.products[role].pid
+            try:
+                tids=[int(p.name) for p in Path(f"/proc/{pid}/task").iterdir()]
+                event["threads_at_end"]=len(tids)
+                event["all_threads_pinned_at_end"]=all(
+                    os.sched_getaffinity(tid)=={event["core"]} for tid in tids)
+                event["competitors_alive_at_end"]=sum(
+                    child.poll() is None for child in self.cpu_stress_workers)
+                event["ended_ns"]=time.monotonic_ns()
+            except (FileNotFoundError,ProcessLookupError):
+                event["all_threads_pinned_at_end"]=False
+        for child in self.cpu_stress_workers:
+            if child.poll() is None: child.terminate()
+        for child in self.cpu_stress_workers:
+            try: child.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                child.kill()
+                child.wait(timeout=2)
+        self.cpu_stress_workers=[]
+        for role, saved in self.cpu_stress_affinity.items():
+            pid=self.products[role].pid
+            try:
+                tasks=[int(p.name) for p in Path(f"/proc/{pid}/task").iterdir()]
+                for tid in tasks:
+                    try: os.sched_setaffinity(tid,saved["threads"].get(tid,saved["leader"]))
+                    except (ProcessLookupError,OSError): pass
+            except (FileNotFoundError,ProcessLookupError): pass
+        self.cpu_stress_affinity={}
+        self.cpu_pause_stop.clear()
+
+    def set_product_cpu_stress(self, phase):
+        self.stop_product_cpu_stress()
+        spec=phase.get("product_cpu_stress")
+        if not spec: return
+        role=spec["role"]
+        product=self.products[role]
+        if product.poll() is not None:
+            raise RuntimeError("cannot stress exited original product "+role)
+        original=os.sched_getaffinity(product.pid)
+        if len(original)<2:
+            raise RuntimeError("CPU stress needs >=2 eligible cores; will not saturate whole runner")
+        core=min(original)
+        # Linux affinity is per-TID, not per-process: Go/Rust worker threads
+        # must ALL share the constrained core or this is not host pressure.
+        def all_threads():
+            return [int(p.name) for p in Path(f"/proc/{product.pid}/task").iterdir()]
+        saved={"leader":original,"threads":{}}
+        self.cpu_stress_affinity[role]=saved
+        for _ in range(3):
+            tids=all_threads()
+            for tid in tids:
+                try:
+                    if tid not in saved["threads"]:
+                        saved["threads"][tid]=os.sched_getaffinity(tid)
+                    os.sched_setaffinity(tid,{core})
+                except ProcessLookupError: continue
+            time.sleep(.03)
+        if not all(os.sched_getaffinity(tid)=={core} for tid in all_threads()):
+            raise RuntimeError("original Go/Rust product worker threads escaped test CPU limit")
+        for _ in range(spec["competitors"]):
+            # Same eligible core, separate test-owned schedulable processes.
+            # Products and their authentic M2/Auto code remain unchanged;
+            # traffic generators stay unpinned on other available cores.
+            # GNU yes is a lightweight native CPU competitor (no packet IO
+            # and no heap-heavy Python worker). It writes only to /dev/null.
+            child=subprocess.Popen(["taskset","-c",str(core),"yes"],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+            self.cpu_stress_workers.append(child)
+        time.sleep(.15)
+        if any(p.poll() is not None for p in self.cpu_stress_workers):
+            raise RuntimeError("CPU competitors exited before measurement")
+        # Capture every TID's actual post-burn readback, not just leader.
+        final_tids=all_threads()
+        for tid in final_tids:
+            if tid not in saved["threads"]:
+                saved["threads"][tid]=original
+            os.sched_setaffinity(tid,{core})
+        if not all(os.sched_getaffinity(tid)=={core} for tid in all_threads()):
+            raise RuntimeError("CPU threads migrated outside the stressed core")
+        self.cpu_stress_events.append({"phase":phase["name"],"role":role,
+            "product_pid":product.pid,"core":core,
+            "original_eligible_cores":len(original),
+            "competitors_started":len(self.cpu_stress_workers),
+            "readback_product_affinity":sorted(os.sched_getaffinity(product.pid)),
+            "readback_all_threads_pinned":True,
+            "readback_thread_count":len(all_threads()),
+            "started_ns":time.monotonic_ns()})
+        if spec.get("pause_seconds"):
+            event=self.cpu_stress_events[-1]
+            event["test_only_pause_requested_s"]=spec["pause_seconds"]
+            event["test_only_pause_offset_s"]=spec["pause_offset_seconds"]
+            def pause_owned_product():
+                if self.cpu_pause_stop.wait(spec["pause_offset_seconds"]): return
+                try:
+                    if product.poll() is not None:
+                        event["pause_error"]="product_exited_before_pause"
+                        return
+                    event["paused_at_ns"]=time.monotonic_ns()
+                    os.kill(product.pid,signal.SIGSTOP)
+                    event["stop_signal_sent"]=True
+                    self.cpu_pause_stop.wait(spec["pause_seconds"])
+                except (OSError,ProcessLookupError) as exc:
+                    event["pause_error"]=type(exc).__name__
+                finally:
+                    try:
+                        os.kill(product.pid,signal.SIGCONT)
+                        event["continue_signal_sent"]=True
+                    except ProcessLookupError:
+                        event["continue_signal_sent"]=False
+                    event["resumed_at_ns"]=time.monotonic_ns()
+            self.cpu_pause_worker=threading.Thread(
+                target=pause_owned_product,name="fec-test-only-bounded-host-pause",daemon=True)
+            self.cpu_pause_worker.start()
 
     def configure(self, phase, index, initial=False):
-        event = {"phase": phase["name"], "scheduled_index": index, "begin_ns": time.monotonic_ns(), "commands": []}
+        event = {"phase": phase["name"], "scheduled_index": index, "begin_ns": time.monotonic_ns(), "wall_begin_ns": time.time_ns(), "commands": []}
         for role, direction in [("client", "c2s"), ("server", "s2c")]:
             dev, d = self.iface[role], phase[direction]
             self.nscommand(role, ["iptables", "-F", "WBN_LOSS"])
@@ -215,18 +999,126 @@ class LinuxExperiment:
                         "pref", str(10+lane), "flower", "ip_proto", "tcp", "dst_port" if role == "client" else "src_port",
                         str(443+lane), "classid", f"1:{lane+1}"])
         event["end_ns"] = time.monotonic_ns()
+        event["wall_end_ns"] = time.time_ns()
         self.config_events.append(event)
+
+    def run_wall_blackouts(self,phase,start_ns):
+        # Test-owned OUTPUT chain installed before any product M4 process.
+        # Two distinct netns receive matching all-lane TCP DROP rules.
+        # Apply concurrently to minimize cross-direction switch skew.
+        # This is wall-clock scheduling, NOT netem's per-packet GE model.
+        def switch(active):
+            op=["-I","WBN_LOSS","1"] if active else ["-D","WBN_LOSS"]
+            rows=[]
+            for role in ("client","server"):
+                cmd=["ip","netns","exec",self.ns[role],"iptables",*op,
+                    "-p","tcp","-j","DROP"]
+                begun=time.monotonic_ns()
+                proc=subprocess.Popen(cmd,stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
+                rows.append((role,begun,proc))
+            result={}
+            for role,begun,proc in rows:
+                out,err=proc.communicate(timeout=3)
+                ended=time.monotonic_ns()
+                if proc.returncode:
+                    raise RuntimeError("wall blackhole iptables failed: "+role+
+                                       " "+err.decode(errors="replace")[:160])
+                result[role]={"begin_ns":begun,"end_ns":ended,
+                              "uncertainty_ms":(ended-begun)/1e6}
+            return result
+        try:
+            for pulse in phase["wall_blackouts_ms"]:
+                target=start_ns+int(pulse["offset_ms"]*1e6)
+                while time.monotonic_ns()<target:
+                    time.sleep(min(.01,max(0,(target-time.monotonic_ns())/1e9)))
+                entry={"phase":phase["name"],"target_on_ns":target,
+                       "duration_ms":pulse["duration_ms"],
+                       "start":None,"end":None}
+                try:
+                    entry["start"]=switch(True)
+                    off_due=target+int(pulse["duration_ms"]*1e6)
+                    while time.monotonic_ns()<off_due:
+                        time.sleep(min(.002,max(0,(off_due-time.monotonic_ns())/1e9)))
+                finally:
+                    entry["end"]=switch(False)
+                    self.wall_blackout_events.append(entry)
+        except Exception as ex:
+            self.wall_blackout_failure=str(ex)
+
+    def egress_sampling_loop(self):
+        """Optional 500ms numeric counters, one owned netns read per edge.
+
+        No per-packet hooks, product mutation, pcap, packet/IP addresses.
+        Limits to 220 samples and preserves monotonic begin/end for alignment.
+        """
+        while not self.egress_stop.is_set() and len(self.egress_trace)<220:
+            tick=time.monotonic()
+            row={"begin_ns":time.monotonic_ns(),"roles":{}}
+            for role in ("client","server"):
+                try:
+                    v=json.loads(self.nscommand(role,["ip","-s","-j",
+                        "link","show","dev",self.iface[role]]))[0]
+                    tun=json.loads(self.nscommand(role,["ip","-s","-j",
+                        "link","show","dev","wbntun0"]))[0]
+                    qs=json.loads(self.nscommand(role,["tc","-s","-j",
+                        "qdisc","show","dev",self.iface[role]]))
+                    q=next((p for p in qs if p.get("kind")=="netem"),None)
+                    # Diagnostic-only original kernel NUD (IPv4 ARP).
+                    # NEVER persist lladdr, dst address or peer secrets.
+                    ns=json.loads(self.nscommand(role,["ip","-s","-j",
+                        "neigh","show","dev",self.iface[role]]))
+                    peer=self.ip["server" if role=="client" else "client"]
+                    nd=next((item for item in ns if item.get("dst")==peer),None)
+                    neighbour=({
+                        "nud_state":nd.get("state","UNKNOWN"),
+                        "probes":nd.get("probes"),
+                        "used":nd.get("used"),
+                        "confirmed":nd.get("confirmed"),
+                        "updated":nd.get("updated")}
+                        if nd is not None else {"nud_state":"NO_ENTRY"})
+                    def brief(x):
+                        return {side:{key:x.get(side,{}).get(key) for key
+                            in ("bytes","packets","dropped","errors")}
+                            for side in ("tx","rx")}
+                    row["roles"][role]={
+                        "outer_veth":brief(v.get("stats64",v.get("stats",{}))),
+                        "source_tun":brief(tun.get("stats64",tun.get("stats",{}))),
+                        "netem":({k:q.get(k) for k in
+                            ("packets","drops","overlimits","qlen","backlog")}
+                            if q is not None else "NOT_OBSERVED"),
+                        "ipv4_neighbour":neighbour}
+                except Exception:
+                    row["roles"][role]={"status":"NOT_OBSERVED_SAMPLER_ERROR"}
+            row["end_ns"]=time.monotonic_ns()
+            self.egress_trace.append(row)
+            self.egress_stop.wait(max(0,0.5-(time.monotonic()-tick)))
 
     def snapshot(self, name):
         row = {"name": name, "ns": time.monotonic_ns(), "processes": {r: process(p.pid) for r, p in self.products.items()}, "network": {}}
         for role in self.ns:
             row["network"][role] = {
                 "qdisc": json.loads(self.nscommand(role, ["tc", "-s", "-j", "qdisc", "show", "dev", self.iface[role]])),
+                "tun_qdisc": json.loads(self.nscommand(role, ["tc", "-s", "-j", "qdisc", "show", "dev", "wbntun0"])),
                 "links": json.loads(self.nscommand(role, ["ip", "-s", "-j", "link", "show"])),
                 "snmp": self.nscommand(role, ["cat", "/proc/net/snmp"]),
                 "udp_sockets": self.nscommand(role, ["ss", "-uanm"], False),
                 "packet_sockets": self.nscommand(role, ["ss", "-0", "-am"], False),
+                "tcp_states": tcp_socket_state_counts(self.nscommand(role, ["ss", "-H", "-tan"], False)),
+                "tcp_kernel_progress": tcp_kernel_progress_counts(self.nscommand(role, ["ss", "-H", "-tin"], False)),
                 "blackhole_counters": self.nscommand(role, ["iptables", "-nvxL", "WBN_LOSS"])}
+        if name.startswith("before-"):
+            settings=("tcp_congestion_control","tcp_available_congestion_control",
+                      "tcp_mtu_probing","tcp_sack","tcp_timestamps",
+                      "tcp_window_scaling","tcp_rmem","tcp_wmem",
+                      "tcp_reordering","tcp_max_reordering","tcp_recovery")
+            row["tcp_kernel_settings"]={
+                role:{**{k:self.nscommand(role,["sysctl","-n","net.ipv4."+k],False).strip()
+                      or "NOT_OBSERVED" for k in settings},
+                      **{k:self.nscommand(role,["sysctl","-n","net.core."+k],False).strip()
+                      or "NOT_OBSERVED" for k in ("rmem_max","wmem_max")}}
+                for role in self.ns}
+        row["end_ns"]=time.monotonic_ns()
         self.snapshots.append(row)
 
     def wait_until(self, ns):
@@ -240,8 +1132,43 @@ class LinuxExperiment:
         logs = {}
         for role in self.ns:
             lines = [line for line in read(self.private / (role + ".log")).splitlines()
-                     if re.search(r"V4_(PUBLIC_(M2_OUTER |FEC2_READBACK |GAME_KERNEL |NATIVE_STOP_DRAINED|GAME_NATIVE_STOP_DRAINED)|ORIGINAL_GO_\w+_NATIVE_READY)", line)]
-            logs[role] = "\n".join(lines[-40:])
+                     if product_marker_line(line)]
+            if self.config["network"].get("v3_timeline",False):
+                timeline = [line for line in lines if "V4_PUBLIC_TIMELINE " in line]
+                # At 4Hz the 1200-sample cap covers up to five minutes,
+                # never copies private TLS args, payloads or credentials.
+                (self.out / (role+"-v3-timeline.log")).write_text(
+                    "\n".join(timeline[-1200:])+"\n")
+            if self.config["network"].get("fec_egress_diagnostic",False):
+                egress_events=[line for line in lines if
+                    "V4_PUBLIC_FEC2_EGRESS_DIAG " in line]
+                # At 2Hz per worker and max 75s measured/dry run,
+                # retain enough samples to include both warmup and steady.
+                # Never retain private logs, key material or packet payload.
+                (self.out/(role+"-fec-egress-timeline.log")).write_text(
+                    "\n".join(egress_events[-500:])+"\n")
+            auto_events=[line for line in lines if
+                "V4_PUBLIC_FEC2_AUTO_QUALITY " in line or
+                "V4_PUBLIC_FEC2_AUTO_STAGE " in line]
+            # Keep all three 2->20->1% phases in a capped, numeric-only
+            # control timeline independent of the 40-line Stop readback.
+            # Neither direction receives netem truth, keys or packet data.
+            (self.out / (role+"-auto-quality.log")).write_text(
+                "\n".join(auto_events[-160:])+"\n")
+            # Preserve the two lifecycle ownership markers even when a
+            # long Auto run produces more than 40 normal numeric readbacks.
+            handoff=[line for line in lines if
+                     "GO_RX_HANDOFF role=" in line or
+                     "GO_RX_POST_HANDOFF role=" in line or
+                     "M0_GAME_M4_RX_MULTIMSG " in line or
+                     "M0_GAME_M4_RX_LOCK_SAMPLE " in line]
+            other=[line for line in lines if "V4_PUBLIC_TIMELINE " not in line
+                   and "V4_PUBLIC_FEC2_AUTO_QUALITY " not in line
+                   and "GO_RX_HANDOFF role=" not in line
+                   and "GO_RX_POST_HANDOFF role=" not in line
+                   and "M0_GAME_M4_RX_MULTIMSG " not in line
+                   and "M0_GAME_M4_RX_LOCK_SAMPLE " not in line]
+            logs[role] = "\n".join(handoff[-4:]+other[-40:])
             (self.out / (role + "-product-markers.log")).write_text(logs[role] + "\n")
         return logs
 
@@ -254,20 +1181,276 @@ class LinuxExperiment:
             if matches:
                 applied[role] = matches[-1]
         verified = True
+        go_handoff={role:public_go_rx_handoff(log,role) for role,log in logs.items()}
+        need_go_handoff=self.config["bundles"][self.label].get("require_go_rx_handoff",False)
+        go_handoff_verified=(len(go_handoff)==2 and all(
+            v is not None and v["kernel_filtered_lanes"]==self.lanes and
+            v["go_data_full_copies_after_handoff"]<=32
+            for v in go_handoff.values())) if need_go_handoff else None
+        lock_sample={role:public_game_rx_lock_sample(log)
+                     for role,log in logs.items()}
+        need_lock_sample=self.config["bundles"][self.label].get(
+            "enable_game_rx_lock_sample",False)
+        lock_sample_verified=(len(lock_sample)==2 and all(
+            v is not None for v in lock_sample.values())
+            ) if need_lock_sample else None
+        if need_lock_sample and not lock_sample_verified:
+            verified=False
+        game_multimsg={role:public_game_rx_multimsg(log)
+                      for role,log in logs.items()}
+        need_game_multimsg=self.config["bundles"][self.label].get(
+            "require_game_rx_multimsg",False)
+        game_multimsg_verified=(len(game_multimsg)==2 and all(
+            v is not None for v in game_multimsg.values())
+            ) if need_game_multimsg else None
+        if need_game_multimsg and not game_multimsg_verified:
+            verified=False
+        if need_go_handoff and not go_handoff_verified:
+            verified=False
         if mode in ["fec-fixed", "fec-auto"]:
             verified = len(applied) == 2 and all(v[0] == ("fixed" if mode == "fec-fixed" else "auto") and v[1] == v[2]
                 and int(v[2]) > 0 and v[4] == "false" and (mode != "fec-fixed" or int(v[3]) == self.config["product"]["fec_profile"])
                 for v in applied.values())
         counters = {}
+        recovery_policy = {}
         for role, log in logs.items():
             lines = [s for s in log.splitlines() if "V4_PUBLIC_M2_OUTER " in s or "V4_PUBLIC_GAME_KERNEL " in s]
             counters[role] = {k: int(v) for k, v in re.findall(r"(\w+)=(\d+)", lines[-1])} if lines else {}
+            outer = [s for s in log.splitlines() if "V4_PUBLIC_M2_OUTER " in s]
+            if outer:
+                m = re.search(r"policy=([A-Za-z0-9_.-]+)", outer[-1])
+                if m:
+                    recovery_policy[role] = {
+                        "policy": m.group(1),
+                        **{k: int(v) for k, v in re.findall(
+                            r"(repair_attempt_limit|shadow_limit|retain_cap_us|shadow_sampling_numerator|shadow_sampling_denominator|admission_pps|repair_pps|byte_credit_pct|byte_cap_pct)=(\d+)", outer[-1])},
+                        **{k: v for k, v in re.findall(
+                            r"(loss_trigger|data_pto)=([A-Za-z0-9_-]+)", outer[-1])},
+                    }
+        rx_chain={}
+        required_rx=("raw_observed","raw_tuple","data_unique","data_lagged32",
+                     "link_completed","tun_delivered","link_pending",
+                     "link_malformed","link_discarded","tun_failed",
+                     "replay_duplicate","replay_retired","open_invalid",
+                     "feedback_retained_pages","feedback_dropped",
+                     "tun_udp","tun_tcp","tun_other")
+        for role,log in logs.items():
+            chain=[line for line in log.splitlines() if "V4_PUBLIC_RX_CHAIN " in line]
+            if chain:
+                row={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",chain[-1])}
+                if all(k in row for k in required_rx):
+                    rx_chain[role]=row
+        tx_chain={}
+        tx_fields=("tun_udp","tun_tcp","tun_other","tun_rejected",
+                   "arena_failed","staged_udp","staged_tcp")
+        for role,log in logs.items():
+            lines=[line for line in log.splitlines() if "V4_PUBLIC_TX_CHAIN " in line]
+            if lines:
+                row={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",lines[-1])}
+                if all(k in row for k in tx_fields): tx_chain[role]=row
+        m1_pool={}
+        for role,log in logs.items():
+            rows=[line for line in log.splitlines() if "V4_PUBLIC_M1_POOL " in line]
+            if rows:
+                v={k:int(n) for k,n in re.findall(r"([a-z0-9_]+)=(\d+)",rows[-1])}
+                if all(k in v for k in ("slots","peak_loaned","charged_bytes",
+                                        "normal_control_reserve")):
+                    m1_pool[role]=v
+        diag_expected=self.config["bundles"][self.label].get("diagnostic_10x")
+        diag_readback=({role:row.get("diagnostic_10x") for role,row in m1_pool.items()}
+                       if len(m1_pool)==2 else {})
+        diag_verified=(diag_expected is None or
+            (len(diag_readback)==2 and all(n==int(diag_expected) for n in diag_readback.values())))
+        if not diag_verified:
+            verified=False
+        requested_policy = self.config["bundles"][self.label].get(
+            "recovery_policy", self.config.get("policy"))
+        # Game2/Game4 use authenticated multi-lane native duplication, not
+        # the one-lane Normal/FEC M2 DATA repair ledger. They do not emit
+        # V4_PUBLIC_M2_OUTER. Never claim a v3 outer repair receipt for Game.
+        game_verified = None
+        game_fec_proof={}
+        game4_copy_readback={}
+        requested_game_copy=requested_game4_copy_schedule(self.config,self.label)
+        if self.config["product"]["mode"]=="game4":
+            for role,log in logs.items():
+                lines=[v for v in log.splitlines()
+                       if "V4_PUBLIC_GAME4_COPY_SCHEDULE " in v]
+                if len(lines)!=1:
+                    verified=False
+                    continue
+                m=re.search(r"role=(\w+) mode=(\d+) planned=([\d,]+) sent=([\d,]+) abandoned=([\d,]+) late_max_us=([\d,]+) late_mean_us=([\d,]+)",lines[0])
+                if not m or m[1]!=role:
+                    verified=False
+                    continue
+                vals=[[int(q) for q in m[i].split(",")] for i in range(3,8)]
+                if any(len(v)!=4 for v in vals):
+                    verified=False
+                    continue
+                row={"mode":int(m[2]),"planned":vals[0],"sent":vals[1],
+                     "abandoned":vals[2],"late_max_us":vals[3],
+                     "late_mean_us":vals[4]}
+                game4_copy_readback[role]=row
+                expected={"immediate":0,"stagger-4-20-60":1,"stagger-4-50-140":2}[requested_game_copy]
+                if (row["mode"]!=expected or any(
+                    row["sent"][i]>row["planned"][i] for i in range(4))):
+                    verified=False
+                if expected:
+                    # Only a declared PHYSICAL lane blackhole may abandon its
+                    # matching staggered position; the other THREE healthy
+                    # positions stay strictly gated, so W114's rotated bug
+                    # remains FAIL. This is not an outer retransmission loss.
+                    blocked={lane-1 for ph in self.config["phases"]
+                             for direction in ("c2s","s2c")
+                             for lane in ph[direction]["blackhole_lanes"]}
+                    if not all(n>0 for n in row["planned"]):
+                        verified=False
+                    for i in range(4):
+                        planned=row["planned"][i]
+                        sent=row["sent"][i]
+                        abandoned=row["abandoned"][i]
+                        if (sent+abandoned>planned or
+                            (i in blocked and
+                             (sent+abandoned)*100 < planned*98) or
+                            (i not in blocked and
+                             (sent*100 < planned*98 or
+                              abandoned*100 > planned*2))):
+                            verified=False
+        # Independent native Game policy: no Normal M2 one-lane retry
+        # ledger is claimed. Only real per-lane first sends and an OFF
+        # duplicate logical-ID prohibition establish DATA retry OFF.
+        game_outer_policy={}
+        if self.lanes > 1:
+            for role,log in logs.items():
+                rows=[v for v in log.splitlines() if "V4_PUBLIC_GAME_OUTER " in v]
+                if len(rows)==1:
+                    game_outer_policy[role]={k:int(v) for k,v in
+                        re.findall(r"([a-z_]+)=(\d+)",rows[0])}
+        if self.lanes > 1:
+            game_verified = verify_native_game_counters(self.lanes,counters,
+                self.config["traffic"])
+            policy_verified = None  # Explicitly N/A, not green for v3 repair.
+            if not game_verified:
+                verified = False
+            configured=self.config["product"].get("game_fec","off")
+            for role,log in logs.items():
+                applied=re.findall(
+                    r"V4_PUBLIC_GAME_FEC_APPLIED role=(\w+) lanes=(\d+) mode=(\w+) profile=(\d+) auth_original_tls=(\d+) original_M4=(\d+)",log)
+                observed=re.findall(r"V4_PUBLIC_GAME_FEC_COUNTERS role=(\w+) lanes=(\d+) (.+)",log)
+                if len(applied)!=1 or applied[0][0]!=role or int(applied[0][1])!=self.lanes:
+                    verified=False;continue
+                expected_mode="off" if configured=="off" else "fixed"
+                expected_profile=0 if configured=="off" else int(configured[-1])
+                if (applied[0][2]!=expected_mode or int(applied[0][3])!=expected_profile
+                    or applied[0][4:]!=("1","1")):
+                    verified=False
+                if configured!="off":
+                    if len(observed)!=1 or observed[0][0]!=role or int(observed[0][1])!=self.lanes:
+                        verified=False;continue
+                    counts={k:int(v) for k,v in re.findall(r"(\w+)=(\d+)",observed[0][2])}
+                    game_fec_proof[role]=counts
+                    sending=self.config["traffic"]["c2s_mbps" if role=="client" else "s2c_mbps"]>0
+                    if sending and (counts.get("source_offered",0)==0 or
+                                    counts.get("parity_copied",0)==0):
+                        verified=False
+                    # Reverse TCP ACK/TUN output may legitimately enter the
+                    # shared Game FEC encoder despite app offered rate=0.
+                    if (counts.get("parity_offered",0)<counts.get("parity_copied",0) or
+                        counts.get("rsent",0)>counts.get("rplanned",0)):
+                        verified=False
+        else:
+            policy_verified = verify_outer_recovery_policy(
+                requested_policy, recovery_policy)
+            if policy_verified is False:
+                verified = False
         repair = sum(v["original_frozen_retransmitted"] for v in counters.values()) if all("original_frozen_retransmitted" in v for v in counters.values()) else None
-        return {"stop_drained_both": all(("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED" if self.lanes > 1 else "V4_PUBLIC_NATIVE_STOP_DRAINED") in s for s in logs.values()),
+        requested_repair = requested_outer_repair(self.config, self.label)
+        repair_readback_verified = None
+        if requested_repair is not None and self.lanes > 1:
+            required=("repair_enabled","outer_data_retransmitted",
+                      "blocked_duplicate","first_lane_copied","parity_separate")
+            repair_readback_verified=(len(game_outer_policy)==2 and all(
+                all(k in p for k in required) and
+                p["repair_enabled"]==int(requested_repair) and
+                p["parity_separate"]==1 and
+                (p["first_lane_copied"]>0 if
+                 self.config["traffic"]["c2s_mbps" if role=="client" else "s2c_mbps"]>0
+                 else p["first_lane_copied"]>=0) and
+                (requested_repair or p["outer_data_retransmitted"]==0)
+                for role,p in game_outer_policy.items()))
+            if not repair_readback_verified:
+                verified=False
+            if repair_readback_verified and requested_repair is False:
+                # Verified initial multi-lane copies and FEC parity are
+                # NOT DATA retransmits.
+                repair=0
+        elif requested_repair is not None:
+            repair_readback_verified = len(counters) == 2 and all(
+                v.get("repair_enabled") == int(requested_repair)
+                for v in counters.values())
+            if requested_repair is False:
+                repair_readback_verified = repair_readback_verified and repair == 0 and all(
+                    v.get("candidate_first") == 0 and v.get("candidate_retry") == 0
+                    and v.get("shadow_outstanding") == 0
+                    and v.get("repair_accepted_wire_bytes") == 0
+                    and v.get("repair_uncertain_wire_bytes") == 0
+                    for v in counters.values())
+            if not repair_readback_verified:
+                verified = False
+        fec_tx = {role:public_fec_tx_snapshot(log) for role,log in logs.items()}
+        tx_available = all(v is not None for v in fec_tx.values())
+        fec_failures = {role:public_fec_failure_reasons(log) for role,log in logs.items()}
+        fec_m2 = {role:public_fec_m2_proof(log) for role,log in logs.items()}
+        fec_rx = {role:public_fec_rx_proof(log) for role,log in logs.items()}
+        fec_capacity = {role:public_fec_rx_capacity(log) for role,log in logs.items()}
+        fec_ip = {role:public_fec_rx_ip_class(log) for role,log in logs.items()}
+        fec_m1 = {role:public_fec_m1_ingress(log) for role,log in logs.items()}
+        fec_stage = {role:public_fec_m1_stage(log) for role,log in logs.items()}
+        fec_class_valid = all(fec_ip[role] is not None and fec_rx[role] is not None and
+            (sum(fec_ip[role][k] for k in ("sys_udp","rec_udp","sys_tcp","rec_tcp","other_ip")) ==
+             fec_rx[role]["systematic_tun"]+fec_rx[role]["recovered_tun"])
+            for role in logs)
+        return {"game_rx_lock_sample": lock_sample if all(
+                     v is not None for v in lock_sample.values()) else "NOT_OBSERVED",
+                 "game_rx_lock_sample_verified":lock_sample_verified,
+                 "game_rx_multimsg": game_multimsg if all(v is not None for v in game_multimsg.values()) else "NOT_OBSERVED",
+                 "game_rx_multimsg_verified":game_multimsg_verified,
+                 "go_receive_handoff": go_handoff if all(v is not None for v in go_handoff.values()) else "NOT_OBSERVED",
+                 "go_receive_handoff_verified": go_handoff_verified,
+                 "stop_drained_both": all(("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED" if self.lanes > 1 else "V4_PUBLIC_NATIVE_STOP_DRAINED") in s for s in logs.values()),
                 "effective_config_verified": verified, "fec_final_readback": applied, "counters": counters,
-                "repair_packets": repair, "repair_wire_bytes_and_10pct_budget": "NOT_OBSERVED",
+                "recovery_policy_readback": recovery_policy,
+                "outer_repair_requested": requested_repair if requested_repair is not None else "NOT_DECLARED",
+                "outer_repair_native_verified": repair_readback_verified,
+                "original_rx_chain": rx_chain if len(rx_chain)==2 else "NOT_OBSERVED",
+                "original_tx_chain": tx_chain if len(tx_chain)==2 else "NOT_OBSERVED",
+                "original_m1_pool": m1_pool if len(m1_pool)==2 else "NOT_OBSERVED",
+                "diagnostic_10x_expected":diag_expected,
+                "diagnostic_10x_readback":diag_readback,
+                "diagnostic_10x_verified":diag_verified,
+                "recovery_policy_verified": policy_verified,
+                "recovery_policy_applicability": ("NOT_APPLICABLE_GAME_MULTILANE"
+                    if self.lanes > 1 else "REQUIRED_SINGLE_LANE"),
+                "game_native_counters_verified": game_verified,
+                "game_outer_policy":game_outer_policy if game_outer_policy else "NOT_OBSERVED",
+                "game_fec_native_proof": game_fec_proof if game_fec_proof else "NOT_APPLICABLE_OR_NOT_OBSERVED",
+                "game4_copy_schedule_requested":requested_game_copy,
+                "game4_copy_schedule_readback":game4_copy_readback if game4_copy_readback else "NOT_APPLICABLE_OR_NOT_OBSERVED",
+                "recovery_policy_expected": requested_policy or "NOT_DECLARED",
+                "repair_packets": repair,
+                "original_m2_authenticated_coverage": fec_m2 if all(v is not None for v in fec_m2.values()) else "NOT_OBSERVED",
+                "original_fec_rx_m3_m4_proof": fec_rx if all(v is not None for v in fec_rx.values()) else "NOT_OBSERVED",
+                "original_fec_rx_capacity": fec_capacity if all(v is not None for v in fec_capacity.values()) else "NOT_OBSERVED",
+                "original_fec_rx_ipv4_classes": fec_ip if fec_class_valid else "NOT_OBSERVED",
+                "original_fec_m1_tun_ingress": fec_m1 if all(v is not None for v in fec_m1.values()) else "NOT_OBSERVED",
+                "original_fec_m1_postloan_stage": fec_stage if all(v is not None for v in fec_stage.values()) else "NOT_OBSERVED",
+                "repair_wire_bytes_and_10pct_budget": "NOT_OBSERVED",
                 "repair_useful_spurious_and_latency": "NOT_OBSERVED",
-                "FEC_k_r_parity_queue_decode": "NOT_OBSERVED",
+                "FEC_k_r_parity_queue_decode": {
+                    "real_tx_owner_end_snapshot": fec_tx,
+                    "real_tx_fail_reasons": fec_failures,
+                    "real_rx_decode_and_parity_age": "NOT_OBSERVED"
+                } if tx_available else "NOT_OBSERVED",
                 "owner_queue_age_lock_wait_raw_socket_drops": "NOT_EXPOSED_BY_CURRENT_PUBLIC_CLI",
                 "auto_runtime_curve": "NOT_OBSERVED_FINAL_READBACK_ONLY"}
 
@@ -279,14 +1462,21 @@ class LinuxExperiment:
             self.setup()
             self.configure({**self.config["phases"][0], "name": "warmup"}, 0, True)
             config_path = self.private / "effective-request.json"
-            dump(config_path, self.config)
+            traffic_config=copy.deepcopy(self.config)
+            warm_scale=self.config["network"].get("warmup_rate_scale_profiles",{}).get(self.label,1)
+            traffic_config["traffic"]["warmup_rate_scale"]=warm_scale
+            self.effective["test_only_warmup_rate_scale"]=warm_scale
+            dump(self.out/"effective-config.json",self.effective)
+            dump(config_path, traffic_config)
             start_ns = time.monotonic_ns() + 20_000_000_000
             for role in ["server", "client"]:
                 peer = "server" if role == "client" else "client"
                 self.workers[role] = self.spawn(role, [sys.executable, str(TRAFFIC), "--config", str(config_path),
                     "--role", role, "--local", self.inner[role], "--peer", self.inner[peer],
                     "--output", str(self.out / (role + "-traffic.json")), "--start-ns", str(start_ns)], role + "-traffic.log")
-            self.monitor = Monitor({**self.products, **{r + "-injector": p for r, p in self.workers.items()}}, self.out)
+            self.monitor = Monitor({**self.products, **{r + "-injector": p for r, p in self.workers.items()}},
+                                   self.out, self.ns,
+                                   fec_irq_diag=self.config.get("owner")=="fec-network-work")
             self.monitor.thread.start()
             deadline = time.monotonic() + 18
             while time.monotonic() < deadline:
@@ -297,17 +1487,73 @@ class LinuxExperiment:
                 time.sleep(.1)
             else:
                 raise RuntimeError("traffic worker not ready before scheduled start")
-            self.wait_until(start_ns)
+            if self.config["network"].get("startup_tun_drop_timeline",False):
+                ready=self.private/"client-tun-startup.ready"
+                self.samplers["client"]=self.spawn("client",[
+                    sys.executable,str(TUN_STARTUP_SAMPLER),
+                    "--start-ns",str(start_ns),
+                    "--warmup-s",str(self.config["warmup_s"]),
+                    "--output",str(self.out/"client-tun-startup-samples.json"),
+                    "--ready",str(ready)],"client-tun-startup.log")
+                deadline=time.monotonic()+4
+                while not ready.exists() and time.monotonic()<deadline:
+                    if self.samplers["client"].poll() is not None:
+                        raise RuntimeError("startup TUN observer failed before traffic")
+                    time.sleep(.02)
+                if not ready.exists():
+                    raise RuntimeError("startup TUN observer not ready before traffic")
+            # Kernel startup loss must be counted BEFORE ANY app packet.
+            # Sampling after the scheduled traffic start silently censors
+            # precisely the first 100ms of TUN ring burst loss. Only use a
+            # pre-start snapshot whose actual END precedes the sender epoch.
             self.snapshot("warmup-start")
+            if self.config["network"].get("fec_egress_diagnostic",False):
+                self.egress_stop.clear()
+                self.egress_thread=threading.Thread(
+                    target=self.egress_sampling_loop,
+                    name="owned-fec-egress-numeric-500ms",daemon=True)
+                self.egress_thread.start()
+            if self.snapshots[-1]["end_ns"]>=start_ns:
+                raise RuntimeError("startup TUN counters sampled after traffic epoch")
+            self.wait_until(start_ns)
             boundary = start_ns + int(self.config["warmup_s"] * 1e9)
             for i, phase in enumerate(self.config["phases"], 1):
                 self.wait_until(boundary)
-                self.snapshot("before-" + phase["name"])
+                # Apply the new qdisc condition BEFORE slow 100ms+ sampling.
+                # Snapshot-first moves old impairment ~120ms into a declared
+                # 0%-recovered traffic cohort and falsely attributes boundary
+                # losses to the product. Timestamp actual begin/end separately.
                 self.configure(phase, i)
+                self.set_product_cpu_stress(phase)
                 self.config_events[-1]["scheduled_start_ns"] = boundary
+                self.snapshot("before-" + phase["name"])
+                if phase.get("wall_blackouts_ms"):
+                    self.wall_blackout_thread=threading.Thread(
+                        target=self.run_wall_blackouts,args=(phase,boundary),
+                        name="scoped-game4-wall-clock-blackhole",daemon=True)
+                    self.wall_blackout_thread.start()
                 boundary += int(phase["seconds"] * 1e9)
+                if self.wall_blackout_thread is not None:
+                    self.wait_until(boundary)
+                    self.wall_blackout_thread.join(timeout=4)
+                    if self.wall_blackout_thread.is_alive():
+                        raise RuntimeError("wall-clock blackhole worker did not terminate")
+                    self.wall_blackout_thread=None
+                    if self.wall_blackout_failure:
+                        raise RuntimeError("wall-clock blackhole failure: "+
+                                           self.wall_blackout_failure)
             self.wait_until(boundary)
             self.snapshot("measurement-end")
+            if self.egress_thread is not None:
+                self.egress_stop.set()
+                self.egress_thread.join(timeout=3)
+                dump(self.out/"egress-trace.json",{
+                    "interval_hint_ms":500,"diagnostic_only":True,
+                    "no_packet_capture":True,"samples":self.egress_trace})
+            for role,p in self.samplers.items():
+                p.wait(timeout=8)
+                if p.returncode:
+                    raise RuntimeError("numeric TUN startup observer failed: "+role)
             for p in self.workers.values():
                 p.wait(timeout=self.config["drain_s"] + 10)
                 if p.returncode:
@@ -324,9 +1570,164 @@ class LinuxExperiment:
             result = summarize(self.config, json.loads((self.out / "client-traffic.json").read_text()),
                                json.loads((self.out / "server-traffic.json").read_text()), self.telemetry(), host)
             result["network_accounting"] = network_accounting(self.snapshots)
+            if self.wall_blackout_events:
+                result["wall_blackout_events"]=self.wall_blackout_events
+                timing_issues=[]
+                for pulse in self.wall_blackout_events:
+                    on=pulse["start"];off=pulse["end"]
+                    if on is None or off is None:
+                        timing_issues.append("missing blackout timing");continue
+                    for role in ("client","server"):
+                        on_end=on[role]["end_ns"]
+                        off_end=off[role]["end_ns"]
+                        target_end=pulse["target_on_ns"]+round(pulse["duration_ms"]*1e6)
+                        # User explicitly asked real wall-clock duration, not
+                        # rule-command BEGIN=kernel effect. Bound uncertainty.
+                        if (abs(on_end-pulse["target_on_ns"])>15_000_000 or
+                            abs(off_end-target_end)>15_000_000 or
+                            on[role]["uncertainty_ms"]>15 or
+                            off[role]["uncertainty_ms"]>15):
+                            timing_issues.append(role+": unqualified wall-clock command skew")
+                if timing_issues:
+                    result["limits"].extend(timing_issues)
+                    if result["result"]!="FAIL":result["result"]="INCONCLUSIVE"
+            if self.config["network"].get("fec_egress_diagnostic",False):
+                result["fec_egress_trace"]={
+                    "filename":"egress-trace.json","samples":len(self.egress_trace),
+                    "diagnostic_sampling_only":True,
+                    "missing_role_samples":{
+                        role:sum(1 for row in self.egress_trace
+                            if row["roles"].get(role,{}).get("status"))
+                        for role in ("client","server")},
+                    "native_timeline_lines":{
+                        role:sum("V4_PUBLIC_FEC2_EGRESS_DIAG role="+role in ln
+                            for ln in read(self.private/(role+".log")).splitlines())
+                        for role in ("client","server")}}
+            if self.config["acceptance"].get("require_zero_tun_root_qdisc_drops_full_run",False):
+                qdrops={}
+                for role in self.ns:
+                    samples=[]
+                    for snapshot in self.snapshots:
+                        roots=[q for q in snapshot.get("network",{}).get(role,{}).get("tun_qdisc",[])
+                               if q.get("root") and q.get("kind")=="fq"]
+                        samples.append(roots[0].get("drops") if len(roots)==1 else None)
+                    qdrops[role]=samples
+                result["source_tun_fq_root_qdisc_drops_full_run"]=qdrops
+                if any(not samples or any(type(n) is not int or n != 0
+                                           for n in samples)
+                       for samples in qdrops.values()):
+                    result["failures"].append("SOURCE_TUN_FQ_ROOT_QDISC_DROP_OR_MISSING_REQUIRED")
+                    result["result"]="FAIL"
+            if self.config["network"].get("startup_tun_drop_timeline",False):
+                sample_file=self.out/"client-tun-startup-samples.json"
+                samples=json.loads(sample_file.read_text())["samples"]
+                if not samples:
+                    raise RuntimeError("numeric startup TUN timeline not observed")
+                first=samples[0]["tx_dropped"]
+                delta=max(0,samples[-1]["tx_dropped"]-first)
+                first_increase=next((v["from_start_ms"] for v in samples
+                                     if v["tx_dropped"]>first),None)
+                result["source_tun_startup_timeline"]={
+                    "scope":"TEST_ONLY_OWNED_SOURCE_TUN_NUMERIC_KERNEL_COUNTS",
+                    "samples":len(samples),"sample_first_ms":samples[0]["from_start_ms"],
+                    "first_drop_increase_ms":first_increase,"warmup_drop_delta":delta,
+                    "client_only":True,
+                    "raw_file":"client-tun-startup-samples.json"}
+            warmup_start=next((p for p in self.snapshots if p["name"]=="warmup-start"),None)
+            steady_start=next((p for p in self.snapshots if
+                p["name"]=="before-"+self.config["phases"][0]["name"]),None)
+            steady_end=next((p for p in self.snapshots if
+                p["name"]=="measurement-end"),None)
+            if warmup_start is not None and steady_start is not None:
+                warmup_drops=source_tun_tx_drops_by_role(warmup_start,steady_start)
+                result["source_tun_tx_drops_warmup"]=warmup_drops
+                if any(isinstance(n,int) and n>0 for n in warmup_drops.values()):
+                    result["warnings"].append("SOURCE_TUN_WARMUP_DROPS_NOT_FULL_ZEROLOSS")
+            if self.config["acceptance"].get("require_zero_source_tun_drops_full_run",False):
+                parts=(result.get("source_tun_tx_drops_warmup"),)
+                for section in parts:
+                    if section is None or any(type(v) is not int or v!=0 for v in section.values()):
+                        result["failures"].append("SOURCE_TUN_WARMUP_ZERO_DROP_REQUIRED")
+                        result["result"]="FAIL"
+                        break
+            if steady_start is not None and steady_end is not None:
+                drops=source_tun_tx_drops_by_role(steady_start,steady_end)
+                result["source_tun_tx_drops_steady"]=drops
+                if self.config["acceptance"].get("require_zero_source_tun_drops_full_run",False):
+                    if any(type(v) is not int or v!=0 for v in drops.values()):
+                        result["failures"].append("SOURCE_TUN_STEADY_ZERO_DROP_REQUIRED")
+                        result["result"]="FAIL"
+                if any(isinstance(n,int) and n>0 for n in drops.values()):
+                    result["limits"].append("SOURCE_TUN_TX_DROPS: kernel upstream loss before product")
+                    if result["result"]=="PASS_SCOPED_OBSERVATION":
+                        result["result"]="INCONCLUSIVE"
+            # Authentic public counters include post-M4 accepted first/repair
+            # *IP bytes*, not just packets. V3 cost gates are explicitly scoped:
+            # both numerator and full offered-capacity horizon include warmup
+            # plus the declared phases; no inferred steady-only R/C is claimed.
+            policy=self.config["bundles"][self.label].get(
+                "recovery_policy",self.config.get("policy"))
+            if policy=="outer-opportunistic-v3" and self.lanes>1:
+                # The Game wire format has no per-direction v3 DATA repair
+                # byte ledger. A Game lane-copy counter is not R/F or R/C.
+                result["v3_repair_accounting"]={
+                    d:{"status":"NOT_APPLICABLE_GAME_MULTI_LANE"} for d in ("c2s","s2c")}
+            if policy=="outer-opportunistic-v3" and self.lanes==1:
+                v3={}
+                horizon=[{"seconds":self.config["warmup_s"],
+                          "c2s":self.config["phases"][0]["c2s"],
+                          "s2c":self.config["phases"][0]["s2c"]},
+                         *self.config["phases"]]
+                for role,direction in (("client","c2s"),("server","s2c")):
+                    counters=result["telemetry"].get("counters",{}).get(role,{})
+                    fbytes=counters.get("first_wire_bytes")
+                    accepted=counters.get("repair_accepted_wire_bytes")
+                    uncertain=counters.get("repair_uncertain_wire_bytes")
+                    capacities=[p[direction]["rate_mbps"] for p in horizon]
+                    capacity=(sum(cap*1e6*p["seconds"]/8 for p,cap in
+                                  zip(horizon,capacities))
+                              if all(cap>0 for cap in capacities) else None)
+                    if not (isinstance(fbytes,int) and isinstance(accepted,int)
+                            and isinstance(uncertain,int) and fbytes>0):
+                        v3[direction]={"status":"NOT_OBSERVED"}
+                        result["limits"].append("V3_AUTHENTIC_BYTE_LEDGER_NOT_OBSERVED_"+direction)
+                        continue
+                    charged=accepted+uncertain
+                    over_f=100*charged/fbytes
+                    over_c=(100*charged/capacity if capacity else None)
+                    v3[direction]={"status":"OBSERVED_FULL_WARMUP_PLUS_PHASES",
+                        "first_wire_bytes":fbytes,"accepted_repair_wire_bytes":accepted,
+                        "uncertain_repair_wire_bytes":uncertain,
+                        "conservative_charged_wire_bytes":charged,
+                        "repair_over_fresh_pct":over_f,"declared_line_capacity_bytes":capacity,
+                        "repair_over_line_pct":over_c,"horizon_seconds":sum(p["seconds"] for p in horizon)}
+                    if over_f>self.config["acceptance"].get("max_repair_fresh_pct",10)+1e-9:
+                        # The normal percentage applies only in sustained load,
+                        # not the product's explicit 32KiB/s sparse exception.
+                        if fbytes>=327680*sum(p["seconds"] for p in horizon):
+                            result["failures"].append("V3_REPAIR_OVER_10PCT_"+direction)
+                    if "min_repair_line_pct" in self.config["acceptance"]:
+                        if over_c is None:
+                            result["limits"].append("V3_LINE_CAPACITY_NOT_OBSERVED_"+direction)
+                        elif over_c+1e-9<self.config["acceptance"]["min_repair_line_pct"]:
+                            result["failures"].append("V3_REPAIR_LINE_BELOW_MIN_"+direction)
+                result["v3_repair_accounting"]=v3
+                if result["failures"]:
+                    result["result"]="FAIL"
+                elif result["limits"] and result["result"]=="PASS_SCOPED_OBSERVATION":
+                    result["result"]="INCONCLUSIVE"
+            result["tcp_window_profile"]=self.tcp_profile
+            result["tcp_reordering_profile"]=self.tcp_reorder_profile
+            result["socket_effective_buffers"]={
+                role:json.loads((self.out/(role+"-traffic.json")).read_text()).get("effective_buffers",{})
+                for role in ("client","server")}
+            before=[v for v in self.snapshots if v["name"]=="before-"+self.config["phases"][0]["name"]]
+            result["tcp_kernel_settings"]=before[0].get("tcp_kernel_settings","NOT_OBSERVED") if before else "NOT_OBSERVED"
             # Source cohort includes late packets; CPU/wire window excludes warmup/drain.
             begin = next(s for s in self.snapshots if s["name"] == "before-" + self.config["phases"][0]["name"])
             end = next(s for s in self.snapshots if s["name"] == "measurement-end")
+            result["test_only_product_cpu_stress"]=self.cpu_stress_events
+            result["measurement_seconds"] = sum(p["seconds"] for p in self.config["phases"])
             result["measurement_cost"] = {}
             for role, direction in [("client", "s2c"), ("server", "c2s")]:
                 cpu = end["processes"][role]["cpu_s"] - begin["processes"][role]["cpu_s"]
@@ -350,7 +1751,12 @@ class LinuxExperiment:
         except Unsupported as e:
             result = {"result": "UNSUPPORTED", "reason": str(e)}
         except Exception as e:
-            result = {"result": "FAIL", "reason": str(e), "failures": [str(e)]}
+            diagnostics = {role: {**startup_diagnostic(read(self.private / (role + ".log"))),
+                                  "exit_before_cleanup": p.poll(),
+                                  "tun_present": bool(self.nscommand(role, ["ip", "link", "show", "wbntun0"], False))}
+                           for role, p in self.products.items()}
+            result = {"result": "FAIL", "reason": str(e), "failures": [str(e)],
+                      "safe_startup_diagnostics": diagnostics}
         finally:
             if self.monitor:
                 host = self.monitor.finish()
@@ -362,6 +1768,8 @@ class LinuxExperiment:
                     (self.out / (role + "-traffic.log")).write_text(text[-12000:])
             dump(self.out / "network-snapshots.json", self.snapshots)
             dump(self.out / "impairment-events.json", self.config_events)
+            if self.wall_blackout_events:
+                dump(self.out / "wall-blackout-events.json",self.wall_blackout_events)
             result.update(label=self.label, monotonic_start_ns=started, monotonic_end_ns=time.monotonic_ns(),
                           host=host, source=self.config["bundles"][self.label]["source"],
                           request_id=self.config["id"], cleanup=self.cleanup_result)
@@ -374,10 +1782,11 @@ class LinuxExperiment:
         return result
 
     def cleanup(self):
-        for p in [*self.workers.values(), *self.products.values()]:
+        self.stop_product_cpu_stress()
+        for p in [*self.workers.values(), *self.samplers.values(), *self.products.values()]:
             if p.poll() is None:
                 p.terminate()
-        for p in [*self.workers.values(), *self.products.values()]:
+        for p in [*self.workers.values(), *self.samplers.values(), *self.products.values()]:
             try:
                 p.wait(timeout=3)
             except subprocess.TimeoutExpired:
@@ -389,6 +1798,119 @@ class LinuxExperiment:
         self.cleanup_result = {"owned_namespaces_absent": all(ns not in present for ns in self.created)}
         for f in self.handles:
             f.close()
+
+
+def source_tun_tx_drops_by_role(before,after):
+    """Exact steady kernel source TUN TX loss, before product can read it."""
+    result={}
+    for role in ("client","server"):
+        def count(snapshot):
+            links=snapshot.get("network",{}).get(role,{}).get("links",[])
+            dev=next((p for p in links if p.get("ifname")=="wbntun0"),None)
+            if not dev: return None
+            stats=dev.get("stats64",dev.get("stats",{}))
+            return stats.get("tx",{}).get("dropped")
+        x,y=count(before),count(after)
+        result[role]=y-x if isinstance(x,int) and isinstance(y,int) and y>=x else "NOT_OBSERVED"
+    return result
+
+
+def capacity_action_digest(leg):
+    """Small source-bounded numeric evidence in the Actions log, in addition
+    to the ordinary artifact. No packet payloads, addresses or credentials.
+    The log must distinguish host, injector and product capacity even when
+    a result is INCONCLUSIVE and artifact retrieval is unavailable.
+    """
+    host = leg.get("host", {})
+    proc = host.get("processes", {})
+    costs = leg.get("measurement_cost", {})
+    telemetry = leg.get("telemetry", {})
+    rows = []
+    for row in leg.get("observed", []):
+        rows.append({
+            "direction": row.get("direction"), "protocol": row.get("protocol"),
+            "phase": row.get("phase"),
+            "target_mbps": row.get("target_app_mbps"),
+            "injected_mbps": row.get("injected_app_mbps"),
+            "delivered_mbps": row.get("cohort_delivered_app_mbps"),
+            "missing": row.get("missing_after_drain"),
+            "arrival_p99_ms": row.get("first_arrival_ms", {}).get("p99_ms"),
+            "send_lag_p99_ms": row.get("send_lag_ms", {}).get("p99_ms"),
+            "tcp_backpressure": row.get("tcp_backpressure_slots"),
+            "app_send_errors": row.get("send_errors"),
+        })
+    netem = []
+    for item in leg.get("network_accounting", []):
+        for q in item.get("netem", []):
+            netem.append({"role": item.get("role"),
+                "phase": item.get("phase"), "netem_drop_pct": q.get("approx_loss_pct"),
+                "backlog_packets": q.get("end_qlen"),
+                "backlog_bytes": q.get("end_backlog_bytes"),
+                "kernel_delta": item.get("kernel_delta", {})})
+    return {
+        "label": leg.get("label"), "result": leg.get("result"),
+        "limits": leg.get("limits", [])[:16],
+        "failures": leg.get("failures", [])[:16],
+        "warnings": leg.get("warnings", [])[:8],
+        "stop_heavier_resource_cases": leg.get("stop_heavier_resource_cases"),
+        "observed": rows, "netem": netem,
+        "measurement_seconds":leg.get("measurement_seconds","NOT_OBSERVED"),
+        "measurement_cpu": {
+            role: {"cpu_s": costs.get(role, {}).get("cpu_s"),
+                   "cpu_s_per_delivered_GiB":
+                        costs.get(role, {}).get("cpu_s_per_delivered_GiB"),
+                   "outer_tx_bytes":
+                        costs.get(role, {}).get("outer_interface_tx_bytes"),
+                   # Exact measured netem-veth interface egress counter.
+                   # The complete byte number already includes all record
+                   # kinds and any retransmission: NEVER add them again.
+                   "outer_tx_mbps": (
+                       costs[role]["outer_interface_tx_bytes"]*8 /
+                       (leg["measurement_seconds"]*1e6)
+                       if isinstance(leg.get("measurement_seconds"),(int,float))
+                       and leg["measurement_seconds"]>0
+                       and isinstance(costs.get(role,{}).get("outer_interface_tx_bytes"),int)
+                       else None)}
+            for role in ("client", "server")},
+        "source_tun_tx_drops_steady":leg.get("source_tun_tx_drops_steady","NOT_OBSERVED"),
+        "source_tun_tx_drops_warmup":leg.get("source_tun_tx_drops_warmup","NOT_OBSERVED"),
+        "tcp_window_profile":leg.get("tcp_window_profile","NOT_OBSERVED"),
+        "tcp_reordering_profile":leg.get("tcp_reordering_profile","NOT_OBSERVED"),
+        "socket_effective_buffers":leg.get("socket_effective_buffers","NOT_OBSERVED"),
+        "tcp_kernel_settings":leg.get("tcp_kernel_settings","NOT_OBSERVED"),
+        "host": {"tcp_window_summary":host.get("tcp_window_summary","NOT_OBSERVED"),
+                 "cpu_psi_peak": host.get("cpu_psi_some_peak"),
+                 "cpu_psi_over20_fraction": host.get("cpu_psi_over20_fraction"),
+                 "steal_pct_peak": host.get("steal_pct_peak"),
+                 "processes": {
+                     name: {"cpu_s_including_setup":
+                                proc.get(name, {}).get("cpu_s_observed_including_warmup_setup_drain"),
+                            "peak_rss_bytes": proc.get(name, {}).get("rss_peak_bytes")}
+                     for name in ("client", "server", "client-injector", "server-injector")}},
+        "original_tx_chain": telemetry.get("original_tx_chain", "NOT_OBSERVED"),
+        "original_m1_pool": telemetry.get("original_m1_pool", "NOT_OBSERVED"),
+        "original_rx_chain": telemetry.get("original_rx_chain", "NOT_OBSERVED"),
+        "original_fec_rx_capacity": telemetry.get("original_fec_rx_capacity", "NOT_OBSERVED"),
+        "original_fec_rx_m3_m4_proof": telemetry.get("original_fec_rx_m3_m4_proof", "NOT_OBSERVED"),
+        "repair_packets": telemetry.get("repair_packets"),
+        "v3_repair_accounting": leg.get("v3_repair_accounting","NOT_OBSERVED"),
+        # Separate 45s authenticated original first-send/repair ledger from
+        # 30s interface accounting. Parity rows are fresh and already
+        # included in the real egress byte counter.
+        "original_fec_tx": (
+            telemetry["FEC_k_r_parity_queue_decode"].get(
+                "real_tx_owner_end_snapshot","NOT_OBSERVED")
+            if isinstance(telemetry.get("FEC_k_r_parity_queue_decode"),dict)
+            else "NOT_OBSERVED"),
+        "original_fec_tx_failure_reasons": (
+            telemetry["FEC_k_r_parity_queue_decode"].get(
+                "real_tx_fail_reasons","NOT_OBSERVED")
+            if isinstance(telemetry.get("FEC_k_r_parity_queue_decode"),dict)
+            else "NOT_OBSERVED"),
+        "stop_drained_both": telemetry.get("stop_drained_both"),
+        "policy_verified": telemetry.get("recovery_policy_verified"),
+        "owned_cleanup": leg.get("cleanup", {}).get("owned_namespaces_absent"),
+    }
 
 
 def host_identity():
@@ -417,6 +1939,7 @@ def main():
     if os.environ.get("GITHUB_ACTIONS") != "true" or platform.system() != "Linux":
         raise RuntimeError("execution validation is GitHub Actions Linux only")
     if a.command == "prepare":
+        dump(directory / "capacity-envelope.json", request_envelope(config))
         for label, bundle in config["bundles"].items():
             receipt = fetch(bundle, directory / ("bundle-" + label))
             dump(directory / ("bundle-" + label + "-receipt.json"), receipt)
@@ -436,6 +1959,11 @@ def main():
         results.append(LinuxExperiment(config, directory / ("bundle-" + label), directory / label, label).run())
         if not results[-1]["cleanup"]["owned_namespaces_absent"]:
             break  # never contaminate the second measurement
+    # The bounded digest survives in the job log when an artifact retrieval
+    # backend fails; do not make a different Action just to fetch raw results.
+    for leg in results:
+        print("NETWORK_CAPACITY_LEG " +
+              json.dumps(capacity_action_digest(leg), sort_keys=True), flush=True)
     statuses = [r["result"] for r in results]
     status = "PASS_SCOPED_OBSERVATION" if all(s == "PASS_SCOPED_OBSERVATION" for s in statuses) else (
         "FAIL" if "FAIL" in statuses else "INCONCLUSIVE")

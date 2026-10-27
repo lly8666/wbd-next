@@ -1,0 +1,336 @@
+{
+  "schema": "FEC_W159_W163_REAL_JUMBO_GAME4_LONG_LOSS_20261026_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "owner": "fec-network-work",
+  "user_requirements": {
+    "large_udp_tcp": "Simple end-to-end actual UDP/TCP large payload delivery; no loss-percentage acceptance gate",
+    "game4": "Actual bidirectional Game4 4-lane application residual STRICTLY below 0.1% for representative long-loss cases",
+    "outer_data_repair": "OFF actual native both endpoints; still send authentic FEC parity and receipt/feedback",
+    "tuning": "If old Game4 stagger cannot meet 0.1%, increase lane3 and lane4 spacing, adjust bounded schedule, retain old default"
+  },
+  "source_baseline": {
+    "source": "8ae002d0b6892664b9d34b415ab3dfeb8186d8ad",
+    "native_build_run": 40317413835,
+    "artifact_id": 12647711084,
+    "artifact_sha256": "05de4ff845bb5d4de3bef112183cfcbd48f68d04343385beca96e6824146ee47",
+    "game4_offsets_ms": [
+      0,
+      4,
+      20,
+      60
+    ]
+  },
+  "source_optin_wide": {
+    "source": "8f85e0ba495070c925504452d3848aa90a5d2c20",
+    "native_build_action": 40324330469,
+    "artifact_id": 12650034658,
+    "artifact_sha256": "3f3c867d8a3ca26f56cc0c14ffd94d1a14f6fd1365b0b25d0a9cf0eff610955c",
+    "arm64_build": "SUCCESS: original Go TLS client/server Rust native and Game4 offset/delivery/Stop FEC regression",
+    "harness_contract_action": 40324330432,
+    "harness_contract_result": "SUCCESS",
+    "maximum_row_contract_action": 40324330428,
+    "maximum_row_contract_result": "SUCCESS",
+    "new_optin_cli_and_harness": "--game4-copy-schedule=stagger-4-50-140",
+    "readback_mode": 2,
+    "offsets_ms": [
+      0,
+      4,
+      50,
+      140
+    ],
+    "original_default_preserved": "stagger-4-20-60",
+    "original_explicit_rollback": "immediate",
+    "affected": "Game4 only; Game2 and Normal remain unchanged; no DATA retry or FEC math/crypto rewrite",
+    "bounded_capacity": {
+      "logical_job_slots": 4096,
+      "logical_bytes_cap": 8388608,
+      "lane_slots_per_lane": 4096,
+      "lane_bytes_cap_each": 8388608,
+      "physical_source_arena_bytes_upper_bound": 16777216,
+      "note": "Reuse existing bounded 4-lane arena and due-relative <=5ms post-due expiry; T0+140ms increases retained work; no per-packet timer; headroom demonstrated only at 1Mbps each way. Existing Game4 25Mbps PSI host pressure still stops higher-load tests."
+    }
+  },
+  "cases": [
+    {
+      "id": "W159",
+      "status": "ACTION_FAILURE_TEST_ONLY_MISSING_SMALL_COHORT_BUT_REAL_JUMBO_ALL_DELIVERED",
+      "request": "tests/network/fec-work/W159-Normal-fixed6-UDP-TCP-1370-60K-2Mbps-ARM64.json",
+      "action": 40321814718,
+      "artifact_id": 12649347040,
+      "artifact_sha256": "bd5d7193c7c0f92cf719a61700e23632512265e812fa1d7d77a2d816bc1060a0",
+      "source": "8ae002d0b6892664b9d34b415ab3dfeb8186d8ad",
+      "traffic": "Normal fixed6 outerDATA off, 1370B/4096B/16384B/60000B real application frames in true UDP fragmented datagrams and TCP framed streams, 2Mbps/dir, 75ms one-way, clean25s",
+      "c2s": {
+        "udp": [
+          311,
+          311
+        ],
+        "tcp": [
+          204,
+          204
+        ]
+      },
+      "s2c": {
+        "udp": [
+          311,
+          311
+        ],
+        "tcp": [
+          204,
+          204
+        ]
+      },
+      "outer_data_retrans": 0,
+      "source_tun_drops": 0,
+      "tcp_backpressure": 0,
+      "app_send_errors": 0,
+      "stop_clean": true,
+      "action_failure_explanation": "Inapplicable small <=256B UDP cohort required only because observe_size_classes=true, but configured size list contains no such packets. BOTH real large-protocol payload cohorts conserved exactly. Original failed Action retained; not relabeled PASS.",
+      "host_psi_peak_pct": 43,
+      "host_contention_stop": true
+    },
+    {
+      "id": "W159R",
+      "status": "SUCCESS_PASS_SCOPED_REAL_JUMBO_DELIVERY",
+      "request": "tests/network/fec-work/W159R-Normal-fixed6-UDP-TCP-1370-60K-1Mbps-only-large-ARM64.json",
+      "action": 40325360992,
+      "artifact_id": 12651007310,
+      "artifact_sha256": "775c2a4ba3d487bcd8fe6db555131c4f651b6bf4f3da3308e26c576268e81eab",
+      "source": "8ae002d0b6892664b9d34b415ab3dfeb8186d8ad",
+      "traffic": "Same genuine large UDP/TCP payloads and fragmentation option, 1Mbps/dir, no inapplicable size-class small cohort gate",
+      "injected_delivered_missing_c2s_s2c": "All UDP and all TCP offered/delivered; zero missing both directions; no TCP backpressure or app send errors",
+      "rate_udp_tcp_mbps_each": [
+        0.59648896,
+        0.38557952
+      ],
+      "outer_data_retrans": 0,
+      "source_tun_drops": 0,
+      "stop_clean": true,
+      "host_psi_peak_pct": 0
+    },
+    {
+      "id": "W160",
+      "status": "SUCCESS_PASS_SCOPED_0P1_GAME4_GE",
+      "request": "tests/network/fec-work/W160-Game4-fixed6-sharedGE15Long-1Mbps-strict0p1-P2-ARM64.json",
+      "action": 40321822324,
+      "artifact_id": 12649836109,
+      "artifact_sha256": "584bdf5e36631cc11ba4c03cb501b986569123ee806a8941e7b010b703f0810a",
+      "source": "8ae002d0b6892664b9d34b415ab3dfeb8186d8ad",
+      "offsets_ms": [
+        0,
+        4,
+        20,
+        60
+      ],
+      "scenario": "45s shared root packet-driven GE [3,17,100,0], 1Mbps each way, UDP96% TCP4%, actual carrier 14.8795/14.9003% loss",
+      "injured_udp_c2s": [
+        8280,
+        8280
+      ],
+      "injured_udp_s2c": [
+        8280,
+        8280
+      ],
+      "injured_tcp_c2s": [
+        322,
+        322
+      ],
+      "injured_tcp_s2c": [
+        322,
+        322
+      ],
+      "app_udp_loss_pct_both": [
+        0,
+        0
+      ],
+      "outer_data_retrans": 0,
+      "parity_planned_sent_both": [
+        32907,
+        32916
+      ],
+      "stop_clean": true,
+      "host_psi_peak_pct": 0
+    },
+    {
+      "id": "W161",
+      "status": "PRE_PRODUCT_UNSUPPORTED_NOT_A_NETWORK_FAILURE",
+      "request": "tests/network/fec-work/W161-Game4-fixed6-shared-100ms-blackout-1Mbps-strict0p1-P2-ARM64.json",
+      "action": 40322366557,
+      "artifact_id": 12650130481,
+      "artifact_sha256": "ea66c4fb5827f1e5c418161e47cf0a747e0246796cd9182fa28c290b1de407cd",
+      "reason": "Historical fixture restricted wall clock blackouts to Game4 FEC OFF; fixed6 request rejected in prepare. Corrected only owned harness gate and unit regression at source3702f802, Action40322747922 success."
+    },
+    {
+      "id": "W161R",
+      "status": "REAL_STRICT_0P1_FAIL_OLD_GAME4_OFFSETS",
+      "request": "tests/network/fec-work/W161R-Game4-fixed6-shared-100ms-blackout-1Mbps-strict0p1-P2-ARM64.json",
+      "action": 40322777858,
+      "artifact_id": 12650356303,
+      "artifact_sha256": "6afd988107d00aeb8c476d27a86978de0094f1e8a57dc1ea5483904b38603d5c",
+      "source": "8ae002d0b6892664b9d34b415ab3dfeb8186d8ad",
+      "offsets_ms": [
+        0,
+        4,
+        20,
+        60
+      ],
+      "blackout_actual_duration_ms_client": [
+        105.208,
+        106.174,
+        105.131
+      ],
+      "injured_udp_c2s": [
+        5888,
+        5864
+      ],
+      "injured_udp_s2c": [
+        5888,
+        5865
+      ],
+      "app_udp_loss_pct_c2s_s2c": [
+        0.4076086956521739,
+        0.390625
+      ],
+      "tcp_missing_both": 0,
+      "outer_data_retrans": 0,
+      "host_psi_peak_pct": 0,
+      "stop_clean": true,
+      "classification": "Real uncovered common blackout >60ms; original failure never relabeled."
+    },
+    {
+      "id": "W162",
+      "status": "SUCCESS_PASS_SCOPED_0P1_GAME4_WIDE_100MS",
+      "request": "tests/network/fec-work/W162-Game4-fixed6-wide50-140-100ms-blackout-1Mbps-strict0p1-ARM64.json",
+      "action": 40324751265,
+      "artifact_id": 12650383038,
+      "artifact_sha256": "26c3a6c6ccaf6643d6bfa25dcf68f29fa19e84fe312fbfb1c7a7dd01664c538d",
+      "source": "8f85e0ba495070c925504452d3848aa90a5d2c20",
+      "offsets_ms": [
+        0,
+        4,
+        50,
+        140
+      ],
+      "readback_mode_both": 2,
+      "blackout_actual_duration_ms_client": [
+        107.26,
+        104.509,
+        102.466
+      ],
+      "injured_udp_c2s": [
+        5888,
+        5888
+      ],
+      "injured_udp_s2c": [
+        5888,
+        5888
+      ],
+      "injured_tcp_missing_both": 0,
+      "app_udp_loss_pct_c2s_s2c": [
+        0,
+        0
+      ],
+      "game4_physical_planned_client": [
+        41830,
+        41830,
+        41830,
+        41830
+      ],
+      "game4_physical_sent_client": [
+        41657,
+        41647,
+        41600,
+        41679
+      ],
+      "game4_abandoned_client": [
+        173,
+        183,
+        230,
+        141
+      ],
+      "note": "Expected native abandonments from blocked lane-specific sends; never pretend every planned copy reached kernel. Actual 2 sided parity and native Go/Rust receiver recovery positive, stop retained bytes0.",
+      "outer_data_retrans": 0,
+      "host_psi_peak_pct": 0,
+      "stop_clean": true
+    },
+    {
+      "id": "W163",
+      "status": "SUCCESS_PASS_SCOPED_LT_0P1_GAME4_WIDE_GE",
+      "request": "tests/network/fec-work/W163-Game4-fixed6-wide50-140-GE15Long-1Mbps-strict0p1-ARM64.json",
+      "action": 40325393000,
+      "artifact_id": 12649954474,
+      "artifact_sha256": "b62f83436bc32acd13e27054c7f4a842204dc5b29469d511716e07315aa6a24a",
+      "source": "8f85e0ba495070c925504452d3848aa90a5d2c20",
+      "offsets_ms": [
+        0,
+        4,
+        50,
+        140
+      ],
+      "readback_mode_both": 2,
+      "scenario": "45s shared long packet GE15, actual carrier lost15.4121/15.1338%, 1Mbps each way UDP96% and true TCP4%",
+      "injured_udp_c2s": [
+        8280,
+        8280
+      ],
+      "injured_udp_s2c": [
+        8280,
+        8279
+      ],
+      "app_udp_loss_pct_c2s_s2c": [
+        0,
+        0.012077294685990338
+      ],
+      "injured_tcp_c2s": [
+        322,
+        322
+      ],
+      "injured_tcp_s2c": [
+        322,
+        322
+      ],
+      "game4_physical_planned_client": [
+        50436,
+        50436,
+        50436,
+        50436
+      ],
+      "game4_physical_sent_client": [
+        50436,
+        50436,
+        50436,
+        50431
+      ],
+      "game4_physical_abandoned_both": 0,
+      "parity_planned_sent_client": [
+        32726,
+        32726
+      ],
+      "parity_planned_sent_server": [
+        32720,
+        32720
+      ],
+      "outer_data_retrans": 0,
+      "host_psi_peak_pct": 0.01,
+      "stop_clean": true
+    }
+  ],
+  "limits": [
+    "W160/W161R/W162/W163 distinct GitHub VMs, different unseeded netem GE trajectories and wall-clock pulse timing; not a repeatable same-VM CPU gain claim.",
+    "Gamemode4 long-loss <0.1% validated ONLY for these 1Mbps-per-direction Linux ARM64 representative GE15 45s and three ~100ms shared all-lane blackout cases; not universal correlated loss guarantee or 25/80Mbps capacity.",
+    "Normal jumbo original W159 red is honest harness false gate; W159R genuine product pass at lower load. No inferred Linux x64/Windows native product qualification.",
+    "W162 real blackout parity planned exceeds sent/expiry while blocked; no fake parity credited and no inferred total absence of product losses outside the observed service cohort.",
+    "Game4 previous 25Mbps host-PSI pressure stop remains; no capacity expansion or higher load. Windows TEMP_SKIPPED/NOT_RUN; no Game Auto."
+  ],
+  "decision": {
+    "keep_optin_wide_50_140": true,
+    "change_existing_game4_default": false,
+    "require_mode2_readback": true,
+    "outer_repair_default_algorithm_untouched": true,
+    "capacity_stop": true,
+    "merge_ready": false,
+    "main_merged": false,
+    "original_network_worker_status_next_action_touched": false
+  }
+}

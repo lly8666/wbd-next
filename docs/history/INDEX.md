@@ -19,3 +19,7 @@ R0 来源/ABI/兼容向量建立后激活 M1 runtime、M2 recovery、M3 codec、
 ## 2026-10-18｜全角色交接瘦身（旧档完整保留）
 
 原 `START_HERE.md` 与 M0–M4 五份固定提示词在 `docs/history/handoff/2026-10-18-pre-slim/` 保留当时全文，用于定位旧 H/任务/Actions 语境；**不再作为当前接手指令**。现行入口 `START_HERE.md` → `docs/handoff/README.md` → 最新 main registry 与各角色分支 cursor → 永久 `docs/prompts/<role>.md`。历史 devlog、evidence、决策和 Action 原件原路径保留；「旧失败」不得因此被覆盖或改判。该简化只改变阅读与交接导航，不改变任何工位权限/任务、产品功能或 CODE 验收。
+
+## 2026-10-26｜W168 冻结 + Windows 真实功能集成
+
+[按日期、来源、红灯查找](2026-10-26-W168-WINDOWS-INTEGRATION-INDEX.md)。完整原始 devlog/evidence 和旧 [handoff 快照](handoff/2026-10-26-pre-W168/README.md) 不动/不删；日常热读取改为 `docs/handoff/CURRENT_INTEGRATION.md`，不会复制过去上百条实验逐测结果到新 agent 的工作上下文。

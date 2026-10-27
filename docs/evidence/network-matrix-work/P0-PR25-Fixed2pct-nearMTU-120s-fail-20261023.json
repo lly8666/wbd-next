@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "id": "P0-merged-Fixed2pct99-large-120",
+  "result": "HARD_FAIL",
+  "run_id": 39885059364,
+  "attempt": 1,
+  "conclusion": "failure",
+  "result_artifact_id": 12472073637,
+  "result_zip_sha256": "5400a68fa7fa43f778a9141015920cf0f6d6d2045cf493f0c322d112b587d4b7",
+  "harness_contract_run_id": 39885059358,
+  "product": {
+    "source": "d64be28591c3752af06be399ff598266ecf4d664",
+    "run": 39881938976,
+    "artifact_id": 12470698437,
+    "zip_sha256": "7886619049f0c458e3bf53b02657f96d79533a98eb6f63a9a689af2fbf5622ef",
+    "arch": "aarch64"
+  },
+  "scenario": {
+    "mode": "fec-fixed",
+    "profile": 6,
+    "one_way_ms": 200,
+    "iid_loss_pct": 2,
+    "outer_mtu": 1500,
+    "readback_inner_mtu": 1315,
+    "udp_size_weight": [
+      [
+        64,
+        1
+      ],
+      [
+        1287,
+        99
+      ]
+    ],
+    "offered_app_mbps_each_direction": 2,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "steady_s": 120,
+    "warmup_s": 15,
+    "drain_s": 30
+  },
+  "measurements": {
+    "actual_netem_pct": {
+      "client": 1.8891361171718044,
+      "server": 1.9760239544260558
+    },
+    "udp": {
+      "c2s": {
+        "sent": 11767,
+        "delivered": 11542,
+        "missing": 225,
+        "residual_pct": 1.9121271352086344,
+        "duplicates": 0,
+        "first_p99_ms": 200.3
+      },
+      "s2c": {
+        "sent": 11767,
+        "delivered": 11552,
+        "missing": 215,
+        "residual_pct": 1.827,
+        "duplicates": 0,
+        "first_p99_ms": 200.3
+      }
+    },
+    "tcp": {
+      "steady_full_frames_c2s": {
+        "sent": 11767,
+        "delivered": 11767,
+        "p99_ms": 4061.1
+      },
+      "steady_full_frames_s2c": {
+        "sent": 11683,
+        "delivered": 11683,
+        "p99_ms": 8122.1
+      }
+    },
+    "original_fec_failures": {
+      "client": {
+        "source_payload": 0,
+        "source_arena": 0,
+        "source_seal": 0,
+        "parity_arena": 0,
+        "parity_seal": 33648
+      },
+      "server": {
+        "source_payload": 0,
+        "source_arena": 0,
+        "source_seal": 0,
+        "parity_arena": 0,
+        "parity_seal": 33502
+      }
+    },
+    "original_tx": {
+      "client": {
+        "m1_stage_attempted": 43065,
+        "queued": 43065,
+        "oversize": 0,
+        "m2_accepted": 43065,
+        "unknown_2s": 13,
+        "first_censored": true,
+        "cover_censored": true
+      },
+      "server": {
+        "m1_stage_attempted": 42912,
+        "queued": 42912,
+        "oversize": 0,
+        "m2_accepted": 42912,
+        "unknown_2s": 6,
+        "first_censored": true,
+        "cover_censored": true
+      }
+    },
+    "mode": {
+      "client": "requested1/applied0/pending",
+      "server": "requested1/applied1"
+    },
+    "stop_and_namespace_cleanup": "PASS_BOTH",
+    "host_psi_mean_pct": 0.007583333333333333
+  },
+  "root_cause": "codec parse_repair enforces 12-byte repair header + protected length 2 inside body, total payload<=budget. Product seal_fec2_product_one kind3 used body.len()>budget-14, redundantly subtracting protected length again and rejecting legal near-budget repair when body length budget-12; explains major parity_seal failure but other seal failure causes not yet excluded. Minimal production condition changed to <=budget-REPAIR_HEADER and codec integration Rust regression unit added.",
+  "scope": "Cannot qualify Fixed; client M2 applied/unknown/censored and TCP p99 separate hard/open issues. No runtime native ISA dispatch observation."
+}

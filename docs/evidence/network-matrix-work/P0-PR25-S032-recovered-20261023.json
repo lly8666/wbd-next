@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "event": "P0-PR25-merged-recovery-and-S032",
+  "merged_commit": "ce70f53b6ed26fc431d427ba9a9062aa63380a68",
+  "merged_parents": [
+    "b169ad07c5b293168925af2a65f1b7fed41338af",
+    "ae73332d4814edc1c8669a44cbe38fc1b134c367"
+  ],
+  "capacity_pr": 25,
+  "capacity_ref": "ae73332d4814edc1c8669a44cbe38fc1b134c367",
+  "capacity_branch_native_9_cases": {
+    "run": 39875959734,
+    "attempt": 1,
+    "source": "b42b8fa2dd1793a056a6242ec4d349cc9e8a250a",
+    "conclusion": "success",
+    "product_artifact": 12467804521,
+    "mtu_artifact": 12468238963,
+    "netns_artifact": 12468995426,
+    "scope": "independent capacity branch exact SOURCE only; not yet verified on merged experiment source"
+  },
+  "integrated_native": {
+    "run": 39878062135,
+    "attempt": 1,
+    "source": "ce70f53b6ed26fc431d427ba9a9062aa63380a68",
+    "conclusion": "failure",
+    "failed_job": 120168452280,
+    "reason": "tools/arm64_public_go_rust_bundle.sh: line 26: features: unbound variable; native Rust release crate compiled, script failed before Go test and bundle assembly; no artifact",
+    "harness_contract_run": 39878062164,
+    "harness_contract_conclusion": "success",
+    "resolution": "define one feature list variable before cargo test, retain prior cargo build unchanged; new source must rebuild"
+  },
+  "S032": {
+    "run": 39877362034,
+    "attempt": 1,
+    "harness_source": "b169ad07c5b293168925af2a65f1b7fed41338af",
+    "conclusion": "failure",
+    "artifact_id": 12468862630,
+    "zip_sha256": "7b14cac2a916e74b67cb4823d4ed13e434e03cc80ae9caef4ac85eeb052b4b6b",
+    "scenario": "same Ubuntu ARM64 runner sequential AB, Fixed Maximum profile6, 2Mbps/direction 50/50 UDP/TCP, netem 30% loss each + 300ms one-way, 120s steady; business seed5205, netem RNG unseeded",
+    "A": {
+      "source": "2476b22f748a686907edfb995431a2b236ccebaa",
+      "build_run": 39803921701,
+      "original_m1_oversize": {
+        "client": 7073,
+        "server": 7074
+      },
+      "original_m1_stage_queued": {
+        "client": 21731,
+        "server": 21729
+      },
+      "tcp_offered_steady_mbps": {
+        "c2s": 0,
+        "s2c": 0
+      },
+      "udp_arrival_mbps": {
+        "c2s": 0.4857941333333334,
+        "s2c": 0.48625066666666666
+      },
+      "fec_readback_client": {
+        "requested": 1,
+        "applied": 0,
+        "pending": true
+      },
+      "result": "FAIL"
+    },
+    "B": {
+      "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",
+      "build_run": 39807984023,
+      "original_m1_oversize": {
+        "client": 0,
+        "server": 0
+      },
+      "prestage_arena_no_capacity": {
+        "client": 1812,
+        "server": 1918
+      },
+      "source_stage_errors": {
+        "client": 1500,
+        "server": 1604
+      },
+      "parity_arena_no_capacity": {
+        "client": 9343,
+        "server": 9815
+      },
+      "tcp_offered_steady_mbps": {
+        "c2s": 0.153,
+        "s2c": 0.149
+      },
+      "udp_arrival_mbps": {
+        "c2s": 0.8673669333333334,
+        "s2c": 0.861948
+      },
+      "fec_readback_client": {
+        "requested": 1,
+        "applied": 0,
+        "pending": true
+      },
+      "result": "FAIL"
+    },
+    "both": {
+      "client_fixed_not_applied": true,
+      "original_stop_and_owned_cleanup": "PASS",
+      "real_tcp_backpressure_both": true,
+      "cpu_psi_mean_pct": 0,
+      "steal_peak_pct": 0
+    },
+    "assessment": "Clear local oversize defect fixed by record wire cap1280, allows useful TCP progression; not Fixed qualification, cannot extrapolate same-host to merged automatic MTU source. As throughput increases, first/repair arena NoCapacity appears. Do not immediately enlarge pool; first P0 correctness on effective actual MTU/readback and P1 budgets."
+  },
+  "hard_gates": "All FAIL and not-yet-measured unchanged; no acceptance waiver"
+}

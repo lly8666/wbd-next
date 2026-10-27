@@ -10,6 +10,7 @@ import (
  "fmt"
  "runtime"
  "sync"
+ "time"
  "syscall"
  "unsafe"
  "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -35,6 +36,9 @@ type V4WindowsAuthenticatedGameGroup struct{
  epoch [16]byte
  joined uint64
  stageProc,receiveProc,joinProc,stopProc *syscall.Proc
+ fecOpenProc,fecFinishProc *syscall.Proc
+ fecParityProc,fecM4SendProc *syscall.Proc
+ gameFec uint8 // authenticated TLS GameFec=1..7 -> shared fixed profile0..6
  closed bool
 }
 // Epoch exposes only the negotiated original-Go TLS generation marker,
@@ -50,28 +54,52 @@ func(g *V4WindowsAuthenticatedGameGroup) Epoch()[16]byte{
 // Rust owner can be submitted through this API.
 func V4WindowsEstablishOriginalGameClientGroup(
  ctx context.Context,dll string,associations []*faketcp.ClientAssociation,
- base ClientAdmissionConfig,
+ base ClientAdmissionConfig,gameFec ...uint8,
 )(*V4WindowsAuthenticatedGameGroup,error){
  n:=len(associations)
+ if len(gameFec)>1{return nil,ErrAdmissionParams}
+ var negotiatedFec uint8
+ if len(gameFec)==1{negotiatedFec=gameFec[0]}
+ if negotiatedFec>7{return nil,ErrAdmissionUnsupported}
  if ctx==nil||(n!=2&&n!=4)||base.Policy.Transport!=TransportGame||
   int(base.Policy.DesiredLanes)!=n||int(base.DesiredLanes)!=n||
-  base.Policy.FECMode!=FECOff{return nil,ErrAdmissionUnsupported}
- g:=&V4WindowsAuthenticatedGameGroup{}
+  base.Policy.SupportedNow()!=nil{return nil,ErrAdmissionUnsupported}
+ g:=&V4WindowsAuthenticatedGameGroup{gameFec:negotiatedFec}
+ // Mirror Linux's abortLocked and the Windows server group's rollback:
+ // a late lane TLS failure cannot strand previously authenticated Rust
+ // owners or leave their exporter-derived keys live across reconnect.
+ fail:=func(cause error)(*V4WindowsAuthenticatedGameGroup,error){
+  cleanup,cancel:=context.WithTimeout(context.Background(),15*time.Second)
+  defer cancel()
+  for i:=len(g.members)-1;i>=0;i--{
+   if o:=g.members[i];o!=nil{
+    cause=errors.Join(cause,o.StopScopedOwner(cleanup))
+   }
+  }
+  return nil,cause
+ }
  for i,assoc:=range associations{
-  if assoc==nil||assoc.BootstrapConn()==nil{return nil,ErrAdmissionParams}
+  if assoc==nil||assoc.BootstrapConn()==nil{return fail(ErrAdmissionParams)}
   b,e:=newV4WindowsPrivateOwnerBridge(dll)
-  if e!=nil{return nil,e}
+  if e!=nil{return fail(e)}
   cfg:=base
   cfg.LaneID=uint8(i+1)
   session,e:=EstablishClientV4(ctx,assoc.BootstrapConn(),cfg,
-   V4ClientOptions{DataPlaneReady:true,Epoch:g.epoch,fec2Product:true})
-  if e!=nil{return nil,e}
+   V4ClientOptions{DataPlaneReady:true,Epoch:g.epoch,
+    fec2Product:true,GameFec:g.gameFec})
+  if e!=nil{return fail(e)}
   if i==0{g.epoch=session.Epoch}
-  if session.Epoch!=g.epoch||g.epoch==[16]byte{}{return nil,ErrAdmissionUnsupported}
+  if session.Epoch!=g.epoch||g.epoch==[16]byte{}{return fail(ErrAdmissionUnsupported)}
   handoff,e:=assoc.Detach()
-  if e!=nil{return nil,e}
+  if e!=nil{return fail(e)}
   if e=b.prepareAuthenticatedClient(session,handoff,assoc.Flow());e!=nil{
-   return nil,fmt.Errorf("Game lane %d authentic Rust owner: %w",i+1,e)
+   // A successful first lane is not a right to retain uncommitted
+   // later-lane transport material. Original bridge aborts a failed
+   // commit itself; if this lane reached ACTIVE, stop it explicitly.
+   if b.committed{
+    e=errors.Join(e,b.stopRustOwnerOnly())
+   }
+   return fail(fmt.Errorf("Game lane %d authentic Rust owner: %w",i+1,e))
   }
   g.members=append(g.members,&V4WindowsAuthenticatedClientOwner{bridge:b})
   g.sessions=append(g.sessions,session)
@@ -96,7 +124,14 @@ func(g *V4WindowsAuthenticatedGameGroup) BindAndJoinOriginalWintun(
    !s.bridge.committed||s.bridge.epoch!=g.epoch{
    return errV4WindowsOwner
   }
-  if err:=s.BindOriginalM4NativeDevice(ctx,device,id);err!=nil{return err}
+  // The real five-stage native OS product has already acquired the
+  // first lane's exact Wintun hold. The group only binds remaining
+  // original TLS lanes and then joins all 2/4 protected Rust owners.
+  if s.device==nil{
+   if err:=s.BindOriginalM4NativeDevice(ctx,device,id);err!=nil{return err}
+  }else if s.device.identity!=id{
+   return errV4WindowsOwner
+  }
   state,err:=s.OriginalOwnerReadback()
   if err!=nil||!state.OwnerActive||!state.DeviceBound||
    state.DeviceQuiesced||state.ProductApplied{return errV4WindowsOwner}
@@ -119,6 +154,25 @@ func(g *V4WindowsAuthenticatedGameGroup) BindAndJoinOriginalWintun(
  runtime.KeepAlive(handles)
  if group==0{return errV4WindowsOwner}
  g.joined=group
+ // Linux authority: each lane's protected GameFec TLS extension matches
+ // g.gameFec before Detach. Enable ONE Rust GameFec owner, never Go FEC.
+ if g.gameFec!=0{
+  open,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_receive_fec")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  finish,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_finish_fec")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  parity,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_fec_parity_due")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  receipt,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_m4_send_result")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  fec,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_fec_enable")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  if err=winOwnerCall(fec,uintptr(group),uintptr(g.gameFec-1));err!=nil{return err}
+  g.fecOpenProc=open
+  g.fecFinishProc=finish
+  g.fecParityProc=parity
+  g.fecM4SendProc=receipt
+ }
  return nil
 }
 func(g *V4WindowsAuthenticatedGameGroup) verifyLive(ctx context.Context)error{
@@ -172,6 +226,7 @@ func(g *V4WindowsAuthenticatedGameGroup) OpenGameRecord(
  if g==nil{return nil,errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
  if err:=g.verifyLive(ctx);err!=nil{return nil,err}
+ if g.gameFec!=0{return nil,errV4WindowsOwner}
  if lane==0||int(lane)>len(g.members)||len(wire)<32||len(wire)>1536{
   return nil,errV4WindowsOwner
  }
@@ -214,4 +269,25 @@ func(g *V4WindowsAuthenticatedGameGroup) StopCryptoAfterDriverDrain(
  }
  g.closed=true;g.joined=0
  return nil
+}
+
+// FirstOriginalOwner anchors the existing one-Wintun native OS/WAL lease.
+// It does not substitute the first lane for the authenticated Game group.
+func(g *V4WindowsAuthenticatedGameGroup) FirstOriginalOwner()*V4WindowsAuthenticatedClientOwner{
+ if g==nil{return nil}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||len(g.members)<2{return nil}
+ return g.members[0]
+}
+func(g *V4WindowsAuthenticatedGameGroup) OriginalGameTCPBoundaries()([][2]uint32,error){
+ if g==nil{return nil,errV4WindowsOwner}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||len(g.members)<2{return nil,errV4WindowsOwner}
+ v:=make([][2]uint32,0,len(g.members))
+ for _,o:=range g.members{
+  tx,rx,err:=o.OriginalVerifiedTCPBoundaries()
+  if err!=nil{return nil,err}
+  v=append(v,[2]uint32{tx,rx})
+ }
+ return v,nil
 }

@@ -63,9 +63,23 @@ func (r *fecV2ControlRuntime) Tick(now time.Duration) error {
     if r.state.Initialized{
         ack,err:=r.backend.Readback(r.epoch,r.cfg.Client,r.cfg.Direction)
         if err==nil{
-            applied,_,err:=FecV2Apply(r.state,ack)
+            before:=r.state
+            applied,_,err:=FecV2Apply(before,ack)
             if err!=nil{return err}
+            if applied.AppliedRevision!=before.AppliedRevision {
+                // Use the same Linux Auto observed-window transition rule;
+                // this callback cannot stage a revision or grant Applied.
+                if observer,ok:=r.backend.(interface{
+                    OnAppliedTransition(FecV2State,FecV2State)
+                });ok{observer.OnAppliedTransition(before,applied)}
+            }
             r.state=applied
+        }
+        // Linux v4ProductFecMonitor.tick does not run FecV2Step
+        // against a profile still awaiting genuine original M2 Applied.
+        // This prevents Auto from issuing a second unobserved cutover.
+        if r.state.AppliedRevision!=r.state.RequestedRevision{
+            return nil
         }
     }
     snap,err:=r.backend.Observe(r.epoch,r.cfg.Client,r.cfg.Direction,now)

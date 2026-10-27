@@ -1,0 +1,132 @@
+{
+  "schema": 1,
+  "owner": "fec-network-work",
+  "id": "FEC-W32-Maximum250-W31Scratch-Fixed-OuterOff-ARM64",
+  "request_commit": "96d003193caca01d268139f89359f107aefc984f",
+  "request": "tests/network/fec-work/W32-maximum250-W31single-static-owned-fq600-arm64.json",
+  "action": 40147431966,
+  "attempt": 1,
+  "action_result": "FAIL_BOTH_RESIDUAL_GT_1PCT_AND_REAL_INJECTOR_ERRORS",
+  "artifact_id": 12581258712,
+  "zip_sha256": "2d14df2efc9231f84fda1d1727529093d2eda7f5ed5a4a233a3be56dfe21d03a",
+  "product": {
+    "source": "3b16e79698d33ef49628dfa8f67a47550438ebbc",
+    "build_run": 40146207152,
+    "artifact_id": 12580177860,
+    "sha256": "69c14dbc1f3a65040c7013844c02d6af036b4a238c6d78262f6edc65d891b30f"
+  },
+  "settings": {
+    "rate_mbps_each": 250,
+    "loss_iid_pct": 30,
+    "delay_oneway_ms": 300,
+    "outer_rate_mbps_each": 600,
+    "outer_DATA_retransmission": 0,
+    "fec_fixed_maximum_both": true,
+    "warmup_s": 15,
+    "measurement_s": 30,
+    "drain_s": 30,
+    "owned_fq600": true,
+    "static_test_veth_neighbors": true
+  },
+  "business": {
+    "c2s": {
+      "injected_mbps": 249.98609066666666,
+      "delivered_mbps": 243.1730848,
+      "residual_loss_pct": 2.73951367037175,
+      "p99_first_ms": 313.3,
+      "missing_after_drain": 20146,
+      "injector_send_errors": 39
+    },
+    "s2c": {
+      "injected_mbps": 249.90126906666666,
+      "delivered_mbps": 243.54651493333333,
+      "residual_loss_pct": 2.5504124406912463,
+      "p99_first_ms": 313.3,
+      "missing_after_drain": 18749,
+      "injector_send_errors": 245
+    }
+  },
+  "native_parity": {
+    "client": {
+      "planned": 1382114,
+      "sent": 1263176,
+      "expired_jobs": 5610,
+      "unknown_capacity": 1116,
+      "pressure_jobs": 0,
+      "pressure_sources": 0,
+      "seal_fail": 0,
+      "m4_noncopy": 0
+    },
+    "server": {
+      "planned": 1381771,
+      "sent": 1263279,
+      "expired_jobs": 5587,
+      "unknown_capacity": 1093,
+      "pressure_jobs": 0,
+      "pressure_sources": 0,
+      "seal_fail": 0,
+      "m4_noncopy": 0
+    }
+  },
+  "resources": {
+    "cpu_s_30": {
+      "client": 32.2,
+      "server": 32.49
+    },
+    "host_cpu_psi_pct": {
+      "mean": 47.190000000000005,
+      "peak": 50.66,
+      "over20_fraction": 1
+    },
+    "four_core_nonidle_pct": [
+      80.4,
+      82.87,
+      77.93,
+      83.05
+    ],
+    "four_core_softirq_pct": [
+      10.42,
+      11.45,
+      9.63,
+      11.44
+    ],
+    "NET_RX_events": [
+      528863,
+      572505,
+      466547,
+      554155
+    ],
+    "NET_TX_events": [
+      620972,
+      664115,
+      550748,
+      646082
+    ],
+    "cgroup_nr_throttled_delta": 0,
+    "cgroup_throttled_usec_delta": 0,
+    "rx_pressure_evicted": 0,
+    "rx_capacity_rejected": 0,
+    "rx_codec_rejected": 0,
+    "root_fq_drop": 0,
+    "source_tun_drop": 0,
+    "netem_actual_loss_pct": {
+      "client": 30.01274878716454,
+      "server": 29.955821764189242
+    },
+    "kernel_udp_sndbuf_errors": {
+      "client": 39,
+      "server": 245
+    },
+    "rx_peak_active": {
+      "client": 271,
+      "server": 269
+    },
+    "rx_peak_bytes": {
+      "client": 9892800,
+      "server": 10088057
+    },
+    "cleanup_owned_absent": true
+  },
+  "qualification": "250Mbps failed both 1% business gates and injector errors; sender M4 parity deadline gap ~8.6% in both, jobs expired >5500, native RX/owner pressure0. Injector SndbufErrors preclude attributing all business deficit to FEC. Not a physical/Windows/stable capacity qualification.",
+  "stop_heavier": true
+}

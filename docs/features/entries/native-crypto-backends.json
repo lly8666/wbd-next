@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "id": "native-crypto-backends",
+  "name": "硬件与原生加速后端",
+  "summary": "codec封装AEAD与可能的ISAL/ARM64本机后端，运行资格须区分构建特性与真实启用。",
+  "owner": "M3/ARM集成",
+  "stage": "experimental",
+  "development_branch": "work/m3-r1-codec",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "policy": "ARM64 native-first（构建策略）",
+    "runtime-backend": "未确认实际选择"
+  },
+  "usage": {
+    "cli": "无已核实的公开 --force-backend 参数；取决于构建/运行时能力",
+    "config": "Cargo features/部署产物选择，不等于用户连接配置",
+    "gui": "无独立UI后端切换"
+  },
+  "code_refs": [
+    "crates/wbd-codec/src/record_crypto.rs",
+    "crates/wbd-codec/src/fec_native.rs",
+    "crates/wbd-codec/src/lib.rs"
+  ],
+  "doc_refs": [
+    "docs/architecture/MIGRATION.md",
+    "docs/devlog/arm64-main-integration-20261022.md"
+  ],
+  "verification": [
+    {
+      "platform": "linux/arm64",
+      "scope": "具体AES/NEON/ISAL实际分派且端到端性能对比",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "AES加速是否应用于所有套件",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "android/arm64",
+      "scope": "真实JNI加速",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "没有本次精确运行时backend读回，构建成功不能直接登记硬件加速PASS。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

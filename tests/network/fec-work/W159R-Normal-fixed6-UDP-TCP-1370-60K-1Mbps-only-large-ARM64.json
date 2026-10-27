@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "id": "FEC-W159R-NORMAL-F6-REAL-LARGE-1M-NOSMALLGATE",
+  "owner": "fec-network-work",
+  "seed": 8211159,
+  "policy": "outer-opportunistic-v3",
+  "product": {
+    "mode": "fec-fixed",
+    "fec_profile": 6,
+    "repair_enabled": false
+  },
+  "traffic": {
+    "c2s_mbps": 1,
+    "s2c_mbps": 1,
+    "udp_share": 0.6,
+    "sizes": [
+      [
+        1370,
+        3
+      ],
+      [
+        4096,
+        3
+      ],
+      [
+        16384,
+        2
+      ],
+      [
+        60000,
+        1
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 5,
+    "deadline_ms": 10000,
+    "burst_ms": 0,
+    "max_packets": 300000,
+    "allow_fragmentation": true,
+    "observe_size_classes": false,
+    "observe_independent_flows": true
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "shared",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded",
+    "owned_veth_static_neighbour": true
+  },
+  "warmup_s": 10,
+  "drain_s": 20,
+  "phases": [
+    {
+      "name": "clean_large_udp_tcp",
+      "seconds": 25,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 100
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0,
+        "rate_mbps": 100
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 10,
+    "require_retransmission": false,
+    "require_zero_source_tun_drops_full_run": true,
+    "require_zero_tun_root_qdisc_drops_full_run": true,
+    "cross_business_hol": false
+  },
+  "bundles": {
+    "A": {
+      "source": "8ae002d0b6892664b9d34b415ab3dfeb8186d8ad",
+      "run_id": 40317413835,
+      "attempt": 1,
+      "artifact_id": 12647711084,
+      "sha256": "05de4ff845bb5d4de3bef112183cfcbd48f68d04343385beca96e6824146ee47",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false,
+      "require_go_rx_handoff": true
+    }
+  },
+  "order": "A"
+}

@@ -34,6 +34,13 @@ const IPPROTO_IP:c_int=0;
 const IP_HDRINCL:c_int=3;
 const SOL_SOCKET:c_int=1;
 const SO_BINDTODEVICE:c_int=25;
+const SO_ATTACH_FILTER:c_int=26;
+// Linux classic BPF instruction ABI. Kernel copies this short program at setsockopt.
+#[repr(C)]
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+struct SockFilter{code:u16,jt:u8,jf:u8,k:u32}
+#[repr(C)]
+struct SockFprog{len:u16,filter:*const SockFilter}
 const MSG_DONTWAIT:c_int=0x40;
 #[repr(C)]
 struct SockAddrIn {
@@ -183,6 +190,28 @@ impl ScopedRawIpv4Tx {
 /// writes L3 directly into caller's M1 UniqueBuffer, then payload is
 /// compacted within the SAME slab (no ciphertext heap-copy or new owner).
 /// This driver never authenticates, publishes LINK, or grants V4 authority.
+// Raw IPPROTO_TCP sockets see every local TCP flow on their bound interface.
+// Filter by a tuple obtained only from the authenticated Go connection, before
+// the kernel copies unrelated lane packets to userspace. AEAD remains mandatory.
+fn exact_tcp_rx_filter(tuple:Ipv4Tuple<'_>)->Result<[SockFilter;13],RawTxError>{
+    checked_destination(tuple)?;
+    let src=u32::from_be_bytes(tuple.src_ip.try_into().map_err(|_|RawTxError::InvalidPacket)?);
+    let dst=u32::from_be_bytes(tuple.dst_ip.try_into().map_err(|_|RawTxError::InvalidPacket)?);
+    // BPF interpreter converts network-order packet fields to host-order A.
+    // LDX MSH computes dynamic IPv4 IHL (IP options, no assumed 20B offset).
+    let load=|code,k|SockFilter{code,jt:0,jf:0,k};
+    let eq=|k,jf|SockFilter{code:0x15,jt:0,jf,k}; // JMP JEQ K
+    Ok([
+        load(0x30,9),eq(6,10),       // IPv4 protocol TCP (also enforced by socket)
+        load(0x20,12),eq(src,8),   // exact source IP
+        load(0x20,16),eq(dst,6),   // exact destination IP
+        load(0xb1,0),             // LDX B MSH [0] IPv4 IHL in bytes
+        load(0x48,0),eq(u32::from(tuple.src_port),3), // LD H IND [X]
+        load(0x48,2),eq(u32::from(tuple.dst_port),1),
+        load(0x06,u32::MAX),       // accept all bytes, not packet identity
+        load(0x06,0),              // reject unmatched packets in kernel
+    ])
+}
 pub struct ScopedRawIpv4Rx {
     fd:OwnedFd,
     ifindex:u32,
@@ -195,6 +224,21 @@ pub struct ScopedRawIpv4Rx {
     serialize:Mutex<()>,
 }
 impl ScopedRawIpv4Rx {
+    /// Kernel-level prefilter; tuple comes from already-authenticated GoFlow.
+    /// Failure is fail-closed: no unfiltered fallback to extra socket reads.
+    pub fn open_exact_tuple(ifname:&str,expected_ifindex:u32,generation:u32,
+        tuple:Ipv4Tuple<'_>)->Result<Self,RawTxError>{
+        let instructions=exact_tcp_rx_filter(tuple)?;
+        let rx=Self::open(ifname,expected_ifindex,generation)?;
+        let prog=SockFprog{len:instructions.len() as u16,
+            filter:instructions.as_ptr()};
+        // SAFETY: synchronously copied Linux sock_fprog references the live
+        // immutable stack instruction array. Owned fd closes on failure.
+        let rc=unsafe{setsockopt(rx.fd.as_raw_fd(),SOL_SOCKET,SO_ATTACH_FILTER,
+            (&prog as *const SockFprog).cast(),std::mem::size_of::<SockFprog>() as u32)};
+        if rc!=0{return Err(RawTxError::Kernel(errno()))}
+        Ok(rx)
+    }
     pub fn open(ifname:&str,expected_ifindex:u32,generation:u32)
         ->Result<Self,RawTxError>{
         if generation==0 || ifname.is_empty()||ifname.len()>15 ||
@@ -297,6 +341,26 @@ impl ScopedRawIpv4Rx {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn game_exact_tuple_kernel_bpf_matches_authenticated_four_tuple(){
+        let src=[10,2,0,4];let dst=[10,3,0,5];
+        let f=exact_tcp_rx_filter(Ipv4Tuple{
+            src_ip:&src,dst_ip:&dst,src_port:45001,dst_port:443
+        }).unwrap();
+        assert_eq!(f.len(),13);
+        assert_eq!(f[0].code,0x30);assert_eq!(f[0].k,9);
+        assert_eq!(f[3].k,u32::from_be_bytes(src));
+        assert_eq!(f[5].k,u32::from_be_bytes(dst));
+        assert_eq!(f[6].code,0xb1); // IPv4 options-safe IHL
+        assert_eq!(f[8].k,45001);assert_eq!(f[10].k,443);
+        for i in [1usize,3,5,8,10]{
+            assert_eq!(i+1+f[i].jf as usize,12); // all rejects fail closed
+        }
+        assert_eq!(f[11].k,u32::MAX);assert_eq!(f[12].k,0);
+        assert!(matches!(exact_tcp_rx_filter(Ipv4Tuple{
+            src_ip:&src,dst_ip:&dst,src_port:0,dst_port:443
+        }),Err(RawTxError::InvalidPacket)));
+    }
     #[test]
     fn r1_raw_bad_interface_fails_before_socket() {
         assert!(matches!(ScopedRawIpv4Tx::open("../lo",1,1),
@@ -656,7 +720,29 @@ impl ScopedRawIpv4Rx {
                             slot.copy_within(begin..len,0);
                             RawReadyEntry::Unauthenticated{cipher_len:n,seq32}
                         },
-                        Err(_)=>RawReadyEntry::Rejected,
+                        Err(reason)=>{
+                            // TEST DIAGNOSTIC ONLY: bounded numeric/header-only
+                            // evidence to distinguish W168 exact tuple/persona
+                            // failures. Does not admit, authenticate, decrypt,
+                            // copy, or touch accepted packet ownership.
+                            static ENABLED:std::sync::OnceLock<bool>=std::sync::OnceLock::new();
+                            static COUNT:std::sync::atomic::AtomicUsize=
+                                std::sync::atomic::AtomicUsize::new(0);
+                            if *ENABLED.get_or_init(||std::env::var("WBD_WL_RX_TUPLE_DIAG")
+                                .ok().as_deref()==Some("1")) &&
+                                COUNT.fetch_add(1,std::sync::atomic::Ordering::Relaxed)<12 {
+                                let ihl=usize::from(slot[0]&0x0f)*4;
+                                let observed=if len>=ihl+4 && ihl>=20 {
+                                    format!("ip={:?}->{:?} ports={}->{} flags={:#x} ihl={} len={}",
+                                        &slot[12..16],&slot[16..20],
+                                        u16::from_be_bytes([slot[ihl],slot[ihl+1]]),
+                                        u16::from_be_bytes([slot[ihl+2],slot[ihl+3]]),
+                                        slot.get(ihl+13).copied().unwrap_or(0),ihl,len)
+                                }else{format!("malformed_header ihl={} len={}",ihl,len)};
+                                eprintln!("WBD_WL_RX_TUPLE_REJECT reason={reason:?} expected={tuple:?} observed={observed}");
+                            }
+                            RawReadyEntry::Rejected
+                        },
                     }
                 }
                 _=>RawReadyEntry::Unused,

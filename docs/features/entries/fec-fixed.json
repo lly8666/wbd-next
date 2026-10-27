@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "id": "fec-fixed",
+  "name": "Normal 固定FEC2",
+  "summary": "固定profile生成认证FEC源/修复分片，接收端可在授权范围修复源数据。",
+  "owner": "M0/M3 + FEC实验",
+  "stage": "experimental",
+  "development_branch": "experiment/fec-network-tuning",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "mode": "fec-fixed",
+    "--fec-profile": "1（可选0..6）",
+    "production": "FEC OFF"
+  },
+  "usage": {
+    "cli": "Windows isolated candidate --native-v4-product --lanes 1 --fec-mode fixed --fec-parity 4 --fec.mode fixed --fec.profile light|mild|medium|balanced|high|strong|maximum; original carrier fixed4 separate from Rust FEC2 selection. Fixed profile6 native two-OS functional PASS at precise source4977f; other profiles and real WinForms remain unverified.",
+    "config": "原Go V3 fixed4 carrier仅是入场包络，Rust FixedStream本身支持profile 0..6和revision；不是单独Fixed6测试活动，默认FEC2 OFF",
+    "gui": "Windows真实WinForms Applied/Disconnect仍NOT_RUN，不从CLI或M2组件PASS推断"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
+    "crates/wbd-engine/src/v4_fixed_stream.rs",
+    "crates/wbd-codec/src/fec_v2.rs",
+    "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_fixed_stream.go",
+    "crates/wbd-engine/src/v4_windows_owner.rs",
+    "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
+    "crates/wbd-engine/src/v4_windows_fec2_owner.rs"
+  ],
+  "doc_refs": [
+    "docs/architecture/FEC_V2_BALANCED.md",
+    "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
+  ],
+  "verification": [
+    {
+      "platform": "linux/amd64",
+      "scope": "原Go TLS与Rust真实raw/TUN：Fixed原生初始Applied、64 UDP/Stop特定组合（旧L源码，非本次审阅SHA）",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
+      "evidence": "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
+    },
+    {
+      "platform": "linux/arm64 + linux/amd64",
+      "scope": "F实验分支W168：Fixed6 20秒UDP配置/场景观测，仅观察/特定case通过，非全平台质量门",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "0776fc4ede72fabd711e8333568eb88a58e8a6ea",
+      "evidence": "docs/evidence/fec-network-work/20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "Fixed6 original Go TLS feature7 native cross-OS positive attempt: admitted genuine guest NPF route but Windows original M2 reverse-kind1 feedback draft refused before product READY; Normal/off and Rust module-only PASS do NOT count as Fixed6",
+      "status": "FAIL",
+      "source_sha": "19db3a812c50a87d2c70618d18314a919cf831cb",
+      "evidence": "docs/devlog/M0/PLAN024-W168-Fixed6-resumed-Linux-wide-reuse-intent-20261027.md"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "undefined；候选源 8e0daba5，不是Linux或Normal的通过",
+      "status": "FAIL",
+      "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
+      "evidence": "docs/devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md"
+    },
+    {
+      "platform": "physical",
+      "scope": "全profile、真实弱网/高载",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "real Windows original Go TLS / Rust FEC2 initial Fixed profile, parity firstsend, M2 recovery + Stop",
+      "status": "FAIL",
+      "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
+      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source8e0daba-20261027.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "original Go protected TLS feature7 Windows→Linux native fixed original M4 first-send; Windows reverse FEC2 C-ABI first 103B failed before Ready despite verified Linux raw/TUN TX",
+      "status": "FAIL",
+      "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
+      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "Original Go protected TLS→shared Rust FixedStream profile6, live Npcap/Wintun+Linux raw/TUN real duplex UDP/TCP, current-generation M2 mature/authenticated readback, owned Windows WAL and Linux Stop; seven-mode same-SOURCE native Actions40449519463.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
+      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json"
+    }
+  ],
+  "limitations": [
+    "旧L来源的Fixed功能不自动证明现在HEAD所有模式或Windows可用。",
+    "FEC parity与外层DATA修复是不同机制。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "Windows原始Go fixed4 carrier与共享Rust FixedStream支持FEC2 0..6隔离候选；源码8e0d真实双系统Fixed在原Rust M2 frozen repair失败，全部profile产品资格需新的实际正例。",
+    "原Windows Fixed6 先前两个Actions 40371148050、40372774560 入场FAIL；d3811b…已修V3 fixed4但测试参数仍遗漏独立 --fec.mode fixed 与 --fec.profile maximum；本次修正后才有新候选，保留其旧FAIL。",
+    "Windows Fixed6 真实网络尝试 19db3a8 Actions40376199812 在原始反向M2反馈环节FAIL，后续01d8b729针对失败路径诊断/原生单测的完整产品测试仍在运行，不能提前转PASS。",
+    "Windows W168 now selects the full Linux FEC2 0..6 range using original Rust FixedStream; original source8e full native first-send M2 repair failed before READY, not product PASS.",
+    "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS.",
+    "Exact SOURCE350199f native Actions40445098497 remains FAIL for Windows original FEC2 reverse first delivery; Linux raw/TUN sender works, Windows still rejected first incoming 103B record before Ready. Subsequent source82ec native FEC2 diagnostic candidate has no inherited PASS; retained as partial.",
+    "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible."
+  ],
+  "promotion": null
+}

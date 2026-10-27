@@ -1,0 +1,107 @@
+{
+  "id": "FEC-W53-MainlineAuto-AuthenticM2-SameVM-AB-8Mbps",
+  "request": "tests/network/fec-work/W53-mainline-auto-bounded-valid-windows-sameVM-AB-arm64.json",
+  "request_commit": "a944d1c0ee94fb1c66c66d5ae0022ec42b804e8c",
+  "action": 40169675377,
+  "attempt": 1,
+  "artifact_id": 12590008550,
+  "zip_sha256": "3e0c4270b9066f5161754118b92e640f60982caee9de4d20e7d03e83780e6f8e",
+  "build_source_A": "e446fa1cf09ebfb259da3d764abf8f8ed8d4211f",
+  "build_source_B": "946346bbd84ff88910ed169037330e8eae13cea3",
+  "result": "PASS_SCOPED_BUSINESS_BOTH_AB_C2S_RECOVERY_DOWNSHIFT_NOT_OBSERVED",
+  "running_order": "AB sameVM sequential; original compiled artifacts, 8Mbps UDP both directions; 2%30s C2S, 20%60s, 1%60s; 0/1/0 S2C; authentic M2; 75ms; no outer DATA repair; netem random unseeded",
+  "legs": {
+    "A": {
+      "native_result": "PASS_SCOPED_OBSERVATION",
+      "c2s_stages": [
+        "pre_low:strong5->high4",
+        "asym_high:high4->maximum6"
+      ],
+      "c2s_recovery_downshift": false,
+      "s2c_stages": [
+        "strong5->high4",
+        "high4->balanced3"
+      ],
+      "final_native": {
+        "c2s": 6,
+        "s2c": 3
+      },
+      "cpu_s": {
+        "client": 16.49,
+        "server": 16.69
+      },
+      "rss_peak_bytes": {
+        "client": 22278144,
+        "server": 21266432
+      },
+      "c2s_high_missing": 30,
+      "c2s_recovery_missing": 0,
+      "c2s_recovery_p99_ms": 79.2,
+      "s2c_recovery_p99_ms": 77.1,
+      "source_tun_drops": 0,
+      "outer_data_retransmit": 0,
+      "recovered_tun": {
+        "client": 500,
+        "server": 11169
+      }
+    },
+    "B": {
+      "native_result": "PASS_SCOPED_OBSERVATION",
+      "c2s_stages": [
+        "asym_high:strong5->maximum6"
+      ],
+      "c2s_recovery_downshift": false,
+      "s2c_stages": [
+        "strong5->high4",
+        "high4->balanced3",
+        "balanced3->medium2",
+        "medium2->mild1"
+      ],
+      "final_native": {
+        "c2s": 6,
+        "s2c": 1
+      },
+      "cpu_s": {
+        "client": 16.65,
+        "server": 16.96
+      },
+      "rss_peak_bytes": {
+        "client": 21483520,
+        "server": 21270528
+      },
+      "c2s_high_missing": 9,
+      "c2s_recovery_missing": 0,
+      "c2s_recovery_p99_ms": 79.3,
+      "s2c_recovery_p99_ms": 76.5,
+      "source_tun_drops": 0,
+      "outer_data_retransmit": 0,
+      "recovered_tun": {
+        "client": 514,
+        "server": 11000
+      },
+      "real_positive_M2_mean_us": {
+        "client": 153571,
+        "server": 154171
+      },
+      "auth_positive_samples": {
+        "client": 118995,
+        "server": 129358
+      },
+      "c2s_actual_k_invalid_interruption": "five genuine VALID 2s cohorts at 06:42:53/55/57/59 and 06:43:01Z; then 06:43:03..10Z k cohort UNKNOWN, >6s hold; latest at 06:43:12 but previous carry expired"
+    }
+  },
+  "tests_and_bounds": {
+    "build_action": 40169455103,
+    "build_status": "SUCCESS",
+    "zero_tun_failures": true,
+    "original_stop_drain_both": true,
+    "owned_namespaces_absent": true,
+    "host_over20_psi_fraction": 0,
+    "outer_retransmission_0": true,
+    "parity_independent": true
+  },
+  "comparative_note": "Host and netem conditions same VM sequential, but stochastic netem and actual profile differed; CPU client B 16.65 vs A16.49 (+0.97%), server B16.96 vs A16.69 (+1.62%). No CPU win or product C2S downshift claim.",
+  "remaining": "20s/4096 first-send authentic low-loss hold requires enough mature VALID 2s cohorts; architecture FEC_V2_BALANCED 7 specifies >=20s per downgrade and 180s steady for tests. Do not relax into UNKNOWN-as-clean. W54 extends only low steady to180s with same frozen product.",
+  "merge_ready": false,
+  "capacity_stop": true
+}

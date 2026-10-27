@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "owner": "fec-network-work",
+  "w24": {
+    "run": 40105506052,
+    "run_attempt": 1,
+    "result_artifact": 12564980324,
+    "result_artifact_sha256": "cf2ba13a6a7876ba186f42fd424845bbc49b3a4c870137a3a10158204c581d98",
+    "request": "tests/network/fec-work/W24-maximum150-native-shared-tables-AB-arm64.json",
+    "request_commit": "d0c5cdd70d3145de597b50286026d06cceeb7808",
+    "order": "AB",
+    "runner": "ubuntu-24.04-arm same job, sequential",
+    "source_A": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+    "build_A": 40099179830,
+    "product_artifact_A": 12562092730,
+    "source_B": "cf00a47c9564d67b15409d50178a956416227a8a",
+    "build_B": 40105262367,
+    "product_artifact_B": 12564910143,
+    "build_B_artifact_sha256": "39809b55b380b4a161f47b367f734c2e45efa526efc36817e3ac6eb500c21d03",
+    "build_B_result": "SUCCESS_NATIVE_TWO_PREPARED_PARITY_TESTS_ORIGINAL_GO_FIXED_AUTO_KERNEL_RECOVERY",
+    "maximum_row_contract": 40105262390,
+    "harness_contract": 40105506150,
+    "result": "BOTH_LEGS_FAIL_RESIDUAL_GT_1PCT_B_IMPROVES_PARITY_BUT_NO_CPU_CAPACITY_QUALIFICATION",
+    "fixed_profile": 6,
+    "app_rate_mbps_each": 150,
+    "netem_loss_requested_pct": 30,
+    "oneway_delay_ms": 300,
+    "outer_DATA_repair": "OFF_RUNTIME_VERIFIED_ZERO_A_AND_B",
+    "data": {
+      "A": {
+        "c2s": {
+          "delivered_mbps": 146.81698426666668,
+          "loss_pct": 2.152742996616438,
+          "p99_ms": 311.3
+        },
+        "s2c": {
+          "delivered_mbps": 146.37564986666666,
+          "loss_pct": 2.4527934151006683,
+          "p99_ms": 311.3
+        },
+        "client": {
+          "cpu_s_30s": 23.91,
+          "rss_peak_bytes": 50569216,
+          "parity_planned": 830151,
+          "parity_sent": 749061,
+          "parity_gap_pct": 9.768102429558,
+          "queued_expired_jobs": 915,
+          "unknown_capacity": 7679,
+          "pressure_jobs": 0,
+          "pressure_sources": 0
+        },
+        "server": {
+          "cpu_s_30s": 24.46,
+          "rss_peak_bytes": 50356224,
+          "parity_planned": 830134,
+          "parity_sent": 737230,
+          "parity_gap_pct": 11.191446200252,
+          "queued_expired_jobs": 1102,
+          "unknown_capacity": 8708,
+          "pressure_jobs": 0,
+          "pressure_sources": 0
+        },
+        "host_cpu_psi_peak_pct": 27.55,
+        "host_cpu_psi_over20_fraction": 1,
+        "netem_loss_actual_pct": {
+          "client": 30.034997473163525,
+          "server": 30.020517211778746
+        },
+        "RX_capacity_evictions": 0,
+        "RX_codec_rejects": 0,
+        "source_TUN_drops": 0
+      },
+      "B": {
+        "c2s": {
+          "delivered_mbps": 147.5757957333333,
+          "loss_pct": 1.6417183197543315,
+          "p99_ms": 311.2
+        },
+        "s2c": {
+          "delivered_mbps": 147.30226533333334,
+          "loss_pct": 1.8261259750443048,
+          "p99_ms": 311.2
+        },
+        "client": {
+          "cpu_s_30s": 23.98,
+          "rss_peak_bytes": 49393664,
+          "parity_planned": 830055,
+          "parity_sent": 763348,
+          "parity_gap_pct": 8.036455415604992,
+          "queued_expired_jobs": 817,
+          "unknown_capacity": 6295,
+          "pressure_jobs": 0,
+          "pressure_sources": 0
+        },
+        "server": {
+          "cpu_s_30s": 24.32,
+          "rss_peak_bytes": 49713152,
+          "parity_planned": 830127,
+          "parity_sent": 754905,
+          "parity_gap_pct": 9.06150504681814,
+          "queued_expired_jobs": 882,
+          "unknown_capacity": 7145,
+          "pressure_jobs": 0,
+          "pressure_sources": 0
+        },
+        "host_cpu_psi_peak_pct": 31.78,
+        "host_cpu_psi_over20_fraction": 1,
+        "netem_loss_actual_pct": {
+          "client": 30.052505818142237,
+          "server": 29.964830990472016
+        },
+        "RX_capacity_evictions": 0,
+        "RX_codec_rejects": 0,
+        "source_TUN_drops": 0
+      }
+    },
+    "interpretation": [
+      "Same-VM A/B gives directional parity gap improvement 1.73/2.13 percentage points, business delivery +0.76/+0.93 Mbps, but BOTH legs fail the <=1% residual requirement",
+      "CPU client +0.07s/30s, server -0.14s/30s; no material aggregate CPU improvement proven; B host PSI peak worse",
+      "unknown_capacity includes in-flight parity deadline expiry, not proven memory pressure; queued expiry separate; RX pressure0",
+      "Native TX cumulative parity covers 45s (including warmup), app throughput 30s. Do not divide rplanned-rsent by app cohort packets",
+      "One A/B without BA, unseeded recorded netem and shared-runner contention cannot establish causality/generalize; W23 standalone150 passed narrowly but not repeatable",
+      "Do not run 175Mbps or higher: capacity_stop=true. Do not change source-first, outer recovery or original fq600."
+    ]
+  }
+}

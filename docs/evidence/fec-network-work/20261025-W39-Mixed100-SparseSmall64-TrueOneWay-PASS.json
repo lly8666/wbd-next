@@ -1,0 +1,163 @@
+{
+  "schema": 1,
+  "owner": "fec-network-work",
+  "id": "FEC-W39-MixedSmall100-SparseProbe-Calibrate-OneNative-ARM64",
+  "request": "tests/network/fec-work/W39-mixed-small100-sparse-probe-diagnostic-arm64.json",
+  "request_commit": "06eced3da900887f2bdab0e7719fd949c3ef5c7a",
+  "action_run": 40151444036,
+  "attempt": 1,
+  "result": "PASS_SCOPED_OBSERVATION",
+  "result_artifact_id": 12582309090,
+  "zip_sha256": "80fa6550e58c62bdd884d22c816cf7a2f1ec6c5bd45fbe133d5f7723f62f80e0",
+  "source": "861f0396264734f97658243156060f13e6a2f74f",
+  "build_run": 40150749260,
+  "build_artifact": 12582379708,
+  "product_zip_sha256": "5f9f587a4d1d44a3cf482c4c46a5be5b52cc71fdb4080935de153dc85f89f7e5",
+  "settings": {
+    "app_rate_mbps_each": 100,
+    "udp_mbps_each": 96,
+    "tcp_mbps_each": 4,
+    "tcp_flows_each": 2,
+    "size_payload_count_weights": [
+      [
+        64,
+        6
+      ],
+      [
+        96,
+        8
+      ],
+      [
+        160,
+        10
+      ],
+      [
+        256,
+        11
+      ],
+      [
+        512,
+        15
+      ],
+      [
+        900,
+        20
+      ],
+      [
+        1287,
+        30
+      ]
+    ],
+    "pct_small_by_count": 35,
+    "sparse_probe_bytes": 64,
+    "sparse_probe_hz": 20,
+    "loss_iid_pct": 30,
+    "netem_oneway_ms": 300,
+    "netem_outer_mbps_each": 600,
+    "fixed_maximum6_actual_both": true,
+    "outer_DATA_retransmission_zero": true,
+    "authenticated_M2": true,
+    "static_veth_neighbors": true,
+    "original_fq600": true,
+    "warmup_s": 15,
+    "measure_s": 30,
+    "drain_s": 30,
+    "small_udp_max_loss_pct": 1,
+    "small_udp_max_p99_ms": 500
+  },
+  "results": {
+    "c2s": {
+      "udp_injected_mbps": 95.998,
+      "udp_delivered_mbps": 95.9578,
+      "udp_residual_loss_pct": 0.04637975901931067,
+      "udp_p99_ms": 307.5,
+      "tcp_target_mbps": 4,
+      "tcp_injected_mbps": 3.9997,
+      "tcp_delivered_mbps": 3.9997,
+      "tcp_residual_loss_pct": 0,
+      "tcp_p99_ms": 943.3,
+      "tcp_backpressure_slots": 0,
+      "small_udp": {
+        "sent": 180355,
+        "delivered": 180240,
+        "missing": 115,
+        "loss_pct": 0.06376313381941172,
+        "p99_ms": 308.6,
+        "send_lag_p99_ms": 2.1,
+        "netem_aligned_10ms_delivery_gap_ms": 0
+      },
+      "sparse_64B": {
+        "offered_hz": 20,
+        "sent": 595,
+        "first_received": 593,
+        "missing": 2,
+        "first_oneway_p99_ms": 307.1,
+        "reverse_rtt_p99_ms": 610
+      }
+    },
+    "s2c": {
+      "udp_injected_mbps": 95.9935,
+      "udp_delivered_mbps": 95.9783,
+      "udp_residual_loss_pct": 0.03085593190736234,
+      "udp_p99_ms": 307.5,
+      "tcp_target_mbps": 4,
+      "tcp_injected_mbps": 3.9998,
+      "tcp_delivered_mbps": 3.9998,
+      "tcp_residual_loss_pct": 0,
+      "tcp_p99_ms": 925.9,
+      "tcp_backpressure_slots": 0,
+      "small_udp": {
+        "sent": 180355,
+        "delivered": 180236,
+        "missing": 119,
+        "loss_pct": 0.06598098195226082,
+        "p99_ms": 308.7,
+        "send_lag_p99_ms": 2.1,
+        "netem_aligned_10ms_delivery_gap_ms": 0
+      },
+      "sparse_64B": {
+        "offered_hz": 20,
+        "sent": 595,
+        "first_received": 593,
+        "missing": 2,
+        "first_oneway_p99_ms": 306.7,
+        "reverse_rtt_p99_ms": 610
+      }
+    }
+  },
+  "native_parity": {
+    "client": {
+      "planned": 1019107,
+      "sent": 1019107,
+      "expired_jobs": 0,
+      "unknown_capacity": 0,
+      "pressure_jobs": 0,
+      "pressure_sources": 0
+    },
+    "server": {
+      "planned": 1020072,
+      "sent": 1020072,
+      "expired_jobs": 0,
+      "unknown_capacity": 0,
+      "pressure_jobs": 0,
+      "pressure_sources": 0
+    }
+  },
+  "resource": {
+    "host_cpu_psi_pct": {
+      "mean": 37.647333333333336,
+      "peak": 40.43
+    },
+    "source_tun_tx_drops_steady_both": 0,
+    "source_tun_tx_drops_warmup_both": 0,
+    "original_tun_root_fq_drops_both": 0,
+    "original_outer_DATA_retransmitted_both": 0,
+    "stop_drained_both": true
+  },
+  "qualification": [
+    "PASS only safe 100Mbps each on 4-core shared ARM64 VM, unchanged loss30%IID/300ms; NOT a 200Mbps mixed qualification.",
+    "W38 200Mbps each with same packet-size weights and higher packet/s load FAILS in A/B: loss~13–14% older and5–6% optimized B, real TUN source drops and TCP severe backpressure. Full mixed 200 still unqualified.",
+    "64B sparse first-arrival direct peer receipt, not echo RTT, actually observed in W39; 595 real probes offered, 593 received per direction, never fabricate 0% loss or survivor-only goodput.",
+    "No native codec/AEAD mathematical changes; destination probe packets included in original on-wire pipeline and recovered by genuine FEC."
+  ]
+}

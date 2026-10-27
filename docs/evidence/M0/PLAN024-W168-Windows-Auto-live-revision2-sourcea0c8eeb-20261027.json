@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "native_original_windows_linux_live_auto_operator_revision2_functional",
+  "source_sha": "a0c8eeb29796aa41d0f41e76798d3d00c672adaf",
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "integration_branch": "integration/w168-freeze-windows-adapter-20261026",
+  "workflow_run_id": 40457048399,
+  "run_attempt": 1,
+  "run_conclusion": "success",
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/40457048399",
+  "native_job_id": 122033786983,
+  "artifacts": [
+    {
+      "id": 12712887451,
+      "name": "m0-wl-full-public-normal-direct",
+      "digest": "sha256:5196a033594ab70d1b99d1d42b49c7d8bfe4ae78071dee2e0fe3d69df7738dd3"
+    },
+    {
+      "id": 12712404092,
+      "name": "windows-compile-preflight-40457048399",
+      "digest": "sha256:daf106721c583cbc98a9ea73cc8d86e30cb687f997ebf0477c7ef7988c5f1630"
+    }
+  ],
+  "preflight": {
+    "assembly": "PASS",
+    "original_windows_go_production_and_tests": "PASS",
+    "linux_original_go_rust_build": "PASS",
+    "native_signed_drivers": "PASS"
+  },
+  "functional": {
+    "mode": "fec-auto",
+    "start_profile": 5,
+    "config_change": "operator fec.profile=light",
+    "requested_revision": 2,
+    "requested_profile": 0,
+    "post_revision_genuine_m2_applied": true,
+    "logs": [
+      "WBD_WL_REAL_AUTO_DYNAMIC_REVISION2_APPLIED_AFTER_TWO_OS_KERNEL_UDP",
+      "WBD_WL_TRUE_PUBLIC_MODE_WIN_LINUX_DUPLEX_STOP_PASS auto-revision",
+      "WL_ACTUAL_AUTO_REVISION2_NATIVE_TWO_OS_AND_STOP_PASS"
+    ],
+    "after_revision_kernel_udp": {
+      "windows": {
+        "sent": 126,
+        "received": 121,
+        "kernel_bind": "PASS",
+        "public_ready_seen": true
+      },
+      "linux": {
+        "sent": 122,
+        "received": 124,
+        "kernel_bind": "PASS",
+        "public_ready_seen": true
+      }
+    },
+    "owned_windows_linux_stop": "PASS",
+    "pre_revision_duplex_udp_tcp": "PASS"
+  },
+  "eligibility": "OPEN_FOR_NETWORK_TEST_SCOPE_ONLY_NOT_FORMAL_RELEASE",
+  "limitations": {
+    "automatic_2s_8s_policy_up_and_down": "NOT_RUN",
+    "all_profile_0_to_6": "NOT_RUN",
+    "true_WinForms_Applied_Disconnect": "NOT_RUN",
+    "host_global_WFP_route_DNS_IPv6": "NOT_RUN",
+    "WL_N0_N1_N5": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "full_performance": "NOT_RUN"
+  },
+  "historical_failed_candidate": {
+    "source_sha": "80e5289ab4b4c47adf55740632b0960f8319dfef",
+    "run_id": 40455980911,
+    "root_cause": "test harness expected absent normal-report.json after auto-revision-only run; original two-OS data and original M2 revision2 applied had reached functional positive, but job conclusion remained FAIL"
+  }
+}

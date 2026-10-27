@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "event": "S023",
+  "kind": "HARNESS_CONTRACT_ONLY",
+  "source": "b084206edaee3a874bc8b24e3e7b517be0830a28",
+  "action_id": 39786357898,
+  "conclusion": "success",
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/39786357898",
+  "observed": "existing real kernel ss -H -tin parsed aggregate ESTAB/cwnd/notsent/bytes_sent/bytes_acked/bytes_received/unacked/rto/retrans per namespace at four existing snapshots; no addresses or ports; missing NOT_OBSERVED",
+  "product_source_unchanged": "370eb534621d76deda7888599bd089acc163acac",
+  "product_performance": "NOT_RUN_CONTRACT"
+}

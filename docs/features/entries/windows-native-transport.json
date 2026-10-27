@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "id": "windows-native-transport",
+  "name": "Windows Npcap/Wintun原生传输",
+  "summary": "原Go TLS与Npcap/签名Wintun的Rust AEAD真实双向App链路，模式mask保守开放。",
+  "owner": "M0 takeover/历史M4",
+  "stage": "experimental",
+  "development_branch": "work/m4-r1-platform",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "mode-mask": "当前验证只覆盖Normal/off",
+    "driver": "真实签名Wintun/Npcap原生"
+  },
+  "usage": {
+    "cli": "原Go wbd-client.exe --native-v4-product；需真实驱动、TLS/地址配置",
+    "config": "原Go Windows参数由固定源组装补丁注入，完整用户可选项需再核",
+    "gui": "WinForms可以发起V4候选，但真实GUI全局OS连通未取得证据"
+  },
+  "code_refs": [
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go",
+    "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
+    "crates/wbd-engine/src/v4_windows_owner.rs"
+  ],
+  "doc_refs": [
+    "docs/evidence/M0/PLAN024-W168-recovered-Windows-v3-native-run-20261027.json",
+    "docs/handoff/CURRENT_INTEGRATION.md"
+  ],
+  "verification": [
+    {
+      "platform": "windows/x64 + WSL2/linux",
+      "scope": "原生 Normal/off：原生Npcap→Linux raw/TUN真实UDP/TCP和Stop；此结果仅旧W源码，不是盘点HEAD的重新测试",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "4fb263dd38b68e6a1763e7d79f5654b611f4ac8b",
+      "evidence": "docs/evidence/M0/PLAN024-W168-recovered-Windows-v3-native-run-20261027.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "Fixed/Auto/Game实际模式放行及应用",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "非hosted环境与全局代理",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "旧Windows修复失败仍需保留；cannot infer Windows modes from Linux or native code mask.",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

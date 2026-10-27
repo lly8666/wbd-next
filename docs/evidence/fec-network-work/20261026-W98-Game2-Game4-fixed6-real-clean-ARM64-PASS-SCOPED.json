@@ -1,0 +1,189 @@
+{
+  "schema": "W98_ORIGINAL_GAME_FIXED6_REAL_NOLOSS_ARM64_V1",
+  "owner": "fec-network-work",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "exact_product": {
+    "source": "c18de0fa79f529c349b6546635f3c6b62aa01b1c",
+    "build_run": 40255431613,
+    "attempt": 1,
+    "artifact_id": 12621844471,
+    "sha256": "85e50a70ef44306fe5a6f913010d57568cc01b652830be09d473cbd7b2248ac6"
+  },
+  "go_tls_regression": {
+    "workflow_only_source": "1d783722e6ca0da284aee9ef5e5605fe99e47462",
+    "run": 40255724717,
+    "result": "SUCCESS",
+    "tests": [
+      "TestFECGameProtectedTLSRejectsDifferentFixedProfilesBeforeOwner",
+      "TestFECGameProtectedV4ProfileWireOffAndFailClosed"
+    ],
+    "build_zip_artifact": [
+      {
+        "id": 12622990062,
+        "sha256": "sha256:fa32ac0409660032e9fd5b2325e11237183b5ae8efec8ede11e7c77b9399fbba"
+      }
+    ]
+  },
+  "scenario": {
+    "each_direction_mbps": 3,
+    "udp_share": 0.96,
+    "real_tcp_flows": 2,
+    "one_way_ms": 75,
+    "phase": "clean_baseline",
+    "duration_s": 20,
+    "warmup_s": 15,
+    "netem_loss": 0,
+    "initial_game_off_comparison": "W91 real OFF PASS on separate VMs; not sameVM causal CPU comparison",
+    "one_scenario_per_action": true,
+    "mtu": {
+      "record_wire": 1460,
+      "record_overhead": 31,
+      "game_logical": 16,
+      "game_fec_inner": 15,
+      "tun": 1398
+    }
+  },
+  "game2": {
+    "run": 40255806409,
+    "request_commit": "756ac19afa8a8c43cd9e8ee4bff5f3e75417ab85",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "udp_injected_delivered_c2s_s2c_mbps": [
+      2.8798264,
+      2.8798264
+    ],
+    "tcp_injected_delivered_c2s_s2c_mbps": [
+      0.1198944,
+      0.1198944
+    ],
+    "missing_udp_tcp": 0,
+    "tcp_backpressure": 0,
+    "p99_udp_ms_c2s_s2c": [
+      77.6,
+      77.5
+    ],
+    "p99_tcp_ms_c2s_s2c": [
+      78.1,
+      78.1
+    ],
+    "client_cpu_s": 2.73,
+    "server_cpu_s": 2.73,
+    "client_cpu_per_gib": 390.8784,
+    "server_cpu_per_gib": 390.8784,
+    "rss_peak_client_server": [
+      26636288,
+      26923008
+    ],
+    "host_psi_peak_pct": 2.88,
+    "outer_tx_mbps_client_server": [
+      18.0629808,
+      18.0598176
+    ],
+    "source_tun_drop_both": 0,
+    "stop_drained_both": true,
+    "client": {
+      "source_offered": 21849,
+      "parity_offered": 29904,
+      "parity_copied": 29904,
+      "rplanned": 29904,
+      "rsent": 29904,
+      "systematic_tun_candidate": 21850,
+      "recovered_candidate": 0,
+      "expired": 0,
+      "failed": 0,
+      "auth_rejected": 0
+    },
+    "server": {
+      "source_offered": 21850,
+      "parity_offered": 29922,
+      "parity_copied": 29922,
+      "rplanned": 29922,
+      "rsent": 29922,
+      "systematic_tun_candidate": 21849,
+      "recovered_candidate": 0,
+      "expired": 0,
+      "failed": 0,
+      "auth_rejected": 0
+    },
+    "action_artifact_id": 12622183767,
+    "action_zip_sha256": "fcb461bfb08d77ee4ce2e1fa8f051c540c7c0841b40c7d2a43db69311b4ebbc8"
+  },
+  "game4": {
+    "run": 40255813118,
+    "request_commit": "d22541d5c2f9f7264e58d07bb45fe069f3659564",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "udp_injected_delivered_c2s_s2c_mbps": [
+      2.8798264,
+      2.8803412
+    ],
+    "tcp_injected_delivered_c2s_s2c_mbps": [
+      0.1198944,
+      0.1198944
+    ],
+    "missing_udp_tcp": 0,
+    "tcp_backpressure": 0,
+    "p99_udp_ms_c2s_s2c": [
+      77.9,
+      77.9
+    ],
+    "p99_tcp_ms_c2s_s2c": [
+      78.2,
+      78
+    ],
+    "client_cpu_s": 3.98,
+    "server_cpu_s": 4.07,
+    "client_cpu_per_gib": 569.7542,
+    "server_cpu_per_gib": 582.7381,
+    "rss_peak_client_server": [
+      39202816,
+      38862848
+    ],
+    "host_psi_peak_pct": 5.91,
+    "outer_tx_mbps_client_server": [
+      36.1412976,
+      36.1483088
+    ],
+    "source_tun_drop_both": 0,
+    "stop_drained_both": true,
+    "client": {
+      "source_offered": 21855,
+      "parity_offered": 29896,
+      "parity_copied": 29896,
+      "rplanned": 29896,
+      "rsent": 29896,
+      "systematic_tun_candidate": 21832,
+      "recovered_candidate": 0,
+      "expired": 0,
+      "failed": 0,
+      "auth_rejected": 0
+    },
+    "server": {
+      "source_offered": 21834,
+      "parity_offered": 29866,
+      "parity_copied": 29866,
+      "rplanned": 29866,
+      "rsent": 29866,
+      "systematic_tun_candidate": 21853,
+      "recovered_candidate": 0,
+      "expired": 0,
+      "failed": 0,
+      "auth_rejected": 0
+    },
+    "action_artifact_id": 12622632343,
+    "action_zip_sha256": "38c44dce518f7efd5647ae482c95817100d7f38cc59538090d40c8dd8f5f5e22"
+  },
+  "assessment": "First real original Go TLS Game2 and Game4 fixed6 clean 3Mbps+real TCP passing after SIX W90 authentic losses and atomic rollback. Can explicitly test this fixed profile in network only; not injured/parity-to-TUN recovered qualification, no Game Auto, no Game outer --outer-repair=off qualification. No CPU saving claim: parity bandwidth and computation cost clear; no sameVM OFF/fixed paired A/B.",
+  "outer_data_repair": "Game original --outer-repair=off explicitly UNSUPPORTED; outer DATA retransmit zero not verified for Game. This is not qualified FEC-only retrans-OFF although parity sent.",
+  "boundaries": [
+    "W90 six historical Game2/4 fixed0/fixed6 failures remain genuine failures of old sources",
+    "FEC recovered_candidate=0 as expected at zero artificial loss: no lost-original recovery demonstrated",
+    "Long GE correlation and lane blackholes NOT_RUN with W98",
+    "Windows and physical devices NOT_RUN/TEMP_SKIPPED",
+    "CPU/ GiB across other VMs not causal",
+    "Normal fixed/auto and true outer DATA repair OFF remain separate historical evidence",
+    "capacity_stop=true",
+    "merge_ready=false"
+  ],
+  "capacity_stop": true,
+  "merge_ready": false
+}

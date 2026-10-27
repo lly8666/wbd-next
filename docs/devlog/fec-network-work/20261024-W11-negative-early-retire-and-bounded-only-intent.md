@@ -1,0 +1,4 @@
+# W11 early-retire regression, resolved evidence / follow-up
+W11 Action40086619261 old b601 vs new 2674 original 50Mbps Maximum30 300ms 30s same VM sequential AB, both outer off. A residual 3.93%/3.63%; B 8.81%/12.23% (FAIL), decoder reject 116812/119879 vs old17449/18494, source firstsend+Parity sender counts unchanged but RX raw observed 333382/341586 vs 363738/364280. CPU B 10.57/10.85 vs A12.11/12.02 cpu-s, RSS B ~27.7/27.5 MB vs A29.2/28.9 MB; do not call efficiency improvement when business lost.
+
+Receiver full block early retire is plausible legitimate redundant parity rejection; reverted, preserve original 150ms age and span128; only enlarge occupancy32->96,1MiB->8MiB computed actual group frequency. Need original RX typed error and retention high-water at Stop; harness whitelist updated. W12 must compare closer source a969→bounded-only new in one VM A/B, not b601→new without accounting Auto code differences. No higher pressure. 

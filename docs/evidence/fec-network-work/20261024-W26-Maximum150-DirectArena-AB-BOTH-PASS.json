@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "owner": "fec-network-work",
+  "task": "W26-150Mbps-source-direct-arena-CPU-AB",
+  "action_run": 40110100061,
+  "run_attempt": 1,
+  "conclusion": "SUCCESS_BOTH_LEGS_SCOPED_PASS",
+  "artifact_id": 12565693815,
+  "artifact_sha256": "d7127551bec2574ec38858e232cce03a65f3c76020c71856be9f389fb81e9051",
+  "request_commit": "2ecf68430b207ee0181215c03b1357e74e2148d6",
+  "request_path": "tests/network/fec-work/W26-maximum150-direct-source-arena-AB-arm64.json",
+  "run_mode": "single ARM64 VM, one performance job, sequential AB",
+  "old": {
+    "source": "ab7ea894100f245d6a510137282736781bd017ce",
+    "build_run": 40108972702,
+    "product_artifact": 12565424535,
+    "business": {
+      "c2s_mbps": 149.87436746666665,
+      "s2c_mbps": 149.87072693333334,
+      "residual_pct_c2s": 0.10152951494727491,
+      "residual_pct_s2c": 0.09541292720514913,
+      "p99_ms_c2s": 304.5,
+      "p99_ms_s2c": 304
+    },
+    "process_cpu_s_30s": {
+      "client": 25.36,
+      "server": 25.27
+    },
+    "rss_peak_bytes": {
+      "client": 49897472,
+      "server": 50171904
+    },
+    "original_native_parity": {
+      "client": {
+        "rplanned": 830379,
+        "rsent": 829009,
+        "queued_expired": 34,
+        "unknown_capacity": 90
+      },
+      "server": {
+        "rplanned": 830337,
+        "rsent": 829059,
+        "queued_expired": 38,
+        "unknown_capacity": 65
+      }
+    },
+    "outer_virtual_tx_bytes_30s": {
+      "client": 973921100,
+      "server": 973093110
+    },
+    "host_cpu_psi_pct": {
+      "peak": 30.58,
+      "mean": 28.096333333333334,
+      "over20_fraction": 1
+    },
+    "result": "PASS_SCOPED_OBSERVATION"
+  },
+  "optimized": {
+    "source": "564490bc7a8f61c9ab06be58add8138212306393",
+    "build_run": 40109847848,
+    "product_artifact": 12566326717,
+    "zip_sha256": "a1ce0b81738a9a74ac04835546479ada398e99718fd5086775c0b765625f649c",
+    "business": {
+      "c2s_mbps": 149.89670773333333,
+      "s2c_mbps": 149.9263082666667,
+      "residual_pct_c2s": 0.08362454618386522,
+      "residual_pct_s2c": 0.06232223997461785,
+      "p99_ms_c2s": 303.7,
+      "p99_ms_s2c": 303.8
+    },
+    "process_cpu_s_30s": {
+      "client": 24.87,
+      "server": 25.39
+    },
+    "rss_peak_bytes": {
+      "client": 49852416,
+      "server": 49713152
+    },
+    "original_native_parity": {
+      "client": {
+        "rplanned": 830269,
+        "rsent": 829411,
+        "queued_expired": 24,
+        "unknown_capacity": 46
+      },
+      "server": {
+        "rplanned": 830185,
+        "rsent": 829614,
+        "queued_expired": 12,
+        "unknown_capacity": 30
+      }
+    },
+    "outer_virtual_tx_bytes_30s": {
+      "client": 974426572,
+      "server": 974278667
+    },
+    "host_cpu_psi_pct": {
+      "peak": 30.25,
+      "mean": 27.724,
+      "over20_fraction": 1
+    },
+    "result": "PASS_SCOPED_OBSERVATION"
+  },
+  "settings": {
+    "fec": "Fixed Maximum 6 both applied",
+    "outer_data_repair": "OFF zero bytes/copies",
+    "traffic_mbps_each": 150,
+    "netem_loss_iid_pct": 30,
+    "oneway_delay_ms": 300,
+    "netem_observed_loss_pct": {
+      "A": {
+        "client": 29.987682231247557,
+        "server": 30.026944949380503
+      },
+      "B": {
+        "client": 29.977144993309643,
+        "server": 29.98858643942406
+      }
+    },
+    "warmup_s": 15,
+    "measurement_s": 30,
+    "drain_s": 30,
+    "owned_static_test_veth_neighbor": true,
+    "original_owned_TUN_fq600_unchanged": true,
+    "source_tun_root_drops_both_zero": true,
+    "rx_capacity_evictions_and_decoder_rejects_zero": true,
+    "stop_owned_namespaces_absent": true
+  },
+  "interpretation": [
+    "Both A and B business scoped PASS under exact mode. Source_into eliminates one source_owned Vec allocation and duplicate copy for every FEC TX source.",
+    "Client CPU observed -0.49s/30s (-1.93%), server +0.12s (+0.47%), combined -0.37s/30s (-0.73%). This single AB is not a causal/general CPU speedup qualification.",
+    "Process RSS near 50MB each and parity planned/sent virtually complete. Low residual and p99 are maintained; no reduced parity/shorter data output trick.",
+    "Host PSI stays above20% across100% samples, physical 175-350 not authorized; 150 single-run PASS does not prove sustained stability.",
+    "Auto dynamic loss-step/asymmetric live configuration and genuine measurement RTT age remain OPEN, merge_ready=false."
+  ]
+}

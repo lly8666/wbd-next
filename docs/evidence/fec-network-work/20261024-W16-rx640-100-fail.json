@@ -1,0 +1,100 @@
+{
+  "run": 40097487779,
+  "source": "8ec552bdd146cf33233130c4779ed5339e27a3c7",
+  "product_build_run": 40097251707,
+  "product_artifact_id": 12561755643,
+  "product_zip_sha256": "866aae86f355e76b8269ea86a72fd15748ee0448d4095085a374695678f45674",
+  "result_artifact_id": 12561303555,
+  "result_sha256": "0cc77ea7e6cc55bed5f1adacbd554bf90be64944b419996eadba2a92597e4d94",
+  "scenario": "100Mbps each; FEC Maximum profile6, 30% IID each, one-way300ms, virtual outer cap400Mbps each, outer data retransmission OFF",
+  "conclusion": "FAIL_C2S_BUSINESS_LOSS_OUTER_EGRESS_DEFICIT",
+  "business": {
+    "c2s": {
+      "injected_mbps": 99.99863013333334,
+      "delivered_mbps": 94.5789728,
+      "missing": 15993,
+      "p99_ms": 303.1
+    },
+    "s2c": {
+      "injected_mbps": 100.00206213333334,
+      "delivered_mbps": 99.97866186666666,
+      "missing": 129,
+      "p99_ms": 303.2
+    }
+  },
+  "resource": {
+    "cpu_s": {
+      "client": 18.57,
+      "server": 18.15
+    },
+    "rss_peak_bytes": {
+      "client": 40132608,
+      "server": 40144896
+    },
+    "host_cpu_psi_peak": 16.5
+  },
+  "real_outer_interface": {
+    "measurement_seconds": 30,
+    "client_tx_bytes": 615616431,
+    "server_tx_bytes": 650063883,
+    "client_tx_mbps": 164.1643816,
+    "server_tx_mbps": 173.3503688,
+    "combined_mbps": 337.5147504,
+    "all_transmissions_included": true
+  },
+  "original_wire_first_send_cumulative": {
+    "window_seconds": 45,
+    "client_bytes": 1376830446,
+    "server_bytes": 1376844261,
+    "client_gross_mbps": 244.76985706666667,
+    "server_gross_mbps": 244.7723121777778,
+    "accounting_different_window_do_not_add_to_outer_interface": true
+  },
+  "actual_retransmission": {
+    "client_packets": 0,
+    "server_packets": 0,
+    "client_repair_wire_bytes": 0,
+    "server_repair_wire_bytes": 0
+  },
+  "fec": {
+    "client": {
+      "rsent": 554439,
+      "source_accepted": 443019,
+      "rx_recovered_tun": 132655
+    },
+    "server": {
+      "rsent": 554434,
+      "source_accepted": 443005,
+      "rx_recovered_tun": 127783
+    }
+  },
+  "rx_capacity": {
+    "client": {
+      "peak_active": 109,
+      "max_active": 640,
+      "peak_bytes": 3829255,
+      "max_stored_bytes": 50331648,
+      "pressure_evicted": 0,
+      "decoder_rejected": 0,
+      "age_evicted": 29527,
+      "reorder_evicted": 0
+    },
+    "server": {
+      "peak_active": 109,
+      "max_active": 640,
+      "peak_bytes": 3774985,
+      "max_stored_bytes": 50331648,
+      "pressure_evicted": 0,
+      "decoder_rejected": 0,
+      "age_evicted": 28364,
+      "reorder_evicted": 101
+    }
+  },
+  "netem_loss_pct": {
+    "client": 29.983550892729433,
+    "server": 30.01534867415148
+  },
+  "source_tun_drops_both": 0,
+  "stop_drained_both": true,
+  "interpretation": "RX slot bottleneck eliminated: 109/640 peak, no pressure eviction. Business fails in C2S; client 30s virtual netem egress164.16 Mbps vs server173.35 Mbps, while both TUN source 100Mbps, both first-wire45s ~1.3768GB, first-copy parity ~554k, no M4 copy failures, and 30% netem loss. Similar underfeed as W12 second leg, not proven FEC decoding/CPU issue."
+}

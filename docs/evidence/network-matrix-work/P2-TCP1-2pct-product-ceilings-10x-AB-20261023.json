@@ -1,0 +1,162 @@
+{
+  "schema": 1,
+  "id": "P2-TCP1-2pct-product-ceilings-10x-AB-20261023",
+  "verdict": "INCONCLUSIVE_TCP_BACKPRESSURED_BOTH_LEGS_NO_10MBPS_QUALIFICATION",
+  "scenario": {
+    "mode": "Normal/off",
+    "tcp_flows_each_direction": 1,
+    "target_mbps_each_direction": 10,
+    "outer_loss_pct": 2,
+    "one_way_delay_ms": 200,
+    "measured_seconds": 60,
+    "warmup_seconds": 10,
+    "drain_seconds": 30,
+    "seed": 5237,
+    "netem_rng": "unseeded_recorded",
+    "kernel_tcp_window_profiles": [
+      "baseline",
+      "baseline"
+    ],
+    "kernel_tcp_reordering_profiles": [
+      "baseline",
+      "baseline"
+    ],
+    "vm": "same_ubuntu24_04_arm_sequential_AB"
+  },
+  "action": {
+    "run": 39950439687,
+    "attempt": 1,
+    "status": "failure_due_to_INCONCLUSIVE_INPUT_RATE",
+    "artifact_id": 12500491341,
+    "artifact_zip_sha256": "9e88daea80e6a7a611992dd6464c5f36c081ff22d025c70e518248690784f552",
+    "harness_source": "31835d7f454bc716a051deca1c41d6671a71fe05",
+    "harness_contract_run": 39950439726,
+    "harness_contract": "success"
+  },
+  "products": {
+    "A": {
+      "source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+      "run": 39921718042,
+      "attempt": 1,
+      "artifact": 12486939897,
+      "zip_sha256": "637ca5d47d06e0aea0674d535821dcfc2e1f055f3fb5201b82deab1a64217f11",
+      "profile": "NORMAL_ONE_REPAIR_10PCT"
+    },
+    "B": {
+      "source": "7d8f6eb2bac64b1fa1e85dc48022c18393dd2e72",
+      "run": 39949934400,
+      "attempt": 1,
+      "artifact": 12500346228,
+      "zip_sha256": "9ba229750d62a6e32b6965ee9d2ab28eaee03aee74914cb719b42c0685a7fba3",
+      "profile": "COMPILE_TIME_ONLY_OVERSIZED_10X_NOT_PRODUCTION",
+      "diagnostic_10x_readback": {
+        "client": 1,
+        "server": 1
+      },
+      "repair_share_diag": 1,
+      "repair_burst_mtu": 80,
+      "m1_slots": 8192,
+      "rx_arena_slots": 640
+    }
+  },
+  "results": {
+    "A": {
+      "directions": {
+        "c2s": {
+          "injected_mbps": 1.1985369333,
+          "delivered_mbps": 1.1985369333,
+          "p99_ms": 3656.4,
+          "tcp_backpressure_slots": 51290
+        },
+        "s2c": {
+          "injected_mbps": 0.7234893333,
+          "delivered_mbps": 0.7234893333,
+          "p99_ms": 4007.8,
+          "tcp_backpressure_slots": 54060
+        }
+      },
+      "repair_sent_total": 793,
+      "quota_blocked_client": 151,
+      "quota_blocked_server": 46,
+      "quota_blocked_total": 197,
+      "m1_peak_client": 210,
+      "m1_peak_server": 100,
+      "m1_alloc_failed_both": 0,
+      "m1_pre_read_deferred_both": 0,
+      "tun_source_drops_both": 0,
+      "cwnd_median_client": 49,
+      "cwnd_median_server": 25,
+      "product_cpu_s": {
+        "client": 1.37,
+        "server": 1.41
+      },
+      "peak_rss_bytes": {
+        "client": 16572416,
+        "server": 17469440
+      },
+      "netem_drop_pct": {
+        "client": 2.0575,
+        "server": 2.2356
+      },
+      "host_cpu_psi_gt20_fraction": 0
+    },
+    "B": {
+      "directions": {
+        "c2s": {
+          "injected_mbps": 1.1075462667,
+          "delivered_mbps": 1.1075462667,
+          "p99_ms": 1914.9,
+          "tcp_backpressure_slots": 81685
+        },
+        "s2c": {
+          "injected_mbps": 1.3456749333,
+          "delivered_mbps": 1.3456749333,
+          "p99_ms": 3321.2,
+          "tcp_backpressure_slots": 50433
+        }
+      },
+      "repair_sent_total": 1032,
+      "quota_blocked_client": 21,
+      "quota_blocked_server": 0,
+      "quota_blocked_total": 21,
+      "m1_peak_client": 125,
+      "m1_peak_server": 164,
+      "m1_alloc_failed_both": 0,
+      "m1_pre_read_deferred_both": 0,
+      "tun_source_drops_both": 0,
+      "cwnd_median_client": 47,
+      "cwnd_median_server": 59,
+      "product_cpu_s": {
+        "client": 1.59,
+        "server": 1.67
+      },
+      "peak_rss_bytes": {
+        "client": 33480704,
+        "server": 33873920
+      },
+      "netem_drop_pct": {
+        "client": 1.9693,
+        "server": 1.9533
+      },
+      "host_cpu_psi_gt20_fraction": 0.2333
+    }
+  },
+  "checks": {
+    "real_kernel_raw_TUN_TLS": "yes",
+    "stop_drained_both": "true",
+    "owner_namespace_cleaned": "true",
+    "outer_repair_attempt_limit": 1,
+    "shadow_limit": 131072,
+    "retain_cap_us": 1500000,
+    "host_and_source_TUN_drops": "none",
+    "FEC_specialized_test": "not_in_scope"
+  },
+  "findings": [
+    "New diagnostic overprovision reduced absolute observed quota denies from 197 to 21 (~89.3%), but no repeatable two-direction TCP throughput qualification.",
+    "M1 pool peaks far below 1024; neither leg had M1 arena_failed, pre_read_deferred, source TUN TX dropped. Enlarging M1 to8192 is unsubstantiated for this ~1Mbps workload.",
+    "Both directions CUBIC remained congestion-window limited; server median cwnd25->59 in B, client49->47. TCP p99 still seconds.",
+    "B ran with measured host CPU contention and stochastic netem differed 2.06%/2.24% vs1.97%/1.95%; do not interpret S2C-only improvement as stable causal speedup.",
+    "Diagnostic deliberately violates production 10% repair/fresh budget; never promote it or claim low tail/10Mbps. Real first-delivery priority unchanged."
+  ],
+  "next_action": "Preserve original Normal/off one-repair ceiling and current scoped multistream evidence. Add bounded authentic TCP DATA-versus-ACK loss/repair decision age/quota-spurious-PTO counter to resolve timeliness vs Linux cwnd, not more blanket slots or quota. Separately investigate zero-loss source M1/TUN full-rate drop."
+}

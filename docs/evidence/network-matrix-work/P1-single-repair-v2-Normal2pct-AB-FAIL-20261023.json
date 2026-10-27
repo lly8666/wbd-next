@@ -1,0 +1,190 @@
+{
+  "schema": 1,
+  "id": "P1-single-repair-v2-Normal2pct-AB-FAIL-20261023",
+  "qualification": "FAIL_REAL_BIDIRECTIONAL_BUSINESS_NOT_PRODUCT_QUALIFIED",
+  "source_commit": "5890776f85a34373bc0c71ebdea43df97f59e52a",
+  "exact_actions": {
+    "native_v2": {
+      "run": 39906119466,
+      "artifact": 12480718285,
+      "result": "PASS_BUNDLE_75_OF_75_MTU9"
+    },
+    "harness_contract": {
+      "run": 39906853856,
+      "result": "PASS"
+    },
+    "harness_request_contract": {
+      "run": 39907046737,
+      "result": "PASS"
+    },
+    "business": {
+      "run": 39907046412,
+      "attempt": 1,
+      "artifact": 12481288207,
+      "artifact_zip_sha256": "0c7aec24ca52b6d8fb7e60943d08eebcfb69755d1634f90a316cf56cd8d06b41",
+      "result": "FAIL_BOTH_AB"
+    }
+  },
+  "frozen_request": {
+    "id": "P1-Normal2pct-single-repair-v2-old-new-AB-60s",
+    "seed": 5205,
+    "order": "AB",
+    "policy": "outer-single-repair-v2",
+    "source_A": "f8b29e785ac8251c526e74b6288ae59ab031016d",
+    "A_product_artifact": 12479730545,
+    "source_B": "e430951cfabe6e33bbc330c6c10cf40ffd9d77a4",
+    "B_product_artifact": 12480718285,
+    "case": "normal, 2Mbps in each direction, UDP 50%/TCP 50%, UDP packet weights64:1 near-MTU1287:99; 2% loss each direction, one-way200ms, zero jitter/dup/reorder, unseeded_recorded netem, steady60s after warmup10s, drain30s, 4 TCP streams",
+    "acceptance": {
+      "max_loss_pct": 0.25,
+      "injection_tolerance_pct": 3,
+      "require_retransmission": true
+    }
+  },
+  "measurements": {
+    "A": {
+      "observed_udp_loss_pct": {
+        "c2s": 2.6512576478586,
+        "s2c": 2.974167233174711
+      },
+      "observed_udp_missing": {
+        "c2s": 156,
+        "s2c": 175,
+        "each_offered": 5884
+      },
+      "tcp_delivered_loss_pct": {
+        "c2s": 0,
+        "s2c": 0
+      },
+      "tcp_p99_ms": {
+        "c2s": 5322.7,
+        "s2c": 5609.8
+      },
+      "udp_first_p50_ms": {
+        "c2s": 200.2,
+        "s2c": 200.2
+      },
+      "product_cpu_s_measurement": {
+        "client": 1.84,
+        "server": 1.86
+      },
+      "product_peak_rss_bytes": {
+        "client": 15523840,
+        "server": 15908864
+      },
+      "repair_accepted": {
+        "client": 661,
+        "server": 623
+      },
+      "blocked_quota": {
+        "client": 185,
+        "server": 182
+      },
+      "netem_loss_pct": {
+        "client": 2.15536,
+        "server": 1.8559
+      },
+      "stop_drained_both": true,
+      "effective_config_verified": true,
+      "policy_expected": "legacy-two-repair-v1",
+      "policy_v2_attested": false
+    },
+    "B": {
+      "observed_udp_loss_pct": {
+        "c2s": 2.48130523453433,
+        "s2c": 2.53229095853161
+      },
+      "observed_udp_missing": {
+        "c2s": 146,
+        "s2c": 149,
+        "each_offered": 5884
+      },
+      "tcp_delivered_loss_pct": {
+        "c2s": 0,
+        "s2c": 0
+      },
+      "tcp_p99_ms": {
+        "c2s": 4489.8,
+        "s2c": 5962.4
+      },
+      "udp_first_p50_ms": {
+        "c2s": 200.2,
+        "s2c": 200.2
+      },
+      "udp_first_p99_ms": {
+        "c2s": 639.4,
+        "s2c": 641.6
+      },
+      "active_zero_delivery_ms": {
+        "c2s_udp": 200,
+        "s2c_udp": 200,
+        "c2s_tcp": 330,
+        "s2c_tcp": 330
+      },
+      "product_cpu_s_measurement": {
+        "client": 1.75,
+        "server": 1.77
+      },
+      "product_peak_rss_bytes": {
+        "client": 15323136,
+        "server": 15511552
+      },
+      "m2_repair": {
+        "client": {
+          "candidate_first": 682,
+          "accepted": 513,
+          "quota_abandoned": 169,
+          "abandon_fraction_pct": 24.78,
+          "max_queue_age_us": 153,
+          "blocked_capacity": 0,
+          "driver_uncertain": 0
+        },
+        "server": {
+          "candidate_first": 682,
+          "accepted": 510,
+          "quota_abandoned": 172,
+          "abandon_fraction_pct": 25.22,
+          "max_queue_age_us": 120,
+          "blocked_capacity": 0,
+          "driver_uncertain": 0
+        }
+      },
+      "netem_loss_pct": {
+        "client": 1.97042,
+        "server": 1.93373
+      },
+      "kernel_udp_errors": 0,
+      "host": {
+        "cpu_psi_over20_fraction": 0.2,
+        "cpu_psi_some_peak": 41.15,
+        "steal_pct_peak": 0
+      },
+      "stop_drained_both": true,
+      "cleanup_owned_namespaces_absent": true,
+      "effective_config_verified": true,
+      "policy_readback": {
+        "both": "outer-single-repair-v2",
+        "repair_attempt_limit": 1,
+        "shadow_limit": 131072,
+        "retain_cap_us": 1500000
+      },
+      "policy_v2_attested": true
+    }
+  },
+  "limitations": [
+    "Both AB legs FAIL strict v2 0.25% UDP criterion. Legacy A failure is baseline; B is material product business failure.",
+    "B has 341 quota-abandoned candidates across endpoints, but actual useful/spurious repair split NOT_OBSERVED. Do not assume each abandonment equals one missing UDP packet or claim quota alone explains residual.",
+    "Netem distribution unseeded, so same VM sequence is controlled but not paired per-wire-drop trace. Host PSI warning only in B; cannot attribute unverified business loss to VM.",
+    "TCP p99 multi-second and observed finite cross-stream gaps; no no-HOL or low-tail qualification.",
+    "A and B resource cost numbers are descriptive rather than a causal CPU advantage under different host PSI.",
+    "Underlying model's static two_retry_ideal_at_5pct field in result is historical theoretical reference, not v2 acceptance evidence.",
+    "Replay/history and 512MiB shared product envelope / 500Mbps near-MTU not stress-qualified in this low-rate representative scenario."
+  ],
+  "disposition": {
+    "business_v2": "FAIL_BLOCK_QUALIFICATION",
+    "no_repeat": "No same-input seed5205 redispatch; previous result already provides representative evidence",
+    "no_blind_patch": "Do not increase quota or rearm a second repair without proof: current v2 intentionally bounds to one repair and 10% quota; 2.5% residual not causally isolated",
+    "next_high_information_observation": "Use existing authenticated first-delivery/late-positive M2 metadata to count actually useful vs already-delivered repair, and bounded per-epoch local sparse/10% quota grant/denial accounting, correlated with real M4 driver completion and RX/TUN counts; no per-packet logger/hot global lock/alloc/idle poll",
+    "execution": "If future follow-up warranted, one focused Action with incremental instrumentation and frozen new source, not repeat old scene; preserve full correctness/Stop/resource hard gates"
+  }
+}

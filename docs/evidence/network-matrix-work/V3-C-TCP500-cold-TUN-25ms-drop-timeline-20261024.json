@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_ORIGINAL_WBD_V3_SAME_PRODUCT_COLD_BURST_NUMERIC_ONLY_TUN_TIMELINE",
+  "request_id": "V3-C-TCP500-cold-TUN-25ms-numeric-rootcause",
+  "request_source": "4947ff7b701e0eddb2dcfb54c212b7f614433d60",
+  "run": 40047401954,
+  "attempt": 1,
+  "action_conclusion": "failure",
+  "reason": "strict full warmup zero TUN kernel tx_dropped required; genuine 6629 source TUN drops",
+  "artifact_id": 12541148938,
+  "artifact_zip_sha256": "680a3a3bbae840fc4eb19b0922b4ce0b281ea7751fab5205a2a0f13f5d271a34",
+  "artifact_zip_sha256_locally_verified": true,
+  "contracts_run": 40047401901,
+  "contracts_conclusion": "success",
+  "product_source": "a0a1285e73584a99c94eb573e7278ce5716fa2a5",
+  "native_build_run": 40044879144,
+  "product_artifact_id": 12540624073,
+  "scenario": {
+    "mode": "Normal/off",
+    "app_tcp_single_flow_target_mbps": 500,
+    "outer_mbps_each_direction": 700,
+    "one_way_ms": 200,
+    "rtt_ms_approx": 400,
+    "loss_pct": 0,
+    "source_tun_qdisc": "fq",
+    "source_tun_txqueuelen": 1024,
+    "warmup_s": 20,
+    "steady_s": 60,
+    "drain_s": 30,
+    "sampled_source_interface": "wbntun0",
+    "sampler_prestart_baseline_ms": 200,
+    "sampler_interval_first_2sec_ms": 25,
+    "sampler_interval_following_ms": 100,
+    "raw_sample_file": "A/client-tun-startup-samples.json",
+    "sample_count": 269,
+    "native_owner_tx_rx_timeline_files": [
+      "A/client-v3-timeline.log",
+      "A/server-v3-timeline.log"
+    ],
+    "no_packet_content_logged": true
+  },
+  "observed": {
+    "app_steady_delivered_mbps": 500.0003584,
+    "app_steady_injected_mbps": 500.0003584,
+    "app_TCP_backpressure_steady": 0,
+    "app_missing_after_drain": 0,
+    "p99_firstarrival_steady_ms": 202.9,
+    "source_TUN_kernel_tx_drop_startup": 6629,
+    "source_TUN_kernel_tx_drop_steady": 0,
+    "source_TUN_kernel_tx_drop_client_baseline_count": 0,
+    "first_drop_observed_since_app_start_ms": 6100.321,
+    "exact_growth_windows": [
+      {
+        "ms_from": 6000.36,
+        "ms_to": 6100.32,
+        "new_TUN_drops": 2849,
+        "new_TUN_tx_packets": 8351
+      },
+      {
+        "ms_from": 6400.35,
+        "ms_to": 6500.34,
+        "new_TUN_drops": 3759,
+        "new_TUN_tx_packets": 5375
+      },
+      {
+        "ms_from": 7400.65,
+        "ms_to": 7500.42,
+        "new_TUN_drops": 21,
+        "new_TUN_tx_packets": 8571
+      }
+    ],
+    "sum_drop_growth_windows": 6629,
+    "other_warmup_sample_intervals_drop_increase": 0,
+    "tcp_sender_linux_ss_observations": [
+      {
+        "ms_since_app_start": 112,
+        "cwnd_mss": 10,
+        "tcp_notsent_bytes": 4053888
+      },
+      {
+        "ms_since_app_start": 2121,
+        "cwnd_mss": 220,
+        "tcp_notsent_bytes": 3475548
+      },
+      {
+        "ms_since_app_start": 4131,
+        "cwnd_mss": 6115,
+        "tcp_notsent_bytes": 13993738
+      },
+      {
+        "ms_since_app_start": 6141,
+        "cwnd_mss": 36853,
+        "cwnd_bytes": 50746981,
+        "unacked_mss": 20427,
+        "snd_wnd_bytes": 28170240,
+        "tcp_notsent_bytes": 15040641
+      },
+      {
+        "ms_since_app_start": 8151,
+        "cwnd_mss": 21194,
+        "tcp_notsent_bytes": 26101861
+      }
+    ],
+    "BDP_bytes_500mbps_400ms": 25000000,
+    "producer_TUN_tx_packets_in_major_100ms_windows": [
+      8351,
+      5375
+    ]
+  },
+  "causal_interpretation": [
+    "The observed local source packet loss is not a sustained 500Mbps inability: during steady, actual app injection and delivery reach500Mbps, first-arrival p99~203ms and source TUN kernel drops0.",
+    "Using 200ms pre-start numeric source stats and 25ms+100ms samples proves 6,608 of 6,629 TUN drops occurred in only two 100ms sampling intervals near6.0–6.5 seconds, with 21 further at7.4–7.5s. No other warmup interval added drops.",
+    "Source Linux TCP CUBIC cwnd at+6.14s 36,853 MSS (~50.75MB) was >2x network BDP25MB. In one 100ms window 8,351 TUN successful TX packets plus 2,849 discarded packets imply source attempted packets at bursts substantially above near-500Mbps steady packet rate. This strongly implicates slow-start/initial high-burst packet production overwhelming the finite TUN path.",
+    "Exact kernel qdisc vs internal TUN loss locus is not fully determined by this time-series alone; no statement of proven general slow-start causality, no production fix claimed. Linux source TCP pacing/qdisc should be discriminated with bounded name-spaced readback before committing a cross-platform product pacing policy.",
+    "No change in ARQ quota, authentication or sparse replay. Do not hide startup losses by computing only steady counters or by reducing configured input target."
+  ],
+  "qualification": "COLD_SOURCE_TUN_BURST_MECHANISM_NARROWED_NOT_FIXED; V3_A_30PCT_AND_V3_C_STEADY500_SCOPED_PASS; STRICT_FULLRUN_LOCAL_ZERO_DROP_FAIL"
+}

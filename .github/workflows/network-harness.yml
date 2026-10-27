@@ -8,24 +8,45 @@ on:
         required: true
         default: tests/network/request.json
         type: string
+      target_arch:
+        description: Native runner architecture; must match the frozen product artifact
+        required: true
+        default: arm64
+        type: choice
+        options: [arm64, amd64]
   # Initial branch acceptance only. After merge, measurements are manual; never auto-fanout.
   push:
-    branches: [feat/network-scenario-harness-20261021]
-    paths: [tests/network/request.json]
+    branches: [feat/network-scenario-harness-20261021, experiment/network-matrix-tuning, experiment/fec-network-tuning]
+    paths:
+      - tests/network/request.json
+      - tests/network/fec-work/*.json
 permissions: {contents: read, actions: read}
 concurrency:
-  group: "network-harness-${{ github.ref }}-${{ inputs.request || 'tests/network/request.json' }}"
+  group: "network-harness-${{ github.ref }}-${{ (github.ref_name == 'experiment/fec-network-tuning' && github.event_name == 'push' && github.sha) || inputs.request || 'tests/network/request.json' }}"
   cancel-in-progress: false
 jobs:
   measure:
     name: One scenario on one VM
-    runs-on: ubuntu-24.04
+    # Manual tests use explicit target; retain legacy automatic-push runner selection.
+    runs-on: ${{ (inputs.target_arch == 'arm64' || (github.event_name != 'workflow_dispatch' && (github.ref_name == 'experiment/network-matrix-tuning' || github.ref_name == 'experiment/fec-network-tuning'))) && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     timeout-minutes: 50
     env:
       REQUEST: ${{ inputs.request || 'tests/network/request.json' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
+      - name: Select exactly one immutable own-branch FEC request on push
+        if: ${{ github.event_name == 'push' && github.ref_name == 'experiment/fec-network-tuning' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # checkout uses a one-commit shallow clone; fetch its immediate parent
+          # so diff-tree never mistakes a root/graft for an empty request change.
+          git fetch --no-tags --depth=2 origin "$GITHUB_SHA"
+          mapfile -t requests < <(git diff-tree --no-commit-id --name-only -r HEAD -- tests/network/fec-work/)
+          test "${#requests[@]}" -eq 1
+          [[ "${requests[0]}" =~ ^tests/network/fec-work/[A-Za-z0-9_.-]+\.json$ ]]
+          echo "REQUEST=${requests[0]}" >> "$GITHUB_ENV"
       - name: Require a committed request inside the request directory
         run: |
           python3 - <<'PY'
@@ -35,6 +56,37 @@ jobs:
           assert p.suffix=='.json' and p.resolve().is_relative_to(root) and p.is_file()
           subprocess.run(['git','ls-files','--error-unmatch','--',str(p)],check=True)
           PY
+      - name: Locate frozen FEC build artifacts without compilation
+        id: fec_bundles
+        if: ${{ github.ref_name == 'experiment/fec-network-tuning' }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,os
+          b=json.load(open(os.environ["REQUEST"]))["bundles"]
+          with open(os.environ["GITHUB_OUTPUT"],"a") as f:
+              for label, cfg in b.items():
+                  # Only the existing own-branch exact ARM64 source build
+                  # is fetched through GitHub Actions' native artifact store.
+                  print(f"{label}_name=network-arm64-public-{cfg['run_id']}-{cfg['attempt']}",file=f)
+                  print(f"{label}_run={cfg['run_id']}",file=f)
+          PY
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: ${{ github.ref_name == 'experiment/fec-network-tuning' && steps.fec_bundles.outputs.A_name != '' }}
+        with:
+          name: ${{ steps.fec_bundles.outputs.A_name }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.fec_bundles.outputs.A_run }}
+          github-token: ${{ github.token }}
+          path: network-result/bundle-A/arm64-public-bundle
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: ${{ github.ref_name == 'experiment/fec-network-tuning' && steps.fec_bundles.outputs.B_name != '' }}
+        with:
+          name: ${{ steps.fec_bundles.outputs.B_name }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.fec_bundles.outputs.B_run }}
+          github-token: ${{ github.token }}
+          path: network-result/bundle-B/arm64-public-bundle
       - name: Fetch existing exact source binaries; verify ZIP, manifest and all binary hashes
         env:
           GH_TOKEN: ${{ github.token }}

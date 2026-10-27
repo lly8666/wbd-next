@@ -21,7 +21,14 @@ type V4LinuxGameProductConfig struct {
     Tun *os.File
     TunName string
     CleanupOwnedNetwork func()error
+    ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     Epochs *V4EpochStore // mandatory only for actual server group
+    GameFecEnabled bool // explicit BOTH-endpoint fixed FEC, never Auto
+    GameFecProfile uint8 // 0..6; only used when GameFecEnabled
+    DisableOuterRepair bool // Game M4 first copy only, no Normal M2 DATA repair
+    Game4CopyStagger bool // pre-start 4-lane delayed physical copies
+    Game4CopyWideStagger bool // longer opt-in T0+50ms/+140ms tail
+    PeerPersona V4PublicNativePeerPersona // original-Go server only
 }
 type V4LinuxGameProduct struct{
     mu sync.Mutex
@@ -36,6 +43,10 @@ type V4LinuxGameProduct struct{
     connected bool
 }
 func newV4LinuxGameProduct(cfg V4LinuxGameProductConfig,server bool)(*V4LinuxGameProduct,error){
+    if cfg.GameFecEnabled&&cfg.GameFecProfile>6{return nil,ErrAdmissionParams}
+    if cfg.Game4CopyWideStagger&&!cfg.Game4CopyStagger{return nil,ErrAdmissionParams}
+    // Game4 fixed FEC is explicitly allowed with the default stagger;
+    // native per-group profile and copy schedule are both installed before M4.
     if cfg.NetworkInterface==""||cfg.NetworkIfIndex==0||cfg.Tun==nil||
        cfg.TunName==""||len(cfg.TunName)>15||cfg.CleanupOwnedNetwork==nil||
        (server&&cfg.Epochs==nil){return nil,ErrAdmissionParams}
@@ -67,6 +78,19 @@ func (p *V4LinuxGameProduct) commitGroupedOwnerLocked()error{
     if err!=nil{return err}
     p.native,err=p.game.joinAuthenticatedOriginalRust(p.bridges...)
     if err!=nil{return err}
+    if p.cfg.GameFecEnabled{
+        if err=p.native.configureFixedFEC(p.cfg.GameFecProfile);err!=nil{return err}
+    }
+    if p.cfg.Game4CopyStagger{
+        if len(p.bridges)!=4{return ErrAdmissionUnsupported}
+        mode:=uint32(1)
+        if p.cfg.Game4CopyWideStagger{mode=2}
+        if err=p.native.configureGame4CopyStagger(mode);err!=nil{return err}
+    }
+    if err=p.native.configureOuterRepair(!p.cfg.DisableOuterRepair);err!=nil{return err}
+    if p.server{
+        if err=p.native.configurePeerPersona(p.cfg.PeerPersona);err!=nil{return err}
+    }
     if err=p.native.startNativeM4(
         p.cfg.NetworkInterface,p.cfg.NetworkIfIndex,p.cfg.Tun,p.cfg.TunName,
     );err!=nil{return err}
@@ -95,8 +119,10 @@ func (p *V4LinuxGameProduct) ConnectClientGame(
             return errors.Join(ErrAdmissionParams,p.abortLocked())
         }
         cfg:=base;cfg.LaneID=uint8(i+1)
+        gameFec:=uint8(0)
+        if p.cfg.GameFecEnabled{gameFec=p.cfg.GameFecProfile+1}
         session,e:=EstablishClientV4(ctx,a.BootstrapConn(),cfg,V4ClientOptions{
-            DataPlaneReady:true,Epoch:epoch,fec2Product:true,
+            DataPlaneReady:true,Epoch:epoch,fec2Product:true,GameFec:gameFec,
         })
         if e!=nil{return errors.Join(e,p.abortLocked())}
         if i==0{epoch=session.Epoch}
@@ -108,6 +134,12 @@ func (p *V4LinuxGameProduct) ConnectClientGame(
         }
         p.clientSessions=append(p.clientSessions,session)
         p.bridges=append(p.bridges,bridge)
+        if p.cfg.ConfigureTunnelMTU!=nil {
+            cold,err:=session.ColdSnapshot()
+            if err!=nil{return errors.Join(err,p.abortLocked())}
+            cl,sl:=cold.RecordLimits()
+            if err=p.cfg.ConfigureTunnelMTU(handoff.Peer.MSS,cl,sl);err!=nil{return errors.Join(err,p.abortLocked())}
+        }
     }
     if err:=p.commitGroupedOwnerLocked();err!=nil{
         return errors.Join(err,p.abortLocked())
@@ -146,18 +178,51 @@ func (p *V4LinuxGameProduct) AcceptServerGame(
             return nil
         }
         bridge:=&v4EmbeddedNativeBridge{}
+        gameFec:=uint8(0)
+        if p.cfg.GameFecEnabled{gameFec=p.cfg.GameFecProfile+1}
         session,e:=EstablishServerV4(ctx,a,cfg,V4ServerOptions{
             DataPlaneReady:true,Epochs:p.cfg.Epochs,
-            ownerBridge:bridge,fec2Product:true,
+            ownerBridge:bridge,fec2Product:true,GameFec:gameFec,
         })
         if e!=nil{return errors.Join(e,p.abortLocked())}
         p.serverSessions=append(p.serverSessions,session)
         p.bridges=append(p.bridges,bridge)
+        if p.cfg.ConfigureTunnelMTU!=nil {
+            cold,err:=session.ColdSnapshot()
+            if err!=nil{return errors.Join(err,p.abortLocked())}
+            cl,sl:=cold.RecordLimits()
+            if err=p.cfg.ConfigureTunnelMTU(a.PeerTCPProfile().MSS,cl,sl);err!=nil{return errors.Join(err,p.abortLocked())}
+        }
     }
     if err:=p.commitGroupedOwnerLocked();err!=nil{
         return errors.Join(err,p.abortLocked())
     }
     return nil
+}
+func (p *V4LinuxGameProduct) CopyScheduleRead()([21]uint64,error){
+    var empty [21]uint64
+    if p==nil{return empty,ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    if !p.connected||p.stopped||p.native==nil||len(p.bridges)!=4{
+        return empty,ErrAdmissionUnsupported
+    }
+    return p.native.copyScheduleRead()
+}
+func (p *V4LinuxGameProduct) OuterPolicy()(V4GameOuterPolicy,error){
+    if p==nil{return V4GameOuterPolicy{},ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    if !p.connected||p.stopped||p.native==nil{
+        return V4GameOuterPolicy{},ErrAdmissionUnsupported
+    }
+    policy,err:=p.native.originalGameOuterPolicy()
+    if err!=nil{return policy,err}
+    if policy.RepairEnabled==p.cfg.DisableOuterRepair{
+        return V4GameOuterPolicy{},ErrAdmissionUnsupported
+    }
+    if p.cfg.DisableOuterRepair&&policy.DataRetransmitted!=0{
+        return V4GameOuterPolicy{},ErrAdmissionUnsupported
+    }
+    return policy,nil
 }
 func (p *V4LinuxGameProduct) KernelCounters()(V4GameKernelCounters,error){
     if p==nil{return V4GameKernelCounters{},ErrAdmissionParams}
@@ -166,6 +231,15 @@ func (p *V4LinuxGameProduct) KernelCounters()(V4GameKernelCounters,error){
         return V4GameKernelCounters{},ErrAdmissionUnsupported
     }
     return p.native.originalM4Counters()
+}
+// Genuine M3/M4 post-driver counters, only valid for explicit Game fixed FEC.
+func (p *V4LinuxGameProduct) FecCounters()(V4GameFecCounters,error){
+    if p==nil{return V4GameFecCounters{},ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    if !p.connected||p.stopped||p.native==nil||!p.cfg.GameFecEnabled{
+        return V4GameFecCounters{},ErrAdmissionUnsupported
+    }
+    return p.native.originalGameFecCounters()
 }
 func (p *V4LinuxGameProduct) Connected()bool{
     if p==nil{return false}

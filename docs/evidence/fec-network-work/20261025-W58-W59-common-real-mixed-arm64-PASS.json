@@ -1,0 +1,187 @@
+{
+  "schema": 1,
+  "id": "FEC-W58-W59-frozen-native-arm64-common-mixed",
+  "branch": "experiment/fec-network-tuning",
+  "source": "1673cd96caea6a5764ace1adbd5573da18e46c85",
+  "build_run": 40173359338,
+  "build_artifact": 12590822815,
+  "build_sha256": "cdc5d4eb68621321f7f918b6667ff16c0a166bfe6b509ded310afc467294a97f",
+  "test_relation": "INDEPENDENT_RUNS_DISTINCT_ARM64_VMS_NO_CROSS_HOST_CPU_COMPARISON",
+  "network": {
+    "app_mbps_each": 8,
+    "udp_share": 0.96,
+    "tcp_share": 0.04,
+    "tcp_sockets": 2,
+    "size_distribution_packet_count": [
+      [
+        64,
+        6
+      ],
+      [
+        96,
+        8
+      ],
+      [
+        160,
+        10
+      ],
+      [
+        256,
+        11
+      ],
+      [
+        512,
+        15
+      ],
+      [
+        900,
+        20
+      ],
+      [
+        1287,
+        30
+      ]
+    ],
+    "one_way_ms": 75,
+    "netem_cap_mbps_each": 50,
+    "loss_iid_both": true,
+    "outer_data_repair_enabled": false
+  },
+  "runs": [
+    {
+      "id": "W58",
+      "source_commit": "3622ee4f652d667ece896ed85403c8a62f7dcd42",
+      "request": "tests/network/fec-work/W58-fixed-medium5-mixed8-outeroff-arm64.json",
+      "action": 40174383391,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact": 12591088641,
+      "artifact_zip_sha256": "d84760a43474e079a7b0c79bc87312410c8e714012f832402ed2c881ed8eeb20",
+      "mode": "fec-fixed",
+      "profile": 2,
+      "loss_pct": 5,
+      "steady_seconds": 60,
+      "result": "PASS_SCOPED_OBSERVATION",
+      "business": {
+        "c2s_udp_sent": 82440,
+        "c2s_udp_missing": 5,
+        "s2c_udp_sent": 82440,
+        "s2c_udp_missing": 4,
+        "tcp_sent_each": 3419,
+        "tcp_missing_both": 0,
+        "small_udp_missing": {
+          "c2s": 0,
+          "s2c": 4
+        },
+        "independent_probe_missing": {
+          "c2s": 2,
+          "s2c": 8
+        },
+        "udp_first_p99_ms": {
+          "c2s": 90,
+          "s2c": 90.1
+        }
+      },
+      "native": {
+        "both_requested_applied": "1/1",
+        "both_profile": 2,
+        "pending_both": false,
+        "original_fec_parity_planned_sent": {
+          "client": 45183,
+          "server": 45173
+        },
+        "expired_both": 0,
+        "real_native_tun_recovered": {
+          "client": 5665,
+          "server": 5528
+        },
+        "native_original_positive_mean_us": {
+          "client": 152692,
+          "server": 152722
+        },
+        "outer_data_retrans_packets": 0,
+        "original_source_tun_drops": 0,
+        "rx_pressure_evicted": 0,
+        "rx_decoder_rejected": 0,
+        "stop_owned_cleanup": true
+      },
+      "cost": {
+        "client_cpu_s": 8.11,
+        "server_cpu_s": 8.05,
+        "client_rss_peak_bytes": 22585344,
+        "server_rss_peak_bytes": 22724608,
+        "host_cpu_psi_peak_pct": 1
+      },
+      "caveat": "Sparse 64B probes not zero loss (2/1191 and8/1190), although mixed main UDP residual tiny; do not call absolute zero-loss."
+    },
+    {
+      "id": "W59",
+      "source_commit": "89494d1cf848d3bdee0d6690265e04a626ad7423",
+      "request": "tests/network/fec-work/W59-fixed-strong15-mixed8-outeroff-arm64.json",
+      "action": 40174386036,
+      "attempt": 1,
+      "conclusion": "success",
+      "artifact": 12591412584,
+      "artifact_zip_sha256": "4e0e5dcdc87658dc44a73d1b36a65f2d51c5f22ab26cd23d8a76c986802148e9",
+      "mode": "fec-fixed",
+      "profile": 5,
+      "loss_pct": 15,
+      "steady_seconds": 60,
+      "result": "PASS_SCOPED_OBSERVATION",
+      "business": {
+        "c2s_udp_sent": 82440,
+        "c2s_udp_missing": 0,
+        "s2c_udp_sent": 82441,
+        "s2c_udp_missing": 0,
+        "tcp_sent_each": 3419,
+        "tcp_missing_both": 0,
+        "small_udp_missing": {
+          "c2s": 0,
+          "s2c": 0
+        },
+        "independent_probe_missing": {
+          "c2s": 6,
+          "s2c": 5
+        },
+        "udp_first_p99_ms": {
+          "c2s": 91.5,
+          "s2c": 91.5
+        }
+      },
+      "native": {
+        "both_requested_applied": "1/1",
+        "both_profile": 5,
+        "pending_both": false,
+        "original_fec_parity_planned_sent": {
+          "client": 111353,
+          "server": 111351
+        },
+        "expired_both": 0,
+        "real_native_tun_recovered": {
+          "client": 16590,
+          "server": 16685
+        },
+        "native_original_positive_mean_us": {
+          "client": 153122,
+          "server": 153160
+        },
+        "outer_data_retrans_packets": 0,
+        "original_source_tun_drops": 0,
+        "rx_pressure_evicted": 0,
+        "rx_decoder_rejected": 0,
+        "stop_owned_cleanup": true
+      },
+      "cost": {
+        "client_cpu_s": 8.93,
+        "server_cpu_s": 8.9,
+        "client_rss_peak_bytes": 23035904,
+        "server_rss_peak_bytes": 22958080,
+        "host_cpu_psi_peak_pct": 1
+      },
+      "caveat": "Independent sparse 64B probes still miss6/1190 and5/1190, no absolute zero-loss claim. These runs do not certify 100Mbps mixed inner TCP post-30% step recovery."
+    }
+  ],
+  "capability": "REAL_GENUINE_TUN_FIRST_DELIVERY_FIXED_TWO_COMMON_IID_CASES_ARM64_ONLY",
+  "capacity_stop": true,
+  "merge_ready": false
+}

@@ -5,3 +5,20 @@ package realityfront
 func v4PublicMatureFixedNative(_ *v4EmbeddedNativeBridge,_ [16]byte,_ uint64)error{
     return ErrAdmissionUnsupported
 }
+
+func v4ReadOriginalFecRxIpClass(_ *v4EmbeddedNativeBridge)(V4PublicFecRxIpClass,error){
+    return V4PublicFecRxIpClass{},ErrAdmissionUnsupported
+}
+
+func v4ReadOriginalFecM1Stage(_ *v4EmbeddedNativeBridge)(V4PublicFecM1Stage,error){
+    return V4PublicFecM1Stage{},ErrAdmissionUnsupported
+}
+
+func v4ReadOriginalFecM1Ingress(_ *v4EmbeddedNativeBridge)(V4PublicFecM1Ingress,error){
+    return V4PublicFecM1Ingress{},ErrAdmissionUnsupported
+}
+
+// No product feature: no fake zero recovered-counter result.
+func v4ReadOriginalFecRxProof(_ *v4EmbeddedNativeBridge)(V4PublicFecRxProof,error){
+    return V4PublicFecRxProof{},ErrAdmissionUnsupported
+}

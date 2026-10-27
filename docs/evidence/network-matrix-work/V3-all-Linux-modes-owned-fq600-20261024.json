@@ -1,0 +1,264 @@
+{
+  "schema": 1,
+  "subject": "2026-10-24 user requests fq600 default in all scenarios, native Linux public CLI all supported modes",
+  "scope": [
+    "normal",
+    "fec-fixed",
+    "fec-auto",
+    "game2",
+    "game4"
+  ],
+  "platform": "Linux aarch64 real original Go TLS/raw -> authenticated Rust owner -> real ephemeral TUN",
+  "product_source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+  "native_bundle": {
+    "run": 40060850580,
+    "attempt": 1,
+    "artifact_id": 12546779978,
+    "zip_sha256": "6ee4a55d14a4a7f01e49a95b3654a79af1498aeca878b0c2ba9454ec2a9100e5",
+    "status": "SUCCESS",
+    "native_build": true
+  },
+  "settings": {
+    "omitted_cli": "--tun-fq-maxrate-mbps omitted => native default600 in every mode",
+    "explicit_rollback": "--tun-fq-maxrate-mbps=0",
+    "owned_root_kernel": "fq maxrate 600mbit flow_limit 256",
+    "fq_global_limit_packets": 10000,
+    "host_global_sysctl_changed": false,
+    "Windows_tc_support_claimed": false,
+    "verification": "Actual Go product marker + tc -d root fq600 and tc -d -j numeric flow_limit==256 on both roles, no test-only qdisc replace",
+    "kernel_source_TUN_tx_drops_warmup_and_steady_all_tested_roles": 0,
+    "kernel_root_fq_drops_all_snapshots_all_modes": 0,
+    "Stop_cleanup": "PASS in all native actions"
+  },
+  "mode_results": [
+    {
+      "mode": "normal",
+      "id": "V3-Linux-global-fq600-Normal-TCP70-UDP30",
+      "run": 40061090616,
+      "artifact": 12546813359,
+      "zip_sha256": "8e7a7301bfa20e84eb9c7435a1d99a26e8337b3c5058e257c453ec03c81e41ac",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "input": "two directions15Mbps each, 70% TCP two flows and 30% UDP including ~1% small bytes, zero netem loss, one way200ms, steady60s",
+      "observed": {
+        "c2s_tcp_delivered_mbps": 10.500088,
+        "c2s_udp_delivered_mbps": 4.5000644,
+        "s2c_tcp_delivered_mbps": 10.4997144,
+        "s2c_udp_delivered_mbps": 4.4998776,
+        "missing_all_business": 0,
+        "p99_ms_range": [
+          200.4,
+          200.5
+        ],
+        "source_TUN_root_drops": 0,
+        "Stop": true
+      }
+    },
+    {
+      "mode": "fec-fixed",
+      "id": "V3-Linux-global-fq600-Fixed5-IID5",
+      "run": 40061035456,
+      "artifact": 12547447656,
+      "zip_sha256": "b23d2083706e6f283ba8748bab114dd26adca026db304edd795fb1ec70bc2acc",
+      "result": "FAIL_REAL_FEC_APPLIED_REVISION_NOT_CLOSED",
+      "input": "profile5, each direction 12Mbps UDP, 5% IID/25ms, warmup10s steady60s",
+      "observed": {
+        "business_delivered_mbps_c2s_s2c": [
+          12.00007147,
+          11.99992373
+        ],
+        "app_missing_c2s_s2c": [
+          1,
+          0
+        ],
+        "arrival_p99_ms_c2s_s2c": [
+          35.3,
+          35.2
+        ],
+        "fec_client": {
+          "requested": 1,
+          "applied": 1,
+          "profile": 5,
+          "pending": false
+        },
+        "fec_server": {
+          "requested": 1,
+          "applied": 0,
+          "profile": 5,
+          "pending": true
+        },
+        "outer_v3_policy": true,
+        "source_TUN_root_drops": 0,
+        "Stop": true
+      },
+      "interpretation": "Default fq600 fully applied both endpoints. Authentic FEC control not fully acknowledged by server; do not qualify Fixed5 with IID5, no artificial UDP residual lower bound."
+    },
+    {
+      "mode": "fec-fixed",
+      "id": "V3-AllModes-fq600-Fixed5-clean-FEC-readback",
+      "run": 40061487976,
+      "artifact": 12547458439,
+      "zip_sha256": "1dac0fb5d13f65ad7e1d6cfd13535e532495586246efeda238290da4e4e90d26",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "input": "same native Fixed profile5 with 0% netem, 12Mbps UDP each direction, one way25ms, warmup10s/steady30s",
+      "observed": {
+        "business_delivered_mbps_each_direction": 12.0000714667,
+        "missing_both": 0,
+        "p99_ms": 25.8,
+        "fec_client": {
+          "requested": 1,
+          "applied": 1,
+          "profile": 5,
+          "pending": false
+        },
+        "fec_server": {
+          "requested": 1,
+          "applied": 1,
+          "profile": 5,
+          "pending": false
+        },
+        "source_TUN_root_drops": 0,
+        "stop": true
+      },
+      "interpretation": "Fixed FEC can fully apply over healthy path; original 5% FEC revision lag remains open, not a generic fq default problem."
+    },
+    {
+      "mode": "fec-auto",
+      "id": "V3-Linux-global-fq600-Auto-asym-1-20-1",
+      "run": 40061047243,
+      "artifact": 12546474541,
+      "zip_sha256": "bb671e0b80d97a04fcb527f9ce361d7a16233a0c9293cfeb203e9b45a28a1a56",
+      "result": "FAIL_REAL_FEC_REVISION_PENDING",
+      "input": "10Mbps UDP each direction, 1%=>C2S20%/S2C1%=>1%, one-way25ms, phases20s/40s/20s",
+      "observed": {
+        "phase_20pct_c2s_delivered_mbps": 10.0000088,
+        "phase_20pct_c2s_missing": 6,
+        "phase_20pct_c2s_p99_ms": 40,
+        "fec_client": {
+          "requested": 1,
+          "applied": 0,
+          "profile": 5,
+          "pending": true
+        },
+        "fec_server": {
+          "requested": 1,
+          "applied": 1,
+          "profile": 5,
+          "pending": false
+        },
+        "source_TUN_root_drops": 0,
+        "stop": true
+      }
+    },
+    {
+      "mode": "fec-auto",
+      "id": "V3-AllModes-fq600-Auto-clean-FEC-readback",
+      "run": 40061499022,
+      "artifact": 12547443507,
+      "zip_sha256": "b2042114ae93d8a2984f5b5a4f6b8edf2db0f22d25d20dc5d7e717d0daee2ae8",
+      "result": "FAIL_REAL_FEC_REVISION_PENDING_EVEN_0LOSS",
+      "input": "10Mbps UDP each direction, 0% netem, one-way25ms, 10warmup+30steady+15drain",
+      "observed": {
+        "delivered_app_mbps_each_direction": 10.000016,
+        "missing_both": 0,
+        "p99_ms": 25.8,
+        "fec_client": {
+          "requested": 1,
+          "applied": 0,
+          "profile": 5,
+          "pending": true
+        },
+        "fec_server": {
+          "requested": 1,
+          "applied": 0,
+          "profile": 5,
+          "pending": true
+        },
+        "source_TUN_root_drops": 0,
+        "stop": true
+      },
+      "interpretation": "Healthy path also fails FEC Auto applied revision on both sides; genuine FEC handshake/integration OPEN outside owned fq change."
+    },
+    {
+      "mode": "game2",
+      "id": "V3-AllModes-fq600-Game2-lane-receipt-correct",
+      "run": 40061387213,
+      "artifact": 12547756255,
+      "zip_sha256": "802947ef790167125978619c7eb58413b7e9bac3281df2fe344c31d3dd14d6a0",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "input": "two Game lanes, independent 5% IID per lane, 3Mbps UDP each direction, one-way25ms, steady60s",
+      "observed": {
+        "app_injected_mbps_both": 2.99987627,
+        "app_delivered_mbps_c2s_s2c": [
+          2.991872533,
+          2.9940064
+        ],
+        "app_missing_c2s_s2c": [
+          146,
+          133
+        ],
+        "p99_ms": 27.4,
+        "actual_kernel_game_lanes": 2,
+        "auth_rejected_both": 0,
+        "source_TUN_root_drops": 0,
+        "stop": true,
+        "CPU_steady60_s_client_server": [
+          6.56,
+          6.58
+        ]
+      },
+      "interpretation": "Actual two-lane loss and residual measured; v3 single-lane DATA repair policy and R/F/R/C explicitly NOT_APPLICABLE, no false Game repair qualification."
+    },
+    {
+      "mode": "game4",
+      "id": "V3-AllModes-fq600-Game4-blackhole-receipt-correct",
+      "run": 40061402339,
+      "artifact": 12547358796,
+      "zip_sha256": "7583ef2e19d6753b853138c182366eead560e84b0f6735efab2f8a20f3665a6a",
+      "result": "PASS_SCOPED_OBSERVATION",
+      "input": "four Game lanes, 3Mbps UDP each direction, clean10s=>lane1 blackhole30s=>recovered20s one way25ms",
+      "observed": {
+        "app_delivery_mbps_c2s_s2c_during_blackhole": [
+          3.00001813,
+          3.00001813
+        ],
+        "missing_in_all_phases": 0,
+        "p99_ms": 27.5,
+        "actual_kernel_game_lanes": 4,
+        "raw_auth_rejected_both": 0,
+        "source_TUN_root_drops": 0,
+        "stop": true,
+        "CPU_steady60_s_client_server": [
+          13.39,
+          13.49
+        ]
+      },
+      "interpretation": "Real remaining Game lanes maintained full offered business during one-lane blackout; no cross-lane HOL at this load, not 500Mbps multi-tenant qualification."
+    }
+  ],
+  "testing_integrity": {
+    "contracts_final_run": 40061361983,
+    "contracts_result": "SUCCESS",
+    "harness_game_applicability_source": "043e76c871e1ea6901d0beb2d39ff5ade901331d",
+    "historical_game_jobs_failed_due_inapplicable_normal_ledger": [
+      40061064744,
+      40061078908
+    ],
+    "not_product_game_qualifications": "Those original Actions remain red; corrected applicability required new native Game Actions. Never use Game native copied as v3 DATA retransmission.",
+    "temporary_generic_contract_red_actions": [
+      40060864256,
+      40060875613,
+      40061035463
+    ],
+    "generic_fec_auto_profile_isolation_source": "ce90a06b5aeeb743b25c8fd156a9fc429ed508d4",
+    "all_artifact_ZIP_SHA256_locally_verified": true
+  },
+  "boundaries": [
+    "Latest shared product source tested true native Linux ARM64 only. Windows/physical platform native qdisc/default cannot be asserted from Linux tc.",
+    "FEC Auto full applied revision unqualified even at 0% line loss. Fixed5 at 5% has one-sided pending; fixed5 at 0% passes.",
+    "Game lane duplicate budget is not v3 Normal/FEC DATA repair accounting.",
+    "No CPU cost savings claims vs separate runner/VM; only actual CPU-s per scenario.",
+    "Older Normal/off real single TCP500 source601e and outer500/2% source601e remain source-specific historic, not rerun on latest all-mode source1c43.",
+    "No new product algorithm tuning of independent FEC worker or main merge."
+  ],
+  "conclusion": "Default native product-owned fq600 with bounded flow_limit256 implemented and kernel verified across all five supported Linux modes. Representative scoped Normal, Fixed clean, Game2 and Game4 PASS. FEC Fixed lossy and Auto lossy/clean remain genuine separate FEC mode qualifications FAIL; report explicitly."
+}

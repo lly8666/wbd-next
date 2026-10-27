@@ -1,0 +1,114 @@
+{
+  "schema": "FEC_W137_GAME_FEC_SPARSE_DEADLINE_CLEAN_AB_V1",
+  "date": "2026-10-26",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "candidate_source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+  "native_build_run": 40293838787,
+  "native_build_result": "SUCCESS",
+  "native_artifact_id": 12636808494,
+  "native_zip_sha256": "d60386779b56b0c091721f444c96c53c309cebe56140b9e0d9308720d278280a",
+  "prior_source": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+  "scenario": {
+    "run": 40294316915,
+    "request": "tests/network/fec-work/W137-Game4-fixed6-sparse-quiet-tail-1Mbps-FEC-due-sameVM-AB-ARM64.json",
+    "request_commit": "d8bad95d1f3be8c63339de3c0a5f924a6ccbf08b",
+    "artifact_id": 12637373657,
+    "zip_sha256": "fbdcb92503f6a6c77e26f936a18c06b6e76ad4169c7bbba4e31ddd86a3b19322",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "order": "AB",
+    "workload": "Game4 fixed6 physical 0/4/20/60, real mixed TCP+UDP each1Mbps, 75ms one-way no loss; genuine activity18s, no generated packets in quiet12s, resume15s"
+  },
+  "old_A": {
+    "source": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+    "cpu_process_client_s": 2.89,
+    "cpu_process_server_s": 2.88,
+    "combined_cpu_s": 5.77,
+    "host_cpu_psi_mean_pct": 0,
+    "host_cpu_psi_peak_pct": 0,
+    "host_steal_peak_pct": 0,
+    "peak_rss_bytes": {
+      "client": 41701376,
+      "server": 41177088
+    },
+    "fec_parity": {
+      "client_planned": 17498,
+      "client_sent": 17498,
+      "server_planned": 17491,
+      "server_sent": 17491
+    },
+    "source_group_jobs": {
+      "client": 9473,
+      "server": 9470
+    },
+    "game4_copy_abandoned_all_zero": true,
+    "last_physical_lane_cutoff_unsent": {
+      "client": 5,
+      "server": 5
+    },
+    "outer_data_retransmit": 0,
+    "go_post_handoff_data_copies": {
+      "client": 0,
+      "server": 0
+    },
+    "stop_drained_both": true,
+    "real_udp_tcp_missing": 0,
+    "udp_p99_ms_approx": 75.5
+  },
+  "new_B": {
+    "source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+    "cpu_process_client_s": 3.04,
+    "cpu_process_server_s": 3.02,
+    "combined_cpu_s": 6.06,
+    "host_cpu_psi_mean_pct": 0,
+    "host_cpu_psi_peak_pct": 0,
+    "host_steal_peak_pct": 0,
+    "peak_rss_bytes": {
+      "client": 41631744,
+      "server": 41037824
+    },
+    "fec_parity": {
+      "client_planned": 17478,
+      "client_sent": 17478,
+      "server_planned": 17467,
+      "server_sent": 17467
+    },
+    "source_group_jobs": {
+      "client": 9473,
+      "server": 9471
+    },
+    "game4_copy_abandoned_all_zero": true,
+    "last_physical_lane_cutoff_unsent": {
+      "client": 5,
+      "server": 5
+    },
+    "outer_data_retransmit": 0,
+    "go_post_handoff_data_copies": {
+      "client": 0,
+      "server": 0
+    },
+    "stop_drained_both": true,
+    "real_udp_tcp_missing": 0,
+    "udp_p99_ms_approx": 75.5
+  },
+  "cpu_new_change_pct": 5.026,
+  "no_loss_latency_benefit_observed": true,
+  "important_limitations": [
+    "CPU process accounting includes warmup, setup and drain; same VM sequential, not causal percentage guarantee",
+    "Clean no-loss route first-delivery p99 is baseline-latency dominated and does not evaluate FEC under damage",
+    "Source and parity counts differ slightly between AB legs; not an identical netem packet trajectory",
+    "Late fourth position at process stop was not counted abandoned; remains genuinely unprocessed in bounded tail",
+    "Native unit proves one sparse source FEC group closes before its original +20ms copy without changing that copy",
+    "Do not extrapolate to higher bandwidth due W134 host PSI peak27.7%"
+  ],
+  "followup": {
+    "request": "tests/network/fec-work/W138-Game4-fixed6-IID30-sparse80Kbps-FEC-deadline-sameVM-BA-ARM64.json",
+    "commit": "29b7ff840ea1e0a1010ba439486c871a8e608fdc",
+    "action": 40295019331,
+    "at_recording": "IN_PROGRESS_NOT_RESULT",
+    "purpose": "Truly sparse damaged independent IID30 each lane 80Kbps and reverse BA; unique condition vs clean tail"
+  },
+  "capacity_stop": true,
+  "merge_ready": false,
+  "windows": "NOT_RUN"
+}

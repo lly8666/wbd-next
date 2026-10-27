@@ -1,0 +1,119 @@
+{
+  "schema": "FEC_P2_REUSE_GIT_ACTIONS_AUDIT_20261026_V1",
+  "category": "AUDIT_ONLY_NO_NEW_PRODUCT_TEST_OR_PERFORMANCE_CLAIM",
+  "branch": "experiment/fec-network-tuning",
+  "date": "2026-10-26",
+  "git": {
+    "audited_head": "fbe64bcabbc959601bab0570fcecef9413a8334f",
+    "head_commit_kind": "documentation and evidence only, post rollback",
+    "rollback_native_source": "8ae002d0b6892664b9d34b415ab3dfeb8186d8ad",
+    "last_full_five_mode_source": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+    "compare_last_five_mode_to_rollback": {
+      "ahead_commits": 144,
+      "product_code_paths": [
+        "crates/wbd-engine/src/runtime/fec2_owner.rs",
+        "crates/wbd-engine/src/runtime/game_shared.rs",
+        "crates/wbd-engine/src/v4_game_fec.rs",
+        "crates/wbd-engine/src/v4_game_lane.rs",
+        "crates/wbd-engine/src/v4_game_public_kernel.rs"
+      ],
+      "shared_fec2_owner_delta": "Only public has_ready_parity() O(1) pending-nonempty accessor added; existing Normal owner algorithms not changed",
+      "outer_retransmission_algorithm_touched": false,
+      "normal_autofec_product_requalified_at_latest_source": false
+    },
+    "compare_rollback_to_audited_head": {
+      "ahead_commits": 6,
+      "only_changed_paths": [
+        "docs/devlog/fec-network-work/20261026-W157-common-Normal-Game-FEC-RS16-source-ref-workspace.md",
+        "docs/evidence/fec-network-work/20261026-W157-W158-CommonFEC-RS16-stack-NormalGame-AB-rejected.json",
+        "docs/evidence/fec-network-work/final-report.md",
+        "docs/evidence/fec-network-work/status.json"
+      ],
+      "product_code_changed": false
+    }
+  },
+  "actions": [
+    {
+      "run": 40316698229,
+      "source": "99d414f69003d471badc9bc10d3bb9cb3f649b1b",
+      "kind": "W157 Normal fixed3 true TCP+UDP 15Mbps per direction, SAME_VM_AB old vs rejected new",
+      "conclusion": "success",
+      "measure_jobs": 1,
+      "artifact_id": 12646678619,
+      "artifact_expired": false,
+      "old_cpu_s": 9.14,
+      "new_cpu_s": 9.25,
+      "outer_DATA_retransmit_count": 0,
+      "business_missing": 0,
+      "decision": "P3b rejected"
+    },
+    {
+      "run": 40316706348,
+      "source": "14ba083859f547b7119e50e5012f71f38a0930ae",
+      "kind": "W158 Game4 fixed6 IID30 per lane real UDP 20Mbps per direction, SAME_VM_AB",
+      "conclusion": "success",
+      "measure_jobs": 1,
+      "artifact_id": 12647691070,
+      "artifact_expired": false,
+      "old_cpu_s": 57.98,
+      "new_cpu_s": 58.02,
+      "outer_DATA_retransmit_count": 0,
+      "business_missing": 0,
+      "physical_game4_and_parity_planned_eq_sent": true,
+      "decision": "P3b rejected"
+    },
+    {
+      "run": 40317413835,
+      "source": "8ae002d0b6892664b9d34b415ab3dfeb8186d8ad",
+      "kind": "final native rollback build, NOT new five-mode real business qualification",
+      "conclusion": "success",
+      "runner_label": "ubuntu-24.04-arm",
+      "artifact_id": 12647711084,
+      "artifact_expired": false,
+      "manifest_and_binary_hashes": "verified by existing W157/W158 receipt"
+    }
+  ],
+  "model_only": {
+    "basis": "k16, r20 maximum fixed6, four physical Game4 copies of each successful source/parity symbol, full source blocks and no ancillary headers; illustrative traffic budget, not wire measured",
+    "copy_plus_fec_symbol_multiplier": 9,
+    "app_25Mbps_each_way_projected_symbol_mbps_each_way": 225,
+    "app_80Mbps_each_way_projected_symbol_mbps_each_way": 720,
+    "total_80Mbps_two_directions_projected_symbol_mbps": 1440,
+    "partial_k_and_protocol_overhead": "Can raise record/byte budget above full-block estimate; delayed or unsent copies can lower actual wire but cannot be counted as delivered parity",
+    "iid30_four_lane_loss_all_original_copies_probability": 0.0081,
+    "w158_example_orig_damaged_cohort": 114765,
+    "w158_no_FEC_independent_loss_expectation_approx_packets": 930,
+    "limitations": "Neither a new sample nor an FEC decoder success count; actual sent counters and timely recovery receipts control qualification"
+  },
+  "historical_request_reconciliation": {
+    "request_rows_with_old_PENDING": [
+      "W10",
+      "W11",
+      "W14",
+      "W19"
+    ],
+    "treatment": "Historical not-yet-run request records retained verbatim; do not re-dispatch as current queue or relabel PASS. Subsequent scoped Auto/fixed and IPv4-neighbor investigations are described elsewhere in current status/report.",
+    "current_next_action_unchanged": true
+  },
+  "guardrails": {
+    "capacity_stop": true,
+    "merge_ready": false,
+    "windows": "NOT_RUN/TEMP_SKIPPED",
+    "game_auto_required": false,
+    "new_performance_dispatch": false,
+    "new_native_build": false,
+    "original_network_status_or_next_action_touched": false,
+    "recorded_W157_W158_outer_DATA_retransmission_enabled": false,
+    "product_default_outer_repair_policy_unchanged": true,
+    "recorded_W157_W158_FEC_parity_independent_from_outer_DATA": true
+  },
+  "evidence_refs": {
+    "prior": "docs/evidence/fec-network-work/20261026-W157-W158-CommonFEC-RS16-stack-NormalGame-AB-rejected.json",
+    "merge_report": "docs/evidence/fec-network-work/final-report.md",
+    "github_action_urls": [
+      "https://github.com/lly8666/wbd-next/actions/runs/40316698229",
+      "https://github.com/lly8666/wbd-next/actions/runs/40316706348",
+      "https://github.com/lly8666/wbd-next/actions/runs/40317413835"
+    ]
+  }
+}

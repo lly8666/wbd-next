@@ -28,6 +28,13 @@ impl StagedParity {
         job: &mut ParityJob, authenticated_profile: Profile,
         record_payload_budget: usize,
     ) -> Result<Self, Error> {
+        Self::from_owner_job_with_workspace(job,authenticated_profile,
+                                            record_payload_budget,Vec::new())
+    }
+    pub fn from_owner_job_with_workspace(
+        job: &mut ParityJob, authenticated_profile: Profile,
+        record_payload_budget: usize, workspace: Vec<u8>,
+    ) -> Result<Self, Error> {
         let k=job.source_count();
         if job.block_id==0 || k==0 || k!=usize::from(job.k)
             || authenticated_profile.parity_count(k)?!=usize::from(job.r)
@@ -35,7 +42,8 @@ impl StagedParity {
             return Err(Error::ConflictingMeta);
         }
         let prepared=job.with_sources(|refs|
-            PreparedBlock::from_frames(refs,record_payload_budget))?;
+            PreparedBlock::from_frames_with_workspace(
+                refs,record_payload_budget,workspace))?;
         Ok(Self{block_id:job.block_id,profile:authenticated_profile,
                 r:usize::from(job.r),next_row:0,prepared})
     }
@@ -62,6 +70,34 @@ impl StagedParity {
         Ok(Some((rows,used)))
     }
 
+    /// Same bounded M3 encode and row cursor, but reuse the original
+    /// FixedStream-owned four wire scratch slabs across ALL FEC blocks.
+    /// No heap allocation per row or temporary Vec of borrowed row views.
+    /// Scratch is never loaned to M4: original owner seals/copies each row
+    /// synchronously before the next quantum may overwrite its plaintext.
+    pub fn next_quantum_reuse(
+        &mut self,rs:&Rs16,record_payload_budget:usize,
+        backend:BackendChoice,rows:&mut [Vec<u8>;MAX_BATCH_ROWS]
+    )->Result<Option<(usize,BackendUsed)>,Error>{
+        if self.next_row==self.r{return Ok(None)}
+        let count=(self.r-self.next_row).min(MAX_BATCH_ROWS);
+        let len=REPAIR_HEADER+self.prepared.symbol_len();
+        if len>record_payload_budget{return Err(Error::BudgetExceeded)}
+        for row in rows.iter_mut().take(count){row.resize(len,0)}
+        // Stack-only four-slice view. The codec sees EXACTLY count output
+        // rows, never any stale unused scratch row from a previous block.
+        let [a,b,c,d]=rows;
+        let mut views=[a.as_mut_slice(),b.as_mut_slice(),
+                       c.as_mut_slice(),d.as_mut_slice()];
+        let used=rs.encode_prepared_into(
+            self.block_id,&mut self.prepared,self.profile,self.next_row,
+            &mut views[..count],record_payload_budget,backend
+        )?;
+        self.next_row+=count;
+        Ok(Some((count,used)))
+    }
+
+    pub fn into_workspace(self)->Vec<u8>{self.prepared.into_workspace()}
     pub fn remaining_rows(&self)->usize {self.r-self.next_row}
 }
 

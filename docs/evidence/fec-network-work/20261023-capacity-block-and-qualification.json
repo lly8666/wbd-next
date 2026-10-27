@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "date": "2026-10-23",
+  "branch": "experiment/fec-network-tuning",
+  "source": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57",
+  "result": "BLOCKED_INFRA_BEFORE_PRODUCT",
+  "merge_ready": false,
+  "actions": [
+    {
+      "id": 39915080968,
+      "name": "ARM64 exact source public product build",
+      "conclusion": "success",
+      "artifact_id": 12484770973,
+      "source": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57",
+      "sha256": "fd22c47a4f57fe5968f4ffb927ba7e284217c0a3fd2b3a3271ab583b600d98f4"
+    },
+    {
+      "id": 39915080946,
+      "name": "ARM64 Fixed maximum native row contract",
+      "conclusion": "success"
+    },
+    {
+      "id": 39915081006,
+      "name": "Network harness contracts",
+      "conclusion": "success"
+    },
+    {
+      "id": 39915604278,
+      "name": "Harness contracts after W1",
+      "conclusion": "success"
+    },
+    {
+      "id": 39915779231,
+      "name": "Harness contracts after W1R",
+      "conclusion": "success"
+    },
+    {
+      "id": 39916080150,
+      "name": "Harness contracts after W1RR",
+      "conclusion": "success"
+    },
+    {
+      "id": 39915604295,
+      "name": "W1 product case",
+      "conclusion": "failure",
+      "at": "Select exactly one immutable own-branch FEC request on push",
+      "product_started": false
+    },
+    {
+      "id": 39915779256,
+      "name": "W1R product case",
+      "conclusion": "failure",
+      "at": "Fetch existing exact-source artifact",
+      "error": "HTTP Error 503: Egress is over the account limit",
+      "product_started": false
+    },
+    {
+      "id": 39916080164,
+      "name": "W1RR product case",
+      "conclusion": "step_failure",
+      "at": "actions/download-artifact to Azure Blob",
+      "error": "download failed after five retries",
+      "product_started": false
+    }
+  ],
+  "runtime": {
+    "both_outer_off": "NOT_OBSERVED",
+    "true_feedback": "NOT_OBSERVED",
+    "original_retransmit_zero": "NOT_OBSERVED",
+    "fec_parity": "NOT_OBSERVED",
+    "fec_recovery": "NOT_OBSERVED",
+    "auto_adaptation": "NOT_OBSERVED",
+    "first_delivery": "NOT_OBSERVED",
+    "cpu_rss": "NOT_OBSERVED",
+    "throughput_latency": "NOT_OBSERVED"
+  },
+  "capacity_policy": "STOP_NEW_PERFORMANCE_RUNS",
+  "source_findings": "Actual repair loop and frozen shadow are distinct from truthful M2 receipt and FEC parity. Native setter/readback only under authenticated owner pre-loop.",
+  "fixture_note": "Current request W1RR immutable, product not launched; per-bundle outer-repair override supports legacy A without new CLI arg and new B OFF; old/new sequential on one VM, not run while artifact blocked."
+}

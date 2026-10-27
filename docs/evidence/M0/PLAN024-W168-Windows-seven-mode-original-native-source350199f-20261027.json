@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "native_original_windows_linux_product_mode_functional",
+  "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "workflow_run_id": 40445098497,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/40445098497",
+  "run_conclusion": "failure",
+  "native_job_id": 121995669340,
+  "artifact_id": 12707759526,
+  "artifact_name": "m0-wl-full-public-normal-direct",
+  "source_lock": {
+    "windows_go_test_compile": "PASS",
+    "windows_go_product_build": "PASS",
+    "linux_original_go_rust_build": "PASS",
+    "windows_rust_owner_tests": "PASS_17_OF_17",
+    "npcap_wintun_signed_install": "PASS"
+  },
+  "modes": {
+    "normal": {
+      "status": "PASS",
+      "native_real_duplex_udp_tcp": true,
+      "owned_stop": true
+    },
+    "game2": {
+      "status": "PASS",
+      "native_real_duplex_udp_tcp": true,
+      "owned_stop": true,
+      "authenticated_lanes": 2,
+      "inner_fec": "off"
+    },
+    "game4": {
+      "status": "PASS",
+      "native_real_duplex_udp_tcp": true,
+      "owned_stop": true,
+      "authenticated_lanes": 4,
+      "inner_fec": "off"
+    },
+    "game2-fec": {
+      "status": "PASS",
+      "native_real_duplex_udp_tcp": true,
+      "owned_stop": true,
+      "authenticated_lanes": 2,
+      "inner_fec": "fixed",
+      "profile": 6,
+      "game_fec_tls": 7
+    },
+    "game4-fec": {
+      "status": "PASS",
+      "native_real_duplex_udp_tcp": true,
+      "owned_stop": true,
+      "authenticated_lanes": 4,
+      "inner_fec": "fixed",
+      "profile": 6,
+      "game_fec_tls": 7
+    },
+    "fixed": {
+      "status": "FAIL",
+      "native_real_duplex_udp_tcp": false,
+      "first_failure": "Windows reverse original FEC2 receive rejects incoming 103B source even though Linux counterpart has copied S2C packets",
+      "native_original_readback": "OpenBoundOriginalFEC2 returns generic original-Go private Windows Rust owner refused before first Windows native Ready",
+      "linux_source_and_tun": "observed",
+      "mode_stop_qualification": "NOT_RUN"
+    },
+    "auto": {
+      "status": "FAIL",
+      "native_real_duplex_udp_tcp": false,
+      "first_failure": "Windows reverse original FEC2 receive rejects incoming 103B source; no Windows authenticated TUN first-delivery",
+      "native_original_readback": "OpenBoundOriginalFEC2 returns generic original-Go private Windows Rust owner refused before Ready",
+      "linux_source_and_tun": "observed",
+      "mode_stop_qualification": "NOT_RUN"
+    }
+  },
+  "feature_boundaries": {
+    "product_game_qualifications": "source-locked functional PASS only on signed Npcap/Wintun, actual Linux raw/TUN and owned Stop; not formal release",
+    "game_fixed_profiles": "profile6 only in this run, not all 0..6",
+    "auto_dynamic_revision": "NOT_RUN",
+    "windows_winforms_applied_disconnect": "NOT_RUN",
+    "windows_global_wfp_ipv6_dns_matrix": "NOT_RUN",
+    "WL_N0": "NOT_RUN",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "historical_failures_preserved": true,
+  "pr_draft": true
+}

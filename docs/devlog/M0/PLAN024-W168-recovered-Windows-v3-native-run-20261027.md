@@ -1,0 +1,16 @@
+# Recovered: W168 Windows M2 opportunistic-v3 native result (2026-10-27)
+
+## Facts, not a new assignment
+Main registry still assigns M0 to `main`, task `R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025`, cursor H274/epoch1/revision3. The user selected this **isolated** W168 integration branch; it has a copy of the main cursor, **not** a new registered M0 cursor. Do not relabel the copied cursor or claim `main` has this source.
+
+Recovery compared main checkpoint `c6866577`→main HEAD `7a6a289` (H274 only), and staged first-parent `05d25fad`→`4fb263dd` (12 commits including real F merge `fea9cd94`, plus source fixes, rejected Actions and two green native revisions). The full experiment ancestry contributes 1227 historical commits since main checkpoint: this receipt is not a claim that every historical commit passed the main G2 scope audit. The branch's 20 listed workflow runs are all completed; `40362898805/1` was already running/finished and was not dispatched again.
+
+## Result recovered from actual completed Actions
+Source `4fb263dd38b68e6a1763e7d79f5654b611f4ac8b`, [run 40362898805/1](https://github.com/lly8666/wbd-next/actions/runs/40362898805): Linux build job `121712790204` PASS; Windows native job `121713772541` PASS including `m0_windows_m2_short_feedback_output_does_not_burn_original_tx_sequence` and `m0_windows_m2_v3_no_unsolicited_pto_repair_and_owned_stop`, real public Windows↔Linux UDP/TCP kernel application markers, original TLS/Npcap/Wintun, and scoped owned Stop. Artifact IDs `12667779905`, `12670021695`. Exact structured details: [recovered receipt](../../evidence/M0/PLAN024-W168-recovered-Windows-v3-native-run-20261027.json).
+
+**Do not erase** the failures `9137f27/40357841232` Linux zero RX, `6e271c1/40360124961` WrongPersona diagnostic, or main `f11b6e7/40295748769` WL-N0 10Mbps +103B sequence discrepancy. These are distinct SOURCE. WL-N0/N1/N5 remain NOT_RUN at `4fb263dd`; Fixed6, Auto, Game2/4, GUI/global WFP/DNS and physical are NOT_RUN or unwired.
+
+## Targeted security and design check before next repair
+The prior Linux symptom was a **persona/packet-parser mismatch**, not evidence that Linux broadly disallowed traffic. Windows11 TTL128 was made an explicitly TLS-bound peer persona; strict TCP tuple, ciphertext AEAD, identity and PN remain enforced. The native public job installs only its scoped TCP/WSL firewall exception, removes it on Stop, and restores driver ownership; do not globally turn off firewall, conntrack or anti-replay in an internet product. Current v3 in `v4_windows_owner.rs::m2_arm_entry` uses W168 adaptive timing/opportunistic budget and keeps 1536 shadows. `m2_next_feedback_entry` preflights output before seal, Go `rustFeedbackOne` advances TCP seq only on exact accepted NPF send. The frozen `v4_fixed_stream.rs` already owns bounded staged parity; current Windows feature7 `transmitOne` emits source0/per-packet block and is held behind capability mask=Normal only. Per `NETWORK_TRIAGE.md` and current W168 integration contract, the next change must wire **real** M2 Applied, grouped source/parity and original Go session in Fixed6, not relax security/mask or repeat Normal PASS.
+
+Next action: implement one source-locked genuine Windows Fixed6 M2 Applied/FEC grouping integration batch, with real Windows/Linux Actions functional gate and historical limitations preserved.

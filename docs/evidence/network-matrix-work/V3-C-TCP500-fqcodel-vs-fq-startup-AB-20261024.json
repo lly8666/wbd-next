@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "kind": "NATIVE_ARM64_SAME_VM_TCP500_FULL_STARTUP_OWNED_TUN_QDISC_FQCODEL_VS_FQ_TEST_ONLY",
+  "request_id": "V3-C-TCP500-owned-TUN-fq-codel-vs-fq-AB",
+  "request_source": "d0876424fc066240229b2ac9d2afaba5760318a6",
+  "run": 40038882744,
+  "attempt": 1,
+  "action_conclusion": "failure",
+  "artifact_id": 12538288191,
+  "artifact_zip_sha256": "4026441117d51f5633bc6dc5f92ddfe56f9e95226deb0e8ea96cce3156bdf62f",
+  "artifact_zip_sha256_locally_verified": true,
+  "scope": {
+    "native_product_source_both": "b8dfc570c8d30098ab6b5a6d98165e22967a56a0",
+    "same_ARM64_VM_sequential_AB": true,
+    "only_variable": "Linux owned TUN root qdisc fq_codel vs fq, actual tc -j qdisc verified on client & server",
+    "app_single_tcp_c2s_target_mbps": 500,
+    "warmup_offered_mbps_A_B": [
+      500,
+      500
+    ],
+    "outer_mtu": 1500,
+    "inner_mtu": 1429,
+    "delay_one_way_ms": 200,
+    "netem_loss_pct": 0,
+    "outer_direction_mbps_cap": 700,
+    "tun_txqlen_A_B": [
+      1024,
+      1024
+    ],
+    "readback": "root qdisc fq_codel on A and fq on B for both namespaces, each readback after cold stage",
+    "warmup_s": 20,
+    "steady_s": 60,
+    "drain_s": 30
+  },
+  "A": {
+    "qdisc": "fq_codel",
+    "steady_TCP_application_mbps": 473.4582784,
+    "steady_tcp_backpressure_events": 6075,
+    "steady_firstarrival_p99_ms": 991.5,
+    "source_TUN_kernel_drop_warmup_client": 21107,
+    "source_TUN_kernel_drop_steady_client": 0,
+    "tcp_cwnd_median_MSS": 20180,
+    "process_CPU_s_steady_client_server": [
+      42.7,
+      61.33
+    ],
+    "host_CPU_PSI_mean_peak_pct": [
+      21.55,
+      27.79
+    ],
+    "result": "INCONCLUSIVE_TCP_BACKPRESSURED"
+  },
+  "B": {
+    "qdisc": "fq",
+    "steady_TCP_application_mbps": 500.0003584,
+    "steady_tcp_backpressure_events": 0,
+    "steady_firstarrival_p99_ms": 202.6,
+    "source_TUN_kernel_drop_warmup_client": 6735,
+    "source_TUN_kernel_drop_steady_client": 0,
+    "tcp_cwnd_median_MSS": 30497,
+    "process_CPU_s_steady_client_server": [
+      45.04,
+      63.7
+    ],
+    "host_CPU_PSI_mean_peak_pct": [
+      26.76,
+      28.18
+    ],
+    "result": "PASS_SCOPED_OBSERVATION_ONLY_STEADY"
+  },
+  "interpretation": [
+    "Both real Go TLS/Rust TUN products are the same immutable binary source and have full500 offered warmup. B fq pacing root qdisc improves startup loss burden and reliably reaches500Mbps in measured steady window with low p99 and no TCP generator backpressure.",
+    "However B STILL has6735 source TUN kernel drops during warmup, despite0 steady drops. This disproves full-run zero-local-loss qualification and may trigger TCP retrans/cwnd events; runner's PASS does not include warmup strict no-drop gate.",
+    "The owned-namespace qdisc and qlen changes here were TEST-ONLY; real Linux product openTun still installs default qlen500 and fq_codel. No deploy/claim of product default500.",
+    "One next bounded 1024-vs-2048 qlen under same fq may distinguish spike buffer shortage, with CPU/latency/tail readback; never automatically promote giant queues or use unbounded memory. Product integration needs Go owned-TUN actual configure+readback and must preserve peer MTU and auth contract."
+  ],
+  "qualification": "500_STEADY_PASS_WITH_FQ_AND_QLEN1024_TEST_ONLY; ABRUPT_START_FULLRUN_NO_LOCAL_DROP_NOT_QUALIFIED"
+}

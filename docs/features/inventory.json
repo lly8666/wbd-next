@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "status": "PARTIAL",
+  "scope_branch": "integration/w168-freeze-windows-adapter-20261026",
+  "baseline_source": "6e271c1e01aefadb4266eed44646d51806f88d49",
+  "inventory_source": "fcf33b14489b46d37aa29d5d9304d1e5a3fe010b",
+  "review_ref": "docs/devlog/M0/20261027-feature-inventory-init.md",
+  "gaps": [
+    "旧原Go完整默认配置、WinForms可用键、V4映射未逐项确认；rotation、idle、keepalive、账号多客户端、黑洞重连只能按NOT_RUN/未接线边界登记。",
+    "Windows Fixed/Auto/Game真实native模式Applied/Stop与全局WFP、默认路由、DNS、GUI整机Applied/Disconnect尚无同一当前SOURCE产品证据。",
+    "审阅HEAD的完整产品回归没有执行；先前Windows WL-N0高载+103字节失败未复测；WL-N0/N1/N5、真实长期弱网、jumbo/PMTU/p99/CPU和物理机仍未通过同源资格。",
+    "独立实验/工位分支仅按相关源与现成收据有界交叉核对，未审计所有未合入未来提交或旧Go完整用户参数表。"
+  ],
+  "next_action": "以已建稳定ID增量补齐原Go参数迁移映射与Windows Native正向模式资格；PARTIAL指目录信息缺口，不表示已盘功能测试全部失败，也不升级任何产品资格。"
+}

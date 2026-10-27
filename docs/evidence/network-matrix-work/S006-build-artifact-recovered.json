@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
+  "workflow_run": 39766278666,
+  "attempt": 1,
+  "workflow_conclusion": "failure",
+  "step_conclusions": {
+    "Exact source native ARM64 original Go and Rust bundle": "success",
+    "Verify product parity maximum row 0..19 on native ARM64": "failure: shell double-escaped line continuation, NOT a product compile failure",
+    "Upload artifact": "success",
+    "native-linux-netns": "skipped by experiment branch intentionally"
+  },
+  "artifact": {
+    "id": 12419289653,
+    "zip_sha256": "065836ce98ef6ae3631f5f65f39ecdb67a1510693501c7016adbe7d310abd398",
+    "manifest_sha256": "1cfa02e8665aa8aae5a7da65d45d6bfd4468311afdc7d65bd1e6b36041cd4342",
+    "manifest_arch": "aarch64",
+    "manifest_source": "df64bab1d60ae684429a4330e5f09d06ff851019",
+    "go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "isa_source": "c387163fcbca62701d646149564c550c78a4f985",
+    "runtime_backend": "NOT_OBSERVED",
+    "file_hash_sha256": {
+      "wbd-v4-client": "196375257b0c7c609e1f9ab66b39430d6581b76d4ee6fcfee068024a7d1fc94c",
+      "wbd-v4-server": "bf12504fa333698e35bfb7e5c80259f55780377898e1110c60f2b06fb1d2894f",
+      "libwbd_engine.so": "b9e79151856e24377675c5c084d1c54a0aed3084c4eec37d4ef2daaea51aeb82"
+    },
+    "all_three_ELF_machine": 183,
+    "zip_sha_matches_GitHub_artifact_digest": true,
+    "all_declared_binary_hashes_match": true
+  },
+  "separate_native_unit": {
+    "run_id": 39766569288,
+    "conclusion": "success",
+    "source": "a44d576e6470adf7a01e1f826ef8586a74ef8e0b",
+    "test_name": "m0_public_fixed_maximum_all_20_rows_supported",
+    "architecture": "ubuntu-24.04-arm",
+    "runtime_feature": "scalar-no-native-ISA",
+    "covers": "public maximum parity row 0..19 allowed, row>=20 refused; DOES NOT prove full network FEC decoding"
+  },
+  "assessment": "PRODUCT_BUILD_STEP_SUCCESS_AND_FILE_INTEGRITY_VERIFIED; OVERALL_BUILD_WORKFLOW_FAIL preserved, unit independently success; candidate may be used for scoped native network A/B but not product qualification. One fixed SOURCE, no second product build."
+}

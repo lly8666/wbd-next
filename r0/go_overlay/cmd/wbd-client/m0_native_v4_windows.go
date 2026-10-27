@@ -6,6 +6,7 @@ package main
 // test-channel trial after exact-source Actions validation, not automatic
 // host activation or any fake Applied result.
 import(
+ "bufio"
  "context"
  "crypto/rand"
  "encoding/binary"
@@ -20,6 +21,7 @@ import(
  "path/filepath"
  "sync"
  "sync/atomic"
+ "strings"
  "syscall"
  "time"
 
@@ -30,14 +32,32 @@ import(
  "golang.org/x/sys/windows"
 )
 
+// One GUI/CLI stdin protocol for live Auto config revision + native
+// Disconnect. Only the already-authenticated Rust generation may
+// accept the profile request after the real OS Applied readback.
+func watchM0NativeV4AutoControl(
+ ctx context.Context,in *os.File,cancel context.CancelFunc,
+ requests chan<- realityfront.FecV2Profile,
+){
+ scanner:=bufio.NewScanner(in)
+ for scanner.Scan(){
+  line:=strings.TrimSpace(scanner.Text())
+  if strings.EqualFold(line,"stop"){cancel();return}
+  if !strings.HasPrefix(line,"fec.profile="){continue}
+  profile,err:=m0WindowsV4Profile(strings.TrimSpace(strings.TrimPrefix(line,"fec.profile=")))
+  if err!=nil{
+   fmt.Printf("WBD_WINDOWS_AUTO_OPERATOR_REJECTED invalid_profile=%q\n",line)
+   continue
+  }
+  select{case requests<-profile:case <-ctx.Done():return}
+ }
+ cancel() // Exactly the existing watchGUIControl EOF→owned Stop.
+}
 func runM0NativeV4Windows(o m0NativeV4Options)error{
  // Mode-specific original Rust capability is queried before Npcap,
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
  // own 2/4-lane original TLS socket group; do not run Normal by mistake.
  if err:=m0CheckWindowsV4NativeMode(o.Mode,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"));err!=nil{return err}
- if o.Mode==m0WinModeGame2||o.Mode==m0WinModeGame4{
-  return fmt.Errorf("%w: public Windows Game group requires 2/4 genuine simultaneous Npcap/TLS lanes and OS Stop; single-owner runtime is forbidden",windowsclient.ErrN4NativeGuard)
- }
  if !o.ServerIP.Is4()||o.ServerPort==0||o.SourcePort==0||
   o.ServerName==""||len(o.RouteKey)<16||o.Username==""||o.Password==""||
   o.TunnelID==([16]byte{})||o.Installation==([16]byte{})||
@@ -47,7 +67,13 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  }
  ctx,cancel:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
  defer cancel()
- if o.ControlStdin{go watchGUIControl(os.Stdin,cancel)}
+ var autoOperatorRequests chan realityfront.FecV2Profile
+ if o.ControlStdin{
+  if o.Mode==m0WinModeAuto{
+   autoOperatorRequests=make(chan realityfront.FecV2Profile,2)
+   go watchM0NativeV4AutoControl(ctx,os.Stdin,cancel,autoOperatorRequests)
+  }else{go watchGUIControl(os.Stdin,cancel)}
+ }
  slot,err:=acquireGUIClientSlot()
  if err!=nil{return err}
  defer windows.CloseHandle(slot)
@@ -106,6 +132,28 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   }
   ncfg.NextHopMAC=actual
   fmt.Printf("WBD_PLAN024_NATIVE_ORIGINAL_NPCAP_NEXT_HOP_BOUND ifindex=%d guest_ip=%s mac=%s source=verified_WSL2_eth0\\n",idx,guestIP,guestMAC)
+ }
+ if o.Mode==m0WinModeGame2||o.Mode==m0WinModeGame4{
+  open:=func(local,remote uint16)(*faketcp.NpcapEndpoint,error){
+   config,e:=underlay.NpcapConfig(local,remote,1,faketcp.PacketPersonaWindows11)
+   if e!=nil{return nil,e}
+   config.NextHopMAC=ncfg.NextHopMAC
+   return faketcp.OpenNpcapEndpoint(config)
+  }
+  planForGame:=func()(windowsclient.NetworkPlan,error){
+   physical,e:=underlay.PhysicalPath()
+   if e!=nil{return windowsclient.NetworkPlan{},e}
+   if guestMAC!=""&&physical.NextHop4==underlay.Source4{physical.NextHop4=o.ServerIP}
+   return windowsclient.BuildCompactNetworkPlan(windowsclient.Config{
+    AdapterAlias:o.AdapterAlias,TunnelMTU:o.TunnelMTU,
+    Lease4:o.Lease4,Server4:o.ServerIP,Physical:physical,
+    DNSServers4:append([]netip.Addr(nil),o.DNSServers4...),
+    Direct4:append([]netip.Prefix(nil),o.Direct4...),
+    Bypass4:append([]netip.Prefix(nil),o.Bypass4...),
+    StatePath:o.StatePath,
+   })
+  }
+  return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),open,planForGame)
  }
  endpoint,err:=faketcp.OpenNpcapEndpoint(ncfg)
  if err!=nil{return err}
@@ -183,6 +231,9 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   policy,err=realityfront.FixedPolicyForClient(1,0)
  case m0WinModeFixed:
   policy,err=realityfront.PolicyForClientWithInitialAndCipher(
+   // Frozen Linux original-Go V3 carrier envelope uses fixed parity 4;
+   // this is NOT W168 FEC2 Maximum profile 6. Native Rust FixedStream
+   // independently selects profile6 under authenticated feature7.
    1,"fixed",4,4,20,realityfront.CipherChaCha)
  case m0WinModeAuto:
   policy,err=realityfront.PolicyForClientWithInitialAndCipher(
@@ -253,6 +304,23 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  if plan.StatePath==""{return windowsclient.ErrN4NativeGuard}
  transport,e:=newM0NativeV4PeerForMode(owner,endpoint,flow,nativeFrames,o.Mode)
  if e!=nil{return e}
+ if o.FEC2AutoPolicy=="aggressive"{
+  transport.autoPolicy=realityfront.FecV2Aggressive
+ }else{transport.autoPolicy=realityfront.FecV2Conservative}
+ if o.Mode==m0WinModeAuto||o.Mode==m0WinModeFixed{
+  if o.Mode==m0WinModeFixed{
+   transport.initialProfile,e=m0WindowsV4Profile(o.FEC2Profile)
+  }else{
+   transport.autoStartProfile,e=m0WindowsV4Profile(o.FEC2AutoStartProfile)
+   if e==nil{
+    transport.initialProfile=transport.autoStartProfile
+    if o.FEC2AutoPolicy=="aggressive"&&transport.initialProfile<realityfront.FecV2Maximum{
+     transport.initialProfile++
+    }
+   }
+  }
+  if e!=nil{return e}
+ }
  product,e:=windowsownerlease.PrepareOriginalTLSNativeProduct(
   ctx,owner,tun,plan,o.Installation,session.Epoch,transport)
  if e!=nil{return e}
@@ -292,6 +360,14 @@ waitNative:
   case <-ctx.Done():break waitNative
   case runtimeErr=<-failure:runtimeErr=fmt.Errorf("native NPF reader: %w",runtimeErr);break waitNative
   case runtimeErr=<-transport.Errors():runtimeErr=fmt.Errorf("native original Rust peer worker: %w",runtimeErr);break waitNative
+  case requested:=<-autoOperatorRequests:
+   state,changeErr:=transport.RequestAutoStartProfile(requested)
+   if changeErr!=nil{
+    fmt.Printf("WBD_WINDOWS_AUTO_REVISION_REJECTED profile=%d reason=%v\n",requested,changeErr)
+   }else{
+    fmt.Printf("WBD_WINDOWS_AUTO_REVISION_REQUESTED_NOT_APPLIED revision=%d profile=%d\n",
+     state.RequestedRevision,state.Desired)
+   }
   case <-metricsTicker.C:
    metrics:=transport.Stats()
    metrics.NPFIngressLocalDrops=ingressLocalDrops.Load()
@@ -311,4 +387,17 @@ waitNative:
  if stopErr!=nil{return errors.Join(runtimeErr,stopErr)}
  fmt.Println("WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1")
  return runtimeErr
+}
+
+func m0WindowsV4Profile(name string)(realityfront.FecV2Profile,error){
+ switch name{
+ case "light":return realityfront.FecV2Light,nil
+ case "mild":return realityfront.FecV2Mild,nil
+ case "medium":return realityfront.FecV2Medium,nil
+ case "balanced":return realityfront.FecV2Balanced,nil
+ case "high":return realityfront.FecV2High,nil
+ case "strong":return realityfront.FecV2Strong,nil
+ case "maximum":return realityfront.FecV2Maximum,nil
+ default:return 0,fmt.Errorf("unsupported original Linux FEC2 profile %q",name)
+ }
 }

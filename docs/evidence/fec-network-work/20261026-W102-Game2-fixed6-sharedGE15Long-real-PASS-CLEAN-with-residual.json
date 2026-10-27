@@ -1,0 +1,180 @@
+{
+  "schema": "W102_GAME2_FIXED6_SHARED_LONG_GE15_REAL_ARM64_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "owner": "fec-network-work",
+  "source": {
+    "sha": "8afc2b8f443dd59edc912fef24b5fffa92e3a6d7",
+    "build_run": 40257758450,
+    "artifact_id": 12622774367,
+    "zip_sha256": "80f65de67e9a89ba961f3d18a722c53cee8911ce19f0a1315f98d448713f9772"
+  },
+  "test": {
+    "run": 40258651816,
+    "request_commit": "bc990686a5f5578d2be6586b73472c70c12d3a9e",
+    "result": "PASS_SCOPED_OBSERVATION_CLEAN_GATES_ONLY",
+    "action_artifact_id": 12623970569,
+    "zip_sha256": "69774b68d0bfe41192c24489ff59a833c44d9d075f53768af2274a8391514ba1"
+  },
+  "scenario": {
+    "mode": "game2",
+    "fixed_profile": 6,
+    "c2s_mbps": 3,
+    "s2c_mbps": 3,
+    "one_way_ms": 75,
+    "udp_share": 0.96,
+    "real_tcp_flows": 2,
+    "shared_loss_across_both_lanes": true,
+    "phases": [
+      [
+        "clean_before",
+        15
+      ],
+      [
+        "shared_long_GE15",
+        45
+      ],
+      [
+        "clean_after",
+        15
+      ]
+    ],
+    "gemodel": [
+      3,
+      17,
+      100,
+      0
+    ],
+    "source_fixture": "W89-Game2-shared-GE15Long-original-arm64.json",
+    "one_scenario_per_action": true,
+    "netem_rng": "unseeded_recorded"
+  },
+  "results": {
+    "clean_before_udp_missing_both": 0,
+    "shared_GE15_udp_missing_c2s_s2c": [
+      434,
+      438
+    ],
+    "shared_GE15_udp_injected_mbps": [
+      2.8800359111111113,
+      2.8800359111111113
+    ],
+    "shared_GE15_udp_delivered_mbps": [
+      2.806376177777778,
+      2.8101392
+    ],
+    "shared_GE15_udp_residual_loss_pct": [
+      2.558,
+      2.427
+    ],
+    "shared_GE15_small_udp_missing_c2s_s2c": [
+      69,
+      86
+    ],
+    "shared_GE15_small_udp_sent_each_direction": 9424,
+    "clean_after_udp_missing_both": 0,
+    "true_tcp_injected_delivered_all_phases_both": true,
+    "tcp_backpressure": 0,
+    "tcp_p99_ms_shared_GE_c2s_s2c": [
+      290.7,
+      402
+    ],
+    "tcp_p99_ms_clean_after_c2s_s2c": [
+      110.3,
+      165.6
+    ],
+    "udp_p99_shared_GE_c2s_s2c_ms": [
+      85.4,
+      85.4
+    ],
+    "largest_all_business_receiver_zero_while_udp_offered_ms_in_GE": 20,
+    "max_active_zero_delivery_ms": {
+      "udp": 70,
+      "tcp": 80
+    },
+    "tun_source_drops_both": 0,
+    "stop_drained": true
+  },
+  "fec": {
+    "client": {
+      "source_offered": 56134,
+      "systematic_candidate": 52496,
+      "recovered_candidate": 3057,
+      "parity_planned": 76859,
+      "parity_offered": 76859,
+      "parity_kernel_copied": 76859,
+      "parity_sent": 76859,
+      "expired": 0,
+      "failed": 0,
+      "rx_invalid": 0,
+      "rx_conflict": 0,
+      "rx_capacity": 0,
+      "rx_codec": 0,
+      "rx_state": 0,
+      "rx_frame": 0,
+      "aead_rejected": 0
+    },
+    "server": {
+      "source_offered": 56043,
+      "systematic_candidate": 52603,
+      "recovered_candidate": 3037,
+      "parity_planned": 76679,
+      "parity_offered": 76679,
+      "parity_kernel_copied": 76679,
+      "parity_sent": 76679,
+      "expired": 0,
+      "failed": 0,
+      "rx_invalid": 0,
+      "rx_conflict": 0,
+      "rx_capacity": 0,
+      "rx_codec": 0,
+      "rx_state": 0,
+      "rx_frame": 0,
+      "aead_rejected": 0
+    }
+  },
+  "host": {
+    "client_server_cpu_s": [
+      8.18,
+      8.01
+    ],
+    "cpu_s_per_delivered_GiB": [
+      316.7149,
+      310.3697
+    ],
+    "outer_interface_tx_bytes": [
+      154210655,
+      154056659
+    ],
+    "rss_peak_bytes": [
+      26611712,
+      27152384
+    ],
+    "cpu_psi_peak_pct": 33.81,
+    "cpu_psi_over20_fraction": 0.12,
+    "warning": "HOST_CONTENTION_OBSERVED; may affect CPU/latency measurement, not proof of saturation of Rust codec",
+    "capacity_stop": true
+  },
+  "comparison_context": {
+    "historical_gameoff_W89_same_GE_config_udp_residual_loss_pct_c2s_s2c": [
+      13.3549,
+      13.1491
+    ],
+    "historical_gameoff_run": 40206930859,
+    "comparability": "Historical W89 and W102 are different VM / stochastic netem runs; visible improvement in this sample cannot be assigned precise causal effect or treated as paired AB",
+    "no_worse_load": true
+  },
+  "decision": "Game2 fixed6 real correlated GE long burst delivers all real TCP and keeps clean restore complete; FEC repairs a meaningful number of authenticated sources, but correlated burst residual ~2.5% remains. Do not claim zero loss/1% gate for GE; host contention warning justifies stopping more damage/capacity load. No Game4 W102 or higher-load variants.",
+  "boundaries": [
+    "FEC recovered_candidate counts are before per-original TUN write; independent business total delivered measured",
+    "Different VM and unseeded netem from W89, cannot prove exact gain percentage",
+    "Host PSI peak33.81%, 12% samples >20%, stop further stress",
+    "Shared GE high-loss residual ~2.4–2.6%, not a full product 1% guarantee",
+    "No high-FEC idle-silent tail specifically tested",
+    "Game --outer-repair=off not wired: FEC-only outer data retrans=0 NOT_VERIFIED",
+    "Queue depth/age not available from this native CLI",
+    "Windows/physical devices not tested"
+  ],
+  "merge_ready": false,
+  "capacity_stop": true
+}

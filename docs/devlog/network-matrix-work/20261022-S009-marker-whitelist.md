@@ -1,0 +1,2 @@
+# S009 marker correction
+Read-only original Go `V4_PUBLIC_FEC2_TX` values contain numeric FEC owner counters but harness initially stripped the marker in its sanitized logs. The whitelist is now a shared, tested helper: preserves known FEC TX marker while not copying arbitrary payload, credentials or error text. This changes harness only; original product builder source `11e9e27e674af92af85cf8e13e41e47ce9e324b4` and Action `39770495489` remain unchanged. No duplicate build or performance dispatch.

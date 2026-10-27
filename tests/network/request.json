@@ -1,24 +1,85 @@
 {
   "version": 1,
-  "id": "normal-off-10m-lossless-mixed-sizes-v2",
-  "owner": "network-harness",
-  "seed": 5205,
-  "product": {"mode": "normal", "fec_profile": 1},
-  "traffic": {
-    "c2s_mbps": 10, "s2c_mbps": 10, "udp_share": 1,
-    "sizes": [[64, 2], [256, 2], [1024, 3], [1172, 3]],
-    "tcp_flows": 2, "probe_hz": 10, "deadline_ms": 250
+  "id": "V3-HOL-low1-50msRTT-twoTCP-delivery",
+  "owner": "network-matrix-work",
+  "seed": 8213,
+  "product": {
+    "mode": "normal",
+    "fec_profile": 1
   },
-  "network": {"outer_mtu": 1500, "lane_loss": "shared", "queue_packets": 32768, "netem_rng": "unseeded_recorded"},
-  "warmup_s": 10, "drain_s": 5,
-  "phases": [{"name": "steady", "seconds": 60, "c2s": {}, "s2c": {}}],
-  "acceptance": {"injection_tolerance_pct": 3, "max_loss_pct": 0.1},
+  "traffic": {
+    "c2s_mbps": 6,
+    "s2c_mbps": 6,
+    "udp_share": 0.3,
+    "sizes": [
+      [
+        64,
+        18
+      ],
+      [
+        1401,
+        82
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "deadline_ms": 1200,
+    "burst_ms": 0,
+    "max_packets": 20000000,
+    "allow_fragmentation": false,
+    "observe_independent_flows": true
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "shared",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded",
+    "tcp_window_profiles": {
+      "A": "baseline"
+    },
+    "tcp_reordering_profiles": {
+      "A": "baseline"
+    },
+    "product_tun_fq_maxrate_mbps_profiles": {},
+    "startup_tun_drop_timeline": true
+  },
+  "warmup_s": 15,
+  "drain_s": 20,
+  "phases": [
+    {
+      "name": "steady",
+      "seconds": 60,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 25,
+        "loss_pct": 1,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 25,
+        "loss_pct": 1,
+        "rate_mbps": 50
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false,
+    "max_repair_fresh_pct": 10,
+    "require_zero_source_tun_drops_full_run": true,
+    "require_zero_tun_root_qdisc_drops_full_run": true,
+    "cross_business_hol": true
+  },
   "bundles": {
     "A": {
-      "source": "bdcd66c6ccf973f26af7e9e4eb035457108cb7dd",
-      "run_id": 39431226207, "attempt": 1, "artifact_id": 12268980051,
-      "sha256": "5fd581f4a5e6309e248fec415fadd1e8287700f81b8471179439e470dc825f79"
+      "source": "1c43b69a15e4eb9cb38e5662e34c0b106c18981d",
+      "run_id": 40060850580,
+      "attempt": 1,
+      "artifact_id": 12546779978,
+      "sha256": "6ee4a55d14a4a7f01e49a95b3654a79af1498aeca878b0c2ba9454ec2a9100e5",
+      "recovery_policy": "outer-opportunistic-v3"
     }
   },
-  "order": "A"
+  "order": "A",
+  "policy": "outer-opportunistic-v3"
 }

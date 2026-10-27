@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "id": "outer-opportunistic-repair",
+  "name": "外层机会式重传",
+  "summary": "认证成熟缺口后以有界预算最多机会式修复同一Seq的原冻结密文；无持续DATA PTO。",
+  "owner": "M2/M0 + FEC实验",
+  "stage": "experimental",
+  "development_branch": "experiment/fec-network-tuning",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "--outer-repair": "on（默认）",
+    "rollback": "off",
+    "windows-v3": "outer-opportunistic-v3"
+  },
+  "usage": {
+    "cli": "Linux --outer-repair on|off；Windows native策略和只读状态按实际owner",
+    "config": "公开V4 CLI有开关，不能宣称旧Go配置全部映射",
+    "gui": "无完整Windows GUI逐方向修复策略操作的同源证据"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "crates/wbd-recovery/src/budget.rs",
+    "crates/wbd-recovery/src/global_sparse.rs",
+    "crates/wbd-engine/src/v4_windows_owner.rs"
+  ],
+  "doc_refs": [
+    "docs/handoff/CURRENT_INTEGRATION.md",
+    "docs/evidence/fec-network-work/20261026-W167-Outer-ON-DualArch-Matrix-and-Deferred-RX-250ms.json"
+  ],
+  "verification": [
+    {
+      "platform": "windows/x64 + WSL2/linux",
+      "scope": "原生 Normal/off：短反馈不烧PN/SEQ且无无据PTO的受限原生功能回归；此结果仅旧W源码，不是盘点HEAD的重新测试",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "4fb263dd38b68e6a1763e7d79f5654b611f4ac8b",
+      "evidence": "docs/evidence/M0/PLAN024-W168-recovered-Windows-v3-native-run-20261027.json"
+    },
+    {
+      "platform": "linux/arm64 + linux/amd64",
+      "scope": "F实验分支W168：外层ON选择与低/高损限定观察；非10%全线路能力证明，仅观察/特定case通过，非全平台质量门",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "0776fc4ede72fabd711e8333568eb88a58e8a6ea",
+      "evidence": "docs/evidence/fec-network-work/20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "WL-N0/N1/N5与+103B高载再验",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "持续真实损伤与带宽预算",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "FEC修复/多lane副本不计入outer DATA重传；pre-netem DATA统计不能除post-netem线路字节。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+  ],
+  "promotion": null
+}

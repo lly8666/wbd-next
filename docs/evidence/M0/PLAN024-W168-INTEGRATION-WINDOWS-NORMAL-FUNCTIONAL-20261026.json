@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "status": "PASS_SCOPED_WINDOWS_LINUX_NORMAL_OFF_FUNCTIONAL_ONLY",
+  "freeze_experiment_source": "254cf4110c1df3878c7bd0e782145fc381189b8f",
+  "true_merge_sha": "fea9cd94a8cabcb6ef3d6958f9ba8db8300721d5",
+  "tested_merge_candidate_source": "fbb281c7c8531a1e242c8368c0b11ca9545be730",
+  "primary_native_run": {
+    "id": 40361251070,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40361251070",
+    "result": "SUCCESS",
+    "linux_native_build": "PASS",
+    "windows_native_build": "PASS",
+    "windows_rust_m2_unit": "PASS",
+    "windows_linux_real_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "windows_linux_real_tcp": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "owner_stop": "PASS_BOTH_OWNED",
+    "test_firewall_removed": true,
+    "artifacts": [
+      12669500425,
+      12668341997
+    ]
+  },
+  "prior_pass": {
+    "source": "1b0371314637b5c46a958de6e2904fdaec41b8aa",
+    "run": 40360805219,
+    "result": "SUCCESS_NORMAL_ONLY"
+  },
+  "source_specific_failures": [
+    {
+      "source": "9137f27b9a10f6818a870bb6efed3ea1375a58d7",
+      "run": 40357841232,
+      "result": "FAIL_LINUX_RX_ZERO",
+      "linux_rx_raw_observed": 546,
+      "linux_rx_raw_tuple": 0,
+      "linux_rx_tun_delivered": 0
+    },
+    {
+      "source": "6e271c1e01aefadb4266eed44646d51806f88d49",
+      "run": 40360124961,
+      "artifact": 12667403997,
+      "reason": "WrongPersona original TLS Windows11 TTL128 vs frozen Linux legacy TTL64",
+      "resolved_by": "explicit authenticated same-session native peer-persona on Linux, no bypass of parser/AEAD"
+    }
+  ],
+  "windows_config": {
+    "m2_shadow_entries": 1536,
+    "normal_m1_slots": 2048,
+    "normal_m1_bytes": 5000000
+  },
+  "excluded": {
+    "WL_N0": "NOT_RUN",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN",
+    "original_plus103B_highload": "UNRESOLVED_NOT_RETESTED",
+    "windows_fixed_auto_game": "UNWIRED_NOT_RUN",
+    "windows_m2_outer_v3_policy": "NOT_YET_VERIFIED_WINDOWS_V3_POLICY",
+    "AMD64_250Mbps": "INCONCLUSIVE_HISTORICAL"
+  },
+  "statement": "Main and Windows tested branch unchanged; PR#28 Draft. This qualifies only exact source native Normal/off functional UDP,TCP,Stop, not W168 FEC/Game Windows or performance."
+}

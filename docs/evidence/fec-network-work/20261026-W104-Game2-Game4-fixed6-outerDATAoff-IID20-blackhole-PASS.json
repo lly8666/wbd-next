@@ -1,0 +1,144 @@
+{
+  "schema": "W104_GAME2_GAME4_FIXED6_OUTER_DATA_OFF_REAL_DAMAGE_V1",
+  "owner": "fec-network-work",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "source": {
+    "sha": "e8b41fb49a74648e405bf23e4600e23c618596fe",
+    "build_run": 40260662919,
+    "artifact_id": 12623678360,
+    "sha256": "04d209b7ef1e887af6599622aaf71efc34381451c847e844cf18c2006ae9708f"
+  },
+  "scenario": {
+    "each_direction_mbps": 3,
+    "udp_share": 0.96,
+    "real_tcp_flows": 2,
+    "one_way_ms": 75,
+    "fec": "fixed6",
+    "outer_DATA_repair": "OFF",
+    "phases": "clean15→each_lane_independent20_30s→lane1_blackhole30s→clean15",
+    "one_action_per_mode": true,
+    "independent_workers": true
+  },
+  "game2": {
+    "run": 40261223312,
+    "request_commit": "69d77e521183a2102bc2255cd45131dfff1a283b",
+    "artifact_id": 12624915103,
+    "sha256": "1d581944cd1d3d6c5059eef5a61fd965dcf5b21a6b3d110c01abf41ca8c987d8",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "native_outer_enabled_client_server": [
+      0,
+      0
+    ],
+    "native_outer_retransmitted": [
+      0,
+      0
+    ],
+    "native_outer_blocked": [
+      0,
+      0
+    ],
+    "native_initial_lane_copied": [
+      266043,
+      265992
+    ],
+    "real_udp_missing_every_phase_every_direction": 0,
+    "real_tcp_all_phases_completed": true,
+    "maximum_observed_tcp_p99_ms": 84.7,
+    "maximum_observed_udp_p99_ms": 83.6,
+    "fec_recovered_candidate_client_server": [
+      765,
+      789
+    ],
+    "fec_parity_planned_sent_client_server": [
+      89683,
+      89658
+    ],
+    "fec_failed_client_server": [
+      97,
+      123
+    ],
+    "fec_rx_invalid_client_server": [
+      81,
+      91
+    ],
+    "fec_rx_conflict_client_server": [
+      16,
+      32
+    ],
+    "fec_rx_capacity_codec": [
+      0,
+      0
+    ],
+    "fec_expired": 0,
+    "source_tun_drops": 0,
+    "stop": true,
+    "process_cpu_s": [
+      9.81,
+      9.87
+    ],
+    "host_psi_peak_pct": 2.88
+  },
+  "game4": {
+    "run": 40261228792,
+    "request_commit": "ed05e8fce9fa19eb9df05a57d82920a1064045e0",
+    "artifact_id": 12624760696,
+    "sha256": "3c1dcac0cb64c22656cdc303bbd19db8442e9acd854ad0500c0bec00113487fc",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "native_outer_enabled_client_server": [
+      0,
+      0
+    ],
+    "native_outer_retransmitted": [
+      0,
+      0
+    ],
+    "native_outer_blocked": [
+      0,
+      0
+    ],
+    "native_initial_lane_copied": [
+      574074,
+      573786
+    ],
+    "real_udp_missing_every_phase_every_direction": 0,
+    "real_tcp_all_phases_completed": true,
+    "maximum_observed_tcp_p99_ms": 78.4,
+    "maximum_observed_udp_p99_ms": 77.9,
+    "fec_recovered_candidate_client_server": [
+      60,
+      72
+    ],
+    "fec_parity_planned_sent_client_server": [
+      88977,
+      88939
+    ],
+    "fec_failed_client_server": [
+      241,
+      273
+    ],
+    "fec_rx_capacity_codec": [
+      0,
+      0
+    ],
+    "fec_expired": 0,
+    "source_tun_drops": 0,
+    "stop": true,
+    "process_cpu_s": [
+      16.73,
+      16.97
+    ],
+    "host_psi_peak_pct": 6.1
+  },
+  "readback_provenance": "V4_PUBLIC_GAME_OUTER native C ABI reads live GameKernelOwner; retransmitted DATA is an actual post-kernel-copy repeat counter, not a constant/zero fill; off policy forbids same-lane repeated logical ID before send; cross-lane original first copies are not outer repair; parity new logical IDs independent; Go CLI insists both readbacks equal explicit configured OFF",
+  "limits": [
+    "M4 Game does not have Normal one-lane outer shadow/feedback algorithm; ON does not mean active V3 retransmission; only OFF is qualified here",
+    "No statistically paired CPU old/new VM, no CPU savings claim",
+    "No Game Auto, only fixed0..fixed6",
+    "Two-destination cloned packet is FEC first parity and independent lane copies, not outer retry",
+    "Shared correlated GE with outer OFF not rerun at capacity stopped; historical Game2 W102 correlated GE >1% residual retained",
+    "Windows physical not run"
+  ],
+  "capacity_stop": true,
+  "merge_ready": false
+}

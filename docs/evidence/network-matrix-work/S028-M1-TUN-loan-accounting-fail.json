@@ -1,0 +1,153 @@
+{
+  "schema": 1,
+  "event": "S028",
+  "kind": "SINGLE_REAL_ARM64_FIXED30_M1_TUN_ACCEPTANCE",
+  "result": "FAIL",
+  "action": {
+    "run_id": 39801548685,
+    "attempt": 1,
+    "conclusion": "failure",
+    "artifact_id": 12436311228,
+    "sha256": "570fed8ff253385e0842eead87e45f6a64548d0f5a98b85a72dcfa0ca68fdf7f",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39801548685"
+  },
+  "product": {
+    "source": "146f81ff70f49c0521dbc959beac5013219a8244",
+    "build_run": 39799604748,
+    "build_artifact_id": 12435082262,
+    "zip_sha256": "f5cbdeededd98c32b411432f8690a2861905a6cd34ac0d3e758e87ec86387705",
+    "arch": "aarch64",
+    "sha256sums_verified": true
+  },
+  "harness_source": "8125a019ef283300308f778c7b5755b357135d87",
+  "contract_run": 39801548948,
+  "scenario": {
+    "mode": "fec-fixed",
+    "fec_profile": 6,
+    "loss_pct": 30,
+    "one_way_ms": 300,
+    "app_mbps_each_dir": 2,
+    "udp_share": 0.5,
+    "tcp_flows": 4,
+    "warmup_s": 15,
+    "steady_s": 120,
+    "drain_s": 30,
+    "netem_rng": "unseeded_recorded"
+  },
+  "measurements": {
+    "netem_pct": {
+      "client": 30.130137581103376,
+      "server": 30.0384681774468
+    },
+    "m1_input": {
+      "client": {
+        "read_ipv4": 28789,
+        "small_loaned": 28765,
+        "small_arena_fail": 24,
+        "jumbo": 0,
+        "rejected": 0
+      },
+      "server": {
+        "read_ipv4": 28808,
+        "small_loaned": 28766,
+        "small_arena_fail": 42,
+        "jumbo": 0,
+        "rejected": 0
+      }
+    },
+    "fec_tx": {
+      "client": {
+        "accepted": 21689,
+        "notready": 11,
+        "rplanned": 35344,
+        "rsent": 32989,
+        "source_arena": 11,
+        "source_seal": 0,
+        "source_payload": 0,
+        "parity_arena": 73,
+        "parity_m4_noncopy": 72
+      },
+      "server": {
+        "accepted": 21696,
+        "notready": 27,
+        "rplanned": 35636,
+        "rsent": 33642,
+        "source_arena": 27,
+        "source_seal": 0,
+        "source_payload": 0,
+        "parity_arena": 111,
+        "parity_m4_noncopy": 3
+      }
+    },
+    "udp": {
+      "c2s": {
+        "sent": 20751,
+        "delivered": 13921,
+        "missing": 6830,
+        "loss_pct": 32.914076430051566,
+        "duplicates": 0,
+        "p99_arrived_ms": 379
+      },
+      "s2c": {
+        "sent": 20751,
+        "delivered": 13969,
+        "missing": 6782,
+        "loss_pct": 32.6827622765168,
+        "duplicates": 0,
+        "p99_arrived_ms": 330.7
+      }
+    },
+    "tcp": {
+      "steady_full_frames_sent_both": 0,
+      "steady_full_frames_received_both": 0,
+      "backpressure_each": 234374,
+      "connection_state": "ESTAB from warmup"
+    },
+    "fec_rx_m4": {
+      "client": {
+        "sys_udp": 15165,
+        "rec_udp": 5772,
+        "sys_tcp": 58,
+        "rec_tcp": 18,
+        "tun_failed": 0
+      },
+      "server": {
+        "sys_udp": 15034,
+        "rec_udp": 5842,
+        "sys_tcp": 57,
+        "rec_tcp": 23,
+        "tun_failed": 0
+      }
+    },
+    "mode": {
+      "client": "fixed requested1 applied0 pending",
+      "server": "fixed requested1 applied1"
+    },
+    "m2": {
+      "client": {
+        "accepted": 21629,
+        "unknown_2s": 207,
+        "authenticated_reverse_reports": 11808
+      },
+      "server": {
+        "accepted": 21668,
+        "unknown_2s": 92,
+        "authenticated_reverse_reports": 12030
+      }
+    },
+    "stop_drained_both": true,
+    "owned_namespace_cleanup": true,
+    "host_cpu_psi_mean_pct": 5.1445,
+    "host_cpu_psi_over20_fraction": 0.1,
+    "steal_peak_pct": 0
+  },
+  "interpretation": "One genuine M1 TUN read then bounded small arena loan failure is rare (24/42), disproving hypothesis that ~7k interface/FEC accepted difference is principally early NoCapacity. ~7k is not yet proved actual packet loss: source-accounting boundaries differ. Original FEC fixed_stage_source rejects n>budget.record_payload_mtu-14 before the owner can increment ClassStats.accepted and without the current source_payload counter; post-loan stage outcome/rejection is NOT_OBSERVED. Need count genuine stage attempts, n>budget limit, callback errors, enqueued_false and perhaps mode/route skip, without changing forwarding. TCP still stalled; need not infer root from this one scene. Host PSI mean5.14% with 10% samples above20 means cross-job CPU performance inference inconclusive. Maintain original auth/duplicate/MTU/Stop hard gates.",
+  "qualification": "FAIL_FIXED_NOT_APPLIED_TCP_ZERO_HIGH_UDP_RESIDUAL",
+  "not_observed": [
+    "post-loan Fixed stage attempted/oversize/callback-error/source-enqueued vs owner accepted",
+    "per-cohort useful recovered UDP delivery",
+    "runtime native ISA-L dispatch",
+    "wire repair-byte fraction"
+  ],
+  "scope": "S026 remains FAIL; S018 Normal/off matched AB PASS; no same-host A/B performance improvement claim"
+}

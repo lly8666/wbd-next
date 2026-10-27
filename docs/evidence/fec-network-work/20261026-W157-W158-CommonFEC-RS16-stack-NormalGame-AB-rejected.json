@@ -1,0 +1,187 @@
+{
+  "schema": "FEC_W157_W158_COMMON_RS16_K_REF_STACK_NORM_GAME_AB_REJECT_V1",
+  "date": "2026-10-26",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "old_p2_reverted_source": "6d51817768aa795db13c817b4785cf7924638a91",
+  "new_trial_source": "194985bba42da757fe62c7ab149db967cffc8bb2",
+  "native": {
+    "run": 40316189069,
+    "result": "SUCCESS",
+    "artifact_id": 12645919440,
+    "sha256": "8e343dec594ec2e6ca3d314a54ace3840c5b25832c3e2cfbd9acd08270a8a253",
+    "manifest_source_arch_aarch64_and_original_go_isa_verified": true,
+    "client_server_rust_sha256sum_c_pass": true,
+    "source": "194985bba42da757fe62c7ab149db967cffc8bb2",
+    "go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "isa_source": "c387163fcbca62701d646149564c550c78a4f985"
+  },
+  "scope": "Exactly one common Fec2LiveRx::accept_authenticated source reference list: previously collect Vec<Option<&[u8]>> per post-k FEC symbol; trial stack [Option<&[u8]>;16] plus [..k], no RS algorithm or source/parity buffer owner, FEC early completion/late source expiry, single AEAD/replay or TUN success commit changes. Shared by Linux Normal fixed and Game fixed.",
+  "runs": [
+    {
+      "id": "W157",
+      "action": 40316698229,
+      "conclusion": "SUCCESS_PASS_SCOPED_CORRECTNESS_NO_CPU_BENEFIT",
+      "contract_action": 40316698225,
+      "contract_result": "SUCCESS",
+      "order": "AB",
+      "request_commit": "99d414f69003d471badc9bc10d3bb9cb3f649b1b",
+      "request": "tests/network/fec-work/W157-Normal-fixed3-IID2-mixed15Mbps-P3b-RS16-stack-AB-ARM64.json",
+      "artifact_id": 12646678619,
+      "artifact_sha256": "2b70e27682163a0292e3f2310cb3e69a4eac52b18c9e326a774015c5285907da",
+      "workload": "Normal fixed3, each direction15Mbps true UDP96% / TCP4%, shared IID2% 75ms one-way, 30s, sameVM old A→new B",
+      "old_A": {
+        "cpu_client_s": 4.58,
+        "cpu_server_s": 4.56,
+        "cpu_total_s": 9.14,
+        "host_cpu_psi_mean_pct": 0.919,
+        "host_cpu_psi_peak_pct": 0.98,
+        "peak_rss_mib": {
+          "client": 19.64,
+          "server": 19.77
+        },
+        "tcp_udp_sent_delivered_both_directions": {
+          "udp": "77300/77300 each",
+          "tcp": "3221/3221 each"
+        },
+        "udp_p99_ms": {
+          "c2s": 80,
+          "s2c": 79.9
+        },
+        "tcp_p99_ms": {
+          "c2s": 83.4,
+          "s2c": 81.3
+        },
+        "fec_recovered_tun": {
+          "client": 2456,
+          "server": 2421
+        },
+        "fec_capacity_rejections": 0,
+        "go_posthandoff_full_data_copies_both": 0,
+        "outer_data_retransmitted_both": 0
+      },
+      "new_B": {
+        "cpu_client_s": 4.58,
+        "cpu_server_s": 4.67,
+        "cpu_total_s": 9.25,
+        "host_cpu_psi_mean_pct": 0.9113,
+        "host_cpu_psi_peak_pct": 0.98,
+        "peak_rss_mib": {
+          "client": 19.58,
+          "server": 19.89
+        },
+        "tcp_udp_sent_delivered_both_directions": {
+          "udp": "77300/77300 each",
+          "tcp": "3221/3221 each"
+        },
+        "udp_p99_ms": {
+          "c2s": 80,
+          "s2c": 79.7
+        },
+        "tcp_p99_ms": {
+          "c2s": 82.8,
+          "s2c": 81.8
+        },
+        "fec_recovered_tun": {
+          "client": 2351,
+          "server": 2428
+        },
+        "fec_capacity_rejections": 0,
+        "go_posthandoff_full_data_copies_both": 0,
+        "outer_data_retransmitted_both": 0
+      },
+      "new_cpu_change_pct": 1.2035,
+      "source_tun_fq_root_drops_zero_both": true,
+      "stop_drained_both": true
+    },
+    {
+      "id": "W158",
+      "action": 40316706348,
+      "conclusion": "SUCCESS_PASS_SCOPED_CORRECTNESS_NO_CPU_BENEFIT",
+      "contract_action": 40316706479,
+      "contract_result": "SUCCESS",
+      "order": "AB",
+      "request_commit": "14ba083859f547b7119e50e5012f71f38a0930ae",
+      "request": "tests/network/fec-work/W158-Game4-fixed6-IID30-UDP20Mbps-P3b-RS16-stack-AB-ARM64.json",
+      "artifact_id": 12647691070,
+      "artifact_sha256": "81094617d572ccd136b15de3ca4f329db33166af9f667be06ab4266977fd017e",
+      "workload": "Game4 fixed6, each direction20Mbps genuine UDP weighted sizes, each physical lane independent IID30%, clean10/damaged30/clean10, 75ms each way, original 0/4/20/60ms",
+      "old_A": {
+        "cpu_client_s": 28.8,
+        "cpu_server_s": 29.18,
+        "cpu_total_s": 57.98,
+        "host_cpu_psi_mean_pct": 12.484,
+        "host_cpu_psi_peak_pct": 14.26,
+        "peak_rss_mib": {
+          "client": 41.39,
+          "server": 41.63
+        },
+        "damaged_udp": {
+          "c2s": "114765/114765",
+          "s2c": "114774/114774",
+          "p99_ms": 83.6
+        },
+        "physical_game4_four_ranks_planned_equals_sent_both": true,
+        "parity_planned_equals_sent": {
+          "client": "305643/305643",
+          "server": "305673/305673"
+        },
+        "recovered_candidates": {
+          "client": 26793,
+          "server": 26659
+        },
+        "outer_data_retransmitted": 0,
+        "go_posthandoff_full_data_copies_both": 0,
+        "stop_retained_fec_bytes_both": 0
+      },
+      "new_B": {
+        "cpu_client_s": 28.69,
+        "cpu_server_s": 29.33,
+        "cpu_total_s": 58.02,
+        "host_cpu_psi_mean_pct": 12.461,
+        "host_cpu_psi_peak_pct": 14.24,
+        "peak_rss_mib": {
+          "client": 41.7,
+          "server": 41.39
+        },
+        "damaged_udp": {
+          "c2s": "114760/114760",
+          "s2c": "114768/114768",
+          "p99_ms": 83.5
+        },
+        "physical_game4_four_ranks_planned_equals_sent_both": true,
+        "parity_planned_equals_sent": {
+          "client": "305696/305696",
+          "server": "305657/305657"
+        },
+        "recovered_candidates": {
+          "client": 26901,
+          "server": 26867
+        },
+        "outer_data_retransmitted": 0,
+        "go_posthandoff_full_data_copies_both": 0,
+        "stop_retained_fec_bytes_both": 0
+      },
+      "new_cpu_change_pct": 0.069,
+      "source_tun_fq_root_drops_zero_both": true,
+      "stop_drained_both": true
+    }
+  ],
+  "assessment": "The identified short-lived common FEC source reference Vec allocation truly disappears in the candidate, but the real whole-program CPU gain does not materialize: Normal +1.20% CPU and Game4 +0.07% with identical business delivered, full fixed6 repair and staggered copy supply, no host PSI congestion. Difference is noise-scale, not evidence to enlarge complexity. Existing RS16 inverse/missing/output buffers and necessary cache/TUN copies dominate; cannot attribute without sampling. No additional BA seed treadmill: reject minimal allocation micro-optimization and restore the one changed file exactly.",
+  "decision": "REJECT_COMMON_FEC_P3B_NO_REPEATABLE_CPU_GAIN_REVERT_ONLY_V4_FEC2_LIVE_RX_KEEP_SCOPED_P2",
+  "revert": {
+    "commit": "8ae002d0b6892664b9d34b415ab3dfeb8186d8ad",
+    "file": "crates/wbd-engine/src/v4_fec2_live_rx.rs",
+    "exact_qualified_pretrial_blob": "a5320a9b60cfe795db2a7649055d68b459c52e24",
+    "content_blob_verified": true
+  },
+  "unqualified": {
+    "full_5_mode_latest_p2": "NOT_ALL_RETESTED; previous SOURCE6c38 remains last cross-mode qualified",
+    "normal_AUTO_at_new_candidate": "NOT_RUN; reverted",
+    "windows": "NOT_RUN/TEMP_SKIPPED",
+    "Game4_80Mbps": "NOT_RUN_CAPACITY_STOP",
+    "Game4_25Mbps": "W153 host PSI mean19/18pct >20pct samples 28/18pct; do not stress further"
+  },
+  "capacity_stop": true,
+  "merge_ready": false
+}

@@ -1,0 +1,30 @@
+# 2026-10-27 功能目录一次性审阅（experiment隔离）
+ 
+- 精确审阅对象：`integration/w168-freeze-windows-adapter-20261026` HEAD `fcf33b14489b46d37aa29d5d9304d1e5a3fe010b`（不是旧main快照）；本次分支：`experiment/feature-inventory-init-20261027`。已先核AGENTS/START_HERE/features README、完整固定提示词、main registry与源收据。
+- 工作方法：逐项反查 Go V4真实CLI/help `r0/go_overlay/internal/v4productcli/linux.go` / `r0/go_overlay/internal/v4productcli/game_linux.go`、源锁组装 `r0/go_overlay/assembly/manifest.json`、Go配置/WinForms绑定、Rust codec/engine/recovery/platform、Native Windows driver/WAL、Android/OpenWrt源码和相关Actions；仅有界阅读W168/FEC/Windows近期收据，无大范围devlog考古。
+- 目录原只有entries/.gitkeep；沿用原schema1/index/工具 `tools/feature_catalog.py`，没有另建体系。新登记 24 项：experimental 24、formal 0、retired 0。保守不以已有main源码自动晋级formal；撤销的W85双ready parity交错未作为现有功能。
+- 真实历史证据（均非本次审阅HEAD的测试）：Windows W=`4fb263dd38b68e6a1763e7d79f5654b611f4ac8b` [40362898805](https://github.com/lly8666/wbd-next/actions/runs/40362898805) 仅真实Normal/off原Go TLS+Rust+Npcap/Wintun↔Linux原生UDP/TCP、特定M2与owned Stop；Linux旧L=`c81838f10371d9ecb6a88fd3cabb8692fd8fff85` [39433130093](https://github.com/lly8666/wbd-next/actions/runs/39433130093) 仅Fixed/Auto初始应用、Game2/4原生组合；F实验W168=`0776fc4ede72fabd711e8333568eb88a58e8a6ea` [40345202316](https://github.com/lly8666/wbd-next/actions/runs/40345202316) 56种实际场景只满足预设observational门，不代表低残余损失或吞吐资格；Win历史TEST-NET WFP partial WAL=`e3e193edb0e8383a9db2c962e5bb5618bae31764` [39618823911](https://github.com/lly8666/wbd-next/actions/runs/39618823911) 非全局宿主资格；旧WinForms portable=`249b7af42fdcc84d6e064ada36a2b7ec331c12d3` [39601695842](https://github.com/lly8666/wbd-next/actions/runs/39601695842) 是build+fake child而非真实用户操作。
+- 红灯保留：W168初合 `9137f27…` [40357841232](https://github.com/lly8666/wbd-next/actions/runs/40357841232) Linux RX 0；`6e271c1…` [40360124961](https://github.com/lly8666/wbd-next/actions/runs/40360124961) WrongPersona；Windows WL-N0旧高载+103B FAIL没有当前源码再验证；W85 [NEGATIVE rollback](../../evidence/fec-network-work/20261025-W85-two-ready-parity-interleave-sameVM-AB-NEGATIVE-ROLLBACK.json) 不登记可用。硬门原样保留。
+- `inventory.json` 标 `PARTIAL` 并列明四项目录资料/适用范围缺口；未执行全部产品功能/性能/物理测试不是将某条旧PASS篡改为本次PASS的理由。源与平台限制看各个entry。
+- 长期入口 `docs/features/README.md` → `inventory.json` / `entries/<ID>.json`。只读命令 `python tools/feature_catalog.py list`、`list --query fec`；`check`仅检查格式、引用和变更声明，不属于产品测试。
+- 实验分支push后由Governance Feature catalog执行格式/引用/声明检查；本次没有更改产品逻辑或参数，没有重跑性能矩阵，也没有修改任何工位cursor/registry或main。
+ 
+```feature-impact
+{"kind":"updated","ids":["normal-off","fec-fixed","fec-auto","game-lanes","game-fixed-fec","game4-copy-stagger","outer-opportunistic-repair","first-arrival-dedup","record-crypto","native-crypto-backends","path-mtu-budget","link-fragment-reassembly","tls-auth-multiclient","generation-stop","idle-rotation-keepalive","linux-raw-tun","windows-native-transport","windows-network-wal","gui-config-feedback","dns-split-ipv6","windows-portable","arm64-targets","openwrt-package","android-vpn-shell"],"reason":"本次仅初始化现有功能、历史证据和未验证范围的结构化文档；没有修改产品逻辑、默认参数、GUI/CLI实现或平台资格。"}
+```
+
+## 2026-10-27 Governance 逐次push恢复记录
+
+- 首推 `249640a6884938bee5cd546e3285c50b2ba96f4e` 的 Feature catalog [40370663484](https://github.com/lly8666/wbd-next/actions/runs/40370663484) FAIL：LINK历史SHA误抄成39位。
+- 第二推 `ac0b672387cff87f38d1d4fe9ef4c695d9eb9844` [40370952313](https://github.com/lly8666/wbd-next/actions/runs/40370952313) FAIL：该次push仅改卡片未在同一push改devlog，因此门拒绝逐次变更声明；原初始化声明依然存在。
+- recovered：原历史LINK源确实为 `821962b7fc204facf5e1e5599a0b3fead3c3a58c`，收据 `docs/evidence/M0/M0-023-real-go-link-fragment-821962b7fc204facf5e1e5599a0b3fead3c3a58c.json`，非本次新产品测试；仅更正文档来源文字。
+
+```feature-impact
+{"kind":"updated","ids":["link-fragment-reassembly"],"reason":"recovered历史真实LINK收据的精确40位SOURCE及文档边界；未修改产品源码、配置或测试结论。"}
+```
+
+## 2026-10-27 全卡片与逐次push审阅声明恢复
+
+- 原LINK收据已按仓库原有40位SOURCE复核。另一次 [40371225001](https://github.com/lly8666/wbd-next/actions/runs/40371225001) 因devlog原始24个ID声明与该次只变动1卡不匹配而FAIL，属于本次文档声明范围问题，不是产品功能FAIL。
+- 本推送在同一提交中对全部24张卡添加审阅源与旧Actions正向边界说明；保留最初完整24个ID的 `feature-impact updated` 声明与纠正LINK的额外声明，两者的ID均在本次变更卡片中。不动功能/默认/产品逻辑，不触发性能矩阵。
+- Gate最终结果以本提交的独立experiment推送Workflow为准，不将之前红灯改写为PASS。

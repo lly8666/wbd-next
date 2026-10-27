@@ -1,0 +1,55 @@
+{
+  "branch": "experiment/fec-network-tuning",
+  "source": "23da99f0de04afe17756542f5176f2759e318747",
+  "product_build_run": 40153525640,
+  "product_artifact_id": 12583149711,
+  "product_sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
+  "arm64": true,
+  "outer_DATA_retransmission_enabled": false,
+  "original_M4": true,
+  "id": "W46",
+  "mode": "normal",
+  "case": "FEC_OFF_2Mbps_sameVM_old_W36_A_then_new_W40_B",
+  "commit": "0b70e4cdaadef1919b5e2fb5c8b857f917fa867a",
+  "request": "tests/network/fec-work/W46-normal-FECoff-outeroff-sparseSmall2-oldnew-AB-arm64.json",
+  "run": 40157334097,
+  "artifact": 12584617269,
+  "sha256": "2516e42e28cab589723092573de3844641d408dce2e21aca1394ccbcb86fe7cf",
+  "result": "PASS_SCOPED_OBSERVATION_BOTH",
+  "source_A": "861f0396264734f97658243156060f13e6a2f74f",
+  "source_B": "23da99f0de04afe17756542f5176f2759e318747",
+  "order": "AB",
+  "process_cpu_s_combined": {
+    "A": 7.46,
+    "B": 2.45
+  },
+  "observed_cpu_reduction_pct": 67.15817694369973,
+  "host_PSI_mean_pct": {
+    "A": 0,
+    "B": 5.014666666666667
+  },
+  "small_loss_pct": {
+    "A": [
+      0,
+      0
+    ],
+    "B": [
+      0,
+      0
+    ]
+  },
+  "small_p99_ms": {
+    "A": [
+      25.3,
+      25.3
+    ],
+    "B": [
+      25.3,
+      25.3
+    ]
+  },
+  "tcp_real_rate_mbps_each": 0.08,
+  "source_TUN_drops_both": 0,
+  "outer_DATA_retransmission_count": 0,
+  "qualification": "one sameVM AB observation, variable host CPU PSI; no universal CPU gain guarantee"
+}

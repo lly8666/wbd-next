@@ -4,16 +4,24 @@
 //! emits first-delivery candidates. M4 must validate/submit each candidate.
 #![forbid(unsafe_code)]
 use std::collections::{BTreeMap,BTreeSet};
-use wbd_codec::fec_v2::{self,BackendChoice,BackendUsed,Rs16};
+use wbd_codec::fec_v2::{self,BackendChoice,Rs16};
 // The authenticated original-owner RX opener is MOVED here; never minted
 // separately from keys, or duplicate normal/FEC PN windows could exist.
 use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig};
 use wbd_types::MonoNs;
 
-const MAX_ACTIVE:usize=32;
-const MAX_STORED_BYTES:usize=1024*1024;
+// Frozen W15 100Mbps: 96/96 active, 29,425 pressure retirements/side,
+// 3.61MiB stored (well below 8MiB); 75Mbps: 83 blocks, no pressure.
+// Extrapolate <=~(100Mbps equivalent 110 live)*3.5=385 blocks at
+// 350Mbps, then reserve ~1.66x for actual-k/feedback/reordering bursts.
+// The cache is on-demand, not a preallocated 48MiB slab. Keep the same
+// 150ms age and never reclaim completed groups early (W11 regression).
+// Retire with a monotonic touched-time index rather than O(live blocks)
+// scans on every authenticated source/parity symbol.
+const MAX_ACTIVE:usize=640;
+const MAX_STORED_BYTES:usize=48*1024*1024;
 const MAX_BLOCK_AGE_NS:u64=150_000_000;
-const BLOCK_REORDER_SPAN:u64=128;
+const BLOCK_REORDER_SPAN:u64=1024;
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub(crate) struct VerifiedReceiveEpoch {
     pub generation:u32,pub epoch:[u8;16],
@@ -27,6 +35,20 @@ pub(crate) enum ReceiveError {
 #[derive(Debug,PartialEq,Eq)]
 pub(crate) struct FirstDelivery {
     pub block_id:u64,pub index:u8,pub recovered:bool,pub frame:Vec<u8>,
+}
+#[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
+pub(crate) struct Fec2RxCapacityReport {
+    pub peak_active:u64,
+    pub peak_stored_bytes:u64,
+    pub evicted_age:u64,
+    pub evicted_reorder:u64,
+    pub evicted_pressure:u64,
+    pub invalid_retired:u64,
+    pub refused_bytes:u64,
+    pub rejected_invalid:u64,
+    pub rejected_capacity:u64,
+    pub rejected_conflict:u64,
+    pub rejected_codec:u64,
 }
 struct LiveBlock {
     touched:MonoNs,
@@ -50,10 +72,11 @@ pub(crate) struct Fec2LiveRx {
     rs:Rs16,budget:usize,stopped:bool,
     highest_block:u64,
     blocks:BTreeMap<u64,LiveBlock>,retired:BTreeSet<u64>,
+    // One (last genuine receive ns, block id) entry per live block.
+    // O(log n) update / amortized oldest-only expiration at 350Mbps.
+    touched_order:BTreeSet<(u64,u64)>,
     stored:usize,evicted:u64,
-    // Actual successful decode backend calls in THIS authenticated generation.
-    // No per-record log; not a claim about native encode, or Go traffic.
-    decoded_native:u64,decoded_scalar:u64,
+    capacity_report:Fec2RxCapacityReport,
 }
 impl Fec2LiveRx{
     // This evidence must be supplied by the same Rust Go TLS owner that
@@ -82,32 +105,55 @@ impl Fec2LiveRx{
         if budget<32||budget>2048{return Err(ReceiveError::Invalid)}
         Ok(Self{credential:verified,opener:None,rs:Rs16::new(),budget,
             stopped:false,highest_block:0,blocks:BTreeMap::new(),retired:BTreeSet::new(),
-            stored:0,evicted:0,decoded_native:0,decoded_scalar:0})
+            touched_order:BTreeSet::new(),stored:0,evicted:0,
+            capacity_report:Fec2RxCapacityReport::default()})
     }
     pub(crate) fn active_blocks(&self)->usize{self.blocks.len()}
     pub(crate) fn stored_bytes(&self)->usize{self.stored}
     /// Lost/expired old blocks are never counted as delivered or credited.
     pub(crate) fn evicted_blocks(&self)->u64{self.evicted}
-    pub(crate) fn decode_backend_calls(&self)->(u64,u64){
-        (self.decoded_native,self.decoded_scalar)
+    pub(crate) fn capacity_report(&self)->Fec2RxCapacityReport{self.capacity_report}
+    pub(crate) fn record_rejection(&mut self,error:ReceiveError){
+        match error{
+            ReceiveError::Invalid=>self.capacity_report.rejected_invalid+=1,
+            ReceiveError::Capacity=>self.capacity_report.rejected_capacity+=1,
+            ReceiveError::ConflictingBlock=>self.capacity_report.rejected_conflict+=1,
+            ReceiveError::Codec=>self.capacity_report.rejected_codec+=1,
+            _=>{}
+        }
     }
     pub(crate) fn stop(&mut self){
-        self.stopped=true;self.blocks.clear();self.retired.clear();self.stored=0;
+        self.stopped=true;self.blocks.clear();self.retired.clear();
+        self.touched_order.clear();self.stored=0;
+    }
+    fn retire_one(&mut self,id:u64,reason:u8){
+        if let Some(block)=self.blocks.remove(&id){
+            self.touched_order.remove(&(block.touched.0,id));
+            self.stored=self.stored.saturating_sub(block.bytes);
+            self.retired.insert(id);
+            self.evicted=self.evicted.saturating_add(1);
+            match reason{
+                0=>self.capacity_report.evicted_age+=1,
+                1=>self.capacity_report.evicted_reorder+=1,
+                _=>self.capacity_report.evicted_pressure+=1,
+            }
+        }
     }
     fn retire(&mut self,now:MonoNs){
         let floor=self.highest_block.saturating_sub(BLOCK_REORDER_SPAN);
-        self.retired.retain(|id|*id>=floor);
-        let keys=self.blocks.iter().filter_map(|(&id,b)|{
-            if id<floor||now.elapsed_since(b.touched)>MAX_BLOCK_AGE_NS{
-                Some(id)
-            }else{None}
-        }).collect::<Vec<_>>();
-        for id in keys{
-            if let Some(old)=self.blocks.remove(&id){
-                self.stored=self.stored.saturating_sub(old.bytes);
-                self.retired.insert(id);
-                self.evicted=self.evicted.saturating_add(1);
-            }
+        // Both indices are ordered. Work proportional to actually expired
+        // blocks, not to all cached blocks per one received packet.
+        while let Some(&id)=self.retired.first(){
+            if id>=floor{break}
+            self.retired.pop_first();
+        }
+        while let Some((&id,_))=self.blocks.first_key_value(){
+            if id>=floor{break}
+            self.retire_one(id,1);
+        }
+        while let Some(&(touched,id))=self.touched_order.first(){
+            if now.elapsed_since(MonoNs(touched))<=MAX_BLOCK_AGE_NS{break}
+            self.retire_one(id,0);
         }
     }
     /// First delivery can occur from a systematic source before ANY prior
@@ -153,31 +199,47 @@ impl Fec2LiveRx{
             }
             _=>return Err(ReceiveError::Invalid)
         };
-        if id==0||id<self.highest_block.saturating_sub(BLOCK_REORDER_SPAN)
-            ||self.retired.contains(&id){
+        if id==0||id<self.highest_block.saturating_sub(BLOCK_REORDER_SPAN){
+            return Err(ReceiveError::Invalid)
+        }
+        if self.retired.contains(&id){
+            self.capacity_report.invalid_retired+=1;
             return Err(ReceiveError::Invalid)
         }
         self.highest_block=self.highest_block.max(id);
         self.retire(now);
+        // The current unique authenticated symbol can itself advance the
+        // monotonic clock beyond the previous block's absolute lifetime.
+        // retire() may have JUST evicted this same identity above. Never
+        // recreate it as a fresh FEC block and redeliver a source from a
+        // delayed parity (or a separately authenticated late source).
+        if self.retired.contains(&id){
+            self.capacity_report.invalid_retired+=1;
+            return Err(ReceiveError::Invalid)
+        }
         if !self.blocks.contains_key(&id)&&self.blocks.len()>=MAX_ACTIVE{
             // Never allow old incomplete parity/source work to block a
             // freshly authenticated source. Evict ONE oldest incomplete
             // block; this is a censored drop, not successful recovery.
-            let oldest=self.blocks.iter()
-                .min_by_key(|(id,b)|(b.touched.0,**id))
-                .map(|(&id,_)|id).ok_or(ReceiveError::Capacity)?;
-            let retired=self.blocks.remove(&oldest).ok_or(ReceiveError::Capacity)?;
-            self.stored=self.stored.saturating_sub(retired.bytes);
-            self.retired.insert(oldest);
-            self.evicted=self.evicted.saturating_add(1);
+            let oldest=self.touched_order.first().map(|(_,id)|*id)
+                .ok_or(ReceiveError::Capacity)?;
+            self.retire_one(oldest,2);
         }
         let old=self.blocks.get(&id);
         if old.is_some_and(|b|b.touched.0>now.0){return Err(ReceiveError::Invalid)}
         if body.len()>MAX_STORED_BYTES.saturating_sub(self.stored){
+            self.capacity_report.refused_bytes+=1;
             return Err(ReceiveError::Capacity)
+        }
+        // Mirror the last-touch semantics even if this authenticated
+        // unique-PN symbol later proves to conflict with an already
+        // delivered source; no stale expiry-index entries are left behind.
+        if let Some(old)=self.blocks.get(&id){
+            self.touched_order.remove(&(old.touched.0,id));
         }
         let b=self.blocks.entry(id).or_insert_with(||LiveBlock::new(now));
         b.touched=now;
+        self.touched_order.insert((now.0,id));
         let mut output=Vec::new();
         if kind==2{
             let index=index as usize;
@@ -216,19 +278,14 @@ impl Fec2LiveRx{
                 let repairs=b.repairs.values().map(|bytes|
                     fec_v2::parse_repair(bytes,self.budget)
                 ).collect::<Result<Vec<_>,_>>().map_err(|_|ReceiveError::Codec)?;
-                let (recovered,backend)=self.rs.recover_missing(id,&live,&repairs,
+                let recovered=self.rs.recover_missing(id,&live,&repairs,
                     self.budget,BackendChoice::default())
-                    .map_err(|_|ReceiveError::Codec)?;
-                if !recovered.is_empty(){
-                    match backend{
-                        BackendUsed::NativeIsaL=>self.decoded_native=self.decoded_native.saturating_add(1),
-                        BackendUsed::Scalar=>self.decoded_scalar=self.decoded_scalar.saturating_add(1),
-                    }
-                }
+                    .map_err(|_|ReceiveError::Codec)?.0;
                 let recovered_bytes=recovered.iter()
                     .try_fold(0usize,|total,(_,frame)|total.checked_add(frame.len()))
                     .ok_or(ReceiveError::Capacity)?;
                 if recovered_bytes>MAX_STORED_BYTES.saturating_sub(self.stored){
+                    self.capacity_report.refused_bytes+=1;
                     return Err(ReceiveError::Capacity)
                 }
                 for (i,frame) in recovered {
@@ -243,6 +300,10 @@ impl Fec2LiveRx{
                 }
             }
         }
+        self.capacity_report.peak_active=self.capacity_report.peak_active
+            .max(self.blocks.len() as u64);
+        self.capacity_report.peak_stored_bytes=self.capacity_report.peak_stored_bytes
+            .max(self.stored as u64);
         Ok(output)
     }
 }
@@ -296,12 +357,82 @@ mod tests {
             Err(ReceiveError::Stopped));
     }
     #[test]
+    fn m0_fec2_live_rx_same_turn_age_retirement_cannot_redeliver_k1(){
+        // Actual M3 AEAD accepts two DISTINCT legitimate record PNs.
+        // The first systematic source is delivered at time 1; an old k1
+        // parity arriving after the 150ms block lifetime MUST NOT revive
+        // this already-delivered block, even if retirement occurs inside
+        // the SAME accept_authenticated call, not on a prior packet.
+        let suite=RecordSuite::ChaCha20Poly1305;
+        let mut tx=LaneTxCrypto::new_for_suite(keys(),1400,suite).unwrap();
+        let mut rx=Fec2LiveRx::from_original_owner(
+            epoch(),opened(suite),1400).unwrap();
+        let frame=vec![0x63u8;120];
+        let source=fec_v2::source_owned(7,0,&frame,1369).unwrap();
+        let repair=Rs16::new().encode_owned(
+            7,&[frame.as_slice()],fec_v2::Profile::Maximum,
+            0,1,1369,BackendChoice::Scalar
+        ).unwrap().0.remove(0);
+        let mut systematic=seal(&mut tx,2,&source);
+        assert_eq!(rx.consume(epoch(),&mut systematic,MonoNs(1)).unwrap(),
+            vec![FirstDelivery{block_id:7,index:0,recovered:false,
+                frame:frame.clone()}]);
+        let mut late_parity=seal(&mut tx,3,&repair);
+        assert_eq!(rx.consume(epoch(),&mut late_parity,
+            MonoNs(MAX_BLOCK_AGE_NS+3)),Err(ReceiveError::Invalid));
+        assert_eq!(rx.evicted_blocks(),1);
+        assert_eq!(rx.active_blocks(),0);
+        // A later independent verified block remains free to deliver.
+        let later=fec_v2::source_owned(8,0,&[0x42u8;120],1369).unwrap();
+        let mut fresh=seal(&mut tx,2,&later);
+        assert_eq!(rx.consume(epoch(),&mut fresh,
+            MonoNs(MAX_BLOCK_AGE_NS+4)).unwrap().len(),1);
+        rx.stop();
+        assert_eq!(rx.stored_bytes(),0);
+    }
+    #[test]
+    fn m0_fec2_350mbps_bounded_touch_index_retirement_no_full_scan(){
+        // Capacity derived from W15 100Mbps 96/96 pressure at 150ms:
+        // 640 live blocks admit the >=~385 extrapolated 350Mbps window.
+        // All 450 independent distinct blocks are incomplete, so there
+        // is no premature complete-block retirement, no pressure or HOL.
+        let mut rx=Fec2LiveRx::from_authenticated_scope(epoch(),1400).unwrap();
+        for id in 1..=450u64{
+            let frame=fec_v2::source_owned(id,0,&[id as u8;1287],1369).unwrap();
+            let r=rx.accept_authenticated(epoch(),2,&frame,MonoNs(id*1000)).unwrap();
+            assert_eq!(r.len(),1);
+            assert!(!r[0].recovered);
+        }
+        assert_eq!(rx.active_blocks(),450);
+        assert_eq!(rx.touched_order.len(),450);
+        assert_eq!(rx.capacity_report().evicted_pressure,0);
+        assert_eq!(rx.capacity_report().evicted_reorder,0);
+        assert_eq!(rx.capacity_report().evicted_age,0);
+        assert!(rx.stored_bytes()<=MAX_STORED_BYTES);
+        // Refresh a block without copying the entire metadata table.
+        let more=fec_v2::source_owned(1,1,&[0x42;1287],1369).unwrap();
+        assert_eq!(rx.accept_authenticated(epoch(),2,&more,MonoNs(1_000_000))
+            .unwrap().len(),1);
+        assert_eq!(rx.touched_order.len(),rx.blocks.len());
+        // Expire all OTHER blocks; the last refreshed record stays live.
+        let recent=fec_v2::source_owned(451,0,&[0x31;1287],1369).unwrap();
+        let now=MonoNs(MAX_BLOCK_AGE_NS+600_000);
+        assert_eq!(rx.accept_authenticated(epoch(),2,&recent,now).unwrap().len(),1);
+        assert_eq!(rx.capacity_report().evicted_age,449);
+        assert_eq!(rx.active_blocks(),2);
+        assert_eq!(rx.touched_order.len(),2);
+        assert_eq!(rx.blocks.len(),2);
+        rx.stop();
+        assert_eq!(rx.stored_bytes(),0);
+        assert!(rx.touched_order.is_empty());
+    }
+    #[test]
     fn m0_fec2_live_rx_old_incomplete_blocks_cannot_head_of_line_fresh(){
         let suite=RecordSuite::ChaCha20Poly1305;
         let mut tx=LaneTxCrypto::new_for_suite(keys(),1400,suite).unwrap();
         let mut rx=Fec2LiveRx::from_original_owner(
             epoch(),opened(suite),1400).unwrap();
-        for id in 1..=33u64{
+        for id in 1..=MAX_ACTIVE as u64+1{
             // Every block is deliberately incomplete. A busy old block
             // cannot force an authenticated new source to wait.
             let src=fec_v2::source_owned(id,0,&[id as u8;32],1369).unwrap();
@@ -310,7 +441,8 @@ mod tests {
             assert_eq!(out.len(),1);
             assert_eq!(out[0].block_id,id);
         }
-        assert_eq!(rx.active_blocks(),32);
+        assert_eq!(rx.active_blocks(),MAX_ACTIVE);
+        assert_eq!(rx.capacity_report().evicted_pressure,1);
         assert_eq!(rx.evicted_blocks(),1);
         assert!(rx.stored_bytes()<=MAX_STORED_BYTES);
         // Even a distinct authenticated PN with the same retired block
@@ -321,6 +453,62 @@ mod tests {
             Err(ReceiveError::Invalid));
         rx.stop();assert_eq!(rx.stored_bytes(),0);
     }
+    #[test]
+    fn m0_fec2_highrate_maximum_iid_missing_sources_recover_and_reclaim(){
+        // ~56 full k16 groups at 50Mbps/150ms used to exceed MAX_ACTIVE=32.
+        // Deliver eleven real first sources and five timely independent
+        // Maximum parity rows; all five missing must be recovered. This
+        // tests live RX cardinality, memory and late duplicate suppression,
+        // not an invented sender or a simulated TUN-success receipt.
+        let mut rx=Fec2LiveRx::from_authenticated_scope(epoch(),1400).unwrap();
+        let codec=Rs16::new();
+        let mut delivered=0usize;
+        let mut recovered=0usize;
+        for block_id in 1..=56u64 {
+            let frames=(0..16usize).map(|i|vec![(i as u8)^block_id as u8;1287])
+                .collect::<Vec<_>>();
+            let refs=frames.iter().map(Vec::as_slice).collect::<Vec<_>>();
+            for i in 0..16usize {
+                if [0,3,6,9,12].contains(&i){continue}
+                let source=fec_v2::source_owned(block_id,i as u8,&frames[i],1369).unwrap();
+                let out=rx.accept_authenticated(epoch(),2,&source,
+                    MonoNs(block_id*1_000_000)).unwrap();
+                delivered+=out.len();
+            }
+            // Live M4 parity policy batches at most MAX_BATCH_ROWS=4.
+            // Five genuine rows therefore require two bounded polls.
+            let mut parity=codec.encode_owned(block_id,&refs,
+                fec_v2::Profile::Maximum,0,4,1369,BackendChoice::Scalar)
+                .unwrap().0;
+            parity.extend(codec.encode_owned(block_id,&refs,
+                fec_v2::Profile::Maximum,4,1,1369,BackendChoice::Scalar)
+                .unwrap().0);
+            assert_eq!(parity.len(),5);
+            for row in &parity{
+                let out=rx.accept_authenticated(epoch(),3,row,
+                    MonoNs(block_id*1_000_000+400)).unwrap();
+                for recovered_source in &out{
+                    assert!(recovered_source.recovered);
+                    assert_eq!(recovered_source.frame,
+                        frames[recovered_source.index as usize]);
+                }
+                recovered+=out.len();
+            }
+            assert!(rx.active_blocks()<=MAX_ACTIVE);
+            assert!(rx.stored_bytes()<=MAX_STORED_BYTES);
+        }
+        assert_eq!(delivered,56*11);
+        assert_eq!(recovered,56*5);
+        assert_eq!(rx.active_blocks(),56);
+        assert!(rx.stored_bytes()>0);
+        assert_eq!(rx.capacity_report().evicted_pressure,0);
+        assert_eq!(rx.capacity_report().refused_bytes,0);
+        let duplicate=fec_v2::source_owned(56,0,&frames_for_late(),1369).unwrap();
+        assert_eq!(rx.accept_authenticated(epoch(),2,&duplicate,MonoNs(57_000_000)),
+            Err(ReceiveError::ConflictingBlock));
+        rx.stop();
+    }
+    fn frames_for_late()->Vec<u8>{vec![0u8;1287]}
     #[test]
     fn m0_fec2_live_rx_interleaved_four_blocks_3_ciphers_no_hol_and_stop(){
         for suite in [RecordSuite::ChaCha20Poly1305,
@@ -358,13 +546,8 @@ mod tests {
                 recovered+=1;
             }
             assert_eq!(recovered,4);
-            let (native,scalar)=rx.decode_backend_calls();
-            assert_eq!(native+scalar,4,"exactly one successful decode per erasure block");
-            #[cfg(not(feature="native_fec_acceleration"))]
-            assert_eq!((native,scalar),(0,4));
-            #[cfg(feature="native_fec_acceleration")]
-            assert_eq!((native,scalar),(4,0));
             assert!(rx.stored_bytes()>0);
+            assert_eq!(rx.active_blocks(),4);
             rx.stop();assert_eq!(rx.active_blocks(),0);
             assert_eq!(rx.stored_bytes(),0);
             assert_eq!(rx.consume(epoch(),&mut vec![0u8;40],MonoNs(30_000)),

@@ -62,7 +62,10 @@ def read_json(root, path):
     target = root / path
     need(target.resolve().is_relative_to(root), f"path escapes repository: {path}")
     need(target.is_file() and not target.is_symlink(), f"missing/nonregular file: {path}")
-    value = json.loads(target.read_text(encoding="utf-8"))
+    try:
+        value = json.loads(target.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ContractError(f"invalid JSON in {path}: line {exc.lineno}, column {exc.colno}: {exc.msg}") from exc
     need(isinstance(value, dict), f"object required: {path}")
     need(value.get("schema_version") == 1, f"unknown schema: {path}")
     return value

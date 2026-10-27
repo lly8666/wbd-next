@@ -1,0 +1,6 @@
+# W97 | Two-phase TUN commit Game OFF under real independent20 + lane1 blackhole
+
+- Exact W96 native SOURCE `44455afb819572ed75689cab28ffc66d1b1c7640`, [ARM64 build40246704747](https://github.com/lly8666/wbd-next/actions/runs/40246704747) SUCCESS, artifact12618184955 SHA256 `f33f2c28f1936de3cfc35a5743f2378d7ee5ef5a8ac45c741ecfffedd82d9baa`; no new binary compilation in performance Actions.
+- W97 Game2 [40247215239](https://github.com/lly8666/wbd-next/actions/runs/40247215239) PASS_SCOPED, unchanged W95 waveform/seed: 3Mbps c2s/s2c, 96% real UDP+TCP, 75ms; IID20 missing665/678 (~4%), lane1 blackhole missing **2/0**, both clean zero. True TCP full all phases, IID20 TCP p99 787.5/526.6ms, no backpressure/TUN drops, Stop drained. No zero-business-loss claim in blackhole.
+- W97 Game4 [40247219774](https://github.com/lly8666/wbd-next/actions/runs/40247219774) PASS_SCOPED: IID20 missing20/20 (~0.12%), lane1 blackhole0/0, clean0/0; real TCP full, zero backpressure/TUN drops, Stop drained.
+- Separate VMs, no cross-VM CPU causal claims. FEC OFF duplication p²/p⁴ reference under independent loss only, shared GE historical W89 high-loss remains; **not** Game+FEC product qualification. Windows TEMP_SKIPPED, capacity_stop=true, merge_ready=false.

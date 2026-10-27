@@ -23,8 +23,11 @@ type V4LinuxClientProductConfig struct {
     Tun *os.File
     TunName string
     CleanupOwnedNetwork func()error
+    // Optional original OS owner callback, only after authentication and before TUN starts.
+    ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     FECMode FecV2Mode
     FECProfile FecV2Profile
+    DisableOuterRepair bool
 }
 type V4LinuxClientProduct struct {
     mu sync.Mutex
@@ -91,13 +94,20 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     p.owner=bridge
     p.session=session
     p.association=assoc
+    if p.cfg.ConfigureTunnelMTU!=nil {
+        clientLimit,serverLimit:=cold.RecordLimits()
+        if err=p.cfg.ConfigureTunnelMTU(handoff.Peer.MSS,clientLimit,serverLimit);err!=nil{
+            return nil,errors.Join(err,p.closeLocked())
+        }
+    }
     if err=bridge.attachRawRxOnInterface(p.cfg.NetworkInterface,p.cfg.NetworkIfIndex);err==nil{
         err=bridge.attachKernelTun(p.cfg.Tun.Fd(),p.cfg.TunName)
     }
     if err==nil{
         p.fec,err=v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,cold)
     }
-    if err==nil{err=bridge.armOriginalPublicM2Feedback(uint32(V4PeerLegacy))}
+    if err==nil{err=bridge.configureOriginalOuterRepair(!p.cfg.DisableOuterRepair)}
+    if err==nil{err=bridge.armOriginalPublicM2Feedback(0)} // public Linux client always expects original Legacy peer
     if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
     if err!=nil{
         shutdown:=p.closeLocked()
@@ -109,6 +119,45 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     if p.fec!=nil{p.fec.start(bridge)}
     return session,nil
 }
+// Only numeric true original M2 counters, once before Stop; never changes
+// TLS, ACK, FEC policy, mode revision or owner state.
+func (p *V4LinuxClientProduct) OriginalFecM2Proof()(V4PublicFecM2Proof,error){
+    if p==nil{return V4PublicFecM2Proof{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.fec==nil||p.owner==nil||p.stopped{return V4PublicFecM2Proof{},ErrAdmissionUnsupported}
+    return v4ReadOriginalFecM2Proof(p.owner)
+}
+// Authentic original TUN intake counters only while this TLS FEC owner lives.
+// Same product-native owner, solely numeric evidence before Stop.
+func (p *V4LinuxClientProduct) OriginalFecM1Stage()(V4PublicFecM1Stage,error){
+    if p==nil{return V4PublicFecM1Stage{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.fec==nil||p.owner==nil||p.stopped{return V4PublicFecM1Stage{},ErrAdmissionUnsupported}
+    return v4ReadOriginalFecM1Stage(p.owner)
+}
+func (p *V4LinuxClientProduct) OriginalFecM1Ingress()(V4PublicFecM1Ingress,error){
+    if p==nil{return V4PublicFecM1Ingress{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.fec==nil||p.owner==nil||p.stopped{return V4PublicFecM1Ingress{},ErrAdmissionUnsupported}
+    return v4ReadOriginalFecM1Ingress(p.owner)
+}
+func (p *V4LinuxClientProduct) OriginalFecRxIpClass()(V4PublicFecRxIpClass,error){
+    if p==nil{return V4PublicFecRxIpClass{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.fec==nil||p.owner==nil||p.stopped{return V4PublicFecRxIpClass{},ErrAdmissionUnsupported}
+    return v4ReadOriginalFecRxIpClass(p.owner)
+}
+func (p *V4LinuxClientProduct) OriginalFecRxProof()(V4PublicFecRxProof,error){
+    if p==nil{return V4PublicFecRxProof{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.fec==nil||p.owner==nil||p.stopped{return V4PublicFecRxProof{},ErrAdmissionUnsupported}
+    return v4ReadOriginalFecRxProof(p.owner)
+}
 func (p *V4LinuxClientProduct) OriginalFECReadback()(V4PublicFecReadback,error){
     if p==nil{return V4PublicFecReadback{},ErrAdmissionParams}
     p.mu.Lock()
@@ -118,19 +167,33 @@ func (p *V4LinuxClientProduct) OriginalFECReadback()(V4PublicFecReadback,error){
 }
 // Real original Go TLS owner M2 wire counters before Stop. No GUI/CLI
 // operator can forge these numbers; every metric comes from original Rust.
-func (p *V4LinuxClientProduct) OriginalFecTxBackend()(V4PublicFecTxBackend,error){
-    if p==nil{return V4PublicFecTxBackend{},ErrAdmissionParams}
+func (p *V4LinuxClientProduct) OriginalFecTxFailures()(V4PublicFecTxFailures,error){
+    if p==nil{return V4PublicFecTxFailures{},ErrAdmissionParams}
     p.mu.Lock()
     defer p.mu.Unlock()
-    if p.fec==nil||p.owner==nil||p.stopped{return V4PublicFecTxBackend{},ErrAdmissionUnsupported}
-    return p.owner.originalPublicFecTxBackend()
+    if p.owner==nil||p.stopped{return V4PublicFecTxFailures{},ErrAdmissionUnsupported}
+    return p.owner.originalPublicFecTxFailures()
 }
-func (p *V4LinuxClientProduct) OriginalFecRxCounters()(V4PublicFecRxCounters,error){
-    if p==nil{return V4PublicFecRxCounters{},ErrAdmissionParams}
+func (p *V4LinuxClientProduct) OriginalFecTxSnapshot()(V4PublicFecTxSnapshot,error){
+    if p==nil{return V4PublicFecTxSnapshot{},ErrAdmissionParams}
     p.mu.Lock()
     defer p.mu.Unlock()
-    if p.fec==nil||p.owner==nil||p.stopped{return V4PublicFecRxCounters{},ErrAdmissionUnsupported}
-    return p.owner.originalPublicFecRxCounters()
+    if p.owner==nil||p.stopped{return V4PublicFecTxSnapshot{},ErrAdmissionUnsupported}
+    return p.owner.originalPublicFecTxSnapshot()
+}
+func (p *V4LinuxClientProduct) OriginalLoopPulse()(V4PublicLoopPulse,error){
+    if p==nil{return V4PublicLoopPulse{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.owner==nil||p.stopped{return V4PublicLoopPulse{},ErrAdmissionUnsupported}
+    return p.owner.originalPublicLoopPulse()
+}
+func (p *V4LinuxClientProduct) OriginalWorkerCPU()(V4PublicWorkerCPU,error){
+    if p==nil{return V4PublicWorkerCPU{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.owner==nil||p.stopped{return V4PublicWorkerCPU{},ErrAdmissionUnsupported}
+    return p.owner.originalPublicWorkerCPU()
 }
 func (p *V4LinuxClientProduct) OriginalOuterCounters()(V4PublicOuterCounters,error){
     if p==nil{return V4PublicOuterCounters{},ErrAdmissionParams}

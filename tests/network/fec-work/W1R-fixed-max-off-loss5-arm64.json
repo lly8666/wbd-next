@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "id": "FEC-W1R-fixed-max-outeroff-baseline-loss5-arm64",
+  "owner": "fec-network-work",
+  "seed": 6347,
+  "product": {
+    "mode": "fec-fixed",
+    "fec_profile": 6,
+    "repair_enabled": false
+  },
+  "traffic": {
+    "c2s_mbps": 2,
+    "s2c_mbps": 2,
+    "udp_share": 1,
+    "sizes": [
+      [
+        64,
+        1
+      ],
+      [
+        1287,
+        99
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "deadline_ms": 1000,
+    "burst_ms": 0,
+    "max_packets": 2000000,
+    "allow_fragmentation": false
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "shared",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded"
+  },
+  "warmup_s": 8,
+  "drain_s": 20,
+  "phases": [
+    {
+      "name": "lossless",
+      "seconds": 12,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 0
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 0
+      }
+    },
+    {
+      "name": "iid5",
+      "seconds": 45,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 5
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 5
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false
+  },
+  "bundles": {
+    "A": {
+      "source": "7ad7e0e11bd6fa130cb10c147c52ed33a5ec9c57",
+      "run_id": 39915080968,
+      "attempt": 1,
+      "artifact_id": 12484770973,
+      "sha256": "fd22c47a4f57fe5968f4ffb927ba7e284217c0a3fd2b3a3271ab583b600d98f4",
+      "recovery_policy": "outer-single-repair-v2"
+    }
+  },
+  "order": "A",
+  "policy": "outer-single-repair-v2"
+}

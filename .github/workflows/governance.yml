@@ -3,7 +3,7 @@ run-name: "${{ inputs.role_id || github.ref_name }}|${{ inputs.request_id || git
 
 on:
   push:
-    branches: [main, "work/**"]
+    branches: [main, "work/**", "experiment/**"]
   workflow_dispatch:
     inputs:
       role_id:
@@ -29,8 +29,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  feature-catalog:
+    name: Feature catalog
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check feature inventory and this change declaration
+        run: |
+          mkdir -p out
+          python tools/feature_catalog.py check > out/feature-check.json
+          python tools/feature_catalog.py list --output out/FEATURES.md
+      - name: Exercise feature gate and existing governance contracts
+        run: |
+          python -m pip install PyYAML==6.0.2
+          python tools/check_workflows.py
+          python -m unittest tests.test_feature_catalog tests.test_governance_ci tests.test_delivery_ci -v
+          python tools/governance.py validate > out/structure.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: feature-catalog-${{ github.run_id }}-${{ github.run_attempt }}
+          path: out/
+          retention-days: 30
+          if-no-files-found: warn
   governance:
     name: Governance
+    # Experiment checks do not impersonate an active M0-M4 worker. Existing
+    # main/work identity, source, scope and receipt gates remain unchanged.
+    if: github.ref_name == 'main' || startsWith(github.ref_name, 'work/')
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     env:

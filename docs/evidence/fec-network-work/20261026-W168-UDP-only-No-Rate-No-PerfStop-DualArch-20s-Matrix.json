@@ -1,0 +1,114 @@
+{
+  "schema": "FEC_W168_USER_RESUME_UDP_ONLY_NATIVE_MATRIX_FULL_20261026_V1",
+  "branch": "experiment/fec-network-tuning",
+  "date": "2026-10-26",
+  "head_prior_to_commit": "e9d6c2d2ad60cbb74cc7420cf592309771b37bc5",
+  "user_new_scope": {
+    "tcp_business_traffic": "NONE; application UDP share 1.0, only original TLS control necessarily uses TCP",
+    "app_rate_each_direction_mbps": 10,
+    "loss_pct": [
+      1,
+      5,
+      15,
+      30
+    ],
+    "seconds_per_case": 20,
+    "all_modes": [
+      "normal_off",
+      "normal_maximum6",
+      "normal_auto",
+      "game2_off",
+      "game2_fixed6",
+      "game4_off",
+      "game4_fixed6"
+    ],
+    "native_arch": [
+      "arm64",
+      "amd64"
+    ],
+    "outer_data_repair": "DEFAULT_ALREADY_ON_EXPLICIT_TWO_ENDPOINT_ON_READBACK",
+    "tc_netem_outer_rate_limit_mbps": 0,
+    "performance_psi_or_steal_auto_stop": "DISABLED_AT_USER_REQUEST_FOR_THIS_SCOPED_MATRIX",
+    "separate_high_load": "250Mbps per direction, Normal Fixed6, UDP-only 30% IID, 20s native arm64 and amd64 independent jobs",
+    "mem_and_cpu_detail": true
+  },
+  "execution_plan": {
+    "workflow": ".github/workflows/fec-w167-arm64-x86-outer-on-matrix.yml",
+    "harness": "tools/network_harness/fec_w167_dual_arch_matrix.py",
+    "aggregation": "tools/network_harness/fec_w167_aggregate.py",
+    "test_contract": "tests/network/test_w167_matrix.py",
+    "build_once_per_arch": true,
+    "scenarios_independent_vm": true,
+    "lowrate_cases": 56,
+    "highrate_cases": 2,
+    "wall_loss_delay_ms": 75,
+    "original_go_tls_rust_tun": true,
+    "no_tcp_application_injectors": true,
+    "no_netem_rate": true,
+    "host_psi_is_observational_not_stop": true,
+    "native_timeout_limits": "Actions job timeout, runner/kernel failures remain failures; no artificial CPU/PSI performance stop.",
+    "udp_payload_size_weights": [
+      [
+        64,
+        6
+      ],
+      [
+        128,
+        8
+      ],
+      [
+        255,
+        6
+      ],
+      [
+        512,
+        10
+      ],
+      [
+        900,
+        20
+      ],
+      [
+        1200,
+        50
+      ]
+    ],
+    "highrate_udp_payload": [
+      [
+        1200,
+        100
+      ]
+    ]
+  },
+  "metrics": {
+    "process_cpu_seconds_20s": true,
+    "process_cpu_pct_one_core": "100*real measured process CPU seconds/20; >100% possible multi-core",
+    "native_rust_worker_cpu": "M4 Rust RX+TX native thread CPU counters, monotonic sample aligned to business phase unix_ns with 800ms tolerance; computes approximate percent process CPU",
+    "other_cpu_pct": "100%-measured native RX+TX share, includes Go TLS, Rust other threads and sampling error, NOT a genuine Go/Rust module breakdown",
+    "peak_rss_mib": "Whole original-Go+Rust linked product process, cannot separate Go heap/Rust arena with present counters",
+    "native_FEC_queue_and_RX_capacity": "If product markers present, retain exact original evidence in raw result files",
+    "outer_data_repair_over_first_plus_repair_pct": "V3 original Normal/FEC DATA first+retry ledger",
+    "outer_data_repair_over_entire_outer_veth_tx_pct_approx": "Native accepted+uncertain repair bytes / actual all-class veth outer TX bytes from warmup start to drain end; approximate time boundary; Game lacks v3 DATA ledger",
+    "game_lane_fresh_copies_not_retries": true,
+    "delivered_app_loss_and_counts": true,
+    "kernel_netem_loss_and_CPU_PSI": true
+  },
+  "previous_runs": {
+    "unlimited_cross_arch_sequential_run": 40340185196,
+    "real_arm64_cases_completed": 3,
+    "real_amd64_cases_completed": 4,
+    "action": "FAIL_PERF_AUTO_STOP_OLD_MATRIX",
+    "qualifier": "Previous run used UDP96%+TCP4% and 500Mbps outer tc rate cap, superseded; retain original evidence. Earlier Native ARM64 Normal OFF Rust RX/TX threads approx 96%-97% of Go+Rust process CPU across 1/5/15% in preliminary source, CPU endpoints not rigorously aligned."
+  },
+  "historical_capacity_stop": true,
+  "new_scoped_user_override": "Explicit current user instruction removes CPU PSI / throughput stop for W168. Historical global capacity_stop key remains true and must not be silently reset. Independent high-rate jobs are new user-ordered exceptions, not prior 250Mbps PASS.",
+  "do_not_change": [
+    "Original network worker next_action",
+    "main branch",
+    "Normal delayed parity product design-only",
+    "Game Auto not added",
+    "Windows FEC remains temporarily skipped"
+  ],
+  "merge_ready": false,
+  "results_at_authoring": "NOT_RUN_NEW_W168_ACTION_BEFORE_COMMIT; DO_NOT_ASSERT_PASS"
+}

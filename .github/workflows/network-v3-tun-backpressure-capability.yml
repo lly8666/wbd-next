@@ -1,0 +1,44 @@
+name: V3-C native Linux TUN capability readback
+run-name: V3-C-TUN-FEATURES|${{ github.sha }}
+on:
+  workflow_dispatch:
+  push:
+    branches: [experiment/network-matrix-tuning]
+    paths:
+      - .github/workflows/network-v3-tun-backpressure-capability.yml
+permissions: {contents: read}
+jobs:
+  tun-capability:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Read real kernel TUNGETFEATURES, no TUN creation or root qdisc change
+        run: |
+          mkdir -p evidence-tun-kernel
+          python3 - <<'PY'
+          import fcntl, json, os, platform, struct
+          from pathlib import Path
+          TUNGETFEATURES=0x800454cf
+          IFF_BACKPRESSURE=0x0080
+          with open('/dev/net/tun','rb+',buffering=0) as fd:
+              flags=struct.unpack('I',fcntl.ioctl(fd.fileno(),TUNGETFEATURES,struct.pack('I',0)))[0]
+          row={'scope':'NATIVE_HOST_CAPABILITY_READBACK_ONLY_NOT_PRODUCT',
+               'machine':platform.machine(),'kernel':platform.release(),
+               'ioctl':'TUNGETFEATURES','feature_mask_int':flags,
+               'feature_mask_hex':hex(flags),
+               'IFF_BACKPRESSURE_bit':IFF_BACKPRESSURE,
+               'backpressure_supported':bool(flags&IFF_BACKPRESSURE),
+               'device_flags_unchanged':True,
+               'note':'No TUNSETIFF and no data path changes; never infer newer-kernel feature from headers'}
+          Path('evidence-tun-kernel/result.json').write_text(json.dumps(row,indent=2)+'\n')
+          print('NATIVE_TUN_FEATURE_READBACK',json.dumps(row))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: v3-c-tun-feature-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evidence-tun-kernel/**
+          retention-days: 14
+          if-no-files-found: warn

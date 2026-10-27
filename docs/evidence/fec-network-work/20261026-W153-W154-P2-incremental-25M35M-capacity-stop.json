@@ -1,0 +1,150 @@
+{
+  "schema": "FEC_W153_W154_CAPACITY_EXPLORATION_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "owner": "fec-network-work",
+  "old_source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+  "new_source": "bb8e8249c2adba9c7dab72bf07da2dbe0bce3b82",
+  "mode": "one Action per condition, source artifact manifests reused, old/new same VM serial, real UDP 75ms each-way, IID30 each physical lane",
+  "cases": [
+    {
+      "id": "W153",
+      "mode": "Game4 fixed6 default 0/4/20/60ms",
+      "rate_mbps_each_direction": 25,
+      "action": 40311062427,
+      "conclusion": "SUCCESS_PASS_SCOPED_OBSERVATION_WITH_HOST_CONTENTION_WARNING",
+      "artifact_id": 12644178173,
+      "zip_sha256": "56c566fac64185fa9bcfa2b08cab3eec30228ee2cf8cdc1e3729c18c47ad6146",
+      "order": "AB",
+      "old": {
+        "client_cpu_s": 44.27,
+        "server_cpu_s": 43.31,
+        "total_cpu_s": 87.58,
+        "host_cpu_psi_mean_pct": 19.2026,
+        "host_cpu_psi_peak_pct": 21.93,
+        "psi_fraction_over20": 0.28,
+        "injector_cpu_client_server_s": [
+          15.34,
+          15.31
+        ],
+        "rss_peak_client_server_bytes": [
+          44507136,
+          43798528
+        ],
+        "game4_client_each_rank_planned_sent": 676200,
+        "game4_server_each_rank_planned_sent": 676230,
+        "fec_parity_client_planned_sent": 377694,
+        "damaged_c2s_mbps": 25,
+        "damaged_s2c_mbps": 25,
+        "damaged_udp_p99_ms": [
+          83.7,
+          83.7
+        ]
+      },
+      "new": {
+        "client_cpu_s": 43.77,
+        "server_cpu_s": 42.83,
+        "total_cpu_s": 86.6,
+        "host_cpu_psi_mean_pct": 18.3322,
+        "host_cpu_psi_peak_pct": 21.92,
+        "psi_fraction_over20": 0.18,
+        "injector_cpu_client_server_s": [
+          15.37,
+          15.4
+        ],
+        "rss_peak_client_server_bytes": [
+          44253184,
+          44449792
+        ],
+        "game4_client_each_rank_planned_sent": 676134,
+        "game4_server_each_rank_planned_sent": 676150,
+        "fec_parity_client_planned_sent": 377631,
+        "damaged_c2s_mbps": 25,
+        "damaged_s2c_mbps": 25,
+        "damaged_udp_p99_ms": [
+          83.7,
+          83.8
+        ]
+      },
+      "cpu_change_pct": -1.12,
+      "real_udp_lost_both_directions": 0,
+      "go_full_copies_after_handoff_both": 0,
+      "outer_data_retransmits": 0,
+      "source_tun_fq_root_drops": 0,
+      "game4_copies_every_due_position_kernel_copied": true,
+      "fec_parity_all_kernel_copied": true,
+      "stop_drained_both": true,
+      "decision": "PASS_DELIVERY_BUT_HOST_PRESSURE_BOUNDARY; DO_NOT_ESCALATE_GAME4_TO_30_OR_80MBPS_ON_THIS_VM"
+    },
+    {
+      "id": "W154",
+      "mode": "Game2 fixed6 immediate",
+      "rate_mbps_each_direction": 35,
+      "action": 40311074186,
+      "conclusion": "SUCCESS_PASS_SCOPED_OBSERVATION",
+      "artifact_id": 12643704430,
+      "zip_sha256": "4f50330edd51c543cb52dc1809d200acb468b63a7f67420754ab6d611c6468bd",
+      "order": "BA",
+      "old": {
+        "client_cpu_s": 31.77,
+        "server_cpu_s": 31.7,
+        "total_cpu_s": 63.47,
+        "host_cpu_psi_mean_pct": 11.0444,
+        "host_cpu_psi_peak_pct": 12.58,
+        "psi_fraction_over20": 0,
+        "injector_cpu_client_server_s": [
+          17.19,
+          17.2
+        ],
+        "rss_peak_client_server_bytes": [
+          24854528,
+          25055232
+        ],
+        "fec_parity_client_planned_sent": 521150,
+        "damaged_udp_p99_ms": [
+          83.5,
+          83.6
+        ]
+      },
+      "new": {
+        "client_cpu_s": 30.83,
+        "server_cpu_s": 30.97,
+        "total_cpu_s": 61.8,
+        "host_cpu_psi_mean_pct": 10.7916,
+        "host_cpu_psi_peak_pct": 12.31,
+        "psi_fraction_over20": 0,
+        "injector_cpu_client_server_s": [
+          17.29,
+          17.17
+        ],
+        "rss_peak_client_server_bytes": [
+          25186304,
+          24924160
+        ],
+        "fec_parity_client_planned_sent": 521110,
+        "damaged_udp_p99_ms": [
+          83.5,
+          83.5
+        ]
+      },
+      "cpu_change_pct": -2.63,
+      "real_udp_lost_both_directions": 0,
+      "go_full_copies_after_handoff_both": 0,
+      "outer_data_retransmits": 0,
+      "source_tun_fq_root_drops": 0,
+      "fec_parity_all_kernel_copied": true,
+      "stop_drained_both": true,
+      "decision": "35MBPS GAME2 UDP SCOPE VERIFIED; HEADROOM NONZERO BUT NOT FULL TCP MIX/40+ OR FULL_GAME80_QUALIFICATION"
+    }
+  ],
+  "scope_limits": [
+    "Product source still Game-specific P2; Normal OFF Fixed Auto prior five-mode source 6c38 remains qualified, not requalified at these rates",
+    "Host CPU PSI is a scheduling-pressure indicator, not module CPU attribution; Game4 >20% on 25Mbps is a capacity warning even if all business delivered",
+    "Independent netem IID30 random delivery trajectory differs despite same seed; do not claim exact paired packets losses",
+    "No measured 25/35Mbps genuine TCP mixed, no Windows native"
+  ],
+  "capacity_stop": true,
+  "merge_ready": false,
+  "next": "Focus P1b native kernel sendmmsg TX pilot with bounded prefix and no false parity copied; on Game4 use <=20Mbps once native+binaries qualified, do not use 25Mbps contested runner for first candidate.",
+  "windows": "NOT_RUN/TEMP_SKIPPED"
+}

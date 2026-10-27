@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "date": "2026-10-24",
+  "source": "1a04e791d28d860107f31bcfe463846cf3f5c2ac",
+  "merge_parents": [
+    "9cfd72968e21a63834f455a96afc71a5d35737db",
+    "040741820b2f917b5868c285c438d4cc21c6193a"
+  ],
+  "product": {
+    "build_run": 40077530806,
+    "artifact": 12553429349,
+    "digest": "5825ca179607b7e0c67e29c143ecb66526a4002a8b6309c10e2fabacd00fd0f6",
+    "architecture": "ARM64",
+    "status": "success"
+  },
+  "related_runs": {
+    "harness": 40077530811,
+    "native_maximum": 40077530837,
+    "spurious_merge_request": 40077530873
+  },
+  "request": {
+    "id": "FEC-W2-V3-Fixed5-OuterOff-Clean-Loss5",
+    "path": "tests/network/fec-work/W2-v3-fixed5-outeroff-loss0to5-arm64.json",
+    "outer_repair_enabled": false,
+    "profiles": "fixed5",
+    "phases": [
+      "lossless 15s",
+      "IID5 45s"
+    ],
+    "cpu_rss_p99": "NETWORK_HARNESS_COLLECTED_ONLY_IF_PRODUCT_RUNS"
+  },
+  "gates": [
+    "Both native readbacks must be repair_enabled=0",
+    "outer data repair=0, shadow candidate and outstanding=0",
+    "real authenticated reverse feedback and FEC actual TX k/r/parity",
+    "first fresh and recovered TUN, no payload forgery",
+    "max phase capacity gate, CPU and RSS are facts only, no performance qualification until trustworthy metrics"
+  ],
+  "result": "INTENT_NOT_PRODUCT_RESULT"
+}

@@ -21,20 +21,29 @@ type V4WindowsAuthenticatedGameServerGroup struct{
  epoch [16]byte
  joined uint64
  stageProc,openProc,joinProc,stopProc *syscall.Proc
+ fecOpenProc,fecFinishProc *syscall.Proc
+ fecParityProc,fecM4SendProc *syscall.Proc
+ gameFec uint8 // protected client/server GameFec, same for all independent TLS lanes
  closed bool
 }
 func V4WindowsEstablishOriginalGameServerGroup(
  ctx context.Context,library string,assocs []*faketcp.ServerAssociation,
- cfg ServerAdmissionConfig,epochs *V4EpochStore,
+ cfg ServerAdmissionConfig,epochs *V4EpochStore,gameFec ...uint8,
 )(*V4WindowsAuthenticatedGameServerGroup,error){
  n:=len(assocs)
+ if len(gameFec)>1{return nil,ErrAdmissionParams}
+ var negotiatedFec uint8
+ if len(gameFec)==1{negotiatedFec=gameFec[0]}
+ if negotiatedFec>7{return nil,ErrAdmissionUnsupported}
  if ctx==nil||epochs==nil||(n!=2&&n!=4){return nil,ErrAdmissionParams}
- g:=&V4WindowsAuthenticatedGameServerGroup{}
+ g:=&V4WindowsAuthenticatedGameServerGroup{gameFec:negotiatedFec}
  fail:=func(cause error)(*V4WindowsAuthenticatedGameServerGroup,error){
   cleanup,cancel:=context.WithTimeout(context.Background(),15*1000000000)
   defer cancel()
-  for _,o:=range g.owners{
-   if o!=nil{cause=errors.Join(cause,o.StopScopedOwner(cleanup))}
+  for i:=len(g.owners)-1;i>=0;i--{
+   if o:=g.owners[i];o!=nil{
+    cause=errors.Join(cause,o.StopScopedOwner(cleanup))
+   }
   }
   return nil,cause
  }
@@ -48,7 +57,7 @@ func V4WindowsEstablishOriginalGameServerGroup(
   validate:=cfg.ValidateRequest
   scoped.PolicyAllow=func(policy AdmissionPolicy)error{
    if policy.Transport!=TransportGame||policy.DesiredLanes!=uint8(n)||
-    policy.FECMode!=FECOff{return ErrAdmissionUnsupported}
+    policy.SupportedNow()!=nil{return ErrAdmissionUnsupported}
    if allow!=nil{return allow(policy)}
    return nil
   }
@@ -60,16 +69,24 @@ func V4WindowsEstablishOriginalGameServerGroup(
    return nil
   }
   opts:=V4ServerOptions{
-   DataPlaneReady:true,Epochs:epochs,ownerBridge:owner,fec2Product:true,
+   DataPlaneReady:true,Epochs:epochs,ownerBridge:owner,
+   fec2Product:true,GameFec:g.gameFec,
   }
   session,e:=EstablishServerV4(ctx,assoc,scoped,opts)
   if e!=nil{return fail(e)}
   st,e:=owner.state()
   if e!=nil||st.phase!=2||st.server!=1||st.generation==0||
-   st.applied!=0||!owner.committed{return fail(errV4WindowsOwner)}
+   st.applied!=0||!owner.committed{
+   // A post-TLS owner may be ACTIVE but not yet added to the full
+   // authenticated group. Do not leak it on a readback mismatch.
+   if owner.committed{
+    return fail(errors.Join(errV4WindowsOwner,owner.stopRustOwnerOnly()))
+   }
+   return fail(errV4WindowsOwner)
+  }
   if i==0{g.epoch=session.Epoch}
   if session.Epoch!=g.epoch||g.epoch==[16]byte{}{
-   return fail(ErrAdmissionUnsupported)
+   return fail(errors.Join(ErrAdmissionUnsupported,owner.stopRustOwnerOnly()))
   }
   g.owners=append(g.owners,&V4WindowsAuthenticatedServerOwner{bridge:owner})
   g.sessions=append(g.sessions,session)
@@ -111,6 +128,25 @@ func(g *V4WindowsAuthenticatedGameServerGroup) BindAndJoinOriginalWintun(
  runtime.KeepAlive(handles)
  if err!=nil||group==0{return errors.Join(errV4WindowsOwner,err)}
  g.joined=group
+ // Linux's one shared authenticated Game fixed FEC owner, installed
+ // strictly after all protected per-lane TLS and bound native identities.
+ if g.gameFec!=0{
+  open,err:=dll.FindProc("wbd_m0_win_owner_v4_game_receive_fec")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  finish,err:=dll.FindProc("wbd_m0_win_owner_v4_game_finish_fec")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  parity,err:=dll.FindProc("wbd_m0_win_owner_v4_game_fec_parity_due")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  receipt,err:=dll.FindProc("wbd_m0_win_owner_v4_game_m4_send_result")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  fec,err:=dll.FindProc("wbd_m0_win_owner_v4_game_fec_enable")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  if err=winOwnerCall(fec,uintptr(group),uintptr(g.gameFec-1));err!=nil{return err}
+  g.fecOpenProc=open
+  g.fecFinishProc=finish
+  g.fecParityProc=parity
+  g.fecM4SendProc=receipt
+ }
  return nil
 }
 func(g *V4WindowsAuthenticatedGameServerGroup) active(ctx context.Context)error{
@@ -155,6 +191,7 @@ func(g *V4WindowsAuthenticatedGameServerGroup) OpenGameRecord(
  if g==nil{return nil,errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
  if err:=g.active(ctx);err!=nil{return nil,err}
+ if g.gameFec!=0{return nil,errV4WindowsOwner}
  if lane==0||int(lane)>len(g.owners)||len(wire)<32||len(wire)>1536{
   return nil,errV4WindowsOwner
  }

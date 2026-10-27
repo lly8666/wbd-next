@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "candidate_source": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
+  "linux_original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "run_id": 40439706001,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40439706001",
+  "native_artifact_id": 12705624424,
+  "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/40439706001/artifacts/12705624424",
+  "conclusion": "FAIL",
+  "whole_system": "NOT_QUALIFIED",
+  "pipeline": "exact-source assembly PASS; original Go Windows native prod/test compiler PASS; original Linux Go+Rust binary PASS; native original Windows Rust DLL/owner module+Go DLL gates PASS; Windows↔Linux whole functional native seven-mode batch FAIL",
+  "native_real_modes": {
+    "normal": {
+      "status": "FUNCTIONAL_PASS",
+      "scope": "real Windows Npcap/Wintun↔Linux raw/TUN 2-way UDP/TCP and genuine owned Stop"
+    },
+    "fixed": {
+      "status": "FAIL",
+      "first_error": "Windows original M2 frozen immutable repair candidate refused before product READY; stage unknown in this source"
+    },
+    "auto": {
+      "status": "FAIL",
+      "first_error": "Windows original M2 reverse-kind1 feedback draft refused before product READY; stage unknown in this source"
+    },
+    "game2": {
+      "status": "FAIL",
+      "first_error": "first original FakeTCP client lane SYN did not establish within 20s"
+    },
+    "game4": {
+      "status": "FAIL",
+      "first_error": "first original FakeTCP client lane SYN did not establish within 20s"
+    },
+    "game2-fec": {
+      "status": "FAIL",
+      "first_error": "first original FakeTCP client lane SYN did not establish within 20s; inner FEC therefore NOT_RUN"
+    },
+    "game4-fec": {
+      "status": "FAIL",
+      "first_error": "first original FakeTCP client lane SYN did not establish within 20s; inner FEC therefore NOT_RUN"
+    }
+  },
+  "later_wiring_candidates": [
+    {
+      "source": "7ad9cda7ad5a45f8348840ac51c41498d71d9cc4",
+      "scope": "Linux FecV2Step Auto Rust M2 actual-k controller",
+      "status": "GO_COMPILE_PREFLIGHT_PASS",
+      "run_id": 40440372236
+    },
+    {
+      "source": "ae5884ad8eaab133d3521e90d485d42d373a17e2",
+      "scope": "same original Go SYN due and WSL port443..446 scoped network rule, Game 2/4",
+      "status": "GO_COMPILE_PREFLIGHT_PASS",
+      "run_id": 40441483368
+    },
+    {
+      "source": "815e6fb3c4636d9a79c44953d2ef1dae6748ade3",
+      "scope": "corrected original Go Windows11 Game peer persona and native Rust M4",
+      "status": "UNVERIFIED"
+    }
+  ],
+  "historical": {
+    "WL_N0": "FAIL historic 103-byte M3 serial mismatch on another source, NOT_RUN this source",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN",
+    "Windows_WFP_global_route_gui": "NOT_RUN / independent evidence required"
+  },
+  "note": "This evidence records the FIRST exact multi-mode full run red, not a new product PASS. Scope source8e only; do not promote experimental Windows modes from Rust component success."
+}

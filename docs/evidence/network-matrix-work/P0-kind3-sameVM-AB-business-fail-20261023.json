@@ -1,0 +1,165 @@
+{
+  "schema": 1,
+  "id": "P0-kind3-12B-sameVM-AB-20261023",
+  "run": {
+    "id": 12473581118,
+    "sha256": "3abbf19ae6a1cf968c56b343f5b7e719ceae4734b254490ef06090b78dd54190",
+    "run_id": 39887028993,
+    "attempt": 1,
+    "harness_source": "39cb2783e7b85f1afef7ac87f0a5c0bb37c5b3f9"
+  },
+  "action": "https://github.com/lly8666/wbd-next/actions/runs/39887028993",
+  "result": "FAIL_STRICT_FIXED_CLIENT_APPLIED_PENDING",
+  "same_vm": {
+    "arch": "aarch64",
+    "kernel": "6.17.0-1022-azure",
+    "logical_cpus": 4,
+    "linux_runner": "GitHub Actions 1000105106",
+    "order": "AB",
+    "one_job": true
+  },
+  "scenario": {
+    "source_A": "d64be28591c3752af06be399ff598266ecf4d664",
+    "source_B": "a58d914049b27e000e30438d175c7bd15022c2c5",
+    "app_mbps_per_direction": 2,
+    "udp_share": 0.5,
+    "udp_payload_sizes_packet_weight": [
+      [
+        64,
+        1
+      ],
+      [
+        1287,
+        99
+      ]
+    ],
+    "loss_iid_pct": 2,
+    "one_way_ms": 200,
+    "steady_s": 120,
+    "seed": 5205
+  },
+  "A": {
+    "loss_actual_pct": [
+      1.9199789591346945,
+      2.005040111806847
+    ],
+    "udp_missing": [
+      233,
+      237
+    ],
+    "tcp_first_p99_ms": [
+      5899.7,
+      8386.3
+    ],
+    "parity_seal": [
+      33603,
+      32929
+    ],
+    "fec_r_sent": [
+      20699,
+      20128
+    ],
+    "fec_r_planned": [
+      58129,
+      57366
+    ],
+    "source_arena": [
+      0,
+      0
+    ],
+    "parity_arena": [
+      0,
+      0
+    ],
+    "client_mode": "requested1/applied0",
+    "server_mode": "requested1/applied1",
+    "product_cpu_s": [
+      5.22,
+      5.47
+    ],
+    "process_peak_rss_bytes": [
+      16605184,
+      17096704
+    ],
+    "stop_clean": "PASS"
+  },
+  "B": {
+    "loss_actual_pct": [
+      2.0069306442871455,
+      2.0199313015511846
+    ],
+    "udp_missing": [
+      0,
+      0
+    ],
+    "udp_sent": [
+      11767,
+      11767
+    ],
+    "tcp_first_p99_ms": [
+      221,
+      220.6
+    ],
+    "udp_first_p99_ms": [
+      220.2,
+      219.4
+    ],
+    "parity_seal": [
+      0,
+      0
+    ],
+    "fec_r_sent": [
+      72579,
+      72441
+    ],
+    "fec_r_planned": [
+      75052,
+      74996
+    ],
+    "source_arena": [
+      0,
+      0
+    ],
+    "parity_arena": [
+      0,
+      0
+    ],
+    "client_mode": "requested1/applied0",
+    "server_mode": "requested1/applied1",
+    "m2_client": {
+      "accepted": 58106,
+      "covered_2s": 58068,
+      "unknown_2s": 34,
+      "reverse_reports": 25398,
+      "censored": true
+    },
+    "m2_server": {
+      "accepted": 58104,
+      "covered_2s": 57416,
+      "unknown_2s": 9,
+      "reverse_reports": 25346,
+      "censored": true
+    },
+    "fec_rx_recovered_to_TUN": [
+      1163,
+      1166
+    ],
+    "product_cpu_s": [
+      7.35,
+      7.59
+    ],
+    "process_peak_rss_bytes": [
+      16723968,
+      17231872
+    ],
+    "stop_clean": "PASS"
+  },
+  "scope": "Repair boundary fix REAL business improvement demonstrated on same runner. Hard mode promotion client still pending, strict whole Action FAIL. Not high-speed, not CPU optimization, not Windows, no running SIMD proof. Repair wire bytes NOT_OBSERVED.",
+  "hypotheses_to_distinguish_next": [
+    "M2 mature samples 2s lag versus cumulative e.fec2_copied_source during active traffic makes gating impossible at steady state",
+    "single historical unknown_2s/censored irrevocably blocks promotion even once healthy authenticated current windows exist",
+    "require report.open_bytes/charged_bytes/queued_jobs all zero demands global quiescence of continuously busy FEC TX",
+    "client/server different early timing accounts for divergence; determine exact failed predicates before changing gate"
+  ],
+  "next_action": "Instrument native strict gate predicate bitmask and counters (cheap, once at Stop) and/or well-proven bounded qualifying cohort; any product change needs native contract + one real failed-counterexample repeat + Normal/off protective anchor, no fabricated applied and no double dispatch."
+}

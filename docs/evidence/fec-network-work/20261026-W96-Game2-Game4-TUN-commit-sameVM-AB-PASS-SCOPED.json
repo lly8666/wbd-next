@@ -1,0 +1,132 @@
+{
+  "schema": "W96_GAME_LINUX_TUN_COMMIT_REAL_SAMEVM_AB_V1",
+  "date": "2026-10-26",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "source": "44455afb819572ed75689cab28ffc66d1b1c7640",
+  "baseline": "fb65d8136c32e3e2182a09425f517cd7b98162ce",
+  "build_run": 40246704747,
+  "build_result": "SUCCESS",
+  "artifact_id": 12618184955,
+  "zip_sha256": "f33f2c28f1936de3cfc35a5743f2378d7ee5ef5a8ac45c741ecfffedd82d9baa",
+  "native_tun_write_failed_then_alternate_lane_test": "PASS",
+  "native_inflight_dedup_no_early_commit_test": "PASS",
+  "native_FEC_math_normal_regressions": "PASS",
+  "change": "Original Game2/4 OFF validated source prepared + at most one pending logical ID per authenticated lane; release RX mutex during genuine TUN write; only on successful return commit logical bitmap; failure removes reservation. Per-lane AEAD and replay untouched.",
+  "game2": {
+    "run": 40246931539,
+    "request_commit": "682ea6de28a8eec791aa46d2a9b62422e8bc6ec8",
+    "result_A": "PASS_SCOPED",
+    "result_B": "PASS_SCOPED",
+    "client_cpu_s_A_B": [
+      1.55,
+      1.62
+    ],
+    "server_cpu_s_A_B": [
+      1.58,
+      1.65
+    ],
+    "client_cpu_per_GiB_A_B": [
+      221.8892,
+      231.9498
+    ],
+    "server_cpu_per_GiB_A_B": [
+      226.1838,
+      236.2452
+    ],
+    "client_rss_peak_A_B": [
+      25391104,
+      25886720
+    ],
+    "server_rss_peak_A_B": [
+      26112000,
+      24985600
+    ],
+    "outer_client_bytes_A_B": [
+      18337986,
+      18338066
+    ],
+    "outer_server_bytes_A_B": [
+      18334674,
+      18338300
+    ],
+    "host_psi_peak_pct_A_B": [
+      1.17,
+      1.56
+    ],
+    "genuine_c2s_s2c_udp_tcp_injected_equals_delivered": true,
+    "udp_loss": 0,
+    "tcp_backpressure": 0,
+    "max_p99_ms": 77.6,
+    "source_tun_drops": 0,
+    "stop_drained": true
+  },
+  "game4": {
+    "run": 40246935612,
+    "request_commit": "5239a4fbd0740b063d3ddb56d1ee7c1f88488360",
+    "result_A": "PASS_SCOPED",
+    "result_B": "PASS_SCOPED",
+    "client_cpu_s_A_B": [
+      2.27,
+      2.31
+    ],
+    "server_cpu_s_A_B": [
+      2.33,
+      2.32
+    ],
+    "client_cpu_per_GiB_A_B": [
+      325.0161,
+      330.7433
+    ],
+    "server_cpu_per_GiB_A_B": [
+      333.6068,
+      332.1751
+    ],
+    "client_rss_peak_A_B": [
+      38060032,
+      37720064
+    ],
+    "server_rss_peak_A_B": [
+      38047744,
+      38305792
+    ],
+    "outer_client_bytes_A_B": [
+      36653572,
+      36650512
+    ],
+    "outer_server_bytes_A_B": [
+      36636128,
+      36643400
+    ],
+    "host_psi_peak_pct_A_B": [
+      3.87,
+      3.86
+    ],
+    "genuine_c2s_s2c_udp_tcp_injected_equals_delivered": true,
+    "udp_loss": 0,
+    "tcp_backpressure": 0,
+    "max_p99_ms": 77.6,
+    "source_tun_drops": 0,
+    "stop_drained": true
+  },
+  "scenario": {
+    "one_way_ms": 75,
+    "both_directions_mbps": 3,
+    "udp_share": 0.96,
+    "tcp_flows": 2,
+    "phase": "clean_baseline",
+    "phase_s": 20,
+    "same_vm_each_ab": true,
+    "separate_game2_game4_VMs": true
+  },
+  "decision": "RETAIN scoped product correction to dedup-on-actual-TUN-write despite Game2 +4-5% CPU; correctness priority. No causal crossVM CPU claim, no Game fixed6 qualification.",
+  "limitations": [
+    "Cannot replay a duplicate per-lane PN after failed TUN write; another still-unprocessed authenticated lane copy can retry",
+    "Race of extreme logical ID advancement while TUN write is pending can make later post-write dedup commit fail closed (not suppressed); no all-conditions proof",
+    "Only netem0 sameVM A/B verified, W97 weaknet exact source pending",
+    "W90 Game+fixed6/fixed0 six real Linux product failures and atomic rollback still recorded",
+    "No Windows/physical-machine or shared Linux 65KiB FEC jumbo qualification"
+  ],
+  "capacity_stop": true,
+  "merge_ready": false
+}

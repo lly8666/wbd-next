@@ -1,0 +1,227 @@
+{
+  "schema": 1,
+  "id": "P1-TUN-preloan-Normal2pct-sameVM-AB-result-20261023",
+  "run_id": 39913690718,
+  "attempt": 1,
+  "workflow_conclusion": "failure",
+  "why_workflow_failure": "A old source leg FAIL; B new source leg PASS_SCOPED_OBSERVATION",
+  "artifact_id": 12484331372,
+  "artifact_zip_sha256": "5a689f6ebd0dde500585f56fc83381a108f9c65b9b5f2de0bfa6639795d2c241",
+  "request_source": "6f4acf937d8003ac6471ae6b690d018b46458ccd",
+  "scenario": "one Linux aarch64 Actions VM; sequential A/B, 2Mbps each direction UDP/TCP mixed, UDP size cycle 99%1287B 1%64B; Normal/off 2% independent netem loss 200ms one-way, 60s steady seed5205 warmup10s drain30s, 4 TCP flows",
+  "policy": "outer-single-repair-v2",
+  "runtime_readback": {
+    "A": {
+      "both_endpoints_policy": "outer-single-repair-v2",
+      "repair_attempt_limit": 1,
+      "shadow_limit": 131072,
+      "retain_cap_us": 1500000
+    },
+    "B": {
+      "both_endpoints_policy": "outer-single-repair-v2",
+      "repair_attempt_limit": 1,
+      "shadow_limit": 131072,
+      "retain_cap_us": 1500000
+    }
+  },
+  "A": {
+    "source": "99042008e8f42f334ed635df92945e00e53c45dd",
+    "native_run": 39911318918,
+    "bundle_artifact": 12482468452,
+    "bundle_sha256": "3518c2c3c2ea112547baaa4c732dcf99efdd18587a28af761c2f8791628fd0d9",
+    "result": "FAIL_BOTH_DIRECTIONS",
+    "udp": {
+      "c2s": {
+        "sent": 5884,
+        "received": 5752,
+        "missing": 132,
+        "loss_pct": 2.24337,
+        "p99_ms": 639.1
+      },
+      "s2c": {
+        "sent": 5884,
+        "received": 5737,
+        "missing": 147,
+        "loss_pct": 2.4983,
+        "p99_ms": 641
+      }
+    },
+    "tcp": {
+      "c2s": {
+        "sent": 5798,
+        "missing": 0,
+        "p99_ms": 4695.7
+      },
+      "s2c": {
+        "sent": 5884,
+        "missing": 0,
+        "p99_ms": 4954.4
+      }
+    },
+    "tx_chain": {
+      "client": {
+        "udp_read": 9485,
+        "udp_staged": 9395,
+        "tcp_read": 11447,
+        "tcp_staged": 11318,
+        "arena_failed": 219
+      },
+      "server": {
+        "udp_read": 9492,
+        "udp_staged": 9380,
+        "tcp_read": 11495,
+        "tcp_staged": 11359,
+        "arena_failed": 248
+      }
+    },
+    "rx_chain": {
+      "client": {
+        "tun_udp": 9375,
+        "tun_tcp": 11346,
+        "link_malformed": 0,
+        "link_discarded": 0,
+        "tun_failed": 0,
+        "feedback_dropped": 266
+      },
+      "server": {
+        "tun_udp": 9382,
+        "tun_tcp": 11306,
+        "link_malformed": 0,
+        "link_discarded": 0,
+        "tun_failed": 0,
+        "feedback_dropped": 296
+      }
+    },
+    "netem_loss_pct": {
+      "client_outbound": 2.035225,
+      "server_outbound": 1.888103
+    },
+    "host": {
+      "psi_some_peak": 0,
+      "steal_peak_pct": 0
+    },
+    "measurement_cpu_seconds": {
+      "client": 1.71,
+      "server": 1.73
+    },
+    "peak_rss_bytes": {
+      "client": 15654912,
+      "server": 15478784
+    },
+    "stop": true,
+    "owned_cleanup": true
+  },
+  "B": {
+    "source": "de55a1322b4580c60e77322d2d38843caefeec79",
+    "native_run": 39913063383,
+    "bundle_artifact": 12483243411,
+    "bundle_sha256": "8a6a8c240430b32f4270085c45569245f65476ba1fb6ff987942a2169a813479",
+    "native_recovery_lib": "75/75_PASS",
+    "native_mtu9": "PASS",
+    "mtu_artifact": 12483528926,
+    "mtu_zip_sha256": "b3fa5fa40092d6499f02b9c6b3e253f4e8166c784cc318666fb5b01756058b31",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "udp": {
+      "c2s": {
+        "sent": 5884,
+        "received": 5879,
+        "missing": 5,
+        "loss_pct": 0.08498,
+        "p99_ms": 617.1
+      },
+      "s2c": {
+        "sent": 5884,
+        "received": 5880,
+        "missing": 4,
+        "loss_pct": 0.06798,
+        "p99_ms": 617.1
+      }
+    },
+    "tcp": {
+      "c2s": {
+        "sent": 5884,
+        "missing": 0,
+        "p99_ms": 643.4
+      },
+      "s2c": {
+        "sent": 5884,
+        "missing": 0,
+        "p99_ms": 898
+      }
+    },
+    "tx_chain": {
+      "client": {
+        "udp_read": 9635,
+        "udp_staged": 9635,
+        "tcp_read": 21622,
+        "tcp_staged": 21622,
+        "arena_failed": 0,
+        "pre_read_deferred": 0
+      },
+      "server": {
+        "udp_read": 9632,
+        "udp_staged": 9632,
+        "tcp_read": 21487,
+        "tcp_staged": 21487,
+        "arena_failed": 0,
+        "pre_read_deferred": 0
+      }
+    },
+    "rx_chain": {
+      "client": {
+        "tun_udp": 9628,
+        "tun_tcp": 21466,
+        "link_malformed": 0,
+        "link_discarded": 0,
+        "tun_failed": 0,
+        "feedback_dropped": 0
+      },
+      "server": {
+        "tun_udp": 9623,
+        "tun_tcp": 21606,
+        "link_malformed": 0,
+        "link_discarded": 0,
+        "tun_failed": 0,
+        "feedback_dropped": 0
+      }
+    },
+    "netem_loss_pct": {
+      "client_outbound": 1.937915,
+      "server_outbound": 2.091639
+    },
+    "host": {
+      "psi_some_peak": 0,
+      "steal_peak_pct": 0
+    },
+    "measurement_cpu_seconds": {
+      "client": 1.93,
+      "server": 1.95
+    },
+    "peak_rss_bytes": {
+      "client": 16900096,
+      "server": 16863232
+    },
+    "stop": true,
+    "owned_cleanup": true
+  },
+  "acceptance": {
+    "normal_v2_udp_loss_pct_max": 0.25,
+    "B_passes_two_directions": true,
+    "A_fails_expected": true,
+    "first_ever_qualifying_steady_normal_2pct_source": "de55a1322b4580c60e77322d2d38843caefeec79"
+  },
+  "causal_reading": [
+    "Source A 128-slot M1 pool and destructive TUN-before-allocate created exact postread losses: 219/248 per endpoint in controlled AB; B 512-slot+preloan conserved 9635/9635 and 9632/9632 UDP, 21622/21622 and 21487/21487 TCP with no consumed fresh loss.",
+    "Same VM both phases, netem measured ~2% each; unseeded independent kernel RNG NOT exact drop trace matching. Strong evidence of fix is disappearance of measured exact source-stage losses, not arbitrary seed gain.",
+    "B native real original replay LINK/TUN path had no malformed/discard or write failure and feedback_drop 0/0; both fully drained and cleaned.",
+    "Absolute CPU rose 1.71->1.93s client,1.73->1.95s server over 60s (~13%), RSS rose about 1.25-1.38MB each; B concurrently carries many more real TCP/source records and fixes TCP p99. Do not call absolute CPU an optimization.",
+    "One policy-specific Normal2pct scenario qualifies; distinct sustained fixed/auto/game, 500Mbps, single-core 500M, endpoint shared512MiB, no cross-client HOL, idle/rebuild/blackhole remain NOT_QUALIFIED."
+  ],
+  "limitations": [
+    "Netem unseeded; not exact paired per-packet losses",
+    "B process CPU+0.22s on client/server despite lower UDP loss and TCP tails; low CPU further tuning requires separate causal evidence, not more repeated seeds",
+    "pre_read_deferred counter should be treated as source-path observational lower bound when a zero-work early-return bypasses final aggregation; this action reports zero but conservation proves no lost-after-read original source. No additional performance claim from this counter alone",
+    "Quota denied 157/158 candidates in B is not zero, but no available evidence ties it to unqualified business at this 2% scenario",
+    "No sustained H500 or no cross-business HOL certification"
+  ]
+}

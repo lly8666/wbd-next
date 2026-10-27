@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "qualification": "PASS_SCOPED_ACTUAL_TWO_OS_ORIGINAL_NORMAL_OFF_TCP_UDP_AND_STOP",
+  "source_sha": "0dc7b58d5a043d73e590e00586d80f7312f1cdb4",
+  "branch": "fix/m0-windows-functional-wiring-20261026",
+  "main_at_source": "7a6a289147d423c20b949697b0bcd4d8d70aaade",
+  "workflow_run": 40311271021,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/40311271021",
+  "jobs": {
+    "linux_exact_source": "SUCCESS",
+    "windows_native_public": "SUCCESS"
+  },
+  "actual_protocol": "original pinned Go credential TLS + Rust M1/M2/M3 original authenticated record + Windows signed Npcap/Wintun + actual Linux WSL2 raw/TUN; no simulation",
+  "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+  "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+  "udp": {
+    "status": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "windows": {
+      "ip": "10.66.0.2",
+      "sent": 25,
+      "received": 19
+    },
+    "linux": {
+      "ip": "10.66.0.1",
+      "sent": 88,
+      "received": 25
+    },
+    "bytes_payload": "genuine UDP marked application datagrams; not rate or loss claim"
+  },
+  "tcp": {
+    "status": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "windows": {
+      "ip": "10.66.0.2",
+      "dial_remote": "10.66.0.1",
+      "client_echo": true,
+      "server_received_bytes": 37
+    },
+    "linux": {
+      "ip": "10.66.0.1",
+      "dial_remote": "10.66.0.2",
+      "client_echo": true,
+      "server_received_bytes": 37
+    },
+    "qualification": "genuine bidirectional kernel TCP connection and exact application marker echo, no speed/loss/RTT qualification"
+  },
+  "reverse_tcp_regression": {
+    "earlier_source": "49f249d480d24db09a2b020b7aa7c7b308b303af",
+    "action": 40310165654,
+    "result": "FAIL_REAL_TCP_LINUX_TO_WINDOWS_INGRESS",
+    "fact": "Windows→Linux TCP echo succeeded, Linux→Windows inbound TCP connect timed out; both UDP directions passed",
+    "candidate": "Windows host Defender inbound listener filter",
+    "tested_fix": "exact source/target IP plus TCP 45902 Action-owned temporary Windows Defender allow rule; native readback and removal both PASS",
+    "limits": "This proves test-OS listener admission under scoped rule; not a product-wide inbound firewall policy"
+  },
+  "rust_regression": {
+    "name": "m0_windows_m2_short_feedback_output_does_not_burn_original_tx_sequence",
+    "result": "PASS_ONE_REAL_WINDOWS_NATIVE_RUST_UNIT",
+    "linux_build": "PASS",
+    "windows_go_compile": "PASS"
+  },
+  "os_stop": "PASS_BOTH_OWNED",
+  "scoped_firewall_removed": true,
+  "hyperv_rule_removed": true,
+  "npcap_owned_cleanup": "PASS",
+  "excluded": {
+    "WL_N0": "NOT_RUN_BY_USER_FUNCTIONAL_ONLY",
+    "WL_N1": "NOT_RUN",
+    "WL_N5": "NOT_RUN",
+    "FEC_fixed_auto_game": "NOT_PUBLICLY_WIRED_NATIVE_SUPPORTED_MODES_MASK_1",
+    "GUI_WFP_DNS_physical": "NOT_RUN",
+    "normal_highload_seq_103_bytes": "UNRESOLVED_NOT_EXERCISED_IN_LOW_RATE_FUNCTIONAL_GATE"
+  },
+  "artifacts": {
+    "product": "m0-wl-full-public-normal-direct",
+    "id": 12645470931,
+    "linux": "m0-plan024-linux-product",
+    "linux_id": 12644174378
+  },
+  "audit_statement": "Do not promote this scoped functionality to 10Mbps/60s performance or Fixed/Auto/Game. Experiment/FEC architecture remains separate; PR #27 draft and main untouched."
+}

@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "kind": "ACTION_RESULT_OBSERVED",
+  "run": {
+    "id": 39764098892,
+    "attempt": 1,
+    "conclusion": "failure",
+    "artifact_id": 12418609807,
+    "artifact_sha256": "a864dcb7a552e57bfa713445e68b5ee4503a41fd0e25d004a855f650bcd14aeb",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39764098892"
+  },
+  "source": {
+    "product": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+    "harness": "973b01901bc27f8881710aca26f1626237aba4e8",
+    "build_run": 39759842150,
+    "attempt": 1,
+    "artifact_id": 12417786567,
+    "zip_sha256": "2942307ef2d432ed7d70b779cd5a4acb5dfef18bbae051e7be7421f80999a06b"
+  },
+  "scene": {
+    "product_mode": "normal",
+    "offered_mbps_direction": 10,
+    "udp_share": 1,
+    "inner_tcp": false,
+    "one_way_ms": 25,
+    "loss_iid_pct": 1,
+    "steady_s": 75,
+    "warmup_s": 15,
+    "drain_s": 15,
+    "application_packet_sizes_bytes": [
+      64,
+      256,
+      1024,
+      1172
+    ],
+    "netem_rng": "unseeded_recorded"
+  },
+  "actual": {
+    "netem_loss_pct": {
+      "c2s": 1.0284422495718866,
+      "s2c": 1.0348108024152056
+    },
+    "udp": {
+      "c2s": {
+        "sent": 129706,
+        "delivered": 129067,
+        "missing": 639,
+        "loss_pct": 0.4926526143740459,
+        "p99_arrived_ms": 90.7,
+        "delivered_mbps": 9.9428992
+      },
+      "s2c": {
+        "sent": 129706,
+        "delivered": 128977,
+        "missing": 729,
+        "loss_pct": 0.5620403065394045,
+        "p99_arrived_ms": 90.7,
+        "delivered_mbps": 9.933160533333334
+      }
+    },
+    "reported_outer_counters": {
+      "client": {
+        "first": 204850,
+        "repair": 2275,
+        "blocked_quota_or_capacity": 417,
+        "authenticated_ack": 204783
+      },
+      "server": {
+        "first": 204716,
+        "repair": 2221,
+        "blocked_quota_or_capacity": 351,
+        "authenticated_ack": 204652
+      }
+    },
+    "product_cpu_s_measured": {
+      "client": 8.8,
+      "server": 8.75
+    },
+    "product_rss_peak_bytes": {
+      "client": 16203776,
+      "server": 16453632
+    },
+    "host_psi_mean_pct": 0,
+    "host_steal_peak_pct": 0,
+    "udp_socket_error_counts": 0,
+    "client_and_server_stop_drained": true,
+    "owned_namespaces_cleanup": true,
+    "wire_repair_bytes": "NOT_OBSERVED",
+    "repair_useful_spurious": "NOT_OBSERVED",
+    "retrans_budget_breakdown": "NOT_OBSERVED",
+    "integrity_invalid_or_duplicate": false
+  },
+  "assessment": "FAIL 0.1% residual gate. UDP offered 10Mbps/direction ±3% met, true netem ~1%, no reported host contention or UDP socket errors; product has concrete quota_or_capacity_blocked counts, but that counter aggregates resource categories and does not prove exact limiting mechanism. S003 5Mbps UDP-only passed, S002 10Mbps mixed had even larger UDP residual; cannot use cross-machine comparisons as performance A/B. Targeted owner / M2 telemetry or matched-host diagnostic needed before modifying limits; do not blame generic VM."
+}

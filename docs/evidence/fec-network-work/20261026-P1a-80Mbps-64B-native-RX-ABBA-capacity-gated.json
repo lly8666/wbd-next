@@ -1,0 +1,134 @@
+{
+  "schema": "FEC_P1A_RX_NATIVE_80MBPS_ABBA_V1",
+  "date": "2026-10-26",
+  "owner": "fec-network-work",
+  "branch": "experiment/fec-network-tuning",
+  "bench_source_commit": "cf6a84365c15a91a9c8ab3c4e1b3ebe60602ec27",
+  "workflow": "/.github/workflows/fec-p1a-native-rx80-diagnostic.yml",
+  "test_path": "crates/wbd-platform/tests/fec_p1a_rx80_diag.rs",
+  "run": 40296519037,
+  "run_conclusion": "SUCCESS",
+  "artifact_id": 12638970145,
+  "artifact_zip_sha256": "a984044557b90577b6c64effb77fc7d5aa28b9b2a01b1cdb40729b77313e4d08",
+  "runner": "ubuntu-24.04-arm aarch64 GitHub Actions same runner class as original product",
+  "target": {
+    "payload_mbps": 80,
+    "payload_size_bytes": 64,
+    "pps": 156250,
+    "packets_per_leg": 312500,
+    "seconds_sending_each_leg": 2,
+    "post_sender_draining_ms": 250,
+    "ordering": "old→new→new→old",
+    "data_path": "Loopback unprivileged UDP socket, kernel recvfrom vs SAME existing wbd-platform receive_ready_udp→recvmmsg with four caller-owned slots; no real Game4 owner"
+  },
+  "qualifying_scope": {
+    "source_packet_delivery_loss_zero": true,
+    "cap_guard_preflight_cpu_psi_avg10_threshold_pct": 20,
+    "all_legs_host_psi_below_pct": 1,
+    "synthetic_recv_only": true,
+    "no_crypto": false,
+    "network_loss_model": "none",
+    "cannot_be_used_as": "Game4+fixed6 real business 80Mbps, physical AF_PACKET/TUN, FEC parity or original Go TLS qualification"
+  },
+  "legs": [
+    {
+      "order": 1,
+      "mode": "recvfrom_one",
+      "sent": 312500,
+      "received": 312500,
+      "missing": 0,
+      "syscall_attempts": 444288,
+      "idle_polls": 131788,
+      "rx_thread_cpu_s": 0.467926,
+      "wall_s": 2.250362,
+      "offered_mbps": 80.0006,
+      "host_psi_avg10_pct": 0.65
+    },
+    {
+      "order": 2,
+      "mode": "recvmmsg_four",
+      "sent": 312500,
+      "received": 312500,
+      "missing": 0,
+      "syscall_attempts": 331315,
+      "idle_polls": 126287,
+      "full_four_batches": 21136,
+      "rx_thread_cpu_s": 0.491533,
+      "wall_s": 2.250478,
+      "offered_mbps": 80.0006,
+      "host_psi_avg10_pct": 0.54
+    },
+    {
+      "order": 3,
+      "mode": "recvmmsg_four",
+      "sent": 312500,
+      "received": 312500,
+      "missing": 0,
+      "syscall_attempts": 332239,
+      "idle_polls": 128533,
+      "full_four_batches": 20845,
+      "rx_thread_cpu_s": 0.489549,
+      "wall_s": 2.250483,
+      "offered_mbps": 80.0006,
+      "host_psi_avg10_pct": 0.44
+    },
+    {
+      "order": 4,
+      "mode": "recvfrom_one",
+      "sent": 312500,
+      "received": 312500,
+      "missing": 0,
+      "syscall_attempts": 448159,
+      "idle_polls": 135659,
+      "rx_thread_cpu_s": 0.479369,
+      "wall_s": 2.250562,
+      "offered_mbps": 80.0006,
+      "host_psi_avg10_pct": 0.36
+    }
+  ],
+  "summary": {
+    "old_receiver_cpu_s_mean": 0.473648,
+    "new_four_batch_cpu_s_mean": 0.490541,
+    "new_vs_old_receiver_cpu_change_pct": 3.567,
+    "old_avg_attempted_syscalls": 446223.5,
+    "new_avg_attempted_syscalls": 331777,
+    "new_syscall_attempt_reduction_pct": 25.648,
+    "full_four_fraction_per_new_attempt_approx": 0.06327,
+    "actual_delivered_packets_each_leg": 312500,
+    "actual_send_payload_mbps_each_leg": 80.0006,
+    "compared_per_leg_cpu_time_not_system_total_cpu": true
+  },
+  "real_product_crosscheck": {
+    "W135_same_vm_BA": {
+      "run": 40292104571,
+      "old_total_cpu_s": 19.26,
+      "new_total_cpu_s": 19.92
+    },
+    "W136_same_vm_AB": {
+      "run": 40292711305,
+      "old_total_cpu_s": 17.25,
+      "new_total_cpu_s": 17.61
+    },
+    "conclusion": "Game fixed6 IID30 5Mbps sameVM two orders CPU slightly worsens; RX microbench at 80Mbps 64B independently also no CPU benefit"
+  },
+  "full_game80_capacity_guard": {
+    "status": "NOT_RUN_CAPACITY_STOP",
+    "evidence": "W126 Game4 fixed6 actual 20Mbps each direction, host PSI mean 33.2352% peak 42.04% all samples >20%; W134 new shared P0 Game4 at10Mbps host PSI peak27.7%; new source80Mbps still unqualified.",
+    "application_pps_80Mbps_weighted": 15301,
+    "fixed6_actual_symbol_multiplier": 2.268,
+    "logical_symbol_pps_80Mbps_weighted": 34699,
+    "four_lane_raw_send_pps_per_endpoint_80Mbps_weighted": 138796,
+    "all_64B_source_pps_80Mbps": 156250,
+    "all_64B_symbol_pps_80Mbps_estimated": 354375,
+    "all_64B_four_lane_tx_pps_per_endpoint_estimated": 1417500,
+    "game4_job_slots": 4096,
+    "weighted_outstanding_slots_at_80Mbps": 2255,
+    "all_64B_outstanding_slots_at_80Mbps_estimated": 23030,
+    "description": "Not safe or interpretable to run full Game4+FEC80 on current 4CPU shared runner; constrained isolated kernel microbench verifies high PPS behavior without violating original stop condition"
+  },
+  "decision": "KEEP_P1A_RECVMMSG_PRODUCT_REVERT; no repeat W135/W136 or speculative Game4 80Mbps; only native bounded 80Mbps RX microbench PASS_VALID_AND_NEGATIVE_PERF",
+  "source_product_current": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+  "windows": "NOT_RUN/TEMP_SKIPPED",
+  "merge_ready": false,
+  "capacity_stop": true
+}

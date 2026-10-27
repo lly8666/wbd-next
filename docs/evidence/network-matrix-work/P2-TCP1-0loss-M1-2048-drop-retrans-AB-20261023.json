@@ -1,0 +1,182 @@
+{
+  "schema": 1,
+  "id": "P2-TCP1-0loss-M1-2048-source-drop-AB-20261023",
+  "kind": "NATIVE_ARM64_SAME_VM_SEQUENTIAL_AB_SCOPED_TEST",
+  "user_priority": "Fix actual inner TCP retransmissions even with zero introduced outer line loss; deferred CPU-first opportunistic repair policy is out of scope",
+  "action": {
+    "run": 39967951884,
+    "attempt": 1,
+    "job": 120462678564,
+    "conclusion": "failure",
+    "why": "A arm INCONCLUSIVE due to source TUN kernel drops, B arm PASS_SCOPED_OBSERVATION; do not equate workflow failure with B's business result",
+    "artifact_id": 12508340683,
+    "artifact_zip_sha256": "e86638b48e2f036d05ae4ffd7983b02b98ff54597511af96125325bb151f0733",
+    "download_sha256_locally_verified": true,
+    "contracts_run": 39967951772,
+    "contracts_conclusion": "success"
+  },
+  "scenario": {
+    "mode": "Normal/off",
+    "inner_tcp_flows_each_direction": 1,
+    "app_target_mbps_each_direction": 10,
+    "outer_netem_loss_pct": 0,
+    "one_way_ms": 200,
+    "jitter_ms": 0,
+    "reorder_pct": 0,
+    "outer_mtu": 1500,
+    "tun_mtu": 1329,
+    "inner_tcp_mss": 1277,
+    "warmup_s": 10,
+    "steady_s": 60,
+    "drain_s": 30,
+    "order": "AB",
+    "host_arch": "aarch64",
+    "same_job_same_VM": true,
+    "netem_drops_both_legs_all_directions": 0
+  },
+  "A": {
+    "source": "1818e01285e3cdbace09a0e2db187077dd387804",
+    "build_run": 39951475090,
+    "build_attempt": 1,
+    "build_artifact_id": 12500084357,
+    "build_artifact_zip_sha256": "875683faa3aaad86567f6e55d8ce9666a04ef4b9597c34d35f0c2702bc806783",
+    "m1_slots": 1024,
+    "m1_peak_client_server": [
+      1009,
+      1009
+    ],
+    "m1_charged_bytes_per_endpoint": 2195456,
+    "result": "INCONCLUSIVE_SOURCE_TUN_TX_DROPS",
+    "tcp_mbps_c2s_s2c": [
+      9.9998596,
+      10.0000312
+    ],
+    "source_tun_tx_drops_client_server": [
+      574,
+      0
+    ],
+    "tcp_kernel_retrans_client_server": [
+      545,
+      0
+    ],
+    "tun_pre_read_deferred_client_server": [
+      16129,
+      425
+    ],
+    "tcp_first_arrival_p99_ms_c2s_s2c": [
+      1027.6,
+      200.3
+    ],
+    "product_cpu_steady60s_client_server_sec": [
+      6.2,
+      5.16
+    ],
+    "product_peak_rss_client_server_bytes": [
+      21454848,
+      21413888
+    ],
+    "outer_repair_accepted_client_server": [
+      125,
+      119
+    ],
+    "outer_replay_duplicate_rx_client_server": [
+      119,
+      125
+    ],
+    "feedback_dropped_client_server": [
+      0,
+      0
+    ],
+    "stop_drained_both": true
+  },
+  "B": {
+    "source": "b179fd0ef83814a05e41833a1f312a8792625b3b",
+    "build_run": 39967257701,
+    "build_attempt": 1,
+    "build_artifact_id": 12507646828,
+    "build_artifact_zip_sha256": "c1d608757c1b047fd506512a7a61af16ba67af5e458dda4299381078d3718aef",
+    "build_native_arm64_conclusion": "success",
+    "build_native_mtu_conclusion": "success",
+    "m1_slots": 2048,
+    "m1_peak_client_server": [
+      1588,
+      1590
+    ],
+    "m1_charged_bytes_per_endpoint": 4390912,
+    "result": "PASS_SCOPED_OBSERVATION",
+    "tcp_mbps_c2s_s2c": [
+      10.0000397333,
+      10.0000312
+    ],
+    "source_tun_tx_drops_client_server": [
+      0,
+      0
+    ],
+    "tcp_kernel_retrans_client_server": [
+      0,
+      0
+    ],
+    "tun_pre_read_deferred_client_server": [
+      0,
+      0
+    ],
+    "tcp_first_arrival_p99_ms_c2s_s2c": [
+      200.3,
+      200.3
+    ],
+    "product_cpu_steady60s_client_server_sec": [
+      8.88,
+      8.8
+    ],
+    "product_peak_rss_client_server_bytes": [
+      24322048,
+      24948736
+    ],
+    "outer_repair_accepted_client_server": [
+      137,
+      250
+    ],
+    "outer_replay_duplicate_rx_client_server": [
+      250,
+      137
+    ],
+    "outer_repair_candidates_client_server": [
+      263,
+      439
+    ],
+    "outer_repair_quota_abandoned_client_server": [
+      126,
+      189
+    ],
+    "feedback_dropped_client_server": [
+      0,
+      0
+    ],
+    "tun_write_failed_client_server": [
+      0,
+      0
+    ],
+    "app_send_errors_both": 0,
+    "tcp_backpressure_both": 0,
+    "stop_drained_both": true,
+    "owned_namespaces_absent": true,
+    "host_cpu_psi_peak": 3.71,
+    "host_cpu_psi_over20_fraction": 0
+  },
+  "causal_interpretation": [
+    "No induced netem packet loss in either leg, but original A source TUN kernel dropped 574 packets in the same steady job and kernel TCP retransmitted 545; TUN pre-read deferral 16129 and M1 reached 1009/1024 despite 16-slot receipt reservation. This is a local source-flight capacity issue, not intrinsic zero-loss line behavior.",
+    "Only product change between exact sources is bounded Linux M1 small-slot backing 1024->2048 and byte budget2.4->4.8MB (actual charged 2.195->4.391MB per endpoint), preserving 16 control slots, generation/ownership, MTU, authentication, outer once-repair and normal10% policy.",
+    "B has no source TUN kernel drop, no TUN pre-read deferrals, and zero kernel Tcp.RetransSegs in both directions, with application target 10Mbps each, no loss after drain and p99 first-arrival 200.3ms; scoped zero-loss single-TCP issue is resolved at this load/RTT.",
+    "A had observable source drops; therefore A/B steady CPU 6.20/5.16 vs B 8.88/8.80 cannot establish CPU cost causally. B consumed more packets with zero upstream loss and has higher actual CPU/RSS; preserve as an explicit efficiency tradeoff, NOT a CPU qualification.",
+    "Despite 0% netem loss, B reported 137+250 accepted outer frozen repairs and receiver replay duplicate counts server137/client250, consistent with redundant outer repairs. PN-by-PN loss/receipt timing remains NOT_OBSERVED; do not call all reparations causally spurious until time-aligned evidence.",
+    "B PASS_SCOPED_OBSERVATION does not qualify 50/100/500Mbps high-rate, Windows, physical machines, other loss, mixed TCP+UDP or multi-client tests. No more quota/window/reordering expansions; deferred opportunistic repair design not implemented."
+  ],
+  "disposition": {
+    "inner_tcp_lossless_10Mbps_200ms": "RESOLVED_SCOPED_NATIVE_ARM64_A_B",
+    "tun_source_drop_and_pre_read_deferral": "RESOLVED_B_60S_BOTH_ENDPOINTS",
+    "cpu_cost": "OPEN_EFFICIENCY_TRADEOFF_NO_CAUSAL_CLAIM",
+    "outer_redundant_repair_under_lossless": "OPEN_DIAGNOSTIC_DEFERRED",
+    "higher_rate_m1": "NOT_RUN",
+    "production_merger": "NOT_DONE"
+  }
+}

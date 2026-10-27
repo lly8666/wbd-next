@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "id": "openwrt-package",
+  "name": "OpenWrt ARM64试验包",
+  "summary": "提供Source-locked native artifact输入的SDK打包壳，不会自动启用网络。",
+  "owner": "M4/集成",
+  "stage": "experimental",
+  "development_branch": "integration/w168-freeze-windows-adapter-20261026",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "autostart": "off",
+    "WBD_ARM64_STAGE": "必须显式提供已审批产物"
+  },
+  "usage": {
+    "cli": "参照openwrt/README.md把openwrt/package安装至feed并用aarch64 SDK打包",
+    "config": "不自动写凭据/配置；产品原Go auth及权限需另提供",
+    "gui": "OpenWrt无WinForms GUI"
+  },
+  "code_refs": [
+    "openwrt/package/Makefile",
+    "crates/wbd-platform/src/linux_raw_carrier.rs"
+  ],
+  "doc_refs": [
+    "openwrt/README.md"
+  ],
+  "verification": [
+    {
+      "platform": "openwrt/arm64",
+      "scope": "真实路由器原Go认证/TUN/AF_PACKET产品连接",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/arm64",
+      "scope": "aarch64-musl构建≠目标libc/内核完整执行",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "包架构存在不代表设备可连接，README明确原生产品还依赖同源Go与真实权限。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

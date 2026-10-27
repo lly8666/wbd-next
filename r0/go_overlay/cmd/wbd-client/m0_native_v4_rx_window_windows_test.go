@@ -2,6 +2,8 @@
 package main
 
 import (
+ "context"
+ "os"
  "testing"
  "time"
  "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -52,8 +54,8 @@ func TestM0PLAN026WindowsNativeV4ParallelModeDoesNotDowngradeAndStalledCarrierFa
  }
  for _,mode:=range []m0WindowsV4Mode{m0WinModeNormal,m0WinModeFixed,m0WinModeAuto}{
   p,e:=newM0NativeV4PeerForMode(owner,ep,flow,inbound,mode)
-  if e!=nil||p==nil||p.mode!=mode||p.blockID!=1{
-   t.Fatalf("original TLS peer mode selection incorrect %s error %v",mode,e)
+  if e!=nil||p==nil||p.mode!=mode||len(p.pending)!=0{
+   t.Fatalf("original TLS peer selection must not pre-create legacy Go FEC source blocks %s error %v",mode,e)
   }
   p.pending=append(p.pending,m0NativeV4Outbound{
    seq:500,wire:[]byte{1,2,3},sentAt:time.Now().Add(-5*time.Second),
@@ -157,5 +159,27 @@ func TestM0PLAN024AuthenticatedHighWaterGapSpanningTCP32Wrap(t *testing.T){
  }
  if w.Ack()!=start||w.Pending()!=0{
   t.Fatal("authenticated independent wrap forged original carrier ACK")
+ }
+}
+
+// This test lives in the embedded native test compilation, never the
+// ordinary Windows legacy build without the source-locked Rust bridge.
+func TestM0WindowsAutoOriginalControlRequestAndOwnedStop(t *testing.T){
+ r,w,err:=os.Pipe();if err!=nil{t.Fatal(err)}
+ defer r.Close();defer w.Close()
+ ctx,cancel:=context.WithCancel(context.Background())
+ defer cancel()
+ requests:=make(chan realityfront.FecV2Profile,2)
+ go watchM0NativeV4AutoControl(ctx,r,cancel,requests)
+ if _,err=w.WriteString("fec.profile=light\n");err!=nil{t.Fatal(err)}
+ select{
+ case p:=<-requests:
+  if p!=realityfront.FecV2Light{t.Fatalf("unexpected Auto profile %d",p)}
+ case <-time.After(time.Second):t.Fatal("real Auto control ignored profile change")
+ }
+ if _,err=w.WriteString("stop\n");err!=nil{t.Fatal(err)}
+ select{
+ case <-ctx.Done():
+ case <-time.After(time.Second):t.Fatal("Auto stdin stop failed to cancel native owner")
  }
 }

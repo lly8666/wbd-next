@@ -1,0 +1,140 @@
+{
+  "schema": 1,
+  "id": "P0-Fixed2pct-M2-cohort-real-AB-result-20261023",
+  "action": {
+    "run_id": 39890061224,
+    "attempt": 1,
+    "harness_source": "0374aa45fa08a67a8dcd5b16b7473deb6a5d4617",
+    "conclusion": "failure_expected_due_to_A_control",
+    "artifact_id": 12474930297,
+    "artifact_sha256": "78db27d3d00b08467d2db8c435430068c1daf2648ceefc72de61f957670a5070"
+  },
+  "scenario": {
+    "order": "AB",
+    "same_vm": true,
+    "machine": "aarch64",
+    "kernel": "6.17.0-1022-azure",
+    "app_mbps_per_direction": 2,
+    "udp_share": 0.5,
+    "sizes_packet_weight": [
+      [
+        64,
+        1
+      ],
+      [
+        1287,
+        99
+      ]
+    ],
+    "loss_pct": 2,
+    "one_way_ms": 200,
+    "steady_s": 120,
+    "seed": 5205
+  },
+  "A": {
+    "source": "a58d914049b27e000e30438d175c7bd15022c2c5",
+    "result": "FAIL_EXPECTED_CONTROL",
+    "readback": {
+      "client": "fixed requested1 applied0 profile6 pending",
+      "server": "fixed requested1 applied1 profile6"
+    },
+    "missing": {
+      "c2s_udp": 0,
+      "c2s_tcp": 0,
+      "s2c_udp": 0,
+      "s2c_tcp": 0
+    },
+    "p99_ms": {
+      "c2s_udp": 220.2,
+      "c2s_tcp": 220.9,
+      "s2c_udp": 220.6,
+      "s2c_tcp": 220.7
+    },
+    "m2": {
+      "client": {
+        "accepted": 58153,
+        "covered_2s": 58117,
+        "unknown_2s": 32,
+        "reverse_reports": 25522,
+        "censored": true
+      },
+      "server": {
+        "accepted": 58081,
+        "covered_2s": 57393,
+        "unknown_2s": 6,
+        "reverse_reports": 25571,
+        "censored": true
+      }
+    },
+    "cpu_process_s": {
+      "client": 8.77,
+      "server": 9
+    },
+    "rss_peak_bytes": {
+      "client": 16982016,
+      "server": 17670144
+    },
+    "stop": true,
+    "warning": "HOST_CONTENTION_OBSERVED"
+  },
+  "B": {
+    "source": "18860b9dfe4931d8aba05943fad484677590571c",
+    "result": "PASS_SCOPED_OBSERVATION",
+    "readback": {
+      "client": "fixed requested1 applied1 profile6 pending=false",
+      "server": "fixed requested1 applied1 profile6 pending=false"
+    },
+    "missing": {
+      "c2s_udp": 0,
+      "c2s_tcp": 0,
+      "s2c_udp": 0,
+      "s2c_tcp": 0
+    },
+    "p99_ms": {
+      "c2s_udp": 211.3,
+      "c2s_tcp": 220.7,
+      "s2c_udp": 211.4,
+      "s2c_tcp": 220.8
+    },
+    "m2": {
+      "client": {
+        "accepted": 58090,
+        "covered_2s": 57367,
+        "unknown_2s": 9,
+        "reverse_reports": 25600,
+        "censored": true
+      },
+      "server": {
+        "accepted": 58099,
+        "covered_2s": 57407,
+        "unknown_2s": 8,
+        "reverse_reports": 25409,
+        "censored": true
+      }
+    },
+    "fec_tx_failures": "all source/parity payload/arena/seal/M4 noncopy zero both roles",
+    "fec_recovered_tun": {
+      "client": 1210,
+      "server": 1122
+    },
+    "cpu_process_s": {
+      "client": 8.78,
+      "server": 8.78
+    },
+    "rss_peak_bytes": {
+      "client": 17289216,
+      "server": 17354752
+    },
+    "stop": true,
+    "warnings": []
+  },
+  "conclusion": "P0 Fixed real business qualifier PASS for this exact point: bounded authentic mature cohort removes client pending while preserving authenticated M2 evidence, real FEC first delivery, zero missing, low tail and Stop. Historical UNKNOWN/censored counters are retained rather than rewritten; APPLIED reflects a later real clean cohort. Workflow overall red is the intentionally failing A control.",
+  "limits": [
+    "Not a high-speed capacity result",
+    "Not an Auto/Game result",
+    "Not a CPU optimization claim",
+    "Native SIMD runtime backend NOT_OBSERVED",
+    "Linux ARM64 only; no Windows/physical inference"
+  ],
+  "next": "One Normal/off real protective anchor on same new product; then P1 RTT-derived recovery timing/budget."
+}

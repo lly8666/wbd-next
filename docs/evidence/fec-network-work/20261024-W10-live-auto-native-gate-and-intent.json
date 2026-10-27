@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "branch": "experiment/fec-network-tuning",
+  "product_source": "a969217e1edd3577ae41df81c38aa7ac84a4a484",
+  "build_action": 40083030170,
+  "artifact_id": 12555524616,
+  "artifact_sha256": "2013372c5555180ea75a9c06d2f980fcb211a992e3c71470de984b1b98b62fb4",
+  "native_test": {
+    "result": "PASS",
+    "source": "a969217e1edd3577ae41df81c38aa7ac84a4a484",
+    "tests": [
+      "Rust authenticated M2 first-copy positive confirmation lag excludes ambiguous recovery",
+      "Go 2s/8s M2 counter delta conservative UNKNOWN",
+      "Linux original Go TLS original Rust background FEC source original encrypted record intentionally dropped, parity restores missing original IPv4 into client TUN UDP",
+      "Encrypted real C2S reverse M2 over raw kernel returns into original Rust owner, accepted authentically",
+      "owned Stop/replay/generation"
+    ]
+  },
+  "request": {
+    "path": "tests/network/fec-work/W10-autolive-m2-asym-rise-recover-off-arm64.json",
+    "id": "FEC-W10-AUTO-LIVE-M2-REVISION-ASYM-8M",
+    "mode": "fec-auto",
+    "repair_enabled": false,
+    "same_as": "W7-v3-auto-asym-rise-recover-off-arm64.json",
+    "source_mbps_per_direction": 8
+  },
+  "caveats": [
+    "Application Auto live controller not product-tested before W10",
+    "Older b601 W7 static Strong cannot validate online revision",
+    "50/75Mbps W8/W9 exceed declared residual; no higher pressure run"
+  ],
+  "qualification": "NATIVE_DETERMINISTIC_PASS_AUTO_ONLINE_PENDING"
+}

@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "id": "FEC-W157-NORMAL-FIXED3-IID2-MIXED15-P3B-RS16-AB",
+  "owner": "fec-network-work",
+  "seed": 8211157,
+  "policy": "outer-opportunistic-v3",
+  "product": {
+    "mode": "fec-fixed",
+    "fec_profile": 3,
+    "repair_enabled": false
+  },
+  "traffic": {
+    "c2s_mbps": 15,
+    "s2c_mbps": 15,
+    "udp_share": 0.96,
+    "sizes": [
+      [
+        64,
+        6
+      ],
+      [
+        96,
+        8
+      ],
+      [
+        160,
+        10
+      ],
+      [
+        256,
+        11
+      ],
+      [
+        512,
+        15
+      ],
+      [
+        900,
+        20
+      ],
+      [
+        1287,
+        30
+      ]
+    ],
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "deadline_ms": 5000,
+    "burst_ms": 0,
+    "max_packets": 5000000,
+    "allow_fragmentation": false,
+    "observe_size_classes": true,
+    "observe_independent_flows": true
+  },
+  "network": {
+    "outer_mtu": 1500,
+    "lane_loss": "shared",
+    "queue_packets": 32768,
+    "netem_rng": "unseeded_recorded",
+    "fec_egress_diagnostic": false,
+    "owned_veth_static_neighbour": true
+  },
+  "warmup_s": 15,
+  "drain_s": 15,
+  "phases": [
+    {
+      "name": "fixed3_iid2",
+      "seconds": 30,
+      "rate_scale": 1,
+      "c2s": {
+        "delay_ms": 75,
+        "loss_pct": 2,
+        "rate_mbps": 50
+      },
+      "s2c": {
+        "delay_ms": 75,
+        "loss_pct": 2,
+        "rate_mbps": 50
+      }
+    }
+  ],
+  "acceptance": {
+    "injection_tolerance_pct": 5,
+    "require_retransmission": false,
+    "max_loss_pct": 1,
+    "require_zero_source_tun_drops_full_run": true,
+    "require_zero_tun_root_qdisc_drops_full_run": true,
+    "max_small_udp_loss_pct": 1,
+    "max_small_udp_p99_ms": 500
+  },
+  "bundles": {
+    "A": {
+      "source": "6d51817768aa795db13c817b4785cf7924638a91",
+      "run_id": 40314448395,
+      "attempt": 1,
+      "artifact_id": 12646950297,
+      "sha256": "043de4146925d219b7ce2f0340666baf301bc47831ffdb1843d1705159023f02",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false,
+      "require_go_rx_handoff": true
+    },
+    "B": {
+      "source": "194985bba42da757fe62c7ab149db967cffc8bb2",
+      "run_id": 40316189069,
+      "attempt": 1,
+      "artifact_id": 12645919440,
+      "sha256": "8e343dec594ec2e6ca3d314a54ace3840c5b25832c3e2cfbd9acd08270a8a253",
+      "recovery_policy": "outer-opportunistic-v3",
+      "repair_enabled": false,
+      "require_go_rx_handoff": true
+    }
+  },
+  "order": "AB"
+}

@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "scene": "S008-same-VM-A-then-B-FEC-maximum-30pct",
+  "action": {
+    "run_id": 39768614669,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "artifact_id": 12421756690,
+    "sha256": "7886d881950a070df5e8a9ca57a739a97ba388105128f7ab00b0b29a1fb6da44",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/39768614669"
+  },
+  "request": {
+    "id": "arm64-fixed-max-30pct-old-new-AB-attested",
+    "phase_s": 120,
+    "warmup_s": 15,
+    "drain_s": 30,
+    "c2s_mbps": 2,
+    "s2c_mbps": 2,
+    "udp_share": 0.5,
+    "one_way_ms": 300,
+    "loss_pct": 30,
+    "netem_rng": "unseeded_recorded",
+    "fec_profile": 6
+  },
+  "legs": {
+    "A": {
+      "source": "3604d8e18f7fa6758444bc82c1b7f5f1bb546966",
+      "build_run": 39759842150,
+      "artifact_id": 12417786567,
+      "workflow_conclusion": "success",
+      "actual_netem_loss_pct": {
+        "client": 29.697,
+        "server": 29.992
+      },
+      "sent_udp_per_direction": 20751,
+      "c2s": {
+        "delivered": 6251,
+        "missing": 14500,
+        "duplicates": 6,
+        "p99_survivors_ms": 1398.5
+      },
+      "s2c": {
+        "delivered": 6287,
+        "missing": 14464,
+        "duplicates": 10,
+        "p99_survivors_ms": 1154.6
+      },
+      "fec_applied": {
+        "client": false,
+        "server": true
+      },
+      "tcp_zero_steady": true,
+      "product_cpu_measured_s": {
+        "client": 2.45,
+        "server": 2.56
+      },
+      "host_psi_mean_pct": 0,
+      "host_steal_peak_pct": 0,
+      "cleanup": true
+    },
+    "B": {
+      "source": "df64bab1d60ae684429a4330e5f09d06ff851019",
+      "build_run": 39766278666,
+      "artifact_id": 12419289653,
+      "workflow_conclusion": "failure",
+      "step_attested_failure": true,
+      "build_and_upload_steps_verified": true,
+      "actual_netem_loss_pct": {
+        "client": 29.692,
+        "server": 30.147
+      },
+      "sent_udp_per_direction": 20751,
+      "c2s": {
+        "delivered": 6280,
+        "missing": 14471,
+        "duplicates": 5,
+        "p99_survivors_ms": 1231.8
+      },
+      "s2c": {
+        "delivered": 6088,
+        "missing": 14663,
+        "duplicates": 5,
+        "p99_survivors_ms": 1225.8
+      },
+      "fec_applied": {
+        "client": false,
+        "server": true
+      },
+      "tcp_zero_or_near_zero_steady": true,
+      "product_cpu_measured_s": {
+        "client": 2.54,
+        "server": 2.67
+      },
+      "host_psi_mean_pct": 0.0124,
+      "host_steal_peak_pct": 0,
+      "cleanup": true
+    }
+  },
+  "assessment": "Both legs valid real measurements and FAIL key hard gates. 20-row boundary repair exists in product source but this sparse sustained scenario is not proven to form k13+ blocks so cannot assert last 4 parity rows exercised. No demonstrated performance benefit (host and delivery differ). 1% residual gate mathematically not globally achievable for sparse k1 maximum p30: p^3=2.7%; keep original failure and separately interpret the theoretical allowance. Duplicate app delivery, client pending, >69% residual, zero TCP and collapsed business remain hard. S006 candidate workflow FAIL is faithfully retained, B build/upload proved via GH steps and all hashes."
+}

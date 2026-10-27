@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "kind": "S031_NATIVE_ARTIFACT_VERIFIED_PENDING_GITHUB_WORKFLOW_FINAL_STATUS",
+  "source": "c297a8052272b1cb7a326ae0281d773e4669ca99",
+  "run_id": 39807984023,
+  "run_status_at_recovery": "in_progress",
+  "run_conclusion_at_recovery": null,
+  "artifact_id": 12438592249,
+  "artifact_zip_sha256": "7fb49eb7cb3727f754f0174005dec4dd40c43b2c9590fa8daa76faaa08cb52eb",
+  "github_digest_sha256": "7fb49eb7cb3727f754f0174005dec4dd40c43b2c9590fa8daa76faaa08cb52eb",
+  "manifest_sha256": "c589a523ff10c29814c31075d6c0e4fab361aee11cadfd089f792db5d04787f1",
+  "manifest_arch": "aarch64",
+  "manifest_source": "c297a8052272b1cb7a326ae0281d773e4669ca99",
+  "go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "isa_source": "c387163fcbca62701d646149564c550c78a4f985",
+  "binaries": {
+    "client_sha256": "7a391e8f3ed55c45099083ec7f968521b005e457a8c35346d74aaf5b15b049da",
+    "server_sha256": "6660a4712aca4d06b562807bc3410b121eceb0025aca0bcd54b4f92ec5da372d",
+    "engine_sha256": "bd3c9632a224820d4fffee113fb8c0ff889904aaca6a48ba4586e3f9008d2608"
+  },
+  "all_file_sha_match": true,
+  "all_elf_machine": 183,
+  "job_status": [
+    {
+      "name": "native-go-rust-bundle",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "native-linux-netns",
+      "status": "completed",
+      "conclusion": "skipped"
+    }
+  ],
+  "network_product_status": "NOT_RUN_BUILD_ONLY",
+  "next": "Await workflow status=completed/success before S032; build itself and real Go test complete success."
+}

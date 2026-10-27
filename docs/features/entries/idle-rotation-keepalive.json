@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "id": "idle-rotation-keepalive",
+  "name": "rotations/idle/keepalive/黑洞恢复",
+  "summary": "迁移既有Go冷层连接存活与失联恢复策略的产品能力跟踪项，不把迁移计划当成V4完成。",
+  "owner": "Go冷层/M0/M1",
+  "stage": "experimental",
+  "development_branch": "main",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "rotation": "未核实新V4可用区间",
+    "idle": "未核实新V4默认",
+    "keepalive": "未核实新V4默认"
+  },
+  "usage": {
+    "cli": "公开V4 CLI尚未发现已证明对应的轮换/idle/保活操作参数",
+    "config": "原Go旧参数列于迁移计划，但未证实新Rust公开V4实时应用",
+    "gui": "旧WinForms表单可能存在；未验证V4网络生效"
+  },
+  "code_refs": [
+    "r0/go_overlay/assembly/manifest.json",
+    "r0/go_overlay/internal/realityfront/admission_v4.go",
+    "crates/wbd-engine/src/runtime/generation.rs"
+  ],
+  "doc_refs": [
+    "docs/architecture/MIGRATION.md",
+    "docs/architecture/modules/10-LIFECYCLE-QUALITY.md"
+  ],
+  "verification": [
+    {
+      "platform": "linux/amd64",
+      "scope": "实际V4长期rotation/idle/keepalive/黑洞断续",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "V4断线重连与失联恢复",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "旧80秒中断专项",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "本卡是当前迁移/未验证能力追踪，不是声称V4这些策略已接线。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}

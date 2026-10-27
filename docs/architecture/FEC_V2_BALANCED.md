@@ -188,7 +188,7 @@ codec/发送拥塞时，过期parity明确丢弃并计expired/host_capacity；�
 
 FEC保留内存不足时取消该组辅助编码/释放其可释放引用，原source仍按FEC2_SOURCE的合法标识尝试首发，记录本组实际r_sent=0/不足；不偷偷换回旧wire或让fixed模式接收端猜裸包。RX无heavy额度仍校验并首次交付合法source，保留有界去重；失败的是恢复机会，不是整条连接。若连正常业务arena/driver容量都不足，返回明确NoCapacity/计drop，不能承诺无条件吞下所有输入，更不能阻塞等待FEC空间。
 
-outer重传仍最多两次/大流量约10%/稀疏绝对上限，不为本轮改变RACK或把FEC包全部禁止修复。已有repair预算对象和固定密文身份保持；测试分别报告FEC单独、组合恢复结果，不能把总丢包改善全部归给FEC。k=1的parity是FEC首发，不是“无限稀疏重传”。
+2026-10-23用户将outer重传改为最多一次，见[一次修复决策](../decisions/NETWORK-ONE-REPAIR-20261023.md)；大流量约10%/稀疏绝对上限、固定密文身份保持，不把FEC包全部禁止修复。测试分别报告FEC单独、组合恢复结果，不能把总丢包改善全部归给FEC。FEC的k/r与parity数量不因outer一次限制改变；k=1的parity是FEC首发，不是“无限稀疏重传”。
 
 ## 9. 跨平台实施
 

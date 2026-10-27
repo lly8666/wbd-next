@@ -1,0 +1,66 @@
+{
+  "run": 40102622202,
+  "result_artifact": 12563376791,
+  "digest": "e07469d772931ab0101777e8e785896da8307f54d82e1439a8ec32af062dab83",
+  "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+  "result": "PASS_SCOPED_125MBPS",
+  "mode": "Maximum6 outerOFF fq600 original static owned neighbour",
+  "app_mbps_each": 125,
+  "impairment": {
+    "loss_pct_client": 29.923955811138015,
+    "loss_pct_server": 29.981850406650278,
+    "oneway_ms": 300
+  },
+  "business": {
+    "c2s": {
+      "injected_mbps": 124.99750693333334,
+      "delivered_mbps": 124.96122053333333,
+      "missing": 177,
+      "p99_ms": 306.1
+    },
+    "s2c": {
+      "injected_mbps": 125.00025253333334,
+      "delivered_mbps": 124.94020186666665,
+      "missing": 270,
+      "p99_ms": 305.8
+    }
+  },
+  "real_outer_30s": {
+    "client_tx_bytes": 813259651,
+    "server_tx_bytes": 812165955,
+    "client_mbps": 216.86924026666668,
+    "server_mbps": 216.577588,
+    "combined_mbps": 433.4468282666667
+  },
+  "native_outer_repair": {
+    "copies": 0,
+    "bytes": 0
+  },
+  "rx": {
+    "client": {
+      "peak_active": 136,
+      "peak_bytes": 4857654,
+      "pressure_evicted": 0,
+      "decoder_rejected": 0,
+      "recovered_tun": 165399
+    },
+    "server": {
+      "peak_active": 136,
+      "peak_bytes": 4902854,
+      "pressure_evicted": 0,
+      "decoder_rejected": 0,
+      "recovered_tun": 165718
+    }
+  },
+  "cost": {
+    "cpu_s_client": 22.28,
+    "cpu_s_server": 22.42,
+    "rss_peak_client": 45187072,
+    "rss_peak_server": 45125632,
+    "cpu_psi_peak_pct": 23.81,
+    "cpu_psi_over20_fraction": 0.8333333333333334
+  },
+  "source_tun_drops_both": 0,
+  "Stop_drained": true,
+  "qualification": "Single observed rate PASS, CPU PSI some >20 most measurement samples; next rate should be bounded."
+}

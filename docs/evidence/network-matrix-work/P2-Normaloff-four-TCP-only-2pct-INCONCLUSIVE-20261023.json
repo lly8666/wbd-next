@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "id": "P2-Normaloff-four-TCP-only-2pct-INCONCLUSIVE-20261023",
+  "product_source": "281f6c6443741d92b8dfb8e4acabd72147bfb0c6",
+  "source_request_commit": "26809d0c475f4a4af7f344b50bd1badd2544e7c4",
+  "run": 39928829670,
+  "attempt": 1,
+  "result": "INCONCLUSIVE_TCP_INJECTION_4_STREAM",
+  "artifact_id": 12491146172,
+  "sha256": "789014c18e9d11f4b9f5be347f6adec3807792b22118091b4f3cd4b03c136971",
+  "paired_harness_contract": {
+    "run_id": 39929026455,
+    "source": "166d72fa29463c74ae03ce7325150fd345925137",
+    "result": "PASS",
+    "prev_request_contract": "39928829676 FAIL fixture-only test_queue_check_is_report_only inherited request udp_share=0",
+    "invalid_id_prior": "39928595426 FAIL_PREPARE_ONLY"
+  },
+  "scenario": {
+    "mode": "Normal/off",
+    "tcp_flows": 4,
+    "udp_share": 0,
+    "rate_mbps_each_direction": 5,
+    "loss_pct": 2,
+    "one_way_delay_ms": 200,
+    "steady_s": 60,
+    "seed": 5207,
+    "probe_hz": 20
+  },
+  "observed": {
+    "c2s_tcp": {
+      "target_mbps": 5,
+      "actually_injected_mbps": 4.821294666666667,
+      "backpressure": 1042,
+      "missing": 0,
+      "p99_ms": 5626.1
+    },
+    "s2c_tcp": {
+      "target_mbps": 5,
+      "actually_injected_mbps": 4.371643866666666,
+      "backpressure": 10633,
+      "missing": 0,
+      "p99_ms": 4648.4
+    },
+    "original_m1": {
+      "client": {
+        "peak_loaned": 489,
+        "slots": 1024,
+        "charged_bytes": 2195456,
+        "pre_read_deferred": 0,
+        "arena_failed": 0
+      },
+      "server": {
+        "peak_loaned": 450,
+        "slots": 1024,
+        "charged_bytes": 2195456,
+        "pre_read_deferred": 0,
+        "arena_failed": 0
+      }
+    },
+    "rx_auth_link_tun_errors": 0,
+    "feedback_drop": 0,
+    "netem_loss_pct": {
+      "client": 2.0345999140859923,
+      "server": 2.0187325627740136
+    },
+    "kernel_tcp_retrans_steady_delta": {
+      "client": 518,
+      "server": 503
+    },
+    "host_psi_peak": 0,
+    "host_steal": 0,
+    "reported_tun_kernel_tx_drop": {
+      "client": 0,
+      "server": 0
+    },
+    "tcp_info_at_steady_end": {
+      "client": {
+        "cwnd_sum": 220,
+        "notsent_bytes": 769019,
+        "rto_max_ms": 1868
+      },
+      "server": {
+        "cwnd_sum": 197,
+        "notsent_bytes": 1042131,
+        "rto_max_ms": 1903
+      }
+    },
+    "measured_product_cpu_s_steady": {
+      "client": 3.44,
+      "server": 3.42
+    },
+    "product_rss_peak_bytes": {
+      "client": 17997824,
+      "server": 18776064
+    },
+    "injector_cpu_including_setup_warmup_drain": {
+      "client": 2.8,
+      "server": 2.77
+    },
+    "stop": true,
+    "owned_cleanup": true
+  },
+  "inference": [
+    "Independent 4-flow TCP-only still limited (4.82/4.37Mbps), despite zero UDP bulk; mixed UDP/TCP competition is not necessary to explain TCP bad latency or sender backpressure.",
+    "No source M1 backpressure or TUN stage/sink errors, receipt starvation, host CPU pressure or kernel TUN drops; product buffer growth and per-protocol priority queue unsupported by evidence.",
+    "Native Linux TCP congestion recovery / residual loss and significant send queue remain root-level constrained; single or four-flow highRTT sustained5Mbps on 2% underlay NOT_QUALIFIED. 8 flow mixed 10Mbps/dir separate run39927659556 PASS but not same VM causal CPU claim.",
+    "Pure-TCP-only scenario has periodic low-rate UDP probes; do not claim zero UDP control packets.",
+    "Do not port old Go platformflow second ordered/reliable ARQ; violates one outer repair semantics and CPU/HOL priorities."
+  ],
+  "next_step": "Do not repeat 4flow identical scenario. Representative Normal/off highRTT 8flow mixed load passes with precise CPU/RSS; four flow limitation recorded. A separate project capability is high-rate 500Mbps lazy M1 storage/endpoint budget and low per-event CPU, NOT_QUALIFIED. Future single stream TCP latency work only if users explicitly require throughput SLA given Linux TCP end-to-end residuals."
+}

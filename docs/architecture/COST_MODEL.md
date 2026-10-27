@@ -1,5 +1,7 @@
 # 成本、容量与验收允许带
 
+2026-10-23当前数值与验收见[机会式v3](../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)。本页旧全量缓存、两次或v2快速恢复成本用于历史解释；新模型必须标policy并核验实际MTU、候选准入、字节/PPS预算、内层TCP窗口和CPU分母。工具尚未更新时明确旧policy，禁止换标签冒充新模型。
+
 2026-10-18 FEC v2的新k/r、期限、头部和理论残余模型见[FEC_V2_BALANCED](FEC_V2_BALANCED.md)，可复现计算器为`tools/fec_v2_model.py`。本文旧20源/56B等示例仅作旧基线，不能作V2固定常量；通用BDP/CPU/线速计账原则保留。
 
 这里的数字是设计计算，**不是 Rust 产品实测结果**。输入与计算在 `model-inputs.json`、`tools/cost_model.py`；Actions 输出 `cost-model.json`。所有带宽先明确“应用 payload / 内层 IP / 外层 IP / Ethernet”，所有延迟明确 RTT 或单程。

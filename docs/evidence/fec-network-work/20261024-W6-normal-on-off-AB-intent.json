@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "source": "b601f2e546bf5f071eb33a80a01beec71d91c5cf",
+  "case_id": "FEC-W6-V3-Normal-On-Off-Sequential-AB-2Pct",
+  "path": "tests/network/fec-work/W6-v3-normal-on-vs-off-sameVM-AB-2pct-arm64.json",
+  "run": "PENDING",
+  "source_artifact": 12554277143,
+  "order": "AB",
+  "each_leg_product_mode": "normal",
+  "bundles": {
+    "A": "real native outer DATA repair ON latest V3",
+    "B": "real native outer DATA repair OFF zero data copies"
+  },
+  "run_constraints": {
+    "test_one_scenario_each_leg": "IID2%, 2Mbps UDP each direction, one-way25ms, 45s measurement",
+    "same_vm": true,
+    "compilation": false,
+    "source_identical": true
+  },
+  "qualification": "GATE_ON_DEFAULT_V3_AND_OFF_WITHOUT_WATERING_RECOVERY"
+}

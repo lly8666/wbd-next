@@ -1,0 +1,48 @@
+{
+  "run": 40101978371,
+  "result_artifact": 12562314781,
+  "digest": "87a5e9652c868f3595817279beb70e824c0a255cbb17bb2efd82709748492850",
+  "source": "6b08527dbb0af8a626760ff83abcd06de1d42d87",
+  "status": "PASS_SCOPED_500MS_NATIVE_AND_KERNEL_DIAGNOSTIC",
+  "netem_loss_pct": {
+    "client": 29.96963625290177,
+    "server": 29.94953581779929
+  },
+  "business": {
+    "c2s": {
+      "delivered_mbps": 99.96938026666666,
+      "missing": 170,
+      "p99_ms": 303.4
+    },
+    "s2c": {
+      "delivered_mbps": 99.984976,
+      "missing": 98,
+      "p99_ms": 303.3
+    }
+  },
+  "outer_measured_30s": {
+    "client_bytes": 650809689,
+    "server_bytes": 650710222,
+    "client_mbps": 173.5492504,
+    "server_mbps": 173.52272586666666
+  },
+  "cpu_s": {
+    "client": 19.79,
+    "server": 19.62
+  },
+  "rss_peak_bytes": {
+    "client": 40398848,
+    "server": 39931904
+  },
+  "first_leg_neighbor_verified_permanent_both": true,
+  "neighbour_sampler": {
+    "client_permanent_samples": 130,
+    "server_permanent_samples": 130,
+    "total": 130
+  },
+  "native_original_fq600_both": true,
+  "native_outer_retransmits": 0,
+  "FEC_rx_decoder_reject": 0,
+  "FEC_rx_pressure": 0,
+  "source_TUN_drops": 0
+}

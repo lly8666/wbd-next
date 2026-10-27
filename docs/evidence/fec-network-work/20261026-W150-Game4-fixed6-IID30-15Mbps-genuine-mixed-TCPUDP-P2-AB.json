@@ -1,0 +1,175 @@
+{
+  "schema": "FEC_W150_REAL_GAME4_FIXED6_MIXED_IID30_AB_V1",
+  "date": "2026-10-26",
+  "branch": "experiment/fec-network-tuning",
+  "owner": "fec-network-work",
+  "action": 40307513185,
+  "status": "SUCCESS_PASS_SCOPED_OBSERVATION",
+  "artifact_id": 12643562443,
+  "artifact_sha256": "c20a1b88f5a12785d8fb5c70691e4e5cb947983b0ad7fc956c39cf57e971d789",
+  "request_commit": "5529d9a93aa51bf15e1f25ada42a6725f949ddb2",
+  "request": "tests/network/fec-work/W150-Game4-fixed6-IID30-mixed-TCPUDP-15Mbps-P2-AB-ARM64.json",
+  "scenario": {
+    "mode": "Game4 fixed6",
+    "game4_physical_lanes": 4,
+    "schedule_ms": [
+      0,
+      4,
+      20,
+      60
+    ],
+    "real_udp_fraction": 0.9,
+    "real_tcp_fraction": 0.1,
+    "rate_mbps_each_direction": 15,
+    "damage": "Each lane IID30 percent independent, 75ms one way, clean10/damaged30/clean10 seconds",
+    "ab_same_vm_serial": true,
+    "host_4_arm64_cpu": true
+  },
+  "older_A": {
+    "source": "e40098f0d238adc362ab096b5bd6e5b3b4fa852e",
+    "cpu_client_s": 24.16,
+    "cpu_server_s": 24.04,
+    "cpu_total_s": 48.2,
+    "cpu_psi_mean_pct": 9.3452,
+    "cpu_psi_peak_pct": 10.5,
+    "rss_peak_bytes": {
+      "client": 43917312,
+      "server": 43597824
+    },
+    "damaged_udp": {
+      "c2s": "77432/77432",
+      "s2c": "77431/77431",
+      "p99_ms": [
+        83.6,
+        83.5
+      ]
+    },
+    "damaged_tcp": {
+      "c2s": "8604/8604",
+      "s2c": "8604/8604",
+      "p99_ms": [
+        83.4,
+        83.6
+      ]
+    },
+    "fec_parity_sent_planned": {
+      "client": "241714/241714",
+      "server": "241631/241631"
+    },
+    "game4_original_copies": {
+      "client_planned": [
+        430901,
+        430901,
+        430901,
+        430901
+      ],
+      "client_sent": [
+        430901,
+        430901,
+        430898,
+        430896
+      ],
+      "server_planned": [
+        430803,
+        430803,
+        430803,
+        430803
+      ],
+      "server_sent": [
+        430803,
+        430803,
+        430800,
+        430798
+      ]
+    },
+    "go_posthandoff_full_data_copies_both": [
+      0,
+      0
+    ],
+    "outer_data_retransmits_both": 0
+  },
+  "p2_B": {
+    "source": "bb8e8249c2adba9c7dab72bf07da2dbe0bce3b82",
+    "cpu_client_s": 23.87,
+    "cpu_server_s": 23.95,
+    "cpu_total_s": 47.82,
+    "cpu_psi_mean_pct": 8.8636,
+    "cpu_psi_peak_pct": 9.93,
+    "rss_peak_bytes": {
+      "client": 43274240,
+      "server": 42606592
+    },
+    "damaged_udp": {
+      "c2s": "77431/77431",
+      "s2c": "77431/77431",
+      "p99_ms": [
+        83.6,
+        83.6
+      ]
+    },
+    "damaged_tcp": {
+      "c2s": "8604/8604",
+      "s2c": "8604/8604",
+      "p99_ms": [
+        83.5,
+        83.6
+      ]
+    },
+    "fec_parity_sent_planned": {
+      "client": "241676/241676",
+      "server": "241749/241749"
+    },
+    "game4_original_copies": {
+      "client_planned": [
+        430856,
+        430856,
+        430856,
+        430856
+      ],
+      "client_sent": [
+        430856,
+        430856,
+        430853,
+        430851
+      ],
+      "server_planned": [
+        430989,
+        430989,
+        430989,
+        430989
+      ],
+      "server_sent": [
+        430989,
+        430989,
+        430986,
+        430984
+      ]
+    },
+    "go_posthandoff_full_data_copies_both": [
+      0,
+      0
+    ],
+    "outer_data_retransmits_both": 0
+  },
+  "summary": {
+    "cpu_pct_change_new_vs_old": -0.78838,
+    "cpu_psis_both_below20": true,
+    "measured_both_udp_and_tcp_final_missing": 0,
+    "measured_both_udp_and_tcp_first_delivery_p99_ms": "83.4–83.6 under lane IID30",
+    "physical_copy_abandoned_zero_both": true,
+    "original_physical_copy_tail_partly_unsent_at_stop": true,
+    "copy_tail_max_5_per_lane_relative_to_planned": "Do NOT claim all four ranks planned==sent; last two tail ranks remain uncredited at Stop.",
+    "fec_parity_planned_all_sent": true,
+    "real_tcp_udp_cross_business_hol_longest_ms": 0,
+    "source_tun_fq_root_qdisc_drops_zero": true,
+    "go_handoff_real_copies_zero": true,
+    "outer_DATA_retransmission_disabled_and_zero": true,
+    "stop_drained_both": true,
+    "host_steal_peak_pct": 0,
+    "real_traffic_not_simulated_tcp": true
+  },
+  "decision": "P2 LANE AEAD OPTIMIZATION RETAIN AS GAME-SCOPED ARCHITECTURAL BENEFIT, modest CPU variability. This action specifically closes damaged mixed TCP+UDP Game4 fixed6 coverage; Normal OFF Fixed Auto unchanged since five-mode P0 source6c38. Latest unqualified P3a candidate is separate.",
+  "windows": "NOT_RUN/TEMP_SKIPPED",
+  "capacity_stop": true,
+  "merge_ready": false
+}

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "arm64-targets",
+  "name": "ARM64 Linux目标",
+  "summary": "aarch64 Linux构建/真kernel限定组合的有界证据与硬件后端限制。",
+  "owner": "M0 + FEC实验",
+  "stage": "experimental",
+  "development_branch": "experiment/fec-network-tuning",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026"
+  ],
+  "defaults": {
+    "target": "linux aarch64 GNU/musl按构建选择",
+    "backend": "native-first但实际后端未核验"
+  },
+  "usage": {
+    "cli": "Linux V4 CLI与架构ABI/真实权限一致时才可使用",
+    "config": "按平台构建产物选择，非运行时UI切换",
+    "gui": "无ARM专属GUI"
+  },
+  "code_refs": [
+    "crates/wbd-platform/src/linux_raw_carrier.rs",
+    "crates/wbd-codec/src/fec_native.rs",
+    ".github/workflows/network-arm64-product-build.yml"
+  ],
+  "doc_refs": [
+    "docs/evidence/fec-network-work/20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json",
+    "docs/devlog/arm64-main-integration-20261022.md"
+  ],
+  "verification": [
+    {
+      "platform": "linux/arm64 + linux/amd64",
+      "scope": "F实验分支W168：56-case双架构实际产品观察，不等于性能全PASS，仅观察/特定case通过，非全平台质量门",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "0776fc4ede72fabd711e8333568eb88a58e8a6ea",
+      "evidence": "docs/evidence/fec-network-work/20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json"
+    },
+    {
+      "platform": "openwrt/arm64",
+      "scope": "真实SDK/package到同源Go auth联网",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "实际ARM路由器运行",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "hosted ARM64读回不能替代真实OpenWrt/Android或完整弱网矩阵。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+  ],
+  "promotion": null
+}

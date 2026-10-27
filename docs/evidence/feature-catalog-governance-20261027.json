@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "scope": "product_feature_catalog_governance_only",
+  "source_sha": "5dd2ac3f20f44b58f3d5b0568bad9a1df57aa4cc",
+  "base_source": "6e271c1e01aefadb4266eed44646d51806f88d49",
+  "target_branch": "integration/w168-freeze-windows-adapter-20261026",
+  "pull_request": "https://github.com/lly8666/wbd-next/pull/29",
+  "feature_gate": {
+    "result": "PASS",
+    "run_id": 40368000934,
+    "job_id": 121730828617,
+    "tests": 19,
+    "workflow_syntax": "PASS",
+    "repository_structure": "PASS",
+    "experiment_worker_identity_job": "SKIPPED_BY_DESIGN"
+  },
+  "maintenance": {
+    "result": "FAIL",
+    "run_id": 40368000850,
+    "job_id": 121730827598,
+    "tests": 224,
+    "remaining_failed_subtests": [
+      "test_original_go_manifest_and_guard_remain_exact: fec_v2_policy.go",
+      "test_original_go_manifest_and_guard_remain_exact: fec_v2_policy_test.go"
+    ],
+    "classification": "BASELINE_FROZEN_MANIFEST_MISMATCH",
+    "basis": "The two product files and assembly manifest are unchanged between base_source and source_sha; FEC changes predate this governance patch.",
+    "failed_assertions_preserved": true,
+    "new_hot_read_budget_regression": "FIXED"
+  },
+  "initial_failed_maintenance_run": 40363215257,
+  "product_files_changed": false,
+  "inventory": "NOT_INITIALIZED",
+  "product_tests": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "next_action": "Initialize current integration feature inventory using docs/prompts/FEATURE_INVENTORY_INIT.md; reconcile old frozen product manifest within the existing integration task."
+}

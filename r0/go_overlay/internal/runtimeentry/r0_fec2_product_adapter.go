@@ -44,7 +44,11 @@ func (p *FEC2ProductFlags) Validate(lanes int) error {
         return errors.New("fec.auto_policy must be normal or aggressive")
     }
     switch *p.Mode {
-    case "off","fixed":
+    case "off":
+    case "fixed":
+        // Linux's one shared FEC2 seven-profile selector; Game2/4
+        // negotiates this in the protected V4 GameFec TLV, while Normal
+        // uses the original feature7 TLS/M2 FixedStream after Detach.
     case "auto":
         if lanes>1 {return errors.New("Game auto FEC2 is unsupported")}
     default:

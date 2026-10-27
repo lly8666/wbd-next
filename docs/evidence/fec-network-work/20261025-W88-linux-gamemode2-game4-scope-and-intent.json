@@ -1,0 +1,73 @@
+{
+  "schema": "FEC_W88_ORIGINAL_LINUX_GAME2_GAME4_REAL_PUBLIC_MODE_SCOPE_V1",
+  "date_utc": "2026-10-25",
+  "branch": "experiment/fec-network-tuning",
+  "role": "fec-network-work",
+  "user_intent": "Is FEC broadly ready and can all currently public GameModes be tested?",
+  "branch_head_checked_before_requests": "b80b91c5ba07cf584e0ac7af8f831440ea228f3f",
+  "project_state": {
+    "fec_scoped_review_ready": true,
+    "merge_ready": false,
+    "capacity_stop": true,
+    "windows_test_status": "TEMP_SKIPPED_USER_20261025_NOT_RUN"
+  },
+  "product": {
+    "source": "4322a811fd63e096458f202767faa2f097a587c0",
+    "build_action": 40203220219,
+    "build_artifact_id": 12602931174,
+    "build_zip_sha256": "0ae0939bdd4c02932a6452260fa65f4e1851bf37bd79d7485c28e1895022f125"
+  },
+  "actual_public_mode_capability": {
+    "modes": [
+      "game2",
+      "game4"
+    ],
+    "game_fec": "OFF_PUBLIC_ONLY",
+    "game_plus_fec": "UNSUPPORTED_NOT_TESTED",
+    "outer_repair_switch": "NOT_AVAILABLE_FOR_PUBLIC_GAME; DO_NOT_SET repair_enabled:false",
+    "outer_data_repair_ledger": "NOT_APPLICABLE_GAME_MULTILANE",
+    "observable_native": "V4_ORIGINAL_GO_GAME_NATIVE_READY; V4_PUBLIC_GAME_KERNEL per role copied/delivered/raw_received/auth_rejected; V4_PUBLIC_GAME_NATIVE_STOP_DRAINED",
+    "mechanism": "Authenticated two/four-lane frozen original Go TLS native duplication and first valid delivery; not Game+FEC parity."
+  },
+  "network_plan": {
+    "cases": [
+      {
+        "mode": "game2",
+        "request": "tests/network/fec-work/W88-Game2-independent20-lane1-blackhole-original-arm64.json",
+        "request_commit": "1ff936793f4c08b54a00ad560e5659e0cdf49d65",
+        "one_scenario_per_action": true
+      },
+      {
+        "mode": "game4",
+        "request": "tests/network/fec-work/W88-Game4-independent20-lane1-blackhole-original-arm64.json",
+        "request_commit": "9376214919dcc8451e8c659cfe9d70fe707dd0df",
+        "one_scenario_per_action": true
+      }
+    ],
+    "same_original_product": true,
+    "real_linux_arm64": true,
+    "application_each_direction_mbps": 3,
+    "udp_share": 0.96,
+    "tcp_flows": 2,
+    "probe_hz": 20,
+    "one_way_delay_ms": 75,
+    "phase_plan": "15s clean before,30s each-lane independent IID20%,30s lane1 blackhole other lanes healthy,15s clean after",
+    "warmup_s": 15,
+    "drain_s": 30,
+    "netem_rng": "unseeded_recorded",
+    "netem_capacity_note": "Independent per-lane 50Mbps qdisc; NOT 50Mbps shared aggregate; 3Mbps application * lanes plus overhead stays well below 50Mbps per lane when near-MTU-dominant mix.",
+    "acceptance": "Normal clean phases strict<=1% UDP (total+small); on impaired phases report actual delivered/loss, native both-side counters and healthy-lane first-delivery, source TUN/root drop zero, Stop clean; do not set expected p^L on common-loss or claim zero loss under independent iid20%."
+  },
+  "not_qualified": [
+    "Game with FEC combined",
+    "Windows Game/Wintun/GUI",
+    "Game network real-life endpoints",
+    "FEC correlated long GE<=1%",
+    "Full merge with main",
+    "Game+outer DATA repair OFF native configured",
+    "100Mbps W49/W50 full TCP comeback",
+    "65KiB FEC TUN full product",
+    "remote receiver host overcapacity signal"
+  ],
+  "next": "Read real GitHub Actions job and artifact before assigning PASS/FAIL. If both Game2/4 real business healthy, optionally bounded shared-failure check as separately declared one-scenario-per-job; no heavier load and no M0 Windows edits."
+}

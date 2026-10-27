@@ -1,0 +1,147 @@
+{
+  "schema": 1,
+  "date": "2026-10-24",
+  "w14": {
+    "mbps_each": 75,
+    "run": 40091124249,
+    "artifact_id": 12559275827,
+    "result": "PASS_SCOPED_OBSERVATION",
+    "business": {
+      "c2s": {
+        "injected_mbps": 74.99973626666666,
+        "delivered_mbps": 74.96737493333333,
+        "missing": 119,
+        "p99_ms": 303.5
+      },
+      "s2c": {
+        "injected_mbps": 74.99870666666668,
+        "delivered_mbps": 74.97887306666667,
+        "missing": 92,
+        "p99_ms": 303.5
+      }
+    },
+    "rx": {
+      "client": {
+        "peak_active": 83,
+        "peak_bytes": 2843941,
+        "decoder_rejected": 0,
+        "pressure_evicted": 0,
+        "recovered_tun": 99625
+      },
+      "server": {
+        "peak_active": 83,
+        "peak_bytes": 2873610,
+        "decoder_rejected": 0,
+        "pressure_evicted": 0,
+        "recovered_tun": 99396
+      }
+    },
+    "cost": {
+      "cpu_s": {
+        "client": 16.79,
+        "server": 16.93
+      },
+      "rss_bytes": {
+        "client": 34443264,
+        "server": 35098624
+      },
+      "psi_peak": 14.33
+    },
+    "outer_data_retransmit_both": 0,
+    "source_TUN_drop_both": 0
+  },
+  "w15": {
+    "schema": 1,
+    "session": "FEC_MAXIMUM_STEPWISE",
+    "source": "ec344557fa8cbf4d717a81833d36f92584263478",
+    "run": 40094982877,
+    "artifact_id": 12559509835,
+    "artifact_sha256": "877d3177d03268adc325aa1aa8b5e418d597c8d1ac223f9030671a683a721175",
+    "request": "tests/network/fec-work/W15-maximum100-stepwise-outeroff-arm64.json",
+    "mode": "fec-fixed",
+    "profile": 6,
+    "native_applied_both": true,
+    "outer_repair_off_both": true,
+    "outer_data_retransmit": 0,
+    "business_mbps_each": 100,
+    "outer_cap_mbps_each": 400,
+    "loss_iid_pct": 30,
+    "one_way_delay_ms": 300,
+    "measure_seconds": 30,
+    "business": {
+      "c2s": {
+        "injected_mbps": 100.00000293333333,
+        "delivered_mbps": 99.95597653333333,
+        "missing": 191,
+        "p99_ms": 303.1
+      },
+      "s2c": {
+        "injected_mbps": 99.99965973333333,
+        "delivered_mbps": 99.96807386666666,
+        "missing": 150,
+        "p99_ms": 303.1
+      }
+    },
+    "netem_loss_pct": {
+      "client": 29.94035311660848,
+      "server": 29.854795286363704
+    },
+    "rx": {
+      "client": {
+        "peak_active": 96,
+        "peak_stored_bytes": 3605923,
+        "pressure_evicted": 29425,
+        "age_evicted": 98,
+        "decoder_rejected": 0,
+        "reject_capacity": 0,
+        "reject_codec": 0,
+        "real_recovered_tun": 131785
+      },
+      "server": {
+        "peak_active": 96,
+        "peak_stored_bytes": 3605720,
+        "pressure_evicted": 29425,
+        "age_evicted": 97,
+        "decoder_rejected": 0,
+        "reject_capacity": 0,
+        "reject_codec": 0,
+        "real_recovered_tun": 132456
+      }
+    },
+    "cpu_measurement_s": {
+      "client": 19.4,
+      "server": 19.54
+    },
+    "rss_peak_bytes": {
+      "client": 39686144,
+      "server": 39915520
+    },
+    "host_cpu_psi_peak": 17.76,
+    "source_tun_drops_both": 0,
+    "stop_drained_both": true,
+    "result": "BUSINESS_PASS_RX_BLOCK_SLOT_CAPACITY_EXHAUSTED_STOP_LADDER",
+    "capacity_signal": "Both native receiver peak_active=96/96 and pressure_evicted=29425 each, while RX bytes peak3.61MB<8MiB, decoder reject0 and source TUN drop0. Business passes on this sample but FEC state eviction at hard limit is capacity pressure. Do not run higher under stop-on-capacity rule."
+  },
+  "unmeasured": [
+    {
+      "mbps_each": 125,
+      "status": "NOT_RUN",
+      "reason": "W15 100Mbps RX slot capacity exhausted: native 96/96 active and pressure_evicted 29425 each; stop-on-capacity rule."
+    },
+    {
+      "mbps_each": 150,
+      "status": "NOT_RUN",
+      "reason": "W15 100Mbps RX slot capacity exhausted: native 96/96 active and pressure_evicted 29425 each; stop-on-capacity rule."
+    },
+    {
+      "mbps_each": 175,
+      "status": "NOT_RUN",
+      "reason": "W15 100Mbps RX slot capacity exhausted: native 96/96 active and pressure_evicted 29425 each; stop-on-capacity rule."
+    },
+    {
+      "mbps_each": 200,
+      "status": "NOT_RUN",
+      "reason": "W15 100Mbps RX slot capacity exhausted: native 96/96 active and pressure_evicted 29425 each; stop-on-capacity rule."
+    }
+  ]
+}

@@ -108,7 +108,9 @@ func winFec2Opener(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
  device *v4WindowsRealDeviceLease,seq uint32,wire []byte,
 )([]V4WindowsFEC2Delivery,error){
  if ctx==nil||bridge==nil||device==nil||bridge.handle==0||
-  len(wire)<=31||len(wire)>device.maxIPv4+14+31{return nil,errV4WindowsOwner}
+  len(wire)<=31||len(wire)>device.maxIPv4+14+31{
+  return nil,fmt.Errorf("%w: FEC2 opener preflight input=%d device=%t",errV4WindowsOwner,len(wire),device!=nil)
+ }
  if err:=ctx.Err();err!=nil{return nil,err}
  if err:=device.device.VerifyCurrentNative(ctx,device.identity);err!=nil{
   return nil,errors.Join(errV4WindowsOwner,err)
@@ -124,12 +126,17 @@ func winFec2Opener(ctx context.Context,bridge *v4WindowsNativeOwnerBridge,
   uintptr(unsafe.Pointer(&raw[0])),uintptr(len(raw)),
   uintptr(unsafe.Pointer(&count)))
  runtime.KeepAlive(bridge.epoch);runtime.KeepAlive(wire);runtime.KeepAlive(raw)
- if err!=nil||count>16{return nil,errors.Join(errV4WindowsOwner,err)}
+ if err!=nil||count>16{
+  return nil,fmt.Errorf("%w: FEC2 original native count=%d rc=%v",errV4WindowsOwner,count,err)
+ }
  out:=make([]V4WindowsFEC2Delivery,0,count)
  for i:=uint32(0);i<count;i++{
   v:=raw[i]
   if v.BlockID==0||v.Index>=16||v.Length<20||v.Length>uint32(device.maxIPv4)||
-   v.Frame[0]>>4!=4||v.Frame[0]&15<5{return nil,errV4WindowsOwner}
+   v.Frame[0]>>4!=4||v.Frame[0]&15<5{
+   return nil,fmt.Errorf("%w: FEC2 first-delivery invalid block=%d index=%d len=%d max_ipv4=%d version=%d",
+    errV4WindowsOwner,v.BlockID,v.Index,v.Length,device.maxIPv4,v.Frame[0]>>4)
+  }
   out=append(out,V4WindowsFEC2Delivery{
    BlockID:v.BlockID,SourceIndex:v.Index,Recovered:v.Recovered==1,
    IPv4:append([]byte(nil),v.Frame[:v.Length]...),
@@ -212,7 +219,11 @@ func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalFEC2(
  if s==nil||s.bridge==nil||s.device==nil{return nil,errV4WindowsOwner}
  scope,err:=s.OriginalOwnerReadback()
  if err!=nil||!scope.OwnerActive||!scope.DeviceBound||
-  scope.DeviceQuiesced||scope.ServerSide{return nil,errV4WindowsOwner}
+  scope.DeviceQuiesced||scope.ServerSide{
+  return nil,fmt.Errorf("%w: original FEC2 client owner readback active=%t bound=%t quiesced=%t server=%t rc=%v",
+   errV4WindowsOwner,scope.OwnerActive,scope.DeviceBound,
+   scope.DeviceQuiesced,scope.ServerSide,err)
+ }
  return winFec2Opener(ctx,s.bridge,s.device,seq,wire)
 }
 func(s *V4WindowsAuthenticatedServerOwner) SealBoundOriginalFEC2Source(

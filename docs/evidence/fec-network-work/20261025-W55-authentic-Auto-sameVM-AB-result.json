@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "id": "FEC-W55-original-native-sameVM-auto-fastdown-AB",
+  "request": "tests/network/fec-work/W55-auto-down-history90-sameVM-AB-arm64.json",
+  "request_commit": "9e2a69930bb3bbd90594fc5e426ac7933f0b3fd7",
+  "run_id": 40171851168,
+  "attempt": 1,
+  "artifact_id": 12591025916,
+  "zip_sha256": "a4eee1e2fb24526aeae7ac1bafd82691c1fe7e7ee99026081e9ad575c6f74ed7",
+  "action_result": "SUCCESS",
+  "qualification": "PASS_SCOPED_BUSINESS_BOTH_A_B; AUTO_30_60_FULL_RETURN_NOT_PROVEN",
+  "source_A": "946346bbd84ff88910ed169037330e8eae13cea3",
+  "source_B": "f3b9e8a5a6ac226d13066fc7ccc780cb5f94fa85",
+  "order": "AB SAME_VM ONE_MEASUREMENT_JOB",
+  "scenario": "native Linux ARM64 original TLS/TUN Auto UDP only 8Mbps each; 64B1%/1287B99%; actual C2S 2%30s->20%60s->1%90s; S2C0/1/0; one-way75ms; outer DATA repair explicitly OFF both, real original M2, real TUN and parity",
+  "results": {
+    "A": {
+      "c2s_high_loss_pct": 0.00637,
+      "c2s_recovery_missing": 0,
+      "c2s_recovery_p99_ms": 79.2,
+      "c2s_high_profile6_UTC": "2026-10-25T07:13:04Z",
+      "recovery_start_UTC": "2026-10-25T07:13:58.987Z",
+      "first_down_to_profile5_s": 67,
+      "second_down_90s": "NOT_OBSERVED",
+      "final_c2s_profile": 5,
+      "final_s2c_profile": 1,
+      "cpu_s": {
+        "client": 18.3,
+        "server": 18.83
+      },
+      "rss_peak_bytes": {
+        "client": 21270528,
+        "server": 21360640
+      },
+      "parity_sent": {
+        "client": 190446,
+        "server": 106986
+      },
+      "recovered_tun": {
+        "client": 506,
+        "server": 11335
+      },
+      "client_quality_sha256": "62dfdf6a96c82980905eb21bd6b2e2cabf5cd2a817ccedcc5218af5c473ef7cc"
+    },
+    "B": {
+      "c2s_high_loss_pct": 0.0085,
+      "c2s_recovery_missing": 0,
+      "c2s_recovery_p99_ms": 79.1,
+      "c2s_high_profile6_UTC": "2026-10-25T07:17:17Z",
+      "recovery_start_UTC": "2026-10-25T07:18:05.006Z",
+      "first_down_to_profile5_s": 47,
+      "second_down_to_profile4_s": 79,
+      "final_c2s_profile": 4,
+      "final_s2c_profile": 2,
+      "cpu_s": {
+        "client": 18.64,
+        "server": 18.85
+      },
+      "rss_peak_bytes": {
+        "client": 21295104,
+        "server": 21532672
+      },
+      "parity_sent": {
+        "client": 185249,
+        "server": 115926
+      },
+      "recovered_tun": {
+        "client": 541,
+        "server": 11129
+      },
+      "client_quality_sha256": "4a73523c1d912a7a4da0f70e9627f1cf504f6d19ff9cb16dfe48c2b4d3c1f59e"
+    }
+  },
+  "both": {
+    "outer_data_retransmitted": 0,
+    "true_auth_m2_positive": true,
+    "parity_planned_equals_sent": true,
+    "real_tun_source_drops": 0,
+    "native_applied_pending_false": true,
+    "stop_owned_clean": true,
+    "host_cpu_psi_peak_pct_max": 0.19
+  },
+  "cost_reading": "sameVM CPU A18.30/18.83 vs B18.64/18.85, no CPU win, source protection profile differs",
+  "diagnosis": "B speeds first down from67s to47s, second down reached at79s, but still above user's hoped 30-60s full return. Active true 8s actual-k CLOSE source counts exceed matured 8s firstsource denominator by typically 0.03%-4.9%, causing 38 B C2S UNKNOWN ticks; after stop >4x stays INVALID. Need bounded uncertainty correction, no fake feedback.",
+  "merge_ready": false,
+  "capacity_stop": true
+}

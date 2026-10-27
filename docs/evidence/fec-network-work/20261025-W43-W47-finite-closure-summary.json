@@ -1,0 +1,50 @@
+{
+  "branch": "experiment/fec-network-tuning",
+  "source": "23da99f0de04afe17756542f5176f2759e318747",
+  "product_build_run": 40153525640,
+  "product_artifact_id": 12583149711,
+  "product_sha256": "d297411d00a312aeac2557fab6af21d70de88d13ac8a96244f8430081a227ff2",
+  "arm64": true,
+  "outer_DATA_retransmission_enabled": false,
+  "original_M4": true,
+  "id": "W43-W47-FiniteClosure-NoMoreUnscopedPerfChasing",
+  "prior_high_load": "W38 200Mbps each real small-UDP/TCP mixed on W36 A/B FAIL 1% total/small, source TUN drops, TCP severe backpressure; W40 23da99 product not retested at200; cannot infer PASS or FAIL for W40",
+  "previous_success": "W41 and W42 100Mbps each mixed sameVM AB+BA both scoped PASS, measured combined CPU -21.19/-21.62%, host contention caveat",
+  "profile_coverage": "Normal FEC OFF lossless sparse W43 W46; Fixed3 2% 8Mbps W44 W47; Fixed6 30% 100Mbps real mixed W41 W42; Auto true asymmetric 2->20->1% 8Mbps W45, 3 VALID original C2S stages 1 S2C stage, native applied revisions diverge authentically",
+  "tested_actions": [
+    {
+      "id": "W43",
+      "run": 40156880680,
+      "artifact": 12585645415,
+      "conclusion": "PASS_SCOPED_OBSERVATION"
+    },
+    {
+      "id": "W44",
+      "run": 40156902370,
+      "artifact": 12585161305,
+      "conclusion": "PASS_SCOPED_OBSERVATION"
+    },
+    {
+      "id": "W45",
+      "run": 40156921978,
+      "artifact": 12584856579,
+      "conclusion": "PASS_SCOPED_OBSERVATION"
+    },
+    {
+      "id": "W46",
+      "run": 40157334097,
+      "artifact": 12584617269,
+      "conclusion": "PASS_SCOPED_OBSERVATION_BOTH"
+    },
+    {
+      "id": "W47",
+      "run": 40157346725,
+      "artifact": 12585227054,
+      "conclusion": "PASS_SCOPED_OBSERVATION_BOTH"
+    }
+  ],
+  "recommended_stop": "Retain native W40 without new packet priority classes/senders/threads. No new high-stress 200Mbps mixed on capacity_stop shared CPU VM. 23/8/1 fairness is bounded minimum not stable high-load max: full k16/r20 requires 1.25 Parity per source; saturated 23DATA+8Parity cannot serve perpetual backlog, but pressure scenario is not measured W40. Reopen only on evidence of real traffic stalls with fixed host CPU headroom or genuine user-facing regression. Preserve original Auto real feedback and per-stream TCP order. Do not merge main until deliberate review and platform/target checks.",
+  "qualification": "Finite functional and low-load regression complete, not physical Linux/Windows or 200Mbps mixed capacity guarantee",
+  "capacity_stop": true,
+  "merge_ready": false
+}
