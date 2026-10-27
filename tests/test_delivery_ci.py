@@ -1,10 +1,12 @@
 """Actions-only tests for batch delivery without weakening native qualification."""
 import copy
 from pathlib import Path
+import tempfile
 import unittest
 
 import yaml
 from tools import prepare_windows_wiring as p
+from tools import governance as g
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -66,6 +68,13 @@ class DeliveryCiTests(unittest.TestCase):
         bad["legacy_source"] = "a" * 40
         with self.assertRaisesRegex(ValueError, "SOURCE changed"):
             p.check_spec(bad, lambda path: data)
+
+    def test_bad_evidence_reports_exact_path_instead_of_anonymous_json_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "wrong-kind.md").write_text("# Not a JSON receipt", encoding="utf-8")
+            with self.assertRaisesRegex(g.ContractError, "invalid JSON in wrong-kind.md"):
+                g.read_json(root, "wrong-kind.md")
 
 
 if __name__ == "__main__":

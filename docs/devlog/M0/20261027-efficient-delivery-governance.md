@@ -25,6 +25,14 @@ e9506950a44d1a02e2e7878bafa0c6362c6404d7 开独立 experiment/windows-wiring-eff
 旧maintenance的FEC冻结manifest差异同样保留。未运行完整产品或网络矩阵，不声明产品通过。
 首轮结果在本日志追加。意外中断按Git/Actions恢复，不能伪造全绿。
 
+首轮SOURCE 2e24fe91b1aa244579f4e3e8b7d2769e98e48ac8：24项定向测试及Windows静态预检通过。
+Governance 40434507538 的随后仓库结构检查失败：集成分支原M0 cursor把Markdown日志、异源历史证据、
+功能卡放进 evidence_refs，JSON读取失败；该cursor在基线已如此，本次没有改写它或替M0确认进度。
+补充诊断让结构错误直接报告具体路径，保留检查强度，M0下次交接把背景引用归context_refs/日志索引，
+evidence_refs只放同源结构化收据即可。不要为此重跑产品网络测试。
+Maintenance 40434507602 的229项还保留4条旧冻结blob子断言失败（含原adapter和FEC policy两文件）；
+这些产品文件均未由本次改动修改。不会把新CI单测通过写成全仓库/产品通过。
+
 ```feature-impact
 {"kind":"none","ids":[],"reason":"只改变开发批次/留痕频率和CI触发、共享现有精确源码装配，不改变运行时功能、默认值、平台资格或硬约束。"}
 ```
