@@ -32,7 +32,7 @@ func runM0NativeV4WindowsGame(
  defer func(){
   for _,ep:=range endpoints{_ = ep.Close()}
   readers.Wait()
-  for _,assoc:=range assocs{_ = assoc.Close()}
+  for _,assoc:=range assocs{assoc.Close()}
  }()
  for i:=0;i<count;i++{
   src,dst:=int(o.SourcePort)+i,int(o.ServerPort)+i
