@@ -21,6 +21,7 @@ type V4WindowsAuthenticatedGameServerGroup struct{
  epoch [16]byte
  joined uint64
  stageProc,openProc,joinProc,stopProc *syscall.Proc
+ fecOpenProc,fecFinishProc *syscall.Proc
  gameFec uint8 // protected client/server GameFec, same for all independent TLS lanes
  closed bool
 }
@@ -120,9 +121,15 @@ func(g *V4WindowsAuthenticatedGameServerGroup) BindAndJoinOriginalWintun(
  // Linux's one shared authenticated Game fixed FEC owner, installed
  // strictly after all protected per-lane TLS and bound native identities.
  if g.gameFec!=0{
+  open,err:=dll.FindProc("wbd_m0_win_owner_v4_game_receive_fec")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  finish,err:=dll.FindProc("wbd_m0_win_owner_v4_game_finish_fec")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   fec,err:=dll.FindProc("wbd_m0_win_owner_v4_game_fec_enable")
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   if err=winOwnerCall(fec,uintptr(group),uintptr(g.gameFec-1));err!=nil{return err}
+  g.fecOpenProc=open
+  g.fecFinishProc=finish
  }
  return nil
 }
@@ -168,6 +175,7 @@ func(g *V4WindowsAuthenticatedGameServerGroup) OpenGameRecord(
  if g==nil{return nil,errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
  if err:=g.active(ctx);err!=nil{return nil,err}
+ if g.gameFec!=0{return nil,errV4WindowsOwner}
  if lane==0||int(lane)>len(g.owners)||len(wire)<32||len(wire)>1536{
   return nil,errV4WindowsOwner
  }

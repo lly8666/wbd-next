@@ -35,6 +35,7 @@ type V4WindowsAuthenticatedGameGroup struct{
  epoch [16]byte
  joined uint64
  stageProc,receiveProc,joinProc,stopProc *syscall.Proc
+ fecOpenProc,fecFinishProc *syscall.Proc
  gameFec uint8 // authenticated TLS GameFec=1..7 -> shared fixed profile0..6
  closed bool
 }
@@ -128,9 +129,15 @@ func(g *V4WindowsAuthenticatedGameGroup) BindAndJoinOriginalWintun(
  // Linux authority: each lane's protected GameFec TLS extension matches
  // g.gameFec before Detach. Enable ONE Rust GameFec owner, never Go FEC.
  if g.gameFec!=0{
+  open,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_receive_fec")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  finish,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_finish_fec")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   fec,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_fec_enable")
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   if err=winOwnerCall(fec,uintptr(group),uintptr(g.gameFec-1));err!=nil{return err}
+  g.fecOpenProc=open
+  g.fecFinishProc=finish
  }
  return nil
 }
@@ -185,6 +192,7 @@ func(g *V4WindowsAuthenticatedGameGroup) OpenGameRecord(
  if g==nil{return nil,errV4WindowsOwner}
  g.mu.Lock();defer g.mu.Unlock()
  if err:=g.verifyLive(ctx);err!=nil{return nil,err}
+ if g.gameFec!=0{return nil,errV4WindowsOwner}
  if lane==0||int(lane)>len(g.members)||len(wire)<32||len(wire)>1536{
   return nil,errV4WindowsOwner
  }
