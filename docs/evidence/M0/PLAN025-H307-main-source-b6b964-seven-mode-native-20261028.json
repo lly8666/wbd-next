@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
+  "kind": "main_integrated_seven_original_windows_linux_true_native_business_and_owned_stop",
+  "run": {
+    "id": 40560287417,
+    "attempt": 1,
+    "conclusion": "success",
+    "native_job": "native-public-two-os",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40560287417"
+  },
+  "artifact": {
+    "id": 12760173657,
+    "name": "m0-wl-full-public-normal-direct",
+    "zip_sha256": "17b037d838b362fdeb79cce7aceea93a32611c7922e71a8e11ce699d133d33de",
+    "independently_verified": true
+  },
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "scope": "signed_native_windows_npcap_wintun_original_go_tls_native_os_wal_to_linux_wsl_raw_tun_sseven_modes_each_genuine_kernel_udp_tcp_duplex_owned_stop",
+  "modes": {
+    "normal": {
+      "result": "FUNCTIONAL_PASS_SCOPED",
+      "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+      "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+      "two_os_kernel_udp_duplex": "PASS",
+      "two_os_kernel_tcp_echo": "PASS",
+      "owned_stop_both": "PASS"
+    },
+    "fixed": {
+      "result": "FUNCTIONAL_PASS_SCOPED",
+      "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+      "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+      "two_os_kernel_udp_duplex": "PASS",
+      "two_os_kernel_tcp_echo": "PASS",
+      "owned_stop_both": "PASS"
+    },
+    "auto": {
+      "result": "FUNCTIONAL_PASS_SCOPED",
+      "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+      "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+      "two_os_kernel_udp_duplex": "PASS",
+      "two_os_kernel_tcp_echo": "PASS",
+      "owned_stop_both": "PASS"
+    },
+    "game2": {
+      "result": "FUNCTIONAL_PASS_SCOPED",
+      "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+      "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+      "two_os_kernel_udp_duplex": "PASS",
+      "two_os_kernel_tcp_echo": "PASS",
+      "owned_stop_both": "PASS"
+    },
+    "game4": {
+      "result": "FUNCTIONAL_PASS_SCOPED",
+      "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+      "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+      "two_os_kernel_udp_duplex": "PASS",
+      "two_os_kernel_tcp_echo": "PASS",
+      "owned_stop_both": "PASS"
+    },
+    "game2-fec": {
+      "result": "FUNCTIONAL_PASS_SCOPED",
+      "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+      "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+      "two_os_kernel_udp_duplex": "PASS",
+      "two_os_kernel_tcp_echo": "PASS",
+      "owned_stop_both": "PASS"
+    },
+    "game4-fec": {
+      "result": "FUNCTIONAL_PASS_SCOPED",
+      "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+      "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+      "two_os_kernel_udp_duplex": "PASS",
+      "two_os_kernel_tcp_echo": "PASS",
+      "owned_stop_both": "PASS"
+    }
+  },
+  "batch": "PASS",
+  "not_qualified": {
+    "natural_auto_grade_on_this_source": "NOT_RUN; separate S55 exact source49f81637 genuine natural downshift PASS",
+    "loss_rapid_upshift": "NOT_RUN",
+    "wl_n0": "NOT_RUN",
+    "wl_n1": "NOT_RUN",
+    "wl_n5": "NOT_RUN",
+    "scored_CPU_p99_perf": "NOT_RUN",
+    "signed_physical": "NOT_RUN",
+    "global_GUI_WFP_DNS_ipv6": "NOT_RUN",
+    "native_arm64_on_this_exact_source": "NOT_RUN; separate f7ee097e inherited product parent S55"
+  },
+  "retained_independent_loss": "sourceaa93183d N0 10Mbps 300ms 0% injected fail with owner error, not cancelled by seven native startup passes."
+}

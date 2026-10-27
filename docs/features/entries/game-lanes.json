@@ -101,6 +101,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
       "evidence": "docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"
+    },
+    {
+      "platform": "windows/x64 signed Npcap+Wintun original Go TLS Rust ↔ linux/amd64 WSL2 raw/TUN",
+      "scope": "Game2 and Game4 independent lanes authentic native signed Windows/Linux two-way UDP, TCP echo and owned Stop; source b6b964a Action40560287417 native PASS; WL-N0/N1/N5, scored p99/CPU, physical, fast-loss Auto NOT_RUN",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
+      "evidence": "docs/evidence/M0/PLAN025-H307-main-source-b6b964-seven-mode-native-20261028.json"
     }
   ],
   "limitations": [
@@ -114,7 +121,8 @@
     "H303 scope clarification (2026-10-28): source 1b33e4a4bb4543961957124ac0c49b63d7e3cab0 Actions40550358765/1 is a Windows original Auto **natural dynamic downshift FAIL only**. This result is not evidence of a Fixed or Game mode regression, new main-source mode qualification, nor loss of the historical scoped native Fixed/Game positive source a2594eba and 4977f12; their original PASS/FAIL/NOT_RUN entries remain unchanged. No mode default or formal promotion was changed.",
     "H303 governance declaration scope (2026-10-28): Actions40553017297 and 40554072482 historical Feature catalog FAIL from multi-card original devlog feature-impact changed-file inventory. This main commit refreshes all four historically declared cards coherently; no executable product/default/verification status changes. Source1b33e4a failed **only** genuine Windows natural Auto one-step Applied, while earlier Fixed and Game scoped PASS stay attached to their own exact SOURCE. Current natural Auto correction source0af9b... remains experiment and NOT main product qualification.",
     "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637.",
-    "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused."
+    "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
+    "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification."
   ],
   "promotion": null
 }

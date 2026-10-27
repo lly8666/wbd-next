@@ -83,6 +83,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
       "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json"
+    },
+    {
+      "platform": "windows/x64 signed Npcap+Wintun original Go TLS Rust ↔ linux/amd64 WSL2 raw/TUN",
+      "scope": "Game2-FEC and Game4-FEC genuine original signed Windows/Linux two-way UDP, TCP echo and both Stop (not restored-loss claim); source b6b964a Action40560287417 native PASS; WL-N0/N1/N5, scored p99/CPU, physical, fast-loss Auto NOT_RUN",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
+      "evidence": "docs/evidence/M0/PLAN025-H307-main-source-b6b964-seven-mode-native-20261028.json"
     }
   ],
   "limitations": [
@@ -95,7 +102,8 @@
     "2026-10-27 user-authorized exact development-tree main overwrite f6469a: implementation code is now present on main but remains experimental, with no new main-SOURCE native/product/global/physical PASS or formal promotion; previous exact-SOURCE PASS/FAIL unchanged.",
     "H303 scope clarification (2026-10-28): source 1b33e4a4bb4543961957124ac0c49b63d7e3cab0 Actions40550358765/1 is a Windows original Auto **natural dynamic downshift FAIL only**. This result is not evidence of a Fixed or Game mode regression, new main-source mode qualification, nor loss of the historical scoped native Fixed/Game positive source a2594eba and 4977f12; their original PASS/FAIL/NOT_RUN entries remain unchanged. No mode default or formal promotion was changed.",
     "H303 governance declaration scope (2026-10-28): Actions40553017297 and 40554072482 historical Feature catalog FAIL from multi-card original devlog feature-impact changed-file inventory. This main commit refreshes all four historically declared cards coherently; no executable product/default/verification status changes. Source1b33e4a failed **only** genuine Windows natural Auto one-step Applied, while earlier Fixed and Game scoped PASS stay attached to their own exact SOURCE. Current natural Auto correction source0af9b... remains experiment and NOT main product qualification.",
-    "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused."
+    "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
+    "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification."
   ],
   "promotion": null
 }
