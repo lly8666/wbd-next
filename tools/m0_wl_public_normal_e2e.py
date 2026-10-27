@@ -2,8 +2,23 @@
 """Run actual original-TLS Windows and Linux native public UDP/TCP, then Stop."""
 import os,sys,subprocess,time,json,hashlib,pathlib,re
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
-fixed6=os.environ.get("WBD_WL_FIXED6")=="1"
-report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINUX_BINARY_SRC"],"mode":"Fixed6" if fixed6 else "Normal/off","fixed6_public":"NOT_RUN","normal_public":"NOT_RUN","windows_ready":"NOT_RUN","linux_ready":"NOT_RUN","app_duplex":"NOT_RUN","tcp_duplex":"NOT_RUN","stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN"}
+mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
+if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec"):
+ raise RuntimeError("unknown exact native Windows public mode "+mode)
+fixed6=mode=="fixed"
+is_game=mode.startswith("game")
+game_fixed=mode.endswith("-fec")
+game_mode=mode[:5] if is_game else ""
+lanes=int(game_mode[-1]) if is_game else 1
+server_mode=("fec-fixed --fec-profile 6" if fixed6 else
+             "fec-auto" if mode=="auto" else
+             game_mode+(" --game-fec fixed6" if game_fixed else " --game-fec off") if is_game
+             else "normal")
+client_fec="fixed" if fixed6 or game_fixed else "auto" if mode=="auto" else "off"
+report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINUX_BINARY_SRC"],"mode":mode,
+ "mode_public":"NOT_RUN","normal_public":"NOT_RUN","windows_ready":"NOT_RUN",
+ "linux_ready":"NOT_RUN","app_duplex":"NOT_RUN","tcp_duplex":"NOT_RUN",
+ "stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN"}
 def run(a,timeout=30):
  p=subprocess.run(a,capture_output=True,text=True,timeout=timeout)
  if p.returncode:raise RuntimeError(str(a[:4])+": "+(p.stderr or p.stdout)[-600:])
@@ -52,11 +67,13 @@ try:
  # Frozen-unadapted run 40357841232 rejected 546 original NPF frames.
  peer_persona=" --peer-persona windows11"
  report["expected_original_tcp_persona"]="windows11_original_go_server"
- linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1 '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+("fec-fixed --fec-profile 6" if fixed6 else "normal")+peer_persona+"\n").encode("utf-8"))
+ linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1 '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+peer_persona+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
  # Linux server authenticated READY only AFTER the genuine Windows TLS client starts.
- args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex",route,"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu","1400","--lanes","1","--fec-mode",("fixed" if fixed6 else "off"),"--fec-parity",("4" if fixed6 else "0"),"--fec.mode",("fixed" if fixed6 else "off"),"--fec.profile",("maximum" if fixed6 else "strong"),"--route-mode","bypass-lan"]
+ args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex",route,"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu","1400","--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
+  "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
+  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode","bypass-lan"]
  log=(out/"client.log").open("w");logs.append(log)
  w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,text=True)
  # Launch true independent Windows/Wintun and Linux/TUN kernel applications
@@ -119,7 +136,8 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1",str(done)],stdout=wlog,stderr=subprocess.STDOUT)
  # This READY remains owned exclusively by the unmodified real product.
  ready(out/"client.log","WBD_WINDOWS_CLIENT_READY",w,30)
- ready(out/"server.log","V4_ORIGINAL_GO_SERVER_NATIVE_READY",s,8);report["linux_ready"]="PASS_REAL_AFTER_ORIGINAL_TLS"
+ ready(out/"server.log","V4_ORIGINAL_GO_GAME_NATIVE_READY" if is_game else "V4_ORIGINAL_GO_SERVER_NATIVE_READY",s,8)
+ report["linux_ready"]="PASS_REAL_AFTER_ORIGINAL_TLS"
  if "WBD_WINDOWS_OS_APPLIED" not in (out/"client.log").read_text():raise RuntimeError("Windows public READY lacks native OS Applied")
  report["windows_ready"]="PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL"
  done.write_text("observed authentic client and Linux server READY\n")
@@ -298,22 +316,28 @@ print(json.dumps(result),flush=True)
    if owned.exists():
     print(netem("cleanup"),flush=True)
  stop_windows(w)
- if w.returncode!=0 or "WBD_WINDOWS_NATIVE_DISCONNECTED_V1" not in (out/"client.log").read_text():raise RuntimeError("Windows native owned WAL Stop missing")
+ stop_marker="WBD_WINDOWS_GAME_NATIVE_DISCONNECTED" if is_game else "WBD_WINDOWS_NATIVE_DISCONNECTED_V1"
+ if w.returncode!=0 or stop_marker not in (out/"client.log").read_text():raise RuntimeError("Windows native owned WAL Stop missing")
  stop_linux();s.wait(timeout=10)
- if s.returncode or "V4_PUBLIC_NATIVE_STOP_DRAINED role=server" not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
+ stop_marker="V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server" if is_game else "V4_PUBLIC_NATIVE_STOP_DRAINED role=server"
+ if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
  report["stop"]="PASS_BOTH_OWNED"
  if fixed6:
-  applied="WBD_WINDOWS_FIXED6_M2_APPLIED_REAL" in (out/"client.log").read_text(errors="replace")
-  report["fixed6_applied_m2"]=applied
-  if not applied:raise RuntimeError("Fixed6 original Rust mature authenticated M2 Applied absent")
-  report["fixed6_public"]="PASS_ACTUAL_WINDOWS_LINUX_NATIVE_FIXED6"
-  print("WBD_WL_TRUE_PUBLIC_FIXED6_WIN_LINUX_DUPLEX_STOP_PASS")
- else:
-  report["normal_public"]="PASS_ACTUAL_WINDOWS_LINUX_NATIVE"
-  print("WBD_WL_TRUE_PUBLIC_NORMAL_OFF_WIN_LINUX_DUPLEX_STOP_PASS")
+  applied="WBD_WINDOWS_FEC2_M2_MATURE_SCOPED mode=fec-fixed" in (out/"client.log").read_text(errors="replace")
+  report["fixed_m2_mature"]=applied
+  if not applied:raise RuntimeError("original Rust Fixed FEC2 mature authenticated M2 Applied missing")
+ if is_game and game_fixed:
+  expected="V4_PUBLIC_GAME_FEC_APPLIED role=server lanes=%d mode=fixed profile=6"%lanes
+  if expected not in (out/"server.log").read_text(errors="replace"):
+   raise RuntimeError("actual Game FEC2 protected Linux profile readback missing")
+ report["mode_public"]="PASS_ACTUAL_WINDOWS_LINUX_NATIVE_"+mode
+ if mode=="normal":report["normal_public"]="PASS_ACTUAL_WINDOWS_LINUX_NATIVE"
+ print("WBD_WL_TRUE_PUBLIC_MODE_WIN_LINUX_DUPLEX_STOP_PASS "+mode)
 except Exception as e:
- report["fixed6_public" if fixed6 else "normal_public"]="FAIL_TRUE_PUBLIC_EXECUTION";report["error"]=str(e)[-1100:]
- print("WBD_WL_TRUE_PUBLIC_NORMAL_OFF_FAIL: "+str(e),file=sys.stderr)
+ report["mode_public"]="FAIL_TRUE_PUBLIC_EXECUTION"
+ if mode=="normal":report["normal_public"]="FAIL_TRUE_PUBLIC_EXECUTION"
+ report["error"]=str(e)[-1100:]
+ print("WBD_WL_TRUE_PUBLIC_MODE_FAIL "+mode+": "+str(e),file=sys.stderr)
  raise
 finally:
  for p in (wa,la,wt,lt):

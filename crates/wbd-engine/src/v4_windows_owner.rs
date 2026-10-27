@@ -837,7 +837,9 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_mode_capabilities(
         return INVALID
     }
     unsafe{out.write(WbdWindowsV4ModeCapabilities{
-        version:4,size,supported_modes:1,authenticated_lanes:1,reserved:0,
+        // Isolated Draft full-wiring CANDIDATE: exact source functional run
+        // must qualify all five original-Go modes before public release.
+        version:4,size,supported_modes:31,authenticated_lanes:4,reserved:0,
     })};
     OK
 }

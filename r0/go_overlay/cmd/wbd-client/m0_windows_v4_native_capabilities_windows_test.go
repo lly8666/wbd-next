@@ -18,14 +18,14 @@ func TestM0PLAN024WindowsNativeWholeProductCapabilityGate(t *testing.T){
  // Missing optional local DLL is NOT a product test PASS.
  library:=os.Getenv("WBD_M0_TEST_NATIVE_V4_DLL")
  if library==""{t.Skip("no same-source native DLL; public product gate NOT_RUN")}
- if err:=m0CheckWindowsV4NativeMode(m0WinModeNormal,library);err!=nil{
-  t.Fatalf("same-source original Rust normal mode rejected: %v",err)
- }
  for _,mode:=range []m0WindowsV4Mode{
-  m0WinModeFixed,m0WinModeAuto,m0WinModeGame2,m0WinModeGame4,
+  m0WinModeNormal,m0WinModeFixed,m0WinModeAuto,
+  m0WinModeGame2,m0WinModeGame4,
  }{
-  if err:=m0CheckWindowsV4NativeMode(mode,library);err==nil{
-   t.Fatalf("mode=%s incorrectly advertised public without full original-Go TLS/OS native product proof",mode)
+  if err:=m0CheckWindowsV4NativeMode(mode,library);err!=nil{
+   t.Fatalf("native Rust original Game/FEC2 candidate missing mode=%s: %v",mode,err)
   }
  }
+ // DLL capability alone cannot claim public Game/Auto PASS: exact
+ // original-Go 2/4 NPF+TLS/Wintun+Stop E2E runs separately below.
 }
