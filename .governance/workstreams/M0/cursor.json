@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 290,
-  "checkpoint_sha": "24c480bdf5b8dab757dab08e6c1a41768cc80ca2",
+  "sequence": 291,
+  "checkpoint_sha": "b305e29c0ee750c4f3c73a81d20b4f1174c299eb",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "User-authorized exact full W168 development-tree main overwrite f6469a done, approved-source admin/compile + historical freeze provenance fixes completed. Remaining obsolete G2 rev2 bootstrap identity fixture corrected in this batch; pending CI exact SOURCE, no product promotion.",
-  "why_now": "24c source governance 40483931968 and governance-maintenance 40483931609 both SUCCESS; prior 6d G2 40483279381 FAIL after compiling because obsolete tools/g2_bootstrap_bundle.py expects rev2 four active workers, whereas main registry rev3 M4 reserved epoch2 and untouched M1..M4 old snapshot rev2. Repair the distinct G2 gate with explicit rev3 role checks and new negative unit tests; preserve independent genuine product FAILs.",
+  "current_task": "2026-10-27 user-authorized full branch tree overwrite from integration/w168-freeze-windows-adapter-20261026 to main and related governance conflict repairs COMPLETE AS INTEGRATION. Exact user-requested tree f6469a matches dev9d2362d; subsequent governed repairs end at b305e29c. Whole Windows/Linux product formal qualification remains PARTIAL/UNVERIFIED, with natural Auto original M2 control sequence FAIL not hidden.",
+  "why_now": "Integration branch source9d2362d exact tree 553d50ad overwritten fast-forward f6469a (main predecessor7a1932); later admin scoped main sources6d35857,24c480bd,b305e29c restored rev3 M0 registry/feature-impact, single-source evidence and fixed Rust non-FEC cfg, native ISAL harness 15 tests, M4 frozen-vs-PLAN020 live blob assertions and G2 bootstrap rev3/M4 reserved identity. Exact b305e29c Actions40484407149 Governance SUCCESS,40484407189 governance-maintenance SUCCESS,40484407148 G2 scoped bootstrap SUCCESS. Old source6d Windows preflight Action40483279255 still in_progress on last checked, not a PASS; native receipt tests four genuine failures40483279229, original product natural Auto9d run40476182202 FAIL.",
   "done_when": "Whole original-Go TLS→shared Rust M1/M2/M3 FEC2 Fixed/Auto & 2/4 real Game lanes→original Windows Npcap/Wintun/WFP/route/DNS/WAL/GUI↔Linux raw/TUN and both-owned Stop across true applicable config/lifecycle. 4977f source seven initial functional mode core PASS; remaining dynamic Auto/GUI/global/lifecycle and weak-network use their own exact evidence. No fake Applied or independent Windows FEC owner.",
-  "next_action": "Check this exact source G2 bootstrap and maintenance/Governance results; do not expand into original R2 budget failing cases, Auto M2 sequence bug or global/GUI/physical product absent separate actual implementation/test evidence. All earlier FAILs retained.",
+  "next_action": "CLOSED temporary overwrite/governance assignment, no further automatic source changes. If resuming existing broader PLAN025 product task, settle terminal 6d Windows preflight40483279255 before dispatch; diagnose exact natural Auto M2 original control TX expected2744012027 got2744012455 (source9d FAIL) and honest native R2 receipt failures separately. Only exact SOURCE Actions qualify new product runtime; preserve global GUI/WFP/physical/WL/performance NOT_RUN.",
   "unverified": true,
   "last_tested_source": "9d2362d30bead0e2a36dd19233a798ec1fb2b3ae",
   "evidence_refs": [
@@ -26,5 +26,5 @@
     "docs/devlog/M0/PLAN025-main-integration-tree-overwrite-recovered-20261027.md"
   ],
   "open_requests": [],
-  "partial_summary": "Exact W168 dev-source full tree replaced main at f6469a without force/history loss. 6d35857 Governance PASS + FEC native15 PASS; 24c480b Governance+maintenance PASS (historical M4 vs current PLAN020 M0 blobs asserted). G2 prior FAIL due obsolete rev2 fixture now targeted, R2 4 receipt tests FAIL independent, Auto source9d native FAIL exact control SEQ, Windows full and global/perf NOT_RUN."
+  "partial_summary": "No-force parent-preserving exact dev-tree main overwrite f6469a; final authored source b305e29c only governance, feature cards, scoped Rust cfg/CI and historic fixture corrections. On exact b305e29c, Governance40484407149/1, maintenance40484407189/1, G2 bootstrap40484407148/1 all SUCCESS. Historical 4977f seven-mode and a0c8eeb operator Auto scoped PASS retained; natural Auto9d Action40476182202/1 FAIL owner M2 TX SEQ; R2 receipts on 6d FAIL 4; original WL-N0 performance FAIL, WL-N1/N5 and global/GUI/physical NOT_RUN. Source6d Windows preflight40483279255 in_progress at last observation, no product PASS."
 }
