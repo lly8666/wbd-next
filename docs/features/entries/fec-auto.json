@@ -66,13 +66,21 @@
       "status": "FAIL",
       "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
       "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source8e0daba-20261027.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "original Go protected TLS feature7 Windows→Linux native auto original M4 first-send; Windows reverse FEC2 C-ABI first 103B failed before Ready despite verified Linux raw/TUN TX",
+      "status": "FAIL",
+      "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
+      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json"
     }
   ],
   "limitations": [
     "历史启动Applied不可推广为所有升/降档场景PASS。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "Windows original Rust auto-quality 30-field mature M2/cumulative actual-k and same Linux FecV2Step controller are wired in Draft branch; dynamic actual revision and GUI Applied still require exact-source real Windows product positive.",
-    "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS."
+    "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS.",
+    "Exact SOURCE350199f native Actions40445098497 remains FAIL for Windows original FEC2 reverse first delivery; Linux raw/TUN sender works, Windows still rejected first incoming 103B record before Ready. Subsequent source82ec native FEC2 diagnostic candidate has no inherited PASS; retained as partial."
   ],
   "promotion": null
 }

@@ -67,3 +67,14 @@ Retire the existing workflow's **automatic second full WSL2/Npcap Fixed6-only pu
 ```feature-impact
 {"kind":"updated","ids":["fec-fixed","fec-auto","game-lanes","game-fixed-fec"],"reason":"Windows W168 genuine CLI/profile/Go TLS/Rust Game+FEC2/Auto native adaptation, and the exact source8e first seven-mode FAIL were added to existing cards. Public promotion denied until later real same-source positive."}
 ```
+
+## 2026-10-27 exact Windows original-Go seven-mode REAL native partial qualification
+
+- SOURCE `350199f9885d6310b71181b25bee2308b462557c`, real signed Npcap/Wintun and Linux raw/TUN Action [40445098497](https://github.com/lly8666/wbd-next/actions/runs/40445098497), native job 121995669340, artifact ID 12707759526: workflow **FAIL overall**, preflight Windows/Linux originals and native Windows Rust owner **17/17 PASS**.
+- **Five distinct genuine two-OS mode-positive functional cases** at this precise SOURCE: Normal/off; Game2/off; Game4/off; Game2 with inner fixed FEC2 profile6; Game4 with inner fixed FEC2 profile6. Each reported genuine bidirectional kernel UDP/TCP, per-lane original-Go TLS/shared Rust GameAdapter, signed Windows Wintun/WFP-WAL owned lifecycle and both-OS Stop. This is **source-scoped OPEN_FOR_NETWORK_TEST** candidate under PLAN021; not main merge/formal release, GUI or quality/physical proof.
+- **Fixed and Auto remain FAIL**: Linux original-Go/Rust accepted original Windows FEC2 source and sent reverse source/parity, but Windows failed its FIRST Rust/Go FEC2 reverse-open for a real 103B inbound packet, Windows TUN delivered zero; subsequent native M2 failure/timeout is downstream and must not be mistaken for original fault. The first `WBD_WINDOWS_FEC2_FIRST_NATIVE_OPEN_REJECTION` was generically `original-Go private Windows Rust owner refused`; source82ec429 pending further specific owner/ABI/tuple diagnosis, not a functional pass. No physical, WinForms, WL-N0/N1/N5 tests in this batch.
+- Precise evidence: `docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json`. Preserve all preceding SOURCE8e0d/92e31/f073b red and mode NOT_RUN; no Windows independent FEC2 engine, cloned Auto policy, synthetic host OS Applied or changes to main authorization.
+
+```feature-impact
+{"kind":"updated","ids":["game-lanes","game-fixed-fec","fec-fixed","fec-auto"],"reason":"七模式整批原生失败中分项认定精确source350199f的Game2/Game4及各自profile6 FEC2双向UDP/TCP+Stop正例，Fixed/Auto反向FEC2首到仍FAIL，历史不抹除，WinForms/global/quality未跑。"}
+```
