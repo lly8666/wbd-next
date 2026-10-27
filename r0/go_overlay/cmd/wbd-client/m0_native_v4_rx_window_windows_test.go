@@ -4,6 +4,7 @@ package main
 import (
  "context"
  "os"
+ "strings"
  "testing"
  "time"
  "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -220,4 +221,17 @@ func TestM0RemediationGameSingleLaneNativeFailureIsIsolated(t *testing.T){
   t.Fatal("all dead native lanes falsely reported healthy group")
  }
  if p.laneFailed!=4{t.Fatalf("lane failure count=%d",p.laneFailed)}
+}
+
+func TestM0RemediationTXSequenceBoundedAuditNoWireDisclosure(t *testing.T){
+ p:=&m0NativeV4Peer{auditStarted:time.Now()}
+ for i:=0;i<70;i++{p.noteTX("source",uint32(i),uint32(i),uint64(i),128,"NPF_COPIED")}
+ if p.auditCursor!=70{t.Fatalf("audit cursor=%d",p.auditCursor)}
+ trace:=p.txTrace()
+ if !strings.Contains(trace,"pn=69")||strings.Contains(trace,"pn=0 "){
+  t.Fatalf("bounded most-recent audit incorrect: %s",trace)
+ }
+ if strings.Contains(trace,"Payload:")||strings.Contains(trace,"key="){
+  t.Fatal("diagnostic contains sensitive wire")
+ }
 }

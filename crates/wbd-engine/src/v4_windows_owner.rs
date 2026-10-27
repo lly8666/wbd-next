@@ -299,9 +299,18 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                 pn:key,wire_bytes:(wire_len as u64).saturating_add(54)
             }
         }else{wbd_recovery::FirstSendOutcome::DefinitelyNotSent{pn:key}};
-        if mature.on_first_send(
+        match mature.on_first_send(
             lane,wbd_recovery::FirstSendKind::Data,observation,m2_clock()
-        ).is_err(){m.fec_censored=true;return Err(BAD_STAGE)}
+        ){
+            Ok(())=>{},
+            // Auto quality metadata is optional to fresh M4 delivery.
+            // A saturated observer counts censored capacity but cannot
+            // convert a real NPF firstsend into a fatal DATA-path error.
+            Err(wbd_recovery::MaturityError::CapacityLimited)=>{
+                m.fec_censored=true;
+            },
+            Err(_)=>{m.fec_censored=true;return Err(BAD_STAGE)},
+        }
         if sent==1{m.fec_copied_source=m.fec_copied_source.saturating_add(1)}
     }
     if sent==0{return Ok(0)}

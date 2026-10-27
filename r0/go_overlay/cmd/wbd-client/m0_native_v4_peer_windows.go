@@ -30,6 +30,19 @@ type m0NativeV4Outbound struct {
  lastSent time.Time
  retries uint32
 }
+// Source-locked low-memory audit: only immutable metadata from Rust M3,
+// not ciphertext, IV, key, payload, tunnel addresses or application bytes.
+// Data writer serializes producer/feedback/parity within the same pulse.
+type m0V4TXEvent struct {
+ Kind string
+ Seq uint32
+ Expected uint32
+ PN uint64
+ Bytes uint32
+ AgeMS int64
+ Status string
+}
+const m0V4TXAuditSlots=64
 type m0NativeV4Peer struct {
  mu sync.Mutex
  owner *realityfront.V4WindowsAuthenticatedClientOwner
@@ -44,6 +57,9 @@ type m0NativeV4Peer struct {
  ring *windowsclient.N4OriginalKernelPacketLease
  identity windowsclient.N4UnifiedIdentity
  sendNext,recvNext,peerAck uint32
+ auditStarted time.Time
+ auditCursor uint64
+ auditEvents [m0V4TXAuditSlots]m0V4TXEvent
  rx *m0V4RxWindow
  scratch []byte // one retained true kernel ring copy buffer for all pulses
  maxIPv4 int
@@ -125,11 +141,37 @@ func(p *m0NativeV4Peer) BindNativeRing(
   }
  }
  p.ring=ring;p.identity=id;p.sendNext=send;p.recvNext=recv
+ p.auditStarted=time.Now()
  p.peerAck=send
  p.rx=newM0V4RxWindow(recv)
  p.maxIPv4=maxIPv4
  p.scratch=make([]byte,maxIPv4+31)
  return nil
+}
+// These ring writes occur only in the single native pulse send-owner.
+// Separate counter snapshots use p.mu, without storing any sensitive wire.
+func(p *m0NativeV4Peer) noteTX(kind string,seq,expected uint32,pn uint64,n int,status string){
+ if p==nil{return}
+ p.mu.Lock();defer p.mu.Unlock()
+ ms:=int64(0)
+ if !p.auditStarted.IsZero(){ms=time.Since(p.auditStarted).Milliseconds()}
+ p.auditEvents[p.auditCursor%m0V4TXAuditSlots]=m0V4TXEvent{
+  Kind:kind,Seq:seq,Expected:expected,PN:pn,Bytes:uint32(n),AgeMS:ms,Status:status,
+ }
+ p.auditCursor++
+}
+func(p *m0NativeV4Peer) txTrace()string{
+ p.mu.Lock();defer p.mu.Unlock()
+ limit:=p.auditCursor
+ if limit>m0V4TXAuditSlots{limit=m0V4TXAuditSlots}
+ var out string
+ for i:=uint64(0);i<limit;i++{
+  idx:=(p.auditCursor-limit+i)%m0V4TXAuditSlots
+  e:=p.auditEvents[idx]
+  out+=fmt.Sprintf(" [%dms %s seq=%d exp=%d pn=%d bytes=%d stage=%s]",
+   e.AgeMS,e.Kind,e.Seq,e.Expected,e.PN,e.Bytes,e.Status)
+ }
+ return out
 }
 func(p *m0NativeV4Peer) stopped()bool{
  select{case <-p.stop:return true;default:return false}
@@ -208,8 +250,14 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
  }
  if err!=nil{return false,fmt.Errorf("M0 native original M3 seal mode=%s: %w",p.mode,err)} // original fail-closed Stop
 
- if seq!=p.sendNext{return false,fmt.Errorf("%w: native normal TX sequence mismatch expected=%d got=%d",windowsclient.ErrN4NativeGuard,p.sendNext,seq)}
+ if seq!=p.sendNext{
+  p.noteTX("source",seq,p.sendNext,pn,len(ciphertext),"SEQ_MISMATCH")
+  return false,fmt.Errorf("%w: native source TX sequence mismatch expected=%d got=%d; recent=%s",
+   windowsclient.ErrN4NativeGuard,p.sendNext,seq,p.txTrace())
+ }
  err=p.sendCarrier(seq,p.recvNext,ciphertext)
+ if err==nil{p.noteTX("source",seq,p.sendNext,pn,len(ciphertext),"NPF_COPIED")
+ }else{p.noteTX("source",seq,p.sendNext,pn,len(ciphertext),"NPF_ERROR")}
  if p.mode==m0WinModeNormal||p.mode==m0WinModeFixed||p.mode==m0WinModeAuto{
   // A valid original NPF pcap_sendpacket return is the ONLY new M2
   // data firstsend event. Negative error is NOT peer receipt or a
@@ -355,11 +403,14 @@ func(p *m0NativeV4Peer) rustFeedbackOne(ctx context.Context)(bool,error){
  if err!=nil{return false,fmt.Errorf("M0 original M2 reverse-kind1 feedback draft: %w",err)}
  if len(wire)==0{return false,nil}
  if seq!=p.sendNext{
+  p.noteTX("control",seq,p.sendNext,pn,len(wire),"SEQ_MISMATCH")
   settle:=p.owner.CompleteBoundOriginalM2Feedback(ctx,pn,false)
   return false,errors.Join(
-   fmt.Errorf("%w: original M2 control TX sequence mismatch expected=%d got=%d",windowsclient.ErrN4NativeGuard,p.sendNext,seq),settle)
+   fmt.Errorf("%w: original M2 control TX sequence mismatch expected=%d got=%d; recent=%s",windowsclient.ErrN4NativeGuard,p.sendNext,seq,p.txTrace()),settle)
  }
  sentErr:=p.sendCarrier(seq,p.recvNext,wire)
+ if sentErr==nil{p.noteTX("control",seq,p.sendNext,pn,len(wire),"NPF_COPIED")
+ }else{p.noteTX("control",seq,p.sendNext,pn,len(wire),"NPF_ERROR")}
  settleErr:=p.owner.CompleteBoundOriginalM2Feedback(ctx,pn,sentErr==nil)
  if sentErr!=nil||settleErr!=nil{
   return false,fmt.Errorf("M0 original M2 reverse-kind1 feedback complete: %w",errors.Join(sentErr,settleErr))
@@ -399,14 +450,17 @@ func(p *m0NativeV4Peer) rustFixedParityOne(ctx context.Context)(bool,error){
  copied:=uint32(0)
  for _,row:=range rows{
   if row.Seq!=p.sendNext{
+   p.noteTX("parity",row.Seq,p.sendNext,row.PN,len(row.Wire),"SEQ_MISMATCH")
    _=p.owner.CompleteBoundOriginalFixedParity(ctx,copied,uint32(len(rows))-copied,0)
    return false,fmt.Errorf("%w: W168 Fixed parity TX sequence mismatch expected=%d got=%d",
-    windowsclient.ErrN4NativeGuard,p.sendNext,row.Seq)
+    windowsclient.ErrN4NativeGuard,p.sendNext,row.Seq) // trace kept for first caller failure
   }
   if err=p.sendCarrier(row.Seq,p.recvNext,row.Wire);err!=nil{
+   p.noteTX("parity",row.Seq,p.sendNext,row.PN,len(row.Wire),"NPF_ERROR")
    _=p.owner.CompleteBoundOriginalFixedParity(ctx,copied,uint32(len(rows))-copied,0)
    return false,err
   }
+  p.noteTX("parity",row.Seq,p.sendNext,row.PN,len(row.Wire),"NPF_COPIED")
   p.sendNext=row.Seq+uint32(len(row.Wire))
   copied++
  }
