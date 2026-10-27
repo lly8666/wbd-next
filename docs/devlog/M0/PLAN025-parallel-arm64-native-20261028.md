@@ -1,0 +1,11 @@
+# M0 PLAN025 — independent native ARM64 signed source assembly and real Linux kernel first-delivery (2026-10-28)
+
+The registry has not assigned a new task or role. One-shot test-only branch `experiment/windows-wiring-arm64-native-parallel-20261028` forks the immutable S55 source `49f816375a9e69bd1cde41df2543b15b58066313` from original `experiment/windows-wiring-s33-source-locked-preflight-20261027`. Exactly one workflow `.github/workflows/arm64-public-go-build.yml` is given an additional push trigger for this branch; all Rust/Go engine, native platform, original source, Cargo/Go dependencies and test scripts remain byte-identical to S55. Original Go repository SOURCE stays pinned `a7a82db31fe736ffedee330795a3234d358f1984`. Do not merge this test-trigger widening into the Auto branch/main.
+
+**Single planned Actions push:** a workflow-file change itself starts the existing ARM64 build once; the original `ubuntu-24.04-arm` workflow compiles exact-source Go/Rust native ARM64 against pinned ISA-L and produces per-file hash manifest. The separate native ARM64 Linux TUN/netns function job **consumes the produced exact run artifact**, exercising actual original Go TLS↔Rust raw/TUN bidirectional app and Stop. Native ARM64 does not represent Windows native capability, cross-build, scored CPU, 10Mbps throughput, physical, or global GUI/WFP qualification. Existing ARM64 older frozen SOURCE remains unchanged; this is new shared recovery source candidate native qualification.
+
+Tests run independently of concurrent Windows original Auto S55 functional run and Windows-WSL2 WL-N0 Normal 300ms test, on independent ARM64 GitHub-hosted runners; no shared original WSL Windows driver state, no shared source writes or floating dependency. This Action performs native functional batch, **not** a performance scenario; 500M and 30% stress remain deferred until bounded capacity preflight. Preserve first error and artifact instead of rerunning a green older source.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Test-only independent original ARM64 native same-source workflow trigger and batch intent. No product code, features, config, ABI, or defaults changed; no unearned source-specific PASS."}
+```

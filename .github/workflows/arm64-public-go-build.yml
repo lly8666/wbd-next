@@ -2,7 +2,7 @@ name: ARM64 original Go client/server plus pinned ISA-L Rust owner
 run-name: ARM64 public bundle ${{ github.sha }}
 on:
   push:
-    branches: [feature/arm64-linux-android-openwrt-autoaccel, experiment/network-matrix-tuning]
+    branches: [feature/arm64-linux-android-openwrt-autoaccel, experiment/network-matrix-tuning, experiment/windows-wiring-arm64-native-parallel-20261028]
     paths:
       - '.github/workflows/arm64-public-go-build.yml'
       - 'tools/arm64_public_go_rust_bundle.sh'
