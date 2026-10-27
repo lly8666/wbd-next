@@ -516,7 +516,17 @@ func(p *m0NativeV4Peer) VerifyPeerFirstAndReverse(
  idle:=time.NewTicker(m0V4IdlePoll);defer idle.Stop()
  for {
   if err:=timeout.Err();err!=nil{
-   return fmt.Errorf("native V4 actual kernel first+reverse app not observed: %w",err)
+   // SOURCE-locked real Windows Wintun/NPF outcome, not a Go/TCP/FEC
+   // simulated receipt. Needed to distinguish unreceived reverse FEC
+   // from M3 rejection, native TUN write, or missing first/reverse TX.
+   stats:=p.Stats()
+   ring,ringErr:=p.ring.Counts()
+   p.mu.Lock()
+   sentAfterOpen:=p.sentAfterOpen
+   txNext,rxNext:=p.sendNext,p.recvNext
+   p.mu.Unlock()
+   return fmt.Errorf("native V4 actual kernel first+reverse app not observed: %w mode=%s sent_after_open=%d original_tx_next=%d original_rx_next=%d native=%+v ring=%+v ring_error=%v",
+    err,p.mode,sentAfterOpen,txNext,rxNext,stats,ring,ringErr)
   }
   work,err:=p.pulse(timeout)
   if err!=nil{return err}
