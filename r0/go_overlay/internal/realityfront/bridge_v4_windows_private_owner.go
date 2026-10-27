@@ -89,11 +89,28 @@ func(b *v4WindowsNativeOwnerBridge) fixedProc(name string)(*syscall.Proc,error){
     winner,_:=b.fixedProcCache.LoadOrStore(name,proc)
     return winner.(*syscall.Proc),nil
 }
+// Native ABI error retains the exact Rust return code through any Go
+// errors.Join wrapping. INVALID(1) may mean untrusted packet rejection;
+// UNKNOWN/BAD_STAGE/FULL/STOP_INCOMPLETE are owner failures, not bad tags.
+type v4WindowsNativeABIError struct{ Code uintptr }
+func(e *v4WindowsNativeABIError)Error()string{
+ return fmt.Sprintf("%v: C ABI rc=%d",errV4WindowsOwner,e.Code)
+}
+func(e *v4WindowsNativeABIError)Unwrap()error{return errV4WindowsOwner}
+// Missing/native transport error without an ABI code also fails closed.
+// INVALID remains an explicit ambiguous legacy packet rejection; the
+// pre-bound M4 authentic lease and Rust v3_ready are never bypassed.
+func V4WindowsNativeOwnerFatal(err error)bool{
+ if err==nil{return false}
+ var native *v4WindowsNativeABIError
+ if errors.As(err,&native){return native.Code!=1}
+ return true
+}
 func winOwnerCall(proc *syscall.Proc,args ...uintptr)error{
-    if proc==nil{return errV4WindowsOwner}
-    status,_,_:=proc.Call(args...)
-    if status!=0{return fmt.Errorf("%w: C ABI rc=%d",errV4WindowsOwner,status)}
-    return nil
+ if proc==nil{return errV4WindowsOwner}
+ status,_,_:=proc.Call(args...)
+ if status!=0{return &v4WindowsNativeABIError{Code:status}}
+ return nil
 }
 func (b *v4WindowsNativeOwnerBridge) prepare(
     snapshot V4ColdSessionSnapshot,rxBoundary uint32,peer v4PeerTransport,

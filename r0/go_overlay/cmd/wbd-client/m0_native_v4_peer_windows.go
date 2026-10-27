@@ -341,6 +341,13 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
  if p.mode==m0WinModeNormal{
   plain,kind,_,openErr:=p.owner.OpenBoundOriginalNormalOrKind1(ctx,seg.Seq,seg.Payload)
   if openErr!=nil{
+   // Rust owner/arena/state faults must not masquerade as arbitrary
+   // untrusted-wire authentication rejects. Only rc=INVALID retains
+   // the existing packet rejection; all other statuses Stop this owner.
+   if realityfront.V4WindowsNativeOwnerFatal(openErr){
+    return fmt.Errorf("%w: original Normal M1/M3 open owner failure: %w",
+     windowsclient.ErrN4NativeGuard,openErr)
+   }
    p.mu.Lock();p.rejected++;p.mu.Unlock()
    return nil
   }
@@ -358,6 +365,10 @@ func(p *m0NativeV4Peer) receiveOne(ctx context.Context,seg faketcp.Segment)error
  }else{
   delivered,openErr:=p.owner.OpenBoundOriginalFEC2(ctx,seg.Seq,seg.Payload)
   if openErr!=nil{
+   if realityfront.V4WindowsNativeOwnerFatal(openErr){
+    return fmt.Errorf("%w: original FEC2 M1/M3 open owner failure: %w",
+     windowsclient.ErrN4NativeGuard,openErr)
+   }
    p.mu.Lock()
    p.rejected++
    first:=p.rejected==1

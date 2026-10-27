@@ -140,6 +140,14 @@ Still pending build/test source freeze: Rust global accounting currently per row
 
 ## S16 — preflight atomicity and native copied-prefix ABI tests (not yet run)
 Completed the batch status return to report exactly how many already accepted firstsend rows were settled, even on a terminal internal error, instead of claiming that an actual prefix was zero. Rust batch fixture first verifies bad duplicate/stale/noncontiguous PN/SEQ rejects with both real M1 pending records untouched; then validates Accepted PN0/Uncertain PN1 accounts exactly one optional immutable repair shadow and burns both PN without fabricated fresh credit; replay of same metadata is rejected. Go original DLL ABI exact C 24B size/offsets and bounded max32, and error-path original-Go firstsend descriptors may never be submitted twice. Updated original Go assembly manifest for both tests; no native test dispatch before whole batch SOURCE freeze.
-```feature-impact
+```json
 {"kind":"none","ids":[],"reason":"Native Rust/Go batch firstsend source-locked negative and layout regression tests plus exact existing assembly manifest; no public selector/feature promotion."}
+```
+
+
+## S17 — native Windows Normal/FEC2 open typed fatal-status boundary (isolated pre-freeze)
+Before edit re-read original v5_open_record_entry, rust v3_ready, actual M4 borrowHot, Go scopedclient opener, and Native winOwnerCall. Previously all original Normal/FEC2 Rust open errors became a simple bad-packet count, so a real BAD_STAGE, FULL, retired handle, or unreleased Stop was hidden as loss. Preserve Rust exact C ABI 1=INVALID (ambiguous crypto/replay/packet) as the existing native rejection, but all other C ABI statuses and untyped missing native session errors now terminate owner with the original exception intact, not fake network loss. The shared Rust v3_ready epoch/device/generation and authenticated Wintun lease remain mandatory on every open. Add source-locked Windows typed ABI error unwrap/return-code test; do not synthesize a packet or change replay acceptance. INVALID remains ambiguous until Rust per-cause typing is added and a real native test runs.
+ 
+```feature-impact
+{"kind":"updated","ids":["windows-native-transport","normal-off","fec-fixed"],"reason":"Experimental Windows original M1/M3 native error provenance separates fatal owner/arena/state failures from packet-invalid return; preserves existing authentication/replay hard gates and DOES NOT claim an Actions product PASS."}
 ```
