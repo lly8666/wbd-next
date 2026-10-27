@@ -308,8 +308,14 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let bytes=wire_len.checked_add(54).ok_or(INVALID)? as u64;
     let mut global=m2_global().lock().map_err(|_|BAD_STAGE)?;
     global.on_fresh_accepted(m.direction,bytes,now).map_err(|_|BAD_STAGE)?;
-    m.shadow.on_sent(frozen,now,MonoNs(now.0.saturating_add(M2_HARD_EXPIRY_NS)))
-        .map_err(|_|FULL)?;
+    // Every successful NPF submission counts as a first send. Repair
+    // retention is optional under v3, not an ACK window or DATA credit.
+    // Keep a bounded immutable shadow while there is room; once saturated,
+    // release only the optional copy, never reject accepted fresh traffic.
+    if m.shadow.outstanding()<MAX_M2_FROZEN {
+        m.shadow.on_sent(frozen,now,MonoNs(now.0.saturating_add(M2_HARD_EXPIRY_NS)))
+            .map_err(|_|BAD_STAGE)?;
+    }
     Ok(m.shadow.outstanding() as u32)
 }
 // Poll is owner-time-only; an actual repair remains byte-exact from its
@@ -885,10 +891,6 @@ fn v3_seal_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         return Err(INVALID)
     }
     let budget=normal_off_windows_budget(e)?;
-    if e.m2.as_ref().is_some_and(|m|
-        m.shadow.outstanding()+m.pending.len()>=MAX_M2_FROZEN) {
-        return Err(FULL)
-    }
     if ipv4.len()>budget.single_business_payload_mtu ||
         ipv4[0]&15<5{return Err(INVALID)}
     let mut slab=e.arena.allocate().map_err(|_|FULL)?;

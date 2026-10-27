@@ -177,15 +177,11 @@ func(p *m0NativeV4Peer) sendACK()error{
 }
 func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
  if p.stopped(){return false,context.Canceled}
- if p.mode==m0WinModeNormal||p.mode==m0WinModeFixed||p.mode==m0WinModeAuto{
-  // This bounded status is from ORIGINAL Rust M2 frozen shadows, never
-  // the peer's cumulative TCP-appearance ACK. Fresh resumes on an
-  // authenticated kind1 receipt even with an earlier carrier gap.
-  outstanding,e:=p.owner.BoundOriginalM2Outstanding(ctx)
-  if e!=nil{return false,fmt.Errorf("M0 original M2 outstanding query: %w",e)}
-  p.mu.Lock();p.pendingCount=int(outstanding);p.mu.Unlock()
-  if outstanding>=m0V4M2ShadowCredit{return false,nil}
- }else if len(p.pending)>=m0V4TxPendingMax{return false,nil}
+ // Original M2 shadow stores OPTIONAL frozen repair candidates. Its
+ // occupancy never waits on peer ACK to permit new Wintun DATA. The Rust
+ // owner still makes an honest, bounded choice about repair retention.
+ if p.mode!=m0WinModeNormal&&p.mode!=m0WinModeFixed&&p.mode!=m0WinModeAuto &&
+    len(p.pending)>=m0V4TxPendingMax{return false,nil}
  n,err:=p.ring.ReceiveReadyIPv4(ctx,p.scratch)
  if errors.Is(err,windowsclient.ErrN4NativeNoPacket){return false,nil}
  if err!=nil{

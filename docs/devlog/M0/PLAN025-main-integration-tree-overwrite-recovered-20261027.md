@@ -36,3 +36,9 @@ S1: preallocate before FixedStream ownership take and assert full->release->same
 ```feature-impact
 {"kind":"updated","ids":["normal-off","fec-fixed"],"reason":"Experimental Windows FEC state capacity recovery and authenticated half/full serial wrap; no new product or performance PASS or default changes."}
 ```
+
+## Isolated Windows remediation S2 (C1 fresh / optional repair)
+Re-read current Windows original M2 trusted NPF completion and GlobalRepairAllocator::on_fresh_accepted contract, ReceiptState::on_sent and current v3 opportunities. Original Go queried shadow outstanding on *every* packet and paused fresh at1536, despite independent repair cache meaning. Rust v3_seal duplicated gate. Both are removed, while exact accepted M4 result still feeds F credit and only optional immutable cache is abandoned at saturation. New native-scoped Rust regression makes >1536 actual first sends with shadow fixed<=1536, same generation; original ciphertext/peer ACK remain protected. This is not proof of 500Mbps or total memory envelope. Repair budget C2 and Auto C3 remain open.
+```feature-impact
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Experimental Windows v3 firstsend no longer gated by optional 1536-entry repair shadow; product performance requires future exact frozen SOURCE native Actions."}
+```

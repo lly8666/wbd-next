@@ -858,6 +858,30 @@ mod tests{
         assert_eq!(release(&mut r,h),OK);
     }
     #[test]
+    fn m0_windows_fresh_firstsend_outlives_optional_m2_shadow_full(){
+        let mut r=Registry{generation:200,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=setup(&mut r,false,991,99);
+        let ep=[2;16];
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_arm_entry(&mut e,ep,991,99).unwrap();
+            for i in 0..(MAX_M2_FROZEN+4) {
+                let mut out=[0u8;2048];
+                let (n,seq,pn)=v3_seal_entry(
+                    &mut e,ep,991,99,&data((i%250) as u8),&mut out)
+                    .expect("fresh seal must not depend on optional repair occupancy");
+                let cached=m2_kernel_firstsend_entry(
+                    &mut e,ep,991,99,pn,seq,n,1)
+                    .expect("actual NPF copy must not fail due to repair-cache cap");
+                assert!(cached as usize<=MAX_M2_FROZEN);
+            }
+            assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),
+                MAX_M2_FROZEN);
+            assert!(e.m2.as_ref().unwrap().pending.is_empty());
+        }
+    }
+    #[test]
     fn m0_windows_fixed6_frozen_linux_stream_same_block_parity_npf_maturity_fence(){
         // Native Windows scoped crypto+M1/M2 unit; not a genuine NPF syscall
         // or two-OS product run. The latter must remain separately NOT_RUN.
