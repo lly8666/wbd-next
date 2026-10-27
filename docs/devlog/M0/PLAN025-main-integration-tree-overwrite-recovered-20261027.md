@@ -56,3 +56,10 @@ No local execution tests. Push Actions on the repaired SOURCE are required; any 
 ```feature-impact
 {"kind":"updated","ids":["fec-auto"],"reason":"Record source-locked real native natural Auto one-grade <=120s failure and measured Windows actual-k window-timer mismatch without promoting product, and retain earlier distinct exact-source PASS/FAIL."}
 ```
+
+## H303 record consistency recovery for original natural Auto failure (2026-10-28)
+- Original main `f33c6b282c23cfa74146fa096086f0ddbc52dbc4` Governance Action`40553017297/1`: structure and identity **PASS**, Feature catalog **FAIL** `declared feature card not updated: fec-fixed`. A historical comprehensive four-card `feature-impact` in the same changed devlog correctly preserves the older Fixed/Game integration facts, but the H303 single-card-only source receipt omitted the three other referenced files from the push diff. Fix is to add an explicit **unchanged mode scope** note to each already-listed historical feature entry, not erase an old `feature-impact`, disable enforcement, or retcon the new Auto failure as affecting Fixed/Game. All historic mode/source statuses remain immutable; no product or policy changes. Keep the original H303 FAIL.
+
+```feature-impact
+{"kind":"updated","ids":["fec-auto","fec-fixed","game-fixed-fec","game-lanes"],"reason":"Reconcile the historical four-card integration declaration and H303 source-specific Auto natural failure with explicit unaffected Fixed/Game mode scope; preserves all source-locked positive/negative qualification and changes neither executable product nor feature promotion."}
+```
