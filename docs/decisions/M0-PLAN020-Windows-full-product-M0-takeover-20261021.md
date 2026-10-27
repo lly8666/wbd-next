@@ -1,5 +1,9 @@
 # PLAN020 — user reassignment: M0 exclusively owns the actual Windows public product end-to-end (2026-10-21)
 
+## 2026-10-27 execution update: finish capabilities, batch qualification
+
+User requests substantially faster delivery before further legacy feature migration. Existing authority and hard correctness gates stay unchanged. Implement one complete public capability across its callers/ABI/platform I/O/config/tests/assembly before claiming progress; normal intermediate commits use cheap preflight, not repeated full Normal qualification. The detailed operating cadence and `[wiring-full]` / manual entry are in TEST_PLAN §0. Existing batch intent covers ordinary repairs; final evidence and one boundary cursor replace per-helper S/H. Do not redesign Linux-proven protocol logic for Windows or add defensive features without a concrete known failure/risk/required contract. Fix current assembly/compile failures first, then wire actual public Game lanes and Fixed/Auto end-to-end; independent legacy capabilities continue as complete batches once their actual dependencies are ready. This does not reassign workers, alter epochs, declare product PASS, or authorize a new scope.
+
 ## Authority and single owner
 User expressly instructed: **“不用m4负责了，你来全权负责正式 WFP/default-route、真实内核 UDP 数据驱动和 WinForms Applied/Disconnect 的完整产品事务，赶紧测”**. M0 main global writer takes over entire remaining native Windows product scope immediately. This is an M0 G2 ownership decision inside existing parent task R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025, not a fictitious newly completed M4 task and not a production release authorization.
 
