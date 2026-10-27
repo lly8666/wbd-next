@@ -33,6 +33,15 @@ evidence_refs只放同源结构化收据即可。不要为此重跑产品网络�
 Maintenance 40434507602 的229项还保留4条旧冻结blob子断言失败（含原adapter和FEC policy两文件）；
 这些产品文件均未由本次改动修改。不会把新CI单测通过写成全仓库/产品通过。
 
+最终工具SOURCE a46bab888b4fadd57572f31af8d67293eecfebae：
+- Actions40434802474：25项定向治理/目录/交付节奏测试PASS；目录声明检查PASS，随后既有cursor结构错误仍FAIL。
+- Actions40434804189静态/装配检查PASS、原生Windows同源装配PASS；编译预检在记录时仍运行。
+- 首个完整预检Actions40434507724在源码2e24fe91已实测捕获同一个p.blockID测试编译错误，
+  Linux完整构建及Windows原生功能job均SKIPPED，未编Rust/未装驱动/未启动WSL；证明前置拦截实际生效。
+- 完整原生产品资格NOT_RUN；maintenance整体FAIL保持，原始记录不覆盖。
+交付PR #31只合最新integration分支。M0接手按TEST_PLAN第0节执行，先修已知编译调用方和自身cursor引用分类，
+再以完整Game/Fixed/Auto能力推进；不需要为读取这些规则重新建任务/epoch或重跑性能。
+
 ```feature-impact
 {"kind":"none","ids":[],"reason":"只改变开发批次/留痕频率和CI触发、共享现有精确源码装配，不改变运行时功能、默认值、平台资格或硬约束。"}
 ```
