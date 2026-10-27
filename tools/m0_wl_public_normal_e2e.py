@@ -101,19 +101,26 @@ seen=set()
 sent=0
 start=time.monotonic()
 deadline=start+max(35.,hold+9.)
-last_send=0.
+next_send=start
 last_diag=start
 ready_since=None
 while time.monotonic()<deadline:
  now=time.monotonic()
- if now-last_send>=cadence:
-  last_send=now
-  try:
-   sock.sendto(('WBD-PUBLIC-NORMAL-%s-%06d'%(local,sent)).encode(),(remote,45901))
-   sent+=1
-  except OSError:
-   # Route is not ready yet; only actual successful socket sends count.
-   pass
+ # Absolute monotonic pacing: Windows hosted timer wakeups may coalesce
+ # fifteen 1.5ms ticks into one ~16ms wake. Stage up to 16 *separate*
+ # real kernel UDP sends rather than mistaking wake frequency for the
+ # SOURCE send rate. Linux and Windows use the SAME simple fixture.
+ if now>=next_send:
+  due=min(16,1+int((now-next_send)/cadence))
+  for _ in range(due):
+   try:
+    sock.sendto(('WBD-PUBLIC-NORMAL-%s-%06d'%(local,sent)).encode(),(remote,45901))
+    sent+=1
+   except OSError:
+    # Before route activation only successful native socket writes count.
+    pass
+   next_send+=cadence
+  if next_send<now-.02:next_send=now
  while True:
   try: payload,peer=sock.recvfrom(2048)
   except BlockingIOError:break
@@ -293,7 +300,7 @@ print(json.dumps(result),flush=True)
   wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1",
     str(done),"53",".0015"],stdout=outputs[0],stderr=subprocess.STDOUT)
   la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
-    "python3",unix(app),"10.66.0.1","10.66.0.2",unix(done),"53",".0015"],
+    "python3",unix(app),"10.66.0.1","10.66.0.2",unix(done),"53",".003"],
     stdout=outputs[1],stderr=subprocess.STDOUT)
   until=time.monotonic()+100
   while wa.poll() is None or la.poll() is None:
