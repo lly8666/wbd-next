@@ -7,7 +7,8 @@
   "stage": "experimental",
   "development_branch": "experiment/fec-network-tuning",
   "available_on": [
-    "integration/w168-freeze-windows-adapter-20261026"
+    "integration/w168-freeze-windows-adapter-20261026",
+    "main"
   ],
   "defaults": {
     "mode": "fec-fixed",
@@ -104,7 +105,8 @@
     "Windows W168 now selects the full Linux FEC2 0..6 range using original Rust FixedStream; original source8e full native first-send M2 repair failed before READY, not product PASS.",
     "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS.",
     "Exact SOURCE350199f native Actions40445098497 remains FAIL for Windows original FEC2 reverse first delivery; Linux raw/TUN sender works, Windows still rejected first incoming 103B record before Ready. Subsequent source82ec native FEC2 diagnostic candidate has no inherited PASS; retained as partial.",
-    "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible."
+    "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible.",
+    "2026-10-27 main 02a9d938 双亲源码合入仅说明代码可用，非正式产品晋级；Windows Auto 自然 M2 2s/8s 源9d2362d Action40476182202 FAIL，GUI/主机全局WFP及高负载网络性能依然待各自精确源码验收。"
   ],
   "promotion": null
 }
