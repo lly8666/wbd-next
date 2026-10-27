@@ -72,8 +72,27 @@ func runM0NativeV4WindowsGame(
    }
   }(i,ep,assoc)
   if err=assoc.Start(time.Now());err!=nil{return err}
+  // Same original FakeTCP SYN timer as the proven one-lane Windows
+  // bootstrap, separately per Game lane. No invented TCP/FEC owner.
   established,cancel:=context.WithTimeout(ctx,20*time.Second)
-  err=assoc.WaitEstablished(established)
+  handshaked:=make(chan error,1)
+  go func(a *faketcp.ClientAssociation){handshaked<-a.WaitEstablished(established)}(assoc)
+  tick:=time.NewTicker(100*time.Millisecond)
+ waitLane:
+  for{
+   select{
+   case <-established.Done():
+    err=established.Err();break waitLane
+   case err=<-handshaked:
+    break waitLane
+   case err=<-failed:
+    break waitLane
+   case <-tick.C:
+    _,err=assoc.EmitRetransmitDue(time.Now())
+    if err!=nil{break waitLane}
+   }
+  }
+  tick.Stop()
   cancel()
   if err!=nil{return fmt.Errorf("original Game%d lane%d TCP: %w",count,i+1,err)}
  }
