@@ -46,7 +46,7 @@ func watchM0NativeV4AutoControl(
   if !strings.HasPrefix(line,"fec.profile="){continue}
   profile,err:=m0WindowsV4Profile(strings.TrimSpace(strings.TrimPrefix(line,"fec.profile=")))
   if err!=nil{
-   fmt.Printf("WBD_WINDOWS_AUTO_OPERATOR_REJECTED invalid_profile=%q\\n",line)
+   fmt.Printf("WBD_WINDOWS_AUTO_OPERATOR_REJECTED invalid_profile=%q\n",line)
    continue
   }
   select{case requests<-profile:case <-ctx.Done():return}
@@ -363,9 +363,9 @@ waitNative:
   case requested:=<-autoOperatorRequests:
    state,changeErr:=transport.RequestAutoStartProfile(requested)
    if changeErr!=nil{
-    fmt.Printf("WBD_WINDOWS_AUTO_REVISION_REJECTED profile=%d reason=%v\\n",requested,changeErr)
+    fmt.Printf("WBD_WINDOWS_AUTO_REVISION_REJECTED profile=%d reason=%v\n",requested,changeErr)
    }else{
-    fmt.Printf("WBD_WINDOWS_AUTO_REVISION_REQUESTED_NOT_APPLIED revision=%d profile=%d\\n",
+    fmt.Printf("WBD_WINDOWS_AUTO_REVISION_REQUESTED_NOT_APPLIED revision=%d profile=%d\n",
      state.RequestedRevision,state.Desired)
    }
   case <-metricsTicker.C:

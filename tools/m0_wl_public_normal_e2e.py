@@ -248,7 +248,7 @@ print(json.dumps(result),flush=True)
  if mode=="auto-revision":
   # Exact original Go TLS→Linux FecV2Step→Rust quiescent revision.
   # No alternate first-send ACK, kernel shortcut or fake Applied marker.
-  w.stdin.write("fec.profile=light\\n");w.stdin.flush()
+  w.stdin.write("fec.profile=light\n");w.stdin.flush()
   ready(out/"client.log","WBD_WINDOWS_AUTO_REVISION_REQUESTED_NOT_APPLIED revision=2 profile=0",w,15)
   report["auto_revision_requested"]="PASS_REAL_RUST_OPERATOR_REVISION2_PENDING"
   again=[]
