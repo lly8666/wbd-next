@@ -369,3 +369,11 @@ S44 exact parent SOURCE `7d0f6462a4712d6c57e38339a7137731dc179f18`: Windows orig
 ```feature-impact
 {"kind":"updated","ids":["fec-auto"],"reason":"Correct original Windows Auto mature first-send and actual-k historical counter span pairing using unchanged true M2 snapshots and thresholds; add a bounded 2s diagnostic and a deterministic jittered native Go test, no policy/GUI/default/threshold or platform privilege relaxation."}
 ```
+
+## S54 reconcile S53 original-Go exact assembly manifest preflight FAIL (2026-10-28)
+- S53 source `ce4f8ce5293688a84bc2a5a72793131cba0395cd` workflow `40553300600/1` **FAIL** at `tools/prepare_windows_wiring.py --check-only`: `assembly blob mismatch: r0/go_overlay/internal/realityfront/bridge_v4_windows_auto_controller.go`. Python YAML/unit checks passed; Windows original-Go compile/native and Win/Linux Rust jobs SKIPPED. This is an intentionally fail-closed source integrity check, not evidence of product test result or quality-code correctness. Do not bypass the checksum.
+- Exact present modified Go blob `65f6d4b468e8026852e8a52267b7a649c42d78ae` replaces obsolete manifest expected `3cee40e963cd4a95bcd310ba163ad723d7df0631` for just the original-Go created Windows Auto controller file. No code/test content, original legacy SOURCE, authentication, M2 threshold or platform permission changed; retains one-copy assembly and the S53 jittered native Go regression. One real native Auto natural mode will run from **S54** only if cheap schema/assembly and code preflight succeed. S52 native 119s FAIL and original scoped S48 Auto startup PASS preserved.
+
+```feature-impact
+{"kind":"updated","ids":["fec-auto"],"reason":"Update frozen original-Go Windows Auto source-assembly manifest blob identity after a fail-closed static mismatch, and register the exact failed S53 source; product logic and user 120s acceptance untouched."}
+```
