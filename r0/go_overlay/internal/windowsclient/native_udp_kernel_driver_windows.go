@@ -188,7 +188,7 @@ func (d *N4OriginalKernelPacketLease) n4ReceiveReadyIPv4(
 // copy a packet, invent a native completion or confer product Applied.
 // WaitForMultipleObjects is capped at 20ms to observe Go cancellation even
 // if the original process-created Win32 close event has not yet fired.
-const n4WaitTimeout uintptr=0x102
+const n4OriginalRingWaitTimeout uintptr=0x102
 func n4BoundedOriginalWaitMillis(duration time.Duration)uintptr{
  if duration<=0{return 1}
  ms:=duration.Milliseconds()
@@ -231,7 +231,7 @@ func (d *N4OriginalKernelPacketLease) WaitReadReady(
   return true,nil
  case waitObject0+1:
   return false,io.EOF
- case n4WaitTimeout:
+ case n4OriginalRingWaitTimeout:
   return false,nil
  case waitFailed:
   return false,wintunCallError("WaitForMultipleObjects(original ring)",callErr,nil)

@@ -635,7 +635,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_udp_kernel_driver_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
-      "result_blob": "3fdba807a21487ff76c0d09019c2ff4b352abbdb"
+      "result_blob": "dc70501597b3249edc5a14b3e55b052e14cf03d4"
     },
     {
       "kind": "create",
