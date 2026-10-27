@@ -35,6 +35,7 @@ type V4WindowsAuthenticatedGameGroup struct{
  epoch [16]byte
  joined uint64
  stageProc,receiveProc,joinProc,stopProc *syscall.Proc
+ gameFec uint8 // authenticated TLS GameFec=1..7 -> shared fixed profile0..6
  closed bool
 }
 // Epoch exposes only the negotiated original-Go TLS generation marker,
@@ -50,13 +51,17 @@ func(g *V4WindowsAuthenticatedGameGroup) Epoch()[16]byte{
 // Rust owner can be submitted through this API.
 func V4WindowsEstablishOriginalGameClientGroup(
  ctx context.Context,dll string,associations []*faketcp.ClientAssociation,
- base ClientAdmissionConfig,
+ base ClientAdmissionConfig,gameFec ...uint8,
 )(*V4WindowsAuthenticatedGameGroup,error){
  n:=len(associations)
+ if len(gameFec)>1{return nil,ErrAdmissionParams}
+ var negotiatedFec uint8
+ if len(gameFec)==1{negotiatedFec=gameFec[0]}
+ if negotiatedFec>7{return nil,ErrAdmissionUnsupported}
  if ctx==nil||(n!=2&&n!=4)||base.Policy.Transport!=TransportGame||
   int(base.Policy.DesiredLanes)!=n||int(base.DesiredLanes)!=n||
   base.Policy.FECMode!=FECOff{return nil,ErrAdmissionUnsupported}
- g:=&V4WindowsAuthenticatedGameGroup{}
+ g:=&V4WindowsAuthenticatedGameGroup{gameFec:negotiatedFec}
  for i,assoc:=range associations{
   if assoc==nil||assoc.BootstrapConn()==nil{return nil,ErrAdmissionParams}
   b,e:=newV4WindowsPrivateOwnerBridge(dll)
@@ -64,7 +69,8 @@ func V4WindowsEstablishOriginalGameClientGroup(
   cfg:=base
   cfg.LaneID=uint8(i+1)
   session,e:=EstablishClientV4(ctx,assoc.BootstrapConn(),cfg,
-   V4ClientOptions{DataPlaneReady:true,Epoch:g.epoch,fec2Product:true})
+   V4ClientOptions{DataPlaneReady:true,Epoch:g.epoch,
+    fec2Product:true,GameFec:g.gameFec})
   if e!=nil{return nil,e}
   if i==0{g.epoch=session.Epoch}
   if session.Epoch!=g.epoch||g.epoch==[16]byte{}{return nil,ErrAdmissionUnsupported}
@@ -119,6 +125,13 @@ func(g *V4WindowsAuthenticatedGameGroup) BindAndJoinOriginalWintun(
  runtime.KeepAlive(handles)
  if group==0{return errV4WindowsOwner}
  g.joined=group
+ // Linux authority: each lane's protected GameFec TLS extension matches
+ // g.gameFec before Detach. Enable ONE Rust GameFec owner, never Go FEC.
+ if g.gameFec!=0{
+  fec,err:=b.dll.FindProc("wbd_m0_win_owner_v4_game_fec_enable")
+  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
+  if err=winOwnerCall(fec,uintptr(group),uintptr(g.gameFec-1));err!=nil{return err}
+ }
  return nil
 }
 func(g *V4WindowsAuthenticatedGameGroup) verifyLive(ctx context.Context)error{

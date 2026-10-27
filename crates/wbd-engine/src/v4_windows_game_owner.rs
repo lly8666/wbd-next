@@ -15,6 +15,7 @@ pub(super) struct WinGameGroup {
     generation:u32,
     epoch:[u8;16],
     tick:u64,
+    role_server:bool,
 }
 #[repr(C)]
 #[derive(Clone,Copy)]
@@ -78,7 +79,7 @@ pub(super) fn join(
         .collect::<Result<Vec<_>,_>>()?;
     r.game_groups.insert(group,Arc::new(Mutex::new(WinGameGroup{
         adapter,handles:ids,lanes,generation,
-        epoch:scope.ok_or(INVALID)?,tick:0,
+        epoch:scope.ok_or(INVALID)?,tick:0,role_server:server,
     })));
     Ok(group)
 }
@@ -97,6 +98,37 @@ fn stopped_group(r:&mut Registry,h:u64)->i32{
     r.game_groups.remove(&h);
     OK
 }
+
+#[cfg(feature="fec2_product_record")]
+pub(super) fn enable_fec(r:&Registry,h:u64,profile:u8)->i32{
+    if profile>6{return INVALID}
+    let Some(group)=r.game_groups.get(&h)else{return UNKNOWN};
+    let Ok(mut game)=group.lock()else{return BAD_STAGE};
+    // The caller is the genuine protected original-Go Game group that
+    // negotiated GameFec=profile+1 on EVERY distinct TLS lane. This native
+    // interface never accepts an unjoined cold key, never sets OS Applied,
+    // and reuses Linux's one shared GameFecTx/GameFecRx owner.
+    if game.lanes.iter().any(|lane|lane.lock().ok().is_none_or(|e|
+        e.game_group!=Some(h)||e.phase!=PH_ACTIVE||!e.feature7||
+        !e.device.is_some_and(|dev|!dev.quiesced))){
+        return BAD_STAGE
+    }
+    let server=game.role_server;
+    match game.adapter.enable_game_fec(profile,server){
+        Ok(())=>OK,
+        Err(_)=>BAD_STAGE,
+    }
+}
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_win_owner_v4_game_fec_enable(
+    group:u64,profile:u32,
+)->i32{
+    if profile>6{return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    enable_fec(&r,group,profile as u8)
+}
+
 pub(super) fn offer_records(
     r:&Registry,h:u64,payload:&[u8],max:usize,
 )->Result<Vec<WbdWindowsGameRecordV4>,i32>{
@@ -327,4 +359,46 @@ mod tests{
             assert_eq!(PRODUCT_APPLIED,0);
         }
     }
+    #[test]
+    fn m0_windows_game_two_four_shared_linux_fec2_fixed_profile_before_public_driver(){
+        // Authenticated/protected owner+feature7 already supplied by setup.
+        // An actual Go caller must negotiate GameFec=profile+1 in TLS
+        // first. This unit is private Go/Rust ABI, NEVER native NPF/TUN PASS.
+        for n in [2,4]{
+            let mut r=Registry{generation:1,entries:BTreeMap::new(),
+                game_groups:BTreeMap::new()};
+            let client=setup(&mut r,n,false);
+            let server=setup(&mut r,n,true);
+            let c=join(&mut r,&client,false).unwrap();
+            let s=join(&mut r,&server,true).unwrap();
+            assert_eq!(enable_fec(&r,c,7),INVALID);
+            assert_eq!(enable_fec(&r,c,6),OK);
+            assert_eq!(enable_fec(&r,s,6),OK);
+            assert_eq!(enable_fec(&r,c,6),BAD_STAGE,
+                "cannot install second FEC owner or change an applied profile");
+            assert!(r.game_groups[&c].lock().unwrap().adapter.has_game_fec());
+            assert!(r.game_groups[&s].lock().unwrap().adapter.has_game_fec());
+            let mut ipv4=[0u8;80];ipv4[0]=0x45;
+            ipv4[2..4].copy_from_slice(&80u16.to_be_bytes());
+            ipv4[8]=64;ipv4[9]=17;ipv4[20..].fill(0x72);
+            let staged=offer_records(&r,c,&ipv4,n).unwrap();
+            assert_eq!(staged.len(),n);
+            assert!(staged.iter().all(|x|x.length>=63));
+            assert!(staged.windows(2).all(|x|x[0].wire!=x[1].wire));
+            // Distinct per-lane encrypted source, one shared Linux FEC
+            // owner. Receiving FEC recovered frame(s) still requires a
+            // batched TUN-success commit ABI and physical kernel workers.
+            for h in client.iter().chain(server.iter()){
+                let d=r.entries[h].lock().unwrap().device.unwrap();
+                assert_eq!(quiesce_wintun(&mut r,*h,[2;16],d.luid,d.ifindex),OK);
+            }
+            assert_eq!(stopped_group(&mut r,c),OK);
+            assert_eq!(stopped_group(&mut r,s),OK);
+            for h in client.iter().chain(server.iter()){
+                assert_eq!(stop(&mut r,*h),OK);
+                assert_eq!(release(&mut r,*h),OK);
+            }
+        }
+    }
+
 }
