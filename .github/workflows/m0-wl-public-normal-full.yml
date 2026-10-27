@@ -134,6 +134,8 @@ jobs:
             if($LASTEXITCODE -ne 0){throw 'Linux shared Auto pending-original-M2 functional regression FAIL'}
             & ../result/realityfront.test.exe '-test.run=TestM0WindowsFEC2OpenABICodeClassificationSurvivesWrapper' '-test.count=1'
             if($LASTEXITCODE -ne 0){throw 'Windows FEC2 original ABI error provenance / fail-closed regression FAIL'}
+            & ../result/realityfront.test.exe '-test.run=TestM0WindowsAutoAlignedMatureCohortPreservesTrueKWindow' '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Windows original Auto real 2s/8s actual-k cohort alignment regression FAIL'}
           } finally {Pop-Location}
           @{source=$env:GITHUB_SHA;scope='GO_COMPILE_ONLY';result='PASS';native_product='NOT_RUN'} |
             ConvertTo-Json | Set-Content result/preflight.json

@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "1b33e4a4bb4543961957124ac0c49b63d7e3cab0",
+  "kind": "original_real_signed_two_os_auto_natural_downshift_119s_terminal_failure",
+  "run": {
+    "id": 40550358765,
+    "attempt": 1,
+    "conclusion": "failure",
+    "native_job_id": 122354443789,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40550358765"
+  },
+  "artifact": {
+    "id": 12756320281,
+    "name": "m0-wl-full-public-normal-direct",
+    "zip_sha256": "473785c7d053b905b03077803fa40240b9b41b93f74b0f42a9b1a893f4495487",
+    "zip_independently_verified": true
+  },
+  "native": {
+    "signed_win_npcap_wintun_os_wal_ready": "PASS",
+    "linux_wsl2_raw_tun_tls_ready": "PASS",
+    "initial_udp_duplex": "PASS",
+    "initial_tcp_duplex": "PASS",
+    "natural_windows_grade_applied": "FAIL",
+    "windows_auto_revision_start": 1,
+    "windows_auto_revision_end": 1,
+    "windows_auto_start_profile": 5,
+    "windows_auto_end_profile": 5,
+    "linux_s2c_one_step_or_more_applied": "OBSERVED",
+    "linux_s2c_last_observed_revision": 6,
+    "linux_s2c_last_profile": 0,
+    "normal_dual_owned_stop": "NOT_RUN_AFTER_NATIVE_AUTOMATIC_GRADE_ASSERTION",
+    "wl_n0": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "real_native_app": {
+    "windows_sent": 79299,
+    "linux_sent": 39669,
+    "windows_first_received": 39626,
+    "linux_first_received": 79226,
+    "windows_app_1hz_observations": 119,
+    "windows_min_socket_sends_per_observation": 631,
+    "windows_max_socket_sends_per_observation": 667,
+    "linux_app_1hz_observations": 118,
+    "linux_min_socket_sends_per_observation": 333,
+    "linux_max_socket_sends_per_observation": 336
+  },
+  "true_windows_m2": {
+    "window_quality_log_observations": 51,
+    "ratio_actual_k_sources_to_slow_mature_first_sent": {
+      "below_0_90": 27,
+      "within_0_90_to_1_05": 15,
+      "above_1_05": 9
+    },
+    "typical_fast_first_sent_values": [
+      1334,
+      2673
+    ],
+    "typical_slow_first_sent_values": [
+      5340,
+      6680
+    ],
+    "typical_actual_k_sources_values": [
+      4000,
+      5340,
+      6680
+    ],
+    "fast_slow_first_sent_equal_observed_each": "OBSERVED_ZERO_LOSS_IN_LOGGED_WINDOWS_WINDOWS",
+    "first_bad_boundary": "Windows Go backend independent elapsed-age floors(2s,8s,16s) select slightly different ticker intervals; actual-k old 8..16s interval not necessarily same measured span as mature first-send current 0..8s interval; policy calls it UNKNOWN and clears downshift proof; no fabricated packet or structural control fault observed"
+  },
+  "failure": "native FecV2Step natural Auto downshift NOT_APPLIED after 119s real healthy UDP; full genuine Windows auto dynamic revision2 and regular owned Stop NOT_RUN",
+  "next_hypothesis": "Align genuine mature slow first-send window and prior actual-k histogram snapshot spans by shared real sampling-index cohort; keep 512/4096, >=90% covered/<=20% censorship and existing Rust M2 policy. Reproduce a jittered true-window offset in deterministic Windows Go regression before another exact-source native Action.",
+  "guardrails": "Do not relax UNKNOWN to VALID, do not invent zero packet loss, no producer pacing replay, do not alter 2s/8s Go policy or original Rust auth/sequence/Stop. S45 Auto FAIL, S48 startup PASS and S51 parser FAIL remain separate exact-SOURCE historical evidence."
+}
