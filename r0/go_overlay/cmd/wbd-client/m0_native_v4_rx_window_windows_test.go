@@ -183,3 +183,22 @@ func TestM0WindowsAutoOriginalControlRequestAndOwnedStop(t *testing.T){
  case <-time.After(time.Second):t.Fatal("Auto stdin stop failed to cancel native owner")
  }
 }
+
+func TestM0RemediationHalfAndFullWrapUnauthenticatedNeverForgesCarrierACK(t *testing.T){
+ w:=newM0V4RxWindow(1000)
+ first:=uint32(1000+m0V4RxAheadMax+2048)
+ w.NoteAuthenticated(first,100) // only callable after real Rust AEAD+Wintun copy
+ if !w.independentOnly{t.Fatal("did not detach after actual far-ahead verified record")}
+ for _,high:=range []uint32{0x7ffffffe,0x80000080,0xfffffff0,0x000000a0}{
+  // Simulated already-authenticated Rust high watermark at exact boundary.
+  w.authenticatedHigh=high
+  seq:=high+32
+  if ok,e:=w.Check(seq,100);ok||e==nil{t.Fatalf("presentation accepted %08x",seq)}
+  if !w.IndependentAEADCandidate(seq,100){t.Fatalf("verified-near candidate refused %08x",seq)}
+  w.NoteAuthenticated(seq,100)
+  if w.Ack()!=1000||w.Pending()!=0{t.Fatal("hole crossed by invented carrier ACK")}
+  if w.IndependentAEADCandidate(seq+m0V4IndependentAEADLookahead+1024,100){
+   t.Fatal("untrusted 4MiB+ jump accepted")
+  }
+ }
+}

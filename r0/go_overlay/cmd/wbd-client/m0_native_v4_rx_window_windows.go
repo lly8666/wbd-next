@@ -19,6 +19,9 @@ type m0V4RxWindow struct {
  // and after all DATA has actually reached the owned Wintun sink.
  // Never feed this to the TCP cumulative ACK / Rust M2 receipt.
  authenticatedHigh uint32
+ // The cumulative TCP receipt ledger is permanently detached once genuine
+ // M3 progress outruns it. Later 32-bit serial aliases cannot forge an ACK.
+ independentOnly bool
  received map[uint32]uint32
 }
 func newM0V4RxWindow(start uint32)*m0V4RxWindow{
@@ -30,7 +33,15 @@ func newM0V4RxWindow(start uint32)*m0V4RxWindow{
 func(w *m0V4RxWindow) Check(seq uint32,n int)(bool,error){
  if w==nil||n<=0||n>m0V4RxRecordMax{return false,errM0V4RxWindow}
  ahead:=int32(seq-w.cumulative)
- if ahead<0{return false,nil}
+ if w.independentOnly{return false,errM0V4RxWindow}
+ if ahead<0{
+  // A cumulative hole may be >2^31 behind verified independent traffic.
+  // Distinguish by M3-authenticated proximity, never the stale ACK anchor.
+  if w.authenticatedHigh!=w.cumulative && w.IndependentAEADCandidate(seq,n){
+   return false,errM0V4RxWindow
+  }
+  return false,nil
+ }
  if ahead>m0V4RxAheadMax||uint32(ahead)+uint32(n)>m0V4RxAheadMax{
   return false,errM0V4RxWindow
  }
@@ -70,12 +81,13 @@ const m0V4IndependentAEADLookahead = 4 * 1024 * 1024
 func(w *m0V4RxWindow) IndependentAEADCandidate(seq uint32,n int)bool{
  if w==nil||n<51||n>m0V4RxRecordMax{return false}
  ahead:=int32(seq-w.cumulative)
- if ahead<0{return false}
- if uint64(ahead)+uint64(n)<=m0V4IndependentAEADLookahead{return true}
+ if !w.independentOnly && ahead>=0 &&
+    uint64(ahead)+uint64(n)<=m0V4IndependentAEADLookahead{return true}
  // A lost control carrier can keep the *presentation* ACK at one old hole
  // forever: Rust M2 never fabricates ACK for it. Past 4MiB, only proximity
  // to previously M3-authenticated unique ciphertext opens the bounded
  // window for another try by that SAME Rust opener. This is NOT an ACK.
+ if w.authenticatedHigh==w.cumulative && ahead<0{return false}
  near:=int64(int32(seq-w.authenticatedHigh))
  return near>=-m0V4IndependentAEADLookahead &&
         near+int64(n)<=m0V4IndependentAEADLookahead
@@ -86,5 +98,11 @@ func(w *m0V4RxWindow) IndependentAEADCandidate(seq uint32,n int)bool{
 func(w *m0V4RxWindow) NoteAuthenticated(seq uint32,n int){
  if w==nil||n<51||n>m0V4RxRecordMax{return}
  end:=seq+uint32(n)
- if int32(end-w.authenticatedHigh)>0{w.authenticatedHigh=end}
+ if int32(end-w.authenticatedHigh)>0{
+  if w.independentOnly || int32(seq-w.cumulative)<0 ||
+     uint32(seq-w.cumulative)+uint32(n)>m0V4RxAheadMax {
+   w.independentOnly=true
+  }
+  w.authenticatedHigh=end
+ }
 }

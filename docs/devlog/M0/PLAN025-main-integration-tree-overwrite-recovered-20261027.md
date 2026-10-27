@@ -27,3 +27,12 @@ No local execution tests. Push Actions on the repaired SOURCE are required; any 
 - Main Governance Action `40483931968/1` **SUCCESS**; governance maintenance Action `40483931609/1` **SUCCESS**, including preserved M4 historical exact pins and three PLAN020 current overrides.
 - Standalone G2 bootstrap Action `40483279381/1` was not a Rust compile failure after cfg fix: Rust workspace compiled, then `tools/g2_bootstrap_bundle.py` rejected current rev3 with hardcoded `revision==2` / four active workers. Rev3 assigned M4 reserved epoch2, and M1–M3 main historical cursor snapshots remain rev2, so refusing genuine live state was an obsolete pre-PLAN020 fixture assumption.
 - Following patch updates only that G2 identity fixture to validate explicit current rev3 M0 active, M1–M3 active, M4 reserved with zero grant and untouched historical rev2 cursor, plus negative tests. Keep non-product bootstrap scope, exact binary manifest and native execution, never make failed role edits pass.
+
+## Windows extreme remediation isolated S1 (2026-10-27)
+PR32 merged to main as 4e6d9d634bee75c965594dea51cf7bca87408a8b. Main registry rev3 M0 epoch1 PLAN025, cursor H291 checked. No queued/in-progress runs at initial recovery. Historical source6d35857 Action40483279255 final FAIL and source9d2362d natural Auto M2 TX sequence FAIL remain exact.
+Pre-edit re-read latest Rust Windows FEC2 source5ff5da and prior 9d2362d/ca0a7a9, original M2 owner source7f9e4 and Go window sourcec1e98830 recent 8642ad4. Source A2 Arena.allocate after fec2_tx.take discards stream on capacity error. Go A3 uses stale cumulative int32 negative before authentic owner verification; target half-wrap/full-wrap replay boundary.
+S1: preallocate before FixedStream ownership take and assert full->release->same-generation actual firstsend. Detach stale Go presentation ACK after genuine M3-verified far-window arrival and allow independently authenticated serial near moving high across half/full wrap. Strict AEAD, Wintun copy and no fake ACK retained. Updated active PLAN020 assembly manifest exact Go bytes. Remaining A1 and C1 through E are OPEN, no full product Actions until entire batch frozen.
+
+```feature-impact
+{"kind":"updated","ids":["normal-off","fec-fixed"],"reason":"Experimental Windows FEC state capacity recovery and authenticated half/full serial wrap; no new product or performance PASS or default changes."}
+```

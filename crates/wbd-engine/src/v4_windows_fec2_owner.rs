@@ -324,13 +324,15 @@ fn stage_fixed_source_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let budget=normal_off_windows_budget(e)?;
     if frame.len()>budget.record_payload_mtu.saturating_sub(14)||
         out.len()<frame.len()+41{return Err(INVALID)}
+    // Fallible Arena allocation MUST precede taking the only FEC stream:
+    // capacity errors cannot discard profile/revision for this generation.
+    let mut input=e.arena.allocate().map_err(|_|FULL)?;
+    input.writable()[14..14+frame.len()].copy_from_slice(frame);
     let mut stream=e.fec2_tx.take().ok_or(BAD_STAGE)?;
     // Linux FixedStream is the sole revision source of truth. The old
     // Windows ==1 placeholder silently rejected every Auto/FEC policy
     // transition despite carrying a correctly authenticated ticket.
     let active_revision=stream.revision();
-    let mut input=e.arena.allocate().map_err(|_|FULL)?;
-    input.writable()[14..14+frame.len()].copy_from_slice(frame);
     let mut result=None;
     let mut error=None;
     let offered=stream.offer_source(
@@ -827,6 +829,34 @@ mod tests{
         assert_eq!(PRODUCT_APPLIED,0);
     }
 
+    #[test]
+    fn m0_windows_fec2_source_arena_full_keeps_stream_and_recovers_same_epoch(){
+        let mut r=Registry{generation:131,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=setup(&mut r,false,911,91);
+        let ep=[2;16];
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_arm_entry(&mut e,ep,911,91).unwrap();
+            let revision=e.fec2_tx.as_ref().unwrap().revision();
+            let mut held=Vec::new();
+            while let Ok(slab)=e.arena.allocate(){held.push(slab);}
+            assert!(!held.is_empty());
+            assert_eq!(stage_fixed_source_entry(
+                &mut e,ep,911,91,&data(7),&mut [0u8;2048]),Err(FULL));
+            assert_eq!(e.fec2_tx.as_ref().unwrap().revision(),revision);
+            drop(held);
+            let (n,seq,pn)=stage_fixed_source_entry(
+                &mut e,ep,911,91,&data(8),&mut [0u8;2048])
+                .expect("released arena must restore original fixed owner");
+            assert!(n>51);
+            m2_kernel_firstsend_entry(&mut e,ep,911,91,pn,seq,n,1)
+                .expect("actual first-send settlement on recovered owner");
+        }
+        assert_eq!(quiesce_wintun(&mut r,h,ep,911,91),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
     #[test]
     fn m0_windows_fixed6_frozen_linux_stream_same_block_parity_npf_maturity_fence(){
         // Native Windows scoped crypto+M1/M2 unit; not a genuine NPF syscall
