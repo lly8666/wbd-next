@@ -238,8 +238,12 @@ fn r2_m0_repair_result_maps_ready_driver_without_new_cipher_or_false_ack(){
     let wire=outer_wire_bytes(&frozen);
     let wire2=outer_wire_bytes(&second_frozen);
     let mut budget=budget();
-    // Only the M4-confirmed FIRST send earns F credit; neither receipt nor
-    // control and neither Uncertain repair creates fresh bytes.
+    // Only a truthful native ReadyPacketSink definite prefix earns F.
+    // Make that precondition explicit for each separate immutable M1 PN.
+    let mut copied_first=Sink::default();
+    let result=submit_ready(&mut copied_first,std::slice::from_ref(&frozen));
+    assert_eq!(result.accepted_prefix,1);
+    assert_eq!(copied_first.datagrams.as_slice(),&[frozen.bytes().to_vec()]);
     budget.on_fresh_accepted(wire,MonoNs(0)).unwrap();
     assert_eq!(budget.snapshot().fresh_confirmed_bytes,wire);
     assert_eq!(budget.snapshot().epoch_repair_limit,32_768);
@@ -259,6 +263,10 @@ fn r2_m0_repair_result_maps_ready_driver_without_new_cipher_or_false_ack(){
     assert!(shadow.on_timer(MonoNs(101)).candidates.is_empty());
     // A *new* original M1 PN can still enter the recovery budget after
     // the old candidate retired; it is not a second retry of PN0.
+    let mut copied_second=Sink::default();
+    let result=submit_ready(&mut copied_second,std::slice::from_ref(&second_frozen));
+    assert_eq!(result.accepted_prefix,1);
+    assert_eq!(copied_second.datagrams.as_slice(),&[sealed.clone()]);
     shadow.on_sent(second_frozen.clone(),MonoNs(101),MonoNs(1101)).unwrap();
     budget.on_fresh_accepted(wire2,MonoNs(101)).unwrap();
     let second=shadow.on_timer(MonoNs(300)).candidates.remove(0);
