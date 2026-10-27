@@ -1,5 +1,7 @@
 # Windows客户端→Linux服务端：先打通产品，再扩网络矩阵
 
+> **2026-10-27执行更新**：W168完整开发树已进入main；七模式已有各自初始功能证据，但自然Auto、参数容量与性能仍有缺口。当前整改/执行次序以 [Windows整改与极限验收](../decisions/M0-WINDOWS-EXTREME-REMEDIATION-20261027.md) 为准：全部代码及夹具先写完、再同源合批功能/独立性能验证。下文是接线历史与可复用拓扑说明；256 pending、两次重传、仅Normal可用等旧审计不得当最新状态。历史红灯保留，具体SOURCE见现行证据。
+
 2026-10-22用户后续授权的执行收口。审阅main `1857e781dc3d5d1acb7a99d8d7f588773585a4e4`，产品最新相关SOURCE `a22c4e09baf7c42a39b4eab1d7c3febffc5a6836`。这是待执行计划，不是已接通声明；并入PR22，由当前M0集成并更新既有任务/next_action，不修改其他活跃作者的cursor。场景/数学门继续读[矩阵](NETWORK_MATRIX_20261022.md)，定位与修复前复习继续读[手册](NETWORK_TRIAGE.md)。
 
 ## 1. 当前真正卡住的地方

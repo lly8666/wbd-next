@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "kind": "read_only_main_windows_architecture_audit",
+  "source_sha": "c7fef14b6e2443ba432d52478f33c374af6466e7",
+  "audit_utc": "2026-10-27T10:06:22Z",
+  "product_changes": false,
+  "product_tests_dispatched": false,
+  "plan": "docs/decisions/M0-WINDOWS-EXTREME-REMEDIATION-20261027.md",
+  "artifact_verified": {
+    "run_id": 40476182202,
+    "attempt": 1,
+    "source_sha": "9d2362d30bead0e2a36dd19233a798ec1fb2b3ae",
+    "artifact_id": 12721601306,
+    "zip_sha256": "be6564e470c58cba87798654a5e890d2f681a7cc5b57bf298568f8c412fdfb36",
+    "scope": "ZIP hash matched; report.json, client.log and process sampler independently read; not a new product qualification or binary-manifest verification"
+  },
+  "observed": {
+    "result": "FAIL_TRUE_PUBLIC_EXECUTION",
+    "auto_natural": "NOT_APPLIED",
+    "owner_error": "original M2 control TX sequence mismatch expected=2744012027 got=2744012455",
+    "seq_delta_bytes": 428,
+    "root_cause": "NOT_ESTABLISHED",
+    "initial_real_udp_tcp": "PASS_SCOPED",
+    "complete_stop": "NOT_RUN",
+    "npf_local_drop_counter": 64,
+    "max_observed_interdelivery_ms": 493,
+    "interdelivery_is_p99": false,
+    "telemetry_covers_steady_only": false
+  },
+  "resources": {
+    "scope": "same Windows EXE Go+Rust DLL; startup/fault included; not steady performance",
+    "samples": 28,
+    "span_s": 27.172,
+    "cpu_total_s": 8.546875,
+    "cpu_kernel_s": 6.78125,
+    "cpu_user_s": 1.765625,
+    "average_cores": 0.314547,
+    "kernel_fraction": 0.793419,
+    "peak_working_set_mib": 42.05859375,
+    "peak_private_mib": 37.34375,
+    "language_cpu_attribution": "UNKNOWN"
+  },
+  "recent_run_checks": [
+    {
+      "run": 40483279229,
+      "source": "6d358570793fb31490279925c3054cf50552f8ae",
+      "result": "FAIL",
+      "receipt_job": 122119010582,
+      "receipt": "7 passed; 4 failed; expected outstanding 1 actual 0; semantics-versus-regression unresolved",
+      "kernel_fec_normal_engine": "SUCCESS"
+    },
+    {
+      "run": 40483279286,
+      "result": "FAIL",
+      "scope": "public CLI old non-skipped test gate; combined build step also failed"
+    },
+    {
+      "run": 40483279256,
+      "result": "FAIL",
+      "scope": "combined build step; detailed root cause not inferred from step name"
+    },
+    {
+      "run": 40483279255,
+      "result_at_audit": "FAIL_FINAL_RESULT_RECOVERED",
+      "scope": "Fixed and Auto-start PASS; Normal, Game2/4 off and FEC FAIL; natural Auto not covered",
+      "artifact_id": 12724129609,
+      "zip_sha256_verified": "1a196c1e5e84cde75c3887c4184c337cdc7da5e61b326bbbc2835a71863e75e1",
+      "normal_error": "M0 native original M3 seal mode=normal: original-Go private Windows Rust owner refused",
+      "normal_local_npf_drops": 7333,
+      "normal_pending_at_exit": 885,
+      "normal_max_interdelivery_ms_not_p99": 2102,
+      "last_game_sender_error": "WinError 10051 network unreachable",
+      "cause": "NOT_ESTABLISHED; do not infer generator-only failure",
+      "fixture_gaps": "mode reports except normal/report and mode-batch omitted by upload list; per-mode resources/app logs overwritten; fixed1200B UDP payload exceeds temporary Game1200B IPv4 ceiling"
+    },
+    {
+      "run": 40449519463,
+      "source": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
+      "result": "SUCCESS_REPOSITORY_RECEIPT",
+      "scope": "seven initial functional modes; natural Auto not covered; full artifact not independently rechecked here"
+    },
+    {
+      "run": 40457048399,
+      "source": "a0c8eeb29796aa41d0f41e76798d3d00c672adaf",
+      "result": "SUCCESS_REPOSITORY_RECEIPT",
+      "scope": "operator revision2; not natural Auto; full artifact not independently rechecked here"
+    }
+  ],
+  "static_findings": [
+    {
+      "id": "fresh_shadow_gate",
+      "status": "CONFIRMED_IN_SOURCE",
+      "paths": [
+        "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
+        "crates/wbd-engine/src/v4_windows_owner.rs"
+      ],
+      "details": "1536 shadow threshold gates new source receive/seal; 2048-slot arena; does not implement independent fresh capacity"
+    },
+    {
+      "id": "fec_take_failure",
+      "status": "CONFIRMED_IN_SOURCE",
+      "path": "crates/wbd-engine/src/v4_windows_fec2_owner.rs",
+      "symbol": "stage_fixed_source_entry",
+      "details": "fec2_tx.take before fallible arena.allocate can return without restoring stream"
+    },
+    {
+      "id": "tcp_half_wrap",
+      "status": "CONFIRMED_IN_SOURCE_NOT_REPRODUCED",
+      "path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rx_window_windows.go",
+      "details": "Check and IndependentAEADCandidate reject negative serial distance from stalled cumulative before using authenticatedHigh"
+    },
+    {
+      "id": "windows_go_hot_path",
+      "status": "CONFIRMED_IN_SOURCE_COST_UNMEASURED",
+      "paths": [
+        "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
+        "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_peer_windows.go",
+        "r0/go_overlay/internal/windowsownerlease/created_wintun_windows.go",
+        "r0/go_overlay/internal/realityfront/bridge_v4_windows_fixed_stream.go"
+      ],
+      "details": "per-packet Go pump, native identity verification, FFI calls and copies; repeated DLL lookup"
+    },
+    {
+      "id": "game_budget_failure",
+      "status": "CONFIRMED_IN_SOURCE",
+      "paths": [
+        "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_peer_windows.go",
+        "crates/wbd-engine/src/v4_windows_game_owner.rs"
+      ],
+      "details": "1200B source ceiling; one lane failure can stop whole worker; all-lane immediate-output expectation"
+    },
+    {
+      "id": "auto_capacity_work",
+      "status": "CONFIRMED_IN_SOURCE_COST_UNMEASURED",
+      "paths": [
+        "crates/wbd-engine/src/v4_windows_fec2_owner.rs",
+        "crates/wbd-recovery/src/maturity.rs"
+      ],
+      "details": "drain-until-empty under Entry lock; live 131072 and constructor max200000; BTreeMap plus two BTreeSet indexes"
+    },
+    {
+      "id": "repair_absolute_caps",
+      "status": "CONFIRMED_IN_SOURCE",
+      "path": "crates/wbd-engine/src/v4_windows_owner.rs",
+      "details": "65536B/s direction,131072B/s global,32768 grant; enabling v3 ratio does not remove absolute caps"
+    },
+    {
+      "id": "single_port_gap",
+      "status": "CONFIRMED_DEFERRED_FUNCTIONAL_SCOPE",
+      "path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
+      "details": "destination ServerPort+i; future common-listener migration needed, not only client patch"
+    }
+  ],
+  "limits": [
+    "No new performance or product correctness tests executed",
+    "No assertion that historical 80-second outage has this root cause",
+    "No proof of Go/Rust/kernel percentage beyond process user/kernel split",
+    "No feature qualification promoted"
+  ]
+}
