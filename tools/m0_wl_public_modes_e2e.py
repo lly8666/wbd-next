@@ -6,16 +6,17 @@ Never derive product PASS from compile or a different mode. A failed
 mode remains a FAIL with its exact original source and report.
 """
 import os,sys,json,subprocess,pathlib
-from m0_wl_mode_evidence import archive_mode_evidence,capture_mode_evidence_baseline
+from m0_wl_mode_evidence import (
+ archive_mode_evidence,capture_mode_evidence_baseline,
+ select_source_locked_modes)
 root=pathlib.Path.cwd()
 out=root/"result"/"wl-public"
-modes=["normal","fixed","auto","game2","game4","game2-fec","game4-fec"]
-if os.environ.get("WBD_WL_PUBLIC_MODES") in ("auto-revision","auto-adaptive"):
- modes=[os.environ["WBD_WL_PUBLIC_MODES"]]
-# A functional batch may reuse one VM for seven modes. A performance run
-# MUST be exactly one named mode and one impairment scenario per Action.
-if os.environ.get("WBD_WL_RUN_N0")=="1" and len(modes)!=1:
- raise SystemExit("WL_PERF_REQUIRES_ONE_MODE_ONE_SCENARIO")
+try:
+ modes=select_source_locked_modes(
+  os.environ.get("WBD_WL_PUBLIC_MODES","all"),
+  performance=os.environ.get("WBD_WL_RUN_N0")=="1")
+except ValueError as error:
+ raise SystemExit(str(error)) from error
 results={}
 failed=[]
 for mode in modes:
@@ -33,16 +34,22 @@ for mode in modes:
  # Per-mode allowlisted redacted logs and sampled resource files survive
  # later uses of the same WSL2/Npcap/Go+Rust native runner.
  evidence=archive_mode_evidence(out,mode,os.environ["GITHUB_SHA"],result,child.returncode,baseline=baseline)
- passed=child.returncode==0 and result.get("mode_public","").startswith("PASS_ACTUAL_")
+ # A native functional first/reverse/Stop PASS does NOT qualify a
+ # selected throughput scenario if actual delivery/loss/kernel TC failed.
+ performance=os.environ.get("WBD_WL_RUN_N0")=="1"
+ passed=child.returncode==0 and result.get("mode_public","").startswith("PASS_ACTUAL_") and (
+  not performance or str(result.get("WL_N0","")).startswith("PASS_SCOPED_"))
  results[mode]={"result":"PASS" if passed else "FAIL",
    "error":result.get("error"),"report":mode+"-report.json",
+   "WL_N0":result.get("WL_N0","NOT_RUN") if performance else "NOT_RUN",
    "evidence_manifest":str(evidence.relative_to(out)).replace(chr(92),"/") }
  print("WL_PUBLIC_REAL_MODE_RESULT "+mode+" "+results[mode]["result"],flush=True)
  if not passed:failed.append(mode)
 summary={"source":os.environ["GITHUB_SHA"],
  "windows_linux_real_native_modes":results,
  "result":"FAIL" if failed else "PASS","failed_modes":failed,
- "WL_N0":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN"}
+ "WL_N0":results[modes[0]]["WL_N0"] if len(modes)==1 else "NOT_RUN",
+ "WL_N1":"NOT_RUN","WL_N5":"NOT_RUN"}
 (out/"mode-batch.json").write_text(json.dumps(summary,indent=2)+"\n")
 print("WL_PUBLIC_REAL_MODE_BATCH "+summary["result"]+" "+",".join(failed),flush=True)
 sys.exit(1 if failed else 0)

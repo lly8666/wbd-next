@@ -9,6 +9,24 @@ import pathlib
 import re
 import hashlib
 
+# Functional acceptance uses exactly seven modes on one signed-driver
+# host. An expensive performance scenario requires ONE named mode and
+# is never silently enabled just because a build ran on main.
+PUBLIC_FUNCTIONAL_MODES=("normal","fixed","auto","game2","game4",
+                         "game2-fec","game4-fec")
+PUBLIC_SPECIAL_MODES=("auto-revision","auto-adaptive")
+def select_source_locked_modes(requested:str="",performance:bool=False)->list[str]:
+ mode=(requested or "all").strip()
+ if mode=="all":
+  modes=list(PUBLIC_FUNCTIONAL_MODES)
+ elif mode in PUBLIC_FUNCTIONAL_MODES+PUBLIC_SPECIAL_MODES:
+  modes=[mode]
+ else:
+  raise ValueError("UNKNOWN_PUBLIC_REAL_MODE")
+ if performance and len(modes)!=1:
+  raise ValueError("WL_PERF_REQUIRES_ONE_MODE_ONE_SCENARIO")
+ return modes
+
 LOGS=(
  "client.log","server.log","native-link-tcp443.log",
  "windows-app.log","linux-app.log","windows-tcp-app.log","linux-tcp-app.log",

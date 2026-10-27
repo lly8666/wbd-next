@@ -3,7 +3,7 @@ import json
 import pathlib
 import tempfile
 import unittest
-from tools.m0_wl_mode_evidence import archive_mode_evidence,capture_mode_evidence_baseline
+from tools.m0_wl_mode_evidence import archive_mode_evidence,capture_mode_evidence_baseline,select_source_locked_modes
 
 SHA="a"*40
 class ModeEvidenceTests(unittest.TestCase):
@@ -56,6 +56,17 @@ class ModeEvidenceTests(unittest.TestCase):
    result=archive_mode_evidence(out,"auto",SHA,{"error":"exact"},1,baseline=snap)
    self.assertIn("native-windows-npf.log",json.loads(result.read_text())["preserved_allowlist"])
    self.assertEqual((result.parent/"native-windows-npf.log").read_text(),"second-correct-mode-failure\\n")
+ def test_seven_functional_modes_not_implicitly_performance_on_main(self):
+  self.assertEqual(len(select_source_locked_modes("all",False)),7)
+  with self.assertRaisesRegex(ValueError,"ONE_MODE_ONE_SCENARIO"):
+   select_source_locked_modes("all",True)
+  for mode in ("normal","fixed","auto","game2","game4",
+               "game2-fec","game4-fec","auto-adaptive"):
+   self.assertEqual(select_source_locked_modes(mode,True),[mode])
+  for invalid in ("","allx","../../secret","game8"):
+   if invalid=="":continue # no selector means seven functional modes
+   with self.assertRaises(ValueError):
+    select_source_locked_modes(invalid,False)
  def test_unknown_source_and_mode_rejected(self):
   with tempfile.TemporaryDirectory() as d:
    out=pathlib.Path(d)
