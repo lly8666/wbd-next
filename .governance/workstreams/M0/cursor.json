@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 300,
-  "checkpoint_sha": "d82b9311f7ce44f638167b3c6ab6890c3df848fe",
+  "sequence": 301,
+  "checkpoint_sha": "6f0212832fb9cc7e3ea6e5dc81085ecb5f62e5f0",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
-  "current_task": "M0 PLAN025 original Go↔Rust Windows/Linux S1–S45 source a2594eba2dea88d3cea0e1fb02cf777300709a1a, frozen candidate, same SHA permanent experiment/windows-extreme-remediation-implementation-20261027 and preflight experiment/windows-wiring-s33-source-locked-preflight-20261027. ONE seven-mode real signed Windows Wintun/Npcap ↔ Linux WSL/TUN original Go TLS functional Action40540082915 actively RUNNING, result pending; N0/N1/N5 stress NOT_RUN.",
-  "why_now": "Recovered S43 dc8022279a exact tests: Windows Go production+test compile, 208/208 Windows Rust eligible library, 207/207 Linux Rust eligible library all PASS Action40537978310. S44 exact 7d0f6462 adds all 11 original M1 frozen, M2 receipt/M3 AEAD/M4 ready-only R2 integration tests each on Windows and Linux; verified Action40539305086 SUCCESS with 208+11 Windows, 207+11 Linux, WinGo PASS, Governance40539305413 SUCCESS and maintenance40539304945 SUCCESS. M1 specialized hosted tests explicitly excluded and NOT_RUN. S45 a2594eba product files unchanged; workflow comment+devlog source candidate freeze, one [wiring-full] push, Governance40540082834 SUCCESS and maintenance40540083018 SUCCESS. One full real seven-mode functional Action40540082915 RUNNING at cursor update, no throughput job. Earlier main H299 corrected original Auto FAIL source; retain unmodified last_tested_source and other curated historic red refs.",
+  "current_task": "PLAN025 / Windows extreme remediation: S1–S45 native implementation source a2594eba; S46 main recovered terminal receipt, S47 ABI error-provenance fix and S48 isolated original-Go regression source 772b8b3af48ee8f8600b16baaf2ddc3c53e84c37 in experiment/windows-wiring-s33-source-locked-preflight-20261027. Experiment/windows-extreme-remediation-implementation-20261027 still points to a2594eba; do not assume both heads now equal.",
+  "why_now": "Recovered exact S45 signed Win↔Linux seven-mode Action40540082915: Normal, Fixed, Game2, Game4, Game2-FEC, Game4-FEC PASS scoped native first delivery/UDP/TCP/Stop; Auto FAIL Rust C ABI INVALID(1) mis-escalated by Go error text wrapper, full Auto duplex/Stop NOT_RUN. S47 Action40544962861 FAIL original Go bridge test fixture undefined v4PairWithPrivateBridgeCipher, native SKIPPED. S48 only adjusts test fixture; Windows/Linux Rust and one-mode original Go compile/native Action40546243971 in flight at H301. S48 governance40546243537 FAIL because devlog updated feature ID fec-auto without card changed; maintenance40546243397 PASS. Prior source 9d2362d natural Auto SEQ FAIL and original four receipt FAIL remain historical, not retconned.",
   "done_when": "Whole original-Go TLS→shared Rust M1/M2/M3 FEC2 Fixed/Auto & 2/4 real Game lanes→original Windows Npcap/Wintun/WFP/route/DNS/WAL/GUI↔Linux raw/TUN and both-owned Stop across true applicable config/lifecycle. 4977f source seven initial functional mode core PASS; remaining dynamic Auto/GUI/global/lifecycle and weak-network use their own exact evidence. No fake Applied or independent Windows FEC owner.",
-  "next_action": "Retrieve exact terminal result and earliest real-first-error/source-matched artifact from source a2594eba native Action40540082915, including original signed Windows NPF/Wintun ↔ Linux WSL/TUN UDP/TCP and Stop for seven modes. On failure isolate only affected mode/first driver root cause; no fake ACK/F/Applied and no full matrix cosmetic reruns. If all 7 native modes PASS, natural Auto 2s/8s independently and one-scenario-per-Action N0/N1/N5 A/B are still NOT_RUN; schedule separate scope and short WPR CPU stacks outside scored runs. M1 dedicated hosted proofs remain NOT_RUN. In-place OS MTU mutation unsupported while five-stage M4 WAL unmodified; distinct new-session 1280/1400/1500 boundaries only, preserve M4 frozen SHA.",
+  "next_action": "Close exact S48 Actions40546243971/1: inspect final first failure and artifacts; preserve any FAIL. Resolve S48 Feature catalog declaration/card coherence without weakening checks, then if Windows compile now passes, diagnose only real Auto first-delivery issue and attempt exact-source scoped native acceptance; no replay of six accepted modes, no performance or natural Auto claim from startup PASS. Before next CODE change recheck module/real call chain/recent fix. Once scoped Auto succeeds, run natural 2s/8s as separate genuine workload then single-scene paired performance/MTU/capacity Actions per remediation plan; global physical/GUI still NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "9d2362d30bead0e2a36dd19233a798ec1fb2b3ae",
+  "last_tested_source": "a2594eba2dea88d3cea0e1fb02cf777300709a1a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN025-W168-Auto-natural-source9d2362d-failure-recovered-20261027.json"
+    "docs/evidence/M0/PLAN025-S45-seven-mode-source-a2594eba-recovered-20261028.json"
   ],
   "context_refs": [
     "docs/architecture/TEST_PLAN.md",
@@ -28,5 +28,5 @@
     "docs/evidence/windows-main-audit-20261027.json"
   ],
   "open_requests": [],
-  "partial_summary": "H300 S1–S45 exact candidate a2594eba frozen. S44 dual OS Rust library 208/207 PASS, R2 11/11 Windows and 11/11 Linux PASS, original Windows Go production/test compile PASS, governance and maintenance PASS. S45 Governance40540082834 and maintenance40540083018 PASS, one real full seven-mode Action40540082915 is RUNNING not PASS; old signed native functional and natural Auto src9d failure remain historical. M1 dedicated hosted NOT_RUN; no perf N0/N1/N5, no original natural Auto acceptance, no in-place M4 WAL dynamic OS MTU certification."
+  "partial_summary": "S46 recovered exact S45 result from same SHA artifact: six genuine Win/Linux native modes PASS scoped and Auto FAIL; six green cannot be used for natural Auto/performance. Full S1–S45 remediation experiment source not merged into main. S47 Go FEC2 errors.As/%w repair unqualified; S48 in-flight Actions and governance declaration red, previous S47 compile red. M1 specialized hosted, real Auto 2s/8s, WL-N0/N1/N5, ARM64 native/performance, physical/global GUI/WFP remain NOT_RUN as applicable."
 }
