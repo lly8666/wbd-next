@@ -609,6 +609,14 @@ func(p *m0NativeV4Peer) DrainPeerAndKernelLoans(
  if p.autoController!=nil{p.autoController.Stop()}
  return ctx.Err()
 }
+func(p *m0NativeV4Peer) RequestAutoStartProfile(
+ profile realityfront.FecV2Profile,
+)(realityfront.FecV2State,error){
+ if p==nil||p.mode!=m0WinModeAuto||p.autoController==nil||p.stopped(){
+  return realityfront.FecV2State{},windowsclient.ErrN4NativeGuard
+ }
+ return p.autoController.RequestOperatorStartProfile(profile)
+}
 func(p *m0NativeV4Peer) Errors()<-chan error{
  if p==nil{return nil}
  return p.failure
@@ -630,6 +638,11 @@ type m0NativeV4PacketStats struct{
  RejectedAuth uint64 `json:"rejected_or_invalid_carriers"`
  ExplicitOversize uint64 `json:"oversize_rejects"`
  PendingRecords int `json:"pending_original_rust_frozen_or_unacked_legacy_carrier_records"`
+ AutoRequestedRevision uint64 `json:"auto_requested_revision,omitempty"`
+ AutoAppliedRevision uint64 `json:"auto_applied_revision,omitempty"`
+ AutoDesiredProfile realityfront.FecV2Profile `json:"auto_requested_profile,omitempty"`
+ AutoPending bool `json:"auto_revision_pending,omitempty"`
+ AutoPolicyError string `json:"auto_policy_error,omitempty"`
  OldestPendingMS int64 `json:"oldest_unacked_carrier_ms"`
  MaxInterdeliveryMS int64 `json:"max_observed_interdelivery_ms"`
 }
@@ -640,11 +653,20 @@ func(p *m0NativeV4Peer) Stats()m0NativeV4PacketStats{
  now:=time.Now()
  var age int64
  if !p.oldestUnackedAt.IsZero(){age=now.Sub(p.oldestUnackedAt).Milliseconds()}
- return m0NativeV4PacketStats{
+ snapshot:=m0NativeV4PacketStats{
   Mode:p.mode,TxPackets:p.sent,RxFirstDelivered:p.opened,
   RetxRecords:p.retries,AuthenticatedM2FeedbackSent:p.feedbackSent,
   DuplicateCarrier:p.duplicates,RejectedAuth:p.rejected,
   ExplicitOversize:p.oversize,PendingRecords:p.pendingCount,
   OldestPendingMS:age,MaxInterdeliveryMS:p.maxRXInterdeliveryMs,
  }
+ if p.autoController!=nil{
+  state,err:=p.autoController.Snapshot()
+  snapshot.AutoRequestedRevision=state.RequestedRevision
+  snapshot.AutoAppliedRevision=state.AppliedRevision
+  snapshot.AutoDesiredProfile=state.Desired
+  snapshot.AutoPending=state.RequestedRevision!=state.AppliedRevision
+  if err!=nil{snapshot.AutoPolicyError=err.Error()}
+ }
+ return snapshot
 }

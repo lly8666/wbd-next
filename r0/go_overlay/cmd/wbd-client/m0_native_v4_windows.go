@@ -6,6 +6,7 @@ package main
 // test-channel trial after exact-source Actions validation, not automatic
 // host activation or any fake Applied result.
 import(
+ "bufio"
  "context"
  "crypto/rand"
  "encoding/binary"
@@ -20,6 +21,7 @@ import(
  "path/filepath"
  "sync"
  "sync/atomic"
+ "strings"
  "syscall"
  "time"
 
@@ -30,6 +32,27 @@ import(
  "golang.org/x/sys/windows"
 )
 
+// One GUI/CLI stdin protocol for live Auto config revision + native
+// Disconnect. Only the already-authenticated Rust generation may
+// accept the profile request after the real OS Applied readback.
+func watchM0NativeV4AutoControl(
+ ctx context.Context,in *os.File,cancel context.CancelFunc,
+ requests chan<- realityfront.FecV2Profile,
+){
+ scanner:=bufio.NewScanner(in)
+ for scanner.Scan(){
+  line:=strings.TrimSpace(scanner.Text())
+  if strings.EqualFold(line,"stop"){cancel();return}
+  if !strings.HasPrefix(line,"fec.profile="){continue}
+  profile,err:=m0WindowsV4Profile(strings.TrimSpace(strings.TrimPrefix(line,"fec.profile=")))
+  if err!=nil{
+   fmt.Printf("WBD_WINDOWS_AUTO_OPERATOR_REJECTED invalid_profile=%q\\n",line)
+   continue
+  }
+  select{case requests<-profile:case <-ctx.Done():return}
+ }
+ cancel() // Exactly the existing watchGUIControl EOF→owned Stop.
+}
 func runM0NativeV4Windows(o m0NativeV4Options)error{
  // Mode-specific original Rust capability is queried before Npcap,
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
@@ -44,7 +67,13 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  }
  ctx,cancel:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
  defer cancel()
- if o.ControlStdin{go watchGUIControl(os.Stdin,cancel)}
+ var autoOperatorRequests chan realityfront.FecV2Profile
+ if o.ControlStdin{
+  if o.Mode==m0WinModeAuto{
+   autoOperatorRequests=make(chan realityfront.FecV2Profile,2)
+   go watchM0NativeV4AutoControl(ctx,os.Stdin,cancel,autoOperatorRequests)
+  }else{go watchGUIControl(os.Stdin,cancel)}
+ }
  slot,err:=acquireGUIClientSlot()
  if err!=nil{return err}
  defer windows.CloseHandle(slot)
@@ -331,6 +360,14 @@ waitNative:
   case <-ctx.Done():break waitNative
   case runtimeErr=<-failure:runtimeErr=fmt.Errorf("native NPF reader: %w",runtimeErr);break waitNative
   case runtimeErr=<-transport.Errors():runtimeErr=fmt.Errorf("native original Rust peer worker: %w",runtimeErr);break waitNative
+  case requested:=<-autoOperatorRequests:
+   state,changeErr:=transport.RequestAutoStartProfile(requested)
+   if changeErr!=nil{
+    fmt.Printf("WBD_WINDOWS_AUTO_REVISION_REJECTED profile=%d reason=%v\\n",requested,changeErr)
+   }else{
+    fmt.Printf("WBD_WINDOWS_AUTO_REVISION_REQUESTED_NOT_APPLIED revision=%d profile=%d\\n",
+     state.RequestedRevision,state.Desired)
+   }
   case <-metricsTicker.C:
    metrics:=transport.Stats()
    metrics.NPFIngressLocalDrops=ingressLocalDrops.Load()

@@ -133,7 +133,10 @@ func(b *winAutoBackend) Observe(epoch [16]byte,client string,
  s.SRTT=time.Duration(lag/count);s.Validity=FecV2Valid
  return s,nil
 }
-type V4WindowsOriginalFEC2AutoController struct{core *fecV2ControlRuntime}
+type V4WindowsOriginalFEC2AutoController struct{
+ core *fecV2ControlRuntime
+ started time.Time
+}
 func NewV4WindowsOriginalFEC2AutoController(
  owner *V4WindowsAuthenticatedClientOwner,policy FecV2AutoPolicy,
  initial FecV2Profile,
@@ -156,6 +159,7 @@ func NewV4WindowsOriginalFEC2AutoController(
 func(c *V4WindowsOriginalFEC2AutoController) Start()error{
  if c==nil||c.core==nil{return errV4WindowsOwner}
  if err:=c.core.Tick(0);err!=nil{return err}
+ c.started=time.Now()
  return c.core.Start()
 }
 func(c *V4WindowsOriginalFEC2AutoController) Stop(){
@@ -164,4 +168,28 @@ func(c *V4WindowsOriginalFEC2AutoController) Stop(){
 func(c *V4WindowsOriginalFEC2AutoController) Snapshot()(FecV2State,error){
  if c==nil||c.core==nil{return FecV2State{},errV4WindowsOwner}
  return c.core.Snapshot()
+}
+
+// RequestOperatorStartProfile reuses the SAME Linux FecV2Step +
+// original-TLS-scoped Rust FixedStream quiescent revision. It is not a
+// new Go Auto policy or an Applied receipt. A rejected/Busy native
+// revision leaves the previous requested+applied config unchanged.
+func(c *V4WindowsOriginalFEC2AutoController) RequestOperatorStartProfile(
+ profile FecV2Profile,
+)(FecV2State,error){
+ if c==nil||c.core==nil||!profile.Valid()||c.started.IsZero(){
+  return FecV2State{},ErrFecV2Scope
+ }
+ core:=c.core
+ core.mu.Lock()
+ cfg:=core.cfg
+ epoch:=core.epoch
+ core.mu.Unlock()
+ if cfg.ConfigRevision==^uint64(0){return FecV2State{},ErrFecV2Revision}
+ cfg.ConfigRevision++
+ cfg.StartProfile=&profile
+ // A config update deliberately triggers Linux FecV2Step's existing
+ // revision/config-change path. The 2s runtime remains the only Auto
+ // sampler, and the actual native M2 readback grants Applied later.
+ return core.ApplyOperatorConfig(epoch,cfg,time.Since(c.started))
 }

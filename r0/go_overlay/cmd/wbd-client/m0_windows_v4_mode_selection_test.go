@@ -2,6 +2,10 @@
 package main
 
 import (
+ "context"
+ "os"
+ "time"
+ "github.com/lly8666/wobuzhidao/internal/realityfront"
  "flag"
  "testing"
  "github.com/lly8666/wobuzhidao/internal/realityfront"
@@ -71,5 +75,25 @@ func TestM0PLAN023WindowsNativeV4FiveModes(t *testing.T){
   if got,err:=m0ParseWindowsV4Mode(tc.lanes,tc.fec2,tc.legacy,tc.parity);err==nil{
    t.Errorf("invalid mode accepted %v: %s",tc,got)
   }
+ }
+}
+
+func TestM0WindowsAutoOriginalControlRequestAndOwnedStop(t *testing.T){
+ r,w,err:=os.Pipe();if err!=nil{t.Fatal(err)}
+ defer r.Close();defer w.Close()
+ ctx,cancel:=context.WithCancel(context.Background())
+ defer cancel()
+ requests:=make(chan realityfront.FecV2Profile,2)
+ go watchM0NativeV4AutoControl(ctx,r,cancel,requests)
+ if _,err=w.WriteString("fec.profile=light\n");err!=nil{t.Fatal(err)}
+ select{
+ case p:=<-requests:
+  if p!=realityfront.FecV2Light{t.Fatalf("unexpected Auto profile %d",p)}
+ case <-time.After(time.Second):t.Fatal("real Auto control ignored profile change")
+ }
+ if _,err=w.WriteString("stop\n");err!=nil{t.Fatal(err)}
+ select{
+ case <-ctx.Done():
+ case <-time.After(time.Second):t.Fatal("Auto stdin stop failed to cancel native owner")
  }
 }
