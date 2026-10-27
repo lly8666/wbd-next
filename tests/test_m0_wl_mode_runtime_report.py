@@ -58,3 +58,28 @@ class SourceLockedModeResourceTests(unittest.TestCase):
    self.assertNotIn("tls_key",str(report))
    self.assertNotIn("product_applied",str(report))
    self.assertTrue(report["business_oneway_p99"].startswith("NOT_MEASURED"))
+ 
+ def test_natural_auto_source_probe_preserves_real_sample_gaps_and_unknown(self):
+  from tools.m0_wl_mode_runtime_report import summarize_auto_udp_progress
+  with tempfile.TemporaryDirectory() as d:
+   p=pathlib.Path(d)/"natural-auto-windows.log"
+   self.assertEqual(summarize_auto_udp_progress(p)["result"],
+                    "NOT_MEASURED_NO_REAL_AUTO_UDP_LOG")
+   rows=[{"phase":"bound","local":"fake-not-counted"},
+         {"phase":"udp_1hz","sent":0,"received":0,"secret":"must-not-leak"},
+         {"phase":"udp_1hz","sent":180,"received":20},
+         {"phase":"udp_1hz","sent":180,"received":21},
+         {"phase":"udp_1hz","sent":610,"received":280}]
+   p.write_text("not-json\\n"+"".join(json.dumps(x)+"\\n" for x in rows))
+   v=summarize_auto_udp_progress(p)
+   self.assertEqual(v["result"],"OBSERVED_REAL_APP_1HZ_SOCKET_PROGRESS")
+   self.assertEqual(v["observations"],4)
+   self.assertEqual(v["min_socket_sent_per_observation"],0)
+   self.assertEqual(v["max_socket_sent_per_observation"],430)
+   self.assertEqual(v["last"]["received_first"],280)
+   self.assertEqual(v["owner_m2_2s8s_denominator"],"NOT_MEASURED_BY_APP")
+   self.assertNotIn("secret",str(v))
+   p.write_text(json.dumps({"phase":"udp_1hz","sent":4,"received":2})+"\\n"+
+                json.dumps({"phase":"udp_1hz","sent":3,"received":2})+"\\n")
+   self.assertEqual(summarize_auto_udp_progress(p)["result"],
+                    "NOT_MEASURED_AUTO_SOURCE_COUNTER_RESET")

@@ -89,3 +89,39 @@ def source_locked_observability(out:pathlib.Path)->dict:
     return {"windows_native_owner":_last_live_owner(out),
             "windows_original_process":summarize_original_windows_process(out),
             "business_oneway_p99":"NOT_MEASURED_UNCALIBRATED_OS_CLOCKS"}
+
+
+def summarize_auto_udp_progress(path:pathlib.Path)->dict:
+    """Bounded actual socket-send/first-receive witnesses; never M2 quality."""
+    if not path.is_file():
+        return {"result":"NOT_MEASURED_NO_REAL_AUTO_UDP_LOG"}
+    with path.open("rb") as stream:
+        stream.seek(0,2)
+        end=stream.tell()
+        stream.seek(max(0,end-256*1024))
+        raw=stream.read().decode("utf-8","replace")
+    rows=[]
+    for line in raw.splitlines():
+        if not line.startswith("{"):continue
+        try:row=json.loads(line)
+        except (ValueError,TypeError):continue
+        if not isinstance(row,dict) or row.get("phase")!="udp_1hz":continue
+        sent,received=row.get("sent"),row.get("received")
+        if type(sent) is not int or type(received) is not int or sent<0 or received<0:
+            return {"result":"NOT_MEASURED_INVALID_AUTO_SOURCE_COUNTER"}
+        if rows and (sent<rows[-1]["socket_sent"] or received<rows[-1]["received_first"]):
+            return {"result":"NOT_MEASURED_AUTO_SOURCE_COUNTER_RESET"}
+        rows.append({"socket_sent":sent,"received_first":received})
+    if not rows:
+        return {"result":"NOT_MEASURED_NO_REAL_AUTO_1HZ_SAMPLES"}
+    # 1Hz progress is not an exact 2s/8s M2 maturity window or a verified
+    # Wintun ingress receipt. Do not compare these deltas to the 512 gate.
+    deltas=[rows[i]["socket_sent"]-rows[i-1]["socket_sent"]
+            for i in range(1,len(rows))]
+    return {
+        "result":"OBSERVED_REAL_APP_1HZ_SOCKET_PROGRESS",
+        "observations":len(rows),"first":rows[0],"last":rows[-1],
+        "min_socket_sent_per_observation":min(deltas) if deltas else None,
+        "max_socket_sent_per_observation":max(deltas) if deltas else None,
+        "last_four":rows[-4:],
+        "owner_m2_2s8s_denominator":"NOT_MEASURED_BY_APP"}

@@ -2,7 +2,7 @@
 """Run actual original-TLS Windows and Linux native public UDP/TCP, then Stop."""
 import os,sys,subprocess,time,json,hashlib,pathlib,re,threading
 from m0_wl_native_resource_sampler import sample_windows_original_process
-from m0_wl_mode_runtime_report import source_locked_observability
+from m0_wl_mode_runtime_report import source_locked_observability,summarize_auto_udp_progress
 from m0_wl_native_mtu_contract import configured_native_test_mtu
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
@@ -455,6 +455,12 @@ finally:
   try:s.wait(timeout=4)
   except subprocess.TimeoutExpired:s.terminate()
  for log in logs:log.close()
+ if mode=="auto-adaptive":
+  # On both PASS and FAIL, retain actual host socket progress per source.
+  # These are application samples only, never synthetic M2 maturity.
+  report["auto_adaptive_real_source_progress"]={
+    name:summarize_auto_udp_progress(out/("auto-adaptive-"+name+"-udp.log"))
+    for name in ("windows","linux")}
  # Preserve first error/Stop outcome, and attach only measured original
  # owner and whole Go+Rust EXE resource observations from THIS mode.
  # Absence remains typed NOT_MEASURED; no readiness/p99 fabricated.
