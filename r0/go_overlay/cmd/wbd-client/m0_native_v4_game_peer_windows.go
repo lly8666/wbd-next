@@ -39,6 +39,8 @@ type m0NativeV4GamePeer struct {
  identity windowsclient.N4UnifiedIdentity
  scratch []byte
  maxIPv4 int
+ lastMTUCheck time.Time // bounded 1Hz genuine native Rust readback
+ mtuUpdates,mtuDrops uint64
  stop,done chan struct{}
  cancel context.CancelFunc
  running,stopping bool
@@ -63,10 +65,37 @@ func(p *m0NativeV4GamePeer) BindNativeRing(
  p.mu.Lock();defer p.mu.Unlock()
  if p.ring!=nil{return windowsclient.ErrN4NativeGuard}
  p.ring=ring;p.identity=id;p.maxIPv4=mtu;p.scratch=make([]byte,mtu)
+ p.lastMTUCheck=time.Now()
  for i,v:=range boundaries{
   p.lanes[i].tx=v[0];p.lanes[i].ack=v[1]
   p.lanes[i].rx=newM0V4RxWindow(v[1])
  }
+ return nil
+}
+// Go owns only bounded Wintun scratch. The verified Rust Game adapter
+// owns actual per-lane SEQ/PN, negotiated MSS/path budget and FEC logic.
+// A smaller effective path cannot leave the old oversized scratch active;
+// a larger path may grow only to the shared fixed native ciphertext cap.
+func(p *m0NativeV4GamePeer) applyNativeGamePayloadMTU(mtu int)error{
+ if p==nil||mtu<20||mtu>1536-31-16{
+  return windowsclient.ErrN4NativeGuard
+ }
+ p.mu.Lock();defer p.mu.Unlock()
+ if mtu==p.maxIPv4&&len(p.scratch)==mtu{return nil}
+ p.maxIPv4=mtu
+ p.scratch=make([]byte,mtu)
+ p.mtuUpdates++
+ return nil
+}
+func(p *m0NativeV4GamePeer) refreshNativeGameMTU(ctx context.Context)error{
+ if p==nil||p.group==nil{return windowsclient.ErrN4NativeGuard}
+ if !p.lastMTUCheck.IsZero()&&time.Since(p.lastMTUCheck)<time.Second{
+  return nil
+ }
+ mtu,err:=p.group.RefreshGamePayloadMTU(ctx)
+ if err!=nil{return err}
+ if err=p.applyNativeGamePayloadMTU(mtu);err!=nil{return err}
+ p.lastMTUCheck=time.Now()
  return nil
 }
 func(p *m0NativeV4GamePeer) carrier(i int,seq,ack uint32,wire []byte)error{
@@ -119,7 +148,13 @@ func(p *m0NativeV4GamePeer) transmit(ctx context.Context)(bool,error){
  n,err:=p.ring.ReceiveReadyIPv4(ctx,p.scratch)
  if errors.Is(err,windowsclient.ErrN4NativeNoPacket){return false,nil}
  if err!=nil{return false,err}
- if n<20||n>p.maxIPv4{return false,windowsclient.ErrN4NativeGuard}
+ if n<20||n>p.maxIPv4{
+  // A malformed/oversize genuine Wintun packet is a local negative
+  // copy outcome, not a reason to terminate healthy Game lanes.
+  // Unknown native driver/read failure above stays fatal and owned.
+  p.mu.Lock();p.mtuDrops++;p.mu.Unlock()
+  return true,nil
+ }
  records,err:=p.group.StageGameRecords(ctx,p.scratch[:n])
  if err!=nil{return false,err}
  if len(records)>len(p.lanes){return false,windowsclient.ErrN4NativeGuard}
@@ -180,6 +215,7 @@ func(p *m0NativeV4GamePeer) receive(ctx context.Context,in m0GameInbound)error{
 }
 func(p *m0NativeV4GamePeer) pulse(ctx context.Context)(int,error){
  if p==nil||p.ring==nil{return 0,windowsclient.ErrN4NativeGuard}
+ if err:=p.refreshNativeGameMTU(ctx);err!=nil{return 0,err}
  done:=0;start:=time.Now()
  for done<m0V4BatchPackets&&time.Since(start)<m0V4BatchCPU{
   if err:=ctx.Err();err!=nil{return done,err}
@@ -284,6 +320,7 @@ func(p *m0NativeV4GamePeer) Stats()string{
   "mode":fmt.Sprintf("game%d",len(p.lanes)),
   "tx_records":p.sent,"rx_first_delivered_ipv4":p.opened,
   "failed_lanes":p.laneFailed,"effective_payload_mtu":p.maxIPv4,
+  "effective_mtu_updates":p.mtuUpdates,"local_mtu_drops":p.mtuDrops,
  })
  return string(s)
 }

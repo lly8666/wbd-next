@@ -186,6 +186,28 @@ func(g *V4WindowsAuthenticatedGameGroup) EffectiveGamePayloadMTU()(int,error){
  if g.closed||g.joined==0||g.maxIPv4<20{return 0,errV4WindowsOwner}
  return g.maxIPv4,nil
 }
+// One true current per-lane Rust budget snapshot, under the original
+// live M4-created Wintun lease and the same native Game group. Call only
+// at low frequency or an owned path-reconfiguration boundary, never on
+// every logical Game/NPF source packet. Does not edit OS MTU/route/WFP.
+func(g *V4WindowsAuthenticatedGameGroup) RefreshGamePayloadMTU(
+ ctx context.Context,
+)(int,error){
+ if g==nil||ctx==nil{return 0,errV4WindowsOwner}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||g.joined==0||g.effectiveMtuProc==nil{return 0,errV4WindowsOwner}
+ release,err:=g.holdLive(ctx)
+ if err!=nil{return 0,err}
+ defer release()
+ var cap uint32
+ err=winOwnerCall(g.effectiveMtuProc,uintptr(g.joined),
+  uintptr(unsafe.Pointer(&cap)))
+ if err!=nil||cap<20||cap>1536-31-16{
+  return 0,errors.Join(errV4WindowsOwner,err)
+ }
+ g.maxIPv4=int(cap)
+ return int(cap),nil
+}
 // The only OS lease validation occurs during the genuine TLS+M4 Hold and
 // on Stop/reconfiguration. A group packet borrows each pinned lane until
 // the Rust Game owner has consumed it. That owner still independently

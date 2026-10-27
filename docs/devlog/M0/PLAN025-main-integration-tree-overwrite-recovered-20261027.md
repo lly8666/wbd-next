@@ -181,6 +181,13 @@ Checked existing Linux GameAdapter::offer/stage_for_windows_native and Game4 4/2
 
 ## S22 — precise S20 native witness short-file append regression fix
 Latest experimental source943ccd3f Governance Action40512442796 SUCCESS, mandatory maintenance Action40512442792 FAIL 1 of 238: test_shared_previous_mode_log_is_not_laundered_into_new_mode. Recovered exact trace: small original link log was shorter than 256B, so comparing full 256B prefix after append included new bytes, falsely inferred rotation and copied stale previous mode. Compare only original min(256,old_size) prefix while independently comparing old inode/current size; preserve all existing redaction/mode boundary and long-file logic. Added second long-file append fixture. No native Windows/Linux product or performance Actions dispatched; the red run remains historical until new source-governance maintenance receipt.
-```feature-impact
+```json
 {"kind":"none","ids":[],"reason":"Restore precise source-locked mode evidence isolation across append to both short and long live witness logs; no product feature change."}
+```
+
+
+## S23 — original Game2/4 effective MTU low-frequency live budget readback
+Read original M4 Wintun protected per-lane lease, current Rust game_effective_payload_mtu and current Go Game native ring. Go previously cached a single effective MTU at Bind and retained the same input scratch indefinitely, so a changed owner-path budget would stay stale until Stop. Added 1Hz only original TLS/M4 borrowed Rust group effective native budget query and tightly capped Game2/4 Wintun scratch shrink/grow, explicitly refusing invalid capacities. A malformed/oversize Wintun frame with successful kernel read counts as an explicit local drop instead of killing healthy Game siblings; genuine driver error remains hard failure, no false NPF copy receipt. Added shrink/grow/invalid guard regression. This only synchronizes the Go adapter to an already-updated real Rust budget; end-to-end kernel OS route/MTU event and actual Winsock/WSL changes remain UNWIRED/NOT_RUN. No jumbo or fake Applied.
+```feature-impact
+{"kind":"updated","ids":["game-lanes","path-mtu-budget"],"reason":"Experimental protected 1Hz Game2/4 native Rust effective MTU readback and bounded Wintun scratch/drop behavior, without claiming OS MTU reconfigure or product runtime/performance qualification."}
 ```

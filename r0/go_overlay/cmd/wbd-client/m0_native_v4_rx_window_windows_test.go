@@ -261,3 +261,27 @@ func TestM0RemediationBatchNativeFirstsendFailedOwnerCannotReplay(t *testing.T){
   t.Fatal("already fenced failed packet must never be submitted twice",err)
  }
 }
+
+func TestM0RemediationGameNativeEffectiveMTUShrinkGrowWithoutOwnerReset(t *testing.T){
+ p:=&m0NativeV4GamePeer{lanes:make([]m0GameLane,4)}
+ for _,value:=range []int{1399,1179,1299,1399}{
+  if err:=p.applyNativeGamePayloadMTU(value);err!=nil{
+   t.Fatalf("legitimate Game MTU change %d: %v",value,err)
+  }
+  if p.maxIPv4!=value||len(p.scratch)!=value{
+   t.Fatalf("Wintun ring copy capacity stale after MTU update %d",value)
+  }
+ }
+ if p.mtuUpdates!=4{t.Fatal("lost effective native budget updates")}
+ for _,bad:=range []int{0,19,1536,4096}{
+  if err:=p.applyNativeGamePayloadMTU(bad);err==nil{
+   t.Fatalf("unsupported native outer record size accepted %d",bad)
+  }
+  if p.maxIPv4!=1399||len(p.scratch)!=1399{
+   t.Fatal("invalid MTU changed live protected Wintun capacity")
+  }
+ }
+ if err:=p.refreshNativeGameMTU(context.Background());err==nil{
+  t.Fatal("nil authenticated Rust Game group must not assert MTU readback")
+ }
+}
