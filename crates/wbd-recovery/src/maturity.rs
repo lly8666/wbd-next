@@ -162,6 +162,8 @@ impl MatureFirstSend {
     }
     pub fn counters(&self)->ObservationCounters{self.counters}
     pub fn live_records(&self)->usize{self.entries.len()}
+    /// Real live metadata cap, not a preallocated payload cache.
+    pub fn max_live_data(&self)->usize{self.cfg.max_live_data}
     pub fn timer_nodes(&self)->usize{self.short.len()+self.long.len()}
     pub fn next_deadline(&self)->Option<MonoNs>{
         [self.short.front().map(|&(t,_)|t),self.long.front().map(|&(t,_)|t)]

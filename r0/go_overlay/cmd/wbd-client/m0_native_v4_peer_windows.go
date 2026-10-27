@@ -66,6 +66,7 @@ type m0NativeV4Peer struct {
  pending []m0NativeV4Outbound
  sent,opened,sentAfterOpen,retries,duplicates,rejected,oversize,feedbackSent uint64
  pendingCount int
+ effective realityfront.V4WindowsM2Effective
  fixedApplied bool
  lastFixedRead time.Time
  oldestUnackedAt time.Time
@@ -127,6 +128,12 @@ func(p *m0NativeV4Peer) BindNativeRing(
  // Do not arm parallel FEC2 until its genuine public M2 mode is approved.
  if p.mode==m0WinModeNormal||p.mode==m0WinModeFixed||p.mode==m0WinModeAuto{
   if err:=p.owner.ArmBoundOriginalM2(ctx);err!=nil{return err}
+  actual,readErr:=p.owner.ReadBoundOriginalM2Effective(ctx)
+  if readErr!=nil||actual.BusinessIPv4MTU!=uint32(maxIPv4){
+   return fmt.Errorf("%w: original M2 effective Rust/FEC MTU readback mismatch go=%d rust=%d: %v",
+    windowsclient.ErrN4NativeGuard,maxIPv4,actual.BusinessIPv4MTU,readErr)
+  }
+  p.effective=actual
   if p.mode==m0WinModeFixed||p.mode==m0WinModeAuto{
    if err:=p.owner.SelectBoundOriginalFEC2Initial(ctx,p.initialProfile);err!=nil{
     return err
@@ -670,6 +677,17 @@ func(p *m0NativeV4Peer) RequestAutoStartProfile(
  }
  return p.autoController.RequestOperatorStartProfile(profile)
 }
+// Exact owner readback uses one tiny Rust FFI per product telemetry second,
+// never per fresh DATA. A failure is returned to the owning run loop.
+func(p *m0NativeV4Peer) RefreshEffective(ctx context.Context)error{
+ if p==nil||p.owner==nil{return windowsclient.ErrN4NativeGuard}
+ actual,err:=p.owner.ReadBoundOriginalM2Effective(ctx)
+ if err!=nil{return err}
+ p.mu.Lock()
+ p.effective=actual
+ p.mu.Unlock()
+ return nil
+}
 func(p *m0NativeV4Peer) Errors()<-chan error{
  if p==nil{return nil}
  return p.failure
@@ -691,6 +709,7 @@ type m0NativeV4PacketStats struct{
  RejectedAuth uint64 `json:"rejected_or_invalid_carriers"`
  ExplicitOversize uint64 `json:"oversize_rejects"`
  PendingRecords int `json:"pending_original_rust_frozen_or_unacked_legacy_carrier_records"`
+ EffectiveM2 realityfront.V4WindowsM2Effective `json:"actual_rust_m2_effective"`
  AutoRequestedRevision uint64 `json:"auto_requested_revision,omitempty"`
  AutoAppliedRevision uint64 `json:"auto_applied_revision,omitempty"`
  AutoDesiredProfile realityfront.FecV2Profile `json:"auto_requested_profile,omitempty"`
@@ -711,6 +730,7 @@ func(p *m0NativeV4Peer) Stats()m0NativeV4PacketStats{
   RetxRecords:p.retries,AuthenticatedM2FeedbackSent:p.feedbackSent,
   DuplicateCarrier:p.duplicates,RejectedAuth:p.rejected,
   ExplicitOversize:p.oversize,PendingRecords:p.pendingCount,
+  EffectiveM2:p.effective,
   OldestPendingMS:age,MaxInterdeliveryMS:p.maxRXInterdeliveryMs,
  }
  if p.autoController!=nil{

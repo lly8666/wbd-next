@@ -369,6 +369,10 @@ waitNative:
      state.RequestedRevision,state.Desired)
    }
   case <-metricsTicker.C:
+   if readErr:=transport.RefreshEffective(ctx);readErr!=nil{
+    runtimeErr=fmt.Errorf("original Rust M2 effective readback: %w",readErr)
+    break waitNative
+   }
    metrics:=transport.Stats()
    metrics.NPFIngressLocalDrops=ingressLocalDrops.Load()
    if line,mErr:=json.Marshal(metrics);mErr==nil{

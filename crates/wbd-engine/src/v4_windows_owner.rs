@@ -83,6 +83,10 @@ struct WindowsOriginalM2 {
     fec_covered_2s:u64,
     #[cfg(feature="fec2_product_record")]
     fec_censored:bool,
+    // A temporary quality metadata shortage is interval UNKNOWN, never
+    // a permanent dead session or a forged line-loss measurement.
+    #[cfg(feature="fec2_product_record")]
+    fec_last_capacity_at:Option<MonoNs>,
     // Same Linux M2 first-send 2s/8s and closed-block k histogram
     // exported to the one shared Go FecV2Step Auto policy. These are
     // CUMULATIVE, not fabricated success from TCP appearance ACK.
@@ -134,7 +138,7 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         .map_err(|_|BAD_STAGE)?;
     shadow.enable_opportunistic_v3().map_err(|_|BAD_STAGE)?;
     let feedback=RxFeedbackState::new(RxFeedbackConfig{
-        max_retained_pages:512,max_pages_per_report:8,
+        max_retained_pages:1024,max_pages_per_report:8,
         retention_ns:2_000_000_000,srtt_ns:600_000_000,
     }).map_err(|_|INVALID)?;
     let now=m2_clock();
@@ -182,6 +186,8 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         fec_covered_2s:0,
         #[cfg(feature="fec2_product_record")]
         fec_censored:false,
+        #[cfg(feature="fec2_product_record")]
+        fec_last_capacity_at:None,
         #[cfg(feature="fec2_product_record")]
         auto_quality:[0;30],
         #[cfg(feature="fec2_product_record")]
@@ -307,7 +313,7 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
             // A saturated observer counts censored capacity but cannot
             // convert a real NPF firstsend into a fatal DATA-path error.
             Err(wbd_recovery::MaturityError::CapacityLimited)=>{
-                m.fec_censored=true;
+                m.fec_last_capacity_at=Some(m2_clock());
             },
             Err(_)=>{m.fec_censored=true;return Err(BAD_STAGE)},
         }
@@ -1181,6 +1187,72 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v6_m2_outstanding(
     unsafe{out.write(m.shadow.outstanding() as u32)};OK
 }
 
+// Source-locked runtime-effective M2 bounds, not CLI-requested defaults or
+// a claim of product/OS Applied. C ABI cannot expose mutable Rust owners.
+#[repr(C)]
+#[derive(Clone,Copy,Debug)]
+pub struct WbdWindowsM2Effective {
+    pub version:u32,pub size:u32,
+    pub path_mtu:u32,pub business_ipv4_mtu:u32,
+    pub shadow_limit:u32,pub feedback_page_limit:u32,
+    pub mature_live_limit:u32,pub v3_enabled:u32,
+    pub process_repair_hard_cap:u64,
+    pub direction_epoch_limit:u64,
+    pub direction_fresh_confirmed:u64,
+    pub process_charged_repairs:u64,
+    pub process_pending_bytes:u64,
+}
+fn m2_effective_entry(e:&Entry,epoch:[u8;16],luid:u64,ifindex:u32)
+    ->Result<WbdWindowsM2Effective,i32>{
+    if !v3_ready(e,epoch,luid,ifindex){return Err(INVALID)}
+    let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
+    let budget=normal_off_windows_budget(e)?;
+    let mtu=if e.feature7{
+        budget.record_payload_mtu.saturating_sub(14)
+    }else{budget.single_business_payload_mtu};
+    if mtu<20||mtu>2048{return Err(INVALID)}
+    let g=m2_global().lock().map_err(|_|BAD_STAGE)?;
+    let dir=g.local_snapshot(m.direction).ok_or(BAD_STAGE)?;
+    let process=g.snapshot();
+    Ok(WbdWindowsM2Effective{
+        version:1,size:std::mem::size_of::<WbdWindowsM2Effective>() as u32,
+        path_mtu:u32::from(e.path_mtu),
+        business_ipv4_mtu:mtu as u32,
+        shadow_limit:m.shadow.policy_limits().1 as u32,
+        feedback_page_limit:m.feedback.config().max_retained_pages as u32,
+        mature_live_limit:{
+            #[cfg(feature="fec2_product_record")]
+            {m.mature.as_ref().map_or(0,|x|x.max_live_data() as u32)}
+            #[cfg(not(feature="fec2_product_record"))]
+            {0}
+        },
+        v3_enabled:u32::from(m.shadow.is_opportunistic_v3()),
+        process_repair_hard_cap:process.hard_cap,
+        direction_epoch_limit:dir.epoch_repair_limit,
+        direction_fresh_confirmed:dir.fresh_confirmed_bytes,
+        process_charged_repairs:process.charged_repairs,
+        process_pending_bytes:process.pending_bytes as u64,
+    })
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v9_m2_effective(
+    h:u64,ep:*const u8,ep_len:usize,luid:u64,ifindex:u32,
+    out:*mut WbdWindowsM2Effective,size:u32,
+)->i32{
+    if out.is_null()||size!=std::mem::size_of::<WbdWindowsM2Effective>() as u32{
+        return INVALID
+    }
+    let Some(epoch)=v3_epoch(ep,ep_len)else{return INVALID};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(e)=lane.lock()else{return BAD_STAGE};
+    match m2_effective_entry(&e,epoch,luid,ifindex){
+        Ok(v)=>{unsafe{out.write(v)};OK},Err(code)=>code
+    }
+}
 // V6 firstsend callback is valid only for the SAME activated, OS Wintun
 // epoch. Every callback matches exact original frozen PN/SEQ/len. Status 1
 // means actual Npcap pcap_sendpacket returned success, not remote Applied.
@@ -1352,6 +1424,35 @@ mod tests {
             assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),0);
         }
         assert_eq!(quiesce_wintun(&mut r,h,epoch,91,19),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+    #[test]
+    fn m0_windows_original_m2_effective_readback_is_actual_runtime_budget(){
+        let mut r=Registry{generation:712,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        let ep=[2u8;16];
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        assert_eq!(bind_wintun(&mut r,h,ep,93,21),OK);
+        let bound=set_path_mtu(&mut r,h,ep,93,21,1400).unwrap();
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_arm_entry(&mut e,ep,93,21).unwrap();
+            let actual=m2_effective_entry(&e,ep,93,21).unwrap();
+            assert_eq!(actual.version,1);
+            assert_eq!(actual.size,std::mem::size_of::<WbdWindowsM2Effective>() as u32);
+            assert_eq!(actual.path_mtu,1400);
+            assert_eq!(actual.business_ipv4_mtu,bound);
+            assert_eq!(actual.shadow_limit,MAX_M2_FROZEN as u32);
+            assert_eq!(actual.feedback_page_limit,1024);
+            assert_eq!(actual.mature_live_limit,0);
+            assert_eq!(actual.v3_enabled,1);
+            assert_eq!(actual.process_repair_hard_cap,14_000_000);
+            assert_eq!(actual.direction_fresh_confirmed,0);
+            assert!(actual.direction_epoch_limit>0);
+            assert_eq!(m2_effective_entry(&e,[9;16],93,21).map(|_|()),Err(INVALID));
+        }
+        assert_eq!(quiesce_wintun(&mut r,h,ep,93,21),OK);
         assert_eq!(stop(&mut r,h),OK);
         assert_eq!(release(&mut r,h),OK);
     }

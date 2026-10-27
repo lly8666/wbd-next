@@ -444,7 +444,7 @@ fn fixed_change_revision_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let now=m2_clock();
     let route=e.m2.as_ref().ok_or(BAD_STAGE)?.route;
     let fresh=wbd_recovery::MatureFirstSend::new(
-        route,wbd_recovery::MaturityConfig{max_live_data:131_072},now
+        route,wbd_recovery::MaturityConfig{max_live_data:524_288},now
     ).map_err(|_|BAD_STAGE)?;
     e.fec2_tx.as_mut().ok_or(BAD_STAGE)?
         .quiescent_change(profile,revision,now)
@@ -463,6 +463,7 @@ fn fixed_change_revision_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     m.fec_positive_2s=0;
     m.fec_covered_2s=0;
     m.fec_censored=false;
+    m.fec_last_capacity_at=None;
     Ok(())
 }
 #[no_mangle]
@@ -580,6 +581,12 @@ fn accumulate_original_auto_quality(
         poll.window_8s.positive_confirmation_samples);
 }
 
+fn original_m2_recent_capacity(at:Option<MonoNs>,now:MonoNs)->bool{
+    // Affected 8-second quality cohorts remain UNKNOWN. Once they mature,
+    // a later clean window can qualify without erasing cumulative censorship.
+    at.is_some_and(|at|now.0.saturating_sub(at.0)<8_000_000_000)
+}
+
 // One Linux MatureFirstSend expiry batch is 64 independent deadlines, but
 // each real M4 DATA needs TWO: 2s and 8s. Windows' 100ms readback previously
 // consumed only 64 per tick (<=320 DATA/s); real Npcap had >660 DATA/s.
@@ -607,7 +614,12 @@ fn drain_original_auto_mature_due(
             poll.window_2s.unambiguous_positive);
         m.fec_covered_2s=m.fec_covered_2s.saturating_add(
             poll.window_2s.covered());
-        m.fec_censored |= poll.capacity_limited||capacity_censored>0;
+        // MatureFirstSend reports cumulative capacity forever. Keep the
+        // count cumulative for source-backed Auto history, but gate current
+        // Fixed quality only during its actual 8s uncertain cohort.
+        if capacity_censored>m.auto_quality[11]{
+            m.fec_last_capacity_at=Some(now);
+        }
         let has_due=poll.next_deadline.is_some_and(|deadline|deadline.0<=now.0);
         let progressed=poll.processed>0;
         handled=handled.saturating_add(poll.processed);
@@ -683,12 +695,15 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_mature_readback(
     if !v3_ready(&e,epoch,luid,ifindex)||!e.feature7{return BAD_STAGE}
     let Some(m)=e.m2.as_mut()else{return BAD_STAGE};
     if drain_original_auto_mature_due(m,m2_clock()).is_err(){return BAD_STAGE}
-    let applied=!m.fec_censored && m.fec_copied_source>0&&
+    let recently_censored=original_m2_recent_capacity(
+        m.fec_last_capacity_at,m2_clock());
+    let censored=m.fec_censored||recently_censored;
+    let applied=!censored && m.fec_copied_source>0&&
         m.fec_copied_parity>0&&m.fec_positive_2s>0&&
         m.fec_covered_2s>0&&m.fec_reverse_reports>0;
     unsafe{out.write(WindowsFixedMatureReadback{
         version:1,size,applied:u32::from(applied),
-        censored:u32::from(m.fec_censored),
+        censored:u32::from(censored),
         copied_source:m.fec_copied_source,copied_parity:m.fec_copied_parity,
         reverse_reports:m.fec_reverse_reports,positive_2s:m.fec_positive_2s,
         covered_2s:m.fec_covered_2s,
@@ -739,6 +754,15 @@ mod tests{
         let (n,seq,pn)=seal_symbol(r,h,[2;16],luid,ifindex,kind,plain,&mut out)
             .expect("genuine original Rust M1 immutable M3 FEC AEAD");
         (out[..n].to_vec(),seq,pn)
+    }
+    #[test]
+    fn m0_windows_auto_capacity_unknown_is_recent_only_without_lying_about_history(){
+        let before=Some(MonoNs(2_000_000_000));
+        assert!(!original_m2_recent_capacity(None,MonoNs(3_000_000_000)));
+        assert!(original_m2_recent_capacity(before,MonoNs(9_999_999_999)));
+        assert!(!original_m2_recent_capacity(before,MonoNs(10_000_000_000)));
+        // A future timestamp is never proof that capacity censorship expired.
+        assert!(original_m2_recent_capacity(before,MonoNs(1_000_000_000)));
     }
     #[test]
     fn m0_windows_native_fec2_original_owner_aead_first_delivery_rs16_and_stop(){

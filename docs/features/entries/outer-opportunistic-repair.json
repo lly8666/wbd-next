@@ -63,7 +63,8 @@
     "FEC修复/多lane副本不计入outer DATA重传；pre-netem DATA统计不能除post-netem线路字节。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "2026-10-27 experiment Windows C1: original M2 1536 optional frozen repair shadows no longer gate fresh TUN reads/seals; native full-product/performance outcome NOT_RUN and repair policy retains previous absolute byte caps until C2.",
-    "2026-10-27 isolated C2 original Windows repair caps changed to per-direction 7MB/s/process14MB/s maximum only; 9% actual firstsend-relative v3 share, 10% R/F and sparse floor still apply. Runtime/stability/effective readback require exact batch-source native tests; no unmeasured throughput promotion."
+    "2026-10-27 isolated C2 original Windows repair caps changed to per-direction 7MB/s/process14MB/s maximum only; 9% actual firstsend-relative v3 share, 10% R/F and sparse floor still apply. Runtime/stability/effective readback require exact batch-source native tests; no unmeasured throughput promotion.",
+    "2026-10-27 experimental Windows C4: true bounded 1024 x 256PN Rust feedback pages, 1536 optional repair shadows no fresh HOL, 9% relative share and 14MB/s absolute process cap, exact native readback. Product performance NOT_RUN."
   ],
   "promotion": null
 }
