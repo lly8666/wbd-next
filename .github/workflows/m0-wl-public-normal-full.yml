@@ -1,4 +1,8 @@
 name: M0 Windows Linux original native whole-wiring capability and functional entry
+# S45 frozen original M0 source candidate: one real seven-mode functional batch.
+# Explicit [wiring-full] push only; manual N0 disabled, no extreme performance.
+# Every built Go/Rust DLL/WSL artifact is labeled GITHUB_SHA. Tests are
+# actual original Wintun+Npcap/Go TLS and independent Linux TUN native I/O.
 # Source-locked first compile gate on an experiment/windows-wiring-* branch:
 # do not run the expensive two-OS native app without an explicit full event.
 run-name: "M0-WIN-LINUX|${{ github.sha }}|preflight-or-explicit-full"
