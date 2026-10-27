@@ -74,6 +74,14 @@ Remaining: currently one effective MTU snapshot per live group, not true dynamic
 ## Windows extreme remediation S7 (TX evidence and Auto capacity non-HOL)
 Re-read exact 9d2362d failing source M2 control TX mismatch expected2744012027 got2744012455 and original m2_next_feedback_entry. The specific preseal output-buffer guard already existed in failed SOURCE; do not relabel as root fix. Added original Go single send-owner bounded last64 TX metadata events (source/control/parity PN, SEQ, expected, wire size, monotonic elapsed, actual NPF result) and strict mismatch error context, with no ciphertext, payload, identity or keys. This is a diagnostic to distinguish staged/burned owner sequence from actual kernel-copy completion; original mismatch still hard FAIL. Fixed maturity observer capacity path to count capacity-censored without killing *already successful* genuine M4 firstsend; other authorization/clock/state errors fail closed. No natural Auto policy change. Added isolated Go unit audit bound check, exact Go manifest pending in this same S commit.
 
-```feature-impact
+```json
 {"kind":"updated","ids":["fec-auto"],"reason":"Experimental bounded original Windows TX sequence trace plus independent capacity-limited quality observation; no downgrade of mismatch hard gate or product PASS."}
+```
+
+## Windows extreme remediation S8 (E mode evidence and no mixed-scenario performance)
+Recovered the old source6d Action40483279255 final FAIL and exact audit in merged PR32; original mode-batch.json and fixed/game mode reports existed during run but the workflow uploaded only normal-report and report. Preserved the *first failure* and independent 1Hz Windows Go-process-with-Rust-DLL resource JSONL, UDP/TCP app logs and native link witness into allowlisted per-mode artifacts under mode-results/<mode>/, with SECRET argument and JSON-field redaction. Explicitly NO copied TLS keys, launch scripts, IP/route key, WAL credentials or private config. New helper/source-scoped unit checks verify redaction, no cross-mode overwrites and missing capture status. Artifact uploader now includes every mode's report and mode-batch, and excludes raw unredacted per-mode logs. Real functional batch remains one compiled artifact reuse; optional WL-N0 measurement requires exactly ONE selected mode per Action.
+
+These are fixture delivery corrections only; no current Windows performance claims, runner platform result or interval-latency measurements. Exact end-to-end SOURCE native run is still NOT_RUN.
+```feature-impact
+{"kind":"none","ids":[],"reason":"Mode artifact/monitoring and upload-only changes; no product selector/default/qualification or public feature changed."}
 ```
