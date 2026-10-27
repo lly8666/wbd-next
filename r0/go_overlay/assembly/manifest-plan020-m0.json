@@ -731,7 +731,7 @@
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_auto_controller.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_auto_controller.go",
-      "result_blob": "31672c70b23f9910490a1065884c4d24f6de09fe"
+      "result_blob": "a0dfe4637458372add755a27f2cb281d25275735"
     },
     {
       "kind": "create",
