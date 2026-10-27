@@ -35,6 +35,9 @@ type m0NativeV4Peer struct {
  owner *realityfront.V4WindowsAuthenticatedClientOwner
  mode m0WindowsV4Mode
  initialProfile realityfront.FecV2Profile
+ autoStartProfile realityfront.FecV2Profile
+ autoPolicy realityfront.FecV2AutoPolicy
+ autoController *realityfront.V4WindowsOriginalFEC2AutoController
  endpoint *faketcp.NpcapEndpoint
  flow faketcp.ClientFlow
  inbound <-chan faketcp.Segment
@@ -109,10 +112,16 @@ func(p *m0NativeV4Peer) BindNativeRing(
  if p.mode==m0WinModeNormal||p.mode==m0WinModeFixed||p.mode==m0WinModeAuto{
   if err:=p.owner.ArmBoundOriginalM2(ctx);err!=nil{return err}
   if p.mode==m0WinModeFixed||p.mode==m0WinModeAuto{
-   // One Linux M1 FixedStream selection, before any real NPF first
-   // send. Auto's native revision control retains the same M2 owner.
-   if err:=p.owner.SelectBoundOriginalFEC2Initial(
-    ctx,p.initialProfile);err!=nil{return err}
+   if err:=p.owner.SelectBoundOriginalFEC2Initial(ctx,p.initialProfile);err!=nil{
+    return err
+   }
+  }
+  if p.mode==m0WinModeAuto {
+   ctl,err:=realityfront.NewV4WindowsOriginalFEC2AutoController(
+    p.owner,p.autoPolicy,p.autoStartProfile)
+   if err!=nil{return err}
+   if err=ctl.Start();err!=nil{return err}
+   p.autoController=ctl
   }
  }
  p.ring=ring;p.identity=id;p.sendNext=send;p.recvNext=recv
@@ -574,6 +583,9 @@ func(p *m0NativeV4Peer) DrainPeerAndKernelLoans(
  p.pendingCount=0
  p.oldestUnackedAt=time.Time{}
  p.mu.Unlock()
+ // Join SAME Linux controller before dropping original Rust generation,
+ // Wintun kernel ring or native OS/WAL; no late Auto revision writes.
+ if p.autoController!=nil{p.autoController.Stop()}
  return ctx.Err()
 }
 func(p *m0NativeV4Peer) Errors()<-chan error{

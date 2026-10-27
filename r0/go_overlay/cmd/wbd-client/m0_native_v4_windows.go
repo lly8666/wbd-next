@@ -275,13 +275,19 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  if plan.StatePath==""{return windowsclient.ErrN4NativeGuard}
  transport,e:=newM0NativeV4PeerForMode(owner,endpoint,flow,nativeFrames,o.Mode)
  if e!=nil{return e}
+ if o.FEC2AutoPolicy=="aggressive"{
+  transport.autoPolicy=realityfront.FecV2Aggressive
+ }else{transport.autoPolicy=realityfront.FecV2Conservative}
  if o.Mode==m0WinModeAuto||o.Mode==m0WinModeFixed{
   if o.Mode==m0WinModeFixed{
    transport.initialProfile,e=m0WindowsV4Profile(o.FEC2Profile)
   }else{
-   transport.initialProfile,e=m0WindowsV4Profile(o.FEC2AutoStartProfile)
-   if e==nil&&o.FEC2AutoPolicy=="aggressive"&&transport.initialProfile<realityfront.FecV2Maximum{
-    transport.initialProfile++
+   transport.autoStartProfile,e=m0WindowsV4Profile(o.FEC2AutoStartProfile)
+   if e==nil{
+    transport.initialProfile=transport.autoStartProfile
+    if o.FEC2AutoPolicy=="aggressive"&&transport.initialProfile<realityfront.FecV2Maximum{
+     transport.initialProfile++
+    }
    }
   }
   if e!=nil{return e}
