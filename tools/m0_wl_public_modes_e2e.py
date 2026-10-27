@@ -5,7 +5,7 @@ Reuse a single signed-driver/WSL host and compiled native artifacts.
 Never derive product PASS from compile or a different mode. A failed
 mode remains a FAIL with its exact original source and report.
 """
-import os,sys,json,subprocess,pathlib
+import os,sys,json,subprocess,pathlib,shutil
 root=pathlib.Path.cwd()
 out=root/"result"/"wl-public"
 modes=["normal","fixed","auto","game2","game4","game2-fec","game4-fec"]
@@ -20,6 +20,11 @@ for mode in modes:
  result=json.loads(report.read_text()) if report.exists() else {
   "mode":mode,"error":"missing genuine same-source report"}
  (out/(mode+"-report.json")).write_text(json.dumps(result,indent=2)+"\n")
+ # Keep the exact original-Go/Rust first error per mode; subsequent
+ # modes reuse the same real WSL/driver but otherwise overwrite logs.
+ for name in ("client.log","server.log","native-link-tcp443.log"):
+  source=out/name
+  if source.is_file():shutil.copyfile(source,out/(mode+"-"+name))
  passed=child.returncode==0 and result.get("mode_public","").startswith("PASS_ACTUAL_")
  results[mode]={"result":"PASS" if passed else "FAIL",
    "error":result.get("error"),"report":mode+"-report.json"}

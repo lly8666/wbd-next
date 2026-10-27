@@ -193,7 +193,9 @@ func(s *V4WindowsAuthenticatedClientOwner) NextBoundOriginalM2Repair(
 )([]byte,uint32,uint64,error){
     if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
         s.bridge.prepareRepairProc==nil||maxWire<51||maxWire>2048{
-        return nil,0,0,errV4WindowsOwner
+        return nil,0,0,fmt.Errorf("%w: original M2 frozen repair preflight cap=%d (owner=%t device=%t proc=%t)",
+            errV4WindowsOwner,maxWire,s!=nil&&s.bridge!=nil,
+            s!=nil&&s.device!=nil,s!=nil&&s.bridge!=nil&&s.bridge.prepareRepairProc!=nil)
     }
     if err:=ctx.Err();err!=nil{return nil,0,0,err}
     if err:=s.device.device.VerifyCurrentNative(ctx,s.device.identity);err!=nil{
@@ -216,7 +218,9 @@ func(s *V4WindowsAuthenticatedClientOwner) NextBoundOriginalM2Repair(
         return nil,0,0,errors.Join(errV4WindowsOwner,err)
     }
     if used==0{return nil,0,0,nil}
-    if used<51{return nil,0,0,errV4WindowsOwner}
+    if used<51{return nil,0,0,fmt.Errorf(
+        "%w: original M2 repair C-ABI returned short authentic ciphertext used=%d cap=%d",
+        errV4WindowsOwner,used,maxWire)}
     return wire[:used],seq,pn,nil
 }
 func(s *V4WindowsAuthenticatedClientOwner) CompleteBoundOriginalM2Repair(
