@@ -32,7 +32,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object tools/m0-v4-public-real-linux-netns.sh)" = "$(git rev-parse "$FROZEN_PRODUCT_SOURCE:tools/m0-v4-public-real-linux-netns.sh")"
+          test "$(git hash-object tools/m0-v4-public-real-linux-netns.sh)" = "471d41579153d3e6ca70cc4d9c30af0e8c01efb9"
           python3 - <<'PY'
           import json,hashlib,pathlib,os
           p=pathlib.Path('precompiled-linux');j=json.loads((p/'manifest.json').read_text())
@@ -86,7 +86,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(uname -m)" = "aarch64"
-          test "$(git hash-object tools/arm64_linux_netns_smoke.sh)" = "$(git rev-parse "$WBD_ARM64_FROZEN_SOURCE:tools/arm64_linux_netns_smoke.sh")"
+          test "$(git hash-object tools/arm64_linux_netns_smoke.sh)" = "28bee73a83907de2302b51b3732090ef389fc8d5"
           (cd arm64-public-bundle && sha256sum -c SHA256SUMS)
           python3 - <<'PY'
           import json,os,pathlib

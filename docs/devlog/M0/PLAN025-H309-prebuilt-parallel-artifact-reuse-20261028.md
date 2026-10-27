@@ -14,3 +14,11 @@ Job success may only qualify *its own binary SOURCE and scenario*. ARM64 iperf's
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Test-only two independent source-frozen native Linux artifact-reuse scenarios; no product/runtime/library/ABI/feature policy or default change, no build duplication."}
 ```
+
+## S2 source-hash preflight recovery (2026-10-28)
+- First prebuilt-reuse run40565735037/1 **FAIL** in both `Fail closed source SHA` steps *before any kernel scenario*, despite successful artifact download. Default actions/checkout on an isolated experiment branch is shallow and does not have the Git commit/tree for frozen product source `33ed20b4` nor divergent old ARM64 source `f7ee097e`. The expression `git rev-parse SOURCE:tools/script.sh` therefore failed with `fatal: path exists on disk but not in SOURCE`, not a product, sha256, or runtime failure. No native traffic, Stop or p99 test took place.
+- S2 fail-closed correction: GitHub REST immutable exact source Git trees independently returned `tools/m0-v4-public-real-linux-netns.sh` blob `471d41579153d3e6ca70cc4d9c30af0e8c01efb9` and `tools/arm64_linux_netns_smoke.sh` blob `28bee73a83907de2302b51b3732090ef389fc8d5`. Compare the checkout script file `git hash-object` directly to those literal source-bound blob SHAs. No floating SHA, full-history checkout, Go/Rust rebuild, original product/permission modification or relaxation of per-file binary SHA/manifest checks. Reuse the same original run-id artifacts and same two separately scoped tests; original red retained, next new SOURCE remains test-driver-only.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Fix only isolated Actions shallow-checkout script blob assertion with literal exact source-derived Git object SHA; product artifacts and both test scenarios unchanged."}
+```
