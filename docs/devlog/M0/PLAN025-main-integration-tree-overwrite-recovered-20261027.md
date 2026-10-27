@@ -317,3 +317,11 @@ S44 exact parent SOURCE `7d0f6462a4712d6c57e38339a7137731dc179f18`: Windows orig
 ```feature-impact
 {"kind":"updated","ids":["fec-auto"],"reason":"Repair original Windows public Auto FEC2 receive error provenance for authentic ABI INVALID(1), retaining fatal non-INVALID owner faults and all default/CLI/GUI/OS gates. Add source-pinned Windows test assembly and a one-mode native acceptance tag; no formal feature promotion or untested PASS."}
 ```
+
+## S48 targeted repair of S47 assembly-only FAIL (2026-10-28)
+- SOURCE `f0dd88ca1ad963fe8b03a30672895aa94de17bc7` Action `40544962861/1` **FAIL**: initial static/workflow, Windows and Linux Rust library checks PASS; original-Go Windows production binary compiles, but Windows `go test -c ./internal/realityfront` fails at `bridge_v4_windows_private_owner_test.go:24:34: undefined: v4PairWithPrivateBridgeCipher`. That was the newly assembled S47 full existing private test importing a helper from another test not in the frozen original-Go overlay. Linux product/native Windows jobs SKIPPED, no new Auto functional proof. Preserve original FAIL; do not rerun six accepted modes or promote the fix to PASS.
+- Precise repair: split only the new S47 ABI code regression into self-contained `bridge_v4_windows_fec2_abi_status_test.go` with no private TLS test fixture dependencies; `tools/prepare_windows_wiring.py` installs this exact named file rather than the entire old private test. Original dev-only private test body remains unchanged, except relocation of the new ABI assertion. Same `TestM0WindowsFEC2OpenABICodeClassificationSurvivesWrapper` invoked by existing preflight. S48 changes no Rust, OS, product logic, rate, source M2 or test assertion, and uses the existing one-mode `[auto-start-only]` public gate after preflight. No local execution; exact Actions remain required.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Fix only Windows original-Go test assembler inclusion: isolate an existing ABI error classification test from a native TLS fixture with an unavailable helper. No product/runtime/config/selector behavior changes; S47 product fix stays experimental."}
+```
