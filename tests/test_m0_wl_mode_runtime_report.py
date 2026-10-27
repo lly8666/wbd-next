@@ -70,7 +70,7 @@ class SourceLockedModeResourceTests(unittest.TestCase):
          {"phase":"udp_1hz","sent":180,"received":20},
          {"phase":"udp_1hz","sent":180,"received":21},
          {"phase":"udp_1hz","sent":610,"received":280}]
-   p.write_text("not-json\\n"+"".join(json.dumps(x)+"\\n" for x in rows))
+   p.write_text("not-json\n"+"".join(json.dumps(x)+"\n" for x in rows))
    v=summarize_auto_udp_progress(p)
    self.assertEqual(v["result"],"OBSERVED_REAL_APP_1HZ_SOCKET_PROGRESS")
    self.assertEqual(v["observations"],4)
@@ -79,7 +79,7 @@ class SourceLockedModeResourceTests(unittest.TestCase):
    self.assertEqual(v["last"]["received_first"],280)
    self.assertEqual(v["owner_m2_2s8s_denominator"],"NOT_MEASURED_BY_APP")
    self.assertNotIn("secret",str(v))
-   p.write_text(json.dumps({"phase":"udp_1hz","sent":4,"received":2})+"\\n"+
-                json.dumps({"phase":"udp_1hz","sent":3,"received":2})+"\\n")
+   p.write_text(json.dumps({"phase":"udp_1hz","sent":4,"received":2})+"\n"+
+                json.dumps({"phase":"udp_1hz","sent":3,"received":2})+"\n")
    self.assertEqual(summarize_auto_udp_progress(p)["result"],
                     "NOT_MEASURED_AUTO_SOURCE_COUNTER_RESET")

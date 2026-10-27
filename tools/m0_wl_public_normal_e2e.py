@@ -303,6 +303,10 @@ print(json.dumps(result),flush=True)
  if mode=="auto-adaptive":
   # Real original Go credential TLS / Rust M2 mature first-send
   # / ALREADY shared Linux FecV2Step Auto decisions. No operator write,
+  # New 2026-10-28 acceptance: first true one-grade native Applied within
+  # 120s of sustained healthy business is sufficient. Source traffic holds
+  # 119s after real READY to distinguish slow honest downshift from FAIL;
+  # correct M2 sample/coverage gates and fail-closed SEQ remain unchanged.
   # injected loss/ACK or synthetic kernel/OS state. Low Mbps, enough PPS
   # for the Linux 512-sample and 4096-source genuinely VALID evidence.
   outputs=[]
@@ -310,11 +314,11 @@ print(json.dumps(result),flush=True)
    f=(out/("auto-adaptive-"+name+"-udp.log")).open("w")
    logs.append(f);outputs.append(f)
   wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1",
-    str(done),"53",".0015"],stdout=outputs[0],stderr=subprocess.STDOUT)
+    str(done),"119",".0015"],stdout=outputs[0],stderr=subprocess.STDOUT)
   la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
-    "python3",unix(app),"10.66.0.1","10.66.0.2",unix(done),"53",".003"],
+    "python3",unix(app),"10.66.0.1","10.66.0.2",unix(done),"119",".003"],
     stdout=outputs[1],stderr=subprocess.STDOUT)
-  until=time.monotonic()+100
+  until=time.monotonic()+150
   while wa.poll() is None or la.poll() is None:
    if w.poll() is not None or s.poll() is not None:
     raise RuntimeError("native TLS/Rust Auto owner exited before mature natural 2s/8s policy")
