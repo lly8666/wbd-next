@@ -117,7 +117,7 @@ def validate(raw):
     t.setdefault("observe_size_classes",False)
     if type(t["observe_size_classes"]) is not bool:
         raise ValueError("observe_size_classes must be boolean")
-    if t["observe_size_classes"] and not (r.get("owner")=="fec-network-work" and t["udp_share"]>0):
+    if t["observe_size_classes"] and not (r.get("owner") in ("fec-network-work","m0-cpu-recovery") and t["udp_share"]>0):
         raise ValueError("size classes are scoped to FEC owned real UDP")
     if not isinstance(t.get("sizes"), list) or not 1 <= len(t["sizes"]) <= 32:
         raise ValueError("sizes: 1..32 [application payload bytes, weight] pairs")
