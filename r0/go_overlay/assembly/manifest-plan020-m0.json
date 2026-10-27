@@ -469,7 +469,7 @@
       "original_blob": "7b884cac80d0023cfcb266c51a606aa89304683f",
       "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
       "donor_blob": "f9f48f9412cf3699a3d4cd773943d7e96da1efe7",
-      "result_blob": "e3184edc234035f7cfc90b487988998d954f13eb"
+      "result_blob": "f9f48f9412cf3699a3d4cd773943d7e96da1efe7"
     },
     {
       "kind": "replace",
@@ -478,7 +478,7 @@
       "original_blob": "d4dec3fa2632b47fb9d6443db05d3a04f06b2dd9",
       "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
       "donor_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f",
-      "result_blob": "2ad252178657f2352e07aedf96fe6f6dd8645697"
+      "result_blob": "1e02718d9b9b7f80c8f1f54a8b8d3cbfe11ae28f"
     },
     {
       "kind": "replace",
@@ -750,6 +750,18 @@
       "path": "internal/windowsclient/native_udp_kernel_driver_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows_test.go",
       "result_blob": "1efdc4ff0e42138f99390484f79088d0b2a115a4"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_m0_runtime_mtu_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_m0_runtime_mtu_windows.go",
+      "result_blob": "7637114c43e9513a5df3bf079bd099e82f5505a5"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_m0_runtime_mtu_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_m0_runtime_mtu_windows_test.go",
+      "result_blob": "86eab20d783fdebeb7ddfb56c4da4f987d7e86a7"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
