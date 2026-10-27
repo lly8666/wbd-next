@@ -1,6 +1,6 @@
 # WBD Next｜新 agent 唯一启动入口
 
-> **2026-10-26 W168/Windows 临时集成状态**：只需另读 [当前跨分支热摘要](docs/handoff/CURRENT_INTEGRATION.md)（约2KB），不把旧 devlog、七十页 FEC final-report 或 PR #26 copied snapshot 一次性装入上下文。功能/红灯以精确 SOURCE + 原生 Actions 为准。实验冻结源码已经在隔离 PR #28 形成真实双亲合并，但尚未获得合并后 Windows 产品资格；main/W test 尚未晋级。FEC 岗位历史 `merge_ready=false` 不覆盖用户现已授权的*隔离集成*；不可改写原 F 状态。W168 的外层 DATA repair 默认 ON，旧“FEC 一律 OFF”备忘已过时。
+> **W168/Windows 已于2026-10-27集成 main；集成完成不等于全产品资格。** 按需读 [当前热摘要](docs/handoff/CURRENT_INTEGRATION.md)，不全量载入旧devlog/FEC报告。Windows整改与极限参数执行入口是 [本次施工方案](docs/decisions/M0-WINDOWS-EXTREME-REMEDIATION-20261027.md)，具体进度仍查最新M0 cursor/Actions。历史F分支 `merge_ready=false` 不覆盖已授权合并，也不被删除。外层DATA repair实际默认/开关以当前feature卡和effective读回为准。
 
 仓库 `lly8666/wbd-next`；控制分支 `main`，其他工位分支由 main 的 `.governance/registry.json` 授权。**先刷新远端，不相信聊天、旧提示词、目录中的某个日期或本地缓存。**
 

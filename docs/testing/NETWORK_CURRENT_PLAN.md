@@ -1,5 +1,7 @@
 # 独立网络测试：当前生效计划入口
 
+> **main Windows 后续**：[接线整改、共享参数与极限验收](../decisions/M0-WINDOWS-EXTREME-REMEDIATION-20261027.md) 消费这里的机会式v3数学与夹具；它不重开已收口的独立网络/FEC工位，也不修改其status。M0先完成整批整改代码，再统一测试；Windows资格不能继承Linux性能。
+
 做什么以本页决策为准，做到哪里只读任务分支 `docs/evidence/network-matrix-work/status.json`，长期职责与提示词见 [NETWORK_AUTONOMOUS_WORK](NETWORK_AUTONOMOUS_WORK.md)。计划不是实现收据，不重置已完成工作或重跑旧流程。
 
 ## 当前决策
