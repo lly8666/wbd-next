@@ -156,14 +156,23 @@ jobs:
           rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
           & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib -- --test-threads=1 --skip runtime::directional::pinned_rtrb_overlay_proof::r1_direction_m0_pinned_rtrb_overlay_source_exact_native_ci --skip runtime::generation_release::r1_owner_release_compiled_once_hosted_cpu_latency_provenance
           if($LASTEXITCODE -ne 0){throw 'Windows full Rust library unit regression FAIL'}
+          # M0/R2 genuine frozen M1 receipt, M3 AEAD replay and M4
+          # ready-only copy: run EVERY integration fixture as a separate
+          # non-network, source-locked Windows program, no skip/xfail.
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --test r2_receipt_ingress -- --test-threads=1
+          if($LASTEXITCODE -ne 0){throw 'Windows actual M1-M2-M3-M4 R2 receipt integration regression FAIL'}
           New-Item -ItemType Directory -Force -Path result | Out-Null
           @{source=$env:GITHUB_SHA;scope='WINDOWS_RUST_ELIGIBLE_LIB_M1_SPECIAL_NOT_RUN';result='PASS';native_product='NOT_RUN';real_two_os='NOT_RUN'} |
             ConvertTo-Json | Set-Content result/rust-owner-contract.json
+          @{source=$env:GITHUB_SHA;scope='WINDOWS_R2_FROZEN_M1_AUTHENTICATED_M3_READY_M4_ALL_FIXTURES';result='PASS';native_product='NOT_RUN';M1_special='NOT_RUN'} |
+            ConvertTo-Json | Set-Content result/r2-receipt-contract.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: rust-owner-compile-preflight-${{ github.run_id }}
-          path: result/rust-owner-contract.json
+          path: |
+            result/rust-owner-contract.json
+            result/r2-receipt-contract.json
           retention-days: 14
           if-no-files-found: warn
 
@@ -181,13 +190,20 @@ jobs:
           set -euo pipefail
           rustup toolchain install 1.85.1 --profile minimal
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib -- --test-threads=1 --skip runtime::directional::pinned_rtrb_overlay_proof::r1_direction_m0_pinned_rtrb_overlay_source_exact_native_ci
+          # Same Rust integration fixtures, but compile with the original
+          # Linux target and native M0 probe feature contract. Do not
+          # pretend an in-memory ready sink is the real Windows driver.
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --test r2_receipt_ingress -- --test-threads=1
           mkdir -p result
           printf '{"source":"%s","scope":"LINUX_RUST_ELIGIBLE_LIB_M1_SPECIAL_NOT_RUN","result":"PASS","native_product":"NOT_RUN","real_two_os":"NOT_RUN"}\n' "$GITHUB_SHA" > result/linux-rust-contract.json
+          printf '{"source":"%s","scope":"LINUX_R2_FROZEN_M1_AUTHENTICATED_M3_READY_M4_ALL_FIXTURES","result":"PASS","native_product":"NOT_RUN","M1_special":"NOT_RUN"}\n' "$GITHUB_SHA" > result/r2-linux-contract.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: linux-rust-contract-preflight-${{ github.run_id }}
-          path: result/linux-rust-contract.json
+          path: |
+            result/linux-rust-contract.json
+            result/r2-linux-contract.json
           retention-days: 14
           if-no-files-found: warn
 

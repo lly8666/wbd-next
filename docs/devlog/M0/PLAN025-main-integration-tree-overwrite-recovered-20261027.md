@@ -296,3 +296,9 @@ S42 Action40536901046: Windows original Go compile PASS, Windows broad Rust libr
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Align bounded capacity witness unit fixture with real M4 failed-firstsend event timestamp and explicitly separate hosted M1 special proofs from broad library CI without weakening them."}
 ```
+
+## S44 — source-locked Windows + Linux authentic R2/receipt integration gate
+At exact experimental S43 source dc8022279a: compile+eligible Rust unit scope 208/208 Windows, 207/207 Linux PASS (Action40537978310). Added the ENTIRE `crates/wbd-engine/tests/r2_receipt_ingress.rs` integration target on both already allocated OS runners after their existing full Rust library regressions, with original `m0_v4_embedded_go,fec2_product_record` on Windows and probe+product features on Linux. It covers the retained original M1 frozen/authenticated reverse HEALTH and one-opportunity R2, exact M4 ready syscall semantics, global real outer wire-byte budgets and replay/duplicate/expiry exclusions. Artifacts get their own exact SOURCE and R2 scope, with explicitly separate M1 specialized hosted and native signed Windows↔Linux NOT_RUN. This is a compile/unit integration witness with in-memory ready sink, not real NPF/Wintun product. On failure keep exact red result and fix only authentic counterexample, do not skip individual R2 tests or count the prior 7/4 historical receipt FAIL as qualified.
+```feature-impact
+{"kind":"none","ids":[],"reason":"Add cross-platform same-source authenticated R2 integration regression Action gate using existing native Rust build and provenance, no product feature/default modification."}
+```
