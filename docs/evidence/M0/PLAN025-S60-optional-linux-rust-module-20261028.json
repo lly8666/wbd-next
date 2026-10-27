@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "source_sha": "e8acbb7891c25aa3d4bc5d3213680dd44a619536",
+  "base_product_source": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
+  "kind": "rust_optional_linux_original_go_module_feature_cfg_failing_gate_recovered",
+  "run_id": 40561871984,
+  "attempt": 1,
+  "conclusion": "success",
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/40561871984",
+  "job_id": 122392745702,
+  "tests": [
+    {
+      "name": "Linux-original-Go FEC2 OFF m0_v4_probe,m0_v4_embedded_go",
+      "result": "MODULE_COMPILE_PASS"
+    },
+    {
+      "name": "Linux original-Go opt-in FEC2+Game m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record",
+      "result": "MODULE_COMPILE_PASS"
+    },
+    {
+      "name": "Rust ordinary base no features",
+      "result": "MODULE_COMPILE_PASS"
+    }
+  ],
+  "previous_main_failure": {
+    "run_id": 40560287464,
+    "source_sha": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
+    "status": "FAIL",
+    "reason": "E0433 v4_game_public_kernel configured out, E0412 OriginalRepairBlockReason out of cfg, E0689 ordinary read_cap integer unknown"
+  },
+  "first_experiment_failure": {
+    "source_sha": "49a7dc2be6e7e37e3a95c2e08ac2a09d52cbf2d3",
+    "run_id": 40561126519,
+    "status": "FAIL",
+    "reason": "four new Rust cfg closing delimiter errors, original product NOT_RUN"
+  },
+  "not_qualified": {
+    "signed_windows_native": "NOT_RUN_ON_S60",
+    "end_to_end_linux_original_go_tls": "NOT_RUN_ON_S60",
+    "performance": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "scope": "same original program type bodies for FEC2 ON, only cfg attribution and usize fallback corrected, no original Go or Rust native ABI change"
+}

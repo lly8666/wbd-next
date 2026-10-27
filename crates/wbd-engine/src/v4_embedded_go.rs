@@ -400,7 +400,11 @@ enum OriginalRepairBlockReason{
     FreshGlobal=0,FreshShadow=1,Grant=2,Burst=3,Quota=4,
     Capacity=5,Stale=6,LocalOther=7,GlobalOther=8,Invariant=9,
 }
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 const ORIGINAL_REPAIR_BLOCK_REASON_COUNT:usize=10;
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn original_repair_reserve_block_reason(
     err:wbd_recovery::GlobalRepairError
 )->OriginalRepairBlockReason{
@@ -446,6 +450,8 @@ fn v3_send_pps_permit(now:MonoNs)->bool{
     static REPAIRS:AtomicU64=AtomicU64::new(0);
     v3_pps_permit(&REPAIRS,now,8192)
 }
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct OriginalOuterRepair{
     shadow:wbd_recovery::ReceiptState<crate::memory::FrozenRecord>,
     direction:wbd_recovery::BudgetDirection,
@@ -461,6 +467,8 @@ struct OriginalOuterRepair{
     block_reasons:[u64;ORIGINAL_REPAIR_BLOCK_REASON_COUNT],
     retired:u64,
 }
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 impl OriginalOuterRepair{
     fn note_block(&mut self,reason:OriginalRepairBlockReason){
         self.repair_blocked=self.repair_blocked.saturating_add(1);
@@ -603,6 +611,7 @@ struct Entry{
 // Global registry only handles lifetime lookup. Once the original
 // authenticated Go control starts perpetual workers, RX's actual AEAD+PN,
 // LINK and M1 arena are MOVED to RX; this Entry guards TX/control only.
+#[cfg(feature="fec2_product_record")]
 struct GameGroupNative{
     adapter:Arc<Mutex<crate::v4_game_lane::GameAdapter>>,
     handles:Vec<u64>,stopped:bool,stopping:bool,
@@ -4056,7 +4065,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 stream.and_then(|st|st.next_deadline()),now)
         }else{32};
         #[cfg(not(feature="fec2_product_record"))]
-        let read_cap=32;
+        let read_cap:usize=32;
         (e.generation,defer_route,read_cap)
     };
     if defer_route{
