@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "kind": "one_mode_real_native_windows_linux_original_go_fec2_auto_start_qualifier",
+  "source_sha": "772b8b3af48ee8f8600b16baaf2ddc3c53e84c37",
+  "ref_at_execution": "experiment/windows-wiring-s33-source-locked-preflight-20261027",
+  "source_original_go": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "run_id": 40546243971,
+  "attempt": 1,
+  "workflow": ".github/workflows/m0-wl-public-normal-full.yml",
+  "run_conclusion": "success",
+  "job_id": 122339783712,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/40546243971",
+  "artifact": {
+    "id": 12754660102,
+    "name": "m0-wl-full-public-normal-direct",
+    "sha256": "f8b8899b3d989221526bc8a84b99a615a315b7461a26dbdd89f107e016fe6562",
+    "zip_sha256_independently_verified": true
+  },
+  "scope": "one true original Windows/Linux FEC2 Auto startup mode; source-locked original Go credential TLS with Rust M1/M2/M3 FEC2 and signed Npcap/Wintun native Windows OS WAL vs Linux WSL2 raw/TUN; no network load step",
+  "outcome": "FUNCTIONAL_PASS_SCOPED",
+  "actual": {
+    "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+    "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+    "bidirectional_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "bidirectional_kernel_tcp": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "owned_stop": "PASS_BOTH_OWNED",
+    "mode": "auto",
+    "initial_profile": "strong5",
+    "initial_revision": 1,
+    "applied_dynamic_revision": "NOT_RUN",
+    "windows_udp": {
+      "sent": 27,
+      "received": 19,
+      "kernel_bind": "PASS"
+    },
+    "linux_udp": {
+      "sent": 100,
+      "received": 27,
+      "kernel_bind": "PASS"
+    },
+    "windows_tcp_echo": true,
+    "linux_tcp_echo": true,
+    "native_m2_effective": {
+      "fec_auto_metadata_limit": 524288,
+      "feedback_retained_pages": 1024,
+      "opportunistic_v3": 1,
+      "direction_accepted_fresh_bytes": 1785
+    },
+    "requested_original_windows_tun_mtu": 1400,
+    "rust_business_ipv4_budget_readback": 1415,
+    "npcap_local_ingress_drop_snapshot": 114,
+    "last_snapshot_max_interdelivery_ms": 2043,
+    "process_1hz": {
+      "samples": 12,
+      "observed_s": 11.062,
+      "cpu_total_s": 0.5781,
+      "cpu_kernel_s": 0.2812,
+      "cpu_user_s": 0.2969,
+      "peak_working_set_bytes": 41918464,
+      "peak_private_bytes": 37990400,
+      "language_cpu_attribution": "UNKNOWN"
+    }
+  },
+  "separate_evidence": {
+    "prior_source_auto_failure": {
+      "source_sha": "a2594eba2dea88d3cea0e1fb02cf777300709a1a",
+      "run_id": 40540082915,
+      "artifact_id": 12750502480,
+      "status": "FAIL"
+    },
+    "s47_test_assembly": {
+      "source_sha": "f0dd88ca1ad963fe8b03a30672895aa94de17bc7",
+      "run_id": 40544962861,
+      "status": "FAIL_WINDOWS_GO_TEST_COMPILE_NATIVE_SKIPPED"
+    },
+    "s48_preflight": "PASS_SOURCE_LOCKED_WINDOWS_GO_AND_WINDOWS_LINUX_RUST"
+  },
+  "not_qualified": {
+    "auto_natural_2s8s": "NOT_RUN",
+    "operator_revision2_on_this_source": "NOT_RUN",
+    "windows_performance_N0_N1_N5": "NOT_RUN",
+    "cpu_or_RSS_scored": "NOT_RUN",
+    "business_oneway_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+    "sustained_hol_and_0drop": "NOT_RUN",
+    "win_global_gui_wfp_dns_ipv6_policy": "NOT_RUN",
+    "on_the_fly_MTU_WAL_mutation": "UNSUPPORTED",
+    "physical": "NOT_RUN",
+    "linux_arm64_native_on_source": "NOT_RUN"
+  },
+  "interpretation": "S47 typed ABI rc=1 preservation has an end-to-end passing affected mode at S48 after S47 failure and S48 test-only assembly correction; original Rust invalid reasons and natural Auto sequence root cause are not independently proven resolved by this one short startup run. Do not treat tiny CPU process samples or a max interdelivery gap as p99/benchmark."
+}
