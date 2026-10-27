@@ -728,6 +728,11 @@ mod tests{
             Err(INVALID));
         let (wire,seq,pn)=send(&mut r,client,101,11,2,&source);
         assert_eq!(pn,0);
+        // The public Windows runner spends real seconds on WSL2, original
+        // credential TLS, Npcap and Wintun before the first reverse DATA.
+        // A fresh authentic M1 RX queue offer must not inherit startup age.
+        let _=m2_clock();
+        std::thread::sleep(std::time::Duration::from_millis(2200));
         let delivered=open_symbol(&mut r,server,[2;16],102,12,seq,&wire).unwrap();
         assert_eq!(delivered.len(),1);
         assert_eq!(&delivered[0].frame[..delivered[0].length as usize],a.as_slice());
