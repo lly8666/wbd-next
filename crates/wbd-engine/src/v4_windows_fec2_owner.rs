@@ -103,7 +103,11 @@ fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     let mut slab=e.arena.allocate().map_err(|_|FULL)?;
     slab.writable()[..wire.len()].copy_from_slice(wire);
     let unfolded=m0_tcp_unwrap(&e,seq,wire.len())?;
-    e.owner.offer_after_active(slab,0..wire.len(),unfolded,MonoNs(0))
+    // Linux M1 uses a single monotonic timestamp for offer and drain.
+    // The Windows FEC2 path formerly offered at zero, then drained at a
+    // clock advanced during TLS/NPF setup, expiring genuine new frames.
+    let now=m2_clock();
+    e.owner.offer_after_active(slab,0..wire.len(),unfolded,now)
         .map_err(|_|INVALID)?;
     let mut result=Vec::new();
     let mut failed=false;
@@ -115,9 +119,9 @@ fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     let decoder=entry.fec2_rx.as_mut().ok_or(BAD_STAGE)?;
     let rx_storage=std::mem::take(&mut entry.rx_scratch);
     let draining=entry.owner.drain_windows_authenticated_fec2(
-        m2_clock(),rx_storage,|pn,kind,plain|{
+        now,rx_storage,|pn,kind,plain|{
             unique_data_pn=Some(pn);
-            match decoder.accept_authenticated(scope,kind,plain,MonoNs(0)){
+            match decoder.accept_authenticated(scope,kind,plain,now){
                 Ok(deliveries)=>{
                     for d in deliveries {
                         if d.frame.len()>2048||result.len()>=16{
@@ -291,7 +295,8 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_fec2_open(
             unsafe{count.write(out.len() as u32)}
             OK
         },
-        _=>INVALID,
+        Ok(_)=>INVALID,
+        Err(status)=>status,
     }
 }
 
