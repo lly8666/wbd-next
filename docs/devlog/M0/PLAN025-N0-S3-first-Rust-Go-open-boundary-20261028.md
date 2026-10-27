@@ -1,0 +1,11 @@
+# S3 original Normal 300ms two-OS load first-fault attribution
+
+Exact parent aa93183d7183681efd5408f3cb2e1a0d1e32fada Action40557095692/1 FAIL after real kernel tc 300ms both ways, 0% configured loss, valid initial Windows/Linux UDP/TCP. Native original Go/Rust returned `original Normal M1/M3 open owner failure: original-Go private Windows Rust owner refused` without Rust `C ABI rc` after ~29s. ZIP12756749498 sha256 8ce1f6dbf831e36cacbe5e5195606f8ff25739027d90aebd1911142d268fb4b8 verified. Offered 10Mbps but actual 4.87/4.78Mbps cut short, local NPF drop17; cannot classify product vs hosted VM until first stage returned. N1/N5 paused.
+
+Pre-fix current-source readback: docs/testing/NETWORK_TRIAGE.md, docs/architecture/modules/05-RECORD-CRYPTO.md, 08-RECOVERY.md, Go m0_native_v4_peer_windows.go::receiveOne -> realityfront.OpenBoundOriginalNormalOrKind1 -> Rust v4_windows_owner.rs::wbd_m0_win_owner_v5_open_data_or_kind1 -> v5_open_record_entry; current M4 Wintun lease borrowHot. Latest S18 scoped owner fast readback removal 4393cf86, S9 native Wintun lease 9d85e63, S17 typed ABI and S47 FEC2 error provenance must remain. Rust would return typed C ABI on nonzero; generic Go return can be preflight, lease state or invalid post-OK structural result. This one source is not enough to select one cause.
+
+Correction does NOT loosen auth, PN, generation, crypto, M2 or capacity: adds distinct bounded numeric reason at Go Normal opener input wire precondition, current M4 borrow, typed Rust ABI (preserves errors.As INVALID(1) soft rejection), or post-OK malformed kind/used/IPv4. No raw payload/secret, per-packet logging, or new FFI. Existing process prints a single first fatal owner reason. Existing source-pinned test file gains actual typed native error+normal valid control/IPv4/malformed tests; original Windows test binary executes it. One follow-up same physical N0 300ms/10Mbps is justified only to observe which first boundary is faulty, not to reuse an unchanged failure for green or report N0 performance.
+
+```feature-impact
+{"kind":"updated","ids":["normal-off"],"reason":"Add bounded one-time native Normal receive error provenance and fail-closed regression without changing packet acceptance, existing active Rust owner or workload; historical N0 failure remains."}
+```

@@ -35,3 +35,21 @@ func TestM0WindowsFEC2OpenABICodeClassificationSurvivesWrapper(t *testing.T){
   t.Fatalf("untyped FEC2 owner failure was hidden: %v",err)
  }
 }
+
+func TestM0WindowsNormalOpenFirstFaultTypedABIAndOutput(t *testing.T){
+ for _,tc:=range []struct{rc uintptr;fatal bool}{{1,false},{2,true},{3,true},{4,true},{5,true}}{
+  err:=winNormalV4OpenStatus(&v4WindowsNativeABIError{Code:tc.rc},64,0,0,0)
+  var abi *v4WindowsNativeABIError
+  if !errors.As(err,&abi)||abi.Code!=tc.rc||!errors.Is(err,errV4WindowsOwner)||V4WindowsNativeOwnerFatal(err)!=tc.fatal{
+   t.Fatalf("Normal opener rc=%d loses typed status/fatal classification: %v",tc.rc,err)
+  }
+ }
+ for _,v:=range []struct{used uintptr;kind uint32;head byte;ok bool}{
+  {20,1,0x45,true},{0,2,0,true},{64,1,0x45,false},
+  {19,1,0x45,false},{20,3,0x45,false},{20,1,0x65,false},
+ }{
+  err:=winNormalV4OpenStatus(nil,60,v.used,v.kind,v.head)
+  if (err==nil)!=v.ok{t.Fatalf("Normal malformed output used=%d kind=%d got=%v",v.used,v.kind,err)}
+  if err!=nil&&!V4WindowsNativeOwnerFatal(err){t.Fatalf("malformed native output must fail closed: %v",err)}
+ }
+}
