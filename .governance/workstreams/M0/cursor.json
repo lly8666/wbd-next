@@ -4,12 +4,12 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 292,
-  "checkpoint_sha": "4e6d9d634bee75c965594dea51cf7bca87408a8b",
+  "sequence": 293,
+  "checkpoint_sha": "6972576063ec966464505193b554ba96128f05bb",
   "progress": "partial",
   "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
   "current_task": "PLAN025 existing M0 product vertical integration; 2026-10-27 user-authorized Windows extreme remediation PR32 accepted and isolated source work S1–S19 staged at experiment/windows-extreme-remediation-implementation-20261027 HEAD ce79252dedcefaf5a585db42762123d432da080f. Entire code/caller/test/readback/fixture package is NOT YET FROZEN and has NOT received product functional/performance Actions. Do not recreate experiment branch, duplicate S1–S19 or advance epoch.",
-  "why_now": "After H291, PR32 docs merged to main at 4e6d9d. Recovered terminal exact 6d35857 Windows Action40483279255 FAIL and receipt Action40483279229 FAIL (7 passed, 4 failed), prior 9d2362d natural Auto M2 control TX 428-byte mismatch FAIL. No running/queued Actions at recovery. Isolated experiment S1–S19 commits saved including FEC arena state, serial unwrap, fresh/optional repair separation, Game lane+prefix, M4 hot lease, actual effective M2 readback, v3 receipt correction, original PN/SEQ and FFI batch, original TX/M2 monotonic source, typed fatal owner error and redundant hot FFI cleanup. Governance on latest ce79252d Action40509993350 SUCCESS only; no native product PASS inferred.",
+  "why_now": "After H291, PR32 docs merged to main at 4e6d9d. Recovered terminal exact 6d35857 Windows Action40483279255 FAIL and receipt Action40483279229 FAIL (7 passed, 4 failed), prior 9d2362d natural Auto M2 control TX 428-byte mismatch FAIL. No running/queued Actions at recovery. Isolated experiment S1–S19 commits saved including FEC arena state, serial unwrap, fresh/optional repair separation, Game lane+prefix, M4 hot lease, actual effective M2 readback, v3 receipt correction, original PN/SEQ and FFI batch, original TX/M2 monotonic source, typed fatal owner error and redundant hot FFI cleanup. Governance on latest ce79252d Action40509993350 SUCCESS only; no native product PASS inferred. H292 recovery cursor write 6972576 Governance Action40510244282 FAIL structure for 9 context_refs >8 (feature catalog structure PASS, native product NOT_RUN). H293 narrows refs to 8 current sources without revising historic test statuses.",
   "done_when": "Whole original-Go TLS→shared Rust M1/M2/M3 FEC2 Fixed/Auto & 2/4 real Game lanes→original Windows Npcap/Wintun/WFP/route/DNS/WAL/GUI↔Linux raw/TUN and both-owned Stop across true applicable config/lifecycle. 4977f source seven initial functional mode core PASS; remaining dynamic Auto/GUI/global/lifecycle and weak-network use their own exact evidence. No fake Applied or independent Windows FEC owner.",
   "next_action": "Continue the same experiment branch at exact ce79252d, reading current design and hot call path before modifications. Finish remaining original source/control/parity post-seal disposition, full B2 bounded stage batch and B3 wake/sampling feasibility, actual dynamic mid-session MTU and E diagnostic/functional fixtures; maintain Go assembly manifest and feature-impact. Freeze one exact entire SOURCE with complete acceptance intent, run one core/build and real seven-mode Windows/Linux functional batch (natural Auto actual quality change) before one-scenario-per-Action A/B performance. Preserve history-native FAIL and NOT_RUN, do not merge to main or promote features until qualifying evidence.",
   "unverified": true,
@@ -21,7 +21,6 @@
     "docs/architecture/TEST_PLAN.md",
     "docs/features/README.md",
     "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md",
-    "docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md",
     "docs/testing/NETWORK_TRIAGE.md",
     "docs/devlog/M0/PLAN025-main-integration-tree-overwrite-recovered-20261027.md",
     "docs/decisions/M0-WINDOWS-EXTREME-REMEDIATION-20261027.md",
@@ -29,5 +28,5 @@
     "docs/evidence/windows-main-audit-20261027.json"
   ],
   "open_requests": [],
-  "partial_summary": "Recovered exact main4e6d PR32 and experimental ce79252d S1–S19 with no uncommitted source in branch. Exact experimental Governance latest40509993350 SUCCESS; experimental product native/cross Linux/ARM64 performance NOT_RUN; main product formal PARTIAL. Rust FEC capacity restoration, original sequence tests, 32-batch NPF receipt, typed native owner fault, M4 guarded lease, Game partial prefix and readback staged only. Historical Auto9d Action40476182202 FAIL control TX expected2744012027 got2744012455; historical Windows6d Action40483279255 FAIL Normal/Game; native R2 receipt6d 7 PASS/4 FAIL. No physical/GUI/WFP/global/perf qualification, do not inherit operator Auto PASSES."
+  "partial_summary": "Recovered exact main4e6d PR32 and experimental ce79252d S1–S19 with no uncommitted source in branch. Exact experimental Governance latest40509993350 SUCCESS; experimental product native/cross Linux/ARM64 performance NOT_RUN; main product formal PARTIAL. Rust FEC capacity restoration, original sequence tests, 32-batch NPF receipt, typed native owner fault, M4 guarded lease, Game partial prefix and readback staged only. Historical Auto9d Action40476182202 FAIL control TX expected2744012027 got2744012455; historical Windows6d Action40483279255 FAIL Normal/Game; native R2 receipt6d 7 PASS/4 FAIL. No physical/GUI/WFP/global/perf qualification, do not inherit operator Auto PASSES. H292 governance exact FAIL40510244282 corrected only context_refs count in H293; experiment source unaffected."
 }
