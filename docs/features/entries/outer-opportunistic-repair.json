@@ -32,7 +32,8 @@
     "docs/handoff/CURRENT_INTEGRATION.md",
     "docs/evidence/fec-network-work/20261026-W167-Outer-ON-DualArch-Matrix-and-Deferred-RX-250ms.json",
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-OPPORTUNISTIC-REPAIR.md",
-    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-WINDOWS-UNIT-REGRESSION.md"
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-WINDOWS-UNIT-REGRESSION.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-FIRST-REAL-FAIL-DIAGNOSTIC.md"
   ],
   "verification": [
     {
@@ -69,6 +70,13 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Windows2025 signed Npcap/Wintun+WSL2 Linux",
+      "scope": "50Mbps each/30% tc loss/300ms one-way/60s first real candidate: Windows actual outer repair0 despite Linux same scenario repair37.1MB; functional/Stop PASS, opportunistic repair FAIL",
+      "status": "FAIL",
+      "source_sha": "504c517fee8bb658f58689560f891e2601c995b9",
+      "evidence": "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE504C-50M-30P-300MS-FAIL-20261028.json"
     }
   ],
   "limitations": [

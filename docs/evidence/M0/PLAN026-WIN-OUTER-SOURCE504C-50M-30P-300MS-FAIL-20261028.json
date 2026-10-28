@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-28",
+  "role_id": "M0",
+  "compiled_source_sha": "504c517fee8bb658f58689560f891e2601c995b9",
+  "action": {
+    "run_id": 40719392779,
+    "job_id": 122928317925,
+    "artifact_id": 12830775783,
+    "artifact_digest": "sha256:9f9b98f83ca8b4ba12b61e19872bf0a880ec5de87d8d278605d6416dce581e80",
+    "outcome": "FAIL_BY_PRECOMMITTED_REPAIR_R_OVER_CAPACITY_FLOOR"
+  },
+  "scenario": {
+    "file": "scenarios/wl-outer-repair-50m-300ms-loss30-60s.json",
+    "sha256": "4c34deb8e3e6a8ce5446d1f380dbb49457015fa32e36fc022482cccdb01ce961",
+    "target_mbps_each_direction": 50,
+    "tc_loss_pct_each_direction": 30,
+    "one_way_delay_ms_each_direction": 300,
+    "measurement_s": 60
+  },
+  "observed": {
+    "offered_mbps": {
+      "windows": 49.9865,
+      "linux": 50
+    },
+    "first_delivered_fraction": {
+      "windows": 0.701352,
+      "linux": 0.699905
+    },
+    "windows_native_rust": {
+      "first_accepted_outer_bytes": 421568965,
+      "repair_accepted_bytes": 0,
+      "repair_uncertain_bytes": 0,
+      "control_outer_bytes": 2284819,
+      "repair_packets": 0,
+      "repair_ratio_to_total": 0,
+      "repair_ratio_to_capacity": 0
+    },
+    "linux_server_rust": {
+      "first_wire_bytes": 415892855,
+      "repair_accepted_bytes": 37116522,
+      "repair_packets": 39702,
+      "repair_ratio_to_first": 0.089245
+    },
+    "owned_stop": {
+      "windows": "PASS",
+      "linux": "PASS"
+    },
+    "real_signed_wintun_npcap": true,
+    "linux_raw_tun": true,
+    "tc_netem_actual_drop_readback": "MEASURED_BOTH_OS_KERNEL"
+  },
+  "interpretation": "Actual Windows zero repair is an unmet functionality/6% capacity floor despite under-10% limit. Distinct Linux peer >37 MB repairs demonstrates original Linux mechanism. Windows original Go telemetry showing 0 is not relied upon; native joined Rust marker is authoritative. No remaining 23-case run, deliberate first-failure stop.",
+  "next_test": "New owner stop-only M2 counters distinguish authenticated reverse kind1, poll-to-candidate, stale and quota. No change to FEC/Game or Linux and no broad matrix until same scene recovers."
+}

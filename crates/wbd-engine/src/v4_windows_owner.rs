@@ -67,6 +67,10 @@ struct WindowsOriginalM2 {
     route:ReceiptRouteScope,
     in_flight:Option<WindowsM2QueuedRepair>,
     ready_repairs:VecDeque<RepairCandidate<FrozenRecord>>, // one bounded 32-candidate M2 turn
+    reverse_authenticated_receipts:u64,
+    repair_polls:u64,
+    repair_preflight_stale:u64,
+    repair_quota_rejected:u64,
     // Feedback comes ONLY from this original M3 opener's unique reverse PN.
     // At most one immutable original-M1 kind1 draft is awaiting real NPF send.
     feedback:RxFeedbackState,
@@ -208,6 +212,8 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
     e.m2=Some(WindowsOriginalM2{
         shadow,pending:BTreeMap::new(),direction,route,in_flight:None,
         ready_repairs:VecDeque::with_capacity(32),
+        reverse_authenticated_receipts:0,repair_polls:0,
+        repair_preflight_stale:0,repair_quota_rejected:0,
         feedback,feedback_pending:None,
         #[cfg(feature="fec2_product_record")]
         mature,
@@ -403,6 +409,7 @@ fn m2_next_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
     if m.in_flight.is_some(){return Err(BAD_STAGE)}
     let now=m2_clock();
+    m.repair_polls+=1;
     // A single timer call supplies up to 32 ready candidates; Windows
     // previously threw away every one after the first. Preserve the bounded
     // turn and recheck authenticated positives just before driver send.
@@ -410,7 +417,9 @@ fn m2_next_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         m.ready_repairs.extend(m.shadow.on_timer(now).candidates);
     }
     while let Some(candidate)=m.ready_repairs.pop_front(){
-        if !m.shadow.preflight(&candidate,now){continue}
+        if !m.shadow.preflight(&candidate,now){
+            m.repair_preflight_stale+=1;continue
+        }
         if !win_v3_send_pps_permit(now){
             let _=m.shadow.on_send_result(&candidate,RepairSendResult::NotSent,now);
             continue
@@ -425,6 +434,7 @@ fn m2_next_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         let lease=match g.grant(m.direction,bytes,40_000_000,now){
             Ok(v)=>v,
             Err(_)=>{
+                m.repair_quota_rejected+=1;
                 let _=m.shadow.on_send_result(&candidate,RepairSendResult::NotSent,now);
                 continue
             }
@@ -514,6 +524,7 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
     let releases=global.observe_scoped_receipt(
         m.direction,&mut m.shadow,&scoped,now
     ).map_err(|_|INVALID)?;
+    m.reverse_authenticated_receipts+=1;
     Ok(releases.len() as u32)
 }
 struct Entry {
@@ -727,6 +738,15 @@ fn stop(r:&mut Registry,h:u64)->i32{
     if e.device.is_some_and(|d|!d.quiesced){return STOP_INCOMPLETE}
     e.phase=PH_STOPPING;
     if let Some(m)=e.m2.take(){
+        // One sparse joined Stop receipt exposes causal M2 state. No
+        // per-packet timers/logging, no dump of keys/PN/ciphertext.
+        let d=m.shadow.diagnostic_snapshot();
+        eprintln!("WBD_WINDOWS_NATIVE_M2_OPPORTUNITY_STOP authenticated_reverse_reports={} repair_polls={} shadow_outstanding={} candidate_first={} expired_first={} acked_first={} repair_accepted={} repair_abandoned={} preflight_stale={} quota_rejected={} queued={} joined=true",
+            m.reverse_authenticated_receipts,m.repair_polls,
+            m.shadow.outstanding(),d.candidate_first,d.expired_attempt0,
+            d.acked_attempt0,d.repair_accepted_retired,
+            d.repair_abandoned_retired,m.repair_preflight_stale,
+            m.repair_quota_rejected,m.ready_repairs.len());
         // Return original M1 frozen clones and retire the exact global
         // direction before original owner retirement. No late kernel sender.
         let Ok(mut global)=m2_global().lock()else{return STOP_INCOMPLETE};
