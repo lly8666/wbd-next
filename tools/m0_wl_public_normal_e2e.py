@@ -358,12 +358,29 @@ print(json.dumps(result),flush=True)
   report["auto_adaptive_native_profile"]=good[-1]["auto_requested_profile"]
   print("WBD_WL_REAL_AUTO_NATURAL_SHARED_POLICY_M2_2S8S_APPLIED_AFTER_KERNEL_UDP",flush=True)
  stress=os.environ.get("WBD_WL_RUN_P200")=="1"
- if os.environ.get("WBD_WL_RUN_N0")=="1" or stress:
+ v2_file=os.environ.get("WBD_WL_V2_SCENARIO","").strip()
+ scenario=None
+ v2_path=None
+ if v2_file:
+  from m0_wl_perf_v2_config import read_scenario
+  if mode!="normal" or stress or os.environ.get("WBD_WL_RUN_N0")=="1":
+   raise RuntimeError("WL_V2_REQUIRES_SINGLE_NORMAL_NOT_LEGACY_PERF")
+  v2_path=(root/v2_file).resolve()
+  if not v2_path.is_relative_to((root/"scenarios").resolve()) or v2_path.suffix!=".json":
+   raise RuntimeError("WL_V2_UNSAFE_SCENARIO_PATH")
+  scenario=read_scenario(v2_path)
+  if scenario["tun_mtu"]!=configured_mtu:raise RuntimeError("WL_V2_TUN_MTU_NOT_APPLIED")
+  staged=out/"wl-v2-scenario.json"
+  staged.write_bytes(v2_path.read_bytes())
+  if read_scenario(staged)["scenario_sha256"]!=scenario["scenario_sha256"]:
+   raise RuntimeError("WL_V2_SCENARIO_STAGING_CHANGED")
+  v2_path=staged
+ if os.environ.get("WBD_WL_RUN_N0")=="1" or stress or scenario:
   if stress and os.environ.get("WBD_WL_RUN_N0")=="1":
    raise RuntimeError("N0 and P200 must be separate measurements")
-  profile_name="p200-250m-30p" if stress else "n0"
-  seconds="60" if stress else os.environ.get("WBD_WL_N0_SECONDS","60")
-  if seconds not in ("60","240"):
+  profile_name="v2" if scenario else "p200-250m-30p" if stress else "n0"
+  seconds=str(scenario["duration_s"]) if scenario else "60" if stress else os.environ.get("WBD_WL_N0_SECONDS","60")
+  if not scenario and seconds not in ("60","240"):
    raise RuntimeError("WL-N0 duration selector must be 60 or 240 seconds")
   # One declared measurement scenario, not a mixed matrix. Genuine Linux
   # egress and eth0-ingress→IFB kernel tc, not an in-app drop/latency shim.
@@ -371,6 +388,7 @@ print(json.dumps(result),flush=True)
   def netem(action):
    cmd=["wsl.exe","-d","Ubuntu","-u","root","--","python3",
         unix(root/"tools"/"m0_wl_netem.py"),action,unix(out),profile_name]
+   if scenario:cmd.append(unix(v2_path))
    return run(cmd,timeout=35)
   owned=out/"wl-n0-netem-owned.json"
   try:
@@ -386,9 +404,11 @@ print(json.dumps(result),flush=True)
    wrate=(out/"wl-n0-windows-app.log").open("w");logs.append(wrate)
    linuxrate=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
        "python3","-u",rate,"10.66.0.1","10.66.0.2",
-       "linux",unix(out/"wl-n0-start.flag"),output,seconds,profile_name],stdout=lrate,stderr=subprocess.STDOUT)
+       "linux",unix(out/"wl-n0-start.flag"),output,seconds,profile_name]+
+       ([unix(v2_path)] if scenario else []),stdout=lrate,stderr=subprocess.STDOUT)
    windowsrate=subprocess.Popen([sys.executable,"-u",str(root/"tools"/"m0_wl_public_rate_app.py"),
-       "10.66.0.2","10.66.0.1","windows",str(out/"wl-n0-start.flag"),str(out),seconds,profile_name],
+       "10.66.0.2","10.66.0.1","windows",str(out/"wl-n0-start.flag"),str(out),seconds,profile_name]+
+       ([str(v2_path)] if scenario else []),
        stdout=wrate,stderr=subprocess.STDOUT)
    try:
     ready(out/"wl-n0-linux-app.log",'"phase": "bound"',linuxrate,25)
@@ -432,7 +452,33 @@ print(json.dumps(result),flush=True)
       return sum((find_counts(v) for v in obj),[])
      return []
     return max(find_counts(qdiscs) or [0])
-   if stress:
+   if scenario:
+    declared=json.loads((out/"wl-n0-netem-before.json").read_text())
+    target={"windows":scenario["windows_to_linux"]["offered_mbps"],
+            "linux":scenario["linux_to_windows"]["offered_mbps"]}
+    offered={role:row["sent_payload_mbps"] for role,row in wl.items()}
+    delivery={role:row["received_payload_mbps"] for role,row in wl.items()}
+    loss_fraction={
+      "windows":round(wl["windows"]["received_first_packets"]/max(1,wl["linux"]["sent_packets"]),6),
+      "linux":round(wl["linux"]["received_first_packets"]/max(1,wl["windows"]["sent_packets"]),6)}
+    valid=all(row.get("scenario_sha256")==scenario["scenario_sha256"] and
+              row["measurement_duration_s"]==float(seconds) for row in wl.values())
+    tc_seen=count_packets(after["eth0"])>0 and count_packets(after["ifb"])>0
+    offered_ok=all(offered[k]>=.95*v for k,v in target.items())
+    status=("INCONCLUSIVE_SCENARIO_OR_MEASUREMENT" if not valid
+            else "INCONCLUSIVE_TC_CARRIER_NOT_OBSERVED" if not tc_seen
+            else "CAPACITY_LIMITED_GENERATOR_OFFER" if not offered_ok
+            else "MEASURED_BOTH_OS_KERNEL")
+    report["WL_V2"]={
+      "status":status,"scenario_id":scenario["scenario_id"],
+      "scenario_sha256":scenario["scenario_sha256"],
+      "declared":scenario,"offered_mbps":offered,"target_mbps":target,
+      "first_delivered_mbps":delivery,"first_delivery_fraction":loss_fraction,
+      "generator_cpu_s":{k:v["sender_cpu_seconds"] for k,v in wl.items()},
+      "kernel_qdisc":"wl-n0-netem-after.json",
+      "scope":"REAL_WINDOWS_WINTUN_NPF_GO_TLS_AND_LINUX_TUN_NOT_ONEWAY_P99"}
+    print("WL_V2_TRUE_KERNEL_MEASUREMENT "+status,flush=True)
+   elif stress:
     declared=json.loads((out/"wl-n0-netem-before.json").read_text())
     requested=declared.get("requested_kernel_profile")
     if declared.get("declared_profile")!=profile_name or requested!=get_profile(profile_name):
@@ -485,6 +531,9 @@ print(json.dumps(result),flush=True)
  stop_marker="V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server" if is_game else "V4_PUBLIC_NATIVE_STOP_DRAINED role=server"
  if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
  report["stop"]="PASS_BOTH_OWNED"
+ if scenario:
+  report["WL_V2"]["owned_stop"]="PASS_BOTH_OWNED"
+  report["WL_V2"]["variant"]="go-steady" if os.environ.get("WBD_WL_PERF_AB_GO_STEADY")=="1" else "rust-native"
  if fixed6:
   applied="WBD_WINDOWS_FEC2_M2_MATURE_SCOPED mode=fec-fixed" in (out/"client.log").read_text(errors="replace")
   report["fixed_m2_mature"]=applied

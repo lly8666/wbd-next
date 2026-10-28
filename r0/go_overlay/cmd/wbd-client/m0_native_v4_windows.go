@@ -318,10 +318,17 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  if e!=nil{return e}
  if plan.StatePath==""{return windowsclient.ErrN4NativeGuard}
  var transport m0NativeV4ProductPeer
- if o.Mode==m0WinModeNormal{
+ // Only explicit CI measurement chooses the retained original Go packet pump.
+ // The product default remains the Rust-only Wintun/Npcap NativeOwner; the
+ // override does not change original credential TLS, OS WAL or session scope.
+ goSteadyAB:=o.Mode==m0WinModeNormal&&os.Getenv("GITHUB_ACTIONS")=="true"&&
+  os.Getenv("WBD_WL_PERF_AB_GO_STEADY")=="1"
+ if goSteadyAB{fmt.Println("WL_PERF_V2_AB_PATH_GO_STEADY_SOURCE_LOCKED")}
+ if o.Mode==m0WinModeNormal&&!goSteadyAB{
   transport=newM0WinRustNativePeer(owner,endpoint,ncfg,flow,
    nativeFrames,rustHandoff,&readers)
  }else{
+  // Fixed/Auto stay unchanged; CI A exercises retained Go Normal steady.
   // Fixed/Auto retain current product path only until the same Rust
   // NativeOwner grows FEC2 mode; there is no Normal/off fallback.
   legacy,legacyErr:=newM0NativeV4PeerForMode(owner,endpoint,flow,nativeFrames,o.Mode)

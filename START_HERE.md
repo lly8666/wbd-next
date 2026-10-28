@@ -23,4 +23,5 @@ M0 的 source、夹具和结果均进 main；编译产物固定 SOURCE 可跨 Ac
 - [当前逻辑/问题导航](docs/handoff/CURRENT_INTEGRATION.md)，数字仍以最新 cursor/证据为准。
 - [历史怎么找](docs/history/2026-10-28-M0-MAIN-HANDOFF.md)：旧 FEC、Windows 接线、故障、性能和方案索引。
 - [模块设计](docs/architecture/modules/README.md)、[网络诊断](docs/testing/NETWORK_TRIAGE.md)：修哪个模块再读哪个。
+- [Windows/Linux V2 性能夹具](docs/testing/WL_PERF_HARNESS_V2.md)：调整 Windows 流量、RTT、丢包、混合包型或进行旧 Go/Rust 同 VM A/B 时必读；历史 N0/P200 不自动重解释。
 main 存在、代码已集成、功能通过、性能/物理通过是不同结论。历史失败保留但不重新生成已经关闭的待办。

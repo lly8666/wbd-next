@@ -16,7 +16,9 @@ from m0_wl_impairment_profile import get_profile
 
 action, directory = sys.argv[1:3]
 profile_name = sys.argv[3] if len(sys.argv)>3 else "n0"
-profile = get_profile(profile_name)
+scenario_path = sys.argv[4] if len(sys.argv)>4 else None
+profile = get_profile(profile_name, side="windows", configfile=scenario_path)
+egress_profile = get_profile(profile_name, side="linux", configfile=scenario_path)
 out = pathlib.Path(directory)
 out.mkdir(parents=True, exist_ok=True)
 owner = out / "wl-n0-netem-owned.json"
@@ -89,12 +91,14 @@ if action == "arm":
         call("ip", "link", "add", iface, "type", "ifb")
         state["ifb_created"] = True; persist(state)
         call("ip", "link", "set", iface, "up")
-        netem = ["netem", "delay", f'{profile["delay_ms"]}ms',
-                 "loss", f'{profile["loss_pct"]}%', "limit", "32768"]
-        if profile["tc_mbit"] is not None:
-            netem += ["rate", f'{profile["tc_mbit"]}mbit']
-        call("tc", "qdisc", "add", "dev", iface, "root", "handle", "10:", *netem)
-        call("tc", "qdisc", "add", "dev", "eth0", "root", "handle", "20:", *netem)
+        def native_netem(d):
+            args=["netem","delay",f'{d["delay_ms"]}ms',
+                  "loss",f'{d["loss_pct"]}%',"limit","32768"]
+            if d["tc_mbit"] is not None:
+                args += ["rate",f'{d["tc_mbit"]}mbit']
+            return args
+        call("tc", "qdisc", "add", "dev", iface, "root", "handle", "10:", *native_netem(profile))
+        call("tc", "qdisc", "add", "dev", "eth0", "root", "handle", "20:", *native_netem(egress_profile))
         state["egress"] = True; persist(state)
         call("tc", "qdisc", "add", "dev", "eth0", "handle", "ffff:", "ingress")
         state["ingress"] = True; persist(state)
@@ -113,9 +117,12 @@ if action == "arm":
             raise RuntimeError("real tc netem root/IFB/ingress readback incomplete")
         snapshot["declared_profile"] = profile_name
         snapshot["requested_kernel_profile"] = profile
+        snapshot["requested_linux_egress_profile"] = egress_profile
         (out / "wl-n0-netem-before.json").write_text(json.dumps(snapshot, indent=2) + "\n")
-        print("WL_N0_GENUINE_KERNEL_300MS_BOTH_DIRECTIONS_CONFIGURED" if profile_name=="n0"
-              else "WL_P200_GENUINE_KERNEL_200MS_30PCT_250MBIT_BOTH_DIRECTIONS_CONFIGURED",flush=True)
+        marker=("WL_N0_GENUINE_KERNEL_300MS_BOTH_DIRECTIONS_CONFIGURED" if profile_name=="n0"
+                else "WL_V2_GENUINE_KERNEL_BIDIRECTIONAL_SCENE_CONFIGURED" if profile_name=="v2"
+                else "WL_P200_GENUINE_KERNEL_200MS_30PCT_250MBIT_BOTH_DIRECTIONS_CONFIGURED")
+        print(marker,flush=True)
     except Exception:
         clean()
         raise

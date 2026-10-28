@@ -65,6 +65,11 @@ on:
       - r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go
       - r0/go_overlay/internal/v4productcli/linux.go
       - tools/m0_wl_impairment_profile.py
+      - tools/m0_wl_perf_v2_config.py
+      - tools/m0_wl_perf_v2_ab.py
+      - scenarios/wl-normal-150m-300ms-0loss-60s.json
+      - tests/test_m0_wl_perf_v2_config.py
+      - docs/testing/WL_PERF_HARNESS_V2.md
       - tests/test_m0_wl_impairment_profile.py
       - tests/test_m0_wl_native_resource_sampler.py
       - r0/go_overlay/assembly/manifest-plan020-m0.json
@@ -81,6 +86,16 @@ on:
         description: "One N0 performance scenario; requires exactly one public mode"
         required: true
         type: boolean
+        default: false
+      perf_scenario_file:
+        description: "Optional source-controlled scenarios/*.json for Normal only; exclude N0/P200"
+        type: string
+        required: false
+        default: ""
+      perf_ab:
+        description: "One same-VM sequential Go-steady then Rust-native A/B for the selected V2 scene"
+        type: boolean
+        required: false
         default: false
 permissions:
   contents: read
@@ -101,21 +116,38 @@ jobs:
       - run: python -m unittest tests.test_m0_wl_native_mtu_contract -v
       - run: python -m unittest tests.test_m0_wl_n0_drop_delta -v
       - run: python -m unittest tests.test_m0_wl_impairment_profile -v
+      - run: python -m unittest tests.test_m0_wl_perf_v2_config -v
       - run: python -m unittest tests.test_m0_wl_native_resource_sampler -v
       - run: python -m unittest tests.test_m0_wl_lock_profile -v
       - run: python tools/prepare_windows_wiring.py --check-only
       - name: Enforce functional seven modes or exactly one scoped N0 before any native build
         env:
-          PUBLIC_MODE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]')) && 'normal' || inputs.public_mode || 'all' }}
+          PUBLIC_MODE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]') || contains(github.event.head_commit.message, '[plan026-ab-150]')) && 'normal' || inputs.public_mode || 'all' }}
           RUN_N0: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '1' || inputs.run_n0 == true && '1' || '0' }}
           RUN_P200: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') && '1' || '0' }}
+          WL_V2_SCENARIO: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-ab-150]') && 'scenarios/wl-normal-150m-300ms-0loss-60s.json' || inputs.perf_scenario_file || '' }}
+          WL_V2_AB: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-ab-150]') && '1' || inputs.perf_ab == true && '1' || '0' }}
         shell: bash
         run: |
           python - <<'PY'
           import os
           from tools.m0_wl_mode_evidence import select_source_locked_modes
-          modes=select_source_locked_modes(os.environ['PUBLIC_MODE'],os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1')
-          print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'])
+          v2=os.environ.get('WL_V2_SCENARIO','').strip()
+          ab=os.environ.get('WL_V2_AB','0')=='1'
+          modes=select_source_locked_modes(os.environ['PUBLIC_MODE'],os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1' or bool(v2) or ab)
+          if v2:
+              from pathlib import Path
+              from tools.m0_wl_perf_v2_config import read_scenario
+              resolved=(Path.cwd()/v2).resolve()
+              if resolved.parent!=(Path.cwd()/'scenarios').resolve():
+                  raise ValueError('WL_V2_REFUSE_UNCOMMITTED_OR_TRAVERSAL_PATH')
+              cfg=read_scenario(resolved)
+              if modes!=['normal'] or os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1':
+                  raise ValueError('WL_V2_REQUIRES_EXACTLY_ONE_NORMAL_AND_NO_N0_P200')
+              print('WL_V2_SOURCE_LOCKED_SCENARIO',cfg['scenario_id'],cfg['scenario_sha256'])
+          if ab and not v2:
+              raise ValueError('WL_V2_AB_REQUIRES_SOURCE_SCENARIO')
+          print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'],'V2_AB='+str(ab))
           PY
       - run: python -m py_compile tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
 
@@ -352,11 +384,13 @@ jobs:
       # The main/push workflow qualifies the seven public functions first.
       # A one-scenario throughput case is an explicit separate manual
       # Action selecting exactly one mode on a single reused VM/build.
-      WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]')) && 'normal' || inputs.public_mode || 'all' }}
+      WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]') || contains(github.event.head_commit.message, '[plan026-ab-150]')) && 'normal' || inputs.public_mode || 'all' }}
       WBD_WL_RUN_N0: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '1' || inputs.run_n0 == true && '1' || '0' }}
       WBD_WL_RUN_P200: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') && '1' || '0' }}
       WBD_WL_PROBE_LOCKS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-probe-locks]') && '1' || '0' }}
       WBD_WL_N0_SECONDS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '240' || '60' }}
+      WBD_WL_V2_SCENARIO: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-ab-150]') && 'scenarios/wl-normal-150m-300ms-0loss-60s.json' || inputs.perf_scenario_file || '' }}
+      WBD_WL_PERF_AB: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-ab-150]') && '1' || inputs.perf_ab == true && '1' || '0' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -404,6 +438,19 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Windows native original owner full-module functional regression FAIL'}
           Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
           Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe
+          [ordered]@{source_sha=$env:GITHUB_SHA;features=$features;sha256=[ordered]@{
+              exe=(Get-FileHash result/wl-public/wbd-client-embedded.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+              dll=(Get-FileHash result/wl-public/wbd_engine.dll -Algorithm SHA256).Hash.ToLowerInvariant()
+            }} | ConvertTo-Json -Depth 6 | Set-Content result/wl-public/windows-binary-manifest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-wl-windows-product-binaries-${{ github.sha }}
+          path: |
+            result/wl-public/wbd-client-embedded.exe
+            result/wl-public/wbd_engine.dll
+            result/wl-public/windows-binary-manifest.json
+          retention-days: 30
+          if-no-files-found: error
       - name: Verify Windows bound authenticated RX high-water without false TCP ACK
         shell: pwsh
         timeout-minutes: 5
@@ -604,8 +651,13 @@ jobs:
                 $env:WBD_WL_PUBLIC_MODES='auto-revision'
               }
             }
-            & python tools/m0_wl_public_modes_e2e.py 2>&1 |
-              Tee-Object result/wl-public/direct-full.log
+            if($env:WBD_WL_PERF_AB -eq '1'){
+              & python tools/m0_wl_perf_v2_ab.py 2>&1 |
+                Tee-Object result/wl-public/direct-full.log
+            }else{
+              & python tools/m0_wl_public_modes_e2e.py 2>&1 |
+                Tee-Object result/wl-public/direct-full.log
+            }
             $e2eExit=$LASTEXITCODE
             if($e2eExit -ne 0){throw 'real Windows-to-Linux public original Go TLS/Rust M1-M3/native I/O path failed'}
             if($env:WBD_WL_PUBLIC_MODES -eq 'all'){
@@ -631,6 +683,11 @@ jobs:
           }
           if($e2eExit -ne 0){throw 'true public Windows Go TLS Rust Npcap Wintun to Linux raw/TUN direct chain FAILED'}
           $result=Get-Content result/wl-public/report.json -Raw | ConvertFrom-Json
+          if($env:WBD_WL_PERF_AB -eq '1'){
+            if($result.WL_V2_AB -ne 'COMPARABLE_OBSERVATION_NOT_PRODUCT_QUALIFICATION'){
+              throw 'real same VM V2 old Go/Rust A/B not comparable or no owned Stop'
+            }
+          }
           if($env:WBD_WL_PUBLIC_MODES -eq 'auto-adaptive'){
             if($result.mode -ne 'auto-adaptive' -or
                $result.mode_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE_auto-adaptive' -or
@@ -739,6 +796,9 @@ jobs:
             result/wl-public/mode-results/
             result/wl-public/wl-n0-*-app.json
             result/wl-public/wl-n0-netem-*.json
+            result/wl-public/wl-ab-v2/
+            result/wl-public/wl-v2-scenario.json
+            result/wl-public/windows-binary-manifest.json
             result/wl-public/assembly.json
             result/wl-public/native-link-tcp443.log
             result/wl-public/native-windows-npf.log

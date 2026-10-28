@@ -1,0 +1,19 @@
+# WL performance harness V2 (M0 Windows Go/Rust)
+
+## Current entry
+The real test is `.github/workflows/m0-wl-public-normal-full.yml`, signed Windows Npcap/Wintun, original authenticated Go TLS and WSL2 Linux real raw/TUN. V2 uses the existing `tools/m0_wl_public_rate_app.py`, `tools/m0_wl_netem.py`, `tools/m0_wl_public_normal_e2e.py` and the orchestration `tools/m0_wl_perf_v2_ab.py`. Normal/off alone has a same-process Go-steady test-selectable path vs Rust NativeOwner. No mocked carrier, no bypassing original Apply/Stop.
+
+**One dedicated Actions run = one scenario + one measurement job**, A then B on the same `windows-2025` runner, same source and signed drivers, same original Linux peer. No concurrent Go/Rust legs. A's Go steady state is the *still-present code compiled at the current SOURCE*, not a historical precompiled published Go executable. It uses the same DLL for legacy M1/M3; report both actual paths honestly. New binary artifact is separate from the diagnostic results.
+
+## How to run
+On a source with the V2 integration, trigger a workflow dispatch with `public_mode=normal`, `run_n0=false`, `perf_scenario_file=scenarios/wl-normal-150m-300ms-0loss-60s.json`, `perf_ab=true`. The workflow may also have a one-off source-tagged push entry `[plan026-ab-150]`. Do not use N0/P200 in the same invocation. The A/B runner handles two independent original TCP/TLS/OS/WAL/Stop sessions, not two simultaneous products.
+
+`scenarios/*.json`: integer duration (10..240 s), warmup (0..30), drain (2..30), supported TUN MTU, seed; two directional sections each contain offered Mbps (0..350), delay ms (0..2000), loss percent (0..60), optional `tc_rate_mbps`, and packet mix array with `udp_payload_bytes` + `packets_weight` (weighted **per packet**, not per byte; sum <= 100). Source-lock full JSON by SHA. Input-to-generator offered Mbps and actual socket sent/first delivered Mbps are distinct. The original N0 and P200 names, thresholds and evidence remain untouched.
+
+## Exact evidence to read
+`result/wl-public/wl-ab-v2/leg-A/` and `leg-B/` contain independent Windows/Linux generator results, 1 Hz whole-EXE Windows CPU+RSS/threads, owner log, and pre/after genuine Linux tc qdiscs. `wl-ab-v2/report.json` contains per-leg offered/first delivered/CPU-seconds/GB and the classified A/B outcome. An invalid scenario, missing authenticated Stop, incomplete same-VM telemetry, insufficient offered rate (each direction >=95% of target) or lost counters -> INCONCLUSIVE/FAIL rather than an invented improvement. Per-process CPU includes Go+Rust and kernel charges; named Rust worker CPU excludes unnamed runtime/driver CPU. Approximate 1 Hz process windows are not per-packet or one-way p99.
+
+Default production builds have no per-packet Rust lock timers. The existing opt-in `win_native_lock_profile` samples 1/64 lock attempts on diagnostic source; it does not establish who consumed all CPU. Separate unexplained TCP-like data loss from actual tc drop and generator capacity. Do not split the NativeOwner mutex or change ciphertext/PN without measured evidence.
+
+## Qualification
+Code installed != build PASS != real two-OS PASS != 150Mbps sustained offered != 150Mbps first-delivered, and none implies physical-machine PASS. If either leg fails, preserve first error and both independent reports; do not compare a surviving single leg. At capacity limits stop heavier scenes. Original Linux path and fixed/auto/game modes are not modified by this opt-in Normal-only benchmark.

@@ -40,9 +40,12 @@ probe_pending={}
 probe_delivered=set()
 probe_rtt_ms=[]
 probe_send_errors=0
-profile_name = sys.argv[7] if len(sys.argv)==8 else "n0"
-profile = get_profile(profile_name)
+profile_name = sys.argv[7] if len(sys.argv)>=8 else "n0"
+scenario_path=sys.argv[8] if len(sys.argv)>8 else None
+profile = get_profile(profile_name,side=side,configfile=scenario_path)
 sizes=(96, 288, 1060, 1200) if profile_name=="n0" else (1060,1200)
+if profile_name=="v2":
+    sizes=tuple(row["udp_payload_bytes"] for row in profile["packet_mix"] for _ in range(row["packets_weight"]))
 rate_bytes_per_sec=int(profile["offered_mbps"]*1_000_000/8)
 stress=profile_name!="n0"
 destination=(remote,45903)
@@ -50,7 +53,8 @@ reused={size:bytearray(prefix+bytes(8)+bytes(size-len(prefix)-8)) for size in si
 # Explicit per-Actions single-scene duration; never let an env on one OS
 # silently produce a different input horizon on the other OS.
 duration = float(sys.argv[6]) if len(sys.argv) >= 7 else 60.0
-if duration not in (60.0,240.0) or (profile_name!="n0" and duration!=profile["duration_s"]):
+if (profile_name=="v2" and duration!=profile["duration_s"]) or (profile_name!="v2" and
+        (duration not in (60.0,240.0) or (profile_name!="n0" and duration!=profile["duration_s"]))):
     raise ValueError("invalid declared impairment duration")
 drain=5.0
 start=time.monotonic()
@@ -176,7 +180,10 @@ end=time.monotonic()
 cpu_seconds=time.process_time()-cpu_start
 result={
     "source":os.environ.get("GITHUB_SHA"),
-    "scenario":"WL-N0" if profile_name=="n0" else "WL-P200-250M-30P",
+    "scenario_sha256":profile.get("scenario_sha256"),
+    "measurement_start_monotonic_s":round(start,6),
+    "measurement_end_monotonic_s":round(start+duration,6),
+    "scenario":"WL-N0" if profile_name=="n0" else "WL-PERF-V2" if profile_name=="v2" else "WL-P200-250M-30P",
     "kernel_impairment_profile":profile_name,
     "side":side,"kernel_bind":"PASS","measurement_duration_s":duration,
     "drain_s":drain,"actual_elapsed_s":round(end-start,3),
