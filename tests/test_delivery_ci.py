@@ -37,7 +37,7 @@ class DeliveryCiTests(unittest.TestCase):
         job = self.workflow["jobs"]["windows-compile-preflight"]
         self.assertEqual(job["needs"], ["wiring-contract"])
         self.assertEqual(job.get("if"),
-            "inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]'))")
+            "inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]'))")
         scripts = "\n".join(x.get("run", "") for x in job["steps"])
         self.assertIn("go test -c", scripts)
         self.assertIn("./cmd/wbd-client", scripts)
@@ -107,6 +107,33 @@ class DeliveryCiTests(unittest.TestCase):
         for step_name in ("Prepare exact original Go", "Build actual original Windows Rust"):
             step=next(x for x in native["steps"] if x.get("name","").startswith(step_name))
             self.assertEqual(step["if"],"env.WBD_WL_REUSE_RUN_ID == ''")
+
+    def test_linux_raw_rxbuf_new_source_150_reuse_is_hash_and_product_guarded(self):
+        native=self.workflow["jobs"]["native-public-two-os"]
+        preflight=self.workflow["jobs"]["wiring-contract"]["steps"]
+        guard=next(x for x in preflight if x.get("name","").startswith("Enforce functional"))
+        linux=self.workflow["jobs"]["linux-source-locked-public"]
+        tag="[plan026-rust-rxbuf-reuse-150]"
+        for line in (native["env"]["WBD_WL_PUBLIC_MODES"],native["env"]["WBD_WL_V2_SCENARIO"],
+                     guard["env"]["PUBLIC_MODE"],guard["env"]["WL_V2_SCENARIO"]):
+            self.assertIn(tag,line)
+        for key in ("WBD_WL_BINARY_SOURCE","LINUX_BINARY_SRC","WBD_WL_REUSE_RUN_ID"):
+            self.assertIn(tag,native["env"][key])
+        self.assertIn("40681039919",native["env"]["WBD_WL_REUSE_RUN_ID"])
+        self.assertIn("0abd1b04ee7a39d8aa426963564a079523c1036a",native["env"]["WBD_WL_BINARY_SOURCE"])
+        self.assertIn("0abd1b04ee7a39d8aa426963564a079523c1036a",native["env"]["LINUX_BINARY_SRC"])
+        self.assertIn("40681039919",guard["env"]["WL_V2_REUSE_RUN"])
+        self.assertIn("0abd1b04ee7a39d8aa426963564a079523c1036a",guard["env"]["WL_V2_BINARY_SHA"])
+        self.assertIn("150m-300ms-0loss-60s.json",native["env"]["WBD_WL_V2_SCENARIO"])
+        # New product already validated source0abd; only now is a further
+        # harness-only source allowed to skip rebuild with exact SHA checks.
+        self.assertIn(tag,linux["if"])
+        self.assertIn(tag,native["if"])
+        self.assertIn(tag,self.workflow["jobs"]["windows-compile-preflight"]["if"])
+        self.assertNotIn(tag,native["env"]["WBD_WL_PERF_AB"])
+        verify=next(x for x in native["steps"] if x.get("name","").startswith("Restore exact prebuilt"))
+        for needle in ("git diff --name-only", "Cargo.lock", "sha256", "head_sha"):
+            self.assertIn(needle,verify["run"])
 
     def test_native_success_and_cleanup_contracts_retained(self):
         job = self.workflow["jobs"]["native-public-two-os"]

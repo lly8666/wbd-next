@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 332,
-  "checkpoint_sha": "c26ba0ef126b5d8bc599950104e1082f76be06aa",
+  "sequence": 333,
+  "checkpoint_sha": "0abd1b04ee7a39d8aa426963564a079523c1036a",
   "progress": "partial",
   "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
-  "current_task": "PLAN026 user authorized Rust-only precise Linux raw socket overrun repair with extra bounded headroom. Current source candidate Linux Rust ScopedRawIpv4Rx::open request4MiB SO_RCVBUF per owned IPPROTO_TCP RX socket, expect max8MiB effective under Linux doubling, actual getsockopt verified and startup marker; fail close if socket option unavailable; no sysctl, fq600/FEC or Windows M1-M3 altered. Fixture one-shot exact /proc/<pid>/fd socket inode ownership join, per-second raw/UDP drops. Fresh [plan026-rust-rxbuf-100] push must force new same-SOURCE Linux+Windows full builds then real 100M/300ms/0loss 60s Rust-only with signed drivers/WSL/Stop. Last measured previous SOURCE73ab 100M first-delivery99.7839% Linux, raw socket drops1800; SOURCE775 150M raw drops162785. User excluded old Go steady A/B.",
-  "why_now": "100Mbps source73ab old unchanged product observed 1779 app missing/1800 exact guest raw socket drops while UDP app drops0 and true fq600 already verified, 150Mbps old source775 saw162785 raw socket drops. Narrowest product-stage fix: bounded per-fd Linux SO_RCVBUF 4MiB request with accurate kernel readback, plus exact PID/inode ownership join; preserve signed drivers and full-stop proof.",
+  "current_task": "Rust-only genuine Linux RAW RX SO_RCVBUF 4MiB requested (effective8MiB readback), SOURCE0abd full new Windows+Linux binaries Actions40681039919 real 100Mbps each/300ms each oneway/0% netem/60s Windows↔WSL2. First-delivery Windows→Linux 823247/823247=100%, Linux→Windows 822665/822766=99.9877% (101 missing); both actual offered99.9732/99.9154Mbps, both kernel netem drops0, exact server owned Linux raw sockets inode6895/9515/6901 PID1005 drops0, Linux app UDP socket drops0, UDP RTT p99 610ms/624.732ms; both owned Stop PASS. Strict .999 gate PASS, absolute both zero NOT claimed. Native product source0abd and ZIP SHA014a0cef... exact. Next source-verified reuse for 150Mbps using same built SOURCE0abd product and true signed driver fresh VM; old compiled SOURCE0543 with raw drops162785 is the pre-fix failing comparator.",
+  "why_now": "User specifically asks precise Rust-only raw socket diagnosis, bigger one-time headroom. Kernel rmem_max4MiB request accepted to effective8MiB. New bounded product compiled fresh SOURCE0abd, evidence proves raw socket drops and Linux app missing become zero at 100Mbps; original old product raw drops1800 at100Mbps. Need 150Mbps reuse run to determine high load capacity without recompiling when only fixture changed.",
   "done_when": "Normal/off newest source exact N0 10Mbps 300ms one-way 240s with old produced0 ready4 regression and same VM old-Go vs new Rust CPU-seconds/GB, RSS, idle wakes and p99 first-delivery A/B. Migrate Fixed/Auto/Game/Health Keepalive and Make-Before-Break dynamic lane native owner; remove remaining Go packet pump only after modes' real functional/perf proof.",
-  "next_action": "Inspect new full compile + real WSL2 run for Rust Linux SO_RCVBUF effective size marker, exact raw socket inode ownership, per-socket drops delta, app unique fraction>=.999 each, actual sent>=95Mbps each, true tc0 drops and both owned Stop. If warmup/compile fails fix source safely; do NOT mark product PASS until 60s actual. If 100M passes, separate 150M same new compiled source via source-verified artifacts, not 0543. If buffer capped below4MiB, investigate WSL rmem_max actual before adjusting global sysctl. Do not blindly alter Rust owner mutex/FEC/fq600.",
+  "next_action": "Check Actions run triggered by [plan026-rust-rxbuf-reuse-150] on main. It MUST use prebuilt Windows EXE DLL and Linux Rust peer SOURCE0abd, original binary run40681039919, manifest+SHA and compiled-path diff locked, fresh real signed Npcap/Wintun/WSL/owned Stop; scenario150Mbps both 300ms one-way 0% tc loss 60s. Compare Linux exact raw inode drops0 or positive, offered>=95% target, first-delivery>=99.9 both and CPU/RTT; preserve actual failures and report separately from 100M scoped PASS. If 150 fails, isolate raw buffer vs consume cadence/virtio before any further increase. No old-Go steady AB or FEC changes.",
   "unverified": true,
-  "last_tested_source": "73ab8199c471cfc25b155f588f3cfa7ebba06da2",
+  "last_tested_source": "0abd1b04ee7a39d8aa426963564a079523c1036a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN026-WL-V2-100M-300MS-0LOSS-SOURCE73AB-REAL-RUST-20261028.json"
+    "docs/evidence/M0/PLAN026-SOURCE0ABD-RAW-RXBUF-100M-ACTUAL-PASS-20261028.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261028-PLAN026-H321-native-thread-CPU-ownership.md",
     "docs/testing/WL_PERF_HARNESS_V2.md",
     "docs/devlog/M0/20261028-PLAN026-WL-PERF-V2-SAME-VM-AB.md",
     "docs/devlog/M0/20261028-PLAN026-WL-V2-150M-A-B-SECOND-REAL-RESULT.md",
     "docs/devlog/M0/20261028-PLAN026-RUST-LOSS-FORENSICS-WIN-CI-REUSE.md",
     "docs/devlog/M0/20261028-PLAN026-WL-V2-LINUX-RAW-SOCKET-STAGE.md",
     "docs/devlog/M0/20261028-PLAN026-WL-V2-100M-RUST-SAME-BINARIES.md",
-    "docs/devlog/M0/20261028-PLAN026-RUST-LINUX-RAW-RXBUF-4M-REGRESSION.md"
+    "docs/devlog/M0/20261028-PLAN026-RUST-LINUX-RAW-RXBUF-4M-REGRESSION.md",
+    "docs/devlog/M0/20261028-PLAN026-RUST-RAW-RXBUF-100M-PASS-150M-REUSE.md"
   ],
   "open_requests": [],
-  "partial_summary": "Source code candidate only, NOT TESTED: Linux platform RawRx::open requests4MiB SO_RCVBUF after BINDTODEVICE, kernel effective up to8MiB per fd, getsockopt readback eprintln marker, no sysctl/fq600/FEC/M2 modification. Unprivileged unit test verifies option ABI. Python fixture exact /proc/<pid>/comm + fd socket:[inode] ownership read once at end. Full new Rust product source build required; 100Mbps scene only. Prior measured source73ab first-delivery Linux821468/823247 99.7839%, raw drop1800; 150Mbps raw drop162785; no claim fix until new real test. See new devlog raw RX product intent. User stopped old Go steady."
+  "partial_summary": "SOURCE0abd true full new-built Rust Normal/off Windows/WSL2 100Mbps each, one-way300ms 0% netem 60s PASS. Linux raw RX SO_RCVBUF 4MiB request, 8MiB effective kernel readback no clamp, process PID1005 exact comm wbd-v4-server fd socket inode owners 6895/9515/6901 raw drops all0; UDP socket0, actual netem drop0, both owned Stops PASS; 823247/823247 W→L, 822665/822766 L→W (101 missing,99.9877%), both offered99.9732/99.9154Mbps, RTT p99 W610/L624.732ms. Status strict≥99.9% PASS, ABSOLUTE bi-dir 0 NOT PASS. Artifact12813077746 sha256 014a0cef822ba57f27b200df86a6641e7d1898f6a1b892ddb1825c907882e9c5. New harness tag [plan026-rust-rxbuf-reuse-150] compares at150 with same SOURCE0abd compiled binary, no product changes, skips rebuild only."
 }

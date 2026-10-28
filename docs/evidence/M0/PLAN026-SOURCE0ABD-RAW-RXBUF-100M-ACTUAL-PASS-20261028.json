@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "qualification": "PASS_SCOPED_RUST_NORMAL_100M_EACH_300MS_0PCT_NETEM_60S",
+  "source_sha": "0abd1b04ee7a39d8aa426963564a079523c1036a",
+  "run_id": 40681039919,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40681039919",
+  "artifact": {
+    "id": 12813077746,
+    "name": "m0-wl-full-public-normal-direct",
+    "zip_sha256": "014a0cef822ba57f27b200df86a6641e7d1898f6a1b892ddb1825c907882e9c5",
+    "exact_zip_verified": true
+  },
+  "native_product": {
+    "windows_exe_rust_dll_linux_server_built_same_new_source": true,
+    "windows_binary_artifact_id": 12813725451,
+    "linux_product_artifact_id": 12812813252,
+    "signed_npcap_wintun_real": true,
+    "real_wsl2": true,
+    "original_tls_and_raw_tun": true,
+    "mode": "normal_off_rust_native",
+    "fq600_actual_linux_server": "maxrate_mbps=600 flow_limit_packets=256 readback=kernel_fq_600Mbit"
+  },
+  "scene": {
+    "id": "wl-normal-100m-300ms-0loss-60s",
+    "sha256": "a09aa5cc9668515c3e6edfe91b2af2e421541c1ca7aac46e57baba02eb59c1a3",
+    "per_direction_target_mbps": 100,
+    "kernel_oneway_delay_ms": 300,
+    "configured_netem_loss_pct": 0,
+    "measure_s": 60,
+    "drain_s": 5,
+    "source": "scenarios/wl-normal-100m-300ms-0loss-60s.json",
+    "packet_mix": "96B:10%,288B:15%,1060B:30%,1200B:45% by packets"
+  },
+  "windows_to_linux": {
+    "windows_app_sent_packets": 823247,
+    "linux_app_first_delivered_packets": 823247,
+    "app_unique_missing_packets": 0,
+    "first_delivery_fraction": 1,
+    "offered_mbps": 99.9732,
+    "first_delivered_mbps": 99.9732
+  },
+  "linux_to_windows": {
+    "linux_app_sent_packets": 822766,
+    "windows_app_first_delivered_packets": 822665,
+    "app_unique_missing_packets": 101,
+    "first_delivery_fraction": 0.999877,
+    "offered_mbps": 99.9154,
+    "first_delivered_mbps": 99.9029
+  },
+  "kernel": {
+    "raw_socket_inodes_owners": {
+      "server_pid": 1005,
+      "comm": "wbd-v4-server",
+      "identity": "EXACT_PROC_FD_SOCKET_INODE",
+      "inodes": [
+        "6895",
+        "9515",
+        "6901"
+      ]
+    },
+    "raw_socket_drop_delta_each": {
+      "6895": 0,
+      "6901": 0,
+      "9515": 0
+    },
+    "raw_socket_rx_queue_last_bytes_each": {
+      "6895": 0,
+      "6901": 0,
+      "9515": 0
+    },
+    "linux_udp_socket_drop_delta": 0,
+    "linux_guest_global_udp_rcvbuf_errors_delta": 0,
+    "tc_ifb_netem_packets": 839201,
+    "tc_eth0_netem_packets": 837842,
+    "tc_netem_drops_each_direction": 0,
+    "tc_netem_overlimits_each_direction": 0,
+    "tc_netem_requeues_each_direction": 0,
+    "linux_rmem_default_bytes": 212992,
+    "linux_rmem_max_bytes": 4194304,
+    "rx_socket_requested_bytes": 4194304,
+    "rx_socket_effective_bytes": 8388608,
+    "rx_socket_capped": false,
+    "marker": "WBD_LINUX_RAW_RX_RCVBUF requested_bytes=4194304 effective_bytes=8388608 kernel_capped=false scope=OWNED_RAW_RX_SOCKET"
+  },
+  "rust_linux_server_rx_chain": {
+    "raw_observed": 839267,
+    "raw_tuple": 839267,
+    "data_unique": 824516,
+    "link_completed": 824516,
+    "tun_delivered": 824516,
+    "tun_udp": 824501,
+    "tun_tcp": 10,
+    "tun_other": 5,
+    "tun_failed": 0,
+    "replay_duplicate": 0,
+    "open_invalid": 0
+  },
+  "business_udp_rtt_p99_ms": {
+    "windows": 610,
+    "linux": 624.732,
+    "scope": "SAME_ORIGIN_MONOTONIC_ROUNDTRIP_NOT_ONEWAY"
+  },
+  "generator_cpu_s": {
+    "windows": 47.9219,
+    "linux": 53.5959
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "preflight": {
+    "cheap_workflow": "PASS",
+    "linux_rust_tests": "PASS",
+    "windows_rust_tests": "PASS",
+    "windows_go_compile": "PASS",
+    "linux_rust_go_native_build": "PASS",
+    "real_windows_linux_job": "PASS"
+  },
+  "compare_original_100m_same_scene_other_vm": {
+    "old_source": "73ab8199c471cfc25b155f588f3cfa7ebba06da2",
+    "old_product_source": "0543b805ca25d804ccd131be6686b0b99f61f80f",
+    "old_run": 40677430821,
+    "old_windows_to_linux_missing_packets": 1779,
+    "old_linux_raw_socket_drop_delta": 1800,
+    "new_missing_packets": 0,
+    "new_raw_socket_drop_delta": 0,
+    "caveat": "Different hosted runners / VMs. Same declared payload mix/seed, delay, 60s and offered100, but not same-VM A/B CPU improvement."
+  },
+  "scope_limitation": "100Mbps scoped PASS under 99.9pct unique first-delivery gate (not absolute bidirectional zero missing because reverse 101). Does not qualify 150Mbps, physical deployment, FEC modes or per-core CPU advantage."
+}
