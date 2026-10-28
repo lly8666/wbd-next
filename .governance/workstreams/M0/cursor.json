@@ -4,31 +4,26 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 344,
-  "checkpoint_sha": "b9d53b92a318c189b52a79d48daefd4cbac57fee",
+  "sequence": 345,
+  "checkpoint_sha": "ddda313541e9aaae493c59b531abd1d9fe6a7400",
   "progress": "partial",
   "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
   "current_task": "PLAN026 Windows Rust Normal/off Linux-v3 opportunistic outer repair source9ed3: original 50/100Mbps x 1/5/10/30% true tc netem x 50/150/300ms each way 60s 24/24 signed Windows/WSL2 native scenario Actions PASS. Prior 504c/b2fb true Windows zero repair FAIL preserved; repaired low-RTT M2 shadow premature expiry with Normal-only bounded 1200ms detached immutable ciphertext. Does NOT close broader PLAN026, 150Mbps or physical/other modes.",
   "why_now": "Recovered previously in-flight Actions40724616857 parent + fanout40726634888: complete source-locked 24 independent one-scene real Windows/WSL2 measurements. Official main evidence/docs b9d settled all 24 artifacts: all offered >=99.9215% target, real tc drops both, original UDP/TCP and both owned Stop PASS; Windows NPF repair R>0 every scene, R/total 0.4816%-8.1055% <=10, R/F max8.876%; accepted uncertain=0, 30%-loss R/business-target proxy 9.802%-9.978%. Whole Windows Go+Rust EXE CPU 7.27-34.63s/75-77s (9.72%-45.10% one core), kernel5.13-27.02s, peak working set40.1-48.9 MiB; Windows app sender CPU64%-83% core is separate, not product. 24 scoped performance pass not cross-VM CPU A/B.",
   "done_when": "Normal/off newest source exact N0 10Mbps 300ms one-way 240s with old produced0 ready4 regression and same VM old-Go vs new Rust CPU-seconds/GB, RSS, idle wakes and p99 first-delivery A/B. Migrate Fixed/Auto/Game/Health Keepalive and Make-Before-Break dynamic lane native owner; remove remaining Go packet pump only after modes' real functional/perf proof.",
-  "next_action": "Windows Normal/off outer opportunistic repair package CLOSED at compiled SOURCE9ed3, signed 24/24 50/100Mbps; preserve all exact artifacts and old 504c/b2fb R0 FAIL, do not rerun matrix or expand mature Linux/FEC/Game. Remaining PLAN026: physical Windows and 150Mbps robustness (previous b1bc signed new-source FAIL, not erased); before spending resources investigate 100M50ms30% Windows product kernel CPU 27.02s/76.78s only if decision requires, use same-host product old-Go vs Rust exact binary CPU/GB; no cross-host causal claims. Current 24 Linux reverse R0 on 10 scenes noted separately, not a Windows success reversal; assess only if authorized. Windows Fixed/Auto/Game/Health/lane, ARM64, idle/1pps/burst all separate qualification. Governance b9d CI structure FAIL because old H343 context_refs count10>8; H344 trims hot links without deleting historical docs.",
+  "next_action": "Windows Normal/off outer opportunistic repair package CLOSED at compiled SOURCE9ed3, signed 24/24 50/100Mbps; preserve all exact artifacts and old 504c/b2fb R0 FAIL, do not rerun matrix or expand mature Linux/FEC/Game. Remaining PLAN026: physical Windows and 150Mbps robustness (previous b1bc signed new-source FAIL, not erased); before spending resources investigate 100M50ms30% Windows product kernel CPU 27.02s/76.78s only if decision requires, use same-host product old-Go vs Rust exact binary CPU/GB; no cross-host causal claims. Current 24 Linux reverse R0 on 10 scenes noted separately, not a Windows success reversal; assess only if authorized. Windows Fixed/Auto/Game/Health/lane, ARM64, idle/1pps/burst all separate qualification. Governance b9d CI structure FAIL because old H343 context_refs count10>8; H344 trims hot links without deleting historical docs. Governance status: H344 cursor-only structure failed due mismatched historical evidence_refs; H345 clears wrong-SOURCE evidence_refs and carries scoped evidence in bounded context_refs. No fresh performance run authorized solely for governance.",
   "unverified": true,
   "last_tested_source": "9ed3da3153e20a1787ed731c45dd3359c7e0654e",
-  "evidence_refs": [
-    "docs/evidence/M0/PLAN026-WIN-NPF-ABBA-SAME-HOST-ROLLBACK-20261028.json",
-    "docs/evidence/M0/PLAN026-WIN-NPF-ABBA-ROLLBACK-NEW-SOURCE150M-FAIL-20261028.json",
-    "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE504C-50M-30P-300MS-FAIL-20261028.json",
-    "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCEB2FB-50M-30P-300MS-RETENTION-FAIL-20261028.json",
-    "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE9ED3-50-100M-24-SIGNED-20261028.json"
-  ],
+  "evidence_refs": [],
   "context_refs": [
     "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ABBA-ROLLBACK.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ROLLBACK-NATIVE-RESULT.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-OPPORTUNISTIC-REPAIR.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-FIRST-REAL-FAIL-DIAGNOSTIC.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-M2-RETENTION-FLOOR.md",
-    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-24-SIGNED-MATRIX.md"
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-24-SIGNED-MATRIX.md",
+    "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE9ED3-50-100M-24-SIGNED-20261028.json"
   ],
   "open_requests": [],
-  "partial_summary": "H344 recovery: source9ed3 (same Win EXE/DLL & Linux peer hashes) Action40724616857 plus 23 artifact-reused 407266.../407267... one-scene signed Windows2025/WSL2 tests ALL PASS 24/24 Normal/off (50/100Mbps each, 1/5/10/30% tc each, 50/150/300ms one-way, 60s). R/total range0.4816%-8.1055%, max R/F8.876%, all genuine R>0/real tc loss/UDP+TCP/owned Stop; 30% R/business-target proxy9.802%-9.978%, true physical link C unspecified. Win whole Go+Rust CPU7.27-34.63s / 75-77s, kernel5.13-27.02s, mean core9.72%-45.10%, peak RSS40.1-48.9MiB; generator CPU separately 64.33%-83.25%. Failures 504c and b2fb true R0 at 50M30%300ms retained, b1bc 150M unrelated FAIL retained. Source evidence docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE9ED3-50-100M-24-SIGNED-20261028.json and fresh 24 matrix devlog main b9d. 10 Linux reverse R0 cases; no physics or full PLAN026 done. H344 shrinks context_refs to within 8 governance bound."
+  "partial_summary": "H344 recovery: source9ed3 (same Win EXE/DLL & Linux peer hashes) Action40724616857 plus 23 artifact-reused 407266.../407267... one-scene signed Windows2025/WSL2 tests ALL PASS 24/24 Normal/off (50/100Mbps each, 1/5/10/30% tc each, 50/150/300ms one-way, 60s). R/total range0.4816%-8.1055%, max R/F8.876%, all genuine R>0/real tc loss/UDP+TCP/owned Stop; 30% R/business-target proxy9.802%-9.978%, true physical link C unspecified. Win whole Go+Rust CPU7.27-34.63s / 75-77s, kernel5.13-27.02s, mean core9.72%-45.10%, peak RSS40.1-48.9MiB; generator CPU separately 64.33%-83.25%. Failures 504c and b2fb true R0 at 50M30%300ms retained, b1bc 150M unrelated FAIL retained. Source evidence docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE9ED3-50-100M-24-SIGNED-20261028.json and fresh 24 matrix devlog main b9d. 10 Linux reverse R0 cases; no physics or full PLAN026 done. H344 shrinks context_refs to within 8 governance bound. H345 cursor-only correction: governance validates every evidence_ref.source_sha equal last_tested_source, while historical ABBA/b1bc evidence belongs to different compiled SOURCE and 24-matrix evidence records compiled_source_sha rather than source_sha. To preserve source integrity, evidence_refs intentionally empty while unverified=true; exact 24-source evidence path remains in context_refs and immutable main docs/devlogs. H344 governance FAIL was cursor bookkeeping only, not product Action."
 }
