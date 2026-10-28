@@ -41,7 +41,11 @@ probe_rtt_ms=[]
 probe_send_errors=0
 sizes=(96, 288, 1060, 1200) # true UDP payload bytes; no fake TCP ACK/FEC record.
 rate_bytes_per_sec=1_250_000
-duration=60.0
+# Explicit per-Actions single-scene duration; never let an env on one OS
+# silently produce a different input horizon on the other OS.
+duration = float(sys.argv[6]) if len(sys.argv) == 7 else 60.0
+if duration not in (60.0,240.0):
+    raise ValueError("WL-N0 duration must be 60 or 240 seconds")
 drain=5.0
 start=time.monotonic()
 probe_next=start
@@ -56,7 +60,7 @@ duplicate=0
 invalid=0
 last_delivery=None
 max_interdelivery_ms=0
-bins=[0] * 6500
+bins=[0] * int((duration+drain)*100)
 err=None
 while True:
     now=time.monotonic()

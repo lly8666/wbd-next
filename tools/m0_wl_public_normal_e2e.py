@@ -4,6 +4,7 @@ import os,sys,subprocess,time,json,hashlib,pathlib,re,threading
 from m0_wl_native_resource_sampler import sample_windows_original_process
 from m0_wl_mode_runtime_report import source_locked_observability,summarize_auto_udp_progress,native_auto_true_applied_snapshots
 from m0_wl_native_mtu_contract import configured_native_test_mtu
+from m0_wl_n0_drop_delta import latest_counter, measured_delta
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
 configured_mtu=configured_native_test_mtu()
@@ -355,6 +356,9 @@ print(json.dumps(result),flush=True)
   report["auto_adaptive_native_profile"]=good[-1]["auto_requested_profile"]
   print("WBD_WL_REAL_AUTO_NATURAL_SHARED_POLICY_M2_2S8S_APPLIED_AFTER_KERNEL_UDP",flush=True)
  if os.environ.get("WBD_WL_RUN_N0")=="1":
+  seconds=os.environ.get("WBD_WL_N0_SECONDS","60")
+  if seconds not in ("60","240"):
+   raise RuntimeError("WL-N0 duration selector must be 60 or 240 seconds")
   # One declared measurement scenario, not a mixed matrix. Genuine Linux
   # egress and eth0-ingress→IFB kernel tc, not an in-app drop/latency shim.
   # It is deliberately after functional warmup, before both owned Stop.
@@ -366,6 +370,9 @@ print(json.dumps(result),flush=True)
   try:
    report["WL_N0"]="ENVIRONMENT_OR_PRODUCT_NOT_YET_VERIFIED"
    print(netem("arm"),flush=True)
+   # Existing 1Hz owner telemetry only: distinguish pre-run cumulative NPF
+   # drops from measurements and never fabricate zero if no sample exists.
+   npf_before=latest_counter(out/"client.log")
    (out/"wl-n0-start.flag").unlink(missing_ok=True)
    rate=unix(root/"tools"/"m0_wl_public_rate_app.py")
    output=unix(out)
@@ -373,21 +380,21 @@ print(json.dumps(result),flush=True)
    wrate=(out/"wl-n0-windows-app.log").open("w");logs.append(wrate)
    linuxrate=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
        "python3","-u",rate,"10.66.0.1","10.66.0.2",
-       "linux",unix(out/"wl-n0-start.flag"),output],stdout=lrate,stderr=subprocess.STDOUT)
+       "linux",unix(out/"wl-n0-start.flag"),output,seconds],stdout=lrate,stderr=subprocess.STDOUT)
    windowsrate=subprocess.Popen([sys.executable,"-u",str(root/"tools"/"m0_wl_public_rate_app.py"),
-       "10.66.0.2","10.66.0.1","windows",str(out/"wl-n0-start.flag"),str(out)],
+       "10.66.0.2","10.66.0.1","windows",str(out/"wl-n0-start.flag"),str(out),seconds],
        stdout=wrate,stderr=subprocess.STDOUT)
    try:
     ready(out/"wl-n0-linux-app.log",'"phase": "bound"',linuxrate,25)
     ready(out/"wl-n0-windows-app.log",'"phase": "bound"',windowsrate,25)
     (out/"wl-n0-start.flag").write_text("REAL_TWO_OS_KERNEL_APPLICATIONS_BOUND\n")
     # Poll process liveness, never relay/transform tested traffic.
-    until=time.monotonic()+85
+    until=time.monotonic()+int(seconds)+25
     while linuxrate.poll() is None or windowsrate.poll() is None:
      if w.poll() is not None or s.poll() is not None:
       raise RuntimeError("real public product exited during WL-N0")
      if time.monotonic()>until:
-      raise RuntimeError("bounded WL-N0 60s native app duration exceeded")
+      raise RuntimeError("bounded WL-N0 "+seconds+"s native app duration exceeded")
      time.sleep(.2)
     if linuxrate.returncode or windowsrate.returncode:
      raise RuntimeError("real kernel generator error windows="+str(windowsrate.returncode)+
@@ -396,6 +403,13 @@ print(json.dumps(result),flush=True)
     for p in (linuxrate,windowsrate):
      if p.poll() is None:p.terminate()
    print(netem("snapshot"),flush=True)
+   npf_after=latest_counter(out/"client.log")
+   npf_delta=measured_delta(npf_before,npf_after)
+   report["wl_n0_npcap_drop"]={
+    "before":npf_before,"after":npf_after,"delta":npf_delta,
+    "scope":"WINDOWS_OWNER_1HZ_APPROX_BOUNDARY_NOT_PRECISE_KERNEL_COUNTER",
+    "status":"OBSERVED" if npf_delta is not None else "UNKNOWN"}
+   print("WL_N0_NPF_MEASUREMENT_DROP "+json.dumps(report["wl_n0_npcap_drop"]),flush=True)
    wl={}
    for role in ("windows","linux"):
     wl[role]=json.loads((out/("wl-n0-"+role+"-app.json")).read_text())
@@ -412,15 +426,21 @@ print(json.dumps(result),flush=True)
       return sum((find_counts(v) for v in obj),[])
      return []
     return max(find_counts(qdiscs) or [0])
-   if count_packets(after["eth0"])==0 or count_packets(after["ifb"])==0:
+   if any(row.get("measurement_duration_s")!=float(seconds) for row in wl.values()):
+    report["WL_N0"]="FAIL_MISMATCHED_OS_MEASUREMENT_DURATION"
+   elif count_packets(after["eth0"])==0 or count_packets(after["ifb"])==0:
     report["WL_N0"]="INCONCLUSIVE_KERNEL_TC_DIRECTION_COUNTS_UNOBSERVED"
    elif min(x["sent_payload_mbps"] for x in wl.values())<9.7:
     report["WL_N0"]="HOST_OR_GENERATOR_OR_PRODUCT_CAPACITY_LIMITED"
    elif min(wl["windows"]["received_first_packets"]/max(wl["linux"]["sent_packets"],1),
             wl["linux"]["received_first_packets"]/max(wl["windows"]["sent_packets"],1))<.999:
     report["WL_N0"]="VALID_OBSERVATION_LOSSLESS_DELIVERY_BELOW_99_9_PCT"
+   elif npf_delta is None:
+    report["WL_N0"]="INCONCLUSIVE_NPCAP_MEASUREMENT_DELTA_UNKNOWN"
+   elif npf_delta>0:
+    report["WL_N0"]="LOCAL_NPCAP_DROPS_DURING_ZERO_INJECTED_LOSS"
    else:
-    report["WL_N0"]="PASS_SCOPED_300MS_0PCT_10MBPS_60S_BOTH_DIRECTIONS"
+    report["WL_N0"]="PASS_SCOPED_300MS_0PCT_10MBPS_"+seconds+"S_BOTH_DIRECTIONS"
    print("WL_N0_TRUE_KERNEL_MEASUREMENT "+report["WL_N0"],flush=True)
   finally:
    if owned.exists():
