@@ -3,6 +3,7 @@ name: M0 Windows Linux original native whole-wiring capability and functional en
 # Explicit [wiring-full] push only; manual N0 disabled, no extreme performance.
 # Every built Go/Rust DLL/WSL artifact is labeled GITHUB_SHA. Tests are
 # actual original Wintun+Npcap/Go TLS and independent Linux TUN native I/O.
+# Linux dual-endpoint source c589 repair: 24-scene Windows rerun explicitly rebuilt after Linux normal-only expiry floor; binary source follows this exact main SHA. No Linux/Windows source mismatch inside a scenario.
 # PLAN026 verified Normal/off Rust-native signed NPF/Wintun functional PASS at SOURCE 055026fd (run 40646957672); N0 240s is separate and does not imply CPU A/B PASS.
 # Source-locked first compile gate on an experiment/windows-wiring-* branch:
 # do not run the expensive two-OS native app without an explicit full event.
