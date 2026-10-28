@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 320,
-  "checkpoint_sha": "622443f8b878c535380b786f6bc30c89bbe30267",
+  "sequence": 321,
+  "checkpoint_sha": "775519f4b071ed2c8d4166fe2cbc2aa561872964",
   "progress": "partial",
   "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
-  "current_task": "PLAN026 Windows Normal/off Rust-only NPF/Wintun. Exact-source native Windows+Linux Normal FUNCTIONAL_PASS f93f7fe7 Action40647191693; Normal 300ms 0% 10Mbps 240s N0 PASS a1238c4d Action40648269441. RX/TX Stop event priority + per-frame AtomicBool confirmed under real P200 first-run owned Stop source0d09cd5e. P200 200ms one-way/250Mbit/s each TC limit/30% loss 60s source0d09cd5e Action40651485360 CAPACITY_LIMITED due source Python senders 148/108Mbps, first delivery ~70% and Stop PASS. Optimized source c8352931 P200 re-test Action40653341765 active. Rust native tx/rx named, 1Hz Win32 process and thread sampler in source688 and later.",
+  "current_task": "PLAN026 native Rust Windows Normal/off M1/M3/M2 direct Wintun+NPF, Stop-first Win32 event priority and per-RX-frame stop check implemented and tested; genuine Windows signed Npcap/Wintun Linux raw/TUN functional sourcef93 PASS, N0 sourcea123 300ms/0%/10Mbps/240s PASS. P200 200ms one-way, each dir250mbit TC, 30% random loss 60s: SOURCE0d09 first source generator capped Windows148/Linux108Mbps, SOURCEc835 optimized sender Windows249.0087/Linux198.2698Mbps, both network+owned Stop PASS but 250Mbps input floor NOT MET. P200 Python recvfrom_into reuse and Win32 SetThreadDescription now source775 native 60s stress Action40655564131; separate Win32 naming Normal-only source84d Action40655286229.",
   "why_now": "User wants actual code progress, CPU-minimal steady Windows and no Normal/off fallback. We published Rust native two workers, single-lock8 batch and actual Accepted ACK snapshot, then obtained two independent exact-source signed two-OS functional PASS runs.",
   "done_when": "Normal/off newest source exact N0 10Mbps 300ms one-way 240s with old produced0 ready4 regression and same VM old-Go vs new Rust CPU-seconds/GB, RSS, idle wakes and p99 first-delivery A/B. Migrate Fixed/Auto/Game/Health Keepalive and Make-Before-Break dynamic lane native owner; remove remaining Go packet pump only after modes' real functional/perf proof.",
-  "next_action": "Check sourcec8352931 Action40653341765 terminal stage. If P200 fails collect actual two-OS offered/delivered, 30pct kernel counts, sender CPU-seconds and named Rust TX/RX thread CPU; decide generator/host vs M2/owner lock. Don't proclaim 250Mbps if source offered<225. Preserve source0d09 CAPACITY_LIMITED receipt. Run same-VM old Go vs Rust resource A/B and optional sampled Entry lock wait before considering owner split or M2 capacity changes. Migrate Fixed/Auto/Game/Health/control/lane afterward and delete old Go hot pump only once genuinely unused.",
+  "next_action": "Read Action40655286229 exact source84d Normal-only genuine Windows output and downloadable 1Hz thread CPU samples, check named_rust_workers=2; read Action40655564131 exact source775 P200 200ms/30%/250mbit/60s offered and delivered, Python CPU and real tc counts, Stop, first failure. If Linux offered still<225 then optimize TEST Linux generator (possible native C/Rust independent app) before touching product. If input meets 225 and first delivery <70%, inspect Windows NPF/WSL host drops, M2 5MB freeze arena and per-thread CPU. Profile TX/RX shared Mutex<Entry> lock wait only when evidence suggests cost; no dual owner/20ms timer speculative rewrite. Only then same-VM Go vs Rust A/B and Fixed/Auto/Game/Keepalive/lane migrations, remove legacy Go packet pump when all unused.",
   "unverified": true,
   "last_tested_source": "f93f7fe7b4627da30b23cbcbfeb06f50840197a2",
   "evidence_refs": [
     "docs/evidence/M0/PLAN026-H321-f93-Rust-NativeOwner-real-Windows-Linux-PASS.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN026-P200-source0d09-Windows-Linux-capacity-limited-20261028.json",
-    "docs/devlog/M0/20261028-PLAN026-H322-P200-generator-capacity-first-fail.md",
-    "docs/devlog/M0/20261028-PLAN026-H324-P200-feature-capacity-scope.md",
+    "docs/evidence/M0/PLAN026-P200-sourcec835-windows-linux-generator-improved-capacity-20261028.json",
+    "docs/devlog/M0/20261028-PLAN026-H326-P200-c835-capacity-and-Win32-thread-description.md",
+    "docs/devlog/M0/20261028-PLAN026-H327-stress-recv-slab-and-artifact-hash.md",
     "docs/devlog/M0/20261028-PLAN026-H319-native-stop-fairness.md",
     "docs/devlog/M0/20261028-PLAN026-H321-native-thread-CPU-ownership.md",
-    "docs/devlog/M0/20261028-PLAN026-source055-real-native-normal-functional-pass.md",
-    "docs/devlog/M0/20261028-PLAN026-native-ack-delivered-snapshot.md",
-    "docs/devlog/M0/20261028-PLAN026-native-source-batch-lock-and-stop.md"
+    "docs/evidence/M0/PLAN026-P200-source0d09-Windows-Linux-capacity-limited-20261028.json",
+    "docs/devlog/M0/20261028-PLAN026-H322-P200-generator-capacity-first-fail.md",
+    "docs/devlog/M0/20261028-PLAN026-H324-P200-feature-capacity-scope.md"
   ],
   "open_requests": [],
-  "partial_summary": "Fixed saturated RX Stop starvation via Stop-first WaitForMultipleObjects and check before each early/NPF frame, TX Stop-first and before source batch; Rust Windows unit and source0d09 genuine loss30/200ms functional Stop passed. P200 source0d09 launched real 250Mbps generator but only Windows148.0198 and Linux108.1181Mbps offered, Windows75.6973 and Linux103.5692Mbps delivered, 70% first arrival both; normal UDP/TCP/Stop and kernel tc cleanup PASS, performance CAPACITY_LIMITED, NOT 250Mbps PASS. Go+Rust Windows process CPU42.1719 sec in 76 sec, kernel34.3594sec, peak RSS41689088B, no per-language attribution. Modified P200-only Python generator to reusable mutable UDP payloads, 128pkt short burst and no unconditional800us sleep; new sourcec835 Action40653341765 pending, 1Hz Win32 named Rust-worker CPU sampler added. No product crypto/record or legacy compatibility fallback added. Fixed/Auto/Game remain old Go hot paths."
+  "partial_summary": "Agent RX Stop starvation fixed at sourcef753e612, RX Stop event first and before every NPF/early frame, TX stop first. Windows Rust and Go full builds PASS, live 200ms30% source0d and c835 original Go TLS/Rust Normal owned Stop success. P200 sourcec835 Action40653341765 genuine caps both TC and actual kernel loss, Windows source249.0087 Linux source198.2698Mbps, delivery Windows117.3942 Linux108.3575Mbps, first arrival ratios0.59211/0.43515, Windows native Go+Rust exe51.3906 CPU sec, peak RSS41967616B. Windows Python generator20.4844 sec CPU31.5% core; Linux generator61.2975 CPU sec94.3% core. Sourcec835 artifactZIP SHA256 7724cb68fb1696872e39fe404d3ccb39855aeb231c290eb4cc085c11ec389dcb matches GitHub digest, source manifest verified. 75 Windows samples named_rust_workers=0 due std::thread name not mapped to OS; fixed by one-time Win32 SetThreadDescription in Rust workers source84d, tests pending. P200 latest script test-only recvfrom_into source775, build/live Action pending. Do not mistake 250Mbps offered target for proven useful goodput. Fixed/Auto/Game still old Go hot and must remain until native modes tested."
 }
