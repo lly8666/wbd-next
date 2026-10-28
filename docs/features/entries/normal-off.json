@@ -127,6 +127,13 @@
       "status": "PERFORMANCE_PASS",
       "source_sha": "a1238c4d6964f60d88e65e2668314160fefe038f",
       "evidence": "docs/evidence/M0/PLAN026-N0-sourcea123-Windows-Normal-300ms-10Mbps-240s-PASS-20261028.json"
+    },
+    {
+      "platform": "Windows2025 signed Npcap/Wintun and Linux WSL2 x64 raw/TUN",
+      "scope": "PLAN026 P200 200ms one-way per direction 250Mbps TC cap 30pct real random loss, optimized Python source sent Windows249.01/Linux198.27Mbps over60s, genuine kernel UDP/TCP/Stop PASS, Linux source<225Mbps 90pct floor",
+      "status": "CAPACITY_LIMITED",
+      "source_sha": "c8352931e15c954aa2c5de7a31e024af3a7eeb35",
+      "evidence": "docs/evidence/M0/PLAN026-P200-sourcec835-windows-linux-generator-improved-capacity-20261028.json"
     }
   ],
   "limitations": [

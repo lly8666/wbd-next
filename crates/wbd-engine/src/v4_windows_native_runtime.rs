@@ -5,6 +5,7 @@
  use super::*;
  use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU32, AtomicU64, Ordering};
  use std::thread::{self, JoinHandle};
+ use std::ffi::c_void;
  use wbd_platform::windows_native_io::{
      self as io, NpcapFns, NpcapRx, NpcapTx, WintunFns,
      WintunRx, WintunTx, WakeEvent, ReadResult, WaitResult,
@@ -14,6 +15,24 @@
  };
  use wbd_platform::rx_ipv4_tcp::{parse_data_packet, extend_seq32, TrustedRx};
 
+ // std::thread::Builder::name is only a Rust thread name on some
+ // Windows runtimes. Expose the actual OS thread description once so that
+ // the *external* 1Hz Win32 sampler can attribute steady Go+Rust CPU.
+ // No clock, allocation, lock or telemetry write in the packet loop.
+ #[link(name="kernel32")]
+ extern "system" {
+     fn GetCurrentThread() -> *mut c_void;
+     fn SetThreadDescription(thread:*mut c_void, description:*const u16) -> i32;
+ }
+ const NATIVE_TX_WIDE:[u16;14]=[
+     119,98,100,45,110,97,116,105,118,101,45,116,120,0
+ ];
+ const NATIVE_RX_WIDE:[u16;14]=[
+     119,98,100,45,110,97,116,105,118,101,45,114,120,0
+ ];
+ fn set_native_thread_name(name:&[u16;14]) {
+     let _=unsafe { SetThreadDescription(GetCurrentThread(),name.as_ptr()) };
+ }
  const BATCH:usize=8;
  const MAX_IPV4:usize=2048;
  const MAX_LINK:usize=2304;
@@ -458,6 +477,7 @@
      let tx_lane=Arc::clone(&lane);let tx_stop=Arc::clone(&stop);
      let tx_notify=Arc::clone(&notify);let tx_counters=Arc::clone(&counters);
      let tx=thread::Builder::new().name("wbd-native-tx".into()).spawn(move||{
+         set_native_thread_name(&NATIVE_TX_WIDE);
          let rc=tx_loop(config,tx_lane,wtx,sender,Arc::clone(&tx_stop),tx_notify,
              Arc::clone(&tx_counters));
          if rc!=OK{
@@ -470,6 +490,7 @@
      let rx_event=Arc::clone(&rx_notify);let rx_early=Arc::clone(&early);
      let tx_notify_for_rx=Arc::clone(&notify);let rx_counters=Arc::clone(&counters);
      let rx=thread::Builder::new().name("wbd-native-rx".into()).spawn(move||{
+         set_native_thread_name(&NATIVE_RX_WIDE);
          let rc=rx_loop(config,rx_lane,wrx,capture,Arc::clone(&rx_stop),tx_notify_for_rx,
              rx_event,rx_early,Arc::clone(&rx_counters));
          if rc!=OK{
@@ -550,6 +571,17 @@
          let counters=Counters::new(1,1);
          counters.stopping.store(true,Ordering::Release);
          assert!(counters.stopping.load(Ordering::Acquire));
+     }
+     #[test]
+     fn windows_native_thread_descriptions_are_exact() {
+         assert_eq!(String::from_utf16(&NATIVE_TX_WIDE[..13]).unwrap(),"wbd-native-tx");
+         assert_eq!(String::from_utf16(&NATIVE_RX_WIDE[..13]).unwrap(),"wbd-native-rx");
+         let (sender,receiver)=std::sync::mpsc::channel();
+         std::thread::spawn(move||{
+             set_native_thread_name(&NATIVE_RX_WIDE);
+             sender.send(()).unwrap();
+         }).join().unwrap();
+         receiver.recv().unwrap();
      }
      #[test]
      fn native_go_rust_c_abi_is_192_bytes_and_fixed_offsets(){

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "source_sha": "c8352931e15c954aa2c5de7a31e024af3a7eeb35",
+  "status": "CAPACITY_LIMITED",
+  "artifact_verified": true,
+  "scope": "Genuine signed Windows Npcap+Wintun Rust native Normal/off and WSL2 Linux raw/TUN, both tc egress/IFB ingress netem 200ms one-way, rate250mbit each, 30pct random loss each, 60s; source generator tried250Mbps each",
+  "action_run": 40653341765,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/40653341765",
+  "artifact_id": 12801400551,
+  "artifact_name": "m0-wl-full-public-normal-direct",
+  "status_reason": "Linux Python generator unable to offer225Mbps despite reduced allocations; both-direction delivered first-packet ratio also below 70% injected-only expectation",
+  "configured_generator_target_mbps_per_direction": 250,
+  "threshold_90pct_offered_mbps": 225,
+  "measured": {
+    "windows_offered_mbps": 249.0087,
+    "linux_offered_mbps": 198.2698,
+    "windows_received_mbps": 117.3942,
+    "linux_received_mbps": 108.3575,
+    "windows_receiver_unique_fraction": 0.59211,
+    "linux_receiver_unique_fraction": 0.43515,
+    "windows_generator_cpu_seconds": 20.4844,
+    "windows_generator_cpu_pct_one_core": 31.514,
+    "linux_generator_cpu_seconds": 61.2975,
+    "linux_generator_cpu_pct_one_core": 94.304,
+    "whole_windows_go_plus_rust_cpu_seconds": 51.3906,
+    "whole_windows_kernel_cpu_seconds": 43.5781,
+    "whole_windows_user_cpu_seconds": 7.8125,
+    "peak_windows_working_set_bytes": 41967616
+  },
+  "tc_after": {
+    "eth0_netem_drops": 338431,
+    "ifb_netem_drops": 404583,
+    "profiles_verified": "delay0.2s loss0.3 rate31250000 bytes/sec both"
+  },
+  "verified": [
+    "Windows Rust and Go and Linux Rust and product build PASS",
+    "real kernel UDP/TCP two-OS duplex PASS",
+    "real P200 kernel qdisc TC arm+readback both directions",
+    "both owned Stop PASS",
+    "native TC, HyperV and Npcap cleanup PASS",
+    "external 1Hz per-thread sampler executed, but named_rust_workers=0 all 75 samples: Rust std::thread::Builder name not visible through Win32 GetThreadDescription, hence cannot attribute TX vs RX"
+  ],
+  "unverified": [
+    "250Mbps offered source Linux",
+    "250Mbps delivered payload goodput",
+    "why additional first delivery loss beyond nominal30pct",
+    "Rust TX/RX CPU prior to Win32 SetThreadDescription fix",
+    "physical NIC and same-VM old Go vs Rust A/B"
+  ],
+  "latest_fix": "Windows SetThreadDescription one-time per worker staged for next source and real normal-only run"
+}
