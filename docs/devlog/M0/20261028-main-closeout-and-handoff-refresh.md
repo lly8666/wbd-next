@@ -17,6 +17,8 @@
 ## 验证与交付
 本地仅静态diff/JSON读取；执行验证只在Actions。以本提交的自动Governance/maintenance为本次治理资格；不派发产品压力测试。短暂文档PR用于避免覆盖活动M0的main写入，合并后唯一生效入口为main，不要求M0在此PR分支开发。
 
+首次1e11ee22的Governance 40623682569通过；maintenance 40623682558的251项测试通过，但历史R0审计把当前project.phase强制等同R0，报unexpected phase promotion。保留该失败；修正审计职责：R0自身phase/NOT_RUN及原证据仍严格锁定，当前项目进度不再被历史快照限制；M0当前写入者/epoch/revision约束保留，仅不强迫当前goal包含已完成PLAN020。新增历史资格逐项伪提升拒绝测试。此修复不提升任何产品资格。
+
 ```feature-impact
 {"kind":"none","ids":[],"reason":"用户授权的main工作流/接手入口/历史任务归档和治理校验修订；未改变产品实现、配置默认值或平台资格。"}
 ```

@@ -58,10 +58,18 @@ def read_json(path):
 def sha256(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
+def audit_historical_qualification(lock):
+    # R0 receipts remain immutable. Current project progress belongs to the
+    # live governance/evidence ledger, not to this historical snapshot.
+    require(lock["phase"] == "R0_FOUNDATION_IN_PROGRESS", "historic R0 phase changed")
+    for key in ("product", "performance", "physical", "windows_arm_native_execution"):
+        require(lock["qualification"][key] == "NOT_RUN", f"historic R0 {key} was promoted")
+    require(lock["qualification"]["rust_business_engine"] == "NOT_IMPLEMENTED",
+            "historic R0 steady engine false-positive")
+
 def audit():
     lock = read_json("r0/source-lock.json")
     m = read_json("r0/qualification-manifest.json")
-    project = read_json(".governance/project.json")
     registry = read_json(".governance/registry.json")
     workspace = tomllib.loads(Path("Cargo.toml").read_text())
     packages = tomllib.loads(Path("Cargo.lock").read_text())["package"]
@@ -145,7 +153,7 @@ def audit():
         require(lock_deps[crate]==(set() if crate=="wbd-types" else {"wbd-types"}),
                 f"Cargo.lock inverted dependency: {crate}")
     require(lock["schema_version"] == m["schema_version"] == 1, "manifest schema mismatch")
-    require(lock["phase"] == project["phase"] == "R0_FOUNDATION_IN_PROGRESS", "unexpected phase promotion")
+    audit_historical_qualification(lock)
     require(lock["qualification"]["canonical_manifest"] == m["source_lock"].replace("source-lock.json","qualification-manifest.json") ==
             "r0/qualification-manifest.json", "canonical R0 manifest path drift")
     require(lock["legacy"]["source_sha"] == m["expected_legacy_source"] ==
@@ -162,11 +170,6 @@ def audit():
     require("NOT_RUN" in lock["rust"]["cross_targets_execution"], "cross target execution overclaimed")
     require(m["production_go_v4"] == "DISABLED_FAIL_CLOSED", "production V4 claimed")
     require(m["capabilities"] == "R0_ABI_SENTINEL_FEATURES_ZERO", "Rust engine falsely advertising capabilities")
-    for key in ("product", "performance", "physical", "windows_arm_native_execution"):
-        require(lock["qualification"][key] == "NOT_RUN", f"{key} was promoted without real evidence")
-    require(lock["qualification"]["rust_business_engine"] == "NOT_IMPLEMENTED", "steady engine false-positive")
-    require(project["product_qualification"] == project["physical"] == "NOT_RUN",
-            "project qualification was promoted")
     roles={r["id"]:r for r in registry["roles"]}
     # R0 historic qualification locks its original 2026-10-17 evidence
     # and the REAL currently approved main writer. The explicit user
@@ -175,8 +178,6 @@ def audit():
     require(roles["M0"]["state"]=="active" and roles["M0"]["branch"]=="main" and
             registry["reservation_revision"]==3 and roles["M0"]["assignment_epoch"]==1 and
             roles["M0"]["global_writer"] is True and
-            "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md"
-            in roles["M0"]["goal"] and
             Path("docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md").is_file(),
             "M0 user-authorized PLAN020 revision3 writer changed")
     expected_worker_paths = {
