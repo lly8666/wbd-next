@@ -35,7 +35,8 @@
     "docs/handoff/CURRENT_INTEGRATION.md",
     "docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-RX-WAKE-COALESCING-150M.md",
-    "docs/devlog/M0/20261028-PLAN026-WIN-NPCAP-ZEROCOPY-RX-BORROW-150M.md"
+    "docs/devlog/M0/20261028-PLAN026-WIN-NPCAP-ZEROCOPY-RX-BORROW-150M.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ABBA-ROLLBACK.md"
   ],
   "verification": [
     {
@@ -121,6 +122,13 @@
       "status": "PERFORMANCE_PASS",
       "source_sha": "e6be9358d2272d7e1960a935be7fe772885bb034",
       "evidence": "docs/evidence/M0/PLAN026-SOURCEE6BE-NPF-BORROW-150M-ATTEMPTS-20261028.json"
+    },
+    {
+      "platform": "Windows-2025 signed Npcap/Wintun + same-host WSL2 Linux raw/TUN",
+      "scope": "PLAN026 ABBA 150Mbps each/300ms one-way each/0% real tc loss/60s, A1-B1-B2-A2 all meet >=99.9% first unique, >=142.5Mbps offered, kernel drops0 and both owned Stop; B rejected for +1.6323% CPU-sec/first-delivered GB vs A; current rollback SOURCE requires fresh build/test.",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "48151cc8825451f526a4cb91ba67dfc95f55e300",
+      "evidence": "docs/evidence/M0/PLAN026-WIN-NPF-ABBA-SAME-HOST-ROLLBACK-20261028.json"
     }
   ],
   "limitations": [
@@ -137,7 +145,8 @@
     "2026-10-28 H326 optional win_native_lock_profile compiled only when explicitly enabled: samples 1/64 shared Entry lock acquisitions for TX and RX, prints counts/total/max wait on owned Stop. Does not split owner yet, no default per-packet instrumentation or claim of measured lock contention before live run.",
     "PLAN026 Windows Rust native RX→TX 32-authenticated-record bounded wake coalescing candidate, with immediate partial-batch flush, per-worker GetCurrentThreadId one-shot diagnostic and Stop wake-attempt readback. No 150Mbps new-source performance result until real signed Windows/WSL2 test; do not promote this optimization as qualified yet.",
     "PLAN026 SOURCE7fc new Rust RX bounded SetEvent coalescing actual real 150Mbps /300ms /tc0% /60s Normal/off PASS first unique>=99.9 each, signed Windows/WSL2 true Stop. 130 Linux→Windows app packets missing in last sequence window; not absolute zero. New actual OS TID CPU identifies RX>T X; CPU differences vs SOURCE0abd from different Windows VMs cannot prove causal speedup; ETW stage attribution and physical/FEC modes NOT_MEASURED.",
-    "PLAN026 actual SOURCEe6be NPF direct borrowed-frame RX verified at150Mbps each direction/300ms one-way/0%tc/60s: same-source Actions40697876014 attempt1 FAILED Windows first-delivery98.6538% and process CPU51.25s, attempt2 PASSED both first deliveries100% and CPU11.0s. Different Github Windows runner IDs 1000107783 vs1000107784, 4.66x CPU variation, no causal same-host CPU optimization proof or stable repeated pass. Borrowed NPF frame extra memcpy 1.267GB avoided in attempt2; owned Stop both pass."
+    "PLAN026 actual SOURCEe6be NPF direct borrowed-frame RX verified at150Mbps each direction/300ms one-way/0%tc/60s: same-source Actions40697876014 attempt1 FAILED Windows first-delivery98.6538% and process CPU51.25s, attempt2 PASSED both first deliveries100% and CPU11.0s. Different Github Windows runner IDs 1000107783 vs1000107784, 4.66x CPU variation, no causal same-host CPU optimization proof or stable repeated pass. Borrowed NPF frame extra memcpy 1.267GB avoided in attempt2; owned Stop both pass.",
+    "2026-10-28 native same-runner ABBA Action40707758779 all four source-attested legacy A7fc/B e6be 150M packet+Stop gates PASS; normalized whole Windows Go+Rust process CPU A4.852864 vs B4.932077 sec/GB => ROLL_BACK_B. B original actual PASS remains history, NOT current default or a demonstrated CPU optimization. New rollback commit must earn separate signed native qualification."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

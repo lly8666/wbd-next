@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "kind": "PLAN026_WINDOWS_NATIVE_SAME_HOST_ABBA_DECISION",
+  "date": "2026-10-28",
+  "origin": "recovered_after_M0_cursor_H342",
+  "repository": "lly8666/wbd-next",
+  "harness_source": "48151cc8825451f526a4cb91ba67dfc95f55e300",
+  "action": {
+    "run_id": 40707758779,
+    "attempt": 1,
+    "job_id": 122884518451,
+    "artifact_id": 12825900107,
+    "artifact_name": "m0-wl-full-public-normal-direct",
+    "artifact_zip_sha256": "2011f5141fa3d1eceac18a2b96268bfc8fa7acdeea822383336ef365aa4edbeb",
+    "summary_path": "wl-native-abba/summary.json",
+    "per_leg_path_pattern": "wl-native-abba/{1-A,2-B,3-B,4-A}/leg.json"
+  },
+  "product": {
+    "variant_a": "7fc38591c501ff4a06e1862c7b08d5d3dbc1be95",
+    "variant_b": "e6be9358d2272d7e1960a935be7fe772885bb034",
+    "only_windows_native_dll_diff": [
+      "crates/wbd-engine/src/v4_windows_native_runtime.rs",
+      "crates/wbd-platform/src/windows_native_io.rs"
+    ],
+    "common_exe_sha256": "d5d7b3b161ee6904c05a8cbf3588f600b81f75b674cbcbafa74a9ec6a9a48eaf",
+    "dll_a_sha256": "5c63730df03c272e04ed9a70cc964e2edffeee4c415a138757a43e47127f328a",
+    "dll_b_sha256": "bd1efffb3e53004b885a5c9722a30167c4d3d81df57fea6d7c4448a46702ae60",
+    "linux_peer_equal": true
+  },
+  "runner": {
+    "name": "GitHub Actions 1000107804",
+    "tracking_id": "github_27777f57-b862-4062-b75c-112a15f3c24c",
+    "os": "Windows-2025",
+    "linux": "WSL2 Ubuntu same guest across four legs",
+    "order": "A1 B1 B2 A2"
+  },
+  "scenario": {
+    "sha256": "e22a96fbd4d6de2b4dc581d7013b343e61f5775298480e185c7a5562906d516e",
+    "offered_target_mbps_each_direction": 150,
+    "one_way_delay_ms_each_direction": 300,
+    "netem_loss_percent": 0,
+    "measure_seconds": 60,
+    "mtu": 1400,
+    "real_signed_npcap_wintun": true,
+    "go_cold_tls_rust_native_owner": true
+  },
+  "gates": {
+    "first_unique_delivery_fraction_min": 0.999,
+    "offered_mbps_min_each_direction": 142.5,
+    "linux_actual_tc_drops_max": 0,
+    "linux_raw_socket_drops_max": 0,
+    "linux_udp_receiver_drops_max": 0,
+    "owned_stop_required": true
+  },
+  "legs": [
+    {
+      "leg": "A1",
+      "compiled_source": "7fc38591c501ff4a06e1862c7b08d5d3dbc1be95",
+      "offered_mbps": {
+        "windows": 149.9624,
+        "linux": 149.9541
+      },
+      "first_delivery_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "missing_packets": {
+        "windows": 0,
+        "linux": 0
+      },
+      "windows_process_cpu_seconds": 11.484375,
+      "windows_cpu_seconds_per_first_delivered_gb": 5.105587,
+      "business_rtt_p99_ms": {
+        "windows": 610,
+        "linux": 610.872
+      },
+      "linux_qdisc_actual_drops": 0,
+      "linux_raw_socket_drops": 0,
+      "linux_udp_receiver_drops": 0,
+      "owned_stop": "PASS_BOTH",
+      "strict_gate": "PASS"
+    },
+    {
+      "leg": "B1",
+      "compiled_source": "e6be9358d2272d7e1960a935be7fe772885bb034",
+      "offered_mbps": {
+        "windows": 149.9599,
+        "linux": 149.9088
+      },
+      "first_delivery_fraction": {
+        "windows": 0.999957,
+        "linux": 1
+      },
+      "missing_packets": {
+        "windows": 53,
+        "linux": 0
+      },
+      "windows_process_cpu_seconds": 11.390625,
+      "windows_cpu_seconds_per_first_delivered_gb": 5.064803,
+      "business_rtt_p99_ms": {
+        "windows": 657,
+        "linux": 613.375
+      },
+      "linux_qdisc_actual_drops": 0,
+      "linux_raw_socket_drops": 0,
+      "linux_udp_receiver_drops": 0,
+      "owned_stop": "PASS_BOTH",
+      "strict_gate": "PASS"
+    },
+    {
+      "leg": "B2",
+      "compiled_source": "e6be9358d2272d7e1960a935be7fe772885bb034",
+      "offered_mbps": {
+        "windows": 149.9599,
+        "linux": 149.9996
+      },
+      "first_delivery_fraction": {
+        "windows": 0.999971,
+        "linux": 1
+      },
+      "missing_packets": {
+        "windows": 36,
+        "linux": 0
+      },
+      "windows_process_cpu_seconds": 10.796875,
+      "windows_cpu_seconds_per_first_delivered_gb": 4.799351,
+      "business_rtt_p99_ms": {
+        "windows": 610,
+        "linux": 620.941
+      },
+      "linux_qdisc_actual_drops": 0,
+      "linux_raw_socket_drops": 0,
+      "linux_udp_receiver_drops": 0,
+      "owned_stop": "PASS_BOTH",
+      "strict_gate": "PASS"
+    },
+    {
+      "leg": "A2",
+      "compiled_source": "7fc38591c501ff4a06e1862c7b08d5d3dbc1be95",
+      "offered_mbps": {
+        "windows": 149.9624,
+        "linux": 149.9998
+      },
+      "first_delivery_fraction": {
+        "windows": 0.999596,
+        "linux": 0.999411
+      },
+      "missing_packets": {
+        "windows": 499,
+        "linux": 727
+      },
+      "windows_process_cpu_seconds": 10.34375,
+      "windows_cpu_seconds_per_first_delivered_gb": 4.600141,
+      "business_rtt_p99_ms": {
+        "windows": 641,
+        "linux": 636.865
+      },
+      "linux_qdisc_actual_drops": 0,
+      "linux_raw_socket_drops": 0,
+      "linux_udp_receiver_drops": 0,
+      "owned_stop": "PASS_BOTH",
+      "strict_gate": "PASS"
+    }
+  ],
+  "decision": {
+    "outcome": "ROLL_BACK_B",
+    "a_mean_cpu_seconds_per_first_delivered_gb": 4.852864,
+    "b_mean_cpu_seconds_per_first_delivered_gb": 4.932077,
+    "relative_b_over_a": 0.016323,
+    "keep_b_threshold": "B <= 0.95 * A AND all four legs pass",
+    "reason": "Both A and B pass real network/Stop gates, but borrowed NPF RX has 1.6323% higher process CPU per first delivered GB rather than >=5% improvement.",
+    "job_conclusion": "failure_is_explicit_rollback_decision_not_four_leg_functional_failure"
+  },
+  "action_after_decision": "Restore only the two A Rust product blobs on main. Preserve 32-record RX/TX event coalescing, Linux raw SO_RCVBUF, Go TLS, Wintun/NPF borrowed-driver ownership, and original M2/FEC/Stop. Rebuild a new exact main product SOURCE and rerun one 150M signed native scenario; no claim of new SOURCE qualification before that result.",
+  "limitations": [
+    "Each ABBA leg is 60s; N0 240s remains an independent gate, not a new pass.",
+    "True full Windows driver ISR/DPC CPU and physical host qualification not measured.",
+    "Host variation remains possible; single 4-leg ABBA is an engineering keep/rollback decision, not a general multi-host confidence interval.",
+    "The A2 first delivery was 99.9596%/99.9411%, not absolute zero-loss; delivered floor still met.",
+    "The entire PLAN026 Fixed/Auto/Game/Health/dynamic-lane migration is outside this ABBA closeout."
+  ]
+}
