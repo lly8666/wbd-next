@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "source_sha": "f93f7fe7b4627da30b23cbcbfeb06f50840197a2",
+  "result": "PASS",
+  "artifact_verified": false,
+  "verification": "source-locked GitHub Actions job-and-stdout reviewed; artifact contents/cryptographic manifest not individually rehashed",
+  "scope": "FUNCTIONAL_PASS_ONLY: Windows2025 signed Npcap/Wintun original Go TLS + Rust native Normal/off ↔ WSL2 Linux raw/TUN",
+  "actions_run_id": 40647191693,
+  "actions_url": "https://github.com/lly8666/wbd-next/actions/runs/40647191693",
+  "observed": [
+    "normal 2-way native kernel UDP and TCP",
+    "Windows and Linux owned Stop",
+    "full seven-mode job passed with other six Windows modes still in Go packet pump",
+    "Windows Go and Rust compile and Linux original-Go/Rust build PASS"
+  ],
+  "not_qualified": [
+    "newest SOURCE 0d09cd5e Stop priority + heavy test",
+    "250Mbps 200ms 30% performance",
+    "same-VM Go-versus-Rust CPU attribution",
+    "Fixed/Auto/Game native Rust hot migration"
+  ]
+}

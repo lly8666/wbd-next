@@ -4,20 +4,18 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 318,
-  "checkpoint_sha": "330fffc42298c70021640db9b30682376c89a984",
+  "sequence": 319,
+  "checkpoint_sha": "0d09cd5e61266b716aa5ade9bbce55a63120f2f1",
   "progress": "partial",
   "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
-  "current_task": "PLAN026 Normal/off Go cold TLS+OS and Rust two-worker native Wintun/Npcap product is wired with NO Go Normal pulse/fallback. Real signed Wintun/Npcap + Linux raw/TUN both UDP/TCP owned Stop FUNCTIONAL_PASS on SOURCE 055026fda (Action40646957672) AND optimized SOURCE f93f7fe7 (Action40647191693); 7-mode batch also PASS with other 6 on legacy Go hot. Latest native ACK source e5752611 code and N0 trigger a1238c4d still need exact source/live/cost evidence.",
+  "current_task": "PLAN026 Windows Normal/off Rust native owner. Existing exact signed two-OS 7-mode functional PASS SOURCE f93f7fe7 Action40647191693 (only Normal Rust hot; rest Go). RX/TX saturated Stop priority fix SOURCE f753e612; P200-250M-30P kernel stress SOURCE 0d09cd5e Action40651485360 currently executing; new profile emits measured offered/delivered and real tc/IFB counters.",
   "why_now": "User wants actual code progress, CPU-minimal steady Windows and no Normal/off fallback. We published Rust native two workers, single-lock8 batch and actual Accepted ACK snapshot, then obtained two independent exact-source signed two-OS functional PASS runs.",
   "done_when": "Normal/off newest source exact N0 10Mbps 300ms one-way 240s with old produced0 ready4 regression and same VM old-Go vs new Rust CPU-seconds/GB, RSS, idle wakes and p99 first-delivery A/B. Migrate Fixed/Auto/Game/Health Keepalive and Make-Before-Break dynamic lane native owner; remove remaining Go packet pump only after modes' real functional/perf proof.",
-  "next_action": "Read terminal status of Normal-only 240s N0 Action40648269441 (source a1238c4d) and normal updated ACK source e5752611 actual two-OS Action40647662195; first true error stage only, no blind seeds or fake PASS. Signed real Windows/Linux UDP/TCP/owned Stop already passed 055026fd run40646957672 and source f93f7fe7 run40647191693, avoid repeating seven-mode functionality. If N0 PASS, collect same-VM sequential old-Go vs Rust CPU/RSS/idle wake/p99 A/B; otherwise fix scoped first failure. Fixed/Auto/Game remain legacy hot until actual native Rust implementation tested.",
+  "next_action": "Read source0d09cd5e actual P200 Action40651485360; if FAIL inspect first Python/tc/kernel or application rate stage with artifacts, do not mark throughput PASS. Review RX Stop Win32 native tests and actual product Stop. Capture CPU process (Go+Rust combined)/RSS, offered vs delivered and tc-IFB loss; if throughput limited, isolate host/generator vs Rust M2 5MB shadows vs common Entry lock. Set up sampled TX/RX lock-wait profiling before splitting owner. No Fixed/Auto/Game deletion until all native modes replaced.",
   "unverified": true,
   "last_tested_source": "f93f7fe7b4627da30b23cbcbfeb06f50840197a2",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN026-S2-source055-Windows-Rust-Normal-real-native-functional-20261028.json",
-    "docs/evidence/M0/PLAN025-H312-source33ed-linux-loss1-512-genuine-20261028.json",
-    "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
+    "docs/evidence/M0/PLAN026-H321-f93-Rust-NativeOwner-real-Windows-Linux-PASS.json"
   ],
   "context_refs": [
     "docs/devlog/M0/20261028-PLAN026-source055-real-native-normal-functional-pass.md",
@@ -30,5 +28,5 @@
     "docs/features/README.md"
   ],
   "open_requests": [],
-  "partial_summary": "Current code source e5752611: Rust NativeOwner Direct Wintun/NPF TX/RX, no Normal Go pulse, cold Go TLS/OS/Stop leases; original M1/M3/M2, owned early delivery, 8 ready source packets with 2 Entry locks, atomic Stop under saturated TX and actual accepted ACK snapshot. Real Windows2025 signed NPF+Wintun/WSL2 Linux original Go TLS/Rust two-OS UDP/TCP/Stop seven modes PASS SOURCE055026fda Action40646957672 and sourcef93f7fe7 Action40647191693; only Normal is Rust hot, Fixed/Auto/Game legacy Go hot. Function card qualified SOURCE055 explicit evidence docs/evidence/M0/PLAN026-S2-source055-Windows-Rust-Normal-real-native-functional-20261028.json. New source e575 actual tests and isolated 240s N0 sourcea123 run40648269441 not proven terminal here; same-VM old Go vs Rust cost A/B NOT_RUN. Old PLAN025 produced0 ready4 still an independent regression. Feature catalog/governance after evidence commit passed."
+  "partial_summary": "Normal/off true Rust Wintun/Npcap two workers; no Go packet pulse fallback. FUNCTIONAL_PASS 055026fd run40646957672, f93f7fe7 run40647191693. 300ms/10Mbps/0%/240s N0 sourcea1238c4d run40648269441 PASS. User agent RX Stop starvation reviewed and fixed via priority Stop event and per-RX-frame/early-frame AtomicBool checks in f753e612 with real Win32 event ordering test. New 200ms each dir / 250mbit tc cap / 30% kernel loss / 250Mbps offered each OS / 60s P200 source0d09cd5e Action40651485360, result pending; does not modify product wire or Go rollback. Shared Entry TX/RX lock, 20ms active timer and extra copies reserved for A/B evidence, not blindly redesigned. Cursor now uses one exact tested source with matching evidence for governance."
 }
