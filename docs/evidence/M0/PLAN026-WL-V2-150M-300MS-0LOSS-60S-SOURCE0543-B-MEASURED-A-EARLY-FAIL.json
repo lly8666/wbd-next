@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "date": "2026-10-28",
+  "source_sha": "0543b805ca25d804ccd131be6686b0b99f61f80f",
+  "run_id": 40668581343,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40668581343",
+  "scenario_id": "wl-normal-150m-300ms-0loss-60s",
+  "scenario_sha256": "e22a96fbd4d6de2b4dc581d7013b343e61f5775298480e185c7a5562906d516e",
+  "workload": {
+    "per_direction_target_offered_mbps": 150,
+    "one_way_kernel_delay_ms": 300,
+    "configured_kernel_loss_pct": 0,
+    "measurement_duration_s": 60,
+    "drain_s": 5,
+    "tun_mtu": 1400,
+    "udp_packet_mix_by_packet_count": [
+      {
+        "bytes": 96,
+        "weight": 10
+      },
+      {
+        "bytes": 288,
+        "weight": 15
+      },
+      {
+        "bytes": 1060,
+        "weight": 30
+      },
+      {
+        "bytes": 1200,
+        "weight": 45
+      }
+    ]
+  },
+  "artifact": {
+    "id": 12806629533,
+    "name": "m0-wl-full-public-normal-direct",
+    "zip_sha256": "421de570c82e3e84ad563c208762518995cf96f11e65bf963e9a66313ce79a06",
+    "zip_retrieved": true,
+    "windows_binary_artifact_id": 12807936581,
+    "windows_binary_zip_sha256": "64288a8ec4963cd7b7625b9a941f6cd3eeaef44a8e292f95dd2a72d0eb15fc33"
+  },
+  "preflight": {
+    "go_windows": "PASS",
+    "rust_windows": "PASS",
+    "rust_linux": "PASS",
+    "linux_product_build": "PASS",
+    "assembly": "PASS"
+  },
+  "order": [
+    "B",
+    "A"
+  ],
+  "common_vm": "GitHub Actions 1000107611",
+  "B_rust_native": {
+    "authentic_initial_two_os_udp_tcp": "PASS",
+    "owned_stop": "PASS_BOTH_OWNED",
+    "measurement_duration_s": 60,
+    "offered_mbps": {
+      "windows_sender": 148.7723,
+      "linux_sender": 149.9995
+    },
+    "first_delivered_mbps": {
+      "windows_receiver": 148.9439,
+      "linux_receiver": 147.0234
+    },
+    "first_delivered_unique_fraction": {
+      "windows_receiver": 0.9929532537767775,
+      "linux_receiver": 0.9884121474912577
+    },
+    "actual_tc_qdisc_drops": {
+      "windows_to_linux": 0,
+      "linux_to_windows": 0
+    },
+    "actual_tc_qdisc_overlimits": {
+      "windows_to_linux": 0,
+      "linux_to_windows": 0
+    },
+    "actual_tc_qdisc_requeues": {
+      "windows_to_linux": 0,
+      "linux_to_windows": 0
+    },
+    "actual_tc_qdisc_packets": {
+      "windows_to_linux": 1245826,
+      "linux_to_windows": 1252107
+    },
+    "local_npcap_ingress_drops_last_counter": 0,
+    "true_udp_roundtrip_p99_ms": {
+      "windows": 609,
+      "linux": 609.439
+    },
+    "first_delivery_p99_one_way": "NOT_MEASURED_UNCALIBRATED_CLOCKS",
+    "windows_process_cpu": {
+      "measurement_window_sample_span_s": 59.25,
+      "total_cpu_s": 13.4531,
+      "kernel_cpu_s": 8.5625,
+      "user_cpu_s": 4.8906,
+      "one_logical_core_avg_pct": 22.706,
+      "peak_rss_bytes": 41963520,
+      "cpu_s_per_first_delivered_GB": 6.0606,
+      "scope": "WHOLE_GO_EXE_PLUS_RUST_DLL_AND_OS_KERNEL_CHARGE"
+    },
+    "generator_cpu_s": {
+      "windows": 52.5938,
+      "linux": 39.4369
+    },
+    "thread_attribution": "NOT_MEASURED_NAMED_RUST_WORKERS_ABSENT_WIN32_GetThreadDescription",
+    "result": "REAL_60S_MEASURED_AND_OWNED_STOP_BUT_RESIDUAL_FIRST_DELIVERY_BELOW_99_9PCT_ZERO_LOSS_GOAL",
+    "physical": "NOT_RUN"
+  },
+  "A_go_steady": {
+    "original_tls_os_wal_app_udp_tcp_initial": "PASS",
+    "is_current_source_go_steady_not_historical_precompiled_release": true,
+    "result": "FAIL_EARLY_PRODUCT_EXIT_UNDER_LOAD_NOT_60S_MEASUREMENT",
+    "windows_exit_code": 1,
+    "linux_exit_code_at_failure": null,
+    "generator_elapsed_s": 14.359,
+    "windows_payload_sent_bytes": 268930440,
+    "windows_actual_offered_mbps_while_alive_approx": 149.83,
+    "old_reported_sent_payload_mbps_planned_60s_denominator": 35.8574,
+    "local_npcap_ingress_drops_last_counter": 167513,
+    "pending_frozen_or_unacked_legacy_carrier_records_last_counter": 1536,
+    "native_failure_source_marker_seen": true,
+    "native_failure_marker_line_sha256": "2c45b6b6715c767641ecc4120da99f75737c02db34b7b13196c32cfa5b2927fb",
+    "failure_reason_subtype": "UNKNOWN_FIRST_ERROR_TEXT_NOT_ARCHIVED",
+    "observed_windows_disconnected_marker": true,
+    "whole_owned_stop_proof": "NOT_RUN_AND_NOT_VERIFIED",
+    "generator_error": "WinError_10051_NETWORK_UNREACHABLE_AFTER_PRODUCT_EXIT",
+    "actual_tc_after": "NOT_MEASURED_EARLY_ABORT",
+    "provisional_windows_cpu_s": 9.5625,
+    "provisional_windows_cpu_window_s": 13.265,
+    "provisional_cpu_scope": "SHORT_ABORTED_RUN_NOT_AB_COMPARABLE"
+  },
+  "ab": {
+    "status": "INCONCLUSIVE_OR_FAILED",
+    "reason": "Go baseline did not complete 60s/owned Stop; Rust succeeded but 0pct configured kernel loss retained app first-delivery gap",
+    "cpu_ratio": "NOT_MEASURED",
+    "language_specific_cpu": "NOT_MEASURED",
+    "product_qualification": "PARTIAL_B_ONLY",
+    "physical": "NOT_RUN"
+  },
+  "source_scope_notes": [
+    "Previous SOURCE113b2e50 Action40666215474 Go-first also exited early; B was not run in that older action.",
+    "Named native Rust worker CPU zero in generated summary is an absent thread-name attribution, NOT proof workers consumed zero CPU.",
+    "tc netem drop=0 does not isolate the residual end-to-end first-delivery gap to a specific queue, OS stage or Rust subsystem.",
+    "Generator CPU excludes product process; 150Mbps Linux and Windows achieved offered, but sender CPU was nontrivial.",
+    "Product default, original Linux path and Fixed/Auto/Game not modified by this diagnostic batch; previous failures preserved."
+  ]
+}

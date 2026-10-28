@@ -4,18 +4,19 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 323,
-  "checkpoint_sha": "113b2e50da90b094b3be10083411f551cd947693",
+  "sequence": 324,
+  "checkpoint_sha": "0543b805ca25d804ccd131be6686b0b99f61f80f",
   "progress": "partial",
   "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
-  "current_task": "PLAN026 current-source Normal/off Windows WL V2 performance harness integrated: 150Mbps per direction, 300ms one-way, 0% injected loss, 60s mixed UDP. CI-only Go steady vs Rust NativeOwner A/B uses one Windows EXE/Rust DLL/driver and independent original TLS, Wintun/Npcap + WSL2 Linux TUN and owned Stop sessions. Feature defaults/other modes unchanged. SOURCE113b2e50 pinned Go overlay blob in assembly manifest.",
-  "why_now": "User explicitly authorized repo write and requested immediate real A/B plus permanent documentation for future Windows agents; commit d7223fc7, manifest repair 113b2e50. Reusable harness entry docs/testing/WL_PERF_HARNESS_V2.md linked from START_HERE and M0 prompt.",
+  "current_task": "PLAN026 Windows NativeOwner latest WL V2 150Mbps both directions/300ms one-way/0pct tc loss/60s: SOURCE0543 B-first Rust Normal full real 60s, original Go TLS/Npcap/Wintun/WSL Linux raw/TUN, both owned Stop PASS Action40668581343. Rust B first delivered 148.9439Mbps Windows, 147.0234Mbps Linux, RTT same-origin p99 ~609ms; tc actual 0 drops; app first-delivery ratio 99.2953%/98.8412% residual NOT qualified 99.9% 0pct target. Old Go A second repeatably exits after ~14.36s offered ~149.83Mbps while alive, 167513 NPF local drops, 1536 pending; typed root error unknown; no valid paired CPU ratio. Future Windows agents start docs/testing/WL_PERF_HARNESS_V2.md.",
+  "why_now": "User authorized direct repo writes, same VM 150M A/B and permanent harness docs; after SOURCE113 first Go AB failure, SOURCE0543 B-first preserves Rust complete performance. Exact Action40668581343 artifacts downloaded/read and measured; source/manifest and history not overclaimed.",
   "done_when": "Normal/off newest source exact N0 10Mbps 300ms one-way 240s with old produced0 ready4 regression and same VM old-Go vs new Rust CPU-seconds/GB, RSS, idle wakes and p99 first-delivery A/B. Migrate Fixed/Auto/Game/Health Keepalive and Make-Before-Break dynamic lane native owner; remove remaining Go packet pump only after modes' real functional/perf proof.",
-  "next_action": "Check exact SOURCE113b2e50 Windows/Linux Action40666215474: cheap workflow/assembly and Linux Rust tests PASS, Windows Go/Rust compiles IN_PROGRESS at H323. If native-public-two-os fails, collect first failing step/log and per-leg wl-ab-v2/report.json and owned Stop state. Do not claim A/B results until both 60s legs and same-VM CPU/driver tc real artifacts exist. Older Action40666043646 failed manifest check (fixed on SOURCE113b2e50), do not rerun old SHA. If V2 source fails patch only relevant harness/assembly/protection and rerun one scene. Remaining Rust native Fixed/Auto/Game/Health/Lane migration as registry.",
+  "next_action": "Read new evidence docs/evidence/M0/PLAN026-WL-V2-150M-300MS-0LOSS-60S-SOURCE0543-B-MEASURED-A-EARLY-FAIL.json. Resolve first Go owner failure from WBD_WINDOWS_NATIVE_FAILURE_SOURCE reason BEFORE stats (current marker tokens include stats and cannot identify root), 167513 local ingress drops/1536 pending and real owned Stop. Rust B 60s full PASS functional/Stop/offer but 0pct injected loss gives Windows .992953 Linux .988412 first-delivery, 0 tc drops: add low-overhead stage conservation counters and correlate actual kernel/tun/NPF queues, not blind buffer enlargement. Win GetThreadDescription named workers absent, fix sampler diagnostics; Rust total whole-EXE 13.4531s/59.25s, no language-specific attribution. Do NOT rerun full 150M until discriminating source fix; respect original 240s N0, Fix/Auto/Game Health lane still pending registry goal, no physical claim.",
   "unverified": true,
-  "last_tested_source": "85072837b800cdab1c78cb78afc9fa0eea3c1bb4",
+  "last_tested_source": "0543b805ca25d804ccd131be6686b0b99f61f80f",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN026-H321-f93-Rust-NativeOwner-real-Windows-Linux-PASS.json"
+    "docs/evidence/M0/PLAN026-H321-f93-Rust-NativeOwner-real-Windows-Linux-PASS.json",
+    "docs/evidence/M0/PLAN026-WL-V2-150M-300MS-0LOSS-60S-SOURCE0543-B-MEASURED-A-EARLY-FAIL.json"
   ],
   "context_refs": [
     "docs/evidence/M0/PLAN026-P200-sourcec835-windows-linux-generator-improved-capacity-20261028.json",
@@ -27,8 +28,9 @@
     "docs/devlog/M0/20261028-PLAN026-H322-P200-generator-capacity-first-fail.md",
     "docs/devlog/M0/20261028-PLAN026-H324-P200-feature-capacity-scope.md",
     "docs/testing/WL_PERF_HARNESS_V2.md",
-    "docs/devlog/M0/20261028-PLAN026-WL-PERF-V2-SAME-VM-AB.md"
+    "docs/devlog/M0/20261028-PLAN026-WL-PERF-V2-SAME-VM-AB.md",
+    "docs/devlog/M0/20261028-PLAN026-WL-V2-150M-A-B-SECOND-REAL-RESULT.md"
   ],
   "open_requests": [],
-  "partial_summary": "SOURCE85072837 real Windows/Linux Normal/off functional/owned Stop PASS under Action40656170585; 250Mbps/30% P200 offered Linux below 90% and is CAPACITY_LIMITED, not product throughput PASS. Earlier f93 true Normal function PASS; a123 original 240s N0 source PASS. Current d7223fc7 integrated V2 scenario parser, real bidirectional kernel tc generator, Go steady AB opt-in, two-leg same VM runner, SHA/CPU/RSS/first-delivery reports, source-binary artifact output and agent docs. First Action40666043646 cheap tests PASS but failed original Go overlay assembly manifest SHA; fixed 113b2e50; new Action40666215474 cheap/assembly PASS and Linux Rust unit PASS, Windows compile/unit still in progress as of 2026-10-28T09:43Z; no real current-source A/B result yet. A baseline is current-source retained Go pump, not an earlier precompiled released Go EXE."
+  "partial_summary": "After SOURCE0543 Action40668581343 preflight/compile/build all PASS. B Rust default Normal signed full two-OS true 60s with original TLS UDP/TCP and owned Stop PASS, offered W148.7723/L149.9995 Mbps; first delivered Windows148.9439/Linux147.0234; ratios .992953/.988412; tc per-direction drops=0, real UDP RTT p99 W609/L609.439ms, whole EXE CPU13.4531s over 59.25s, RSS peak41963520B. Generator CPU W52.5938/L39.4369s; named Rust worker CPU NOT_MEASURED (GetThreadDescription none). A current-source Go packet path true TLS started, exits after 14.359s Windows generator at ~149.83Mbps actual offered while alive; 167513 NPF local drops/1536 pending, WinError10051 after product exit, owned both Stop NOT_VERIFIED; B was first and fully valid. A/B CPU ratio INCONCLUSIVE, 0pct real first delivery below 99.9%, physical NOT_RUN. First source113 run had A-first fail and skipped B; preserved."
 }
