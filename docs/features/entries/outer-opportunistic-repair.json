@@ -37,7 +37,8 @@
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-M2-RETENTION-FLOOR.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-24-SIGNED-MATRIX.md",
     "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-OUTER-REPAIR-RTT-FLOOR.md",
-    "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-24-SIGNED-RESULT.md"
+    "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-24-SIGNED-RESULT.md",
+    "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-FEATURE-STATUS-CORRECTION.md"
   ],
   "verification": [
     {
@@ -99,7 +100,7 @@
     {
       "platform": "Linux x86_64 original Go TLS / Rust raw M4 TUN original real client+server, isolated netns",
       "scope": "New Linux dual source b9c after c589 shared 1.2s v3 bounded retention; 50/100Mbps each ×1/5/10/30% tc each ×50/150/300ms one-way, 60s, UDP mix. Both roles nonzero authentic M4 R and <=10% R/(F+R) all24; 12/12 50M native PASS, 10/12 100M native PASS, 2/12 100M 50ms pacing catch-up INCONCLUSIVE.",
-      "status": "PARTIAL",
+      "status": "CAPACITY_LIMITED",
       "source_sha": "b9c2c1707c917816c6d615a5283c9ea2329ee6b5",
       "evidence": "docs/evidence/M0/PLAN026-LINUX-DUAL-SOURCEB9C2-50M-12-SIGNED-20261029.json"
     }
