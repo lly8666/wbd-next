@@ -6,6 +6,7 @@ from m0_wl_mode_runtime_report import source_locked_observability,summarize_auto
 from m0_wl_native_mtu_contract import configured_native_test_mtu
 from m0_wl_n0_drop_delta import latest_counter, measured_delta
 from m0_wl_impairment_profile import get_profile
+from m0_wl_lock_profile import parse_native_lock_profile
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
 configured_mtu=configured_native_test_mtu()
@@ -520,6 +521,10 @@ finally:
  # Preserve first error/Stop outcome, and attach only measured original
  # owner and whole Go+Rust EXE resource observations from THIS mode.
  # Absence remains typed NOT_MEASURED; no readiness/p99 fabricated.
+ if mode=="normal":
+  path=out/"client.log"
+  report["rust_owner_lock_wait"]=parse_native_lock_profile(
+   path.read_text(errors="replace") if path.exists() else "")
  try:
   report["runtime_observability"]=source_locked_observability(out)
  except Exception as sample_error:

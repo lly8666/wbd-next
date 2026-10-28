@@ -39,6 +39,52 @@
  const MAX_NPF:usize=65535+64;
  const IDLE_WAIT:u32=u32::MAX;
 
+ // This diagnostic is compiled out of ordinary Windows production
+ // builds. At most 1/64 owner-lock attempts per direction reads a clock.
+ #[derive(Clone,Copy)]
+ enum LockDirection {Tx,Rx}
+ #[cfg(feature="win_native_lock_profile")]
+ struct LockWaitSamples {
+     ticks:AtomicU64, samples:AtomicU64,
+     wait_ns:AtomicU64, max_ns:AtomicU64,
+ }
+ #[cfg(feature="win_native_lock_profile")]
+ impl LockWaitSamples {
+     fn new()->Self{
+         Self{ticks:AtomicU64::new(0),samples:AtomicU64::new(0),
+             wait_ns:AtomicU64::new(0),max_ns:AtomicU64::new(0)}
+     }
+     fn sample(&self,ns:u64){
+         self.samples.fetch_add(1,Ordering::Relaxed);
+         self.wait_ns.fetch_add(ns,Ordering::Relaxed);
+         self.max_ns.fetch_max(ns,Ordering::Relaxed);
+     }
+ }
+ #[cfg(feature="win_native_lock_profile")]
+ struct LockProfile{tx:LockWaitSamples,rx:LockWaitSamples}
+ #[cfg(feature="win_native_lock_profile")]
+ impl LockProfile{
+     fn new()->Self{Self{tx:LockWaitSamples::new(),rx:LockWaitSamples::new()}}
+ }
+ #[inline]
+ fn lock_owner<'a>(lane:&'a Arc<Mutex<Entry>>,counters:&Counters,
+     dir:LockDirection)->Result<std::sync::MutexGuard<'a,Entry>,i32>{
+     #[cfg(feature="win_native_lock_profile")]
+     {
+         let p=match dir {LockDirection::Tx=>&counters.profile.tx,
+             LockDirection::Rx=>&counters.profile.rx};
+         if p.ticks.fetch_add(1,Ordering::Relaxed)&63==0{
+             let started=Instant::now();
+             let guard=lane.lock().map_err(|_|BAD_STAGE)?;
+             let ns=started.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64;
+             p.sample(ns);
+             return Ok(guard)
+         }
+     }
+     #[cfg(not(feature="win_native_lock_profile"))]
+     let _=(counters,dir);
+     lane.lock().map_err(|_|BAD_STAGE)
+ }
  #[repr(C)]
  #[derive(Clone, Copy)]
  pub struct WbdWinNativeAttachV1 {
@@ -85,8 +131,9 @@
      ack:AtomicU32,
      ack_sent:AtomicU32,
      tx_seq:AtomicU32,
-     last_rx_ns:AtomicU64,
      stopping:AtomicBool,
+     #[cfg(feature="win_native_lock_profile")]
+     profile:LockProfile,
  }
  impl Counters {
      fn new(ack:u32,seq:u32)->Self{
@@ -95,7 +142,9 @@
              worker_error:AtomicI32::new(0),ack:AtomicU32::new(ack),
              ack_sent:AtomicU32::new(ack),
              tx_seq:AtomicU32::new(seq),
-             last_rx_ns:AtomicU64::new(0),stopping:AtomicBool::new(false)}
+             stopping:AtomicBool::new(false),
+             #[cfg(feature="win_native_lock_profile")]
+             profile:LockProfile::new()}
      }
      fn snapshot(&self)->WbdWinNativeStatsV1{
          WbdWinNativeStatsV1{
@@ -209,7 +258,7 @@
      let mut wire=[[0u8;MAX_IPV4];BATCH];
      let mut meta=[(0u64,0u32,0usize);BATCH];
      {
-         let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+         let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          for i in 0..count {
              let (used,seq,pn)=v3_seal_entry(
                  &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
@@ -237,7 +286,7 @@
          counters.ack_sent.store(ack,Ordering::Release);
      }
      {
-         let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+         let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          for (i,&(pn,seq,used)) in meta[..count].iter().enumerate(){
              let status=kernel_result(result,count,i)?;
              m2_kernel_firstsend_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
@@ -261,7 +310,7 @@
      let mut wire=[0u8;MAX_IPV4];
      let ack=counters.ack.load(Ordering::Acquire);
      let feedback={
-         let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+         let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          m2_next_feedback_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?
      };
      if let Some((used,seq,pn))=feedback{
@@ -273,14 +322,14 @@
          let outcome=npf.send_batch(&[raw]);
          let accepted=kernel_result(outcome,1,0)?==1;
          if accepted{counters.ack_sent.store(ack,Ordering::Release);}
-         let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+         let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          m2_finish_feedback_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
              pn,u32::from(accepted))?;
          if outcome.error.is_some(){return Err(BAD_STAGE)}
          return Ok(true)
      }
      let repair={
-         let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+         let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          m2_next_repair_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?
      };
      if let Some((used,seq,pn))=repair{
@@ -291,7 +340,7 @@
          let outcome=npf.send_batch(&[raw]);
          let accepted=kernel_result(outcome,1,0)?==1;
          if accepted{counters.ack_sent.store(ack,Ordering::Release);}
-         let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+         let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          m2_complete_repair_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
              pn,u32::from(accepted))?;
          if outcome.error.is_some(){return Err(BAD_STAGE)}
@@ -302,25 +351,38 @@
  fn send_presentation_ack(cfg:&WbdWinNativeAttachV1,
      npf:&mut NpcapTx,counters:&Counters,ip_id:&mut u16,
  )->Result<(),i32>{
-     let mut bytes=[0u8;MAX_LINK];
+     // Build pure TCP-looking ACK directly at Ethernet L3 offset.
+     // The old path filled a separate 2304B scratch and copied 40B back.
      let mut frame=[0u8;MAX_LINK];
      let ack=counters.ack.load(Ordering::Acquire);
-     let raw=build_presentation_ack(Ipv4Tuple{
+     let n=build_presentation_ack(Ipv4Tuple{
          src_ip:&cfg.local_ip,dst_ip:&cfg.peer_ip,
          src_port:cfg.local_port,dst_port:cfg.peer_port,
      },counters.tx_seq.load(Ordering::Acquire),
        ack,*ip_id,
-       PacketPersona::Windows11,cfg.path_mtu as usize,&mut bytes)
-       .map_err(|_|INVALID)?;
-     let link=io::ethernet_outbound(raw,&cfg.source_mac,
-         &cfg.next_hop_mac,&mut frame).map_err(|_|INVALID)?;
+       PacketPersona::Windows11,cfg.path_mtu as usize,&mut frame[14..])
+       .map_err(|_|INVALID)?.len();
+     frame[..6].copy_from_slice(&cfg.next_hop_mac);
+     frame[6..12].copy_from_slice(&cfg.source_mac);
+     frame[12..14].copy_from_slice(&0x0800u16.to_be_bytes());
      *ip_id=ip_id.wrapping_add(1);
-     let outcome=npf.send_batch(&[link]);
+     let outcome=npf.send_batch(&[&frame[..14+n]]);
      if kernel_result(outcome,1,0)?!=1{return Err(BAD_STAGE)}
      counters.ack_sent.store(ack,Ordering::Release);
      Ok(())
  }
-  fn tx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
+  /// Exact event-driven M2 wake. Both deadlines use the same Rust
+ /// monotonic clock, and RX/TUN/Stop events wake earlier. No 20ms polling
+ /// after a genuine authenticated reverse packet.
+ fn m2_wake_timeout_ms(now:MonoNs,feedback:Option<MonoNs>,
+     repair:Option<MonoNs>)->u32 {
+     let Some(next)=feedback.into_iter().chain(repair).map(|x|x.0).min()
+         else{return IDLE_WAIT};
+     if next<=now.0{return 0}
+     let remaining=next-now.0;
+     remaining.div_ceil(1_000_000).min(u64::from(u32::MAX-1)) as u32
+ }
+ fn tx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
      mut tun:WintunRx,mut npf:NpcapTx,stop:Arc<WakeEvent>,
      notify:Arc<WakeEvent>,counters:Arc<Counters>)->i32{
      let mut ip_id=1u16;
@@ -341,13 +403,12 @@
                  send_presentation_ack(&cfg,&mut npf,&counters,&mut ip_id)?;
                  return Ok(false)
              }
-             let m2_active={
-                 let e=lane.lock().map_err(|_|BAD_STAGE)?;
-                 e.m2.as_ref().is_some_and(|m|m.shadow.outstanding()>0)
+             let timeout={
+                 let e=lock_owner(&lane,&counters,LockDirection::Tx)?;
+                 let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
+                 m2_wake_timeout_ms(m2_clock(),m.feedback.next_deadline(),
+                     m.shadow.next_deadline())
              };
-             let since_rx=m2_clock().0.saturating_sub(
-                 counters.last_rx_ns.load(Ordering::Acquire));
-             let timeout=if m2_active||since_rx<2_000_000_000{20}else{IDLE_WAIT};
              match io::wait_ready(&[stop.handle(),tun.event(),notify.handle()],timeout){
                  Ok(WaitResult::Ready(0))=>Ok(true),
                  Ok(WaitResult::Ready(_)|WaitResult::Timeout)=>Ok(false),
@@ -362,7 +423,7 @@
      ack:&mut PresentationAck,seq:u32,wire:&[u8],
      plain:&mut [u8;MAX_IPV4])->Result<(),i32>{
      let opened={
-         let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+         let mut e=lock_owner(lane,counters,LockDirection::Rx)?;
          let opened=v5_open_record_entry(&mut e,cfg.epoch,cfg.luid,
              cfg.ifindex,seq,wire,plain);
          opened
@@ -372,12 +433,10 @@
              tun.deliver_authenticated(&plain[..used]).map_err(|_|BAD_STAGE)?;
              counters.ack.store(ack.verified(seq,wire.len()),Ordering::Release);
              counters.rx_delivered.fetch_add(1,Ordering::Release);
-             counters.last_rx_ns.store(m2_clock().0,Ordering::Release);
              let _=tx_notify.wake();
          },
          Ok((_,2,_))=>{
              counters.ack.store(ack.verified(seq,wire.len()),Ordering::Release);
-             counters.last_rx_ns.store(m2_clock().0,Ordering::Release);
              let _=tx_notify.wake();
          },
          Err(INVALID)=>{counters.rejected.fetch_add(1,Ordering::Relaxed);},
@@ -542,6 +601,17 @@
      let _=session.rx_notify.wake();
      let tx=session.tx.join().unwrap_or(STOP_INCOMPLETE);
      let rx=session.rx.join().unwrap_or(STOP_INCOMPLETE);
+     #[cfg(feature="win_native_lock_profile")]
+     {
+         let p=&session.counters.profile;
+         eprintln!("WBD_WINDOWS_RUST_NATIVE_ENTRY_LOCK_SAMPLED sample_every=64 tx_samples={} tx_wait_ns={} tx_max_ns={} rx_samples={} rx_wait_ns={} rx_max_ns={}",
+             p.tx.samples.load(Ordering::Relaxed),
+             p.tx.wait_ns.load(Ordering::Relaxed),
+             p.tx.max_ns.load(Ordering::Relaxed),
+             p.rx.samples.load(Ordering::Relaxed),
+             p.rx.wait_ns.load(Ordering::Relaxed),
+             p.rx.max_ns.load(Ordering::Relaxed));
+     }
      if tx!=OK&&tx!=BAD_STAGE{return tx}
      if rx!=OK&&rx!=BAD_STAGE{return rx}
      OK // all driver borrows returned before Go can EndSession/pcap_close
@@ -550,6 +620,44 @@
  #[cfg(test)]
  mod tests {
      use super::*;
+     #[cfg(feature="win_native_lock_profile")]
+     #[test]
+     fn sampled_lock_profile_separates_tx_and_rx_without_packet_abi() {
+         let c=Counters::new(1,1);
+         let lock=Arc::new(Mutex::new(0));
+         // The actual Entry lock wrapper is exercised in real Windows
+         // product tests; the sample account policy is 1 per 64 attempts.
+         for i in 0..64{
+             let tick=c.profile.tx.ticks.fetch_add(1,Ordering::Relaxed);
+             if tick&63==0{c.profile.tx.sample(i)}
+         }
+         assert_eq!(c.profile.tx.samples.load(Ordering::Relaxed),1);
+         assert_eq!(c.profile.rx.samples.load(Ordering::Relaxed),0);
+         assert_eq!(*lock.lock().unwrap(),0);
+     }
+     #[test]
+     fn m2_native_next_deadline_wakes_only_when_due() {
+         assert_eq!(m2_wake_timeout_ms(MonoNs(1),None,None),IDLE_WAIT);
+         assert_eq!(m2_wake_timeout_ms(MonoNs(10),Some(MonoNs(10)),None),0);
+         assert_eq!(m2_wake_timeout_ms(MonoNs(10),None,Some(MonoNs(9))),0);
+         assert_eq!(m2_wake_timeout_ms(MonoNs(10),
+             Some(MonoNs(21_000_011)),None),22);
+         assert_eq!(m2_wake_timeout_ms(MonoNs(100),
+             Some(MonoNs(55_000_100)),Some(MonoNs(4_000_100))),4);
+         assert_eq!(m2_wake_timeout_ms(MonoNs(0),None,
+             Some(MonoNs(u64::MAX))),u32::MAX-1);
+     }
+     #[test]
+     fn windows_native_thread_descriptions_are_exact() {
+         assert_eq!(String::from_utf16(&NATIVE_TX_WIDE[..13]).unwrap(),"wbd-native-tx");
+         assert_eq!(String::from_utf16(&NATIVE_RX_WIDE[..13]).unwrap(),"wbd-native-rx");
+         let (sender,receiver)=std::sync::mpsc::channel();
+         std::thread::spawn(move||{
+             set_native_thread_name(&NATIVE_RX_WIDE);
+             sender.send(()).unwrap();
+         }).join().unwrap();
+         receiver.recv().unwrap();
+     }
      #[test]
      fn native_stop_event_wins_when_capture_and_handoff_are_also_ready(){
          let stop=WakeEvent::new().unwrap();
@@ -571,17 +679,6 @@
          let counters=Counters::new(1,1);
          counters.stopping.store(true,Ordering::Release);
          assert!(counters.stopping.load(Ordering::Acquire));
-     }
-     #[test]
-     fn windows_native_thread_descriptions_are_exact() {
-         assert_eq!(String::from_utf16(&NATIVE_TX_WIDE[..13]).unwrap(),"wbd-native-tx");
-         assert_eq!(String::from_utf16(&NATIVE_RX_WIDE[..13]).unwrap(),"wbd-native-rx");
-         let (sender,receiver)=std::sync::mpsc::channel();
-         std::thread::spawn(move||{
-             set_native_thread_name(&NATIVE_RX_WIDE);
-             sender.send(()).unwrap();
-         }).join().unwrap();
-         receiver.recv().unwrap();
      }
      #[test]
      fn native_go_rust_c_abi_is_192_bytes_and_fixed_offsets(){

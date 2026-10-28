@@ -16,6 +16,8 @@ on:
       - tests/test_delivery_ci.py
       - tools/m0_wl_public_normal_e2e.py
       - tools/m0_wl_native_resource_sampler.py
+      - tools/m0_wl_lock_profile.py
+      - tests/test_m0_wl_lock_profile.py
       - tools/m0_wl_netem.py
       - tools/m0_wl_public_rate_app.py
       - tools/m0_wl_n0_drop_delta.py
@@ -100,6 +102,7 @@ jobs:
       - run: python -m unittest tests.test_m0_wl_n0_drop_delta -v
       - run: python -m unittest tests.test_m0_wl_impairment_profile -v
       - run: python -m unittest tests.test_m0_wl_native_resource_sampler -v
+      - run: python -m unittest tests.test_m0_wl_lock_profile -v
       - run: python tools/prepare_windows_wiring.py --check-only
       - name: Enforce functional seven modes or exactly one scoped N0 before any native build
         env:
@@ -114,7 +117,7 @@ jobs:
           modes=select_source_locked_modes(os.environ['PUBLIC_MODE'],os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1')
           print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'])
           PY
-      - run: python -m py_compile tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
+      - run: python -m py_compile tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
 
   windows-compile-preflight:
     name: Windows Go production and test compilation only
@@ -352,6 +355,7 @@ jobs:
       WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]')) && 'normal' || inputs.public_mode || 'all' }}
       WBD_WL_RUN_N0: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '1' || inputs.run_n0 == true && '1' || '0' }}
       WBD_WL_RUN_P200: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') && '1' || '0' }}
+      WBD_WL_PROBE_LOCKS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-probe-locks]') && '1' || '0' }}
       WBD_WL_N0_SECONDS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '240' || '60' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -386,15 +390,17 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Rust 1.85.1 toolchain missing'}
           rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
           if($LASTEXITCODE -ne 0){throw 'actual Windows MSVC target missing'}
-          & cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_embedded_go,fec2_product_record
-          if($LASTEXITCODE -ne 0){throw 'actual Windows Rust M2 production library build failed'}
+          $features='m0_v4_embedded_go,fec2_product_record'
+          if($env:WBD_WL_PROBE_LOCKS -eq '1'){$features+=',win_native_lock_profile'}
+          & cargo +1.85.1 build --locked --release -p wbd-engine --features $features
+          if($LASTEXITCODE -ne 0){throw 'actual Windows Rust M2 library build failed'}
           New-Item -ItemType Directory -Force result/wl-public | Out-Null
           # Native Rust-only regression: a too-short reverse-M2 draft buffer
           # cannot burn one PN/TCP span and silently misalign original Go.
           # Whole native M1/M2/M3/FEC2/Game-owner module regressions as
           # one bounded suite. Do not promote isolated Fixed6 samples or
           # run a dedicated profile6 public Windows/Linux sequence.
-          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib v4_windows_owner -- --test-threads=1 --nocapture
+          & cargo +1.85.1 test --locked -p wbd-engine --features $features --lib v4_windows_owner -- --test-threads=1 --nocapture
           if($LASTEXITCODE -ne 0){throw 'Windows native original owner full-module functional regression FAIL'}
           Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
           Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe

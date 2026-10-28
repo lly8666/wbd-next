@@ -23,6 +23,9 @@ m0_v4_embedded_go = []
 # Worker-frozen M1-012 direction SPSC; compile-time opt-in; default remains off.
 # Main-managed rtrb=0.3.2 workspace pin; no production TLS ABI change.
 m1_rtrb = []
+# Windows-only test build: sample 1/64 shared Entry lock acquisitions.
+# Omitted in production; no timer or counter in default data plane.
+win_native_lock_profile = []
 # Optional fixed-source ISA-L backend; runtime selects it automatically when compiled.
 # Default builds remain portable and do not require an external static library.
 native_fec_acceleration = ["wbd-codec/native-isal"]
