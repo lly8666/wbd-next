@@ -11,7 +11,8 @@ import os
 import time
 
 class _FileTime(ctypes.Structure):
-    _fields_=[("low",wintypes.DWORD),("high",wintypes.DWORD)]
+    # Win32 FILETIME is two uint32 on Windows x64 AND in Linux CI tests.
+    _fields_=[("low",ctypes.c_uint32),("high",ctypes.c_uint32)]
 
 class _Memory(ctypes.Structure):
     _fields_=[
@@ -32,10 +33,12 @@ def _sec(t):
     return ((int(t.high)<<32)|int(t.low))*1e-7
 
 class _ThreadEntry(ctypes.Structure):
-    _fields_=[("size",wintypes.DWORD),("usage",wintypes.DWORD),
-              ("thread_id",wintypes.DWORD),("owner_pid",wintypes.DWORD),
-              ("base_priority",wintypes.LONG),("delta_priority",wintypes.LONG),
-              ("flags",wintypes.DWORD)]
+    # THREADENTRY32 consists of seven 32-bit fields; never use a host
+    # c_ulong (64-bit on Linux) to model the Windows kernel ABI.
+    _fields_=[("size",ctypes.c_uint32),("usage",ctypes.c_uint32),
+              ("thread_id",ctypes.c_uint32),("owner_pid",ctypes.c_uint32),
+              ("base_priority",ctypes.c_int32),("delta_priority",ctypes.c_int32),
+              ("flags",ctypes.c_uint32)]
 
 def _thread_cpu_snapshot(kernel, pid, previous):
     """One 1Hz Toolhelp read, outside the product. No native packet callbacks."""
