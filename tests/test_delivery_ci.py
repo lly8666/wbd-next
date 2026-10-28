@@ -84,6 +84,19 @@ class DeliveryCiTests(unittest.TestCase):
         self.assertIn("select_source_locked_modes", checks)
         self.assertIn("RUN_N0", checks)
 
+    def test_new_windows_original_m2_and_m3_regressions_are_compiled_not_zero_tests(self):
+        # A go test -run exact name silently exits 0 when the test file was
+        # not copied into pinned original-Go. Require both source files in
+        # the exact shared original-Go assembly, not just workflow path triggers.
+        self.assertIn("bridge_v4_windows_m2_batch_preflight_test.go",
+                      p.EXTRA_BRIDGES["realityfront"])
+        self.assertIn("bridge_v4_windows_open_validated_test.go",
+                      p.EXTRA_BRIDGES["realityfront"])
+        scripts = "\n".join(x.get("run", "") for x in
+                            self.workflow["jobs"]["windows-compile-preflight"]["steps"])
+        self.assertIn("TestM0PLAN025WindowsOriginalM2BatchPreflightClassifiesFirstRefusal", scripts)
+        self.assertIn("TestM0PLAN025WindowsNativeNormalOpenFirstFaultIsBoundedAndSafe", scripts)
+
     def test_both_paths_use_same_assembly_and_pinned_original(self):
         for name in ("windows-compile-preflight", "native-public-two-os"):
             steps = self.workflow["jobs"][name]["steps"]

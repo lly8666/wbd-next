@@ -23,6 +23,8 @@ EXTRA_BRIDGES = {
         "bridge_v4_windows_fec2_owner.go", "bridge_v4_windows_fixed_stream.go", "bridge_v4_windows_fixed_stream_test.go",
         "bridge_v4_windows_wintun_lease.go", "bridge_v4_windows_wintun_lease_test.go",
         "bridge_v4_windows_scoped_client.go",
+        "bridge_v4_windows_m2_batch_preflight_test.go",
+        "bridge_v4_windows_open_validated_test.go",
         "bridge_v4_windows_m2_effective.go", "bridge_v4_windows_m2_effective_test.go",
     ),
     "windowsownerlease": (
