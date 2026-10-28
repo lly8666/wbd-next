@@ -87,6 +87,27 @@ class DeliveryCiTests(unittest.TestCase):
         self.assertIn("[plan026-rust-reuse-100]",native["env"]["WBD_WL_REUSE_RUN_ID"])
         self.assertIn("0543b805ca25d804ccd131be6686b0b99f61f80f",native["env"]["WBD_WL_BINARY_SOURCE"])
 
+    def test_linux_raw_rxbuf_100_rebuilds_new_product_and_never_reuses_old_binary(self):
+        flow=self.workflow["jobs"]["wiring-contract"]["steps"]
+        first=next(x for x in flow if x.get("name","").startswith("Enforce functional"))
+        native=self.workflow["jobs"]["native-public-two-os"]
+        marker="[plan026-rust-rxbuf-100]"
+        for expression in (first["env"]["PUBLIC_MODE"],first["env"]["WL_V2_SCENARIO"],
+                           native["env"]["WBD_WL_PUBLIC_MODES"],native["env"]["WBD_WL_V2_SCENARIO"]):
+            self.assertIn(marker,expression)
+        self.assertIn("wl-normal-100m-300ms-0loss-60s.json",native["env"]["WBD_WL_V2_SCENARIO"])
+        # The product ABI changed under crates/; this tag MUST NOT be a
+        # prebuilt-mode selector or turn on Go steady-state A/B.
+        self.assertNotIn(marker,native["env"]["WBD_WL_REUSE_RUN_ID"])
+        self.assertNotIn(marker,first["env"]["WL_V2_REUSE_RUN"])
+        self.assertNotIn(marker,native["env"]["WBD_WL_BINARY_SOURCE"])
+        self.assertNotIn(marker,first["env"]["WL_V2_BINARY_SHA"])
+        self.assertNotIn(marker,native["env"]["WBD_WL_PERF_AB"])
+        self.assertNotIn(marker,self.workflow["jobs"]["linux-source-locked-public"]["if"])
+        for step_name in ("Prepare exact original Go", "Build actual original Windows Rust"):
+            step=next(x for x in native["steps"] if x.get("name","").startswith(step_name))
+            self.assertEqual(step["if"],"env.WBD_WL_REUSE_RUN_ID == ''")
+
     def test_native_success_and_cleanup_contracts_retained(self):
         job = self.workflow["jobs"]["native-public-two-os"]
         scripts = "\n".join(x.get("run", "") for x in job["steps"])

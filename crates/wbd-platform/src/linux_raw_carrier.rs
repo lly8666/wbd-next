@@ -35,6 +35,13 @@ const IP_HDRINCL:c_int=3;
 const SOL_SOCKET:c_int=1;
 const SO_BINDTODEVICE:c_int=25;
 const SO_ATTACH_FILTER:c_int=26;
+const SO_RCVBUF:c_int=8;
+// Linux doubles a SO_RCVBUF request for bookkeeping; 4 MiB requested
+// yields up to 8 MiB effective per owned raw RX socket, capped by rmem_max.
+// A 4 MiB request is ~20x the observed 212,992-byte guest default. This is
+// NOT a global sysctl change, and it never changes qdisc fq600 or FEC pools.
+const RAW_RX_RCVBUF_REQUEST_BYTES:c_int=4*1024*1024;
+const RAW_RX_RCVBUF_EFFECTIVE_CEILING_BYTES:c_int=8*1024*1024;
 // Linux classic BPF instruction ABI. Kernel copies this short program at setsockopt.
 #[repr(C)]
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
@@ -49,6 +56,7 @@ struct SockAddrIn {
 unsafe extern "C" {
     fn socket(domain:c_int,typ:c_int,proto:c_int)->c_int;
     fn setsockopt(fd:c_int,level:c_int,opt:c_int,value:*const c_void,len:u32)->c_int;
+    fn getsockopt(fd:c_int,level:c_int,opt:c_int,value:*mut c_void,len:*mut u32)->c_int;
     fn poll(fds:*mut PollFd,nfds:usize,timeout:c_int)->c_int;
     fn recvfrom(fd:c_int,bytes:*mut c_void,len:usize,flags:c_int,
         src:*mut c_void,addr_len:*mut u32)->isize;
@@ -56,6 +64,27 @@ unsafe extern "C" {
         dst:*const c_void,dst_len:u32)->isize;
 }
 fn errno()->i32{io::Error::last_os_error().raw_os_error().unwrap_or(5)}
+/// Bound just this owned Linux raw receive queue. Never SO_RCVBUFFORCE,
+/// never adjust the host/guest sysctl, never call once per packet.
+/// Return actual Linux effective doubled/clamped allocation, not request.
+fn tune_raw_rx_buffer(fd:c_int)->Result<c_int,RawTxError>{
+    let wanted=RAW_RX_RCVBUF_REQUEST_BYTES;
+    // SAFETY: kernel synchronously copies a bounded 32-bit value.
+    let rc=unsafe{setsockopt(fd,SOL_SOCKET,SO_RCVBUF,
+        (&wanted as *const c_int).cast(),std::mem::size_of::<c_int>() as u32)};
+    if rc!=0{return Err(RawTxError::Kernel(errno()))}
+    let mut effective:c_int=0;
+    let mut size=std::mem::size_of::<c_int>() as u32;
+    // SAFETY: kernel writes one aligned c_int and its actual size.
+    let rc=unsafe{getsockopt(fd,SOL_SOCKET,SO_RCVBUF,
+        (&mut effective as *mut c_int).cast(),&mut size)};
+    if rc!=0{return Err(RawTxError::Kernel(errno()))}
+    if size!=std::mem::size_of::<c_int>() as u32 ||
+        effective<=0 || effective>RAW_RX_RCVBUF_EFFECTIVE_CEILING_BYTES {
+        return Err(RawTxError::InvalidInterface)
+    }
+    Ok(effective)
+}
 /// A tuple has to be checked before indexing a Rust slice or consulting
 /// kernel link/route state. Malformed or unauthenticated tuples are not an
 /// interface/MTU event and must never cause a panic or packet transmission.
@@ -260,6 +289,13 @@ impl ScopedRawIpv4Rx {
         let rc=unsafe{setsockopt(fd.as_raw_fd(),SOL_SOCKET,SO_BINDTODEVICE,
             name.as_ptr().cast(),name.as_bytes_with_nul().len() as u32)};
         if rc!=0{return Err(RawTxError::Kernel(errno()))}
+        // This is a receive-side Linux raw IPPROTO_TCP queue, not the
+        // already verified egress TUN fq600. Keep scoped error cleanup:
+        // owned fd automatically closes on all tuning/readback failures.
+        let actual_rx_bytes=tune_raw_rx_buffer(fd.as_raw_fd())?;
+        eprintln!("WBD_LINUX_RAW_RX_RCVBUF requested_bytes={} effective_bytes={} kernel_capped={} scope=OWNED_RAW_RX_SOCKET",
+            RAW_RX_RCVBUF_REQUEST_BYTES,actual_rx_bytes,
+            actual_rx_bytes<RAW_RX_RCVBUF_EFFECTIVE_CEILING_BYTES);
         let budget=ScopedRouteBudget::open(ifname,ifindex,generation,observed.kernel_mtu)
             .map_err(|_|RawTxError::InvalidInterface)?;
         Ok(Self{fd,ifindex,ifname:ifname.to_owned(),generation,
@@ -567,6 +603,31 @@ mod ready_batch_tests{
         assert_eq!(RawReadyBatch::new(32).attempted,32);
         assert_eq!(RawReadyBatch::new(33).attempted,32);
         assert_eq!(RawReadyBatch::new(33).entry(32),None);
+    }
+    #[test]
+    fn linux_raw_rx_receive_buffer_is_bounded_and_kernel_readback_actual(){
+        // Use unprivileged ephemeral UDP socket only to test the Linux
+        // SOL_SOCKET buffer syscall ABI; never open a live raw interface.
+        use std::net::UdpSocket;
+        let s=UdpSocket::bind("127.0.0.1:0").unwrap();
+        let actual=tune_raw_rx_buffer(s.as_raw_fd()).unwrap();
+        assert!(actual>0);
+        assert!(actual<=RAW_RX_RCVBUF_EFFECTIVE_CEILING_BYTES);
+        // Both kernel reads must reflect the same effective byte count.
+        let mut readback:c_int=0;
+        let mut n=std::mem::size_of::<c_int>() as u32;
+        let rc=unsafe{getsockopt(s.as_raw_fd(),SOL_SOCKET,SO_RCVBUF,
+            (&mut readback as *mut c_int).cast(),&mut n)};
+        assert_eq!(rc,0);
+        assert_eq!(n,4);
+        assert_eq!(readback,actual);
+        assert_eq!(RAW_RX_RCVBUF_REQUEST_BYTES,4*1024*1024);
+    }
+    #[test]
+    fn linux_raw_rx_buffer_does_not_scale_with_fec_or_flow_count(){
+        assert_eq!(RAW_RX_RCVBUF_EFFECTIVE_CEILING_BYTES,2*RAW_RX_RCVBUF_REQUEST_BYTES);
+        // Runtime has one bounded fixed request per OS-owned raw RX
+        // socket. There is no global rmem sysctl, FEC pool or queue growth.
     }
     #[test]
     fn r1_m4_pack_raw_nonprivileged_no_interface_capture(){

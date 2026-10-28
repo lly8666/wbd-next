@@ -1,6 +1,8 @@
 """Linux UDP fixture-level drop attribution without production side effects."""
 import unittest
-from tools.m0_wl_udp_socket_telemetry import parse_udp_mib,parse_udp_socket,delta,parse_linux_raw_sockets,raw_sockets_delta
+import tempfile
+from pathlib import Path
+from tools.m0_wl_udp_socket_telemetry import parse_udp_mib,parse_udp_socket,delta,parse_linux_raw_sockets,raw_sockets_delta,raw_socket_product_owners
 
 class LinuxUdpSocketTelemetryTests(unittest.TestCase):
     def test_exact_socket_inode_not_other_udp_apps(self):
@@ -25,6 +27,21 @@ class LinuxUdpSocketTelemetryTests(unittest.TestCase):
         self.assertEqual(last["4321"]["rx_queue_bytes"],4096)
     def test_raw_socket_replaced_is_unknown(self):
         self.assertIsNone(raw_sockets_delta({"123":{"drops":1}},{"456":{"drops":9}}))
+
+    def test_real_proc_fd_owner_exact_inode_not_name_guess(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            p=root/"321"
+            (p/"fd").mkdir(parents=True)
+            (p/"comm").write_text("wbd-v4-server\\n")
+            (p/"fd"/"4").symlink_to("socket:[9367]")
+            q=root/"654"
+            (q/"fd").mkdir(parents=True)
+            (q/"comm").write_text("unrelated\\n")
+            (q/"fd"/"3").symlink_to("socket:[9911]")
+            owners=raw_socket_product_owners({"9367","9911"},proc_root=root)
+            self.assertEqual(owners,{"9367":{"pid":321,"comm":"wbd-v4-server",
+                "identity":"EXACT_PROC_FD_SOCKET_INODE"}})
 
     def test_monotonic_drop_is_actual_delta(self):
         x=delta({"linux_socket_udp_drops":3},{"linux_socket_udp_drops":77})

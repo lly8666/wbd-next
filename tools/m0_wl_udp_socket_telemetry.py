@@ -54,11 +54,37 @@ def raw_sockets_delta(first,last):
                     "last_rx_queue_bytes":last[inode].get("rx_queue_bytes")}
     return out
 
+def raw_socket_product_owners(inodes,proc_root="/proc"):
+    """One-shot exact Linux product comm + fd inode join, not PID inference.
+    Only enumerates fd symlinks for the fixed product process basenames;
+    no app data or credentials leave the guest in this diagnostic.
+    """
+    valid={str(x) for x in inodes}
+    found={}
+    try:entries=list(pathlib.Path(proc_root).iterdir())
+    except OSError:return found
+    for proc in entries:
+        if not proc.name.isdigit():continue
+        try:comm=(proc/"comm").read_text(encoding="ascii").strip()
+        except (OSError,UnicodeError):continue
+        if comm not in ("wbd-v4-server","wbd-v4-client"):continue
+        try:fds=list((proc/"fd").iterdir())
+        except OSError:continue
+        for fd in fds:
+            try:target=os.readlink(fd)
+            except OSError:continue
+            if not target.startswith("socket:[") or not target.endswith("]"):continue
+            inode=target[8:-1]
+            if inode in valid:
+                found[inode]={"pid":int(proc.name),"comm":comm,
+                              "identity":"EXACT_PROC_FD_SOCKET_INODE"}
+    return found
+
 def _read(path):
     try:return pathlib.Path(path).read_text(encoding="ascii")
     except (OSError,UnicodeError):return None
 
-def snapshot(sock):
+def snapshot(sock, include_raw_owners=False):
     try:actual=sock.getsockopt(__import__("socket").SOL_SOCKET,__import__("socket").SO_RCVBUF)
     except OSError:actual=None
     result={"scope":"BOUND_UDP_GENERATOR_RECEIVER_SOCKET",
@@ -70,6 +96,7 @@ def snapshot(sock):
             "linux_guest_rmem_max_bytes":None,
             "linux_guest_rmem_default_bytes":None,
             "linux_raw_socket_snapshot":None,
+            "linux_raw_socket_owners":None,
             "linux_raw_socket_scope":"WSL_GUEST_GLOBAL_AF_INET_RAW_NOT_ONE_PRODUCT_INODE"}
     if sys.platform!="linux":return result
     try:inode=os.fstat(sock.fileno()).st_ino
@@ -81,6 +108,9 @@ def snapshot(sock):
         result["linux_socket_rx_queue_bytes"]=row["rx_queue_bytes"]
     raw=_read("/proc/net/raw")
     result["linux_raw_socket_snapshot"]=parse_linux_raw_sockets(raw) if raw is not None else None
+    if include_raw_owners and result["linux_raw_socket_snapshot"] is not None:
+        result["linux_raw_socket_owners"]=raw_socket_product_owners(
+            result["linux_raw_socket_snapshot"])
     raw=_read("/proc/net/snmp")
     mib=parse_udp_mib(raw) if raw else {}
     result["linux_guest_global_udp_rcvbuf_errors"]=mib.get("RcvbufErrors")

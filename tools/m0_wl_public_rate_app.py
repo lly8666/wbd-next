@@ -207,7 +207,7 @@ while True:
             time.sleep(0)
     else:
         time.sleep(.0008)
-socket_end=udp_socket_probe(sock) if socket_start is not None else None
+socket_end=udp_socket_probe(sock,include_raw_owners=True) if socket_start is not None else None
 sock.close()
 end=time.monotonic()
 cpu_seconds=time.process_time()-cpu_start
