@@ -76,6 +76,10 @@ jobs:
               hash,name=line.split(maxsplit=1)
               assert hashlib.sha256((root/name.strip().removeprefix("*")).read_bytes()).hexdigest()==hash
           PY
+          # actions/download-artifact normalizes file modes. Restore
+          # executable bits after BYTE-HASH verification, before native
+          # original-Go client/server launch. W168 established this step.
+          chmod +x native-bundle/wbd-v4-client native-bundle/wbd-v4-server
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
           test -c /dev/net/tun
