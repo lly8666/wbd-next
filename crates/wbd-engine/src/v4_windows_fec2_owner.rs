@@ -901,7 +901,7 @@ mod tests{
         {
             let mut e=r.entries[&h].lock().unwrap();
             m2_arm_entry(&mut e,ep,991,99).unwrap();
-            for i in 0..(MAX_M2_FROZEN+4) {
+            for i in 0..(MAX_M2_FIXED_FROZEN+4) {
                 let mut out=[0u8;2048];
                 let (n,seq,pn)=v3_seal_entry(
                     &mut e,ep,991,99,&data((i%250) as u8),&mut out)
@@ -909,10 +909,10 @@ mod tests{
                 let cached=m2_kernel_firstsend_entry(
                     &mut e,ep,991,99,pn,seq,n,1)
                     .expect("actual NPF copy must not fail due to repair-cache cap");
-                assert!(cached as usize<=MAX_M2_FROZEN);
+                assert!(cached as usize<=MAX_M2_FIXED_FROZEN);
             }
             assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),
-                MAX_M2_FROZEN);
+                MAX_M2_FIXED_FROZEN);
             assert!(e.m2.as_ref().unwrap().pending.is_empty());
         }
     }

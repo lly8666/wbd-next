@@ -38,7 +38,8 @@ const MAX_SESSIONS:usize=16;
 const MAX_AUTHENTICATED_KIND1:usize=32;
 // Original M1 arena has 64 slots: hold at most 48 DATA shadows + one
 // pending first-send while leaving room for RX and authentic control.
-const MAX_M2_FROZEN:usize=24_576; // bounded detached v3 repair snapshots; first-send M1 slabs freed
+const MAX_M2_FROZEN:usize=24_576; // Normal/off independent snapshots only
+const MAX_M2_FIXED_FROZEN:usize=1536; // preserve existing Fixed FEC arena-backed shadow and tests
 const M2_HARD_EXPIRY_NS:u64=2_000_000_000;
 const MAX_EARLY:u32=32;
 const PH_PREPARED:u32=1;
@@ -112,9 +113,7 @@ fn win_v3_pps_permit(counter:&std::sync::atomic::AtomicU64,
         (count<max_packets).then_some((epoch<<32)|(count+1))
     }).is_ok()
 }
-fn win_v3_admit_shadow(pn:u64,lane:wbd_types::LaneKey,now:MonoNs)->bool {
-    static ADMISSIONS:std::sync::atomic::AtomicU64=
-        std::sync::atomic::AtomicU64::new(0);
+fn win_v3_sample(pn:u64,lane:wbd_types::LaneKey)->bool {
     let key=pn^((lane.tunnel.slot as u64)<<48)
         ^((lane.tunnel.generation as u64)<<32)
         ^((lane.slot as u64)<<16)^(lane.generation as u64);
@@ -122,7 +121,12 @@ fn win_v3_admit_shadow(pn:u64,lane:wbd_types::LaneKey,now:MonoNs)->bool {
     x=(x^(x>>30)).wrapping_mul(0xbf58476d1ce4e5b9);
     x=(x^(x>>27)).wrapping_mul(0x94d049bb133111eb);
     x^=x>>31;
-    x&1==0 && win_v3_pps_permit(&ADMISSIONS,now,32_768)
+    x&1==0
+}
+fn win_v3_admit_shadow(pn:u64,lane:wbd_types::LaneKey,now:MonoNs)->bool {
+    static ADMISSIONS:std::sync::atomic::AtomicU64=
+        std::sync::atomic::AtomicU64::new(0);
+    win_v3_sample(pn,lane) && win_v3_pps_permit(&ADMISSIONS,now,32_768)
 }
 fn win_v3_send_pps_permit(now:MonoNs)->bool {
     static REPAIRS:std::sync::atomic::AtomicU64=
@@ -162,7 +166,8 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
     // policy, not pre-freeze PTO/RACK blind two-repair retries. The verified
     // original sender holds at most 24,576 separately charged immutable snapshots.
     let mut shadow=ReceiptState::new(lane,ReceiptConfig{
-        max_shadow_entries:MAX_M2_FROZEN,pto_ns:810_000_000,
+        max_shadow_entries:if e.feature7{MAX_M2_FIXED_FROZEN}else{MAX_M2_FROZEN},
+        pto_ns:810_000_000,
         reorder_window_ns:20_000_000,
     }).map_err(|_|INVALID)?;
     shadow.enable_adaptive_timing(600_000_000,50_000_000)
@@ -368,7 +373,14 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     // retention is optional under v3, not an ACK window or DATA credit.
     // Keep a bounded immutable shadow while there is room; once saturated,
     // release only the optional copy, never reject accepted fresh traffic.
-    if m.shadow.outstanding()<MAX_M2_FROZEN &&
+    if e.feature7 {
+        // Fixed/Auto still uses the historical 1536-slot original M1
+        // contract. This Normal/off-only opportunity repair must not
+        // silently change Fixed FEC protected regression semantics.
+        if m.shadow.outstanding()<MAX_M2_FIXED_FROZEN {
+            m.shadow.on_sent_adaptive(frozen,now).map_err(|_|BAD_STAGE)?;
+        }
+    }else if m.shadow.outstanding()<MAX_M2_FROZEN &&
         win_v3_admit_shadow(pn,m.route.outbound_lane(),now) {
         // Linux v3 exact frozen-record detached repair snapshot:
         // returned first-send M1 loan is never pinned through an RTT.
@@ -1936,6 +1948,10 @@ mod tests {
         let mut wire=[0u8;2048];
         let (size,seq,pn)=v3_seal_one(
             &r,client,epoch,71,91,&ipv4,&mut wire).unwrap();
+        let selected={
+            let e=r.entries[&client].lock().unwrap();
+            usize::from(win_v3_sample(pn,e.m2.as_ref().unwrap().route.outbound_lane()))
+        };
         {
             let e=r.entries[&client].lock().unwrap();
             let m=e.m2.as_ref().unwrap();
@@ -1948,10 +1964,10 @@ mod tests {
             assert_eq!(m2_kernel_firstsend_entry(
                 &mut e,epoch,71,91,pn,seq,size+1,1),Err(INVALID));
             assert_eq!(m2_kernel_firstsend_entry(
-                &mut e,epoch,71,91,pn,seq,size,1),Ok(1));
+                &mut e,epoch,71,91,pn,seq,size,1),Ok(selected as u32));
             assert_eq!(m2_kernel_firstsend_entry(
                 &mut e,epoch,71,91,pn,seq,size,1),Err(INVALID));
-            assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),1);
+            assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),selected);
         }
         // TCP presentation ACK never enters this recovery state.
         let mut bitmap=[0u8;32];bitmap[0]=1;
@@ -1982,7 +1998,7 @@ mod tests {
         assert_eq!(v5_open_record_one(&r,client,epoch,71,91,rseq,
             &tamper,&mut plain),Err(INVALID));
         assert_eq!(r.entries[&client].lock().unwrap()
-            .m2.as_ref().unwrap().shadow.outstanding(),1);
+            .m2.as_ref().unwrap().shadow.outstanding(),selected);
         assert_eq!(v5_open_record_one(&r,client,epoch,71,91,rseq,
             &rwire,&mut plain),Ok((0,2,0)));
         assert_eq!(r.entries[&client].lock().unwrap()
