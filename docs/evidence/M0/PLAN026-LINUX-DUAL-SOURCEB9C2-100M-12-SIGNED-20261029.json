@@ -1,0 +1,728 @@
+{
+  "schema_version": 1,
+  "source_sha": "b9c2c1707c917816c6d615a5283c9ea2329ee6b5",
+  "product_code_change_sha": "c58968619f143a9de1a0bf8e749add57a3121485",
+  "action_run_id": 40733603221,
+  "product": "real original Go TLS Linux client+server Rust M4 raw/TUN; original immutable ciphertext; 1.2s bounded minimum expiry; 1 repair max",
+  "platform": "Ubuntu 24.04 x86_64 independent owned network namespaces, tc netem true both directions",
+  "scope": "100Mbps each, 1/5/10/30pct true loss both sides, 50/150/300ms one-way each, 60s measurement plus warmup/drain, UDP96/288/1060/1200B, source-locked hashes",
+  "status": "10/12 PASS_FULL_NATIVE, 2/12 INCONCLUSIVE_CAPACITY_PACING_CATCHUP",
+  "rows": [
+    {
+      "scenario": "wl-outer-repair-100m-150ms-loss1-60s",
+      "job_id": 122978086496,
+      "exact_harness_result": "PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR",
+      "original_result": "PASS_SCOPED_OBSERVATION",
+      "offered_mbps": {
+        "c2s": {
+          "offered_mbps": 100.00008,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 99.49283573333334
+        },
+        "s2c": {
+          "offered_mbps": 100.00008,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 99.500408
+        }
+      },
+      "raw_original_m4_outer_wire": {
+        "client": {
+          "F": 901235841,
+          "R_F": 0.004937488943030174,
+          "R_accepted": 4449842,
+          "R_over_F_plus_R": 0.004913229924602882,
+          "R_over_business_target_proxy": 0.005476728615384616,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        },
+        "server": {
+          "F": 901235841,
+          "R_F": 0.005119888479890138,
+          "R_accepted": 4614227,
+          "R_over_F_plus_R": 0.0050938087471667556,
+          "R_over_business_target_proxy": 0.005679048615384616,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        }
+      },
+      "netem_real_drops": {
+        "client": 8582,
+        "server": 8700
+      },
+      "whole_product_cpu_s": {
+        "client": 22.45,
+        "server": 22.46
+      },
+      "peak_rss_bytes": {
+        "client": 41893888,
+        "server": 41971712
+      },
+      "owned_cleanup": {
+        "owned_namespaces_absent": true
+      },
+      "limits": [],
+      "blockers": []
+    },
+    {
+      "scenario": "wl-outer-repair-100m-150ms-loss10-60s",
+      "job_id": 122978090646,
+      "exact_harness_result": "PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR",
+      "original_result": "PASS_SCOPED_OBSERVATION",
+      "offered_mbps": {
+        "c2s": {
+          "offered_mbps": 100.00038133333332,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 94.45444533333333
+        },
+        "s2c": {
+          "offered_mbps": 99.99940266666667,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 94.45609013333333
+        }
+      },
+      "raw_original_m4_outer_wire": {
+        "client": {
+          "F": 901226056,
+          "R_F": 0.049434317509346404,
+          "R_accepted": 44549809,
+          "R_over_F_plus_R": 0.047105680350410434,
+          "R_over_business_target_proxy": 0.05483260923076923,
+          "R_uncertain_charged": 1686,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        },
+        "server": {
+          "F": 901217126,
+          "R_F": 0.04952498872064266,
+          "R_accepted": 44632768,
+          "R_over_F_plus_R": 0.047188003385239055,
+          "R_over_business_target_proxy": 0.05493263753846154,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        }
+      },
+      "netem_real_drops": {
+        "client": 90895,
+        "server": 90580
+      },
+      "whole_product_cpu_s": {
+        "client": 34.36,
+        "server": 34.34
+      },
+      "peak_rss_bytes": {
+        "client": 41750528,
+        "server": 42102784
+      },
+      "owned_cleanup": {
+        "owned_namespaces_absent": true
+      },
+      "limits": [],
+      "blockers": []
+    },
+    {
+      "scenario": "wl-outer-repair-100m-150ms-loss30-60s",
+      "job_id": 122978090855,
+      "exact_harness_result": "PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR",
+      "original_result": "PASS_SCOPED_OBSERVATION",
+      "offered_mbps": {
+        "c2s": {
+          "offered_mbps": 99.99988266666668,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 75.93523093333334
+        },
+        "s2c": {
+          "offered_mbps": 100.00009866666667,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 76.05542453333334
+        }
+      },
+      "raw_original_m4_outer_wire": {
+        "client": {
+          "F": 901191683,
+          "R_F": 0.08779747915183544,
+          "R_accepted": 79120812,
+          "R_over_F_plus_R": 0.08071123608439676,
+          "R_over_business_target_proxy": 0.0973813636923077,
+          "R_uncertain_charged": 1546,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        },
+        "server": {
+          "F": 901196879,
+          "R_F": 0.088354969769042,
+          "R_accepted": 79625223,
+          "R_over_F_plus_R": 0.08118212552269749,
+          "R_over_business_target_proxy": 0.09800027446153846,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        }
+      },
+      "netem_real_drops": {
+        "client": 285777,
+        "server": 285068
+      },
+      "whole_product_cpu_s": {
+        "client": 32.459999999999994,
+        "server": 32.47
+      },
+      "peak_rss_bytes": {
+        "client": 42549248,
+        "server": 42430464
+      },
+      "owned_cleanup": {
+        "owned_namespaces_absent": true
+      },
+      "limits": [],
+      "blockers": []
+    },
+    {
+      "scenario": "wl-outer-repair-100m-150ms-loss5-60s",
+      "job_id": 122978089661,
+      "exact_harness_result": "PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR",
+      "original_result": "PASS_SCOPED_OBSERVATION",
+      "offered_mbps": {
+        "c2s": {
+          "offered_mbps": 100.00106933333333,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 97.3752
+        },
+        "s2c": {
+          "offered_mbps": 100.001088,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 97.37403306666667
+        }
+      },
+      "raw_original_m4_outer_wire": {
+        "client": {
+          "F": 901231114,
+          "R_F": 0.024678721866675368,
+          "R_accepted": 22241232,
+          "R_over_F_plus_R": 0.024084350870210033,
+          "R_over_business_target_proxy": 0.027373824,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        },
+        "server": {
+          "F": 901232576,
+          "R_F": 0.02478120031915047,
+          "R_accepted": 22333625,
+          "R_over_F_plus_R": 0.024181942751714015,
+          "R_over_business_target_proxy": 0.027487538461538463,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        }
+      },
+      "netem_real_drops": {
+        "client": 44010,
+        "server": 44061
+      },
+      "whole_product_cpu_s": {
+        "client": 31.990000000000002,
+        "server": 32.02
+      },
+      "peak_rss_bytes": {
+        "client": 46325760,
+        "server": 46665728
+      },
+      "owned_cleanup": {
+        "owned_namespaces_absent": true
+      },
+      "limits": [],
+      "blockers": []
+    },
+    {
+      "scenario": "wl-outer-repair-100m-300ms-loss1-60s",
+      "job_id": 122978089355,
+      "exact_harness_result": "PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR",
+      "original_result": "PASS_SCOPED_OBSERVATION",
+      "offered_mbps": {
+        "c2s": {
+          "offered_mbps": 100.000664,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 99.49551573333333
+        },
+        "s2c": {
+          "offered_mbps": 100.00078666666667,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 99.4758
+        }
+      },
+      "raw_original_m4_outer_wire": {
+        "client": {
+          "F": 901237303,
+          "R_F": 0.004879789135847609,
+          "R_accepted": 4397848,
+          "R_over_F_plus_R": 0.004856092428771021,
+          "R_over_business_target_proxy": 0.005412736,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        },
+        "server": {
+          "F": 901236004,
+          "R_F": 0.004812754906316415,
+          "R_accepted": 4337428,
+          "R_over_F_plus_R": 0.004789703238555258,
+          "R_over_business_target_proxy": 0.005338372923076923,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        }
+      },
+      "netem_real_drops": {
+        "client": 8479,
+        "server": 8623
+      },
+      "whole_product_cpu_s": {
+        "client": 33.06,
+        "server": 32.95
+      },
+      "peak_rss_bytes": {
+        "client": 44396544,
+        "server": 44331008
+      },
+      "owned_cleanup": {
+        "owned_namespaces_absent": true
+      },
+      "limits": [],
+      "blockers": []
+    },
+    {
+      "scenario": "wl-outer-repair-100m-300ms-loss10-60s",
+      "job_id": 122978090737,
+      "exact_harness_result": "PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR",
+      "original_result": "PASS_SCOPED_OBSERVATION",
+      "offered_mbps": {
+        "c2s": {
+          "offered_mbps": 100.00024,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 94.46609120000001
+        },
+        "s2c": {
+          "offered_mbps": 99.99849866666668,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 94.41512533333332
+        }
+      },
+      "raw_original_m4_outer_wire": {
+        "client": {
+          "F": 901225730,
+          "R_F": 0.04889288169790714,
+          "R_accepted": 44063523,
+          "R_over_F_plus_R": 0.04661379875012712,
+          "R_over_business_target_proxy": 0.05423202830769231,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        },
+        "server": {
+          "F": 901214859,
+          "R_F": 0.048947548478003956,
+          "R_accepted": 44112258,
+          "R_over_F_plus_R": 0.046663485270570106,
+          "R_over_business_target_proxy": 0.054292009846153844,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        }
+      },
+      "netem_real_drops": {
+        "client": 90597,
+        "server": 90912
+      },
+      "whole_product_cpu_s": {
+        "client": 23.509999999999998,
+        "server": 23.5
+      },
+      "peak_rss_bytes": {
+        "client": 44658688,
+        "server": 44851200
+      },
+      "owned_cleanup": {
+        "owned_namespaces_absent": true
+      },
+      "limits": [],
+      "blockers": []
+    },
+    {
+      "scenario": "wl-outer-repair-100m-300ms-loss30-60s",
+      "job_id": 122978090997,
+      "exact_harness_result": "PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR",
+      "original_result": "PASS_SCOPED_OBSERVATION",
+      "offered_mbps": {
+        "c2s": {
+          "offered_mbps": 99.99849866666668,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 76.1427968
+        },
+        "s2c": {
+          "offered_mbps": 99.99977866666667,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 76.213
+        }
+      },
+      "raw_original_m4_outer_wire": {
+        "client": {
+          "F": 901185193,
+          "R_F": 0.08912076188539862,
+          "R_accepted": 80314311,
+          "R_over_F_plus_R": 0.08182817278326408,
+          "R_over_business_target_proxy": 0.09884838276923077,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        },
+        "server": {
+          "F": 901193955,
+          "R_F": 0.08911579638813712,
+          "R_accepted": 80310617,
+          "R_over_F_plus_R": 0.08182398665382885,
+          "R_over_business_target_proxy": 0.0988438363076923,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        }
+      },
+      "netem_real_drops": {
+        "client": 286250,
+        "server": 285513
+      },
+      "whole_product_cpu_s": {
+        "client": 21.89,
+        "server": 21.93
+      },
+      "peak_rss_bytes": {
+        "client": 44580864,
+        "server": 44855296
+      },
+      "owned_cleanup": {
+        "owned_namespaces_absent": true
+      },
+      "limits": [],
+      "blockers": []
+    },
+    {
+      "scenario": "wl-outer-repair-100m-300ms-loss5-60s",
+      "job_id": 122978090181,
+      "exact_harness_result": "PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR",
+      "original_result": "PASS_SCOPED_OBSERVATION",
+      "offered_mbps": {
+        "c2s": {
+          "offered_mbps": 100.00025866666667,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 97.3315968
+        },
+        "s2c": {
+          "offered_mbps": 100.00009866666667,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 97.37429386666666
+        }
+      },
+      "raw_original_m4_outer_wire": {
+        "client": {
+          "F": 901235016,
+          "R_F": 0.02415901137156881,
+          "R_accepted": 21770489,
+          "R_over_F_plus_R": 0.02358912151660386,
+          "R_over_business_target_proxy": 0.026797473230769232,
+          "R_uncertain_charged": 2458,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        },
+        "server": {
+          "F": 901232902,
+          "R_F": 0.024776929415743856,
+          "R_accepted": 22329784,
+          "R_over_F_plus_R": 0.02417787589136099,
+          "R_over_business_target_proxy": 0.02748281107692308,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        }
+      },
+      "netem_real_drops": {
+        "client": 43947,
+        "server": 44040
+      },
+      "whole_product_cpu_s": {
+        "client": 33,
+        "server": 33.150000000000006
+      },
+      "peak_rss_bytes": {
+        "client": 44515328,
+        "server": 44593152
+      },
+      "owned_cleanup": {
+        "owned_namespaces_absent": true
+      },
+      "limits": [],
+      "blockers": []
+    },
+    {
+      "scenario": "wl-outer-repair-100m-50ms-loss1-60s",
+      "job_id": 122978086454,
+      "exact_harness_result": "FAIL_OR_INCONCLUSIVE",
+      "original_result": "INCONCLUSIVE",
+      "offered_mbps": {
+        "c2s": {
+          "offered_mbps": 99.999776,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 99.51218613333334
+        },
+        "s2c": {
+          "offered_mbps": 99.9996,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 99.50166879999999
+        }
+      },
+      "raw_original_m4_outer_wire": {
+        "client": {
+          "F": 900186667,
+          "R_F": 0.004966323279258256,
+          "R_accepted": 4470618,
+          "R_over_F_plus_R": 0.00494178079823897,
+          "R_over_business_target_proxy": 0.005502299076923077,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        },
+        "server": {
+          "F": 900540509,
+          "R_F": 0.0049128461804709336,
+          "R_accepted": 4422918,
+          "R_over_F_plus_R": 0.00488882811991503,
+          "R_over_business_target_proxy": 0.005445190153846154,
+          "R_uncertain_charged": 1299,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        }
+      },
+      "netem_real_drops": {
+        "client": 8419,
+        "server": 8529
+      },
+      "whole_product_cpu_s": {
+        "client": 32.33,
+        "server": 32.35
+      },
+      "peak_rss_bytes": {
+        "client": 40255488,
+        "server": 40136704
+      },
+      "owned_cleanup": {
+        "owned_namespaces_absent": true
+      },
+      "limits": [
+        "client: {\"pacing_catchup_limited\": 1}"
+      ],
+      "blockers": [
+        "ORIGINAL_PRODUCT_NOT_FULL_PASS"
+      ]
+    },
+    {
+      "scenario": "wl-outer-repair-100m-50ms-loss10-60s",
+      "job_id": 122978090292,
+      "exact_harness_result": "PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR",
+      "original_result": "PASS_SCOPED_OBSERVATION",
+      "offered_mbps": {
+        "c2s": {
+          "offered_mbps": 100.00032533333332,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 94.452264
+        },
+        "s2c": {
+          "offered_mbps": 100.00006133333333,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 94.4890432
+        }
+      },
+      "raw_original_m4_outer_wire": {
+        "client": {
+          "F": 901223463,
+          "R_F": 0.04997809849520085,
+          "R_accepted": 45041435,
+          "R_over_F_plus_R": 0.04759918189420147,
+          "R_over_business_target_proxy": 0.055435612307692304,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        },
+        "server": {
+          "F": 901224762,
+          "R_F": 0.04984438499038933,
+          "R_accepted": 44919695,
+          "R_over_F_plus_R": 0.04747787929622125,
+          "R_over_business_target_proxy": 0.05528737723076923,
+          "R_uncertain_charged": 1299,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        }
+      },
+      "netem_real_drops": {
+        "client": 91389,
+        "server": 90820
+      },
+      "whole_product_cpu_s": {
+        "client": 22.490000000000002,
+        "server": 22.529999999999998
+      },
+      "peak_rss_bytes": {
+        "client": 40775680,
+        "server": 40591360
+      },
+      "owned_cleanup": {
+        "owned_namespaces_absent": true
+      },
+      "limits": [],
+      "blockers": []
+    },
+    {
+      "scenario": "wl-outer-repair-100m-50ms-loss30-60s",
+      "job_id": 122978090623,
+      "exact_harness_result": "PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR",
+      "original_result": "PASS_SCOPED_OBSERVATION",
+      "offered_mbps": {
+        "c2s": {
+          "offered_mbps": 100.00094666666668,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 76.178408
+        },
+        "s2c": {
+          "offered_mbps": 100.00009866666667,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 76.1556976
+        }
+      },
+      "raw_original_m4_outer_wire": {
+        "client": {
+          "F": 901194271,
+          "R_F": 0.0883909391829678,
+          "R_accepted": 79654950,
+          "R_over_F_plus_R": 0.08121249084388833,
+          "R_over_business_target_proxy": 0.09803988676923077,
+          "R_uncertain_charged": 2458,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        },
+        "server": {
+          "F": 901194923,
+          "R_F": 0.08883105192548893,
+          "R_accepted": 80052407,
+          "R_over_F_plus_R": 0.08158387085709953,
+          "R_over_business_target_proxy": 0.09852811446153846,
+          "R_uncertain_charged": 1686,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        }
+      },
+      "netem_real_drops": {
+        "client": 284807,
+        "server": 284497
+      },
+      "whole_product_cpu_s": {
+        "client": 32.51,
+        "server": 32.419999999999995
+      },
+      "peak_rss_bytes": {
+        "client": 40517632,
+        "server": 40660992
+      },
+      "owned_cleanup": {
+        "owned_namespaces_absent": true
+      },
+      "limits": [],
+      "blockers": []
+    },
+    {
+      "scenario": "wl-outer-repair-100m-50ms-loss5-60s",
+      "job_id": 122978089683,
+      "exact_harness_result": "FAIL_OR_INCONCLUSIVE",
+      "original_result": "INCONCLUSIVE",
+      "offered_mbps": {
+        "c2s": {
+          "offered_mbps": 99.99750133333333,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 97.38426986666666
+        },
+        "s2c": {
+          "offered_mbps": 99.957688,
+          "protocols": [
+            "udp"
+          ],
+          "unique_first_delivered_mbps": 97.32409706666667
+        }
+      },
+      "raw_original_m4_outer_wire": {
+        "client": {
+          "F": 901208053,
+          "R_F": 0.02489783566104019,
+          "R_accepted": 22438130,
+          "R_over_F_plus_R": 0.02429299272056863,
+          "R_over_business_target_proxy": 0.02761616,
+          "R_uncertain_charged": 0,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        },
+        "server": {
+          "F": 900874814,
+          "R_F": 0.025055304742929576,
+          "R_accepted": 22570394,
+          "R_over_F_plus_R": 0.024442880912862664,
+          "R_over_business_target_proxy": 0.02778054523076923,
+          "R_uncertain_charged": 1299,
+          "accounting_scope": "real original M4 IP wire incl TCP/IP headers, not L2 or physical C"
+        }
+      },
+      "netem_real_drops": {
+        "client": 44321,
+        "server": 44277
+      },
+      "whole_product_cpu_s": {
+        "client": 33.75,
+        "server": 33.74
+      },
+      "peak_rss_bytes": {
+        "client": 40124416,
+        "server": 39940096
+      },
+      "owned_cleanup": {
+        "owned_namespaces_absent": true
+      },
+      "limits": [
+        "server: {\"pacing_catchup_limited\": 1}"
+      ],
+      "blockers": [
+        "ORIGINAL_PRODUCT_NOT_FULL_PASS"
+      ]
+    }
+  ]
+}
