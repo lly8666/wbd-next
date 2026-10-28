@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 322,
-  "checkpoint_sha": "85072837b800cdab1c78cb78afc9fa0eea3c1bb4",
+  "sequence": 323,
+  "checkpoint_sha": "113b2e50da90b094b3be10083411f551cd947693",
   "progress": "partial",
   "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
-  "current_task": "PLAN026 Windows Normal/off Rust two-worker NPF/Wintun owner (Go TLS/OS cold only): SOURCE85072837 adds M2 exact deadline-driven TX Wait (replaces recurring 20ms poll, drops per-RX last_rx_ns Atomic), native pure-ACK direct final L2 frame construction, and opt-in diagnostic-only Rust win_native_lock_profile sampling 1/64 TX and RX Entry lock wait (no hot overhead in default production). Existing Windows SetThreadDescription per-worker naming preserved. Normal ABI/wire unchanged, existing Fixed/Auto/Game still Go steady.",
-  "why_now": "User wants actual code progress, CPU-minimal steady Windows and no Normal/off fallback. We published Rust native two workers, single-lock8 batch and actual Accepted ACK snapshot, then obtained two independent exact-source signed two-OS functional PASS runs.",
+  "current_task": "PLAN026 current-source Normal/off Windows WL V2 performance harness integrated: 150Mbps per direction, 300ms one-way, 0% injected loss, 60s mixed UDP. CI-only Go steady vs Rust NativeOwner A/B uses one Windows EXE/Rust DLL/driver and independent original TLS, Wintun/Npcap + WSL2 Linux TUN and owned Stop sessions. Feature defaults/other modes unchanged. SOURCE113b2e50 pinned Go overlay blob in assembly manifest.",
+  "why_now": "User explicitly authorized repo write and requested immediate real A/B plus permanent documentation for future Windows agents; commit d7223fc7, manifest repair 113b2e50. Reusable harness entry docs/testing/WL_PERF_HARNESS_V2.md linked from START_HERE and M0 prompt.",
   "done_when": "Normal/off newest source exact N0 10Mbps 300ms one-way 240s with old produced0 ready4 regression and same VM old-Go vs new Rust CPU-seconds/GB, RSS, idle wakes and p99 first-delivery A/B. Migrate Fixed/Auto/Game/Health Keepalive and Make-Before-Break dynamic lane native owner; remove remaining Go packet pump only after modes' real functional/perf proof.",
-  "next_action": "Check source85072837 P200 exact Action40656170585 after Windows original-Go/Linux build and native-public-two-os; inspect true WL_P200 measurement, actual Windows Rust lock profile marker tx/rx mean/max sampled 1/64, per-thread CPU and process RSS, genuine Kernel tc 30pct loss and owned Stop. If new M2 deadline regresses feedback/repair or busy wake, fix FIRST signal. If diagnostic shows shared Entry lock > material threshold under 250Mbps offered, split directional TX/RX owner only after preserving common M1 PN/feedback/epoch authority, else retain one mutex. Copy reduction only in ACK-only path, DATA Wintun/M1/NPF buffers not optimized without A/B. Then one Normal-only default feature-less real network regression and same-VM old Go vs Rust CPU-seconds/GB A/B. Fixed/Auto/Game/health/lane not migrated yet; no deletion of used Go modules.",
+  "next_action": "Check exact SOURCE113b2e50 Windows/Linux Action40666215474: cheap workflow/assembly and Linux Rust tests PASS, Windows Go/Rust compiles IN_PROGRESS at H323. If native-public-two-os fails, collect first failing step/log and per-leg wl-ab-v2/report.json and owned Stop state. Do not claim A/B results until both 60s legs and same-VM CPU/driver tc real artifacts exist. Older Action40666043646 failed manifest check (fixed on SOURCE113b2e50), do not rerun old SHA. If V2 source fails patch only relevant harness/assembly/protection and rerun one scene. Remaining Rust native Fixed/Auto/Game/Health/Lane migration as registry.",
   "unverified": true,
-  "last_tested_source": "f93f7fe7b4627da30b23cbcbfeb06f50840197a2",
+  "last_tested_source": "85072837b800cdab1c78cb78afc9fa0eea3c1bb4",
   "evidence_refs": [
     "docs/evidence/M0/PLAN026-H321-f93-Rust-NativeOwner-real-Windows-Linux-PASS.json"
   ],
@@ -25,8 +25,10 @@
     "docs/devlog/M0/20261028-PLAN026-H321-native-thread-CPU-ownership.md",
     "docs/evidence/M0/PLAN026-P200-source0d09-Windows-Linux-capacity-limited-20261028.json",
     "docs/devlog/M0/20261028-PLAN026-H322-P200-generator-capacity-first-fail.md",
-    "docs/devlog/M0/20261028-PLAN026-H324-P200-feature-capacity-scope.md"
+    "docs/devlog/M0/20261028-PLAN026-H324-P200-feature-capacity-scope.md",
+    "docs/testing/WL_PERF_HARNESS_V2.md",
+    "docs/devlog/M0/20261028-PLAN026-WL-PERF-V2-SAME-VM-AB.md"
   ],
   "open_requests": [],
-  "partial_summary": "Already-verified previous sources: f93f7fe7 Normal Rust real signed Wintun/Npcap UDP/TCP and owned Stop PASS Action40647191693; sourcea123 N0 300ms two directions 0% 10Mbps 240s PASS Action40648269441. SOURCEc835 P200 real 200ms each direction/30pct tc/250mbit 60s, after Python generator optimization Windows249.0087Mbps and Linux198.2698Mbps injected, Windows117.3942Mbps/Linux108.3575Mbps delivered; both genuine Stop PASS but overall CAPACITY_LIMITED, NOT 250Mbps PASS. Other concurrent source775 Windows OS thread description and receive-slab optimizations preserved by merged SOURCE85072837. Source850 Windows Go, Windows Rust and Linux Rust unit/gov/feature checks PASS; original-Go/Linux build and stress owner test still running (Action40656170585 at last observation). New M2 deadlines correct scheduler APIs: m.feedback.next_deadline()/m.shadow.next_deadline(). Lock wait diag only [plan026-probe-locks] build, not yet measured. Remaining business copies/owner lock ownership split not done pending quantitative evidence."
+  "partial_summary": "SOURCE85072837 real Windows/Linux Normal/off functional/owned Stop PASS under Action40656170585; 250Mbps/30% P200 offered Linux below 90% and is CAPACITY_LIMITED, not product throughput PASS. Earlier f93 true Normal function PASS; a123 original 240s N0 source PASS. Current d7223fc7 integrated V2 scenario parser, real bidirectional kernel tc generator, Go steady AB opt-in, two-leg same VM runner, SHA/CPU/RSS/first-delivery reports, source-binary artifact output and agent docs. First Action40666043646 cheap tests PASS but failed original Go overlay assembly manifest SHA; fixed 113b2e50; new Action40666215474 cheap/assembly PASS and Linux Rust unit PASS, Windows compile/unit still in progress as of 2026-10-28T09:43Z; no real current-source A/B result yet. A baseline is current-source retained Go pump, not an earlier precompiled released Go EXE."
 }
