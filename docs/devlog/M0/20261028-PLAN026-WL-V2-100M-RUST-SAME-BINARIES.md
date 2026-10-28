@@ -15,3 +15,17 @@ One explicit main push tag `[plan026-rust-reuse-100]` schedules only Normal/off 
 ```feature-impact
 {"kind":"none","ids":[],"reason":"One source-locked Python 100Mbps Rust-only measurement scenario, workflow tag selection and negative tests; no Rust compiled product source, production wire/protocol or runtime changes."}
 ```
+
+## Actual matched-configuration execution and interpretation
+
+SOURCE `73ab8199c471cfc25b155f588f3cfa7ebba06da2` [Actions 40677430821](https://github.com/lly8666/wbd-next/actions/runs/40677430821), artifact ID `12810718979`, ZIP SHA256 `f18c38077f1cbbb789e644cb4b1ed309aa739413bb55bd148e8b76635453f856`; actual scenario SHA `a09aa5cc9668515c3e6edfe91b2af2e421541c1ca7aac46e57baba02eb59c1a3`. Cheap workflow preflight SUCCESS; unchanged Windows Rust DLL/Go cold control EXE/Linux peer binaries SOURCE0543 SHA and driver/WSL2 gates PASS; prebuilt compile jobs SKIPPED. Real Rust Normal/off Windows↔WSL2 Linux UDP/TCP and owned Stop **PASS**, but strict 99.9% first-delivery gate **FAIL**.
+
+Both generators reached full 100Mbps offered: Windows **99.9732Mbps**, Linux **99.9998Mbps**. Windows→Linux sent **823,247** UDP app packets, Linux uniquely received **821,468**, **1,779 missing** (**99.7839%** first-delivered). Linux→Windows sent **823,462**, Windows uniquely received **823,462**, **0 missing** (**100%**). Both independent business UDP RTT p99 **609.000ms** Windows and **611.617ms** Linux on their respective local monotonic clocks (real RTT, NOT one-way). Both configured tc qdiscs **0 drops**, owned Stop BOTH PASS. Python generator CPU-s/65s: Windows51.1719, Linux42.9778, under one core each in this source, unlike Linux94%/65s at 150Mbps.
+
+Linux guest /proc/net/raw socket inode `9367` increased **1,800 kernel RX drops** during 60s+drain; two other raw sockets zero. The raw socket dropped at least once in **41** sampled seconds (1Hz), so never call this lossless even though much improved. Linux UDP fixture socket /proc/net/udp **zero drops**, guest UDP RcvbufErrors **zero**. Linux Rust raw observable `raw_observed=840222`, `raw_tuple=838896`, `data_unique=822725`, `tun_udp=822710`, `open_invalid=0`, no TUN delivery failure. Counts have different bounded window / control traffic, not exact conservation. Linux rmem_default212992B, max4194304B; no `SO_RCVBUF` product code change yet.
+
+Compare previous **150Mbps** *same compiled product but DIFFERENT VM* run40675314979: raw drops **162,785 → 1,800** (↓98.89%), Windows→Linux missing **175,620 → 1,779** (↓98.99%). This suggests a steep rate-dependent socket RX backlog / servicing threshold, but not a same-VM CPU benefit proof. It is inappropriate to claim Rust fixed, to equate configured netem 0% with application zero loss or to ascribe the raw socket inode to an exact PID without separate FD owner proof.
+
+Exact receipt: [100Mbps source-locked evidence](../../evidence/M0/PLAN026-WL-V2-100M-300MS-0LOSS-SOURCE73AB-REAL-RUST-20261028.json).
+
+**Next product experiment (not executed here):** narrow Linux `ScopedRawIpv4Rx::open` socket receive buffer request under explicit bound and effective `getsockopt` readback, preserving the auth-tuple BPF and actual runtime ownership/Stop. Also investigate high-PPS per-buffer `poll(0)` + `recvfrom` syscalls. Rebuild Rust Linux product once, then re-run the **same 100Mbps/300ms/0%/60s** with explicit socket drop + 99.9% business delivery gate; any claim of fix awaits that result.

@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task": "Rust NativeOwner 100Mbps lossless attempted capacity diagnosis",
+  "result": "FAIL_0PCT_TC_LOSS_FIRST_DELIVERY_BELOW_99_9PCT_RUST_FUNCTIONAL_AND_STOP_PASS",
+  "source_sha": "73ab8199c471cfc25b155f588f3cfa7ebba06da2",
+  "actual_compiled_rust_product_source_sha": "0543b805ca25d804ccd131be6686b0b99f61f80f",
+  "compiled_binary_reused_from_run": 40668581343,
+  "run_id": 40677430821,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40677430821",
+  "artifact": {
+    "id": 12810718979,
+    "name": "m0-wl-full-public-normal-direct",
+    "sha256": "f18c38077f1cbbb789e644cb4b1ed309aa739413bb55bd148e8b76635453f856"
+  },
+  "scenario": {
+    "path": "scenarios/wl-normal-100m-300ms-0loss-60s.json",
+    "schema_version": 1,
+    "scenario_id": "wl-normal-100m-300ms-0loss-60s",
+    "scenario_sha256": "a09aa5cc9668515c3e6edfe91b2af2e421541c1ca7aac46e57baba02eb59c1a3",
+    "duration_s": 60,
+    "warmup_s": 5,
+    "drain_s": 5,
+    "windows_to_linux_target_mbps": 100,
+    "linux_to_windows_target_mbps": 100,
+    "oneway_delay_ms": 300,
+    "configured_netem_loss_pct": 0,
+    "tc_rate_mbps": null,
+    "seed": 20261028,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 96,
+        "packets_weight": 10
+      },
+      {
+        "udp_payload_bytes": 288,
+        "packets_weight": 15
+      },
+      {
+        "udp_payload_bytes": 1060,
+        "packets_weight": 30
+      },
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 45
+      }
+    ]
+  },
+  "windows_to_linux": {
+    "offered_mbps": 99.9732,
+    "sent_packets": 823247,
+    "first_delivered_mbps": 99.7603,
+    "first_delivered_packets": 821468,
+    "first_delivery_fraction": 0.9978390446609583,
+    "missing_packets": 1779,
+    "raw_socket_drops": 1800,
+    "raw_socket_inode": "9367",
+    "raw_socket_drops_nonzero_seconds": 41,
+    "raw_socket_max_drops_in_1hz": 136,
+    "linux_udp_app_socket_drops": 0
+  },
+  "linux_to_windows": {
+    "offered_mbps": 99.9998,
+    "sent_packets": 823462,
+    "first_delivered_mbps": 99.9998,
+    "first_delivered_packets": 823462,
+    "first_delivery_fraction": 1,
+    "missing_packets": 0
+  },
+  "kernel": {
+    "netem_real_ifb_packets": 841850,
+    "netem_real_eth0_packets": 838546,
+    "tc_ifb_drops": 0,
+    "tc_eth0_drops": 0,
+    "tc_overlimits": 0,
+    "tc_requeues": 0,
+    "linux_raw_socket_inodes": {
+      "7916": {
+        "drops_delta": 0
+      },
+      "8553": {
+        "drops_delta": 0
+      },
+      "9367": {
+        "drops_delta": 1800
+      }
+    },
+    "linux_raw_socket_inode_pid_attribution": "NOT_INDEPENDENTLY_VERIFIED",
+    "linux_rmem_default_bytes": 212992,
+    "linux_rmem_max_bytes": 4194304,
+    "linux_own_udp_socket_effective_so_rcvbuf": 4194304,
+    "linux_own_udp_socket_drop_delta": 0,
+    "linux_guest_udp_rcvbuf_errors_delta": 0
+  },
+  "rust_linux_server_chain": {
+    "raw_observed": 840222,
+    "raw_tuple": 838896,
+    "data_unique": 822725,
+    "link_completed": 822725,
+    "tun_delivered": 822725,
+    "tun_udp": 822710,
+    "tun_failed": 0,
+    "replay_duplicate": 0,
+    "open_invalid": 0
+  },
+  "userspace": {
+    "windows_generator_cpu_s": 51.1719,
+    "windows_generator_pct_one_core": 78.726,
+    "linux_generator_cpu_s": 42.9778,
+    "linux_generator_pct_one_core": 66.119,
+    "windows_max_generator_loop_gap_ms": 16,
+    "linux_max_generator_loop_gap_ms": 34.964,
+    "business_udp_rtt_windows_p99_ms": 609,
+    "business_udp_rtt_linux_p99_ms": 611.617,
+    "oneway_p99": "NOT_MEASURED_UNCALIBRATED_CLOCKS"
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "both_os_real_udp_tcp": "PASS_ACTUAL_TWO_OS_KERNEL",
+  "signed_drivers": "TRUE_NPCAP_WINTUN",
+  "old_steady_go_ab": "NOT_RUN_USER_EXCLUDED",
+  "compared_to_150m_same_binary_different_host": {
+    "reference_source_sha": "775ce995036c2a581c445af9d649fdd8e6ce2478",
+    "reference_run_id": 40675314979,
+    "reference_app_missing_windows_to_linux": 175620,
+    "reference_raw_socket_drops": 162785,
+    "reference_linux_to_windows_app_missing": 25046,
+    "raw_socket_drops_reduction_fraction": 0.9889424701293117,
+    "windows_to_linux_app_missing_reduction_fraction": 0.989870174239836,
+    "interpretation": "Distinct GitHub-hosted Windows VMs; strong rate-associated diagnostic evidence, not a matched same-VM A/B performance improvement proof. Same compiled product SHA, declared packet mix/seed/delay/loss/duration unchanged, offered target 150->100."
+  },
+  "capacity_gates": {
+    "actual_offered_both_over_95pct": true,
+    "first_delivery_both_over_99_9pct": false,
+    "qualified": false
+  },
+  "next": "Linux ScopedRawIpv4Rx::open bounded SO_RCVBUF with getsockopt readback and controlled regression or isolate Rust raw syscall consumer; do not claim 0% path qualified at 100Mbps. Distinguish buffer from per-socket poll+recvfrom at high PPS, protect no-loss/Stop semantics."
+}
