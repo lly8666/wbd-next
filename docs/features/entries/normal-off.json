@@ -128,7 +128,8 @@
     "Linux 1% original-Go product source33ed Action40587653027 now source-locked native 512 offered/508 unique received/4 residual via non-stop-and-wait, both Stop PASS; old source33ed harness Action40566375977 FAIL remains. No equivalence with physical Windows or FEC2/Game loss tests.",
     "2026-10-28 PLAN026 新Normal/off直接转 Rust 两固定worker，无Go包FFI/Go数据泵作为正式候选；此代码尚未获Windows Rust/Go生产编译、真双端应用、N0 240s或同机CPU/首到A/B证据。旧已测SOURCE不是新路径PASS，Fixed/Auto/Game仍沿当前独立旧热路径待逐模式迁入同一个NativeOwner。",
     "2026-10-28 PLAN026 follow-up: new raw Rust NativeOwner Windows build previously blocked at E0502 in pure TCP ACK checksum; source patch separates checksum computation. Windows native Go ABI 192-byte V1 layout explicitly asserted in test. This is a build correction, not a Windows actual Npcap/Wintun or performance PASS.",
-    "PLAN026 authenticated TCP presentation ACK correction: Rust NativeOwner now records the ACK value actually included in a Npcap-accepted carrier; only when authenticated contiguous progress exceeds this value does it send a standalone ACK. Source changed on main but live Windows/Npcap/A-B still requires independent evidence."
+    "PLAN026 authenticated TCP presentation ACK correction: Rust NativeOwner now records the ACK value actually included in a Npcap-accepted carrier; only when authenticated contiguous progress exceeds this value does it send a standalone ACK. Source changed on main but live Windows/Npcap/A-B still requires independent evidence.",
+    "PLAN026 Stop scheduling: Rust RX prefers stop event and checks AtomicBool before each early packet and NPF frame; TX also prefers stop over Wintun read events. Windows live load/Stop regression on this exact post-fix SOURCE must be re-run; past live PASS belongs only to earlier SOURCE."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

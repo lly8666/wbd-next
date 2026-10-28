@@ -172,6 +172,7 @@
      let mut source_len=[0usize;BATCH];
      let mut count=0;
      for _ in 0..BATCH {
+         if counters.stopping.load(Ordering::Acquire){break}
          match tun.read(&mut sources[count]){
              Ok(ReadResult::Frame(n))=>{
                  source_len[count]=n;
@@ -309,6 +310,7 @@
          let result=(||->Result<bool,i32>{
              let mut work=0;
              for _ in 0..4 {
+                 if counters.stopping.load(Ordering::Acquire){return Ok(true)}
                  let n=stage_sources(&cfg,&lane,&mut tun,&mut npf,&counters,&mut ip_id)?;
                  work+=n;
                  if n<BATCH{break}
@@ -327,8 +329,8 @@
              let since_rx=m2_clock().0.saturating_sub(
                  counters.last_rx_ns.load(Ordering::Acquire));
              let timeout=if m2_active||since_rx<2_000_000_000{20}else{IDLE_WAIT};
-             match io::wait_ready(&[tun.event(),notify.handle(),stop.handle()],timeout){
-                 Ok(WaitResult::Ready(2))=>Ok(true),
+             match io::wait_ready(&[stop.handle(),tun.event(),notify.handle()],timeout){
+                 Ok(WaitResult::Ready(0))=>Ok(true),
                  Ok(WaitResult::Ready(_)|WaitResult::Timeout)=>Ok(false),
                  Err(_)=>Err(BAD_STAGE),
              }
@@ -381,9 +383,11 @@
      let mut plain=[0u8;MAX_IPV4];
      let mut ack=PresentationAck::new(cfg.initial_rx_seq);
      loop{
+         if counters.stopping.load(Ordering::Acquire){return OK}
          // Drain genuine Go pre-handoff packets FIRST, in original order.
          // Only this RX worker ever calls the M3 opener after Start.
          loop{
+             if counters.stopping.load(Ordering::Acquire){return OK}
              let next=match early.lock(){
                  Ok(mut q)=>q.pop_front(),Err(_)=>return BAD_STAGE
              };
@@ -391,14 +395,15 @@
              if let Err(code)=open_and_deliver(&cfg,&lane,&mut tun,&tx_notify,
                  &counters,&mut ack,seq,&record,&mut plain){return code}
          }
-         match io::wait_ready(&[event,early_notify.handle(),stop.handle()],IDLE_WAIT){
-             Ok(WaitResult::Ready(2))=>return OK,
-             Ok(WaitResult::Ready(0|1))=>{},
+         match io::wait_ready(&[stop.handle(),event,early_notify.handle()],IDLE_WAIT){
+             Ok(WaitResult::Ready(0))=>return OK,
+             Ok(WaitResult::Ready(1|2))=>{},
              Ok(WaitResult::Timeout)=>continue,
              Err(_)=>return BAD_STAGE,
              _=>return BAD_STAGE,
          }
          for _ in 0..32{
+             if counters.stopping.load(Ordering::Acquire){return OK}
              let n=match npf.read(&mut frame){
                  Ok(ReadResult::Frame(n))=>n,
                  Ok(ReadResult::NoPacket)=>break,
@@ -524,6 +529,28 @@
  #[cfg(test)]
  mod tests {
      use super::*;
+     #[test]
+     fn native_stop_event_wins_when_capture_and_handoff_are_also_ready(){
+         let stop=WakeEvent::new().unwrap();
+         let capture=WakeEvent::new().unwrap();
+         let early=WakeEvent::new_auto().unwrap();
+         capture.wake().unwrap();
+         early.wake().unwrap();
+         stop.wake().unwrap();
+         assert_eq!(io::wait_ready(
+             &[stop.handle(),capture.handle(),early.handle()],0
+         ).unwrap(),WaitResult::Ready(0));
+         // The same manual-reset Stop wins again after the RX wake.
+         assert_eq!(io::wait_ready(
+             &[stop.handle(),capture.handle(),early.handle()],0
+         ).unwrap(),WaitResult::Ready(0));
+     }
+     #[test]
+     fn saturated_rx_and_early_loops_observe_stop_without_reaching_wait(){
+         let counters=Counters::new(1,1);
+         counters.stopping.store(true,Ordering::Release);
+         assert!(counters.stopping.load(Ordering::Acquire));
+     }
      #[test]
      fn native_go_rust_c_abi_is_192_bytes_and_fixed_offsets(){
          use std::mem::{offset_of,size_of};
