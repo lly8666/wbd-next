@@ -387,8 +387,8 @@ for block in d.get("intervals",[]):
                 "jitter_ms":stream.get("jitter_ms"),
                 "sender":stream.get("sender")} for stream in block.get("streams",[])])
 rc=int((p/"iperf-exit.txt").read_text().strip())
-measured=rc==0 and all(isinstance(x,(int,float)) for x in rates+loss)
-         and all(isinstance(x,(int,float)) and x>=55 for x in seconds)
+measured=(rc==0 and all(isinstance(x,(int,float)) for x in rates+loss)
+          and all(isinstance(x,(int,float)) and x>=55 for x in seconds))
 actual_loss_bounded=measured and max(loss)<=1.0
 actual_rate_bounded=measured and min(rates)>=.8*target
 proof=(c["has_netem"] and v["has_netem"] and
