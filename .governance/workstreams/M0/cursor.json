@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 329,
-  "checkpoint_sha": "775ce995036c2a581c445af9d649fdd8e6ce2478",
+  "sequence": 330,
+  "checkpoint_sha": "d75a351469d2c97dc5a2ed7ff5ace669da2089af",
   "progress": "partial",
   "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
-  "current_task": "M0 Rust-only high rate Windows/Linux NativeOwner no-injected-loss RCA: exact SOURCE775 fixture, reused compiled Windows/Linux product SOURCE0543, run40675314979 true 150Mbps each direction target/300ms one-way/0pct loss/60s. Native signed driver, TLS UDP/TCP/owned Stop PASS, strict app first delivery FAIL. Linux guest /proc/net/raw exact inode7924 drop delta 162785, two other raw zero; rmem_default212992 B, rmem_max4194304 B. Linux Rust native raw_observed1068993, tun_udp1057257, Linux app first1055855, only1402 local TUN→app gap; Windows sender1231475 packets. Linux UDP app socket drops308, genuine tc netem drops0. Rust Linux RawRx::open AF_INET SOCK_RAW IPPROTO_TCP has no SO_RCVBUF; raw receive kernel buffer overflow is directly observed and dominant contributor; inode->PID ownership still unproven. Compiled product source unchanged, no Rust code modified in this diagnostic batch.",
-  "why_now": "User requested Rust-only deep packet loss root and efficient Windows fixture; native Linux raw kernel per-inode drops from real 60s run pinpoint >162k receive overflows. Linux original raw driver fails to size rx socket; 0 netem/308 UDP app drops rules out those dominant explanations. Prebuilt run skip compile verified, ~12s cheap+217s native vs full 135s preflight+100s Linux+340s native. Product fix separate and NOT_RUN.",
+  "current_task": "User requests Linux-vs-Linux zero-loss explanation and exact Rust-only 100Mbps per-direction 300ms one-way 0pct injected tc loss 60s test, no product rebuild. Added 100 scenario with same 96/288/1060/1200 packet mix, seed, MTU, warmup and drain as 150; tagged fast workflow [plan026-rust-reuse-100] pinned SOURCE0543 compiled Windows Rust DLL/EXE & Linux product from run40668581343, only fixture/workflow/test code changes. Linux historical lossless was real isolated same host Linux20Mbps each direction, not equivalent to 150Mbps Windows→Npcap→WSL2 Linux raw queue. Source775 original Linux raw socket drops162785 under 150 Mbps while real tc dropped0. Test scenario and CPU/drop counters need actual run.",
+  "why_now": "User explicitly ordered 100 Mbps same impairment/packet mix Rust-only run and asked why Linux historical no-loss. Controlled reduction in offered PPS distinguishes 150Mbps raw socket queue overrun from fundamental Rust loss, minimizing compilation via source-verified prebuilt binaries.",
   "done_when": "Normal/off newest source exact N0 10Mbps 300ms one-way 240s with old produced0 ready4 regression and same VM old-Go vs new Rust CPU-seconds/GB, RSS, idle wakes and p99 first-delivery A/B. Migrate Fixed/Auto/Game/Health Keepalive and Make-Before-Break dynamic lane native owner; remove remaining Go packet pump only after modes' real functional/perf proof.",
-  "next_action": "Next M0 product task: scoped bounded SO_RCVBUF only on authenticated Linux RawRx::open, call getsockopt SO_RCVBUF to read effective actual, keep exact tuple BPF, kernel limits, memory/Stop ownership and test with unprivileged UDP socket ABI; source full Linux native compile once with exact source, then reuse that new product artifact for test-only fixes. Validate 150Mbps each direction,300ms one-way,0pct tc loss,60s,>=99.9pct unique first delivery, raw inode drop delta, true Stop and CPU. Do not claim source775 performance PASS; Linux generator reverse offered141.62Mbps and both first-delivery below 99.9%. Check docs/testing/WL_PERF_HARNESS_V2.md and source775 evidence. Do not change Windows Rust owner mutex/AEAD/M2, no old-Go steady comparison.",
+  "next_action": "Read the newly triggered main [plan026-rust-reuse-100] Action source-locked scenario result. Verify actual Windows/Linux offered ≥95Mbps each, Linux raw inode-specific drop deltas vs prior 162785 at 150Mbps, Linux UDP app drops, qdisc loss0, unique app first-delivery≥99.9%, RTT p99 and both owned Stop. Preserve FAIL if below either gate; do not infer rate threshold from one run. If raw drops persist at 100, next product fix scoped Linux RawRx::open SO_RCVBUF with effective getsockopt, exact BPF, caps/Stop, one new binary build. Never touch old Go steady A/B; no Rust product changes in this run.",
   "unverified": true,
   "last_tested_source": "775ce995036c2a581c445af9d649fdd8e6ce2478",
   "evidence_refs": [
     "docs/evidence/M0/PLAN026-WL-V2-SOURCE775-LINUX-RAW-SOCKET-DROPS-CONFIRMED.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261028-PLAN026-H326-P200-c835-capacity-and-Win32-thread-description.md",
     "docs/devlog/M0/20261028-PLAN026-H319-native-stop-fairness.md",
     "docs/devlog/M0/20261028-PLAN026-H321-native-thread-CPU-ownership.md",
     "docs/testing/WL_PERF_HARNESS_V2.md",
     "docs/devlog/M0/20261028-PLAN026-WL-PERF-V2-SAME-VM-AB.md",
     "docs/devlog/M0/20261028-PLAN026-WL-V2-150M-A-B-SECOND-REAL-RESULT.md",
     "docs/devlog/M0/20261028-PLAN026-RUST-LOSS-FORENSICS-WIN-CI-REUSE.md",
-    "docs/devlog/M0/20261028-PLAN026-WL-V2-LINUX-RAW-SOCKET-STAGE.md"
+    "docs/devlog/M0/20261028-PLAN026-WL-V2-LINUX-RAW-SOCKET-STAGE.md",
+    "docs/devlog/M0/20261028-PLAN026-WL-V2-100M-RUST-SAME-BINARIES.md"
   ],
   "open_requests": [],
   "partial_summary": "SOURCE775 Action40675314979 exact real Windows Rust Normal/off product compiled source0543, Go only cold TLS, no old steady; signed Npcap/Wintun/WSL2, 60s 150Mbps target per direction, one-way300ms, tc0pct loss. Native functional and both Stop PASS, performance FAIL: W→L offered149.5494Mbps sender1231475, Linux UDP first1055855/127.9407Mbps; L→W offered141.6188, Win first1141126/138.6266. Linux raw socket inode7924 kernel drops+162785 (other 2 zero), rmem_default212992 max4194304; UDP fixture socket drops+308, tc ifb1231670 drop0, eth0 drop0. Linux raw native observed1068993, tun_udp1057257, Linux app1055855 => only1402 after TUN. Linux Rust RawRx::open SOCK_RAW TCP no explicit SO_RCVBUF. Diagnosis: Linux raw kernel socket RX overrun major source, no full no-loss PASS; exact socket PID ownership not yet confirmed. Rust product unchanged. Fast artifact reuse/source SHA and signed driver/WSL real: cheap12s+native217s vs full ~575s. Future Linux raw bounded SO_RCVBUF with effective getsockopt and new full Rust source qualification."

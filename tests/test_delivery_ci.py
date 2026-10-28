@@ -24,20 +24,20 @@ class DeliveryCiTests(unittest.TestCase):
         # source-verified Rust-only reuse bypasses separate compiler jobs.
         for guard in ("github.event_name == 'workflow_dispatch'", "github.ref_name == 'main'",
                       "contains(github.event.head_commit.message, '[wiring-full]')",
-                      "inputs.perf_reuse_run_id == ''", "[plan026-rust-reuse-150]"):
+                      "inputs.perf_reuse_run_id == ''", "[plan026-rust-reuse-150]", "[plan026-rust-reuse-100]"):
             self.assertIn(guard, job["if"])
         native=self.workflow["jobs"]["native-public-two-os"]
         self.assertEqual(native["needs"], ["wiring-contract","linux-source-locked-public"])
         for guard in ("always()", "needs.wiring-contract.result == 'success'",
                       "needs.linux-source-locked-public.result == 'success'",
-                      "inputs.perf_reuse_run_id != ''", "[plan026-rust-reuse-150]"):
+                      "inputs.perf_reuse_run_id != ''", "[plan026-rust-reuse-150]", "[plan026-rust-reuse-100]"):
             self.assertIn(guard,native["if"])
 
     def test_preflight_has_no_native_runtime_or_driver_effects(self):
         job = self.workflow["jobs"]["windows-compile-preflight"]
         self.assertEqual(job["needs"], ["wiring-contract"])
         self.assertEqual(job.get("if"),
-            "inputs.perf_reuse_run_id == '' && !contains(github.event.head_commit.message, '[plan026-rust-reuse-150]')")
+            "inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]'))")
         scripts = "\n".join(x.get("run", "") for x in job["steps"])
         self.assertIn("go test -c", scripts)
         self.assertIn("./cmd/wbd-client", scripts)
@@ -63,6 +63,29 @@ class DeliveryCiTests(unittest.TestCase):
         self.assertIn('m["source_sha"]==os.environ["LINUX_BINARY_SRC"]',linux["run"])
         self.assertIn("WBD_WL_REUSE_RUN_ID", native["env"])
         self.assertIn("WBD_WL_BINARY_SOURCE",native["env"])
+
+    def test_rust_only_100mbps_scene_preserves_original_parameters(self):
+        import json
+        scene100=json.loads((ROOT/"scenarios/wl-normal-100m-300ms-0loss-60s.json").read_text())
+        scene150=json.loads((ROOT/"scenarios/wl-normal-150m-300ms-0loss-60s.json").read_text())
+        self.assertEqual(scene100["scenario_id"],"wl-normal-100m-300ms-0loss-60s")
+        for field in ("schema_version","duration_s","warmup_s","drain_s","tun_mtu","seed"):
+            self.assertEqual(scene100[field],scene150[field])
+        for direction in ("windows_to_linux","linux_to_windows"):
+            a=scene100[direction];b=scene150[direction]
+            self.assertEqual(a["offered_mbps"],100)
+            self.assertEqual(b["offered_mbps"],150)
+            for field in ("delay_ms","loss_pct","tc_rate_mbps","packet_mix"):
+                self.assertEqual(a[field],b[field])
+        flow=self.workflow["jobs"]["wiring-contract"]["steps"]
+        preflight=next(x for x in flow if x.get("name","").startswith("Enforce functional"))
+        native=self.workflow["jobs"]["native-public-two-os"]
+        for key in ("WL_V2_SCENARIO","WL_V2_REUSE_RUN","WL_V2_BINARY_SHA"):
+            self.assertIn("[plan026-rust-reuse-100]",preflight["env"][key])
+        self.assertIn("wl-normal-100m-300ms-0loss-60s.json",preflight["env"]["WL_V2_SCENARIO"])
+        self.assertIn("wl-normal-100m-300ms-0loss-60s.json",native["env"]["WBD_WL_V2_SCENARIO"])
+        self.assertIn("[plan026-rust-reuse-100]",native["env"]["WBD_WL_REUSE_RUN_ID"])
+        self.assertIn("0543b805ca25d804ccd131be6686b0b99f61f80f",native["env"]["WBD_WL_BINARY_SOURCE"])
 
     def test_native_success_and_cleanup_contracts_retained(self):
         job = self.workflow["jobs"]["native-public-two-os"]
