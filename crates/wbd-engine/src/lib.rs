@@ -39,6 +39,10 @@ mod v4_owner_crypto;
 // Versioned actual owner Prepare is in ordinary builds; test FFI only routes
 // the already authenticated private Go callback into this same code.
 mod v4_protected_handoff;
+/// PLAN026 pure Make-Before-Break lane generation state for Windows NativeOwner.
+/// Unit-testable without Npcap, Wintun or Go; no new crypto owner.
+#[cfg(any(target_os="windows", test))]
+mod windows_lane_lifecycle;
 #[cfg(all(feature = "m0_v4_embedded_go", target_os = "linux"))]
 mod v4_embedded_go;
 // M0-shared private original-Go Windows lifecycle ABI. No Windows M4 device

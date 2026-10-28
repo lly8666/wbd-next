@@ -13,6 +13,12 @@ pub mod ipv4_tcp;
 /// Strict, allocation-free inbound IPv4/TCP DATA bytes parser (no AEAD authentication).
 pub mod rx_ipv4_tcp;
 
+/// PLAN026 genuine Windows NPF/Wintun kernel I/O island; no Go per-packet FFI.
+/// Built only for Win32; Go must first provide a real authenticated handle loan.
+#[cfg(target_os = "windows")]
+#[allow(unsafe_code)]
+pub mod windows_native_io;
+
 // ABI island: the other platform modules still deny unsafe Rust code.
 #[cfg(all(target_os = "linux", any(target_arch="x86_64",target_arch="aarch64"), any(target_env="gnu",target_env="musl")))]
 #[allow(unsafe_code)]

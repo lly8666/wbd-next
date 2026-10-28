@@ -635,7 +635,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_udp_kernel_driver_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
-      "result_blob": "dc70501597b3249edc5a14b3e55b052e14cf03d4"
+      "result_blob": "90cd3240c26b21efaba0edae1b491705e82b2d39"
     },
     {
       "kind": "create",
@@ -762,6 +762,30 @@
       "path": "internal/windowsclient/native_m0_runtime_mtu_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_m0_runtime_mtu_windows_test.go",
       "result_blob": "86eab20d783fdebeb7ddfb56c4da4f987d7e86a7"
+    },
+    {
+      "kind": "create",
+      "path": "internal/faketcp/npcap_native_handoff_windows.go",
+      "overlay_path": "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go",
+      "result_blob": "8cda8c6d1e729aed9f0904084cf63c63de1984f8"
+    },
+    {
+      "kind": "create",
+      "path": "internal/faketcp/npcap_native_handoff_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows_test.go",
+      "result_blob": "d0d880b1c07fa515a21abf76434b0d0d13342c12"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_rust_wintun_loan_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_rust_wintun_loan_windows.go",
+      "result_blob": "9967d58995019a192c914e658479b71b5c71ce9a"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_rust_wintun_loan_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_rust_wintun_loan_windows_test.go",
+      "result_blob": "e4553540b99b2e8397bce94e2134cdae995ae7f7"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

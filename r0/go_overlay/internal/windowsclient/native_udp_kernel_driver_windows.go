@@ -45,6 +45,9 @@ type N4OriginalKernelPacketLease struct{
     holder N4WindowsCreatedWintunReservation
     id N4UnifiedIdentity
     stopped bool
+    // True while Rust owns the same Wintun session's business ring.
+    // Go RX/TX/Stop are fenced until the native Rust workers join.
+    nativeRustLoan bool
     // The exact real M4-owned TUN/generation and Stop are serialized on
     // every ring op. The expensive GUID/LUID/PnP OS proof is reaudited at
     // most once per second; a failed refresh permanently fences this lease.
@@ -85,7 +88,7 @@ func n4RealOriginalWintunAuditDue(last,now time.Time)bool{
 func (d *N4OriginalKernelPacketLease) check(ctx context.Context)error{
     if d==nil||ctx==nil{return ErrN4NativeGuard}
     if err:=ctx.Err();err!=nil{return err}
-    if d.stopped||d.identityRevoked||d.tun==nil||
+    if d.stopped||d.nativeRustLoan||d.identityRevoked||d.tun==nil||
        d.id.Generation==[16]byte{}||d.id.Installation==[16]byte{}{
         return ErrN4NativeGuard
     }
@@ -251,6 +254,7 @@ func (d *N4OriginalKernelPacketLease) Stop(ctx context.Context)error{
     if d==nil||ctx==nil{return ErrN4NativeGuard}
     d.mu.Lock();defer d.mu.Unlock()
     if d.stopped{return nil}
+    if d.nativeRustLoan{return ErrN4NativeGuard}
     if err:=ctx.Err();err!=nil{return err}
     n4OriginalRingOwners.Lock()
     claimed,exists:=n4OriginalRingOwners.held[d.tun]

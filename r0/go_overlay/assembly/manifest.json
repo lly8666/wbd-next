@@ -570,6 +570,18 @@
       "path": "internal/windowsclient/native_wfp_exact_arm_windows_test.go",
       "result_blob": "0cca3e225ea95932eab09666cf5195107bd61351",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_wfp_exact_arm_windows_test.go"
+    },
+    {
+      "kind": "create",
+      "path": "internal/faketcp/npcap_native_handoff_windows.go",
+      "overlay_path": "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go",
+      "result_blob": "8cda8c6d1e729aed9f0904084cf63c63de1984f8"
+    },
+    {
+      "kind": "create",
+      "path": "internal/faketcp/npcap_native_handoff_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows_test.go",
+      "result_blob": "d0d880b1c07fa515a21abf76434b0d0d13342c12"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
