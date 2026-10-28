@@ -192,7 +192,7 @@ jobs:
   windows-compile-preflight:
     name: Windows Go production and test compilation only
     needs: [wiring-contract]
-    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]' || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
+    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
     runs-on: windows-2025
     timeout-minutes: 12
     steps:
@@ -249,7 +249,7 @@ jobs:
   windows-rust-contract-preflight:
     name: Windows Rust eligible library unit tests (special M1 separate)
     needs: [wiring-contract]
-    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]' || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
+    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
     runs-on: windows-2025
     timeout-minutes: 25
     env:
@@ -288,7 +288,7 @@ jobs:
   linux-rust-contract-preflight:
     name: Linux Rust eligible library unit tests (special M1 separate)
     needs: [wiring-contract]
-    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]' || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
+    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -321,7 +321,7 @@ jobs:
     # Ordinary staging pushes stop after compile preflight. A complete
     # capability batch opts in; main's existing qualification remains intact.
     needs: [windows-compile-preflight]
-    if: (github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || contains(github.event.head_commit.message, '[wiring-full]')) && inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]' || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
+    if: (github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || contains(github.event.head_commit.message, '[wiring-full]')) && inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
     name: Build true original Go and new Linux Rust peer persona from same SOURCE
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -415,7 +415,7 @@ jobs:
 
   native-public-two-os:
     needs: [wiring-contract, linux-source-locked-public]
-    if: always() && needs.wiring-contract.result == 'success' && (needs.linux-source-locked-public.result == 'success' || inputs.perf_reuse_run_id != '' || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]' || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))))
+    if: always() && needs.wiring-contract.result == 'success' && (needs.linux-source-locked-public.result == 'success' || inputs.perf_reuse_run_id != '' || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))))
     runs-on: windows-2025
     timeout-minutes: 60
     env:
