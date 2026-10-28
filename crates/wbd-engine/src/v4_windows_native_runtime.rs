@@ -437,9 +437,9 @@
      });
      let rx_lane=Arc::clone(&lane);let rx_stop=Arc::clone(&stop);
      let rx_event=Arc::clone(&rx_notify);let rx_early=Arc::clone(&early);
-     let rx_notify=Arc::clone(&notify);let rx_counters=Arc::clone(&counters);
+     let tx_notify_for_rx=Arc::clone(&notify);let rx_counters=Arc::clone(&counters);
      let rx=thread::spawn(move||{
-         let rc=rx_loop(config,rx_lane,wrx,capture,Arc::clone(&rx_stop),rx_notify,
+         let rc=rx_loop(config,rx_lane,wrx,capture,Arc::clone(&rx_stop),tx_notify_for_rx,
              rx_event,rx_early,Arc::clone(&rx_counters));
          if rc!=OK{
              rx_counters.worker_error.store(rc,Ordering::Release);
