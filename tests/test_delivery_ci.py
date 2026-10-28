@@ -52,10 +52,23 @@ class DeliveryCiTests(unittest.TestCase):
         # N0 is a performance scenario, not an implicit main seven-mode
         # startup requirement. Keep strong delivery checks and require
         # explicit one-mode selection/true on-wire N0 PASS before promotion.
-        self.assertEqual(job["env"]["WBD_WL_RUN_N0"],
-                         "${{ inputs.run_n0 == true && '1' || '0' }}")
-        self.assertIn("inputs.public_mode || 'all'",
-                      job["env"]["WBD_WL_PUBLIC_MODES"])
+        # Existing manual N0 selection is unchanged; a narrowly tagged main
+        # source may select ONLY Normal N0 240s, never a hidden seven-mode
+        # performance matrix or an unrelated staging/PR event.
+        run_n0=job["env"]["WBD_WL_RUN_N0"]
+        mode=job["env"]["WBD_WL_PUBLIC_MODES"]
+        seconds=job["env"]["WBD_WL_N0_SECONDS"]
+        for guard in ("github.ref_name == 'main'", "[plan025-n0-240s]",
+                      "inputs.run_n0 == true && '1' || '0'"):
+            self.assertIn(guard, run_n0)
+        for guard in ("github.ref_name == 'main'", "[plan025-n0-240s]",
+                      "&& 'normal'", "inputs.public_mode || 'all'"):
+            self.assertIn(guard, mode)
+        self.assertIn("&& '240' || '60'", seconds)
+        preflight=self.workflow["jobs"]["wiring-contract"]["steps"]
+        entry=next(x for x in preflight if x.get("name","").startswith("Enforce functional"))
+        self.assertIn("[plan025-n0-240s]",entry["env"]["RUN_N0"])
+        self.assertIn("&& 'normal'",entry["env"]["PUBLIC_MODE"])
         self.assertIn("PASS_SCOPED_", scripts)
         self.assertIn("selected same-SOURCE native public mode", scripts)
 
