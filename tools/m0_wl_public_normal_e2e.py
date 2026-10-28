@@ -5,6 +5,7 @@ from m0_wl_native_resource_sampler import sample_windows_original_process
 from m0_wl_mode_runtime_report import source_locked_observability,summarize_auto_udp_progress,native_auto_true_applied_snapshots
 from m0_wl_native_mtu_contract import configured_native_test_mtu
 from m0_wl_n0_drop_delta import latest_counter, measured_delta
+from m0_wl_impairment_profile import get_profile
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
 configured_mtu=configured_native_test_mtu()
@@ -23,7 +24,7 @@ client_fec="fixed" if fixed6 or game_fixed else "auto" if mode.startswith("auto"
 report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINUX_BINARY_SRC"],"mode":mode,
  "mode_public":"NOT_RUN","normal_public":"NOT_RUN","windows_ready":"NOT_RUN",
  "linux_ready":"NOT_RUN","app_duplex":"NOT_RUN","tcp_duplex":"NOT_RUN",
- "stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN",
+ "stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_P200":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN",
  "requested_original_win_mtu":configured_mtu,
  "runtime_os_mtu_guard":"ORIGINAL_NATIVE_M4_1HZ_FAIL_CLOSED"}
 def run(a,timeout=30):
@@ -355,8 +356,12 @@ print(json.dumps(result),flush=True)
   report["auto_adaptive_native_revision"]=good[-1]["auto_applied_revision"]
   report["auto_adaptive_native_profile"]=good[-1]["auto_requested_profile"]
   print("WBD_WL_REAL_AUTO_NATURAL_SHARED_POLICY_M2_2S8S_APPLIED_AFTER_KERNEL_UDP",flush=True)
- if os.environ.get("WBD_WL_RUN_N0")=="1":
-  seconds=os.environ.get("WBD_WL_N0_SECONDS","60")
+ stress=os.environ.get("WBD_WL_RUN_P200")=="1"
+ if os.environ.get("WBD_WL_RUN_N0")=="1" or stress:
+  if stress and os.environ.get("WBD_WL_RUN_N0")=="1":
+   raise RuntimeError("N0 and P200 must be separate measurements")
+  profile_name="p200-250m-30p" if stress else "n0"
+  seconds="60" if stress else os.environ.get("WBD_WL_N0_SECONDS","60")
   if seconds not in ("60","240"):
    raise RuntimeError("WL-N0 duration selector must be 60 or 240 seconds")
   # One declared measurement scenario, not a mixed matrix. Genuine Linux
@@ -364,7 +369,7 @@ print(json.dumps(result),flush=True)
   # It is deliberately after functional warmup, before both owned Stop.
   def netem(action):
    cmd=["wsl.exe","-d","Ubuntu","-u","root","--","python3",
-        unix(root/"tools"/"m0_wl_netem.py"),action,unix(out)]
+        unix(root/"tools"/"m0_wl_netem.py"),action,unix(out),profile_name]
    return run(cmd,timeout=35)
   owned=out/"wl-n0-netem-owned.json"
   try:
@@ -380,9 +385,9 @@ print(json.dumps(result),flush=True)
    wrate=(out/"wl-n0-windows-app.log").open("w");logs.append(wrate)
    linuxrate=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
        "python3","-u",rate,"10.66.0.1","10.66.0.2",
-       "linux",unix(out/"wl-n0-start.flag"),output,seconds],stdout=lrate,stderr=subprocess.STDOUT)
+       "linux",unix(out/"wl-n0-start.flag"),output,seconds,profile_name],stdout=lrate,stderr=subprocess.STDOUT)
    windowsrate=subprocess.Popen([sys.executable,"-u",str(root/"tools"/"m0_wl_public_rate_app.py"),
-       "10.66.0.2","10.66.0.1","windows",str(out/"wl-n0-start.flag"),str(out),seconds],
+       "10.66.0.2","10.66.0.1","windows",str(out/"wl-n0-start.flag"),str(out),seconds,profile_name],
        stdout=wrate,stderr=subprocess.STDOUT)
    try:
     ready(out/"wl-n0-linux-app.log",'"phase": "bound"',linuxrate,25)
@@ -426,7 +431,34 @@ print(json.dumps(result),flush=True)
       return sum((find_counts(v) for v in obj),[])
      return []
     return max(find_counts(qdiscs) or [0])
-   if any(row.get("measurement_duration_s")!=float(seconds) for row in wl.values()):
+   if stress:
+    declared=json.loads((out/"wl-n0-netem-before.json").read_text())
+    requested=declared.get("requested_kernel_profile")
+    if declared.get("declared_profile")!=profile_name or requested!=get_profile(profile_name):
+     report["WL_P200"]="FAIL_KERNEL_IMPAIRMENT_PROFILE_NOT_READ_BACK"
+    elif any(row.get("measurement_duration_s")!=float(seconds) or
+             row.get("kernel_impairment_profile")!=profile_name for row in wl.values()):
+     report["WL_P200"]="FAIL_MISMATCHED_TWO_OS_GENERATOR_HORIZON"
+    elif count_packets(after["eth0"])==0 or count_packets(after["ifb"])==0:
+     report["WL_P200"]="INCONCLUSIVE_KERNEL_TC_DIRECTION_COUNTS_UNOBSERVED"
+    elif not all(x["received_first_packets"]>0 for x in wl.values()):
+     report["WL_P200"]="FAIL_NO_REAL_TWO_OS_APPLICATION_DELIVERY"
+    elif min(x["sent_payload_mbps"] for x in wl.values())<225:
+     report["WL_P200"]="CAPACITY_LIMITED_OFFERED_BELOW_90PCT_250MBPS"
+    else:
+     report["WL_P200"]="PASS_SCOPED_KERNEL_200MS_30PCT_250MBIT_60S_BOTH_DIRECTIONS"
+    report["wl_p200_measured"]={
+     "declared":requested,
+     "offered_mbps":{side:row["sent_payload_mbps"] for side,row in wl.items()},
+     "delivered_mbps":{side:row["received_payload_mbps"] for side,row in wl.items()},
+     "unique_received_fraction":{
+      "windows":round(wl["windows"]["received_first_packets"]/max(1,wl["linux"]["sent_packets"]),5),
+      "linux":round(wl["linux"]["received_first_packets"]/max(1,wl["windows"]["sent_packets"]),5)},
+     "kernel_qdisc":report["wl_n0_tc_after"],
+     "interpretation":"250 Mbit/s is offered generator target and kernel link rate, not guaranteed end-to-end goodput",
+    }
+    print("WL_P200_TRUE_KERNEL_MEASUREMENT "+report["WL_P200"],flush=True)
+   elif any(row.get("measurement_duration_s")!=float(seconds) for row in wl.values()):
     report["WL_N0"]="FAIL_MISMATCHED_OS_MEASUREMENT_DURATION"
    elif count_packets(after["eth0"])==0 or count_packets(after["ifb"])==0:
     report["WL_N0"]="INCONCLUSIVE_KERNEL_TC_DIRECTION_COUNTS_UNOBSERVED"

@@ -12,8 +12,11 @@ import pathlib
 import subprocess
 import sys
 import time
+from m0_wl_impairment_profile import get_profile
 
 action, directory = sys.argv[1:3]
+profile_name = sys.argv[3] if len(sys.argv)>3 else "n0"
+profile = get_profile(profile_name)
 out = pathlib.Path(directory)
 out.mkdir(parents=True, exist_ok=True)
 owner = out / "wl-n0-netem-owned.json"
@@ -80,16 +83,18 @@ if action == "arm":
     if call("ip", "link", "show", iface, checked=False)["rc"] == 0:
         raise RuntimeError("foreign ifb device name exists")
     state = {"owner": "M0-WL-N0-ETH0-IFB", "interface": iface,
-             "egress": False, "ingress": False, "ifb_created": False}
+             "profile": profile_name, "egress": False, "ingress": False, "ifb_created": False}
     persist(state)
     try:
         call("ip", "link", "add", iface, "type", "ifb")
         state["ifb_created"] = True; persist(state)
         call("ip", "link", "set", iface, "up")
-        call("tc", "qdisc", "add", "dev", iface, "root", "handle", "10:",
-             "netem", "delay", "300ms", "loss", "0%", "limit", "32768")
-        call("tc", "qdisc", "add", "dev", "eth0", "root", "handle", "20:",
-             "netem", "delay", "300ms", "loss", "0%", "limit", "32768")
+        netem = ["netem", "delay", f'{profile["delay_ms"]}ms',
+                 "loss", f'{profile["loss_pct"]}%', "limit", "32768"]
+        if profile["tc_mbit"] is not None:
+            netem += ["rate", f'{profile["tc_mbit"]}mbit']
+        call("tc", "qdisc", "add", "dev", iface, "root", "handle", "10:", *netem)
+        call("tc", "qdisc", "add", "dev", "eth0", "root", "handle", "20:", *netem)
         state["egress"] = True; persist(state)
         call("tc", "qdisc", "add", "dev", "eth0", "handle", "ffff:", "ingress")
         state["ingress"] = True; persist(state)
@@ -106,13 +111,17 @@ if action == "arm":
         incoming = [x for x in snapshot["ifb"] if x.get("kind") == "netem"]
         if len(root) != 1 or len(incoming) != 1 or "mirred" not in snapshot["ingress_filters"]:
             raise RuntimeError("real tc netem root/IFB/ingress readback incomplete")
+        snapshot["declared_profile"] = profile_name
+        snapshot["requested_kernel_profile"] = profile
         (out / "wl-n0-netem-before.json").write_text(json.dumps(snapshot, indent=2) + "\n")
-        print("WL_N0_GENUINE_KERNEL_300MS_BOTH_DIRECTIONS_CONFIGURED", flush=True)
+        print("WL_N0_GENUINE_KERNEL_300MS_BOTH_DIRECTIONS_CONFIGURED" if profile_name=="n0"
+              else "WL_P200_GENUINE_KERNEL_200MS_30PCT_250MBIT_BOTH_DIRECTIONS_CONFIGURED",flush=True)
     except Exception:
         clean()
         raise
 elif action == "snapshot":
     if not owner.exists(): raise RuntimeError("no owned netem state for readback")
+    if json.loads(owner.read_text()).get("profile") != profile_name: raise RuntimeError("impairment profile mismatch")
     snapshot = probe()
     (out / "wl-n0-netem-after.json").write_text(json.dumps(snapshot, indent=2) + "\n")
     print("WL_N0_GENUINE_KERNEL_TC_STATS_CAPTURED", flush=True)

@@ -14,7 +14,7 @@ out=root/"result"/"wl-public"
 try:
  modes=select_source_locked_modes(
   os.environ.get("WBD_WL_PUBLIC_MODES","all"),
-  performance=os.environ.get("WBD_WL_RUN_N0")=="1")
+  performance=os.environ.get("WBD_WL_RUN_N0")=="1" or os.environ.get("WBD_WL_RUN_P200")=="1")
 except ValueError as error:
  raise SystemExit(str(error)) from error
 results={}
@@ -37,11 +37,14 @@ for mode in modes:
  # A native functional first/reverse/Stop PASS does NOT qualify a
  # selected throughput scenario if actual delivery/loss/kernel TC failed.
  performance=os.environ.get("WBD_WL_RUN_N0")=="1"
+ stress=os.environ.get("WBD_WL_RUN_P200")=="1"
  passed=child.returncode==0 and result.get("mode_public","").startswith("PASS_ACTUAL_") and (
-  not performance or str(result.get("WL_N0","")).startswith("PASS_SCOPED_"))
+  not performance or str(result.get("WL_N0","")).startswith("PASS_SCOPED_")) and (
+  not stress or str(result.get("WL_P200","")).startswith("PASS_SCOPED_"))
  results[mode]={"result":"PASS" if passed else "FAIL",
    "error":result.get("error"),"report":mode+"-report.json",
    "WL_N0":result.get("WL_N0","NOT_RUN") if performance else "NOT_RUN",
+   "WL_P200":result.get("WL_P200","NOT_RUN") if stress else "NOT_RUN",
    "evidence_manifest":str(evidence.relative_to(out)).replace(chr(92),"/") }
  print("WL_PUBLIC_REAL_MODE_RESULT "+mode+" "+results[mode]["result"],flush=True)
  if not passed:failed.append(mode)
@@ -49,6 +52,7 @@ summary={"source":os.environ["GITHUB_SHA"],
  "windows_linux_real_native_modes":results,
  "result":"FAIL" if failed else "PASS","failed_modes":failed,
  "WL_N0":results[modes[0]]["WL_N0"] if len(modes)==1 else "NOT_RUN",
+ "WL_P200":results[modes[0]]["WL_P200"] if len(modes)==1 else "NOT_RUN",
  "WL_N1":"NOT_RUN","WL_N5":"NOT_RUN"}
 (out/"mode-batch.json").write_text(json.dumps(summary,indent=2)+"\n")
 print("WL_PUBLIC_REAL_MODE_BATCH "+summary["result"]+" "+",".join(failed),flush=True)

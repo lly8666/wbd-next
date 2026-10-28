@@ -13,6 +13,7 @@ import struct
 import sys
 import time
 from m0_wl_business_latency import summarize_rtt
+from m0_wl_impairment_profile import get_profile
 
 local, remote, side, start_flag, output_dir = sys.argv[1:6]
 out = pathlib.Path(output_dir)
@@ -39,13 +40,15 @@ probe_pending={}
 probe_delivered=set()
 probe_rtt_ms=[]
 probe_send_errors=0
-sizes=(96, 288, 1060, 1200) # true UDP payload bytes; no fake TCP ACK/FEC record.
-rate_bytes_per_sec=1_250_000
+profile_name = sys.argv[7] if len(sys.argv)==8 else "n0"
+profile = get_profile(profile_name)
+sizes=(96, 288, 1060, 1200) if profile_name=="n0" else (1060,1200)
+rate_bytes_per_sec=int(profile["offered_mbps"]*1_000_000/8)
 # Explicit per-Actions single-scene duration; never let an env on one OS
 # silently produce a different input horizon on the other OS.
-duration = float(sys.argv[6]) if len(sys.argv) == 7 else 60.0
-if duration not in (60.0,240.0):
-    raise ValueError("WL-N0 duration must be 60 or 240 seconds")
+duration = float(sys.argv[6]) if len(sys.argv) >= 7 else 60.0
+if duration not in (60.0,240.0) or (profile_name!="n0" and duration!=profile["duration_s"]):
+    raise ValueError("invalid declared impairment duration")
 drain=5.0
 start=time.monotonic()
 probe_next=start
@@ -143,10 +146,11 @@ sock.close()
 end=time.monotonic()
 result={
     "source":os.environ.get("GITHUB_SHA"),
-    "scenario":"WL-N0",
+    "scenario":"WL-N0" if profile_name=="n0" else "WL-P200-250M-30P",
+    "kernel_impairment_profile":profile_name,
     "side":side,"kernel_bind":"PASS","measurement_duration_s":duration,
     "drain_s":drain,"actual_elapsed_s":round(end-start,3),
-    "requested_payload_mbps":10.0,
+    "requested_payload_mbps":profile["offered_mbps"],
     "sent_packets":sent,"sent_payload_bytes":sent_bytes,
     "sent_payload_mbps":round(sent_bytes*8/(duration*1e6),4),
     "received_first_packets":len(first),
