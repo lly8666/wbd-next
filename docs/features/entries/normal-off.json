@@ -120,6 +120,13 @@
       "status": "CAPACITY_LIMITED",
       "source_sha": "0d09cd5e61266b716aa5ade9bbce55a63120f2f1",
       "evidence": "docs/evidence/M0/PLAN026-P200-source0d09-Windows-Linux-capacity-limited-20261028.json"
+    },
+    {
+      "platform": "Windows2025 signed Npcap Wintun ↔ WSL2 Linux native raw TUN",
+      "scope": "Original Rust Normal/off 10Mbps genuine kernel both-direction 300ms delay 0% injected loss for 240s UDP, separate TCP and owned Stop; N0 1-run source-locked scoped performance",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "a1238c4d6964f60d88e65e2668314160fefe038f",
+      "evidence": "docs/evidence/M0/PLAN026-N0-sourcea123-Windows-Normal-300ms-10Mbps-240s-PASS-20261028.json"
     }
   ],
   "limitations": [

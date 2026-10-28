@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "source_sha": "a1238c4d6964f60d88e65e2668314160fefe038f",
+  "status": "PERFORMANCE_PASS",
+  "artifact_verified": false,
+  "scope": "Scoped Windows signed Npcap Wintun native Rust Normal/off sourcea123, WSL2 Linux original Go TLS Rust raw/TUN real two-OS 300ms each direction, 0pct injected loss, 10Mbps UDP offered per OS, 240 seconds, actual two-OS TCP UDP and owned Stop",
+  "action_id": 40648269441,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/40648269441",
+  "markers": [
+    "WL_N0_GENUINE_KERNEL_300MS_BOTH_DIRECTIONS_CONFIGURED",
+    "WL_N0_TRUE_KERNEL_MEASUREMENT PASS_SCOPED_300MS_0PCT_10MBPS_240S_BOTH_DIRECTIONS",
+    "WL_N0_KERNEL_NETEM_ALL_OWNED_RESOURCES_REMOVED",
+    "WBD_WL_TRUE_PUBLIC_MODE_WIN_LINUX_DUPLEX_STOP_PASS normal"
+  ],
+  "limitations": [
+    "Source predates saturated RX Stop priority change f753e612",
+    "Does not imply 200ms 30pct 250Mbps performance, which separately failed capacity gate source0d09 and was rerun with optimized generator sourcec835",
+    "Does not attribute Windows Go process CPU to language",
+    "No physical Windows or global production qualification"
+  ]
+}
