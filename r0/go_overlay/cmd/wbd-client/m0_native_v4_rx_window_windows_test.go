@@ -332,3 +332,24 @@ func TestM0WindowsNativeRingWaitObserverCanceledNoOrphanWake(t *testing.T){
  default:
  }
 }
+
+func TestM0PLAN025WindowsNativeSourceInvalidIPv4DoesNotPoisonBatch(t *testing.T){
+ good:=make([]byte,120);good[0]=0x45
+ v6:=append([]byte(nil),good...);v6[0]=0x60
+ shortIHL:=append([]byte(nil),good...);shortIHL[0]=0x44
+ tooLongIHL:=make([]byte,20);tooLongIHL[0]=0x4f
+ for _,tc:=range []struct{name string;packet []byte;want bool}{
+  {"trueIPv4",good,true},
+  {"IPv6-on-Wintun",v6,false},
+  {"IPv4-too-short",good[:19],false},
+  {"bad-ihl",shortIHL,false},
+  {"ihl-exceeds-packet",tooLongIHL,false},
+  {"too-large",make([]byte,2049),false},
+ }{
+  t.Run(tc.name,func(t *testing.T){
+   if got:=m0ValidNativeIPv4Source(tc.packet);got!=tc.want{
+    t.Fatalf("unexpected pre-seal IP source decision: got %v want %v",got,tc.want)
+   }
+  })
+ }
+}

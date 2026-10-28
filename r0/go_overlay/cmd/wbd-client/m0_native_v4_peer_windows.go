@@ -257,6 +257,15 @@ func(p *m0NativeV4Peer) sendACK()error{
  })
  return err
 }
+// Wintun may surface a bounded non-IPv4/malformed inner frame between
+// genuine IPv4 UDP packets. Rust M1 source admission only accepts IPv4; do
+// not poison the entire sealed source batch or Stop a healthy generation
+// for one untrusted kernel packet. No AEAD PN has been allocated yet.
+func m0ValidNativeIPv4Source(packet []byte)bool{
+ if len(packet)<20||len(packet)>2048{return false}
+ v,ihl:=packet[0]>>4,packet[0]&15
+ return v==4&&ihl>=5&&int(ihl)*4<=len(packet)
+}
 // Read up to four ALREADY-ready native Wintun frames with zero batching
 // wait, seal all in the one original Rust M1/FixedStream owner, then send
 // each fully authenticated packet through its original pcap endpoint.
@@ -284,6 +293,12 @@ func(p *m0NativeV4Peer) transmitReadySourceBatch(
   }
   if n<20||n>p.maxIPv4||n>2048{
    p.mu.Lock();p.oversize++;p.mu.Unlock()
+   dropped++;continue
+  }
+  if !m0ValidNativeIPv4Source(p.scratch[:n]){
+   // This is an invalid source packet, not a poisoned Rust M1 owner.
+   // Drop only the current pre-seal frame; valid siblings retain order.
+   p.mu.Lock();p.rejected++;p.mu.Unlock()
    dropped++;continue
   }
   in:=&p.sourceInputs[ready]

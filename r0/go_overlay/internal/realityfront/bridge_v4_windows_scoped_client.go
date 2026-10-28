@@ -87,12 +87,15 @@ func(s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalSourceBatch(
  outputs []V4WindowsOriginalSourceOutput,
 )(uint32,error){
  if ctx==nil||s==nil||s.bridge==nil||s.device==nil||
-    s.bridge.stageSourceBatchProc==nil||
-    len(inputs)==0||len(inputs)>V4WindowsOriginalSourceBatchMax||
+    s.bridge.stageSourceBatchProc==nil{
+    return 0,fmt.Errorf("%w: SOURCE_BATCH_OWNER_UNBOUND",errV4WindowsOwner)
+ }
+ if len(inputs)==0||len(inputs)>V4WindowsOriginalSourceBatchMax||
     len(outputs)!=len(inputs)||
     unsafe.Sizeof(V4WindowsOriginalSourceInput{})!=2056||
     unsafe.Sizeof(V4WindowsOriginalSourceOutput{})!=2064{
-    return 0,errV4WindowsOwner
+    return 0,fmt.Errorf("%w: SOURCE_BATCH_LAYOUT input=%d output=%d",
+     errV4WindowsOwner,len(inputs),len(outputs))
  }
  if err:=ctx.Err();err!=nil{return 0,err}
  maxIPv4:=s.device.maxIPv4
@@ -100,8 +103,10 @@ func(s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalSourceBatch(
   n:=inputs[i].Length
   if inputs[i].Reserved!=0||n<20||n>2048||
      int(n)>maxIPv4||inputs[i].IPv4[0]>>4!=4||
-     inputs[i].IPv4[0]&15<5{
-    return 0,errV4WindowsOwner
+     inputs[i].IPv4[0]&15<5||
+     int(inputs[i].IPv4[0]&15)*4>int(n){
+    return 0,fmt.Errorf("%w: SOURCE_BATCH_BAD_IPV4 row=%d n=%d max=%d version=%d ihl=%d reserved=%d",
+      errV4WindowsOwner,i,n,maxIPv4,inputs[i].IPv4[0]>>4,inputs[i].IPv4[0]&15,inputs[i].Reserved)
   }
  }
  release,err:=s.device.borrowHot(ctx)
@@ -116,15 +121,27 @@ func(s *V4WindowsAuthenticatedClientOwner) SealBoundOriginalSourceBatch(
   uintptr(unsafe.Pointer(&produced)))
  runtime.KeepAlive(inputs);runtime.KeepAlive(outputs)
  runtime.KeepAlive(s.bridge.epoch)
- if produced>uint32(len(inputs)){return 0,errV4WindowsOwner}
+ if produced>uint32(len(inputs)){
+  return 0,fmt.Errorf("%w: SOURCE_BATCH_OUTPUT_OVERFLOW produced=%d requested=%d",
+    errV4WindowsOwner,produced,len(inputs))
+ }
  // Any partial native error after a seal may have burned original M1
  // PN/SEQ. Return the truthful prefix but do not submit it as a second
  // attempt; the enclosing original Go owner must Stop.
- if err!=nil{return produced,errors.Join(errV4WindowsOwner,err)}
- if produced!=uint32(len(inputs)){return produced,errV4WindowsOwner}
+ if err!=nil{
+  return produced,fmt.Errorf("SOURCE_BATCH_RUST_ABI produced=%d requested=%d: %w",
+   produced,len(inputs),errors.Join(errV4WindowsOwner,err))
+ }
+ if produced!=uint32(len(inputs)){
+  return produced,fmt.Errorf("%w: SOURCE_BATCH_PARTIAL_SUCCESS produced=%d requested=%d",
+   errV4WindowsOwner,produced,len(inputs))
+ }
  for i:=range outputs{
   n:=outputs[i].Used
-  if n<=31||n>2048{return produced,errV4WindowsOwner}
+  if n<=31||n>2048{
+   return produced,fmt.Errorf("%w: SOURCE_BATCH_BAD_OUTPUT row=%d used=%d",
+    errV4WindowsOwner,i,n)
+  }
  }
  return produced,nil
 }

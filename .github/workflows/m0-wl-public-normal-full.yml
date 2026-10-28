@@ -137,6 +137,8 @@ jobs:
             # no second build, signed driver, WSL or Normal full-path run.
             & ../result/realityfront.test.exe '-test.run=TestF2ControlAutoPendingM2CannotEvaluateOrStackNativeRevisions' '-test.count=1'
             if($LASTEXITCODE -ne 0){throw 'Linux shared Auto pending-original-M2 functional regression FAIL'}
+            & ../result/client.test.exe '-test.run=^TestM0PLAN025WindowsNativeSourceInvalidIPv4DoesNotPoisonBatch$' '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Windows pre-seal native IPv4 Wintun filtering boundary FAIL'}
             & ../result/realityfront.test.exe '-test.run=^TestM0PLAN025WindowsNativeNormalOpenFirstFaultIsBoundedAndSafe$' '-test.count=1'
             if($LASTEXITCODE -ne 0){throw 'Windows original M3 authenticated IPv4 drop vs ABI fatal regression FAIL'}
             & ../result/realityfront.test.exe '-test.run=^TestM0PLAN025WindowsOriginalM2BatchPreflightClassifiesFirstRefusal$' '-test.count=1'

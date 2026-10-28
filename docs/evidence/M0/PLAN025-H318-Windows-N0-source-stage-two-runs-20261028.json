@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "scope": "PLAN025_H318_WINDOWS_SOURCE_PRESEAL_FIRST_FAULT",
+  "result": "FAIL_REAL_NATIVE_N0",
+  "runs": [
+    {
+      "source": "7a0f58bffe0c29278f86c1e34fec48c7e50df168",
+      "actions_id": 40630704506,
+      "artifact_id": 12790869370,
+      "measured_seconds_approx": 60,
+      "n0_requested_seconds": 240,
+      "native_tx_records": 109498,
+      "native_rx_ipv4": 108866,
+      "local_npf_drops_cumulative": 14,
+      "first_fault": "original M1 source stage batch produced=0 ready=4: original-Go private Windows Rust owner refused"
+    },
+    {
+      "source": "4f459ab7d06c544e3235dea8de0227810ee5d8c0",
+      "actions_id": 40631000400,
+      "artifact_id": 12791807022,
+      "measured_seconds_approx": 82,
+      "n0_requested_seconds": 240,
+      "native_tx_records": 150950,
+      "native_rx_ipv4": 150320,
+      "local_npf_drops_cumulative": 20,
+      "first_fault": "original M1 source stage batch produced=0 ready=4: original-Go private Windows Rust owner refused"
+    }
+  ],
+  "test_gates": {
+    "4f_windows_go_and_new_m2_m3_tests": "PASS_COMPILED_AND_EXECUTED",
+    "4f_windows_rust": "PASS",
+    "4f_linux_rust": "PASS",
+    "4f_linux_original_build": "PASS",
+    "4f_real_two_os_longrun": "FAIL"
+  },
+  "interpretation": "Windows pre-seal source batch rejects entire generation with generic owner refusal; stage is in Go wrapper or Rust and has no precise code. Suspected one invalid IPv4 inner Wintun frame; not yet proven. Requires scoped filter and exact stage diagnostic. Linux known-good code not changed.",
+  "product_qualification": "NOT_QUALIFIED",
+  "report_provenance": "Direct native Actions artifacts; no synthetic traffic"
+}
