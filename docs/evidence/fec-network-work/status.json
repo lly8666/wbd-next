@@ -1,5 +1,8 @@
 {
   "schema": 1,
+  "task_lifecycle": "COMPLETED_ARCHIVED_BY_USER_20261028",
+  "current_owner": "M0@main",
+  "resume_policy": "Historical snapshot only: do not execute the old next_action or reopen this worker. Current product work follows main registry and M0 cursor. Completion is not blanket qualification; all historical failures and limits below stay unchanged.",
   "branch": "experiment/fec-network-tuning",
   "phase": "W159R_REAL_JUMBO_UDP_TCP_PASS; W160_GAME4_DEFAULT_SHAREDGE15_PASS; W161R_DEFAULT_100MS_0P1_FAIL; W162_OPTIN_WIDE_140MS_BLACKOUT_PASS; W163_WIDE_SHAREDGE15_LT0P1_PASS; GAME4_CAPACITY_STOP; MERGE_READY_FALSE",
   "task_entry": "docs/testing/FEC_AUTONOMOUS_WORK.md",

@@ -10,7 +10,7 @@ COMPLETE_FOR_SCOPE 仅表示指定 SOURCE 已盘点，不表示全部功能/平�
 这是只读文档命令，不执行测试。GitHub 可直接读 [entries/](entries/)；Actions 会上传生成索引。
 不全量读历史，不再维护第二份手写总表。
 
-- 新功能先在 `experiment/<topic>` 登记 experimental；work 继续既有模块任务，integration 用于隔离集成。
+- M0 按2026-10-28用户授权直接在 main 开发；新功能仍登记 experimental，研发分支填 main 并写 `main_development_reason`。明确另授的独立任务才用 experiment/work；已有历史来源不批量改名。
 - 一项产品能力一个稳定 ID。配置/默认值/平台接线/行为变化同步卡片、适用 CLI/配置/GUI/帮助与证据。
 - 卡片记录研发来源 `development_branch` 和代码实际所在 `available_on`，不把计划合并写成已存在。
 - main 合并不自动正式化。formal 另需 main 集成、采纳决定、精确源码及适用产品证据；退出标 retired。

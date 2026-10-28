@@ -1,30 +1,23 @@
-# WBD Next｜新 agent 唯一启动入口
+# WBD Next｜从 main 接续
 
-> **W168/Windows 已于2026-10-27集成 main；集成完成不等于全产品资格。** 按需读 [当前热摘要](docs/handoff/CURRENT_INTEGRATION.md)，不全量载入旧devlog/FEC报告。Windows整改与极限参数执行入口是 [本次施工方案](docs/decisions/M0-WINDOWS-EXTREME-REMEDIATION-20261027.md)，具体进度仍查最新M0 cursor/Actions。历史F分支 `merge_ready=false` 不覆盖已授权合并，也不被删除。外层DATA repair实际默认/开关以当前feature卡和effective读回为准。
+**M0 在 main 连续开发；独立 FEC 历史工位已完成。** 不再寻找“最新实验分支”。任务/进度/证据分别有唯一落点，旧工作提示词不自动派活。
 
-仓库 `lly8666/wbd-next`；控制分支 `main`，其他工位分支由 main 的 `.governance/registry.json` 授权。**先刷新远端，不相信聊天、旧提示词、目录中的某个日期或本地缓存。**
+## 最小启动读取
+1. AGENTS.md 与 PROJECT_CHARTER.md：目标、硬门、开发方法。
+2. main 的 .governance/project.json 与 .governance/registry.json：阶段和权限/当前包。
+3. docs/prompts/M0.md 与 main 的 .governance/workstreams/M0/cursor.json：长期职责、当前事实/在途 run。
+4. docs/features/README.md：功能目录，用只读 `python tools/feature_catalog.py list --query <主题>` 或 GitHub entries 按需查卡。
+本页加上述七项合计八文件；不要再一次性载入旧 devlog。非 M0 的明确授权角色读取自身 prompt/cursor。
 
-## 最小热读取（不超过 8 文件）
+## 开工
+刷新 origin/main，检查本地未提交工作的归属。核对 cursor.checkpoint_sha 后实际增量、最新相关 Actions 和未写结果；必要时补 recovered 日志。不要扫全部历史或从旧分支 cursor 续错任务。registry.goal 给出当前施工方案，进度不从方案推断。
 
-1. `AGENTS.md`、`PROJECT_CHARTER.md`。
-2. main 的 `.governance/project.json`、`.governance/registry.json`。
-3. **`docs/features/README.md`**：产品功能唯一入口；先看盘点完整性，再运行 `python tools/feature_catalog.py list` 只读当前索引，按任务读卡片。正式/实验、开发分支、可用分支、配置和平台资格分开。`docs/handoff/README.md` 的工位与历史索引仅在需要时读，不增加固定热读取量。
-4. main 的 `docs/prompts/<role>.md`：永不过期的角色责任与停止条件；**在 registry 指定的角色分支**读取 `.governance/workstreams/<role>/cursor.json`。
+M0 的 source、夹具和结果均进 main；编译产物固定 SOURCE 可跨 Actions 复用。旧分支已经有独有在途工作时，先结算和选择性带回 main，一次收敛即可，不重跑已完成矩阵来“证明合并”。源码与 harness/binary 来源不同必须分列。
 
-## 开工/恢复（同一 agent 与全新 agent 完全一致）
+整批写完再测试；功能合批，性能单 Action 单场景/测量 job，同机顺序 A/B。容量不足停止更重同族并报告实测边界，不冒充极限 PASS。
 
-先确认 role/active/branch/task_id、reservation_revision、assignment_epoch；核对 cursor.checkpoint_sha 是远端 HEAD 的祖先，**逐个提交**检查 changed paths。检查 cursor 中 open_requests 与已提交 Actions 的精确 run/attempt/artifact；失败、403、超时或未跑均不能隐去。判 `CLEAN`（事实交接完整，非产品 PASS）、`RECOVERY_REQUIRED`（先补事实）或 `BLOCKED`（身份/证据/权限冲突）。
-
-CLEAN 后按assigned_task推进完整能力：公开入口→真实业务→关闭。源码、调用方、测试、装配清单一起改；便宜预检先行，完整原生流程按批次触发。旧cursor里的helper/重复Normal验证不是新任务。详见TEST_PLAN第0节；M0不等齐所有工位，按需读模块，勿全量历史。
-
-新功能试验进入 `experiment/**`；开发先登记，交付更新功能卡和现有 devlog 的 feature-impact，明确配置/CLI/GUI是否接线。意外中断先恢复遗漏登记。main 合并不会自动把 experimental 改成 formal。跨分支待发现的实验登记应随交接同步给集成者，不能声称未发布的分支变化已被其他 agent 自动知晓。
-
-**任务发现**：registry的`goal`应引用当前任务决策文件和本角色章节，详细验收读那里；`docs/prompts/<role>.md`仅是长期启动说明，不发布具体任务。新包由M0一次更新registry+决策发布，工位补旧事实后自行接续；不需要每轮给用户换初始提示词。缺引用由M0补入口，禁止从历史日期猜任务。详见GOVERNANCE第3节。
-
-写入：一份批次intent可与代码S同提交，普通包内修复连续推进；交付/暂停/恢复边界再H（只改自己的cursor）。不逐helper交接，不为文档更新重验产品。权限、精确SOURCE、性能单Action单场景/同机AB保持；失败先定位、不刷seed。
-
-**模式与平台**：FEC2默认 **OFF**；公开Linux的Normal/Fixed/Auto/Game已有各自范围的Actions证据，不能再按旧快照断言仅有测试helper，也不能推广到所有配置或物理环境。ARM64公共构建默认native-first加速，实际编译/运行后端及主线集成资格读 `docs/evidence/arm64-main-integration-20261022.json`。Windows、完整自动档/生命周期、MTU/大UDP/p99等按各自最新证据；网络实验分支的失败/修复不因ARM合并自动关闭。历史仍见 `docs/history/INDEX.md`。
-
-说明：若 main registry 和 worker cursor 记录的任务不同，**权限/本轮任务以 main registry 为准**，从决策/证据理解变更，不让旧 cursor 抢权限。治理细则 `docs/GOVERNANCE.md`；中央 Scope 唯一 G2 完整分页来源，旧64规则只用于独立恢复诊断。
-
-**PLAN021 用户新硬门**：精确 SOURCE Actions 正向功能 PASS 可开放该已接线模式供显式网络试验，无须先跑物理/全矩阵；未接线不冒充 PASS，认证、WFP、owned WAL、Stop 仍强制。见 [PLAN021](docs/decisions/M0-PLAN021-Actions-functional-pass-opens-network-trial-20261021.md)。
+## 只在需要时打开
+- [当前逻辑/问题导航](docs/handoff/CURRENT_INTEGRATION.md)，数字仍以最新 cursor/证据为准。
+- [历史怎么找](docs/history/2026-10-28-M0-MAIN-HANDOFF.md)：旧 FEC、Windows 接线、故障、性能和方案索引。
+- [模块设计](docs/architecture/modules/README.md)、[网络诊断](docs/testing/NETWORK_TRIAGE.md)：修哪个模块再读哪个。
+main 存在、代码已集成、功能通过、性能/物理通过是不同结论。历史失败保留但不重新生成已经关闭的待办。

@@ -92,8 +92,10 @@ def validate_entry(root, path):
     branch = item.get("development_branch")
     need(branch_ok(branch), f"{fid}: invalid development branch")
     if item["stage"] == "experimental" and not branch.startswith("experiment/"):
-        need(nonempty(item.get("legacy_branch_reason")),
-             f"{fid}: new experiments belong in experiment/**; historical exceptions need a reason")
+        main_work = (branch == "main" and item["owner"] == "M0"
+                     and nonempty(item.get("main_development_reason")))
+        need(main_work or nonempty(item.get("legacy_branch_reason")),
+             f"{fid}: M0 main development needs main_development_reason; other non-experiment origins need legacy_branch_reason")
     locations = item.get("available_on")
     need(isinstance(locations, list) and all(branch_ok(x) for x in locations)
          and (locations or planned or item["stage"] == "retired"),

@@ -1,5 +1,7 @@
 # 历史索引
 
+当前接手从main开始；[2026-10-28历史检索地图](2026-10-28-M0-MAIN-HANDOFF.md)按问题定位旧FEC/Windows/性能细节。FEC历史工位已完成，下文历史阶段OPEN不直接派发今天的任务。
+
 初始治理见 `docs/devlog/M0/GOV-001-complete.md`；2026-10-14 架构规划见 `docs/devlog/M0/PLAN-001-design.md`、当前设计入口 `docs/architecture/README.md`。旧“产品待讨论/禁止顺序A/B”已经显式被新方案与用户指令替代，历史原文保留，不重新导入当前 cursor。
 
 整理触发：阶段完成、约 20–30 项变更或热上下文达到预算。整理不是删除失败；OPEN 风险不因年龄变成已解决。

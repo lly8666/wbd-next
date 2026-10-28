@@ -34,6 +34,8 @@ G1 在授权范围内自主执行。G2 接口/职责调整由 M0 合并影响与
 
 ## 3. 一个控制面，多条工作线，一条集成通道
 
+**2026-10-28 M0 主线开发覆盖规则：** M0 的源码、调用方、夹具、功能登记和进度均直接在 main；不再常规开 experiment/preflight/integration 分支再抄进度回主线。旧分支一次核独有差异/在途run，必要增量带回main，不整树覆盖、不重刷已有效证据。只有明确另授的独立并行任务继续指定分支；单一主线活动写入者、非force和精确SOURCE仍保留。独立FEC历史工位已完成，不执行其旧next_action。下文通用worker分支条款仅适用于仍有明确授权的worker，不要求M0离开main。
+
 ### 长期提示词与任务发布分离
 
 `docs/prompts/M0.md`至`M4.md`只保存稳定职责、远端发现/恢复、边界和完成纪律，不写本轮task编号、源码、进度、参数或临时优化。用户长期复用同一提示词即可；发布任务不更新提示词。
@@ -141,7 +143,7 @@ runner CPU/ISA、架构、配额、PSI/steal、注入与内核/队列 drop 是�
 
 worker ready_for_integration 前：接口行为、正确性证据、适用配置/CLI/GUI、`docs/features/`卡片、资源成本、未验范围、回退方式齐全。M0 重新核实际 SOURCE，集成后跑必要组合回归；模块通过不等于产品通过。
 
-2026-10-27 功能登记闭环：新能力先在 `experiment/<topic>` 开发，声明 experimental 和实际分支；work保留已有模块授权，integration只做隔离集成。每次产品代码变化在原devlog写 feature-impact：更新列出的卡片，或解释没有产品功能影响。卡片由同一个稳定ID维护；配置、默认值、平台/模式接线、删除/回退都不能漏记。formal 需要实际 main 集成、明确晋级决定和适用产品证据，不能因合并或单测绿灯自动晋级。完整规则和格式在 `docs/features/README.md`。
+功能登记闭环（2026-10-28修订）：M0在main开发并声明experimental及main_development_reason，其他明确授权的独立任务可用experiment/work；integration只作已有隔离集成的历史入口。每次产品代码变化在原devlog写 feature-impact：更新列出的卡片，或解释没有产品功能影响。卡片由同一个稳定ID维护；配置、默认值、平台/模式接线、删除/回退都不能漏记。formal 需要实际 main 集成、明确晋级决定和适用产品证据，不能因合并或单测绿灯自动晋级。完整规则和格式在 `docs/features/README.md`。
 
 Governance push覆盖 main、work/**、experiment/**。三类分支都执行 Feature catalog 检查；旧main/work角色身份、路径、证据门完整保留。实验job仅做功能登记契约，不伪造M0身份、不修改registry授权，不声称产品通过。integration不加入自动push范围。工作包若需新增卡片写路径，由集成者一次授予相应文档范围，不能变成逐功能审批。目录变更先在本分支可见；集成者消费实验登记时可先合文档，不必合产品代码。
 

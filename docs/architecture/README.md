@@ -14,7 +14,7 @@ Normal 是一条 lane 的同一引擎。Game 在一个逻辑方向只做一次 L
 
 实施入口是 **[模块施工说明 v2](modules/README.md)**：逐模块的结构、接口、执行顺序和反例门已经细化。该目录对receipt、桥接、KDF/admission、内存与解码的明确修订优先于v1总览；不必一次读完所有模块。
 
-M0当前调优入口：[热路径成本修复与同Actions对比](../decisions/M0-hotpath-cost-first-2026-10-16.md)。按registry执行，同时依GOVERNANCE第3节一次分配其他模块完整工作包、阶段集中集成；不再要求024结束后才能启动独立模块。该决策的MTU预算、方向所有权、批量与验收边界保留，不重置阶段/硬门。
+M0当前任务从 main registry.goal / M0 cursor 读取，主线整改见 [完工包](../decisions/M0-MAIN-CLOSEOUT-20261028.md)。早期热路径成本方案仅作设计历史，不能从它重新派模块任务；FEC历史工位已完成。修哪个模块再读哪份设计，不把旧阶段OPEN直接变成今天待办。
 
 | 文档 | 解决的问题 |
 |---|---|

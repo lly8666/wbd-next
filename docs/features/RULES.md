@@ -13,8 +13,9 @@
 
 ## 登记与晋级
 
-- 新功能/新行为试验从明确基线开 `experiment/<topic>`；先登记 experimental、真实开发分支与 NOT_RUN。
-  `work/**` 继续既有授权模块任务，`integration/**` 只做隔离集成；不以临时分支绕开实验登记。
+- 2026-10-28用户授权 M0 后续直接在 main 开发；新功能先登记 experimental、真实开发分支与 NOT_RUN。
+  `owner=M0, development_branch=main` 时填非空 `main_development_reason` 说明该授权/任务；这不自动晋级 formal，也不扩展其他工位权限。
+  明确另授的独立实验才用 `experiment/<topic>`，work继续既有授权；原研发来源不因集成批量改名。
 - 一项产品能力一份 `entries/<stable-id>.json`；修复、优化、调默认值更新原条目，不为每个 helper 建卡。
   多分支同能力沿用同一 ID，集成时合并变化，不能靠换 ID 丢掉历史状态。
 - `development_branch` 指研发来源；`available_on` 只列已有代码的分支，不列“准备合并”的目标。
