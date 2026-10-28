@@ -365,13 +365,23 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             |x|x.snapshot().reorder_window_ns)
     }
     pub fn on_sent_adaptive(&mut self,frozen:H,at:MonoNs)->Result<(),DataError>{
+        self.on_sent_adaptive_with_floor(frozen,at,0)
+    }
+    /// Preserve the same v3 missing-witness and single-repair algorithm,
+    /// but optionally bound residency for a caller whose original source
+    /// must survive an RTT step-up before the estimator has new positives.
+    /// A floor is a finite immutable expiry, NOT a PTO or a DATA retry.
+    /// Existing Linux and Fixed callers use the unchanged zero-floor path.
+    pub fn on_sent_adaptive_with_floor(&mut self,frozen:H,at:MonoNs,
+        floor_ns:u64)->Result<(),DataError>{
         let Some(t)=self.timing_snapshot()else{return Err(DataError::Malformed)};
         let cache=if self.opportunistic_v3 {
             let r=t.srtt_ns.max(t.recent_rtt_ns);
             r.saturating_add(r/2).saturating_add(t.rttvar_ns.saturating_mul(4))
                 .saturating_add(100_000_000).clamp(250_000_000,MAX_RETAIN_NS)
         }else{t.cache_ns};
-        self.on_sent(frozen,at,MonoNs(at.0.saturating_add(cache)))
+        self.on_sent(frozen,at,MonoNs(at.0.saturating_add(
+            cache.max(floor_ns.min(MAX_RETAIN_NS)))))
     }
 
     /// Register only an already frozen, actually submitted data record.
@@ -753,6 +763,34 @@ mod tests {
         assert!(expired.candidates.is_empty());
     }
 
+    #[test]
+    fn v3_scoped_bounded_floor_keeps_genuine_rtt_step_feedback_in_shadow(){
+        let mut win=state(16,80_000_000);
+        win.enable_adaptive_timing(45_000_000,5_000_000).unwrap();
+        win.enable_opportunistic_v3().unwrap();
+        win.on_sent_adaptive_with_floor(
+            frozen(1),MonoNs(0),1_200_000_000).unwrap();
+        // The same 45ms estimate would otherwise expire at 250ms.
+        // On the now-300ms-per-way link, an authentic 600ms positive
+        // witness can still report a later DATA PN and a missing PN1.
+        assert_eq!(win.next_deadline(),Some(MonoNs(1_200_000_000)));
+        assert!(win.on_timer(MonoNs(599_999_999)).candidates.is_empty());
+        win.on_receipt(&receipt(1,3,vec![page(0,&[3])]),
+            MonoNs(600_000_000)).unwrap();
+        assert!(win.on_timer(MonoNs(619_999_999)).candidates.is_empty());
+        let got=win.on_timer(MonoNs(620_000_000)).candidates;
+        assert_eq!(got.len(),1);
+        assert!(win.preflight(&got[0],MonoNs(620_000_000)));
+        win.on_send_result(&got[0],RepairSendResult::Accepted,
+            MonoNs(620_000_000)).unwrap();
+        assert_eq!(win.outstanding(),0);
+        assert!(win.on_timer(MonoNs(1_300_000_000)).candidates.is_empty());
+        let mut linux=state(16,80_000_000);
+        linux.enable_adaptive_timing(45_000_000,5_000_000).unwrap();
+        linux.enable_opportunistic_v3().unwrap();
+        linux.on_sent_adaptive(frozen(1),MonoNs(0)).unwrap();
+        assert_eq!(linux.next_deadline(),Some(MonoNs(250_000_000)));
+    }
     #[test]
     fn v3_mature_negative_single_repair_and_positive_cancellation() {
         let mut s=state(16,80_000_000);

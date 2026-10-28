@@ -40,6 +40,11 @@ const MAX_AUTHENTICATED_KIND1:usize=32;
 // pending first-send while leaving room for RX and authentic control.
 const MAX_M2_FROZEN:usize=24_576; // Normal/off independent snapshots only
 const MAX_M2_FIXED_FROZEN:usize=1536; // preserve existing Fixed FEC arena-backed shadow and tests
+// Source-observed Windows Netem300/600ms RTT step: startup low RTT samples
+// shortened v3 H to 250ms, retiring ~all shadows BEFORE authentic feedback.
+// Bound Normal-only protection to the original 600ms RTT bootstrap horizon;
+// no blind PTO, no percentage increase, no retained fresh M1 slabs.
+const WIN_NORMAL_M2_MIN_RETAIN_NS:u64=1_200_000_000;
 const M2_HARD_EXPIRY_NS:u64=2_000_000_000;
 const MAX_EARLY:u32=32;
 const PH_PREPARED:u32=1;
@@ -392,7 +397,8 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         // returned first-send M1 loan is never pinned through an RTT.
         // Candidate memory denial is optional and cannot fail fresh DATA.
         if let Some(snapshot)=frozen.try_v3_repair_snapshot(){
-            let _=m.shadow.on_sent_adaptive(snapshot,now);
+            let _=m.shadow.on_sent_adaptive_with_floor(
+                snapshot,now,WIN_NORMAL_M2_MIN_RETAIN_NS);
         }
     }
     Ok(m.shadow.outstanding() as u32)
@@ -1894,6 +1900,7 @@ mod tests {
         ).count();
         assert!((1800..2300).contains(&selected));
         assert_eq!(MAX_M2_FROZEN,24_576);
+        assert_eq!(WIN_NORMAL_M2_MIN_RETAIN_NS,1_200_000_000);
         assert_eq!(wbd_recovery::receipt::OUTER_REPAIR_ATTEMPT_LIMIT,1);
     }
     #[test]

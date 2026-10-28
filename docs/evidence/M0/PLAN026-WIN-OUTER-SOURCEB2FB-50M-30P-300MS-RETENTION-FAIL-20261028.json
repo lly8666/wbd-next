@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "date": "2026-10-28",
+  "compiled_source_sha": "b2fb57f5087532ae43fac35ec99c2d68fa3ddc0a",
+  "action": {
+    "id": 40721820303,
+    "job_id": 122936971020,
+    "artifact_id": 12832340438,
+    "artifact_sha256": "823510d53e3c4edf5e05a46ee9d041bbe80cefbfb02c195fbbca094d16936ab3",
+    "conclusion": "FAIL_WINDOWS_ZERO_USEFUL_REPAIR"
+  },
+  "scenario": {
+    "path": "scenarios/wl-outer-repair-50m-300ms-loss30-60s.json",
+    "sha256": "4c34deb8e3e6a8ce5446d1f380dbb49457015fa32e36fc022482cccdb01ce961",
+    "offered_mbps_each": 50,
+    "loss_pct_each": 30,
+    "one_way_delay_ms_each": 300,
+    "duration_s": 60
+  },
+  "result": {
+    "windows_offered_mbps": 49.9865,
+    "linux_offered_mbps": 50,
+    "windows_first_delivery_pct": 69.5938,
+    "linux_first_delivery_pct": 69.9541,
+    "real_stop_both": "PASS",
+    "windows_native": {
+      "fresh_accepted_outer_bytes": 421563586,
+      "repair_accepted_outer_bytes": 0,
+      "repair_uncertain_outer_bytes": 0,
+      "control_outer_bytes": 2420475,
+      "authenticated_reverse_reports": 7381,
+      "repair_polls": 49426,
+      "candidate_first": 0,
+      "expired_first": 206546,
+      "acked_first": 15,
+      "quota_rejected": 0
+    },
+    "linux_server": {
+      "fresh_wire_bytes": 414262462,
+      "repair_bytes": 0,
+      "acked0": 14,
+      "expired0": 205669,
+      "estimated_srtt_us": 46437,
+      "rtvar_us": 21574,
+      "recent_rtt_us": 58691,
+      "cache_us": 254989
+    },
+    "app_measured_p99_rtt_ms": {
+      "windows": 594,
+      "linux": 605.911
+    }
+  },
+  "interpretation": "Both endpoints original authenticated reverse feedback present; no candidate because nearly all half-sampled shadows expire before meaningful 600ms-RTT feedback. Linux peer estimator stepped down to 46ms/255ms cache; Windows sample similarly shows only 15 confirmed positives of ~206k expiring. This is strong causal candidate, not yet independently proven by new floor. Preserve old source FAIL, test new Normal-only 1200ms bounded lifetime against exact counterexample first. Linux and Fixed policy unchanged.",
+  "remaining": "No 24-case results or physical qualification. 10% max ratio untested with nonzero R."
+}

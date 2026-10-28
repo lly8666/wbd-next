@@ -33,7 +33,8 @@
     "docs/evidence/fec-network-work/20261026-W167-Outer-ON-DualArch-Matrix-and-Deferred-RX-250ms.json",
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-OPPORTUNISTIC-REPAIR.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-WINDOWS-UNIT-REGRESSION.md",
-    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-FIRST-REAL-FAIL-DIAGNOSTIC.md"
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-FIRST-REAL-FAIL-DIAGNOSTIC.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-M2-RETENTION-FLOOR.md"
   ],
   "verification": [
     {
@@ -77,6 +78,13 @@
       "status": "FAIL",
       "source_sha": "504c517fee8bb658f58689560f891e2601c995b9",
       "evidence": "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE504C-50M-30P-300MS-FAIL-20261028.json"
+    },
+    {
+      "platform": "Windows x64 signed Npcap/Wintun + WSL2",
+      "scope": "b2fb 50M each/30% netem/300ms one-way: 7381 authenticated reverse receipts, no candidates, 206546 expiry and Windows R0 despite kernel loss; Normal-only 1200ms floor fix pending new SOURCE",
+      "status": "FAIL",
+      "source_sha": "b2fb57f5087532ae43fac35ec99c2d68fa3ddc0a",
+      "evidence": "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCEB2FB-50M-30P-300MS-RETENTION-FAIL-20261028.json"
     }
   ],
   "limitations": [
