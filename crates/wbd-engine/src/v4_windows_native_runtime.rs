@@ -64,6 +64,7 @@
      rejected:AtomicU64,
      worker_error:AtomicI32,
      ack:AtomicU32,
+     ack_sent:AtomicU32,
      tx_seq:AtomicU32,
      last_rx_ns:AtomicU64,
      stopping:AtomicBool,
@@ -73,6 +74,7 @@
          Self{tx_copied:AtomicU64::new(0),rx_delivered:AtomicU64::new(0),
              tx_after_rx:AtomicU64::new(0),rejected:AtomicU64::new(0),
              worker_error:AtomicI32::new(0),ack:AtomicU32::new(ack),
+             ack_sent:AtomicU32::new(ack),
              tx_seq:AtomicU32::new(seq),
              last_rx_ns:AtomicU64::new(0),stopping:AtomicBool::new(false)}
      }
@@ -211,6 +213,9 @@
      let mut ready:[&[u8];BATCH]=[&[];BATCH];
      for i in 0..count {ready[i]=&frames[i][..lens[i]];}
      let result=npf.send_batch(&ready[..count]);
+     if result.accepted_prefix>0{
+         counters.ack_sent.store(ack,Ordering::Release);
+     }
      {
          let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
          for (i,&(pn,seq,used)) in meta[..count].iter().enumerate(){
@@ -234,18 +239,20 @@
      npf:&mut NpcapTx,counters:&Counters,ip_id:&mut u16,
  )->Result<bool,i32>{
      let mut wire=[0u8;MAX_IPV4];
+     let ack=counters.ack.load(Ordering::Acquire);
      let feedback={
          let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
          m2_next_feedback_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?
      };
      if let Some((used,seq,pn))=feedback{
          let mut frame=[0u8;MAX_LINK];
-         let raw=packet_frame(cfg,seq,counters.ack.load(Ordering::Acquire),
+         let raw=packet_frame(cfg,seq,ack,
              &wire[..used],*ip_id,&mut frame)?;
          *ip_id=ip_id.wrapping_add(1);
          counters.tx_seq.store(seq.wrapping_add(used as u32),Ordering::Release);
          let outcome=npf.send_batch(&[raw]);
          let accepted=kernel_result(outcome,1,0)?==1;
+         if accepted{counters.ack_sent.store(ack,Ordering::Release);}
          let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
          m2_finish_feedback_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
              pn,u32::from(accepted))?;
@@ -258,11 +265,12 @@
      };
      if let Some((used,seq,pn))=repair{
          let mut frame=[0u8;MAX_LINK];
-         let raw=packet_frame(cfg,seq,counters.ack.load(Ordering::Acquire),
+         let raw=packet_frame(cfg,seq,ack,
              &wire[..used],*ip_id,&mut frame)?;
          *ip_id=ip_id.wrapping_add(1);
          let outcome=npf.send_batch(&[raw]);
          let accepted=kernel_result(outcome,1,0)?==1;
+         if accepted{counters.ack_sent.store(ack,Ordering::Release);}
          let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
          m2_complete_repair_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
              pn,u32::from(accepted))?;
@@ -276,11 +284,12 @@
  )->Result<(),i32>{
      let mut bytes=[0u8;MAX_LINK];
      let mut frame=[0u8;MAX_LINK];
+     let ack=counters.ack.load(Ordering::Acquire);
      let raw=build_presentation_ack(Ipv4Tuple{
          src_ip:&cfg.local_ip,dst_ip:&cfg.peer_ip,
          src_port:cfg.local_port,dst_port:cfg.peer_port,
      },counters.tx_seq.load(Ordering::Acquire),
-       counters.ack.load(Ordering::Acquire),*ip_id,
+       ack,*ip_id,
        PacketPersona::Windows11,cfg.path_mtu as usize,&mut bytes)
        .map_err(|_|INVALID)?;
      let link=io::ethernet_outbound(raw,&cfg.source_mac,
@@ -288,13 +297,13 @@
      *ip_id=ip_id.wrapping_add(1);
      let outcome=npf.send_batch(&[link]);
      if kernel_result(outcome,1,0)?!=1{return Err(BAD_STAGE)}
+     counters.ack_sent.store(ack,Ordering::Release);
      Ok(())
  }
   fn tx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
      mut tun:WintunRx,mut npf:NpcapTx,stop:Arc<WakeEvent>,
      notify:Arc<WakeEvent>,counters:Arc<Counters>)->i32{
      let mut ip_id=1u16;
-     let mut last_ack_sent=cfg.initial_rx_seq;
      loop {
          if counters.stopping.load(Ordering::Acquire){return OK}
          let result=(||->Result<bool,i32>{
@@ -305,14 +314,10 @@
                  if n<BATCH{break}
              }
              let control=send_control(&cfg,&lane,&mut npf,&counters,&mut ip_id)?;
-             if work>0||control{
-                 last_ack_sent=counters.ack.load(Ordering::Acquire);
-                 return Ok(false)
-             }
+             if work>0||control{return Ok(false)}
              let next_ack=counters.ack.load(Ordering::Acquire);
-             if next_ack!=last_ack_sent{
+             if next_ack!=counters.ack_sent.load(Ordering::Acquire){
                  send_presentation_ack(&cfg,&mut npf,&counters,&mut ip_id)?;
-                 last_ack_sent=next_ack;
                  return Ok(false)
              }
              let m2_active={
