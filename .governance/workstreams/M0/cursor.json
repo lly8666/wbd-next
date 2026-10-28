@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 316,
-  "checkpoint_sha": "bfa676c5ff1c11686b05f3df3aba83927323db92",
+  "sequence": 317,
+  "checkpoint_sha": "e5752611914278de1477ac2ca195989d33828780",
   "progress": "partial",
   "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
-  "current_task": "PLAN026 first native-source batch on main bfa676c5: real Rust Npcap/Wintun I/O + NPF bounded sendqueue, original Go Npcap capture handoff, scoped Rust Wintun session borrow and Go ring/Stop fence, generation-safe candidate lane table and Go assembly blob pins. Native product worker/Go callsite NOT YET wired.",
-  "why_now": "User explicitly chose Option B Go cold control + Rust exclusive steady Windows I/O. The former m0_native_v4_peer_windows.go still runs Go NPF reader/pulse, so low-level Rust modules and original Go device loan contracts must precede an authenticated two-worker native owner.",
-  "done_when": "Complete PLAN026 docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md: normal/off true Windows Rust native Npcap/Wintun in real Go TLS/OS product, Stop joined, native UDP/TCP 240s N0 plus source-locked old-Go A/B CPU/RSS/p99/idle; then Fixed/Auto/Game/Health/lane replacement only with genuine evidence. No false APPLIED/performance/physical PASS.",
-  "next_action": "Wire bfa676c5 Rust WintunRx/Tx and NpcapRx/Tx into the existing authenticated v4_windows_owner.rs as two persistent TX/RX workers; add versioned native C ABI attach/start/stop and Go m0_native_v4_windows.go handoff that quiesces ReadSegment and drains early frames, preserves original M2 Accepted/Uncertain and Rust AEAD/PN, then updates N4 packet proof and Stop order. Write whole Normal/off product+tests+manifest before concentrated Actions; preserve old produced=0 ready=4 failure.",
+  "current_task": "PLAN026 Windows Normal/off true Rust-native packet product now wired on main: original Go TLS/WFP/route/DNS/Wintun cold controls; Rust two native Wintun/Npcap TX/RX workers, protected original M1/M3/PN/M2, ready-only NPF sendqueue, authentic TCP ACK, early packet handoff, Go owned Stop. Normal/off has NO Go pulse/fallback. Fixed/Auto/Game remain on legacy Go packet pump until their Rust replacement.",
+  "why_now": "User chose Option B and substantial source implementations, low idle/active CPU, no backward-compatibility hot path. Normal/off should now be proven via real signed Wintun/Npcap Linux peer and same-VM old Go vs Rust performance, then move other modes.",
+  "done_when": "Normal/off exact new source signed Wintun/Npcap ↔ Linux raw/TUN UDP/TCP/Stop PASS, N0 240s (old produced0/ready4 regression retained), same-VM old-Go versus Rust CPU/RSS/idle wakes/P99 and first-delivery comparison; Fixed/Auto/Game2/4/Health/Keepalive/Make-Before-Break lane dynamic native implementation, removing Go pump only when every dependent mode is replaced and truly tested.",
+  "next_action": "Inspect source-locked Windows native-public-two-os run(s) 40646957672 [055026fda], 40647191693 [f93f7fe7] and main e5752611 run; Windows Rust/Go/Linux unit/build gates PASS at 055/f93f, but signed Windows/Linux live product/CPU for latest source not yet PASS. Diagnose first live network/M3/OS Stop error, fix without restoring Go Normal pulse. Then ONE true N0 240s plus same-VM A/B CPU-RSS-latency; subsequently migrate Fixed/Auto/Game/Keepalive/lane on same Rust owner.",
   "unverified": true,
   "last_tested_source": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
   "evidence_refs": [
@@ -19,15 +19,15 @@
     "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261028-PLAN026-native-normal-product-wiring.md",
+    "docs/devlog/M0/20261028-PLAN026-native-source-batch-lock-and-stop.md",
+    "docs/devlog/M0/20261028-PLAN026-native-ack-delivered-snapshot.md",
+    "docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md",
     "docs/devlog/M0/20261028-PLAN026-native-io-first-source-batch.md",
     "docs/architecture/TEST_PLAN.md",
     "docs/features/README.md",
-    "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md",
-    "docs/testing/NETWORK_TRIAGE.md",
-    "docs/devlog/M0/PLAN025-main-integration-tree-overwrite-recovered-20261027.md",
-    "docs/decisions/M0-WINDOWS-EXTREME-REMEDIATION-20261027.md",
-    "docs/prompts/M0_WINDOWS_REMEDIATION_EXECUTION.md"
+    "docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md"
   ],
   "open_requests": [],
-  "partial_summary": "S bfa676c5 new Rust/Go Windows native driver/loan and dynamic lane state code committed; no Rust native worker activated, no old Go pulse removed, no Normal/off source-qualified test or performance A/B run. Go manifest blobs reviewed; new Windows/x64 compilation and actual Win2022/Wintun/Npcap/WSL2 test remain NOT_RUN. Old PLAN025 original Windows N0 failures and in-flight result status not reclassified; old Linux evidence retained separately."
+  "partial_summary": "Full product source batch pushed b2d01c7a: Rust Normal native RX/TX, WinABI Start/Stop/Early/Stats, Go captured NPF/Wintun lease, original M2, true packet ACK and OS-WAL. E0502 platform checksum fixed b8db2a4a, E0382 RX Arc fixed 055026fd, exact 192-byte ABI tests and build triggers aef4ef8a; f93f7fe7 performance 8-sources/2 locks and Stop under saturated TX, e5752611 actual NPF-copied ACK snapshot coalescing. Verified Windows Rust library + Windows Go compile + Linux Rust + Linux Go/Rust product build on 055026fd Actions40646957672 and f93f7fe7 Actions40647191693; Windows actual signed two-OS native legs IN_PROGRESS at last check, not new product PASS. Main e575 native/N0/CPU NOT_RUN or IN_PROGRESS, no same-VM A/B. Keep old PLAN025 produced0 ready4 failure. Feature catalog and governance e575 PASS."
 }
