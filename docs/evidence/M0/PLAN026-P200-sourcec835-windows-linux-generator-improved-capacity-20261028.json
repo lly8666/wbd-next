@@ -47,5 +47,7 @@
     "Rust TX/RX CPU prior to Win32 SetThreadDescription fix",
     "physical NIC and same-VM old Go vs Rust A/B"
   ],
-  "latest_fix": "Windows SetThreadDescription one-time per worker staged for next source and real normal-only run"
+  "latest_fix": "Windows SetThreadDescription one-time per worker staged for next source and real normal-only run",
+  "artifact_sha256": "7724cb68fb1696872e39fe404d3ccb39855aeb231c290eb4cc085c11ec389dcb",
+  "artifact_verification_method": "Downloaded exact Action40653341765 artifact ZIP, verified SHA256 byte-for-byte matches GitHub Actions artifact digest; inspected source manifest c8352931e15c954aa2c5de7a31e024af3a7eeb35 and actual app/TC/CPU JSON."
 }

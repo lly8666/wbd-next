@@ -67,6 +67,10 @@ recv_bytes=0
 duplicate=0
 invalid=0
 last_delivery=None
+# P200-only reusable receive slab: the original recvfrom() allocated one
+# Python bytes object for every one of ~1 million observed native UDP frames.
+recv_slabs=bytearray(2048) if stress else None
+recv_view=memoryview(recv_slabs) if stress else None
 max_interdelivery_ms=0
 bins=[0] * int((duration+drain)*100)
 err=None
@@ -114,32 +118,38 @@ while True:
     # Drain ready packets without blocking the sender. Count first arrival
     # only and keep 10ms first-delivery buckets.
     for _ in range(160):
-        try: payload,peer=sock.recvfrom(1600)
+        try:
+            if stress:
+                plen,peer=sock.recvfrom_into(recv_slabs)
+                payload=recv_view
+            else:
+                payload,peer=sock.recvfrom(1600)
+                plen=len(payload)
         except BlockingIOError: break
         if peer[0]!=remote:
             invalid+=1
             continue
-        if payload.startswith(probe_request) and len(payload)==len(probe_request)+8:
+        if plen==len(probe_request)+8 and payload[:len(probe_request)]==probe_request:
             # Genuine application echo, not a transport/FEC M2 ACK.
-            try:sock.sendto(probe_reply+payload[len(probe_request):],peer)
+            try:sock.sendto(probe_reply+bytes(payload[len(probe_request):len(probe_request)+8]),peer)
             except OSError:probe_send_errors+=1
             continue
-        if payload.startswith(probe_reply) and len(payload)==len(probe_reply)+8:
-            seq=struct.unpack("!Q",payload[len(probe_reply):])[0]
+        if plen==len(probe_reply)+8 and payload[:len(probe_reply)]==probe_reply:
+            seq=struct.unpack_from("!Q",payload,len(probe_reply))[0]
             sent_at=probe_pending.pop(seq,None)
             if sent_at is not None and seq not in probe_delivered:
                 probe_delivered.add(seq)
                 probe_rtt_ms.append((time.monotonic()-sent_at)*1000)
             continue
-        if not payload.startswith(prefix) or len(payload)<len(prefix)+8:
+        if plen<len(prefix)+8 or payload[:len(prefix)]!=prefix:
             invalid+=1
             continue
-        seq=struct.unpack("!Q",payload[len(prefix):len(prefix)+8])[0]
+        seq=struct.unpack_from("!Q",payload,len(prefix))[0]
         if seq in first:
             duplicate+=1
             continue
         first.add(seq)
-        recv_bytes+=len(payload)
+        recv_bytes+=plen
         elapsed=now-start
         bucket=int(elapsed*100)
         if 0<=bucket<len(bins): bins[bucket]+=1
@@ -175,6 +185,7 @@ result={
     "sender_cpu_pct_one_core":round(100*cpu_seconds/max(0.001,end-start),3),
     "generator_main_loop_iterations":loop_count,
     "reused_payload_buffer":stress,
+    "reused_receive_slab":stress,
     "sent_packets":sent,"sent_payload_bytes":sent_bytes,
     "sent_payload_mbps":round(sent_bytes*8/(duration*1e6),4),
     "received_first_packets":len(first),
