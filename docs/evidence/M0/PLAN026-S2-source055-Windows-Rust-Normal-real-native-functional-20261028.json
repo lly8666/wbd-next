@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
+  "claim": "FUNCTIONAL_PASS",
+  "tested_source_sha": "055026fda1cf6ef31e1a8d81b7e04badeb617c34",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action_run": 40646957672,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/40646957672",
+  "runner": "windows-2025; signed Npcap/Wintun; WSL2 Linux real raw/TUN",
+  "original_lifecycle": "Go FakeTCP/TLS and original owned Windows OS transaction",
+  "normal_transport": "Rust NativeOwner 2-worker direct Wintun/Npcap; no Go Normal per-packet fallback in tested source",
+  "passes": [
+    "Windows Go production/test compile",
+    "Windows Rust M1/M2/M3 library unit",
+    "Linux Rust library unit",
+    "original Go TLS + Linux Rust product build",
+    "signed native Wintun/Npcap installation",
+    "normal UDP two-OS kernel duplex",
+    "normal TCP two-OS kernel duplex",
+    "normal Windows/Linux owned Stop",
+    "fixed/auto/game2/game4/game2-fec/game4-fec UDP/TCP/Stop in legacy Go packet hot path only"
+  ],
+  "observed_native_log_markers": [
+    "WL_PUBLIC_REAL_MODE_RESULT normal PASS",
+    "WBD_WL_TRUE_PUBLIC_MODE_WIN_LINUX_DUPLEX_STOP_PASS normal",
+    "WL_PUBLIC_REAL_MODE_BATCH PASS",
+    "WBD_NPCAP_DRIVER_CI_CLEANUP_PASS"
+  ],
+  "exclusions": [
+    "This is FUNCTIONAL_PASS only for tested_source_sha, NOT source e5752611 or subsequent N0 trigger source",
+    "Fixed/Auto/Game modes use prior Go packet hot path, not the new Rust NativeOwner",
+    "No same-host old Go vs new Rust CPU/RSS/P99 A/B",
+    "No 240-second 300ms RTT 10Mbps N0 on this run",
+    "No actual Health/Keepalive/dynamic lane hot replacement tested"
+  ]
+}

@@ -76,6 +76,13 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Windows2025 x64 signed Wintun/Npcap ↔ WSL2 Linux x86_64 raw/TUN",
+      "scope": "PLAN026 SOURCE055 Rust NativeOwner Normal/off real bidirectional UDP/TCP and both owned Stop; excludes N0/CPU A-B and excludes legacy Fixed/Auto/Game",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "055026fda1cf6ef31e1a8d81b7e04badeb617c34",
+      "evidence": "docs/evidence/M0/PLAN026-S2-source055-Windows-Rust-Normal-real-native-functional-20261028.json"
     }
   ],
   "limitations": [
