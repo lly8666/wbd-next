@@ -84,7 +84,8 @@
     "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
     "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
     "H311 provenance index: H309 main33ed seven-mode native PASS; N0dd0767 independent one-sample PASS while aa931 FAIL remains; ARM64f7ee prebuilt 10M capacity success; Linux33ed loss1 old serial-echo FAIL.",
-    "2026-10-28 PLAN026 新Normal/off直接转 Rust 两固定worker，无Go包FFI/Go数据泵作为正式候选；此代码尚未获Windows Rust/Go生产编译、真双端应用、N0 240s或同机CPU/首到A/B证据。旧已测SOURCE不是新路径PASS，Fixed/Auto/Game仍沿当前独立旧热路径待逐模式迁入同一个NativeOwner。"
+    "2026-10-28 PLAN026 新Normal/off直接转 Rust 两固定worker，无Go包FFI/Go数据泵作为正式候选；此代码尚未获Windows Rust/Go生产编译、真双端应用、N0 240s或同机CPU/首到A/B证据。旧已测SOURCE不是新路径PASS，Fixed/Auto/Game仍沿当前独立旧热路径待逐模式迁入同一个NativeOwner。",
+    "2026-10-28 PLAN026 follow-up: new raw Rust NativeOwner Windows build previously blocked at E0502 in pure TCP ACK checksum; source patch separates checksum computation. Windows native Go ABI 192-byte V1 layout explicitly asserted in test. This is a build correction, not a Windows actual Npcap/Wintun or performance PASS."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

@@ -11,6 +11,12 @@ func TestNativeV1ABIHasStablePointerTables(t *testing.T) {
         t.Fatal("Rust NativeFn ABI changed")
     }
     var v V4WindowsNativeIOV1
+    if unsafe.Sizeof(v)!=192 ||
+       unsafe.Offsetof(v.RXCapture)!=80 ||
+       unsafe.Offsetof(v.Npcap)!=112 ||
+       unsafe.Offsetof(v.Wintun)!=160 {
+        t.Fatal("Rust NativeOwner C attach V1 byte layout changed")
+    }
     if unsafe.Offsetof(v.Npcap)%8!=0 ||
        unsafe.Offsetof(v.Wintun)!=unsafe.Offsetof(v.Npcap)+6*ptr{
         t.Fatal("ABI field table offsets changed")

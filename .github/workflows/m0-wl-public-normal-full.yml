@@ -47,6 +47,14 @@ on:
       - crates/wbd-engine/src/v4_windows_fec2_owner.rs
       - crates/wbd-engine/src/v4_fixed_stream.rs
       - crates/wbd-engine/src/v4_windows_owner.rs
+      - crates/wbd-engine/src/v4_windows_native_runtime.rs
+      - crates/wbd-platform/src/windows_native_io.rs
+      - crates/wbd-platform/src/ipv4_tcp.rs
+      - r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go
+      - r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io.go
+      - r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io_test.go
+      - r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go
+      - r0/go_overlay/internal/windowsclient/native_rust_wintun_loan_windows.go
       - crates/wbd-engine/src/v4_owner_crypto.rs
       - crates/wbd-engine/src/v4_embedded_go.rs
       - r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go
