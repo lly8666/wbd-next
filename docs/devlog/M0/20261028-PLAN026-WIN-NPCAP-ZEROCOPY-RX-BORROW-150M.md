@@ -30,3 +30,31 @@ Strict PASS requires ≥142.5Mbps both offered, ≥99.9% first unique delivered 
 ```feature-impact
 {"kind":"updated","ids":["windows-native-transport","normal-off"],"reason":"Windows Rust NativeOwner authentic NPF RX now synchronously processes Npcap-owned pcap_next_ex frame bytes without an extra full-frame Rust memcpy, preserving M3/PN, Wintun driver-owned loan, Stop and <=32 TX wake batch. ABI unchanged; new-source real signed 150Mbps native qualification pending."}
 ```
+
+## Actual source-qualified full test: attempt 1 FAIL, attempt 2 PASS (different VM)
+
+Final actual **new product compiled SOURCE `e6be9358d2272d7e1960a935be7fe772885bb034`**, Actions [40697876014](https://github.com/lly8666/wbd-next/actions/runs/40697876014). Both runs use original signed Windows Npcap/Wintun, genuine WSL2 Linux raw/TUN, original Go cold TLS and Rust NativeOwner, the exact 150Mbps each / 300ms one-way each / 0% tc loss / 60s source-locked scenario SHA `e22a96fbd4d6de2b4dc581d7013b343e61f5775298480e185c7a5562906d516e`, both owned Stops PASS. All Windows/Linux Rust unit/Go compile and M0 Governance/Feature Catalog source checks PASS. **Same new compiled Rust code; two different GitHub-hosted Windows runner IDs.**
+
+| Metric | Attempt 1, runner1000107783 | Attempt 2, runner1000107784 |
+|---|---:|---:|
+| GitHub Action outcome | FAIL | **SUCCESS** |
+| Windows offered Mbps | 149.8978 | **149.9599** |
+| Linux offered Mbps | 144.7883 | **149.9629** |
+| Windows app first-delivery fraction (Linux→Win) | **98.6538% (FAIL)** | **100% (PASS)** |
+| Linux app first-delivery fraction (Win→Linux) | 100% | **100%** |
+| Windows original client EXE process CPU seconds | **51.25** / 76.922s | **11.00** / 74.703s |
+| Windows process charged kernel CPU seconds | 41.578125 | 7.40625 |
+| Native Rust TX thread CPU seconds, sampled lower bound | **43.48438** | **2.03125** |
+| Native Rust RX thread CPU seconds, sampled lower bound | 7.40625 | 8.10938 |
+| Source-verified NPF capture frames | 1,190,057 | **1,252,344** |
+| Avoided full Ethernet-frame scratch memcpy bytes | 1,206,393,335 | **1,267,003,670** |
+| RX→TX SetEvent attempts | 37,483 | 39,642 |
+| Real tc netem drops, Windows Npcap local ingress drops, Stop | 0,0,PASS | **0,0,PASS** |
+
+Attempt1 original artifact12820812914 SHA256 `97a4b63dab9587f391870c3d34980217eb929e95952f56b624f548cb567817d3`; attempt2 original artifact12822205415 SHA256 `2758c2c1ce73eefeefd1c200273f335fc71e61604dc92218decbe02ef1c0b338`. SHA hashes locally verified. Current repo HEAD after source candidate still holds the same Rust product until a later code change; rerun attempt2 is the **latest** real product performance observation. Actual source-locked NPF capture lifetime marker `WBD_WINDOWS_RUST_NATIVE_NPF_BORROW frames=1252344 bytes=1267003670 extra_memcpy_bytes=0 lifetime=UNTIL_NEXT_PCAP_READ`.
+
+**What is proven:** synchronous Npcap borrowed-frame implementation did not retain an extra copied caplen buffer, a real 150Mbps two-direction end-to-end scenario passed in one fresh VM with 100% first receipts both sides, and all Stop/owner paths passed in both. **What is NOT proven:** reliable 150Mbps across machines (attempt1 failed under the same code) and CPU speedup vs the prior original SOURCE7fc. The same new product exhibited **51.25s vs11.00s = 4.66x** process CPU variation across different GitHub-hosted runner IDs, concentrated in TX kernel-charged CPU (38.1875s vs1.60938s); Linux offered144.79Mbps in attempt1 vs149.96Mbps in attempt2. The two different runner IDs are established from GitHub attempt-specific jobs API; **the cause of the spike is UNKNOWN**, not proven to be NPF borrow. CPU on previous old SOURCE7fc run40693430836 was8.390625s/74.437s in yet another VM; comparing 8.39 to 11.00 does NOT quantify true code-level overhead. Also process kernel charged CPU is not driver-wide ISR/DPC CPU; the 1Hz samples do not include an ETW CPU stack attribution.
+
+**Required next step to exclude VM effects:** use exact old compiled SOURCE7fc and new SOURCEe6be artifacts on the **SAME Windows runner/WSL2 host** with equivalent original scene, source manifest SHA checks, real owned Stop/driver cleanups between legs and ideally ABBA ordering; report true per-thread CPU and packet first-delivery without changing default protocol. Until then keep the result marked `ONE_PASS_ONE_FAIL__CPU_ROI_UNVERIFIED`, even though successful retry is an authentic scoped 150Mbps PASS. Do not automatically revert the borrow solely due one red hosted VM, or claim it improved CPU because it removed 1.27GB memcpy.
+
+Exact [attempts and runner IDs evidence](../../evidence/M0/PLAN026-SOURCEE6BE-NPF-BORROW-150M-ATTEMPTS-20261028.json).

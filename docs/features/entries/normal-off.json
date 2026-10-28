@@ -144,6 +144,13 @@
       "status": "PERFORMANCE_PASS",
       "source_sha": "7fc38591c501ff4a06e1862c7b08d5d3dbc1be95",
       "evidence": "docs/evidence/M0/PLAN026-WIN-RX-WAKE-150M-SOURCE7FC3-ACTUAL-PASS-20261028.json"
+    },
+    {
+      "platform": "Windows amd64 signed Npcap/Wintun↔WSL2 Linux Rust raw/TUN",
+      "scope": "Compiled SOURCEe6be Windows Rust NativeOwner Normal/off 150Mbps each /300ms one-way/0% tc netem/60s: attempt1 same-source runner1000107783 FAIL Windows first receipt98.6538%, CPU51.25s; attempt2 runner1000107784 PASS first unique100% both, CPU11s, both owned Stop PASS. NPF in-place RX 1.267GB extra Rust scratch memcpy avoided. Stable cross-run performance and sameVM CPU improvement NOT_PROVEN.",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "e6be9358d2272d7e1960a935be7fe772885bb034",
+      "evidence": "docs/evidence/M0/PLAN026-SOURCEE6BE-NPF-BORROW-150M-ATTEMPTS-20261028.json"
     }
   ],
   "limitations": [
@@ -165,7 +172,7 @@
     "2026-10-28 H326 optional win_native_lock_profile compiled only when explicitly enabled: samples 1/64 shared Entry lock acquisitions for TX and RX, prints counts/total/max wait on owned Stop. Does not split owner yet, no default per-packet instrumentation or claim of measured lock contention before live run.",
     "PLAN026 Windows Rust native RX→TX 32-authenticated-record bounded wake coalescing candidate, with immediate partial-batch flush, per-worker GetCurrentThreadId one-shot diagnostic and Stop wake-attempt readback. No 150Mbps new-source performance result until real signed Windows/WSL2 test; do not promote this optimization as qualified yet.",
     "PLAN026 SOURCE7fc new Rust RX bounded SetEvent coalescing actual real 150Mbps /300ms /tc0% /60s Normal/off PASS first unique>=99.9 each, signed Windows/WSL2 true Stop. 130 Linux→Windows app packets missing in last sequence window; not absolute zero. New actual OS TID CPU identifies RX>T X; CPU differences vs SOURCE0abd from different Windows VMs cannot prove causal speedup; ETW stage attribution and physical/FEC modes NOT_MEASURED.",
-    "PLAN026 candidate Windows Rust NativeOwner RX pcap_next_ex direct borrowed read-only frame through synchronous M3/PN/Wintun delivery; extra 65KiB scratch frame memcpy removed; original Npcap/Go driver loan Stop unaffected. No fresh-source 150Mbps dual OS regression proven yet. Compare CPU across different hosted Windows VMs as exploratory only."
+    "PLAN026 actual SOURCEe6be NPF direct borrowed-frame RX verified at150Mbps each direction/300ms one-way/0%tc/60s: same-source Actions40697876014 attempt1 FAILED Windows first-delivery98.6538% and process CPU51.25s, attempt2 PASSED both first deliveries100% and CPU11.0s. Different Github Windows runner IDs 1000107783 vs1000107784, 4.66x CPU variation, no causal same-host CPU optimization proof or stable repeated pass. Borrowed NPF frame extra memcpy 1.267GB avoided in attempt2; owned Stop both pass."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
