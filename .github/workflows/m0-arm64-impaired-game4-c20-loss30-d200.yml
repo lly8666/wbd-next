@@ -2,7 +2,7 @@ name: M0 impaired game4-c20-loss30-d200
 run-name: "M0 game4-c20-loss30-d200 60s original Go Rust"
 on:
   push:
-    branches: [experiment/m0-arm64-grade-capacity-20261028]
+    branches: [experiment/m0-arm64-impaired-30pct-200ms-20261028]
     paths: ['.github/workflows/m0-arm64-impaired-game4-c20-loss30-d200.yml']
 permissions: {contents: read, actions: read}
 jobs:
