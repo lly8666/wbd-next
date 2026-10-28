@@ -37,7 +37,7 @@ class DeliveryCiTests(unittest.TestCase):
         job = self.workflow["jobs"]["windows-compile-preflight"]
         self.assertEqual(job["needs"], ["wiring-contract"])
         self.assertEqual(job.get("if"),
-            "inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]'))")
+            "inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))")
         scripts = "\n".join(x.get("run", "") for x in job["steps"])
         self.assertIn("go test -c", scripts)
         self.assertIn("./cmd/wbd-client", scripts)
@@ -51,7 +51,7 @@ class DeliveryCiTests(unittest.TestCase):
     def test_reused_rust_product_requires_source_and_binary_sha_and_real_driver(self):
         native=self.workflow["jobs"]["native-public-two-os"]
         step=next(x for x in native["steps"] if x.get("name","").startswith("Restore exact prebuilt"))
-        self.assertEqual(step["if"],"env.WBD_WL_REUSE_RUN_ID != ''")
+        self.assertEqual(step["if"],"env.WBD_WL_REUSE_RUN_ID != '' && env.WBD_WL_ABBA_NATIVE != '1'")
         for required in ("gh api", "head_sha", "git diff --name-only",
                          "Cargo.lock", "m0-wl-windows-product-binaries-", "sha256",
                          "wbd_engine.dll", "wbd-client-embedded.exe", "m['features']"):
@@ -213,6 +213,37 @@ class DeliveryCiTests(unittest.TestCase):
         self.assertIn("env.WBD_WL_REUSE_RUN_ID == ''",
             next(x for x in native["steps"]
                 if x.get("name","").startswith("Build actual original Windows Rust"))["if"])
+
+    def test_same_windows_runner_rust_native_abba_is_exact_source_only(self):
+        tag="[plan026-win-npf-abba-150]"
+        jobs=self.workflow["jobs"]
+        native=jobs["native-public-two-os"]
+        for line in (native["if"],native["env"]["WBD_WL_PUBLIC_MODES"],
+                     native["env"]["WBD_WL_V2_SCENARIO"],
+                     native["env"]["WBD_WL_ABBA_NATIVE"]):
+            self.assertIn(tag,line)
+        self.assertIn("40693430836",native["env"]["WBD_WL_REUSE_RUN_ID"])
+        self.assertIn("7fc38591c501ff4a06e1862c7b08d5d3dbc1be95",
+                      native["env"]["WBD_WL_BINARY_SOURCE"])
+        self.assertEqual(native["env"]["WBD_WL_PERF_AB"].count(tag),0)
+        self.assertIn(tag,jobs["linux-source-locked-public"]["if"])
+        self.assertIn(tag,jobs["windows-compile-preflight"]["if"])
+        self.assertIn(tag,jobs["windows-rust-contract-preflight"]["if"])
+        prepare=next(x for x in native["steps"]
+                if x.get("name","").startswith("Prepare source-locked A/B"))
+        self.assertEqual(prepare["if"],"env.WBD_WL_ABBA_NATIVE == '1'")
+        self.assertIn("m0_wl_native_abba_prepare.py",prepare["run"])
+        self.assertIn("git diff --name-only",prepare["run"])
+        execution=next(x for x in native["steps"]
+                if x.get("name","").startswith("Launch actual WSL2"))
+        self.assertIn("m0_wl_native_rx_abba.py",execution["run"])
+        self.assertIn("WL_REAL_SAME_WINDOWS_RUNNER_ABBA_DECISION",execution["run"])
+        self.assertIn("result/wl-public/wl-native-abba/",
+                next(x for x in native["steps"]
+                  if x.get("uses","").startswith("actions/upload-artifact")
+                     and x.get("if")=="always()")["with"]["path"])
+        preflight="\n".join(x.get("run","") for x in jobs["wiring-contract"]["steps"])
+        self.assertIn("tests.test_m0_wl_native_rx_abba",preflight)
 
     def test_native_success_and_cleanup_contracts_retained(self):
         job = self.workflow["jobs"]["native-public-two-os"]
