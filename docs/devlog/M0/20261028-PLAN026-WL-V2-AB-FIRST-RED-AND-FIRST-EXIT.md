@@ -1,0 +1,7 @@
+# PLAN026 WL V2 AB: source113b first failure and reduced-scope rerun
+
+Exact source: `113b2e50da90b094b3be10083411f551cd947693`, Action `40666215474`. The source-complete Linux+Windows compile and tests all passed. The actual signed Windows/Linux first authenticated UDP/TCP smoke and OS/WAL Apply passed.
+
+Go-steady A began the genuine kernel 150Mbps-per-direction, 300ms one-way/0% configured loss, 60s case, then product exited before 60s. Real Windows generator stopped after 13.359 seconds with WinError10051; 250181160 bytes / 13.359s ~149.82Mbps offered while alive, but 33.3575Mbps dividing by planned 60s is NOT comparable throughput. Go owner last 1Hz observed 210265 local Npcap ingress drops and 1489 pending legacy carrier records; attribution to root process exit remains UNKNOWN because client first-error subtype was not in archived artifact. Stop was NOT_RUN/UNVERIFIED; B was correctly suppressed for safety. This is neither a 150Mbps A performance PASS nor evidence Rust was faster.
+
+Corrective next batch: order Rust B first, verified owned Stop, then baseline Go A so both paths can be observed even when the Go baseline fails; do not run Go after an unverified Rust Stop. Capture exit codes and only allowlisted diagnostic marker tokens + hash, never upload raw client TLS/payload logs. Retain the same source-controlled scenario and 60s measurement. No user-visible product default change; Fixed/Auto/Game and Linux untouched. **Feature impact: none (testing-only).**

@@ -103,7 +103,7 @@ def collect(label,rc):
     (folder/"leg-summary.json").write_text(json.dumps(row,indent=2,sort_keys=True)+"\n")
     return row
 legs=[]
-for label in ("A","B"):
+for label in ("B","A"):
     for name in ("report.json","wl-n0-windows-app.json","wl-n0-linux-app.json",
                  "wl-n0-netem-before.json","wl-n0-netem-after.json",
                  "windows-original-go-rust-process-1hz.jsonl"):
@@ -116,7 +116,8 @@ for label in ("A","B"):
     row=collect(label,rc)
     legs.append(row)
     print("WL_V2_AB_LEG_END "+label+" rc="+str(rc)+" stop="+str(row["stop"]),flush=True)
-    # Never launch B when A failed owned Stop: previous OS state may remain.
+    # Refuse any next leg without fully proven Stop; B-first protects Rust
+    # evidence when the retained Go steady baseline crashes under pressure.
     if row["stop"]!="PASS_BOTH_OWNED":break
 
 issues=[]
@@ -149,7 +150,7 @@ result={"schema_version":2,"source_sha":os.environ.get("GITHUB_SHA"),
         "scenario_id":scenario["scenario_id"],"scenario_sha256":scenario["scenario_sha256"],
         "run_id":os.environ.get("GITHUB_RUN_ID"),"runner":os.environ.get("RUNNER_NAME"),
         "comparison_scope":"SAME_VM_SAME_BINARIES_CURRENT_SOURCE_GO_STEADY_VS_RUST_NATIVE",
-        "order":["A","B"],"legs":rows,"issues":issues,
+        "order":["B","A"],"legs":rows,"issues":issues,
         "status":"INCONCLUSIVE_OR_FAILED" if issues else "COMPARABLE_OBSERVATION_NOT_PRODUCT_QUALIFICATION"}
 if len(legs)==2 and not issues:
     a,b=rows["A"],rows["B"]

@@ -418,6 +418,39 @@ print(json.dumps(result),flush=True)
     until=time.monotonic()+int(seconds)+25
     while linuxrate.poll() is None or windowsrate.poll() is None:
      if w.poll() is not None or s.poll() is not None:
+      # Do not replace the first native owner failure with a generic perf
+      # timeout. This summary is allowlisted: never upload raw TLS/packet logs.
+      markers=("WBD_WINDOWS_NATIVE_FAILURE_SOURCE",
+               "WBD_WINDOWS_NATIVE_DISCONNECTED_V1",
+               "WBD_WINDOWS_NATIVE_APPLIED_V1",
+               "V4_PUBLIC_NATIVE_STOP_DRAINED")
+      diagnostic={}
+      for key,path in (("windows",out/"client.log"),("linux",out/"server.log")):
+       rows=[]
+       if path.is_file():
+        with path.open("rb") as stream:
+         stream.seek(0,2)
+         stream.seek(max(0,stream.tell()-131072))
+         for raw in stream.read().decode("utf-8","replace").splitlines():
+          for marker in markers:
+           if marker in raw:
+            # A line digest can be matched to a private runner log if
+            # necessary; only allowlisted code-stage tokens are public.
+            allowed=("Npcap","Wintun","M1","M2","M3","M4","WAL",
+                     "Stop","source","batch","peer","owner","route",
+                     "expired","timeout","closed","ring","failure",
+                     "capacity","kernel","NET","OS","backpressure")
+            rows.append({"marker":marker,
+                         "sha256":hashlib.sha256(raw.encode("utf-8")).hexdigest(),
+                         "tokens":[t for t in allowed if t.lower() in raw.lower()]})
+        diagnostic[key]=rows[-6:]
+       else:diagnostic[key]=[]
+      report["native_early_exit"]={
+       "windows_rc":w.poll(),"linux_rc":s.poll(),
+       "observed_marker_signatures":diagnostic,
+       "phase":"real_kernel_sustained_udp",
+       "status":"FAIL_EXIT_DURING_REQUIRED_60S"}
+      print("WL_V2_FIRST_NATIVE_EXIT "+json.dumps(report["native_early_exit"],sort_keys=True),flush=True)
       raise RuntimeError("real public product exited during WL-N0")
      if time.monotonic()>until:
       raise RuntimeError("bounded WL-N0 "+seconds+"s native app duration exceeded")

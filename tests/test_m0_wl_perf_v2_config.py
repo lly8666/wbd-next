@@ -32,4 +32,16 @@ class V2Scenarios(unittest.TestCase):
    p=pathlib.Path(d)/"bad.json"
    p.write_text(json.dumps(c))
    with self.assertRaises(ValueError):read_scenario(p)
+class V2ABFailureWitness(unittest.TestCase):
+ def test_rust_first_preserves_evidence_if_go_exits(self):
+  script=(pathlib.Path(__file__).resolve().parents[1]/"tools"/"m0_wl_perf_v2_ab.py").read_text()
+  self.assertIn('for label in ("B","A"):',script)
+  self.assertIn('"order":["B","A"]',script)
+  self.assertIn('if row["stop"]!="PASS_BOTH_OWNED":break',script)
+ def test_native_exit_has_hash_only_allowlisted_signatures(self):
+  script=(pathlib.Path(__file__).resolve().parents[1]/"tools"/"m0_wl_public_normal_e2e.py").read_text()
+  self.assertIn("WL_V2_FIRST_NATIVE_EXIT",script)
+  self.assertIn('"observed_marker_signatures":diagnostic',script)
+  self.assertIn('hashlib.sha256(raw.encode("utf-8")).hexdigest()',script)
+
 if __name__=="__main__":unittest.main()
