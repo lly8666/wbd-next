@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "source_sha": "4e3db33805c375372f9187449eeb05333de8f0e1",
+  "compiled_windows_linux_product_source_sha": "0543b805ca25d804ccd131be6686b0b99f61f80f",
+  "run_id": 40673750173,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40673750173",
+  "artifact": {
+    "id": 12808369702,
+    "name": "m0-wl-full-public-normal-direct",
+    "zip_sha256": "482b033ccce98924d5d8fad5f10b84c2f374cdb88e810edae55f00229a709f5e"
+  },
+  "source_reuse_manifest_sha_qualification": "PASS_WINDOWS_EXE_RUST_DLL_AND_LINUX_SOURCE_HASHES",
+  "compiled_from_same_source_as_previous": true,
+  "workload": {
+    "directions": "both",
+    "offered_mbps_each_target": 150,
+    "kernel_delay_ms_oneway": 300,
+    "netem_loss_pct": 0,
+    "duration_s": 60,
+    "real_signed_drivers": true,
+    "real_wsl2_linux": true
+  },
+  "windows_sender_to_linux_receiver": {
+    "offered_mbps": 149.9599,
+    "offered_packets": 1234860,
+    "first_delivered_mbps": 135.4067,
+    "first_delivered_packets": 1116215,
+    "missing_packets": 118645,
+    "first_delivered_fraction": 0.90392
+  },
+  "linux_sender_to_windows_receiver": {
+    "offered_mbps": 146.1655,
+    "offered_packets": 1203614,
+    "first_delivered_mbps": 144.7718,
+    "first_delivered_packets": 1192026,
+    "missing_packets": 11588,
+    "first_delivered_fraction": 0.990372
+  },
+  "kernels": {
+    "tc_ifb_inbound_packets": 1250530,
+    "tc_eth0_egress_packets": 1205833,
+    "tc_drops_each": 0,
+    "tc_overlimits_each": 0,
+    "tc_requeues_each": 0,
+    "windows_local_npcap_ingress_drops_approx": 0
+  },
+  "windows_generator": {
+    "cpu_s_65s": 37.5625,
+    "max_loop_gap_ms": 16,
+    "send_10ms_buckets_continuous": true
+  },
+  "linux_generator": {
+    "cpu_s_65s": 61.1531,
+    "core_pct_one": 94.082,
+    "max_loop_gap_ms": 139.824,
+    "windows_with_missing_seq_4096": 300,
+    "total_seq_windows_4096": 302
+  },
+  "linux_original_rust_server_rx_chain": {
+    "raw_observed": 1132269,
+    "raw_tuple": 1132181,
+    "data_unique": 1118872,
+    "link_completed": 1118872,
+    "tun_delivered": 1118872,
+    "tun_udp": 1118858,
+    "tun_failed": 0,
+    "open_invalid": 0,
+    "replay_duplicate": 0
+  },
+  "local_linux_udp_app_gap_after_tun_udp": 2643,
+  "first_loss_stage": "NOT_YET_ATTRIBUTED_SOCKET_DROP_COUNTER_MISSING",
+  "scope_note": "Linux raw chain counters cover server life and tc/app counters cover scenario measurement/drain, not an exact synchronized per-stage conservation",
+  "suspected_stage": "WINDOWS_NPCAP_TO_WSL2_LINUX_RAW_SOCKET_OR_LINUX_RAW_RCV_BUFFER",
+  "linux_raw_socket_rust_source": "crates/wbd-platform/src/linux_raw_carrier.rs RawRx::open AF_INET SOCK_RAW IPPROTO_TCP no explicit SO_RCVBUF",
+  "next_discriminating_measure": "Linux guest /proc/net/raw per-inode drops and queue 1Hz and before/after; /proc/net/udp bound generator socket drops; global Udp RcvbufErrors and rmem_default/max; no product changes until confirmed",
+  "actual_result": "FAIL_RUST_V2_FIRST_DELIVERY_BELOW_99_9PCT_WITH_STOP_PASS",
+  "infrastructure": {
+    "all_prebuilt_product_compilations_skipped": true,
+    "preflight_s": 12,
+    "real_windows_job_s": 217,
+    "prior_full_workflow_native_job_s": 340,
+    "prior_linux_product_build_s": 100,
+    "prior_max_parallel_preflight_s": 135,
+    "signed_drivers_and_wsl_boot_still_real": true
+  },
+  "physical_product": "NOT_RUN"
+}

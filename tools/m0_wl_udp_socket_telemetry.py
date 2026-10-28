@@ -1,0 +1,107 @@
+"""Low-overhead *fixture socket* UDP queue/drops, not Rust packet stats.
+
+Linux /proc/net/udp drops belongs to an EXACT bound UDP socket inode.
+Linux /proc/net/snmp Udp RcvbufErrors is guest GLOBAL (not per fixture).
+Any missing field returns None, never a manufactured zero.
+Only read at 1Hz or start/end; never per-packet syscalls.
+"""
+import os,pathlib,sys
+
+def parse_udp_mib(raw):
+    lines=raw.splitlines()
+    for i in range(len(lines)-1):
+        a=lines[i].split()
+        b=lines[i+1].split()
+        if a and b and a[0]==b[0]=="Udp:" and len(a)==len(b):
+            try:return {k:int(v) for k,v in zip(a[1:],b[1:])}
+            except ValueError:return {}
+    return {}
+
+def parse_udp_socket(raw,inode):
+    expected=str(inode)
+    for line in raw.splitlines()[1:]:
+        row=line.split()
+        if len(row)<13 or row[9]!=expected:continue
+        try:
+            return {"rx_queue_bytes":int(row[4].split(":")[1],16),
+                    "socket_drops":int(row[-1])}
+        except (IndexError,ValueError):return None
+    return None
+
+def parse_linux_raw_sockets(raw):
+    """Guest-global IPv4 raw socket inode, queue bytes and drop counters."""
+    rows={}
+    for line in raw.splitlines()[1:]:
+        fields=line.split()
+        if len(fields)<13:continue
+        try:
+            inode=fields[9]
+            if not inode.isdigit() or inode=="0":continue
+            rows[inode]={"rx_queue_bytes":int(fields[4].split(":")[1],16),
+                         "drops":int(fields[-1])}
+        except (IndexError,ValueError):continue
+    return rows
+
+def raw_sockets_delta(first,last):
+    if first is None or last is None:return None
+    # A disappearing/replaced socket is not evidence of zero drops.
+    if set(first)!=set(last) or not first:return None
+    out={}
+    for inode in first:
+        a=first[inode].get("drops");b=last[inode].get("drops")
+        if type(a) is not int or type(b) is not int or b<a:return None
+        out[inode]={"drops_delta":b-a,
+                    "last_rx_queue_bytes":last[inode].get("rx_queue_bytes")}
+    return out
+
+def _read(path):
+    try:return pathlib.Path(path).read_text(encoding="ascii")
+    except (OSError,UnicodeError):return None
+
+def snapshot(sock):
+    try:actual=sock.getsockopt(__import__("socket").SOL_SOCKET,__import__("socket").SO_RCVBUF)
+    except OSError:actual=None
+    result={"scope":"BOUND_UDP_GENERATOR_RECEIVER_SOCKET",
+            "so_rcvbuf_effective_bytes":actual,
+            "linux_socket_udp_drops":None,
+            "linux_socket_rx_queue_bytes":None,
+            "linux_guest_global_udp_rcvbuf_errors":None,
+            "linux_guest_global_udp_in_errors":None,
+            "linux_guest_rmem_max_bytes":None,
+            "linux_guest_rmem_default_bytes":None,
+            "linux_raw_socket_snapshot":None,
+            "linux_raw_socket_scope":"WSL_GUEST_GLOBAL_AF_INET_RAW_NOT_ONE_PRODUCT_INODE"}
+    if sys.platform!="linux":return result
+    try:inode=os.fstat(sock.fileno()).st_ino
+    except OSError:return result
+    raw=_read("/proc/net/udp")
+    row=parse_udp_socket(raw,inode) if raw else None
+    if row is not None:
+        result["linux_socket_udp_drops"]=row["socket_drops"]
+        result["linux_socket_rx_queue_bytes"]=row["rx_queue_bytes"]
+    raw=_read("/proc/net/raw")
+    result["linux_raw_socket_snapshot"]=parse_linux_raw_sockets(raw) if raw is not None else None
+    raw=_read("/proc/net/snmp")
+    mib=parse_udp_mib(raw) if raw else {}
+    result["linux_guest_global_udp_rcvbuf_errors"]=mib.get("RcvbufErrors")
+    result["linux_guest_global_udp_in_errors"]=mib.get("InErrors")
+    for field,path in (("linux_guest_rmem_max_bytes","/proc/sys/net/core/rmem_max"),
+                       ("linux_guest_rmem_default_bytes","/proc/sys/net/core/rmem_default")):
+        raw=_read(path)
+        if raw:
+            try:result[field]=int(raw.strip())
+            except ValueError:pass
+    return result
+
+def delta(first,last):
+    out={}
+    for key in ("linux_socket_udp_drops",
+                "linux_guest_global_udp_rcvbuf_errors",
+                "linux_guest_global_udp_in_errors"):
+        a=first.get(key) if first else None
+        b=last.get(key) if last else None
+        out[key+"_delta"]=(b-a if type(a) is int and type(b) is int and b>=a else None)
+    out["linux_raw_socket_deltas"]=raw_sockets_delta(
+        first.get("linux_raw_socket_snapshot") if first else None,
+        last.get("linux_raw_socket_snapshot") if last else None)
+    return out

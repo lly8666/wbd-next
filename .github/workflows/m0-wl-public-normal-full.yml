@@ -68,6 +68,8 @@ on:
       - tools/m0_wl_perf_v2_config.py
       - tools/m0_wl_perf_v2_ab.py
       - tools/m0_wl_v2_gap_audit.py
+      - tools/m0_wl_udp_socket_telemetry.py
+      - tests/test_m0_wl_udp_socket_telemetry.py
       - tests/test_m0_wl_v2_gap_audit.py
       - tools/m0_wl_public_modes_e2e.py
       - scenarios/wl-normal-150m-300ms-0loss-60s.json
@@ -131,6 +133,7 @@ jobs:
       - run: python -m unittest tests.test_m0_wl_impairment_profile -v
       - run: python -m unittest tests.test_m0_wl_perf_v2_config -v
       - run: python -m unittest tests.test_m0_wl_v2_gap_audit -v
+      - run: python -m unittest tests.test_m0_wl_udp_socket_telemetry -v
       - run: python -m unittest tests.test_m0_wl_native_resource_sampler -v
       - run: python -m unittest tests.test_m0_wl_lock_profile -v
       - run: python tools/prepare_windows_wiring.py --check-only

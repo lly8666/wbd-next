@@ -14,6 +14,7 @@ import sys
 import time
 from m0_wl_business_latency import summarize_rtt
 from m0_wl_impairment_profile import get_profile
+from m0_wl_udp_socket_telemetry import snapshot as udp_socket_probe, delta as udp_socket_delta
 
 local, remote, side, start_flag, output_dir = sys.argv[1:6]
 out = pathlib.Path(output_dir)
@@ -58,6 +59,10 @@ if (profile_name=="v2" and duration!=profile["duration_s"]) or (profile_name!="v
     raise ValueError("invalid declared impairment duration")
 drain=5.0
 start=time.monotonic()
+# Linux socket inode/proc UDP global counters are scoped to this real socket
+# (except explicitly named guest-global MIB). Read 1Hz, never per frame.
+socket_start=udp_socket_probe(sock) if profile_name=="v2" else None
+socket_timeline=[]
 cpu_start=time.process_time()
 loop_count=0
 probe_next=start
@@ -180,6 +185,14 @@ while True:
             max_interdelivery_ms=max(max_interdelivery_ms,int((now-last_delivery)*1000))
         last_delivery=now
     if now-last_heartbeat>=1:
+        if socket_start is not None:
+            snap=udp_socket_probe(sock)
+            socket_timeline.append({
+                "elapsed_s":round(now-start,3),
+                "socket_udp_drops":snap["linux_socket_udp_drops"],
+                "socket_rx_queue_bytes":snap["linux_socket_rx_queue_bytes"],
+                "guest_global_udp_rcvbuf_errors":snap["linux_guest_global_udp_rcvbuf_errors"],
+                "linux_raw_sockets":snap["linux_raw_socket_snapshot"]})
         print(json.dumps({"phase":"progress_1hz","side":side,"sent":sent,
                           "sent_bytes":sent_bytes,"received_first":len(first),
                           "received_bytes":recv_bytes}), flush=True)
@@ -194,6 +207,7 @@ while True:
             time.sleep(0)
     else:
         time.sleep(.0008)
+socket_end=udp_socket_probe(sock) if socket_start is not None else None
 sock.close()
 end=time.monotonic()
 cpu_seconds=time.process_time()-cpu_start
@@ -259,6 +273,12 @@ result={
     "max_generator_loop_gap_ms":round(max_loop_pause_ms,3) if send_bins is not None else None,
     "first_32_generator_loop_gaps_ge_20ms":long_loop_pauses if send_bins is not None else None,
     "received_sequence_gap_summary":sequence_sample,
+    "udp_socket_probe_start":socket_start,
+    "udp_socket_probe_end":socket_end,
+    "udp_socket_probe_deltas":udp_socket_delta(socket_start,socket_end) if socket_start is not None else None,
+    "udp_socket_1hz":socket_timeline if socket_start is not None else None,
+    "udp_probe_scope":"LINUX_SOCKET_INODE_AND_GUEST_GLOBAL_MIB_EXCLUDES_WINDOWS"
+                      if socket_start is not None else "NOT_MEASURED_LEGACY",
     "business_udp_rtt":summarize_rtt(probe_rtt_ms,probes_sent),
     "business_udp_rtt_send_errors":probe_send_errors,
     "application_oneway_p99":"NOT_MEASURED_UNCALIBRATED_WINDOWS_LINUX_CLOCKS",
@@ -267,5 +287,6 @@ result={
 (out / ("wl-n0-"+side+"-app.json")).write_text(json.dumps(result)+"\n")
 print(json.dumps({k:v for k,v in result.items()
     if k not in ("arrival_10ms_bucket_counts","send_10ms_bucket_counts",
-                 "send_10ms_bucket_bytes","received_sequence_gap_summary")}),flush=True)
+                 "send_10ms_bucket_bytes","received_sequence_gap_summary",
+                 "udp_socket_1hz")}),flush=True)
 sys.exit(1 if err else 0)

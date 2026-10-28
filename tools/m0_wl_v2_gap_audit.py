@@ -70,6 +70,9 @@ def audit(folder):
                 receiver.get("send_10ms_bucket_counts"),duration)
                 if receiver.get("send_10ms_bucket_counts") is not None else "NOT_MEASURED_OLD_FIXTURE",
             "sender_loop_pause_ms":receiver.get("max_generator_loop_gap_ms","NOT_MEASURED_OLD_FIXTURE"),
+            "linux_fixture_udp_socket_start":receiver.get("udp_socket_probe_start","NOT_MEASURED_OLD_FIXTURE"),
+            "linux_fixture_udp_socket_deltas":receiver.get("udp_socket_probe_deltas","NOT_MEASURED_OLD_FIXTURE"),
+            "linux_fixture_udp_socket_end":receiver.get("udp_socket_probe_end","NOT_MEASURED_OLD_FIXTURE"),
             "receiver_sequence_gaps":receiver.get("received_sequence_gap_summary","NOT_MEASURED_OLD_FIXTURE")
         }
     return {"schema_version":1,
