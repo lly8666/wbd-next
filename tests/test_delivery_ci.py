@@ -155,6 +155,35 @@ class DeliveryCiTests(unittest.TestCase):
                       " ".join(x.get("run","") for x in
                           self.workflow["jobs"]["wiring-contract"]["steps"]))
 
+    def test_win_rx_wake_batch_source_build_and_true_150_cpu_audit(self):
+        tag="[plan026-win-wake-150]"
+        preflight=next(x for x in self.workflow["jobs"]["wiring-contract"]["steps"]
+            if x.get("name","").startswith("Enforce functional"))
+        native=self.workflow["jobs"]["native-public-two-os"]
+        for expr in (preflight["env"]["PUBLIC_MODE"],
+                     preflight["env"]["WL_V2_SCENARIO"],
+                     native["env"]["WBD_WL_PUBLIC_MODES"],
+                     native["env"]["WBD_WL_V2_SCENARIO"],
+                     native["env"]["WBD_WL_V2_CPU_AUDIT"]):
+            self.assertIn(tag,expr)
+        self.assertIn("150m-300ms-0loss-60s.json",
+                      native["env"]["WBD_WL_V2_SCENARIO"])
+        # Changed Rust owner requires SAME new-SOURCE Windows+Linux native
+        # builds. Old 0abd products must never be reused for this experiment.
+        for expr in (preflight["env"]["WL_V2_REUSE_RUN"],
+                     preflight["env"]["WL_V2_BINARY_SHA"],
+                     native["env"]["WBD_WL_REUSE_RUN_ID"],
+                     native["env"]["WBD_WL_BINARY_SOURCE"],
+                     native["env"]["LINUX_BINARY_SRC"],
+                     native["env"]["WBD_WL_PERF_AB"]):
+            self.assertNotIn(tag,expr)
+        self.assertNotIn(tag,self.workflow["jobs"]["linux-source-locked-public"]["if"])
+        self.assertNotIn(tag,self.workflow["jobs"]["windows-compile-preflight"]["if"])
+        self.assertNotIn(tag,self.workflow["jobs"]["windows-rust-contract-preflight"]["if"])
+        self.assertIn("env.WBD_WL_REUSE_RUN_ID == ''",
+                      next(x for x in native["steps"]
+                           if x.get("name","").startswith("Build actual original Windows Rust"))["if"])
+
     def test_native_success_and_cleanup_contracts_retained(self):
         job = self.workflow["jobs"]["native-public-two-os"]
         scripts = "\n".join(x.get("run", "") for x in job["steps"])

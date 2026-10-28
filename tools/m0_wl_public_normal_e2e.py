@@ -610,7 +610,7 @@ finally:
    path.read_text(errors="replace") if path.exists() else "")
  if mode=="normal" and os.environ.get("WBD_WL_V2_CPU_AUDIT")=="1":
   try:
-   cpu_audit=summarize_windows_cpu(out/"windows-original-go-rust-process-1hz.jsonl")
+   cpu_audit=summarize_windows_cpu(out/"windows-original-go-rust-process-1hz.jsonl",client_log=out/"client.log")
   except Exception as cpu_err:
    cpu_audit={"status":"INCONCLUSIVE_CPU_AUDIT_PARSER",
               "exception_type":type(cpu_err).__name__}

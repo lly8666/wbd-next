@@ -22,6 +22,7 @@
  #[link(name="kernel32")]
  extern "system" {
      fn GetCurrentThread() -> *mut c_void;
+     fn GetCurrentThreadId() -> u32;
      fn SetThreadDescription(thread:*mut c_void, description:*const u16) -> i32;
  }
  const NATIVE_TX_WIDE:[u16;14]=[
@@ -34,6 +35,20 @@
      let _=unsafe { SetThreadDescription(GetCurrentThread(),name.as_ptr()) };
  }
  const BATCH:usize=8;
+ // Auto-reset Windows TX events preserve a pending wake. Once per ready
+ // batch is sufficient; a partial batch flushes before any next RX wait.
+ const RX_WAKE_BATCH:usize=32;
+ #[derive(Default)]
+ struct TxWakeBatch { pending:usize }
+ impl TxWakeBatch {
+     fn note_verified(&mut self)->bool {
+         self.pending+=1;
+         if self.pending==RX_WAKE_BATCH {self.pending=0;true}else{false}
+     }
+     fn finish(&mut self)->bool {
+         if self.pending==0 {false}else{self.pending=0;true}
+     }
+ }
  const MAX_IPV4:usize=2048;
  const MAX_LINK:usize=2304;
  const MAX_NPF:usize=65535+64;
@@ -125,6 +140,7 @@
  struct Counters {
      tx_copied:AtomicU64,
      rx_delivered:AtomicU64,
+     rx_tx_notify_attempts:AtomicU64,
      tx_after_rx:AtomicU64,
      rejected:AtomicU64,
      worker_error:AtomicI32,
@@ -138,6 +154,7 @@
  impl Counters {
      fn new(ack:u32,seq:u32)->Self{
          Self{tx_copied:AtomicU64::new(0),rx_delivered:AtomicU64::new(0),
+             rx_tx_notify_attempts:AtomicU64::new(0),
              tx_after_rx:AtomicU64::new(0),rejected:AtomicU64::new(0),
              worker_error:AtomicI32::new(0),ack:AtomicU32::new(ack),
              ack_sent:AtomicU32::new(ack),
@@ -418,10 +435,12 @@
          match result {Ok(true)=>return OK,Ok(false)=>{},Err(code)=>return code}
      }
  }
+ // Returns true only for authenticated DATA or CONTROL whose ACK/M2
+ // state was updated. The RX worker performs the bounded TX notification.
  fn open_and_deliver(cfg:&WbdWinNativeAttachV1,lane:&Arc<Mutex<Entry>>,
-     tun:&mut WintunTx,tx_notify:&WakeEvent,counters:&Counters,
+     tun:&mut WintunTx,counters:&Counters,
      ack:&mut PresentationAck,seq:u32,wire:&[u8],
-     plain:&mut [u8;MAX_IPV4])->Result<(),i32>{
+     plain:&mut [u8;MAX_IPV4])->Result<bool,i32>{
      let opened={
          let mut e=lock_owner(lane,counters,LockDirection::Rx)?;
          let opened=v5_open_record_entry(&mut e,cfg.epoch,cfg.luid,
@@ -433,17 +452,24 @@
              tun.deliver_authenticated(&plain[..used]).map_err(|_|BAD_STAGE)?;
              counters.ack.store(ack.verified(seq,wire.len()),Ordering::Release);
              counters.rx_delivered.fetch_add(1,Ordering::Release);
-             let _=tx_notify.wake();
+             Ok(true)
          },
          Ok((_,2,_))=>{
              counters.ack.store(ack.verified(seq,wire.len()),Ordering::Release);
-             let _=tx_notify.wake();
+             Ok(true)
          },
-         Err(INVALID)=>{counters.rejected.fetch_add(1,Ordering::Relaxed);},
-         Err(code)=>return Err(code),
-         _=>return Err(BAD_STAGE),
+         Err(INVALID)=>{
+             counters.rejected.fetch_add(1,Ordering::Relaxed);
+             Ok(false)
+         },
+         Err(code)=>Err(code),
+         _=>Err(BAD_STAGE),
      }
-     Ok(())
+ }
+ #[inline]
+ fn flush_tx_wake(tx_notify:&WakeEvent,counters:&Counters) {
+     counters.rx_tx_notify_attempts.fetch_add(1,Ordering::Relaxed);
+     let _=tx_notify.wake();
  }
  fn rx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
      mut tun:WintunTx,mut npf:NpcapRx,stop:Arc<WakeEvent>,
@@ -464,15 +490,22 @@
          if counters.stopping.load(Ordering::Acquire){return OK}
          // Drain genuine Go pre-handoff packets FIRST, in original order.
          // Only this RX worker ever calls the M3 opener after Start.
+         let mut early_wakes=TxWakeBatch::default();
          loop{
              if counters.stopping.load(Ordering::Acquire){return OK}
              let next=match early.lock(){
                  Ok(mut q)=>q.pop_front(),Err(_)=>return BAD_STAGE
              };
              let Some((seq,record))=next else{break};
-             if let Err(code)=open_and_deliver(&cfg,&lane,&mut tun,&tx_notify,
-                 &counters,&mut ack,seq,&record,&mut plain){return code}
+             let verified=match open_and_deliver(&cfg,&lane,&mut tun,
+                 &counters,&mut ack,seq,&record,&mut plain){
+                 Ok(v)=>v,Err(code)=>return code
+             };
+             if verified&&early_wakes.note_verified(){
+                 flush_tx_wake(&tx_notify,&counters);
+             }
          }
+         if early_wakes.finish(){flush_tx_wake(&tx_notify,&counters);}
          match io::wait_ready(&[stop.handle(),event,early_notify.handle()],IDLE_WAIT){
              Ok(WaitResult::Ready(0))=>return OK,
              Ok(WaitResult::Ready(1|2))=>{},
@@ -480,7 +513,8 @@
              Err(_)=>return BAD_STAGE,
              _=>return BAD_STAGE,
          }
-         for _ in 0..32{
+         let mut npf_wakes=TxWakeBatch::default();
+         for _ in 0..RX_WAKE_BATCH{
              if counters.stopping.load(Ordering::Acquire){return OK}
              let n=match npf.read(&mut frame){
                  Ok(ReadResult::Frame(n))=>n,
@@ -493,9 +527,16 @@
              let Ok(sealed)=parse_data_packet(packet,trusted)else{
                  counters.rejected.fetch_add(1,Ordering::Relaxed);continue
              };
-             if let Err(code)=open_and_deliver(&cfg,&lane,&mut tun,&tx_notify,
-                 &counters,&mut ack,sealed.seq32,sealed.ciphertext,&mut plain){return code}
+             let verified=match open_and_deliver(&cfg,&lane,&mut tun,
+                 &counters,&mut ack,sealed.seq32,sealed.ciphertext,&mut plain){
+                 Ok(v)=>v,Err(code)=>return code
+             };
+             if verified&&npf_wakes.note_verified(){
+                 flush_tx_wake(&tx_notify,&counters);
+             }
          }
+         // A partial ready batch must signal immediately on drain.
+         if npf_wakes.finish(){flush_tx_wake(&tx_notify,&counters);}
      }
  }
 
@@ -537,6 +578,7 @@
      let tx_notify=Arc::clone(&notify);let tx_counters=Arc::clone(&counters);
      let tx=thread::Builder::new().name("wbd-native-tx".into()).spawn(move||{
          set_native_thread_name(&NATIVE_TX_WIDE);
+         eprintln!("WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=TX tid={}",unsafe{GetCurrentThreadId()});
          let rc=tx_loop(config,tx_lane,wtx,sender,Arc::clone(&tx_stop),tx_notify,
              Arc::clone(&tx_counters));
          if rc!=OK{
@@ -550,6 +592,7 @@
      let tx_notify_for_rx=Arc::clone(&notify);let rx_counters=Arc::clone(&counters);
      let rx=thread::Builder::new().name("wbd-native-rx".into()).spawn(move||{
          set_native_thread_name(&NATIVE_RX_WIDE);
+         eprintln!("WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=RX tid={}",unsafe{GetCurrentThreadId()});
          let rc=rx_loop(config,rx_lane,wrx,capture,Arc::clone(&rx_stop),tx_notify_for_rx,
              rx_event,rx_early,Arc::clone(&rx_counters));
          if rc!=OK{
@@ -601,6 +644,10 @@
      let _=session.rx_notify.wake();
      let tx=session.tx.join().unwrap_or(STOP_INCOMPLETE);
      let rx=session.rx.join().unwrap_or(STOP_INCOMPLETE);
+     eprintln!("WBD_WINDOWS_RUST_NATIVE_WAKE_BATCH max_verified_per_wake={} tx_wake_attempts={} rx_data_delivered={} joined=true",
+         RX_WAKE_BATCH,
+         session.counters.rx_tx_notify_attempts.load(Ordering::Relaxed),
+         session.counters.rx_delivered.load(Ordering::Acquire));
      #[cfg(feature="win_native_lock_profile")]
      {
          let p=&session.counters.profile;
@@ -634,6 +681,22 @@
          assert_eq!(c.profile.tx.samples.load(Ordering::Relaxed),1);
          assert_eq!(c.profile.rx.samples.load(Ordering::Relaxed),0);
          assert_eq!(*lock.lock().unwrap(),0);
+     }
+     #[test]
+     fn bounded_rx_tx_wake_coalescing_preserves_single_and_full_batches(){
+         let mut b=TxWakeBatch::default();
+         assert!(!b.finish()); // No ACK verification: no SetEvent.
+         assert!(!b.note_verified());
+         assert!(b.finish()); // one verified packet: notify immediately.
+         assert!(!b.finish()); // no duplicate wake.
+         for _ in 0..RX_WAKE_BATCH-1 {assert!(!b.note_verified());}
+         assert!(b.note_verified()); // 32 verified packets: one wake.
+         assert!(!b.finish());
+         for _ in 0..RX_WAKE_BATCH+1 {
+             let signal=b.note_verified();
+             if signal {assert_eq!(b.pending,0);}
+         }
+         assert!(b.finish()); // 33 -> 1 full + 1 partial wake.
      }
      #[test]
      fn m2_native_next_deadline_wakes_only_when_due() {

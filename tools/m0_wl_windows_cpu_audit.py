@@ -6,10 +6,14 @@ Top-6 thread table is a lower bound for a thread missing from some samples.
 This module does not measure AEAD, Npcap, Wintun, Go vs Rust stack CPU.
 """
 import json
+import re
 from collections import defaultdict
 from pathlib import Path
 
-def summarize_windows_cpu(path):
+_WORKER=re.compile(r"WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=(TX|RX) tid=(\d+)")
+_WAKE=re.compile(r"WBD_WINDOWS_RUST_NATIVE_WAKE_BATCH max_verified_per_wake=(\d+) tx_wake_attempts=(\d+) rx_data_delivered=(\d+) joined=true")
+
+def summarize_windows_cpu(path,client_log=None):
     p=Path(path)
     if not p.is_file():
         return {"status":"NOT_MEASURED_FILE_MISSING"}
@@ -68,6 +72,30 @@ def summarize_windows_cpu(path):
             "user_s_lower_bound":round(v["user_s_lower_bound"],5),
             "observations_in_top6":v["observations_in_top6"]})
     top.sort(key=lambda x:x["cpu_s_lower_bound"],reverse=True)
+    # The real Rust worker logs GetCurrentThreadId once at spawn, avoiding
+    # broken GetThreadDescription HRESULT on this Windows CI runner.
+    # Reject ambiguous or recycled thread IDs rather than guessing.
+    native_ids={}
+    wake=None
+    if client_log is not None and Path(client_log).is_file():
+        log=Path(client_log).read_text(encoding="utf-8",errors="replace")
+        matches=_WORKER.findall(log)
+        counts={role:[int(tid) for r,tid in matches if r==role]
+                for role in ("TX","RX")}
+        if all(len(v)==1 for v in counts.values()) and counts["TX"]!=counts["RX"]:
+            native_ids={v[0]:role for role,v in counts.items()}
+        found=_WAKE.findall(log)
+        if len(found)==1:
+            max_per,attempts,delivered=map(int,found[0])
+            if max_per==32 and delivered>=0 and attempts>=0:
+                wake={"max_verified_per_wake":max_per,
+                      "tx_wake_attempts":attempts,
+                      "rx_data_delivered":delivered,
+                      "data_delivered_per_tx_wake_attempt":
+                          round(delivered/attempts,4) if attempts else None,
+                      "interpretation":"Wake attempts also serve CONTROL and early handoff; data-delivered / wake-attempts is not exact batching CPU or time"}
+    for row in top:
+        row["rust_worker_role"]=native_ids.get(row["tid"])
     named={k:round(sum((r.get("thread_cpu") or {}).get(k,0) or 0 for r in rows),5)
             for k in ("rust_tx_cpu_delta_s","rust_rx_cpu_delta_s",
                       "rust_tx_kernel_delta_s","rust_tx_user_delta_s",
@@ -87,6 +115,8 @@ def summarize_windows_cpu(path):
         "peak_working_set_bytes":max(r.get("working_set_bytes",0) for r in rows),
         "peak_private_bytes":max(r.get("private_bytes",0) for r in rows),
         "named_rust_workers_cpu_s":named,
+        "verified_worker_os_tids":{role:tid for tid,role in native_ids.items()},
+        "native_rx_to_tx_wake_batch":wake if wake is not None else {"status":"NOT_MEASURED"},
         "thread_name_status_counts_observation_sum":overall_status,
         "top_threads_by_lower_bound_cpu":top[:8],
         "top2_threads_cpu_share_lower_bound":round(

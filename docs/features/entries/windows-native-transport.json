@@ -33,7 +33,8 @@
   "doc_refs": [
     "docs/evidence/M0/PLAN024-W168-recovered-Windows-v3-native-run-20261027.json",
     "docs/handoff/CURRENT_INTEGRATION.md",
-    "docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md"
+    "docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-RX-WAKE-COALESCING-150M.md"
   ],
   "verification": [
     {
@@ -118,7 +119,8 @@
     "PLAN026 authenticated TCP presentation ACK correction: Rust NativeOwner now records the ACK value actually included in a Npcap-accepted carrier; only when authenticated contiguous progress exceeds this value does it send a standalone ACK. Source changed on main but live Windows/Npcap/A-B still requires independent evidence.",
     "PLAN026 Stop scheduling: Rust RX prefers stop event and checks AtomicBool before each early packet and NPF frame; TX also prefers stop over Wintun read events. Windows live load/Stop regression on this exact post-fix SOURCE must be re-run; past live PASS belongs only to earlier SOURCE.",
     "2026-10-28 H326 Windows Rust Normal/off TX event-only scheduling: M2 feedback.next_deadline and shadow.next_deadline wake earliest deadline in one M2 monotonic clock, replacing fixed 20ms poll/2s post-RX spin; removes per-delivery last_rx_ns atomic writes. Requires exact-source real Windows signed NPF/Wintun tests; earlier PASS does not transfer.",
-    "2026-10-28 H326 optional win_native_lock_profile compiled only when explicitly enabled: samples 1/64 shared Entry lock acquisitions for TX and RX, prints counts/total/max wait on owned Stop. Does not split owner yet, no default per-packet instrumentation or claim of measured lock contention before live run."
+    "2026-10-28 H326 optional win_native_lock_profile compiled only when explicitly enabled: samples 1/64 shared Entry lock acquisitions for TX and RX, prints counts/total/max wait on owned Stop. Does not split owner yet, no default per-packet instrumentation or claim of measured lock contention before live run.",
+    "PLAN026 Windows Rust native RX→TX 32-authenticated-record bounded wake coalescing candidate, with immediate partial-batch flush, per-worker GetCurrentThreadId one-shot diagnostic and Stop wake-attempt readback. No 150Mbps new-source performance result until real signed Windows/WSL2 test; do not promote this optimization as qualified yet."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
