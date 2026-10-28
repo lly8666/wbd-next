@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "assigned_task": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "binary_source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "platform": "native linux/arm64 2 Linux OS namespaces original-Go TLS Rust raw/TUN",
+  "origin_bundle": {
+    "build_run_id": 40557336142,
+    "artifact_id": 12757832935,
+    "archive_sha256": "a6c2f17d6282e0d9817236357b62adb119a9d6d22143daa117458b789872ea45",
+    "source_and_sha256sum_verified": true,
+    "recompilation": false
+  },
+  "note": "Distinct hosted runners; one genuine 60s bidirectional app scenario per Actions job; tested tc netem loss random30% one-way delay200ms with rate shaping survivors only (erased frames do not consume capacity). NOT exact physical preloss capacity; business offered rate is smaller than configured line cap.",
+  "cases": [
+    {
+      "id": "FEC6_C150_D200_LOSS30",
+      "initial": {
+        "source_sha": "6860aa61d09a3538194a1447f464e1c4c4929a70",
+        "run_id": 40613090176,
+        "result": "FAIL_BEFORE_LOAD",
+        "description": "Original Go FakeTCP WaitEstablished 20sec under zero underlay loss before adding tc, 10/9 veth control frames, no true 60s traffic",
+        "artifact_id": 12782939907,
+        "archive_sha256": "c48830b189dde2f2dbbfe034022932edf599961c77c247f45637b2de3301a106"
+      },
+      "result": {
+        "source_sha": "524482217b9cf2fc7cdaa0fa46be607468538813",
+        "run_id": 40613432085,
+        "artifact_id": 12783474168,
+        "archive_sha256": "165f5d4d771ba47edd32427f584c8ce2b6a0852c8597d3d8a38a81abdb5e6227",
+        "action_result": "SUCCESS",
+        "scope_status": "PERFORMANCE_PASS_SCOPED",
+        "mode": "fec-fixed",
+        "profile_requested": 6,
+        "actual_both_endpoints": {
+          "mode": "fixed",
+          "profile": "6",
+          "requested": "1",
+          "applied": "1",
+          "pending": "false"
+        },
+        "line_survivor_rate_mbps_each": 150,
+        "loss_pct_each_requested": 30,
+        "one_way_delay_ms": 200,
+        "business_offered_mbps_each": 50,
+        "received_mbps": [
+          49.6477967501,
+          49.6497833348
+        ],
+        "udp_lost_pct": [
+          0.0322670969,
+          0.0346990454
+        ],
+        "netem_actual_dropped_packets": [
+          261942,
+          263875
+        ],
+        "tun_icmp_rtt_ms": {
+          "p50": 402,
+          "p95": 410,
+          "p99": 411,
+          "received_probes": 518
+        },
+        "cpu_pct_mean_process_client_server": [
+          23.73,
+          24.1
+        ],
+        "cpu_pct_peak_process_client_server": [
+          33.1,
+          33.7
+        ],
+        "rss_peak_kib_client_server": [
+          30320,
+          30212
+        ],
+        "cpu_psi_some_avg10_after_pct": 24.72,
+        "qdisc_peak_packet_backlog_each": [
+          2086,
+          2091
+        ],
+        "qdisc_overlimits": 0,
+        "client_parity_symbols_sent": 470076,
+        "server_parity_symbols_sent": 473178,
+        "client_recovered_source_candidates": 112873,
+        "server_recovered_source_candidates": 112552,
+        "decoder_rejected": 0,
+        "outer_m2_frozen_retransmissions": 0,
+        "positive_m2_feedback_mean_us_approx": 403800,
+        "m2_shadow_cache_us_each_approx": [
+          132161,
+          129286
+        ],
+        "native_stop": "PASS_BOTH",
+        "cleared_netns": true,
+        "limitations": [
+          "Only homogeneous 1000B UDP, no mixed-size/TCP HOL",
+          "No calibrated one-way app p99",
+          "CPU quota unavailable",
+          "Linux ARM64 not Windows",
+          "Netem shapes surviving packets, physical pre-erasure wire cap unproven"
+        ]
+      }
+    },
+    {
+      "id": "GAME4_C20_D200_LOSS30",
+      "result": {
+        "source_sha": "6860aa61d09a3538194a1447f464e1c4c4929a70",
+        "run_id": 40613090033,
+        "artifact_id": 12783159927,
+        "archive_sha256": "672f060caf2c864f6e995b5c2500361c334359ab3fffa3ab2f714c2718f4429f",
+        "action_result": "SUCCESS",
+        "scope_status": "PERFORMANCE_PASS_SCOPED",
+        "mode": "game4",
+        "fec": "off",
+        "lanes_authenticated": 4,
+        "line_survivor_rate_mbps_each": 20,
+        "loss_pct_each_requested": 30,
+        "one_way_delay_ms": 200,
+        "business_offered_mbps_each": 3,
+        "received_mbps": [
+          2.9554503508,
+          2.9566423851
+        ],
+        "udp_lost_pct": [
+          0.8266666667,
+          0.7814224538
+        ],
+        "netem_actual_dropped_packets": [
+          27525,
+          27632
+        ],
+        "tun_icmp_rtt_ms": {
+          "p50": 404,
+          "p95": 541,
+          "p99": 546,
+          "received_probes": 530
+        },
+        "cpu_pct_mean_process_client_server": [
+          2.96,
+          3.08
+        ],
+        "cpu_pct_peak_process_client_server": [
+          3.9,
+          4
+        ],
+        "rss_peak_kib_client_server": [
+          39760,
+          40152
+        ],
+        "qdisc_peak_packet_backlog_each": [
+          239,
+          232
+        ],
+        "qdisc_overlimits": 0,
+        "game4_copy_schedule_late_max_us_approx": 4094,
+        "game4_copy_schedule_late_mean_us_approx": 154,
+        "auth_rejected": 0,
+        "tun_failed": 0,
+        "native_stop": "PASS_BOTH",
+        "cleared_netns": true,
+        "limitations": [
+          "Game4 FEC OFF, not Game4+FEC",
+          "Same underlay shared across lanes but iid per-packet netem not correlated blackholes",
+          "No business one-way p99 or concurrent TCP/UDP",
+          "Netem shapes surviving packets, physical pre-erasure wire cap unproven"
+        ]
+      }
+    }
+  ],
+  "architecture_triage": [
+    "First FEC6 original run failed at 20sec Go FakeTCP WaitEstablished before netem or any business load; original FAIL stays. Separate traced attempt succeeded, so recurrent preauth reliability is OPEN, not CPU saturation.",
+    "FEC6 FEC recovery 112k original sources each side; decoder rejected0; no qdisc overlimit and measured 200ms propagation flight queue around2k pkts as predicted. No demonstrated steady HOL in single UDP flow.",
+    "FEC6 M2 frozen retransmissions 0 though mean positive feedback lag ~403ms and shadow cache lifetime~130ms. Given opportunistic-v3 this may be intentional, but demands exact SOURCE control/runtime design review before any fix; not expand cache blindly.",
+    "FEC6 CPU PSI some avg10 24.72% after load, mean Go+Rust shared owners ~24% of one core each; injector CPU substantial; CPU quota unavailable, not proof of host versus software bottleneck.",
+    "Game4 delivered residual near 0.3^4=0.81%, no sender/receiver rejects, client/server copy schedule late max ~3-4ms; ICMP RTT p99 546 vs400ms physical floor, extra tail not conclusively product HOL."
+  ],
+  "unqualified": [
+    "Strict pre-loss physical 150/20Mbps cap",
+    "Windows Npcap/Wintun under 30% loss",
+    "Mixed size UDP and TCP 60s",
+    "Business one-way latency p99",
+    "10ms first-arrival and unrelated-flow HOL",
+    "Repeated cold connection success ratio",
+    "Per-lane correlated failure/blackhole"
+  ]
+}

@@ -115,6 +115,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
       "evidence": "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
+    },
+    {
+      "platform": "linux/arm64 original-Go TLS Rust native raw/TUN 2 netns under authentic tc netem",
+      "scope": "Game4 four authenticated original-Go TLS Rust independent lanes, shared underlay netem rate20Mbps survivors 30% IID/200ms one-way, 60s logical3Mbps per dir, received2.955/2.957Mbps residual0.827/0.781%, 0 auth reject/owned Stop PASS. FEC OFF, no correlated blackout, precise business one-way p99, TCP/HOL or physical preloss wire cap.",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
+      "evidence": "docs/evidence/M0/PLAN025-H313-ARM64-30pct-200ms-FEC6-Game4-20261028.json"
     }
   ],
   "limitations": [
