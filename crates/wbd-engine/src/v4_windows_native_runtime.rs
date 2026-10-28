@@ -3,7 +3,7 @@
  //! packet callbacks. This is a child of the existing original TLS-scoped
  //! Rust owner: all M1/M3/PN/M2 logic is reused, never reimplemented.
  use super::*;
- use std::sync::atomic::{AtomicI32, AtomicU32, AtomicU64, Ordering};
+ use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU32, AtomicU64, Ordering};
  use std::thread::{self, JoinHandle};
  use wbd_platform::windows_native_io::{
      self as io, NpcapFns, NpcapRx, NpcapTx, WintunFns,
@@ -66,6 +66,7 @@
      ack:AtomicU32,
      tx_seq:AtomicU32,
      last_rx_ns:AtomicU64,
+     stopping:AtomicBool,
  }
  impl Counters {
      fn new(ack:u32,seq:u32)->Self{
@@ -73,7 +74,7 @@
              tx_after_rx:AtomicU64::new(0),rejected:AtomicU64::new(0),
              worker_error:AtomicI32::new(0),ack:AtomicU32::new(ack),
              tx_seq:AtomicU32::new(seq),
-             last_rx_ns:AtomicU64::new(0)}
+             last_rx_ns:AtomicU64::new(0),stopping:AtomicBool::new(false)}
      }
      fn snapshot(&self)->WbdWinNativeStatsV1{
          WbdWinNativeStatsV1{
@@ -162,40 +163,58 @@
      lane:&Arc<Mutex<Entry>>,tun:&mut WintunRx,npf:&mut NpcapTx,
      counters:&Counters,ip_id:&mut u16,
  )->Result<usize,i32>{
-     let mut inner=[0u8;MAX_IPV4];
-     let mut wire=[0u8;MAX_IPV4];
-     let mut frames=[[0u8;MAX_LINK];BATCH];
-     let mut lens=[0usize;BATCH];
-     let mut meta=[(0u64,0u32,0usize);BATCH];
+     // One bounded Wintun drain, ONE Entry lock to seal ALL ready sources,
+     // ONE NPF ready-only queue and ONE lock to settle real driver receipts.
+     // No Vec, Go call, thread pool or shared registry lookup per packet.
+     let mut sources=[[0u8;MAX_IPV4];BATCH];
+     let mut source_len=[0usize;BATCH];
      let mut count=0;
      for _ in 0..BATCH {
-         let n=match tun.read(&mut inner){
-             Ok(ReadResult::Frame(n))=>n,
+         match tun.read(&mut sources[count]){
+             Ok(ReadResult::Frame(n))=>{
+                 source_len[count]=n;
+                 count+=1;
+                 if count==BATCH{break}
+             },
              Ok(ReadResult::NoPacket|ReadResult::EndOfStream)=>break,
-             Ok(ReadResult::Skipped)=>{counters.rejected.fetch_add(1,Ordering::Relaxed);continue},
+             Ok(ReadResult::Skipped)=>{
+                 counters.rejected.fetch_add(1,Ordering::Relaxed);
+             },
              Err(_)=>return Err(BAD_STAGE),
-         };
-         let (used,seq,pn)={
-             let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
-             v3_seal_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,&inner[..n],&mut wire)?
-         };
-         let f=packet_frame(cfg,seq,counters.ack.load(Ordering::Acquire),
-             &wire[..used],*ip_id,&mut frames[count])?;
-         lens[count]=f.len();
-         meta[count]=(pn,seq,used);
-         counters.tx_seq.store(seq.wrapping_add(used as u32),Ordering::Release);
-         *ip_id=ip_id.wrapping_add(1);
-         count+=1;
-         if count==BATCH{break}
+         }
      }
      if count==0{return Ok(0)}
-     let mut ready: [&[u8]; BATCH]=[&[]; BATCH];
+     let mut wire=[[0u8;MAX_IPV4];BATCH];
+     let mut meta=[(0u64,0u32,0usize);BATCH];
+     {
+         let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+         for i in 0..count {
+             let (used,seq,pn)=v3_seal_entry(
+                 &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
+                 &sources[i][..source_len[i]],&mut wire[i]
+             )?;
+             meta[i]=(pn,seq,used);
+         }
+     }
+     let mut frames=[[0u8;MAX_LINK];BATCH];
+     let mut lens=[0usize;BATCH];
+     let ack=counters.ack.load(Ordering::Acquire);
+     for i in 0..count {
+         let (_,seq,used)=meta[i];
+         let f=packet_frame(cfg,seq,ack,&wire[i][..used],
+             *ip_id,&mut frames[i])?;
+         lens[i]=f.len();
+         *ip_id=ip_id.wrapping_add(1);
+     }
+     let (_,last_seq,last_used)=meta[count-1];
+     counters.tx_seq.store(last_seq.wrapping_add(last_used as u32),Ordering::Release);
+     let mut ready:[&[u8];BATCH]=[&[];BATCH];
      for i in 0..count {ready[i]=&frames[i][..lens[i]];}
      let result=npf.send_batch(&ready[..count]);
      {
          let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
-         for (index,&(pn,seq,used)) in meta[..count].iter().enumerate(){
-             let status=kernel_result(result,count,index)?;
+         for (i,&(pn,seq,used)) in meta[..count].iter().enumerate(){
+             let status=kernel_result(result,count,i)?;
              m2_kernel_firstsend_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
                  pn,seq,used,status)?;
              if status==1{
@@ -209,6 +228,7 @@
      if result.error.is_some(){return Err(BAD_STAGE)}
      Ok(count)
  }
+
  fn send_control(
      cfg:&WbdWinNativeAttachV1,lane:&Arc<Mutex<Entry>>,
      npf:&mut NpcapTx,counters:&Counters,ip_id:&mut u16,
@@ -276,6 +296,7 @@
      let mut ip_id=1u16;
      let mut last_ack_sent=cfg.initial_rx_seq;
      loop {
+         if counters.stopping.load(Ordering::Acquire){return OK}
          let result=(||->Result<bool,i32>{
              let mut work=0;
              for _ in 0..4 {
@@ -484,6 +505,7 @@
          let Some(s)=g.remove(&h)else{return UNKNOWN};
          s
      };
+     session.counters.stopping.store(true,Ordering::Release);
      let _=session.stop.wake();
      let _=session.tx_notify.wake();
      let _=session.rx_notify.wake();
@@ -497,6 +519,17 @@
  #[cfg(test)]
  mod tests {
      use super::*;
+     #[test]
+     fn native_go_rust_c_abi_is_192_bytes_and_fixed_offsets(){
+         use std::mem::{offset_of,size_of};
+         assert_eq!(size_of::<WbdWinNativeAttachV1>(),192);
+         assert_eq!(offset_of!(WbdWinNativeAttachV1,rx_capture),80);
+         assert_eq!(offset_of!(WbdWinNativeAttachV1,npcap),112);
+         assert_eq!(offset_of!(WbdWinNativeAttachV1,wintun),160);
+         assert_eq!(size_of::<WbdWinNativeStatsV1>(),48);
+         assert_eq!(size_of::<NpcapFns>(),6*size_of::<usize>());
+         assert_eq!(size_of::<WintunFns>(),4*size_of::<usize>());
+     }
      #[test]
      fn native_ack_stops_at_gap_and_merges_verified_ranges_only(){
          let mut ack=PresentationAck::new(100);
