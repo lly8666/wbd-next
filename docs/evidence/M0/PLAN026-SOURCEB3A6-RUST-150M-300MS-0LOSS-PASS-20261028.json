@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "scenario": "Rust Normal/off Windows↔WSL2 150Mbps each direction, 300ms one-way, 0% injected tc loss, 60 seconds",
+  "result": "PASS_SCOPED_99_9PCT_FIRST_DELIVERY_AND_TRUE_OWNED_STOP_NOT_ABSOLUTE_ZERO",
+  "test_harness_source_sha": "b3a6533c3451727abcbcc43eb7ddfa3f2c48b42e",
+  "compiled_product_source_sha": "0abd1b04ee7a39d8aa426963564a079523c1036a",
+  "precompiled_product_origin_run_id": 40681039919,
+  "current_test_run_id": 40684266415,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40684266415",
+  "artifact": {
+    "id": 12814471764,
+    "name": "m0-wl-full-public-normal-direct",
+    "sha256": "b687fcfb3c8c8d768f4885947b2cb3485a4a8939d8583def1f8050ea28276547",
+    "exact_zip_verified": true
+  },
+  "scenario_config": {
+    "source_path": "scenarios/wl-normal-150m-300ms-0loss-60s.json",
+    "sha256": "e22a96fbd4d6de2b4dc581d7013b343e61f5775298480e185c7a5562906d516e",
+    "target_offered_mbps_per_direction": 150,
+    "oneway_delay_ms_per_direction": 300,
+    "configured_netem_loss_pct": 0,
+    "measure_s": 60,
+    "drain_s": 5,
+    "tun_mtu": 1400,
+    "seed": 20261028,
+    "packet_mix_by_count": [
+      {
+        "bytes": 96,
+        "weight": 10
+      },
+      {
+        "bytes": 288,
+        "weight": 15
+      },
+      {
+        "bytes": 1060,
+        "weight": 30
+      },
+      {
+        "bytes": 1200,
+        "weight": 45
+      }
+    ]
+  },
+  "windows_to_linux": {
+    "windows_sender_packets": 1234860,
+    "windows_sender_payload_mbps": 149.9599,
+    "linux_first_delivered_packets": 1234860,
+    "linux_first_delivered_payload_mbps": 149.9599,
+    "missing_unique": 0,
+    "first_delivery_fraction": 1
+  },
+  "linux_to_windows": {
+    "linux_sender_packets": 1234967,
+    "linux_sender_payload_mbps": 149.9731,
+    "windows_first_delivered_packets": 1234952,
+    "windows_first_delivered_payload_mbps": 149.9707,
+    "missing_unique": 15,
+    "first_delivery_fraction": 0.99998785,
+    "received_sequence_gap": {
+      "start": 1170,
+      "end_exclusive": 1185,
+      "missing_packets": 15
+    },
+    "location_of_remaining_missing": "NOT_MEASURED_WINDOWS_UDP_SOCKET_DROP_PER_STAGE"
+  },
+  "native": {
+    "actual_original_tls_and_two_os_udp_tcp": "PASS",
+    "signed_npcap_wintun": "TRUE",
+    "wsl2_original_linux_kernel_raw_tun": "TRUE",
+    "both_owned_stop": "PASS_BOTH_OWNED",
+    "windows_npcap_ingress_local_drops": 0,
+    "linux_tun_fq600_actual_readback": "maxrate_mbps=600 flow_limit_packets=256 readback=kernel_fq_600Mbit",
+    "raw_tcp_open_invalid": 0,
+    "linux_tun_failed": 0
+  },
+  "linux_kernel": {
+    "raw_ipv4_tcp_rx_so_rcvbuf_requested_bytes": 4194304,
+    "raw_ipv4_tcp_rx_so_rcvbuf_effective_bytes": 8388608,
+    "kernel_capped": false,
+    "raw_socket_inodes_and_owners": {
+      "8127": {
+        "pid": 998,
+        "comm": "wbd-v4-server",
+        "drops_delta": 0,
+        "last_rx_queue_bytes": 0
+      },
+      "9277": {
+        "pid": 998,
+        "comm": "wbd-v4-server",
+        "drops_delta": 0,
+        "last_rx_queue_bytes": 0
+      },
+      "9287": {
+        "pid": 998,
+        "comm": "wbd-v4-server",
+        "drops_delta": 0,
+        "last_rx_queue_bytes": 0
+      }
+    },
+    "independent_udp_fixture_socket_so_rcvbuf_requested_bytes": 4194304,
+    "independent_udp_fixture_socket_so_rcvbuf_effective_bytes": 8388608,
+    "linux_udp_fixture_kernel_drop_delta": 0,
+    "linux_guest_global_udp_rcvbuf_errors_delta": 0,
+    "true_netem_ifb_packets": 1254356,
+    "true_netem_eth0_packets": 1252538,
+    "netem_ifb_drops": 0,
+    "netem_eth0_drops": 0,
+    "netem_overlimits": 0,
+    "netem_requeues": 0,
+    "rust_native_server_raw_observed": 1254421,
+    "rust_native_server_data_unique": 1236161,
+    "rust_native_server_tun_udp": 1236147
+  },
+  "measurement": {
+    "independent_generator_cpu_seconds_65s": {
+      "windows": 48.3906,
+      "linux": 49.3533
+    },
+    "generator_cpu_one_core_pct": {
+      "windows": 74.447,
+      "linux": 75.912
+    },
+    "true_business_udp_rtt_p99_ms": {
+      "windows": 610,
+      "linux": 619.801
+    },
+    "udp_rtt_p99_scope": "EACH_SENDER_LOCAL_MONOTONIC_ROUNDTRIP_NOT_CROSS_OS_ONEWAY",
+    "generator_max_main_loop_gap_ms": {
+      "windows": 31,
+      "linux": 60.288
+    }
+  },
+  "prior_stage_controls": {
+    "old_product_run_150m_source775": {
+      "run": 40675314979,
+      "raw_socket_drops": 162785,
+      "linux_app_missing": 175620
+    },
+    "new_product_fixture_request_2MiB_150m": {
+      "run": 40683222367,
+      "raw_socket_drops": 0,
+      "linux_udp_fixture_socket_drops": 14726,
+      "linux_offered_mbps": 137.3996,
+      "first_delivery_windows_to_linux_frac": 0.977078,
+      "first_delivery_linux_to_windows_frac": 0.984525
+    },
+    "new_product_fixture_request_4MiB_150m": {
+      "run": 40684266415,
+      "raw_socket_drops": 0,
+      "linux_udp_fixture_socket_drops": 0,
+      "linux_offered_mbps": 149.9731,
+      "both_first_delivery_fraction_above_99_9_pct": true
+    },
+    "caveat": "Each run uses a different GitHub-hosted VM. Same compiled SOURCE0abd for the two newest 150Mbps fixture runs. Cannot claim same-VM CPU performance improvement or prove all earlier loss solely due socket buffers."
+  },
+  "qualification": {
+    "both_actual_offered_mbps_at_least_142_5": true,
+    "both_unique_app_fraction_at_least_0_999": true,
+    "both_owned_stop": true,
+    "real_kernel_tc_drop_zero": true,
+    "linux_product_raw_socket_drop_zero": true,
+    "linux_fixture_udp_socket_drop_zero": true,
+    "exact_both_directions_absolute_zero_missing": false,
+    "physical": "NOT_RUN",
+    "fec_auto_game": "NOT_RUN"
+  },
+  "next": "At 150Mbps first-delivery pass; optional targeted Windows UDP socket drop/wfp/local receive stage counters to classify one 15-packet consecutive seq gap1170-1184. Do not silently raise native buffers again or infer fully lossless physical product."
+}

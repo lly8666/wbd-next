@@ -18,3 +18,15 @@ Observed Windows source `1230390` UDP app packets, **149.4182Mbps**, Linux first
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Fixture-only 2MiB→4MiB per-socket V2 business UDP SO_RCVBUF request after proved original Rust raw RX drops zero at 150Mbps; original N0/P200 unchanged, no Rust product or FEC changes."}
 ```
+
+## Actual 4MiB V2 UDP socket receive-buffer result: 150Mbps scoped PASS
+
+Harness source `b3a6533c3451727abcbcc43eb7ddfa3f2c48b42e`; compiled Rust product source `0abd1b04ee7a39d8aa426963564a079523c1036a`. [Action40684266415](https://github.com/lly8666/wbd-next/actions/runs/40684266415) SUCCESS, original artifact12814471764 SHA256 `b687fcfb3c8c8d768f4885947b2cb3485a4a8939d8583def1f8050ea28276547`. Signed Wintun/Npcap/WSL2, genuine TLS and owned Stop both PASS.
+
+At 150Mbps per direction, 300ms one-way, 0% netem, 60s: Windows sent 1234860 packets/149.9599Mbps, Linux first received **1234860/149.9599Mbps, zero missing**. Linux sent 1234967/149.9731Mbps, Windows first received 1234952/149.9707Mbps, **15 missing consecutive packet sequence 1170–1184 (99.9988%)**. Absolute duplex zero-missing is NOT demonstrated, but strict >=99.9% first-delivery gate PASS.
+
+Rust Linux raw TCP socket remains SO_RCVBUF requested4MiB, effective8MiB, no clamp; PID998 wbd-v4-server owns inodes8127,9277,9287 with drops0 and last rx queues0. Independent V2 UDP test app socket requested4MiB, effective8MiB in Linux, app socket drops0 and Udp RcvbufErrors0. Both netem qdiscs zero drops/overlimits/requeues. Owned TUN fq600 readback unchanged. Genuine business UDP RTT p99 Windows610ms/Linux619.801ms on each sender local clock, not one-way. Python generator CPU seconds/65s Windows48.3906, Linux49.3533.
+
+Earlier same Rust product at150 with test app UDP requested2MiB/effective4MiB: Linux socket drops14726, sender offered only137.4Mbps. New fixture 4MiB request resolved local socket overflow and under-offer in this different hosted VM, **not a sameVM CPU optimization proof**. Remaining 15 packets localize to the Windows first receiver early sequence gap only; Windows UDP kernel socket drop not measured. Avoid further Linux buffer increases; consider targeted Windows startup socket/WFP observation only if absolute zero-missing required.
+
+Exact evidence: [SOURCEb3a6 Rust 150Mbps](../../evidence/M0/PLAN026-SOURCEB3A6-RUST-150M-300MS-0LOSS-PASS-20261028.json).
