@@ -35,7 +35,8 @@
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-WINDOWS-UNIT-REGRESSION.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-FIRST-REAL-FAIL-DIAGNOSTIC.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-M2-RETENTION-FLOOR.md",
-    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-24-SIGNED-MATRIX.md"
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-24-SIGNED-MATRIX.md",
+    "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-OUTER-REPAIR-RTT-FLOOR.md"
   ],
   "verification": [
     {
@@ -86,6 +87,13 @@
       "status": "FAIL",
       "source_sha": "b2fb57f5087532ae43fac35ec99c2d68fa3ddc0a",
       "evidence": "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCEB2FB-50M-30P-300MS-RETENTION-FAIL-20261028.json"
+    },
+    {
+      "platform": "Linux original Go TLS x86_64 client+server Rust raw/TUN, true network namespaces",
+      "scope": "50/100Mbps 1/5/10/30% 50/150/300ms source-specific 24 cases, client and server independently; repair snapshot minimum 1200ms",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
@@ -94,7 +102,8 @@
     "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
     "Old standalone unit tests alone did not prove Windows repair; SOURCE9ed3 true 24-case signed NPF/WSL2 native PASS replaces that NOT_RUN. 30% R/C has only business-target proxy, not real configured outer C.",
     "SOURCE504c Fixed/FEC originally needed its 1536 arena-backed shadow retained. SOURCE9ed3 scopes independent detached snapshot and 1200ms retention to Normal/off only; no broader mode or physical proof.",
-    "Original SOURCE504c/b2fb 50/30/300 R0 FAIL retained. SOURCE9ed3 24 independently signed CI VM runs, no same-host CPU A/B or repeat-run stability/physical qualification."
+    "Original SOURCE504c/b2fb 50/30/300 R0 FAIL retained. SOURCE9ed3 24 independently signed CI VM runs, no same-host CPU A/B or repeat-run stability/physical qualification.",
+    "Old source9ed3 Linux server R=0 in 10/24 and 50M30%300ms 266B; Linux both-endpoint source-local verification must precede qualification."
   ],
   "promotion": null
 }

@@ -4555,7 +4555,8 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 // bounded process-shared repair-only backing after M4 copy.
                 // No new PN, AEAD or business HOL on admission failure.
                 let tracked=record.try_v3_repair_snapshot().is_some_and(|frozen|
-                    original.shadow.on_sent_adaptive(frozen,now).is_ok());
+                    original.shadow.on_sent_adaptive_with_floor(
+                        frozen,now,LINUX_ORIGINAL_V3_RETAIN_FLOOR_NS).is_ok());
                 if !tracked{
                     original.note_block(OriginalRepairBlockReason::FreshShadow);
                 }
@@ -4840,6 +4841,14 @@ fn ready_only_slice(
     }
     count
 }
+// Signed 24-scene Win/WSL2 reverse direction proved that Linux's startup
+// low-RTT (~25-65ms) samples can expire detached shadow ciphertext at
+// 210-314ms BEFORE true 150/300ms one-way netem reverse receipts arrive.
+// Client and server share this exact original TLS/M4 first-send path;
+// keep both alive at least 1200ms (shared M2 hard max 1500ms), without a
+// PTO retransmission, cloned PN, or first-send slab held across an RTT.
+const LINUX_ORIGINAL_V3_RETAIN_FLOOR_NS:u64=1_200_000_000;
+
 // REAL original TLS V4 public product outer retransmission, for either
 // direction, using M2's EXISTING single-repair PTO/RACK immutable candidate producer,
 // process-global sparse/10% byte grants and exact M4 raw syscall result.

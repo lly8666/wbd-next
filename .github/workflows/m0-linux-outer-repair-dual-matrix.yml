@@ -1,0 +1,99 @@
+name: M0 source-locked Linux original TLS client-server dual outer repair 24
+run-name: "M0-LINUX-OUTER-DUAL24|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - crates/wbd-engine/src/v4_embedded_go.rs
+      - tools/network_harness/m0_linux_dual_outer_repair.py
+      - .github/workflows/m0-linux-outer-repair-dual-matrix.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  native-bundle-once:
+    if: contains(github.event.head_commit.message, '[plan026-linux-dual-outer-24]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Build exact original Go TLS client AND server plus Rust native shared M4 once
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm
+          sed -e 's/aarch64/x86_64/g' -e 's/arm64/amd64/g' tools/arm64_public_go_rust_bundle.sh > "$RUNNER_TEMP/m0-linux-native-amd64.sh"
+          bash "$RUNNER_TEMP/m0-linux-native-amd64.sh"
+          test -s amd64-public-bundle/manifest.json
+          (cd amd64-public-bundle && sha256sum -c SHA256SUMS)
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("amd64-public-bundle/manifest.json"))
+          assert m["source"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]=="x86_64"
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: linux-dual-original-product-${{ github.sha }}
+          path: amd64-public-bundle/
+          retention-days: 30
+          if-no-files-found: error
+  one-genuine-linux-client-and-server-scenario:
+    needs: native-bundle-once
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        rate: [50, 100]
+        loss: [1, 5, 10, 30]
+        delay: [50, 150, 300]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    env:
+      SCENARIO: scenarios/wl-outer-repair-${{ matrix.rate }}m-${{ matrix.delay }}ms-loss${{ matrix.loss }}-60s.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: linux-dual-original-product-${{ github.sha }}
+          path: native-bundle
+      - name: Source locked exact binaries and Linux kernel namespace preflight
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          root=pathlib.Path("native-bundle")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["source"]==os.environ["GITHUB_SHA"] and m["architecture"]=="x86_64"
+          lines=(root/"SHA256SUMS").read_text().splitlines()
+          for line in lines:
+              hash,name=line.split(maxsplit=1)
+              assert hashlib.sha256((root/name.strip().removeprefix("*")).read_bytes()).hexdigest()==hash
+          PY
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+          test -c /dev/net/tun
+      - name: Real native original TLS Linux client/server 60s both-way loss/latency with bounded repair
+        run: |
+          set -euo pipefail
+          sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB \
+            python3 -m tools.network_harness.m0_linux_dual_outer_repair \
+            --bundle "$GITHUB_WORKSPACE/native-bundle" \
+            --scenario "$SCENARIO" --out "$GITHUB_WORKSPACE/linux-dual-scene"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: linux-dual-outer-${{ matrix.rate }}m-${{ matrix.delay }}ms-loss${{ matrix.loss }}
+          path: |
+            linux-dual-scene/result.json
+            linux-dual-scene/*/result.json
+            linux-dual-scene/*/network-snapshots.json
+            linux-dual-scene/*/summary.md
+          retention-days: 30
+          if-no-files-found: warn
