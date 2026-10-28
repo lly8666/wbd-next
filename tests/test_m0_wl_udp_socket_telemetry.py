@@ -33,11 +33,11 @@ class LinuxUdpSocketTelemetryTests(unittest.TestCase):
             root=Path(temp)
             p=root/"321"
             (p/"fd").mkdir(parents=True)
-            (p/"comm").write_text("wbd-v4-server\\n")
+            (p/"comm").write_text("wbd-v4-server\n")
             (p/"fd"/"4").symlink_to("socket:[9367]")
             q=root/"654"
             (q/"fd").mkdir(parents=True)
-            (q/"comm").write_text("unrelated\\n")
+            (q/"comm").write_text("unrelated\n")
             (q/"fd"/"3").symlink_to("socket:[9911]")
             owners=raw_socket_product_owners({"9367","9911"},proc_root=root)
             self.assertEqual(owners,{"9367":{"pid":321,"comm":"wbd-v4-server",
