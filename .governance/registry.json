@@ -4,7 +4,7 @@
   "roles": [
     {
       "id": "M0",
-      "name": "集成与治理",
+      "name": "项目主开发与交付",
       "state": "active",
       "branch": "main",
       "assignment_epoch": 1,
@@ -18,8 +18,8 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025: complete Windows↔Linux original-Go TLS→shared Rust M1/M2/M3 FEC2/Auto/Game2/4→real Npcap/Wintun/raw/TUN/WFP/WAL/GUI/Stop. Authority docs/decisions/M0-PLAN020-Windows-full-product-M0-takeover-20261021.md §2026-10-27; docs/testing/WINDOWS_LINUX_MATRIX_ENTRY.md §2–§4 and PLAN021. 2026-10-27 user-authorized full dev-tree overwrite recorded docs/devlog/M0/PLAN025-main-integration-tree-overwrite-recovered-20261027.md; product qualifications remain exact SOURCE.",
-      "done_when": "Authentic end-to-end Windows original Go TLS→shared Rust owner/data/feedback/FEC2/Auto/Game→native Npcap/Wintun/owned OS route/WFP/DNS/WAL/GUI→Linux raw/TUN, real bidirectional UDP/TCP and Stop. Effective Normal/off, Fixed, Auto, Game2/4 each have explicit positive or honest NOT_RUN/UNWIRED/FAIL; no unsupported mode masks, fake Applied, or Fixed6-only trials. Source-locked functional PASS unlocks opt-in test; WL-N0/N1/N5 and physical/global quality later, historical failures retained.",
+      "goal": "Continue PLAN025 on main under docs/decisions/M0-MAIN-CLOSEOUT-20261028.md sections 2-6: finish handshake/N0 stability, high-RTT optional repair lifetime, unified control appearance/idle, truthful shaping and representative capacity tests. All M0 source, reusable harness and progress live on main; reconcile old branches once, do not restart completed FEC/Windows wiring. Keep epoch/task and original correctness gates.",
+      "done_when": "One main-source product/manifest with reproducible blockers repaired, typed errors and bounded nonblocking repair/control; affected native modes/lifecycle pass scoped; representative matrices run to measured capacity with CPU/memory/first-arrival/RTT/missing and outer-byte ratios. Preserve unexplained risks and exact NOT_RUN/CAPACITY_LIMITED; no false full-platform/physical PASS or endless helper reruns. Follow closeout section 5; old-feature migration is separate.",
       "assigned_task": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025"
     },
     {

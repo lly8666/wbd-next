@@ -1,4 +1,6 @@
-# 独立网络测试岗位：永久工作说明
+# 独立网络测试岗位：历史工作方法
+
+> 2026-10-28：本页不再作为M0启动入口。M0当前任务、源码、夹具和进度统一在main，读START_HERE/registry/M0 cursor；只有另有明确独立授权的worker才按自己的分支继续。本页旧分支/状态说明不覆盖新的主线策略。FEC历史工位已完工。
 
 本页只维护长期职责和工作方法，不保存本轮SOURCE、Action编号、参数值或“先做某个历史任务”。**做什么看[当前计划](NETWORK_CURRENT_PLAN.md)，做到哪看任务分支的 `docs/evidence/network-matrix-work/status.json`，是否通过看精确源码的证据。** 改计划不等于代码已实现，旧status也不能推翻用户已经授权的新设计。
 

@@ -61,6 +61,26 @@ class FeatureCatalogTests(unittest.TestCase):
         with self.assertRaises(f.CatalogError):
             f.validate_entry(self.root, self.card())
 
+    def test_m0_main_development_is_explicit_and_does_not_promote(self):
+        self.entry.update(development_branch="main", available_on=["main"])
+        with self.assertRaises(f.CatalogError):
+            f.validate_entry(self.root, self.card())
+        self.entry["main_development_reason"] = "2026-10-28 user-authorized M0 main development"
+        self.assertEqual(f.validate_entry(self.root, self.card())["stage"], "experimental")
+        self.entry["stage"] = "formal"
+        with self.assertRaises(f.CatalogError):
+            f.validate_entry(self.root, self.card())
+
+    def test_main_reason_does_not_authorize_other_owner_or_branch(self):
+        self.entry.update(development_branch="main", available_on=["main"],
+                          main_development_reason="M0 main-only policy")
+        self.entry["owner"] = "M1"
+        with self.assertRaises(f.CatalogError):
+            f.validate_entry(self.root, self.card())
+        self.entry.update(owner="M0", development_branch="integration/demo")
+        with self.assertRaises(f.CatalogError):
+            f.validate_entry(self.root, self.card())
+
     def test_main_merge_does_not_promote(self):
         self.entry["available_on"].append("main")
         self.assertEqual(f.validate_entry(self.root, self.card())["stage"], "experimental")
