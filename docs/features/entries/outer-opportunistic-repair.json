@@ -34,7 +34,8 @@
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-OPPORTUNISTIC-REPAIR.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-WINDOWS-UNIT-REGRESSION.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-FIRST-REAL-FAIL-DIAGNOSTIC.md",
-    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-M2-RETENTION-FLOOR.md"
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-M2-RETENTION-FLOOR.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-24-SIGNED-MATRIX.md"
   ],
   "verification": [
     {
@@ -67,10 +68,10 @@
     },
     {
       "platform": "Windows2025 x64 signed NPF/Wintun + WSL2 Linux",
-      "scope": "New Linux-v3-equivalent Windows Rust repair candidate/ciphertext/stop accounting; 50/100Mbps × 1/5/10/30% × 50/150/300ms actual 24-scene",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
+      "scope": "Source9ed3 signed Win/WSL2 Rust Normal/off authentic UDP/TCP/Stop 24/24 50/100Mbps × 1/5/10/30% real netem × 50/150/300ms per direction, max real R/total 8.1055% and R/F 8.876%, no separate physical qualification",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "9ed3da3153e20a1787ed731c45dd3359c7e0654e",
+      "evidence": "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE9ED3-50-100M-24-SIGNED-20261028.json"
     },
     {
       "platform": "Windows2025 signed Npcap/Wintun+WSL2 Linux",
@@ -91,8 +92,9 @@
     "FEC修复/多lane副本不计入outer DATA重传；pre-netem DATA统计不能除post-netem线路字节。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
-    "Normal/off Windows Rust repaired opportunity/ratio only becomes qualified after exact main SHA authentic two-OS Actions; 24 requested points and 30%-loss R/C >=6% must not be inferred from Rust library tests or old Go stats.",
-    "Same-branch Windows M2 fix scopes 1/2 sampled detached snapshot to Normal/off only. Existing Fixed/FEC uses original 1536 arena-backed frozen shadows; old test assumptions now mode-aware. No signed live result yet."
+    "Old standalone unit tests alone did not prove Windows repair; SOURCE9ed3 true 24-case signed NPF/WSL2 native PASS replaces that NOT_RUN. 30% R/C has only business-target proxy, not real configured outer C.",
+    "SOURCE504c Fixed/FEC originally needed its 1536 arena-backed shadow retained. SOURCE9ed3 scopes independent detached snapshot and 1200ms retention to Normal/off only; no broader mode or physical proof.",
+    "Original SOURCE504c/b2fb 50/30/300 R0 FAIL retained. SOURCE9ed3 24 independently signed CI VM runs, no same-host CPU A/B or repeat-run stability/physical qualification."
   ],
   "promotion": null
 }
