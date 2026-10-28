@@ -33,6 +33,7 @@ on:
       - r0/go_overlay/cmd/wbd-client/m0_windows_v4_native_capabilities_windows_test.go
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner.go
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_scoped_client.go
+      - r0/go_overlay/internal/realityfront/bridge_v4_windows_open_validated_test.go
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_m2_batch_preflight_test.go
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_fixed_stream.go
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_fec2_owner.go
@@ -136,6 +137,8 @@ jobs:
             # no second build, signed driver, WSL or Normal full-path run.
             & ../result/realityfront.test.exe '-test.run=TestF2ControlAutoPendingM2CannotEvaluateOrStackNativeRevisions' '-test.count=1'
             if($LASTEXITCODE -ne 0){throw 'Linux shared Auto pending-original-M2 functional regression FAIL'}
+            & ../result/realityfront.test.exe '-test.run=^TestM0PLAN025WindowsNativeNormalOpenFirstFaultIsBoundedAndSafe$' '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Windows original M3 authenticated IPv4 drop vs ABI fatal regression FAIL'}
             & ../result/realityfront.test.exe '-test.run=^TestM0PLAN025WindowsOriginalM2BatchPreflightClassifiesFirstRefusal$' '-test.count=1'
             if($LASTEXITCODE -ne 0){throw 'Original Windows M2 NPF firstsend batch first-error provenance FAIL'}
             & ../result/realityfront.test.exe '-test.run=TestM0WindowsFEC2OpenABICodeClassificationSurvivesWrapper' '-test.count=1'

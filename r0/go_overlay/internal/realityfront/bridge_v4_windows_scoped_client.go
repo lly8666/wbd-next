@@ -467,6 +467,32 @@ func(s *V4WindowsAuthenticatedClientOwner) CompleteBoundOriginalM2Feedback(
  runtime.KeepAlive(s.bridge.epoch)
  return err
 }
+// Rust has already authenticated this record and its unique PN before
+// returning OK. Malformed authenticated *DATA* is a per-record discard, not
+// proof that the authenticated owner/OS generation is corrupt. An unexpected
+// returned kind, by contrast, is an owner ABI contract failure: Stop.
+// The error carries only a bounded validation stage and lengths, no wire.
+func normalOpenVerifiedKind1(kind uint32,used uintptr,plain []byte)error{
+ if kind!=1{
+  return fmt.Errorf("%w: NORMAL_OPEN_UNEXPECTED_KIND kind=%d used=%d",
+   errV4WindowsOwner,kind,used)
+ }
+ if used<20||used>uintptr(len(plain)){
+  if used>uintptr(len(plain)){
+   return fmt.Errorf("%w: NORMAL_OPEN_OUTPUT_OVERFLOW used=%d cap=%d",
+    errV4WindowsOwner,used,len(plain))
+  }
+  return fmt.Errorf("%w: NORMAL_OPEN_AUTHENTICATED_IPV4_SHORT used=%d",
+   &v4WindowsNativeABIError{Code:1},used)
+ }
+ version,ihl:=plain[0]>>4,plain[0]&15
+ if version!=4||ihl<5||int(ihl)*4>int(used){
+  return fmt.Errorf("%w: NORMAL_OPEN_AUTHENTICATED_IPV4_HEADER used=%d version=%d ihl=%d",
+   &v4WindowsNativeABIError{Code:1},used,version,ihl)
+ }
+ return nil
+}
+
 // OpenBoundOriginalNormalOrKind1 calls the ONE original Rust M1/M3 AEAD+PN
 // opener and returns verified kind=1 IPv4 or kind=2 canonical staged M2
 // receipt. The latter has NO Wintun packet and is NOT an M2 ACK/repair
@@ -476,8 +502,12 @@ func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalNormalOrKind1(
     ctx context.Context,seq uint32,wire []byte,
 )([]byte,uint32,uint64,error){
     if s==nil||s.bridge==nil||s.device==nil||ctx==nil||
-        s.bridge.openKind1Proc==nil||len(wire)<51||len(wire)>s.device.maxIPv4+31 {
-        return nil,0,0,errV4WindowsOwner
+        s.bridge.openKind1Proc==nil{
+        return nil,0,0,fmt.Errorf("%w: NORMAL_OPEN_OWNER_UNBOUND",errV4WindowsOwner)
+    }
+    if len(wire)<51||len(wire)>s.device.maxIPv4+31{
+        return nil,0,0,fmt.Errorf("%w: NORMAL_OPEN_WIRE_BUDGET wire=%d max=%d",
+            errV4WindowsOwner,len(wire),s.device.maxIPv4+31)
     }
     if err:=ctx.Err();err!=nil{return nil,0,0,err}
     borrowRelease,borrowErr:=s.device.borrowHot(ctx)
@@ -504,15 +534,20 @@ func(s *V4WindowsAuthenticatedClientOwner) OpenBoundOriginalNormalOrKind1(
     runtime.KeepAlive(wire)
     runtime.KeepAlive(plaintext)
     runtime.KeepAlive(s.bridge.epoch)
-    if err!=nil||used>uintptr(len(plaintext)) {
-        return nil,0,0,errors.Join(errV4WindowsOwner,err)
+    if err!=nil {
+        // The original Rust rc stays wrapped for Fatal() classification.
+        return nil,0,0,fmt.Errorf("NORMAL_OPEN_RUST_ABI seq=%d wire=%d: %w",
+            seq,len(wire),errors.Join(errV4WindowsOwner,err))
     }
-    if kind==2 && used==0 {
+    if used>uintptr(len(plaintext)){
+        return nil,0,0,fmt.Errorf("%w: NORMAL_OPEN_OUTPUT_OVERFLOW used=%d cap=%d",
+            errV4WindowsOwner,used,len(plaintext))
+    }
+    if kind==2 && used==0{
         return nil,kind,pn,nil // Rust retains decoded, authenticated kind1
     }
-    if kind!=1||used<20||plaintext[0]>>4!=4||plaintext[0]&0xf<5||
-        int(plaintext[0]&0xf)*4>int(used) {
-        return nil,0,0,errV4WindowsOwner
+    if verifyErr:=normalOpenVerifiedKind1(kind,used,plaintext);verifyErr!=nil{
+        return nil,0,0,verifyErr
     }
     return plaintext[:used],kind,pn,nil
 }

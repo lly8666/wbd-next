@@ -1,0 +1,11 @@
+# PLAN025 H316 — Windows N0 second first-fault triage and candidate patch
+
+Source 9ed962ef8ddd Actions40627263146 failed ~64s at Windows normal original Rust M2 pending NPF firstsend batch completed0/4. Typed-preflight source a8b5cbd75fd Actions40628831668 **also failed** after genuine two-OS bidirectional UDP/TCP warmup, this time at ~11s in `OpenBoundOriginalNormalOrKind1`: `original Normal M1/M3 open owner failure: original-Go private Windows Rust owner refused`. No native C ABI code in this latter error, so the refusal is from a Go pre/post-condition or ambiguous native no-code branch; not proven to be a Rust AEAD failure. Windows 1Hz local NPF ingress count remained10 under ~17k TX records; source stage failures0; Rust+WAL Stop and Linux Stop confirmed. The a8 native M2-firstsend failure did **not** reproduce before this first RX refusal. Do NOT combine both as a single root cause or claim N0 PASS.
+
+Targeted Windows-only change: preserve authenticated Rust M3 AEAD/unique PN and generation checks; separate `NORMAL_OPEN_OWNER_UNBOUND`, `NORMAL_OPEN_WIRE_BUDGET`, `NORMAL_OPEN_RUST_ABI`, output overflow and unexpected kind, without logging protected bytes. An authenticated kind1 DATA returned by Rust OK but with malformed IPv4 header is **packet-local invalid** (same rc INVALID(1) as existing untrusted per-packet reject), not an untyped fatal loss of the entire Windows client. Unexpected kind/output overflow are still fatal, no kernel sink write on invalid packet. Add Go negative fixtures for version/IHL/buffer/kind and execute these in Windows Go preflight. Rust/Linux product code untouched. This is a candidate fix, not a proven root-cause correction; test actual 240s original two-OS source before qualification.
+
+Prior Windows pure ACK filter candidate remains uncommitted, because neither a8 nor 9ed N0 shows local queue-drop growth during load. Two old auxiliary Windows workflows on a8 failed unrelated stale feature/assembly modes; authoritative PLAN025 native Action runs with complete current M2 feature/source. Both old failures remain failures.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Windows M3 result validation and exact native first-fault classification, no public config or Linux product feature change."}
+```
