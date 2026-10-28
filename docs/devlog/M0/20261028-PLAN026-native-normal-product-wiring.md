@@ -20,5 +20,5 @@
 仍未实现：Fixed/Auto/Game2/4全Rust native I/O、Rust Health/Keepalive真实双端wire、Rust动态lane驱动热替换（上一批仅实现了生成代次/prepare/promote状态机）。不会暗中启用这些能力或删仍被它们使用的Go代码。针对 Normal/off 已不提供Go fallback，编译/OS/driver失败直接保留真实错误。
 
 ```feature-impact
-{"kind":"update","ids":["normal-off","windows-native-transport"],"reason":"Windows Normal/off NativeOwner Rust NPF/Wintun 真实产品调用点、Go冷句柄交接和ABI已改变；两张卡保留旧SOURCE验收与新增NOT_RUN，本批还没有新真机/性能合格证据。"}
+{"kind":"updated","ids":["normal-off","windows-native-transport"],"reason":"Windows Normal/off NativeOwner Rust NPF/Wintun 真实产品调用点、Go冷句柄交接和ABI已改变；两张卡保留旧SOURCE验收与新增NOT_RUN，本批还没有新真机/性能合格证据。"}
 ```
