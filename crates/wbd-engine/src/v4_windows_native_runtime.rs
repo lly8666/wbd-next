@@ -457,7 +457,7 @@
      if guard.contains_key(&config.owner){return BAD_STAGE}
      let tx_lane=Arc::clone(&lane);let tx_stop=Arc::clone(&stop);
      let tx_notify=Arc::clone(&notify);let tx_counters=Arc::clone(&counters);
-     let tx=thread::spawn(move||{
+     let tx=thread::Builder::new().name("wbd-native-tx".into()).spawn(move||{
          let rc=tx_loop(config,tx_lane,wtx,sender,Arc::clone(&tx_stop),tx_notify,
              Arc::clone(&tx_counters));
          if rc!=OK{
@@ -465,11 +465,11 @@
              let _=tx_stop.wake();
          }
          rc
-     });
+     }).expect("Rust TX worker spawn");
      let rx_lane=Arc::clone(&lane);let rx_stop=Arc::clone(&stop);
      let rx_event=Arc::clone(&rx_notify);let rx_early=Arc::clone(&early);
      let tx_notify_for_rx=Arc::clone(&notify);let rx_counters=Arc::clone(&counters);
-     let rx=thread::spawn(move||{
+     let rx=thread::Builder::new().name("wbd-native-rx".into()).spawn(move||{
          let rc=rx_loop(config,rx_lane,wrx,capture,Arc::clone(&rx_stop),tx_notify_for_rx,
              rx_event,rx_early,Arc::clone(&rx_counters));
          if rc!=OK{
@@ -477,7 +477,7 @@
              let _=rx_stop.wake();
          }
          rc
-     });
+     }).expect("Rust RX worker spawn");
      guard.insert(config.owner,NativeSession{stop,tx_notify:notify,
          rx_notify,early,counters,tx,rx});
      OK

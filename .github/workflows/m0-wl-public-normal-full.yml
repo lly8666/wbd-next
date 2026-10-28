@@ -64,6 +64,7 @@ on:
       - r0/go_overlay/internal/v4productcli/linux.go
       - tools/m0_wl_impairment_profile.py
       - tests/test_m0_wl_impairment_profile.py
+      - tests/test_m0_wl_native_resource_sampler.py
       - r0/go_overlay/assembly/manifest-plan020-m0.json
       - tools/m0_wl_public_native_npf_trace.py
   workflow_dispatch:
@@ -98,10 +99,11 @@ jobs:
       - run: python -m unittest tests.test_m0_wl_native_mtu_contract -v
       - run: python -m unittest tests.test_m0_wl_n0_drop_delta -v
       - run: python -m unittest tests.test_m0_wl_impairment_profile -v
+      - run: python -m unittest tests.test_m0_wl_native_resource_sampler -v
       - run: python tools/prepare_windows_wiring.py --check-only
       - name: Enforce functional seven modes or exactly one scoped N0 before any native build
         env:
-          PUBLIC_MODE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]')) && 'normal' || inputs.public_mode || 'all' }}
+          PUBLIC_MODE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]')) && 'normal' || inputs.public_mode || 'all' }}
           RUN_N0: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '1' || inputs.run_n0 == true && '1' || '0' }}
           RUN_P200: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') && '1' || '0' }}
         shell: bash
@@ -347,7 +349,7 @@ jobs:
       # The main/push workflow qualifies the seven public functions first.
       # A one-scenario throughput case is an explicit separate manual
       # Action selecting exactly one mode on a single reused VM/build.
-      WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]')) && 'normal' || inputs.public_mode || 'all' }}
+      WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]')) && 'normal' || inputs.public_mode || 'all' }}
       WBD_WL_RUN_N0: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '1' || inputs.run_n0 == true && '1' || '0' }}
       WBD_WL_RUN_P200: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') && '1' || '0' }}
       WBD_WL_N0_SECONDS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '240' || '60' }}

@@ -31,6 +31,62 @@ class _Memory(ctypes.Structure):
 def _sec(t):
     return ((int(t.high)<<32)|int(t.low))*1e-7
 
+class _ThreadEntry(ctypes.Structure):
+    _fields_=[("size",wintypes.DWORD),("usage",wintypes.DWORD),
+              ("thread_id",wintypes.DWORD),("owner_pid",wintypes.DWORD),
+              ("base_priority",wintypes.LONG),("delta_priority",wintypes.LONG),
+              ("flags",wintypes.DWORD)]
+
+def _thread_cpu_snapshot(kernel, pid, previous):
+    """One 1Hz Toolhelp read, outside the product. No native packet callbacks."""
+    snapshot=kernel.CreateToolhelp32Snapshot(0x00000004,0) # TH32CS_SNAPTHREAD
+    if snapshot==ctypes.c_void_p(-1).value:
+        return {"status":"NOT_MEASURED_TOOLHELP"},previous
+    current={}
+    samples=[]
+    try:
+        entry=_ThreadEntry()
+        entry.size=ctypes.sizeof(entry)
+        valid=kernel.Thread32First(snapshot,ctypes.byref(entry))
+        while valid:
+            if entry.owner_pid==pid:
+                handle=kernel.OpenThread(0x0800,False,entry.thread_id)
+                if handle:
+                    try:
+                        create,exit_time,kt,ut=(_FileTime() for _ in range(4))
+                        if kernel.GetThreadTimes(handle,ctypes.byref(create),
+                                                 ctypes.byref(exit_time),
+                                                 ctypes.byref(kt),ctypes.byref(ut)):
+                            total=_sec(kt)+_sec(ut)
+                            name=""
+                            name_pointer=ctypes.c_void_p()
+                            if kernel.GetThreadDescription(handle,ctypes.byref(name_pointer))==0:
+                                if name_pointer.value:
+                                    name=ctypes.wstring_at(name_pointer.value)
+                                    kernel.LocalFree(name_pointer)
+                            delta=max(0.,total-previous.get(entry.thread_id,total))
+                            current[entry.thread_id]=total
+                            samples.append({"tid":int(entry.thread_id),"name":name,
+                                            "cpu_total_s":round(total,6),
+                                            "cpu_delta_s":round(delta,6)})
+                    finally:
+                        kernel.CloseHandle(handle)
+            entry.size=ctypes.sizeof(entry)
+            valid=kernel.Thread32Next(snapshot,ctypes.byref(entry))
+    finally:
+        kernel.CloseHandle(snapshot)
+    named=[row for row in samples if row["name"] in ("wbd-native-tx","wbd-native-rx")]
+    return {
+        "status":"MEASURED" if samples else "NO_THREAD_SAMPLES",
+        "thread_count_sampled":len(samples),
+        "named_rust_workers":len(named),
+        "rust_tx_cpu_delta_s":round(sum(x["cpu_delta_s"] for x in named if x["name"]=="wbd-native-tx"),6),
+        "rust_rx_cpu_delta_s":round(sum(x["cpu_delta_s"] for x in named if x["name"]=="wbd-native-rx"),6),
+        "other_threads_cpu_delta_s":round(sum(x["cpu_delta_s"] for x in samples if x["name"] not in ("wbd-native-tx","wbd-native-rx")),6),
+        "hottest_threads":sorted(samples,key=lambda x:x["cpu_delta_s"],reverse=True)[:6],
+        "interpretation":"Thread-name attribution only. Other Go/runtime/native threads and kernel driver CPU are NOT separately attributable by this counter",
+    },current
+
 def sample_windows_original_process(proc,path,stop,interval=1.0):
     if os.name!="nt":
         return
@@ -43,7 +99,24 @@ def sample_windows_original_process(proc,path,stop,interval=1.0):
     memory.argtypes=[ctypes.c_void_p,ctypes.POINTER(_Memory),wintypes.DWORD]
     memory.restype=wintypes.BOOL
     handle=ctypes.c_void_p(int(proc._handle))
+    kernel.CreateToolhelp32Snapshot.argtypes=[wintypes.DWORD,wintypes.DWORD]
+    kernel.CreateToolhelp32Snapshot.restype=ctypes.c_void_p
+    kernel.Thread32First.argtypes=[ctypes.c_void_p,ctypes.POINTER(_ThreadEntry)]
+    kernel.Thread32First.restype=wintypes.BOOL
+    kernel.Thread32Next.argtypes=[ctypes.c_void_p,ctypes.POINTER(_ThreadEntry)]
+    kernel.Thread32Next.restype=wintypes.BOOL
+    kernel.OpenThread.argtypes=[wintypes.DWORD,wintypes.BOOL,wintypes.DWORD]
+    kernel.OpenThread.restype=ctypes.c_void_p
+    kernel.GetThreadTimes.argtypes=[ctypes.c_void_p]+[ctypes.POINTER(_FileTime)]*4
+    kernel.GetThreadTimes.restype=wintypes.BOOL
+    kernel.GetThreadDescription.argtypes=[ctypes.c_void_p,ctypes.POINTER(ctypes.c_void_p)]
+    kernel.GetThreadDescription.restype=ctypes.c_long
+    kernel.LocalFree.argtypes=[ctypes.c_void_p]
+    kernel.LocalFree.restype=ctypes.c_void_p
+    kernel.CloseHandle.argtypes=[ctypes.c_void_p]
+    kernel.CloseHandle.restype=wintypes.BOOL
     previous=None
+    previous_threads={}
     with open(path,"w",encoding="utf-8") as out:
         while proc.poll() is None and not stop.is_set():
             create,exit_time,kernel_time,user_time=(_FileTime() for _ in range(4))
@@ -70,6 +143,8 @@ def sample_windows_original_process(proc,path,stop,interval=1.0):
                     "private_bytes":int(mem.private_bytes),
                     "logical_cpus_reported":os.cpu_count(),
                 }
+                row["thread_cpu"],previous_threads=_thread_cpu_snapshot(
+                    kernel,proc.pid,previous_threads)
                 out.write(json.dumps(row,sort_keys=True)+"\n")
                 out.flush()
                 previous=(now,total)
