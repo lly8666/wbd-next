@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "source_sha": "775ce995036c2a581c445af9d649fdd8e6ce2478",
+  "native_product_source_sha": "0543b805ca25d804ccd131be6686b0b99f61f80f",
+  "run_id": 40675314979,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40675314979",
+  "artifact": {
+    "id": 12810187258,
+    "name": "m0-wl-full-public-normal-direct",
+    "sha256": "5b110af2d16c62c6dbf770a28718379a445c858da789cab7a3ec3880b3a0d9df",
+    "sha_verified": true
+  },
+  "scene": {
+    "direction_target_mbps": 150,
+    "oneway_delay_ms": 300,
+    "configured_netem_loss_pct": 0,
+    "duration_s": 60,
+    "mode": "Rust_NativeOwner_normal_off",
+    "actual_windows_linux_signed": true
+  },
+  "status": {
+    "source_preflight": "PASS",
+    "prebuilt_windows_exe_rust_dll_linux_binary_SHA": "PASS",
+    "real_signed_npcap_wintun": "PASS",
+    "true_two_os_udp_tcp": "PASS",
+    "true_owned_stop": "PASS_BOTH_OWNED",
+    "app_performance": "FAIL_FIRST_DELIVERY_AND_LINUX_OFFERED_CAPACITY",
+    "physical": "NOT_RUN"
+  },
+  "windows_to_linux": {
+    "sent_packets": 1231475,
+    "offered_mbps": 149.5494,
+    "linux_udp_app_first_packets": 1055855,
+    "first_delivered_mbps": 127.9407,
+    "first_delivered_fraction": 0.857391,
+    "missing_app_packets": 175620
+  },
+  "linux_to_windows": {
+    "sent_packets": 1166172,
+    "offered_mbps": 141.6188,
+    "windows_udp_app_first_packets": 1141126,
+    "first_delivered_mbps": 138.6266,
+    "first_delivered_fraction": 0.978523,
+    "missing_app_packets": 25046
+  },
+  "linux_kernel_true_counters": {
+    "rmem_default_bytes": 212992,
+    "rmem_max_bytes": 4194304,
+    "raw_socket_inodes_at_start": [
+      "9276",
+      "9265",
+      "7924"
+    ],
+    "raw_socket_drop_delta_by_inode": {
+      "7924": 162785,
+      "9265": 0,
+      "9276": 0
+    },
+    "raw_socket_7924_drops_first_second": 2489,
+    "raw_socket_7924_drops_last": 162785,
+    "bound_udp_app_so_rcvbuf_effective_bytes": 4194304,
+    "bound_udp_app_socket_drops": 308,
+    "guest_global_udp_rcvbuf_errors": 308,
+    "netem_ifb_packets": 1231670,
+    "netem_eth0_packets": 1156117,
+    "netem_drops_each_direction": 0,
+    "netem_overlimits_each": 0,
+    "netem_requeues_each": 0,
+    "scope_note": "/proc/net/raw is guest-global by inode; Linux native process inode ownership is highly suggested by active raw flow but not independently verified via /proc/<pid>/fd; mixed raw control packets and asynchronous windows forbid exact packet conservation."
+  },
+  "linux_original_rust_rx_chain": {
+    "raw_observed": 1068993,
+    "raw_tuple": 1068942,
+    "data_unique": 1057272,
+    "link_completed": 1057272,
+    "tun_delivered": 1057272,
+    "tun_udp": 1057257,
+    "tun_failed": 0,
+    "open_invalid": 0,
+    "replay_duplicate": 0
+  },
+  "linux_udp_app_gap_after_tun_udp": 1402,
+  "rust_original_driver": "crates/wbd-platform/src/linux_raw_carrier.rs:ScopedRawIpv4Rx::open uses AF_INET SOCK_RAW IPPROTO_TCP and SO_BINDTODEVICE without setting SO_RCVBUF; source-matched real run.",
+  "performance": {
+    "windows_generator_cpu_s": 36.2812,
+    "windows_generator_max_loop_gap_ms": 63,
+    "linux_generator_cpu_s": 61.0658,
+    "linux_generator_max_loop_gap_ms": 71.097,
+    "linux_udp_roundtrip_p99_ms": 1251.63,
+    "windows_udp_roundtrip_p99_ms": 1313
+  },
+  "root_cause_state": "CONFIRMED_LINUX_GUEST_RAW_SOCKET_INGRESS_KERNEL_DROP_BOTTLENECK_NOT_YET_REMEDIATED",
+  "remaining_unknown": "All drop sources/one-way p99 uncalibrated; exact socket inode PID not proven. Product performance 150Mbps 99.9pct NOT qualified.",
+  "recommended_product_change": "Scope a bounded SO_RCVBUF request on Linux Rust raw RX only, verify effective getsockopt and kernel rmem_max, preserve closed/Stop, then rebuild exact Rust Linux source once; reuse verified binary for further fixture-only attempts.",
+  "prior_linux_lessons": [
+    "Linux Normal20 genuine 20Mbps zero-loss 60s did not stress same raw socket queue.",
+    "Linux traced D10 strace could disturb throughput; use bounded 1Hz counters not per-packet trace.",
+    "Prior Linux network harness commit ef6bbe9042af197c0c6e9e20d6022b14b69d345a paired socket buffer request with actual getsockopt effective readback, but that was TCP preconnect, not raw TCP socket."
+  ],
+  "ci_efficiency": {
+    "fast_workflow_preflight_seconds": 12,
+    "fast_windows_native_job_seconds": 217,
+    "full_native_job_seconds": 340,
+    "full_linux_build_seconds_approx": 100,
+    "full_parallel_compile_gate_max_seconds_approx": 135,
+    "precompiled_reuse_real_signature_and_signed_driver": true
+  }
+}
