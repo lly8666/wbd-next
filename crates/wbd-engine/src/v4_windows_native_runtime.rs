@@ -8,7 +8,7 @@
  use std::ffi::c_void;
  use wbd_platform::windows_native_io::{
      self as io, NpcapFns, NpcapRx, NpcapTx, WintunFns,
-     WintunRx, WintunTx, WakeEvent, ReadResult, WaitResult,
+     WintunRx, WintunTx, WakeEvent, ReadResult, Captured, WaitResult,
  };
  use wbd_platform::ipv4_tcp::{
      build_bytes, build_presentation_ack, Ipv4Tuple, PacketPersona, Presentation,
@@ -471,6 +471,16 @@
      counters.rx_tx_notify_attempts.fetch_add(1,Ordering::Relaxed);
      let _=tx_notify.wake();
  }
+ // Single owned RX worker: no atomics/clock inside NPF packet hot loop.
+ // Drop logs one bounded summary even on early worker error or Stop.
+ #[derive(Default)]
+ struct NpfBorrowedStats { frames:u64,bytes:u64 }
+ impl Drop for NpfBorrowedStats {
+     fn drop(&mut self){
+         eprintln!("WBD_WINDOWS_RUST_NATIVE_NPF_BORROW frames={} bytes={} extra_memcpy_bytes=0 lifetime=UNTIL_NEXT_PCAP_READ",
+             self.frames,self.bytes);
+     }
+ }
  fn rx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
      mut tun:WintunTx,mut npf:NpcapRx,stop:Arc<WakeEvent>,
      tx_notify:Arc<WakeEvent>,early_notify:Arc<WakeEvent>,
@@ -483,7 +493,7 @@
          persona:PacketPersona::Legacy,mtu:cfg.path_mtu as usize,
          authenticated_options:None,
      };
-     let mut frame=[0u8;MAX_NPF];
+     let mut borrowed_stats=NpfBorrowedStats::default();
      let mut plain=[0u8;MAX_IPV4];
      let mut ack=PresentationAck::new(cfg.initial_rx_seq);
      loop{
@@ -516,20 +526,27 @@
          let mut npf_wakes=TxWakeBatch::default();
          for _ in 0..RX_WAKE_BATCH{
              if counters.stopping.load(Ordering::Acquire){return OK}
-             let n=match npf.read(&mut frame){
-                 Ok(ReadResult::Frame(n))=>n,
-                 Ok(ReadResult::NoPacket)=>break,
-                 Ok(ReadResult::Skipped)=>continue,
-                 Ok(ReadResult::EndOfStream)=>return BAD_STAGE,
-                 Err(_)=>return BAD_STAGE,
-             };
-             let Some(packet)=io::ethernet_ipv4(&frame[..n])else{continue};
-             let Ok(sealed)=parse_data_packet(packet,trusted)else{
-                 counters.rejected.fetch_add(1,Ordering::Relaxed);continue
-             };
-             let verified=match open_and_deliver(&cfg,&lane,&mut tun,
-                 &counters,&mut ack,sealed.seq32,sealed.ciphertext,&mut plain){
-                 Ok(v)=>v,Err(code)=>return code
+             // pcap_next_ex's const bytes remain valid until NEXT read.
+             // Authenticate/consume synchronously; return only owned data.
+             let result=npf.with_frame(|ethernet|{
+                 borrowed_stats.frames+=1;
+                 borrowed_stats.bytes+=ethernet.len() as u64;
+                 let Some(packet)=io::ethernet_ipv4(ethernet)else{
+                     return Ok(false)
+                 };
+                 let Ok(sealed)=parse_data_packet(packet,trusted)else{
+                     counters.rejected.fetch_add(1,Ordering::Relaxed);
+                     return Ok(false)
+                 };
+                 open_and_deliver(&cfg,&lane,&mut tun,&counters,
+                     &mut ack,sealed.seq32,sealed.ciphertext,&mut plain)
+             });
+             let verified=match result{
+                 Ok(Captured::Frame(Ok(v)))=>v,
+                 Ok(Captured::Frame(Err(code)))=>return code,
+                 Ok(Captured::NoPacket)=>break,
+                 Ok(Captured::Skipped)=>continue,
+                 Ok(Captured::EndOfStream)|Err(_)=>return BAD_STAGE,
              };
              if verified&&npf_wakes.note_verified(){
                  flush_tx_wake(&tx_notify,&counters);

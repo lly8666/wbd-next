@@ -12,6 +12,7 @@ from pathlib import Path
 
 _WORKER=re.compile(r"WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=(TX|RX) tid=(\d+)")
 _WAKE=re.compile(r"WBD_WINDOWS_RUST_NATIVE_WAKE_BATCH max_verified_per_wake=(\d+) tx_wake_attempts=(\d+) rx_data_delivered=(\d+) joined=true")
+_NPF_BORROW=re.compile(r"WBD_WINDOWS_RUST_NATIVE_NPF_BORROW frames=(\d+) bytes=(\d+) extra_memcpy_bytes=0 lifetime=UNTIL_NEXT_PCAP_READ")
 
 def summarize_windows_cpu(path,client_log=None):
     p=Path(path)
@@ -77,6 +78,7 @@ def summarize_windows_cpu(path,client_log=None):
     # Reject ambiguous or recycled thread IDs rather than guessing.
     native_ids={}
     wake=None
+    capture_borrow=None
     if client_log is not None and Path(client_log).is_file():
         log=Path(client_log).read_text(encoding="utf-8",errors="replace")
         matches=_WORKER.findall(log)
@@ -84,6 +86,12 @@ def summarize_windows_cpu(path,client_log=None):
                 for role in ("TX","RX")}
         if all(len(v)==1 for v in counts.values()) and counts["TX"]!=counts["RX"]:
             native_ids={v[0]:role for role,v in counts.items()}
+        borrowed=_NPF_BORROW.findall(log)
+        if len(borrowed)==1:
+            frames,bytes_seen=map(int,borrowed[0])
+            capture_borrow={"frames":frames,"borrowed_bytes":bytes_seen,
+                "full_frame_memcpy_bytes":0,
+                "status":"REAL_PCAP_NEXT_EX_BUFFER_USED_IN_PLACE"}
         found=_WAKE.findall(log)
         if len(found)==1:
             max_per,attempts,delivered=map(int,found[0])
@@ -117,6 +125,7 @@ def summarize_windows_cpu(path,client_log=None):
         "named_rust_workers_cpu_s":named,
         "verified_worker_os_tids":{role:tid for tid,role in native_ids.items()},
         "native_rx_to_tx_wake_batch":wake if wake is not None else {"status":"NOT_MEASURED"},
+        "native_rx_npf_capture_borrow":capture_borrow if capture_borrow is not None else {"status":"NOT_MEASURED"},
         "thread_name_status_counts_observation_sum":overall_status,
         "top_threads_by_lower_bound_cpu":top[:8],
         "top2_threads_cpu_share_lower_bound":round(

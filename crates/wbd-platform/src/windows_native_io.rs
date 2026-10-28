@@ -41,6 +41,15 @@ pub enum ReadResult {
     Skipped,
     EndOfStream,
 }
+/// Returned only after the Npcap borrowed bytes have been processed inside
+/// the caller's synchronous callback. T cannot borrow the temporary capture.
+#[derive(Debug, PartialEq, Eq)]
+pub enum Captured<T> {
+    Frame(T),
+    NoPacket,
+    Skipped,
+    EndOfStream,
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WaitResult {
     Ready(usize),
@@ -178,8 +187,39 @@ impl NpcapRx {
         let h = unsafe { (self.fns.get_event)(self.handle.as_ptr()) } as usize;
         if h == 0 { Err(NativeIoError::UnsupportedEvent) } else { Ok(h) }
     }
-    /// One ready packet maximum. Copies only caplen into the owner's reused
-    /// slab; never retains pcap_next_ex's temporary pointer across calls.
+    /// Process Npcap's borrowed capture bytes synchronously, BEFORE any
+    /// subsequent pcap_next_ex/dispatch/loop on the same handle. This avoids
+    /// one full Ethernet-frame memcpy per RX packet. Its callback cannot
+    /// return a slice borrowing this temporary data: T has no capture lifetime.
+    /// The original Go cold owner keeps the live pcap_t/DLL handle pinned.
+    pub fn with_frame<T, F>(&mut self, f:F)->Result<Captured<T>,NativeIoError>
+    where F:FnOnce(&[u8])->T {
+        let mut header: *const PcapHeader = ptr::null();
+        let mut frame: *const u8 = ptr::null();
+        let rc=unsafe{
+            (self.fns.next_ex)(self.handle.as_ptr(),&mut header,&mut frame)
+        };
+        match rc{
+            0=>Ok(Captured::NoPacket),
+            -2=>Ok(Captured::EndOfStream),
+            -1=>Err(NativeIoError::CaptureFailed),
+            1=>{
+                if header.is_null()||frame.is_null(){return Ok(Captured::Skipped)}
+                let meta=unsafe{&*header};
+                let n=meta.caplen as usize;
+                if n==0||n>MAX_NPF_FRAME||meta.caplen>meta.len{
+                    return Ok(Captured::Skipped)
+                }
+                // SAFETY: Npcap owns caplen valid bytes until the next pcap
+                // read. f is called synchronously, before that next read.
+                let borrowed=unsafe{std::slice::from_raw_parts(frame,n)};
+                Ok(Captured::Frame(f(borrowed)))
+            },
+            _=>Err(NativeIoError::CaptureFailed)
+        }
+    }
+    /// Compatibility path for callers requiring an owned scratch copy.
+    /// Native Rust RX uses with_frame() instead, avoiding this packet copy.
     pub fn read(&mut self, out: &mut [u8]) -> Result<ReadResult, NativeIoError> {
         let mut header: *const PcapHeader = ptr::null();
         let mut frame: *const u8 = ptr::null();
@@ -608,6 +648,37 @@ mod tests {
         assert_eq!(QUEUE_BYTES.load(Ordering::SeqCst),3*(16+IPV4.len()));
         drop(tx);
         assert_eq!(QUEUE_FREES.load(Ordering::SeqCst),1);
+    }
+    #[test]
+    fn borrowed_capture_callback_reads_in_place_without_copy_or_lifetime_escape(){
+        let fns=NpcapFns {next_ex,send_packet,get_event,queue_alloc:None,
+            queue_transmit:None,queue_destroy:None};
+        let mut rx=unsafe{NpcapRx::from_borrowed(1,fns).unwrap()};
+        let mut invoked=0usize;
+        let result=rx.with_frame(|bytes|{
+            invoked+=1;
+            assert_eq!(bytes.as_ptr(),IPV4.as_ptr());
+            assert_eq!(bytes,&IPV4);
+            // Owned scalar result only, not a borrowed slice.
+            bytes.len()
+        });
+        assert_eq!(result,Ok(Captured::Frame(20)));
+        assert_eq!(invoked,1);
+    }
+    unsafe extern "C" fn invalid_capture(_: *mut c_void,
+        hdr:*mut *const PcapHeader,bytes:*mut *const u8)->i32 {
+        static BAD:PcapHeader=PcapHeader{sec:0,usec:0,caplen:30,len:20};
+        unsafe{*hdr=&BAD;*bytes=IPV4.as_ptr()};
+        1
+    }
+    #[test]
+    fn borrowed_capture_rejects_inconsistent_caplen_before_callback(){
+        let fns=NpcapFns {next_ex:invalid_capture,send_packet,get_event,
+            queue_alloc:None,queue_transmit:None,queue_destroy:None};
+        let mut rx=unsafe{NpcapRx::from_borrowed(1,fns).unwrap()};
+        let mut called=false;
+        assert_eq!(rx.with_frame(|_|{called=true}),Ok(Captured::Skipped));
+        assert!(!called);
     }
     #[test]
     fn captured_frame_copied_into_owner_scratch_and_send_prefix() {

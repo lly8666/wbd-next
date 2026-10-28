@@ -49,13 +49,18 @@ class CpuAuditTests(unittest.TestCase):
             log.write_text("WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=TX tid=111\n"
                 "WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=RX tid=222\n"
                 "WBD_WINDOWS_RUST_NATIVE_WAKE_BATCH max_verified_per_wake=32 "
-                "tx_wake_attempts=150 rx_data_delivered=3200 joined=true\n")
+                "tx_wake_attempts=150 rx_data_delivered=3200 joined=true\n"
+                "WBD_WINDOWS_RUST_NATIVE_NPF_BORROW frames=3299 bytes=4147000 extra_memcpy_bytes=0 lifetime=UNTIL_NEXT_PCAP_READ\n")
             x=summarize_windows_cpu(p,client_log=log)
             self.assertEqual(x["verified_worker_os_tids"],{"TX":111,"RX":222})
             top={r["tid"]:r["rust_worker_role"] for r in x["top_threads_by_lower_bound_cpu"]}
             self.assertEqual(top,{111:"TX",222:"RX"})
             self.assertEqual(x["native_rx_to_tx_wake_batch"]["tx_wake_attempts"],150)
             self.assertEqual(x["native_rx_to_tx_wake_batch"]["data_delivered_per_tx_wake_attempt"],21.3333)
+            self.assertEqual(x["native_rx_npf_capture_borrow"],{
+                "frames":3299,"borrowed_bytes":4147000,
+                "full_frame_memcpy_bytes":0,
+                "status":"REAL_PCAP_NEXT_EX_BUFFER_USED_IN_PLACE"})
             # Duplicated startup role markers are ambiguous, NEVER invent mapping.
             log.write_text(log.read_text()+"WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=TX tid=333\n")
             x=summarize_windows_cpu(p,client_log=log)
