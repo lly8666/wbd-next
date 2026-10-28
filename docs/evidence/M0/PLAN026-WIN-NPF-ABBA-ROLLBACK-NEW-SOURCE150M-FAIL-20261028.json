@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "date": "2026-10-28",
+  "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
+  "phase": "RECOVERED_ABBA_ROLLBACK_NEW_SOURCE_VALIDATION",
+  "compiled_product_source_sha": "b1bc9315be23a78b2af65c52c2d6f53bbf858aa2",
+  "control_repo_main": "lly8666/wbd-next",
+  "action": {
+    "run_id": 40710227335,
+    "attempt": 1,
+    "windows_native_job_id": 122895718517,
+    "workflow_outcome": "FAIL",
+    "cheap_contract": "PASS",
+    "windows_rust_unit": "PASS",
+    "linux_rust_unit": "PASS",
+    "windows_go_compile": "PASS",
+    "linux_go_rust_peer_compile": "PASS",
+    "artifact_id": 12827165857,
+    "artifact_name": "m0-wl-full-public-normal-direct",
+    "artifact_zip_sha256": "c4b778be432f484f8a75bc99be9b53cc20e4749771544d84a41f4b8431bda9dd",
+    "report": "normal-report.json",
+    "mode_batch": "mode-batch.json",
+    "windows_manifest": "windows-binary-manifest.json"
+  },
+  "source_identity": {
+    "windows_exe_sha256": "d5d7b3b161ee6904c05a8cbf3588f600b81f75b674cbcbafa74a9ec6a9a48eaf",
+    "windows_rust_dll_sha256": "f5570d917d02362aca8469f16d2d1213d9e9299dc3ba205e74c754b82d9ff586",
+    "linux_source_sha": "b1bc9315be23a78b2af65c52c2d6f53bbf858aa2",
+    "restored_exact_a_engine_blob": "a71549ac29f1c97ff9a472ef57bc0b212aef85c5",
+    "restored_exact_a_platform_blob": "b52c40fc286542479beb7d0cacf9ee456a7f047f",
+    "recompiled_current_main_not_old_abba_prebuilt": true
+  },
+  "scenario": {
+    "scenario_sha256": "e22a96fbd4d6de2b4dc581d7013b343e61f5775298480e185c7a5562906d516e",
+    "target_offered_mbps_each_direction": 150,
+    "min_offered_mbps_each_direction": 142.5,
+    "first_unique_delivery_floor_each_direction": 0.999,
+    "one_way_tc_delay_ms_each_direction": 300,
+    "tc_loss_percent": 0,
+    "run_seconds": 60,
+    "original_go_cold_tls_rust_native_owner": true,
+    "windows_signed_wintun_npcap_real": true,
+    "linux_wsl2_real_raw_tun": true
+  },
+  "functional": {
+    "original_go_tls_wintun_npcap_os_wal": "PASS",
+    "kernel_bidirectional_udp": "PASS",
+    "kernel_bidirectional_tcp": "PASS",
+    "original_source_stage_failures": 0,
+    "owned_stop_both": "PASS",
+    "mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal"
+  },
+  "performance": {
+    "status": "FAIL_TARGET",
+    "tool_status": "CAPACITY_LIMITED_GENERATOR_OFFER",
+    "offered_mbps": {
+      "windows": 149.9618,
+      "linux": 140.9482
+    },
+    "first_delivered_mbps": {
+      "windows": 138.5259,
+      "linux": 149.8273
+    },
+    "first_unique_delivery_fraction": {
+      "windows": 0.982784,
+      "linux": 0.99916
+    },
+    "first_unique_delivered_packets": {
+      "windows": 1140673,
+      "linux": 1233835
+    },
+    "missing_inside_observed_sequence_span": {
+      "windows": 19982,
+      "linux": 1037
+    },
+    "linux_owned_raw_socket_drops": 0,
+    "linux_udp_fixture_socket_drops": 81,
+    "linux_guest_global_udp_rcvbuf_errors_delta": 81,
+    "linux_true_tc_ifb_eth0_drops": 0,
+    "windows_npcap_ingress_local_drops_1hz": 0,
+    "app_rtt_p99_ms": {
+      "windows": 782,
+      "linux": 811.691
+    },
+    "business_one_way_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS"
+  },
+  "whole_windows_exe_go_plus_rust": {
+    "cpu_total_seconds": 50.90625,
+    "cpu_kernel_charged_seconds": 41.140625,
+    "cpu_user_seconds": 9.765625,
+    "elapsed_seconds": 75.921,
+    "mean_one_core_pct": 67.052,
+    "rust_tx_t_id": 5668,
+    "rust_tx_sampled_top6_cpu_lower_bound_seconds": 43.71875,
+    "rust_tx_sampled_kernel_lower_bound_seconds": 38.01562,
+    "rust_rx_t_id": 7768,
+    "rust_rx_sampled_top6_cpu_lower_bound_seconds": 6.73438,
+    "peak_working_set_bytes": 42033152,
+    "peak_private_bytes": 38080512,
+    "driver_wide_isr_dpc_cpu": "NOT_MEASURED",
+    "lock_wait_profile": "NOT_MEASURED",
+    "critical_conclusion": "TX kernel-charged hot thread is real within-process CPU; do NOT label all high CPU as host/environment or infer Go vs Rust by language name"
+  },
+  "rx_wake_batch": {
+    "max_verified_per_wake": 32,
+    "tx_wake_attempts": 36357,
+    "rx_data_delivered": 1141893,
+    "source": "native Stop readback"
+  },
+  "interpretation": [
+    "New rolled-back main SOURCE b1bc has fresh native construction, authenticated bidirectional UDP/TCP and both owned Stop PASS, but 150Mbps performance FAIL. No new 150Mbps PASS.",
+    "Linux offered only 140.9482<142.5Mbps generator limit, while Windows first unique 98.2784%<99.9%; Linux UDP app socket drops 81 and product Rust TX charged kernel CPU 38.01562s. Combined signs prevent classifying entire failure as host-only, fixture-only or product-only.",
+    "Earlier original A compiled source7fc same-host ABBA A1/A2 passed on different GitHub Windows runner. It proves rollback decision, NOT transferable new product/source qualification.",
+    "Do not rerun heavier family while this host capacity and TX bottleneck remain unexplained; need discriminating same-host low-cost TX CPU/driver outcome samples if revisiting.",
+    "No product change needed to preserve conservative A after B rejected. No rollback of 32-record RX coalescing, Linux raw SO_RCVBUF, Go cold TLS, authenticated PN, or owned Stop.",
+    "PLAN026 240s N0, idle/wakes, separate legacy Go A/B, Fixed/Auto/Game/Health/lane, physical Windows not validated here."
+  ],
+  "related": {
+    "abba_evidence": "docs/evidence/M0/PLAN026-WIN-NPF-ABBA-SAME-HOST-ROLLBACK-20261028.json",
+    "rollback_devlog": "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ABBA-ROLLBACK.md"
+  }
+}

@@ -38,7 +38,8 @@
     "docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-RX-WAKE-COALESCING-150M.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-NPCAP-ZEROCOPY-RX-BORROW-150M.md",
-    "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ABBA-ROLLBACK.md"
+    "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ABBA-ROLLBACK.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ROLLBACK-NATIVE-RESULT.md"
   ],
   "verification": [
     {
@@ -159,6 +160,13 @@
       "status": "PERFORMANCE_PASS",
       "source_sha": "7fc38591c501ff4a06e1862c7b08d5d3dbc1be95",
       "evidence": "docs/evidence/M0/PLAN026-WIN-NPF-ABBA-SAME-HOST-ROLLBACK-20261028.json"
+    },
+    {
+      "platform": "Windows2025 signed native + WSL2 Linux x64",
+      "scope": "Rollback main b1bc fresh 150M/300ms one-way/60s Normal/off: kernel UDP/TCP and both Stop PASS; Win first 98.2784% FAIL, Linux offered 140.9482 Mbps below 142.5, Linux UDP socket drops81, TX CPU hotspot; 150M NOT_QUALIFIED.",
+      "status": "FAIL",
+      "source_sha": "b1bc9315be23a78b2af65c52c2d6f53bbf858aa2",
+      "evidence": "docs/evidence/M0/PLAN026-WIN-NPF-ABBA-ROLLBACK-NEW-SOURCE150M-FAIL-20261028.json"
     }
   ],
   "limitations": [
@@ -167,10 +175,10 @@
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637.",
     "Action40557095692 exact sourceaa93183d Normal WL-N0 300ms 10Mbps target/0% tc loss FAIL due untyped native Normal M1/M3 owner failure. 4.87Mbps attempted until early Stop, not a scored peak or proven host cap. Pause N1/N5/higher pending root, preserve older functional positives.",
-    "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
+    "H307: S55 signed Windows Go/Rust import to main; prior S55 scope only. Independent old N0 aa931 FAIL; source b6b product evidence retained.",
     "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
-    "S61 main integrates sourcee8acbb validated tiny Rust cfg-only module fix for old default original-Go FEC2-off Linux build, while preserving all FEC2-enabled code and historical main sourceb6b964a signed seven-mode functional PASS. S60 Action40561871984 exact Rust ordinary, no-FEC2, opt-in FEC2/Game module checks PASS; this new main SOURCE not yet native-qualified and original NORMAL-COMMON Action40560287464 FAIL remains.",
-    "H311 provenance index: H309 main33ed seven-mode native PASS; N0dd0767 independent one-sample PASS while aa931 FAIL remains; ARM64f7ee prebuilt 10M capacity success; Linux33ed loss1 old serial-echo FAIL.",
+    "S61: source33ed FEC2-off Linux Rust build fix; old b6b native positive remains source-specific; earlier NORMAL-COMMON FAIL retained.",
+    "H311: source33ed 7 modes PASS, N0dd0767 one-sample PASS, aa931 FAIL, ARM64f7ee separate; Linux serial-echo 1% FAIL retained.",
     "Linux 1% original-Go product source33ed Action40587653027 now source-locked native 512 offered/508 unique received/4 residual via non-stop-and-wait, both Stop PASS; old source33ed harness Action40566375977 FAIL remains. No equivalence with physical Windows or FEC2/Game loss tests.",
     "2026-10-28 PLAN026 新Normal/off直接转 Rust 两固定worker，无Go包FFI/Go数据泵作为正式候选；此代码尚未获Windows Rust/Go生产编译、真双端应用、N0 240s或同机CPU/首到A/B证据。旧已测SOURCE不是新路径PASS，Fixed/Auto/Game仍沿当前独立旧热路径待逐模式迁入同一个NativeOwner。",
     "2026-10-28 PLAN026 follow-up: new raw Rust NativeOwner Windows build previously blocked at E0502 in pure TCP ACK checksum; source patch separates checksum computation. Windows native Go ABI 192-byte V1 layout explicitly asserted in test. This is a build correction, not a Windows actual Npcap/Wintun or performance PASS.",
@@ -178,10 +186,11 @@
     "PLAN026 Stop scheduling: Rust RX prefers stop event and checks AtomicBool before each early packet and NPF frame; TX also prefers stop over Wintun read events. Windows live load/Stop regression on this exact post-fix SOURCE must be re-run; past live PASS belongs only to earlier SOURCE.",
     "2026-10-28 H326 Windows Rust Normal/off TX event-only scheduling: M2 feedback.next_deadline and shadow.next_deadline wake earliest deadline in one M2 monotonic clock, replacing fixed 20ms poll/2s post-RX spin; removes per-delivery last_rx_ns atomic writes. Requires exact-source real Windows signed NPF/Wintun tests; earlier PASS does not transfer.",
     "2026-10-28 H326 optional win_native_lock_profile compiled only when explicitly enabled: samples 1/64 shared Entry lock acquisitions for TX and RX, prints counts/total/max wait on owned Stop. Does not split owner yet, no default per-packet instrumentation or claim of measured lock contention before live run.",
-    "PLAN026 Windows Rust native RX→TX 32-authenticated-record bounded wake coalescing candidate, with immediate partial-batch flush, per-worker GetCurrentThreadId one-shot diagnostic and Stop wake-attempt readback. No 150Mbps new-source performance result until real signed Windows/WSL2 test; do not promote this optimization as qualified yet.",
+    "PLAN026 RX→TX <=32 authenticated records wake batch; real signed SOURCE7fc PASS; no same-host speedup proved.",
     "PLAN026 SOURCE7fc new Rust RX bounded SetEvent coalescing actual real 150Mbps /300ms /tc0% /60s Normal/off PASS first unique>=99.9 each, signed Windows/WSL2 true Stop. 130 Linux→Windows app packets missing in last sequence window; not absolute zero. New actual OS TID CPU identifies RX>T X; CPU differences vs SOURCE0abd from different Windows VMs cannot prove causal speedup; ETW stage attribution and physical/FEC modes NOT_MEASURED.",
     "Historic e6be borrowed RX: 150Mbps 1 FAIL/1 PASS on different Windows runners; host variance and CPU ROI unproven. See source-specific evidence and ABBA record.",
-    "ABBA 40707758779: B NPF borrow rejected (A 4.852864 vs B 4.932077 CPU s/GB); new main rollback SOURCE not qualified until separate native Action."
+    "ABBA 40707758779: B NPF borrow rejected (A 4.852864 vs B 4.932077 CPU s/GB); new main rollback SOURCE not qualified until separate native Action.",
+    "Rollback main b1bc signed Action40710227335: fresh native CPU50.90625s/75.921s, Rust TX sample43.72s, Linux offered140.95 and UDP socket drops81, Windows first98.2784%; 150M FAIL, no host-only attribution. ABBA A/B remains earlier-source decision."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
