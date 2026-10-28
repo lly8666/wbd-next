@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "harness_source_sha": "4cbd1a6f188db5cff638dd78d1a80f81a4dc55d2",
+  "compiled_native_product_source_sha": "0abd1b04ee7a39d8aa426963564a079523c1036a",
+  "run_id": 40690015405,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40690015405",
+  "artifact": {
+    "id": 12817655455,
+    "sha256": "803cc432cc22bc2c32e233f7f235a96836f3f14f4bf7c4ddfd29088d30621916",
+    "name": "m0-wl-full-public-normal-direct"
+  },
+  "scenario": {
+    "target_mbps_per_direction": 150,
+    "oneway_ms_per_direction": 300,
+    "configured_netem_loss_pct": 0,
+    "duration_s": 60,
+    "packet_mix": "96B10/288B15/1060B30/1200B45",
+    "actual_offered_mbps_windows": 149.9599,
+    "actual_offered_mbps_linux": 149.9441,
+    "first_delivery_fraction_both": 1,
+    "owned_stop": "PASS_BOTH_OWNED",
+    "native_real_signed_driver": true
+  },
+  "sample": {
+    "path": "mode-results/normal/windows-original-go-rust-process-1hz.jsonl",
+    "audit_in_report": "mode-results/normal/report.json/windows_cpu_audit",
+    "native_exe_pid": 9272,
+    "observation_count": 73,
+    "monotonic_elapsed_s": 73.734,
+    "total_cpu_s": 12.84375,
+    "process_charged_kernel_cpu_s": 8.234375,
+    "user_cpu_s": 4.609375,
+    "percent_one_logical_core": 17.419,
+    "kernel_fraction": 0.64112,
+    "peak_working_set_bytes": 42086400,
+    "peak_private_bytes": 38178816,
+    "top2_tids": [
+      {
+        "tid": 9780,
+        "cpu_s_lower_bound": 8.42188,
+        "kernel_s_lower_bound": 4.79688,
+        "user_s_lower_bound": 3.625,
+        "sampled_top6_times": 59,
+        "role": "UNKNOWN"
+      },
+      {
+        "tid": 9776,
+        "cpu_s_lower_bound": 4.21875,
+        "kernel_s_lower_bound": 3.375,
+        "user_s_lower_bound": 0.84375,
+        "sampled_top6_times": 59,
+        "role": "UNKNOWN"
+      }
+    ],
+    "top2_cpu_share_lower_bound": 0.98419,
+    "get_thread_description": {
+      "status": "FAILED_SAME_STATUS_ALL_SAMPLES",
+      "hresult_hex": "0x10000000",
+      "status_count": 1241,
+      "named_rust_worker_samples": 0,
+      "caveat": "GetThreadDescription returns nonzero for every attempted thread; no TX/RX name attribution, not evidence threads are Go."
+    }
+  },
+  "scope": "Measured one Windows EXE process including original Go runtime, Rust DLL, its syscall charge, startup and Stop; does not include separate Python generators, Linux peer, system driver ISR/DPC, per-function AES or Wintun/NPF CPU.",
+  "rust_source_review": {
+    "outbound": [
+      "Wintun receive one copy into reusable source slab",
+      "8 original IPv4 frames sealed under one Entry lock",
+      "build IPv4 TCP Ethernet into independent frame buffer",
+      "Npcap queue copies Ethernet frames then kernel transmit",
+      "second Entry lock settles M2 actual accepted/unconfirmed prefix"
+    ],
+    "inbound": [
+      "Npcap pcap_next_ex per frame and copies caplen",
+      "exact tuple TCP parser",
+      "Rust Entry lock for AEAD open and replay PN",
+      "Wintun AllocateSendPacket + copy + SendPacket per IPv4",
+      "tx_notify.wake once per authenticated record"
+    ],
+    "already_improved": [
+      "TX batch eight records two locks",
+      "M2 timer earliest deadline not 20ms poll",
+      "direct TCP-looking ACK build into target frame"
+    ],
+    "candidate_not_proven_hot": [
+      "Npcap queue copy/transmit syscalls",
+      "Wintun allocate/copy/send and Wintun loan copies",
+      "RX per-record TX auto-reset wake",
+      "M2 lock latency and AEAD under owner lock"
+    ]
+  },
+  "recommendation": "First determine TX/RX exact OS TID via one-shot Rust GetCurrentThreadId startup identity; GetThreadDescription failed 0x10000000 in all 1241 attempted thread accesses. Then diagnostic feature-gated lower-rate CPU-cycle or ETW stack sampling for NPF/Wintun/AEAD/wake; do not optimize protocol, AEAD/PN or lock without stage evidence. Maintain 150Mbps/0%-netem/60s/99.9%-first-delivery/Stop gate."
+}
