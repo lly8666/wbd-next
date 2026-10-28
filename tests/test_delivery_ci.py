@@ -20,13 +20,24 @@ class DeliveryCiTests(unittest.TestCase):
     def test_plain_staging_push_does_not_launch_full_product(self):
         job = self.workflow["jobs"]["linux-source-locked-public"]
         self.assertEqual(job["needs"], ["windows-compile-preflight"])
-        self.assertEqual(job["if"], "github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || contains(github.event.head_commit.message, '[wiring-full]')")
-        self.assertEqual(self.workflow["jobs"]["native-public-two-os"]["needs"], ["linux-source-locked-public"])
+        # Normal staging still cannot run full product; only an explicit,
+        # source-verified Rust-only reuse bypasses separate compiler jobs.
+        for guard in ("github.event_name == 'workflow_dispatch'", "github.ref_name == 'main'",
+                      "contains(github.event.head_commit.message, '[wiring-full]')",
+                      "inputs.perf_reuse_run_id == ''", "[plan026-rust-reuse-150]"):
+            self.assertIn(guard, job["if"])
+        native=self.workflow["jobs"]["native-public-two-os"]
+        self.assertEqual(native["needs"], ["wiring-contract","linux-source-locked-public"])
+        for guard in ("always()", "needs.wiring-contract.result == 'success'",
+                      "needs.linux-source-locked-public.result == 'success'",
+                      "inputs.perf_reuse_run_id != ''", "[plan026-rust-reuse-150]"):
+            self.assertIn(guard,native["if"])
 
     def test_preflight_has_no_native_runtime_or_driver_effects(self):
         job = self.workflow["jobs"]["windows-compile-preflight"]
         self.assertEqual(job["needs"], ["wiring-contract"])
-        self.assertNotIn("if", job)
+        self.assertEqual(job.get("if"),
+            "inputs.perf_reuse_run_id == '' && !contains(github.event.head_commit.message, '[plan026-rust-reuse-150]')")
         scripts = "\n".join(x.get("run", "") for x in job["steps"])
         self.assertIn("go test -c", scripts)
         self.assertIn("./cmd/wbd-client", scripts)
@@ -36,6 +47,22 @@ class DeliveryCiTests(unittest.TestCase):
         for forbidden in ("rustup", "cargo ", "wsl.exe", "-Action Install", "m0_wl_public_normal_e2e.py"):
             self.assertNotIn(forbidden, scripts)
         self.assertNotIn("continue-on-error", job)
+
+    def test_reused_rust_product_requires_source_and_binary_sha_and_real_driver(self):
+        native=self.workflow["jobs"]["native-public-two-os"]
+        step=next(x for x in native["steps"] if x.get("name","").startswith("Restore exact prebuilt"))
+        self.assertEqual(step["if"],"env.WBD_WL_REUSE_RUN_ID != ''")
+        for required in ("gh api", "head_sha", "git diff --name-only",
+                         "Cargo.lock", "m0-wl-windows-product-binaries-", "sha256",
+                         "wbd_engine.dll", "wbd-client-embedded.exe", "m['features']"):
+            self.assertIn(required,step["run"])
+        install=next(x for x in native["steps"] if x.get("name","").startswith("Full public-run signed"))
+        self.assertIn("-Action Install",install["run"])
+        linux=next(x for x in native["steps"] if x.get("name","").startswith("Restore SAME-RUN"))
+        self.assertIn("$env:WBD_WL_REUSE_RUN_ID",linux["run"])
+        self.assertIn('m["source_sha"]==os.environ["LINUX_BINARY_SRC"]',linux["run"])
+        self.assertIn("WBD_WL_REUSE_RUN_ID", native["env"])
+        self.assertIn("WBD_WL_BINARY_SOURCE",native["env"])
 
     def test_native_success_and_cleanup_contracts_retained(self):
         job = self.workflow["jobs"]["native-public-two-os"]
