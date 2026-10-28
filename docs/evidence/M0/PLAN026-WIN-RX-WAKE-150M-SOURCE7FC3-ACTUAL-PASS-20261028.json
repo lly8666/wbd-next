@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "source_sha": "7fc38591c501ff4a06e1862c7b08d5d3dbc1be95",
+  "harness_source_sha": "7fc38591c501ff4a06e1862c7b08d5d3dbc1be95",
+  "compiled_windows_and_linux_product_source_sha": "7fc38591c501ff4a06e1862c7b08d5d3dbc1be95",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "Windows Rust NativeOwner Normal/off 150Mbps each direction true signed Windows/WSL2 native kernel, 300ms one-way each, 0% configured tc loss, 60s, offered>=95%, unique delivery>=99.9%, both real owned Stop; not physical and not absolute bidirectional zero missing",
+  "run_id": 40693430836,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40693430836",
+  "artifact": {
+    "id": 12818896594,
+    "name": "m0-wl-full-public-normal-direct",
+    "sha256": "f2363df44b63730e495fde49a6f134bb322845f5883cfd6f6538415a9eb58465",
+    "exact_zip_verified": true
+  },
+  "new_compiled_product_artifacts": {
+    "windows_id": 12817869276,
+    "linux_id": 12818806001,
+    "new_source_sha_verified": true
+  },
+  "scenario": {
+    "path": "scenarios/wl-normal-150m-300ms-0loss-60s.json",
+    "id": "wl-normal-150m-300ms-0loss-60s",
+    "sha256": "e22a96fbd4d6de2b4dc581d7013b343e61f5775298480e185c7a5562906d516e",
+    "duration_s": 60,
+    "drain_s": 5,
+    "tun_mtu": 1400,
+    "seed": 20261028,
+    "oneway_delay_ms_each": 300,
+    "configured_netem_loss_pct": 0,
+    "offered_target_mbps_each": 150,
+    "mix": "96B:10%;288B:15%;1060B:30%;1200B:45% packets"
+  },
+  "traffic": {
+    "windows_to_linux": {
+      "windows_sender_packets": 1234860,
+      "windows_sender_offered_mbps": 149.9599,
+      "linux_receiver_unique_first_packets": 1234860,
+      "linux_first_delivered_mbps": 149.9599,
+      "first_delivery_fraction": 1,
+      "app_missing_packets": 0
+    },
+    "linux_to_windows": {
+      "linux_sender_packets": 1235039,
+      "linux_sender_offered_mbps": 149.9811,
+      "windows_receiver_unique_first_packets": 1234909,
+      "windows_first_delivered_mbps": 149.9642,
+      "first_delivery_fraction": 0.9998947401661,
+      "app_missing_packets": 130,
+      "sequence_gap_summary": "130 missing inside observed 0..1235038 seq span in final 4096-sequence window (end of measurement window); exact Windows kernel UDP socket loss counter NOT_MEASURED"
+    }
+  },
+  "native_windows": {
+    "actual_exe_pid": 3740,
+    "rust_tx_os_tid": 8968,
+    "rust_rx_os_tid": 6952,
+    "worker_tids_from": "WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=TX|RX tid=... one-shot native Rust GetCurrentThreadId readback, exact join to Toolhelp32Snapshot GetThreadTimes; GetThreadDescription still HRESULT_10000000",
+    "rust_rx_data_delivered": 1236151,
+    "rust_rx_tx_event_wake_attempts": 39701,
+    "max_verified_records_per_wake_batch": 32,
+    "rx_data_delivered_per_wake_attempts": 31.136520490667742,
+    "message": "WBD_WINDOWS_RUST_NATIVE_WAKE_BATCH max_verified_per_wake=32 tx_wake_attempts=39701 rx_data_delivered=1236151 joined=true",
+    "old_source_behavior": "Before SOURCE7fc every authenticated DATA/CONTROL caused one SetEvent; new code merges up to32 verified records and flushes partial batch immediately. This 31.1365 diagnostic ratio includes CONTROL and handoff and should NOT be called 31x CPU speedup.",
+    "npcap_local_ingress_drops": "CHECK_SEPARATELY_NOT_NEEDED_FOR_TC_0_GATE"
+  },
+  "windows_cpu": {
+    "file": "mode-results/normal/windows-original-go-rust-process-1hz.jsonl",
+    "source": "mode-results/normal/report.json.windows_cpu_audit",
+    "sampling_seconds": 74.437,
+    "observations": 74,
+    "pid": 3740,
+    "whole_exe_cpu_total_s": 8.390625,
+    "whole_exe_cpu_kernel_s": 4.875,
+    "whole_exe_cpu_user_s": 3.515625,
+    "whole_exe_cpu_pct_one_logical_core": 11.272,
+    "top_worker_tids": [
+      {
+        "role": "RX",
+        "tid": 6952,
+        "cpu_s_top6_lower_bound": 6.42188,
+        "kernel_s_top6_lower_bound": 3.34375,
+        "user_s_top6_lower_bound": 3.07812
+      },
+      {
+        "role": "TX",
+        "tid": 8968,
+        "cpu_s_top6_lower_bound": 1.46875,
+        "kernel_s_top6_lower_bound": 1.17188,
+        "user_s_top6_lower_bound": 0.29688
+      }
+    ],
+    "other_threads": "not assigned Go vs Rust unless native TID marker",
+    "peak_working_set_bytes": 42274816,
+    "peak_private_bytes": 38555648,
+    "comparison_prior_run": {
+      "run_id": 40690015405,
+      "prior_compiled_product_sha": "0abd1b04ee7a39d8aa426963564a079523c1036a",
+      "prior_whole_exe_cpu_total_s": 12.84375,
+      "prior_sampling_window_s": 73.734,
+      "prior_kernel_s": 8.234375,
+      "prior_user_s": 4.609375,
+      "old_vs_new_cpu_delta_pct": -34.67153284671533,
+      "caveat": "DIFFERENT hosted Windows VM and timing; 34.7% smaller whole-process CPU is observational, NOT a causal same-VM optimization speedup proof. Same nominal scenario, changed native product."
+    }
+  },
+  "linux_kernel": {
+    "native_server_pid": 995,
+    "raw_server_fd_inodes": [
+      "7128",
+      "7135",
+      "7832"
+    ],
+    "raw_socket_drops_delta_each": {
+      "7128": 0,
+      "7135": 0,
+      "7832": 0
+    },
+    "raw_receiver_requested_so_rcvbuf_bytes": 4194304,
+    "raw_receiver_effective_so_rcvbuf_bytes": 8388608,
+    "fixture_udp_requested_so_rcvbuf_bytes": 4194304,
+    "fixture_udp_effective_so_rcvbuf_bytes": 8388608,
+    "fixture_udp_drops_delta": 0,
+    "guest_udp_rcvbuf_errors_delta": 0,
+    "tc_netem_ifb_drops": 0,
+    "tc_netem_eth0_drops": 0,
+    "tc_overlimits": 0,
+    "tc_requeues": 0,
+    "real_fq_tun": "fq maxrate600mbit flow_limit256 actual kernel readback",
+    "linux_tun_failed": 0,
+    "linux_m3_open_invalid": 0
+  },
+  "business_udp_rtt_p99_ms": {
+    "windows": 609,
+    "linux": 609.315,
+    "measurement": "independent local same-origin monotonic RTT, not one-way clock-mixed"
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "signed_npcap_wintun": true,
+  "original_go_tls_real": true,
+  "wsl2_original_raw_tun": true,
+  "qualification": {
+    "both_offered_at_least_95pct": true,
+    "both_first_unique_delivery_at_least_99_9pct": true,
+    "real_netem_drops_zero": true,
+    "linux_socket_drops_zero": true,
+    "owned_stop_both": true,
+    "absolute_bidirectional_zero_missing": false,
+    "same_vm_cpu_ab": false,
+    "physical": "NOT_RUN",
+    "other_modes": "NOT_RUN"
+  },
+  "next": "RX thread top6 CPU lower bound6.42s vs TX1.47s; prioritize ETW/opt-in per-stage RX pcap_next_ex + memcpy / M3 AEAD+Entry lock / Wintun allocate+copy+send. Retain useful RX wake batching. To quantify causal CPU speedup vs SOURCE0abd, same-host A/B would be required, not separate GitHub VMs."
+}
