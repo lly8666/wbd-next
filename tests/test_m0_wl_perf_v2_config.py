@@ -12,6 +12,13 @@ class V2Scenarios(unittest.TestCase):
    self.assertEqual((p["offered_mbps"],p["delay_ms"],p["loss_pct"],p["tc_mbit"]),(150,300,0,None))
    self.assertEqual(sum(x["packets_weight"] for x in p["packet_mix"]),100)
   self.assertEqual(read_scenario(SCENE)["scenario_sha256"],c["scenario_sha256"])
+ def test_v2_udp_fixture_socket_headroom_is_extra_but_scoped(self):
+  path=pathlib.Path(__file__).resolve().parents[1]/"tools"/"m0_wl_public_rate_app.py"
+  app=path.read_text()
+  self.assertIn('sys.argv[7]=="v2" else 2)*1024*1024',app)
+  self.assertIn('sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, receiver_rcvbuf_request)',app)
+  self.assertIn('"requested_socket_rcvbuf_bytes":receiver_rcvbuf_request',app)
+  self.assertIn('socket_start=udp_socket_probe(sock) if profile_name=="v2" else None',app)
  def test_legacy_unchanged(self):
   self.assertEqual(get_profile("n0")["offered_mbps"],10)
   self.assertEqual(get_profile("p200-250m-30p")["loss_pct"],30)

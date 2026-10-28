@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "source_sha": "e9f8b741d249bc362e57bfd5e2d9fe899fe6574f",
+  "compiled_product_source_sha": "0abd1b04ee7a39d8aa426963564a079523c1036a",
+  "compiled_bundle_run": 40681039919,
+  "action_id": 40683222367,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/40683222367",
+  "artifact": {
+    "id": 12813229452,
+    "name": "m0-wl-full-public-normal-direct",
+    "sha256": "8d6020acb2f6e8ac154176ab621dcb15790c734e2d0e2b76f11a8a1af9514fc1",
+    "locally_verified": true
+  },
+  "scenario": {
+    "id": "wl-normal-150m-300ms-0loss-60s",
+    "sha256": "e22a96fbd4d6de2b4dc581d7013b343e61f5775298480e185c7a5562906d516e",
+    "per_direction_target_mbps": 150,
+    "oneway_delay_ms": 300,
+    "tc_loss_pct": 0,
+    "duration_s": 60,
+    "mix": "96B10%,288B15%,1060B30%,1200B45% packets",
+    "seed": 20261028
+  },
+  "outcome": {
+    "cheap_preflight": "PASS",
+    "compiled_artifact_sha_reuse": "PASS_NEW_SOURCE0ABD",
+    "signed_npcap_wintun": "PASS",
+    "real_wsl2": "PASS",
+    "original_tls_udp_tcp": "PASS",
+    "rust_normal_off": "PASS_FUNCTIONAL",
+    "owned_stop": "PASS_BOTH_OWNED",
+    "app_qualified": false,
+    "reason": [
+      "CAPACITY_LIMITED_LINUX_PYTHON_GENERATOR_OFFER",
+      "FIRST_DELIVERY_LT_99_9_BOTH",
+      "LINUX_UDP_TEST_SOCKET_RECEIVE_OVERFLOW"
+    ],
+    "physical": "NOT_RUN"
+  },
+  "windows_to_linux": {
+    "source_sent_packets": 1230390,
+    "source_offered_mbps": 149.4182,
+    "linux_app_unique_first": 1202187,
+    "linux_first_delivered_mbps": 145.8907,
+    "missing_packets": 28203,
+    "unique_fraction": 0.977078
+  },
+  "linux_to_windows": {
+    "linux_source_sent_packets": 1131437,
+    "linux_offered_mbps": 137.3996,
+    "windows_app_unique_first": 1113928,
+    "windows_first_delivered_mbps": 135.2912,
+    "missing_packets": 17509,
+    "unique_fraction": 0.984525
+  },
+  "kernel": {
+    "linux_raw_rx_requested_bytes": 4194304,
+    "linux_raw_rx_effective_bytes": 8388608,
+    "kernel_capped": false,
+    "server_comm": "wbd-v4-server",
+    "server_pid": 1003,
+    "raw_socket_owned_inodes": [
+      "8490",
+      "8044",
+      "8483"
+    ],
+    "raw_socket_kernel_drops_each": {
+      "8044": 0,
+      "8483": 0,
+      "8490": 0
+    },
+    "linux_guest_rmem_default_bytes": 212992,
+    "linux_guest_rmem_max_bytes": 4194304,
+    "linux_udp_fixture_so_rcvbuf_effective_bytes": 4194304,
+    "linux_udp_fixture_socket_drops": 14726,
+    "linux_guest_global_udp_rcvbuf_errors": 14726,
+    "linux_guest_udp_in_errors": 14726,
+    "tc_ifb_inbound_netem_packets": 1231178,
+    "tc_eth0_egress_netem_packets": 1129145,
+    "netem_drops_each_direction": 0,
+    "netem_overlimits_each_direction": 0,
+    "netem_requeues_each_direction": 0,
+    "windows_app_socket_drop_counter": "NOT_MEASURED_NATIVE_WINDOWS_API"
+  },
+  "rust_native_linux_server": {
+    "raw_observed": 1231294,
+    "raw_tuple": 1231233,
+    "data_unique": 1218162,
+    "link_completed": 1218162,
+    "tun_delivered": 1218162,
+    "tun_udp": 1218147,
+    "tun_tcp": 10,
+    "tun_other": 5,
+    "tun_failed": 0,
+    "open_invalid": 0,
+    "replay_duplicate": 0
+  },
+  "post_rust_tun_udp_to_linux_app_unique_gap_packets": 15960,
+  "business_rtt_p99_ms": {
+    "windows": 1000,
+    "linux": 1186.782,
+    "scope": "SAME_ORIGIN_MONOTONIC_REAL_OS_UDP_ROUNDTRIP_NOT_ONEWAY"
+  },
+  "generator_cpu_s": {
+    "windows": 36.8125,
+    "linux": 61.1984
+  },
+  "observed_linux_cpu_fraction_one_core_over65s": 0.9415,
+  "root_status": "LINUX_KERNEL_RAW_RX_OVERFLOW_REMOVED_AT_150M;_TEST_UDP_RECEIVER_KERNEL_OVERFLOW_CONFIRMED;_LINUX_COMBINED_GENERATOR_CPU_NEAR_FULL_AND_UNDEROFFERED",
+  "caution": "Product RX_CHAIN counters cover native server lifecycle including control; app packet counts cover scenario measure+drain; do not subtract as exact synchronized equality. Loss at Windows receiver stage remains unlocalized. 150Mbps no PASS.",
+  "next": "Increase ONLY V2 fixture UDP SO_RCVBUF request2MiB→4MiB (Linux kernel effective up to8MiB; readback); same source0abd Rust binaries and scenario. If Linux offered <95pct target after test fixture buffer increase, separate TX/RX workload into independent low-overhead processes/multicore fixture before blaming Rust. Do not inflate Rust buffer further while /proc/net/raw drops=0."
+}

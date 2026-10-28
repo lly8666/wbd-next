@@ -20,7 +20,13 @@ local, remote, side, start_flag, output_dir = sys.argv[1:6]
 out = pathlib.Path(output_dir)
 out.mkdir(parents=True, exist_ok=True)
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 2 * 1024 * 1024)
+# V2: 150Mbps highlighted *this fixture's own Linux UDP receive queue*
+# (14726 real socket drops) after Rust raw RX drops reached zero. Request
+# enough per-socket headroom once; Linux cap rmem_max=4MiB gives up to 8MiB
+# effective via kernel doubling. No sysctl, SO_RCVBUFFORCE or OS/product edit.
+# Preserve N0/P200 original 2MiB request and exact same payload/pacing.
+receiver_rcvbuf_request = (4 if len(sys.argv)>7 and sys.argv[7]=="v2" else 2)*1024*1024
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, receiver_rcvbuf_request)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 2 * 1024 * 1024)
 sock.bind((local, 45903))
 sock.setblocking(False)
@@ -259,6 +265,7 @@ result={
     "generator_main_loop_iterations":loop_count,
     "reused_payload_buffer":stress,
     "reused_receive_slab":stress,
+    "requested_socket_rcvbuf_bytes":receiver_rcvbuf_request,
     "sent_packets":sent,"sent_payload_bytes":sent_bytes,
     "sent_payload_mbps":round(sent_bytes*8/(duration*1e6),4),
     "received_first_packets":len(first),

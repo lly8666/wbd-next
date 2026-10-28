@@ -1,0 +1,20 @@
+# PLAN026 Rust-only 150Mbps raw RX PASS stage / fixture UDP receive pressure FAIL
+
+**Compiled product remains the bounded receive-buffer Rust SOURCE `0abd1b04ee7a39d8aa426963564a079523c1036a`** (new Linux Rust SO_RCVBUF 4MiB request, actual8MiB kernel readback), previously source-verified actual **100Mbps scoped PASS** run40681039919. Follow-up harness-only SOURCE `e9f8b741d249bc362e57bfd5e2d9fe899fe6574f`, real [Actions40683222367](https://github.com/lly8666/wbd-next/actions/runs/40683222367) artifact `12813229452`, ZIP verified SHA256 `8d6020acb2f6e8ac154176ab621dcb15790c734e2d0e2b76f11a8a1af9514fc1`.
+
+Exact 150Mbps each direction target; one-way300ms each; configured0% kernel netem loss; 60s; same seed and 96/288/1060/1200B weighted mix as prior 150. **Real signed Npcap/Wintun, Linux raw/TUN, original TLS, both owned Stop PASS. 150Mbps business/performance FAIL.** Same-source artifacts source0abd reused and verified without recompilation; test OS VM fresh.
+
+Observed Windows source `1230390` UDP app packets, **149.4182Mbps**, Linux first app receiver `1202187`, **145.8907Mbps**, unique missing28203 (97.7078% receipt). Linux source `1131437` packets, **137.3996Mbps**, Windows first receiver `1113928`, **135.2912Mbps**, unique missing17509 (98.4525% receipt). Linux Python combined sender/receiver process spent **61.1984 CPU seconds in 65s**, ~94.15% of one core, and could not reach required >=142.5Mbps offered. Windows Python CPU36.8125s. RTT real same-origin business UDP p99 Windows1000ms/Linux1186.782ms (NOT cross-OS one-way p99). Thus full 150Mbps path cannot be called CPU/product qualified.
+
+**New stage separation, do not confuse kernel queues:**
+
+- Linux Rust `wbd-v4-server` PID1003 owns **all three raw socket inodes 8490,8044,8483** confirmed by `/proc/<pid>/fd`. Their `/proc/net/raw` drops **all ZERO**, effective raw socket `SO_RCVBUF=8388608`B (requested4194304B), kernel_capped=false. **The former raw RX queue bottleneck remains resolved even at150Mbps.**
+- Real netem IFB packets1231178/eth0 packets1129145, actual netem drops/overlimits/requeues **all 0**.
+- Original server `V4_PUBLIC_RX_CHAIN raw_observed1231294 raw_tuple1231233 data_unique1218162 tun_delivered1218162 tun_udp1218147 tun_failed0 open_invalid0`; independent Linux UDP app first received1202187: difference **15960** between Rust TUN→UDP kernel-delivery counter and Python application unique receipt (asynchronous scope plus control, do not equate each number as strict synchronized per-packet conservation).
+- Linux **Python test UDP socket**, NOT Rust raw socket, reported **14726 actual /proc/net/udp drops** plus **14726 guest-global Udp:RcvbufErrors**. Its real `SO_RCVBUF` readback was4194304B (requested2097152B); WSL2 `rmem_max4194304`. At this pressure the combined Python sender+receiver is CPU-limited and has a confirmed local UDP receive queue overrun. Windows UDP app drop counter NOT_MEASURED: remaining reverse 17509 missing packets not yet stage-attributed.
+
+**Next lowest-impact discriminating fixture-only change:** V2 independent test business UDP socket requests `SO_RCVBUF=4MiB` instead of2MiB; WSL2 Linux should effectively provide up to8MiB (must read back actual), Windows actual readback separately; original N0/P200 profiles retain original2MiB, no fake socket, no sysctl, no Rust/FEC/Go product changes. Re-run exact same 150Mbps scene with same compiled SOURCE0abd products pinned to run40681039919; native CI still installs signed drivers/true WSL2/real Stop. Preserve strict offered>=95% target and unique delivery>=99.9% both. If Linux generator still only offers ~137Mbps at nearly one core, buffered receiving does not fix sustained computation capacity: proceed to a dedicated multi-process/native sender/receiver capacity fixture with exact source/sequence accounting instead of enlarging Rust RX or claiming product throughput failure.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Fixture-only 2MiB→4MiB per-socket V2 business UDP SO_RCVBUF request after proved original Rust raw RX drops zero at 150Mbps; original N0/P200 unchanged, no Rust product or FEC changes."}
+```
