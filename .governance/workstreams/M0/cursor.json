@@ -4,33 +4,31 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 343,
-  "checkpoint_sha": "45c6912d1ab478b210e8831a2393b0ebb93c506d",
+  "sequence": 344,
+  "checkpoint_sha": "b9d53b92a318c189b52a79d48daefd4cbac57fee",
   "progress": "partial",
   "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
-  "current_task": "Recovered after H342: complete source-attested same-Windows-runner signed 150Mbps/300ms one-way 60s A1 B1 B2 A2 NPF borrowed RX experiment at harness 48151: A compiled SOURCE7fc and B e6be all four actual UDP/TCP/Stop qualified; A mean4.852864 vs B4.932077 Windows Go+Rust process CPU-sec/first delivered GB, B +1.6323%, so predefined ROLL_BACK_B (not a performance benefit). Main b1bc restored only two A Rust NPF RX blobs; retained <=32 RX wake batching and Linux raw SO_RCVBUF. Fresh new-source b1bc signed native Action40710227335 original TLS/Linux Rust/UDP/TCP and both Stop PASS but 150Mbps performance FAIL: Linux offered140.9482<142.5Mbps floor, Windows first98.2784%<99.9%, Linux UDP socket drops81, Rust TX sampled CPU43.71875s (kernel38.01562), not established host-only. Source outcome and feature-impact on main45c; ongoing entire PLAN026 (Fixed/Auto/Game/Health/dynamic lane, robust 150M, physical) still incomplete.",
-  "why_now": "ABBA outcome recovered from main Actions 40707758779 artifact12825900107 (SHA256 2011f514...eabeb) versus prior cursor H342 IN_PROGRESS. Four same-runner legs all product gates PASS, job nonzero intentionally signals ROLL_BACK_B. Rollback main b1bc source built new signed Windows DLL/Linux peer, all compile and cheap tests PASS, genuine Stop PASS, yet NPF/TX CPU and Linux fixture observations prevent latest 150M performance promotion. Gov/Feature catalog main docs 45c Action40713158595 both PASS. Close ABBA without re-running full matrix or hiding negative retest.",
+  "current_task": "PLAN026 Windows Rust Normal/off Linux-v3 opportunistic outer repair source9ed3: original 50/100Mbps x 1/5/10/30% true tc netem x 50/150/300ms each way 60s 24/24 signed Windows/WSL2 native scenario Actions PASS. Prior 504c/b2fb true Windows zero repair FAIL preserved; repaired low-RTT M2 shadow premature expiry with Normal-only bounded 1200ms detached immutable ciphertext. Does NOT close broader PLAN026, 150Mbps or physical/other modes.",
+  "why_now": "Recovered previously in-flight Actions40724616857 parent + fanout40726634888: complete source-locked 24 independent one-scene real Windows/WSL2 measurements. Official main evidence/docs b9d settled all 24 artifacts: all offered >=99.9215% target, real tc drops both, original UDP/TCP and both owned Stop PASS; Windows NPF repair R>0 every scene, R/total 0.4816%-8.1055% <=10, R/F max8.876%; accepted uncertain=0, 30%-loss R/business-target proxy 9.802%-9.978%. Whole Windows Go+Rust EXE CPU 7.27-34.63s/75-77s (9.72%-45.10% one core), kernel5.13-27.02s, peak working set40.1-48.9 MiB; Windows app sender CPU64%-83% core is separate, not product. 24 scoped performance pass not cross-VM CPU A/B.",
   "done_when": "Normal/off newest source exact N0 10Mbps 300ms one-way 240s with old produced0 ready4 regression and same VM old-Go vs new Rust CPU-seconds/GB, RSS, idle wakes and p99 first-delivery A/B. Migrate Fixed/Auto/Game/Health Keepalive and Make-Before-Break dynamic lane native owner; remove remaining Go packet pump only after modes' real functional/perf proof.",
-  "next_action": "ABBA borrowed-frame optimization CLOSED: keep copied NPF RX on main (exact 7fc A blobs, compiled rollback SHA b1bc). Do not restore B solely to remove memcpy; do not treat old ABBA A source as fresh 150M pass. PLAN026 remaining gates: for 150M triage use first discriminating scoped same-host RX/TX kernel/NPF driver outcome vs Linux generator/socket capacity and immutable same SOURCE; no larger same-family/seed reruns while capacity + TX CPU unknown. Windows real N0 240s separate source scoped historical pass a123, new-source needs preservation; verify idle/1pps/burst, process CPU/GB, RSS/Stop, and original Go vs Rust old-Go A/B if required by registry. Only after Normal/off genuine cost/reliability gate, migrate Fixed/Auto/Game2/4/Health dynamic lane. Keep Windows/ARM64/physical qualifications distinct. Historical governance-maintenance test_m4 frozen manifest expectation still FAIL at earlier 48151, not product qualification; no old FEC work.",
+  "next_action": "Windows Normal/off outer opportunistic repair package CLOSED at compiled SOURCE9ed3, signed 24/24 50/100Mbps; preserve all exact artifacts and old 504c/b2fb R0 FAIL, do not rerun matrix or expand mature Linux/FEC/Game. Remaining PLAN026: physical Windows and 150Mbps robustness (previous b1bc signed new-source FAIL, not erased); before spending resources investigate 100M50ms30% Windows product kernel CPU 27.02s/76.78s only if decision requires, use same-host product old-Go vs Rust exact binary CPU/GB; no cross-host causal claims. Current 24 Linux reverse R0 on 10 scenes noted separately, not a Windows success reversal; assess only if authorized. Windows Fixed/Auto/Game/Health/lane, ARM64, idle/1pps/burst all separate qualification. Governance b9d CI structure FAIL because old H343 context_refs count10>8; H344 trims hot links without deleting historical docs.",
   "unverified": true,
-  "last_tested_source": "b1bc9315be23a78b2af65c52c2d6f53bbf858aa2",
+  "last_tested_source": "9ed3da3153e20a1787ed731c45dd3359c7e0654e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN026-SOURCEE6BE-NPF-BORROW-150M-ATTEMPTS-20261028.json",
     "docs/evidence/M0/PLAN026-WIN-NPF-ABBA-SAME-HOST-ROLLBACK-20261028.json",
-    "docs/evidence/M0/PLAN026-WIN-NPF-ABBA-ROLLBACK-NEW-SOURCE150M-FAIL-20261028.json"
+    "docs/evidence/M0/PLAN026-WIN-NPF-ABBA-ROLLBACK-NEW-SOURCE150M-FAIL-20261028.json",
+    "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE504C-50M-30P-300MS-FAIL-20261028.json",
+    "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCEB2FB-50M-30P-300MS-RETENTION-FAIL-20261028.json",
+    "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE9ED3-50-100M-24-SIGNED-20261028.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261028-PLAN026-WL-V2-100M-RUST-SAME-BINARIES.md",
-    "docs/devlog/M0/20261028-PLAN026-RUST-LINUX-RAW-RXBUF-4M-REGRESSION.md",
-    "docs/devlog/M0/20261028-PLAN026-RUST-RAW-RXBUF-100M-PASS-150M-REUSE.md",
-    "docs/devlog/M0/20261028-PLAN026-RUST-150M-LINUX-UDP-FIXTURE-BACKPRESSURE.md",
-    "docs/devlog/M0/20261028-PLAN026-WIN-CPU-HOTPATH-AUDIT-SOURCE0ABD.md",
-    "docs/devlog/M0/20261028-PLAN026-WIN-RX-WAKE-COALESCING-150M.md",
-    "docs/devlog/M0/20261028-PLAN026-WIN-NPCAP-ZEROCOPY-RX-BORROW-150M.md",
-    "docs/devlog/M0/20261028-PLAN026-WIN-NPF-SAME-RUNNER-ABBA.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ABBA-ROLLBACK.md",
-    "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ROLLBACK-NATIVE-RESULT.md"
+    "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ROLLBACK-NATIVE-RESULT.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-OPPORTUNISTIC-REPAIR.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-FIRST-REAL-FAIL-DIAGNOSTIC.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-M2-RETENTION-FLOOR.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-24-SIGNED-MATRIX.md"
   ],
   "open_requests": [],
-  "partial_summary": "H343 recovered ABBA: Actions40707758779 exact A7fc/B e6be prebuilt compiled originals on SAME runner1000107804 A1 B1 B2 A2 60s each all offered/delivery/kerneldrop/Stop PASS, Windows whole EXE process normalized A4.852864 vs B4.932077 CPU-sec/GB => ROLL_BACK_B. Main rollback b1bc restored only engine+platform Rust A NPF RX blobs, kept wake32 and Linux buf. Fresh b1bc signed new DLL+Linux peer Action40710227335 compile/core/functional Stop PASS but 150M perf FAIL Linux offer140.9482, Win first98.2784%, Linux UDP drops81, Windows TX thread kernel-hot >=38.01562s; no blame purely host, do not claim new 150M qualified. Docs/evidence/cards main45c and Feature Catalog/Gov Action40713158595 SUCCESS; no in-flight related jobs. PLAN026 remaining broad A/other modes/physical NOT_DONE."
+  "partial_summary": "H344 recovery: source9ed3 (same Win EXE/DLL & Linux peer hashes) Action40724616857 plus 23 artifact-reused 407266.../407267... one-scene signed Windows2025/WSL2 tests ALL PASS 24/24 Normal/off (50/100Mbps each, 1/5/10/30% tc each, 50/150/300ms one-way, 60s). R/total range0.4816%-8.1055%, max R/F8.876%, all genuine R>0/real tc loss/UDP+TCP/owned Stop; 30% R/business-target proxy9.802%-9.978%, true physical link C unspecified. Win whole Go+Rust CPU7.27-34.63s / 75-77s, kernel5.13-27.02s, mean core9.72%-45.10%, peak RSS40.1-48.9MiB; generator CPU separately 64.33%-83.25%. Failures 504c and b2fb true R0 at 50M30%300ms retained, b1bc 150M unrelated FAIL retained. Source evidence docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE9ED3-50-100M-24-SIGNED-20261028.json and fresh 24 matrix devlog main b9d. 10 Linux reverse R0 cases; no physics or full PLAN026 done. H344 shrinks context_refs to within 8 governance bound."
 }
