@@ -1,5 +1,8 @@
 # 10 生命周期、自动档、配置与观测接入
 
+## Windows方案B生命周期责任更新
+Windows按 [PLAN026](../../decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md)：Rust保存Health/Keepalive/业务idle证据和lane active/retiring、发送控制事件；Go只作低频FakeTCP/TLS新lane/OS重连，Rust负责业务原子切换。Auto保证一个有效控制器，原Go低频策略可过渡保留，绝不与Rust另设双控制器。下面早期“Go永远决定rotation/idle”是旧设计背景；正确性（收包认证、真实idle、generation、owned Stop）不变，Linux运行路径暂不动。
+
 ## 原功能复用的精确边界
 
 Go继续决定认证/地址租约、lane建立/rotation/idle、auto FEC升降、server policy、DNS与分流、GUI状态；Rust只执行逐包行为和提供客观事件。不得在Rust另写一套auto controller与Go同时改档。2026-10-18新工作包的档位、初始化/升降/有效样本规则以[FEC v2第7节](../FEC_V2_BALANCED.md)为准，覆盖下文“旧判断/滞回/配置定义照搬”，保留唯一控制点和本页生命周期要求。旧N2效率/GE尾延迟OPEN保持，旧N4/GUI/打包收尾从精确SHA导入。

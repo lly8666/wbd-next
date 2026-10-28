@@ -2,6 +2,9 @@
 
 这是长期设计入口，不是当前进度快照。实现和资格分别读取 main 的 project、registry 及角色分支 cursor/evidence；不得从早期方案推断“尚未开始”或“已完成产品”。2026-10-14 用户明确的同机顺序 A/B 要求覆盖旧版“每 run 禁止 multi-leg”约定。
 
+## Windows方案B（2026-10-28最新授权）
+当前Windows产品目标详见 [PLAN026](../decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md) / [Windows NativeOwner v2](WINDOWS_NATIVE_OWNER_V2.md)：Go保留认证建链与设备/系统管理，Rust 独占Wintun/Npcap业务、M2/FEC/Game/Health；固定双worker、支持动态lane。下文早期v1如写“Windows Go稳态包pump/全部策略永远留Go”只是历史阶段计划，不再是当前授权。现有Linux原Rust路径不动，新增产品功能/性能须真实验证。
+
 ## 结论
 
 采用 **原 Go 控制层 + 同进程 Rust 数据引擎**。建连、借站 TLS、认证、地址分配、配置/GUI、系统安装和网络管理沿用原方案；长期逐包执行的编解码、FEC、独立 AEAD、外层恢复、队列/定时器、TUN/raw 收发迁入 Rust。先减少重复工作和调度成本，再谈换语言的收益。不会重新实现完整 TLS、完整 TCP 栈或另一套管理平台。

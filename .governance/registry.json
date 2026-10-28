@@ -18,9 +18,9 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "Continue PLAN025 on main under docs/decisions/M0-MAIN-CLOSEOUT-20261028.md sections 2-6: finish handshake/N0 stability, high-RTT optional repair lifetime, unified control appearance/idle, truthful shaping and representative capacity tests. All M0 source, reusable harness and progress live on main; reconcile old branches once, do not restart completed FEC/Windows wiring. Keep epoch/task and original correctness gates.",
-      "done_when": "One main-source product/manifest with reproducible blockers repaired, typed errors and bounded nonblocking repair/control; affected native modes/lifecycle pass scoped; representative matrices run to measured capacity with CPU/memory/first-arrival/RTT/missing and outer-byte ratios. Preserve unexplained risks and exact NOT_RUN/CAPACITY_LIMITED; no false full-platform/physical PASS or endless helper reruns. Follow closeout section 5; old-feature migration is separate.",
-      "assigned_task": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025"
+      "goal": "Implement docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md on main. User selected Option B: preserve Windows Go FakeTCP/uTLS/TLS/OS WFP-WAL-Wintun cold control, Rust DLL solely owns real Wintun/Npcap steady I/O, AEAD/M2/FEC/Game/Health with lane replacement API. First write complete Normal/off Rust two-worker drivers, Go handle handoff, real Stop, packaging/callers/tests and old-Go same-host A/B before concentrated native Actions and N0 240s. Then migrate Fixed/Auto/Game2/4/Health/Make-Before-Break lanes on the SAME owner, after Normal performance evidence. Preserve Linux product, in-flight PLAN025 facts and failures; no per-packet FFI, no duplicate TLS/M2.",
+      "done_when": "Exact main SOURCE of Windows Rust NativeOwner Normal/off with signed Wintun/Npcap and Linux peer authentic UDP/TCP, real owned Stop, original produced0/ready4 regression, 240s high-RTT N0 and same-VM old-Go vs Rust CPU/RSS/p99/idle wake tests with bounded handle/loan counts. All applicable Fixed/Auto/Game and Health/lane replacement integrated with truthful per-mode evidence/readback or explicitly UNWIRED/NOT_RUN. Go business packet path permanently removed from product, original Go TLS/WAL maintained, no unproven product/physical PASS.",
+      "assigned_task": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO"
     },
     {
       "id": "M1",

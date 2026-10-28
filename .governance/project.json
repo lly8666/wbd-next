@@ -2,7 +2,7 @@
   "schema_version": 1,
   "repository": "lly8666/wbd-next",
   "control_branch": "main",
-  "phase": "MAIN_PRODUCT_STABILITY_AND_NETWORK_CLOSEOUT",
+  "phase": "MAIN_WINDOWS_RUST_NATIVE_OWNER_IMPLEMENTATION",
   "governance_evidence": "docs/evidence/M0/GOV-003-PR4-main-integration.json",
   "product_design": "DESIGN_READY",
   "product_implementation": "INTEGRATED_FUNCTIONAL_SCOPES_PERFORMANCE_CLOSEOUT",
@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "M0 source, fixtures and progress live on main. Current task from registry.goal and main M0 cursor; closeout plan docs/decisions/M0-MAIN-CLOSEOUT-20261028.md. Seven-mode native functional and natural Auto scoped evidence exist; not blanket performance/physical qualification. Independent FEC history completed; never resume its old status.next_action.",
+  "next_decision": "2026-10-28 newer user authorization: main M0 PLAN026 Windows Go cold control + Rust-native Wintun/Npcap steady owner, task and done_when in registry.goal at docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md. Before implementation settle old PLAN025 in-flight run and carry N0 produced0/ready4 as regression. This documentation changes no product SOURCE or performance/physical qualification; Linux stays as-is.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

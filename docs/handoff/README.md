@@ -2,6 +2,7 @@
 
 日常从 main 的 START_HERE.md 开始；当前任务在 registry.goal，事实在 main M0 cursor，资格在精确 SOURCE 的证据。M0 不再从临时分支找主产品。
 
+- [当前授权：PLAN026 Windows Rust NativeOwner](../decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md)：完整编码批、真实设备Stop和性能A/B；尚未实施。
 - [当前逻辑与风险](CURRENT_INTEGRATION.md)：短摘要，不能替代实时 cursor。
 - [历史检索地图](../history/2026-10-28-M0-MAIN-HANDOFF.md)：按问题找旧 FEC、Windows、性能和错误。
 - [架构](../architecture/README.md) / [模块](../architecture/modules/README.md) / [功能目录](../features/README.md)：按需阅读。

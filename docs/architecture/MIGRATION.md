@@ -1,5 +1,7 @@
 # 迁移顺序与旧功能继承
 
+> **新Windows优先包（2026-10-28）：** [PLAN026 Go冷控制 + Rust NativeOwner](../decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md)覆盖下方旧 Windows Go direct-TCP/Auto/keepalive热路径过渡策略。保留既有 Go TLS/OS管理和安全回滚，不保留每包Go业务泵；先 Normal/off，再 Fixed/Auto/Game/Health/换lane。旧表仍作历史复用来源和功能清单，不代表今天已实施。
+
 产品装配和并行归属按[PLAN-008](../decisions/M0-integration-unblock-2026-10-19.md)收口：复用固定旧SOURCE的Go冷层/配置/GUI已在用户授权范围；可在本仓库保存有hash的overlay/替换清单，Actions组装真实程序。缺少完整旧目录不构成再次申请许可的理由；不修改旧仓库主线、不移植旧数据wire、不移除未实现能力门来冒充接通。
 
 Windows运行时去PowerShell按[PLAN-010](../decisions/M0-windows-native-migration-2026-10-19.md)：保留a7a82冷层主基线，定向导入后续12文件原生恢复增量，再由M4接实际CLI/GUI网络事务；不是整体更新旧源或改写Rust OS管理。老版最新仍调用脚本、生产WFP/完整崩溃恢复尚未通过，移植与产品资格分开。M0一次登记临时包和精确新增路径，原015在安全交接点接续。

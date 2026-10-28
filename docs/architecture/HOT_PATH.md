@@ -4,6 +4,9 @@
 
 实施细节以[模块施工说明v2](modules/README.md)为准。本文保留总览；模块页明确V4协商、bootstrap退休、无漏唤醒队列、e×e缺源解码、96B shadow槽预算和固定密文/动态外观头的区别。
 
+## Windows NativeOwner v2 规则（覆盖旧热路径示意）
+以 [PLAN026](../decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md) 和 [NativeOwner v2](WINDOWS_NATIVE_OWNER_V2.md) 为准：Go只负责Windows冷建链/OS租约，Rust完全拥有Windows Wintun/Npcap的V4业务I/O。本文早期“direct-TCP Go热路径例外”、Go稳定运行Auto/Health等应视为历史过渡；如果任何旁路仍需Go处理真实业务，必须明确UNWIRED/未完成，不可声称Go业务CPU=0。Normal/off性能及Stop证明先于Game迁移；Linux旧实现不重构。
+
 ## 1. 运行边界
 
 一个客户端/服务端进程：原 Go 控制层加载同目录的 Rust `wbd_engine` 动态库；Windows GUI 仍为原 C# 方案。动态库及依赖随 portable 包放在同一目录，不运行时解压到系统目录。Linux 同样使用固定安装目录的库，不另开数据面微服务。

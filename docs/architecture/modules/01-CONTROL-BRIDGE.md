@@ -1,5 +1,7 @@
 # 01 Go控制层与Rust引擎桥接
 
+> **2026-10-28 Windows 方案B优先说明：** [PLAN026](../../decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md)规定 Go 是 FakeTCP/TLS/OS 冷控制，认证后 Rust独占 Wintun/Npcap业务收发。下面旧方案中“Go通过Rust reader冷流收发”是历史抽象，不可据此在 Windows保留每包Go FFI。先移交原 Go Npcap capture reader/handle及已读early帧，再启动唯一Rust稳态worker；Stop Rust join先于Go系统清理。Linux原热路径不受此处新授权影响。
+
 ## 选择
 
 保留原Go bootstrap可靠有序流（仅握手期间），Rust拥有平台reader。以已有 `BootstrapStream` 和 `StageTransition` 状态机为参考，不把它们的锁和重组缓冲带入steady。原 `Detach()` 只释放适配器、不发送FIN的行为必须保留。

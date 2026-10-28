@@ -9,6 +9,9 @@
 4. docs/features/README.md：功能目录，用只读 `python tools/feature_catalog.py list --query <主题>` 或 GitHub entries 按需查卡。
 本页加上述七项合计八文件；不要再一次性载入旧 devlog。非 M0 的明确授权角色读取自身 prompt/cursor。
 
+## 当前新任务
+M0 最新授权是 [PLAN026 Windows Rust NativeOwner](docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md)，任务有效性仍按 main registry.goal。**文档尚未代表产品实现或测试**；先结算旧cursor所载在途N0 Actions事实，再 Normal/off整批编码/测试/同机性能，达标迁其它模式/动态lane。
+
 ## 开工
 刷新 origin/main，检查本地未提交工作的归属。核对 cursor.checkpoint_sha 后实际增量、最新相关 Actions 和未写结果；必要时补 recovered 日志。不要扫全部历史或从旧分支 cursor 续错任务。registry.goal 给出当前施工方案，进度不从方案推断。
 

@@ -1,6 +1,6 @@
 # WBD Next
 
-面向可替换聊天 agent 的下一代 WBD 开发仓库。**详细重构方案已完成：原成熟控制层 + Rust 长期运行数据引擎。尚无 Rust 产品实现或产品性能资格。**
+面向可替换聊天 agent 的下一代 WBD 开发仓库。**现有 Go 受保护认证控制层 + Rust Linux raw/TUN 和 Windows ScopedOwner，部分平台/模式已有精确SOURCE功能正例；并非全性能或物理PASS。2026-10-28新授权[PLAN026 Windows方案B](docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md)：Rust将独占Windows Wintun/Npcap稳态收发，Go留作冷控制，方案尚待实现。**
 
 目标：真实业务首次到达效率优先，低延迟、无跨业务 HOL、低 CPU 与合理带宽成本；允许有界内存换 CPU。保留必要正确性与隔离边界。
 
@@ -31,7 +31,7 @@
 
 ## 当前边界
 
-M0负责方案与后续R0接入，M1–M4等待正式分配。先建立最小共享接口再并行实现，旧项目剩余控制层工作按迁移表导入。未授权物理部署。
+M0 按 main registry.goal 负责当前 PLAN026；Linux现有产品路径不重构，Windows NativeOwner先Normal/off再Fixed/Auto/Game/Health/换lane。其它工位权限以最新registry为准；未授权物理部署。
 
 治理设计参考 [Longcycle Core](https://github.com/lly8666/longcycle-core)。审阅版本、借鉴范围及差异见 [来源与设计取舍](docs/LONGCYCLE_REVIEW.md)。未复制其研究数据、业务代码或历史任务。
 
