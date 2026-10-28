@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "source_sha": "0d09cd5e61266b716aa5ade9bbce55a63120f2f1",
+  "status": "CAPACITY_LIMITED",
+  "artifact_verified": false,
+  "scenario": "200ms each direction, 250 Mbit/s each direction tc netem cap, 30% independent random loss, 250Mbps offered target per generator, 60 seconds",
+  "action_id": 40651485360,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/40651485360",
+  "run_conclusion": "failure",
+  "failure_stage": "native-public-two-os real workload grading",
+  "test_result": "CAPACITY_LIMITED_OFFERED_BELOW_90PCT_250MBPS",
+  "profile_arm": "WL_P200_GENUINE_KERNEL_200MS_30PCT_250MBIT_BOTH_DIRECTIONS_CONFIGURED",
+  "windows_sender_offered_mbps": 148.0198,
+  "linux_sender_offered_mbps": 108.1181,
+  "windows_receiver_delivered_mbps": 75.6973,
+  "linux_receiver_delivered_mbps": 103.5692,
+  "windows_receiver_first_fraction": 0.70016,
+  "linux_receiver_first_fraction": 0.6997,
+  "normal_product_udp_tcp_owned_stop": "PASS",
+  "kernel_tc_cleanup": "PASS",
+  "original_windows_go_rust_process_cpu_total_seconds": 42.1719,
+  "original_windows_go_rust_process_cpu_kernel_seconds": 34.3594,
+  "original_windows_go_rust_process_cpu_user_seconds": 7.8125,
+  "peak_working_set_bytes": 41689088,
+  "limits": [
+    "Source generator itself offered <225Mbps on BOTH OS, thus 250Mbps native owner throughput not measured",
+    "No Go-versus-Rust CPU attribution from process CPU alone",
+    "Injected 30% loss yielded roughly 70% first arrival, not proof of useful M2 restored loss",
+    "Source does not include newer 1Hz thread profiler or optimized 250Mbps generator"
+  ],
+  "next": "Change ONLY high-offer Python generator to reusable payloads and no fixed 800us sleep; repeat same exact tc+owned Stop profile, retaining first capacity-limited observation."
+}

@@ -44,6 +44,9 @@ profile_name = sys.argv[7] if len(sys.argv)==8 else "n0"
 profile = get_profile(profile_name)
 sizes=(96, 288, 1060, 1200) if profile_name=="n0" else (1060,1200)
 rate_bytes_per_sec=int(profile["offered_mbps"]*1_000_000/8)
+stress=profile_name!="n0"
+destination=(remote,45903)
+reused={size:bytearray(prefix+bytes(8)+bytes(size-len(prefix)-8)) for size in sizes} if stress else None
 # Explicit per-Actions single-scene duration; never let an env on one OS
 # silently produce a different input horizon on the other OS.
 duration = float(sys.argv[6]) if len(sys.argv) >= 7 else 60.0
@@ -51,6 +54,8 @@ if duration not in (60.0,240.0) or (profile_name!="n0" and duration!=profile["du
     raise ValueError("invalid declared impairment duration")
 drain=5.0
 start=time.monotonic()
+cpu_start=time.process_time()
+loop_count=0
 probe_next=start
 last_credit=start
 last_heartbeat=start
@@ -66,17 +71,22 @@ max_interdelivery_ms=0
 bins=[0] * int((duration+drain)*100)
 err=None
 while True:
+    loop_count+=1
     now=time.monotonic()
     if now >= start + duration + drain: break
     if now < start + duration:
         credit=min(credit+(now-last_credit)*rate_bytes_per_sec,rate_bytes_per_sec/20)
         last_credit=now
-        for _ in range(32):
+        for _ in range(128 if stress else 32):
             size=sizes[sent % len(sizes)]
             if credit < size: break
-            payload=prefix+struct.pack("!Q",sent)+bytes([sent%251])*(size-len(prefix)-8)
+            if stress:
+                payload=reused[size]
+                struct.pack_into("!Q",payload,len(prefix),sent)
+            else:
+                payload=prefix+struct.pack("!Q",sent)+bytes([sent%251])*(size-len(prefix)-8)
             try:
-                n=sock.sendto(payload,(remote,45903))
+                n=sock.sendto(payload,destination)
                 if n != size: raise RuntimeError("partial kernel UDP send")
             except (OSError, RuntimeError) as e:
                 err=str(e)
@@ -141,9 +151,19 @@ while True:
                           "sent_bytes":sent_bytes,"received_first":len(first),
                           "received_bytes":recv_bytes}), flush=True)
         last_heartbeat=now
-    time.sleep(.0008)
+    # High-offer mode uses reusable payload slabs and yields only when
+    # pacing credit is insufficient; fixed 800us sleep throttled the
+    # Python generator long before the 250Mbps native product was stressed.
+    if stress:
+        if credit < min(sizes):
+            time.sleep(.00005)
+        elif loop_count%8==0:
+            time.sleep(0)
+    else:
+        time.sleep(.0008)
 sock.close()
 end=time.monotonic()
+cpu_seconds=time.process_time()-cpu_start
 result={
     "source":os.environ.get("GITHUB_SHA"),
     "scenario":"WL-N0" if profile_name=="n0" else "WL-P200-250M-30P",
@@ -151,6 +171,10 @@ result={
     "side":side,"kernel_bind":"PASS","measurement_duration_s":duration,
     "drain_s":drain,"actual_elapsed_s":round(end-start,3),
     "requested_payload_mbps":profile["offered_mbps"],
+    "sender_cpu_seconds":round(cpu_seconds,4),
+    "sender_cpu_pct_one_core":round(100*cpu_seconds/max(0.001,end-start),3),
+    "generator_main_loop_iterations":loop_count,
+    "reused_payload_buffer":stress,
     "sent_packets":sent,"sent_payload_bytes":sent_bytes,
     "sent_payload_mbps":round(sent_bytes*8/(duration*1e6),4),
     "received_first_packets":len(first),
