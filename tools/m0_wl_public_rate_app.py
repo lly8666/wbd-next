@@ -77,10 +77,24 @@ recv_slabs=bytearray(2048) if stress else None
 recv_view=memoryview(recv_slabs) if stress else None
 max_interdelivery_ms=0
 bins=[0] * int((duration+drain)*100)
+# Diagnostic-only V2 timing: receive bins are loop-observation timestamps,
+# never kernel arrival timestamps or cross-OS one-way latency.
+send_bins=[0]*int((duration+drain)*100) if profile_name=="v2" else None
+send_bytes_bins=[0]*int((duration+drain)*100) if profile_name=="v2" else None
+last_loop_tick=start
+long_loop_pauses=[]
+max_loop_pause_ms=0.0
 err=None
 while True:
     loop_count+=1
     now=time.monotonic()
+    if send_bins is not None and now<start+duration:
+        gap_ms=(now-last_loop_tick)*1000
+        if gap_ms>max_loop_pause_ms:max_loop_pause_ms=gap_ms
+        if gap_ms>=20 and len(long_loop_pauses)<32:
+            long_loop_pauses.append({"end_rel_s":round(now-start,4),
+                                     "loop_gap_ms":round(gap_ms,3)})
+    last_loop_tick=now
     if now >= start + duration + drain: break
     if now < start + duration:
         credit=min(credit+(now-last_credit)*rate_bytes_per_sec,rate_bytes_per_sec/20)
@@ -102,6 +116,11 @@ while True:
             credit-=size
             sent+=1
             sent_bytes+=size
+            if send_bins is not None:
+                sb=int((now-start)*100)
+                if 0<=sb<len(send_bins):
+                    send_bins[sb]+=1
+                    send_bytes_bins[sb]+=size
         if err: break
     else:
         last_credit=now
@@ -178,6 +197,39 @@ while True:
 sock.close()
 end=time.monotonic()
 cpu_seconds=time.process_time()-cpu_start
+# Snapshot only bounded diagnostic distributions after measurement.
+# Sequence 0..max(received) may contain gaps; the post-run last-source
+# sequence beyond max is recovered from the opposite sender's exact total.
+sequence_sample=None
+if send_bins is not None:
+    hi=max(first) if first else -1
+    seq_missing_windows=[]
+    missing_count=0
+    gap_start=None
+    groups=[]
+    for window_start in range(0,hi+1,4096):
+        window_end=min(hi+1,window_start+4096)
+        nmissing=0
+        for seq in range(window_start,window_end):
+            if seq not in first:
+                nmissing+=1
+                if gap_start is None:gap_start=seq
+            elif gap_start is not None:
+                if len(seq_missing_windows)<64:
+                    seq_missing_windows.append({"start":gap_start,"end_exclusive":seq,
+                                                "missing_packets":seq-gap_start})
+                gap_start=None
+        groups.append(nmissing)
+        missing_count+=nmissing
+    if gap_start is not None and len(seq_missing_windows)<64:
+        seq_missing_windows.append({"start":gap_start,"end_exclusive":hi+1,
+                                    "missing_packets":hi+1-gap_start})
+    sequence_sample={"first_received_seq":min(first) if first else None,
+                     "last_received_seq":hi if hi>=0 else None,
+                     "missing_inside_observed_sequence_span":missing_count,
+                     "missing_packet_count_by_4096_sequence_window":groups,
+                     "first_64_missing_sequence_ranges":seq_missing_windows,
+                     "source_tail_beyond_highest_received":"NOT_KNOWN_FROM_RECEIVER"}
 result={
     "source":os.environ.get("GITHUB_SHA"),
     "scenario_sha256":profile.get("scenario_sha256"),
@@ -201,11 +253,19 @@ result={
     "duplicate_packets":duplicate,"invalid_packets":invalid,
     "max_interdelivery_ms":max_interdelivery_ms,
     "arrival_10ms_bucket_counts":bins,
+    "send_10ms_bucket_counts":send_bins,
+    "send_10ms_bucket_bytes":send_bytes_bins,
+    "arrival_bucket_scope":"USERSPACE_LOOP_TICK_NOT_KERNEL_TIMESTAMP",
+    "max_generator_loop_gap_ms":round(max_loop_pause_ms,3) if send_bins is not None else None,
+    "first_32_generator_loop_gaps_ge_20ms":long_loop_pauses if send_bins is not None else None,
+    "received_sequence_gap_summary":sequence_sample,
     "business_udp_rtt":summarize_rtt(probe_rtt_ms,probes_sent),
     "business_udp_rtt_send_errors":probe_send_errors,
     "application_oneway_p99":"NOT_MEASURED_UNCALIBRATED_WINDOWS_LINUX_CLOCKS",
     "sender_error":err
 }
 (out / ("wl-n0-"+side+"-app.json")).write_text(json.dumps(result)+"\n")
-print(json.dumps({k:v for k,v in result.items() if k!="arrival_10ms_bucket_counts"}),flush=True)
+print(json.dumps({k:v for k,v in result.items()
+    if k not in ("arrival_10ms_bucket_counts","send_10ms_bucket_counts",
+                 "send_10ms_bucket_bytes","received_sequence_gap_summary")}),flush=True)
 sys.exit(1 if err else 0)
