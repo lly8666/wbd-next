@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task_id": "R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
+  "scope": "PLAN025_WL_N0_240S_INITIAL_FAILURE",
+  "main_source_sha": "9ed962ef8ddd5750ddf1cf4006103bb072cc5ae3",
+  "original_go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "actions_run_id": 40627263146,
+  "native_job_id": 122616381774,
+  "artifact": {
+    "id": 12789959039,
+    "name": "m0-wl-full-public-normal-direct",
+    "zip_sha256": "78dc11a357a48e94ef50ea9edc4ae2127596ae72f5c079023e9f667efc093877"
+  },
+  "build_and_units": {
+    "workflow_core": "PASS",
+    "windows_go": "PASS",
+    "windows_rust": "PASS",
+    "linux_rust": "PASS",
+    "linux_original_product_build": "PASS"
+  },
+  "initial_functionality": {
+    "original_go_TLS": "PASS_REAL",
+    "windows_npcap_wintun_wal": "PASS_READY",
+    "linux_rust_tun": "PASS_READY",
+    "initial_duplex_udp": "PASS_REAL",
+    "duplex_tcp": "PASS_REAL"
+  },
+  "measured": {
+    "requested_duration_s": 240,
+    "actual_traffic_until_fatal_s_approx": 64,
+    "windows_total_app_packets_sent_before_fatal": 120939,
+    "windows_total_app_packets_first_received_before_fatal": 119865,
+    "windows_npf_local_queue_drop_first_observed": 6,
+    "windows_npf_local_queue_drop_before_load": 7,
+    "windows_npf_local_queue_drop_at_fatal": 7,
+    "windows_original_go_rust_process_cpu_one_logical_core_mean_pct": 23.532,
+    "windows_original_go_rust_process_working_set_peak_bytes": 42885120,
+    "application_oneway_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+    "cli_original_sha256": "d6da03f7305b03fcdf8e54de968e38c082cb088a8a70e99e7ddd9e1ffc37878a",
+    "linux_server_sha256": "7bbd33c5420728571ff7f2ffe05f3711f4c331067192279dac4fa7a4ffe5dcee"
+  },
+  "first_fault": "Windows actual original NPF M2 batch completed=0 expected=4: original-Go private Windows Rust owner refused",
+  "attribution": "PRODUCT_WINDOWS_M2_BATCH_OR_WRAPPER_UNRESOLVED; Go preflight lacks typed failure reason at this source. No evidence of host CPU exhaustion, Linux server failure, or Windows ingress queue overflow at 64s.",
+  "verdict": "FAIL_NATIVE_WINDOWSLINUX_N0_BEFORE_240S",
+  "stop": {
+    "windows_owned_wal_restored_and_rust_stopped": "OBSERVED_AFTER_FATAL",
+    "linux_rust_stop": "OBSERVED",
+    "normal_successful_stop": "NOT_RUN_EARLY_FATAL"
+  },
+  "unqualified": [
+    "WL-N0-240s",
+    "Strict physical wire capacity",
+    "Windows long-run 240s N0 p99",
+    "Windows driver/kernel drop measurement period independent of Go queue",
+    "Source-qualified capacity limit",
+    "Full-platform and physical PASS"
+  ],
+  "note": "Prior 60s dd0767 Actions40561743731 remains a distinct scoped historical PASS; earlier ~29s source aa93183 error different and still unexplained. Linux original product not rewritten."
+}

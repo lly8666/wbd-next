@@ -353,25 +353,45 @@ type V4WindowsM2FirstsendResult struct {
  Seq,WireLen,Outcome,Reserved uint32
 }
 const V4WindowsM2FirstsendBatchMax=32
+// Pure metadata preflight: original NPF first-send has already happened, so
+// refusal must say whether the caller presented noncontiguous/duplicate
+// records or Rust refused the exact original frozen PN. Never log ciphertext.
+func validateOriginalM2FirstsendBatch(rows []V4WindowsM2FirstsendResult)error{
+ if len(rows)==0||len(rows)>V4WindowsM2FirstsendBatchMax{
+  return fmt.Errorf("%w: M2_BATCH_BAD_COUNT count=%d",errV4WindowsOwner,len(rows))
+ }
+ var next uint32
+ for i,row:=range rows{
+  if row.Reserved!=0||row.Outcome>2||row.WireLen<31||row.WireLen>2048{
+   return fmt.Errorf("%w: M2_BATCH_BAD_DESCRIPTOR row=%d len=%d outcome=%d reserved=%d",
+    errV4WindowsOwner,i,row.WireLen,row.Outcome,row.Reserved)
+  }
+  if i>0&&row.Seq!=next{
+   return fmt.Errorf("%w: M2_BATCH_NONCONTIGUOUS row=%d expected_seq=%d got_seq=%d",
+    errV4WindowsOwner,i,next,row.Seq)
+  }
+  for j:=0;j<i;j++{
+   if rows[j].PN==row.PN{
+    return fmt.Errorf("%w: M2_BATCH_DUPLICATE_PN row=%d earlier=%d",
+     errV4WindowsOwner,i,j)
+   }
+  }
+  next=row.Seq+row.WireLen // uint32 TCP wrap remains valid
+ }
+ return nil
+}
 func(s *V4WindowsAuthenticatedClientOwner) ReportOriginalM2NpcapFirstsendBatch(
  ctx context.Context,rows []V4WindowsM2FirstsendResult,
 )(uint32,uint32,error){
  if s==nil||ctx==nil||s.bridge==nil||s.device==nil||
-  s.bridge.reportM2BatchProc==nil||len(rows)==0||
-  len(rows)>V4WindowsM2FirstsendBatchMax||
-  unsafe.Sizeof(V4WindowsM2FirstsendResult{})!=24{
-  return 0,0,errV4WindowsOwner
+  s.bridge.reportM2BatchProc==nil{
+  return 0,0,fmt.Errorf("%w: M2_BATCH_OWNER_UNBOUND",errV4WindowsOwner)
+ }
+ if unsafe.Sizeof(V4WindowsM2FirstsendResult{})!=24{
+  return 0,0,fmt.Errorf("%w: M2_BATCH_ABI_LAYOUT",errV4WindowsOwner)
  }
  if err:=ctx.Err();err!=nil{return 0,0,err}
- var next uint32
- for i,row:=range rows {
-  if row.Reserved!=0||row.Outcome>2||row.WireLen<31||row.WireLen>2048||
-   (i>0&&row.Seq!=next){return 0,0,errV4WindowsOwner}
-  for j:=0;j<i;j++{
-   if rows[j].PN==row.PN{return 0,0,errV4WindowsOwner}
-  }
-  next=row.Seq+row.WireLen
- }
+ if err:=validateOriginalM2FirstsendBatch(rows);err!=nil{return 0,0,err}
  release,err:=s.device.borrowHot(ctx)
  if err!=nil{return 0,0,errors.Join(errV4WindowsOwner,err)}
  defer release()
@@ -384,7 +404,8 @@ func(s *V4WindowsAuthenticatedClientOwner) ReportOriginalM2NpcapFirstsendBatch(
  runtime.KeepAlive(rows);runtime.KeepAlive(s.bridge.epoch)
  if err!=nil{return settled,outstanding,err}
  if settled!=uint32(len(rows)){
-  return settled,outstanding,errV4WindowsOwner
+  return settled,outstanding,fmt.Errorf("%w: M2_BATCH_NATIVE_INCOMPLETE settled=%d expected=%d",
+   errV4WindowsOwner,settled,len(rows))
  }
  return settled,outstanding,nil
 }
