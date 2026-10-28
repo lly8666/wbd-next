@@ -29,7 +29,11 @@ def prepare(scenario,source,run_id):
     config["seed"]=scenario["seed"]
     config["traffic"]["c2s_mbps"]=rate
     config["traffic"]["s2c_mbps"]=rate
-    config["traffic"]["udp_share"]=.9  # real product UDP/TCP, unlike W168 UDP-only
+    # Existing real two-Linux original product capacity fixture uses UDP-only.
+    # TCP congestion/window backpressure at 300ms masked 50/100Mbps offers
+    # in source db24's 90/10 exploratory cases; keep those INCONCLUSIVE.
+    # Preserve exact 96/288/1060/1200 packet mix and 24-scene dimensions.
+    config["traffic"]["udp_share"]=1.0
     config["traffic"]["sizes"]=[[v["udp_payload_bytes"],v["packets_weight"]]
                                   for v in scenario["windows_to_linux"]["packet_mix"]]
     config["traffic"]["observe_size_classes"]=True
@@ -57,6 +61,7 @@ def prepare(scenario,source,run_id):
 
 def genuine_case(scene,leg,dir_path,hashes,source):
     out={"source":source,"scene":scene["scenario_id"],
+         "traffic_profile":"NATIVE_ORIGINAL_TLS_TUN_UDP_ONLY_MIXED_96_288_1060_1200",
          "requested_rate_mbps_each_direction":scene["windows_to_linux"]["offered_mbps"],
          "actual_result":leg.get("result"),
          "failures":leg.get("failures",[]),"limits":leg.get("limits",[]),
