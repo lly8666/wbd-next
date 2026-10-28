@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 319,
-  "checkpoint_sha": "0d09cd5e61266b716aa5ade9bbce55a63120f2f1",
+  "sequence": 320,
+  "checkpoint_sha": "622443f8b878c535380b786f6bc30c89bbe30267",
   "progress": "partial",
   "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
-  "current_task": "PLAN026 Windows Normal/off Rust native owner. Existing exact signed two-OS 7-mode functional PASS SOURCE f93f7fe7 Action40647191693 (only Normal Rust hot; rest Go). RX/TX saturated Stop priority fix SOURCE f753e612; P200-250M-30P kernel stress SOURCE 0d09cd5e Action40651485360 currently executing; new profile emits measured offered/delivered and real tc/IFB counters.",
+  "current_task": "PLAN026 Windows Normal/off Rust-only NPF/Wintun. Exact-source native Windows+Linux Normal FUNCTIONAL_PASS f93f7fe7 Action40647191693; Normal 300ms 0% 10Mbps 240s N0 PASS a1238c4d Action40648269441. RX/TX Stop event priority + per-frame AtomicBool confirmed under real P200 first-run owned Stop source0d09cd5e. P200 200ms one-way/250Mbit/s each TC limit/30% loss 60s source0d09cd5e Action40651485360 CAPACITY_LIMITED due source Python senders 148/108Mbps, first delivery ~70% and Stop PASS. Optimized source c8352931 P200 re-test Action40653341765 active. Rust native tx/rx named, 1Hz Win32 process and thread sampler in source688 and later.",
   "why_now": "User wants actual code progress, CPU-minimal steady Windows and no Normal/off fallback. We published Rust native two workers, single-lock8 batch and actual Accepted ACK snapshot, then obtained two independent exact-source signed two-OS functional PASS runs.",
   "done_when": "Normal/off newest source exact N0 10Mbps 300ms one-way 240s with old produced0 ready4 regression and same VM old-Go vs new Rust CPU-seconds/GB, RSS, idle wakes and p99 first-delivery A/B. Migrate Fixed/Auto/Game/Health Keepalive and Make-Before-Break dynamic lane native owner; remove remaining Go packet pump only after modes' real functional/perf proof.",
-  "next_action": "Read source0d09cd5e actual P200 Action40651485360; if FAIL inspect first Python/tc/kernel or application rate stage with artifacts, do not mark throughput PASS. Review RX Stop Win32 native tests and actual product Stop. Capture CPU process (Go+Rust combined)/RSS, offered vs delivered and tc-IFB loss; if throughput limited, isolate host/generator vs Rust M2 5MB shadows vs common Entry lock. Set up sampled TX/RX lock-wait profiling before splitting owner. No Fixed/Auto/Game deletion until all native modes replaced.",
+  "next_action": "Check sourcec8352931 Action40653341765 terminal stage. If P200 fails collect actual two-OS offered/delivered, 30pct kernel counts, sender CPU-seconds and named Rust TX/RX thread CPU; decide generator/host vs M2/owner lock. Don't proclaim 250Mbps if source offered<225. Preserve source0d09 CAPACITY_LIMITED receipt. Run same-VM old Go vs Rust resource A/B and optional sampled Entry lock wait before considering owner split or M2 capacity changes. Migrate Fixed/Auto/Game/Health/control/lane afterward and delete old Go hot pump only once genuinely unused.",
   "unverified": true,
   "last_tested_source": "f93f7fe7b4627da30b23cbcbfeb06f50840197a2",
   "evidence_refs": [
     "docs/evidence/M0/PLAN026-H321-f93-Rust-NativeOwner-real-Windows-Linux-PASS.json"
   ],
   "context_refs": [
+    "docs/evidence/M0/PLAN026-P200-source0d09-Windows-Linux-capacity-limited-20261028.json",
+    "docs/devlog/M0/20261028-PLAN026-H322-P200-generator-capacity-first-fail.md",
+    "docs/devlog/M0/20261028-PLAN026-H324-P200-feature-capacity-scope.md",
+    "docs/devlog/M0/20261028-PLAN026-H319-native-stop-fairness.md",
+    "docs/devlog/M0/20261028-PLAN026-H321-native-thread-CPU-ownership.md",
     "docs/devlog/M0/20261028-PLAN026-source055-real-native-normal-functional-pass.md",
     "docs/devlog/M0/20261028-PLAN026-native-ack-delivered-snapshot.md",
-    "docs/devlog/M0/20261028-PLAN026-native-source-batch-lock-and-stop.md",
-    "docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md",
-    "docs/devlog/M0/20261028-PLAN026-native-normal-product-wiring.md",
-    "docs/devlog/M0/20261028-PLAN026-native-io-first-source-batch.md",
-    "docs/architecture/TEST_PLAN.md",
-    "docs/features/README.md"
+    "docs/devlog/M0/20261028-PLAN026-native-source-batch-lock-and-stop.md"
   ],
   "open_requests": [],
-  "partial_summary": "Normal/off true Rust Wintun/Npcap two workers; no Go packet pulse fallback. FUNCTIONAL_PASS 055026fd run40646957672, f93f7fe7 run40647191693. 300ms/10Mbps/0%/240s N0 sourcea1238c4d run40648269441 PASS. User agent RX Stop starvation reviewed and fixed via priority Stop event and per-RX-frame/early-frame AtomicBool checks in f753e612 with real Win32 event ordering test. New 200ms each dir / 250mbit tc cap / 30% kernel loss / 250Mbps offered each OS / 60s P200 source0d09cd5e Action40651485360, result pending; does not modify product wire or Go rollback. Shared Entry TX/RX lock, 20ms active timer and extra copies reserved for A/B evidence, not blindly redesigned. Cursor now uses one exact tested source with matching evidence for governance."
+  "partial_summary": "Fixed saturated RX Stop starvation via Stop-first WaitForMultipleObjects and check before each early/NPF frame, TX Stop-first and before source batch; Rust Windows unit and source0d09 genuine loss30/200ms functional Stop passed. P200 source0d09 launched real 250Mbps generator but only Windows148.0198 and Linux108.1181Mbps offered, Windows75.6973 and Linux103.5692Mbps delivered, 70% first arrival both; normal UDP/TCP/Stop and kernel tc cleanup PASS, performance CAPACITY_LIMITED, NOT 250Mbps PASS. Go+Rust Windows process CPU42.1719 sec in 76 sec, kernel34.3594sec, peak RSS41689088B, no per-language attribution. Modified P200-only Python generator to reusable mutable UDP payloads, 128pkt short burst and no unconditional800us sleep; new sourcec835 Action40653341765 pending, 1Hz Win32 named Rust-worker CPU sampler added. No product crypto/record or legacy compatibility fallback added. Fixed/Auto/Game remain old Go hot paths."
 }
