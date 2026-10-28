@@ -16,6 +16,8 @@ on:
       - tests/test_delivery_ci.py
       - tools/m0_wl_public_normal_e2e.py
       - tools/m0_wl_native_resource_sampler.py
+      - tools/m0_wl_windows_cpu_audit.py
+      - tests/test_m0_wl_windows_cpu_audit.py
       - tools/m0_wl_lock_profile.py
       - tests/test_m0_wl_lock_profile.py
       - tools/m0_wl_netem.py
@@ -136,16 +138,17 @@ jobs:
       - run: python -m unittest tests.test_m0_wl_v2_gap_audit -v
       - run: python -m unittest tests.test_m0_wl_udp_socket_telemetry -v
       - run: python -m unittest tests.test_m0_wl_native_resource_sampler -v
+      - run: python -m unittest tests.test_m0_wl_windows_cpu_audit -v
       - run: python -m unittest tests.test_m0_wl_lock_profile -v
       - run: python tools/prepare_windows_wiring.py --check-only
       - name: Enforce functional seven modes or exactly one scoped N0 before any native build
         env:
-          PUBLIC_MODE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]') || contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]'))) && 'normal' || inputs.public_mode || 'all' }}
+          PUBLIC_MODE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]') || contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]'))) && 'normal' || inputs.public_mode || 'all' }}
           RUN_N0: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '1' || inputs.run_n0 == true && '1' || '0' }}
           RUN_P200: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') && '1' || '0' }}
-          WL_V2_SCENARIO: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]'))) && ((contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]')) && 'scenarios/wl-normal-100m-300ms-0loss-60s.json' || 'scenarios/wl-normal-150m-300ms-0loss-60s.json') || inputs.perf_scenario_file || '' }}
-          WL_V2_REUSE_RUN: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') && '40681039919' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '40668581343' || inputs.perf_reuse_run_id || '' }}
-          WL_V2_BINARY_SHA: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') && '0abd1b04ee7a39d8aa426963564a079523c1036a' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '0543b805ca25d804ccd131be6686b0b99f61f80f' || inputs.perf_binary_source_sha || '' }}
+          WL_V2_SCENARIO: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]'))) && ((contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]')) && 'scenarios/wl-normal-100m-300ms-0loss-60s.json' || 'scenarios/wl-normal-150m-300ms-0loss-60s.json') || inputs.perf_scenario_file || '' }}
+          WL_V2_REUSE_RUN: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '40681039919' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '40668581343' || inputs.perf_reuse_run_id || '' }}
+          WL_V2_BINARY_SHA: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '0abd1b04ee7a39d8aa426963564a079523c1036a' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '0543b805ca25d804ccd131be6686b0b99f61f80f' || inputs.perf_binary_source_sha || '' }}
           WL_V2_AB: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-ab-150]') && '1' || inputs.perf_ab == true && '1' || '0' }}
         shell: bash
         run: |
@@ -185,7 +188,7 @@ jobs:
   windows-compile-preflight:
     name: Windows Go production and test compilation only
     needs: [wiring-contract]
-    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]'))
+    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]'))
     runs-on: windows-2025
     timeout-minutes: 12
     steps:
@@ -242,7 +245,7 @@ jobs:
   windows-rust-contract-preflight:
     name: Windows Rust eligible library unit tests (special M1 separate)
     needs: [wiring-contract]
-    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]'))
+    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]'))
     runs-on: windows-2025
     timeout-minutes: 25
     env:
@@ -281,7 +284,7 @@ jobs:
   linux-rust-contract-preflight:
     name: Linux Rust eligible library unit tests (special M1 separate)
     needs: [wiring-contract]
-    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]'))
+    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -314,7 +317,7 @@ jobs:
     # Ordinary staging pushes stop after compile preflight. A complete
     # capability batch opts in; main's existing qualification remains intact.
     needs: [windows-compile-preflight]
-    if: (github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || contains(github.event.head_commit.message, '[wiring-full]')) && inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]'))
+    if: (github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || contains(github.event.head_commit.message, '[wiring-full]')) && inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]'))
     name: Build true original Go and new Linux Rust peer persona from same SOURCE
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -408,26 +411,27 @@ jobs:
 
   native-public-two-os:
     needs: [wiring-contract, linux-source-locked-public]
-    if: always() && needs.wiring-contract.result == 'success' && (needs.linux-source-locked-public.result == 'success' || inputs.perf_reuse_run_id != '' || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]')))
+    if: always() && needs.wiring-contract.result == 'success' && (needs.linux-source-locked-public.result == 'success' || inputs.perf_reuse_run_id != '' || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')))
     runs-on: windows-2025
     timeout-minutes: 60
     env:
       AWS_LC_SYS_PREBUILT_NASM: "1"
       GH_TOKEN: ${{ github.token }}
       GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
-      LINUX_BINARY_SRC: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') && '0abd1b04ee7a39d8aa426963564a079523c1036a' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '0543b805ca25d804ccd131be6686b0b99f61f80f' || inputs.perf_binary_source_sha || github.sha }}
+      LINUX_BINARY_SRC: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '0abd1b04ee7a39d8aa426963564a079523c1036a' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '0543b805ca25d804ccd131be6686b0b99f61f80f' || inputs.perf_binary_source_sha || github.sha }}
       # The main/push workflow qualifies the seven public functions first.
       # A one-scenario throughput case is an explicit separate manual
       # Action selecting exactly one mode on a single reused VM/build.
-      WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]') || contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]'))) && 'normal' || inputs.public_mode || 'all' }}
+      WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]') || contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]'))) && 'normal' || inputs.public_mode || 'all' }}
       WBD_WL_RUN_N0: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '1' || inputs.run_n0 == true && '1' || '0' }}
       WBD_WL_RUN_P200: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') && '1' || '0' }}
       WBD_WL_PROBE_LOCKS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-probe-locks]') && '1' || '0' }}
+      WBD_WL_V2_CPU_AUDIT: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') && '1' || '0' }}
       WBD_WL_N0_SECONDS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '240' || '60' }}
-      WBD_WL_V2_SCENARIO: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]'))) && ((contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]')) && 'scenarios/wl-normal-100m-300ms-0loss-60s.json' || 'scenarios/wl-normal-150m-300ms-0loss-60s.json') || inputs.perf_scenario_file || '' }}
+      WBD_WL_V2_SCENARIO: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]'))) && ((contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]')) && 'scenarios/wl-normal-100m-300ms-0loss-60s.json' || 'scenarios/wl-normal-150m-300ms-0loss-60s.json') || inputs.perf_scenario_file || '' }}
       WBD_WL_PERF_AB: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-ab-150]') && '1' || inputs.perf_ab == true && '1' || '0' }}
-      WBD_WL_REUSE_RUN_ID: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') && '40681039919' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '40668581343' || inputs.perf_reuse_run_id || '' }}
-      WBD_WL_BINARY_SOURCE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') && '0abd1b04ee7a39d8aa426963564a079523c1036a' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '0543b805ca25d804ccd131be6686b0b99f61f80f' || inputs.perf_binary_source_sha || github.sha }}
+      WBD_WL_REUSE_RUN_ID: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '40681039919' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '40668581343' || inputs.perf_reuse_run_id || '' }}
+      WBD_WL_BINARY_SOURCE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '0abd1b04ee7a39d8aa426963564a079523c1036a' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '0543b805ca25d804ccd131be6686b0b99f61f80f' || inputs.perf_binary_source_sha || github.sha }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}

@@ -37,7 +37,7 @@ class DeliveryCiTests(unittest.TestCase):
         job = self.workflow["jobs"]["windows-compile-preflight"]
         self.assertEqual(job["needs"], ["wiring-contract"])
         self.assertEqual(job.get("if"),
-            "inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]'))")
+            "inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]'))")
         scripts = "\n".join(x.get("run", "") for x in job["steps"])
         self.assertIn("go test -c", scripts)
         self.assertIn("./cmd/wbd-client", scripts)
@@ -134,6 +134,26 @@ class DeliveryCiTests(unittest.TestCase):
         verify=next(x for x in native["steps"] if x.get("name","").startswith("Restore exact prebuilt"))
         for needle in ("git diff --name-only", "Cargo.lock", "sha256", "head_sha"):
             self.assertIn(needle,verify["run"])
+
+    def test_rust_150_windows_cpu_audit_uses_same_compiled_source_and_real_os(self):
+        native=self.workflow["jobs"]["native-public-two-os"]
+        preflight=next(x for x in self.workflow["jobs"]["wiring-contract"]["steps"]
+                       if x.get("name","").startswith("Enforce functional"))
+        tag="[plan026-rust-cpu-reuse-150]"
+        for env in (preflight["env"],native["env"]):
+            self.assertIn(tag,env["WL_V2_SCENARIO"] if "WL_V2_SCENARIO" in env
+                          else env["WBD_WL_V2_SCENARIO"])
+        self.assertIn("150m-300ms-0loss-60s.json",native["env"]["WBD_WL_V2_SCENARIO"])
+        self.assertIn(tag,native["env"]["WBD_WL_V2_CPU_AUDIT"])
+        self.assertIn("40681039919",native["env"]["WBD_WL_REUSE_RUN_ID"])
+        self.assertIn("0abd1b04ee7a39d8aa426963564a079523c1036a",
+                      native["env"]["WBD_WL_BINARY_SOURCE"])
+        self.assertIn(tag,self.workflow["jobs"]["linux-source-locked-public"]["if"])
+        self.assertIn(tag,native["if"])
+        self.assertNotIn(tag,native["env"]["WBD_WL_PERF_AB"])
+        self.assertIn("tests.test_m0_wl_windows_cpu_audit",
+                      " ".join(x.get("run","") for x in
+                          self.workflow["jobs"]["wiring-contract"]["steps"]))
 
     def test_native_success_and_cleanup_contracts_retained(self):
         job = self.workflow["jobs"]["native-public-two-os"]

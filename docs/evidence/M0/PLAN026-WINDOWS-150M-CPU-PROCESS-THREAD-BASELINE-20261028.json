@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "source_run_id": 40684266415,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40684266415",
+  "source_harness_sha": "b3a6533c3451727abcbcc43eb7ddfa3f2c48b42e",
+  "compiled_product_source_sha": "0abd1b04ee7a39d8aa426963564a079523c1036a",
+  "artifact_id": 12814471764,
+  "artifact_sha256": "b687fcfb3c8c8d768f4885947b2cb3485a4a8939d8583def1f8050ea28276547",
+  "source_log": "mode-results/normal/windows-original-go-rust-process-1hz.jsonl",
+  "workload": {
+    "windows_to_linux_offered_mbps": 149.9599,
+    "linux_to_windows_offered_mbps": 149.9731,
+    "oneway_delay_ms_each": 300,
+    "configured_netem_loss_pct": 0,
+    "seconds": 60,
+    "first_unique_receipt_windows_to_linux": 1,
+    "first_unique_receipt_linux_to_windows": 0.99998785,
+    "both_owned_stop": true
+  },
+  "win32_process": {
+    "pid": 9328,
+    "observations": 74,
+    "monotonic_elapsed_s": 75.156,
+    "logical_cpus": 4,
+    "cpu_total_delta_s": 14.9375,
+    "cpu_kernel_delta_s": 10.203125,
+    "cpu_user_delta_s": 4.734375,
+    "cpu_fraction_one_logical_core": 0.19875,
+    "process_kernel_fraction_of_charged_cpu": 0.6830543933054394,
+    "working_set_peak_bytes": 42516480,
+    "private_bytes_peak_approx": 38678528,
+    "scope": "SAME_WINDOWS_EXE_ORIGINAL_GO_PLUS_RUST_DLL_INCLUDING_SYSCALL_CPU_START_STOP_NOT_KERNEL_ISR_OR_DPC"
+  },
+  "win32_top_thread_tids": {
+    "top1": {
+      "tid": 9804,
+      "cpu_delta_s": 8.265625,
+      "sampled_top6_times": 60,
+      "role": "NOT_VERIFIED_BLANK_THREAD_DESCRIPTION"
+    },
+    "top2": {
+      "tid": 9808,
+      "cpu_delta_s": 6.234375,
+      "sampled_top6_times": 60,
+      "role": "NOT_VERIFIED_BLANK_THREAD_DESCRIPTION"
+    },
+    "combined_cpu_lower_bound_s": 14.5,
+    "combined_fraction_process_cpu": 0.9707112970711297
+  },
+  "ambiguities": [
+    "All 74 Toolhelp samples had named_rust_workers=0 though source contains SetThreadDescription calls; OS name acquisition failed or returned empty and GetThreadDescription HRESULT was not retained, so TID9804/9808 cannot be labeled TX/RX yet.",
+    "Process kernel CPU is not total Npcap/Wintun kernel-driver ISR/DPC CPU; ETW or CPU stack sampling needed for function-level attribution.",
+    "No per-function CPU/AEAD/seal/Open/NPF/Wintun attribution available in this run.",
+    "Python independent sender CPU (Windows48.3906s/65s) is a separate PID and not included in this process CPU.",
+    "Process CPU sampled across startup, measurement, Stop and drain, not exact aligned 60s."
+  ],
+  "linux_raw_rx_already_fixed": {
+    "requested_socket_buffer_bytes": 4194304,
+    "effective_socket_buffer_bytes": 8388608,
+    "raw_drops": 0
+  },
+  "next": "Add read-only per-thread kernel/user split and thread-description status, source-locked reuse of SAME compiled product SOURCE0abd at150, then determine if TX/RX thread names recover; profile packet path with feature-gated low frequency stage sampling only after thread ownership actually measured."
+}

@@ -60,18 +60,31 @@ def _thread_cpu_snapshot(kernel, pid, previous):
                         if kernel.GetThreadTimes(handle,ctypes.byref(create),
                                                  ctypes.byref(exit_time),
                                                  ctypes.byref(kt),ctypes.byref(ut)):
-                            total=_sec(kt)+_sec(ut)
+                            kt_s=_sec(kt);ut_s=_sec(ut);total=kt_s+ut_s
                             name=""
                             name_pointer=ctypes.c_void_p()
-                            if kernel.GetThreadDescription(handle,ctypes.byref(name_pointer))==0:
-                                if name_pointer.value:
-                                    name=ctypes.wstring_at(name_pointer.value)
-                                    kernel.LocalFree(name_pointer)
-                            delta=max(0.,total-previous.get(entry.thread_id,total))
-                            current[entry.thread_id]=total
+                            hr=kernel.GetThreadDescription(handle,ctypes.byref(name_pointer))
+                            if hr==0 and name_pointer.value:
+                                try:name=ctypes.wstring_at(name_pointer.value)
+                                finally:kernel.LocalFree(name_pointer)
+                            # Name failure or an empty description is not
+                            # evidence this thread belongs to Go rather
+                            # than Rust. Preserve status for the RCA.
+                            description_status=("NAMED" if name else
+                                "EMPTY" if hr==0 else "HRESULT_"+format(hr&0xffffffff,"08x"))
+                            prev=previous.get(entry.thread_id)
+                            delta=max(0.,total-prev[0]) if prev else 0.
+                            dk=max(0.,kt_s-prev[1]) if prev else 0.
+                            du=max(0.,ut_s-prev[2]) if prev else 0.
+                            current[entry.thread_id]=(total,kt_s,ut_s)
                             samples.append({"tid":int(entry.thread_id),"name":name,
+                                            "name_status":description_status,
                                             "cpu_total_s":round(total,6),
-                                            "cpu_delta_s":round(delta,6)})
+                                            "cpu_kernel_s":round(kt_s,6),
+                                            "cpu_user_s":round(ut_s,6),
+                                            "cpu_delta_s":round(delta,6),
+                                            "cpu_kernel_delta_s":round(dk,6),
+                                            "cpu_user_delta_s":round(du,6)})
                     finally:
                         kernel.CloseHandle(handle)
             entry.size=ctypes.sizeof(entry)
@@ -83,11 +96,22 @@ def _thread_cpu_snapshot(kernel, pid, previous):
         "status":"MEASURED" if samples else "NO_THREAD_SAMPLES",
         "thread_count_sampled":len(samples),
         "named_rust_workers":len(named),
+        "thread_name_status_counts":{
+            label:sum(x["name_status"]==label for x in samples)
+            for label in sorted({x["name_status"] for x in samples})
+        },
+        "all_thread_cpu_kernel_delta_s":round(sum(x["cpu_kernel_delta_s"] for x in samples),6),
+        "all_thread_cpu_user_delta_s":round(sum(x["cpu_user_delta_s"] for x in samples),6),
+        "all_thread_cpu_delta_s":round(sum(x["cpu_delta_s"] for x in samples),6),
         "rust_tx_cpu_delta_s":round(sum(x["cpu_delta_s"] for x in named if x["name"]=="wbd-native-tx"),6),
+        "rust_tx_kernel_delta_s":round(sum(x["cpu_kernel_delta_s"] for x in named if x["name"]=="wbd-native-tx"),6),
+        "rust_tx_user_delta_s":round(sum(x["cpu_user_delta_s"] for x in named if x["name"]=="wbd-native-tx"),6),
         "rust_rx_cpu_delta_s":round(sum(x["cpu_delta_s"] for x in named if x["name"]=="wbd-native-rx"),6),
+        "rust_rx_kernel_delta_s":round(sum(x["cpu_kernel_delta_s"] for x in named if x["name"]=="wbd-native-rx"),6),
+        "rust_rx_user_delta_s":round(sum(x["cpu_user_delta_s"] for x in named if x["name"]=="wbd-native-rx"),6),
         "other_threads_cpu_delta_s":round(sum(x["cpu_delta_s"] for x in samples if x["name"] not in ("wbd-native-tx","wbd-native-rx")),6),
         "hottest_threads":sorted(samples,key=lambda x:x["cpu_delta_s"],reverse=True)[:6],
-        "interpretation":"Thread-name attribution only. Other Go/runtime/native threads and kernel driver CPU are NOT separately attributable by this counter",
+        "interpretation":"Exact Win32 thread kernel/user CPU only. NAMELESS THREADS ARE NOT GO. Native driver execution beyond this process and syscall substage attribution are NOT measured.",
     },current
 
 def sample_windows_original_process(proc,path,stop,interval=1.0):

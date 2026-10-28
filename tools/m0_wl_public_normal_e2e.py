@@ -2,6 +2,7 @@
 """Run actual original-TLS Windows and Linux native public UDP/TCP, then Stop."""
 import os,sys,subprocess,time,json,hashlib,pathlib,re,threading
 from m0_wl_native_resource_sampler import sample_windows_original_process
+from m0_wl_windows_cpu_audit import summarize_windows_cpu
 from m0_wl_mode_runtime_report import source_locked_observability,summarize_auto_udp_progress,native_auto_true_applied_snapshots
 from m0_wl_native_mtu_contract import configured_native_test_mtu
 from m0_wl_n0_drop_delta import latest_counter, measured_delta
@@ -607,6 +608,18 @@ finally:
   path=out/"client.log"
   report["rust_owner_lock_wait"]=parse_native_lock_profile(
    path.read_text(errors="replace") if path.exists() else "")
+ if mode=="normal" and os.environ.get("WBD_WL_V2_CPU_AUDIT")=="1":
+  try:
+   cpu_audit=summarize_windows_cpu(out/"windows-original-go-rust-process-1hz.jsonl")
+  except Exception as cpu_err:
+   cpu_audit={"status":"INCONCLUSIVE_CPU_AUDIT_PARSER",
+              "exception_type":type(cpu_err).__name__}
+  report["windows_cpu_audit"]=cpu_audit
+  (out/"windows-cpu-audit.json").write_text(json.dumps(cpu_audit,indent=2)+"\n")
+  print("WBD_WL_WINDOWS_CPU_AUDIT "+json.dumps({
+   "status":cpu_audit["status"],"process_cpu_s":cpu_audit.get("process_cpu_s"),
+   "top2_threads_cpu_share_lower_bound":cpu_audit.get("top2_threads_cpu_share_lower_bound")}),
+   flush=True)
  try:
   report["runtime_observability"]=source_locked_observability(out)
  except Exception as sample_error:
