@@ -23,11 +23,15 @@
     "r0/go_overlay/internal/v4productcli/linux.go",
     "crates/wbd-recovery/src/budget.rs",
     "crates/wbd-recovery/src/global_sparse.rs",
-    "crates/wbd-engine/src/v4_windows_owner.rs"
+    "crates/wbd-engine/src/v4_windows_owner.rs",
+    "crates/wbd-engine/src/v4_windows_native_runtime.rs",
+    "crates/wbd-engine/src/v4_windows_owner.rs",
+    "tools/m0_wl_outer_repair_verify.py"
   ],
   "doc_refs": [
     "docs/handoff/CURRENT_INTEGRATION.md",
-    "docs/evidence/fec-network-work/20261026-W167-Outer-ON-DualArch-Matrix-and-Deferred-RX-250ms.json"
+    "docs/evidence/fec-network-work/20261026-W167-Outer-ON-DualArch-Matrix-and-Deferred-RX-250ms.json",
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-OPPORTUNISTIC-REPAIR.md"
   ],
   "verification": [
     {
@@ -57,12 +61,20 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Windows2025 x64 signed NPF/Wintun + WSL2 Linux",
+      "scope": "New Linux-v3-equivalent Windows Rust repair candidate/ciphertext/stop accounting; 50/100Mbps × 1/5/10/30% × 50/150/300ms actual 24-scene",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
     "FEC修复/多lane副本不计入outer DATA重传；pre-netem DATA统计不能除post-netem线路字节。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
-    "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused."
+    "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
+    "Normal/off Windows Rust repaired opportunity/ratio only becomes qualified after exact main SHA authentic two-OS Actions; 24 requested points and 30%-loss R/C >=6% must not be inferred from Rust library tests or old Go stats."
   ],
   "promotion": null
 }

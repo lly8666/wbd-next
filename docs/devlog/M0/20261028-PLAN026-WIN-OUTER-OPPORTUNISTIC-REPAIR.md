@@ -1,0 +1,21 @@
+# M0 PLAN026 | Windows native opportunistic outer repair parity with Linux v3
+
+## Scope and shortest chain
+User: repair **Windows** outer DATA retransmit only; Linux client/server already source-qualified and unchanged. Source review: `v4_windows_owner.rs::m2_kernel_firstsend_entry` and `m2_next_repair_entry`, `v4_windows_native_runtime.rs::stage_sources/send_control/tx_loop`, Linux `v4_embedded_go.rs::v3_admit_shadow`, shared `ReceiptState`, `GlobalRepairAllocator`, actual NPF driver prefix, Go cold handoff/Stop. Do not rework FEC/Game or Windows OS/WAL.
+
+Actual flaws before patch: Windows froze **every** accepted DATA in a 1536-entry optional shadow sized for 10Mbps, pinning the live 2048 M1 arena over RTT; Linux samples half by PN+generation and uses globally bounded independent immutable snapshot. Windows popped up to 32 timer candidates, then attempted only ONE and discarded the rest of that M2 turn; its native TX loop allowed one control/repair per as many as32 fresh, too small for useful 30%-loss repair. Old Go telemetry `frozen_ciphertext_retransmits=0` cannot measure Rust NativeOwner.
+
+## Product code, unchanged hard boundaries
+- Windows now uses Linux's exact uniform 1/2 PN+generation hash, process admission <=32768/s and repair-send <=8192/s; only real NPF Accepted firstsend enters candidate state. Full candidate pool is 24576 entries **detached** from original M1 slabs via `FrozenRecord::try_v3_repair_snapshot`, already protected by shared global 65536 slots/128MiB. Original Windows M1 still stays 2048 slots/5MB, and available fresh always wins.
+- Existing authenticated newer-positive PN witness, lifetime/RTTVAR guard, <=one same PN/SEQ/ciphertext repair, expired/covered/unknown handling, same shared Rust M2 credit/grants and Stop are preserved. A 32-entry timer turn is held in a bounded FIFO; candidates recheck latest authenticated positive before NPF dispatch; TX gives up to4 ready control sends between fresh batches, not a new thread or poll timer.
+- One joined Stop marker reports **actual Windows Rust NPF copied** Ethernet F, accepted R, charged Uncertain R and K. Ratios use `R/F`, `R/(F+R+K)`, and `R/C`; 9% Linux-v3 byte credit + its existing 10% first-send ceiling, plus user-requested <=10% **total outer bytes**. 30% loaded benchmark expects >=6% of declared capacity repair only when actual offered meets capacity threshold; zero repair at 30% is NOT PASS. Sparse repair remains allowed by v3 absolute floor but the continuous 50/100Mbps matrix applies hard ratios.
+- Avoid pseudo-wins: count actual tc qdisc drops, Windows/Linux offered and first unique delivered, actual kernel socket drops, CPU/Stop. A 30% deliberate packet-loss sample cannot be judged with no-loss 99.9% delivery floor. Do not change Linux executable path or create parallel Go pump.
+
+## Single-SOURCE qualification plan
+All 24 committed `scenarios/wl-outer-repair-*.json` from `scenarios/wl-outer-repair-manifest.json`: offered 50/100Mbps **each direction**, 1/5/10/30% Linux tc netem each direction, one-way 50/150/300ms each direction, original 96/288/1060/1200 B mix and 60s+drain. One scenario per Windows-2025 signed NPF/Wintun + WSL2 Actions run and **one measurement job**. Freeze product SHA; build Windows EXE/DLL and Linux peer once, later runs reuse exact manifest-verified artifact hashes, not recompile for each profile. Start with 50M/30%/300ms to expose the old repair starvation. Other cases must retain source-scoped independent statuses (FAIL/CAPACITY_LIMITED/NOT_RUN); stop higher-load family if host cannot offer it. `tools/m0_wl_outer_repair_verify.py` emits one allowlisted numerical receipt and refuses absent Rust joined log/actual tc/drop or unfounded 10% claims.
+
+No real-VM or physical PASS is recorded by this code change. Runtime unit and preflight Actions first; signed two-OS test and full matrix **pending source-locked result**.
+
+```feature-impact
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Windows Rust NativeOwner uses Linux-v3 bounded selected immutable ciphertext shadows and loss-witness candidates, retains entire 32-candidate M2 turn, schedules multiple bounded ready repair sends; adds real NPF F/R/K Stop accounting and source-scoped 24-scene Windows signed test fixtures. Linux client/server unchanged; no new performance PASS before Actions."}
+```

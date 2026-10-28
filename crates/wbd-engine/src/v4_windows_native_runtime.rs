@@ -143,6 +143,12 @@
      rx_tx_notify_attempts:AtomicU64,
      tx_after_rx:AtomicU64,
      rejected:AtomicU64,
+     fresh_outer_bytes:AtomicU64,
+     feedback_outer_bytes:AtomicU64,
+     repair_outer_bytes:AtomicU64,
+     repair_uncertain_bytes:AtomicU64,
+     pure_ack_outer_bytes:AtomicU64,
+     repair_packets:AtomicU64,
      worker_error:AtomicI32,
      ack:AtomicU32,
      ack_sent:AtomicU32,
@@ -156,6 +162,12 @@
          Self{tx_copied:AtomicU64::new(0),rx_delivered:AtomicU64::new(0),
              rx_tx_notify_attempts:AtomicU64::new(0),
              tx_after_rx:AtomicU64::new(0),rejected:AtomicU64::new(0),
+             fresh_outer_bytes:AtomicU64::new(0),
+             feedback_outer_bytes:AtomicU64::new(0),
+             repair_outer_bytes:AtomicU64::new(0),
+             repair_uncertain_bytes:AtomicU64::new(0),
+             pure_ack_outer_bytes:AtomicU64::new(0),
+             repair_packets:AtomicU64::new(0),
              worker_error:AtomicI32::new(0),ack:AtomicU32::new(ack),
              ack_sent:AtomicU32::new(ack),
              tx_seq:AtomicU32::new(seq),
@@ -304,17 +316,20 @@
      }
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
+         let mut fresh_bytes=0u64;
          for (i,&(pn,seq,used)) in meta[..count].iter().enumerate(){
              let status=kernel_result(result,count,i)?;
              m2_kernel_firstsend_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
                  pn,seq,used,status)?;
              if status==1{
+                 fresh_bytes+=lens[i] as u64;
                  counters.tx_copied.fetch_add(1,Ordering::Relaxed);
                  if counters.rx_delivered.load(Ordering::Acquire)>0{
                      counters.tx_after_rx.fetch_add(1,Ordering::Relaxed);
                  }
              }
          }
+         counters.fresh_outer_bytes.fetch_add(fresh_bytes,Ordering::Relaxed);
      }
      if result.error.is_some(){return Err(BAD_STAGE)}
      Ok(count)
@@ -338,7 +353,10 @@
          counters.tx_seq.store(seq.wrapping_add(used as u32),Ordering::Release);
          let outcome=npf.send_batch(&[raw]);
          let accepted=kernel_result(outcome,1,0)?==1;
-         if accepted{counters.ack_sent.store(ack,Ordering::Release);}
+         if accepted{
+             counters.ack_sent.store(ack,Ordering::Release);
+             counters.feedback_outer_bytes.fetch_add(raw.len() as u64,Ordering::Relaxed);
+         }
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          m2_finish_feedback_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
              pn,u32::from(accepted))?;
@@ -355,11 +373,17 @@
              &wire[..used],*ip_id,&mut frame)?;
          *ip_id=ip_id.wrapping_add(1);
          let outcome=npf.send_batch(&[raw]);
-         let accepted=kernel_result(outcome,1,0)?==1;
-         if accepted{counters.ack_sent.store(ack,Ordering::Release);}
+         let kernel=kernel_result(outcome,1,0)?;
+         if kernel==1{
+             counters.ack_sent.store(ack,Ordering::Release);
+             counters.repair_outer_bytes.fetch_add(raw.len() as u64,Ordering::Relaxed);
+             counters.repair_packets.fetch_add(1,Ordering::Relaxed);
+         }else if kernel==2{
+             counters.repair_uncertain_bytes.fetch_add(raw.len() as u64,Ordering::Relaxed);
+         }
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          m2_complete_repair_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-             pn,u32::from(accepted))?;
+             pn,kernel)?;
          if outcome.error.is_some(){return Err(BAD_STAGE)}
          return Ok(true)
      }
@@ -386,6 +410,7 @@
      let outcome=npf.send_batch(&[&frame[..14+n]]);
      if kernel_result(outcome,1,0)?!=1{return Err(BAD_STAGE)}
      counters.ack_sent.store(ack,Ordering::Release);
+     counters.pure_ack_outer_bytes.fetch_add((14+n) as u64,Ordering::Relaxed);
      Ok(())
  }
   /// Exact event-driven M2 wake. Both deadlines use the same Rust
@@ -413,7 +438,15 @@
                  work+=n;
                  if n<BATCH{break}
              }
-             let control=send_control(&cfg,&lane,&mut npf,&counters,&mut ip_id)?;
+             // One repair per 32 new packets would cap useful opportunities
+             // near 3%, even at 30% real loss. Four ready-only control slots
+             // per bounded fresh turn; v3 credit and 8192pps remain hard gates.
+             let mut control=false;
+             for _ in 0..4 {
+                 if counters.stopping.load(Ordering::Acquire){break}
+                 if !send_control(&cfg,&lane,&mut npf,&counters,&mut ip_id)?{break}
+                 control=true;
+             }
              if work>0||control{return Ok(false)}
              let next_ack=counters.ack.load(Ordering::Acquire);
              if next_ack!=counters.ack_sent.load(Ordering::Acquire){
@@ -659,6 +692,17 @@
              p.rx.wait_ns.load(Ordering::Relaxed),
              p.rx.max_ns.load(Ordering::Relaxed));
      }
+     let f=session.counters.fresh_outer_bytes.load(Ordering::Relaxed);
+     let r=session.counters.repair_outer_bytes.load(Ordering::Relaxed);
+     let u=session.counters.repair_uncertain_bytes.load(Ordering::Relaxed);
+     let k=session.counters.feedback_outer_bytes.load(Ordering::Relaxed)
+         +session.counters.pure_ack_outer_bytes.load(Ordering::Relaxed);
+     // Conservative bound includes uncertain driver sends as charged R.
+     // Ratio numerators/denominators are wire Ethernet bytes, not app bytes.
+     eprintln!("WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes={} repair_accepted_wire_bytes={} repair_uncertain_wire_bytes={} control_wire_bytes={} repair_packets={} r_to_f_ppm={} r_to_total_ppm={} joined=true",
+         f,r,u,k,session.counters.repair_packets.load(Ordering::Relaxed),
+         if f>0{(r+u).saturating_mul(1_000_000)/f}else{0},
+         if f+r+u+k>0{(r+u).saturating_mul(1_000_000)/(f+r+u+k)}else{0});
      if tx!=OK&&tx!=BAD_STAGE{return tx}
      if rx!=OK&&rx!=BAD_STAGE{return rx}
      OK // all driver borrows returned before Go can EndSession/pcap_close

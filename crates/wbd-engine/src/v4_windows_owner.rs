@@ -38,7 +38,7 @@ const MAX_SESSIONS:usize=16;
 const MAX_AUTHENTICATED_KIND1:usize=32;
 // Original M1 arena has 64 slots: hold at most 48 DATA shadows + one
 // pending first-send while leaving room for RX and authentic control.
-const MAX_M2_FROZEN:usize=1536; // bounded 10Mbps mixed-source RTT600ms (~1135 records) + headroom
+const MAX_M2_FROZEN:usize=24_576; // bounded detached v3 repair snapshots; first-send M1 slabs freed
 const M2_HARD_EXPIRY_NS:u64=2_000_000_000;
 const MAX_EARLY:u32=32;
 const PH_PREPARED:u32=1;
@@ -65,6 +65,7 @@ struct WindowsOriginalM2 {
     direction:BudgetDirection,
     route:ReceiptRouteScope,
     in_flight:Option<WindowsM2QueuedRepair>,
+    ready_repairs:VecDeque<RepairCandidate<FrozenRecord>>, // one bounded 32-candidate M2 turn
     // Feedback comes ONLY from this original M3 opener's unique reverse PN.
     // At most one immutable original-M1 kind1 draft is awaiting real NPF send.
     feedback:RxFeedbackState,
@@ -100,6 +101,34 @@ struct WindowsOriginalM2 {
     #[cfg(feature="fec2_product_record")]
     auto_reverse_base:u64,
 }
+// Exact Linux v3 half-sampled PN/generation selection and global bounded PPS.
+// No RNG, time query or global mutex per business packet; now comes from M2.
+fn win_v3_pps_permit(counter:&std::sync::atomic::AtomicU64,
+    now:MonoNs,max_packets:u64)->bool {
+    use std::sync::atomic::Ordering;
+    let epoch=(now.0/1_000_000_000)&0xffff_ffff;
+    counter.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|old|{
+        let count=if (old>>32)==epoch {old&0xffff_ffff}else{0};
+        (count<max_packets).then_some((epoch<<32)|(count+1))
+    }).is_ok()
+}
+fn win_v3_admit_shadow(pn:u64,lane:wbd_types::LaneKey,now:MonoNs)->bool {
+    static ADMISSIONS:std::sync::atomic::AtomicU64=
+        std::sync::atomic::AtomicU64::new(0);
+    let key=pn^((lane.tunnel.slot as u64)<<48)
+        ^((lane.tunnel.generation as u64)<<32)
+        ^((lane.slot as u64)<<16)^(lane.generation as u64);
+    let mut x=key.wrapping_add(0x9e3779b97f4a7c15);
+    x=(x^(x>>30)).wrapping_mul(0xbf58476d1ce4e5b9);
+    x=(x^(x>>27)).wrapping_mul(0x94d049bb133111eb);
+    x^=x>>31;
+    x&1==0 && win_v3_pps_permit(&ADMISSIONS,now,32_768)
+}
+fn win_v3_send_pps_permit(now:MonoNs)->bool {
+    static REPAIRS:std::sync::atomic::AtomicU64=
+        std::sync::atomic::AtomicU64::new(0);
+    win_v3_pps_permit(&REPAIRS,now,8_192)
+}
 fn m2_clock()->MonoNs{
     static START:OnceLock<Instant>=OnceLock::new();
     let elapsed=START.get_or_init(Instant::now).elapsed().as_nanos();
@@ -131,7 +160,7 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         .map_err(|_|INVALID)?;
     // Windows original Go/Npcap M2 uses W168's *same opportunistic-v3*
     // policy, not pre-freeze PTO/RACK blind two-repair retries. The verified
-    // original sender still has the explicit 1536 immutable M2 shadow cap.
+    // original sender holds at most 24,576 separately charged immutable snapshots.
     let mut shadow=ReceiptState::new(lane,ReceiptConfig{
         max_shadow_entries:MAX_M2_FROZEN,pto_ns:810_000_000,
         reorder_window_ns:20_000_000,
@@ -173,6 +202,7 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
     }
     e.m2=Some(WindowsOriginalM2{
         shadow,pending:BTreeMap::new(),direction,route,in_flight:None,
+        ready_repairs:VecDeque::with_capacity(32),
         feedback,feedback_pending:None,
         #[cfg(feature="fec2_product_record")]
         mature,
@@ -338,9 +368,14 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     // retention is optional under v3, not an ACK window or DATA credit.
     // Keep a bounded immutable shadow while there is room; once saturated,
     // release only the optional copy, never reject accepted fresh traffic.
-    if m.shadow.outstanding()<MAX_M2_FROZEN {
-        // Trusted RTT-derived v3 residency, not an old fixed 2s shadow.
-        m.shadow.on_sent_adaptive(frozen,now).map_err(|_|BAD_STAGE)?;
+    if m.shadow.outstanding()<MAX_M2_FROZEN &&
+        win_v3_admit_shadow(pn,m.route.outbound_lane(),now) {
+        // Linux v3 exact frozen-record detached repair snapshot:
+        // returned first-send M1 loan is never pinned through an RTT.
+        // Candidate memory denial is optional and cannot fail fresh DATA.
+        if let Some(snapshot)=frozen.try_v3_repair_snapshot(){
+            let _=m.shadow.on_sent_adaptive(snapshot,now);
+        }
     }
     Ok(m.shadow.outstanding() as u32)
 }
@@ -356,10 +391,16 @@ fn m2_next_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
     if m.in_flight.is_some(){return Err(BAD_STAGE)}
     let now=m2_clock();
-    let polled=m.shadow.on_timer(now);
-    let mut selected=None;
-    for candidate in polled.candidates{
-        if selected.is_some(){ // remaining queue deadlines simply expire
+    // A single timer call supplies up to 32 ready candidates; Windows
+    // previously threw away every one after the first. Preserve the bounded
+    // turn and recheck authenticated positives just before driver send.
+    if m.ready_repairs.is_empty(){
+        m.ready_repairs.extend(m.shadow.on_timer(now).candidates);
+    }
+    while let Some(candidate)=m.ready_repairs.pop_front(){
+        if !m.shadow.preflight(&candidate,now){continue}
+        if !win_v3_send_pps_permit(now){
+            let _=m.shadow.on_send_result(&candidate,RepairSendResult::NotSent,now);
             continue
         }
         let wire=candidate.frozen().bytes();
@@ -398,14 +439,14 @@ fn m2_next_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         m.in_flight=Some(WindowsM2QueuedRepair{
             candidate,lease,reservation_id
         });
-        selected=Some((n,seq,pn));
+        return Ok(Some((n,seq,pn)));
     }
-    Ok(selected)
+    Ok(None)
 }
 fn m2_complete_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,pn:u64,sent:u32
 )->Result<u32,i32>{
-    if !v3_ready(e,epoch,luid,ifindex)||sent>1{return Err(INVALID)}
+    if !v3_ready(e,epoch,luid,ifindex)||sent>2{return Err(INVALID)}
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
     let held=m.in_flight.take().ok_or(BAD_STAGE)?;
     if held.candidate.pn()!=RecordPn(pn){
@@ -540,7 +581,8 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
     // actor is bound; no public bit is promoted, and all memory is bounded.
     // Normal/off negotiated inside ORIGINAL protected Go TLS. A 600ms
     // RTT at 10Mbps and 661B mean-symbol needs ~1135 immutable in-flight
-    // M1 records. Bounded 2048 slots/5MB; other features keep prior cap.
+    // M1 records. Linux v3 detaches only sampled repair ciphertext; M1
+    // retains the proven bounded 2048 slots/5MB (Arena hard cap 8192).
     let normal=handoff.negotiated_features==3;
     let slots=if normal||handoff.negotiated_features==7{2048}else{64};
     let bytes=if normal||handoff.negotiated_features==7{5_000_000}else{3_000_000};
@@ -1601,10 +1643,10 @@ mod tests {
         a[26]=1;a
     }
     #[test]
-    fn m0_windows_original_m1_2048_slots_and_m2_1536_shadow_contract(){
+    fn m0_windows_original_m1_2048_slots_and_m2_detached_shadow_contract(){
         // This is a REAL Windows-only original M1 ownership fixture. It is
         // never an OS/product or 10Mbps performance qualification.
-        assert_eq!(MAX_M2_FROZEN,1536,
+        assert_eq!(MAX_M2_FROZEN,24_576,
             "original Npcap frozen-M2 limit must match Go admission");
         let mut r=Registry{generation:711,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
         let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
@@ -1809,6 +1851,19 @@ mod tests {
         assert_eq!(release(&mut r,server),OK);
     }
 
+    #[test]
+    fn win_v3_half_sampling_is_mixed_bounded_and_repair_is_single(){
+        let lane=wbd_types::LaneKey{
+            tunnel:wbd_types::TunnelKey{slot:3,generation:11},
+            slot:9,generation:2,
+        };
+        let selected=(0..4096u64).filter(|pn|
+            win_v3_admit_shadow(*pn,lane,MonoNs(2_000_000_000))
+        ).count();
+        assert!((1800..2300).contains(&selected));
+        assert_eq!(MAX_M2_FROZEN,24_576);
+        assert_eq!(wbd_recovery::receipt::OUTER_REPAIR_ATTEMPT_LIMIT,1);
+    }
     #[test]
     fn m0_windows_m2_v3_no_unsolicited_pto_repair_and_owned_stop(){
         // Original-Windows feature3 owner, real frozen firstsend and M2
