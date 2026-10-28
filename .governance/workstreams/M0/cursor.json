@@ -15,7 +15,6 @@
   "unverified": true,
   "last_tested_source": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN025-H315-Windows-N0-main-source9ed-fail-20261028.json",
     "docs/evidence/M0/PLAN025-H312-source33ed-linux-loss1-512-genuine-20261028.json",
     "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
   ],
