@@ -83,6 +83,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "055026fda1cf6ef31e1a8d81b7e04badeb617c34",
       "evidence": "docs/evidence/M0/PLAN026-S2-source055-Windows-Rust-Normal-real-native-functional-20261028.json"
+    },
+    {
+      "platform": "Windows2025 signed Npcap Wintun to WSL2 Linux x64",
+      "scope": "PLAN026 P200 actual 60s kernel 200ms per direction 250Mbit/s rate 30% loss, offered Windows 148.02 Linux 108.12Mbps <225Mbps floor, real duplex/Stop PASS but 250Mbps capacity NOT MET",
+      "status": "CAPACITY_LIMITED",
+      "source_sha": "0d09cd5e61266b716aa5ade9bbce55a63120f2f1",
+      "evidence": "docs/evidence/M0/PLAN026-P200-source0d09-Windows-Linux-capacity-limited-20261028.json"
     }
   ],
   "limitations": [
