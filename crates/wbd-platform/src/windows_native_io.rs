@@ -53,6 +53,7 @@ extern "system" {
     fn CreateEventW(attributes: *const c_void, manual_reset: i32, initial_state: i32,
                     name: *const u16) -> *mut c_void;
     fn SetEvent(handle: *mut c_void) -> i32;
+    fn ResetEvent(handle: *mut c_void) -> i32;
     fn CloseHandle(handle: *mut c_void) -> i32;
     fn WaitForMultipleObjects(count: u32, handles: *const usize,
                               wait_all: i32, timeout_millis: u32) -> u32;
@@ -68,10 +69,18 @@ pub struct WakeEvent { handle: NonNull<c_void> }
 unsafe impl Send for WakeEvent {}
 unsafe impl Sync for WakeEvent {}
 impl WakeEvent {
-    pub fn new() -> Result<Self, NativeIoError> {
-        let p = unsafe { CreateEventW(ptr::null(), 1, 0, ptr::null()) };
+    pub fn new() -> Result<Self, NativeIoError> { Self::create(true) }
+    pub fn new_auto() -> Result<Self, NativeIoError> { Self::create(false) }
+    fn create(manual: bool) -> Result<Self, NativeIoError> {
+        let p = unsafe { CreateEventW(ptr::null(), if manual {1} else {0}, 0, ptr::null()) };
         let handle = NonNull::new(p).ok_or_else(last_error)?;
         Ok(Self { handle })
+    }
+    pub fn reset(&self) -> Result<(), NativeIoError> {
+        if unsafe { ResetEvent(self.handle.as_ptr()) } == 0 {
+            return Err(last_error());
+        }
+        Ok(())
     }
     pub fn handle(&self) -> usize { self.handle.as_ptr() as usize }
     pub fn wake(&self) -> Result<(), NativeIoError> {

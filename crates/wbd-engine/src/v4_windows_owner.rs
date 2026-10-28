@@ -8,6 +8,8 @@ use std::collections::{BTreeMap,BTreeSet,VecDeque};
 use std::sync::{Arc,Mutex,OnceLock};
 use std::time::Instant;
 use crate::cold_v4::{UntrustedColdV4,COLD_V4_LEN};
+#[path = "v4_windows_native_runtime.rs"]
+mod native_runtime;
 #[path = "v4_windows_game_owner.rs"]
 mod game;
 #[cfg(feature="fec2_product_record")]

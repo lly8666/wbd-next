@@ -8,6 +8,7 @@ package faketcp
 // packet and never creates a background reader.
 import (
     "fmt"
+    "unsafe"
     "sync"
     "syscall"
 )
@@ -51,6 +52,31 @@ type NpcapNativeCaptureLease struct {
     generation uint64
     flow      NpcapFlow
     closed    bool
+}
+
+// DisableReceiveForNativeTX installs an always-false BPF on the dedicated
+// TX pcap_t. Otherwise a second open_live would also capture every incoming
+// lane frame and waste kernel CPU / fill an unread NPF ring. It is still
+// the SAME interface and uses pcap_sendpacket/sendqueue normally.
+func(e *NpcapEndpoint) DisableReceiveForNativeTX()error{
+ if e==nil||e.gate==nil||e.handle==0{return ErrNpcapClosed}
+ if err:=e.gate.begin(e.cfg.Generation);err!=nil{return err}
+ defer e.gate.end()
+ compile,err:=e.dll.FindProc("pcap_compile");if err!=nil{return err}
+ set,err:=e.dll.FindProc("pcap_setfilter");if err!=nil{return err}
+ free,err:=e.dll.FindProc("pcap_freecode");if err!=nil{return err}
+ expression,err:=syscall.BytePtrFromString("ip and ip[0] = 0")
+ if err!=nil{return err}
+ var prog pcapBPFProgram
+ if rc,_,_:=compile.Call(e.handle,uintptr(unsafe.Pointer(&prog)),
+    uintptr(unsafe.Pointer(expression)),1,pcapNetmaskUnknown);int32(rc)!=0{
+  return fmt.Errorf("Npcap TX-only filter compile: %s",pcapError(e.getErr,e.handle))
+ }
+ defer free.Call(uintptr(unsafe.Pointer(&prog)))
+ if rc,_,_:=set.Call(e.handle,uintptr(unsafe.Pointer(&prog)));int32(rc)!=0{
+  return fmt.Errorf("Npcap TX-only filter apply: %s",pcapError(e.getErr,e.handle))
+ }
+ return nil
 }
 
 // TakeNativeCapture permanently disables Go NpcapEndpoint packet calls. It

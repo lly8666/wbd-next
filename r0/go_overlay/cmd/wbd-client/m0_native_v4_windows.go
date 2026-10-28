@@ -54,6 +54,16 @@ func watchM0NativeV4AutoControl(
  }
  cancel() // Exactly the existing watchGUIControl EOF→owned Stop.
 }
+// One product interface for cold OS admission; only the legacy Fixed/Auto
+// implementations still run the old Go packet loop until their Rust-native
+// mode is installed. Normal/off uses exclusively Rust NPF/Wintun workers.
+type m0NativeV4ProductPeer interface {
+ windowsownerlease.N4NativeAuthenticatedPeerTraffic
+ Errors()<-chan error
+ RefreshEffective(context.Context)error
+ Stats()m0NativeV4PacketStats
+ RequestAutoStartProfile(realityfront.FecV2Profile)(realityfront.FecV2State,error)
+}
 func runM0NativeV4Windows(o m0NativeV4Options)error{
  // Mode-specific original Rust capability is queried before Npcap,
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
@@ -174,6 +184,9 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  defer assoc.Close()
  failure:=make(chan error,2)
  nativeFrames:=make(chan faketcp.Segment,64)
+ // Closed exactly at the Go→Rust capture handoff; suppress expected Go
+ // ErrNpcapClosed from the departing cold bootstrap reader.
+ rustHandoff:=make(chan struct{})
  // Explicit local pre-auth carrier pressure, not WAN loss or authenticated success.
  var ingressLocalDrops atomic.Uint64
  var readers sync.WaitGroup
@@ -183,6 +196,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   for{
    seg,_,e:=endpoint.ReadSegment(1)
    if e!=nil{
+    select{case <-rustHandoff:return;default:}
     select{case failure<-fmt.Errorf("native NPF ReadSegment failed: %w",e):default:}
     return
    }
@@ -303,24 +317,33 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  })
  if e!=nil{return e}
  if plan.StatePath==""{return windowsclient.ErrN4NativeGuard}
- transport,e:=newM0NativeV4PeerForMode(owner,endpoint,flow,nativeFrames,o.Mode)
- if e!=nil{return e}
- if o.FEC2AutoPolicy=="aggressive"{
-  transport.autoPolicy=realityfront.FecV2Aggressive
- }else{transport.autoPolicy=realityfront.FecV2Conservative}
- if o.Mode==m0WinModeAuto||o.Mode==m0WinModeFixed{
-  if o.Mode==m0WinModeFixed{
-   transport.initialProfile,e=m0WindowsV4Profile(o.FEC2Profile)
-  }else{
-   transport.autoStartProfile,e=m0WindowsV4Profile(o.FEC2AutoStartProfile)
-   if e==nil{
-    transport.initialProfile=transport.autoStartProfile
-    if o.FEC2AutoPolicy=="aggressive"&&transport.initialProfile<realityfront.FecV2Maximum{
-     transport.initialProfile++
+ var transport m0NativeV4ProductPeer
+ if o.Mode==m0WinModeNormal{
+  transport=newM0WinRustNativePeer(owner,endpoint,ncfg,flow,
+   nativeFrames,rustHandoff,&readers)
+ }else{
+  // Fixed/Auto retain current product path only until the same Rust
+  // NativeOwner grows FEC2 mode; there is no Normal/off fallback.
+  legacy,legacyErr:=newM0NativeV4PeerForMode(owner,endpoint,flow,nativeFrames,o.Mode)
+  if legacyErr!=nil{return legacyErr}
+  if o.FEC2AutoPolicy=="aggressive"{
+   legacy.autoPolicy=realityfront.FecV2Aggressive
+  }else{legacy.autoPolicy=realityfront.FecV2Conservative}
+  if o.Mode==m0WinModeAuto||o.Mode==m0WinModeFixed{
+   if o.Mode==m0WinModeFixed{
+    legacy.initialProfile,e=m0WindowsV4Profile(o.FEC2Profile)
+   }else{
+    legacy.autoStartProfile,e=m0WindowsV4Profile(o.FEC2AutoStartProfile)
+    if e==nil{
+     legacy.initialProfile=legacy.autoStartProfile
+     if o.FEC2AutoPolicy=="aggressive"&&legacy.initialProfile<realityfront.FecV2Maximum{
+      legacy.initialProfile++
+     }
     }
    }
+   if e!=nil{return e}
   }
-  if e!=nil{return e}
+  transport=legacy
  }
  product,e:=windowsownerlease.PrepareOriginalTLSNativeProduct(
   ctx,owner,tun,plan,o.Installation,session.Epoch,transport)

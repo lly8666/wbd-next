@@ -9,7 +9,8 @@
   "available_on": [
     "integration/w168-freeze-windows-adapter-20261026",
     "experiment/windows-wiring-arm64-native-parallel-20261028",
-    "experiment/windows-wiring-n0-normal-parallel-20261028"
+    "experiment/windows-wiring-n0-normal-parallel-20261028",
+    "main"
   ],
   "defaults": {
     "--mode": "normal（Linux V4默认）",
@@ -24,11 +25,16 @@
     "r0/go_overlay/internal/v4productcli/linux.go",
     "crates/wbd-engine/src/v4_embedded_go.rs",
     "crates/wbd-platform/src/linux_raw_carrier.rs",
-    "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go"
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+    "crates/wbd-engine/src/v4_windows_native_runtime.rs",
+    "crates/wbd-platform/src/windows_native_io.rs",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io.go"
   ],
   "doc_refs": [
     "docs/handoff/CURRENT_INTEGRATION.md",
-    "docs/architecture/MIGRATION.md"
+    "docs/architecture/MIGRATION.md",
+    "docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md"
   ],
   "verification": [
     {
@@ -93,6 +99,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
       "evidence": "docs/evidence/M0/PLAN025-H312-source33ed-linux-loss1-512-genuine-20261028.json"
+    },
+    {
+      "platform": "windows/x64 signed Wintun+Npcap ↔ linux/amd64 WSL2",
+      "scope": "PLAN026 Rust-only Normal/off NativeOwner product-source wiring, GO NPF/Wintun handoff, real M3/Ack/M2 and owned Stop; source build/native bidirectional/network performance for this new path",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
@@ -105,7 +118,8 @@
     "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
     "S61 main integrates sourcee8acbb validated tiny Rust cfg-only module fix for old default original-Go FEC2-off Linux build, while preserving all FEC2-enabled code and historical main sourceb6b964a signed seven-mode functional PASS. S60 Action40561871984 exact Rust ordinary, no-FEC2, opt-in FEC2/Game module checks PASS; this new main SOURCE not yet native-qualified and original NORMAL-COMMON Action40560287464 FAIL remains.",
     "H311 provenance index: H309 main33ed seven-mode native PASS; N0dd0767 independent one-sample PASS while aa931 FAIL remains; ARM64f7ee prebuilt 10M capacity success; Linux33ed loss1 old serial-echo FAIL.",
-    "Linux 1% original-Go product source33ed Action40587653027 now source-locked native 512 offered/508 unique received/4 residual via non-stop-and-wait, both Stop PASS; old source33ed harness Action40566375977 FAIL remains. No equivalence with physical Windows or FEC2/Game loss tests."
+    "Linux 1% original-Go product source33ed Action40587653027 now source-locked native 512 offered/508 unique received/4 residual via non-stop-and-wait, both Stop PASS; old source33ed harness Action40566375977 FAIL remains. No equivalence with physical Windows or FEC2/Game loss tests.",
+    "2026-10-28 PLAN026 新Normal/off直接转 Rust 两固定worker，无Go包FFI/Go数据泵作为正式候选；此代码尚未获Windows Rust/Go生产编译、真双端应用、N0 240s或同机CPU/首到A/B证据。旧已测SOURCE不是新路径PASS，Fixed/Auto/Game仍沿当前独立旧热路径待逐模式迁入同一个NativeOwner。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

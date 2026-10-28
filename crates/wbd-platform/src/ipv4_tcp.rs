@@ -150,9 +150,20 @@ pub fn build<'b, H: FrozenRecordHandle>(
     mtu: usize,
     scratch: &'b mut [u8],
 ) -> Result<&'b [u8], PacketError> {
-    check_tuple(tuple)?;
     let read = driver_read(record);
-    let plan = measure(read.wire.len(), authenticated_options)?;
+    build_bytes(tuple, presentation, record.metadata().seq.0, read.wire,
+        authenticated_options, mtu, scratch)
+}
+
+/// Same zero-allocation carrier builder for raw immutable bytes produced by
+/// the authenticated Rust owner: no per-packet Go FFI or temporary Arc.
+pub fn build_bytes<'b>(
+    tuple: Ipv4Tuple<'_>, presentation: Presentation, seq64: u64,
+    wire: &[u8], authenticated_options: Option<&[u8]>,
+    mtu: usize, scratch: &'b mut [u8],
+) -> Result<&'b [u8], PacketError> {
+    check_tuple(tuple)?;
+    let plan = measure(wire.len(), authenticated_options)?;
     if plan.required > mtu {
         return Err(PacketError::MtuExceeded { required: plan.required, mtu });
     }
@@ -181,13 +192,13 @@ pub fn build<'b, H: FrozenRecordHandle>(
     tcp[0..2].copy_from_slice(&tuple.src_port.to_be_bytes());
     tcp[2..4].copy_from_slice(&tuple.dst_port.to_be_bytes());
     // 64-bit owner seq is stable across retransmission; only wire32 wraps.
-    tcp[4..8].copy_from_slice(&(record.metadata().seq.0 as u32).to_be_bytes());
+    tcp[4..8].copy_from_slice(&(seq64 as u32).to_be_bytes());
     tcp[8..12].copy_from_slice(&presentation.ack32.to_be_bytes());
     tcp[12] = (((TCP_HEADER_LEN + options.len()) / 4) as u8) << 4;
     tcp[13] = TCP_DATA_FLAGS;
     tcp[14..16].copy_from_slice(&presentation.advertised_window.to_be_bytes());
     tcp[TCP_HEADER_LEN..TCP_HEADER_LEN + options.len()].copy_from_slice(options);
-    tcp[TCP_HEADER_LEN + options.len()..].copy_from_slice(read.wire);
+    tcp[TCP_HEADER_LEN + options.len()..].copy_from_slice(wire);
 
     // TCP one’s-complement pseudoheader: IPv4 src/dst, 00 06, TCP length.
     // Works with odd record lengths and every negotiated option length.
@@ -197,6 +208,46 @@ pub fn build<'b, H: FrozenRecordHandle>(
     Ok(&scratch[..plan.required])
 }
 
+
+/// TCP-looking presentation ACK only. This consumes no AEAD PN, is not
+/// an M2 receipt, and must be scheduled only after authenticated M3 delivery.
+/// Bounded 40B, no allocation; TX may coalesce multiple RX ACKs into one.
+pub fn build_presentation_ack<'a>(
+    tuple: Ipv4Tuple<'_>, seq32: u32, ack32: u32,
+    ip_id: u16, persona: PacketPersona, mtu: usize,
+    scratch: &'a mut [u8],
+) -> Result<&'a [u8],PacketError> {
+    check_tuple(tuple)?;
+    if mtu<BASE_OVERHEAD{return Err(PacketError::MtuExceeded {
+        required:BASE_OVERHEAD,mtu,
+    })}
+    if scratch.len()<BASE_OVERHEAD{return Err(PacketError::ScratchTooSmall {
+        required:BASE_OVERHEAD,available:scratch.len(),
+    })}
+    let packet=&mut scratch[..BASE_OVERHEAD];
+    packet.fill(0);
+    let (ip,tcp)=packet.split_at_mut(IPV4_HEADER_LEN);
+    ip[0]=0x45;
+    ip[2..4].copy_from_slice(&(BASE_OVERHEAD as u16).to_be_bytes());
+    ip[4..6].copy_from_slice(&ip_id.to_be_bytes());
+    ip[6..8].copy_from_slice(&0x4000u16.to_be_bytes());
+    ip[8]=persona.ttl();
+    ip[9]=TCP_PROTOCOL;
+    ip[12..16].copy_from_slice(tuple.src_ip);
+    ip[16..20].copy_from_slice(tuple.dst_ip);
+    ip[10..12].copy_from_slice(&finish_checksum(sum_words(ip)).to_be_bytes());
+    tcp[0..2].copy_from_slice(&tuple.src_port.to_be_bytes());
+    tcp[2..4].copy_from_slice(&tuple.dst_port.to_be_bytes());
+    tcp[4..8].copy_from_slice(&seq32.to_be_bytes());
+    tcp[8..12].copy_from_slice(&ack32.to_be_bytes());
+    tcp[12]=5u8<<4;
+    tcp[13]=0x10; // ACK with no DATA, exactly legacy Go sendACK
+    tcp[14..16].copy_from_slice(&65535u16.to_be_bytes());
+    let sum=sum_words(tuple.src_ip)+sum_words(tuple.dst_ip)
+        +u64::from(TCP_PROTOCOL)+tcp.len() as u64+sum_words(tcp);
+    tcp[16..18].copy_from_slice(&finish_checksum(sum).to_be_bytes());
+    Ok(packet)
+}
 
 /// Build only the original IPv4+TCP header into the caller's preallocated
 /// scratch. The checksum reads frozen ciphertext without copying it; the
@@ -255,6 +306,32 @@ mod tests {
     use wbd_types::{BufferKey, LaneKey, RecordPn, SeqOffset, TunnelKey};
     use wbd_types::buffer_contract::{BufferOrigin, FrozenMetadata};
 
+    #[test]
+    fn presentation_ack_is_exact_40_bytes_and_not_data() {
+        let tuple=Ipv4Tuple{src_ip:&[192,0,2,1],dst_ip:&[192,0,2,2],
+            src_port:49152,dst_port:443};
+        let mut buf=[0u8;64];
+        let raw=build_presentation_ack(tuple,0xffff_fffe,100,7,
+            PacketPersona::Windows11,1400,&mut buf).unwrap();
+        assert_eq!(raw.len(),40);
+        assert_eq!(raw[8],128);
+        assert_eq!(raw[20+13],0x10);
+        assert_eq!(&raw[24..28],&0xffff_fffeu32.to_be_bytes());
+        assert_eq!(&raw[28..32],&100u32.to_be_bytes());
+        assert_eq!(finish_checksum(sum_words(&raw[..20])),0);
+    }
+    #[test]
+    fn build_bytes_is_identical_to_frozen_builder() {
+        let frozen=TestFrozen {wire:vec![1,2,3,4,5,6,7],seq:SeqOffset(0xffff_fffe)};
+        let tuple=Ipv4Tuple {src_ip:&[10,2,0,1],dst_ip:&[10,2,0,2],
+            src_port:4001,dst_port:443};
+        let p=Presentation {ack32:100,advertised_window:65535,ip_id:7,
+            persona:PacketPersona::Windows11};
+        let mut old=[0u8;256];let mut native=[0u8;256];
+        let a=build(tuple,p,&frozen,None,1500,&mut old).unwrap();
+        let b=build_bytes(tuple,p,frozen.seq.0,&frozen.wire,None,1500,&mut native).unwrap();
+        assert_eq!(a,b);
+    }
     #[derive(Clone)]
     struct TestFrozen { wire: Vec<u8>, seq: SeqOffset }
     impl FrozenRecordHandle for TestFrozen {
