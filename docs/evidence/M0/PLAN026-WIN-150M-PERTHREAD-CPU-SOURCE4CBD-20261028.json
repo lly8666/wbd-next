@@ -90,5 +90,6 @@
       "M2 lock latency and AEAD under owner lock"
     ]
   },
-  "recommendation": "First determine TX/RX exact OS TID via one-shot Rust GetCurrentThreadId startup identity; GetThreadDescription failed 0x10000000 in all 1241 attempted thread accesses. Then diagnostic feature-gated lower-rate CPU-cycle or ETW stack sampling for NPF/Wintun/AEAD/wake; do not optimize protocol, AEAD/PN or lock without stage evidence. Maintain 150Mbps/0%-netem/60s/99.9%-first-delivery/Stop gate."
+  "recommendation": "First determine TX/RX exact OS TID via one-shot Rust GetCurrentThreadId startup identity; GetThreadDescription failed 0x10000000 in all 1241 attempted thread accesses. Then diagnostic feature-gated lower-rate CPU-cycle or ETW stack sampling for NPF/Wintun/AEAD/wake; do not optimize protocol, AEAD/PN or lock without stage evidence. Maintain 150Mbps/0%-netem/60s/99.9%-first-delivery/Stop gate.",
+  "source_sha": "4cbd1a6f188db5cff638dd78d1a80f81a4dc55d2"
 }
