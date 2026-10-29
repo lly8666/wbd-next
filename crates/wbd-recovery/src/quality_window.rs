@@ -471,6 +471,16 @@ impl SendHistory {
     /// Convert an authenticated v2 summary ONLY after the caller has bound
     /// its AEAD-opened lane/epoch/direction to this history. Remote first F
     /// must match our definite driver count, never override local evidence.
+    /// Sender-local age; never compare monotone timestamps across hosts.
+    pub fn assess_wire_with_age(&self,wire:WireReport,now:MonoNs)
+        ->Result<(LossBounds,u64),QualityError>{
+        let bounds=self.assess_wire(wire,now)?;
+        let sent=self.slots.iter().flatten()
+            .find(|x|x.key.id==wire.id&&x.key.first.0==wire.first
+                &&x.key.last.0==wire.last)
+            .ok_or(QualityError::WrongWindow)?;
+        Ok((bounds,now.0-sent.closed_at.0))
+    }
     pub fn assess_wire(&self,wire:WireReport,now:MonoNs)
         ->Result<LossBounds,QualityError>{
         wire.valid()?;

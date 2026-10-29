@@ -159,12 +159,16 @@ pub(super) fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     }
     if let Some(pn)=unique_data_pn{
         if let Some(m)=e.m2.as_mut(){
-            m.feedback.on_authenticated_data(RecordPn(pn),m2_clock());
+            if !m.auto_low_rate_mode{
+                m.feedback.on_authenticated_data(RecordPn(pn),m2_clock());
+            }
             // Record PN was accepted by the original replay-checked M3 FEC2
             // opener, independent of whether FEC generated business output.
             // Four bounded low-rate RX windows observe DATA once, not M2
             // bitmap drafts, retransmissions or untrusted TCP carrier ACKs.
-            m.quality_receive.on_unique_data(RecordPn(pn),false);
+            if m.auto_low_rate_mode{
+                m.quality_receive.on_unique_data(RecordPn(pn),false);
+            }
             if result.is_empty(){m.health.on_authenticated_control(m2_clock().0)}
             else{m.health.on_authenticated_business(m2_clock().0)}
         }
@@ -611,6 +615,20 @@ fn original_m2_recent_capacity(at:Option<MonoNs>,now:MonoNs)->bool{
 fn drain_original_auto_mature_due(
     m:&mut WindowsOriginalM2,now:MonoNs,
 )->Result<(),i32>{
+    // Low-rate Auto no longer depends on per-record M2 maturity. Its slow
+    // cohort advances only from independently matched, mature v2 summaries.
+    if m.auto_low_rate_mode{
+        while m.quality_slow_due.front().is_some_and(|x|x.0<=now.0){
+            let (_,bounds)=m.quality_slow_due.pop_front().ok_or(BAD_STAGE)?;
+            let values=[u64::from(bounds.first),
+                u64::from(bounds.first-bounds.upper),
+                u64::from(bounds.lower),u64::from(bounds.upper-bounds.lower),0];
+            for (i,value) in values.into_iter().enumerate(){
+                m.auto_quality[5+i]=m.auto_quality[5+i].saturating_add(value);
+            }
+        }
+        return Ok(())
+    }
     // Every call is one time/budget-limited owner turn. No long historical
     // drain can hold the Entry mutex while incoming DATA waits.
     let started=Instant::now();

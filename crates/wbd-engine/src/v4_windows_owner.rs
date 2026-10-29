@@ -100,6 +100,10 @@ struct WindowsOriginalM2 {
     quality_signal_awaiting:Option<crate::v4_native_health::QualityWindowSignal>,
     quality_next_id:u64,
     quality_next_open_ns:u64,
+    // Only native mode2 enables sampling; survives the Auto actor's take().
+    auto_low_rate_mode:bool,
+    quality_last_report_id:Option<u64>,
+    quality_slow_due:VecDeque<(u64,wbd_recovery::quality_window::LossBounds)>,
     // Per-lane state, no thread/timer; TX Health deadline not yet activated.
     health:crate::v4_native_health::HealthClock,
     // Same W168 mature source-only denominator as Linux Fixed; never a
@@ -359,6 +363,8 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         quality_awaiting:None,
         quality_sender:None,quality_history,quality_close_waiting:None,
         quality_signal_awaiting:None,quality_next_id:0,quality_next_open_ns:0,
+        auto_low_rate_mode:false,quality_last_report_id:None,
+        quality_slow_due:VecDeque::with_capacity(16),
         health:crate::v4_native_health::HealthClock::new(
             crate::v4_native_health::HealthPolicy::default_connected(),now.0),
         #[cfg(feature="fec2_product_record")]
@@ -407,10 +413,8 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let now=m2_clock();
     // Native mode 2, not merely feature7, is the single explicit Auto gate.
     // Fixed and Normal/off never create continuous quality windows.
-    #[cfg(feature="fec2_product_record")]
-    let auto=e.feature7&&e.auto_actor.is_some()&&e.game_group.is_none();
-    #[cfg(not(feature="fec2_product_record"))]
-    let auto=false;
+    let auto=e.feature7&&e.m2.as_ref().is_some_and(|m|m.auto_low_rate_mode)
+        &&e.game_group.is_none();
     let next_pn=e.owner.next_original_record_pn().ok_or(BAD_STAGE)?;
     let (draft,health_due,quality,signal)={
         let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
@@ -612,6 +616,7 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if row.metadata().pn!=key||row.metadata().seq.0 as u32!=seq
         ||row.bytes().len()!=wire_len {return Err(INVALID)}
     let frozen=m.pending.remove(&key).ok_or(INVALID)?;
+    if m.auto_low_rate_mode {
     if let Some(sampler)=m.quality_sender.as_mut(){
         let status=match sent{
             1=>FirstSendStatus::Accepted,
@@ -619,6 +624,7 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
             _=>FirstSendStatus::Uncertain,
         };
         sampler.on_first_send(key,status);
+    }
     }
     #[cfg(feature="fec2_product_record")]
     if let Some(mature)=m.mature.as_mut(){
@@ -780,6 +786,40 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
     if let Some(idle)=control.peer_idle_ns{
         m.health.on_peer_idle_hint(now.0,idle);
     }else{m.health.on_authenticated_control(now.0)}
+    if let Some(summary)=control.low_rate_quality{
+        if m.auto_low_rate_mode &&
+            !m.quality_last_report_id.is_some_and(|id|summary.id<=id){
+            match m.quality_history.assess_wire_with_age(summary,now){
+                Ok((bounds,age_ns))=>{
+                    m.quality_last_report_id=Some(summary.id);
+                    // Count only mature, matched samples. Potentially repaired
+                    // source PN cannot masquerade as unambiguous first arrival.
+                    let safe_positive=u64::from(bounds.first-bounds.upper);
+                    let first=u64::from(bounds.first);
+                    let missing=u64::from(bounds.lower);
+                    let ambiguous=u64::from(bounds.upper-bounds.lower);
+                    for (i,value) in [first,safe_positive,missing,ambiguous,0]
+                        .into_iter().enumerate(){
+                        m.auto_quality[i]=m.auto_quality[i].saturating_add(value);
+                    }
+                    m.auto_quality[10]=m.auto_quality[10].saturating_add(1);
+                    m.auto_quality[12]=m.auto_quality[12].saturating_add(age_ns);
+                    m.auto_quality[13]=m.auto_quality[13].saturating_add(1);
+                    if m.quality_slow_due.len()==16{
+                        m.quality_slow_due.pop_front();
+                        m.auto_quality[11]=m.auto_quality[11].saturating_add(1);
+                    }
+                    m.quality_slow_due.push_back((
+                        now.0.saturating_add(5_000_000_000),bounds
+                    ));
+                },
+                Err(_) => {
+                    // Unknown/expired never becomes a fabricated zero loss.
+                    m.auto_quality[11]=m.auto_quality[11].saturating_add(1);
+                }
+            }
+        }
+    }
     if let Some(signal)=control.low_rate_signal{
         // Only negotiated feature7 FEC/Auto lanes admit low-rate windows.
         // Game lanes never feed Auto; authenticated control is not DATA.
@@ -800,6 +840,7 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
     }
     // A v2 summary cannot affect Auto until the sender's matching
     // driver-confirmed SendHistory is connected. Never interpret it as ACK.
+    if m.auto_low_rate_mode{return Ok(0)}
     let Some(receipt)=control.receipt.as_ref()else{return Ok(0)};
     let opened=ReceiptOpenFacts{
         verified_reverse_lane:m.route.outbound_lane(),
@@ -1514,9 +1555,10 @@ fn v5_open_record_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         // Only the same owner-replay-checked M3 successful DATA opens
         // activate RxFeedbackState. Control kind1 cannot ACK itself.
         if let Some(m)=e.m2.as_mut(){
-            m.feedback.on_authenticated_data(RecordPn(unique_pn),m2_clock());
-            if e.feature7{
+            if m.auto_low_rate_mode {
                 m.quality_receive.on_unique_data(RecordPn(unique_pn),false);
+            }else{
+                m.feedback.on_authenticated_data(RecordPn(unique_pn),m2_clock());
             }
             m.health.on_authenticated_business(m2_clock().0);
         }

@@ -810,6 +810,8 @@
              let rev=stream.revision().0;
              e.auto_actor=Some(auto_native::NativeAutoActor::new(
                  profile,rev,aggressive,m2_clock().0));
+              if let Some(m)=e.m2.as_mut(){m.auto_low_rate_mode=true;}
+              else{return BAD_STAGE}
          }
          #[cfg(not(feature="fec2_product_record"))]
          if auto_policy.is_some(){return BAD_STAGE}
