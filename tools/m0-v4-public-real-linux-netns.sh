@@ -100,9 +100,15 @@ import socket,time,os
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.bind(("10.66.0.1",45901));s.settimeout(28)
 try:
-    for i in range(int(os.environ["WBD_REAL_COUNT"])):
+    # Count distinct ORIGINAL UDP payloads, not received retries. The
+    # native Rust frozen retransmit can legitimately redeliver a packet;
+    # duplicates must never satisfy an application-completion assertion.
+    distinct=set()
+    target=int(os.environ["WBD_REAL_COUNT"])
+    while len(distinct)<target:
         data,src=s.recvfrom(8192)
-        assert data.startswith(b"WBD_REAL_V4_ORIGINAL_GO")
+        assert data.startswith(b"WBD_REAL_V4_ORIGINAL_GO/")
+        distinct.add(data)
         s.sendto(b"V4_SERVER_APP_ECHO/"+data,src)
 finally:s.close()
 ' >"$TMP/echo.log" 2>&1 &
@@ -141,15 +147,19 @@ if [[ "$GAME" != 0 ]];then
   sudo -n ip netns exec "$NSC" iptables -I OUTPUT 1 -p tcp --dport 443 -j DROP
   sudo -n ip netns exec "$NSS" iptables -I OUTPUT 1 -p tcp --sport 443 -j DROP
 fi
-if ! sudo -n ip netns exec "$NSC" env WBD_REAL_COUNT="$PACKETS" WBD_REAL_FEC="$FEC" WBD_REAL_MODE="$MODE" python3 -u -c '
+if ! sudo -n ip netns exec "$NSC" env WBD_REAL_COUNT="$PACKETS" WBD_REAL_FEC="$FEC" WBD_REAL_MODE="$MODE" WBD_REAL_LOSS="$LOSS" python3 -u -c '
 import socket,time,os
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.bind(("10.66.0.2",45902));s.settimeout(12)
 count=int(os.environ["WBD_REAL_COUNT"])
 fec=os.environ.get("WBD_REAL_FEC")=="1"
-if fec:
-    # Send a genuine source GROUP before awaiting echoes, not a fake
-    # one-by-one application stop-and-wait that starves FEC composer.
+loss=os.environ.get("WBD_REAL_LOSS")=="1"
+if fec or loss:
+    # Under actual kernel netem loss, per-packet UDP stop-and-wait
+    # DEADLOCKS on one missing echo and starves all subsequent genuine
+    # M2 mature-gap evidence. Use a bounded real application source burst
+    # on the very same public Rust transport binaries. No app retries,
+    # no fake TCP ACK, no alternate FEC codec, no relaxed 512/Stop proof.
     payloads={}
     for i in range(count):
         msg=(b"WBD_REAL_V4_ORIGINAL_GO/"+str(i).encode()+b"/"+bytes([i%256])*64)
@@ -164,8 +174,13 @@ if fec:
         assert src[0]=="10.66.0.1"
         msg=data[len(b"V4_SERVER_APP_ECHO/"):]
         assert msg in payloads,(msg,len(unique))
-        unique.add(payloads[msg])
-    print("M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode="+os.environ.get("WBD_REAL_MODE","")+" delivered="+str(len(unique)),flush=True)
+        index=payloads[msg]
+        if index not in unique:
+            unique.add(index)
+            if loss:
+                print("M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK",index,flush=True)
+    if fec:
+        print("M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode="+os.environ.get("WBD_REAL_MODE","")+" delivered="+str(len(unique)),flush=True)
 else:
     for i in range(count):
         msg=(b"WBD_REAL_V4_ORIGINAL_GO/"+str(i).encode()+b"/"+bytes([i%256])*64)

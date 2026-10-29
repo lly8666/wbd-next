@@ -1,0 +1,15 @@
+# M0 PLAN026 source-exact 2026-10-29 PLAN012 public 1% netem real application burst
+
+From exact source `c39f1c53`, PLAN012 Action `40834533036`: **strict Rust unit counts PASS**, Linux original Go TLS + native Game2/4 actual raw/TUN app PASS, original three-cipher Fixed source/parity real M4 raw/TUN and same-frozen M2 recovery PASS (9/9 including 2-slot sendmmsg), original Linux Fixed/Auto actual RX and applied readback PASS, and normal/off public real CLI **no-loss PASS**. The only observed failed step is separately scoped `WBD_V4_PUBLIC_KERNEL_LOSS=1` with actual Linux veth netem: one authentic underlay kernel drop after 153+ successful UDP echoes. Original TEST CLIENT used strictly sequential `sendto(msg); recvfrom()` in normal/off and could never send an additional packet after the first dropped echo. The peer-authenticated native policy expressly has `data_pto=false` and only genuine later AEAD/mature gaps trigger FrozenRecord recovery; a stopped application generates no later auth gap, so this is an invalid qualification traffic model, not proof of recovery.
+
+Modify the **same real public client/server programs and same real kernel namespaces**, no mocks, no new production code:
+- Only at 1% real netem, send all 512 unique original application payloads as a bounded 3ms paced source stream (one packet per input, NEVER application retransmit); collect all 512 distinct genuine echo replies from the actual TUN kernel+remote real UDP socket. Never count duplicate replies.
+- Server echo socket now waits for 512 **distinct original packets**, not 512 receptions (M2's genuine identical retransmission may duplicate original delivery; duplicates cannot fake 512 app progress); still only echoes packets it received from kernel.
+- Original five-packet no-loss normal/off strict sequential echo and FEC 64-source group paths remain semantically intact. Preserve existing terminal hard gates: qdisc real dropped>0, both original TLS owners native stop joined, first-copy>=1024, actual original frozen M2 retransmissions>0, authenticated actual kind1 ACK>0, all 512 distinct UDP echoes.
+- Does not change `data_pto`, original frozen storage/PN, verified loss semantics, native timer or link wire. If 1% run still fails, report genuine source-locked FAIL and investigate root cause; do NOT declare PASS from test script.
+
+Governance maintenance `40834533074` also reports only two stale **current** authorized M0 Git object pins for `fec_v2_policy.go` (`a5cd239f...`) and its exact test (`a6a09df1...`), already source-equal to live PLAN020 manifest. Historical 34 M4 PINNED_FILES hashes remain untouched. Update exactly these two current authorized hashes; no weakening of source equalities.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Original-Go real 1% netem qualification uses bounded distinct UDP application traffic instead of deadlocking one-by-one ACK; no native product or loss policy changes. Exact live M0 Git pins fixed, historical frozen M4 SHA remains immutable."}
+```
