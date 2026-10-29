@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 404,
-  "checkpoint_sha": "9a2af725ab0dd498dd7960e4e91d1ca23a0683cb",
+  "sequence": 405,
+  "checkpoint_sha": "e60aa1c1e5e5e427989320b24b0b2ac2678155ca",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 §0 PARTIAL. Recovered H401 Windows/Linux preflight Action40946233322 SUCCESS at old SOURCE c8dad610 (not PLAN027 A/B/C). S404 9a2af725 adds strict authenticated Quality START/CLOSE v3 wire and regression; production owner not wired, M2 still LIVE. New-source governance40953849032 SUCCESS; native40953849123 and other ABI/real-owner checks in flight.",
-  "why_now": "Record recovered old-source preflight and precise S404 new-source wire candidate; preserve in-flight Actions and no product/A/B/C PASS claim.",
+  "current_task": "PLAN027 §0 PARTIAL. S404 9a2af725 strict authenticated Quality START/CLOSE v3 native40953849123 SUCCESS: engine135 passed, 1 optional ignored, other four groups pass; exact manifest/binary/log hashes H405 evidence. Old H401 Windows/Linux preflight40946233322 SUCCESS but still M2 live. S404 governance/static/g2/crossABI/ABI SUCCESS; Windows owner40953849191 and Linux Auto/Health40953849208 in flight.",
+  "why_now": "Checkpoint S404 code, H405 source-locked native evidence and old preflight recovery; do not infer product qualification or duplicate running Actions.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Retrieve S404 native/Windows/Linux Actions40953849123/40953849208/40953849191 first; fix any real failures. Wire strict authenticated Quality START/CLOSE/mature report into original Linux+Windows owner with driver F/unique RX, capability gate and outer ACK/SACK shadow retirement, retire per-record M2; then A→B→C/long tests/fixes.",
+  "next_action": "Collect pending S404 Windows owner Action40953849191 and Linux Auto/Health40953849208; then implement both original owners' low-rate Quality START/CLOSE/mature report, driver-F and unique RX, negotiated capability, ACK/SACK shadow retirement, remove per-record M2; proceed A→B→C/long tests/fixes.",
   "unverified": true,
   "last_tested_source": "302d02049669d8f36f3d6852bc1c668ff003ed4a",
   "evidence_refs": [
@@ -23,10 +23,10 @@
     "docs/features/entries/outer-opportunistic-repair.json",
     "docs/features/entries/fec-auto.json",
     "docs/evidence/M0/PLAN027-H403-ACK-SACK-WIRE-SOURCE-NATIVE-RESULTS-20261030.json",
-    "docs/evidence/M0/PLAN027-H395-NATIVE-QUALITY-AND-CI-RESULTS-20261030.json",
     "docs/evidence/M0/PLAN027-H398-SENDER-QUALITY-SOURCE-NATIVE-RESULTS-20261030.json",
-    "docs/evidence/M0/PLAN027-H404-RECOVERED-PREFLIGHT-20261030.json"
+    "docs/evidence/M0/PLAN027-H404-RECOVERED-PREFLIGHT-20261030.json",
+    "docs/evidence/M0/PLAN027-H405-QUALITY-BOUNDARY-SOURCE-NATIVE-RESULTS-20261030.json"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL: S404 strict Quality START/CLOSE wire candidate; sender sampler/ACK/SACK pure helpers exist, but Windows/Linux per-record M2 LIVE, Quality/Auto/outer ACK repair NOT WIRED. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. Old SOURCE c8dad H401 preflight40946233322 recovered SUCCESS, not new-source product. S404 governance40953849032 PASS; native/ABI/real owner runs in flight, do not duplicate. Physical NOT_RUN."
+  "partial_summary": "§0-1 PARTIAL: S404 v3 authenticated Quality START/CLOSE wire pure native PASS40953849123; pure sender F and ACK/SACK helpers exist, but original Windows/Linux per-record M2 LIVE and live Quality/Auto/outer ACK repair NOT WIRED. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. H401 preflight40946233322 recovered SUCCESS on old SOURCE; new S404 Windows/Linux owner/Auto checks still in flight. Physical NOT_RUN."
 }
