@@ -6,6 +6,11 @@ New narrowly scoped independent Linux kernel negative Actions uses the exact sam
 
 This negative explicitly does **not** prove real FIN/Dormant/Wake, server-owned OS stop (Stop-on-dead not separately instrumented) or signed Windows/physical. Together with positive idle100 and 9/9 Health core it informs Windows exact-source negative test design without transferring Linux PASS to Windows.
 
+
+## Retest gate correction after first Actions
+
+First new harness SOURCE457963c7b8ed544c35058da7ba63978c48abbb04 [40854238252](https://github.com/lly8666/wbd-next/actions/runs/40854238252) ended SUCCESS with both original native 90s Health timeout markers and no false Dormant. But artifact12887948349 included tc qdisc **initial installation** snapshots with 0 observed drops; the result's 100pct configured filter was not sufficient real loss evidence, and is not a qualified measured-loss result. The stricter current harness source now captures `tc -s qdisc` **after the full 106s**, asserts positive genuine kernel dropped packets on BOTH sides and writes those counts to the run receipt. Keep the old Action and its incompleteness, do not relabel it a fully measured 100pct loss PASS. Product binaries remain source7e984 pinned. New Actions outcome must be reviewed independently before qualifying.
+
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Source-locked Linux original Go/Rust real underlay blackhole negative Keepalive/dead-vs-Dormant test fixture and Actions only; no product behavior or public config change."}
 ```

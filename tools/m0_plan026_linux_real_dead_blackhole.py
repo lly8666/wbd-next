@@ -21,6 +21,18 @@ sudo -n ip netns exec "$NSS" tc qdisc add dev wbdvs0 root netem loss 100%
 sudo -n ip netns exec "$NSC" tc -s qdisc show dev wbdvc0 >"$ART/dead-blackhole-client-qdisc.txt"
 sudo -n ip netns exec "$NSS" tc -s qdisc show dev wbdvs0 >"$ART/dead-blackhole-server-qdisc.txt"
 sleep 106
+# Verify the actual original native control attempted kernel sends: a
+# merely installed 100% netem filter with zero packet drops proves nothing.
+sudo -n ip netns exec "$NSC" tc -s qdisc show dev wbdvc0 >"$ART/dead-blackhole-client-qdisc.txt"
+sudo -n ip netns exec "$NSS" tc -s qdisc show dev wbdvs0 >"$ART/dead-blackhole-server-qdisc.txt"
+python3 - "$ART" <<'DROP'
+import pathlib,re,sys
+p=pathlib.Path(sys.argv[1])
+for role in ("client","server"):
+    s=(p/("dead-blackhole-"+role+"-qdisc.txt")).read_text()
+    m=re.search(r'\bdropped (\d+)',s)
+    assert m and int(m.group(1))>0,(role,s)
+DROP
 for role in client server;do
   if ! grep -Fq 'WBD_M0_NATIVE_HEALTH_TIMEOUT side=tx reason=missing_authenticated_peer_dead_after_90s' "$TMP/$role.log";then
     echo "M0_PLAN026_LINUX_AUTHENTICATED_DEAD_TIMEOUT_MISSING role=$role" >&2
