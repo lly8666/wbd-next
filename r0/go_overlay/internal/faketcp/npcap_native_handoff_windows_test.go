@@ -4,6 +4,7 @@ package faketcp
 
 import (
     "errors"
+    "io"
     "testing"
     "unsafe"
 )
@@ -33,4 +34,23 @@ func TestNpcapNativeCaptureRequiresLiveOwnedLoan(t *testing.T) {
     if _,err:=lease.Native();!errors.Is(err,ErrNpcapClosed){
         t.Fatalf("closed lease produced native authority: %v",err)
     }
+}
+
+func TestNpcapNativeGameColdReadTimeoutYieldsBeforeCaptureLoan(t *testing.T){
+ e:=&NpcapEndpoint{gate:newNpcapCallGate(1)}
+ done:=make(chan struct{});reads:=0
+ _,_,err:=e.readSegmentUntil(1,done,func(_ **pcapHeader,_ *uintptr)int32{
+  reads++;if reads==3{close(done)};return 0
+ })
+ if !errors.Is(err,ErrNpcapClosed)||reads!=3{t.Fatalf("idle NPF never yielded: %d %v",reads,err)}
+ if !e.gate.close(){t.Fatal("NPF gate cannot join after signal")}
+ e.gate.wait()
+}
+func TestNpcapNativeGameColdReadKeepsGenuineEOF(t *testing.T){
+ e:=&NpcapEndpoint{gate:newNpcapCallGate(1)};done:=make(chan struct{})
+ _,_,err:=e.readSegmentUntil(1,done,func(_ **pcapHeader,_ *uintptr)int32{return -2})
+ if !errors.Is(err,io.EOF){t.Fatalf("unexpected NPF EOF masked: %v",err)}
+ close(done);reads:=0
+ _,_,err=e.readSegmentUntil(1,done,func(_ **pcapHeader,_ *uintptr)int32{reads++;return -2})
+ if !errors.Is(err,ErrNpcapClosed)||reads!=0{t.Fatalf("read after transfer: %d %v",reads,err)}
 }

@@ -17,6 +17,17 @@ import(
  "github.com/lly8666/wobuzhidao/internal/windowsclient"
  "github.com/lly8666/wobuzhidao/internal/windowsownerlease"
 )
+// Bounded Go prehandoff ciphertext cannot block the last reader while
+// Rust waits for its pcap_t loan. Full capacity is a typed failure.
+func offerGameColdInbound(inbound chan<- m0GameInbound, failed chan<- error, record m0GameInbound)bool{
+ select{
+ case inbound<-record:return true
+ default:
+  select{case failed<-fmt.Errorf("original Game cold NPF backlog capacity exceeded"):default:}
+  return false
+ }
+}
+
 func runM0NativeV4WindowsGame(
  ctx context.Context,o m0NativeV4Options,localIP [4]byte,
  open func(uint16,uint16)(*faketcp.NpcapEndpoint,error),
@@ -60,15 +71,14 @@ func runM0NativeV4WindowsGame(
    defer readers.Done()
    for{
     select{case <-handoff:return;default:}
-    seg,_,err:=endpoint.ReadSegment(1)
+    seg,_,err:=endpoint.ReadSegmentUntil(1,handoff)
     if err!=nil{
      select{case <-handoff:return;default:}
      if ctx.Err()==nil{select{case failed<-err:default:}}
      return
     }
     if a.State()==faketcp.ClientAssociationDetached{
-     select{case inbound<-m0GameInbound{lane:index,segment:seg}:
-     case <-ctx.Done():return}
+     if !offerGameColdInbound(inbound,failed,m0GameInbound{lane:index,segment:seg}){return}
     }else if err=a.HandleSegment(seg,time.Now());err!=nil{
      if ctx.Err()==nil{select{case failed<-err:default:}}
      return

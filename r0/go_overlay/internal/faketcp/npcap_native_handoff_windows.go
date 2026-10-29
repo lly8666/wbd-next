@@ -8,6 +8,8 @@ package faketcp
 // packet and never creates a background reader.
 import (
     "fmt"
+    "io"
+    "time"
     "unsafe"
     "sync"
     "syscall"
@@ -87,6 +89,52 @@ func(e *NpcapEndpoint) NativeCaptureConfig()(NpcapConfig,error){
   return NpcapConfig{},ErrNpcapClosed
  }
  return e.cfg,nil
+}
+
+
+// Game cold reader only: original Go credential/TLS owns the live pcap_t
+// until ALL readers join. Legacy ReadSegment internally loops forever over
+// zero-packet NPF timeouts, ignoring the caller's closed handoff channel.
+// Never call pcap_breakloop: its pending -2 corrupts Rust's first live read.
+func(e *NpcapEndpoint) ReadSegmentUntil(generation uint64, stop <-chan struct{})(Segment,[]byte,error){
+ if e==nil||e.nextEx==nil{return Segment{},nil,ErrNpcapClosed}
+ return e.readSegmentUntil(generation,stop,func(hdr **pcapHeader,data *uintptr)int32{
+  rc,_,_:=e.nextEx.Call(e.handle,uintptr(unsafe.Pointer(hdr)),uintptr(unsafe.Pointer(data)))
+  return int32(rc)
+ })
+}
+// Cold-only injectable driver seam. Keep the original decoder, BPF filter,
+// optional driver stats, generation gate and real unexpected EOF semantics.
+func(e *NpcapEndpoint) readSegmentUntil(generation uint64,stop <-chan struct{},
+ next func(**pcapHeader,*uintptr)int32,
+)(Segment,[]byte,error){
+ if e==nil||e.gate==nil||stop==nil||next==nil{return Segment{},nil,ErrNpcapClosed}
+ if err:=e.gate.begin(generation);err!=nil{return Segment{},nil,err}
+ defer e.gate.end()
+ for{
+  select{case <-stop:return Segment{},nil,ErrNpcapClosed;default:}
+  if e.gate.isClosed(){return Segment{},nil,ErrNpcapClosed}
+  if e.diag.enabled.Load(){e.sampleDriverStats(time.Now())}
+  var hdr *pcapHeader;var data uintptr
+  switch rc:=next(&hdr,&data);rc{
+  case 0:continue // bounded original NPF timeout: reconsider handoff
+  case -1:return Segment{},nil,fmt.Errorf("pcap_next_ex: %s",pcapError(e.getErr,e.handle))
+  case -2:return Segment{},nil,io.EOF // real unexpected driver error
+  case 1:
+   if hdr==nil||data==0||hdr.Caplen==0||hdr.Caplen>maxNpcapCapturedFrame{continue}
+   frame:=unsafe.Slice((*byte)(unsafe.Pointer(data)),int(hdr.Caplen))
+   seg,packet,ok,err:=decodeNpcapInbound(frame,e.cfg.Flow)
+   if err!=nil{return Segment{},nil,err}
+   if !ok{continue}
+   if e.diag.enabled.Load(){
+    now:=time.Now();var gap uint64
+    if !e.readAt.IsZero(){gap=uint64(now.Sub(e.readAt))}
+    e.readAt=now;e.diag.observeRead(uint64(len(packet)),gap)
+   }
+   return seg,packet,nil
+  default:return Segment{},nil,fmt.Errorf("pcap_next_ex returned %d",rc)
+  }
+ }
 }
 
 // TakeNativeCapture permanently disables Go NpcapEndpoint packet calls. It

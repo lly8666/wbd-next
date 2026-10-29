@@ -725,7 +725,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "0a7e57e80940c8f4976c5e76579a150375348e38"
+      "result_blob": "2756dbbdf689c1008fac63cc8adf5e5d28dd8644"
     },
     {
       "kind": "create",
@@ -785,13 +785,13 @@
       "kind": "create",
       "path": "internal/faketcp/npcap_native_handoff_windows.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go",
-      "result_blob": "6fcb0e18f9b34eb0c9418a7efd71d5c17e16d2df"
+      "result_blob": "2901f24535e369046845802aede6eac3db77c5d1"
     },
     {
       "kind": "create",
       "path": "internal/faketcp/npcap_native_handoff_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows_test.go",
-      "result_blob": "d0d880b1c07fa515a21abf76434b0d0d13342c12"
+      "result_blob": "53d06d454cba7cedd0e9575de9446936b30aac5c"
     },
     {
       "kind": "create",
@@ -846,6 +846,12 @@
       "path": "cmd/wbd-client/m0_native_v4_rust_fixed_mature_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_fixed_mature_windows_test.go",
       "result_blob": "21bf8abbed9d0d2f1c5df58bc1ece0826793f219"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go",
+      "result_blob": "98440e3c2fe884ce01dc1dbfb1054b00d811d343"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
