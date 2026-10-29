@@ -288,7 +288,7 @@ elif [[ "$FEC" == 1 ]];then
       # A 64-record Auto burst cannot fill the new 1024-PN sender window.
       # No CLOSE/mature matched Quality is guaranteed: pending is correct,
       # not a product failure and never evidence of an applied Auto policy.
-      expected="V4_PUBLIC_FEC2_READBACK role=$role mode=auto requested=1 applied=[01] profile=[0-6] pending=(true|false)"
+      expected="V4_PUBLIC_FEC2_READBACK role=$role mode=auto requested=1 applied=0 profile=[0-6] pending=true"
     fi
     if ! grep -Eq "$expected" "$TMP/$role.log";then
       echo "M0_PUBLIC_V4_FEC2_READBACK_MISSING role=$role mode=$MODE" >&2
