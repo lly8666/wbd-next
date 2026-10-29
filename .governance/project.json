@@ -2,7 +2,7 @@
   "schema_version": 1,
   "repository": "lly8666/wbd-next",
   "control_branch": "main",
-  "phase": "MAIN_WINDOWS_RUST_NATIVE_OWNER_IMPLEMENTATION",
+  "phase": "MAIN_PLAN027_IMPLEMENTATION_AND_QUALIFICATION",
   "governance_evidence": "docs/evidence/M0/GOV-003-PR4-main-integration.json",
   "product_design": "DESIGN_READY",
   "product_implementation": "INTEGRATED_FUNCTIONAL_SCOPES_PERFORMANCE_CLOSEOUT",
@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "2026-10-30 user-approved PLAN027 takes precedence over historical cursor next_action: remove online M2 Receipt and replace measurement/repair first, simple A checks, remaining native wiring/lifecycle B, representative capacity-limited network C, evidence-driven fixes, then READY_FOR_USER_REVIEW. Main instruction: docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md. Default every resume to interrupted-session recovery; no repeated matrices after completion.",
+  "next_decision": "ACTIVE unfinished task R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT: PLAN027 section0 is whole-scope checklist. Implement M2 retirement/replacements, A, remaining B wiring/lifecycle, C matrix, required fixes/regressions and delivery. Each stage automatically advances. Only all obligations closed permits no further work; old READY, empty requests, docs-only plan or single capacity-limited family never do. Recover interrupted work first, preserve exact evidence.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",
