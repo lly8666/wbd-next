@@ -19,8 +19,6 @@
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN026-FEC-GAME-AUTO-HEALTH-LOW-COST-EXECUTION-20261029.md",
-    "docs/devlog/M0/20261029-PLAN026-WINDOWS-RUST-NATIVE-GAME2-GAME4-IO.md",
-    "docs/devlog/M0/20261029-PLAN026-NATIVE-HEALTH-EFFECTIVE-COLD-POLICY.md",
     "docs/testing/WL_PERF_HARNESS_V2.md",
     "docs/features/entries/idle-rotation-keepalive.json",
     "docs/features/entries/game-lanes.json",
