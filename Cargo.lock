@@ -222,6 +222,7 @@ dependencies = [
 name = "wbd-engine"
 version = "0.1.0"
 dependencies = [
+ "aws-lc-rs",
  "rtrb",
  "wbd-codec",
  "wbd-platform",
