@@ -29,6 +29,29 @@ class V2Scenarios(unittest.TestCase):
    p=pathlib.Path(d)/"bad.json"
    p.write_text(json.dumps(c))
    with self.assertRaisesRegex(ValueError,"PACKET_SIZE"):read_scenario(p)
+ def test_mode_aware_w168_fixed_game_matrix_reuses_v2_observation(self):
+  root=SCENE.parents[0]
+  for name,mode,loss in (
+   ("wl-fec-fixed6-10m-75ms-loss5-20s","fixed",5),
+   ("wl-game2-fixed6-10m-75ms-loss15-20s","game2-fec",15),
+   ("wl-game4-fixed6-10m-75ms-loss30-20s","game4-fec",30)):
+   s=read_scenario(root/(name+".json"))
+   self.assertEqual(s["public_mode"],mode)
+   self.assertEqual(s["duration_s"],20)
+   for side in ("windows","linux"):
+    p=profile(s,side)
+    self.assertEqual((p["offered_mbps"],p["delay_ms"],p["loss_pct"]),(10,75,loss))
+  legacy=read_scenario(SCENE)
+  self.assertEqual(legacy.get("public_mode","normal"),"normal")
+ def test_mode_rejects_implicit_game_auto_and_unknown(self):
+  original=json.loads(SCENE.read_text())
+  with tempfile.TemporaryDirectory() as directory:
+   path=pathlib.Path(directory)/"scene.json"
+   for mode in ("game-auto","game4-auto","invented"):
+    original["public_mode"]=mode
+    path.write_text(json.dumps(original))
+    with self.assertRaisesRegex(ValueError,"UNSUPPORTED_PUBLIC_MODE"):
+     read_scenario(path)
  def test_v2_must_have_exact_path_and_side(self):
   with self.assertRaises(ValueError):get_profile("v2")
   self.assertEqual(get_profile("v2",side="windows",configfile=str(SCENE))["offered_mbps"],150)

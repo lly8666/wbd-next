@@ -174,8 +174,10 @@ jobs:
               if resolved.parent!=(Path.cwd()/'scenarios').resolve():
                   raise ValueError('WL_V2_REFUSE_UNCOMMITTED_OR_TRAVERSAL_PATH')
               cfg=read_scenario(resolved)
-              if modes!=['normal'] or os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1':
-                  raise ValueError('WL_V2_REQUIRES_EXACTLY_ONE_NORMAL_AND_NO_N0_P200')
+              if cfg.get('public_mode','normal')!=modes[0] or os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1':
+                  raise ValueError('WL_V2_REQUIRES_EXACT_ONE_MATCHING_MODE_AND_NO_N0_P200')
+              if ab and modes!=['normal']:
+                  raise ValueError('WL_V2_OLD_GO_AB_NORMAL_ONLY')
               print('WL_V2_SOURCE_LOCKED_SCENARIO',cfg['scenario_id'],cfg['scenario_sha256'])
           if ab and not v2:
               raise ValueError('WL_V2_AB_REQUIRES_SOURCE_SCENARIO')
@@ -802,18 +804,37 @@ jobs:
             Write-Output ('WL_REAL_SAME_WINDOWS_RUNNER_ABBA_DECISION '+$abba.decision.decision)
           }
           if($env:WBD_WL_V2_SCENARIO -and $env:WBD_WL_PERF_AB -ne '1' -and $env:WBD_WL_ABBA_NATIVE -ne '1'){
-            if($env:WBD_WL_V2_SCENARIO -like 'scenarios/wl-outer-repair-*.json'){
+            $v2Config=Get-Content $env:WBD_WL_V2_SCENARIO -Raw | ConvertFrom-Json
+            $modeForScenario=if($v2Config.public_mode){$v2Config.public_mode}else{'normal'}
+            if($modeForScenario -ne $env:WBD_WL_PUBLIC_MODES){
+              throw 'V2 real mode must equal committed scenario public_mode'
+            }
+            if($env:WBD_WL_V2_SCENARIO -like 'scenarios/wl-outer-repair-*.json' -and $modeForScenario -eq 'normal'){
               # Intentional netem damage: 99.9% app delivery is not a valid
               # hard gate. Verify actual tc drops, offered rate, Rust Stop
               # and accepted/uncertain outer R/F, R/total, R/C instead.
               & python tools/m0_wl_outer_repair_verify.py --scenario $env:WBD_WL_V2_SCENARIO --mode-root result/wl-public/mode-results/normal --out result/wl-public/outer-repair-verdict.json
               if($LASTEXITCODE -ne 0){throw 'Windows Rust native outer repair: scoped budget, coverage or capacity FAIL'}
             }else{
-              if($result.WL_V2.status -ne 'MEASURED_BOTH_OS_KERNEL' -or
-                 $result.WL_V2.owned_stop -ne 'PASS_BOTH_OWNED' -or
-                 $result.WL_V2.first_delivery_fraction.windows -lt 0.999 -or
-                 $result.WL_V2.first_delivery_fraction.linux -lt 0.999){
-                throw 'Rust-only V2 true 60s app delivery or owned Stop below hard gate'
+              $real=$result.WL_V2
+              if($real.status -ne 'MEASURED_BOTH_OS_KERNEL' -or
+                 $real.owned_stop -ne 'PASS_BOTH_OWNED'){
+                throw 'Rust V2 real kernel measurement or owned Stop not proven'
+              }
+              # A deliberately damaged FEC/Game netem profile is not a 0-loss
+              # Normal trial. Require genuine positive first-arrival each way;
+              # the existing per-mode report checks true TLS/UDP/TCP/Stop.
+              # Keep the historical >=99.9% gate for loss=0 unchanged.
+              $damaged=($v2Config.windows_to_linux.loss_pct -gt 0 -or
+                        $v2Config.linux_to_windows.loss_pct -gt 0)
+              if($damaged){
+                if($real.first_delivery_fraction.windows -le 0 -or
+                   $real.first_delivery_fraction.linux -le 0){
+                  throw 'damaged V2 mode had no authentic first-delivery in one direction'
+                }
+              } elseif($real.first_delivery_fraction.windows -lt 0.999 -or
+                       $real.first_delivery_fraction.linux -lt 0.999){
+                throw 'clean V2 native first delivery below existing 99.9 percent gate'
               }
             }
           }

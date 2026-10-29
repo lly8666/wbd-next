@@ -12,6 +12,11 @@ def read_scenario(path):
         raise ValueError("WL_V2_BAD_SCHEMA")
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,79}",str(cfg.get("scenario_id",""))):
         raise ValueError("WL_V2_BAD_NAME")
+    # Opt-in per-mode scenario. Historical V2 scenes without this field
+    # remain exactly Normal, including their canonical scenario SHA.
+    mode=cfg.get("public_mode","normal")
+    if mode not in ("normal","fixed","game2","game4","game2-fec","game4-fec","auto"):
+        raise ValueError("WL_V2_UNSUPPORTED_PUBLIC_MODE")
     for field,minimum,maximum in (("duration_s",10,240),("warmup_s",0,30),("drain_s",2,30),("tun_mtu",1280,1500)):
         value=cfg.get(field)
         if type(value) is not int or not minimum<=value<=maximum:

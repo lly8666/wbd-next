@@ -1,5 +1,8 @@
 # WL performance harness V2 (M0 Windows Go/Rust)
 
+> **PLAN026 / 2026-10-29 mode-aware V2 candidate**: Existing source-locked `scenarios/*.json` without `public_mode` stay Normal. Explicit `public_mode=fixed|game2-fec|game4-fec` is accepted only with matching exactly-one `workflow_dispatch.public_mode`, not with Normal A/B or reused binaries; the same real signed Windows/Linux kernel measurement, first-arrival, tc and owned Stop counters are retained. Representative historical W168 patterns: `wl-fec-fixed6-10m-75ms-loss5-20s.json`, `wl-game2-fixed6-10m-75ms-loss15-20s.json`, `wl-game4-fixed6-10m-75ms-loss30-20s.json`. **No such new-scene native run/PASS is implied.** Test Fixed then Game2/4, Auto (and Keepalive/dead/FIN) LAST only after full product wiring. No-loss scenes keep existing 99.9% first-delivery gate; deliberate netem loss demands actual positive first-delivery in both directions, true kernel send/observed tc and Stop, not fabricated 99.9% under intentional loss. Capacity shortfall reports CAPACITY_LIMITED, not a solver regression or a fake pass. Keep legacy source-locked results separate.
+
+
 ## Current entry
 The real test is `.github/workflows/m0-wl-public-normal-full.yml`, signed Windows Npcap/Wintun, original authenticated Go TLS and WSL2 Linux real raw/TUN. V2 uses the existing `tools/m0_wl_public_rate_app.py`, `tools/m0_wl_netem.py`, `tools/m0_wl_public_normal_e2e.py` and the orchestration `tools/m0_wl_perf_v2_ab.py`. Normal/off alone has a same-process Go-steady test-selectable path vs Rust NativeOwner. No mocked carrier, no bypassing original Apply/Stop.
 

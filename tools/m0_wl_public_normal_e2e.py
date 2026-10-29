@@ -364,12 +364,16 @@ print(json.dumps(result),flush=True)
  v2_path=None
  if v2_file:
   from m0_wl_perf_v2_config import read_scenario
-  if mode!="normal" or stress or os.environ.get("WBD_WL_RUN_N0")=="1":
-   raise RuntimeError("WL_V2_REQUIRES_SINGLE_NORMAL_NOT_LEGACY_PERF")
+  if stress or os.environ.get("WBD_WL_RUN_N0")=="1":
+   raise RuntimeError("WL_V2_CANNOT_MIX_LEGACY_PERFORMANCE")
   v2_path=(root/v2_file).resolve()
   if not v2_path.is_relative_to((root/"scenarios").resolve()) or v2_path.suffix!=".json":
    raise RuntimeError("WL_V2_UNSAFE_SCENARIO_PATH")
   scenario=read_scenario(v2_path)
+  if scenario.get("public_mode","normal")!=mode:
+   raise RuntimeError("WL_V2_MODE_AND_SCENARIO_MISMATCH")
+  if os.environ.get("WBD_WL_PERF_AB")=="1" and mode!="normal":
+   raise RuntimeError("WL_V2_GO_RUST_AB_REQUIRES_NORMAL")
   if scenario["tun_mtu"]!=configured_mtu:raise RuntimeError("WL_V2_TUN_MTU_NOT_APPLIED")
   staged=out/"wl-v2-scenario.json"
   staged.write_bytes(v2_path.read_bytes())
