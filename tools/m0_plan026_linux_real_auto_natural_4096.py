@@ -13,17 +13,17 @@ def replace_one(old,new):
     if src.count(old)!=1:
         raise SystemExit("source-locked original Auto fixture changed: "+repr(old[:95]))
     src=src.replace(old,new,1)
-replace_one("  PACKETS=64\n", "  PACKETS=4608\n")
+replace_one("  PACKETS=64\n", "  PACKETS=8192\n")
 replace_one('s.bind(("10.66.0.1",45901));s.settimeout(28)',
             's.bind(("10.66.0.1",45901));s.settimeout(160)')
 start=src.index("if fec or loss:\n")
 end=src.index("else:\n    for i in range(count):",start)
 old=src[start:end]
-# Concurrent real UDP receive is essential; serial burst 4608 echoes
+# Concurrent real UDP receive is essential; serial burst 8192 echoes
 # overfills the actual kernel app socket and creates a false loss verdict.
 replacement=r'''if fec or loss:
     import threading
-    assert fec and not loss and count==4608
+    assert fec and not loss and count==8192
     payloads={}
     unique=set()
     malformed=[]
@@ -47,7 +47,7 @@ replacement=r'''if fec or loss:
         msg=b"WBD_REAL_V4_ORIGINAL_GO/"+str(i).encode()+b"/"+bytes([i%256])*64
         payloads[msg]=i
         assert s.sendto(msg,("10.66.0.1",45901))==len(msg)
-        time.sleep(.009)
+        time.sleep(.005)
     wait_until=time.monotonic()+24
     while len(unique)<count and time.monotonic()<wait_until and not malformed:
         time.sleep(.05)
