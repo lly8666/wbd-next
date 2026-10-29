@@ -65,7 +65,11 @@ replace_one("  sleep 5\nfi\n# Confirm clean signal-to-actual-Rust-Stop",
 check='''if ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=$role mode=(fixed|auto) requested=1 applied=1 profile=[0-6] pending=false" "$TMP/$role.log";then'''
 if src.count(check)!=1:
     raise SystemExit("source-locked native M2 readback guard changed")
-src=src.replace(check,'''if ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=$role mode=auto requested=[2-9] applied=[2-9] profile=[0-4] pending=false" "$TMP/$role.log";then''',1)
+src=src.replace(check,'''# Keep only authenticated maturity/Auto policy diagnostics; no secrets, credentials,
+# packet content, or unredacted client logs in the uploaded artifacts.
+echo "M0_PLAN026_LINUX_AUTO_TRUE_M2_POLICY_DIAGNOSTICS role=$role" >&2
+grep -E 'V4_PUBLIC_FEC2_AUTO_(QUALITY|STAGE)|V4_PUBLIC_FEC2_READBACK' "$TMP/$role.log" | tail -n 30 >&2 || true
+if ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=$role mode=auto requested=[2-9] applied=[2-9] profile=[0-4] pending=false" "$TMP/$role.log";then''',1)
 # Require exact same committed revision on both original Go endpoints:
 # requested2 applied3 is false; the Python readback binds them by equality.
 anchor='''elif [[ "$LOSS" == 1 ]];then
