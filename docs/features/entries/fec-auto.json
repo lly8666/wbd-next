@@ -2,7 +2,7 @@
  "schema_version": 1,
  "id": "fec-auto",
  "name": "Normal 自动FEC2",
- "summary": "按可信成熟M2反馈调整FEC冗余强度，区分启动应用与实际动态调整。",
+ "summary": "Normal 自动 FEC2：以真实首发和认证 M2 证据快升缓降，区分 requested/APPLIED；Windows Rust NativeAttachV2 目前仍是未验证的代码候选。",
  "owner": "M0/M2/M3 + FEC实验",
  "stage": "experimental",
  "development_branch": "experiment/fec-network-tuning",
