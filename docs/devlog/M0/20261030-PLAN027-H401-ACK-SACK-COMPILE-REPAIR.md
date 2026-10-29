@@ -5,5 +5,5 @@
 无协议行为变化，保留 H400 失败；main push 新 SOURCE 自动编译验证。H400 governance40945968922 PASS，其他因相同源码编译失败的 Actions 不视为功能 FAIL 通过。PLAN027 线上 Receipt 退役和 A/B/C 仍未完成。
 
 ```feature-impact
-{"kind":"none","reason":"Compiler-only correction of H400 cast precedence and checksum borrow; no additional product feature or parameter semantics."}
+{"kind":"none","ids":[],"reason":"Compiler-only correction of H400 cast precedence and checksum borrow; no additional product feature or parameter semantics."}
 ```

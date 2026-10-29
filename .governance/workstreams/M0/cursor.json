@@ -4,12 +4,12 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 401,
-  "checkpoint_sha": "0d96269b8af7c3ef860237febdbd6bc585b5a9af",
+  "sequence": 402,
+  "checkpoint_sha": "c8dad61048d532b3e6d7eb11f94fb36ffa1d6a8e",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 §0 PARTIAL. H400 source0d962 native40945968960 build FAIL (Rust parser cast << precedence and E0502 IP checksum borrow), related push Actions fail compile; H401 minimal syntax/borrow repair. H400 governance40945968922 SUCCESS. H396 sender source native PASS. Online M2 and A/B/C still OPEN.",
-  "why_now": "Repair two exact H400 compiler diagnostics from r0-fake-platform Action40945968858, without changing protocol semantics or rerunning failed source.",
+  "current_task": "PLAN027 §0 PARTIAL. H401 source c8dad Rust ACK/SACK syntax repair native40946233170 in flight. H401 governance40946233545 Feature catalog FAIL: kind=none impact note omitted mandatory ids:[]; H402 corrects devlog schema. H400 native build FAIL retained, H396 sender F native PASS. Production M2 remains live.",
+  "why_now": "Repair exact feature-impact schema first error in H401 governance without changing product SOURCE or re-running same native build.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
   "next_action": "Collect H401 exact-source native/governance and remaining H400 preflight; then integrate strict ACK/SACK parser with both production owners and authenticated low-rate Quality start/close/summary, retire M2, run A/B/C and long test.",
   "unverified": true,
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN027-H398-SENDER-QUALITY-SOURCE-NATIVE-RESULTS-20261030.json"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL: H400 pure ACK/SACK parser source compiler FAIL, H401 fixes two exact diagnostics; H396 sender F pure native PASS. Online M2 LIVE; Windows/Linux Quality/ACK not wired. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. H400 governance PASS, native FAIL retained; H401 pending. Physical NOT_RUN."
+  "partial_summary": "§0-1 PARTIAL: H400 pure ACK/SACK parser source compiler FAIL, H401 fixes two exact diagnostics; H396 sender F pure native PASS. Online M2 LIVE; Windows/Linux Quality/ACK not wired. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. H400 governance PASS, native FAIL retained; H401 native pending; governance FAIL missing ids:[], H402 doc repair pending. Physical NOT_RUN."
 }
