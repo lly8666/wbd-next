@@ -392,7 +392,7 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
         let tlv=crate::v4_native_health::encode_authenticated_health_live(
             m.health.local_idle_ns(now.0),msg.as_ref(),None,
-            budget.record_payload_mtu.min(out.len().saturating_sub(FIXED_WIRE_OVERHEAD))
+            budget.record_payload_mtu
         ).map_err(|_|INVALID)?;
         // Preflight the *actual encoded receipt* against the caller's
         // C ABI output BEFORE spending an AEAD PN and original TCP sequence.
