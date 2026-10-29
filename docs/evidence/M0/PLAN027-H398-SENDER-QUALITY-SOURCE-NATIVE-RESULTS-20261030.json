@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "scope": "SOURCE_ONLY_NOT_PRODUCT",
+  "source_sha": "519a8a6d2132e85a0bab427d293046c2262a0920",
+  "platform": "ubuntu-24.04 linux/amd64",
+  "toolchain": "Rust 1.85.1",
+  "native_action": {
+    "run_id": 40944961945,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40944961945",
+    "status": "completed",
+    "conclusion": "success",
+    "manifest_sha256": "9bde7cbe34c49b53acf515c920054c0badcb60b63c1daa08151b368682a9c0c1",
+    "build_artifact_id": 12929420299,
+    "build_zip_sha256": "02c2494f07c0fbe6e0ae57ad520cdc0c31a69603646e05783ef4e83730676d98",
+    "groups": [
+      {
+        "group": "normal",
+        "job_id": 123698585631,
+        "passed": 3,
+        "failed": 0,
+        "conclusion": "success",
+        "manifest_sha256": "9bde7cbe34c49b53acf515c920054c0badcb60b63c1daa08151b368682a9c0c1",
+        "binary_sha256": "aea6ec750ba139d1b4b404865139ebd4fceb0728baf790f134fa9522a288ab6e",
+        "log_sha256": "e567c10f58bfd52b27558a8351d8deeca9e4472d0048d6419d2feb2b37f0f956"
+      },
+      {
+        "group": "recovery",
+        "job_id": 123698585679,
+        "passed": 91,
+        "failed": 0,
+        "conclusion": "success",
+        "manifest_sha256": "9bde7cbe34c49b53acf515c920054c0badcb60b63c1daa08151b368682a9c0c1",
+        "binary_sha256": "143656ebe3c18eeb6f24ab01e2f8e27b6ee4a8dbbce546a0d44f529b8c9b258a",
+        "log_sha256": "b2518d00e1f54ce2354387632cf20cbc472a0de55eb13355b84bf96005f76198"
+      },
+      {
+        "group": "kernel",
+        "job_id": 123698585705,
+        "passed": 6,
+        "failed": 0,
+        "conclusion": "success",
+        "manifest_sha256": "9bde7cbe34c49b53acf515c920054c0badcb60b63c1daa08151b368682a9c0c1",
+        "binary_sha256": "de845a77fc12527769b29c764f2a964956670df0e4c9b4e2e9a67ef126884b45",
+        "log_sha256": "d58dc0a3ef96bbc0e213970f12d32617abd8ffcf1e499fbb8d68c290647bf4e7"
+      },
+      {
+        "group": "fec",
+        "job_id": 123698585793,
+        "passed": 3,
+        "failed": 0,
+        "conclusion": "success",
+        "manifest_sha256": "9bde7cbe34c49b53acf515c920054c0badcb60b63c1daa08151b368682a9c0c1",
+        "binary_sha256": "20700b12099c4da7ef951bce5f5dc44e5380f2988d919a31d05df8860c703aa1",
+        "log_sha256": "0f6d1515fb2a9ec84fab824cf0b94fd7246c75279605952310b8ac31771cc327"
+      },
+      {
+        "group": "codec",
+        "job_id": 123698585852,
+        "passed": 114,
+        "failed": 0,
+        "conclusion": "success",
+        "manifest_sha256": "9bde7cbe34c49b53acf515c920054c0badcb60b63c1daa08151b368682a9c0c1",
+        "binary_sha256": "610c5f0903749a6372cb5f953951efb5093711f4c1dd2e67a7aea879bcd803e5",
+        "log_sha256": "88001c383ecd7d1bbdad3fbf9976c566b854a1de65a8d83cceb5773449deca1d"
+      },
+      {
+        "group": "receipt",
+        "job_id": 123698585857,
+        "passed": 11,
+        "failed": 0,
+        "conclusion": "success",
+        "manifest_sha256": "9bde7cbe34c49b53acf515c920054c0badcb60b63c1daa08151b368682a9c0c1",
+        "binary_sha256": "b9a50ca6316923c5a740070accdb3270c9ef54ab433d2f6e5e57b4efeb702f45",
+        "log_sha256": "7e2e5d151051ed5a26e28cccc89c883bda035cf5a037285973e4db8ee708709d"
+      },
+      {
+        "group": "platform",
+        "job_id": 123698585868,
+        "passed": 93,
+        "failed": 0,
+        "conclusion": "success",
+        "manifest_sha256": "9bde7cbe34c49b53acf515c920054c0badcb60b63c1daa08151b368682a9c0c1",
+        "binary_sha256": "058aa6c2d3623dbcb9a158515e47f96b3476f6ce8c080d659e7675aa217e4fa4",
+        "log_sha256": "3542ea04cf61a278f493b7e709cfa1f670cb4107fb112f9459d4c7ce7c00cdaa"
+      },
+      {
+        "group": "engine",
+        "job_id": 123698585947,
+        "passed": 134,
+        "failed": 0,
+        "conclusion": "success",
+        "manifest_sha256": "9bde7cbe34c49b53acf515c920054c0badcb60b63c1daa08151b368682a9c0c1",
+        "binary_sha256": "b9048a6e6f0c643cf012ec5c23ad0472a90ea5aea7eb3cfb76fa8a2ef0ac5e3d",
+        "log_sha256": "06f14d213dfbdda05f3ee56d36558ffe44d16e7882c60796f76a6747df69a09a"
+      }
+    ]
+  },
+  "governance": {
+    "prior_failure": {
+      "run_id": 40944961891,
+      "reason": "UTF-8 feature-card byte bound"
+    },
+    "repair": {
+      "run_id": 40945109847,
+      "source_sha": "1719dd599cb718459734d6b57935e2decf9482ac",
+      "conclusion": "success",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/40945109847"
+    }
+  },
+  "new_required_tests": [
+    "r2_plan027_sender_start_before_data_and_actual_driver_f_only",
+    "r2_plan027_sender_late_start_local_failure_uncertain_never_wan_loss"
+  ],
+  "limitations": [
+    "No production Windows/Linux sender/receiver start-close callbacks",
+    "Online per-record M2 remains live",
+    "No A/B/C, p99/CPU/RSS/network matrix or physical qualification"
+  ],
+  "whole_task": {
+    "implementation": "PARTIAL",
+    "A": "NOT_RUN",
+    "B": "OPEN",
+    "C": "NOT_RUN",
+    "fix_delivery": "OPEN"
+  }
+}
