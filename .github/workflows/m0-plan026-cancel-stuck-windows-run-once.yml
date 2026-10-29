@@ -1,0 +1,40 @@
+name: M0 one-shot cancel exact stuck old Windows WSL2 run
+run-name: "M0|CANCEL-STUCK-40851521064|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan026-cancel-stuck-windows-run-once.yml"
+permissions:
+  actions: write
+  contents: read
+jobs:
+  exact_old_run_only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_RUN: "40851521064"
+      EXPECTED_SOURCE: "7e9842f6e99769d9919e75a4b15da8d6d88e7257"
+    steps:
+      - name: Verify immutable target SHA and request cancellation, force if stuck
+        shell: bash
+        run: |
+          set -euo pipefail
+          API="repos/lly8666/wbd-next/actions/runs/$TARGET_RUN"
+          sha="$(gh api "$API" --jq .head_sha)"
+          test "$sha" = "$EXPECTED_SOURCE" || { echo "REFUSE_CANCEL_SOURCE_MISMATCH"; exit 1; }
+          state="$(gh api "$API" --jq .status)"
+          if [[ "$state" == completed ]];then
+             echo "M0_EXACT_OLD_RUN_ALREADY_COMPLETED"
+             exit 0
+          fi
+          echo "M0_REQUEST_EXACT_STUCK_WINDOWS_RUN_CANCEL id=$TARGET_RUN status=$state"
+          gh api --method POST "$API/cancel" >/dev/null
+          sleep 7
+          state="$(gh api "$API" --jq .status)"
+          if [[ "$state" != completed ]];then
+            echo "M0_EXACT_STUCK_WINDOWS_FORCE_CANCEL_REQUESTED id=$TARGET_RUN"
+            gh api --method POST "$API/force-cancel" >/dev/null
+          fi
+          echo "M0_EXACT_STUCK_WINDOWS_CANCEL_API_ACCEPTED id=$TARGET_RUN"
