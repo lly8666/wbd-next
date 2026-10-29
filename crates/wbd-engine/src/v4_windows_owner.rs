@@ -786,6 +786,7 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
     if let Some(idle)=control.peer_idle_ns{
         m.health.on_peer_idle_hint(now.0,idle);
     }else{m.health.on_authenticated_control(now.0)}
+    #[cfg(feature="fec2_product_record")]
     if let Some(summary)=control.low_rate_quality{
         if m.auto_low_rate_mode &&
             !m.quality_last_report_id.is_some_and(|id|summary.id<=id){
