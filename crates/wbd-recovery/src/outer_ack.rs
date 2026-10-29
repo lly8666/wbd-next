@@ -192,7 +192,7 @@ mod tests {
         OuterAckIndex::new(lane(), [7; 16], initial, capacity).unwrap()
     }
     #[test]
-    fn plan027_ack_sack_gap_only_after_guard_and_exact_retirement() {
+    fn r2_plan027_ack_sack_gap_only_after_guard_and_exact_retirement() {
         let mut x = index(100, 8);
         for i in 0..3 {
             assert_eq!(x.on_definitely_sent(RecordPn(i + 1),
@@ -212,7 +212,7 @@ mod tests {
             MonoNs(32), 20).unwrap().retired, vec![RecordPn(2)]);
     }
     #[test]
-    fn plan027_wrap32_and_wrong_epoch_never_release() {
+    fn r2_plan027_wrap32_and_wrong_epoch_never_release() {
         let base = (1_u64 << 32) - 16;
         let mut x = index(base, 4);
         x.on_definitely_sent(RecordPn(1), base, 32, MonoNs(1)).unwrap();
@@ -225,7 +225,7 @@ mod tests {
             MonoNs(2), 20).unwrap().retired, vec![RecordPn(1)]);
     }
     #[test]
-    fn plan027_partial_ack_stale_ack_and_invalid_sack_are_safe() {
+    fn r2_plan027_partial_ack_stale_ack_and_invalid_sack_are_safe() {
         let mut x = index(100, 4);
         x.on_definitely_sent(RecordPn(1), 100, 100, MonoNs(1)).unwrap();
         assert!(x.on_feedback(lane(), [7; 16], 150, &[],
@@ -240,7 +240,7 @@ mod tests {
             MonoNs(3), 20).unwrap().retired, vec![RecordPn(1)]);
     }
     #[test]
-    fn plan027_cache_full_does_not_block_sent_bounds_and_expires() {
+    fn r2_plan027_cache_full_does_not_block_sent_bounds_and_expires() {
         let mut x = index(0, 1);
         assert_eq!(x.on_definitely_sent(RecordPn(1), 0, 100, MonoNs(1)), Ok(true));
         assert_eq!(x.on_definitely_sent(RecordPn(2), 100, 100, MonoNs(2)), Ok(false));
