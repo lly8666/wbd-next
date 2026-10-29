@@ -330,6 +330,7 @@
         "r1_parity_rejects_slot_budget_and_retains_no_extra_payload_copy",
         "r1_parity_stop_full_three_classes_and_frozen_return_race",
         "r1_parity_wake_stop_cancels_delayed_parity_before_delivery",
+        "r1_plan027_low_rate_quality_health_v2_authenticated_wire_roundtrip",
         "r1_ready_owner_concurrent_old_drop_and_stop_keeps_fences_exact",
         "r1_ready_owner_old_stale_offer_after_new_fresh_preserves_first_order",
         "r1_ready_owner_p0_component_warmup_repeat_provenance",

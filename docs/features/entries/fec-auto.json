@@ -197,7 +197,8 @@
     "PLAN026 Linux source80bf true Auto 26k real M2/k cohort VALID 30s/4096, revision2 profile4 Applied both roles + owned Stop PASS; Windows Auto/CPU/GUI/physical still NOT_RUN.",
     "Candidate: actual accepted M2 now carries idle Health. Native requalification pending.",
     "Candidate M2 feedback no longer forces Health padding/clock reset unless Health due; ordinary M2 retains original prompt timing. No new timers; real Auto M2 proof pending.",
-    "PLAN027 low-rate quality v2 36-byte pure Rust report/count bounds introduced on main; source-only at this step. Native authenticated report TX/RX, continuous grade and new-source A/B/C are NOT_RUN. Never treat missing/partial/expired samples as zero loss."
+    "PLAN027 low-rate quality v2 36-byte pure Rust report/count bounds introduced on main; source-only at this step. Native authenticated report TX/RX, continuous grade and new-source A/B/C are NOT_RUN. Never treat missing/partial/expired samples as zero loss.",
+    "PLAN027 source-only v2 LowRateQualityWire now encoded/decoded inside the existing authenticated kind1 Health/LegacyQuality TLV on Rust native health seam; actual low-frequency tick, matched sender/receiver windows, direction-specific Auto application and full live M2 removal are NOT_RUN."
   ],
   "promotion": null
 }

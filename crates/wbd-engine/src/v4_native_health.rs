@@ -245,13 +245,16 @@ pub(crate) struct AuthenticatedControl {
     pub(crate) receipt:Option<wbd_codec::Receipt>,
     pub(crate) peer_idle_ns:Option<u64>,
     pub(crate) quality:bool,
+    /// Parsed only from an already-authenticated kind1 control envelope.
+    /// A wire body alone never becomes an Auto sample or liveness authority.
+    pub(crate) low_rate_quality:Option<wbd_recovery::LowRateQualityWire>,
 }
 pub(crate) fn parse_authenticated_control(wire:&[u8])
     ->Result<AuthenticatedControl,wbd_codec::CodecError>{
     use wbd_codec::{ControlTlv,CodecError};
     let items=wbd_codec::decode_control(wire,512)?;
     if items.is_empty(){return Err(CodecError::InvalidLength)}
-    let mut out=AuthenticatedControl{receipt:None,peer_idle_ns:None,quality:false};
+    let mut out=AuthenticatedControl{receipt:None,peer_idle_ns:None,quality:false,low_rate_quality:None};
     for item in items{
         match item{
             ControlTlv::Receipt(r)=>{
@@ -268,6 +271,15 @@ pub(crate) fn parse_authenticated_control(wire:&[u8])
                 // Opaque legacy quality is NOT a verified loss/Auto sample.
                 if out.quality||bytes.is_empty()||bytes.len()>64{
                     return Err(CodecError::InvalidLength)
+                }
+                // Legacy opaque quality stays diagnostic-only. The v2
+                // fixed-size body may be decoded only AFTER M3 authenticated
+                // this control, never on raw carrier ACK or unverified wire.
+                if bytes.len()==wbd_recovery::quality_window::WIRE_LEN
+                    && bytes[0]==2 {
+                    let report=wbd_recovery::LowRateQualityWire::decode(&bytes)
+                        .map_err(|_|CodecError::InvalidLength)?;
+                    out.low_rate_quality=Some(report);
                 }
                 out.quality=true;
             },
@@ -313,6 +325,15 @@ pub(crate) fn encode_authenticated_health_budgeted(idle_ns:u64,
     }
     Ok(initial)
 }
+/// Send a PLAN027 quality summary with the SAME encrypted Health idle hint.
+/// Caller chooses the low-rate schedule and passes genuine matched counts.
+pub(crate) fn encode_authenticated_low_rate_quality_live(idle_ns:u64,
+    report:&wbd_recovery::LowRateQualityWire,payload_budget:usize,
+)->Result<Vec<u8>,wbd_codec::CodecError>{
+    let body=report.encode().map_err(|_|wbd_codec::CodecError::InvalidLength)?;
+    encode_authenticated_health_live(idle_ns,None,Some(&body),payload_budget)
+}
+
 pub(crate) fn encode_authenticated_health_live(idle_ns:u64,
     receipt:Option<&wbd_codec::Receipt>,quality:Option<&[u8]>,
     payload_budget:usize,
@@ -464,4 +485,21 @@ mod tests {
         assert_eq!(c.next_deadline(),None);
         assert_eq!(c.control_due(300*S),ControlDue::None);
     }
+    #[test]
+    fn r1_plan027_low_rate_quality_health_v2_authenticated_wire_roundtrip(){
+        use wbd_recovery::LowRateQualityWire;
+        let report=LowRateQualityWire{id:5,first:90,last:99,
+            first_sent:10,received_unique:8,possibly_repaired:1,
+            mature:true,complete:true,capacity_limited:false};
+        let wire=encode_authenticated_low_rate_quality_live(500_000_000,&report,512).unwrap();
+        let checked=parse_authenticated_control(&wire).unwrap();
+        assert_eq!(checked.low_rate_quality,Some(report));
+        assert!(checked.quality);
+        assert_eq!(checked.peer_idle_ns,Some(500_000_000));
+        assert!(encode_authenticated_low_rate_quality_live(0,&report,8).is_err());
+        let mut invalid=report.encode().unwrap();invalid[32]=1;
+        let tamper=encode_authenticated_health(0,None,Some(&invalid)).unwrap();
+        assert!(parse_authenticated_control(&tamper).is_err());
+    }
+
 }
