@@ -1697,6 +1697,10 @@ fn fec2_probe_real_frozen_repair_one(
     };
     let cell=session(handle)?;
     let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+    eprintln!("M0_FIXED_DIAG single scope phase={} workers={} features={} bound={} raw_tx={} sender={} generation={}",
+        e.phase,e.workers.is_some(),e.protected_fec2_features,
+        e.owner.is_fec2_probe_bound(),e.raw_tx.is_some(),
+        e.fec2_receipt_sender.is_some(),e.generation);
     if e.phase!=PH_ACTIVE||e.workers.is_some()
         ||e.protected_fec2_features!=7
         ||!e.owner.is_fec2_probe_bound(){return Err(BAD_STAGE)}
@@ -1718,6 +1722,9 @@ fn fec2_probe_real_frozen_repair_one(
     let mut process=fec2_probe_process_quota().lock().map_err(|_|BAD_STAGE)?;
     let now=process.at_least(sender.start_ns.saturating_add(31_000_000));
     let mut poll=sender.shadow.on_timer(now);
+    eprintln!("M0_FIXED_DIAG single after PTO target={} now={} releases={} candidates={} outstanding={}",
+        sender.start_ns.saturating_add(31_000_000),now.0,
+        poll.releases.len(),poll.candidates.len(),sender.shadow.outstanding());
     if !poll.releases.is_empty()||poll.candidates.len()!=1 {
         return Err(INVALID)
     }
@@ -1879,6 +1886,10 @@ fn fec2_probe_real_frozen_repair_prefix_two(
     };
     let cell=session(handle)?;
     let mut e=cell.lock().map_err(|_|BAD_STAGE)?;
+    eprintln!("M0_FIXED_DIAG double kernel={} scope phase={} workers={} features={} bound={} raw_tx={} sender={} generation={}",
+        actual_kernel_batch,e.phase,e.workers.is_some(),e.protected_fec2_features,
+        e.owner.is_fec2_probe_bound(),e.raw_tx.is_some(),
+        e.fec2_receipt_sender.is_some(),e.generation);
     if e.phase!=PH_ACTIVE||e.workers.is_some()
         ||e.protected_fec2_features!=7
         ||!e.owner.is_fec2_probe_bound(){return Err(BAD_STAGE)}
@@ -1899,6 +1910,9 @@ fn fec2_probe_real_frozen_repair_prefix_two(
     let mut process=fec2_probe_process_quota().lock().map_err(|_|BAD_STAGE)?;
     let now=process.at_least(sender.start_ns.saturating_add(31_000_000));
     let poll=sender.shadow.on_timer(now);
+    eprintln!("M0_FIXED_DIAG double kernel={} target={} now={} releases={} candidates={} outstanding={}",
+        actual_kernel_batch,sender.start_ns.saturating_add(31_000_000),now.0,
+        poll.releases.len(),poll.candidates.len(),sender.shadow.outstanding());
     if !poll.releases.is_empty()||poll.candidates.len()!=2{return Err(INVALID)}
     let mut iter=poll.candidates.into_iter();
     let first=iter.next().ok_or(INVALID)?;
