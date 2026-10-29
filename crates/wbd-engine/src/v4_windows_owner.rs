@@ -27,6 +27,7 @@ use crate::memory::{Arena,FrozenRecord};
 use crate::runtime::early_rx::EarlyAccepted;
 use crate::runtime::{TxDispatch,RxPacket};
 use wbd_types::{MonoNs,RecordPn};
+use wbd_recovery::quality_window::{ReceiveWindows,WindowKey,QualityError,WireReport};
 use wbd_types::buffer_contract::{UniqueSealable,FrozenRecordHandle};
 use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
 use wbd_codec::link_fec_wire::{inspect_link,LinkMode,LinkView};
@@ -86,6 +87,10 @@ struct WindowsOriginalM2 {
     // At most one immutable original-M1 kind1 draft is awaiting real NPF send.
     feedback:RxFeedbackState,
     feedback_pending:Option<(Option<FeedbackDraft>,u64,bool)>,
+    // Only four sender-announced Auto windows: no per-record report queue.
+    quality_receive:ReceiveWindows,
+    quality_due:VecDeque<WindowKey>,
+    quality_awaiting:Option<WindowKey>,
     // Per-lane state, no thread/timer; TX Health deadline not yet activated.
     health:crate::v4_native_health::HealthClock,
     // Same W168 mature source-only denominator as Linux Fixed; never a
@@ -299,6 +304,9 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
     shadow.enable_adaptive_timing(600_000_000,50_000_000)
         .map_err(|_|BAD_STAGE)?;
     shadow.enable_opportunistic_v3().map_err(|_|BAD_STAGE)?;
+    let reverse=if e.role_server{WireDirection::ClientToServer}
+        else{WireDirection::ServerToClient};
+    let quality_receive=ReceiveWindows::new(lane,epoch,reverse);
     let feedback=RxFeedbackState::new(RxFeedbackConfig{
         max_retained_pages:1024,max_pages_per_report:8,
         retention_ns:2_000_000_000,srtt_ns:600_000_000,
@@ -337,6 +345,8 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         reverse_authenticated_receipts:0,repair_polls:0,
         repair_preflight_stale:0,repair_quota_rejected:0,
         feedback,feedback_pending:None,
+        quality_receive,quality_due:VecDeque::with_capacity(4),
+        quality_awaiting:None,
         health:crate::v4_native_health::HealthClock::new(
             crate::v4_native_health::HealthPolicy::default_connected(),now.0),
         #[cfg(feature="fec2_product_record")]
@@ -362,6 +372,19 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
     });
     Ok(())
 }
+// Only the four announced RX windows can become mature low-rate summaries.
+// Expiry and missing sender CLOSE stay UNKNOWN, never fabricated zero loss.
+fn win_mature_quality_due(m:&mut WindowsOriginalM2,now:MonoNs)
+    ->Option<(WindowKey,WireReport)>{
+    while let Some(&key)=m.quality_due.front(){
+        match m.quality_receive.report_wire(key,now){
+            Ok(report)=>return Some((key,report)),
+            Err(QualityError::NotMature)=>return None,
+            Err(_)=>{m.quality_due.pop_front();},
+        }
+    }
+    None
+}
 // S865 original TLS-bound Windows reverse feedback: one bounded M3-unique
 // receipt draft. No TCP-appearance ACK, untrusted carrier, or replayed PN
 // may create a bit in this original-Go M2 receive bitmap.
@@ -370,13 +393,16 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
 )->Result<Option<(usize,u32,u64)>,i32>{
     if !v3_ready(e,epoch,luid,ifindex){return Err(INVALID)}
     let now=m2_clock();
-    let (draft,health_due)={
+    let (draft,health_due,quality)={
         let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
         if m.feedback_pending.is_some(){return Ok(None)}
-        let draft=m.feedback.on_due(now);
+        let quality=win_mature_quality_due(m,now);
+        // A matured quality report takes precedence over an old M2 draft.
+        // Do not consume a draft unless its bitmap will actually be sent.
+        let draft=if quality.is_some(){None}else{m.feedback.on_due(now)};
         let health_due=m.health.tx_due(now.0);
-        if draft.is_none()&&!health_due{return Ok(None)}
-        (draft,health_due)
+        if draft.is_none()&&!health_due&&quality.is_none(){return Ok(None)}
+        (draft,health_due,quality)
     };
     let prepared=(||->Result<(usize,u32,u64),i32>{
         let msg=draft.as_ref().map(|d|wbd_codec::Receipt{
@@ -391,7 +417,12 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         // local business-idle hint and bounded random padding. Otherwise
         // forward the M2 bitmap at original speed without any control RNG.
         let budget=normal_off_windows_budget(e)?;
-        let tlv=if health_due{
+        let tlv=if let Some((_,report))=quality.as_ref(){
+            let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
+            crate::v4_native_health::encode_authenticated_low_rate_quality_live(
+                m.health.local_idle_ns(now.0),report,budget.record_payload_mtu
+            ).map_err(|_|INVALID)?
+        }else if health_due{
             let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
             crate::v4_native_health::encode_authenticated_health_live(
                 m.health.local_idle_ns(now.0),msg.as_ref(),None,
@@ -442,7 +473,8 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
     match prepared{
         Ok((n,seq,pn))=>{
-            m.feedback_pending=Some((draft,pn,health_due));
+            m.quality_awaiting=quality.map(|(key,_)|key);
+            m.feedback_pending=Some((draft,pn,health_due||m.quality_awaiting.is_some()));
             Ok(Some((n,seq,pn)))
         },
         Err(err)=>{
@@ -467,6 +499,11 @@ fn m2_finish_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if *expected!=pn{return Err(INVALID)}
     let (draft,_,has_health)=m.feedback_pending.take().ok_or(BAD_STAGE)?;
     let now=m2_clock();
+    if let Some(key)=m.quality_awaiting.take(){
+        if npcap_sent==1&&m.quality_due.front()==Some(&key){
+            m.quality_due.pop_front();
+        }
+    }
     if let Some(draft)=draft.as_ref(){
         m.feedback.on_send_result(draft,if npcap_sent==1{
             FeedbackSendResult::Accepted
@@ -647,6 +684,26 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
     if let Some(idle)=control.peer_idle_ns{
         m.health.on_peer_idle_hint(now.0,idle);
     }else{m.health.on_authenticated_control(now.0)}
+    if let Some(signal)=control.low_rate_signal{
+        // Only negotiated feature7 FEC/Auto lanes admit low-rate windows.
+        // Game lanes never feed Auto; authenticated control is not DATA.
+        if !e.feature7||e.game_group.is_some(){return Err(INVALID)}
+        let inbound=if e.role_server{WireDirection::ClientToServer}
+            else{WireDirection::ServerToClient};
+        crate::v4_native_health::apply_authenticated_quality_signal(
+            &mut m.quality_receive,m.route.outbound_lane(),e.authenticated_epoch,
+            inbound,signal,now
+        ).map_err(|_|INVALID)?;
+        if signal.kind==crate::v4_native_health::QualitySignalKind::Close{
+            let key=WindowKey{lane:m.route.outbound_lane(),
+                epoch:e.authenticated_epoch,direction:inbound,id:signal.id,
+                first:RecordPn(signal.first),last:RecordPn(signal.last)};
+            if m.quality_due.len()==4{m.quality_due.pop_front();}
+            m.quality_due.push_back(key);
+        }
+    }
+    // A v2 summary cannot affect Auto until the sender's matching
+    // driver-confirmed SendHistory is connected. Never interpret it as ACK.
     let Some(receipt)=control.receipt.as_ref()else{return Ok(0)};
     let opened=ReceiptOpenFacts{
         verified_reverse_lane:m.route.outbound_lane(),
@@ -1362,6 +1419,9 @@ fn v5_open_record_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         // activate RxFeedbackState. Control kind1 cannot ACK itself.
         if let Some(m)=e.m2.as_mut(){
             m.feedback.on_authenticated_data(RecordPn(unique_pn),m2_clock());
+            if e.feature7{
+                m.quality_receive.on_unique_data(RecordPn(unique_pn),false);
+            }
             m.health.on_authenticated_business(m2_clock().0);
         }
         e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);
@@ -2471,6 +2531,56 @@ mod tests {
         e.rx_unwrapped_high=(1u64<<32)+120;
         assert_eq!(m0_tcp_unwrap(&e,30,40).unwrap(),(1u64<<32)+30);
         assert_eq!(m0_tcp_unwrap(&e,150,40).unwrap(),(1u64<<32)+150);
+    }
+
+    #[cfg(feature="fec2_product_record")]
+    #[test]
+    fn plan027_windows_owner_authenticated_quality_close_matures_without_receipt(){
+        use crate::v4_native_health::{QualityWindowSignal,QualitySignalKind};
+        let mut r=Registry{generation:991,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let mut handoff=cmd();
+        handoff[4..6].copy_from_slice(&2u16.to_be_bytes());
+        handoff[27..29].copy_from_slice(&7u16.to_be_bytes());
+        let h=allocate(&mut r,&cold(false),&handoff,false).unwrap();
+        let epoch=[2u8;16];
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        assert_eq!(bind_wintun(&mut r,h,epoch,91,19),OK);
+        assert!(set_path_mtu(&mut r,h,epoch,91,19,1400).is_ok());
+        let mut e=r.entries[&h].lock().unwrap();
+        assert!(m2_arm_entry(&mut e,epoch,91,19).is_ok());
+        let start=QualityWindowSignal{
+            kind:QualitySignalKind::Start,id:17,first:100,last:103,
+            first_sent:0,complete:false,capacity_limited:false,
+        };
+        let close=QualityWindowSignal{
+            kind:QualitySignalKind::Close,first_sent:4,complete:true,..start
+        };
+        for signal in [start,close]{
+            let wire=crate::v4_native_health::encode_authenticated_low_rate_signal_live(
+                0,signal,512).unwrap();
+            let parsed=crate::v4_native_health::parse_authenticated_control(&wire).unwrap();
+            assert!(parsed.receipt.is_none());
+            assert_eq!(m2_authenticated_kind1_entry(&mut e,17,&parsed),Ok(0));
+            if signal.kind==QualitySignalKind::Start{
+                let m=e.m2.as_mut().unwrap();
+                m.quality_receive.on_unique_data(RecordPn(100),false);
+                m.quality_receive.on_unique_data(RecordPn(102),false);
+            }
+        }
+        let m=e.m2.as_mut().unwrap();
+        assert_eq!(m.quality_due.len(),1);
+        assert!(win_mature_quality_due(m,m2_clock()).is_none());
+        let future=MonoNs(m2_clock().0+3_000_000_001);
+        let (_,summary)=win_mature_quality_due(m,future).unwrap();
+        assert_eq!((summary.first_sent,summary.received_unique),(4,2));
+        assert!(summary.mature && summary.complete);
+        // Unsent summary stays queued; it is never retired on a timer alone.
+        assert_eq!(m.quality_due.len(),1);
+        drop(e);
+        assert_eq!(quiesce_wintun(&mut r,h,epoch,91,19),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
     }
 
 }
