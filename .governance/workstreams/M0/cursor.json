@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 400,
-  "checkpoint_sha": "926845e500fe33ed34f9d39c70acae890492cdbc",
+  "sequence": 401,
+  "checkpoint_sha": "0d96269b8af7c3ef860237febdbd6bc585b5a9af",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 §0 PARTIAL. H399 governance40945751731 SUCCESS. H400 adds source-only strict pure ACK/SACK builder/parser with cold SACK capability and two required platform tests; native Actions pending. H396 sender driver-F PASS. Production M2 still LIVE.",
-  "why_now": "Build bounded zero-allocation pure ACK/SACK wire parsing/encoding as necessary first step to retire M2, without treating unauthenticated TCP ACK as Health or business delivery.",
+  "current_task": "PLAN027 §0 PARTIAL. H400 source0d962 native40945968960 build FAIL (Rust parser cast << precedence and E0502 IP checksum borrow), related push Actions fail compile; H401 minimal syntax/borrow repair. H400 governance40945968922 SUCCESS. H396 sender source native PASS. Online M2 and A/B/C still OPEN.",
+  "why_now": "Repair two exact H400 compiler diagnostics from r0-fake-platform Action40945968858, without changing protocol semantics or rerunning failed source.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H400 native/governance results, then connect ACK/SACK to both production owners' scoped shadow retirement/gap once; add authenticated low-rate start/close/mature Quality sender/RX and Auto/Health, retire online per-record M2; freeze and run PLAN027 A/B/C.",
+  "next_action": "Collect H401 exact-source native/governance and remaining H400 preflight; then integrate strict ACK/SACK parser with both production owners and authenticated low-rate Quality start/close/summary, retire M2, run A/B/C and long test.",
   "unverified": true,
   "last_tested_source": "302d02049669d8f36f3d6852bc1c668ff003ed4a",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN027-H398-SENDER-QUALITY-SOURCE-NATIVE-RESULTS-20261030.json"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL: H400 strict ACK/SACK wire source-only (pending), H396 sender-F source-only PASS, low-rate 4RX/16TX and 10%F pure; online M2 LIVE, production ACK/Quality not wired. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. H399 governance PASS; physical NOT_RUN."
+  "partial_summary": "§0-1 PARTIAL: H400 pure ACK/SACK parser source compiler FAIL, H401 fixes two exact diagnostics; H396 sender F pure native PASS. Online M2 LIVE; Windows/Linux Quality/ACK not wired. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. H400 governance PASS, native FAIL retained; H401 pending. Physical NOT_RUN."
 }

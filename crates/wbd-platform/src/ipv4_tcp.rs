@@ -289,12 +289,13 @@ pub fn build_presentation_ack_sack<'a>(
     ip[8]=persona.ttl();ip[9]=TCP_PROTOCOL;
     ip[12..16].copy_from_slice(tuple.src_ip);
     ip[16..20].copy_from_slice(tuple.dst_ip);
-    ip[10..12].copy_from_slice(&finish_checksum(sum_words(ip)).to_be_bytes());
+    let checksum=finish_checksum(sum_words(ip));
+    ip[10..12].copy_from_slice(&checksum.to_be_bytes());
     tcp[0..2].copy_from_slice(&tuple.src_port.to_be_bytes());
     tcp[2..4].copy_from_slice(&tuple.dst_port.to_be_bytes());
     tcp[4..8].copy_from_slice(&seq32.to_be_bytes());
     tcp[8..12].copy_from_slice(&ack32.to_be_bytes());
-    tcp[12]=((TCP_HEADER_LEN+options)/4) as u8<<4;
+    tcp[12]=(((TCP_HEADER_LEN+options)/4) as u8)<<4;
     tcp[13]=0x10;
     tcp[14..16].copy_from_slice(&65535u16.to_be_bytes());
     tcp[20..24].copy_from_slice(&[1,1,5,(2+8*sacks.len()) as u8]);
