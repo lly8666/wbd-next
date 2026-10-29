@@ -342,6 +342,13 @@
              }
          }
          counters.fresh_outer_bytes.fetch_add(fresh_bytes,Ordering::Relaxed);
+         if fresh_bytes>0{
+             // Only true Npcap-copied business resets local idle; a staged
+             // but definitely-not-sent source is not user progress.
+             if let Some(m)=e.m2.as_mut(){
+                 m.health.on_local_business(m2_clock().0);
+             }
+         }
      }
      if result.error.is_some(){return Err(BAD_STAGE)}
      Ok(count)
@@ -495,26 +502,62 @@
      let remaining=next-now.0;
      remaining.div_ceil(1_000_000).min(u64::from(u32::MAX-1)) as u32
  }
+ #[cfg(feature="fec2_product_record")]
+ fn native_auto_tick(cfg:&WbdWinNativeAttachV1,
+     lane:&Arc<Mutex<Entry>>,counters:&Counters
+ )->Result<(),i32>{
+     let now=m2_clock();
+     let mut guard=lock_owner(lane,counters,LockDirection::Tx)?;
+     let e:&mut Entry=&mut guard;
+     if !e.auto_actor.as_ref().is_some_and(|actor|actor.deadline()<=now.0){
+         return Ok(())
+     }
+     // This is the identical original M2 firstsend/k histogram readback
+     // that the former Go policy read at 2s, not packet appearance ACKs.
+     let q=fec2::native_auto_quality_entry(e,now)?;
+     let Some(mut actor)=e.auto_actor.take()else{return Err(BAD_STAGE)};
+     let intent=actor.evaluate(now.0,q);
+     if let Some(intent)=intent{
+         // Apply only via original FixedStream/true M2 quiescent revision.
+         // Rejected/busy is not a false GUI Applied or extra controller.
+         let result=fec2::fixed_change_revision_entry(e,cfg.epoch,
+             cfg.luid,cfg.ifindex,intent.profile,intent.revision);
+         if result.is_ok(){
+             actor.commit(intent,now.0);
+             eprintln!("WBD_WINDOWS_RUST_NATIVE_AUTO_REVISION_REQUESTED revision={} profile={} evidence=original_authenticated_m2",
+                 intent.revision,intent.profile);
+         }else if result==Err(INVALID){
+             e.auto_actor=Some(actor);
+             return Err(INVALID)
+         }
+     }
+     e.auto_actor=Some(actor);
+     Ok(())
+ }
  fn tx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
      mut tun:WintunRx,mut npf:NpcapTx,stop:Arc<WakeEvent>,
-     notify:Arc<WakeEvent>,counters:Arc<Counters>,fixed:bool)->i32{
+     notify:Arc<WakeEvent>,counters:Arc<Counters>,fixed:bool,auto:bool)->i32{
      let mut ip_id=1u16;
      loop {
          if counters.stopping.load(Ordering::Acquire){return OK}
          let result=(||->Result<bool,i32>{
+             {
+                 let e=lock_owner(&lane,&counters,LockDirection::Tx)?;
+                 // Genuine post-M3 AEAD+PN, not TCP ACK or inactivity.
+                 // DORMANT is not a dead-peer verdict: only a separate
+                 // verified client FIN plus business-idle may dormancy.
+                 if e.m2.as_ref().is_some_and(|m|
+                     m.health.unhealthy(m2_clock().0)){
+                     eprintln!("WBD_WINDOWS_RUST_NATIVE_HEALTH_TIMEOUT reason=authenticated_dead_after_90s");
+                     return Err(BAD_STAGE)
+                 }
+             }
              let mut work=0;
              for _ in 0..4 {
                  if counters.stopping.load(Ordering::Acquire){return Ok(true)}
                  let n=stage_sources(&cfg,&lane,&mut tun,&mut npf,&counters,&mut ip_id,fixed)?;
                  work+=n;
                  if n<BATCH{break}
-             }
-             if work>0{
-                 // One timestamp and one owner update PER ready batch, not
-                 // per source; control-only time must not mark payload idle.
-                 let mut e=lock_owner(&lane,&counters,LockDirection::Tx)?;
-                 e.m2.as_mut().ok_or(BAD_STAGE)?.health
-                     .on_local_business(m2_clock().0);
              }
              // A bounded <=4-row parity quantum follows ready fresh sources.
              // In Fixed/Auto there is never an extra native parity worker.
@@ -533,6 +576,8 @@
                  if !send_control(&cfg,&lane,&mut npf,&counters,&mut ip_id)?{break}
                  control=true;
              }
+             #[cfg(feature="fec2_product_record")]
+             if auto{native_auto_tick(&cfg,&lane,&counters)?;}
              if work>0||control||parity{return Ok(false)}
              let next_ack=counters.ack.load(Ordering::Acquire);
              if next_ack!=counters.ack_sent.load(Ordering::Acquire){
@@ -548,9 +593,14 @@
                      #[cfg(not(feature="fec2_product_record"))]
                      {None}
                  }else{None};
+                 #[cfg(feature="fec2_product_record")]
+                 let auto_due=e.auto_actor.as_ref().map(|actor|MonoNs(actor.deadline()));
+                 #[cfg(not(feature="fec2_product_record"))]
+                 let auto_due:Option<MonoNs>=None;
                  let next=m.shadow.next_deadline().into_iter()
                      .chain(fec_due)
                      .chain(m.health.next_tx_deadline().map(MonoNs))
+                     .chain(auto_due)
                      .min_by_key(|d|d.0);
                  m2_wake_timeout_ms(m2_clock(),m.feedback.next_deadline(),next)
              };
@@ -710,25 +760,29 @@
      if cfg.is_null(){return INVALID}
      let v2=unsafe{*cfg};
      if v2.version!=2 || v2.size as usize!=std::mem::size_of::<WbdWinNativeAttachV2>()
-         ||!matches!(v2.mode,1|2)||v2.reserved!=0{return INVALID}
+         ||!matches!(v2.mode,1|2)||v2.reserved>1||
+         (v2.mode==1&&v2.reserved!=0){return INVALID}
      #[cfg(feature="fec2_product_record")]
-     {start_native(v2.normal,true)}
+     {start_native(v2.normal,true,
+         if v2.mode==2{Some(v2.reserved==1)}else{None})}
      #[cfg(not(feature="fec2_product_record"))]
      {let _=v2;BAD_STAGE}
  }
  #[no_mangle]
  pub unsafe extern "C" fn wbd_m0_win_native_v1_start(cfg:*const WbdWinNativeAttachV1)->i32{
      if cfg.is_null(){return INVALID}
-     start_native(unsafe{*cfg},false)
+     start_native(unsafe{*cfg},false,None)
  }
- fn start_native(config:WbdWinNativeAttachV1,fixed:bool)->i32{
+ fn start_native(config:WbdWinNativeAttachV1,fixed:bool,
+     auto_policy:Option<bool>
+ )->i32{
      if config.version!=1||config.size as usize!=std::mem::size_of::<WbdWinNativeAttachV1>()
          ||config.owner==0||config.local_port==0||config.peer_port==0
          ||config.rx_capture==0||config.tx_capture==0||config.wintun_session==0
          ||config.wintun_read_event==0{return INVALID}
      let lane=match lookup(config.owner){Ok(v)=>v,Err(code)=>return code};
      {
-         let e=match lane.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+         let mut e=match lane.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
          if !v3_ready(&e,config.epoch,config.luid,config.ifindex)
              ||e.path_mtu as u32!=config.path_mtu ||e.m2.is_none()
              ||e.role_server||e.feature7!=fixed{return BAD_STAGE}
@@ -738,6 +792,17 @@
          }
          #[cfg(not(feature="fec2_product_record"))]
          if fixed{return BAD_STAGE}
+         #[cfg(feature="fec2_product_record")]
+         if let Some(aggressive)=auto_policy{
+             if e.auto_actor.is_some(){return BAD_STAGE}
+             let Some(stream)=e.fec2_tx.as_ref()else{return BAD_STAGE};
+             let profile=stream.profile_index();
+             let rev=stream.revision().0;
+             e.auto_actor=Some(auto_native::NativeAutoActor::new(
+                 profile,rev,aggressive,m2_clock().0));
+         }
+         #[cfg(not(feature="fec2_product_record"))]
+         if auto_policy.is_some(){return BAD_STAGE}
      }
      let (wtx,wrx)=match unsafe{io::split_borrowed_wintun(
          config.wintun_session,config.wintun_read_event,config.wintun)}{
@@ -764,7 +829,7 @@
          set_native_thread_name(&NATIVE_TX_WIDE);
          eprintln!("WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=TX tid={}",unsafe{GetCurrentThreadId()});
          let rc=tx_loop(config,tx_lane,wtx,sender,Arc::clone(&tx_stop),tx_notify,
-             Arc::clone(&tx_counters),fixed);
+             Arc::clone(&tx_counters),fixed,auto_policy.is_some());
          if rc!=OK{
              tx_counters.worker_error.store(rc,Ordering::Release);
              let _=tx_stop.wake();

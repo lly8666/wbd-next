@@ -78,6 +78,15 @@ impl FixedStream {
             parity_scratch:std::array::from_fn(|_|Vec::new()),
             source_scratch:Vec::new(),stopped:false})
     }
+    /// Read-only authentic profile of the original FixedStream, not GUI intent.
+    pub fn profile_index(&self)->u8{
+        match self.profile{
+            CodecProfile::Light=>0,CodecProfile::Mild=>1,
+            CodecProfile::Medium=>2,CodecProfile::Balanced=>3,
+            CodecProfile::High=>4,CodecProfile::Strong=>5,
+            CodecProfile::Maximum=>6,
+        }
+    }
     pub fn revision(&self)->ConfigRevision{self.revision}
     pub fn report(&self)->OwnerReport{self.owner.report()}
     pub fn next_deadline(&self)->Option<MonoNs>{

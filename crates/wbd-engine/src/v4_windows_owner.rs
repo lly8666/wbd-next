@@ -13,6 +13,9 @@ mod native_runtime;
 #[path = "v4_windows_game_owner.rs"]
 mod game;
 #[cfg(feature="fec2_product_record")]
+#[path = "v4_windows_rust_auto.rs"]
+mod auto_native;
+#[cfg(feature="fec2_product_record")]
 #[path = "v4_windows_fec2_owner.rs"]
 mod fec2;
 use crate::v4_protected_handoff::{PrivateGoV4Handoff,HANDOFF_V1_LEN};
@@ -144,6 +147,48 @@ fn win_v3_send_pps_permit(now:MonoNs)->bool {
         std::sync::atomic::AtomicU64::new(0);
     win_v3_pps_permit(&REPAIRS,now,8_192)
 }
+/// Rust-Auto desired vs genuine M2-verified Applied, read-only cold C ABI.
+#[cfg(feature="fec2_product_record")]
+#[repr(C)]
+pub struct WbdWindowsRustAutoStateV1{
+    pub version:u32,pub size:u32,
+    pub requested_revision:u64,pub applied_revision:u64,
+    pub profile:u32,pub applied:u32,
+}
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v9_rust_auto_state(
+    handle:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    out:*mut WbdWindowsRustAutoStateV1,size:u32,
+)->i32{
+    if out.is_null()||size!=std::mem::size_of::<WbdWindowsRustAutoStateV1>() as u32{
+        return INVALID
+    }
+    let Some(epoch)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let lane={
+        let Ok(registry)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=registry.entries.get(&handle)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(e)=lane.lock()else{return BAD_STAGE};
+    if !v3_ready(&e,epoch,luid,ifindex)||!e.feature7||
+        e.game_group.is_some(){return BAD_STAGE}
+    let Some(actor)=e.auto_actor.as_ref()else{return BAD_STAGE};
+    let Some(m)=e.m2.as_ref()else{return BAD_STAGE};
+    let valid=m.fec_copied_source>0&&m.fec_copied_parity>0&&
+        m.fec_reverse_reports>0&&
+        (m.fec_positive_2s>0||m.fec_covered_2s>0)&&
+        !m.fec_censored&&
+        m.fec_last_capacity_at.is_none_or(|at|m2_clock().0.saturating_sub(at.0)>=8_000_000_000);
+    let requested_revision=actor.revision();
+    unsafe{out.write(WbdWindowsRustAutoStateV1{
+        version:1,size,requested_revision,
+        applied_revision:if valid{requested_revision}else{0},
+        profile:u32::from(actor.profile()),applied:u32::from(valid),
+    })};
+    OK
+}
+
 fn m2_clock()->MonoNs{
     static START:OnceLock<Instant>=OnceLock::new();
     let elapsed=START.get_or_init(Instant::now).elapsed().as_nanos();
@@ -585,6 +630,8 @@ struct Entry {
     feature7:bool,
     #[cfg(feature="fec2_product_record")]
     fec2_tx:Option<crate::v4_fixed_stream::FixedStream>,
+    #[cfg(feature="fec2_product_record")]
+    auto_actor:Option<auto_native::NativeAutoActor>,
     game_cold:Option<UntrustedColdV4>,
     game_group:Option<u64>,
     #[cfg(feature="fec2_product_record")]
@@ -660,6 +707,8 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
         feature7:handoff.negotiated_features==7,
         #[cfg(feature="fec2_product_record")]
         fec2_tx:None,
+        #[cfg(feature="fec2_product_record")]
+        auto_actor:None,
         game_cold:if handoff.negotiated_features==7{Some(parsed)}else{None},
         game_group:None,
         #[cfg(feature="fec2_product_record")]
@@ -786,6 +835,8 @@ fn stop(r:&mut Registry,h:u64)->i32{
     }
     let Ok(retired)=e.owner.stop()else{return STOP_INCOMPLETE};
     if !retired.ready.batch_handles_released(){return STOP_INCOMPLETE}
+    #[cfg(feature="fec2_product_record")]
+    {e.auto_actor.take();}
     #[cfg(feature="fec2_product_record")]
     if let Some(mut tx)=e.fec2_tx.take(){tx.stop()}
     #[cfg(feature="fec2_product_record")]

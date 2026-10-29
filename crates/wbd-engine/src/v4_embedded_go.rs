@@ -536,6 +536,8 @@ struct Entry{
     #[cfg(feature="fec2_product_record")]
     native_health:Option<crate::v4_native_health::HealthClock>,
     #[cfg(feature="fec2_product_record")]
+    native_health_evidence:Option<Arc<crate::v4_native_health::AuthenticatedActivity>>,
+    #[cfg(feature="fec2_product_record")]
     original_outer:Option<Arc<Mutex<OriginalOuterRepair>>>,
     // One authenticated, immutable-per-worker public policy. V3 ON remains
     // unchanged; OFF cannot hold repair ciphertext or send outer DATA copies.
@@ -818,6 +820,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         feedback_queued:None,
         #[cfg(feature="fec2_product_record")]
         native_health:None,
+        #[cfg(feature="fec2_product_record")]
+        native_health_evidence:None,
         #[cfg(feature="fec2_product_record")]
         original_outer:None,
         #[cfg(feature="fec2_product_record")]
@@ -3478,6 +3482,8 @@ fn background_raw_once(
     feedback:Option<&Arc<Mutex<wbd_recovery::RxFeedbackState>>>,
     #[cfg(feature="fec2_product_record")]
     outer:Option<&Arc<Mutex<OriginalOuterRepair>>>,
+    #[cfg(feature="fec2_product_record")]
+    activity:Option<&Arc<crate::v4_native_health::AuthenticatedActivity>>,
 )->Result<u32,i32>{
     // The SAME original Go credential-derived AEAD+PN opener and M3 LINK
     // table are now owned by RX, not re-initialized or cloned. RX never
@@ -3519,6 +3525,8 @@ fn background_raw_once(
     let mut pending_valid=false;
     let mut invalid_seen=false;
     let mut authenticated_control=false;
+    #[cfg(feature="fec2_product_record")]
+    let(mut authenticated_at,mut business_at,mut peer_idle_hint)=(0u64,0u64,None);
     // Unused preposted original M1 slabs persist in this RX worker; used
     // ones return through the same bounded per-arena return path.
     for (i,slab) in rx_pending.drain(..batch.observed).enumerate(){
@@ -3565,6 +3573,19 @@ fn background_raw_once(
             *anchor,absolute,len,receipt.authenticated_link
         )else{continue};
         *anchor=next;
+        #[cfg(feature="fec2_product_record")]
+        {
+            if receipt.authenticated_link>0 || receipt.authenticated_control ||
+                receipt.authenticated_data_pn.is_some(){
+                authenticated_at=authenticated_at.max(when.0);
+            }
+            if receipt.delivered>0{
+                business_at=business_at.max(when.0);
+            }
+            if let Some(idle)=receipt.authenticated_health_hint{
+                peer_idle_hint=Some((when.0,idle));
+            }
+        }
         pending_valid |=receipt.pending>0;
         invalid_seen |=receipt.invalid>0 || receipt.failed>0;
         // The one unique authenticated M3 opener is the ONLY input to
@@ -3633,6 +3654,11 @@ fn background_raw_once(
     for (dst,n) in fec_stats.fec_rx_ip.iter().zip(fec_ip_batch){
         if n>0{dst.fetch_add(n,Ordering::Relaxed);}
     }
+    #[cfg(feature="fec2_product_record")]
+    if let Some(activity)=activity{
+        // Exactly once per native RX batch; no per-packet cross-thread lock.
+        activity.record_batch(authenticated_at,business_at,peer_idle_hint);
+    }
     arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP);
     // A unique authenticated LINK shard with no completed datagram is
     // healthy progress, not a spurious RX error. A malformed/discarded shard
@@ -3650,6 +3676,10 @@ fn background_raw_once(
 #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
     if e.feedback_queued.is_some(){return Ok(false)}
+    // RX publishes only authenticated+unique M3 facts; TX alone mutates clock.
+    if let (Some(clock),Some(evidence))=(
+        e.native_health.as_mut(),e.native_health_evidence.as_ref()
+    ){evidence.absorb(clock)}
     let Some(feedback)=e.rx_feedback.as_ref().map(Arc::clone)
         else{return Ok(false)};
     let mut rx=feedback.lock().map_err(|_|BAD_STAGE)?;
@@ -4612,10 +4642,10 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     }else{false};
     #[cfg(not(feature="fec2_product_record"))]
     let feedback_last=false;
+    // These fields exist only with the feature7 authentic M2 product.
+    // The ordinary non-FEC original Go TLS/Normal build must compile.
     #[cfg(feature="fec2_product_record")]
-    // At least one actual M4 data/parity copy is payload activity.
-    // A sole Health/Receipt control is NOT application traffic.
-    #[cfg(feature="fec2_product_record")]
+    {
     let payload_copied=(finish.copied as usize).min(
         actual_firstsend.len().saturating_sub(usize::from(e.feedback_queued.is_some())));
     if payload_copied>0{
@@ -4644,6 +4674,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                     matches!(status,wbd_recovery::FeedbackSendResult::Accepted));
             }
         }
+    }
     }
     #[cfg(feature="fec2_product_record")]
     {
@@ -5173,6 +5204,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         // only public-armed client/server gets this extra due source.
         e.native_health=Some(crate::v4_native_health::HealthClock::new(
             crate::v4_native_health::HealthPolicy::default_connected(),loop_now().0));
+        e.native_health_evidence=Some(Arc::new(
+            crate::v4_native_health::AuthenticatedActivity::default()));
         Some(shared)
     }else{None};
     let normal=match e.normal.take(){Some(n)=>n,None=>return BAD_STAGE};
@@ -5207,6 +5240,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let rx_flow=e.flow;
     let rx_server_side=e.server_side;
     let rx_peer_persona=e.incoming_peer_persona;
+    #[cfg(feature="fec2_product_record")]
+    let rx_health_evidence=e.native_health_evidence.as_ref().map(Arc::clone);
     let generation=e.generation;
     // Diagnostic-only, opt-in, at most 2 timestamps/sec per worker.
     // No new per-packet atomics, locks, blocking IO or production behavior.
@@ -5257,7 +5292,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     #[cfg(feature="fec2_product_record")]
                     feedback_rx.as_ref(),
                     #[cfg(feature="fec2_product_record")]
-                    original_outer_rx.as_ref()
+                    original_outer_rx.as_ref(),
+                    #[cfg(feature="fec2_product_record")]
+                    rx_health_evidence.as_ref()
                 ){
                     Ok(n)=>{stats_rx.rx.fetch_add(u64::from(n),Ordering::Relaxed);}
                     Err(_)=>{stats_rx.rx_error.fetch_add(1,Ordering::Relaxed);}
@@ -5369,7 +5406,11 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 #[cfg(feature="fec2_product_record")]
                 let (wait_ns,initial_due)={
                     let now=loop_now();
-                    tx_cell.lock().ok().map_or((10_000_000,false),|e|{
+                    tx_cell.lock().ok().map_or((10_000_000,false),|mut guard|{
+                        let e:&mut Entry=&mut guard;
+                        if let (Some(clock),Some(evidence))=(
+                            e.native_health.as_mut(),e.native_health_evidence.as_ref()
+                        ){evidence.absorb(clock)}
                         let queued=e.fec2_live_tx.as_ref().is_some_and(|s|
                             s.report().queued_jobs>0);
                         let fec_deadline=e.fec2_live_tx.as_ref()
@@ -5399,7 +5440,11 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 };
                 #[cfg(feature="fec2_product_record")]
                 let (fec_due,feedback_due)=tx_cell.lock().ok().map_or(
-                    (initial_due,false),|e|{
+                    (initial_due,false),|mut guard|{
+                        let e:&mut Entry=&mut guard;
+                        if let (Some(clock),Some(evidence))=(
+                            e.native_health.as_mut(),e.native_health_evidence.as_ref()
+                        ){evidence.absorb(clock)}
                         let now=loop_now();
                         let fec=e.fec2_live_tx.as_ref().is_some_and(|s|
                             s.report().queued_jobs>0 ||
@@ -5415,6 +5460,18 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     });
                 #[cfg(not(feature="fec2_product_record"))]
                 let (fec_due,feedback_due)=(false,false);
+                // A server must distinguish dead authenticated peer from
+                // ordinary zero-business idle. Expired health never implies
+                // DORMANT; Stop is owned by the existing joined workers.
+                #[cfg(feature="fec2_product_record")]
+                if tx_cell.lock().ok().is_some_and(|e|
+                    e.native_health.as_ref().is_some_and(|h|h.unhealthy(loop_now().0))
+                ){
+                    eprintln!("WBD_M0_NATIVE_HEALTH_TIMEOUT side=tx reason=missing_authenticated_peer_dead_after_90s");
+                    stats.tx_error.fetch_add(1,Ordering::Relaxed);
+                    stop_tx.store(true,Ordering::Release);
+                    break
+                }
                 if !tun_ready && active_jumbo.is_none() &&
                     jumbo_queue.is_empty()&&!fec_due&&!feedback_due{
                     #[cfg(feature="fec2_product_record")]

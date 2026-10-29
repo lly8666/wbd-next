@@ -441,7 +441,7 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_select_initial(
 // Wintun hold. Does NOT grant Windows product mode/GUI Applied. A new
 // revision must produce fresh kernel-copy source/parity and mature M2
 // evidence; old revision counters cannot qualify the new one.
-fn fixed_change_revision_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+pub(super) fn fixed_change_revision_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,profile:u8,revision:u64)->Result<(),i32>{
     if profile>6||revision==0{return Err(INVALID)}
     if !v3_ready(e,epoch,luid,ifindex)||!e.feature7||
@@ -469,6 +469,11 @@ fn fixed_change_revision_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     m.fec_covered_2s=0;
     m.fec_censored=false;
     m.fec_last_capacity_at=None;
+    if let Some(actor)=e.auto_actor.as_mut(){
+        // Only external original-TLS operator revisions resync the actor;
+        // native actor temporarily takes itself out during committed stage.
+        actor.resync(profile,revision,now.0);
+    }
     Ok(())
 }
 #[no_mangle]
@@ -632,6 +637,29 @@ fn drain_original_auto_mature_due(
         if !has_due{return Ok(())}
         if !progressed{return Err(BAD_STAGE)}
     }
+}
+// The same 30 genuine M2 native readback fields feed the TX-local Rust
+// Auto actor. Fixed/Auto only; one bounded maturity turn, no Go quality
+// decision, invented loss or per-source quality sampling.
+pub(super) fn native_auto_quality_entry(
+    e:&mut Entry,now:MonoNs,
+)->Result<[u64;30],i32>{
+    if !e.feature7||e.game_group.is_some()||e.m2.is_none(){return Err(BAD_STAGE)}
+    let histogram={
+        let tx=e.fec2_tx.as_ref().ok_or(BAD_STAGE)?;
+        let report=tx.report();
+        let mut h=[0u64;16];
+        for (i,slot) in h.iter_mut().enumerate(){
+            for class in report.classes{
+                *slot=slot.saturating_add(class.k_hist[i+1]);
+            }
+        }
+        h
+    };
+    let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+    drain_original_auto_mature_due(m,now)?;
+    for (i,k) in histogram.into_iter().enumerate(){m.auto_quality[14+i]=k;}
+    Ok(m.auto_quality)
 }
 #[repr(C)]
 pub struct WindowsFEC2AutoQuality {

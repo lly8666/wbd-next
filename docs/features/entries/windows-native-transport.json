@@ -159,7 +159,8 @@
     "Rollback main b1bc signed Action40710227335: fresh native CPU50.90625s/75.921s, Rust TX sample43.72s, Linux offered140.95 and UDP socket drops81, Windows first98.2784%; 150M FAIL, no host-only attribution. ABBA A/B remains earlier-source decision.",
     "PLAN026 candidate extends V1 Normal native ownership to versioned Fixed/Auto V2 without a second native Wintun/NPF owner. New code and low-frequency Go telemetry are NOT yet compiled, tested, or performance qualified at this main SOURCE. Game2/4 still use Go steady packet code and must not be promoted; only prior exact Normal or legacy-mode evidence retains its original scope.",
     "PLAN026 Windows original M3 Normal/FEC kind1 now accepts after unique AEAD+PN Health-only and Receipt+Health; Health-only can update native Rust liveness but cannot retire any frozen M2 DATA. Native TX Health/Go effective readback/Game native two-worker still UNWIRED.",
-    "PLAN026 source candidate: shared Windows native TX M2 deadline now includes authenticated 15s Health and original copied/failed NPF outcome with no extra Go packet loop. Linux native TX and Game native 2/4 are not wired, whole-product CPU/Stop qualification NOT_RUN."
+    "PLAN026 source candidate: shared Windows native TX M2 deadline now includes authenticated 15s Health and original copied/failed NPF outcome with no extra Go packet loop. Linux native TX and Game native 2/4 are not wired, whole-product CPU/Stop qualification NOT_RUN.",
+    "PLAN026 candidate original Windows NativeOwner Rust Auto grade runs in EXISTING TX event loop using true 2s/8s M2+actual-k, no Go Auto ticker. 90s authenticated Health dead-peer failure fenced from FIN Dormant. Game2/4 still Go business pump pending multi-Npcap native transfer; exact product Auto/Health/Game tests NOT_RUN."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

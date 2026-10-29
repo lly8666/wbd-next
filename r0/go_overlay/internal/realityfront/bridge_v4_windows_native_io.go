@@ -54,6 +54,12 @@ func(s *V4WindowsAuthenticatedClientOwner) StartNativeIO(
 func(s *V4WindowsAuthenticatedClientOwner) StartNativeIOForMode(
     ctx context.Context,cfg V4WindowsNativeIOV1,mode uint32,
 ) error {
+    return s.StartNativeIOForModePolicy(ctx,cfg,mode,false)
+}
+// AutoPolicy is one cold native ABI bit, not a second hotpath controller.
+func(s *V4WindowsAuthenticatedClientOwner) StartNativeIOForModePolicy(
+    ctx context.Context,cfg V4WindowsNativeIOV1,mode uint32,aggressive bool,
+) error {
     if mode>2{return errV4WindowsOwner}
     if s==nil||s.bridge==nil||s.device==nil||ctx==nil {
         return errV4WindowsOwner
@@ -79,6 +85,7 @@ func(s *V4WindowsAuthenticatedClientOwner) StartNativeIOForMode(
         return err
     }
     v2:=V4WindowsNativeIOV2{Version:2,Mode:mode,Normal:cfg}
+    if mode==2&&aggressive{v2.Reserved=1}
     v2.Size=uint32(unsafe.Sizeof(v2))
     proc,err:=s.bridge.fixedProc("wbd_m0_win_native_v2_start")
     if err!=nil{return err}
@@ -118,6 +125,36 @@ func(s *V4WindowsAuthenticatedClientOwner) NativeIOStats(
     if state.Version!=1||state.Size!=uint32(unsafe.Sizeof(state))||
        state.Workers!=2{return state,errV4WindowsOwner}
     return state,nil
+}
+// The active original M1/Rust Auto actor is the sole grade authority.
+// This read-only C ABI returns requested and truly source/M2 Applied values.
+type V4WindowsRustAutoStateV1 struct {
+    Version,Size uint32
+    RequestedRevision,AppliedRevision uint64
+    Profile,Applied uint32
+}
+func(s *V4WindowsAuthenticatedClientOwner) ReadBoundRustAutoState(
+    ctx context.Context,
+)(V4WindowsRustAutoStateV1,error){
+    var value V4WindowsRustAutoStateV1
+    if ctx==nil||s==nil||s.bridge==nil||s.device==nil{
+        return value,errV4WindowsOwner
+    }
+    if err:=ctx.Err();err!=nil{return value,err}
+    proc,err:=s.bridge.fixedProc("wbd_m0_win_owner_v9_rust_auto_state")
+    if err!=nil{return value,err}
+    value.Size=uint32(unsafe.Sizeof(value))
+    err=winOwnerCall(proc,uintptr(s.bridge.handle),
+        uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+        uintptr(s.device.identity.LUID),
+        uintptr(s.device.identity.InterfaceIndex),
+        uintptr(unsafe.Pointer(&value)),uintptr(unsafe.Sizeof(value)))
+    runtime.KeepAlive(s.bridge.epoch)
+    if err!=nil||value.Version!=1||value.Size!=uint32(unsafe.Sizeof(value))||
+        value.Profile>6||value.Applied>1{
+        return value,errV4WindowsOwner
+    }
+    return value,nil
 }
 // Must be called BEFORE Go releases either Npcap capture loan, Wintun
 // native loan, Wintun EndSession or original scoped Rust crypto owner.

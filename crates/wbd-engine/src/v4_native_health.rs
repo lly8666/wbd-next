@@ -151,6 +151,69 @@ impl HealthClock {
     pub(crate) fn stopped(&mut self){self.disconnected=true}
 }
 
+/// An RX worker emits at most one atomic evidence batch for each real
+/// recvmmsg turn. TX retains the only mutable HealthClock. No per-packet
+/// mutex, duplicate controller, Go callback or independent timer.
+#[derive(Default,Debug)]
+pub(crate) struct AuthenticatedActivity {
+    authenticated_ns:std::sync::atomic::AtomicU64,
+    business_ns:std::sync::atomic::AtomicU64,
+    hint_at_ns:std::sync::atomic::AtomicU64,
+    hint_idle_ns:std::sync::atomic::AtomicU64,
+}
+impl AuthenticatedActivity {
+    pub(crate) fn record_batch(&self,authenticated_ns:u64,business_ns:u64,
+        hint:Option<(u64,u64)>){
+        use std::sync::atomic::Ordering;
+        if authenticated_ns>0{
+            self.authenticated_ns.fetch_max(authenticated_ns,Ordering::Release);
+        }
+        if business_ns>0{
+            self.business_ns.fetch_max(business_ns,Ordering::Release);
+        }
+        if let Some((at,idle))=hint{
+            if at>0{
+                // One RX thread per authenticated lane. Data first, stamp
+                // second; TX will not consume partially published hints.
+                self.hint_idle_ns.store(idle,Ordering::Relaxed);
+                self.hint_at_ns.store(at,Ordering::Release);
+            }
+        }
+    }
+    pub(crate) fn absorb(&self,clock:&mut HealthClock){
+        use std::sync::atomic::Ordering;
+        let a=self.authenticated_ns.load(Ordering::Acquire);
+        if a!=0{clock.on_authenticated_control(a)}
+        let b=self.business_ns.load(Ordering::Acquire);
+        if b!=0{clock.on_local_business(b)}
+        let at=self.hint_at_ns.load(Ordering::Acquire);
+        if at!=0{
+            let idle=self.hint_idle_ns.load(Ordering::Relaxed);
+            clock.on_peer_idle_hint(at,idle);
+        }
+    }
+}
+
+#[cfg(test)]
+mod activity_tests {
+    use super::*;
+    #[test]
+    fn genuine_rx_batch_only_and_idle_hint_never_imply_business(){
+        let source=AuthenticatedActivity::default();
+        let mut clock=HealthClock::new(HealthPolicy::default_connected(),0);
+        source.record_batch(10_000_000_000,0,Some((10_000_000_000,72_000_000_000)));
+        source.absorb(&mut clock);
+        assert!(!clock.unhealthy(90_000_000_000));
+        assert_eq!(clock.local_idle_ns(90_000_000_000),90_000_000_000);
+        source.record_batch(20_000_000_000,21_000_000_000,None);
+        source.absorb(&mut clock);
+        assert_eq!(clock.local_idle_ns(22_000_000_000),1_000_000_000);
+        source.record_batch(0,0,None);
+        source.absorb(&mut clock);
+        assert!(!clock.unhealthy(90_000_000_000));
+    }
+}
+
 /// Only after the existing original M3 AEAD + unique PN gate.
 /// WBC4 kind1; no additional keys, replay bitmap or application ACK.
 #[derive(Clone,Debug,PartialEq,Eq)]

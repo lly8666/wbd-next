@@ -110,15 +110,12 @@ func(p *m0WinRustNativePeer) BindNativeRing(ctx context.Context,
  case m0WinModeAuto:mode=2
  default:return windowsclient.ErrN4NativeGuard
  }
- if err=p.owner.StartNativeIOForMode(ctx,cfg,mode);err!=nil{return err}
+ if err=p.owner.StartNativeIOForModePolicy(
+  ctx,cfg,mode,p.mode==m0WinModeAuto&&p.autoPolicy==realityfront.FecV2Aggressive,
+ );err!=nil{return err}
  p.active=true
- if p.mode==m0WinModeAuto{
-  controller,e:=realityfront.NewV4WindowsOriginalFEC2AutoController(
-   p.owner,p.autoPolicy,p.autoStartProfile)
-  if e!=nil{return e}
-  if e=controller.Start();e!=nil{return e}
-  p.autoController=controller
- }
+ // Auto M2 grading now lives on the same Rust TX worker (2s).
+ // No second Go FecV2ControlRuntime goroutine in native hotpath.
  // At most the original Go 64-slot early buffer; Rust unique M3 opener
  // authenticates those bytes inside its RX worker before kernel delivery.
  for{
@@ -179,13 +176,16 @@ func(p *m0WinRustNativePeer) Stats()m0NativeV4PacketStats{
  result:=m0NativeV4PacketStats{Mode:p.mode,TxPackets:p.last.TXCopied,
   RxFirstDelivered:p.last.RXDelivered,RejectedAuth:p.last.Rejected,
   EffectiveM2:p.effective}
- if p.autoController!=nil{
-  state,err:=p.autoController.Snapshot()
-  result.AutoRequestedRevision=state.RequestedRevision
-  result.AutoAppliedRevision=state.AppliedRevision
-  result.AutoDesiredProfile=state.Desired
-  result.AutoPending=state.RequestedRevision!=state.AppliedRevision
-  if err!=nil{result.AutoPolicyError=err.Error()}
+ if p.mode==m0WinModeAuto&&p.active{
+  ctx,cancel:=context.WithTimeout(context.Background(),2*time.Second)
+  state,err:=p.owner.ReadBoundRustAutoState(ctx)
+  cancel()
+  if err==nil{
+   result.AutoRequestedRevision=state.RequestedRevision
+   result.AutoAppliedRevision=state.AppliedRevision
+   result.AutoDesiredProfile=realityfront.FecV2Profile(state.Profile)
+   result.AutoPending=state.RequestedRevision!=state.AppliedRevision
+  }else{result.AutoPolicyError=err.Error()}
  }
  return result
 }
@@ -193,8 +193,27 @@ func(p *m0WinRustNativePeer) Errors()<-chan error{return p.fail}
 func(p *m0WinRustNativePeer) RequestAutoStartProfile(
  profile realityfront.FecV2Profile,
 )(realityfront.FecV2State,error){
- if p.mode!=m0WinModeAuto||p.autoController==nil{
-  return realityfront.FecV2State{},windowsclient.ErrN4NativeGuard
+ var result realityfront.FecV2State
+ if p.mode!=m0WinModeAuto||!p.active||!profile.Valid(){
+  return result,windowsclient.ErrN4NativeGuard
  }
- return p.autoController.RequestOperatorStartProfile(profile)
+ ctx,cancel:=context.WithTimeout(context.Background(),8*time.Second)
+ defer cancel()
+ current,err:=p.owner.ReadBoundRustAutoState(ctx)
+ if err!=nil||current.RequestedRevision==^uint64(0){
+  return result,windowsclient.ErrN4NativeGuard
+ }
+ next:=current.RequestedRevision+1
+ if err=p.owner.RequestBoundOriginalFEC2Revision(ctx,profile,next);err!=nil{
+  return result,err
+ }
+ // A config write is only requested. The Rust native M2 and actual
+ // copied firstsend/parity give Applied separately on later readback.
+ result.Initialized=true
+ result.Mode=realityfront.FecV2Auto
+ result.Desired=profile
+ result.RequestedRevision=next
+ result.AppliedRevision=current.AppliedRevision
+ result.AppliedProfile=realityfront.FecV2Profile(current.Profile)
+ return result,nil
 }
