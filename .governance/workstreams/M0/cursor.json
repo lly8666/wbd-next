@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 412,
-  "checkpoint_sha": "0dd162de912fc6f5d1852230687356b7dfb681a5",
+  "sequence": 413,
+  "checkpoint_sha": "97c9a59820fbfc847b9f32020cc6eb57a291218f",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H407 source36126525 RX CLOSE->v2 summary native PASS40962693585 (recovery94 engine136), ABI/cross PASS, Linux old-M2 owner40962693776 and Windows old-M2 owner40962693602 scoped PASS. H410/H411 evidence exact manifest/binary/artifact hashes. H411 governance40963876159 SUCCESS. PLAN027 live M2 still active, A/B/C NOT_RUN.",
-  "why_now": "H411 governance passed after exact-source evidence-ref correction; record final recovered Actions and resume point without repeating old-source tests.",
+  "current_task": "H413 committed Windows original Rust owner AEAD-opened START/CLOSE RX four bounded quality windows; matured v2 Quality send through existing kind1 feedback/real NPF completion; FEC2 authenticated PN ingress wired. SOURCE unverified; prior old-M2 PASS not transferred.",
+  "why_now": "Recovered b4cd006c HEAD and completed prior runs; H413 source and Windows FEC2 RX/low-rate TX wiring pushed, native/Windows Actions running. Historical feature/governance failure on H413 source-only commit corrected by feature-impact devlog.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Implement negotiated low-rate START/CLOSE and RX/TX v2 summary in actual Linux/Windows M3 owners, driver-accepted F and Auto policy; retire per-record M2, wire outer ACK/SACK bounded repair, then run simplified A, lifecycle B, network matrix C, long tests and necessary fixes.",
+  "next_action": "Collect H413 exact-source Windows native, Rust, governance results; repair compile/test failures; connect driver-accepted TX window START/CLOSE and SendHistory→Auto, retire old per-record M2 in both owners; then A/B/C and final evidence.",
   "unverified": true,
   "last_tested_source": "361265256d58d18ea0b36badf04668c16fb19e1c",
   "evidence_refs": [
@@ -29,5 +29,5 @@
     "docs/devlog/M0/20261030-PLAN027-H407-RECEIVER-ANNOUNCED-CLOSE-WIRE-GLUE.md"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL: H407 pure RX close→wire native PASS; H407 SOURCE old-M2 Linux/Windows real/scoped owner regression PASS; online per-record M2 NOT RETIRED, new live Quality/Auto/ACK NOT WIRED. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. No new-source product p99/CPU/RSS/drop, capacity or physical evidence. H411 governance PASS40963876159."
+  "partial_summary": "§0-1 PARTIAL (Windows v2 receiving/sending candidate production wired, start producer/quality Auto policy/ACK and Linux and M2 retirement OPEN). §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. H413 SOURCE needs Actions validation, no new-source product p99/CPU/RSS/drop or capacity claims."
 }

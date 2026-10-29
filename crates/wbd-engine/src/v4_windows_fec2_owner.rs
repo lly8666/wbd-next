@@ -160,6 +160,11 @@ pub(super) fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     if let Some(pn)=unique_data_pn{
         if let Some(m)=e.m2.as_mut(){
             m.feedback.on_authenticated_data(RecordPn(pn),m2_clock());
+            // Record PN was accepted by the original replay-checked M3 FEC2
+            // opener, independent of whether FEC generated business output.
+            // Four bounded low-rate RX windows observe DATA once, not M2
+            // bitmap drafts, retransmissions or untrusted TCP carrier ACKs.
+            m.quality_receive.on_unique_data(RecordPn(pn),false);
             if result.is_empty(){m.health.on_authenticated_control(m2_clock().0)}
             else{m.health.on_authenticated_business(m2_clock().0)}
         }
