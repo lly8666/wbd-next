@@ -31,3 +31,11 @@ Corrections on main: `ec3008d7` restores actual eight-MTU pacer/fresh DATA test;
 ```feature-impact
 {"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Recovered mandatory pure recovery native coverage, restored actual pacer/queued-ACK cases, aligned three renamed current one-shot tests, and required four new ACK/SACK cases; no live owner connection or product PASS."}
 ```
+
+## Optional frozen shadow retirement (second pure integration seam)
+
+Added `ReceiptState::discard_outer_ack_hint` in `crates/wbd-recovery/src/receipt.rs` (source `e8f837f8`) and a required `r2_plan027_outer_ack_hint_discards_only_shadow_and_cancels_queued_repair` regression (suite pin `a7d215d2`). It removes the exact PN and both indexed wake/expiry nodes, invalidates a queued candidate, but **does not** update authenticated receipt counters, RTT/Health, Auto loss or delivery. It returns the immutable frozen handle to the owner for optional cache release. This is a pure seam; no live Windows/Linux caller yet and no external TCP ACK is treated as authenticated. Final CI after this source change remains to be collected.
+
+```feature-impact
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Added source-only exact optional shadow discard for scoped outer ACK hints and required queued-candidate race regression; online M2 remains active until full product wiring."}
+```
