@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 407,
-  "checkpoint_sha": "bdf4d24640045eb939f1d3200a4d6a8dc5e9c6d9",
+  "sequence": 408,
+  "checkpoint_sha": "361265256d58d18ea0b36badf04668c16fb19e1c",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 §0 PARTIAL. H407 receiver announced-CLOSE/first-send F and pre-START watermark candidate committed for native source verification; H405/H406 exact old-source results remain scoped. Windows/Linux per-record M2 LIVE; new Quality/ACK production owners not wired.",
-  "why_now": "Recovered H406 Actions and completed missing low-rate RX wire-summary bridge without pretending old M2 product is retired.",
+  "current_task": "H407 source 36126525 candidate low-rate RX CLOSE summary committed; governance40962693582 FAIL (feature card >16KiB, cursor >8 refs), H408 corrects metadata. Native/owner Actions40962693585/40962693776/40962693602/40962693614 were in progress at recovery, results not yet claimed. PLAN027 §0 remains partial.",
+  "why_now": "Fix exact observed governance failures without changing source behavior; keep old failure and native run identities.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Recover H407 exact SOURCE native Actions; then wire Windows/Linux authenticated START/CLOSE, RX summary and sender quality/Auto, negotiated capability and outer ACK/SACK one-shot repair; remove online M2; proceed A/B/C and final delivery.",
+  "next_action": "Recover H407 native/owner Actions; fix any source test errors; then integrate actual Windows/Linux production low-rate control and retire M2, proceed PLAN027 A/B/C.",
   "unverified": true,
   "last_tested_source": "302d02049669d8f36f3d6852bc1c668ff003ed4a",
   "evidence_refs": [
@@ -23,11 +23,10 @@
     "docs/testing/WL_PERF_HARNESS_V2.md",
     "docs/features/entries/outer-opportunistic-repair.json",
     "docs/features/entries/fec-auto.json",
-    "docs/evidence/M0/PLAN027-H404-RECOVERED-PREFLIGHT-20261030.json",
     "docs/evidence/M0/PLAN027-H405-QUALITY-BOUNDARY-SOURCE-NATIVE-RESULTS-20261030.json",
     "docs/evidence/M0/PLAN027-H406-S404-OWNER-LEGACY-PATH-REGRESSION-20261030.json",
     "docs/devlog/M0/20261030-PLAN027-H407-RECEIVER-ANNOUNCED-CLOSE-WIRE-GLUE.md"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL: H407 adds receiver START/CLOSE-to-mature v2 summary and late-START censor with native tests pending; previous sender/ACK/SACK/wire components source-native PASS, but Windows/Linux live per-record M2 still active. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. Old-source H405/H406 SUCCESS scoped; no new-source product performance or physical evidence."
+  "partial_summary": "§0-1 PARTIAL: low-rate RX CLOSE->v2 summary candidate H407, but Windows/Linux M2 live; H407 governance metadata failure corrected H408, source native results pending. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. Physical NOT_RUN."
 }
