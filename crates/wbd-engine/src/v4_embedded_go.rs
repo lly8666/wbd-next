@@ -4069,18 +4069,34 @@ fn background_raw_once(
 #[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
     if e.feedback_queued.is_some(){return Ok(false)}
-    // RX publishes only authenticated+unique M3 facts; TX alone mutates clock.
+    if let (Some(rx),Some(tx))=(e.quality_rx.as_ref(),e.quality_tx.as_mut()){
+        let mut inbox=rx.lock().map_err(|_|BAD_STAGE)?;
+        while let Some(report)=inbox.reports.pop_front(){tx.accept_report(report,now);}
+        tx.advance(now);
+    }
     if let (Some(clock),Some(evidence))=(
         e.native_health.as_mut(),e.native_health_evidence.as_ref()
     ){evidence.absorb(clock)}
-    let Some(feedback)=e.rx_feedback.as_ref().map(Arc::clone)
-        else{return Ok(false)};
-    let quality=e.quality_rx.as_ref().and_then(|q|
-        q.lock().ok().and_then(|mut rx|rx.mature_due(now)));
-    let mut rx=feedback.lock().map_err(|_|BAD_STAGE)?;
-    let draft=if quality.is_some(){None}else{rx.on_due(now)};
+    let next=if e.quality_tx.is_some(){
+        Some(e.owner.next_original_record_pn().ok_or(BAD_STAGE)?)
+    }else{None};
+    let signal=if let Some(tx)=e.quality_tx.as_mut(){
+        tx.next_signal(next.ok_or(BAD_STAGE)?,now)?
+    }else{None};
+    let quality=if signal.is_none(){
+        e.quality_rx.as_ref().and_then(|q|
+            q.lock().ok().and_then(|mut rx|rx.mature_due(now)))
+    }else{None};
+    let feedback=e.rx_feedback.as_ref().map(Arc::clone);
+    let draft=if e.auto_low_rate_mode||signal.is_some()||quality.is_some(){
+        None
+    }else if let Some(ref f)=feedback{
+        f.lock().map_err(|_|BAD_STAGE)?.on_due(now)
+    }else{None};
     let health_due=e.native_health.as_ref().is_some_and(|h|h.tx_due(now.0));
-    if draft.is_none()&&!health_due&&quality.is_none(){return Ok(false)}
+    if draft.is_none()&&!health_due&&quality.is_none()&&signal.is_none(){
+        return Ok(false)
+    }
     let attempt=(||->Result<u64,i32>{
         let msg=draft.as_ref().map(|d|wbd_codec::Receipt{
             largest_data_pn:d.largest_data_pn().0,ack_delay_us:0,
@@ -4090,18 +4106,17 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
             }).collect(),
         });
         let budget=e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped.frame;
-        // Real M2 receipts may arrive far faster than original ~2s Quality.
-        // Do not draw random padding or reset the 15s Health clock for each.
-        // Merge authenticated business-idle only when Health is due.
-        let tlv=if let Some((_,report))=quality.as_ref(){
-            let idle=e.native_health.as_ref().ok_or(BAD_STAGE)?
-                .local_idle_ns(now.0);
+        let idle=e.native_health.as_ref().ok_or(BAD_STAGE)?
+            .local_idle_ns(now.0);
+        let tlv=if let Some(signal)=signal{
+            crate::v4_native_health::encode_authenticated_low_rate_signal_live(
+                idle,signal,budget.record_payload_mtu
+            ).map_err(|_|INVALID)?
+        }else if let Some((_,report))=quality.as_ref(){
             crate::v4_native_health::encode_authenticated_low_rate_quality_live(
                 idle,report,budget.record_payload_mtu
             ).map_err(|_|INVALID)?
         }else if health_due{
-            let idle=e.native_health.as_ref().ok_or(BAD_STAGE)?
-                .local_idle_ns(now.0);
             crate::v4_native_health::encode_authenticated_health_live(
                 idle,msg.as_ref(),None,budget.record_payload_mtu
             ).map_err(|_|INVALID)?
@@ -4120,14 +4135,21 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
     match attempt{
         Ok(pn)=>{
             e.quality_report_queued=quality.map(|(key,_)|key);
-            e.feedback_queued=Some((draft,pn,health_due||quality.is_some()));
+            e.quality_signal_queued=signal;
+            e.feedback_queued=Some((draft,pn,health_due||
+                quality.is_some()||signal.is_some()));
             Ok(true)
         },
         Err(err)=>{
-            if let Some(d)=draft.as_ref(){
-                let _=rx.on_send_result(
-                    d,wbd_recovery::FeedbackSendResult::NotSent,now
-                );
+            if let (Some(d),Some(f))=(draft.as_ref(),feedback.as_ref()){
+                let _=f.lock().map_err(|_|BAD_STAGE)?.on_send_result(
+                    d,wbd_recovery::FeedbackSendResult::NotSent,now);
+            }
+            if let Some(signal)=signal{
+                if signal.kind==crate::v4_native_health::QualitySignalKind::Start{
+                    e.quality_tx.as_mut().ok_or(BAD_STAGE)?
+                        .complete_signal(signal,false,now)?;
+                }
             }
             if health_due{
                 if let Some(h)=e.native_health.as_mut(){
