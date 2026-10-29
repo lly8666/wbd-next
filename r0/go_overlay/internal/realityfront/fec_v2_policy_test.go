@@ -261,7 +261,9 @@ func TestF2ControlW52IntermittentActualKNoFakeCleanDown(t *testing.T) {
     stepped:=false
     for _,stage:=range []struct{sec int; misaligned bool}{
         {6,false},{8,true},{10,false},{12,false},
-        {14,true},{16,false},{18,false},{20,true},{22,false},\n        {24,false},{26,false},{28,false},{30,false},\n        {32,false},{34,false},{36,false},
+        {14,true},{16,false},{18,false},{20,true},{22,false},
+        {24,false},{26,false},{28,false},{30,false},
+        {32,false},{34,false},{36,false},
     } {
         now:=time.Duration(stage.sec)*time.Second
         snap:=f2Snapshot("w52",FecV2C2S,now,12,70)
