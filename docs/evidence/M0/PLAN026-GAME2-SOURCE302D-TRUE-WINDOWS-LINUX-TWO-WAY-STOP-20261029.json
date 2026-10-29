@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
+  "source_sha": "302d02049669d8f36f3d6852bc1c668ff003ed4a",
+  "result": "PASS_SCOPED_GAME2_SIGNED_WINDOWS_WSL2_ORIGINAL_TLS_RUST_NATIVE_UDP_TCP_OWNED_STOP",
+  "artifact_verified": true,
+  "run": {
+    "id": 40899247335,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40899247335",
+    "status": "completed",
+    "conclusion": "success",
+    "commit_sha": "302d02049669d8f36f3d6852bc1c668ff003ed4a",
+    "completed_utc": "2026-10-29T15:21:38Z",
+    "jobs": {
+      "Cheap workflow and current assembly checks": "success",
+      "Linux Rust eligible library unit tests (special M1 separate)": "success",
+      "Windows Rust eligible library unit tests (special M1 separate)": "success",
+      "Windows Go production and test compilation only": "success",
+      "Build true original Go and new Linux Rust peer persona from same SOURCE": "success",
+      "native-public-two-os": "success"
+    }
+  },
+  "artifact": {
+    "id": 12908487889,
+    "name": "m0-wl-full-public-normal-direct",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40899247335/artifacts/12908487889",
+    "sha256": "e165d413a20514823f5465b36464f2b393db41b70c393b913c41461208154834",
+    "zip_sha256_locally_verified": true,
+    "files_verified": {
+      "game2-report.json": "3280f19e545d563001a2af671a3d8005dd49a3fe43d9704902c982179c79f493",
+      "mode-batch.json": "9b76de7221e41051dd04265cc1f02d5d75ca639b6e8b5d192c878689a712bd08",
+      "mode-results/game2/client.log": "561ec3afb481ca5c95d1b58ae02bb783b561d265cf5e0d7be16487939de8e25d",
+      "mode-results/game2/server.log": "a789ba9d9c7cba4fa349b419eaf32fb8790e386c626f0932eed1b42bbeb2d933",
+      "mode-results/game2/windows-app.log": "dbcdde519801e5ceb05428510c79b8ef441bec1d8920b0d093bfce995c3d7c8f",
+      "mode-results/game2/linux-app.log": "571f08fbc4aee30f37b5d372a6f321d85896257de8e0756412a640fbcf10861a",
+      "mode-results/game2/windows-tcp-app.log": "b1e99da9b953e0e9b29f51a952c881680acf6cefcb071a9e105dfb773a62afbf",
+      "mode-results/game2/linux-tcp-app.log": "fe2206613574bd0dc9648b0b2c689578915110a9258635fe156146c2a8f4ad86"
+    }
+  },
+  "original_build": {
+    "windows_binary_manifest_source": "302d02049669d8f36f3d6852bc1c668ff003ed4a",
+    "windows_exe_sha256": "bd3f4cc93e7b606fb4260cac6fae455b820c42aa2ecf03047e1e4823755dbf79",
+    "windows_rust_dll_sha256": "3d8cfa8c3c7dd526ea1a1c8f50c9a00ffbc1b0102e5ce897d032d37cb4af7dd0",
+    "linux_server_sha256": "f0c3b6c37473ac9a7e191be0ad512564d30ee9cc07a55c3ca6d3416d7ec695b1"
+  },
+  "scope": {
+    "platform": "GitHub-hosted Windows2025 x64 signed Npcap 1.88/Wintun ↔ real Ubuntu WSL2 Linux x64 kernel raw/TUN",
+    "windows": "original Go credential TLS/FakeTCP original OS/WAL and Rust two-worker Game2 native shared Wintun and per-lane Npcap",
+    "linux": "original Go credential TLS Rust M4 two lane Game kernel original raw IPv4/TUN",
+    "mode": "game2",
+    "lanes": 2,
+    "fec": "off",
+    "test_type": "actual two-OS kernel application functional only",
+    "duration_seconds": 11
+  },
+  "authentic_results": {
+    "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+    "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+    "original_tcp_persona": "windows11_original_go_server",
+    "windows_native": {
+      "rust_workers": 2,
+      "tx_copied_records": 100,
+      "rx_first_delivered_ipv4": 99,
+      "worker_error": 0,
+      "rejected_auth": 16,
+      "effective_payload_mtu": 1353
+    },
+    "linux_game": {
+      "copied": 198,
+      "delivered": 50,
+      "raw_received": 100,
+      "auth_rejected": 0,
+      "tun_delivery": 50
+    },
+    "udp": {
+      "windows": {
+        "sent": 26,
+        "received": 26,
+        "kernel_bind": "PASS"
+      },
+      "linux": {
+        "sent": 87,
+        "received": 26,
+        "kernel_bind": "PASS"
+      },
+      "qualification": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+      "note": "Linux app starts before public readiness; do not misstate 87/26 as 100% delivery. Real two-way packets observed after Ready."
+    },
+    "tcp": {
+      "windows": {
+        "server_received_bytes": 37,
+        "client_echo": true
+      },
+      "linux": {
+        "server_received_bytes": 37,
+        "client_echo": true
+      },
+      "qualification": "PASS_ACTUAL_TWO_OS_KERNEL_TCP"
+    },
+    "owned_stop": {
+      "windows": "WBD_WINDOWS_GAME_NATIVE_DISCONNECTED lanes=2 wal_restored=1 rust_stopped=1",
+      "linux": "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server lanes=2",
+      "windows_process_exit_code": 0,
+      "linux_server_process_exit_code": 0,
+      "qualification": "PASS_BOTH_OWNED",
+      "cleanup_note": "Harness calls stop_linux() before verifying Linux server exit0+drained marker, then repeats stop_linux() unconditionally in finally. The later WL_REAL_LINUX_OWNED_STOP_REQUEST_FAILED code=1 is a duplicate TERM against already-exited server PID, not an owner Stop failure."
+    }
+  },
+  "provenance": {
+    "first_game2_only_hang_source": "ee2b4f2b135ecf6006fbf266223955d9c78e3483",
+    "first_cold_signed_native_product_failure_source": "578e00d0c4e67746132fc8c64d28bdff100ac2ed",
+    "first_send_ack_fix_but_duplex_failure_source": "768b1e0f363b2ecdbe5fe24a1f96dcecacedbb46",
+    "corrective_source": "302d02049669d8f36f3d6852bc1c668ff003ed4a",
+    "original_persona_fix": "Strict Windows11 frozen peer persona on Windows Rust Game NPF RX; preserves AEAD/PN, checksums, tuple and original Go TLS."
+  },
+  "not_run": [
+    "Game4 native product on this SOURCE",
+    "Game2-FEC and Game4-FEC loss profile",
+    "Fixed/Auto current-source native qualification",
+    "WL-N0/WL-N1/WL-N5/WL-P200/WL_V2/first arrival 99.9% performance gates",
+    "same-runner whole Go+Rust CPU A/B, scored p99/wake/driver queues",
+    "physical Windows host, GUI and dynamic lane lifecycle",
+    "Linux/Windows bilateral real Health timeout vs FIN/Dormant/Wake for game/auto"
+  ],
+  "measurements_nonqualifying": {
+    "windows_native_process_cpu_total_seconds": 0.25,
+    "avg_one_logical_core_pct": 2.726,
+    "elapsed_seconds": 9.172,
+    "peak_working_set_bytes": 46972928,
+    "business_oneway_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+    "causal_cpu_comparison": "NOT_RUN"
+  }
+}

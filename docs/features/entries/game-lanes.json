@@ -45,7 +45,9 @@
     "docs/evidence/M0/PLAN026-WINDOWS-GAME-DEADLINE-SOURCEB222-20261029.json",
     "docs/devlog/M0/20261029-PLAN026-GAME-NPCAP-COLD-HANDOFF-LIVENESS.md",
     "docs/devlog/M0/20261029-PLAN026-GAME2-NATIVE-PURE-ACK-EMPTY-RECORD-FIX.md",
-    "docs/devlog/M0/20261029-PLAN026-GAME2-WINDOWS-RUST-NPF-PEER-PERSONA-REPAIR.md"
+    "docs/devlog/M0/20261029-PLAN026-GAME2-WINDOWS-RUST-NPF-PEER-PERSONA-REPAIR.md",
+    "docs/evidence/M0/PLAN026-GAME2-SOURCE302D-TRUE-WINDOWS-LINUX-TWO-WAY-STOP-20261029.json",
+    "docs/devlog/M0/20261029-PLAN026-GAME2-SOURCE302D-SIGNED-TWO-OS-FUNCTIONAL-ACCEPTANCE.md"
   ],
   "verification": [
     {
@@ -152,6 +154,13 @@
       "status": "FAIL",
       "source_sha": "768b1e0f363b2ecdbe5fe24a1f96dcecacedbb46",
       "evidence": "docs/devlog/M0/20261029-PLAN026-GAME2-WINDOWS-RUST-NPF-PEER-PERSONA-REPAIR.md"
+    },
+    {
+      "platform": "Windows2025 x64 signed Npcap 1.88/Wintun ↔ real Ubuntu WSL2 Linux x64 raw/TUN",
+      "scope": "M0 PLAN026 Game2 2 original independent Go credential TLS lanes, Rust 2 workers, FEC off, current exact SOURCE native Windows/Linux true kernel UDP Windows26/26 Linux87/26 (app starts before ready) + TCP 37B bidirectional echoed, 2-side owned Stop; WL-N0/V2/loss/CPU A-B/Game4/GameFEC/physical NOT_RUN. Action40899247335 6/6 PASS, artifact12908487889 original ZIP SHA256 locally verified.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "302d02049669d8f36f3d6852bc1c668ff003ed4a",
+      "evidence": "docs/evidence/M0/PLAN026-GAME2-SOURCE302D-TRUE-WINDOWS-LINUX-TWO-WAY-STOP-20261029.json"
     }
   ],
   "limitations": [
