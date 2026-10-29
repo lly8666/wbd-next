@@ -1,0 +1,93 @@
+name: M0 PLAN026 Linux genuine auth dead after full kernel blackhole
+run-name: "M0|PLAN026-LINUX-DEAD-BLACKHOLE|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan026-linux-real-dead-blackhole.yml"
+      - "tools/m0_plan026_linux_real_dead_blackhole.py"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  actual-original-tls-native-keepalive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      # The real original Go/Rust binary SOURCE7e984 is the same frozen binary
+      # that already PASSED genuine Linux Auto. Harness source is separate.
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 40851521157
+          name: m0-plan012-combined-40851521157-1
+          github-token: ${{ github.token }}
+          path: frozen/
+      - name: Verify original TLS Rust product binary SHA and original netns fixture source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p linux-dead-result fixed-kernel-result
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path('frozen')
+          m=json.loads((root/'fixed-kernel-result/manifest.json').read_text())
+          assert m['source_sha']=='7e9842f6e99769d9919e75a4b15da8d6d88e7257'
+          assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
+          sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+          for name,h in m['binaries_sha256'].items():
+              p=root/'fixed-build'/name
+              assert p.is_file() and sha(p)==h,(name,p)
+          old='tools/m0-v4-public-real-linux-netns.sh'
+          assert sha(pathlib.Path(old))==m['source_inputs_sha256'][old]
+          print('M0_PLAN026_LINUX_IDLE_HEALTH_ORIGINAL_PRODUCT_BINARY_AND_FIXTURE_SOURCE_LOCKED_PASS')
+          PY
+          python3 tools/m0_plan026_linux_real_dead_blackhole.py \
+            tools/m0-v4-public-real-linux-netns.sh linux-dead-result/dead100-netns.sh
+          chmod +x frozen/fixed-build/wbd-v4-client frozen/fixed-build/wbd-v4-server
+      - name: Real two-sided native dead after 106s authentic underlay 100pct blackhole, not Dormant
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          WBD_V4_PUBLIC_MODE=fec-auto \
+            bash linux-dead-result/dead100-netns.sh frozen/fixed-build \
+            >linux-dead-result/real-blackhole.log 2>&1 || {
+              tail -80 linux-dead-result/real-blackhole.log >&2
+              echo 'M0_PLAN026_LINUX_REAL_AUTHENTICATED_DEAD_BLACKHOLE_FAIL'
+              exit 1
+            }
+          grep -Fq 'M0_PLAN026_LINUX_REAL_TLS_RUST_NO_AUTH_BLACKHOLE_100PCT_DEAD_NOT_DORMANT_PASS' \
+            linux-dead-result/real-blackhole.log
+          python3 - <<'PY'
+          import pathlib,os,json,hashlib
+          log=pathlib.Path('linux-dead-result/real-blackhole.log')
+          d={'source_product':'7e9842f6e99769d9919e75a4b15da8d6d88e7257',
+             'harness_source':os.environ['GITHUB_SHA'],
+             'run_id':int(os.environ['GITHUB_RUN_ID']),
+             'actual_real_linux_original_tls_native_rust_netns':True,
+             'real_initial_auto_m2_app':64,'tc_underlay_loss_percent':100,
+             'consecutive_loss_seconds':106,'native_default_dead_seconds':90,
+             'real_native_authenticated_dead_client_and_server':'PASS',
+             'real_native_false_dormant':'REJECTED',
+             'real_own_stop_on_dead':'NOT_INSTRUMENTED',
+             'windows':'NOT_RUN','physical':'NOT_RUN',
+             'log_sha256':hashlib.sha256(log.read_bytes()).hexdigest()}
+          pathlib.Path('linux-dead-result/result.json').write_text(json.dumps(d,indent=2)+'\n')
+          print('M0_PLAN026_LINUX_REAL_AUTHENTICATED_DEAD_BLACKHOLE_100PCT_PASS')
+          PY
+          cp fixed-kernel-result/dead-blackhole-client-qdisc.txt linux-dead-result/
+          cp fixed-kernel-result/dead-blackhole-server-qdisc.txt linux-dead-result/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan026-linux-real-dead-blackhole-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            linux-dead-result/result.json
+            linux-dead-result/real-blackhole.log
+            linux-dead-result/dead-blackhole-client-qdisc.txt
+            linux-dead-result/dead-blackhole-server-qdisc.txt
+          if-no-files-found: warn
+          retention-days: 30
