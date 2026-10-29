@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "c8dad61048d532b3e6d7eb11f94fb36ffa1d6a8e",
+  "scope": "SOURCE_ONLY_NOT_PRODUCT",
+  "native_action": {
+    "id": 40946233170,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40946233170",
+    "conclusion": "success",
+    "platform": "ubuntu-24.04 linux/amd64",
+    "toolchain": "Rust 1.85.1",
+    "manifest_sha256": "3f5d5de11bdecd11adc24cd1d9412636a07904dbafe8e231b8d614658a71c5e4",
+    "build_artifact_id": 12930150538,
+    "build_zip_sha256": "e3ab64300193256a47f3e6db15ba0c54458d7f467d8734c29b4fe0dfaab541a9",
+    "groups": [
+      {
+        "group": "kernel",
+        "job_id": 123702860266,
+        "passed": 6,
+        "failed": 0,
+        "conclusion": "success",
+        "manifest_sha256": "3f5d5de11bdecd11adc24cd1d9412636a07904dbafe8e231b8d614658a71c5e4",
+        "binary_sha256": "44c8ae73caea65bd184eedf2246f1304419ce0adb16093d17c21292d87ef5fe5",
+        "log_sha256": "9adab9c0bb86ce4c783fbb82692c096121b775254e697c79f995c5879236d2c4"
+      },
+      {
+        "group": "receipt",
+        "job_id": 123702860348,
+        "passed": 11,
+        "failed": 0,
+        "conclusion": "success",
+        "manifest_sha256": "3f5d5de11bdecd11adc24cd1d9412636a07904dbafe8e231b8d614658a71c5e4",
+        "binary_sha256": "5890a5df440343ed8d60f74b121c2f822ca9b07d5cf2376f245b7a5b12ef23ea",
+        "log_sha256": "7e2e5d151051ed5a26e28cccc89c883bda035cf5a037285973e4db8ee708709d"
+      },
+      {
+        "group": "fec",
+        "job_id": 123702860359,
+        "passed": 3,
+        "failed": 0,
+        "conclusion": "success",
+        "manifest_sha256": "3f5d5de11bdecd11adc24cd1d9412636a07904dbafe8e231b8d614658a71c5e4",
+        "binary_sha256": "125264dce871e2b6c7ca8eb60b30ed2ea04df0a4c5822794ca1396fe0cbede10",
+        "log_sha256": "0f6d1515fb2a9ec84fab824cf0b94fd7246c75279605952310b8ac31771cc327"
+      },
+      {
+        "group": "platform",
+        "job_id": 123702860421,
+        "passed": 95,
+        "failed": 0,
+        "conclusion": "success",
+        "manifest_sha256": "3f5d5de11bdecd11adc24cd1d9412636a07904dbafe8e231b8d614658a71c5e4",
+        "binary_sha256": "d6e1e16f3e02bfbc66c1181cf52c06b121e19cd98b182a7e36b6655585db75ab",
+        "log_sha256": "6d4c0e851c3e81f2ce68789e39ba36a1fc9ad204ff6321c2358701c4184a53ab"
+      },
+      {
+        "group": "engine",
+        "job_id": 123702860446,
+        "passed": 134,
+        "failed": 0,
+        "conclusion": "success",
+        "manifest_sha256": "3f5d5de11bdecd11adc24cd1d9412636a07904dbafe8e231b8d614658a71c5e4",
+        "binary_sha256": "8e136c59f998a8d0847785ae827a12bbe94d0100522638dbaac0b21b9b6260b3",
+        "log_sha256": "11a40d98a637c5270bcb78457b14a1ad961e38a4b5611f76cfaba56e3b078e76"
+      },
+      {
+        "group": "normal",
+        "job_id": 123702860494,
+        "passed": 3,
+        "failed": 0,
+        "conclusion": "success",
+        "manifest_sha256": "3f5d5de11bdecd11adc24cd1d9412636a07904dbafe8e231b8d614658a71c5e4",
+        "binary_sha256": "adc5430e574383c086160ff16b3185b3fc6822170d18cee25498e53605609c74",
+        "log_sha256": "e567c10f58bfd52b27558a8351d8deeca9e4472d0048d6419d2feb2b37f0f956"
+      }
+    ]
+  },
+  "new_required_tests": [
+    "r1_plan027_presentation_sack_builder_bounded_and_original_ack_unchanged",
+    "r1_plan027_pure_ack_sack_checksum_capability_and_data_isolation"
+  ],
+  "governance": {
+    "H400": {
+      "id": 40945968922,
+      "conclusion": "success"
+    },
+    "H401": {
+      "id": 40946233545,
+      "conclusion": "failure",
+      "cause": "missing ids:[] in feature-impact kind none"
+    },
+    "H402": {
+      "id": 40946398609,
+      "conclusion": "success"
+    }
+  },
+  "prior_compile_failure": {
+    "source_sha": "0d96269b8af7c3ef860237febdbd6bc585b5a9af",
+    "action": 40945968960,
+    "conclusion": "failure",
+    "fixed_by": "c8dad61048d532b3e6d7eb11f94fb36ffa1d6a8e"
+  },
+  "in_flight": [
+    {
+      "id": 40946233322,
+      "scope": "Windows/Linux preflight, not full native product"
+    }
+  ],
+  "limitations": [
+    "No Windows/Linux original owner uses this parser/builder yet",
+    "No negotiated SACK capability product readback or per-record M2 retirement",
+    "No PLAN027 A/B/C, real p99/CPU/RSS, network matrix or physical evidence"
+  ]
+}
