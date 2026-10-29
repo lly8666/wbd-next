@@ -5,5 +5,5 @@
 H407 源码 native-functional40962693585、Windows owner40962693602、Linux Auto/Health40962693776、r0 ABI40962693614 当时仍在途，必须按精确 SOURCE 回收，不能由 H408 metadata 成功推断代码 PASS。PLAN027 五项仍未闭环。
 
 ```feature-impact
-{"kind":"none","ids":[],"reason":"Governance-only metadata size and bounded reference repair; no product behavior or feature semantics changed."}
+{"kind":"updated","ids":["fec-auto"],"reason":"Trim duplicate feature limitation text to meet the 16KiB gate; product behavior unchanged."}
 ```

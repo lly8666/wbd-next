@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 408,
-  "checkpoint_sha": "361265256d58d18ea0b36badf04668c16fb19e1c",
+  "sequence": 409,
+  "checkpoint_sha": "e0774cae0d1c33736cca295ae45130fcce406684",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H407 source 36126525 candidate low-rate RX CLOSE summary committed; governance40962693582 FAIL (feature card >16KiB, cursor >8 refs), H408 corrects metadata. Native/owner Actions40962693585/40962693776/40962693602/40962693614 were in progress at recovery, results not yet claimed. PLAN027 §0 remains partial.",
-  "why_now": "Fix exact observed governance failures without changing source behavior; keep old failure and native run identities.",
+  "current_task": "H407 source 36126525 low-rate RX bridge native Actions in progress. H407 governance40962693582 FAIL oversized card/9 context refs; H408 governance40962889507 role SUCCESS but feature catalog FAIL missing fec-auto declaration. H409 corrects declaration and trims redundant card text.",
+  "why_now": "Repair observed feature-catalog declaration failure while preserving exact source and in-flight native results.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Recover H407 native/owner Actions; fix any source test errors; then integrate actual Windows/Linux production low-rate control and retire M2, proceed PLAN027 A/B/C.",
+  "next_action": "Recover H407 native-functional40962693585, Windows40962693602, Linux40962693776 and ABI Actions; correct any failures; continue PLAN027 production owner wiring and M2 retirement.",
   "unverified": true,
   "last_tested_source": "302d02049669d8f36f3d6852bc1c668ff003ed4a",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H407-RECEIVER-ANNOUNCED-CLOSE-WIRE-GLUE.md"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL: low-rate RX CLOSE->v2 summary candidate H407, but Windows/Linux M2 live; H407 governance metadata failure corrected H408, source native results pending. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. Physical NOT_RUN."
+  "partial_summary": "§0-1 PARTIAL H407 RX candidate, native verification in flight; old M2 still LIVE. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. H407/H408 governance failures retained, H409 metadata fix. Physical NOT_RUN."
 }
