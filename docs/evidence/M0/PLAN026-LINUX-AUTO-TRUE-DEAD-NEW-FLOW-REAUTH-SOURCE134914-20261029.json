@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
+  "source_sha": "134914f4263f905047b1096c771609558bcdde82",
+  "result": "PASS_SCOPED_GENUINE_LINUX_ORIGINAL_GO_TLS_RUST_AUTO_DEAD_REAUTH_ON_NEW_FLOW",
+  "run_id": 40860233188,
+  "run_attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40860233188",
+  "workflow_conclusion": "success",
+  "jobs": [
+    {
+      "name": "product-source-build / native",
+      "conclusion": "success",
+      "scope": "Current exact-source original Go TLS/Rust native M3 M4 two-netns product build, 64 Fixed/Auto kernel app and actual M2 Applied/Stop plus Game tests and 1pct netem"
+    },
+    {
+      "name": "real-dead-new-flow-native-reauth",
+      "conclusion": "success",
+      "scope": "same SOURCE current original Go TLS and Rust Auto, real two-netns loss and reauthentication"
+    }
+  ],
+  "actual_sequence": {
+    "initial_authenticated_go_tls_rust_ready_client_server": 1,
+    "initial_real_app_echo": 64,
+    "underlay": "real Linux tc netem two-way 100pct loss",
+    "no_authenticated_peer_duration_seconds": 106,
+    "auth_health_dead_client": true,
+    "auth_health_dead_server": true,
+    "false_dormant_rejected": true,
+    "underlay_restored": true,
+    "new_business_source": "different real UDP application socket via the original kernel TUN",
+    "reconnect_by_test_or_manual_api": false,
+    "client_process_pid_unchanged": true,
+    "server_process_pid_unchanged": true,
+    "additional_original_go_tls_rust_native_ready_client": true,
+    "additional_original_go_tls_rust_native_ready_server": true,
+    "new_app_echo_after_original_dead": true
+  },
+  "artifact": {
+    "name": "plan026-linux-reconnect-after-dead-40860233188-1",
+    "id": 12891412900,
+    "sha256": "5cc521eb503b231bd8a94bc25bd8767f8b4a2a080e2cd2d4883ad3272a87241e",
+    "zip_sha256_locally_verified": true,
+    "contained_files": [
+      "result.json",
+      "real-reconnect.log"
+    ]
+  },
+  "source_assembly": "same workflow run reusable original PLAN012 combined Go/Rust product build, not the older source7e984 frozen binary",
+  "safety_constraints": [
+    "Authenticated dead is from Rust native Health 90s; not test-synthesized",
+    "Existing true original Go FakeTCP SYN+credential TLS must reoccur on both sides before new Rust NativeOwner READY",
+    "No Go business-packet transfer or Go 200ms timer; Go only cold 1Hz native terminal observation while Auto connected and kernel TUN readability while disconnected",
+    "Old native owner Stop precedes new original TLS and reattach; no old PN/cipher replay claimed",
+    "Outer one-shot repair delivery optional"
+  ],
+  "not_run": [
+    "Windows genuine Npcap/Wintun 100pct blackout/reconnect",
+    "Non-Auto mode reconnection",
+    "True FIN/Dormant/Wake and lane replacement lifecycle",
+    "Physical host or GUI / same-machine CPU and p99"
+  ]
+}
