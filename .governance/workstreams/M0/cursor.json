@@ -4,12 +4,12 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 347,
-  "checkpoint_sha": "dc651aab52c94a85b9ae486b3e72b7f10a1281e0",
+  "sequence": 348,
+  "checkpoint_sha": "d4ee36e1d7e4d2027d8b2416c5488892ef7b08bf",
   "progress": "partial",
   "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
   "current_task": "PLAN026 same M0 package: current low-cost Fixed/Auto FEC2 + Game2/4 shared Windows Rust NativeOwner and Linux/Windows unified authenticated M2/Health/Keepalive; user authorized batch code then Actions, Fixed/Game before Auto last with server idle/dead/FIN/Dormant verification. Design contract committed, PRODUCT_CODE_NOT_YET_WRITTEN/NOT_RUN.",
-  "why_now": "User explicitly authorized main writes to pin a concrete M0 implementation contract and compress always-read hot docs. Main dc651aab adds docs/decisions/M0-PLAN026-FEC-GAME-AUTO-HEALTH-LOW-COST-EXECUTION-20261029.md, new intent devlog, updates START_HERE/AGENTS/PROJECT_CHARTER/M0 permanent prompt and registry.goal; NO PRODUCT CODE, fixture or compiled SOURCE changed and no Actions triggered. Legacy wobuzhidao@a7a82db3 keepalive15s/dead90s server inactive lease max(90,3*interval) is NOT ordinary DORMANT: server needs peer FIN plus payload idle. Original Linux FEC W168 56case scoped observations/old capacity are test oracle, not fresh pass.",
+  "why_now": "User explicitly authorized main writes to pin a concrete M0 implementation contract and compress always-read hot docs. Main dc651aab adds docs/decisions/M0-PLAN026-FEC-GAME-AUTO-HEALTH-LOW-COST-EXECUTION-20261029.md, new intent devlog, updates START_HERE/AGENTS/PROJECT_CHARTER/M0 permanent prompt and registry.goal; NO PRODUCT CODE, fixture or compiled SOURCE changed and no Actions triggered. Legacy wobuzhidao@a7a82db3 keepalive15s/dead90s server inactive lease max(90,3*interval) is NOT ordinary DORMANT: server needs peer FIN plus payload idle. Original Linux FEC W168 56case scoped observations/old capacity are test oracle, not fresh pass. Recovered historical Windows↔Linux run40736177552 terminal FAILURE on old source bf84929b; not counted as product NEW failure. H347 governance rejected cursor context_refs=10 exceeding max8; H348 fixes only hot reference boundedness. Preceding docs-only commit dc651aab governance PASS; original M4 frozen manifest mismatch belongs to older maintenance checks and is not newly changed product.",
   "done_when": "Normal/off newest source exact N0 10Mbps 300ms one-way 240s with old produced0 ready4 regression and same VM old-Go vs new Rust CPU-seconds/GB, RSS, idle wakes and p99 first-delivery A/B. Migrate Fixed/Auto/Game/Health Keepalive and Make-Before-Break dynamic lane native owner; remove remaining Go packet pump only after modes' real functional/perf proof.",
   "next_action": "Follow new PLAN026 low-cost execution decision §0–6 as one complete M0 coding batch: inspect exact current Go/Rust callers, write Windows native attach mode-aware V2 Fixed/Auto/Game2/4 + owned Stop, Linux dual-side unified Rust Auto/M2/Health, effective Go settings/readbacks, legacy server timeout-vs-FIN/idle/Wake semantics, V2 fixtures/monitors/workflows/manifest and affected feature cards BEFORE freezing SOURCE. Then Actions cheap/core, Fixed tests, Game2/4 real loss matrix, Auto LAST with keepalive/dead/idle 15s/90s/optional60s, same-host A/B and capacity reporting. Respect outstanding Normal N0/lane requirements; unimplemented modes NOT_RUN. No half-coded product tests.",
   "unverified": true,
@@ -19,17 +19,13 @@
     "docs/evidence/M0/PLAN026-LINUX-DUAL-SOURCEB9C2-100M-12-SIGNED-20261029.json"
   ],
   "context_refs": [
+    "docs/decisions/M0-PLAN026-FEC-GAME-AUTO-HEALTH-LOW-COST-EXECUTION-20261029.md",
     "docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md",
     "docs/decisions/M0-PLAN026-FEC-GAME-RUST-STEADY-WIRING-RESEARCH-20261029.md",
-    "docs/devlog/M0/20261029-PLAN026-FEC-GAME-NATIVE-WIRING-RESEARCH.md",
-    "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-24-SIGNED-RESULT.md",
-    "docs/evidence/M0/PLAN026-LINUX-DUAL-SOURCEB9C2-50M-12-SIGNED-20261029.json",
-    "docs/evidence/M0/PLAN026-LINUX-DUAL-SOURCEB9C2-100M-12-SIGNED-20261029.json",
-    "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE9ED3-50-100M-24-SIGNED-20261028.json",
     "docs/architecture/WINDOWS_NATIVE_OWNER_V2.md",
-    "docs/decisions/M0-PLAN026-FEC-GAME-AUTO-HEALTH-LOW-COST-EXECUTION-20261029.md",
-    "docs/devlog/M0/20261029-PLAN026-FEC-GAME-AUTO-HEALTH-DESIGN-INTENT.md"
+    "docs/devlog/M0/20261029-PLAN026-FEC-GAME-AUTO-HEALTH-DESIGN-INTENT.md",
+    "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-24-SIGNED-RESULT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H347 2026-10-29 M0 main docs-only authorization/implementation handoff. Latest main dc651aab pinned concrete PLAN026 Windows Rust-only Fixed/Game/Auto/Health and Linux dual Keepalive/Auto policy, FIXED→GAME→AUTO LAST V2 network and CPU test; compacted always-read START/AGENTS/Charter/M0 prompt and updated registry goal. No product code/fixture/Actions in this batch. Old Linux original 50M12 PASS,100M10 PASS+2 capacity inconclusive and Windows pending run historical; real NEW qualification NOT_RUN. Original Go keepalive15s/dead90s/server lease inactivity is distinct from FIN-based Dormant; tests must preserve semantics. Finish full coding bundle, then freeze source and validate. Do not restart old FEC work or infer product PASS from docs."
+  "partial_summary": "H347 2026-10-29 M0 main docs-only authorization/implementation handoff. Latest main dc651aab pinned concrete PLAN026 Windows Rust-only Fixed/Game/Auto/Health and Linux dual Keepalive/Auto policy, FIXED→GAME→AUTO LAST V2 network and CPU test; compacted always-read START/AGENTS/Charter/M0 prompt and updated registry goal. No product code/fixture/Actions in this batch. Old Linux original 50M12 PASS,100M10 PASS+2 capacity inconclusive and Windows pending run historical; real NEW qualification NOT_RUN. Original Go keepalive15s/dead90s/server lease inactivity is distinct from FIN-based Dormant; tests must preserve semantics. Finish full coding bundle, then freeze source and validate. Do not restart old FEC work or infer product PASS from docs. H348 cursor-only governance repair: context_refs trimmed from10 to6 (policy max8), old Windows pending run40736177552 now failure, no new product code/run."
 }
