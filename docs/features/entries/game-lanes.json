@@ -38,7 +38,8 @@
   ],
   "doc_refs": [
     "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
-    "docs/handoff/CURRENT_INTEGRATION.md"
+    "docs/handoff/CURRENT_INTEGRATION.md",
+    "docs/evidence/M0/PLAN026-WINDOWS-GAME-DEADLINE-SOURCEB222-20261029.json"
   ],
   "verification": [
     {
@@ -124,6 +125,13 @@
       "status": "PERFORMANCE_PASS",
       "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
       "evidence": "docs/evidence/M0/PLAN025-H313-ARM64-30pct-200ms-FEC6-Game4-20261028.json"
+    },
+    {
+      "platform": "Windows-2022 x64 true signed Wintun, scoped original Go credential TLS/Rust M3-M4 native kernel",
+      "scope": "SOURCEb222 Game2+Game4 genuine one-packet first/reverse UDP signed Wintun, lane1 blocked healthy first app/noHOL/Stop PASS. Original Rust owner 47 Windows unit+Game4 deadline mapping PASS; no new Game4 CPU/idle wake measurement, full Npcap multi-lane V2 loss/host WFP qualification NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "b222744cc37df3d560fa2d9b9ee81deb678c715e",
+      "evidence": "docs/evidence/M0/PLAN026-WINDOWS-GAME-DEADLINE-SOURCEB222-20261029.json"
     }
   ],
   "limitations": [

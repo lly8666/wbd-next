@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
+  "verdict": "PASS_SCOPED_WINDOWS_RUST_CORE_AND_ACTUAL_SIGNED_WINTUN_PER_MODE",
+  "tested_source_sha": "b222744cc37df3d560fa2d9b9ee81deb678c715e",
+  "source_parent": "acd6f9d9523b577defe5d39db9a644e15e26dd22",
+  "authored_change": "Game2/4 native TX idle unconditional 10ms polling replaced with true Game4 copy/FEC partial-close monotonic deadline, or WAIT_INFINITE until Wintun/RX/Stop; unchanged prior Normal/off",
+  "source_paths": [
+    "crates/wbd-engine/src/v4_windows_game_native_runtime.rs",
+    "crates/wbd-engine/src/v4_windows_game_owner.rs",
+    ".github/workflows/m0-plan013-windows-rust-original-owner-abi.yml"
+  ],
+  "windows_rust_owner": {
+    "action_run": 40844243141,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40844243141",
+    "conclusion": "success",
+    "test_facts": [
+      "13 pre-existing original Windows owner tests PASSED (0 fail)",
+      "47 PLAN026 Windows Fixed/Game/Auto NativeOwner suite tests PASSED (0 fail), including new native_game_idle_waits_for_event_and_stagger_deadline_not_fixed_10ms_poll",
+      "9 authenticated native Health core tests PASSED (0 fail)"
+    ],
+    "artifact": {
+      "id": 12883978574,
+      "digest": "sha256:0b3d02788b07edac0d9c0f05362e67ad7a7eff1e1e02b124dc5602a95c3cc593"
+    }
+  },
+  "windows_original_go_signed_wintun": {
+    "action_run": 40844243066,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40844243066",
+    "conclusion": "success",
+    "jobs": {
+      "original_go_native_wal": "success",
+      "normal_impacted_regression": "success",
+      "fixed": "success",
+      "auto": "success",
+      "game2": "success",
+      "game4": "success"
+    },
+    "scope": "genuine original credential-Go TLS Rust M3/M4 and officially signed Wintun kernel original UDP App first/reverse with Stop, original Game2/Game4 lane1 blocked no HOL, Fixed/Auto scoped original RS16 missing source recovered to actual app; does NOT prove full current Game2/4 steady Npcap multi-lane throughput",
+    "source_markers": [
+      "M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_GAME2_NATIVE_RUST_M4_SIGNED_WINTUN_KERNEL_APP_LANE1_BLOCKED_FIRST_REVERSE_NO_HOL_STOP_PASS_SCOPED",
+      "M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_GAME4_NATIVE_RUST_M4_SIGNED_WINTUN_KERNEL_APP_LANE1_BLOCKED_FIRST_REVERSE_NO_HOL_STOP_PASS_SCOPED",
+      "M0_PLAN026_WINDOWS_ORIGINAL_GO_TLS_RUST_SHARED_RS16_REPAIR_SIGNED_WINTUN_RECOVERS_MISSING_SOURCE_fixed_PASS_SCOPED",
+      "M0_PLAN026_WINDOWS_ORIGINAL_GO_TLS_RUST_SHARED_RS16_REPAIR_SIGNED_WINTUN_RECOVERS_MISSING_SOURCE_auto_PASS_SCOPED"
+    ],
+    "artifact_manifest": [
+      {
+        "name": "m0-plan020-win-wal",
+        "id": 12884378511,
+        "digest": "sha256:bf7177f083452df8b394e293b5db3c074499858c9276e0fb9f39fac1c5c3c376"
+      },
+      {
+        "name": "m0-native-mode-game2",
+        "id": 12884910570,
+        "digest": "sha256:7c5b4cbbecbb1e2fc94360576517b87427a6b56c3c8b5f193809cd4135f0bf44"
+      },
+      {
+        "name": "m0-native-mode-game4",
+        "id": 12885030277,
+        "digest": "sha256:5e42959e6a3bd7d91f6e990fd3ba61c853ef1dccd203f5457318da2659dbc626"
+      },
+      {
+        "name": "m0-native-mode-fixed",
+        "id": 12884621797,
+        "digest": "sha256:e947f7a04ed05f95fd590c0cc8b38c2dc8a23268e9839121619def3149a56769"
+      },
+      {
+        "name": "m0-native-mode-auto",
+        "id": 12884492273,
+        "digest": "sha256:58c6eabe5c7d251f24a2d904c8643586d04a97dda9d0f1d4fa6c171044005e4a"
+      }
+    ]
+  },
+  "other_scoped_checks": {
+    "governance": 40844243103,
+    "static_qualification": 40844243053,
+    "native_abi": 40844243049,
+    "cross_abi": 40844243076,
+    "native_functional": 40844243044,
+    "g2_bootstrap": 40844243221,
+    "outcome": "success for each completed listed run"
+  },
+  "in_flight_at_record": {
+    "windows_linux_preflight_run_id": 40844243101,
+    "status": "in_progress",
+    "no_result_claimed": true
+  },
+  "exclusions": [
+    "No full per-profile V2 netem/loss+capacity multi-packet rate evidence for Windows new Game Rust data plane",
+    "No measured idle Windows Game4 CPU/wake improvement (test proves deadline mapping and removal of forced poll, not runtime cost)",
+    "No Auto organic M2 Applied/downshift (this signed Wintun scoped test states m2_applied=NOT_RUN)",
+    "No full both-side FIN/Dormant/Wake, hot dynamic lane, GUI/global WFP or physical machine PASS",
+    "Historic Normal/off acceptance remains on independently signed source-specific evidence; no reimplementation or N0 gate",
+    "Outer opportunistic packet repair delivery not required"
+  ]
+}
