@@ -182,6 +182,9 @@ const WINDOW_WORDS:usize=(MAX_WINDOW_PNS as usize)/64;
 pub struct ReceiveCounter {
     key:WindowKey,
     opened_at:MonoNs,
+    // Maturity starts only after a sender's authenticated window-close
+    // announcement, never 3s after an arbitrarily slow first DATA.
+    closed_at:Option<MonoNs>,
     complete:bool,
     capacity_limited:bool,
     seen:[u64;WINDOW_WORDS],
@@ -196,11 +199,19 @@ impl ReceiveCounter {
             .and_then(|v|v.checked_add(1))
             .filter(|&v|v<=MAX_WINDOW_PNS)
             .ok_or(QualityError::InvalidRange)?;
-        Ok(Self{key,opened_at,complete:complete_from_first_data,
+        Ok(Self{key,opened_at,closed_at:None,complete:complete_from_first_data,
             capacity_limited:false,seen:[0;WINDOW_WORDS],
             possibly_repaired:[0;WINDOW_WORDS],unique:0,repaired:0})
     }
     pub fn key(&self)->WindowKey{self.key}
+    /// The remote sender must explicitly close the advertised PN interval.
+    /// A missing/late close remains UNKNOWN, not a fabricated loss sample.
+    pub fn close(&mut self,now:MonoNs)->Result<(),QualityError>{
+        if now.0<self.opened_at.0{return Err(QualityError::ClockReversed)}
+        if self.closed_at.is_some(){return Err(QualityError::InvalidRange)}
+        self.closed_at=Some(now);
+        Ok(())
+    }
     /// Returns true only for the first authenticated unique DATA in range.
     /// Duplicates and out-of-window PNs cannot create false observations.
     pub fn on_unique_data(&mut self,pn:RecordPn,possibly_repaired:bool)->bool{
@@ -222,7 +233,11 @@ impl ReceiveCounter {
     pub fn censor_capacity(&mut self){self.capacity_limited=true}
     pub fn mature_report(&self,now:MonoNs)->Result<MatureReport,QualityError>{
         if now.0<self.opened_at.0{return Err(QualityError::ClockReversed)}
-        let elapsed=now.0-self.opened_at.0;
+        let Some(closed_at)=self.closed_at else{
+            return Err(QualityError::NotMature)
+        };
+        if now.0<closed_at.0{return Err(QualityError::ClockReversed)}
+        let elapsed=now.0-closed_at.0;
         if elapsed<RECEIVE_MATURE_NS{return Err(QualityError::NotMature)}
         if elapsed>EXPIRE_NS{return Err(QualityError::Stale)}
         Ok(MatureReport{key:self.key,received_unique:self.unique,
@@ -271,6 +286,11 @@ impl ReceiveWindows {
             if entry.on_unique_data(pn,repaired){return true}
         }
         false
+    }
+    pub fn close(&mut self,key:WindowKey,now:MonoNs)->Result<(),QualityError>{
+        let Some(entry)=self.slots.iter_mut().flatten()
+            .find(|entry|entry.key==key)else{return Err(QualityError::WrongWindow)};
+        entry.close(now)
     }
     pub fn censor_capacity(&mut self,key:WindowKey)->Result<(),QualityError>{
         let Some(entry)=self.slots.iter_mut().flatten()
@@ -346,6 +366,7 @@ mod bounded_window_tests {
         assert!(!w.on_unique_data(RecordPn(0),true));
         assert!(w.on_unique_data(RecordPn(1023),true));
         assert!(!w.on_unique_data(RecordPn(1024),false));
+        w.close(key(1,0),MonoNs(0)).unwrap();
         assert_eq!(w.report(key(1,0),MonoNs(2_999_999_999)),
             Err(QualityError::NotMature));
         let r=w.report(key(1,0),MonoNs(3_000_000_000)).unwrap();
@@ -367,6 +388,7 @@ mod bounded_window_tests {
         for n in 0..17u64{
             let wk=key(n+1,n*1024);
             rx.arm(wk,MonoNs(0),true).unwrap();
+            rx.close(wk,MonoNs(0)).unwrap();
             tx.close(ClosedWindow{key:wk,first_sent:1024,
                 closed_at:MonoNs(0),complete:true,capacity_limited:false}).unwrap();
             assert!(rx.on_unique_data(wk.first,false));
@@ -385,11 +407,40 @@ mod bounded_window_tests {
             Err(QualityError::WrongWindow));
     }
     #[test]
+    fn r2_plan027_receiver_requires_closed_window_for_maturity(){
+        let k=key(1,500);
+        let mut rx=ReceiveWindows::new(k.lane,k.epoch,k.direction);
+        rx.arm(k,MonoNs(0),true).unwrap();
+        assert!(rx.on_unique_data(RecordPn(500),false));
+        // 9s since first DATA is not 3s since last possible first-send.
+        assert_eq!(rx.report(k,MonoNs(9_000_000_000)),
+            Err(QualityError::NotMature));
+        assert_eq!(rx.close(k,MonoNs(0)),
+            Ok(())); // explicit close at opening is valid
+        assert_eq!(rx.close(k,MonoNs(9_000_000_000)),
+            Err(QualityError::InvalidRange));
+        assert_eq!(rx.report(k,MonoNs(2_999_999_999)),
+            Err(QualityError::NotMature));
+        let m=rx.report(k,MonoNs(3_000_000_000)).unwrap();
+        assert_eq!(m.received_unique,1);
+        let mut slow=ReceiveWindows::new(k.lane,k.epoch,k.direction);
+        slow.arm(k,MonoNs(1_000_000_000),true).unwrap();
+        assert_eq!(slow.close(k,MonoNs(999_999_999)),
+            Err(QualityError::ClockReversed));
+        slow.close(k,MonoNs(9_000_000_000)).unwrap();
+        assert_eq!(slow.report(k,MonoNs(11_999_999_999)),
+            Err(QualityError::NotMature));
+        assert!(slow.report(k,MonoNs(12_000_000_000)).is_ok());
+        assert_eq!(slow.report(k,MonoNs(19_000_000_001)),
+            Err(QualityError::Stale));
+    }
+    #[test]
     fn r2_plan027_partial_or_capacity_window_never_claims_clean(){
         let k=key(1,100);
         let mut rx=ReceiveWindows::new(k.lane,k.epoch,k.direction);
         let mut tx=SendHistory::new(k.lane,k.epoch,k.direction);
         rx.arm(k,MonoNs(50),false).unwrap();
+        rx.close(k,MonoNs(50)).unwrap();
         tx.close(ClosedWindow{key:k,first_sent:4,
             closed_at:MonoNs(50),complete:true,capacity_limited:false}).unwrap();
         rx.on_unique_data(RecordPn(100),false);

@@ -279,7 +279,8 @@
         "r2_scope_epoch_rollover_departure_old_notsent_and_uncertain_debit",
         "r2_scope_forward_stale_epoch_rotation_and_pn_fail_before_receipt",
         "r2_scope_four_clients_directions_mixed_batch_rejects_cross_scope",
-        "r2_uncertain_consumes_unique_repair_and_releases_shadow"
+        "r2_uncertain_consumes_unique_repair_and_releases_shadow",
+        "r2_plan027_receiver_requires_closed_window_for_maturity"
       ],
       "allowed_ignored": [],
       "scope": "PURE_BUDGET_RACK_PTO_EXPIRY_NO_LIVE_AUTHORITY",
