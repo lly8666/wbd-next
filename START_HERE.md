@@ -1,27 +1,13 @@
-# WBD Next｜从 main 接续
+# WBD Next｜main 最小接续
 
-**M0 在 main 连续开发；独立 FEC 历史工位已完成。** 不再寻找“最新实验分支”。任务/进度/证据分别有唯一落点，旧工作提示词不自动派活。
+**M0的产品代码、夹具、任务事实与结果只在main；不创建M0实验/预检分支。** 独立并行任务仅按另行明确授权。旧FEC工位已完工，历史分支/旧next_action不派活。
 
-## 最小启动读取
-1. AGENTS.md 与 PROJECT_CHARTER.md：目标、硬门、开发方法。
-2. main 的 .governance/project.json 与 .governance/registry.json：阶段和权限/当前包。
-3. docs/prompts/M0.md 与 main 的 .governance/workstreams/M0/cursor.json：长期职责、当前事实/在途 run。
-4. docs/features/README.md：功能目录，用只读 `python tools/feature_catalog.py list --query <主题>` 或 GitHub entries 按需查卡。
-本页加上述七项合计八文件；不要再一次性载入旧 devlog。非 M0 的明确授权角色读取自身 prompt/cursor。
+## 每次启动的八文件
+本页＋`AGENTS.md`、`PROJECT_CHARTER.md`、`.governance/project.json`、`.governance/registry.json`、`docs/prompts/M0.md`、`.governance/workstreams/M0/cursor.json`、`docs/features/README.md`。任务看最新main registry.goal，进度看main cursor，资格看精确SOURCE/Actions/证据。先刷新HEAD、核checkpoint之后提交与在途结果，不按旧聊天自增epoch、不全仓扫旧devlog。
 
-## 当前新任务
-M0 最新授权是 [PLAN026 Windows Rust NativeOwner](docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md)，任务有效性仍按 main registry.goal。**文档尚未代表产品实现或测试**；先结算旧cursor所载在途N0 Actions事实，再 Normal/off整批编码/测试/同机性能，达标迁其它模式/动态lane。
+## 当前施工导航（不是产品完成声明）
+PLAN026 Windows Go冷TLS/OS/WAL＋Rust独占Wintun/Npcap稳态；**Fixed/Game/Auto/Health/服务器超时与休眠** 的新增细化施工、测试顺序见 [M0低成本整批契约](docs/decisions/M0-PLAN026-FEC-GAME-AUTO-HEALTH-LOW-COST-EXECUTION-20261029.md)。此前 [NativeOwner主决策](docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md) 和 [阶段B技术盘点](docs/decisions/M0-PLAN026-FEC-GAME-RUST-STEADY-WIRING-RESEARCH-20261029.md) 按需读，不从本页猜已接线/通过。
 
-## 开工
-刷新 origin/main，检查本地未提交工作的归属。核对 cursor.checkpoint_sha 后实际增量、最新相关 Actions 和未写结果；必要时补 recovered 日志。不要扫全部历史或从旧分支 cursor 续错任务。registry.goal 给出当前施工方案，进度不从方案推断。
+先写全产品代码、双方调用/配置readback、用例、V2夹具、Actions与manifest，冻结同一SOURCE再集中测试：便宜编译/core→**Fixed→Game2/4→Auto最后（连同Keepalive/超时/休眠）**→必要同VM A/B。真实首次交付、低CPU/无HOL优先；每性能Action一个场景/测量job，旧新同VM，分清宿主容量和产品缺陷。
 
-M0 的 source、夹具和结果均进 main；编译产物固定 SOURCE 可跨 Actions 复用。旧分支已经有独有在途工作时，先结算和选择性带回 main，一次收敛即可，不重跑已完成矩阵来“证明合并”。源码与 harness/binary 来源不同必须分列。
-
-整批写完再测试；功能合批，性能单 Action 单场景/测量 job，同机顺序 A/B。容量不足停止更重同族并报告实测边界，不冒充极限 PASS。
-
-## 只在需要时打开
-- [当前逻辑/问题导航](docs/handoff/CURRENT_INTEGRATION.md)，数字仍以最新 cursor/证据为准。
-- [历史怎么找](docs/history/2026-10-28-M0-MAIN-HANDOFF.md)：旧 FEC、Windows 接线、故障、性能和方案索引。
-- [模块设计](docs/architecture/modules/README.md)、[网络诊断](docs/testing/NETWORK_TRIAGE.md)：修哪个模块再读哪个。
-- [Windows/Linux V2 性能夹具](docs/testing/WL_PERF_HARNESS_V2.md)：调整 Windows 流量、RTT、丢包、混合包型或进行旧 Go/Rust 同 VM A/B 时必读；历史 N0/P200 不自动重解释。
-main 存在、代码已集成、功能通过、性能/物理通过是不同结论。历史失败保留但不重新生成已经关闭的待办。
+按需索引：[功能卡](docs/features/README.md)、[V2夹具](docs/testing/WL_PERF_HARNESS_V2.md)、[历史资料](docs/history/2026-10-28-M0-MAIN-HANDOFF.md)、[故障定位](docs/testing/NETWORK_TRIAGE.md)。历史证据不删，热入口不重复旧每轮日志。

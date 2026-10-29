@@ -1,36 +1,13 @@
-# 项目章程
+# WBD Next｜项目长期目标与不可退让边界
 
-## 目的
+**目标**：保留原成熟TLS/系统冷控制，以Rust长寿命native数据面降低**全产品**CPU/内存/唤醒并改善真实业务首次交付。优先级：真实first-delivery、低延迟无跨业务HOL、系统成本、最后才是附加复杂度。可用有界内存换CPU；语言名称本身不等于CPU归因。
 
-用原成熟控制层与 Rust 长期运行数据引擎降低系统成本，并支持聊天 agent 可靠并行接续。真实业务首次到达效率第一；低延迟、无跨业务 HOL、低系统开销优先，额外安全复杂度最后。允许适量、有界内存换 CPU。
+**不可退让**：真实认证/完整性、用户及lane隔离、epoch/generation、MTU/PMTU、合法报文/PN/重放窗口、真实驱动结果、原密文修复（同Seq不可重封）、有界队列/次数/寿命/资源和owned Stop/WAL恢复。独立新业务包不等旧ACK/FEC block/坏lane，缺失或不确定反馈绝不算零损/确认；不为控制包造ACK循环。允许TLS-like/TCP-like设计目标，不宣称流量不可识别。默认不自造新TLS、TCP栈、加密格式、FEC矩阵。
 
-## 用户已明确的产品边界
+**外层机会式修复**：仅低CPU、最多一次、无持续DATA PTO；高负载总修复约≤10% DATA字节，稀疏业务不受相同比例限制但仍受绝对资源边界。来源见`docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md`，历史数值如50M/30%、500M/2%、单内层TCP500M/200ms是性能目标，资格与容量以实测区分，不替代安全/Stop硬门。原FEC RS20档只做迁移行为oracle，新协议使用`docs/architecture/FEC_V2_BALANCED.md`真实FEC2 k≤16。
 
-- 稳态数据独立解码、乱序首次交付；新包不等旧缺口、ACK、FEC block 或其他 lane。
-- 保留成熟建连能力以及 TCP-like/TLS-like 目标，但不宣称不可识别或完全等价正常 TCP/TLS。
-- 认证、必要完整性、账号/地址隔离、generation、MTU 与资源有界属于正确性要求。
-- 同一 Seq 的修复复用原密文；放弃修复不代表确认送达。
-- 大流量修复控制在约 10% 带宽预算；**稀疏业务不受重传占比限制**，仍受次数、寿命和绝对资源边界保护。
-- 2026-10-23最新授权：外层只做低CPU机会式TCP-like重传，取消低损快速恢复SLA和持续DATA PTO；最多一次。30%充分负载标准场景重传至少约线路容量6%、同时不超过首发DATA字节10%；0%损伤重传接近零。UDP实际残余允许低于线路损失，不要求追p²。新增单内层TCP应用500Mbps/单程200ms/0损目标，保留旧外层500M/2%和50M/30%目标，资格以实测为准。统一动态MSS/record/FEC2/TUN预算，删除无依据100B和1180/1280限制。详见[机会式v3决策](docs/decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)；旧一次快速修复数值被覆盖，原硬门不变。
-- FEC 固定/off/自动、Normal/Game、多客户端、生命周期、DNS、分流、IPv6、MTU、portable 和用户配置等旧功能须建立迁移清单后决定实现，不因换语言无意丢失。
-- 2026-10-18明确：新Rust数据面不要求与旧Go客户端/服务端网络互通。复用成熟控制/建连和正确性经验，不锁定旧FEC矩阵、20源/档位/56B头/32ms；按`docs/architecture/FEC_V2_BALANCED.md`重设。原功能需可见迁移，旧PASS不替代新协议资格。
-- 旧 80 秒下行中断等未解问题保留为后续风险，不虚构根因或继承修复资格。
-- 2026-10-19明确：Windows产品部署假定一台电脑同一时刻只有一个网络代理相关实例。PLAN-010由M4定向完成原始Go产品运行时的原生网络事务、连接/断开/恢复、GUI、配置、portable及旧脚本依赖清除；不要求多个VPN/代理共存、跨程序仲裁、极端PnP ghost自愈。正常错误、取消、Stop、owned清理和一般异常退出恢复仍须有原生验证；构建及Actions脚本允许继续使用PowerShell。该授权不包括整体升级旧Go、重写Rust热路径、偷开生产FEC2。
+**平台职责**：Windows原Go FakeTCP/TLS、WFP/DNS/route/WAL/GUI和低频建链；Rust唯一Windows Wintun/Npcap稳态owner；Linux保留已有原Rust raw/TUN成熟路径。Game2/4无Auto，Normal可Fixed/Auto；Keepalive、真实业务idle、无认证dead、FIN/DORMANT必须区分。最新细化授权见main `registry.goal`与其当前决策，不从本章程推断项目进度。
 
-## 当前允许的工作
+**交付证据**：代码/组件PASS≠真实双端/性能/物理PASS。同一SOURCE构建固定manifest、Actions真业务/Stop验证、同runner顺序A/B对CPU；按容量停止更重同族，保留旧FAIL/未测风险。更新功能目录与可见参数，不默认动用户物理机器、无凭据/正文进入仓库。旧目标与分支背景详见`docs/history/2026-10-28-M0-MAIN-HANDOFF.md`及归档决策。
 
-详细架构、科学成本模型、迁移清单、Actions验证契约与治理工具，以及 main registry 正式分配的阶段实现。实施进度读取当前 project/角色 cursor，不能从本章程推断“尚未开始”或“已经完成”。设计入口为 `docs/architecture/README.md`。
-
-## 当前不做
-
-不从零重写 TLS/bootstrap、GUI、安装和OS网络管理；仅在PLAN-010已明确授权的范围内对原Go Windows CLI/GUI/网络API做定向去PowerShell接线，并保留原冷层与owned WAL；不加WS/VMess、不自造完整TCP/密码栈、不默认AF_XDP，不部署用户物理机。原项目尚未收尾的控制功能后来精确导入，历史未关闭问题不凭重构自动关闭。
-
-性能验证：编译产物可复用；旧新同一个 Actions job 连续配对，不能跨VM比CPU百分比。主机容量不足时停止更重负载，保留可检验模型与 PROJECTED_NOT_TESTED。理论、实现初值、实测资格分开；合理质疑指标属于工程职责。
-
-## 变更判断
-
-- G1：已授权范围内的实现与修复，自主推进。
-- G2：模块接口/归属或重要设计选择，由集成者登记影响与回归；已有授权不重复索取。
-- G3：改变用户硬要求、项目目标或未授权外部影响，先准备具体影响说明并取得必要决定。
-
-旧实现数字不是永久硬门；更换算法或减少代码也不是自动正确。关键判断是是否改善父级目标、是否有证据、是否保留行为与可回退边界。
+**治理**：G1授权包自主做；G2模块/责任边界变更记录影响；G3更改硬要求/未授权外部部署需先取得决定。源码/成果在main；角色/真实进展见main registry/cursor。
