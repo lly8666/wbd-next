@@ -25,8 +25,10 @@ func runM0NativeV4WindowsGame(
  count:=2;if o.Mode==m0WinModeGame4{count=4}
  assocs:=make([]*faketcp.ClientAssociation,0,count)
  endpoints:=make([]*faketcp.NpcapEndpoint,0,count)
- lanes:=make([]m0GameLane,0,count)
+ flows:=make([]faketcp.ClientFlow,0,count)
+ // Native M3 authenticates the finite real pre-handoff NPF backlog.
  inbound:=make(chan m0GameInbound,256)
+ handoff:=make(chan struct{})
  failed:=make(chan error,count+1)
  var readers sync.WaitGroup
  defer func(){
@@ -52,13 +54,15 @@ func runM0NativeV4WindowsGame(
    })
   if err!=nil{return err}
   assocs=append(assocs,assoc)
-  lanes=append(lanes,m0GameLane{endpoint:ep,flow:flow})
+  flows=append(flows,flow)
   readers.Add(1)
   go func(index int,endpoint *faketcp.NpcapEndpoint,a *faketcp.ClientAssociation){
    defer readers.Done()
    for{
+    select{case <-handoff:return;default:}
     seg,_,err:=endpoint.ReadSegment(1)
     if err!=nil{
+     select{case <-handoff:return;default:}
      if ctx.Err()==nil{select{case failed<-err:default:}}
      return
     }
@@ -120,9 +124,10 @@ func runM0NativeV4WindowsGame(
  defer tun.Close()
  plan,err:=makePlan()
  if err!=nil{return err}
- packet:=&m0NativeV4GamePeer{
-  group:group,first:group.FirstOriginalOwner(),tun:tun,fec:fecMode!=0,
-  lanes:lanes,inbound:inbound,stop:make(chan struct{}),done:make(chan struct{}),
+ packet:=&m0WinRustGamePeer{
+  group:group,first:group.FirstOriginalOwner(),tun:tun,
+  endpoints:endpoints,flows:flows,inbound:inbound,handoff:handoff,
+  readers:&readers,errorSource:failed,pathMTU:uint32(o.TunnelMTU),
   errors:make(chan error,1),
  }
  product,err:=windowsownerlease.PrepareOriginalTLSNativeGameProduct(
@@ -152,6 +157,10 @@ outer:
   case runtimeErr=<-packet.Errors():break outer
   case runtimeErr=<-failed:break outer
   case <-ticker.C:
+   if stateErr:=packet.HealthError(ctx);stateErr!=nil{
+    runtimeErr=fmt.Errorf("real Game Rust native driver/MTU failure: %w",stateErr)
+    break outer
+   }
    currentMTU,mtuErr:=product.RuntimeMTU(ctx)
    if mtuErr!=nil||currentMTU!=o.TunnelMTU{
     runtimeErr=fmt.Errorf("Game original M4 OS MTU drift/invalid WAL expected=%d actual=%d: %w",

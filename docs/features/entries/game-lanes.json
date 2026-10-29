@@ -32,7 +32,9 @@
     "crates/wbd-engine/src/v4_windows_game_owner.rs",
     "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
     "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_peer_windows.go",
-    "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go"
+    "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go",
+    "crates/wbd-engine/src/v4_windows_game_native_runtime.rs",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go"
   ],
   "doc_refs": [
     "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
@@ -137,7 +139,8 @@
     "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637.",
     "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
     "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
-    "H311 provenance index: H309 main33ed seven-mode native PASS; N0dd0767 independent one-sample PASS while aa931 FAIL remains; ARM64f7ee prebuilt 10M capacity success; Linux33ed loss1 old serial-echo FAIL."
+    "H311 provenance index: H309 main33ed seven-mode native PASS; N0dd0767 independent one-sample PASS while aa931 FAIL remains; ARM64f7ee prebuilt 10M capacity success; Linux33ed loss1 old serial-echo FAIL.",
+    "PLAN026 candidate original Windows Game2/4 Npcap full native two-worker handoff: original each-lane credential TLS+detached M3 GameAdapter, one shared Wintun, actual per-lane kernel prefix and signed joined Stop. Code staged, new same-source native physical/CPU qualification NOT_RUN; existing Go packet pump preserved only as inert compiled historic path."
   ],
   "promotion": null
 }

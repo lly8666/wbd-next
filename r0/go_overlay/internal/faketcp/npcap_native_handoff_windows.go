@@ -79,6 +79,16 @@ func(e *NpcapEndpoint) DisableReceiveForNativeTX()error{
  return nil
 }
 
+// This is a cold read-only clone of the already-verified original Npcap
+// lane configuration. Needed to open one TX-only capture after the Go
+// readers have joined. It never reopens a second receive path.
+func(e *NpcapEndpoint) NativeCaptureConfig()(NpcapConfig,error){
+ if e==nil||e.gate==nil||e.handle==0||e.cfg.Generation==0{
+  return NpcapConfig{},ErrNpcapClosed
+ }
+ return e.cfg,nil
+}
+
 // TakeNativeCapture permanently disables Go NpcapEndpoint packet calls. It
 // keeps the exact original pcap_t and DLL loaded for Rust's two-worker engine;
 // no old Go caller can accidentally close the transferred handle.

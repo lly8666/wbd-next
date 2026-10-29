@@ -146,6 +146,44 @@ pub extern "C" fn wbd_m0_win_owner_v4_game_fec_enable(
     enable_fec(&r,group,profile as u8)
 }
 
+// Native Game2/4 owns the same protected group, not an alternate
+// crypto/PN/retransmission implementation. Registry lookup happens once
+// at attached worker startup, never on a packet.
+#[cfg(feature="fec2_product_record")]
+pub(super) fn native_game_group(
+    h:u64,epoch:[u8;16],luid:u64,ifindex:u32,lanes:usize,owners:&[u64],
+)->Result<Arc<Mutex<WinGameGroup>>,i32>{
+    let r=registry().lock().map_err(|_|BAD_STAGE)?;
+    let g=r.game_groups.get(&h).cloned().ok_or(UNKNOWN)?;
+    {
+        let group=g.lock().map_err(|_|BAD_STAGE)?;
+        if group.role_server||group.epoch!=epoch||
+            group.handles.len()!=lanes||group.handles!=owners{return Err(INVALID)}
+        for lane in &group.lanes{
+            let e=lane.lock().map_err(|_|BAD_STAGE)?;
+            if !v3_ready(&e,epoch,luid,ifindex)||
+                !e.feature7||e.game_group!=Some(h){return Err(BAD_STAGE)}
+        }
+    }
+    Ok(g)
+}
+#[cfg(feature="fec2_product_record")]
+#[cfg(feature="fec2_product_record")]
+pub(super) fn offer_records_native(
+    group:&mut WinGameGroup,h:u64,ipv4:&[u8],
+)->Result<Vec<WbdWindowsGameRecordV4>,i32>{
+    let capacity=group.handles.len();
+    offer_group(group,h,ipv4,capacity)
+}
+pub(super) fn native_game_due(
+    group:&mut WinGameGroup,h:u64,capacity:usize,
+)->Result<Vec<WbdWindowsGameRecordV4>,i32>{
+    game_fec_poll_group(group,h,capacity)
+}
+#[cfg(feature="fec2_product_record")]
+pub(super) fn native_game_has_fec(group:&WinGameGroup)->bool{
+    group.adapter.has_game_fec()
+}
 pub(super) fn offer_records(
     r:&Registry,h:u64,payload:&[u8],max:usize,
 )->Result<Vec<WbdWindowsGameRecordV4>,i32>{
@@ -231,7 +269,7 @@ fn offer_group(
     Ok(out)
 }
 #[cfg(feature="fec2_product_record")]
-fn game_fec_poll_group(
+pub(super) fn game_fec_poll_group(
     game:&mut WinGameGroup,h:u64,capacity:usize,
 )->Result<Vec<WbdWindowsGameRecordV4>,i32>{
     if capacity==0||capacity>16{
@@ -261,7 +299,7 @@ fn game_fec_poll_group(
     Ok(out)
 }
 #[cfg(feature="fec2_product_record")]
-fn game_m4_result_group(game:&mut WinGameGroup,h:u64,lane:u32,
+pub(super) fn game_m4_result_group(game:&mut WinGameGroup,h:u64,lane:u32,
     logical_id:u64,pn:u64,sent:bool)->i32{
     if game.lanes.iter().any(|member|member.lock().ok().is_none_or(|e|
         e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
@@ -325,7 +363,7 @@ pub(super) fn receive_record(
     let mut game=group.lock().map_err(|_|BAD_STAGE)?;
     receive_group(&mut game,h,lane,wire)
 }
-fn receive_group(
+pub(super) fn receive_group(
     game:&mut WinGameGroup,h:u64,lane:u32,wire:&[u8],
 )->Result<Option<Vec<u8>>,i32>{
     if wire.len()<32||wire.len()>1536||

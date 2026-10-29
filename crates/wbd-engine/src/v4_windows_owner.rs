@@ -13,6 +13,9 @@ mod native_runtime;
 #[path = "v4_windows_game_owner.rs"]
 mod game;
 #[cfg(feature="fec2_product_record")]
+#[path = "v4_windows_game_native_runtime.rs"]
+mod game_native;
+#[cfg(feature="fec2_product_record")]
 #[path = "v4_windows_rust_auto.rs"]
 mod auto_native;
 #[cfg(feature="fec2_product_record")]
