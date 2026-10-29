@@ -250,6 +250,65 @@ pub fn build_presentation_ack<'a>(
     Ok(packet)
 }
 
+
+/** Untrusted presentation SACK range, NEVER application delivery or
+ * authenticated liveness. The owner must scope/extend/validate against
+ * definite sent spans before releasing optional immutable repair shadows.
+ */
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub struct SackRange32 { pub start:u32,pub end:u32 }
+
+/// Strict pure TCP-looking ACK with optional 1..4 SACK blocks. No AEAD PN,
+/// ciphertext, heap allocation, or DATA acknowledgement loop. The caller
+/// MUST have negotiated SACK in the original protected cold handshake.
+pub fn build_presentation_ack_sack<'a>(
+    tuple:Ipv4Tuple<'_>,seq32:u32,ack32:u32,ip_id:u16,
+    persona:PacketPersona,mtu:usize,sacks:&[SackRange32],
+    scratch:&'a mut [u8],
+)->Result<&'a [u8],PacketError>{
+    if sacks.is_empty(){
+        return build_presentation_ack(tuple,seq32,ack32,ip_id,persona,mtu,scratch)
+    }
+    if sacks.len()>4||sacks.iter().any(|r|r.start==r.end){
+        return Err(PacketError::UnsupportedOptions)
+    }
+    check_tuple(tuple)?;
+    // NOP,NOP,SACK(kind5,length2+8*n), then exactly n pairs.
+    let options=4+8*sacks.len();
+    let required=BASE_OVERHEAD+options;
+    if required>mtu{return Err(PacketError::MtuExceeded{required,mtu})}
+    if required>scratch.len(){return Err(PacketError::ScratchTooSmall{
+        required,available:scratch.len()})}
+    let packet=&mut scratch[..required];
+    packet.fill(0);
+    let (ip,tcp)=packet.split_at_mut(IPV4_HEADER_LEN);
+    ip[0]=0x45;
+    ip[2..4].copy_from_slice(&(required as u16).to_be_bytes());
+    ip[4..6].copy_from_slice(&ip_id.to_be_bytes());
+    ip[6..8].copy_from_slice(&0x4000u16.to_be_bytes());
+    ip[8]=persona.ttl();ip[9]=TCP_PROTOCOL;
+    ip[12..16].copy_from_slice(tuple.src_ip);
+    ip[16..20].copy_from_slice(tuple.dst_ip);
+    ip[10..12].copy_from_slice(&finish_checksum(sum_words(ip)).to_be_bytes());
+    tcp[0..2].copy_from_slice(&tuple.src_port.to_be_bytes());
+    tcp[2..4].copy_from_slice(&tuple.dst_port.to_be_bytes());
+    tcp[4..8].copy_from_slice(&seq32.to_be_bytes());
+    tcp[8..12].copy_from_slice(&ack32.to_be_bytes());
+    tcp[12]=((TCP_HEADER_LEN+options)/4) as u8<<4;
+    tcp[13]=0x10;
+    tcp[14..16].copy_from_slice(&65535u16.to_be_bytes());
+    tcp[20..24].copy_from_slice(&[1,1,5,(2+8*sacks.len()) as u8]);
+    for (i,range) in sacks.iter().enumerate(){
+        let at=24+8*i;
+        tcp[at..at+4].copy_from_slice(&range.start.to_be_bytes());
+        tcp[at+4..at+8].copy_from_slice(&range.end.to_be_bytes());
+    }
+    let sum=sum_words(tuple.src_ip)+sum_words(tuple.dst_ip)
+        +u64::from(TCP_PROTOCOL)+tcp.len() as u64+sum_words(tcp);
+    tcp[16..18].copy_from_slice(&finish_checksum(sum).to_be_bytes());
+    Ok(packet)
+}
+
 /// Build only the original IPv4+TCP header into the caller's preallocated
 /// scratch. The checksum reads frozen ciphertext without copying it; the
 /// Linux scatter sendmmsg backend lends TWO iovecs (header, original record)
@@ -515,5 +574,34 @@ mod tests {
         let mut persona=state();persona.persona=PacketPersona::Windows11;
         let p=build(packet_tuple(),persona,&f,None,100,&mut first).unwrap();
         assert_eq!(p[8],128);check_packet(p);
+    }
+}
+
+#[cfg(test)]
+mod plan027_sack_builder_tests{
+    use super::*;
+    fn tuple()->Ipv4Tuple<'static>{
+        Ipv4Tuple{src_ip:&[192,0,2,10],dst_ip:&[198,51,100,10],
+            src_port:43000,dst_port:443}
+    }
+    #[test]
+    fn r1_plan027_presentation_sack_builder_bounded_and_original_ack_unchanged(){
+        let mut a=[0u8;128];let mut b=[0u8;128];
+        let old=build_presentation_ack(tuple(),10,20,1,
+            PacketPersona::Legacy,1500,&mut a).unwrap().to_vec();
+        let empty=build_presentation_ack_sack(tuple(),10,20,1,
+            PacketPersona::Legacy,1500,&[],&mut b).unwrap().to_vec();
+        assert_eq!(old,empty);
+        let ranges=[SackRange32{start:100,end:200};4];
+        let full=build_presentation_ack_sack(tuple(),10,20,1,
+            PacketPersona::Legacy,1500,&ranges,&mut a).unwrap();
+        assert_eq!(full.len(),76);
+        assert_eq!(&full[40..44],&[1,1,5,34]);
+        assert_eq!(build_presentation_ack_sack(tuple(),10,20,1,
+            PacketPersona::Legacy,75,&ranges,&mut a),
+            Err(PacketError::MtuExceeded{required:76,mtu:75}));
+        assert_eq!(build_presentation_ack_sack(tuple(),10,20,1,
+            PacketPersona::Legacy,1500,&[ranges[0];5],&mut a),
+            Err(PacketError::UnsupportedOptions));
     }
 }

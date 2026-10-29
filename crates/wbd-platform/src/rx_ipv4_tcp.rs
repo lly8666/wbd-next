@@ -212,6 +212,93 @@ pub fn parse_data_packet<'a>(
     })
 }
 
+
+/// A checksum/tuple-validated but UNAUTHENTICATED presentation ACK. It
+/// never proves M3 DATA, refreshes Health or advances an application stream.
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub struct UnauthenticatedAck {
+    pub seq32:u32,
+    pub ack32:u32,
+    sacks:[crate::ipv4_tcp::SackRange32;4],
+    sack_count:u8,
+}
+impl UnauthenticatedAck {
+    pub fn sacks(&self)->&[crate::ipv4_tcp::SackRange32]{
+        &self.sacks[..usize::from(self.sack_count)]
+    }
+}
+/// Strict pure ACK/SACK parser, no allocations. SACK must be explicitly
+/// enabled from the authenticated cold capability; DATA remains M3-gated
+/// through parse_data_packet. Scope and sent-range validation belong to the
+/// per-lane OuterAckIndex, not this unauthenticated packet parser.
+pub fn parse_ack_packet(packet:&[u8],trusted:TrustedRx<'_>,
+    sack_negotiated:bool)->Result<UnauthenticatedAck,RxError>{
+    let tuple=trusted.tuple;
+    if !plausible_unicast(tuple.src_ip)||!plausible_unicast(tuple.dst_ip)
+        ||tuple.src_port==0||tuple.dst_port==0{
+        return Err(RxError::InvalidTrustedTuple)
+    }
+    if packet.len()>MAX_PACKET_LEN{return Err(RxError::TooLong)}
+    if packet.len()>trusted.mtu{return Err(RxError::ExceedsMtu{
+        actual:packet.len(),mtu:trusted.mtu})}
+    if packet.len()<IPV4_HEADER_LEN+TCP_HEADER_LEN{return Err(RxError::TooShort)}
+    if packet[0]!=0x45{return Err(RxError::WrongVersionOrIhl)}
+    if packet[1]!=0{return Err(RxError::WrongIpHeader)}
+    if usize::from(be16(&packet[2..4]))!=packet.len(){
+        return Err(RxError::TotalLengthMismatch)
+    }
+    if be16(&packet[6..8])!=DF_ONLY{
+        return Err(RxError::FragmentedOrUnexpectedFlags)
+    }
+    if packet[9]!=TCP_PROTO{return Err(RxError::WrongProtocol)}
+    if packet[8]!=trusted.persona.ttl(){return Err(RxError::WrongPersona)}
+    if &packet[12..16]!=tuple.src_ip||&packet[16..20]!=tuple.dst_ip{
+        return Err(RxError::WrongTuple)
+    }
+    if !checksum_is_valid(add_bytes(0,&packet[..IPV4_HEADER_LEN])){
+        return Err(RxError::IpChecksum)
+    }
+    let tcp=&packet[IPV4_HEADER_LEN..];
+    if be16(&tcp[0..2])!=tuple.src_port||be16(&tcp[2..4])!=tuple.dst_port{
+        return Err(RxError::WrongTuple)
+    }
+    if tcp[12]&15!=0{return Err(RxError::InvalidTcpHeader)}
+    let header=usize::from(tcp[12]>>4)*4;
+    if header<TCP_HEADER_LEN||header>TCP_HEADER_LEN+40||header!=tcp.len(){
+        return Err(RxError::InvalidTcpHeader)
+    }
+    if tcp[13]!=0x10{return Err(RxError::InvalidDataFlags)}
+    if tcp[18]!=0||tcp[19]!=0{return Err(RxError::InvalidTcpHeader)}
+    let opts=&tcp[TCP_HEADER_LEN..];
+    let mut sacks=[crate::ipv4_tcp::SackRange32{start:0,end:0};4];
+    let mut count=0usize;
+    if !opts.is_empty(){
+        if !sack_negotiated||opts.len()<12||opts.len()>36
+            ||(opts.len()-4)%8!=0{
+            return Err(RxError::UnsupportedOptions)
+        }
+        count=(opts.len()-4)/8;
+        if count==0||count>4||
+            opts[..4]!=[1,1,5,(2+8*count) as u8]{
+            return Err(RxError::UnsupportedOptions)
+        }
+        for (i,slot) in sacks.iter_mut().take(count).enumerate(){
+            let at=4+8*i;
+            *slot=crate::ipv4_tcp::SackRange32{
+                start:be32(&opts[at..at+4]),
+                end:be32(&opts[at+4..at+8]),
+            };
+            if slot.start==slot.end{return Err(RxError::UnsupportedOptions)}
+        }
+    }
+    let mut sum=add_bytes(0,&packet[12..20]);
+    sum+=u64::from(TCP_PROTO)+tcp.len() as u64;
+    sum=add_bytes(sum,tcp);
+    if !checksum_is_valid(sum){return Err(RxError::TcpChecksum)}
+    Ok(UnauthenticatedAck{seq32:be32(&tcp[4..8]),
+        ack32:be32(&tcp[8..12]),sacks,sack_count:count as u8})
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -431,5 +518,46 @@ mod tests {
         let untrusted=parse_data_packet(&pkt,trusted(None,1500)).unwrap();
         assert_eq!(untrusted.ciphertext,arbitrary);
         assert_eq!(untrusted.seq32,999);
+    }
+}
+
+#[cfg(test)]
+mod plan027_ack_tests{
+    use super::*;
+    use crate::ipv4_tcp::{build_presentation_ack_sack,PacketPersona,SackRange32};
+    fn trusted_ack()->TrustedRx<'static>{
+        TrustedRx{tuple:Ipv4Tuple{src_ip:&[192,0,2,10],
+            dst_ip:&[198,51,100,10],src_port:43000,dst_port:443},
+            persona:PacketPersona::Legacy,mtu:1500,
+            authenticated_options:None}
+    }
+    #[test]
+    fn r1_plan027_pure_ack_sack_checksum_capability_and_data_isolation(){
+        let t=trusted_ack();
+        let mut buf=[0u8;128];
+        let blocks=[SackRange32{start:100,end:200},
+            SackRange32{start:u32::MAX-5,end:3}];
+        let ack=build_presentation_ack_sack(t.tuple,10,20,1,
+            PacketPersona::Legacy,1500,&blocks,&mut buf).unwrap().to_vec();
+        let parsed=parse_ack_packet(&ack,t,true).unwrap();
+        assert_eq!(parsed.ack32,20);
+        assert_eq!(parsed.seq32,10);
+        assert_eq!(parsed.sacks(),&blocks);
+        assert_eq!(parse_ack_packet(&ack,t,false),
+            Err(RxError::UnsupportedOptions));
+        assert_eq!(parse_data_packet(&ack,t).err(),Some(RxError::InvalidDataFlags));
+        let mut corrupt=ack.clone();
+        corrupt[44]^=1;
+        assert_eq!(parse_ack_packet(&corrupt,t,true),Err(RxError::TcpChecksum));
+        let mut bad=ack.clone();
+        bad[12]^=1;
+        assert_eq!(parse_ack_packet(&bad,t,true),Err(RxError::WrongTuple));
+        let mut malformed=ack.clone();
+        malformed[42]=4;
+        assert_eq!(parse_ack_packet(&malformed,t,true),
+            Err(RxError::UnsupportedOptions));
+        let no_sack=build_presentation_ack_sack(t.tuple,10,20,1,
+            PacketPersona::Legacy,1500,&[],&mut buf).unwrap();
+        assert!(parse_ack_packet(no_sack,t,false).unwrap().sacks().is_empty());
     }
 }

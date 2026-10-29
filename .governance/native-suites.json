@@ -196,6 +196,8 @@
         "r1_rx_ipv4_tcp_seq32_wrap_nearest_and_halfspace_fail_closed",
         "r1_rx_ipv4_tcp_unrelated_bad_packet_cannot_block_next_valid",
         "r1_rx_ipv4_tcp_wrong_ip_port_ttl_and_independent_checksums",
+        "r1_plan027_presentation_sack_builder_bounded_and_original_ack_unchanged",
+        "r1_plan027_pure_ack_sack_checksum_capability_and_data_isolation",
         "r1_udp_rx_real_33rd_overflow_repeated_bursts_preallocated_no_starvation",
         "r1_udp_rx_real_truncation_then_late_arrival_and_empty_not_promoted",
         "r1_udp_rx_scope_identity_rejects_equal_numeric_generation_across_contexts",

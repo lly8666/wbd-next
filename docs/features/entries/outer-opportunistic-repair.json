@@ -27,8 +27,9 @@
     "crates/wbd-recovery/src/receipt.rs",
     "crates/wbd-engine/src/v4_windows_owner.rs",
     "crates/wbd-engine/src/v4_windows_native_runtime.rs",
-    "crates/wbd-engine/src/v4_windows_owner.rs",
-    "tools/m0_wl_outer_repair_verify.py"
+    "tools/m0_wl_outer_repair_verify.py",
+    "crates/wbd-platform/src/ipv4_tcp.rs",
+    "crates/wbd-platform/src/rx_ipv4_tcp.rs"
   ],
   "doc_refs": [
     "docs/handoff/CURRENT_INTEGRATION.md",
@@ -118,7 +119,8 @@
     "Original SOURCE504c/b2fb 50/30/300 R0 FAIL retained. SOURCE9ed3 24 independently signed CI VM runs, no same-host CPU A/B or repeat-run stability/physical qualification.",
     "Old source9ed3 Linux server R=0 in 10/24 and 50M30%300ms 266B; Linux both-endpoint source-local verification must precede qualification.",
     "Linux dual original Go/Rust pure-UDP capacity matrix b9c is 22/24 full PASS, two 100M/50ms pacing-catchup INCONCLUSIVE; source c589 90/10 UDP/TCP exploratory runs are not capacity-qualified. Physical outer link C, repeated stability and Linux client TCP under 300ms not proven.",
-    "PLAN027 changes v3 hard byte credit to R<=0.10F on confirmed outer first sends; 9%-rate smoothing remains. Sparse absolute/global caps unchanged. Pure-source regression is not a real live wire ratio or source-scoped platform PASS; report R/(F+R+C) separately."
+    "PLAN027 changes v3 hard byte credit to R<=0.10F on confirmed outer first sends; 9%-rate smoothing remains. Sparse absolute/global caps unchanged. Pure-source regression is not a real live wire ratio or source-scoped platform PASS; report R/(F+R+C) separately.",
+    "PLAN027 H400 source-only strict pure ACK/SACK build/parse (cold SACK capability required); no Windows/Linux owner feed, live Receipt retirement or A/B/C qualification."
   ],
   "promotion": null
 }
