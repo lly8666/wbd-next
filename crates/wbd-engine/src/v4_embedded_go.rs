@@ -3971,7 +3971,7 @@ fn background_raw_once(
         #[cfg(feature="fec2_product_record")]
         if let Some(quality)=quality{
             if receipt.authenticated_data_pn.is_some() ||
-                receipt.quality_signal.is_some(){
+                receipt.quality_signal.is_some()||receipt.quality_report.is_some(){
                 if let Ok(mut state)=quality.lock(){
                     if let Some(pn)=receipt.authenticated_data_pn{
                         state.receive.on_unique_data(wbd_types::RecordPn(pn),false);
@@ -3979,8 +3979,16 @@ fn background_raw_once(
                     if let Some(signal)=receipt.quality_signal{
                         if state.on_signal(signal,when).is_err(){invalid_seen=true}
                     }
+                    if let Some(report)=receipt.quality_report{
+                        state.on_report(report);
+                    }
                 }else{invalid_seen=true}
             }
+        }
+        #[cfg(feature="fec2_product_record")]
+        if quality.is_none() &&
+            (receipt.quality_signal.is_some()||receipt.quality_report.is_some()){
+            invalid_seen=true; // Fixed/off never negotiate Auto low-rate
         }
         authenticated_control|=receipt.authenticated_control;
         if let Some(control)=receipt.reverse_kind1{
@@ -5030,6 +5038,13 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             }
         }
     }
+    #[cfg(feature="fec2_product_record")]
+    if let Some(tx)=e.quality_tx.as_mut(){
+        let fec=e.fixed_pending.is_some()||e.fixed_applied.is_some();
+        tx.settle_batch(actual_firstsend,
+            finish.copied as usize,finish.uncertain as usize,
+            e.feedback_queued.is_some(),fec,&e.fec2_staged_pns);
+    }
     // Keep M2 original outbound DATA denominator separate from a native
     // receipt record. Control is appended last after all application
     // first-sends; failure to preserve this order censors the owner, never
@@ -5063,6 +5078,12 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         }else{
             wbd_recovery::FeedbackSendResult::NotSent
         };
+        if let Some(signal)=e.quality_signal_queued.take(){
+            if let Some(tx)=e.quality_tx.as_mut(){
+                tx.complete_signal(signal,matches!(status,
+                    wbd_recovery::FeedbackSendResult::Accepted),loop_now())?;
+            }else{return Err(BAD_STAGE)}
+        }
         if let Some(key)=e.quality_report_queued.take(){
             if matches!(status,wbd_recovery::FeedbackSendResult::Accepted){
                 if let Some(q)=e.quality_rx.as_ref(){
@@ -5592,6 +5613,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         e.original_outer=Some(Arc::clone(&active));
         Some(active)
     }else{None};
+    #[cfg(feature="fec2_product_record")]
+    if e.original_public_feedback_armed && e.protected_features==7 &&
+        e.auto_low_rate_mode{
+        e.quality_tx=Some(LinuxQualityTx::new(
+            first.lane,first.epoch,first.route.outbound_direction()));
+    }
     let mature=Arc::new(Mutex::new(first));
     e.normal_firstsend_m2=Some(Arc::clone(&mature));
     // Only the REAL published original-Go product API explicitly arms the
