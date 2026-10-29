@@ -168,13 +168,13 @@ pub(super) fn native_game_group(
     Ok(g)
 }
 #[cfg(feature="fec2_product_record")]
-#[cfg(feature="fec2_product_record")]
 pub(super) fn offer_records_native(
     group:&mut WinGameGroup,h:u64,ipv4:&[u8],
 )->Result<Vec<WbdWindowsGameRecordV4>,i32>{
     let capacity=group.handles.len();
     offer_group(group,h,ipv4,capacity)
 }
+#[cfg(feature="fec2_product_record")]
 pub(super) fn native_game_due(
     group:&mut WinGameGroup,h:u64,capacity:usize,
 )->Result<Vec<WbdWindowsGameRecordV4>,i32>{

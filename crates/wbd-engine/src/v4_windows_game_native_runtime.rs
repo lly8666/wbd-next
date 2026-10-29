@@ -483,14 +483,12 @@ pub extern "C" fn wbd_m0_win_game_native_v3_stop(h:u64)->i32{
 mod tests{
     use super::*;
     #[test]
-    fn game_v3_config_rejects_single_lane_duplicate_handle_and_unbound(){
-        let mut cfg=unsafe{std::mem::zeroed::<WbdWinGameNativeAttachV3>()};
-        cfg.version=3;
-        cfg.size=std::mem::size_of::<WbdWinGameNativeAttachV3>() as u32;
-        cfg.group=1;cfg.lanes=1;
-        assert!(configs(&cfg).is_err());
-        cfg.lanes=2;
-        assert!(configs(&cfg).is_err());
+    fn game_v3_rejects_missing_owned_attachment_without_driver_borrow(){
+        assert_eq!(unsafe{wbd_m0_win_game_native_v3_start(std::ptr::null())},INVALID);
+        assert_eq!(unsafe{wbd_m0_win_game_native_v3_early(
+            1,1,100,std::ptr::null(),32)},INVALID);
+        assert_eq!(unsafe{wbd_m0_win_game_native_v3_stats(
+            1,std::ptr::null_mut())},INVALID);
     }
     #[test]
     fn game_ack_ledger_copies_only_actual_gap_closure(){
