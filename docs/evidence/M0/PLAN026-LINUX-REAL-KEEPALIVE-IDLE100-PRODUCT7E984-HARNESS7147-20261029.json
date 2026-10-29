@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
+  "result": "PASS_SCOPED_LINUX_ORIGINAL_TLS_RUST_AUTO_NO_BUSINESS_IDLE100_RESUME",
+  "product_source_sha": "7e9842f6e99769d9919e75a4b15da8d6d88e7257",
+  "harness_source_sha": "7147c1b66103269aa8c59a6e559be3f9a83cec52",
+  "source_sha": "7147c1b66103269aa8c59a6e559be3f9a83cec52",
+  "source_basis": "Frozen true original-Go credential TLS/Rust raw/TUN Linux product from previously independently PASSed source7e984 with binary-sha manifest; only new harness reads exact hashed product and runs unmodified binaries, has separate source7147",
+  "run_id": 40853285135,
+  "run_attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40853285135",
+  "run_result": "success",
+  "artifact": {
+    "id": 12887608807,
+    "name": "plan026-linux-real-health-idle100-40853285135-1",
+    "sha256": "d2d6206aae48309ce98d6a4bc476820827887708369f717e04437a7f4c76e65f",
+    "verified_local_bytes_against_api": true,
+    "source_manifest_binary_sha_verified": true
+  },
+  "actual_original_go_tls": true,
+  "native_rust_raw_tun": true,
+  "one_generation": true,
+  "mode": "fec-auto",
+  "initial_real_udp_app_offered_and_echoed": 64,
+  "subsequent_no_business_seconds": 100,
+  "real_udp_app_after_idle_offered_and_echoed": 1,
+  "default_keepalive_seconds": 15,
+  "default_dead_after_seconds": 90,
+  "original_fec2_mature_m2_applied": true,
+  "owned_stop_client_and_server": true,
+  "auth_health_kind1_packet_count": "NOT_INSTRUMENTED",
+  "scope_limits": [
+    "No independent M3 unique authenticated Health control packet count in this network trial, though post-dead-threshold business echo on the true original tunnel is proven",
+    "No server FIN verified Dormant or Wake, no explicit no-auth health-blackout 90s negative test",
+    "Not Windows Npcap/Wintun signed product, physical PC or GUI",
+    "No Auto natural downgrade within 120s in this idle case; no performance CPU claim",
+    "No assumption every outer opportunistic repair recovers"
+  ]
+}
