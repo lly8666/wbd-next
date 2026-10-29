@@ -441,7 +441,7 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                 let last=first.checked_add(1023).ok_or(BAD_STAGE)?;
                 let id=m.quality_next_id.checked_add(1).ok_or(BAD_STAGE)?;
                 let key=WindowKey{lane:m.route.outbound_lane(),
-                    epoch:e.authenticated_epoch,direction:m.route.direction(),
+                    epoch:e.authenticated_epoch,direction:m.route.outbound_direction(),
                     id,first:RecordPn(first),last:RecordPn(last)};
                 m.quality_sender=Some(SendWindowSampler::new(key,now)
                     .map_err(|_|BAD_STAGE)?);
