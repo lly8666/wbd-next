@@ -167,3 +167,239 @@ mod tests {
         assert_eq!(assess(&t,&r,MonoNs(9)),Err(QualityError::ClockReversed));
     }
 }
+
+
+/// PLAN027 3-second receiver maturity. Monotonic time belongs to the
+/// receiving process; never compare this timestamp with the peer clock.
+pub const RECEIVE_MATURE_NS:u64=3_000_000_000;
+pub const MAX_RECEIVE_WINDOWS:usize=4;
+pub const MAX_CLOSED_SEND_WINDOWS:usize=16;
+const WINDOW_WORDS:usize=(MAX_WINDOW_PNS as usize)/64;
+
+/// At most 1024 PN bits in an already-authenticated, scoped Auto window.
+/// Updating a unique DATA reception is O(1) with no alloc/scan/FFI.
+/// Never feed carrier ACKs, unauthenticated packets or control PNs here.
+pub struct ReceiveCounter {
+    key:WindowKey,
+    opened_at:MonoNs,
+    complete:bool,
+    capacity_limited:bool,
+    seen:[u64;WINDOW_WORDS],
+    possibly_repaired:[u64;WINDOW_WORDS],
+    unique:u16,
+    repaired:u16,
+}
+impl ReceiveCounter {
+    pub fn new(key:WindowKey,opened_at:MonoNs,
+        complete_from_first_data:bool)->Result<Self,QualityError>{
+        key.last.0.checked_sub(key.first.0)
+            .and_then(|v|v.checked_add(1))
+            .filter(|&v|v<=MAX_WINDOW_PNS)
+            .ok_or(QualityError::InvalidRange)?;
+        Ok(Self{key,opened_at,complete:complete_from_first_data,
+            capacity_limited:false,seen:[0;WINDOW_WORDS],
+            possibly_repaired:[0;WINDOW_WORDS],unique:0,repaired:0})
+    }
+    pub fn key(&self)->WindowKey{self.key}
+    /// Returns true only for the first authenticated unique DATA in range.
+    /// Duplicates and out-of-window PNs cannot create false observations.
+    pub fn on_unique_data(&mut self,pn:RecordPn,possibly_repaired:bool)->bool{
+        if pn.0<self.key.first.0||pn.0>self.key.last.0{return false}
+        let offset=(pn.0-self.key.first.0) as usize;
+        let word=offset/64;
+        let bit=1u64<<(offset%64);
+        if self.seen[word]&bit!=0{return false}
+        self.seen[word]|=bit;
+        self.unique+=1; // bounded by exactly 1024 positions
+        if possibly_repaired{
+            self.possibly_repaired[word]|=bit;
+            self.repaired+=1;
+        }
+        true
+    }
+    /// Local dropped metadata or missed start censors the entire interval;
+    /// it must not be exported as a deceptively clean Auto sample.
+    pub fn censor_capacity(&mut self){self.capacity_limited=true}
+    pub fn mature_report(&self,now:MonoNs)->Result<MatureReport,QualityError>{
+        if now.0<self.opened_at.0{return Err(QualityError::ClockReversed)}
+        let elapsed=now.0-self.opened_at.0;
+        if elapsed<RECEIVE_MATURE_NS{return Err(QualityError::NotMature)}
+        if elapsed>EXPIRE_NS{return Err(QualityError::Stale)}
+        Ok(MatureReport{key:self.key,received_unique:self.unique,
+            possibly_repaired:self.repaired,mature:true,
+            complete:self.complete,capacity_limited:self.capacity_limited})
+    }
+}
+
+/// One 4-slot RX ring per authenticated lane/epoch/direction, not a packet
+/// history. Windows are nonoverlapping and armed before first DATA whenever
+/// complete coverage is claimed. Eviction is a missing report (UNKNOWN).
+pub struct ReceiveWindows {
+    lane:LaneKey,
+    epoch:[u8;16],
+    direction:WireDirection,
+    slots:[Option<ReceiveCounter>;MAX_RECEIVE_WINDOWS],
+    next:usize,
+    last_id:Option<u64>,
+    last_pn:Option<u64>,
+}
+impl ReceiveWindows {
+    pub fn new(lane:LaneKey,epoch:[u8;16],direction:WireDirection)->Self{
+        Self{lane,epoch,direction,
+            slots:std::array::from_fn(|_|None),next:0,
+            last_id:None,last_pn:None}
+    }
+    pub fn arm(&mut self,key:WindowKey,now:MonoNs,
+        complete_from_first_data:bool)->Result<(),QualityError>{
+        if key.lane!=self.lane||key.epoch!=self.epoch||
+            key.direction!=self.direction{return Err(QualityError::WrongWindow)}
+        if self.last_id.is_some_and(|old|key.id<=old)||
+            self.last_pn.is_some_and(|old|key.first.0<=old) {
+            return Err(QualityError::InvalidRange)
+        }
+        let counter=ReceiveCounter::new(key,now,complete_from_first_data)?;
+        self.slots[self.next]=Some(counter);
+        self.next=(self.next+1)%MAX_RECEIVE_WINDOWS;
+        self.last_id=Some(key.id);
+        self.last_pn=Some(key.last.0);
+        Ok(())
+    }
+    /// Only after native authentication/unique-PN and DATA classification.
+    /// Scans at most four fixed slots, never historical DATA/Receipt pages.
+    pub fn on_unique_data(&mut self,pn:RecordPn,repaired:bool)->bool{
+        for entry in self.slots.iter_mut().flatten(){
+            if entry.on_unique_data(pn,repaired){return true}
+        }
+        false
+    }
+    pub fn censor_capacity(&mut self,key:WindowKey)->Result<(),QualityError>{
+        let Some(entry)=self.slots.iter_mut().flatten()
+            .find(|entry|entry.key==key)else{return Err(QualityError::WrongWindow)};
+        entry.censor_capacity();
+        Ok(())
+    }
+    pub fn report(&self,key:WindowKey,now:MonoNs)
+        ->Result<MatureReport,QualityError>{
+        let Some(entry)=self.slots.iter().flatten()
+            .find(|entry|entry.key==key)else{return Err(QualityError::WrongWindow)};
+        entry.mature_report(now)
+    }
+}
+
+/// Up to 16 completed, definitely-driver-confirmed first-send windows.
+/// A small, report-cadence scan is allowed; never scan it for DATA admission.
+/// A missing/evicted/stale report is UNKNOWN rather than zero loss.
+pub struct SendHistory {
+    lane:LaneKey,epoch:[u8;16],direction:WireDirection,
+    slots:[Option<ClosedWindow>;MAX_CLOSED_SEND_WINDOWS],
+    next:usize,last_id:Option<u64>,last_pn:Option<u64>,
+}
+impl SendHistory {
+    pub fn new(lane:LaneKey,epoch:[u8;16],direction:WireDirection)->Self{
+        Self{lane,epoch,direction,slots:[None;MAX_CLOSED_SEND_WINDOWS],
+            next:0,last_id:None,last_pn:None}
+    }
+    pub fn close(&mut self,window:ClosedWindow)->Result<(),QualityError>{
+        if window.key.lane!=self.lane||window.key.epoch!=self.epoch||
+            window.key.direction!=self.direction{return Err(QualityError::WrongWindow)}
+        if self.last_id.is_some_and(|old|window.key.id<=old)||
+            self.last_pn.is_some_and(|old|window.key.first.0<=old) {
+            return Err(QualityError::InvalidRange)
+        }
+        let span=window.key.last.0.checked_sub(window.key.first.0)
+            .and_then(|v|v.checked_add(1))
+            .filter(|&v|v<=MAX_WINDOW_PNS)
+            .ok_or(QualityError::InvalidRange)?;
+        if u64::from(window.first_sent)>span{
+            return Err(QualityError::InvalidCounts)
+        }
+        self.slots[self.next]=Some(window);
+        self.next=(self.next+1)%MAX_CLOSED_SEND_WINDOWS;
+        self.last_id=Some(window.key.id);
+        self.last_pn=Some(window.key.last.0);
+        Ok(())
+    }
+    pub fn assess_report(&self,report:&MatureReport,now:MonoNs)
+        ->Result<LossBounds,QualityError>{
+        let Some(sent)=self.slots.iter().flatten()
+            .find(|sent|sent.key==report.key)else{return Err(QualityError::WrongWindow)};
+        assess(sent,report,now)
+    }
+}
+
+#[cfg(test)]
+mod bounded_window_tests {
+    use super::*;
+    use wbd_types::TunnelKey;
+    fn key(id:u64,first:u64)->WindowKey {
+        WindowKey{lane:LaneKey{
+            tunnel:TunnelKey{slot:2,generation:9},slot:1,generation:4},
+            epoch:[9;16],direction:WireDirection::ClientToServer,
+            id,first:RecordPn(first),last:RecordPn(first+1023)}
+    }
+    #[test]
+    fn r2_plan027_receiver_1024_bits_matures_3s_no_duplicates(){
+        let mut w=ReceiveWindows::new(key(1,0).lane,[9;16],
+            WireDirection::ClientToServer);
+        w.arm(key(1,0),MonoNs(0),true).unwrap();
+        assert!(w.on_unique_data(RecordPn(0),false));
+        assert!(!w.on_unique_data(RecordPn(0),true));
+        assert!(w.on_unique_data(RecordPn(1023),true));
+        assert!(!w.on_unique_data(RecordPn(1024),false));
+        assert_eq!(w.report(key(1,0),MonoNs(2_999_999_999)),
+            Err(QualityError::NotMature));
+        let r=w.report(key(1,0),MonoNs(3_000_000_000)).unwrap();
+        assert_eq!((r.received_unique,r.possibly_repaired),(2,1));
+        let mut h=SendHistory::new(key(1,0).lane,[9;16],
+            WireDirection::ClientToServer);
+        h.close(ClosedWindow{key:key(1,0),first_sent:3,
+            closed_at:MonoNs(1),complete:true,capacity_limited:false}).unwrap();
+        let b=h.assess_report(&r,MonoNs(3_000_000_000)).unwrap();
+        assert_eq!((b.lower,b.upper),(1,2));
+        assert_eq!(w.report(key(1,0),MonoNs(EXPIRE_NS+1)),
+            Err(QualityError::Stale));
+    }
+    #[test]
+    fn r2_plan027_four_rx_sixteen_tx_windows_evict_to_unknown(){
+        let k=key(1,0);
+        let mut rx=ReceiveWindows::new(k.lane,k.epoch,k.direction);
+        let mut tx=SendHistory::new(k.lane,k.epoch,k.direction);
+        for n in 0..17u64{
+            let wk=key(n+1,n*1024);
+            rx.arm(wk,MonoNs(0),true).unwrap();
+            tx.close(ClosedWindow{key:wk,first_sent:1024,
+                closed_at:MonoNs(0),complete:true,capacity_limited:false}).unwrap();
+            assert!(rx.on_unique_data(wk.first,false));
+        }
+        assert_eq!(rx.report(key(1,0),MonoNs(3_000_000_000)),
+            Err(QualityError::WrongWindow));
+        let latest=rx.report(key(17,16*1024),MonoNs(3_000_000_000)).unwrap();
+        assert_eq!(tx.assess_report(&latest,MonoNs(3_000_000_000))
+            .unwrap().lower,1023);
+        assert_eq!(tx.assess_report(&MatureReport{key:k,..latest},
+            MonoNs(3_000_000_000)),Err(QualityError::WrongWindow));
+        assert_eq!(rx.arm(key(17,17*1024),MonoNs(0),true),
+            Err(QualityError::InvalidRange));
+        let mut wrong=key(18,17*1024);wrong.epoch=[8;16];
+        assert_eq!(rx.arm(wrong,MonoNs(0),true),
+            Err(QualityError::WrongWindow));
+    }
+    #[test]
+    fn r2_plan027_partial_or_capacity_window_never_claims_clean(){
+        let k=key(1,100);
+        let mut rx=ReceiveWindows::new(k.lane,k.epoch,k.direction);
+        let mut tx=SendHistory::new(k.lane,k.epoch,k.direction);
+        rx.arm(k,MonoNs(50),false).unwrap();
+        tx.close(ClosedWindow{key:k,first_sent:4,
+            closed_at:MonoNs(50),complete:true,capacity_limited:false}).unwrap();
+        rx.on_unique_data(RecordPn(100),false);
+        let partial=rx.report(k,MonoNs(3_000_000_050)).unwrap();
+        assert_eq!(tx.assess_report(&partial,MonoNs(3_000_000_050)),
+            Err(QualityError::Unknown));
+        rx.censor_capacity(k).unwrap();
+        let censored=rx.report(k,MonoNs(3_000_000_050)).unwrap();
+        assert!(censored.capacity_limited);
+        assert_eq!(tx.assess_report(&censored,MonoNs(3_000_000_050)),
+            Err(QualityError::Unknown));
+    }
+}
