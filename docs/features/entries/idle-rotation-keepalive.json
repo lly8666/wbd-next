@@ -29,7 +29,8 @@
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
-    "docs/architecture/modules/10-LIFECYCLE-QUALITY.md"
+    "docs/architecture/modules/10-LIFECYCLE-QUALITY.md",
+    "docs/evidence/M0/PLAN026-LINUX-AUTO-KEEPALIVE-SOURCE7E984-20261029.json"
   ],
   "verification": [
     {
@@ -52,6 +53,13 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "linux/amd64 current-source Rust M2/Health component",
+      "scope": "PLAN026 source7e984 compiled Rust native authenticated Health/Quality + 15s/90s keepalive clock: 9/9 positive+negative unit PASS. Real 2-netns zero-business >15s heartbeat and 90s server dead/verified FIN/Dormant/Wake separately NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "7e9842f6e99769d9919e75a4b15da8d6d88e7257",
+      "evidence": "docs/evidence/M0/PLAN026-LINUX-AUTO-KEEPALIVE-SOURCE7E984-20261029.json"
     }
   ],
   "limitations": [

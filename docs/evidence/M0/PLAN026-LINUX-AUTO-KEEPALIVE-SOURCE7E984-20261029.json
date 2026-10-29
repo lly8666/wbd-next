@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "source_sha": "7e9842f6e99769d9919e75a4b15da8d6d88e7257",
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
+  "result": "PASS_SCOPED_LINUX_AUTO_REAL_AND_HEALTH_CORE",
+  "artifact_verified": true,
+  "run_id": 40851521157,
+  "run_attempt": 1,
+  "github_url": "https://github.com/lly8666/wbd-next/actions/runs/40851521157",
+  "parallel_jobs": [
+    {
+      "job": "auto-real-go-rust-two-netns / native",
+      "conclusion": "success",
+      "actual_linux_product": "original Go credential TLS + Rust M1/M3/M4 raw/TUN both directions",
+      "facts": [
+        "fec-auto: 64 offered application records and 64 first-real-delivered, genuine original authenticated M2 Applied and client+server owned Stop",
+        "fec-fixed: independent 64 actual app and authenticated M2 Applied + Stop",
+        "normal original TLS raw/TUN base, Game2/4 original 2/4 authenticated lanes with one harmed lane no-HOL/Stop and 1pct loss tested under combined workflow"
+      ],
+      "true_netem_1pct": {
+        "offered": 512,
+        "first_unique_delivered": 509,
+        "missing": 3,
+        "tc_client_drop": 14,
+        "tc_server_drop": 13,
+        "kernel_first_copy_client": 512,
+        "kernel_first_copy_server": 510,
+        "authenticated_m2_acks_client": 254,
+        "authenticated_m2_acks_server": 268,
+        "outer_repair_attempts_observed": 13,
+        "outer_delivery_required": false
+      },
+      "artifact_id": 12886709510,
+      "artifact_name": "m0-plan012-combined-40851521157-1",
+      "sha256": "bfef81074b1da4969d87088a86768756cd28ffea400822c3b62b48b07b70c1a5"
+    },
+    {
+      "job": "keepalive-linux-authenticated-core",
+      "conclusion": "success",
+      "actual_platform": "linux/amd64 compiled Rust core, no simulated PASS of signed Win driver",
+      "facts": [
+        "9/9 actual Rust HealthClock/AuthenticatedActivity/control-Codec tests passed",
+        "15s/90s default and 3*interval invariant",
+        "idle without business does not prove Dormant or alive without authenticated peer",
+        "missing authenticated records -> dead, but verified FIN required for Dormant",
+        "negative stale generation/oversized control, failed send retry do not fabricate authenticated facts"
+      ],
+      "artifact_id": 12886938003,
+      "artifact_name": "plan026-linux-health-core-40851521157-1",
+      "sha256": "1c4260f34f2e1709ef1ba8863421ef306413527c50878b2513854fa167c7187b"
+    }
+  ],
+  "scope_limits": [
+    "True original Linux source Auto startup M2 Applied is not naturally loss-driven rise/120s down-grade",
+    "Keepalive 9 tests are AUTHENTICATED CORE ONLY, not genuine 90s idle/timeout two-OS network behavior or verified FIN Dormant/Wake",
+    "Windows same-source signed Game2/4 and real full public remain independent unresolved at evidence capture",
+    "No physical, GUI or same-VM CPU attribution claim",
+    "Optional outer opportunistic recovery delivery not an acceptance gate"
+  ],
+  "file_integrity": "Both downloaded Action ZIP SHA256 computed locally and matched GitHub published artifact digests; original messages and source lock preserved."
+}

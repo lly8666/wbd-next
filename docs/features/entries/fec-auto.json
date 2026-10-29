@@ -33,7 +33,8 @@
   ],
   "doc_refs": [
     "docs/architecture/FEC_V2_BALANCED.md",
-    "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
+    "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
+    "docs/evidence/M0/PLAN026-LINUX-AUTO-KEEPALIVE-SOURCE7E984-20261029.json"
   ],
   "verification": [
     {
@@ -154,12 +155,19 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
       "evidence": "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
+    },
+    {
+      "platform": "linux/amd64 original Go TLS + Rust real 2-netns raw/TUN",
+      "scope": "PLAN026 source7e984 Auto 64/64 true app, authenticated mature M2 Applied, both Stop; 1pct netem 512 offered/509 delivered. No natural 120s grade/Windows/physical claim.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "7e9842f6e99769d9919e75a4b15da8d6d88e7257",
+      "evidence": "docs/evidence/M0/PLAN026-LINUX-AUTO-KEEPALIVE-SOURCE7E984-20261029.json"
     }
   ],
   "limitations": [
     "历史启动Applied不可推广为所有升/降档场景PASS。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
-    "Windows original Rust auto-quality 30-field mature M2/cumulative actual-k and same Linux FecV2Step controller are wired in Draft branch; dynamic actual revision and GUI Applied still require exact-source real Windows product positive.",
+    "Windows Rust 30-field mature M2 and Linux FecV2Step share decision reference; previous candidate source still separately scoped.",
     "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS.",
     "Exact SOURCE350199f native Actions40445098497 remains FAIL for Windows original FEC2 reverse first delivery; Linux raw/TUN sender works, Windows still rejected first incoming 103B record before Ready. Subsequent source82ec native FEC2 diagnostic candidate has no inherited PASS; retained as partial.",
     "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible.",
@@ -176,7 +184,7 @@
     "S55 source49f81637 Actions40556191100 full native Auto natural one-grade within120s + both owned Stop PASS. Does NOT evidence rapid loss-driven upshift or WL-N0/p99/physical/global. Historical S52/S54 original FAIL unchanged.",
     "H307 exact S55 source49f81637 reviewed integration to main; original per-SOURCE tests and limitations unchanged. See docs/devlog/M0/PLAN025-H307-S55-frozen-product-main-integration-20261028.md.",
     "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
-    "PLAN026 Windows native Rust Auto actor code candidate replaces the Go 2s grade goroutine ONLY on NativeAttachV2/auto. It consumes original mature M2 firstsend 2s/8s + actual-k histogram, uses existing FixedStream quiescent revision and an M2-backed readback, 2s fast-rise and 30s/4096 genuine-source one-rung down. Linux original Go policy remains on its cold 2s cadence. Rust Auto exact-source native network up/down/GUI/CPU and Game auto exclusion NOT_RUN; historical source-bound FAIL/PASS unchanged."
+    "PLAN026 Windows Rust Auto actor remains unqualified for natural grade up/down, GUI, CPU and physical. Linux original Auto 64 genuine app/M2/Stop at source7e984 PASS, not 120s natural grade."
   ],
   "promotion": null
 }
