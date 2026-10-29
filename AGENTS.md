@@ -1,10 +1,11 @@
 # WBD Next｜全体agent硬约束
 
-1. 以最新用户授权为先。主目标：真实业务**首次到达**、低时延、无跨业务HOL、低系统成本；允许有界内存换CPU。保留认证/完整性、账户和地址隔离、epoch/generation、原密文修复、MTU与owned Stop。具体产品边界见`PROJECT_CHARTER.md`。
-2. M0在**main**直接开发/测试/留痕；只有独立明确授权的并行角色才用其他分支。每次从`START_HERE.md`八文件起步，刷新HEAD，核`registry.goal`、M0 cursor checkpoint增量与在途Actions。旧FEC工位已结束，旧分支/旧聊天/历史FAIL不是新任务。
-3. Windows Option B：Go负责原FakeTCP/TLS认证、OS/WFP/WAL/GUI与低频换lane；Rust独占稳态Wintun/Npcap/M2/FEC/Game/Health。**不允许Go每包FFI、Go空轮询、双热控制器**；Windows尽量固定两Rust I/O worker，真实事件/最近deadline；Linux已稳定I/O先不重写。具体本批依赖/Auto/Keepalive/测试按`docs/decisions/M0-PLAN026-FEC-GAME-AUTO-HEALTH-LOW-COST-EXECUTION-20261029.md`。
-4. 每批先补齐全部产品实现/调用/有效配置与CLI/GUI适用项/测试/夹具/装配manifest，再冻结SOURCE执行Actions；可随写静态检查。先便宜编译/core，后Fixed/Game，**Auto与Keepalive/服务器超时协同最后**；不为helper反复全链路，不无限架构重写。失败先找首异常，区分产品/夹具/容量/错判，仅重跑原反例及受影响保护。
-5. 功能可合批，性能每Action一个场景一个测量job，旧Go与新Rust同机先后A/B。按实际offered/delivered、tc drop、真实Stop、CPU+线程/内核、RSS/idle wakes报告；主机达到容量停更重同族，不将锁/单核瓶颈假称环境。生产不留逐包计时/日志，诊断仅显式opt-in稀疏采样。
-6. 用户可见功能唯一入口`docs/features/README.md`，变更同步对应卡/新短devlog的feature-impact；experimental不自动成为formal。历史日志和证据归档保留，不复制到热提示词。权限冲突/硬要求变更/未授权部署之外自行连续完成，阶段边界cursor-only H；禁止force和整树覆盖。
+1. 用户最新指令优先。真实业务首到、低延迟/无跨流HOL、低CPU；允许有界内存。认证/完整性、账户和lane隔离、generation、原密文、MTU、真实驱动结果、owned Stop不可退让，见PROJECT_CHARTER。
+2. M0在main连续开发；只有另授独立任务用其他分支。新聊天或定时提示默认上次可能中断，按START_HERE恢复main/cursor后增量与在途Actions，不重复dispatch、重扫历史或复活已结束FEC工位。
+3. 当前用户授权优先级为PLAN027：先去线上M2 Receipt及热依赖、接老版低频质量/Health与机会重传，简化验证后再补接线、跑矩阵、优化。唯一细则见docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md；旧PLAN026/cursor next_action冲突处被覆盖，历史证据不删。
+4. Go保留成熟TLS/OS/GUI冷控制，Rust稳态，禁止Go逐包FFI/空轮询/双控制器。普通实现选择自主做，不增防御性包装/通用框架，不为假设极端钻牛角尖；必要正确性检查保持。
+5. 同一批代码/双方调用/配置读回/功能卡/夹具先齐再冻结SOURCE。执行测试在Actions：一Action一场景测试控制进程/测量job，必要双端进程允许；不同场景可独立Action并行，同VM A/B顺序。一次构建按SOURCE/manifest/hash复用；容量耗尽停更重同族，不刷seed，产品锁/单核瓶颈不能伪称环境。
+6. 单main写入，不覆盖未知变更、不reset/force。每批短devlog带feature-impact，功能卡统一记录；阶段/恢复更新cursor与在途run。旧SOURCE PASS不转移新SOURCE，失败/未验/物理范围保留。
+7. 满足当前完成条件即交付。定时器重复提示在无新实质任务时只回复基本完成待验收，不重新开发或跑矩阵。凭据/正文/大pcap不入库，清理自有大文件，不擅自部署物理机或发其他聊天消息。
 
-详细流程仅按需读`docs/GOVERNANCE.md`、`docs/history/2026-10-28-M0-MAIN-HANDOFF.md`。
+历史细节按需读docs/GOVERNANCE.md、docs/history/2026-10-28-M0-MAIN-HANDOFF.md及原证据。

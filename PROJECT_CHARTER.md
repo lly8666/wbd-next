@@ -11,3 +11,4 @@
 **交付证据**：代码/组件PASS≠真实双端/性能/物理PASS。同一SOURCE构建固定manifest、Actions真业务/Stop验证、同runner顺序A/B对CPU；按容量停止更重同族，保留旧FAIL/未测风险。更新功能目录与可见参数，不默认动用户物理机器、无凭据/正文进入仓库。旧目标与分支背景详见`docs/history/2026-10-28-M0-MAIN-HANDOFF.md`及归档决策。
 
 **治理**：G1授权包自主做；G2模块/责任边界变更记录影响；G3更改硬要求/未授权外部部署需先取得决定。源码/成果在main；角色/真实进展见main registry/cursor。
+**2026-10-30最新范围**：按PLAN027先退役线上逐record M2 Receipt，以老版低频质量/Health与外层ACK/SACK机会重传替代；ACK不当认证存活或真实业务交付。持续重传按R≤0.10F记账，另报R/(F+R+C)，稀疏绝对界保留。Auto升档期不设损失硬门，合格持续样本120s降一档；本轮矩阵10–200Mbps/最高30%/单程250ms，Game4最高FEC≤20Mbps。先简化验证再接线/矩阵，容量止步，完成后重复提示只报待验收。旧500Mbps等目标保留历史，不是本轮必跑门。细则见[PLAN027](docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md)。
