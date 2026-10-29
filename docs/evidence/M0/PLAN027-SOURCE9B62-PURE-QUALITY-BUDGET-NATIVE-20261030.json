@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "scope": "PURE_LOW_RATE_QUALITY_V2_AND_TEN_PERCENT_REPAIR_ACCOUNTING_CONTRACT_ONLY",
+  "source_sha": "9b62b9638710ac39a710c598a9eeb6f6da196f90",
+  "source_manifest_sha256": "16af0866f2e06e089e2798c70ad6812544bd8b8c01a8735375bb989b09634e9e",
+  "native_run_id": 40929901727,
+  "native_run_url": "https://github.com/lly8666/wbd-next/actions/runs/40929901727",
+  "execution": "GitHub Actions / native-functional / same SOURCE",
+  "groups": [
+    {
+      "group": "recovery",
+      "result": "PASS",
+      "tests": 85,
+      "failed": 0,
+      "job_id": 123645910302,
+      "binary_sha256": "f6ef2d281b29c04f42802dca5a59628fa5367bdc02242e2032443b23de09d352",
+      "log_sha256": "dd315d30633a8fb6d7fdc423a4f701caf18b72e888b5960b90005673b4b8665c"
+    },
+    {
+      "group": "engine",
+      "result": "PASS",
+      "tests": 134,
+      "failed": 0,
+      "ignored": 1,
+      "job_id": 123645910237,
+      "binary_sha256": "b9873e2221dd0f41b5c12b6260b9aa5344eae2b87695f2ad94e4abe0b077aa50",
+      "log_sha256": "991abbd700c0f68e3a70353196ed3338cec2a26de2eb0c4df09ffb511b59f491"
+    }
+  ],
+  "other_native_groups": "kernel,receipt,fec,normal,plan,build all SUCCESS in same run",
+  "previous_failures_retained": [
+    {
+      "run_id": 40929275175,
+      "result": "FAIL",
+      "reason": "Windows native original M2 effective readback direction_epoch_limit==0 in source23717d0; fixed H384, Windows targeted requal run40930106841 in progress"
+    },
+    {
+      "run_id": 40915929426,
+      "result": "FAIL",
+      "reason": "Independent Windows WAL Game2 Stop rc5 and 8-minute timeout; no valid subsequent same-scene outcome yet"
+    }
+  ],
+  "product_online_m2_receipt": "ACTIVE_NOT_RETIRED",
+  "plan027_qualification_A": "NOT_RUN",
+  "plan027_qualification_B": "OPEN",
+  "plan027_qualification_C": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "no_product_inference": true
+}
