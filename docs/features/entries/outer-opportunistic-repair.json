@@ -23,6 +23,7 @@
     "r0/go_overlay/internal/v4productcli/linux.go",
     "crates/wbd-recovery/src/budget.rs",
     "crates/wbd-recovery/src/global_sparse.rs",
+    "crates/wbd-recovery/src/outer_ack.rs",
     "crates/wbd-engine/src/v4_windows_owner.rs",
     "crates/wbd-engine/src/v4_windows_native_runtime.rs",
     "crates/wbd-engine/src/v4_windows_owner.rs",
@@ -38,7 +39,8 @@
     "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-24-SIGNED-MATRIX.md",
     "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-OUTER-REPAIR-RTT-FLOOR.md",
     "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-24-SIGNED-RESULT.md",
-    "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-FEATURE-STATUS-CORRECTION.md"
+    "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-FEATURE-STATUS-CORRECTION.md",
+    "docs/devlog/M0/20261030-PLAN027-OUTER-ACK-SACK-INDEX-FIRST-CODE.md"
   ],
   "verification": [
     {
@@ -106,6 +108,7 @@
     }
   ],
   "limitations": [
+    "PLAN027 main SOURCE4edec16e3 introduced pure scoped outer ACK/SACK cache retirement/gap-hint index and unit tests; not connected to either live owner, M2 per-record Receipt still active, no new-source native or matrix PASS. Exact code/devlog reference above.",
     "FEC修复/多lane副本不计入outer DATA重传；pre-netem DATA统计不能除post-netem线路字节。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
