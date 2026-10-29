@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "361265256d58d18ea0b36badf04668c16fb19e1c",
+  "scope": "OLD_M2_WINDOWS_OWNER_SCOPED_NATIVE_REGRESSION_NOT_NEW_LOW_RATE_PRODUCTION",
+  "windows": {
+    "run_id": 40962693602,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40962693602",
+    "job_id": 123759288042,
+    "artifact_id": 12937205517,
+    "artifact_zip_sha256": "e5e9260b93034f9ee230a60e8e92ce9f428691505a0b91126fc6d92b45856392",
+    "receipt_json_sha256": "3fc6d3e261c409b70105952dc505dac474be6b0f209a6ed3db4c98e0c44bbbe0",
+    "native_tests_log_sha256": "6efd4197952ffc34a69629715f22e3ae81d19fcbd276b766aa704efbc6fab1be",
+    "original_go_tls_native_rust_log_sha256": "faf80ed75d4860842f5404e3ca80b4de60d4df22760030340618bb0ae223b630",
+    "original_go_native_cli_build_json_sha256": "1a6be6bb7f968b1625fc21e0497f1e66bf386e13f900324b61abef57854340d4",
+    "platform": "windows/x64 native MSVC signed Wintun, original Go TLS/Rust owner",
+    "rust_toolchain": "1.85.1",
+    "go_version": "1.23.12",
+    "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "frozen_m4_sha": "b53b5dac422a634cdd82178a29071f9f9f0ae5e7",
+    "binaries_sha256": {
+      "wbd-client.exe": "e3b64a9b06043208f02d0ba0aaa9e6ef2228c11e387d9f34097c19e44b52033e",
+      "wbd-server.exe": "a2ccc5b0288fc9d4fe68b85f896abb7c33adf9c5fcb5d1e341c142fa33a3f943",
+      "wbd_engine.dll": "8aa90888bc921460758e0263bde7052fac1506e7090199f7c5234df4c0f0d0e2"
+    },
+    "scoped_positive": [
+      "Original Go credential TLS to Rust M3 AEAD signed Wintun kernel to real UDP app",
+      "Bidirectional original TLS/Rust M3 authenticated Windows Wintun UDP",
+      "Replay and tamper denied",
+      "Same-generation Wintun hold, quiesce and owned Stop",
+      "Native Windows Go client/server compiled"
+    ],
+    "limitations": [
+      "Still old per-record M2, no low-rate START/CLOSE or v2 summary production",
+      "No host-global WFP/default route/DNS/IPv6/MTU WAL applied",
+      "No public CLI/WinForms real Applied/Disconnect",
+      "No PLAN027 A/B/C/performance/long-run qualification"
+    ]
+  },
+  "governance": {
+    "failed_run_id": 40963709657,
+    "failed_conclusion": "failure",
+    "reason": "cursor.evidence_refs contained PLAN026 old source but last_tested_source was updated to H407; evidence-source consistency check",
+    "correction": "H411 restrict evidence_refs to H407 exact source H410/H411; historical PLAN026 evidence retained in repository"
+  },
+  "related_source_native_evidence": "docs/evidence/M0/PLAN027-H410-RECEIVER-QUALITY-SOURCE-NATIVE-RESULTS-20261030.json"
+}
