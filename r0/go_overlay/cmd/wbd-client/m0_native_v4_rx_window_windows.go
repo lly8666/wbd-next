@@ -68,6 +68,14 @@ func(w *m0V4RxWindow) Copied(seq uint32,n int)(uint32,error){
   delete(w.received,w.cumulative)
   w.cumulative+=size // serial arithmetic, handles 32-bit wrap.
  }
+ // Copied is called ONLY after real original Rust M3 authentication and
+ // a successful owned Wintun copy. A contiguous progress is also genuine
+ // authenticated evidence: keep its high watermark at least as fresh as
+ // the cumulative ACK. Otherwise a previously copied stale retransmit
+ // could be misclassified as fatal out-of-window (not a normal duplicate).
+ if int32(w.cumulative-w.authenticatedHigh)>0{
+  w.authenticatedHigh=w.cumulative
+ }
  return w.cumulative,nil
 }
 func(w *m0V4RxWindow) Ack()uint32{return w.cumulative}
