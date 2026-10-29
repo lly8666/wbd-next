@@ -562,6 +562,14 @@ impl ProtectedScopedOwner {
          && self.rx_tx.detached() && self.epoch!=[0u8;16])
         .then_some((self.token.lane(),self.epoch))
     }
+    /// Read-only preview for original Windows M3's START boundary.
+    /// Sender must still commit the encrypted START at the real driver
+    /// before its subsequent DATA can qualify as covered.
+    #[cfg(target_os="windows")]
+    pub(crate) fn next_original_record_pn(&self)->Option<u64>{
+        self.normal_firstsend_identity()?;
+        self.crypto.tx.next_packet_number()
+    }
     /// Transfer the SAME protected Go-authenticated RX replay opener,
     /// original Normal-off table and generation to one RX worker exactly
     /// once; the original TX queue/sealer remain with the control Entry.

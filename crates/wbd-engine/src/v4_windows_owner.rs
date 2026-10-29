@@ -27,7 +27,8 @@ use crate::memory::{Arena,FrozenRecord};
 use crate::runtime::early_rx::EarlyAccepted;
 use crate::runtime::{TxDispatch,RxPacket};
 use wbd_types::{MonoNs,RecordPn};
-use wbd_recovery::quality_window::{ReceiveWindows,WindowKey,QualityError,WireReport};
+use wbd_recovery::quality_window::{ReceiveWindows,WindowKey,QualityError,WireReport,
+    SendWindowSampler,SendHistory,ClosedWindow,FirstSendStatus};
 use wbd_types::buffer_contract::{UniqueSealable,FrozenRecordHandle};
 use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
 use wbd_codec::link_fec_wire::{inspect_link,LinkMode,LinkView};
@@ -91,6 +92,14 @@ struct WindowsOriginalM2 {
     quality_receive:ReceiveWindows,
     quality_due:VecDeque<WindowKey>,
     quality_awaiting:Option<WindowKey>,
+    // Original M3 PN allocator is the single authority for TX boundaries.
+    // Only actual NPF outcomes enter F. No second controller/timer thread.
+    quality_sender:Option<SendWindowSampler>,
+    quality_history:SendHistory,
+    quality_close_waiting:Option<ClosedWindow>,
+    quality_signal_awaiting:Option<crate::v4_native_health::QualityWindowSignal>,
+    quality_next_id:u64,
+    quality_next_open_ns:u64,
     // Per-lane state, no thread/timer; TX Health deadline not yet activated.
     health:crate::v4_native_health::HealthClock,
     // Same W168 mature source-only denominator as Linux Fixed; never a
@@ -307,6 +316,7 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
     let reverse=if e.role_server{WireDirection::ClientToServer}
         else{WireDirection::ServerToClient};
     let quality_receive=ReceiveWindows::new(lane,epoch,reverse);
+    let quality_history=SendHistory::new(lane,epoch,outbound);
     let feedback=RxFeedbackState::new(RxFeedbackConfig{
         max_retained_pages:1024,max_pages_per_report:8,
         retention_ns:2_000_000_000,srtt_ns:600_000_000,
@@ -347,6 +357,8 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         feedback,feedback_pending:None,
         quality_receive,quality_due:VecDeque::with_capacity(4),
         quality_awaiting:None,
+        quality_sender:None,quality_history,quality_close_waiting:None,
+        quality_signal_awaiting:None,quality_next_id:0,quality_next_open_ns:0,
         health:crate::v4_native_health::HealthClock::new(
             crate::v4_native_health::HealthPolicy::default_connected(),now.0),
         #[cfg(feature="fec2_product_record")]
@@ -393,16 +405,62 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
 )->Result<Option<(usize,u32,u64)>,i32>{
     if !v3_ready(e,epoch,luid,ifindex){return Err(INVALID)}
     let now=m2_clock();
-    let (draft,health_due,quality)={
+    // Native mode 2, not merely feature7, is the single explicit Auto gate.
+    // Fixed and Normal/off never create continuous quality windows.
+    #[cfg(feature="fec2_product_record")]
+    let auto=e.feature7&&e.auto_actor.is_some()&&e.game_group.is_none();
+    #[cfg(not(feature="fec2_product_record"))]
+    let auto=false;
+    let next_pn=e.owner.next_original_record_pn().ok_or(BAD_STAGE)?;
+    let (draft,health_due,quality,signal)={
         let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
         if m.feedback_pending.is_some(){return Ok(None)}
-        let quality=win_mature_quality_due(m,now);
-        // A matured quality report takes precedence over an old M2 draft.
-        // Do not consume a draft unless its bitmap will actually be sent.
-        let draft=if quality.is_some(){None}else{m.feedback.on_due(now)};
+        let signal=if auto{
+            if let Some(window)=m.quality_close_waiting {
+                Some(crate::v4_native_health::QualityWindowSignal{
+                    kind:crate::v4_native_health::QualitySignalKind::Close,
+                    id:window.key.id,first:window.key.first.0,last:window.key.last.0,
+                    first_sent:window.first_sent,complete:window.complete,
+                    capacity_limited:window.capacity_limited,
+                })
+            }else if m.quality_sender.as_ref().is_some_and(|s|
+                next_pn>s.key().last.0 &&
+                m.pending.range(s.key().first..=s.key().last).next().is_none()){
+                let closed=m.quality_sender.as_mut().ok_or(BAD_STAGE)?
+                    .close(now).map_err(|_|BAD_STAGE)?;
+                m.quality_sender=None;
+                m.quality_close_waiting=Some(closed);
+                Some(crate::v4_native_health::QualityWindowSignal{
+                    kind:crate::v4_native_health::QualitySignalKind::Close,
+                    id:closed.key.id,first:closed.key.first.0,
+                    last:closed.key.last.0,first_sent:closed.first_sent,
+                    complete:closed.complete,capacity_limited:closed.capacity_limited,
+                })
+            }else if m.quality_sender.is_none() && now.0>=m.quality_next_open_ns{
+                let first=next_pn.checked_add(1).ok_or(BAD_STAGE)?;
+                let last=first.checked_add(1023).ok_or(BAD_STAGE)?;
+                let id=m.quality_next_id.checked_add(1).ok_or(BAD_STAGE)?;
+                let key=WindowKey{lane:m.route.outbound_lane(),
+                    epoch:e.authenticated_epoch,direction:m.route.direction(),
+                    id,first:RecordPn(first),last:RecordPn(last)};
+                m.quality_sender=Some(SendWindowSampler::new(key,now)
+                    .map_err(|_|BAD_STAGE)?);
+                m.quality_next_id=id;
+                Some(crate::v4_native_health::QualityWindowSignal{
+                    kind:crate::v4_native_health::QualitySignalKind::Start,
+                    id,first,last,first_sent:0,complete:false,capacity_limited:false,
+                })
+            }else{None}
+        }else{None};
+        let quality=if signal.is_some(){None}else{win_mature_quality_due(m,now)};
+        // Auto explicitly disables old bitmap draft generation; other
+        // modes temporarily retain their existing unmodified repair path.
+        let draft=if auto||quality.is_some(){None}else{m.feedback.on_due(now)};
         let health_due=m.health.tx_due(now.0);
-        if draft.is_none()&&!health_due&&quality.is_none(){return Ok(None)}
-        (draft,health_due,quality)
+        if draft.is_none()&&!health_due&&quality.is_none()&&signal.is_none(){
+            return Ok(None)
+        }
+        (draft,health_due,quality,signal)
     };
     let prepared=(||->Result<(usize,u32,u64),i32>{
         let msg=draft.as_ref().map(|d|wbd_codec::Receipt{
@@ -417,7 +475,12 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         // local business-idle hint and bounded random padding. Otherwise
         // forward the M2 bitmap at original speed without any control RNG.
         let budget=normal_off_windows_budget(e)?;
-        let tlv=if let Some((_,report))=quality.as_ref(){
+        let tlv=if let Some(signal)=signal{
+            let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
+            crate::v4_native_health::encode_authenticated_low_rate_signal_live(
+                m.health.local_idle_ns(now.0),signal,budget.record_payload_mtu
+            ).map_err(|_|INVALID)?
+        }else if let Some((_,report))=quality.as_ref(){
             let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
             crate::v4_native_health::encode_authenticated_low_rate_quality_live(
                 m.health.local_idle_ns(now.0),report,budget.record_payload_mtu
@@ -474,7 +537,9 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     match prepared{
         Ok((n,seq,pn))=>{
             m.quality_awaiting=quality.map(|(key,_)|key);
-            m.feedback_pending=Some((draft,pn,health_due||m.quality_awaiting.is_some()));
+            m.quality_signal_awaiting=signal;
+            m.feedback_pending=Some((draft,pn,health_due||
+                m.quality_awaiting.is_some()||signal.is_some()));
             Ok(Some((n,seq,pn)))
         },
         Err(err)=>{
@@ -483,6 +548,10 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                 let _=m.feedback.on_send_result(
                     draft,FeedbackSendResult::NotSent,now
                 );
+            }
+            if signal.is_some_and(|s|
+                s.kind==crate::v4_native_health::QualitySignalKind::Start){
+                m.quality_sender=None; // no accepted START, next attempt rekeys PN
             }
             if health_due{m.health.on_health_send_result(now.0,false)}
             if err==FULL{Ok(None)}else{Err(err)}
@@ -499,6 +568,25 @@ fn m2_finish_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if *expected!=pn{return Err(INVALID)}
     let (draft,_,has_health)=m.feedback_pending.take().ok_or(BAD_STAGE)?;
     let now=m2_clock();
+    if let Some(signal)=m.quality_signal_awaiting.take(){
+        match signal.kind{
+            crate::v4_native_health::QualitySignalKind::Start=>{
+                if npcap_sent==1{
+                    if let Some(sampler)=m.quality_sender.as_mut(){
+                        sampler.on_start_send_result(true);
+                    }
+                }else{m.quality_sender=None;}
+            }
+            crate::v4_native_health::QualitySignalKind::Close=>{
+                if npcap_sent==1{
+                    let closed=m.quality_close_waiting.take().ok_or(BAD_STAGE)?;
+                    m.quality_history.close(closed).map_err(|_|BAD_STAGE)?;
+                    m.quality_next_open_ns=now.0.saturating_add(1_500_000_000);
+                }
+                // Failed CLOSE retains the exact closed F for later retry.
+            }
+        }
+    }
     if let Some(key)=m.quality_awaiting.take(){
         if npcap_sent==1&&m.quality_due.front()==Some(&key){
             m.quality_due.pop_front();
@@ -524,6 +612,14 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if row.metadata().pn!=key||row.metadata().seq.0 as u32!=seq
         ||row.bytes().len()!=wire_len {return Err(INVALID)}
     let frozen=m.pending.remove(&key).ok_or(INVALID)?;
+    if let Some(sampler)=m.quality_sender.as_mut(){
+        let status=match sent{
+            1=>FirstSendStatus::Accepted,
+            0=>FirstSendStatus::DefinitelyNotSent,
+            _=>FirstSendStatus::Uncertain,
+        };
+        sampler.on_first_send(key,status);
+    }
     #[cfg(feature="fec2_product_record")]
     if let Some(mature)=m.mature.as_mut(){
         let (lane,_) = e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;

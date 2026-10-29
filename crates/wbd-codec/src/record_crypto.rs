@@ -185,6 +185,11 @@ fn chacha_hp_mask(hp_key: &[u8; 32], ciphertext_and_tag: &[u8]) -> Result<[u8; 8
 }
 
 impl LaneTxCrypto {
+    /// Read-only next PN for an active scoped owner's low-rate START
+    /// preannouncement. Does not allocate a PN or authorize delivery.
+    pub fn next_packet_number(&self)->Option<u64>{
+        (!self.exhausted).then_some(self.next_pn)
+    }
     pub fn new(keys: DirectionKeys, max_wire: usize) -> Result<Self, CryptoError> {
         Self::new_for_suite(keys, max_wire, RecordSuite::ChaCha20Poly1305)
     }
