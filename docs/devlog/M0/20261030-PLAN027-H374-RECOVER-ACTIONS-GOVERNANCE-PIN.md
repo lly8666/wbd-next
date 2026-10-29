@@ -22,3 +22,7 @@ PLAN027 remains **partial**: online per-record M2 Receipt/bitmap still exists; r
 ## H375 automatic CI correction (same recovery batch)
 
 The H374 automatic [governance-maintenance40924459719](https://github.com/lly8666/wbd-next/actions/runs/40924459719) and [governance40924459811](https://github.com/lly8666/wbd-next/actions/runs/40924459811) failed because the recovery cursor carried 10 context references while `.governance/policy.json` permits 8. The M4 Npcap pin assertions were no longer failing; governance test failures all stemmed from `unbounded context_refs`. H375 trims context refs to eight, preserving old evidence files and the PLAN027 authority. No product source/test/dispatch change; H375 automatic CI result pending.
+
+## H376 evidence/source consistency correction
+
+The H375 [governance40924637189](https://github.com/lly8666/wbd-next/actions/runs/40924637189) identity gate passed but structure failed. The cursor's `evidence_refs` still points to the accepted SOURCE302d Game2 JSON; the recovered de892 Game2 Action is a **separate** run and must not be substituted as `last_tested_source` without a corresponding exact evidence file. H376 restores `last_tested_source=302d02049669d8f36f3d6852bc1c668ff003ed4a`, retains de892 in the recovered narrative, and leaves the earlier CI FAIL visible. No product tests dispatched.
