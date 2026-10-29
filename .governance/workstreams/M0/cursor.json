@@ -4,11 +4,11 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 374,
-  "checkpoint_sha": "5d449bcb354e17d0c0aac48a4ac3f6d2a3d5157d",
+  "sequence": 375,
+  "checkpoint_sha": "5088e88aa91896532e20047862d5875894c687e5",
   "progress": "partial",
   "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
-  "current_task": "M0 PLAN027 H374 interrupted-session recovery at main 5d449bcb: user PLAN027 supersedes old PLAN026 next_action. SOURCE009d seven public Windows2025 Npcap/Wintun↔Ubuntu WSL2 original Go TLS/Rust native modes Normal/Fixed/Auto/Game2/Game4/Game2-FEC/Game4-FEC each PASS actual duplex UDP/TCP/owned Stop in Action40903498445; Linux real natural Auto one-grade-down Action40903498710 SUCCESS; dead106s new-flow reauth Action40903498603 SUCCESS; Linux Health core Action40903498544 CANCELED due workflow concurrency, not a product FAIL. Newer de892 Game2-only Action40915929519 PASS but WAL Action40915929426 FAIL in separate signed OS gate. Latest main governance Action40922861021 SUCCESS, governance-maintenance Action40922861001 FAIL two stale frozen-M4-vs-live-M0 Npcap blob assertions; H374 updates only legitimate current-source test pins. No PLAN027 Receipt retirement or new-source qualification yet.",
+  "current_task": "M0 PLAN027 H374 interrupted-session recovery at main 5d449bcb: user PLAN027 supersedes old PLAN026 next_action. SOURCE009d seven public Windows2025 Npcap/Wintun↔Ubuntu WSL2 original Go TLS/Rust native modes Normal/Fixed/Auto/Game2/Game4/Game2-FEC/Game4-FEC each PASS actual duplex UDP/TCP/owned Stop in Action40903498445; Linux real natural Auto one-grade-down Action40903498710 SUCCESS; dead106s new-flow reauth Action40903498603 SUCCESS; Linux Health core Action40903498544 CANCELED due workflow concurrency, not a product FAIL. Newer de892 Game2-only Action40915929519 PASS but WAL Action40915929426 FAIL in separate signed OS gate. Latest main governance Action40922861021 SUCCESS, governance-maintenance Action40922861001 FAIL two stale frozen-M4-vs-live-M0 Npcap blob assertions; H374 updates only legitimate current-source test pins. No PLAN027 Receipt retirement or new-source qualification yet. H374 CI exposed cursor context_refs 10>policy max8; H375 trims to eight without deleting historical evidence or changing PLAN027 priority.",
   "why_now": "Recover after cursor H373 and prioritize newly authorized PLAN027. Correct a real governance regression with exact current blobs; do not redispatch already completed source009d/de892 tests. Online per-record M2 Receipt retirement and replacement remains pending, so no ready-for-review claim.",
   "done_when": "Follow main registry PLAN027 and docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md: retire online M2 Receipt, implement directional low-rate mature quality/Health and ACK/SACK one-shot bounded repair; then simple A, remaining Windows/Linux lifecycle B, capacity-limited C, source-scoped evidence and READY_FOR_USER_REVIEW. Do not promote old source009d/de892 evidence to new product SOURCE or physical PASS.",
   "next_action": "Start PLAN027 implementation first: trace Windows m2_next_feedback_entry/m2_authenticated_kind1_entry and Linux stage_original_reverse_feedback/receive control, retire per-record Receipt plus hot feedback/repair dependencies, implement mature low-rate directional quality and outer ACK/SACK one-shot immutable repair with R<=0.10F. Update both callers/config/feature cards/fixtures before one frozen SOURCE build. Check automatic governance-maintenance result from H374; do not repeat old seven-mode or Linux M2 Auto tests.",
@@ -18,17 +18,15 @@
     "docs/evidence/M0/PLAN026-GAME2-SOURCE302D-TRUE-WINDOWS-LINUX-TWO-WAY-STOP-20261029.json"
   ],
   "context_refs": [
+    "docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md",
     "docs/decisions/M0-PLAN026-FEC-GAME-AUTO-HEALTH-LOW-COST-EXECUTION-20261029.md",
     "docs/testing/WL_PERF_HARNESS_V2.md",
     "docs/features/entries/game-lanes.json",
     "docs/features/entries/windows-native-transport.json",
     "docs/evidence/M0/PLAN026-GAME2-SOURCE302D-TRUE-WINDOWS-LINUX-TWO-WAY-STOP-20261029.json",
     "docs/evidence/M0/PLAN026-LINUX-AUTO-NATURAL-REAL-26000-SOURCE80BF-20261029.json",
-    "docs/devlog/M0/20261029-PLAN026-GAME2-SOURCE302D-SIGNED-TWO-OS-FUNCTIONAL-ACCEPTANCE.md",
-    "docs/devlog/M0/20261029-PLAN026-GAME2-WINDOWS-RUST-NPF-PEER-PERSONA-REPAIR.md",
-    "docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md",
     "docs/devlog/M0/20261030-PLAN027-H374-RECOVER-ACTIONS-GOVERNANCE-PIN.md"
   ],
   "open_requests": [],
-  "partial_summary": "H374 recovered main HEAD5d449b and completed Actions. 009d original seven public modes PASS exact SOURCE Windows↔WSL2; Linux Auto natural and dead reauth PASS exact SOURCE; Linux Health suite CANCELED with core PASS. de892 Game2-only signed two-OS PASS; separate Windows WAL FAIL, not generalized. HEAD5d governance PASS, maintenance FAIL two stale M0 Npcap pins; this H374 commit corrects only fixture assertions. PLAN027 production M2 removal and A/B/C remain NOT_RUN, physical NOT_RUN; no manual dispatch or build."
+  "partial_summary": "H374 recovered main HEAD5d449b and completed Actions. 009d original seven public modes PASS exact SOURCE Windows↔WSL2; Linux Auto natural and dead reauth PASS exact SOURCE; Linux Health suite CANCELED with core PASS. de892 Game2-only signed two-OS PASS; separate Windows WAL FAIL, not generalized. HEAD5d governance PASS, maintenance FAIL two stale M0 Npcap pins; this H374 commit corrects only fixture assertions. PLAN027 production M2 removal and A/B/C remain NOT_RUN, physical NOT_RUN; no manual dispatch or build. H374 automatic governance/maintenance both FAIL solely because cursor context_refs exceeded max8; maintenance reached and passed original M4 pin assertions. H375 restores valid bounded refs."
 }

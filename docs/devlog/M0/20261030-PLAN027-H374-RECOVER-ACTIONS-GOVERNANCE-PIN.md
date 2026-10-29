@@ -18,3 +18,7 @@ PLAN027 remains **partial**: online per-record M2 Receipt/bitmap still exists; r
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Interrupted-session source/run recovery, exact current M0 Npcap governance test fixture correction and cursor update only; no product functionality or config change."}
 ```
+
+## H375 automatic CI correction (same recovery batch)
+
+The H374 automatic [governance-maintenance40924459719](https://github.com/lly8666/wbd-next/actions/runs/40924459719) and [governance40924459811](https://github.com/lly8666/wbd-next/actions/runs/40924459811) failed because the recovery cursor carried 10 context references while `.governance/policy.json` permits 8. The M4 Npcap pin assertions were no longer failing; governance test failures all stemmed from `unbounded context_refs`. H375 trims context refs to eight, preserving old evidence files and the PLAN027 authority. No product source/test/dispatch change; H375 automatic CI result pending.
