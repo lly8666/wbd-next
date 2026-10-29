@@ -1,181 +1,181 @@
 {
-  "schema_version": 1,
-  "id": "fec-auto",
-  "name": "Normal 自动FEC2",
-  "summary": "按可信成熟M2反馈调整FEC冗余强度，区分启动应用与实际动态调整。",
-  "owner": "M0/M2/M3 + FEC实验",
-  "stage": "experimental",
-  "development_branch": "experiment/fec-network-tuning",
-  "available_on": [
-    "integration/w168-freeze-windows-adapter-20261026",
-    "main",
-    "experiment/windows-wiring-arm64-native-parallel-20261028",
-    "experiment/windows-wiring-s33-source-locked-preflight-20261027"
-  ],
-  "defaults": {
-    "mode": "fec-auto",
-    "startup": "strong（源码注释）",
-    "production": "off"
+ "schema_version": 1,
+ "id": "fec-auto",
+ "name": "Normal 自动FEC2",
+ "summary": "按可信成熟M2反馈调整FEC冗余强度，区分启动应用与实际动态调整。",
+ "owner": "M0/M2/M3 + FEC实验",
+ "stage": "experimental",
+ "development_branch": "experiment/fec-network-tuning",
+ "available_on": [
+  "integration/w168-freeze-windows-adapter-20261026",
+  "main",
+  "experiment/windows-wiring-arm64-native-parallel-20261028",
+  "experiment/windows-wiring-s33-source-locked-preflight-20261027"
+ ],
+ "defaults": {
+  "mode": "fec-auto",
+  "startup": "strong（源码注释）",
+  "production": "off"
+ },
+ "usage": {
+  "cli": "Windows native --native-v4-product --fec.mode auto --fec.auto_policy normal|aggressive --fec.auto_start_profile light|mild|medium|balanced|high|strong|maximum; source4977f Auto initial Strong duplex+Stop PASS, Linux FecV2Step dynamic adaptive applied revision NOT_RUN. Runtime Auto profile revisions now accept stdin `fec.profile=light|mild|medium|balanced|high|strong|maximum` on explicit --control-stdin, before `stop`; prints REQUESTED_NOT_APPLIED until the authenticated native M2 Applied readback; exact source a0c8eeb native Actions40457048399 operator-requested revision2 Light0 real two-OS UDP/M2-APPLIED/Stop FUNCTIONAL_PASS; natural 2s/8s network-driven auto up/down still NOT_RUN.",
+  "config": "原Go V3 fixed4 carrier仅是入场包络，Rust FixedStream本身支持profile 0..6和revision；不是单独Fixed6测试活动，默认FEC2 OFF",
+  "gui": "Windows真实WinForms Applied/Disconnect仍NOT_RUN，不从CLI或M2组件PASS推断"
+ },
+ "code_refs": [
+  "r0/go_overlay/internal/v4productcli/linux.go",
+  "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
+  "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller.go",
+  "crates/wbd-engine/src/runtime/fec2_owner.rs",
+  "r0/go_overlay/internal/realityfront/bridge_v4_windows_auto_controller.go",
+  "crates/wbd-engine/src/v4_windows_fec2_owner.rs"
+ ],
+ "doc_refs": [
+  "docs/architecture/FEC_V2_BALANCED.md",
+  "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
+ ],
+ "verification": [
+  {
+   "platform": "linux/amd64",
+   "scope": "原Go TLS与Rust真实raw/TUN：Auto启动初始revision Applied与UDP/Stop，非完整升降档（旧L源码，非本次审阅SHA）",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
+   "evidence": "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
   },
-  "usage": {
-    "cli": "Windows native --native-v4-product --fec.mode auto --fec.auto_policy normal|aggressive --fec.auto_start_profile light|mild|medium|balanced|high|strong|maximum; source4977f Auto initial Strong duplex+Stop PASS, Linux FecV2Step dynamic adaptive applied revision NOT_RUN. Runtime Auto profile revisions now accept stdin `fec.profile=light|mild|medium|balanced|high|strong|maximum` on explicit --control-stdin, before `stop`; prints REQUESTED_NOT_APPLIED until the authenticated native M2 Applied readback; exact source a0c8eeb native Actions40457048399 operator-requested revision2 Light0 real two-OS UDP/M2-APPLIED/Stop FUNCTIONAL_PASS; natural 2s/8s network-driven auto up/down still NOT_RUN.",
-    "config": "原Go V3 fixed4 carrier仅是入场包络，Rust FixedStream本身支持profile 0..6和revision；不是单独Fixed6测试活动，默认FEC2 OFF",
-    "gui": "Windows真实WinForms Applied/Disconnect仍NOT_RUN，不从CLI或M2组件PASS推断"
+  {
+   "platform": "linux/arm64",
+   "scope": "W132原始M2有限动态窗口及降档观测，旧F源码",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+   "evidence": "docs/evidence/fec-network-work/20261026-W130-W134-Go-Rust-RX-handoff-real-five-mode-Actions.json"
   },
-  "code_refs": [
-    "r0/go_overlay/internal/v4productcli/linux.go",
-    "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
-    "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller.go",
-    "crates/wbd-engine/src/runtime/fec2_owner.rs",
-    "r0/go_overlay/internal/realityfront/bridge_v4_windows_auto_controller.go",
-    "crates/wbd-engine/src/v4_windows_fec2_owner.rs"
-  ],
-  "doc_refs": [
-    "docs/architecture/FEC_V2_BALANCED.md",
-    "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
-  ],
-  "verification": [
-    {
-      "platform": "linux/amd64",
-      "scope": "原Go TLS与Rust真实raw/TUN：Auto启动初始revision Applied与UDP/Stop，非完整升降档（旧L源码，非本次审阅SHA）",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
-      "evidence": "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
-    },
-    {
-      "platform": "linux/arm64",
-      "scope": "W132原始M2有限动态窗口及降档观测，旧F源码",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "6c38ed0df9da3547c7bd604b51f13443d6863181",
-      "evidence": "docs/evidence/fec-network-work/20261026-W130-W134-Go-Rust-RX-handoff-real-five-mode-Actions.json"
-    },
-    {
-      "platform": "windows/x64",
-      "scope": "undefined；候选源 8e0daba5，不是Linux或Normal的通过",
-      "status": "FAIL",
-      "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
-      "evidence": "docs/devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md"
-    },
-    {
-      "platform": "physical",
-      "scope": "长窗口和自适应质量",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
-    },
-    {
-      "platform": "windows/x64",
-      "scope": "Windows original Go→Rust M2 FEC2 Auto adaptive controller real Windows native startup + 2OS duplex and Stop",
-      "status": "FAIL",
-      "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
-      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source8e0daba-20261027.json"
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "original Go protected TLS feature7 Windows→Linux native auto original M4 first-send; Windows reverse FEC2 C-ABI first 103B failed before Ready despite verified Linux raw/TUN TX",
-      "status": "FAIL",
-      "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
-      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json"
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "Original Go protected TLS→shared Rust FixedStream initial Auto Strong(profile5), live two-OS native duplex UDP/TCP and owned Stop. Linux shared FecV2Step dynamic control exists in source but genuine Auto adaptive revision positive NOT_RUN.",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
-      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json"
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "Windows original Go Auto live operator profile revision2 via Linux FecV2Step, Rust quiescent_change, real signed Npcap/Wintun UDP both ways and authenticated mature M2 Applied; exact-source native targeted action currently in flight, not a positive evidence yet.",
-      "status": "NOT_RUN",
-      "source_sha": "80e5289ab4b4c47adf55740632b0960f8319dfef",
-      "evidence": null
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "Exact source a0c8eeb original credential-TLS signed Npcap/Wintun Auto start Strong5 → operator selected Light0 revision2 via existing Linux FecV2Step + Rust FixedStream quiescent change, real Windows/Linux kernel UDP both directions after change, authenticated mature M2 auto_applied_revision>=2 and owned Stop. NOT natural automatic 2s/8s loss-feedback choice.",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "a0c8eeb29796aa41d0f41e76798d3d00c672adaf",
-      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-Auto-live-revision2-sourcea0c8eeb-20261027.json"
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "Exact source67ed real 53s native Windows/Linux kernel UDP/TCP and owned Wintun/TUN, original Go TLS and 2s/8s M2 Rust quality; native Auto revision STAYED 1. Physical Windows Python timer 1.5ms single send per wake only delivered 3393 C2S source packets vs 16508 Linux S2C; genuine fast window 128..268<512 samples, so Linux FecV2Step appropriately withheld natural downgrade. Native run failed target; fixture-paced follow-up sourcea3bb in flight.",
-      "status": "FAIL",
-      "source_sha": "67ed412e9075ad95f863d4e042f119d81dce407a",
-      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-Auto-natural-M2-source67ed-failure-20261027.json"
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "Original Go credential TLS original Rust FEC2 Auto initial Strong5 native Windows signed Npcap/Wintun and Linux raw/TUN, genuine bidirectional UDP/TCP and both-owned Stop; source772b8b3 narrow starter only, natural feedback grade and performance NOT_RUN",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "772b8b3af48ee8f8600b16baaf2ddc3c53e84c37",
-      "evidence": "docs/evidence/M0/PLAN025-S48-Auto-start-native-source772b8b3-success-20261028.json"
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "S52 signed original Windows↔Linux auto-adaptive real 119s two-OS UDP: 79299 Windows /39669 Linux genuine source packets; Windows revision1 Strong5 never downshifted despite M2 zero-loss mature windows and Linux s2c genuine profile0; full Stop not reached. Native auto one-step <=120s FAIL, not app-rate-limited and not a performance test.",
-      "status": "FAIL",
-      "source_sha": "1b33e4a4bb4543961957124ac0c49b63d7e3cab0",
-      "evidence": "docs/evidence/M0/PLAN025-S52-Auto-natural-source1b33e4a-failure-20261028.json"
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "S54 genuine original Go TLS signed Windows↔Linux FEC2 Auto 119s, 79,320/39,668 real kernel UDP, Rust M2 Applied rev2/3/4 profiles4/3/2 by snapshot38; whole run FAIL because test's omitted JSON false treated as pending, owned Stop NOT_RUN",
-      "status": "FAIL",
-      "source_sha": "0af9b5859c282a6efa0bda6c8d0c9fa01c14d9f1",
-      "evidence": "docs/evidence/M0/PLAN025-S54-Auto-natural-source0af9b585-applied-fixture-failure-20261028.json"
-    },
-    {
-      "platform": "linux/aarch64 native GitHub-hosted two-netns raw/TUN",
-      "scope": "ARM64 original TLS Rust Auto startup genuine two-netns 20 ICMP per direction, owned Stop; MTU1280/1500 budgets1195/1415 DF+1 rejected; dynamic natural grade NOT_RUN",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
-      "evidence": "docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "S55 original signed Windows TLS/native Npcap Wintun WAL↔Linux raw TUN natural healthy Auto Strong5 lowered by real Rust M2 Applied revision2/profile4 at 1Hz snapshot37, final revision4/profile2. 79,334 Windows and39,668 Linux actual kernel UDP, bidirectional TCP and both owned Stop PASS; N0/perf/loss-rise NOT_RUN.",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "49f816375a9e69bd1cde41df2543b15b58066313",
-      "evidence": "docs/evidence/M0/PLAN025-S55-Auto-natural-source49f81637-full-native-pass-20261028.json"
-    },
-    {
-      "platform": "windows/x64 signed Npcap+Wintun original Go TLS Rust ↔ linux/amd64 WSL2 raw/TUN",
-      "scope": "Auto initial Strong5 real signed Windows/Linux two-way kernel UDP, TCP echo and both Stop (not natural grade on this source); source b6b964a Action40560287417 native PASS; WL-N0/N1/N5, scored p99/CPU, physical, fast-loss Auto NOT_RUN",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
-      "evidence": "docs/evidence/M0/PLAN025-H307-main-source-b6b964-seven-mode-native-20261028.json"
-    },
-    {
-      "platform": "windows/x64 signed Npcap Wintun ↔ linux/amd64 WSL2 true kernel",
-      "scope": "Main S61 exact true native Auto initial grade mode duplex UDP/TCP and Stop; natural 120s downgrade still separately S55; loss-driven rise unrun",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
-      "evidence": "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
-    }
-  ],
-  "limitations": [
-    "历史启动Applied不可推广为所有升/降档场景PASS。",
-    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
-    "Windows original Rust auto-quality 30-field mature M2/cumulative actual-k and same Linux FecV2Step controller are wired in Draft branch; dynamic actual revision and GUI Applied still require exact-source real Windows product positive.",
-    "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS.",
-    "Exact SOURCE350199f native Actions40445098497 remains FAIL for Windows original FEC2 reverse first delivery; Linux raw/TUN sender works, Windows still rejected first incoming 103B record before Ready. Subsequent source82ec native FEC2 diagnostic candidate has no inherited PASS; retained as partial.",
-    "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible.",
-    "Only Auto startup Strong profile5 completed real Windows bidirectional business; no positive dynamic up/down revision or late GUI profile Applied receipt in this run.",
-    "Latest exact source a0c8eeb Actions40457048399 genuine Windows↔Linux kernel UDP after Auto operator revision2 via shared FecV2Step/FixedStream, M2 mature exact revision2 and owned Stop SUCCESS. This does NOT test automatic periodic 2s/8s policy-driven grade selection, all 0..6, WinForms Applied, global OS or physical. Older 80e5289 Actions40455980911 job FAIL at stale harness normal-report file is preserved.",
-    "Historical source6707bd52 original Linux Auto Go sampling/true M2 gate; Windows SOURCE6707 compiled PASS40462558630, test argv S99a FAIL40462738560, repaired S072a preflight PASS40463122392, full original native NOT_RUN. Details and unchanged status in prior M0 devlog/verification.",
-    "Native source67ed Actions40465641281 real Auto natural 2s/8s target FAIL: 53s Windows→Linux 3393 source sends, original Rust mature fast 128..268 <512, genuine Linux-shared policy rightly does not downshift. No algorithm/safety-bypass permitted; real kernel UDP/TCP and previously scoped Auto operator revision positive still stand. Sourcea3bb is only paced genuine-UDP fixture repair and NOT_RUN until outcome.",
-    "2026-10-27 user-authorized exact development-tree main overwrite f6469a: implementation code is now present on main but remains experimental, with no new main-SOURCE native/product/global/physical PASS or formal promotion; previous exact-SOURCE PASS/FAIL unchanged.",
-    "Recovered 2026-10-28 S48 source772b8b3 actual Auto initial Strong5 signed Win/Linux original Go TLS native UDP/TCP+owned Stop PASS Action40546243971 artifact12754660102 SHA256 f8b8899b...; historical S45 sourcea2594eba Auto FAIL preserved. User-authorized fast-rise/downgrade<=120s decision 054f18c; exact S52 source1b33e4a4 natural Action40550358765 was RUNNING as of main H302 and is NOT a current PASS; N0/physical/global still NOT_RUN.",
-    "S52 source1b33e4a Action40550358765 natural Auto 119s FAIL with actual source pacing enough and quality k-hist versus M2 mature firstsend 0.6/0.8/1.25 ratios due mismatched 8/16s sampling spans; latest user <=120s actual one-step not met. Historical 9d SEQ FAIL and S48 startup PASS remain separate. Investigate Windows Go ticker historical cohort alignment, not actual FEC loss gate.",
-    "H303 governance declaration scope (2026-10-28): Actions40553017297 and 40554072482 historical Feature catalog FAIL from multi-card original devlog feature-impact changed-file inventory. This main commit refreshes all four historically declared cards coherently; no executable product/default/verification status changes. Source1b33e4a failed **only** genuine Windows natural Auto one-step Applied, while earlier Fixed and Game scoped PASS stay attached to their own exact SOURCE. Current natural Auto correction source0af9b... remains experiment and NOT main product qualification.",
-    "H304 S54 source0af9b585 authentic natural Auto one or more Applied downgrade before120s observed; full Action40553530258 FAIL from omitempty harness and owned Stop NOT_RUN, not an entire mode PASS. S55 49f81637 native retest in flight; exact loss-triggered rise, scored N0, ARM64 source native, physical/global remain pending and retain earlier FAIL.",
-    "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637.",
-    "S55 source49f81637 Actions40556191100 full native Auto natural one-grade within120s + both owned Stop PASS. Does NOT evidence rapid loss-driven upshift or WL-N0/p99/physical/global. Historical S52/S54 original FAIL unchanged.",
-    "H307 exact S55 source49f81637 reviewed integration to main; original per-SOURCE tests and limitations unchanged. See docs/devlog/M0/PLAN025-H307-S55-frozen-product-main-integration-20261028.md.",
-    "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
-    "PLAN026 candidate routes Windows Auto via the same Rust FixedStream NativeAttachV2 as Fixed. One original Go 2s mature-M2 policy actor remains temporarily and native profile revision requires actual readback; Rust-only Auto actor, authentic Keepalive merge and natural up/down tests are still UNWIRED/NOT_RUN. Linux Auto observer ticker is reduced from 200ms to 2s (same policy cadence). Never label this candidate final Auto/Health qualification."
-  ],
-  "promotion": null
+  {
+   "platform": "windows/x64",
+   "scope": "undefined；候选源 8e0daba5，不是Linux或Normal的通过",
+   "status": "FAIL",
+   "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
+   "evidence": "docs/devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md"
+  },
+  {
+   "platform": "physical",
+   "scope": "长窗口和自适应质量",
+   "status": "NOT_RUN",
+   "source_sha": null,
+   "evidence": null
+  },
+  {
+   "platform": "windows/x64",
+   "scope": "Windows original Go→Rust M2 FEC2 Auto adaptive controller real Windows native startup + 2OS duplex and Stop",
+   "status": "FAIL",
+   "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
+   "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source8e0daba-20261027.json"
+  },
+  {
+   "platform": "windows/x64 + linux/amd64 WSL2",
+   "scope": "original Go protected TLS feature7 Windows→Linux native auto original M4 first-send; Windows reverse FEC2 C-ABI first 103B failed before Ready despite verified Linux raw/TUN TX",
+   "status": "FAIL",
+   "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
+   "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json"
+  },
+  {
+   "platform": "windows/x64 + linux/amd64 WSL2",
+   "scope": "Original Go protected TLS→shared Rust FixedStream initial Auto Strong(profile5), live two-OS native duplex UDP/TCP and owned Stop. Linux shared FecV2Step dynamic control exists in source but genuine Auto adaptive revision positive NOT_RUN.",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
+   "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json"
+  },
+  {
+   "platform": "windows/x64 + linux/amd64 WSL2",
+   "scope": "Windows original Go Auto live operator profile revision2 via Linux FecV2Step, Rust quiescent_change, real signed Npcap/Wintun UDP both ways and authenticated mature M2 Applied; exact-source native targeted action currently in flight, not a positive evidence yet.",
+   "status": "NOT_RUN",
+   "source_sha": "80e5289ab4b4c47adf55740632b0960f8319dfef",
+   "evidence": null
+  },
+  {
+   "platform": "windows/x64 + linux/amd64 WSL2",
+   "scope": "Exact source a0c8eeb original credential-TLS signed Npcap/Wintun Auto start Strong5 → operator selected Light0 revision2 via existing Linux FecV2Step + Rust FixedStream quiescent change, real Windows/Linux kernel UDP both directions after change, authenticated mature M2 auto_applied_revision>=2 and owned Stop. NOT natural automatic 2s/8s loss-feedback choice.",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "a0c8eeb29796aa41d0f41e76798d3d00c672adaf",
+   "evidence": "docs/evidence/M0/PLAN024-W168-Windows-Auto-live-revision2-sourcea0c8eeb-20261027.json"
+  },
+  {
+   "platform": "windows/x64 + linux/amd64 WSL2",
+   "scope": "Exact source67ed real 53s native Windows/Linux kernel UDP/TCP and owned Wintun/TUN, original Go TLS and 2s/8s M2 Rust quality; native Auto revision STAYED 1. Physical Windows Python timer 1.5ms single send per wake only delivered 3393 C2S source packets vs 16508 Linux S2C; genuine fast window 128..268<512 samples, so Linux FecV2Step appropriately withheld natural downgrade. Native run failed target; fixture-paced follow-up sourcea3bb in flight.",
+   "status": "FAIL",
+   "source_sha": "67ed412e9075ad95f863d4e042f119d81dce407a",
+   "evidence": "docs/evidence/M0/PLAN024-W168-Windows-Auto-natural-M2-source67ed-failure-20261027.json"
+  },
+  {
+   "platform": "windows/x64 + linux/amd64 WSL2",
+   "scope": "Original Go credential TLS original Rust FEC2 Auto initial Strong5 native Windows signed Npcap/Wintun and Linux raw/TUN, genuine bidirectional UDP/TCP and both-owned Stop; source772b8b3 narrow starter only, natural feedback grade and performance NOT_RUN",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "772b8b3af48ee8f8600b16baaf2ddc3c53e84c37",
+   "evidence": "docs/evidence/M0/PLAN025-S48-Auto-start-native-source772b8b3-success-20261028.json"
+  },
+  {
+   "platform": "windows/x64 + linux/amd64 WSL2",
+   "scope": "S52 signed original Windows↔Linux auto-adaptive real 119s two-OS UDP: 79299 Windows /39669 Linux genuine source packets; Windows revision1 Strong5 never downshifted despite M2 zero-loss mature windows and Linux s2c genuine profile0; full Stop not reached. Native auto one-step <=120s FAIL, not app-rate-limited and not a performance test.",
+   "status": "FAIL",
+   "source_sha": "1b33e4a4bb4543961957124ac0c49b63d7e3cab0",
+   "evidence": "docs/evidence/M0/PLAN025-S52-Auto-natural-source1b33e4a-failure-20261028.json"
+  },
+  {
+   "platform": "windows/x64 + linux/amd64 WSL2",
+   "scope": "S54 genuine original Go TLS signed Windows↔Linux FEC2 Auto 119s, 79,320/39,668 real kernel UDP, Rust M2 Applied rev2/3/4 profiles4/3/2 by snapshot38; whole run FAIL because test's omitted JSON false treated as pending, owned Stop NOT_RUN",
+   "status": "FAIL",
+   "source_sha": "0af9b5859c282a6efa0bda6c8d0c9fa01c14d9f1",
+   "evidence": "docs/evidence/M0/PLAN025-S54-Auto-natural-source0af9b585-applied-fixture-failure-20261028.json"
+  },
+  {
+   "platform": "linux/aarch64 native GitHub-hosted two-netns raw/TUN",
+   "scope": "ARM64 original TLS Rust Auto startup genuine two-netns 20 ICMP per direction, owned Stop; MTU1280/1500 budgets1195/1415 DF+1 rejected; dynamic natural grade NOT_RUN",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
+   "evidence": "docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"
+  },
+  {
+   "platform": "windows/x64 + linux/amd64 WSL2",
+   "scope": "S55 original signed Windows TLS/native Npcap Wintun WAL↔Linux raw TUN natural healthy Auto Strong5 lowered by real Rust M2 Applied revision2/profile4 at 1Hz snapshot37, final revision4/profile2. 79,334 Windows and39,668 Linux actual kernel UDP, bidirectional TCP and both owned Stop PASS; N0/perf/loss-rise NOT_RUN.",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "49f816375a9e69bd1cde41df2543b15b58066313",
+   "evidence": "docs/evidence/M0/PLAN025-S55-Auto-natural-source49f81637-full-native-pass-20261028.json"
+  },
+  {
+   "platform": "windows/x64 signed Npcap+Wintun original Go TLS Rust ↔ linux/amd64 WSL2 raw/TUN",
+   "scope": "Auto initial Strong5 real signed Windows/Linux two-way kernel UDP, TCP echo and both Stop (not natural grade on this source); source b6b964a Action40560287417 native PASS; WL-N0/N1/N5, scored p99/CPU, physical, fast-loss Auto NOT_RUN",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
+   "evidence": "docs/evidence/M0/PLAN025-H307-main-source-b6b964-seven-mode-native-20261028.json"
+  },
+  {
+   "platform": "windows/x64 signed Npcap Wintun ↔ linux/amd64 WSL2 true kernel",
+   "scope": "Main S61 exact true native Auto initial grade mode duplex UDP/TCP and Stop; natural 120s downgrade still separately S55; loss-driven rise unrun",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
+   "evidence": "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
+  }
+ ],
+ "limitations": [
+  "历史启动Applied不可推广为所有升/降档场景PASS。",
+  "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+  "Windows original Rust auto-quality 30-field mature M2/cumulative actual-k and same Linux FecV2Step controller are wired in Draft branch; dynamic actual revision and GUI Applied still require exact-source real Windows product positive.",
+  "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS.",
+  "Exact SOURCE350199f native Actions40445098497 remains FAIL for Windows original FEC2 reverse first delivery; Linux raw/TUN sender works, Windows still rejected first incoming 103B record before Ready. Subsequent source82ec native FEC2 diagnostic candidate has no inherited PASS; retained as partial.",
+  "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible.",
+  "Only Auto startup Strong profile5 completed real Windows bidirectional business; no positive dynamic up/down revision or late GUI profile Applied receipt in this run.",
+  "Latest exact source a0c8eeb Actions40457048399 genuine Windows↔Linux kernel UDP after Auto operator revision2 via shared FecV2Step/FixedStream, M2 mature exact revision2 and owned Stop SUCCESS. This does NOT test automatic periodic 2s/8s policy-driven grade selection, all 0..6, WinForms Applied, global OS or physical. Older 80e5289 Actions40455980911 job FAIL at stale harness normal-report file is preserved.",
+  "Historical source6707bd52 original Linux Auto Go sampling/true M2 gate; Windows SOURCE6707 compiled PASS40462558630, test argv S99a FAIL40462738560, repaired S072a preflight PASS40463122392, full original native NOT_RUN. Details and unchanged status in prior M0 devlog/verification.",
+  "Native source67ed Actions40465641281 real Auto natural 2s/8s target FAIL: 53s Windows→Linux 3393 source sends, original Rust mature fast 128..268 <512, genuine Linux-shared policy rightly does not downshift. No algorithm/safety-bypass permitted; real kernel UDP/TCP and previously scoped Auto operator revision positive still stand. Sourcea3bb is only paced genuine-UDP fixture repair and NOT_RUN until outcome.",
+  "2026-10-27 user-authorized exact development-tree main overwrite f6469a: implementation code is now present on main but remains experimental, with no new main-SOURCE native/product/global/physical PASS or formal promotion; previous exact-SOURCE PASS/FAIL unchanged.",
+  "Recovered 2026-10-28 S48 source772b8b3 actual Auto initial Strong5 signed Win/Linux original Go TLS native UDP/TCP+owned Stop PASS Action40546243971 artifact12754660102 SHA256 f8b8899b...; historical S45 sourcea2594eba Auto FAIL preserved. User-authorized fast-rise/downgrade<=120s decision 054f18c; exact S52 source1b33e4a4 natural Action40550358765 was RUNNING as of main H302 and is NOT a current PASS; N0/physical/global still NOT_RUN.",
+  "S52 source1b33e4a Action40550358765 natural Auto 119s FAIL with actual source pacing enough and quality k-hist versus M2 mature firstsend 0.6/0.8/1.25 ratios due mismatched 8/16s sampling spans; latest user <=120s actual one-step not met. Historical 9d SEQ FAIL and S48 startup PASS remain separate. Investigate Windows Go ticker historical cohort alignment, not actual FEC loss gate.",
+  "H303 governance declaration scope (2026-10-28): Actions40553017297 and 40554072482 historical Feature catalog FAIL from multi-card original devlog feature-impact changed-file inventory. This main commit refreshes all four historically declared cards coherently; no executable product/default/verification status changes. Source1b33e4a failed **only** genuine Windows natural Auto one-step Applied, while earlier Fixed and Game scoped PASS stay attached to their own exact SOURCE. Current natural Auto correction source0af9b... remains experiment and NOT main product qualification.",
+  "H304 S54 source0af9b585 authentic natural Auto one or more Applied downgrade before120s observed; full Action40553530258 FAIL from omitempty harness and owned Stop NOT_RUN, not an entire mode PASS. S55 49f81637 native retest in flight; exact loss-triggered rise, scored N0, ARM64 source native, physical/global remain pending and retain earlier FAIL.",
+  "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637.",
+  "S55 source49f81637 Actions40556191100 full native Auto natural one-grade within120s + both owned Stop PASS. Does NOT evidence rapid loss-driven upshift or WL-N0/p99/physical/global. Historical S52/S54 original FAIL unchanged.",
+  "H307 exact S55 source49f81637 reviewed integration to main; original per-SOURCE tests and limitations unchanged. See docs/devlog/M0/PLAN025-H307-S55-frozen-product-main-integration-20261028.md.",
+  "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
+  "PLAN026 candidate routes Windows Auto via the same Rust FixedStream NativeAttachV2 as Fixed. One original Go 2s mature-M2 policy actor remains temporarily and native profile revision requires actual readback; Rust-only Auto actor, authentic Keepalive merge and natural up/down tests are still UNWIRED/NOT_RUN. Linux Auto observer ticker is reduced from 200ms to 2s (same policy cadence). Never label this candidate final Auto/Health qualification."
+ ],
+ "promotion": null
 }
