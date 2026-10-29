@@ -723,9 +723,12 @@
          if !v3_ready(&e,config.epoch,config.luid,config.ifindex)
              ||e.path_mtu as u32!=config.path_mtu ||e.m2.is_none()
              ||e.role_server||e.feature7!=fixed{return BAD_STAGE}
+         #[cfg(feature="fec2_product_record")]
          if fixed && (e.fec2_tx.is_none()||e.game_group.is_some()){
              return BAD_STAGE
          }
+         #[cfg(not(feature="fec2_product_record"))]
+         if fixed{return BAD_STAGE}
      }
      let (wtx,wrx)=match unsafe{io::split_borrowed_wintun(
          config.wintun_session,config.wintun_read_event,config.wintun)}{

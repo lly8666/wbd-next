@@ -1147,7 +1147,8 @@ impl ProtectedScopedOwner {
     /// original active lane AEAD/PN and M1 frozen kernel queue as real DATA.
     /// Control does not create another sealer or another epoch, and never
     /// authorizes an FEC APPLIED revision by itself.
-    #[cfg(feature="fec2_product_record")]
+    // WBC4 kind1 is also a Normal/off M2/Health record when FEC2 is
+    // disabled. It uses the SAME original M1 AEAD/PN, not the FEC codec.
     pub(crate) fn seal_original_authenticated_receipt(
         &mut self,mut slab:UniqueBuffer,tlv:&[u8],budget:FrameBudget,
         carrier_snapshot:u64,now:MonoNs,

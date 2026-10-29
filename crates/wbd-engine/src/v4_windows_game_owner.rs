@@ -20,6 +20,7 @@ pub(super) struct WinGameGroup {
     tick:u64,
     role_server:bool,
     started:std::time::Instant,
+    #[cfg(feature="fec2_product_record")]
     fec_pending:Vec<Option<crate::v4_game_lane::PreparedGameFecBatch>>,
     #[cfg(feature="fec2_product_record")]
     staged:Vec<WinGameStagedRecord>,
@@ -88,6 +89,7 @@ pub(super) fn join(
         adapter,handles:ids,lanes,generation,
         epoch:scope.ok_or(INVALID)?,tick:0,role_server:server,
         started:std::time::Instant::now(),
+        #[cfg(feature="fec2_product_record")]
         fec_pending:(0..handles.len()).map(|_|None).collect(),
         #[cfg(feature="fec2_product_record")]
         staged:Vec::with_capacity(16),
@@ -100,6 +102,7 @@ fn stopped_group(r:&mut Registry,h:u64)->i32{
     if game.lanes.iter().any(|lane|lane.lock().ok().is_none_or(|e|
         e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
         !e.device.is_some_and(|d|d.quiesced))){return STOP_INCOMPLETE}
+    #[cfg(feature="fec2_product_record")]
     if game.fec_pending.iter().any(Option::is_some){return STOP_INCOMPLETE}
     #[cfg(feature="fec2_product_record")]
     if !game.staged.is_empty(){return STOP_INCOMPLETE}
@@ -373,6 +376,7 @@ fn valid_fec_kernel_prefix(copied:u32,total:usize)->Result<bool,i32>{
     if copied as usize>total{return Err(INVALID)}
     Ok(copied as usize==total)
 }
+#[cfg(feature="fec2_product_record")]
 pub(super) fn finish_fec_group(
     game:&mut WinGameGroup,lane:u32,copied_prefix:u32,
 )->i32{
