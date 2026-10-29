@@ -583,7 +583,8 @@ struct Entry{
     // M3 replay opener; the native TX owner seals on its own PN allocator.
     #[cfg(feature="fec2_product_record")]
     rx_feedback:Option<Arc<Mutex<wbd_recovery::RxFeedbackState>>>,
-    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+    #[cfg(all(feature="fec2_product_record",target_os="linux",
+        any(target_arch="x86_64",target_arch="aarch64"),
         any(target_env="gnu",target_env="musl")))]
     quality_rx:Option<Arc<Mutex<LinuxQualityRx>>>,
     #[cfg(feature="fec2_product_record")]
@@ -593,7 +594,8 @@ struct Entry{
     incoming_peer_persona:PacketPersona,
     #[cfg(feature="fec2_product_record")]
     feedback_queued:Option<(Option<wbd_recovery::FeedbackDraft>,u64,bool)>,
-    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+    #[cfg(all(feature="fec2_product_record",target_os="linux",
+        any(target_arch="x86_64",target_arch="aarch64"),
         any(target_env="gnu",target_env="musl")))]
     quality_report_queued:Option<wbd_recovery::quality_window::WindowKey>,
     // One native Rust TX clock per actually armed original-Go product.
@@ -878,7 +880,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         normal_firstsend_m2:None,
         #[cfg(feature="fec2_product_record")]
         rx_feedback:None,
-        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        #[cfg(all(feature="fec2_product_record",target_os="linux",
+            any(target_arch="x86_64",target_arch="aarch64"),
             any(target_env="gnu",target_env="musl")))]
         quality_rx:None,
         #[cfg(feature="fec2_product_record")]
@@ -887,7 +890,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         incoming_peer_persona:PacketPersona::Legacy,
         #[cfg(feature="fec2_product_record")]
         feedback_queued:None,
-        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        #[cfg(all(feature="fec2_product_record",target_os="linux",
+            any(target_arch="x86_64",target_arch="aarch64"),
             any(target_env="gnu",target_env="musl")))]
         quality_report_queued:None,
         #[cfg(feature="fec2_product_record")]
