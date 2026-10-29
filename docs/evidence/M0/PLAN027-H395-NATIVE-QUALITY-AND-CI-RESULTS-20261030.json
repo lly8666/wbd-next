@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "kind": "mixed_source_ci_recovery_not_product_qualification",
+  "h392_native": {
+    "source_sha": "1a5c368fec453d6f19a2b18f5e590e1cdecdfa2f",
+    "run_id": 40936196353,
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40936196353",
+    "conclusion": "success",
+    "groups": "plan/build/codec/engine/platform/kernel/fec/recovery/receipt/normal all SUCCESS",
+    "codec": {
+      "job_id": 123667862549,
+      "passed": 114,
+      "ignored": 1,
+      "failed": 0,
+      "manifest_sha256": "eb22e725356b1cf200d32b23471c6c67bd174d5d649344947329f25311134190",
+      "binary_sha256": "610c5f0903749a6372cb5f953951efb5093711f4c1dd2e67a7aea879bcd803e5",
+      "log_sha256": "a8ecc90dcb3749145bebf0b0591adfbac5dc2797abb1124d8fccf2be8c23081b"
+    },
+    "scope": "nonmandatory CPU probe excluded from functional gate, required codec tests still run; no CPU A/B claim"
+  },
+  "h393_native": {
+    "source_sha": "99c78aa3e795440b650453582ccaa803b79102bf",
+    "run_id": 40936343251,
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40936343251",
+    "conclusion": "success",
+    "groups": "plan/build/codec/engine/platform/kernel/fec/recovery/receipt/normal all SUCCESS",
+    "manifest_sha256": "1aced604bbd97fdbf0af0473bc10259bb60e77a384185d6e9e066876a5901db5",
+    "recovery": {
+      "job_id": 123668369467,
+      "passed": 89,
+      "failed": 0,
+      "required_new_test": "r2_plan027_receiver_requires_closed_window_for_maturity",
+      "binary_sha256": "3a9c0058a8c6c855abb91f61bedfcecced54d0b307af0597a0b56e8d469872a7",
+      "log_sha256": "0701e942c0eea118795a3573d5c6dafb956c4f45420e23d15fb49824f622feb4"
+    },
+    "engine": {
+      "job_id": 123668369610,
+      "passed": 134,
+      "failed": 0,
+      "ignored": 1,
+      "binary_sha256": "82179164adb40dc52dea5ce36707693c865fad3aa917c052ecf574145bbe9efe",
+      "log_sha256": "70275232642777ca59d53a6d111c4ad109d419c5be617bda421d4f60f06ff1dc"
+    },
+    "codec": {
+      "job_id": 123668369323,
+      "passed": 114,
+      "failed": 0,
+      "ignored": 1,
+      "binary_sha256": "610c5f0903749a6372cb5f953951efb5093711f4c1dd2e67a7aea879bcd803e5",
+      "log_sha256": "1a15abf71bb553416cc86e9264e2bf0d2e069b0ba3ea6c64b43f63cbfd02fdd0"
+    },
+    "scope": "pure source-level RX quality close/maturity and functional regressions; no Windows/Linux live feedback or A/B/C"
+  },
+  "h394_governance": {
+    "source_sha": "75c030f4da32a5e1e6986edf3c0d3244d7afb6bd",
+    "run_id": 40936503230,
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40936503230",
+    "conclusion": "success",
+    "jobs": "Governance + Feature catalog both SUCCESS",
+    "scope": "card size and structure only"
+  },
+  "prior_failures_preserved": [
+    40933554887,
+    40935895112,
+    40935895121,
+    40936343297
+  ],
+  "plan027": {
+    "phase1": "PARTIAL_SOURCE_ONLY",
+    "A": "NOT_RUN",
+    "B": "OPEN",
+    "C": "NOT_RUN",
+    "delivery": "OPEN",
+    "physical": "NOT_RUN"
+  },
+  "no_inference": "A passing native component gate is not product first-delivery, network, p99, CPU/RSS, physical or Stop qualification"
+}
