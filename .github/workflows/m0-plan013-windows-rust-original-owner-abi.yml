@@ -80,7 +80,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
-          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go --lib v4_windows_owner::tests -- --nocapture 2>&1 | Tee-Object -FilePath windows-owner-result/native-tests.log
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go --lib v4_windows_owner::tests -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath windows-owner-result/native-tests.log
           if ($LASTEXITCODE -ne 0) {throw 'actual Windows original Rust owner lifecycle tests FAIL'}
           $log=Get-Content windows-owner-result/native-tests.log -Raw
           foreach ($test in @('m0_windows_owner_real_native_prepare_commit_stop_generation_scoped','m0_windows_owner_role_fec2_bad_handoff_stale_and_prevent_public_apply',

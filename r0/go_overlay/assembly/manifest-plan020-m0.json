@@ -741,6 +741,18 @@
     },
     {
       "kind": "create",
+      "path": "internal/realityfront/bridge_v4_windows_game_fec_batch.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_fec_batch.go",
+      "result_blob": "dfce2e0f24eddf34bee0c46772b4b2b36e49fb46"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/bridge_v4_windows_m2_effective.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_m2_effective.go",
+      "result_blob": "e287f8938572fc8a74be201fc7d1de96065ef66a"
+    },
+    {
+      "kind": "create",
       "path": "internal/realityfront/fec_v2_runtime_controller.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller.go",
       "result_blob": "b2caa5d437a1b62c02d2e37cdd5db0c1d03ec2ea"
