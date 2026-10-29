@@ -93,5 +93,6 @@
     "No full both-side FIN/Dormant/Wake, hot dynamic lane, GUI/global WFP or physical machine PASS",
     "Historic Normal/off acceptance remains on independently signed source-specific evidence; no reimplementation or N0 gate",
     "Outer opportunistic packet repair delivery not required"
-  ]
+  ],
+  "source_sha": "b222744cc37df3d560fa2d9b9ee81deb678c715e"
 }
