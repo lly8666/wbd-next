@@ -107,7 +107,8 @@
         "r1_tx_sparse_first_source_immediate_32ms_absolute_not_extended"
       ],
       "allowed_ignored": [
-        "r1_steady_release_same_source_fresh_vs_reused_owner_cost"
+        "r1_steady_release_same_source_fresh_vs_reused_owner_cost",
+        "r1_tx_cooperative_release_cpu_wall_diagnostic"
       ],
       "scope": "REAL_AEAD_REPLAY_LINK_FEC_POST_AUTH_TEST_ORIGIN_RETIRE_MULTISCOPE",
       "supersedes_workflows": [

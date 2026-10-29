@@ -126,7 +126,12 @@ def native_group_selection(group,spec):
     if group=="codec":
         if any(name.startswith("r1_f2_") for name in spec["required"]):
             raise ValueError("cannot skip mandatory F2 from R1 codec matrix")
-        selected+=["--skip","r1_f2_"]
+        # PLAN027: this same-source fresh/reused owner CPU probe can run for
+        # minutes and is not a functional assertion. Keep it for dedicated
+        # measurement Actions; never let it time out the 240s codec gate.
+        # The separately pinned F2 suite remains independent as above.
+        selected+=["--skip","r1_f2_","--skip",
+                   "r1_steady_release_same_source_fresh_vs_reused_owner_cost"]
     return selected
 
 

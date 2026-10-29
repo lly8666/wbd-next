@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "recorded_at_utc": "2026-10-29T19:00:00Z",
+  "recovered_head": "9105cb806275c0e6d698d3e13c4a9e1232d1a188",
+  "windows_original_wal": {
+    "source": "18cfcc1331c893bf70cf65c6bc65b711b425e16d",
+    "run_id": 40932953430,
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40932953430",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": {
+      "original_go_native_wal": 123655931374,
+      "game2": 123659363385,
+      "fixed": 123659363500,
+      "game4": 123659363564,
+      "auto": 123659363662,
+      "normal": 123659363739
+    },
+    "scope": "signed Wintun original TLS kernel app, scoped modes, source18cf; not current PLAN027 quality or network qualification",
+    "game2_stop": "PASS after negative Wintun completion in source18cf",
+    "host_global_wfp": "NOT_RUN"
+  },
+  "native_h388": {
+    "source": "9105cb806275c0e6d698d3e13c4a9e1232d1a188",
+    "run_id": 40933554887,
+    "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40933554887",
+    "manifest_sha256": "cc6eca745b14b6d55a8b5579cc571f2bc76749c55b7516fd63de3734c2025ab3",
+    "recovery": {
+      "job_id": 123658796815,
+      "result": "PASS",
+      "passed": 88,
+      "failed": 0,
+      "binary_sha256": "0e0ce25f0f969cd9117dd57db5f786009e8a3622a51125c0833be17fa2fe7504",
+      "log_sha256": "e894ac9b8cb21a78eb3d4e942c8e217d7c89bcc5eb081d62c88047274f2c3161"
+    },
+    "engine": {
+      "job_id": 123658796804,
+      "result": "PASS",
+      "passed": 134,
+      "failed": 0,
+      "ignored": 1,
+      "binary_sha256": "a377fa280601b57e0aed45b4dbb7cd51fc5e5fa4227c87ec4913522e46cd8c30",
+      "log_sha256": "462e772073ae6730e4d541ea6da4e02433c99dc96c68a7d9204c048fc523b14e"
+    },
+    "codec": {
+      "job_id": 123658796724,
+      "result": "FAIL",
+      "exit_code": 124,
+      "reason": "240s functional gate timeout in nonmandatory r1_steady_release_same_source_fresh_vs_reused_owner_cost CPU probe; existing ignored r1_tx_cooperative_release_cpu_wall_diagnostic not allowed by ledger",
+      "binary_sha256": "610c5f0903749a6372cb5f953951efb5093711f4c1dd2e67a7aea879bcd803e5",
+      "log_sha256": "a7373365659cc4b6aaff492d66cbd0fb92222e82dd8ab8dfd8bd1c5ce6c7e505"
+    },
+    "other_groups": "platform,normal,kernel,fec,receipt all PASS; no product or performance inference"
+  },
+  "correction": {
+    "scope": "native functional codec selector only; no required test excluded",
+    "excluded_nonmandatory_cpu_probe": "r1_steady_release_same_source_fresh_vs_reused_owner_cost",
+    "allowed_preexisting_ignored": "r1_tx_cooperative_release_cpu_wall_diagnostic",
+    "verification": "PENDING_NEW_SOURCE_ACTIONS"
+  },
+  "plan027": {
+    "phase1": "PARTIAL",
+    "A": "NOT_RUN",
+    "B": "OPEN",
+    "C": "NOT_RUN",
+    "delivery": "OPEN",
+    "physical": "NOT_RUN"
+  }
+}
