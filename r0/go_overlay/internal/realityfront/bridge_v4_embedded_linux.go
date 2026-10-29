@@ -25,6 +25,8 @@ extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
     uint64_t *,uint32_t *,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_public_auto_low_rate_config(uint64_t,const unsigned char *,size_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_public_auto_low_rate_effective(uint64_t,const unsigned char *,size_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_public_native_health_config(uint64_t,const unsigned char *,size_t,uint32_t,uint32_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_public_native_health_effective(uint64_t,const unsigned char *,size_t,uint32_t *,size_t);
 extern int32_t wbd_m0_embedded_go_set_public_outer_repair(uint64_t,uint32_t);
@@ -439,6 +441,23 @@ func (b *v4EmbeddedNativeBridge) readOriginalNativeHealth()([3]uint32,error){
  if rc!=0{return result,fmt.Errorf("%w: original native Rust Health readback rc=%d",errV4Embedded,int(rc))}
  for i:=range result{result[i]=uint32(data[i])}
  return result,nil
+}
+// Auto mode is selected once by the credential-verified Go product,
+ // read back from the same Rust native owner before any M4 worker starts.
+func (b *v4EmbeddedNativeBridge) enableOriginalLowRateAuto()error{
+    if b==nil||!b.committed||b.stopped||b.handle==0||
+        b.protectedEpoch==[16]byte{}{return errV4Embedded}
+    ep:=(*C.uchar)(unsafe.Pointer(&b.protectedEpoch[0]))
+    rc:=C.wbd_m0_embedded_go_public_auto_low_rate_config(
+        C.uint64_t(b.handle),ep,C.size_t(16),C.uint32_t(1))
+    if rc!=0{return fmt.Errorf("%w: Linux original Auto low-rate config rc=%d",errV4Embedded,int(rc))}
+    var applied C.uint32_t
+    rc=C.wbd_m0_embedded_go_public_auto_low_rate_effective(
+        C.uint64_t(b.handle),ep,C.size_t(16),&applied)
+    if rc!=0||applied!=1{
+        return fmt.Errorf("%w: Linux original Auto low-rate readback rc=%d applied=%d",errV4Embedded,int(rc),uint32(applied))
+    }
+    return nil
 }
 func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback(peerPersona uint32)error{
     if b==nil||!b.committed||b.stopped||b.handle==0||

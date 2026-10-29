@@ -150,6 +150,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
         if dead==0{dead=90}
         err=bridge.configureOriginalNativeHealth(keepalive,dead,p.cfg.HealthIdleDormantSeconds)
     }
+    if err==nil&&mode==FecV2Auto{err=bridge.enableOriginalLowRateAuto()}
     if err==nil{err=bridge.armOriginalPublicM2Feedback(uint32(p.cfg.PeerPersona))}
     if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
     if err!=nil{

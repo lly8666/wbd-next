@@ -589,6 +589,9 @@ struct Entry{
     quality_rx:Option<Arc<Mutex<LinuxQualityRx>>>,
     #[cfg(feature="fec2_product_record")]
     original_public_feedback_armed:bool,
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")))]
+    auto_low_rate_mode:bool,
     // Original credential-Go server sets expected TCP sender once before M4.
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     incoming_peer_persona:PacketPersona,
@@ -886,6 +889,9 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         quality_rx:None,
         #[cfg(feature="fec2_product_record")]
         original_public_feedback_armed:false,
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+            any(target_env="gnu",target_env="musl")))]
+        auto_low_rate_mode:false,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         incoming_peer_persona:PacketPersona::Legacy,
         #[cfg(feature="fec2_product_record")]
@@ -3203,6 +3209,47 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_arm_public_original_m2_feedback(
     }
 }
 
+
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_public_auto_low_rate_config(
+    h:u64,epoch_ptr:*const u8,epoch_len:usize,enabled:u32,
+)->i32{
+    #[cfg(not(feature="fec2_product_record"))]
+    {let _=(h,epoch_ptr,epoch_len,enabled);BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    {
+        if enabled!=1{return INVALID}
+        let Ok(epoch)=verified_normal_off_epoch(epoch_ptr,epoch_len)else{return INVALID};
+        let Ok(cell)=session(h)else{return UNKNOWN};
+        let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+        if !verified_normal_off_owner(&e,&epoch)||e.protected_features!=7||
+            e.workers.is_some()||e.original_public_feedback_armed||
+            e.raw_rx.is_none()||e.tun_sink.is_none(){return BAD_STAGE}
+        e.auto_low_rate_mode=true;
+        OK
+    }
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_public_auto_low_rate_effective(
+    h:u64,epoch_ptr:*const u8,epoch_len:usize,out:*mut u32,
+)->i32{
+    #[cfg(not(feature="fec2_product_record"))]
+    {let _=(h,epoch_ptr,epoch_len,out);BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    {
+        if out.is_null(){return INVALID}
+        let Ok(epoch)=verified_normal_off_epoch(epoch_ptr,epoch_len)else{return INVALID};
+        let Ok(cell)=session(h)else{return UNKNOWN};
+        let Ok(e)=cell.lock()else{return BAD_STAGE};
+        if !verified_normal_off_owner(&e,&epoch){return BAD_STAGE}
+        unsafe{out.write(u32::from(e.auto_low_rate_mode))}
+        OK
+    }
+}
 // The exact authenticated original-Go client AND server owner may set
 // independent Health interval/dead/sleep once while the native worker is
 // stopped. Never let timer ticks, untrusted TCP or GUI intent impersonate
@@ -5413,7 +5460,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     // authenticated Go health sender; no duplicate two-sender race.
     #[cfg(feature="fec2_product_record")]
     let quality_rx=if e.original_public_feedback_armed &&
-        e.protected_features==7{
+        e.protected_features==7 && e.auto_low_rate_mode{
         let (lane,exact_epoch)=match e.owner.normal_firstsend_identity(){
             Some(v)=>v,None=>return BAD_STAGE};
         let direction=if e.server_side{wbd_recovery::WireDirection::ClientToServer}
