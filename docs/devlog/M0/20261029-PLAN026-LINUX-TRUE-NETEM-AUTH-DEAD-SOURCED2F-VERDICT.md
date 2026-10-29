@@ -1,0 +1,11 @@
+# PLAN026 Linux true 106-second 100% two-side kernel loss → authenticated dead NOT Dormant
+
+2026-10-29. Confirmed exact-source Actions [40855356404](https://github.com/lly8666/wbd-next/actions/runs/40855356404) SUCCESS with original Go credential TLS + source7e984 Rust native Auto real Linux two-netns raw/TUN, **strictly separately source-locked new harness d2f79e8a1fad88f7dc73b596f01a3b3bb5c0ecd4**. 64 actual native FEC2 Auto UDP first-delivered and original mature authenticated M2 Applied; then real both-side tc netem 100% loss for 106s. **Actual post-window** qdisc stats client dropped21, server dropped28; authentic original Rust native Health on both sides emitted `WBD_M0_NATIVE_HEALTH_TIMEOUT side=tx reason=missing_authenticated_peer_dead_after_90s`, with no false Dormant. Neither server/client Health event was simulated or manufactured by the harness. Matched exact downloaded artifact12889535872 SHA256 43c599922e5c83ba562fba69e72d7ffff03b2f096543b2dc80e538128a8cdd4e.
+
+Earlier Action40854238252 source457963 demonstrated real native timeouts but captured tc counters immediately after filter attachment (both dropped0), therefore is **not** a measured-loss proof. Current source d2f both positive kernel drop assertions are mandatory and PASS. Evidence `docs/evidence/M0/PLAN026-LINUX-REAL-HEALTH-DEAD-PRODUCT7E984-HARNESSD2F-20261029.json`. The independent **positive** counterpart Actions40853285135 product7e/harness7147 proved 100s zero-business with same-generation resumed real UDP echo + original M2/Stop; core 9/9 with authentic TLV source7e Actions40851521157. These Linux controls help design Windows test, not transfer Windows qualification.
+
+Limitations: independent kind1 Health wire packet count not extracted, no separate owned automatic Stop assertion on dead, no genuine signed FIN→Dormant/Wake, no Windows native signed driver or physical, no claimed Auto natural up/down nor CPU measurement. Original TLS/AEAD/PN/generation and Stop protections unchanged.
+
+```feature-impact
+{"kind":"updated","ids":["idle-rotation-keepalive"],"reason":"Record strict source-separated Linux 100pct real tc drops after 106s and both native authenticated dead NOT Dormant evidence, without claiming uninstrumented owned Stop/FIN or Windows."}
+```

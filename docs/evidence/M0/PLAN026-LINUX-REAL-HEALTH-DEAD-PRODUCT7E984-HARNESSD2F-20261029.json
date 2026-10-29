@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
+  "result": "PASS_SCOPED_REAL_LINUX_AUTHENTICATED_PEER_DEAD_WITH_OBSERVED_TWO_SIDE_KERNEL_LOSS",
+  "source_sha": "d2f79e8a1fad88f7dc73b596f01a3b3bb5c0ecd4",
+  "product_source_sha": "7e9842f6e99769d9919e75a4b15da8d6d88e7257",
+  "harness_source_sha": "d2f79e8a1fad88f7dc73b596f01a3b3bb5c0ecd4",
+  "original_go_donor": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "source_integrity": "Unmodified original-Go credential TLS/Rust product binaries exact source7e manifest sha verified before 106s real underlay trial; harness new source d2f distinct",
+  "run_id": 40855356404,
+  "run_result": "success",
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/40855356404",
+  "artifact": {
+    "id": 12889535872,
+    "name": "plan026-linux-real-dead-blackhole-40855356404-1",
+    "sha256": "43c599922e5c83ba562fba69e72d7ffff03b2f096543b2dc80e538128a8cdd4e",
+    "verified_against_GitHub_api": true
+  },
+  "mode": "fec-auto",
+  "initial_genuine_udp_apps_delivered": 64,
+  "original_fec2_m2_mature_applied": true,
+  "actual_kernel_underlay_netem_loss_pct": 100,
+  "continuous_loss_seconds": 106,
+  "observed_qdisc_dropped_client": 21,
+  "observed_qdisc_dropped_server": 28,
+  "authentic_original_rust_native_health_dead_client": true,
+  "authentic_original_rust_native_health_dead_server": true,
+  "dead_after_seconds": 90,
+  "false_dormant": false,
+  "additional_notes": "First harness SOURCE457963 gave timeouts but qdisc snapshot before 106s had dropped0, not accepted as measured loss; stricter SOURCEd2f reads qdisc after 106s and enforces actual positive kernel drops both directions",
+  "limitations": [
+    "Linux only; no Windows signed Npcap/Wintun or physical computer",
+    "Exact protected original Health kind1 wire packet counts not recorded, but kernel losses and native timed-out on both sides observed",
+    "Owned Stop on automatic dead was NOT separately instrumented; fail-closed timeout event only",
+    "True verified FIN/Dormant/Wake not tested",
+    "No claim of Auto natural grade, CPU or GUI",
+    "Outer opportunistic repair delivery not required"
+  ]
+}
