@@ -67,6 +67,23 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
             self.assertIn("GENUINE_INNER_WSL_PARENT_EXIT",p.stdout)
             self.assertLess(time.monotonic()-start,3.2)
 
+    def test_genuine_wsl_guest_probe_uses_file_backed_deadline(self):
+        probe=(ROOT/"tools/m0_wl_real_wsl2_guest_probe.py").read_text()
+        self.assertIn('with_name("m0_wl_windows_bounded_cmd.py")',probe)
+        self.assertNotIn("subprocess.run(args, capture_output=True",probe)
+        self.assertIn('"90",*args',probe)
+
+    def test_native_step_has_no_raw_wsl_pipe_and_own_progress(self):
+        flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertNotIn("& wsl.exe -d Ubuntu -u root -- ip -j -4 addr",flow)
+        self.assertIn("m0_wl_windows_bounded_cmd.py 25 wsl.exe",flow)
+        self.assertIn("Invoke-WebRequest -UseBasicParsing -TimeoutSec 180",flow)
+        mode=(ROOT/"tools/m0_wl_public_modes_e2e.py").read_text()
+        runner=(ROOT/"tools/m0_wl_native_step_runner.py").read_text()
+        self.assertIn("WL_PUBLIC_REAL_MODE_HEARTBEAT",mode)
+        self.assertIn("WL_ORIGINAL_NATIVE_E2E_BATCH_TIMEOUT",runner)
+        self.assertIn("WL_ORIGINAL_NATIVE_E2E_BATCH_HEARTBEAT",runner)
+
     def test_real_workflow_regular_batch_does_not_use_tee_pipeline(self):
         content=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         self.assertIn(

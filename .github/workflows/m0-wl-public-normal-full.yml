@@ -673,7 +673,7 @@ jobs:
             # This remains a genuine Ubuntu WSL2 guest/kernel, never a mock.
             $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
             $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
-            Invoke-WebRequest -UseBasicParsing -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
+            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
             if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'official Ubuntu WSL image integrity mismatch'}
             New-Item -ItemType Directory -Force $vm | Out-Null
             & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2 2>&1 |
@@ -687,8 +687,10 @@ jobs:
           # One real Linux-kernel preflight, now bounded: past SOURCE bdf574
           # imported Ubuntu but its first guest command hung until 22m timeout.
           # A failed precondition is ENVIRONMENT_BLOCKED, not product FAIL.
+          Write-Output 'WL_WSL2_STAGE_BEGIN real_guest_kernel_probe'
           & python tools/m0_wl_real_wsl2_guest_probe.py
           if($LASTEXITCODE -ne 0){throw 'real WSL2 native guest boot ENVIRONMENT_BLOCKED; see bounded probe JSON'}
+          Write-Output 'WL_WSL2_STAGE_PASS real_guest_kernel_probe'
           & python tools/m0_wl_windows_bounded_cmd.py 120 wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
           if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
           & python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443:446 -j DROP
@@ -767,6 +769,7 @@ jobs:
           # Passive wire witness observes THIS SAME real public handshake, never injects traffic.
           $drive=$PWD.Path.Substring(0,1).ToLowerInvariant()
           $traceScript='/mnt/'+$drive+'/'+$PWD.Path.Substring(3).Replace('\','/')+'/tools/m0_wl_public_native_wire_trace.py'
+          Write-Output 'WL_WSL2_STAGE_BEGIN signed_product_wire_witness'
           $witness=Start-Process -FilePath wsl.exe -ArgumentList @('-d','Ubuntu','-u','root','--','python3','-u',$traceScript,'eth0') -PassThru -RedirectStandardOutput result/wl-public/native-link-tcp443.log -RedirectStandardError result/wl-public/native-link-stderr.log
           # These OS route witnesses are captured during the SAME public
           # TLS/Npcap/WSL2 product run; no synthetic sender or mock route.
@@ -776,8 +779,9 @@ jobs:
           Get-NetAdapter -IncludeHidden -ErrorAction Continue |
             Select-Object Name,InterfaceIndex,InterfaceGuid,MacAddress,Status |
             ConvertTo-Json -Depth 4 | Out-File result/wl-public/windows-adapters.json
-          & wsl.exe -d Ubuntu -u root -- ip -j -4 addr show dev eth0 |
+          & python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -j -4 addr show dev eth0 |
             Out-File result/wl-public/linux-eth0.json
+          if($LASTEXITCODE -ne 0){throw 'bounded WSL2 eth0 native witness failed'}
           $npf=Start-Process -FilePath python -ArgumentList @('-u','tools/m0_wl_public_native_npf_trace.py') -PassThru -RedirectStandardOutput result/wl-public/native-windows-npf.log -RedirectStandardError result/wl-public/native-windows-npf-stderr.log
           Start-Sleep -Milliseconds 800
           try {
@@ -804,6 +808,7 @@ jobs:
               # WSL/Go child may inherit stdout and outlive its owning test.
               # Tail a real file by PID so its genuine error/exit is promptly
               # surfaced without waiting for unrelated descendant handles.
+              Write-Output ('WL_WSL2_STAGE_BEGIN actual_native_modes mode='+$env:WBD_WL_PUBLIC_MODES)
               & python -u tools/m0_wl_native_step_runner.py tools/m0_wl_public_modes_e2e.py result/wl-public/direct-full.log
             }
             $e2eExit=$LASTEXITCODE

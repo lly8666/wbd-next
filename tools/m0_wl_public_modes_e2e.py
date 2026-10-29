@@ -5,7 +5,7 @@ Reuse a single signed-driver/WSL host and compiled native artifacts.
 Never derive product PASS from compile or a different mode. A failed
 mode remains a FAIL with its exact original source and report.
 """
-import os,sys,json,subprocess,pathlib
+import os,sys,json,subprocess,pathlib,time
 from m0_wl_mode_evidence import (
  archive_mode_evidence,capture_mode_evidence_baseline,
  select_source_locked_modes)
@@ -35,8 +35,18 @@ for mode in modes:
  child=subprocess.Popen([sys.executable,"tools/m0_wl_public_normal_e2e.py"],env=env,
   creationflags=getattr(subprocess,"CREATE_NEW_PROCESS_GROUP",0) if os.name=="nt" else 0)
  timed_out=False
+ started=time.monotonic()
  try:
-  rc=child.wait(timeout=mode_seconds)
+  while True:
+   remaining=mode_seconds-(time.monotonic()-started)
+   if remaining<=0:raise subprocess.TimeoutExpired(child.args,mode_seconds)
+   try:
+    rc=child.wait(timeout=min(remaining,20))
+    break
+   except subprocess.TimeoutExpired:
+    if time.monotonic()-started>=mode_seconds:raise
+    print("WL_PUBLIC_REAL_MODE_HEARTBEAT mode="+mode+" elapsed_seconds="+
+          str(int(time.monotonic()-started))+" source="+env.get("GITHUB_SHA",""),flush=True)
  except subprocess.TimeoutExpired:
   timed_out=True
   # Terminate the entire test-child tree on Windows; no orphan native Go/Wsl
@@ -49,6 +59,8 @@ for mode in modes:
   except subprocess.TimeoutExpired: pass
   rc=124
   print("WL_PUBLIC_REAL_MODE_TIMEOUT mode="+mode+" bounded_seconds="+str(mode_seconds),flush=True)
+ print("WL_PUBLIC_REAL_MODE_PROCESS_EXIT mode="+mode+" rc="+str(rc)+
+       " elapsed_seconds="+str(int(time.monotonic()-started)),flush=True)
  report=out/"report.json"
  result=json.loads(report.read_text()) if report.exists() and not timed_out else {
   "mode":mode,"error":("native mode deadline "+str(mode_seconds)+"s expired" if timed_out

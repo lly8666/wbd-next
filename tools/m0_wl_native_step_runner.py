@@ -14,6 +14,27 @@ import subprocess
 import sys
 import time
 
+def kill_native_child_tree(child):
+    # A deadline kills exactly the one original E2E child tree.
+    if sys.platform == "win32":
+        try:
+            subprocess.run(["taskkill.exe","/PID",str(child.pid),"/T","/F"],
+                           stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL,timeout=15,check=False)
+        except (OSError,subprocess.TimeoutExpired):
+            pass
+    if child.poll() is None:child.kill()
+    try:child.wait(timeout=5)
+    except subprocess.TimeoutExpired:pass
+
+def native_batch_deadline(env):
+    # One functional mode has <=165s, historical four modes <=4*165s.
+    # These extra guards end earlier than the 1020s whole-step watchdog.
+    if (env.get("WBD_WL_RUN_N0")=="1" or env.get("WBD_WL_RUN_P200")=="1"
+        or env.get("WBD_WL_V2_SCENARIO")):return 970
+    selected=env.get("WBD_WL_PUBLIC_MODES","all")
+    return 800 if selected=="through-game2" else 970 if selected=="all" else 320
+
 
 def main() -> int:
     if len(sys.argv) != 3:
@@ -32,6 +53,10 @@ def main() -> int:
         print("WL_ORIGINAL_NATIVE_E2E_CHILD_STARTED pid=" + str(child.pid) +
               " script=" + script.name, flush=True)
         offset = 0
+        started=time.monotonic()
+        last_heartbeat=started
+        limit=native_batch_deadline(os.environ)
+        print('WL_ORIGINAL_NATIVE_E2E_BATCH_DEADLINE seconds='+str(limit),flush=True)
         while True:
             with output.open("rb") as reader:
                 reader.seek(offset)
@@ -53,6 +78,17 @@ def main() -> int:
                 print("WL_ORIGINAL_NATIVE_E2E_CHILD_EXIT pid=" + str(child.pid) +
                       " rc=" + str(rc), flush=True)
                 return rc
+            now=time.monotonic()
+            if now-started>=limit:
+                print("WL_ORIGINAL_NATIVE_E2E_BATCH_TIMEOUT seconds="+str(limit)+
+                      " owner_pid="+str(child.pid)+" mode="+os.environ.get("WBD_WL_PUBLIC_MODES","all"),
+                      file=sys.stderr,flush=True)
+                kill_native_child_tree(child)
+                return 124
+            if now-last_heartbeat>=20:
+                print("WL_ORIGINAL_NATIVE_E2E_BATCH_HEARTBEAT elapsed_seconds="+
+                      str(int(now-started))+" owner_pid="+str(child.pid),flush=True)
+                last_heartbeat=now
             time.sleep(.2)
 
 

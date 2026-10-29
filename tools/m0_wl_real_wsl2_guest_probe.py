@@ -21,7 +21,10 @@ receipt = {
     "product": "NOT_RUN",
 }
 try:
-    process = subprocess.run(args, capture_output=True, text=True, timeout=90, check=False)
+    bounded=pathlib.Path(__file__).with_name("m0_wl_windows_bounded_cmd.py")
+    # File-backed actual WSL guest PID: no descendant may retain a PIPE EOF.
+    process = subprocess.run([sys.executable,str(bounded),"90",*args],
+                             capture_output=True,text=True,timeout=115,check=False)
     receipt["exit_code"] = process.returncode
     receipt["stdout_tail"] = process.stdout[-160:]
     receipt["stderr_tail"] = process.stderr[-160:]
