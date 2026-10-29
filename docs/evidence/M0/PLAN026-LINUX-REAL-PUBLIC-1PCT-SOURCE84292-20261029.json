@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "source_sha": "84292ac25b552208f1d9a22c90e76f338b19b405",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action_run_id": 40838774534,
+  "action_conclusion": "success",
+  "artifact_id": 12882420368,
+  "artifact_name": "m0-plan012-combined-40838774534-1",
+  "artifact_sha256": "424c11796e578fb5179eb3aaf9fa7d14bf38d205f0c1ac65f0126847ed8b9da1",
+  "artifact_manifest_source_sha": "84292ac25b552208f1d9a22c90e76f338b19b405",
+  "result": "PASS_SCOPED_REAL_ORIGINAL_GO_LINUX_PUBLIC_NORMAL_FEC_GAME_AND_1PCT_ACCOUNTING",
+  "artifact_verified": true,
+  "platform": "Ubuntu 24.04 x86_64 GitHub Actions, real Linux netns TUN/raw/netem original Go TLS+Rust M4",
+  "product_mode_default": "FEC2_OFF",
+  "real_1pct_udp": {
+    "offered": 512,
+    "unique_first_delivered": 510,
+    "missing": 2,
+    "tc_client_dropped": 6,
+    "tc_server_dropped": 10,
+    "kernel_first_copy_client": 512,
+    "kernel_first_copy_server": 511,
+    "authenticated_m2_ack_client": 265,
+    "authenticated_m2_ack_server": 268,
+    "outer_opportunistic_repair_attempts_observed": 5,
+    "outer_repair_delivery_not_required": true,
+    "native_stop_drained_both": true
+  },
+  "other_same_source_qualified": {
+    "normal_off_real_first_app_and_stop": "PASS",
+    "fixed_real_app_first_delivered": 64,
+    "auto_real_app_first_delivered": 64,
+    "fixed_auto_applied_only_after_authentic_mature_m2": true,
+    "game2_damaged_lane_healthy_first_app_stop": "PASS",
+    "game4_damaged_lane_healthy_first_app_stop": "PASS",
+    "true_original_rs16_missing_source_scoped": "PASS"
+  },
+  "separate_actions_same_source": {
+    "v4_wiring_parallel": {
+      "run_id": 40838774515,
+      "conclusion": "success",
+      "jobs": 4
+    },
+    "governance": {
+      "run_id": 40838774553,
+      "conclusion": "success"
+    }
+  },
+  "not_claimed": {
+    "guaranteed_udp_512_delivery": "NOT_CLAIMED",
+    "outer_retransmit_recovery_effect": "NOT_CLAIMED",
+    "windows_full_native_game2_4_and_fixed_auto": "NOT_RUN_HERE",
+    "windows_v2_all_profiles_and_health_lane": "NOT_RUN",
+    "windows_same_vm_go_rust_cpu_ab": "NOT_RUN",
+    "signed_physical_device": "NOT_RUN",
+    "system_capacity_threshold": "NOT_MEASURED_THIS_SCENE"
+  },
+  "historical_capacity_reference": {
+    "source_sha": "b9c2c1707c917816c6d615a5283c9ea2329ee6b5",
+    "prior_100mbps_12_scenarios": "10/12 PASS_FULL_NATIVE, 2/12 INCONCLUSIVE_CAPACITY_PACING_CATCHUP",
+    "no_cross_source_cpu_inference": true
+  }
+}
