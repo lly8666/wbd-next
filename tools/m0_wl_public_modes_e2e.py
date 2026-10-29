@@ -33,7 +33,7 @@ for mode in modes:
            or env.get("WBD_WL_V2_SCENARIO"))
  mode_seconds=1200 if slow else 165
  child=subprocess.Popen([sys.executable,"tools/m0_wl_public_normal_e2e.py"],env=env,
-  creationflags=getattr(subprocess,"CREATE_NEW_PROCESS_GROUP",0) if os.name=="nt" else 0)
+  creationflags=0) # restore last terminating pre-a8 original Windows child launch
  timed_out=False
  started=time.monotonic()
  try:

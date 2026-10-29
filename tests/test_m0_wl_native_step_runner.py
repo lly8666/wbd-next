@@ -84,6 +84,21 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         self.assertIn("WL_ORIGINAL_NATIVE_E2E_BATCH_TIMEOUT",runner)
         self.assertIn("WL_ORIGINAL_NATIVE_E2E_BATCH_HEARTBEAT",runner)
 
+    def test_wsl_real_boot_is_own_action_step_before_native_game(self):
+        flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        stage="Real WSL2 Ubuntu kernel boot and TUN prerequisite (independent bounded stage)"
+        native="Launch actual WSL2 Linux and direct full public two-OS product"
+        self.assertLess(flow.index(stage),flow.index(native))
+        self.assertEqual(flow.count("WL_WSL2_BOOT_STAGE_COMPLETE_REAL_KERNEL"),1)
+        self.assertEqual(flow.count("WL_REAL_PINNED_UBUNTU_24045_WSL2_IMPORTED"),1)
+        self.assertIn("m0-wl-real-guest-boot-",flow)
+
+    def test_game_process_group_rolls_back_first_hanging_a8_launcher_flag(self):
+        mode=(ROOT/"tools/m0_wl_public_modes_e2e.py").read_text()
+        self.assertIn("creationflags=0)",mode)
+        self.assertNotIn("creationflags=getattr(subprocess",mode)
+        self.assertIn("mode_seconds=1200 if slow else 165",mode)
+
     def test_real_workflow_regular_batch_does_not_use_tee_pipeline(self):
         content=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         self.assertIn(

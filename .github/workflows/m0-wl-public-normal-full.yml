@@ -651,20 +651,15 @@ jobs:
           print("WL_NEW_LINUX_ORIGINAL_GO_RUST_SOURCE_MATCH_VERIFIED")
           '@ | python -
           if($LASTEXITCODE -ne 0){throw 'new exact Linux Go/Rust binary integrity failed'}
-      - name: Launch actual WSL2 Linux and direct full public two-OS product
+      # Preserve actual Ubuntu on the SAME Windows runner for the later
+      # native kernel job. A completed step gives inspectable first-error
+      # logs even if the later Game2 process tree wedges the runner.
+      - name: Real WSL2 Ubuntu kernel boot and TUN prerequisite (independent bounded stage)
         shell: pwsh
-        timeout-minutes: 24
+        timeout-minutes: 8
         run: |
           $ErrorActionPreference='Stop'
-          # Whole-step external native OS process-tree watchdog, including
-          # WSL2 import/boot/firewall, 7 modes, and cleanup (not just mode).
-          $watchdogDone=Join-Path $env:RUNNER_TEMP ('wbd-wl-'+$env:GITHUB_RUN_ID+'-guard-done.flag')
-          Remove-Item $watchdogDone -Force -ErrorAction SilentlyContinue
-          $watchdogScript=(Resolve-Path 'tools/m0_wl_windows_step_watchdog.py').Path
-          $guard=Start-Process -FilePath python -ArgumentList @('-u',$watchdogScript,[string]$PID,'1020',$watchdogDone) -PassThru
-          if($null -eq $guard){throw 'external WSL2 whole-step watchdog not armed'}
-          Write-Output ('WL_WSL2_OUTER_WATCHDOG_ARMED max_seconds=1020 windows_parent_pid='+$PID)
-          try {
+          Write-Output ('WL_WSL2_BOOT_STAGE_SOURCE '+$env:GITHUB_SHA)
           $known=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
           if($LASTEXITCODE -ne 0){throw 'bounded WSL2 distribution listing failed'}
           if($known -notmatch 'Ubuntu'){
@@ -692,6 +687,30 @@ jobs:
           & python tools/m0_wl_real_wsl2_guest_probe.py
           if($LASTEXITCODE -ne 0){throw 'real WSL2 native guest boot ENVIRONMENT_BLOCKED; see bounded probe JSON'}
           Write-Output 'WL_WSL2_STAGE_PASS real_guest_kernel_probe'
+          Write-Output 'WL_WSL2_BOOT_STAGE_COMPLETE_REAL_KERNEL'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-wl-real-guest-boot-${{ github.run_id }}
+          path: |
+            result/wl-public/wsl2-real-guest-probe.json
+            result/wl-public/wsl-import.log
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Launch actual WSL2 Linux and direct full public two-OS product
+        shell: pwsh
+        timeout-minutes: 24
+        run: |
+          $ErrorActionPreference='Stop'
+          # Whole-step external native OS process-tree watchdog, including
+          # WSL2 import/boot/firewall, 7 modes, and cleanup (not just mode).
+          $watchdogDone=Join-Path $env:RUNNER_TEMP ('wbd-wl-'+$env:GITHUB_RUN_ID+'-guard-done.flag')
+          Remove-Item $watchdogDone -Force -ErrorAction SilentlyContinue
+          $watchdogScript=(Resolve-Path 'tools/m0_wl_windows_step_watchdog.py').Path
+          $guard=Start-Process -FilePath python -ArgumentList @('-u',$watchdogScript,[string]$PID,'1020',$watchdogDone) -PassThru
+          if($null -eq $guard){throw 'external WSL2 whole-step watchdog not armed'}
+          Write-Output ('WL_WSL2_OUTER_WATCHDOG_ARMED max_seconds=1020 windows_parent_pid='+$PID)
+          try {
           & python tools/m0_wl_windows_bounded_cmd.py 120 wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
           if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
           & python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443:446 -j DROP
