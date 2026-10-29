@@ -88,6 +88,21 @@ jobs:
                    'm0_windows_owner_v3_real_m1_m3_aead_pn_replay_and_generation')) {
             if ($log -notmatch ('test .*'+[regex]::Escape($test)+'.* ok')) {throw "native Rust test NOT_RUN $test"}
           }
+      - name: PLAN026 current work only - Windows Fixed Game Auto native 2-worker M2 Health Rust core regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib v4_windows_owner:: -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath windows-owner-result/plan026-mode-tests.log
+          if ($LASTEXITCODE -ne 0) {throw 'PLAN026 Windows real source Fixed/Game/Auto Rust owner tests FAIL'}
+          $log=Get-Content windows-owner-result/plan026-mode-tests.log -Raw
+          foreach ($test in @('fixed_v2_attach_is_versioned_and_does_not_change_v1_abi',
+             'game_v3_rejects_missing_owned_attachment_without_driver_borrow',
+             'genuine_2s_8s_mature_m2_down_one_rung_only_after_30s_and_4096')) {
+            if ($log -notmatch ('test .*'+[regex]::Escape($test)+'.* ok')) {throw "PLAN026 missing scoped test $test"}
+          }
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib v4_native_health:: -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath windows-owner-result/plan026-health-tests.log
+          if ($LASTEXITCODE -ne 0) {throw 'PLAN026 Windows shared authenticated Health core tests FAIL'}
+          if ((Get-Content windows-owner-result/plan026-health-tests.log -Raw) -notmatch 'test .*health_only_and_merged_receipt_quality_share_canonical_wbc4.* ok') {throw 'PLAN026 Health actual test missing'}
       - name: Build actual Windows Rust DLL and inspect external C FFI without simulated native products
         shell: pwsh
         run: |

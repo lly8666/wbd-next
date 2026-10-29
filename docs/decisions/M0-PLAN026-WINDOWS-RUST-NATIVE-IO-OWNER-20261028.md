@@ -2,6 +2,8 @@
 
 > 2026-10-28 用户已选择方案 B。此文件是 **M0 的完整施工单，不是实现或测试 PASS**。M0 直接在 main 连续开发；Linux 当前真实 raw/TUN/Rust 数据面不重写。优先一次写全 Normal/off 的产品+调用方+Stop+测试+装配，集中 Actions/真实性能 A/B，达标再连续移植其他模式、Health、换 lane。任务授权看 main registry.goal；本计划先只更新文档，不代写 M0 cursor 的事实。
 
+**2026-10-29 当前进度校正（覆盖下文 2026-10-28 施工时态）**：A阶段 Normal/off Rust NativeOwner 已经实现并经真实签名 Windows 设备验证：SOURCE055 双向 UDP/TCP/Stop 功能 PASS，SOURCEa123 N0 240s PASS，SOURCE7fc 150Mbps 代表性性能 PASS，证据见 Windows transport 功能卡。此处早期‘先一次写全 Normal/off/再跑A’仅为历史计划，**不得再次将 Normal/off 接线、N0 或旧Go同机 CPU A/B 当成 Fixed/Game/Auto 的阻塞前置**。保持老源负例、波动/容量及跨SOURCE/物理边界，后续仅受影响回归，主工位是 Fixed/Game/Auto、双端 Health、FIN/Dormant/Wake、动态 lane 与各模式确切资格。
+
 ## 1. 定死的运行边界与成功标准
 
 **Go 保留**：Windows FakeTCP SYN/TLS/uTLS、真实身份/特征协商和 exporter、Wintun 创建与验证、WFP/route/DNS/MTU、owned WAL/崩溃恢复、CLI/WinForms、按 Rust 事件重新建 lane。**Rust DLL 独占**：Wintun 的业务 RX/TX、Npcap 业务 RX/TX、AEAD/PN、M2反馈与真实发送结果、FEC2、Game调度、Keepalive/健康和低频定时。稳态 Go 对每个业务包 0 次 FFI、0 次 ReadSegment/WriteSegment、0 次 channel copy、0 次 Go pulse；Go 可阻塞等控制事件和按需低频统计，CPU 不应随 PPS 增长。换 lane 不重建 Wintun/WFP/系统路由。

@@ -1,6 +1,6 @@
 # PLAN026｜Windows Rust-only FEC/Game + 双端 Auto/Health 低成本整批施工契约
 
-**2026-10-29 / M0 / 用户新增明确授权。状态：DESIGN_APPROVED_FOR_M0_IMPLEMENTATION；产品接线、构建、功能、性能均不是本文件所证明的 PASS。** 继续在 `main` 实现既有 `R0-M0-PLAN026-WIN-RUST-NATIVE-IO`，不新建任务/epoch/实验分支。当前任务有效性仍以 main registry.goal、真实进度以 cursor、资格以精确 SOURCE/Actions 为准。本文替代前期 [阶段 B 研究](M0-PLAN026-FEC-GAME-RUST-STEADY-WIRING-RESEARCH-20261029.md) 的**实施顺序与 Auto/Health/测试契约**，原设计/负面历史保留，不复制到热入口。与 [Windows Option B](M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md) 不冲突；未完成的 Normal/off N0、同 VM A/B 和 lane 更换仍如实开放。
+**2026-10-29 / M0 / 用户新增明确授权。状态：DESIGN_APPROVED_FOR_M0_IMPLEMENTATION；产品接线、构建、功能、性能均不是本文件所证明的 PASS。** 继续在 `main` 实现既有 `R0-M0-PLAN026-WIN-RUST-NATIVE-IO`，不新建任务/epoch/实验分支。当前任务有效性仍以 main registry.goal、真实进度以 cursor、资格以精确 SOURCE/Actions 为准。本文替代前期 [阶段 B 研究](M0-PLAN026-FEC-GAME-RUST-STEADY-WIRING-RESEARCH-20261029.md) 的**实施顺序与 Auto/Health/测试契约**，原设计/负面历史保留，不复制到热入口。与 [Windows Option B](M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md) 不冲突；本决策最初提及的 Normal/off N0 未验已被后续真实 Windows signed-Npcap/Wintun 证据取代：SOURCE055 功能/Stop、SOURCEa123 N0 240s、SOURCE7fc 150Mbps 代表性性能已 PASS（均仅限精确SOURCE）。同VM CPU因果优化、历史波动/容量及物理不自动全绿，但**不得把 Normal/off 再施工或重跑当作后续 Fixed/Game/Auto 的硬前置依赖**；动态 lane 更换仍独立开放。
 
 ## 0. 一次性批次的最短依赖链 / 不做什么
 

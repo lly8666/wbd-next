@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "windows-native-transport",
   "name": "Windows Npcap/Wintun原生传输",
-  "summary": "原Go TLS与Npcap/签名Wintun的Rust AEAD真实双向App链路，模式mask保守开放。",
+  "summary": "Windows 原Go TLS 冷认证 + Rust NativeOwner 两worker Npcap/签名Wintun Normal/off：真实双端UDP/TCP/Stop和历史N0/150Mbps 已有精确SOURCE PASS；当前新施工是 Fixed/Auto/Game2/4/Health，不重建 Normal。",
   "owner": "M0 takeover/历史M4",
   "stage": "experimental",
   "development_branch": "work/m4-r1-platform",
@@ -80,7 +80,7 @@
     },
     {
       "platform": "windows/x64 signed Wintun+Npcap ↔ linux/amd64 WSL2",
-      "scope": "PLAN026 Rust-only Normal/off NativeOwner product-source wiring, GO NPF/Wintun handoff, real M3/Ack/M2 and owned Stop; source build/native bidirectional/network performance for this new path",
+      "scope": "历史施工前(已被 SOURCE055 FUNCTIONAL_PASS、SOURCEa123 N0 PASS、SOURCE7fc 150Mbps PASS 取代)：PLAN026 Rust-only Normal/off NativeOwner product-source wiring, GO NPF/Wintun handoff, real M3/Ack/M2 and owned Stop; source build/native bidirectional/network performance for this new path",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
@@ -143,6 +143,7 @@
     }
   ],
   "limitations": [
+    "CURRENT M0 2026-10-29 status correction: Normal/off native Go cold→Rust 2-worker Wintun/Npcap already wired with original signed Windows SOURCE055 duplex/Stop functional PASS, SOURCEa123 genuine N0 240s PASS and SOURCE7fc 150Mbps scoped performance PASS. Do not classify Normal/off as TODO or require new N0 before Fixed/Game/Auto. Historical source FAIL/capacity, same-host optimization attribution, physical and new HEAD-specific tests remain separate facts; stale older NOT_RUN descriptions are historical, not the current task.",
     "旧Windows修复失败仍需保留；cannot infer Windows modes from Linux or native code mask.",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",

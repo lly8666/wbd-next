@@ -274,6 +274,12 @@ jobs:
           assert (caps.version,caps.size,caps.supported_modes,
                   caps.authenticated_lanes,caps.reserved)==(
                   4,ctypes.sizeof(caps),31,4,0)
+          for sym in ("wbd_m0_win_native_v2_start", "wbd_m0_win_game_native_v3_start",
+                      "wbd_m0_win_game_native_v3_early", "wbd_m0_win_game_native_v3_stats",
+                      "wbd_m0_win_game_native_v3_stop", "wbd_m0_win_owner_v9_rust_auto_state",
+                      "wbd_m0_win_owner_v9_native_health_config"):
+              assert getattr(dll,sym,None) is not None, "missing actual PLAN026 source mode/health ABI "+sym
+          print("M0_PLAN026_WINDOWS_NATIVE_FIXED_GAME_AUTO_HEALTH_EXPORTS_SOURCE_LOCKED_PASS; not real network")
           print("M0_PLAN026_REAL_WINDOWS_RUST_MODE_ABI_EXPORTS_PRESENT mask=31 lanes=4; no product/OS/UDP PASS inferred")
           print("M0_PLAN020_REAL_NATIVE_V4_RUST_M3_DLL_EXPORTS_PASS sha256="+hashlib.sha256(p.read_bytes()).hexdigest())
           '@ | python -

@@ -5,6 +5,9 @@
 ## 每次启动的八文件
 本页＋`AGENTS.md`、`PROJECT_CHARTER.md`、`.governance/project.json`、`.governance/registry.json`、`docs/prompts/M0.md`、`.governance/workstreams/M0/cursor.json`、`docs/features/README.md`。任务看最新main registry.goal，进度看main cursor，资格看精确SOURCE/Actions/证据。先刷新HEAD、核checkpoint之后提交与在途结果，不按旧聊天自增epoch、不全仓扫旧devlog。
 
+## Normal/off 既有验收基线（不是当前施工门）
+Windows Rust NativeOwner **Normal/off 已基本完成接线和测试**：原Go TLS冷交接、Rust 两worker 独占真实签名Npcap/Wintun、双向UDP/TCP与owned Stop 已有 SOURCE055 功能 PASS；SOURCEa123 有 10Mbps/300ms 单程/240s N0 PASS；SOURCE7fc 有 150Mbps/300ms 单程/60s 真实首次交付性能 PASS，详见 `docs/features/entries/windows-native-transport.json` 的精确SOURCE证据。旧SOURCE下存在容量上限、波动和回滚负例，不能把历史结果伪称当前HEAD/物理全绿；但**不得把Normal/off重新接线、N0重跑或Go/Rust CPU对照作为进入Fixed/Game/Auto施工的前置条件**。相关变更只做受影响回归，优先当前 PLAN026 Fixed→Game→Auto/Health/生命周期。
+
 ## 当前施工导航（不是产品完成声明）
 PLAN026 Windows Go冷TLS/OS/WAL＋Rust独占Wintun/Npcap稳态；**Fixed/Game/Auto/Health/服务器超时与休眠** 的新增细化施工、测试顺序见 [M0低成本整批契约](docs/decisions/M0-PLAN026-FEC-GAME-AUTO-HEALTH-LOW-COST-EXECUTION-20261029.md)。此前 [NativeOwner主决策](docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md) 和 [阶段B技术盘点](docs/decisions/M0-PLAN026-FEC-GAME-RUST-STEADY-WIRING-RESEARCH-20261029.md) 按需读，不从本页猜已接线/通过。
 

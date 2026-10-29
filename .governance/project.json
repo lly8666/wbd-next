@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "2026-10-28 newer user authorization: main M0 PLAN026 Windows Go cold control + Rust-native Wintun/Npcap steady owner, task and done_when in registry.goal at docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md. Before implementation settle old PLAN025 in-flight run and carry N0 produced0/ready4 as regression. This documentation changes no product SOURCE or performance/physical qualification; Linux stays as-is.",
+  "next_decision": "2026-10-29 M0 PLAN026 live stage: Windows Rust NativeOwner Normal/off previously wired and source-scoped Windows signed-driver functional/Stop, N0 240s and 150Mbps performance evidence accepted as baseline; do not reopen Normal/off or force N0/old-Go A/B before Fixed/Game/Auto. Current implementation+testing is Windows Fixed/Auto/Game2/4 native owner, bilateral Health and real FIN/Dormant/Wake/lane, V2 and genuine M2 gates, source-locked compile/core/Windows WAL/functional, then mode-specific performance. Historical rollback/capacity and physical qualification remain precisely scoped; do not invent current HEAD PASS.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",
