@@ -44,6 +44,29 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
             self.assertIn("WL_ORIGINAL_NATIVE_E2E_CHILD_EXIT",p.stdout)
             self.assertIn("GENUINE_NATIVE_FAILURE_STAGE",log.read_text())
 
+    def test_inner_wsl_control_does_not_capture_a_raw_wsl_pipe(self):
+        content=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()
+        self.assertIn('str(root/"tools"/"m0_wl_windows_bounded_cmd.py")',content)
+        self.assertNotIn("subprocess.run(a,capture_output=True",content)
+
+    def test_file_backed_inner_control_preserves_parent_exit_with_inherited_writer(self):
+        with tempfile.TemporaryDirectory() as d:
+            code=pathlib.Path(d)/"wsl-like-parent.py"
+            code.write_text(
+                "import subprocess,sys\\n"
+                "subprocess.Popen([sys.executable,'-c','import time;time.sleep(4)'],"
+                " stdout=sys.stdout,stderr=sys.stderr)\\n"
+                "print('GENUINE_INNER_WSL_PARENT_EXIT',flush=True)\\n"
+                "sys.exit(7)\\n")
+            start=time.monotonic()
+            p=subprocess.run([sys.executable,
+                              str(ROOT/"tools/m0_wl_windows_bounded_cmd.py"),
+                              "5",sys.executable,str(code)],
+                             capture_output=True,text=True,timeout=3.5)
+            self.assertEqual(p.returncode,7,p.stdout+p.stderr)
+            self.assertIn("GENUINE_INNER_WSL_PARENT_EXIT",p.stdout)
+            self.assertLess(time.monotonic()-start,3.2)
+
     def test_real_workflow_regular_batch_does_not_use_tee_pipeline(self):
         content=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         self.assertIn(

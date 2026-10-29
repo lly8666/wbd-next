@@ -30,7 +30,13 @@ report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINU
  "requested_original_win_mtu":configured_mtu,
  "runtime_os_mtu_guard":"ORIGINAL_NATIVE_M4_1HZ_FAIL_CLOSED"}
 def run(a,timeout=30):
- p=subprocess.run(a,capture_output=True,text=True,timeout=timeout)
+ # The outer suite already writes to a file, but this inner WSL command
+ # must not leave an inherited capture_output PIPE writer inside WSL.
+ # Reuse the existing bounded, file-backed OS-command runner. Its one
+ # owning PID returns the real status even if Linux descendants remain.
+ wrapped=[sys.executable,str(root/"tools"/"m0_wl_windows_bounded_cmd.py"),
+          str(timeout),*a]
+ p=subprocess.run(wrapped,capture_output=True,text=True,timeout=timeout+25)
  if p.returncode:raise RuntimeError(str(a[:4])+": "+(p.stderr or p.stdout)[-600:])
  return p.stdout.strip()
 def wsl(*a,timeout=30):return run(["wsl.exe","-d","Ubuntu","-u","root","--",*a],timeout)
