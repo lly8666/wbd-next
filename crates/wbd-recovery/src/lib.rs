@@ -8,6 +8,8 @@ pub mod budget;
 pub mod global_sparse;
 pub mod ingress;
 pub mod maturity;
+pub mod outer_ack;
+pub use outer_ack::{OuterAckError, OuterAckIndex, OuterAckUpdate, SackRange32};
 pub use maturity::{MatureFirstSend,MaturityConfig,MaturityError,FirstSendKind,FirstSendOutcome,MatureWindow,MaturityPoll,MaturityStop,ObservationCounters};
 pub use ingress::{
     admit_opened_receipt, reserve_frozen_submission, complete_driver_prefix,
