@@ -243,7 +243,10 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 Ok(ReadResult::Skipped)=>{
                     c.rejected.fetch_add(1,Ordering::Relaxed);
                 }
-                Err(_)=>return BAD_STAGE,
+                Err(err)=>{
+                    eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=wintun_read reason={err:?}");
+                    return BAD_STAGE
+                },
             }
         }
         // Same Game4 scheduler/FEC parity owner as original Linux.
@@ -273,7 +276,14 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         match io::wait_ready(&[stop.handle(),tun.event(),wake.handle()],timeout){
             Ok(WaitResult::Ready(0))=>return OK,
             Ok(WaitResult::Ready(1|2)|WaitResult::Timeout)=>{},
-            _=>return BAD_STAGE,
+            Ok(other)=>{
+                eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=event_wait unexpected={other:?} timeout_ms={timeout}");
+                return BAD_STAGE
+            },
+            Err(err)=>{
+                eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=event_wait reason={err:?} timeout_ms={timeout}");
+                return BAD_STAGE
+            },
         }
     }
 }
@@ -342,7 +352,14 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         match io::wait_ready(&handles,u32::MAX){
             Ok(WaitResult::Ready(0))=>return OK,
             Ok(WaitResult::Ready(_))=>{},
-            _=>return BAD_STAGE,
+            Ok(other)=>{
+                eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=RX stage=event_wait unexpected={other:?}");
+                return BAD_STAGE
+            },
+            Err(err)=>{
+                eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=RX stage=event_wait reason={err:?}");
+                return BAD_STAGE
+            },
         }
         let mut verified=false;
         // One RX thread and one shared Wintun, read each lane fairly.
@@ -353,7 +370,14 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                     Ok(ReadResult::Frame(n))=>n,
                     Ok(ReadResult::Skipped)=>continue,
                     Ok(ReadResult::NoPacket)=>break,
-                    Ok(ReadResult::EndOfStream)|Err(_)=>return BAD_STAGE,
+                    Ok(ReadResult::EndOfStream)=>{
+                        eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=RX stage=npcap_read lane={} reason=EndOfStream",i+1);
+                        return BAD_STAGE
+                    },
+                    Err(err)=>{
+                        eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=RX stage=npcap_read lane={} reason={err:?}",i+1);
+                        return BAD_STAGE
+                    },
                 };
                 let Some(ipv4)=io::ethernet_ipv4(&frame[..n])else{continue};
                 let l=&lanes[i];
@@ -424,6 +448,7 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_start(
         let rc=tx_loop(cfg,tx_lanes,tx_group,tun_rx,senders,
             Arc::clone(&tx_stop),tx_notify,Arc::clone(&tx_counters));
         if rc!=OK{
+            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=worker_exit rc={rc}");
             tx_counters.err.store(rc,Ordering::Release);
             let _=tx_stop.wake();
         }
@@ -440,6 +465,7 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_start(
             Arc::clone(&rx_stop),rx_notify,wake_tx,rx_early,
             Arc::clone(&rx_counter));
         if rc!=OK{
+            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=RX stage=worker_exit rc={rc}");
             rx_counter.err.store(rc,Ordering::Release);
             let _=rx_stop.wake();
         }
