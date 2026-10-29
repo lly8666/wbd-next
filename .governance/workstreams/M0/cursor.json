@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 411,
-  "checkpoint_sha": "74b1c9d4f56fbfddbee7be6927f023545bc50217",
+  "sequence": 412,
+  "checkpoint_sha": "0dd162de912fc6f5d1852230687356b7dfb681a5",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H407 SOURCE36126525 native recovery94/engine136 and Linux old M2 owner PASS, Windows old M2 owner40962693602 SUCCESS with scoped signed Wintun TLS/AEAD/Stop; H411 exact Windows evidence. H410 governance40963709657 FAIL due cross-SOURCE evidence_refs; H411 fixes refs. Online M2 still LIVE.",
-  "why_now": "Collect in-flight Windows result, attest DLL/Go executable and logs, fix observed governance source mismatch without deleting old evidence.",
+  "current_task": "H407 source36126525 RX CLOSE->v2 summary native PASS40962693585 (recovery94 engine136), ABI/cross PASS, Linux old-M2 owner40962693776 and Windows old-M2 owner40962693602 scoped PASS. H410/H411 evidence exact manifest/binary/artifact hashes. H411 governance40963876159 SUCCESS. PLAN027 live M2 still active, A/B/C NOT_RUN.",
+  "why_now": "H411 governance passed after exact-source evidence-ref correction; record final recovered Actions and resume point without repeating old-source tests.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Verify H411 governance, then implement actual Windows/Linux authenticated low-rate Quality/Auto and negotiated ACK/SACK repair, remove online M2, run PLAN027 A/B/C/long/necessary fixes.",
+  "next_action": "Implement negotiated low-rate START/CLOSE and RX/TX v2 summary in actual Linux/Windows M3 owners, driver-accepted F and Auto policy; retire per-record M2, wire outer ACK/SACK bounded repair, then run simplified A, lifecycle B, network matrix C, long tests and necessary fixes.",
   "unverified": true,
   "last_tested_source": "361265256d58d18ea0b36badf04668c16fb19e1c",
   "evidence_refs": [
@@ -29,5 +29,5 @@
     "docs/devlog/M0/20261030-PLAN027-H407-RECEIVER-ANNOUNCED-CLOSE-WIRE-GLUE.md"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL H407 pure RX native PASS and exact old-M2 Linux/Windows scoped regression PASS, but no new live owner. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. H410 governance source-mismatch FAIL corrected H411, awaiting governance. Physical NOT_RUN."
+  "partial_summary": "§0-1 PARTIAL: H407 pure RX close→wire native PASS; H407 SOURCE old-M2 Linux/Windows real/scoped owner regression PASS; online per-record M2 NOT RETIRED, new live Quality/Auto/ACK NOT WIRED. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. No new-source product p99/CPU/RSS/drop, capacity or physical evidence. H411 governance PASS40963876159."
 }
