@@ -443,14 +443,14 @@ func FecV2Step(c FecV2Config, previous FecV2State, snap FecV2Snapshot, now time.
         } else {s.DownSources+=snap.Fast.Observed}
         if s.DownValidWindows<5 {s.DownValidWindows++}
         s.DownLastValid=now
-        // Require both elapsed hold and >=5 authentic valid 2s windows.
+        // Preserve the legacy stable-link 30s hold with >=5 genuine 2s windows.\n        // One-step drops are never driven by absent/unknown M2 data.
         // Interleaved UNKNOWN adds neither an outcome nor maturity.
-        if now-s.DownSince>=10*time.Second && s.DownValidWindows>=5 &&
+        if now-s.DownSince>=30*time.Second && s.DownValidWindows>=5 &&
             s.DownSources>=4096 &&
-            (s.LastDown==0 || now-s.LastDown>=10*time.Second) {
+            (s.LastDown==0 || now-s.LastDown>=30*time.Second) {
             s.LastDown=now
             fecV2ClearDown(&s)
-            out.Reason="10s and 4096 valid sources; one-step down"
+            out.Reason="30s and 4096 valid sources; one-step down"
             return fecV2Issue(c,s,out,s.Desired-1,false)
         }
     } else {fecV2ClearDown(&s)}

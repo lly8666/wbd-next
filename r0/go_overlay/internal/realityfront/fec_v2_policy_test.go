@@ -124,7 +124,7 @@ func TestF2ControlHysteresisEscalateLowerAndPartialWeight(t *testing.T) {
     s,_,e:=FecV2Step(cfg,FecV2State{},FecV2Snapshot{},0)
     if e!=nil {t.Fatal(e)}
     down:=0
-    for sec:=2;sec<=72;sec+=2 {
+    for sec:=2;sec<=180;sec+=2 {
         now:=time.Duration(sec)*time.Second
         v:=f2Snapshot("flow",FecV2C2S,now,0,0)
         next,out,e:=FecV2Step(cfg,s,v,now)
@@ -136,7 +136,7 @@ func TestF2ControlHysteresisEscalateLowerAndPartialWeight(t *testing.T) {
         s=next
     }
     if s.Desired!=FecV2Light||down!=5 {t.Fatalf("down=%d desired=%s",down,s.Desired)}
-    for j,sec:=range []int{74,76} {
+    for j,sec:=range []int{182,184} {
         now:=time.Duration(sec)*time.Second
         v:=f2Snapshot("flow",FecV2C2S,now,310,1800)
         next,out,e:=FecV2Step(cfg,s,v,now)
@@ -261,7 +261,7 @@ func TestF2ControlW52IntermittentActualKNoFakeCleanDown(t *testing.T) {
     stepped:=false
     for _,stage:=range []struct{sec int; misaligned bool}{
         {6,false},{8,true},{10,false},{12,false},
-        {14,true},{16,false},{18,false},{20,true},{22,false},
+        {14,true},{16,false},{18,false},{20,true},{22,false},\n        {24,false},{26,false},{28,false},{30,false},\n        {32,false},{34,false},{36,false},
     } {
         now:=time.Duration(stage.sec)*time.Second
         snap:=f2Snapshot("w52",FecV2C2S,now,12,70)
@@ -292,7 +292,7 @@ func TestF2ControlW52IntermittentActualKNoFakeCleanDown(t *testing.T) {
         }
         state=next
     }
-    if observedUnknown!=3||observedValid!=6||!stepped||state.Desired!=FecV2Strong {
+    if observedUnknown!=3||observedValid!=13||!stepped||state.Desired!=FecV2Strong {
         t.Fatalf("bounded W52 hold did not downshift: valid=%d unknown=%d stepped=%t profile=%s",
             observedValid,observedUnknown,stepped,state.Desired)
     }
@@ -392,7 +392,7 @@ func TestF2ControlW56RealLowCanDownWithSmallKOverhang(t *testing.T) {
     }
     if state.Desired!=FecV2Maximum{t.Fatal("genuine high loss failed UP")}
     downs:=0
-    for sec:=6;sec<=18;sec+=2{
+    for sec:=6;sec<=38;sec+=2{
         at:=time.Duration(sec)*time.Second
         snap:=f2Snapshot("k-skew",FecV2C2S,at,10,60)
         snap.ActualK[15]=386 // original native close-vs-M2 skew, within bound
@@ -402,7 +402,7 @@ func TestF2ControlW56RealLowCanDownWithSmallKOverhang(t *testing.T) {
             t.Fatalf("bounded authentic k window rejected at %ds: %+v %v",sec,intent,e)
         }
         if intent.Send{
-            if previous.Desired!=FecV2Maximum||intent.Profile!=FecV2Strong||sec<16{
+            if previous.Desired!=FecV2Maximum||intent.Profile!=FecV2Strong||sec<36{
                 t.Fatalf("too-fast/illegal DOWN: %+v",intent)
             }
             downs++
