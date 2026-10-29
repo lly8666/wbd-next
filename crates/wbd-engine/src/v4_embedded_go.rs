@@ -1793,7 +1793,10 @@ fn fec2_probe_real_frozen_repair_one(
         ||settlement.counts.definitely_not_sent!=0
         ||process.broker.snapshot().pending!=0
         ||process.broker.snapshot().charged_repairs!=before+outer_bytes
-        ||sender.shadow.outstanding()!=1 {return Err(INVALID)}
+        // ReceiptState::on_send_result ends the SINGLE repair chance:
+        // the frozen payload is retired on Accepted, not retained until
+        // a later peer M2 ACK. Maturity retains source/censored evidence.
+        ||sender.shadow.outstanding()!=0 {return Err(INVALID)}
     sender.repair_submitted=true;
     let copied=driver_result.map_err(|_|INVALID)?;
     if copied as u64!=outer_bytes{return Err(INVALID)}
@@ -2043,7 +2046,10 @@ fn fec2_probe_real_frozen_repair_prefix_two(
         ||settled.counts.held_unproven!=0
         ||process.broker.snapshot().pending!=0
         ||process.broker.snapshot().charged_repairs!=before+charged
-        ||sender.shadow.outstanding()!=2{return Err(INVALID)}
+        // BOTH staged attempts are terminal at actual per-slot driver
+        // result; NotSent and Accepted retire their original shadow slots.
+        // No source loss or peer delivery is inferred from this.
+        ||sender.shadow.outstanding()!=0{return Err(INVALID)}
     // Successful sendmmsg means kernel copies, NOT peer receipt.
     // Unsent test slot explicitly never reached kernel; both scenarios
     // retire FrozenRecord only on subsequent original reverse AEAD receipt.

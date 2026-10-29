@@ -809,8 +809,14 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
                     t.Fatal("same evidence produced an immediate second repair")
                 }
             }
-            // Fresh authenticated positive PN1 from the independent Go
-            // TLS direction retires only the still retained repaired handle.
+            // Fresh authenticated positive PN1 is valid but arrives AFTER
+            // the real native M4 driver settled this packet's unique repair
+            // chance. ReceiptState::on_send_result already reclaimed the
+            // original FrozenRecord for Accepted, NotSent or Uncertain:
+            // an authenticated late ACK must NOT reclaim it twice, mint
+            // recovery quota, or magically convert M2 censored loss to
+            // clean zero-loss. The 2s/8s observed-versus-censored proof
+            // below remains mandatory.
             positiveReceipt:=append([]byte(nil),receipt...)
             binary.BigEndian.PutUint32(positiveReceipt[0:4],seqM+1)
             positiveReceipt[20]=bitsM
@@ -818,12 +824,12 @@ func TestR0V4Fec2ActualKernelRawSourceRepairAfterProtectedGoTLS(t *testing.T){
             if e!=nil||positivePN!=1{t.Fatalf("positive control PN err=%v pn=%d",e,positivePN)}
             sendControl(positiveWire)
             retired,left,e=b.fec2ProbeReverseRawReceipt()
-            if e!=nil||retired!=expectedLeft||left!=0{
-                t.Fatalf("late positive authenticated missing release mode=%s n=%d left=%d err=%v",
+            if e!=nil||retired!=0||left!=0{
+                t.Fatalf("late positive authenticated ACK reclaimed already terminal repair shadow mode=%s n=%d left=%d err=%v",
                     mode,retired,left,e)
             }
             if n,e:=b.fec2ProbeShadowOutstanding();e!=nil||n!=0{
-                t.Fatal("late authenticated receipt did not retire exact original frozen handle")
+                t.Fatal("late positive authenticated ACK resurrected original FrozenRecord")
             }
             // First-send is from two actual M4 kernel copied originals,
             // and PN1's late repair must be CENSORED rather than magically

@@ -1,0 +1,9 @@
+# M0 PLAN026 real Linux Fixed kernel 9/9 core M2 shadow lifecycle mismatch fix
+
+2026-10-29. Exact source `bd8dd716` genuine Linux Fixed kernel Action `40831086190` proves for ALL 9 original Go TLS ciphers/modes: PTO candidates 1/2; checked original M1 FrozenRecord metadata; global process M2 grant/reservations; original raw sendto Ok or sendmmsg accepted_prefix=2; `complete_driver_prefix` accepted/not-sent counters, pending=0 and charged bytes match exactly. The only failing probe invariant was `sender.shadow.outstanding()!=1` for single and `!=2` for mixed/two-slot, while the actual shadow is 0 after the genuine driver's terminal attempt.
+
+**Authoritative lifecycle:** `crates/wbd-recovery/src/receipt.rs` `ReceiptState::on_send_result` removes `entries.remove(&candidate.pn)` for **Accepted, Uncertain AND NotSent**. This is the one-shot repair opportunity: the FrozenRecord is retired on actual driver outcome, **not** retained awaiting a peer ACK; M2 maturity separately preserves first-send and censored repair quality. Test-only `m0_fec2_owner_probe` had stale assertions expecting shadows to remain. Change those strict assertions to 0 only AFTER checked real M4 settlement. In the real Go original-TLS / raw TUN source test the later fresh authenticated positive M2 ACK must return `retired=0, outstanding=0` rather than falsely claiming to release the already-retired shadow again; keep all replay denial, no second retransmit, kernel wire bytes and 2s/8s censored loss tests. No process broker, production shadow lifecycle, native M2 applied, packet bytes or quota refund changed. New exact-source real kernel status NOT_RUN until Action completes.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Align dev-only original FrozenRecord scoped kernel test assertions with unchanged authoritative one-shot ReceiptState::on_send_result terminal shadow lifecycle; preserve all real Linux network and M2 maturity tests."}
+```
