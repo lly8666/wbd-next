@@ -286,6 +286,64 @@ elif [[ "$FEC" == 1 ]];then
       exit 1
     fi
   done
+elif [[ "$LOSS" == 1 ]];then
+  # Real loss is counted by distinct first responses, not a 512/512
+  # reliable-UDP assumption. Persist before the next mode overwrites it.
+  grep -Eq '^M0_V4_PUBLIC_REAL_NETEM_APP_ACCOUNTING offered=512 first_unique_delivered=[0-9]+ missing=[0-9]+
+  grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=client' "$TMP/client.log"
+  grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=server' "$TMP/server.log"
+fi
+if [[ "$LOSS" == 1 ]];then
+  sudo -n ip netns exec "$NSC" tc -s qdisc show dev wbdvc0 >"$TMP/kernel-client-netem.txt"
+  sudo -n ip netns exec "$NSS" tc -s qdisc show dev wbdvs0 >"$TMP/kernel-server-netem.txt"
+  python3 - "$TMP" "$ART" <<'PY'
+import pathlib,re,sys
+p=pathlib.Path(sys.argv[1]);out=pathlib.Path(sys.argv[2])
+def read(name):return (p/name).read_text()
+# Genuine first app UDP underlay loss: all 512 offered stay in denominator,
+# including datagrams no opportunistic outer repair could possibly recover.
+app=(out/'public-v4-normal-business.log').read_text()
+m=re.search(r'M0_V4_PUBLIC_REAL_NETEM_APP_ACCOUNTING offered=(\d+) first_unique_delivered=(\d+) missing=(\d+)',app)
+assert m,"no application source/delivery denominator"
+offered,delivered,missing=map(int,m.groups())
+assert offered==512 and 0<delivered<=offered and missing==offered-delivered,(offered,delivered,missing)
+drops_by_side=[sum(map(int,re.findall(r'dropped (\d+)',read(n)))) for n in
+    ('kernel-client-netem.txt','kernel-server-netem.txt')]
+assert all(n>0 for n in drops_by_side),f"bidirectional netem not evidenced: {drops_by_side}"
+def counter(role,key):
+    values=re.findall(r'\b'+re.escape(key)+r'=(\d+)',read(role+'.log'))
+    assert values,(role,key)
+    return int(values[-1])
+client_copied=counter('client','real_first_copy')
+server_copied=counter('server','real_first_copy')
+acks=[counter(role,'authenticated_ack') for role in ('client','server')]
+repairs=sum(counter(role,'original_frozen_retransmitted') for role in ('client','server'))
+# A genuinely lost C2S source never generated a server echo; requiring
+# >=1024 total driver first-copies was the old false no-loss assumption.
+assert client_copied>=offered,(client_copied,offered)
+assert server_copied>=delivered,(server_copied,delivered)
+assert all(n>0 for n in acks),acks
+assert all('V4_PUBLIC_NATIVE_STOP_DRAINED role='+role in read(role+'.log')
+    for role in ('client','server')),"owned Stop did not drain"
+marker=(f"M0_V4_PUBLIC_REAL_1PCT_LOSS_ACCOUNTED_STOP_PASS"
+ f" original_tls=1 offered={offered} first_unique_delivered={delivered}"
+ f" missing={missing} tc_client_drop={drops_by_side[0]} tc_server_drop={drops_by_side[1]}"
+ f" kernel_first_copy_client={client_copied} kernel_first_copy_server={server_copied}"
+ f" authenticated_m2_acks_client={acks[0]} authenticated_m2_acks_server={acks[1]}"
+ f" outer_repair_attempts_observed={repairs} outer_repair_delivery_not_required=1"
+ f" Stop_drained_both=1")
+(out/'v4-public-1pct-authentic-M2-recovery.log').write_text(marker+'\n')
+print(marker)
+PY
+elif [[ "$FEC" == 1 ]];then
+  echo "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_APPLIED_REAL_AUTH_M2_GROUP_M4_TUN_STOP_PASS mode=$MODE both_original_go_roles=1 first_app=$PACKETS original_TLS=1 M2_mature=1 source_parity=original_native FEC2_production_off=1"
+elif [[ "$GAME" != 0 ]];then
+  echo "M0_PUBLIC_ORIGINAL_GO_V4_GAME_REAL_TLS_M4_DAMAGED_LANE_NO_HOL_STOP_PASS lanes=$GAME udp_app=$PACKETS auth_go=1 native_m4=1 lane1_underlay_dropped=1 stop_drained=1 production_off=1"
+else
+  echo 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS'
+fi
+ "$ART/public-v4-normal-business.log"
+  cp "$ART/public-v4-normal-business.log" "$ART/v4-public-1pct-business.log"
 else
   test "$(grep -c 'M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK' "$ART/public-v4-normal-business.log")" -eq "$PACKETS"
 fi
