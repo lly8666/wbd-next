@@ -54,6 +54,8 @@ on:
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_game_group_test.go
       - r0/go_overlay/internal/realityfront/bridge_v4_windows_game_fec_batch.go
       - crates/wbd-engine/src/v4_windows_game_owner.rs
+      # Actual PLAN026 Game2/4 Rust two-worker implementation must trigger real Windows/WSL2 tests.
+      - crates/wbd-engine/src/v4_windows_game_native_runtime.rs
       - crates/wbd-engine/src/v4_game_lane.rs
       - crates/wbd-engine/src/v4_game_fec.rs
       - crates/wbd-engine/src/v4_windows_fec2_owner.rs
