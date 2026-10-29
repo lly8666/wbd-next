@@ -8,6 +8,8 @@ Verified historical evidence already in repo:
 - SOURCE7fc `docs/evidence/M0/PLAN026-WIN-RX-WAKE-150M-SOURCE7FC3-ACTUAL-PASS-20261028.json`: signed Windows 150Mbps per direction /300ms one-way /60s, 0% tc; first delivery 100% and 99.989474% by direction, Stop PASS; scoped PERFORMANCE_PASS.
 - Old ABBA CPU rollback and capacity/variance failures remain honest source-scoped. No assertion that latest HEAD or physical PC has been revalidated, nor that all higher bandwidth/CPU improvements PASS.
 
+Follow-up scope of the feature-card-only size fix: the first correction exceeded the catalog's 16KiB limit, so the text was bounded without removing signed-source evidence or changing runtime. This devlog change accompanies that feature-card correction for feature-impact validation.
+
 Correction: **No Normal/off reimplementation, N0 replay or old-Go/Native A/B prerequisite before Fixed/Game/Auto**. Only impacted regression. Preserve all authenticated TLS/epoch/AEAD/PN/Npf/Wintun ownership/Stop guards.
 
 Work resumed on actual remaining PLAN026: two exact-source Windows Actions gates now target Rust Fixed/Auto/Game native owner and Health replay, Windows original Go assembly, signed-Wintun WAL and mode/Health DLL exports. These build/FFI/core tests are not claims of full network/physical or FIN/Dormant/Wake qualification. Next locate first real failing job, fix only the actual first cause, rerun affected guard, then V2 real Fixed→Game→Auto+Health.
