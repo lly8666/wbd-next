@@ -35,7 +35,7 @@ type V4WindowsAuthenticatedGameGroup struct{
  sessions []*V4ClientSession
  epoch [16]byte
  joined uint64
- stageProc,receiveProc,joinProc,stopProc,effectiveMtuProc *syscall.Proc
+ stageProc,receiveProc,offFinishProc,joinProc,stopProc,effectiveMtuProc *syscall.Proc
  maxIPv4 int
  fecOpenProc,fecFinishProc *syscall.Proc
  fecParityProc,fecM4SendProc *syscall.Proc
@@ -142,7 +142,8 @@ func(g *V4WindowsAuthenticatedGameGroup) BindAndJoinOriginalWintun(
  for _,item:=range []struct{name string;into **syscall.Proc}{
   {"wbd_m0_win_owner_v4_game_join",&g.joinProc},
   {"wbd_m0_win_owner_v4_game_stage",&g.stageProc},
-  {"wbd_m0_win_owner_v4_game_receive",&g.receiveProc},
+  {"wbd_m0_win_owner_v4_game_prepare_off",&g.receiveProc},
+  {"wbd_m0_win_owner_v4_game_finish_off",&g.offFinishProc},
   {"wbd_m0_win_owner_v4_game_stop",&g.stopProc},
   {"wbd_m0_win_owner_v4_game_effective_mtu",&g.effectiveMtuProc},
   {"wbd_m0_win_owner_v4_game_m4_send_result",&g.fecM4SendProc},
@@ -276,8 +277,10 @@ func decodeOriginalGameStagedRecords(raw []v4WindowsGameRawRecord,
  }
  return out,nil
 }
-// OpenGameRecord applies Rust AEAD+PN replay admission and Game first-delivery
-// dedup. A zero-length plaintext is a legitimate already-delivered packet.
+// OpenGameRecord now STAGES (never confirms) an authenticated Game/off first
+// logical candidate in the original Rust owner. Positive bytes require an
+// exact one-packet CompleteGameOff after real Wintun write; zero means no
+// pending candidate and no copy. This Go path cannot claim a success early.
 func(g *V4WindowsAuthenticatedGameGroup) OpenGameRecord(
  ctx context.Context,lane uint32,wire []byte,
 )([]byte,error){
@@ -301,6 +304,21 @@ func(g *V4WindowsAuthenticatedGameGroup) OpenGameRecord(
  if used==0{return nil,nil}
  if used<20||used>uintptr(g.maxIPv4)||out[0]>>4!=4||out[0]&15<5{return nil,errV4WindowsOwner}
  return out[:used],nil
+}
+// CompleteGameOff is called once per successfully prepared off candidate,
+// including definite kernel Wintun copy failures. No new Go packet pump.
+func(g *V4WindowsAuthenticatedGameGroup) CompleteGameOff(
+ ctx context.Context,lane uint32,copied uint32,
+)error{
+ if g==nil||ctx==nil||copied>1{return errV4WindowsOwner}
+ g.mu.Lock();defer g.mu.Unlock()
+ release,err:=g.holdLive(ctx)
+ if err!=nil{return err}
+ defer release()
+ if g.gameFec!=0||g.offFinishProc==nil||lane==0||
+  int(lane)>len(g.members){return errV4WindowsOwner}
+ return winOwnerCall(g.offFinishProc,uintptr(g.joined),uintptr(lane),
+  uintptr(copied))
 }
 // The caller MUST join all M4 native socket and kernel packet workers BEFORE
 // this crypto-only Stop. This cannot certify WFP, OS routes or GUI Disconnect.

@@ -606,6 +606,53 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_game_stage(
         Err(e)=>e,
     }
 }
+/// Original-Go cold/compat Game OFF bridge: stage authenticated logical
+/// first without claiming kernel delivery. The Go caller must finish after
+/// the actual Wintun copy, same as the Rust-native RX worker.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v4_game_prepare_off(
+    group:u64,lane:u32,wire:*const u8,len:usize,
+    out:*mut u8,capacity:usize,used:*mut usize,
+)->i32{
+    if wire.is_null()||out.is_null()||used.is_null()||
+        len<32||len>1536||capacity<20||capacity>65535{return INVALID}
+    let bytes=unsafe{std::slice::from_raw_parts(wire,len)};
+    let owned={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
+        Arc::clone(g)
+    };
+    let Ok(mut g)=owned.lock()else{return BAD_STAGE};
+    match prepare_off_group(&mut g,group,lane,bytes){
+        Ok((Some(plain),true)) if plain.len()<=capacity=>{
+            unsafe{
+                std::ptr::copy_nonoverlapping(plain.as_ptr(),out,plain.len());
+                used.write(plain.len())
+            }
+            OK
+        },
+        Ok((Some(_),true))=>{
+            // No pointer/PN leak or permanently staged logical delivery.
+            let _=finish_off_group(&mut g,lane,false);
+            FULL
+        },
+        Ok((None,false))=>{unsafe{used.write(0)};OK},
+        _=>BAD_STAGE,
+    }
+}
+#[no_mangle]
+pub extern "C" fn wbd_m0_win_owner_v4_game_finish_off(
+    group:u64,lane:u32,copied:u32,
+)->i32{
+    if copied>1{return INVALID}
+    let owned={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
+        Arc::clone(g)
+    };
+    let Ok(mut g)=owned.lock()else{return BAD_STAGE};
+    finish_off_group(&mut g,lane,copied==1)
+}
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_win_owner_v4_game_receive(
     group:u64,lane:u32,wire:*const u8,len:usize,

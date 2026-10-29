@@ -183,7 +183,10 @@ func(p *m0NativeV4GamePeer) receive(ctx context.Context,in m0GameInbound)error{
  }else{
   var ipv4 []byte
   ipv4,e=p.group.OpenGameRecord(ctx,uint32(in.lane+1),seg.Payload)
-  if len(ipv4)>0{frames=[][]byte{ipv4}}
+  if e==nil&&len(ipv4)>0{
+   frames=[][]byte{ipv4}
+   pending=true // must settle only AFTER actual shared Wintun kernel copy
+  }
  }
  if e!=nil{return nil} // Rust AEAD/PN/auth rejection, never OS copy
  copiedPrefix:=uint32(0)
@@ -193,10 +196,14 @@ func(p *m0NativeV4GamePeer) receive(ctx context.Context,in m0GameInbound)error{
   copiedPrefix++
  }
  if pending{
-  // One authenticated symbol can emit multiple recovered IPv4 packets.
-  // Report only the TRUE successful Wintun prefix, not a false all/none
-  // claim after earlier writes already reached the native kernel.
-  if e:=p.group.CompleteGameFecBatch(ctx,uint32(in.lane+1),copiedPrefix);e!=nil{return e}
+  // The original M3 authenticates but never settles kernel delivery.
+  // FEC uses an exact copied-prefix batch, OFF settles one prepared
+  // logical first only after the real Wintun WriteAuthenticatedIPv4.
+  if p.fec{
+   if e:=p.group.CompleteGameFecBatch(ctx,uint32(in.lane+1),copiedPrefix);e!=nil{return e}
+  }else{
+   if e:=p.group.CompleteGameOff(ctx,uint32(in.lane+1),copiedPrefix);e!=nil{return e}
+  }
  }
  p.mu.Lock();p.opened+=uint64(copiedPrefix);p.mu.Unlock()
  if copiedPrefix!=uint32(len(frames)){return windowsclient.ErrN4NativeGuard}
