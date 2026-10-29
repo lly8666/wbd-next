@@ -34,7 +34,8 @@
   "doc_refs": [
     "docs/architecture/FEC_V2_BALANCED.md",
     "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
-    "docs/evidence/M0/PLAN026-LINUX-AUTO-KEEPALIVE-SOURCE7E984-20261029.json"
+    "docs/evidence/M0/PLAN026-LINUX-AUTO-KEEPALIVE-SOURCE7E984-20261029.json",
+    "docs/evidence/M0/PLAN026-LINUX-AUTO-NATURAL-REAL-26000-SOURCE80BF-20261029.json"
   ],
   "verification": [
     {
@@ -162,6 +163,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "7e9842f6e99769d9919e75a4b15da8d6d88e7257",
       "evidence": "docs/evidence/M0/PLAN026-LINUX-AUTO-KEEPALIVE-SOURCE7E984-20261029.json"
+    },
+    {
+      "platform": "linux/amd64 original Go TLS + Rust native 2-netns",
+      "scope": "source80bf 26000 genuine app echo, native authenticated M2 VALID, true 30s/4096 one-rung profile5→4 requested=applied2 both sides + Stop; not Windows or CPU",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "80bf1608d4aa5b15cd16767aae24427c5b26f31b",
+      "evidence": "docs/evidence/M0/PLAN026-LINUX-AUTO-NATURAL-REAL-26000-SOURCE80BF-20261029.json"
     }
   ],
   "limitations": [
@@ -172,19 +180,19 @@
     "Exact SOURCE350199f native Actions40445098497 remains FAIL for Windows original FEC2 reverse first delivery; Linux raw/TUN sender works, Windows still rejected first incoming 103B record before Ready. Subsequent source82ec native FEC2 diagnostic candidate has no inherited PASS; retained as partial.",
     "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible.",
     "Only Auto startup Strong profile5 completed real Windows bidirectional business; no positive dynamic up/down revision or late GUI profile Applied receipt in this run.",
-    "Latest exact source a0c8eeb Actions40457048399 genuine Windows↔Linux kernel UDP after Auto operator revision2 via shared FecV2Step/FixedStream, M2 mature exact revision2 and owned Stop SUCCESS. This does NOT test automatic periodic 2s/8s policy-driven grade selection, all 0..6, WinForms Applied, global OS or physical. Older 80e5289 Actions40455980911 job FAIL at stale harness normal-report file is preserved.",
+    "Sourcea0c8eeb Action40457048399 Windows↔Linux real kernel operator Auto revision2 M2 and Stop PASS; not natural 2s/8s dynamic grade, all profiles, GUI/OS/physical. Old source80e5289 stale normal-report harness FAIL retained.",
     "Historical source6707bd52 original Linux Auto Go sampling/true M2 gate; Windows SOURCE6707 compiled PASS40462558630, test argv S99a FAIL40462738560, repaired S072a preflight PASS40463122392, full original native NOT_RUN. Details and unchanged status in prior M0 devlog/verification.",
-    "Native source67ed Actions40465641281 real Auto natural 2s/8s target FAIL: 53s Windows→Linux 3393 source sends, original Rust mature fast 128..268 <512, genuine Linux-shared policy rightly does not downshift. No algorithm/safety-bypass permitted; real kernel UDP/TCP and previously scoped Auto operator revision positive still stand. Sourcea3bb is only paced genuine-UDP fixture repair and NOT_RUN until outcome.",
+    "Source67ed Action40465641281 Windows natural Auto FAIL: 53s 3393 source; real Fast128..268 below512. No invented downshift; operator revision PASS separate. Sourcea3bb fixture alone unqualified.",
     "2026-10-27 user-authorized exact development-tree main overwrite f6469a: implementation code is now present on main but remains experimental, with no new main-SOURCE native/product/global/physical PASS or formal promotion; previous exact-SOURCE PASS/FAIL unchanged.",
     "S48 source772b8b3 real Auto initial Strong5 signed Windows/Linux native business+owned Stop PASS Action40546243971; S45 FAIL retained. User fast-up/down<=120s gate; S52 source1b33e4a then running, later failed (next item). N0/physical/global still NOT_RUN.",
-    "S52 source1b33e4a Action40550358765 natural Auto 119s FAIL with actual source pacing enough and quality k-hist versus M2 mature firstsend 0.6/0.8/1.25 ratios due mismatched 8/16s sampling spans; latest user <=120s actual one-step not met. Historical 9d SEQ FAIL and S48 startup PASS remain separate. Investigate Windows Go ticker historical cohort alignment, not actual FEC loss gate.",
+    "S52 source1b33e4a Action40550358765 Windows Auto119s FAIL: actual k vs M2 firstsend clock mismatch (0.6/0.8/1.25); no <=120s natural down PASS. Separate historical startup PASS remains.",
     "H303 historical feature-card declaration repair on main: original Actions40553017297/40554072482 feature audit FAIL from multi-card devlog; original 1b33e4a natural Auto one-step FAIL stays failed, older Fixed/Game scoped PASS stay source-bound. See original H303 devlog/evidence.",
     "H304 S54 source0af9b585 authentic natural Auto one or more Applied downgrade before120s observed; full Action40553530258 FAIL from omitempty harness and owned Stop NOT_RUN, not an entire mode PASS. S55 49f81637 native retest in flight; exact loss-triggered rise, scored N0, ARM64 source native, physical/global remain pending and retain earlier FAIL.",
     "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637.",
     "S55 source49f81637 Actions40556191100 full native Auto natural one-grade within120s + both owned Stop PASS. Does NOT evidence rapid loss-driven upshift or WL-N0/p99/physical/global. Historical S52/S54 original FAIL unchanged.",
     "H307 exact S55 source49f81637 reviewed integration to main; original per-SOURCE tests and limitations unchanged. See docs/devlog/M0/PLAN025-H307-S55-frozen-product-main-integration-20261028.md.",
     "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
-    "PLAN026 Linux Auto original source7e real 64 M2 PASS; current Linux-only cold 500ms native M2/k cohort-clock alignment is a candidate awaiting true 26k natural down receipt. Windows Auto natural/CPU/GUI/physical NOT_RUN."
+    "PLAN026 Linux source80bf true Auto 26k real M2/k cohort VALID 30s/4096, revision2 profile4 Applied both roles + owned Stop PASS; Windows Auto/CPU/GUI/physical still NOT_RUN."
   ],
   "promotion": null
 }

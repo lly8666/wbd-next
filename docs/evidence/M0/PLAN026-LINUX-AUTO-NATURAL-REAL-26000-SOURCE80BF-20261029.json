@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
+  "source_sha": "80bf1608d4aa5b15cd16767aae24427c5b26f31b",
+  "result": "PASS_SCOPED_LINUX_ORIGINAL_TLS_RUST_NATIVE_AUTO_NATURAL_ONE_STEP_DOWN",
+  "run": {
+    "id": 40870266676,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40870266676",
+    "conclusion": "success",
+    "jobs": {
+      "product-source-build / native": "success",
+      "actual-original-tls-native-keepalive": "success"
+    }
+  },
+  "archive": {
+    "artifact_id": 12896196421,
+    "name": "plan026-linux-real-auto-natural-40870266676-1",
+    "sha256": "3bf5acaf0c27c46698200b496494f766676d19ede388c1fe10e53e4727d4bab8",
+    "zip_sha256_locally_verified": true,
+    "artifact_source_json_sha_verified": true,
+    "real_log_sha256": "2bcc6c36aecb50f4ff76212922eda2c59a4ea26c5005a5815e75dbf4160dc690"
+  },
+  "actual_business": {
+    "source": "original Go credential TLS + Rust M3/M4 real Linux two-netns kernel raw/TUN",
+    "genuine_first_app_delivered": 26000,
+    "authenticated_original_m2": true,
+    "original_source_parity": true,
+    "owned_stop_both": true
+  },
+  "actual_client": {
+    "mode": "auto",
+    "direction": "c2s",
+    "staged_requested": 2,
+    "staged_profile": 4,
+    "staged_validity": "VALID",
+    "reason": "30s and 4096 valid sources; one-step down",
+    "final_requested": 2,
+    "final_applied": 2,
+    "final_profile": 4,
+    "pending": false
+  },
+  "actual_server": {
+    "mode": "auto",
+    "direction": "s2c",
+    "staged_requested": 2,
+    "staged_profile": 4,
+    "staged_validity": "VALID",
+    "reason": "30s and 4096 valid sources; one-step down",
+    "final_requested": 2,
+    "final_applied": 2,
+    "final_profile": 4,
+    "pending": false
+  },
+  "provenance": "Real artifact result.json and native log independently unzipped, both directions actual Go actor stage and final readback at source80bf; prior 8k and 26k sourcec098 failure remain valid negatives. 500ms native-only real M2/k timestamp cohort snapshots, Go policy decision 2s and strict 512 Fast, 4096/30s stable hold preserved.",
+  "excluded": [
+    "Windows Npcap/Wintun genuine Auto grade",
+    "CPU/wakeup overhead on Windows or same VM",
+    "Physical GUI or N0 low loss",
+    "Host natural grade upshift and true FIN/Dormant/Wake",
+    "Any optional outer repair delivery gate"
+  ]
+}

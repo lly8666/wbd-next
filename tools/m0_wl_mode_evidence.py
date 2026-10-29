@@ -19,6 +19,11 @@ def select_source_locked_modes(requested:str="",performance:bool=False)->list[st
  mode=(requested or "all").strip()
  if mode=="all":
   modes=list(PUBLIC_FUNCTIONAL_MODES)
+ elif mode=="through-game2":
+  # Same initial Windows signed-driver / WSL2 mode ORDER as the historical
+  # promptly failing full original-Go TLS+Rust actions, but do not spend
+  # another expensive worker running Game4/FEC after the FIRST Game2 verdict.
+  modes=list(PUBLIC_FUNCTIONAL_MODES[:4])
  elif mode in PUBLIC_FUNCTIONAL_MODES+PUBLIC_SPECIAL_MODES:
   modes=[mode]
  else:
