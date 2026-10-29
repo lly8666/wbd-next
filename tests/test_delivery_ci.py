@@ -27,6 +27,8 @@ class DeliveryCiTests(unittest.TestCase):
                       "inputs.perf_reuse_run_id == ''", "[plan026-rust-reuse-150]", "[plan026-rust-reuse-100]"):
             self.assertIn(guard, job["if"])
         native=self.workflow["jobs"]["native-public-two-os"]
+        self.assertIn("[plan026-coding]", job["if"])
+        self.assertIn("[plan026-coding]", native["if"])
         self.assertEqual(native["needs"], ["wiring-contract","linux-source-locked-public"])
         for guard in ("always()", "needs.wiring-contract.result == 'success'",
                       "needs.linux-source-locked-public.result == 'success'",

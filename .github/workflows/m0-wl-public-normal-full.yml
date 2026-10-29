@@ -325,10 +325,11 @@ jobs:
           if-no-files-found: warn
 
   linux-source-locked-public:
-    # Ordinary staging pushes stop after compile preflight. A complete
-    # capability batch opts in; main's existing qualification remains intact.
+    # PLAN026 coding commits use [plan026-coding]: compile/cheap ABI only.
+    # Full signed two-OS qualification is reserved for the completed bundle
+    # via workflow_dispatch or a separately source-locked full marker.
     needs: [windows-compile-preflight]
-    if: (github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || contains(github.event.head_commit.message, '[wiring-full]')) && inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
+    if: (github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || contains(github.event.head_commit.message, '[wiring-full]')) && !contains(github.event.head_commit.message, '[plan026-coding]') && inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
     name: Build true original Go and new Linux Rust peer persona from same SOURCE
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -422,7 +423,7 @@ jobs:
 
   native-public-two-os:
     needs: [wiring-contract, linux-source-locked-public]
-    if: always() && needs.wiring-contract.result == 'success' && (needs.linux-source-locked-public.result == 'success' || inputs.perf_reuse_run_id != '' || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
+    if: always() && !contains(github.event.head_commit.message, '[plan026-coding]') && needs.wiring-contract.result == 'success' && (needs.linux-source-locked-public.result == 'success' || inputs.perf_reuse_run_id != '' || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
     runs-on: windows-2025
     timeout-minutes: 60
     env:
