@@ -358,6 +358,29 @@ mod tests {
         }, cfg(mtu), MonoNs(at)).unwrap()
     }
     #[test]
+    fn r2_budget_pacer_eight_mtu_and_unreported_fresh_not_blocked() {
+        let mut b = ledger(1500, 0);
+        b.enable_opportunistic_v3();
+        assert_eq!(b.snapshot().pacer_burst_limit, 12_000);
+        for i in 0..8 {
+            let c = candidate(i, 2);
+            let id = b.reserve(&c, 1500, MonoNs(2)).unwrap();
+            b.on_send_result(id, RepairSendResult::Accepted, MonoNs(2)).unwrap();
+        }
+        assert_eq!(b.snapshot().pacer_tokens, 0);
+        // Stage-0 repair may use the existing byte allowance, but cannot
+        // create token debt or block a new definitely accepted first send.
+        let ninth = candidate(9, 3);
+        let id = b.reserve(&ninth, 1500, MonoNs(3)).unwrap();
+        b.on_send_result(id, RepairSendResult::Accepted, MonoNs(3)).unwrap();
+        assert_eq!(b.snapshot().pacer_tokens, 0);
+        b.on_fresh_accepted(500_000, MonoNs(4)).unwrap();
+        assert_eq!(b.snapshot().fresh_confirmed_bytes, 500_000);
+        assert_eq!(b.snapshot().epoch_repair_limit, 45_000);
+        assert_eq!(b.snapshot().charged_repair_bytes, 13_500);
+        assert!(b.snapshot().pacer_tokens <= b.snapshot().pacer_burst_limit);
+    }
+    #[test]
     fn r2_budget_sparse_32k_absolute_floor_not_percentage_or_sum() {
         let mut b = ledger(4_000, 0);
         assert_eq!(b.snapshot().epoch_repair_limit, 32_768);
