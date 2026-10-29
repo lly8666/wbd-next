@@ -307,6 +307,28 @@ impl QualityWindowSignal {
     }
 }
 
+
+/// Apply an already-AEAD-opened, replay-checked PLAN027 boundary to the
+/// receiver's four bounded windows. The native owner supplies the verified
+/// lane/epoch/direction; raw carrier ACKs must never call this function.
+/// A START arriving after unique DATA remains incomplete via RX watermark.
+pub(crate) fn apply_authenticated_quality_signal(
+    windows:&mut wbd_recovery::quality_window::ReceiveWindows,
+    lane:wbd_types::LaneKey,epoch:[u8;16],
+    direction:wbd_recovery::WireDirection,
+    signal:QualityWindowSignal,now:wbd_types::MonoNs,
+)->Result<(),wbd_recovery::quality_window::QualityError>{
+    use wbd_recovery::quality_window::WindowKey;
+    use wbd_types::RecordPn;
+    let key=WindowKey{lane,epoch,direction,id:signal.id,
+        first:RecordPn(signal.first),last:RecordPn(signal.last)};
+    match signal.kind{
+        QualitySignalKind::Start=>windows.arm(key,now,true),
+        QualitySignalKind::Close=>windows.close_announced(key,now,
+            signal.first_sent,signal.complete,signal.capacity_limited),
+    }
+}
+
 /// Only after the existing original M3 AEAD + unique PN gate.
 /// WBC4 kind1; no additional keys, replay bitmap or application ACK.
 #[derive(Clone,Debug,PartialEq,Eq)]
@@ -610,6 +632,50 @@ mod tests {
         let wire=encode_authenticated_health(0,None,Some(&report)).unwrap();
         assert!(parse_authenticated_control(&wire).is_err());
     }
+
+    #[test]
+    fn r1_plan027_authenticated_signal_to_mature_wire_without_receipt(){
+        use wbd_recovery::quality_window::{ReceiveWindows,SendHistory,
+            ClosedWindow,WindowKey,QualityError};
+        use wbd_recovery::WireDirection;
+        use wbd_types::{TunnelKey,LaneKey,MonoNs,RecordPn};
+        let lane=LaneKey{tunnel:TunnelKey{slot:7,generation:8},
+            slot:2,generation:9};
+        let epoch=[3;16];
+        let direction=WireDirection::ClientToServer;
+        let key=WindowKey{lane,epoch,direction,id:42,
+            first:RecordPn(100),last:RecordPn(109)};
+        let start=QualityWindowSignal{kind:QualitySignalKind::Start,
+            id:42,first:100,last:109,first_sent:0,complete:false,
+            capacity_limited:false};
+        let close=QualityWindowSignal{kind:QualitySignalKind::Close,
+            first_sent:2,complete:true,..start};
+        let mut rx=ReceiveWindows::new(lane,epoch,direction);
+        let parsed=parse_authenticated_control(
+            &encode_authenticated_low_rate_signal_live(0,start,512).unwrap()
+        ).unwrap();
+        assert_eq!(parsed.receipt,None);
+        apply_authenticated_quality_signal(&mut rx,lane,epoch,direction,
+            parsed.low_rate_signal.unwrap(),MonoNs(0)).unwrap();
+        assert!(rx.on_unique_data(RecordPn(100),false));
+        let parsed=parse_authenticated_control(
+            &encode_authenticated_low_rate_signal_live(0,close,512).unwrap()
+        ).unwrap();
+        apply_authenticated_quality_signal(&mut rx,lane,epoch,direction,
+            parsed.low_rate_signal.unwrap(),MonoNs(1_000_000_000)).unwrap();
+        assert_eq!(rx.report_wire(key,MonoNs(3_999_999_999)),
+            Err(QualityError::NotMature));
+        let wire=rx.report_wire(key,MonoNs(4_000_000_000)).unwrap();
+        let encoded=encode_authenticated_low_rate_quality_live(0,&wire,512).unwrap();
+        let summary=parse_authenticated_control(&encoded).unwrap();
+        let mut tx=SendHistory::new(lane,epoch,direction);
+        tx.close(ClosedWindow{key,first_sent:2,
+            closed_at:MonoNs(1_000_000_000),
+            complete:true,capacity_limited:false}).unwrap();
+        assert_eq!(tx.assess_wire(summary.low_rate_quality.unwrap(),
+            MonoNs(4_000_000_000)).unwrap().lower,1);
+    }
+
     #[test]
     fn r1_plan027_low_rate_quality_health_v2_authenticated_wire_roundtrip(){
         use wbd_recovery::LowRateQualityWire;

@@ -185,6 +185,7 @@ pub struct ReceiveCounter {
     // Maturity starts only after a sender's authenticated window-close
     // announcement, never 3s after an arbitrarily slow first DATA.
     closed_at:Option<MonoNs>,
+    sender_first_sent:Option<u16>,
     complete:bool,
     capacity_limited:bool,
     seen:[u64;WINDOW_WORDS],
@@ -199,7 +200,8 @@ impl ReceiveCounter {
             .and_then(|v|v.checked_add(1))
             .filter(|&v|v<=MAX_WINDOW_PNS)
             .ok_or(QualityError::InvalidRange)?;
-        Ok(Self{key,opened_at,closed_at:None,complete:complete_from_first_data,
+        Ok(Self{key,opened_at,closed_at:None,sender_first_sent:None,
+            complete:complete_from_first_data,
             capacity_limited:false,seen:[0;WINDOW_WORDS],
             possibly_repaired:[0;WINDOW_WORDS],unique:0,repaired:0})
     }
@@ -210,6 +212,23 @@ impl ReceiveCounter {
         if now.0<self.opened_at.0{return Err(QualityError::ClockReversed)}
         if self.closed_at.is_some(){return Err(QualityError::InvalidRange)}
         self.closed_at=Some(now);
+        Ok(())
+    }
+    /// An authenticated CLOSE carries the sender's definite driver F and
+    /// coverage status. Validate before closing; an absent CLOSE never
+    /// produces a wire report, even if a local timer has expired.
+    pub fn close_announced(&mut self,now:MonoNs,first_sent:u16,
+        sender_complete:bool,sender_capacity_limited:bool
+    )->Result<(),QualityError>{
+        let span=self.key.last.0-self.key.first.0+1;
+        if u64::from(first_sent)>span||
+            (sender_complete&&sender_capacity_limited){
+            return Err(QualityError::InvalidCounts)
+        }
+        self.close(now)?;
+        self.sender_first_sent=Some(first_sent);
+        self.complete&=sender_complete;
+        self.capacity_limited|=sender_capacity_limited;
         Ok(())
     }
     /// Returns true only for the first authenticated unique DATA in range.
@@ -244,6 +263,19 @@ impl ReceiveCounter {
             possibly_repaired:self.repaired,mature:true,
             complete:self.complete,capacity_limited:self.capacity_limited})
     }
+    /// Only a sender-announced CLOSE may supply F to a mature v2 summary.
+    /// The caller still authenticates the resulting control and binds scope.
+    pub fn mature_wire_report(&self,now:MonoNs)->Result<WireReport,QualityError>{
+        let first_sent=self.sender_first_sent.ok_or(QualityError::Unknown)?;
+        let report=self.mature_report(now)?;
+        let wire=WireReport{id:self.key.id,first:self.key.first.0,
+            last:self.key.last.0,first_sent,
+            received_unique:report.received_unique,
+            possibly_repaired:report.possibly_repaired,mature:report.mature,
+            complete:report.complete,capacity_limited:report.capacity_limited};
+        wire.valid()?;
+        Ok(wire)
+    }
 }
 
 /// One 4-slot RX ring per authenticated lane/epoch/direction, not a packet
@@ -257,12 +289,15 @@ pub struct ReceiveWindows {
     next:usize,
     last_id:Option<u64>,
     last_pn:Option<u64>,
+    // If authenticated DATA arrived before its START, later START cannot
+    // retroactively claim full coverage. One monotone watermark, no bitmap.
+    untracked_highest:Option<u64>,
 }
 impl ReceiveWindows {
     pub fn new(lane:LaneKey,epoch:[u8;16],direction:WireDirection)->Self{
         Self{lane,epoch,direction,
             slots:std::array::from_fn(|_|None),next:0,
-            last_id:None,last_pn:None}
+            last_id:None,last_pn:None,untracked_highest:None}
     }
     pub fn arm(&mut self,key:WindowKey,now:MonoNs,
         complete_from_first_data:bool)->Result<(),QualityError>{
@@ -272,7 +307,9 @@ impl ReceiveWindows {
             self.last_pn.is_some_and(|old|key.first.0<=old) {
             return Err(QualityError::InvalidRange)
         }
-        let counter=ReceiveCounter::new(key,now,complete_from_first_data)?;
+        let covered=complete_from_first_data &&
+            !self.untracked_highest.is_some_and(|pn|pn>=key.first.0);
+        let counter=ReceiveCounter::new(key,now,covered)?;
         self.slots[self.next]=Some(counter);
         self.next=(self.next+1)%MAX_RECEIVE_WINDOWS;
         self.last_id=Some(key.id);
@@ -285,6 +322,8 @@ impl ReceiveWindows {
         for entry in self.slots.iter_mut().flatten(){
             if entry.on_unique_data(pn,repaired){return true}
         }
+        self.untracked_highest=Some(self.untracked_highest.map_or(pn.0,
+            |prior|prior.max(pn.0)));
         false
     }
     pub fn close(&mut self,key:WindowKey,now:MonoNs)->Result<(),QualityError>{
@@ -292,11 +331,25 @@ impl ReceiveWindows {
             .find(|entry|entry.key==key)else{return Err(QualityError::WrongWindow)};
         entry.close(now)
     }
+    /// Apply only after an AEAD-opened, unique-PN CLOSE for this exact scope.
+    pub fn close_announced(&mut self,key:WindowKey,now:MonoNs,
+        first_sent:u16,sender_complete:bool,sender_capacity_limited:bool
+    )->Result<(),QualityError>{
+        let Some(entry)=self.slots.iter_mut().flatten()
+            .find(|entry|entry.key==key)else{return Err(QualityError::WrongWindow)};
+        entry.close_announced(now,first_sent,sender_complete,sender_capacity_limited)
+    }
     pub fn censor_capacity(&mut self,key:WindowKey)->Result<(),QualityError>{
         let Some(entry)=self.slots.iter_mut().flatten()
             .find(|entry|entry.key==key)else{return Err(QualityError::WrongWindow)};
         entry.censor_capacity();
         Ok(())
+    }
+    pub fn report_wire(&self,key:WindowKey,now:MonoNs)
+        ->Result<WireReport,QualityError>{
+        let Some(entry)=self.slots.iter().flatten()
+            .find(|entry|entry.key==key)else{return Err(QualityError::WrongWindow)};
+        entry.mature_wire_report(now)
     }
     pub fn report(&self,key:WindowKey,now:MonoNs)
         ->Result<MatureReport,QualityError>{
@@ -611,5 +664,81 @@ mod plan027_sender_tests {
         assert!(closed.capacity_limited);
         assert_eq!(SendWindowSampler::new(WindowKey{last:RecordPn(1224),..k},
             MonoNs(0)).err(),Some(QualityError::InvalidRange));
+    }
+}
+
+
+#[cfg(test)]
+mod plan027_announced_close_tests {
+    use super::*;
+    use wbd_types::TunnelKey;
+    fn key()->WindowKey {
+        WindowKey{lane:LaneKey{tunnel:TunnelKey{slot:7,generation:3},
+            slot:2,generation:5},epoch:[4;16],
+            direction:WireDirection::ClientToServer,
+            id:11,first:RecordPn(200),last:RecordPn(1223)}
+    }
+    #[test]
+    fn r2_plan027_closed_receiver_exports_only_sender_matched_mature_wire(){
+        let k=key();
+        let mut rx=ReceiveWindows::new(k.lane,k.epoch,k.direction);
+        rx.arm(k,MonoNs(0),true).unwrap();
+        assert!(rx.on_unique_data(RecordPn(200),false));
+        assert!(rx.on_unique_data(RecordPn(202),true));
+        assert_eq!(rx.report_wire(k,MonoNs(9_000_000_000)),
+            Err(QualityError::Unknown));
+        rx.close_announced(k,MonoNs(1_000_000_000),3,true,false).unwrap();
+        assert_eq!(rx.report_wire(k,MonoNs(3_999_999_999)),
+            Err(QualityError::NotMature));
+        let wire=rx.report_wire(k,MonoNs(4_000_000_000)).unwrap();
+        assert_eq!((wire.first_sent,wire.received_unique,wire.possibly_repaired),
+            (3,2,1));
+        assert!(wire.complete);
+        assert_eq!(WireReport::decode(&wire.encode().unwrap()),Ok(wire));
+        let mut tx=SendHistory::new(k.lane,k.epoch,k.direction);
+        tx.close(ClosedWindow{key:k,first_sent:3,
+            closed_at:MonoNs(1_000_000_000),
+            complete:true,capacity_limited:false}).unwrap();
+        assert_eq!(tx.assess_wire(wire,MonoNs(4_000_000_000)),
+            Ok(LossBounds{first:3,lower:1,upper:2}));
+        assert_eq!(rx.report_wire(k,MonoNs(11_000_000_001)),
+            Err(QualityError::Stale));
+    }
+    #[test]
+    fn r2_plan027_prestart_data_and_sender_censor_cannot_be_clean(){
+        let k=key();
+        let mut rx=ReceiveWindows::new(k.lane,k.epoch,k.direction);
+        assert!(!rx.on_unique_data(RecordPn(201),false));
+        rx.arm(k,MonoNs(1),true).unwrap();
+        assert!(rx.on_unique_data(RecordPn(200),false));
+        rx.close_announced(k,MonoNs(2),2,true,false).unwrap();
+        let wire=rx.report_wire(k,MonoNs(3_000_000_002)).unwrap();
+        assert!(!wire.complete);
+        let mut tx=SendHistory::new(k.lane,k.epoch,k.direction);
+        tx.close(ClosedWindow{key:k,first_sent:2,closed_at:MonoNs(2),
+            complete:true,capacity_limited:false}).unwrap();
+        assert_eq!(tx.assess_wire(wire,MonoNs(3_000_000_002)),
+            Err(QualityError::Unknown));
+        let next=WindowKey{id:12,first:RecordPn(1224),
+            last:RecordPn(2247),..k};
+        rx.arm(next,MonoNs(4),true).unwrap();
+        rx.close_announced(next,MonoNs(5),1,false,true).unwrap();
+        let censored=rx.report_wire(next,MonoNs(3_000_000_005)).unwrap();
+        assert!(!censored.complete&&censored.capacity_limited);
+    }
+    #[test]
+    fn r2_plan027_bad_close_does_not_advance_receiver_maturity(){
+        let k=key();
+        let mut rx=ReceiveWindows::new(k.lane,k.epoch,k.direction);
+        rx.arm(k,MonoNs(0),true).unwrap();
+        assert_eq!(rx.close_announced(k,MonoNs(1),1025,true,false),
+            Err(QualityError::InvalidCounts));
+        assert_eq!(rx.close_announced(k,MonoNs(1),1,true,true),
+            Err(QualityError::InvalidCounts));
+        assert_eq!(rx.report_wire(k,MonoNs(9_000_000_000)),
+            Err(QualityError::Unknown));
+        rx.close_announced(k,MonoNs(9_000_000_000),1,true,false).unwrap();
+        assert_eq!(rx.report_wire(k,MonoNs(11_999_999_999)),
+            Err(QualityError::NotMature));
     }
 }
