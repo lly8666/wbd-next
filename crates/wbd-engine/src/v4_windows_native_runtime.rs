@@ -228,6 +228,10 @@
  fn active()->&'static Mutex<BTreeMap<u64,NativeSession>>{
      NATIVE.get_or_init(||Mutex::new(BTreeMap::new()))
  }
+ pub(super) fn active_owner(h:u64)->bool{
+     active().lock().map_or(true,|g|g.contains_key(&h))
+ }
+
  // The owner is already authenticated and M4 OS-pinned before construction.
  // Worker threads clone this Arc ONCE and never lock the global registry.
  fn lookup(h:u64)->Result<Arc<Mutex<Entry>>,i32>{

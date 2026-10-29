@@ -536,6 +536,8 @@ struct Entry{
     #[cfg(feature="fec2_product_record")]
     native_health:Option<crate::v4_native_health::HealthClock>,
     #[cfg(feature="fec2_product_record")]
+    native_health_policy:crate::v4_native_health::HealthPolicy,
+    #[cfg(feature="fec2_product_record")]
     native_health_evidence:Option<Arc<crate::v4_native_health::AuthenticatedActivity>>,
     #[cfg(feature="fec2_product_record")]
     original_outer:Option<Arc<Mutex<OriginalOuterRepair>>>,
@@ -820,6 +822,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         feedback_queued:None,
         #[cfg(feature="fec2_product_record")]
         native_health:None,
+        #[cfg(feature="fec2_product_record")]
+        native_health_policy:crate::v4_native_health::HealthPolicy::default_connected(),
         #[cfg(feature="fec2_product_record")]
         native_health_evidence:None,
         #[cfg(feature="fec2_product_record")]
@@ -3075,6 +3079,60 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_arm_public_original_m2_feedback(
     }
 }
 
+// The exact authenticated original-Go client AND server owner may set
+// independent Health interval/dead/sleep once while the native worker is
+// stopped. Never let timer ticks, untrusted TCP or GUI intent impersonate
+// confirmed Rust M3+M4 liveness. 0 dormant means no automatic sleep.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_public_native_health_config(
+    h:u64,epoch_ptr:*const u8,epoch_len:usize,
+    keepalive_seconds:u32,dead_seconds:u32,dormant_seconds:u32,
+)->i32{
+    #[cfg(not(feature="fec2_product_record"))]
+    {let _=(h,epoch_ptr,epoch_len,keepalive_seconds,dead_seconds,dormant_seconds);BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    {
+        let Ok(epoch)=verified_normal_off_epoch(epoch_ptr,epoch_len)else{return INVALID};
+        let policy=crate::v4_native_health::HealthPolicy::new(
+            u64::from(keepalive_seconds)*1_000_000_000,
+            u64::from(dead_seconds)*1_000_000_000,
+            (dormant_seconds>0).then_some(u64::from(dormant_seconds)*1_000_000_000));
+        let Some(policy)=policy else{return INVALID};
+        let Ok(cell)=session(h)else{return UNKNOWN};
+        let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+        if !verified_normal_off_owner(&e,&epoch)||
+            e.workers.is_some()||e.raw_rx.is_none()||
+            e.tun_sink.is_none(){return BAD_STAGE}
+        e.native_health_policy=policy;
+        OK
+    }
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_public_native_health_effective(
+    h:u64,epoch_ptr:*const u8,epoch_len:usize,out:*mut u32,count:usize,
+)->i32{
+    if out.is_null()||count!=3{return INVALID}
+    #[cfg(not(feature="fec2_product_record"))]
+    {let _=(h,epoch_ptr,epoch_len);BAD_STAGE}
+    #[cfg(feature="fec2_product_record")]
+    {
+        let Ok(epoch)=verified_normal_off_epoch(epoch_ptr,epoch_len)else{return INVALID};
+        let Ok(cell)=session(h)else{return UNKNOWN};
+        let Ok(e)=cell.lock()else{return BAD_STAGE};
+        if !verified_normal_off_owner(&e,&epoch)||e.raw_rx.is_none()||
+            e.tun_sink.is_none(){return BAD_STAGE}
+        let p=e.native_health.as_ref().map_or(e.native_health_policy,|clock|clock.policy());
+        unsafe{
+            out.add(0).write((p.interval_ns()/1_000_000_000) as u32);
+            out.add(1).write((p.dead_ns()/1_000_000_000) as u32);
+            out.add(2).write(p.dormant_ns().map_or(0,|v|(v/1_000_000_000) as u32));
+        }
+        OK
+    }
+}
+
 // Policy is set on a committed original TLS session after actual M4 driver
 // binding, before arming feedback and starting threads. Never touch FEC
 // source/parity, first-send M2 quality, authenticated ACK or keepalive.
@@ -5203,7 +5261,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         // Same actual original TLS/epoch and native M3 feedback worker;
         // only public-armed client/server gets this extra due source.
         e.native_health=Some(crate::v4_native_health::HealthClock::new(
-            crate::v4_native_health::HealthPolicy::default_connected(),loop_now().0));
+            e.native_health_policy,loop_now().0));
         e.native_health_evidence=Some(Arc::new(
             crate::v4_native_health::AuthenticatedActivity::default()));
         Some(shared)

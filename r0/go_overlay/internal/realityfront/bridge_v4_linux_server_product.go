@@ -41,6 +41,12 @@ type V4LinuxServerProductConfig struct {
     FECMode FecV2Mode
     FECProfile FecV2Profile
     DisableOuterRepair bool
+    // Zero interval/dead keeps original product defaults 15s/90s.
+    // Dormant 0 means no automatic sleep; nonzero policy must have real
+    // authenticated FIN and independently proven peer idle before use.
+    HealthKeepaliveSeconds uint32
+    HealthDeadAfterSeconds uint32
+    HealthIdleDormantSeconds uint32
 }
 type V4LinuxServerProduct struct {
     mu sync.Mutex
@@ -138,6 +144,12 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
         p.fec,err=v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,verified)
     }
     if err==nil{err=bridge.configureOriginalOuterRepair(!p.cfg.DisableOuterRepair)}
+    if err==nil{
+        keepalive,dead:=p.cfg.HealthKeepaliveSeconds,p.cfg.HealthDeadAfterSeconds
+        if keepalive==0{keepalive=15}
+        if dead==0{dead=90}
+        err=bridge.configureOriginalNativeHealth(keepalive,dead,p.cfg.HealthIdleDormantSeconds)
+    }
     if err==nil{err=bridge.armOriginalPublicM2Feedback(uint32(p.cfg.PeerPersona))}
     if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
     if err!=nil{

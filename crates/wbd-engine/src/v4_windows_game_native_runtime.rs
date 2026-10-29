@@ -269,29 +269,33 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
     group:&Arc<Mutex<game::WinGameGroup>>,tun:&mut WintunTx,
     c:&GameCounters,ledgers:&mut [AckLedger],lane:usize,seq:u32,wire:&[u8],
 )->Result<(),i32>{
-    let mut g=group.lock().map_err(|_|BAD_STAGE)?;
-    let fec=game::native_game_has_fec(&g);
+    // Original Go TLS-derived GameAdapter M3+PN open and stage happens
+    // under ONE group lock; the actual Wintun kernel writes MUST happen
+    // outside the group lock or a blocked TUN send would stall every
+    // sibling Game4 TX lane. AllCopied is settled only after real kernel
+    // results, with exact per-lane prefix on partial failure.
+    let (frames,pending)={
+        let mut g=group.lock().map_err(|_|BAD_STAGE)?;
+        if game::native_game_has_fec(&g){
+            game::receive_fec_group(&mut g,cfg.group,(lane+1) as u32,wire)?
+        }else{
+            let frame=game::receive_group(&mut g,cfg.group,(lane+1) as u32,wire)?;
+            (frame.into_iter().collect(),false)
+        }
+    };
+    let total=frames.len();
     let mut copied=0u32;
-    if fec{
-        let (frames,pending)=game::receive_fec_group(
-            &mut g,cfg.group,(lane+1) as u32,wire)?;
-        let total=frames.len();
-        let mut failed=false;
-        for frame in frames{
-            if tun.deliver_authenticated(&frame).is_err(){failed=true;break}
-            copied+=1;c.rx.fetch_add(1,Ordering::Release);
-        }
-        if pending{
-            let rc=game::finish_fec_group(&mut g,(lane+1) as u32,copied);
-            if rc!=OK{return Err(rc)}
-        }
-        if failed||copied as usize!=total{return Err(BAD_STAGE)}
-    }else if let Some(frame)=game::receive_group(
-        &mut g,cfg.group,(lane+1) as u32,wire)?{
-        tun.deliver_authenticated(&frame).map_err(|_|BAD_STAGE)?;
+    let mut failed=false;
+    for frame in frames{
+        if tun.deliver_authenticated(&frame).is_err(){failed=true;break}
         copied+=1;c.rx.fetch_add(1,Ordering::Release);
     }
-    drop(g);
+    if pending{
+        let mut g=group.lock().map_err(|_|BAD_STAGE)?;
+        let rc=game::finish_fec_group(&mut g,(lane+1) as u32,copied);
+        if rc!=OK{return Err(rc)}
+    }
+    if failed||copied as usize!=total{return Err(BAD_STAGE)}
     // The group game opener already verified independent original
     // authenticated AEAD/PN, so presentation ACK can only follow that.
     let ack=ledgers[lane].verified(seq,wire.len());

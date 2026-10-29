@@ -342,8 +342,12 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   default:return windowsclient.ErrN4NativeGuard
   }
   if e!=nil{return e}
-  transport=newM0WinRustNativePeer(owner,endpoint,ncfg,flow,
+  nativePeer:=newM0WinRustNativePeer(owner,endpoint,ncfg,flow,
    nativeFrames,rustHandoff,&readers,o.Mode,initial,autoStart,autoPolicy)
+  nativePeer.healthInterval=o.HealthIntervalSeconds
+  nativePeer.healthDead=o.HealthDeadSeconds
+  nativePeer.healthDormant=o.HealthDormantSeconds
+  transport=nativePeer
  }else{
   // Explicit source-locked A/B only. Never a product Fixed/Auto fallback.
   legacy,legacyErr:=newM0NativeV4PeerForMode(

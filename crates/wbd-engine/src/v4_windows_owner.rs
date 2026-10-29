@@ -192,6 +192,73 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v9_rust_auto_state(
     OK
 }
 
+// Authenticated cold original-Go TLS / scoped M4 device health policy.
+// A config write never claims network/GUI Applied. The effective readback
+// comes from the same native Rust HealthClock the TX worker really uses.
+#[repr(C)]
+#[derive(Clone,Copy)]
+pub struct WbdWinHealthPolicyV1{
+    pub version:u32,pub size:u32,
+    pub interval_seconds:u32,pub dead_seconds:u32,
+    pub dormant_seconds:u32,pub configured:u32,
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v9_native_health_config(
+    handle:u64,epoch_ptr:*const u8,epoch_len:usize,
+    luid:u64,ifindex:u32,ptr:*const WbdWinHealthPolicyV1,
+)->i32{
+    if ptr.is_null(){return INVALID}
+    let c=unsafe{*ptr};
+    if c.version!=1||c.size as usize!=std::mem::size_of::<WbdWinHealthPolicyV1>()||
+        c.configured!=0{return INVALID}
+    let Some(epoch)=v3_epoch(epoch_ptr,epoch_len)else{return INVALID};
+    let interval=u64::from(c.interval_seconds).saturating_mul(1_000_000_000);
+    let dead=u64::from(c.dead_seconds).saturating_mul(1_000_000_000);
+    let dormant=(c.dormant_seconds>0).then_some(
+        u64::from(c.dormant_seconds).saturating_mul(1_000_000_000));
+    let Some(policy)=crate::v4_native_health::HealthPolicy::new(
+        interval,dead,dormant)else{return INVALID};
+    if native_runtime::active_owner(handle){return BAD_STAGE}
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&handle)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    if !v3_ready(&e,epoch,luid,ifindex)||
+        e.role_server||e.game_group.is_some(){return BAD_STAGE}
+    let Some(m)=e.m2.as_mut()else{return BAD_STAGE};
+    if m.shadow.outstanding()>0||m.in_flight.is_some()||
+        m.feedback_pending.is_some(){return BAD_STAGE}
+    m.health=crate::v4_native_health::HealthClock::new(policy,m2_clock().0);
+    OK
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v9_native_health_effective(
+    handle:u64,epoch_ptr:*const u8,epoch_len:usize,
+    luid:u64,ifindex:u32,out:*mut WbdWinHealthPolicyV1,
+)->i32{
+    if out.is_null(){return INVALID}
+    let Some(epoch)=v3_epoch(epoch_ptr,epoch_len)else{return INVALID};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&handle)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(e)=lane.lock()else{return BAD_STAGE};
+    if !v3_ready(&e,epoch,luid,ifindex)||
+        e.role_server||e.game_group.is_some(){return BAD_STAGE}
+    let Some(m)=e.m2.as_ref()else{return BAD_STAGE};
+    let p=m.health.policy();
+    unsafe{out.write(WbdWinHealthPolicyV1{
+        version:1,size:std::mem::size_of::<WbdWinHealthPolicyV1>() as u32,
+        interval_seconds:(p.interval_ns()/1_000_000_000) as u32,
+        dead_seconds:(p.dead_ns()/1_000_000_000) as u32,
+        dormant_seconds:p.dormant_ns().map_or(0,|v|(v/1_000_000_000) as u32),
+        configured:1,
+    })};
+    OK
+}
 fn m2_clock()->MonoNs{
     static START:OnceLock<Instant>=OnceLock::new();
     let elapsed=START.get_or_init(Instant::now).elapsed().as_nanos();

@@ -156,6 +156,67 @@ func(s *V4WindowsAuthenticatedClientOwner) ReadBoundRustAutoState(
     }
     return value,nil
 }
+// Bound policy and effective are from the ORIGINAL Rust TX HealthClock.
+// These do not claim OS WAL/GUI Applied and must precede native worker Start.
+type V4WindowsNativeHealthPolicyV1 struct{
+ Version,Size uint32
+ IntervalSeconds,DeadSeconds,DormantSeconds uint32
+ Configured uint32
+}
+func(s *V4WindowsAuthenticatedClientOwner) SetBoundNativeHealthPolicy(
+ ctx context.Context,interval,dead,dormant uint32,
+)(V4WindowsNativeHealthPolicyV1,error){
+ var p V4WindowsNativeHealthPolicyV1
+ if s==nil||s.bridge==nil||s.device==nil||ctx==nil||
+  interval<1||interval>3600||dead>86400||
+  uint64(dead)<uint64(interval)*3{
+  return p,errV4WindowsOwner
+ }
+ if err:=ctx.Err();err!=nil{return p,err}
+ p=V4WindowsNativeHealthPolicyV1{Version:1,
+  Size:uint32(unsafe.Sizeof(p)),IntervalSeconds:interval,
+  DeadSeconds:dead,DormantSeconds:dormant}
+ proc,err:=s.bridge.fixedProc("wbd_m0_win_owner_v9_native_health_config")
+ if err!=nil{return p,err}
+ err=winOwnerCall(proc,uintptr(s.bridge.handle),
+  uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+  uintptr(s.device.identity.LUID),
+  uintptr(s.device.identity.InterfaceIndex),
+  uintptr(unsafe.Pointer(&p)))
+ runtime.KeepAlive(p)
+ runtime.KeepAlive(s.bridge.epoch)
+ if err!=nil{return p,err}
+ effective,err:=s.ReadBoundNativeHealthPolicy(ctx)
+ if err!=nil||effective.IntervalSeconds!=interval||
+  effective.DeadSeconds!=dead||effective.DormantSeconds!=dormant{
+  return effective,errV4WindowsOwner
+ }
+ return effective,nil
+}
+func(s *V4WindowsAuthenticatedClientOwner) ReadBoundNativeHealthPolicy(
+ ctx context.Context,
+)(V4WindowsNativeHealthPolicyV1,error){
+ var p V4WindowsNativeHealthPolicyV1
+ if s==nil||s.bridge==nil||s.device==nil||ctx==nil{
+  return p,errV4WindowsOwner
+ }
+ if err:=ctx.Err();err!=nil{return p,err}
+ proc,err:=s.bridge.fixedProc("wbd_m0_win_owner_v9_native_health_effective")
+ if err!=nil{return p,err}
+ err=winOwnerCall(proc,uintptr(s.bridge.handle),
+  uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+  uintptr(s.device.identity.LUID),
+  uintptr(s.device.identity.InterfaceIndex),
+  uintptr(unsafe.Pointer(&p)))
+ runtime.KeepAlive(&p)
+ runtime.KeepAlive(s.bridge.epoch)
+ if err!=nil||p.Version!=1||p.Size!=uint32(unsafe.Sizeof(p))||
+  p.Configured!=1||p.IntervalSeconds==0||
+  uint64(p.DeadSeconds)<3*uint64(p.IntervalSeconds){
+  return p,errV4WindowsOwner
+ }
+ return p,nil
+}
 // Must be called BEFORE Go releases either Npcap capture loan, Wintun
 // native loan, Wintun EndSession or original scoped Rust crypto owner.
 func(s *V4WindowsAuthenticatedClientOwner) JoinNativeIO(

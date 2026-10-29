@@ -24,5 +24,8 @@ type m0NativeV4Options struct {
  ControlStdin bool
  Mode m0WindowsV4Mode
  FEC2Mode,FEC2Profile,FEC2AutoPolicy,FEC2AutoStartProfile string
+ // Explicit cold original Rust Health policy. Zero means 15/90/0 defaults;
+ // the real M2 TX clock returns the effective, not GUI intent.
+ HealthIntervalSeconds,HealthDeadSeconds,HealthDormantSeconds uint32
 }
 var errM0NativeV4PacketBridge=errors.New("Windows original Go native V4 TLS authenticated, but public Rust M3 TCP/Wintun application packet bridge and full OS Applied/Stop remain NOT_RUN; refusing production network activation")

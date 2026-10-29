@@ -24,7 +24,8 @@
     "r0/go_overlay/internal/realityfront/admission_v4.go",
     "crates/wbd-engine/src/runtime/generation.rs",
     "crates/wbd-engine/src/v4_native_health.rs",
-    "crates/wbd-engine/src/v4_embedded_go.rs"
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "crates/wbd-engine/src/v4_windows_owner.rs"
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
@@ -59,7 +60,8 @@
     "PLAN026 code candidate: original Windows/Linux M3 AEAD+unique PN kind1 now parses strict 10-byte versioned WBC4 Health plus bundled Receipt/Quality, Windows HealthClock tracks authenticated facts. Timed TX, dual-sided effective config, server FIN/Dormant/Wake still UNWIRED; new product PASS NOT_RUN.",
     "PLAN026 Windows Normal/Fixed/Auto Rust native TX now schedules one authenticated WBC4 Health at 15s real deadline, with existing M2 Receipt merged when due and genuine pcap_sendpacket result; Linux M3 accepts Health. This is unilateral source candidate only, NO complete dual-side Health TX/dead/FIN/Dormant/Wake or V2 network PASS.",
     "PLAN026 candidate: Linux real original-Go TLS client/server Rust native TX now schedules 15s WBC4 Health through the sole M1 AEAD/PN and true M4 sendmmsg, coalesced into existing Receipt if due; no extra worker. Linux receiving this TLV was previously wired. Server dead90/FIN Dormant/Wake, config/GUI readback and full network proof still NOT_RUN.",
-    "PLAN026 candidate source: Linux original Rust RX now publishes genuine authenticated unique-M3 activity+peer idle once per recvmmsg batch, Rust TX absorbs it without per-packet callbacks. Both Linux/Windows native TX use 15s AEAD Health and 90s authenticated dead-peer threshold; no business-idle -> dormancy inference. Verified peer FIN/optional idle Dormant/Wake and effective config remain UNWIRED/NOT_RUN."
+    "PLAN026 candidate source: Linux original Rust RX now publishes genuine authenticated unique-M3 activity+peer idle once per recvmmsg batch, Rust TX absorbs it without per-packet callbacks. Both Linux/Windows native TX use 15s AEAD Health and 90s authenticated dead-peer threshold; no business-idle -> dormancy inference. Verified peer FIN/optional idle Dormant/Wake and effective config remain UNWIRED/NOT_RUN.",
+    "PLAN026 native-config candidate (not product qualification): Windows owner C ABI + Go CLI health.keepalive_seconds/dead_after_seconds/idle_dormant_seconds, actual M2 effective readback and >=3x deadline; Linux dual original Go TLS owner Rust C-ABI readback and per-product client/server config, real worker consumes policy. Defaults15s/90s/no dormancy. Server-side verified FIN and Wake NOT_WIRED, nondefault original Linux CLI/GUI readback NOT_WIRED, real 90s idle-vs-dead network test NOT_RUN."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

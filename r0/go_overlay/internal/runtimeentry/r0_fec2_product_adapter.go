@@ -18,6 +18,11 @@ type FEC2ProductFlags struct {
     Profile *string
     AutoPolicy *string
     AutoStartProfile *string
+    // Original Rust native Health: both keepalive and dead-after are
+    // explicit. Dormant=0 disables sleep; keepalive 15s and dead 90s.
+    HealthKeepaliveSeconds *uint
+    HealthDeadAfterSeconds *uint
+    HealthIdleDormantSeconds *uint
 }
 
 func RegisterFEC2ProductFlags(fs *flag.FlagSet) *FEC2ProductFlags {
@@ -26,6 +31,9 @@ func RegisterFEC2ProductFlags(fs *flag.FlagSet) *FEC2ProductFlags {
         Profile: fs.String("fec.profile","strong","FEC2 fixed profile: light|mild|medium|balanced|high|strong|maximum"),
         AutoPolicy: fs.String("fec.auto_policy","normal","FEC2 auto policy: normal|aggressive (Normal lanes only)"),
         AutoStartProfile: fs.String("fec.auto_start_profile","strong","FEC2 normal auto start profile before +1 aggressive offset"),
+        HealthKeepaliveSeconds: fs.Uint("health.keepalive_seconds",15,"original Rust authenticated Health interval in seconds; default 15"),
+        HealthDeadAfterSeconds: fs.Uint("health.dead_after_seconds",90,"missing authenticated peer timeout in seconds; >=3x keepalive, default 90"),
+        HealthIdleDormantSeconds: fs.Uint("health.idle_dormant_seconds",0,"optional genuine FIN+business idle seconds; default 0 (no auto sleep)"),
     }
 }
 func fec2ValidProfile(s string) bool {
@@ -37,6 +45,14 @@ func fec2ValidProfile(s string) bool {
 func (p *FEC2ProductFlags) Validate(lanes int) error {
     if p==nil || p.Mode==nil || p.Profile==nil || p.AutoPolicy==nil || p.AutoStartProfile==nil {return errors.New("FEC2 parameter binding missing")}
     if lanes < 1 || lanes > 4 {return errors.New("FEC2 invalid lane count")}
+    if p.HealthKeepaliveSeconds!=nil&&p.HealthDeadAfterSeconds!=nil&&
+        p.HealthIdleDormantSeconds!=nil{
+        ka,dead,idle:=*p.HealthKeepaliveSeconds,*p.HealthDeadAfterSeconds,*p.HealthIdleDormantSeconds
+        if ka<1||ka>3600||dead>86400||uint64(dead)<3*uint64(ka)||
+            idle>86400{
+            return errors.New("health.keepalive_seconds must be 1..3600; health.dead_after_seconds >=3x keepalive and <=86400; idle <=86400")
+        }
+    }
     if !fec2ValidProfile(*p.Profile) || !fec2ValidProfile(*p.AutoStartProfile) {
         return errors.New("fec.profile and fec.auto_start_profile must use one of the seven FEC2 profiles")
     }

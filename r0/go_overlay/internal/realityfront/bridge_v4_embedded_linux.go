@@ -25,6 +25,8 @@ extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
     uint64_t *,uint32_t *,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_public_native_health_config(uint64_t,const unsigned char *,size_t,uint32_t,uint32_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_public_native_health_effective(uint64_t,const unsigned char *,size_t,uint32_t *,size_t);
 extern int32_t wbd_m0_embedded_go_set_public_outer_repair(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_read_public_outer_repair(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_public_outer_counters(uint64_t,uint64_t *,size_t);
@@ -403,6 +405,40 @@ func (b *v4EmbeddedNativeBridge) configureOriginalOuterRepair(enabled bool)error
             errV4Embedded,uint32(value),uint32(applied),int(rc))
     }
     return nil
+}
+// 3x-dead redundancy and the actual owner-only Rust effective readback.
+// This is a cold post-TLS/pre-worker call shared by Linux client and server.
+func (b *v4EmbeddedNativeBridge) configureOriginalNativeHealth(
+ interval,dead,dormant uint32,
+)error{
+ if b==nil||!b.committed||b.stopped||b.handle==0||
+  b.protectedEpoch==[16]byte{}||
+  interval<1||interval>3600||dead>86400||
+  uint64(dead)<3*uint64(interval)||dormant>86400{return errV4Embedded}
+ rc:=C.wbd_m0_embedded_go_public_native_health_config(
+  C.uint64_t(b.handle),
+  (*C.uchar)(unsafe.Pointer(&b.protectedEpoch[0])),C.size_t(16),
+  C.uint32_t(interval),C.uint32_t(dead),C.uint32_t(dormant))
+ if rc!=0{return fmt.Errorf("%w: original native Rust Health config rc=%d",errV4Embedded,int(rc))}
+ effective,err:=b.readOriginalNativeHealth()
+ if err!=nil||effective!=[3]uint32{interval,dead,dormant}{
+  return fmt.Errorf("%w: original native Rust Health effective requested=%v readback=%v: %v",
+   errV4Embedded,[3]uint32{interval,dead,dormant},effective,err)
+ }
+ return nil
+}
+func (b *v4EmbeddedNativeBridge) readOriginalNativeHealth()([3]uint32,error){
+ var result [3]uint32
+ if b==nil||!b.committed||b.stopped||b.handle==0||
+  b.protectedEpoch==[16]byte{}{return result,errV4Embedded}
+ var data [3]C.uint32_t
+ rc:=C.wbd_m0_embedded_go_public_native_health_effective(
+  C.uint64_t(b.handle),
+  (*C.uchar)(unsafe.Pointer(&b.protectedEpoch[0])),C.size_t(16),
+  &data[0],C.size_t(len(data)))
+ if rc!=0{return result,fmt.Errorf("%w: original native Rust Health readback rc=%d",errV4Embedded,int(rc))}
+ for i:=range result{result[i]=uint32(data[i])}
+ return result,nil
 }
 func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback(peerPersona uint32)error{
     if b==nil||!b.committed||b.stopped||b.handle==0||

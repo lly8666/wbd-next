@@ -31,6 +31,8 @@ type m0WinRustNativePeer struct{
  initialProfile realityfront.FecV2Profile
  autoStartProfile realityfront.FecV2Profile
  autoPolicy realityfront.FecV2AutoPolicy
+ healthInterval,healthDead,healthDormant uint32
+ effectiveHealth realityfront.V4WindowsNativeHealthPolicyV1
  autoController *realityfront.V4WindowsOriginalFEC2AutoController
 }
 func newM0WinRustNativePeer(owner *realityfront.V4WindowsAuthenticatedClientOwner,
@@ -57,6 +59,15 @@ func(p *m0WinRustNativePeer) BindNativeRing(ctx context.Context,
   err=errors.Join(err,p.DrainPeerAndKernelLoans(stopped,p.owner,nil,id))
  }()
  if err=p.owner.ArmBoundOriginalM2(ctx);err!=nil{return err}
+ interval,dead:=p.healthInterval,p.healthDead
+ if interval==0{interval=15}
+ if dead==0{dead=90}
+ p.effectiveHealth,err=p.owner.SetBoundNativeHealthPolicy(
+  ctx,interval,dead,p.healthDormant)
+ if err!=nil{return fmt.Errorf("original signed Rust Health 15s/90s cold policy: %w",err)}
+ fmt.Printf("WBD_WINDOWS_NATIVE_HEALTH_EFFECTIVE keepalive_seconds=%d dead_after_seconds=%d idle_dormant_seconds=%d source=original_rust_authenticated_m2\\n",
+  p.effectiveHealth.IntervalSeconds,p.effectiveHealth.DeadSeconds,
+  p.effectiveHealth.DormantSeconds)
  if p.mode==m0WinModeFixed||p.mode==m0WinModeAuto{
   // This can only happen after real original-TLS feature7 and OS device
   // proof. The same Rust FixedStream owns revision1 and all parity.

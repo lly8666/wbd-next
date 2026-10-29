@@ -61,6 +61,7 @@ impl HealthClock {
             retry_not_before:at,peer_idle:None,peer_write_closed:false,
             disconnected:false}
     }
+    pub(crate) fn policy(&self)->HealthPolicy{self.policy}
     pub(crate) fn on_authenticated_control(&mut self,at:u64){
         if at>=self.attached_at {
             self.last_authenticated=Some(self.last_authenticated.map_or(at,|old|old.max(at)));

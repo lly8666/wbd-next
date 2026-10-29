@@ -350,7 +350,7 @@
       "kind": "create",
       "path": "internal/runtimeentry/r0_fec2_product_adapter.go",
       "overlay_path": "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go",
-      "result_blob": "2dbb06dcb5c33878c450a594e56345b281ad6186"
+      "result_blob": "e5dbe438ea30f24f7e14f1e34f7895b403abc6d8"
     },
     {
       "kind": "create",
@@ -587,7 +587,7 @@
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_native_io.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io.go",
-      "result_blob": "a999e1ca08e78bc52f20af1828bb949c730e0dff"
+      "result_blob": "d27aa26262b1725794165fdbaaba9a5cdcc365d4"
     },
     {
       "kind": "create",
