@@ -258,6 +258,7 @@
         "r2_plan027_wrap32_and_wrong_epoch_never_release",
         "r2_plan027_partial_ack_stale_ack_and_invalid_sack_are_safe",
         "r2_plan027_cache_full_does_not_block_sent_bounds_and_expires",
+        "r2_plan027_outer_ack_hint_discards_only_shadow_and_cancels_queued_repair",
         "r2_pn_holes_control_burned_and_unreported_page_never_invent_loss",
         "r2_queue_timeout_retires_payload_without_second_timer",
         "r2_race_32_33_bounded_callback_after_timeout_is_all_stale",
