@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
+  "source_sha": "4c6a7c03328033dff2534922de3ee6f45b06cca9",
+  "result": "PASS_SCOPED_FIXED_REAL_WINDOWS_LINUX_KERNEL_AND_MATURE_AUTHENTICATED_M2",
+  "overall_workflow_conclusion": "failure",
+  "overall_workflow_other_mode_failures": [
+    "game2",
+    "game4",
+    "game2-fec",
+    "game4-fec"
+  ],
+  "run": {
+    "id": 40847146468,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40847146468",
+    "artifact_id": 12886530318,
+    "artifact_digest": "sha256:4d1241cd973d14ce5f4a4f1b3a1fee92c5fe2c629aff31f3c641f49694e304dc",
+    "artifact_name": "m0-wl-full-public-normal-direct"
+  },
+  "actual_mode_reports": {
+    "normal": {
+      "result": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+      "real_kernel_udp": true,
+      "real_kernel_tcp": true,
+      "stop": "PASS_BOTH_OWNED"
+    },
+    "fixed": {
+      "result": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_fixed",
+      "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+      "real_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+      "real_kernel_tcp": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+      "stop": "PASS_BOTH_OWNED",
+      "fixed_m2_mature": true,
+      "mature_marker": "WBD_WINDOWS_FEC2_M2_MATURE_SCOPED mode=fec-fixed",
+      "readback": {
+        "copied_source": 35,
+        "copied_parity": 66,
+        "authenticated_reverse_reports": 51,
+        "positive_2s": 9,
+        "covered_2s": 9,
+        "censored": 0
+      }
+    },
+    "auto": {
+      "result": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_auto",
+      "real_kernel_udp": true,
+      "real_kernel_tcp": true,
+      "stop": "PASS_BOTH_OWNED"
+    },
+    "game2_and_game4": {
+      "result": "FAIL_BEFORE_WINDOWS_READY",
+      "first_error": "M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=RX stage=npcap_read lane=1 reason=EndOfStream",
+      "no_claim_of_game_pass": true
+    }
+  },
+  "additional_test": {
+    "run_id": 40847146472,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40847146472",
+    "conclusion": "success",
+    "scoped_windows_original_go_wal_and_modes": "6/6 success, normal/fixed/auto/game2/game4"
+  },
+  "safety_boundaries": "Fixed positive comes from actual Rust FEC2 v8 FixedMatureReadback through original Go 1Hz control; requires Applied=1 uncensored, real copied source+parity, auth reverse reports and mature positive+covered 2s. Historic string is not synthesized if proof absent. Original Go TLS/AEAD/PN/owned Stop preserved. Game true public remains FAIL and later adc Game fix requires independent rerun.",
+  "unverified": [
+    "Full 7-mode source 4c6 PASS",
+    "Game2/4 real public on this source",
+    "Auto organic M2 applied up/down",
+    "Full V2 real loss/CPU, FIN/Dormant/Wake, dynamic lane, physical Windows/GUI"
+  ]
+}

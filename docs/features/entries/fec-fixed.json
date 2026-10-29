@@ -36,7 +36,8 @@
   ],
   "doc_refs": [
     "docs/architecture/FEC_V2_BALANCED.md",
-    "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
+    "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
+    "docs/evidence/M0/PLAN026-WINDOWS-FIXED-MATURE-SOURCE4C6-20261029.json"
   ],
   "verification": [
     {
@@ -122,6 +123,13 @@
       "status": "PERFORMANCE_PASS",
       "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
       "evidence": "docs/evidence/M0/PLAN025-H313-ARM64-30pct-200ms-FEC6-Game4-20261028.json"
+    },
+    {
+      "platform": "Windows Server 2022 x64 real signed Npcap/Wintun and WSL2 Linux original Go TLS Rust M3/M4 raw/TUN",
+      "scope": "Exact source4c6a7c0 actual two-OS fixed kernel UDP+TCP duplex, original Rust FixedMatureReadback Applied=1 uncensored: copied_source35 copied_parity66 auth_reverse51 positive2s9 covered2s9, owned Stop both. Whole seven-mode workflow FAIL because Game2/4 separate native capture EOF; not full profile/V2/CPU/physical PASS.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "4c6a7c03328033dff2534922de3ee6f45b06cca9",
+      "evidence": "docs/evidence/M0/PLAN026-WINDOWS-FIXED-MATURE-SOURCE4C6-20261029.json"
     }
   ],
   "limitations": [
