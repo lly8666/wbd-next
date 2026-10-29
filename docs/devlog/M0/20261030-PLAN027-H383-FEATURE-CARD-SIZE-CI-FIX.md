@@ -3,5 +3,5 @@
 没有重派旧业务矩阵；在途H382 Native仍需真实结果，PLAN027第0节五项仍未全部完成。
 
 ```feature-impact
-{"kind":"update","ids":["fec-auto"],"reason":"Compact only the same JSON metadata to satisfy the existing 16KiB feature-card size gate; no behavioral or evidence change."}
+{"kind":"updated","ids":["fec-auto"],"reason":"Compact only the same JSON metadata to satisfy the existing 16KiB feature-card size gate; no behavioral or evidence change."}
 ```

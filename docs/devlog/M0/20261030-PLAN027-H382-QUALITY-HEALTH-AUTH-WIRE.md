@@ -6,5 +6,5 @@
 - **尚非完整产品生效**：Windows/Linux 实际 worker 未生产/消费成熟窗口，Auto 仍沿旧 M2，逐 record Receipt 尚未移除；A/B/C/Stop 与物理仍未结案。
 
 ```feature-impact
-{"kind":"update","ids":["fec-auto"],"reason":"PLAN027 authenticated Health/Quality-v2 Rust control seam and required source-native test; no changes to deployed public CLI/GUI defaults or live quality scheduling yet."}
+{"kind":"updated","ids":["fec-auto"],"reason":"PLAN027 authenticated Health/Quality-v2 Rust control seam and required source-native test; no changes to deployed public CLI/GUI defaults or live quality scheduling yet."}
 ```

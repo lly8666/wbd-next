@@ -143,7 +143,7 @@ impl RepairBudget {
     fn burst_cap(&self) -> u64 { self.cfg.outer_mtu * 8 }
     fn epoch_limit(&self) -> u64 {
         // The 32KiB sparse allowance is a floor, not an additional bonus.
-        self.current.fresh/10
+        (self.current.fresh/10)
             .max(SPARSE_FLOOR_BYTES)
             .min(self.cfg.max_repair_bytes_per_epoch)
     }

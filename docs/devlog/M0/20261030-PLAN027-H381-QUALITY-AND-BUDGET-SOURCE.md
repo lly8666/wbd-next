@@ -7,5 +7,5 @@
 - 本提交尚未连接 Windows/Linux 生产层，不说明 M2 Receipt 线上已移除或 Auto 正式生效。接下来先完成双向生产接线/参数/功能卡再冻结 SOURCE 跑 A，继而 B、C、必要修复回归交付。物理 NOT_RUN。
 
 ```feature-impact
-{"kind":"update","ids":["fec-auto","outer-opportunistic-repair"],"reason":"Add source-only PLAN027 low-rate Quality wire/sample bounds and change v3 exact local F repair ceiling to 10%, with required native regressions; live production verification remains NOT_RUN."}
+{"kind":"updated","ids":["fec-auto","outer-opportunistic-repair"],"reason":"Add source-only PLAN027 low-rate Quality wire/sample bounds and change v3 exact local F repair ceiling to 10%, with required native regressions; live production verification remains NOT_RUN."}
 ```

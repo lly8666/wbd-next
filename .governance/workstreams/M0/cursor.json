@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 383,
-  "checkpoint_sha": "23717d0d90ef29d1009e33c7c947c44ed93961b1",
+  "sequence": 384,
+  "checkpoint_sha": "dad47065a8827d36ba9f165fa5994e54dfc9d93a",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
   "current_task": "PLAN027 full scope remains PARTIAL. H380 first real replacement code includes scoped bounded OuterAckIndex ACK/SACK cache retirement/gap hints and ReceiptState::discard_outer_ack_hint exact optional shadow release, with five new mandatory r2_plan027 regressions. Both are pure source-only seams, no live Windows/Linux callers or per-record M2 retirement. Native SOURCE4edec compiled, recovery gate FAIL missing five mandatory names; corrected actual test inventory and assertions in subsequent source; newer SOURCE53b native build PASS with verify jobs queued, latest SOURCEa7d and card/cursor still in flight. No product/network PASS.",
-  "why_now": "H383 recovered H381 governance failure from feature card >16KiB bytes after pretty printing. Same semantic JSON compacted below existing 16KiB limit, no history or evidence erased; follow H382 native CI and finish phase1 live wiring.",
+  "why_now": "H384: recovered Windows native Action40929275175 FAIL direction_epoch_limit==0. Exact cause identified as accidental Rust parse precedence after H381 replacing v3 9% expression: `self.current.fresh/10 .max(...)` binds `.max` to `10`, making early F quota zero. Parenthesized `(fresh/10).max(...)`. Also fixed three new devlog feature-impact kind values update->updated per tools/feature_catalog.py schema.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Wire actual producer/consumer of LowRateQualityWire in Windows/Linux owners with 16 send/4 receive bounded windows and 3s maturity/10s expiry, 1.5–2s success/3.5s busy cadences, source only confirmed driver first-send F; apply Auto after matched mature feedback without zero-loss inference. Wire exact outer ACK/SACK shadow retirement and 0.10F budget, then shut off per-record Receipt. Freeze SOURCE and run PLAN027 A, remaining B/Windows WAL Stop, matrix C, necessary fixes/delivery.",
+  "next_action": "Collect exact H384 native recovery and Windows lifecycle CI; verify direction_epoch_limit >0 and 10%F quota; inspect new regressions. Proceed with PLAN027 sender/receiver matured window scheduling, actual Windows/Linux Quality/Health and ACK/SACK integration, old M2 removal, source-locked A then B/C/fixes. WAL Game2 Stop rc5 remains open.",
   "unverified": true,
   "last_tested_source": "302d02049669d8f36f3d6852bc1c668ff003ed4a",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN026-GAME2-SOURCE302D-TRUE-WINDOWS-LINUX-TWO-WAY-STOP-20261029.json"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN027 §0-1 PARTIAL: H381 quality v2/scoped bounds+10% F cap, H382 authenticated Health+Quality v2 source seam, new required tests. H381 governance 40928873330 failed ONLY feature-card bounded-size gate (fec-auto >16KiB); H383 compacted same card data without erasing historic verification, source commit next CI to confirm. Actual Windows/Linux M2 Receipt still LIVE, A NOT_RUN new product, B OPEN Windows WAL Stop rc5, C NOT_RUN, delivery OPEN; physical NOT_RUN."
+  "partial_summary": "PLAN027 §0-1 PARTIAL. H381 low-rate quality v2 and 10%F hard budget; H382 authenticated Health+Quality wire. H384 fixes real H381 regression: Rust `.max` method wrongly on divisor 10 made low-F direction epoch limit zero, observed Windows native Action40929275175 failure. Also corrects invalid feature-impact kind in H381/H382/H383 logs; feature-card compacted <16KiB in H383. New CI pending. M2 per-record still LIVE, A NOT_RUN new product, B open incl WAL Game2 Stop rc5, C NOT_RUN, delivery OPEN; physical NOT_RUN."
 }
