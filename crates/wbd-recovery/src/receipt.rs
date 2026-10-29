@@ -429,6 +429,17 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             assert!(self.wake_index.remove(&(at,pn)));
         }
     }
+    /// PLAN027: a scoped outer TCP ACK/SACK hint may discard only OPTIONAL
+    /// immutable repair storage. It is not an authenticated M2 receipt:
+    /// never update Auto loss, peer Health, RTT witnesses, first-delivery
+    /// diagnostics, or fresh DATA credit. Caller must bind lane+epoch in its
+    /// own OuterAckIndex before passing the exact original record PN.
+    pub fn discard_outer_ack_hint(&mut self, pn: RecordPn) -> Option<H> {
+        let entry = self.entries.remove(&pn)?;
+        self.remove_indexes(pn, &entry, false);
+        Some(entry.frozen)
+    }
+
     /// Positive bitmap bits may release once even from an old report.
     /// Only new report_seq can establish negative evidence or RTT witnesses.
     /// Unreported pages, PN > largest and absent/control/burned PN do nothing.
@@ -964,6 +975,30 @@ mod tests {
             Err(DataError::Stale));
         drop(first);
         assert_eq!(Arc::strong_count(&shared),1);
+    }
+
+    #[test]
+    fn r2_plan027_outer_ack_hint_discards_only_shadow_and_cancels_queued_repair() {
+        let mut s = state(3, 10);
+        add(&mut s, 1, 0, 100);
+        add(&mut s, 2, 0, 100);
+        let c = s.on_timer(MonoNs(10)).candidates.remove(0);
+        assert_eq!(c.pn(), RecordPn(1));
+        let frozen = s.discard_outer_ack_hint(RecordPn(1)).unwrap();
+        assert_eq!(frozen.metadata().pn, RecordPn(1));
+        assert_eq!(s.discard_outer_ack_hint(RecordPn(1)).is_none(), true);
+        assert!(!s.preflight(&c, MonoNs(11)));
+        assert_eq!(s.on_send_result(&c, RepairSendResult::Accepted, MonoNs(11)),
+            Err(DataError::Stale));
+        assert_eq!(s.outstanding(), 1);
+        assert_eq!(s.expiry_index.len(), 1);
+        assert_eq!(s.wake_index.len(), 1);
+        assert_eq!(s.diagnostic_snapshot().acked_attempt0, 0);
+        assert!(s.witnesses.is_empty());
+        let expired = s.on_timer(MonoNs(100));
+        assert_eq!(expired.releases.len(), 1);
+        assert_eq!(expired.releases[0].pn, RecordPn(2));
+        assert_eq!(s.outstanding(), 0);
     }
 
     #[test]
