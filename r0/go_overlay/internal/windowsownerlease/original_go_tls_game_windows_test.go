@@ -123,6 +123,31 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int){
  tun,e:=windowsclient.OpenTUN(fmt.Sprintf("WBD-M0-GAME%d-%s",n,os.Getenv("GITHUB_RUN_ID")))
  if e!=nil{t.Fatalf("Game%d signed Wintun create: %v",n,e)}
  defer tun.Close()
+ // This is a scoped real Wintun/M3-only test, NOT an NPF send. On any
+ // fatal assertion, first cancel only ACTUALLY UNSUBMITTED Game M4
+ // tickets and join original Rust owner holds before closing Wintun.
+ // A false NPF copied receipt must never be invented to make Stop pass.
+ var unsubmittedClient,unsubmittedServer []realityfront.V4WindowsGameRecord
+ defer func(){
+  cleanup,cancel:=context.WithTimeout(context.Background(),15*time.Second)
+  defer cancel()
+  if len(unsubmittedClient)>0{
+   if err:=clientGroup.CancelUnsubmittedGameTickets(cleanup,unsubmittedClient);err!=nil{
+    t.Errorf("Game%d original client never-NPF tickets cleanup: %v",n,err)
+   }
+  }
+  if len(unsubmittedServer)>0{
+   if err:=serverGroup.CancelUnsubmittedGameTickets(cleanup,unsubmittedServer);err!=nil{
+    t.Errorf("Game%d original server never-NPF tickets cleanup: %v",n,err)
+   }
+  }
+  if err:=clientGroup.StopCryptoAfterDriverDrain(cleanup);err!=nil{
+   t.Errorf("Game%d original client failure-path owner Stop: %v",n,err)
+  }
+  if err:=serverGroup.StopCryptoAfterDriverDrain(cleanup);err!=nil{
+   t.Errorf("Game%d original server failure-path owner Stop: %v",n,err)
+  }
+ }()
  device:=CreatedWintun{TUN:tun}
  identity,e:=device.Identity(ctx,[16]byte{19},clientGroup.Epoch())
  if e!=nil{t.Fatal(e)}
@@ -135,6 +160,7 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int){
  packet:=m0OriginalTLSRustAEADKernelUDP([]byte(fmt.Sprintf("game%d-real-original-Go-TLS",n)),41990)
  records,e:=clientGroup.StageGameRecords(ctx,packet)
  if e!=nil||len(records)!=n{t.Fatalf("Game%d native independent AEAD stage: %d %v",n,len(records),e)}
+ unsubmittedClient=records
  // Native lane1 packet is deliberately NOT delivered; lane2 must reach
  // the original server's Rust first-delivery dedup after real OS kernel.
  lane2:=records[1]
@@ -146,15 +172,26 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int){
  if replay,err:=serverGroup.OpenGameRecord(ctx,lane2.Lane,fromKernel);err==nil{
   t.Fatalf("Game%d original M3 replay delivered %d bytes",n,len(replay))
  }
+ // Genuine kernel delivery above was Wintun->UDP, NEVER Npcap TX.
+ // Conservatively report NotSent for all original staged lane tickets.
+ if err:=clientGroup.CancelUnsubmittedGameTickets(ctx,unsubmittedClient);err!=nil{
+  t.Fatalf("Game%d original not-submitted client M4 ticket settle: %v",n,err)
+ }
+ unsubmittedClient=nil
  reverse:=m0OriginalTLSRustAEADKernelUDP([]byte(fmt.Sprintf("game%d-native-reverse",n)),41991)
  backward,e:=serverGroup.StageGameRecords(ctx,reverse)
  if e!=nil||len(backward)!=n{t.Fatalf("Game%d original server reverse AEAD: %v",n,e)}
+ unsubmittedServer=backward
  lane:=backward[n-1]
  reverseFromKernel:=m0RealOriginalTLSRustAEADToSignedWintunKernelApp(t,ctx,tun,lane.Wire)
  got,e:=clientGroup.OpenGameRecord(ctx,lane.Lane,reverseFromKernel)
  if e!=nil||string(got)!=string(reverse){
   t.Fatalf("Game%d original Go TLS Rust reverse first-delivery: %v",n,e)
  }
+ if err:=serverGroup.CancelUnsubmittedGameTickets(ctx,unsubmittedServer);err!=nil{
+  t.Fatalf("Game%d original not-submitted server M4 ticket settle: %v",n,err)
+ }
+ unsubmittedServer=nil
  stop,cancelStop:=context.WithTimeout(context.Background(),15*time.Second)
  defer cancelStop()
  if e=clientGroup.StopCryptoAfterDriverDrain(stop);e!=nil{t.Fatalf("Game%d client native Stop: %v",n,e)}

@@ -743,7 +743,7 @@
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_game_fec_batch.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_fec_batch.go",
-      "result_blob": "dfce2e0f24eddf34bee0c46772b4b2b36e49fb46"
+      "result_blob": "1cb4cceaf4df7ac5359cdacd712fb283ead974de"
     },
     {
       "kind": "create",

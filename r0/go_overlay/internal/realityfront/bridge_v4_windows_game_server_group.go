@@ -117,6 +117,7 @@ func(g *V4WindowsAuthenticatedGameServerGroup) BindAndJoinOriginalWintun(
   {"wbd_m0_win_owner_v4_game_stage",&g.stageProc},
   {"wbd_m0_win_owner_v4_game_receive",&g.openProc},
   {"wbd_m0_win_owner_v4_game_stop",&g.stopProc},
+  {"wbd_m0_win_owner_v4_game_m4_send_result",&g.fecM4SendProc},
  }{
   proc,err:=dll.FindProc(row.name)
   if err!=nil{return fmt.Errorf("%w: real Rust Windows group ABI %s",errV4WindowsOwner,row.name)}
@@ -137,15 +138,12 @@ func(g *V4WindowsAuthenticatedGameServerGroup) BindAndJoinOriginalWintun(
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   parity,err:=dll.FindProc("wbd_m0_win_owner_v4_game_fec_parity_due")
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
-  receipt,err:=dll.FindProc("wbd_m0_win_owner_v4_game_m4_send_result")
-  if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   fec,err:=dll.FindProc("wbd_m0_win_owner_v4_game_fec_enable")
   if err!=nil{return errors.Join(errV4WindowsOwner,err)}
   if err=winOwnerCall(fec,uintptr(group),uintptr(g.gameFec-1));err!=nil{return err}
   g.fecOpenProc=open
   g.fecFinishProc=finish
   g.fecParityProc=parity
-  g.fecM4SendProc=receipt
  }
  return nil
 }

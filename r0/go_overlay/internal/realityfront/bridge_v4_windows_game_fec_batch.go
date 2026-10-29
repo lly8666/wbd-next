@@ -128,6 +128,46 @@ func winGameFecM4SendResult(proc *syscall.Proc,group uint64,
  return winOwnerCall(proc,uintptr(group),uintptr(lane),
   uintptr(logicalID),uintptr(pn),copied)
 }
+// CancelUnsubmittedGameTickets is a strictly NEGATIVE M4 receipt.
+// A caller which STAGED ciphertext but did not call pcap_sendpacket must
+// retire the exact Rust GameAdapter tickets before group Stop. This never
+// credits copied bytes, FEC parity, first delivery, or product Applied.
+// The caller must have joined any actual native NPF workers first.
+func(g *V4WindowsAuthenticatedGameGroup) CancelUnsubmittedGameTickets(
+ ctx context.Context,records []V4WindowsGameRecord,
+)error{
+ if g==nil||len(records)==0{return errV4WindowsOwner}
+ g.mu.Lock();defer g.mu.Unlock()
+ giveBack,err:=g.holdLive(ctx)
+ if err!=nil{return err}
+ defer giveBack()
+ if g.fecM4SendProc==nil{return errV4WindowsOwner}
+ for _,r:=range records{
+  if r.Lane==0||int(r.Lane)>len(g.members)||r.Length<32||r.Length>1536{
+   return errV4WindowsOwner
+  }
+  if err:=winGameFecM4SendResult(g.fecM4SendProc,g.joined,
+   r.Lane,r.LogicalID,r.PacketNumber,false);err!=nil{return err}
+ }
+ return nil
+}
+func(g *V4WindowsAuthenticatedGameServerGroup) CancelUnsubmittedGameTickets(
+ ctx context.Context,records []V4WindowsGameRecord,
+)error{
+ if g==nil||len(records)==0{return errV4WindowsOwner}
+ g.mu.Lock();defer g.mu.Unlock()
+ if err:=g.active(ctx);err!=nil{return err}
+ if g.fecM4SendProc==nil{return errV4WindowsOwner}
+ for _,r:=range records{
+  if r.Lane==0||int(r.Lane)>len(g.owners)||r.Length<32||r.Length>1536{
+   return errV4WindowsOwner
+  }
+  if err:=winGameFecM4SendResult(g.fecM4SendProc,g.joined,
+   r.Lane,r.LogicalID,r.PacketNumber,false);err!=nil{return err}
+ }
+ return nil
+}
+
 // DueGameFecParity returns a bounded batch from the SAME shared Rust
 // GameFecTx timed owner used by Linux. Only use after real native
 // Npcap has reported all earlier staged send tickets.
