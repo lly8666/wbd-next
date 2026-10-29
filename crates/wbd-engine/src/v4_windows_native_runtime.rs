@@ -509,6 +509,13 @@
                  work+=n;
                  if n<BATCH{break}
              }
+             if work>0{
+                 // One timestamp and one owner update PER ready batch, not
+                 // per source; control-only time must not mark payload idle.
+                 let mut e=lock_owner(&lane,&counters,LockDirection::Tx)?;
+                 e.m2.as_mut().ok_or(BAD_STAGE)?.health
+                     .on_local_business(m2_clock().0);
+             }
              // A bounded <=4-row parity quantum follows ready fresh sources.
              // In Fixed/Auto there is never an extra native parity worker.
              #[cfg(feature="fec2_product_record")]
@@ -542,7 +549,9 @@
                      {None}
                  }else{None};
                  let next=m.shadow.next_deadline().into_iter()
-                     .chain(fec_due).min_by_key(|d|d.0);
+                     .chain(fec_due)
+                     .chain(m.health.next_tx_deadline().map(MonoNs))
+                     .min_by_key(|d|d.0);
                  m2_wake_timeout_ms(m2_clock(),m.feedback.next_deadline(),next)
              };
              match io::wait_ready(&[stop.handle(),tun.event(),notify.handle()],timeout){

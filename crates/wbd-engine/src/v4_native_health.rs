@@ -107,6 +107,18 @@ impl HealthClock {
         !self.disconnected && now>=from &&
             now.saturating_sub(from)>=self.policy.dead_ns
     }
+    /// Sending Health must not become a 0ms busy loop if the peer has
+    /// stopped reporting. Dead-peer policy is independent and is only
+    /// acted on by the owner's explicit timeout/lifecycle transition.
+    pub(crate) fn tx_due(&self,now:u64)->bool{
+        !self.disconnected&&now>=self.next_health&&now>=self.retry_not_before
+    }
+    pub(crate) fn next_tx_deadline(&self)->Option<u64>{
+        (!self.disconnected).then_some(self.next_health.max(self.retry_not_before))
+    }
+    pub(crate) fn local_idle_ns(&self,now:u64)->u64{
+        now.saturating_sub(self.last_business)
+    }
     pub(crate) fn control_due(&self,now:u64)->ControlDue{
         if self.disconnected{return ControlDue::None}
         if self.unhealthy(now){return ControlDue::DeadPeer}

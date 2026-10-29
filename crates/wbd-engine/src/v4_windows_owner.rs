@@ -79,7 +79,7 @@ struct WindowsOriginalM2 {
     // Feedback comes ONLY from this original M3 opener's unique reverse PN.
     // At most one immutable original-M1 kind1 draft is awaiting real NPF send.
     feedback:RxFeedbackState,
-    feedback_pending:Option<(FeedbackDraft,u64)>,
+    feedback_pending:Option<(Option<FeedbackDraft>,u64,bool)>,
     // Per-lane state, no thread/timer; TX Health deadline not yet activated.
     health:crate::v4_native_health::HealthClock,
     // Same W168 mature source-only denominator as Linux Fixed; never a
@@ -255,23 +255,32 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
 )->Result<Option<(usize,u32,u64)>,i32>{
     if !v3_ready(e,epoch,luid,ifindex){return Err(INVALID)}
     let now=m2_clock();
-    let draft={
+    let (draft,health_due)={
         let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
         if m.feedback_pending.is_some(){return Ok(None)}
-        let Some(draft)=m.feedback.on_due(now)else{return Ok(None)};
-        draft
+        let draft=m.feedback.on_due(now);
+        let health_due=m.health.tx_due(now.0);
+        if draft.is_none()&&!health_due{return Ok(None)}
+        (draft,health_due)
     };
     let prepared=(||->Result<(usize,u32,u64),i32>{
-        let msg=wbd_codec::Receipt{
-            largest_data_pn:draft.largest_data_pn().0,
-            ack_delay_us:0,report_seq:draft.report_seq(),
-            pages:draft.pages().iter().map(|p|wbd_codec::ReceiptPage{
+        let msg=draft.as_ref().map(|d|wbd_codec::Receipt{
+            largest_data_pn:d.largest_data_pn().0,
+            ack_delay_us:0,report_seq:d.report_seq(),
+            pages:d.pages().iter().map(|p|wbd_codec::ReceiptPage{
                 base_pn:p.base_pn.0,bitmap:p.bitmap,
             }).collect(),
+        });
+        let tlv=if health_due{
+            let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
+            crate::v4_native_health::encode_authenticated_health(
+                m.health.local_idle_ns(now.0),msg.as_ref(),None
+            ).map_err(|_|INVALID)?
+        }else{
+            let msg=msg.ok_or(BAD_STAGE)?;
+            wbd_codec::encode_control(&[wbd_codec::ControlTlv::Receipt(msg)],512)
+                .map_err(|_|INVALID)?
         };
-        let tlv=wbd_codec::encode_control(
-            &[wbd_codec::ControlTlv::Receipt(msg)],512
-        ).map_err(|_|INVALID)?;
         let budget=normal_off_windows_budget(e)?;
         // Preflight the *actual encoded receipt* against the caller's
         // C ABI output BEFORE spending an AEAD PN and original TCP sequence.
@@ -312,14 +321,17 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
     match prepared{
         Ok((n,seq,pn))=>{
-            m.feedback_pending=Some((draft,pn));
+            m.feedback_pending=Some((draft,pn,health_due));
             Ok(Some((n,seq,pn)))
         },
         Err(err)=>{
             // No NPF syscall accepted this draft: restore dirty coverage.
-            let _=m.feedback.on_send_result(
-                &draft,FeedbackSendResult::NotSent,now
-            );
+            if let Some(draft)=draft.as_ref(){
+                let _=m.feedback.on_send_result(
+                    draft,FeedbackSendResult::NotSent,now
+                );
+            }
+            if health_due{m.health.on_health_send_result(now.0,false)}
             if err==FULL{Ok(None)}else{Err(err)}
         },
     }
@@ -329,14 +341,17 @@ fn m2_finish_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
 )->Result<(),i32>{
     if !v3_ready(e,epoch,luid,ifindex)||npcap_sent>1{return Err(INVALID)}
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
-    let Some((draft,expected))=m.feedback_pending.as_ref()
+    let Some((_,expected,_))=m.feedback_pending.as_ref()
         else{return Err(BAD_STAGE)};
     if *expected!=pn{return Err(INVALID)}
-    m.feedback.on_send_result(draft,if npcap_sent==1{
-        FeedbackSendResult::Accepted
-    }else{FeedbackSendResult::NotSent},m2_clock())
-        .map_err(|_|BAD_STAGE)?;
-    m.feedback_pending=None;
+    let (draft,_,has_health)=m.feedback_pending.take().ok_or(BAD_STAGE)?;
+    let now=m2_clock();
+    if let Some(draft)=draft.as_ref(){
+        m.feedback.on_send_result(draft,if npcap_sent==1{
+            FeedbackSendResult::Accepted
+        }else{FeedbackSendResult::NotSent},now).map_err(|_|BAD_STAGE)?;
+    }
+    if has_health{m.health.on_health_send_result(now.0,npcap_sent==1)}
     Ok(())
 }
 fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
