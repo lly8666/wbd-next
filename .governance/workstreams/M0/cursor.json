@@ -4,12 +4,12 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 396,
-  "checkpoint_sha": "dca376af1123e9d7b94f7e5382a2ae4a16d2affe",
+  "sequence": 397,
+  "checkpoint_sha": "519a8a6d2132e85a0bab427d293046c2262a0920",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 §0 PARTIAL. H396 adds bounded sender first-send sampler and strict matched Quality wire F guard; no production wiring, no new Action PASS yet. H393/H394/H395 verified evidence remains source-scoped.",
-  "why_now": "Complete missing low-rate sender driver-F accounting and prevent mismatched remote F from being used as Auto loss; native regression/governance push Actions must be collected before marking PASS.",
+  "current_task": "PLAN027 §0 PARTIAL. H396 new sender driver-F and matched-wire guard source-only, native-functional run40944961945 still pending. H396 governance run40944961891 feature card byte limit FAIL; H397 compacts duplicate source-only limitation, preserving H393 evidence. No production M2 retirement.",
+  "why_now": "Correct actual feature catalog bounded UTF-8 byte limit without deleting source-scoped history; collect pending H396 native Actions before further product changes.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
   "next_action": "Collect H396 exact-source native/governance Actions; then implement authenticated low-rate start/close/receive/report in BOTH production owners, retire online M2 Receipt and blind hot repair, connect ACK/SACK one-shot shadow and Auto/Health, freeze product SOURCE and run A, B, C and delivery.",
   "unverified": true,
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN027-H395-NATIVE-QUALITY-AND-CI-RESULTS-20261030.json"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL: H396 bounded driver-F sender/remote F matching source-only; earlier 4RX/16TX, 10%F and ACK index pure only. Online M2 per-record LIVE; Windows/Linux production Quality/ACK not wired. §0-2 A NOT_RUN. §0-3 B OPEN. §0-4 C NOT_RUN. §0-5 OPEN. H396 native/governance pending push; H393 native89/134/114 PASS and H394 governance PASS, hashes H395. Physical NOT_RUN."
+  "partial_summary": "§0-1 PARTIAL: H396 bounded sender driver-F and remote F matching source-only, H393 quality close source-only. Live per-record M2 still active, Windows/Linux low-rate quality/ACK not wired. §0-2 A NOT_RUN. §0-3 B OPEN. §0-4 C NOT_RUN. §0-5 OPEN. H396 governance feature card byte limit FAIL, H397 repair pending governance; native Action40944961945 pending. H393 native PASS. Physical NOT_RUN."
 }
