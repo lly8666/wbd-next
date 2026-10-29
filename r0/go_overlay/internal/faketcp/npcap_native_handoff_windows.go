@@ -102,7 +102,19 @@ func(e *NpcapEndpoint) NativeCaptureConfig()(NpcapConfig,error){
 // An unsupported pcap_getevent is rejected before freezing the Go endpoint.
 // After the freeze, all failures are scoped fatal to THIS candidate and must
 // be closed with the returned lease after Rust Stop.
+// TakeNativeCaptureAfterReadersJoined is the exclusive Game2/4 post-join
+// handoff: the caller has already closed its Go ingress and joined every
+// pcap_next_ex reader. Do NOT call pcap_breakloop after that join: libpcap
+// would leave PCAP_ERROR_BREAK (-2) pending for Rust's FIRST live read,
+// which is indistinguishable from a genuine offline EOF at the Rust ABI.
+// All the same generation/lease, active-call gate and owned Stop rules apply.
+func (e *NpcapEndpoint) TakeNativeCaptureAfterReadersJoined(generation uint64) (*NpcapNativeCaptureLease, error) {
+    return e.takeNativeCapture(generation,false)
+}
 func (e *NpcapEndpoint) TakeNativeCapture(generation uint64) (*NpcapNativeCaptureLease, error) {
+    return e.takeNativeCapture(generation,true)
+}
+func (e *NpcapEndpoint) takeNativeCapture(generation uint64,interruptReader bool) (*NpcapNativeCaptureLease, error) {
     if e == nil || e.gate == nil || e.dll == nil || e.handle == 0 {
         return nil, ErrNpcapClosed
     }
@@ -116,7 +128,7 @@ func (e *NpcapEndpoint) TakeNativeCapture(generation uint64) (*NpcapNativeCaptur
     if !e.gate.close() {
         return nil, ErrNpcapClosed
     }
-    if e.breakLoop != nil {
+    if interruptReader && e.breakLoop != nil {
         e.breakLoop.Call(e.handle)
     }
     // No new Go read/write may start after gate.close. In-flight uses finish

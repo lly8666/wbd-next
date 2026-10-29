@@ -72,19 +72,21 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
  // for normal authenticated opening and never written into Wintun by Go.
  close(p.handoff);p.moved=true
  p.readers.Wait()
+ // Readers have joined, so the next native live pcap_next_ex MUST NOT
+ // inherit an unconsumed pcap_breakloop (-2) from the old Go handoff.
  select{case e:=<-p.errorSource:return fmt.Errorf("original Game capture handoff: %w",e)
  default:}
  nativeRX:=make([]faketcp.NpcapNativeCaptureV1,len(cfgs))
  nativeTX:=make([]faketcp.NpcapNativeCaptureV1,len(cfgs))
  for i,endpoint:=range p.endpoints{
-  loan,e:=endpoint.TakeNativeCapture(cfgs[i].Generation)
+  loan,e:=endpoint.TakeNativeCaptureAfterReadersJoined(cfgs[i].Generation)
   if e!=nil{return e}
   p.captures=append(p.captures,loan)
   nativeRX[i],err=loan.Native();if err!=nil{return err}
   tx,e:=faketcp.OpenNpcapEndpoint(cfgs[i])
   if e!=nil{return e}
   if e=tx.DisableReceiveForNativeTX();e!=nil{_ =tx.Close();return e}
-  send,e:=tx.TakeNativeCapture(cfgs[i].Generation)
+  send,e:=tx.TakeNativeCaptureAfterReadersJoined(cfgs[i].Generation)
   if e!=nil{_ =tx.Close();return e}
   p.senders=append(p.senders,send)
   nativeTX[i],err=send.Native();if err!=nil{return err}

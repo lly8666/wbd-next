@@ -149,7 +149,8 @@
     "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
     "H311 provenance index: H309 main33ed seven-mode native PASS; N0dd0767 independent one-sample PASS while aa931 FAIL remains; ARM64f7ee prebuilt 10M capacity success; Linux33ed loss1 old serial-echo FAIL.",
     "PLAN026 candidate original Windows Game2/4 Npcap full native two-worker handoff: original each-lane credential TLS+detached M3 GameAdapter, one shared Wintun, actual per-lane kernel prefix and signed joined Stop. Code staged, new same-source native physical/CPU qualification NOT_RUN; existing Go packet pump preserved only as inert compiled historic path.",
-    "PLAN026 main Game2/4 idle TX correction: old unconditional 10ms poll replaced by existing original Game4 stagger/FEC earliest monotonic deadline, or INFINITE event wait when none. New code needs exact Windows Rust/real network latency+wake/Stop qualification; does not alter earlier Go/legacy or Normal/off PASS."
+    "PLAN026 main Game2/4 idle TX correction: old unconditional 10ms poll replaced by existing original Game4 stagger/FEC earliest monotonic deadline, or INFINITE event wait when none. New code needs exact Windows Rust/real network latency+wake/Stop qualification; does not alter earlier Go/legacy or Normal/off PASS.",
+    "PLAN026 2026-10-29 full WSL2 original-Go Game2/4 first error isolated: after Go readers joined, generic Npcap TakeNativeCapture called pcap_breakloop on quiescent live RX; next Rust pcap_next_ex returned -2 and worker stopped before Ready. Candidate Game-only TakeNativeCaptureAfterReadersJoined suppresses redundant break and retains existing generation/lease/Stop. Exact new SOURCE real Win↔Linux E2E NOT_RUN until its own Actions; Normal uses unchanged original handoff."
   ],
   "promotion": null
 }

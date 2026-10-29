@@ -575,7 +575,7 @@
       "kind": "create",
       "path": "internal/faketcp/npcap_native_handoff_windows.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go",
-      "result_blob": "240724962471bcc48052594049596436e87fb8a1"
+      "result_blob": "6fcb0e18f9b34eb0c9418a7efd71d5c17e16d2df"
     },
     {
       "kind": "create",
