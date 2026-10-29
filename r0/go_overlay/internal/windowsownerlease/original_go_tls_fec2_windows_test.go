@@ -175,22 +175,27 @@ func m0PLAN024WindowsRealOriginalGoFEC2(t *testing.T,mode string,port uint16){
  lost:=m0OriginalTLSRustAEADKernelUDP([]byte("source-missing-after-first-"+mode),41112)
  knownWire,knownSeq,_,e:=owner.SealBoundOriginalFEC2Source(ctx,88,0,known)
  if e!=nil{t.Fatalf("FEC real original Go source0 %s: %v",mode,e)}
- fromKnown:=m0RealOriginalTLSRustAEADToSignedWintunKernelApp(t,ctx,tun,knownWire)
- gotKnown,e:=peer.owner.OpenBoundOriginalFEC2(ctx,knownSeq,fromKnown)
- if e!=nil||len(gotKnown)!=1||string(gotKnown[0].IPv4)!=string(known){
-  t.Fatalf("FEC real original Go known source %s: %+v %v",mode,gotKnown,e)
- }
  repairWire,repairSeq,_,e:=owner.SealBoundOriginalFEC2Repair(
   ctx,88,3,0,[][]byte{known,lost})
  if e!=nil{t.Fatalf("original Go original-TLS shared Rust RS16 repair %s: %v",mode,e)}
- fromRepair:=m0RealOriginalTLSRustAEADToSignedWintunKernelApp(t,ctx,tun,repairWire)
- recovered,e:=peer.owner.OpenBoundOriginalFEC2(ctx,repairSeq,fromRepair)
+ // Native RX's actual 150ms block expiration is retained. Seal both with
+ // one real source-owned Rust M1, then cross the SAME signed Wintun kernel
+ // app in a continuous batch BEFORE opening both unique M3 packet numbers.
+ // The previous two independent Windows /32/firewall leases took seconds
+ // and made a physically valid repair look like an expired block.
+ fecKernelBatch:=m0RealOriginalTLSRustAEADToSignedWintunKernelAppBatch(
+  t,ctx,tun,[][]byte{knownWire,repairWire})
+ gotKnown,e:=peer.owner.OpenBoundOriginalFEC2(ctx,knownSeq,fecKernelBatch[0])
+ if e!=nil||len(gotKnown)!=1||string(gotKnown[0].IPv4)!=string(known){
+  t.Fatalf("FEC real original Go known source %s: %+v %v",mode,gotKnown,e)
+ }
+ recovered,e:=peer.owner.OpenBoundOriginalFEC2(ctx,repairSeq,fecKernelBatch[1])
  if e!=nil||len(recovered)!=1||!recovered[0].Recovered||
   string(recovered[0].IPv4)!=string(lost){
   t.Fatalf("signed Wintun original Go Rust RS16 missing first delivery %s: %+v %v",
    mode,recovered,e)
  }
- if again,dup:=peer.owner.OpenBoundOriginalFEC2(ctx,repairSeq,fromRepair);dup==nil{
+ if again,dup:=peer.owner.OpenBoundOriginalFEC2(ctx,repairSeq,fecKernelBatch[1]);dup==nil{
   t.Fatalf("replayed original RS16 repair %s delivered %d frames",mode,len(again))
  }
  t.Logf("M0_PLAN026_WINDOWS_ORIGINAL_GO_TLS_RUST_SHARED_RS16_REPAIR_SIGNED_WINTUN_RECOVERS_MISSING_SOURCE_%s_PASS_SCOPED m2_applied=NOT_RUN",mode)

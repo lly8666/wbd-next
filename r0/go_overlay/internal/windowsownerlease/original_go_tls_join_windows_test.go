@@ -87,8 +87,25 @@ func m0RealOriginalTLSRustAEADToSignedWintunKernelApp(
     t *testing.T,ctx context.Context,tun *windowsclient.TUN,wire []byte,
 )[]byte{
     t.Helper()
-    if tun==nil||len(wire)<51||len(wire)>543{
-        t.Fatal("no valid real Rust M3 ciphertext for native Wintun")
+    return m0RealOriginalTLSRustAEADToSignedWintunKernelAppBatch(
+        t,ctx,tun,[][]byte{wire})[0]
+}
+// One real signed Wintun /32/UDP/Defender lease for a contiguous batch.
+// The real FEC2 receiver retains incomplete original blocks for only 150ms:
+// full OS lease reconfiguration BETWEEN source and repair would exceed that
+// production deadline and falsely fail the recovery experiment. All bytes
+// here still traverse the actual Wintun kernel and a real UDP socket.
+func m0RealOriginalTLSRustAEADToSignedWintunKernelAppBatch(
+    t *testing.T,ctx context.Context,tun *windowsclient.TUN,wires [][]byte,
+)[][]byte{
+    t.Helper()
+    if tun==nil||len(wires)==0||len(wires)>16{
+        t.Fatal("invalid native signed Wintun packet batch")
+    }
+    for _,wire:=range wires{
+        if len(wire)<51||len(wire)>543{
+            t.Fatal("no valid real Rust M3 ciphertext for native Wintun batch")
+        }
     }
     identity,err:=tun.NativeIdentity(ctx)
     if err!=nil||!identity.CreatedByProcess||identity.Index==0||identity.LUID==0{
@@ -143,21 +160,25 @@ func m0RealOriginalTLSRustAEADToSignedWintunKernelApp(
             t.Errorf("test-only per-port Defender permit persists: %s",rule)
         }
     }()
-    frame:=m0OriginalTLSRustAEADKernelUDP(wire,destPort)
-    copied,e:=tun.WritePacket(frame)
-    if e!=nil||copied!=len(frame){
-        t.Fatalf("actual signed Wintun kernel M3 ciphertext injection FAILED bytes=%d err=%v",copied,e)
+    results:=make([][]byte,0,len(wires))
+    for _,wire:=range wires{
+        frame:=m0OriginalTLSRustAEADKernelUDP(wire,destPort)
+        copied,e:=tun.WritePacket(frame)
+        if e!=nil||copied!=len(frame){
+            t.Fatalf("actual signed Wintun kernel M3 ciphertext injection FAILED bytes=%d err=%v",copied,e)
+        }
+        if e=socket.SetReadDeadline(time.Now().Add(4*time.Second));e!=nil{t.Fatal(e)}
+        buffer:=make([]byte,2048)
+        size,src,e:=socket.ReadFromUDP(buffer)
+        if e!=nil||size!=len(wire)||src==nil||
+            !src.IP.Equal(net.IPv4(198,18,30,88))||src.Port!=41131||
+            string(buffer[:size])!=string(wire){
+            t.Fatalf("real signed Wintun kernel app ciphertext source/payload FAILED: size=%d src=%v err=%v",size,src,e)
+        }
+        results=append(results,append([]byte(nil),buffer[:size]...))
     }
-    if e=socket.SetReadDeadline(time.Now().Add(4*time.Second));e!=nil{t.Fatal(e)}
-    buffer:=make([]byte,2048)
-    size,src,e:=socket.ReadFromUDP(buffer)
-    if e!=nil||size!=len(wire)||src==nil||
-        !src.IP.Equal(net.IPv4(198,18,30,88))||src.Port!=41131||
-        string(buffer[:size])!=string(wire){
-        t.Fatalf("real signed Wintun kernel app ciphertext source/payload FAILED: size=%d src=%v err=%v",size,src,e)
-    }
-    t.Log("M0_PLAN020_REAL_ORIGINAL_GO_CREDENTIAL_TLS_RUST_M3_AEAD_SIGNED_WINTUN_KERNEL_TO_ACTUAL_UDP_APP_PASS original_rust_ciphertext=1 exact_OS_app=1 signed_Wintun_lease=1 host_global_WFP_NOT_RUN=1")
-    return append([]byte(nil),buffer[:size]...)
+    t.Logf("M0_PLAN020_REAL_ORIGINAL_GO_CREDENTIAL_TLS_RUST_M3_AEAD_SIGNED_WINTUN_KERNEL_TO_ACTUAL_UDP_APP_PASS original_rust_ciphertext=1 packet_count=%d exact_OS_app=1 signed_Wintun_lease=1 host_global_WFP_NOT_RUN=1",len(results))
+    return results
 }
 
 func m0WinJoinCert(t *testing.T)tls.Certificate{
