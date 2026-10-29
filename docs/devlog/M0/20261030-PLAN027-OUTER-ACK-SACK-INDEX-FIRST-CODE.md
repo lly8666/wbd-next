@@ -21,3 +21,13 @@ Previously failed Windows WAL Action40915929426 is a real original signed Game2/
 ```feature-impact
 {"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Added source-only scoped bounded outer ACK/SACK hint index and pure tests as PLAN027 replacement foundation; live M2 retirement and network qualification remain pending."}
 ```
+
+## Source-locked native recovery gate and correction (same batch)
+
+Automatic native functional [Action40926268287](https://github.com/lly8666/wbd-next/actions/runs/40926268287) compiled source `4edec16e` successfully. Its recovery group reported **FAIL despite 74/74 executed tests passing**: `.governance/native-suites.json` required five stale/missing exact test names. This is not an assertion failure, not a native product PASS and not a reason to delete necessary gates. The source-only ACK tests originally used `plan027_` names and were compiled but excluded by the mandatory `r2_` filter, so they had **not yet run**.
+
+Corrections on main: `ec3008d7` restores actual eight-MTU pacer/fresh DATA test; `25b10ed7` restores exact queued-timeout-vs-ACK index regression; `fd878107` updates three old required names to the existing equivalent current one-shot timeout/uncertain/10k indexed tests, rather than weakening their assertions; `3f5390a3` names all four new ACK tests with `r2_plan027_`; `53b32432` pins those four as mandatory native recovery cases. New frozen candidate SOURCE is the final commit after cursor/devlog updates, not the earlier `4edec16e`. The native suite rebuild after changing its contract is intentional and source-locked; reuse its compiled artifacts, do not manually redispatch duplicate runs. **New-source final CI remains pending until actual result is fetched.**
+
+```feature-impact
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Recovered mandatory pure recovery native coverage, restored actual pacer/queued-ACK cases, aligned three renamed current one-shot tests, and required four new ACK/SACK cases; no live owner connection or product PASS."}
+```
