@@ -53,11 +53,11 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             code=pathlib.Path(d)/"wsl-like-parent.py"
             code.write_text(
-                "import subprocess,sys\\n"
+                "import subprocess,sys\n"
                 "subprocess.Popen([sys.executable,'-c','import time;time.sleep(4)'],"
-                " stdout=sys.stdout,stderr=sys.stderr)\\n"
-                "print('GENUINE_INNER_WSL_PARENT_EXIT',flush=True)\\n"
-                "sys.exit(7)\\n")
+                " stdout=sys.stdout,stderr=sys.stderr)\n"
+                "print('GENUINE_INNER_WSL_PARENT_EXIT',flush=True)\n"
+                "sys.exit(7)\n")
             start=time.monotonic()
             p=subprocess.run([sys.executable,
                               str(ROOT/"tools/m0_wl_windows_bounded_cmd.py"),
