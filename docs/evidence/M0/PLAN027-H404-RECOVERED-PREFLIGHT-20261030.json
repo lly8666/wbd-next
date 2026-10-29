@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "c8dad61048d532b3e6d7eb11f94fb36ffa1d6a8e",
+  "run_id": 40946233322,
+  "attempt": 1,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/40946233322",
+  "conclusion": "success",
+  "scope": "OLD_SOURCE_PREFLIGHT_NOT_PLAN027_A_B_C",
+  "jobs": [
+    {
+      "id": 123702205091,
+      "conclusion": "success"
+    },
+    {
+      "id": 123702328813,
+      "conclusion": "success"
+    },
+    {
+      "id": 123702328978,
+      "conclusion": "success"
+    },
+    {
+      "id": 123702328998,
+      "conclusion": "success"
+    },
+    {
+      "id": 123703260675,
+      "conclusion": "success"
+    },
+    {
+      "id": 123704204841,
+      "conclusion": "success"
+    }
+  ],
+  "artifact_ids": [
+    12929761039,
+    12929756775,
+    12929452313,
+    12929312676,
+    12929168661,
+    12929118648,
+    12929022783
+  ],
+  "limitations": [
+    "Online per-record M2 still active",
+    "New Quality START/CLOSE code untested at this source",
+    "No new-source p99/CPU/RSS or PLAN027 A/B/C"
+  ]
+}

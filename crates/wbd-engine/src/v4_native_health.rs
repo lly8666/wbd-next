@@ -238,6 +238,75 @@ mod activity_tests {
     }
 }
 
+
+/** PLAN027: 32-byte v3 Quality START/CLOSE inside existing encrypted kind1.
+ * Caller MUST bind verified lane/epoch/direction and capability. This
+ * decoded wire never proves delivery, liveness or Auto quality on its own.
+ */
+pub(crate) const LOW_RATE_SIGNAL_LEN:usize=32;
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub(crate) enum QualitySignalKind { Start, Close }
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub(crate) struct QualityWindowSignal {
+    pub(crate) kind:QualitySignalKind,
+    pub(crate) id:u64,
+    pub(crate) first:u64,
+    pub(crate) last:u64,
+    pub(crate) first_sent:u16,
+    pub(crate) complete:bool,
+    pub(crate) capacity_limited:bool,
+}
+impl QualityWindowSignal {
+    fn valid(self)->Result<(),wbd_codec::CodecError>{
+        use wbd_codec::CodecError;
+        let span=self.last.checked_sub(self.first)
+            .and_then(|v|v.checked_add(1))
+            .filter(|&v|v<=wbd_recovery::quality_window::MAX_WINDOW_PNS)
+            .ok_or(CodecError::InvalidLength)?;
+        if u64::from(self.first_sent)>span
+            ||(self.complete&&self.capacity_limited)
+            ||(self.kind==QualitySignalKind::Start
+                &&(self.first_sent!=0||self.complete||self.capacity_limited)){
+            return Err(CodecError::InvalidLength)
+        }
+        Ok(())
+    }
+    pub(crate) fn encode(self)->Result<[u8;LOW_RATE_SIGNAL_LEN],wbd_codec::CodecError>{
+        self.valid()?;
+        let mut b=[0u8;LOW_RATE_SIGNAL_LEN];
+        b[0]=3;
+        b[1]=match self.kind{QualitySignalKind::Start=>1,QualitySignalKind::Close=>2};
+        b[2]=u8::from(self.complete)|u8::from(self.capacity_limited)<<1;
+        b[4..12].copy_from_slice(&self.id.to_be_bytes());
+        b[12..20].copy_from_slice(&self.first.to_be_bytes());
+        b[20..28].copy_from_slice(&self.last.to_be_bytes());
+        b[28..30].copy_from_slice(&self.first_sent.to_be_bytes());
+        Ok(b)
+    }
+    pub(crate) fn decode(b:&[u8])->Result<Self,wbd_codec::CodecError>{
+        use wbd_codec::CodecError;
+        if b.len()!=LOW_RATE_SIGNAL_LEN||b[0]!=3||b[2]&!3!=0
+            ||b[3]!=0||b[30]!=0||b[31]!=0{
+            return Err(CodecError::InvalidLength)
+        }
+        let kind=match b[1]{
+            1=>QualitySignalKind::Start,
+            2=>QualitySignalKind::Close,
+            _=>return Err(CodecError::InvalidLength),
+        };
+        let read=|i:usize|{
+            let mut a=[0u8;8];a.copy_from_slice(&b[i..i+8]);u64::from_be_bytes(a)
+        };
+        let out=Self{
+            kind,id:read(4),first:read(12),last:read(20),
+            first_sent:u16::from_be_bytes([b[28],b[29]]),
+            complete:b[2]&1!=0,capacity_limited:b[2]&2!=0,
+        };
+        out.valid()?;
+        Ok(out)
+    }
+}
+
 /// Only after the existing original M3 AEAD + unique PN gate.
 /// WBC4 kind1; no additional keys, replay bitmap or application ACK.
 #[derive(Clone,Debug,PartialEq,Eq)]
@@ -248,13 +317,14 @@ pub(crate) struct AuthenticatedControl {
     /// Parsed only from an already-authenticated kind1 control envelope.
     /// A wire body alone never becomes an Auto sample or liveness authority.
     pub(crate) low_rate_quality:Option<wbd_recovery::LowRateQualityWire>,
+    pub(crate) low_rate_signal:Option<QualityWindowSignal>,
 }
 pub(crate) fn parse_authenticated_control(wire:&[u8])
     ->Result<AuthenticatedControl,wbd_codec::CodecError>{
     use wbd_codec::{ControlTlv,CodecError};
     let items=wbd_codec::decode_control(wire,512)?;
     if items.is_empty(){return Err(CodecError::InvalidLength)}
-    let mut out=AuthenticatedControl{receipt:None,peer_idle_ns:None,quality:false,low_rate_quality:None};
+    let mut out=AuthenticatedControl{receipt:None,peer_idle_ns:None,quality:false,low_rate_quality:None,low_rate_signal:None};
     for item in items{
         match item{
             ControlTlv::Receipt(r)=>{
@@ -275,11 +345,12 @@ pub(crate) fn parse_authenticated_control(wire:&[u8])
                 // Legacy opaque quality stays diagnostic-only. The v2
                 // fixed-size body may be decoded only AFTER M3 authenticated
                 // this control, never on raw carrier ACK or unverified wire.
-                if bytes.len()==wbd_recovery::quality_window::WIRE_LEN
-                    && bytes[0]==2 {
+                if bytes[0]==2 {
                     let report=wbd_recovery::LowRateQualityWire::decode(&bytes)
                         .map_err(|_|CodecError::InvalidLength)?;
                     out.low_rate_quality=Some(report);
+                }else if bytes[0]==3 {
+                    out.low_rate_signal=Some(QualityWindowSignal::decode(&bytes)?);
                 }
                 out.quality=true;
             },
@@ -331,6 +402,14 @@ pub(crate) fn encode_authenticated_low_rate_quality_live(idle_ns:u64,
     report:&wbd_recovery::LowRateQualityWire,payload_budget:usize,
 )->Result<Vec<u8>,wbd_codec::CodecError>{
     let body=report.encode().map_err(|_|wbd_codec::CodecError::InvalidLength)?;
+    encode_authenticated_health_live(idle_ns,None,Some(&body),payload_budget)
+}
+
+/// Boundary signals share the existing encrypted Health/Quality envelope.
+pub(crate) fn encode_authenticated_low_rate_signal_live(idle_ns:u64,
+    signal:QualityWindowSignal,payload_budget:usize,
+)->Result<Vec<u8>,wbd_codec::CodecError>{
+    let body=signal.encode()?;
     encode_authenticated_health_live(idle_ns,None,Some(&body),payload_budget)
 }
 
@@ -484,6 +563,52 @@ mod tests {
         c.stopped();
         assert_eq!(c.next_deadline(),None);
         assert_eq!(c.control_due(300*S),ControlDue::None);
+    }
+
+    #[test]
+    fn r1_plan027_authenticated_quality_start_close_canonical_and_fail_closed(){
+        let start=QualityWindowSignal{
+            kind:QualitySignalKind::Start,id:12,first:100,last:1123,
+            first_sent:0,complete:false,capacity_limited:false,
+        };
+        let close=QualityWindowSignal{
+            kind:QualitySignalKind::Close,first_sent:1024,complete:true,..start
+        };
+        for event in [start,close]{
+            let body=event.encode().unwrap();
+            assert_eq!(QualityWindowSignal::decode(&body),Ok(event));
+            let wire=encode_authenticated_low_rate_signal_live(
+                900_000_000,event,512).unwrap();
+            let parsed=parse_authenticated_control(&wire).unwrap();
+            assert_eq!(parsed.low_rate_signal,Some(event));
+            assert_eq!(parsed.low_rate_quality,None);
+            assert_eq!(parsed.receipt,None);
+            assert_eq!(parsed.peer_idle_ns,Some(900_000_000));
+        }
+        assert!(encode_authenticated_low_rate_signal_live(0,start,8).is_err());
+        assert!(QualityWindowSignal{first_sent:1,..start}.encode().is_err());
+        assert!(QualityWindowSignal{last:1124,..close}.encode().is_err());
+        assert!(QualityWindowSignal{capacity_limited:true,..close}.encode().is_err());
+        let mut bad=start.encode().unwrap();bad[3]=1;
+        let wire=encode_authenticated_health(0,None,Some(&bad)).unwrap();
+        assert!(parse_authenticated_control(&wire).is_err());
+        bad=start.encode().unwrap();bad[1]=7;
+        let wire=encode_authenticated_health(0,None,Some(&bad)).unwrap();
+        assert!(parse_authenticated_control(&wire).is_err());
+        bad=start.encode().unwrap();bad[28]=1;
+        let wire=encode_authenticated_health(0,None,Some(&bad)).unwrap();
+        assert!(parse_authenticated_control(&wire).is_err());
+        let body=start.encode().unwrap();
+        let wire=encode_authenticated_health(0,None,Some(&body[..31])).unwrap();
+        assert!(parse_authenticated_control(&wire).is_err());
+        let mut report=wbd_recovery::LowRateQualityWire{
+            id:12,first:100,last:1123,first_sent:1,
+            received_unique:1,possibly_repaired:0,
+            mature:true,complete:true,capacity_limited:false,
+        }.encode().unwrap().to_vec();
+        report.pop();
+        let wire=encode_authenticated_health(0,None,Some(&report)).unwrap();
+        assert!(parse_authenticated_control(&wire).is_err());
     }
     #[test]
     fn r1_plan027_low_rate_quality_health_v2_authenticated_wire_roundtrip(){
