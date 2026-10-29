@@ -280,8 +280,18 @@ PY
 elif [[ "$FEC" == 1 ]];then
   grep -q "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode=$MODE delivered=$PACKETS" "$ART/public-v4-normal-business.log"
   for role in client server;do
-    if ! grep -Eq "V4_PUBLIC_FEC2_READBACK role=$role mode=(fixed|auto) requested=1 applied=1 profile=[0-6] pending=false" "$TMP/$role.log";then
-      echo "M0_PUBLIC_V4_FEC2_NOT_AUTHENTICALLY_APPLIED role=$role mode=$MODE" >&2
+    if [[ "$MODE" == fec-fixed ]];then
+      # Historical Fixed gate still requires the old mature receipt witness.
+      # PLAN027 has not retired this production dependency yet.
+      expected="V4_PUBLIC_FEC2_READBACK role=$role mode=fixed requested=1 applied=1 profile=[0-6] pending=false"
+    else
+      # A 64-record Auto burst cannot fill the new 1024-PN sender window.
+      # No CLOSE/mature matched Quality is guaranteed: pending is correct,
+      # not a product failure and never evidence of an applied Auto policy.
+      expected="V4_PUBLIC_FEC2_READBACK role=$role mode=auto requested=1 applied=[01] profile=[0-6] pending=(true|false)"
+    fi
+    if ! grep -Eq "$expected" "$TMP/$role.log";then
+      echo "M0_PUBLIC_V4_FEC2_READBACK_MISSING role=$role mode=$MODE" >&2
       grep -E 'V4_PUBLIC_FEC2_READBACK|V4_PUBLIC_M2_OUTER|V4_PUBLIC_NATIVE_STOP' "$TMP/$role.log" >&2 || true
       exit 1
     fi
@@ -341,7 +351,11 @@ marker=(f"M0_V4_PUBLIC_REAL_1PCT_LOSS_ACCOUNTED_STOP_PASS"
 print(marker)
 PY
 elif [[ "$FEC" == 1 ]];then
-  echo "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_APPLIED_REAL_AUTH_M2_GROUP_M4_TUN_STOP_PASS mode=$MODE both_original_go_roles=1 first_app=$PACKETS original_TLS=1 M2_mature=1 source_parity=original_native FEC2_production_off=1"
+  if [[ "$MODE" == fec-fixed ]];then
+    echo "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_APPLIED_REAL_AUTH_M2_GROUP_M4_TUN_STOP_PASS mode=$MODE both_original_go_roles=1 first_app=$PACKETS original_TLS=1 M2_mature=1 source_parity=original_native FEC2_production_off=1"
+  else
+    echo "M0_PLAN027_AUTO_SHORT_BURST_DELIVERY_STOP_PENDING_QUALITY_NOT_QUALIFIED mode=$MODE both_original_go_roles=1 first_app=$PACKETS original_TLS=1 matched_quality_required_for_applied=1 source_parity=original_native"
+  fi
 elif [[ "$GAME" != 0 ]];then
   echo "M0_PUBLIC_ORIGINAL_GO_V4_GAME_REAL_TLS_M4_DAMAGED_LANE_NO_HOL_STOP_PASS lanes=$GAME udp_app=$PACKETS auth_go=1 native_m4=1 lane1_underlay_dropped=1 stop_drained=1 production_off=1"
 else
