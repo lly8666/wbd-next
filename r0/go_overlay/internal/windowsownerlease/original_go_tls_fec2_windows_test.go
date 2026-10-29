@@ -131,6 +131,20 @@ func m0PLAN024WindowsRealOriginalGoFEC2(t *testing.T,mode string,port uint16){
  if e:=peer.owner.BindOriginalM4NativeDevice(ctx,device,identity);e!=nil{
   t.Fatalf("FEC2 server original TLS->Rust real Wintun hold: %v",e)
  }
+ // The real signed Wintun session cannot be closed until BOTH protected
+ // original Rust owners release their native M4 holds. A failing real RS16
+ // assertion previously called t.Fatal BEFORE manual Stop and deadlocked
+ // deferred tun.Close for six minutes, hiding the genuine M3 rc=INVALID.
+ // Clean up actual scoped owners in LIFO order on every test failure; do
+ // not mask that failure or emit fake source/mode PASS.
+ stopped:=false
+ defer func(){
+  if stopped{return}
+  stopCtx,cancel:=context.WithTimeout(context.Background(),12*time.Second)
+  defer cancel()
+  _=owner.StopScopedOwner(stopCtx)
+  _=peer.owner.StopScopedOwner(stopCtx)
+ }()
  outbound:=m0OriginalTLSRustAEADKernelUDP([]byte("original-FEC2-"+mode),41090)
  wire,seq,pn,e:=owner.SealBoundOriginalFEC2Source(ctx,1,0,outbound)
  if e!=nil||pn!=0||len(wire)==0{
@@ -184,6 +198,7 @@ func m0PLAN024WindowsRealOriginalGoFEC2(t *testing.T,mode string,port uint16){
  defer stopCancel()
  if e:=owner.StopScopedOwner(stopCtx);e!=nil{t.Fatalf("client FEC2 native Stop %s: %v",mode,e)}
  if e:=peer.owner.StopScopedOwner(stopCtx);e!=nil{t.Fatalf("server FEC2 native Stop %s: %v",mode,e)}
+ stopped=true
  if _,_,_,e:=owner.SealBoundOriginalFEC2Source(ctx,3,0,outbound);e==nil{
   t.Fatalf("FEC2 after Stop accepted source %s",mode)
  }
