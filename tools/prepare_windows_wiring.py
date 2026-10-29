@@ -14,13 +14,15 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 ORIGINAL = "a7a82db31fe736ffedee330795a3234d358f1984"
 MANIFEST = "r0/go_overlay/assembly/manifest-plan020-m0.json"
+# bridge_v4_windows_fixed_stream.go now lives in the one exact manifest.
+# Keep the test bridge in this list; never install the same source twice.
 EXTRA_BRIDGES = {
     "realityfront": (
         "admission_v4.go", "bridge_v4_windows_private_owner.go",
         "bridge_v4_windows_game_group.go", "bridge_v4_windows_game_server_group.go",
         "bridge_v4_windows_game_fec_batch.go", "bridge_v4_windows_game_group_test.go",
         "bridge_v4_windows_fec2_abi_status_test.go", "bridge_v4_windows_auto_cohort_test.go",
-        "bridge_v4_windows_fec2_owner.go", "bridge_v4_windows_fixed_stream.go", "bridge_v4_windows_fixed_stream_test.go",
+        "bridge_v4_windows_fec2_owner.go", "bridge_v4_windows_fixed_stream_test.go",
         "bridge_v4_windows_wintun_lease.go", "bridge_v4_windows_wintun_lease_test.go",
         "bridge_v4_windows_scoped_client.go",
         "bridge_v4_windows_m2_batch_preflight_test.go",
