@@ -81,7 +81,7 @@
     {
       "platform": "linux/amd64 original Go TLS Rust native 2-netns",
       "scope": "Sourcea8 test with frozen product7e984 real 64 app→100% two-way netem 106s actual native auth dead→restore underlay→new TUN flow; no UDP echo in 48s, original cold TLS not reauthorized. New Go cold Auto lifecycle candidate exists as untested successor, does NOT retroactively repair this negative.",
-      "status": "FAILED",
+      "status": "FAIL",
       "source_sha": "a8df98e5c952953b2884af051ee0802d89dd759b",
       "evidence": "docs/evidence/M0/PLAN026-LINUX-REAL-DISCONNECT-NEW-FLOW-SOURCEA8-FAIL-20261029.json"
     }
