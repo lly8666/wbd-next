@@ -37,5 +37,3 @@ wbd-codec = { path = "../wbd-codec" }
 wbd-platform = { path = "../wbd-platform" }
 wbd-recovery = { path = "../wbd-recovery" }
 rtrb = { workspace = true }
-# Only on low-frequency authenticated control, no per-business RNG.
-aws-lc-rs = { workspace = true }

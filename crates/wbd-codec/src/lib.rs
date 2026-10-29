@@ -29,6 +29,14 @@ pub mod fec_auth_gate;
 /// Sole ledger for outer path, record and optional encapsulation budgets.
 pub mod path_budget;
 
+/// Low-frequency original control-only entropy, using the codec's EXISTING
+/// audited aws-lc-rs dependency. Do not enlarge the engine's locked R1 graph
+/// or add a per-packet RNG in the native DATA path.
+pub fn fill_control_entropy(bytes:&mut [u8])->bool{
+    use aws_lc_rs::rand::{SecureRandom,SystemRandom};
+    SystemRandom::new().fill(bytes).is_ok()
+}
+
 use wbd_types::LogicalPacketId;
 
 const CONTROL_MAGIC: &[u8; 4] = b"WBC4";

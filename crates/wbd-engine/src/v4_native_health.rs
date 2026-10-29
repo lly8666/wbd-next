@@ -8,13 +8,12 @@
 const SECOND_NS:u64=1_000_000_000;
 const MIN_RETRY_NS:u64=SECOND_NS;
 const MAX_CONTROL_PADDING:usize=64;
-use aws_lc_rs::rand::{SecureRandom,SystemRandom};
 use std::sync::OnceLock;
 
 fn control_random_below(n:u64)->Option<u64>{
     if n<=1{return Some(0)}
     let mut bytes=[0u8;8];
-    SystemRandom::new().fill(&mut bytes).ok()?;
+    if !wbd_codec::fill_control_entropy(&mut bytes){return None}
     Some(u64::from_le_bytes(bytes)%n)
 }
 // Original Go behavior oracle: draw entropy only after successful actual
@@ -305,7 +304,7 @@ pub(crate) fn encode_authenticated_health_budgeted(idle_ns:u64,
     if let Some(count)=control_random_below(maximum as u64+1){
         if count>0 {
             let mut suffix=vec![0u8;count as usize];
-            if SystemRandom::new().fill(&mut suffix).is_ok(){
+            if wbd_codec::fill_control_entropy(&mut suffix){
                 bytes.extend_from_slice(&suffix);
                 tlvs[health_index]=wbd_codec::ControlTlv::LegacyHealth(bytes);
                 return wbd_codec::encode_control(&tlvs,budget)
