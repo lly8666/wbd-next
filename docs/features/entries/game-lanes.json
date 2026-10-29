@@ -44,7 +44,8 @@
     "docs/handoff/CURRENT_INTEGRATION.md",
     "docs/evidence/M0/PLAN026-WINDOWS-GAME-DEADLINE-SOURCEB222-20261029.json",
     "docs/devlog/M0/20261029-PLAN026-GAME-NPCAP-COLD-HANDOFF-LIVENESS.md",
-    "docs/devlog/M0/20261029-PLAN026-GAME2-NATIVE-PURE-ACK-EMPTY-RECORD-FIX.md"
+    "docs/devlog/M0/20261029-PLAN026-GAME2-NATIVE-PURE-ACK-EMPTY-RECORD-FIX.md",
+    "docs/devlog/M0/20261029-PLAN026-GAME2-WINDOWS-RUST-NPF-PEER-PERSONA-REPAIR.md"
   ],
   "verification": [
     {
@@ -144,6 +145,13 @@
       "status": "FAIL",
       "source_sha": "578e00d0c4e67746132fc8c64d28bdff100ac2ed",
       "evidence": "docs/devlog/M0/20261029-PLAN026-GAME2-NATIVE-PURE-ACK-EMPTY-RECORD-FIX.md"
+    },
+    {
+      "platform": "Windows2025 signed Npcap/Wintun ↔ actual Ubuntu WSL2 Linux",
+      "scope": "PLAN026 source768 original TLS native Game2: Windows Ready, Linux Game copied276 delivered452 and Linux UDP recv24; Windows native TX888 RX22, Windows UDP recv0 of385 sent, so duplex/TCP/Stop NOT_PASS. Linux server Windows11 original persona conflicts with Windows Rust NPF Legacy parser; next source attempts strict fix.",
+      "status": "FAIL",
+      "source_sha": "768b1e0f363b2ecdbe5fe24a1f96dcecacedbb46",
+      "evidence": "docs/devlog/M0/20261029-PLAN026-GAME2-WINDOWS-RUST-NPF-PEER-PERSONA-REPAIR.md"
     }
   ],
   "limitations": [

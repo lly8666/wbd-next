@@ -314,6 +314,23 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         }
     }
 }
+// Authenticated original Linux Game server uses peer_persona=Windows11
+// when its opposite Go TLS client is Windows. This persona also governs
+// post-handoff Rust raw packets, not just earlier FakeTCP Go handshake.
+// A strict frozen peer expectation: never learn persona from wire bytes.
+fn trusted_windows_game_rx<'a>(
+    peer_ip:&'a [u8;4],local_ip:&'a [u8;4],
+    peer_port:u16,local_port:u16,mtu:usize,
+)->TrustedRx<'a>{
+    TrustedRx{
+        tuple:Ipv4Tuple{
+            src_ip:peer_ip,dst_ip:local_ip,
+            src_port:peer_port,dst_port:local_port,
+        },
+        persona:PacketPersona::Windows11,
+        mtu,authenticated_options:None,
+    }
+}
 fn receive_one(cfg:&WbdWinGameNativeAttachV3,
     group:&Arc<Mutex<game::WinGameGroup>>,tun:&mut WintunTx,
     c:&GameCounters,ledgers:&mut [AckLedger],lane:usize,seq:u32,wire:&[u8],
@@ -408,14 +425,10 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 };
                 let Some(ipv4)=io::ethernet_ipv4(&frame[..n])else{continue};
                 let l=&lanes[i];
-                let trusted=TrustedRx{
-                    tuple:Ipv4Tuple{
-                        src_ip:&cfg.first.peer_ip,dst_ip:&cfg.first.local_ip,
-                        src_port:l.peer_port,dst_port:l.local_port,
-                    },
-                    persona:PacketPersona::Legacy,mtu:cfg.first.path_mtu as usize,
-                    authenticated_options:None,
-                };
+                let trusted=trusted_windows_game_rx(
+                    &cfg.first.peer_ip,&cfg.first.local_ip,
+                    l.peer_port,l.local_port,cfg.first.path_mtu as usize,
+                );
                 let Ok(p)=parse_data_packet(ipv4,trusted)else{continue};
                 match receive_one(&cfg,&group,&mut tun,&c,&mut ledgers,
                     i,p.seq32,p.ciphertext){
@@ -567,6 +580,37 @@ mod tests{
         assert_eq!(game_wait_timeout_ms(0,Some(140_000_000)),140);
         assert_eq!(game_wait_timeout_ms(140_000_000,Some(140_000_000)),1);
         assert_eq!(game_wait_timeout_ms(140_000_000,Some(140_000_001)),1);
+    }
+    #[test]
+    fn game_native_npf_rx_accepts_original_linux_server_windows11_persona_only(){
+        use wbd_platform::rx_ipv4_tcp::RxError;
+        let server=[172,24,106,93];let client=[172,24,96,1];
+        let trusted=trusted_windows_game_rx(&server,&client,443,41031,1400);
+        assert_eq!(trusted.persona,PacketPersona::Windows11);
+        let tuple=Ipv4Tuple{src_ip:&server,dst_ip:&client,
+            src_port:443,dst_port:41031};
+        let mut scratch=[0u8;256];
+        let data=build_bytes(tuple,Presentation{
+            ack32:991,advertised_window:4096,ip_id:75,
+            persona:PacketPersona::Windows11,
+        },u64::from(1234u32),&[8,7,6,5,4],None,1400,&mut scratch)
+            .unwrap().to_vec();
+        let accepted=parse_data_packet(&data,trusted).unwrap();
+        assert_eq!(accepted.seq32,1234);
+        assert_eq!(accepted.ciphertext,&[8,7,6,5,4]);
+        // SOURCE768 trusted Legacy TTL64 and rejected the real Linux server
+        // Windows11 TTL128 live frames after pre-handoff early packets.
+        assert_eq!(parse_data_packet(&data,TrustedRx{
+            persona:PacketPersona::Legacy,..trusted
+        }),Err(RxError::WrongPersona));
+        // Do not widen parser to accept any unauthenticated carrier persona.
+        let mut other=[0u8;256];
+        let legacy=build_bytes(tuple,Presentation{
+            ack32:991,advertised_window:4096,ip_id:75,
+            persona:PacketPersona::Legacy,
+        },u64::from(1234u32),&[8,7,6,5,4],None,1400,&mut other)
+            .unwrap().to_vec();
+        assert_eq!(parse_data_packet(&legacy,trusted),Err(RxError::WrongPersona));
     }
     #[test]
     fn game_presentation_ack_is_real_empty_payload_tcp_control_not_empty_data(){
