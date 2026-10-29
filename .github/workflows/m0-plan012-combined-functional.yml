@@ -343,6 +343,17 @@ jobs:
           cat fixed-kernel-result/v4-public-normal-real-cli.log
           grep -q 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS' fixed-kernel-result/v4-public-normal-real-cli.log
           cp fixed-kernel-result/public-v4-normal-business.log fixed-kernel-result/v4-public-normal-baseline-business.log
+      # Preserve exact 1% public NETEM failure as a required final gate.
+      # This step's temporary continued execution lets later Fixed/Auto/
+      # Game2/4 modes run against the SAME compiled source and real OS,
+      # even when the opportunistic 1%-loss policy is deficient. It is
+      # NEVER considered a successful product qualification on its own.
+      - name: Real public 1pct bidirectional loss exact 512 distinct real UDP and authentic frozen M2
+        id: v4_real_loss
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
           # The two exact same compiled product binaries, reused, now under
           # genuine 1% independent Linux veth netem kernel loss BOTH ways.
           # Assert real dropped kernel packets, original M3 authentic ACK,
@@ -392,6 +403,18 @@ jobs:
             grep -q "M0_PUBLIC_ORIGINAL_GO_V4_GAME_REAL_TLS_M4_DAMAGED_LANE_NO_HOL_STOP_PASS lanes=$lanes" "fixed-kernel-result/v4-public-$game-real-cli.log"
             echo "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=$game" 
           done
+      # A failed 1% test is still a HARD CI failure. Deferring this check
+      # does not waive any UDP packet, M2 copied receipt, source SHA or Stop.
+      # Earlier independent Fixed/Game jobs complete first and can expose
+      # unrelated first failures without an additional expensive Rust build.
+      - name: Mandatory exact original public 1pct M2 frozen kernel recovery gate
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${{ steps.v4_real_loss.outcome }}" = success
+          grep -Fq 'M0_V4_PUBLIC_REAL_1PCT_M2_FROZEN_BIDIRECTIONAL_RECOVERY_PASS' \
+            fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
