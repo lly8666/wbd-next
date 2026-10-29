@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "9a2af725ab0dd498dd7960e4e91d1ca23a0683cb",
+  "scope": "SOURCE_ONLY_AUTHENTICATED_QUALITY_WINDOW_BOUNDARY_NOT_LIVE_OWNER",
+  "action": {
+    "id": 40953849123,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40953849123",
+    "platform": "ubuntu-24.04 linux/amd64",
+    "rustc": "1.85.1",
+    "manifest_sha256": "b356905e9d2c43d74902b0c565c8d36e6323037fad4f90e2a7719960e15c1c04",
+    "build_artifact_id": 12932083994,
+    "build_zip_sha256": "fd9acba190a8382739498a2c85a27e1676973c0e4573f9f037aac94d70a7b92c",
+    "groups": [
+      {
+        "group": "fec",
+        "job_id": 123729317375,
+        "passed": 3,
+        "failed": 0,
+        "ignored": 0,
+        "binary_sha256": "125264dce871e2b6c7ca8eb60b30ed2ea04df0a4c5822794ca1396fe0cbede10",
+        "log_sha256": "0f6d1515fb2a9ec84fab824cf0b94fd7246c75279605952310b8ac31771cc327",
+        "artifact_id": 12932492942
+      },
+      {
+        "group": "receipt",
+        "job_id": 123729317433,
+        "passed": 11,
+        "failed": 0,
+        "ignored": 0,
+        "binary_sha256": "5890a5df440343ed8d60f74b121c2f822ca9b07d5cf2376f245b7a5b12ef23ea",
+        "log_sha256": "7e2e5d151051ed5a26e28cccc89c883bda035cf5a037285973e4db8ee708709d",
+        "artifact_id": 12931729760
+      },
+      {
+        "group": "kernel",
+        "job_id": 123729317514,
+        "passed": 6,
+        "failed": 0,
+        "ignored": 0,
+        "binary_sha256": "44c8ae73caea65bd184eedf2246f1304419ce0adb16093d17c21292d87ef5fe5",
+        "log_sha256": "d58dc0a3ef96bbc0e213970f12d32617abd8ffcf1e499fbb8d68c290647bf4e7",
+        "artifact_id": 12932856491
+      },
+      {
+        "group": "engine",
+        "job_id": 123729317597,
+        "passed": 135,
+        "failed": 0,
+        "ignored": 1,
+        "binary_sha256": "b8dca3321c9e5349529242a5c0729f88cdb5e512be3b82d859ffa286926f03b8",
+        "log_sha256": "37de0f8c093f500fe38a6cd27538faf1679b736070af2c25a1f27dc9c7bfb973",
+        "artifact_id": 12932885989
+      },
+      {
+        "group": "normal",
+        "job_id": 123729317641,
+        "passed": 3,
+        "failed": 0,
+        "ignored": 0,
+        "binary_sha256": "adc5430e574383c086160ff16b3185b3fc6822170d18cee25498e53605609c74",
+        "log_sha256": "e567c10f58bfd52b27558a8351d8deeca9e4472d0048d6419d2feb2b37f0f956",
+        "artifact_id": 12933490600
+      }
+    ]
+  },
+  "required_new_test": "v4_native_health::tests::r1_plan027_authenticated_quality_start_close_canonical_and_fail_closed",
+  "other_actions": {
+    "governance": {
+      "id": 40953849032,
+      "conclusion": "success"
+    },
+    "g2": {
+      "id": 40953849056,
+      "conclusion": "success"
+    },
+    "static_audit": {
+      "id": 40953849199,
+      "conclusion": "success"
+    },
+    "cross_abi": {
+      "id": 40953849131,
+      "conclusion": "success"
+    },
+    "pending": [
+      40953849214,
+      40953849208,
+      40953849191
+    ]
+  },
+  "limitations": [
+    "No live Windows/Linux owner Quality START/CLOSE or Auto consumption",
+    "Per-record M2 Receipt and its hot state remain live",
+    "No PLAN027 A/B/C, CPU/RSS/p99/network matrix/long run proof"
+  ]
+}
