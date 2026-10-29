@@ -46,7 +46,7 @@ jobs:
           python3 tools/m0_plan026_linux_real_auto_natural_4096.py \
             tools/m0-v4-public-real-linux-netns.sh linux-auto-natural-result/natural4096-netns.sh
           chmod +x frozen/fixed-build/wbd-v4-client frozen/fixed-build/wbd-v4-server
-      - name: Real original Go TLS Rust Auto 8192 firstsend, 30s 4096 maturity, applied one-grade down and Stop
+      - name: Real original Go TLS Rust Auto 26000 firstsend, 30s 4096 maturity, applied one-grade down and Stop
         shell: bash
         run: |
           set -euo pipefail
@@ -63,7 +63,7 @@ jobs:
             linux-auto-natural-result/real-natural-auto.log
           grep -Fq 'M0_PUBLIC_ORIGINAL_GO_V4_FEC2_APPLIED_REAL_AUTH_M2_GROUP_M4_TUN_STOP_PASS mode=fec-auto' \
             linux-auto-natural-result/real-natural-auto.log
-          grep -Fq 'M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode=fec-auto delivered=8192' \
+          grep -Fq 'M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode=fec-auto delivered=26000' \
             fixed-kernel-result/public-v4-normal-business.log
           python3 - <<'PY'
           import pathlib,json,hashlib,os
@@ -75,7 +75,7 @@ jobs:
              'source_harness_sha':os.environ['GITHUB_SHA'],
              'github_run_id':int(os.environ['GITHUB_RUN_ID']),
              'actual_original_go_tls_rust_raw_tun':True,
-             'actual_real_app_first_unique':8192,
+             'actual_real_app_first_unique':26000,
              'real_native_m2_applied_revision_min':2,
              'real_native_original_both_stop':True,
              'auto_natural_30s_4096_source_one_step_down':'PASS_SCOPED',
