@@ -689,7 +689,7 @@ jobs:
           Write-Output 'WL_WSL2_STAGE_PASS real_guest_kernel_probe'
           Write-Output 'WL_WSL2_BOOT_STAGE_COMPLETE_REAL_KERNEL'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
+        if: success() || failure()
         with:
           name: m0-wl-real-guest-boot-${{ github.run_id }}
           path: |
