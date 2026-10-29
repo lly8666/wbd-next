@@ -676,6 +676,39 @@ impl LinuxQualityTx{
         }
     }
 }
+#[cfg(all(test,feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn plan027_linux_auto_sender_window_real_kernel_census_and_matched_maturity(){
+    use wbd_recovery::quality_window::{WireReport,QualityError};
+    use wbd_recovery::WireDirection;
+    let lane=wbd_types::LaneKey{
+        tunnel:wbd_types::TunnelKey{slot:1,generation:3},slot:2,generation:3};
+    let mut tx=LinuxQualityTx::new(lane,[7;16],WireDirection::ClientToServer);
+    let start=tx.next_signal(40,MonoNs(1)).unwrap().unwrap();
+    assert_eq!((start.first,start.last,start.id),(41,1064,1));
+    tx.complete_signal(start,true,MonoNs(2)).unwrap();
+    for pn in 41..=1064u64{
+        tx.settle_batch(&[(wbd_types::RecordPn(pn),132)],1,0,false,false,&[]);
+    }
+    let close=tx.next_signal(1065,MonoNs(1_000_000_000)).unwrap().unwrap();
+    assert_eq!(close.first_sent,1024);
+    assert!(close.complete && !close.capacity_limited);
+    tx.complete_signal(close,true,MonoNs(1_000_000_100)).unwrap();
+    let r=WireReport{id:1,first:41,last:1064,first_sent:1024,
+        received_unique:900,possibly_repaired:10,
+        mature:true,complete:true,capacity_limited:false};
+    tx.accept_report(r,MonoNs(4_000_000_000));
+    tx.accept_report(r,MonoNs(4_000_000_000));
+    assert_eq!(&tx.counters[..5],&[1024,890,124,0,10]);
+    assert_eq!(tx.counters[10],1);
+    tx.advance(MonoNs(9_000_000_001));
+    assert_eq!(&tx.counters[5..10],&[1024,890,124,0,10]);
+    tx.accept_report(WireReport{first_sent:1023,id:2,..r},
+        MonoNs(9_000_000_002));
+    assert_eq!(tx.counters[11],1);
+    let _=QualityError::Unknown;
+}
 struct Entry{
     generation:u32,
     server_side:bool,
@@ -4361,11 +4394,21 @@ fn original_fixed_stage_source(e:&mut Entry,
         if next_rev>old_rev && e.fec2_staged_pns.is_empty(){
             if let Some(stream)=e.fec2_live_tx.as_mut(){
                 if stream.quiescent_change(next_profile,next_rev,now).is_ok(){
-                    let Some(m2)=e.normal_firstsend_m2.as_ref()else{return Err(BAD_STAGE)};
-                    let Ok(mut m2)=m2.lock()else{return Err(BAD_STAGE)};
-                    m2.poll(now);
-                    e.fec2_pending_m2_positive_baseline=m2.positive_2s;
-                    e.fec2_pending_m2_reverse_baseline=m2.authenticated_reverse_reports;
+                    if e.auto_low_rate_mode{
+                        let Some(tx)=e.quality_tx.as_ref()else{return Err(BAD_STAGE)};
+                        // Compare only post-revision real mature Quality, never
+                        // reuse an earlier profile's authenticated report.
+                        e.fec2_pending_m2_positive_baseline=tx.counters[1];
+                        e.fec2_pending_m2_reverse_baseline=tx.counters[10];
+                    }else{
+                        let Some(m2)=e.normal_firstsend_m2.as_ref()
+                            else{return Err(BAD_STAGE)};
+                        let Ok(mut m2)=m2.lock()else{return Err(BAD_STAGE)};
+                        m2.poll(now);
+                        e.fec2_pending_m2_positive_baseline=m2.positive_2s;
+                        e.fec2_pending_m2_reverse_baseline=
+                            m2.authenticated_reverse_reports;
+                    }
                     e.fixed_applied=None;
                     e.fec2_copied_source=0;
                     e.fec2_copied_repair=0;
@@ -6306,13 +6349,18 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_commit_mature_m2(
     // Under continuing business FEC open/queued jobs are bounded and
     // expected; a global all-jobs-zero gate is a startup timing race.
     if e.fec2_live_tx.is_none(){return BAD_STAGE}
-    let Some(first)=e.normal_firstsend_m2.as_ref()else{return BAD_STAGE};
-    let covered={
+    let covered=if e.auto_low_rate_mode{
+        // A matched AEAD+replay v2 summary proves genuine receiver unique
+        // evidence for local definitely-copied F, not a raw TCP ACK.
+        // Source and parity still require their own REAL M4 copy above.
+        let Some(tx)=e.quality_tx.as_ref()else{return BAD_STAGE};
+        tx.counters[1]>e.fec2_pending_m2_positive_baseline &&
+        tx.counters[10]>e.fec2_pending_m2_reverse_baseline
+    }else{
+        let Some(first)=e.normal_firstsend_m2.as_ref()else{return BAD_STAGE};
         let Ok(mut m2)=first.lock()else{return BAD_STAGE};
         let now=loop_now();
         m2.poll(now);
-        // A 2s-mature authentic clean cohort, NOT all-source epoch totals.
-        // Identity/capacity censorship is still a hard failure.
         m2.has_verified_fixed_m2_witness(now) &&
         m2.positive_2s>e.fec2_pending_m2_positive_baseline &&
         m2.authenticated_reverse_reports>e.fec2_pending_m2_reverse_baseline
