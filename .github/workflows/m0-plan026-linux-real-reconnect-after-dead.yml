@@ -1,0 +1,85 @@
+name: M0 PLAN026 Linux original TLS Rust native real dead reconnect on new traffic
+run-name: "M0|PLAN026-LINUX-RECONNECT-AFTER-DEAD|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan026-linux-real-reconnect-after-dead.yml"
+      - "tools/m0_plan026_linux_real_reconnect_after_dead.py"
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  real-dead-new-flow-native-reauth:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 40851521157
+          name: m0-plan012-combined-40851521157-1
+          github-token: ${{ github.token }}
+          path: frozen/
+      - name: Verify exact original-Go protected source and current signed Rust Linux product
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reconnect-result fixed-kernel-result
+          python3 - <<'PY'
+          import pathlib,json,hashlib
+          base=pathlib.Path('frozen')
+          m=json.loads((base/'fixed-kernel-result/manifest.json').read_text())
+          assert m['source_sha']=='7e9842f6e99769d9919e75a4b15da8d6d88e7257'
+          assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
+          h=lambda x:hashlib.sha256(pathlib.Path(x).read_bytes()).hexdigest()
+          for name,digest in m['binaries_sha256'].items():
+              p=base/'fixed-build'/name
+              assert p.is_file() and h(p)==digest,(name,p)
+          src='tools/m0-v4-public-real-linux-netns.sh'
+          assert h(src)==m['source_inputs_sha256'][src]
+          print('M0_PLAN026_REAL_RECONNECT_ORIGINAL_GO_TLS_RUST_BINARIES_EXACT_PASS')
+          PY
+          python3 tools/m0_plan026_linux_real_reconnect_after_dead.py \
+            tools/m0-v4-public-real-linux-netns.sh reconnect-result/reconnect.sh
+          chmod +x frozen/fixed-build/wbd-v4-client frozen/fixed-build/wbd-v4-server
+      - name: 64 true initial Auto packets, 100pct both underlay dead106s, restore, new flow must AUTO TLS + Rust reattach
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          WBD_V4_PUBLIC_MODE=fec-auto bash reconnect-result/reconnect.sh frozen/fixed-build \
+            >reconnect-result/real-reconnect.log 2>&1 || {
+              tail -80 reconnect-result/real-reconnect.log >&2
+              echo 'M0_PLAN026_GENUINE_AUTOMATIC_RECONNECT_FAIL_NO_FAKE_PASS'
+              exit 1
+            }
+          grep -Fq 'M0_PLAN026_LINUX_REAL_100PCT_DEAD_RESTORED_NEW_APP_AUTO_TLS_RUST_RECONNECT_PASS' \
+            reconnect-result/real-reconnect.log
+          python3 - <<'PY'
+          import pathlib,hashlib,json,os
+          log=pathlib.Path("reconnect-result/real-reconnect.log")
+          d={"product_source_sha":"7e9842f6e99769d9919e75a4b15da8d6d88e7257",
+             "harness_source_sha":os.environ["GITHUB_SHA"],"run_id":int(os.environ["GITHUB_RUN_ID"]),
+             "real_original_go_tls_native_rust":True,
+             "initial_real_udp_app":64,"both_underlay_loss_percent":100,
+             "no_authenticated_peer_seconds":106,"native_health_dead_both":True,
+             "old_processes_not_killed":True,"underlay_restored":True,
+             "post_dead_trigger":"NEW_REAL_LINUX_KERNEL_TUN_UDP",
+             "new_tls_auth_and_native_rust_ready_both":True,
+             "physical":"NOT_RUN","windows":"NOT_RUN",
+             "log_sha256":hashlib.sha256(log.read_bytes()).hexdigest()}
+          pathlib.Path("reconnect-result/result.json").write_text(json.dumps(d,indent=2)+"\n")
+          print("M0_PLAN026_REAL_LINUX_AUTO_TLS_RUST_RECONNECT_PASS")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan026-linux-reconnect-after-dead-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            reconnect-result/real-reconnect.log
+            reconnect-result/result.json
+          if-no-files-found: warn
+          retention-days: 30

@@ -26,14 +26,37 @@ for mode in modes:
  (out/"report.json").unlink(missing_ok=True)
  baseline=capture_mode_evidence_baseline(out)
  print("WL_PUBLIC_REAL_MODE_START "+mode,flush=True)
- child=subprocess.run([sys.executable,"tools/m0_wl_public_normal_e2e.py"],env=env)
+ # A real Game native worker can block in Win32/WSL2 I/O or WaitForSingleObject
+ # even when the outer workflow has a generous 40-minute cleanup timeout.
+ # Bound EVERY full functional mode separately; capacity N0/V2 can take longer.
+ slow=bool(env.get("WBD_WL_RUN_N0")=="1" or env.get("WBD_WL_RUN_P200")=="1"
+           or env.get("WBD_WL_V2_SCENARIO"))
+ mode_seconds=1200 if slow else 165
+ child=subprocess.Popen([sys.executable,"tools/m0_wl_public_normal_e2e.py"],env=env,
+  creationflags=getattr(subprocess,"CREATE_NEW_PROCESS_GROUP",0) if os.name=="nt" else 0)
+ timed_out=False
+ try:
+  rc=child.wait(timeout=mode_seconds)
+ except subprocess.TimeoutExpired:
+  timed_out=True
+  # Terminate the entire test-child tree on Windows; no orphan native Go/Wsl
+  # product may be reused by another mode as a fake Ready or stale evidence.
+  if os.name=="nt":
+   subprocess.run(["taskkill","/PID",str(child.pid),"/T","/F"],
+     capture_output=True,timeout=20,check=False)
+  if child.poll() is None: child.kill()
+  try: child.wait(timeout=10)
+  except subprocess.TimeoutExpired: pass
+  rc=124
+  print("WL_PUBLIC_REAL_MODE_TIMEOUT mode="+mode+" bounded_seconds="+str(mode_seconds),flush=True)
  report=out/"report.json"
- result=json.loads(report.read_text()) if report.exists() else {
-  "mode":mode,"error":"missing genuine same-source report"}
+ result=json.loads(report.read_text()) if report.exists() and not timed_out else {
+  "mode":mode,"error":("native mode deadline "+str(mode_seconds)+"s expired" if timed_out
+                      else "missing genuine same-source report")}
  (out/(mode+"-report.json")).write_text(json.dumps(result,indent=2)+"\n")
  # Per-mode allowlisted redacted logs and sampled resource files survive
  # later uses of the same WSL2/Npcap/Go+Rust native runner.
- evidence=archive_mode_evidence(out,mode,os.environ["GITHUB_SHA"],result,child.returncode,baseline=baseline)
+ evidence=archive_mode_evidence(out,mode,os.environ["GITHUB_SHA"],result,rc,baseline=baseline)
  # A native functional first/reverse/Stop PASS does NOT qualify a
  # selected throughput scenario if actual delivery/loss/kernel TC failed.
  performance=os.environ.get("WBD_WL_RUN_N0")=="1"
@@ -49,7 +72,7 @@ for mode in modes:
   v2.get("owned_stop")=="PASS_BOTH_OWNED" and
   (repair_scene or all(v2.get("first_delivery_fraction",{}).get(k,0)>=.999
        for k in ("windows","linux")))))
- passed=child.returncode==0 and result.get("mode_public","").startswith("PASS_ACTUAL_") and (
+ passed=rc==0 and result.get("mode_public","").startswith("PASS_ACTUAL_") and (
   not performance or str(result.get("WL_N0","")).startswith("PASS_SCOPED_")) and (
   not stress or str(result.get("WL_P200","")).startswith("PASS_SCOPED_")) and v2_delivery_ok
  results[mode]={"result":"PASS" if passed else "FAIL",
