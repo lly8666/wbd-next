@@ -122,7 +122,9 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int){
  serverGroup:=answerValue.group
  tun,e:=windowsclient.OpenTUN(fmt.Sprintf("WBD-M0-GAME%d-%s",n,os.Getenv("GITHUB_RUN_ID")))
  if e!=nil{t.Fatalf("Game%d signed Wintun create: %v",n,e)}
- defer tun.Close()
+ // On a Fatal Stop failure, unblock Wintun consumers before native close;
+ // ordinary Go defers run in LIFO order, after the group Stop cleanup.
+ defer func(){cancel();tun.Close()}()
  // This is a scoped real Wintun/M3-only test, NOT an NPF send. On any
  // fatal assertion, first cancel only ACTUALLY UNSUBMITTED Game M4
  // tickets and join original Rust owner holds before closing Wintun.
@@ -187,6 +189,19 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int){
  got,e:=clientGroup.OpenGameRecord(ctx,lane.Lane,reverseFromKernel)
  if e!=nil||string(got)!=string(reverse){
   t.Fatalf("Game%d original Go TLS Rust reverse first-delivery: %v",n,e)
+ }
+ // OpenGameRecord prepares one Rust Game/off first-delivery ticket. In
+ // this scenario the real signed-Wintun kernel delivered the OUTER encrypted
+ // UDP record, but the returned INNER plaintext was never written to the
+ // Wintun device. Retire the exact pending ticket as DefinitelyNotSent;
+ // claiming a successful inner kernel copy here would forge delivery.
+ // This must precede group Stop, whose owned fence correctly rejects
+ // uncompleted prepare/commit pairs with C ABI rc=5.
+ if err:=clientGroup.CompleteGameOff(ctx,lane.Lane,0);err!=nil{
+  t.Fatalf("Game%d original reverse not-copied inner M4 settlement: %v",n,err)
+ }
+ if err:=clientGroup.CompleteGameOff(ctx,lane.Lane,0);err==nil{
+  t.Fatalf("Game%d duplicate inner Wintun result accepted",n)
  }
  if err:=serverGroup.CancelUnsubmittedGameTickets(ctx,unsubmittedServer);err!=nil{
   t.Fatalf("Game%d original not-submitted server M4 ticket settle: %v",n,err)
