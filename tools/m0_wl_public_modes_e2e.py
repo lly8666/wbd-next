@@ -84,6 +84,9 @@ for mode in modes:
    "evidence_manifest":str(evidence.relative_to(out)).replace(chr(92),"/") }
  print("WL_PUBLIC_REAL_MODE_RESULT "+mode+" "+results[mode]["result"],flush=True)
  if not passed:failed.append(mode)
+ if timed_out:
+  print("WL_PUBLIC_REAL_MODE_ABORT_ON_TIMEOUT mode="+mode,flush=True)
+  break
 summary={"source":os.environ["GITHUB_SHA"],
  "windows_linux_real_native_modes":results,
  "result":"FAIL" if failed else "PASS","failed_modes":failed,

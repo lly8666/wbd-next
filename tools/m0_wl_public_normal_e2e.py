@@ -44,9 +44,18 @@ def ready(path,marker,process,seconds):
   time.sleep(.2)
  raise RuntimeError(marker+" not observed: "+path.read_text(errors="replace")[-800:])
 def stop_linux():
+ # This cleanup runs in Python's finally on both PASS and product FAIL.
+ # wsl.exe can hang independently of the original Rust server, and an
+ # unbounded wsl.exe here previously swallowed the real preceding error.
  f=out/"linux-server.pid"
  if f.exists() and f.read_text().strip().isdigit():
-  subprocess.run(["wsl.exe","-d","Ubuntu","-u","root","--","kill","-TERM",f.read_text().strip()],capture_output=True)
+  try:
+   proc=subprocess.run(["wsl.exe","-d","Ubuntu","-u","root","--","kill","-TERM",f.read_text().strip()],
+                       stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=8,check=False)
+   if proc.returncode:
+    print("WL_REAL_LINUX_OWNED_STOP_REQUEST_FAILED code="+str(proc.returncode),file=sys.stderr,flush=True)
+  except subprocess.TimeoutExpired:
+   print("WL_REAL_LINUX_OWNED_STOP_REQUEST_TIMEOUT seconds=8",file=sys.stderr,flush=True)
 def stop_windows(p):
  if p and p.poll() is None:
   try:p.stdin.write("stop\n");p.stdin.flush();p.wait(timeout=15)

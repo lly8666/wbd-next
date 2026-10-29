@@ -83,6 +83,9 @@ on:
       - tests/test_m0_wl_udp_socket_telemetry.py
       - tests/test_m0_wl_v2_gap_audit.py
       - tools/m0_wl_public_modes_e2e.py
+      - tools/m0_wl_windows_step_watchdog.py
+      - tools/m0_wl_windows_bounded_cmd.py
+      - tests/test_m0_wl_native_os_deadline.py
       - scenarios/wl-normal-150m-300ms-0loss-60s.json
       - scenarios/wl-normal-100m-300ms-0loss-60s.json
       - tests/test_m0_wl_perf_v2_config.py
@@ -149,6 +152,7 @@ jobs:
       - run: python -m unittest tests.test_m0_wl_native_resource_sampler -v
       - run: python -m unittest tests.test_m0_wl_windows_cpu_audit -v
       - run: python -m unittest tests.test_m0_wl_native_rx_abba -v
+      - run: python -m unittest tests.test_m0_wl_native_os_deadline -v
       - run: python -m unittest tests.test_m0_wl_outer_repair_verify -v
       - run: python -m unittest tests.test_m0_wl_lock_profile -v
       - run: python tools/prepare_windows_wiring.py --check-only
@@ -196,7 +200,7 @@ jobs:
               raise ValueError('WL_V2_BINARY_SOURCE_WITHOUT_REUSE_RUN')
           print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'],'V2_AB='+str(ab))
           PY
-      - run: python -m py_compile tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
+      - run: python -m py_compile tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
 
   windows-compile-preflight:
     name: Windows Go production and test compilation only
@@ -427,7 +431,7 @@ jobs:
     needs: [wiring-contract, linux-source-locked-public]
     if: always() && !contains(github.event.head_commit.message, '[plan026-coding]') && needs.wiring-contract.result == 'success' && (needs.linux-source-locked-public.result == 'success' || inputs.perf_reuse_run_id != '' || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
     runs-on: windows-2025
-    timeout-minutes: 60
+    timeout-minutes: 38
     env:
       AWS_LC_SYS_PREBUILT_NASM: "1"
       GH_TOKEN: ${{ github.token }}
@@ -635,10 +639,20 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'new exact Linux Go/Rust binary integrity failed'}
       - name: Launch actual WSL2 Linux and direct full public two-OS product
         shell: pwsh
-        timeout-minutes: 40
+        timeout-minutes: 24
         run: |
           $ErrorActionPreference='Stop'
-          $known=((& wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          # Whole-step external native OS process-tree watchdog, including
+          # WSL2 import/boot/firewall, 7 modes, and cleanup (not just mode).
+          $watchdogDone=Join-Path $env:RUNNER_TEMP ('wbd-wl-'+$env:GITHUB_RUN_ID+'-guard-done.flag')
+          Remove-Item $watchdogDone -Force -ErrorAction SilentlyContinue
+          $watchdogScript=(Resolve-Path 'tools/m0_wl_windows_step_watchdog.py').Path
+          $guard=Start-Process -FilePath python -ArgumentList @('-u',$watchdogScript,[string]$PID,'1020',$watchdogDone) -PassThru
+          if($null -eq $guard){throw 'external WSL2 whole-step watchdog not armed'}
+          Write-Output ('WL_WSL2_OUTER_WATCHDOG_ARMED max_seconds=1020 windows_parent_pid='+$PID)
+          try {
+          $known=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          if($LASTEXITCODE -ne 0){throw 'bounded WSL2 distribution listing failed'}
           if($known -notmatch 'Ubuntu'){
             # Old WSL Store/network launcher hung until the full product
             # step timed out. Import real Ubuntu 24.04.5 WSL rootfs directly
@@ -649,10 +663,11 @@ jobs:
             Invoke-WebRequest -UseBasicParsing -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
             if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'official Ubuntu WSL image integrity mismatch'}
             New-Item -ItemType Directory -Force $vm | Out-Null
-            & wsl.exe --import Ubuntu $vm $img --version 2 2>&1 |
+            & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2 2>&1 |
               Tee-Object result/wl-public/wsl-import.log
             if($LASTEXITCODE -ne 0){throw 'actual Ubuntu WSL2 distribution import failed'}
-            $installed=((& wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+            $installed=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+            if($LASTEXITCODE -ne 0){throw 'bounded post-import WSL2 distribution listing failed'}
             if($installed -notmatch 'Ubuntu'){throw 'real Ubuntu WSL2 distribution not registered after import'}
             Write-Output 'WL_REAL_PINNED_UBUNTU_24045_WSL2_IMPORTED'
           }
@@ -661,9 +676,9 @@ jobs:
           # A failed precondition is ENVIRONMENT_BLOCKED, not product FAIL.
           & python tools/m0_wl_real_wsl2_guest_probe.py
           if($LASTEXITCODE -ne 0){throw 'real WSL2 native guest boot ENVIRONMENT_BLOCKED; see bounded probe JSON'}
-          & wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
+          & python tools/m0_wl_windows_bounded_cmd.py 120 wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
           if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
-          & wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443:446 -j DROP
+          & python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443:446 -j DROP
           if($LASTEXITCODE -ne 0){throw 'real Linux original FakeTCP RST suppression unavailable'}
           'owned' | Set-Content result/wl-public/linux-rst-rule-owned.flag
           # Observed genuine source 1445e2c: Windows WSL NPF sees TCP SYN,
@@ -672,7 +687,8 @@ jobs:
           $creator=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop |
             Where-Object {$_.FriendlyName -eq 'WSL'})
           if($creator.Count -ne 1){throw 'exact WSL HyperV firewall VM creator unavailable'}
-          $guestText=(& wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0 | Out-String)
+          $guestText=(& python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0 | Out-String)
+          if($LASTEXITCODE -ne 0){throw 'bounded WSL2 eth0 address lookup failed'}
           $match=[regex]::Match($guestText,'\binet\s+(\d{1,3}(?:\.\d{1,3}){3})/')
           if(-not $match.Success){throw 'actual WSL2 guest eth0 address missing'}
           $guestIP=$match.Groups[1].Value
@@ -693,7 +709,8 @@ jobs:
           # Real NPF header showed original product SYN destination MAC equals
           # Windows vEthernet own source MAC. Resolve ONLY this actual WSL2
           # Linux eth0 MAC, never fabricate an IP/TLS/ACK or replace Npcap.
-          $guestLink=(& wsl.exe -d Ubuntu -u root -- ip -j link show dev eth0 | ConvertFrom-Json)
+          $guestLink=(& python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -j link show dev eth0 | ConvertFrom-Json)
+          if($LASTEXITCODE -ne 0){throw 'bounded WSL2 eth0 MAC lookup failed'}
           $guestMAC=[string]$guestLink.address
           $hostMAC=([string]$nic[0].MacAddress).Replace('-',':')
           if(@($guestMAC.Split(':')).Count -ne 6 -or $guestMAC -eq $hostMAC){throw 'actual WSL2 guest Ethernet MAC invalid or same as Windows host'}
@@ -887,8 +904,14 @@ jobs:
              $result.WL_P200 -notlike 'PASS_SCOPED_*'){
             throw 'P200 true kernel impairment reached capacity limit, missing delivery, or failed owned Stop'
           }
+          } finally {
+            Set-Content -Path $watchdogDone -Value 'owner-finished'
+            if($null -ne $guard -and -not $guard.HasExited){Stop-Process -Id $guard.Id -Force -ErrorAction SilentlyContinue}
+            Write-Output 'WL_WSL2_OUTER_WATCHDOG_DISARMED'
+          }
       - name: Restore Linux raw FakeTCP fixture RST rule after product Stop
         if: always()
+        timeout-minutes: 2
         shell: pwsh
         run: |
           if(Test-Path result/wl-public/linux-rst-rule-owned.flag){
@@ -898,6 +921,7 @@ jobs:
           }else{Write-Output 'WL_REAL_LINUX_RST_RULE_NOT_INSTALLED_SKIP_CLEANUP'}
       - name: Remove exact owned WSL HyperV per-flow rule after full public product Stop
         if: always()
+        timeout-minutes: 2
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
@@ -913,6 +937,7 @@ jobs:
           }else{Write-Output 'WL_REAL_WSL_HYPERV_RULE_NOT_CREATED_SKIP_CLEANUP'}
       - name: Delete only exact owned WSL2 guest MAC neighbor after public Stop
         if: always()
+        timeout-minutes: 2
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
@@ -926,6 +951,7 @@ jobs:
           }else{Write-Output 'WL_GUEST_MAC_NEIGHBOR_NOT_CREATED'}
       - name: Restore Npcap owned Windows kernel service after product Stop
         if: always()
+        timeout-minutes: 4
         shell: pwsh
         run: |
           $ErrorActionPreference='Continue'
