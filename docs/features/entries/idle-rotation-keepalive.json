@@ -34,7 +34,8 @@
     "docs/evidence/M0/PLAN026-LINUX-REAL-KEEPALIVE-IDLE100-PRODUCT7E984-HARNESS7147-20261029.json",
     "docs/evidence/M0/PLAN026-LINUX-REAL-HEALTH-DEAD-PRODUCT7E984-HARNESSD2F-20261029.json",
     "docs/evidence/M0/PLAN026-LINUX-REAL-DISCONNECT-NEW-FLOW-SOURCEA8-FAIL-20261029.json",
-    "docs/evidence/M0/PLAN026-LINUX-AUTO-TRUE-DEAD-NEW-FLOW-REAUTH-SOURCE134914-20261029.json"
+    "docs/evidence/M0/PLAN026-LINUX-AUTO-TRUE-DEAD-NEW-FLOW-REAUTH-SOURCE134914-20261029.json",
+    "docs/devlog/M0/20261029-PLAN026-GAME-NATIVE-WRITE-COMMIT-LANE-ISOLATION-HEALTH-ORACLE-BATCH.md"
   ],
   "verification": [
     {
@@ -105,7 +106,8 @@
     "2026-10-29 true 100s no-business original TLS Rust native Linux Auto resumed kernel app PASS, product7e984/harness7147 only; cannot infer explicit authenticated kind1 packet count, FIN/Dormant/Wake, server no-ack dead negative or Windows signed/physical PASS.",
     "PLAN026 SOURCEd2f 106s 100pct measured underlay netem dropped21+28 with BOTH authenticated native Health dead/NOT Dormant PASS; excludes owned automatic Stop readback, verified FIN/Wake/physical/Windows.",
     "New PLAN026 Linux Auto only original Go cold lifecycle reconnect on native Health-dead and new TUN source candidate: 1Hz cold terminal observation, Rust Stop before fresh authenticated TLS and new generation, original TUN held across generations; exact new SOURCE real Linux reconnect and Windows physical NOT_RUN until Actions.",
-    "Latest source134914 authentic Linux Auto new-flow reauthorization from true 106s bilateral dead PASS; old source7e negative and sourcea8 failed test retained. Does not validate Windows signed Npcap/Wintun, true FIN/Dormant/Wake/lane or physical no-CPU-regression."
+    "Latest source134914 authentic Linux Auto new-flow reauthorization from true 106s bilateral dead PASS; old source7e negative and sourcea8 failed test retained. Does not validate Windows signed Npcap/Wintun, true FIN/Dormant/Wake/lane or physical no-CPU-regression.",
+    "Candidate: ±10% Health send jitter, bounded optional random record padding, merge M2+Health after real copy. Game per-lane Health/FIN-Dormant-Wake UNWIRED."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

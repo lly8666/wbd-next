@@ -34,7 +34,8 @@
   ],
   "doc_refs": [
     "docs/architecture/FEC_V2_BALANCED.md",
-    "docs/evidence/fec-network-work/20261026-W103-Game2-Game4-fixed6-outerDATAoff-real-clean-PASS.json"
+    "docs/evidence/fec-network-work/20261026-W103-Game2-Game4-fixed6-outerDATAoff-real-clean-PASS.json",
+    "docs/devlog/M0/20261029-PLAN026-GAME-NATIVE-WRITE-COMMIT-LANE-ISOLATION-HEALTH-ORACLE-BATCH.md"
   ],
   "verification": [
     {
@@ -114,7 +115,8 @@
     "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
     "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
     "H311 provenance index: H309 main33ed seven-mode native PASS; N0dd0767 independent one-sample PASS while aa931 FAIL remains; ARM64f7ee prebuilt 10M capacity success; Linux33ed loss1 old serial-echo FAIL.",
-    "PLAN026 candidate Windows Game2/4 off/fixed native worker retains original Linux GameAdapter and GameFec true copied tickets, real Wintun prefix+authenticated M3 replay; no Auto on Game. New native M4/weaknet/capacity proof NOT_RUN."
+    "PLAN026 candidate Windows Game2/4 off/fixed native worker retains original Linux GameAdapter and GameFec true copied tickets, real Wintun prefix+authenticated M3 replay; no Auto on Game. New native M4/weaknet/capacity proof NOT_RUN.",
+    "Candidate: preserve FEC batch copied prefix and isolate single failed Game NPF RX lane. New SOURCE native untested."
   ],
   "promotion": null
 }

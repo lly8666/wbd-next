@@ -345,8 +345,9 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
         if game::native_game_has_fec(&g){
             game::receive_fec_group(&mut g,cfg.group,(lane+1) as u32,wire)?
         }else{
-            let frame=game::receive_group(&mut g,cfg.group,(lane+1) as u32,wire)?;
-            (frame.into_iter().collect(),false)
+            let (frame,pending)=game::prepare_off_group(
+                &mut g,cfg.group,(lane+1) as u32,wire)?;
+            (frame.into_iter().collect(),pending)
         }
     };
     let total=frames.len();
@@ -358,7 +359,11 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
     }
     if pending{
         let mut g=group.lock().map_err(|_|BAD_STAGE)?;
-        let rc=game::finish_fec_group(&mut g,(lane+1) as u32,copied);
+        let rc=if game::native_game_has_fec(&g){
+            game::finish_fec_group(&mut g,(lane+1) as u32,copied)
+        }else{
+            game::finish_off_group(&mut g,(lane+1) as u32,copied==1)
+        };
         if rc!=OK{return Err(rc)}
     }
     if failed||copied as usize!=total{return Err(BAD_STAGE)}
@@ -368,6 +373,12 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
     c.ack[lane].store(ack,Ordering::Release);
     Ok(())
 }
+// Per-capture retirement never substitutes a shared Wintun or owner Stop.
+// A real last-lane loss is terminal. No timers or replacement threads.
+fn retire_game_rx_lane(active:&mut [bool],lane:usize)->bool{
+    if let Some(slot)=active.get_mut(lane){*slot=false}
+    active.iter().any(|&ok|ok)
+}
 fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     group:Arc<Mutex<game::WinGameGroup>>,mut tun:WintunTx,
     mut npf:Vec<NpcapRx>,stop:Arc<WakeEvent>,wake:Arc<WakeEvent>,
@@ -375,11 +386,22 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     c:Arc<GameCounters>,
 )->i32{
     let mut ledgers:Vec<AckLedger>=lanes.iter().map(|x|AckLedger::new(x.rx_seq)).collect();
-    let events=match npf.iter().map(|x|x.event()).collect::<Result<Vec<_>,_>>(){
-        Ok(e)=>e,Err(_)=>return BAD_STAGE,
-    };
+    // A dead Npcap capture is lane-local. Stop/shared Wintun errors remain
+    // group-wide. Rebuild the wait set only upon lane retirement (cold path).
+    let mut active=vec![true;npf.len()];
+    let mut events=vec![0usize;npf.len()];
+    for (i,rx) in npf.iter().enumerate(){
+        match rx.event(){
+            Ok(e)=>events[i]=e,
+            Err(err)=>{
+                eprintln!("M0_PLAN026_GAME_NATIVE_RX_LANE_RETIRED lane={} stage=event reason={err:?}",i+1);
+                active[i]=false;
+            },
+        }
+    }
+    if !active.iter().any(|&ok|ok){return BAD_STAGE}
     let mut handles=vec![stop.handle(),wake.handle()];
-    handles.extend_from_slice(&events);
+    for (i,&e) in events.iter().enumerate(){if active[i]{handles.push(e)}};
     let mut frame=[0u8;NPF_CAP];
     loop{
         if c.stop.load(Ordering::Acquire){return OK}
@@ -408,6 +430,7 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         let mut verified=false;
         // One RX thread and one shared Wintun, read each lane fairly.
         for (i,rx) in npf.iter_mut().enumerate(){
+            if !active[i]{continue}
             for _ in 0..32{
                 if c.stop.load(Ordering::Acquire){return OK}
                 let n=match rx.read(&mut frame){
@@ -415,12 +438,12 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                     Ok(ReadResult::Skipped)=>continue,
                     Ok(ReadResult::NoPacket)=>break,
                     Ok(ReadResult::EndOfStream)=>{
-                        eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=RX stage=npcap_read lane={} reason=EndOfStream",i+1);
-                        return BAD_STAGE
+                        eprintln!("M0_PLAN026_GAME_NATIVE_RX_LANE_RETIRED lane={} stage=npcap_read reason=EndOfStream",i+1);
+                        let _=retire_game_rx_lane(&mut active,i);break
                     },
                     Err(err)=>{
-                        eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=RX stage=npcap_read lane={} reason={err:?}",i+1);
-                        return BAD_STAGE
+                        eprintln!("M0_PLAN026_GAME_NATIVE_RX_LANE_RETIRED lane={} stage=npcap_read reason={err:?}",i+1);
+                        let _=retire_game_rx_lane(&mut active,i);break
                     },
                 };
                 let Some(ipv4)=io::ethernet_ipv4(&frame[..n])else{continue};
@@ -439,6 +462,18 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             }
         }
         if verified{let _=tx_wake.wake();}
+        // All lanes lost is a genuine terminal group failure; a single
+        // inactive Npcap RX handle must NOT stop sibling genuine copies.
+        if !active.iter().any(|&ok|ok){
+            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=RX stage=all_npcap_lanes_retired");
+            return BAD_STAGE
+        }
+        // A retired capture is no longer a valid WaitForMultipleObjects
+        // handle. Preserve Stop and original Go early-wake in every set.
+        handles.truncate(2);
+        for (i,&e) in events.iter().enumerate(){
+            if active[i]{handles.push(e)}
+        }
     }
 }
 #[no_mangle]
@@ -649,6 +684,15 @@ mod tests{
         },[1;6],[2;6],1,1,1,39,&mut bytes);
         assert_eq!(result,Err(INVALID));
         assert!(bytes.iter().all(|&x|x==0xa5));
+    }
+    #[test]
+    fn one_npf_capture_failure_keeps_other_game_lanes_and_stop_wait_live(){
+        let mut active=[true,true,true,true];
+        assert!(retire_game_rx_lane(&mut active,1));
+        assert_eq!(active,[true,false,true,true]);
+        assert!(retire_game_rx_lane(&mut active,0));
+        assert!(retire_game_rx_lane(&mut active,2));
+        assert!(!retire_game_rx_lane(&mut active,3)); // all genuinely retired
     }
     #[test]
     fn game_ack_ledger_copies_only_actual_gap_closure(){

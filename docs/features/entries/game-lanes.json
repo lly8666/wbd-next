@@ -47,7 +47,8 @@
     "docs/devlog/M0/20261029-PLAN026-GAME2-NATIVE-PURE-ACK-EMPTY-RECORD-FIX.md",
     "docs/devlog/M0/20261029-PLAN026-GAME2-WINDOWS-RUST-NPF-PEER-PERSONA-REPAIR.md",
     "docs/evidence/M0/PLAN026-GAME2-SOURCE302D-TRUE-WINDOWS-LINUX-TWO-WAY-STOP-20261029.json",
-    "docs/devlog/M0/20261029-PLAN026-GAME2-SOURCE302D-SIGNED-TWO-OS-FUNCTIONAL-ACCEPTANCE.md"
+    "docs/devlog/M0/20261029-PLAN026-GAME2-SOURCE302D-SIGNED-TWO-OS-FUNCTIONAL-ACCEPTANCE.md",
+    "docs/devlog/M0/20261029-PLAN026-GAME-NATIVE-WRITE-COMMIT-LANE-ISOLATION-HEALTH-ORACLE-BATCH.md"
   ],
   "verification": [
     {
@@ -180,7 +181,8 @@
     "PLAN026 candidate original Windows Game2/4 Npcap full native two-worker handoff: original each-lane credential TLS+detached M3 GameAdapter, one shared Wintun, actual per-lane kernel prefix and signed joined Stop. Code staged, new same-source native physical/CPU qualification NOT_RUN; existing Go packet pump preserved only as inert compiled historic path.",
     "PLAN026 main Game2/4 idle TX correction: old unconditional 10ms poll replaced by existing original Game4 stagger/FEC earliest monotonic deadline, or INFINITE event wait when none. New code needs exact Windows Rust/real network latency+wake/Stop qualification; does not alter earlier Go/legacy or Normal/off PASS.",
     "PLAN026 2026-10-29 full WSL2 original-Go Game2/4 first error isolated: after Go readers joined, generic Npcap TakeNativeCapture called pcap_breakloop on quiescent live RX; next Rust pcap_next_ex returned -2 and worker stopped before Ready. Candidate Game-only TakeNativeCaptureAfterReadersJoined suppresses redundant break and retains existing generation/lease/Stop. Exact new SOURCE real Win↔Linux E2E NOT_RUN until its own Actions; Normal uses unchanged original handoff.",
-    "2026-10-29 PLAN026 main Go NPF Game2/4 idle cold read: 原固定Go ReadSegment 在0包超时内无限循环，handoff无法终止readers.Wait；新冷态 ReadSegmentUntil 重查原Npcap超时，保留真实EOF；队列满立即显式错误，无假M4与Go稳态泵。新同源Windows真实双向/Stop未验，旧成功失败按原SHA保留。"
+    "2026-10-29 PLAN026 main Go NPF Game2/4 idle cold read: 原固定Go ReadSegment 在0包超时内无限循环，handoff无法终止readers.Wait；新冷态 ReadSegmentUntil 重查原Npcap超时，保留真实EOF；队列满立即显式错误，无假M4与Go稳态泵。新同源Windows真实双向/Stop未验，旧成功失败按原SHA保留。",
+    "Candidate: Game/off commit after true Wintun write; per-lane NPF RX EOF/error no longer stops healthy sibling lane. New SOURCE native untested."
   ],
   "promotion": null
 }

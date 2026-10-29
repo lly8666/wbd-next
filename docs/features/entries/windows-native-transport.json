@@ -43,7 +43,8 @@
     "docs/devlog/M0/20261028-PLAN026-WIN-NPCAP-ZEROCOPY-RX-BORROW-150M.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ABBA-ROLLBACK.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ROLLBACK-NATIVE-RESULT.md",
-    "docs/devlog/M0/20261029-PLAN026-GAME-NPCAP-COLD-HANDOFF-LIVENESS.md"
+    "docs/devlog/M0/20261029-PLAN026-GAME-NPCAP-COLD-HANDOFF-LIVENESS.md",
+    "docs/devlog/M0/20261029-PLAN026-GAME-NATIVE-WRITE-COMMIT-LANE-ISOLATION-HEALTH-ORACLE-BATCH.md"
   ],
   "verification": [
     {
@@ -167,7 +168,8 @@
     "PLAN026 exact source a6a6985 original Windows Go WAL ran 5-mode code and found a real stale retransmit incorrectly fatal in TCP RX ledger: authenticated copied cumulative ACK advanced while authenticatedHigh stayed behind. New code updates high only after real Copied success. Go replay tests must pass same source; no new Game native two-worker or keepalive/Auto network PASS.",
     "PLAN026 code candidate adds Game2/4 Rust NativeAttachV3 with 2 threads total, 2/4 independent Npcap borrows, shared Wintun and exact original per-lane TLS+M3+M4. Native Go capture handoff is cold-only; no Game Go business pulse. All real Windows Game native source tests and CPU NOT_RUN; no borrowed old PASS.",
     "PLAN026 cold Health effective candidate: original Rust M2 scoped config/readback accepted pre-Start, default15/90/0 and 3x bound; original Win CLI args preserve custom Health. Game2/4 group Health & real FIN Dormant/Wake are NOT_WIRED; no Windows Game physical PASS or CPU A/B.",
-    "2026-10-29 PLAN026 Windows Game cold NPF handoff liveness correction on main; actual signed Windows Game2/4 first/reverse/Stop and cross-platform Auto/Health remain UNVERIFIED on this SOURCE, historical Normal/off unchanged."
+    "2026-10-29 PLAN026 Windows Game cold NPF handoff liveness correction on main; actual signed Windows Game2/4 first/reverse/Stop and cross-platform Auto/Health remain UNVERIFIED on this SOURCE, historical Normal/off unchanged.",
+    "Candidate: Windows Game RX commit-after-Wintun and per-lane NPF isolation; single-channel M2/Health merged, bounded jitter/padding. Native test pending."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

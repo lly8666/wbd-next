@@ -7,6 +7,30 @@
 
 const SECOND_NS:u64=1_000_000_000;
 const MIN_RETRY_NS:u64=SECOND_NS;
+const MAX_CONTROL_PADDING:usize=64;
+use aws_lc_rs::rand::{SecureRandom,SystemRandom};
+use std::sync::OnceLock;
+
+fn control_random_below(n:u64)->Option<u64>{
+    if n<=1{return Some(0)}
+    let mut bytes=[0u8;8];
+    SystemRandom::new().fill(&mut bytes).ok()?;
+    Some(u64::from_le_bytes(bytes)%n)
+}
+// Original Go behavior oracle: draw entropy only after successful actual
+// M4 control copy, never per business frame or timer wake.
+fn next_health_delay(interval:u64)->u64{
+    let delta=interval/10;
+    if delta==0{return interval}
+    interval-delta+control_random_below(delta.saturating_mul(2)+1).unwrap_or(delta)
+}
+fn padding_max()->usize{
+    static MAX:OnceLock<usize>=OnceLock::new();
+    *MAX.get_or_init(||std::env::var("WBD_NATIVE_HEALTH_PADDING_MAX_BYTES")
+        .ok().and_then(|s|s.parse::<usize>().ok())
+        .map_or(MAX_CONTROL_PADDING,|v|v.min(MAX_CONTROL_PADDING)))
+}
+
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub(crate) struct HealthPolicy {
@@ -92,7 +116,7 @@ impl HealthClock {
     /// Failed/uncertain copies do not postpone a required heartbeat for 15s.
     pub(crate) fn on_health_send_result(&mut self,at:u64,accepted:bool){
         if accepted {
-            self.next_health=at.saturating_add(self.policy.interval_ns);
+            self.next_health=at.saturating_add(next_health_delay(self.policy.interval_ns));
             self.retry_not_before=at;
         }else{
             self.retry_not_before=at.saturating_add(MIN_RETRY_NS);
@@ -235,7 +259,8 @@ pub(crate) fn parse_authenticated_control(wire:&[u8])
                 if out.receipt.replace(r).is_some(){return Err(CodecError::DuplicateReceipt)}
             },
             ControlTlv::LegacyHealth(bytes)=>{
-                if bytes.len()!=10||bytes[0]!=1||bytes[1]!=0||
+                if !(10..=10+MAX_CONTROL_PADDING).contains(&bytes.len())||
+                    bytes[0]!=1||bytes[1]!=0||
                     out.peer_idle_ns.is_some(){return Err(CodecError::InvalidLength)}
                 let mut ns=[0u8;8];ns.copy_from_slice(&bytes[2..10]);
                 out.peer_idle_ns=Some(u64::from_be_bytes(ns));
@@ -254,17 +279,49 @@ pub(crate) fn parse_authenticated_control(wire:&[u8])
 pub(crate) fn encode_authenticated_health(idle_ns:u64,
     receipt:Option<&wbd_codec::Receipt>,quality:Option<&[u8]>,
 )->Result<Vec<u8>,wbd_codec::CodecError>{
+    encode_authenticated_health_budgeted(idle_ns,receipt,quality,512,0)
+}
+// One existing authenticated WBC4 Health TLV; no additional wire kind.
+// Optional opaque suffix is inside the same Health TLV, bounded by the
+// actual per-lane record payload MTU and 64-byte oracle-derived cap.
+pub(crate) fn encode_authenticated_health_budgeted(idle_ns:u64,
+    receipt:Option<&wbd_codec::Receipt>,quality:Option<&[u8]>,
+    payload_budget:usize,max_padding:usize,
+)->Result<Vec<u8>,wbd_codec::CodecError>{
+    let budget=payload_budget.min(512);
     let mut tlvs=Vec::with_capacity(3);
     if let Some(r)=receipt{tlvs.push(wbd_codec::ControlTlv::Receipt(r.clone()))}
-    let mut bytes=Vec::with_capacity(10);
+    let mut bytes=Vec::with_capacity(10+MAX_CONTROL_PADDING);
     bytes.extend_from_slice(&[1,0]);bytes.extend_from_slice(&idle_ns.to_be_bytes());
-    tlvs.push(wbd_codec::ControlTlv::LegacyHealth(bytes));
+    let health_index=tlvs.len();
+    tlvs.push(wbd_codec::ControlTlv::LegacyHealth(bytes.clone()));
     if let Some(q)=quality{
         if q.is_empty()||q.len()>64{return Err(wbd_codec::CodecError::InvalidLength)}
         tlvs.push(wbd_codec::ControlTlv::LegacyQuality(q.to_vec()));
     }
-    wbd_codec::encode_control(&tlvs,512)
+    let initial=wbd_codec::encode_control(&tlvs,budget)?;
+    let remaining=budget.saturating_sub(initial.len());
+    let maximum=remaining.min(max_padding).min(MAX_CONTROL_PADDING);
+    if let Some(count)=control_random_below(maximum as u64+1){
+        if count>0 {
+            let mut suffix=vec![0u8;count as usize];
+            if SystemRandom::new().fill(&mut suffix).is_ok(){
+                bytes.extend_from_slice(&suffix);
+                tlvs[health_index]=wbd_codec::ControlTlv::LegacyHealth(bytes);
+                return wbd_codec::encode_control(&tlvs,budget)
+            }
+        }
+    }
+    Ok(initial)
 }
+pub(crate) fn encode_authenticated_health_live(idle_ns:u64,
+    receipt:Option<&wbd_codec::Receipt>,quality:Option<&[u8]>,
+    payload_budget:usize,
+)->Result<Vec<u8>,wbd_codec::CodecError>{
+    encode_authenticated_health_budgeted(
+        idle_ns,receipt,quality,payload_budget,padding_max())
+}
+
 #[cfg(test)]
 mod wire_tests{
     use super::*;
@@ -283,6 +340,21 @@ mod wire_tests{
         assert_eq!(parsed.receipt,Some(r));
         assert_eq!(parsed.peer_idle_ns,Some(idle));
         assert!(parsed.quality);
+    }
+    #[test]
+    fn native_control_optional_padding_is_bounded_and_preserves_authenticated_idle(){
+        let idle=41_000_000_000u64;
+        for _ in 0..32{
+            let frame=encode_authenticated_health_budgeted(idle,None,None,50,64).unwrap();
+            assert!(frame.len()<=50);
+            assert_eq!(parse_authenticated_control(&frame).unwrap().peer_idle_ns,Some(idle));
+        }
+        assert_eq!(encode_authenticated_health_budgeted(idle,None,None,512,0).unwrap(),
+                   encode_authenticated_health(idle,None,None).unwrap());
+        let mut bad=vec![1,0];bad.extend_from_slice(&idle.to_be_bytes());
+        bad.extend_from_slice(&[0;MAX_CONTROL_PADDING+1]);
+        let invalid=wbd_codec::encode_control(&[ControlTlv::LegacyHealth(bad)],512).unwrap();
+        assert_eq!(parse_authenticated_control(&invalid),Err(CodecError::InvalidLength));
     }
     #[test]
     fn bad_health_repeated_hint_and_oversize_quality_do_not_become_evidence(){
@@ -312,10 +384,12 @@ mod tests {
     #[test]
     fn authenticated_health_keeps_idle_tunnel_alive_without_business(){
         let mut c=default();
-        for tick in 1..=12 {
-            let now=tick*15*S;
+        for _ in 1..=12 {
+            let now=c.next_tx_deadline().unwrap();
             assert_eq!(c.control_due(now),ControlDue::Health);
             c.on_health_send_result(now,true);
+            let next=c.next_tx_deadline().unwrap();
+            assert!((now+13*S+S/2..=now+16*S+S/2).contains(&next));
             c.on_authenticated_control(now);
             assert!(!c.unhealthy(now));
         }
@@ -333,7 +407,8 @@ mod tests {
         c.on_merged_control_sent(16*S,false);
         assert_eq!(c.control_due(16*S),ControlDue::Health);
         c.on_merged_control_sent(16*S,true);
-        assert_eq!(c.next_deadline(),Some(31*S));
+        let next=c.next_deadline().unwrap();
+        assert!((29*S+S/2..=32*S+S/2).contains(&next));
     }
     #[test]
     fn missing_authenticated_records_becomes_dead_not_dormant(){

@@ -386,17 +386,14 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                 base_pn:p.base_pn.0,bitmap:p.bitmap,
             }).collect(),
         });
-        let tlv=if health_due{
-            let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
-            crate::v4_native_health::encode_authenticated_health(
-                m.health.local_idle_ns(now.0),msg.as_ref(),None
-            ).map_err(|_|INVALID)?
-        }else{
-            let msg=msg.ok_or(BAD_STAGE)?;
-            wbd_codec::encode_control(&[wbd_codec::ControlTlv::Receipt(msg)],512)
-                .map_err(|_|INVALID)?
-        };
+        // A genuine M2/Quality draft carries the same authenticated idle
+        // evidence. Its confirmed native NPF copy defers standalone Health.
         let budget=normal_off_windows_budget(e)?;
+        let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
+        let tlv=crate::v4_native_health::encode_authenticated_health_live(
+            m.health.local_idle_ns(now.0),msg.as_ref(),None,
+            budget.record_payload_mtu.min(out.len().saturating_sub(FIXED_WIRE_OVERHEAD))
+        ).map_err(|_|INVALID)?;
         // Preflight the *actual encoded receipt* against the caller's
         // C ABI output BEFORE spending an AEAD PN and original TCP sequence.
         // A short buffer is backpressure, not a silently emitted control:
@@ -436,7 +433,7 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
     match prepared{
         Ok((n,seq,pn))=>{
-            m.feedback_pending=Some((draft,pn,health_due));
+            m.feedback_pending=Some((draft,pn,true));
             Ok(Some((n,seq,pn)))
         },
         Err(err)=>{
@@ -446,7 +443,7 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                     draft,FeedbackSendResult::NotSent,now
                 );
             }
-            if health_due{m.health.on_health_send_result(now.0,false)}
+            m.health.on_health_send_result(now.0,false)
             if err==FULL{Ok(None)}else{Err(err)}
         },
     }

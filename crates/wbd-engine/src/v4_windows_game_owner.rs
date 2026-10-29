@@ -20,6 +20,10 @@ pub(super) struct WinGameGroup {
     tick:u64,
     role_server:bool,
     started:std::time::Instant,
+    // Game OFF uses the same prepare -> genuine Wintun write -> finish
+    // contract as the proven Linux worker and Game+FEC. Never publish
+    // first logical delivery while a kernel write remains in flight.
+    off_pending:Vec<Option<crate::v4_game_lane::PreparedGameDelivery>>,
     #[cfg(feature="fec2_product_record")]
     fec_pending:Vec<Option<crate::v4_game_lane::PreparedGameFecBatch>>,
     #[cfg(feature="fec2_product_record")]
@@ -89,6 +93,7 @@ pub(super) fn join(
         adapter,handles:ids,lanes,generation,
         epoch:scope.ok_or(INVALID)?,tick:0,role_server:server,
         started:std::time::Instant::now(),
+        off_pending:(0..handles.len()).map(|_|None).collect(),
         #[cfg(feature="fec2_product_record")]
         fec_pending:(0..handles.len()).map(|_|None).collect(),
         #[cfg(feature="fec2_product_record")]
@@ -102,6 +107,7 @@ fn stopped_group(r:&mut Registry,h:u64)->i32{
     if game.lanes.iter().any(|lane|lane.lock().ok().is_none_or(|e|
         e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
         !e.device.is_some_and(|d|d.quiesced))){return STOP_INCOMPLETE}
+    if game.off_pending.iter().any(Option::is_some){return STOP_INCOMPLETE}
     #[cfg(feature="fec2_product_record")]
     if game.fec_pending.iter().any(Option::is_some){return STOP_INCOMPLETE}
     #[cfg(feature="fec2_product_record")]
@@ -391,6 +397,46 @@ pub(super) fn receive_group(
     game.adapter.receive(key,wire.to_vec()).map_err(|_|INVALID)
 }
 
+// Native Game/off only. The legacy ABI receive_group() is an in-memory
+// delivery contract for its original caller and is NEVER used by native M4.
+// Keep an exact pending slab until Wintun confirms a real copy, just as
+// Linux GameKernelOwner does; a failed write must not poison the shared
+// logical-first delivery window and sibling lane copy opportunity.
+pub(super) fn prepare_off_group(
+    game:&mut WinGameGroup,h:u64,lane:u32,wire:&[u8],
+)->Result<(Option<Vec<u8>>,bool),i32>{
+    if wire.len()<32||wire.len()>1536||game.adapter.has_game_fec(){
+        return Err(INVALID)
+    }
+    let idx=usize::try_from(lane).ok().and_then(|v|v.checked_sub(1))
+        .filter(|&v|v<game.handles.len()).ok_or(INVALID)?;
+    if game.off_pending[idx].is_some(){return Err(BAD_STAGE)}
+    if game.lanes.iter().any(|member|member.lock().ok().is_none_or(|e|
+        e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
+        !e.device.is_some_and(|d|!d.quiesced))){return Err(BAD_STAGE)}
+    let key=LaneKey{tunnel:TunnelKey{slot:14,generation:game.generation},
+        slot:lane,generation:game.generation};
+    let handle=game.adapter.receiver_handle();
+    let mut rx=handle.lock().map_err(|_|BAD_STAGE)?;
+    let mut encrypted=wire.to_vec();
+    let Some(mut prepared)=rx.prepare_receive(key,&mut encrypted)
+        .map_err(|_|INVALID)? else{return Ok((None,false))};
+    let payload=prepared.payload().to_vec();
+    drop(rx);
+    game.off_pending[idx]=Some(prepared);
+    Ok((Some(payload),true))
+}
+pub(super) fn finish_off_group(
+    game:&mut WinGameGroup,lane:u32,kernel_written:bool,
+)->i32{
+    let Some(idx)=usize::try_from(lane).ok().and_then(|v|v.checked_sub(1))
+        .filter(|&v|v<game.off_pending.len())else{return INVALID};
+    let Some(prepared)=game.off_pending[idx].take()else{return BAD_STAGE};
+    let handle=game.adapter.receiver_handle();
+    let Ok(mut rx)=handle.lock()else{return BAD_STAGE};
+    if rx.finish_receive(prepared,kernel_written).is_err(){return BAD_STAGE}
+    OK
+}
 #[cfg(feature="fec2_product_record")]
 pub(super) fn receive_fec_group(
     game:&mut WinGameGroup,h:u64,lane:u32,wire:&[u8],
@@ -649,6 +695,51 @@ mod tests{
         // A native parity frame can yield no IP payload, so zero is a
         // fully settled empty batch, without invented Wintun writes.
         assert_eq!(valid_fec_kernel_prefix(0,0),Ok(true));
+    }
+    #[test]
+    fn m0_game_off_native_wintun_failed_write_preserves_sibling_lane_first_copy(){
+        let mut r=Registry{generation:301,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let clients=setup(&mut r,2,false);
+        let servers=setup(&mut r,2,true);
+        let c=join(&mut r,&clients,false).unwrap();
+        let s=join(&mut r,&servers,true).unwrap();
+        let mut ipv4=[0x51u8;40];ipv4[0]=0x45;
+        ipv4[2..4].copy_from_slice(&40u16.to_be_bytes());
+        ipv4[8]=64;ipv4[9]=17;
+        let packets=offer_records(&mut r,c,&ipv4,2).unwrap();
+        assert_eq!(packets.len(),2);
+        {
+            let mut group=r.game_groups[&c].lock().unwrap();
+            for rec in &packets{
+                assert_eq!(game_m4_result_group(&mut group,c,
+                    rec.lane,rec.logical_id,rec.pn,true),OK);
+            }
+        }
+        let g=r.game_groups[&s].clone();
+        let first=&packets[0];
+        let sibling=&packets[1];
+        {
+            let mut group=g.lock().unwrap();
+            let (payload,pending)=prepare_off_group(&mut group,s,first.lane,
+                &first.wire[..first.length as usize]).unwrap();
+            assert!(pending);assert_eq!(payload,Some(ipv4.to_vec()));
+            // Kernel Wintun copy failed; it is not a logical delivery.
+            assert_eq!(finish_off_group(&mut group,first.lane,false),OK);
+            assert!(group.off_pending.iter().all(Option::is_none));
+            let (payload,pending)=prepare_off_group(&mut group,s,sibling.lane,
+                &sibling.wire[..sibling.length as usize]).unwrap();
+            assert!(pending);assert_eq!(payload,Some(ipv4.to_vec()));
+            assert_eq!(finish_off_group(&mut group,sibling.lane,true),OK);
+            // Reuse of a logical first ID after authentic successful copy
+            // is suppressed on a fresh AEAD PN, even on another lane.
+        }
+        for h in clients.iter().chain(servers.iter()){
+            let d=r.entries[h].lock().unwrap().device.unwrap();
+            assert_eq!(quiesce_wintun(&mut r,*h,[2;16],d.luid,d.ifindex),OK);
+        }
+        assert_eq!(stopped_group(&mut r,c),OK);
+        assert_eq!(stopped_group(&mut r,s),OK);
     }
     #[test]
     fn m0_windows_native_game_two_four_original_owner_aead_no_hol_and_stop(){
