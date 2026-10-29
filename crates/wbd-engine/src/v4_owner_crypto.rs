@@ -333,6 +333,10 @@ pub(crate) struct BackgroundRxReceipt{
     // Exact post-AEAD+replay M3 control only, not business or TCP ACK.
     pub(crate) authenticated_control:bool,
     pub(crate) authenticated_health_hint:Option<u64>,
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) quality_signal:Option<crate::v4_native_health::QualityWindowSignal>,
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) quality_report:Option<wbd_recovery::quality_window::WireReport>,
     // Genuine original AEAD/PN FEC counts only: source seen/accepted 0,1;
     // parity seen/accepted 2,3; systematic/recovered candidates 4,5;
     // actual TUN writes 6,7; TUN failure 8, FEC reject 9, disabled 10.
@@ -494,6 +498,9 @@ impl ProtectedBackgroundRx{
                 Ok(control)=>{
                     receipt.authenticated_control=true;
                     receipt.authenticated_health_hint=control.peer_idle_ns;
+                    #[cfg(feature="fec2_product_record")]
+                    {receipt.quality_signal=control.low_rate_signal;
+                     receipt.quality_report=control.low_rate_quality;}
                     if let Some(received)=control.receipt{
                         receipt.reverse_kind1=Some(AuthenticatedNormalKind1{
                             reverse_record_pn:opened.pn,receipt:received

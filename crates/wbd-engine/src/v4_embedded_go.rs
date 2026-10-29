@@ -490,6 +490,64 @@ fn original_process_repair_quota()->&'static Mutex<wbd_recovery::GlobalRepairAll
             cfg,MonoNs(0)).expect("constant bounded global M2 repair config"))
     })
 }
+
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+struct LinuxQualityRx{
+    receive:wbd_recovery::quality_window::ReceiveWindows,
+    lane:wbd_types::LaneKey,
+    epoch:[u8;16],
+    direction:wbd_recovery::WireDirection,
+    due:VecDeque<(wbd_recovery::quality_window::WindowKey,u64)>,
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+impl LinuxQualityRx{
+    fn new(lane:wbd_types::LaneKey,epoch:[u8;16],
+        direction:wbd_recovery::WireDirection)->Self{
+        Self{receive:wbd_recovery::quality_window::ReceiveWindows::new(
+            lane,epoch,direction),lane,epoch,direction,
+            due:VecDeque::with_capacity(4)}
+    }
+    fn on_signal(&mut self,signal:crate::v4_native_health::QualityWindowSignal,
+        now:MonoNs)->Result<(),i32>{
+        crate::v4_native_health::apply_authenticated_quality_signal(
+            &mut self.receive,self.lane,self.epoch,self.direction,signal,now
+        ).map_err(|_|INVALID)?;
+        if signal.kind==crate::v4_native_health::QualitySignalKind::Close{
+            let key=wbd_recovery::quality_window::WindowKey{
+                lane:self.lane,epoch:self.epoch,direction:self.direction,
+                id:signal.id,first:wbd_types::RecordPn(signal.first),
+                last:wbd_types::RecordPn(signal.last)};
+            if self.due.len()==4{self.due.pop_front();}
+            self.due.push_back((key,now.0.saturating_add(3_000_000_000)));
+        }
+        Ok(())
+    }
+    fn next_deadline(&self)->Option<MonoNs>{
+        self.due.front().map(|(_,at)|MonoNs(*at))
+    }
+    fn mature_due(&mut self,now:MonoNs)->Option<(
+        wbd_recovery::quality_window::WindowKey,
+        wbd_recovery::quality_window::WireReport)>{
+        while let Some(&(key,at))=self.due.front(){
+            if now.0<at{return None}
+            match self.receive.report_wire(key,now){
+                Ok(report)=>return Some((key,report)),
+                Err(wbd_recovery::quality_window::QualityError::NotMature)=>{
+                    return None
+                },
+                Err(_)=>{self.due.pop_front();},
+            }
+        }
+        None
+    }
+    fn retire_sent(&mut self,key:wbd_recovery::quality_window::WindowKey){
+        if self.due.front().is_some_and(|x|x.0==key){
+            self.due.pop_front();
+        }
+    }
+}
 struct Entry{
     generation:u32,
     server_side:bool,
@@ -525,6 +583,9 @@ struct Entry{
     // M3 replay opener; the native TX owner seals on its own PN allocator.
     #[cfg(feature="fec2_product_record")]
     rx_feedback:Option<Arc<Mutex<wbd_recovery::RxFeedbackState>>>,
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")))]
+    quality_rx:Option<Arc<Mutex<LinuxQualityRx>>>,
     #[cfg(feature="fec2_product_record")]
     original_public_feedback_armed:bool,
     // Original credential-Go server sets expected TCP sender once before M4.
@@ -532,6 +593,9 @@ struct Entry{
     incoming_peer_persona:PacketPersona,
     #[cfg(feature="fec2_product_record")]
     feedback_queued:Option<(Option<wbd_recovery::FeedbackDraft>,u64,bool)>,
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")))]
+    quality_report_queued:Option<wbd_recovery::quality_window::WindowKey>,
     // One native Rust TX clock per actually armed original-Go product.
     #[cfg(feature="fec2_product_record")]
     native_health:Option<crate::v4_native_health::HealthClock>,
@@ -814,12 +878,18 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         normal_firstsend_m2:None,
         #[cfg(feature="fec2_product_record")]
         rx_feedback:None,
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+            any(target_env="gnu",target_env="musl")))]
+        quality_rx:None,
         #[cfg(feature="fec2_product_record")]
         original_public_feedback_armed:false,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         incoming_peer_persona:PacketPersona::Legacy,
         #[cfg(feature="fec2_product_record")]
         feedback_queued:None,
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+            any(target_env="gnu",target_env="musl")))]
+        quality_report_queued:None,
         #[cfg(feature="fec2_product_record")]
         native_health:None,
         #[cfg(feature="fec2_product_record")]
@@ -3589,6 +3659,8 @@ fn background_raw_once(
     #[cfg(feature="fec2_product_record")]
     feedback:Option<&Arc<Mutex<wbd_recovery::RxFeedbackState>>>,
     #[cfg(feature="fec2_product_record")]
+    quality:Option<&Arc<Mutex<LinuxQualityRx>>>,
+    #[cfg(feature="fec2_product_record")]
     outer:Option<&Arc<Mutex<OriginalOuterRepair>>>,
     #[cfg(feature="fec2_product_record")]
     activity:Option<&Arc<crate::v4_native_health::AuthenticatedActivity>>,
@@ -3705,6 +3777,20 @@ fn background_raw_once(
                 state.on_authenticated_data(wbd_types::RecordPn(pn),when);
             }else{invalid_seen=true}
         }
+        #[cfg(feature="fec2_product_record")]
+        if let Some(quality)=quality{
+            if receipt.authenticated_data_pn.is_some() ||
+                receipt.quality_signal.is_some(){
+                if let Ok(mut state)=quality.lock(){
+                    if let Some(pn)=receipt.authenticated_data_pn{
+                        state.receive.on_unique_data(wbd_types::RecordPn(pn),false);
+                    }
+                    if let Some(signal)=receipt.quality_signal{
+                        if state.on_signal(signal,when).is_err(){invalid_seen=true}
+                    }
+                }else{invalid_seen=true}
+            }
+        }
         authenticated_control|=receipt.authenticated_control;
         if let Some(control)=receipt.reverse_kind1{
             // RX never locks Entry/TX and never holds a driver slab after
@@ -3790,10 +3876,12 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
     ){evidence.absorb(clock)}
     let Some(feedback)=e.rx_feedback.as_ref().map(Arc::clone)
         else{return Ok(false)};
+    let quality=e.quality_rx.as_ref().and_then(|q|
+        q.lock().ok().and_then(|mut rx|rx.mature_due(now)));
     let mut rx=feedback.lock().map_err(|_|BAD_STAGE)?;
-    let draft=rx.on_due(now);
+    let draft=if quality.is_some(){None}else{rx.on_due(now)};
     let health_due=e.native_health.as_ref().is_some_and(|h|h.tx_due(now.0));
-    if draft.is_none()&&!health_due{return Ok(false)}
+    if draft.is_none()&&!health_due&&quality.is_none(){return Ok(false)}
     let attempt=(||->Result<u64,i32>{
         let msg=draft.as_ref().map(|d|wbd_codec::Receipt{
             largest_data_pn:d.largest_data_pn().0,ack_delay_us:0,
@@ -3806,7 +3894,13 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
         // Real M2 receipts may arrive far faster than original ~2s Quality.
         // Do not draw random padding or reset the 15s Health clock for each.
         // Merge authenticated business-idle only when Health is due.
-        let tlv=if health_due{
+        let tlv=if let Some((_,report))=quality.as_ref(){
+            let idle=e.native_health.as_ref().ok_or(BAD_STAGE)?
+                .local_idle_ns(now.0);
+            crate::v4_native_health::encode_authenticated_low_rate_quality_live(
+                idle,report,budget.record_payload_mtu
+            ).map_err(|_|INVALID)?
+        }else if health_due{
             let idle=e.native_health.as_ref().ok_or(BAD_STAGE)?
                 .local_idle_ns(now.0);
             crate::v4_native_health::encode_authenticated_health_live(
@@ -3826,7 +3920,8 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
     })();
     match attempt{
         Ok(pn)=>{
-            e.feedback_queued=Some((draft,pn,health_due));
+            e.quality_report_queued=quality.map(|(key,_)|key);
+            e.feedback_queued=Some((draft,pn,health_due||quality.is_some()));
             Ok(true)
         },
         Err(err)=>{
@@ -4376,7 +4471,10 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 e.rx_feedback.as_ref().is_some_and(|f|
                     f.lock().ok().and_then(|rx|rx.next_deadline())
                     .is_some_and(|d|d.0<=loop_now().0)) ||
-                e.native_health.as_ref().is_some_and(|h|h.tx_due(loop_now().0)));
+                e.native_health.as_ref().is_some_and(|h|h.tx_due(loop_now().0))||
+                e.quality_rx.as_ref().is_some_and(|q|
+                    q.lock().ok().and_then(|rx|rx.next_deadline())
+                    .is_some_and(|d|d<=loop_now())));
             fec||reverse
         };
         #[cfg(not(feature="fec2_product_record"))]
@@ -4774,6 +4872,13 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         }else{
             wbd_recovery::FeedbackSendResult::NotSent
         };
+        if let Some(key)=e.quality_report_queued.take(){
+            if matches!(status,wbd_recovery::FeedbackSendResult::Accepted){
+                if let Some(q)=e.quality_rx.as_ref(){
+                    q.lock().map_err(|_|BAD_STAGE)?.retire_sent(key);
+                }
+            }
+        }
         if let Some(d)=draft.as_ref(){
             let feedback=e.rx_feedback.as_ref().ok_or(BAD_STAGE)?;
             feedback.lock().map_err(|_|BAD_STAGE)?
@@ -5303,6 +5408,18 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     // separate-sender scoped source proofs keep their independently
     // authenticated Go health sender; no duplicate two-sender race.
     #[cfg(feature="fec2_product_record")]
+    let quality_rx=if e.original_public_feedback_armed &&
+        e.protected_features==7{
+        let (lane,exact_epoch)=match e.owner.normal_firstsend_identity(){
+            Some(v)=>v,None=>return BAD_STAGE};
+        let direction=if e.server_side{wbd_recovery::WireDirection::ClientToServer}
+            else{wbd_recovery::WireDirection::ServerToClient};
+        let state=Arc::new(Mutex::new(LinuxQualityRx::new(
+            lane,exact_epoch,direction)));
+        e.quality_rx=Some(Arc::clone(&state));
+        Some(state)
+    }else{None};
+    #[cfg(feature="fec2_product_record")]
     let feedback_rx=if e.original_public_feedback_armed{
         let Ok(state)=wbd_recovery::RxFeedbackState::new(
             wbd_recovery::RxFeedbackConfig{
@@ -5403,6 +5520,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     &stats_rx,
                     #[cfg(feature="fec2_product_record")]
                     feedback_rx.as_ref(),
+                    #[cfg(feature="fec2_product_record")]
+                    quality_rx.as_ref(),
                     #[cfg(feature="fec2_product_record")]
                     original_outer_rx.as_ref(),
                     #[cfg(feature="fec2_product_record")]
@@ -5531,8 +5650,13 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             e.rx_feedback.as_ref().and_then(|f|
                                 f.lock().ok().and_then(|rx|rx.next_deadline()))
                         }else{None};
+                        let quality_deadline=if e.feedback_queued.is_none(){
+                            e.quality_rx.as_ref().and_then(|q|
+                                q.lock().ok().and_then(|rx|rx.next_deadline()))
+                        }else{None};
                         let earliest=fec_deadline.into_iter()
                             .chain(feedback_deadline)
+                            .chain(quality_deadline)
                             .chain(e.native_health.as_ref()
                                 .and_then(|h|h.next_tx_deadline()).map(MonoNs))
                             .min_by_key(|x|x.0);
@@ -5567,7 +5691,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             e.rx_feedback.as_ref().is_some_and(|f|
                                 f.lock().ok().and_then(|rx|rx.next_deadline())
                                 .is_some_and(|d|d<=now)) ||
-                            e.native_health.as_ref().is_some_and(|h|h.tx_due(now.0)));
+                            e.native_health.as_ref().is_some_and(|h|h.tx_due(now.0))||
+                            e.quality_rx.as_ref().is_some_and(|q|
+                                q.lock().ok().and_then(|rx|rx.next_deadline())
+                                .is_some_and(|d|d<=now)));
                         (fec,fb)
                     });
                 #[cfg(not(feature="fec2_product_record"))]
