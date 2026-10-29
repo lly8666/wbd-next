@@ -1781,6 +1781,12 @@ fn fec2_probe_real_frozen_repair_one(
     if sender.mature.on_possible_recovery(
         sender.route.outbound_lane(),candidate.pn(),status,now
     ).is_err(){sender.mature_invalid=true;}
+    eprintln!("M0_FIXED_DIAG single settle status_accepted={} accepted={} uncertain={} held={} not_sent={} pending={} charged={} target={} shadow={} copied={:?} outer={}",
+        status==RepairSendResult::Accepted,settlement.counts.accepted,
+        settlement.counts.uncertain,settlement.counts.held_unproven,
+        settlement.counts.definitely_not_sent,process.broker.snapshot().pending,
+        process.broker.snapshot().charged_repairs,before+outer_bytes,
+        sender.shadow.outstanding(),driver_result.as_ref().ok(),outer_bytes);
     if driver_result.is_err(){return Err(INVALID)}
     if status!=RepairSendResult::Accepted || settlement.counts.accepted!=1
         ||settlement.counts.uncertain!=0 || settlement.counts.held_unproven!=0
@@ -1804,8 +1810,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fec2_probe_real_frozen_repair(
     if pn.is_null()||seq.is_null()||wire.is_null()||charged.is_null(){
         return INVALID
     }
-    let Ok((p,s,w,c))=fec2_probe_real_frozen_repair_one(handle)
-    else{return BAD_STAGE};
+    let (p,s,w,c)=match fec2_probe_real_frozen_repair_one(handle){
+        Ok(v)=>v,Err(rc)=>return rc
+    };
     unsafe{pn.write(p);seq.write(s);wire.write(w);charged.write(c)}
     OK
 }
@@ -2012,6 +2019,15 @@ fn fec2_probe_real_frozen_repair_prefix_two(
             &&r.outcome.error.is_none()
             &&r.signal==wbd_platform::linux_batch::KernelSendSignal::None
     );
+    eprintln!("M0_FIXED_DIAG double kernel={} all_copied={} accepted={} not_sent={} uncertain={} held={} pending={} charged={} target={} shadow={} first_ok={} copied={:?}",
+        actual_kernel_batch,all_kernel_copied,
+        settled.counts.accepted,settled.counts.definitely_not_sent,
+        settled.counts.uncertain,settled.counts.held_unproven,
+        process.broker.snapshot().pending,process.broker.snapshot().charged_repairs,
+        before+if actual_kernel_batch{total}else{first_outer},
+        sender.shadow.outstanding(),
+        first_result.as_ref().is_some_and(|x|x.is_ok()),
+        first_result.as_ref().and_then(|x|x.as_ref().ok()));
     if actual_kernel_batch&&!all_kernel_copied{return Err(INVALID)}
     if !actual_kernel_batch&&first_result.as_ref().is_none_or(|x|x.is_err()){
         return Err(INVALID)
