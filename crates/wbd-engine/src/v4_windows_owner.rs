@@ -443,7 +443,7 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                     draft,FeedbackSendResult::NotSent,now
                 );
             }
-            m.health.on_health_send_result(now.0,false)
+            m.health.on_health_send_result(now.0,false);
             if err==FULL{Ok(None)}else{Err(err)}
         },
     }
