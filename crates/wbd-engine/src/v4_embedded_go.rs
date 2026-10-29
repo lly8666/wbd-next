@@ -1705,6 +1705,8 @@ fn fec2_probe_real_frozen_repair_one(
         ||e.protected_fec2_features!=7
         ||!e.owner.is_fec2_probe_bound(){return Err(BAD_STAGE)}
     let raw=Arc::clone(e.raw_tx.as_ref().ok_or(BAD_STAGE)?);
+    eprintln!("M0_FIXED_DIAG single raw generation={} expected={} stopping={}",
+        raw.generation(),e.generation,raw.is_stopping());
     if raw.generation()!=e.generation || raw.is_stopping(){return Err(BAD_STAGE)}
     let generation=e.generation;
     let flow=e.flow;
@@ -1737,13 +1739,16 @@ fn fec2_probe_real_frozen_repair_one(
         .checked_add(40).ok_or(INVALID)? as u64;
     // Whole global grant is process-scoped, not a per-lane sparse mint.
     let before=process.broker.snapshot().charged_repairs;
+    eprintln!("M0_FIXED_DIAG single broker before={} pending={} outer={}",
+        before,process.broker.snapshot().pending,outer_bytes);
     let lease=process.broker.grant(
         sender.direction,outer_bytes,20_000_000,now
-    ).map_err(|_|INVALID)?;
+    ).map_err(|err|{eprintln!("M0_FIXED_DIAG single grant refused {:?}",err);INVALID})?;
     let submission=reserve_frozen_submission(
         &mut process.broker,lease,sender.route,&sender.shadow,
         &candidate,outer_bytes,now
-    ).map_err(|_|INVALID)?;
+    ).map_err(|err|{eprintln!("M0_FIXED_DIAG single reservation refused {:?}",err);INVALID})?;
+    eprintln!("M0_FIXED_DIAG single reservation granted id={}",submission.reservation_id);
     if submission.driver.metadata!=original
         ||submission.driver.wire.as_ptr()!=candidate.frozen().bytes().as_ptr()
         ||!sender.shadow.preflight(&candidate,now){return Err(INVALID)}
@@ -1753,6 +1758,7 @@ fn fec2_probe_real_frozen_repair_one(
     let driver_result=raw.send_one(
         generation,candidate.frozen(),tuple,presentation
     );
+    eprintln!("M0_FIXED_DIAG single driver_ok={}",driver_result.is_ok());
     let mut process=fec2_probe_process_quota().lock().map_err(|_|BAD_STAGE)?;
     let now=process.at_least(now.0);
     // No fabricated "proven-not-attempted" from a syscall failure.
@@ -1894,6 +1900,8 @@ fn fec2_probe_real_frozen_repair_prefix_two(
         ||e.protected_fec2_features!=7
         ||!e.owner.is_fec2_probe_bound(){return Err(BAD_STAGE)}
     let raw=Arc::clone(e.raw_tx.as_ref().ok_or(BAD_STAGE)?);
+    eprintln!("M0_FIXED_DIAG double raw kernel={} generation={} expected={} stopping={}",
+        actual_kernel_batch,raw.generation(),e.generation,raw.is_stopping());
     if raw.generation()!=e.generation||raw.is_stopping(){return Err(BAD_STAGE)}
     let generation=e.generation;
     let flow=e.flow;
@@ -1928,17 +1936,20 @@ fn fec2_probe_real_frozen_repair_prefix_two(
         .checked_add(40).ok_or(INVALID)? as u64;
     let total=first_outer.checked_add(second_outer).ok_or(INVALID)?;
     let before=process.broker.snapshot().charged_repairs;
+    eprintln!("M0_FIXED_DIAG double kernel={} broker before={} pending={} total={}",
+        actual_kernel_batch,before,process.broker.snapshot().pending,total);
     let lease=process.broker.grant(
         sender.direction,total,20_000_000,now
-    ).map_err(|_|INVALID)?;
+    ).map_err(|err|{eprintln!("M0_FIXED_DIAG double grant refused {:?}",err);INVALID})?;
     let reserved_first=reserve_frozen_submission(
         &mut process.broker,lease,sender.route,&sender.shadow,
         &first,first_outer,now
-    ).map_err(|_|INVALID)?;
+    ).map_err(|err|{eprintln!("M0_FIXED_DIAG double first reserve refused {:?}",err);INVALID})?;
     let reserved_second=reserve_frozen_submission(
         &mut process.broker,lease,sender.route,&sender.shadow,
         &second,second_outer,now
-    ).map_err(|_|INVALID)?;
+    ).map_err(|err|{eprintln!("M0_FIXED_DIAG double second reserve refused {:?}",err);INVALID})?;
+    eprintln!("M0_FIXED_DIAG double kernel={} reservations=two-ok",actual_kernel_batch);
     if reserved_first.driver.metadata!=first_meta
         ||reserved_second.driver.metadata!=second_meta
         ||reserved_first.driver.wire.as_ptr()!=first.frozen().bytes().as_ptr()
@@ -1964,6 +1975,9 @@ fn fec2_probe_real_frozen_repair_prefix_two(
     let first_result=if actual_kernel_batch{None}else{
         Some(raw.send_one(generation,first.frozen(),tuple,presentation))
     };
+    eprintln!("M0_FIXED_DIAG double kernel={} send_one_ok={} sendmmsg_prefix={}",
+        actual_kernel_batch,first_result.as_ref().is_some_and(|r|r.is_ok()),
+        actual_report.as_ref().map_or(0,|r|r.outcome.accepted_prefix));
     let mut process=fec2_probe_process_quota().lock().map_err(|_|BAD_STAGE)?;
     let now=process.at_least(now.0);
     // The original kernel report is the ONLY source of Accepted count.

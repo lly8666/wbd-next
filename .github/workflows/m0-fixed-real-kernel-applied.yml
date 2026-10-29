@@ -83,7 +83,12 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2
-          WBD_M0_FEC2_KERNEL_TX=1 bash tools/run-v4-tun-netns.sh fixed-build >fixed-kernel-result/real-kernel.log 2>&1
+          # Preserve the full exact-source real kernel failure record in
+          # the job log; artifacts remain archived as before. No skip.
+          if ! WBD_M0_FEC2_KERNEL_TX=1 bash tools/run-v4-tun-netns.sh fixed-build >fixed-kernel-result/real-kernel.log 2>&1; then
+            cat fixed-kernel-result/real-kernel.log
+            exit 1
+          fi
           cat fixed-kernel-result/real-kernel.log
           for suite in 1 2 3; do
             grep -q "M0_ORIGINAL_GO_FIXED_REQUEST_PENDING_KERNEL_APPLIED_PASS suite=$suite requested=4 copied=2 applied=4 no_premature_ack=1" fixed-kernel-result/real-kernel.log
