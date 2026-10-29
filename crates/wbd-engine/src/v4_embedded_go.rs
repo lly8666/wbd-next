@@ -1748,7 +1748,7 @@ fn fec2_probe_real_frozen_repair_one(
         &mut process.broker,lease,sender.route,&sender.shadow,
         &candidate,outer_bytes,now
     ).map_err(|err|{eprintln!("M0_FIXED_DIAG single reservation refused {:?}",err);INVALID})?;
-    eprintln!("M0_FIXED_DIAG single reservation granted id={}",submission.reservation_id);
+    eprintln!("M0_FIXED_DIAG single reservation granted id={:?}",submission.reservation_id);
     if submission.driver.metadata!=original
         ||submission.driver.wire.as_ptr()!=candidate.frozen().bytes().as_ptr()
         ||!sender.shadow.preflight(&candidate,now){return Err(INVALID)}
