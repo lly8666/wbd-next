@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 403,
-  "checkpoint_sha": "b34a568d864b8c3da2f0a17dfc7577ea5c60c68f",
+  "sequence": 404,
+  "checkpoint_sha": "9a2af725ab0dd498dd7960e4e91d1ca23a0683cb",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 §0 PARTIAL. H401 source c8dad610 native40946233170 six groups SUCCESS: platform95/95 incl 2 new ACK/SACK, engine134/134; manifest/hashes H403 evidence. H402 governance40946398609 SUCCESS; H400 compile and H401 feature-impact schema FAIL retained. H401 preflight40946233322 still in flight; no production ACK owner.",
-  "why_now": "Record exact H401 source-locked ACK/SACK native build and six verify groups, H402 governance recovery, and preserve in-flight preflight without duplicate tests.",
+  "current_task": "PLAN027 §0 PARTIAL. Recovered H401 Windows/Linux preflight Action40946233322 SUCCESS at old SOURCE c8dad610 (not PLAN027 A/B/C). S404 9a2af725 adds strict authenticated Quality START/CLOSE v3 wire and regression; production owner not wired, M2 still LIVE. New-source governance40953849032 SUCCESS; native40953849123 and other ABI/real-owner checks in flight.",
+  "why_now": "Record recovered old-source preflight and precise S404 new-source wire candidate; preserve in-flight Actions and no product/A/B/C PASS claim.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Retrieve H401 preflight Action40946233322 before claiming scope; integrate strict ACK/SACK into original Windows/Linux owner and capability/version gate, low-rate authenticated start/close/mature Quality with driver F and unique RX, remove per-record M2; then PLAN027 A/B/C/long tests and final delivery.",
+  "next_action": "Retrieve S404 native/Windows/Linux Actions40953849123/40953849208/40953849191 first; fix any real failures. Wire strict authenticated Quality START/CLOSE/mature report into original Linux+Windows owner with driver F/unique RX, capability gate and outer ACK/SACK shadow retirement, retire per-record M2; then A→B→C/long tests/fixes.",
   "unverified": true,
   "last_tested_source": "302d02049669d8f36f3d6852bc1c668ff003ed4a",
   "evidence_refs": [
     "docs/evidence/M0/PLAN026-GAME2-SOURCE302D-TRUE-WINDOWS-LINUX-TWO-WAY-STOP-20261029.json"
   ],
   "context_refs": [
-    "docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md",
     "docs/prompts/M0.md",
     "docs/testing/WL_PERF_HARNESS_V2.md",
     "docs/features/entries/outer-opportunistic-repair.json",
     "docs/features/entries/fec-auto.json",
     "docs/evidence/M0/PLAN027-H403-ACK-SACK-WIRE-SOURCE-NATIVE-RESULTS-20261030.json",
     "docs/evidence/M0/PLAN027-H395-NATIVE-QUALITY-AND-CI-RESULTS-20261030.json",
-    "docs/evidence/M0/PLAN027-H398-SENDER-QUALITY-SOURCE-NATIVE-RESULTS-20261030.json"
+    "docs/evidence/M0/PLAN027-H398-SENDER-QUALITY-SOURCE-NATIVE-RESULTS-20261030.json",
+    "docs/evidence/M0/PLAN027-H404-RECOVERED-PREFLIGHT-20261030.json"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL: H401 strict pure ACK/SACK wire native PASS, H396 sender F/quality pure PASS; original Windows/Linux per-record M2 LIVE, live ACK/Quality/Auto not wired. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. H401 native six groups PASS, H402 governance PASS, H401 preflight in flight; hashes H403 evidence. Physical NOT_RUN."
+  "partial_summary": "§0-1 PARTIAL: S404 strict Quality START/CLOSE wire candidate; sender sampler/ACK/SACK pure helpers exist, but Windows/Linux per-record M2 LIVE, Quality/Auto/outer ACK repair NOT WIRED. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. Old SOURCE c8dad H401 preflight40946233322 recovered SUCCESS, not new-source product. S404 governance40953849032 PASS; native/ABI/real owner runs in flight, do not duplicate. Physical NOT_RUN."
 }
