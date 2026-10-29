@@ -366,7 +366,7 @@ jobs:
           cat fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
           grep -q 'M0_V4_PUBLIC_REAL_1PCT_LOSS_ACCOUNTED_STOP_PASS' \
             fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
-      - name: Same binary two public V4 Fixed and Auto original TLS FEC2 real app 64 each way, M2 applied and Stop
+      - name: Legacy source-locked Fixed applied and sparse Auto delivery/Stop smoke (Auto quality NOT qualified)
         shell: bash
         run: |
           set -euo pipefail
@@ -382,13 +382,20 @@ jobs:
                 tail -110 "fixed-kernel-result/v4-public-$mode-real-cli.log" >&2
                 exit 1
               }
-            grep -Fq "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_APPLIED_REAL_AUTH_M2_GROUP_M4_TUN_STOP_PASS mode=$mode" \
-              "fixed-kernel-result/v4-public-$mode-real-cli.log"
+            if [[ "$mode" == fec-fixed ]]; then
+              # Legacy Fixed still requires its old M2 applied witness.
+              marker="M0_PUBLIC_ORIGINAL_GO_V4_FEC2_APPLIED_REAL_AUTH_M2_GROUP_M4_TUN_STOP_PASS mode=$mode"
+            else
+              # A sparse 64-record Auto smoke is not a mature 1024-PN
+              # Quality cohort; do not mislabel its pending readback PASS.
+              marker="M0_PLAN027_AUTO_SHORT_BURST_DELIVERY_STOP_PENDING_QUALITY_NOT_QUALIFIED mode=$mode"
+            fi
+            grep -Fq "$marker" "fixed-kernel-result/v4-public-$mode-real-cli.log"
             grep -Fq "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode=$mode delivered=64" \
               fixed-kernel-result/public-v4-normal-business.log
             cp fixed-kernel-result/public-v4-normal-business.log \
               "fixed-kernel-result/v4-public-$mode-business.log"
-            echo "M0_PLAN022_PUBLIC_V4_FEC_MODE_REAL_APP_M2_AND_STOP_PASS mode=$mode same_binary=1 first_app=64"
+            echo "M0_PLAN027_PUBLIC_V4_FEC_SHORT_SMOKE_PASS mode=$mode same_binary=1 first_app=64 auto_quality_maturity_not_claimed=1"
           done
       - name: Two real original-Go product Game2/4 multi-lane TLS -> M4 raw/TUN first-app and damaged lane no-HOL
         shell: bash
