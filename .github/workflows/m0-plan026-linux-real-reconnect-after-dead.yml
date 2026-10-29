@@ -1,3 +1,4 @@
+# PLAN026 H373 concurrent exact-SOURCE real Linux original Go TLS Rust dead106s/100pct blackout, restore, fresh kernel flow auto reauth; NOT a Windows dead/FIN/Dormant/Wake claim.
 name: M0 PLAN026 Linux original TLS Rust native real dead reconnect on new traffic
 run-name: "M0|PLAN026-LINUX-RECONNECT-AFTER-DEAD|${{ github.sha }}"
 on:
