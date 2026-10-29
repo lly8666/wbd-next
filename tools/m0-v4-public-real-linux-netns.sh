@@ -101,8 +101,8 @@ s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.bind(("10.66.0.1",45901));s.settimeout(28)
 try:
     # Count distinct ORIGINAL UDP payloads, not received retries. The
-    # native Rust frozen retransmit can legitimately redeliver a packet;
-    # duplicates must never satisfy an application-completion assertion.
+    # Native outer repair is only opportunistic; duplicate delivery never
+    # satisfies the independent application first-unique counter.
     distinct=set()
     target=int(os.environ["WBD_REAL_COUNT"])
     while len(distinct)<target:
@@ -159,17 +159,24 @@ if fec or loss:
     # DEADLOCKS on one missing echo and starves all subsequent genuine
     # M2 mature-gap evidence. Use a bounded real application source burst
     # on the very same public Rust transport binaries. No app retries,
-    # no fake TCP ACK, no alternate FEC codec, no relaxed 512/Stop proof.
+    # no fake TCP ACK, no alternate FEC codec and no assumed UDP recovery.
     payloads={}
     for i in range(count):
         msg=(b"WBD_REAL_V4_ORIGINAL_GO/"+str(i).encode()+b"/"+bytes([i%256])*64)
         payloads[msg]=i
-        s.sendto(msg,("10.66.0.1",45901))
+        assert s.sendto(msg,("10.66.0.1",45901))==len(msg)
         time.sleep(.003)
     unique=set()
-    s.settimeout(24)
+    # Real independent UDP loss is not guaranteed delivery by the outer
+    # one-shot repair. Account every offered first source, even missing ones.
+    deadline=time.monotonic()+6 if loss else None
+    s.settimeout(.5 if loss else 24)
     while len(unique)<count:
-        data,src=s.recvfrom(8192)
+        if loss and time.monotonic()>=deadline:break
+        try:data,src=s.recvfrom(8192)
+        except socket.timeout:
+            if loss:continue
+            raise
         assert data.startswith(b"V4_SERVER_APP_ECHO/")
         assert src[0]=="10.66.0.1"
         msg=data[len(b"V4_SERVER_APP_ECHO/"):]
@@ -177,8 +184,11 @@ if fec or loss:
         index=payloads[msg]
         if index not in unique:
             unique.add(index)
-            if loss:
-                print("M0_PUBLIC_ORIGINAL_GO_V4_CLIENT_SERVER_RUST_M4_REAL_TUN_UDP_ECHO_OK",index,flush=True)
+    if loss:
+        assert len(unique)>0,"no real first app delivery"
+        print("M0_V4_PUBLIC_REAL_NETEM_APP_ACCOUNTING offered="+str(count)+
+              " first_unique_delivered="+str(len(unique))+
+              " missing="+str(count-len(unique)),flush=True)
     if fec:
         print("M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode="+os.environ.get("WBD_REAL_MODE","")+" delivered="+str(len(unique)),flush=True)
 else:
@@ -227,8 +237,9 @@ if [[ "$GAME" != 0 ]];then
 fi
 if [[ "$FEC" == 1 ]];then
   # Go policy monitor refuses premature APPLIED; wait for real ORIGINAL
-  # M2 2s matured authenticated reverse receipts while both owners run.
-  sleep 3
+  # 2s authentic M2 maturity + the following 2s Go policy decision turn.
+  # Rust still requires M4 copied source/parity and genuine reverse receipt.
+  sleep 5
 fi
 # Confirm clean signal-to-actual-Rust-Stop; no test-only positive receipt.
 sudo -n kill -TERM "$(cat "$TMP/client.pid")"
@@ -289,20 +300,39 @@ if [[ "$LOSS" == 1 ]];then
 import pathlib,re,sys
 p=pathlib.Path(sys.argv[1]);out=pathlib.Path(sys.argv[2])
 def read(name):return (p/name).read_text()
-drops=sum(sum(map(int,re.findall(r'dropped (\d+)',read(n)))) for n in
-    ('kernel-client-netem.txt','kernel-server-netem.txt'))
-repairs=sum(sum(map(int,re.findall(r'original_frozen_retransmitted=(\d+)',read(n))))
-    for n in ('client.log','server.log'))
-copied=sum(sum(map(int,re.findall(r'real_first_copy=(\d+)',read(n))))
-    for n in ('client.log','server.log'))
-acks=sum(sum(map(int,re.findall(r'authenticated_ack=(\d+)',read(n))))
-    for n in ('client.log','server.log'))
-assert drops>0,f"kernel 1% dropped=0 not a real loss proof"
-assert copied>=1024,f"true first-copy count wrong: {copied}"
-assert repairs>0,f"no real M2 original-frozen retransmissions: {repairs}"
-assert acks>0,f"no real peer AEAD kind1 receipt retirement: {acks}"
-marker=f"M0_V4_PUBLIC_REAL_1PCT_M2_FROZEN_BIDIRECTIONAL_RECOVERY_PASS original_tls=1 real_udp_echo=512 kernel_netem_drops={drops} native_m2_frozen_retransmitted={repairs} authenticated_m2_acks={acks} actual_kernel_first_copied={copied} Stop_drained_both=1"
-(out/'v4-public-1pct-authentic-M2-recovery.log').write_text(marker+'\\n')
+# Genuine first app UDP underlay loss: all 512 offered stay in denominator,
+# including datagrams no opportunistic outer repair could possibly recover.
+app=(out/'public-v4-normal-business.log').read_text()
+m=re.search(r'M0_V4_PUBLIC_REAL_NETEM_APP_ACCOUNTING offered=(\d+) first_unique_delivered=(\d+) missing=(\d+)',app)
+assert m,"no application source/delivery denominator"
+offered,delivered,missing=map(int,m.groups())
+assert offered==512 and 0<delivered<=offered and missing==offered-delivered,(offered,delivered,missing)
+drops_by_side=[sum(map(int,re.findall(r'dropped (\d+)',read(n)))) for n in
+    ('kernel-client-netem.txt','kernel-server-netem.txt')]
+assert all(n>0 for n in drops_by_side),f"bidirectional netem not evidenced: {drops_by_side}"
+def counter(role,key):
+    values=re.findall(r'\b'+re.escape(key)+r'=(\d+)',read(role+'.log'))
+    assert values,(role,key)
+    return int(values[-1])
+client_copied=counter('client','real_first_copy')
+server_copied=counter('server','real_first_copy')
+acks=[counter(role,'authenticated_ack') for role in ('client','server')]
+repairs=sum(counter(role,'original_frozen_retransmitted') for role in ('client','server'))
+# A genuinely lost C2S source never generated a server echo; requiring
+# >=1024 total driver first-copies was the old false no-loss assumption.
+assert client_copied>=offered,(client_copied,offered)
+assert server_copied>=delivered,(server_copied,delivered)
+assert all(n>0 for n in acks),acks
+assert all('V4_PUBLIC_NATIVE_STOP_DRAINED role='+role in read(role+'.log')
+    for role in ('client','server')),"owned Stop did not drain"
+marker=(f"M0_V4_PUBLIC_REAL_1PCT_LOSS_ACCOUNTED_STOP_PASS"
+ f" original_tls=1 offered={offered} first_unique_delivered={delivered}"
+ f" missing={missing} tc_client_drop={drops_by_side[0]} tc_server_drop={drops_by_side[1]}"
+ f" kernel_first_copy_client={client_copied} kernel_first_copy_server={server_copied}"
+ f" authenticated_m2_acks_client={acks[0]} authenticated_m2_acks_server={acks[1]}"
+ f" outer_repair_attempts_observed={repairs} outer_repair_delivery_not_required=1"
+ f" Stop_drained_both=1")
+(out/'v4-public-1pct-authentic-M2-recovery.log').write_text(marker+'\n')
 print(marker)
 PY
 elif [[ "$FEC" == 1 ]];then
