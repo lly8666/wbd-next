@@ -1,0 +1,13 @@
+# PLAN026 H361 | Recovered in-flight Windows Game failure; parallel Linux Auto + Keepalive
+
+2026-10-29. Restarted at main c36e26bc7968c2d8e616db3b4d936093ecb106c1 / cursor H360 after checking 40848387586 (finished **FAIL**), 40848387469 (**SUCCESS** six signed Windows per-mode Wintun/WAL jobs), source manifests and original artifacts. Genuine two-OS Windows↔WSL2 native public mode at source adc586cd200c24eba717e07b9df6f1a0e0572dca: Normal, Fixed (true Rust mature M2) and Auto **PASS** per-mode; Game2, Game4, Game2-FEC, Game4-FEC **FAIL** before Windows client Ready with native TX worker error rc=3. After Game original Go post-reader-join Npcap handoff correction the previous RX-first `EndOfStream` no longer appears, but first TX error was not stage-instrumented. No inherited full Game PASS from signed one-packet test.
+
+Fix/diagnosis stage: add single-shot failing *TX-only* stage diagnostics for offer lock/result, NPF copied/uncertain, M4 stage receipt, due/ack and Game scheduling errors. All diagnostics log only on error (not per packet), leave original TLS/AEAD/PN/FEC, kernel send receipts, worker Stop and read protocol unchanged. New exact-source Windows original-Go real public Action must identify genuine first cause; no guess about Game4 CPU improvement before measurements.
+
+Independently of Windows compilation, user explicitly requested Linux Auto+Keepalive testing in parallel. New `.github/workflows/m0-plan026-linux-auto-keepalive-parallel.yml` launches TWO independent Linux jobs on this same immutable source: (1) reusable existing `m0-plan012-combined-functional.yml` full original Go TLS/Rust real two-netns raw/TUN original Auto 64 genuine offered/delivered app messages, native authenticated M2, Stop, existing Fixed/Game tests; (2) Linux Rust current-source authenticated native Health/Keepalive core 9+ positive/negative tests (idle no business, Health+Quality canonical TLV, dead vs FIN Dormant, stale incarnation, send failures with bounded retry). Health branch is **CORE ONLY**; real 15s idle protected two-sided Windows/Linux kernel traffic is NOT yet certified by this core job and will need its own test. Per-job source and run artifact remains separate, no historic binary reuse or fabricated network liveness claims.
+
+Legacy Normal/off historical signed Windows functional/N0/150Mbps already accepted and not a prerequisite. Outer repair delivery is optional and NOT used as a positive delivery gate.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Windows Game native error-side diagnostic only, plus new parallel Linux Auto real kernel and authenticated Keepalive/Health core Actions; no product config, wire, runtime, default, or user-facing feature changed."}
+```

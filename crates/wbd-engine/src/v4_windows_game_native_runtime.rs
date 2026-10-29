@@ -184,7 +184,10 @@ fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
             let mut g=owner.lock().map_err(|_|BAD_STAGE)?;
             game::game_m4_result_group(&mut g,group,r.lane,r.logical_id,r.pn,copied)
         };
-        if rc!=OK{return Err(rc)}
+        if rc!=OK{
+            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=game_m4_receipt rc={rc} lane={} copied={copied}",r.lane);
+            return Err(rc)
+        }
         if copied{
             c.tx_seq[idx].fetch_add(r.length,Ordering::Release);
             c.ack_sent[idx].store(ack,Ordering::Release);
@@ -192,6 +195,7 @@ fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
             if c.rx.load(Ordering::Acquire)>0{c.after.fetch_add(1,Ordering::Relaxed);}
         }
         if outcome.error.is_some()||outcome.uncertain_index.is_some(){
+            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=npcap_send_driver lane={} accepted_prefix={} uncertain_index={:?} error={:?}",r.lane,outcome.accepted_prefix,outcome.uncertain_index,outcome.error);
             return Err(BAD_STAGE)
         }
     }
@@ -230,13 +234,13 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 Ok(ReadResult::Frame(n))=>{
                     let records=match group.lock(){
                         Ok(mut g)=>game::offer_records_native(&mut g,cfg.group,&bytes[..n]),
-                        Err(_)=>return BAD_STAGE,
+                        Err(_)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_lock");return BAD_STAGE},
                     };
                     let rows=match records{Ok(v)=>v,Err(INVALID)=>{
                         c.rejected.fetch_add(1,Ordering::Relaxed);continue
-                    },Err(e)=>return e};
-                    if send_records(cfg.group,&cfg.first,&group,&lanes,&mut npf,
-                        &c,rows,&mut id).is_err(){return BAD_STAGE}
+                    },Err(e)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_result rc={e}");return e}};
+                    if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&lanes,&mut npf,
+                        &c,rows,&mut id){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_send_records rc={rc}");return rc}
                     did_work=true;
                 }
                 Ok(ReadResult::NoPacket|ReadResult::EndOfStream)=>break,
@@ -253,19 +257,20 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         // One bounded due pass, no Go per-packet polling.
         let due=match group.lock(){
             Ok(mut g)=>game::native_game_due(&mut g,cfg.group,16),
-            Err(_)=>return BAD_STAGE,
+            Err(_)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=due_lock");return BAD_STAGE},
         };
         match due{
             Ok(rows) if !rows.is_empty()=>{
-                if send_records(cfg.group,&cfg.first,&group,&lanes,
-                    &mut npf,&c,rows,&mut id).is_err(){return BAD_STAGE}
+                if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&lanes,
+                    &mut npf,&c,rows,&mut id){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=due_send_records rc={rc}");return rc}
                 did_work=true;
             },
-            Err(rc)=>return rc,
+            Err(rc)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=game_native_due rc={rc}");return rc},
             _=>{},
         }
-        if send_ack(&cfg.first,&lanes,&mut npf,&c,&mut id).is_err(){
-            return BAD_STAGE
+        if let Err(rc)=send_ack(&cfg.first,&lanes,&mut npf,&c,&mut id){
+            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=send_ack rc={rc}");
+            return rc
         }
         if did_work{continue}
         let timeout={
