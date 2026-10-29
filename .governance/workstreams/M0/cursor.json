@@ -4,18 +4,19 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 409,
-  "checkpoint_sha": "e0774cae0d1c33736cca295ae45130fcce406684",
+  "sequence": 410,
+  "checkpoint_sha": "44a5b8d0ae51b26b7db80eeb228fb19e8e67f671",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H407 source 36126525 low-rate RX bridge native Actions in progress. H407 governance40962693582 FAIL oversized card/9 context refs; H408 governance40962889507 role SUCCESS but feature catalog FAIL missing fec-auto declaration. H409 corrects declaration and trims redundant card text.",
-  "why_now": "Repair observed feature-catalog declaration failure while preserving exact source and in-flight native results.",
+  "current_task": "H407 SOURCE36126525 low-rate RX announced-CLOSE->mature summary native-functional40962693585 SUCCESS recovery94 engine136 receipt11 kernel6 fec3 normal3; ABI40962693614/cross40962693789 SUCCESS. Linux old-M2 owner40962693776 SUCCESS, 512/508 1pct, not new mechanism. Windows owner40962693602 still IN_PROGRESS at H410. Governance H409 corrected SUCCESS40963036802.",
+  "why_now": "Recover exact H407 source native Actions and manifest/binary/log/artifact hashes; keep Windows in-flight and distinguish old-M2 owner regression.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Recover H407 native-functional40962693585, Windows40962693602, Linux40962693776 and ABI Actions; correct any failures; continue PLAN027 production owner wiring and M2 retirement.",
+  "next_action": "Collect Windows old-M2 Action40962693602 first; continue live Windows/Linux Quality/Auto and outer ACK/SACK wiring, negotiated capability and M2 retirement; then PLAN027 A/B/C/long and required fixes.",
   "unverified": true,
-  "last_tested_source": "302d02049669d8f36f3d6852bc1c668ff003ed4a",
+  "last_tested_source": "361265256d58d18ea0b36badf04668c16fb19e1c",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN026-GAME2-SOURCE302D-TRUE-WINDOWS-LINUX-TWO-WAY-STOP-20261029.json"
+    "docs/evidence/M0/PLAN026-GAME2-SOURCE302D-TRUE-WINDOWS-LINUX-TWO-WAY-STOP-20261029.json",
+    "docs/evidence/M0/PLAN027-H410-RECEIVER-QUALITY-SOURCE-NATIVE-RESULTS-20261030.json"
   ],
   "context_refs": [
     "docs/prompts/M0.md",
@@ -23,10 +24,10 @@
     "docs/testing/WL_PERF_HARNESS_V2.md",
     "docs/features/entries/outer-opportunistic-repair.json",
     "docs/features/entries/fec-auto.json",
-    "docs/evidence/M0/PLAN027-H405-QUALITY-BOUNDARY-SOURCE-NATIVE-RESULTS-20261030.json",
+    "docs/evidence/M0/PLAN027-H410-RECEIVER-QUALITY-SOURCE-NATIVE-RESULTS-20261030.json",
     "docs/evidence/M0/PLAN027-H406-S404-OWNER-LEGACY-PATH-REGRESSION-20261030.json",
     "docs/devlog/M0/20261030-PLAN027-H407-RECEIVER-ANNOUNCED-CLOSE-WIRE-GLUE.md"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL H407 RX candidate, native verification in flight; old M2 still LIVE. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. H407/H408 governance failures retained, H409 metadata fix. Physical NOT_RUN."
+  "partial_summary": "§0-1 PARTIAL: H407 pure RX close+summary native PASS40962693585 with exact H410 manifest/hashes, old-M2 Linux owner PASS; Windows owner pending. Online M2 still LIVE, low-rate new control/Auto/ACK production NOT WIRED. §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. Physical NOT_RUN."
 }

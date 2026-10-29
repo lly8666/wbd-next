@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "361265256d58d18ea0b36badf04668c16fb19e1c",
+  "scope": "SOURCE_ONLY_RX_ANNOUNCED_CLOSE_TO_MATURE_QUALITY_WIRE; NO LIVE_OWNER_OR_M2_RETIREMENT",
+  "native_regression": {
+    "run_id": 40962693585,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/40962693585",
+    "platform": "ubuntu-24.04 linux/amd64",
+    "rustc": "1.85.1",
+    "profile": "release",
+    "features": "default",
+    "manifest_sha256": "0f67c41e1f8b719f08b6302eb0220ceda19444c699f091416f29505950b5a3c0",
+    "build": {
+      "artifact_id": 12935278796,
+      "zip_sha256": "694c5b5499aa864d893ed700d9fa22e736ff40b257e60753b57b9d8044174983"
+    },
+    "groups": [
+      {
+        "name": "recovery",
+        "job_id": 123759832257,
+        "passed": 94,
+        "failed": 0,
+        "ignored": 0,
+        "binary_sha256": "fcacb11c5084b9694fc35a764c5bcedd3e746a4d3ebef00c71d1e5fb86b503c4",
+        "log_sha256": "f7cd80b93702579a69756ff09473bc926b2d0449ec2e94595a7d5c99dd3d74f6",
+        "artifact_id": 12935278807,
+        "artifact_zip_sha256": "17769992a03b64deaf0133daebdb21fdeaf2568bdadd597259abfb0bd78fdd2c"
+      },
+      {
+        "name": "engine",
+        "job_id": 123759832282,
+        "passed": 136,
+        "failed": 0,
+        "ignored": 1,
+        "binary_sha256": "b430c6d67cce09c0808ff34f83da7eed2fe00545b6d6a42e1e243ad907674f56",
+        "log_sha256": "2f31d84cd31c3f77fb456c08dc524b4918b9c20b9c9bc716872ec3b17d36b512",
+        "artifact_id": 12937026418,
+        "artifact_zip_sha256": "c7570123db7a7c8465348af10c5c6a5e8c03e65dd298cb5971c95416021d3336"
+      },
+      {
+        "name": "receipt",
+        "job_id": 123759832349,
+        "passed": 11,
+        "failed": 0,
+        "ignored": 0,
+        "artifact_id": 12935784275,
+        "artifact_zip_sha256": "b7e00a414fc2cdfe7daa18ece13b6d70d001242dd0bfa6f117b4cefb5155fefa"
+      },
+      {
+        "name": "kernel",
+        "job_id": 123759832318,
+        "passed": 6,
+        "failed": 0,
+        "ignored": 0,
+        "artifact_id": 12935354850,
+        "artifact_zip_sha256": "0960277804ea9d12fd3b11793bee0405b7d56e35b1895ecea4e99dd4bcc8c2d5"
+      },
+      {
+        "name": "fec",
+        "job_id": 123759832165,
+        "passed": 3,
+        "failed": 0,
+        "ignored": 0,
+        "artifact_id": 12935968744,
+        "artifact_zip_sha256": "740e99206add0f5594ceb361f1aa635a86a18268d45f16a35633473d88e1b212"
+      },
+      {
+        "name": "normal",
+        "job_id": 123759832179,
+        "passed": 3,
+        "failed": 0,
+        "ignored": 0,
+        "artifact_id": 12937006444,
+        "artifact_zip_sha256": "076d3e18798881e0449c914d454815b8789c965ef1325701d1df203d32b85e2e"
+      }
+    ],
+    "new_required_tests": [
+      "quality_window::plan027_announced_close_tests::r2_plan027_closed_receiver_exports_only_sender_matched_mature_wire",
+      "quality_window::plan027_announced_close_tests::r2_plan027_prestart_data_and_sender_censor_cannot_be_clean",
+      "quality_window::plan027_announced_close_tests::r2_plan027_bad_close_does_not_advance_receiver_maturity",
+      "v4_native_health::tests::r1_plan027_authenticated_signal_to_mature_wire_without_receipt"
+    ]
+  },
+  "other_source_actions": [
+    {
+      "run_id": 40962693614,
+      "conclusion": "success",
+      "scope": "r0-native-abi",
+      "build_artifact_id": 12936367679,
+      "build_zip_sha256": "6d2a1a7eb53e8ff7f59eeea555b2339b304cf9f8509d40cea011f6ebafb71faa",
+      "result_artifact_id": 12936557331,
+      "result_zip_sha256": "f965a5ff77ce43cbd2c8c07bd4078f687bcf52421b30dfd6c87f1d973ce9d61c"
+    },
+    {
+      "run_id": 40962693789,
+      "conclusion": "success",
+      "scope": "linux-arm64 and windows-gnu cross-ABI",
+      "result_artifact_ids": [
+        12937270174,
+        12936178293
+      ]
+    },
+    {
+      "run_id": 40962693776,
+      "conclusion": "success",
+      "scope": "OLD M2 Linux original Go TLS/Rust native owner and Health, NOT new low-rate live wire",
+      "real_kernel_1pct": {
+        "offered": 512,
+        "first_unique_delivered": 508,
+        "missing": 4,
+        "tc_client_drop": 5,
+        "tc_server_drop": 5,
+        "authenticated_m2_acks_client": 283,
+        "authenticated_m2_acks_server": 269,
+        "stop_drained_both": true
+      },
+      "combined_artifact_id": 12936138664,
+      "combined_zip_sha256": "9686f8dbf66ad217a6d0b44e9c6c14634bf287d9ffafe2e38c349010208469e5",
+      "health_artifact_id": 12935374761,
+      "health_zip_sha256": "4643b8ed5d208ad074cf6a54a23435a5da796aab52abc69b9b4ee35023330a3a"
+    },
+    {
+      "run_id": 40962693602,
+      "conclusion": "in_progress_at_collection",
+      "scope": "Windows original owner old M2; collect later, do not count PASS"
+    }
+  ],
+  "governance": {
+    "first_run": 40962693582,
+    "first_conclusion": "failure",
+    "second_run": 40962889507,
+    "second_conclusion": "failure",
+    "corrected_run": 40963036802,
+    "corrected_conclusion": "success",
+    "scope": "feature-card byte bound, cursor context bound and feature-impact declaration"
+  },
+  "unverified": [
+    "Windows/Linux live low-rate START/CLOSE and mature summary NOT WIRED",
+    "Per-record M2 Receipt still LIVE on both owners",
+    "Outer ACK/SACK production one-shot repair NOT WIRED",
+    "PLAN027 A/B/C, 5-minute stability and real new-source p99/CPU/RSS/drop NOT_RUN",
+    "physical NOT_RUN"
+  ]
+}
