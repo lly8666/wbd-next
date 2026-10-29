@@ -4,19 +4,20 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 413,
-  "checkpoint_sha": "97c9a59820fbfc847b9f32020cc6eb57a291218f",
+  "sequence": 426,
+  "checkpoint_sha": "aecadabdbe433748c5eb4d9bb421aa8bfe921ab8",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H413 committed Windows original Rust owner AEAD-opened START/CLOSE RX four bounded quality windows; matured v2 Quality send through existing kind1 feedback/real NPF completion; FEC2 authenticated PN ingress wired. SOURCE unverified; prior old-M2 PASS not transferred.",
-  "why_now": "Recovered b4cd006c HEAD and completed prior runs; H413 source and Windows FEC2 RX/low-rate TX wiring pushed, native/Windows Actions running. Historical feature/governance failure on H413 source-only commit corrected by feature-impact devlog.",
+  "current_task": "H426 recovered H414-H425 source progress and H425 Actions; corrected legacy 64-packet Auto smoke oracle so sparse pending Quality is not misreported as applied. H425 native/governance PASS, combined Auto old-assertion FAIL retained, cross-platform in flight; Fixed/off per-record M2 remains active.",
+  "why_now": "PLAN027 §0-1 still PARTIAL. Actual H425 Auto netns 64 first-app delivery passed but requested=1 applied=0 pending=true is correct with unclosed 1024-PN Quality; old M2-based smoke falsely required applied=1. Corrected source-locked smoke markers without weakening production policy. Continue code replacement and A/B/C.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H413 exact-source Windows native, Rust, governance results; repair compile/test failures; connect driver-accepted TX window START/CLOSE and SendHistory→Auto, retire old per-record M2 in both owners; then A/B/C and final evidence.",
+  "next_action": "First collect 40976092884 and exact-source H426 runs 40976712086/40976711962/40976711934; do not duplicate dispatch. Retire remaining Fixed/off per-record M2 and hot feedback; implement bounded ACK/SACK one-shot original-ciphertext retirement, both owners and Health/Auto. Freeze source, Actions A1-A5; then Windows/Linux B lifecycle, capacity C and 5-minute stability, measured fixes and final evidence.",
   "unverified": true,
-  "last_tested_source": "361265256d58d18ea0b36badf04668c16fb19e1c",
+  "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H410-RECEIVER-QUALITY-SOURCE-NATIVE-RESULTS-20261030.json",
-    "docs/evidence/M0/PLAN027-H411-WINDOWS-OLD-M2-OWNER-AND-GOVERNANCE-20261030.json"
+    "docs/evidence/M0/PLAN027-H411-WINDOWS-OLD-M2-OWNER-AND-GOVERNANCE-20261030.json",
+    "docs/evidence/M0/PLAN027-H426-RECOVERED-H425-ACTIONS-AND-SPARSE-AUTO-SMOKE-20261030.json"
   ],
   "context_refs": [
     "docs/prompts/M0.md",
@@ -26,8 +27,9 @@
     "docs/features/entries/fec-auto.json",
     "docs/evidence/M0/PLAN027-H410-RECEIVER-QUALITY-SOURCE-NATIVE-RESULTS-20261030.json",
     "docs/evidence/M0/PLAN027-H411-WINDOWS-OLD-M2-OWNER-AND-GOVERNANCE-20261030.json",
-    "docs/devlog/M0/20261030-PLAN027-H407-RECEIVER-ANNOUNCED-CLOSE-WIRE-GLUE.md"
+    "docs/devlog/M0/20261030-PLAN027-H407-RECEIVER-ANNOUNCED-CLOSE-WIRE-GLUE.md",
+    "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL (Windows v2 receiving/sending candidate production wired, start producer/quality Auto policy/ACK and Linux and M2 retirement OPEN). §0-2 A NOT_RUN; §0-3 B OPEN; §0-4 C NOT_RUN; §0-5 OPEN. H413 SOURCE needs Actions validation, no new-source product p99/CPU/RSS/drop or capacity claims."
+  "partial_summary": "§0-1 PARTIAL: H414–H425 Linux/Windows Auto v2 quality code and readback landed, H425 native/governance success, but Fixed/off old M2 Receipt and ACK/SACK replacement OPEN; Auto 1024-PN mature production sample NOT_QUALIFIED. §0-2 A1–A5 NOT_RUN. §0-3 B Windows/Linux real wiring/lifecycle OPEN. §0-4 C matrix/5min NOT_RUN. §0-5 fixes/regression/delivery OPEN. H425 combined/Auto legacy 64-packet assertion FAIL preserved, corrected in H426 smoke-only fixture; new-source Actions in flight. No current-source p99/CPU/RSS/drop/capacity PASS; physical NOT_RUN."
 }
