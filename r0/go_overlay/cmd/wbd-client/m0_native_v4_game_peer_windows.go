@@ -12,6 +12,7 @@ import (
  "encoding/json"
  "runtime"
  "sync"
+ "syscall"
  "time"
 
  "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -190,9 +191,17 @@ func(p *m0NativeV4GamePeer) receive(ctx context.Context,in m0GameInbound)error{
  }
  if e!=nil{return nil} // Rust AEAD/PN/auth rejection, never OS copy
  copiedPrefix:=uint32(0)
+ var temporaryRingFull bool
  for _,ipv4:=range frames{
-  n,e:=p.ring.WriteAuthenticatedIPv4(ctx,ipv4)
-  if e!=nil||n!=len(ipv4){break}
+  n,copyErr:=p.ring.WriteAuthenticatedIPv4(ctx,ipv4)
+  if copyErr!=nil||n!=len(ipv4){
+   // Win32 ERROR_BUFFER_OVERFLOW (111) from genuine Wintun
+   // AllocateSendPacket is a transient ring-capacity refusal, not an
+   // invalid signed adapter or broken shared driver. Its prepared Game
+   // first copy is settled NotSent below; other lanes remain available.
+   temporaryRingFull=errors.Is(copyErr,syscall.Errno(111))
+   break
+  }
   copiedPrefix++
  }
  if pending{
@@ -206,7 +215,10 @@ func(p *m0NativeV4GamePeer) receive(ctx context.Context,in m0GameInbound)error{
   }
  }
  p.mu.Lock();p.opened+=uint64(copiedPrefix);p.mu.Unlock()
- if copiedPrefix!=uint32(len(frames)){return windowsclient.ErrN4NativeGuard}
+ if copiedPrefix!=uint32(len(frames)){
+  if temporaryRingFull{return nil} // bounded discard, not false delivered
+  return windowsclient.ErrN4NativeGuard // real shared Wintun failure
+ }
  if independent{
   l.ack=l.rx.Ack()
  }else{

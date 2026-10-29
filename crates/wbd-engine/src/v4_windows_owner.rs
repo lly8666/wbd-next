@@ -386,14 +386,23 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                 base_pn:p.base_pn.0,bitmap:p.bitmap,
             }).collect(),
         });
-        // A genuine M2/Quality draft carries the same authenticated idle
-        // evidence. Its confirmed native NPF copy defers standalone Health.
+        // A fresh M2 receipt is NOT the legacy ~2s Quality cadence. Only
+        // when low-frequency Health is actually due do we piggyback its
+        // local business-idle hint and bounded random padding. Otherwise
+        // forward the M2 bitmap at original speed without any control RNG.
         let budget=normal_off_windows_budget(e)?;
-        let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
-        let tlv=crate::v4_native_health::encode_authenticated_health_live(
-            m.health.local_idle_ns(now.0),msg.as_ref(),None,
-            budget.record_payload_mtu
-        ).map_err(|_|INVALID)?;
+        let tlv=if health_due{
+            let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
+            crate::v4_native_health::encode_authenticated_health_live(
+                m.health.local_idle_ns(now.0),msg.as_ref(),None,
+                budget.record_payload_mtu
+            ).map_err(|_|INVALID)?
+        }else{
+            wbd_codec::encode_control(
+                &[wbd_codec::ControlTlv::Receipt(msg.ok_or(BAD_STAGE)?)],
+                budget.record_payload_mtu.min(512)
+            ).map_err(|_|INVALID)?
+        };
         // Preflight the *actual encoded receipt* against the caller's
         // C ABI output BEFORE spending an AEAD PN and original TCP sequence.
         // A short buffer is backpressure, not a silently emitted control:
@@ -433,7 +442,7 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
     match prepared{
         Ok((n,seq,pn))=>{
-            m.feedback_pending=Some((draft,pn,true));
+            m.feedback_pending=Some((draft,pn,health_due));
             Ok(Some((n,seq,pn)))
         },
         Err(err)=>{
@@ -443,7 +452,7 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                     draft,FeedbackSendResult::NotSent,now
                 );
             }
-            m.health.on_health_send_result(now.0,false);
+            if health_due{m.health.on_health_send_result(now.0,false)}
             if err==FULL{Ok(None)}else{Err(err)}
         },
     }

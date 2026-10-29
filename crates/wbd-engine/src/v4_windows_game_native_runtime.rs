@@ -9,7 +9,7 @@ use std::collections::{BTreeMap,VecDeque};
 use std::thread::{self,JoinHandle};
 use wbd_platform::windows_native_io::{
     self as io,NpcapRx,NpcapTx,NpcapFns,WintunRx,WintunTx,
-    WintunFns,WakeEvent,ReadResult,WaitResult,
+    WintunFns,WakeEvent,ReadResult,WaitResult,NativeIoError,
 };
 use wbd_platform::ipv4_tcp::{
     build_bytes,build_presentation_ack,Ipv4Tuple,Presentation,PacketPersona,
@@ -177,6 +177,7 @@ fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
     owner:&Arc<Mutex<game::WinGameGroup>>,
     lanes:&[LaneConfig],npf:&mut [NpcapTx],c:&GameCounters,
     records:Vec<game::WbdWindowsGameRecordV4>,ip_id:&mut u16,
+    active:&mut [bool],
 )->Result<usize,i32>{
     let total=records.len();
     for r in records{
@@ -190,8 +191,10 @@ fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
         let frame=wire_frame(cfg,l,seq,ack,
             &r.wire[..r.length as usize],*ip_id,&mut scratch)?;
         *ip_id=ip_id.wrapping_add(1);
-        let outcome=npf[idx].send_batch(&[frame]);
-        let copied=outcome.accepted_prefix==1;
+        let outcome=if active[idx]{
+            Some(npf[idx].send_batch(&[frame]))
+        }else{None};
+        let copied=outcome.as_ref().is_some_and(|x|x.accepted_prefix==1);
         // Settle this exact original Linux GameAdapter staged ticket
         // AFTER the real Npcap success/unknown/not-sent result. No Go
         // fake receipt, no inferred application ACK.
@@ -209,8 +212,17 @@ fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
             c.tx.fetch_add(1,Ordering::Relaxed);
             if c.rx.load(Ordering::Acquire)>0{c.after.fetch_add(1,Ordering::Relaxed);}
         }
-        if outcome.error.is_some()||outcome.uncertain_index.is_some(){
-            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=npcap_send_driver lane={} accepted_prefix={} uncertain_index={:?} error={:?}",r.lane,outcome.accepted_prefix,outcome.uncertain_index,outcome.error);
+        if let Some(outcome)=outcome{
+            if outcome.error.is_some()||outcome.uncertain_index.is_some(){
+                // Only this NPF TX endpoint is untrustworthy. The original
+                // staged ticket was already settled using its REAL copied
+                // prefix. Keep 2/4-lane siblings sending; all dead is fatal.
+                eprintln!("M0_PLAN026_GAME_NATIVE_TX_LANE_RETIRED lane={} stage=npcap_send_driver accepted_prefix={} uncertain_index={:?} error={:?}",r.lane,outcome.accepted_prefix,outcome.uncertain_index,outcome.error);
+                let _=retire_game_tx_lane(active,idx);
+            }
+        }
+        if !active.iter().any(|&ok|ok){
+            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=all_npcap_send_lanes_retired");
             return Err(BAD_STAGE)
         }
     }
@@ -218,8 +230,10 @@ fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
 }
 fn send_ack(cfg:&WbdWinNativeAttachV1,lanes:&[LaneConfig],
     npf:&mut [NpcapTx],c:&GameCounters,ip_id:&mut u16,
+    active:&mut [bool],
 )->Result<(),i32>{
     for (i,l) in lanes.iter().enumerate(){
+        if !active[i]{continue}
         let ack=c.ack[i].load(Ordering::Acquire);
         if ack==c.ack_sent[i].load(Ordering::Acquire){continue}
         let mut scratch=[0u8;FRAME_CAP];
@@ -235,7 +249,11 @@ fn send_ack(cfg:&WbdWinNativeAttachV1,lanes:&[LaneConfig],
             c.ack_sent[i].store(ack,Ordering::Release)
         }
         if status.error.is_some()||status.uncertain_index.is_some(){
-            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=npcap_ack_send_driver lane={} accepted_prefix={} uncertain_index={:?} error={:?}",i+1,status.accepted_prefix,status.uncertain_index,status.error);
+            eprintln!("M0_PLAN026_GAME_NATIVE_TX_LANE_RETIRED lane={} stage=npcap_ack_send_driver accepted_prefix={} uncertain_index={:?} error={:?}",i+1,status.accepted_prefix,status.uncertain_index,status.error);
+            let _=retire_game_tx_lane(active,i);
+        }
+        if !active.iter().any(|&ok|ok){
+            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=all_npcap_ack_lanes_retired");
             return Err(BAD_STAGE)
         }
     }
@@ -247,6 +265,9 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     wake:Arc<WakeEvent>,c:Arc<GameCounters>,
 )->i32{
     let mut bytes=[0u8;MAX_IPV4];let mut id=1u16;
+    // TX and RX capture endpoints have distinct native failure lifetimes.
+    // Retiring one local TX handle must never stop another lane's NPF send.
+    let mut active=vec![true;npf.len()];
     loop{
         if c.stop.load(Ordering::Acquire){return OK}
         let mut did_work=false;
@@ -262,7 +283,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                         c.rejected.fetch_add(1,Ordering::Relaxed);continue
                     },Err(e)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_result rc={e}");return e}};
                     if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&lanes,&mut npf,
-                        &c,rows,&mut id){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_send_records rc={rc}");return rc}
+                        &c,rows,&mut id,&mut active){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_send_records rc={rc}");return rc}
                     did_work=true;
                 }
                 Ok(ReadResult::NoPacket|ReadResult::EndOfStream)=>break,
@@ -284,13 +305,13 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         match due{
             Ok(rows) if !rows.is_empty()=>{
                 if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&lanes,
-                    &mut npf,&c,rows,&mut id){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=due_send_records rc={rc}");return rc}
+                    &mut npf,&c,rows,&mut id,&mut active){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=due_send_records rc={rc}");return rc}
                 did_work=true;
             },
             Err(rc)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=game_native_due rc={rc}");return rc},
             _=>{},
         }
-        if let Err(rc)=send_ack(&cfg.first,&lanes,&mut npf,&c,&mut id){
+        if let Err(rc)=send_ack(&cfg.first,&lanes,&mut npf,&c,&mut id,&mut active){
             eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=send_ack rc={rc}");
             return rc
         }
@@ -353,9 +374,22 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
     let total=frames.len();
     let mut copied=0u32;
     let mut failed=false;
+    let mut backpressure=false;
     for frame in frames{
-        if tun.deliver_authenticated(&frame).is_err(){failed=true;break}
-        copied+=1;c.rx.fetch_add(1,Ordering::Release);
+        match tun.deliver_authenticated(&frame){
+            Ok(())=>{copied+=1;c.rx.fetch_add(1,Ordering::Release);},
+            Err(NativeIoError::BufferTooSmall)=>{
+                // ERROR_BUFFER_OVERFLOW from Wintun AllocateSendPacket:
+                // this bounded packet cannot be copied right now. Release
+                // its prepared Game first-delivery reservation as NOT copied;
+                // later authenticated sibling lanes may still deliver it.
+                backpressure=true;break
+            },
+            Err(err)=>{
+                eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=RX stage=shared_wintun_delivery error={err:?}");
+                failed=true;break
+            },
+        }
     }
     if pending{
         let mut g=group.lock().map_err(|_|BAD_STAGE)?;
@@ -366,7 +400,12 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
         };
         if rc!=OK{return Err(rc)}
     }
-    if failed||copied as usize!=total{return Err(BAD_STAGE)}
+    if failed{return Err(BAD_STAGE)}
+    if backpressure{
+        c.rejected.fetch_add(1,Ordering::Relaxed);
+        return Ok(()) // no kernel-delivery ledger, no synthetic TCP ACK
+    }
+    if copied as usize!=total{return Err(BAD_STAGE)}
     // The group game opener already verified independent original
     // authenticated AEAD/PN, so presentation ACK can only follow that.
     let ack=ledgers[lane].verified(seq,wire.len());
@@ -375,6 +414,10 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
 }
 // Per-capture retirement never substitutes a shared Wintun or owner Stop.
 // A real last-lane loss is terminal. No timers or replacement threads.
+fn retire_game_tx_lane(active:&mut [bool],lane:usize)->bool{
+    if let Some(slot)=active.get_mut(lane){*slot=false}
+    active.iter().any(|&ok|ok)
+}
 fn retire_game_rx_lane(active:&mut [bool],lane:usize)->bool{
     if let Some(slot)=active.get_mut(lane){*slot=false}
     active.iter().any(|&ok|ok)
@@ -684,6 +727,15 @@ mod tests{
         },[1;6],[2;6],1,1,1,39,&mut bytes);
         assert_eq!(result,Err(INVALID));
         assert!(bytes.iter().all(|&x|x==0xa5));
+    }
+    #[test]
+    fn one_tx_npf_driver_failure_keeps_sibling_copy_and_last_loss_is_fatal(){
+        let mut active=[true,true,true,true];
+        assert!(retire_game_tx_lane(&mut active,0));
+        assert_eq!(active,[false,true,true,true]);
+        assert!(retire_game_tx_lane(&mut active,2));
+        assert!(retire_game_tx_lane(&mut active,1));
+        assert!(!retire_game_tx_lane(&mut active,3));
     }
     #[test]
     fn one_npf_capture_failure_keeps_other_game_lanes_and_stop_wait_live(){

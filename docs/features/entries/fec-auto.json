@@ -36,7 +36,8 @@
   "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
   "docs/evidence/M0/PLAN026-LINUX-AUTO-KEEPALIVE-SOURCE7E984-20261029.json",
   "docs/evidence/M0/PLAN026-LINUX-AUTO-NATURAL-REAL-26000-SOURCE80BF-20261029.json",
-  "docs/devlog/M0/20261029-PLAN026-GAME-NATIVE-WRITE-COMMIT-LANE-ISOLATION-HEALTH-ORACLE-BATCH.md"
+  "docs/devlog/M0/20261029-PLAN026-GAME-NATIVE-WRITE-COMMIT-LANE-ISOLATION-HEALTH-ORACLE-BATCH.md",
+  "docs/devlog/M0/20261030-PLAN026-RECOVERY-M2-LOW-FREQUENCY-HEALTH-GAME-LANE-SEND-WINTUN-BOUNDARIES.md"
  ],
  "verification": [
   {
@@ -194,7 +195,8 @@
   "H307 exact S55 source49f81637 reviewed integration to main; original per-SOURCE tests and limitations unchanged. See docs/devlog/M0/PLAN025-H307-S55-frozen-product-main-integration-20261028.md.",
   "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
   "PLAN026 Linux source80bf true Auto 26k real M2/k cohort VALID 30s/4096, revision2 profile4 Applied both roles + owned Stop PASS; Windows Auto/CPU/GUI/physical still NOT_RUN.",
-  "Candidate: actual accepted M2 now carries idle Health. Native requalification pending."
+  "Candidate: actual accepted M2 now carries idle Health. Native requalification pending.",
+  "Candidate M2 feedback no longer forces Health padding/clock reset unless Health due; ordinary M2 retains original prompt timing. No new timers; real Auto M2 proof pending."
  ],
  "promotion": null
 }

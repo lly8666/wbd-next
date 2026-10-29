@@ -396,6 +396,21 @@ mod tests {
         assert!(!c.server_can_dormant(180*S));
     }
     #[test]
+    fn frequent_receipt_without_idle_hint_never_retimes_health_or_sends_random_padding(){
+        let mut clock=default();
+        for ms in 1..15_000u64{
+            // A real M2 bitmap can be much more frequent than old Quality.
+            // No Health TLV => no 15s deadline refresh, no secret RNG.
+            clock.on_merged_control_sent(ms*1_000_000,false);
+            assert_eq!(clock.next_tx_deadline(),Some(15*S));
+        }
+        assert_eq!(clock.control_due(15*S),ControlDue::Health);
+        clock.on_merged_control_sent(15*S,true);
+        let next=clock.next_tx_deadline().unwrap();
+        assert!((28*S+S/2..=31*S+S/2).contains(&next));
+        assert_eq!(clock.last_business,0);
+    }
+    #[test]
     fn failure_retries_at_one_second_without_claiming_keepalive_success(){
         let mut c=default();
         assert_eq!(c.control_due(15*S),ControlDue::Health);

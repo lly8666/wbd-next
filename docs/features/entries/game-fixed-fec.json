@@ -1,122 +1,124 @@
 {
-  "schema_version": 1,
-  "id": "game-fixed-fec",
-  "name": "Game内层固定FEC2",
-  "summary": "在Game2/4真实lane上按固定级别生成FEC源与修复数据，与纯副本隔离计数。",
-  "owner": "M0/M3 + FEC实验",
-  "stage": "experimental",
-  "development_branch": "experiment/fec-network-tuning",
-  "available_on": [
-    "integration/w168-freeze-windows-adapter-20261026",
-    "main"
-  ],
-  "defaults": {
-    "--game-fec": "off（默认）",
-    "alternatives": "fixed0..fixed6，Game Auto不支持"
+ "schema_version": 1,
+ "id": "game-fixed-fec",
+ "name": "Game内层固定FEC2",
+ "summary": "在Game2/4真实lane上按固定级别生成FEC源与修复数据，与纯副本隔离计数。",
+ "owner": "M0/M3 + FEC实验",
+ "stage": "experimental",
+ "development_branch": "experiment/fec-network-tuning",
+ "available_on": [
+  "integration/w168-freeze-windows-adapter-20261026",
+  "main"
+ ],
+ "defaults": {
+  "--game-fec": "off（默认）",
+  "alternatives": "fixed0..fixed6，Game Auto不支持"
+ },
+ "usage": {
+  "cli": "Windows isolated --native-v4-product --lanes 2|4 --fec.mode fixed --fec.profile 0..6 names, protected original TLS GameFec=profile+1; Game auto unsupported.",
+  "config": "原Go V3 fixed4 carrier仅是入场包络，Rust FixedStream本身支持profile 0..6和revision；不是单独Fixed6测试活动，默认FEC2 OFF",
+  "gui": "Windows真实WinForms Applied/Disconnect仍NOT_RUN，不从CLI或M2组件PASS推断"
+ },
+ "code_refs": [
+  "r0/go_overlay/internal/v4productcli/linux.go",
+  "r0/go_overlay/internal/v4productcli/game_linux.go",
+  "crates/wbd-engine/src/v4_game_fec.rs",
+  "crates/wbd-codec/src/fec_v2.rs",
+  "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_group.go",
+  "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_server_group.go",
+  "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_fec_batch.go",
+  "crates/wbd-engine/src/v4_windows_game_owner.rs",
+  "crates/wbd-engine/src/v4_game_lane.rs",
+  "crates/wbd-engine/src/v4_windows_game_native_runtime.rs",
+  "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go"
+ ],
+ "doc_refs": [
+  "docs/architecture/FEC_V2_BALANCED.md",
+  "docs/evidence/fec-network-work/20261026-W103-Game2-Game4-fixed6-outerDATAoff-real-clean-PASS.json",
+  "docs/devlog/M0/20261029-PLAN026-GAME-NATIVE-WRITE-COMMIT-LANE-ISOLATION-HEALTH-ORACLE-BATCH.md",
+  "docs/devlog/M0/20261030-PLAN026-RECOVERY-M2-LOW-FREQUENCY-HEALTH-GAME-LANE-SEND-WINTUN-BOUNDARIES.md"
+ ],
+ "verification": [
+  {
+   "platform": "linux/arm64",
+   "scope": "Game2/4 fixed6内层FEC真实kernel范围，旧F源码",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+   "evidence": "docs/evidence/fec-network-work/20261026-W130-W134-Go-Rust-RX-handoff-real-five-mode-Actions.json"
   },
-  "usage": {
-    "cli": "Windows isolated --native-v4-product --lanes 2|4 --fec.mode fixed --fec.profile 0..6 names, protected original TLS GameFec=profile+1; Game auto unsupported.",
-    "config": "原Go V3 fixed4 carrier仅是入场包络，Rust FixedStream本身支持profile 0..6和revision；不是单独Fixed6测试活动，默认FEC2 OFF",
-    "gui": "Windows真实WinForms Applied/Disconnect仍NOT_RUN，不从CLI或M2组件PASS推断"
+  {
+   "platform": "windows/x64",
+   "scope": "undefined；候选源 8e0daba5，不是Linux或Normal的通过",
+   "status": "FAIL",
+   "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
+   "evidence": "docs/devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md"
   },
-  "code_refs": [
-    "r0/go_overlay/internal/v4productcli/linux.go",
-    "r0/go_overlay/internal/v4productcli/game_linux.go",
-    "crates/wbd-engine/src/v4_game_fec.rs",
-    "crates/wbd-codec/src/fec_v2.rs",
-    "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_group.go",
-    "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_server_group.go",
-    "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_fec_batch.go",
-    "crates/wbd-engine/src/v4_windows_game_owner.rs",
-    "crates/wbd-engine/src/v4_game_lane.rs",
-    "crates/wbd-engine/src/v4_windows_game_native_runtime.rs",
-    "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go"
-  ],
-  "doc_refs": [
-    "docs/architecture/FEC_V2_BALANCED.md",
-    "docs/evidence/fec-network-work/20261026-W103-Game2-Game4-fixed6-outerDATAoff-real-clean-PASS.json",
-    "docs/devlog/M0/20261029-PLAN026-GAME-NATIVE-WRITE-COMMIT-LANE-ISOLATION-HEALTH-ORACLE-BATCH.md"
-  ],
-  "verification": [
-    {
-      "platform": "linux/arm64",
-      "scope": "Game2/4 fixed6内层FEC真实kernel范围，旧F源码",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "6c38ed0df9da3547c7bd604b51f13443d6863181",
-      "evidence": "docs/evidence/fec-network-work/20261026-W130-W134-Go-Rust-RX-handoff-real-five-mode-Actions.json"
-    },
-    {
-      "platform": "windows/x64",
-      "scope": "undefined；候选源 8e0daba5，不是Linux或Normal的通过",
-      "status": "FAIL",
-      "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
-      "evidence": "docs/devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md"
-    },
-    {
-      "platform": "physical",
-      "scope": "所有级别高损组合",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
-    },
-    {
-      "platform": "windows/x64",
-      "scope": "Windows Game2/4 fixed6 protected GameFec original TLS native kernel parity and real Wintun success/Stop",
-      "status": "FAIL",
-      "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
-      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source8e0daba-20261027.json"
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "original-Go credential TLS each of 2 Windows Npcap lanes → shared Linux Rust GameAdapter inner fixed profile6, authentic parity M4 copy/finish → signed Wintun + owned OS/WAL, genuine two-way UDP/TCP, owned Stop; exact-source native mode game2-fec",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
-      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json"
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "original-Go credential TLS each of 4 Windows Npcap lanes → shared Linux Rust GameAdapter inner fixed profile6, authentic parity M4 copy/finish → signed Wintun + owned OS/WAL, genuine two-way UDP/TCP, owned Stop; exact-source native mode game4-fec",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
-      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json"
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "Game2 and Game4 (2/4 genuine TLS/NPF lanes) plus shared Rust GameFecTx/Rx fixed profile6, authenticated GameFec TLV=7, parity NPF kernel-copy receipt and Wintun delivery, real Windows↔Linux duplex UDP/TCP plus owned Stop; both modes PASS in seven-mode Actions40449519463.",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
-      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json"
-    },
-    {
-      "platform": "windows/x64 signed Npcap+Wintun original Go TLS Rust ↔ linux/amd64 WSL2 raw/TUN",
-      "scope": "Game2-FEC and Game4-FEC genuine original signed Windows/Linux two-way UDP, TCP echo and both Stop (not restored-loss claim); source b6b964a Action40560287417 native PASS; WL-N0/N1/N5, scored p99/CPU, physical, fast-loss Auto NOT_RUN",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
-      "evidence": "docs/evidence/M0/PLAN025-H307-main-source-b6b964-seven-mode-native-20261028.json"
-    },
-    {
-      "platform": "windows/x64 signed Npcap Wintun ↔ linux/amd64 WSL2 true kernel",
-      "scope": "Main S61 exact Game2-FEC and Game4-FEC authentic native duplex UDP/TCP and both Stop, no damaged line recovery",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
-      "evidence": "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
-    }
-  ],
-  "limitations": [
-    "已执行干净/损伤范围不代表所有级别强损残余为零。",
-    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
-    "Game2/4 original Windows FEC2 shared Rust parity due/per-lane NPF copy/receiver batch Wintun completion ABI exists in Draft. Source8e real Win↔Linux stopped before authenticated lane1; no successful Game+FEC public product Applied.",
-    "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS.",
-    "Exact SOURCE350199f native Actions40445098497 proves genuine Game2/4 two-OS kernel UDP/TCP and owned Stop for the listed modes (Game fixed FEC2 profile6 only); this does NOT qualify all FEC profiles, physical network, host-global WFP/IPv6 or real WinForms GUI. Earlier 8e0d Game FAIL remains historical.",
-    "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible.",
-    "2026-10-27 user-authorized exact development-tree main overwrite f6469a: implementation code is now present on main but remains experimental, with no new main-SOURCE native/product/global/physical PASS or formal promotion; previous exact-SOURCE PASS/FAIL unchanged.",
-    "H303 scope clarification (2026-10-28): source 1b33e4a4bb4543961957124ac0c49b63d7e3cab0 Actions40550358765/1 is a Windows original Auto **natural dynamic downshift FAIL only**. This result is not evidence of a Fixed or Game mode regression, new main-source mode qualification, nor loss of the historical scoped native Fixed/Game positive source a2594eba and 4977f12; their original PASS/FAIL/NOT_RUN entries remain unchanged. No mode default or formal promotion was changed.",
-    "H303 governance declaration scope (2026-10-28): Actions40553017297 and 40554072482 historical Feature catalog FAIL from multi-card original devlog feature-impact changed-file inventory. This main commit refreshes all four historically declared cards coherently; no executable product/default/verification status changes. Source1b33e4a failed **only** genuine Windows natural Auto one-step Applied, while earlier Fixed and Game scoped PASS stay attached to their own exact SOURCE. Current natural Auto correction source0af9b... remains experiment and NOT main product qualification.",
-    "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
-    "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
-    "H311 provenance index: H309 main33ed seven-mode native PASS; N0dd0767 independent one-sample PASS while aa931 FAIL remains; ARM64f7ee prebuilt 10M capacity success; Linux33ed loss1 old serial-echo FAIL.",
-    "PLAN026 candidate Windows Game2/4 off/fixed native worker retains original Linux GameAdapter and GameFec true copied tickets, real Wintun prefix+authenticated M3 replay; no Auto on Game. New native M4/weaknet/capacity proof NOT_RUN.",
-    "Candidate: preserve FEC batch copied prefix and isolate single failed Game NPF RX lane. New SOURCE native untested."
-  ],
-  "promotion": null
+  {
+   "platform": "physical",
+   "scope": "所有级别高损组合",
+   "status": "NOT_RUN",
+   "source_sha": null,
+   "evidence": null
+  },
+  {
+   "platform": "windows/x64",
+   "scope": "Windows Game2/4 fixed6 protected GameFec original TLS native kernel parity and real Wintun success/Stop",
+   "status": "FAIL",
+   "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
+   "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source8e0daba-20261027.json"
+  },
+  {
+   "platform": "windows/x64 + linux/amd64 WSL2",
+   "scope": "original-Go credential TLS each of 2 Windows Npcap lanes → shared Linux Rust GameAdapter inner fixed profile6, authentic parity M4 copy/finish → signed Wintun + owned OS/WAL, genuine two-way UDP/TCP, owned Stop; exact-source native mode game2-fec",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
+   "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json"
+  },
+  {
+   "platform": "windows/x64 + linux/amd64 WSL2",
+   "scope": "original-Go credential TLS each of 4 Windows Npcap lanes → shared Linux Rust GameAdapter inner fixed profile6, authentic parity M4 copy/finish → signed Wintun + owned OS/WAL, genuine two-way UDP/TCP, owned Stop; exact-source native mode game4-fec",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
+   "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json"
+  },
+  {
+   "platform": "windows/x64 + linux/amd64 WSL2",
+   "scope": "Game2 and Game4 (2/4 genuine TLS/NPF lanes) plus shared Rust GameFecTx/Rx fixed profile6, authenticated GameFec TLV=7, parity NPF kernel-copy receipt and Wintun delivery, real Windows↔Linux duplex UDP/TCP plus owned Stop; both modes PASS in seven-mode Actions40449519463.",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
+   "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json"
+  },
+  {
+   "platform": "windows/x64 signed Npcap+Wintun original Go TLS Rust ↔ linux/amd64 WSL2 raw/TUN",
+   "scope": "Game2-FEC and Game4-FEC genuine original signed Windows/Linux two-way UDP, TCP echo and both Stop (not restored-loss claim); source b6b964a Action40560287417 native PASS; WL-N0/N1/N5, scored p99/CPU, physical, fast-loss Auto NOT_RUN",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
+   "evidence": "docs/evidence/M0/PLAN025-H307-main-source-b6b964-seven-mode-native-20261028.json"
+  },
+  {
+   "platform": "windows/x64 signed Npcap Wintun ↔ linux/amd64 WSL2 true kernel",
+   "scope": "Main S61 exact Game2-FEC and Game4-FEC authentic native duplex UDP/TCP and both Stop, no damaged line recovery",
+   "status": "FUNCTIONAL_PASS",
+   "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
+   "evidence": "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
+  }
+ ],
+ "limitations": [
+  "已执行干净/损伤范围不代表所有级别强损残余为零。",
+  "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+  "Game2/4 original Windows FEC2 shared Rust parity due/per-lane NPF copy/receiver batch Wintun completion ABI exists in Draft. Source8e real Win↔Linux stopped before authenticated lane1; no successful Game+FEC public product Applied.",
+  "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS.",
+  "Exact SOURCE350199f native Actions40445098497 proves genuine Game2/4 two-OS kernel UDP/TCP and owned Stop for the listed modes (Game fixed FEC2 profile6 only); this does NOT qualify all FEC profiles, physical network, host-global WFP/IPv6 or real WinForms GUI. Earlier 8e0d Game FAIL remains historical.",
+  "Exact source 4977f1200daec7c9f9fb6fd47810a1a372fd1e78: Windows native seven-mode original Go/Rust two-OS kernel duplex UDP/TCP + owned Stop PASS for the stated scope [Actions 40449519463]. Old FAIL runs remain historical; not formal/main or physical qualification. Source-scoped PLAN021 explicit network tests eligible.",
+  "2026-10-27 user-authorized exact development-tree main overwrite f6469a: implementation code is now present on main but remains experimental, with no new main-SOURCE native/product/global/physical PASS or formal promotion; previous exact-SOURCE PASS/FAIL unchanged.",
+  "H303 scope clarification (2026-10-28): source 1b33e4a4bb4543961957124ac0c49b63d7e3cab0 Actions40550358765/1 is a Windows original Auto **natural dynamic downshift FAIL only**. This result is not evidence of a Fixed or Game mode regression, new main-source mode qualification, nor loss of the historical scoped native Fixed/Game positive source a2594eba and 4977f12; their original PASS/FAIL/NOT_RUN entries remain unchanged. No mode default or formal promotion was changed.",
+  "H303 governance declaration scope (2026-10-28): Actions40553017297 and 40554072482 historical Feature catalog FAIL from multi-card original devlog feature-impact changed-file inventory. This main commit refreshes all four historically declared cards coherently; no executable product/default/verification status changes. Source1b33e4a failed **only** genuine Windows natural Auto one-step Applied, while earlier Fixed and Game scoped PASS stay attached to their own exact SOURCE. Current natural Auto correction source0af9b... remains experiment and NOT main product qualification.",
+  "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
+  "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
+  "H311 provenance index: H309 main33ed seven-mode native PASS; N0dd0767 independent one-sample PASS while aa931 FAIL remains; ARM64f7ee prebuilt 10M capacity success; Linux33ed loss1 old serial-echo FAIL.",
+  "PLAN026 candidate Windows Game2/4 off/fixed native worker retains original Linux GameAdapter and GameFec true copied tickets, real Wintun prefix+authenticated M3 replay; no Auto on Game. New native M4/weaknet/capacity proof NOT_RUN.",
+  "Candidate: preserve FEC batch copied prefix and isolate single failed Game NPF RX lane. New SOURCE native untested.",
+  "Candidate: Game FEC retains exact NPF copy and real Wintun prefix; TX/RX lane errors isolated; temporary Wintun full does not mark uncommitted recovered packet delivered. Native FEC/burst proof pending."
+ ],
+ "promotion": null
 }

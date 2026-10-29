@@ -3803,13 +3803,21 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
             }).collect(),
         });
         let budget=e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped.frame;
-        // Fresh authenticated M2 already knows peer health and local payload
-        // idle: merge once instead of an independent periodic Health record.
-        let idle=e.native_health.as_ref().ok_or(BAD_STAGE)?
-            .local_idle_ns(now.0);
-        let tlv=crate::v4_native_health::encode_authenticated_health_live(
-            idle,msg.as_ref(),None,budget.record_payload_mtu
-        ).map_err(|_|INVALID)?;
+        // Real M2 receipts may arrive far faster than original ~2s Quality.
+        // Do not draw random padding or reset the 15s Health clock for each.
+        // Merge authenticated business-idle only when Health is due.
+        let tlv=if health_due{
+            let idle=e.native_health.as_ref().ok_or(BAD_STAGE)?
+                .local_idle_ns(now.0);
+            crate::v4_native_health::encode_authenticated_health_live(
+                idle,msg.as_ref(),None,budget.record_payload_mtu
+            ).map_err(|_|INVALID)?
+        }else{
+            wbd_codec::encode_control(
+                &[wbd_codec::ControlTlv::Receipt(msg.ok_or(BAD_STAGE)?)],
+                budget.record_payload_mtu.min(512)
+            ).map_err(|_|INVALID)?
+        };
         let slab=e.arena.allocate().map_err(|_|FULL)?;
         let (pn,_,_)=e.owner.seal_original_authenticated_receipt(
             slab,&tlv,budget,15,now
@@ -3818,7 +3826,7 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
     })();
     match attempt{
         Ok(pn)=>{
-            e.feedback_queued=Some((draft,pn,true));
+            e.feedback_queued=Some((draft,pn,health_due));
             Ok(true)
         },
         Err(err)=>{
@@ -3827,8 +3835,10 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
                     d,wbd_recovery::FeedbackSendResult::NotSent,now
                 );
             }
-            if let Some(h)=e.native_health.as_mut(){
-                h.on_health_send_result(now.0,false);
+            if health_due{
+                if let Some(h)=e.native_health.as_mut(){
+                    h.on_health_send_result(now.0,false);
+                }
             }
             Err(err)
         },

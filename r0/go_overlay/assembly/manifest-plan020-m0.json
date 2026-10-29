@@ -719,7 +719,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_peer_windows.go",
-      "result_blob": "9cc6a9036b928723138c0d5fdebb652ac7264c7b"
+      "result_blob": "b910ddac839731e4a46a55331647e9da0acadde4"
     },
     {
       "kind": "create",
