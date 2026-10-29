@@ -76,8 +76,8 @@ jobs:
           cargo +1.85.1 test --locked -p wbd-engine --features fec2_product_record --lib m0_fixed_stream_ -- --test-threads=1 --nocapture >fixed-kernel-result/fixed-tx-stream.log 2>&1 || { cat fixed-kernel-result/fixed-tx-stream.log; exit 1; }
           grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/release-record.log
           grep -q 'test result: ok. 2 passed; 0 failed' fixed-kernel-result/game-lanes.log
-          grep -q 'test result: ok. 3 passed; 0 failed' fixed-kernel-result/continuous-rx.log
-          grep -q 'test result: ok. 3 passed; 0 failed' fixed-kernel-result/fixed-tx-stream.log
+          grep -q 'test result: ok. 4 passed; 0 failed' fixed-kernel-result/continuous-rx.log
+          grep -q 'test result: ok. 5 passed; 0 failed' fixed-kernel-result/fixed-tx-stream.log
           cargo +1.85.1 build --release --locked -p wbd-engine >fixed-kernel-result/default-build.log 2>&1
           if nm -D target/release/libwbd_engine.so | grep -Eq ' wbd_m0_(embedded_go_|test_probe_)'; then
             echo 'M0_FIXED_PRODUCT_DEFAULT_ABI_LEAK' >&2; exit 1
