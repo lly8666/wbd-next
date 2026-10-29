@@ -52,6 +52,10 @@ M0_AUTHORIZED_CURRENT = {
     "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go": "e5dbe438ea30f24f7e14f1e34f7895b403abc6d8",
     "r0/go_overlay/internal/realityfront/fec_v2_policy.go": "a5cd239f175330c249c088ceb25c04cfa10abd7b",
     "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go": "a6a09df12c9fe30ee1b6d681e321d78a5b3ecc8a",
+    # PLAN026 current M0 Npcap handoff is intentionally newer than the frozen
+    # M4 four-entry manifest; the live PLAN020 manifest pins these exact blobs.
+    "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go": "2901f24535e369046845802aede6eac3db77c5d1",
+    "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows_test.go": "53d06d454cba7cedd0e9575de9446936b30aac5c",
 }
 
 def object_sha(data):
@@ -109,7 +113,7 @@ class M4FrozenOverlay(unittest.TestCase):
         native = (ROOT / "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go").read_text()
         self.assertIn("func N4NativeNetworkReady(", native)
         self.assertIn("production native WFP Apply and authenticated Stop have not been qualified", native)
-        print("M0_PLAN014_34_HISTORIC_M4_SHA_PINS_AND_3_EXACT_M0_CURRENT_OVERRIDES_PASS_NETWORK_NOT_RUN")
+        print("M0_PLAN014_34_HISTORIC_M4_SHA_PINS_AND_6_EXACT_M0_CURRENT_OVERRIDES_PASS_NETWORK_NOT_RUN")
 
 if __name__ == "__main__":
     unittest.main()
