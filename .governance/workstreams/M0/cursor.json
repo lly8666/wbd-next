@@ -4,12 +4,12 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 398,
-  "checkpoint_sha": "1719dd599cb718459734d6b57935e2decf9482ac",
+  "sequence": 399,
+  "checkpoint_sha": "02461bab0c421a26ab64418e93e15efcd41e3553",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 §0 PARTIAL. H396 source519a8a6 native-functional40944961945 all eight verify groups SUCCESS: recovery91/91 (2 new), engine134/134, codec114/114; manifest/binary/log hashes H398 evidence. H397 governance40945109847 SUCCESS after H396 feature byte-limit FAIL. Source-only; online M2 and production Quality/ACK/Auto remain OPEN.",
-  "why_now": "H396 native and H397 governance exact results collected; resume dual-owner phase1 without repeating source-only gates.",
+  "current_task": "PLAN027 §0 PARTIAL. H396 native40944961945 eight groups PASS and H397 governance40945109847 PASS. H398 governance40945596235 FAILED solely from unbounded cursor context_refs=9; H399 fixes to8. Online M2 and production Quality/ACK/Auto remain OPEN.",
+  "why_now": "H398 source evidence commit governance40945596235 FAIL: cursor context_refs exceeded max8 after adding H398; remove obsolete H374 hot pointer (historical file retained), preserve exact H398 evidence and continue phase1.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
   "next_action": "Wire authenticated low-rate start/close/mature Quality and real driver F/unique RX in both Windows/Linux owners, replace per-record M2 and blind hot repair with scoped ACK/SACK one-shot, connect Auto/Health/config/fixtures; then A, B, C, long test, fixes and delivery.",
   "unverified": true,
@@ -23,11 +23,10 @@
     "docs/testing/WL_PERF_HARNESS_V2.md",
     "docs/features/entries/outer-opportunistic-repair.json",
     "docs/features/entries/fec-auto.json",
-    "docs/devlog/M0/20261030-PLAN027-H374-RECOVER-ACTIONS-GOVERNANCE-PIN.md",
     "docs/evidence/M0/PLAN027-H389-RECOVERED-WINDOWS-AND-NATIVE-GATES-20261030.json",
     "docs/evidence/M0/PLAN027-H395-NATIVE-QUALITY-AND-CI-RESULTS-20261030.json",
     "docs/evidence/M0/PLAN027-H398-SENDER-QUALITY-SOURCE-NATIVE-RESULTS-20261030.json"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL: H396 sender driver-F/matched wire source-only PASS, prior 4RX/16TX/10%F/outer ACK index pure only. Online per-record M2 still LIVE; Windows/Linux low-rate Quality/ACK owner absent. §0-2 A NOT_RUN. §0-3 B OPEN. §0-4 C NOT_RUN. §0-5 OPEN. H396 native all eight groups SUCCESS, H397 governance SUCCESS; hashes H398 evidence. Physical NOT_RUN."
+  "partial_summary": "§0-1 PARTIAL: H396 sender driver-F/matched wire source-only PASS, prior 4RX/16TX/10%F/outer ACK index pure only. Online per-record M2 still LIVE; Windows/Linux low-rate Quality/ACK owner absent. §0-2 A NOT_RUN. §0-3 B OPEN. §0-4 C NOT_RUN. §0-5 OPEN. H396 native all eight groups SUCCESS, H397 governance SUCCESS; H398 governance FAIL context_refs=9, H399 fixes to8; hashes H398 evidence. Physical NOT_RUN."
 }
