@@ -499,6 +499,7 @@ struct LinuxQualityRx{
     epoch:[u8;16],
     direction:wbd_recovery::WireDirection,
     due:VecDeque<(wbd_recovery::quality_window::WindowKey,u64)>,
+    reports:VecDeque<wbd_recovery::quality_window::WireReport>,
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -507,7 +508,7 @@ impl LinuxQualityRx{
         direction:wbd_recovery::WireDirection)->Self{
         Self{receive:wbd_recovery::quality_window::ReceiveWindows::new(
             lane,epoch,direction),lane,epoch,direction,
-            due:VecDeque::with_capacity(4)}
+            due:VecDeque::with_capacity(4),reports:VecDeque::with_capacity(16)}
     }
     fn on_signal(&mut self,signal:crate::v4_native_health::QualityWindowSignal,
         now:MonoNs)->Result<(),i32>{
@@ -543,8 +544,135 @@ impl LinuxQualityRx{
         None
     }
     fn retire_sent(&mut self,key:wbd_recovery::quality_window::WindowKey){
-        if self.due.front().is_some_and(|x|x.0==key){
-            self.due.pop_front();
+        if self.due.front().is_some_and(|x|x.0==key){self.due.pop_front();}
+    }
+    fn on_report(&mut self,report:wbd_recovery::quality_window::WireReport){
+        if self.reports.len()==16{self.reports.pop_front();}
+        self.reports.push_back(report);
+    }
+    fn has_report(&self)->bool{!self.reports.is_empty()}
+}
+
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+struct LinuxQualityTx{
+    lane:wbd_types::LaneKey,epoch:[u8;16],direction:wbd_recovery::WireDirection,
+    sender:Option<wbd_recovery::quality_window::SendWindowSampler>,
+    history:wbd_recovery::quality_window::SendHistory,
+    closing:Option<wbd_recovery::quality_window::ClosedWindow>,
+    last_settled:Option<u64>,next_id:u64,next_open:u64,
+    last_report:Option<u64>,counters:[u64;14],
+    slow:VecDeque<(u64,wbd_recovery::quality_window::LossBounds)>,
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+impl LinuxQualityTx{
+    fn new(lane:wbd_types::LaneKey,epoch:[u8;16],
+        direction:wbd_recovery::WireDirection)->Self{
+        Self{lane,epoch,direction,sender:None,
+            history:wbd_recovery::quality_window::SendHistory::new(lane,epoch,direction),
+            closing:None,last_settled:None,next_id:0,next_open:0,last_report:None,
+            counters:[0;14],slow:VecDeque::with_capacity(16)}
+    }
+    fn due(&self,now:MonoNs)->bool{
+        self.closing.is_some()||
+        self.sender.as_ref().is_some_and(|s|
+            self.last_settled.is_some_and(|p|p>=s.key().last.0))||
+        (self.sender.is_none()&&now.0>=self.next_open)
+    }
+    fn next_signal(&mut self,next_pn:u64,now:MonoNs)
+        ->Result<Option<crate::v4_native_health::QualityWindowSignal>,i32>{
+        use crate::v4_native_health::{QualityWindowSignal as Signal,QualitySignalKind as Kind};
+        if self.closing.is_none()&&self.sender.as_ref().is_some_and(|s|
+            self.last_settled.is_some_and(|p|p>=s.key().last.0)){
+            let closed=self.sender.as_mut().ok_or(BAD_STAGE)?
+                .close(now).map_err(|_|BAD_STAGE)?;
+            self.sender=None;self.closing=Some(closed);
+        }
+        if let Some(w)=self.closing {
+            return Ok(Some(Signal{kind:Kind::Close,id:w.key.id,
+                first:w.key.first.0,last:w.key.last.0,first_sent:w.first_sent,
+                complete:w.complete,capacity_limited:w.capacity_limited}))
+        }
+        if self.sender.is_some()||now.0<self.next_open{return Ok(None)}
+        let first=next_pn.checked_add(1).ok_or(BAD_STAGE)?;
+        let last=first.checked_add(1023).ok_or(BAD_STAGE)?;
+        let id=self.next_id.checked_add(1).ok_or(BAD_STAGE)?;
+        let key=wbd_recovery::quality_window::WindowKey{
+            lane:self.lane,epoch:self.epoch,direction:self.direction,id,
+            first:wbd_types::RecordPn(first),last:wbd_types::RecordPn(last)};
+        self.sender=Some(wbd_recovery::quality_window::SendWindowSampler::new(
+            key,now).map_err(|_|BAD_STAGE)?);
+        self.next_id=id;
+        Ok(Some(Signal{kind:Kind::Start,id,first,last,
+            first_sent:0,complete:false,capacity_limited:false}))
+    }
+    fn complete_signal(&mut self,signal:crate::v4_native_health::QualityWindowSignal,
+        accepted:bool,now:MonoNs)->Result<(),i32>{
+        use crate::v4_native_health::QualitySignalKind as Kind;
+        match signal.kind{
+            Kind::Start=>{
+                if accepted{self.sender.as_mut().ok_or(BAD_STAGE)?
+                    .on_start_send_result(true);}
+                else{self.sender=None;self.next_open=now.0.saturating_add(1_000_000_000);}
+            },
+            Kind::Close=>if accepted{
+                let w=self.closing.take().ok_or(BAD_STAGE)?;
+                self.history.close(w).map_err(|_|BAD_STAGE)?;
+                self.next_open=now.0.saturating_add(1_500_000_000);
+            }
+        }
+        Ok(())
+    }
+    fn settle_batch(&mut self,records:&[(wbd_types::RecordPn,u64)],
+        copied:usize,uncertain:usize,control_last:bool,
+        fec_mode:bool,fec_sources:&[(u64,u8,u64)]){
+        use wbd_recovery::quality_window::FirstSendStatus;
+        let data=records.len().saturating_sub(usize::from(control_last));
+        for (i,(pn,_)) in records.iter().enumerate(){
+            self.last_settled=Some(pn.0);
+            if i>=data||fec_mode&&
+                !fec_sources.iter().any(|(p,k,_)|*p==pn.0&&*k==2){continue}
+            if let Some(sender)=self.sender.as_mut(){
+                sender.on_first_send(*pn,if i<copied{
+                    FirstSendStatus::Accepted
+                }else if i==copied&&uncertain!=0{
+                    FirstSendStatus::Uncertain
+                }else{FirstSendStatus::DefinitelyNotSent});
+            }
+        }
+    }
+    fn accept_report(&mut self,report:wbd_recovery::quality_window::WireReport,
+        now:MonoNs){
+        if self.last_report.is_some_and(|old|report.id<=old){return}
+        match self.history.assess_wire_with_age(report,now){
+            Ok((bounds,age))=>{
+                self.last_report=Some(report.id);
+                let vals=[u64::from(bounds.first),u64::from(bounds.first-bounds.upper),
+                    u64::from(bounds.lower),0,u64::from(bounds.upper-bounds.lower)];
+                for (slot,v) in self.counters[..5].iter_mut().zip(vals){
+                    *slot=slot.saturating_add(v);
+                }
+                self.counters[10]=self.counters[10].saturating_add(1);
+                self.counters[12]=self.counters[12].saturating_add(age);
+                self.counters[13]=self.counters[13].saturating_add(1);
+                if self.slow.len()==16{
+                    self.slow.pop_front();
+                    self.counters[11]=self.counters[11].saturating_add(1);
+                }
+                self.slow.push_back((now.0.saturating_add(5_000_000_000),bounds));
+            },
+            Err(_)=>self.counters[11]=self.counters[11].saturating_add(1),
+        }
+    }
+    fn advance(&mut self,now:MonoNs){
+        while self.slow.front().is_some_and(|x|x.0<=now.0){
+            let Some((_,b))=self.slow.pop_front()else{break};
+            let vals=[u64::from(b.first),u64::from(b.first-b.upper),
+                u64::from(b.lower),0,u64::from(b.upper-b.lower)];
+            for (slot,v) in self.counters[5..10].iter_mut().zip(vals){
+                *slot=slot.saturating_add(v);
+            }
         }
     }
 }
@@ -587,6 +715,9 @@ struct Entry{
         any(target_arch="x86_64",target_arch="aarch64"),
         any(target_env="gnu",target_env="musl")))]
     quality_rx:Option<Arc<Mutex<LinuxQualityRx>>>,
+    #[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+    quality_tx:Option<LinuxQualityTx>,
     #[cfg(feature="fec2_product_record")]
     original_public_feedback_armed:bool,
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
@@ -601,6 +732,9 @@ struct Entry{
         any(target_arch="x86_64",target_arch="aarch64"),
         any(target_env="gnu",target_env="musl")))]
     quality_report_queued:Option<wbd_recovery::quality_window::WindowKey>,
+    #[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+    quality_signal_queued:Option<crate::v4_native_health::QualityWindowSignal>,
     // One native Rust TX clock per actually armed original-Go product.
     #[cfg(feature="fec2_product_record")]
     native_health:Option<crate::v4_native_health::HealthClock>,
@@ -887,6 +1021,9 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
             any(target_arch="x86_64",target_arch="aarch64"),
             any(target_env="gnu",target_env="musl")))]
         quality_rx:None,
+        #[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+        quality_tx:None,
         #[cfg(feature="fec2_product_record")]
         original_public_feedback_armed:false,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
@@ -900,6 +1037,9 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
             any(target_arch="x86_64",target_arch="aarch64"),
             any(target_env="gnu",target_env="musl")))]
         quality_report_queued:None,
+        #[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+        quality_signal_queued:None,
         #[cfg(feature="fec2_product_record")]
         native_health:None,
         #[cfg(feature="fec2_product_record")]
