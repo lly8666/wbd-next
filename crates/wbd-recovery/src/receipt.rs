@@ -1142,6 +1142,35 @@ mod tests {
     }
 
     #[test]
+    fn r2_burst_queued_timeout_and_ack_preserve_exact_index_and_no_retry() {
+        let mut s = state(4, 10);
+        add(&mut s, 1, 0, 100_000_000);
+        add(&mut s, 2, 0, 100_000_000);
+        let mut due = s.on_timer(MonoNs(10)).candidates;
+        assert_eq!(due.len(), 2);
+        assert_eq!(s.expiry_index.len(), 2);
+        assert_eq!(s.wake_index.len(), 2);
+        let acked = s.on_receipt(&receipt(1, 2, vec![page(0, &[1])]),
+            MonoNs(11)).unwrap();
+        assert_eq!(acked.len(), 1);
+        assert_eq!(acked[0].pn, RecordPn(1));
+        assert!(!s.preflight(&due[0], MonoNs(12)));
+        assert_eq!(s.outstanding(), 1);
+        assert_eq!(s.expiry_index.len(), 1);
+        assert_eq!(s.wake_index.len(), 1);
+        assert!(s.preflight(&due[1], MonoNs(20_000_009)));
+        assert!(!s.preflight(&due[1], MonoNs(20_000_011)));
+        assert!(s.on_timer(MonoNs(20_000_011)).candidates.is_empty());
+        assert_eq!(s.outstanding(), 0);
+        assert!(s.expiry_index.is_empty());
+        assert!(s.wake_index.is_empty());
+        assert_eq!(s.on_send_result(&due.remove(1),
+            RepairSendResult::Accepted, MonoNs(20_000_012)),
+            Err(DataError::Stale));
+        assert!(s.on_timer(MonoNs(100_000_000)).candidates.is_empty());
+    }
+
+    #[test]
     fn r2_burst_queued_timeouts_retire_payload_in_bounded_owner_turns() {
         let mut s=state(35,10);
         for pn in 0..35 {add(&mut s,pn,0,100_000_000);}
