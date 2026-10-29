@@ -48,7 +48,7 @@ M0_AUTHORIZED_CURRENT = {
     # Historical M4 hash above is STILL immutable. The additional M0
     # Windows-owned Native IO entries belong to the live assembled source,
     # which is separately content-addressed; old M4 remains available.
-    "r0/go_overlay/assembly/manifest.json": "ac2a4ca8dd33ea022e337c4474e459ed710da17b",
+    "r0/go_overlay/assembly/manifest.json": "2f2476c9338b43b0be1d36357b1427d68c6db342",
     "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go": "e5dbe438ea30f24f7e14f1e34f7895b403abc6d8",
     "r0/go_overlay/internal/realityfront/fec_v2_policy.go": "a5cd239f175330c249c088ceb25c04cfa10abd7b",
     "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go": "a6a09df12c9fe30ee1b6d681e321d78a5b3ecc8a",

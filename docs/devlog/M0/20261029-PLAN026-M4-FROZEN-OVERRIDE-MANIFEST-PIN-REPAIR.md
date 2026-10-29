@@ -1,0 +1,7 @@
+# M0 PLAN026 — preserve M4 frozen fixture while refreshing legitimate current M0 Windows manifest pin
+
+2026-10-29 source457963c7b8ed544c35058da7ba63978c48abbb04 governance [40854238264](https://github.com/lly8666/wbd-next/actions/runs/40854238264) SUCCESS; parallel governance-maintenance [40854238273](https://github.com/lly8666/wbd-next/actions/runs/40854238273) FAILURE 1/307 tests, `test_m4_frozen_windows_main_import.M4FrozenOverlay.test_import_all_frozen_original_go_windows_source`. The failure is exact old *M0 authorized current* Windows root `r0/go_overlay/assembly/manifest.json` expected blob `ac2a4ca8...` vs legitimate current `2f2476c9338b43b0be1d36357b1427d68c6db342`. This root manifest was deliberately updated with Game post-reader-join Npcap cold ownership in main adc586, using actual Go source blob `6fcb0e...`. All historical frozen M4 `PINNED_FILES` remain untouched. Correct ONLY `M0_AUTHORIZED_CURRENT["r0/go_overlay/assembly/manifest.json"]` to current known Git blob and rerun exact main governance-maintenance; retain 41 expected M4+M0 manifest operations and separate PLAN020 original Go overlay pin. No production/FEC/Mode/Normal source changed and no fake previous PASS.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Fix 1/307 stale approved M0 live-assembly hash in historical M4 test without changing original M4 frozen hashes, product sources or artifacts."}
+```
