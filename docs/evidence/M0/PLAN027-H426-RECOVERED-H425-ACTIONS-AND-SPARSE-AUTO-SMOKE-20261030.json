@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "recorded_date": "2026-10-30",
+  "kind": "source_scoped_actions_recovery_not_plan027_A",
+  "recovered_checkpoint": "97c9a59820fbfc847b9f32020cc6eb57a291218f",
+  "recovered_source": "69bbe53c76560655236518366a1cbc8a35384587",
+  "source_delta_commits": 15,
+  "source_scope": "Windows and Linux low-rate Auto producer/receiver and matched readback; Fixed/off legacy M2 not yet retired",
+  "runs": [
+    {
+      "id": 40976092880,
+      "conclusion": "success",
+      "scope": "governance",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/40976092880"
+    },
+    {
+      "id": 40976092922,
+      "conclusion": "success",
+      "scope": "native-functional",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/40976092922"
+    },
+    {
+      "id": 40976092963,
+      "conclusion": "success",
+      "scope": "g2-scoped-bootstrap-native",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/40976092963"
+    },
+    {
+      "id": 40976092890,
+      "conclusion": "failure",
+      "scope": "Linux Auto product smoke job; keepalive-linux-authenticated-core job success",
+      "observed": "Real TLS two netns 64 first-app delivery in fec-auto; requested=1 applied=0 pending=true; old fixture demanded applied=1, invalid for incomplete 1024-PN window",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/40976092890"
+    },
+    {
+      "id": 40976093067,
+      "conclusion": "failure",
+      "scope": "combined original-Go 64-packet fec-auto legacy APPLIED assertion; Fixed smoke succeeded",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/40976093067"
+    },
+    {
+      "id": 40976092884,
+      "conclusion": "in_progress_at_recording",
+      "scope": "Windows/Linux cross-platform build and preflight; must collect result",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/40976092884"
+    }
+  ],
+  "fixture_fix_commits": [
+    "4157d3e34ff6bb4c68596ca11135b4117024f911",
+    "cbf20b5458aedb9ebcf9b4ac2ced37f135355bea",
+    "a48c258045fb8dd111c135082b01e49188359cb3"
+  ],
+  "latest_fixture_source": "a48c258045fb8dd111c135082b01e49188359cb3",
+  "latest_fixture_runs": [
+    {
+      "id": 40976712086,
+      "status": "pending_at_recording",
+      "scope": "source-locked original-Go combined smoke",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/40976712086"
+    },
+    {
+      "id": 40976711962,
+      "status": "in_progress_at_recording",
+      "scope": "Linux Auto Health",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/40976711962"
+    }
+  ],
+  "claims": {
+    "plan027_1": "PARTIAL",
+    "plan027_A": "NOT_RUN",
+    "plan027_B": "OPEN",
+    "plan027_C": "NOT_RUN",
+    "plan027_5": "OPEN",
+    "auto_mature_applied": "NOT_QUALIFIED",
+    "auto_120s_downshift": "NOT_RUN",
+    "physical": "NOT_RUN"
+  },
+  "next": "Collect all source-scoped Actions; implement remaining Fixed/off M2 retirement, ACK/SACK and low-rate replacement; then A, B, C and required fixes. No duplicate dispatch of running source."
+}
