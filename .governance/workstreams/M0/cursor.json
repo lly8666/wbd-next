@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 395,
-  "checkpoint_sha": "75c030f4da32a5e1e6986edf3c0d3244d7afb6bd",
+  "sequence": 396,
+  "checkpoint_sha": "dca376af1123e9d7b94f7e5382a2ae4a16d2affe",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 §0 remains PARTIAL. H392 source1a5c native all groups SUCCESS (codec114/114 +1 allowed ignored, nonmandatory CPU probe isolated). H393 source99c native all groups SUCCESS (recovery89/89 including explicit-close sparse RX test, engine134/134, codec114/114); H394 source75c governance+feature SUCCESS. Historical H387 source18cf original Windows WAL five-mode scoped PASS. These are source/CI or historical product gates, not online M2 retirement or A/B/C. Windows/Linux live low-rate Quality/ACK/Health and per-record removal still OPEN.",
-  "why_now": "Collect exact in-flight H392/H393/H394 Actions results, preserve SOURCE/manifest/binary/log hashes and historical failures, link source-only feature evidence; no duplicate tests.",
+  "current_task": "PLAN027 §0 PARTIAL. H396 adds bounded sender first-send sampler and strict matched Quality wire F guard; no production wiring, no new Action PASS yet. H393/H394/H395 verified evidence remains source-scoped.",
+  "why_now": "Complete missing low-rate sender driver-F accounting and prevent mismatched remote F from being used as Auto loss; native regression/governance push Actions must be collected before marking PASS.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Implement both production owners' authenticated low-rate start/close/receive/summary with actual first-send F, source repair bounds and Auto, ACK/SACK scoped shadow retire/gap one-shot; retire per-record M2; align config/cards/fixtures; then freeze SOURCE, run PLAN027 A, remaining B lifecycle, C matrix and stable long test, fix/regress/deliver. Do not treat H393 source-only PASS as product readiness.",
+  "next_action": "Collect H396 exact-source native/governance Actions; then implement authenticated low-rate start/close/receive/report in BOTH production owners, retire online M2 Receipt and blind hot repair, connect ACK/SACK one-shot shadow and Auto/Health, freeze product SOURCE and run A, B, C and delivery.",
   "unverified": true,
   "last_tested_source": "302d02049669d8f36f3d6852bc1c668ff003ed4a",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/evidence/M0/PLAN027-H395-NATIVE-QUALITY-AND-CI-RESULTS-20261030.json"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL: bounded ACK index, R<=0.10F budget, authenticated Quality-v2/Health seam, 4RX/16TX windows, H393 close-gated sparse maturation; pure/native only. Online M2 perrecord still LIVE, production quality and ACK owner absent. §0-2 A NOT_RUN. §0-3 B OPEN (historical Windows 18cf five-mode scoped PASS, no current PLAN027 B). §0-4 C NOT_RUN. §0-5 delivery OPEN. H393 native all groups PASS and H394 governance PASS; exact hashes in H395 evidence. Physical NOT_RUN."
+  "partial_summary": "§0-1 PARTIAL: H396 bounded driver-F sender/remote F matching source-only; earlier 4RX/16TX, 10%F and ACK index pure only. Online M2 per-record LIVE; Windows/Linux production Quality/ACK not wired. §0-2 A NOT_RUN. §0-3 B OPEN. §0-4 C NOT_RUN. §0-5 OPEN. H396 native/governance pending push; H393 native89/134/114 PASS and H394 governance PASS, hashes H395. Physical NOT_RUN."
 }

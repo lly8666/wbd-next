@@ -306,6 +306,81 @@ impl ReceiveWindows {
     }
 }
 
+
+/** Sender-side PLAN027 Auto sampling for a preannounced, nonoverlapping PN
+ * interval. Start must be accepted by the driver BEFORE any DATA in range.
+ * A local failed/uncertain first send or missing start censors the interval;
+ * it must never be counted as WAN loss or silently become a zero-loss sample.
+ * This is one fixed 128-byte bitmap, not a per-record receipt/heap queue.
+ */
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub enum FirstSendStatus { Accepted, DefinitelyNotSent, Uncertain }
+
+pub struct SendWindowSampler {
+    key:WindowKey,
+    opened_at:MonoNs,
+    start_accepted:bool,
+    first_data_seen:bool,
+    censored:bool,
+    closed:bool,
+    seen:[u64;WINDOW_WORDS],
+    first_sent:u16,
+}
+impl SendWindowSampler {
+    pub fn new(key:WindowKey,now:MonoNs)->Result<Self,QualityError>{
+        key.last.0.checked_sub(key.first.0)
+            .and_then(|v|v.checked_add(1))
+            .filter(|&n|n<=MAX_WINDOW_PNS)
+            .ok_or(QualityError::InvalidRange)?;
+        Ok(Self{key,opened_at:now,start_accepted:false,
+            first_data_seen:false,censored:false,closed:false,
+            seen:[0;WINDOW_WORDS],first_sent:0})
+    }
+    pub fn key(&self)->WindowKey{self.key}
+    /// Only a definite driver-accepted authenticated start qualifies. A
+    /// delayed start cannot retroactively cover previously emitted DATA.
+    pub fn on_start_send_result(&mut self,accepted:bool){
+        if self.closed||self.first_data_seen||!accepted{
+            self.censored=true;
+        }else{
+            self.start_accepted=true;
+        }
+    }
+    /// Call once per original DATA's definite/uncertain driver completion.
+    /// Repair copies, parity not in this window, and control PNs are excluded.
+    /// False means duplicate, out of interval, or already closed.
+    pub fn on_first_send(&mut self,pn:RecordPn,status:FirstSendStatus)->bool{
+        if self.closed||pn.0<self.key.first.0||pn.0>self.key.last.0{
+            return false
+        }
+        let offset=(pn.0-self.key.first.0) as usize;
+        let word=offset/64;
+        let bit=1u64<<(offset%64);
+        if self.seen[word]&bit!=0{return false}
+        self.seen[word]|=bit;
+        self.first_data_seen=true;
+        if !self.start_accepted{self.censored=true}
+        match status{
+            FirstSendStatus::Accepted=>self.first_sent+=1,
+            FirstSendStatus::DefinitelyNotSent|FirstSendStatus::Uncertain=>{
+                self.censored=true;
+            }
+        }
+        true
+    }
+    pub fn censor_capacity(&mut self){self.censored=true}
+    /// Closing is local; the receiver still needs an authenticated close
+    /// control and its own 3s maturity. Neither clock crosses machines.
+    pub fn close(&mut self,now:MonoNs)->Result<ClosedWindow,QualityError>{
+        if self.closed{return Err(QualityError::InvalidRange)}
+        if now.0<self.opened_at.0{return Err(QualityError::ClockReversed)}
+        self.closed=true;
+        Ok(ClosedWindow{key:self.key,first_sent:self.first_sent,
+            closed_at:now,complete:self.start_accepted&&!self.censored,
+            capacity_limited:self.censored})
+    }
+}
+
 /// Up to 16 completed, definitely-driver-confirmed first-send windows.
 /// A small, report-cadence scan is allowed; never scan it for DATA admission.
 /// A missing/evicted/stale report is UNKNOWN rather than zero loss.
@@ -338,6 +413,24 @@ impl SendHistory {
         self.last_id=Some(window.key.id);
         self.last_pn=Some(window.key.last.0);
         Ok(())
+    }
+
+    /// Convert an authenticated v2 summary ONLY after the caller has bound
+    /// its AEAD-opened lane/epoch/direction to this history. Remote first F
+    /// must match our definite driver count, never override local evidence.
+    pub fn assess_wire(&self,wire:WireReport,now:MonoNs)
+        ->Result<LossBounds,QualityError>{
+        wire.valid()?;
+        let Some(sent)=self.slots.iter().flatten().find(|sent|
+            sent.key.id==wire.id&&sent.key.first.0==wire.first
+                &&sent.key.last.0==wire.last)
+            else{return Err(QualityError::WrongWindow)};
+        if wire.first_sent!=sent.first_sent{return Err(QualityError::InvalidCounts)}
+        assess(sent,&MatureReport{key:sent.key,
+            received_unique:wire.received_unique,
+            possibly_repaired:wire.possibly_repaired,
+            mature:wire.mature,complete:wire.complete,
+            capacity_limited:wire.capacity_limited},now)
     }
     pub fn assess_report(&self,report:&MatureReport,now:MonoNs)
         ->Result<LossBounds,QualityError>{
@@ -452,5 +545,71 @@ mod bounded_window_tests {
         assert!(censored.capacity_limited);
         assert_eq!(tx.assess_report(&censored,MonoNs(3_000_000_050)),
             Err(QualityError::Unknown));
+    }
+}
+
+#[cfg(test)]
+mod plan027_sender_tests {
+    use super::*;
+    use wbd_types::TunnelKey;
+    fn key()->WindowKey{
+        WindowKey{lane:LaneKey{tunnel:TunnelKey{slot:7,generation:9},
+            slot:2,generation:4},epoch:[8;16],
+            direction:WireDirection::ClientToServer,
+            id:11,first:RecordPn(200),last:RecordPn(1223)}
+    }
+    #[test]
+    fn r2_plan027_sender_start_before_data_and_actual_driver_f_only(){
+        let k=key();
+        let mut tx=SendWindowSampler::new(k,MonoNs(0)).unwrap();
+        tx.on_start_send_result(true);
+        assert!(tx.on_first_send(RecordPn(200),FirstSendStatus::Accepted));
+        assert!(!tx.on_first_send(RecordPn(200),FirstSendStatus::Accepted));
+        assert!(tx.on_first_send(RecordPn(1223),FirstSendStatus::Accepted));
+        assert!(!tx.on_first_send(RecordPn(1224),FirstSendStatus::Accepted));
+        let closed=tx.close(MonoNs(2_000_000_000)).unwrap();
+        assert_eq!(closed.first_sent,2);
+        assert!(closed.complete);
+        assert_eq!(tx.close(MonoNs(3_000_000_000)),Err(QualityError::InvalidRange));
+        let mut hist=SendHistory::new(k.lane,k.epoch,k.direction);
+        hist.close(closed).unwrap();
+        let good=WireReport{id:11,first:200,last:1223,first_sent:2,
+            received_unique:1,possibly_repaired:1,mature:true,
+            complete:true,capacity_limited:false};
+        assert_eq!(hist.assess_wire(good,MonoNs(4_000_000_000)),
+            Ok(LossBounds{first:2,lower:1,upper:2}));
+        assert_eq!(hist.assess_wire(WireReport{first_sent:1,..good},
+            MonoNs(4_000_000_000)),Err(QualityError::InvalidCounts));
+        assert_eq!(hist.assess_wire(WireReport{id:12,..good},
+            MonoNs(4_000_000_000)),Err(QualityError::WrongWindow));
+    }
+    #[test]
+    fn r2_plan027_sender_late_start_local_failure_uncertain_never_wan_loss(){
+        let k=key();
+        let mut late=SendWindowSampler::new(k,MonoNs(10)).unwrap();
+        assert!(late.on_first_send(RecordPn(200),FirstSendStatus::Accepted));
+        late.on_start_send_result(true);
+        let closed=late.close(MonoNs(20)).unwrap();
+        assert_eq!(closed.first_sent,1);
+        assert!(!closed.complete);
+        let mut hist=SendHistory::new(k.lane,k.epoch,k.direction);
+        hist.close(closed).unwrap();
+        let report=WireReport{id:11,first:200,last:1223,first_sent:1,
+            received_unique:1,possibly_repaired:0,mature:true,
+            complete:true,capacity_limited:false};
+        assert_eq!(hist.assess_wire(report,MonoNs(21)),Err(QualityError::Unknown));
+        let mut local=SendWindowSampler::new(k,MonoNs(10)).unwrap();
+        local.on_start_send_result(true);
+        assert!(local.on_first_send(RecordPn(200),
+            FirstSendStatus::DefinitelyNotSent));
+        assert!(local.on_first_send(RecordPn(201),
+            FirstSendStatus::Uncertain));
+        assert!(local.on_first_send(RecordPn(202),FirstSendStatus::Accepted));
+        let closed=local.close(MonoNs(20)).unwrap();
+        assert_eq!(closed.first_sent,1);
+        assert!(!closed.complete);
+        assert!(closed.capacity_limited);
+        assert_eq!(SendWindowSampler::new(WindowKey{last:RecordPn(1224),..k},
+            MonoNs(0)).err(),Some(QualityError::InvalidRange));
     }
 }
