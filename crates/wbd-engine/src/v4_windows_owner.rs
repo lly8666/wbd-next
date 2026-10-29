@@ -80,6 +80,8 @@ struct WindowsOriginalM2 {
     // At most one immutable original-M1 kind1 draft is awaiting real NPF send.
     feedback:RxFeedbackState,
     feedback_pending:Option<(FeedbackDraft,u64)>,
+    // Per-lane state, no thread/timer; TX Health deadline not yet activated.
+    health:crate::v4_native_health::HealthClock,
     // Same W168 mature source-only denominator as Linux Fixed; never a
     // Go carrier ACK or configuration-intent receipt.
     #[cfg(feature="fec2_product_record")]
@@ -220,6 +222,8 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         reverse_authenticated_receipts:0,repair_polls:0,
         repair_preflight_stale:0,repair_quota_rejected:0,
         feedback,feedback_pending:None,
+        health:crate::v4_native_health::HealthClock::new(
+            crate::v4_native_health::HealthPolicy::default_connected(),now.0),
         #[cfg(feature="fec2_product_record")]
         mature,
         #[cfg(feature="fec2_product_record")]
@@ -500,10 +504,14 @@ fn m2_complete_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     Ok(m.shadow.outstanding() as u32)
 }
 fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
-    receipt:&wbd_codec::Receipt,
+    control:&crate::v4_native_health::AuthenticatedControl,
 )->Result<u32,i32>{
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
     let now=m2_clock();
+    if let Some(idle)=control.peer_idle_ns{
+        m.health.on_peer_idle_hint(now.0,idle);
+    }else{m.health.on_authenticated_control(now.0)}
+    let Some(receipt)=control.receipt.as_ref()else{return Ok(0)};
     let opened=ReceiptOpenFacts{
         verified_reverse_lane:m.route.outbound_lane(),
         verified_reverse_direction:if e.role_server {
@@ -1212,6 +1220,7 @@ fn v5_open_record_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         // activate RxFeedbackState. Control kind1 cannot ACK itself.
         if let Some(m)=e.m2.as_mut(){
             m.feedback.on_authenticated_data(RecordPn(unique_pn),m2_clock());
+            m.health.on_authenticated_business(m2_clock().0);
         }
         e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);
         Ok((len,1,unique_pn))
@@ -1220,15 +1229,12 @@ fn v5_open_record_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     // can this typed kind1 enter the bounded staging lane. It does not yet
     // authorize shadow retirement or Go TCP carrier receipt.
     else if report.link_ready==0&&report.control_ready==1&&report.rejected==0 {
-        let Some((pn,receipt))=opened_kind1 else{return Err(INVALID)};
-        if e.authenticated_kind1.len()>=MAX_AUTHENTICATED_KIND1 {
-            return Err(FULL)
-        }
+        let Some((pn,control))=opened_kind1 else{return Err(INVALID)};
         if e.m2.is_some(){
-            // Only real M3-authenticated kind1 can retire previously
-            // Npcap-confirmed FrozenRecord shadows. No raw Go TCP ACK.
-            m2_authenticated_kind1_entry(e,pn,&receipt)?;
-        }else{
+            // Health-only is verified liveness, not a frozen DATA receipt.
+            m2_authenticated_kind1_entry(e,pn,&control)?;
+        }else if let Some(receipt)=control.receipt{
+            if e.authenticated_kind1.len()>=MAX_AUTHENTICATED_KIND1{return Err(FULL)}
             e.authenticated_kind1.push_back((pn,receipt));
         }
         e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);

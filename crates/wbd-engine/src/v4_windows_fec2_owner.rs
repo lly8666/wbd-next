@@ -153,13 +153,15 @@ pub(super) fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
         report.link_ready.saturating_add(report.control_ready)!=1 {
         return Err(INVALID)
     }
-    if let Some((pn,receipt))=unique_receipt{
-        if e.m2.is_some(){m2_authenticated_kind1_entry(e,pn,&receipt)?;}
+    if let Some((pn,control))=unique_receipt{
+        if e.m2.is_some(){m2_authenticated_kind1_entry(e,pn,&control)?;}
         else{return Err(BAD_STAGE)}
     }
     if let Some(pn)=unique_data_pn{
         if let Some(m)=e.m2.as_mut(){
             m.feedback.on_authenticated_data(RecordPn(pn),m2_clock());
+            if result.is_empty(){m.health.on_authenticated_control(m2_clock().0)}
+            else{m.health.on_authenticated_business(m2_clock().0)}
         }
     }
     e.rx_unwrapped_high=e.rx_unwrapped_high.max(unfolded+wire.len() as u64);

@@ -3571,6 +3571,7 @@ fn background_raw_once(
                 state.on_authenticated_data(wbd_types::RecordPn(pn),when);
             }else{invalid_seen=true}
         }
+        authenticated_control|=receipt.authenticated_control;
         if let Some(control)=receipt.reverse_kind1{
             // RX never locks Entry/TX and never holds a driver slab after
             // opener returns. Shared M2 state is one bounded mutex.

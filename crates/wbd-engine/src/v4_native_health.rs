@@ -139,6 +139,87 @@ impl HealthClock {
     pub(crate) fn stopped(&mut self){self.disconnected=true}
 }
 
+/// Only after the existing original M3 AEAD + unique PN gate.
+/// WBC4 kind1; no additional keys, replay bitmap or application ACK.
+#[derive(Clone,Debug,PartialEq,Eq)]
+pub(crate) struct AuthenticatedControl {
+    pub(crate) receipt:Option<wbd_codec::Receipt>,
+    pub(crate) peer_idle_ns:Option<u64>,
+    pub(crate) quality:bool,
+}
+pub(crate) fn parse_authenticated_control(wire:&[u8])
+    ->Result<AuthenticatedControl,wbd_codec::CodecError>{
+    use wbd_codec::{ControlTlv,CodecError};
+    let items=wbd_codec::decode_control(wire,512)?;
+    if items.is_empty(){return Err(CodecError::InvalidLength)}
+    let mut out=AuthenticatedControl{receipt:None,peer_idle_ns:None,quality:false};
+    for item in items{
+        match item{
+            ControlTlv::Receipt(r)=>{
+                if out.receipt.replace(r).is_some(){return Err(CodecError::DuplicateReceipt)}
+            },
+            ControlTlv::LegacyHealth(bytes)=>{
+                if bytes.len()!=10||bytes[0]!=1||bytes[1]!=0||
+                    out.peer_idle_ns.is_some(){return Err(CodecError::InvalidLength)}
+                let mut ns=[0u8;8];ns.copy_from_slice(&bytes[2..10]);
+                out.peer_idle_ns=Some(u64::from_be_bytes(ns));
+            },
+            ControlTlv::LegacyQuality(bytes)=>{
+                // Opaque legacy quality is NOT a verified loss/Auto sample.
+                if out.quality||bytes.is_empty()||bytes.len()>64{
+                    return Err(CodecError::InvalidLength)
+                }
+                out.quality=true;
+            },
+        }
+    }
+    Ok(out)
+}
+pub(crate) fn encode_authenticated_health(idle_ns:u64,
+    receipt:Option<&wbd_codec::Receipt>,quality:Option<&[u8]>,
+)->Result<Vec<u8>,wbd_codec::CodecError>{
+    let mut tlvs=Vec::with_capacity(3);
+    if let Some(r)=receipt{tlvs.push(wbd_codec::ControlTlv::Receipt(r.clone()))}
+    let mut bytes=Vec::with_capacity(10);
+    bytes.extend_from_slice(&[1,0]);bytes.extend_from_slice(&idle_ns.to_be_bytes());
+    tlvs.push(wbd_codec::ControlTlv::LegacyHealth(bytes));
+    if let Some(q)=quality{
+        if q.is_empty()||q.len()>64{return Err(wbd_codec::CodecError::InvalidLength)}
+        tlvs.push(wbd_codec::ControlTlv::LegacyQuality(q.to_vec()));
+    }
+    wbd_codec::encode_control(&tlvs,512)
+}
+#[cfg(test)]
+mod wire_tests{
+    use super::*;
+    use wbd_codec::{ControlTlv,CodecError,Receipt,ReceiptPage};
+    #[test]
+    fn health_only_and_merged_receipt_quality_share_canonical_wbc4(){
+        let idle=72_000_000_000u64;
+        let only=encode_authenticated_health(idle,None,None).unwrap();
+        let parsed=parse_authenticated_control(&only).unwrap();
+        assert_eq!(parsed.peer_idle_ns,Some(idle));
+        assert_eq!(parsed.receipt,None);
+        let r=Receipt{largest_data_pn:8,ack_delay_us:0,report_seq:5,
+            pages:vec![ReceiptPage{base_pn:0,bitmap:[0;32]}]};
+        let merged=encode_authenticated_health(idle,Some(&r),Some(&[1,2])).unwrap();
+        let parsed=parse_authenticated_control(&merged).unwrap();
+        assert_eq!(parsed.receipt,Some(r));
+        assert_eq!(parsed.peer_idle_ns,Some(idle));
+        assert!(parsed.quality);
+    }
+    #[test]
+    fn bad_health_repeated_hint_and_oversize_quality_do_not_become_evidence(){
+        let small=wbd_codec::encode_control(&[ControlTlv::LegacyHealth(vec![1])],512).unwrap();
+        assert_eq!(parse_authenticated_control(&small),Err(CodecError::InvalidLength));
+        let bytes=vec![1,0,0,0,0,0,0,0,0,0];
+        let duplicate=wbd_codec::encode_control(&[
+            ControlTlv::LegacyHealth(bytes.clone()),ControlTlv::LegacyHealth(bytes)],512).unwrap();
+        assert_eq!(parse_authenticated_control(&duplicate),Err(CodecError::InvalidLength));
+        assert_eq!(encode_authenticated_health(0,None,Some(&[])),Err(CodecError::InvalidLength));
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

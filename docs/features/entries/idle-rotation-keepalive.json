@@ -22,7 +22,8 @@
   "code_refs": [
     "r0/go_overlay/assembly/manifest.json",
     "r0/go_overlay/internal/realityfront/admission_v4.go",
-    "crates/wbd-engine/src/runtime/generation.rs"
+    "crates/wbd-engine/src/runtime/generation.rs",
+    "crates/wbd-engine/src/v4_native_health.rs"
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
@@ -53,7 +54,8 @@
   ],
   "limitations": [
     "本卡是当前迁移/未验证能力追踪，不是声称V4这些策略已接线。",
-    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "PLAN026 code candidate: original Windows/Linux M3 AEAD+unique PN kind1 now parses strict 10-byte versioned WBC4 Health plus bundled Receipt/Quality, Windows HealthClock tracks authenticated facts. Timed TX, dual-sided effective config, server FIN/Dormant/Wake still UNWIRED; new product PASS NOT_RUN."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

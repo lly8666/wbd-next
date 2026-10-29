@@ -330,6 +330,9 @@ pub(crate) struct BackgroundRxReceipt{
     pub(crate) authenticated_data_pn:Option<u64>,
     // Only created after the SAME moved original M3 AEAD + unique PN opener.
     pub(crate) reverse_kind1:Option<AuthenticatedNormalKind1>,
+    // Exact post-AEAD+replay M3 control only, not business or TCP ACK.
+    pub(crate) authenticated_control:bool,
+    pub(crate) authenticated_health_hint:Option<u64>,
     // Genuine original AEAD/PN FEC counts only: source seen/accepted 0,1;
     // parity seen/accepted 2,3; systematic/recovered candidates 4,5;
     // actual TUN writes 6,7; TUN failure 8, FEC reject 9, disabled 10.
@@ -487,15 +490,17 @@ impl ProtectedBackgroundRx{
                 receipt.invalid=1;
                 return receipt
             }
-            match wbd_codec::decode_control(opened.payload,512){
-                Ok(mut items) if items.len()==1 =>{
-                    if let wbd_codec::ControlTlv::Receipt(received)=items.remove(0){
+            match crate::v4_native_health::parse_authenticated_control(opened.payload){
+                Ok(control)=>{
+                    receipt.authenticated_control=true;
+                    receipt.authenticated_health_hint=control.peer_idle_ns;
+                    if let Some(received)=control.receipt{
                         receipt.reverse_kind1=Some(AuthenticatedNormalKind1{
                             reverse_record_pn:opened.pn,receipt:received
                         });
-                    }else{receipt.invalid=1;}
+                    }
                 },
-                _=>receipt.invalid=1,
+                Err(_)=>receipt.invalid=1,
             }
             return receipt
         }
@@ -1509,7 +1514,7 @@ impl ProtectedScopedOwner {
         mut accept_link:F,mut accept_kind1:G,
     )->Result<(Vec<RxPacket>,AuthenticatedRxReport),
                (ProtectedCryptoError,Vec<RxPacket>)>
-    where F:FnMut(u64,&[u8]), G:FnMut(u64,wbd_codec::Receipt) {
+    where F:FnMut(u64,&[u8]), G:FnMut(u64,crate::v4_native_health::AuthenticatedControl) {
         if self.state!=OwnerPhase::Active {
             return Err((ProtectedCryptoError::Inactive,storage))
         }
@@ -1530,14 +1535,12 @@ impl ProtectedScopedOwner {
                     if record.payload.len()>512 {
                         report.rejected+=1;continue
                     }
-                    match wbd_codec::decode_control(record.payload,512){
-                        Ok(mut items) if items.len()==1=>{
-                            if let wbd_codec::ControlTlv::Receipt(receipt)=items.remove(0){
-                                accept_kind1(record.pn,receipt);
-                                report.control_ready+=1;
-                            } else {report.rejected+=1}
+                    match crate::v4_native_health::parse_authenticated_control(record.payload){
+                        Ok(control)=>{
+                            accept_kind1(record.pn,control);
+                            report.control_ready+=1;
                         },
-                        _=>report.rejected+=1,
+                        Err(_)=>report.rejected+=1,
                     }
                 },
                 Ok(_)=>report.rejected+=1,
@@ -1557,7 +1560,7 @@ impl ProtectedScopedOwner {
         mut accept_kind1:G,
     )->Result<(Vec<RxPacket>,AuthenticatedRxReport),
                (ProtectedCryptoError,Vec<RxPacket>)>
-    where F:FnMut(u64,u8,&[u8]),G:FnMut(u64,wbd_codec::Receipt){
+    where F:FnMut(u64,u8,&[u8]),G:FnMut(u64,crate::v4_native_health::AuthenticatedControl){
         if self.state!=OwnerPhase::Active {
             return Err((ProtectedCryptoError::Inactive,storage))
         }
@@ -1580,14 +1583,12 @@ impl ProtectedScopedOwner {
                     if record.payload.len()>512 {
                         report.rejected+=1;continue
                     }
-                    match wbd_codec::decode_control(record.payload,512){
-                        Ok(mut items) if items.len()==1=>{
-                            if let wbd_codec::ControlTlv::Receipt(receipt)=items.remove(0){
-                                accept_kind1(record.pn,receipt);
-                                report.control_ready+=1;
-                            }else{report.rejected+=1}
+                    match crate::v4_native_health::parse_authenticated_control(record.payload){
+                        Ok(control)=>{
+                            accept_kind1(record.pn,control);
+                            report.control_ready+=1;
                         },
-                        _=>report.rejected+=1,
+                        Err(_)=>report.rejected+=1,
                     }
                 },
                 Ok(_)=>report.rejected+=1,

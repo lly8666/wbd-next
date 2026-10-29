@@ -28,7 +28,8 @@
     "crates/wbd-platform/src/windows_native_io.rs",
     "r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
     "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io.go",
-    "tools/m0_wl_lock_profile.py"
+    "tools/m0_wl_lock_profile.py",
+    "crates/wbd-engine/src/v4_native_health.rs"
   ],
   "doc_refs": [
     "docs/evidence/M0/PLAN024-W168-recovered-Windows-v3-native-run-20261027.json",
@@ -156,7 +157,8 @@
     "PLAN026 actual SOURCEe6be NPF direct borrowed-frame RX verified at150Mbps each direction/300ms one-way/0%tc/60s: same-source Actions40697876014 attempt1 FAILED Windows first-delivery98.6538% and process CPU51.25s, attempt2 PASSED both first deliveries100% and CPU11.0s. Different Github Windows runner IDs 1000107783 vs1000107784, 4.66x CPU variation, no causal same-host CPU optimization proof or stable repeated pass. Borrowed NPF frame extra memcpy 1.267GB avoided in attempt2; owned Stop both pass.",
     "ABBA 40707758779: B NPF borrow rejected (A 4.852864 vs B 4.932077 CPU s/GB); new main rollback SOURCE not qualified until separate native Action.",
     "Rollback main b1bc signed Action40710227335: fresh native CPU50.90625s/75.921s, Rust TX sample43.72s, Linux offered140.95 and UDP socket drops81, Windows first98.2784%; 150M FAIL, no host-only attribution. ABBA A/B remains earlier-source decision.",
-    "PLAN026 candidate extends V1 Normal native ownership to versioned Fixed/Auto V2 without a second native Wintun/NPF owner. New code and low-frequency Go telemetry are NOT yet compiled, tested, or performance qualified at this main SOURCE. Game2/4 still use Go steady packet code and must not be promoted; only prior exact Normal or legacy-mode evidence retains its original scope."
+    "PLAN026 candidate extends V1 Normal native ownership to versioned Fixed/Auto V2 without a second native Wintun/NPF owner. New code and low-frequency Go telemetry are NOT yet compiled, tested, or performance qualified at this main SOURCE. Game2/4 still use Go steady packet code and must not be promoted; only prior exact Normal or legacy-mode evidence retains its original scope.",
+    "PLAN026 Windows original M3 Normal/FEC kind1 now accepts after unique AEAD+PN Health-only and Receipt+Health; Health-only can update native Rust liveness but cannot retire any frozen M2 DATA. Native TX Health/Go effective readback/Game native two-worker still UNWIRED."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
