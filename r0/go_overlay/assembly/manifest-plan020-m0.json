@@ -735,6 +735,12 @@
     },
     {
       "kind": "create",
+      "path": "internal/realityfront/bridge_v4_windows_fixed_stream.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_fixed_stream.go",
+      "result_blob": "c9088b993e71405b77aca663cb1375e5ddfb9a32"
+    },
+    {
+      "kind": "create",
       "path": "internal/realityfront/fec_v2_runtime_controller.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller.go",
       "result_blob": "b2caa5d437a1b62c02d2e37cdd5db0c1d03ec2ea"

@@ -538,6 +538,9 @@
      mut tun:WintunRx,mut npf:NpcapTx,stop:Arc<WakeEvent>,
      notify:Arc<WakeEvent>,counters:Arc<Counters>,fixed:bool,auto:bool)->i32{
      let mut ip_id=1u16;
+     // Cache Auto next check in the worker. A full packet batch never
+     // takes an extra owner mutex for a 2-second policy decision.
+     let mut next_auto_check=m2_clock().0.saturating_add(2_000_000_000);
      loop {
          if counters.stopping.load(Ordering::Acquire){return OK}
          let result=(||->Result<bool,i32>{
@@ -577,7 +580,10 @@
                  control=true;
              }
              #[cfg(feature="fec2_product_record")]
-             if auto{native_auto_tick(&cfg,&lane,&counters)?;}
+             if auto&&m2_clock().0>=next_auto_check{
+                 native_auto_tick(&cfg,&lane,&counters)?;
+                 next_auto_check=m2_clock().0.saturating_add(2_000_000_000);
+             }
              if work>0||control||parity{return Ok(false)}
              let next_ack=counters.ack.load(Ordering::Acquire);
              if next_ack!=counters.ack_sent.load(Ordering::Acquire){

@@ -1993,7 +1993,8 @@ mod tests {
         let mut wire=[0u8;2048];
         {
             let mut entry=r.entries[&h].lock().unwrap();
-            assert!(m2_arm_entry(&mut entry,epoch,91,19).is_ok());
+            assert_eq!(m2_arm_entry(&mut entry,epoch,91,19),Ok(()),
+                "original M2 bootstrap must admit current generation");
             assert!(entry.m2.as_ref().unwrap().shadow.timing_snapshot().is_some());
             assert_eq!(entry.m2.as_ref().unwrap().shadow.policy_limits().1,MAX_M2_FROZEN);
         }
