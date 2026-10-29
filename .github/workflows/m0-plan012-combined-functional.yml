@@ -102,6 +102,19 @@ jobs:
           # Assemble ACTUAL public original-Go V4 client and server entry
           # sources, not a clone of V3 or a package-private Go test binary.
           mkdir -p legacy/internal/v4productcli legacy/cmd/wbd-v4-client legacy/cmd/wbd-v4-server
+          # Public Linux product imports the actual detached-data kernel BPF
+          # and cold SYN MSS owners. Both are opt-in files in THIS source tree,
+          # not part of the frozen original donor; without them the Go V4
+          # executable cannot compile. Pin these exact source files into the
+          # SAME original-Go staging root before compiling any product CLI.
+          for file in raw_detached_data_linux.go public_v4_mss.go; do
+            source="r0/go_overlay/internal/faketcp/$file"
+            dest="legacy/internal/faketcp/$file"
+            test -f "$source"
+            test ! -e "$dest"
+            cp "$source" "$dest"
+            cmp -s "$source" "$dest"
+          done
           cp r0/go_overlay/internal/v4productcli/linux.go legacy/internal/v4productcli/linux.go
           cp r0/go_overlay/internal/v4productcli/game_linux.go legacy/internal/v4productcli/game_linux.go
           cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/main.go

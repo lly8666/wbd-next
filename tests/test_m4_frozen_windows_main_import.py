@@ -45,7 +45,11 @@ PINNED_FILES = {
 }
 
 M0_AUTHORIZED_CURRENT = {
-    "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go": "948ff4c1456af24aa9ea845c1b6d866b9dd25bb8",
+    # Historical M4 hash above is STILL immutable. The additional M0
+    # Windows-owned Native IO entries belong to the live assembled source,
+    # which is separately content-addressed; old M4 remains available.
+    "r0/go_overlay/assembly/manifest.json": "ac2a4ca8dd33ea022e337c4474e459ed710da17b",
+    "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go": "e5dbe438ea30f24f7e14f1e34f7895b403abc6d8",
     "r0/go_overlay/internal/realityfront/fec_v2_policy.go": "76a707bf71abbcbed58c37c8cf7b2965e069da30",
     "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go": "b9ef571fdbe523ca18ff807b7eb73d19c48f8967",
 }
@@ -69,15 +73,27 @@ class M4FrozenOverlay(unittest.TestCase):
     def test_original_go_manifest_and_guard_remain_exact(self):
         obj = json.loads((ROOT / "r0/go_overlay/assembly/manifest.json").read_text())
         self.assertEqual(obj["legacy_source"], ORIGINAL_GO)
-        self.assertEqual(len(obj["operations"]), 37)
+        # Four exact, source-locked M0 native Windows owner attachments were
+        # appended after the frozen M4 37/17 baseline. Verify they are the
+        # ONLY extra entries; the original donor hashes above are untouched.
+        self.assertEqual(len(obj["operations"]), 41)
         creates = [x for x in obj["operations"] if x["kind"] == "create"]
-        self.assertEqual(len(creates), 17)
+        self.assertEqual(len(creates), 21)
+        expected_m0 = {
+            "internal/faketcp/npcap_native_handoff_windows.go",
+            "internal/faketcp/npcap_native_handoff_windows_test.go",
+            "internal/realityfront/bridge_v4_windows_native_io.go",
+            "internal/realityfront/bridge_v4_windows_native_io_test.go",
+        }
+        self.assertEqual({r["path"] for r in obj["operations"][37:]}, expected_m0)
+        self.assertTrue(all(r["kind"] == "create" for r in obj["operations"][37:]))
         live = json.loads((ROOT / "r0/go_overlay/assembly/manifest-plan020-m0.json").read_text())
         self.assertEqual(live["legacy_source"], ORIGINAL_GO)
         live_creates = {x["overlay_path"]: x for x in live["operations"]
                         if x["kind"] == "create"}
         self.assertEqual(set(M0_AUTHORIZED_CURRENT) & set(PINNED_FILES),
-                         {"r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go"})
+                         {"r0/go_overlay/assembly/manifest.json",
+                          "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go"})
         for row in creates:
             with self.subTest(path=row["overlay_path"]):
                 path = row["overlay_path"]
