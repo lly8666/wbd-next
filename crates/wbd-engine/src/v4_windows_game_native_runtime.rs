@@ -20,7 +20,14 @@ const FRAME_CAP:usize=2304;
 const NPF_CAP:usize=65535+64;
 const MAX_IPV4:usize=2048;
 const EARLY_CAP:usize=256;
-const DELAY_POLL_MS:u32=10;
+// An idle Game2/4 tunnel has no periodic TX timer. Only real Game4/FEC
+// deadlines, Npcap-derived ACK wake, new Wintun sources or Stop wake TX.
+fn game_wait_timeout_ms(now_ns:u64,next_due_ns:Option<u64>)->u32{
+    next_due_ns.map(|due|{
+        due.saturating_sub(now_ns).div_ceil(1_000_000)
+            .max(1).min(u64::from(u32::MAX-1)) as u32
+    }).unwrap_or(u32::MAX)
+}
 #[repr(C)]
 #[derive(Clone,Copy)]
 pub struct WbdWinGameExtraLaneV3 {
@@ -258,7 +265,12 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             return BAD_STAGE
         }
         if did_work{continue}
-        match io::wait_ready(&[stop.handle(),tun.event(),wake.handle()],DELAY_POLL_MS){
+        let timeout={
+            let group=match group.lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
+            let (now,due)=game::native_game_wait_deadline(&group);
+            game_wait_timeout_ms(now,due)
+        };
+        match io::wait_ready(&[stop.handle(),tun.event(),wake.handle()],timeout){
             Ok(WaitResult::Ready(0))=>return OK,
             Ok(WaitResult::Ready(1|2)|WaitResult::Timeout)=>{},
             _=>return BAD_STAGE,
@@ -493,6 +505,15 @@ mod tests{
             1,1,100,std::ptr::null(),32)},INVALID);
         assert_eq!(unsafe{wbd_m0_win_game_native_v3_stats(
             1,std::ptr::null_mut())},INVALID);
+    }
+    #[test]
+    fn native_game_idle_waits_for_event_and_stagger_deadline_not_fixed_10ms_poll(){
+        assert_eq!(game_wait_timeout_ms(1_000_000,None),u32::MAX);
+        assert_eq!(game_wait_timeout_ms(0,Some(4_000_000)),4);
+        assert_eq!(game_wait_timeout_ms(0,Some(50_000_000)),50);
+        assert_eq!(game_wait_timeout_ms(0,Some(140_000_000)),140);
+        assert_eq!(game_wait_timeout_ms(140_000_000,Some(140_000_000)),1);
+        assert_eq!(game_wait_timeout_ms(140_000_000,Some(140_000_001)),1);
     }
     #[test]
     fn game_ack_ledger_copies_only_actual_gap_closure(){

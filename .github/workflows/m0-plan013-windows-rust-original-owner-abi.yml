@@ -6,6 +6,10 @@ on:
     paths:
       - ".github/workflows/m0-plan013-windows-rust-original-owner-abi.yml"
       - "crates/wbd-engine/src/v4_windows_owner.rs"
+      - "crates/wbd-engine/src/v4_windows_game_owner.rs"
+      - "crates/wbd-engine/src/v4_windows_game_native_runtime.rs"
+      - "crates/wbd-engine/src/v4_windows_rust_auto.rs"
+      - "crates/wbd-engine/src/v4_native_health.rs"
       - "crates/wbd-engine/src/v4_owner_crypto.rs"
       - "crates/wbd-engine/src/lib.rs"
       - "r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner.go"

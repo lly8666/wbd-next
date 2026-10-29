@@ -180,6 +180,17 @@ pub(super) fn native_game_due(
 )->Result<Vec<WbdWindowsGameRecordV4>,i32>{
     game_fec_poll_group(group,h,capacity)
 }
+// Reuse the exact original Game4 stagger and GameFec partial-close clocks.
+// These monotonic deadlines share the same group.started epoch as native_due;
+// the worker must not substitute a perpetual 10ms idle poll.
+#[cfg(feature="fec2_product_record")]
+pub(super) fn native_game_wait_deadline(group:&WinGameGroup)->(u64,Option<u64>){
+    let now=game_monotonic_now(group);
+    let next=group.adapter.game4_next_due_ns().into_iter()
+        .chain(group.adapter.game_fec_next_due_ns(now))
+        .min();
+    (now.0,next)
+}
 #[cfg(feature="fec2_product_record")]
 pub(super) fn native_game_has_fec(group:&WinGameGroup)->bool{
     group.adapter.has_game_fec()
