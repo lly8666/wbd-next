@@ -821,7 +821,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
-      "result_blob": "9468f93810c399b639039cfaa8a1de7e5486c502"
+      "result_blob": "7bce68ae499bc1d704865850800e8c9eead77e46"
     },
     {
       "kind": "create",
@@ -840,6 +840,12 @@
       "path": "internal/runtimeentry/r0_native_health_flags_test.go",
       "overlay_path": "r0/go_overlay/internal/runtimeentry/r0_native_health_flags_test.go",
       "result_blob": "7f12e1225a7d59b602b268f1b0e09938f371057d"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_native_v4_rust_fixed_mature_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_fixed_mature_windows_test.go",
+      "result_blob": "21bf8abbed9d0d2f1c5df58bc1ece0826793f219"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

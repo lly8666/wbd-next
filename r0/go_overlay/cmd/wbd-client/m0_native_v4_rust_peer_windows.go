@@ -33,6 +33,7 @@ type m0WinRustNativePeer struct{
  autoPolicy realityfront.FecV2AutoPolicy
  healthInterval,healthDead,healthDormant uint32
  effectiveHealth realityfront.V4WindowsNativeHealthPolicyV1
+ fixedMatureReported bool
  autoController *realityfront.V4WindowsOriginalFEC2AutoController
 }
 func newM0WinRustNativePeer(owner *realityfront.V4WindowsAuthenticatedClientOwner,
@@ -181,7 +182,25 @@ func(p *m0WinRustNativePeer) RefreshEffective(ctx context.Context)error{
  if s.WorkerError!=0{return fmt.Errorf("Rust native worker rc=%d",s.WorkerError)}
  p.last=s
  p.effective,err=p.owner.ReadBoundOriginalM2Effective(ctx)
- return err
+ if err!=nil{return err}
+ if p.mode==m0WinModeFixed&&!p.fixedMatureReported{
+  // Exactly one 1Hz original Rust M2 readback, never a Go packet callback.
+  m,mErr:=p.owner.ReadBoundOriginalFixedMature(ctx)
+  if mErr!=nil{return fmt.Errorf("original Rust Fixed mature M2 readback: %w",mErr)}
+  if m0WindowsFixedMatureVerified(m){
+   fmt.Printf("WBD_WINDOWS_FEC2_M2_MATURE_SCOPED mode=fec-fixed source=original_rust_authenticated_m2 copied_source=%d copied_parity=%d reverse_reports=%d positive_2s=%d covered_2s=%d censored=%d\\n",
+    m.CopiedSource,m.CopiedParity,m.ReverseReports,m.Positive2s,m.Covered2s,m.Censored)
+   p.fixedMatureReported=true
+  }
+ }
+ return nil
+}
+// The 56B original Rust M2 ABI proves genuine copied-firstsend and mature
+// authenticated feedback, never a CLI/OS/config-intent Applied surrogate.
+func m0WindowsFixedMatureVerified(m realityfront.V4WindowsFixedMatureReadback)bool{
+ return m.Version==1&&m.Size==56&&m.Applied==1&&m.Censored==0&&
+  m.CopiedSource>0&&m.CopiedParity>0&&m.ReverseReports>0&&
+  m.Positive2s>0&&m.Covered2s>0
 }
 func(p *m0WinRustNativePeer) Stats()m0NativeV4PacketStats{
  result:=m0NativeV4PacketStats{Mode:p.mode,TxPackets:p.last.TXCopied,

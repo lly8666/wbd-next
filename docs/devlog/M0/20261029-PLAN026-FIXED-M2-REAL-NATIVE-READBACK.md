@@ -1,0 +1,13 @@
+# M0 PLAN026 H358 — replace missing Fixed M2 fixture marker with real Rust native readback
+
+2026-10-29. The exact source-b222 genuine two-OS Windows↔WSL2 Action [40844243101](https://github.com/lly8666/wbd-next/actions/runs/40844243101) reported **Fixed FAIL** despite its real Windows/Linux kernel UDP, TCP and both owned Stop being PASS. Its criterion in `tools/m0_wl_public_normal_e2e.py` checks `WBD_WINDOWS_FEC2_M2_MATURE_SCOPED mode=fec-fixed`, which was only emitted by an old path and is missing after the PLAN026 NativeOwner Go cold handoff. This is an observability/qualification wiring failure; it is not a license to infer M2 Applied from normal traffic, TLS, OS Applied or a signed kernel copy.
+
+The original Rust M2 production ABI `wbd_m0_win_owner_v8_fixed_mature_readback`, already wrapped by `ReadBoundOriginalFixedMature` in `bridge_v4_windows_fixed_stream.go`, supplies strict typed original evidence: version/size, Applied and Censored, true NPF-copied source+parity, authenticated reverse reports, positive mature 2s and covered mature 2s. `m0_native_v4_rust_peer_windows.go` now calls this exact native ABI **only on the existing once-per-second `RefreshEffective` cold control check**, only while native Fixed mode is active, and prints the historic scoped marker ONCE if ALL authoritative Rust fields are valid. A pending/requested/configured source is never accepted. If real source/parity/positive/coverage are missing, no marker is printed and the unchanged E2E test correctly remains FAIL. ABI read errors fail closed, no Go per-packet FFI or worker is added.
+
+A pure original Go regression test exercises true and nine false cases (stale ABI, un-applied, censored, missing genuine NPF source, parity, reverse/auth, mature positive, mature coverage). Both effective Go source and new test were pinned as exact blobs to the authoritative original Windows `manifest-plan020-m0.json`, not only the overlay. No FEC encoder/Game scheduler change or optional outer retransmission delivery gate. Prior signed Normal/off PASS is unchanged.
+
+The in-flight previous full source 6a8aa79d Win-Linux Action [40846416052](https://github.com/lly8666/wbd-next/actions/runs/40846416052) is a **diagnostic source**, not proof of this new Fixed change. New main source requires its own original Windows compile/FFI and two-OS tests, with original Game worker rc3 stage captured without auth weakening. Do not mark Fixed mature PASS before actual same-source output and source manifest.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only scoped Fixed genuine native M2 evidence readback in the existing Go 1Hz cold diagnostics, plus original-Go test and pinned manifest; no FEC mode, product data path, settings or packet semantic change."}
+```
