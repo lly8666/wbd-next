@@ -130,6 +130,8 @@ def native_group_selection(group,spec):
         # minutes and is not a functional assertion. Keep it for dedicated
         # measurement Actions; never let it time out the 240s codec gate.
         # The separately pinned F2 suite remains independent as above.
+        if "r1_steady_release_same_source_fresh_vs_reused_owner_cost" in spec["required"]:
+            raise ValueError("cannot skip mandatory CPU probe")
         selected+=["--skip","r1_f2_","--skip",
                    "r1_steady_release_same_source_fresh_vs_reused_owner_cost"]
     return selected

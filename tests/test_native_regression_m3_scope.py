@@ -19,6 +19,12 @@ class Tests(unittest.TestCase):
         c["required"]=c["required"]+["r1_f2_native_decode_tables_and_workspace_reused_dirty_tail_exact"]
         with self.assertRaisesRegex(ValueError,"cannot skip mandatory F2"):
             n.native_group_selection("codec",c)
+    def test_future_mandatory_cpu_probe_cannot_be_skipped(self):
+        c=dict(n.suites()["codec"])
+        c["required"]=c["required"]+[
+            "r1_steady_release_same_source_fresh_vs_reused_owner_cost"]
+        with self.assertRaisesRegex(ValueError,"cannot skip mandatory CPU probe"):
+            n.native_group_selection("codec",c)
     def test_other_groups_keep_original_full_selection(self):
         for role,spec in n.suites().items():
             if role!="codec":
