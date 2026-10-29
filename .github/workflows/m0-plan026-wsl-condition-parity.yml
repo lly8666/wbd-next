@@ -1,0 +1,83 @@
+name: M0 PLAN026 WSL2 old-vs-current condition parity (no native product)
+run-name: "M0|WL-WSL2-ENV-PARITY|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-plan026-wsl-condition-parity.yml"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  identical-windows-2025-guest:
+    strategy:
+      fail-fast: false
+      matrix:
+        launch: [historical-direct, current-wrapped]
+    runs-on: windows-2025
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Actual former/current Ubuntu WSL2 kernel launch and raw TUN prerequisites
+        shell: pwsh
+        timeout-minutes: 7
+        env:
+          WBD_WL_PROBE_METHOD: ${{ matrix.launch }}
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force result/wl-public | Out-Null
+          $started=[System.Diagnostics.Stopwatch]::StartNew()
+          $method=$env:WBD_WL_PROBE_METHOD
+          Write-Output "WL_CONDITION_PARITY_BEGIN method=$method runner=windows-2025 product=NOT_RUN"
+          $system=[ordered]@{
+            runner='windows-2025'; method=$method; source=$env:GITHUB_SHA;
+            product='NOT_RUN'; original_tls='NOT_RUN'; signed_driver='NOT_RUN';
+            os_build=[Environment]::OSVersion.Version.ToString();
+            pwsh=$PSVersionTable.PSVersion.ToString()
+          }
+          $system | ConvertTo-Json | Set-Content result/wl-public/parity-system.json
+          $known=if($method -eq 'historical-direct'){
+            (& wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]',''
+          }else{
+            (& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]',''
+          }
+          Write-Output ("WL_CONDITION_PARITY_LIST method=$method seconds="+$started.Elapsed.TotalSeconds.ToString('0.0'))
+          if($LASTEXITCODE -ne 0){throw "WSL distribution list failed method=$method"}
+          if($known -notmatch 'Ubuntu'){
+            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+            $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
+            Write-Output "WL_CONDITION_PARITY_FETCH_OFFICIAL_ROOTFS method=$method"
+            Invoke-WebRequest -UseBasicParsing -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -TimeoutSec 125 -OutFile $img
+            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'official Ubuntu WSL image integrity mismatch'}
+            Write-Output ("WL_CONDITION_PARITY_FETCHED method=$method seconds="+$started.Elapsed.TotalSeconds.ToString('0.0'))
+            New-Item -ItemType Directory -Force $vm | Out-Null
+            if($method -eq 'historical-direct'){
+              & wsl.exe --import Ubuntu $vm $img --version 2
+            }else{
+              & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2
+            }
+            if($LASTEXITCODE -ne 0){throw "original Ubuntu WSL2 import failed method=$method"}
+          }
+          Write-Output ("WL_CONDITION_PARITY_IMPORTED method=$method seconds="+$started.Elapsed.TotalSeconds.ToString('0.0'))
+          & python tools/m0_wl_real_wsl2_guest_probe.py
+          if($LASTEXITCODE -ne 0){throw "real WSL2 guest/TUN blocked method=$method"}
+          Write-Output ("WL_CONDITION_PARITY_GUEST_BOOT_OK method=$method seconds="+$started.Elapsed.TotalSeconds.ToString('0.0'))
+          if($method -eq 'historical-direct'){
+            & wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0
+          }else{
+            & python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0
+          }
+          if($LASTEXITCODE -ne 0){throw "actual Ubuntu eth0 probe failed method=$method"}
+          $system['result']='PASS_GENUINE_WSL2_KERNEL_PREREQUISITE_ONLY'
+          $system['elapsed_seconds']=[math]::Round($started.Elapsed.TotalSeconds,2)
+          $system | ConvertTo-Json | Set-Content result/wl-public/parity-system.json
+          Write-Output ("WL_CONDITION_PARITY_SUCCESS method=$method source=$env:GITHUB_SHA total_seconds="+$started.Elapsed.TotalSeconds.ToString('0.0'))
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan026-wsl2-condition-parity-${{ matrix.launch }}-${{ github.run_id }}
+          path: |
+            result/wl-public/parity-system.json
+            result/wl-public/wsl2-real-guest-probe.json
+          if-no-files-found: warn
+          retention-days: 14
