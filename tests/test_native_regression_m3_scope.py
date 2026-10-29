@@ -4,7 +4,14 @@ from tools import native_regression as n
 class Tests(unittest.TestCase):
     def test_r1_codec_mandatory_cases_unskipped_and_f2_separately_qualified(self):
         c=n.suites()["codec"]
-        self.assertEqual(n.native_group_selection("codec",c),["r1_","--skip","r1_f2_"])
+        self.assertEqual(n.native_group_selection("codec",c),[
+            "r1_","--skip","r1_f2_","--skip",
+            "r1_steady_release_same_source_fresh_vs_reused_owner_cost"])
+        # Only the unbounded CPU comparison is excluded from the functional
+        # gate; no mandatory codec assertion can be silently skipped.
+        self.assertFalse("r1_steady_release_same_source_fresh_vs_reused_owner_cost" in c["required"])
+        self.assertTrue(all(required not in
+            n.native_group_selection("codec",c)[2::2] for required in c["required"]))
         self.assertTrue(c["required"])
         self.assertFalse(any(x.startswith("r1_f2_") for x in c["required"]))
     def test_future_mandatory_f2_cannot_be_skipped(self):

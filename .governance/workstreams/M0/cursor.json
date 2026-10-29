@@ -4,19 +4,18 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 389,
-  "checkpoint_sha": "9105cb806275c0e6d698d3e13c4a9e1232d1a188",
+  "sequence": 390,
+  "checkpoint_sha": "ca3115487aebe5156bf08b56eed39dac1b89ef46",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 §0 remains PARTIAL. H388 SOURCE9105 native recovery 88/88 PASS, engine 134/134 PASS, codec FAIL code124 after 240s in nonmandatory fresh-vs-reused CPU probe plus unexpected ignored diagnostic; H389 excludes only that nonmandatory perf probe from functional codec gate and explicitly permits its existing ignored diagnostic, not a product fix. H387 original Windows WAL source18cf Action40932953430 all five mode jobs SUCCESS including Game2/4 Stop after true negative completion; not new PLAN027 product SOURCE qualification. Online M2 Receipt and Windows/Linux live low-rate Auto Quality/ACK integration still OPEN; A/B/C NOT_RUN.",
-  "why_now": "Recover already-completed H387 Windows WAL and H388 native results without duplicate dispatch. Repair actual 240s codec functional gate pollution by nonmandatory CPU measurement; preserve required functional tests. Continue PLAN027 product phase1, then A/B/C and delivery.",
+  "current_task": "PLAN027 §0 remains PARTIAL. H388 SOURCE9105 native recovery 88/88 PASS, engine 134/134 PASS, codec FAIL code124 after 240s in nonmandatory fresh-vs-reused CPU probe plus unexpected ignored diagnostic; H389 excludes only that nonmandatory perf probe from functional codec gate and explicitly permits its existing ignored diagnostic, not a product fix. H387 original Windows WAL source18cf Action40932953430 all five mode jobs SUCCESS including Game2/4 Stop after true negative completion; not new PLAN027 product SOURCE qualification. Online M2 Receipt and Windows/Linux live low-rate Auto Quality/ACK integration still OPEN; A/B/C NOT_RUN. H389 first CI Action40935895121 FAIL at mandatory selector selftest expecting old list; governance Action40935895112 FAIL because new mixed-source evidence was incorrectly added as cursor.last_tested_source evidence. H390 corrects both, no product tests claimed.",
+  "why_now": "H389 CI actual failures recovered: selector unit test expected obsolete exact argument list; governance requires cursor evidence_refs same SOURCE as last_tested_source. Correct test to assert required codec cases retained and move mixed-source recovery note to context_refs, not qualification evidence_refs.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H389 native-regression Actions for new CI selector (one existing functional group per job), then implement Windows/Linux actual low-rate quality window arm/firstsend/receive/report and ACK/SACK owner, remove live M2 perrecord emit/consume, update configs/cards/fixtures; freeze source and A, B, C, fixes/delivery. Do not count source-only regressions as product A.",
+  "next_action": "Collect H390 CI Action results; continue actual live M2 retirement/replacement Windows/Linux owner and then A/B/C/repair/delivery. Do not re-run historical Windows source18cf or native SOURCE9105.",
   "unverified": true,
   "last_tested_source": "302d02049669d8f36f3d6852bc1c668ff003ed4a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN026-GAME2-SOURCE302D-TRUE-WINDOWS-LINUX-TWO-WAY-STOP-20261029.json",
-    "docs/evidence/M0/PLAN027-H389-RECOVERED-WINDOWS-AND-NATIVE-GATES-20261030.json"
+    "docs/evidence/M0/PLAN026-GAME2-SOURCE302D-TRUE-WINDOWS-LINUX-TWO-WAY-STOP-20261029.json"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md",
@@ -26,8 +25,9 @@
     "docs/features/entries/fec-auto.json",
     "docs/devlog/M0/20261030-PLAN027-OUTER-ACK-SACK-INDEX-FIRST-CODE.md",
     "docs/devlog/M0/20261030-PLAN027-H374-RECOVER-ACTIONS-GOVERNANCE-PIN.md",
-    "docs/evidence/M0/PLAN026-GAME2-SOURCE302D-TRUE-WINDOWS-LINUX-TWO-WAY-STOP-20261029.json"
+    "docs/evidence/M0/PLAN026-GAME2-SOURCE302D-TRUE-WINDOWS-LINUX-TWO-WAY-STOP-20261029.json",
+    "docs/evidence/M0/PLAN027-H389-RECOVERED-WINDOWS-AND-NATIVE-GATES-20261030.json"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL: pure scoped ACK index, R<=0.10F budget, authenticated Quality-v2/Health envelope, 4RX/16TX windows, source-only. Online M2 perrecord remains LIVE, owner wiring absent. §0-2 A NOT_RUN. §0-3 B OPEN (H387 historical Windows 5-mode original TLS Wintun scoped PASS at 18cf including Game2 Stop, no current-source B claim). §0-4 C NOT_RUN. §0-5 delivery OPEN. H388 SOURCE9105 recovery88/88 engine134/134 PASS; codec 240s nonmandatory perf timeout + ignored diagnostic FAIL. H389 CI selector correction pending Action. Physical NOT_RUN."
+  "partial_summary": "§0-1 PARTIAL: pure scoped ACK index, R<=0.10F budget, authenticated Quality-v2/Health envelope, 4RX/16TX windows, source-only. Online M2 perrecord remains LIVE, owner wiring absent. §0-2 A NOT_RUN. §0-3 B OPEN (H387 historical Windows 5-mode original TLS Wintun scoped PASS at 18cf including Game2 Stop, no current-source B claim). §0-4 C NOT_RUN. §0-5 delivery OPEN. H388 SOURCE9105 recovery88/88 engine134/134 PASS; codec 240s nonmandatory perf timeout + ignored diagnostic FAIL. H389 CI selector correction pending Action. Physical NOT_RUN. H389 CI FAIL: Action40935895121 selector selftest stale expectation; Action40935895112 mixed-source cursor evidence_refs mismatch. H390 fixes pending."
 }
