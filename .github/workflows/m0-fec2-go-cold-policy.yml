@@ -75,7 +75,7 @@ jobs:
         with:
           name: fec2-go-build-${{ github.run_id }}-${{ github.run_attempt }}
           path: fec2-go-build/
-      - name: Verify exact MAIN Go policy bytes and execute 8 compiled original Go package tests
+      - name: Verify exact MAIN Go policy bytes and execute 12 compiled original Go package tests
         shell: bash
         run: |
           set -euo pipefail
@@ -100,7 +100,7 @@ jobs:
           s=pathlib.Path("fec2-go-result/tests.log").read_text()
           passed=re.findall(r"^--- PASS: (TestF2Control[^ ]+)",s,re.M)
           failed=re.findall(r"^--- FAIL: (TestF2Control[^ ]+)",s,re.M)
-          assert len(passed)==8 and len(set(passed))==8 and not failed,(passed,failed)
+          assert len(passed)==12 and len(set(passed))==12 and not failed,(passed,failed)
           assert re.search(r"^PASS$",s,re.M),s[-500:]
           m=json.load(open("fec2-go-build/manifest.json"))
           v={"result":"PASS","control_sha":m["control_sha"],"accepted_m4_code_sha":m["accepted_m4_code_sha"],

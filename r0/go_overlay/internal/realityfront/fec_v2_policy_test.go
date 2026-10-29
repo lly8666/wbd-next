@@ -228,7 +228,7 @@ func TestF2ControlAggressiveStableOneProfileAboveNormal(t *testing.T) {
     if e!=nil {t.Fatal(e)}
     b,_,e:=FecV2Step(aggressive,FecV2State{},FecV2Snapshot{},0)
     if e!=nil {t.Fatal(e)}
-    for sec:=2;sec<=80;sec+=2 {
+    for sec:=2;sec<=180;sec+=2 {
         now:=time.Duration(sec)*time.Second
         a,_,e=FecV2Step(plain,a,f2Snapshot("customer",FecV2C2S,now,0,0),now)
         if e!=nil {t.Fatal(e)}
