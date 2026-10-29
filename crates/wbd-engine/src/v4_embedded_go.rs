@@ -554,7 +554,7 @@ impl LinuxQualityRx{
 }
 
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct LinuxQualityTx{
     lane:wbd_types::LaneKey,epoch:[u8;16],direction:wbd_recovery::WireDirection,
     sender:Option<wbd_recovery::quality_window::SendWindowSampler>,
@@ -565,7 +565,7 @@ struct LinuxQualityTx{
     slow:VecDeque<(u64,wbd_recovery::quality_window::LossBounds)>,
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 impl LinuxQualityTx{
     fn new(lane:wbd_types::LaneKey,epoch:[u8;16],
         direction:wbd_recovery::WireDirection)->Self{
@@ -716,7 +716,7 @@ struct Entry{
         any(target_env="gnu",target_env="musl")))]
     quality_rx:Option<Arc<Mutex<LinuxQualityRx>>>,
     #[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     quality_tx:Option<LinuxQualityTx>,
     #[cfg(feature="fec2_product_record")]
     original_public_feedback_armed:bool,
@@ -733,7 +733,7 @@ struct Entry{
         any(target_env="gnu",target_env="musl")))]
     quality_report_queued:Option<wbd_recovery::quality_window::WindowKey>,
     #[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     quality_signal_queued:Option<crate::v4_native_health::QualityWindowSignal>,
     // One native Rust TX clock per actually armed original-Go product.
     #[cfg(feature="fec2_product_record")]
@@ -1022,7 +1022,7 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
             any(target_env="gnu",target_env="musl")))]
         quality_rx:None,
         #[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         quality_tx:None,
         #[cfg(feature="fec2_product_record")]
         original_public_feedback_armed:false,
@@ -1038,7 +1038,7 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
             any(target_env="gnu",target_env="musl")))]
         quality_report_queued:None,
         #[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))]
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         quality_signal_queued:None,
         #[cfg(feature="fec2_product_record")]
         native_health:None,
