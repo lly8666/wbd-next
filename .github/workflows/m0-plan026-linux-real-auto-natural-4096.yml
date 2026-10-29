@@ -6,10 +6,15 @@ on:
     paths:
       - ".github/workflows/m0-plan026-linux-real-auto-natural-4096.yml"
       - "tools/m0_plan026_linux_real_auto_natural_4096.py"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_public_product_linux.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_fec2_auto_live_linux_test.go"
   workflow_dispatch:
 permissions: {contents: read, actions: read}
 jobs:
+  product-source-build:
+    uses: ./.github/workflows/m0-plan012-combined-functional.yml
   actual-original-tls-native-keepalive:
+    needs: product-source-build
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
@@ -20,8 +25,8 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           repository: lly8666/wbd-next
-          run-id: 40851521157
-          name: m0-plan012-combined-40851521157-1
+          run-id: ${{ github.run_id }}
+          name: m0-plan012-combined-${{ github.run_id }}-${{ github.run_attempt }}
           github-token: ${{ github.token }}
           path: frozen/
       - name: Verify original TLS Rust product binary SHA and original netns fixture source
@@ -30,10 +35,10 @@ jobs:
           set -euo pipefail
           mkdir -p linux-auto-natural-result fixed-kernel-result
           python3 - <<'PY'
-          import hashlib,json,pathlib
+          import hashlib,json,pathlib,os
           root=pathlib.Path('frozen')
           m=json.loads((root/'fixed-kernel-result/manifest.json').read_text())
-          assert m['source_sha']=='7e9842f6e99769d9919e75a4b15da8d6d88e7257'
+          assert m['source_sha']==os.environ['GITHUB_SHA']
           assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
           sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
           for name,h in m['binaries_sha256'].items():
@@ -71,7 +76,7 @@ jobs:
           log=root/'real-natural-auto.log'
           app=pathlib.Path('fixed-kernel-result/public-v4-normal-business.log')
           receipt={
-             'source_product_sha':'7e9842f6e99769d9919e75a4b15da8d6d88e7257',
+             'source_product_sha':os.environ['GITHUB_SHA'],
              'source_harness_sha':os.environ['GITHUB_SHA'],
              'github_run_id':int(os.environ['GITHUB_RUN_ID']),
              'actual_original_go_tls_rust_raw_tun':True,

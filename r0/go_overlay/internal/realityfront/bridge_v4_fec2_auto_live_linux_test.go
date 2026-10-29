@@ -2,7 +2,10 @@
 
 package realityfront
 
-import "testing"
+import (
+    "testing"
+    "time"
+)
 
 // Only native counters from genuine M4 first-copied DATA and authenticated
 // reverse M2 can enter the decision. Missing or ambiguous stay unknown.
@@ -107,4 +110,42 @@ func TestV4FecAutoAppliedDownRetainsOnlyAuthenticHistory(t *testing.T) {
             }
         })
     }
+}
+
+// Native M2's 8s-mature cohort was copied ~8..16s ago; real FEC
+// copied-k must be from the SAME actual clock interval, not independent
+// 2s floor samples (which were 2-4s off in source7e real Linux).
+func TestV4FecAutoNearestGenuineCohortNotStaleFloor(t *testing.T){
+    sec:=time.Second
+    mk:=func(at time.Duration,n uint64)v4AutoQualitySample{
+        var c [30]uint64
+        c[5],c[6]=n,n
+        c[14]=n
+        return v4AutoQualitySample{at:at,counters:c}
+    }
+    now:=24*sec
+    samples:=[]v4AutoQualitySample{
+        mk(8*sec,3200),mk(16*sec,6400),mk(22*sec,8800),
+    }
+    fast,ok:=v4FecAutoNearestCohort(samples,now-2*sec)
+    if !ok||fast[14]!=8800{t.Fatal("missing true recent 2s cohort")}
+    slow,ok:=v4FecAutoNearestCohort(samples,now-8*sec)
+    if !ok||slow[14]!=6400{t.Fatal("missing true 8s cohort")}
+    old,ok:=v4FecAutoNearestCohort(samples,now-16*sec)
+    if !ok||old[14]!=3200{t.Fatal("missing true 16s cohort")}
+    // The native 8s-mature FIRST-data snapshot and independent copied
+    // k histogram span exactly the same *actual* 8s interval.
+    raw:=mk(now,9600).counters
+    mature,ok:=v4FecAutoWindow(raw,slow,5)
+    if !ok||mature.FirstSent!=3200||slow[14]-old[14]!=3200{
+        t.Fatalf("real mature vs real k source intervals diverged: %+v",mature)
+    }
+    if _,ok:=v4FecAutoNearestCohort([]v4AutoQualitySample{
+        mk(13*sec,5200),mk(5*sec,2000)},now-8*sec);ok{
+        t.Fatal("old 2-4s stale floor cohort must not forge VALID")
+    }
+    near:=[]v4AutoQualitySample{mk(16*sec-300*time.Millisecond,1),
+                                 mk(16*sec+200*time.Millisecond,2)}
+    selected,ok:=v4FecAutoNearestCohort(near,now-8*sec)
+    if !ok||selected[14]!=2{t.Fatal("must choose closest actual timestamp, not stale floor")}
 }

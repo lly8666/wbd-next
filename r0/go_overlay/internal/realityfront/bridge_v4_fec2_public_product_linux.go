@@ -130,7 +130,7 @@ func v4ConfigureProductFec(
     }
     return &v4ProductFecMonitor{
         epoch:authenticated.Epoch(),state:state,cfg:cfg,
-        history:make([]v4AutoQualitySample,0,12),
+        history:make([]v4AutoQualitySample,0,48),
         stopCh:make(chan struct{}),doneCh:make(chan struct{}),
     },nil
 }
@@ -141,6 +141,28 @@ func v4ConfigureProductFec(
 type v4AutoQualitySample struct {
     at time.Duration
     counters [30]uint64
+}
+// A cumulatively sampled mature M2 cohort and its genuine FEC k histogram
+// can only be compared when both snapshots refer to the same source times.
+// Use the nearest REAL Rust snapshot within 400ms, never invent/interpolate
+// an ACK, force a zero-loss window, or use a multi-second stale floor point.
+func v4FecAutoNearestCohort(
+    history []v4AutoQualitySample,target time.Duration,
+)([30]uint64,bool){
+    const maxSkew=400*time.Millisecond
+    var best [30]uint64
+    found:=false
+    closest:=maxSkew+time.Nanosecond
+    for i:=len(history)-1;i>=0;i--{
+        delta:=history[i].at-target
+        if delta<0{delta=-delta}
+        if delta<=maxSkew && delta<closest {
+            best=history[i].counters
+            closest=delta
+            found=true
+        }
+    }
+    return best,found
 }
 func v4FecAutoDiff(a,b uint64)(uint64,bool){
     if b<a{return 0,false}
@@ -176,19 +198,14 @@ func (m *v4ProductFecMonitor)autoObserve(bridge *v4EmbeddedNativeBridge,
     raw,err:=bridge.rustOwnerFec2MatureQuality()
     if err!=nil{return snap,err}
     m.history=append(m.history,v4AutoQualitySample{at:now,counters:raw})
-    // Retain 20s plus one floor point, never an unbounded history table.
-    for len(m.history)>12{m.history=m.history[1:]}
-    find:=func(age time.Duration)([30]uint64,bool){
-        for i:=len(m.history)-1;i>=0;i--{
-            if m.history[i].at<=now-age {
-                return m.history[i].counters,true
-            }
-        }
-        return [30]uint64{},false
-    }
-    fast,haveFast:=find(2*time.Second)
-    slow,haveSlow:=find(8*time.Second)
-    histOld,haveHist:=find(16*time.Second)
+    // 500ms genuine native samples over 24s; the 2s Auto decision cadence
+    // below is unchanged. Matching 2/8/16s exact physical cohort times
+    // prevents k-hist (copied now) from being compared with an older M2
+    // maturity window by 2-4s during a delayed Go tick.
+    for len(m.history)>48{m.history=m.history[1:]}
+    fast,haveFast:=v4FecAutoNearestCohort(m.history,now-2*time.Second)
+    slow,haveSlow:=v4FecAutoNearestCohort(m.history,now-8*time.Second)
+    histOld,haveHist:=v4FecAutoNearestCohort(m.history,now-16*time.Second)
     if !haveFast||!haveSlow||!haveHist{return snap,nil}
     var ok bool
     snap.Fast,ok=v4FecAutoWindow(raw,fast,0)
@@ -252,10 +269,13 @@ func (m *v4ProductFecMonitor)tick(
         }
         m.state=applied
     }
-    if m.cfg.Mode!=FecV2Auto||now-m.lastAutoAt<2*time.Second{return}
-    m.lastAutoAt=now
+    if m.cfg.Mode!=FecV2Auto{return}
+    // One genuine Rust M2 observation every 500ms while Auto is active,
+    // no Go packet pump. Decide/emit stages at most once every 2 seconds.
     snap,err:=m.autoObserve(bridge,now)
     if err!=nil{return}
+    if now-m.lastAutoAt<2*time.Second{return}
+    m.lastAutoAt=now
     if m.state.AppliedRevision!=m.state.RequestedRevision{return}
     next,intent,err:=FecV2Step(m.cfg,m.state,snap,now)
     if err!=nil{return}
@@ -285,9 +305,10 @@ func (m *v4ProductFecMonitor)start(bridge *v4EmbeddedNativeBridge){
     go func(){
         defer close(m.doneCh)
         // Policy itself only evaluates authentic 2s/8s mature cohorts.
-        // Polling a Go clock at 200ms added ten cold-controller wakeups
-        // per two-second decision without observing another useful sample.
-        ticker:=time.NewTicker(2*time.Second)
+        // Rust M2 8s-mature and FEC copied-k cohorts require <=400ms
+        // sampling skew for trustworthy window alignment. This is a
+        // cold 2Hz native counter read; the Auto policy remains 0.5Hz.
+        ticker:=time.NewTicker(500*time.Millisecond)
         defer ticker.Stop()
         for{
             select{
