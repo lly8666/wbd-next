@@ -10,6 +10,8 @@ on:
       - "crates/wbd-engine/src/v4_windows_game_native_runtime.rs"
       - "crates/wbd-engine/src/v4_windows_rust_auto.rs"
       - "crates/wbd-engine/src/v4_native_health.rs"
+      - "crates/wbd-recovery/src/budget.rs"
+      - "crates/wbd-recovery/src/global_sparse.rs"
       - "crates/wbd-engine/src/v4_owner_crypto.rs"
       - "crates/wbd-engine/src/lib.rs"
       - "r0/go_overlay/internal/realityfront/bridge_v4_windows_private_owner.go"
