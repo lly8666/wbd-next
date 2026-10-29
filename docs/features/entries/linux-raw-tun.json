@@ -77,7 +77,8 @@
   "limitations": [
     "仅修改自己新建的TUN，不自动改宿主全局网络；内核write成功≠对端送达。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
-    "PLAN026 SOURCE0abd 100Mbps/300ms/0% netem 60s 原生Windows↔WSL2 Rust Normal/off 已真实验证：SO_RCVBUF请求4MiB、有效8MiB，raw socket drops0、业务首次交付两方向>=99.9%及Stop PASS；但Linux→Windows仍有101唯一包缺失，绝对零丢包未达成；150Mbps/物理/其他模式尚未验证。"
+    "PLAN026 SOURCE0abd 100Mbps/300ms/0% netem 60s 原生Windows↔WSL2 Rust Normal/off 已真实验证：SO_RCVBUF请求4MiB、有效8MiB，raw socket drops0、业务首次交付两方向>=99.9%及Stop PASS；但Linux→Windows仍有101唯一包缺失，绝对零丢包未达成；150Mbps/物理/其他模式尚未验证。",
+    "PLAN026 low-cost candidate only changes Linux Auto Go observation scheduler from 200ms to the existing two-second decision cadence. No change to Linux Rust raw/TUN kernel path or FEC codec. New source and CPU/no-latency regression remain NOT_RUN, and this does not implement merged Rust Keepalive/server Dormant."
   ],
   "promotion": null
 }

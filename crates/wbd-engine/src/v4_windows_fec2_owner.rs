@@ -89,7 +89,7 @@ pub(super) fn open_symbol(
     let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
     open_symbol_entry(&mut e,epoch,luid,ifindex,seq,wire)
 }
-fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
+pub(super) fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     seq:u32,wire:&[u8],
 )->Result<Vec<WbdWindowsFec2FirstDeliveryV4>,i32>{
     if !v3_ready(e,epoch,luid,ifindex)||
@@ -360,7 +360,7 @@ pub(super) fn stage_fixed_source_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if !accepted.source_enqueued{return Err(BAD_STAGE)}
     result.ok_or(BAD_STAGE)
 }
-fn stage_fixed_parity_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+pub(super) fn stage_fixed_parity_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32
 )->Result<WindowsFixedParityBatch,i32>{
     use crate::v4_fixed_stream::DriverProof;

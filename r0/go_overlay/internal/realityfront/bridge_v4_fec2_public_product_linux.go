@@ -284,7 +284,10 @@ func (m *v4ProductFecMonitor)start(bridge *v4EmbeddedNativeBridge){
     m.startedAt=time.Now()
     go func(){
         defer close(m.doneCh)
-        ticker:=time.NewTicker(200*time.Millisecond)
+        // Policy itself only evaluates authentic 2s/8s mature cohorts.
+        // Polling a Go clock at 200ms added ten cold-controller wakeups
+        // per two-second decision without observing another useful sample.
+        ticker:=time.NewTicker(2*time.Second)
         defer ticker.Stop()
         for{
             select{

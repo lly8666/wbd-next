@@ -324,32 +324,31 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  goSteadyAB:=o.Mode==m0WinModeNormal&&os.Getenv("GITHUB_ACTIONS")=="true"&&
   os.Getenv("WBD_WL_PERF_AB_GO_STEADY")=="1"
  if goSteadyAB{fmt.Println("WL_PERF_V2_AB_PATH_GO_STEADY_SOURCE_LOCKED")}
- if o.Mode==m0WinModeNormal&&!goSteadyAB{
-  transport=newM0WinRustNativePeer(owner,endpoint,ncfg,flow,
-   nativeFrames,rustHandoff,&readers)
- }else{
-  // Fixed/Auto stay unchanged; CI A exercises retained Go Normal steady.
-  // Fixed/Auto retain current product path only until the same Rust
-  // NativeOwner grows FEC2 mode; there is no Normal/off fallback.
-  legacy,legacyErr:=newM0NativeV4PeerForMode(owner,endpoint,flow,nativeFrames,o.Mode)
-  if legacyErr!=nil{return legacyErr}
-  if o.FEC2AutoPolicy=="aggressive"{
-   legacy.autoPolicy=realityfront.FecV2Aggressive
-  }else{legacy.autoPolicy=realityfront.FecV2Conservative}
-  if o.Mode==m0WinModeAuto||o.Mode==m0WinModeFixed{
-   if o.Mode==m0WinModeFixed{
-    legacy.initialProfile,e=m0WindowsV4Profile(o.FEC2Profile)
-   }else{
-    legacy.autoStartProfile,e=m0WindowsV4Profile(o.FEC2AutoStartProfile)
-    if e==nil{
-     legacy.initialProfile=legacy.autoStartProfile
-     if o.FEC2AutoPolicy=="aggressive"&&legacy.initialProfile<realityfront.FecV2Maximum{
-      legacy.initialProfile++
-     }
-    }
+ if !goSteadyAB{
+  initial:=realityfront.FecV2Maximum
+  autoStart:=realityfront.FecV2Strong
+  autoPolicy:=realityfront.FecV2Conservative
+  switch o.Mode{
+  case m0WinModeNormal:
+  case m0WinModeFixed:
+   initial,e=m0WindowsV4Profile(o.FEC2Profile)
+  case m0WinModeAuto:
+   autoStart,e=m0WindowsV4Profile(o.FEC2AutoStartProfile)
+   initial=autoStart
+   if o.FEC2AutoPolicy=="aggressive"{
+    autoPolicy=realityfront.FecV2Aggressive
+    if initial<realityfront.FecV2Maximum{initial++}
    }
-   if e!=nil{return e}
+  default:return windowsclient.ErrN4NativeGuard
   }
+  if e!=nil{return e}
+  transport=newM0WinRustNativePeer(owner,endpoint,ncfg,flow,
+   nativeFrames,rustHandoff,&readers,o.Mode,initial,autoStart,autoPolicy)
+ }else{
+  // Explicit source-locked A/B only. Never a product Fixed/Auto fallback.
+  legacy,legacyErr:=newM0NativeV4PeerForMode(
+   owner,endpoint,flow,nativeFrames,m0WinModeNormal)
+  if legacyErr!=nil{return legacyErr}
   transport=legacy
  }
  product,e:=windowsownerlease.PrepareOriginalTLSNativeProduct(
@@ -382,7 +381,14 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  // Read-only producer counters are emitted at 1 Hz (never per packet)
  // for isolated Windows sustained harness accounting. They do not grant
  // application goodput, CPU/RSS, WFP or product OS receipt.
- metricsTicker:=time.NewTicker(time.Second)
+ // The expensive Go heap/GC JSON telemetry is a test diagnostic, not a
+ // production steady heartbeat. A quiet product only checks OS MTU/owner
+ // effective state at a coarse cold-control interval.
+ diagnostic:=os.Getenv("GITHUB_ACTIONS")=="true"||
+  os.Getenv("WBD_NATIVE_TELEMETRY")=="1"
+ interval:=30*time.Second
+ if diagnostic{interval=time.Second}
+ metricsTicker:=time.NewTicker(interval)
  defer metricsTicker.Stop()
  var runtimeErr error
 waitNative:
@@ -410,8 +416,10 @@ waitNative:
     runtimeErr=fmt.Errorf("original Rust M2 effective readback: %w",readErr)
     break waitNative
    }
+   if !diagnostic{continue}
    metrics:=transport.Stats()
-   // Precisely one Go runtime heap/GC snapshot per second. These
+   // Precisely one Go runtime heap/GC snapshot per second only when
+   // opt-in telemetry is enabled. These
    // counters DO NOT represent Rust DLL or kernel allocator activity:
    // the same original Windows EXE process CPU/RSS is sampled separately.
    var goHeap runtime.MemStats

@@ -38,9 +38,23 @@ type V4WindowsNativeWorkerStatsV1 struct {
     WorkerError int32
     Workers uint32
 }
+// The native V2 wrapper changes the operating mode without touching the
+// proven 192-byte V1 device/identity handoff. Exactly one of Fixed or Auto
+// may use the same two Rust workers; Game needs multi-lane attachment.
+type V4WindowsNativeIOV2 struct {
+    Version,Size uint32
+    Mode,Reserved uint32
+    Normal V4WindowsNativeIOV1
+}
 func(s *V4WindowsAuthenticatedClientOwner) StartNativeIO(
     ctx context.Context,cfg V4WindowsNativeIOV1,
 ) error {
+    return s.StartNativeIOForMode(ctx,cfg,0)
+}
+func(s *V4WindowsAuthenticatedClientOwner) StartNativeIOForMode(
+    ctx context.Context,cfg V4WindowsNativeIOV1,mode uint32,
+) error {
+    if mode>2{return errV4WindowsOwner}
     if s==nil||s.bridge==nil||s.device==nil||ctx==nil {
         return errV4WindowsOwner
     }
@@ -57,10 +71,19 @@ func(s *V4WindowsAuthenticatedClientOwner) StartNativeIO(
     cfg.IfIndex=s.device.identity.InterfaceIndex
     if cfg.PathMTU==0||cfg.RXCapture==0||cfg.TXCapture==0||
        cfg.WintunSession==0||cfg.WintunReadEvent==0{return errV4WindowsOwner}
-    proc,err:=s.bridge.fixedProc("wbd_m0_win_native_v1_start")
+    if mode==0{
+        proc,err:=s.bridge.fixedProc("wbd_m0_win_native_v1_start")
+        if err!=nil{return err}
+        err=winOwnerCall(proc,uintptr(unsafe.Pointer(&cfg)))
+        runtime.KeepAlive(cfg)
+        return err
+    }
+    v2:=V4WindowsNativeIOV2{Version:2,Mode:mode,Normal:cfg}
+    v2.Size=uint32(unsafe.Sizeof(v2))
+    proc,err:=s.bridge.fixedProc("wbd_m0_win_native_v2_start")
     if err!=nil{return err}
-    err=winOwnerCall(proc,uintptr(unsafe.Pointer(&cfg)))
-    runtime.KeepAlive(cfg)
+    err=winOwnerCall(proc,uintptr(unsafe.Pointer(&v2)))
+    runtime.KeepAlive(v2)
     return err
 }
 // An early segment was read by the cold Go capture reader during the TLS

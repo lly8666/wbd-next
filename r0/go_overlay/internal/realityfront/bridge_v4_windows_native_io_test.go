@@ -25,3 +25,14 @@ func TestNativeV1ABIHasStablePointerTables(t *testing.T) {
         t.Fatal("Native status ABI changed")
     }
 }
+
+func TestNativeFixedAutoV2PreservesOriginalV1Layout(t *testing.T) {
+    var v1 V4WindowsNativeIOV1
+    var v2 V4WindowsNativeIOV2
+    if got,want:=unsafe.Sizeof(v2),unsafe.Sizeof(v1)+16;got!=want{
+        t.Fatalf("native V2 size=%d want=%d",got,want)
+    }
+    if unsafe.Offsetof(v2.Mode)!=8||unsafe.Offsetof(v2.Normal)!=16{
+        t.Fatalf("native V2 fields are not a 16-byte cold wrapper")
+    }
+}

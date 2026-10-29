@@ -27,13 +27,22 @@ type m0WinRustNativePeer struct{
  last realityfront.V4WindowsNativeWorkerStatsV1
  effective realityfront.V4WindowsM2Effective
  fail chan error
+ mode m0WindowsV4Mode
+ initialProfile realityfront.FecV2Profile
+ autoStartProfile realityfront.FecV2Profile
+ autoPolicy realityfront.FecV2AutoPolicy
+ autoController *realityfront.V4WindowsOriginalFEC2AutoController
 }
 func newM0WinRustNativePeer(owner *realityfront.V4WindowsAuthenticatedClientOwner,
  endpoint *faketcp.NpcapEndpoint,cfg faketcp.NpcapConfig,flow faketcp.ClientFlow,
  early <-chan faketcp.Segment,handoff chan struct{},readers *sync.WaitGroup,
+ mode m0WindowsV4Mode,initialProfile,autoStartProfile realityfront.FecV2Profile,
+ autoPolicy realityfront.FecV2AutoPolicy,
 )*m0WinRustNativePeer{
  return &m0WinRustNativePeer{owner:owner,endpoint:endpoint,cfg:cfg,
-  flow:flow,early:early,handoff:handoff,readers:readers,fail:make(chan error,1)}
+  flow:flow,early:early,handoff:handoff,readers:readers,fail:make(chan error,1),
+  mode:mode,initialProfile:initialProfile,autoStartProfile:autoStartProfile,
+  autoPolicy:autoPolicy}
 }
 func(p *m0WinRustNativePeer) BindNativeRing(ctx context.Context,
  ring *windowsclient.N4OriginalKernelPacketLease,id windowsclient.N4UnifiedIdentity)(err error){
@@ -48,6 +57,13 @@ func(p *m0WinRustNativePeer) BindNativeRing(ctx context.Context,
   err=errors.Join(err,p.DrainPeerAndKernelLoans(stopped,p.owner,nil,id))
  }()
  if err=p.owner.ArmBoundOriginalM2(ctx);err!=nil{return err}
+ if p.mode==m0WinModeFixed||p.mode==m0WinModeAuto{
+  // This can only happen after real original-TLS feature7 and OS device
+  // proof. The same Rust FixedStream owns revision1 and all parity.
+  if err=p.owner.SelectBoundOriginalFEC2Initial(ctx,p.initialProfile);err!=nil{
+   return err
+  }
+ }
  sendSeq,recvSeq,err:=p.owner.OriginalVerifiedTCPBoundaries()
  if err!=nil{return err}
  maxIPv4,err:=p.owner.BoundOriginalIPv4Budget(ctx)
@@ -87,8 +103,22 @@ func(p *m0WinRustNativePeer) BindNativeRing(ctx context.Context,
    Allocate:native.Fns.Allocate,Send:native.Fns.Send,
   },
  }
- if err=p.owner.StartNativeIO(ctx,cfg);err!=nil{return err}
+ mode:=uint32(0)
+ switch p.mode {
+ case m0WinModeNormal:
+ case m0WinModeFixed:mode=1
+ case m0WinModeAuto:mode=2
+ default:return windowsclient.ErrN4NativeGuard
+ }
+ if err=p.owner.StartNativeIOForMode(ctx,cfg,mode);err!=nil{return err}
  p.active=true
+ if p.mode==m0WinModeAuto{
+  controller,e:=realityfront.NewV4WindowsOriginalFEC2AutoController(
+   p.owner,p.autoPolicy,p.autoStartProfile)
+  if e!=nil{return e}
+  if e=controller.Start();e!=nil{return e}
+  p.autoController=controller
+ }
  // At most the original Go 64-slot early buffer; Rust unique M3 opener
  // authenticates those bytes inside its RX worker before kernel delivery.
  for{
@@ -122,6 +152,10 @@ func(p *m0WinRustNativePeer) DrainPeerAndKernelLoans(ctx context.Context,
  owner *realityfront.V4WindowsAuthenticatedClientOwner,
  tun *windowsclient.TUN,id windowsclient.N4UnifiedIdentity)error{
  if p.owner!=owner{return windowsclient.ErrN4NativeGuard}
+ if p.autoController!=nil{
+  p.autoController.Stop()
+  p.autoController=nil
+ }
  if p.active{
   // A failed join is not a stop receipt. Never free native handles that a
   // Rust worker might still own.
@@ -142,13 +176,25 @@ func(p *m0WinRustNativePeer) RefreshEffective(ctx context.Context)error{
  return err
 }
 func(p *m0WinRustNativePeer) Stats()m0NativeV4PacketStats{
- return m0NativeV4PacketStats{Mode:m0WinModeNormal,TxPackets:p.last.TXCopied,
+ result:=m0NativeV4PacketStats{Mode:p.mode,TxPackets:p.last.TXCopied,
   RxFirstDelivered:p.last.RXDelivered,RejectedAuth:p.last.Rejected,
   EffectiveM2:p.effective}
+ if p.autoController!=nil{
+  state,err:=p.autoController.Snapshot()
+  result.AutoRequestedRevision=state.RequestedRevision
+  result.AutoAppliedRevision=state.AppliedRevision
+  result.AutoDesiredProfile=state.Desired
+  result.AutoPending=state.RequestedRevision!=state.AppliedRevision
+  if err!=nil{result.AutoPolicyError=err.Error()}
+ }
+ return result
 }
 func(p *m0WinRustNativePeer) Errors()<-chan error{return p.fail}
 func(p *m0WinRustNativePeer) RequestAutoStartProfile(
  profile realityfront.FecV2Profile,
 )(realityfront.FecV2State,error){
- return realityfront.FecV2State{},windowsclient.ErrN4NativeGuard
+ if p.mode!=m0WinModeAuto||p.autoController==nil{
+  return realityfront.FecV2State{},windowsclient.ErrN4NativeGuard
+ }
+ return p.autoController.RequestOperatorStartProfile(profile)
 }

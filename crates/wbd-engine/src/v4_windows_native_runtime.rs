@@ -260,7 +260,7 @@
  fn stage_sources(
      cfg:&WbdWinNativeAttachV1,
      lane:&Arc<Mutex<Entry>>,tun:&mut WintunRx,npf:&mut NpcapTx,
-     counters:&Counters,ip_id:&mut u16,
+     counters:&Counters,ip_id:&mut u16,fixed:bool,
  )->Result<usize,i32>{
      // One bounded Wintun drain, ONE Entry lock to seal ALL ready sources,
      // ONE NPF ready-only queue and ONE lock to settle real driver receipts.
@@ -289,10 +289,22 @@
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          for i in 0..count {
-             let (used,seq,pn)=v3_seal_entry(
-                 &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                 &sources[i][..source_len[i]],&mut wire[i]
-             )?;
+             let (used,seq,pn)=if fixed{
+                 #[cfg(feature="fec2_product_record")]
+                 {
+                     fec2::stage_fixed_source_entry(
+                         &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
+                         &sources[i][..source_len[i]],&mut wire[i]
+                     )?
+                 }
+                 #[cfg(not(feature="fec2_product_record"))]
+                 {return Err(BAD_STAGE)}
+             }else{
+                 v3_seal_entry(
+                     &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
+                     &sources[i][..source_len[i]],&mut wire[i]
+                 )?
+             };
              meta[i]=(pn,seq,used);
          }
      }
@@ -335,6 +347,65 @@
      Ok(count)
  }
 
+ // Only the existing FixedStream owns actual-k parity and block close.
+ // Driver prefix receipts settle its staged rows exactly once. No duplicate
+ // Go FEC encoder or busy-timer, and a sparse source is sent before parity.
+ #[cfg(feature="fec2_product_record")]
+ fn send_fixed_parity(
+     cfg:&WbdWinNativeAttachV1,lane:&Arc<Mutex<Entry>>,
+     npf:&mut NpcapTx,counters:&Counters,ip_id:&mut u16,
+ )->Result<bool,i32>{
+     let batch={
+         let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
+         fec2::stage_fixed_parity_entry(
+             &mut e,cfg.epoch,cfg.luid,cfg.ifindex
+         )?
+     };
+     let count=batch.count as usize;
+     if count==0{return Ok(false)}
+     let mut frames=[[0u8;MAX_LINK];4];
+     let mut lengths=[0usize;4];
+     let ack=counters.ack.load(Ordering::Acquire);
+     for (i,row) in batch.rows[..count].iter().enumerate(){
+         let wire_len=row.used as usize;
+         let f=packet_frame(cfg,row.seq,ack,&row.wire[..wire_len],
+             *ip_id,&mut frames[i])?;
+         lengths[i]=f.len();
+         *ip_id=ip_id.wrapping_add(1);
+     }
+     let last=&batch.rows[count-1];
+     counters.tx_seq.store(last.seq.wrapping_add(last.used),Ordering::Release);
+     let mut packets:[&[u8];4]=[&[];4];
+     for i in 0..count{packets[i]=&frames[i][..lengths[i]]}
+     let outcome=npf.send_batch(&packets[..count]);
+     let mut copied=0u8;
+     let mut uncertain=0u8;
+     for i in 0..count{
+         match kernel_result(outcome,count,i)?{
+             1=>{
+                 copied+=1;
+                 counters.tx_copied.fetch_add(1,Ordering::Relaxed);
+                 counters.fresh_outer_bytes.fetch_add(lengths[i] as u64,Ordering::Relaxed);
+             },
+             2=>uncertain+=1,
+             _=>{},
+         }
+     }
+     let not_sent=(count as u8)-copied-uncertain;
+     {
+         let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
+         e.fec2_tx.as_mut().ok_or(BAD_STAGE)?
+             .settle_staged(copied,not_sent,uncertain)
+             .map_err(|_|BAD_STAGE)?;
+         if copied>0{
+             let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+             m.fec_copied_parity=m.fec_copied_parity.saturating_add(copied as u64);
+             counters.ack_sent.store(ack,Ordering::Release);
+         }
+     }
+     if outcome.error.is_some(){return Err(BAD_STAGE)}
+     Ok(true)
+ }
  fn send_control(
      cfg:&WbdWinNativeAttachV1,lane:&Arc<Mutex<Entry>>,
      npf:&mut NpcapTx,counters:&Counters,ip_id:&mut u16,
@@ -426,7 +497,7 @@
  }
  fn tx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
      mut tun:WintunRx,mut npf:NpcapTx,stop:Arc<WakeEvent>,
-     notify:Arc<WakeEvent>,counters:Arc<Counters>)->i32{
+     notify:Arc<WakeEvent>,counters:Arc<Counters>,fixed:bool)->i32{
      let mut ip_id=1u16;
      loop {
          if counters.stopping.load(Ordering::Acquire){return OK}
@@ -434,10 +505,18 @@
              let mut work=0;
              for _ in 0..4 {
                  if counters.stopping.load(Ordering::Acquire){return Ok(true)}
-                 let n=stage_sources(&cfg,&lane,&mut tun,&mut npf,&counters,&mut ip_id)?;
+                 let n=stage_sources(&cfg,&lane,&mut tun,&mut npf,&counters,&mut ip_id,fixed)?;
                  work+=n;
                  if n<BATCH{break}
              }
+             // A bounded <=4-row parity quantum follows ready fresh sources.
+             // In Fixed/Auto there is never an extra native parity worker.
+             #[cfg(feature="fec2_product_record")]
+             let parity=if fixed{
+                 send_fixed_parity(&cfg,&lane,&mut npf,&counters,&mut ip_id)?
+             }else{false};
+             #[cfg(not(feature="fec2_product_record"))]
+             let parity=false;
              // One repair per 32 new packets would cap useful opportunities
              // near 3%, even at 30% real loss. Four ready-only control slots
              // per bounded fresh turn; v3 credit and 8192pps remain hard gates.
@@ -447,7 +526,7 @@
                  if !send_control(&cfg,&lane,&mut npf,&counters,&mut ip_id)?{break}
                  control=true;
              }
-             if work>0||control{return Ok(false)}
+             if work>0||control||parity{return Ok(false)}
              let next_ack=counters.ack.load(Ordering::Acquire);
              if next_ack!=counters.ack_sent.load(Ordering::Acquire){
                  send_presentation_ack(&cfg,&mut npf,&counters,&mut ip_id)?;
@@ -456,8 +535,15 @@
              let timeout={
                  let e=lock_owner(&lane,&counters,LockDirection::Tx)?;
                  let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
-                 m2_wake_timeout_ms(m2_clock(),m.feedback.next_deadline(),
-                     m.shadow.next_deadline())
+                 let fec_due=if fixed{
+                     #[cfg(feature="fec2_product_record")]
+                     {e.fec2_tx.as_ref().and_then(|tx|tx.next_deadline())}
+                     #[cfg(not(feature="fec2_product_record"))]
+                     {None}
+                 }else{None};
+                 let next=m.shadow.next_deadline().into_iter()
+                     .chain(fec_due).min_by_key(|d|d.0);
+                 m2_wake_timeout_ms(m2_clock(),m.feedback.next_deadline(),next)
              };
              match io::wait_ready(&[stop.handle(),tun.event(),notify.handle()],timeout){
                  Ok(WaitResult::Ready(0))=>Ok(true),
@@ -473,7 +559,35 @@
  fn open_and_deliver(cfg:&WbdWinNativeAttachV1,lane:&Arc<Mutex<Entry>>,
      tun:&mut WintunTx,counters:&Counters,
      ack:&mut PresentationAck,seq:u32,wire:&[u8],
-     plain:&mut [u8;MAX_IPV4])->Result<bool,i32>{
+     plain:&mut [u8;MAX_IPV4],fixed:bool)->Result<bool,i32>{
+     if fixed{
+         #[cfg(feature="fec2_product_record")]
+         {
+             let delivered={
+                 let mut e=lock_owner(lane,counters,LockDirection::Rx)?;
+                 fec2::open_symbol_entry(&mut e,cfg.epoch,cfg.luid,
+                     cfg.ifindex,seq,wire)
+             };
+             match delivered{
+                 Ok(frames)=>{
+                     for frame in frames{
+                         tun.deliver_authenticated(&frame.frame[..frame.length as usize])
+                             .map_err(|_|BAD_STAGE)?;
+                         counters.rx_delivered.fetch_add(1,Ordering::Release);
+                     }
+                     counters.ack.store(ack.verified(seq,wire.len()),Ordering::Release);
+                     return Ok(true)
+                 },
+                 Err(INVALID)=>{
+                     counters.rejected.fetch_add(1,Ordering::Relaxed);
+                     return Ok(false)
+                 },
+                 Err(code)=>return Err(code),
+             }
+         }
+         #[cfg(not(feature="fec2_product_record"))]
+         {return Err(BAD_STAGE)}
+     }
      let opened={
          let mut e=lock_owner(lane,counters,LockDirection::Rx)?;
          let opened=v5_open_record_entry(&mut e,cfg.epoch,cfg.luid,
@@ -508,7 +622,7 @@
      mut tun:WintunTx,mut npf:NpcapRx,stop:Arc<WakeEvent>,
      tx_notify:Arc<WakeEvent>,early_notify:Arc<WakeEvent>,
      early:Arc<Mutex<VecDeque<(u32,Vec<u8>)>>>,
-     counters:Arc<Counters>)->i32{
+     counters:Arc<Counters>,fixed:bool)->i32{
      let event=match npf.event(){Ok(e)=>e,Err(_)=>return BAD_STAGE};
      let trusted=TrustedRx{
          tuple:Ipv4Tuple{src_ip:&cfg.peer_ip,dst_ip:&cfg.local_ip,
@@ -531,7 +645,7 @@
              };
              let Some((seq,record))=next else{break};
              let verified=match open_and_deliver(&cfg,&lane,&mut tun,
-                 &counters,&mut ack,seq,&record,&mut plain){
+                 &counters,&mut ack,seq,&record,&mut plain,fixed){
                  Ok(v)=>v,Err(code)=>return code
              };
              if verified&&early_wakes.note_verified(){
@@ -561,7 +675,7 @@
                  counters.rejected.fetch_add(1,Ordering::Relaxed);continue
              };
              let verified=match open_and_deliver(&cfg,&lane,&mut tun,
-                 &counters,&mut ack,sealed.seq32,sealed.ciphertext,&mut plain){
+                 &counters,&mut ack,sealed.seq32,sealed.ciphertext,&mut plain,fixed){
                  Ok(v)=>v,Err(code)=>return code
              };
              if verified&&npf_wakes.note_verified(){
@@ -573,10 +687,32 @@
      }
  }
 
+ #[repr(C)]
+ #[derive(Clone,Copy)]
+ pub struct WbdWinNativeAttachV2 {
+     pub version:u32,
+     pub size:u32,
+     pub mode:u32, // 1 Fixed, 2 Auto. Game requires separate multi-lane attach.
+     pub reserved:u32,
+     pub normal:WbdWinNativeAttachV1,
+ }
+ #[no_mangle]
+ pub unsafe extern "C" fn wbd_m0_win_native_v2_start(cfg:*const WbdWinNativeAttachV2)->i32{
+     if cfg.is_null(){return INVALID}
+     let v2=unsafe{*cfg};
+     if v2.version!=2 || v2.size as usize!=std::mem::size_of::<WbdWinNativeAttachV2>()
+         ||!matches!(v2.mode,1|2)||v2.reserved!=0{return INVALID}
+     #[cfg(feature="fec2_product_record")]
+     {start_native(v2.normal,true)}
+     #[cfg(not(feature="fec2_product_record"))]
+     {let _=v2;BAD_STAGE}
+ }
  #[no_mangle]
  pub unsafe extern "C" fn wbd_m0_win_native_v1_start(cfg:*const WbdWinNativeAttachV1)->i32{
      if cfg.is_null(){return INVALID}
-     let config=unsafe{*cfg};
+     start_native(unsafe{*cfg},false)
+ }
+ fn start_native(config:WbdWinNativeAttachV1,fixed:bool)->i32{
      if config.version!=1||config.size as usize!=std::mem::size_of::<WbdWinNativeAttachV1>()
          ||config.owner==0||config.local_port==0||config.peer_port==0
          ||config.rx_capture==0||config.tx_capture==0||config.wintun_session==0
@@ -586,7 +722,10 @@
          let e=match lane.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
          if !v3_ready(&e,config.epoch,config.luid,config.ifindex)
              ||e.path_mtu as u32!=config.path_mtu ||e.m2.is_none()
-             ||e.role_server||e.feature7{return BAD_STAGE}
+             ||e.role_server||e.feature7!=fixed{return BAD_STAGE}
+         if fixed && (e.fec2_tx.is_none()||e.game_group.is_some()){
+             return BAD_STAGE
+         }
      }
      let (wtx,wrx)=match unsafe{io::split_borrowed_wintun(
          config.wintun_session,config.wintun_read_event,config.wintun)}{
@@ -613,7 +752,7 @@
          set_native_thread_name(&NATIVE_TX_WIDE);
          eprintln!("WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=TX tid={}",unsafe{GetCurrentThreadId()});
          let rc=tx_loop(config,tx_lane,wtx,sender,Arc::clone(&tx_stop),tx_notify,
-             Arc::clone(&tx_counters));
+             Arc::clone(&tx_counters),fixed);
          if rc!=OK{
              tx_counters.worker_error.store(rc,Ordering::Release);
              let _=tx_stop.wake();
@@ -627,7 +766,7 @@
          set_native_thread_name(&NATIVE_RX_WIDE);
          eprintln!("WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=RX tid={}",unsafe{GetCurrentThreadId()});
          let rc=rx_loop(config,rx_lane,wrx,capture,Arc::clone(&rx_stop),tx_notify_for_rx,
-             rx_event,rx_early,Arc::clone(&rx_counters));
+             rx_event,rx_early,Arc::clone(&rx_counters),fixed);
          if rc!=OK{
              rx_counters.worker_error.store(rc,Ordering::Release);
              let _=rx_stop.wake();
@@ -797,6 +936,12 @@
          assert_eq!(size_of::<WbdWinNativeStatsV1>(),48);
          assert_eq!(size_of::<NpcapFns>(),6*size_of::<usize>());
          assert_eq!(size_of::<WintunFns>(),4*size_of::<usize>());
+     }
+     #[test]
+     fn fixed_v2_attach_is_versioned_and_does_not_change_v1_abi(){
+         assert_eq!(std::mem::size_of::<WbdWinNativeAttachV2>(),
+             std::mem::size_of::<WbdWinNativeAttachV1>()+16);
+         assert_eq!(std::mem::size_of::<WbdWinNativeAttachV1>(),192);
      }
      #[test]
      fn native_ack_stops_at_gap_and_merges_verified_ranges_only(){
