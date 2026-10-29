@@ -43,7 +43,8 @@
     "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
     "docs/handoff/CURRENT_INTEGRATION.md",
     "docs/evidence/M0/PLAN026-WINDOWS-GAME-DEADLINE-SOURCEB222-20261029.json",
-    "docs/devlog/M0/20261029-PLAN026-GAME-NPCAP-COLD-HANDOFF-LIVENESS.md"
+    "docs/devlog/M0/20261029-PLAN026-GAME-NPCAP-COLD-HANDOFF-LIVENESS.md",
+    "docs/devlog/M0/20261029-PLAN026-GAME2-NATIVE-PURE-ACK-EMPTY-RECORD-FIX.md"
   ],
   "verification": [
     {
@@ -136,6 +137,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "b222744cc37df3d560fa2d9b9ee81deb678c715e",
       "evidence": "docs/evidence/M0/PLAN026-WINDOWS-GAME-DEADLINE-SOURCEB222-20261029.json"
+    },
+    {
+      "platform": "windows/2025 signed Npcap+Wintun ↔ Ubuntu WSL2 kernel",
+      "scope": "PLAN026 frozen SOURCE578e00 Game2-only true cold native product negative: WSL2 boot/verified MAC/HyperV rule PASS, authenticated Linux+NPF packet capture observed; Windows Game TX send_ack rc1 EmptyRecord, no WBD_WINDOWS_CLIENT_READY and no genuine UDP/TCP+owned Stop. Follow-up new-source fix unverified.",
+      "status": "FAIL",
+      "source_sha": "578e00d0c4e67746132fc8c64d28bdff100ac2ed",
+      "evidence": "docs/devlog/M0/20261029-PLAN026-GAME2-NATIVE-PURE-ACK-EMPTY-RECORD-FIX.md"
     }
   ],
   "limitations": [

@@ -12,7 +12,7 @@ use wbd_platform::windows_native_io::{
     WintunFns,WakeEvent,ReadResult,WaitResult,
 };
 use wbd_platform::ipv4_tcp::{
-    build_bytes,Ipv4Tuple,Presentation,PacketPersona,
+    build_bytes,build_presentation_ack,Ipv4Tuple,Presentation,PacketPersona,
 };
 use wbd_platform::rx_ipv4_tcp::{parse_data_packet,TrustedRx};
 use super::native_runtime::{WbdWinNativeAttachV1,WbdWinNativeStatsV1};
@@ -158,6 +158,21 @@ fn wire_frame<'a>(cfg:&WbdWinNativeAttachV1,l:&LaneConfig,
     out[12..14].copy_from_slice(&0x0800u16.to_be_bytes());
     Ok(&out[..n])
 }
+// Presentation ACK has NO ciphertext, PN, M2 receipt, or data record.
+// The normal wire_frame -> build_bytes path rejects zero-length records
+// deliberately. Never relax that validation to send this TCP-only ACK.
+fn presentation_ack_frame<'a>(
+    tuple:Ipv4Tuple<'_>,source_mac:[u8;6],next_hop_mac:[u8;6],
+    seq:u32,ack:u32,ip_id:u16,mtu:usize,out:&'a mut [u8;FRAME_CAP],
+)->Result<&'a [u8],i32>{
+    let tcp=build_presentation_ack(tuple,seq,ack,ip_id,
+        PacketPersona::Windows11,mtu,&mut out[14..]).map_err(|_|INVALID)?;
+    let n=14+tcp.len();
+    out[..6].copy_from_slice(&next_hop_mac);
+    out[6..12].copy_from_slice(&source_mac);
+    out[12..14].copy_from_slice(&0x0800u16.to_be_bytes());
+    Ok(&out[..n])
+}
 fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
     owner:&Arc<Mutex<game::WinGameGroup>>,
     lanes:&[LaneConfig],npf:&mut [NpcapTx],c:&GameCounters,
@@ -208,14 +223,21 @@ fn send_ack(cfg:&WbdWinNativeAttachV1,lanes:&[LaneConfig],
         let ack=c.ack[i].load(Ordering::Acquire);
         if ack==c.ack_sent[i].load(Ordering::Acquire){continue}
         let mut scratch=[0u8;FRAME_CAP];
-        let frame=wire_frame(cfg,l,c.tx_seq[i].load(Ordering::Acquire),
-            ack,&[],*ip_id,&mut scratch)?;
+        let frame=presentation_ack_frame(Ipv4Tuple{
+            src_ip:&cfg.local_ip,dst_ip:&cfg.peer_ip,
+            src_port:l.local_port,dst_port:l.peer_port,
+        },cfg.source_mac,cfg.next_hop_mac,
+            c.tx_seq[i].load(Ordering::Acquire),ack,*ip_id,
+            cfg.path_mtu as usize,&mut scratch)?;
         *ip_id=ip_id.wrapping_add(1);
         let status=npf[i].send_batch(&[frame]);
         if status.accepted_prefix==1{
             c.ack_sent[i].store(ack,Ordering::Release)
         }
-        if status.error.is_some(){return Err(BAD_STAGE)}
+        if status.error.is_some()||status.uncertain_index.is_some(){
+            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=npcap_ack_send_driver lane={} accepted_prefix={} uncertain_index={:?} error={:?}",i+1,status.accepted_prefix,status.uncertain_index,status.error);
+            return Err(BAD_STAGE)
+        }
     }
     Ok(())
 }
@@ -545,6 +567,44 @@ mod tests{
         assert_eq!(game_wait_timeout_ms(0,Some(140_000_000)),140);
         assert_eq!(game_wait_timeout_ms(140_000_000,Some(140_000_000)),1);
         assert_eq!(game_wait_timeout_ms(140_000_000,Some(140_000_001)),1);
+    }
+    #[test]
+    fn game_presentation_ack_is_real_empty_payload_tcp_control_not_empty_data(){
+        use wbd_platform::ipv4_tcp::PacketError;
+        let src=[172,18,80,1];let dst=[172,18,95,17];
+        let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,src_port:41031,dst_port:443};
+        let src_mac=[0,0x15,0x5d,0xbd,0xd7,0x55];
+        let dst_mac=[0,0x15,0x5d,0xc5,0x4c,0x29];
+        let mut bytes=[0u8;FRAME_CAP];
+        let packet=presentation_ack_frame(tuple,src_mac,dst_mac,
+            0x11223344,0x55667788,9,1500,&mut bytes).unwrap();
+        assert_eq!(packet.len(),54); // 14 Ethernet + 20 IPv4 + 20 TCP
+        assert_eq!(&packet[0..6],&dst_mac);
+        assert_eq!(&packet[6..12],&src_mac);
+        assert_eq!(&packet[12..14],&[0x08,0x00]);
+        assert_eq!(&packet[16..18],&40u16.to_be_bytes());
+        assert_eq!(&packet[14+20..14+22],&41031u16.to_be_bytes());
+        assert_eq!(&packet[14+22..14+24],&443u16.to_be_bytes());
+        assert_eq!(&packet[14+24..14+28],&0x11223344u32.to_be_bytes());
+        assert_eq!(&packet[14+28..14+32],&0x55667788u32.to_be_bytes());
+        assert_eq!(packet[14+20+13],0x10); // ACK only, not PSH+ACK data
+        assert!(packet[14+20+16..14+20+18].iter().any(|&x|x!=0));
+        let mut data_scratch=[0u8;256];
+        let data=build_bytes(tuple,Presentation{
+            ack32:0x55667788,advertised_window:65535,
+            ip_id:9,persona:PacketPersona::Windows11,
+        },u64::from(0x11223344u32),&[],None,1500,&mut data_scratch);
+        assert_eq!(data,Err(PacketError::EmptyRecord));
+    }
+    #[test]
+    fn game_presentation_ack_fails_closed_for_too_small_native_mtu(){
+        let src=[172,18,80,1];let dst=[172,18,95,17];
+        let mut bytes=[0xa5;FRAME_CAP];
+        let result=presentation_ack_frame(Ipv4Tuple{
+            src_ip:&src,dst_ip:&dst,src_port:41031,dst_port:443,
+        },[1;6],[2;6],1,1,1,39,&mut bytes);
+        assert_eq!(result,Err(INVALID));
+        assert!(bytes.iter().all(|&x|x==0xa5));
     }
     #[test]
     fn game_ack_ledger_copies_only_actual_gap_closure(){
