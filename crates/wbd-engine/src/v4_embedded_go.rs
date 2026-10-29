@@ -4689,6 +4689,9 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 s.report().queued_jobs>0 ||
                 s.next_deadline().is_some_and(|d|d.0<=loop_now().0));
             let reverse=e.feedback_queued.is_none() && (
+                e.quality_tx.as_ref().is_some_and(|tx|tx.due(loop_now()))||
+                e.quality_rx.as_ref().is_some_and(|q|
+                    q.lock().ok().is_some_and(|rx|rx.has_report()))||
                 e.rx_feedback.as_ref().is_some_and(|f|
                     f.lock().ok().and_then(|rx|rx.next_deadline())
                     .is_some_and(|d|d.0<=loop_now().0)) ||
@@ -5660,7 +5663,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         Some(state)
     }else{None};
     #[cfg(feature="fec2_product_record")]
-    let feedback_rx=if e.original_public_feedback_armed{
+    let feedback_rx=if e.original_public_feedback_armed && !e.auto_low_rate_mode{
         let Ok(state)=wbd_recovery::RxFeedbackState::new(
             wbd_recovery::RxFeedbackConfig{
                 max_retained_pages:512,max_pages_per_report:8,
@@ -5669,14 +5672,16 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         )else{return INVALID};
         let shared=Arc::new(Mutex::new(state));
         e.rx_feedback=Some(Arc::clone(&shared));
-        // Same actual original TLS/epoch and native M3 feedback worker;
-        // only public-armed client/server gets this extra due source.
+        Some(shared)
+    }else{None};
+    #[cfg(feature="fec2_product_record")]
+    if e.original_public_feedback_armed{
+        // Same authenticated Health owner in Auto without per-PN M2.
         e.native_health=Some(crate::v4_native_health::HealthClock::new(
             e.native_health_policy,loop_now().0));
         e.native_health_evidence=Some(Arc::new(
             crate::v4_native_health::AuthenticatedActivity::default()));
-        Some(shared)
-    }else{None};
+    }
     let normal=match e.normal.take(){Some(n)=>n,None=>return BAD_STAGE};
     let mut original_rx=match e.owner.detach_background_rx(normal){
         Ok(rx)=>rx,
@@ -5894,8 +5899,13 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             e.quality_rx.as_ref().and_then(|q|
                                 q.lock().ok().and_then(|rx|rx.next_deadline()))
                         }else{None};
+                        let low_due=e.quality_tx.as_ref()
+                            .filter(|tx|tx.due(now)).map(|_|now);
+                        let low_next=e.quality_tx.as_ref()
+                            .filter(|tx|tx.sender.is_none()&&tx.closing.is_none())
+                            .map(|tx|MonoNs(tx.next_open));
                         let earliest=fec_deadline.into_iter()
-                            .chain(feedback_deadline)
+                            .chain(feedback_deadline).chain(low_due).chain(low_next)
                             .chain(quality_deadline)
                             .chain(e.native_health.as_ref()
                                 .and_then(|h|h.next_tx_deadline()).map(MonoNs))
@@ -5928,6 +5938,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         // Authenticated feedback is independently due, even
                         // for strictly one-way data with an idle local TUN.
                         let fb=e.feedback_queued.is_none() && (
+                            e.quality_tx.as_ref().is_some_and(|tx|tx.due(now))||
+                            e.quality_rx.as_ref().is_some_and(|q|
+                                q.lock().ok().is_some_and(|rx|rx.has_report()))||
                             e.rx_feedback.as_ref().is_some_and(|f|
                                 f.lock().ok().and_then(|rx|rx.next_deadline())
                                 .is_some_and(|d|d<=now)) ||
@@ -6433,22 +6446,34 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_mature_quality(
     #[cfg(feature="fec2_product_record")]
     {
         let Ok(cell)=session(h)else{return UNKNOWN};
-        let Ok(e)=cell.lock()else{return BAD_STAGE};
-        if e.phase!=PH_ACTIVE||e.protected_features!=7||e.workers.is_none(){return BAD_STAGE}
-        let Some(m2)=e.normal_firstsend_m2.as_ref()else{return BAD_STAGE};
-        let Ok(mut m)=m2.lock()else{return BAD_STAGE};
-        m.poll(loop_now());
-        let a=m.live_mature_2s;let b=m.live_mature_8s;
-        let w=|x:wbd_recovery::MatureWindow|->[u64;5]{
-            [x.first_sent,x.unambiguous_positive,x.covered_missing,
-                x.uncovered,x.repaired_or_ambiguous]
-        };
+        let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+        if e.phase!=PH_ACTIVE||e.protected_features!=7||e.workers.is_none(){
+            return BAD_STAGE
+        }
         let mut v=[0u64;30];
-        v[..5].copy_from_slice(&w(a));v[5..10].copy_from_slice(&w(b));
-        v[10]=m.authenticated_reverse_reports;
-        v[11]=m.state.counters().capacity_censored;
-        v[12]=b.positive_confirmation_lag_ns;
-        v[13]=b.positive_confirmation_samples;
+        if e.auto_low_rate_mode{
+            // Native matched START/CLOSE v2 summaries only; a missing
+            // summary is UNKNOWN, not a synthetic positive M2 receipt.
+            let Some(tx)=e.quality_tx.as_mut()else{return BAD_STAGE};
+            tx.advance(loop_now());
+            v[..14].copy_from_slice(&tx.counters);
+        }else{
+            // Fixed legacy readback retained pending ACK/SACK replacement.
+            let Some(m2)=e.normal_firstsend_m2.as_ref()else{return BAD_STAGE};
+            let Ok(mut m)=m2.lock()else{return BAD_STAGE};
+            m.poll(loop_now());
+            let a=m.live_mature_2s;let b=m.live_mature_8s;
+            let w=|x:wbd_recovery::MatureWindow|->[u64;5]{
+                [x.first_sent,x.unambiguous_positive,x.covered_missing,
+                    x.uncovered,x.repaired_or_ambiguous]
+            };
+            v[..5].copy_from_slice(&w(a));
+            v[5..10].copy_from_slice(&w(b));
+            v[10]=m.authenticated_reverse_reports;
+            v[11]=m.state.counters().capacity_censored;
+            v[12]=b.positive_confirmation_lag_ns;
+            v[13]=b.positive_confirmation_samples;
+        }
         let Some(stream)=e.fec2_live_tx.as_ref()else{return BAD_STAGE};
         for cl in &stream.report().classes {
             for k in 1..=16 {
