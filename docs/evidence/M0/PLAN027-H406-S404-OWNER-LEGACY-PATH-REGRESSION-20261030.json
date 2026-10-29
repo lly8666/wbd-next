@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "9a2af725ab0dd498dd7960e4e91d1ca23a0683cb",
+  "scope": "S404_REGRESSION_OF_EXISTING_LEGACY_M2_PATHS_NOT_NEW_PLAN027_OWNER",
+  "actions": [
+    {
+      "id": 40953849208,
+      "attempt": 1,
+      "conclusion": "success",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/40953849208",
+      "jobs": [
+        {
+          "id": 123728711629,
+          "scope": "Linux authenticated Health core 13 checks",
+          "conclusion": "success"
+        },
+        {
+          "id": 123728712167,
+          "scope": "Linux original Go TLS + Rust 2-netns legacy-M2 native modes",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 12933156591,
+          "digest": "sha256:92e78a376e37cd7daf0109aa82fc121432066cf5744c6190373be43c6606b646"
+        },
+        {
+          "id": 12932956080,
+          "digest": "sha256:552de7160d2ef57575b3ae429c8af26a1827da1cc7326fbc2f70b02655266d0c"
+        }
+      ],
+      "observed": [
+        "Old original-Go Linux 1pct netem case: offered 512, first-unique delivered 507, missing 5, tc drops client6/server8",
+        "Old M2 Fixed/Auto 64 app first deliveries and Stop; Game2/Game4 scoped real mode PASS",
+        "Not new Quality START/CLOSE product consumption"
+      ]
+    },
+    {
+      "id": 40953849191,
+      "attempt": 1,
+      "conclusion": "success",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/40953849191",
+      "jobs": [
+        {
+          "id": 123728712088,
+          "scope": "Windows original TLS/Rust owner native scoped signed Wintun, Stop and negative checks",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 12932358326,
+          "digest": "sha256:1c323d086f7169faa9370fb8330352c886e4582c80b0a9c7779040fd69609303"
+        }
+      ],
+      "observed": [
+        "Signed Wintun real kernel UDP app scoped positive and Rust M3 peer decrypt/replay/tamper checks",
+        "Same generation native owned Stop; no full WFP/route APPLIED in this scoped job",
+        "Not new Quality START/CLOSE product consumption"
+      ]
+    }
+  ],
+  "other_s404_checks": [
+    {
+      "id": 40953849214,
+      "scope": "r0-native-abi",
+      "conclusion": "success"
+    },
+    {
+      "id": 40953849131,
+      "scope": "r0-cross-abi",
+      "conclusion": "success"
+    }
+  ],
+  "limitations": [
+    "Legacy online per-record M2 still active and tests explicitly exercise it",
+    "No current-SOURCE PLAN027 A2/A3/A4/A5, B full lifecycle, C matrix or stability long test",
+    "No new-source scored p99/CPU/RSS/queue/drop or physical evidence"
+  ]
+}
