@@ -300,6 +300,45 @@ func originalRandomISN()(uint32,error){
     if n==0{return 1,nil}
     return n,nil
 }
+var errPublicNativePeerDead=errors.New("original Rust authenticated peer dead; Go cold TLS reauthorization required")
+
+// Rust alone owns native Health; Go observes its terminal worker error at
+// one cold-control sample/second, never inspects application packets.
+func monitorPublicNativePeer(ctx context.Context,errs <-chan error,
+ live func()bool,pulse func()(realityfront.V4PublicLoopPulse,error))error{
+ ticker:=time.NewTicker(time.Second);defer ticker.Stop()
+ for{select{
+ case <-ctx.Done():return nil
+ case e:=<-errs:return e
+ case <-ticker.C:
+  if live(){stats,e:=pulse();if e==nil&&stats.TxErrors>0{return errPublicNativePeerDead}}
+ }}
+}
+
+// Cold only: wait for real kernel TUN READABILITY after old Rust Stop/join;
+// do not consume a single source. The newly authorized owner reads it.
+func waitForNativeReconnectTraffic(ctx context.Context,tun *ownedTun)error{
+ fd:=int(tun.f.Fd())
+ if fd<0||fd>=1024{return fmt.Errorf("reconnect TUN fd outside select bound %d",fd)}
+ for{
+  if e:=ctx.Err();e!=nil{return e}
+  var rfds syscall.FdSet;rfds.Bits[fd/64]|=int64(1)<<uint(fd%64)
+  wait:=syscall.Timeval{Sec:1}
+  n,e:=syscall.Select(fd+1,&rfds,nil,nil,&wait)
+  if errors.Is(e,syscall.EINTR){continue}
+  if e!=nil{return fmt.Errorf("reconnect TUN readiness: %w",e)}
+  if n>0{return nil}
+ }
+}
+
+func productNativeCleanup(c config,tun *ownedTun)func()error{
+ if c.fecMode==realityfront.FecV2Auto{
+  // Retain only outer-owned TUN between cleanly drained Auto generations.
+  return func()error{return nil}
+ }
+ return tun.Close
+}
+
 func Run(role string,args []string)error{
     cfg,err:=parse(role,args)
     if err!=nil{return err}
@@ -321,7 +360,7 @@ func Run(role string,args []string)error{
     // This fallback is ONLY used if no authenticated Rust owner was started.
     // An active owner's Close performs Stop->release->network cleanup instead.
     connected:=false
-    defer func(){if !connected {_ = tun.Close()}}()
+    defer func(){if !connected || cfg.fecMode==realityfront.FecV2Auto {_ = tun.Close()}}()
     if err=setOwnedTunFq(tun.name,cfg.tunFqMaxrateMbps);err!=nil{return err}
     if cfg.tunFqMaxrateMbps!=0 {
         log.Printf("V4_PUBLIC_TUN_FQ role=%s interface=%s maxrate_mbps=600 flow_limit_packets=256 readback=kernel_fq_600Mbit",cfg.role,tun.name)
@@ -333,19 +372,39 @@ func Run(role string,args []string)error{
         defer stop()
         return runGame(ctx,cfg,uint32(iface.Index),tun,&connected)
     }
-    raw,err:=faketcp.OpenRawIPv4EndpointWithOptions(
-        cfg.rawInterface,cfg.localIP.As4(),faketcp.PacketPersonaLegacy,
-        faketcp.RawIPv4EndpointOptions{ReceivePort:cfg.localPort},
-    )
-    if err!=nil{return err}
-    defer raw.Close()
     ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
     defer stop()
-    emit:=func(seg faketcp.Segment)error{_,e:=raw.WriteSegment(seg);return e}
-    if role=="client" {
-        return runClient(ctx,cfg,uint32(iface.Index),tun,raw,emit,&connected)
+    for attempt:=uint64(1);;attempt++{
+        if ctx.Err()!=nil{return nil}
+        raw,err:=faketcp.OpenRawIPv4EndpointWithOptions(
+            cfg.rawInterface,cfg.localIP.As4(),faketcp.PacketPersonaLegacy,
+            faketcp.RawIPv4EndpointOptions{ReceivePort:cfg.localPort},
+        )
+        if err!=nil{return err}
+        emit:=func(seg faketcp.Segment)error{_,e:=raw.WriteSegment(seg);return e}
+        connected=false
+        var runErr error
+        if role=="client"{
+            runErr=runClient(ctx,cfg,uint32(iface.Index),tun,raw,emit,&connected)
+        }else{
+            runErr=runServer(ctx,cfg,uint32(iface.Index),tun,raw,emit,&connected)
+        }
+        closeErr:=raw.Close()
+        if !errors.Is(runErr,errPublicNativePeerDead)||
+            cfg.fecMode!=realityfront.FecV2Auto||ctx.Err()!=nil{
+            return errors.Join(runErr,closeErr)
+        }
+        if closeErr!=nil{return closeErr}
+        log.Printf("V4_PUBLIC_NATIVE_DEAD_RECONNECT_ARMED role=%s generation=%d old_owner_drained=1",role,attempt)
+        if role=="client"{
+            if e:=waitForNativeReconnectTraffic(ctx,tun);e!=nil{
+                if ctx.Err()!=nil{return nil}
+                return e
+            }
+            log.Printf("V4_PUBLIC_NATIVE_RECONNECT_TRIGGER role=client source=real_kernel_tun_ready generation=%d",attempt+1)
+        }
+        log.Printf("V4_PUBLIC_ORIGINAL_GO_TLS_REAUTHORIZE role=%s generation=%d",role,attempt+1)
     }
-    return runServer(ctx,cfg,uint32(iface.Index),tun,raw,emit,&connected)
 }
 // Opt-in native V3 diagnostic, OFF by default. Samples only every 250ms;
  // no packet timestamps, packet payloads, heap per-record work or control ACK
@@ -516,7 +575,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     native,err:=realityfront.NewV4LinuxClientProduct(
         realityfront.V4LinuxClientProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
-            Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
+            Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:productNativeCleanup(c,tun),
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
         })
@@ -542,9 +601,10 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     *connected=true
     log.Printf("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client Rust_owner=active real_raw_tun=1")
     startV3ProductTimeline(ctx,"client",native.OriginalLoopPulse,native.OriginalOuterCounters)
-    select{
-    case <-ctx.Done():
-    case err=<-errs:
+    if c.fecMode==realityfront.FecV2Auto {
+        err=monitorPublicNativePeer(ctx,errs,func()bool{return handoffCommitted.Load()},native.OriginalLoopPulse)
+    }else{
+        select{case <-ctx.Done():case err=<-errs:}
     }
     log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=client mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())
     counters,countErr:=native.OriginalOuterCounters()
@@ -612,7 +672,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     product,err:=realityfront.NewV4LinuxServerProduct(
         realityfront.V4LinuxServerProductConfig{
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
-            Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
+            Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:productNativeCleanup(c,tun),
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
             PeerPersona:c.peerPersona,
@@ -711,7 +771,11 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             }
         }
     }()
-    select{case <-ctx.Done():case err=<-errs:}
+    if c.fecMode==realityfront.FecV2Auto {
+        err=monitorPublicNativePeer(ctx,errs,func()bool{return handoffCommitted.Load()},product.OriginalLoopPulse)
+    }else{
+        select{case <-ctx.Done():case err=<-errs:}
+    }
     // The public product's authenticated readiness is published atomically
     // by the admission worker; only this caller writes the lifecycle flag.
     *connected=handoffCommitted.Load()

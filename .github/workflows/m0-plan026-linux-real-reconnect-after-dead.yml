@@ -9,7 +9,10 @@ on:
   workflow_dispatch:
 permissions: {contents: read, actions: read}
 jobs:
+  product-source-build:
+    uses: ./.github/workflows/m0-plan012-combined-functional.yml
   real-dead-new-flow-native-reauth:
+    needs: product-source-build
     runs-on: ubuntu-24.04
     timeout-minutes: 9
     steps:
@@ -18,8 +21,8 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           repository: lly8666/wbd-next
-          run-id: 40851521157
-          name: m0-plan012-combined-40851521157-1
+          run-id: ${{ github.run_id }}
+          name: m0-plan012-combined-${{ github.run_id }}-${{ github.run_attempt }}
           github-token: ${{ github.token }}
           path: frozen/
       - name: Verify exact original-Go protected source and current signed Rust Linux product
@@ -28,10 +31,10 @@ jobs:
           set -euo pipefail
           mkdir -p reconnect-result fixed-kernel-result
           python3 - <<'PY'
-          import pathlib,json,hashlib
+          import pathlib,json,hashlib,os
           base=pathlib.Path('frozen')
           m=json.loads((base/'fixed-kernel-result/manifest.json').read_text())
-          assert m['source_sha']=='7e9842f6e99769d9919e75a4b15da8d6d88e7257'
+          assert m['source_sha']==os.environ['GITHUB_SHA']
           assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
           h=lambda x:hashlib.sha256(pathlib.Path(x).read_bytes()).hexdigest()
           for name,digest in m['binaries_sha256'].items():
@@ -61,7 +64,7 @@ jobs:
           python3 - <<'PY'
           import pathlib,hashlib,json,os
           log=pathlib.Path("reconnect-result/real-reconnect.log")
-          d={"product_source_sha":"7e9842f6e99769d9919e75a4b15da8d6d88e7257",
+          d={"product_source_sha":os.environ["GITHUB_SHA"],
              "harness_source_sha":os.environ["GITHUB_SHA"],"run_id":int(os.environ["GITHUB_RUN_ID"]),
              "real_original_go_tls_native_rust":True,
              "initial_real_udp_app":64,"both_underlay_loss_percent":100,

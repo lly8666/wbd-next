@@ -1,0 +1,17 @@
+# PLAN026 — red genuine disconnect recovery → Linux Auto Go cold original TLS lifecycle fix
+
+2026-10-29. The new actual original Linux Go TLS/Rust Auto native [sourcea8 reconnect Action40859234031](https://github.com/lly8666/wbd-next/actions/runs/40859234031) ended **FAIL** after genuine initial 64 kernel app echoes, two-direction 100% tc loss for 106s / observed Rust native authenticated dead, and actual underlay restore plus a fresh TUN UDP flow. The application had **no subsequent real echo within 48s**; this definitively separates ordinary 100s *connected idle* PASS and dead recognition PASS from **automatic new authenticated connection** FAIL. Record original negative unchanged at `docs/evidence/M0/PLAN026-LINUX-REAL-DISCONNECT-NEW-FLOW-SOURCEA8-FAIL-20261029.json`.
+
+Root cause confirmed from `r0/go_overlay/internal/v4productcli/linux.go`: Linux public `Run` ran `runClient`/`runServer` just ONCE. After Rust Health native dead, its TX worker stops but Go remained in its cold raw endpoint event loop; client was not waiting for new native TUN business, server did not re-arm original Go SYN/TLS admission. The user explicitly requires **real disconnection and new-flow driven fresh handshake**, not 100s idle.
+
+Candidate product change limited to **Linux FEC Auto cold lifecycle only** (Normal/off, Fixed, Game unchanged):
+- 1Hz Go *terminal* Rust worker pulse (`TxErrors` after native Health-dead); no per-packet Go dispatch, no second Heartbeat/Quality actor.
+- On terminal native session, original `native.Close` and existing `V4StopThenCleanupNetwork` complete owned Rust Stop/join; Go cold retains only its original TUN kernel FD, releases old original FakeTCP association and raw BPF endpoint.
+- Client cold-waits for real TUN kernel readability without consuming any application packet (one blocked Select with 1s signal interrupt, no data-carrying Go Read), then reopens the original raw FakeTCP SYN → original credential TLS → original Rust owner generation. Server re-arms the original Go SYN/TLS admission loop while retaining shared TUN. New TLS does not inherit old AEAD/PN/epoch as success.
+- One source-locked two-netns test must prove old PIDs unmodified, genuine both-side original native Health-dead and tc drops, restored real network, **new real application UDP** echo plus **SECOND authenticated native READY in BOTH original Go processes**. Old frozen binary is intentionally RED; repaired SOURCE must build from the same commit via reusable `m0-plan012-combined-functional.yml` and replay the exact reauth case.
+
+Safety: if original authenticated readback unavailable, no fake reconnect receipt; no synthesis of TLS or M3 packet, no per-packet Go, no weakening the original Stop order or retrying original ciphertext under wrong epoch. Negative receipt remains separate from new-source candidate. Windows corresponding signed physical/Wintun reconnection remains independent NOT_RUN. Long Windows run 40851521064 cannot be cancelled through the connected GitHub API; future full Win-Linux per-mode execution is capped 165s and a hung test mode fails, not inherited PASS.
+
+```feature-impact
+{"kind":"updated","ids":["idle-rotation-keepalive"],"reason":"Linux FEC Auto product Go cold owner adds terminal native Health-error recognition, owned Rust Stop/new original authenticated FakeTCP TLS reattach gated by subsequent TUN source; keeps Normal/off, Fixed and Game unchanged; exact real same-source tests required."}
+```

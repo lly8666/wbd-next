@@ -32,7 +32,8 @@
     "docs/architecture/modules/10-LIFECYCLE-QUALITY.md",
     "docs/evidence/M0/PLAN026-LINUX-AUTO-KEEPALIVE-SOURCE7E984-20261029.json",
     "docs/evidence/M0/PLAN026-LINUX-REAL-KEEPALIVE-IDLE100-PRODUCT7E984-HARNESS7147-20261029.json",
-    "docs/evidence/M0/PLAN026-LINUX-REAL-HEALTH-DEAD-PRODUCT7E984-HARNESSD2F-20261029.json"
+    "docs/evidence/M0/PLAN026-LINUX-REAL-HEALTH-DEAD-PRODUCT7E984-HARNESSD2F-20261029.json",
+    "docs/evidence/M0/PLAN026-LINUX-REAL-DISCONNECT-NEW-FLOW-SOURCEA8-FAIL-20261029.json"
   ],
   "verification": [
     {
@@ -76,6 +77,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "d2f79e8a1fad88f7dc73b596f01a3b3bb5c0ecd4",
       "evidence": "docs/evidence/M0/PLAN026-LINUX-REAL-HEALTH-DEAD-PRODUCT7E984-HARNESSD2F-20261029.json"
+    },
+    {
+      "platform": "linux/amd64 original Go TLS Rust native 2-netns",
+      "scope": "Sourcea8 test with frozen product7e984 real 64 app→100% two-way netem 106s actual native auth dead→restore underlay→new TUN flow; no UDP echo in 48s, original cold TLS not reauthorized. New Go cold Auto lifecycle candidate exists as untested successor, does NOT retroactively repair this negative.",
+      "status": "FAILED",
+      "source_sha": "a8df98e5c952953b2884af051ee0802d89dd759b",
+      "evidence": "docs/evidence/M0/PLAN026-LINUX-REAL-DISCONNECT-NEW-FLOW-SOURCEA8-FAIL-20261029.json"
     }
   ],
   "limitations": [
@@ -87,7 +95,8 @@
     "PLAN026 candidate source: Linux original Rust RX now publishes genuine authenticated unique-M3 activity+peer idle once per recvmmsg batch, Rust TX absorbs it without per-packet callbacks. Both Linux/Windows native TX use 15s AEAD Health and 90s authenticated dead-peer threshold; no business-idle -> dormancy inference. Verified peer FIN/optional idle Dormant/Wake and effective config remain UNWIRED/NOT_RUN.",
     "PLAN026 native-config candidate (not product qualification): Windows owner C ABI + Go CLI health.keepalive_seconds/dead_after_seconds/idle_dormant_seconds, actual M2 effective readback and >=3x deadline; Linux dual original Go TLS owner Rust C-ABI readback and per-product client/server config, real worker consumes policy. Defaults15s/90s/no dormancy. Server-side verified FIN and Wake NOT_WIRED, nondefault original Linux CLI/GUI readback NOT_WIRED, real 90s idle-vs-dead network test NOT_RUN.",
     "2026-10-29 true 100s no-business original TLS Rust native Linux Auto resumed kernel app PASS, product7e984/harness7147 only; cannot infer explicit authenticated kind1 packet count, FIN/Dormant/Wake, server no-ack dead negative or Windows signed/physical PASS.",
-    "PLAN026 SOURCEd2f 106s 100pct measured underlay netem dropped21+28 with BOTH authenticated native Health dead/NOT Dormant PASS; excludes owned automatic Stop readback, verified FIN/Wake/physical/Windows."
+    "PLAN026 SOURCEd2f 106s 100pct measured underlay netem dropped21+28 with BOTH authenticated native Health dead/NOT Dormant PASS; excludes owned automatic Stop readback, verified FIN/Wake/physical/Windows.",
+    "New PLAN026 Linux Auto only original Go cold lifecycle reconnect on native Health-dead and new TUN source candidate: 1Hz cold terminal observation, Rust Stop before fresh authenticated TLS and new generation, original TUN held across generations; exact new SOURCE real Linux reconnect and Windows physical NOT_RUN until Actions."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

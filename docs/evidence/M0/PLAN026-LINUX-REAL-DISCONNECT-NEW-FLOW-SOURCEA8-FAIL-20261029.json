@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN026-WIN-RUST-NATIVE-IO",
+  "source_sha": "a8df98e5c952953b2884af051ee0802d89dd759b",
+  "product_source_sha": "7e9842f6e99769d9919e75a4b15da8d6d88e7257",
+  "result": "FAIL_AUTOMATIC_RECONNECT_MISSING",
+  "run_id": 40859234031,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/40859234031",
+  "run_conclusion": "failure",
+  "artifact_id": 12890941906,
+  "artifact_sha256": "96129256d426dbdb0cfc682b6b0bab125a571a7ec8abf6e0e2b7094fa486ccb6",
+  "preconditions": "Actual original Go TLS/Rust native two-netns 64 genuine application echoes; both directions tc netem 100pct for106s; genuine M3 authenticated peer timeout; restored underlay",
+  "stimulus": "New independent real TUN UDP application flow after underlay restored, without human restart, without fake handshake or ACK",
+  "observed": "Original Linux V4 one-shot Go cold lifecycle did not recover UDP echo within48s; no PASS on reauthentication",
+  "code_cause": "r0/go_overlay/internal/v4productcli/linux.go original Run invoked runClient/runServer once, without native Health dead→Stop→new SYN/TLS/owner lifecycle",
+  "safety": "No optional outer retransmission recovery requirement; original TLS, AEAD, PN, native Stop cannot be simulated",
+  "unverified": [
+    "new source after lifecycle repair full real reconnect",
+    "Windows equivalent signed Npcap/Wintun reconnect",
+    "FIN/Dormant/Wake independent"
+  ]
+}
