@@ -9,6 +9,8 @@ pub mod global_sparse;
 pub mod ingress;
 pub mod maturity;
 pub mod outer_ack;
+pub mod quality_window;
+pub use quality_window::{assess as assess_low_rate_quality,WireReport as LowRateQualityWire,QualityError,WindowKey,ClosedWindow,MatureReport,LossBounds};
 pub use outer_ack::{OuterAckError, OuterAckIndex, OuterAckUpdate, SackRange32};
 pub use maturity::{MatureFirstSend,MaturityConfig,MaturityError,FirstSendKind,FirstSendOutcome,MatureWindow,MaturityPoll,MaturityStop,ObservationCounters};
 pub use ingress::{

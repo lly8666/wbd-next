@@ -137,15 +137,13 @@ impl RepairBudget {
         })
     }
 
-    /// Switch to v3 9% byte credit; the independent historical 10% cap
-    /// remains a strict upper bound (except the explicit sparse floor).
+    /// PLAN027: v3 uses 10% of confirmed first-send F for the hard
+    /// credit ceiling; 9% pacing remains a conservative smoothing target.
     pub fn enable_opportunistic_v3(&mut self) { self.opportunistic_v3 = true; }
     fn burst_cap(&self) -> u64 { self.cfg.outer_mtu * 8 }
     fn epoch_limit(&self) -> u64 {
         // The 32KiB sparse allowance is a floor, not an additional bonus.
-        (if self.opportunistic_v3 {
-            self.current.fresh.saturating_mul(9)/100
-        }else{self.current.fresh/10})
+        self.current.fresh/10
             .max(SPARSE_FLOOR_BYTES)
             .min(self.cfg.max_repair_bytes_per_epoch)
     }
@@ -376,9 +374,28 @@ mod tests {
         assert_eq!(b.snapshot().pacer_tokens, 0);
         b.on_fresh_accepted(500_000, MonoNs(4)).unwrap();
         assert_eq!(b.snapshot().fresh_confirmed_bytes, 500_000);
-        assert_eq!(b.snapshot().epoch_repair_limit, 45_000);
+        assert_eq!(b.snapshot().epoch_repair_limit, 50_000);
         assert_eq!(b.snapshot().charged_repair_bytes, 13_500);
         assert!(b.snapshot().pacer_tokens <= b.snapshot().pacer_burst_limit);
+    }
+    #[test]
+    fn r2_plan027_v3_ten_percent_of_f_and_distinct_total_ratio(){
+        let mut b=ledger(60_000,0);
+        b.enable_opportunistic_v3();
+        b.on_fresh_accepted(1_000_000,MonoNs(1)).unwrap();
+        assert_eq!(b.snapshot().epoch_repair_limit,100_000);
+        for (pn,size) in [(1,60_000),(2,40_000)]{
+            let c=candidate(pn,2);
+            let id=b.reserve(&c,size,MonoNs(2)).unwrap();
+            b.on_send_result(id,RepairSendResult::Accepted,MonoNs(2)).unwrap();
+        }
+        let s=b.snapshot();
+        assert_eq!(s.charged_repair_bytes,100_000);
+        assert_eq!(s.charged_repair_bytes*10,s.fresh_confirmed_bytes);
+        let control_bytes=10_000;
+        let total=s.fresh_confirmed_bytes+s.charged_repair_bytes+control_bytes;
+        assert_eq!(total,1_110_000);
+        assert!(s.charged_repair_bytes*10<total);
     }
     #[test]
     fn r2_budget_sparse_32k_absolute_floor_not_percentage_or_sum() {
