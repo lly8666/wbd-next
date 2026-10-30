@@ -581,6 +581,15 @@ impl LinuxQualityTx{
             counters:[0;14],last_open_gate_pn:None,
             slow:VecDeque::with_capacity(16)}
     }
+    // A START can be authenticated before any DATA with PN >= first.
+    // Its time-based CLOSE is not executable until a REAL first copy
+    // enters this window. Never hand a permanently expired, impossible
+    // deadline to the TUN worker: that starves original application ingress.
+    fn next_close_deadline(&self)->Option<MonoNs>{
+        self.sender.as_ref().filter(|sender|
+            self.last_settled.is_some_and(|p|p>=sender.key().first.0)
+        ).and_then(|sender|sender.timed_close_deadline())
+    }
     fn due(&self,now:MonoNs)->bool{
         (self.closing.is_some()&&now.0>=self.next_open)||
         self.sender.as_ref().is_some_and(|s|
@@ -716,7 +725,15 @@ fn plan027_linux_auto_sender_window_real_kernel_census_and_matched_maturity(){
     let start=tx.next_signal(40,MonoNs(1)).unwrap().unwrap();
     assert_eq!((start.first,start.last,start.id),(41,1064,1));
     tx.complete_signal(start,true,MonoNs(2)).unwrap();
-    for pn in 41..=1064u64{
+    assert!(tx.next_close_deadline().is_none(),
+        "a START with no in-window DATA must not schedule stale CLOSE");
+    assert!(!tx.due(MonoNs(9_000_000_000)),
+        "missing DATA cannot manufacture an always-due control");
+    assert!(tx.next_signal(40,MonoNs(9_000_000_000)).unwrap().is_none());
+    tx.settle_batch(&[(wbd_types::RecordPn(41),132)],1,0,false,false,&[]);
+    assert!(tx.next_close_deadline().is_some(),
+        "first true M4 DATA permits bounded timed closure");
+    for pn in 42..=1064u64{
         tx.settle_batch(&[(wbd_types::RecordPn(pn),132)],1,0,false,false,&[]);
     }
     let close=tx.next_signal(1065,MonoNs(1_000_000_000)).unwrap().unwrap();
@@ -5974,8 +5991,11 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                 tx.last_settled.is_some_and(|p|
                                     tx.last_open_gate_pn.is_none_or(|last|p>last)))
                             .map(|tx|MonoNs(tx.next_open));
-                        let low_close=e.quality_tx.as_ref().and_then(|tx|
-                            tx.sender.as_ref().and_then(|s|s.timed_close_deadline()));
+                        // Exactly the same executable predicate as
+                        // LinuxQualityTx::due/next_signal; no overdue START
+                        // deadline can busy-loop before the first DATA PN.
+                        let low_close=e.quality_tx.as_ref()
+                            .and_then(|tx|tx.next_close_deadline());
                         let earliest=fec_deadline.into_iter()
                             .chain(feedback_deadline).chain(low_due).chain(low_next)
                             .chain(low_close).chain(quality_deadline)

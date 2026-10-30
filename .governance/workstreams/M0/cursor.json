@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 458,
-  "checkpoint_sha": "baa7be228d67af64a56d3fdf387f72e2107ec847",
+  "sequence": 459,
+  "checkpoint_sha": "80e8e7b53c6a8b67e78ed169c6fc95eda595b5fc",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H458 unblock actual A2/A3 via exact preflight-only condition test change, no new binaries; align B Fixed real owner-installed readback and dispatch one independent same-binary B Fixed recheck. Genuine Auto B failure remains open for product fix.",
-  "why_now": "H457 true A dispatcher40995309062 success spawned three scene Actions40995322925/25145/27742 but all cheap check fail same stale test_delivery_ci.test_preflight_has_no_native_runtime_or_driver_effects exact if expected old compiler guard; no actual netem tested. H455 Fixed40994441580 report real UDP25 each, TCP both, owned Stop and Linux actual applied revision1/profile6 but old M2 gate fails. H455 Auto40994443303 genuine Windows reverse UDP0/385, Linux Rx27/100 and ~1-core Linux TX CPU 41.8/41s, src H455, retain.",
+  "current_task": "H459 fix real Auto Linux original M4 TX full-core spin: START without post-window DATA left unconditional overdue low_close in worker while due() intentionally false. Reuse exact no-new-DATA test and require real twoOS Auto regression after one source rebuild; A2/A3 H458 pinned original source in transit.",
+  "why_now": "H455 B Auto Action40994443303 artifact12951230045 shows Windows UDP sent385 received0, Linux sent100 received27, Linux TX actual thread CPU41.8s in ~42s wall; rx first 466 but TUN firstsend only9. LinuxQualityTx::due waits for DATA>=window.first, while worker independently supplied timed_close_deadline even with no DATA, creating 0ms poll spin. Minimal gating prevents overdue impossible deadline; other FEC/group/Stop untouched.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H458 A three independent scene runs and B Fixed with original product SHA88ba090 and verified driver, hashes/F-R-C/p99/Stop; resolve Auto original worker 1core spin and reverse packet gap, then A4 staged Auto120s/A5 sequential CPU AB, B full lifecycle and C progressive/5min.",
+  "next_action": "Run H459 exact Linux Rust/native and true Win↔Linux Auto one-scene; compare TX CPU, TUN source throughput, Windows application first delivery, p99/Stop; no business fabricated. Collect A2/A3 H458 original-binary run results and Fixed B recheck; then A4 120s/B lifecycle/C + 5min.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①H455 original Go+Rust/Linux and H453 native functional PASS, H452 production source candidate. ②A2/A3 H457 dispatched but preflight test mismatch blocked (three FAIL no real test), H458 repeats only preflight-blocked scenarii using identical binary artifacts; A4/A5 OPEN. ③B H455 Normal+Game2/4 on/off FEC real 5 modes PASS, Fixed actual app/Stop PASS internal, old Applied test-only fail H458 corrected awaiting one Action; Auto genuine reverse app FAIL and TX single-core 41.8s 41wall, no B closure. ④C matrix/5min NOT_RUN. ⑤H457 governance/preflight failed old if exact negative expectation, H458 fixes test and harness. No full completion."
+  "partial_summary": "①Linux Auto H459 removes impossible stale CLOSE deadline while preserving actual unique M4 firstsend requirement, quality windows/Health/AEAD. ②A2/A3 H458 source-locked scenarios dispatched pending; A1 H453 PASS; A4/A5 open. ③B Normal and four Game scopes PASS, Fixed B old M2 test removed H458 current result pending; Auto B actual Windows inbound0/385 and Linux 41.8s CPU fail preserved, H459 new SRC unverified. ④C/5min not run. ⑤Full task partial, H459 Action validation pending."
 }
