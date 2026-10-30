@@ -440,6 +440,24 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         Some(entry.frozen)
     }
 
+    /// One *untrusted outer TCP-like* ACK/SACK gap nomination, accepted
+    /// only after M0's scoped real-send OuterAckIndex verified a covered
+    /// genuine first-send record and the reorder guard. No Health, peer
+    /// delivery, ACK RTT, Auto loss or fresh byte credit is created here.
+    /// The one existing immutable shadow and one-shot global quota still
+    /// arbitrate an eventual opportunistic identical-ciphertext repair.
+    pub fn on_outer_gap_hint(&mut self,pn:RecordPn,now:MonoNs)->bool{
+        if !self.opportunistic_v3{return false}
+        let Some(e)=self.entries.get_mut(&pn)else{return false};
+        if e.queued.is_some()||e.missing_reported||
+            e.repair_attempts>=OUTER_REPAIR_ATTEMPT_LIMIT as u8||
+            now>=e.hard_expiry||now<e.last_sent{return false}
+        e.missing_reported=true;
+        e.negative_since=Some(now);
+        self.refresh_wake(pn);
+        true
+    }
+
     /// Positive bitmap bits may release once even from an old report.
     /// Only new report_seq can establish negative evidence or RTT witnesses.
     /// Unreported pages, PN > largest and absent/control/burned PN do nothing.
@@ -977,6 +995,27 @@ mod tests {
         assert_eq!(Arc::strong_count(&shared),1);
     }
 
+    #[test]
+    fn r2_plan027_outer_gap_is_bounded_not_a_peer_receipt_or_blind_pto(){
+        let mut s=state(4,810_000_000);
+        s.enable_adaptive_timing(600_000_000,50_000_000).unwrap();
+        s.enable_opportunistic_v3().unwrap();
+        s.on_sent_adaptive(frozen(1),MonoNs(0)).unwrap();
+        assert!(s.on_timer(MonoNs(640_000_000)).candidates.is_empty());
+        assert!(!s.on_outer_gap_hint(RecordPn(9),MonoNs(650_000_000)));
+        assert!(s.on_outer_gap_hint(RecordPn(1),MonoNs(650_000_000)));
+        assert!(!s.on_outer_gap_hint(RecordPn(1),MonoNs(651_000_000)));
+        assert_eq!(s.diagnostic_snapshot().acked_attempt0,0);
+        assert!(s.witnesses.is_empty());
+        assert!(s.on_timer(MonoNs(749_000_000)).candidates.is_empty());
+        let c=s.on_timer(MonoNs(750_000_000)).candidates.remove(0);
+        assert_eq!(c.pn(),RecordPn(1));
+        s.on_send_result(&c,RepairSendResult::Accepted,MonoNs(750_000_000))
+            .unwrap();
+        assert_eq!(s.outstanding(),0);
+        assert!(!s.on_outer_gap_hint(RecordPn(1),MonoNs(751_000_000)));
+        assert!(s.on_timer(MonoNs(800_000_000)).candidates.is_empty());
+    }
     #[test]
     fn r2_plan027_outer_ack_hint_discards_only_shadow_and_cancels_queued_repair() {
         let mut s = state(3, 10);
