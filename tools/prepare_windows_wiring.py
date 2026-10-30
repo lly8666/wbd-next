@@ -56,6 +56,61 @@ def check_spec(spec, read_source):
                  "assembly blob mismatch: " + op["overlay_path"])
 
 
+def replace_original_once(data, needle, replacement, path):
+    need(data.count(needle) == 1, "frozen Npcap RX buffer anchor changed: " + path)
+    return data.replace(needle, replacement)
+
+
+def install_pinned_npcap_kernel_capture_buffer(root, legacy, output):
+    """Patch ONLY the source-frozen Actions checkout, never the original Go repo.
+
+    Npcap pcap_open_live defaults to a 1MiB kernel ring; pcap_setbuff must
+    run before the first Go reader or handoff, not while pending M3 is live.
+    TX-only cloned handles retain 1MiB via overlay NativeCaptureConfig.
+    """
+    config = legacy / "internal/faketcp/npcap.go"
+    win = legacy / "internal/faketcp/npcap_windows.go"
+    for file in (config, win):
+        relative = str(file.relative_to(legacy)).replace("\\", "/")
+        original = git(legacy, "show", ORIGINAL + ":" + relative)
+        need(file.read_bytes() == original, "original Npcap source changed: " + relative)
+    config_before = config.read_bytes()
+    config_after = replace_original_once(config_before,
+        b"\tPersona    PacketPersona\n\tGeneration uint64\n}",
+        b"\tPersona    PacketPersona\n\tGeneration uint64\n\tCaptureBufferBytes int // zero=16MiB original RX; TX clone=1MiB\n}",
+        "npcap.go")
+    win_before = win.read_bytes()
+    marker = b"\tif setMinToCopy, err := dll.FindProc(\"pcap_setmintocopy\"); err == nil {"
+    injection = (
+        b"\t// Before ANY native RX or TLS business packet: enlarge the NPF kernel\n"
+        b"\t// capture ring; resetting it after the Go-to-Rust handoff loses M3.\n"
+        b"\tcaptureBytes := cfg.CaptureBufferBytes\n"
+        b"\tif captureBytes == 0 { captureBytes = 16 << 20 }\n"
+        b"\tif captureBytes < 1<<20 || captureBytes > 16<<20 {\n"
+        b"\t\treturn nil, fmt.Errorf(\"Npcap kernel capture buffer outside owned bounds: %d\", captureBytes)\n"
+        b"\t}\n"
+        b"\tsetBuf, err := dll.FindProc(\"pcap_setbuff\")\n"
+        b"\tif err != nil { return nil, fmt.Errorf(\"Npcap pcap_setbuff unavailable: %w\", err) }\n"
+        b"\tif rc, _, _ := setBuf.Call(handle, uintptr(captureBytes)); int32(rc) != 0 {\n"
+        b"\t\treturn nil, fmt.Errorf(\"Npcap pcap_setbuff %d bytes failed: %s\", captureBytes, pcapError(getErr, handle))\n"
+        b"\t}\n"
+        b"\tfmt.Printf(\"WBD_WINDOWS_NPCAP_KERNEL_BUFFER_ACCEPTED bytes=%d\\n\", captureBytes)\n"
+    )
+    win_after = replace_original_once(win_before, marker, injection + marker, "npcap_windows.go")
+    config.write_bytes(config_after)
+    win.write_bytes(win_after)
+    output.mkdir(parents=True, exist_ok=True)
+    receipt = {"scope":"ACTION_CHECKOUT_ONLY_ORIGINAL_GO_PINNED",
+       "original_source":ORIGINAL,
+       "pcap_default_ring_bytes":1<<20,"rx_ring_requested_bytes":16<<20,
+       "tx_bpf_rejected_clone_ring_bytes":1<<20,
+       "api":"Npcap pcap_setbuff before pcap_setmode/BPF/first packet",
+       "patched_file_sha256":{
+         "internal/faketcp/npcap.go":hashlib.sha256(config_after).hexdigest(),
+         "internal/faketcp/npcap_windows.go":hashlib.sha256(win_after).hexdigest()}}
+    (output/"windows-npcap-ring-source.json").write_text(json.dumps(receipt,indent=2)+"\n")
+    return receipt
+
 def prepare(root, legacy, output, source, spec):
     need(git(legacy, "rev-parse", "HEAD").decode().strip() == ORIGINAL, "legacy checkout SOURCE changed")
     # Normalize bytes from Git just as the original workflow did; Windows
@@ -73,6 +128,7 @@ def prepare(root, legacy, output, source, spec):
     subprocess.run([os.sys.executable, str(root / "r0/go_overlay/assembly/assemble.py"),
                     "--legacy-root", str(legacy), "--overlay-root", str(root),
                     "--manifest", str(root / MANIFEST), "--receipt", str(output / "assembly.json")], check=True)
+    install_pinned_npcap_kernel_capture_buffer(root, legacy, output)
     for part, names in EXTRA_BRIDGES.items():
         dest = legacy / "internal" / part
         dest.mkdir(parents=True, exist_ok=True)
