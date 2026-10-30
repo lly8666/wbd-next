@@ -586,6 +586,11 @@ impl ProtectedScopedOwner {
         self.normal_firstsend_identity()?;
         self.crypto.tx.next_packet_number()
     }
+    #[cfg(target_os="windows")]
+    pub(crate) fn next_original_record_seq(&self)->Option<u64>{
+        self.normal_firstsend_identity()?;
+        self.next_tx_seq
+    }
     /// Transfer the SAME protected Go-authenticated RX replay opener,
     /// original Normal-off table and generation to one RX worker exactly
     /// once; the original TX queue/sealer remain with the control Entry.

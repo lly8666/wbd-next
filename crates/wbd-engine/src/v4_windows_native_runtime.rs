@@ -13,7 +13,7 @@
  use wbd_platform::ipv4_tcp::{
      build_bytes, build_presentation_ack, Ipv4Tuple, PacketPersona, Presentation,
  };
- use wbd_platform::rx_ipv4_tcp::{parse_data_packet, extend_seq32, TrustedRx};
+ use wbd_platform::rx_ipv4_tcp::{parse_data_packet,parse_ack_packet,extend_seq32,TrustedRx};
 
  // std::thread::Builder::name is only a Rust thread name on some
  // Windows runtimes. Expose the actual OS thread description once so that
@@ -741,6 +741,7 @@
              _=>return BAD_STAGE,
          }
          let mut npf_wakes=TxWakeBatch::default();
+         let mut last_outer_ack=None;
          for _ in 0..RX_WAKE_BATCH{
              if counters.stopping.load(Ordering::Acquire){return OK}
              let n=match npf.read(&mut frame){
@@ -751,18 +752,34 @@
                  Err(_)=>return BAD_STAGE,
              };
              let Some(packet)=io::ethernet_ipv4(&frame[..n])else{continue};
-             let Ok(sealed)=parse_data_packet(packet,trusted)else{
+             // Cold SACK capability is not yet carried by original Go
+              // TLS handoff; reject unnegotiated SACK, not pure ACK.
+              if let Ok(outer)=parse_ack_packet(packet,trusted,false){
+                  last_outer_ack=Some(outer.ack32);
+                  continue
+              }
+              let Ok(sealed)=parse_data_packet(packet,trusted)else{
                  counters.rejected.fetch_add(1,Ordering::Relaxed);continue
              };
              let verified=match open_and_deliver(&cfg,&lane,&mut tun,
                  &counters,&mut ack,sealed.seq32,sealed.ciphertext,&mut plain,fixed){
                  Ok(v)=>v,Err(code)=>return code
              };
-             if verified&&npf_wakes.note_verified(){
-                 flush_tx_wake(&tx_notify,&counters);
-             }
-         }
-         // A partial ready batch must signal immediately on drain.
+             if verified{
+                  last_outer_ack=Some(sealed.presentation_ack32);
+                  if npf_wakes.note_verified(){
+                      flush_tx_wake(&tx_notify,&counters);
+                  }
+              }
+          }
+          if let Some(ack32)=last_outer_ack{
+              let mut e=match lock_owner(&lane,&counters,LockDirection::Rx){
+                  Ok(e)=>e,Err(code)=>return code
+              };
+              let _=m2_outer_ack_hint_entry(&mut e,cfg.epoch,
+                  cfg.luid,cfg.ifindex,ack32,&[]);
+          }
+          // A partial ready batch must signal immediately on drain.
          if npf_wakes.finish(){flush_tx_wake(&tx_notify,&counters);}
      }
  }

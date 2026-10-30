@@ -29,6 +29,7 @@ use crate::runtime::{TxDispatch,RxPacket};
 use wbd_types::{MonoNs,RecordPn};
 use wbd_recovery::quality_window::{ReceiveWindows,WindowKey,QualityError,WireReport,
     SendWindowSampler,SendHistory,ClosedWindow,FirstSendStatus};
+use wbd_recovery::outer_ack::{OuterAckIndex,SackRange32};
 use wbd_types::buffer_contract::{UniqueSealable,FrozenRecordHandle};
 use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
 use wbd_codec::link_fec_wire::{inspect_link,LinkMode,LinkView};
@@ -75,6 +76,7 @@ struct WindowsM2QueuedRepair {
 }
 struct WindowsOriginalM2 {
     shadow:ReceiptState<FrozenRecord>,
+    outer_ack:OuterAckIndex, // untrusted hints retire optional shadow only
     pending:BTreeMap<RecordPn,FrozenRecord>,
     direction:BudgetDirection,
     route:ReceiptRouteScope,
@@ -317,6 +319,10 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
     shadow.enable_adaptive_timing(600_000_000,50_000_000)
         .map_err(|_|BAD_STAGE)?;
     shadow.enable_opportunistic_v3().map_err(|_|BAD_STAGE)?;
+    let initial_seq=e.owner.next_original_record_seq().ok_or(BAD_STAGE)?;
+    let outer_ack=OuterAckIndex::new(lane,epoch,initial_seq,
+        if e.feature7{MAX_M2_FIXED_FROZEN}else{MAX_M2_FROZEN})
+        .map_err(|_|BAD_STAGE)?;
     let reverse=if e.role_server{WireDirection::ClientToServer}
         else{WireDirection::ServerToClient};
     let quality_receive=ReceiveWindows::new(lane,epoch,reverse);
@@ -354,7 +360,7 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         ).ok_or(BAD_STAGE)?);
     }
     e.m2=Some(WindowsOriginalM2{
-        shadow,pending:BTreeMap::new(),direction,route,in_flight:None,
+        shadow,outer_ack,pending:BTreeMap::new(),direction,route,in_flight:None,
         ready_repairs:VecDeque::with_capacity(32),
         reverse_authenticated_receipts:0,repair_polls:0,
         repair_preflight_stale:0,repair_quota_rejected:0,
@@ -620,6 +626,11 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if row.metadata().pn!=key||row.metadata().seq.0 as u32!=seq
         ||row.bytes().len()!=wire_len {return Err(INVALID)}
     let frozen=m.pending.remove(&key).ok_or(INVALID)?;
+    if sent==1{
+        // Optional index contention or capacity never blocks fresh data.
+        let _=m.outer_ack.on_definitely_sent(key,
+            frozen.metadata().seq.0,wire_len as u32,m2_clock());
+    }
     if m.auto_low_rate_mode {
     if let Some(sampler)=m.quality_sender.as_mut(){
         let status=match sent{
@@ -691,6 +702,25 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
 // going to the Windows Npcap sink. No private Go 750ms reseal/retry timer.
 // Successful return publishes one bounded repair candidate for Go to send;
 // no candidate never fabricates a peer ACK or consumes a new AEAD PN.
+// Only a checked current-lane/epoch outer appearance ACK hint. It is
+// NOT proof of business delivery, authenticated Health or Auto loss.
+fn m2_outer_ack_hint_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+    ifindex:u32,ack32:u32,sacks:&[SackRange32]
+)->Result<(),i32>{
+    if !v3_ready(e,epoch,luid,ifindex){return Err(INVALID)}
+    let (lane,scope_epoch)=e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
+    if scope_epoch!=epoch{return Err(INVALID)}
+    let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+    if m.auto_low_rate_mode{return Ok(())}
+    let now=m2_clock();
+    let Ok(result)=m.outer_ack.on_feedback(lane,epoch,ack32,sacks,
+        now,20_000_000)else{return Ok(())};
+    for pn in result.retired{let _=m.shadow.discard_outer_ack_hint(pn);}
+    for pn in result.gap_candidates{
+        let _=m.shadow.on_outer_gap_hint(pn,now);
+    }
+    Ok(())
+}
 fn m2_next_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,out:&mut [u8],
 )->Result<Option<(usize,u32,u64)>,i32>{
