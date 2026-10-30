@@ -1,0 +1,74 @@
+name: M0 PLAN027 H542 half-gap exact-source four independent true loss tiers
+on:
+  workflow_run:
+    workflows:
+      - M0 Windows Linux original native whole-wiring capability and functional entry
+    types: [completed]
+permissions: {contents: read, actions: write}
+jobs:
+  once-frozen-four:
+    if: >-
+      github.event.workflow_run.id == 41085178791 &&
+      github.event.workflow_run.run_attempt == 1 &&
+      github.event.workflow_run.event == 'workflow_dispatch' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_sha == '10001c7eefb52387a5c71aa71129b80418273ac9' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Check exact real zero-loss signed Windows Linux and dispatch one Action per tier, no rebuild
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          src=10001c7eefb52387a5c71aa71129b80418273ac9
+          build=41085178791
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .head_sha)" = "$src"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$build/artifacts" --jq '.artifacts[].name' > "$RUNNER_TEMP/h542-artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$src" "$RUNNER_TEMP/h542-artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/h542-artifacts"
+          grep -Fx m0-wl-full-public-normal-direct "$RUNNER_TEMP/h542-artifacts"
+          mkdir -p "$RUNNER_TEMP/zero"
+          gh run download "$build" --repo "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/zero"
+          export ORIGINAL_RESULT_DIR="$RUNNER_TEMP/zero"
+          python3 - <<'PY'
+          import os,json,pathlib,re
+          from tools.m0_wl_perf_v2_config import read_scenario
+          root=pathlib.Path(os.environ['ORIGINAL_RESULT_DIR'])
+          r=json.loads((root/'report.json').read_text())
+          src='10001c7eefb52387a5c71aa71129b80418273ac9'
+          assert r['source']==src and r['linux_binary_source']==src
+          assert r['stop']=='PASS_BOTH_OWNED' and r['mode_public'].endswith('_normal')
+          z=read_scenario('scenarios/plan027-h539-normal-10m-250ms-loss0-60s.json')
+          v=r['WL_V2']
+          assert v['status']=='MEASURED_BOTH_OS_KERNEL' and v['scenario_sha256']==z['scenario_sha256']
+          assert all(v['first_delivery_fraction'][s]>=.999 for s in ('windows','linux'))
+          q=(root/'mode-results'/'normal'/'client.log').read_text(errors='replace')
+          rows=re.findall(r'WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=(\d+) repair_accepted_wire_bytes=(\d+) repair_uncertain_wire_bytes=(\d+) control_wire_bytes=(\d+) repair_packets=(\d+)',q)
+          assert len(rows)==1
+          F,R,U,C,N=map(int,rows[0])
+          assert F>0 and R+U<=F//1000, 'unjustified lossless retransmissions'
+          for p in (1,5,15,30):
+            path=f'scenarios/plan027-h539-normal-10m-250ms-loss{p}-60s.json' if p!=30 else 'scenarios/wl-outer-repair-10m-250ms-loss30-60s.json'
+            t=read_scenario(path)
+            assert t['duration_s']==60 and t['seed']==20261030 and t['public_mode']=='normal'
+            assert all(t[s]['loss_pct']==p and t[s]['offered_mbps']==10 and t[s]['delay_ms']==250 for s in ('windows_to_linux','linux_to_windows'))
+            print('H542_SOURCE_LOCKED_ONE_TIER',p,t['scenario_sha256'])
+          print('H542_TRUE_ZERO_SOURCE',F,R,U,C,N)
+          PY
+          for p in 1 5 15 30; do
+            scene="scenarios/plan027-h539-normal-10m-250ms-loss${p}-60s.json"
+            if [ "$p" = 30 ]; then scene=scenarios/wl-outer-repair-10m-250ms-loss30-60s.json; fi
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode=normal -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="$scene" \
+              -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
+            echo "H542_INDEPENDENT_TRUE_TWO_OS_TIER=$p SOURCE=$src"
+          done
