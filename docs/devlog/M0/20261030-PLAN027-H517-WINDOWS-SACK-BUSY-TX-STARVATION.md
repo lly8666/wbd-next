@@ -7,5 +7,5 @@ H517 uses a pure `native_ack_only_due` gate to allow a pending *new RX SACK revi
 This is a new source relative to H516 `6f5cd` and requires its own build and source-locked true zero-loss gate before the repaired 1/5/10/30% window. H516 Windows Go/Rust and Linux Rust eligible tests PASS; the true two-OS native run is separately in progress and cannot be reused as H517. No fabricated R/F promotion. H514 old-source Game2/Fixed50 PASS, GameFEC pending and A5 original Go AB baseline FAIL stay separately reported.
 
 ```feature-impact
-{"kind":"none","reason":"H517 is a source-only Windows Rust TX fairness correction with a focused unit test, not a new feature readiness or policy change."}
+{"kind":"none","ids":[],"reason":"H517 is a source-only Windows Rust TX fairness correction with a focused unit test, not a new feature readiness or policy change."}
 ```
