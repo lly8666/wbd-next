@@ -85,7 +85,8 @@ if action == "arm":
     if call("ip", "link", "show", iface, checked=False)["rc"] == 0:
         raise RuntimeError("foreign ifb device name exists")
     state = {"owner": "M0-WL-N0-ETH0-IFB", "interface": iface,
-             "profile": profile_name, "egress": False, "ingress": False, "ifb_created": False}
+             "profile": profile_name, "egress": False, "ingress": False, "ifb_created": False,
+             "stage_index": 0}
     persist(state)
     try:
         call("ip", "link", "add", iface, "type", "ifb")
@@ -126,6 +127,47 @@ if action == "arm":
     except Exception:
         clean()
         raise
+elif action == "stage":
+    # In-place kernel qdisc change ONLY for the M0-owned WSL2 eth0/IFB.
+    # No application shim, no link recreation, no new process or reboot.
+    if profile_name != "v2" or not scenario_path or not owner.exists() or len(sys.argv)!=6:
+        raise RuntimeError("WL_V2_STAGE_REQUIRES_OWNED_SOURCE_SCENARIO")
+    from m0_wl_perf_v2_config import read_scenario
+    source=read_scenario(scenario_path)
+    phases=source.get("impairment_stages")
+    if not phases or not sys.argv[5].isdigit():
+        raise RuntimeError("WL_V2_STAGE_NO_VALID_AUTO_PHASE")
+    index=int(sys.argv[5])
+    state=json.loads(owner.read_text())
+    if state.get("owner")!="M0-WL-N0-ETH0-IFB" or state.get("interface")!=iface or state.get("profile")!="v2":
+        raise RuntimeError("WL_V2_STAGE_FOREIGN_KERNEL_OWNER")
+    if not 1<=index<len(phases) or index!=state.get("stage_index",0)+1:
+        raise RuntimeError("WL_V2_STAGE_OUT_OF_ORDER")
+    # Verify the same owned qdisc handles exist before modifying either.
+    for device,handle in ((iface,"10:"),("eth0","20:")):
+        current=json.loads(call("tc","-j","qdisc","show","dev",device)["stdout"] or "[]")
+        if not any(row.get("kind")=="netem" and row.get("handle")==handle for row in current):
+            raise RuntimeError("WL_V2_STAGE_OWNED_QDISC_MISSING_"+device)
+    phase=phases[index]
+    for device,handle,direction,original in (
+        (iface,"10:","windows_to_linux",profile),
+        ("eth0","20:","linux_to_windows",egress_profile)):
+        item=phase[direction]
+        flags=["netem","delay",f'{item["delay_ms"]}ms',
+               "loss",f'{item["loss_pct"]}%',"limit","32768"]
+        if original["tc_mbit"] is not None:
+            flags+=["rate",f'{original["tc_mbit"]}mbit']
+        call("tc","qdisc","change","dev",device,"root","handle",handle,*flags)
+    state["stage_index"]=index
+    persist(state)
+    readback=probe()
+    readback["stage_index"]=index
+    readback["source_scenario_sha256"]=source["scenario_sha256"]
+    readback["requested_kernel_stage"]=phase
+    (out/f"wl-v2-kernel-stage-{index:02}.json").write_text(json.dumps(readback,indent=2)+"\n")
+    print("WL_V2_OWNED_KERNEL_STAGE_APPLIED "+json.dumps({
+        "index":index,"scheduled_at_s":phase["start_s"],
+        "scenario_sha256":source["scenario_sha256"],"readback":"REAL_ETH0_IFB_TC_QDISC"}),flush=True)
 elif action == "snapshot":
     if not owner.exists(): raise RuntimeError("no owned netem state for readback")
     if json.loads(owner.read_text()).get("profile") != profile_name: raise RuntimeError("impairment profile mismatch")
