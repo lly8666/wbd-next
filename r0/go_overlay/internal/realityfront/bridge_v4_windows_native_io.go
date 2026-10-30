@@ -77,15 +77,11 @@ func(s *V4WindowsAuthenticatedClientOwner) StartNativeIOForModePolicy(
     cfg.IfIndex=s.device.identity.InterfaceIndex
     if cfg.PathMTU==0||cfg.RXCapture==0||cfg.TXCapture==0||
        cfg.WintunSession==0||cfg.WintunReadEvent==0{return errV4WindowsOwner}
-    if mode==0{
-        proc,err:=s.bridge.fixedProc("wbd_m0_win_native_v1_start")
-        if err!=nil{return err}
-        err=winOwnerCall(proc,uintptr(unsafe.Pointer(&cfg)))
-        runtime.KeepAlive(cfg)
-        return err
-    }
+    // V2 existing cold attach carries authenticated FakeTCP SACK capability
+    // into native Rust for Normal/Fixed/Auto, without steady Go work.
     v2:=V4WindowsNativeIOV2{Version:2,Mode:mode,Normal:cfg}
     if mode==2&&aggressive{v2.Reserved=1}
+    if s.bridge.sackPermitted{v2.Reserved|=2}
     v2.Size=uint32(unsafe.Sizeof(v2))
     proc,err:=s.bridge.fixedProc("wbd_m0_win_native_v2_start")
     if err!=nil{return err}
