@@ -1,0 +1,57 @@
+name: M0 PLAN027 H486 exact new NPF binary followups
+on:
+  workflow_run:
+    workflows:
+      - M0 Windows Linux original native whole-wiring capability and functional entry
+    types: [completed]
+permissions: {contents: read, actions: write}
+jobs:
+  strict-c100-and-independent-weak-loss:
+    if: github.event.workflow_run.id == 41013628666 && github.event.workflow_run.head_sha == 'f83874c30e0d918cfe070b67b39e208eea0da457' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.event == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Validate actual new product and real kernel C100, then reuse exact built binaries
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          build_run=41013628666
+          product=f83874c30e0d918cfe070b67b39e208eea0da457
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build_run" --jq .head_sha)" = "$product"
+          gh api "repos/$GH_REPO/actions/runs/$build_run/artifacts" --paginate --jq '.artifacts[].name' > "$RUNNER_TEMP/build-artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$product" "$RUNNER_TEMP/build-artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/build-artifacts"
+          mkdir -p "$RUNNER_TEMP/new100"
+          gh run download "$build_run" -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/new100"
+          python - <<'PY'
+          import json,os,pathlib
+          from tools.m0_wl_plan027_loss_verdict import verdict
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'new100'
+          d=json.loads((root/'report.json').read_text()); v=d['WL_V2']
+          assert d['linux_binary_source']=='f83874c30e0d918cfe070b67b39e208eea0da457'
+          assert v['scenario_id']=='plan027-c-normal-100m-25ms-loss0-60s'
+          assert v['status']=='MEASURED_BOTH_OS_KERNEL'
+          assert d['stop']==v['owned_stop']=='PASS_BOTH_OWNED'
+          assert all(v['offered_mbps'][side]>=95 for side in ('windows','linux'))
+          log=(root/'mode-results/normal/client.log').read_text(errors='replace')
+          assert 'WBD_WINDOWS_NPCAP_KERNEL_BUFFER_ACCEPTED bytes=16777216' in log
+          result=verdict(d)
+          print('H486_STRICT_ZERO_FIRST_SOURCE_C100',json.dumps(result,sort_keys=True))
+          if result['status']!='PASS_ZERO_INJECTED_LOSS_EXACT_FIRST':
+              print('H486_C100_NOT_STRICT_ZERO_LOSS; KEEP AS BLOCKER')
+          PY
+          for entry in 'normal scenarios/plan027-c-normal-10m-25ms-loss0-60s.json' 'fixed scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json'; do
+            read -r mode scene <<< "$entry"
+            gh workflow run m0-wl-public-normal-full.yml --ref main \
+              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="$scene" \
+              -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+            echo "H486_NEW_NPF_NATIVE_DISPATCH mode=$mode source=$product"
+          done
