@@ -3917,10 +3917,21 @@ impl OriginalPresentationAck{
     fn verified(&mut self,start:u64,len:usize)->u32{
         let Some(end)=start.checked_add(len as u64)else{return self.next as u32};
         if end<=self.next{return self.next as u32}
-        if start<=self.next{self.next=end}
-        else if self.future.len()<256{
-            let at=self.future.partition_point(|(first,_)|*first<=start);
-            self.future.insert(at,(start,end));
+        if start<=self.next{self.next=self.next.max(end)}
+        else{
+            // Consecutive verified future records form ONE SACK-like span.
+            // The old one-entry-per-record 256 cap saturated after ~256
+            // packets behind a single genuine hole and could never catch up.
+            let at=self.future.partition_point(|(_,last)|*last<start);
+            let(mut first,mut last)=(start,end);
+            let mut until=at;
+            while until<self.future.len() && self.future[until].0<=last{
+                first=first.min(self.future[until].0);
+                last=last.max(self.future[until].1);
+                until+=1;
+            }
+            if until==at && self.future.len()>=256{return self.next as u32}
+            self.future.splice(at..until,std::iter::once((first,last)));
         }
         while let Some(&(first,end))=self.future.first(){
             if first>self.next{break}
@@ -3940,6 +3951,18 @@ mod original_presentation_ack_tests{
         assert_eq!(x.verified(1000,100),1100);
         assert_eq!(x.verified(1100,100),1300);
         assert_eq!(x.verified(1300,10),1310);
+    }
+    #[test]
+    fn h505_future_is_bounded_by_disjoint_gaps_not_256_adjacent_packets(){
+        let mut x=OriginalPresentationAck::new(1000);
+        for i in 0..600u64{
+            assert_eq!(x.verified(2000+i*10,10),1000);
+        }
+        assert_eq!(x.future.len(),1);
+        assert_eq!(x.future[0],(2000,8000));
+        assert_eq!(x.verified(1000,1000),8000);
+        assert!(x.future.is_empty());
+        assert_eq!(x.verified(7000,20),8000); // duplicate never regresses
     }
 }
 // Do not hold global registry lock while M4 RX preflight ignores unrelated
