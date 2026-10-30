@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 447,
-  "checkpoint_sha": "08ebf0e2e0e27f055a19e658f05808f691d08fce",
+  "sequence": 448,
+  "checkpoint_sha": "ce568d201681e354e350e80b28feed954d4cbd9d",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H447 exact Linux H444 source real Fixed/Auto 64 test both first-delivered but old new smoke Pending-only oracle failed: client readback Fixed=applied1/pendingfalse, Auto=applied1/profile5/pendingfalse. Now require BOTH original roles coherent Applied/Pending readback; no 64-packet Auto quality grade claim. Exact source CI pending.",
-  "why_now": "H445 parallel 40987887943 source H444 real Fixed and Auto first app PASS, native config readback client already applied1 (not pending), a meaningful changed product behavior; old script falsely insisted pending0 after H443. Test must not assume either pending or applied.",
+  "current_task": "H448 exact H446 Windows native regression first fail was fixture-only: START moved outside loop and DATA unique(100,102) no longer injected, Windows source compiled; restoring two true unique RX observations while bootstrap open, no product gate relaxation.",
+  "why_now": "Windows owner ABI Action40988092490 and full WSL preflight Action40988092605 both compiled code then same one unit failed at line2750: left (first_sent4, received0), expected (4,2). Separate unique data fixture omitted by H446 refactor.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Verify H447 both-role real readback independently and H446 Windows native/WSL. If valid, label only scoped Fixed bootstrap positive with authenticated code path; no Auto dynamics PASS. Then complete PLAN027 A/B/C/5min.",
+  "next_action": "Collect H448 Windows native and full Rust CI; then actual Windows↔Linux Fixed and full Auto A/B/C under exact compiled SOURCE. Test 2-window finite cap and no old WBC4 control.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①Linux Fixed bootstrap H444 native PASS, real readback applied1 client in FEC Fixed/Auto 64, but both roles not yet independently verified; Windows Fixed H446 candidate. ②A partial ③B Linux app/Stop partial and true 2OS lifecycle OPEN ④C/5min NOT_RUN ⑤H447 cross-consumer false Pending assertion correction, source CI OPEN."
+  "partial_summary": "①H444 Linux Fixed native candidate PASS, H446 Windows Fixed candidate compiled but fixture test H448 needs redo. ②A1-A5 partial ③B still false old-source Fixed and new source unverified ④C/5min NOT_RUN ⑤first-fail test fix H448 pending."
 }

@@ -2730,17 +2730,20 @@ mod tests {
         assert_eq!(m2_authenticated_kind1_entry(&mut e,16,&start_control),Ok(0));
         assert!(e.m2.as_ref().unwrap().quality_fixed_rx_active);
         assert!(!e.m2.as_ref().unwrap().auto_low_rate_mode);
+        // Feed only replay-unique DATA while the authenticated Fixed
+        // startup START is active. The old loop also supplied START,
+        // but after H446 it is already consumed immediately above.
+        {
+            let m=e.m2.as_mut().unwrap();
+            m.quality_receive.on_unique_data(RecordPn(100),false);
+            m.quality_receive.on_unique_data(RecordPn(102),false);
+        }
         for signal in [close]{
             let wire=crate::v4_native_health::encode_authenticated_low_rate_signal_live(
                 0,signal,512).unwrap();
             let parsed=crate::v4_native_health::parse_authenticated_control(&wire).unwrap();
             assert!(parsed.receipt.is_none());
             assert_eq!(m2_authenticated_kind1_entry(&mut e,17,&parsed),Ok(0));
-            if signal.kind==QualitySignalKind::Start{
-                let m=e.m2.as_mut().unwrap();
-                m.quality_receive.on_unique_data(RecordPn(100),false);
-                m.quality_receive.on_unique_data(RecordPn(102),false);
-            }
         }
         let m=e.m2.as_mut().unwrap();
         assert_eq!(m.quality_due.len(),1);
