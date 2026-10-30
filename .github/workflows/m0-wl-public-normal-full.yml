@@ -897,6 +897,16 @@ jobs:
               # Keep the historical >=99.9% gate for loss=0 unchanged.
               $damaged=($v2Config.windows_to_linux.loss_pct -gt 0 -or
                         $v2Config.linux_to_windows.loss_pct -gt 0)
+              # A staged Auto profile begins clean but deliberately damages
+              # one or both directions later. Overall 240s first arrival is
+              # NOT the clean 99.9% oracle. Keep genuine tc-stage readbacks.
+              foreach($stage in @($v2Config.impairment_stages)){
+                if($stage.windows_to_linux.loss_pct -gt 0 -or
+                   $stage.linux_to_windows.loss_pct -gt 0){
+                  $damaged=$true
+                  break
+                }
+              }
               if($damaged){
                 if($real.first_delivery_fraction.windows -le 0 -or
                    $real.first_delivery_fraction.linux -le 0){

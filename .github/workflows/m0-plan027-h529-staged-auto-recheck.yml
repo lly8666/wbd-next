@@ -1,0 +1,49 @@
+name: M0 PLAN027 H529 corrected staged Auto damage oracle single source7a run
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h529-staged-auto-recheck.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  source-locked-auto-one:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h529-auto-recheck]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Prove original A4 failure was clean-only post-run oracle after real Stop; dispatch ONE 240s Auto
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          src=7a5d7e83823e96539d2a904a8193a85ec18df30d
+          build=41060763175
+          failed=41065120516
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .head_sha)" = "$src"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .conclusion)" = success
+          test "$(gh api "repos/$GH_REPO/actions/runs/$failed" --jq .conclusion)" = failure
+          gh run download "$failed" -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/h529"
+          python - <<'PY'
+          import json,os,pathlib
+          from tools.m0_wl_perf_v2_config import read_scenario
+          f=pathlib.Path(os.environ['RUNNER_TEMP'])/'h529'/'report.json'
+          report=json.loads(f.read_text())
+          assert report['linux_binary_source']=='7a5d7e83823e96539d2a904a8193a85ec18df30d'
+          assert report['stop']=='PASS_BOTH_OWNED'
+          assert report['WL_V2']['scenario_id']=='plan027-a4-auto-10m-staged-240s'
+          assert report['WL_V2']['status']=='MEASURED_BOTH_OS_KERNEL'
+          assert report['WL_V2']['first_delivery_fraction']['windows']>0
+          assert report['WL_V2']['first_delivery_fraction']['linux']>0
+          cfg=read_scenario('scenarios/plan027-a4-auto-10m-staged-240s.json')
+          assert len(cfg['impairment_stages'])>=5 and cfg['duration_s']==240
+          assert any(p['windows_to_linux']['loss_pct']>0 or p['linux_to_windows']['loss_pct']>0 for p in cfg['impairment_stages'])
+          print('H529_REAL_ORIGINAL_AUTO_STOP_AND_INTENTIONAL_STAGED_DAMAGE_ORACLE_PROOF')
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=auto -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-a4-auto-10m-staged-240s.json \
+            -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
+          echo H529_SOURCE7A_ONE_NATIVE_AUTO_240S_SENT
