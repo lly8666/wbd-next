@@ -1,0 +1,36 @@
+name: M0 PLAN027 H481 exact original Windows NPF 16MiB source rebuild C100
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h481-npf-rebuild.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  validate-dispatch-real-rebuild:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-h481]') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Manifest exact pinned Go source and new kernel RX buffer; trigger full build no reuse
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          python tools/prepare_windows_wiring.py --check-only
+          python -m unittest -q tests.test_m0_wl_npcap_ring_patch tests.test_m0_wl_rate_utils tests.test_m0_wl_plan027_loss_verdict
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          c=read_scenario('scenarios/plan027-c-normal-100m-25ms-loss0-60s.json')
+          assert c['public_mode']=='normal' and c['duration_s']==60
+          assert all(c[side]['offered_mbps']==100 and c[side]['loss_pct']==0 for side in ('windows_to_linux','linux_to_windows'))
+          print('H481_NEW_PRODUCT_NOT_REUSED_C100_SCENARIO_SHA',c['scenario_sha256'])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-c-normal-100m-25ms-loss0-60s.json
+          echo H481_TRUE_NATIVE_BUILD_AND_WINDOWS_NPCAP_RING100_DISPATCHED

@@ -73,7 +73,13 @@ def install_pinned_npcap_kernel_capture_buffer(root, legacy, output):
     for file in (config, win):
         relative = str(file.relative_to(legacy)).replace("\\", "/")
         original = git(legacy, "show", ORIGINAL + ":" + relative)
-        need(file.read_bytes() == original, "original Npcap source changed: " + relative)
+        worktree = file.read_bytes()
+        # Checkout may apply Windows core.autocrlf. Convert only the exact
+        # unmodified original baseline before provenance check.
+        need(worktree.replace(b"\\r\\n", b"\\n") == original,
+             "original Npcap source changed: " + relative)
+        if worktree != original:
+            file.write_bytes(original)
     config_before = config.read_bytes()
     config_after = replace_original_once(config_before,
         b"\tPersona    PacketPersona\n\tGeneration uint64\n}",
