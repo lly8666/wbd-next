@@ -4,7 +4,9 @@ def _root_fq(rows):
     found=[r for r in rows if isinstance(r,dict) and r.get("kind")=="fq" and
            (r.get("root") is True or r.get("parent") in ("root",None))]
     if len(found)!=1:return None
-    stats=found[0].get("stats")
+    # Linux tc -s -j commonly puts drops/packets at the FQ root top level.
+    # Some iproute2 versions place them under stats instead.
+    stats=found[0].get("stats") or found[0]
     if not isinstance(stats,dict):return None
     counts={}
     for key in ("drops","packets","bytes","overlimits"):
