@@ -22,7 +22,21 @@ def verify(scene,report,client_log,tc):
     if (r==0)!=(packets==0):raise ValueError("INCONSISTENT_REPAIR_COUNT")
     capacity_bytes=target*1_000_000*scene["duration_s"]/8
     rc=r/capacity_bytes
-    return {"status":"PASS_SCOPED_WINDOWS_OUTER_REPAIR","source":report.get("source"),"scene":scene["scenario_id"],"scenario_sha256":scene["scenario_sha256"],"wire_bytes":{"first":f,"repair_accepted":ra,"repair_uncertain_charged":ru,"control":k},"ratios":{"R/F":r/f,"R/(F+R+C)":r/tot,"R/total":r/tot,"R/offered_target":rc},"repair_packets":packets,"actual_tc_drops":drops,"offered_mbps":w["offered_mbps"],"first_delivery_fraction":w["first_delivery_fraction"],"owned_stop":"PASS_BOTH_OWNED"}
+    # A truthful ledger/Stop PASS is NOT product recovery qualification.
+    # One original Win sender metric cannot grade both directions or actual
+    # Linux/Windows UDP/TCP recovery. Never pad real R to a target ratio.
+    declared=max(scene["windows_to_linux"]["loss_pct"],
+        scene.get("linux_to_windows",{}).get("loss_pct",0))
+    if declared==0 and r*1000>f:
+        signal="FALSE_REPAIR_ON_NO_LOSS"
+    elif declared>0 and r==0:
+        signal="NO_OUTER_OPPORTUNITY_ON_MEASURED_LOSS"
+    elif declared>0:
+        signal="NONZERO_WINDOWS_REPAIR_NOT_BILATERAL_GRADE"
+    else:
+        signal="LOSSLESS_BELOW_ONE_PER_MILLE_NOT_BILATERAL_GRADE"
+    return {"repair_signal_grade":signal,"product_repair_qualified":False,
+        "status":"PASS_SCOPED_WINDOWS_OUTER_REPAIR","source":report.get("source"),"scene":scene["scenario_id"],"scenario_sha256":scene["scenario_sha256"],"wire_bytes":{"first":f,"repair_accepted":ra,"repair_uncertain_charged":ru,"control":k},"ratios":{"R/F":r/f,"R/(F+R+C)":r/tot,"R/total":r/tot,"R/offered_target":rc},"repair_packets":packets,"actual_tc_drops":drops,"offered_mbps":w["offered_mbps"],"first_delivery_fraction":w["first_delivery_fraction"],"owned_stop":"PASS_BOTH_OWNED"}
 def main():
     p=argparse.ArgumentParser();p.add_argument("--scenario",required=True);p.add_argument("--mode-root",required=True);p.add_argument("--out",required=True);a=p.parse_args()
     scene=read_scenario(a.scenario);root=pathlib.Path(a.mode_root)

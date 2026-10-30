@@ -18,6 +18,18 @@ class OuterRepairQualification(unittest.TestCase):
   self.assertEqual(observed["wire_bytes"]["repair_accepted"],0)
   self.assertEqual(observed["ratios"]["R/(F+R+C)"],0)
   self.assertNotIn("R/C",observed["ratios"])
+ def test_h519_signal_grade_separates_valid_measurement_from_real_recovery(self):
+  stalled=verify(self.scene,self.report,self.line(r=0),self.tc)
+  self.assertEqual(stalled["repair_signal_grade"],"NO_OUTER_OPPORTUNITY_ON_MEASURED_LOSS")
+  self.assertFalse(stalled["product_repair_qualified"])
+  measured=verify(self.scene,self.report,self.line(),self.tc)
+  self.assertEqual(measured["repair_signal_grade"],"NONZERO_WINDOWS_REPAIR_NOT_BILATERAL_GRADE")
+  lossless=copy.deepcopy(self.scene)
+  lossless["windows_to_linux"]["loss_pct"]=0
+  self.assertEqual(verify(lossless,self.report,self.line(r=0),self.tc)["repair_signal_grade"],
+   "LOSSLESS_BELOW_ONE_PER_MILLE_NOT_BILATERAL_GRADE")
+  self.assertEqual(verify(lossless,self.report,self.line(r=2_000_000),self.tc)["repair_signal_grade"],
+   "FALSE_REPAIR_ON_NO_LOSS")
  def test_repair_packet_count_must_match_debit(self):
   with self.assertRaisesRegex(ValueError,"INCONSISTENT_REPAIR_COUNT"):
    verify(self.scene,self.report,self.line(r=0).replace("repair_packets=0","repair_packets=3000"),self.tc)
