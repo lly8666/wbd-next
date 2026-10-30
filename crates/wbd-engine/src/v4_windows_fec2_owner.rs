@@ -974,7 +974,7 @@ mod tests{
         }
     }
     #[test]
-    fn m0_windows_fixed_source_then_true_kind1_control_then_parity_seq_is_contiguous(){
+    fn plan027_windows_fixed_source_then_no_m2_control_then_parity_seq_is_contiguous(){
         // Reproduces the source/control/parity interleaving of the historic
         // natural Auto 428-byte control mismatch at original Rust M1.
         // This is a deterministic *unit*, not proof of the failing NPF run.
@@ -986,14 +986,9 @@ mod tests{
         {
             let mut e=r.entries[&h].lock().unwrap();
             m2_arm_entry(&mut e,ep,811,81).unwrap();
-            // Authenticated reverse M2 data can precede this new outbound
-            // full FEC block. Make its real 20ms feedback timer mature
-            // BEFORE the block is sealed, so parity doesn't expire while
-            // the test sleeps (real original worker would poll meanwhile).
-            e.m2.as_mut().unwrap().feedback.on_authenticated_data(
-                RecordPn(711),m2_clock());
+            // A previously observed peer DATA must not cause a new
+            // high-frequency per-record M2 emission on Fixed/off.
         }
-        std::thread::sleep(std::time::Duration::from_millis(21));
         {
             let mut e=r.entries[&h].lock().unwrap();
             for i in 0..16u8 {
@@ -1006,17 +1001,13 @@ mod tests{
                     .expect("exact typed copy of freshly sealed M1 DATA");
             }
         }
-        let (control_seq,control_len,control_pn)={
+        {
             let mut e=r.entries[&h].lock().unwrap();
             let mut wire=[0u8;2048];
-            let (n,seq,pn)=m2_next_feedback_entry(
-                &mut e,ep,811,81,&mut wire).unwrap().unwrap();
-            assert_eq!(seq,last,"M2 kind1 must not skip prior source");
-            m2_finish_feedback_entry(&mut e,ep,811,81,pn,1).unwrap();
-            (seq,n,pn)
-        };
-        assert!(control_len>FIXED_WIRE_OVERHEAD && control_pn>=16);
-        last=control_seq.wrapping_add(control_len as u32);
+            assert_eq!(m2_next_feedback_entry(
+                &mut e,ep,811,81,&mut wire),Ok(None),
+                "Fixed/off shall not generate a per-record M2 kind1");
+        }
         {
             let mut e=r.entries[&h].lock().unwrap();
             let parity=stage_fixed_parity_entry(&mut e,ep,811,81)
@@ -1206,7 +1197,7 @@ mod tests{
     }
 
     #[test]
-    fn m0_windows_fixed6_native_authenticated_m2_reverse_feedback_same_owner(){
+    fn plan027_windows_fixed6_no_per_record_reverse_m2_after_real_source(){
         // The genuine feature7 original-M3 source opener must emit a
         // canonical M2 kind1 through the SAME Rust M1 PN/SEQ owner.
         // NPF send disposition is simulated here, so no OS Applied claim.
@@ -1237,23 +1228,16 @@ mod tests{
         let delivered=open_symbol(&mut r,client,epoch,821,82,seq,&wire).unwrap();
         assert_eq!(delivered.len(),1);
         assert_eq!(&delivered[0].frame[..delivered[0].length as usize],original.as_slice());
-        std::thread::sleep(std::time::Duration::from_millis(12));
-        let (receipt,feedback_seq)={
+        {
             let mut e=r.entries[&client].lock().unwrap();
             let mut out=[0u8;2048];
-            let (used,seq,pn)=m2_next_feedback_entry(
-                &mut e,epoch,821,82,&mut out
-            ).expect("original feature7 reverse kind1 draft rejected")
-             .expect("actual verified source must cause due kind1 receipt");
-            assert!(used>=51&&used<=2048);
-            m2_finish_feedback_entry(&mut e,epoch,821,82,pn,1).unwrap();
-            (out[..used].to_vec(),seq)
-        };
-        let got=open_symbol(&mut r,server,epoch,822,83,feedback_seq,&receipt)
-            .expect("same genuine M3 unique-PN opener must parse scoped M2");
-        assert!(got.is_empty(),"authenticated kind1 is not business Wintun data");
+            assert_eq!(m2_next_feedback_entry(
+                &mut e,epoch,821,82,&mut out),Ok(None),
+                "Fixed6 authenticated real source does not schedule M2 bitmap");
+        }
         assert_eq!(r.entries[&server].lock().unwrap().m2.as_ref().unwrap()
-            .shadow.outstanding(),0,"only genuine receipt may retire source");
+            .shadow.outstanding(),1,
+            "without a scoped outer ACK the optional ciphertext shadow remains");
         for (h,luid,index) in [(client,821,82),(server,822,83)]{
             assert_eq!(quiesce_wintun(&mut r,h,epoch,luid,index),OK);
             assert_eq!(stop(&mut r,h),OK);
