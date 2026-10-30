@@ -1,0 +1,50 @@
+name: M0 PLAN027 H478 generator select Win UDP buffer real A B
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h478-generator-win-audit.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  gate-three-native:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-h478]') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify source and exact unchanged prebuilt binaries, local fixture regressions
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/41002998813" --jq .head_sha)" = 'a61eef334068512b00a1db3137a51f3d0489020c'
+          gh api "repos/$GH_REPO/actions/runs/41002998813/artifacts" --paginate --jq '.artifacts[].name' > "$RUNNER_TEMP/product-artifacts"
+          grep -Fx 'm0-wl-windows-product-binaries-a61eef334068512b00a1db3137a51f3d0489020c' "$RUNNER_TEMP/product-artifacts"
+          grep -Fx 'm0-plan024-linux-product' "$RUNNER_TEMP/product-artifacts"
+          python -m unittest -q tests.test_m0_wl_rate_utils tests.test_m0_wl_udp_socket_telemetry tests.test_m0_wl_perf_v2_config
+          python -m py_compile tools/m0_wl_rate_utils.py tools/m0_wl_public_rate_app.py tools/m0_wl_udp_socket_telemetry.py
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          scenes=[('scenarios/plan027-c-normal-10m-25ms-loss0-60s.json','normal',10,25,0),
+                  ('scenarios/plan027-c-normal-100m-25ms-loss0-60s.json','normal',100,25,0),
+                  ('scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json','fixed',10,250,30)]
+          for name,mode,rate,ms,loss in scenes:
+              c=read_scenario(name)
+              assert c['public_mode']==mode and c['duration_s']==60
+              for side in ('windows_to_linux','linux_to_windows'):
+                  assert (c[side]['offered_mbps'],c[side]['delay_ms'],c[side]['loss_pct'])==(rate,ms,loss)
+              print('H478_FIXED_BINARY_BEFORE_AFTER_SCENARIO',name,c['scenario_sha256'])
+          PY
+          for entry in 'normal scenarios/plan027-c-normal-10m-25ms-loss0-60s.json' 'normal scenarios/plan027-c-normal-100m-25ms-loss0-60s.json' 'fixed scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json'; do
+            read -r mode scene <<< "$entry"
+            gh workflow run m0-wl-public-normal-full.yml --ref main \
+              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="$scene" \
+              -f perf_reuse_run_id=41002998813 \
+              -f perf_binary_source_sha=a61eef334068512b00a1db3137a51f3d0489020c
+            echo "H478_DISPATCHED_REAL_OS mode=$mode scenario=$scene"
+          done

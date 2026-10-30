@@ -65,6 +65,9 @@ class V2Scenarios(unittest.TestCase):
   self.assertIn('sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, receiver_rcvbuf_request)',app)
   self.assertIn('"requested_socket_rcvbuf_bytes":receiver_rcvbuf_request',app)
   self.assertIn('socket_start=udp_socket_probe(sock) if profile_name=="v2" else None',app)
+  self.assertIn('select.select([sock],[],[],wait)',app)
+  self.assertIn('KERNEL_SELECT_UNTIL_RX_OR_NEXT_BUDGET',app)
+  self.assertIn('first_arrival_bitmap_bytes',app)
  def test_plan027_a2_a3_real_bidirectional_scenes_are_separate_and_bounded(self):
   for name,mode,loss in (
    ("plan027-a2-normal-10m-250ms-0loss-60s","normal",0),

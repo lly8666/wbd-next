@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "old_product_source": "a61eef334068512b00a1db3137a51f3d0489020c",
+  "fixture_change_only": true,
+  "date": "2026-10-30",
+  "before": [
+    {
+      "action": 41000374541,
+      "scenario": "Normal10M25ms0",
+      "windows_sender_cpu_pct_one_core": 86.731,
+      "windows_loop_count": 9155002,
+      "first": {
+        "windows": 1,
+        "linux": 1
+      }
+    },
+    {
+      "action": 41004888921,
+      "scenario": "Normal100M25ms0",
+      "windows_sender_cpu_pct_one_core": 82.212,
+      "windows_first_fraction": 0.999587,
+      "windows_consecutive_missing_source_ids": {
+        "start": 111353,
+        "end_exclusive": 111764,
+        "count": 411
+      },
+      "npf_drop_delta": 0,
+      "netem_drop_both": 0,
+      "windows_socket_rcvbuf_effective_bytes": 4194304,
+      "linux_socket_rcvbuf_effective_bytes": 8388608
+    },
+    {
+      "action": 41004892952,
+      "scenario": "Normal50M25ms0 300s",
+      "windows_sender_cpu_pct_one_core": 79.959,
+      "windows_long_missing_burst": 141,
+      "netem_drop_both": 0,
+      "npf_drop_delta": 0
+    },
+    {
+      "action": 41004890965,
+      "scenario": "Fixed10M250ms30pct",
+      "windows_sender_cpu_pct_one_core": 89.375,
+      "win_residual_first_loss": 0.003717,
+      "linux_residual_first_loss": 0.000734,
+      "win_npf_drop_delta": 0,
+      "linux_udp_socket_drops": 0
+    },
+    {
+      "action": 41005956082,
+      "scenario": "Normal200M25ms0",
+      "linux_generator_actual_offered_mbps": 118.2412,
+      "linux_generator_cpu_one_core_pct": 94.32,
+      "linux_guest_socket_drops": 9204,
+      "qualified": false
+    }
+  ],
+  "hypotheses": [
+    "Python fixture busy-spin contention",
+    "Windows fixture receive buffer much smaller than Linux; backlog possible",
+    "Actual Windows OS UDP, Wintun and/or product M4 burst possible; not proved by tcp NPF0"
+  ],
+  "fixes": [
+    "event-driven send credit and receive wait with real socket select",
+    "bounded first arrival bitmap one bit/sequence instead of unbounded Python set",
+    "Windows V2 only SO_RCVBUF request16MiB and effective readback",
+    "Windows GetUdpStatistics IPv4 machine-global error delta explicitly not per socket"
+  ],
+  "tests_pending": [
+    "after C10 60s",
+    "after C100 zero injected loss 60s",
+    "after Fixed10M250ms30pct 60s"
+  ],
+  "post_results": "NOT_RUN",
+  "no_unverified_pass": true
+}

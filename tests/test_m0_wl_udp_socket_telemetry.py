@@ -5,6 +5,22 @@ from pathlib import Path
 from tools.m0_wl_udp_socket_telemetry import parse_udp_mib,parse_udp_socket,delta,parse_linux_raw_sockets,raw_sockets_delta,raw_socket_product_owners
 
 class LinuxUdpSocketTelemetryTests(unittest.TestCase):
+    def test_windows_host_ipv4_udp_not_per_socket_and_wrap_fails_closed(self):
+        import ctypes
+        from tools.m0_wl_udp_socket_telemetry import _windows_udp_ipv4_stats
+        def fake(ptr):
+            words=(ctypes.c_uint32*5).from_address(ctypes.cast(ptr,ctypes.c_void_p).value)
+            words[0]=100;words[1]=4;words[2]=7;words[3]=140;words[4]=2
+            return 0
+        self.assertEqual(_windows_udp_ipv4_stats(fake),
+                         {"in_datagrams":100,"no_ports":4,"in_errors":7})
+        a={"windows_host_ipv4_udp_stats":{"in_datagrams":10,"no_ports":0,"in_errors":2}}
+        b={"windows_host_ipv4_udp_stats":{"in_datagrams":30,"no_ports":4,"in_errors":7}}
+        self.assertEqual(delta(a,b)["windows_host_ipv4_udp_deltas"],
+                         {"in_datagrams_delta":20,"in_errors_delta":5,"no_ports_delta":4})
+        self.assertIsNone(delta(b,a)["windows_host_ipv4_udp_deltas"]["in_errors_delta"])
+        self.assertIsNone(delta({},{}).get("windows_host_ipv4_udp_deltas"))
+
     def test_exact_socket_inode_not_other_udp_apps(self):
         header="sl local_address rem_address st tx_queue tr tm->when retrnsmt uid timeout inode ref pointer drops"
         line1="1: 0100007F:B34F 00000000:0000 07 00000000:0000ABCD 00:00000000 00000000 0 0 1234 2 00000000 57"

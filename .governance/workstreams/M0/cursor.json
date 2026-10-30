@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 477,
-  "checkpoint_sha": "a64011ecebc413b55d72143e9d19748a34a7b8fd",
+  "sequence": 478,
+  "checkpoint_sha": "f3df31ca3048269d4c1d6a99f00284d109052d26",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H477 source-frozen 2 extra authentic two-OS network loss30 witnesses queued: Normal/off10M250ms30% baseline and Game4-fec max 20M250ms30% with same original binary a61; H475 A4 240s currently running. No PASS until artifact.",
-  "why_now": "H468 Fixed30 PASS cannot be compared to Normal/off under same loss until real separate original mode. Game4-FEC capped <=20M required C and B reality. One-VM Action per scene, shared prebuilt, no product rebuild.",
+  "current_task": "H478 Windows rate app busy-poll CPU + unexplained 0-loss Windows first-source bursts: V2 select kernel RX/pacing, bounded 1-bit first-arrival bitmap, Win receiver 16MiB SO_RCVBUF requested/effective readback, GetUdpStatistics machine-global IPv4 UDP in_errors/no_ports (NOT socket scope). CI and true same-product native A/B pending.",
+  "why_now": "C10 win generator86.7% one core/9.155m ticks, Fixed30 win generator89.375%/6.8m ticks; C100 loss0 Windows one consecutive 411-source gap (NPF delta0, tc drops0), C50 300s Windows one 141-gap, Windows effective UDP recv socket4MiB vs Linux8MiB; Fixed30 first-delivery Windows99.6283% vs Linux99.9266%. Real source instrumentation required not speculative FEC or product patch.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H477 two real result reports with business denominator, Stop, native CPU/recv kernel drops and artifact identity; H475 A4 stage readback; resolve A5 old-Go baseline and C200 generator cap.",
+  "next_action": "H478 verify Python unit + bounded first accounting then independent native C10/C100/Fixed30 source-reused Actions; inspect actual win app cpu and first burst, Windows host global UDP error deltas (not per socket), Win SO_RCVBUF getsockopt, kernel qdisc and owned Stop. If zero-loss bursts persist, isolate Wintun queue vs Python receiver using OS metrics. No premature product claim.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①Product unchanged source a61e H466 real seven mode functional PASS, A1 units PASS. ②H467 Auto10 60s 100%/Stop PASS, Linux server actual low-rate VALID slow window revision2 profile4 requested=applied PASS; H468 Fixed10/250ms/30% residual Windows0.3717% Linux0.0734%, Stop PASS; A4 multistage/A5 pending. ③B 7 mode native short PASS, lifecycle 90s/idle/rekey/blackhole OPEN. ④C Normal 10/50/100Mbps graded genuine PASS, C100 99.9587% Windows first, 100% Linux first; H468 C50 300s pending, H469 C200/A5/Auto119 dispatched gated. ⑤F/R/C, one-way calibrated p99, weak loss, representative Game pending; no final readiness."
+  "partial_summary": "H478 generator+fixture scoped only, original Go/Rust production binary a61eef3 remains unchanged. Pre source reference: C10 Win gen ~86.731% single core, C100 Windows missing contiguous 411 at zero netem/NPF drop, Fixed30 Windows residual .3717% vs Linux .0734%, C200 Linux generator underoffer118Mbps/200 and 9204 guest socket drops. OS select/bounded bitmap/win RCVBUF and host-global MIB added, post real tests NOT_RUN. PLAN027 five criteria OPEN, partial."
 }

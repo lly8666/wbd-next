@@ -212,10 +212,16 @@ while True:
     # pacing credit is insufficient; fixed 800us sleep throttled the
     # Python generator long before the 250Mbps native product was stressed.
     if stress:
-        if credit < min(sizes):
-            time.sleep(.00005)
-        elif loop_count%8==0:
-            time.sleep(0)
+        # Kernel-assisted UDP readiness replaces millions of 50us hot polls.
+        # Preserve precise byte-credit, packet mix, sparse RTT and RX drain.
+        tick=time.monotonic()
+        updated_credit=min(rate_bytes_per_sec/20,
+                           credit+max(0.0,tick-last_credit)*rate_bytes_per_sec)
+        wait=rate_wait_seconds(tick,start+duration,start+duration+drain,
+                               updated_credit,sizes[sent % len(sizes)],
+                               rate_bytes_per_sec,probe_next)
+        if wait>0:
+            select.select([sock],[],[],wait)
     else:
         time.sleep(.0008)
 socket_end=udp_socket_probe(sock,include_raw_owners=True) if socket_start is not None else None
@@ -271,6 +277,10 @@ result={
     "reused_payload_buffer":stress,
     "reused_receive_slab":stress,
     "requested_socket_rcvbuf_bytes":receiver_rcvbuf_request,
+    "effective_socket_rcvbuf_bytes":receiver_rcvbuf_effective,
+    "sender_wait_mode":"KERNEL_SELECT_UNTIL_RX_OR_NEXT_BUDGET" if stress else "LEGACY_POLL",
+    "first_arrival_storage":"BOUNDED_ONE_BIT_PER_SOURCE",
+    "first_arrival_bitmap_bytes":first.storage_bytes,
     "sent_packets":sent,"sent_payload_bytes":sent_bytes,
     "sent_payload_mbps":round(sent_bytes*8/(duration*1e6),4),
     "received_first_packets":len(first),
@@ -289,8 +299,10 @@ result={
     "udp_socket_probe_end":socket_end,
     "udp_socket_probe_deltas":udp_socket_delta(socket_start,socket_end) if socket_start is not None else None,
     "udp_socket_1hz":socket_timeline if socket_start is not None else None,
-    "udp_probe_scope":"LINUX_SOCKET_INODE_AND_GUEST_GLOBAL_MIB_EXCLUDES_WINDOWS"
-                      if socket_start is not None else "NOT_MEASURED_LEGACY",
+    "udp_probe_scope":("LINUX_SOCKET_INODE_AND_GUEST_GLOBAL_MIB" if sys.platform=="linux"
+                       else "WINDOWS_HOST_GLOBAL_IPV4_UDP_ERRORS_NOT_PER_SOCKET"
+                       if sys.platform=="win32" else "PLATFORM_COUNTERS_UNAVAILABLE")
+                       if socket_start is not None else "NOT_MEASURED_LEGACY",
     "business_udp_rtt":summarize_rtt(probe_rtt_ms,probes_sent),
     "business_udp_rtt_send_errors":probe_send_errors,
     "application_oneway_p99":"NOT_MEASURED_UNCALIBRATED_WINDOWS_LINUX_CLOCKS",

@@ -80,6 +80,39 @@ def raw_socket_product_owners(inodes,proc_root="/proc"):
                               "identity":"EXACT_PROC_FD_SOCKET_INODE"}
     return found
 
+def _windows_udp_ipv4_stats(fetch=None):
+    """Read Windows IPv4 machine-global UDP MIB; never claim per-socket drops."""
+    import ctypes
+    class UdpStats(ctypes.Structure):
+        _fields_=[("dwInDatagrams",ctypes.c_uint32),
+                  ("dwNoPorts",ctypes.c_uint32),
+                  ("dwInErrors",ctypes.c_uint32),
+                  ("dwOutDatagrams",ctypes.c_uint32),
+                  ("dwNumAddrs",ctypes.c_uint32)]
+    if fetch is None:
+        if sys.platform!="win32":return None
+        try:
+            fetch=ctypes.WinDLL("iphlpapi").GetUdpStatistics
+            fetch.argtypes=[ctypes.POINTER(UdpStats)]
+            fetch.restype=ctypes.c_ulong
+        except (OSError,AttributeError):return None
+    result=UdpStats()
+    try:
+        if fetch(ctypes.byref(result))!=0:return None
+    except (OSError,TypeError):return None
+    return {"in_datagrams":int(result.dwInDatagrams),
+            "no_ports":int(result.dwNoPorts),
+            "in_errors":int(result.dwInErrors)}
+
+def _windows_ipv4_udp_delta(first,last):
+    a=first.get("windows_host_ipv4_udp_stats") if first else None
+    b=last.get("windows_host_ipv4_udp_stats") if last else None
+    if not isinstance(a,dict) or not isinstance(b,dict):return None
+    return {key+"_delta":(b[key]-a[key]
+            if type(a.get(key)) is int and type(b.get(key)) is int
+            and b[key]>=a[key] else None)
+            for key in ("in_datagrams","in_errors","no_ports")}
+
 def _read(path):
     try:return pathlib.Path(path).read_text(encoding="ascii")
     except (OSError,UnicodeError):return None
@@ -97,7 +130,12 @@ def snapshot(sock, include_raw_owners=False):
             "linux_guest_rmem_default_bytes":None,
             "linux_raw_socket_snapshot":None,
             "linux_raw_socket_owners":None,
-            "linux_raw_socket_scope":"WSL_GUEST_GLOBAL_AF_INET_RAW_NOT_ONE_PRODUCT_INODE"}
+            "linux_raw_socket_scope":"WSL_GUEST_GLOBAL_AF_INET_RAW_NOT_ONE_PRODUCT_INODE",
+            "windows_host_ipv4_udp_stats":None,
+            "windows_udp_scope":"MACHINE_GLOBAL_IPV4_NOT_PER_SOCKET"}
+    if sys.platform=="win32":
+        result["windows_host_ipv4_udp_stats"]=_windows_udp_ipv4_stats()
+        return result
     if sys.platform!="linux":return result
     try:inode=os.fstat(sock.fileno()).st_ino
     except OSError:return result
@@ -131,6 +169,7 @@ def delta(first,last):
         a=first.get(key) if first else None
         b=last.get(key) if last else None
         out[key+"_delta"]=(b-a if type(a) is int and type(b) is int and b>=a else None)
+    out["windows_host_ipv4_udp_deltas"]=_windows_ipv4_udp_delta(first,last)
     out["linux_raw_socket_deltas"]=raw_sockets_delta(
         first.get("linux_raw_socket_snapshot") if first else None,
         last.get("linux_raw_socket_snapshot") if last else None)
