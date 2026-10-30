@@ -1,0 +1,11 @@
+# PLAN027 H521 — H516 signed original real no-loss PASS, H520 one-source loss fanout hard gated
+
+[H516 Action41058943121](https://github.com/lly8666/wbd-next/actions/runs/41058943121) source `6f5cd093a2758d666e867db229e63ec307707f65` **completed success**, actual original Go credential TLS and signed Windows NPF/Wintun ↔ Linux WSL2 Rust raw/TUN under 10Mbps each/25ms/0%/60s. Actual original kernel tc eth0 and ifb netem drops 0, offered 9.9973Mbps/10Mbps, receiver first delivery 1.0/1.0, Stop PASS_BOTH_OWNED. Windows genuine STOP ledger: **F=86,398,163B, R accepted=0, R uncertain=0, C=226,447B, packets=0**. Full product original source, scenario SHA, Go/Rust binary SHA, artifact id12979226003 and downloaded ZIP SHA `2808a29205a7d45931741f268b40b41555e43bba3f09628b045c4bcb82df3fa6` in [H521 evidence](../evidence/M0/PLAN027-H521-H516-TRUE-ORIGINAL-SACK-NOLOSS-20261030.json). Linux R/F not asserted. This is no-loss baseline and **does not include H517 busy-TX SACK fix**.
+
+H520 source `7a5d7e83823e96539d2a904a8193a85ec18df30d` composes original Go cold SACK, Linux bound raw SACK RX/TX, Windows native RX/TX, H517 native busy TX fairness and H519 separate signal grade. Its full **fresh** original binary/no-loss Action [41060763175](https://github.com/lly8666/wbd-next/actions/runs/41060763175) is still running, not a PASS. New H521 `workflow_run` guard is tied to only this exact workflow run ID/source/branch/event/success, validates true two-OS report, original Go source both ends, F/R/C joined Rust STOP, <=0.1% no-loss R/F, both receiver >=99.9% and actual tc eth0/ifb zero, and immutable two-OS binary artifacts **before** dispatching exactly four independent 1/5/10/30% real-netem 50Mbps/150ms/60s runs using **the same frozen binaries**. No blind DATA retry, forced R ratio, or retroactive Action laundering. If H520 fails, the workflow never launches loss tiers.
+
+PLAN027 five original obligations remain open: no H520 damaged SACK R yet, A4 mature bilateral grade/A5 original Go AB failure, two GameFEC canceled, Windows B scenarios, C impaired/stress/5-minute coverage.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Source-scoped external native evidence and a fail-closed one-event workflow with fixed source/checks; product feature and safe runtime settings unchanged."}
+```

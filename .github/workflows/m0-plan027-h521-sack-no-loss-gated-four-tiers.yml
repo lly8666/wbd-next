@@ -1,0 +1,80 @@
+name: M0 PLAN027 H521 exact source H520 real no-loss gated four loss tiers
+on:
+  workflow_run:
+    workflows: ["M0 Windows Linux original native whole-wiring capability and functional entry"]
+    types: [completed]
+permissions: {contents: read, actions: write}
+jobs:
+  source-locked-four-loss-tiers:
+    if: >-
+      github.event.workflow_run.id == 41060763175 &&
+      github.event.workflow_run.head_sha == '7a5d7e83823e96539d2a904a8193a85ec18df30d' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.event == 'workflow_dispatch' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 7a5d7e83823e96539d2a904a8193a85ec18df30d
+          persist-credentials: false
+      - name: Verify one genuine original two-OS Normal/no-loss source before ANY damaged dispatch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          src=7a5d7e83823e96539d2a904a8193a85ec18df30d
+          run=41060763175
+          test "$(git rev-parse HEAD)" = "$src"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$run" --jq '.head_sha')" = "$src"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$run" --jq '.conclusion')" = success
+          gh api "repos/$GH_REPO/actions/runs/$run/jobs" --jq '.jobs[] | select(.name=="native-public-two-os" and .conclusion=="success") | .id' > "$RUNNER_TEMP/native-jobs"
+          test -s "$RUNNER_TEMP/native-jobs"
+          gh api "repos/$GH_REPO/actions/runs/$run/artifacts" --jq '.artifacts[].name' > "$RUNNER_TEMP/bins"
+          grep -Fx "m0-wl-windows-product-binaries-$src" "$RUNNER_TEMP/bins"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/bins"
+          grep -Fx m0-wl-full-public-normal-direct "$RUNNER_TEMP/bins"
+          mkdir -p "$RUNNER_TEMP/real"
+          gh run download "$run" --repo "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/real"
+          export RESULT_PATH="$RUNNER_TEMP/real"
+          python - <<'PY'
+          import json,os,pathlib,re
+          from tools.m0_wl_perf_v2_config import read_scenario
+          root=pathlib.Path(os.environ['RESULT_PATH'])
+          scene=read_scenario('scenarios/plan027-c-normal-10m-25ms-loss0-60s.json')
+          r=json.loads((root/'report.json').read_text())
+          v=r['WL_V2']
+          assert r['source']=='7a5d7e83823e96539d2a904a8193a85ec18df30d' and r['linux_binary_source']=='7a5d7e83823e96539d2a904a8193a85ec18df30d'
+          assert r['stop']=='PASS_BOTH_OWNED' and r['mode_public'].startswith('PASS_ACTUAL_')
+          assert v['status']=='MEASURED_BOTH_OS_KERNEL' and v['scenario_sha256']==scene['scenario_sha256']
+          assert v['owned_stop']=='PASS_BOTH_OWNED'
+          assert all(v['first_delivery_fraction'][side]>=.999 for side in ('windows','linux'))
+          t=json.loads((root/'wl-n0-netem-after.json').read_text())
+          assert all(len([q for q in t[side] if q['kind']=='netem'])==1 for side in ('eth0','ifb'))
+          assert all(next(q['drops'] for q in t[side] if q['kind']=='netem')==0 for side in ('eth0','ifb'))
+          s=(root/'mode-results/normal/client.log').read_text(errors='replace')
+          match=re.findall(r'WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=(\d+) repair_accepted_wire_bytes=(\d+) repair_uncertain_wire_bytes=(\d+) control_wire_bytes=(\d+) repair_packets=(\d+) r_to_f_ppm=(\d+) r_to_total_ppm=(\d+) joined=true',s)
+          assert len(match)==1, 'missing original Rust final Stop ledger'
+          f,ra,ru,k,p,rf,rt=map(int,match[0])
+          assert f>0 and (ra+ru)*1000<=f, 'no-loss phantom outer R'
+          print('H521_REAL_ZERO_LOSS_SOURCE_AND_STOP_GATE_PASS',scene['scenario_sha256'],f,ra+ru,k)
+          PY
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          for loss in (1,5,10,30):
+              p=f'scenarios/wl-outer-repair-50m-150ms-loss{loss}-60s.json'
+              cfg=read_scenario(p)
+              assert cfg['duration_s']==60 and cfg['public_mode']=='normal'
+              assert all(cfg[d]['loss_pct']==loss and cfg[d]['offered_mbps']==50 for d in ('windows_to_linux','linux_to_windows'))
+              print('H521_SAME_SOURCE_TRUE_DAMAGE_SCENE',loss,cfg['scenario_sha256'])
+          PY
+          for loss in 1 5 10 30; do
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode=normal -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="scenarios/wl-outer-repair-50m-150ms-loss${loss}-60s.json" \
+              -f perf_reuse_run_id="$run" -f perf_binary_source_sha="$src"
+            echo "H521_DISPATCHED_ONE_NATIVE_DAMAGE_ACTION loss=${loss} source=${src}"
+          done

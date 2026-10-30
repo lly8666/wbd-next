@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "scope": "ACTUAL_SIGNED_WIN2025_NPCAP_WINTUN_WSL2_LINUX_RUST_RAW_TUN_ORIGINAL_GO_TLS_NATIVE_NORMAL_OFF",
+  "original_source_sha": "6f5cd093a2758d666e867db229e63ec307707f65",
+  "action": 41058943121,
+  "scenario": "plan027-c-normal-10m-25ms-loss0-60s",
+  "scenario_sha256": "666b857cc87a6652d2ac9367fd50a2208b543bfefb15d997abc01b35da196adf",
+  "result": "PASS_REAL_ONE_SCENE_ONLY",
+  "seconds": 60,
+  "kernel_tc": {
+    "eth0_netem_drops": 0,
+    "ifb_netem_drops": 0,
+    "delay_ms": 25
+  },
+  "offered_mbps": {
+    "windows": 9.9973,
+    "linux": 10
+  },
+  "first_delivery_fraction": {
+    "windows": 1,
+    "linux": 1
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "windows_outer_wire_bytes": {
+    "first": 86398163,
+    "repair_accepted": 0,
+    "repair_uncertain": 0,
+    "control": 226447,
+    "repair_packets": 0,
+    "R_over_F": 0,
+    "R_over_F_plus_R_plus_C": 0
+  },
+  "zip_sha256": "2808a29205a7d45931741f268b40b41555e43bba3f09628b045c4bcb82df3fa6",
+  "artifact_id": 12979226003,
+  "binaries_sha256": {
+    "windows_go_exe": "0584e40da19061e0dd7fd7f3f40300abe4685c0d95189af4a70411618601bfed",
+    "windows_rust_dll": "a1bcb774fe6f1480c1221dc7d2dbb4ed6f2f483f68043066162eff9479de0a66",
+    "linux_server": "fa7ccf65a0e5f10573644940ac03713de196b3f9caaf563015dd979e28ff98f0"
+  },
+  "limitations": [
+    "No injected damage, no graded 1/5/10/30% opportunity proof",
+    "Source6f5 pre-dates H517 Windows busy-TX SACK starvation correction; no H517 product promotion",
+    "Linux R/F not asserted from this H516 artifact; only authentic source+Stop and Windows wire R zero",
+    "No A5 CPU AB, no Windows lifecycle B, no Auto sustained 120s grade or full capacity"
+  ]
+}

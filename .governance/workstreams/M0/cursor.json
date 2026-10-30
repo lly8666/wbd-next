@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 520,
-  "checkpoint_sha": "80a6be4177bb11881e4af13064789f26a9be1bcd",
+  "sequence": 521,
+  "checkpoint_sha": "7a5d7e83823e96539d2a904a8193a85ec18df30d",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H520 new-source original product gate: H516 main6f5 all Windows Rust/Go and Linux Rust unit tests plus original two-OS product binary built PASS, genuine 0% native still in progress. H517 source3c70 fixes Windows ACK-only verified SACK TX starvation under continuous DATA and tests pass, H518 and H519 original CI/governance PASS. H519 adds explicit product_repair_qualified=false separate from scoped ledger pass. H520 launches only one new H517/H519 real-source native 10M/25ms/0% 60s from exact current main no binary reuse; true SACK loss1/5/10/30 to follow ONLY if no-loss/Stop PASS. H514 Game2 Fixed50 PASS; GameFEC canceled, A5 baseline FAIL.",
-  "why_now": "H519 exact compiler/harness/governance green; H516 pre-fairness native product source6f5 is not sufficient to qualify H517 Windows nonstarved SACK on continuous traffic. One new true native binary source is necessary; no unqualified old reuse.",
+  "current_task": "H521 H516 source6f5 same-source original Go TLS Windows signed NPF/Wintun↔Linux WSL2 raw/TUN Normal/off 10M each/25ms/0%/60s genuine native Action41058943121 SUCCESS: first100% both, Win R=0 F86398163 C226447 R/F0, owned Stop PASS; original binary hashes + ZIP SHA in H521 evidence. Source6f5 pre-H517 Windows busy-TX SACK fix. H520 source7a includes fairness+diagnostic grade, exact fresh native action41060763175 in progress; install fail-closed one-event 0%→four actual 1/5/10/30 source-reuse dispatcher. H514 GameFEC CANCELLED, A5 original Go baseline FAIL; other PLAN027 tasks active.",
+  "why_now": "H516 now supplies actual valid no-loss first100% and no phantom Windows R. To efficiently measure new H520 source's true loss-correlated SACK under real netem with identical artifacts, ensure fail-closed no-loss gated four Actions without re-building each, and preserve exact source evidence.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H520 new-source real 0% Action and confirm signed NPF/Wintun↔WSL2 original TLS/owned Stop, F/R/C, no-loss repair grade. Reuse exact built artifact source for 1/5/10/30% true TC; investigate SACK cadence/repair opportunity rather than budget padding. Then A5 original Go AB, GameFEC, Windows B, Auto A and C stability. All five obligations ACTIVE.",
+  "next_action": "Once H520 Action41060763175 completes, gated H521 workflow verifies true no-loss report, TC zero, first both >=.999, Stop, Windows R/F<=0.001 and both real binary manifest artifacts; only then one-source 1/5/10/30 Actions with frozen binary source7a. Record real F/R/C, receiver app, SACK and Stop. If none, diagnose, no synthetic R or READY. Return to A5 old Go AB, GameFEC and B Windows lifecycle.",
   "unverified": true,
   "last_tested_source": "1644df34d241d487c5c5eb704a1a0a2e5f506f5e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H513-SOURCE1644-TRUE-NATIVE-RECOVERY-20261030.json"
+    "docs/evidence/M0/PLAN027-H521-H516-TRUE-ORIGINAL-SACK-NOLOSS-20261030.json"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md",
