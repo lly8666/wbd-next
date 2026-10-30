@@ -61,3 +61,15 @@ jobs:
               -f perf_reuse_run_id="$run" -f perf_binary_source_sha="$src"
             echo H506_NEW_BINARY_INDEPENDENT_50M_150MS_LOSS=$p
           done
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario('scenarios/plan027-c-normal-50m-25ms-loss0-300s.json')
+          assert s.get('public_mode','normal')=='normal' and s['duration_s']==300
+          assert all(s[x]['offered_mbps']==50 and s[x]['loss_pct']==0 for x in ('windows_to_linux','linux_to_windows'))
+          print('H509_ONE_REPRESENTATIVE_5MIN_REAL_NATIVE_STABILITY',s['scenario_sha256'])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-c-normal-50m-25ms-loss0-300s.json \
+            -f perf_reuse_run_id="$run" -f perf_binary_source_sha="$src"
+          echo H509_SOURCE_PINNED_NORMAL_50M_300S_SINGLE_STABILITY_SCENE
