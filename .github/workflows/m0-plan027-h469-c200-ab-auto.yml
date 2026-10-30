@@ -1,3 +1,4 @@
+# H470 retry after fixing H469 cheap test indentation; e10 children cheap-only failure, not physical tests.
 # H469: one SOURCE-verified reused build, three separate truly native Actions.
 name: M0 PLAN027 H469 C200 source gate and A5 same VM AB plus Auto natural descent
 on:
