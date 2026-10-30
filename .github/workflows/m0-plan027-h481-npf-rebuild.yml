@@ -1,3 +1,4 @@
+# H482 fix Python literal escapes (one backslash), H481 cheap unit failed before native rebuild.
 name: M0 PLAN027 H481 exact original Windows NPF 16MiB source rebuild C100
 on:
   push:

@@ -76,7 +76,7 @@ def install_pinned_npcap_kernel_capture_buffer(root, legacy, output):
         worktree = file.read_bytes()
         # Checkout may apply Windows core.autocrlf. Convert only the exact
         # unmodified original baseline before provenance check.
-        need(worktree.replace(b"\\r\\n", b"\\n") == original,
+        need(worktree.replace(b"\r\n", b"\n") == original,
              "original Npcap source changed: " + relative)
         if worktree != original:
             file.write_bytes(original)

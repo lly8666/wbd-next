@@ -1,0 +1,3 @@
+# H482 source manifest digest test correction
+
+H481 workflow Action41011345813 ended BEFORE driver/native/product build at strict static test of original overlay blob, because Python unit wrote b"\\\\0" (literal backslash and zero) rather than the required single Git blob NUL byte. The manifest and overlay were correct and must remain unchanged. H482 fixes Python test to b"\\0" and Windows checkout CRLF normalization literals to actual CR/LF escapes, re-triggers H481 source-frozen NEW real Windows Go+Rust and Linux peer C100 build. Failure preserved. At H482 commit physical result pending; no PASS or root-cause conclusion.

@@ -25,7 +25,7 @@ class WindowsNpcapRingTests(unittest.TestCase):
   import json,hashlib
   p=ROOT/"r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go"
   b=p.read_bytes()
-  digest=hashlib.sha1(b"blob "+str(len(b)).encode()+b"\\0"+b).hexdigest()
+  digest=hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
   spec=json.loads((ROOT/"r0/go_overlay/assembly/manifest-plan020-m0.json").read_text())
   ops=[o for o in spec["operations"] if o.get("overlay_path")=="r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go"]
   self.assertEqual(len(ops),1)
