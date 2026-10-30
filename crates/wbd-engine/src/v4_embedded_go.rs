@@ -3941,6 +3941,8 @@ fn background_raw_once(
     let mut invalid_seen=false;
     let mut authenticated_control=false;
     #[cfg(feature="fec2_product_record")]
+    let mut outer_only_valid=false;
+    #[cfg(feature="fec2_product_record")]
     let mut outer_hint=None::<u32>;
     #[cfg(feature="fec2_product_record")]
     let(mut authenticated_at,mut business_at,mut peer_idle_hint)=(0u64,0u64,None);
@@ -3953,6 +3955,9 @@ fn background_raw_once(
             })=>(cipher_len,seq32,ack32),
             #[cfg(feature="fec2_product_record")]
             Some(wbd_platform::linux_raw_carrier::RawReadyEntry::PureAck{ack32})=>{
+                // Strict TCP checksum/tuple ACK-only is a legitimate carrier
+                // turn, never a crypto failure or peer Health witness.
+                outer_only_valid=true;
                 outer_hint=Some(ack32);
                 drop(slab);continue
             },
@@ -4131,7 +4136,15 @@ fn background_raw_once(
     // A unique authenticated LINK shard with no completed datagram is
     // healthy progress, not a spurious RX error. A malformed/discarded shard
     // must still register an error even if another pending shard was valid.
-    if invalid_seen || (delivered_total==0 && !pending_valid && !authenticated_control){
+    #[cfg(feature="fec2_product_record")]
+    let valid_optional_ack=outer_only_valid;
+    #[cfg(not(feature="fec2_product_record"))]
+    let valid_optional_ack=false;
+    // An ACK-only native raw batch is a valid optional carrier turn; it
+    // never refreshed Health or delivered app bytes. Before this change
+    // legitimate high-rate ACK batches incremented rx_error continuously.
+    if invalid_seen || (delivered_total==0 && !pending_valid &&
+        !authenticated_control && !valid_optional_ack){
         return Err(INVALID)
     }
     Ok(delivered_total)
