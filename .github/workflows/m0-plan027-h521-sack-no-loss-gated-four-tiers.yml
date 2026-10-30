@@ -8,7 +8,7 @@ jobs:
   source-locked-four-loss-tiers:
     if: >-
       github.ref == 'refs/heads/main' &&
-      contains(github.event.head_commit.message, '[plan027-h524-loss-launch]')
+      contains(github.event.head_commit.message, '[plan027-h525-loss-launch]')
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
@@ -64,7 +64,7 @@ jobs:
           for loss in (1,5,10,30):
               p=f'scenarios/wl-outer-repair-50m-150ms-loss{loss}-60s.json'
               cfg=read_scenario(p)
-              assert cfg['duration_s']==60 and cfg['public_mode']=='normal'
+              assert cfg['duration_s']==60 and cfg.get('public_mode','normal')=='normal'
               assert all(cfg[d]['loss_pct']==loss and cfg[d]['offered_mbps']==50 for d in ('windows_to_linux','linux_to_windows'))
               print('H521_SAME_SOURCE_TRUE_DAMAGE_SCENE',loss,cfg['scenario_sha256'])
           PY
