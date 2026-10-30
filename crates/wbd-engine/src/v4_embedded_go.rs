@@ -798,6 +798,8 @@ struct Entry{
     quality_tx:Option<LinuxQualityTx>,
     #[cfg(feature="fec2_product_record")]
     original_public_feedback_armed:bool,
+    #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+    original_sack_permitted:bool,
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
         any(target_env="gnu",target_env="musl")))]
     auto_low_rate_mode:bool,
@@ -1104,6 +1106,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         quality_tx:None,
         #[cfg(feature="fec2_product_record")]
         original_public_feedback_armed:false,
+        #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+        original_sack_permitted:false,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
             any(target_env="gnu",target_env="musl")))]
         auto_low_rate_mode:false,
@@ -3417,11 +3421,15 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_arm_public_original_m2_feedback(
             e.raw_ifname.is_none(){return BAD_STAGE}
         // Bounded original Go/TLS owner-only policy; never guessed from an
         // unauthenticated packet. Rust AEAD/PN/checksum remain mandatory.
-        e.incoming_peer_persona=match peer_persona{
+        if peer_persona&!5 !=0{return INVALID}
+        e.incoming_peer_persona=match peer_persona&1{
             0=>PacketPersona::Legacy,
             1 if e.server_side=>PacketPersona::Windows11,
             _=>return INVALID,
         };
+        // Bit2 came from original Go SYN/SYN-ACK after credential TLS:
+        // optional outer-only SACK, never a fresh trust or delivery grant.
+        e.original_sack_permitted=peer_persona&4!=0;
         e.original_public_feedback_armed=true;
         OK
     }
@@ -3940,6 +3948,15 @@ impl OriginalPresentationAck{
         }
         self.next as u32
     }
+    fn sacks(&self)->Vec<wbd_platform::ipv4_tcp::SackRange32>{
+        // One authenticated gap may have hundreds of subsequent records.
+        // Four merged positive SACK intervals are enough to nominate the
+        // earlier holes; never allocate or scan the outer repair cache.
+        self.future.iter().take(4).map(|&(start,end)|
+            wbd_platform::ipv4_tcp::SackRange32{
+                start:start as u32,end:end as u32,
+            }).collect()
+    }
 }
 #[cfg(all(test,feature="fec2_product_record",target_os="linux"))]
 mod original_presentation_ack_tests{
@@ -3963,6 +3980,19 @@ mod original_presentation_ack_tests{
         assert_eq!(x.verified(1000,1000),8000);
         assert!(x.future.is_empty());
         assert_eq!(x.verified(7000,20),8000); // duplicate never regresses
+    }
+    #[test]
+    fn h515_real_authenticated_gap_exposes_sack_until_contiguous(){
+        let mut x=OriginalPresentationAck::new(1000);
+        assert_eq!(x.verified(1200,100),1000);
+        assert_eq!(x.verified(1400,100),1000);
+        let sacks=x.sacks();
+        assert_eq!(sacks.len(),2);
+        assert_eq!((sacks[0].start,sacks[0].end),(1200,1300));
+        assert_eq!(x.verified(1000,200),1300);
+        assert_eq!(x.sacks().len(),1);
+        assert_eq!(x.verified(1300,100),1500);
+        assert!(x.sacks().is_empty());
     }
 }
 // Do not hold global registry lock while M4 RX preflight ignores unrelated
@@ -3995,6 +4025,12 @@ fn background_raw_once(
     #[cfg(feature="fec2_product_record")]
     presentation_ack:&mut OriginalPresentationAck,
     #[cfg(feature="fec2_product_record")]
+    sack_negotiated:bool,
+    #[cfg(feature="fec2_product_record")]
+    sack_tx:&ScopedRawIpv4Tx,
+    #[cfg(feature="fec2_product_record")]
+    last_sack_tx_ns:&mut u64,
+    #[cfg(feature="fec2_product_record")]
     feedback:Option<&Arc<Mutex<wbd_recovery::RxFeedbackState>>>,
     #[cfg(feature="fec2_product_record")]
     quality:Option<&Arc<Mutex<LinuxQualityRx>>>,
@@ -4025,6 +4061,11 @@ fn background_raw_once(
     for (dst,slab) in slots.iter_mut().zip(rx_pending.iter_mut()){
         *dst=slab.writable();
     }
+    #[cfg(feature="fec2_product_record")]
+    let batch=raw.receive_kernel_multimsg_with_sack(
+        generation,&mut slots[..slot_count],tuple,peer_persona,sack_negotiated
+    ).map_err(|_|INVALID)?;
+    #[cfg(not(feature="fec2_product_record"))]
     let batch=raw.receive_kernel_multimsg(
         generation,&mut slots[..slot_count],tuple,peer_persona
     ).map_err(|_|INVALID)?;
@@ -4048,6 +4089,8 @@ fn background_raw_once(
     #[cfg(feature="fec2_product_record")]
     let mut outer_hint=None::<u32>;
     #[cfg(feature="fec2_product_record")]
+    let mut outer_sack_hint=Vec::<wbd_recovery::outer_ack::SackRange32>::with_capacity(4);
+    #[cfg(feature="fec2_product_record")]
     let(mut authenticated_at,mut business_at,mut peer_idle_hint)=(0u64,0u64,None);
     // Unused preposted original M1 slabs persist in this RX worker; used
     // ones return through the same bounded per-arena return path.
@@ -4061,7 +4104,20 @@ fn background_raw_once(
                 // Strict TCP checksum/tuple ACK-only is a legitimate carrier
                 // turn, never a crypto failure or peer Health witness.
                 outer_only_valid=true;
+                if outer_sack_hint.is_empty(){outer_hint=Some(ack32);}
+                drop(slab);continue
+            },
+            #[cfg(feature="fec2_product_record")]
+            Some(wbd_platform::linux_raw_carrier::RawReadyEntry::PureAckSack{
+                ack32,sacks,count
+            })=>{
+                outer_only_valid=true;
                 outer_hint=Some(ack32);
+                outer_sack_hint.clear();
+                outer_sack_hint.extend(sacks[..usize::from(count)].iter().map(|s|
+                    wbd_recovery::outer_ack::SackRange32{
+                        start:s.start,end:s.end
+                    }));
                 drop(slab);continue
             },
             _=>{drop(slab);continue},
@@ -4085,7 +4141,7 @@ fn background_raw_once(
         }
         #[cfg(feature="fec2_product_record")]
         if receipt.authenticated_link>0||receipt.authenticated_control{
-            outer_hint=Some(ack32);
+            if outer_sack_hint.is_empty(){outer_hint=Some(ack32);}
             let contiguous=presentation_ack.verified(absolute,len);
             fec_stats.outer_presentation_ack.store(contiguous,Ordering::Release);
         }
@@ -4178,13 +4234,39 @@ fn background_raw_once(
         let lane=owned.shadow.lane();
         let epoch=owned.epoch;
         if let Ok(update)=owned.outer_ack.on_feedback(
-            lane,epoch,ack32,&[],loop_now(),20_000_000
+            lane,epoch,ack32,&outer_sack_hint,loop_now(),20_000_000
         ){
             for pn in update.retired{
                 let _=owned.shadow.discard_outer_ack_hint(pn);
             }
             for pn in update.gap_candidates{
                 let _=owned.shadow.on_outer_gap_hint(pn,loop_now());
+            }
+        }
+    }
+    #[cfg(feature="fec2_product_record")]
+    if sack_negotiated && outer.is_some(){
+        let now=loop_now().0;
+        // One optional ACK-only packet per >=20ms real RX activity, only
+        // while authenticated future bytes prove an actual outer hole.
+        // No empty ACK traffic or extra TLS/AEAD exchange on a lossless link.
+        if now.saturating_sub(*last_sack_tx_ns)>=20_000_000 {
+            let sacks=presentation_ack.sacks();
+            if !sacks.is_empty(){
+                let seq=outer.and_then(|own|own.lock().ok().map(|o|
+                    o.outer_ack.highest_sent_end() as u32));
+                if let Some(seq32)=seq{
+                    let reverse=if server_side{Ipv4Tuple{
+                        src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
+                        src_port:flow.server_port,dst_port:flow.client_port,
+                    }}else{Ipv4Tuple{
+                        src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
+                        src_port:flow.client_port,dst_port:flow.server_port,
+                    }};
+                    if sack_tx.send_presentation_ack_sack(
+                        generation,reverse,seq32,presentation_ack.next as u32,&sacks
+                    ).is_ok(){*last_sack_tx_ns=now;}
+                }
             }
         }
     }
@@ -5902,6 +5984,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let rx_server_side=e.server_side;
     let rx_peer_persona=e.incoming_peer_persona;
     #[cfg(feature="fec2_product_record")]
+    let rx_sack_permitted=e.original_sack_permitted;
+    #[cfg(feature="fec2_product_record")]
+    let raw_sack_tx=Arc::clone(e.raw_tx.as_ref().expect("original raw tx opened"));
+    #[cfg(feature="fec2_product_record")]
     let rx_health_evidence=e.native_health_evidence.as_ref().map(Arc::clone);
     let generation=e.generation;
     // Diagnostic-only, opt-in, at most 2 timestamps/sec per worker.
@@ -5927,6 +6013,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut rx_pending=Vec::<crate::memory::UniqueBuffer>::with_capacity(32);
             #[cfg(feature="fec2_product_record")]
             let mut rx_presentation_ack=OriginalPresentationAck::new(rx_anchor);
+            #[cfg(feature="fec2_product_record")]
+            let mut last_sack_tx_ns=0u64;
             while !stop_rx.load(Ordering::Acquire){
                 #[cfg(feature="fec2_product_record")]
                 if egress_diag && last_egress_diag.elapsed()>=Duration::from_millis(500){
@@ -5954,6 +6042,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     &stats_rx,
                     #[cfg(feature="fec2_product_record")]
                     &mut rx_presentation_ack,
+                    #[cfg(feature="fec2_product_record")]
+                    rx_sack_permitted,
+                    #[cfg(feature="fec2_product_record")]
+                    &raw_sack_tx,
+                    #[cfg(feature="fec2_product_record")]
+                    &mut last_sack_tx_ns,
                     #[cfg(feature="fec2_product_record")]
                     feedback_rx.as_ref(),
                     #[cfg(feature="fec2_product_record")]
