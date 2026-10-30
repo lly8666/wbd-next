@@ -88,11 +88,7 @@ func(e *NpcapEndpoint) NativeCaptureConfig()(NpcapConfig,error){
  if e==nil||e.gate==nil||e.handle==0||e.cfg.Generation==0{
   return NpcapConfig{},ErrNpcapClosed
  }
- // NativeCaptureConfig is the TX-only clone. Do not allocate 16 MiB
- // of nonpaged receive kernel ring for a BPF-rejected TX handle.
- cfg:=e.cfg
- cfg.CaptureBufferBytes=1<<20
- return cfg,nil
+ return e.cfg,nil
 }
 
 
