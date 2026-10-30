@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "date": "2026-10-30",
+  "product_source_sha": "a61eef334068512b00a1db3137a51f3d0489020c",
+  "binary_build_action": 41002998813,
+  "scope": "TRUE_WINDOWS_NPCAP_WINTUN_WSL2_LINUX_GO_TLS_RUST_TUN_NO_SPOOFED_KERNEL_EVIDENCE",
+  "stable": [
+    {
+      "case": "C Normal 10Mbps 25ms loss0 60s",
+      "action": 41000374541,
+      "artifact": 12952983950,
+      "status": "PASS",
+      "delivered_first_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "case": "Auto 10Mbps 25ms loss0 60s",
+      "action": 41003831217,
+      "artifact": 12955111161,
+      "status": "PASS",
+      "delivered_first_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "native_linux_auto_stage": {
+        "revision": 2,
+        "profile": 4,
+        "valid_reason": "30s and 4096 valid sources; one-step down",
+        "readback_applied": 2,
+        "pending": false
+      }
+    },
+    {
+      "case": "C Normal 50Mbps 25ms loss0 60s",
+      "action": 41003834670,
+      "artifact": 12954517062,
+      "status": "PASS",
+      "offered_mbps": {
+        "windows": 49.9866,
+        "linux": 49.9999
+      },
+      "delivered_first_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "case": "C Normal 100Mbps 25ms loss0 60s",
+      "action": 41004888921,
+      "artifact": 12954817739,
+      "status": "PASS",
+      "offered_mbps": {
+        "windows": 99.9532,
+        "linux": 99.9793
+      },
+      "delivered_first_fraction": {
+        "windows": 0.999587,
+        "linux": 1
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "oneway_p99": "NOT_MEASURED"
+    },
+    {
+      "case": "A3 Fixed 10Mbps 250ms loss30pct 60s",
+      "action": 41004890965,
+      "artifact": 12954992256,
+      "status": "PASS",
+      "offered_mbps": {
+        "windows": 9.9973,
+        "linux": 10
+      },
+      "delivered_first_fraction": {
+        "windows": 0.996283,
+        "linux": 0.999266
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "oneway_p99": "NOT_MEASURED"
+    },
+    {
+      "case": "C Normal 50Mbps 25ms loss0 300s",
+      "action": 41004892952,
+      "artifact": 12954879469,
+      "status": "PASS",
+      "offered_mbps": {
+        "windows": 49.9897,
+        "linux": 49.9768
+      },
+      "delivered_first_fraction": {
+        "windows": 0.999942,
+        "linux": 1
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "oneway_p99": "NOT_MEASURED"
+    },
+    {
+      "case": "Auto natural health 119s no injected stage",
+      "action": 41005961263,
+      "artifact": 12956165088,
+      "status": "PASS_ACTUAL_NATIVE_MATURE_REVISION",
+      "native_windows_auto_applied_revision": 3,
+      "native_windows_auto_applied_profile": 3,
+      "first_native_true_applied_1hz_observation_index": 43,
+      "observations_1hz": 122,
+      "stop": "PASS_BOTH_OWNED",
+      "scope_note": "Not A4 low-to-5/15/30-to-low continuous staged case"
+    }
+  ],
+  "blocked": [
+    {
+      "case": "C Normal 200Mbps 25ms loss0 60s",
+      "action": 41005956082,
+      "artifact": 12956110092,
+      "status": "CAPACITY_LIMITED_GENERATOR_OFFER",
+      "offered_mbps": {
+        "windows": 199.8383,
+        "linux": 118.2412
+      },
+      "first_delivery_fraction": {
+        "windows": 0.972213,
+        "linux": 0.686332
+      },
+      "native_win_product_cpu_one_core_pct": 66.49,
+      "stop": "PASS_BOTH_OWNED",
+      "qualification": "NOT_PROVEN_200MBPS; Linux generator and UDP queue pressure observed, product and OS attribution unresolved"
+    },
+    {
+      "case": "A5 same VM CPU A/B B=Rust A=Go steady 10Mbps 25ms loss0 60s",
+      "action": 41005958420,
+      "artifact": 12954794295,
+      "status": "INCONCLUSIVE_OR_FAILED",
+      "rust_leg": {
+        "status": "PASS",
+        "first_delivery_fraction": {
+          "windows": 0.99998995,
+          "linux": 1
+        },
+        "whole_windows_cpu_s": 3.4844,
+        "cpu_seconds_per_first_delivered_GB": 23.2325,
+        "stop": "PASS_BOTH_OWNED"
+      },
+      "go_steady_leg": {
+        "status": "FAIL_NATIVE_WINDOWS_EXIT",
+        "elapsed_s_approx": 28,
+        "windows_process_exit_code": 1,
+        "stop": "NOT_RUN",
+        "failure_marker": "WBD_WINDOWS_NATIVE_FAILURE_SOURCE Npcap M2 batch"
+      },
+      "same_vm_comparable_cpu_ratio": "NOT_MEASURED"
+    }
+  ],
+  "active": [
+    {
+      "case": "A4 uninterrupted five stage Auto 240s",
+      "action": 41007110020,
+      "source_checkout": "d5d6147e438a1a683587ac3b58222321598f715d",
+      "status_at_record": "IN_PROGRESS",
+      "required": [
+        "all real eth0 IFB tc stage readbacks",
+        "actual source-staged 0/5/15/30/0 loss profile",
+        "FEC Auto quality and Apply Native",
+        "first delivery and Stop"
+      ]
+    }
+  ],
+  "still_open": [
+    "B lifecycle/idle/dead/reconnection/rotation",
+    "A5 valid comparable Go native steady leg",
+    "C200 generator+receiver bottleneck isolation",
+    "A4 real staged Auto outcome",
+    "weak loss matrix F/R/C",
+    "one-way calibrated p99"
+  ]
+}
