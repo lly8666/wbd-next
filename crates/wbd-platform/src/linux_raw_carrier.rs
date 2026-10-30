@@ -423,6 +423,7 @@ pub enum RawReadyEntry{
     /// TCP-only, tuple/TTL/checksum/MTU checked; never AEAD-authenticated.
     /// Only eligible as an optional scoped outer cache-retirement hint.
     PureAck {ack32:u32},
+    PureAckSack {ack32:u32,sacks:[ipv4_tcp::SackRange32;4],count:u8},
     Rejected,
     Truncated {wire_len:usize,capacity:usize},
 }
@@ -736,6 +737,42 @@ impl ScopedRawIpv4Tx {
         result
     }
 }
+/// Optional presentation-only ACK/SACK for true authenticated future
+/// ciphertext ranges. Does not allocate a PN or mark any business delivered.
+/// The same scoped raw FD/borrow fence, route/MTU and Stop guard owns TX.
+impl ScopedRawIpv4Tx {
+    pub fn send_presentation_ack_sack(&self,generation:u32,
+        tuple:Ipv4Tuple<'_>,seq32:u32,ack32:u32,
+        sacks:&[ipv4_tcp::SackRange32],
+    )->Result<usize,RawTxError>{
+        if generation!=self.generation{return Err(RawTxError::InvalidScope)}
+        if self.is_stopping(){return Err(RawTxError::Stopped)}
+        let _loan=self.borrow.try_enter_ready().map_err(|e|match e{
+            BorrowError::Stopping=>RawTxError::Stopped,
+            BorrowError::TooManyLoans=>RawTxError::NoCapacity
+        })?;
+        let _lock=self.serialize.lock().map_err(|_|RawTxError::InvalidInterface)?;
+        let dest=checked_destination(tuple)?;
+        let mtu=self.budget.send_budget(dest).map_err(|e|match e{
+            BudgetError::Unavailable=>RawTxError::RouteUnavailable,
+            _=>RawTxError::RouteStale,
+        })?;
+        let mut wire=[0u8;80];
+        let packet=ipv4_tcp::build_presentation_ack_sack(
+            tuple,seq32,ack32,43,PacketPersona::Legacy,mtu,sacks,&mut wire
+        ).map_err(|_|RawTxError::PacketExceedsBudget)?;
+        let addr=SockAddrIn{family:AF_INET as u16,port:0,
+            ip_be:u32::from_ne_bytes(tuple.dst_ip.try_into()
+                .map_err(|_|RawTxError::InvalidPacket)?),zero:[0;8]};
+        let n=unsafe{sendto(self.fd.as_raw_fd(),packet.as_ptr().cast(),packet.len(),
+            MSG_DONTWAIT,(&addr as *const SockAddrIn).cast(),
+            std::mem::size_of::<SockAddrIn>() as u32)};
+        if n<0{return Err(RawTxError::Kernel(errno()))}
+        if n as usize!=packet.len(){return Err(RawTxError::ShortSend)}
+        Ok(n as usize)
+    }
+}
+
 /// Kernel native raw recvmmsg into original owner-borrowed M1 packet slots.
 /// A completed raw packet is NEVER authenticated just by kernel acceptance:
 /// strict trusted tuple/checksum precedes engine AEAD/PN checks. The owner
@@ -744,6 +781,14 @@ impl ScopedRawIpv4Tx {
 impl ScopedRawIpv4Rx {
     pub fn receive_kernel_multimsg(&self,generation:u32,
         buffers:&mut [&mut [u8]],tuple:Ipv4Tuple<'_>,persona:PacketPersona
+    )->Result<RawReadyBatch,RawTxError>{
+        self.receive_kernel_multimsg_with_sack(generation,buffers,tuple,persona,false)
+    }
+    /// Genuine protected FakeTCP cold SACK capability, not a packet-header
+    /// guess. Unnegotiated optional blocks never reach the outer hint index.
+    pub fn receive_kernel_multimsg_with_sack(&self,generation:u32,
+        buffers:&mut [&mut [u8]],tuple:Ipv4Tuple<'_>,persona:PacketPersona,
+        sack_negotiated:bool,
     )->Result<RawReadyBatch,RawTxError>{
         if generation!=self.generation{return Err(RawTxError::InvalidScope)}
         if self.is_stopping(){return Err(RawTxError::Stopped)}
@@ -800,8 +845,16 @@ impl ScopedRawIpv4Rx {
                             // NOT an authenticated business or quality receipt.
                             if let Ok(ack)=parse_ack_packet(&slot[..len],TrustedRx{
                                 tuple,persona,mtu,authenticated_options:None
-                            },false){
-                                out.entries[i]=RawReadyEntry::PureAck{ack32:ack.ack32};
+                            },sack_negotiated){
+                                if ack.sacks().is_empty(){
+                                    out.entries[i]=RawReadyEntry::PureAck{ack32:ack.ack32};
+                                }else{
+                                    let mut sacks=[ipv4_tcp::SackRange32{start:0,end:0};4];
+                                    let count=ack.sacks().len() as u8;
+                                    sacks[..usize::from(count)].copy_from_slice(ack.sacks());
+                                    out.entries[i]=RawReadyEntry::PureAckSack{
+                                        ack32:ack.ack32,sacks,count};
+                                }
                                 continue
                             }
                             // TEST DIAGNOSTIC ONLY: bounded numeric/header-only

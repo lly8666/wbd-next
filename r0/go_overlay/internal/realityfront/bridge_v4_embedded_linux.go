@@ -67,6 +67,7 @@ type v4EmbeddedNativeBridge struct {
     authenticatedPrincipal string
     protectedFeatures uint16
     protectedLane uint8 // original immutable Go TLS negotiated 1..4 lane
+    sackPermitted bool // original Go FakeTCP SYN/SYN-ACK result, not a packet claim
     // M0-only opt-in settings. Actual production config/state still lives
     // in the Go parameter owner and remains FEC2-OFF until product wiring.
     fec2ProbePolicySet bool
@@ -146,6 +147,7 @@ func (b *v4EmbeddedNativeBridge) prepareAuthenticatedClient(
     b.authenticatedPrincipal=cold.Principal()
     b.protectedFeatures=session.negotiatedFeatures
     b.protectedLane=cold.laneID
+    b.sackPermitted=handoff.Peer.SACKPermitted
     b.committed=true
     return nil
 }
@@ -463,6 +465,9 @@ func (b *v4EmbeddedNativeBridge) enableOriginalLowRateAuto()error{
 func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback(peerPersona uint32)error{
     if b==nil||!b.committed||b.stopped||b.handle==0||
         b.protectedEpoch==[16]byte{} {return errV4Embedded}
+    // One cold capability bit on the original scoped bind: the native
+    // receiver may use SACK only when the protected FakeTCP peer agreed.
+    if b.sackPermitted { peerPersona|=4 }
     rc:=C.wbd_m0_embedded_go_arm_public_original_m2_feedback(
         C.uint64_t(b.handle),
         (*C.uchar)(unsafe.Pointer(&b.protectedEpoch[0])),C.size_t(16),C.uint32_t(peerPersona))

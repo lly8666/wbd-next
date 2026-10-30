@@ -129,6 +129,8 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     p.tunnel=verified.TunnelID()
     p.lane=verified.LaneID()
     p.epoch=verified.Epoch()
+    // Real Go SYN/SYN-ACK peer profile, recorded after protected TLS.
+    bridge.sackPermitted=assoc.PeerTCPProfile().SACKPermitted
     if p.cfg.ConfigureTunnelMTU!=nil {
         clientLimit,serverLimit:=verified.RecordLimits()
         if err=p.cfg.ConfigureTunnelMTU(assoc.PeerTCPProfile().MSS,clientLimit,serverLimit);err!=nil{
