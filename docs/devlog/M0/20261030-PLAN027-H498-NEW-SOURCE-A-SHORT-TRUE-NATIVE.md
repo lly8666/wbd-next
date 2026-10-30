@@ -1,0 +1,13 @@
+# PLAN027 H498 — recovered new-product three real native A short scenarios
+
+Same actual original product `SOURCE 787ad4c900f3bae867c5c9556c4702339deef8cb` build Action [41025962277](https://github.com/lly8666/wbd-next/actions/runs/41025962277) reused after H495 exact source/readback gate Action [41028324612](https://github.com/lly8666/wbd-next/actions/runs/41028324612) PASS. Each subsequent independently hosted Windows2025 signed NPF/Wintun ↔ WSL2 Linux original Go TLS/Rust job has one scenario, no recompile, genuine tc/kernel and both owned Stop. Actual artifacts and ZIP SHA256 in H498 [evidence](../evidence/M0/PLAN027-H498-NEW-SOURCE-A-C10-FIXED30-AUTO-20261030.json).
+
+- [41028345925](https://github.com/lly8666/wbd-next/actions/runs/41028345925) Normal/off C10 each direction 25ms 0% 60s: genuine source packets 99498/99551 and all unique first 99498/99551 received, 0 missing, kernel original TUN/fq drop0, Stop PASS; Windows whole EXE 5.352% of one logical core, RTT p99 47/52.42ms.
+- [41028348498](https://github.com/lly8666/wbd-next/actions/runs/41028348498) Fixed(max) C10 each 250ms 30% loss 60s: true Linux eth0/IFB netem drops67977/68616; Linux sent99551 Windows first99538 (13 missing); Windows sent99498 Linux first99458 (40 missing), positive business, TCP, owned Stop; Linux Fixed installed true; Windows Fixed readback NOT_INSTRUMENTED_THIS_REAL_ABI; quality maturity NOT_MEASURED_SHORT_BURST. Whole Windows EXE average6.269% one core; RTT p99 532/535.476ms. No claim 100% under deliberate damage.
+- [41028351349](https://github.com/lly8666/wbd-next/actions/runs/41028351349) Auto C10 25ms 0% 60s: bidirectional first all, Stop PASS, Linux sampled quality VALID and readback requested/applied2 profile4, Windows still revision1. No claim two-direction sustained 120s natural grade. Windows whole EXE avg4.466% core, RTT p99 47/51.737ms.
+
+Original Go Linux V4 TUN `V4_PUBLIC_TUN_TXQLEN ... packets=2048 readback=REAL_ORIGINAL_LINUX_TUN` is logged for all three **after real ip -j verification**; no transient harness mutation. Distinguish app first delivery, original TUN and fq drop, OS packet clocks; RTT is not one-way. H497 original new-product C100 11 missing stays FAIL strict zero, old f838 300s exact zero remains other-source. A4 phased 240s, Fixed idle/Health, A5 same VM CPU A/B, B Game2/4/native lifecycle and C50→200 graded, outer off30 R/F/C remain required.
+
+```feature-impact
+{"kind":"updated","ids":["linux-raw-tun","fec-auto"],"reason":"Source787ad4 exact original Go TUN2048 real native A C10/Fixed30/Auto verified; update existing Linux TUN new source NOT_RUN to scoped FUNCTIONAL_PASS and Auto Linux profile4 real readback (Windows revision1), without promoting 100M strict-zero/120s or physical."}
+```

@@ -7,7 +7,8 @@
   "stage": "experimental",
   "development_branch": "experiment/fec-network-tuning",
   "available_on": [
-    "integration/w168-freeze-windows-adapter-20261026"
+    "integration/w168-freeze-windows-adapter-20261026",
+    "main"
   ],
   "defaults": {
     "--tun-name": "wbdv40",
@@ -34,7 +35,8 @@
     "docs/architecture/MIGRATION.md",
     "docs/devlog/M0/20261028-PLAN026-RUST-LINUX-RAW-RXBUF-4M-REGRESSION.md",
     "docs/devlog/M0/20261028-PLAN026-RUST-150M-LINUX-UDP-FIXTURE-BACKPRESSURE.md",
-    "docs/devlog/M0/20261030-PLAN027-H494-TUN-2048-REAL-PRODUCT-COLD-FIX.md"
+    "docs/devlog/M0/20261030-PLAN027-H494-TUN-2048-REAL-PRODUCT-COLD-FIX.md",
+    "docs/devlog/M0/20261030-PLAN027-H498-NEW-SOURCE-A-SHORT-TRUE-NATIVE.md"
   ],
   "verification": [
     {
@@ -81,10 +83,10 @@
     },
     {
       "platform": "Windows amd64 + Linux WSL2 amd64",
-      "scope": "原 Go Linux V4 TUN 产品新默认 txqlen2048 的 NEW SOURCE Go/Rust 冷启动和实际 Windows 双向实测待验证，旧 f838 仅测临时 qlen 2048。不将旧证据伪装成新源码达标",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": "docs/devlog/M0/20261030-PLAN027-H494-TUN-2048-REAL-PRODUCT-COLD-FIX.md"
+      "scope": "New actual original Go Linux-owned TUN default txqlen2048 exact real ip -j before native startup; Windows2025 signed Npcap/Wintun ↔ Linux WSL2 original TLS/Rust C10 60s Normal/off and Auto 0% netem exact first all both, Fixed6 10Mbps 250ms 30% native kernel positive first and Stop; C100 60s 11 Windows first-missing so strict exact-zero not claimed",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "787ad4c900f3bae867c5c9556c4702339deef8cb",
+      "evidence": "docs/evidence/M0/PLAN027-H498-NEW-SOURCE-A-C10-FIXED30-AUTO-20261030.json"
     }
   ],
   "limitations": [
@@ -95,7 +97,8 @@
     "PLAN026 Linux original Rust raw/TUN M3 unique AEAD+PN now admits authenticated Health-only or Receipt+Health/Quality as control without fabricating business delivery or M2 ACK. Native timed Keepalive TX, server FIN Dormant and physical qualification still NOT_RUN.",
     "PLAN026 client/server real native Rust raw/TUN TX owner now includes 15s Health due/one merged M2 Receipt control and real sendmmsg copied/uncertain/NotSent settlement, no new Go packet pump; liveness remote data aggregation, dead/FIN Dormant effective config, representative V2 network and CPU qualification remain NOT_RUN.",
     "PLAN026 Linux original Go/TLS Rust RX shares post-auth unique M3 activity once per recvmmsg batch with native TX 15s Health and 90s dead-after, no new worker or per-packet Go callback. Server FIN-bound Dormant/Wake and effective configuration still pending, zero network/CPU qualification implied.",
-    "PLAN026 Linux original C ABI per-session native Health config/readback added, original Go authenticated client/server product config applied pre-loop; same WBC4 Health and RX authentication to single TX owner. Original legacy main Linux GUI/CLI may still not expose nondefault to V4 (not retroactively claimed). No verified original FIN Dormant/Wake, no new signed network/CPU evidence."
+    "PLAN026 Linux original C ABI per-session native Health config/readback added, original Go authenticated client/server product config applied pre-loop; same WBC4 Health and RX authentication to single TX owner. Original legacy main Linux GUI/CLI may still not expose nondefault to V4 (not retroactively claimed). No verified original FIN Dormant/Wake, no new signed network/CPU evidence.",
+    "SOURCE787ad4 H497 native C100 60s Linux→Windows 11 first-missing although Linux owner TUN TX and fq drops0, owned Stop PASS; OLD f838 independent q2048 300s exact-zero is not new-source qualification. H498 C10/Fixed30/Auto short tests do not certify 120s Auto, all B lifecycle, 5min new-source, calibrated one-way, or physical."
   ],
   "promotion": null
 }

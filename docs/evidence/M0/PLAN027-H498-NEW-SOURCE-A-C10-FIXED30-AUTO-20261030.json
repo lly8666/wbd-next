@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "787ad4c900f3bae867c5c9556c4702339deef8cb",
+  "result": "PASS",
+  "artifact_verified": true,
+  "date": "2026-10-30",
+  "fresh_product_build_action": 41025962277,
+  "test_harness_head": "808d6df3a442e9a9621941404015beed6aa6c79a",
+  "source_reuse_gate_action": 41028324612,
+  "records": [
+    {
+      "run_id": 41028345925,
+      "artifact_id": 12964334571,
+      "zip_sha256": "f8bdd516a783216ac7842786b4938eb0f61b8badf6eccdbf732ce6ab20b97db9",
+      "scenario": "plan027-c-normal-10m-25ms-loss0-60s",
+      "mode": "normal",
+      "offered_mbps": {
+        "windows": 9.9974,
+        "linux": 10
+      },
+      "unique_first": {
+        "windows": 99551,
+        "linux": 99498
+      },
+      "sent": {
+        "windows": 99498,
+        "linux": 99551
+      },
+      "missing_first": {
+        "windows": 0,
+        "linux": 0
+      },
+      "rtt_p99_ms": {
+        "windows": 47,
+        "linux": 52.42
+      },
+      "cpu_pct_core_windows_exe": 5.352,
+      "real_linux_owned_tun_tx_dropped": 0,
+      "real_linux_tun_fq_dropped": 0,
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "run_id": 41028348498,
+      "artifact_id": 12964647785,
+      "zip_sha256": "3cc39b48b96068ba1038a316bb9ce978481c04943f2a0c649c3d4181fd811397",
+      "scenario": "wl-outer-repair-fixed-10m-250ms-loss30-60s",
+      "mode": "fixed",
+      "offered_mbps": {
+        "windows": 9.9974,
+        "linux": 10
+      },
+      "tc_netem_drop_packets": {
+        "linux_eth0": 67977,
+        "linux_ifb": 68616
+      },
+      "sent": {
+        "windows": 99498,
+        "linux": 99551
+      },
+      "unique_first": {
+        "windows": 99538,
+        "linux": 99458
+      },
+      "missing_first": {
+        "windows": 13,
+        "linux": 40
+      },
+      "first_fraction": {
+        "windows": 0.999869,
+        "linux": 0.999598
+      },
+      "rtt_p99_ms": {
+        "windows": 532,
+        "linux": 535.476
+      },
+      "cpu_pct_core_windows_exe": 6.269,
+      "original_linux_fixed_installed": true,
+      "windows_fixed_readback": "NOT_INSTRUMENTED_THIS_REAL_ABI",
+      "fixed_quality_maturity": "NOT_MEASURED_SHORT_BURST",
+      "real_linux_owned_tun_tx_dropped": 0,
+      "real_linux_tun_fq_dropped": 0,
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "run_id": 41028351349,
+      "artifact_id": 12964513341,
+      "zip_sha256": "232959e11c7f9e6705fd001ec40bfeb50afea842b937ef390e64a4dca679310a",
+      "scenario": "plan027-h461-auto-egress-10m-25ms-loss0-60s",
+      "mode": "auto",
+      "offered_mbps": {
+        "windows": 9.9973,
+        "linux": 10
+      },
+      "sent": {
+        "windows": 99497,
+        "linux": 99551
+      },
+      "unique_first": {
+        "windows": 99551,
+        "linux": 99497
+      },
+      "missing_first": {
+        "windows": 0,
+        "linux": 0
+      },
+      "rtt_p99_ms": {
+        "windows": 47,
+        "linux": 51.737
+      },
+      "cpu_pct_core_windows_exe": 4.466,
+      "linux_auto_readback": {
+        "requested_revision": 2,
+        "applied_revision": 2,
+        "profile": 4
+      },
+      "windows_auto_applied_revision": 1,
+      "real_linux_owned_tun_tx_dropped": 0,
+      "real_linux_tun_fq_dropped": 0,
+      "stop": "PASS_BOTH_OWNED"
+    }
+  ],
+  "controls": "Original signed Npcap/Wintun Windows2025, Linux WSL2 Go TLS/Rust owned raw/TUN; actual source-reused binary manifests guarded by workflow, not a simulation; kernel tc changes actual on Fixed30. No busy-wait CPU inference from average whole-process CPU alone.",
+  "caveats": [
+    "Fixed30 FEC positive first delivery not guaranteed 100%; NOT fixed quality maturity, not full Auto <=120s both directions",
+    "No cross-host calibrated one-way p99; listed p99 are monotonic same-origin RTT",
+    "Source 787ad4 C100 60s 11 missing first (H497) so no strict zero C100 or new 300s qualification yet",
+    "Native source test unaffected recent Go queue change, B/rotation/dead/FIN/CPU A5 and C weak losses/higher capacity pending",
+    "No product physical qualification"
+  ],
+  "full_task_status": "PARTIAL"
+}
