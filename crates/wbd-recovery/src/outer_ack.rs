@@ -92,6 +92,16 @@ impl OuterAckIndex {
         }
         self.highest_sent_end = end;
         self.last_sent_at = now;
+        if self.sent.len() >= self.capacity {
+            // The optional ACK index must recover after two seconds of
+            // missing feedback. No background timer, heap scan or DATA
+            // admission wait: release at most ONE oldest already-stale
+            // metadata entry on an actual next kernel firstsend.
+            // Shadow ciphertext has an independent <=1.5s hard expiry.
+            let stale = self.sent.first_key_value().is_some_and(|(_,old)|
+                now.0.saturating_sub(old.at.0) >= 2_000_000_000);
+            if stale { self.sent.pop_first(); }
+        }
         if self.sent.len() >= self.capacity { return Ok(false); }
         self.sent.insert(seq_start, SentSpan { end, pn, at: now });
         Ok(true)
@@ -238,6 +248,26 @@ mod tests {
             MonoNs(2), 20).unwrap().retired.is_empty());
         assert_eq!(x.on_feedback(lane(), [7; 16], 200, &[],
             MonoNs(3), 20).unwrap().retired, vec![RecordPn(1)]);
+    }
+    #[test]
+    fn r2_plan027_saturated_optional_outer_index_recovers_on_new_real_firstsend(){
+        let mut x=index(0,2);
+        assert_eq!(x.on_definitely_sent(RecordPn(1),0,100,MonoNs(1)),
+            Ok(true));
+        assert_eq!(x.on_definitely_sent(RecordPn(2),100,100,MonoNs(2)),
+            Ok(true));
+        assert_eq!(x.on_definitely_sent(RecordPn(3),200,100,
+            MonoNs(1_900_000_000)),Ok(false));
+        assert_eq!(x.outstanding(),2);
+        assert_eq!(x.on_definitely_sent(RecordPn(4),300,100,
+            MonoNs(2_000_000_002)),Ok(true));
+        // One stale entry per admitted M4 result. A newer outstanding
+        // index never loses its predecessor without the full 2s age.
+        assert_eq!(x.outstanding(),2);
+        assert_eq!(x.on_feedback(lane(),[7;16],400,&[],
+            MonoNs(2_000_000_003),20).unwrap().retired,
+            vec![RecordPn(2),RecordPn(4)]);
+        assert_eq!(x.outstanding(),0);
     }
     #[test]
     fn r2_plan027_cache_full_does_not_block_sent_bounds_and_expires() {
