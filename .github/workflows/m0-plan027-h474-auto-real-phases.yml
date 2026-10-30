@@ -1,0 +1,47 @@
+name: M0 PLAN027 H474 true same-native-session Auto low-loss staging
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h474-auto-real-phases.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  stage-a4:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-h474]') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Strict phase controller and actual prebuilt product provenance
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          product='a61eef334068512b00a1db3137a51f3d0489020c'
+          build_run=41002998813
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build_run" --jq .head_sha)" = "$product"
+          gh api "repos/$GH_REPO/actions/runs/$build_run/artifacts" --paginate --jq '.artifacts[].name' > "$RUNNER_TEMP/a4-built-artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$product" "$RUNNER_TEMP/a4-built-artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/a4-built-artifacts"
+          python -m unittest -q tests.test_m0_wl_perf_v2_config.V2Scenarios.test_plan027_a4_validated_240s_kernel_phase_source_schema tests.test_m0_wl_perf_v2_config.V2Scenarios.test_plan027_a4_runtime_owned_qdisc_stage_and_live_scheduler_implemented
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          from pathlib import Path
+          case=read_scenario("scenarios/plan027-a4-auto-10m-staged-240s.json")
+          assert (case["public_mode"],case["duration_s"],case["tun_mtu"])==("auto",240,1400)
+          assert [x["start_s"] for x in case["impairment_stages"]]==[0,20,40,65,95]
+          for name,losses in (("windows_to_linux",[0,5,15,30,0]),("linux_to_windows",[0,0,5,15,0])):
+              assert [x[name]["loss_pct"] for x in case["impairment_stages"]]==losses
+          for name in ("tools/m0_wl_netem.py","tools/m0_wl_public_normal_e2e.py"):
+              assert Path(name).exists()
+          print("H474_NATIVE_A4_PHASES_SOURCE_LOCKED",case["scenario_sha256"])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=auto -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-a4-auto-10m-staged-240s.json \
+            -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+          echo H474_ACTUAL_NATIVE_A4_UNINTERRUPTED_240S_DISPATCHED

@@ -25,6 +25,19 @@ class V2Scenarios(unittest.TestCase):
    bad=json.loads(scene.read_text());bad["public_mode"]="fixed"
    p.write_text(json.dumps(bad))
    with self.assertRaisesRegex(ValueError,"BAD_AUTO_STAGE_SCOPE"):read_scenario(p)
+ def test_plan027_a4_runtime_owned_qdisc_stage_and_live_scheduler_implemented(self):
+  root=SCENE.parents[0]
+  netem=(root/"tools/m0_wl_netem.py").read_text()
+  e2e=(root/"tools/m0_wl_public_normal_e2e.py").read_text()
+  for guard in ('elif action == "stage":','WL_V2_STAGE_FOREIGN_KERNEL_OWNER',
+                'index!=state.get("stage_index",0)+1','"qdisc","change"',
+                'WL_V2_OWNED_KERNEL_STAGE_APPLIED','wl-v2-kernel-stage-'):
+   self.assertIn(guard,netem)
+  for guard in ('phase_schedule=scenario.get("impairment_stages")',
+                'netem("stage",phase_next_index)',
+                'WL_V2_AUTO_KERNEL_PHASE_NOT_APPLIED',
+                '"kernel_phases_applied"','"a4_auto_mature_grade"'):
+   self.assertIn(guard,e2e)
  def test_exact_150m_300ms_0loss_60s(self):
   c=read_scenario(SCENE)
   self.assertEqual(c["duration_s"],60)

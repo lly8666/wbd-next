@@ -1,0 +1,3 @@
+# PLAN027 H474 true same-session kernel staged Auto
+
+Runs ONE product-source-frozen original Windows NPF/Wintun↔Linux Go TLS/TUN/Rust Auto 240s native Action, not five independent 60s scenarios. Scenario stages 0/20/40/65/95s and actual guest-owned `tc qdisc change` are compiled in source and tested. Source lock fixed to a61eef334068512b00a1db3137a51f3d0489020c binary build Action41002998813. Per-stage guest tc qdisc readback JSON retained in Action artifact and timeline within WL_V2. Actual mature Auto policy must be separately checked via real server/client source quality and readback, not inferred from ACTION success or p99 across OS clocks. At commit A4 real RESULT PENDING, no readiness.
