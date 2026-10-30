@@ -24,6 +24,13 @@ class WindowsNpcapRingTests(unittest.TestCase):
   self.assertNotIn("CaptureBufferBytes",overlay)
   self.assertIn("cfg.CaptureBufferBytes=1<<20",s)
   self.assertIn('clone_after=original_clone.replace(old_return,new_return)',s)
+ def test_pinned_source_is_explicitly_forwarded_to_assembler(self):
+  import inspect
+  params=list(inspect.signature(a.install_pinned_npcap_kernel_capture_buffer).parameters)
+  self.assertEqual(params,['root','legacy','output','source'])
+  s=(ROOT/'tools/prepare_windows_wiring.py').read_text()
+  self.assertIn('install_pinned_npcap_kernel_capture_buffer(root, legacy, output, source)',s)
+  self.assertIn('donor = git(root, "show", source + ":"',s)
  def test_assembly_blob_matches_real_git_sha(self):
   import json,hashlib
   p=ROOT/"r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go"

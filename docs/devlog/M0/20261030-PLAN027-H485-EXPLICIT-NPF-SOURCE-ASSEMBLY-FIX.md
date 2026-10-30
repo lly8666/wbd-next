@@ -1,0 +1,3 @@
+# H485 Windows NPF source frozen build argument repair
+
+Previous real build Action41011805501 native compile job123919234615 failed in Windows Python stage before Go compile due `NameError: name 'source' is not defined`, after successfully checking exact pinned original overlay and Rust library tests. Root cause: the NPF staging helper introduced by H483 uses `source` for original overlay provenance but its signature and caller lacked the parameter. Pass checked source explicitly, add signature and invocation regression, rerun full-source Windows Go/Rust and Linux binaries plus actual C100. No product physical evidence yet; preserve failure and original frozen M4 overlay.

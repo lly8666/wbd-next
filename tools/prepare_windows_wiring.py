@@ -61,7 +61,7 @@ def replace_original_once(data, needle, replacement, path):
     return data.replace(needle, replacement)
 
 
-def install_pinned_npcap_kernel_capture_buffer(root, legacy, output):
+def install_pinned_npcap_kernel_capture_buffer(root, legacy, output, source):
     """Patch ONLY the source-frozen Actions checkout, never the original Go repo.
 
     Npcap pcap_open_live defaults to a 1MiB kernel ring; pcap_setbuff must
@@ -150,7 +150,7 @@ def prepare(root, legacy, output, source, spec):
     subprocess.run([os.sys.executable, str(root / "r0/go_overlay/assembly/assemble.py"),
                     "--legacy-root", str(legacy), "--overlay-root", str(root),
                     "--manifest", str(root / MANIFEST), "--receipt", str(output / "assembly.json")], check=True)
-    install_pinned_npcap_kernel_capture_buffer(root, legacy, output)
+    install_pinned_npcap_kernel_capture_buffer(root, legacy, output, source)
     for part, names in EXTRA_BRIDGES.items():
         dest = legacy / "internal" / part
         dest.mkdir(parents=True, exist_ok=True)
