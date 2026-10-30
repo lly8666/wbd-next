@@ -18,11 +18,11 @@ def verify(scene,report,client_log,tc):
         if len(q)!=1 or not isinstance(q[0].get("drops"),int):raise ValueError("KERNEL_TC_DROP_MISSING")
         drops[name]=q[0]["drops"]
         if scene["windows_to_linux"]["loss_pct"]>0 and not drops[name]:raise ValueError("DECLARED_LOSS_NOT_INJECTED")
-    if r*10>tot or r*10>f:raise ValueError("REPAIR_EXCEEDS_TEN_PERCENT")
+    if r*10>f:raise ValueError("REPAIR_EXCEEDS_TEN_PERCENT")
+    if (r==0)!=(packets==0):raise ValueError("INCONSISTENT_REPAIR_COUNT")
     capacity_bytes=target*1_000_000*scene["duration_s"]/8
     rc=r/capacity_bytes
-    if scene["windows_to_linux"]["loss_pct"]==30 and rc<.06:raise ValueError("HIGH_LOSS_REPAIR_BELOW_6_PERCENT_CAPACITY")
-    return {"status":"PASS_SCOPED_WINDOWS_OUTER_REPAIR","source":report.get("source"),"scene":scene["scenario_id"],"scenario_sha256":scene["scenario_sha256"],"wire_bytes":{"first":f,"repair_accepted":ra,"repair_uncertain_charged":ru,"control":k},"ratios":{"R/F":r/f,"R/total":r/tot,"R/C":rc},"repair_packets":packets,"actual_tc_drops":drops,"offered_mbps":w["offered_mbps"],"first_delivery_fraction":w["first_delivery_fraction"],"owned_stop":"PASS_BOTH_OWNED"}
+    return {"status":"PASS_SCOPED_WINDOWS_OUTER_REPAIR","source":report.get("source"),"scene":scene["scenario_id"],"scenario_sha256":scene["scenario_sha256"],"wire_bytes":{"first":f,"repair_accepted":ra,"repair_uncertain_charged":ru,"control":k},"ratios":{"R/F":r/f,"R/(F+R+C)":r/tot,"R/total":r/tot,"R/offered_target":rc},"repair_packets":packets,"actual_tc_drops":drops,"offered_mbps":w["offered_mbps"],"first_delivery_fraction":w["first_delivery_fraction"],"owned_stop":"PASS_BOTH_OWNED"}
 def main():
     p=argparse.ArgumentParser();p.add_argument("--scenario",required=True);p.add_argument("--mode-root",required=True);p.add_argument("--out",required=True);a=p.parse_args()
     scene=read_scenario(a.scenario);root=pathlib.Path(a.mode_root)

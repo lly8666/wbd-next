@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 456,
-  "checkpoint_sha": "88ba090086f0e42b4909d504bde3523848e414a3",
+  "sequence": 457,
+  "checkpoint_sha": "ea098890411cf6624f62a5ca4abbc0c091b063f7",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H456 source-locked A2 normal0/30 and A3 fixed30 genuine dualOS 10Mbps 250ms 60s separate Actions, reusable H455 binary after Normal true PASS; fix live M0 Go blob SHA negative test. Maintain H455 B fanout across harness-only main changes. A4/A5/B lifecycle/C still open.",
-  "why_now": "H455 combined Linux native pass and Windows Wintun five modes pass, real Windows↔Linux Normal run40993452459 in-flight. H455 governance-maintenance run40993452425 two exact stale hashes in live M0 overlay test. Stage only scenario/harness/test code; preserve H455 frozen native binary artifacts and avoid H456 new build.",
+  "current_task": "H457 repair H456 YAML scanner (A2/A3 new dispatcher had unindented Python and non-retroactive workflow_run), add one-shot source-checked A launch; remove fake 30% loss >=6% repair admission and mislabeled R/C verifier. H455 B Fixed old-M2 Applied test false negative but true business+Stop PASS; B Auto real 0 Windows UDP inbound FAIL, needs real product triage.",
+  "why_now": "H456 Actions40994656424,40994657501/529 and40994657611 all YAML parse FAIL before A2/A3; no measurements launched. H455 six B: Fixed Action40994441580 test-only M2 Applied fails after 25/25 UDP/TCP and Stop; Auto Action40994443303 true Windows RX0 of385 and Linux RX27 of100, fail/Stop unproven. Four Game B runs SUCCESS. Verifier enforced forbidden 6% min high-loss and mislabeled R/offered target as R/C.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "First collect H455 true Windows↔Linux Normal result and exact binary manifest; on PASS collect per-scene A2/A3 and B one-mode independent Actions from H456 autogated dispatchers; triage actual F/R/C, driver, p99, TCP/UDP, then Auto 120s/CPU A/B/B lifecycle/C capacity+long.",
+  "next_action": "Collect H457 dispatcher A2/A3 real per-scene IDs and current governance; retain B Auto red, investigate real asymmetry and Fixed local owner config before rerun only affected B. Then A4 sustained Auto 120s/A5 CPU and B lifecycle and C representative matrix long 5min.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①PLAN027 §0.1 source corrections H452; H455 original Go combined native PASS and Windows Wintun mode each PASS; new code not yet under full B. ②H456 A2 off0/off30 + A3 Fixed30 separate true netem Actions automatically gated on signed Normal H455 PASS, pending. A4/A5 open. ③B current H455 dualOS Normal in flight; six source-locked modes gated; B lifecycle open. ④C capacity/5min not run. ⑤H456 governance negative SHA fixture patched, new source CI pending."
+  "partial_summary": "①M2/Auto/ACK source repairs H451-H454; H455 same-source full Linux original product and Normal dualOS PASS. ②A1 native H453 PASS; H456 A2/A3 dispatcher YAML invalid, H457 repairs & triggers true 3 independent Actions, outcome pending; A4/A5 OPEN. ③B source H455 Normal and Game2/4 variants 4 PASS, Fixed true UDP+TCP/Stop PASS but false old M2 test red, Auto Windows inbound0 real FAIL; lifecycle OPEN. ④C and 5min NOT_RUN. ⑤H456 YAML red kept, H457 fixes tests/dispatch, exact new results pending."
 }
