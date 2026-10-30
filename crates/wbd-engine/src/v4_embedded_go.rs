@@ -5052,7 +5052,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             }
         };
         let ready=e.owner.checked_tx_ready(&batch).map_err(|_|BAD_STAGE)?;
-        if ready.is_empty() || ready.len()>32 || ready.iter().any(
+        if ready.len()>32 || ready.iter().any(
             |x|x.kind!=crate::runtime::TxKind::Fresh){
             *tx_storage=batch.recycle();
             e.tx_route=None;
@@ -5060,6 +5060,12 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             drain_data_turn_returns(&mut e.arena);
             return Err(INVALID)
         }
+        // A genuine M1 50ms ready-age expiration can leave zero ready
+        // records AFTER one bounded FEC parity encoding turn. Do NOT
+        // return INVALID here: already-staged PNs (and possible M2 control)
+        // must be resolved as definitely NOT kernel-copied below. The
+        // original owner discarded those expired FrozenRecords; no PN
+        // can ever be retried, nor can an empty sendmmsg claim delivery.
         // Clone only Arc handles into preallocated metadata, NEVER the
         // plaintext/ciphertext. Both vectors are recycled next turn.
         for x in ready{
@@ -5076,7 +5082,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         }
         (batch,raw,flow,e.server_side,e.generation,ready_records.len(),failed,jumbo_staged)
     };
-    let report=if stop.load(Ordering::Acquire){None}else{
+    let report=if stop.load(Ordering::Acquire)||admitted==0{None}else{
         let tuple=if server_side{Ipv4Tuple{
             src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
             src_port:flow.server_port,dst_port:flow.client_port,
@@ -5102,6 +5108,19 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         return Err(BAD_STAGE)
     }
     let finish=classify_tx_turn(report.as_ref(),admitted,seal_failed);
+    // An original M1 queue-age eviction can remove an appended M2 record
+    // before M4. Its draft is still owned but NOT in the ready batch.
+    // Only the actual last ready PN may be counted as copied feedback.
+    #[cfg(feature="fec2_product_record")]
+    let feedback_last=if let Some((_,pn,_))=e.feedback_queued.as_ref(){
+        let last=actual_firstsend.last().is_some_and(|x|x.0.0==*pn);
+        if !last && actual_firstsend.iter().any(|x|x.0.0==*pn){
+            return Err(BAD_STAGE) // never allow reordered control
+        }
+        last
+    }else{false};
+    #[cfg(not(feature="fec2_product_record"))]
+    let feedback_last=false;
     #[cfg(feature="fec2_product_record")]
     if let Some(shared)=e.original_outer.as_ref(){
         let mut original=shared.lock().map_err(|_|BAD_STAGE)?;
@@ -5113,8 +5132,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         // All actual DATA first-copies contribute F once; only one half,
         // mixed by PN+generation, may pin a frozen repair shadow. This
         // unconditionally preserves the independent first-send fast path.
-        let control_last=e.feedback_queued.is_some();
-        let data_count=frozen_for_outer.len()-usize::from(control_last);
+        let data_count=frozen_for_outer.len()-usize::from(feedback_last);
         let real_copied=copied.min(data_count);
         let mut fresh_bytes=0u64;
         for record in frozen_for_outer.iter().take(real_copied){
@@ -5155,39 +5173,37 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         let fec=e.fixed_pending.is_some()||e.fixed_applied.is_some();
         tx.settle_batch(actual_firstsend,
             finish.copied as usize,finish.uncertain as usize,
-            e.feedback_queued.is_some(),fec,&e.fec2_staged_pns);
+            feedback_last,fec,&e.fec2_staged_pns);
     }
     // Keep M2 original outbound DATA denominator separate from a native
     // receipt record. Control is appended last after all application
     // first-sends; failure to preserve this order censors the owner, never
     // counts an authenticated ACK as successful new business DATA.
-    #[cfg(feature="fec2_product_record")]
-    let feedback_last=if let Some((_,pn,_))=e.feedback_queued.as_ref(){
-        if !actual_firstsend.last().is_some_and(|x|x.0.0==*pn){
-            return Err(BAD_STAGE)
-        }
-        true
-    }else{false};
-    #[cfg(not(feature="fec2_product_record"))]
-    let feedback_last=false;
+    // An expired M2 has no eligible kernel record. The real ready suffix,
+    // not the existence of an owner-held draft, defines the data boundary.
     // These fields exist only with the feature7 authentic M2 product.
     // The ordinary non-FEC original Go TLS/Normal build must compile.
     #[cfg(feature="fec2_product_record")]
     {
     let payload_copied=(finish.copied as usize).min(
-        actual_firstsend.len().saturating_sub(usize::from(e.feedback_queued.is_some())));
+        actual_firstsend.len().saturating_sub(usize::from(feedback_last)));
     if payload_copied>0{
         if let Some(h)=e.native_health.as_mut(){
             h.on_local_business(loop_now().0);
         }
     }
     if let Some((draft,_,has_health))=e.feedback_queued.take(){
-        let idx=actual_firstsend.len().checked_sub(1).ok_or(BAD_STAGE)?;
-        let status=if idx<finish.copied as usize{
-            wbd_recovery::FeedbackSendResult::Accepted
-        }else if finish.uncertain==1&&idx==finish.copied as usize{
-            wbd_recovery::FeedbackSendResult::Uncertain
+        let status=if feedback_last {
+            let idx=actual_firstsend.len()-1; // proven nonempty above
+            if idx<finish.copied as usize{
+                wbd_recovery::FeedbackSendResult::Accepted
+            }else if finish.uncertain==1&&idx==finish.copied as usize{
+                wbd_recovery::FeedbackSendResult::Uncertain
+            }else{
+                wbd_recovery::FeedbackSendResult::NotSent
+            }
         }else{
+            // M1 age eviction or no driver: no authenticated peer receipt.
             wbd_recovery::FeedbackSendResult::NotSent
         };
         if let Some(signal)=e.quality_signal_queued.take(){
@@ -5365,6 +5381,16 @@ fn original_fec_tx_data_cap(fec_active:bool,queued:bool,
     if queued || deadline.is_some_and(|d|
         d.0<=now.0.saturating_add(1_000_000)) {23}
     else{31}
+}
+#[cfg(all(test,feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[test]
+fn plan027_expired_m1_ready_batch_zero_has_no_fabricated_kernel_copy(){
+    let done=classify_tx_turn(None,0,false);
+    assert_eq!((done.copied,done.uncertain,done.definitely_unsent),(0,0,0));
+    assert!(done.failed); // not a successful send or a new receipt
+    assert!(!done.backpressure&&!done.invalidate_route);
 }
 #[cfg(all(test,feature="fec2_product_record"))]
 #[test]

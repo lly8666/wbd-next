@@ -372,6 +372,39 @@ mod tests{
         stream.stop();arena.stop();arena.drain_returns();
     }
     #[test]
+    fn plan027_original_m1_expired_parity_batch_settles_not_sent_without_retry(){
+        // The Linux ready queue may expire while M3's <=4-row parity
+        // quanta are encoded. Its original M4 owner then sees an EMPTY
+        // batch: all staged PNs must be conclusively retired as NotSent,
+        // never retried or left behind to block each subsequent TX turn.
+        let mut arena=Arena::new(609,48,2048,48,1_000_000).unwrap();
+        let mut stream=FixedStream::new(5,1,1400).unwrap(); // Strong k8 r8
+        let mut source=Vec::new();
+        for i in 0..8{
+            push(&mut stream,&mut arena,&[i as u8;120],i,&mut source);
+        }
+        let mut staged=0u8;
+        assert_eq!(stream.poll_parity_quanta(MonoNs(6_100_000),2,
+            |_,_,row,_| {
+                if row==7 {DriverProof::NotSent}else{
+                    staged+=1;DriverProof::Staged
+                }
+            }).unwrap(),(8,0));
+        assert_eq!(staged,7);
+        assert_eq!(stream.report().classes[0].r_sent,0);
+        // M1 expired ALL seven staged records, never reached kernel M4.
+        stream.settle_staged(0,staged,0).unwrap();
+        assert_eq!(stream.report().classes[0].r_sent,0);
+        assert_eq!(stream.report().outstanding_jobs,0);
+        assert!(stream.next_deadline().is_none());
+        assert_eq!(stream.poll_parity_quanta(MonoNs(6_100_001),2,
+            |_,_,_,_|panic!("expired parity must not be resealed")).unwrap(),(0,0));
+        push(&mut stream,&mut arena,&[99u8;120],6_100_002,&mut source);
+        assert_eq!(source.last().unwrap().0,2);
+        stream.stop();arena.stop();arena.drain_returns();
+        assert_eq!(arena.report().loaned,0);
+    }
+    #[test]
     fn m0_fixed_stream_two_quanta_one_m4_settlement_no_reseal_no_data_hol(){
         let mut arena=Arena::new(607,48,2048,48,1_000_000).unwrap();
         let mut stream=FixedStream::new(6,21,1400).unwrap(); // Maximum k8 r10

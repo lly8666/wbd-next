@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "measured": "2026-10-30",
+  "source_binary_sha": "0daddf65ef1ae0abf2e42dc841b96ed4458a8fb9",
+  "cases": [
+    {
+      "run_id": 41000372316,
+      "artifact_id": 12953171887,
+      "mode": "auto",
+      "status": "FAIL",
+      "stage": "REAL_TWO_OS_UDP_SMOKE",
+      "windows_first_received": 8,
+      "linux_first_received": 0,
+      "egress_first_copied": 8,
+      "egress_staged_parity": 7,
+      "m4_errors_500ms": 88265,
+      "turn_err_500ms": [
+        0,
+        88264,
+        0,
+        1
+      ],
+      "source": "500ms native log + real app and Stop negative",
+      "stop": "NOT_RUN"
+    },
+    {
+      "run_id": 41000374541,
+      "artifact_id": 12952983950,
+      "mode": "normal",
+      "status": "PASS",
+      "scenario": "plan027-c-normal-10m-25ms-loss0-60s",
+      "first_delivered_mbps": {
+        "windows": 10,
+        "linux": 9.9974
+      },
+      "offered_mbps": {
+        "windows": 9.9974,
+        "linux": 10
+      },
+      "first_delivery_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "oneway_p99": "NOT_MEASURED"
+    }
+  ],
+  "claim": "ONE_REAL_SCENARIO_PER_JOB_AND_NO_PHYSICAL_PASS",
+  "pending": [
+    "H466 exact new product native tests",
+    "A4 Auto120 A5 CPU AB B lifecycle and C 50-200/300s"
+  ]
+}
