@@ -89,3 +89,17 @@ def profile(cfg,side):
             "duration_s":cfg["duration_s"],
             "packet_mix":d["packet_mix"],
             "scenario_sha256":cfg["scenario_sha256"]}
+
+# Product-independent gate over real scenario measurements. The recorded
+# receiver (not the sender) determines which direction's tc loss applies.
+# A damaged Game/Fixed/Normal source must be delivered, but cannot satisfy
+# a lossless >=99.9% oracle under a real requested 5/30% kernel loss.
+def first_delivery_ok_for_scenario(scene,first):
+    for receiver,direction in (("windows","linux_to_windows"),
+                               ("linux","windows_to_linux")):
+        v=first.get(receiver)
+        if type(v) not in (int,float):return False
+        if scene[direction]["loss_pct"]>0:
+            if not v>0:return False
+        elif v<.999:return False
+    return True

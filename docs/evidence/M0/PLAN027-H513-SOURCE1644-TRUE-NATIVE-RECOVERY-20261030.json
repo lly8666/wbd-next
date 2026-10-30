@@ -1,0 +1,282 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "status": "PARTIAL_ACTIVE",
+  "source_sha": "1644df34d241d487c5c5eb704a1a0a2e5f506f5e",
+  "harness_head": "ac3cd07c20212ead68a5e29f6f691ef1b430f4f0",
+  "binary_manifest_run": 41041996161,
+  "binary_reused": true,
+  "independent_signed_npf_wintun_linux_netns": true,
+  "measurements": [
+    {
+      "action": 41045594162,
+      "mode": "normal",
+      "scene": "loss1",
+      "result": "NATIVE_MEASUREMENT_AND_STOP_PASS",
+      "first_delivery_fraction": {
+        "windows": 0.989994,
+        "linux": 0.990067
+      },
+      "windows_outer_bytes": {
+        "F": 421596532,
+        "R": 0,
+        "C": 568,
+        "R_over_F": 0,
+        "R_over_F_plus_R_plus_C": 0
+      },
+      "linux_outer_bytes": {
+        "F": 415912408,
+        "R": 0,
+        "R_over_F": 0,
+        "C": "NOT_REPORTED"
+      },
+      "zip_sha256": "99f1da2fe4f6ac2ae50ba1bcaa4236c43388d08f7ea14f5ac51925b82b616592"
+    },
+    {
+      "action": 41045596974,
+      "mode": "normal",
+      "scene": "loss5",
+      "result": "NATIVE_MEASUREMENT_AND_STOP_PASS",
+      "first_delivery_fraction": {
+        "windows": 0.950265,
+        "linux": 0.95031
+      },
+      "windows_outer_bytes": {
+        "F": 421587923,
+        "R": 0,
+        "C": 2053,
+        "R_over_F": 0,
+        "R_over_F_plus_R_plus_C": 0
+      },
+      "linux_outer_bytes": {
+        "F": 415911263,
+        "R": 0,
+        "R_over_F": 0,
+        "C": "NOT_REPORTED"
+      },
+      "zip_sha256": "98c1f8e5e37a198564ad48dfb08f6ca32aee504ddf5ac8fbab945a86917c2d0e"
+    },
+    {
+      "action": 41045600319,
+      "mode": "normal",
+      "scene": "loss10",
+      "result": "NATIVE_MEASUREMENT_AND_STOP_PASS",
+      "first_delivery_fraction": {
+        "windows": 0.899784,
+        "linux": 0.899488
+      },
+      "windows_outer_bytes": {
+        "F": 421583361,
+        "R": 209,
+        "C": 620,
+        "R_over_F": 4.957501157167349e-7,
+        "R_over_F_plus_R_plus_C": 4.957491408774129e-7
+      },
+      "linux_outer_bytes": {
+        "F": 415902985,
+        "R": 133,
+        "R_over_F": 3.1978611550479735e-7,
+        "C": "NOT_REPORTED"
+      },
+      "zip_sha256": "b22ea5484550ed20122792531915aebd1606c26668a9bb70fe4d646ff76a9024"
+    },
+    {
+      "action": 41045603179,
+      "mode": "normal",
+      "scene": "loss30",
+      "result": "NATIVE_MEASUREMENT_AND_STOP_PASS",
+      "first_delivery_fraction": {
+        "windows": 0.699668,
+        "linux": 0.699703
+      },
+      "windows_outer_bytes": {
+        "F": 421562072,
+        "R": 0,
+        "C": 2393,
+        "R_over_F": 0,
+        "R_over_F_plus_R_plus_C": 0
+      },
+      "linux_outer_bytes": null,
+      "zip_sha256": null
+    },
+    {
+      "action": 41045606889,
+      "mode": "game2",
+      "scene": "loss5",
+      "result": "FAILED_WRONG_NOLOSS_HARNESS_GATE",
+      "first_delivery_fraction": {
+        "windows": 0.997305,
+        "linux": 1
+      },
+      "windows_outer_bytes": null,
+      "linux_outer_bytes": null,
+      "zip_sha256": "fc0f0817d9554271538caa3ac7599b24bab98bc75aec39c5c4acdfaf06caa3ac"
+    },
+    {
+      "action": 41045609845,
+      "mode": "game4",
+      "scene": "loss5",
+      "result": "NATIVE_MEASUREMENT_AND_STOP_PASS",
+      "first_delivery_fraction": {
+        "windows": 0.999964,
+        "linux": 1
+      },
+      "windows_outer_bytes": null,
+      "linux_outer_bytes": null,
+      "zip_sha256": "b122c5a249e05f521a24a03a54e12970e286049c230e2fb7c3af87839a1ec476"
+    },
+    {
+      "action": 41045612660,
+      "mode": "game2-fec",
+      "scene": "loss15",
+      "result": "CANCELED_NOT_RUN",
+      "first_delivery_fraction": null,
+      "windows_outer_bytes": null,
+      "linux_outer_bytes": null,
+      "zip_sha256": null
+    },
+    {
+      "action": 41045615720,
+      "mode": "game4-fec",
+      "scene": "loss30",
+      "result": "CANCELED_NOT_RUN",
+      "first_delivery_fraction": null,
+      "windows_outer_bytes": null,
+      "linux_outer_bytes": null,
+      "zip_sha256": null
+    },
+    {
+      "action": 41045618953,
+      "mode": "fixed",
+      "scene": "loss30",
+      "result": "NATIVE_MEASUREMENT_AND_STOP_PASS",
+      "first_delivery_fraction": {
+        "windows": 0.999829,
+        "linux": 0.999347
+      },
+      "windows_outer_bytes": {
+        "F": 210548049,
+        "R": 187,
+        "C": 2527,
+        "R_over_F": 8.881583129749163e-7,
+        "R_over_F_plus_R_plus_C": 8.881468646114572e-7
+      },
+      "linux_outer_bytes": {
+        "F": 207942770,
+        "R": 316,
+        "R_over_F": 0.0000015196488918561583,
+        "C": "NOT_REPORTED"
+      },
+      "zip_sha256": "eb4baae3d1d79ddd0c013c9aec908b5089760bcd682c23225d0d9aa809e38de0"
+    },
+    {
+      "action": 41045621864,
+      "mode": "auto",
+      "scene": "staged240",
+      "result": "NATIVE_MEASUREMENT_AND_STOP_PASS",
+      "first_delivery_fraction": {
+        "windows": 1,
+        "linux": 0.999829
+      },
+      "windows_outer_bytes": {
+        "F": 743596457,
+        "R": 0,
+        "C": 71054,
+        "R_over_F": 0,
+        "R_over_F_plus_R_plus_C": 0
+      },
+      "linux_outer_bytes": {
+        "F": 589088903,
+        "R": 0,
+        "R_over_F": 0,
+        "C": "NOT_REPORTED"
+      },
+      "zip_sha256": "b42a354451b6474a5024edff6b2841ef11b0c2cea2cf9e4c77f0d73db8d9de91"
+    },
+    {
+      "action": 41045624817,
+      "mode": "normal",
+      "scene": "loss0-100m",
+      "result": "NATIVE_MEASUREMENT_AND_STOP_PASS",
+      "first_delivery_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "windows_outer_bytes": {
+        "F": 862405438,
+        "R": 0,
+        "C": 1046859,
+        "R_over_F": 0,
+        "R_over_F_plus_R_plus_C": 0
+      },
+      "linux_outer_bytes": {
+        "F": 848678976,
+        "R": 0,
+        "R_over_F": 0,
+        "C": "NOT_REPORTED"
+      },
+      "zip_sha256": "8b67269e4e046b76240492c62f0caaf9311792961b3851eb88c3365f57beb3db"
+    },
+    {
+      "action": 41045627596,
+      "mode": "normal",
+      "scene": "loss0-50m-300s",
+      "result": "NATIVE_MEASUREMENT_AND_STOP_PASS",
+      "first_delivery_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "windows_outer_bytes": {
+        "F": 2156883030,
+        "R": 0,
+        "C": 63779,
+        "R_over_F": 0,
+        "R_over_F_plus_R_plus_C": 0
+      },
+      "linux_outer_bytes": {
+        "F": 2122020593,
+        "R": 133,
+        "R_over_F": 6.267611183356693e-8,
+        "C": "NOT_REPORTED"
+      },
+      "zip_sha256": "311611d3824fbdcae4b4b6ba0d2ccd8bc2129fd24dc88bcf36307ec21713a781"
+    }
+  ],
+  "linux_lifecycle": [
+    {
+      "run": 41046398896,
+      "scenario": "idle100",
+      "status": "PASS_SCOPED",
+      "log_sha256": "53fe8b05d68e3480ff2e4c23c94a7ae159cb30376514efec74a8eedc1d13dc95"
+    },
+    {
+      "run": 41046401566,
+      "scenario": "dead106",
+      "status": "PASS_SCOPED",
+      "log_sha256": "21582b2e7df1764d364e5074b194473b76670cd6c3f7659c2375788f90f3cb06"
+    },
+    {
+      "run": 41046404423,
+      "scenario": "reconnect",
+      "status": "PASS_SCOPED",
+      "log_sha256": "5f3fbe20c06cfe7f60c69acdb952e55228f1caba4ee8ef6caa06e103e2fcef0b"
+    }
+  ],
+  "governance_recovery": {
+    "run_41046389786": "SUCCESS",
+    "run_41046389697": "SUCCESS"
+  },
+  "actual_problem": "source1644 real 1/5/10/30% outer opportunity Win R0/0/209/0 and Linux R0/0/133/UNKNOWN; true damage but near-zero repair, cold Go SACK negotiation not propagated into Rust native ACK send/receive; plan 0.1 opportunity not met",
+  "limitations": [
+    "Game2 native UDP/TCP and Stop PASS but prior harness labeled FAIL from erroneous .999 threshold on actual 5% impairment: rerun after test-only correction; no retroactive Action PASS",
+    "30% artifact ZIP absent in recovered ZIP fetch, live marker Win R0, Linux exact not asserted",
+    "Auto staged all five tc stages, first both positive and Stop PASS but final 120s mature bilateral one-grade state remains unqualified",
+    "Game2/4 FEC canceled, still NOT_RUN",
+    "A5 matched host old/new CPU comparison still not passed",
+    "B Windows lifecycle and rotation/FIN/DORMANT/DNS/IPv6/MTU remain",
+    "C Fixed/Game high stress and other damage cases still outstanding",
+    "No physical PASS",
+    "One 300s Normal/off 50M 25ms loss0 signed native completes first100% both/owned Stop; not 5-min damages or entire matrix"
+  ]
+}

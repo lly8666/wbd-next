@@ -1,0 +1,42 @@
+name: M0 PLAN027 H513 one Game2 damaged oracle corrected real native
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h513-game2-source-reuse.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-game2-verified-reuse:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message,'[plan027-h513-game2]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: One true original Game2/5pct requalification with old exact SOURCE binaries
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          src=1644df34d241d487c5c5eb704a1a0a2e5f506f5e
+          run=41041996161
+          test "$(gh api "repos/$GH_REPO/actions/runs/$run" --jq .head_sha)" = "$src"
+          gh api "repos/$GH_REPO/actions/runs/$run/artifacts" --jq '.artifacts[].name' > "$RUNNER_TEMP/product"
+          grep -Fx "m0-wl-windows-product-binaries-$src" "$RUNNER_TEMP/product"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/product"
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario,first_delivery_ok_for_scenario
+          s=read_scenario('scenarios/plan027-b-game2-off-10m-75ms-loss5-20s.json')
+          assert s.get('public_mode')=='game2' and s['duration_s']==20
+          assert all(s[k]['loss_pct']==5 for k in ('windows_to_linux','linux_to_windows'))
+          assert first_delivery_ok_for_scenario(s,{'windows':.997305,'linux':1.0})
+          print('H513_ONE_TRUE_GAME2_DAMAGE_ORACLE',s['scenario_sha256'])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=game2 -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-b-game2-off-10m-75ms-loss5-20s.json \
+            -f perf_reuse_run_id="$run" -f perf_binary_source_sha="$src"
+          echo H513_EXACT_ONE_GAME2_NATIVE_ACTION

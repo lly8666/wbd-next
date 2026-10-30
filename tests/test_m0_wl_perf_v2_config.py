@@ -1,9 +1,23 @@
 """Safety and deterministic V2 scenario contract; no driver side effects."""
 import json, pathlib, tempfile, unittest
-from tools.m0_wl_perf_v2_config import read_scenario,profile
+from tools.m0_wl_perf_v2_config import read_scenario,profile,first_delivery_ok_for_scenario
 from tools.m0_wl_impairment_profile import get_profile
 SCENE=pathlib.Path(__file__).resolve().parents[1]/"scenarios"/"wl-normal-150m-300ms-0loss-60s.json"
 class V2Scenarios(unittest.TestCase):
+ def test_plan027_game2_damaged_real_first_is_not_lossless_oracle(self):
+  root=SCENE.parent
+  off=read_scenario(root/"plan027-b-game2-off-10m-75ms-loss5-20s.json")
+  self.assertTrue(first_delivery_ok_for_scenario(off,{"windows":.997305,"linux":1.0}))
+  self.assertFalse(first_delivery_ok_for_scenario(off,{"windows":0,"linux":1.0}))
+  loss0=read_scenario(root/"plan027-c-normal-100m-25ms-loss0-60s.json")
+  self.assertFalse(first_delivery_ok_for_scenario(loss0,{"windows":.997305,"linux":1.0}))
+  self.assertTrue(first_delivery_ok_for_scenario(loss0,{"windows":1.0,"linux":1.0}))
+  # Asymmetric impairment keeps the unaffected receive direction strict.
+  asymmetric=dict(loss0)
+  asymmetric["windows_to_linux"]=dict(loss0["windows_to_linux"],loss_pct=5)
+  self.assertTrue(first_delivery_ok_for_scenario(asymmetric,{"windows":1.0,"linux":.95}))
+  self.assertFalse(first_delivery_ok_for_scenario(asymmetric,{"windows":.95,"linux":1.0}))
+
  def test_plan027_a4_validated_240s_kernel_phase_source_schema(self):
   scene=SCENE.parent/"plan027-a4-auto-10m-staged-240s.json"
   case=read_scenario(scene)

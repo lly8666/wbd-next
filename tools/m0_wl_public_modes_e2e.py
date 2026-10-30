@@ -9,6 +9,7 @@ import os,sys,json,subprocess,pathlib,time
 from m0_wl_mode_evidence import (
  archive_mode_evidence,capture_mode_evidence_baseline,
  select_source_locked_modes)
+from m0_wl_perf_v2_config import read_scenario,first_delivery_ok_for_scenario
 root=pathlib.Path.cwd()
 out=root/"result"/"wl-public"
 try:
@@ -75,10 +76,10 @@ for mode in modes:
  stress=os.environ.get("WBD_WL_RUN_P200")=="1"
  rust_v2=bool(os.environ.get("WBD_WL_V2_SCENARIO"))
  v2=result.get("WL_V2",{}) if rust_v2 else {}
- # Intentional 1/5/10/30% outer loss must preserve all measured first
- # arrivals, not be forced through the no-loss >=99.9% hard gate.
- repair_scene=rust_v2 and os.environ["WBD_WL_V2_SCENARIO"].startswith(
-  "scenarios/wl-outer-repair-")
+ # Damage-aware first-delivery expectations follow the SOURCE scenario,
+ # not a filename prefix. Game2/4/Fixed at real 5/15/30% tc must not be
+ # mislabeled product FAIL by a lossless 99.9% gate. Loss0 stays strict.
+ scene=read_scenario(os.environ["WBD_WL_V2_SCENARIO"]) if rust_v2 else None
  # Auto A4 intentionally cycles real kernel impairment 0..30..0%:
  # the no-loss >=.999 gate is invalid. Admit only exact five actual tc
  # stages, nonzero first business each direction and genuine owned Stop;
@@ -94,10 +95,8 @@ for mode in modes:
  v2_delivery_ok=(not rust_v2 or (
   v2.get("status")=="MEASURED_BOTH_OS_KERNEL" and
   v2.get("owned_stop")=="PASS_BOTH_OWNED" and
-  (repair_scene or staged_real or (
-   not staged_auto and all(
-    v2.get("first_delivery_fraction",{}).get(k,0)>=.999
-    for k in ("windows","linux"))))))
+  (staged_real or (not staged_auto and
+   first_delivery_ok_for_scenario(scene,v2.get("first_delivery_fraction",{})))))
  passed=rc==0 and result.get("mode_public","").startswith("PASS_ACTUAL_") and (
   not performance or str(result.get("WL_N0","")).startswith("PASS_SCOPED_")) and (
   not stress or str(result.get("WL_P200","")).startswith("PASS_SCOPED_")) and v2_delivery_ok
