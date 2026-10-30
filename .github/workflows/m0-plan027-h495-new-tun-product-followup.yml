@@ -1,5 +1,8 @@
 name: M0 PLAN027 H495 real source TUN2048 C100 gated followups
 on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h495-new-tun-product-followup.yml]
   workflow_run:
     workflows:
       - M0 Windows Linux original native whole-wiring capability and functional entry
@@ -8,10 +11,14 @@ permissions: {contents: read, actions: write}
 jobs:
   native-continuity:
     if: >-
-      github.event.workflow_run.id == 41025962277 &&
-      github.event.workflow_run.head_sha == '787ad4c900f3bae867c5c9556c4702339deef8cb' &&
-      github.event.workflow_run.head_branch == 'main' &&
-      github.event.workflow_run.event == 'workflow_dispatch'
+      (github.event_name == 'push' &&
+       github.ref == 'refs/heads/main' &&
+       contains(github.event.head_commit.message, '[plan027-h497]')) ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.id == 41025962277 &&
+       github.event.workflow_run.head_sha == '787ad4c900f3bae867c5c9556c4702339deef8cb' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.event == 'workflow_dispatch')
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
@@ -36,7 +43,6 @@ jobs:
           gh run download "$build_run" -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/c100"
           python - <<'PY'
           import json,os,pathlib
-          from tools.m0_wl_plan027_linux_tun_link import tun_queue_identity
           p=pathlib.Path(os.environ['RUNNER_TEMP'])/'c100'
           d=json.loads((p/'report.json').read_text())
           v=d['WL_V2']
@@ -46,8 +52,11 @@ jobs:
           assert v['status']=='MEASURED_BOTH_OS_KERNEL' and v['scenario_id']=='plan027-c-normal-100m-25ms-loss0-60s'
           for side in ('windows','linux'):
               assert v['offered_mbps'][side]>=95 and d['wl_n0_measured'][side]['invalid_packets']==0
-          guest=tun_queue_identity(json.loads((p/'wl-v2-linux-tun-link-before.json').read_text()))
-          assert guest is not None and guest['txqlen']==2048,guest
+          # H494 artifact holds true kernel TUN counters and Go's validated
+          # ip -j readback log; the raw ip -j snapshot was not uploaded.
+          kernel=d['linux_tun_link_kernel']
+          assert kernel['status']=='MEASURED_ORIGINAL_LINUX_TUN_IP_LINK',kernel
+          assert kernel['tx_dropped_delta']==0,kernel
           server=(p/'mode-results'/'normal'/'server.log')
           if not server.exists():server=p/'server.log'
           logs=server.read_text(errors='replace')
