@@ -85,6 +85,14 @@ class V2Scenarios(unittest.TestCase):
     bad['linux_tun_txqlen_packets']=queue;bad['duration_s']=299
     p.write_text(json.dumps(bad))
     with self.assertRaisesRegex(ValueError,'TUN_QLEN_BOUNDED'):read_scenario(p)
+ def test_plan027_h496_product_default_not_harness_mutated_long100m(self):
+  c=read_scenario(SCENE.parent/"plan027-c-normal-100m-product-tun2048-loss0-300s.json")
+  self.assertEqual((c["public_mode"],c["duration_s"],c["tun_mtu"]),("normal",300,1400))
+  self.assertNotIn("linux_tun_txqlen_packets",c)
+  for side in ("windows_to_linux","linux_to_windows"):
+   self.assertEqual((c[side]["offered_mbps"],c[side]["delay_ms"],c[side]["loss_pct"]),(100,25,0))
+  self.assertEqual(c["scenario_sha256"],
+                   read_scenario(SCENE.parent/"plan027-c-normal-100m-product-tun2048-loss0-300s.json")["scenario_sha256"])
  def test_exact_150m_300ms_0loss_60s(self):
   c=read_scenario(SCENE)
   self.assertEqual(c["duration_s"],60)
