@@ -119,5 +119,6 @@
     "Source7a C50 300s separate Action41067316465 still in flight and NOT_PROMOTED",
     "A5 Go legacy steady A Action41065131823 genuine early Windows exit/Stop NOT_RUN, not comparable CPU; preserve FAIL",
     "Game2/4 source7a and original Linux lifecycle B still in flight"
-  ]
+  ],
+  "source_sha": "7a5d7e83823e96539d2a904a8193a85ec18df30d"
 }
