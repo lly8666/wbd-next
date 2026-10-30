@@ -93,7 +93,12 @@ try:
  # Frozen-unadapted run 40357841232 rejected 546 original NPF frames.
  peer_persona=" --peer-persona windows11"
  report["expected_original_tcp_persona"]="windows11_original_go_server"
- linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1 '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+peer_persona+"\n").encode("utf-8"))
+ # This ONE explicit original-Auto diagnostic scenario activates existing
+ # Rust 500ms FEC/M4 snapshots, no per-record logging or release overhead.
+ egress_diag=(" WBD_FEC_EGRESS_DIAG=1"
+    if mode=="auto" and os.environ.get("WBD_WL_V2_SCENARIO","").endswith(
+        "scenarios/plan027-h461-auto-egress-10m-25ms-loss0-60s.json") else "")
+ linux.write_bytes(("#!/bin/sh\nset -eu\necho $ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+peer_persona+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
  # Linux server authenticated READY only AFTER the genuine Windows TLS client starts.

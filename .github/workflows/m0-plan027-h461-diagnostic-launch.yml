@@ -1,0 +1,53 @@
+# PLAN027 H461 — diagnostic-only source reuse; exactly ONE Auto scene and ONE independent C baseline Action.
+name: M0 PLAN027 H461 bounded Auto diagnosis and C10 launch
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h461-diagnostic-launch.yml]
+permissions: {contents: read, actions: write}
+concurrency:
+  group: m0-plan027-h461-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  launch:
+    if: contains(github.event.head_commit.message, '[plan027-h461-launch]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Attest H460 immutable successful builds (not failed Auto measurement) and dispatch TWO independent single-scene Actions
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA" || exit 1
+          product='3dc623f161d195b92548d422b3fbe592f32bddca'
+          build_run=40996124709
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build_run" --jq .head_sha)" = "$product"
+          gh api "repos/$GH_REPO/actions/runs/$build_run/artifacts" --paginate --jq '.artifacts[].name' > "$RUNNER_TEMP/build-artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$product" "$RUNNER_TEMP/build-artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/build-artifacts"
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          for p,mode in (('scenarios/plan027-h461-auto-egress-10m-25ms-loss0-60s.json','auto'),
+                         ('scenarios/plan027-c-normal-10m-25ms-loss0-60s.json','normal')):
+              c=read_scenario(p)
+              assert c['public_mode']==mode and c['duration_s']==60
+              for side in ('windows_to_linux','linux_to_windows'):
+                  d=c[side];assert (d['offered_mbps'],d['delay_ms'],d['loss_pct'])==(10,25,0)
+              print('PLAN027_H461_SCENE_ATTESTED',c['scenario_id'],c['scenario_sha256'])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=auto -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-h461-auto-egress-10m-25ms-loss0-60s.json \
+            -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+          echo "PLAN027_H461_AUTO_DIAGNOSTIC_DISPATCHED build_run=$build_run source=$product"
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-c-normal-10m-25ms-loss0-60s.json \
+            -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+          echo "PLAN027_H461_C10_DISPATCHED build_run=$build_run source=$product"

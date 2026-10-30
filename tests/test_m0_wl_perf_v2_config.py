@@ -33,6 +33,24 @@ class V2Scenarios(unittest.TestCase):
     p=profile(c,side)
     self.assertEqual((p["offered_mbps"],p["delay_ms"],p["loss_pct"]),(10,250,loss))
     self.assertEqual(sum(row["packets_weight"] for row in p["packet_mix"]),100)
+ def test_plan027_capacity_gradient_and_300s_long_are_source_locked(self):
+  names=(("plan027-c-normal-10m-25ms-loss0-60s",10,60),
+         ("plan027-c-normal-50m-25ms-loss0-60s",50,60),
+         ("plan027-c-normal-100m-25ms-loss0-60s",100,60),
+         ("plan027-c-normal-200m-25ms-loss0-60s",200,60),
+         ("plan027-c-normal-10m-25ms-loss0-300s",10,300))
+  for name,mb,duration in names:
+   p=SCENE.parent/(name+".json")
+   case=read_scenario(p)
+   self.assertEqual((case["scenario_id"],case["duration_s"],case["public_mode"]),(name,duration,"normal"))
+   for side in ("windows","linux"):
+    prof=profile(case,side)
+    self.assertEqual((prof["offered_mbps"],prof["delay_ms"],prof["loss_pct"]),(mb,25,0))
+   if duration==300:
+    changed=json.loads(p.read_text());changed["duration_s"]=301
+    with tempfile.TemporaryDirectory() as d:
+     bad=pathlib.Path(d)/"bad.json";bad.write_text(json.dumps(changed))
+     with self.assertRaisesRegex(ValueError,"WL_V2_BAD_duration_s"):read_scenario(bad)
  def test_legacy_unchanged(self):
   self.assertEqual(get_profile("n0")["offered_mbps"],10)
   self.assertEqual(get_profile("p200-250m-30p")["loss_pct"],30)

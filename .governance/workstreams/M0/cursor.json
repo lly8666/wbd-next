@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 460,
-  "checkpoint_sha": "cb09492d06bf6435df462bbbdb3188ff694a2d24",
+  "sequence": 461,
+  "checkpoint_sha": "3dc623f161d195b92548d422b3fbe592f32bddca",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H460 feature card for H459 real Linux Auto expired CLOSE fix and one independent true Windows↔Linux Auto test under new product SHA. A2/A3 + B Fixed 4 H458 source-locked Actions in flight; no duplicate.",
-  "why_now": "H459 governance Feature catalog run40995823454 red only due declared fec-auto card not modified. H455 B Auto actual CPU 41.8/42s & Windows first receive 0/385; H459 source fixes unexecutable timed CLOSE. Must verify real new-source native Auto, not just core green.",
+  "current_task": "H461: Recovered H460 true Auto twoOS FAIL Windows sent386 received0, Linux89/26, Linux TX CPU40.8s/42s despite H459 deadline fix. Add ONLY opt-in existing native 500ms FEC egress diagnostic to one Auto source-locked H460 prebuilt binaries scenario, launch C10Mbps25ms0 baseline independently. Stage C50/100/200 and 300s fixture without declaring pass.",
+  "why_now": "H460 Action40996124709 native original Win/Linux Auto real FAIL: artifact12951313833 kernel first reception Windows0/386, Linux26/89, Rust Linux TX40.811s/42s, source9 and parity planned9 sent0. Same-owner A2 Normal0 TX CPU4.54s/60 and 30% TX CPU61.52s/60; Fixed30 CPU61.35 and first Windows10.1%. H459 did NOT fix root. Existing `WBD_FEC_EGRESS_DIAG=1` already offers opt-in 2Hz TX/RX counters; do not invent instrumentation framework.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H460 Auto real B and current A2/A3/Fixed B Action results, triage first failure; A4 sustained Auto120s, A5 CPU A/B, B lifecycle, C gradient+5min and final evidence still open.",
+  "next_action": "Collect H461 exactly one Auto diagnostic and C10 baseline real Actions, inspect bounded FEC/TX trace, repair proven hot-loop/driver cause and rerun only affected. C gradient only if capacity permits; A4 Auto >=120s, A5 CPU A/B, B lifecycle/Stop, C matrix &5min remain. A3 Fixed30 first Windows10.1% not quality pass.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①H459 Linux Auto real TX deadline product fix candidate, H460 feature catalog card + one native twoOS Auto Action; no proof until run. ②A2/A3 3 scenario source reuse plus one B Fixed underway; A4/A5 open. ③H455 B Normal+Game4 scopes PASS, Fixed 25/25 UDP & TCP/Stop PASS old M2 oracle red; Auto Windows0/385 and Linux high CPU FAIL, H460 retest pending. ④C/5min not run. ⑤H459 governance feature red, H460 card repair, all original evidence retained."
+  "partial_summary": "①PLAN027 low-rate replacement and ACK implemented; B Auto exact H460 real regression FAIL Windows0/386 Linux26/89 and 40.8s CPU; H461 diagnosis in flight. ②A1 core PASS, A2 true Normal0/30 first business measured, A3 Fixed30 Windows first delivery10.1% despite wrapper green -> FAIL/capacity; A4/A5 OPEN. ③B Normal and Game four scoped PASS, Fixed B short pass readback, Auto B BLOCKER, idle/dead/rotation/blackhole lifecycle pending. ④C first Normal10/25ms0 H461 dispatched once; higher tiers and 5min fixtures staged NOT_RUN. ⑤Root cause/CPU/p99 and full artifact evidence pending, no final readiness."
 }

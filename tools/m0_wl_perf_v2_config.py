@@ -17,7 +17,7 @@ def read_scenario(path):
     mode=cfg.get("public_mode","normal")
     if mode not in ("normal","fixed","game2","game4","game2-fec","game4-fec","auto"):
         raise ValueError("WL_V2_UNSUPPORTED_PUBLIC_MODE")
-    for field,minimum,maximum in (("duration_s",10,240),("warmup_s",0,30),("drain_s",2,30),("tun_mtu",1280,1500)):
+    for field,minimum,maximum in (("duration_s",10,300),("warmup_s",0,30),("drain_s",2,30),("tun_mtu",1280,1500)):
         value=cfg.get(field)
         if type(value) is not int or not minimum<=value<=maximum:
             raise ValueError("WL_V2_BAD_"+field)
