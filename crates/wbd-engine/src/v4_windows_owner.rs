@@ -90,7 +90,7 @@ struct WindowsOriginalM2 {
     feedback_pending:Option<(Option<FeedbackDraft>,u64,bool)>,
     // Only four sender-announced Auto windows: no per-record report queue.
     quality_receive:ReceiveWindows,
-    quality_due:VecDeque<WindowKey>,
+    quality_due:VecDeque<(WindowKey,u64)>,
     quality_awaiting:Option<WindowKey>,
     // Original M3 PN allocator is the single authority for TX boundaries.
     // Only actual NPF outcomes enter F. No second controller/timer thread.
@@ -394,7 +394,8 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
 // Expiry and missing sender CLOSE stay UNKNOWN, never fabricated zero loss.
 fn win_mature_quality_due(m:&mut WindowsOriginalM2,now:MonoNs)
     ->Option<(WindowKey,WireReport)>{
-    while let Some(&key)=m.quality_due.front(){
+    while let Some(&(key,due))=m.quality_due.front(){
+        if now.0<due{return None}
         match m.quality_receive.report_wire(key,now){
             Ok(report)=>return Some((key,report)),
             Err(QualityError::NotMature)=>return None,
@@ -428,10 +429,13 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                     capacity_limited:window.capacity_limited,
                 })
             }else if m.quality_sender.as_ref().is_some_and(|s|
-                next_pn>s.key().last.0 &&
+                (next_pn>s.key().last.0 ||
+                    (s.timed_close_due(now)&&next_pn>s.key().first.0)) &&
                 m.pending.range(s.key().first..=s.key().last).next().is_none()){
+                let last=next_pn.checked_sub(1).ok_or(BAD_STAGE)?
+                    .min(m.quality_sender.as_ref().ok_or(BAD_STAGE)?.key().last.0);
                 let closed=m.quality_sender.as_mut().ok_or(BAD_STAGE)?
-                    .close(now).map_err(|_|BAD_STAGE)?;
+                    .close_prefix(now,RecordPn(last)).map_err(|_|BAD_STAGE)?;
                 m.quality_sender=None;
                 m.quality_close_waiting=Some(closed);
                 Some(crate::v4_native_health::QualityWindowSignal{
@@ -592,7 +596,7 @@ fn m2_finish_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         }
     }
     if let Some(key)=m.quality_awaiting.take(){
-        if npcap_sent==1&&m.quality_due.front()==Some(&key){
+        if npcap_sent==1&&m.quality_due.front().is_some_and(|(k,_)|*k==key){
             m.quality_due.pop_front();
         }
     }
@@ -842,7 +846,7 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
                 epoch:e.authenticated_epoch,direction:inbound,id:signal.id,
                 first:RecordPn(signal.first),last:RecordPn(signal.last)};
             if m.quality_due.len()==4{m.quality_due.pop_front();}
-            m.quality_due.push_back(key);
+            m.quality_due.push_back((key,now.0.saturating_add(3_000_000_000)));
         }
     }
     // A v2 summary cannot affect Auto until the sender's matching

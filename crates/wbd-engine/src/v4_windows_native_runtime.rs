@@ -607,12 +607,23 @@
                  let auto_due=e.auto_actor.as_ref().map(|actor|MonoNs(actor.deadline()));
                  #[cfg(not(feature="fec2_product_record"))]
                  let auto_due:Option<MonoNs>=None;
-                 let next=m.shadow.next_deadline().into_iter()
-                     .chain(fec_due)
-                     .chain(m.health.next_tx_deadline().map(MonoNs))
-                     .chain(auto_due)
-                     .min_by_key(|d|d.0);
-                 m2_wake_timeout_ms(m2_clock(),m.feedback.next_deadline(),next)
+                 let now=m2_clock();
+                  let quality_due=if m.auto_low_rate_mode{
+                      m.quality_sender.as_ref().and_then(|s|s.timed_close_deadline())
+                          .or_else(||m.quality_close_waiting.map(|_|now))
+                          .or_else(||m.quality_sender.is_none()
+                              .then_some(MonoNs(m.quality_next_open_ns)))
+                  }else{None};
+                  let receive_due=m.quality_due.front().map(|(_,due)|MonoNs(*due));
+                  let shadow_due=if m.auto_low_rate_mode{None}
+                      else{m.shadow.next_deadline()};
+                  let next=shadow_due.into_iter().chain(quality_due)
+                      .chain(receive_due).chain(fec_due)
+                      .chain(m.health.next_tx_deadline().map(MonoNs))
+                      .chain(auto_due).min_by_key(|d|d.0);
+                  let receipt_due=if m.auto_low_rate_mode{None}
+                      else{m.feedback.next_deadline()};
+                  m2_wake_timeout_ms(now,receipt_due,next)
              };
              match io::wait_ready(&[stop.handle(),tun.event(),notify.handle()],timeout){
                  Ok(WaitResult::Ready(0))=>Ok(true),

@@ -577,16 +577,23 @@ impl LinuxQualityTx{
     fn due(&self,now:MonoNs)->bool{
         self.closing.is_some()||
         self.sender.as_ref().is_some_and(|s|
-            self.last_settled.is_some_and(|p|p>=s.key().last.0))||
+            (self.last_settled.is_some_and(|p|p>=s.key().last.0)||
+                (s.timed_close_due(now)&&self.last_settled.is_some_and(
+                    |p|p>=s.key().first.0))))||
         (self.sender.is_none()&&now.0>=self.next_open)
     }
     fn next_signal(&mut self,next_pn:u64,now:MonoNs)
         ->Result<Option<crate::v4_native_health::QualityWindowSignal>,i32>{
         use crate::v4_native_health::{QualityWindowSignal as Signal,QualitySignalKind as Kind};
         if self.closing.is_none()&&self.sender.as_ref().is_some_and(|s|
-            self.last_settled.is_some_and(|p|p>=s.key().last.0)){
+            self.last_settled.is_some_and(|p|p>=s.key().last.0)||
+            (s.timed_close_due(now)&&self.last_settled.is_some_and(
+                |p|p>=s.key().first.0))){
+            let last=self.last_settled.ok_or(BAD_STAGE)?
+                .min(self.sender.as_ref().ok_or(BAD_STAGE)?.key().last.0);
             let closed=self.sender.as_mut().ok_or(BAD_STAGE)?
-                .close(now).map_err(|_|BAD_STAGE)?;
+                .close_prefix(now,wbd_types::RecordPn(last))
+                .map_err(|_|BAD_STAGE)?;
             self.sender=None;self.closing=Some(closed);
         }
         if let Some(w)=self.closing {
@@ -5947,9 +5954,11 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         let low_next=e.quality_tx.as_ref()
                             .filter(|tx|tx.sender.is_none()&&tx.closing.is_none())
                             .map(|tx|MonoNs(tx.next_open));
+                        let low_close=e.quality_tx.as_ref().and_then(|tx|
+                            tx.sender.as_ref().and_then(|s|s.timed_close_deadline()));
                         let earliest=fec_deadline.into_iter()
                             .chain(feedback_deadline).chain(low_due).chain(low_next)
-                            .chain(quality_deadline)
+                            .chain(low_close).chain(quality_deadline)
                             .chain(e.native_health.as_ref()
                                 .and_then(|h|h.next_tx_deadline()).map(MonoNs))
                             .min_by_key(|x|x.0);
