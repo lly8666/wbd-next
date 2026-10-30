@@ -81,5 +81,8 @@
     "H495 source-reuse independent C10/Fixed30/Auto; native results not yet claimed",
     "H496 strict gate cannot dispatch 300s while new-source C100 has 11 missing",
     "A4 Auto 120s, A5 CPU, B lifecycle modes, C weak-network 10-200Mbps and stable long test; PLAN027 NOT COMPLETED"
-  ]
+  ],
+  "source_sha": "787ad4c900f3bae867c5c9556c4702339deef8cb",
+  "result": "FAIL",
+  "artifact_verified": false
 }
