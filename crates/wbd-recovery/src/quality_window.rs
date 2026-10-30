@@ -220,12 +220,29 @@ impl ReceiveCounter {
     pub fn close_announced(&mut self,now:MonoNs,first_sent:u16,
         sender_complete:bool,sender_capacity_limited:bool
     )->Result<(),QualityError>{
-        let span=self.key.last.0-self.key.first.0+1;
+        self.close_announced_prefix(self.key.last,now,first_sent,
+            sender_complete,sender_capacity_limited)
+    }
+    /// Sparse windows may CLOSE below the START upper bound only when
+    /// there are no verified DATA above the shorter last PN.
+    pub fn close_announced_prefix(&mut self,last:RecordPn,now:MonoNs,
+        first_sent:u16,sender_complete:bool,sender_capacity_limited:bool
+    )->Result<(),QualityError>{
+        if last.0<self.key.first.0||last.0>self.key.last.0{
+            return Err(QualityError::InvalidRange)
+        }
+        let span=last.0-self.key.first.0+1;
         if u64::from(first_sent)>span||
             (sender_complete&&sender_capacity_limited){
             return Err(QualityError::InvalidCounts)
         }
+        for bit in span as usize..(self.key.last.0-self.key.first.0+1) as usize{
+            if self.seen[bit/64]&(1u64<<(bit%64))!=0{
+                return Err(QualityError::InvalidCounts)
+            }
+        }
         self.close(now)?;
+        self.key.last=last;
         self.sender_first_sent=Some(first_sent);
         self.complete&=sender_complete;
         self.capacity_limited|=sender_capacity_limited;
@@ -335,9 +352,16 @@ impl ReceiveWindows {
     pub fn close_announced(&mut self,key:WindowKey,now:MonoNs,
         first_sent:u16,sender_complete:bool,sender_capacity_limited:bool
     )->Result<(),QualityError>{
+        if key.lane!=self.lane||key.epoch!=self.epoch||
+            key.direction!=self.direction{return Err(QualityError::WrongWindow)}
         let Some(entry)=self.slots.iter_mut().flatten()
-            .find(|entry|entry.key==key)else{return Err(QualityError::WrongWindow)};
-        entry.close_announced(now,first_sent,sender_complete,sender_capacity_limited)
+            .find(|entry|entry.key.id==key.id&&
+                entry.key.first==key.first&&key.last.0<=entry.key.last.0)
+            else{return Err(QualityError::WrongWindow)};
+        entry.close_announced_prefix(key.last,now,first_sent,
+            sender_complete,sender_capacity_limited)?;
+        if self.last_id==Some(key.id){self.last_pn=Some(key.last.0)}
+        Ok(())
     }
     pub fn censor_capacity(&mut self,key:WindowKey)->Result<(),QualityError>{
         let Some(entry)=self.slots.iter_mut().flatten()
@@ -390,6 +414,16 @@ impl SendWindowSampler {
             seen:[0;WINDOW_WORDS],first_sent:0})
     }
     pub fn key(&self)->WindowKey{self.key}
+    /// Nonempty sparse windows may close after two local seconds, provided
+    /// the original native owner fenced all M4/NPF outcomes through last PN.
+    pub fn timed_close_due(&self,now:MonoNs)->bool{
+        self.start_accepted&&self.first_data_seen&&!self.closed&&
+        now.0>=self.opened_at.0.saturating_add(2_000_000_000)
+    }
+    pub fn timed_close_deadline(&self)->Option<MonoNs>{
+        (self.start_accepted&&self.first_data_seen&&!self.closed)
+            .then_some(MonoNs(self.opened_at.0.saturating_add(2_000_000_000)))
+    }
     /// Only a definite driver-accepted authenticated start qualifies. A
     /// delayed start cannot retroactively cover previously emitted DATA.
     pub fn on_start_send_result(&mut self,accepted:bool){
@@ -425,11 +459,24 @@ impl SendWindowSampler {
     /// Closing is local; the receiver still needs an authenticated close
     /// control and its own 3s maturity. Neither clock crosses machines.
     pub fn close(&mut self,now:MonoNs)->Result<ClosedWindow,QualityError>{
-        if self.closed{return Err(QualityError::InvalidRange)}
-        if now.0<self.opened_at.0{return Err(QualityError::ClockReversed)}
+        self.close_prefix(now,self.key.last)
+    }
+    pub fn close_prefix(&mut self,now:MonoNs,last:RecordPn)
+        ->Result<ClosedWindow,QualityError>{
+        if self.closed||now.0<self.opened_at.0||
+            last.0<self.key.first.0||last.0>self.key.last.0{
+            return Err(QualityError::InvalidRange)
+        }
+        let keep=(last.0-self.key.first.0+1) as usize;
+        for bit in keep..(self.key.last.0-self.key.first.0+1) as usize{
+            if self.seen[bit/64]&(1u64<<(bit%64))!=0{
+                return Err(QualityError::InvalidRange)
+            }
+        }
         self.closed=true;
-        Ok(ClosedWindow{key:self.key,first_sent:self.first_sent,
-            closed_at:now,complete:self.start_accepted&&!self.censored,
+        Ok(ClosedWindow{key:WindowKey{last,..self.key},
+            first_sent:self.first_sent,closed_at:now,
+            complete:self.start_accepted&&!self.censored,
             capacity_limited:self.censored})
     }
 }
@@ -512,6 +559,51 @@ mod bounded_window_tests {
             tunnel:TunnelKey{slot:2,generation:9},slot:1,generation:4},
             epoch:[9;16],direction:WireDirection::ClientToServer,
             id,first:RecordPn(first),last:RecordPn(first+1023)}
+    }
+    #[test]
+    fn r2_plan027_sparse_prefix_close_rearms_without_pn_hole(){
+        let first=key(1,50);
+        let mut rx=ReceiveWindows::new(first.lane,first.epoch,first.direction);
+        let mut tx=SendHistory::new(first.lane,first.epoch,first.direction);
+        let mut sampler=SendWindowSampler::new(first,MonoNs(0)).unwrap();
+        sampler.on_start_send_result(true);
+        rx.arm(first,MonoNs(0),true).unwrap();
+        for pn in 50..114{
+            assert!(sampler.on_first_send(RecordPn(pn),FirstSendStatus::Accepted));
+            assert!(rx.on_unique_data(RecordPn(pn),false));
+        }
+        assert!(!sampler.timed_close_due(MonoNs(1_999_999_999)));
+        assert!(sampler.timed_close_due(MonoNs(2_000_000_000)));
+        let closed=sampler.close_prefix(MonoNs(2_000_000_000),
+            RecordPn(113)).unwrap();
+        let key=closed.key;
+        tx.close(closed).unwrap();
+        rx.close_announced(key,MonoNs(2_000_000_001),
+            64,true,false).unwrap();
+        let report=rx.report_wire(key,MonoNs(5_000_000_001)).unwrap();
+        assert_eq!(tx.assess_wire(report,MonoNs(5_000_000_001)).unwrap().lower,0);
+        let next=WindowKey{id:2,first:RecordPn(114),
+            last:RecordPn(1137),..first};
+        rx.arm(next,MonoNs(5_000_000_002),true).unwrap();
+        assert!(rx.on_unique_data(RecordPn(114),false));
+        assert_eq!(rx.close_announced(first,MonoNs(5_000_000_003),
+            64,true,false),Err(QualityError::WrongWindow));
+    }
+    #[test]
+    fn r2_plan027_truncated_close_refuses_higher_verified_data(){
+        let k=key(1,200);
+        let mut rx=ReceiveWindows::new(k.lane,k.epoch,k.direction);
+        rx.arm(k,MonoNs(0),true).unwrap();
+        assert!(rx.on_unique_data(RecordPn(250),false));
+        let short=WindowKey{last:RecordPn(205),..k};
+        assert_eq!(rx.close_announced(short,MonoNs(1),4,true,false),
+            Err(QualityError::InvalidCounts));
+        assert_eq!(rx.report_wire(k,MonoNs(4_000_000_000)),
+            Err(QualityError::NotMature));
+        let next=WindowKey{id:2,first:RecordPn(206),
+            last:RecordPn(1229),..k};
+        assert_eq!(rx.arm(next,MonoNs(4_000_000_001),true),
+            Err(QualityError::InvalidRange));
     }
     #[test]
     fn r2_plan027_receiver_1024_bits_matures_3s_no_duplicates(){
