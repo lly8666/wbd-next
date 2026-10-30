@@ -92,9 +92,15 @@ jobs:
             echo "M0_V4_PUBLIC_MODE_REAL_GATE_FAIL mode=$MODE" >parallel-results/outcome.log
             exit 1
           }
-          grep -q "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_APPLIED_REAL_AUTH_M2_GROUP_M4_TUN_STOP_PASS mode=$MODE" parallel-results/real-mode.log
+          # Source-scoped FEC first app/Stop may PASS while policy
+          # Applied and Auto 2s/8s evidence remain genuinely unqualified.
+          if [[ "$MODE" == fec-fixed ]];then
+            grep -Fq "M0_PLAN027_PUBLIC_FIXED_REAL_FIRST_DELIVERY_STOP_PENDING_ACK mode=$MODE" parallel-results/real-mode.log
+          else
+            grep -Fq "M0_PLAN027_AUTO_SHORT_BURST_DELIVERY_STOP_PENDING_QUALITY_NOT_QUALIFIED mode=$MODE" parallel-results/real-mode.log
+          fi
           cp fixed-kernel-result/public-v4-normal-business.log parallel-results/real-public-app.log
-          echo "M0_V4_PUBLIC_MODE_REAL_GATE_PASS mode=$MODE" >parallel-results/outcome.log
+          echo "M0_PLAN027_FEC_REAL_DELIVERY_STOP_ONLY mode=$MODE APPLIED=NOT_VERIFIED" >parallel-results/outcome.log
       - name: Immutable per-lane receipt (failures must remain)
         if: always()
         shell: bash

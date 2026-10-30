@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 444,
-  "checkpoint_sha": "56580c3a32b8a2f378b7ac87acb57a2dffe923fa",
+  "sequence": 445,
+  "checkpoint_sha": "3e2bdbc7599e9557a62e4494e9c3aaf1c484a8dc",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H444 Linux Fixed one-shot authenticated startup Quality source candidate: max two START/CLOSE windows; matched AEAD+replay summary plus genuine source/parity M4 required before Applied. Native qualification not yet observed.",
-  "why_now": "H442 real Fixed64 delivered but only old M2 witness missing, so H443 smoke stays pending. H444 wires finite scoped v2 summary instead of treating outer ACK as delivery.",
+  "current_task": "H445 correct stale M2 positive workflow assertions. H444 native-functional compiled/success. Linux true Fixed/Auto first-delivery Smoke qualified ONLY for first app, not Applied/Auto quality.",
+  "why_now": "H443 1pct script output renamed and receipt-free, PLAN012 still demanded stale file, parallel still old APPLIED marker. Old action FAIL is invalid test oracle while actual 64 FEC UDP delivered.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H444 source-native CI first; wire Windows corresponding finite Fixed bootstrap, prove genuine Fixed Applied or record failure, then complete A1-A5/B/C and 5min. Reuse SOURCE builds.",
+  "next_action": "Inspect H445 CI for real failures; implement Windows finite Fixed bootstrap and prove true twoOS authenticated Applied. Then A1-A5/B lifecycle/C capacity/5min and perf source evidence.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①Fixed Linux one-shot quality bootstrap H444 source candidate not yet compiled, Windows counterpart open. ②A1-A5 unfinished, ③B Windows/Linux real Fixed/Auto/Game+life unfinished, ④C+5min unrun, ⑤CI/evidence open."
+  "partial_summary": "①Linux one-shot Fixed new bootstrap H444 native-functional PASS, Windows reciprocal open; ②A missing full, ③B pending real Applied/Auto+Game life, ④C/5min not run, ⑤H445 script-oracle CI aligned but not executed."
 }

@@ -348,7 +348,7 @@ jobs:
       # Game2/4 modes run against the SAME compiled source and real OS,
       # even when the opportunistic 1%-loss policy is deficient. It is
       # NEVER considered a successful product qualification on its own.
-      - name: Real public 1pct bidirectional loss exact 512 distinct real UDP and authentic frozen M2
+      - name: Real public 1pct loss exact 512 real UDP, no per-record M2
         id: v4_real_loss
         continue-on-error: true
         shell: bash
@@ -357,16 +357,16 @@ jobs:
           # The two exact same compiled product binaries, reused, now under
           # genuine 1% independent Linux veth netem kernel loss BOTH ways.
           # Assert all 512 original offers, real per-direction kernel drops,
-          # distinct first-delivery/missing, authentic M2 and joined Stop.
+          # distinct first-delivery/missing, no legacy M2, and joined Stop.
           # Outer opportunistic retransmit need not recover lost app UDP.
           WBD_V4_PUBLIC_KERNEL_LOSS=1 bash tools/m0-v4-public-real-linux-netns.sh fixed-build \
             >fixed-kernel-result/v4-public-1pct-real-cli.log 2>&1 || {
             tail -85 fixed-kernel-result/v4-public-1pct-real-cli.log; exit 1;
           }
-          cat fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
+          cat fixed-kernel-result/v4-public-1pct-no-M2-real-delivery.log
           grep -q 'M0_V4_PUBLIC_REAL_1PCT_LOSS_ACCOUNTED_STOP_PASS' \
-            fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
-      - name: Legacy source-locked Fixed applied and sparse Auto delivery/Stop smoke (Auto quality NOT qualified)
+            fixed-kernel-result/v4-public-1pct-no-M2-real-delivery.log
+      - name: Source-locked Linux Fixed/Auto first-delivery smoke (Applied NOT qualified)
         shell: bash
         run: |
           set -euo pipefail
@@ -383,8 +383,9 @@ jobs:
                 exit 1
               }
             if [[ "$mode" == fec-fixed ]]; then
-              # Legacy Fixed still requires its old M2 applied witness.
-              marker="M0_PUBLIC_ORIGINAL_GO_V4_FEC2_APPLIED_REAL_AUTH_M2_GROUP_M4_TUN_STOP_PASS mode=$mode"
+              # Genuine FEC first app delivery is independent of
+              # pending authenticated bootstrap Applied evidence.
+              marker="M0_PLAN027_PUBLIC_FIXED_REAL_FIRST_DELIVERY_STOP_PENDING_ACK mode=$mode"
             else
               # A sparse 64-record Auto smoke is not a mature 1024-PN
               # Quality cohort; do not mislabel its pending readback PASS.
@@ -421,7 +422,7 @@ jobs:
           set -euo pipefail
           test "${{ steps.v4_real_loss.outcome }}" = success
           grep -Fq 'M0_V4_PUBLIC_REAL_1PCT_LOSS_ACCOUNTED_STOP_PASS' \
-            fixed-kernel-result/v4-public-1pct-authentic-M2-recovery.log
+            fixed-kernel-result/v4-public-1pct-no-M2-real-delivery.log
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
