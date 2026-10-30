@@ -1,0 +1,103 @@
+# PLAN027 H467: one artifact-proven source rebuild, two independent native measurements.
+name: M0 PLAN027 H467 Auto repair verification and gated C50
+on:
+  workflow_run:
+    workflows:
+      - M0 Windows Linux original native whole-wiring capability and functional entry
+    types: [completed]
+permissions: {contents: read, actions: write}
+jobs:
+  auto:
+    if: >-
+      github.event.workflow_run.id == 41002998813 &&
+      github.event.workflow_run.head_sha == 'a61eef334068512b00a1db3137a51f3d0489020c' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Source and product evidence then ONE live Auto kernel 60s scenario
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          product='a61eef334068512b00a1db3137a51f3d0489020c'
+          build_run=41002998813
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build_run" --jq .head_sha)" = "$product"
+          gh api "repos/$GH_REPO/actions/runs/$build_run/artifacts" --paginate --jq '.artifacts[].name' > "$RUNNER_TEMP/plan027-artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$product" "$RUNNER_TEMP/plan027-artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/plan027-artifacts"
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario('scenarios/plan027-h461-auto-egress-10m-25ms-loss0-60s.json')
+          assert s['public_mode']=='auto' and s['duration_s']==60
+          for k in ('windows_to_linux','linux_to_windows'):
+              assert (s[k]['offered_mbps'],s[k]['delay_ms'],s[k]['loss_pct'])==(10,25,0)
+          print('H467_AUTO_EXACT_SCENARIO',s['scenario_sha256'])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=auto -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-h461-auto-egress-10m-25ms-loss0-60s.json \
+            -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+          echo "PLAN027_H467_AUTO_TRUE_SOURCE_DISPATCHED=$product build=$build_run"
+  c50:
+    if: >-
+      github.event.workflow_run.id == 41002998813 &&
+      github.event.workflow_run.head_sha == 'a61eef334068512b00a1db3137a51f3d0489020c' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Require completed old C10 and NEW source Normal smoke before C50
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          product='a61eef334068512b00a1db3137a51f3d0489020c'
+          build_run=41002998813
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build_run" --jq .head_sha)" = "$product"
+          gh api "repos/$GH_REPO/actions/runs/$build_run/artifacts" --paginate --jq '.artifacts[].name' > "$RUNNER_TEMP/plan027-artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$product" "$RUNNER_TEMP/plan027-artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/plan027-artifacts"
+          mkdir -p $RUNNER_TEMP/c10 $RUNNER_TEMP/current
+          gh run download 41000374541 -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/c10"
+          gh run download "$build_run" -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/current"
+          python - <<'PY'
+          import json,os,pathlib
+          c10=pathlib.Path(os.environ['RUNNER_TEMP'])/'c10/report.json'
+          a=json.loads(c10.read_text());v=a['WL_V2']
+          assert a['linux_binary_source']=='0daddf65ef1ae0abf2e42dc841b96ed4458a8fb9'
+          assert a['stop']=='PASS_BOTH_OWNED' and v['owned_stop']=='PASS_BOTH_OWNED'
+          assert v['status']=='MEASURED_BOTH_OS_KERNEL' and v['scenario_id']=='plan027-c-normal-10m-25ms-loss0-60s'
+          for side in ('windows','linux'):
+              assert v['offered_mbps'][side]>=9.5 and v['first_delivery_fraction'][side]>=.999
+          p=pathlib.Path(os.environ['RUNNER_TEMP'])/'current/mode-results/normal/report.json'
+          d=json.loads(p.read_text())
+          assert d['linux_binary_source']=='a61eef334068512b00a1db3137a51f3d0489020c'
+          assert d['mode_public']=='PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal'
+          assert d['stop']=='PASS_BOTH_OWNED'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario('scenarios/plan027-c-normal-50m-25ms-loss0-60s.json')
+          assert s['public_mode']=='normal' and s['duration_s']==60
+          for k in ('windows_to_linux','linux_to_windows'):
+              assert (s[k]['offered_mbps'],s[k]['delay_ms'],s[k]['loss_pct'])==(50,25,0)
+          print('PLAN027_H467_C50_GATED_BY_BOTH_STOP_FIRST_DELIVERY_AND_PRODUCT',s['scenario_sha256'])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-c-normal-50m-25ms-loss0-60s.json \
+            -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+          echo "PLAN027_H467_C50_SOURCE_DISPATCHED=$product build=$build_run"
