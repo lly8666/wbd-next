@@ -8,6 +8,7 @@ from m0_wl_native_mtu_contract import configured_native_test_mtu
 from m0_wl_n0_drop_delta import latest_counter, measured_delta
 from m0_wl_impairment_profile import get_profile
 from m0_wl_lock_profile import parse_native_lock_profile
+from m0_wl_plan027_linux_tun_fq import fq_delta
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
 configured_mtu=configured_native_test_mtu()
@@ -416,6 +417,16 @@ print(json.dumps(result),flush=True)
    if scenario:cmd.append(unix(v2_path))
    if stage_index is not None:cmd.append(str(stage_index))
    return run(cmd,timeout=35)
+  # Actual Linux TUN FQ kernel qdisc, distinct from WSL eth0/IFB netem.
+  def tun_fq_snapshot(phase):
+   try:
+    rows=json.loads(wsl("tc","-s","-j","qdisc","show","dev","wbdwl4",timeout=10))
+    (out/("wl-v2-linux-tun-fq-"+phase+".json")).write_text(json.dumps(rows,indent=2)+"\n")
+    return rows
+   except (ValueError,RuntimeError) as error:
+    report["linux_tun_fq_"+phase+"_error"]=type(error).__name__
+    return None
+  tun_fq_before=tun_fq_snapshot("before") if scenario else None
   owned=out/"wl-n0-netem-owned.json"
   try:
    report["WL_N0"]="ENVIRONMENT_OR_PRODUCT_NOT_YET_VERIFIED"
@@ -507,6 +518,10 @@ print(json.dumps(result),flush=True)
     for p in (linuxrate,windowsrate):
      if p.poll() is None:p.terminate()
    print(netem("snapshot"),flush=True)
+   if scenario:
+    tun_fq_after=tun_fq_snapshot("after")
+    report["linux_tun_fq_kernel"]=fq_delta(tun_fq_before,tun_fq_after)
+    print("WL_V2_LINUX_TUN_FQ_KERNEL "+json.dumps(report["linux_tun_fq_kernel"],sort_keys=True),flush=True)
    npf_after=latest_counter(out/"client.log")
    npf_delta=measured_delta(npf_before,npf_after)
    report["wl_n0_npcap_drop"]={

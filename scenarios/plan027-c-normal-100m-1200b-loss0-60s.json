@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "scenario_id": "plan027-c-normal-100m-1200b-loss0-60s",
+  "public_mode": "normal",
+  "duration_s": 60,
+  "warmup_s": 5,
+  "drain_s": 5,
+  "tun_mtu": 1400,
+  "seed": 20261030,
+  "windows_to_linux": {
+    "offered_mbps": 100,
+    "delay_ms": 25,
+    "loss_pct": 0,
+    "tc_rate_mbps": null,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 100
+      }
+    ]
+  },
+  "linux_to_windows": {
+    "offered_mbps": 100,
+    "delay_ms": 25,
+    "loss_pct": 0,
+    "tc_rate_mbps": null,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 100
+      }
+    ]
+  }
+}
