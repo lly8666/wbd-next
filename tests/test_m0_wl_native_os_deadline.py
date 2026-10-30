@@ -23,6 +23,12 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertLess(time.monotonic()-start,10)
         self.assertIn("WL_WSL2_COMMAND_TIMEOUT seconds=1",p.stderr)
 
+    def test_owned_linux_pid_script_expands_shell_pid(self):
+        # A literal "$" leaves an invalid two-byte PID file after real UDP.
+        script=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()
+        self.assertIn("echo $ > ",script)
+        self.assertNotIn("echo $ > ",script)
+
     def test_hard_guard_is_whole_step_not_only_mode(self):
         y=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         self.assertIn("WL_WSL2_OUTER_WATCHDOG_ARMED",y)

@@ -5907,6 +5907,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut last_cpu_sample=Instant::now();
             #[cfg(feature="fec2_product_record")]
             let mut last_egress_diag=Instant::now();
+            #[cfg(feature="fec2_product_record")]
+            let mut diag_turn_err=[0u64;4]; // aggregate only in explicit opt-in
             let mut tx_storage=Vec::<TxDispatch>::with_capacity(32);
             let mut tx_pending=Vec::<(crate::memory::UniqueBuffer,usize)>::with_capacity(32);
             let mut tx_prefetched=Vec::<crate::memory::UniqueBuffer>::with_capacity(8);
@@ -5925,11 +5927,18 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     // one best-effort *slow* session snapshot, never sleep
                     // waiting for a diagnostic lock in the DATA sender.
                     let slow=tx_cell.try_lock().ok().and_then(|e|
-                        e.fec2_live_tx.as_ref().map(|stream|
-                            (e.server_side,original_fec_tx_snapshot(stream.report()))));
-                    if let Some((server_side,fec))=slow {
+                        e.fec2_live_tx.as_ref().map(|stream|{
+                            let report=stream.report();
+                            (e.server_side,original_fec_tx_snapshot(report),
+                                report.queued_jobs,report.open_bytes,
+                                e.fec2_staged_pns.len(),e.fec2_fail_reasons,
+                                stream.next_deadline().map(|d|d.0))
+                        }));
+                    if let Some((server_side,fec,queued,open,staged,reasons,next_due))=slow {
                         // Logging only after the owner mutex has been dropped.
-                        eprintln!("V4_PUBLIC_FEC2_EGRESS_DIAG role={} side=tx ns={} tun_read={} source_queued={} m4_copied={} m4_errors={} m4_uncertain={} backpressure={} route_refresh={} fec_first={} fec_parity_planned={} fec_parity_sent={}",
+                        let chain:Vec<u64>=stats.tx_chain.iter().map(|x|
+                            x.load(Ordering::Relaxed)).collect();
+                        eprintln!("V4_PUBLIC_FEC2_EGRESS_DIAG role={} side=tx ns={} tun_read={} source_queued={} m4_copied={} m4_errors={} m4_uncertain={} backpressure={} route_refresh={} fec_first={} fec_parity_planned={} fec_parity_sent={} queued={} open_bytes={} staged={} reasons={:?} next_due={:?} turn_err={:?} chain={:?}",
                             if server_side{"server"}else{"client"},
                             loop_now().0,
                             stats.fec_m1_ingress[0].load(Ordering::Relaxed),
@@ -5939,7 +5948,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             stats.tx_uncertain.load(Ordering::Relaxed),
                             stats.tx_backpressure.load(Ordering::Relaxed),
                             stats.route_refresh.load(Ordering::Relaxed),
-                            fec[0],fec[8],fec[9]);
+                            fec[0],fec[8],fec[9],queued,open,staged,
+                            reasons,next_due,diag_turn_err,chain);
                     }
                 }
                 if split_ingress {
@@ -6082,13 +6092,24 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     fec_ingress_on
                 ){
                     Ok(done)=>{
+                        #[cfg(feature="fec2_product_record")]
+                        if egress_diag && done.failed {
+                            diag_turn_err[0]=diag_turn_err[0].saturating_add(1);
+                        }
                         stats.tx.fetch_add(u64::from(done.copied),Ordering::Relaxed);
                         stats.tx_dropped.fetch_add(u64::from(done.definitely_unsent),Ordering::Relaxed);
                         stats.tx_uncertain.fetch_add(u64::from(done.uncertain),Ordering::Relaxed);
                         if done.backpressure{stats.tx_backpressure.fetch_add(1,Ordering::Relaxed);}
                         if done.failed{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
                     }
-                    Err(_)=>{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
+                    Err(code)=>{
+                        #[cfg(feature="fec2_product_record")]
+                        if egress_diag {
+                            let slot=if code==BAD_STAGE{1}else if code==FULL{2}else{3};
+                            diag_turn_err[slot]=diag_turn_err[slot].saturating_add(1);
+                        }
+                        stats.tx_error.fetch_add(1,Ordering::Relaxed);
+                    }
                 }
                 #[cfg(feature="fec2_product_record")]
                 if background_original_repair_once(&tx_cell,&stop_tx).is_err(){

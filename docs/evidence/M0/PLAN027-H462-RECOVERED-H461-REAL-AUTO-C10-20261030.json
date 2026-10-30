@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_product_sha": "3dc623f161d195b92548d422b3fbe592f32bddca",
+  "source_harness_sha": "3b1aac65c8c1625dad87e9933597f7ddd864f54e",
+  "recorded": "2026-10-30",
+  "cases": [
+    {
+      "run": 40998035077,
+      "job": 123875738083,
+      "artifact": 12951904475,
+      "mode": "Auto Windows↔Linux native10Mbps25ms0",
+      "status": "FAIL",
+      "windows": {
+        "sent": 384,
+        "first_recv": 0
+      },
+      "linux": {
+        "sent": 99,
+        "first_recv": 25
+      },
+      "linux_m4": {
+        "errors": 32621976,
+        "first_enqueued": 10,
+        "first_copied": 9,
+        "parity_planned": 9,
+        "parity_sent": 0
+      },
+      "stop": "NOT_RUN"
+    },
+    {
+      "run": 40998037302,
+      "job": 123875756813,
+      "artifact": 12952331677,
+      "mode": "Normal C10Mbps25ms0 60s",
+      "status": "FAIL_ON_RESTART",
+      "business_phase": "MEASURED",
+      "fraction_first_windows": 0.99999,
+      "fraction_first_linux": 1,
+      "offered_windows_mbps": 9.9899,
+      "offered_linux_mbps": 10,
+      "post_business_linux_start_timeout_s": 10,
+      "stop": "NOT_RUN",
+      "oneway_p99": "NOT_RUN"
+    }
+  ],
+  "source_scope": "scoped real public original-Go TLS Windows NPF/Wintun and Linux raw/TUN; no physical qualification",
+  "task_status": "UNFINISHED"
+}
