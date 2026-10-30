@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "status": "PARTIAL_ACTIVE",
+  "recovered_from_cursor_checkpoint": "895b225b62ba1992c82a67c21bf981bf38200ff7",
+  "head_at_tier_dispatch": "d96d3272fa0f0d754085363915f60bd8dbde673c",
+  "product_source": "0b7391a182f05947419c1211f01058b4798370a3",
+  "original_two_os_native_action": 41032003068,
+  "artifact_id": 12965814728,
+  "downloaded_zip_sha256": "1ab93512e11d271b8ebed9d574c9e271af97ed58db9a7365062763f66556f916",
+  "test": "Normal/off 10Mbps each 250ms each one-way 30% each tc true 60s",
+  "linux": {
+    "first_wire_bytes": 84988196,
+    "repair_accepted_wire_bytes": 3690533,
+    "repair_packets": 3659,
+    "R_over_F": 0.04342406561965382,
+    "reported_control_C": "NOT_PRESENT_IN_LINUX_JOIN_SUMMARY",
+    "auth_acked": 0,
+    "retired_expired": 46703,
+    "shadow_outstanding_stop": 0
+  },
+  "windows": {
+    "first_wire_bytes": 86377653,
+    "repair_accepted_wire_bytes": 1200281,
+    "control_wire_bytes": 2205,
+    "repair_packets": 1123,
+    "R_over_F": 0.013895735277734392,
+    "R_over_F_plus_R_plus_C": 0.013704945136019936,
+    "candidates": 1123,
+    "expired_first": 49249,
+    "quota_rejected": 0
+  },
+  "actual_tc_drop": {
+    "eth0": 31456,
+    "ifb": 30495
+  },
+  "app_first_fraction": {
+    "linux": 0.702252,
+    "windows": 0.706492
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "native_action_conclusion": "SUCCESS",
+  "limitations": [
+    "genuine candidate and immutable repair proof; still only scoped 60s",
+    "30% first delivery approximately bare line; no inner application improvement proven",
+    "Windows R 1.39% and Linux R 4.34%, prior old per-Receipt controls source9ed3 signed Windows 50M comparable tiers ~0.5/2.4/4.7/8% R/total at 1/5/10/30; not same SOURCE/measurement and not automatic thresholds",
+    "SACK remains unnegotiated, no artificial repair volume added"
+  ],
+  "tier_dispatch": {
+    "initial_orchestrator_action": 41039527670,
+    "initial_status": "FAIL_PRE_DISPATCH",
+    "reason": "existing legacy scenario has no explicit public_mode and normal is default; KeyError corrected; no scenario spawned by failed orchestration",
+    "corrected_orchestrator_action": 41039732552,
+    "corrected_status": "SUCCESS_DISPATCH_ONLY",
+    "build_reuse_action": 41032003068,
+    "scenes": "four independent 50Mbps both-direction,150ms each, loss 1/5/10/30%,60s",
+    "scene_actions": {
+      "loss1": 41039752111,
+      "loss5": 41039755447,
+      "loss10": 41039758730,
+      "loss30": 41039762110
+    },
+    "scene_results": "IN_FLIGHT_NOT_YET_CLOSED"
+  },
+  "other_open": [
+    "PLAN027 A4 real 240s original child native Stop PASS but test failure due wrong >=.999 with actual staged tc; corrected oracle not yet rerun",
+    "A5 original Go baseline Windows exit and Stop NOT_RUN",
+    "Game2/4 prior source actions 41029390768 and 41029393488 canceled; no coverage",
+    "B full lifecycle and capacity C 300s/200M not closed",
+    "new-source C100 60s had 11 first misses; exact-zero 300s gate not launched"
+  ],
+  "physical": "NOT_RUN"
+}
