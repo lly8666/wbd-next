@@ -1,0 +1,56 @@
+name: M0 PLAN027 H508 source1644 A3 A4 and C100 independent true native
+on:
+  workflow_run:
+    workflows:
+      - M0 Windows Linux original native whole-wiring capability and functional entry
+    types: [completed]
+permissions: {contents: read, actions: write}
+jobs:
+  new-source-independent-a3-a4-c100:
+    if: >-
+      github.event.workflow_run.id == 41041996161 &&
+      github.event.workflow_run.event == 'workflow_dispatch' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_sha == '1644df34d241d487c5c5eb704a1a0a2e5f506f5e' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Three independent scene controllers reuse one manifest; no product rebuild
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          src=1644df34d241d487c5c5eb704a1a0a2e5f506f5e
+          build=41041996161
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .head_sha)" = "$src"
+          gh api "repos/$GH_REPO/actions/runs/$build/artifacts" --jq '.artifacts[].name' > "$RUNNER_TEMP/product-artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$src" "$RUNNER_TEMP/product-artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/product-artifacts"
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          rows=[
+           ('fixed','scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json',60),
+           ('auto','scenarios/plan027-a4-auto-10m-staged-240s.json',240),
+           ('normal','scenarios/plan027-c-normal-100m-25ms-loss0-60s.json',60)
+          ]
+          for mode,path,duration in rows:
+              c=read_scenario(path)
+              assert c.get('public_mode','normal')==mode and c['duration_s']==duration
+              print('H508_REUSE_NATIVE_SINGLE_SCENE',mode,path,c['scenario_sha256'])
+          PY
+          while read -r mode path; do
+            gh workflow run m0-wl-public-normal-full.yml --ref main \
+              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="$path" \
+              -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
+            echo "H508_INDEPENDENT_NATIVE $mode $path"
+          done <<'EOF'
+          fixed scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json
+          auto scenarios/plan027-a4-auto-10m-staged-240s.json
+          normal scenarios/plan027-c-normal-100m-25ms-loss0-60s.json
+          EOF
