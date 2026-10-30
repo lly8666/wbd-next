@@ -255,6 +255,16 @@
          assert!(x.future.is_empty());
          assert_eq!(x.verified(7000,10),8000);
      }
+     #[test]
+     fn h515_authenticated_outer_gap_sack_and_then_real_cumulative(){
+         let mut ack=PresentationAck::new(100);
+         assert_eq!(ack.verified(200,100),100);
+         let (blocks,count)=ack.sacks();
+         assert_eq!(count,1);
+         assert_eq!((blocks[0].start,blocks[0].end),(200,300));
+         assert_eq!(ack.verified(100,100),300);
+         assert_eq!(ack.sacks().1,0);
+     }
  }
   struct NativeSession {
      stop:Arc<WakeEvent>,
@@ -882,8 +892,8 @@
  pub struct WbdWinNativeAttachV2 {
      pub version:u32,
      pub size:u32,
-     pub mode:u32, // 1 Fixed, 2 Auto. Game requires separate multi-lane attach.
-     pub reserved:u32,
+     pub mode:u32, // 0 Normal, 1 Fixed, 2 Auto. Game stays multi-lane.
+     pub reserved:u32, // bit0 Auto aggressive; bit1 Go-negotiated SACK
      pub normal:WbdWinNativeAttachV1,
  }
  #[no_mangle]

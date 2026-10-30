@@ -809,7 +809,7 @@
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_native_io.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io.go",
-      "result_blob": "d27aa26262b1725794165fdbaaba9a5cdcc365d4"
+      "result_blob": "96f24e506ea765e9719b252e850a94e4896f18b4"
     },
     {
       "kind": "create",
