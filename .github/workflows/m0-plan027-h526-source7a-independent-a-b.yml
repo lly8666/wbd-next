@@ -6,7 +6,7 @@ on:
 permissions: {contents: read, actions: write}
 jobs:
   source-locked-a-b-seven:
-    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h526-a-b-once]')
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h527-a-b-once]')
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
@@ -32,13 +32,13 @@ jobs:
           python - <<'PY'
           from tools.m0_wl_perf_v2_config import read_scenario
           rows=[
-    ('normal','scenarios/plan027-a2-normal-10m-250ms-0loss-60s.json',10,60),
-    ('normal','scenarios/wl-outer-repair-10m-250ms-loss30-60s.json',10,60),
-    ('fixed','scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json',10,60),
-    ('auto','scenarios/plan027-a4-auto-10m-staged-240s.json',10,240),
-    ('game2-fec','scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json',10,20),
-    ('game4-fec','scenarios/wl-game4-fixed6-10m-75ms-loss30-20s.json',10,20),
-    ('normal','scenarios/plan027-c-normal-10m-25ms-loss0-60s.json',10,60),
+          ('normal','scenarios/plan027-a2-normal-10m-250ms-0loss-60s.json',10,60),
+          ('normal','scenarios/wl-outer-repair-10m-250ms-loss30-60s.json',10,60),
+          ('fixed','scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json',10,60),
+          ('auto','scenarios/plan027-a4-auto-10m-staged-240s.json',10,240),
+          ('game2-fec','scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json',10,20),
+          ('game4-fec','scenarios/wl-game4-fixed6-10m-75ms-loss30-20s.json',10,20),
+          ('normal','scenarios/plan027-c-normal-10m-25ms-loss0-60s.json',10,60),
           ]
           for mode,path,rate,duration in rows:
               cfg=read_scenario(path)
@@ -53,11 +53,11 @@ jobs:
               -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
             echo "H526_DISPATCHED_ONE_ACTION $mode $scene perf_ab=$ab"
           done <<'EOF'
-normal scenarios/plan027-a2-normal-10m-250ms-0loss-60s.json false
-normal scenarios/wl-outer-repair-10m-250ms-loss30-60s.json false
-fixed scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json false
-auto scenarios/plan027-a4-auto-10m-staged-240s.json false
-game2-fec scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json false
-game4-fec scenarios/wl-game4-fixed6-10m-75ms-loss30-20s.json false
-normal scenarios/plan027-c-normal-10m-25ms-loss0-60s.json true
-EOF
+          normal scenarios/plan027-a2-normal-10m-250ms-0loss-60s.json false
+          normal scenarios/wl-outer-repair-10m-250ms-loss30-60s.json false
+          fixed scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json false
+          auto scenarios/plan027-a4-auto-10m-staged-240s.json false
+          game2-fec scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json false
+          game4-fec scenarios/wl-game4-fixed6-10m-75ms-loss30-20s.json false
+          normal scenarios/plan027-c-normal-10m-25ms-loss0-60s.json true
+          EOF
