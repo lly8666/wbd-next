@@ -38,6 +38,18 @@ class V2Scenarios(unittest.TestCase):
                 'WL_V2_AUTO_KERNEL_PHASE_NOT_APPLIED',
                 '"kernel_phases_applied"','"a4_auto_mature_grade"'):
    self.assertIn(guard,e2e)
+ def test_plan027_c_game4_fec_max20_and_normal_off_loss30(self):
+  pairs=(
+   ("plan027-c-game4-fec-20m-250ms-loss30-60s","game4-fec",20),
+   ("wl-outer-repair-10m-250ms-loss30-60s","normal",10),
+  )
+  for name,mode,rate in pairs:
+   c=read_scenario(SCENE.parent/(name+".json"))
+   self.assertEqual((c["public_mode"],c["duration_s"],c["tun_mtu"]),(mode,60,1400))
+   for side in ("windows","linux"):
+    p=profile(c,side)
+    self.assertEqual((p["offered_mbps"],p["delay_ms"],p["loss_pct"]),(rate,250,30))
+   self.assertEqual(read_scenario(SCENE.parent/(name+".json"))["scenario_sha256"],c["scenario_sha256"])
  def test_exact_150m_300ms_0loss_60s(self):
   c=read_scenario(SCENE)
   self.assertEqual(c["duration_s"],60)

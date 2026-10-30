@@ -1,0 +1,50 @@
+name: M0 PLAN027 H477 real Normal off30 and Game4 max20 loss30
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h477-loss30-game4.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  guarded-two-true-native-witnesses:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-h477]') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Exact single binary plus both low-rate real loss30 scenarios
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          build_run=41002998813
+          product='a61eef334068512b00a1db3137a51f3d0489020c'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build_run" --jq .head_sha)" = "$product"
+          gh api "repos/$GH_REPO/actions/runs/$build_run/artifacts" --paginate --jq '.artifacts[].name' > "$RUNNER_TEMP/verified-binaries"
+          grep -Fx "m0-wl-windows-product-binaries-$product" "$RUNNER_TEMP/verified-binaries"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/verified-binaries"
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          for filename,mode,mbps in (
+              ("scenarios/wl-outer-repair-10m-250ms-loss30-60s.json","normal",10),
+              ("scenarios/plan027-c-game4-fec-20m-250ms-loss30-60s.json","game4-fec",20)):
+              c=read_scenario(filename)
+              assert c["public_mode"]==mode and c["duration_s"]==60 and c["tun_mtu"]==1400
+              for side in ("windows_to_linux","linux_to_windows"):
+                  assert (c[side]["offered_mbps"],c[side]["delay_ms"],c[side]["loss_pct"])==(mbps,250,30)
+              print("H477_NATIVE_REAL_LOSS30_SOURCE",c["scenario_id"],c["scenario_sha256"])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/wl-outer-repair-10m-250ms-loss30-60s.json \
+            -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+          echo H477_DISPATCH_NORMAL_OFF30_NOT_FEC_A2
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=game4-fec -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-c-game4-fec-20m-250ms-loss30-60s.json \
+            -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+          echo H477_DISPATCH_GAME4_FEC_MAX20_LOSS30
