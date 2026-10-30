@@ -1,0 +1,62 @@
+name: M0 PLAN027 H537 one true 30pct after source080 genuine 0pct
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h537-new-source-30-after-zero.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  source-locked-damaged-one:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h537-loss30-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify original full two-OS no-loss artifact then dispatch exactly one 30pct scenario
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          src=08069b1513a9cba61d0b315dde03505f97ef796c
+          build=41072984387
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .head_sha)" = "$src"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$build/artifacts" --jq '.artifacts[].name' > "$RUNNER_TEMP/h537-artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$src" "$RUNNER_TEMP/h537-artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/h537-artifacts"
+          grep -Fx m0-wl-full-public-normal-direct "$RUNNER_TEMP/h537-artifacts"
+          mkdir -p "$RUNNER_TEMP/no-loss"
+          gh run download "$build" --repo "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/no-loss"
+          export REAL_ROOT="$RUNNER_TEMP/no-loss"
+          python3 - <<'PY'
+          import os,pathlib,json,re
+          from tools.m0_wl_perf_v2_config import read_scenario
+          root=pathlib.Path(os.environ['REAL_ROOT'])
+          r=json.loads((root/'report.json').read_text())
+          src='08069b1513a9cba61d0b315dde03505f97ef796c'
+          assert r['source']==src and r['linux_binary_source']==src
+          assert r['stop']=='PASS_BOTH_OWNED' and r['mode_public'].endswith('_normal')
+          v=r['WL_V2']
+          z=read_scenario('scenarios/plan027-a2-normal-10m-250ms-0loss-60s.json')
+          assert v['status']=='MEASURED_BOTH_OS_KERNEL' and v['scenario_sha256']==z['scenario_sha256']
+          assert all(v['first_delivery_fraction'][side]>=.999 for side in ('windows','linux'))
+          q=json.loads((root/'wl-n0-netem-after.json').read_text())
+          assert all(next(x['drops'] for x in q[side] if x['kind']=='netem')==0 for side in ('eth0','ifb'))
+          t=(root/'mode-results/normal/client.log').read_text(errors='replace')
+          rows=re.findall(r'WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=(\d+) repair_accepted_wire_bytes=(\d+) repair_uncertain_wire_bytes=(\d+) control_wire_bytes=(\d+) repair_packets=(\d+) r_to_f_ppm=(\d+) r_to_total_ppm=(\d+) joined=true',t)
+          assert len(rows)==1
+          f,ra,ru,c,p,rf,rt=map(int,rows[0])
+          assert f>0 and (ra+ru)*1000<=f, 'abnormal no-loss outer retransmissions'
+          damaged=read_scenario('scenarios/wl-outer-repair-10m-250ms-loss30-60s.json')
+          assert damaged.get('public_mode','normal')=='normal' and damaged['duration_s']==60
+          assert all(damaged[d]['offered_mbps']==10 and damaged[d]['delay_ms']==250 and damaged[d]['loss_pct']==30 for d in ('windows_to_linux','linux_to_windows'))
+          print('H537_GENUINE_SOURCE080_NOLOSS_OK',f,ra+ru,c,p,damaged['scenario_sha256'])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/wl-outer-repair-10m-250ms-loss30-60s.json \
+            -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
+          echo H537_DISPATCHED_ONE_TRUE_DAMAGED_ACTION_SOURCE080
