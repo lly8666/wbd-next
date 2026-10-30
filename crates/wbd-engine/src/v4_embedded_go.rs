@@ -566,6 +566,8 @@ struct LinuxQualityTx{
     closing:Option<wbd_recovery::quality_window::ClosedWindow>,
     last_settled:Option<u64>,next_id:u64,next_open:u64,
     last_report:Option<u64>,counters:[u64;14],
+    // Fixed only: finite startup witness, not ongoing Auto measurement.
+    bootstrap_only:bool,
     slow:VecDeque<(u64,wbd_recovery::quality_window::LossBounds)>,
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
@@ -576,7 +578,8 @@ impl LinuxQualityTx{
         Self{lane,epoch,direction,sender:None,
             history:wbd_recovery::quality_window::SendHistory::new(lane,epoch,direction),
             closing:None,last_settled:None,next_id:0,next_open:0,last_report:None,
-            counters:[0;14],slow:VecDeque::with_capacity(16)}
+            counters:[0;14],bootstrap_only:false,
+            slow:VecDeque::with_capacity(16)}
     }
     fn due(&self,now:MonoNs)->bool{
         self.closing.is_some()||
@@ -606,6 +609,8 @@ impl LinuxQualityTx{
                 complete:w.complete,capacity_limited:w.capacity_limited}))
         }
         if self.sender.is_some()||now.0<self.next_open{return Ok(None)}
+        // No third Fixed window even after missing peer feedback.
+        if self.bootstrap_only && self.next_id>=2{return Ok(None)}
         let first=next_pn.checked_add(1).ok_or(BAD_STAGE)?;
         let last=first.checked_add(1023).ok_or(BAD_STAGE)?;
         let id=self.next_id.checked_add(1).ok_or(BAD_STAGE)?;
@@ -4400,7 +4405,7 @@ fn original_fixed_stage_source(e:&mut Entry,
         if next_rev>old_rev && e.fec2_staged_pns.is_empty(){
             if let Some(stream)=e.fec2_live_tx.as_mut(){
                 if stream.quiescent_change(next_profile,next_rev,now).is_ok(){
-                    if e.auto_low_rate_mode{
+                    if e.quality_tx.is_some(){
                         let Some(tx)=e.quality_tx.as_ref()else{return Err(BAD_STAGE)};
                         // Compare only post-revision real mature Quality, never
                         // reuse an earlier profile's authenticated report.
@@ -5695,9 +5700,11 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     }else{None};
     #[cfg(feature="fec2_product_record")]
     if e.original_public_feedback_armed && e.protected_features==7 &&
-        e.auto_low_rate_mode{
-        e.quality_tx=Some(LinuxQualityTx::new(
-            first.lane,first.epoch,first.route.outbound_direction()));
+        (e.auto_low_rate_mode||e.fixed_pending.is_some()){
+        let mut tx=LinuxQualityTx::new(
+            first.lane,first.epoch,first.route.outbound_direction());
+        tx.bootstrap_only=!e.auto_low_rate_mode;
+        e.quality_tx=Some(tx);
     }
     let mature=Arc::new(Mutex::new(first));
     e.normal_firstsend_m2=Some(Arc::clone(&mature));
@@ -5707,7 +5714,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     // authenticated Go health sender; no duplicate two-sender race.
     #[cfg(feature="fec2_product_record")]
     let quality_rx=if e.original_public_feedback_armed &&
-        e.protected_features==7 && e.auto_low_rate_mode{
+        e.protected_features==7 &&
+        (e.auto_low_rate_mode||e.fixed_pending.is_some()){
         let (lane,exact_epoch)=match e.owner.normal_firstsend_identity(){
             Some(v)=>v,None=>return BAD_STAGE};
         let direction=if e.server_side{wbd_recovery::WireDirection::ClientToServer}
@@ -6375,7 +6383,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_commit_mature_m2(
     // Under continuing business FEC open/queued jobs are bounded and
     // expected; a global all-jobs-zero gate is a startup timing race.
     if e.fec2_live_tx.is_none(){return BAD_STAGE}
-    let covered=if e.auto_low_rate_mode{
+    let covered=if e.quality_tx.is_some(){
         // A matched AEAD+replay v2 summary proves genuine receiver unique
         // evidence for local definitely-copied F, not a raw TCP ACK.
         // Source and parity still require their own REAL M4 copy above.
@@ -6525,7 +6533,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_mature_quality(
             return BAD_STAGE
         }
         let mut v=[0u64;30];
-        if e.auto_low_rate_mode{
+        if e.quality_tx.is_some(){
             // Native matched START/CLOSE v2 summaries only; a missing
             // summary is UNKNOWN, not a synthetic positive M2 receipt.
             let Some(tx)=e.quality_tx.as_mut()else{return BAD_STAGE};
