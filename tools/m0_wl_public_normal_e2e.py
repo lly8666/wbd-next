@@ -410,10 +410,11 @@ print(json.dumps(result),flush=True)
   # One declared measurement scenario, not a mixed matrix. Genuine Linux
   # egress and eth0-ingress→IFB kernel tc, not an in-app drop/latency shim.
   # It is deliberately after functional warmup, before both owned Stop.
-  def netem(action):
+  def netem(action,stage_index=None):
    cmd=["wsl.exe","-d","Ubuntu","-u","root","--","python3",
         unix(root/"tools"/"m0_wl_netem.py"),action,unix(out),profile_name]
    if scenario:cmd.append(unix(v2_path))
+   if stage_index is not None:cmd.append(str(stage_index))
    return run(cmd,timeout=35)
   owned=out/"wl-n0-netem-owned.json"
   try:
@@ -439,6 +440,14 @@ print(json.dumps(result),flush=True)
     ready(out/"wl-n0-linux-app.log",'"phase": "bound"',linuxrate,25)
     ready(out/"wl-n0-windows-app.log",'"phase": "bound"',windowsrate,25)
     (out/"wl-n0-start.flag").write_text("REAL_TWO_OS_KERNEL_APPLICATIONS_BOUND\n")
+    phase_events=[]
+    phase_schedule=scenario.get("impairment_stages") if scenario else None
+    phase_clock=time.monotonic()
+    phase_next_index=1 if phase_schedule else 0
+    if phase_schedule:
+     phase_events.append({"index":0,"scheduled_s":0,"elapsed_s":0,
+                          "source":"REAL_KERNEL_TC_ARM_BEFORE_APPLICATION_BARRIER",
+                          "scenario_sha256":scenario["scenario_sha256"]})
     # Poll process liveness, never relay/transform tested traffic.
     until=time.monotonic()+int(seconds)+25
     while linuxrate.poll() is None or windowsrate.poll() is None:
@@ -477,6 +486,17 @@ print(json.dumps(result),flush=True)
        "status":"FAIL_EXIT_DURING_REQUIRED_60S"}
       print("WL_V2_FIRST_NATIVE_EXIT "+json.dumps(report["native_early_exit"],sort_keys=True),flush=True)
       raise RuntimeError("real public product exited during WL-N0")
+     if phase_schedule and phase_next_index<len(phase_schedule):
+      target_phase=phase_schedule[phase_next_index]
+      if time.monotonic()-phase_clock>=target_phase["start_s"]:
+       print(netem("stage",phase_next_index),flush=True)
+       phase_events.append({"index":phase_next_index,
+                            "scheduled_s":target_phase["start_s"],
+                            "elapsed_s":round(time.monotonic()-phase_clock,3),
+                            "source":"REAL_ETH0_IFB_OWNED_TC_QDISC_CHANGE",
+                            "scenario_sha256":scenario["scenario_sha256"],
+                            "readback_file":f"wl-v2-kernel-stage-{phase_next_index:02}.json"})
+       phase_next_index+=1
      if time.monotonic()>until:
       raise RuntimeError("bounded WL-N0 "+seconds+"s native app duration exceeded")
      time.sleep(.2)
@@ -535,6 +555,12 @@ print(json.dumps(result),flush=True)
       "generator_cpu_s":{k:v["sender_cpu_seconds"] for k,v in wl.items()},
       "kernel_qdisc":"wl-n0-netem-after.json",
       "scope":"REAL_WINDOWS_WINTUN_NPF_GO_TLS_AND_LINUX_TUN_NOT_ONEWAY_P99"}
+    if phase_schedule:
+     if len(phase_events)!=len(phase_schedule):
+      raise RuntimeError("WL_V2_AUTO_KERNEL_PHASE_NOT_APPLIED "+
+                         str(len(phase_events))+"/"+str(len(phase_schedule)))
+     report["WL_V2"]["kernel_phases_applied"]=phase_events
+     report["WL_V2"]["a4_auto_mature_grade"]="NOT_PROVEN_UNTIL_NATIVE_QUALITY_AND_APPLIED_READBACK"
     print("WL_V2_TRUE_KERNEL_MEASUREMENT "+status,flush=True)
    elif stress:
     declared=json.loads((out/"wl-n0-netem-before.json").read_text())

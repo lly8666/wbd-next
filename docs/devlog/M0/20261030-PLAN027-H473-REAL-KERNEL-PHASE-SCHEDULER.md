@@ -1,0 +1,3 @@
+# PLAN027 H473: deterministic in-place kernel phase scheduler
+
+The same real original Windows Wintun/Npcap/Go TLS ↔ WSL2 Linux TUN/Rust client/server and both UDP sender/receiver processes survive one continuous 240s Auto scenario. Stage0 kernel qdiscs are armed before traffic start flag; stage1..4 issue owned Linux tc qdisc change on original IFB ingress and eth0 egress at monotone 20/40/65/95s. Every change is source SHA bound, ownership and qdisc handle verified, guest snapshot retained; per-phase scheduled/actual times are emitted in WL_V2 report. Missing phases fail closed. At this commit source-only validation; does **not** claim A4 physical PASS or native Auto downshift, require subsequent real Action and FEC2 applied readback.
