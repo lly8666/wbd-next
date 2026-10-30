@@ -1,0 +1,86 @@
+name: M0 PLAN027 H499 remaining A4 A5 B Game and staged C native
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h499-source-native-remaining-a-b-c.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  verified-new-product-fanout:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h499]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Require exact new SOURCE, real native H498 evidence and independent one-scene Actions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          product=787ad4c900f3bae867c5c9556c4702339deef8cb
+          build_run=41025962277
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build_run" --jq .head_sha)" = "$product"
+          gh api "repos/$GH_REPO/actions/runs/$build_run/artifacts" --paginate --jq '.artifacts[].name' > "$RUNNER_TEMP/product-artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$product" "$RUNNER_TEMP/product-artifacts"
+          grep -Fx "m0-plan024-linux-product" "$RUNNER_TEMP/product-artifacts"
+          for witness in 41028345925 41028348498 41028351349; do
+            test "$(gh api "repos/$GH_REPO/actions/runs/$witness" --jq .conclusion)" = success
+            test "$(gh api "repos/$GH_REPO/actions/runs/$witness" --jq .head_sha)" = 808d6df3a442e9a9621941404015beed6aa6c79a
+            mkdir -p "$RUNNER_TEMP/witness-$witness"
+            gh run download "$witness" -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/witness-$witness"
+          done
+          python - <<'PY'
+          import json,os,pathlib
+          from tools.m0_wl_perf_v2_config import read_scenario
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])
+          for run,mode,scenario in (
+              (41028345925,'normal','plan027-c-normal-10m-25ms-loss0-60s'),
+              (41028348498,'fixed','wl-outer-repair-fixed-10m-250ms-loss30-60s'),
+              (41028351349,'auto','plan027-h461-auto-egress-10m-25ms-loss0-60s')):
+              d=json.loads((root/f'witness-{run}'/'report.json').read_text())
+              assert d['linux_binary_source']=='787ad4c900f3bae867c5c9556c4702339deef8cb'
+              assert d['stop']=='PASS_BOTH_OWNED' and d['WL_V2']['status']=='MEASURED_BOTH_OS_KERNEL'
+              assert d['WL_V2']['scenario_id']==scenario and d['mode_public'].endswith('_'+mode),d['mode_public']
+              assert d['linux_tun_link_kernel']['status']=='MEASURED_ORIGINAL_LINUX_TUN_IP_LINK'
+              assert d['linux_tun_link_kernel']['tx_dropped_delta']==0
+              server=root/f'witness-{run}'/'mode-results'/mode/'server.log'
+              assert 'V4_PUBLIC_TUN_TXQLEN role=server interface=wbdwl4 packets=2048 readback=REAL_ORIGINAL_LINUX_TUN' in server.read_text(errors='replace')
+          scenes=(
+              ('auto','scenarios/plan027-a4-auto-10m-staged-240s.json',10,240),
+              ('game2-fec','scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json',10,20),
+              ('game4-fec','scenarios/plan027-c-game4-fec-20m-250ms-loss30-60s.json',20,60),
+              ('normal','scenarios/plan027-c-normal-50m-25ms-loss0-60s.json',50,60),
+              ('normal','scenarios/wl-outer-repair-10m-250ms-loss30-60s.json',10,60),
+          )
+          for mode,path,rate,duration in scenes:
+              s=read_scenario(path)
+              assert s['public_mode']==mode and s['duration_s']==duration,(path,s)
+              assert all(s[x]['offered_mbps']==rate for x in ('windows_to_linux','linux_to_windows'))
+              print('H499_SCENE_SOURCE_LOCK',mode,path,s['scenario_sha256'])
+          PY
+          # Each invocation is ONE independently scheduled Actions native test
+          # controller and its own hosted VM; none combines simultaneous rates.
+          for entry in \
+            "auto scenarios/plan027-a4-auto-10m-staged-240s.json" \
+            "game2-fec scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json" \
+            "game4-fec scenarios/plan027-c-game4-fec-20m-250ms-loss30-60s.json" \
+            "normal scenarios/plan027-c-normal-50m-25ms-loss0-60s.json" \
+            "normal scenarios/wl-outer-repair-10m-250ms-loss30-60s.json"; do
+            read -r mode scenario <<< "$entry"
+            gh workflow run m0-wl-public-normal-full.yml --ref main \
+              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="$scenario" \
+              -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+            echo "H499_INDEPENDENT_NATIVE_SCENE_SENT $mode $scenario"
+          done
+          # A5 is ONE sequential same-VM Rust/Go comparison, not parallel
+          # throughput; independent of the Normal-only C10 source trial above.
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=true \
+            -f perf_scenario_file=scenarios/plan027-c-normal-10m-25ms-loss0-60s.json \
+            -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+          echo H499_A5_SAME_VM_SEQUENTIAL_AB_NATIVE_SENT
