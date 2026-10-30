@@ -621,8 +621,7 @@
                       .chain(receive_due).chain(fec_due)
                       .chain(m.health.next_tx_deadline().map(MonoNs))
                       .chain(auto_due).min_by_key(|d|d.0);
-                  let receipt_due=if m.auto_low_rate_mode{None}
-                      else{m.feedback.next_deadline()};
+                  let receipt_due=None; // PLAN027 no per-record M2 timer
                   m2_wake_timeout_ms(now,receipt_due,next)
              };
              match io::wait_ready(&[stop.handle(),tun.event(),notify.handle()],timeout){

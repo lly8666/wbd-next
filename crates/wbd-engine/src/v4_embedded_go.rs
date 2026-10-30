@@ -4056,45 +4056,11 @@ fn background_raw_once(
             invalid_seen=true; // Fixed/off never negotiate Auto low-rate
         }
         authenticated_control|=receipt.authenticated_control;
-        if let Some(control)=receipt.reverse_kind1{
-            // RX never locks Entry/TX and never holds a driver slab after
-            // opener returns. Shared M2 state is one bounded mutex.
-            if stop.load(Ordering::Acquire){break}
-            match mature.lock(){
-                Ok(mut first)=>{
-                    if let Ok(scoped)=first.on_original_authenticated_reverse(control,when){
-                        authenticated_control=true;
-                        // The SAME original TLS-bound authenticated control
-                        // retires frozen M2 shadows; TCP ACK is never trust.
-                        #[cfg(feature="fec2_product_record")]
-                        if let Some(shared)=outer {
-                            match shared.lock(){
-                                Ok(mut active)=>{
-                                    let dir=active.direction;
-                                    let result=original_process_repair_quota().lock()
-                                        .map_err(|_|BAD_STAGE)
-                                        .and_then(|mut global|
-                                            global.observe_scoped_receipt(
-                                                dir,&mut active.shadow,&scoped,when
-                                            ).map_err(|_|BAD_STAGE)
-                                        );
-                                    match result{
-                                        Ok(released)=>{
-                                            active.authentic_ack=active.authentic_ack
-                                                .saturating_add(released.len() as u64);
-                                            active.retired=active.retired
-                                                .saturating_add(released.len() as u64);
-                                        },
-                                        Err(_)=>invalid_seen=true,
-                                    }
-                                },
-                                Err(_)=>invalid_seen=true,
-                            }
-                        }
-                    }else{invalid_seen=true;}
-                },
-                Err(_)=>invalid_seen=true,
-            }
+        if receipt.reverse_kind1.is_some(){
+            // The peer may have encrypted this legacy WBC4 Receipt, but
+            // current PLAN027 modes never trust it to retire shadow or
+            // influence Auto/Health. Do not apply old M2 feedback.
+            invalid_seen=true;
         }
         if receipt.failed==0{
             delivered_total=delivered_total.saturating_add(receipt.delivered);
@@ -4178,24 +4144,13 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
         e.quality_rx.as_ref().and_then(|q|
             q.lock().ok().and_then(|mut rx|rx.mature_due(now)))
     }else{None};
-    let feedback=e.rx_feedback.as_ref().map(Arc::clone);
-    let draft=if e.auto_low_rate_mode||signal.is_some()||quality.is_some(){
-        None
-    }else if let Some(ref f)=feedback{
-        f.lock().map_err(|_|BAD_STAGE)?.on_due(now)
-    }else{None};
+    // All live modes retire old per-record M2 drafts.
+    let draft:Option<wbd_recovery::FeedbackDraft>=None;
     let health_due=e.native_health.as_ref().is_some_and(|h|h.tx_due(now.0));
     if draft.is_none()&&!health_due&&quality.is_none()&&signal.is_none(){
         return Ok(false)
     }
     let attempt=(||->Result<u64,i32>{
-        let msg=draft.as_ref().map(|d|wbd_codec::Receipt{
-            largest_data_pn:d.largest_data_pn().0,ack_delay_us:0,
-            report_seq:d.report_seq(),
-            pages:d.pages().iter().map(|p|wbd_codec::ReceiptPage{
-                base_pn:p.base_pn.0,bitmap:p.bitmap,
-            }).collect(),
-        });
         let budget=e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped.frame;
         let idle=e.native_health.as_ref().ok_or(BAD_STAGE)?
             .local_idle_ns(now.0);
@@ -4209,13 +4164,10 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
             ).map_err(|_|INVALID)?
         }else if health_due{
             crate::v4_native_health::encode_authenticated_health_live(
-                idle,msg.as_ref(),None,budget.record_payload_mtu
+                idle,None,None,budget.record_payload_mtu
             ).map_err(|_|INVALID)?
         }else{
-            wbd_codec::encode_control(
-                &[wbd_codec::ControlTlv::Receipt(msg.ok_or(BAD_STAGE)?)],
-                budget.record_payload_mtu.min(512)
-            ).map_err(|_|INVALID)?
+            return Err(BAD_STAGE) // no Receipt-only fallback
         };
         let slab=e.arena.allocate().map_err(|_|FULL)?;
         let (pn,_,_)=e.owner.seal_original_authenticated_receipt(
@@ -4232,10 +4184,6 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
             Ok(true)
         },
         Err(err)=>{
-            if let (Some(d),Some(f))=(draft.as_ref(),feedback.as_ref()){
-                let _=f.lock().map_err(|_|BAD_STAGE)?.on_send_result(
-                    d,wbd_recovery::FeedbackSendResult::NotSent,now);
-            }
             if let Some(signal)=signal{
                 if signal.kind==crate::v4_native_health::QualitySignalKind::Start{
                     e.quality_tx.as_mut().ok_or(BAD_STAGE)?
@@ -5770,17 +5718,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         Some(state)
     }else{None};
     #[cfg(feature="fec2_product_record")]
-    let feedback_rx=if e.original_public_feedback_armed && !e.auto_low_rate_mode{
-        let Ok(state)=wbd_recovery::RxFeedbackState::new(
-            wbd_recovery::RxFeedbackConfig{
-                max_retained_pages:512,max_pages_per_report:8,
-                retention_ns:2_000_000_000,srtt_ns:600_000_000,
-            }
-        )else{return INVALID};
-        let shared=Arc::new(Mutex::new(state));
-        e.rx_feedback=Some(Arc::clone(&shared));
-        Some(shared)
-    }else{None};
+    // PLAN027: no non-Auto per-record bitmap owner; existing bounded
+    // encrypted Health and outer ACK remain live on the same Rust worker.
+    let feedback_rx:Option<Arc<Mutex<wbd_recovery::RxFeedbackState>>>=None;
     #[cfg(feature="fec2_product_record")]
     if e.original_public_feedback_armed{
         // Same authenticated Health owner in Auto without per-PN M2.

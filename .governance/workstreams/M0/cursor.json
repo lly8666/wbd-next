@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 438,
-  "checkpoint_sha": "7e700a32730bb989092650ed2de923d5c510be79",
+  "sequence": 440,
+  "checkpoint_sha": "a7c492bea0434670d72ea02b417386c5b7ac8537",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H438 recovered H437 exact-source native/governance: source 7e700a native, Windows-Linux and real Go still in-flight; feature-catalog Action40981761380 failed because fec-auto card not updated alongside outer repair. H438 updates card and pending run references. §0 full task still PARTIAL.",
-  "why_now": "Recovered latest M0 registry.goal/PLAN027 and H437 source GitHub Actions. At source 6d2e1438 core native-functional, G2, normal, Windows ABI and PLAN012 successful. At H437 7e700a Go monitor now reauthorizes solely on Rust authenticated Health dead-after-90s rather than cumulative M4 TxErrors, but true Linux/Windows duplex has not yet qualified. Source 7e feature-catalog failure fixed with this paired fec-auto card.",
+  "current_task": "H440 source candidate: retire Fixed/off/Auto live old per-record M2 Receipt producer, hot bitmap RX and old negative shadow route; preserve low-rate Health/Quality and outer scoped ACK index. Compile/new exact-source true two-OS and PLAN027 A/B/C still required.",
+  "why_now": "Recovered H439 head a7c492; native-functional/G2/governance PASS but no H439 real two-OS network evidence. Scoped H440 product retirement patch awaits source-locked Actions.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H438 source Actions and true Windows↔Linux Auto original TLS/UDP/Stop, investigate any remaining source Go/ABI/Health and fixed path errors. Then retire Fixed/off online Receipt and per-record bitmap via ACK/SACK scoped shadow and Health, execute simplified A, B lifecycle, capacity-aware C and final 5min evidence.",
+  "next_action": "Collect H440 native/Go/Windows-Linux compile results, repair any first FAIL. Then freeze source/build, run PLAN027 A1-A5 and B same-source authentic Windows/Linux lifecycle, capacity-aware C + 5min, finish features/evidence; no full completion yet.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN027 five-stage status: ①PARTIAL—Auto low-rate quality, two-OS outer ACK indexes and 90s Health terminal-only Go cold reauthorization source integrated; Fixed/off per-record M2 Receipt/hot state and SACK negotiated product still OPEN. ②A NOT_RUN except component regression. ③B OPEN—prior genuine Windows↔Linux Auto UDP duplex FAIL Action40978386152 (Windows sending, Linux cold reconnected at ~2s) with H437 plausible root corrected, new-source duplex not yet PASS. ④C network matrix/5min NOT_RUN. ⑤OPEN—true SOURCE Actions, performance/CPU/RSS/p99 and final evidence still required. Prior 6d2e native-functional successful not transferred to new source or product."
+  "partial_summary": "PLAN027 ①PARTIAL candidate H440 removes live per-record M2 send/receive on Windows and Linux, leaves pure compatibility structs/test probe; native/real SOURCE NOT_VERIFIED; quality/Health + ACK scope source intact. ②A only prior component tests, new A1-A5 NOT_RUN. ③B exact-source Windows/Linux Auto/Fixed/Game lifecycle OPEN; H437 plausibly fixed old premature Go reauthorization, retest pending. ④C matrix and 5min NOT_RUN. ⑤final fixes and observed F/R/C,p99,CPU/RSS and evidence OPEN."
 }

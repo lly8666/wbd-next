@@ -469,7 +469,7 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         let quality=if signal.is_some(){None}else{win_mature_quality_due(m,now)};
         // Auto explicitly disables old bitmap draft generation; other
         // modes temporarily retain their existing unmodified repair path.
-        let draft=if auto||quality.is_some(){None}else{m.feedback.on_due(now)};
+        let draft:Option<FeedbackDraft>=None;
         let health_due=m.health.tx_due(now.0);
         if draft.is_none()&&!health_due&&quality.is_none()&&signal.is_none(){
             return Ok(None)
@@ -477,17 +477,8 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         (draft,health_due,quality,signal)
     };
     let prepared=(||->Result<(usize,u32,u64),i32>{
-        let msg=draft.as_ref().map(|d|wbd_codec::Receipt{
-            largest_data_pn:d.largest_data_pn().0,
-            ack_delay_us:0,report_seq:d.report_seq(),
-            pages:d.pages().iter().map(|p|wbd_codec::ReceiptPage{
-                base_pn:p.base_pn.0,bitmap:p.bitmap,
-            }).collect(),
-        });
-        // A fresh M2 receipt is NOT the legacy ~2s Quality cadence. Only
-        // when low-frequency Health is actually due do we piggyback its
-        // local business-idle hint and bounded random padding. Otherwise
-        // forward the M2 bitmap at original speed without any control RNG.
+        // PLAN027: only sparse Quality or authenticated Health controls.
+        // Fixed/off must never send per-record bitmap Receipts.
         let budget=normal_off_windows_budget(e)?;
         let tlv=if let Some(signal)=signal{
             let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
@@ -502,14 +493,11 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         }else if health_due{
             let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
             crate::v4_native_health::encode_authenticated_health_live(
-                m.health.local_idle_ns(now.0),msg.as_ref(),None,
+                m.health.local_idle_ns(now.0),None,None,
                 budget.record_payload_mtu
             ).map_err(|_|INVALID)?
         }else{
-            wbd_codec::encode_control(
-                &[wbd_codec::ControlTlv::Receipt(msg.ok_or(BAD_STAGE)?)],
-                budget.record_payload_mtu.min(512)
-            ).map_err(|_|INVALID)?
+            return Err(BAD_STAGE) // no Receipt-only control fallback
         };
         // Preflight the *actual encoded receipt* against the caller's
         // C ABI output BEFORE spending an AEAD PN and original TCP sequence.
@@ -879,38 +867,10 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
             m.quality_due.push_back((key,now.0.saturating_add(3_000_000_000)));
         }
     }
-    // A v2 summary cannot affect Auto until the sender's matching
-    // driver-confirmed SendHistory is connected. Never interpret it as ACK.
-    if m.auto_low_rate_mode{return Ok(0)}
-    let Some(receipt)=control.receipt.as_ref()else{return Ok(0)};
-    let opened=ReceiptOpenFacts{
-        verified_reverse_lane:m.route.outbound_lane(),
-        verified_reverse_direction:if e.role_server {
-            WireDirection::ClientToServer
-        }else{WireDirection::ServerToClient},
-        verified_tunnel_epoch:e.authenticated_epoch,
-        control_record_pn:RecordPn(reverse_pn),
-    };
-    let pages=receipt.pages.iter().map(|p|ReceiptPage{
-        base_pn:RecordPn(p.base_pn),bitmap:p.bitmap,
-    }).collect();
-    let scoped=ScopedAuthenticatedReceipt::checked_after_open(
-        m.route,opened,RecordPn(receipt.largest_data_pn),
-        receipt.report_seq,pages,
-    ).map_err(|_|INVALID)?;
-    #[cfg(feature="fec2_product_record")]
-    if let Some(mature)=m.mature.as_mut(){
-        if mature.on_authenticated_receipt(&scoped,now).is_err(){
-            m.fec_censored=true;return Err(BAD_STAGE)
-        }
-        m.fec_reverse_reports=m.fec_reverse_reports.saturating_add(1);
-    }
-    let mut global=m2_global().lock().map_err(|_|BAD_STAGE)?;
-    let releases=global.observe_scoped_receipt(
-        m.direction,&mut m.shadow,&scoped,now
-    ).map_err(|_|INVALID)?;
-    m.reverse_authenticated_receipts+=1;
-    Ok(releases.len() as u32)
+    // Retire authenticated per-record M2 Receipt on all live modes.
+    // ACK/SACK remains an outer shadow hint, not business delivery.
+    if control.receipt.is_some(){return Err(INVALID)}
+    Ok(0)
 }
 struct Entry {
     generation:u32,
@@ -1598,8 +1558,6 @@ fn v5_open_record_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         if let Some(m)=e.m2.as_mut(){
             if m.auto_low_rate_mode {
                 m.quality_receive.on_unique_data(RecordPn(unique_pn),false);
-            }else{
-                m.feedback.on_authenticated_data(RecordPn(unique_pn),m2_clock());
             }
             m.health.on_authenticated_business(m2_clock().0);
         }
@@ -2336,7 +2294,7 @@ mod tests {
 
     #[cfg(feature="fec2_product_record")]
     #[test]
-    fn m0_windows_original_m2_only_real_npcap_firstsend_and_authenticated_kind1_retire(){
+    fn plan027_windows_old_m2_receipt_rejected_after_authenticated_open(){
         use wbd_codec::{ControlTlv,Receipt,ReceiptPage};
         // Use the same production M1 frozen owner and genuine AEAD/PN
         // crypto. Test fixture cold is NOT original TLS and proves no OS
@@ -2415,9 +2373,9 @@ mod tests {
         assert_eq!(r.entries[&client].lock().unwrap()
             .m2.as_ref().unwrap().shadow.outstanding(),selected);
         assert_eq!(v5_open_record_one(&r,client,epoch,71,91,rseq,
-            &rwire,&mut plain),Ok((0,2,0)));
+            &rwire,&mut plain),Err(INVALID)); // retired M2 receipt
         assert_eq!(r.entries[&client].lock().unwrap()
-            .m2.as_ref().unwrap().shadow.outstanding(),0);
+            .m2.as_ref().unwrap().shadow.outstanding(),selected);
         assert_eq!(v5_open_record_one(&r,client,epoch,71,91,rseq,
             &rwire,&mut plain),Err(INVALID)); // PN replay not receipt reapply
         {
@@ -2659,9 +2617,8 @@ mod tests {
     }
     #[test]
     fn m0_windows_original_source_after_real_clock_feedback_has_contiguous_seq(){
-        // A real M2 receipt is sealed at monotonic time, then a new
-        // original-Go TLS DATA must NOT rewind the exact same M1 owner
-        // clock by presenting synthetic MonoNs(0).
+        // Fixed/off can no longer generate a per-record M2 receipt;
+        // absence of feedback must never burn PN/Seq or block new DATA.
         let mut r=Registry{generation:701,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
         let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
         assert_eq!(commit(&mut r,h,0,0,500),OK);
@@ -2676,20 +2633,16 @@ mod tests {
         {
             let mut e=r.entries[&h].lock().unwrap();
             assert!(m2_arm_entry(&mut e,ep,91,19).is_ok());
-            e.m2.as_mut().unwrap().feedback.on_authenticated_data(
-                RecordPn(89),m2_clock());
         }
-        std::thread::sleep(std::time::Duration::from_millis(21));
         let mut wire=[0u8;2048];
-        let (nc,sc,_pn)={
+        {
             let mut e=r.entries[&h].lock().unwrap();
-            m2_next_feedback_entry(&mut e,ep,91,19,&mut wire)
-                .unwrap().expect("actual original M2 authenticated draft")
-        };
-        assert_eq!(sc,s1.wrapping_add(n1 as u32));
+            assert_eq!(m2_next_feedback_entry(&mut e,ep,91,19,&mut wire),
+                Ok(None), "Fixed/off must not emit Receipt");
+        }
         let (n2,s2,_)=v3_seal_one(&r,h,ep,91,19,&frame,&mut first)
             .expect("fresh DATA after kind1 must keep monotonic owner clock");
-        assert_eq!(s2,sc.wrapping_add(nc as u32));
+        assert_eq!(s2,s1.wrapping_add(n1 as u32));
         assert!(n2>51);
         assert_eq!(quiesce_wintun(&mut r,h,ep,91,19),OK);
         assert_eq!(stop(&mut r,h),OK);
