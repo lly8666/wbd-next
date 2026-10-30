@@ -67,6 +67,24 @@ class V2Scenarios(unittest.TestCase):
     bad["linux_tun_txqlen_packets"]=value;bad["public_mode"]="fixed"
     file.write_text(json.dumps(bad))
     with self.assertRaisesRegex(ValueError,"TUN_QLEN_BOUNDED"):read_scenario(file)
+ def test_plan027_h493_larger_4096_vs_2048_stability_and_negative_bounds(self):
+  import tempfile,json
+  for name,queue,duration in (
+   ('plan027-c-normal-100m-qlen4096-loss0-60s',4096,60),
+   ('plan027-c-normal-100m-qlen2048-loss0-300s',2048,300)):
+   path=SCENE.parent/(name+'.json')
+   c=read_scenario(path)
+   self.assertEqual((c['linux_tun_txqlen_packets'],c['duration_s'],c['public_mode']),(queue,duration,'normal'))
+   self.assertEqual(read_scenario(path)['scenario_sha256'],c['scenario_sha256'])
+   for side in ('windows_to_linux','linux_to_windows'):
+    self.assertEqual((c[side]['offered_mbps'],c[side]['delay_ms'],c[side]['loss_pct']),(100,25,0))
+   with tempfile.TemporaryDirectory() as tmp:
+    bad=dict(c);bad.pop('scenario_sha256');bad['linux_tun_txqlen_packets']=8192
+    p=pathlib.Path(tmp)/'invalid.json';p.write_text(json.dumps(bad))
+    with self.assertRaisesRegex(ValueError,'TUN_QLEN_BOUNDED'):read_scenario(p)
+    bad['linux_tun_txqlen_packets']=queue;bad['duration_s']=299
+    p.write_text(json.dumps(bad))
+    with self.assertRaisesRegex(ValueError,'TUN_QLEN_BOUNDED'):read_scenario(p)
  def test_exact_150m_300ms_0loss_60s(self):
   c=read_scenario(SCENE)
   self.assertEqual(c["duration_s"],60)

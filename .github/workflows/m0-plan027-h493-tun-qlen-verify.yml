@@ -1,0 +1,66 @@
+name: M0 PLAN027 H493 real TUN qlen repeat 2048 vs 4096 and 300s
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h493-tun-qlen-verify.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  source-locked-three-real-native:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-h493]') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Require two actual controlled baseline reports and exact product binary
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          product='f83874c30e0d918cfe070b67b39e208eea0da457'
+          build_run=41013628666
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build_run" --jq .head_sha)" = "$product"
+          gh api "repos/$GH_REPO/actions/runs/$build_run/artifacts" --paginate --jq '.artifacts[].name' > "$RUNNER_TEMP/proven"
+          grep -Fx "m0-wl-windows-product-binaries-$product" "$RUNNER_TEMP/proven"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/proven"
+          python -m unittest -q tests.test_m0_wl_perf_v2_config tests.test_m0_wl_plan027_linux_tun_link tests.test_m0_wl_plan027_linux_tun_fq
+          mkdir -p "$RUNNER_TEMP/q1024" "$RUNNER_TEMP/q2048"
+          gh run download 41021684902 -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/q1024"
+          gh run download 41021687116 -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/q2048"
+          python - <<'PY'
+          import json,os,pathlib
+          from tools.m0_wl_plan027_linux_tun_link import link_delta
+          from tools.m0_wl_perf_v2_config import read_scenario
+          p=pathlib.Path(os.environ['RUNNER_TEMP'])
+          for q,kdrop,businessloss in ((1024,265,267),(2048,0,3)):
+              r=json.loads((p/('q'+str(q))/'report.json').read_text())
+              assert r['linux_binary_source']=='f83874c30e0d918cfe070b67b39e208eea0da457'
+              assert r['stop']=='PASS_BOTH_OWNED' and r['WL_V2']['owned_stop']=='PASS_BOTH_OWNED'
+              assert r['WL_V2']['status']=='MEASURED_BOTH_OS_KERNEL'
+              assert r['linux_tun_queue_control']['requested']==q
+              assert r['linux_tun_queue_control']['restored']=='PASS_ORIGINAL_500_READBACK'
+              assert r['linux_tun_link_kernel']['tx_dropped_delta']==kdrop
+              assert r['linux_tun_fq_kernel']['drops_delta']==0
+              miss=r['wl_n0_measured']['linux']['sent_packets']-r['wl_n0_measured']['windows']['received_first_packets']
+              assert miss==businessloss,(q,miss)
+              print('H493_REAL_KERNEL_CAUSAL_CONTROL',q,kdrop,miss)
+          for name,q,duration in (
+             ('plan027-c-normal-100m-qlen2048-loss0-60s',2048,60),
+             ('plan027-c-normal-100m-qlen4096-loss0-60s',4096,60),
+             ('plan027-c-normal-100m-qlen2048-loss0-300s',2048,300)):
+              c=read_scenario('scenarios/'+name+'.json')
+              assert (c['linux_tun_txqlen_packets'],c['duration_s'])==(q,duration)
+              assert all((c[s]['offered_mbps'],c[s]['loss_pct'])==(100,0) for s in ('windows_to_linux','linux_to_windows'))
+              print('H493_SOURCE_LOCKED_SCENARIO',name,c['scenario_sha256'])
+          PY
+          for file in plan027-c-normal-100m-qlen2048-loss0-60s plan027-c-normal-100m-qlen4096-loss0-60s plan027-c-normal-100m-qlen2048-loss0-300s; do
+            gh workflow run m0-wl-public-normal-full.yml --ref main \
+              -f public_mode=normal -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="scenarios/$file.json" \
+              -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+            echo "H493_REAL_NATIVE_SOURCE_FROZEN $file build=$build_run"
+          done
