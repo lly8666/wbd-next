@@ -588,9 +588,14 @@ print(json.dumps(result),flush=True)
   report["WL_V2"]["owned_stop"]="PASS_BOTH_OWNED"
   report["WL_V2"]["variant"]="go-steady" if os.environ.get("WBD_WL_PERF_AB_GO_STEADY")=="1" else "rust-native"
  if fixed6:
-  applied="WBD_WINDOWS_FEC2_M2_MATURE_SCOPED mode=fec-fixed" in (out/"client.log").read_text(errors="replace")
-  report["fixed_m2_mature"]=applied
-  if not applied:raise RuntimeError("original Rust Fixed FEC2 mature authenticated M2 Applied missing")
+  # PLAN027 legacy Fixed installation is a true native owner readback,
+  # never an extra startup Quality window or retired M2 Receipt.
+  linux_log=(out/"server.log").read_text(errors="replace")
+  installed="V4_PUBLIC_FEC2_READBACK role=server mode=fixed requested=1 applied=1 profile=6 pending=false" in linux_log
+  report["fixed_linux_native_installed"]=installed
+  report["fixed_windows_native_installed"]="NOT_INSTRUMENTED_THIS_REAL_ABI"
+  report["fixed_quality_maturity"]="NOT_MEASURED_SHORT_BURST"
+  if not installed:raise RuntimeError("genuine Linux native FixedStream profile6 installed readback missing")
  if is_game and game_fixed:
   expected="V4_PUBLIC_GAME_FEC_APPLIED role=server lanes=%d mode=fixed profile=6"%lanes
   if expected not in (out/"server.log").read_text(errors="replace"):

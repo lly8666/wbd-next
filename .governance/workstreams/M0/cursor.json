@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 457,
-  "checkpoint_sha": "ea098890411cf6624f62a5ca4abbc0c091b063f7",
+  "sequence": 458,
+  "checkpoint_sha": "baa7be228d67af64a56d3fdf387f72e2107ec847",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H457 repair H456 YAML scanner (A2/A3 new dispatcher had unindented Python and non-retroactive workflow_run), add one-shot source-checked A launch; remove fake 30% loss >=6% repair admission and mislabeled R/C verifier. H455 B Fixed old-M2 Applied test false negative but true business+Stop PASS; B Auto real 0 Windows UDP inbound FAIL, needs real product triage.",
-  "why_now": "H456 Actions40994656424,40994657501/529 and40994657611 all YAML parse FAIL before A2/A3; no measurements launched. H455 six B: Fixed Action40994441580 test-only M2 Applied fails after 25/25 UDP/TCP and Stop; Auto Action40994443303 true Windows RX0 of385 and Linux RX27 of100, fail/Stop unproven. Four Game B runs SUCCESS. Verifier enforced forbidden 6% min high-loss and mislabeled R/offered target as R/C.",
+  "current_task": "H458 unblock actual A2/A3 via exact preflight-only condition test change, no new binaries; align B Fixed real owner-installed readback and dispatch one independent same-binary B Fixed recheck. Genuine Auto B failure remains open for product fix.",
+  "why_now": "H457 true A dispatcher40995309062 success spawned three scene Actions40995322925/25145/27742 but all cheap check fail same stale test_delivery_ci.test_preflight_has_no_native_runtime_or_driver_effects exact if expected old compiler guard; no actual netem tested. H455 Fixed40994441580 report real UDP25 each, TCP both, owned Stop and Linux actual applied revision1/profile6 but old M2 gate fails. H455 Auto40994443303 genuine Windows reverse UDP0/385, Linux Rx27/100 and ~1-core Linux TX CPU 41.8/41s, src H455, retain.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H457 dispatcher A2/A3 real per-scene IDs and current governance; retain B Auto red, investigate real asymmetry and Fixed local owner config before rerun only affected B. Then A4 sustained Auto 120s/A5 CPU and B lifecycle and C representative matrix long 5min.",
+  "next_action": "Collect H458 A three independent scene runs and B Fixed with original product SHA88ba090 and verified driver, hashes/F-R-C/p99/Stop; resolve Auto original worker 1core spin and reverse packet gap, then A4 staged Auto120s/A5 sequential CPU AB, B full lifecycle and C progressive/5min.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①M2/Auto/ACK source repairs H451-H454; H455 same-source full Linux original product and Normal dualOS PASS. ②A1 native H453 PASS; H456 A2/A3 dispatcher YAML invalid, H457 repairs & triggers true 3 independent Actions, outcome pending; A4/A5 OPEN. ③B source H455 Normal and Game2/4 variants 4 PASS, Fixed true UDP+TCP/Stop PASS but false old M2 test red, Auto Windows inbound0 real FAIL; lifecycle OPEN. ④C and 5min NOT_RUN. ⑤H456 YAML red kept, H457 fixes tests/dispatch, exact new results pending."
+  "partial_summary": "①H455 original Go+Rust/Linux and H453 native functional PASS, H452 production source candidate. ②A2/A3 H457 dispatched but preflight test mismatch blocked (three FAIL no real test), H458 repeats only preflight-blocked scenarii using identical binary artifacts; A4/A5 OPEN. ③B H455 Normal+Game2/4 on/off FEC real 5 modes PASS, Fixed actual app/Stop PASS internal, old Applied test-only fail H458 corrected awaiting one Action; Auto genuine reverse app FAIL and TX single-core 41.8s 41wall, no B closure. ④C matrix/5min NOT_RUN. ⑤H457 governance/preflight failed old if exact negative expectation, H458 fixes test and harness. No full completion."
 }

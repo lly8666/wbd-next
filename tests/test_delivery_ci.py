@@ -39,7 +39,7 @@ class DeliveryCiTests(unittest.TestCase):
         job = self.workflow["jobs"]["windows-compile-preflight"]
         self.assertEqual(job["needs"], ["wiring-contract"])
         self.assertEqual(job.get("if"),
-            "inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))")
+            "inputs.perf_reuse_run_id == '' && !contains(github.event.head_commit.message, '[plan026-coding]') && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))")
         scripts = "\n".join(x.get("run", "") for x in job["steps"])
         self.assertIn("go test -c", scripts)
         self.assertIn("./cmd/wbd-client", scripts)
