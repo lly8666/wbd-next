@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "date": "2026-10-30",
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_binary_sha": "a61eef334068512b00a1db3137a51f3d0489020c",
+  "fixture_source_commit": "28bbbcbfdc97a92e2e725e3ef1b64e1e96a88e95",
+  "measured": [
+    {
+      "scenario": "Normal10M25ms0 60s",
+      "old": {
+        "action": 41000374541,
+        "artifact": 12952983950,
+        "windows_cpu_one_core_pct": 86.731,
+        "windows_source_loop_iterations": 9155002
+      },
+      "new": {
+        "action": 41009787523,
+        "artifact": 12956224685,
+        "windows_cpu_one_core_pct": 6.394,
+        "linux_cpu_one_core_pct": 11.726,
+        "windows_source_loop_iterations": 124869,
+        "offered_mbps": {
+          "windows": 9.9973,
+          "linux": 10
+        },
+        "first_fraction": {
+          "windows": 1,
+          "linux": 1
+        },
+        "strict_exact_zero_loss": "PASS",
+        "stop": "PASS_BOTH_OWNED",
+        "windows_socket_rcvbuf_effective_bytes": 16777216,
+        "windows_host_global_udp_in_errors_delta": 0
+      },
+      "windows_cpu_ratio_new_over_old": 0.07372
+    },
+    {
+      "scenario": "Normal100M25ms0 60s",
+      "old": {
+        "action": 41004888921,
+        "artifact": 12954817739,
+        "windows_cpu_one_core_pct": 82.212,
+        "windows_first_fraction": 0.999587,
+        "consecutive_missing_window": [
+          111353,
+          111764
+        ],
+        "missing_sources": 411
+      },
+      "new": {
+        "action": 41009789527,
+        "artifact": 12957117485,
+        "windows_cpu_one_core_pct": 16.13,
+        "linux_cpu_one_core_pct": 56.336,
+        "windows_source_loop_iterations": 323706,
+        "offered_mbps": {
+          "windows": 99.9733,
+          "linux": 99.9999
+        },
+        "first_fraction": {
+          "windows": 0.999834,
+          "linux": 1
+        },
+        "exact_missing_source_ids": {
+          "start": 120087,
+          "end_exclusive": 120252,
+          "count": 165
+        },
+        "windows_socket_rcvbuf_effective_bytes": 16777216,
+        "windows_host_global_ipv4_udp_deltas": {
+          "in_datagrams": 996234,
+          "in_errors": 0,
+          "no_ports": 0
+        },
+        "windows_npf_drops": 0,
+        "kernel_netem_drops_both": 0,
+        "strict_exact_zero_loss": "FAIL_WINDOWS_165_SOURCE_GAP",
+        "stop": "PASS_BOTH_OWNED"
+      },
+      "windows_cpu_ratio_new_over_old": 0.196197
+    },
+    {
+      "scenario": "Fixed10M250ms30pct 60s",
+      "old": {
+        "action": 41004890965,
+        "artifact": 12954992256,
+        "windows_cpu_one_core_pct": 89.375,
+        "residual_loss_fraction": {
+          "windows": 0.003717,
+          "linux": 0.000734
+        }
+      },
+      "new": {
+        "action": 41009791454,
+        "artifact": 12956804456,
+        "windows_cpu_one_core_pct": 5.625,
+        "linux_cpu_one_core_pct": 12.836,
+        "first_fraction": {
+          "windows": 0.999879,
+          "linux": 0.999759
+        },
+        "exact_source_missing": {
+          "windows": 12,
+          "linux": 24
+        },
+        "windows_socket_rcvbuf_effective_bytes": 16777216,
+        "windows_host_ipv4_udp_in_errors_delta": 0,
+        "linux_exact_bound_socket_drop_delta": 0,
+        "stop": "PASS_BOTH_OWNED"
+      },
+      "windows_cpu_ratio_new_over_old": 0.062937
+    }
+  ],
+  "interpretation": "Strong CPU and Fixed residual improvements from fixture scheduling and socket configuration; source counts are real, not inferred transport egress delivery. 165 Windows missing sources at C100 zero loss remains a blocking exact-first failure. Windows OS UDP host-global in_errors=0 does NOT exclude pre-UDP Windows Wintun/NPF or TCP outer loss. Do not assert root resolved.",
+  "pending": [
+    "Windows C100 strict exact-zero gap attribution",
+    "high rate C200 generator capacity",
+    "A5 baseline CPU comparison",
+    "B health/idle/rotation/dead/reconnection",
+    "C weak full matrix"
+  ]
+}
