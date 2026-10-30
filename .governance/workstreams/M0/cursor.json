@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 455,
-  "checkpoint_sha": "7433d64475e9c5545e6323ef932f1d8c909b142e",
+  "sequence": 456,
+  "checkpoint_sha": "88ba090086f0e42b4909d504bde3523848e414a3",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H455 Linux actual original-Go Fixed/Auto installed readback+Stop grep/manifest, UTF8 feature card, true Windows Linux Normal single mode and conditional six source-locked independent B Actions. PLAN027 A/C still open.",
-  "why_now": "H454 original Go Linux Action40992451408 actual kernel Fixed/Auto 4/4 UDP, RS16 restored, revision4 readback and owned Stop true, but whole Action FAIL due old string grep; feature catalog 16703B>16384B. H453 Windows real Wintun five modes PASS scoped not dual OS.",
+  "current_task": "H456 source-locked A2 normal0/30 and A3 fixed30 genuine dualOS 10Mbps 250ms 60s separate Actions, reusable H455 binary after Normal true PASS; fix live M0 Go blob SHA negative test. Maintain H455 B fanout across harness-only main changes. A4/A5/B lifecycle/C still open.",
+  "why_now": "H455 combined Linux native pass and Windows Wintun five modes pass, real Windows↔Linux Normal run40993452459 in-flight. H455 governance-maintenance run40993452425 two exact stale hashes in live M0 overlay test. Stage only scenario/harness/test code; preserve H455 frozen native binary artifacts and avoid H456 new build.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H455 original Go Linux and current Windows/Linux Normal real Actions. If B Normal full PASS six independent same-SHA signed binary B modes fan out. Continue A2-A5 and C matrix+5min, preserve failures/results.",
+  "next_action": "First collect H455 true Windows↔Linux Normal result and exact binary manifest; on PASS collect per-scene A2/A3 and B one-mode independent Actions from H456 autogated dispatchers; triage actual F/R/C, driver, p99, TCP/UDP, then Auto 120s/CPU A/B/B lifecycle/C capacity+long.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①H451-H454 source patches; H453 native-functional ALL PASS. ②A2-A5 NOT_RUN. ③H454 real Linux Fixed/Auto RS16 recovered 4/4 UDP, installed rev4 owned Stop PASS internal yet workflow FAIL stale markers. H453 Windows real Wintun modes scoped PASS. H455 dual-OS Normal and conditional B one-scene fanout in flight. ④C/5min NOT_RUN. ⑤H455 old grep/UTF8 fix submitted not yet verified, partial."
+  "partial_summary": "①PLAN027 §0.1 source corrections H452; H455 original Go combined native PASS and Windows Wintun mode each PASS; new code not yet under full B. ②H456 A2 off0/off30 + A3 Fixed30 separate true netem Actions automatically gated on signed Normal H455 PASS, pending. A4/A5 open. ③B current H455 dualOS Normal in flight; six source-locked modes gated; B lifecycle open. ④C capacity/5min not run. ⑤H456 governance negative SHA fixture patched, new source CI pending."
 }

@@ -207,8 +207,8 @@ jobs:
                   raise ValueError('WL_V2_REUSE_REQUIRES_NUMERIC_RUN_AND_EXACT_BINARY_SOURCE')
               if len(modes)!=1 or ab or os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1':
                   raise ValueError('WL_SOURCE_REUSE_REQUIRES_ONE_MODE_NO_AB_OR_N0')
-              if v2 and modes!=['normal']:
-                  raise ValueError('WL_V2_RUST_ONLY_NORMAL_SCENE')
+              if v2 and modes[0] in ('auto-revision','auto-adaptive'):
+                  raise ValueError('WL_V2_REUSE_REQUIRES_SUPPORTED_PUBLIC_MODE')
               print('WL_SINGLE_MODE_PREBUILT_SOURCE',modes[0],reuse,binary)
           elif binary:
               raise ValueError('WL_V2_BINARY_SOURCE_WITHOUT_REUSE_RUN')
@@ -219,7 +219,7 @@ jobs:
   windows-compile-preflight:
     name: Windows Go production and test compilation only
     needs: [wiring-contract]
-    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
+    if: inputs.perf_reuse_run_id == '' && !contains(github.event.head_commit.message, '[plan026-coding]') && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
     runs-on: windows-2025
     timeout-minutes: 12
     steps:
@@ -280,7 +280,7 @@ jobs:
   windows-rust-contract-preflight:
     name: Windows Rust eligible library unit tests (special M1 separate)
     needs: [wiring-contract]
-    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
+    if: inputs.perf_reuse_run_id == '' && !contains(github.event.head_commit.message, '[plan026-coding]') && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
     runs-on: windows-2025
     timeout-minutes: 25
     env:
@@ -319,7 +319,7 @@ jobs:
   linux-rust-contract-preflight:
     name: Linux Rust eligible library unit tests (special M1 separate)
     needs: [wiring-contract]
-    if: inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
+    if: inputs.perf_reuse_run_id == '' && !contains(github.event.head_commit.message, '[plan026-coding]') && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:

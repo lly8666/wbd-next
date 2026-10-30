@@ -16,6 +16,7 @@ jobs:
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_branch == 'main' &&
       github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.run_attempt == 1 &&
       contains(github.event.workflow_run.head_commit.message, '[plan027-b-normal]')
     runs-on: ubuntu-24.04
     timeout-minutes: 8
@@ -34,8 +35,10 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$ORIGINAL_SHA"
-          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$ORIGINAL_SHA" ||
-            { echo 'main changed; refuse non-frozen fanout'; exit 1; }
+          LATEST="$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)"
+          git fetch --depth=1 origin "$LATEST"
+          git diff --quiet "$ORIGINAL_SHA" "$LATEST" -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py ||
+            { echo 'product or ABI changed since verified B Normal; no fanout'; exit 1; }
           test "$(gh api "repos/$GH_REPO/actions/runs/$ORIGINAL_RUN" --jq .conclusion)" = success
           gh api "repos/$GH_REPO/actions/runs/$ORIGINAL_RUN/artifacts" --paginate --jq '.artifacts[].name' > "$RUNNER_TEMP/artifacts"
           grep -Fx "m0-wl-windows-product-binaries-$ORIGINAL_SHA" "$RUNNER_TEMP/artifacts"

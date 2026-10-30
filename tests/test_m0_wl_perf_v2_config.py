@@ -19,6 +19,20 @@ class V2Scenarios(unittest.TestCase):
   self.assertIn('sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, receiver_rcvbuf_request)',app)
   self.assertIn('"requested_socket_rcvbuf_bytes":receiver_rcvbuf_request',app)
   self.assertIn('socket_start=udp_socket_probe(sock) if profile_name=="v2" else None',app)
+ def test_plan027_a2_a3_real_bidirectional_scenes_are_separate_and_bounded(self):
+  for name,mode,loss in (
+   ("plan027-a2-normal-10m-250ms-0loss-60s","normal",0),
+   ("wl-outer-repair-10m-250ms-loss30-60s","normal",30),
+   ("wl-outer-repair-fixed-10m-250ms-loss30-60s","fixed",30)):
+   path=SCENE.parent/(name+".json")
+   c=read_scenario(path)
+   self.assertEqual((c["scenario_id"],c["public_mode"],c["duration_s"],c["tun_mtu"],c["seed"]),
+    (name,mode,60,1400,20261030))
+   self.assertEqual(c["warmup_s"],5)
+   for side in ("windows","linux"):
+    p=profile(c,side)
+    self.assertEqual((p["offered_mbps"],p["delay_ms"],p["loss_pct"]),(10,250,loss))
+    self.assertEqual(sum(row["packets_weight"] for row in p["packet_mix"]),100)
  def test_legacy_unchanged(self):
   self.assertEqual(get_profile("n0")["offered_mbps"],10)
   self.assertEqual(get_profile("p200-250m-30p")["loss_pct"],30)

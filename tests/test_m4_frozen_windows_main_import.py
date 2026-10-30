@@ -50,8 +50,8 @@ M0_AUTHORIZED_CURRENT = {
     # which is separately content-addressed; old M4 remains available.
     "r0/go_overlay/assembly/manifest.json": "2f2476c9338b43b0be1d36357b1427d68c6db342",
     "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go": "e5dbe438ea30f24f7e14f1e34f7895b403abc6d8",
-    "r0/go_overlay/internal/realityfront/fec_v2_policy.go": "a5cd239f175330c249c088ceb25c04cfa10abd7b",
-    "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go": "a6a09df12c9fe30ee1b6d681e321d78a5b3ecc8a",
+    "r0/go_overlay/internal/realityfront/fec_v2_policy.go": "4b1a907673473e84a3753c0672ac3316b6f1b763",
+    "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go": "aada7132a9edd492f2f1a00aa066021efcb1670b",
     # PLAN026 current M0 Npcap handoff is intentionally newer than the frozen
     # M4 four-entry manifest; the live PLAN020 manifest pins these exact blobs.
     "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go": "2901f24535e369046845802aede6eac3db77c5d1",
