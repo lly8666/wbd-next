@@ -205,9 +205,11 @@ jobs:
           if reuse:
               if not re.fullmatch(r'[1-9][0-9]{5,16}',reuse) or not re.fullmatch(r'[0-9a-f]{40}',binary):
                   raise ValueError('WL_V2_REUSE_REQUIRES_NUMERIC_RUN_AND_EXACT_BINARY_SOURCE')
-              if modes!=['normal'] or not v2 or ab:
-                  raise ValueError('WL_V2_REUSE_REQUIRES_RUST_ONLY_SINGLE_NORMAL_SCENE')
-              print('WL_V2_RUST_ONLY_PREBUILT_SOURCE',reuse,binary)
+              if len(modes)!=1 or ab or os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1':
+                  raise ValueError('WL_SOURCE_REUSE_REQUIRES_ONE_MODE_NO_AB_OR_N0')
+              if v2 and modes!=['normal']:
+                  raise ValueError('WL_V2_RUST_ONLY_NORMAL_SCENE')
+              print('WL_SINGLE_MODE_PREBUILT_SOURCE',modes[0],reuse,binary)
           elif binary:
               raise ValueError('WL_V2_BINARY_SOURCE_WITHOUT_REUSE_RUN')
           print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'],'V2_AB='+str(ab))
@@ -453,9 +455,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
       LINUX_BINARY_SRC: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]') && '7fc38591c501ff4a06e1862c7b08d5d3dbc1be95' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '0abd1b04ee7a39d8aa426963564a079523c1036a' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '0543b805ca25d804ccd131be6686b0b99f61f80f' || inputs.perf_binary_source_sha || github.sha }}
-      # The main/push workflow qualifies the seven public functions first.
-      # A one-scenario throughput case is an explicit separate manual
-      # Action selecting exactly one mode on a single reused VM/build.
+      # PLAN027 main push selects only Normal. Subsequent B public modes
+      # each own a separate Action and reuse source-verified signed binaries,
+      # never mixing throughput scenes on one VM.
       WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-game2-historical-order]') && 'through-game2' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-game2-only]') && 'game2' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]') || contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || (contains(github.event.head_commit.message, '[plan026-win-wake-150]') || contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]')) || contains(github.event.head_commit.message, '[plan026-win-npf-borrow-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))) && 'normal' || inputs.public_mode || 'all' }}
       WBD_WL_ABBA_NATIVE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]') && '1' || '0' }}
       WBD_WL_RUN_N0: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '1' || inputs.run_n0 == true && '1' || '0' }}
