@@ -1,0 +1,58 @@
+name: M0 PLAN027 H538 source080 independent Game modes and Fixed30 B
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h538-original-game-b-once.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  source-locked-b-five:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h538-game-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Reuse exact H533 signed original binaries and launch five independent already committed scenes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          src=08069b1513a9cba61d0b315dde03505f97ef796c
+          build=41072984387
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .head_sha)" = "$src"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .conclusion)" = success
+          test "$(gh api "repos/$GH_REPO/actions/runs/41075416858" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$build/artifacts" --jq '.artifacts[].name' > "$RUNNER_TEMP/artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$src" "$RUNNER_TEMP/artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/artifacts"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          scenes=[
+            ('game2','scenarios/plan027-b-game2-off-10m-75ms-loss5-20s.json',5,20),
+            ('game4','scenarios/plan027-b-game4-off-10m-75ms-loss5-20s.json',5,20),
+            ('game2-fec','scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json',15,20),
+            ('game4-fec','scenarios/wl-game4-fixed6-10m-75ms-loss30-20s.json',30,20),
+            ('fixed','scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json',30,60),
+          ]
+          for mode,path,loss,duration in scenes:
+            q=read_scenario(path)
+            assert q['public_mode']==mode and q['duration_s']==duration
+            assert all(q[side]['offered_mbps']==10 and q[side]['loss_pct']==loss for side in ('windows_to_linux','linux_to_windows'))
+            print('H538_REUSED_SOURCE080_ONE_MODE',mode,q['scenario_sha256'])
+          PY
+          while read -r mode scenario; do
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="$scenario" \
+              -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
+            echo "H538_ONE_ACTION_ONE_SCENE $mode $scenario source=$src"
+          done <<'EOF'
+          game2 scenarios/plan027-b-game2-off-10m-75ms-loss5-20s.json
+          game4 scenarios/plan027-b-game4-off-10m-75ms-loss5-20s.json
+          game2-fec scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json
+          game4-fec scenarios/wl-game4-fixed6-10m-75ms-loss30-20s.json
+          fixed scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json
+          EOF

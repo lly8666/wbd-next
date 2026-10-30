@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "08069b1513a9cba61d0b315dde03505f97ef796c",
+  "measurement_harness_sha": "d10a91515c122dfcb6b1306fa72b2b32def599fa",
+  "scope": "ORIGINAL_SIGNED_WINDOWS_NPCAP_WINTUN_GO_TLS_VS_LINUX_WSL2_RUST_RAW_TUN_SAME_SOURCE080_ORIGINAL_BINARIES",
+  "result": "PASS_SCOPED_LOW_COST_PARTIAL_REPAIR_0PCT_AND_30PCT_NO_RELIVERY_PERCENT_FLOOR",
+  "artifact_verified": true,
+  "no_loss_action": 41072984387,
+  "thirty_loss_action": 41075416858,
+  "artifact_id": 12987860051,
+  "zip_sha256": "95993a1d83cc526a4c0096aba557dcb99ba13acd5e1466d789004103068c3657",
+  "binary_artifacts": {
+    "source_sha": "08069b1513a9cba61d0b315dde03505f97ef796c",
+    "windows_archive_id": 12986028220,
+    "linux_archive_id": 12986990588,
+    "reused_in_thirty_loss": true
+  },
+  "scenario": {
+    "id": "wl-outer-repair-10m-250ms-loss30-60s",
+    "scenario_sha256": "73bf61884e54551e16f290af78c447db1a717232aaa2b238c71fc03f35ddf0a8",
+    "offered_each_mbps": {
+      "windows": 9.9974,
+      "linux": 10
+    },
+    "delay_each_oneway_ms": 250,
+    "loss_each_pct": 30,
+    "duration_s": 60,
+    "kernel_netem_drops": {
+      "eth0": 30930,
+      "ifb": 30434
+    },
+    "first_delivered_fraction": {
+      "windows": 0.700254,
+      "linux": 0.700708
+    },
+    "max_interdelivery_ms": {
+      "windows": 62,
+      "linux": 523
+    }
+  },
+  "outer": {
+    "windows": {
+      "F": 86375024,
+      "R_accepted": 303259,
+      "R_uncertain_charged": 0,
+      "C": 17593,
+      "repair_packets": 300,
+      "R_over_F": 0.003510957,
+      "ratio_R_over_F_plus_R_plus_C": 0.003497963,
+      "first_cache_expired": 16094,
+      "old_head_ack_retired": 0,
+      "candidate_first": 300,
+      "at_stop_shadow_outstanding": 0,
+      "repair_abandoned": 0
+    },
+    "linux": {
+      "F": 84988535,
+      "R_accepted": 149128,
+      "R_uncertain_charged": 0,
+      "C": "NOT_SEPARATELY_EXPOSED_BY_EXISTING_LINUX_STOP_COUNTER",
+      "repair_packets": 180,
+      "R_over_F": 0.0017546837346943327,
+      "first_cache_expired": 17839,
+      "retired_after_send": 180,
+      "at_stop_shadow_outstanding": 0,
+      "repair_attempt_limit": 1,
+      "blocked_global": 0
+    }
+  },
+  "baseline_no_loss": {
+    "evidence": "docs/evidence/M0/PLAN027-H537-SOURCE080-TRUE-NATIVE-NOLOSS-20261030.json",
+    "first_windows": 1,
+    "first_linux": 1,
+    "R_windows": 0,
+    "R_linux": 0
+  },
+  "business_and_stop": {
+    "UDP": "PASS_BIDIRECTIONAL_ACTUAL_KERNEL",
+    "TCP": "PASS_BIDIRECTIONAL_ACTUAL_KERNEL",
+    "stop": "PASS_BOTH_OWNED",
+    "tun_tx_drops": 0,
+    "tun_rx_drops": 0,
+    "qlen_at_end": 0
+  },
+  "resources": {
+    "windows_original_process": {
+      "elapsed_s": 77.172,
+      "cpu_total_s": 2.9844,
+      "average_one_core_pct": 3.867,
+      "peak_rss_bytes": 43511808,
+      "peak_private_bytes": 39792640
+    },
+    "windows_generator_cpu_s": 4.3281,
+    "linux_generator_cpu_s": 10.6956,
+    "linux_rust_process_cpu": "NOT_MEASURED_AS_STANDALONE_FULL_PROCESS",
+    "same_vm_A_B": "NOT_RUN"
+  },
+  "conclusions": [
+    "0pct did not retrigger outer sends, 30pct gives actual bounded opportunities in both directions, source080 no new reencrypt/marker/PN or retries per cached item",
+    "Aged gaps and 256-span future bounded replay/ACK unit tests compiled and passed same exact source; black-box evidence does not isolate individual cosmetic abandon transitions",
+    "Compared to source7a 50M/150ms earlier Windows6/Linux2 attempts, source080 10M/250ms Windows300/Linux180. Different scenario: NEVER claim causal improvement in repair throughput or CPU",
+    "No fixed percent recovery/rate floor; loss fraction of business tracks real 30pct qdisc as outer repair is optional",
+    "Linux C separate wire byte stop counter unavailable, do not invent it; Windows F/R/C and both real F/R are exact",
+    "Do not rerun this cosmetic repair task or multiply limiters; proceed B Game/Windows lifecycle/C/A5"
+  ]
+}

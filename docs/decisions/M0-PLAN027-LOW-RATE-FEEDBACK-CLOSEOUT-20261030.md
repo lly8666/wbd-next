@@ -35,6 +35,12 @@
 
 本子任务只用同一新SOURCE原双端 Normal/off 10Mbps每方向、单程250ms，0%和30%各一条60秒Action；证据包含持续首到、旧洞后的重传机会、F/R/C、CPU/RSS、队列/Stop。**重传几乎为零本身不等于功能通过，但没有任何百分比下限**；不为凑比例加码。如果达标即停止本子任务的扩测，继续第0节剩余A/B/C生命周期、容量矩阵及交付，不可把子项完成误称全部完成。
 
+### H538 外层子任务已按宽松授权收口，后续 B/C 继续（SOURCE080）
+
+本子任务的核心算法与双端接线冻结在产品 SOURCE `08069b1513a9cba61d0b315dde03505f97ef796c`，随后仓库仅做验收记录和 Action 派发，无新数据代码。同源码 Windows 签名 NPF/Wintun↔Linux WSL2 原 Go TLS/Rust、独立 Action 0% [41072984387](https://github.com/lly8666/wbd-next/actions/runs/41072984387) 与 30% [41075416858](https://github.com/lly8666/wbd-next/actions/runs/41075416858)，各向 10Mbps/250ms/60s。0% 两端首到100%、R=0；30% 真正 tc drops30930/30434、首到70.0254/70.0708%、Windows F/R/C=86375024/303259/17593，Linux F/R=84988535/149128（Linux C 旧日志尚无独立 wire 字节口径，不伪填），原记录重复发送 Windows300/Linux180 次，双向 UDP/TCP/Stop 均通过，结束后影子缓存0、TUN drop0、无持续大量误重传。Windows 30% Go+Rust全进程 CPU约单核3.87%、峰值 RSS43.5MB，**没有同VM父子对照，不宣称CPU提高**。旧 SOURCE7a 的 Windows6/Linux2 次采用不同负载/延迟，仅作原风险记录，不能做精确修复率因果 A/B。缓存/单包只一次/额度继续用原语；没有额外的重传门槛。
+
+因此按照最新版授权，**外层机会重传单项 DONE，不再发新比例追求或多 seed**；剩余 B 的 Windows 健康/轮换、Game 全模式和 C 的边界矩阵、A5 同VM比较，仍逐项 OPEN，不阻塞后续开发派发。
+
 ## 1. 唯一顺序与恢复
 1. 默认上个聊天意外中断：刷新main，读cursor checkpoint后提交、短devlog、已登记Actions和SOURCE/hash；先补recovered事实、取在途结果，不重复dispatch。新registry/本计划优先于旧cursor next_action。
 2. **先整批实现M2退役及替代逻辑、双方调用、配置/功能卡/夹具→冻结SOURCE→一次编译→简化验证A。**
