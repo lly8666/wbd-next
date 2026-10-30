@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "observed_date": "2026-10-30",
+  "product_source_sha": "a61eef334068512b00a1db3137a51f3d0489020c",
+  "original_binary_build_action": 41002998813,
+  "source_qualification": {
+    "action": 41002998813,
+    "artifact": 12954880580,
+    "seven_modes": [
+      "normal",
+      "fixed",
+      "auto",
+      "game2",
+      "game4",
+      "game2-fec",
+      "game4-fec"
+    ],
+    "all_actual_short_native_functional": "PASS",
+    "owned_stop": "PASS_BOTH_OWNED"
+  },
+  "measured": [
+    {
+      "action": 41003831217,
+      "artifact": 12955111161,
+      "mode": "auto",
+      "scenario": "plan027-h461-auto-egress-10m-25ms-loss0-60s",
+      "duration_s": 60,
+      "offered_mbps": {
+        "windows": 9.9973,
+        "linux": 10
+      },
+      "received_first_mbps": {
+        "windows": 10,
+        "linux": 9.9973
+      },
+      "first_delivery_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "invalid_packets": {
+        "windows": 0,
+        "linux": 0
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "windows_native_product_avg_one_core_pct": 7.204,
+      "oneway_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS"
+    },
+    {
+      "action": 41003834670,
+      "artifact": 12954517062,
+      "mode": "normal",
+      "scenario": "plan027-c-normal-50m-25ms-loss0-60s",
+      "duration_s": 60,
+      "offered_mbps": {
+        "windows": 49.9866,
+        "linux": 49.9999
+      },
+      "received_first_mbps": {
+        "windows": 49.9999,
+        "linux": 49.9866
+      },
+      "first_delivery_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "invalid_packets": {
+        "windows": 0,
+        "linux": 0
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "windows_native_product_avg_one_core_pct": 9.729,
+      "windows_generator_cpu_one_core_pct": 81.683,
+      "oneway_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS"
+    }
+  ],
+  "pending": [
+    "C100 with real result gate to C200",
+    "A3 Fixed30 source repair regression",
+    "C50 300s long stability",
+    "A4 Auto continuous staged loss and true grade drop",
+    "A5 CPU comparison",
+    "B health idle/dead/rotation/reconnection",
+    "C weak loss matrix and F/R/C/p99"
+  ]
+}

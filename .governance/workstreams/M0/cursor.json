@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 467,
-  "checkpoint_sha": "a61eef334068512b00a1db3137a51f3d0489020c",
+  "sequence": 468,
+  "checkpoint_sha": "38a4e8f2d1123086622f327a14637411ca0b0e16",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H467 source-locked one rebuilt H466 product native Auto functional 60s test and conditional C50 (only after H464 measured Normal C10 both Stop and H466 new normal short original native Stop). Parent Action41002998813 builds Linux/Windows source a61. Fix proof still not confirmed.",
-  "why_now": "H466 actual product change submitted SHA a61: M1 50ms empty ready no longer returns INVALID with staged parity/control; source tests compile in progress. H464 Auto artifact12953171887 proves initial invalid then staged7 and BAD_STAGE spin, H464 C10 artifact12952983950 genuine 60s 100% both first Stop PASS.",
+  "current_task": "H468 VERIFIED H466 real seven-mode native PASS and H467 prebuilt-source Auto10/C50 both 60s true first delivery1.0/owned Stop; H468 one push launches graded C100, Fixed10/250ms/30% A3 regression and Normal C50 300s, conditionally C200 only if real C100 report clears gate.",
+  "why_now": "H466 Action41002998813 fully PASS 7 native modes, H467 Auto Action41003831217 and C50 Action41003834670 actual both source a61eef3 binary and first1.0 Stop PASS; C50 generator windows single-core 81.683pct, rate guard necessary.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H466 source-locked Linux/Windows build and unit/true Normal, H467 Auto 60s CPU/first/Stop and conditional C50; if Auto failure repair next exact evidence. A4 120s A5 CPU A/B B other lifecycle C 100-200/300s remain.",
+  "next_action": "Collect H468 independent native jobs actual artifacts; C200 only after real C100 >=95Mbps per side. Investigate Fixed30 residual, Auto 120s multistage A4, A5 same-VM CPU AB, B lifecycle/health and representative loss. No readiness until 5 obligations.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①H466 original Linux 50ms expired ready/staged lifecycle fix newly submitted, native unverified; H467 registered one rebuilt-source Auto 60s regression. ②H464 C10 full 60s 10Mbps25ms0 first 100% both and owned Stop PASS; H467 C50 only if H466 Normal short full PASS and C10 complete evidence. ③A1/A2 scope PASS, Fixed30 Windows first10.1% remains FAIL, A4/A5 OPEN. ④B Auto previously 7 staged, first INVALID, ~35M BAD_STAGE, 0 Linux first; other lifecycle OPEN. ⑤C50/100/200/loss/300s pending; no final readiness."
+  "partial_summary": "①M2 replacement source A1 unit/true native proven, source a61eef3 H466 PASS seven short modes. ②A2 Normal C10 PASS; H467 Auto10 60s 100% both Stop PASS; A3 Fixed30 recheck newly queued, A4/A5 OPEN. ③B seven-mode full actual short PASS H466 but 90s idle/rotation/blackhole/reconnect OPEN. ④C Normal 10,50Mbps 60s PASS; H468 launches C100, 50Mbps 300s, conditional C200; weak loss, Fixed matrix pending. ⑤p99 NOT_MEASURED, F/R/C and lifecycle missing, partial not ready."
 }
