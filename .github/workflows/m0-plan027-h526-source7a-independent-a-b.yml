@@ -1,0 +1,63 @@
+name: M0 PLAN027 H526 seven independent source7a A B real native scenes
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h526-source7a-independent-a-b.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  source-locked-a-b-seven:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h526-a-b-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify source7a real original kernel product then independent per-scene measurement Actions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          src=7a5d7e83823e96539d2a904a8193a85ec18df30d
+          build=41060763175
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .head_sha)" = "$src"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .conclusion)" = success
+          test "$(gh api "repos/$GH_REPO/actions/runs/41064405693" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$build/artifacts" --jq '.artifacts[].name' > "$RUNNER_TEMP/h526-source-artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$src" "$RUNNER_TEMP/h526-source-artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/h526-source-artifacts"
+          grep -Fx m0-wl-full-public-normal-direct "$RUNNER_TEMP/h526-source-artifacts"
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          rows=[
+    ('normal','scenarios/plan027-a2-normal-10m-250ms-0loss-60s.json',10,60),
+    ('normal','scenarios/wl-outer-repair-10m-250ms-loss30-60s.json',10,60),
+    ('fixed','scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json',10,60),
+    ('auto','scenarios/plan027-a4-auto-10m-staged-240s.json',10,240),
+    ('game2-fec','scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json',10,20),
+    ('game4-fec','scenarios/wl-game4-fixed6-10m-75ms-loss30-20s.json',10,20),
+    ('normal','scenarios/plan027-c-normal-10m-25ms-loss0-60s.json',10,60),
+          ]
+          for mode,path,rate,duration in rows:
+              cfg=read_scenario(path)
+              assert cfg.get('public_mode','normal')==mode and cfg['duration_s']==duration,(path,cfg)
+              assert all(cfg[d]['offered_mbps']==rate for d in ('windows_to_linux','linux_to_windows'))
+              print('H526_ONE_SCENE_SOURCE7A',mode,path,cfg['scenario_sha256'])
+          PY
+          while read -r mode scene ab; do
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode="$mode" -f run_n0=false -f perf_ab="$ab" \
+              -f perf_scenario_file="$scene" \
+              -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
+            echo "H526_DISPATCHED_ONE_ACTION $mode $scene perf_ab=$ab"
+          done <<'EOF'
+normal scenarios/plan027-a2-normal-10m-250ms-0loss-60s.json false
+normal scenarios/wl-outer-repair-10m-250ms-loss30-60s.json false
+fixed scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json false
+auto scenarios/plan027-a4-auto-10m-staged-240s.json false
+game2-fec scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json false
+game4-fec scenarios/wl-game4-fixed6-10m-75ms-loss30-20s.json false
+normal scenarios/plan027-c-normal-10m-25ms-loss0-60s.json true
+EOF
