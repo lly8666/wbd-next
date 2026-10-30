@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 453,
-  "checkpoint_sha": "cdef278f202c7fb08bf17e5068a83be7f798e138",
+  "sequence": 454,
+  "checkpoint_sha": "32d855a256d4d06cf6a549421a826720586663ad",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H453 repair exact H452 CI: recovery group two tests retained obsolete priority/expired-candidate semantics, current Windows check-only manifest old Go blob. Fix test assumptions and both exact git blob references; new SOURCE Actions and A/B/C remain.",
-  "why_now": "H452 native-functional run40991692192 recovery FAIL (96/98, two budget tests), win-linux run40991692231 assembly check-only FAIL before real driver due 2 Go blob hashes. Correct source-driven regression, not relax runtime assertions.",
+  "current_task": "H454 repair H453 red Windows Go cohort oracle (old full/sample k equality), Linux kernel app test (old M2 commit must fail), and 16KiB feature catalog. Native recovery A1 H453 full PASS, Windows cheap assembly check PASS. New H454 Actions and genuine two-OS B pending.",
+  "why_now": "H453 run40992006434 native functional all recovery/engine/fec/normal/kernel/receipt PASS, but run40992006504 Win Go compile preflight failed old cohort ratio oracle, run40991692240 real Go kernel test failed old M2 Applied must reject. Feature catalog 40992006437 over 16KiB due verbose card formatting.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H453 exact Recovery/native/Windows assembly and Windows Rust tests plus H452 continuing real runs. Then real A/B/C; do not infer success from preflight and short runs.",
+  "next_action": "Collect H454 Windows Go preflight and Linux true original Go kernel app test; if both clear, Windows/Linux actual modes and scoped A/B/C; plan complete only after full evidence.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①H451 Linux installed readback/idle + H452 ACK/Auto/Windows/stage0 submitted, H453 fixes exactly two unit tests + manifest SHA. ②A2-A5 OPEN. ③B Windows/Linux two-OS blocked until manifest and native source verification, old true failure retained. ④C/5min NOT_RUN. ⑤H452 recovery & preflight true FAIL retained and H453 revalidation pending; no final PASS."
+  "partial_summary": "①H452 production 3dupACK/rate/Auto/Windows and H451 Linux correct candidates; H453 A1 native all groups PASS, Go test semantics and inventory repaired H454 pending. ②A2-A5 OPEN. ③B Linux original-Go kernel active failed H452 due old test oracle (H454 fixed unverified), Windows↔Linux blocked by Go tests; full lifecycles OPEN. ④C/5min NOT_RUN. ⑤Exact source Actions pending; no overall PASS."
 }

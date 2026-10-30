@@ -225,23 +225,28 @@ func realOriginalGoFec2LinuxMode(t *testing.T,mode FecV2Mode){
         clientDelivered[got]=true
     }
     if len(clientDelivered)!=packets{t.Fatalf("client TUN app only received %d",len(clientDelivered))}
-    // PLAN027: the original-Go authenticated client source/parity must
-    // recover genuine Linux UDP over real TUN. Retired per-record M2
-    // cannot silently produce fixed-revision Applied or positive loss.
-    // Old standalone probe may still encode historic WBC4 for offline
-    // oracle; the live sender intentionally does not call feedbackDue.
+    // Real Go authenticated TLS and actual Rust source/parity copied into
+    // the live kernel recovered original application UDP. Per-record
+    // Receipt remains retired; Fixed/Auto local installation is a distinct
+    // revision fact and MUST NOT wait on legacy mature M2.
     coverage,e:=b.rustOwnerNormalM2Coverage()
     if e!=nil||coverage.AuthenticatedReverseReports!=0||coverage.Covered2s!=0{
         t.Fatalf("retired M2 unexpectedly accepted per-record feedback: coverage=%+v err=%v",coverage,e)
     }
     got,applied,e:=b.readbackOriginalFixedPending(pending,server.Epoch)
     if e!=nil||applied.Applied||got.AppliedRevision!=0{
-        t.Fatalf("Fixed/Auto false Applied without new authenticated witness: %+v %+v %v",got,applied,e)
+        t.Fatalf("pre-commit config must remain pending: %+v %+v %v",got,applied,e)
     }
-    if e:=b.commitOriginalFixedMatureM2(server.Epoch,4);e==nil{
-        t.Fatal("retired M2 cannot grant legacy maturity and false Applied")
+    // Historical C ABI name is stable. Its current semantics check the
+    // actual owner/worker installed revision; they do not read M2 Receipt.
+    if e:=b.commitOriginalFixedMatureM2(server.Epoch,4);e!=nil{
+        t.Fatalf("real installed FixedStream revision4 not committed: %v",e)
     }
-    t.Logf("M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS mode=%s kernel_records=%d application_ipv4=%d parity_silent=%d recovered_missing=%d client_udp=%d originalTLS=1 no_per_record_receipt=1 fixed_applied=false",
+    got,applied,e=b.readbackOriginalFixedPending(pending,server.Epoch)
+    if e!=nil||!applied.Applied||got.AppliedRevision!=4{
+        t.Fatalf("real owner installed revision not read back: %+v %+v %v",got,applied,e)
+    }
+    t.Logf("M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS mode=%s kernel_records=%d application_ipv4=%d parity_silent=%d recovered_missing=%d client_udp=%d originalTLS=1 no_per_record_receipt=1 fixed_installed=true",
         mode,recordsSeen,originalDelivered,paritySilent,recoveredFirst,len(clientDelivered))
     // M4 Linux lifecycle contract: after real traffic, Stop must join
     // native client borrow/receiver before the Go-owned TUN is released.
@@ -265,9 +270,9 @@ func realOriginalGoFec2LinuxMode(t *testing.T,mode FecV2Mode){
         t.Fatal("server TUN interface leaked after native Stop + Go fd close")
     }
     if mode==FecV2Auto{
-        t.Log("M0_PLAN027_ORIGINAL_GO_FEC2_AUTO_START_PENDING_NO_M2_PASS startup_profile=mild bounded_unknown_feedback=hold legacy_applied=false client_udp=4")
+        t.Log("M0_PLAN027_ORIGINAL_GO_FEC2_AUTO_START_INSTALLED_NO_M2_PASS startup_profile=mild bounded_unknown_feedback=hold owner_revision=4 client_udp=4")
     }else{
-        t.Log("M0_PLAN027_ORIGINAL_GO_FEC2_FIXED_PENDING_NO_M2_PASS kernel_source_parity=1 legacy_applied=false client_udp=4 no_fake_apply=1")
+        t.Log("M0_PLAN027_ORIGINAL_GO_FEC2_FIXED_INSTALLED_NO_M2_PASS kernel_source_parity=1 owner_revision=4 client_udp=4 no_fake_receipt=1")
     }
     t.Log("M4_LINUX_ORIGINAL_GO_CONNECT_FEC_REAL_NETNS_CLIENT_SERVER_STOP_OWNED_CLEANUP_PASS tls=1 client_udp=4 lost_source_recovered=1 repeated_stop=1 stale_rx_deny=1 stale_probe_feedback_deny=1 both_tun_devices_gone=1")
 }

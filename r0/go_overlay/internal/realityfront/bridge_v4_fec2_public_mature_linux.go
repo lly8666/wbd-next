@@ -9,8 +9,9 @@ extern int32_t wbd_m0_embedded_go_loop_fec_m1_ingress(uint64_t,uint64_t*,size_t)
 extern int32_t wbd_m0_embedded_go_loop_fec_m1_stage(uint64_t,uint64_t*,size_t);
 */
 import "C"
-// Product uses same actual M4 copied source+parity and original M3
-// authenticated M2 coverage, never a GUI/Go APPLIED assertion.
+// Stable ABI name now verifies authenticated original-Go requested
+// revision/profile installed in actual Rust FEC owner with live worker.
+// Quality maturity and receiver delivery are separate, not old M2 gates.
 func v4PublicMatureFixedNative(
     b *v4EmbeddedNativeBridge,epoch [16]byte,revision uint64,
 )error{return b.commitOriginalFixedMatureM2(epoch,revision)}

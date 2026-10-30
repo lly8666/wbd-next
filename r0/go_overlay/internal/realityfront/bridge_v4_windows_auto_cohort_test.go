@@ -41,13 +41,20 @@ func TestM0WindowsAutoAlignedMatureCohortPreservesTrueKWindow(t *testing.T){
  snap.ActualK[0]=n
  v,reason,_:=fecV2Quality(now,snap)
  if v!=FecV2Valid{t.Fatalf("equal real cohort with zero loss treated as %s: %s (slow=%d k=%d)",v,reason,s.FirstSent,n)}
- // Reconstruct the S52 buggy independent 16s floor (3.9s): it picks
- // ~10s actual-k against ~8s mature FIRST, and MUST still be UNKNOWN.
+ // Independent k cohorts represent real closed blocks, not the sampled
+ // first-send packet count. Different real snapshot intervals are not
+ // evidence of missing packets, so ratio mismatch cannot freeze Auto.
  wrong,okWrong:=winAutoDiff(points[2].v.Counters[14],slow.v.Counters[14])
  if !okWrong{t.Fatal("invalid synthetic historical counter")}
  snap.ActualK[0]=wrong
- if v,why,_:=fecV2Quality(now,snap);v!=FecV2Unknown||why!="actual-k observation incomplete"{
-  t.Fatalf("mismatched real sampled cohorts got false acceptance %s %s",v,why)
+ if v,why,_:=fecV2Quality(now,snap);v!=FecV2Valid{
+  t.Fatalf("independent real k cohort rejected %s %s",v,why)
+ }
+ // A lost authenticated feedback source is still UNKNOWN even when k
+ // is nonzero; never convert a real missing window into zero loss.
+ snap.Validity=FecV2Unknown
+ if v,_,_:=fecV2Quality(now,snap);v!=FecV2Unknown{
+  t.Fatal("missing authenticated sampled feedback forged VALID")
  }
  if _,_,_,ok:=winAutoAlignedMatureCohorts(points[:5],points[4].at);ok{
   t.Fatal("insufficient genuine 16s historical cohort forged VALID")
