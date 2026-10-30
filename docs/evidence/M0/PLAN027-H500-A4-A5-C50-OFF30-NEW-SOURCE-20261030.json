@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "787ad4c900f3bae867c5c9556c4702339deef8cb",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "date": "2026-10-30",
+  "binary_action": 41025962277,
+  "harness_source": "bdc9d4cb896e72b112ea7868edfc00b2b6237ebd",
+  "records": [
+    {
+      "run": 41029396030,
+      "scope": "C50 normal/off 50Mbps each 25ms0% 60s real signed twoOS",
+      "outcome": "PASS_FIRST_AND_STOP",
+      "artifact": 12964584760,
+      "zip_sha256": "d56e34166327aa9111477a5d4f97af9a7fffabf4f2460d3cd058dfe59a96bbae",
+      "offered_mbps": {
+        "windows": 49.9866,
+        "linux": 49.9999
+      },
+      "first_unique_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "linux_original_tun_drop": 0,
+      "linux_root_fq_drop": 0,
+      "owned_stop": "PASS",
+      "whole_windows_exe_cpu_pct_one_core": 8.558,
+      "monotonic_rtt_p99_ms": {
+        "windows": 63,
+        "linux": 66.009
+      },
+      "linux_repair_bytes": 1299,
+      "windows_repair_bytes": 0
+    },
+    {
+      "run": 41029399148,
+      "scope": "A2 normal/off 10Mbps each 250ms 30% real tc 60s",
+      "outcome": "FAIL_LIVE_OPPORTUNITY",
+      "carrier_and_stop": "PASS",
+      "artifact": 12964748178,
+      "zip_sha256": "976c3753e9454c68986747476ecf7a101fa9d23192d6152034e9204058eeb082",
+      "sent": {
+        "windows": 99497,
+        "linux": 99551
+      },
+      "unique_first": {
+        "windows": 69881,
+        "linux": 69846
+      },
+      "fraction": {
+        "windows": 0.701962,
+        "linux": 0.701991
+      },
+      "windows": {
+        "F": 86383225,
+        "R": 0,
+        "C": 1143,
+        "R_div_F": 0,
+        "R_div_total": 0,
+        "candidates": 0
+      },
+      "linux": {
+        "F": 84987217,
+        "R": 0,
+        "R_div_F": 0,
+        "R_div_total": 0,
+        "candidates": 0
+      },
+      "linux_original_tun_fq_drops": 0,
+      "stop": "PASS_BOTH_OWNED",
+      "root_cause_candidate": "Existing outer ACK/SACK source path does not nominate live frozen repair at severe real gaps; no unnegotiated SACK, Linux static outgoing ACK1."
+    },
+    {
+      "run": 41029388055,
+      "scope": "A4 Auto staged 240s 0→5→15→30→0% original eth0/ifb tc",
+      "outcome": "FAIL_STOP_REQUEST",
+      "artifact": 12965217309,
+      "zip_sha256": "0c61566b1e25d1033c0b2e8de1daac075cf6640cc98774dd9bb210324b0e469d",
+      "actual_stage_start_s": [
+        0,
+        20.453,
+        40.484,
+        65.531,
+        95.593
+      ],
+      "first_fraction": {
+        "windows": 1,
+        "linux": 0.997028
+      },
+      "linux_auto": {
+        "valid": true,
+        "requested_revision": 6,
+        "applied_revision": 6,
+        "profile": 0,
+        "profiles_observed": [
+          5,
+          4,
+          3,
+          2,
+          1,
+          0
+        ]
+      },
+      "windows_auto": {
+        "applied_revision": 4,
+        "profile": 2
+      },
+      "raw_runner_failure": "WL_REAL_LINUX_OWNED_STOP_REQUEST_FAILED code=1",
+      "report_stop": "PASS_BOTH_OWNED",
+      "caveat": "Later Stop marker does not override failing Action; 120s full-grade both directions NOT_PASS"
+    },
+    {
+      "run": 41029401961,
+      "scope": "A5 same-VM sequential AB normal 10Mbps each 25ms0%",
+      "outcome": "FAIL_AB",
+      "artifact": 12965013139,
+      "zip_sha256": "b61b97f7c521bdb7a9921d57e2f6df543c30aa8b97348b7eb2f6b0ef61ffed21",
+      "order": [
+        "B",
+        "A"
+      ],
+      "leg_B": {
+        "first_fraction_both": 1,
+        "stop": "PASS",
+        "cpu_s_per_first_delivered_gb": 12.6056
+      },
+      "leg_A": {
+        "windows_exit_code": 1,
+        "stop": "NOT_RUN",
+        "status": "FAIL_EXIT_DURING_60S"
+      },
+      "comparison": "INCONCLUSIVE_OR_FAILED"
+    }
+  ],
+  "inflight": [
+    41029390768,
+    41029393488
+  ],
+  "c100_strict_zero": "FAIL_11_MISSING_H497",
+  "c100_300s": "NOT_RUN",
+  "full_task": "PARTIAL"
+}

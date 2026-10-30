@@ -4,19 +4,20 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 499,
-  "checkpoint_sha": "2348e2ccbccf8c0215d79987565e3c8a9ab9e424",
+  "sequence": 500,
+  "checkpoint_sha": "e10102d8bb32951900ccf46ae4f82549c68d153e",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 §0 still open. Exact new product SOURCE787ad4 Go owns TUN txqlen2048 verified after ip -j, C100 60s Linux->Windows 11 first misses strict-zero FAIL despite Stop and kernel TUN/fq drop0 (H497). H498 verified three independent original signed two-OS native C10 off exact first, Fixed30 netem 250ms first mostly/Stop, Auto 60s Linux applied rev2 profile4/Windows rev1/Stop; not 120s. H499 dispatched 6 independent new-source native Actions 41029388055/41029390768/41029393488/41029396030/41029399148/41029401961; collect real results before any more dispatch. Product FEC/driver code unchanged since SOURCE787.",
+  "current_task": "PLAN027 §0 still OPEN H500: source787ad4 new product C50 exact first and Stop PASS; Normal/off30 candidate/R zero both despite severe real loss => live ACK opportunity FAIL; A4 staged240s Linux Auto profile5→0 valid but native owned Stop request code1 => Action FAIL; A5 same-VM AB leg A Windows exited => FAIL. H499 Game2/4 Actions41029390768/41029393488 in flight.",
   "why_now": "Source-reused new product C10 0%, Fixed30 and Auto native results now verified with actual tc, owner and Stop, no new compiler cycles; A4 240s, A5 sequential same-VM AB, B Game2/4 and C50/Normal-off30 testing in flight. C100 strict FAIL 11 missed remains unresolved; no 300s new-source PASS.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H499 six action reports by exact run ID and scenario, don't repeat. Check H499 A4 true phased Auto sustained 120s (Windows/Linux grade, valid samples), A5 sequential same-VM CPU and business, B Game2/4 signed native, C50 + off30 actual R/F/C and tail; preserve failures, verify new SOURCE/manifest/TUN/owned Stop. Then B lifecycle gaps (Health/idle90/wake/rotation/lane failure/blackhole/MTU/driver/GUI) and C capacity only supported tiers, stable real 300s and regressions; no final READY until §0 five items proven.",
+  "next_action": "Collect IN-FLIGHT Game2 Action41029390768, Game4 Action41029393488 (no duplicate). Repair real ACK opportunity trigger (Linux static ACK1/no negotiated SACK + stale oldest shadow), diagnose A4 Linux owned Stop request code1 and A5 Windows rc1 with targeted source-pinned runs. Rebuild ONCE after product code batch; validate live off30 once original immutable repair with R<=0.10F, Auto A4, A5 and B mode/lifecycle; then C capacity + source-true 300s and final feature/evidence/cursor. No READY.",
   "unverified": true,
   "last_tested_source": "787ad4c900f3bae867c5c9556c4702339deef8cb",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H497-RECOVERED-NEW-PRODUCT-C100-FIRST-LOSS-20261030.json",
-    "docs/evidence/M0/PLAN027-H498-NEW-SOURCE-A-C10-FIXED30-AUTO-20261030.json"
+    "docs/evidence/M0/PLAN027-H498-NEW-SOURCE-A-C10-FIXED30-AUTO-20261030.json",
+    "docs/evidence/M0/PLAN027-H500-A4-A5-C50-OFF30-NEW-SOURCE-20261030.json"
   ],
   "context_refs": [
     "docs/prompts/M0.md",
@@ -24,10 +25,10 @@
     "docs/testing/WL_PERF_HARNESS_V2.md",
     "docs/features/entries/outer-opportunistic-repair.json",
     "docs/features/entries/fec-auto.json",
-    "docs/evidence/M0/PLAN027-H411-WINDOWS-OLD-M2-OWNER-AND-GOVERNANCE-20261030.json",
     "docs/devlog/M0/20261030-PLAN027-H497-RECOVERED-C100-TEST-GATE.md",
-    "docs/devlog/M0/20261030-PLAN027-H498-NEW-SOURCE-A-SHORT-TRUE-NATIVE.md"
+    "docs/devlog/M0/20261030-PLAN027-H498-NEW-SOURCE-A-SHORT-TRUE-NATIVE.md",
+    "docs/devlog/M0/20261030-PLAN027-H500-REAL-NATIVE-A4-A5-C50-OFF30.md"
   ],
   "open_requests": [],
-  "partial_summary": "H499 PARTIAL from H497: SOURCE787ad4 true qlen2048 original Go ip-j readback, source-true C100 Action41025962277 => 11 Linux->Windows first missing, other direction zero, original TUN/fq/UDP kernel drop zero, both owned Stop, H496 300s strict gate NOT_RUN. H498 three separate native SOURCE-reused Actions 41028345925 Normal10/25/0 first100%, 41028348498 Fixed10/250/30 eth0+IFB actual drops67977/68616 first 99.9869/99.9598%, 41028351349 Auto10/25/0 first100% Linux revision2 profile4 Windows rev1, each native UDP/TCP/Stop PASS. See H498 evidence with each ZIP SHA. 60s Auto not 120s. H499 staging dispatch Action41029363921 PASS, six new SOURCE-reuse independent Actions: 41029388055 A4 auto phased240s; 41029390768 B Game2 max 10/75/15; 41029393488 B Game4 max 20/250/30; 41029396030 C50/25/0; 41029399148 A2 off10/250/30; 41029401961 A5 same VM serial AB Normal10/25/0. All in-flight at checkpoint, no results claimed. Governance 41028814853 PASS after removing historical cross-SOURCE evidence and oversized hot context. H498 cards updated; feature catalog CI rejected >16KB pretty fec-auto on 7813 and then standalone card-only correction on 2348; compact 16218 bytes now; next main push verifies eventual green. §0: (1) source logic implemented but final live opportunity ACK/fixed lifecycle unproven; (2) A A1/short partially, A4/A5 in flight; (3) B incomplete; (4) C partial; (5) final regression/records pending. Not complete."
+  "partial_summary": "H500 SOURCE787ad4 H494 real qlen2048 true Go+Rust. H497 C100 60s 11 L→W missing strict-zero FAIL no new-source300. H498 separate native C10 off exact first, Fixed30 true kernel first positive and stop, Auto60 Linux rev2 profile4/Windows rev1/Stop. H499 C50 Action41029396030 real C50/25/0 60s first100% each/Stop kernel original TUN/fq drops0; off30 Action41029399148 actual 10M each/250ms/30% 60s first 70.1962/70.1991% and R0/candidate0 despite F,C -> live ACK opportunity FAIL; Auto240 Action41029388055 real staged 0→5/15/30→0 and Linux valid Auto profile5→0 rev6, Windows profile2/rev4, but Linux owned Stop request code1 -> Action FAIL even if later report PASS; A5 serial AB Action41029401961 B pass A Windows native rc1 during 60s Stop NOT_RUN -> INCONCLUSIVE FAIL. Game2/4 Actions41029390768/41029393488 IN_FLIGHT, do not duplicate. Exact ZIP hashes H497/H498/H500. Existing product SOURCE has unchanged since787ad4, H500 updates source-scoped cards/evidence only. Governance earlier card exceeded 16KiB; H500 compact old duplicate limitations and records previous FAIL in log. §0 items (1) live repair block, (2) A4/A5/off30 fail, (3) lifecycle B undone, (4) C partial no source300, (5) repair/regress/closeout undone. NO READY."
 }
