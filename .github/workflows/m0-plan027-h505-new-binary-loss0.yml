@@ -1,0 +1,38 @@
+name: M0 PLAN027 H505 rebuilt bounded ACK native no-loss qualification
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h505-new-binary-loss0.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  launch-new-source:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h505-build]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Freeze H505 both native source and one original zero-loss scene
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          grep -Fq 'nominated_stalled_ack' crates/wbd-recovery/src/outer_ack.rs
+          grep -Fq 'future.splice(at..until' crates/wbd-engine/src/v4_embedded_go.rs
+          grep -Fq 'future.splice(at..until' crates/wbd-engine/src/v4_windows_native_runtime.rs
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario('scenarios/plan027-h504-outer-50m-150ms-loss0-60s.json')
+          assert s.get('public_mode','normal')=='normal' and s['duration_s']==60
+          for x in ('windows_to_linux','linux_to_windows'):
+              assert s[x]['loss_pct']==0 and s[x]['offered_mbps']==50 and s[x]['delay_ms']==150
+          print('H505_ONE_FROZEN_REAL_ZERO_LOSS_SCENE',s['scenario_sha256'])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-h504-outer-50m-150ms-loss0-60s.json
+          echo H505_FULL_SOURCE_PRODUCT_BUILD_ONE_SCENE_DISPATCHED
