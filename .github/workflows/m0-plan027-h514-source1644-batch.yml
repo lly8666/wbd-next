@@ -1,0 +1,57 @@
+name: M0 PLAN027 H514 five independent existing binary Game FEC Fixed AB followups
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h514-source1644-batch.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  five-independent-native-actions:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message,'[plan027-h514-launch]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Validate original immutable SOURCE artifacts then one Action per real scene
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          src=1644df34d241d487c5c5eb704a1a0a2e5f506f5e
+          build=41041996161
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .head_sha)" = "$src"
+          gh api "repos/$GH_REPO/actions/runs/$build/artifacts" --jq '.artifacts[].name' > "$RUNNER_TEMP/manifest"
+          grep -Fx "m0-wl-windows-product-binaries-$src" "$RUNNER_TEMP/manifest"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/manifest"
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario,first_delivery_ok_for_scenario
+          s=[
+          ('game2','scenarios/plan027-b-game2-off-10m-75ms-loss5-20s.json',20),
+          ('game2-fec','scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json',20),
+          ('game4-fec','scenarios/wl-game4-fixed6-10m-75ms-loss30-20s.json',20),
+          ('fixed','scenarios/plan027-c-fixed-50m-25ms-loss0-60s.json',60),
+          ('normal','scenarios/plan027-c-normal-10m-25ms-loss0-60s.json',60)]
+          for mode,path,duration in s:
+              cfg=read_scenario(path)
+              assert cfg.get('public_mode','normal')==mode and cfg['duration_s']==duration
+              print('H514_FROZEN_TRUE_SCENE',mode,cfg['scenario_sha256'])
+          game=read_scenario(s[0][1])
+          assert first_delivery_ok_for_scenario(game,{'windows':.997305,'linux':1.0})
+          PY
+          while read -r mode path ab; do
+            gh workflow run m0-wl-public-normal-full.yml --ref main \
+              -f public_mode="$mode" -f run_n0=false -f perf_ab="$ab" \
+              -f perf_scenario_file="$path" \
+              -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
+            echo "H514_ONE_ACTION_ONE_TRUE_SCENE $mode $path AB=$ab"
+          done <<'EOF'
+          game2 scenarios/plan027-b-game2-off-10m-75ms-loss5-20s.json false
+          game2-fec scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json false
+          game4-fec scenarios/wl-game4-fixed6-10m-75ms-loss30-20s.json false
+          fixed scenarios/plan027-c-fixed-50m-25ms-loss0-60s.json false
+          normal scenarios/plan027-c-normal-10m-25ms-loss0-60s.json true
+          EOF
