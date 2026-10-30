@@ -4,8 +4,8 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 503,
-  "checkpoint_sha": "41929cefcce45c3c4d436d4caeb17147d34dfa6c",
+  "sequence": 504,
+  "checkpoint_sha": "3338177c12279a8d010d63a0f22f2eb0cbebb411",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
   "current_task": "PLAN027 section0 remains ACTIVE. H503 recovered H501 actual successful native bilateral ACK gap retries; independent H503 four 50M/150ms loss 1/5/10/30 Actions launched after pre-dispatch oracle correction, currently in flight. Continue evidence-driven repair without no-loss synthetic retransmit. B lifecycle/A4 mature/A5/capacity C/long test incomplete.",
@@ -15,9 +15,7 @@
   "unverified": true,
   "last_tested_source": "0b7391a182f05947419c1211f01058b4798370a3",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H503-RECOVERED-H501-LIVE-REPAIR-AND-TIER-20261030.json",
-    "docs/evidence/M0/PLAN027-H500-A4-A5-C50-OFF30-NEW-SOURCE-20261030.json",
-    "docs/evidence/M0/PLAN027-H498-NEW-SOURCE-A-C10-FIXED30-AUTO-20261030.json"
+    "docs/evidence/M0/PLAN027-H503-RECOVERED-H501-LIVE-REPAIR-AND-TIER-20261030.json"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md",
@@ -25,8 +23,10 @@
     "docs/devlog/M0/20261030-PLAN027-H503-H501-RECOVERY-AND-LOSS-TIERS.md",
     "docs/features/entries/outer-opportunistic-repair.json",
     "docs/features/entries/fec-auto.json",
-    "docs/testing/WL_PERF_HARNESS_V2.md"
+    "docs/testing/WL_PERF_HARNESS_V2.md",
+    "docs/evidence/M0/PLAN027-H500-A4-A5-C50-OFF30-NEW-SOURCE-20261030.json",
+    "docs/evidence/M0/PLAN027-H498-NEW-SOURCE-A-C10-FIXED30-AUTO-20261030.json"
   ],
   "open_requests": [],
-  "partial_summary": "H503 recovered completed H501 ACTION41032003068 source0b7391 both real signed originals 10M/250ms/30% 60s Stop PASS. Win F86377653,R1200281,C2205 R/F1.38957%,R/total1.37049%,1123 retries; Linux F84988196,R3690533 R/F4.34241%,3659 retries, C UNKNOWN. First Windows70.6492/Linux70.2252, actual tc>0, TUN drop0. H503 first orchestrator41039527670 FAIL KeyError public_mode before dispatch; corrected 41039732552 SUCCESS dispatched independent in-flight 1/5/10/30 50M/150ms one Action each runs 41039752111/41039755447/41039758730/41039762110. Prebuilt run41032003068, no recompilation. H499 Game2/4 41029390768/41029393488 CANCELED. A4 old native actual Stop PASS but parent staged loss oracle failure; corrected H502 pending rerun; A5 Windows Go baseline early exit; H497 new-source C100 11 misses strict fail, 300s untested. B full lifecycle/C matrix and stability remain pending. Five PLAN027 section0 items NOT CLOSED. No READY."
+  "partial_summary": "H503 recovered completed H501 ACTION41032003068 source0b7391 both real signed originals 10M/250ms/30% 60s Stop PASS. Win F86377653,R1200281,C2205 R/F1.38957%,R/total1.37049%,1123 retries; Linux F84988196,R3690533 R/F4.34241%,3659 retries, C UNKNOWN. First Windows70.6492/Linux70.2252, actual tc>0, TUN drop0. H503 first orchestrator41039527670 FAIL KeyError public_mode before dispatch; corrected 41039732552 SUCCESS dispatched independent in-flight 1/5/10/30 50M/150ms one Action each runs 41039752111/41039755447/41039758730/41039762110. Prebuilt run41032003068, no recompilation. H499 Game2/4 41029390768/41029393488 CANCELED. A4 old native actual Stop PASS but parent staged loss oracle failure; corrected H502 pending rerun; A5 Windows Go baseline early exit; H497 new-source C100 11 misses strict fail, 300s untested. B full lifecycle/C matrix and stability remain pending. Five PLAN027 section0 items NOT CLOSED. No READY. H504 50M/150ms 0% source0b reuse Action41040914488 in flight. H503 four actual native ZIPs received, preliminary Linux R/F ~6.35/5.44/6.56/6.80% and Windows R/total ~1.24/1.10/1.19/1.12% at loss1/5/10/30; parity not yet regression qualified. Governance H504 failed because cursor mixed evidence refs from SOURCE787 and H503 lacked source_sha; corrected exact evidence-source, retain historic evidence as context, no evidence deleted."
 }
