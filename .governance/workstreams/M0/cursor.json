@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 449,
-  "checkpoint_sha": "7cd860380d4e544d2b9cf81d7f0bee0d102d577a",
+  "sequence": 450,
+  "checkpoint_sha": "1b669b31c7b601332c104e9a013cc354c7a9f4ea",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H449 preserve exact-source H447 Linux real Fixed/Auto first-delivery+both-role applied readback evidence from Action40988303441 artifacts12947589018/12947364975: 64 UDP app, Fixed role client/server applied1 profile1 pendingfalse; Auto role client/server applied1 profile5 pendingfalse. H448 Windows test fix pending Action; no B full or A/C.",
-  "why_now": "H447 parallel Action40988303441 all 4 jobs success, genuine fixed/auto Linux original Go TLS Rust M4 each64; downloaded artifacts reveal both original roles applied1/pendingfalse, stronger than client-only preview; still cannot classify Auto dynamic.",
+  "current_task": "H450 harden M2 retirement: reject encrypted legacy per-record Receipt *before* applying Health/Quality/outer activity in both Windows and Linux. Preserve M3 replay consume then fail closed; exact-source native and true two-OS actions pending.",
+  "why_now": "Review of H440 retired-receipt handler found Windows rejected only after health and quality updates, Linux marked invalid only after RX evidence and quality summary; composite retired Receipt+Health could affect liveness despite error. Fix atomic prior to side effects.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H448 Windows Rust and true WSL native Actions; verify source-locked two-OS Fixed+Auto. Run A1-A5 and B lifecycle before C capacity matrix/5min, preserving measured F/R/C,p99,CPU/RSS and capacity stopping.",
+  "next_action": "Collect H450 CI Windows native and Linux, H448 true original Windows↔Linux result. Then missing core A2-A5, B lifecycle/Auto/Game and C network/capacity/long run, no premature PASS.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①H444 Linux Fixed v2 one-shot source compiler PASS, H446 Windows counterpart candidate H448 test fixture fix CI pending. ②A native unit scoped pass but A2-A5 unfinished. ③Linux same-source Fixed/Auto both-role applied1 first64 40988303441 PASS_SCOPED_ONLY; true Win↔Linux B Auto/Fixed/Game/lifecycle unresolved. ④C/5min NOT_RUN. ⑤evidence H449 written; final perf/failure fixes OPEN."
+  "partial_summary": "①retired M2 path now source-level fail closed before Health/Quality side effects (H450, CI pending); Linux Fixed Auto initial Applied64 both roles scoped PASS. ②A1 native core PASS, A2-A5 open. ③B real Win↔Linux mode/lifecycle still pending. ④C matrix/5min not run. ⑤H449 source evidence retained, future Action proof required."
 }

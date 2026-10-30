@@ -819,6 +819,10 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
     control:&crate::v4_native_health::AuthenticatedControl,
 )->Result<u32,i32>{
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+    // Fail atomically: even a valid replay-unique legacy Receipt mixed
+    // with Health or Quality must not refresh peer liveness, grade a
+    // window, or retire a ciphertext shadow before being rejected.
+    if control.receipt.is_some(){return Err(INVALID)}
     let now=m2_clock();
     // Normal/off and Game never accept a quality signal. Fixed may
     // process a *finite* startup witness; this is not Auto sampling.
@@ -900,9 +904,7 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
             m.quality_due.push_back((key,now.0.saturating_add(3_000_000_000)));
         }
     }
-    // Retire authenticated per-record M2 Receipt on all live modes.
-    // ACK/SACK remains an outer shadow hint, not business delivery.
-    if control.receipt.is_some(){return Err(INVALID)}
+    // No legacy Receipt enters this authenticated control path.
     Ok(0)
 }
 struct Entry {

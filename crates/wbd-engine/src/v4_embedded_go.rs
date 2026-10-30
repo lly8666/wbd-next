@@ -3980,6 +3980,14 @@ fn background_raw_once(
         // Exactly one actual M3 opener and unique replay PN bitmap.
         let when=loop_now();
         let receipt=owner.consume_original(slab,len,tun,when);
+        // Do not let a replay-unique, AEAD-valid but retired WBC4
+        // Receipt share a frame with Health/Quality and then update
+        // authenticated activity, window grades or outer ACK shadows.
+        // The original M3 opener has already consumed this PN.
+        if receipt.reverse_kind1.is_some(){
+            invalid_seen=true;
+            continue
+        }
         #[cfg(feature="fec2_product_record")]
         if receipt.authenticated_link>0||receipt.authenticated_control{
             outer_hint=Some(ack32);
@@ -4061,12 +4069,6 @@ fn background_raw_once(
             invalid_seen=true; // Fixed/off never negotiate Auto low-rate
         }
         authenticated_control|=receipt.authenticated_control;
-        if receipt.reverse_kind1.is_some(){
-            // The peer may have encrypted this legacy WBC4 Receipt, but
-            // current PLAN027 modes never trust it to retire shadow or
-            // influence Auto/Health. Do not apply old M2 feedback.
-            invalid_seen=true;
-        }
         if receipt.failed==0{
             delivered_total=delivered_total.saturating_add(receipt.delivered);
         }
