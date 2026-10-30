@@ -122,6 +122,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "0b7391a182f05947419c1211f01058b4798370a3",
       "evidence": "docs/evidence/M0/PLAN027-H503-RECOVERED-H501-LIVE-REPAIR-AND-TIER-20261030.json"
+    },
+    {
+      "platform": "Windows2025 x64 signed Npcap/Wintun + WSL2 Linux original Go TLS/Rust",
+      "scope": "SOURCE1644 true Normal/off 50Mbps each/150ms one-way/0% tc/60s: Windows first 99.9995% (not exact-zero), Linux first100%, owned Stop both. Original Linux R133B/F415911076 (one retransmit, 0.00003198% of F) vs old source0b R4.304% false; Windows R0. Scoped no-loss low-repair PASS, source C100/A/B/C still incomplete.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "1644df34d241d487c5c5eb704a1a0a2e5f506f5e",
+      "evidence": "docs/evidence/M0/PLAN027-H510-RECOVERED-SOURCE1644-NOLOSS-AND-GOV-20261030.json"
     }
   ],
   "limitations": [
@@ -144,7 +151,8 @@
     "H500 real 30% loss per direction, R0 with F>0/C>0 and no repair candidates, despite full Stop. Linux outgoing outer ACK hardcoded 1, Windows RX no SACK negotiation, oldest ACK gap outlives shadow; fix peer trigger before claiming live repair.",
     "H503 prior H501 true Windows/Linux repaired candidate/Stop verified at 30%, but no SACK negotiation, R values below old SOURCE9ed3 different-feedback 8% high-loss reference; tier runs 1/5/10/30 pending and no new-source matrix or stable long-test transfer.",
     "H505 Rust source on main compresses adjacent authenticated future TCP ACK spans on BOTH Linux and Windows instead of saturating at 256 individual records; correctness unit and new-source two-OS results NOT_RUN at code commit, no claimed tier improvement. Original FakeTCP SYN/SYN-ACK already carries negotiated SACK but native handoff currently does not, so stale cumulative ACK cannot replace true per-gap SACK; do not fake ACK or increase retry budget.",
-    "H504 true no-loss normal 50M/150ms original source0b proves 15,485 unnecessary Linux retries (R/F4.304%) with 100% first/Stop, hard FAIL for no-loss product behavior. H505 source dedupes repeated unchanged cumulative ACK nominations until real progress; pending new-binary zero-loss and graded tests. No fake loss matching historical percentages."
+    "H504 true no-loss normal 50M/150ms original source0b proves 15,485 unnecessary Linux retries (R/F4.304%) with 100% first/Stop, hard FAIL for no-loss product behavior. H505 source dedupes repeated unchanged cumulative ACK nominations until real progress; pending new-binary zero-loss and graded tests. No fake loss matching historical percentages.",
+    "H510 recovered exact native SOURCE1644 no-loss 50M/150ms suppressed spurious Linux R from old H504 4.304% to 133B (0.00003198% of F), Win R0; first Win 99.9995% prevents strict exact-zero claim. Old damage tiers SOURCE0b do NOT transfer to SOURCE1644; real source loss1/5/10/30 and 5-minute stability queued separately, presentation-only opportunity not inner reliability."
   ],
   "promotion": null
 }

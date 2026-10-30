@@ -4,32 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 507,
-  "checkpoint_sha": "b5dd2ee59da34e960a34c4d158f12977c8737b87",
+  "sequence": 510,
+  "checkpoint_sha": "b556757605d3e2c6cf657ca929860e691e0de395",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H507 PLAN027 section0 remains ACTIVE. Source1644 H505 Rust Windows/Linux authenticated future interval merge plus 1-stalled-ACK-one-real-gap rule; native full no-loss original two-OS Action41041996161 launched after source1644 build, rust unit+Win Go/Lin build PASS, native measurement IN_FLIGHT. H506 graded 1/5/10/30 and H507 Game2/4 off/max FEC source-reuse dispatchers registered; do not redispatch. This addresses H504 old-source 0% true native 15,485 spurious Linux retrans while 100% delivery.",
-  "why_now": "Real no-loss counterexample Action41040914488 source0b showed Linux R/F 4.304% despite 0% netem and full first-delivery. Source1644 fixes phantom repeated duplicate-ACK candidate and future authenticated interval cap; needs actual no-loss product verdict before graded numbers. Full A/B/C still in task.",
+  "current_task": "H510: recovered H505 source1644 native no-loss first delivery 99.9995/100%, Linux immutable outer repair 133B/F415911076, Windows repair0, owned Stop PASS. H506/H507/H508 watchers were registered but no actual fanout Actions observed after build. H510 one-shot source-reuse dispatcher for four genuine loss tiers, 4 Game, Fixed30, Auto240, C100 and 300s; PLAN027 full scope remains OPEN.",
+  "why_now": "H505 real source fixed H504 0%-loss 15485 phantom repairs: source1644 real native Linux R133 B only vs F415911076, Stop pass. Governance fails unbounded cursor context_refs; fix existing cursor bound rather than relax rules. Missing completed-trigger fanout cannot be called verified.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "FIRST collect H505 source1644 actual native Action41041996161 and H506/H507 workflow_run gates (no duplicate dispatch). Require 0% Linux R/F <=0.001, both first/Stop. Then collect actual independent H506 loss1/5/10/30 and H507 Game2/4 off/FEC; if graded repair underproduces vs previous signed levels investigate real negotiated Go SACK native handoff, don't raise blind retries. A4 revised source-true 240s/120s, A5, B lifecycle, C capacity/5min/affected regressions remain.",
+  "next_action": "Collect H510 dispatcher and each independent same-source Action (no duplicate dispatch). Assess actual R/F and R/(F+R+C) at 0/1/5/10/30; outer only presentation, never lossless quota chasing. Then B lifecycle, C graded capacity/long, Auto grade120s, A5 and affected regressions. No READY before PLAN027 five tasks close.",
   "unverified": true,
-  "last_tested_source": "0b7391a182f05947419c1211f01058b4798370a3",
+  "last_tested_source": "1644df34d241d487c5c5eb704a1a0a2e5f506f5e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H503-RECOVERED-H501-LIVE-REPAIR-AND-TIER-20261030.json"
+    "docs/evidence/M0/PLAN027-H503-RECOVERED-H501-LIVE-REPAIR-AND-TIER-20261030.json",
+    "docs/evidence/M0/PLAN027-H510-RECOVERED-SOURCE1644-NOLOSS-AND-GOV-20261030.json"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md",
     "docs/decisions/M0-PLAN027-LEGACY-SEMANTICS-REVIEW-20261030.md",
-    "docs/devlog/M0/20261030-PLAN027-H503-H501-RECOVERY-AND-LOSS-TIERS.md",
     "docs/features/entries/outer-opportunistic-repair.json",
     "docs/features/entries/fec-auto.json",
     "docs/testing/WL_PERF_HARNESS_V2.md",
-    "docs/evidence/M0/PLAN027-H500-A4-A5-C50-OFF30-NEW-SOURCE-20261030.json",
-    "docs/evidence/M0/PLAN027-H498-NEW-SOURCE-A-C10-FIXED30-AUTO-20261030.json",
-    "docs/devlog/M0/20261030-PLAN027-H505-CUMULATIVE-ACK-FUTURE-SPANS.md",
-    ".github/workflows/m0-plan027-h506-rebuilt-graded-after-zero.yml",
-    ".github/workflows/m0-plan027-h507-game2-game4-source1644.yml"
+    "docs/evidence/M0/PLAN027-H503-RECOVERED-H501-LIVE-REPAIR-AND-TIER-20261030.json",
+    "docs/evidence/M0/PLAN027-H510-RECOVERED-SOURCE1644-NOLOSS-AND-GOV-20261030.json"
   ],
   "open_requests": [],
-  "partial_summary": "H503 recovered completed H501 ACTION41032003068 source0b7391 both real signed originals 10M/250ms/30% 60s Stop PASS. Win F86377653,R1200281,C2205 R/F1.38957%,R/total1.37049%,1123 retries; Linux F84988196,R3690533 R/F4.34241%,3659 retries, C UNKNOWN. First Windows70.6492/Linux70.2252, actual tc>0, TUN drop0. H503 first orchestrator41039527670 FAIL KeyError public_mode before dispatch; corrected 41039732552 SUCCESS dispatched independent in-flight 1/5/10/30 50M/150ms one Action each runs 41039752111/41039755447/41039758730/41039762110. Prebuilt run41032003068, no recompilation. H499 Game2/4 41029390768/41029393488 CANCELED. A4 old native actual Stop PASS but parent staged loss oracle failure; corrected H502 pending rerun; A5 Windows Go baseline early exit; H497 new-source C100 11 misses strict fail, 300s untested. B full lifecycle/C matrix and stability remain pending. Five PLAN027 section0 items NOT CLOSED. No READY. H504 50M/150ms 0% source0b Action41040914488 COMPLETED SUCCESS; true delivery100% both and owned Stop, BUT Linux F415912051 R17902266=4.304% 15485 unneeded retrans, Windows R0; zip SHA b18ebc9... artifact12969509773; FAIL_NOLOSS_REPAIR. H503 four actual native ZIPs received, verified Linux R/F ~6.35/5.44/6.56/6.80% and Windows R/total ~1.24/1.10/1.19/1.12% at loss1/5/10/30; parity not yet regression qualified. Governance H504 failed because cursor mixed evidence refs from SOURCE787 and H503 lacked source_sha; corrected exact evidence-source, retain historic evidence as context, no evidence deleted. H505 new product SOURCE1644df34d241d487c5c5eb704a1a0a2e5f506f5e original both native run41041996161 building/native in-flight; Rust Linux/Windows unit compile PASS, original Go Linux/Windows compile PASS. H506 exact build-run watcher dispatch 1/5/10/30 only if new source 0% no-spurious real gate. H507 four Game2/4 off/maxFEC one-Action/scene native watcher. Existing B lifecycle/A4/A5/C capacity and 300s remain unresolved. Preserve no-loss old FAIL, no synthetic R."
+  "partial_summary": "RECOVERED H505 run41041996161 source1644 50M/150ms/0% 60s true signed Win/WSL2: Linux F415911076,R133(1 retry), R/F0.00003198%, Windows F421589999,R0,C60592; first Win.999995 Linux1.0, owned Stop both PASS, TUN/fq0 drop, ZIP SHA256 6363f188a4d77c8646c58b995abe411fb3347fecbae2c51af6598b38d0d3e3d7. Strict exact-zero business still not proved. H504 old source0b no-loss R17902266/415912051 4.304%, genuine FAIL remains. H503 old source0b loss1/5/10/30 actual independent runs completed; not inherited by source1644. H509 latest governance failures feature_catalog structure BLOCKED by cursor unbounded context_refs; trim to 7 refs, do not relax validation. H506/507/508 workflow_run fanouts were registered but no downstream dispatch observed by recovery; H510 single launcher gate after exact reuse/no-loss source. Game previous Actions canceled, A5 Go early exit, B lifecycle, A4 120s, C high-rate/300s/Stop still unfinished. Entire PLAN027 section0 1/2/3/4/5 PARTIAL, no READY, physical NOT_RUN."
 }

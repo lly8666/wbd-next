@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "status": "PARTIAL_ACTIVE",
+  "recovered_main_head": "b556757605d3e2c6cf657ca929860e691e0de395",
+  "source_sha": "1644df34d241d487c5c5eb704a1a0a2e5f506f5e",
+  "run_id": 41041996161,
+  "artifact_id": 12970504805,
+  "zip_sha256": "6363f188a4d77c8646c58b995abe411fb3347fecbae2c51af6598b38d0d3e3d7",
+  "scenario_id": "plan027-h504-outer-50m-150ms-loss0-60s",
+  "scenario_sha256": "ca33f871090beecd689f27a3a592bcb661b49319f756c004e36eb8d33eb8bb91",
+  "original_signed_npcap_wintun_wsl2": true,
+  "first_delivery_fraction": {
+    "windows": 0.999995,
+    "linux": 1
+  },
+  "offered_mbps": {
+    "windows": 49.9865,
+    "linux": 49.9998
+  },
+  "wire_bytes": {
+    "windows": {
+      "F": 421589999,
+      "R": 0,
+      "C": 60592
+    },
+    "linux": {
+      "F": 415911076,
+      "R": 133,
+      "C": "UNKNOWN_NOT_REPORTED"
+    }
+  },
+  "r_to_f": {
+    "windows": 0,
+    "linux": 3.197798944887921e-7
+  },
+  "linux_retransmit_count": 1,
+  "kernel_original_tun_drops": 0,
+  "kernel_original_fq_drops": 0,
+  "owned_stop": "PASS_BOTH_OWNED",
+  "previous_source0b_same_scenario": {
+    "run_id": 41040914488,
+    "linux_F": 415912051,
+    "linux_R": 17902266,
+    "linux_R_over_F": 0.04304339332547977,
+    "classification": "FAIL_REAL_NOLOSS_FALSE_RETRANSMIT"
+  },
+  "governance_failure": {
+    "runs": [
+      41042923775,
+      41042923290
+    ],
+    "reason": "unbounded context_refs",
+    "correction": "M0 cursor context_refs trimmed to seven, check rule unchanged"
+  },
+  "limitations": [
+    "This is a real no-loss suppression scoped result, not exact zero-first-delivery, not other loss tiers or FEC/Auto/Games",
+    "No application retransmission requirement; outer appearance only; do not invent repairs at zero loss",
+    "H506/7/8 event watchers did not appear in recovered Actions list; H510 push one-shot gate will dispatch independent original native source-reuse scenes",
+    "PLAN027 full section0 five obligations NOT CLOSED"
+  ]
+}
