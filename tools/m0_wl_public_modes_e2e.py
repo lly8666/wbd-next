@@ -96,7 +96,7 @@ for mode in modes:
   v2.get("status")=="MEASURED_BOTH_OS_KERNEL" and
   v2.get("owned_stop")=="PASS_BOTH_OWNED" and
   (staged_real or (not staged_auto and
-   first_delivery_ok_for_scenario(scene,v2.get("first_delivery_fraction",{})))))
+   first_delivery_ok_for_scenario(scene,v2.get("first_delivery_fraction",{}))))))
  passed=rc==0 and result.get("mode_public","").startswith("PASS_ACTUAL_") and (
   not performance or str(result.get("WL_N0","")).startswith("PASS_SCOPED_")) and (
   not stress or str(result.get("WL_P200","")).startswith("PASS_SCOPED_")) and v2_delivery_ok
