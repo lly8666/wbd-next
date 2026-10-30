@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "7a5d7e83823e96539d2a904a8193a85ec18df30d",
+  "harness_head_sha": "a5b92619f8b18cbf0b05906bc808f276492a3d92",
+  "binary_build_action": 41060763175,
+  "gate_action": 41064405693,
+  "scope": "ACTUAL_SIGNED_WINDOWS_NPCAP_WINTUN_AND_LINUX_WSL2_ORIGINAL_GO_TLS_RUST_TUN_NORMAL_OFF_PER_SCENE",
+  "outcome": "PASS_MEASURED_FOUR_REAL_KERNEL_SCENES_NOT_MEANINGFUL_REPAIR_QUALIFICATION",
+  "measured": [
+    {
+      "loss_pct": 1,
+      "action": 41064427699,
+      "artifact_id": 12982775775,
+      "zip_sha256": "f3dace7312083b9c6a18e5e28cb15a4be3d565c8b98365022563a0bb9b571c11",
+      "first": {
+        "windows": 0.990188,
+        "linux": 0.989709
+      },
+      "window": {
+        "F": 421585821,
+        "R": 4972,
+        "C": 2680,
+        "repair_packets": 4,
+        "R_over_F": 0.000011793565514623889,
+        "R_over_F_plus_R_plus_C": 0.000011793351459214835
+      },
+      "linux": {
+        "F": 415912998,
+        "R": 3757,
+        "repair_packets": 3,
+        "R_over_F": 0.000009033139185517832
+      },
+      "netem": {
+        "eth0_drops": 4071,
+        "ifb_drops": 4250
+      },
+      "cpu": {
+        "avg_one_core_pct": 9.236,
+        "peak_rss": 50270208
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "scenario": "wl-outer-repair-50m-150ms-loss1-60s",
+      "scenario_profile": {
+        "offered_each_mbps": 50,
+        "oneway_delay_ms": 150,
+        "duration_s": 60
+      }
+    },
+    {
+      "loss_pct": 5,
+      "action": 41064431346,
+      "artifact_id": 12981722789,
+      "zip_sha256": "9350dccdaff94720c6a9d0058424efe0a1877dd5990c6299ed969e43ae82da0f",
+      "first": {
+        "windows": 0.949903,
+        "linux": 0.950019
+      },
+      "window": {
+        "F": 421588735,
+        "R": 2764,
+        "C": 2721,
+        "repair_packets": 4,
+        "R_over_F": 0.000006556152407630152,
+        "R_over_F_plus_R_plus_C": 0.000006556067111166752
+      },
+      "linux": {
+        "F": 415906393,
+        "R": 0,
+        "repair_packets": 0,
+        "R_over_F": 0
+      },
+      "netem": {
+        "eth0_drops": 20786,
+        "ifb_drops": 20648
+      },
+      "cpu": {
+        "avg_one_core_pct": 10.066,
+        "peak_rss": 50241536
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "scenario": "wl-outer-repair-50m-150ms-loss5-60s",
+      "scenario_profile": {
+        "offered_each_mbps": 50,
+        "oneway_delay_ms": 150,
+        "duration_s": 60
+      }
+    },
+    {
+      "loss_pct": 10,
+      "action": 41064435483,
+      "artifact_id": 12982635943,
+      "zip_sha256": "ef0eac4f48aad894e30b9a04e4b917de37d8341dd5a697ea7147eca56f412ec7",
+      "first": {
+        "windows": 0.901066,
+        "linux": 0.899992
+      },
+      "window": {
+        "F": 421589817,
+        "R": 2747,
+        "C": 2290,
+        "repair_packets": 3,
+        "R_over_F": 0.000006515812026835554,
+        "R_over_F_plus_R_plus_C": 0.0000065157341792411915
+      },
+      "linux": {
+        "F": 415905463,
+        "R": 133,
+        "repair_packets": 1,
+        "R_over_F": 3.1978421019201665e-7
+      },
+      "netem": {
+        "eth0_drops": 41096,
+        "ifb_drops": 41290
+      },
+      "cpu": {
+        "avg_one_core_pct": 9.362,
+        "peak_rss": 50647040
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "scenario": "wl-outer-repair-50m-150ms-loss10-60s",
+      "scenario_profile": {
+        "offered_each_mbps": 50,
+        "oneway_delay_ms": 150,
+        "duration_s": 60
+      }
+    },
+    {
+      "loss_pct": 30,
+      "action": 41064438830,
+      "artifact_id": 12981692597,
+      "zip_sha256": "53392c07c01d8fddabbab54df035d7feb4ee7d9fd417ee180858c9fbf94d1272",
+      "first": {
+        "windows": 0.701043,
+        "linux": 0.700934
+      },
+      "window": {
+        "F": 421680421,
+        "R": 1638,
+        "C": 2422,
+        "repair_packets": 6,
+        "R_over_F": 0.000003884458273200216,
+        "R_over_F_plus_R_plus_C": 0.000003884420873434989
+      },
+      "linux": {
+        "F": 415891317,
+        "R": 328,
+        "repair_packets": 2,
+        "R_over_F": 7.886675835552488e-7
+      },
+      "netem": {
+        "eth0_drops": 124108,
+        "ifb_drops": 123465
+      },
+      "cpu": {
+        "avg_one_core_pct": 9.038,
+        "peak_rss": 50462720
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "scenario": "wl-outer-repair-50m-150ms-loss30-60s",
+      "scenario_profile": {
+        "offered_each_mbps": 50,
+        "oneway_delay_ms": 150,
+        "duration_s": 60
+      }
+    }
+  ],
+  "all_owned_stop": true,
+  "observations": [
+    "All four independently completed success with actual bidirectional UDP/TCP, real loss drops and exact original binary source7a from prebuilt H520 (no per-scene source rebuild)",
+    "Repair on Windows genuine frozen Rust R once-per-candidate and below 10% F; total ratio on Windows measured using F+R+C",
+    "Linux full C not extracted, do not fabricate R/(F+R+C) for Linux",
+    "At losses 5 and 30 Linux actual R=0/328 bytes respectively, extremely small. This is an opportunity repair trigger, not recovery-rate achievement.",
+    "First delivery aligns injected kernel loss; don't promote naive recovery or p99. Source7a no-loss and source1644 prior damage evidence separately retained.",
+    "Windows CPU and peak RSS whole EXE including Go/Rust/kernel activity; single-source comparisons not cross-run A/B.",
+    "One-way p99 NOT_MEASURED_UNCALIBRATED_OS_CLOCKS and Auto120s/Windows B lifecycle/GameFEC/C broader unverified."
+  ]
+}
