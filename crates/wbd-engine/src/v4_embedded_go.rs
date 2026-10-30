@@ -566,8 +566,8 @@ struct LinuxQualityTx{
     closing:Option<wbd_recovery::quality_window::ClosedWindow>,
     last_settled:Option<u64>,next_id:u64,next_open:u64,
     last_report:Option<u64>,counters:[u64;14],
-    // Fixed only: finite startup witness, not ongoing Auto measurement.
-    bootstrap_only:bool,
+    // No timer after an idle close until genuine M4 first-send progresses.
+    last_open_gate_pn:Option<u64>,
     slow:VecDeque<(u64,wbd_recovery::quality_window::LossBounds)>,
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
@@ -578,16 +578,18 @@ impl LinuxQualityTx{
         Self{lane,epoch,direction,sender:None,
             history:wbd_recovery::quality_window::SendHistory::new(lane,epoch,direction),
             closing:None,last_settled:None,next_id:0,next_open:0,last_report:None,
-            counters:[0;14],bootstrap_only:false,
+            counters:[0;14],last_open_gate_pn:None,
             slow:VecDeque::with_capacity(16)}
     }
     fn due(&self,now:MonoNs)->bool{
-        self.closing.is_some()||
+        (self.closing.is_some()&&now.0>=self.next_open)||
         self.sender.as_ref().is_some_and(|s|
             (self.last_settled.is_some_and(|p|p>=s.key().last.0)||
                 (s.timed_close_due(now)&&self.last_settled.is_some_and(
                     |p|p>=s.key().first.0))))||
-        (self.sender.is_none()&&now.0>=self.next_open)
+        (self.sender.is_none()&&self.closing.is_none()&&
+            now.0>=self.next_open&&self.last_settled.is_some_and(
+                |p|self.last_open_gate_pn.is_none_or(|last|p>last)))
     }
     fn next_signal(&mut self,next_pn:u64,now:MonoNs)
         ->Result<Option<crate::v4_native_health::QualityWindowSignal>,i32>{
@@ -601,16 +603,20 @@ impl LinuxQualityTx{
             let closed=self.sender.as_mut().ok_or(BAD_STAGE)?
                 .close_prefix(now,wbd_types::RecordPn(last))
                 .map_err(|_|BAD_STAGE)?;
+            self.last_open_gate_pn=self.last_settled;
             self.sender=None;self.closing=Some(closed);
         }
         if let Some(w)=self.closing {
+            if now.0<self.next_open{return Ok(None)}
             return Ok(Some(Signal{kind:Kind::Close,id:w.key.id,
                 first:w.key.first.0,last:w.key.last.0,first_sent:w.first_sent,
                 complete:w.complete,capacity_limited:w.capacity_limited}))
         }
-        if self.sender.is_some()||now.0<self.next_open{return Ok(None)}
-        // No third Fixed window even after missing peer feedback.
-        if self.bootstrap_only && self.next_id>=2{return Ok(None)}
+        if self.sender.is_some()||now.0<self.next_open||
+            !self.last_settled.is_some_and(|p|
+                self.last_open_gate_pn.is_none_or(|last|p>last)){
+            return Ok(None)
+        }
         let first=next_pn.checked_add(1).ok_or(BAD_STAGE)?;
         let last=first.checked_add(1023).ok_or(BAD_STAGE)?;
         let id=self.next_id.checked_add(1).ok_or(BAD_STAGE)?;
@@ -636,6 +642,9 @@ impl LinuxQualityTx{
                 let w=self.closing.take().ok_or(BAD_STAGE)?;
                 self.history.close(w).map_err(|_|BAD_STAGE)?;
                 self.next_open=now.0.saturating_add(1_500_000_000);
+            }else{
+                // Kernel backpressure is UNKNOWN, not a busy deadline loop.
+                self.next_open=now.0.saturating_add(500_000_000);
             }
         }
         Ok(())
@@ -701,6 +710,9 @@ fn plan027_linux_auto_sender_window_real_kernel_census_and_matched_maturity(){
     let lane=wbd_types::LaneKey{
         tunnel:wbd_types::TunnelKey{slot:1,generation:3},slot:2,generation:3};
     let mut tx=LinuxQualityTx::new(lane,[7;16],WireDirection::ClientToServer);
+    assert!(!tx.due(MonoNs(1)), "idle sender has no quality work");
+    tx.last_settled=Some(40); // one actual first-copy observation
+    assert!(tx.due(MonoNs(1)));
     let start=tx.next_signal(40,MonoNs(1)).unwrap().unwrap();
     assert_eq!((start.first,start.last,start.id),(41,1064,1));
     tx.complete_signal(start,true,MonoNs(2)).unwrap();
@@ -5701,12 +5713,12 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         Some(active)
     }else{None};
     #[cfg(feature="fec2_product_record")]
+    // PLAN027 §0.1: ONLY Auto samples continuously. Fixed config
+    // installation is separate from mature network-quality observation.
     if e.original_public_feedback_armed && e.protected_features==7 &&
-        (e.auto_low_rate_mode||e.fixed_pending.is_some()){
-        let mut tx=LinuxQualityTx::new(
-            first.lane,first.epoch,first.route.outbound_direction());
-        tx.bootstrap_only=!e.auto_low_rate_mode;
-        e.quality_tx=Some(tx);
+        e.auto_low_rate_mode{
+        e.quality_tx=Some(LinuxQualityTx::new(
+            first.lane,first.epoch,first.route.outbound_direction()));
     }
     let mature=Arc::new(Mutex::new(first));
     e.normal_firstsend_m2=Some(Arc::clone(&mature));
@@ -5716,8 +5728,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     // authenticated Go health sender; no duplicate two-sender race.
     #[cfg(feature="fec2_product_record")]
     let quality_rx=if e.original_public_feedback_armed &&
-        e.protected_features==7 &&
-        (e.auto_low_rate_mode||e.fixed_pending.is_some()){
+        e.protected_features==7 && e.auto_low_rate_mode{
         let (lane,exact_epoch)=match e.owner.normal_firstsend_identity(){
             Some(v)=>v,None=>return BAD_STAGE};
         let direction=if e.server_side{wbd_recovery::WireDirection::ClientToServer}
@@ -6360,10 +6371,11 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_pending_readback(
     OK
 }
 
-// One authenticated original-Go TLS revision may become APPLIED only when
-// M4 definitely copied source+parity and the SAME moved C2S AEAD opener
-// delivered M2, with a genuinely matured/covered first-send denominator.
-// This is NOT an external client-supplied success boolean.
+// PLAN027 §0.1: this stable historical ABI now confirms that the
+// authenticated original-Go TLS revision and chosen Fixed profile are
+// INSTALLED in the active Rust FEC owner with native M4 worker attached.
+// It does NOT require old WBC4 per-record M2 or a 1024-PN/3s v2 sample.
+// Real user data delivery, peer agreement, Health and quality are separate.
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
@@ -6374,34 +6386,14 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_commit_mature_m2(
     let Ok(epoch)=verified_normal_off_epoch(epoch,len)else{return INVALID};
     let Ok(cell)=session(h)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    let Some((profile,pending_revision))=e.fixed_pending else{return BAD_STAGE};
     if !verified_normal_off_owner(&e,&epoch)||
-        e.protected_features!=7||
-        !e.fixed_pending.is_some_and(|(_,r)|r==revision)||
-        e.fec2_copied_source==0||e.fec2_copied_repair==0||
-        !e.fec2_staged_pns.is_empty()||
-        e.fec2_live_tx.as_ref().is_none_or(|s|s.revision().0!=revision){
+        e.phase!=PH_ACTIVE||e.workers.is_none()||
+        e.protected_features!=7||pending_revision!=revision||
+        e.fec2_live_tx.as_ref().is_none_or(|s|
+            s.revision().0!=revision||s.profile_index()!=profile){
         return BAD_STAGE
     }
-    // Under continuing business FEC open/queued jobs are bounded and
-    // expected; a global all-jobs-zero gate is a startup timing race.
-    if e.fec2_live_tx.is_none(){return BAD_STAGE}
-    let covered=if e.quality_tx.is_some(){
-        // A matched AEAD+replay v2 summary proves genuine receiver unique
-        // evidence for local definitely-copied F, not a raw TCP ACK.
-        // Source and parity still require their own REAL M4 copy above.
-        let Some(tx)=e.quality_tx.as_ref()else{return BAD_STAGE};
-        tx.counters[1]>e.fec2_pending_m2_positive_baseline &&
-        tx.counters[10]>e.fec2_pending_m2_reverse_baseline
-    }else{
-        let Some(first)=e.normal_firstsend_m2.as_ref()else{return BAD_STAGE};
-        let Ok(mut m2)=first.lock()else{return BAD_STAGE};
-        let now=loop_now();
-        m2.poll(now);
-        m2.has_verified_fixed_m2_witness(now) &&
-        m2.positive_2s>e.fec2_pending_m2_positive_baseline &&
-        m2.authenticated_reverse_reports>e.fec2_pending_m2_reverse_baseline
-    };
-    if !covered{return BAD_STAGE}
     let Some(policy)=e.fixed_pending.take()else{return BAD_STAGE};
     e.fixed_applied=Some(policy);
     e.fec2_rx_admit.store(true,Ordering::Release);

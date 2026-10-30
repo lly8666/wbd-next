@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 450,
-  "checkpoint_sha": "1b669b31c7b601332c104e9a013cc354c7a9f4ea",
+  "sequence": 451,
+  "checkpoint_sha": "3b8a4e9db1e2e8af690679cbfe0d7c8c6771484c",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H450 harden M2 retirement: reject encrypted legacy per-record Receipt *before* applying Health/Quality/outer activity in both Windows and Linux. Preserve M3 replay consume then fail closed; exact-source native and true two-OS actions pending.",
-  "why_now": "Review of H440 retired-receipt handler found Windows rejected only after health and quality updates, Linux marked invalid only after RX evidence and quality summary; composite retired Receipt+Health could affect liveness despite error. Fix atomic prior to side effects.",
+  "current_task": "H451 PLAN027§0.1 Linux real semantics: Fixed no extra Quality START/CLOSE, real native original Rust FEC stream current profile/revision and running M4 worker suffice installed Applied readback; Auto Quality idle no deadline spin and failed-CLOSE bounded 500ms retry; Windows/ACK/Auto k next.",
+  "why_now": "New main 3b8a4e9d updated registry and PLAN027§0.1 overriding prior H444/H446 fixed startup proof. Previous H451 old-Q matcher design was aborted BEFORE blob/commit. Linux now separates installed config from quality and closes idle timer gap.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H450 CI Windows native and Linux, H448 true original Windows↔Linux result. Then missing core A2-A5, B lifecycle/Auto/Game and C network/capacity/long run, no premature PASS.",
+  "next_action": "Verify H451 Linux exact native real, then Windows Fixed configuration readback and remove Fixed quality excess; P1 ACK gap and actual-k sample mismatch, stage0 budget, clean stale hot M2. Continue A/B/C and 5min.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①retired M2 path now source-level fail closed before Health/Quality side effects (H450, CI pending); Linux Fixed Auto initial Applied64 both roles scoped PASS. ②A1 native core PASS, A2-A5 open. ③B real Win↔Linux mode/lifecycle still pending. ④C matrix/5min not run. ⑤H449 source evidence retained, future Action proof required."
+  "partial_summary": "①H451 Linux Fixed extra startup sampling removed by source candidate, installed config readback uses authenticated current revision+real Rust M4 worker; Auto idle timer guards; Windows Fixed legacy readback and ACK gap/Auto actual-k still need work. ②A unfinished ③B real Windows 6/7 scoped PASS old source Fixed prior fail; new semantics pending ④C/5min not run ⑤new §0.1 review work commenced, not complete."
 }
