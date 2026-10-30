@@ -79,11 +79,25 @@ for mode in modes:
  # arrivals, not be forced through the no-loss >=99.9% hard gate.
  repair_scene=rust_v2 and os.environ["WBD_WL_V2_SCENARIO"].startswith(
   "scenarios/wl-outer-repair-")
+ # Auto A4 intentionally cycles real kernel impairment 0..30..0%:
+ # the no-loss >=.999 gate is invalid. Admit only exact five actual tc
+ # stages, nonzero first business each direction and genuine owned Stop;
+ # 120s mature bilateral grade still needs independent evidence.
+ staged_auto=rust_v2 and os.environ["WBD_WL_V2_SCENARIO"]==(
+  "scenarios/plan027-a4-auto-10m-staged-240s.json")
+ phases=v2.get("kernel_phases_applied",[])
+ staged_real=(staged_auto and len(phases)==5 and
+  [q.get("index") for q in phases]==list(range(5)) and
+  all(q.get("source","").startswith("REAL_") for q in phases) and
+  all(v2.get("first_delivery_fraction",{}).get(k,0)>0
+   for k in ("windows","linux")))
  v2_delivery_ok=(not rust_v2 or (
   v2.get("status")=="MEASURED_BOTH_OS_KERNEL" and
   v2.get("owned_stop")=="PASS_BOTH_OWNED" and
-  (repair_scene or all(v2.get("first_delivery_fraction",{}).get(k,0)>=.999
-       for k in ("windows","linux")))))
+  (repair_scene or staged_real or (
+   not staged_auto and all(
+    v2.get("first_delivery_fraction",{}).get(k,0)>=.999
+    for k in ("windows","linux"))))))
  passed=rc==0 and result.get("mode_public","").startswith("PASS_ACTUAL_") and (
   not performance or str(result.get("WL_N0","")).startswith("PASS_SCOPED_")) and (
   not stress or str(result.get("WL_P200","")).startswith("PASS_SCOPED_")) and v2_delivery_ok

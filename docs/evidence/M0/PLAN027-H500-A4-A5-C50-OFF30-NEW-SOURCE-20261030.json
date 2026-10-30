@@ -75,7 +75,7 @@
     {
       "run": 41029388055,
       "scope": "A4 Auto staged 240s 0→5→15→30→0% original eth0/ifb tc",
-      "outcome": "FAIL_STOP_REQUEST",
+      "outcome": "FAIL_PARENT_WRONG_NOLOSS_999_ORACLE",
       "artifact": 12965217309,
       "zip_sha256": "0c61566b1e25d1033c0b2e8de1daac075cf6640cc98774dd9bb210324b0e469d",
       "actual_stage_start_s": [
@@ -109,7 +109,11 @@
       },
       "raw_runner_failure": "WL_REAL_LINUX_OWNED_STOP_REQUEST_FAILED code=1",
       "report_stop": "PASS_BOTH_OWNED",
-      "caveat": "Later Stop marker does not override failing Action; 120s full-grade both directions NOT_PASS"
+      "caveat": "Later Stop marker does not override failing Action; 120s full-grade both directions NOT_PASS",
+      "actual_owned_stop": "PASS_BOTH_OWNED",
+      "original_native_child_rc": 0,
+      "failure_root": "Parent script m0_wl_public_modes_e2e.py demanded >=0.999 first on staged real 30% loss Linux first0.997028; original native report mode PASS and Stop PASS, child rc0. Linux kill TERM return1 was optional finally cleanup on stopped PID, not an owned Stop defect.",
+      "grade_120s_both": "NOT_FULLY_QUALIFIED"
     },
     {
       "run": 41029401961,
