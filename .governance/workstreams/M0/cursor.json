@@ -4,19 +4,17 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 427,
-  "checkpoint_sha": "7e7b59104603e7d590857b6aff7860670514b31c",
+  "sequence": 428,
+  "checkpoint_sha": "973c2574a71c6958d841d6729f58cfd226ee324e",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
   "current_task": "H427 Windows Normal Auto-only authenticated Quality control gate implemented with Fixed/off rejection regression; H426 sparse Auto smoke oracle corrected; exact-source Actions pending. §0-1 remains PARTIAL: Fixed/off per-record M2 and ACK/SACK replacement still open.",
-  "why_now": "H425 Auto smoke old M2 APPLIED assertion failed on 64 records without closed 1024-PN Quality; H426 corrected source smoke, H427 discovered Windows Fixed/off accepted Auto-only control and refreshed Health, now rejects before liveness. Recovered governance failure SCOPE_AUDIT_FAILED unbounded context_refs from H426 cursor; bounded back to eight refs.",
+  "why_now": "H427 Windows Normal Auto-only Quality gate landed; governance replay exposed H426 evidence_refs mixed SOURCE and unbounded context refs. Preserve old H410/H411 evidence in repository but only bind current H425 recovered exact-source evidence to last_tested_source 69bbe; cursor remains unverified. H427 Windows native and H426 smoke in flight.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H427 Windows native 40976912003 and all latest source-locked Actions; ensure governance after bounded cursor fix. Then implement remaining Fixed/off Receipt retirement, bounded ACK/SACK and Health, full A/B/C and fixes; no duplicated running dispatch.",
+  "next_action": "Collect exact-source Windows native 40976912003, H426 Auto smoke 40976712086, H425 Windows/Linux 40976092884, and current governance; resolve failures without masking. Continue Fixed/off M2 retirement and ACK/SACK/Health; then A/B/C and measured delivery.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H410-RECEIVER-QUALITY-SOURCE-NATIVE-RESULTS-20261030.json",
-    "docs/evidence/M0/PLAN027-H411-WINDOWS-OLD-M2-OWNER-AND-GOVERNANCE-20261030.json",
     "docs/evidence/M0/PLAN027-H426-RECOVERED-H425-ACTIONS-AND-SPARSE-AUTO-SMOKE-20261030.json"
   ],
   "context_refs": [
@@ -30,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "§0-1 PARTIAL: Windows/Linux low-rate Auto producer/receiver and H427 Windows Fixed/off quality isolation code landed; H425 native/governance passed but sparse Auto legacy assertion failed; Fixed/off old M2 hot Receipt, real ACK/SACK retirement and full Health wiring OPEN. §0-2 A NOT_RUN (Auto 1024+ continuous and 120s downshift NOT_QUALIFIED). §0-3 B OPEN. §0-4 C/5min NOT_RUN. §0-5 regression/metrics/delivery OPEN. H427 exact-source Windows native and H426 smoke in flight; no current-source business p99/CPU/RSS/drop/physical PASS."
+  "partial_summary": "§0-1 PARTIAL: Windows/Linux low-rate Auto producer/receiver and H427 Windows Fixed/off quality isolation code landed; H425 native/governance passed but sparse Auto legacy assertion failed; Fixed/off old M2 hot Receipt, real ACK/SACK retirement and full Health wiring OPEN. §0-2 A NOT_RUN (Auto 1024+ continuous and 120s downshift NOT_QUALIFIED). §0-3 B OPEN. §0-4 C/5min NOT_RUN. §0-5 regression/metrics/delivery OPEN. H427 exact-source Windows native and H426 smoke in flight; recovered H425 evidence is PARTIAL and unverified, old H410/H411 source evidence retained off hot refs; no current-source business p99/CPU/RSS/drop/physical PASS."
 }
