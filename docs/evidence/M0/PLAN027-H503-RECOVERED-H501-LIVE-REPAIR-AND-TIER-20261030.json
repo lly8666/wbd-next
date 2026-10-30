@@ -61,7 +61,141 @@
       "loss10": 41039758730,
       "loss30": 41039762110
     },
-    "scene_results": "IN_FLIGHT_NOT_YET_CLOSED"
+    "scene_results": "FOUR_COMPLETED_SUCCESS_SOURCE_REUSED_NATIVE_BOTH_OWNED; old behavior loss response defective, NOT FINAL ACCEPTANCE",
+    "scene_conclusions": [
+      {
+        "loss_pct": 1,
+        "action": 41039752111,
+        "conclusion": "SUCCESS",
+        "artifact_id": 12969522660,
+        "zip_sha256": "93b71630d0d26a83b03f3577b73f28b2eb02f7422a44f1b1f9ebb2a62c693fcc",
+        "windows": {
+          "F": 421591638,
+          "R": 5310016,
+          "C": 2929,
+          "R_over_F": 0.012595164423066664,
+          "R_over_F_R_C": 0.012438414136209917
+        },
+        "linux": {
+          "F": 415913128,
+          "R": 26427101,
+          "R_uncertain_charged": 0,
+          "R_over_F": 0.06353995394922951,
+          "packets_accepted": 22926,
+          "C": "NOT_MEASURED"
+        },
+        "first_fraction": {
+          "linux": 0.990156,
+          "windows": 0.990045
+        },
+        "tc_drop": {
+          "eth0": 4341,
+          "ifb": 4159
+        },
+        "Stop": "PASS_BOTH_OWNED",
+        "binary_source": "0b7391a182f05947419c1211f01058b4798370a3",
+        "harness_source": "d96d3272fa0f0d754085363915f60bd8dbde673c"
+      },
+      {
+        "loss_pct": 5,
+        "action": 41039755447,
+        "conclusion": "SUCCESS",
+        "artifact_id": 12970011538,
+        "zip_sha256": "8a11cccf2304f01cd7a85322052d0b759f265d2b2a50c57257615fd5260175f5",
+        "windows": {
+          "F": 421697308,
+          "R": 4708664,
+          "C": 2110,
+          "R_over_F": 0.01116598069437996,
+          "R_over_F_R_C": 0.011042623718375019
+        },
+        "linux": {
+          "F": 415907413,
+          "R": 22621073,
+          "R_uncertain_charged": 0,
+          "R_over_F": 0.054389684561837806,
+          "packets_accepted": 19450,
+          "C": "NOT_MEASURED"
+        },
+        "first_fraction": {
+          "linux": 0.950527,
+          "windows": 0.949954
+        },
+        "tc_drop": {
+          "eth0": 21677,
+          "ifb": 20876
+        },
+        "Stop": "PASS_BOTH_OWNED",
+        "binary_source": "0b7391a182f05947419c1211f01058b4798370a3",
+        "harness_source": "d96d3272fa0f0d754085363915f60bd8dbde673c"
+      },
+      {
+        "loss_pct": 10,
+        "action": 41039758730,
+        "conclusion": "SUCCESS",
+        "artifact_id": 12968993467,
+        "zip_sha256": "4688105617ac649d003740d15ff928f7a5071a960dcad43b9a42cf04f2ba01d3",
+        "windows": {
+          "F": 421694429,
+          "R": 5062551,
+          "C": 825,
+          "R_over_F": 0.01200525938178804,
+          "R_over_F_R_C": 0.01186281994303537
+        },
+        "linux": {
+          "F": 415905899,
+          "R": 27284488,
+          "R_uncertain_charged": 133,
+          "R_over_F": 0.0656028709032569,
+          "packets_accepted": 23490,
+          "C": "NOT_MEASURED"
+        },
+        "first_fraction": {
+          "linux": 0.90028,
+          "windows": 0.89994
+        },
+        "tc_drop": {
+          "eth0": 43665,
+          "ifb": 42099
+        },
+        "Stop": "PASS_BOTH_OWNED",
+        "binary_source": "0b7391a182f05947419c1211f01058b4798370a3",
+        "harness_source": "d96d3272fa0f0d754085363915f60bd8dbde673c"
+      },
+      {
+        "loss_pct": 30,
+        "action": 41039762110,
+        "conclusion": "SUCCESS",
+        "artifact_id": 12970281071,
+        "zip_sha256": "f466a756f4240ef9fad6942c1a1bf0648f76e053e6d59859d831efd118aa2594",
+        "windows": {
+          "F": 421562550,
+          "R": 4785509,
+          "C": 551,
+          "R_over_F": 0.011351836162865985,
+          "R_over_F_R_C": 0.011224403898021387
+        },
+        "linux": {
+          "F": 415892065,
+          "R": 28299347,
+          "R_uncertain_charged": 0,
+          "R_over_F": 0.06804493132130328,
+          "packets_accepted": 24435,
+          "C": "NOT_MEASURED"
+        },
+        "first_fraction": {
+          "linux": 0.702009,
+          "windows": 0.69986
+        },
+        "tc_drop": {
+          "eth0": 131339,
+          "ifb": 125192
+        },
+        "Stop": "PASS_BOTH_OWNED",
+        "binary_source": "0b7391a182f05947419c1211f01058b4798370a3",
+        "harness_source": "d96d3272fa0f0d754085363915f60bd8dbde673c"
+      }
+    ]
   },
   "other_open": [
     "PLAN027 A4 real 240s original child native Stop PASS but test failure due wrong >=.999 with actual staged tc; corrected oracle not yet rerun",
@@ -72,5 +206,11 @@
   ],
   "physical": "NOT_RUN",
   "source_sha": "0b7391a182f05947419c1211f01058b4798370a3",
-  "result": "PARTIAL"
+  "result": "PARTIAL",
+  "tier_findings": [
+    "Windows R/total ~1.1-1.24% insensitive to loss; Linux R/F ~5.4-6.8% also insensitive and far above 1% actual loss; do not call graded behavior mature or boost budget",
+    "Linux cumulative presentation ACK stalls at first irrecoverable hole without negotiated/native SACK; contiguous future records were stored one Vec entry each 256 cap, potential genuine catch-up deficit; H505 bounded merge code NOT YET PRODUCT-TESTED",
+    "Four independent actual native runs closed, source-reused binary manifest is H501 0b7391 rather than harness head d96d327; no recompile on tiers",
+    "Lossless H504 Action 41040914488 separate real no-spurious candidate test in flight"
+  ]
 }
