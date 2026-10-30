@@ -44,5 +44,6 @@
     "Source6f5 pre-dates H517 Windows busy-TX SACK starvation correction; no H517 product promotion",
     "Linux R/F not asserted from this H516 artifact; only authentic source+Stop and Windows wire R zero",
     "No A5 CPU AB, no Windows lifecycle B, no Auto sustained 120s grade or full capacity"
-  ]
+  ],
+  "source_sha": "6f5cd093a2758d666e867db229e63ec307707f65"
 }
