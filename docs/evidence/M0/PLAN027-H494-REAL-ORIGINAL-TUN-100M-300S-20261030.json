@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "date": "2026-10-30",
+  "product_binary_source": "f83874c30e0d918cfe070b67b39e208eea0da457",
+  "build_action": 41013628666,
+  "real_native": [
+    {
+      "run": 41020317561,
+      "queue": 500,
+      "kernel_tun_tx_dropped": 594,
+      "windows_missing_first": 597,
+      "root_fq_drops": 0,
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "run": 41021684902,
+      "queue": 1024,
+      "kernel_tun_tx_dropped": 265,
+      "windows_missing_first": 267,
+      "root_fq_drops": 0,
+      "stop": "PASS_BOTH_OWNED",
+      "artifact": 12961808748
+    },
+    {
+      "run": 41021687116,
+      "queue": 2048,
+      "kernel_tun_tx_dropped": 0,
+      "windows_missing_first": 3,
+      "root_fq_drops": 0,
+      "stop": "PASS_BOTH_OWNED",
+      "artifact": 12962515213
+    },
+    {
+      "run": 41024624909,
+      "queue": 2048,
+      "duration_s": 60,
+      "offered_mbps": {
+        "windows": 99.9733,
+        "linux": 99.9999
+      },
+      "kernel_tun_tx_dropped": 0,
+      "linux_fq_drops": 0,
+      "windows_missing_first": 0,
+      "linux_missing_first": 0,
+      "business_udp_rtt_p99_ms": {
+        "windows": 63,
+        "linux": 77.114
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "restored": "PASS_ORIGINAL_500_READBACK",
+      "artifact": 12962919202
+    },
+    {
+      "run": 41024629038,
+      "queue": 4096,
+      "duration_s": 60,
+      "offered_mbps": {
+        "windows": 99.9733,
+        "linux": 99.9672
+      },
+      "kernel_tun_tx_dropped": 0,
+      "linux_fq_drops": 0,
+      "windows_missing_first": 24,
+      "linux_missing_first": 0,
+      "business_udp_rtt_p99_ms": {
+        "windows": 125,
+        "linux": 133.396
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "restored": "PASS_ORIGINAL_500_READBACK",
+      "artifact": 12962159991
+    },
+    {
+      "run": 41024631907,
+      "queue": 2048,
+      "duration_s": 300,
+      "offered_mbps": {
+        "windows": 99.995,
+        "linux": 99.9998
+      },
+      "kernel_tun_tx_dropped": 0,
+      "linux_fq_drops": 0,
+      "windows_missing_first": 0,
+      "linux_missing_first": 0,
+      "business_udp_rtt_p99_ms": {
+        "windows": 63,
+        "linux": 66.841
+      },
+      "sender_cpu_one_core_pct": {
+        "windows": 15.041,
+        "linux": 72.59
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "restored": "PASS_ORIGINAL_500_READBACK",
+      "artifact": 12963576424
+    }
+  ],
+  "next_product_change": {
+    "original_go_source": "r0/go_overlay/internal/v4productcli/linux.go",
+    "new_default_queue": 2048,
+    "rollback_queue": 500,
+    "cold_owner_readback": true,
+    "real_product_source_after": "NOT_YET_BUILT",
+    "product_native_after": "NOT_YET_RUN"
+  },
+  "scope_notes": [
+    "All pre-product qlen kernel changes were within original Windows↔WSL2 native VM harness, then restored baseline500",
+    "No calibrated cross-machine one-way p99",
+    "No unconditional kernel queue guarantee across different hosts",
+    "Avoid q4096 default due worse missing first and RTT"
+  ],
+  "remaining": [
+    "Actual new source build and C100",
+    "Fixed30/Auto+Game modes under new queue",
+    "B lifecycle and A5 CPU",
+    "C200 generator capacity / weak loss"
+  ]
+}

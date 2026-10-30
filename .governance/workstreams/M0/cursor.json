@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 493,
-  "checkpoint_sha": "f7a4834878f1c9b11479df3f551e93fab688e973",
+  "sequence": 494,
+  "checkpoint_sha": "37d986dc998c6546ffbec024f9fa0bb466c6b6d3",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H493 baseline Windows 100M 0loss source f838: Linux TUN original txqlen500 lost594/597 business in Action41020317561, q1024 lost265/267 Action41021684902, q2048 Linux link TX dropped0 but Windows missing3 Action41021687116. Control restored baseline500, fq drops0 and UDP errors0, STOP both. H493 repeat2048, q4096 and q2048 300s real VM source-frozen no rebuild and compare RTT before choosing bounded product cold queue.",
-  "why_now": "Original Linux wbdwl4 TUN driver TX dropped correlated with Windows first business loss, 265/267 at q1024, 0/3 at q2048. This isolates dominant Windows apparent gap to Linux TUN, not Windows UDP/Npf. Need repeat and bound tail latency under queue sizes, prefer q2048 over unbounded queue if possible.",
+  "current_task": "H494 final genuine kernel causality: source f838 original Linux qlen500 594 TX drops/597 app missing, q1024 265/267, q2048 0/3; q2048 repeat 60s action41024624909 strict zero in both, and q2048 300s action41024631907 strict zero both, original TUN/FQ drops0, RTT p99 W63 L66.8ms; q4096 60s Action41024629038 still 24 missing + RTT p99 125/133ms. NEW original Linux Go product now intended default2048 bounded cold authenticated TUN source; source build/real C100 still NOT_RUN.",
+  "why_now": "Strong 300s controlled original Linux TUN queue evidence: ~5m, ~4.98M packets each direction, no first missing, no Linux kernel TX drops; 4096 not better. Fix in original Go owned TUN source not test shim. Must run NEW source binary with bound JSON readback and rollback 500 test; do not claim new product pass until Action.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H493 three separate native Action artifacts, measured Linux original TUN tx_dropped and FQ drops, Windows/LINUX first delivery, RTT p99 CPU, Stop and true 500 reset. Then one minimal source product cold queue set with proper OS config/source manifest instead of permanently depending on test harness.",
+  "next_action": "Run H494 workflow new product source C100 single real Windows/Linux case and Go unit. Assert true ORIGINAL Go `V4_PUBLIC_TUN_TXQLEN=2048` log, strict exact zero source-count and owned Stop; after passing, reuse binary for Normal C10 and Fixed30, Auto stage and B life without unnecessary recompiles. C200 Linux generator bottleneck and A5 valid baseline still unresolved.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "H478 generator+fixture scoped only, original Go/Rust production binary a61eef3 remains unchanged. Pre source reference: C10 Win gen ~86.731% single core, C100 Windows missing contiguous 411 at zero netem/NPF drop, Fixed30 Windows residual .3717% vs Linux .0734%, C200 Linux generator underoffer118Mbps/200 and 9204 guest socket drops. OS select/bounded bitmap/win RCVBUF and host-global MIB added, post real tests NOT_RUN. PLAN027 five criteria OPEN, partial."
+  "partial_summary": "H494 old-source controlled qlen2048 actual original native C100 60sec and 300sec strict zero both directions, original 500 restored, RTT p9963/66.841ms measured same-origin, not one-way. q4096 24 missing even though TUN drop0 -> don't choose. Product original Linux Go cold txqlen2048 default rollback500 source changed; NEW SOURCE pending build/test. FEC online receipt removal and B Health/idle/dead/rotation/Stop, C200 gen/A5 separate work still partial; NOT READY."
 }

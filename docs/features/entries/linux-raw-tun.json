@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "linux-raw-tun",
   "name": "Linux Raw IPv4/TUN产品驱动",
-  "summary": "原Go authenticated控制层与Rust绑定真实IPv4 raw/TUN；owned TUN可配置fq maxrate。",
+  "summary": "原Go authenticated控制层与Rust绑定真实IPv4 raw/TUN；Go 在启用新建的自有 TUN 前设置并核验 bounded txqlen=2048，保留 fq 600Mbps 与显式500回退。",
   "owner": "M4/M0 + FEC实验",
   "stage": "experimental",
   "development_branch": "experiment/fec-network-tuning",
@@ -12,10 +12,11 @@
   "defaults": {
     "--tun-name": "wbdv40",
     "--tun-fq-maxrate-mbps": "600（0禁用）",
-    "IPv6": "在owned Linux V4 TUN禁用"
+    "IPv6": "在owned Linux V4 TUN禁用",
+    "--tun-txqlen-packets": "2048（只对本进程原始 Go 新建 Linux V4 TUN 生效；显式 500 回退）"
   },
   "usage": {
-    "cli": "Linux --raw-interface --local-ip --tun-ipv4 --tun-name；需要CAP_NET_RAW和/dev/net/tun",
+    "cli": "Linux --raw-interface --local-ip --tun-ipv4 --tun-name；需要CAP_NET_RAW和/dev/net/tun；Linux --tun-txqlen-packets 2048|500：只修改已绑定的自身 TUN",
     "config": "公开CLI拥有TUN及FQ；不是通用Go配置字段",
     "gui": "无官方Linux V4前端GUI本次同源证据"
   },
@@ -32,7 +33,8 @@
     "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
     "docs/architecture/MIGRATION.md",
     "docs/devlog/M0/20261028-PLAN026-RUST-LINUX-RAW-RXBUF-4M-REGRESSION.md",
-    "docs/devlog/M0/20261028-PLAN026-RUST-150M-LINUX-UDP-FIXTURE-BACKPRESSURE.md"
+    "docs/devlog/M0/20261028-PLAN026-RUST-150M-LINUX-UDP-FIXTURE-BACKPRESSURE.md",
+    "docs/devlog/M0/20261030-PLAN027-H494-TUN-2048-REAL-PRODUCT-COLD-FIX.md"
   ],
   "verification": [
     {
@@ -76,6 +78,13 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Windows amd64 + Linux WSL2 amd64",
+      "scope": "原 Go Linux V4 TUN 产品新默认 txqlen2048 的 NEW SOURCE Go/Rust 冷启动和实际 Windows 双向实测待验证，旧 f838 仅测临时 qlen 2048。不将旧证据伪装成新源码达标",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": "docs/devlog/M0/20261030-PLAN027-H494-TUN-2048-REAL-PRODUCT-COLD-FIX.md"
     }
   ],
   "limitations": [

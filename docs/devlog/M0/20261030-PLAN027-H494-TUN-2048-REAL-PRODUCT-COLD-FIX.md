@@ -1,0 +1,11 @@
+# PLAN027 H494: product-level fix for 100 Mbps apparent Windows loss
+
+Genuine signed original Windows Npcap/Wintun ↔ Linux WSL2/Go TLS/Rust controlled 100Mbps/25ms/0% tests with product binary f838...: original Linux wbdwl4 txqlen500 **594 real kernel TX drops / 597 missing Windows first sources**, q1024 **265/267**, q2048 initial **0/3**. Repeated q2048 60s Action41024624909 **ZERO missing on BOTH ends**, 0 original TUN and fq drops, owned Stop; RTT p99 63/77ms. Crucially q2048 300s Action41024631907 **100.0000% exact first delivery BOTH ends** ~5 million packets each direction, real TUN tx drops0/fq drops0, owned Stop and txqlen500 restored, RTT p99 63/66.841ms. q4096 Action41024629038 TUN drops0 but Windows missing24 and RTT p99 125/133ms: no blanket recommendation to grow queues.
+
+**Product source H494** now changes original Go `r0/go_overlay/internal/v4productcli/linux.go` cold owner startup: after creating its own TUN, set bounded `txqueuelen 2048` before Rust workers start, read back kernel `ip -j` with exact name, ifindex, mode flags and queue, fail closed if missing or mismatched. Explicit CLI rollback `--tun-txqlen-packets 500` allowed, rejects 0/1024/4096/arbitrary. Retains existing root fq600/flow_limit256. No host/global network sysctl, unrelated TUN interface, Windows/Npcap setting, M2 feedback or FEC codec modifications. Adds original Go unit tests in the Linux product build and feature catalog update.
+
+**At H494 commit the PRODUCT-LEVEL source is NOT YET physically tested**; historical H493 performance belongs to old f838 product source with manual temporary TUN control. H494 one genuinely NEW product source original Windows/Linux build and C100 physical Action must prove `V4_PUBLIC_TUN_TXQLEN packets=2048 readback`, strict exact first packet counts and owned Stop. Later A3 Fixed30 and B lifecycle still open. Do not claim one-way p99 or final PLAN027 readiness.
+
+```feature-impact
+{"kind":"updated","ids":["linux-raw-tun"],"reason":"Cold original Linux Go-owned V4 TUN txqueuelen default2048 and explicit 500 rollback with exact kernel readback; measured Linux TUN TX drop was the dominant source of Windows-direction 100Mbps zero-netem business loss. New source real build required."}
+```

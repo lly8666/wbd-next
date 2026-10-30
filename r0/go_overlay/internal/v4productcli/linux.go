@@ -14,6 +14,7 @@ import (
     "crypto/tls"
     "encoding/binary"
     "encoding/hex"
+    "encoding/json"
     "errors"
     "flag"
     "fmt"
@@ -95,6 +96,7 @@ type config struct{
     recordLimit uint16
     innerMTU int
     tunFqMaxrateMbps int
+    tunTxQLenPackets int
 }
 func parse(role string,args []string)(config,error){
     var c config
@@ -125,6 +127,7 @@ func parse(role string,args []string)(config,error){
     outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and actual receipt feedback remain enabled")
     outerMTU:=flags.Int("outer-mtu",1500,"outer IPv4 packet MTU; inner TUN MTU is derived automatically and clamped to device/peer limits")
     tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
+    tunTxQLen:=flags.Int("tun-txqlen-packets",2048,"owned original Linux TUN TX queue: 2048 bounded default, 500 explicit rollback")
     if err:=flags.Parse(args);err!=nil{return c,err}
     if *passFile!="" {
         if *pass!="" {return c,fmt.Errorf("password and password-file are mutually exclusive")}
@@ -184,6 +187,8 @@ func parse(role string,args []string)(config,error){
         return c,fmt.Errorf("tun-fq-maxrate-mbps must be 0 or 600")
     }
     c.tunFqMaxrateMbps=*tunFqRate
+    if *tunTxQLen!=500&&*tunTxQLen!=2048{return c,fmt.Errorf("tun-txqlen-packets must be 500 or 2048")}
+    c.tunTxQLenPackets=*tunTxQLen
     switch *outerRepair{
     case "on":c.disableOuterRepair=false
     case "off":c.disableOuterRepair=true
@@ -230,6 +235,37 @@ func runIP(args ...string)error{
     output,err:=cmd.CombinedOutput()
     if err!=nil{return fmt.Errorf("owned Linux ip %v: %w %s",args,err,output)}
     return nil
+}
+// Only the original Go owner of a newly-created TUN may resize its TX
+// queue, once before protected Rust workers can write. The old Linux kernel
+// qlen500 dropped 594 packets at 100Mbps, matching 597 Windows business
+// first-source gaps; owned qlen2048 twice produced zero TUN TX drops.
+func validateOwnedTunTxQueueReadback(raw []byte,name string,packets int)error{
+    var links []struct{
+        IfName string `json:"ifname"`
+        IfIndex int `json:"ifindex"`
+        MTU int `json:"mtu"`
+        QLen int `json:"txqlen"`
+        LinkType string `json:"link_type"`
+        Flags []string `json:"flags"`
+    }
+    if err:=json.Unmarshal(raw,&links);err!=nil{return fmt.Errorf("TUN tx queue JSON readback: %w",err)}
+    if len(links)!=1||links[0].IfName!=name||links[0].IfIndex<=0||
+       links[0].MTU<1280||links[0].MTU>1500||links[0].QLen!=packets||
+       links[0].LinkType!="none"{return fmt.Errorf("original Linux TUN tx queue identity mismatch")}
+    seen:=map[string]bool{}
+    for _,flag:=range links[0].Flags{seen[flag]=true}
+    if !seen["UP"]||!seen["POINTOPOINT"]||!seen["NOARP"]{
+        return fmt.Errorf("original Linux TUN tx queue flag readback mismatch")
+    }
+    return nil
+}
+func setOwnedTunTxQueue(name string,packets int)error{
+    if packets!=500&&packets!=2048{return fmt.Errorf("unsupported bounded owned TUN txqlen %d",packets)}
+    if err:=runIP("link","set","dev",name,"txqueuelen",strconv.Itoa(packets));err!=nil{return err}
+    raw,err:=exec.Command("ip","-j","link","show","dev",name).CombinedOutput()
+    if err!=nil{return fmt.Errorf("owned TUN queue readback: %w %s",err,raw)}
+    return validateOwnedTunTxQueueReadback(raw,name,packets)
 }
 // Only the newly-owned ephemeral TUN is modified: never host/global sysctls
 // or arbitrary application TCP sockets. If tc/kernel fq is unavailable,
@@ -366,6 +402,8 @@ func Run(role string,args []string)error{
     // An active owner's Close performs Stop->release->network cleanup instead.
     connected:=false
     defer func(){if !connected || cfg.fecMode==realityfront.FecV2Auto {_ = tun.Close()}}()
+    if err=setOwnedTunTxQueue(tun.name,cfg.tunTxQLenPackets);err!=nil{return err}
+    log.Printf("V4_PUBLIC_TUN_TXQLEN role=%s interface=%s packets=%d readback=REAL_ORIGINAL_LINUX_TUN",cfg.role,tun.name,cfg.tunTxQLenPackets)
     if err=setOwnedTunFq(tun.name,cfg.tunFqMaxrateMbps);err!=nil{return err}
     if cfg.tunFqMaxrateMbps!=0 {
         log.Printf("V4_PUBLIC_TUN_FQ role=%s interface=%s maxrate_mbps=600 flow_limit_packets=256 readback=kernel_fq_600Mbit",cfg.role,tun.name)

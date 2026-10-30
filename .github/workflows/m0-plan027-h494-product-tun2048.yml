@@ -1,0 +1,39 @@
+name: M0 PLAN027 H494 true new Linux original TUN2048 product build
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h494-product-tun2048.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  new-original-source-c100:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-h494]') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Source-locked original Go owned TUN queue and new 2OS build; no old binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          python tools/prepare_windows_wiring.py --check-only
+          python -m unittest -q tests.test_m0_wl_plan027_linux_tun_link tests.test_m0_wl_perf_v2_config
+          grep -Fq 'tunTxQLen:=flags.Int("tun-txqlen-packets",2048' r0/go_overlay/internal/v4productcli/linux.go
+          grep -Fq 'validateOwnedTunTxQueueReadback' r0/go_overlay/internal/v4productcli/linux.go
+          grep -Fq 'V4_PUBLIC_TUN_TXQLEN' r0/go_overlay/internal/v4productcli/linux.go
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          c=read_scenario('scenarios/plan027-c-normal-100m-25ms-loss0-60s.json')
+          assert c['public_mode']=='normal' and c['duration_s']==60
+          assert all((c[x]['offered_mbps'],c[x]['loss_pct'])==(100,0) for x in ('windows_to_linux','linux_to_windows'))
+          print('H494_NEW_PRODUCT_SOURCE_C100',c['scenario_sha256'])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-c-normal-100m-25ms-loss0-60s.json
+          echo H494_FULL_NEW_PRODUCT_BUILD_AND_PHYSICAL_C100_DISPATCHED

@@ -421,6 +421,7 @@ jobs:
           (cd legacy && go test ./internal/faketcp -run TestDetachedDataKernelFilterPreservesHandshakeAndControl -count=1)
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli)
           (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/linux-product/wbd-v4-client" ./cmd/wbd-v4-client)
           (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/linux-product/wbd-v4-server" ./cmd/wbd-v4-server)
           cp target/release/libwbd_engine.so linux-product/libwbd_engine.so
