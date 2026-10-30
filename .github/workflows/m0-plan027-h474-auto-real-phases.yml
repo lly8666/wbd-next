@@ -1,3 +1,4 @@
+# H475 fixed test fixture repo root: SCENE.parents[1] is repo; previous A4 dispatch failed cheap unit before native.
 name: M0 PLAN027 H474 true same-native-session Auto low-loss staging
 on:
   push:

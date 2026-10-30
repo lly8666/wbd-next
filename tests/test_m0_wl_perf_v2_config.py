@@ -26,7 +26,7 @@ class V2Scenarios(unittest.TestCase):
    p.write_text(json.dumps(bad))
    with self.assertRaisesRegex(ValueError,"BAD_AUTO_STAGE_SCOPE"):read_scenario(p)
  def test_plan027_a4_runtime_owned_qdisc_stage_and_live_scheduler_implemented(self):
-  root=SCENE.parents[0]
+  root=SCENE.parents[1]
   netem=(root/"tools/m0_wl_netem.py").read_text()
   e2e=(root/"tools/m0_wl_public_normal_e2e.py").read_text()
   for guard in ('elif action == "stage":','WL_V2_STAGE_FOREIGN_KERNEL_OWNER',
