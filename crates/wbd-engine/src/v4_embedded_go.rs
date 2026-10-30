@@ -454,6 +454,9 @@ fn v3_send_pps_permit(now:MonoNs)->bool{
     any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct OriginalOuterRepair{
     shadow:wbd_recovery::ReceiptState<crate::memory::FrozenRecord>,
+    // Optional untrusted carrier ACK index. One lane+epoch and only actual
+    // M4-copied first sends; no proof of peer delivery/Health/FEC Auto.
+    outer_ack:wbd_recovery::outer_ack::OuterAckIndex,
     direction:wbd_recovery::BudgetDirection,
     route:wbd_recovery::ReceiptRouteScope,
     sent_fresh:u64,
@@ -3937,14 +3940,21 @@ fn background_raw_once(
     let mut invalid_seen=false;
     let mut authenticated_control=false;
     #[cfg(feature="fec2_product_record")]
+    let mut outer_hint=None::<u32>;
+    #[cfg(feature="fec2_product_record")]
     let(mut authenticated_at,mut business_at,mut peer_idle_hint)=(0u64,0u64,None);
     // Unused preposted original M1 slabs persist in this RX worker; used
     // ones return through the same bounded per-arena return path.
     for (i,slab) in rx_pending.drain(..batch.observed).enumerate(){
-        let (len,seq)=match batch.entry(i){
+        let (len,seq,ack32)=match batch.entry(i){
             Some(wbd_platform::linux_raw_carrier::RawReadyEntry::Unauthenticated{
-                cipher_len,seq32
-            })=>(cipher_len,seq32),
+                cipher_len,seq32,ack32
+            })=>(cipher_len,seq32,ack32),
+            #[cfg(feature="fec2_product_record")]
+            Some(wbd_platform::linux_raw_carrier::RawReadyEntry::PureAck{ack32})=>{
+                outer_hint=Some(ack32);
+                drop(slab);continue
+            },
             _=>{drop(slab);continue},
         };
         if stop.load(Ordering::Acquire){break}
@@ -3956,6 +3966,12 @@ fn background_raw_once(
         // Exactly one actual M3 opener and unique replay PN bitmap.
         let when=loop_now();
         let receipt=owner.consume_original(slab,len,tun,when);
+        #[cfg(feature="fec2_product_record")]
+        if receipt.authenticated_link>0||receipt.authenticated_control{
+            outer_hint=Some(ack32);
+        }
+        #[cfg(not(feature="fec2_product_record"))]
+        let _=ack32;
         #[cfg(feature="fec2_product_record")]
         {
             let items=[
@@ -4073,6 +4089,24 @@ fn background_raw_once(
         }
         if receipt.failed==0{
             delivered_total=delivered_total.saturating_add(receipt.delivered);
+        }
+    }
+    #[cfg(feature="fec2_product_record")]
+    if let (Some(owner),Some(ack32))=(outer,outer_hint){
+        // Once per bounded RX turn. This is an untrusted presentation hint
+        // after TCP checksum and session tuple checks, not a Go/AEAD ACK.
+        let mut owned=owner.lock().map_err(|_|BAD_STAGE)?;
+        let lane=owned.shadow.lane();
+        let epoch=owned.route.epoch();
+        if let Ok(update)=owned.outer_ack.on_feedback(
+            lane,epoch,ack32,&[],loop_now(),20_000_000
+        ){
+            for pn in update.retired{
+                let _=owned.shadow.discard_outer_ack_hint(pn);
+            }
+            for pn in update.gap_candidates{
+                let _=owned.shadow.on_outer_gap_hint(pn,loop_now());
+            }
         }
     }
     #[cfg(feature="fec2_product_record")]
@@ -5084,6 +5118,8 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         let mut fresh_bytes=0u64;
         for record in frozen_for_outer.iter().take(real_copied){
             let meta=record.metadata();
+            let _=original.outer_ack.on_definitely_sent(
+                meta.pn,meta.seq.0,record.bytes().len() as u32,now);
             fresh_bytes=fresh_bytes.saturating_add((record.bytes().len()+
                 wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64);
             original.sent_fresh=original.sent_fresh.saturating_add(1);
@@ -5666,6 +5702,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             || shadow.enable_opportunistic_v3().is_err(){
             return INVALID
         }
+        let Some(seq)=e.owner.next_original_record_seq()else{return BAD_STAGE};
+        let Ok(outer_ack)=wbd_recovery::outer_ack::OuterAckIndex::new(
+            lane,epoch,seq,65_536
+        )else{return BAD_STAGE};
         let Ok(mut global)=original_process_repair_quota().lock()else{return BAD_STAGE};
         // RepairBudget independently enforces its finite local burst and
         // sparse/10% epoch ledger. The large configured ceiling remains only
@@ -5679,7 +5719,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         if global.enable_opportunistic_v3(direction).is_err()
             || global.bind_receipt_route(direction,route,now).is_err(){return BAD_STAGE}
         let active=Arc::new(Mutex::new(OriginalOuterRepair{
-            shadow,direction,route,sent_fresh:0,sent_first_wire_bytes:0,
+            shadow,outer_ack,direction,route,sent_fresh:0,sent_first_wire_bytes:0,
             repair_accepted_wire_bytes:0,repair_uncertain_wire_bytes:0,
             authentic_ack:0,
             repair_copied:0,repair_uncertain:0,repair_blocked:0,

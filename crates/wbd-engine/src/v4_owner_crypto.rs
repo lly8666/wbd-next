@@ -586,7 +586,9 @@ impl ProtectedScopedOwner {
         self.normal_firstsend_identity()?;
         self.crypto.tx.next_packet_number()
     }
-    #[cfg(target_os="windows")]
+    #[cfg(any(target_os="windows",all(target_os="linux",
+        any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")))]
     pub(crate) fn next_original_record_seq(&self)->Option<u64>{
         self.normal_firstsend_identity()?;
         self.next_tx_seq
