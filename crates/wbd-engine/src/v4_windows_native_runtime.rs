@@ -11,7 +11,8 @@
      WintunRx, WintunTx, WakeEvent, ReadResult, WaitResult,
  };
  use wbd_platform::ipv4_tcp::{
-     build_bytes, build_presentation_ack, Ipv4Tuple, PacketPersona, Presentation,
+     build_bytes, build_presentation_ack, build_presentation_ack_sack,
+     SackRange32 as WireSack, Ipv4Tuple, PacketPersona, Presentation,
  };
  use wbd_platform::rx_ipv4_tcp::{parse_data_packet,parse_ack_packet,extend_seq32,TrustedRx};
 
@@ -152,6 +153,9 @@
      worker_error:AtomicI32,
      ack:AtomicU32,
      ack_sent:AtomicU32,
+     sack_frame:Mutex<([WireSack;4],usize)>,
+     sack_rev:AtomicU32,
+     sack_sent_rev:AtomicU32,
      tx_seq:AtomicU32,
      stopping:AtomicBool,
      #[cfg(feature="win_native_lock_profile")]
@@ -170,6 +174,9 @@
              repair_packets:AtomicU64::new(0),
              worker_error:AtomicI32::new(0),ack:AtomicU32::new(ack),
              ack_sent:AtomicU32::new(ack),
+             sack_frame:Mutex::new(([WireSack{start:0,end:0};4],0)),
+             sack_rev:AtomicU32::new(0),
+             sack_sent_rev:AtomicU32::new(0),
              tx_seq:AtomicU32::new(seq),
              stopping:AtomicBool::new(false),
              #[cfg(feature="win_native_lock_profile")]
@@ -196,6 +203,15 @@
  }
  impl PresentationAck {
      fn new(next:u32)->Self{Self{next:u64::from(next),future:Vec::with_capacity(256)}}
+     fn sacks(&self)->([WireSack;4],usize){
+         let mut blocks=[WireSack{start:0,end:0};4];
+         let mut n=0;
+         for &(start,end) in self.future.iter().take(4){
+             blocks[n]=WireSack{start:start as u32,end:end as u32};
+             n+=1;
+         }
+         (blocks,n)
+     }
      fn verified(&mut self,seq:u32,len:usize)->u32{
          let Ok(start)=extend_seq32(self.next,seq)else{return self.next as u32};
          let Some(end)=start.checked_add(len as u64)else{return self.next as u32};
@@ -498,18 +514,31 @@
  }
  fn send_presentation_ack(cfg:&WbdWinNativeAttachV1,
      npf:&mut NpcapTx,counters:&Counters,ip_id:&mut u16,
+     sack_negotiated:bool,
  )->Result<(),i32>{
      // Build pure TCP-looking ACK directly at Ethernet L3 offset.
      // The old path filled a separate 2304B scratch and copied 40B back.
      let mut frame=[0u8;MAX_LINK];
      let ack=counters.ack.load(Ordering::Acquire);
-     let n=build_presentation_ack(Ipv4Tuple{
+     let tuple=Ipv4Tuple{
          src_ip:&cfg.local_ip,dst_ip:&cfg.peer_ip,
          src_port:cfg.local_port,dst_port:cfg.peer_port,
-     },counters.tx_seq.load(Ordering::Acquire),
-       ack,*ip_id,
-       PacketPersona::Windows11,cfg.path_mtu as usize,&mut frame[14..])
-       .map_err(|_|INVALID)?.len();
+     };
+     let rev=counters.sack_rev.load(Ordering::Acquire);
+     let (blocks,count)=if sack_negotiated{
+         *counters.sack_frame.lock().map_err(|_|BAD_STAGE)?
+     }else{([WireSack{start:0,end:0};4],0)};
+     let n=if count>0{
+         build_presentation_ack_sack(tuple,
+             counters.tx_seq.load(Ordering::Acquire),ack,*ip_id,
+             PacketPersona::Windows11,cfg.path_mtu as usize,
+             &blocks[..count],&mut frame[14..])
+     }else{
+         build_presentation_ack(tuple,
+             counters.tx_seq.load(Ordering::Acquire),ack,*ip_id,
+             PacketPersona::Windows11,cfg.path_mtu as usize,
+             &mut frame[14..])
+     }.map_err(|_|INVALID)?.len();
      frame[..6].copy_from_slice(&cfg.next_hop_mac);
      frame[6..12].copy_from_slice(&cfg.source_mac);
      frame[12..14].copy_from_slice(&0x0800u16.to_be_bytes());
@@ -517,6 +546,7 @@
      let outcome=npf.send_batch(&[&frame[..14+n]]);
      if kernel_result(outcome,1,0)?!=1{return Err(BAD_STAGE)}
      counters.ack_sent.store(ack,Ordering::Release);
+     counters.sack_sent_rev.store(rev,Ordering::Release);
      counters.pure_ack_outer_bytes.fetch_add((14+n) as u64,Ordering::Relaxed);
      Ok(())
  }
@@ -565,7 +595,8 @@
  }
  fn tx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
      mut tun:WintunRx,mut npf:NpcapTx,stop:Arc<WakeEvent>,
-     notify:Arc<WakeEvent>,counters:Arc<Counters>,fixed:bool,auto:bool)->i32{
+     notify:Arc<WakeEvent>,counters:Arc<Counters>,fixed:bool,auto:bool,
+     sack_negotiated:bool)->i32{
      let mut ip_id=1u16;
      // Cache Auto next check in the worker. A full packet batch never
      // takes an extra owner mutex for a 2-second policy decision.
@@ -615,8 +646,13 @@
              }
              if work>0||control||parity{return Ok(false)}
              let next_ack=counters.ack.load(Ordering::Acquire);
-             if next_ack!=counters.ack_sent.load(Ordering::Acquire){
-                 send_presentation_ack(&cfg,&mut npf,&counters,&mut ip_id)?;
+             let sack_changed=sack_negotiated &&
+                 counters.sack_rev.load(Ordering::Acquire)!=
+                 counters.sack_sent_rev.load(Ordering::Acquire);
+             if next_ack!=counters.ack_sent.load(Ordering::Acquire)||
+                 sack_changed{
+                 send_presentation_ack(&cfg,&mut npf,&counters,&mut ip_id,
+                     sack_negotiated)?;
                  return Ok(false)
              }
              let timeout={
@@ -726,7 +762,7 @@
      mut tun:WintunTx,mut npf:NpcapRx,stop:Arc<WakeEvent>,
      tx_notify:Arc<WakeEvent>,early_notify:Arc<WakeEvent>,
      early:Arc<Mutex<VecDeque<(u32,Vec<u8>)>>>,
-     counters:Arc<Counters>,fixed:bool)->i32{
+     counters:Arc<Counters>,fixed:bool,sack_negotiated:bool)->i32{
      let event=match npf.event(){Ok(e)=>e,Err(_)=>return BAD_STAGE};
      let trusted=TrustedRx{
          tuple:Ipv4Tuple{src_ip:&cfg.peer_ip,dst_ip:&cfg.local_ip,
@@ -737,6 +773,7 @@
      let mut frame=[0u8;MAX_NPF];
      let mut plain=[0u8;MAX_IPV4];
      let mut ack=PresentationAck::new(cfg.initial_rx_seq);
+     let mut last_sack_publish=Instant::now();
      loop{
          if counters.stopping.load(Ordering::Acquire){return OK}
          // Drain genuine Go pre-handoff packets FIRST, in original order.
@@ -765,7 +802,8 @@
              _=>return BAD_STAGE,
          }
          let mut npf_wakes=TxWakeBatch::default();
-         let mut last_outer_ack=None;
+         let mut verified_batch=false;
+         let mut last_outer_ack=None::<(u32,[WireSack;4],usize)>;
          for _ in 0..RX_WAKE_BATCH{
              if counters.stopping.load(Ordering::Acquire){return OK}
              let n=match npf.read(&mut frame){
@@ -776,12 +814,17 @@
                  Err(_)=>return BAD_STAGE,
              };
              let Some(packet)=io::ethernet_ipv4(&frame[..n])else{continue};
-             // Cold SACK capability is not yet carried by original Go
-              // TLS handoff; reject unnegotiated SACK, not pure ACK.
-              if let Ok(outer)=parse_ack_packet(packet,trusted,false){
-                  last_outer_ack=Some(outer.ack32);
-                  continue
-              }
+             // Optional SACK only after actual original Go protected
+             // FakeTCP SYN/SYN-ACK; packet checksum is NOT crypto proof.
+             if let Ok(outer)=parse_ack_packet(packet,trusted,sack_negotiated){
+                 let mut blocks=[WireSack{start:0,end:0};4];
+                 blocks[..outer.sacks().len()].copy_from_slice(outer.sacks());
+                 if !outer.sacks().is_empty()||
+                     !last_outer_ack.as_ref().is_some_and(|x|x.2>0){
+                     last_outer_ack=Some((outer.ack32,blocks,outer.sacks().len()));
+                 }
+                 continue
+             }
               let Ok(sealed)=parse_data_packet(packet,trusted)else{
                  counters.rejected.fetch_add(1,Ordering::Relaxed);continue
              };
@@ -790,18 +833,44 @@
                  Ok(v)=>v,Err(code)=>return code
              };
              if verified{
-                  last_outer_ack=Some(sealed.presentation_ack32);
+                  verified_batch=true;
+                  if !last_outer_ack.as_ref().is_some_and(|x|x.2>0){
+                      last_outer_ack=Some((sealed.presentation_ack32,
+                          [WireSack{start:0,end:0};4],0));
+                  }
                   if npf_wakes.note_verified(){
                       flush_tx_wake(&tx_notify,&counters);
                   }
               }
           }
-          if let Some(ack32)=last_outer_ack{
+          if let Some((ack32,blocks,n))=last_outer_ack{
               let mut e=match lock_owner(&lane,&counters,LockDirection::Rx){
                   Ok(e)=>e,Err(code)=>return code
               };
+              let mut sacks=[wbd_recovery::outer_ack::SackRange32{
+                  start:0,end:0};4];
+              for (dst,src) in sacks.iter_mut().zip(&blocks[..n]){
+                  *dst=wbd_recovery::outer_ack::SackRange32{
+                      start:src.start,end:src.end};
+              }
               let _=m2_outer_ack_hint_entry(&mut e,cfg.epoch,
-                  cfg.luid,cfg.ifindex,ack32,&[]);
+                  cfg.luid,cfg.ifindex,ack32,&sacks[..n]);
+          }
+          // RX publishes <=50 authenticated SACK snapshots per second,
+          // never one Go call or global lock per inner business packet.
+          if sack_negotiated&&verified_batch&&
+              last_sack_publish.elapsed()>=Duration::from_millis(20){
+              last_sack_publish=Instant::now();
+              let snapshot=ack.sacks();
+              let mut current=match counters.sack_frame.lock(){
+                  Ok(s)=>s,Err(_)=>return BAD_STAGE
+              };
+              if *current!=snapshot{
+                  *current=snapshot;
+                  counters.sack_rev.fetch_add(1,Ordering::Release);
+                  drop(current);
+                  flush_tx_wake(&tx_notify,&counters);
+              }
           }
           // A partial ready batch must signal immediately on drain.
          if npf_wakes.finish(){flush_tx_wake(&tx_notify,&counters);}
@@ -822,21 +891,22 @@
      if cfg.is_null(){return INVALID}
      let v2=unsafe{*cfg};
      if v2.version!=2 || v2.size as usize!=std::mem::size_of::<WbdWinNativeAttachV2>()
-         ||!matches!(v2.mode,1|2)||v2.reserved>1||
-         (v2.mode==1&&v2.reserved!=0){return INVALID}
+         ||!matches!(v2.mode,0|1|2)||v2.reserved>3||
+         (v2.mode!=2&&v2.reserved&1!=0){return INVALID}
      #[cfg(feature="fec2_product_record")]
-     {start_native(v2.normal,true,
-         if v2.mode==2{Some(v2.reserved==1)}else{None})}
+     {start_native(v2.normal,v2.mode!=0,
+         if v2.mode==2{Some(v2.reserved&1!=0)}else{None},
+         v2.reserved&2!=0)}
      #[cfg(not(feature="fec2_product_record"))]
      {let _=v2;BAD_STAGE}
  }
  #[no_mangle]
  pub unsafe extern "C" fn wbd_m0_win_native_v1_start(cfg:*const WbdWinNativeAttachV1)->i32{
      if cfg.is_null(){return INVALID}
-     start_native(unsafe{*cfg},false,None)
+     start_native(unsafe{*cfg},false,None,false)
  }
  fn start_native(config:WbdWinNativeAttachV1,fixed:bool,
-     auto_policy:Option<bool>
+     auto_policy:Option<bool>,sack_negotiated:bool
  )->i32{
      if config.version!=1||config.size as usize!=std::mem::size_of::<WbdWinNativeAttachV1>()
          ||config.owner==0||config.local_port==0||config.peer_port==0
@@ -893,7 +963,7 @@
          set_native_thread_name(&NATIVE_TX_WIDE);
          eprintln!("WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=TX tid={}",unsafe{GetCurrentThreadId()});
          let rc=tx_loop(config,tx_lane,wtx,sender,Arc::clone(&tx_stop),tx_notify,
-             Arc::clone(&tx_counters),fixed,auto_policy.is_some());
+             Arc::clone(&tx_counters),fixed,auto_policy.is_some(),sack_negotiated);
          if rc!=OK{
              tx_counters.worker_error.store(rc,Ordering::Release);
              let _=tx_stop.wake();
@@ -907,7 +977,7 @@
          set_native_thread_name(&NATIVE_RX_WIDE);
          eprintln!("WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=RX tid={}",unsafe{GetCurrentThreadId()});
          let rc=rx_loop(config,rx_lane,wrx,capture,Arc::clone(&rx_stop),tx_notify_for_rx,
-             rx_event,rx_early,Arc::clone(&rx_counters),fixed);
+             rx_event,rx_early,Arc::clone(&rx_counters),fixed,sack_negotiated);
          if rc!=OK{
              rx_counters.worker_error.store(rc,Ordering::Release);
              let _=rx_stop.wake();
