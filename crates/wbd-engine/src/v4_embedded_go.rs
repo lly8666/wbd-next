@@ -4010,10 +4010,10 @@ fn background_raw_once(
         }
         #[cfg(feature="fec2_product_record")]
         if let Some(quality)=quality{
-            if receipt.authenticated_data_pn.is_some() ||
+            if receipt.quality_source_pn.is_some() ||
                 receipt.quality_signal.is_some()||receipt.quality_report.is_some(){
                 if let Ok(mut state)=quality.lock(){
-                    if let Some(pn)=receipt.authenticated_data_pn{
+                    if let Some(pn)=receipt.quality_source_pn{
                         state.receive.on_unique_data(wbd_types::RecordPn(pn),false);
                     }
                     if let Some(signal)=receipt.quality_signal{

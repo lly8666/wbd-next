@@ -115,6 +115,7 @@ pub(super) fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     let mut result=Vec::new();
     let mut failed=false;
     let mut unique_data_pn=None;
+    let mut unique_source_pn=None;
     let mut unique_receipt=None;
     // Split the actual Entry fields, not the MutexGuard deref, so Rust
     // guarantees one unique RX owner and distinct bounded RS16 decoder.
@@ -123,7 +124,8 @@ pub(super) fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     let rx_storage=std::mem::take(&mut entry.rx_scratch);
     let draining=entry.owner.drain_windows_authenticated_fec2(
         now,rx_storage,|pn,kind,plain|{
-            unique_data_pn=Some(pn);
+            unique_data_pn=Some(pn); // legacy per-record feedback only
+            if kind==2{unique_source_pn=Some(pn)}
             match decoder.accept_authenticated(scope,kind,plain,now){
                 Ok(deliveries)=>{
                     for d in deliveries {
@@ -167,7 +169,9 @@ pub(super) fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
             // Four bounded low-rate RX windows observe DATA once, not M2
             // bitmap drafts, retransmissions or untrusted TCP carrier ACKs.
             if m.auto_low_rate_mode{
-                m.quality_receive.on_unique_data(RecordPn(pn),false);
+                if let Some(source)=unique_source_pn{
+                    m.quality_receive.on_unique_data(RecordPn(source),false);
+                }
             }
             if result.is_empty(){m.health.on_authenticated_control(m2_clock().0)}
             else{m.health.on_authenticated_business(m2_clock().0)}

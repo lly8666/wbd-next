@@ -328,6 +328,9 @@ pub(crate) struct BackgroundRxReceipt{
     // opener consumed an authentic, unique normal/FEC business record.
     // Never acknowledge unauthenticated tuples, replay or malformed LINK.
     pub(crate) authenticated_data_pn:Option<u64>,
+    // For low-rate Quality count original source PN only, not authenticated
+    // FEC repair/parity PN. Legacy M2 may still ACK every received symbol.
+    pub(crate) quality_source_pn:Option<u64>,
     // Only created after the SAME moved original M3 AEAD + unique PN opener.
     pub(crate) reverse_kind1:Option<AuthenticatedNormalKind1>,
     // Exact post-AEAD+replay M3 control only, not business or TCP ACK.
@@ -460,6 +463,9 @@ impl ProtectedBackgroundRx{
                 Ok(deliveries)=>{
                     if opened.kind==2{receipt.fec_rx[1]+=1}else{receipt.fec_rx[3]+=1}
                     receipt.authenticated_data_pn=Some(opened.pn);
+                    if opened.kind==2{
+                        receipt.quality_source_pn=Some(opened.pn);
+                    }
                     if deliveries.is_empty(){receipt.pending=1}
                     for first in deliveries{
                         if first.recovered{receipt.fec_rx[5]+=1}else{receipt.fec_rx[4]+=1}
@@ -538,6 +544,7 @@ impl ProtectedBackgroundRx{
         receipt.invalid=link_report.malformed.saturating_add(link_report.discarded);
         if receipt.invalid==0 && receipt.failed==0 {
             receipt.authenticated_data_pn=Some(opened.pn);
+            receipt.quality_source_pn=Some(opened.pn);
         }
         receipt
     }
