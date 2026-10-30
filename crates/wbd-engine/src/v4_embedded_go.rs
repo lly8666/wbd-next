@@ -454,6 +454,7 @@ fn v3_send_pps_permit(now:MonoNs)->bool{
     any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct OriginalOuterRepair{
     shadow:wbd_recovery::ReceiptState<crate::memory::FrozenRecord>,
+    epoch:[u8;16],
     // Optional untrusted carrier ACK index. One lane+epoch and only actual
     // M4-copied first sends; no proof of peer delivery/Health/FEC Auto.
     outer_ack:wbd_recovery::outer_ack::OuterAckIndex,
@@ -4097,7 +4098,7 @@ fn background_raw_once(
         // after TCP checksum and session tuple checks, not a Go/AEAD ACK.
         let mut owned=owner.lock().map_err(|_|BAD_STAGE)?;
         let lane=owned.shadow.lane();
-        let epoch=owned.route.epoch();
+        let epoch=owned.epoch;
         if let Ok(update)=owned.outer_ack.on_feedback(
             lane,epoch,ack32,&[],loop_now(),20_000_000
         ){
@@ -5704,7 +5705,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         }
         let Some(seq)=e.owner.next_original_record_seq()else{return BAD_STAGE};
         let Ok(outer_ack)=wbd_recovery::outer_ack::OuterAckIndex::new(
-            lane,epoch,seq,65_536
+            lane,epoch,seq,24_576
         )else{return BAD_STAGE};
         let Ok(mut global)=original_process_repair_quota().lock()else{return BAD_STAGE};
         // RepairBudget independently enforces its finite local burst and
@@ -5719,7 +5720,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         if global.enable_opportunistic_v3(direction).is_err()
             || global.bind_receipt_route(direction,route,now).is_err(){return BAD_STAGE}
         let active=Arc::new(Mutex::new(OriginalOuterRepair{
-            shadow,outer_ack,direction,route,sent_fresh:0,sent_first_wire_bytes:0,
+            shadow,epoch,outer_ack,direction,route,sent_fresh:0,sent_first_wire_bytes:0,
             repair_accepted_wire_bytes:0,repair_uncertain_wire_bytes:0,
             authentic_ack:0,
             repair_copied:0,repair_uncertain:0,repair_blocked:0,
