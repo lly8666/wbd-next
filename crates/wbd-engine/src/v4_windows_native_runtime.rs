@@ -201,11 +201,21 @@
          let Some(end)=start.checked_add(len as u64)else{return self.next as u32};
          if end<=self.next{return self.next as u32}
          if start<=self.next {
-             self.next=end;
+             self.next=self.next.max(end);
          }else{
-             if self.future.len()>=256{return self.next as u32}
-             let at=self.future.partition_point(|(begin,_)|*begin<=start);
-             self.future.insert(at,(start,end));
+             // The original per-record 256 cap stopped advancing behind
+             // a real gap after only 256 later packets. Keep disjoint,
+             // authenticated future byte spans, not one node per packet.
+             let at=self.future.partition_point(|(_,limit)|*limit<start);
+             let(mut first,mut last)=(start,end);
+             let mut until=at;
+             while until<self.future.len() && self.future[until].0<=last{
+                 first=first.min(self.future[until].0);
+                 last=last.max(self.future[until].1);
+                 until+=1;
+             }
+             if until==at && self.future.len()>=256{return self.next as u32}
+             self.future.splice(at..until,std::iter::once((first,last)));
          }
          while let Some(&(begin,limit))=self.future.first(){
              if begin>self.next{break}
@@ -213,6 +223,21 @@
              self.future.remove(0);
          }
          self.next as u32
+     }
+ }
+ #[cfg(test)]
+ mod plan027_native_presentation_ack_test{
+     use super::PresentationAck;
+     #[test]
+     fn h505_contiguous_future_600_verified_records_coalesce_and_recover(){
+         let mut x=PresentationAck::new(1000);
+         for i in 0..600u32{
+             assert_eq!(x.verified(2000+i*10,10),1000);
+         }
+         assert_eq!(x.future,vec![(2000,8000)]);
+         assert_eq!(x.verified(1000,1000),8000);
+         assert!(x.future.is_empty());
+         assert_eq!(x.verified(7000,10),8000);
      }
  }
   struct NativeSession {
