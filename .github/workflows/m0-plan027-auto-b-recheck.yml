@@ -1,0 +1,33 @@
+# PLAN027 H460 one real original-Go TLS Windows↔Linux Auto B scenario
+name: M0 PLAN027 Auto B true native one-shot
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-auto-b-recheck.yml]
+permissions: {contents: read, actions: write}
+concurrency:
+  group: m0-plan027-auto-b-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  dispatch-one:
+    if: contains(github.event.head_commit.message, '[plan027-auto-b-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify exact main and dispatch ONE real Auto product/Stop measurement
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA" || {
+            echo 'main advanced, refuse ambiguous source' >&2
+            exit 1
+          }
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=auto -f run_n0=false -f perf_ab=false
+          echo "PLAN027_TRUE_AUTO_B_DISPATCHED binary_source=$GITHUB_SHA"
