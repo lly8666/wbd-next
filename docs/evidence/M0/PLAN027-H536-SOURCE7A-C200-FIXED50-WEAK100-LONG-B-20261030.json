@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "7a5d7e83823e96539d2a904a8193a85ec18df30d",
+  "scope": "ORIGINAL_GO_TLS_WINDOWS_SIGNED_NPCAP_WINTUN_WSL2_LINUX_RUST_RAW_TUN_AND_SEPARATE_LINUX_TWO_NETNS",
+  "result": "MIXED_SCOPED_PASS_FAIL_OPEN",
+  "physical": "NOT_RUN",
+  "c200": {
+    "action": 41069012141,
+    "artifact_id": 12983218344,
+    "zip_sha256": "a8404fc329f2887766713cd64678210b9d9c02af2f99a610cce7dd4d05114ca7",
+    "scene": "plan027-c-normal-200m-25ms-loss0-60s",
+    "duration_s": 60,
+    "offered_mbps": {
+      "windows": 199.9467,
+      "linux": 198.9107
+    },
+    "first_fraction": {
+      "windows": 0.995284,
+      "linux": 0.93897
+    },
+    "first_mbps": {
+      "windows": 197.9364,
+      "linux": 186.4541
+    },
+    "tcp_udp": "PASS_ACTUAL_TWO_OS_KERNEL",
+    "owned_stop": "PASS_BOTH_OWNED",
+    "result": "FAIL_FIRST_DELIVERY_LOSSLESS_NEVER_PASS",
+    "windows_whole_process_cpu_s": 44.5,
+    "windows_avg_one_core_pct": 58.312,
+    "windows_peak_rss_bytes": 44523520,
+    "linux_business_generator_one_core_pct": 85.106,
+    "linux_tun_tx_dropped_delta": 12,
+    "eth0_netem_drops": 0,
+    "ifb_netem_drops": 0,
+    "classification": "PRODUCT_OR_HOST_CAPACITY_UNRESOLVED_STOP_HIGHER_200M_SAME_FAMILY",
+    "limitations": [
+      "No host PSI/steal enough to excuse lossless failure as pure VM capacity",
+      "Failed 200M family does not exclude other modes/lower rates",
+      "No calibrated one-way p99"
+    ]
+  },
+  "fixed50": {
+    "action": 41069016503,
+    "artifact_id": 12982893820,
+    "zip_sha256": "98de5e39cd7766ec15a80f1528f82e7cfaacb25a94c123bb82d109d73ebc2143",
+    "scene": "plan027-c-fixed-50m-25ms-loss0-60s",
+    "duration_s": 60,
+    "first_fraction": {
+      "windows": 0.999968,
+      "linux": 1
+    },
+    "offered_mbps": {
+      "windows": 49.9866,
+      "linux": 49.9997
+    },
+    "owned_stop": "PASS_BOTH_OWNED",
+    "windows_f": 914007040,
+    "windows_r": 0,
+    "windows_c": 179504,
+    "windows_avg_core_pct": 71.954,
+    "peak_rss_bytes": 46034944,
+    "result": "PASS_SCOPED_BUSINESS_AND_STOP_NOT_AB_CPU"
+  },
+  "weak100": {
+    "action": 41069020380,
+    "artifact_id": 12983333122,
+    "zip_sha256": "98995777f093acdfe79920e6378eaf242476a40295dcfc13118d3e71b414abe3",
+    "scene": "wl-outer-repair-100m-50ms-loss5-60s",
+    "duration_s": 60,
+    "actual_loss_pct": 5,
+    "first_fraction": {
+      "windows": 0.950071,
+      "linux": 0.949943
+    },
+    "offered_mbps": {
+      "windows": 99.975,
+      "linux": 99.9998
+    },
+    "owned_stop": "PASS_BOTH_OWNED",
+    "windows_f": 843012455,
+    "windows_r": 1714,
+    "windows_c": 2174,
+    "windows_repair_packets": 2,
+    "linux_f": 831659206,
+    "linux_r": 1299,
+    "linux_repair_packets": 1,
+    "result": "PASS_SCOPED_REAL_LOSS_BUSINESS_AND_STOP_NO_REPAIR_PERCENTAGE_FLOOR"
+  },
+  "long300": {
+    "action": 41067316465,
+    "artifact_id": 12983102354,
+    "zip_sha256": "da2a9f35392fa639d2924302456ee84f04755549946b87d2adb317712bc193cb",
+    "scene": "plan027-c-normal-50m-25ms-loss0-300s",
+    "duration_s": 300,
+    "offered_mbps": {
+      "windows": 49.9973,
+      "linux": 50
+    },
+    "first_fraction": {
+      "windows": 1,
+      "linux": 1
+    },
+    "owned_stop": "PASS_BOTH_OWNED",
+    "windows_f": 2156891613,
+    "windows_r": 0,
+    "windows_c": 4509967,
+    "windows_whole_process_cpu_s": 38.7188,
+    "windows_avg_one_core_pct": 12.233,
+    "windows_peak_rss_bytes": 42156032,
+    "result": "PASS_SCOPED_TRUE_5MIN_BUSINESS_NOT_PHYSICAL"
+  },
+  "linux_lifecycle": [
+    {
+      "action": 41068111060,
+      "artifact_id": 12983716917,
+      "zip_sha256": "f7bfe3c8f68db9008808a063c82d19b4266826539d7a906eaa925712d71b0b27",
+      "scene": "idle100",
+      "result": "PASS_SCOPED_AUTH_KEEPALIVE_AND_NEW_REAL_APP"
+    },
+    {
+      "action": 41068115020,
+      "artifact_id": 12984905412,
+      "zip_sha256": "18148a833f23ae1022ff8484e8eaa64d9ec506ad2e91f9d390604e24cdc91735",
+      "scene": "dead106",
+      "result": "PASS_SCOPED_GENUINE_BIDIRECTIONAL_FULL_BLACKHOLE_DEAD_NOT_DORMANT"
+    },
+    {
+      "action": 41068119093,
+      "artifact_id": 12983012361,
+      "zip_sha256": "64b81c9d6ef2fc090e08a844d4b3973fb48da57ae4dfeed75d225ffcaa17440d",
+      "scene": "reconnect",
+      "result": "PASS_SCOPED_REAL_RESTORED_NEW_APP_TLS_RUST_RECONNECT"
+    }
+  ],
+  "pending": [
+    "Windows original lifecycle idle/dead/rotation/wake, Game FEC actual source-scoped, A5 original Go CPU comparator, C missing representative scenarios and 200M root limitation",
+    "H533 new source dual-side cosmetic ACK 0/30 still pending; this source7a evidence does not transfer to H533 product"
+  ]
+}
