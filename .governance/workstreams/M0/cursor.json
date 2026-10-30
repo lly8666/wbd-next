@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 463,
-  "checkpoint_sha": "e7d4795ea3f19c6976720bc17f0c3c88fc1fe986",
+  "sequence": 464,
+  "checkpoint_sha": "0daddf65ef1ae0abf2e42dc841b96ed4458a8fb9",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H463 exact H462 preflight repair: shell PID and unittest string were both single $ in Git blob due JS replacement escape. Preserve actual two dollar bytes in source and assertion. Re-run source-locked build and then Auto diagnostic/C10 owned Stop.",
-  "why_now": "H462 win-linux Action40999231338 cheap test failure exact script/test both old '$' and no compiled binaries. Source H461 Auto real M4 error 32.62M /40s, C10 business 100% but Stop NOT_RUN and restart timed out. Correct only misapplied PID patch.",
+  "current_task": "H464 source-locked H463 one-build two real cases fanout on completed run40999605005: Auto explicit native 500ms fault classes and Normal10/25ms/0% owned Stop lifecycle. Only after Windows/Linux artifact presence, each independent Action/one scene. Then fix proven M4 Auto root and complete A/B/C.",
+  "why_now": "H463 preflight Linux/Windows Rust and Windows Go passed, Linux source product build completed success; native Windows product still running. H462 had blocked preflight, so use H463 exact artifact SHA and avoid premature dispatch or rebuild per scene.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H463 exact Windows/Linux native compiled products and 500ms diagnostic; use one source-locked artifact for separate Auto and Normal C10 Stop trials. Then fix real Auto TX error and complete PLAN027 A4/A5 B lifecycle C capacity/5min.",
+  "next_action": "Collect H463 native-public-two-os, H464 workflow_run fanout result and both separately dispatched true Windows/Linux scenarios. Analyze auto stage counters; repair actual fault, rerun affected A3/B Auto; continue A4 120s, A5 CPU A/B, lifecycle and C gradient/300s.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①Online M2/ACK candidate implemented, H462 diagnostics source untested due preflight, H463 PID/test source correction. Auto H461 true severe FAIL Windows0/384 Linux25/99, 32.6M M4 error and parity9 planned0 sent. ②A1 pass, A2 0/30 scoped, A3 Fixed30 first delivery Windows10.1% FAIL, A4/A5 OPEN. ③B Auto and lifecycle BLOCKED. ④C10 business child >99.999% but full fail restart/Stop; C50+ and 300s NOT_RUN. ⑤H463 exact source build pending, no final PASS."
+  "partial_summary": "①H463 source-locked low-rate Auto M4 diagnostic built Linux/Windows unit+Go preflight PASS, real native Windows job in flight. One-build H464 fanout protected by artifact presence. ②A1 scoped PASS; A2 Normal0/30 measured; A3 Fixed30 Windows first10.1% FAIL; A4/A5 OPEN. ③B Auto original severe 32.6M M4 errors and first Windows0/384, Linux25/99; normal/game limited prior scoped success; lifecycle OPEN. ④C10 first business near100% but lifecycle BAD PID H463 source patch, C50+/300s NOT_RUN. ⑤H464 actual tests and bug fixes pending; no final readiness."
 }
