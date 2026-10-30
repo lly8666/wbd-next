@@ -358,16 +358,15 @@ mod tests {
             b.on_send_result(id, RepairSendResult::Accepted, MonoNs(2)).unwrap();
         }
         assert_eq!(b.snapshot().pacer_tokens, 0);
-        // Stage-0 repair may use the existing byte allowance, but cannot
-        // create token debt or block a new definitely accepted first send.
+        // A ninth instantaneous repair is paced, never granted phantom
+        // stage0 priority. Fresh traffic remains independently accepted.
         let ninth = candidate(9, 3);
-        let id = b.reserve(&ninth, 1500, MonoNs(3)).unwrap();
-        b.on_send_result(id, RepairSendResult::Accepted, MonoNs(3)).unwrap();
-        assert_eq!(b.snapshot().pacer_tokens, 0);
+        assert_eq!(b.reserve(&ninth, 1500, MonoNs(3)),
+            Err(BudgetError::BurstPaced));
         b.on_fresh_accepted(500_000, MonoNs(4)).unwrap();
         assert_eq!(b.snapshot().fresh_confirmed_bytes, 500_000);
         assert_eq!(b.snapshot().epoch_repair_limit, 50_000);
-        assert_eq!(b.snapshot().charged_repair_bytes, 13_500);
+        assert_eq!(b.snapshot().charged_repair_bytes, 12_000);
         assert!(b.snapshot().pacer_tokens <= b.snapshot().pacer_burst_limit);
     }
     #[test]
@@ -486,10 +485,11 @@ mod tests {
         assert_eq!(b.reserve(&extra,1500,MonoNs(2)),Err(BudgetError::BurstPaced));
         // Genuine time replenishes the smoothing budget without granting
         // any new ciphertext or extra repair attempt.
-        let next=b.reserve(&extra,1500,MonoNs(100_000_002)).unwrap();
+        let renewed=candidate(100,100_000_002);
+        let next=b.reserve(&renewed,1500,MonoNs(100_000_002)).unwrap();
         b.on_send_result(next,RepairSendResult::Accepted,MonoNs(100_000_002)).unwrap();
         // Repair accounting never blocks fresh credit acquisition.
-        b.on_fresh_accepted(100,MonoNs(3)).unwrap();
+        b.on_fresh_accepted(100,MonoNs(100_000_003)).unwrap();
         assert_eq!(b.snapshot().fresh_confirmed_bytes,100);
     }
 

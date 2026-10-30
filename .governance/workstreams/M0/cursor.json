@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 452,
-  "checkpoint_sha": "7c9dbe31a560f6e304a843f5fd4049999b4a8443",
+  "sequence": 453,
+  "checkpoint_sha": "cdef278f202c7fb08bf17e5068a83be7f798e138",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H452 overlay on H451 Linux Fixed+idle: true ACK duplicate gap candidate, paced stage0, Auto independent sampled Quality/full actual-k and Windows Fixed local Applied/retired heat. Exact new-source CI and real A/B/C pending.",
-  "why_now": "H451 Linux commit7c9d landed on main during H452 preparation; abandoned detached candidate a761 for ref purposes and rebased all compatible pending edits on 7c9d. Preserve genuine H451 native Fixed installed readback and idle sender fixes.",
+  "current_task": "H453 repair exact H452 CI: recovery group two tests retained obsolete priority/expired-candidate semantics, current Windows check-only manifest old Go blob. Fix test assumptions and both exact git blob references; new SOURCE Actions and A/B/C remain.",
+  "why_now": "H452 native-functional run40991692192 recovery FAIL (96/98, two budget tests), win-linux run40991692231 assembly check-only FAIL before real driver due 2 Go blob hashes. Correct source-driven regression, not relax runtime assertions.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect exact H452 Actions and investigate first failures; A2-A5 original 0/30% off, Fixed idle, 120s sustained Auto; finish B Windows/Linux/native lifecycle and C network matrix/5min, measure p99/CPU/RSS/F-R-C.",
+  "next_action": "Collect H453 exact Recovery/native/Windows assembly and Windows Rust tests plus H452 continuing real runs. Then real A/B/C; do not infer success from preflight and short runs.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①H451 Linux Fixed stream Installed and Auto idle; H452 ACK 3dup gap, 8MTU stage0, sampled-k independent Auto, Windows Fixed no extra bootstrap, locally installed readback and retired hot state candidate unverified. ②A2-A5 OPEN. ③B true Windows↔Linux and lifecycle OPEN (ec1c failure retained). ④C capacity matrix/long 5min NOT_RUN. ⑤H452 new source Actions and follow-on necessary fixes/metrics OPEN."
+  "partial_summary": "①H451 Linux installed readback/idle + H452 ACK/Auto/Windows/stage0 submitted, H453 fixes exactly two unit tests + manifest SHA. ②A2-A5 OPEN. ③B Windows/Linux two-OS blocked until manifest and native source verification, old true failure retained. ④C/5min NOT_RUN. ⑤H452 recovery & preflight true FAIL retained and H453 revalidation pending; no final PASS."
 }
