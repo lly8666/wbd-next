@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "scope": "ACTUAL_SIGNED_WIN_NPCAP_WINTUN_WSL2_LINUX_RUST_RAW_TUN_ORIGINAL_GO_TLS_NATIVE_NORMAL_OFF",
+  "source_sha": "7a5d7e83823e96539d2a904a8193a85ec18df30d",
+  "action": 41060763175,
+  "artifact_id": 12979407518,
+  "zip_sha256": "18efe56f6c58321a9c5bda404a51ee8aac86c9f0c37b50f2d9c833d9e7180b4b",
+  "scenario": "plan027-c-normal-10m-25ms-loss0-60s",
+  "scenario_sha256": "666b857cc87a6652d2ac9367fd50a2208b543bfefb15d997abc01b35da196adf",
+  "result": "PASS_REAL_ONE_NOLOSS_SCENE_ONLY",
+  "duration_s": 60,
+  "kernel_tc": {
+    "eth0_netem_drops": 0,
+    "ifb_netem_drops": 0,
+    "one_way_delay_ms": 25
+  },
+  "offered_mbps": {
+    "windows": 9.9974,
+    "linux": 10
+  },
+  "first_delivered_mbps": {
+    "windows": 10,
+    "linux": 9.9974
+  },
+  "first_delivery_fraction": {
+    "windows": 1,
+    "linux": 1
+  },
+  "udp_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+  "tcp_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "windows_outer_wire_bytes": {
+    "first": 86402246,
+    "repair_accepted": 0,
+    "repair_uncertain": 0,
+    "control": 227836,
+    "repair_packets": 0,
+    "R_over_F": 0,
+    "R_over_F_plus_R_plus_C": 0
+  },
+  "linux_outer_wire_bytes": {
+    "first": 85007864,
+    "repair_accepted": 133,
+    "repair_uncertain": 0,
+    "original_frozen_retransmitted": 1,
+    "control": "NOT_EXTRACTED",
+    "R_over_F": 0.0000015645611328382514
+  },
+  "windows_cpu": {
+    "whole_process_cpu_seconds": 4.2031,
+    "elapsed_seconds": 78.437,
+    "avg_one_logical_core_percent": 5.359,
+    "peak_working_set_bytes": 41533440,
+    "peak_private_bytes": 37679104,
+    "scope": "GO_PLUS_RUST_PLUS_KERNEL"
+  },
+  "build_sha256": {
+    "windows_go_exe": "0584e40da19061e0dd7fd7f3f40300abe4685c0d95189af4a70411618601bfed",
+    "windows_rust_dll": "b6b487ea36cfb36267798fbcb7a97cf0e1b33ae3e659c9113e30db0d743d86d0"
+  },
+  "limitations": [
+    "No loss-tier opportunity proof; four H521 source-gated damage Actions are separate pending result (do not duplicate without verifying launch)",
+    "One Linux one-shot 133-byte original outer repair on 0% run is not zero but 0.000156% of F, not evidence of phantom sustained repair",
+    "One-way p99 not measured: uncalibrated OS clocks",
+    "No sustained Auto 120s grade, A5 CPU A/B, Windows B lifecycle, C matrix qualification from this source",
+    "Do not turn old 1644 or 6f5 scene evidence into source7a proof"
+  ]
+}
