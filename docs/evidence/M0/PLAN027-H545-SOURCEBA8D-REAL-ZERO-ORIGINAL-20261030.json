@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "ba8d999aa806800cfb562ed34dfd738a98fb45bc",
+  "result": "PASS_GENUINE_SOURCE_LOCKED_WIN_LINUX_NORMAL_ZERO_ONLY_FOUR_TIER_NOT_YET_RUN",
+  "action": 41124773657,
+  "artifact_id": 13010008709,
+  "zip_sha256": "425b6259d6dbb7af77bba8742c3906afffe8cec5e2d93a0df9774667a3929990",
+  "windows_binary": {
+    "id": 13009938342,
+    "zip_sha256": "188fd84969a802f67fb9075deb25066dd1c4d344e241f52a002fc66b1acbbd41"
+  },
+  "linux_binary": {
+    "id": 13009354130,
+    "zip_sha256": "dff6fbd247808b75ebed0c0d305ceeb4a7eee728e42a0465a0ee1e044b56f362"
+  },
+  "scene": "plan027-h539-normal-10m-250ms-loss0-60s",
+  "scenario_sha256": "51e76b771491436b4b2cf36f4897047d3708bd56d8738f98e1e21e54472d74bd",
+  "duration_s": 60,
+  "directions_mbps": {
+    "windows": 9.9974,
+    "linux": 10
+  },
+  "first_fraction": {
+    "windows": 1,
+    "linux": 1
+  },
+  "windows_outer": {
+    "F": 86397074,
+    "R_accepted": 0,
+    "R_uncertain": 0,
+    "C": 215130,
+    "repair_packets": 0
+  },
+  "linux_outer": {
+    "F": 85007731,
+    "R_accepted": 0,
+    "R_uncertain": 0,
+    "C": "NOT_EXPOSED",
+    "repair_packets": 0,
+    "shadow_outstanding": 0
+  },
+  "business": "PASS_REAL_WSL2_NPF_WINTUN_UDP_TCP_BOTH_DIRECTIONS",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "windows_process": {
+    "scope": "GO_PLUS_RUST_ONE_WIN32_PROCESS_NOT_ATTRIBUTABLE_TO_RUST_ALONE",
+    "cpu_total_s": 4.296875,
+    "observed_s": 77.266,
+    "avg_one_core_pct": 5.56,
+    "peak_working_set_bytes": 42283008
+  },
+  "kernel_tun": {
+    "tx_dropped": 0,
+    "rx_dropped": 0
+  },
+  "limitations": [
+    "Original Action success does not imply 1/5/15/30 loss-ratio target",
+    "No calibrated true one-way p99 or same-VM Go-vs-Rust CPU benefit; A5 pending",
+    "Next four loss tiers must reuse exact binaries from same build action, not recompile",
+    "Previous source100 four tier ratio FAIL preserved separately in H544"
+  ]
+}
