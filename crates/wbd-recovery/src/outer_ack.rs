@@ -48,6 +48,9 @@ pub struct OuterAckIndex {
     highest_sent_end: u64,
     cumulative_ack: u64,
     duplicate_acks: u8,
+    // One cumulative-only gap nomination per unchanged ACK: later sends
+    // alone are not a positive peer SACK and cannot prove new gaps.
+    nominated_stalled_ack: Option<u64>,
     last_sent_at: MonoNs,
     capacity: usize,
     sent: BTreeMap<u64, SentSpan>,
@@ -73,6 +76,7 @@ impl OuterAckIndex {
         Ok(Self {
             lane, epoch, highest_sent_end: initial_seq,
             cumulative_ack: initial_seq, duplicate_acks: 0,
+            nominated_stalled_ack: None,
             last_sent_at: MonoNs(0),
             capacity, sent: BTreeMap::new(),
         })
@@ -202,12 +206,19 @@ impl OuterAckIndex {
                 result.gap_candidates.push(span.pn);
             }
         }
-        if sacks.is_empty() && self.duplicate_acks>=3 {
+        if sacks.is_empty() && self.duplicate_acks>=3 &&
+            self.nominated_stalled_ack!=Some(ack) {
             if let Some((_,head))=self.sent.range(ack..).next() {
                 if self.sent.range(head.end..).next().is_some() &&
                     now.0.saturating_sub(head.at.0)>=reorder_guard_ns &&
                     !result.gap_candidates.contains(&head.pn) {
                     result.gap_candidates.push(head.pn);
+                    // Once this head expires, its successor is NOT a new
+                    // proven gap merely because old ACKs keep arriving.
+                    // Genuine SACK ranges can independently nominate later
+                    // missing spans; without negotiation we wait for real
+                    // cumulative progress instead of repairing on no loss.
+                    self.nominated_stalled_ack=Some(ack);
                 }
             }
         }
@@ -219,25 +230,36 @@ impl OuterAckIndex {
 mod tests {
     use super::*;
     #[test]
-    fn h501_stalled_ack_prunes_old_metadata_before_real_duplicate_gap(){
+    fn h505_stalled_ack_cannot_generate_fake_loss_after_old_shadow_expires(){
         let mut x=index(100,128);
-        for i in 0..100u64{
+        for i in 0..3u64{
             x.on_definitely_sent(RecordPn(i+1),100+i*10,10,
                 MonoNs(i*1_000_000)).unwrap();
         }
-        for _ in 0..2{
-            x.on_feedback(lane(),[7;16],100,&[],MonoNs(1_100_000_000),
-                20_000_000).unwrap();
-        }
-        assert_eq!(x.outstanding(),0);
-        x.on_definitely_sent(RecordPn(201),1100,10,MonoNs(1_200_000_000)).unwrap();
-        x.on_definitely_sent(RecordPn(202),1110,10,MonoNs(1_210_000_000)).unwrap();
-        let mut proposed=Vec::new();
-        for now in [1_250_000_000,1_260_000_000,1_270_000_000]{
-            proposed=x.on_feedback(lane(),[7;16],100,&[],MonoNs(now),
+        let mut first=Vec::new();
+        for now in [40_000_000,50_000_000,60_000_000]{
+            first=x.on_feedback(lane(),[7;16],100,&[],MonoNs(now),
                 20_000_000).unwrap().gap_candidates;
         }
-        assert_eq!(proposed,vec![RecordPn(201)]);
+        assert_eq!(first,vec![RecordPn(1)]);
+        let _=x.expire(MonoNs(1_100_000_000),900_000_000);
+        for i in 0..3u64{
+            x.on_definitely_sent(RecordPn(i+201),130+i*10,10,
+                MonoNs(1_200_000_000+i*1_000_000)).unwrap();
+        }
+        for now in [1_250_000_000,1_260_000_000,1_270_000_000]{
+            assert!(x.on_feedback(lane(),[7;16],100,&[],MonoNs(now),
+                20_000_000).unwrap().gap_candidates.is_empty());
+        }
+        // Only actual cumulative progress can re-arm the next eligible gap.
+        assert!(x.on_feedback(lane(),[7;16],130,&[],
+            MonoNs(1_280_000_000),20_000_000).unwrap()
+            .gap_candidates.is_empty());
+        for now in [1_300_000_000,1_310_000_000,1_320_000_000]{
+            first=x.on_feedback(lane(),[7;16],130,&[],MonoNs(now),
+                20_000_000).unwrap().gap_candidates;
+        }
+        assert_eq!(first,vec![RecordPn(201)]);
     }
 
     use wbd_types::TunnelKey;
