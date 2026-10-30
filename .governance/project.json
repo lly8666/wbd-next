@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "ACTIVE unfinished task R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT: PLAN027 section0 is whole-scope checklist. Implement M2 retirement/replacements, A, remaining B wiring/lifecycle, C matrix, required fixes/regressions and delivery. Each stage automatically advances. Only all obligations closed permits no further work; old READY, empty requests, docs-only plan or single capacity-limited family never do. Recover interrupted work first, preserve exact evidence.",
+  "next_decision": "ACTIVE unfinished task R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT: PLAN027 section0 is whole-scope checklist. Implement M2 retirement/replacements, A, remaining B wiring/lifecycle, C matrix, required fixes/regressions and delivery. Each stage automatically advances. Only all obligations closed permits no further work; old READY, empty requests, docs-only plan or single capacity-limited family never do. Recover interrupted work first, preserve exact evidence. Latest user allows legacy mature logic under PLAN027 section0.1; fix review's real wiring/unit/deadline defects, remove extra Fixed-quality Applied gate, reuse original tests, retain complete task scope.",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",
