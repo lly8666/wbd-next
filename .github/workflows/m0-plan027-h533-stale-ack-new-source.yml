@@ -1,0 +1,35 @@
+name: M0 PLAN027 H533 one new source true 0pct original native build
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h533-stale-ack-new-source.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  once-new-source:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h533-build]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: One original Go TLS Windows Linux SOURCE build and one true 0pct scene
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          c=read_scenario('scenarios/plan027-a2-normal-10m-250ms-0loss-60s.json')
+          assert c.get('public_mode','normal')=='normal' and c['duration_s']==60
+          assert all(c[d]['offered_mbps']==10 and c[d]['delay_ms']==250 and c[d]['loss_pct']==0 for d in ('windows_to_linux','linux_to_windows'))
+          print('H533_ONE_FROZEN_SOURCE_NORMAL_NOLOSS',c['scenario_sha256'])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-a2-normal-10m-250ms-0loss-60s.json \
+            -f perf_reuse_run_id="" -f perf_binary_source_sha=""
+          echo H533_ONE_NEW_SOURCE_BUILD_REAL_NOLOSS_SCENE_DISPATCHED

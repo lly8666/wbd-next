@@ -201,9 +201,25 @@
  struct PresentationAck {
      next:u64,
      future:Vec<(u64,u64)>,
+     stalled:Option<(u64,u64)>, // old appearance ACK head, first RX-batch time
  }
  impl PresentationAck {
-     fn new(next:u32)->Self{Self{next:u64::from(next),future:Vec::with_capacity(256)}}
+     fn new(next:u32)->Self{Self{next:u64::from(next),future:Vec::with_capacity(256),stalled:None}}
+     // Partial reliability of cosmetic appearance only: no M3 payload or
+     // Auto quality authority. One RX-batch check, never a DATA PTO timer.
+     fn abandon_stalled(&mut self,now:u64)->bool{
+         let Some((_,end))=self.future.last().copied()else{
+             self.stalled=None;return false
+         };
+         if self.stalled.is_none_or(|(seq,_)|seq!=self.next){
+             self.stalled=Some((self.next,now));return false
+         }
+         if now.saturating_sub(self.stalled.unwrap().1)<600_000_000{return false}
+         self.next=self.next.max(end);
+         self.future.clear(); // <=256 authenticated positive spans, no full-cache scan
+         self.stalled=None;
+         true
+     }
      fn sacks(&self)->([WireSack;4],usize){
          let mut blocks=[WireSack{start:0,end:0};4];
          let mut n=0;
@@ -255,6 +271,23 @@
          assert_eq!(x.verified(1000,1000),8000);
          assert!(x.future.is_empty());
          assert_eq!(x.verified(7000,10),8000);
+     }
+     #[test]
+     fn h533_old_gap_abandon_rearms_later_authentic_ack(){
+         let mut x=PresentationAck::new(100);
+         for i in 0..300u32{x.verified(200+i*20,10);}
+         assert_eq!(x.future.len(),256);
+         assert!(!x.abandon_stalled(1));
+         assert!(!x.abandon_stalled(500_000_000));
+         assert!(x.abandon_stalled(600_000_001));
+         assert_eq!(x.next,200+255*20+10);
+         assert!(x.future.is_empty());
+         x.verified(7000,10);
+         assert!(!x.abandon_stalled(600_000_002));
+         assert!(x.abandon_stalled(1_200_000_003));
+         assert_eq!(x.next,7010);
+         x.verified(7010,10);
+         assert_eq!(x.next,7020);
      }
      #[test]
      fn h515_authenticated_outer_gap_sack_and_then_real_cumulative(){
@@ -866,6 +899,12 @@
                       flush_tx_wake(&tx_notify,&counters);
                   }
               }
+          }
+          // Advance only on a genuine authenticated RX ready batch; this
+          // cannot create a timer, extra DATA, or an inner delivery ACK.
+          if sack_negotiated&&verified_batch&&ack.abandon_stalled(m2_clock().0){
+              counters.ack.store(ack.next as u32,Ordering::Release);
+              flush_tx_wake(&tx_notify,&counters);
           }
           if let Some((ack32,blocks,n))=last_outer_ack{
               let mut e=match lock_owner(&lane,&counters,LockDirection::Rx){

@@ -3916,12 +3916,14 @@ fn drain_data_turn_returns(arena:&mut Arena)->usize{
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),
     any(target_env="gnu",target_env="musl")))]
-struct OriginalPresentationAck{next:u64,future:Vec<(u64,u64)>}
+struct OriginalPresentationAck{
+    next:u64,future:Vec<(u64,u64)>,stalled:Option<(u64,u64)>
+}
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),
     any(target_env="gnu",target_env="musl")))]
 impl OriginalPresentationAck{
-    fn new(next:u64)->Self{Self{next,future:Vec::with_capacity(256)}}
+    fn new(next:u64)->Self{Self{next,future:Vec::with_capacity(256),stalled:None}}
     fn verified(&mut self,start:u64,len:usize)->u32{
         let Some(end)=start.checked_add(len as u64)else{return self.next as u32};
         if end<=self.next{return self.next as u32}
@@ -3947,6 +3949,21 @@ impl OriginalPresentationAck{
             self.future.remove(0);
         }
         self.next as u32
+    }
+    // Cosmetic appearance only: authentic future spans may abandon a
+    // persistent old hole; never marks an original M3 business byte delivered.
+    fn abandon_stalled(&mut self,now:u64)->bool{
+        let Some((_,end))=self.future.last().copied()else{
+            self.stalled=None;return false
+        };
+        if self.stalled.is_none_or(|(seq,_)|seq!=self.next){
+            self.stalled=Some((self.next,now));return false
+        }
+        if now.saturating_sub(self.stalled.unwrap().1)<600_000_000{return false}
+        self.next=self.next.max(end);
+        self.future.clear(); // <=256 bounded authentic positive spans
+        self.stalled=None;
+        true
     }
     fn sacks(&self)->Vec<wbd_platform::ipv4_tcp::SackRange32>{
         // One authenticated gap may have hundreds of subsequent records.
@@ -3980,6 +3997,23 @@ mod original_presentation_ack_tests{
         assert_eq!(x.verified(1000,1000),8000);
         assert!(x.future.is_empty());
         assert_eq!(x.verified(7000,20),8000); // duplicate never regresses
+    }
+    #[test]
+    fn h533_stale_gap_abandon_rearms_following_authenticated_opportunity(){
+        let mut x=OriginalPresentationAck::new(100);
+        for i in 0..300u64{x.verified(200+i*20,10);}
+        assert_eq!(x.future.len(),256);
+        assert!(!x.abandon_stalled(1));
+        assert!(!x.abandon_stalled(400_000_000));
+        assert!(x.abandon_stalled(600_000_001));
+        assert_eq!(x.next,200+255*20+10);
+        assert!(x.sacks().is_empty());
+        x.verified(7000,10);
+        assert!(!x.abandon_stalled(600_000_002));
+        assert!(x.abandon_stalled(1_200_000_003));
+        assert_eq!(x.next,7010);
+        x.verified(7010,10);
+        assert_eq!(x.next,7020);
     }
     #[test]
     fn h515_real_authenticated_gap_exposes_sack_until_contiguous(){
@@ -4227,6 +4261,11 @@ fn background_raw_once(
         }
     }
     #[cfg(feature="fec2_product_record")]
+    // Only M3-authenticated RX activity can advance a stale appearance ACK.
+    // Neither an untrusted raw ACK nor idle timer can trigger abandonment.
+    #[cfg(feature="fec2_product_record")]
+    let abandoned=sack_negotiated&&authenticated_at!=0&&
+        presentation_ack.abandon_stalled(loop_now().0);
     if let (Some(owner),Some(ack32))=(outer,outer_hint){
         // Once per bounded RX turn. This is an untrusted presentation hint
         // after TCP checksum and session tuple checks, not a Go/AEAD ACK.
@@ -4250,9 +4289,11 @@ fn background_raw_once(
         // One optional ACK-only packet per >=20ms real RX activity, only
         // while authenticated future bytes prove an actual outer hole.
         // No empty ACK traffic or extra TLS/AEAD exchange on a lossless link.
-        if now.saturating_sub(*last_sack_tx_ns)>=20_000_000 {
+        if abandoned||now.saturating_sub(*last_sack_tx_ns)>=20_000_000 {
             let sacks=presentation_ack.sacks();
-            if !sacks.is_empty(){
+            // Existing builder sends plain ACK if the old SACKs are all
+            // abandoned: no new wire control type or crypto record.
+            if !sacks.is_empty()||abandoned{
                 let seq=outer.and_then(|own|own.lock().ok().map(|o|
                     o.outer_ack.highest_sent_end() as u32));
                 if let Some(seq32)=seq{
