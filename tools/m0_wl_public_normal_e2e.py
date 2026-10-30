@@ -9,7 +9,7 @@ from m0_wl_n0_drop_delta import latest_counter, measured_delta
 from m0_wl_impairment_profile import get_profile
 from m0_wl_lock_profile import parse_native_lock_profile
 from m0_wl_plan027_linux_tun_fq import fq_delta
-from m0_wl_plan027_linux_tun_link import link_delta
+from m0_wl_plan027_linux_tun_link import link_delta,tun_queue_identity
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
 configured_mtu=configured_native_test_mtu()
@@ -437,9 +437,25 @@ print(json.dumps(result),flush=True)
     return None
   tun_fq_before=tun_fq_snapshot("before") if scenario else None
   tun_link_before=tun_link_snapshot("before") if scenario else None
+  tun_queue_lease=None
   owned=out/"wl-n0-netem-owned.json"
   try:
    report["WL_N0"]="ENVIRONMENT_OR_PRODUCT_NOT_YET_VERIFIED"
+   if scenario and scenario.get("linux_tun_txqlen_packets") is not None:
+    original=tun_queue_identity(tun_link_before)
+    requested=scenario["linux_tun_txqlen_packets"]
+    if original is None or original["txqlen"]!=500:
+     raise RuntimeError("H491_ORIGINAL_TUN_QUEUELEN_BASELINE_NOT_500")
+    wsl("ip","link","set","dev","wbdwl4","txqueuelen",str(requested),timeout=10)
+    tun_queue_lease={"ifindex":original["ifindex"],"baseline":500,"requested":requested}
+    applied=tun_queue_identity(tun_link_snapshot("configured"))
+    if applied is None or applied["ifindex"]!=original["ifindex"] or applied["txqlen"]!=requested:
+     raise RuntimeError("H491_TUN_QUEUELEN_DRIVER_READBACK_MISMATCH")
+    report["linux_tun_queue_control"]={"status":"ORIGINAL_WSL_TUN_QUEUE_APPLIED",
+      "original":500,"requested":requested,"ifindex":original["ifindex"],
+      "source":"REAL_IP_LINK_NOT_WINDOWS_NPF_OR_TC_FQ",
+      "scenario_sha256":scenario["scenario_sha256"]}
+    print("H491_ORIGINAL_TUN_QUEUE_ACTUAL "+json.dumps(report["linux_tun_queue_control"]),flush=True)
    print(netem("arm"),flush=True)
    # Existing 1Hz owner telemetry only: distinguish pre-run cumulative NPF
    # drops from measurements and never fabricate zero if no sample exists.
@@ -634,8 +650,20 @@ print(json.dumps(result),flush=True)
     report["WL_N0"]="PASS_SCOPED_300MS_0PCT_10MBPS_"+seconds+"S_BOTH_DIRECTIONS"
    print("WL_N0_TRUE_KERNEL_MEASUREMENT "+report["WL_N0"],flush=True)
   finally:
-   if owned.exists():
-    print(netem("cleanup"),flush=True)
+   try:
+    if tun_queue_lease is not None:
+     before=tun_queue_identity(tun_link_snapshot("pre-restore"))
+     if before is None or before["ifindex"]!=tun_queue_lease["ifindex"] or before["txqlen"]!=tun_queue_lease["requested"]:
+      raise RuntimeError("H491_TUN_QUEUELEN_FOREIGN_MUTATION_BLOCK_RESTORE")
+     wsl("ip","link","set","dev","wbdwl4","txqueuelen",str(tun_queue_lease["baseline"]),timeout=10)
+     restored=tun_queue_identity(tun_link_snapshot("restored"))
+     if restored is None or restored["ifindex"]!=tun_queue_lease["ifindex"] or restored["txqlen"]!=tun_queue_lease["baseline"]:
+      raise RuntimeError("H491_TUN_QUEUELEN_ORIGINAL_RESTORE_FAILED")
+     report["linux_tun_queue_control"]["restored"]="PASS_ORIGINAL_500_READBACK"
+     print("H491_ORIGINAL_TUN_QUEUE_RESTORED ifindex="+str(restored["ifindex"]),flush=True)
+   finally:
+    if owned.exists():
+     print(netem("cleanup"),flush=True)
  stop_windows(w)
  stop_marker="WBD_WINDOWS_GAME_NATIVE_DISCONNECTED" if is_game else "WBD_WINDOWS_NATIVE_DISCONNECTED_V1"
  if w.returncode!=0 or stop_marker not in (out/"client.log").read_text():raise RuntimeError("Windows native owned WAL Stop missing")

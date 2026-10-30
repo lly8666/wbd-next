@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "role": "M0",
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "original_product_source_sha": "f83874c30e0d918cfe070b67b39e208eea0da457",
+  "original_build_action": 41013628666,
+  "baseline": {
+    "action": 41020317561,
+    "artifact": 12961900166,
+    "scenario": "plan027-c-normal-100m-25ms-loss0-60s",
+    "duration_s": 60,
+    "offered_mbps": {
+      "windows": 99.9733,
+      "linux": 99.9997
+    },
+    "linux_original_udp_sent": 995250,
+    "windows_first_received": 994653,
+    "original_source_missing_windows": 597,
+    "linux_wbdwl4_txqlen": 500,
+    "linux_wbdwl4_tx_dropped_delta": 594,
+    "linux_wbdwl4_rx_dropped_delta": 0,
+    "linux_root_fq_drops_delta": 0,
+    "linux_link_errors": 0,
+    "owned_stop": "PASS_BOTH_OWNED",
+    "same_origin_business_udp_rtt_p99_ms": {
+      "windows": 110,
+      "linux": 124.501
+    },
+    "oneway_p99": "NOT_MEASURED"
+  },
+  "controlled": [
+    {
+      "linux_tun_txqlen_packets": 1024,
+      "source_reuse": true,
+      "scene": "plan027-c-normal-100m-qlen1024-loss0-60s",
+      "action": "PENDING"
+    },
+    {
+      "linux_tun_txqlen_packets": 2048,
+      "source_reuse": true,
+      "scene": "plan027-c-normal-100m-qlen2048-loss0-60s",
+      "action": "PENDING"
+    }
+  ],
+  "status": "SOURCE_ONLY_TWO_NATIVE_ACTIONS_PASSED_GATE_NOT_RESULTED",
+  "product_changed": false,
+  "production_default": "NO_CHANGE_UNTIL_CAUSAL_AND_RTT_VERIFIED",
+  "readiness": false
+}

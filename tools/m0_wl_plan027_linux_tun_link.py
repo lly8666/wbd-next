@@ -1,4 +1,17 @@
 """Real Linux original TUN interface RX/TX deltas, not Linux FQ qdisc."""
+def tun_queue_identity(rows, device="wbdwl4"):
+    """Source-owned original WSL TUN; fail closed on noncanonical interface."""
+    if not isinstance(rows,list):return None
+    matches=[r for r in rows if isinstance(r,dict) and r.get("ifname")==device]
+    if len(matches)!=1:return None
+    item=matches[0]
+    flags=item.get("flags")
+    if not isinstance(flags,list) or not {"UP","POINTOPOINT","NOARP"}.issubset(set(flags)):return None
+    qlen=item.get("txqlen");ifindex=item.get("ifindex");mtu=item.get("mtu")
+    if type(qlen) is not int or not 1<=qlen<=4096 or type(ifindex) is not int or ifindex<=0:
+        return None
+    if type(mtu) is not int or not 1280<=mtu<=1500 or item.get("link_type")!="none":return None
+    return {"ifindex":ifindex,"txqlen":qlen,"mtu":mtu}
 def link_delta(before,after,device="wbdwl4"):
     def read(rows):
         if not isinstance(rows,list):return None

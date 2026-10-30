@@ -46,6 +46,13 @@ def read_scenario(path):
             if type(n) is not int or not 1<=n<=100:raise ValueError("WL_V2_BAD_PACKET_WEIGHT")
             total+=n
         if total>100:raise ValueError("WL_V2_PACKET_MIX_TOO_LARGE")
+    tun_queue=cfg.get("linux_tun_txqlen_packets")
+    if tun_queue is not None:
+        if (mode!="normal" or cfg["duration_s"]!=60 or
+            type(tun_queue) is not int or tun_queue not in (1024,2048) or
+            any(cfg[d]["loss_pct"]!=0 for d in
+                ("windows_to_linux","linux_to_windows"))):
+            raise ValueError("WL_V2_TUN_QLEN_BOUNDED_NORMAL_LOSS0_ONLY")
     stages=cfg.get("impairment_stages")
     if stages is not None:
         if mode!="auto" or not isinstance(stages,list) or not 3<=len(stages)<=12:

@@ -1032,8 +1032,6 @@ jobs:
             result/wl-public/wl-ab-v2/
             result/wl-public/wl-native-abba/
             result/wl-public/wl-v2-kernel-stage-*.json
-            result/wl-public/wl-v2-linux-tun-fq-*.json
-            result/wl-public/wl-v2-linux-tun-link-*.json
             result/wl-public/wl-v2-scenario.json
             result/wl-public/outer-repair-verdict.json
             result/wl-public/windows-binary-manifest.json

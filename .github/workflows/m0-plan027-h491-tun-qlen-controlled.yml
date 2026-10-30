@@ -1,0 +1,70 @@
+name: M0 PLAN027 H491 original Linux TUN 1024 2048 controlled kernel A B
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h491-tun-qlen-controlled.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  independent-two-native:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-h491]') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Actual baseline 594 kernel TUN drops, exact product binary and guarded two tests
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          product='f83874c30e0d918cfe070b67b39e208eea0da457'
+          build_run=41013628666
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build_run" --jq .head_sha)" = "$product"
+          gh api "repos/$GH_REPO/actions/runs/$build_run/artifacts" --paginate --jq '.artifacts[].name' > "$RUNNER_TEMP/proven"
+          grep -Fx "m0-wl-windows-product-binaries-$product" "$RUNNER_TEMP/proven"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/proven"
+          python -m unittest -q tests.test_m0_wl_perf_v2_config tests.test_m0_wl_plan027_linux_tun_link
+          python -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_wl_plan027_linux_tun_link.py
+          mkdir -p "$RUNNER_TEMP/baseline"
+          gh run download 41020317561 -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/baseline"
+          python - <<'PY'
+          import os,json,pathlib
+          from tools.m0_wl_plan027_linux_tun_link import link_delta,tun_queue_identity
+          from tools.m0_wl_plan027_linux_tun_fq import fq_delta
+          from tools.m0_wl_perf_v2_config import read_scenario
+          p=pathlib.Path(os.environ['RUNNER_TEMP'])/'baseline'
+          r=json.loads((p/'report.json').read_text())
+          assert r['linux_binary_source']=='f83874c30e0d918cfe070b67b39e208eea0da457'
+          assert r['stop']=='PASS_BOTH_OWNED' and r['WL_V2']['owned_stop']=='PASS_BOTH_OWNED'
+          assert r['WL_V2']['status']=='MEASURED_BOTH_OS_KERNEL'
+          before=json.loads((p/'wl-v2-linux-tun-link-before.json').read_text())
+          after=json.loads((p/'wl-v2-linux-tun-link-after.json').read_text())
+          link=link_delta(before,after)
+          assert link['status']=='MEASURED_ORIGINAL_LINUX_TUN_IP_LINK'
+          assert link['tx_dropped_delta']==594 and link['rx_dropped_delta']==0,link
+          assert tun_queue_identity(before)['txqlen']==500
+          fb=json.loads((p/'wl-v2-linux-tun-fq-before.json').read_text())
+          fa=json.loads((p/'wl-v2-linux-tun-fq-after.json').read_text())
+          fq=fq_delta(fb,fa)
+          assert fq['status']=='MEASURED_ORIGINAL_LINUX_TUN_FQ_KERNEL' and fq['drops_delta']==0
+          lost=r['wl_n0_measured']['linux']['sent_packets']-r['wl_n0_measured']['windows']['received_first_packets']
+          assert lost==597,lost
+          for q in (1024,2048):
+              c=read_scenario('scenarios/plan027-c-normal-100m-qlen'+str(q)+'-loss0-60s.json')
+              assert (c['public_mode'],c['duration_s'],c['linux_tun_txqlen_packets'])==('normal',60,q)
+              for side in ('windows_to_linux','linux_to_windows'):
+                  assert (c[side]['offered_mbps'],c[side]['delay_ms'],c[side]['loss_pct'])==(100,25,0)
+              print('H491_KERNEL_NATIVE_SCENE',q,c['scenario_sha256'])
+          print('H491_ORIGINAL_TUN_BASELINE_LOSS597_KERNEL_DROP594_FQ0_PROVED')
+          PY
+          for q in 1024 2048; do
+            gh workflow run m0-wl-public-normal-full.yml --ref main \
+              -f public_mode=normal -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="scenarios/plan027-c-normal-100m-qlen"$q"-loss0-60s.json" \
+              -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+            echo "H491_INDEPENDENT_SIGNED_NATIVE_STARTED queue=$q binary=$product"
+          done

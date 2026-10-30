@@ -1,8 +1,0 @@
-# H489 — Real Windows missing source already absent by original Linux TUN reader
-
-Original 100Mbps/25ms/loss0 source f83874c3 Action41013628666, first Windows missing1767; exact same-product normal10M control Action41015331347 zero missing. Linux original server TX_CHAIN TUN source reads 994650 at100M versus Linux rate app sent995179; control TUN reads100795 versus rate app sent99551, with +1244 background valid TUN IPv4. Subtract that control background => **1773** source packets missing BEFORE (or at) Linux TUN read, versus Windows original source missing **1767**. The remaining 6 is nonbusiness count variation, not per-packet proof.
-
-Windows original authenticated Rust/Wintun delivered minus Windows business first is 1247 vs control1256 (difference -9), Windows global UDP receive minus business first1139 vs control1149 (difference -10). No downstream 1767-sized extra deficit. Original Linux server explicitly reports `V4_PUBLIC_TUN_FQ interface=wbdwl4 maxrate_mbps=600 flow_limit_packets=256 readback=kernel_fq_600Mbit`. Root FQ 256-packet per-flow backlog under 100Mbps source bursts could account for intermittent pre-TUN drops. **No real FQ drop counter collected yet.**
-
-H489 adds **real** Linux `tc -s -j qdisc show dev wbdwl4` beginning/end measurements and immutable artifact readbacks, typed unknown/reset instead of fabricated zero. Dispatch separate genuine Windows NPF/Wintun ↔ WSL2 original Go TLS/Rust (prebuilt f838 source Action41013628666) 60s C100 all1200B versus 75M original mixed. Source mix differs, but receiver product binary and root FQ remain identical. Actual request vs offer, Linux root FQ dropped, Windows missing source, CPU and owned Stop must be inspected before causal claim. One-way p99 not measured. PLAN027 partial.
-

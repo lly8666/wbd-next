@@ -1,6 +1,13 @@
 import unittest
-from tools.m0_wl_plan027_linux_tun_link import link_delta
+from tools.m0_wl_plan027_linux_tun_link import link_delta,tun_queue_identity
 class LinuxTunLinkTests(unittest.TestCase):
+    def test_canonical_original_wsl_tun_lease_identity(self):
+        original=[{"ifname":"wbdwl4","ifindex":3,"mtu":1329,"txqlen":500,
+                   "link_type":"none","flags":["POINTOPOINT","MULTICAST","NOARP","UP"]}]
+        self.assertEqual(tun_queue_identity(original),{"ifindex":3,"txqlen":500,"mtu":1329})
+        self.assertIsNone(tun_queue_identity([dict(original[0],ifname="foreign")]))
+        self.assertIsNone(tun_queue_identity([dict(original[0],flags=["UP"])]))
+        self.assertIsNone(tun_queue_identity(original*2))
     def test_real_linux_interface_tx_and_rx_separate(self):
         a=[{"ifname":"wbdwl4","stats64":{"rx":{"packets":10,"dropped":1,"errors":0},"tx":{"packets":20,"dropped":2,"errors":0}}}]
         b=[{"ifname":"wbdwl4","stats64":{"rx":{"packets":15,"dropped":4,"errors":0},"tx":{"packets":200,"dropped":12,"errors":0}}}]

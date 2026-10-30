@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "scenario_id": "plan027-c-normal-75m-mixed-loss0-60s",
+  "scenario_id": "plan027-c-normal-100m-qlen2048-loss0-60s",
   "public_mode": "normal",
   "duration_s": 60,
   "warmup_s": 5,
@@ -8,7 +8,7 @@
   "tun_mtu": 1400,
   "seed": 20261030,
   "windows_to_linux": {
-    "offered_mbps": 75,
+    "offered_mbps": 100,
     "delay_ms": 25,
     "loss_pct": 0,
     "tc_rate_mbps": null,
@@ -32,7 +32,7 @@
     ]
   },
   "linux_to_windows": {
-    "offered_mbps": 75,
+    "offered_mbps": 100,
     "delay_ms": 25,
     "loss_pct": 0,
     "tc_rate_mbps": null,
@@ -54,5 +54,6 @@
         "packets_weight": 50
       }
     ]
-  }
+  },
+  "linux_tun_txqlen_packets": 2048
 }
