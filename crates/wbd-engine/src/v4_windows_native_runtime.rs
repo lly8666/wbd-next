@@ -604,6 +604,14 @@
      e.auto_actor=Some(actor);
      Ok(())
  }
+ // Only the once-per-new-RX SACK revision can justify an ACK-only
+ // frame in a continuously backlogged DATA sender; otherwise do not
+ // interfere with original M1 definite-copy readiness and DATA piggyback.
+ fn native_ack_only_due(sack_negotiated:bool,pending_sack:bool,
+     cumulative_changed:bool,business_active:bool)->bool{
+     (sack_negotiated&&pending_sack)||
+         (!business_active&&cumulative_changed)
+ }
  fn tx_loop(cfg:WbdWinNativeAttachV1,lane:Arc<Mutex<Entry>>,
      mut tun:WintunRx,mut npf:NpcapTx,stop:Arc<WakeEvent>,
      notify:Arc<WakeEvent>,counters:Arc<Counters>,fixed:bool,auto:bool,
@@ -655,17 +663,22 @@
                  native_auto_tick(&cfg,&lane,&counters)?;
                  next_auto_check=m2_clock().0.saturating_add(2_000_000_000);
              }
-             if work>0||control||parity{return Ok(false)}
+             // SACK is not on the DATA carrier and must not starve while
+             // TUN continuously yields complete 8x4 ready batches. RX
+             // publishes at most one authenticated-future snapshot /20ms.
+             // Normal cumulative ACK remains DATA-piggybacked during work:
+             // no periodic ACK-only traffic when only DATA is flowing.
+             let active=work>0||control||parity;
              let next_ack=counters.ack.load(Ordering::Acquire);
-             let sack_changed=sack_negotiated &&
-                 counters.sack_rev.load(Ordering::Acquire)!=
+             let sack_pending=counters.sack_rev.load(Ordering::Acquire)!=
                  counters.sack_sent_rev.load(Ordering::Acquire);
-             if next_ack!=counters.ack_sent.load(Ordering::Acquire)||
-                 sack_changed{
+             if native_ack_only_due(sack_negotiated,sack_pending,
+                 next_ack!=counters.ack_sent.load(Ordering::Acquire),active){
                  send_presentation_ack(&cfg,&mut npf,&counters,&mut ip_id,
                      sack_negotiated)?;
                  return Ok(false)
              }
+             if active{return Ok(false)}
              let timeout={
                  let e=lock_owner(&lane,&counters,LockDirection::Tx)?;
                  let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
@@ -1086,6 +1099,18 @@
          assert_eq!(c.profile.tx.samples.load(Ordering::Relaxed),1);
          assert_eq!(c.profile.rx.samples.load(Ordering::Relaxed),0);
          assert_eq!(*lock.lock().unwrap(),0);
+     }
+     #[test]
+     fn h517_negotiated_positive_sack_is_not_starved_by_full_native_business_batch(){
+         // Continuous TUN ready business formerly returned before all
+         // presentation ACK-only checks; genuine SACK could never escape.
+         assert!(native_ack_only_due(true,true,false,true));
+         assert!(native_ack_only_due(true,true,true,true));
+         // No background pure ACK flood on lossless, busy Normal source.
+         assert!(!native_ack_only_due(true,false,true,true));
+         assert!(!native_ack_only_due(false,true,false,true));
+         assert!(!native_ack_only_due(false,false,false,false));
+         assert!(native_ack_only_due(false,false,true,false));
      }
      #[test]
      fn bounded_rx_tx_wake_coalescing_preserves_single_and_full_batches(){
