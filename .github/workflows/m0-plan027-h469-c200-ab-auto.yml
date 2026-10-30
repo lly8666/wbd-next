@@ -1,0 +1,70 @@
+# H469: one SOURCE-verified reused build, three separate truly native Actions.
+name: M0 PLAN027 H469 C200 source gate and A5 same VM AB plus Auto natural descent
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h469-c200-ab-auto.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  c200-a5-auto-long:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-h469]') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Validate genuine C100 and original prebuilt source, dispatch 3 independent native tests
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          product='a61eef334068512b00a1db3137a51f3d0489020c'
+          build_run=41002998813
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build_run" --jq .head_sha)" = "$product"
+          gh api "repos/$GH_REPO/actions/runs/$build_run/artifacts" --paginate --jq '.artifacts[].name' > "$RUNNER_TEMP/plan027-h469-built-artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$product" "$RUNNER_TEMP/plan027-h469-built-artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/plan027-h469-built-artifacts"
+          mkdir -p "$RUNNER_TEMP/c100"
+          gh run download 41004888921 -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/c100"
+          python - <<'PY'
+          import json,os,pathlib
+          from tools.m0_wl_perf_v2_config import read_scenario
+          d=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'c100/report.json').read_text())
+          v=d['WL_V2']
+          assert d['linux_binary_source']=='a61eef334068512b00a1db3137a51f3d0489020c' and d['mode_public']=='PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal'
+          assert d['stop']=='PASS_BOTH_OWNED' and v['owned_stop']=='PASS_BOTH_OWNED'
+          assert v['scenario_id']=='plan027-c-normal-100m-25ms-loss0-60s' and v['status']=='MEASURED_BOTH_OS_KERNEL'
+          for side in ('windows','linux'):
+              assert v['offered_mbps'][side]>=95 and v['first_delivery_fraction'][side]>=.99
+              assert d['wl_n0_measured'][side]['invalid_packets']==0 and d['wl_n0_measured'][side]['duplicate_packets']==0
+          for name,rate in [('plan027-c-normal-200m-25ms-loss0-60s',200),('plan027-c-normal-10m-25ms-loss0-60s',10)]:
+              c=read_scenario('scenarios/'+name+'.json')
+              assert c['public_mode']=='normal' and c['duration_s']==60
+              for direction in ('windows_to_linux','linux_to_windows'):
+                  assert (c[direction]['offered_mbps'],c[direction]['delay_ms'],c[direction]['loss_pct'])==(rate,25,0)
+              print('H469_SCENARIO_LOCKED',name,c['scenario_sha256'])
+          print('H469_SOURCE_C100_OWNED_STOP_REAL_BOTH_DELIVERY_GATE',v['offered_mbps'],v['first_delivery_fraction'])
+          PY
+          # C200 capacity family: only after real new-source C100 at threshold.
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-c-normal-200m-25ms-loss0-60s.json \
+            -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+          echo H469_C200_AFTER_C100_DISPATCHED
+          # A5 CPU A/B reuses ONE same original Go/Rust binary pair on the
+          # SAME native signed-driver VM sequential B=>A; no second build.
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=true \
+            -f perf_scenario_file=scenarios/plan027-c-normal-10m-25ms-loss0-60s.json \
+            -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+          echo H469_A5_SAME_VM_AB_SOURCE_REUSED_DISPATCHED
+          # Existing 119s actual original native Auto spontaneous one-grade
+          # regression (not a multistage-loss A4 replacement).
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=auto-adaptive -f run_n0=false -f perf_ab=false \
+            -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
+          echo H469_AUTO_119S_NATURAL_GRADE_SOURCE_REUSED_DISPATCHED

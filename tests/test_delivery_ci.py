@@ -12,6 +12,15 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class DeliveryCiTests(unittest.TestCase):
+ def test_plan027_v2_ab_exact_prebuilt_product_same_vm_source_guard(self):
+  workflow=(pathlib.Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text()
+  self.assertIn("if len(modes)!=1 or os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1':",workflow)
+  self.assertIn("if ab and not v2:",workflow)
+  self.assertIn("if ab and modes!=['normal']:",workflow)
+  self.assertIn('if($sha -ne $env:GITHUB_SHA)',workflow)
+  self.assertIn('if($LASTEXITCODE -ne 0 -or $changes.Count -gt 0)',workflow)
+  self.assertIn('WL_V2_REUSED_WINDOWS_NATIVE_EXACT_BINARY_SHA_PASS',workflow)
+
     @classmethod
     def setUpClass(cls):
         cls.workflow = yaml.load((ROOT / ".github/workflows/m0-wl-public-normal-full.yml").read_text(),

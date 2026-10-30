@@ -205,8 +205,8 @@ jobs:
           if reuse:
               if not re.fullmatch(r'[1-9][0-9]{5,16}',reuse) or not re.fullmatch(r'[0-9a-f]{40}',binary):
                   raise ValueError('WL_V2_REUSE_REQUIRES_NUMERIC_RUN_AND_EXACT_BINARY_SOURCE')
-              if len(modes)!=1 or ab or os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1':
-                  raise ValueError('WL_SOURCE_REUSE_REQUIRES_ONE_MODE_NO_AB_OR_N0')
+              if len(modes)!=1 or os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1':
+                  raise ValueError('WL_SOURCE_REUSE_REQUIRES_ONE_MODE_NO_N0')
               if v2 and modes[0] in ('auto-revision','auto-adaptive'):
                   raise ValueError('WL_V2_REUSE_REQUIRES_SUPPORTED_PUBLIC_MODE')
               print('WL_SINGLE_MODE_PREBUILT_SOURCE',modes[0],reuse,binary)

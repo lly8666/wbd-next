@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "date": "2026-10-30",
+  "binary_source_sha": "a61eef334068512b00a1db3137a51f3d0489020c",
+  "tests": [
+    {
+      "run_id": 41004888921,
+      "artifact_id": 12954817739,
+      "scene": "plan027-c-normal-100m-25ms-loss0-60s",
+      "mode": "normal",
+      "offered_mbps": {
+        "windows": 99.9532,
+        "linux": 99.9793
+      },
+      "first_fraction": {
+        "windows": 0.999587,
+        "linux": 1
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "result": "MEASURED_BOTH_OS_KERNEL",
+      "windows_native_product_cpu_one_core_pct": 7.759,
+      "windows_generator_one_core_pct": 82.212,
+      "windows_business_udp_rtt_p99_ms": 63,
+      "linux_business_udp_rtt_p99_ms": 66.063,
+      "oneway_p99": "NOT_MEASURED"
+    },
+    {
+      "run_id": 41004890965,
+      "artifact_id": 12954992256,
+      "scene": "wl-outer-repair-fixed-10m-250ms-loss30-60s",
+      "mode": "fixed",
+      "offered_mbps": {
+        "windows": 9.9973,
+        "linux": 10
+      },
+      "first_fraction": {
+        "windows": 0.996283,
+        "linux": 0.999266
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "result": "MEASURED_BOTH_OS_KERNEL",
+      "note": "original sampled Fixed30 Windows 10pct first counterexample repaired under H466 source; one pass no general capacity claim"
+    }
+  ],
+  "h469": [
+    "C200 only after verified C100",
+    "A5 same-VM B/A binary reuse opt-in fixture",
+    "Auto natural 119s complementary not staged A4"
+  ],
+  "pending": [
+    "C50 300s",
+    "A4 actual multistage loss",
+    "B lifecycle",
+    "C weak matrix",
+    "F/R/C and p99"
+  ]
+}
