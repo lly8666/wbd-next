@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "date": "2026-10-30",
+  "recovered_from": {
+    "previous_checkpoint": "d14744e8486527306960221a99deb537a00801c3",
+    "main_head_on_recovery": "88b9eb783e0590783866b7486d872fcff53ab135",
+    "new_commits": [
+      "787ad4c900f3bae867c5c9556c4702339deef8cb",
+      "d14744e8486527306960221a99deb537a00801c3",
+      "88b9eb783e0590783866b7486d872fcff53ab135"
+    ]
+  },
+  "product_source": "787ad4c900f3bae867c5c9556c4702339deef8cb",
+  "build_and_test_run": 41025962277,
+  "run_conclusion": "success",
+  "native_test_job_id": 123965426266,
+  "artifact": {
+    "name": "m0-wl-full-public-normal-direct",
+    "id": 12963619338,
+    "zip_sha256": "16c9f16eec0763cddc1ac4fa5a1bc8fddadc50cda95119750975f406c78a1c47",
+    "windows_binary_manifest": {
+      "exe_sha256": "f46774f445e817e2ff3c4a44dafe5b54e8bc6e8bccc5975846897602b2fca587",
+      "dll_sha256": "cc1bbab221974dc6fa31500bcae129d961dcdb0549715d6f2db21b089e9d648f"
+    }
+  },
+  "scenario": {
+    "id": "plan027-c-normal-100m-25ms-loss0-60s",
+    "sha256": "737eaf5b2b2da784a0cd740ab41ed9525e00e30c7a46d224d47b81d30f110f15",
+    "duration_s": 60,
+    "oneway_delay_ms": 25,
+    "netem_loss_pct": 0
+  },
+  "actual": {
+    "linux_sent": 995240,
+    "windows_received_first": 995229,
+    "windows_missing_first": 11,
+    "windows_missing_inside": 8,
+    "windows_missing_range": {
+      "start": 89051,
+      "end_exclusive": 89059
+    },
+    "windows_remaining_unobserved_tail": 3,
+    "windows_sent": 994983,
+    "linux_received_first": 994983,
+    "linux_missing_first": 0,
+    "offered_mbps": {
+      "windows": 99.9749,
+      "linux": 99.9991
+    },
+    "first_delivery_fraction": {
+      "windows": 0.999989,
+      "linux": 1
+    },
+    "original_linux_tun_tx_dropped": 0,
+    "original_linux_tun_fq_dropped": 0,
+    "linux_udp_socket_drops": 0,
+    "windows_host_ipv4_udp_in_errors": 0,
+    "business_udp_rtt_p99_ms": {
+      "windows": 140,
+      "linux": 147.156
+    },
+    "generator_cpu_pct_one_core": {
+      "windows": 29.728,
+      "linux": 81.741
+    },
+    "stop": "PASS_BOTH_OWNED",
+    "original_go_kernel_readback_log": "V4_PUBLIC_TUN_TXQLEN role=server interface=wbdwl4 packets=2048 readback=REAL_ORIGINAL_LINUX_TUN"
+  },
+  "verdict": {
+    "source_true_build": "PASS",
+    "real_both_os": "PASS_WITH_11_MISSING_FIRST",
+    "strict_zero_first": "FAIL",
+    "long_300s_new_source": "NOT_RUN",
+    "original_h493_300s_preproduct": "PASS_OTHER_SOURCE_ONLY"
+  },
+  "gate_defect": "H495 and H496 workflow checks expected wl-v2-linux-tun-link-before.json inside the result artifact, but run 41025962277 did not upload that file; original Go readback logged only after actual ip -j validate, and genuine kernel counters are in report.json; use these existing actual-source witnesses without inventing missing artifact.",
+  "other_scope": "Neither ACK/FEC/Auto nor long-duration or physical-platform PASS inferred. No calibrated cross-host one-way p99. Preserve 11 missing and earlier exact-zero source-f838 measurement separately.",
+  "pending": [
+    "H495 source-reuse independent C10/Fixed30/Auto; native results not yet claimed",
+    "H496 strict gate cannot dispatch 300s while new-source C100 has 11 missing",
+    "A4 Auto 120s, A5 CPU, B lifecycle modes, C weak-network 10-200Mbps and stable long test; PLAN027 NOT COMPLETED"
+  ]
+}
