@@ -56,6 +56,9 @@ M0_AUTHORIZED_CURRENT = {
     # M4 four-entry manifest; the live PLAN020 manifest pins these exact blobs.
     "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go": "2901f24535e369046845802aede6eac3db77c5d1",
     "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows_test.go": "53d06d454cba7cedd0e9575de9446936b30aac5c",
+    # M0 own-current hash is already pinned in manifest-plan020-m0.json.
+    # Original frozen M4 donor/manifest remain byte-exact.
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io.go": "96f24e506ea765e9719b252e850a94e4896f18b4",
 }
 
 def object_sha(data):

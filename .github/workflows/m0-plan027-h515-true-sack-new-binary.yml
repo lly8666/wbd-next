@@ -2,7 +2,7 @@ name: M0 PLAN027 H515 one new-source original negotiated SACK no-loss build
 on:
   push:
     branches: [main]
-    paths: [.github/workflows/m0-plan027-h515-true-sack-new-binary.yml]
+    paths: [.github/workflows/m0-plan027-h515-true-sack-new-binary.yml, crates/wbd-engine/src/v4_windows_native_runtime.rs]
 permissions: {contents: read, actions: write}
 jobs:
   one-source-true-win-linux-native:

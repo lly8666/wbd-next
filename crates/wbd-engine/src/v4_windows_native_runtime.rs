@@ -5,6 +5,7 @@
  use super::*;
  use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU32, AtomicU64, Ordering};
  use std::thread::{self, JoinHandle};
+ use std::time::Duration;
  use std::ffi::c_void;
  use wbd_platform::windows_native_io::{
      self as io, NpcapFns, NpcapRx, NpcapTx, WintunFns,
