@@ -36,7 +36,6 @@ jobs:
           gh run download "$build_run" -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/c100"
           python - <<'PY'
           import json,os,pathlib
-          from tools.m0_wl_plan027_linux_tun_link import tun_queue_identity
           from tools.m0_wl_plan027_loss_verdict import verdict
           from tools.m0_wl_perf_v2_config import read_scenario
           p=pathlib.Path(os.environ['RUNNER_TEMP'])/'c100'
@@ -46,8 +45,12 @@ jobs:
           assert v['status']=='MEASURED_BOTH_OS_KERNEL'
           assert v['scenario_id']=='plan027-c-normal-100m-25ms-loss0-60s'
           assert all(v['offered_mbps'][x]>=95 for x in ('windows','linux'))
-          q=tun_queue_identity(json.loads((p/'wl-v2-linux-tun-link-before.json').read_text()))
-          assert q is not None and q['txqlen']==2048,q
+          # This run's ZIP includes the native TUN kernel counters and the
+          # original Go log, but not the transient ip -j JSON test snapshot.
+          # Go emits the marker only after strict kernel readback validation.
+          owned=r['linux_tun_link_kernel']
+          assert owned['status']=='MEASURED_ORIGINAL_LINUX_TUN_IP_LINK',owned
+          assert owned['tx_dropped_delta']==0,owned
           text=(p/'mode-results'/'normal'/'server.log').read_text(errors='replace')
           assert 'V4_PUBLIC_TUN_TXQLEN role=server interface=wbdwl4 packets=2048 readback=REAL_ORIGINAL_LINUX_TUN' in text
           result=verdict(r)
