@@ -70,5 +70,7 @@
     "B full lifecycle and capacity C 300s/200M not closed",
     "new-source C100 60s had 11 first misses; exact-zero 300s gate not launched"
   ],
-  "physical": "NOT_RUN"
+  "physical": "NOT_RUN",
+  "source_sha": "0b7391a182f05947419c1211f01058b4798370a3",
+  "result": "PARTIAL"
 }
