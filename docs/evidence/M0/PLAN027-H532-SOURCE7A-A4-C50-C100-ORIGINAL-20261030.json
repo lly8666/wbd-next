@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "product_source_sha": "7a5d7e83823e96539d2a904a8193a85ec18df30d",
+  "product_build_action": 41060763175,
+  "scope": "TRUE_SIGNED_WINDOWS_NPF_WINTUN_GO_TLS_RUST_NATIVE_LINUX_WSL2_RAW_TUN",
+  "source_locked_results": [
+    {
+      "action": 41066945697,
+      "artifact_id": 12983111794,
+      "zip_sha256": "7861275bf44e7328e612b0dc79400108bdde4e2938609ea0674cf871fda10272",
+      "scenario": "plan027-a4-auto-10m-staged-240s",
+      "scenario_sha256": "940e6e713f81397996e156507affe6309bd482262569df1542cd4d0570a815ba",
+      "first_windows": 0.999985,
+      "first_linux": 0.996644,
+      "offered_mbps_each": 10,
+      "duration_s": 240,
+      "windows": {
+        "F": 719892385,
+        "R": 0,
+        "C": 171328,
+        "CPU_onecore_pct": 7.225,
+        "peak_rss": 43544576,
+        "requested_revision": 5,
+        "applied_revision": 5,
+        "R_over_F": 0,
+        "R_over_total": 0
+      },
+      "linux": {
+        "F": 650897788,
+        "R": 1242,
+        "real_retransmits": 2,
+        "requested_revision": 5,
+        "applied_revision": 5,
+        "profile": 1,
+        "quality_valid_downgrade": 4,
+        "R_over_F": 0.0000019081336930276985
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "observed_stages_seconds": [
+        0,
+        20.5,
+        40.579,
+        65.469,
+        95.547
+      ],
+      "auto_grade": "QUALIFIED_ONE_RUNG_DOWN_WITHIN_120S_AFTER_SUFFICIENT_SUSTAINED_REAL_SAMPLES",
+      "limitations": [
+        "Rust Linux source7a log shows 30s/4096 VALID downstage profile 5→4→3→2→1; final authentic Linux readback requested=5 applied=5 pending=false. Rust Windows owner readback revision5 applied=5, client log revisions2→4,3→6,4→5,5→4. Duplicated transient fast_first=0 UNKNOWN while slow cohort valid; no global guarantee of all k/p99",
+        "Loss impairments intentionally staged, aggregate first<99.9% may be valid, not lossless profile",
+        "No calibrated OS one-way p99 or full GUI lifecycle"
+      ]
+    },
+    {
+      "action": 41067313066,
+      "artifact_id": 12984380383,
+      "zip_sha256": "01ac376946d71574bae8e855373d995bf48d47c0e195495faf418976bcb16e10",
+      "scenario": "plan027-c-normal-50m-25ms-loss0-60s",
+      "scenario_sha256": "928b3babbe8790e0a32ba46959a0e15c6ca1d5ebf82c5daa3702f3c68aa575c3",
+      "first_windows": 0.999974,
+      "first_linux": 1,
+      "first_mbps_windows": 49.9997,
+      "first_mbps_linux": 49.9866,
+      "offered_mbps_each": 50,
+      "duration_s": 60,
+      "windows": {
+        "F": 431288112,
+        "R": 0,
+        "C": 235582,
+        "CPU_onecore_pct": 11.254,
+        "peak_rss": 42205184,
+        "R_over_F": 0,
+        "R_over_total": 0
+      },
+      "linux": {
+        "F": 424414506,
+        "R": 133,
+        "real_retransmits": 1,
+        "R_over_F": 3.133728892857399e-7
+      },
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "action": 41067319629,
+      "artifact_id": 12983161645,
+      "zip_sha256": "ab520f631e391c03abe4c916c0a0aad5798a5f5ecfe110883c84a94e9baddef7",
+      "scenario": "plan027-c-normal-100m-25ms-loss0-60s",
+      "scenario_sha256": "737eaf5b2b2da784a0cd740ab41ed9525e00e30c7a46d224d47b81d30f110f15",
+      "first_windows": 0.999992,
+      "first_linux": 1,
+      "first_mbps_windows": 99.9773,
+      "first_mbps_linux": 99.9749,
+      "offered_mbps_each": 100,
+      "duration_s": 60,
+      "windows": {
+        "F": 862420217,
+        "R": 625,
+        "C": 188794,
+        "CPU_onecore_pct": 59.152,
+        "peak_rss": 42565632,
+        "R_over_F": 7.247047178162336e-7,
+        "R_over_total": 7.245455811254119e-7
+      },
+      "linux": {
+        "F": 848488842,
+        "R": 0,
+        "real_retransmits": 0,
+        "R_over_F": 0
+      },
+      "stop": "PASS_BOTH_OWNED"
+    }
+  ],
+  "qualification": "A4_ONE_STEP_AUTO_DOWNGRADE_TRUE_PRODUCT_AND_STOP_PASS; C_NORMAL_50_AND_100_TRUE_KERNEL_NOLOSS_PASS",
+  "limitations": [
+    "No general p99: uncalibrated OS clock",
+    "One representative 240s Auto, does not prove every loss profile or physical user workload",
+    "C100 avg Windows whole EXE 59.152% one logical core, peak RSS42.6MB, no Linux TUN drop; next C200 capacity-conditional only",
+    "Source7a C50 300s separate Action41067316465 still in flight and NOT_PROMOTED",
+    "A5 Go legacy steady A Action41065131823 genuine early Windows exit/Stop NOT_RUN, not comparable CPU; preserve FAIL",
+    "Game2/4 source7a and original Linux lifecycle B still in flight"
+  ]
+}

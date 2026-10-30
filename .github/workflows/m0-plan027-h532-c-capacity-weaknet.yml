@@ -1,0 +1,72 @@
+name: M0 PLAN027 H532 gated C200 Fixed50 weak100 original source7a
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h532-c-capacity-weaknet.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  qualify-source7a-100-then-200:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h532-c-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Check actual 100M host capacity and Fixed10 business then independent C scenes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          src=7a5d7e83823e96539d2a904a8193a85ec18df30d
+          build=41060763175
+          actual100=41067319629
+          fixed10=41065117167
+          for run in "$build" "$actual100" "$fixed10"; do
+            test "$(gh api "repos/$GH_REPO/actions/runs/$run" --jq .conclusion)" = success
+          done
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .head_sha)" = "$src"
+          gh run download "$actual100" -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/h532-c100"
+          gh run download "$fixed10" -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/h532-fixed10"
+          python3 - <<'PY'
+          import json,os,pathlib
+          from tools.m0_wl_perf_v2_config import read_scenario
+          temp=pathlib.Path(os.environ['RUNNER_TEMP'])
+          c=json.loads((temp/'h532-c100'/'report.json').read_text())
+          assert c['linux_binary_source']=='7a5d7e83823e96539d2a904a8193a85ec18df30d'
+          assert c['WL_V2']['scenario_id']=='plan027-c-normal-100m-25ms-loss0-60s'
+          assert c['stop']=='PASS_BOTH_OWNED'
+          assert min(c['WL_V2']['first_delivery_fraction'].values())>=0.999
+          obs=c['runtime_observability']['windows_original_process']
+          assert obs['avg_one_logical_core_pct']<90 and obs['peak_working_set_bytes']<200_000_000,obs
+          assert c['linux_tun_link_kernel']['rx_dropped_delta']==0
+          assert c['linux_tun_fq_kernel']['drops_delta']==0
+          f=json.loads((temp/'h532-fixed10'/'report.json').read_text())
+          assert f['linux_binary_source']==c['linux_binary_source'] and f['stop']=='PASS_BOTH_OWNED'
+          assert f['WL_V2']['scenario_id']=='wl-outer-repair-fixed-10m-250ms-loss30-60s'
+          assert f['fixed_linux_native_installed'] is True
+          rows=[
+              ('normal','plan027-c-normal-200m-25ms-loss0-60s',200,0),
+              ('fixed','plan027-c-fixed-50m-25ms-loss0-60s',50,0),
+              ('normal','wl-outer-repair-100m-50ms-loss5-60s',100,5),
+          ]
+          for mode,name,rate,loss in rows:
+              s=read_scenario('scenarios/'+name+'.json')
+              assert s.get('public_mode','normal')==mode
+              assert s['duration_s']==60
+              assert all(s[d]['offered_mbps']==rate and s[d]['loss_pct']==loss for d in ('windows_to_linux','linux_to_windows'))
+              print('H532_SOURCE7A_APPROVED_ONE_C_SCENE',mode,name,s['scenario_sha256'])
+          print('H532_C100_REAL_CAPACITY_59_PERCENT_CPU_AND_FIXED10_NATIVE_PASS')
+          PY
+          while read -r mode scene; do
+            gh workflow run m0-wl-public-normal-full.yml -R "$GH_REPO" --ref main \
+              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="$scene" \
+              -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
+            echo "H532_ONE_ACTION_ONE_SCENE $mode $scene"
+          done <<'EOF'
+          normal scenarios/plan027-c-normal-200m-25ms-loss0-60s.json
+          fixed scenarios/plan027-c-fixed-50m-25ms-loss0-60s.json
+          normal scenarios/wl-outer-repair-100m-50ms-loss5-60s.json
+          EOF

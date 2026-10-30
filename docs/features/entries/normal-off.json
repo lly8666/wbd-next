@@ -39,7 +39,8 @@
     "docs/devlog/M0/20261028-PLAN026-WIN-RX-WAKE-COALESCING-150M.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-NPCAP-ZEROCOPY-RX-BORROW-150M.md",
     "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ABBA-ROLLBACK.md",
-    "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ROLLBACK-NATIVE-RESULT.md"
+    "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ROLLBACK-NATIVE-RESULT.md",
+    "docs/evidence/M0/PLAN027-H532-SOURCE7A-A4-C50-C100-ORIGINAL-20261030.json"
   ],
   "verification": [
     {
@@ -167,6 +168,13 @@
       "status": "FAIL",
       "source_sha": "b1bc9315be23a78b2af65c52c2d6f53bbf858aa2",
       "evidence": "docs/evidence/M0/PLAN026-WIN-NPF-ABBA-ROLLBACK-NEW-SOURCE150M-FAIL-20261028.json"
+    },
+    {
+      "platform": "Windows Server x64 signed NPF/Wintun + Linux/amd64 WSL2 actual TLS/Rust native",
+      "scope": "H532 SOURCE7a signed Windows NPF/Wintun original Go TLS↔Linux Rust native WSL2 50M/25ms/0%/60s and 100M/25ms/0%/60s, bidirectional first 99.9974–100%, 99.9992–100%, authentic TCP/UDP and both owned Stop. 100M process CPU59.152% 1logicalcore, peakRSS42.6MB, TUN zero drop. Not 200M nor long yet; prior true damaged source7a H528 separate.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "7a5d7e83823e96539d2a904a8193a85ec18df30d",
+      "evidence": "docs/evidence/M0/PLAN027-H532-SOURCE7A-A4-C50-C100-ORIGINAL-20261030.json"
     }
   ],
   "limitations": [
