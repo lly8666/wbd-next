@@ -1,3 +1,4 @@
+# H541 repeat only because H539 old unit assumed oldest SACK first; new source fixes unit ordering.
 name: M0 PLAN027 H539 simple half-gap source real 0pct build once
 on:
   push:

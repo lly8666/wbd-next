@@ -196,8 +196,8 @@
      }
  }
 // Only authenticated, successfully delivered TCP ranges may advance
- // presentation ACK. Late SACK-like ranges stay bounded; M2 is the real
- // reliability protocol and does not derive acknowledgement from this.
+ // presentation ACK. Future SACK ranges are bounded; M3 business delivery
+ // and AEAD replay remain independent of cosmetic ACK progress.
  struct PresentationAck {
      next:u64,
      future:Vec<(u64,u64)>,
@@ -288,6 +288,20 @@
          assert_eq!(x.next,7010);
          x.verified(7010,10);
          assert_eq!(x.next,7020);
+     }
+     #[test]
+     fn h541_sack_prefers_recent_authenticated_future_without_forged_ack(){
+         let mut x=PresentationAck::new(100);
+         assert_eq!(x.verified(200,10),100);
+         assert_eq!(x.verified(300,10),100);
+         let (blocks,n)=x.sacks();
+         assert_eq!(n,2);
+         assert_eq!((blocks[0].start,blocks[0].end),(300,310));
+         assert_eq!((blocks[1].start,blocks[1].end),(200,210));
+         assert_eq!(x.next,100);
+         assert_eq!(x.verified(100,100),210);
+         assert_eq!(x.verified(210,90),310);
+         assert_eq!(x.sacks().1,0);
      }
      #[test]
      fn h515_authenticated_outer_gap_sack_and_then_real_cumulative(){

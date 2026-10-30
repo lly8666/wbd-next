@@ -4024,7 +4024,10 @@ mod original_presentation_ack_tests{
         assert_eq!(x.verified(1400,100),1000);
         let sacks=x.sacks();
         assert_eq!(sacks.len(),2);
-        assert_eq!((sacks[0].start,sacks[0].end),(1200,1300));
+        // First block is newest authenticated positive span (RFC SACK
+        // ordering); older ACK head no longer monopolizes repeated hints.
+        assert_eq!((sacks[0].start,sacks[0].end),(1400,1500));
+        assert_eq!((sacks[1].start,sacks[1].end),(1200,1300));
         assert_eq!(x.verified(1000,200),1300);
         assert_eq!(x.sacks().len(),1);
         assert_eq!(x.verified(1300,100),1500);
