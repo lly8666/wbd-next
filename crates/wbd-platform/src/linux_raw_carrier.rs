@@ -573,9 +573,10 @@ impl ScopedRawIpv4Rx{
             let begin=n-parsed.ciphertext.len();
             let size=parsed.ciphertext.len();
             let seq=parsed.seq32;
+            let ack32=parsed.presentation_ack32; // copy before mutating same slab
             slot.copy_within(begin..n,0);
             outcome.entries[i]=RawReadyEntry::Unauthenticated{
-                cipher_len:size,seq32:seq,ack32:parsed.presentation_ack32};
+                cipher_len:size,seq32:seq,ack32};
         }
         if outcome.observed==MAX_READY_RAW && buffers.len()>MAX_READY_RAW{
             outcome.status=RawReadyStatus::AtCap;
@@ -789,9 +790,10 @@ impl ScopedRawIpv4Rx {
                         Ok(p)=>{
                             let begin=len-p.ciphertext.len();
                             let n=p.ciphertext.len();let seq32=p.seq32;
+                            let ack32=p.presentation_ack32;
                             slot.copy_within(begin..len,0);
                             RawReadyEntry::Unauthenticated{
-                                cipher_len:n,seq32,ack32:p.presentation_ack32}
+                                cipher_len:n,seq32,ack32}
                         },
                         Err(reason)=>{
                             // Pure carrier ACK is a scoped optional cache hint,
