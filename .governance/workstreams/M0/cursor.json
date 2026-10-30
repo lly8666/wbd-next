@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 446,
-  "checkpoint_sha": "f1a49ce2367458dc78e085b338400a64db23b485",
+  "sequence": 447,
+  "checkpoint_sha": "08ebf0e2e0e27f055a19e658f05808f691d08fce",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H446 Windows Fixed bounded authenticated START/CLOSE reciprocity source candidate: after real NPF source+parity, max two START windows, inbound fixed unique DATA only within peer START/CLOSE; AUTO unchanged, Normal/off rejects. Native compile/B cross-OS still pending.",
-  "why_now": "H441 true Windows/WSL fixed failed old M2 Applied, H444 Linux Fixed now uses bounded v2 startup but Windows rejected Fixed v2 as Auto-only. H445 corrected test gates and qualified-vs-smoke labels.",
+  "current_task": "H447 exact Linux H444 source real Fixed/Auto 64 test both first-delivered but old new smoke Pending-only oracle failed: client readback Fixed=applied1/pendingfalse, Auto=applied1/profile5/pendingfalse. Now require BOTH original roles coherent Applied/Pending readback; no 64-packet Auto quality grade claim. Exact source CI pending.",
+  "why_now": "H445 parallel 40987887943 source H444 real Fixed and Auto first app PASS, native config readback client already applied1 (not pending), a meaningful changed product behavior; old script falsely insisted pending0 after H443. Test must not assume either pending or applied.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H446 Windows Rust and Linux/Windows same-source B results first. Correct first fail; implement exact Fixed authentic Applied evidence on both sides, then stage A/B/C/5min.",
+  "next_action": "Verify H447 both-role real readback independently and H446 Windows native/WSL. If valid, label only scoped Fixed bootstrap positive with authenticated code path; no Auto dynamics PASS. Then complete PLAN027 A/B/C/5min.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①New low-rate Auto and Linux Fixed bootstrap source; Windows matching bounded Fixed candidate H446, native/real pending. ②A1-A5 incomplete ③B true 2OS long full/lifecycle unproven, ④C+5min unrun ⑤fixes/tests/evidence open."
+  "partial_summary": "①Linux Fixed bootstrap H444 native PASS, real readback applied1 client in FEC Fixed/Auto 64, but both roles not yet independently verified; Windows Fixed H446 candidate. ②A partial ③B Linux app/Stop partial and true 2OS lifecycle OPEN ④C/5min NOT_RUN ⑤H447 cross-consumer false Pending assertion correction, source CI OPEN."
 }

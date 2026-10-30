@@ -385,11 +385,11 @@ jobs:
             if [[ "$mode" == fec-fixed ]]; then
               # Genuine FEC first app delivery is independent of
               # pending authenticated bootstrap Applied evidence.
-              marker="M0_PLAN027_PUBLIC_FIXED_REAL_FIRST_DELIVERY_STOP_PENDING_ACK mode=$mode"
+              marker="M0_PLAN027_FIXED_REAL_FIRST_DELIVERY_STOP_CONFIG_READBACK mode=$mode"
             else
               # A sparse 64-record Auto smoke is not a mature 1024-PN
               # Quality cohort; do not mislabel its pending readback PASS.
-              marker="M0_PLAN027_AUTO_SHORT_BURST_DELIVERY_STOP_PENDING_QUALITY_NOT_QUALIFIED mode=$mode"
+              marker="M0_PLAN027_AUTO_SHORT_BURST_DELIVERY_STOP_CONFIG_READBACK_QUALITY_UNQUALIFIED mode=$mode"
             fi
             grep -Fq "$marker" "fixed-kernel-result/v4-public-$mode-real-cli.log"
             grep -Fq "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode=$mode delivered=64" \

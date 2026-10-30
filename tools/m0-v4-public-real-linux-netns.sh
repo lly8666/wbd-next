@@ -279,24 +279,28 @@ for role in ("client","server"):
 PY
 elif [[ "$FEC" == 1 ]];then
   grep -q "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode=$MODE delivered=$PACKETS" "$ART/public-v4-normal-business.log"
-  for role in client server;do
-    if [[ "$MODE" == fec-fixed ]];then
-      # PLAN027 retirement cutover: real native FEC first-delivery is
-      # independently checked, but legacy M2 cannot prove revision Applied.
-      # Pending is truthful until a separate authenticated bootstrap witness.
-      expected="V4_PUBLIC_FEC2_READBACK role=$role mode=fixed requested=1 applied=0 profile=[0-6] pending=true"
-    else
-      # A 64-record Auto burst cannot fill the new 1024-PN sender window.
-      # No CLOSE/mature matched Quality is guaranteed: pending is correct,
-      # not a product failure and never evidence of an applied Auto policy.
-      expected="V4_PUBLIC_FEC2_READBACK role=$role mode=auto requested=1 applied=0 profile=[0-6] pending=true"
-    fi
-    if ! grep -Eq "$expected" "$TMP/$role.log";then
-      echo "M0_PUBLIC_V4_FEC2_READBACK_MISSING role=$role mode=$MODE" >&2
-      grep -E 'V4_PUBLIC_FEC2_READBACK|V4_PUBLIC_M2_OUTER|V4_PUBLIC_NATIVE_STOP' "$TMP/$role.log" >&2 || true
-      exit 1
-    fi
-  done
+  # A short cohort may be PENDING or genuinely APPLIED after a mature
+  # AEAD/replay-verified v2 summary. Require readback coherence on BOTH
+  # original Go/Rust roles; do not declare Auto long-window convergence.
+  python3 - "$TMP" "$MODE" <<'PY'
+import pathlib,re,sys
+root=pathlib.Path(sys.argv[1]);selected=sys.argv[2]
+mode={"fec-fixed":"fixed","fec-auto":"auto"}[selected]
+for role in ("client","server"):
+    text=(root/(role+".log")).read_text()
+    pat=(r"V4_PUBLIC_FEC2_READBACK role="+role+r" mode="+mode+
+         r" requested=1 applied=([01]) profile=([0-6]) pending=(true|false)")
+    rows=re.findall(pat,text)
+    if not rows:
+        raise AssertionError("authentic product readback missing "+role+
+            " "+mode)
+    applied,profile,pending=rows[-1]
+    assert (applied=="1" and pending=="false") or (
+        applied=="0" and pending=="true"),(role,rows[-1])
+    print("M0_PLAN027_FEC_NATIVE_CONFIG_READBACK role=%s mode=%s applied=%s profile=%s pending=%s"%
+          (role,mode,applied,profile,pending))
+PY
+
 elif [[ "$LOSS" == 1 ]];then
   # True 1pct UDP loss is counted by distinct first echo and missing,
   # rather than requiring unrecoverable original UDP to have 512 echoes.
@@ -356,9 +360,9 @@ print(marker)
 PY
 elif [[ "$FEC" == 1 ]];then
   if [[ "$MODE" == fec-fixed ]];then
-    echo "M0_PLAN027_PUBLIC_FIXED_REAL_FIRST_DELIVERY_STOP_PENDING_ACK mode=$MODE both_original_go_roles=1 first_app=$PACKETS original_TLS=1 old_M2_retired=1 applied_unverified=1 source_parity=original_native"
+    echo "M0_PLAN027_FIXED_REAL_FIRST_DELIVERY_STOP_CONFIG_READBACK mode=$MODE both_original_go_roles=1 first_app=$PACKETS original_TLS=1 old_M2_retired=1 qualified_applied_not_inferred_from_app=1 source_parity=original_native"
   else
-    echo "M0_PLAN027_AUTO_SHORT_BURST_DELIVERY_STOP_PENDING_QUALITY_NOT_QUALIFIED mode=$MODE both_original_go_roles=1 first_app=$PACKETS original_TLS=1 matched_quality_required_for_applied=1 source_parity=original_native"
+    echo "M0_PLAN027_AUTO_SHORT_BURST_DELIVERY_STOP_CONFIG_READBACK_QUALITY_UNQUALIFIED mode=$MODE both_original_go_roles=1 first_app=$PACKETS original_TLS=1 matched_quality_required_for_applied=1 source_parity=original_native"
   fi
 elif [[ "$GAME" != 0 ]];then
   echo "M0_PUBLIC_ORIGINAL_GO_V4_GAME_REAL_TLS_M4_DAMAGED_LANE_NO_HOL_STOP_PASS lanes=$GAME udp_app=$PACKETS auth_go=1 native_m4=1 lane1_underlay_dropped=1 stop_drained=1 production_off=1"
