@@ -1,0 +1,47 @@
+name: M0 PLAN027 H503 source-pinned outer repair tier measurements
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h503-repair-tier-reuse.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  dispatch-independent-native-scenes:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h503]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Reuse H501 genuine Windows and Linux binaries; four independent loss-tier Actions
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          source_sha=0b7391a182f05947419c1211f01058b4798370a3
+          build_run=41032003068
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build_run" --jq .head_sha)" = "$source_sha"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build_run" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$build_run/artifacts" --jq '.artifacts[].name' > "$RUNNER_TEMP/proven-artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$source_sha" "$RUNNER_TEMP/proven-artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/proven-artifacts"
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          for p in (1,5,10,30):
+              f=f'scenarios/wl-outer-repair-50m-150ms-loss{p}-60s.json'
+              s=read_scenario(f)
+              assert s['public_mode']=='normal' and s['duration_s']==60, s
+              for direction in ('windows_to_linux','linux_to_windows'):
+                  assert s[direction]['offered_mbps']==50 and s[direction]['loss_pct']==p
+              print('H503_SOURCE_FROZEN_SCENE',f,s['scenario_sha256'])
+          PY
+          for p in 1 5 10 30; do
+            gh workflow run m0-wl-public-normal-full.yml --ref main \
+              -f public_mode=normal -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="scenarios/wl-outer-repair-50m-150ms-loss${p}-60s.json" \
+              -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$source_sha"
+            echo "H503_DISPATCHED_ONE_NATIVE_SCENE loss_pct=$p source=$source_sha"
+          done
