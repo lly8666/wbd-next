@@ -281,9 +281,10 @@ elif [[ "$FEC" == 1 ]];then
   grep -q "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_REAL_GROUP_APP_FIRST_DELIVERY_PASS mode=$MODE delivered=$PACKETS" "$ART/public-v4-normal-business.log"
   for role in client server;do
     if [[ "$MODE" == fec-fixed ]];then
-      # Historical Fixed gate still requires the old mature receipt witness.
-      # PLAN027 has not retired this production dependency yet.
-      expected="V4_PUBLIC_FEC2_READBACK role=$role mode=fixed requested=1 applied=1 profile=[0-6] pending=false"
+      # PLAN027 retirement cutover: real native FEC first-delivery is
+      # independently checked, but legacy M2 cannot prove revision Applied.
+      # Pending is truthful until a separate authenticated bootstrap witness.
+      expected="V4_PUBLIC_FEC2_READBACK role=$role mode=fixed requested=1 applied=0 profile=[0-6] pending=true"
     else
       # A 64-record Auto burst cannot fill the new 1024-PN sender window.
       # No CLOSE/mature matched Quality is guaranteed: pending is correct,
@@ -337,22 +338,25 @@ repairs=sum(counter(role,'original_frozen_retransmitted') for role in ('client',
 # >=1024 total driver first-copies was the old false no-loss assumption.
 assert client_copied>=offered,(client_copied,offered)
 assert server_copied>=delivered,(server_copied,delivered)
-assert all(n>0 for n in acks),acks
+# Old per-record WBC4 Receipt is RETIRED. A real first-copy, raw TCP
+# ACK-like presentation or kernel qdisc drop is not authenticated delivery.
+# Preserve the measured 0/positive counts, forbid only fabricated credit.
+assert all(n==0 for n in acks),acks
 assert all('V4_PUBLIC_NATIVE_STOP_DRAINED role='+role in read(role+'.log')
     for role in ('client','server')),"owned Stop did not drain"
 marker=(f"M0_V4_PUBLIC_REAL_1PCT_LOSS_ACCOUNTED_STOP_PASS"
  f" original_tls=1 offered={offered} first_unique_delivered={delivered}"
  f" missing={missing} tc_client_drop={drops_by_side[0]} tc_server_drop={drops_by_side[1]}"
  f" kernel_first_copy_client={client_copied} kernel_first_copy_server={server_copied}"
- f" authenticated_m2_acks_client={acks[0]} authenticated_m2_acks_server={acks[1]}"
+ f" retired_m2_reports_client={acks[0]} retired_m2_reports_server={acks[1]}"
  f" outer_repair_attempts_observed={repairs} outer_repair_delivery_not_required=1"
  f" Stop_drained_both=1")
-(out/'v4-public-1pct-authentic-M2-recovery.log').write_text(marker+'\n')
+(out/'v4-public-1pct-no-M2-real-delivery.log').write_text(marker+'\n')
 print(marker)
 PY
 elif [[ "$FEC" == 1 ]];then
   if [[ "$MODE" == fec-fixed ]];then
-    echo "M0_PUBLIC_ORIGINAL_GO_V4_FEC2_APPLIED_REAL_AUTH_M2_GROUP_M4_TUN_STOP_PASS mode=$MODE both_original_go_roles=1 first_app=$PACKETS original_TLS=1 M2_mature=1 source_parity=original_native FEC2_production_off=1"
+    echo "M0_PLAN027_PUBLIC_FIXED_REAL_FIRST_DELIVERY_STOP_PENDING_ACK mode=$MODE both_original_go_roles=1 first_app=$PACKETS original_TLS=1 old_M2_retired=1 applied_unverified=1 source_parity=original_native"
   else
     echo "M0_PLAN027_AUTO_SHORT_BURST_DELIVERY_STOP_PENDING_QUALITY_NOT_QUALIFIED mode=$MODE both_original_go_roles=1 first_app=$PACKETS original_TLS=1 matched_quality_required_for_applied=1 source_parity=original_native"
   fi
