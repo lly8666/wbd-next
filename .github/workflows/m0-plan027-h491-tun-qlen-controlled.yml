@@ -1,3 +1,4 @@
+# H492 restore checked-in fq kernel parser omitted from previous tree, rerun true native gated pair.
 name: M0 PLAN027 H491 original Linux TUN 1024 2048 controlled kernel A B
 on:
   push:
@@ -27,8 +28,8 @@ jobs:
           gh api "repos/$GH_REPO/actions/runs/$build_run/artifacts" --paginate --jq '.artifacts[].name' > "$RUNNER_TEMP/proven"
           grep -Fx "m0-wl-windows-product-binaries-$product" "$RUNNER_TEMP/proven"
           grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/proven"
-          python -m unittest -q tests.test_m0_wl_perf_v2_config tests.test_m0_wl_plan027_linux_tun_link
-          python -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_wl_plan027_linux_tun_link.py
+          python -m unittest -q tests.test_m0_wl_perf_v2_config tests.test_m0_wl_plan027_linux_tun_link tests.test_m0_wl_plan027_linux_tun_fq
+          python -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_wl_plan027_linux_tun_link.py tools/m0_wl_plan027_linux_tun_fq.py
           mkdir -p "$RUNNER_TEMP/baseline"
           gh run download 41020317561 -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/baseline"
           python - <<'PY'

@@ -1,0 +1,3 @@
+# PLAN027 H492: tracked actual Linux FQ parser preflight repair
+
+H491 workflow Action41021427046 cheap source gate failed after 20 successful unit tests, before any native/VM process: ModuleNotFoundError for tools.m0_wl_plan027_linux_tun_fq, because parser had not been added to the tracked main tree even though the experiment/harness imports it. H492 adds its source and four tests: actual Linux tc -s -j *top-level* fq counters, nested variant, fail closed missing/reset. Adds parser to explicit source gate, re-triggers same binary f838 original Windows/WSL 100Mbps zero-loss controlled Linux TUN qlen1024/2048. No product change or permanent qdisc FQ modification; double-readback original qlen500 restore required. H491 failure preserved, real outcomes PENDING.
