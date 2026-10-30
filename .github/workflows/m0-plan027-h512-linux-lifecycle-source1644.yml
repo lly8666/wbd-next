@@ -1,0 +1,124 @@
+name: M0 PLAN027 H512 exact SOURCE1644 original TLS Rust 2-netns lifecycle
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h512-linux-lifecycle-source1644.yml]
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: One actual original Linux lifecycle scene only
+        type: choice
+        required: true
+        options: [idle100, dead106, reconnect]
+permissions: {contents: read, actions: write}
+jobs:
+  launch-independent:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-h512-launch]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch three independent source-frozen real Linux netns life cycle Actions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for scene in idle100 dead106 reconnect; do
+            gh workflow run m0-plan027-h512-linux-lifecycle-source1644.yml --ref main -f scenario="$scene"
+            echo "H512_INDEPENDENT_SOURCE1644_ORIGINAL_LINUX_LIFECYCLE_SCENE $scene"
+          done
+  one-native-scenario:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          repository: lly8666/wbd-next
+          run-id: 41041996161
+          name: m0-plan024-linux-product
+          github-token: ${{ github.token }}
+          path: frozen/fixed-build
+      - name: Existing binary manifest, original TLS source and exact unchanged native 2-netns fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p fixed-kernel-result lifecycle-result
+          python3 - <<'PY'
+          import pathlib,json,hashlib
+          p=pathlib.Path('frozen/fixed-build')
+          m=json.loads((p/'manifest.json').read_text())
+          assert m['source_sha']=='1644df34d241d487c5c5eb704a1a0a2e5f506f5e'
+          assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
+          assert all((p/name).is_file() and hashlib.sha256((p/name).read_bytes()).hexdigest()==digest
+                     for name,digest in m['sha256'].items())
+          print('H512_REUSE_EXACT_ORIGINAL_GO_RUST_LINUX_SOURCE1644',m['sha256'])
+          PY
+          test "$(git hash-object tools/m0-v4-public-real-linux-netns.sh)" = 5cb784f7a13056367e43f9a887734038afdf24c6
+          chmod +x frozen/fixed-build/wbd-v4-client frozen/fixed-build/wbd-v4-server
+          case "${{ inputs.scenario }}" in
+            idle100) patch=tools/m0_plan026_linux_real_idle_keepalive.py;;
+            dead106) patch=tools/m0_plan026_linux_real_dead_blackhole.py;;
+            reconnect) patch=tools/m0_plan026_linux_real_reconnect_after_dead.py;;
+            *) exit 2;;
+          esac
+          python3 "$patch" tools/m0-v4-public-real-linux-netns.sh lifecycle-result/scenario.sh
+          test -s lifecycle-result/scenario.sh
+      - name: Real Linux original two-netns kernel TLS Rust Health and lifecycle scene
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          WBD_V4_PUBLIC_MODE=fec-auto bash lifecycle-result/scenario.sh frozen/fixed-build >lifecycle-result/real.log 2>&1 || {
+            tail -80 lifecycle-result/real.log >&2
+            exit 1
+          }
+          case "${{ inputs.scenario }}" in
+            idle100)
+              grep -Fq 'M0_PLAN026_LINUX_REAL_TLS_RUST_HEALTH_IDLE_100S_KERNEL_APP_RESUME_PASS' fixed-kernel-result/public-v4-normal-business.log
+              grep -Fq 'V4_PUBLIC_NATIVE_STOP_DRAINED' lifecycle-result/real.log || true
+              ;;
+            dead106)
+              grep -Fq 'M0_PLAN026_LINUX_REAL_TLS_RUST_NO_AUTH_BLACKHOLE_100PCT_DEAD_NOT_DORMANT_PASS' lifecycle-result/real.log
+              ;;
+            reconnect)
+              grep -Fq 'M0_PLAN026_LINUX_REAL_100PCT_DEAD_RESTORED_NEW_APP_AUTO_TLS_RUST_RECONNECT_PASS' lifecycle-result/real.log
+              ;;
+          esac
+          python3 - <<'PY'
+          import os,pathlib,json,hashlib
+          scene=os.environ['SCENE']
+          p=pathlib.Path('lifecycle-result')
+          text=(p/'real.log').read_text()
+          tags={'idle100':'M0_PLAN026_LINUX_REAL_TLS_RUST_HEALTH_IDLE_100S_KERNEL_APP_RESUME_PASS',
+                'dead106':'M0_PLAN026_LINUX_REAL_TLS_RUST_NO_AUTH_BLACKHOLE_100PCT_DEAD_NOT_DORMANT_PASS',
+                'reconnect':'M0_PLAN026_LINUX_REAL_100PCT_DEAD_RESTORED_NEW_APP_AUTO_TLS_RUST_RECONNECT_PASS'}
+          proof=text+((pathlib.Path('fixed-kernel-result')/'public-v4-normal-business.log').read_text()
+                      if (pathlib.Path('fixed-kernel-result')/'public-v4-normal-business.log').exists() else '')
+          assert tags[scene] in proof
+          result={'source_sha':'1644df34d241d487c5c5eb704a1a0a2e5f506f5e','run_id':int(os.environ['GITHUB_RUN_ID']),
+                  'scenario':scene,'genuine_two_netns':True,'original_credentials_tls':True,'native_kernel_rust':True,
+                  'first_app_or_dead':tags[scene],'result':'PASS_SCOPED',
+                  'limitations':'No Windows/physical or unobserved FIN/DORMANT/A-B promotion',
+                  'log_sha256':hashlib.sha256((p/'real.log').read_bytes()).hexdigest()}
+          (p/'result.json').write_text(json.dumps(result,indent=2)+'\n')
+          print('H512_SOURCE1644_INDEPENDENT_TRUE_LIFECYCLE_PASS',json.dumps(result))
+          PY
+        env:
+          SCENE: ${{ inputs.scenario }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan027-h512-native-${{ inputs.scenario }}-${{ github.run_id }}
+          path: |
+            lifecycle-result/result.json
+            lifecycle-result/real.log
+            fixed-kernel-result/public-v4-normal-business.log
+            fixed-kernel-result/dead-blackhole-client-qdisc.txt
+            fixed-kernel-result/dead-blackhole-server-qdisc.txt
+          if-no-files-found: warn
+          retention-days: 30
