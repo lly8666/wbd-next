@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 441,
-  "checkpoint_sha": "016b249a6359b488a01df66d544daa2b918c0ee5",
+  "sequence": 442,
+  "checkpoint_sha": "6e6ade25e21e8d1a95c53420f68e5a483fb1ec61",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H441 first-fail fix of 016b249a: feature card 16574B>16KiB, two Windows Fixed6 old per-record M2 positive tests conflict with intentional retirement; converted to firstsend/PN/Seq/Stop negative controls. Source CI pending.",
-  "why_now": "Actions40985293756 catalog size FAIL and 40985293722/40985293773 Windows owner two old M2 receipt-dependent assertions FAIL, while 40985293700 native functional group PASS. Old 40985294022 Normal legacy netns fail remains for independent diagnosis.",
+  "current_task": "H442 diagnose H440 Linux real/Normal old-source tests: 8/8 native business and FEC recovery succeeded but required retired per-record M2 acceptance/Fixed Applied. Converted old fixtures to honest negative and business/Stop regression, replacement Applied still OPEN.",
+  "why_now": "Artifact 12946287909 shows genuine C2S/S2C8 PASS then old M2 coverage expectation FAIL; H440 40985293746/40985293776 release-client probes similarly fail old Feedback Applied. No auto PASS inferred.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H441 native and true two-OS runs including 40985293722 and 40985293776; inspect old Normal fixture log before changing oracle; then PLAN027 A/B/C/5min whole workflow and per-source evidence.",
+  "next_action": "Verify H442 source compilation CI; implement/verify substitute Fixed configuration Applied gate with genuine authenticated evidence before classifying Fixed mode B ready; then A1-A5 and B lifecycle/C capacity/5min. No false legacy receipt promotion.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①H440/H441 source candidate removes live M2 on Windows/Linux, native H440 compile passes but two legacy Windows tests replaced and exact SOURCE H441 pending. ②A1-A5 NOT_RUN. ③B true Windows/Linux Auto/Fixed/Stop partial/pending, H437 real Auto retest still pending. ④C/5min NOT_RUN. ⑤governance/card fix and CI ongoing."
+  "partial_summary": "①H440 old WBC4 M2 retired source, old Go test fixtures H442 rewritten to no-per-record + explicit Applied unavailable (not a feature PASS); ②A NOT_RUN, ③B Fixed/Auto new authenticated Applied witness OPEN + original 2OS Auto/lifecycle, ④C/5min NOT_RUN, ⑤CI and evidence OPEN."
 }

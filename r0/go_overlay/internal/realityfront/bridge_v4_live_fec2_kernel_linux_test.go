@@ -225,77 +225,23 @@ func realOriginalGoFec2LinuxMode(t *testing.T,mode FecV2Mode){
         clientDelivered[got]=true
     }
     if len(clientDelivered)!=packets{t.Fatalf("client TUN app only received %d",len(clientDelivered))}
-    // The CLIENT's independently bound C2S AEAD sealer derived a
-    // WBC4/M2 receipt only from original S2C authenticated+unique PNs.
-    // Send THIS exact encrypted record across actual Linux IP_HDRINCL,
-    // and let original Rust M4 receive it on its single C2S opener.
-    time.Sleep(12*time.Millisecond)
-    draft,e:=releaseClient.feedbackDue()
-    if e!=nil||len(draft.Ciphertext)<31{
-        t.Fatalf("client authenticated M2 C2S draft absent: %d %v",
-            len(draft.Ciphertext),e)
+    // PLAN027: the original-Go authenticated client source/parity must
+    // recover genuine Linux UDP over real TUN. Retired per-record M2
+    // cannot silently produce fixed-revision Applied or positive loss.
+    // Old standalone probe may still encode historic WBC4 for offline
+    // oracle; the live sender intentionally does not call feedbackDue.
+    coverage,e:=b.rustOwnerNormalM2Coverage()
+    if e!=nil||coverage.AuthenticatedReverseReports!=0||coverage.Covered2s!=0{
+        t.Fatalf("retired M2 unexpectedly accepted per-record feedback: coverage=%+v err=%v",coverage,e)
     }
-    rawFeedback,e:=syscall.Socket(syscall.AF_INET,syscall.SOCK_RAW,syscall.IPPROTO_RAW)
-    if e!=nil{t.Fatal(e)}
-    defer syscall.Close(rawFeedback)
-    if e:=syscall.SetsockoptInt(rawFeedback,syscall.IPPROTO_IP,
-        syscall.IP_HDRINCL,1);e!=nil{t.Fatal(e)}
-    c2sPacket:=v4RawC2STestPacket(draft.Ciphertext,b.rxBoundary,b.originalFlow)
-    // Same-netns test only: server original IP is nonlocal until the
-    // authenticated M2 reverse turn. Install a local kernel route *after*
-    // the real original systematic/parity TX and client TUN UDP delivery,
-    // never a synthetic receipt or extra independent decryptor.
-    serverAddress:=net.IP(b.originalFlow.ServerIP[:]).String()
-    if out,e:=exec.Command("ip","route","replace","local",
-        serverAddress+"/32","dev","lo").CombinedOutput();e!=nil{
-        t.Fatalf("isolated reverse M2 local route: %v %s",e,out)
-    }
-    if e:=syscall.Sendto(rawFeedback,c2sPacket,0,
-        &syscall.SockaddrInet4{Addr:b.originalFlow.ServerIP});e!=nil{
-        t.Fatalf("client authenticated FEC M2 kernel TX: %v",e)
-    }
-    if e:=releaseClient.feedbackKernelResult(draft.RecordPN,1);e!=nil{
-        t.Fatalf("client M2 actual kernel send classification: %v",e)
-    }
-    acceptedM2:=false
-    for deadline:=time.Now().Add(350*time.Millisecond);
-        time.Now().Before(deadline);time.Sleep(5*time.Millisecond){
-        coverage,e:=b.rustOwnerNormalM2Coverage()
-        if e!=nil{t.Fatalf("original Rust M2 coverage readback: %v",e)}
-        if coverage.AuthenticatedReverseReports>=1{
-            acceptedM2=true;break
-        }
-    }
-    if !acceptedM2{
-        t.Fatal("original server moved C2S AEAD/replay owner did not accept real kernel authenticated client feedback")
-    }
-    // A source queued or even copied locally is NOT an authenticated
-    // remote application-APPLIED receipt. Keep truthful pending.
     got,applied,e:=b.readbackOriginalFixedPending(pending,server.Epoch)
     if e!=nil||applied.Applied||got.AppliedRevision!=0{
-        t.Fatalf("false product Fixed applied before M2 maturity: %+v %+v %v",got,applied,e)
+        t.Fatalf("Fixed/Auto false Applied without new authenticated witness: %+v %+v %v",got,applied,e)
     }
-    // M2 2s is genuine elapsed time from original M4 accepted first sends,
-    // not a forged timer advance. Only the actual AEAD C2S receipt and
-    // complete recovered client TUN UDP may let the operator commit rev4.
-    mature:=false
-    for until:=time.Now().Add(4*time.Second);time.Now().Before(until);
-        time.Sleep(20*time.Millisecond){
-        if e:=b.commitOriginalFixedMatureM2(server.Epoch,4);e==nil{
-            mature=true;break
-        }
+    if e:=b.commitOriginalFixedMatureM2(server.Epoch,4);e==nil{
+        t.Fatal("retired M2 cannot grant legacy maturity and false Applied")
     }
-    if !mature{
-        coverage,e:=b.rustOwnerNormalM2Coverage()
-        t.Fatalf("actual M2 mature Fixed rev4 not APPLIED coverage=%+v err=%v",
-            coverage,e)
-    }
-    got,applied,e=b.readbackOriginalFixedPending(pending,server.Epoch)
-    if e!=nil||!applied.Applied||got.AppliedRevision!=4{
-        t.Fatalf("authenticated 2s M2 Fixed revision not APPLIED: %+v %+v %v",
-            got,applied,e)
-    }
-    t.Logf("M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS mode=%s kernel_records=%d application_ipv4=%d parity_silent=%d recovered_missing=%d client_udp=%d originalTLS=1 release_client_no_probe_receiver=1 M2_authenticated_C2S_real_kernel_reverse_accepted=1 pending_before_maturity=1 applied_rev4_after_mature_auth_M2=1 FEC2_PRODUCT_OFF=1",
+    t.Logf("M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS mode=%s kernel_records=%d application_ipv4=%d parity_silent=%d recovered_missing=%d client_udp=%d originalTLS=1 no_per_record_receipt=1 fixed_applied=false",
         mode,recordsSeen,originalDelivered,paritySilent,recoveredFirst,len(clientDelivered))
     // M4 Linux lifecycle contract: after real traffic, Stop must join
     // native client borrow/receiver before the Go-owned TUN is released.
@@ -319,9 +265,9 @@ func realOriginalGoFec2LinuxMode(t *testing.T,mode FecV2Mode){
         t.Fatal("server TUN interface leaked after native Stop + Go fd close")
     }
     if mode==FecV2Auto{
-        t.Log("M0_ORIGINAL_GO_FEC2_AUTO_INITIAL_PROFILE_AUTHENTICATED_M2_APPLIED_PASS revision=4 startup_profile=mild bounded_unknown_feedback=hold M2_2s=covered client_udp=4")
+        t.Log("M0_PLAN027_ORIGINAL_GO_FEC2_AUTO_START_PENDING_NO_M2_PASS startup_profile=mild bounded_unknown_feedback=hold legacy_applied=false client_udp=4")
     }else{
-        t.Log("M0_ORIGINAL_GO_FEC2_FIXED_MATURE_AUTHENTICATED_M2_APPLIED_PASS revision=4 kernel_source_parity=1 coverage_2s=positive client_udp=4 no_fake_apply=1")
+        t.Log("M0_PLAN027_ORIGINAL_GO_FEC2_FIXED_PENDING_NO_M2_PASS kernel_source_parity=1 legacy_applied=false client_udp=4 no_fake_apply=1")
     }
-    t.Log("M4_LINUX_ORIGINAL_GO_CONNECT_FEC_REAL_NETNS_CLIENT_SERVER_STOP_OWNED_CLEANUP_PASS tls=1 client_udp=4 lost_source_recovered=1 repeated_stop=1 stale_rx_deny=1 stale_m2_deny=1 both_tun_devices_gone=1")
+    t.Log("M4_LINUX_ORIGINAL_GO_CONNECT_FEC_REAL_NETNS_CLIENT_SERVER_STOP_OWNED_CLEANUP_PASS tls=1 client_udp=4 lost_source_recovered=1 repeated_stop=1 stale_rx_deny=1 stale_probe_feedback_deny=1 both_tun_devices_gone=1")
 }

@@ -280,9 +280,9 @@ jobs:
           grep -q 'M0_REAL_ORIGINAL_GO_RELEASE_CLIENT_FEC2_TUN_UDP_RECOVERY_PASS' fixed-kernel-result/continuous-kernel.log
           grep -q 'M4_LINUX_ORIGINAL_GO_CONNECT_FEC_REAL_NETNS_CLIENT_SERVER_STOP_OWNED_CLEANUP_PASS' fixed-kernel-result/continuous-kernel.log
           grep -q 'M4_PLAN012_ORIGINAL_GO_TLS_FEC_MISSING_SOURCE_REAL_CLIENT_TUN_UDP_REPEATED_STOP_STALE_RX_ROUTE_FD_CLEANUP_PASS' fixed-kernel-result/continuous-kernel.log
-          grep -q 'M0_ORIGINAL_GO_FEC2_FIXED_MATURE_AUTHENTICATED_M2_APPLIED_PASS' fixed-kernel-result/continuous-kernel.log
-          grep -q 'M0_ORIGINAL_GO_FEC2_AUTO_INITIAL_PROFILE_AUTHENTICATED_M2_APPLIED_PASS' fixed-kernel-result/continuous-kernel.log
-          grep -q 'M2_authenticated_C2S_real_kernel_reverse_accepted=1 pending_before_maturity=1 applied_rev4_after_mature_auth_M2=1 FEC2_PRODUCT_OFF=1' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M0_PLAN027_ORIGINAL_GO_FEC2_FIXED_PENDING_NO_M2_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'M0_PLAN027_ORIGINAL_GO_FEC2_AUTO_START_PENDING_NO_M2_PASS' fixed-kernel-result/continuous-kernel.log
+          grep -q 'no_per_record_receipt=1 fixed_applied=false' fixed-kernel-result/continuous-kernel.log
           python3 - <<'PY'
           import hashlib,json,pathlib
           p=pathlib.Path("fixed-kernel-result")
@@ -291,7 +291,7 @@ jobs:
             actual_original_go_tls_ciphers=3,original_m1_fec2_scheduler=True,
             original_m3_aead_unique_replay_and_rs16=True,
             original_m4_kernel_copy_source_repair_and_real_tun_udp_recovery=True,
-            real_original_m2_authenticated_reverse_receipt=True,
+            real_original_m2_authenticated_reverse_receipt=False,per_record_m2_retired=True,
             applied_before_kernel_copy=False,
             authenticated_fixed_to_quiescent_off5_after_m2_settlement=True,
             real_data_blocks_per_case=1,
@@ -310,9 +310,9 @@ jobs:
             M4_Linux_connect_real_netns_client_server_stop_owned_cleanup="PASS_ACTIONS_SCOPED",
             M4_route_readback_after_Stop="PASS_M4_SOURCE_OWNED_COMBINED_ACTIONS",
             M4_Windows_network="NOT_RUN_DEFERRED",
-            M0_original_Go_real_FEC_source_parity_UDP_and_authenticated_C2S_M2="PASS_SCOPED_AUTHENTIC_MATURE_FIXED_APPLIED",
-            Fixed_revision4_mature_original_go_M2="PASS_LINUX_SCOPED_AUTHENTIC_2S_AFTER_CLIENT_TUN",
-            Auto_initial_profile_authenticated_M2_APPLIED="PASS_LINUX_SCOPED_STARTUP_PROFILE_ONLY",
+            M0_original_Go_real_FEC_source_parity_UDP_and_authenticated_C2S_M2="PASS_UDP_RECOVERY_ONLY_FIXED_APPLIED_OPEN",
+            Fixed_revision4_mature_original_go_M2="NOT_RUN_RETIRED_NO_REPLACEMENT_APPLIED",
+            Auto_initial_profile_authenticated_M2_APPLIED="NOT_RUN_RETIRED_NO_REPLACEMENT_APPLIED",
             Auto_dynamic_512_mature_samples="NOT_RUN",
             fec_rx_interleaved_4_blocks_3ciphers="PASS_NATIVE_NOT_KERNEL",
             network_multiblock="NOT_RUN",

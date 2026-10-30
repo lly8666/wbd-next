@@ -111,7 +111,7 @@ jobs:
           done
           grep -q 'M0_ORIGINAL_GO_TLS_RUST_STOP_AND_RELEASE_COMPLETION_PASS' common-result/connect-stop.log
           grep -q 'EMBEDDED_OLD_NEW_GENERATION_STOP_ISOLATION_PASS' common-result/connect-stop.log
-      - name: Common live netns bidirectional Normal8, authentic kind1 to M2, Stop/cleanup
+      - name: Common live netns bidirectional Normal8, no old M2, Stop/cleanup
         shell: bash
         run: |
           set -euo pipefail
@@ -119,17 +119,17 @@ jobs:
             bash tools/run-v4-tun-netns.sh common-build \
             >common-result/common-netns.log 2>&1
           cat common-result/common-netns.log
-          grep -q 'M0_COMMON_SCENARIO_NORMAL_OFF_CONNECT_BIDIRECTIONAL_KIND1_STOP_PASS original_TLS=1 C2S=8 S2C=8 authenticated_M2=1 covered2s=8 FEC2_OFF=1 no_extreme_matrix=1' common-result/common-netns.log
-          grep -q 'M0_ORIGINAL_GO_REAL_C2S_KIND1_M2_COVERED_2S_PASS original_tls=1 go_client_seal_health=1 kernel_send=1 original_Rust_AEAD_replay=1 S2C_firstsend=8 authentic_reports=1 covered2s=8 unknown2s=0 FEC2=OFF' common-result/common-netns.log
+          grep -q 'M0_PLAN027_COMMON_NORMAL_OFF_BIDIRECTIONAL_NO_M2_STOP_PASS original_TLS=1 C2S=8 S2C=8 authenticated_M2=0 covered2s=0 FEC2_OFF=1 no_extreme_matrix=1' common-result/common-netns.log
+          grep -q 'M0_PLAN027_NORMAL_NO_PER_RECORD_RECEIPT_REAL_FIRSTSEND_PASS original_tls=1 C2S=8 S2C=8 firstsend=8 authenticated_m2_reports=0 covered2s=0 FEC2=OFF' common-result/common-netns.log
           grep -q 'ORIGINAL_RUST_BACKGROUND_OWNER_LOOP_FUNCTIONAL_PASS' common-result/common-netns.log
           python3 - <<'PY'
           import hashlib,json,os,pathlib
           p=pathlib.Path("common-result")
           receipt=json.load(open(p/"identity.json"))
           receipt.update(result="PASS_SCOPED_REAL_GO_RUST_NORMAL_EVERYDAY",
-            common_scenario="original TLS, 3-cipher admission, live RX/TX 8 each, authenticated C2S kind1 1, M2 covered2s 8/8, Stop/release/reconnect generation",
-            authenticated_reverse_kind1_reports=1,actual_firstsend_data=8,
-            covered_2s=8,unknown_2s=0,
+            common_scenario="original TLS, 3-cipher admission, live RX/TX 8 each, M4 real firstsend 8, no per-record M2 receipt, Stop/release/reconnect generation",
+            authenticated_reverse_kind1_reports=0,actual_firstsend_data=8,
+            covered_2s=0,per_record_m2_retired=True,
             common_netns_log_sha256=hashlib.sha256((p/"common-netns.log").read_bytes()).hexdigest(),
             connect_stop_log_sha256=hashlib.sha256((p/"connect-stop.log").read_bytes()).hexdigest(),
             full_original_go_cli_gui_windows="NOT_RUN",

@@ -1015,73 +1015,31 @@ func TestR0V4EmbeddedIndependentRustOwnerLoop(t *testing.T){
     }
     t.Logf("EMBEDDED_ORIGINAL_RUST_BACKGROUND_RX_TX_PASS C2S=%d S2C=%d threads=2 NoGoPerPacketHelpers=true errors_RX=%d errors_TX=%d",
         stats.RxOK,stats.TxOK,stats.RxErr,stats.TxErr)
-    // Genuine original Go TLS CLIENT C2S kind1 through a real M4 Linux
-    // IP_HDRINCL raw send. Only the SAME moved M3 AEAD+unique PN server
-    // receiver can admit this control to the already sender-owned M2.
-    // WBC4 has exactly one 60B receipt TLV, one covered PN0..PN7 page.
-    // This is not a production GUI/applied ACK or synthetic M2 callback.
-    beforeReceipt,e:=b.rustOwnerNormalM2Coverage()
-    if e!=nil||beforeReceipt.AuthenticatedReverseReports!=0||
-       beforeReceipt.Covered2s!=0||beforeReceipt.Covered8s!=0{
-        t.Fatalf("pre-peer original M2 manufactured coverage %+v err=%v",beforeReceipt,e)
-    }
-    receiptBody:=make([]byte,72)
-    copy(receiptBody[0:4],[]byte("WBC4"))
-    receiptBody[4]=1;receiptBody[5]=1
-    binary.BigEndian.PutUint16(receiptBody[6:8],72)
-    receiptBody[8]=1 // receipt TLV only; flags zero
-    binary.BigEndian.PutUint16(receiptBody[10:12],60)
-    binary.BigEndian.PutUint64(receiptBody[12:20],packets-1)
-    binary.BigEndian.PutUint32(receiptBody[24:28],1) // first report_seq
-    receiptBody[28]=1 // page count; flags/reserved are zero
-    binary.BigEndian.PutUint64(receiptBody[32:40],0) // PN0 base
-    receiptBody[40]=0xff // eight exact real S2C PN0..7 admitted by independent Go opener
-    encryptedKind1,pnHealth,e:=seal.SealHealth(receiptBody)
-    if e!=nil||pnHealth!=packets{
-        t.Fatalf("original Go C2S authenticated kind1 pn=%d err=%v",pnHealth,e)
-    }
-    if e=syscall.Sendto(raw,v4RawC2STestPacket(encryptedKind1,seq,b.originalFlow),0,
-       &syscall.SockaddrInet4{Addr:b.originalFlow.ServerIP});e!=nil{
-        t.Fatalf("original Go C2S kind1 actual raw kernel transmission: %v",e)
-    }
-    seq+=uint32(len(encryptedKind1))
-    reverseDeadline:=time.Now().Add(650*time.Millisecond)
-    var coverage v4NormalM2Coverage
-    for time.Now().Before(reverseDeadline){
-        coverage,e=b.rustOwnerNormalM2Coverage()
-        if e!=nil{t.Fatal(e)}
-        if coverage.AuthenticatedReverseReports==1{break}
-        time.Sleep(5*time.Millisecond)
-    }
-    if coverage.AuthenticatedReverseReports!=1||coverage.Censored{
-        t.Fatalf("real C2S kind1 was not admitted by original Rust AEAD PN worker: %+v",coverage)
-    }
-    // M2 actual kernel accepted denominator MUST mature as covered, not
-    // UNKNOWN or guessed lost: 2s event time and original S2C PN0..7.
+    // PLAN027: one real original-Go TLS and Rust M3/M4 native Normal
+    // round-trip. Neither side emits/requires an obsolete per-record
+    // WBC4 Receipt; no healthy DATA can be presented as M2 coverage.
+    // Retain genuine Linux raw/TUN and Stop/release generation checks.
     var firstsend v4NormalM2Firstsend
-    deadlineM2:=time.Now().Add(2600*time.Millisecond)
-    for time.Now().Before(deadlineM2){
+    firstsendDeadline:=time.Now().Add(500*time.Millisecond)
+    for time.Now().Before(firstsendDeadline){
         firstsend,e=b.rustOwnerNormalM2Firstsend()
         if e!=nil{t.Fatal(e)}
-        coverage,e=b.rustOwnerNormalM2Coverage()
-        if e!=nil{t.Fatal(e)}
-        if firstsend.Accepted==packets && coverage.Covered2s==packets{break}
-        time.Sleep(10*time.Millisecond)
+        if firstsend.Accepted==packets{break}
+        time.Sleep(5*time.Millisecond)
     }
-    if firstsend.Accepted!=packets||firstsend.DefinitelyNotSent!=0||
-       firstsend.Uncertain!=0||firstsend.Unknown2s!=0||
-       coverage.Covered2s!=packets||coverage.AuthenticatedReverseReports!=1||
-       firstsend.Censored||coverage.Censored{
-        t.Fatalf("genuine Go TLS C2S kind1 to real owner M2 coverage failed sender=%+v receipt=%+v",
-            firstsend,coverage)
+    coverage,e:=b.rustOwnerNormalM2Coverage()
+    if e!=nil||firstsend.Accepted!=packets||
+        firstsend.DefinitelyNotSent!=0||firstsend.Uncertain!=0||
+        coverage.AuthenticatedReverseReports!=0||coverage.Covered2s!=0{
+        t.Fatalf("PLAN027 Native firstsend or no-M2 guard failed: source=%+v receipt=%+v err=%v",firstsend,coverage,e)
     }
-    t.Logf("M0_ORIGINAL_GO_REAL_C2S_KIND1_M2_COVERED_2S_PASS original_tls=1 go_client_seal_health=1 kernel_send=1 original_Rust_AEAD_replay=1 S2C_firstsend=%d authentic_reports=%d covered2s=%d unknown2s=%d FEC2=OFF",
-        firstsend.Accepted,coverage.AuthenticatedReverseReports,coverage.Covered2s,firstsend.Unknown2s)
+    t.Logf("M0_PLAN027_NORMAL_NO_PER_RECORD_RECEIPT_REAL_FIRSTSEND_PASS original_tls=1 C2S=8 S2C=8 firstsend=%d authenticated_m2_reports=0 covered2s=0 FEC2=OFF",
+        firstsend.Accepted)
 
-    // Common Normal product scenario after live 8p and authentic M2
-    // receipt, before expensive jumbo/MTU/host mutation diagnostics.
+    // Common native Normal product scenario: true business/firstsend but
+    // no legacy per-record feedback requirement.
     if os.Getenv("WBD_M0_COMMON_SCENARIO")=="1" {
-        t.Log("M0_COMMON_SCENARIO_NORMAL_OFF_CONNECT_BIDIRECTIONAL_KIND1_STOP_PASS original_TLS=1 C2S=8 S2C=8 authenticated_M2=1 covered2s=8 FEC2_OFF=1 no_extreme_matrix=1")
+        t.Log("M0_PLAN027_COMMON_NORMAL_OFF_BIDIRECTIONAL_NO_M2_STOP_PASS original_TLS=1 C2S=8 S2C=8 authenticated_M2=0 covered2s=0 FEC2_OFF=1 no_extreme_matrix=1")
         // Deferred Go→Rust Stop and generation-owned cleanup still run.
         return
     }
