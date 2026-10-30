@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 462,
-  "checkpoint_sha": "3b1aac65c8c1625dad87e9933597f7ddd864f54e",
+  "sequence": 463,
+  "checkpoint_sha": "e7d4795ea3f19c6976720bc17f0c3c88fc1fe986",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H462 recovered H461 Auto artifact12951904475 32.6M Linux Rust M4 TX errors/40s, Windows first0/384, Linux25/99; C10 99.999%/100% business but lifecycle restart failed due H461 literal '$' pid. Fix owned PID and collect 500ms native in-flight/stage/error-code diagnosis, no speculative FEC retune.",
-  "why_now": "Source 3dc compiled binary actual H461 Auto run40998035077 has parity9 planned zero sent and >30M M4 errors; source H461 diagnostic harness accidentally emitted 2-byte '$\\n' instead of shell PID, so C10 run40998037302 ended post-business restart 10s timeout/Stop NOT_RUN.",
+  "current_task": "H463 exact H462 preflight repair: shell PID and unittest string were both single $ in Git blob due JS replacement escape. Preserve actual two dollar bytes in source and assertion. Re-run source-locked build and then Auto diagnostic/C10 owned Stop.",
+  "why_now": "H462 win-linux Action40999231338 cheap test failure exact script/test both old '$' and no compiled binaries. Source H461 Auto real M4 error 32.62M /40s, C10 business 100% but Stop NOT_RUN and restart timed out. Correct only misapplied PID patch.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect new H462 full source-locked Auto 500ms diag (queued/staged/owner fail/turn error) and C10 lifecycle, fix proven root and affected regressions. A4/A5, B Health/rotation/blackhole, C 50+ gradient/300s still required.",
+  "next_action": "Collect H463 exact Windows/Linux native compiled products and 500ms diagnostic; use one source-locked artifact for separate Auto and Normal C10 Stop trials. Then fix real Auto TX error and complete PLAN027 A4/A5 B lifecycle C capacity/5min.",
   "unverified": true,
   "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
   "evidence_refs": [
@@ -28,5 +28,5 @@
     "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
   ],
   "open_requests": [],
-  "partial_summary": "①M2/ACK product replacements in place but real Auto Linux TX full-core Err spin 32,621,976/40s, parity planned9 sent0; H462 diag source pending Actions. ②A1 pass, A2 real Normal0/30 measured, A3 Fixed30 Windows 10.1% first delivery FAIL, A4/A5 open. ③B Normal/Game limited pass, Fixed short pass, Auto severe failure, lifecycle incomplete. ④C10 10Mbps/25ms/0% first-delivery measured 99.999% W 100% L but full FAIL Linux next-start timeout, Stop NOT_RUN; 50+ and 300s not run. ⑤H461 source/artifact failures preserved, H462 targeted fixes and rechecks pending, no final ready."
+  "partial_summary": "①Online M2/ACK candidate implemented, H462 diagnostics source untested due preflight, H463 PID/test source correction. Auto H461 true severe FAIL Windows0/384 Linux25/99, 32.6M M4 error and parity9 planned0 sent. ②A1 pass, A2 0/30 scoped, A3 Fixed30 first delivery Windows10.1% FAIL, A4/A5 OPEN. ③B Auto and lifecycle BLOCKED. ④C10 business child >99.999% but full fail restart/Stop; C50+ and 300s NOT_RUN. ⑤H463 exact source build pending, no final PASS."
 }
