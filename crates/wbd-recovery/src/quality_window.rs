@@ -598,8 +598,10 @@ mod bounded_window_tests {
         let short=WindowKey{last:RecordPn(205),..k};
         assert_eq!(rx.close_announced(short,MonoNs(1),4,true,false),
             Err(QualityError::InvalidCounts));
+        // No accepted sender CLOSE supplied F: UNKNOWN precedes maturity
+        // checks, never a zero-loss or premature valid report.
         assert_eq!(rx.report_wire(k,MonoNs(4_000_000_000)),
-            Err(QualityError::NotMature));
+            Err(QualityError::Unknown));
         let next=WindowKey{id:2,first:RecordPn(206),
             last:RecordPn(1229),..k};
         assert_eq!(rx.arm(next,MonoNs(4_000_000_001),true),
