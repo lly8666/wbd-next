@@ -1,0 +1,5 @@
+# H471 A4 staged scenario contract (not execution)
+
+Source-scoped Auto 10Mbps 240s scenario for a single unbroken native test. Loss stages both directions at 0,20,40,65,95 seconds: windows-to-linux 0/5/15/30/0%; linux-to-windows 0/0/5/15/0%; the final 145s low observation exceeds 120s. Distinct per-direction delay and immutable SHA. Production source and ABI unchanged. Config parser rejects non-Auto stage fields, unordered clock, stage0 mismatch and final low shorter than 120s. **A4 is NOT RUN** until the owned guest kernel qdisc stage controller and live report are implemented and cheaply tested.
+
+Other real reports: Auto natural119 Action41005961263 PASS Windows revision3/profile3, owned Stop; C200 Action41005956082 CAPACITY_LIMITED_GENERATOR_OFFER (Linux118.2412Mbps vs target200; Windows199.8383; first Linux .686332, Windows .972213), Stop PASS but not C200 capacity success; A5 Action41005958420 source Rust B 10Mbps PASS but old Go steady A exits early after~28s, Windows NPF M2 failure, AB INCONCLUSIVE. All from original prebuilt source a61eef334068512b00a1db3137a51f3d0489020c. Preserve failures.

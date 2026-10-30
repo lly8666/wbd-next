@@ -4,6 +4,27 @@ from tools.m0_wl_perf_v2_config import read_scenario,profile
 from tools.m0_wl_impairment_profile import get_profile
 SCENE=pathlib.Path(__file__).resolve().parents[1]/"scenarios"/"wl-normal-150m-300ms-0loss-60s.json"
 class V2Scenarios(unittest.TestCase):
+ def test_plan027_a4_validated_240s_kernel_phase_source_schema(self):
+  scene=SCENE.parent/"plan027-a4-auto-10m-staged-240s.json"
+  case=read_scenario(scene)
+  self.assertEqual((case["public_mode"],case["duration_s"]),("auto",240))
+  stages=case["impairment_stages"]
+  self.assertEqual([r["start_s"] for r in stages],[0,20,40,65,95])
+  self.assertEqual([r["windows_to_linux"]["loss_pct"] for r in stages],[0,5,15,30,0])
+  self.assertEqual([r["linux_to_windows"]["loss_pct"] for r in stages],[0,0,5,15,0])
+  self.assertGreaterEqual(case["duration_s"]-stages[-1]["start_s"],120)
+  self.assertEqual(case["scenario_sha256"],read_scenario(scene)["scenario_sha256"])
+  with tempfile.TemporaryDirectory() as tmp:
+   p=pathlib.Path(tmp)/"bad.json"
+   bad=json.loads(scene.read_text());bad["impairment_stages"][2]["start_s"]=20
+   p.write_text(json.dumps(bad))
+   with self.assertRaisesRegex(ValueError,"BAD_AUTO_STAGE_CLOCK"):read_scenario(p)
+   bad=json.loads(scene.read_text());bad["impairment_stages"][-1]["start_s"]=125
+   p.write_text(json.dumps(bad))
+   with self.assertRaisesRegex(ValueError,"NO_120S_FINAL_OBSERVATION"):read_scenario(p)
+   bad=json.loads(scene.read_text());bad["public_mode"]="fixed"
+   p.write_text(json.dumps(bad))
+   with self.assertRaisesRegex(ValueError,"BAD_AUTO_STAGE_SCOPE"):read_scenario(p)
  def test_exact_150m_300ms_0loss_60s(self):
   c=read_scenario(SCENE)
   self.assertEqual(c["duration_s"],60)

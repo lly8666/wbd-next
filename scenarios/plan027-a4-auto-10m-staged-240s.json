@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "scenario_id": "plan027-a4-auto-10m-staged-240s",
+  "public_mode": "auto",
+  "duration_s": 240,
+  "warmup_s": 5,
+  "drain_s": 10,
+  "tun_mtu": 1400,
+  "seed": 20261030,
+  "windows_to_linux": {
+    "offered_mbps": 10,
+    "delay_ms": 25,
+    "loss_pct": 0,
+    "tc_rate_mbps": null,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 64,
+        "packets_weight": 10
+      },
+      {
+        "udp_payload_bytes": 128,
+        "packets_weight": 15
+      },
+      {
+        "udp_payload_bytes": 512,
+        "packets_weight": 25
+      },
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 50
+      }
+    ]
+  },
+  "linux_to_windows": {
+    "offered_mbps": 10,
+    "delay_ms": 25,
+    "loss_pct": 0,
+    "tc_rate_mbps": null,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 64,
+        "packets_weight": 10
+      },
+      {
+        "udp_payload_bytes": 128,
+        "packets_weight": 15
+      },
+      {
+        "udp_payload_bytes": 512,
+        "packets_weight": 25
+      },
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 50
+      }
+    ]
+  },
+  "impairment_stages": [
+    {
+      "start_s": 0,
+      "windows_to_linux": {
+        "delay_ms": 25,
+        "loss_pct": 0
+      },
+      "linux_to_windows": {
+        "delay_ms": 25,
+        "loss_pct": 0
+      }
+    },
+    {
+      "start_s": 20,
+      "windows_to_linux": {
+        "delay_ms": 25,
+        "loss_pct": 5
+      },
+      "linux_to_windows": {
+        "delay_ms": 25,
+        "loss_pct": 0
+      }
+    },
+    {
+      "start_s": 40,
+      "windows_to_linux": {
+        "delay_ms": 75,
+        "loss_pct": 15
+      },
+      "linux_to_windows": {
+        "delay_ms": 25,
+        "loss_pct": 5
+      }
+    },
+    {
+      "start_s": 65,
+      "windows_to_linux": {
+        "delay_ms": 150,
+        "loss_pct": 30
+      },
+      "linux_to_windows": {
+        "delay_ms": 75,
+        "loss_pct": 15
+      }
+    },
+    {
+      "start_s": 95,
+      "windows_to_linux": {
+        "delay_ms": 25,
+        "loss_pct": 0
+      },
+      "linux_to_windows": {
+        "delay_ms": 25,
+        "loss_pct": 0
+      }
+    }
+  ]
+}

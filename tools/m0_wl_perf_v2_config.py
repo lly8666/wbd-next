@@ -46,6 +46,30 @@ def read_scenario(path):
             if type(n) is not int or not 1<=n<=100:raise ValueError("WL_V2_BAD_PACKET_WEIGHT")
             total+=n
         if total>100:raise ValueError("WL_V2_PACKET_MIX_TOO_LARGE")
+    stages=cfg.get("impairment_stages")
+    if stages is not None:
+        if mode!="auto" or not isinstance(stages,list) or not 3<=len(stages)<=12:
+            raise ValueError("WL_V2_BAD_AUTO_STAGE_SCOPE")
+        previous=-1
+        for i,stage in enumerate(stages):
+            if not isinstance(stage,dict) or set(stage)!={"start_s","windows_to_linux","linux_to_windows"}:
+                raise ValueError("WL_V2_BAD_AUTO_STAGE_SHAPE")
+            start=stage["start_s"]
+            if type(start) is not int or not previous<start<cfg["duration_s"] or (i==0 and start!=0):
+                raise ValueError("WL_V2_BAD_AUTO_STAGE_CLOCK")
+            previous=start
+            for direction in ("windows_to_linux","linux_to_windows"):
+                point=stage[direction]
+                if not isinstance(point,dict) or set(point)!={"delay_ms","loss_pct"}:
+                    raise ValueError("WL_V2_BAD_AUTO_STAGE_PROFILE")
+                for field,upper in (("delay_ms",2000),("loss_pct",60)):
+                    v=point[field]
+                    if type(v) not in (int,float) or not 0<=v<=upper:
+                        raise ValueError("WL_V2_BAD_AUTO_STAGE_VALUE")
+                if i==0 and any(point[field]!=cfg[direction][field] for field in ("delay_ms","loss_pct")):
+                    raise ValueError("WL_V2_AUTO_STAGE_ZERO_MISMATCH")
+        if stages[-1]["start_s"]>cfg["duration_s"]-120:
+            raise ValueError("WL_V2_AUTO_NO_120S_FINAL_OBSERVATION")
     encoded=json.dumps(cfg,sort_keys=True,separators=(",",":"),ensure_ascii=True).encode()
     cfg["scenario_sha256"]=hashlib.sha256(encoded).hexdigest()
     return cfg
