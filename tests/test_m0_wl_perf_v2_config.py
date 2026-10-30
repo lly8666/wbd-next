@@ -61,7 +61,7 @@ class V2Scenarios(unittest.TestCase):
  def test_v2_udp_fixture_socket_headroom_is_extra_but_scoped(self):
   path=pathlib.Path(__file__).resolve().parents[1]/"tools"/"m0_wl_public_rate_app.py"
   app=path.read_text()
-  self.assertIn('sys.argv[7]=="v2" else 2)*1024*1024',app)
+  self.assertIn('receiver_buffer_request_bytes(sys.platform, len(sys.argv)>7 and sys.argv[7]=="v2")',app)
   self.assertIn('sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, receiver_rcvbuf_request)',app)
   self.assertIn('"requested_socket_rcvbuf_bytes":receiver_rcvbuf_request',app)
   self.assertIn('socket_start=udp_socket_probe(sock) if profile_name=="v2" else None',app)

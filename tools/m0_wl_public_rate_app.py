@@ -8,6 +8,7 @@ Both processes run concurrently against their native Wintun/TUN socket.
 import json
 import os
 import pathlib
+import select
 import socket
 import struct
 import sys
@@ -15,6 +16,7 @@ import time
 from m0_wl_business_latency import summarize_rtt
 from m0_wl_impairment_profile import get_profile
 from m0_wl_udp_socket_telemetry import snapshot as udp_socket_probe, delta as udp_socket_delta
+from m0_wl_rate_utils import FirstDeliveryBitmap, bounded_sequence_limit, rate_wait_seconds, receiver_buffer_request_bytes
 
 local, remote, side, start_flag, output_dir = sys.argv[1:6]
 out = pathlib.Path(output_dir)
@@ -25,9 +27,10 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # enough per-socket headroom once; Linux cap rmem_max=4MiB gives up to 8MiB
 # effective via kernel doubling. No sysctl, SO_RCVBUFFORCE or OS/product edit.
 # Preserve N0/P200 original 2MiB request and exact same payload/pacing.
-receiver_rcvbuf_request = (4 if len(sys.argv)>7 and sys.argv[7]=="v2" else 2)*1024*1024
+receiver_rcvbuf_request = receiver_buffer_request_bytes(sys.platform, len(sys.argv)>7 and sys.argv[7]=="v2")
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, receiver_rcvbuf_request)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 2 * 1024 * 1024)
+receiver_rcvbuf_effective = sock.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
 sock.bind((local, 45903))
 sock.setblocking(False)
 print(json.dumps({"phase":"bound","side":side,"address":local}), flush=True)
@@ -77,7 +80,7 @@ last_heartbeat=start
 credit=0.0
 sent=0
 sent_bytes=0
-first=set()
+first=FirstDeliveryBitmap(bounded_sequence_limit(rate_bytes_per_sec,duration,min(sizes)))
 recv_bytes=0
 duplicate=0
 invalid=0
@@ -179,10 +182,12 @@ while True:
             invalid+=1
             continue
         seq=struct.unpack_from("!Q",payload,len(prefix))[0]
-        if seq in first:
+        if seq > first.limit:
+            invalid+=1
+            continue
+        if not first.add(seq):
             duplicate+=1
             continue
-        first.add(seq)
         recv_bytes+=plen
         elapsed=now-start
         bucket=int(elapsed*100)
@@ -222,7 +227,7 @@ cpu_seconds=time.process_time()-cpu_start
 # sequence beyond max is recovered from the opposite sender's exact total.
 sequence_sample=None
 if send_bins is not None:
-    hi=max(first) if first else -1
+    hi=first.high if first else -1
     seq_missing_windows=[]
     missing_count=0
     gap_start=None
@@ -244,7 +249,7 @@ if send_bins is not None:
     if gap_start is not None and len(seq_missing_windows)<64:
         seq_missing_windows.append({"start":gap_start,"end_exclusive":hi+1,
                                     "missing_packets":hi+1-gap_start})
-    sequence_sample={"first_received_seq":min(first) if first else None,
+    sequence_sample={"first_received_seq":first.low,
                      "last_received_seq":hi if hi>=0 else None,
                      "missing_inside_observed_sequence_span":missing_count,
                      "missing_packet_count_by_4096_sequence_window":groups,
