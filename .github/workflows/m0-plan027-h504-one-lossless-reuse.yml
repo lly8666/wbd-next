@@ -1,0 +1,42 @@
+name: M0 PLAN027 H504 one real lossless no-spurious-retransmit witness
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h504-one-lossless-reuse.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-scene:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h504]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Confirm immutable H501 both-OS product and dispatch one no-loss real scene
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          product=0b7391a182f05947419c1211f01058b4798370a3
+          binary=41032003068
+          test "$(gh api "repos/$GH_REPO/actions/runs/$binary" --jq .head_sha)" = "$product"
+          gh api "repos/$GH_REPO/actions/runs/$binary/artifacts" --jq '.artifacts[].name' > "$RUNNER_TEMP/artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$product" "$RUNNER_TEMP/artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/artifacts"
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario("scenarios/plan027-h504-outer-50m-150ms-loss0-60s.json")
+          assert s.get('public_mode','normal')=='normal' and s['duration_s']==60
+          for d in ('windows_to_linux','linux_to_windows'):
+              assert s[d]['loss_pct']==0 and s[d]['offered_mbps']==50 and s[d]['delay_ms']==150
+          print('H504_TRUE_ZERO_SOURCE_SCENE',s['scenario_sha256'])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-h504-outer-50m-150ms-loss0-60s.json \
+            -f perf_reuse_run_id="$binary" -f perf_binary_source_sha="$product"
+          echo H504_EXACTLY_ONE_INDEPENDENT_ZERO_LOSS_ACTION
