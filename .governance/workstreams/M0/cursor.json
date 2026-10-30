@@ -4,31 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 502,
-  "checkpoint_sha": "895b225b62ba1992c82a67c21bf981bf38200ff7",
+  "sequence": 503,
+  "checkpoint_sha": "41929cefcce45c3c4d436d4caeb17147d34dfa6c",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 §0 H502 OPEN. H499 Auto A4 Action41029388055 rc0 original native Stop PASS; outer FAIL caused by wrong >=.999 first threshold on genuine staged 0→30% impairment, second cleanup kill1 benign. H502 exact staged five true tc/positive first both/owned Stop oracle corrected; new-source H501 Action41032003068 building/native in flight, prior-source H499 Game2/4 Actions41029390768/41029393488 in flight; A5 AB Windows leg A early exit genuine.",
-  "why_now": "Verified real native rc0 and Stop PASS vs outer wrapper .999 no-loss gate on intentionally damaged Auto; preserve failed run, correct test not product Stop.",
+  "current_task": "PLAN027 section0 remains ACTIVE. H503 recovered H501 actual successful native bilateral ACK gap retries; independent H503 four 50M/150ms loss 1/5/10/30 Actions launched after pre-dispatch oracle correction, currently in flight. Continue evidence-driven repair without no-loss synthetic retransmit. B lifecycle/A4 mature/A5/capacity C/long test incomplete.",
+  "why_now": "H501 original Linux authenticated ACK wire correction yielded genuine Windows R/F1.39% and Linux R/F4.34% at 30% 10M/250ms with Stop, below old different-Receipt source9ed3 Windows 8% reference. Need comparable 1/5/10/30 tier results and real first/p99/CPU to guide minimum code change.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Collect H501 new source0b7391 Action41032003068 with source manifests, R/F/(F+R+C), owned Stop; don't rerun/build before result. Collect H499 Game2/4 original in-flight; reuse H501 frozen binaries after available for corrected A4 and C50 source-true, then C50 300s, A5 true CPU, B lifecycle, graded C and regressions; no READY.",
+  "next_action": "FIRST collect four independent H503 source0b binary-reused Actions 41039752111 (1%),41039755447 (5%),41039758730 (10%),41039762110 (30%) R/F and R/(F+R+C) both direction, first, real tc, Stop. Do not redispatch in flight. Diagnose only observed repair issue. Then corrected A4 true staged Auto, separate Game2/4 (H499 canceled), A5, remaining B lifecycle, graded C incl stable >=300s; actual tests all Actions. PLAN027 partial.",
   "unverified": true,
-  "last_tested_source": "787ad4c900f3bae867c5c9556c4702339deef8cb",
+  "last_tested_source": "0b7391a182f05947419c1211f01058b4798370a3",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H497-RECOVERED-NEW-PRODUCT-C100-FIRST-LOSS-20261030.json",
-    "docs/evidence/M0/PLAN027-H498-NEW-SOURCE-A-C10-FIXED30-AUTO-20261030.json",
-    "docs/evidence/M0/PLAN027-H500-A4-A5-C50-OFF30-NEW-SOURCE-20261030.json"
+    "docs/evidence/M0/PLAN027-H503-RECOVERED-H501-LIVE-REPAIR-AND-TIER-20261030.json",
+    "docs/evidence/M0/PLAN027-H500-A4-A5-C50-OFF30-NEW-SOURCE-20261030.json",
+    "docs/evidence/M0/PLAN027-H498-NEW-SOURCE-A-C10-FIXED30-AUTO-20261030.json"
   ],
   "context_refs": [
-    "docs/prompts/M0.md",
     "docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md",
-    "docs/testing/WL_PERF_HARNESS_V2.md",
+    "docs/decisions/M0-PLAN027-LEGACY-SEMANTICS-REVIEW-20261030.md",
+    "docs/devlog/M0/20261030-PLAN027-H503-H501-RECOVERY-AND-LOSS-TIERS.md",
     "docs/features/entries/outer-opportunistic-repair.json",
     "docs/features/entries/fec-auto.json",
-    "docs/devlog/M0/20261030-PLAN027-H500-REAL-NATIVE-A4-A5-C50-OFF30.md",
-    "docs/devlog/M0/20261030-PLAN027-H501-LINUX-M3-CUMULATIVE-ACK-NATIVE.md",
-    "docs/devlog/M0/20261030-PLAN027-H502-A4-STAGED-ORACLE-CORRECTION.md"
+    "docs/testing/WL_PERF_HARNESS_V2.md"
   ],
   "open_requests": [],
-  "partial_summary": "H500 SOURCE787ad4 H494 real qlen2048 true Go+Rust. H497 C100 60s 11 L→W missing strict-zero FAIL no new-source300. H498 separate native C10 off exact first, Fixed30 true kernel first positive and stop, Auto60 Linux rev2 profile4/Windows rev1/Stop. H499 C50 Action41029396030 real C50/25/0 60s first100% each/Stop kernel original TUN/fq drops0; off30 Action41029399148 actual 10M each/250ms/30% 60s first 70.1962/70.1991% and R0/candidate0 despite F,C -> live ACK opportunity FAIL; Auto240 Action41029388055 real staged 0→5/15/30→0 and Linux valid Auto profile5→0 rev6, Windows profile2/rev4, but Linux owned Stop request code1 -> Action FAIL even if later report PASS; A5 serial AB Action41029401961 B pass A Windows native rc1 during 60s Stop NOT_RUN -> INCONCLUSIVE FAIL. Game2/4 Actions41029390768/41029393488 IN_FLIGHT, do not duplicate. Exact ZIP hashes H497/H498/H500. Existing product SOURCE has unchanged since787ad4, H500 updates source-scoped cards/evidence only. Governance earlier card exceeded 16KiB; H500 compact old duplicate limitations and records previous FAIL in log. §0 items (1) live repair block, (2) A4/A5/off30 fail, (3) lifecycle B undone, (4) C partial no source300, (5) repair/regress/closeout undone. NO READY. H501 product SOURCE0b7391a182f05947419c1211f01058b4798370a3 committed [plan026-coding], original Linux M3 authenticated contiguous-only ACK replaces constant1 in real raw firstsend and immutable repair, bounded old outer index prune<=64 per ACK at >900ms, no unnegotiated SACK/Receipt/extra rounds. H501 one-time source-frozen dispatcher41031988824 PASS dispatched exactly one native new-source build+off30 Action41032003068 in flight; NOT VERIFIED. Original H499 Game2/4 Actions 41029390768/41029393488 still INFLIGHT. H500 and earlier failures remain; cannot infer full completion. H502 correct H499 A4 failure: native child rc0 + Stop PASS, parent false .999 threshold under real tc staged loss; second cleanup Linux kill1 benign. Narrow A4 oracle five real stages, positive first both, Stop PASS, no 120s mature grade claim. H501 native build/run in flight; H499 Game2/4 still in flight."
+  "partial_summary": "H503 recovered completed H501 ACTION41032003068 source0b7391 both real signed originals 10M/250ms/30% 60s Stop PASS. Win F86377653,R1200281,C2205 R/F1.38957%,R/total1.37049%,1123 retries; Linux F84988196,R3690533 R/F4.34241%,3659 retries, C UNKNOWN. First Windows70.6492/Linux70.2252, actual tc>0, TUN drop0. H503 first orchestrator41039527670 FAIL KeyError public_mode before dispatch; corrected 41039732552 SUCCESS dispatched independent in-flight 1/5/10/30 50M/150ms one Action each runs 41039752111/41039755447/41039758730/41039762110. Prebuilt run41032003068, no recompilation. H499 Game2/4 41029390768/41029393488 CANCELED. A4 old native actual Stop PASS but parent staged loss oracle failure; corrected H502 pending rerun; A5 Windows Go baseline early exit; H497 new-source C100 11 misses strict fail, 300s untested. B full lifecycle/C matrix and stability remain pending. Five PLAN027 section0 items NOT CLOSED. No READY."
 }
