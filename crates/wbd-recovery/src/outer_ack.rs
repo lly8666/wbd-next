@@ -184,6 +184,14 @@ impl OuterAckIndex {
             }
         }
         self.cumulative_ack = ack;
+        // At most one bounded oldest cohort per real feedback. The optional
+        // ACK index can outlive its immutable <=1.5s ciphertext shadow if a
+        // cumulative hole persists. No full-map scan or DATA admission gate.
+        for _ in 0..64 {
+            if !self.sent.first_key_value().is_some_and(|(_,span)|
+                now.0.saturating_sub(span.at.0)>=900_000_000){break}
+            self.sent.pop_first();
+        }
         // A later SACK is evidence of an OUTER sequence gap, not of inner
         // loss. Bounded candidates only; no periodic blind DATA PTO.
         for (&seq, span) in self.sent.range(ack..highest_positive) {
@@ -210,6 +218,28 @@ impl OuterAckIndex {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn h501_stalled_ack_prunes_old_metadata_before_real_duplicate_gap(){
+        let mut x=index(100,128);
+        for i in 0..100u64{
+            x.on_definitely_sent(RecordPn(i+1),100+i*10,10,
+                MonoNs(i*1_000_000)).unwrap();
+        }
+        for _ in 0..2{
+            x.on_feedback(lane(),[7;16],100,&[],MonoNs(1_100_000_000),
+                20_000_000).unwrap();
+        }
+        assert_eq!(x.outstanding(),0);
+        x.on_definitely_sent(RecordPn(201),1100,10,MonoNs(1_200_000_000)).unwrap();
+        x.on_definitely_sent(RecordPn(202),1110,10,MonoNs(1_210_000_000)).unwrap();
+        let mut proposed=Vec::new();
+        for now in [1_250_000_000,1_260_000_000,1_270_000_000]{
+            proposed=x.on_feedback(lane(),[7;16],100,&[],MonoNs(now),
+                20_000_000).unwrap().gap_candidates;
+        }
+        assert_eq!(proposed,vec![RecordPn(201)]);
+    }
+
     use wbd_types::TunnelKey;
 
     fn lane() -> LaneKey {

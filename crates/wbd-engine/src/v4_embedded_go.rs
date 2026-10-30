@@ -7,7 +7,7 @@
 //! Default production ABI features stay zero; M4 driver-held stop NOT_RUN.
 #![allow(clippy::missing_safety_doc)]
 use std::collections::{BTreeMap,VecDeque};
-use std::sync::{Mutex,OnceLock,Arc,atomic::{AtomicBool,AtomicU64,Ordering}};
+use std::sync::{Mutex,OnceLock,Arc,atomic::{AtomicBool,AtomicU32,AtomicU64,Ordering}};
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use std::thread::{self,JoinHandle};
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -3761,6 +3761,8 @@ struct LoopCounts {
     route_refresh:AtomicU64,
     rx_thread_cpu_ns:AtomicU64,tx_thread_cpu_ns:AtomicU64,
     #[cfg(feature="fec2_product_record")]
+    outer_presentation_ack:AtomicU32,
+    #[cfg(feature="fec2_product_record")]
     fec_rx:[AtomicU64;11],
     #[cfg(feature="fec2_product_record")]
     fec_rx_ip:[AtomicU64;8],
@@ -3901,6 +3903,45 @@ fn drain_data_turn_returns(arena:&mut Arena)->usize{
     arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP)
 }
 
+// Only original M3 authenticated contiguous TCP spans may advance the
+// presentation ACK, never the unauthenticated highest raw seq32.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+struct OriginalPresentationAck{next:u64,future:Vec<(u64,u64)>}
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+impl OriginalPresentationAck{
+    fn new(next:u64)->Self{Self{next,future:Vec::with_capacity(256)}}
+    fn verified(&mut self,start:u64,len:usize)->u32{
+        let Some(end)=start.checked_add(len as u64)else{return self.next as u32};
+        if end<=self.next{return self.next as u32}
+        if start<=self.next{self.next=end}
+        else if self.future.len()<256{
+            let at=self.future.partition_point(|(first,_)|*first<=start);
+            self.future.insert(at,(start,end));
+        }
+        while let Some(&(first,end))=self.future.first(){
+            if first>self.next{break}
+            self.next=self.next.max(end);
+            self.future.remove(0);
+        }
+        self.next as u32
+    }
+}
+#[cfg(all(test,feature="fec2_product_record",target_os="linux"))]
+mod original_presentation_ack_tests{
+    use super::OriginalPresentationAck;
+    #[test]
+    fn h501_unique_crypto_contiguous_only_not_raw_highwater(){
+        let mut x=OriginalPresentationAck::new(1000);
+        assert_eq!(x.verified(1200,100),1000);
+        assert_eq!(x.verified(1000,100),1100);
+        assert_eq!(x.verified(1100,100),1300);
+        assert_eq!(x.verified(1300,10),1310);
+    }
+}
 // Do not hold global registry lock while M4 RX preflight ignores unrelated
 // RST/ACK or polls for up to 750ms. M4 receives directly into the already
 // allocated ORIGINAL M1 UniqueBuffer via recvmmsg and checks trusted tuple and
@@ -3928,6 +3969,8 @@ fn background_raw_once(
     mature:&Arc<Mutex<NormalFirstSendM2>>,
     #[cfg(feature="fec2_product_record")]
     fec_stats:&LoopCounts,
+    #[cfg(feature="fec2_product_record")]
+    presentation_ack:&mut OriginalPresentationAck,
     #[cfg(feature="fec2_product_record")]
     feedback:Option<&Arc<Mutex<wbd_recovery::RxFeedbackState>>>,
     #[cfg(feature="fec2_product_record")]
@@ -4020,6 +4063,8 @@ fn background_raw_once(
         #[cfg(feature="fec2_product_record")]
         if receipt.authenticated_link>0||receipt.authenticated_control{
             outer_hint=Some(ack32);
+            let contiguous=presentation_ack.verified(absolute,len);
+            fec_stats.outer_presentation_ack.store(contiguous,Ordering::Release);
         }
         #[cfg(not(feature="fec2_product_record"))]
         let _=ack32;
@@ -5076,7 +5121,12 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 (x.record.bytes().len()+wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64));
             ready_records.push(x.record.clone());
             presentations.push(Presentation{
-                ack32:1,advertised_window:4096,ip_id:43,
+                ack32:{
+                    #[cfg(feature="fec2_product_record")]
+                    {e.counters.outer_presentation_ack.load(Ordering::Acquire)}
+                    #[cfg(not(feature="fec2_product_record"))]
+                    {1}
+                },advertised_window:4096,ip_id:43,
                 persona:PacketPersona::Legacy,
             });
         }
@@ -5503,7 +5553,7 @@ fn background_original_repair_once(
         DriverPrefixObservation,BatchSuffixEvidence,RepairSendResult
     };
     if stop.load(Ordering::Acquire){return Ok(0)}
-    let (shared,raw,flow,server,generation,mature)={
+    let (shared,raw,flow,server,generation,mature,ack32)={
         let e=cell.lock().map_err(|_|BAD_STAGE)?;
         if e.phase!=PH_ACTIVE||e.workers.is_none()||
             !e.outer_repair_enabled{return Ok(0)}
@@ -5514,7 +5564,8 @@ fn background_original_repair_once(
         let Some(mature)=e.normal_firstsend_m2.as_ref().map(Arc::clone)
             else{return Err(BAD_STAGE)};
         if raw.is_stopping()||e.tx_route.is_none(){return Ok(0)}
-        (shared,raw,e.flow,e.server_side,e.generation,mature)
+        (shared,raw,e.flow,e.server_side,e.generation,mature,
+         e.counters.outer_presentation_ack.load(Ordering::Acquire))
     };
     let now=loop_now();
     let candidates={
@@ -5531,7 +5582,7 @@ fn background_original_repair_once(
         src_port:flow.client_port,dst_port:flow.server_port,
     }};
     let presentation=Presentation{
-        ack32:1,advertised_window:4096,ip_id:43,
+        ack32,advertised_window:4096,ip_id:43,
         persona:PacketPersona::Legacy,
     };
     let mut repaired=0;
@@ -5822,6 +5873,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         e.fec2_rx_admit.store(true,Ordering::Release);
     }
     let mut rx_anchor=e.rx_seq_anchor;
+    #[cfg(feature="fec2_product_record")]
+    e.counters.outer_presentation_ack.store(rx_anchor as u32,Ordering::Release);
     let rx_flow=e.flow;
     let rx_server_side=e.server_side;
     let rx_peer_persona=e.incoming_peer_persona;
@@ -5849,6 +5902,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             #[cfg(feature="fec2_product_record")]
             let mut last_egress_diag=Instant::now();
             let mut rx_pending=Vec::<crate::memory::UniqueBuffer>::with_capacity(32);
+            #[cfg(feature="fec2_product_record")]
+            let mut rx_presentation_ack=OriginalPresentationAck::new(rx_anchor);
             while !stop_rx.load(Ordering::Acquire){
                 #[cfg(feature="fec2_product_record")]
                 if egress_diag && last_egress_diag.elapsed()>=Duration::from_millis(500){
@@ -5874,6 +5929,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     &stop_rx,&mut rx_pending,&mature,
                     #[cfg(feature="fec2_product_record")]
                     &stats_rx,
+                    #[cfg(feature="fec2_product_record")]
+                    &mut rx_presentation_ack,
                     #[cfg(feature="fec2_product_record")]
                     feedback_rx.as_ref(),
                     #[cfg(feature="fec2_product_record")]

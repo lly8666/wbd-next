@@ -1,0 +1,35 @@
+name: M0 PLAN027 H501 one new-source ACK damaged native build
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h501-live-ack-off30.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-new-source-native:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message,'[plan027-h501]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Source-frozen one original Windows/WSL2 build plus 30pct native scenario
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          python - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario('scenarios/wl-outer-repair-10m-250ms-loss30-60s.json')
+          assert s['public_mode']=='normal' and s['duration_s']==60
+          assert all(s[k]['offered_mbps']==10 for k in ('windows_to_linux','linux_to_windows'))
+          print('SOURCE_FREEZE_H501',s['scenario_sha256'])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/wl-outer-repair-10m-250ms-loss30-60s.json \
+            -f perf_binary_source_sha="" -f perf_reuse_run_id=""
+          echo H501_SENT_EXACT_ONE_GENUINE_OFF30_ACTION
