@@ -4,18 +4,19 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 496,
-  "checkpoint_sha": "d14744e8486527306960221a99deb537a00801c3",
+  "sequence": 497,
+  "checkpoint_sha": "819cd69259888527972c3535bd418efe268b855e",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H496 source-frozen new H494 product old-harness-free native 100M 300s gate requires real new product source 787ad4 build Action41025962277 C100 60s exact zero both + original Go Linux TUN readback2048 before dispatch. New 300s V2 scene NO temporary `linux_tun_txqlen_packets`, so passing test proves product implementation not test shim. H495 separately gates C10/Fixed30/Auto.",
-  "why_now": "Old source f838 temporary q2048 300s original native strict first 100% and Stop PASS, but new product H494 permanent cold default requires same 300s with no test kernel override; prevent claiming old source success for changed product. Gate real source C100 strict pass before long expensive test.",
+  "current_task": "Recovered H494 new actual product binary 787ad4 native C100/60s Action41025962277: source manifest/Stop/TUN2048 PASS, strict zero first FAIL (11 Linux->Windows). H497 is repairing missing archived JSON in H495/H496 gate by source-owned ip -j validated Go readback plus kernel counters. Separate C10/Fixed30/Auto source-reused Actions planned by H495 push; new-source 300s H496 must remain gated until strict zero.",
+  "why_now": "Read in-flight Action before dispatch; recovered exact SOURCE/run/artifact/hashes, found true 11 missing at 100Mbps no netem and no original TUN drops; old f838 exact-zero 300s is not new-source PASS. H495/H496 referenced a non-uploaded kernel JSON file, causing false blocking independent verification.",
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Inspect H494 new product build C100, H495 new-source Fixed30 Auto/C10, H496 actual source-default 300s; confirm strict first packet, kernel tx_dropped, rooted fq, RTT, Stop. PLAN027 partial.",
+  "next_action": "Observe H495 source-pinned workflow push/run and independent C10 Fixed30 Auto results; do not repeat 41025962277. Diagnose genuine new-source 11 missing before deciding C100 300s, then A4 120s/A5 CPU, B modes/lifecycle and capacity-aware C including 5-min real new SOURCE; preserve failures and follow PLAN027 §0.",
   "unverified": true,
-  "last_tested_source": "69bbe53c76560655236518366a1cbc8a35384587",
+  "last_tested_source": "787ad4c900f3bae867c5c9556c4702339deef8cb",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H426-RECOVERED-H425-ACTIONS-AND-SPARSE-AUTO-SMOKE-20261030.json"
+    "docs/evidence/M0/PLAN027-H426-RECOVERED-H425-ACTIONS-AND-SPARSE-AUTO-SMOKE-20261030.json",
+    "docs/evidence/M0/PLAN027-H497-RECOVERED-NEW-PRODUCT-C100-FIRST-LOSS-20261030.json"
   ],
   "context_refs": [
     "docs/prompts/M0.md",
@@ -25,8 +26,9 @@
     "docs/features/entries/fec-auto.json",
     "docs/evidence/M0/PLAN027-H410-RECEIVER-QUALITY-SOURCE-NATIVE-RESULTS-20261030.json",
     "docs/evidence/M0/PLAN027-H411-WINDOWS-OLD-M2-OWNER-AND-GOVERNANCE-20261030.json",
-    "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md"
+    "docs/devlog/M0/20261030-PLAN027-H426-AUTO-SPARSE-SMOKE-ORACLE-REPAIR.md",
+    "docs/devlog/M0/20261030-PLAN027-H497-RECOVERED-C100-TEST-GATE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H494 old-source controlled qlen2048 actual original native C100 60sec and 300sec strict zero both directions, original 500 restored, RTT p9963/66.841ms measured same-origin, not one-way. q4096 24 missing even though TUN drop0 -> don't choose. Product original Linux Go cold txqlen2048 default rollback500 source changed; NEW SOURCE pending build/test. FEC online receipt removal and B Health/idle/dead/rotation/Stop, C200 gen/A5 separate work still partial; NOT READY."
+  "partial_summary": "H497 RECOVERED: H494 true new source 787ad4 Action41025962277 SUCCESS compile and native Stop, C100 60s offered~100M two directions, Linux->Windows 995240/995229 (11 missing, eight contiguous 89051-89058 + 3 tail), Windows->Linux 994983/994983 (0 missing); original Linux TUN kernel tx_dropped0/fq0, source-owned kernel qlen2048 Go readback PASS, RTT p99 140/147ms RTT not one-way. Artifact12963619338 ZIP sha 16c9f16eec0763cddc1ac4fa5a1bc8fddadc50cda95119750975f406c78a1c47. New-source strict C100 FAIL; old f838 300s PASS cannot transfer; H496 new 300s NOT_RUN and rightly zero-gated. H495 test oracle checked absent ZIP JSON; corrected to kernel TUN counters + source-owned true ip -j Go readback, source-reuse C10/Fixed30/Auto targeted. PLAN027 §§0(1-5) PARTIAL: A4/A5, Fixed idle, B lifecycle, C capacity matrix/long and affected fix regression/closeout remain. No final READY."
 }
