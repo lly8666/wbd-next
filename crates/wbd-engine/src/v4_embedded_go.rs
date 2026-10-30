@@ -5970,7 +5970,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         let low_due=e.quality_tx.as_ref()
                             .filter(|tx|tx.due(now)).map(|_|now);
                         let low_next=e.quality_tx.as_ref()
-                            .filter(|tx|tx.sender.is_none()&&tx.closing.is_none())
+                            .filter(|tx|tx.sender.is_none()&&tx.closing.is_none()&&
+                                tx.last_settled.is_some_and(|p|
+                                    tx.last_open_gate_pn.is_none_or(|last|p>last)))
                             .map(|tx|MonoNs(tx.next_open));
                         let low_close=e.quality_tx.as_ref().and_then(|tx|
                             tx.sender.as_ref().and_then(|s|s.timed_close_deadline()));

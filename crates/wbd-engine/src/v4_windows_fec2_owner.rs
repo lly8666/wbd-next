@@ -161,9 +161,6 @@ pub(super) fn open_symbol_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     }
     if let Some(pn)=unique_data_pn{
         if let Some(m)=e.m2.as_mut(){
-            if !m.auto_low_rate_mode{
-                m.feedback.on_authenticated_data(RecordPn(pn),m2_clock());
-            }
             // Record PN was accepted by the original replay-checked M3 FEC2
             // opener, independent of whether FEC generated business output.
             // Four bounded low-rate RX windows observe DATA once, not M2
@@ -753,14 +750,12 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_mature_readback(
     };
     let Ok(mut e)=lane.lock()else{return BAD_STAGE};
     if !v3_ready(&e,epoch,luid,ifindex)||!e.feature7{return BAD_STAGE}
-    let Some(m)=e.m2.as_mut()else{return BAD_STAGE};
-    if drain_original_auto_mature_due(m,m2_clock()).is_err(){return BAD_STAGE}
-    let recently_censored=original_m2_recent_capacity(
+    // Fixed Applied is a local owner installation fact; old mature
+    // Receipt counters are separate diagnostics and cannot gate config.
+    let applied=e.fec2_tx.as_ref().is_some_and(|tx|tx.revision().0>0);
+    let Some(m)=e.m2.as_ref()else{return BAD_STAGE};
+    let censored=m.fec_censored||original_m2_recent_capacity(
         m.fec_last_capacity_at,m2_clock());
-    let censored=m.fec_censored||recently_censored;
-    let applied=!censored && m.fec_copied_source>0&&
-        m.fec_copied_parity>0&&m.fec_positive_2s>0&&
-        m.fec_covered_2s>0&&m.fec_reverse_reports>0;
     unsafe{out.write(WindowsFixedMatureReadback{
         version:1,size,applied:u32::from(applied),
         censored:u32::from(censored),

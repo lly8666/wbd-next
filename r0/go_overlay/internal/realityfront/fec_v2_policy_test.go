@@ -242,8 +242,8 @@ func TestF2ControlAggressiveStableOneProfileAboveNormal(t *testing.T) {
 
  
 // W52 real Auto (8 Mbps original ARM64 owner, outer DATA OFF) had genuine
-// 1%-loss low-stage VALID observations interleaved with original M2 actual-k
-// cohort misalignment UNKNOWN. W45 prior-source had consecutive VALID ticks.
+// 1%-loss low-stage VALID observations interleaved with independently
+// larger authentic full-k cohorts, which no longer invalidate PN samples.
 // Retain only bounded, authenticated VALID proof; no synthetic ACK or clean
 // sample is permitted, and UNKNOWN must never itself issue a downshift.
 func TestF2ControlW52IntermittentActualKNoFakeCleanDown(t *testing.T) {
@@ -268,33 +268,25 @@ func TestF2ControlW52IntermittentActualKNoFakeCleanDown(t *testing.T) {
         now:=time.Duration(stage.sec)*time.Second
         snap:=f2Snapshot("w52",FecV2C2S,now,12,70)
         if stage.misaligned {
-            // Native closed k sources exceed 8s mature FIRST denominator;
-            // keep it unknown, DO NOT clip counts to manufacture a window.
-            snap.ActualK[15]=400 // +6.67% cohort mismatch must remain UNKNOWN (>5% bound)
+            // Full k counts exceed sampled FIRST: normalize k within
+            // its own cohort, rather than inventing missing or zero-loss.
+            snap.ActualK[15]=400
         }
-        before:=state
         next,intent,e:=FecV2Step(cfg,state,snap,now)
         if e!=nil {t.Fatal(e)}
-        if stage.misaligned {
-            observedUnknown++
-            if intent.Validity!=FecV2Unknown||intent.Send||
-                next.DownSources!=before.DownSources||
-                next.DownValidWindows!=before.DownValidWindows {
-                t.Fatalf("UNKNOWN forged a sample/revision at %ds: %+v %+v",stage.sec,next,intent)
-            }
-        } else {
-            observedValid++
-            if intent.Validity!=FecV2Valid {t.Fatalf("valid cohort rejected at %ds: %+v",stage.sec,intent)}
+        observedValid++
+        if intent.Validity!=FecV2Valid {
+            t.Fatalf("independent actual-k distribution rejected at %ds: %+v",stage.sec,intent)
         }
         if intent.Send {
-            if intent.Profile!=FecV2Strong||stage.misaligned {
+            if intent.Profile!=FecV2Strong {
                 t.Fatalf("bad downshift from genuine proof: %+v",intent)
             }
             stepped=true
         }
         state=next
     }
-    if observedUnknown!=3||observedValid!=13||!stepped||state.Desired!=FecV2Strong {
+    if observedUnknown!=0||observedValid!=16||!stepped||state.Desired!=FecV2Strong {
         t.Fatalf("bounded W52 hold did not downshift: valid=%d unknown=%d stepped=%t profile=%s",
             observedValid,observedUnknown,stepped,state.Desired)
     }
@@ -306,7 +298,7 @@ func TestF2ControlW52CensoredCapacityAndLongUnknownResetDownProof(t *testing.T) 
         {"feedback_lost",func(s *FecV2Snapshot){s.Validity=FecV2Unknown}},
         {"capacity",func(s *FecV2Snapshot){s.HostDrops=1}},
         {"censored",func(s *FecV2Snapshot){s.Validity=FecV2Censored}},
-        {"long_k_unknown",func(s *FecV2Snapshot){s.ActualK[15]=400}}, // >5% is truly invalid
+        {"long_k_unknown",func(s *FecV2Snapshot){s.ActualK=[16]uint64{}}}, // no observed block type
     } {
         t.Run(fault.name,func(t *testing.T){
             state,_,e:=FecV2Step(cfg,FecV2State{},FecV2Snapshot{},0)
@@ -338,17 +330,15 @@ func TestF2ControlW52CensoredCapacityAndLongUnknownResetDownProof(t *testing.T) 
 }
 
 
-// W55 original native ARM64 8Mbps actual-k cohort can close 0.03-4.9%
-// *more* symbols than an 8s matured FIRST-send window due to independent
-// sample/close boundaries. All 38 client UNKNOWN were actual-k overcount.
-// The overhang bound is NOT a new ACK, and unknown/host/censored sources
-// remain invalid; the conservative risk penalty must never improve q.
+// Full closed-block k can outnumber an independent sampled first-send
+// cohort. It supplies a normalized block mix, not another loss denominator.
+// Missing feedback/host capacity and empty k remain UNKNOWN.
 func TestF2ControlW56AuthenticKWindowSkewRiskEnvelope(t *testing.T){
     cfg:=f2Config("w56",FecV2C2S,FecV2Auto,FecV2Conservative)
     snap:=f2Snapshot("w56",FecV2C2S,2*time.Second,10,60)
     snap.ActualK[15]=386 // 6176 genuine k sources vs 6000 mature FIRST
     validity,reason,p:=fecV2Quality(2*time.Second,snap)
-    if validity!=FecV2Valid || reason!="mature first-send; bounded authentic k-window overhang"{
+    if validity!=FecV2Valid || reason!="matched sampled first-send and normalized actual-k"{
         t.Fatalf("small native cohort overhang discarded: %s %q",validity,reason)
     }
     for prof:=FecV2Light;prof<=FecV2Maximum;prof++{
@@ -358,10 +348,10 @@ func TestF2ControlW56AuthenticKWindowSkewRiskEnvelope(t *testing.T){
             t.Fatalf("false optimistic bound profile=%s q=%g guarded=%g",prof,old,conservative)
         }
     }
-    snap.ActualK[15]=395 // 6320 is >5% above observed; no trust
+    snap.ActualK[15]=395 // independent full k distribution can exceed PN sample
     validity,reason,_=fecV2Quality(2*time.Second,snap)
-    if validity!=FecV2Unknown||reason!="actual-k observation incomplete"{
-        t.Fatalf("large wrong k cohort promoted to VALID: %s %q",validity,reason)
+    if validity!=FecV2Valid{
+        t.Fatalf("valid full k distribution incorrectly censored: %s %q",validity,reason)
     }
     // False zero loss from no genuine positive feedback is prohibited.
     snap.ActualK[15]=386

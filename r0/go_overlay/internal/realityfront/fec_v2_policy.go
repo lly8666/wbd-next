@@ -247,31 +247,18 @@ func fecV2Base(hist [16]uint64,p float64) (FecV2Profile,bool,float64) {
 // runs ~7k sources/window. Allow at most a 5% upper boundary skew, with a
 // conservative residual penalty for every uncertain source, not a clipped
 // histogram, forged receipt, zero-loss inference, or lenient under-coverage.
-const fecV2MaxActualKWindowOverhang=0.05
-
 func fecV2KCount(h [16]uint64) float64 {
     total:=0.0
     for i,n:=range h { total+=float64(n)*float64(i+1) }
     return total
 }
 
-// q(known mix)+fraction-of-cohort-uncertainty*worst(any legal k) never
-// treats unmatched block-close symbols as clean, and is evaluated only in
-// the existing 2s cold quality control. This is a conservative uncertainty
-// envelope, not a claim of a mathematically exact same-time histogram.
+// Sampled first-send Quality and full-block actual-k have different
+// denominators. The k histogram is normalized by its own real sources;
+// only authenticated first-send samples estimate the loss probability.
 func fecV2GuardedMix(s FecV2Snapshot,profile FecV2Profile,p float64) float64 {
-    if s.Slow.FirstSent==0{return 1}
-    observed:=fecV2Mix(s.ActualK,profile,p)
-    ratio:=fecV2KCount(s.ActualK)/float64(s.Slow.FirstSent)
-    skew:=math.Abs(ratio-1)
-    if skew==0{return observed}
-    worst:=0.0
-    for k:=uint8(1);k<=16;k++{
-        repair,_:=FecV2Parity(profile,k)
-        q:=fecV2Residual(k,repair,p)
-        if q>worst{worst=q}
-    }
-    return math.Min(1,observed+skew*worst)
+    if s.Slow.FirstSent==0 || fecV2KCount(s.ActualK)==0{return 1}
+    return fecV2Mix(s.ActualK,profile,p)
 }
 func fecV2GuardedBase(s FecV2Snapshot,p float64)(FecV2Profile,bool){
     for profile:=FecV2Light;profile<=FecV2Maximum;profile++{
@@ -305,24 +292,18 @@ func fecV2Quality(now time.Duration,s FecV2Snapshot) (FecV2Validity, string, flo
             return FecV2Censored,"uncertain / censored fraction above 20%",0
         }
     }
-    kSources:=fecV2KCount(s.ActualK)
-    kRatio:=kSources/float64(s.Slow.FirstSent)
-    if kSources==0 || kRatio<0.90 ||
-        kRatio>1+fecV2MaxActualKWindowOverhang {
-        return FecV2Unknown,"actual-k observation incomplete",0
+    if fecV2KCount(s.ActualK)==0 {
+        return FecV2Unknown,"no authentic actual-k distribution",0
     }
-    if s.Fast.Observed<512 || s.Slow.Observed<512 {
-        return FecV2Unknown,"fewer than 512 valid sources",0
+    if s.Fast.Observed<64 || s.Slow.Observed<64 {
+        return FecV2Unknown,"fewer than 64 sampled valid sources",0
     }
     pf:=float64(s.Fast.Missing)/float64(s.Fast.Observed)
     ps:=float64(s.Slow.Missing)/float64(s.Slow.Observed)
     n:=float64(s.Slow.Observed)
     margin:=math.Min(0.005,1.64*math.Sqrt(ps*(1-ps)/n))
-    if kRatio>1 {
-        return FecV2Valid,"mature first-send; bounded authentic k-window overhang",
-            math.Min(1,math.Max(pf,ps)+margin)
-    }
-    return FecV2Valid,"mature first-send evidence",math.Min(1,math.Max(pf,ps)+margin)
+    return FecV2Valid,"matched sampled first-send and normalized actual-k",
+        math.Min(1,math.Max(pf,ps)+margin)
 }
 
 // Reset all of the downshift proof together; it is never inferred from
@@ -411,7 +392,7 @@ func FecV2Step(c FecV2Config, previous FecV2State, snap FecV2Snapshot, now time.
     baseline,unattainable:=fecV2GuardedBase(snap,p)
     target:=baseline
     if c.AutoPolicy==FecV2Aggressive {target=fecV2Raise(target)}
-    if snap.ConsecutiveMatureGaps>=3 && snap.Fast.Observed>=512 {
+    if snap.ConsecutiveMatureGaps>=3 && snap.Fast.Observed>=64 {
         s.BurstUntil=now+10*time.Second
     }
     if s.BurstUntil>now {

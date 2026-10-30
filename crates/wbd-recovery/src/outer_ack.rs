@@ -47,6 +47,7 @@ pub struct OuterAckIndex {
     epoch: [u8; 16],
     highest_sent_end: u64,
     cumulative_ack: u64,
+    duplicate_acks: u8,
     last_sent_at: MonoNs,
     capacity: usize,
     sent: BTreeMap<u64, SentSpan>,
@@ -71,7 +72,8 @@ impl OuterAckIndex {
         }
         Ok(Self {
             lane, epoch, highest_sent_end: initial_seq,
-            cumulative_ack: initial_seq, last_sent_at: MonoNs(0),
+            cumulative_ack: initial_seq, duplicate_acks: 0,
+            last_sent_at: MonoNs(0),
             capacity, sent: BTreeMap::new(),
         })
     }
@@ -153,6 +155,15 @@ impl OuterAckIndex {
             ranges.push((start, end));
         }
 
+        // Production currently carries cumulative ACK without negotiated
+        // SACK. Three repeated, in-range ACKs may nominate only the earliest
+        // outstanding gap when a genuinely later first-send exists. This is
+        // an inexpensive *opportunity*, never a claim of peer delivery.
+        if ack == self.cumulative_ack && sacks.is_empty() {
+            self.duplicate_acks=self.duplicate_acks.saturating_add(1);
+        } else {
+            self.duplicate_acks=0;
+        }
         let mut result = OuterAckUpdate::default();
         let cumulative: Vec<_> = self.sent.range(..ack)
             .filter_map(|(&seq, span)| (span.end <= ack).then_some(seq))
@@ -181,6 +192,15 @@ impl OuterAckIndex {
                 && now.0.saturating_sub(span.at.0) >= reorder_guard_ns {
                 let _ = seq;
                 result.gap_candidates.push(span.pn);
+            }
+        }
+        if sacks.is_empty() && self.duplicate_acks>=3 {
+            if let Some((_,head))=self.sent.range(ack..).next() {
+                if self.sent.range(head.end..).next().is_some() &&
+                    now.0.saturating_sub(head.at.0)>=reorder_guard_ns &&
+                    !result.gap_candidates.contains(&head.pn) {
+                    result.gap_candidates.push(head.pn);
+                }
             }
         }
         Ok(result)
@@ -220,6 +240,28 @@ mod tests {
         assert_eq!(x.outstanding(), 1);
         assert_eq!(x.on_feedback(lane(), [7; 16], 400, &[],
             MonoNs(32), 20).unwrap().retired, vec![RecordPn(2)]);
+    }
+    #[test]
+    fn plan027_live_cumulative_duplicate_ack_nominates_one_bounded_gap(){
+        let mut x=index(100,8);
+        for i in 0..3 {
+            assert_eq!(x.on_definitely_sent(RecordPn(i+1),100+i*100,100,
+                MonoNs(10)),Ok(true));
+        }
+        for _ in 0..2 {
+            assert!(x.on_feedback(lane(),[7;16],100,&[],
+                MonoNs(20),20).unwrap().gap_candidates.is_empty());
+        }
+        let late=x.on_feedback(lane(),[7;16],100,&[],
+            MonoNs(31),20).unwrap();
+        assert_eq!(late.gap_candidates,vec![RecordPn(1)]);
+        assert!(late.retired.is_empty());
+        assert_eq!(x.on_feedback(lane(),[8;16],100,&[],
+            MonoNs(32),20),Err(OuterAckError::WrongScope));
+        let advanced=x.on_feedback(lane(),[7;16],200,&[],
+            MonoNs(33),20).unwrap();
+        assert_eq!(advanced.retired,vec![RecordPn(1)]);
+        assert!(advanced.gap_candidates.is_empty());
     }
     #[test]
     fn r2_plan027_wrap32_and_wrong_epoch_never_release() {

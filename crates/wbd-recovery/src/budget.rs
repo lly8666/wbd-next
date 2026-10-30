@@ -92,8 +92,7 @@ struct Pending {
     key: CandidateKey,
     epoch: u64,
     wire_bytes: u64,
-    // Exact token debit, which may be < wire_bytes only for the first
-    // latency-priority repair. NotSent must never mint pacer credit.
+    // Exact token debit. Only an explicit NotSent may refund it.
     pacer_debit: u64,
     timeout: MonoNs,
 }
@@ -244,16 +243,10 @@ impl RepairBudget {
         if outer_wire_bytes > available.saturating_sub(self.current.charged) {
             return Err(BudgetError::QuotaExhausted);
         }
-        // First-delivery repair outranks smoothing: a stage-0 candidate may
-        // use the already-authorized epoch quota even when the token bucket
-        // is temporarily empty. It drains whatever tokens exist but never
-        // creates token debt. Retry-stage repairs remain strictly paced.
-        let pacer_debit=if candidate.repair_attempt_stage()==0 {
-            self.tokens.min(outer_wire_bytes)
-        }else{
-            if outer_wire_bytes > self.tokens { return Err(BudgetError::BurstPaced); }
-            outer_wire_bytes
-        };
+        // Even a first (stage0) one-shot repair must obey the 8-MTU
+        // smooth burst cap; fresh records never wait for repair tokens.
+        if outer_wire_bytes > self.tokens { return Err(BudgetError::BurstPaced); }
+        let pacer_debit=outer_wire_bytes;
         let id = self.next_id.checked_add(1).ok_or(BudgetError::IdExhausted)?;
         self.next_id = id;
         self.current.charged += outer_wire_bytes; // bounded by the epoch cap
@@ -282,8 +275,7 @@ impl RepairBudget {
             } else if let Some(prev) = &mut self.previous {
                 if p.epoch == prev.number { prev.charged -= p.wire_bytes; }
             }
-            // Refund only tokens actually debited. A stage-0 priority
-            // reservation made with an empty bucket cannot mint new credit.
+            // Only an explicitly NotSent reservation refunds its token debit.
             self.tokens = self.tokens.saturating_add(p.pacer_debit)
                 .min(self.burst_cap());
         }
@@ -481,19 +473,21 @@ mod tests {
     #[test]
     fn r2_budget_single_repair_stage_uses_existing_epoch_quota_without_second_stage(){
         let mut b=ledger(1500,0);
-        let mut reserved=0usize;
-        for i in 0..21 {
+        for i in 0..8 {
             let c=candidate(i,2);
             assert_eq!(c.repair_attempt_stage(),0);
             let id=b.reserve(&c,1500,MonoNs(2)).unwrap();
             b.on_send_result(id,RepairSendResult::Accepted,MonoNs(2)).unwrap();
-            reserved+=1;
         }
-        assert_eq!(reserved,21);
-        assert_eq!(b.snapshot().charged_repair_bytes,31_500);
+        assert_eq!(b.snapshot().charged_repair_bytes,12_000);
+        assert_eq!(b.snapshot().pacer_tokens,0);
         let extra=candidate(99,2);
         assert_eq!(extra.repair_attempt_stage(),0);
-        assert_eq!(b.reserve(&extra,1500,MonoNs(2)),Err(BudgetError::QuotaExhausted));
+        assert_eq!(b.reserve(&extra,1500,MonoNs(2)),Err(BudgetError::BurstPaced));
+        // Genuine time replenishes the smoothing budget without granting
+        // any new ciphertext or extra repair attempt.
+        let next=b.reserve(&extra,1500,MonoNs(100_000_002)).unwrap();
+        b.on_send_result(next,RepairSendResult::Accepted,MonoNs(100_000_002)).unwrap();
         // Repair accounting never blocks fresh credit acquisition.
         b.on_fresh_accepted(100,MonoNs(3)).unwrap();
         assert_eq!(b.snapshot().fresh_confirmed_bytes,100);

@@ -1,6 +1,6 @@
-//! PLAN026 Windows single Rust native Auto actor. One 2s turn inside the
-//! EXISTING native TX worker, fed solely by original M2 matured first-send
-//! counters + actual closed-block k. No controller thread or hotpath FFI.
+//! PLAN027 Windows single Rust native Auto actor. One low-rate turn inside
+//! the existing native worker, fed by authenticated sampled Quality and
+//! independently normalized actual closed-block k. No hotpath controller.
 #![allow(dead_code)]
 use std::collections::VecDeque;
 const S:u64=1_000_000_000;
@@ -36,19 +36,16 @@ fn residual(k:usize,r:usize,p:f64)->f64{
     }
     (p*tail).min(1.0)
 }
-fn guarded(khist:&[u64;16],profile:u8,p:f64,slow_sources:u64)->f64{
-    if slow_sources==0{return 1.0}
+fn guarded(khist:&[u64;16],profile:u8,p:f64,_sampled_sources:u64)->f64{
+    // Actual k is a full closed-block distribution; first-send loss is
+    // an independent bounded PN sample. Normalize k within its own cohort.
     let mut total=0.0;let mut weighted=0.0;
     for (idx,&blocks) in khist.iter().enumerate(){
         let k=idx+1;let w=(blocks as f64)*(k as f64);
         total+=w;weighted+=w*residual(k,parity(profile,k),p);
     }
     if total==0.0{return 1.0}
-    let ratio=total/(slow_sources as f64);
-    let skew=(ratio-1.0).abs();
-    let worst=(1..=16).map(|k|residual(k,parity(profile,k),p))
-        .fold(0.0,f64::max);
-    (weighted/total+skew*worst).min(1.0)
+    (weighted/total).min(1.0)
 }
 /// Returned revision is a *request*. Only an actual quiescent Rust
 /// FixedStream revision change, followed by first-copy/M2 proof, is Applied.
@@ -119,7 +116,7 @@ impl NativeAutoActor{
 
         let Some(f)=window(&counters,&fast.counters,0)else{return self.invalid(now)};
         let Some(s)=window(&counters,&slow.counters,5)else{return self.invalid(now)};
-        if f.observed<512||s.observed<512||f.sent==0||s.sent==0||
+        if f.observed<64||s.observed<64||f.sent==0||s.sent==0||
             (f.observed as f64)/(f.sent as f64)<0.9||
             (s.observed as f64)/(s.sent as f64)<0.9||
             (f.unknown as f64)/(f.sent as f64)>0.2||
@@ -135,15 +132,13 @@ impl NativeAutoActor{
         let Some(samples)=counters[13].checked_sub(slow.counters[13])
             else{return self.invalid(now)};
         if samples==0||lag/samples>6*S{return self.invalid(now)}
-        let mut khist=[0u64;16];let mut ktotal=0u64;
+        let mut khist=[0u64;16];
         for k in 0..16{
             let Some(n)=slow.counters[14+k].checked_sub(hist.counters[14+k])
                 else{return self.invalid(now)};
             khist[k]=n;
-            ktotal=ktotal.saturating_add(n.saturating_mul((k+1) as u64));
         }
-        let ratio=(ktotal as f64)/(s.sent as f64);
-        if ratio<0.9||ratio>1.05{return self.invalid(now)}
+        if khist.iter().all(|&n|n==0){return self.invalid(now)}
         let pf=(f.missing as f64)/(f.observed as f64);
         let ps=(s.missing as f64)/(s.observed as f64);
         let margin=(1.64*(ps*(1.0-ps)/(s.observed as f64)).max(0.0).sqrt()).min(0.005);

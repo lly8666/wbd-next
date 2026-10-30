@@ -104,9 +104,6 @@ struct WindowsOriginalM2 {
     quality_next_open_ns:u64,
     // Only native mode2 enables sampling; survives the Auto actor's take().
     auto_low_rate_mode:bool,
-    // Fixed accepts at most two matching inbound START/CLOSE windows,
-    // and observes DATA only while the authenticated startup is open.
-    quality_fixed_rx_active:bool,quality_fixed_rx_starts:u8,
     quality_last_report_id:Option<u64>,
     quality_slow_due:VecDeque<(u64,wbd_recovery::quality_window::LossBounds)>,
     // Per-lane state, no thread/timer; TX Health deadline not yet activated.
@@ -200,12 +197,11 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v9_rust_auto_state(
     if !v3_ready(&e,epoch,luid,ifindex)||!e.feature7||
         e.game_group.is_some(){return BAD_STAGE}
     let Some(actor)=e.auto_actor.as_ref()else{return BAD_STAGE};
-    let Some(m)=e.m2.as_ref()else{return BAD_STAGE};
-    let valid=m.fec_copied_source>0&&m.fec_copied_parity>0&&
-        m.fec_reverse_reports>0&&
-        (m.fec_positive_2s>0||m.fec_covered_2s>0)&&
-        !m.fec_censored&&
-        m.fec_last_capacity_at.is_none_or(|at|m2_clock().0.saturating_sub(at.0)>=8_000_000_000);
+    // Applied is the locally installed real FixedStream revision/profile,
+    // independent of sampled Quality or the now-retired per-record Receipt.
+    let valid=e.fec2_tx.as_ref().is_some_and(|tx|
+        tx.revision().0==actor.revision()&&
+        tx.profile_index()==actor.profile());
     let requested_revision=actor.revision();
     unsafe{out.write(WbdWindowsRustAutoStateV1{
         version:1,size,requested_revision,
@@ -373,7 +369,6 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         quality_sender:None,quality_history,quality_close_waiting:None,
         quality_signal_awaiting:None,quality_next_id:0,quality_next_open_ns:0,
         auto_low_rate_mode:false,
-        quality_fixed_rx_active:false,quality_fixed_rx_starts:0,
         quality_last_report_id:None,
         quality_slow_due:VecDeque::with_capacity(16),
         health:crate::v4_native_health::HealthClock::new(
@@ -423,23 +418,15 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
 )->Result<Option<(usize,u32,u64)>,i32>{
     if !v3_ready(e,epoch,luid,ifindex){return Err(INVALID)}
     let now=m2_clock();
-    // Auto is the sole *continuous* sampler. Fixed may emit only
-    // two startup windows after genuine source+parity NPF copies.
+    // Only Normal Auto sends low-rate loss windows. Fixed/off still
+    // carry authenticated Health, but never bootstrap a quality cycle.
     let auto=e.feature7&&e.m2.as_ref().is_some_and(|m|m.auto_low_rate_mode)
         &&e.game_group.is_none();
-    #[cfg(feature="fec2_product_record")]
-    let fixed_bootstrap=e.feature7&&!auto&&e.game_group.is_none()&&
-        e.m2.as_ref().is_some_and(|m|
-            m.fec_copied_source>0&&m.fec_copied_parity>0&&
-            (m.quality_next_id<2||m.quality_sender.is_some()||
-                m.quality_close_waiting.is_some()));
-    #[cfg(not(feature="fec2_product_record"))]
-    let fixed_bootstrap=false;
     let next_pn=e.owner.next_original_record_pn().ok_or(BAD_STAGE)?;
     let (draft,health_due,quality,signal)={
         let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
         if m.feedback_pending.is_some(){return Ok(None)}
-        let signal=if auto||fixed_bootstrap{
+        let signal=if auto{
             if let Some(window)=m.quality_close_waiting {
                 Some(crate::v4_native_health::QualityWindowSignal{
                     kind:crate::v4_native_health::QualitySignalKind::Close,
@@ -464,7 +451,7 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                     complete:closed.complete,capacity_limited:closed.capacity_limited,
                 })
             }else if m.quality_sender.is_none() &&
-                (auto||m.quality_next_id<2) &&
+                auto &&
                 now.0>=m.quality_next_open_ns{
                 let first=next_pn.checked_add(1).ok_or(BAD_STAGE)?;
                 let last=first.checked_add(1023).ok_or(BAD_STAGE)?;
@@ -644,31 +631,11 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         sampler.on_first_send(key,status);
     }
     }
+    // Retired per-record MatureFirstSend no longer receives DATA events.
+    // Retain only the actual successful source count needed by diagnostics.
     #[cfg(feature="fec2_product_record")]
-    if let Some(mature)=m.mature.as_mut(){
-        let (lane,_) = e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
-        let observation=match sent {
-            1=>wbd_recovery::FirstSendOutcome::Accepted{
-                pn:key,wire_bytes:(wire_len as u64).saturating_add(54)
-            },
-            2=>wbd_recovery::FirstSendOutcome::Uncertain{
-                pn:key,wire_bytes:(wire_len as u64).saturating_add(54)
-            },
-            _=>wbd_recovery::FirstSendOutcome::DefinitelyNotSent{pn:key},
-        };
-        match mature.on_first_send(
-            lane,wbd_recovery::FirstSendKind::Data,observation,m2_clock()
-        ){
-            Ok(())=>{},
-            // Auto quality metadata is optional to fresh M4 delivery.
-            // A saturated observer counts censored capacity but cannot
-            // convert a real NPF firstsend into a fatal DATA-path error.
-            Err(wbd_recovery::MaturityError::CapacityLimited)=>{
-                m.fec_last_capacity_at=Some(m2_clock());
-            },
-            Err(_)=>{m.fec_censored=true;return Err(BAD_STAGE)},
-        }
-        if sent==1{m.fec_copied_source=m.fec_copied_source.saturating_add(1)}
+    if sent==1 && e.feature7{
+        m.fec_copied_source=m.fec_copied_source.saturating_add(1);
     }
     if sent!=1{return Ok(m.shadow.outstanding() as u32)}
     // The caller's synchronous pcap_sendpacket success is a copied
@@ -824,28 +791,18 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
     // window, or retire a ciphertext shadow before being rejected.
     if control.receipt.is_some(){return Err(INVALID)}
     let now=m2_clock();
-    // Normal/off and Game never accept a quality signal. Fixed may
-    // process a *finite* startup witness; this is not Auto sampling.
+    // Never grant Fixed/off/Game an Auto-quality control side effect,
+    // even when the encrypted control also contains a valid idle hint.
     if (control.low_rate_quality.is_some()||control.low_rate_signal.is_some())&&
-        (!e.feature7||e.game_group.is_some()){
+        (!e.feature7||e.game_group.is_some()||!m.auto_low_rate_mode){
         return Err(INVALID)
-    }
-    let fixed_bootstrap=e.feature7&&!m.auto_low_rate_mode;
-    if fixed_bootstrap {
-        if let Some(signal)=control.low_rate_signal {
-            use crate::v4_native_health::QualitySignalKind;
-            if signal.kind==QualitySignalKind::Start &&
-                m.quality_fixed_rx_starts>=2{return Err(INVALID)}
-            if signal.kind==QualitySignalKind::Close &&
-                !m.quality_fixed_rx_active{return Err(INVALID)}
-        }
     }
     if let Some(idle)=control.peer_idle_ns{
         m.health.on_peer_idle_hint(now.0,idle);
     }else{m.health.on_authenticated_control(now.0)}
     #[cfg(feature="fec2_product_record")]
     if let Some(summary)=control.low_rate_quality{
-        if (m.auto_low_rate_mode||m.quality_next_id>0) &&
+        if m.auto_low_rate_mode &&
             !m.quality_last_report_id.is_some_and(|id|summary.id<=id){
             match m.quality_history.assess_wire_with_age(summary,now){
                 Ok((bounds,age_ns))=>{
@@ -879,23 +836,13 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
         }
     }
     if let Some(signal)=control.low_rate_signal{
-        // Authenticated Normal Auto or finite Fixed startup only.
-        // Control is not DATA and never fabricates an M2 ACK.
+        // Authenticated Normal Auto only, never a per-record Receipt.
         let inbound=if e.role_server{WireDirection::ClientToServer}
             else{WireDirection::ServerToClient};
         crate::v4_native_health::apply_authenticated_quality_signal(
             &mut m.quality_receive,m.route.outbound_lane(),e.authenticated_epoch,
             inbound,signal,now
         ).map_err(|_|INVALID)?;
-        if fixed_bootstrap {
-            use crate::v4_native_health::QualitySignalKind;
-            if signal.kind==QualitySignalKind::Start{
-                m.quality_fixed_rx_starts+=1;
-                m.quality_fixed_rx_active=true;
-            }else{
-                m.quality_fixed_rx_active=false;
-            }
-        }
         if signal.kind==crate::v4_native_health::QualitySignalKind::Close{
             let key=WindowKey{lane:m.route.outbound_lane(),
                 epoch:e.authenticated_epoch,direction:inbound,id:signal.id,
@@ -1591,7 +1538,7 @@ fn v5_open_record_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         // Only the same owner-replay-checked M3 successful DATA opens
         // activate RxFeedbackState. Control kind1 cannot ACK itself.
         if let Some(m)=e.m2.as_mut(){
-            if m.auto_low_rate_mode || m.quality_fixed_rx_active {
+            if m.auto_low_rate_mode {
                 m.quality_receive.on_unique_data(RecordPn(unique_pn),false);
             }
             m.health.on_authenticated_business(m2_clock().0);
@@ -2702,7 +2649,7 @@ mod tests {
 
     #[cfg(feature="fec2_product_record")]
     #[test]
-    fn plan027_windows_owner_authenticated_quality_close_matures_without_receipt(){
+    fn plan027_windows_owner_auto_quality_close_matures_fixed_rejects(){
         use crate::v4_native_health::{QualityWindowSignal,QualitySignalKind};
         let mut r=Registry{generation:991,entries:BTreeMap::new(),
             game_groups:BTreeMap::new()};
@@ -2727,11 +2674,11 @@ mod tests {
             0,start,512).unwrap();
         let start_control=crate::v4_native_health::parse_authenticated_control(
             &start_wire).unwrap();
-        // Feature7 Fixed accepts one authenticated startup window,
-        // without ever enabling the continuous Auto sampler.
+        // Fixed must reject an Auto-only signal before touching Health.
+        assert_eq!(m2_authenticated_kind1_entry(&mut e,16,&start_control),Err(INVALID));
+        assert!(e.m2.as_ref().unwrap().quality_due.is_empty());
+        e.m2.as_mut().unwrap().auto_low_rate_mode=true;
         assert_eq!(m2_authenticated_kind1_entry(&mut e,16,&start_control),Ok(0));
-        assert!(e.m2.as_ref().unwrap().quality_fixed_rx_active);
-        assert!(!e.m2.as_ref().unwrap().auto_low_rate_mode);
         // Feed only replay-unique DATA while the authenticated Fixed
         // startup START is active. The old loop also supplied START,
         // but after H446 it is already consumed immediately above.
@@ -2753,8 +2700,6 @@ mod tests {
         let future=MonoNs(m2_clock().0+3_000_000_001);
         let (_,summary)=win_mature_quality_due(m,future).unwrap();
         assert_eq!((summary.first_sent,summary.received_unique),(4,2));
-        assert!(!m.quality_fixed_rx_active);
-        assert_eq!(m.quality_fixed_rx_starts,1);
         assert!(summary.mature && summary.complete);
         // Unsent summary stays queued; it is never retired on a timer alone.
         assert_eq!(m.quality_due.len(),1);
