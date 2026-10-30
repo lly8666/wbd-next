@@ -10,6 +10,14 @@ const FULL_SEQ: u64 = 1 << 32;
 const MAX_ENTRIES: usize = 24_576;
 const MAX_SACK_RANGES: usize = 8;
 const MAX_GAPS_PER_FEEDBACK: usize = 32;
+const COSMETIC_SHADOW_AGE_NS: u64 = 1_400_000_000;
+
+/// Half of the *feedback-nominated* gaps, not half of all fresh DATA.
+/// A stable PN parity hash is cheap, needs no sampling table/timer and
+/// never resubmits an expired shadow. Normal first sends always take priority.
+pub fn cosmetic_half_gap(pn: RecordPn) -> bool {
+    pn.0.count_ones() & 1 == 0
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum OuterAckError {
@@ -198,11 +206,15 @@ impl OuterAckIndex {
         }
         // A later SACK is evidence of an OUTER sequence gap, not of inner
         // loss. Bounded candidates only; no periodic blind DATA PTO.
-        for (&seq, span) in self.sent.range(ack..highest_positive) {
+        // Prefer newest real positive-SACK-bounded gaps. Previously the
+        // oldest <=32 entries (often already expired behind the first hole)
+        // monopolized every /20ms ACK batch, starving current cached DATA.
+        // Reverse BTree range is O(log N + 32) without full-cache scans.
+        for (_, span) in self.sent.range(ack..highest_positive).rev() {
             if result.gap_candidates.len() >= MAX_GAPS_PER_FEEDBACK { break; }
+            let age=now.0.saturating_sub(span.at.0);
             if span.end <= highest_positive
-                && now.0.saturating_sub(span.at.0) >= reorder_guard_ns {
-                let _ = seq;
+                && age >= reorder_guard_ns && age < COSMETIC_SHADOW_AGE_NS {
                 result.gap_candidates.push(span.pn);
             }
         }
@@ -272,6 +284,20 @@ mod tests {
     }
     fn index(initial: u64, capacity: usize) -> OuterAckIndex {
         OuterAckIndex::new(lane(), [7; 16], initial, capacity).unwrap()
+    }
+    #[test]
+    fn h539_half_gap_sample_and_recent_first_hints(){
+        assert_eq!((0..4096).filter(|&pn|super::cosmetic_half_gap(RecordPn(pn))).count(),2048);
+        assert_eq!(super::cosmetic_half_gap(RecordPn(7)),super::cosmetic_half_gap(RecordPn(7)));
+        let mut x=index(0,128);
+        for i in 0..100u64{
+            x.on_definitely_sent(RecordPn(i),i*100,100,MonoNs(1)).unwrap();
+        }
+        let r=x.on_feedback(lane(),[7;16],0,
+            &[SackRange32{start:9700,end:10000}],MonoNs(500),20).unwrap();
+        assert!(r.gap_candidates.len()<=32);
+        assert!(r.gap_candidates.iter().all(|pn|pn.0<97));
+        assert!(r.gap_candidates[0].0>r.gap_candidates.last().unwrap().0);
     }
     #[test]
     fn r2_plan027_ack_sack_gap_only_after_guard_and_exact_retirement() {

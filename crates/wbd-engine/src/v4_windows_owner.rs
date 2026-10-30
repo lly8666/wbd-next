@@ -686,8 +686,12 @@ fn m2_outer_ack_hint_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let Ok(result)=m.outer_ack.on_feedback(lane,epoch,ack32,sacks,
         now,20_000_000)else{return Ok(())};
     for pn in result.retired{let _=m.shadow.discard_outer_ack_hint(pn);}
+    // Cosmetic half-sampling is tied to genuine TCP-like SACK/dupACK gaps,
+    // never to all new business bytes. Existing 10% single byte credit wins.
     for pn in result.gap_candidates{
-        let _=m.shadow.on_outer_gap_hint(pn,now);
+        if wbd_recovery::outer_ack::cosmetic_half_gap(pn){
+            let _=m.shadow.on_outer_gap_hint(pn,now);
+        }
     }
     Ok(())
 }

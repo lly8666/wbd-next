@@ -214,7 +214,7 @@
          if self.stalled.is_none_or(|(seq,_)|seq!=self.next){
              self.stalled=Some((self.next,now));return false
          }
-         if now.saturating_sub(self.stalled.unwrap().1)<600_000_000{return false}
+         if now.saturating_sub(self.stalled.unwrap().1)<250_000_000{return false}
          self.next=self.next.max(end);
          self.future.clear(); // <=256 authenticated positive spans, no full-cache scan
          self.stalled=None;
@@ -223,7 +223,7 @@
      fn sacks(&self)->([WireSack;4],usize){
          let mut blocks=[WireSack{start:0,end:0};4];
          let mut n=0;
-         for &(start,end) in self.future.iter().take(4){
+         for &(start,end) in self.future.iter().rev().take(4){
              blocks[n]=WireSack{start:start as u32,end:end as u32};
              n+=1;
          }
@@ -278,13 +278,13 @@
          for i in 0..300u32{x.verified(200+i*20,10);}
          assert_eq!(x.future.len(),256);
          assert!(!x.abandon_stalled(1));
-         assert!(!x.abandon_stalled(500_000_000));
-         assert!(x.abandon_stalled(600_000_001));
+         assert!(!x.abandon_stalled(200_000_000));
+         assert!(x.abandon_stalled(250_000_001));
          assert_eq!(x.next,200+255*20+10);
          assert!(x.future.is_empty());
          x.verified(7000,10);
-         assert!(!x.abandon_stalled(600_000_002));
-         assert!(x.abandon_stalled(1_200_000_003));
+         assert!(!x.abandon_stalled(250_000_002));
+         assert!(x.abandon_stalled(500_000_003));
          assert_eq!(x.next,7010);
          x.verified(7010,10);
          assert_eq!(x.next,7020);

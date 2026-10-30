@@ -1,0 +1,17 @@
+# PLAN027 H539 — user reopens cosmetic retransmission target
+
+LATEST USER: original H538 no-minimum cosmetic success (source080 first100% @0% R0; 30% p with Win R/F0.351%, Linux0.175%) is **not a final quota qualification**. User requests real low loss R/F=0.4–0.6 p, high loss R/F=0.25–0.6 p, smooth bounded 10% and one original encrypted immutable send only. Source080 old evidence still authentic, no "perf improvement" claim. Whole PLAN027 B/C/A5 also remains OPEN.
+
+Minimal source candidate across BOTH existing Rust native owners (Go only TLS/control cold):
+- `wbd-recovery::outer_ack` publishes `cosmetic_half_gap(RecordPn)` pure stable PN popcount parity. One sampled record in ~two **existing SACK/dupACK gap candidates**, not one in every new business record, no new AEAD/ACK marker/quality window or per-packet timer. Existing single global/proportional quota, <=8MTU burst, absolute sparse bound, true M4 receipt and all Stop remain authoritative.
+- Former bounded `OuterAckIndex` forward hint scan repeatedly offered oldest shadow metadata (already expired) and starved current candidates. Reverse iterate at most32 **recent** sent records enclosed by authentic positive SACK bound; skip older-than-1.4s records and keep original20ms reorder guard. O(logN+32), no full shadow scan.
+- Windows `PresentationAck` and Linux `OriginalPresentationAck` now use latest four authentic positive SACK spans, not first four stale, and abandon the old *cosmetic ACK head only* on an authenticated RX batch after250ms of unchanged gap. Do not change inner first delivery or Auto/Health.
+- One shared core test verifies deterministic half across 4096 PN, valid scope and newest gap order. Windows and Linux prior stale-gap tests adjust to250ms. No overlay protocol round, crypto or retry change.
+
+**Design projection, not PASS**: ideal R/F min(0.5p,0.10) where p is genuine loss observable from real ACK/SACK, with 1% target0.4–0.6%, 5% 2–3%, 15% 3.75–9%, 30% 7.5–10%. Actual p/positive coverage and event pacing may differ; only per-Action real F/R/C/Stop/CPU tests qualify. Source freeze in this batch, build once via H539 signed Windows original Go TLS + Linux Rust Normal/off 0% 10M/250ms 60s, then independent same binaries 1,5,15,30 with identical seed/mix. Multi-VM scenario Actions can run concurrently, no same-VM throughput concurrency. No seed sweep; detect insufficient low/high and fix minimum actual defect based on reports.
+
+**Recovered simultaneous B**: SOURCE080 H538 four/five results so far: Game2 off Action41079618842 SUCCESS, Game4 off 41079622778 SUCCESS, Fixed30 41079634037 SUCCESS. Game4 FEC 41079630362 FAIL Windows NPF warm client never Ready; Linux all four lanes started, real app bind failed; this is an outstanding necessary B defect. Game2 FEC41079626524 was IN_PROGRESS at checkpoint and must be collected before any repeat. Windows Game Health 15/90s still not wired to Game worker idle deadline, original lifecycle rotation and A5 comparator/C matrix OPEN. User ratio change does not cancel other jobs or excuse failures.
+
+```feature-impact
+{"kind":"updated","ids":["outer-opportunistic-repair","linux-raw-tun","windows-native-transport"],"reason":"H539 shared bounded real ACK/SACK cosmetic half-gap candidate selection and recent SACK telemetry on both Linux/Windows Rust owners, no new protocol/control/limiters; source-locked new 0/1/5/15/30 independent runs pending."}
+```

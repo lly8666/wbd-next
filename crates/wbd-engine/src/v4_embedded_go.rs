@@ -3959,7 +3959,7 @@ impl OriginalPresentationAck{
         if self.stalled.is_none_or(|(seq,_)|seq!=self.next){
             self.stalled=Some((self.next,now));return false
         }
-        if now.saturating_sub(self.stalled.unwrap().1)<600_000_000{return false}
+        if now.saturating_sub(self.stalled.unwrap().1)<250_000_000{return false}
         self.next=self.next.max(end);
         self.future.clear(); // <=256 bounded authentic positive spans
         self.stalled=None;
@@ -3969,7 +3969,9 @@ impl OriginalPresentationAck{
         // One authenticated gap may have hundreds of subsequent records.
         // Four merged positive SACK intervals are enough to nominate the
         // earlier holes; never allocate or scan the outer repair cache.
-        self.future.iter().take(4).map(|&(start,end)|
+        // Fresh authenticated positive spans bound the latest eligible
+        // gaps. Oldest-four alone repeat stale hints after the first hole.
+        self.future.iter().rev().take(4).map(|&(start,end)|
             wbd_platform::ipv4_tcp::SackRange32{
                 start:start as u32,end:end as u32,
             }).collect()
@@ -4004,13 +4006,13 @@ mod original_presentation_ack_tests{
         for i in 0..300u64{x.verified(200+i*20,10);}
         assert_eq!(x.future.len(),256);
         assert!(!x.abandon_stalled(1));
-        assert!(!x.abandon_stalled(400_000_000));
-        assert!(x.abandon_stalled(600_000_001));
+        assert!(!x.abandon_stalled(200_000_000));
+        assert!(x.abandon_stalled(250_000_001));
         assert_eq!(x.next,200+255*20+10);
         assert!(x.sacks().is_empty());
         x.verified(7000,10);
-        assert!(!x.abandon_stalled(600_000_002));
-        assert!(x.abandon_stalled(1_200_000_003));
+        assert!(!x.abandon_stalled(250_000_002));
+        assert!(x.abandon_stalled(500_000_003));
         assert_eq!(x.next,7010);
         x.verified(7010,10);
         assert_eq!(x.next,7020);
@@ -4279,7 +4281,9 @@ fn background_raw_once(
                 let _=owned.shadow.discard_outer_ack_hint(pn);
             }
             for pn in update.gap_candidates{
-                let _=owned.shadow.on_outer_gap_hint(pn,loop_now());
+                if wbd_recovery::outer_ack::cosmetic_half_gap(pn){
+                    let _=owned.shadow.on_outer_gap_hint(pn,loop_now());
+                }
             }
         }
     }
