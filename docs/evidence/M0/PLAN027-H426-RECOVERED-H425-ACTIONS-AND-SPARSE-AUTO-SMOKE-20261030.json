@@ -76,5 +76,8 @@
     "auto_120s_downshift": "NOT_RUN",
     "physical": "NOT_RUN"
   },
-  "next": "Collect all source-scoped Actions; implement remaining Fixed/off M2 retirement, ACK/SACK and low-rate replacement; then A, B, C and required fixes. No duplicate dispatch of running source."
+  "next": "Collect all source-scoped Actions; implement remaining Fixed/off M2 retirement, ACK/SACK and low-rate replacement; then A, B, C and required fixes. No duplicate dispatch of running source.",
+  "source_sha": "69bbe53c76560655236518366a1cbc8a35384587",
+  "result": "PARTIAL",
+  "artifact_verified": false
 }
