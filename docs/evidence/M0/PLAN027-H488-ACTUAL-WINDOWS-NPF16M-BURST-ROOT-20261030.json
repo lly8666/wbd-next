@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "date": "2026-10-30",
+  "candidate_product_source": "f83874c30e0d918cfe070b67b39e208eea0da457",
+  "candidate_original_build_action": 41013628666,
+  "scenario_evidence": [
+    {
+      "case": "Normal C100 25ms loss0 60s",
+      "source": "f83874c30e0d918cfe070b67b39e208eea0da457",
+      "action": 41013628666,
+      "artifact_id": 12958594317,
+      "actual_original_npf_capture_16m_marker_count": 2,
+      "win_sent_from_linux": 995179,
+      "windows_received_first": 993412,
+      "windows_missing": 1767,
+      "linux_fraction": 1,
+      "windows_fraction": 0.998224,
+      "windows_generator_cpu_one_core_pct": 29.104,
+      "linux_generator_cpu_one_core_pct": 81.424,
+      "windows_global_ipv4_udp_inerrors_delta": 0,
+      "windows_npf_owner_approx_drop_delta": 0,
+      "linux_kernel_netem_injected_loss_pct": 0,
+      "windows_missing_ranges": [
+        {
+          "start": 94381,
+          "end_exclusive": 94384,
+          "missing": 3,
+          "source_sender_clock_approx_s": [
+            5.68,
+            5.69
+          ]
+        },
+        {
+          "start": 94879,
+          "end_exclusive": 95649,
+          "missing": 770,
+          "source_sender_clock_approx_s": [
+            5.71,
+            5.76
+          ],
+          "linux_sender_bin_near_nominal": true
+        },
+        {
+          "start": 521645,
+          "end_exclusive": 521772,
+          "missing": 127,
+          "source_sender_clock_approx_s": [
+            31.47,
+            31.48
+          ]
+        },
+        {
+          "start": 521804,
+          "end_exclusive": 522671,
+          "missing": 867,
+          "source_sender_clock_approx_s": [
+            31.47,
+            31.53
+          ],
+          "linux_sender_bin_peak_packets_per_10ms": 384
+        }
+      ],
+      "stop": "PASS_BOTH_OWNED",
+      "strict_zero_first": "FAIL",
+      "action_outcome": "FAIL"
+    },
+    {
+      "case": "Normal C10 25ms loss0 60s",
+      "action": 41015331347,
+      "artifact_id": 12959641227,
+      "windows_first_fraction": 1,
+      "linux_first_fraction": 1,
+      "windows_generator_cpu_one_core_pct": 8.676,
+      "linux_generator_cpu_one_core_pct": 17.054,
+      "actual_windows_npf_kernel_buffer_bytes": 16777216,
+      "stop": "PASS_BOTH_OWNED",
+      "strict_zero_first": "PASS"
+    },
+    {
+      "case": "Fixed 10M250ms30pct 60s",
+      "action": 41015333723,
+      "artifact_id": 12958678904,
+      "windows_first_fraction": 0.999799,
+      "linux_first_fraction": 0.999206,
+      "windows_residual_missing": 20,
+      "linux_residual_missing": 79,
+      "windows_generator_cpu_one_core_pct": 6.851,
+      "linux_generator_cpu_one_core_pct": 18.424,
+      "stop": "PASS_BOTH_OWNED",
+      "result": "MEASURED_BOTH_OS_KERNEL"
+    },
+    {
+      "case": "Control previous original NPF source a61 C100 optimized Python",
+      "action": 41009789527,
+      "artifact_id": 12957117485,
+      "windows_first_fraction": 0.999834,
+      "linux_first_fraction": 1,
+      "windows_missing": 165,
+      "windows_missing_source_clock_s": [
+        7.23,
+        7.25
+      ],
+      "win_cpu_one_core_pct": 16.13,
+      "stop": "PASS_BOTH_OWNED",
+      "strict_zero_first": "FAIL"
+    }
+  ],
+  "interpretation": "One actual 16MiB NPF run underperforms one prior original NPF 1MiB run; cannot causally conclude NPF buffer itself worsened loss without controlled repeats. No injected loss; Windows guest UDP host-global errors0 and approximate owner NPF drops0 do not prove Wintun/NPF/TCP carrier delivery. Fixed direction residual asymmetry reverses across independent VM runs. Source Linux sender 10ms bins at 5.7s close to nominal while 31.5s peak ~384/10ms vs nominal166; not all losses are explainable as generator burst. All clocks are local per sender, not one-way p99. Product source changed for NPF candidate, historical M4 blob preserved.",
+  "new_tool": "tools/m0_wl_plan027_burst_clock.py",
+  "confidence": "MEASURED_WINDOWS_APPLICATION_FIRST_GAPS_ROOT_NOT_LOCALIZED",
+  "blocking": [
+    "100Mbps strict zero-first Windows 1767 missing",
+    "M3/Wintun/OS UDP boundary not localized",
+    "A5 Go baseline native exit",
+    "B Health idle dead rotation",
+    "C200 capacity generator"
+  ]
+}
