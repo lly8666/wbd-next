@@ -1,0 +1,60 @@
+name: M0 PLAN027 H530 source7a staged capacity 50 100 and 50 long
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h530-source7a-c50-c100-long.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  verified-source-c-five-minutes:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h530-c-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Actual original source7a 50Mbps proven then three new independent capacity and long scenes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          src=7a5d7e83823e96539d2a904a8193a85ec18df30d
+          build=41060763175
+          prior50=41064427699
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .head_sha)" = "$src"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .conclusion)" = success
+          test "$(gh api "repos/$GH_REPO/actions/runs/$prior50" --jq .conclusion)" = success
+          gh run download "$prior50" -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/h530"
+          python3 - <<'PY'
+          import json,os,pathlib
+          from tools.m0_wl_perf_v2_config import read_scenario
+          source='7a5d7e83823e96539d2a904a8193a85ec18df30d'
+          p=pathlib.Path(os.environ['RUNNER_TEMP'])/'h530'/'report.json'
+          r=json.loads(p.read_text())
+          assert r['linux_binary_source']==source
+          assert r['WL_V2']['scenario_id']=='wl-outer-repair-50m-150ms-loss1-60s'
+          assert r['WL_V2']['status']=='MEASURED_BOTH_OS_KERNEL'
+          assert r['stop']=='PASS_BOTH_OWNED'
+          assert min(r['WL_V2']['first_delivery_fraction'].values())>.98
+          for name,rate,duration in (
+              ('plan027-c-normal-50m-25ms-loss0-60s',50,60),
+              ('plan027-c-normal-50m-25ms-loss0-300s',50,300),
+              ('plan027-c-normal-100m-25ms-loss0-60s',100,60)):
+              s=read_scenario('scenarios/'+name+'.json')
+              assert s.get('public_mode','normal')=='normal' and s['duration_s']==duration
+              assert all(s[d]['offered_mbps']==rate and s[d]['loss_pct']==0 for d in ('windows_to_linux','linux_to_windows'))
+              print('H530_ONE_NATIVE_CAPACITY_SCENE',name,s['scenario_sha256'])
+          print('H530_REAL_SOURCE7A_C50_BASELINE_TO_C100_STAGING_GATE_PASS')
+          PY
+          for scene in \
+            scenarios/plan027-c-normal-50m-25ms-loss0-60s.json \
+            scenarios/plan027-c-normal-50m-25ms-loss0-300s.json \
+            scenarios/plan027-c-normal-100m-25ms-loss0-60s.json; do
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode=normal -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="$scene" \
+              -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
+            echo "H530_ONE_ACTION_ONE_MEASUREMENT source=$src $scene"
+          done
