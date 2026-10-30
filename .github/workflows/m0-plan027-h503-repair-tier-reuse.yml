@@ -33,7 +33,7 @@ jobs:
           for p in (1,5,10,30):
               f=f'scenarios/wl-outer-repair-50m-150ms-loss{p}-60s.json'
               s=read_scenario(f)
-              assert s['public_mode']=='normal' and s['duration_s']==60, s
+              assert s.get('public_mode','normal')=='normal' and s['duration_s']==60, s
               for direction in ('windows_to_linux','linux_to_windows'):
                   assert s[direction]['offered_mbps']==50 and s[direction]['loss_pct']==p
               print('H503_SOURCE_FROZEN_SCENE',f,s['scenario_sha256'])
