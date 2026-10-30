@@ -37,6 +37,7 @@ extern int32_t wbd_m0_embedded_go_public_fec2_tx_snapshot(uint64_t,uint64_t *,si
 extern int32_t wbd_m0_embedded_go_public_fec2_mature_quality(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_public_fec2_tx_failures(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_loop_authenticated_dead(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2_coverage(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_debug_pause_jumbo(uint64_t,uint32_t,uint32_t *,uint32_t *);
@@ -549,6 +550,7 @@ type V4PublicWorkerCPU struct{RxNs,TxNs uint64}
 type V4PublicLoopPulse struct{
     RxRecords,TxRecords,RxErrors,TxErrors uint64
     RxThreadCPUns,TxThreadCPUns uint64
+    AuthenticatedPeerDead bool
 }
 func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,error){
     if b==nil||!b.committed||b.stopped||b.handle==0 {
@@ -558,10 +560,17 @@ func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,err
     if err!=nil{return V4PublicLoopPulse{},err}
     rx,tx,err:=b.rustOwnerWorkerCPU()
     if err!=nil{return V4PublicLoopPulse{},err}
+    var nativeDead C.uint32_t
+    rc:=C.wbd_m0_embedded_go_loop_authenticated_dead(
+        C.uint64_t(b.handle),&nativeDead)
+    if rc!=0{return V4PublicLoopPulse{},fmt.Errorf(
+        "%w: native authenticated Health terminal readback=%d",
+        errV4Embedded,int(rc))}
     return V4PublicLoopPulse{
         RxRecords:stats.RxOK,TxRecords:stats.TxOK,
         RxErrors:stats.RxErr,TxErrors:stats.TxErr,
         RxThreadCPUns:rx,TxThreadCPUns:tx,
+        AuthenticatedPeerDead:nativeDead!=0,
     },nil
 }
 func (b *v4EmbeddedNativeBridge) originalPublicWorkerCPU()(V4PublicWorkerCPU,error){

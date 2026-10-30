@@ -3720,6 +3720,9 @@ unsafe extern "C" {
 #[derive(Default)]
 struct LoopCounts {
     rx:AtomicU64,tx:AtomicU64,rx_error:AtomicU64,tx_error:AtomicU64,
+    // A local driver partial/NotSent is NOT an authenticated peer death.
+    // Only the native HealthClock 90s terminal decision sets this bit.
+    authenticated_peer_dead:AtomicBool,
     tx_dropped:AtomicU64,tx_uncertain:AtomicU64,tx_backpressure:AtomicU64,
     route_refresh:AtomicU64,
     rx_thread_cpu_ns:AtomicU64,tx_thread_cpu_ns:AtomicU64,
@@ -6067,6 +6070,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 ){
                     eprintln!("WBD_M0_NATIVE_HEALTH_TIMEOUT side=tx reason=missing_authenticated_peer_dead_after_90s");
                     stats.tx_error.fetch_add(1,Ordering::Relaxed);
+                    stats.authenticated_peer_dead.store(true,Ordering::Release);
                     stop_tx.store(true,Ordering::Release);
                     break
                 }
@@ -6175,6 +6179,25 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_stats(
         rx_err.write(e.counters.rx_error.load(Ordering::Relaxed));
         tx_err.write(e.counters.tx_error.load(Ordering::Relaxed));
     }
+    OK
+}
+
+// Cold Go polls once per second. A retryable raw M4 partial send contributes
+// to tx_error/tx_dropped but never authorizes TLS reauthentication. Only
+// actual native authenticated Health dead-after-90s does. No timer or Go
+// per-record observation, and no second liveness controller.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_authenticated_dead(
+    h:u64,dead:*mut u32
+)->i32{
+    if dead.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.workers.is_none(){return BAD_STAGE}
+    unsafe{dead.write(u32::from(
+        e.counters.authenticated_peer_dead.load(Ordering::Acquire)))};
     OK
 }
 

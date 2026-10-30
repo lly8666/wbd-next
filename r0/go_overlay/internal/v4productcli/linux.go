@@ -302,8 +302,13 @@ func originalRandomISN()(uint32,error){
 }
 var errPublicNativePeerDead=errors.New("original Rust authenticated peer dead; Go cold TLS reauthorization required")
 
-// Rust alone owns native Health; Go observes its terminal worker error at
-// one cold-control sample/second, never inspects application packets.
+// Rust alone owns native Health. Go cold control must never mistake a
+// cumulative raw M4 NotSent, transient backpressure, or optional feedback
+// scheduling error for 90s of missing authenticated peer activity.
+// Only the exact Rust HealthClock terminal flag can reauthorize TLS.
+func publicNativeHealthDead(p realityfront.V4PublicLoopPulse)bool{
+ return p.AuthenticatedPeerDead
+}
 func monitorPublicNativePeer(ctx context.Context,errs <-chan error,
  live func()bool,pulse func()(realityfront.V4PublicLoopPulse,error))error{
  ticker:=time.NewTicker(time.Second);defer ticker.Stop()
@@ -311,7 +316,7 @@ func monitorPublicNativePeer(ctx context.Context,errs <-chan error,
  case <-ctx.Done():return nil
  case e:=<-errs:return e
  case <-ticker.C:
-  if live(){stats,e:=pulse();if e==nil&&stats.TxErrors>0{return errPublicNativePeerDead}}
+  if live(){stats,e:=pulse();if e==nil&&publicNativeHealthDead(stats){return errPublicNativePeerDead}}
  }}
 }
 
