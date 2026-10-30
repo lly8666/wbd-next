@@ -49,6 +49,14 @@
 
 同源码冻结一套原Windows NPF/Wintun Go TLS+Rust 和Linux Rust/TUN build，先0%，再复用相同二进制分别运行1/5/15/30%四个独立 Actions；每场景Normal/OFF双向10Mbps/250ms/60s、相同固定seed和包形状，双端场景进程各跑一套，不同VM场景可并行，同VM不可并发吞吐。报告每向真实F/R/C（未暴露的C写NOT_MEASURED）、F初发、R比例、业务首到/尾延迟、CPU/RSS/队列/驱动/Stop。旧SOURCE080 0/30%证据和原H538 Game B正负保留，但**旧“机会式重传 DONE”被本节重开**，直到新比例验收；且PLAN027剩余Windows GameFEC/Health、B/C/A5不等待无关完美统计。
 
+### H544 实损反馈后的最小补齐：一个缺口带三个近期缓存机会（待新 SOURCE 验证）
+
+原产品 SOURCE `10001c7eefb52387a5c71aa71129b80418273ac9` 通过原始双 OS 0%/60s，但在1/5/15/30% real tc 的四条独立 Action 41087790680/41087795350/41087799226/41087803404，Windows R/F 只有0.098/0.712/1.796/2.184%，Linux 0.099/0.581/2.045/2.610%。实际真业务/Stop均通过，**新比例目标四档双端均 FAIL**，详见 [H544原始证据](../evidence/M0/PLAN027-H544-SOURCE100-FOUR-RATE-TIERS-ORIGINAL-20261030.json)。该真证据不能以green工作流充作重传达标。原有半选只能发现部分稀疏SACK缺口，反复放大单包概率不足。
+
+H544仅补一条候选扩张：当现有 SACK/累计重复ACK 已有**真实缓存、尚未被标记的缺口记录**被原1/2轻量选中时，再从有序原发送索引的最近≤256条记录中，取**最多3条** age≥50ms、还没被本批选过、<1.4s 的原密文候选，立即走相同 `shadow.on_outer_gap_hint`→原budget→驱动真正发送→owned释放。只有反馈触发；无损0%，不主动重传业务；未缓存或已排队跳过。只用一bit sent index 已额外候选标记，保证同一批反馈不反复拿同一项，不加timer、新独立限速器/控制报文/Go热泵。这相当于将已有低概率反馈机会的一次原包候选扩成最多四条便宜机会；**预测**缓解比例不足，不把四倍当实测结论。最高10%旧字节预算/8MTU突发/一次不可变密文/原Seq PN、generation、MTU、真实驱动/Stop均不动。
+
+H544同时修原 Windows Game cold TLS 交接：原 Game4 FEC Action41079630362 FAIL，在4条Linux lane已真实开始后Windows尚未Ready，Go已Detach lane 的256项可选早到M3缓存溢出此前会直接结束 reader，可能连带阻塞剩余TLS。现在仅丢弃该可选早到记录，reader继续原TLS工作；定量队列不增、M3仍Rust验证、无热Go数据环。新源码需编译并以Game2/4最高FEC实际回归，不能把这项候选修复提前标PASS。剩余Windows Game idle/Health、rotation、A5和容量C亦继续。
+
 ## 1. 唯一顺序与恢复
 1. 默认上个聊天意外中断：刷新main，读cursor checkpoint后提交、短devlog、已登记Actions和SOURCE/hash；先补recovered事实、取在途结果，不重复dispatch。新registry/本计划优先于旧cursor next_action。
 2. **先整批实现M2退役及替代逻辑、双方调用、配置/功能卡/夹具→冻结SOURCE→一次编译→简化验证A。**

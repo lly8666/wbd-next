@@ -688,9 +688,15 @@ fn m2_outer_ack_hint_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     for pn in result.retired{let _=m.shadow.discard_outer_ack_hint(pn);}
     // Cosmetic half-sampling is tied to genuine TCP-like SACK/dupACK gaps,
     // never to all new business bytes. Existing 10% single byte credit wins.
-    for pn in result.gap_candidates{
-        if wbd_recovery::outer_ack::cosmetic_half_gap(pn){
-            let _=m.shadow.on_outer_gap_hint(pn,now);
+    for pn in result.gap_candidates {
+        // True SACK/dupACK gap is the sole trigger. After admitting this
+        // original immutable shadow, borrow <=3 newer cached first sends;
+        // never scan all DATA, never invent a PTO or consume new PN.
+        if wbd_recovery::outer_ack::cosmetic_half_gap(pn) &&
+            m.shadow.on_outer_gap_hint(pn,now) {
+            for recent in m.outer_ack.nominate_recent_feedback_followups(now,3) {
+                let _=m.shadow.on_outer_gap_hint(recent,now);
+            }
         }
     }
     Ok(())

@@ -46,6 +46,7 @@ struct SentSpan {
     end: u64,
     pn: RecordPn,
     at: MonoNs,
+    followup_offered: bool,
 }
 
 /// One owner instance per lane+epoch. No per-packet allocations after
@@ -117,7 +118,9 @@ impl OuterAckIndex {
             if stale { self.sent.pop_first(); }
         }
         if self.sent.len() >= self.capacity { return Ok(false); }
-        self.sent.insert(seq_start, SentSpan { end, pn, at: now });
+        self.sent.insert(seq_start, SentSpan {
+            end, pn, at: now, followup_offered: false
+        });
         Ok(true)
     }
 
@@ -132,6 +135,34 @@ impl OuterAckIndex {
             }
         }
         expired
+    }
+
+    /// After ONE feedback-supported, still-live old-gap candidate, the
+    /// owner may opportunistically borrow three other recently sent immutable
+    /// shadows. This remains a single ACK-triggered batch, not DATA PTO:
+    /// zero genuine gaps => zero tail nominations. No new byte limiter:
+    /// the old one-shot shadow / M4 driver / 10%-F quota remain final.
+    /// Mark tail metadata once so repeated SACKs never select the same
+    /// candidate and never scan older than 256 recent sent records.
+    pub fn nominate_recent_feedback_followups(&mut self, now: MonoNs,
+        count: usize)->Vec<RecordPn>{
+        let mut keys=Vec::with_capacity(count.min(3));
+        for (&seq,span) in self.sent.iter().rev().take(256) {
+            if keys.len()>=count.min(3){break}
+            let age=now.0.saturating_sub(span.at.0);
+            if !span.followup_offered && age>=50_000_000 &&
+                age<COSMETIC_SHADOW_AGE_NS {
+                keys.push(seq);
+            }
+        }
+        let mut offered=Vec::with_capacity(keys.len());
+        for seq in keys {
+            if let Some(span)=self.sent.get_mut(&seq) {
+                span.followup_offered=true;
+                offered.push(span.pn);
+            }
+        }
+        offered
     }
 
     /// Raw presentation ACK/SACK is untrusted: it can only retire optional
@@ -298,6 +329,25 @@ mod tests {
         assert!(r.gap_candidates.len()<=32);
         assert!(r.gap_candidates.iter().all(|pn|pn.0<97));
         assert!(r.gap_candidates[0].0>r.gap_candidates.last().unwrap().0);
+    }
+    #[test]
+    fn h544_genuine_gap_can_nominate_three_new_bounded_tail_caches_once() {
+        let mut x=index(100,16);
+        for i in 0..10u64 {
+            assert!(x.on_definitely_sent(RecordPn(i+1),
+                100+i*100,100,MonoNs(1)).unwrap());
+        }
+        let future=[SackRange32 {start:500,end:600}];
+        let hinted=x.on_feedback(lane(),[7;16],200,&future,
+            MonoNs(100_000_001),20_000_000).unwrap();
+        assert!(hinted.gap_candidates.contains(&RecordPn(2)));
+        let tails=x.nominate_recent_feedback_followups(MonoNs(100_000_001),3);
+        assert_eq!(tails,vec![RecordPn(10),RecordPn(9),RecordPn(8)]);
+        assert_eq!(x.nominate_recent_feedback_followups(MonoNs(100_000_002),3),
+            vec![RecordPn(7),RecordPn(6),RecordPn(4)]);
+        assert!(x.nominate_recent_feedback_followups(MonoNs(1_500_000_002),3).is_empty());
+        assert_eq!(x.on_feedback(lane(),[8;16],200,&future,
+            MonoNs(100_000_003),20_000_000),Err(OuterAckError::WrongScope));
     }
     #[test]
     fn r2_plan027_ack_sack_gap_only_after_guard_and_exact_retirement() {

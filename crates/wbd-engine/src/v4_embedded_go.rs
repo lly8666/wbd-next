@@ -4283,9 +4283,14 @@ fn background_raw_once(
             for pn in update.retired{
                 let _=owned.shadow.discard_outer_ack_hint(pn);
             }
-            for pn in update.gap_candidates{
-                if wbd_recovery::outer_ack::cosmetic_half_gap(pn){
-                    let _=owned.shadow.on_outer_gap_hint(pn,loop_now());
+            for pn in update.gap_candidates {
+                let now=loop_now();
+                if wbd_recovery::outer_ack::cosmetic_half_gap(pn) &&
+                    owned.shadow.on_outer_gap_hint(pn,now) {
+                    for recent in owned.outer_ack
+                        .nominate_recent_feedback_followups(now,3) {
+                        let _=owned.shadow.on_outer_gap_hint(recent,now);
+                    }
                 }
             }
         }

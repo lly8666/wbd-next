@@ -17,14 +17,14 @@ import(
  "github.com/lly8666/wobuzhidao/internal/windowsclient"
  "github.com/lly8666/wobuzhidao/internal/windowsownerlease"
 )
-// Bounded Go prehandoff ciphertext cannot block the last reader while
-// Rust waits for its pcap_t loan. Full capacity is a typed failure.
-func offerGameColdInbound(inbound chan<- m0GameInbound, failed chan<- error, record m0GameInbound)bool{
+// Already-detached Game M3 ciphertext is an optional finite cold backlog.
+// Its overflow must NEVER kill a Go reader still needed by other genuine
+// per-lane TLS handshakes. Drop just this early record and keep servicing
+// the original NPF socket until Rust owns it; no hot Go pump is introduced.
+func offerGameColdInbound(inbound chan<- m0GameInbound,record m0GameInbound)bool{
  select{
  case inbound<-record:return true
- default:
-  select{case failed<-fmt.Errorf("original Game cold NPF backlog capacity exceeded"):default:}
-  return false
+ default:return false
  }
 }
 
@@ -78,7 +78,7 @@ func runM0NativeV4WindowsGame(
      return
     }
     if a.State()==faketcp.ClientAssociationDetached{
-     if !offerGameColdInbound(inbound,failed,m0GameInbound{lane:index,segment:seg}){return}
+     _=offerGameColdInbound(inbound,m0GameInbound{lane:index,segment:seg})
     }else if err=a.HandleSegment(seg,time.Now());err!=nil{
      if ctx.Err()==nil{select{case failed<-err:default:}}
      return
@@ -129,6 +129,7 @@ func runM0NativeV4WindowsGame(
  group,err:=realityfront.V4WindowsEstablishOriginalGameClientGroup(
   ctx,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),assocs,cfg,fecMode)
  if err!=nil{return err}
+ fmt.Printf("WBD_WINDOWS_GAME_COLD_TLS_JOINED lanes=%d fec=%d\n",count,fecMode)
  tun,err:=windowsclient.OpenTUN(o.AdapterAlias)
  if err!=nil{return err}
  defer tun.Close()

@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "10001c7eefb52387a5c71aa71129b80418273ac9",
+  "head_harness_sha": "734d182e8d2c67e2dafd5fc59d0303d0cd647b6b",
+  "scope": "original signed Windows Go TLS NPF Wintun native Rust and original Linux Rust Raw TUN WSL2; each independent real 10Mbps each-way 250ms 60s fixed packet shape, same original binaries (built Action41085178791); each independent Action one controller",
+  "overall": "FAIL_USER_NEW_R_OVER_F_MINIMUM_ALL_FOUR_TIER_BOTH_OS; PASS_REAL_BUSINESS_BOTH_OS_STOP_AND_LOSSLESS_ZERO",
+  "windows_binary_artifact": {
+    "id": 12991283388,
+    "sha256": "59262ba3f625fefe133bdbfb9189857840321bbb3d46677f08d24730def4e236"
+  },
+  "linux_binary_artifact": {
+    "id": 12991187722,
+    "sha256": "714f898a7ac0ce3b25eedee40bcc22c86e85255344a8e28206597e1e05220864"
+  },
+  "zero_baseline": {
+    "action": 41085178791,
+    "artifact_id": 12991248945,
+    "zip_sha256": "bf7d002572871106d7c3b1cfb4010def2600f8c9931cac72d7fa9152ac9494ae",
+    "windows_F": 86402605,
+    "windows_R": 0,
+    "windows_C": 238295,
+    "linux_F": 85007588,
+    "linux_R": 0,
+    "first_fraction_both": 1,
+    "owned_stop": "PASS"
+  },
+  "results": [
+    {
+      "loss_pct": 1,
+      "run": 41087790680,
+      "artifact_id": 12992945868,
+      "zip_sha256": "6ebc49ca75ba66ac2c7fe3e5f78944470c9aa7949ac3041d541bc4e3c29fe824",
+      "scenario_hash": "85226ffb994a46cf4600e541e8b196df65d2a3b2fac5c576bddcd9a61ba8c5f1",
+      "windows": {
+        "F": 86395085,
+        "R": 84864,
+        "C": 182323,
+        "repair_packets": 91,
+        "first": 0.9911,
+        "R_over_F": 0.0982,
+        "target_low": 0.4,
+        "target_high": 0.6,
+        "rate_pass": false
+      },
+      "linux": {
+        "F": 85004364,
+        "R": 84358,
+        "C": null,
+        "repair_packets": 91,
+        "first": 0.99002,
+        "R_over_F": 0.0992,
+        "target_low": 0.4,
+        "target_high": 0.6,
+        "rate_pass": false
+      },
+      "netem_drops": {
+        "eth0": 1008,
+        "ifb": 1108
+      },
+      "windows_cpu_s": 2.1094,
+      "windows_elapsed_s": 74.563,
+      "windows_peak_rss_bytes": 42356736,
+      "max_interdelivery_ms": {
+        "windows": 640,
+        "linux": 410
+      },
+      "real_business_stop": "PASS_BOTH_BIDIRECTIONAL_UDP_TCP_AND_OWNED_STOP",
+      "retransmission_goal": "FAIL_BOTH_DIRECTIONS_BELOW_USER_MINIMUM"
+    },
+    {
+      "loss_pct": 5,
+      "run": 41087795350,
+      "artifact_id": 12993305441,
+      "zip_sha256": "7b77ad695c2b571588c0aa59c64e441ab59f7f4dc90fea712e8fff6a5bc673c4",
+      "scenario_hash": "f8014bd4760912d9c94477d610f3c9924f54f18859eec53c8285f9e05419d63f",
+      "windows": {
+        "F": 86402829,
+        "R": 614863,
+        "C": 185164,
+        "repair_packets": 801,
+        "first": 0.95325,
+        "R_over_F": 0.7116,
+        "target_low": 2,
+        "target_high": 3,
+        "rate_pass": false
+      },
+      "linux": {
+        "F": 85003688,
+        "R": 493931,
+        "C": null,
+        "repair_packets": 698,
+        "first": 0.952833,
+        "R_over_F": 0.5811,
+        "target_low": 2,
+        "target_high": 3,
+        "rate_pass": false
+      },
+      "netem_drops": {
+        "eth0": 5145,
+        "ifb": 5214
+      },
+      "windows_cpu_s": 4.4062,
+      "windows_elapsed_s": 77.782,
+      "windows_peak_rss_bytes": 42733568,
+      "max_interdelivery_ms": {
+        "windows": 641,
+        "linux": 309
+      },
+      "real_business_stop": "PASS_BOTH_BIDIRECTIONAL_UDP_TCP_AND_OWNED_STOP",
+      "retransmission_goal": "FAIL_BOTH_DIRECTIONS_BELOW_USER_MINIMUM"
+    },
+    {
+      "loss_pct": 15,
+      "run": 41087799226,
+      "artifact_id": 12992483087,
+      "zip_sha256": "8912c49a94805535bfdcc9cc1cb58c8e87cbc18d5e1b5c438e58289260903456",
+      "scenario_hash": "117574315db13cda90feed0c52551ac75e685b99cc53faf238d2bd91804d8084",
+      "windows": {
+        "F": 86386432,
+        "R": 1551666,
+        "C": 164312,
+        "repair_packets": 1924,
+        "first": 0.85755,
+        "R_over_F": 1.7962,
+        "target_low": 3.75,
+        "target_high": 9,
+        "rate_pass": false
+      },
+      "linux": {
+        "F": 84996658,
+        "R": 1738378,
+        "C": null,
+        "repair_packets": 2089,
+        "first": 0.855403,
+        "R_over_F": 2.0452,
+        "target_low": 3.75,
+        "target_high": 9,
+        "rate_pass": false
+      },
+      "netem_drops": {
+        "eth0": 15591,
+        "ifb": 15643
+      },
+      "windows_cpu_s": 2.1094,
+      "windows_elapsed_s": 75.672,
+      "windows_peak_rss_bytes": 42659840,
+      "max_interdelivery_ms": {
+        "windows": 312,
+        "linux": 273
+      },
+      "real_business_stop": "PASS_BOTH_BIDIRECTIONAL_UDP_TCP_AND_OWNED_STOP",
+      "retransmission_goal": "FAIL_BOTH_DIRECTIONS_BELOW_USER_MINIMUM"
+    },
+    {
+      "loss_pct": 30,
+      "run": 41087803404,
+      "artifact_id": 12991963701,
+      "zip_sha256": "449151e83cae79f7dbd7047f0fd747beb903f8f142beac5a8255b7b115bbfe4f",
+      "scenario_hash": "73bf61884e54551e16f290af78c447db1a717232aaa2b238c71fc03f35ddf0a8",
+      "windows": {
+        "F": 86373931,
+        "R": 1886200,
+        "C": 142641,
+        "repair_packets": 2275,
+        "first": 0.706171,
+        "R_over_F": 2.1838,
+        "target_low": 7.5,
+        "target_high": 10,
+        "rate_pass": false
+      },
+      "linux": {
+        "F": 84988651,
+        "R": 2218354,
+        "C": null,
+        "repair_packets": 2234,
+        "first": 0.707951,
+        "R_over_F": 2.6102,
+        "target_low": 7.5,
+        "target_high": 10,
+        "rate_pass": false
+      },
+      "netem_drops": {
+        "eth0": 31555,
+        "ifb": 31228
+      },
+      "windows_cpu_s": 3.1719,
+      "windows_elapsed_s": 77.297,
+      "windows_peak_rss_bytes": 42766336,
+      "max_interdelivery_ms": {
+        "windows": 266,
+        "linux": 249
+      },
+      "real_business_stop": "PASS_BOTH_BIDIRECTIONAL_UDP_TCP_AND_OWNED_STOP",
+      "retransmission_goal": "FAIL_BOTH_DIRECTIONS_BELOW_USER_MINIMUM"
+    }
+  ],
+  "limits": [
+    "Positive SACK candidate coverage real, but current sample yields about one tenth of real loss at 1%, and only 2–3% of first bytes at 30%. No rate claim or retrospective PASS.",
+    "Linux current original Stop counters do not separately print wire C; C is unknown, not zero.",
+    "At 5% and 15% payload first fractions may be higher than 1-p due timing/drain; user target based real tc impairment; no recovery rate claim.",
+    "CPU is Windows whole original Go plus Rust app total observed over original process span on independent VM; cross-VM CPU differences are not causal speedups.",
+    "0% original SOURCE100 truly PASS and no outer repeats. Keep original PN / ciphertext, one send, no HOL/Stop."
+  ],
+  "required_next": "Minimally increase bounded feedback-triggered candidate coverage on both native senders while preserving single existing R<=0.10F quota; freeze new source, validate same 0/1/5/15/30 scenes."
+}
