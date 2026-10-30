@@ -783,6 +783,13 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
 )->Result<u32,i32>{
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
     let now=m2_clock();
+    // Low-rate Quality is negotiated only for Normal Auto. A Fixed/off
+    // peer's authenticated control must not allocate tracking windows,
+    // influence quality, or refresh Health by smuggling Auto-only TLVs.
+    if (control.low_rate_quality.is_some()||control.low_rate_signal.is_some())&&
+        (!e.feature7||e.game_group.is_some()||!m.auto_low_rate_mode){
+        return Err(INVALID)
+    }
     if let Some(idle)=control.peer_idle_ns{
         m.health.on_peer_idle_hint(now.0,idle);
     }else{m.health.on_authenticated_control(now.0)}
@@ -822,9 +829,8 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
         }
     }
     if let Some(signal)=control.low_rate_signal{
-        // Only negotiated feature7 FEC/Auto lanes admit low-rate windows.
-        // Game lanes never feed Auto; authenticated control is not DATA.
-        if !e.feature7||e.game_group.is_some(){return Err(INVALID)}
+        // Already gated by authenticated Normal Auto mode above.
+        // Control is never DATA and cannot create an M2 ACK.
         let inbound=if e.role_server{WireDirection::ClientToServer}
             else{WireDirection::ServerToClient};
         crate::v4_native_health::apply_authenticated_quality_signal(
@@ -2695,6 +2701,15 @@ mod tests {
         let close=QualityWindowSignal{
             kind:QualitySignalKind::Close,first_sent:4,complete:true,..start
         };
+        let start_wire=crate::v4_native_health::encode_authenticated_low_rate_signal_live(
+            0,start,512).unwrap();
+        let start_control=crate::v4_native_health::parse_authenticated_control(
+            &start_wire).unwrap();
+        // Same authenticated record in Fixed/off mode is NOT an Auto sample.
+        assert_eq!(m2_authenticated_kind1_entry(&mut e,16,&start_control),
+            Err(INVALID));
+        assert!(e.m2.as_ref().unwrap().quality_due.is_empty());
+        e.m2.as_mut().unwrap().auto_low_rate_mode=true;
         for signal in [start,close]{
             let wire=crate::v4_native_health::encode_authenticated_low_rate_signal_live(
                 0,signal,512).unwrap();
