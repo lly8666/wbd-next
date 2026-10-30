@@ -1,0 +1,63 @@
+name: M0 PLAN027 H506 source1644 gated native outer repair loss tiers
+on:
+  workflow_run:
+    workflows:
+      - M0 Windows Linux original native whole-wiring capability and functional entry
+    types: [completed]
+permissions: {contents: read, actions: write}
+jobs:
+  only-after-source-and-real-zero:
+    if: >-
+      github.event.workflow_run.id == 41041996161 &&
+      github.event.workflow_run.event == 'workflow_dispatch' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_sha == '1644df34d241d487c5c5eb704a1a0a2e5f506f5e' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Require newly rebuilt original Linux+Windows real native 0pct and no phantom retransmit
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          src=1644df34d241d487c5c5eb704a1a0a2e5f506f5e
+          run=41041996161
+          test "$(gh api "repos/$GH_REPO/actions/runs/$run" --jq .head_sha)" = "$src"
+          gh api "repos/$GH_REPO/actions/runs/$run/artifacts" --jq '.artifacts[].name' > "$RUNNER_TEMP/h505-artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$src" "$RUNNER_TEMP/h505-artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/h505-artifacts"
+          mkdir -p "$RUNNER_TEMP/h505"
+          gh run download "$run" -R "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/h505"
+          python - <<'PY'
+          import json,os,pathlib,re
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'h505'
+          report=json.loads((root/'report.json').read_text())
+          v=report['WL_V2']
+          assert report.get('linux_binary_source')=='1644df34d241d487c5c5eb704a1a0a2e5f506f5e'
+          assert report['stop']=='PASS_BOTH_OWNED'
+          assert v['status']=='MEASURED_BOTH_OS_KERNEL' and v['scenario_id']=='plan027-h504-outer-50m-150ms-loss0-60s'
+          assert all(v['offered_mbps'][side]>=47.5 for side in ('windows','linux'))
+          assert all(v['first_delivery_fraction'][side]>=.999 for side in ('windows','linux'))
+          log=(root/'mode-results'/'normal'/'server.log').read_text(errors='replace')
+          found=re.findall(r'V4_PUBLIC_M2_OUTER[^\n]+',log)
+          assert found, 'missing actual product Rust repair readback'
+          last=found[-1]
+          f=int(re.search(r'\bfirst_wire_bytes=(\d+)',last).group(1))
+          r=int(re.search(r'\brepair_accepted_wire_bytes=(\d+)',last).group(1))
+          print('H506_NEW_PRODUCT_NO_LOSS_LINUX_R_OVER_F',r/f,'F',f,'R',r,
+                'FIRST',v['first_delivery_fraction'])
+          assert f>0 and r/f<=0.001, 'no-loss unexpected repair: do NOT dispatch more tiers'
+          PY
+          for p in 1 5 10 30; do
+            scenario="scenarios/wl-outer-repair-50m-150ms-loss${p}-60s.json"
+            gh workflow run m0-wl-public-normal-full.yml --ref main \
+              -f public_mode=normal -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="$scenario" \
+              -f perf_reuse_run_id="$run" -f perf_binary_source_sha="$src"
+            echo H506_NEW_BINARY_INDEPENDENT_50M_150MS_LOSS=$p
+          done
