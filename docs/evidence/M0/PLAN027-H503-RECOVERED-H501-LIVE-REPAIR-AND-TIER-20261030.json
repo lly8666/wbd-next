@@ -211,6 +211,37 @@
     "Windows R/total ~1.1-1.24% insensitive to loss; Linux R/F ~5.4-6.8% also insensitive and far above 1% actual loss; do not call graded behavior mature or boost budget",
     "Linux cumulative presentation ACK stalls at first irrecoverable hole without negotiated/native SACK; contiguous future records were stored one Vec entry each 256 cap, potential genuine catch-up deficit; H505 bounded merge code NOT YET PRODUCT-TESTED",
     "Four independent actual native runs closed, source-reused binary manifest is H501 0b7391 rather than harness head d96d327; no recompile on tiers",
-    "Lossless H504 Action 41040914488 separate real no-spurious candidate test in flight"
-  ]
+    "Lossless H504 Action 41040914488 separate real no-spurious candidate test in flight",
+    "H504 loss0 BOTH real app first100%, true loss0, Linux R/F4.304%, Windows R0; violates no-loss not to manufacture retransmission; H505 ACK horizon dedup under test"
+  ],
+  "zero_loss_counterexample": {
+    "source_sha": "0b7391a182f05947419c1211f01058b4798370a3",
+    "action": 41040914488,
+    "conclusion": "SUCCESS_NATIVE_BOTH_STOP",
+    "artifact_id": 12969509773,
+    "zip_sha256": "b18ebc9c21b48de877cd91cf966b47c375283bd278929c7904e22a60269324dd",
+    "scene": "plan027-h504-outer-50m-150ms-loss0-60s",
+    "netem_loss_percent": 0,
+    "offered_mbps": {
+      "windows": 49.9865,
+      "linux": 49.9998
+    },
+    "app_first_fraction": {
+      "windows": 1,
+      "linux": 1
+    },
+    "Linux": {
+      "first_wire_bytes": 415912051,
+      "repair_accepted_wire_bytes": 17902266,
+      "packets": 15485,
+      "R_over_F": 0.04304339332547977,
+      "candidate_first": 15486
+    },
+    "Windows": {
+      "repair_packets": 0
+    },
+    "owned_stop": "PASS_BOTH_OWNED",
+    "result": "FAIL_NO_LOSS_OUTER_REPAIR_SPUROUS_LINUX",
+    "diagnosis": "Stale cumulative ACK behind a hole can repeatedly nominate sequential unproven gaps after shadow expiry, even with no intentional tc loss; H505 source bounds one nomination per unchanged ACK, mandatory real regress"
+  }
 }
