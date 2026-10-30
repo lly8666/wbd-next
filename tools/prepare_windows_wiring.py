@@ -112,12 +112,11 @@ def install_pinned_npcap_kernel_capture_buffer(root, legacy, output):
     original_clone = cloned.read_bytes()
     donor = git(root, "show", source + ":" + "r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go")
     need(original_clone == donor, "assembled immutable NPF clone changed")
-    copy_before = (b" return e.cfg,nil\\n}",)
     # Avoid replacing a generic return from a different method in the donor.
     exact = b"func(e *NpcapEndpoint) NativeCaptureConfig()(NpcapConfig,error){"
     need(original_clone.count(exact)==1, "missing exact NPF native capture clone")
-    old_return = b" return e.cfg,nil\\n}\\n"
-    new_return = b" cfg:=e.cfg\\n cfg.CaptureBufferBytes=1<<20\\n return cfg,nil\\n}\\n"
+    old_return = b" return e.cfg,nil\n}\n"
+    new_return = b" cfg:=e.cfg\n cfg.CaptureBufferBytes=1<<20\n return cfg,nil\n}\n"
     need(original_clone.count(old_return)==1, "ambiguous NPF clone final return")
     clone_after=original_clone.replace(old_return,new_return)
     cloned.write_bytes(clone_after)

@@ -20,7 +20,10 @@ class WindowsNpcapRingTests(unittest.TestCase):
   self.assertIn("original Npcap source changed",s)
   self.assertIn('win_after = replace_original_once(win_before, marker, injection + marker',s)
   overlay=(ROOT/"r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go").read_text()
-  self.assertIn("cfg.CaptureBufferBytes=1<<20",overlay)
+  self.assertIn("return e.cfg,nil",overlay)
+  self.assertNotIn("CaptureBufferBytes",overlay)
+  self.assertIn("cfg.CaptureBufferBytes=1<<20",s)
+  self.assertIn('clone_after=original_clone.replace(old_return,new_return)',s)
  def test_assembly_blob_matches_real_git_sha(self):
   import json,hashlib
   p=ROOT/"r0/go_overlay/internal/faketcp/npcap_native_handoff_windows.go"

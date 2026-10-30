@@ -1,0 +1,3 @@
+# H484: correct test expectation of immutable M4 source
+
+H483 source-freeze reconciliation restored exact M4 overlay Git object 2901f245 and manifest, moving NPF TX-only 1MiB clone variant to inspected Actions staged checkout. H483 dispatch Action41011657447 was cheap unit failure because old unit still expected the altered frozen overlay. H484 tests unchanged M4 overlay and verifies staged replacement source instead. Also corrects original Python byte literals to actual `\n` escape rather than a literal backslash/n, which would have rejected exactly pinned staged clone at source build. H484 triggers one full new Go+Rust native build, old Action failures remain. Source test PASS != physical C100 PASS.
