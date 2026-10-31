@@ -50,11 +50,11 @@ jobs:
           assert v['status']=='MEASURED_BOTH_OS_KERNEL' and v['scenario_sha256']==q['scenario_sha256']
           assert all(v['first_delivery_fraction'][d]>=0.999 for d in ('windows','linux'))
           w=(root/'mode-results/normal/client.log').read_text(errors='replace')
-          rows=re.findall(r'WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=(\\d+) repair_accepted_wire_bytes=(\\d+) repair_uncertain_wire_bytes=(\\d+) control_wire_bytes=(\\d+) repair_packets=(\\d+)',w)
+          rows=re.findall(r'WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=(\d+) repair_accepted_wire_bytes=(\d+) repair_uncertain_wire_bytes=(\d+) control_wire_bytes=(\d+) repair_packets=(\d+)',w)
           assert len(rows)==1
           f,rr,unc,cc,packets=map(int,rows[0]); assert f>0 and (rr+unc)*1000<=f
           l=(root/'mode-results/normal/server.log').read_text(errors='replace')
-          rows=re.findall(r'V4_PUBLIC_M2_OUTER[^\\n]*first_wire_bytes=(\\d+) repair_accepted_wire_bytes=(\\d+) repair_uncertain_wire_bytes=(\\d+)',l)
+          rows=re.findall(r'V4_PUBLIC_M2_OUTER[^\n]*first_wire_bytes=(\d+) repair_accepted_wire_bytes=(\d+) repair_uncertain_wire_bytes=(\d+)',l)
           assert rows
           lf,lr,lu=map(int,rows[-1]); assert lf>0 and (lr+lu)*1000<=lf
           print('H557_SOURCE525_TRUE_ZERO_FIRST_STOP_R0',f,rr,cc,lf,lr)
