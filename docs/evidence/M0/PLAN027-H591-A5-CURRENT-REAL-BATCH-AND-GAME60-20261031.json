@@ -36,5 +36,7 @@
     "change": "Windows original Rust NPF copied prefix global F byte accounting once per batch with monotonic clock after global mutex",
     "original_PN_SEQ_AEAD": "UNCHANGED",
     "hard_R_over_F_limit": "UNCHANGED"
-  }
+  },
+  "source_sha": "cb475c89a29bc79c1608b747e76e136fd9341500",
+  "result": "PRIOR_SOURCECB475_NATIVE_A5_B_PASS_A_FAIL_AND_GAME_CANCELLED; H591_NEW_PRODUCT_NOT_RUN"
 }
