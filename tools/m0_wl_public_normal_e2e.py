@@ -527,10 +527,34 @@ print(json.dumps(result),flush=True)
              ):
               if needle in raw:stage=label;break
              if stage is None:stage="OTHER_NATIVE_FAILURE"
+            # The old A5 artifact only said RUST_PEER although the actual
+            # fail-closed product contains distinct M1/M2/driver paths.
+            # Emit NO raw error, sequence, PN, address or unredacted text;
+            # the allowlisted categorical stage is enough for a real fix.
+            substage=None
+            if stage=="RUST_PEER":
+             for label,needle in (
+              ("M2_FIRSTSEND_BATCH","actual original NPF M2 batch completed="),
+              ("M2_FEEDBACK_DRAFT","M0 original M2 reverse-kind1 feedback draft:"),
+              ("M2_FEEDBACK_COMPLETE","M0 original M2 reverse-kind1 feedback complete:"),
+              ("M2_REPAIR_DRAFT","M0 original M2 immutable repair candidate:"),
+              ("M2_REPAIR_COMPLETE","M0 original M2 immutable repair completion:"),
+              ("M3_NORMAL_SEAL","M0 native original M3 seal mode="),
+              ("M3_NORMAL_OPEN","original Normal M1/M3 open owner failure:"),
+              ("TCP_SOURCE_SEQUENCE","native source TX sequence mismatch"),
+              ("TCP_CARRIER_RETRY","exact original TCP carrier retry exhausted"),
+              ("TCP_CARRIER_FIN_RST","native peer TCP carrier FIN/RST"),
+              ("NPF_SOURCE_SEND","native NPF send"),
+              ("WINTUN_NATIVE_EVENT","original Wintun native ready event failed"),
+              ("INGRESS_QUEUE_CLOSED","original NPF peer ingress queue closed"),
+             ):
+              if needle in raw:substage=label;break
+             if substage is None:substage="OTHER_RUST_PEER"
             item={"marker":marker,
                   "sha256":hashlib.sha256(raw.encode("utf-8")).hexdigest(),
                   "tokens":[t for t in allowed if t.lower() in raw.lower()]}
             if stage is not None:item["a5_go_failure_stage"]=stage
+            if substage is not None:item["a5_go_rust_peer_substage"]=substage
             rows.append(item)
         diagnostic[key]=rows[-6:]
        else:diagnostic[key]=[]
