@@ -59,6 +59,10 @@ pub struct OuterAckIndex {
     // One cumulative-only gap nomination per unchanged ACK: later sends
     // alone are not a positive peer SACK and cannot prove new gaps.
     nominated_stalled_ack: Option<u64>,
+    // Strictly forward across *actual unacknowledged SACK gaps*, not all
+    // unacked shadows or newest 256 ciphertexts.
+    last_sack_examined_seq:Option<u64>,
+    gap_scanned:u64,
     last_sent_at: MonoNs,
     capacity: usize,
     sent: BTreeMap<u64, SentSpan>,
@@ -84,14 +88,15 @@ impl OuterAckIndex {
         Ok(Self {
             lane, epoch, highest_sent_end: initial_seq,
             cumulative_ack: initial_seq, duplicate_acks: 0,
-            nominated_stalled_ack: None,
-            last_sent_at: MonoNs(0),
+            nominated_stalled_ack: None,last_sack_examined_seq:None,
+            gap_scanned:0,last_sent_at: MonoNs(0),
             capacity, sent: BTreeMap::new(),
         })
     }
 
     pub fn outstanding(&self) -> usize { self.sent.len() }
     pub fn highest_sent_end(&self) -> u64 { self.highest_sent_end }
+    pub fn gap_scanned_once(&self)->u64{self.gap_scanned}
 
     /// Returns false only when the optional repair index is full. A skipped
     /// span still advances the actual sent-range bound for ACK validation.
@@ -204,19 +209,28 @@ impl OuterAckIndex {
                 now.0.saturating_sub(span.at.0)>=900_000_000){break}
             self.sent.pop_first();
         }
-        // A later SACK is evidence of an OUTER sequence gap, not of inner
-        // loss. Bounded candidates only; no periodic blind DATA PTO.
-        // Prefer newest real positive-SACK-bounded gaps. Previously the
-        // oldest <=32 entries (often already expired behind the first hole)
-        // monopolized every /20ms ACK batch, starving current cached DATA.
-        // Reverse BTree range is O(log N + 32) without full-cache scans.
-        for (_, span) in self.sent.range(ack..highest_positive).rev() {
-            if result.gap_candidates.len() >= MAX_GAPS_PER_FEEDBACK { break; }
-            let age=now.0.saturating_sub(span.at.0);
-            if span.end <= highest_positive
-                && age >= reorder_guard_ns && age < COSMETIC_SHADOW_AGE_NS {
-                result.gap_candidates.push(span.pn);
+        // SACK positive bytes bound an actual missing range. Walk original
+        // sent order, not newest-256 tails (which can all be too young at
+        // high PPS). Cursor advances over no more than 32 inspected gaps
+        // per real feedback and never skips a not-yet-mature send. A stale
+        // SACK is finite: it cannot nominate newly sent unrelated DATA.
+        if highest_positive>ack {
+            let start=self.last_sack_examined_seq
+                .map_or(ack,|seq|seq.saturating_add(1).max(ack));
+            let mut examined=0usize;
+            let mut last=None;
+            for (&seq,span) in self.sent.range(start..highest_positive){
+                if examined>=MAX_GAPS_PER_FEEDBACK{break}
+                let age=now.0.saturating_sub(span.at.0);
+                if age<50_000_000{break}
+                examined+=1;
+                last=Some(seq);
+                if span.end<=highest_positive && age<COSMETIC_SHADOW_AGE_NS{
+                    result.gap_candidates.push(span.pn);
+                }
             }
+            if let Some(seq)=last{self.last_sack_examined_seq=Some(seq)}
+            self.gap_scanned=self.gap_scanned.saturating_add(examined as u64);
         }
         if sacks.is_empty() && self.duplicate_acks>=3 &&
             self.nominated_stalled_ack!=Some(ack) {
@@ -294,10 +308,37 @@ mod tests {
             x.on_definitely_sent(RecordPn(i),i*100,100,MonoNs(1)).unwrap();
         }
         let r=x.on_feedback(lane(),[7;16],0,
-            &[SackRange32{start:9700,end:10000}],MonoNs(500),20).unwrap();
+            &[SackRange32{start:9700,end:10000}],MonoNs(60_000_000),20).unwrap();
         assert!(r.gap_candidates.len()<=32);
         assert!(r.gap_candidates.iter().all(|pn|pn.0<97));
-        assert!(r.gap_candidates[0].0>r.gap_candidates.last().unwrap().0);
+        assert!(r.gap_candidates[0].0<r.gap_candidates.last().unwrap().0);
+    }
+    #[test]
+    fn plan027_sack_cursor_ages_old_real_gaps_without_ever_fabricating_new_ones(){
+        let mut x=index(0,512);
+        for i in 0..400u64{
+            let at=if i<100{0}else{55_000_000};
+            x.on_definitely_sent(RecordPn(i+1),i*100,100,MonoNs(at)).unwrap();
+        }
+        // One genuine positive SACK from the end; old gaps are older
+        // than50ms, newest256 mostly too young. Only 32 visited per call.
+        let sack=[SackRange32{start:39900,end:40000}];
+        let first=x.on_feedback(lane(),[7;16],0,&sack,MonoNs(60_000_000),20).unwrap();
+        assert_eq!(first.gap_candidates.len(),32);
+        assert_eq!(first.gap_candidates[0],RecordPn(1));
+        let second=x.on_feedback(lane(),[7;16],0,&sack,MonoNs(60_000_001),20).unwrap();
+        assert_eq!(second.gap_candidates[0],RecordPn(33));
+        assert_eq!(x.gap_scanned_once(),64);
+        let third=x.on_feedback(lane(),[7;16],0,&sack,MonoNs(60_000_002),20).unwrap();
+        assert_eq!(third.gap_candidates[0],RecordPn(65));
+        let waiting=x.on_feedback(lane(),[7;16],0,&sack,MonoNs(60_000_003),20).unwrap();
+        assert_eq!(waiting.gap_candidates.len(),4);
+        assert!(x.on_feedback(lane(),[7;16],0,&sack,MonoNs(60_000_004),20)
+            .unwrap().gap_candidates.is_empty());
+        // The original SACK can only continue when other candidates age;
+        // already scanned PNs remain unique, not 4/7/12 per ACK cadence.
+        let older=x.on_feedback(lane(),[7;16],0,&sack,MonoNs(110_000_000),20).unwrap();
+        assert_eq!(older.gap_candidates[0],RecordPn(101));
     }
     #[test]
     fn r2_plan027_ack_sack_gap_only_after_guard_and_exact_retirement() {
@@ -312,12 +353,12 @@ mod tests {
         assert_eq!(early.retired, vec![RecordPn(1), RecordPn(3)]);
         assert!(early.gap_candidates.is_empty());
         let late = x.on_feedback(lane(), [7; 16], 200, &sacks,
-            MonoNs(31), 20).unwrap();
+            MonoNs(60_000_010), 20).unwrap();
         assert!(late.retired.is_empty());
         assert_eq!(late.gap_candidates, vec![RecordPn(2)]);
         assert_eq!(x.outstanding(), 1);
         assert_eq!(x.on_feedback(lane(), [7; 16], 400, &[],
-            MonoNs(32), 20).unwrap().retired, vec![RecordPn(2)]);
+            MonoNs(60_000_011), 20).unwrap().retired, vec![RecordPn(2)]);
     }
     #[test]
     fn plan027_live_cumulative_duplicate_ack_nominates_one_bounded_gap(){
