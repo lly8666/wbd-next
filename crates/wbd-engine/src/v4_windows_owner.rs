@@ -692,10 +692,10 @@ fn m2_outer_ack_hint_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     // Each new real ACK/SACK gap is handled once per owner turn. The shared
     // original-shadow cursor selects mature PNs, never newest-256 by cadence.
     if !result.gap_candidates.is_empty(){
+        // Original first-send snapshots already have one 50% PN sample.
+        // Do not independently halve genuine authenticated gaps again.
         for pn in result.gap_candidates{
-            if wbd_recovery::outer_ack::cosmetic_half_gap(pn){
-                let _=m.shadow.on_outer_gap_hint(pn,now);
-            }
+            let _=m.shadow.on_outer_gap_hint(pn,now);
         }
     }
     Ok(())

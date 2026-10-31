@@ -1,0 +1,77 @@
+name: M0 PLAN027 H584 single sample new source zero then tiers
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h584-single-sample.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-source:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h584-one-source]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: One frozen original Windows Linux build and real zero before four independent tiers
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          for n,loss in [('plan027-h539-normal-10m-250ms-loss0-60s.json',0),('plan027-h539-normal-10m-250ms-loss1-60s.json',1),('plan027-h539-normal-10m-250ms-loss5-60s.json',5),('plan027-h539-normal-10m-250ms-loss15-60s.json',15),('wl-outer-repair-10m-250ms-loss30-60s.json',30)]:
+              s=read_scenario('scenarios/'+n)
+              assert s['public_mode']=='normal' and s['duration_s']==60
+              for d in ('windows_to_linux','linux_to_windows'):
+                  assert s[d]['offered_mbps']==10 and s[d]['delay_ms']==250 and s[d]['loss_pct']==loss
+              print('H584',n,s['scenario_sha256'])
+          PY
+          before="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=40" --jq '.workflow_runs[].id')"
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main -f public_mode=normal -f run_n0=false -f perf_ab=false -f perf_scenario_file=scenarios/plan027-h539-normal-10m-250ms-loss0-60s.json -f perf_reuse_run_id="" -f perf_binary_source_sha=""
+          zero=""
+          for i in $(seq 1 20); do
+            for id in $(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=40" --jq '.workflow_runs[].id'); do
+              grep -qx "$id" <<<"$before" && continue
+              test "$(gh api "repos/$GH_REPO/actions/runs/$id" --jq .head_sha)" = "$GITHUB_SHA" && { zero="$id";break; }
+            done
+            [ -z "$zero" ] || break
+            sleep 6
+          done
+          test -n "$zero" || { echo H584_ZERO_ID_MISSING >&2;exit 2; }
+          echo "H584_FROZEN_NEW_SOURCE_ZERO=$zero SHA=$GITHUB_SHA"
+          for i in $(seq 1 48); do
+            state="$(gh api "repos/$GH_REPO/actions/runs/$zero")"
+            if [ "$(jq -r .status <<<"$state")" = completed ]; then
+              test "$(jq -r .conclusion <<<"$state")" = success || { echo H584_ZERO_FAIL >&2;exit 1; }
+              break
+            fi
+            test "$i" -lt 48 || { echo H584_ZERO_PENDING_NO_DUPLICATE >&2;exit 2; }
+            sleep 30
+          done
+          jobs="$(gh api "repos/$GH_REPO/actions/runs/$zero/jobs?per_page=100")"
+          test "$(jq -r '[.jobs[]|select(.name=="native-public-two-os")|.conclusion]|first' <<<"$jobs")" = success
+          artifacts="$(gh api "repos/$GH_REPO/actions/runs/$zero/artifacts?per_page=100")"
+          jq -e --arg n "m0-wl-windows-product-binaries-$GITHUB_SHA" '.artifacts[]|select(.name==$n and .expired==false)' <<<"$artifacts" >/dev/null
+          jq -e '.artifacts[]|select(.name=="m0-plan024-linux-product" and .expired==false)' <<<"$artifacts" >/dev/null
+          mkdir -p zero
+          gh run download "$zero" --repo "$GH_REPO" --name m0-wl-full-public-normal-direct --dir zero
+          SOURCE="$GITHUB_SHA" python3 - <<'PY'
+          import os,json
+          from tools.m0_wl_perf_v2_config import read_scenario
+          r=json.load(open('zero/report.json'))
+          assert r['linux_binary_source']==os.environ['SOURCE']
+          assert r['mode_public']=='PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal'
+          assert r['stop']=='PASS_BOTH_OWNED'
+          assert r['WL_V2']['status']=='MEASURED_BOTH_OS_KERNEL'
+          assert r['WL_V2']['scenario_sha256']==read_scenario('scenarios/plan027-h539-normal-10m-250ms-loss0-60s.json')['scenario_sha256']
+          assert min(r['WL_V2']['first_delivery_fraction'].values())>=.999
+          print('H584_REAL_ZERO_FIRST_AND_STOP_PASS')
+          PY
+          for scene in plan027-h539-normal-10m-250ms-loss1-60s.json plan027-h539-normal-10m-250ms-loss5-60s.json plan027-h539-normal-10m-250ms-loss15-60s.json wl-outer-repair-10m-250ms-loss30-60s.json; do
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main -f public_mode=normal -f run_n0=false -f perf_ab=false -f perf_scenario_file="scenarios/$scene" -f perf_reuse_run_id="$zero" -f perf_binary_source_sha="$GITHUB_SHA"
+            echo "H584_ONE_ACTION_ONE_SCENE scene=$scene SOURCE=$GITHUB_SHA zero=$zero"
+          done

@@ -203,7 +203,7 @@
     "H555/H561 SOURCE525: real SACK-gap cursor, one-shot PN half-sample, bounded frozen FIFO; original native NOT_RUN, old f031 rate FAIL remains; PLAN027 B/C open.",
     "H566 SOURCE525 genuine 9 real business/Stop positives recorded with exact artifact and ratios; cancelled Game highestFEC and failed A5 remain separately NOT_VERIFIED, C100/300s initially IN_FLIGHT, p99 one-way NOT_MEASURED, old SOURCEf031 failure retained. No sameVM CPU speedup inference.",
     "H573 old GameFEC Actions41170807537/09210 still IN_PROGRESS immediately after separately completed exact-force-cancel Action41173524500; cannot infer host/job termination or Game PASS. H574 cheap Action41173607539 PASS but original signed Windows/Linux product new 0% Action41173614494 remains IN_PROGRESS; bounded v3 FIFO logic not a real performance proof.",
-    "H580 old SOURCEd5e 1/5/15/30 true dual-source rate ratios below theoretical half-loss even with bounded FIFO; v3 real ACK gap deadline was double RTT, H580 changed only due timing, not measured PASS until new SOURCE A1 and true 0/damage. Game2/4 FEC source d5e functional PASS only, no Game idle/rotation qualification."
+    "H584 previous SOURCE502c native 1% true R/F Windows0.2093% Linux0.2196%; BurstPaced=0 both. Two independent half-samples identified in live Windows/Linux first-send snapshot and ACK-gap path; remove only latter. NEW SOURCE 0/1/5/15/30% native tests NOT_RUN, 0.4–0.55% is user target not PASS. Preserve one cached immutable PN sample, real ACK gap, 10%F, Stop."
   ],
   "promotion": null
 }

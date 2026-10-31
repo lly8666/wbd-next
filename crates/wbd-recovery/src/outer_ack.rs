@@ -12,13 +12,6 @@ const MAX_SACK_RANGES: usize = 8;
 const MAX_GAPS_PER_FEEDBACK: usize = 32;
 const COSMETIC_SHADOW_AGE_NS: u64 = 1_400_000_000;
 
-/// Half of the *feedback-nominated* gaps, not half of all fresh DATA.
-/// A stable PN parity hash is cheap, needs no sampling table/timer and
-/// never resubmits an expired shadow. Normal first sends always take priority.
-pub fn cosmetic_half_gap(pn: RecordPn) -> bool {
-    pn.0.count_ones() & 1 == 0
-}
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum OuterAckError {
     InvalidConfig,
@@ -303,9 +296,7 @@ mod tests {
         OuterAckIndex::new(lane(), [7; 16], initial, capacity).unwrap()
     }
     #[test]
-    fn h539_half_gap_sample_and_recent_first_hints(){
-        assert_eq!((0..4096).filter(|&pn|super::cosmetic_half_gap(RecordPn(pn))).count(),2048);
-        assert_eq!(super::cosmetic_half_gap(RecordPn(7)),super::cosmetic_half_gap(RecordPn(7)));
+    fn h584_real_sack_cursor_returns_unique_validated_candidates(){
         let mut x=index(0,128);
         for i in 0..100u64{
             x.on_definitely_sent(RecordPn(i),i*100,100,MonoNs(1)).unwrap();

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "source_sha": "502c2480b15569d28fe923862e9eb1ba2e5ef8a4",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "result": "PRIOR_PRODUCT_REAL_ALL_FIVE_SCENES_SUCCESS_NEW_SOURCE_NOT_RUN",
+  "zero_run": 41175027533,
+  "damage": [
+    {
+      "loss_pct": 1,
+      "run": 41175749992,
+      "artifact": 13032846027,
+      "zip_sha256": "9a12f84699939e59b16bc887db67347ea809314b0bb9cabbd191fcc50db662c2",
+      "first_win": 0.992235,
+      "first_linux": 0.992366,
+      "win_F": 86422351,
+      "win_R": 180902,
+      "win_C": 190164,
+      "linux_F": 85007253,
+      "linux_R": 186692,
+      "linux_C": "NOT_MEASURED",
+      "win_unique": 219,
+      "linux_unique": 410,
+      "win_burst_wait": 0,
+      "linux_burst_wait": 0,
+      "win_cpu_one_core_pct": 5.185
+    },
+    {
+      "loss_pct": 5,
+      "run": 41175751556,
+      "artifact": 13033131438,
+      "zip_sha256": "93d1a21af157f898f3a1813f7fcc8b376341ba1c4b28f378a9bf227b11cdc3db",
+      "win_F": 86393486,
+      "win_R": 2273530,
+      "win_C": 188897,
+      "linux_F": 85004465,
+      "linux_R": 2004634,
+      "linux_C": "NOT_MEASURED"
+    },
+    {
+      "loss_pct": 15,
+      "run": 41175753126,
+      "artifact": 13033565254,
+      "zip_sha256": "90c50417ce20d1cdd1d03e1fc0e209b73134fe2ee6a6c89732bda5154eda897c",
+      "win_F": 86392693,
+      "win_R": 7071501,
+      "win_C": 183080,
+      "linux_F": 84996190,
+      "linux_R": 6546431,
+      "linux_C": "NOT_MEASURED"
+    },
+    {
+      "loss_pct": 30,
+      "run": 41175754386,
+      "artifact": 13033161318,
+      "zip_sha256": "765b75b24369853f21cd21cdf4e1dce134e52117a6883dab86695a8394ef12fc",
+      "win_F": 86380155,
+      "win_R": 6948431,
+      "win_C": 148717,
+      "linux_F": 84987963,
+      "linux_R": 5966208,
+      "linux_C": "NOT_MEASURED"
+    }
+  ],
+  "stop": "PASS_BOTH_OWNED_ALL_NATIVE_ORIGINAL",
+  "new_source": "NOT_RUN_SINCE_CODE_CHANGE",
+  "cpu_comparison": "NO_SAME_VM_AB",
+  "p99": "NO_CALIBRATED_BOTH_OS"
+}

@@ -4290,10 +4290,10 @@ fn background_raw_once(
             }
             if !update.gap_candidates.is_empty(){
                 let now=loop_now();
+                // Single deterministic sample at first-send cache admission.
+                // A true ACK/SACK missing range does not get sampled twice.
                 for pn in update.gap_candidates{
-                    if wbd_recovery::outer_ack::cosmetic_half_gap(pn){
-                        let _=owned.shadow.on_outer_gap_hint(pn,now);
-                    }
+                    let _=owned.shadow.on_outer_gap_hint(pn,now);
                 }
             }
         }
