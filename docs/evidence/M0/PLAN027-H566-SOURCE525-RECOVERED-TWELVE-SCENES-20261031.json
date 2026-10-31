@@ -250,5 +250,6 @@
     "No sameVM valid old-Go CPU comparison because A failed; compare no CPU improvement.",
     "No true Game2/4 highestFEC product/Stop result; cancelled when Windows runner froze, cannot assert Rust bug.",
     "A/B/C/lifecycle and 300s stability still OPEN, one-source only."
-  ]
+  ],
+  "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb"
 }
