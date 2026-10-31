@@ -1,0 +1,94 @@
+name: M0 PLAN027 H557 source525 verified-zero to unique-gap four-rate and B A5 C50
+on:
+  workflow_run:
+    workflows: [M0 Windows Linux original native whole-wiring capability and functional entry]
+    types: [completed]
+permissions: {contents: read, actions: write}
+jobs:
+  real-zero-gate:
+    if: >-
+      github.event.workflow_run.id == 41166008870 &&
+      github.event.workflow_run.run_attempt == 1 &&
+      github.event.workflow_run.event == 'workflow_dispatch' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_sha == '52566af216edf9dee4068f0bb8bfd0fb8d18dfcb' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Assert actual native first and Stop, artifacts and source before any new scene
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          src=52566af216edf9dee4068f0bb8bfd0fb8d18dfcb
+          build=41166008870
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .head_sha)" = "$src"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$build/artifacts" --jq '.artifacts[].name' > "$RUNNER_TEMP/h557-artifacts"
+          grep -Fx "m0-wl-windows-product-binaries-$src" "$RUNNER_TEMP/h557-artifacts"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/h557-artifacts"
+          grep -Fx m0-wl-full-public-normal-direct "$RUNNER_TEMP/h557-artifacts"
+          mkdir -p "$RUNNER_TEMP/h557-zero"
+          gh run download "$build" --repo "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/h557-zero"
+          export H557_ZERO="$RUNNER_TEMP/h557-zero"
+          python3 - <<'PY'
+          import os,json,pathlib,re
+          from tools.m0_wl_perf_v2_config import read_scenario
+          root=pathlib.Path(os.environ['H557_ZERO'])
+          src='52566af216edf9dee4068f0bb8bfd0fb8d18dfcb'
+          r=json.loads((root/'report.json').read_text())
+          assert r['source']==src and r['linux_binary_source']==src
+          assert r['stop']=='PASS_BOTH_OWNED' and r['mode_public'].endswith('_normal')
+          v=r['WL_V2']
+          q=read_scenario('scenarios/plan027-h539-normal-10m-250ms-loss0-60s.json')
+          assert v['status']=='MEASURED_BOTH_OS_KERNEL' and v['scenario_sha256']==q['scenario_sha256']
+          assert all(v['first_delivery_fraction'][d]>=0.999 for d in ('windows','linux'))
+          w=(root/'mode-results/normal/client.log').read_text(errors='replace')
+          rows=re.findall(r'WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=(\\d+) repair_accepted_wire_bytes=(\\d+) repair_uncertain_wire_bytes=(\\d+) control_wire_bytes=(\\d+) repair_packets=(\\d+)',w)
+          assert len(rows)==1
+          f,rr,unc,cc,packets=map(int,rows[0]); assert f>0 and (rr+unc)*1000<=f
+          l=(root/'mode-results/normal/server.log').read_text(errors='replace')
+          rows=re.findall(r'V4_PUBLIC_M2_OUTER[^\\n]*first_wire_bytes=(\\d+) repair_accepted_wire_bytes=(\\d+) repair_uncertain_wire_bytes=(\\d+)',l)
+          assert rows
+          lf,lr,lu=map(int,rows[-1]); assert lf>0 and (lr+lu)*1000<=lf
+          print('H557_SOURCE525_TRUE_ZERO_FIRST_STOP_R0',f,rr,cc,lf,lr)
+          for loss in (1,5,15,30):
+              path=f'scenarios/plan027-h539-normal-10m-250ms-loss{loss}-60s.json' if loss!=30 else 'scenarios/wl-outer-repair-10m-250ms-loss30-60s.json'
+              scene=read_scenario(path)
+              assert scene['public_mode']=='normal' and scene['seed']==20261030 and scene['duration_s']==60
+              assert all(scene[d]['loss_pct']==loss and scene[d]['offered_mbps']==10 and scene[d]['delay_ms']==250 for d in ('windows_to_linux','linux_to_windows'))
+              print('H557_ONE_REAL_RATE',loss,scene['scenario_sha256'])
+          for mode,path,seconds in (
+            ('fixed','scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json',60),
+            ('auto','scenarios/plan027-a4-auto-10m-staged-240s.json',240),
+            ('normal','scenarios/plan027-c-normal-50m-25ms-loss0-60s.json',60)):
+              q=read_scenario(path)
+              assert q.get('public_mode','normal')==mode and q['duration_s']==seconds
+              print('H557_QUALIFICATION_SCENE',mode,q['scenario_sha256'])
+          PY
+          while read -r mode scene; do
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="$scene" \
+              -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
+            echo "H557_ONE_INDEPENDENT_ACTION $mode $scene frozen=$src"
+          done <<'EOF'
+          normal scenarios/plan027-h539-normal-10m-250ms-loss1-60s.json
+          normal scenarios/plan027-h539-normal-10m-250ms-loss5-60s.json
+          normal scenarios/plan027-h539-normal-10m-250ms-loss15-60s.json
+          normal scenarios/wl-outer-repair-10m-250ms-loss30-60s.json
+          fixed scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json
+          auto scenarios/plan027-a4-auto-10m-staged-240s.json
+          normal scenarios/plan027-c-normal-50m-25ms-loss0-60s.json
+          EOF
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=true \
+            -f perf_scenario_file=scenarios/plan027-c-normal-10m-25ms-loss0-60s.json \
+            -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
+          echo H557_SAME_VM_SEQUENTIAL_A5_DIAGNOSTIC_DISPATCHED
