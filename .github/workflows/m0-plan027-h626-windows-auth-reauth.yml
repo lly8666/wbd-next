@@ -1,4 +1,4 @@
-name: M0 PLAN027 H626 source-auth Windows cold reauthorization B106 and Fixed reuse
+name: M0 PLAN027 H627 repaired source-auth Windows B106 and Fixed reuse
 on:
   push:
     branches: [main]
@@ -19,6 +19,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          python3 tools/check_workflows.py
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
           python3 - <<'PY'
