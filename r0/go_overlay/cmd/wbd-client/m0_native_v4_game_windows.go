@@ -86,29 +86,39 @@ func runM0NativeV4WindowsGame(
    }
   }(i,ep,assoc)
   if err=assoc.Start(time.Now());err!=nil{return err}
-  // Same original FakeTCP SYN timer as the proven one-lane Windows
-  // bootstrap, separately per Game lane. No invented TCP/FEC owner.
-  established,cancel:=context.WithTimeout(ctx,20*time.Second)
-  handshaked:=make(chan error,1)
-  go func(a *faketcp.ClientAssociation){handshaked<-a.WaitEstablished(established)}(assoc)
-  tick:=time.NewTicker(100*time.Millisecond)
- waitLane:
-  for{
-   select{
-   case <-established.Done():
-    err=established.Err();break waitLane
-   case err=<-handshaked:
-    break waitLane
-   case err=<-failed:
-    break waitLane
-   case <-tick.C:
-    _,err=assoc.EmitRetransmitDue(time.Now())
-    if err!=nil{break waitLane}
+ }
+ // Start all independent original FakeTCP SYNs before waiting for any
+ // particular lane. Under real 15–30% loss, serial 20s lane waits could
+ // burn the entire Windows public Ready deadline without ever attempting
+ // later Game4 TLS lanes; no new protocol, OS worker or hot Go pump.
+ established,cancel:=context.WithTimeout(ctx,20*time.Second)
+ defer cancel()
+ type laneReady struct{index int;err error}
+ handshaked:=make(chan laneReady,count)
+ for i,a:=range assocs{
+  go func(i int,a *faketcp.ClientAssociation){
+   handshaked<-laneReady{index:i,err:a.WaitEstablished(established)}
+  }(i,a)
+ }
+ tick:=time.NewTicker(100*time.Millisecond)
+ defer tick.Stop()
+ for remaining:=count;remaining>0;{
+  select{
+  case <-established.Done():
+   return fmt.Errorf("original Game%d lanes TCP: %w",count,established.Err())
+  case res:=<-handshaked:
+   if res.err!=nil{return fmt.Errorf("original Game%d lane%d TCP: %w",count,res.index+1,res.err)}
+   remaining--
+  case readErr:=<-failed:
+   return fmt.Errorf("original Game%d NPF prehandoff: %w",count,readErr)
+  case <-tick.C:
+   now:=time.Now()
+   for i,a:=range assocs{
+    if _,err=a.EmitRetransmitDue(now);err!=nil{
+     return fmt.Errorf("original Game%d lane%d TCP retransmit: %w",count,i+1,err)
+    }
    }
   }
-  tick.Stop()
-  cancel()
-  if err!=nil{return fmt.Errorf("original Game%d lane%d TCP: %w",count,i+1,err)}
  }
  policy,err:=realityfront.FixedPolicyForClient(count,4)
  if err!=nil{return err}

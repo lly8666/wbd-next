@@ -692,11 +692,12 @@ fn m2_outer_ack_hint_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         // True SACK/dupACK gap is the sole trigger. After admitting this
         // original immutable shadow, borrow <=3 newer cached first sends;
         // never scan all DATA, never invent a PTO or consume new PN.
-        if wbd_recovery::outer_ack::cosmetic_half_gap(pn) &&
-            m.shadow.on_outer_gap_hint(pn,now) {
-            for recent in m.outer_ack.nominate_recent_feedback_followups(now,3) {
-                let _=m.shadow.on_outer_gap_hint(recent,now);
-            }
+        if wbd_recovery::outer_ack::cosmetic_half_gap(pn) {
+            // A stale old ACK head must not silence new cached shadows.
+            // Real gap evidence is enough for four bounded opportunities:
+            // the existing one-shot shadow, age and byte budget decide.
+            let _=m.shadow.on_outer_gap_hint(pn,now);
+            let _=m.shadow.on_outer_gap_recent_followups(now,4);
         }
     }
     Ok(())

@@ -57,6 +57,14 @@ H544仅补一条候选扩张：当现有 SACK/累计重复ACK 已有**真实缓�
 
 H544同时修原 Windows Game cold TLS 交接：原 Game4 FEC Action41079630362 FAIL，在4条Linux lane已真实开始后Windows尚未Ready，Go已Detach lane 的256项可选早到M3缓存溢出此前会直接结束 reader，可能连带阻塞剩余TLS。现在仅丢弃该可选早到记录，reader继续原TLS工作；定量队列不增、M3仍Rust验证、无热Go数据环。新源码需编译并以Game2/4最高FEC实际回归，不能把这项候选修复提前标PASS。剩余Windows Game idle/Health、rotation、A5和容量C亦继续。
 
+### H547 四档真实二次失败后的最终化简（当前 SOURCE 候选、待真实验证）
+
+BA8D 源码的 H545/H546 四档真实 Win/Linux 双端 Actions 41126738290/41126741528/41126744763/41126748120 全部业务/owned Stop PASS，但用户重传比例 **仍八方向 FAIL**：Win R/F 0.108/0.722/2.702/3.476%，Linux 0.100/0.625/3.203/3.941%，完整 F/R/C、源 binary/hash、CPU/RSS 见 [H547 证据](../evidence/M0/PLAN027-H547-SOURCEBA8D-FOUR-TIER-A5-GAME-20261031.json)。失败显示候选足够少、quota_rejected=0；不要增加新限速器或假定采样率可填预算。
+
+根因检查：H544 的三条候选从**原外层 ACK index**向后取，这个索引已经因可靠的累计 ACK/positive SACK 退休大量序号，得到的 PN 在原密文 `ReceiptState.entries` 常已不存在；并且 H544 把“原第一个旧洞还在缓存”当作继续扩张的必要条件，从而错过刚因旧洞过期放弃产生的有效反馈线索。H547 删除第二份 index 选择函数和多余标记，只在**真正收到实际 ACK/SACK 后、Index 报告真实序列缺口**时，基于每个 sampled gap，从当前真实原密文 `ReceiptState` BTreeMap 末尾最多看256条、挑最多4条 age≥50ms、尚未排队/未标记、未超缓存寿命的包（每包一次），立刻沿用原 `on_outer_gap_hint` 与已有10%F/8MTU/驱动/Stop。第一个缺口本身已过期时**也允许近期候选**，不向旧洞等待交付；0%没有缺口不触发。此处增加的4次机会是少量反馈采样，不生成业务重发PTO/新增控制报文。若真实四档仍不命中，只根据测量回看实际现有TCP SACK是否协商/候选与cache的有效比例，不能无限加复杂度或用假随机重发凑数。
+
+H546 Game2/4 FEC 原 Action41126751247/41126754244在WSL guest boot之后**CANCELLED**（未产生业务通过），之前 Game4 源080已 FAIL Windows cold Ready。H547 同批按老版仅改Go冷TLS的串行“每条Start后等待20s”成为“全部原TCP SYN Start后，每条独立WaitEstablished，共享原单次20s deadline及100ms重试 tick”，不创Go hot actor、协议或新控制轮次，维持独立原握手/epoch/generation及原密文。既有Game冷M3容量溢出仅跳过可选早到包、不杀别的TLS reader。需下一新 SOURCE build并真实 Game2/4FEC各一Action验证。H546 A5 Action41126757601同VM顺序 Rust B先PASS100%/Stop，Go A在14s因Windows产品崩溃 fail，没有可比较的A5结果；需回看Go A原运行设计做最小修复/受影响回归，不能宣称CPU提升。其余B生命周期/Auto/矩阵C长测继续。
+
 ## 1. 唯一顺序与恢复
 1. 默认上个聊天意外中断：刷新main，读cursor checkpoint后提交、短devlog、已登记Actions和SOURCE/hash；先补recovered事实、取在途结果，不重复dispatch。新registry/本计划优先于旧cursor next_action。
 2. **先整批实现M2退役及替代逻辑、双方调用、配置/功能卡/夹具→冻结SOURCE→一次编译→简化验证A。**

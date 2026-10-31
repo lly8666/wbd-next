@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "source_sha": "ba8d999aa806800cfb562ed34dfd738a98fb45bc",
+  "harness_sha": "c6a55f0193db2b84c578058dad30aa4a7bfae70a",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "exact_source_binaries": {
+    "win_artifact": 13009938342,
+    "win_zip_sha256": "188fd84969a802f67fb9075deb25066dd1c4d344e241f52a002fc66b1acbbd41",
+    "linux_artifact": 13009354130,
+    "linux_zip_sha256": "dff6fbd247808b75ebed0c0d305ceeb4a7eee728e42a0465a0ee1e044b56f362"
+  },
+  "test_condition": "Normal OFF 10Mbps both ways 250ms one-way, 60s duration, identical seed20261030, each independent Action new VM with tc real netem",
+  "results": [
+    {
+      "loss_pct": 1,
+      "action": 41126738290,
+      "report_artifact_id": 13011870283,
+      "report_zip_sha256": "97552354666e5f77f34875bd30bcc258ca7ba30306c75c10300ccfdced733b2a",
+      "observed": "REAL_BOTH_OS_KERNEL_UDP_TCP_FIRST_AND_OWNED_STOP_PASS",
+      "windows": {
+        "F": 86427592,
+        "R": 93711,
+        "C": 186339,
+        "R_over_F_pct": 0.1084,
+        "R_over_F_plus_R_plus_C_pct": 0.1081,
+        "first_fraction": 0.990899,
+        "whole_process_cpu_s": 2.7656,
+        "peak_working_set_bytes": 42856448
+      },
+      "linux": {
+        "F": 85005791,
+        "R": 85181,
+        "C": "NOT_MEASURED",
+        "R_over_F_pct": 0.1002,
+        "first_fraction": 0.990849
+      },
+      "acceptance": "FAIL_BOTH_OS_RATE_BELOW_USER_LOWER_BOUND"
+    },
+    {
+      "loss_pct": 5,
+      "action": 41126741528,
+      "report_artifact_id": 13011975316,
+      "report_zip_sha256": "505efcfb97c87f4579be8e01a2f81fc1f60e54c7865045463acf7b88202cd03d",
+      "observed": "REAL_BOTH_OS_KERNEL_UDP_TCP_FIRST_AND_OWNED_STOP_PASS",
+      "windows": {
+        "F": 86395653,
+        "R": 623924,
+        "C": 183017,
+        "R_over_F_pct": 0.7222,
+        "R_over_F_plus_R_plus_C_pct": 0.7155,
+        "first_fraction": 0.953431,
+        "whole_process_cpu_s": 1.7344,
+        "peak_working_set_bytes": 43110400
+      },
+      "linux": {
+        "F": 85002852,
+        "R": 530914,
+        "C": "NOT_MEASURED",
+        "R_over_F_pct": 0.6246,
+        "first_fraction": 0.95228
+      },
+      "acceptance": "FAIL_BOTH_OS_RATE_BELOW_USER_LOWER_BOUND"
+    },
+    {
+      "loss_pct": 15,
+      "action": 41126744763,
+      "report_artifact_id": 13012040619,
+      "report_zip_sha256": "0b1f6ee848fa9c72c9df4d3efcdb21b8376d62f621181c9730ac77ef83adc2e8",
+      "observed": "REAL_BOTH_OS_KERNEL_UDP_TCP_FIRST_AND_OWNED_STOP_PASS",
+      "windows": {
+        "F": 86388141,
+        "R": 2333846,
+        "C": 164726,
+        "R_over_F_pct": 2.7016,
+        "R_over_F_plus_R_plus_C_pct": 2.6256,
+        "first_fraction": 0.857088,
+        "whole_process_cpu_s": 2.0781,
+        "peak_working_set_bytes": 42500096
+      },
+      "linux": {
+        "F": 84995026,
+        "R": 2722070,
+        "C": "NOT_MEASURED",
+        "R_over_F_pct": 3.2026,
+        "first_fraction": 0.857835
+      },
+      "acceptance": "FAIL_BOTH_OS_RATE_BELOW_USER_LOWER_BOUND"
+    },
+    {
+      "loss_pct": 30,
+      "action": 41126748120,
+      "report_artifact_id": 13010474178,
+      "report_zip_sha256": "246213b86798f4af820baaeebd63eae9304c65acdb3fa6d514d0b8f6b12c0958",
+      "observed": "REAL_BOTH_OS_KERNEL_UDP_TCP_FIRST_AND_OWNED_STOP_PASS",
+      "windows": {
+        "F": 86373103,
+        "R": 3002017,
+        "C": 144084,
+        "R_over_F_pct": 3.4756,
+        "R_over_F_plus_R_plus_C_pct": 3.3535,
+        "first_fraction": 0.712861,
+        "whole_process_cpu_s": 2.5469,
+        "peak_working_set_bytes": 42770432
+      },
+      "linux": {
+        "F": 84989130,
+        "R": 3349406,
+        "C": "NOT_MEASURED",
+        "R_over_F_pct": 3.941,
+        "first_fraction": 0.708966
+      },
+      "acceptance": "FAIL_BOTH_OS_RATE_BELOW_USER_LOWER_BOUND"
+    }
+  ],
+  "A5": {
+    "action": 41126757601,
+    "result": "FAIL_NOT_COMPARABLE",
+    "report_artifact": 13010528716,
+    "sha256": "2fe457eb9132b6ed640ebe7c0c8f3db404c7be3c805115fe063353b4f7ee1318",
+    "order": [
+      "B Rust",
+      "A Go"
+    ],
+    "Rust": {
+      "first_both": 1,
+      "stop": "PASS_BOTH_OWNED",
+      "whole_process_cpu_s": 3.875,
+      "peak_rss_bytes": 41877504
+    },
+    "Go": {
+      "run_s": 14.219,
+      "product_exit_code": 1,
+      "stop": "NOT_RUN",
+      "cpu_s_partial": 3.9375,
+      "peak_rss_bytes": 44662784
+    },
+    "conclusion": "No CPU/latency advantage claim without valid same-VM A leg; Go product exits during real 60s, need cause"
+  },
+  "GameB": {
+    "Game2HighestFec": {
+      "action": 41126751247,
+      "result": "CANCELLED",
+      "native_job": "cancelled after real WSL boot, no app result"
+    },
+    "Game4HighestFec": {
+      "action": 41126754244,
+      "result": "CANCELLED",
+      "native_job": "cancelled after real WSL boot, no app result"
+    },
+    "prior": {
+      "Game4_source080_action": 41079630362,
+      "result": "CANCELLED",
+      "Game2_source080_action": 41079626524
+    }
+  },
+  "limitation": [
+    "SourceBA8D four rate tiers FAIL newest user's 0.4–0.6p low/0.25–0.6p high, independent of positive business/Stop",
+    "No Linux C wire available; report NOT_MEASURED not zero",
+    "Windows CPU uses whole Go+Rust native application process; different VM run values cannot prove speedup",
+    "No same-VM valid Go A baseline; A5 not fulfilled",
+    "GameFEC cancelled, cannot call product PASS"
+  ]
+}

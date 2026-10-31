@@ -458,6 +458,31 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         true
     }
 
+    /// A real peer SACK/duplicate-ACK gap permits a few cosmetic followups
+    /// from ACTUAL retained immutable ciphertext, not the outer ACK index:
+    /// the latter may already have retired its newest span. A stale first
+    /// hole can still trigger these bounded recent opportunities, but never
+    /// renews its own lifetime or creates a control packet.
+    /// Called only in the already-batched feedback path, no DATA timer.
+    pub fn on_outer_gap_recent_followups(&mut self,now:MonoNs,max:usize)->usize{
+        if !self.opportunistic_v3{return 0}
+        let mut chosen=Vec::with_capacity(max.min(4));
+        for (&pn,e) in self.entries.iter().rev().take(256){
+            if chosen.len()>=max.min(4){break}
+            if e.queued.is_none() && !e.missing_reported &&
+               e.repair_attempts==0 && now>=e.last_sent &&
+               now.0.saturating_sub(e.last_sent.0)>=50_000_000 &&
+               now<e.hard_expiry {
+                chosen.push(pn);
+            }
+        }
+        let mut accepted=0;
+        for pn in chosen{
+            if self.on_outer_gap_hint(pn,now){accepted+=1}
+        }
+        accepted
+    }
+
     /// Positive bitmap bits may release once even from an old report.
     /// Only new report_seq can establish negative evidence or RTT witnesses.
     /// Unreported pages, PN > largest and absent/control/burned PN do nothing.
@@ -1015,6 +1040,21 @@ mod tests {
         assert_eq!(s.outstanding(),0);
         assert!(!s.on_outer_gap_hint(RecordPn(1),MonoNs(751_000_000)));
         assert!(s.on_timer(MonoNs(800_000_000)).candidates.is_empty());
+    }
+    #[test]
+    fn h547_feedback_recent_uses_live_shadow_not_retired_ack_index(){
+        let mut s=state(24,100_000_000);
+        s.enable_adaptive_timing(600_000_000,50_000_000).unwrap();
+        s.enable_opportunistic_v3().unwrap();
+        for pn in 1..=10 { s.on_sent_adaptive(frozen(pn),MonoNs(0)).unwrap(); }
+        let retired=s.discard_outer_ack_hint(RecordPn(9)).unwrap();
+        assert_eq!(retired.metadata().pn,RecordPn(9));
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(60_000_000),4),4);
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(60_000_001),4),4);
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(60_000_002),4),1);
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(60_000_003),4),0);
+        assert_eq!(s.on_timer(MonoNs(60_000_003)).candidates.len(),0);
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(1_600_000_000),4),0);
     }
     #[test]
     fn r2_plan027_outer_ack_hint_discards_only_shadow_and_cancels_queued_repair() {

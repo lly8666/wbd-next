@@ -4285,12 +4285,11 @@ fn background_raw_once(
             }
             for pn in update.gap_candidates {
                 let now=loop_now();
-                if wbd_recovery::outer_ack::cosmetic_half_gap(pn) &&
-                    owned.shadow.on_outer_gap_hint(pn,now) {
-                    for recent in owned.outer_ack
-                        .nominate_recent_feedback_followups(now,3) {
-                        let _=owned.shadow.on_outer_gap_hint(recent,now);
-                    }
+                if wbd_recovery::outer_ack::cosmetic_half_gap(pn) {
+                    // The old head may have expired. Reuse authentic gap
+                    // evidence on up to four ACTUAL retained shadows.
+                    let _=owned.shadow.on_outer_gap_hint(pn,now);
+                    let _=owned.shadow.on_outer_gap_recent_followups(now,4);
                 }
             }
         }
