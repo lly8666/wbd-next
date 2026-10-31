@@ -137,6 +137,47 @@ permissions:
   contents: read
   actions: read
 jobs:
+  # On Windows-2025, a frozen WSL2/Hyper-V runner may not execute its
+  # PowerShell step timeout or even the on-host process watchdog. Historical
+  # 40859233957/40860233126 were cancelled by a separate Actions worker;
+  # SOURCE525 Game FEC 41167362490/41167363904 again survived until job cap.
+  # This is NOT another scenario/controller: a separate Linux runner only
+  # watches the one existing job and cancels the same Action after 20min.
+  native-wsl-external-deadline:
+    if: github.event_name == 'workflow_dispatch' && inputs.public_mode != 'all'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions: {contents: read, actions: write}
+    steps:
+      - name: Source-scoped single native job independent hard deadline
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          while :; do
+            jobs="$(gh api "repos/$GH_REPO/actions/runs/$GITHUB_RUN_ID/jobs?per_page=100")"
+            stage="$(jq -c '.jobs[] | select(.name=="native-public-two-os") | {status,conclusion,started_at}' <<<"$jobs" | head -1)"
+            if [ -n "$stage" ]; then
+              status="$(jq -r '.status' <<<"$stage")"
+              if [ "$status" = completed ]; then
+                echo "WL_INDEPENDENT_DEADLINE_DISARMED native-job-completed"
+                exit 0
+              fi
+              started="$(jq -r '.started_at // empty' <<<"$stage")"
+              if [ -n "$started" ]; then
+                since="$(date -u -d "$started" +%s)"
+                elapsed="$(($(date -u +%s)-since))"
+                if [ "$elapsed" -ge 1200 ]; then
+                  echo "WL_INDEPENDENT_DEADLINE_CANCEL exact_run=$GITHUB_RUN_ID native_elapsed=$elapsed"
+                  gh api -X POST "repos/$GH_REPO/actions/runs/$GITHUB_RUN_ID/cancel" --silent
+                  exit 0
+                fi
+              fi
+            fi
+            sleep 30
+          done
   wiring-contract:
     name: Cheap workflow and current assembly checks
     runs-on: ubuntu-24.04
@@ -826,8 +867,7 @@ jobs:
               & python -u tools/m0_wl_native_rx_abba.py 2>&1 |
                 Tee-Object result/wl-public/direct-full.log
             } elseif($env:WBD_WL_PERF_AB -eq '1'){
-              & python tools/m0_wl_perf_v2_ab.py 2>&1 |
-                Tee-Object result/wl-public/direct-full.log
+              & python -u tools/m0_wl_native_step_runner.py tools/m0_wl_perf_v2_ab.py result/wl-public/direct-full.log
             }else{
               # No native PowerShell PIPE/EOF dependency: a detached original
               # WSL/Go child may inherit stdout and outlive its owning test.
