@@ -185,10 +185,10 @@
     },
     {
       "platform": "Windows2025 original signed NPF/Wintun + Linux WSL2 raw/TUN",
-      "scope": "SOURCED5E7 H579 affected true 1/5/15/30% Normal/off and Game2/4 highestFEC six original Actions in progress, not yet real network/Stop PASS",
-      "status": "NOT_RUN",
+      "scope": "H583 frozen SOURCEd5e genuine 1/5/15/30% each 10Mbps/250ms/60s double OS original Actions41174422266/23925/25541/27152 + Game2/4 highestFEC41174428731/30566: ALL COMPLETED SUCCESS native UDP/TCP/owned Stop, valid true F/R/C scoped; R/F Win 0.1006/0.766/2.755/4.0785%, Linux 0.0885/0.5933/2.9432/3.9548%, less than half-p ideal; no source502c gain inference.",
+      "status": "FUNCTIONAL_PASS",
       "source_sha": "d5e7e3eca7b4988419ca60e008f2644aea775629",
-      "evidence": "docs/evidence/M0/PLAN027-H579-SOURCED5E7-TRUE-ZERO-AND-REUSED-TIERS-INFLIGHT-20261031.json"
+      "evidence": "docs/evidence/M0/PLAN027-H583-SOURCED5E7-FIVE-RATE-AND-GAME-FEC-20261031.json"
     }
   ],
   "limitations": [

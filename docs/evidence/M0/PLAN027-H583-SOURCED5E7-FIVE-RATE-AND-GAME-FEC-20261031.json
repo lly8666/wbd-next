@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "d5e7e3eca7b4988419ca60e008f2644aea775629",
+  "source_build_run": 41173614494,
+  "source_windows_artifact_id": 13032043586,
+  "source_linux_artifact_id": 13032147561,
+  "test_binary_reuse": "ALL_SIX_INDEPENDENT_ORIGINAL_SCENES_FROM_SINGLE_FROZEN_D5E_SOURCE",
+  "scenario_scope": "each direction offered 10Mbps, 250ms one-way, 60s, fixed seed 20261030, genuine real tc loss",
+  "result": "TRUE_NATIVE_0_1_5_15_30_ORIGINAL_BUSINESS_STOP_PASS; TWO_GAME_HIGHEST_FEC_REAL_PASS; 0P_NOT_EXACT_R_ZERO_LINUX133B; LOSS_RATE_BELOW_HALF_P_REFERENCE; STILL_NOT_WHOLE_PLAN027",
+  "zero_run": 41173614494,
+  "zero_result": "completed_success Windows first0.99999 Linux1, Win F86405269 R0 C219796; Linux F85007120 R133 C NOT_MEASURED, UDP/TCP/owned Stop PASS",
+  "damage_tiers": [
+    {
+      "p": 1,
+      "run": 41174422266,
+      "artifact": 13031984588,
+      "zip_sha256": "8ba1fd5be9c21c58765ec818db5e9810713786ebd88f6ba7a12d636852dad939",
+      "first_win": 0.989875,
+      "first_linux": 0.990985,
+      "win": {
+        "F": 86397886,
+        "R": 86884,
+        "C": 186326,
+        "unique_candidates": 239,
+        "unique_bytes": 202174,
+        "burst_wait": 0
+      },
+      "linux": {
+        "F": 85006681,
+        "R": 75269,
+        "C": "NOT_MEASURED",
+        "unique_candidates": 415,
+        "unique_bytes": 363642,
+        "burst_wait": 0
+      },
+      "win_cpu_percent": 6.228,
+      "win_rss": 42520576,
+      "win_R_over_F": 0.0010056264571103048,
+      "linux_R_over_F": 0.0008854480508420274,
+      "win_R_over_F_R_C": 0.0010024564590714303,
+      "linux_R_over_F_R_C": "NOT_MEASURED_LINUX_CONTROL",
+      "status": "COMPLETED_SUCCESS_REAL_UDP_TCP_STOP_BOTH"
+    },
+    {
+      "p": 5,
+      "run": 41174423925,
+      "artifact": 13031863416,
+      "zip_sha256": "6e8e357becd3f197d6f978da722121e02bc3c0d473c6b6a29b3770f102755b79",
+      "first_win": 0.951563,
+      "first_linux": 0.953104,
+      "win": {
+        "F": 86394674,
+        "R": 661768,
+        "C": 183920,
+        "unique_candidates": 3217,
+        "unique_bytes": 2521378,
+        "burst_wait": 0
+      },
+      "linux": {
+        "F": 85005172,
+        "R": 504307,
+        "C": "NOT_MEASURED",
+        "unique_candidates": 2937,
+        "unique_bytes": 2022631,
+        "burst_wait": 2
+      },
+      "win_cpu_percent": 5.515,
+      "win_rss": 42749952,
+      "win_R_over_F": 0.0076598240303563155,
+      "linux_R_over_F": 0.0059326625443449485,
+      "win_R_over_F_R_C": 0.007585571458311922,
+      "linux_R_over_F_R_C": "NOT_MEASURED_LINUX_CONTROL",
+      "status": "COMPLETED_SUCCESS_REAL_UDP_TCP_STOP_BOTH"
+    },
+    {
+      "p": 15,
+      "run": 41174425541,
+      "artifact": 13031959731,
+      "zip_sha256": "1bb6f75dfc62dbe8f9aca6836ed6cd76ea305ff930e96d14e951a3596cc5d819",
+      "first_win": 0.856717,
+      "first_linux": 0.857856,
+      "win": {
+        "F": 86386804,
+        "R": 2379964,
+        "C": 165540,
+        "unique_candidates": 10487,
+        "unique_bytes": 7477164,
+        "burst_wait": 7
+      },
+      "linux": {
+        "F": 84996947,
+        "R": 2501614,
+        "C": "NOT_MEASURED",
+        "unique_candidates": 9804,
+        "unique_bytes": 6821014,
+        "burst_wait": 67
+      },
+      "win_cpu_percent": 4.375,
+      "win_rss": 43114496,
+      "win_R_over_F": 0.027550087395292456,
+      "linux_R_over_F": 0.0294318100625426,
+      "win_R_over_F_R_C": 0.02676152293270068,
+      "linux_R_over_F_R_C": "NOT_MEASURED_LINUX_CONTROL",
+      "status": "COMPLETED_SUCCESS_REAL_UDP_TCP_STOP_BOTH"
+    },
+    {
+      "p": 30,
+      "run": 41174427152,
+      "artifact": 13032378608,
+      "zip_sha256": "03e958f6894065886e3750d2a895711c01d90a88c76bc34f6b68c389e7e96de2",
+      "first_win": 0.71051,
+      "first_linux": 0.710775,
+      "win": {
+        "F": 86377167,
+        "R": 3522894,
+        "C": 142558,
+        "unique_candidates": 10063,
+        "unique_bytes": 7638827,
+        "burst_wait": 38
+      },
+      "linux": {
+        "F": 84986990,
+        "R": 3361021,
+        "C": "NOT_MEASURED",
+        "unique_candidates": 7639,
+        "unique_bytes": 5901989,
+        "burst_wait": 374
+      },
+      "win_cpu_percent": 2.87,
+      "win_rss": 42967040,
+      "win_R_over_F": 0.04078501440085434,
+      "linux_R_over_F": 0.03954747661965673,
+      "win_R_over_F_R_C": 0.03912473936370065,
+      "linux_R_over_F_R_C": "NOT_MEASURED_LINUX_CONTROL",
+      "status": "COMPLETED_SUCCESS_REAL_UDP_TCP_STOP_BOTH"
+    }
+  ],
+  "game2": {
+    "run_id": 41174428731,
+    "artifact_id": 13031514016,
+    "artifact_zip_sha256": "8d2d1c1235367b3abf0130beb1bbe1c2ab271f72131622f6fad44bccb320059a",
+    "mode": "Game2 highestFEC fixed profile6",
+    "parity_offered": 205,
+    "parity_copied": 205,
+    "parity_sent": 205,
+    "retained_bytes_after_stop": 0,
+    "conclusion": "COMPLETED_SUCCESS_TRUE_NATIVE_UDP_TCP_COLD_TLS_APPLIED_OWNED_STOP"
+  },
+  "game4": {
+    "run_id": 41174430566,
+    "artifact_id": 13032233969,
+    "artifact_zip_sha256": "2b69466e69e92af82015799259fdd1f8f04f2427706d882d56ace8d034c8a320",
+    "mode": "Game4 highestFEC fixed profile6",
+    "parity_offered": 189,
+    "parity_copied": 189,
+    "parity_sent": 189,
+    "retained_bytes_after_stop": 0,
+    "conclusion": "COMPLETED_SUCCESS_TRUE_NATIVE_UDP_TCP_COLD_TLS_APPLIED_OWNED_STOP"
+  },
+  "independent_watchers": "SIX_SEPARATE_LINUX_WATCHERS_COMPLETE_SUCCESS_NO_STUCK_GAME_TEST",
+  "controls": "No added M2, no extra control, shared 32-candidate send-order and one-shot budget. 5% R/F well below ideal while BurstPaced near zero, suggests actual gap/expiry time rather than quota; H580 authentic-gap due fix now separate SOURCE502c NOT verified by these rows.",
+  "limitations": [
+    "No same-host before/after CPU for old-Go A; A5 baseline original error RUST_PEER remains",
+    "No calibrated one-way p99; cannot report latency improvement",
+    "Linux control wire C separately NOT_MEASURED; cannot claim total ratio there",
+    "No Game90s Health/idle/rotation, neither high Game4 FEC 20Mbps matrix nor C mixed/burst test",
+    "Other old SOURCE525 C200 true first FAIL retains capacity cap; no physical PASS"
+  ]
+}
