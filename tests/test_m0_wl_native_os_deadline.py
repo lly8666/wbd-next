@@ -41,8 +41,9 @@ class NativeWslDeadlineTests(unittest.TestCase):
         # The native deadline must run in a distinct Linux workflow_run.
         self.assertNotIn("native-wsl-external-deadline:",y)
         independent=(ROOT/".github/workflows/m0-plan027-independent-native-deadline.yml").read_text()
-        self.assertIn("types: [requested]",independent)
-        self.assertIn("github.event.workflow_run.event == 'workflow_dispatch'",independent)
+        self.assertIn("workflow_dispatch:",independent)
+        self.assertIn("target_run_id:",independent)
+        self.assertIn("M0_SEPARATE_NATIVE_DEADLINE_ARMED",y)
         self.assertIn("M0_EXTERNAL_NATIVE_TIMEOUT",independent)
         self.assertIn("/force-cancel",independent)
         self.assertIn("actions: write",independent)
