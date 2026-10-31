@@ -48,7 +48,9 @@
     "docs/devlog/M0/20261029-PLAN026-NATIVE-M2-HEALTH-SYNTAX-FIRST-COMPILE-FIX.md",
     "docs/devlog/M0/20261029-PLAN026-M2-MERGED-HEALTH-SHORT-OUTPUT-PREFLIGHT-FIX.md",
     "docs/devlog/M0/20261030-PLAN026-RECOVERY-M2-LOW-FREQUENCY-HEALTH-GAME-LANE-SEND-WINTUN-BOUNDARIES.md",
-    "docs/devlog/M0/20261031-PLAN027-H605-GAME-ACTION-TRIGGER-AND-FEATURE-CARD.md"
+    "docs/devlog/M0/20261031-PLAN027-H605-GAME-ACTION-TRIGGER-AND-FEATURE-CARD.md",
+    "docs/devlog/M0/20261031-PLAN027-H608-SOURCEA83-GAME2-TRUE-STOP.md",
+    "docs/evidence/M0/PLAN027-H608-SOURCEA83-GAME2-ORIGINAL-NATIVE-CLOSEOUT.json"
   ],
   "verification": [
     {
@@ -176,6 +178,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "cb475c89a29bc79c1608b747e76e136fd9341500",
       "evidence": "docs/evidence/M0/PLAN027-H586-SOURCECB475-REAL-RATES-FIXED50-20261031.json"
+    },
+    {
+      "platform": "Windows2025 signed Npcap/Wintun original Go TLS+Rust ↔ Linux WSL2 raw/TUN",
+      "scope": "PLAN027 H608 SOURCEa83 Game2/off genuine 2-lane original TLS→Rust/native OS-WAL/Wintun+Npcap→Linux TUN true duplex UDP/TCP (Win25/25, Linux25 received of 97 sent; first receipt not lossless qualified), both owned Stop; single short13s functional only. Action41189248640, artifacts13038776043. 90s/Health/rotation/Game2/4-FEC/p99/persistent low loss NOT_VERIFIED.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "a83b55e295db0b96e1108f071d877086c0f383ff",
+      "evidence": "docs/evidence/M0/PLAN027-H608-SOURCEA83-GAME2-ORIGINAL-NATIVE-CLOSEOUT.json"
     }
   ],
   "limitations": [
@@ -191,7 +200,8 @@
     "H552 Windows SOURCEf031 real 1/5/15/30 R/F0.1372/1.2732/4.6963/5.8654%, actual two-OS first/Stop PASS but rate 1/5/30 FAIL,15 PASS; sourcef031 Game2/4FEC in progress. New candidate shared Rust on authentic ACK/SACK real gap 4/7/8/12 live shadows max12 with one original PN/cipher/driver result and old ≤10% quota. New-source native validation pending.",
     "H555/H561 SOURCE525: real SACK-gap cursor, one-shot PN half-sample, bounded frozen FIFO; original native NOT_RUN, old f031 rate FAIL remains; PLAN027 B/C open.",
     "H566 SOURCE525 genuine 9 real business/Stop positives recorded with exact artifact and ratios; cancelled Game highestFEC and failed A5 remain separately NOT_VERIFIED, C100/300s initially IN_FLIGHT, p99 one-way NOT_MEASURED, old SOURCEf031 failure retained. No sameVM CPU speedup inference.",
-    "H604/H605 Game pre-TLS/Apply failed exit now closes cold read signal before Go NPF join and endpoint close; Rust handoff uses once-close. Previous H601 Game2 run41186157073 CANCELLED without business/Stop proof. H604 first push failed to trigger native due to missing Game Go code paths; new H605 native CI/source Game2, Game4 FEC and Health/rotation remain NOT_VERIFIED until real Actions. PLAN027 section0 A/B/C/long still OPEN."
+    "H604/H605 Game pre-TLS/Apply failed exit now closes cold read signal before Go NPF join and endpoint close; Rust handoff uses once-close. Previous H601 Game2 run41186157073 CANCELLED without business/Stop proof. H604 first push failed to trigger native due to missing Game Go code paths; new H605 native CI/source Game2, Game4 FEC and Health/rotation remain NOT_VERIFIED until real Actions. PLAN027 section0 A/B/C/long still OPEN.",
+    "H608 source a83 exact Game2/off original 2-OS authentic product and owned Stop 13s PASS; Windows auth_rejected18 with rust_worker_error0, Linux cleanup extra TERM code1 even though genuine server Stop marker and exit0; not a clean-sheet zero-error performance qualification. This run does not exercise cold TLS failure abort fix, 90s Health/dead, rotation, Game2/4-FEC, p99, C long test, or full PLAN027 closeout."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

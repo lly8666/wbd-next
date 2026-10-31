@@ -1,0 +1,9 @@
+# PLAN027 H608 — first actual original Game2 native business and Stop after stuck-Actions fix
+
+Original authenticated Win2025 signed Npcap/Wintun↔WSL2 Linux Game2/off native Action [41189248640](https://github.com/lly8666/wbd-next/actions/runs/41189248640) completed SUCCESS at SOURCE a83b55e295db0b96e1108f071d877086c0f383ff. Read same-run [artifact13038776043](https://github.com/lly8666/wbd-next/actions/runs/41189248640/artifacts/13038776043): report.json, client.log, server.log, artifact-manifest.json. Original 2-lane Go TLS JOINED, Rust M4/Npcap Wintun OS-WAL applied, Win CLIENT_READY; Linux GAME_NATIVE_READY. Genuine two-way UDP Win25 sent/25 received; Linux97 sent/25 received, positive smoke, not lossless throughput; 37B TCP echo both. Client WBD_WINDOWS_GAME_NATIVE_DISCONNECTED lanes2 wal_restored1 rust_stopped1; Linux V4_PUBLIC_GAME_NATIVE_STOP_DRAINED lanes2. Game2 real mode 13s rc0, the 600s whole-step watchdog disarmed cleanly. H601 original canceled source511c remains canceled/not PASS; H604 early-failure signal+join bug fix is not proven on a failed-start stimulus by this successful start.
+
+Exact Windows CLI sha256 95e946f006198b7888a64778f76e97a565c728ec10b5e11e8a0f44a9dec61b33, Linux server fa7ccf65a0e5f10573644940ac03713de196b3f9caaf563015dd979e28ff98f0. Windows process measured 10.406s with CPU0.4531s, 4.354% one logical core and peak working 47,398,912B; p99 NOT_MEASURED. Windows rejected_auth18 but Rust worker_error0, Linux auth_rejected0; cleanup extra TERM request returned code1 though original server exited0 after owned Stop marker, preserve warning. Full Game2/4 FEC, failure-path abort, 15s Health /90s dead, rotation, PLAN027 A/B/C and 5min remained NOT_RUN and mandatory, no final READY.
+
+```feature-impact
+{"kind":"updated","ids":["windows-native-transport"],"reason":"Record same-source genuine Game2 off native end-to-end UDP/TCP/owned Stop PASS with hashes and limits; no new product source modification."}
+```

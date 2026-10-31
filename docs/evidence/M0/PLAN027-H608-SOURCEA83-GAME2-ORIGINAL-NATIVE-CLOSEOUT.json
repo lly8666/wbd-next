@@ -1,0 +1,57 @@
+{
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "a83b55e295db0b96e1108f071d877086c0f383ff",
+  "run_id": 41189248640,
+  "job_id": 124503295398,
+  "artifact_id": 13038776043,
+  "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/41189248640/artifacts/13038776043",
+  "mode": "game2",
+  "fec": "off",
+  "lane_count": 2,
+  "real_native_business": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_game2",
+  "authenticated_tls": "PASS",
+  "windows_os_applied": "PASS",
+  "windows_wal_restored": 1,
+  "windows_rust_stopped": 1,
+  "linux_owned_stop": "PASS",
+  "windows_cli_sha256": "95e946f006198b7888a64778f76e97a565c728ec10b5e11e8a0f44a9dec61b33",
+  "linux_server_sha256": "fa7ccf65a0e5f10573644940ac03713de196b3f9caaf563015dd979e28ff98f0",
+  "windows_kernel_udp": {
+    "sent": 25,
+    "received": 25
+  },
+  "linux_kernel_udp": {
+    "sent": 97,
+    "received": 25,
+    "note": "Smoke receipt positive; not a loss-free rate test"
+  },
+  "tcp": {
+    "windows_server_received": 37,
+    "linux_server_received": 37,
+    "echo_both": true
+  },
+  "native_telemetry": {
+    "windows_tx_records": 98,
+    "windows_rx_first_delivered_ipv4": 109,
+    "windows_rejected_auth": 18,
+    "windows_rust_worker_error": 0,
+    "windows_effective_payload_mtu": 1353,
+    "linux_raw_received": 98,
+    "linux_auth_rejected": 0,
+    "linux_tun_delivered": 49,
+    "linux_stop_drained": true
+  },
+  "windows_process": {
+    "sample_elapsed_s": 10.406,
+    "cpu_total_s": 0.4531,
+    "one_logical_core_avg_pct": 4.354,
+    "peak_working_set_bytes": 47398912
+  },
+  "p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+  "auth_abnormal_exit_regression": "NOT_EXERCISED",
+  "health_90s": "NOT_RUN",
+  "rotation": "NOT_RUN",
+  "game4_or_fec": "NOT_RUN",
+  "capacity_and_long_test": "NOT_RUN",
+  "note": "WL_REAL_LINUX_OWNED_STOP_REQUEST_FAILED code=1 cleanup warning observed after server emitted V4_PUBLIC_GAME_NATIVE_STOP_DRAINED, exit 0; do not hide log. H604 prehandoff failure abort deadlock risk fixed in code but not induced by successful E2E smoke."
+}
