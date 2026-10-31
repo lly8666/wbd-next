@@ -1,0 +1,257 @@
+{
+  "schema_version": 1,
+  "source_sha": "f0313d565e4e271aeb3cce3df11762b046d76f2e",
+  "harness_sha": "dd015719ab49250d3b40c6411936a055346fca7f",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "result": "THREE_OF_FOUR_LOSS_RATE_TIERS_FAIL_BOTH_OS; P15_BOTH_PASS; ALL_TRUE_NATIVE_UDP_TCP_STOP_PASS",
+  "zero": {
+    "run": 41155198489,
+    "F_windows": 86398827,
+    "R_windows": 0,
+    "C_windows": 197430,
+    "F_linux": 85006002,
+    "R_linux": 0,
+    "first_both": "GE_0.999",
+    "stop": "PASS_BOTH_OWNED"
+  },
+  "frozen_build": {
+    "run": 41155198489,
+    "windows_artifact": 13024188713,
+    "windows_sha256": "0189db2d08258bd9614ccbb38270b4d20fb8cf7fde2636f7ba6fa0ea1c82da4d",
+    "linux_artifact": 13024594029,
+    "linux_sha256": "8dc7f6a008b69a34b54ea6de6f854161b2ee1243003c4f58b755d7f1933bd7f8"
+  },
+  "loss_tiers": [
+    {
+      "loss_pct": 1,
+      "run": 41161004484,
+      "report_artifact_id": 13027033214,
+      "zip_sha256": "6f9b9c69c7932e57f5bb0e2d90228a20db351c426339185156ac5f8cf1dab145",
+      "source_binary_sha": "f0313d565e4e271aeb3cce3df11762b046d76f2e",
+      "scene": "10Mbps/each,250ms/one-way,1% tc,60s",
+      "windows": {
+        "F": 86398479,
+        "R": 118567,
+        "C": 189103,
+        "R_over_F_percent": 0.1372,
+        "R_over_total_percent": 0.1367,
+        "first_fraction": 0.99103,
+        "process_cpu_s": 3.7812,
+        "peak_rss_bytes": 42942464,
+        "candidates": 149,
+        "repair_accepted": 147,
+        "abandoned": 0
+      },
+      "linux": {
+        "F": 85006842,
+        "R": 99820,
+        "C": "NOT_MEASURED",
+        "R_over_F_percent": 0.1174,
+        "first_fraction": 0.991487,
+        "candidates": 112,
+        "repair_accepted": 112,
+        "blocked_burst": 0
+      },
+      "target_R_over_F_percent": [
+        0.4,
+        0.6
+      ],
+      "pass_R_over_F_both": false,
+      "business": "PASS_GENUINE_BOTH_OS_UDP_TCP_OWNED_STOP"
+    },
+    {
+      "loss_pct": 5,
+      "run": 41161005816,
+      "report_artifact_id": 13026684717,
+      "zip_sha256": "f64be9a8e396ca6f508abe99fc07b38a8f0d878c99c8d360b21dc7175b89f9d2",
+      "source_binary_sha": "f0313d565e4e271aeb3cce3df11762b046d76f2e",
+      "scene": "10Mbps/each,250ms/one-way,5% tc,60s",
+      "windows": {
+        "F": 86395990,
+        "R": 1099963,
+        "C": 185447,
+        "R_over_F_percent": 1.2732,
+        "R_over_total_percent": 1.2545,
+        "first_fraction": 0.956374,
+        "process_cpu_s": 3.7344,
+        "peak_rss_bytes": 42225664,
+        "candidates": 1605,
+        "repair_accepted": 1411,
+        "abandoned": 162
+      },
+      "linux": {
+        "F": 85004095,
+        "R": 972983,
+        "C": "NOT_MEASURED",
+        "R_over_F_percent": 1.1446,
+        "first_fraction": 0.95616,
+        "candidates": 1413,
+        "repair_accepted": 1314,
+        "blocked_burst": 99
+      },
+      "target_R_over_F_percent": [
+        2,
+        3
+      ],
+      "pass_R_over_F_both": false,
+      "business": "PASS_GENUINE_BOTH_OS_UDP_TCP_OWNED_STOP"
+    },
+    {
+      "loss_pct": 15,
+      "run": 41161007405,
+      "report_artifact_id": 13026988297,
+      "zip_sha256": "ebe9972c043d2658ed9e97deb9d546013e55c340314964003eb64341fee5fdf6",
+      "source_binary_sha": "f0313d565e4e271aeb3cce3df11762b046d76f2e",
+      "scene": "10Mbps/each,250ms/one-way,15% tc,60s",
+      "windows": {
+        "F": 86391203,
+        "R": 4057215,
+        "C": 167859,
+        "R_over_F_percent": 4.6963,
+        "R_over_total_percent": 4.4774,
+        "first_fraction": 0.860715,
+        "process_cpu_s": 1.7031,
+        "peak_rss_bytes": 42799104,
+        "candidates": 6608,
+        "repair_accepted": 5443,
+        "abandoned": 1113
+      },
+      "linux": {
+        "F": 84995983,
+        "R": 3585072,
+        "C": "NOT_MEASURED",
+        "R_over_F_percent": 4.2179,
+        "first_fraction": 0.862438,
+        "candidates": 7121,
+        "repair_accepted": 4981,
+        "blocked_burst": 2094
+      },
+      "target_R_over_F_percent": [
+        3.75,
+        9
+      ],
+      "pass_R_over_F_both": true,
+      "business": "PASS_GENUINE_BOTH_OS_UDP_TCP_OWNED_STOP"
+    },
+    {
+      "loss_pct": 30,
+      "run": 41161009034,
+      "report_artifact_id": 13027680167,
+      "zip_sha256": "4bbe28d4310032ca2119ce7c7991969a811db255400c6cece2812815e1abe57d",
+      "source_binary_sha": "f0313d565e4e271aeb3cce3df11762b046d76f2e",
+      "scene": "10Mbps/each,250ms/one-way,30% tc,60s",
+      "windows": {
+        "F": 86378445,
+        "R": 5066482,
+        "C": 145264,
+        "R_over_F_percent": 5.8654,
+        "R_over_total_percent": 5.5317,
+        "first_fraction": 0.714609,
+        "process_cpu_s": 3.3906,
+        "peak_rss_bytes": 42848256,
+        "candidates": 9892,
+        "repair_accepted": 6574,
+        "abandoned": 3254
+      },
+      "linux": {
+        "F": 84988951,
+        "R": 4141942,
+        "C": "NOT_MEASURED",
+        "R_over_F_percent": 4.8735,
+        "first_fraction": 0.718959,
+        "candidates": 10729,
+        "repair_accepted": 5335,
+        "blocked_burst": 5352
+      },
+      "target_R_over_F_percent": [
+        7.5,
+        10
+      ],
+      "pass_R_over_F_both": false,
+      "business": "PASS_GENUINE_BOTH_OS_UDP_TCP_OWNED_STOP"
+    }
+  ],
+  "fixed30": {
+    "run": 41161013499,
+    "artifact": 13026774653,
+    "sha256": "2af08c4c9d07caabebab5db6c1990992ac090a6681a5d27d3a4e6fb7b7743438",
+    "first_windows": 0.999427,
+    "first_linux": 0.999709,
+    "stop": "PASS_BOTH_OWNED",
+    "windows": {
+      "F": 211423495,
+      "R": 4629727,
+      "C": 203592
+    },
+    "linux": {
+      "F": 207946537,
+      "R": 5708971,
+      "C": "NOT_MEASURED"
+    }
+  },
+  "auto240": {
+    "run": 41161014936,
+    "artifact": 13027885028,
+    "sha256": "6797887d7d3689a526c7170c689629093914df49a2f9a0e50af4686da75261d4",
+    "first_windows": 0.785462,
+    "first_linux": 0.785082,
+    "stop": "PASS_BOTH_OWNED",
+    "windows": {
+      "F": 741725810,
+      "R": 0,
+      "C": 970943,
+      "whole_process_cpu_s": 11.5938,
+      "elapsed_s": 255.44,
+      "peak_rss_bytes": 43425792
+    },
+    "linux": {
+      "F": 491725268,
+      "R": 0,
+      "C": "NOT_MEASURED"
+    },
+    "quality": "LINUX_30S_4096_SAMPLES_VALID_ONE_RUNG_WITHIN_120S_OBSERVED; exact grade/revision from report for promotion"
+  },
+  "normal_C50": {
+    "run": 41161016522,
+    "artifact": 13026888942,
+    "sha256": "f053679b12ec514def69e89942a45248c6f24fe8e0607db4312f6f31dbafbc60",
+    "offered_both_mbps": [
+      49.9866,
+      49.9999
+    ],
+    "first_fraction": [
+      0.999984,
+      1
+    ],
+    "stop": "PASS_BOTH_OWNED",
+    "windows": {
+      "F": 431290555,
+      "R": 0,
+      "C": 776264
+    },
+    "linux": {
+      "F": 424414102,
+      "R": 0,
+      "C": "NOT_MEASURED"
+    }
+  },
+  "game_fec": [
+    {
+      "run": 41161010440,
+      "mode": "Game2HighestFEC",
+      "result": "IN_FLIGHT"
+    },
+    {
+      "run": 41161011977,
+      "mode": "Game4HighestFEC",
+      "result": "IN_FLIGHT"
+    }
+  ],
+  "limitations": [
+    "Linux C wire bytes not separately measured, do not guess.",
+    "Windows CPU whole process original Go+Rust, independent hosted VMs cannot prove CPU improvement.",
+    "0% no false retries, 15% rate both PASS, 1/5/30 fail rate both; green business not rate PASS.",
+    "New H552 age-cadence source compiled+real tests NOT_RUN, must freeze new SOURCE and test separately.",
+    "200M old source7a Linux first93.897% FAIL; avoid higher same family."
+  ]
+}

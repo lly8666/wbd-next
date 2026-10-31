@@ -312,6 +312,7 @@ pub struct ReceiptState<H: FrozenRecordHandle> {
     rack_ack_ns: Option<u64>,
     adaptive:Option<AdaptiveTiming>,
     opportunistic_v3:bool,
+    last_cosmetic_feedback_ns:Option<u64>,
     diagnostics:ReceiptDiagnosticSnapshot,
 }
 fn serial_newer(seq: u32, prev: u32) -> bool {
@@ -332,7 +333,8 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             last_timer_index_pops: 0,
             last_report_seq: None,
             witnesses: Vec::with_capacity(3), rack_ack_ns: None,adaptive:None,
-            opportunistic_v3:false,diagnostics:ReceiptDiagnosticSnapshot::default(),
+            opportunistic_v3:false,last_cosmetic_feedback_ns:None,
+            diagnostics:ReceiptDiagnosticSnapshot::default(),
         })
     }
     pub fn enable_adaptive_timing(&mut self,bootstrap_rtt_ns:u64,
@@ -463,12 +465,27 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
     /// the latter may already have retired its newest span. A stale first
     /// hole can still trigger these bounded recent opportunities, but never
     /// renews its own lifetime or creates a control packet.
-    /// Called only in the already-batched feedback path, no DATA timer.
+    /// A single cheap last-productive-feedback timestamp adapts the
+    /// number of eligible live cached shadows to sparse versus dense
+    /// *genuine* outer gaps. No loss estimator, timer or extra byte limiter.
+    /// Sparse real feedback can borrow up to 12; common feedback borrows
+    /// 8, frequent feedback 7. Same-timestamp gaps stay at the old 4.
+    /// All repair sends still pass the one original 10%-F budget/8MTU
+    /// burst and once-only immutable PN/seq/ciphertext driver ownership.
+    /// This is called ONLY from the authenticated peer's actual SACK/dupACK
+    /// gap path, never from ordinary DATA or idle timer polling.
     pub fn on_outer_gap_recent_followups(&mut self,now:MonoNs,max:usize)->usize{
-        if !self.opportunistic_v3{return 0}
-        let mut chosen=Vec::with_capacity(max.min(4));
+        if !self.opportunistic_v3||max==0{return 0}
+        let allowance=match self.last_cosmetic_feedback_ns {
+            None=>12,
+            Some(at) if now.0==at=>max,
+            Some(at) if now.0.saturating_sub(at)>=350_000_000=>12,
+            Some(at) if now.0.saturating_sub(at)>=65_000_000=>8,
+            Some(_)=>7,
+        }.min(max.saturating_mul(3)).min(12);
+        let mut chosen=Vec::with_capacity(allowance);
         for (&pn,e) in self.entries.iter().rev().take(256){
-            if chosen.len()>=max.min(4){break}
+            if chosen.len()>=allowance{break}
             if e.queued.is_none() && !e.missing_reported &&
                e.repair_attempts==0 && now>=e.last_sent &&
                now.0.saturating_sub(e.last_sent.0)>=50_000_000 &&
@@ -480,6 +497,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         for pn in chosen{
             if self.on_outer_gap_hint(pn,now){accepted+=1}
         }
+        if accepted>0{self.last_cosmetic_feedback_ns=Some(now.0)}
         accepted
     }
 
@@ -1049,11 +1067,27 @@ mod tests {
         for pn in 1..=10 { s.on_sent_adaptive(frozen(pn),MonoNs(0)).unwrap(); }
         let retired=s.discard_outer_ack_hint(RecordPn(9)).unwrap();
         assert_eq!(retired.metadata().pn,RecordPn(9));
-        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(60_000_000),4),4);
-        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(60_000_001),4),4);
-        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(60_000_002),4),1);
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(60_000_000),4),9);
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(60_000_001),4),0);
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(60_000_002),4),0);
         assert_eq!(s.on_outer_gap_recent_followups(MonoNs(60_000_003),4),0);
         assert_eq!(s.on_timer(MonoNs(60_000_003)).candidates.len(),0);
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(1_600_000_000),4),0);
+    }
+    #[test]
+    fn h552_gap_cadence_uses_only_bounded_live_once_shadows(){
+        let mut s=state(48,100_000_000);
+        s.enable_adaptive_timing(600_000_000,50_000_000).unwrap();
+        s.enable_opportunistic_v3().unwrap();
+        for pn in 1..=40 {
+            s.on_sent_adaptive(frozen(pn),MonoNs(0)).unwrap();
+        }
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(60_000_000),4),12);
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(60_000_001),4),7);
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(140_000_001),4),8);
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(500_000_001),4),12);
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(500_000_002),4),1);
+        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(500_000_003),4),0);
         assert_eq!(s.on_outer_gap_recent_followups(MonoNs(1_600_000_000),4),0);
     }
     #[test]

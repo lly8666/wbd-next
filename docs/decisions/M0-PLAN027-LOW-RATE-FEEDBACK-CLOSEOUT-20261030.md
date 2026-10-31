@@ -65,6 +65,12 @@ BA8D 源码的 H545/H546 四档真实 Win/Linux 双端 Actions 41126738290/41126
 
 H546 Game2/4 FEC 原 Action41126751247/41126754244在WSL guest boot之后**CANCELLED**（未产生业务通过），之前 Game4 源080已 FAIL Windows cold Ready。H547 同批按老版仅改Go冷TLS的串行“每条Start后等待20s”成为“全部原TCP SYN Start后，每条独立WaitEstablished，共享原单次20s deadline及100ms重试 tick”，不创Go hot actor、协议或新控制轮次，维持独立原握手/epoch/generation及原密文。既有Game冷M3容量溢出仅跳过可选早到包、不杀别的TLS reader。需下一新 SOURCE build并真实 Game2/4FEC各一Action验证。H546 A5 Action41126757601同VM顺序 Rust B先PASS100%/Stop，Go A在14s因Windows产品崩溃 fail，没有可比较的A5结果；需回看Go A原运行设计做最小修复/受影响回归，不能宣称CPU提升。其余B生命周期/Auto/矩阵C长测继续。
 
+### H552 最新 SOURCEf031 四档验收与最小反馈节奏改进（2026-10-31）
+
+最新冻结产品 SOURCE `f0313d565e4e271aeb3cce3df11762b046d76f2e`，原 Windows Npcap/Wintun+Go TLS/Rust ↔ Linux Raw/TUN Rust 双向同二进制真实60秒，最新比例目标只在 **15%** 同时达标（Win 4.6963%、Linux 4.2179%）。1%为0.1372/0.1174%，低于0.4%门；5%为1.2732/1.1446%，低于2%门；30%为5.8654/4.8735%，低于7.5%门。四档真实内核业务/Stop均通过，但这些 rate FAIL 必须保留 SOURCE、run、hash，不拿 banner 当 PASS。无损两侧 R0。15%与30%的底层单次/额度仍正确，反馈短时突发拒绝的记录远多于1%/5%；不能简单全面放大并承诺达标。其余 Game/Auto 在途单独留证。
+
+H552仅在已有 `ReceiptState.on_outer_gap_recent_followups` 中加入一处 O(1) 最近**成功选到新缓存**的真实反馈时间戳：首次/间隔≥350ms 最多12条，间隔65–350ms最多8条，频繁真实缺口（<65ms）最多7条，同一次反馈时间戳维持旧4条。最多只查看现存 BTree 的近期256条，50ms至已有硬过期内且PN从未排队/重发；无损绝不进入该调用。单次原密文/PN/Seq/不可变数据及真实 driver receipt/Stop 不变；10% F 持续字节预算/8MTU短时突发仍为唯一额度，没有另建估计器、反馈报文、定时器或 Go 热线程。该选择是简单的反馈稀疏度代理，**不是声称真实丢包概率已精确估计**。新 SOURCE先0%业务/Stop→复用二进制独立1/5/15/30%四档；比例不达用户要求时按证据继续最小修复，不能靠数学预测宣称PASS。
+
 ## 1. 唯一顺序与恢复
 1. 默认上个聊天意外中断：刷新main，读cursor checkpoint后提交、短devlog、已登记Actions和SOURCE/hash；先补recovered事实、取在途结果，不重复dispatch。新registry/本计划优先于旧cursor next_action。
 2. **先整批实现M2退役及替代逻辑、双方调用、配置/功能卡/夹具→冻结SOURCE→一次编译→简化验证A。**
