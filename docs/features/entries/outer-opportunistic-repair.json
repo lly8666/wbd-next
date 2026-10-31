@@ -177,10 +177,17 @@
     },
     {
       "platform": "Windows2025 NPF/Wintun+Linux WSL2 raw/TUN",
-      "scope": "PLAN027 H574 unchanged product from bf603: v3-only 200ms paced FIFO and 5ms deadline while existing monotone ACK/SACK cursor/half PN, 32 immutable candidates, 8MTU/10%F unchanged; new true 0% original Action41173614494 IN_PROGRESS. Affected 1/5/15/30% and Game B/C NOT_RUN on this source, no claimed ratio/pass.",
+      "scope": "H579 same frozen SOURCEd5e true original Windows/WSL2 Normal off 10Mbps each 250ms 0pct 60s: first Windows99.999%, Linux100%, true UDP/TCP/Stop PASS, Windows F86405269 R0 C219796 Linux F85007120 R133 C not measured, Win CPU5.869% one core RSS42.4MB; no same-VM CPU gain or one-way p99 proof.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "d5e7e3eca7b4988419ca60e008f2644aea775629",
+      "evidence": "docs/evidence/M0/PLAN027-H579-SOURCED5E7-TRUE-ZERO-AND-REUSED-TIERS-INFLIGHT-20261031.json"
+    },
+    {
+      "platform": "Windows2025 original signed NPF/Wintun + Linux WSL2 raw/TUN",
+      "scope": "SOURCED5E7 H579 affected true 1/5/15/30% Normal/off and Game2/4 highestFEC six original Actions in progress, not yet real network/Stop PASS",
       "status": "NOT_RUN",
       "source_sha": "d5e7e3eca7b4988419ca60e008f2644aea775629",
-      "evidence": null
+      "evidence": "docs/evidence/M0/PLAN027-H579-SOURCED5E7-TRUE-ZERO-AND-REUSED-TIERS-INFLIGHT-20261031.json"
     }
   ],
   "limitations": [

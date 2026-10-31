@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "d5e7e3eca7b4988419ca60e008f2644aea775629",
+  "result": "ZERO_TRUE_NATIVE_PASS_AND_RECOVERY_108_PASS; SIX_LOSS_AND_GAME_SCENES_IN_PROGRESS; FULL_PLAN027_OPEN",
+  "original_zero": {
+    "run_id": 41173614494,
+    "conclusion": "completed_success",
+    "scenario": "scenarios/plan027-h539-normal-10m-250ms-loss0-60s.json",
+    "scenario_sha256": "51e76b771491436b4b2cf36f4897047d3708bd56d8738f98e1e21e54472d74bd",
+    "loss_pct": 0,
+    "one_way_ms": 250,
+    "duration_s": 60,
+    "offered_mbps_each": 10,
+    "delivered_first": {
+      "windows": 0.99999,
+      "linux": 1
+    },
+    "actual_F_R_C_wire_bytes": {
+      "windows": {
+        "F": 86405269,
+        "R": 0,
+        "C": 219796
+      },
+      "linux": {
+        "F": 85007120,
+        "R": 133,
+        "C": "NOT_MEASURED"
+      }
+    },
+    "windows_cpu_one_core_percent": 5.869,
+    "windows_cpu_s": 4.5469,
+    "windows_peak_rss_bytes": 42409984,
+    "windows_npcap_local_drops": 0,
+    "stop": "PASS_BOTH_OWNED",
+    "business": "TRUE_BOTH_OS_UDP_TCP",
+    "p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+    "artifact_id": 13032602173,
+    "zip_sha256": "33302ddfb4631d7eecd59685dd22a4a7e5b9e87314b8bde85777654268ce3488"
+  },
+  "binary_source": {
+    "rust_version": "1.85.1",
+    "go_version": "1.23.12",
+    "features": "m0_v4_embedded_go,fec2_product_record",
+    "windows": {
+      "artifact_id": 13032043586,
+      "zip_sha256": "1138fbb1df477d09f383d36cbc031a0594cdb060a464122b70b60cb5eb2214b0",
+      "exe_sha256": "32680a0a49e26a262e5182384db9046b5b8536e171cf9b78d501b0d889637166",
+      "dll_sha256": "3c2cd1adbfe91de107cda4af0c00ddd05b7bde2b60004f6b4579282ec792f45c"
+    },
+    "linux": {
+      "artifact_id": 13032147561,
+      "zip_sha256": "77f99c8c7fcaf63eb87fd111ccce100e35b27946231e77959976747849bdc583",
+      "server_sha256": "fa7ccf65a0e5f10573644940ac03713de196b3f9caaf563015dd979e28ff98f0",
+      "so_sha256": "7c7b40d8766d522f6115eb9075ba6948a113f9929721ac49ca70b66195a1e6f9"
+    }
+  },
+  "a1_recovery": {
+    "run_id": 41174321053,
+    "conclusion": "success",
+    "passed": 108,
+    "failed": 0,
+    "new_v3_paced_fifo_test": "PASS"
+  },
+  "gated_dispatch": {
+    "run_id": 41174155321,
+    "conclusion": "success",
+    "same_binary_source": "d5e7e3eca7b4988419ca60e008f2644aea775629",
+    "original_scenarios": [
+      {
+        "run_id": 41174422266,
+        "description": "normal off 1pct 10Mbps 250ms 60s",
+        "status": "IN_PROGRESS"
+      },
+      {
+        "run_id": 41174423925,
+        "description": "normal off 5pct 10Mbps 250ms 60s",
+        "status": "IN_PROGRESS"
+      },
+      {
+        "run_id": 41174425541,
+        "description": "normal off 15pct 10Mbps 250ms 60s",
+        "status": "IN_PROGRESS"
+      },
+      {
+        "run_id": 41174427152,
+        "description": "normal off 30pct 10Mbps 250ms 60s",
+        "status": "IN_PROGRESS"
+      },
+      {
+        "run_id": 41174428731,
+        "description": "game2 highest FEC",
+        "status": "IN_PROGRESS"
+      },
+      {
+        "run_id": 41174430566,
+        "description": "game4 highest FEC",
+        "status": "IN_PROGRESS"
+      }
+    ]
+  },
+  "old_game_actions": {
+    "ids": [
+      41170807537,
+      41170809210
+    ],
+    "status": "COMPLETED_CANCELLED_NOT_FUNCTIONAL_PASS",
+    "independent_recovery_action": 41173524500
+  },
+  "remaining": [
+    "Windows Game native Health 15/90s, idle/rotation",
+    "Game2/4 highest FEC business and Stop",
+    "A5 Go A source525 RUST_PEER failure, AB comparison NOT_RUN",
+    "capacity-eligible C mixed/burst, weaknet and affected regressions",
+    "source525 Normal/off C200 strict first FAIL with real Linux TUN/fq drops"
+  ]
+}
