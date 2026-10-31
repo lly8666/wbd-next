@@ -118,7 +118,8 @@
   "H311 provenance index: H309 main33ed seven-mode native PASS; N0dd0767 independent one-sample PASS while aa931 FAIL remains; ARM64f7ee prebuilt 10M capacity success; Linux33ed loss1 old serial-echo FAIL.",
   "PLAN026 candidate Windows Game2/4 off/fixed native worker retains original Linux GameAdapter and GameFec true copied tickets, real Wintun prefix+authenticated M3 replay; no Auto on Game. New native M4/weaknet/capacity proof NOT_RUN.",
   "Candidate: preserve FEC batch copied prefix and isolate single failed Game NPF RX lane. New SOURCE native untested.",
-  "Candidate: Game FEC retains exact NPF copy and real Wintun prefix; TX/RX lane errors isolated; temporary Wintun full does not mark uncommitted recovered packet delivered. Native FEC/burst proof pending."
+  "Candidate: Game FEC retains exact NPF copy and real Wintun prefix; TX/RX lane errors isolated; temporary Wintun full does not mark uncommitted recovered packet delivered. Native FEC/burst proof pending.",
+  "PLAN027 H631 source candidate: Windows original Game FEC Wintun BufferTooSmall now retains a bounded per-lane decoded FEC delivery batch and retries ONLY the missing kernel prefix, without reopening the same AEAD PN or falsely committing a recovered source; all original new-source FEC loss/Stop tests remain NOT_RUN."
  ],
  "promotion": null
 }

@@ -419,9 +419,16 @@ fn trusted_windows_game_rx<'a>(
         mtu,authenticated_options:None,
     }
 }
+// A verified Game-FEC decoder candidate is NOT a Wintun delivery. Keep
+// its exact bounded batch while the shared Wintun is temporarily full;
+// the original AEAD/PN and FEC decode MUST NOT be replayed on retry.
+struct DeferredFec{
+    seq:u32,wire_len:usize,copied:u32,frames:Vec<Vec<u8>>,
+}
 fn receive_one(cfg:&WbdWinGameNativeAttachV3,
     group:&Arc<Mutex<game::WinGameGroup>>,tun:&mut WintunTx,
-    c:&GameCounters,ledgers:&mut [AckLedger],lane:usize,seq:u32,wire:&[u8],
+    c:&GameCounters,ledgers:&mut [AckLedger],
+    deferred:&mut [Option<DeferredFec>],lane:usize,seq:u32,wire:&[u8],
 )->Result<(),i32>{
     // Original Go TLS-derived GameAdapter M3+PN open and stage happens
     // under ONE group lock; the actual Wintun kernel writes MUST happen
@@ -442,8 +449,8 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
     let mut copied=0u32;
     let mut failed=false;
     let mut backpressure=false;
-    for frame in frames{
-        match tun.deliver_authenticated(&frame){
+    for frame in &frames{
+        match tun.deliver_authenticated(frame){
             Ok(())=>{copied+=1;c.rx.fetch_add(1,Ordering::Release);},
             Err(NativeIoError::BufferTooSmall)=>{
                 // ERROR_BUFFER_OVERFLOW from Wintun AllocateSendPacket:
@@ -457,6 +464,18 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
                 failed=true;break
             },
         }
+    }
+    if backpressure && pending{
+        // The decoder already consumed the unique authenticated symbol.
+        // Retiring it now loses recovered source frames permanently, since
+        // replay will correctly reject the same original PN. Preserve the
+        // remaining payloads and their exact accepted kernel prefix instead.
+        let slot=deferred.get_mut(lane).ok_or(INVALID)?;
+        if slot.is_some(){return Err(BAD_STAGE)}
+        *slot=Some(DeferredFec{
+            seq,wire_len:wire.len(),copied,frames
+        });
+        return Ok(())
     }
     if pending{
         let mut g=group.lock().map_err(|_|BAD_STAGE)?;
@@ -489,6 +508,56 @@ fn retire_game_rx_lane(active:&mut [bool],lane:usize)->bool{
     if let Some(slot)=active.get_mut(lane){*slot=false}
     active.iter().any(|&ok|ok)
 }
+// Only one RX worker owns all deferred FEC batches. Up to 4 lanes x
+// 16 restored frames; never a new decoder, packet seal, or TX timer.
+fn flush_deferred_fec(
+    group:&Arc<Mutex<game::WinGameGroup>>,tun:&mut WintunTx,
+    c:&GameCounters,ledgers:&mut [AckLedger],
+    deferred:&mut [Option<DeferredFec>],
+)->Result<bool,i32>{
+    let mut finished_any=false;
+    for (i,slot) in deferred.iter_mut().enumerate(){
+        let Some(row)=slot.as_mut()else{continue};
+        while (row.copied as usize)<row.frames.len(){
+            match tun.deliver_authenticated(&row.frames[row.copied as usize]){
+                Ok(())=>{
+                    row.copied+=1;
+                    c.rx.fetch_add(1,Ordering::Release);
+                },
+                Err(NativeIoError::BufferTooSmall)=>break,
+                Err(err)=>{
+                    eprintln!("M0_PLAN027_GAME_FEC_DEFERRED_TUN_FATAL lane={} copied={} error={err:?}",i+1,row.copied);
+                    return Err(BAD_STAGE)
+                },
+            }
+        }
+        if row.copied as usize==row.frames.len(){
+            // Commit Game logical-first delivery only after ALL restored
+            // frames have actually passed the original Wintun kernel writer.
+            let rc={
+                let mut g=group.lock().map_err(|_|BAD_STAGE)?;
+                game::finish_fec_group(&mut g,(i+1) as u32,row.copied)
+            };
+            if rc!=OK{return Err(rc)}
+            let ack=ledgers[i].verified(row.seq,row.wire_len);
+            c.ack[i].store(ack,Ordering::Release);
+            *slot=None;
+            finished_any=true;
+        }
+    }
+    Ok(finished_any)
+}
+fn abort_deferred_fec(group:&Arc<Mutex<game::WinGameGroup>>,
+    deferred:&mut [Option<DeferredFec>])->i32{
+    let Ok(mut g)=group.lock()else{return BAD_STAGE};
+    for (i,slot) in deferred.iter_mut().enumerate(){
+        if let Some(row)=slot.take(){
+            let rc=game::finish_fec_group(&mut g,(i+1) as u32,row.copied);
+            if rc!=OK{return rc}
+        }
+    }
+    OK
+}
 fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     group:Arc<Mutex<game::WinGameGroup>>,mut tun:WintunTx,
     mut npf:Vec<NpcapRx>,stop:Arc<WakeEvent>,wake:Arc<WakeEvent>,
@@ -496,6 +565,7 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     c:Arc<GameCounters>,
 )->i32{
     let mut ledgers:Vec<AckLedger>=lanes.iter().map(|x|AckLedger::new(x.rx_seq)).collect();
+    let mut deferred:Vec<Option<DeferredFec>>=(0..lanes.len()).map(|_|None).collect();
     // A dead Npcap capture is lane-local. Stop/shared Wintun errors remain
     // group-wide. Rebuild the wait set only upon lane retirement (cold path).
     let mut active=vec![true;npf.len()];
@@ -511,23 +581,40 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     }
     if !active.iter().any(|&ok|ok){return BAD_STAGE}
     let mut handles=vec![stop.handle(),wake.handle()];
-    for (i,&e) in events.iter().enumerate(){if active[i]{handles.push(e)}};
+    for (i,&e) in events.iter().enumerate(){if active[i]&&deferred[i].is_none(){handles.push(e)}};
     let mut frame=[0u8;NPF_CAP];
     loop{
-        if c.stop.load(Ordering::Acquire){return OK}
+        if c.stop.load(Ordering::Acquire){
+            return abort_deferred_fec(&group,&mut deferred)
+        }
+        match flush_deferred_fec(&group,&mut tun,&c,&mut ledgers,&mut deferred){
+            Ok(true)=>{let _=tx_wake.wake();},
+            Ok(false)=>{},
+            Err(e)=>return e,
+        }
         // Drain real Go TLS->Rust handoff backlog before new Npcap records.
         loop{
             let row=match early.lock(){Ok(mut q)=>q.pop_front(),Err(_)=>return BAD_STAGE};
             let Some((i,seq,wire))=row else{break};
-            match receive_one(&cfg,&group,&mut tun,&c,&mut ledgers,i,seq,&wire){
+            if deferred.get(i).is_some_and(Option::is_some){
+                let Ok(mut q)=early.lock()else{return BAD_STAGE};
+                q.push_front((i,seq,wire));break
+            }
+            match receive_one(&cfg,&group,&mut tun,&c,&mut ledgers,
+                &mut deferred,i,seq,&wire){
                 Ok(())=>{let _=tx_wake.wake();},
                 Err(INVALID)=>{c.rejected.fetch_add(1,Ordering::Relaxed);},
                 Err(e)=>return e,
             }
         }
-        match io::wait_ready(&handles,u32::MAX){
-            Ok(WaitResult::Ready(0))=>return OK,
-            Ok(WaitResult::Ready(_))=>{},
+        // Never park indefinitely while a real decoded FEC batch is
+        // awaiting Wintun capacity; never poll when there is no backlog.
+        let timeout=if deferred.iter().any(Option::is_some){5}else{u32::MAX};
+        match io::wait_ready(&handles,timeout){
+            Ok(WaitResult::Ready(0))=>{
+                return abort_deferred_fec(&group,&mut deferred)
+            },
+            Ok(WaitResult::Ready(_)|WaitResult::Timeout)=>{},
             Ok(other)=>{
                 eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=RX stage=event_wait unexpected={other:?}");
                 return BAD_STAGE
@@ -540,9 +627,11 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         let mut verified=false;
         // One RX thread and one shared Wintun, read each lane fairly.
         for (i,rx) in npf.iter_mut().enumerate(){
-            if !active[i]{continue}
+            if !active[i]||deferred[i].is_some(){continue}
             for _ in 0..32{
-                if c.stop.load(Ordering::Acquire){return OK}
+                if c.stop.load(Ordering::Acquire){
+                    return abort_deferred_fec(&group,&mut deferred)
+                }
                 let n=match rx.read(&mut frame){
                     Ok(ReadResult::Frame(n))=>n,
                     Ok(ReadResult::Skipped)=>continue,
@@ -564,7 +653,7 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 );
                 let Ok(p)=parse_data_packet(ipv4,trusted)else{continue};
                 match receive_one(&cfg,&group,&mut tun,&c,&mut ledgers,
-                    i,p.seq32,p.ciphertext){
+                    &mut deferred,i,p.seq32,p.ciphertext){
                     Ok(())=>verified=true,
                     Err(INVALID)=>{c.rejected.fetch_add(1,Ordering::Relaxed);},
                     Err(e)=>return e,
@@ -582,7 +671,7 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         // handle. Preserve Stop and original Go early-wake in every set.
         handles.truncate(2);
         for (i,&e) in events.iter().enumerate(){
-            if active[i]{handles.push(e)}
+            if active[i]&&deferred[i].is_none(){handles.push(e)}
         }
     }
 }
