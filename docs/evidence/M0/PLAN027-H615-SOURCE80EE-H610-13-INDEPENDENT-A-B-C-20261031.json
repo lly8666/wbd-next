@@ -1,0 +1,228 @@
+{
+  "schema": "M0_PLAN027_ORIGINAL_TWO_OS_BATCH_RESULT_V1",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "run_dispatch": 41192841840,
+  "dispatch_sha": "a655ef195f774c08058e14a0135fd23c2fc6f2ac",
+  "product_source": "80ee526cc7b466ec6ccbe3cc25caf2f3754996ef",
+  "product_artifacts": {
+    "build_run": 41190352345,
+    "windows_artifact_name": "m0-wl-windows-product-binaries-80ee526cc7b466ec6ccbe3cc25caf2f3754996ef",
+    "linux_artifact_name": "m0-plan024-linux-product",
+    "artifact_digests_original_run": "github_actions_artifact_metadata"
+  },
+  "scope": "Original Go TLS/Windows signed NPF+Wintun Rust native owner ↔ Linux WSL2 original Rust/TUN, one scenario Action each",
+  "outcome": "12_REAL_BOTH_OS_UDP_TCP_OWNED_STOP_PASS_1_PRE_MEASUREMENT_FIXTURE_FAIL",
+  "cpu_scope": "Whole Windows original Go+Rust process, percent of one logical core; compares no different runners",
+  "p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+  "wire_F_R_C": "NOT_NORMALIZED_FROM_THESE_13_SCENE_REPORTS; do not conflate business payload or local counters with outer F/R/C",
+  "auto_real_grade": "NOT_PROVEN_BY_STAGED_A4_ONLY; see H614 independent auto-adaptive",
+  "source_hash_note": "Product binary source 80ee, test harness checkout a655, only workflow/test/notes changes on main; no product crates/r0/manifest edits",
+  "cases": [
+    {
+      "run_id": 41192854748,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41192854748",
+      "mode": "normal",
+      "scenario": "scenarios/plan027-a2-normal-10m-250ms-0loss-60s.json",
+      "scenario_sha256": "0d469c873912500ebb2915abc1fb940068e969957431b514ec181bc1f466de64",
+      "result": "PASS_REAL_DUPLEX_UDP_TCP_OWNED_STOP",
+      "first_delivery_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "windows_avg_one_logical_core_pct": 5.354,
+      "wire_F_R_C": "NOT_EXTRACTED_PER_RUN",
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "run_id": 41192859062,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41192859062",
+      "mode": "normal",
+      "scenario": "scenarios/wl-outer-repair-10m-250ms-loss30-60s.json",
+      "scenario_sha256": "73bf61884e54551e16f290af78c447db1a717232aaa2b238c71fc03f35ddf0a8",
+      "result": "PASS_REAL_DUPLEX_UDP_TCP_OWNED_STOP",
+      "first_delivery_fraction": {
+        "windows": 0.722082,
+        "linux": 0.724427
+      },
+      "windows_avg_one_logical_core_pct": 31.644,
+      "wire_F_R_C": "NOT_EXTRACTED_PER_RUN",
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "run_id": 41192863665,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41192863665",
+      "mode": "fixed",
+      "scenario": "scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json",
+      "scenario_sha256": "89d50dfbc87ad88a19f3b9258040bbfd4787ffb586d4634bf98c947760c92ed5",
+      "result": "PASS_REAL_DUPLEX_UDP_TCP_OWNED_STOP",
+      "first_delivery_fraction": {
+        "windows": 0.999528,
+        "linux": 0.999477
+      },
+      "windows_avg_one_logical_core_pct": 49.55,
+      "wire_F_R_C": "NOT_EXTRACTED_PER_RUN",
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "run_id": 41192868015,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41192868015",
+      "mode": "auto",
+      "scenario": "scenarios/plan027-a4-auto-10m-staged-240s.json",
+      "scenario_sha256": "940e6e713f81397996e156507affe6309bd482262569df1542cd4d0570a815ba",
+      "result": "PASS_REAL_DUPLEX_UDP_TCP_OWNED_STOP",
+      "first_delivery_fraction": {
+        "windows": 1,
+        "linux": 0.997794
+      },
+      "windows_avg_one_logical_core_pct": 7.213,
+      "wire_F_R_C": "NOT_EXTRACTED_PER_RUN",
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "run_id": 41192872132,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41192872132",
+      "mode": "normal",
+      "scenario": "scenarios/plan027-c-normal-50m-25ms-loss1-60s.json",
+      "scenario_sha256": "f639f3fda30f82991ba7ab99664578538774050d6a4e8f370a1f54a16a9b6758",
+      "result": "PASS_REAL_DUPLEX_UDP_TCP_OWNED_STOP",
+      "first_delivery_fraction": {
+        "windows": 0.994267,
+        "linux": 0.99411
+      },
+      "windows_avg_one_logical_core_pct": 10.731,
+      "wire_F_R_C": "NOT_EXTRACTED_PER_RUN",
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "run_id": 41192877461,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41192877461",
+      "mode": "normal",
+      "scenario": "scenarios/plan027-c-normal-50m-250ms-loss15-60s.json",
+      "scenario_sha256": "972a07262fd022e0545def9b29ced86e28cdaf347497bf46b772a659df245be0",
+      "result": "PASS_REAL_DUPLEX_UDP_TCP_OWNED_STOP",
+      "first_delivery_fraction": {
+        "windows": 0.854148,
+        "linux": 0.858068
+      },
+      "windows_avg_one_logical_core_pct": 14.685,
+      "wire_F_R_C": "NOT_EXTRACTED_PER_RUN",
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "run_id": 41192881280,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41192881280",
+      "mode": "normal",
+      "scenario": "scenarios/plan027-c-normal-50m-250ms-loss30-60s.json",
+      "scenario_sha256": "4e25ee6dcad57a8de6e497beb3bfdb0427c6a36f61eca77b65bd7e6e74c4b98b",
+      "result": "PASS_REAL_DUPLEX_UDP_TCP_OWNED_STOP",
+      "first_delivery_fraction": {
+        "windows": 0.701247,
+        "linux": 0.710989
+      },
+      "windows_avg_one_logical_core_pct": 15.556,
+      "wire_F_R_C": "NOT_EXTRACTED_PER_RUN",
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "run_id": 41192885918,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41192885918",
+      "mode": "fixed",
+      "scenario": "scenarios/plan027-c-fixed-50m-25ms-loss0-60s.json",
+      "scenario_sha256": "1a97e25f609bf6691d656b397d65f3467d2b018326a7b8d5495c560a071e853d",
+      "result": "PASS_REAL_DUPLEX_UDP_TCP_OWNED_STOP",
+      "first_delivery_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "windows_avg_one_logical_core_pct": 14.865,
+      "wire_F_R_C": "NOT_EXTRACTED_PER_RUN",
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "run_id": 41192891100,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41192891100",
+      "mode": "normal",
+      "scenario": "scenarios/plan027-c-normal-100m-25ms-loss0-60s.json",
+      "scenario_sha256": "737eaf5b2b2da784a0cd740ab41ed9525e00e30c7a46d224d47b81d30f110f15",
+      "result": "PASS_REAL_DUPLEX_UDP_TCP_OWNED_STOP",
+      "first_delivery_fraction": {
+        "windows": 0.99999,
+        "linux": 1
+      },
+      "windows_avg_one_logical_core_pct": 55.296,
+      "wire_F_R_C": "NOT_EXTRACTED_PER_RUN",
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "run_id": 41192895325,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41192895325",
+      "mode": "normal",
+      "scenario": "scenarios/plan027-c-normal-100m-100ms-loss5-60s.json",
+      "scenario_sha256": "8600d68b9ba3620ec8c7fa056174e3c0060bbf49be264123d5d1c25e8156a53f",
+      "result": "PASS_REAL_DUPLEX_UDP_TCP_OWNED_STOP",
+      "first_delivery_fraction": {
+        "windows": 0.950663,
+        "linux": 0.95203
+      },
+      "windows_avg_one_logical_core_pct": 20.09,
+      "wire_F_R_C": "NOT_EXTRACTED_PER_RUN",
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "run_id": 41192901095,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41192901095",
+      "mode": "normal",
+      "scenario": "scenarios/plan027-c-normal-100m-qlen2048-loss0-300s.json",
+      "scenario_sha256": "615fb1c6cfdfc28d7e9f115f11ab1306fb4550e12f75870d99a71642380769ac",
+      "result": "FAIL_PRE_MEASUREMENT_H491_TUN_QLEN_BASELINE_NOT_500",
+      "first_delivery_fraction": null,
+      "windows_avg_one_logical_core_pct": null,
+      "wire_F_R_C": "NOT_EXTRACTED_PER_RUN",
+      "stop": "NOT_PROVEN_SCENE_ABORTED"
+    },
+    {
+      "run_id": 41192906352,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41192906352",
+      "mode": "game2",
+      "scenario": "scenarios/plan027-b-game2-off-10m-75ms-loss5-20s.json",
+      "scenario_sha256": "46ca43a095ee6b2fcf899618f2d2a7e66b7e30eb720c29c1463e36cbc25e022a",
+      "result": "PASS_REAL_DUPLEX_UDP_TCP_OWNED_STOP",
+      "first_delivery_fraction": {
+        "windows": 0.996832,
+        "linux": 1
+      },
+      "windows_avg_one_logical_core_pct": 3.374,
+      "wire_F_R_C": "NOT_EXTRACTED_PER_RUN",
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "run_id": 41192910600,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41192910600",
+      "mode": "game4",
+      "scenario": "scenarios/plan027-b-game4-off-10m-75ms-loss5-20s.json",
+      "scenario_sha256": "ecc420728964fa76e03e73332b8dae4a0ce559a429510a666c294e09f7cb7d2a",
+      "result": "PASS_REAL_DUPLEX_UDP_TCP_OWNED_STOP",
+      "first_delivery_fraction": {
+        "windows": 0.999964,
+        "linux": 1
+      },
+      "windows_avg_one_logical_core_pct": 18.528,
+      "wire_F_R_C": "NOT_EXTRACTED_PER_RUN",
+      "stop": "PASS_BOTH_OWNED"
+    }
+  ],
+  "fail_preservation": {
+    "run": 41192901095,
+    "error": "H491_ORIGINAL_TUN_QUEUELEN_BASELINE_NOT_500",
+    "observed_before": "TLS/OS ready and initial UDP+TCP startup",
+    "not": "NOT_A_REAL_300S_CAPACITY_VERDICT",
+    "replacement_run": "H614 default queue 300s Action pending"
+  },
+  "remaining": {
+    "H612": "Game2-FEC streaming original real Action41193144417 pending",
+    "H613": "Normal idle105s Action41193562170 pending",
+    "H614": "Auto grade/revision and C100 default long pending",
+    "other_B": "90s loss/blackhole, rotation, DNS/IPv6, MTU and Stop unverified",
+    "physical": "NOT_RUN"
+  }
+}
