@@ -9,6 +9,9 @@ const PAGE_BITS: u64 = 256;
 const MAX_PAGES: usize = 8;
 const MAX_POLL_CANDIDATES: usize = 32;
 const QUEUE_LIFETIME_NS: u64 = 20_000_000;
+// Only cosmetic v3 candidates may wait longer for existing burst tokens;
+// the immutable original shadow's hard expiry still wins.
+const V3_PACED_QUEUE_LIFETIME_NS: u64 = 200_000_000;
 const MIN_REORDER_NS:u64=2_000_000;
 const MAX_REORDER_NS:u64=20_000_000;
 const FEEDBACK_ALLOWANCE_NS:u64=10_000_000;
@@ -642,7 +645,9 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                 entry.retry_epoch=entry.retry_epoch.checked_add(1)
                     .expect("queue generation exhausted before PN");
                 let until=MonoNs(entry.hard_expiry.0.min(
-                    now.0.saturating_add(QUEUE_LIFETIME_NS)));
+                    now.0.saturating_add(if self.opportunistic_v3 {
+                        V3_PACED_QUEUE_LIFETIME_NS
+                    } else { QUEUE_LIFETIME_NS })));
                 entry.queued=Some(Queued {
                     epoch:entry.retry_epoch,until,started:now
                 });
@@ -1070,6 +1075,27 @@ mod tests {
         assert!(s.on_receipt(&receipt(1,4,vec![page(0,&[4])]),MonoNs(20))
             .unwrap().is_empty());
         assert_eq!(s.diagnostic_snapshot().repair_abandoned_retired,1);
+    }
+
+    #[test]
+    fn v3_paced_fifo_retains_one_frozen_candidate_beyond_20ms_but_not_expiry(){
+        let mut s=state(4,10);
+        s.enable_opportunistic_v3().unwrap();
+        add(&mut s,7,0,300_000_000);
+        assert!(s.on_outer_gap_hint(RecordPn(7),MonoNs(50_000_000)));
+        let due=s.next_deadline().expect("genuine outer gap due");
+        assert!(due.0<300_000_000);
+        let candidate=s.on_timer(due).candidates.remove(0);
+        assert_eq!(candidate.pn(),RecordPn(7));
+        let last=MonoNs(candidate.dispatch_by().0-1);
+        assert!(last.0>due.0+20_000_000);
+        assert!(s.preflight(&candidate,last));
+        assert!(!s.preflight(&candidate,MonoNs(candidate.dispatch_by().0+1)));
+        assert!(s.on_timer(MonoNs(candidate.dispatch_by().0+1)).candidates.is_empty());
+        assert_eq!(s.outstanding(),0);
+        assert_eq!(s.diagnostic_snapshot().repair_abandoned_retired,1);
+        // Never creates a second repaired packet when the queue expires.
+        assert!(s.on_timer(MonoNs(310_000_000)).candidates.is_empty());
     }
 
     #[test]

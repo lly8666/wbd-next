@@ -752,7 +752,7 @@ fn m2_next_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                 // Temporarily paced, NOT permanently lost. Same immutable
                 // candidate stays at the head until its 20ms hard deadline.
                 m.repair_burst_deferred=m.repair_burst_deferred.saturating_add(1);
-                m.repair_retry_after_ns=Some(now.0.saturating_add(1_000_000));
+                m.repair_retry_after_ns=Some(now.0.saturating_add(5_000_000));
                 m.ready_repairs.push_front(candidate);
                 return Ok(None)
             }

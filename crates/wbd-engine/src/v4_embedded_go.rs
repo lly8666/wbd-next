@@ -5808,7 +5808,7 @@ fn background_original_repair_once(
                                 // fresh TUN always has priority over this FIFO.
                                 own.repair_burst_deferred=
                                     own.repair_burst_deferred.saturating_add(1);
-                                own.repair_retry_after_ns=Some(now.0.saturating_add(1_000_000));
+                                own.repair_retry_after_ns=Some(now.0.saturating_add(5_000_000));
                                 own.ready_repairs.push_front(candidate);
                                 return Ok(repaired)
                             }

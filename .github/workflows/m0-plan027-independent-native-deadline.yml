@@ -1,0 +1,85 @@
+name: M0 PLAN027 independent native Windows WSL2 deadline
+on:
+  workflow_run:
+    workflows: ["M0 Windows Linux original native whole-wiring capability and functional entry"]
+    types: [requested]
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-independent-native-deadline.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  watch-native:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.event == 'workflow_dispatch' && github.event.workflow_run.head_repository.full_name == github.repository && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TARGET_ID: ${{ github.event.workflow_run.id }}
+    steps:
+      - name: Cancel exact stale Windows native job from DIFFERENT Action
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "M0_EXTERNAL_NATIVE_WATCH target=$TARGET_ID"
+          for i in $(seq 1 53); do
+            run="$(gh api "repos/$GH_REPO/actions/runs/$TARGET_ID")"
+            status="$(jq -r .status <<<"$run")"
+            if [ "$status" = completed ]; then
+              echo "M0_EXTERNAL_NATIVE_DISARM target=$TARGET_ID conclusion=$(jq -r .conclusion <<<"$run")"
+              exit 0
+            fi
+            jobs="$(gh api "repos/$GH_REPO/actions/runs/$TARGET_ID/jobs?per_page=100")"
+            stage="$(jq -c '.jobs[] | select(.name=="native-public-two-os") | {status,started_at}' <<<"$jobs" | head -1)"
+            if [ -n "$stage" ]; then
+              if [ "$(jq -r .status <<<"$stage")" = completed ]; then
+                echo "M0_EXTERNAL_NATIVE_JOB_FINISHED target=$TARGET_ID"
+                exit 0
+              fi
+              since="$(jq -r '.started_at // empty' <<<"$stage")"
+              if [ -n "$since" ]; then
+                seconds="$(($(date -u +%s)-$(date -u -d "$since" +%s)))"
+                if [ "$seconds" -ge 1200 ]; then
+                  echo "M0_EXTERNAL_NATIVE_TIMEOUT target=$TARGET_ID job_seconds=$seconds"
+                  gh api -X POST "repos/$GH_REPO/actions/runs/$TARGET_ID/cancel" --silent || true
+                  sleep 45
+                  current="$(gh api "repos/$GH_REPO/actions/runs/$TARGET_ID" --jq .status)"
+                  if [ "$current" != completed ]; then
+                    echo "M0_EXTERNAL_NATIVE_FORCE_CANCEL target=$TARGET_ID"
+                    gh api -X POST "repos/$GH_REPO/actions/runs/$TARGET_ID/force-cancel" --silent
+                  fi
+                  exit 0
+                fi
+              fi
+            fi
+            sleep 30
+          done
+          echo "M0_EXTERNAL_NATIVE_WATCH_WINDOW_EXHAUSTED target=$TARGET_ID" >&2
+          exit 1
+  recover-two-previous-stuck:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-recover-stuck]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Conclude exact previously monitored SOURCE525 Game FEC runs
+        shell: bash
+        run: |
+          set -euo pipefail
+          for id in 41170807537 41170809210; do
+            run="$(gh api "repos/$GH_REPO/actions/runs/$id")"
+            sha="$(jq -r .head_sha <<<"$run")"
+            event="$(jq -r .event <<<"$run")"
+            status="$(jq -r .status <<<"$run")"
+            test "$sha" = 3ab182fa6448241f139dcf7a8736c7479bd7d567
+            test "$event" = workflow_dispatch
+            if [ "$status" != completed ]; then
+              echo "M0_EXACT_OLD_STUCK_FORCE_CANCEL id=$id old_status=$status"
+              gh api -X POST "repos/$GH_REPO/actions/runs/$id/force-cancel" --silent
+            else
+              echo "M0_EXACT_OLD_ALREADY_COMPLETED id=$id"
+            fi
+          done
+          echo "M0_GAME_FEC_NOT_PASS_STUCK_JOBS_CLEANED"
