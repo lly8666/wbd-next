@@ -3293,9 +3293,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_outer_diagnostics(
         let Ok(v)=outer.lock()else{return BAD_STAGE};
         let d=v.shadow.diagnostic_snapshot();
         // Explicit low-frequency status read, not a packet log or ACK signal.
-        eprintln!("V4_PUBLIC_OUTER_CURSOR unique_candidates={} unique_candidate_cipher_bytes={} checked_once={} sampled_out={} burst_wait={} fifo_left={}",
-            d.cosmetic_candidates,d.cosmetic_candidate_bytes,v.outer_ack.gap_scanned_once(),
-            0u64,v.repair_burst_deferred,v.ready_repairs.len());
+        eprintln!("V4_PUBLIC_OUTER_CURSOR unique_candidates={} unique_candidate_cipher_bytes={} checked_once={} burst_wait={} fifo_left={}",
+            d.cosmetic_candidates,d.cosmetic_candidate_bytes,v.outer_ack.gap_scanned_once(),v.repair_burst_deferred,v.ready_repairs.len());
         let Some(t)=v.shadow.timing_snapshot()else{return BAD_STAGE};
         let vals=[
             d.candidate_first,d.candidate_retry,
