@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "11f1881ff68afa22c5b0ca957d6808420a878a06",
+  "harness_sha": "ee6bf03b69dfad30a76b751a6933c31a9f731bc1",
+  "result": "C_THREE_ORIGINAL_NATIVE_PASS_B_FEC_106_PENDING",
+  "build_run": 41210457594,
+  "measurements": [
+    {
+      "mode": "game4",
+      "run": 41215998307,
+      "artifact": 13048835584,
+      "scenario": "plan027-c-game4-off-10m-250ms-loss30-60s",
+      "scenario_sha256": "4718ad0e75b581c7fd689eb6ac8ed0852dc93699ed87e2c1314b120b42aec1ba",
+      "offered_mbps": {
+        "windows": 9.9972,
+        "linux": 9.9999
+      },
+      "first_fraction": {
+        "windows": 0.992168,
+        "linux": 0.991778
+      },
+      "windows_cpu_one_core_pct": 18.76,
+      "windows_cpu_total_s": 14.5156,
+      "windows_rss_peak_bytes": 65806336,
+      "linux_original_game_tx_reject_total": 0,
+      "first_expected_independent_copies": "1-0.3^4 = .9919"
+    },
+    {
+      "mode": "normal",
+      "run": 41216003154,
+      "artifact": 13048556594,
+      "scenario": "plan027-c-normal-50m-250ms-loss15-60s",
+      "scenario_sha256": "972a07262fd022e0545def9b29ced86e28cdaf347497bf46b772a659df245be0",
+      "offered_mbps": {
+        "windows": 49.9866,
+        "linux": 49.9999
+      },
+      "first_fraction": {
+        "windows": 0.853784,
+        "linux": 0.858199
+      },
+      "windows_cpu_one_core_pct": 10.646,
+      "windows_cpu_total_s": 8.0625,
+      "windows_rss_peak_bytes": 47575040
+    },
+    {
+      "mode": "fixed",
+      "run": 41216007177,
+      "artifact": 13048775912,
+      "scenario": "plan027-c-fixed-50m-250ms-loss15-60s",
+      "scenario_sha256": "40c13fc9b94ea3fff35a91b36b5075deda71f454eb4075972448683485d8eb78",
+      "offered_mbps": {
+        "windows": 49.9874,
+        "linux": 49.9999
+      },
+      "first_fraction": {
+        "windows": 0.999887,
+        "linux": 0.998919
+      },
+      "windows_cpu_one_core_pct": 55.867,
+      "windows_cpu_total_s": 42.625,
+      "windows_rss_peak_bytes": 46522368,
+      "server_fixed_readback": "V4_PUBLIC_FEC2_READBACK role=server mode=fixed requested=1 applied=1 profile=6 pending=false"
+    }
+  ],
+  "all": "TRUE_WINDOWS_SIGNED_NPF_WINTUN_ORIGINAL_GO_TLS_RUST_AND_LINUX_RAW_TUN_DUAL_UDP_TCP_AND_OWNED_STOP_PASS",
+  "linux_tun_tx_rx_dropped_all_zero": true,
+  "oneway_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+  "F_R_C": "NOT_EXTRACTED_COMPARABLE_SINGLE_WIRE_BYTE_DENOMINATORS",
+  "cheap_H647": {
+    "run": 41216511019,
+    "status": "SUCCESS_WORKFLOW_CORE_ONLY_NOT_NETWORK",
+    "product_binary_source_unchanged": true
+  },
+  "next_native_scenes": [
+    "game2-fec 10Mbps/75ms/15%/20s",
+    "normal B106 10Mbps/25ms/0 baseline plus full 100% kernel blackout 106s"
+  ],
+  "next_native_status": "DISPATCHED_NOT_RESULT"
+}

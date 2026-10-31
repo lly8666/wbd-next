@@ -1,0 +1,58 @@
+name: M0 PLAN027 H648 one Game2FEC and one Normal106 original bounded native
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h648-exact-native-game-fec-and-b106.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  original-two:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h648-native-b-two]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_SOURCE: 11f1881ff68afa22c5b0ca957d6808420a878a06
+      BUILD_RUN: "41210457594"
+      CHECK_RUN: "41216511019"
+      CHECK_SHA: "4f0b87a2f256e1a22163e5c8b748eb432cc34da8"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Recover successful repaired source-only native deadline control, and dispatch two original one-scenario Actions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$CHECK_RUN" --jq .head_sha)" = "$CHECK_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$CHECK_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .head_sha)" = "$PRODUCT_SOURCE"
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/artifacts?per_page=100" |
+            jq -e --arg w "m0-wl-windows-product-binaries-$PRODUCT_SOURCE" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' >/dev/null
+          git fetch --depth=1 origin "$PRODUCT_SOURCE"
+          test -z "$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_wl_netem.py tools/m0_wl_perf_v2_config.py)"
+          python3 -m unittest tests.test_m0_wl_native_step_runner tests.test_m0_wl_native_os_deadline -v
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          for mode,name,blackout in (
+              ("game2-fec","wl-game2-fixed6-10m-75ms-loss15-20s.json",0),
+              ("normal","plan027-b-normal-blackhole106-recover-10m-25ms-0loss-60s.json",106)):
+              s=read_scenario("scenarios/"+name)
+              assert s["public_mode"]==mode and s.get("lifecycle_blackhole_s",0)==blackout
+              print("H648_SOURCE_LOCKED_ORIGINAL_SCENE",mode,name,s["scenario_sha256"])
+          PY
+          while read -r mode filename;do
+            scene="scenarios/$filename"
+            title="M0-WIN-LINUX|$GITHUB_SHA|$mode|$scene"
+            prior="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" | jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id'|head -1)"
+            if [ -n "$prior" ];then echo "H648_ALREADY_DISPATCHED mode=$mode run=$prior";continue;fi
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode="$mode" -f run_n0=false -f perf_scenario_file="$scene" \
+              -f perf_reuse_run_id="$BUILD_RUN" -f perf_binary_source_sha="$PRODUCT_SOURCE"
+            echo "H648_ORIGINAL_TWO_OS_ACTION_SENT mode=$mode original_binary_source=$PRODUCT_SOURCE harness=$GITHUB_SHA state=NOT_VERIFIED"
+          done <<'CASES'
+          game2-fec wl-game2-fixed6-10m-75ms-loss15-20s.json
+          normal plan027-b-normal-blackhole106-recover-10m-25ms-0loss-60s.json
+          CASES
+          echo H648_ONE_GAME2_FEC_AND_ONE_NORMAL_106_INDEPENDENT_NO_PASS_YET
