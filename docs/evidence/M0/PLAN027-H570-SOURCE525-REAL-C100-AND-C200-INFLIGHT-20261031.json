@@ -2,7 +2,7 @@
   "schema_version": 1,
   "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "result": "C100_TRUE_60S_AND_C50_300S_ORIGINAL_FIRST_STOP_PASS; C200_IN_PROGRESS; GAME_FEC_IN_PROGRESS",
+  "result": "C100_REAL_PASS_C50_300S_REAL_PASS_C200_STRICT_FIRST_FAIL_WITH_KERNEL_DROP_CAPACITY_BOUNDARY; GAME_FEC_OPEN",
   "c100": {
     "run_id": 41170803766,
     "harness_sha": "3ab182fa6448241f139dcf7a8736c7479bd7d567",
@@ -32,12 +32,39 @@
   },
   "c200": {
     "gate_run_id": 41171215690,
-    "gate_conclusion": "SUCCESS_REAL_C100_QUALIFIED",
+    "gate_conclusion": "SUCCESS_EXACT_C100_REPORT",
     "run_id": 41171236689,
-    "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
-    "binary_reuse_build_run_id": 41166008870,
+    "artifact_id": 13030224906,
+    "artifact_sha256": "88e7500280a233b88bc21dc33db69a80287d9a41e6ede31e74bb70404bde1372",
     "scenario": "plan027-c-normal-200m-25ms-loss0-60s",
-    "result": "IN_PROGRESS_NOT_PASS"
+    "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+    "product_report_mode": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+    "product_report_stop": "PASS_BOTH_OWNED",
+    "workflow_native_job": "FAIL_STRICT_DELIVERY_GATE",
+    "overall_run_at_collection": "IN_PROGRESS_EXTERNAL_GUARD_FINISH_PENDING",
+    "offered_mbps": {
+      "windows": 199.9467,
+      "linux": 197.1906
+    },
+    "first_fraction": {
+      "windows": 0.998764,
+      "linux": 0.999155
+    },
+    "required_no_loss_first_fraction": 0.999,
+    "windows_F_bytes": 1723629798,
+    "windows_R_bytes": 0,
+    "windows_C_bytes": 79421,
+    "linux_F_bytes": 1671324517,
+    "linux_R_bytes": 0,
+    "linux_C_bytes": "NOT_MEASURED",
+    "linux_tun_tx_dropped_delta": 2112,
+    "linux_fq_drops_delta": 314,
+    "windows_process_cpu_total_s": 47.2812,
+    "windows_process_elapsed_s": 77.359,
+    "windows_process_avg_one_core_percent": 61.119,
+    "windows_peak_rss_bytes": 44060672,
+    "classification": "CAPACITY_LIMITED_OR_PRODUCT_KERNEL_QUEUE_DROP_AT_200M; STRICT_FIRST_DELIVERY_FAIL; NO_LARGER_SAME_FAMILY",
+    "warning": "WL_REAL_LINUX_OWNED_STOP_REQUEST_FAILED code=1 appeared during harness cleanup, but report final stop PASS_BOTH_OWNED and Rust server V4_PUBLIC_NATIVE_STOP_DRAINED; preserve both, do not invent hard Stop failure or PASS network gate"
   },
   "five_min_stability": {
     "run_id": 41170805473,
