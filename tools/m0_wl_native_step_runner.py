@@ -30,6 +30,10 @@ def kill_native_child_tree(child):
 def native_batch_deadline(env):
     # One functional mode has <=165s, historical four modes <=4*165s.
     # These extra guards end earlier than the 1020s whole-step watchdog.
+    if env.get("WBD_WL_V2_SCENARIO") and env.get("WBD_WL_PUBLIC_MODES","").startswith("game"):
+        # Must exceed Game's 360s mode deadline + bounded tree cleanup
+        # yet finish before the independent Windows job 1200s watchdog.
+        return 440
     if (env.get("WBD_WL_RUN_N0")=="1" or env.get("WBD_WL_RUN_P200")=="1"
         or env.get("WBD_WL_V2_SCENARIO")):return 970
     selected=env.get("WBD_WL_PUBLIC_MODES","all")

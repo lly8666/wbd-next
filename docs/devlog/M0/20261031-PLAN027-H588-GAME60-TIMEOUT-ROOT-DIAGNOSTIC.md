@@ -1,0 +1,9 @@
+# PLAN027 H588 — Game 60s native cancel race, bounded first-error preservation
+
+H585 source-frozen Game4 highest-FEC 10Mbps/250ms/0%/60s Action41178602168 **CANCELLED**, not PASS; external exact watchdog41178609326 emitted `M0_EXTERNAL_NATIVE_TIMEOUT target=41178602168 job_seconds=1227` and force-cancel at ~07:18Z. The native Windows job had reached `Launch actual WSL2 Linux and direct full public two-OS product`; no game product artifact survived, only genuine WSL2 preboot. H587 exact-ID follow-on Action41179987787 correctly blocked 20M because this 10M parent never passed. Previously H585 orchestrator erroneously chose unrelated Fixed50 Action, separately a workflow identity bug. Neither canceled Game nor wrong harness gate is a verified Game pass.
+
+**Root of missing failure evidence**: slow V2 mode subprocess timeout was 1200s, child stage deadline 970s and independent job watchdog 1200s from job start (including WSL/driver setup). The outer cancellation could hit *before* the nested cleanup or evidence upload; the logs endpoint then exposes no decoded product tail. H588 changes **harness only for selected Game V2**: 360s one-mode deadline, 440s parent file-backed child deadline, before external 1200s native job watchdog. Existing Normal/Fixed/Auto 970s path and functional Game 165s path unchanged. A true long/stuck product thus returns explicit 124/error + per-mode report and best-effort owned cleanup instead of unqualified forever-running Action. Do not alter product AEAD/FEC/PN/Stop to hide it. Retest EXACT ONE previously cancelled Game4 10M scene, same SOURCE cb475 frozen signed binaries, require real business/Stop before any 20M. No unneeded Fixed, 1% or 20M dispatch. If 10M still fails, inspect archive and repair product/lifecycle before proceeding.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only test watchdog ordering and one source-reused original Game4 diagnostic Action; no runtime feature implementation changes."}
+```
