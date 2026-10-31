@@ -1,0 +1,7 @@
+# PLAN027 H565 — 11 independent native scenes + one same-VM A5 actually dispatched once
+
+Original SOURCE525 true 0%/real Stop [41166008870](https://github.com/lly8666/wbd-next/actions/runs/41166008870) is verified in H562. Exact archive and hashes unchanged. The H564 once-only existing report gate [41167340900](https://github.com/lly8666/wbd-next/actions/runs/41167340900) completed SUCCESS and dispatched all twelve per-scenario GH Actions (11 distinct single-test controllers, plus one same-VM B→A diagnostic; **not** 12 plus another A5). Every scenario's original product is reused with `perf_reuse_run_id=41166008870` and `perf_binary_source_sha=52566af216edf9dee4068f0bb8bfd0fb8d18dfcb`; parent checkout HEAD935a is a docs/workflow orchestration commit, **not** a different product binary. Per-scenario Action ID and full committed scenario path stored in H565 JSON and cursor; preflight examples confirm exact scenario/source; no second source build or duplicate dispatch. Original dual-side first, R/F/C, CPU/RSS, p99, Stop per scene remain IN_PROGRESS, NOT_PASS; later capacity and Windows Game lifecycle still OPEN. Preserve earlier SOURCEf031 failed 1/5/30 narrow tiers as scoped history and use latest user's reasonable opportunity reference, not forced exact fraction.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Record the existing twelve actual per-scene Action IDs/source-locked artifacts and pending B/A/C evidence. No product or configuration changes."}
+```

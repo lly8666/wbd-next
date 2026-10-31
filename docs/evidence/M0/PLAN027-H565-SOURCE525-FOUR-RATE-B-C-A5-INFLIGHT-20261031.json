@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+  "original_source_build_run": 41166008870,
+  "original_report_sha256": "3f869f0d1762a1819326893a60704be45f16c262bdfd75f7abb2c1980fab72d6",
+  "windows_binary_artifact": 13028693506,
+  "windows_zip_sha256": "881c64d6de8ebbfa98eda77022e011e4ac18458f783a38913186dbda3da8a291",
+  "linux_binary_artifact": 13028673203,
+  "linux_zip_sha256": "0d5eb97b89b5d071b4e39ef282debc936cd6fcbf95acbc6d2668ea7ad298cd41",
+  "fanout_gate_run": 41167340900,
+  "fanout_result": "SUCCESS_EXACT_SOURCE_ZERO_GATED",
+  "scenario_count": 12,
+  "independent_network_scenarios": 11,
+  "independent_same_vm_sequential_a5": 1,
+  "scenario_runs": [
+    {
+      "key": "normal_p1",
+      "run": 41167348101,
+      "scenario": "scenarios/plan027-h539-normal-10m-250ms-loss1-60s.json",
+      "artifact_source": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+      "result": "IN_PROGRESS_OR_PENDING_OWNED_STOP_AND_F_R_C"
+    },
+    {
+      "key": "normal_p5",
+      "run": 41167349797,
+      "scenario": "scenarios/plan027-h539-normal-10m-250ms-loss5-60s.json",
+      "artifact_source": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+      "result": "IN_PROGRESS_OR_PENDING_OWNED_STOP_AND_F_R_C"
+    },
+    {
+      "key": "normal_p15",
+      "run": 41167351360,
+      "scenario": "scenarios/plan027-h539-normal-10m-250ms-loss15-60s.json",
+      "artifact_source": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+      "result": "IN_PROGRESS_OR_PENDING_OWNED_STOP_AND_F_R_C"
+    },
+    {
+      "key": "normal_p30",
+      "run": 41167353156,
+      "scenario": "scenarios/wl-outer-repair-10m-250ms-loss30-60s.json",
+      "artifact_source": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+      "result": "IN_PROGRESS_OR_PENDING_OWNED_STOP_AND_F_R_C"
+    },
+    {
+      "key": "fixed_p30",
+      "run": 41167354629,
+      "scenario": "scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json",
+      "artifact_source": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+      "result": "IN_PROGRESS_OR_PENDING_OWNED_STOP_AND_F_R_C"
+    },
+    {
+      "key": "auto240",
+      "run": 41167356282,
+      "scenario": "scenarios/plan027-a4-auto-10m-staged-240s.json",
+      "artifact_source": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+      "result": "IN_PROGRESS_OR_PENDING_OWNED_STOP_AND_F_R_C"
+    },
+    {
+      "key": "c50",
+      "run": 41167357685,
+      "scenario": "scenarios/plan027-c-normal-50m-25ms-loss0-60s.json",
+      "artifact_source": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+      "result": "IN_PROGRESS_OR_PENDING_OWNED_STOP_AND_F_R_C"
+    },
+    {
+      "key": "game2_off",
+      "run": 41167359078,
+      "scenario": "scenarios/plan027-b-game2-off-10m-75ms-loss5-20s.json",
+      "artifact_source": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+      "result": "IN_PROGRESS_OR_PENDING_OWNED_STOP_AND_F_R_C"
+    },
+    {
+      "key": "game4_off",
+      "run": 41167360719,
+      "scenario": "scenarios/plan027-b-game4-off-10m-75ms-loss5-20s.json",
+      "artifact_source": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+      "result": "IN_PROGRESS_OR_PENDING_OWNED_STOP_AND_F_R_C"
+    },
+    {
+      "key": "game2_fec",
+      "run": 41167362490,
+      "scenario": "scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json",
+      "artifact_source": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+      "result": "IN_PROGRESS_OR_PENDING_OWNED_STOP_AND_F_R_C"
+    },
+    {
+      "key": "game4_fec",
+      "run": 41167363904,
+      "scenario": "scenarios/wl-game4-fixed6-10m-75ms-loss30-20s.json",
+      "artifact_source": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+      "result": "IN_PROGRESS_OR_PENDING_OWNED_STOP_AND_F_R_C"
+    },
+    {
+      "key": "a5_sequential_samevm",
+      "run": 41167365369,
+      "scenario": "scenarios/plan027-c-normal-10m-25ms-loss0-60s.json",
+      "artifact_source": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+      "result": "IN_PROGRESS_OR_PENDING_OWNED_STOP_AND_F_R_C"
+    }
+  ],
+  "still_open": [
+    "A5 baseline dual leg only if both finish and Stop",
+    "C100/300s after C50 capacity",
+    "Game4 20Mbps after lower capacity",
+    "Windows Game actual Health/idle/dead/rotation",
+    "DNS/MTU/blackhole/mixed/burst and final regression/doc evidence"
+  ]
+}
