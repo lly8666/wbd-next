@@ -49,11 +49,19 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "windows-2025 signed-Wintun local test adapter",
+      "scope": "H672 genuine created-Wintun native local IPv4 address/MTU/DNS set-get/CAS original values restore and ghost DNS partial WAL recovery; authentic Go TLS/Rust native kernel on same source; no host global DNS/split/IPv6 WFP",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+      "evidence": "docs/evidence/M0/PLAN027-H672-SOURCE6ECE-REAL-WINDOWS-LOCAL-WAL-AND-MODES-20261101.json"
     }
   ],
   "limitations": [
     "旧迁移表列出需要保留的功能不等于全部完成；Windows主机全局门仍关闭。",
-    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "H672 local Windows original signed Wintun DNS restore Action41226501543 PASS scoped; host-global manual DNS failover, split DNS, IPv6 guard/routes and physical DNS leak qualification remain NOT_RUN."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

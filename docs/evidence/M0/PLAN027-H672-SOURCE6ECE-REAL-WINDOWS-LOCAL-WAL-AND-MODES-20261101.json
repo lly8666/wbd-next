@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "result": "PASS_SCOPED_REAL_WINDOWS_SIGNED_WINTUN_LOCAL_WAL_AND_ORIGINAL_GO_TLS_RUST_MODES_GLOBAL_NOT_RUN",
+  "action": 41226501543,
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "signed_wintun": "REAL_NATIVE_CREATED_DEVICE",
+  "local_wal": {
+    "authentic_tls_rust_first_reverse": "PASS",
+    "created_wintun_ipv4_address": "PASS_APPLY_READ_CAS_RESTORE",
+    "created_wintun_mtu": "PASS_APPLY_READ_CAS_RESTORE",
+    "created_wintun_dns": "PASS_APPLY_READ_CAS_RESTORE",
+    "crash_device_gone_ghost_dns": "PASS_PARTIAL_DNS_ONLY",
+    "crash_exact_lease_audit": "PASS_SCOPE_ONLY",
+    "test_fake_wfp": "NOT_A_REAL_HOST_WFP_PASS",
+    "test_fake_routes": "NOT_A_REAL_HOST_ROUTE_PASS"
+  },
+  "native_mode_runs": [
+    {
+      "mode": "normal",
+      "artifact_id": 13052275880,
+      "first_reverse": "PASS_SCOPED",
+      "public_os_applied": "NOT_RUN",
+      "sustained_10mbps": "NOT_RUN"
+    },
+    {
+      "mode": "fixed",
+      "artifact_id": 13051473948,
+      "first_reverse": "PASS_SCOPED",
+      "public_os_applied": "NOT_RUN",
+      "sustained_10mbps": "NOT_RUN"
+    },
+    {
+      "mode": "auto",
+      "artifact_id": 13052116962,
+      "first_reverse": "PASS_SCOPED",
+      "public_os_applied": "NOT_RUN",
+      "sustained_10mbps": "NOT_RUN"
+    },
+    {
+      "mode": "game2",
+      "artifact_id": 13051969238,
+      "first_reverse": "PASS_SCOPED",
+      "public_os_applied": "NOT_RUN",
+      "sustained_10mbps": "NOT_RUN"
+    },
+    {
+      "mode": "game4",
+      "artifact_id": 13052275906,
+      "first_reverse": "PASS_SCOPED",
+      "public_os_applied": "NOT_RUN",
+      "sustained_10mbps": "NOT_RUN"
+    }
+  ],
+  "negative_scope": {
+    "host_global_WFP": "NOT_RUN",
+    "default_route_and_split": "NOT_RUN",
+    "IPv6_global_guard": "NOT_RUN",
+    "global_DNS_manual_fallback": "NOT_RUN",
+    "physical": "NOT_RUN",
+    "public_full_game_fec": "NOT_RUN",
+    "new_tls_mtu1280_both_original_os": "NOT_VERIFIED_SEPARATE_ACTION41226521824"
+  },
+  "actual_source_binary_receipt": {
+    "windows_original_client_sha256": "61b790c57bb13ea54eed013c25fb54ae4ed95d160f19e78bc785500fd6c5b4f3",
+    "windows_rust_dll_sha256": "e984ca87c964d47f04dce326d44991aa6bbf27b5c5e9b0947c996062865cb607",
+    "winforms_build_sha256": "2416b60d5f3fd633d0f228dca518b3c37b10d4cbf2f6378f48958a559b81cb5b"
+  }
+}
