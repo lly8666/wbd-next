@@ -4,31 +4,25 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 641,
-  "checkpoint_sha": "1e9d0f7fd324ab14970e7a751bbce943fea1f6db",
+  "sequence": 642,
+  "checkpoint_sha": "d72acbb06c6809b4b56a47b76b6a8c058fe1b216",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H641 one new SOURCE binary build and five independent original Windows/WSL2 scenarios: Game2/off30 first (true all-lane tc), Game2/4 highest FEC15 and Normal/Fixed genuine B106 reauth after exact artifact reuse; not PASS until native results.",
-  "why_now": "H639 GameFEC Action41206215082/41206217160 CANCELED without native log/Stop after 720s; Game2/off30 Action41206219407 real both OS UDP+TCP/Stop PASS but first delivery Win38.1408% Linux41.8635%, Linux M4 rejected96344; original kernel IFB ingress only 443 despite Game 444..446.",
-  "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
-  "next_action": "Inspect H641 push workflow and its first Game2/off exact source build artifact/manifest; then four reused Actions Game2/4 FEC and Normal/Fixed B106; independently continue PLAN027 §0 A/B/C and scoped 300s long; mark failures, fix root, rerun affected source.",
+  "current_task": "H641 SOURCE 11f188: Game2/off30 original e2e and Game2/4 highest FEC15, Normal/Fixed B106 independent original native runs; inspect real outcomes before fixes.",
+  "why_now": "H639 SOURCE020f Game2/4 FEC cancelled after 720s with no owned Stop; Game2/off30 duplex+Stop PASS but first arrival 38.14%/41.86%, Linux M4 rejected96344. H640 corrected Game all-lane tc coverage and added M4 failure diagnostics. H641 one-build test runs: Game2/off30 workflow success; both FEC and both B106 cancelled, not native PASS.",
+  "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
+  "next_action": "Read H641 independent child logs/artifacts for 4 cancelled GameFEC/B106 cases and Game2/off30 first-delivery/M4 causes; locate true original IO/deadline bottleneck, apply minimal verified fix, re-run affected same-SOURCE scenarios. Continue open Auto, lifecycle and C without duplicate dispatch.",
   "unverified": true,
-  "last_tested_source": "020f6b5805996ab1148d9c97587fbe6c7e741d0f",
-  "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H624-SOURCE593-NORMAL105-20261031.json",
-    "docs/evidence/M0/PLAN027-H625-SOURCE593-PARALLEL-OUTCOMES-20261031.json",
-    "docs/evidence/M0/PLAN027-H640-SOURCE020F-GAME-RECOVERY-20261031.json"
-  ],
+  "last_tested_source": "11f1881ff68afa22c5b0ca957d6808420a878a06",
+  "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md",
-    "docs/decisions/M0-PLAN027-LEGACY-SEMANTICS-REVIEW-20261030.md",
-    "docs/devlog/M0/20261031-PLAN027-H555-STRUCTURAL-REAL-GAP-FIFO.md",
+    "docs/evidence/M0/PLAN027-H640-SOURCE020F-GAME-RECOVERY-20261031.json",
+    "docs/evidence/M0/PLAN027-H625-SOURCE593-PARALLEL-OUTCOMES-20261031.json",
+    "docs/evidence/M0/PLAN027-H615-SOURCE80EE-H610-13-INDEPENDENT-A-B-C-20261031.json",
     "docs/features/entries/outer-opportunistic-repair.json",
-    "docs/features/entries/windows-native-transport.json",
-    "docs/features/entries/linux-raw-tun.json",
-    "docs/testing/WL_PERF_HARNESS_V2.md",
-    "docs/devlog/M0/20261031-PLAN027-H572-C200-HOST-CAPACITY-AND-GAME-IDLE-REVIEW.md"
+    "docs/testing/WL_PERF_HARNESS_V2.md"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN027 §0 still PARTIAL. A5 WAIVED, existing M2 retirement/Quality/Health and A1-A4 support earlier scoped real runs but latest true-source Auto grade not promoted. H639 Game2/4 highest FEC Actions 41206215082/41206217160 CANCELLED after 720s native with no downloadable log; not product or owned Stop PASS. H639 Game2/off30 41206219407 real two-OS UDP/TCP and owned Stop PASS but first arrival .381408/.418635; Linux Game TX 96344 rejected, outer ACK examined0, possible source/driver+tc errors; no FEC qualification. H640 bounded Linux Game TX cause classification at Stop + true Game sibling TCP 443..446 ingress netem + watcher live-log attempt, all new SOURCE TEST PENDING. B106 Windows reauth/rotation/GameFEC/DNS/IPv6/MTU remain OPEN; C capacity 100M/300s first-delivery FAIL, C200 host capacity and remaining representative/long tests remain. Do not promote success banners or old data. H641 exact main source one-build/five one-scenario Actions orchestrator now armed only by source-tagged push; dispatch/result not yet observed."
+  "partial_summary": "PLAN027 §0 PARTIAL. A5 WAIVED. Earlier SOURCE A2/A3, some A4 and C have scoped true two-OS PASS; not inherited by new candidate. H641 Game2/off30 action success requires business/quality review; Game2/4 FEC15 and Normal/Fixed authenticated-dead B106 all cancelled, no owned-Stop qualification. Open: Game high-loss M4 rejection/first-delivery, GameFEC hang, B106 reauth/rotation/DNS/IPv6/MTU, Auto grade, C remaining weaknet/300s/capacity and F/R/C/p99. Physical NOT_RUN; no blanket PASS."
 }
