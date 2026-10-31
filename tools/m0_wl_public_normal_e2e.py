@@ -394,8 +394,6 @@ print(json.dumps(result),flush=True)
   scenario=read_scenario(v2_path)
   if scenario.get("public_mode","normal")!=mode:
    raise RuntimeError("WL_V2_MODE_AND_SCENARIO_MISMATCH")
-  if os.environ.get("WBD_WL_PERF_AB")=="1" and mode!="normal":
-   raise RuntimeError("WL_V2_GO_RUST_AB_REQUIRES_NORMAL")
   if scenario["tun_mtu"]!=configured_mtu:raise RuntimeError("WL_V2_TUN_MTU_NOT_APPLIED")
   staged=out/"wl-v2-scenario.json"
   staged.write_bytes(v2_path.read_bytes())
@@ -511,50 +509,9 @@ print(json.dumps(result),flush=True)
                      "Stop","source","batch","peer","owner","route",
                      "expired","timeout","closed","ring","failure",
                      "capacity","kernel","NET","OS","backpressure")
-            # A5 Go-steady only: emit an allowlisted product-code stage,
-            # never raw session keys/addresses/packet bytes/free-form logs.
-            stage=None
-            if os.environ.get("WBD_WL_PERF_AB_GO_STEADY")=="1" and marker=="WBD_WINDOWS_NATIVE_FAILURE_SOURCE":
-             for label,needle in (
-              ("NPF_READER","native NPF reader:"),
-              ("RUST_PEER","native original Rust peer worker:"),
-              ("RUST_EFFECTIVE_READBACK","original Rust M2 effective readback:"),
-              ("M4_MTU_DRIFT","original M4 OS interface MTU drift/invalid WAL"),
-              ("NORMAL_M3_OPEN","original Normal M1/M3 open owner failure"),
-              ("NPF_INGRESS_QUEUE","original NPF peer ingress queue closed"),
-              ("WINTUN_NATIVE_EVENT","original Wintun native ready event failed"),
-              ("NPF_CARRIER_FLAGS","native peer TCP carrier FIN/RST"),
-             ):
-              if needle in raw:stage=label;break
-             if stage is None:stage="OTHER_NATIVE_FAILURE"
-            # The old A5 artifact only said RUST_PEER although the actual
-            # fail-closed product contains distinct M1/M2/driver paths.
-            # Emit NO raw error, sequence, PN, address or unredacted text;
-            # the allowlisted categorical stage is enough for a real fix.
-            substage=None
-            if stage=="RUST_PEER":
-             for label,needle in (
-              ("M2_FIRSTSEND_BATCH","actual original NPF M2 batch completed="),
-              ("M2_FEEDBACK_DRAFT","M0 original M2 reverse-kind1 feedback draft:"),
-              ("M2_FEEDBACK_COMPLETE","M0 original M2 reverse-kind1 feedback complete:"),
-              ("M2_REPAIR_DRAFT","M0 original M2 immutable repair candidate:"),
-              ("M2_REPAIR_COMPLETE","M0 original M2 immutable repair completion:"),
-              ("M3_NORMAL_SEAL","M0 native original M3 seal mode="),
-              ("M3_NORMAL_OPEN","original Normal M1/M3 open owner failure:"),
-              ("TCP_SOURCE_SEQUENCE","native source TX sequence mismatch"),
-              ("TCP_CARRIER_RETRY","exact original TCP carrier retry exhausted"),
-              ("TCP_CARRIER_FIN_RST","native peer TCP carrier FIN/RST"),
-              ("NPF_SOURCE_SEND","native NPF send"),
-              ("WINTUN_NATIVE_EVENT","original Wintun native ready event failed"),
-              ("INGRESS_QUEUE_CLOSED","original NPF peer ingress queue closed"),
-             ):
-              if needle in raw:substage=label;break
-             if substage is None:substage="OTHER_RUST_PEER"
             item={"marker":marker,
                   "sha256":hashlib.sha256(raw.encode("utf-8")).hexdigest(),
                   "tokens":[t for t in allowed if t.lower() in raw.lower()]}
-            if stage is not None:item["a5_go_failure_stage"]=stage
-            if substage is not None:item["a5_go_rust_peer_substage"]=substage
             rows.append(item)
         diagnostic[key]=rows[-6:]
        else:diagnostic[key]=[]
@@ -715,7 +672,7 @@ print(json.dumps(result),flush=True)
  report["stop"]="PASS_BOTH_OWNED"
  if scenario:
   report["WL_V2"]["owned_stop"]="PASS_BOTH_OWNED"
-  report["WL_V2"]["variant"]="go-steady" if os.environ.get("WBD_WL_PERF_AB_GO_STEADY")=="1" else "rust-native"
+  report["WL_V2"]["variant"]="rust-native"
  if fixed6:
   # PLAN027 legacy Fixed installation is a true native owner readback,
   # never an extra startup Quality window or retired M2 Receipt.

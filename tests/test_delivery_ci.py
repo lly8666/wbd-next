@@ -12,14 +12,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class DeliveryCiTests(unittest.TestCase):
-    def test_plan027_v2_ab_exact_prebuilt_product_same_vm_source_guard(self):
+    def test_retired_a5_has_no_public_native_dispatch(self):
         workflow=(ROOT / ".github/workflows/m0-wl-public-normal-full.yml").read_text()
-        self.assertIn("if len(modes)!=1 or os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1':",workflow)
-        self.assertIn("if ab and not v2:",workflow)
-        self.assertIn("if ab and modes!=['normal']:",workflow)
-        self.assertIn('if($sha -ne $env:GITHUB_SHA)',workflow)
-        self.assertIn('if($LASTEXITCODE -ne 0 -or $changes.Count -gt 0)',workflow)
-        self.assertIn('WL_V2_REUSED_WINDOWS_NATIVE_EXACT_BINARY_SHA_PASS',workflow)
+        self.assertNotIn("perf_ab",self.workflow["on"]["workflow_dispatch"]["inputs"])
+        self.assertNotIn("m0_wl_perf_v2_ab.py",workflow)
+        self.assertNotIn("WBD_WL_PERF_AB",workflow)
+        self.assertIn("WL_V2_REUSED_WINDOWS_NATIVE_EXACT_BINARY_SHA_PASS",workflow)
 
     @classmethod
     def setUpClass(cls):
@@ -113,7 +111,7 @@ class DeliveryCiTests(unittest.TestCase):
         self.assertNotIn(marker,first["env"]["WL_V2_REUSE_RUN"])
         self.assertNotIn(marker,native["env"]["WBD_WL_BINARY_SOURCE"])
         self.assertNotIn(marker,first["env"]["WL_V2_BINARY_SHA"])
-        self.assertNotIn(marker,native["env"]["WBD_WL_PERF_AB"])
+        self.assertNotIn(marker,native["env"]["WBD_WL_PUBLIC_MODES"])
         self.assertNotIn(marker,self.workflow["jobs"]["linux-source-locked-public"]["if"])
         for step_name in ("Prepare exact original Go", "Build actual original Windows Rust"):
             step=next(x for x in native["steps"] if x.get("name","").startswith(step_name))
@@ -141,7 +139,7 @@ class DeliveryCiTests(unittest.TestCase):
         self.assertIn(tag,linux["if"])
         self.assertIn(tag,native["if"])
         self.assertIn(tag,self.workflow["jobs"]["windows-compile-preflight"]["if"])
-        self.assertNotIn(tag,native["env"]["WBD_WL_PERF_AB"])
+        self.assertNotIn(tag,native["env"]["WBD_WL_PUBLIC_MODES"])
         verify=next(x for x in native["steps"] if x.get("name","").startswith("Restore exact prebuilt"))
         for needle in ("git diff --name-only", "Cargo.lock", "sha256", "head_sha"):
             self.assertIn(needle,verify["run"])
@@ -161,7 +159,7 @@ class DeliveryCiTests(unittest.TestCase):
                       native["env"]["WBD_WL_BINARY_SOURCE"])
         self.assertIn(tag,self.workflow["jobs"]["linux-source-locked-public"]["if"])
         self.assertIn(tag,native["if"])
-        self.assertNotIn(tag,native["env"]["WBD_WL_PERF_AB"])
+        self.assertNotIn(tag,native["env"]["WBD_WL_PUBLIC_MODES"])
         self.assertIn("tests.test_m0_wl_windows_cpu_audit",
                       " ".join(x.get("run","") for x in
                           self.workflow["jobs"]["wiring-contract"]["steps"]))
@@ -186,7 +184,7 @@ class DeliveryCiTests(unittest.TestCase):
                      native["env"]["WBD_WL_REUSE_RUN_ID"],
                      native["env"]["WBD_WL_BINARY_SOURCE"],
                      native["env"]["LINUX_BINARY_SRC"],
-                     native["env"]["WBD_WL_PERF_AB"]):
+                     native["env"]["WBD_WL_PUBLIC_MODES"]):
             self.assertNotIn(tag,expr)
         self.assertNotIn(tag,self.workflow["jobs"]["linux-source-locked-public"]["if"])
         self.assertNotIn(tag,self.workflow["jobs"]["windows-compile-preflight"]["if"])
@@ -216,7 +214,7 @@ class DeliveryCiTests(unittest.TestCase):
                     native["env"]["WBD_WL_REUSE_RUN_ID"],
                     native["env"]["WBD_WL_BINARY_SOURCE"],
                     native["env"]["LINUX_BINARY_SRC"],
-                    native["env"]["WBD_WL_PERF_AB"]):
+                    native["env"]["WBD_WL_PUBLIC_MODES"]):
             self.assertNotIn(tag,val)
         self.assertNotIn(tag,jobs["linux-source-locked-public"]["if"])
         self.assertNotIn(tag,jobs["windows-compile-preflight"]["if"])
@@ -236,7 +234,7 @@ class DeliveryCiTests(unittest.TestCase):
         self.assertIn("40693430836",native["env"]["WBD_WL_REUSE_RUN_ID"])
         self.assertIn("7fc38591c501ff4a06e1862c7b08d5d3dbc1be95",
                       native["env"]["WBD_WL_BINARY_SOURCE"])
-        self.assertEqual(native["env"]["WBD_WL_PERF_AB"].count(tag),0)
+        self.assertEqual(native["env"]["WBD_WL_PUBLIC_MODES"].count(tag),0)
         self.assertIn(tag,jobs["linux-source-locked-public"]["if"])
         self.assertIn(tag,jobs["windows-compile-preflight"]["if"])
         self.assertIn(tag,jobs["windows-rust-contract-preflight"]["if"])

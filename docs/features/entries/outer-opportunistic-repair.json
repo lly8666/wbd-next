@@ -210,7 +210,7 @@
     "H555/H561 SOURCE525: real SACK-gap cursor, one-shot PN half-sample, bounded frozen FIFO; original native NOT_RUN, old f031 rate FAIL remains; PLAN027 B/C open.",
     "H566 SOURCE525 genuine 9 real business/Stop positives recorded with exact artifact and ratios; cancelled Game highestFEC and failed A5 remain separately NOT_VERIFIED, C100/300s initially IN_FLIGHT, p99 one-way NOT_MEASURED, old SOURCEf031 failure retained. No sameVM CPU speedup inference.",
     "H573 old GameFEC Actions41170807537/09210 still IN_PROGRESS immediately after separately completed exact-force-cancel Action41173524500; cannot infer host/job termination or Game PASS. H574 cheap Action41173607539 PASS but original signed Windows/Linux product new 0% Action41173614494 remains IN_PROGRESS; bounded v3 FIFO logic not a real performance proof.",
-    "H586 sourcecb475 real 1% R/F Win0.4575 Linux0.4815 user band PASS; all rates/Stop PASS under10%F. CPU high-loss separate runner caveat; Game Health/A5 OPEN. H591 Windows original NPF copied batch global fresh-credit once candidate NOT_RUN; previous real 1% goal PASS remains separate."
+    "H586 sourcecb475 real 1% R/F Win0.4575 Linux0.4815 user band PASS; all rates/Stop PASS under10%F. CPU high-loss separate runner caveat; Game Health/A5 OPEN. H591 Windows original NPF copied batch global fresh-credit once candidate NOT_RUN; previous real 1% goal PASS remains separate. H593 A5 old Go benchmark explicitly retired by user; H591 unverified copied-F global batching reverted. Sourcecb475 earlier 1% native original PASS remains historical only, H593 new SOURCE NOT_RUN."
   ],
   "promotion": null
 }

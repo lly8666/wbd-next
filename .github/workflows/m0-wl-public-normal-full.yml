@@ -81,7 +81,6 @@ on:
       - r0/go_overlay/internal/v4productcli/linux.go
       - tools/m0_wl_impairment_profile.py
       - tools/m0_wl_perf_v2_config.py
-      - tools/m0_wl_perf_v2_ab.py
       - tools/m0_wl_v2_gap_audit.py
       - tools/m0_wl_udp_socket_telemetry.py
       - tests/test_m0_wl_udp_socket_telemetry.py
@@ -118,11 +117,6 @@ on:
         type: string
         required: false
         default: ""
-      perf_ab:
-        description: "Optional retained Go comparison; Rust-only is default"
-        type: boolean
-        required: false
-        default: false
       perf_reuse_run_id:
         description: "Full run ID containing archived source-verified prebuilt Windows and Linux products"
         type: string
@@ -192,15 +186,13 @@ jobs:
           WL_V2_SCENARIO: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]') && 'scenarios/wl-outer-repair-50m-300ms-loss30-60s.json' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || (contains(github.event.head_commit.message, '[plan026-win-wake-150]') || contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]')) || contains(github.event.head_commit.message, '[plan026-win-npf-borrow-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))) && ((contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]')) && 'scenarios/wl-normal-100m-300ms-0loss-60s.json' || 'scenarios/wl-normal-150m-300ms-0loss-60s.json') || inputs.perf_scenario_file || '' }}
           WL_V2_REUSE_RUN: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '40681039919' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '40668581343' || inputs.perf_reuse_run_id || '' }}
           WL_V2_BINARY_SHA: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '0abd1b04ee7a39d8aa426963564a079523c1036a' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '0543b805ca25d804ccd131be6686b0b99f61f80f' || inputs.perf_binary_source_sha || '' }}
-          WL_V2_AB: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-ab-150]') && '1' || inputs.perf_ab == true && '1' || '0' }}
         shell: bash
         run: |
           python - <<'PY'
           import os
           from tools.m0_wl_mode_evidence import select_source_locked_modes
           v2=os.environ.get('WL_V2_SCENARIO','').strip()
-          ab=os.environ.get('WL_V2_AB','0')=='1'
-          modes=select_source_locked_modes(os.environ['PUBLIC_MODE'],os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1' or bool(v2) or ab)
+          modes=select_source_locked_modes(os.environ['PUBLIC_MODE'],os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1' or bool(v2))
           if v2:
               from pathlib import Path
               from tools.m0_wl_perf_v2_config import read_scenario
@@ -210,11 +202,7 @@ jobs:
               cfg=read_scenario(resolved)
               if cfg.get('public_mode','normal')!=modes[0] or os.environ['RUN_N0']=='1' or os.environ['RUN_P200']=='1':
                   raise ValueError('WL_V2_REQUIRES_EXACT_ONE_MATCHING_MODE_AND_NO_N0_P200')
-              if ab and modes!=['normal']:
-                  raise ValueError('WL_V2_OLD_GO_AB_NORMAL_ONLY')
               print('WL_V2_SOURCE_LOCKED_SCENARIO',cfg['scenario_id'],cfg['scenario_sha256'])
-          if ab and not v2:
-              raise ValueError('WL_V2_AB_REQUIRES_SOURCE_SCENARIO')
           import re
           reuse=os.environ.get('WL_V2_REUSE_RUN','')
           binary=os.environ.get('WL_V2_BINARY_SHA','')
@@ -228,7 +216,7 @@ jobs:
               print('WL_SINGLE_MODE_PREBUILT_SOURCE',modes[0],reuse,binary)
           elif binary:
               raise ValueError('WL_V2_BINARY_SOURCE_WITHOUT_REUSE_RUN')
-          print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'],'V2_AB='+str(ab))
+          print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'],'A5=RETIRED')
           PY
       - run: python -m py_compile tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_native_step_runner.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
 
@@ -483,7 +471,6 @@ jobs:
       WBD_WL_V2_CPU_AUDIT: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || (contains(github.event.head_commit.message, '[plan026-win-wake-150]') || contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]')) || contains(github.event.head_commit.message, '[plan026-win-npf-borrow-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')) && '1' || '0' }}
       WBD_WL_N0_SECONDS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '240' || '60' }}
       WBD_WL_V2_SCENARIO: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]') && 'scenarios/wl-outer-repair-50m-300ms-loss30-60s.json' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || (contains(github.event.head_commit.message, '[plan026-win-wake-150]') || contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]')) || contains(github.event.head_commit.message, '[plan026-win-npf-borrow-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))) && ((contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]')) && 'scenarios/wl-normal-100m-300ms-0loss-60s.json' || 'scenarios/wl-normal-150m-300ms-0loss-60s.json') || inputs.perf_scenario_file || '' }}
-      WBD_WL_PERF_AB: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-ab-150]') && '1' || inputs.perf_ab == true && '1' || '0' }}
       WBD_WL_REUSE_RUN_ID: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]') && '40693430836' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '40681039919' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '40668581343' || inputs.perf_reuse_run_id || '' }}
       WBD_WL_BINARY_SOURCE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]') && '7fc38591c501ff4a06e1862c7b08d5d3dbc1be95' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '0abd1b04ee7a39d8aa426963564a079523c1036a' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '0543b805ca25d804ccd131be6686b0b99f61f80f' || inputs.perf_binary_source_sha || github.sha }}
     steps:
@@ -841,8 +828,6 @@ jobs:
             if($env:WBD_WL_ABBA_NATIVE -eq '1'){
               & python -u tools/m0_wl_native_rx_abba.py 2>&1 |
                 Tee-Object result/wl-public/direct-full.log
-            } elseif($env:WBD_WL_PERF_AB -eq '1'){
-              & python -u tools/m0_wl_native_step_runner.py tools/m0_wl_perf_v2_ab.py result/wl-public/direct-full.log
             }else{
               # No native PowerShell PIPE/EOF dependency: a detached original
               # WSL/Go child may inherit stdout and outlive its owning test.
@@ -888,7 +873,7 @@ jobs:
             }
             Write-Output ('WL_REAL_SAME_WINDOWS_RUNNER_ABBA_DECISION '+$abba.decision.decision)
           }
-          if($env:WBD_WL_V2_SCENARIO -and $env:WBD_WL_PERF_AB -ne '1' -and $env:WBD_WL_ABBA_NATIVE -ne '1'){
+          if($env:WBD_WL_V2_SCENARIO -and $env:WBD_WL_ABBA_NATIVE -ne '1'){
             $v2Config=Get-Content $env:WBD_WL_V2_SCENARIO -Raw | ConvertFrom-Json
             $modeForScenario=if($v2Config.public_mode){$v2Config.public_mode}else{'normal'}
             if($modeForScenario -ne $env:WBD_WL_PUBLIC_MODES){
@@ -931,11 +916,6 @@ jobs:
                        $real.first_delivery_fraction.linux -lt 0.999){
                 throw 'clean V2 native first delivery below existing 99.9 percent gate'
               }
-            }
-          }
-          if($env:WBD_WL_PERF_AB -eq '1'){
-            if($result.WL_V2_AB -ne 'COMPARABLE_OBSERVATION_NOT_PRODUCT_QUALIFICATION'){
-              throw 'real same VM V2 old Go/Rust A/B not comparable or no owned Stop'
             }
           }
           if($env:WBD_WL_PUBLIC_MODES -eq 'auto-adaptive'){

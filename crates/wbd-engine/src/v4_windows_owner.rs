@@ -610,16 +610,6 @@ fn m2_finish_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
 fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,pn:u64,seq:u32,wire_len:usize,sent:u32,
 )->Result<u32,i32>{
-    m2_kernel_firstsend_entry_inner(e,epoch,luid,ifindex,pn,seq,wire_len,sent,false)
-}
-
-// The original Go/NPF batch checks all PN/SEQ/lengths first and settles
-// individual immutable loans. Only the process/global fresh-byte accounting
-// is deferred and charged once for the definitely accepted batch prefix.
-fn m2_kernel_firstsend_entry_inner(e:&mut Entry,epoch:[u8;16],luid:u64,
-    ifindex:u32,pn:u64,seq:u32,wire_len:usize,sent:u32,
-    batch_credit:bool,
-)->Result<u32,i32>{
     // 2 is explicit unknown driver completion, not definitely NotSent:
     // burn the original PN without fabricating peer delivery or fresh F.
     if !v3_ready(e,epoch,luid,ifindex)||sent>2{return Err(INVALID)}
@@ -653,19 +643,10 @@ fn m2_kernel_firstsend_entry_inner(e:&mut Entry,epoch:[u8;16],luid:u64,
     if sent!=1{return Ok(m.shadow.outstanding() as u32)}
     // The caller's synchronous pcap_sendpacket success is a copied
     // kernel submission, NEVER proof of remote peer delivery.
-    // Single-row ABI remains exact. The Go batch path will charge the
-    // successful copied prefix only ONCE after all row-level settlements,
-    // avoiding a process-wide pending-expiry scan per copied packet.
-    // Read this monotonic instant INSIDE the global lock: independent
-    // directions may have entered the mutex in a different scheduling
-    // order than the instant they requested it.
-    let now=if batch_credit{m2_clock()}else{
-        let bytes=wire_len.checked_add(54).ok_or(INVALID)? as u64;
-        let mut global=m2_global().lock().map_err(|_|BAD_STAGE)?;
-        let now=m2_clock();
-        global.on_fresh_accepted(m.direction,bytes,now).map_err(|_|BAD_STAGE)?;
-        now
-    };
+    let now=m2_clock();
+    let bytes=wire_len.checked_add(54).ok_or(INVALID)? as u64;
+    let mut global=m2_global().lock().map_err(|_|BAD_STAGE)?;
+    global.on_fresh_accepted(m.direction,bytes,now).map_err(|_|BAD_STAGE)?;
     // Every successful NPF submission counts as a first send. Repair
     // retention is optional under v3, not an ACK window or DATA credit.
     // Keep a bounded immutable shadow while there is room; once saturated,
@@ -1879,14 +1860,6 @@ pub struct WbdWindowsM2FirstsendResult{
     pub pn:u64,pub seq:u32,pub wire_len:u32,pub outcome:u32,pub reserved:u32,
 }
 const MAX_WINDOWS_M2_COMPLETIONS:usize=32;
-fn m2_charge_copied_batch(e:&Entry,bytes:u64)->Result<(),i32>{
-    if bytes==0{return Ok(())}
-    let direction=e.m2.as_ref().ok_or(BAD_STAGE)?.direction;
-    let mut global=m2_global().lock().map_err(|_|BAD_STAGE)?;
-    let now=m2_clock(); // monotonic at acquisition, not pre-lock time
-    global.on_fresh_accepted_batch(direction,bytes,now)
-        .map_err(|_|BAD_STAGE)
-}
 fn m2_kernel_firstsend_batch_entry(
     e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32,
     rows:&[WbdWindowsM2FirstsendResult],
@@ -1918,31 +1891,15 @@ fn m2_kernel_firstsend_batch_entry(
     }
     let mut settled=0u32;
     let mut outstanding=m.shadow.outstanding() as u32;
-    let mut copied_bytes=0u64;
     for row in rows{
-        // PN/SEQ and immutable driver settlement remain per record. Only
-        // definitely copied NPF bytes earn first-send budget; uncertain and
-        // NotSent never mint F credit, even on a partial callback error.
-        match m2_kernel_firstsend_entry_inner(e,epoch,luid,ifindex,row.pn,
-            row.seq,row.wire_len as usize,row.outcome,true){
-            Ok(left)=>{
-                settled+=1;outstanding=left;
-                if row.outcome==1{
-                    copied_bytes=copied_bytes.saturating_add(u64::from(row.wire_len)+54);
-                }
-            },
-            Err(code)=>{
-                // A partially settled prefix is irreversible. Charge just
-                // that real copied prefix before reporting failure/Stop.
-                if m2_charge_copied_batch(e,copied_bytes).is_err(){
-                    return (BAD_STAGE,settled,outstanding)
-                }
-                return (code,settled,outstanding)
-            },
+        // If a post-NPF internal owner failure occurs, report the exact
+        // already-settled prefix and fail closed. Neither the remaining
+        // accepted NPF rows nor the settled prefix may be blindly retried.
+        match m2_kernel_firstsend_entry(e,epoch,luid,ifindex,row.pn,
+            row.seq,row.wire_len as usize,row.outcome){
+            Ok(left)=>{settled+=1;outstanding=left},
+            Err(code)=>return (code,settled,outstanding),
         }
-    }
-    if m2_charge_copied_batch(e,copied_bytes).is_err(){
-        return (BAD_STAGE,settled,outstanding)
     }
     (OK,settled,outstanding)
 }
@@ -2657,11 +2614,6 @@ mod tests {
         assert!(e.m2.as_ref().unwrap().pending.is_empty());
         assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),1,
             "only actually copied NPF row earns retained immutable repair");
-        let direction=e.m2.as_ref().unwrap().direction;
-        let fresh=m2_global().lock().unwrap()
-            .local_snapshot(direction).unwrap().fresh_confirmed_bytes;
-        assert_eq!(fresh,n1 as u64+54,
-            "one batch credit only for actual copied NPF firstsend, not uncertain");
         assert_eq!(m2_kernel_firstsend_batch_entry(
             &mut e,ep,81,18,&[a]),(INVALID,0,0),
             "same PN cannot be reported as an additional fresh send");
