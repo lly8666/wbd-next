@@ -43,6 +43,8 @@ on:
       - tools/m0_wl_real_wsl2_guest_probe.py
       - tools/m0_wl_public_native_wire_trace.py
       - r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go
+      - r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go
+      - r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go
       - r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go
       - r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go
       - r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection_test.go
