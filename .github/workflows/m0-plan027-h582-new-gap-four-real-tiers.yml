@@ -64,7 +64,7 @@ jobs:
             plan027-h539-normal-10m-250ms-loss15-60s.json \
             wl-outer-repair-10m-250ms-loss30-60s.json; do
             gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
-              -f public_mode=normal -f run_n0=false -f perf_ab=false \
+              -f public_mode=normal -f run_n0=false  \
               -f perf_scenario_file="scenarios/$scen" \
               -f perf_reuse_run_id="$ZERO_RUN" -f perf_binary_source_sha="$SOURCE"
             echo "H582_ONE_TEST_PER_ACTION_DISPATCHED scene=$scen source=$SOURCE"

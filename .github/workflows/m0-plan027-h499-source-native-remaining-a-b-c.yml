@@ -1,4 +1,4 @@
-name: M0 PLAN027 H499 remaining A4 A5 B Game and staged C native
+name: M0 PLAN027 H499 remaining A4 B Game and staged C native
 on:
   push:
     branches: [main]
@@ -72,15 +72,8 @@ jobs:
             "normal scenarios/wl-outer-repair-10m-250ms-loss30-60s.json"; do
             read -r mode scenario <<< "$entry"
             gh workflow run m0-wl-public-normal-full.yml --ref main \
-              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f public_mode="$mode" -f run_n0=false  \
               -f perf_scenario_file="$scenario" \
               -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
             echo "H499_INDEPENDENT_NATIVE_SCENE_SENT $mode $scenario"
           done
-          # A5 is ONE sequential same-VM Rust/Go comparison, not parallel
-          # throughput; independent of the Normal-only C10 source trial above.
-          gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=normal -f run_n0=false -f perf_ab=true \
-            -f perf_scenario_file=scenarios/plan027-c-normal-10m-25ms-loss0-60s.json \
-            -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
-          echo H499_A5_SAME_VM_SEQUENTIAL_AB_NATIVE_SENT

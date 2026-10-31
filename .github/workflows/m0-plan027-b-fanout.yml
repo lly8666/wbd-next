@@ -47,7 +47,7 @@ jobs:
           # Each validates exact original source SHA and binary checksums.
           for mode in fixed auto game2 game4 game2-fec game4-fec; do
             gh workflow run m0-wl-public-normal-full.yml --ref main \
-              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f public_mode="$mode" -f run_n0=false  \
               -f perf_reuse_run_id="$ORIGINAL_RUN" \
               -f perf_binary_source_sha="$ORIGINAL_SHA"
             echo "PLAN027_B_MODE_DISPATCHED mode=$mode source=$ORIGINAL_SHA binary_run=$ORIGINAL_RUN"

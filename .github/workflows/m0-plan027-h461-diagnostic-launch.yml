@@ -42,12 +42,12 @@ jobs:
               print('PLAN027_H461_SCENE_ATTESTED',c['scenario_id'],c['scenario_sha256'])
           PY
           gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=auto -f run_n0=false -f perf_ab=false \
+            -f public_mode=auto -f run_n0=false  \
             -f perf_scenario_file=scenarios/plan027-h461-auto-egress-10m-25ms-loss0-60s.json \
             -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
           echo "PLAN027_H461_AUTO_DIAGNOSTIC_DISPATCHED build_run=$build_run source=$product"
           gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f public_mode=normal -f run_n0=false  \
             -f perf_scenario_file=scenarios/plan027-c-normal-10m-25ms-loss0-60s.json \
             -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
           echo "PLAN027_H461_C10_DISPATCHED build_run=$build_run source=$product"

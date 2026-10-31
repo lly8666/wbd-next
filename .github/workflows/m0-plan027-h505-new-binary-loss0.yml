@@ -33,6 +33,6 @@ jobs:
           print('H505_ONE_FROZEN_REAL_ZERO_LOSS_SCENE',s['scenario_sha256'])
           PY
           gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f public_mode=normal -f run_n0=false  \
             -f perf_scenario_file=scenarios/plan027-h504-outer-50m-150ms-loss0-60s.json
           echo H505_FULL_SOURCE_PRODUCT_BUILD_ONE_SCENE_DISPATCHED

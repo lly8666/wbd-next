@@ -1170,7 +1170,7 @@ mod tests{
             true
         });
         let mut sealed=fresh.expect("fresh source on second physical lane");
-        let (fresh_id,fresh_payload)=opener1.open(&mut sealed).unwrap();
+        let (fresh_id,fresh_payload)=opener1.open(&mut sealed).unwrap().unwrap();
         assert_ne!(fresh_id,id);
         let batch=owner.lock().unwrap().prepare_opened_fec_batch(
             lane1,fresh_id,fresh_payload,MonoNs(14)).unwrap().unwrap();

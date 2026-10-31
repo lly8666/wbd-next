@@ -29,7 +29,7 @@ jobs:
           print('H515_FROZEN_ORIGINAL_GO_SACK_WSL2_WIN_NATIVE_SOURCE',s['scenario_sha256'])
           PY
           gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f public_mode=normal -f run_n0=false  \
             -f perf_scenario_file=scenarios/plan027-c-normal-10m-25ms-loss0-60s.json \
             -f perf_reuse_run_id="" -f perf_binary_source_sha=""
           echo H515_ONE_NEW_SOURCE_BUILD_AND_REAL_NATIVE_NOLOSS_ACTION

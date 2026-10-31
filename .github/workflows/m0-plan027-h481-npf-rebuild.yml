@@ -35,6 +35,6 @@ jobs:
           print('H481_NEW_PRODUCT_NOT_REUSED_C100_SCENARIO_SHA',c['scenario_sha256'])
           PY
           gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f public_mode=normal -f run_n0=false  \
             -f perf_scenario_file=scenarios/plan027-c-normal-100m-25ms-loss0-60s.json
           echo H481_TRUE_NATIVE_BUILD_AND_WINDOWS_NPCAP_RING100_DISPATCHED

@@ -42,7 +42,7 @@ jobs:
           print("H474_NATIVE_A4_PHASES_SOURCE_LOCKED",case["scenario_sha256"])
           PY
           gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=auto -f run_n0=false -f perf_ab=false \
+            -f public_mode=auto -f run_n0=false  \
             -f perf_scenario_file=scenarios/plan027-a4-auto-10m-staged-240s.json \
             -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
           echo H474_ACTUAL_NATIVE_A4_UNINTERRUPTED_240S_DISPATCHED

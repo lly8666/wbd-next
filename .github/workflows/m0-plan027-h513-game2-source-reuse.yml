@@ -36,7 +36,7 @@ jobs:
           print('H513_ONE_TRUE_GAME2_DAMAGE_ORACLE',s['scenario_sha256'])
           PY
           gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=game2 -f run_n0=false -f perf_ab=false \
+            -f public_mode=game2 -f run_n0=false  \
             -f perf_scenario_file=scenarios/plan027-b-game2-off-10m-75ms-loss5-20s.json \
             -f perf_reuse_run_id="$run" -f perf_binary_source_sha="$src"
           echo H513_EXACT_ONE_GAME2_NATIVE_ACTION

@@ -56,7 +56,7 @@ jobs:
           for entry in "normal scenarios/plan027-c-normal-100m-25ms-loss0-60s.json" "fixed scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json" "normal scenarios/plan027-c-normal-50m-25ms-loss0-300s.json"; do
             read -r mode file <<< "$entry"
             gh workflow run m0-wl-public-normal-full.yml --ref main \
-              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f public_mode="$mode" -f run_n0=false  \
               -f perf_scenario_file="$file" \
               -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
             echo "H468_DISPATCHED $mode $file SAME_BINARY_SHA=$product"
@@ -123,7 +123,7 @@ jobs:
           print('H468_GATED_C200_SCENARIO',c['scenario_sha256'])
           PY
           gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f public_mode=normal -f run_n0=false  \
             -f perf_scenario_file=scenarios/plan027-c-normal-200m-25ms-loss0-60s.json \
             -f perf_reuse_run_id=41002998813 -f perf_binary_source_sha=a61eef334068512b00a1db3137a51f3d0489020c
           echo H468_C200_DISPATCHED_AFTER_VERIFIED_C100

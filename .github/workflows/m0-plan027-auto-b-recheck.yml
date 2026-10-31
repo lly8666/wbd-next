@@ -29,5 +29,5 @@ jobs:
             exit 1
           }
           gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=auto -f run_n0=false -f perf_ab=false
+            -f public_mode=auto -f run_n0=false 
           echo "PLAN027_TRUE_AUTO_B_DISPATCHED binary_source=$GITHUB_SHA"

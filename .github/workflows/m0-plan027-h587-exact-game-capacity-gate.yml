@@ -89,7 +89,7 @@ jobs:
             local scene="$1" baseline id count
             baseline="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=70" --jq '.workflow_runs[].id')"
             gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
-              -f public_mode=game4-fec -f run_n0=false -f perf_ab=false \
+              -f public_mode=game4-fec -f run_n0=false  \
               -f perf_scenario_file="scenarios/$scene" \
               -f perf_reuse_run_id="$BUILD" -f perf_binary_source_sha="$SOURCE"
             for i in $(seq 1 24);do

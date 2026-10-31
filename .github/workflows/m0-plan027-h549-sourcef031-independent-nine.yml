@@ -79,7 +79,7 @@ jobs:
           PY
           while read -r mode scenario; do
             gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
-              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f public_mode="$mode" -f run_n0=false  \
               -f perf_scenario_file="$scenario" \
               -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
             echo "H549_ONE_TWO_OS_ACTION $mode $scenario source=$src"

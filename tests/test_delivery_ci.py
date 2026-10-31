@@ -17,6 +17,10 @@ class DeliveryCiTests(unittest.TestCase):
         self.assertNotIn("perf_ab",self.workflow["on"]["workflow_dispatch"]["inputs"])
         self.assertNotIn("m0_wl_perf_v2_ab.py",workflow)
         self.assertNotIn("WBD_WL_PERF_AB",workflow)
+        for old in (ROOT / ".github/workflows").glob("m0-plan027-*.yml"):
+            text=old.read_text()
+            self.assertNotIn("-f perf_ab=",text,old.name)
+            self.assertNotIn("m0_wl_perf_v2_ab.py",text,old.name)
         self.assertIn("WL_V2_REUSED_WINDOWS_NATIVE_EXACT_BINARY_SHA_PASS",workflow)
 
     @classmethod

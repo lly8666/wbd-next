@@ -68,7 +68,7 @@ jobs:
           PY
             gh workflow run m0-wl-public-normal-full.yml --ref main \
               -f public_mode="$mode" -f perf_scenario_file="$scene" \
-              -f run_n0=false -f perf_ab=false \
+              -f run_n0=false  \
               -f perf_reuse_run_id="$PRODUCT_RUN" -f perf_binary_source_sha="$PRODUCT_SHA"
             echo "PLAN027_A_ACTION_DISPATCHED mode=$mode scene=$scene binary_source=$PRODUCT_SHA"
           done
@@ -76,6 +76,6 @@ jobs:
           # an obsolete M2-only harness rejected installed Fixed. Recheck
           # it once with the same SHA and one native functional Action.
           gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=fixed -f run_n0=false -f perf_ab=false \
+            -f public_mode=fixed -f run_n0=false  \
             -f perf_reuse_run_id="$PRODUCT_RUN" -f perf_binary_source_sha="$PRODUCT_SHA"
           echo "PLAN027_B_FIXED_NATIVE_RECHECK_REQUESTED source=$PRODUCT_SHA"

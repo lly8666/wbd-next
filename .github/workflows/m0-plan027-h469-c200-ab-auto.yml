@@ -1,13 +1,13 @@
 # H470 retry after fixing H469 cheap test indentation; e10 children cheap-only failure, not physical tests.
 # H469: one SOURCE-verified reused build, three separate truly native Actions.
-name: M0 PLAN027 H469 C200 source gate and A5 same VM AB plus Auto natural descent
+name: M0 PLAN027 H469 C200 source gate and Auto natural descent (A5 retired)
 on:
   push:
     branches: [main]
     paths: [.github/workflows/m0-plan027-h469-c200-ab-auto.yml]
 permissions: {contents: read, actions: write}
 jobs:
-  c200-a5-auto-long:
+  c200-auto-long:
     if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-h469]') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 8
@@ -52,20 +52,13 @@ jobs:
           PY
           # C200 capacity family: only after real new-source C100 at threshold.
           gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f public_mode=normal -f run_n0=false  \
             -f perf_scenario_file=scenarios/plan027-c-normal-200m-25ms-loss0-60s.json \
             -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
           echo H469_C200_AFTER_C100_DISPATCHED
-          # A5 CPU A/B reuses ONE same original Go/Rust binary pair on the
-          # SAME native signed-driver VM sequential B=>A; no second build.
-          gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=normal -f run_n0=false -f perf_ab=true \
-            -f perf_scenario_file=scenarios/plan027-c-normal-10m-25ms-loss0-60s.json \
-            -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
-          echo H469_A5_SAME_VM_AB_SOURCE_REUSED_DISPATCHED
           # Existing 119s actual original native Auto spontaneous one-grade
           # regression (not a multistage-loss A4 replacement).
           gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=auto-adaptive -f run_n0=false -f perf_ab=false \
+            -f public_mode=auto-adaptive -f run_n0=false  \
             -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
           echo H469_AUTO_119S_NATURAL_GRADE_SOURCE_REUSED_DISPATCHED

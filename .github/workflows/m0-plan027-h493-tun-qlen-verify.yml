@@ -59,7 +59,7 @@ jobs:
           PY
           for file in plan027-c-normal-100m-qlen2048-loss0-60s plan027-c-normal-100m-qlen4096-loss0-60s plan027-c-normal-100m-qlen2048-loss0-300s; do
             gh workflow run m0-wl-public-normal-full.yml --ref main \
-              -f public_mode=normal -f run_n0=false -f perf_ab=false \
+              -f public_mode=normal -f run_n0=false  \
               -f perf_scenario_file="scenarios/$file.json" \
               -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
             echo "H493_REAL_NATIVE_SOURCE_FROZEN $file build=$build_run"

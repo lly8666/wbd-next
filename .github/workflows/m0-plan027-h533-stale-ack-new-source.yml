@@ -29,7 +29,7 @@ jobs:
           print('H533_ONE_FROZEN_SOURCE_NORMAL_NOLOSS',c['scenario_sha256'])
           PY
           gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
-            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f public_mode=normal -f run_n0=false  \
             -f perf_scenario_file=scenarios/plan027-a2-normal-10m-250ms-0loss-60s.json \
             -f perf_reuse_run_id="" -f perf_binary_source_sha=""
           echo H533_ONE_NEW_SOURCE_BUILD_REAL_NOLOSS_SCENE_DISPATCHED

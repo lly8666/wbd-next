@@ -1,4 +1,4 @@
-name: M0 PLAN027 H545 one frozen signed original six loss/Game plus one sequential A5 feedback Game FEC scenes
+name: M0 PLAN027 H545 six original loss/Game scenes (old A5 retired)
 on:
   push:
     branches: [main]
@@ -71,7 +71,7 @@ jobs:
           PY
           while read -r mode scenario; do
             gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
-              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f public_mode="$mode" -f run_n0=false  \
               -f perf_scenario_file="$scenario" \
               -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
             echo "H545_ONE_TWO_OS_ACTION $mode $scenario source=$src"
@@ -83,10 +83,3 @@ jobs:
           game2-fec scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json
           game4-fec scenarios/wl-game4-fixed6-10m-75ms-loss30-20s.json
           EOF
-          # A5 original Go vs Rust on the SAME Windows VM, measured
-          # sequentially (no overlapping throughput measurement).
-          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
-            -f public_mode=normal -f run_n0=false -f perf_ab=true \
-            -f perf_scenario_file=scenarios/plan027-c-normal-10m-25ms-loss0-60s.json \
-            -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
-          echo H545_INDEPENDENT_A5_SAME_VM_SEQUENTIAL_AB_ORIGINAL_GO_AND_RUST_SENT

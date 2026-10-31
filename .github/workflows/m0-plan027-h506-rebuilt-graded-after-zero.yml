@@ -56,7 +56,7 @@ jobs:
           for p in 1 5 10 30; do
             scenario="scenarios/wl-outer-repair-50m-150ms-loss${p}-60s.json"
             gh workflow run m0-wl-public-normal-full.yml --ref main \
-              -f public_mode=normal -f run_n0=false -f perf_ab=false \
+              -f public_mode=normal -f run_n0=false  \
               -f perf_scenario_file="$scenario" \
               -f perf_reuse_run_id="$run" -f perf_binary_source_sha="$src"
             echo H506_NEW_BINARY_INDEPENDENT_50M_150MS_LOSS=$p
@@ -69,7 +69,7 @@ jobs:
           print('H509_ONE_REPRESENTATIVE_5MIN_REAL_NATIVE_STABILITY',s['scenario_sha256'])
           PY
           gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f public_mode=normal -f run_n0=false  \
             -f perf_scenario_file=scenarios/plan027-c-normal-50m-25ms-loss0-300s.json \
             -f perf_reuse_run_id="$run" -f perf_binary_source_sha="$src"
           echo H509_SOURCE_PINNED_NORMAL_50M_300S_SINGLE_STABILITY_SCENE

@@ -47,7 +47,7 @@ jobs:
           PY
           while read -r mode path; do
             gh workflow run m0-wl-public-normal-full.yml --ref main \
-              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f public_mode="$mode" -f run_n0=false  \
               -f perf_scenario_file="$path" \
               -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
             echo "H507_NEW_BIN_INDEPENDENT_GAME $mode $path"

@@ -40,7 +40,7 @@ jobs:
           PY
           for p in 1 5 10 30; do
             gh workflow run m0-wl-public-normal-full.yml --ref main \
-              -f public_mode=normal -f run_n0=false -f perf_ab=false \
+              -f public_mode=normal -f run_n0=false  \
               -f perf_scenario_file="scenarios/wl-outer-repair-50m-150ms-loss${p}-60s.json" \
               -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$source_sha"
             echo "H503_DISPATCHED_ONE_NATIVE_SCENE loss_pct=$p source=$source_sha"

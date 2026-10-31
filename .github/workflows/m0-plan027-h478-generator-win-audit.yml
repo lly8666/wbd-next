@@ -42,7 +42,7 @@ jobs:
           for entry in 'normal scenarios/plan027-c-normal-10m-25ms-loss0-60s.json' 'normal scenarios/plan027-c-normal-100m-25ms-loss0-60s.json' 'fixed scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json'; do
             read -r mode scene <<< "$entry"
             gh workflow run m0-wl-public-normal-full.yml --ref main \
-              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f public_mode="$mode" -f run_n0=false  \
               -f perf_scenario_file="$scene" \
               -f perf_reuse_run_id=41002998813 \
               -f perf_binary_source_sha=a61eef334068512b00a1db3137a51f3d0489020c

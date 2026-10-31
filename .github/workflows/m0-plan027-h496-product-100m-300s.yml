@@ -61,7 +61,7 @@ jobs:
           print('H496_NEW_PRODUCT_LONG100_SOURCE_SHA',s['scenario_sha256'])
           PY
           gh workflow run m0-wl-public-normal-full.yml --ref main \
-            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f public_mode=normal -f run_n0=false  \
             -f perf_scenario_file=scenarios/plan027-c-normal-100m-product-tun2048-loss0-300s.json \
             -f perf_reuse_run_id="$build_run" -f perf_binary_source_sha="$product"
           echo H496_REAL_NEW_PRODUCT_C100_300S_NOT_HARNESS_OVERRIDE_DISPATCHED
