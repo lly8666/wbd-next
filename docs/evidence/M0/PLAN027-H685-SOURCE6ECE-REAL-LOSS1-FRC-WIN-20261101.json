@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "prebuilt_build_run": 41226521824,
+  "original_windows_artifact": 13051429248,
+  "original_linux_artifact": 13051109212,
+  "harness_sha": "92354d5a70f34640918f61b25859ba0bb05989dd",
+  "physical": "NOT_RUN",
+  "run": 41239118075,
+  "workflow_conclusion": "success",
+  "result": "PASS_SCOPED_ONE_WINDOWS_ORIGINAL_RUST_OUTER_REPAIR_LEDGER_WITH_GENUINE_1PCT_KERNEL_DAMAGE_NOT_BILATERAL_RECOVERY_QUALIFICATION",
+  "report_artifact": {
+    "id": 13057075954,
+    "sha256": "5f91c0ee642951bcf3dd5543a94cf5688607d9b9ee677411523e203652e0e0c8"
+  },
+  "scenario": "wl-outer-repair-10m-250ms-loss1-60s",
+  "scenario_sha256": "fbb53fd3f064a10f7c50214f1ddd8cfd30c47535f87c8edc4afdae2dc6a6e1f0",
+  "report_workflow_head_sha": "df36f770ad59941335282924862cc38454ed9ff2",
+  "report_linux_binary_source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "old_h539_seed": 20261030,
+  "real_kernel_netem": {
+    "delay_ms_each": 250,
+    "loss_percent_each": 1,
+    "observed_drops": {
+      "eth0": 997,
+      "ifb": 1021
+    }
+  },
+  "real_original_duplex": {
+    "offered_mbps_each": 10,
+    "measured_offered": {
+      "windows": 9.9973,
+      "linux": 10
+    },
+    "first_delivered_mbps": {
+      "windows": 9.9474,
+      "linux": 9.9426
+    },
+    "first_delivery_fraction": {
+      "windows": 0.994817,
+      "linux": 0.994462
+    },
+    "received_missing_inside_span": {
+      "windows": 516,
+      "linux": 551
+    },
+    "owned_stop": "PASS_BOTH_OWNED",
+    "udp_tcp": "PASS"
+  },
+  "win_original_rust_joined_wire": {
+    "F_first_wire_bytes": 86398470,
+    "R_accepted_wire_bytes": 387275,
+    "R_uncertain_charged_bytes": 0,
+    "C_control_wire_bytes": 188903,
+    "repair_packets": 451,
+    "R_over_F": 0.0044824289133823785,
+    "R_over_FplusRplusC": 0.004452734318625814,
+    "ratio_cap_R_over_F": 0.1,
+    "scope": "WINDOWS_DIRECTION_ONLY_TRUE_JOINED"
+  },
+  "oracle_grade": "NONZERO_WINDOWS_REPAIR_NOT_BILATERAL_GRADE",
+  "product_repair_qualified": false,
+  "own_origin_roundtrip_p99_ms": {
+    "windows": 1016,
+    "linux": 1026.786
+  },
+  "probe_reply": {
+    "windows": {
+      "sent": 549,
+      "returned": 547,
+      "not_returned": 2
+    },
+    "linux": {
+      "sent": 600,
+      "returned": 592,
+      "not_returned": 8
+    }
+  },
+  "win_product_process": {
+    "cpu_s": 4.2656,
+    "observed_elapsed_s": 77.235,
+    "peak_working_set_bytes": 42516480
+  },
+  "cleanup_warning": "WL_REAL_LINUX_OWNED_STOP_REQUEST_FAILED code=1 extra best effort; native joined Stop report PASS_BOTH_OWNED",
+  "limits": [
+    "No bilateral verified R/F or actual repair attribution; positive R under 1pct loss is real but one side",
+    "Not long-term 1pct/5pct/15pct/30pct qualification, >10pct R limiter only source-specific this 60s run",
+    "Probes missing do not count as returned or p99 samples; p99 delivered RTT not one-way",
+    "No fabricated retransmits or F/R/C control accounting for Linux"
+  ]
+}

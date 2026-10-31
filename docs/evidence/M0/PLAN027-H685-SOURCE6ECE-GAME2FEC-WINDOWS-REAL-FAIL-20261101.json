@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "prebuilt_build_run": 41226521824,
+  "original_windows_artifact": 13051429248,
+  "original_linux_artifact": 13051109212,
+  "harness_sha": "92354d5a70f34640918f61b25859ba0bb05989dd",
+  "physical": "NOT_RUN",
+  "run": 41238055914,
+  "workflow_head_sha": "409805ff20cafd61f0c434bac432337bde6127dc",
+  "job_id": 124645958200,
+  "workflow_conclusion": "cancelled",
+  "native_job_conclusion": "cancelled",
+  "native_product_launch_step_conclusion": "failure",
+  "native_artifact_upload_step_conclusion": "failure",
+  "result": "FAIL_GAME2_FIXED6_ORIGINAL_WINDOWS_LOW_ACTUAL_BUSINESS_AND_MISSING_OWNED_WAL_STOP",
+  "scene": "plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s",
+  "real_os": "SIGNED_WINDOWS_NPF_WINTUN_AND_LINUX_WSL2_GO_TLS_RUST_REAL",
+  "real_report_visible_in_job_log": true,
+  "original_win_native_game_stats": {
+    "mode": "game2",
+    "tx_records": 270,
+    "rx_first_delivered_ipv4": 96,
+    "effective_payload_mtu": 1330
+  },
+  "offered_mbps_each": 1,
+  "actual_delivered_mbps": {
+    "windows": 0.0354,
+    "linux": 0.0325
+  },
+  "actual_first_fraction": {
+    "windows": 0.044235,
+    "linux": 0.042121
+  },
+  "true_udp_rtt": {
+    "windows": {
+      "sent": 92,
+      "replied": 4,
+      "unreturned": 88
+    },
+    "linux": {
+      "sent": 100,
+      "replied": 3,
+      "unreturned": 97
+    }
+  },
+  "actual_runtime_error": "Windows native owned WAL Stop missing",
+  "job_error": "WBD_WL_TRUE_PUBLIC_MODE_FAIL game2-fec: Windows native owned WAL Stop missing",
+  "artifact_upload_error": "Failed to CreateArtifact: Unable to make request: ENOTFOUND; underlying artifact service unavailable",
+  "only_saved_artifact": {
+    "id": 13056555571,
+    "name": "m0-wl-real-guest-boot-41238055914",
+    "sha256": "f193e6a8fead6a62b46d4dcc04c354a39e00f59ca18daa06a9be0efe0027f961"
+  },
+  "real_product_client_log_saved": false,
+  "cause": "NOT_VERIFIED_NO_CLIENT_LOG",
+  "limitations": [
+    "Not proof of Game2 FEC recovery on Windows",
+    "Status CANCELLED by bounded external watchdog after native launch test and artifact upload failures; product run is explicitly failed, NOT an environment-only qualification",
+    "Linux original Game2FEC source6ece 105s + real15pct distinct PASS does not qualify Windows",
+    "Do not repeat identical unchanged Game scenario without recovered reason or source-changing fix; check module design and recent game stop corrections first"
+  ]
+}

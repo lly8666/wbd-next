@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "prebuilt_build_run": 41226521824,
+  "original_windows_artifact": 13051429248,
+  "original_linux_artifact": 13051109212,
+  "harness_sha": "92354d5a70f34640918f61b25859ba0bb05989dd",
+  "physical": "NOT_RUN",
+  "run": 41238945716,
+  "result": "PASS_SIGNED_REAL_TWO_OS_NORMAL_AUTHENTICATED_105S_NO_BUSINESS_POST_WAKE_AND_60S_FIRST_STOP",
+  "workflow_conclusion": "success",
+  "report_artifact": {
+    "id": 13056637560,
+    "sha256": "2e90a4fce343f91c813d5b67a629e2e476739012b045eeb9191e3649787aeec2"
+  },
+  "scene": "plan027-b-normal-idle-wake-10m-25ms-0loss-60s",
+  "reported_lifecycle_idle_s": 108.3,
+  "requested_no_business_idle_s": 105,
+  "both_original_authenticated_owners_alive": true,
+  "new_udp_after_idle": "PASS_BOTH_GENUINE_KERNEL",
+  "health_kind1_count": "NOT_EXPLICITLY_MEASURED",
+  "sustained_offered_mbps_each": 10,
+  "real_kernel_delay_ms": 25,
+  "real_kernel_loss_pct": 0,
+  "duration_s": 60,
+  "first_delivery_fraction": {
+    "windows": 1,
+    "linux": 1
+  },
+  "first_delivery_mbps": {
+    "windows": 10,
+    "linux": 10
+  },
+  "first_receiver_seq_start": {
+    "windows": 0,
+    "linux": 0
+  },
+  "missing_inside_observed_span": {
+    "windows": 0,
+    "linux": 0
+  },
+  "actual_original_udp_tcp": "PASS",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "source_origin_udp_rtt_p99_ms": {
+    "windows": 63,
+    "linux": 52.756
+  },
+  "rtt_probes": {
+    "windows": "549/549",
+    "linux": "600/600"
+  },
+  "original_win_product_process": {
+    "cpu_s": 4.5469,
+    "observed_elapsed_s": 186.219,
+    "peak_ws_bytes": 41885696
+  },
+  "cleanup_warning": "WL_REAL_LINUX_OWNED_STOP_REQUEST_FAILED code=1 in extra termination attempt; workflow and original joined Stop report PASS_BOTH_OWNED, do not conceal warning or interpret as first payload loss",
+  "not_covered": [
+    "Windows authenticated blackhole106 requires fresh TLS/generation and remains NOT_RUN",
+    "Rotation, FIN/DORMANT and host-global WFP/IPv6/DNS/route NOT_RUN",
+    "Health frame kind1 count not instrumented, long-term 90s quality maturity NOT_QUALIFIED",
+    "Cross-OS calibrated one-way p99 NOT_MEASURED"
+  ]
+}

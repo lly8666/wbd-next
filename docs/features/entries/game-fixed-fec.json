@@ -108,6 +108,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
       "evidence": "docs/evidence/M0/PLAN027-H677-SOURCE6ECE-LINUX-GAME2FEC-IDLE105-20261101.json"
+    },
+    {
+      "platform": "windows/x64 signed NPF/Wintun + linux/amd64 WSL2 original product",
+      "scope": "H679 exact SOURCE6ece original Game2 fixed6 1Mbps/25ms0%10s signed native Windows twoOS FAIL: win/linux first only0.044235/0.042121, Windows owned WAL Stop marker missing, run CANCELLED following actual product step FAIL; full logs artifact upload ENOTFOUND, cannot assert specific root. Linux-only H675 distinct PASS.",
+      "status": "FAIL",
+      "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+      "evidence": "docs/evidence/M0/PLAN027-H685-SOURCE6ECE-GAME2FEC-WINDOWS-REAL-FAIL-20261101.json"
     }
   ],
   "limitations": [
@@ -130,7 +137,8 @@
     "PLAN027 H632: deferred Game-FEC Wintun retries re-arm newly unblocked Npcap event handles before any infinite wait and rotate early authenticated TLS records so a backpressured lane cannot block a sibling. Native original Game FEC e2e still NOT_RUN.",
     "PLAN027 H638 original sourced scenario for Game4 fixed6 10Mbps/75ms/15% symmetric loss/20s now supplied; explicit SHA-locked three-mode Game2FEC/Game4FEC/Game2off 30% Actions dispatch gate prepared, never automatic unless tagged and no real PASS yet.",
     "PLAN027 H639 exact source original Game2+Game4 fixed6 FEC symmetric 15% and Game2/off 30% trigger: source SHA compared to protected main, checkout before scenario validation; dispatch is attempted by explicitly tagged push, actual original native results pending.",
-    "H675 Linux source6ece true 105s idle and 15% real kernel Game2 FEC fixed6 64/64 Stop positive, DOES NOT qualify signed Windows GameFEC or physical; native Health kind1 count unmeasured."
+    "H675 Linux source6ece true 105s idle and 15% real kernel Game2 FEC fixed6 64/64 Stop positive, DOES NOT qualify signed Windows GameFEC or physical; native Health kind1 count unmeasured.",
+    "H679 true current SOURCE6ece signed Windows↔WSL2 Game2FEC6 1M native FAIL first4.4/4.2% and Windows Stop marker absent; bounded run cancelled and full artifact upload ENOTFOUND. No exact client-side root, cannot promote Linux FEC pass or repeat unchanged. Original Game2/4 Windows B remains open."
   ],
   "promotion": null
 }
