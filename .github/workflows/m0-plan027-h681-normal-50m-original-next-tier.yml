@@ -1,0 +1,53 @@
+name: M0 PLAN027 H681 immutable original-source Normal 50Mbps capacity next rung
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h681-normal-50m-original-next-tier.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-true-original-50m:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h681-50m]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_SOURCE: 6ece9eab653f46a716e8d3a0927fb74bec4819e8
+      HARNESS_SOURCE: 92354d5a70f34640918f61b25859ba0bb05989dd
+      BUILD_RUN: "41226521824"
+      PRIOR_LONG: "41237900545"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: True 300s previous rung must PASS; then one real 50M separate-VM scene on exact frozen original product
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$PRIOR_LONG" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$PRIOR_LONG/jobs?per_page=100" |
+            jq -e '[.jobs[]|select(.name=="native-public-two-os")|.conclusion]|.==["success"]' > /dev/null
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .head_sha)" = "$PRODUCT_SOURCE"
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/artifacts?per_page=100" |
+            jq -e --arg w "m0-wl-windows-product-binaries-$PRODUCT_SOURCE" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' > /dev/null
+          git fetch --depth=1 origin "$HARNESS_SOURCE"
+          test -z "$(git diff --name-only "$HARNESS_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools scenarios)"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario('scenarios/plan027-c-normal-50m-25ms-loss0-60s.json')
+          assert s['public_mode']=='normal' and s['duration_s']==60 and s['tun_mtu']==1400
+          for d in ('windows_to_linux','linux_to_windows'):
+              x=s[d];assert x['offered_mbps']==50 and x['delay_ms']==25 and x['loss_pct']==0
+              assert [t['udp_payload_bytes'] for t in x['packet_mix']]==[64,128,512,1200]
+          print('H681_AUTHENTIC_SAME_SOURCE_NORMAL_50M_NEXT_CAPACITY_RUNG',s['scenario_sha256'])
+          PY
+          scene=scenarios/plan027-c-normal-50m-25ms-loss0-60s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|normal|$scene"
+          old="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg title "$title" '.workflow_runs[]|select(.display_title==$title)|.id' | head -1)"
+          if [ -n "$old" ];then echo "H681_ALREADY_DISPATCHED action=$old";exit 0;fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_scenario_file="$scene" \
+            -f perf_reuse_run_id="$BUILD_RUN" -f perf_binary_source_sha="$PRODUCT_SOURCE"
+          echo H681_ONE_50MBPS_TRUE_ORIGINAL_NORMAL_NATIVE_ACTION_DISPATCHED_NOT_PASS

@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "result": "PASS_ORIGINAL_WINDOWS_NPF_WINTUN_LINUX_WSL2_NORMAL_10MBPS_EACH_TRUE_300S_0PCT_WITH_OWNED_STOP",
+  "run": 41237900545,
+  "scene": "plan027-c-normal-10m-25ms-loss0-300s",
+  "binary_source_build_run": 41226521824,
+  "binary_windows_artifact": 13051429248,
+  "binary_linux_artifact": 13051109212,
+  "harness_source_sha": "92354d5a70f34640918f61b25859ba0bb05989dd",
+  "artifact": {
+    "id": 13055903563,
+    "sha256": "2078e402ddbd4823216e0ebcdd0ac03eb7b759efb09e4473a188f83b0c6dff45"
+  },
+  "real_os": "SIGNED_WINDOWS_NPCAP_WINTUN_AND_WSL2_LINUX_KERNEL_TUN_GO_CREDENTIAL_TLS_RUST",
+  "tun_mtu_requested": 1400,
+  "one_way_kernel_netem_ms": 25,
+  "kernel_loss_percent": 0,
+  "duration_s": 300,
+  "offered_each_mbps": 10,
+  "first_delivery_mbps": {
+    "windows": 10,
+    "linux": 9.9995
+  },
+  "first_unique_delivery_fraction": {
+    "windows": 1,
+    "linux": 1
+  },
+  "received_sequence": {
+    "windows": {
+      "start": 0,
+      "end": 497635,
+      "missing_inside": 0
+    },
+    "linux": {
+      "start": 0,
+      "end": 497590,
+      "missing_inside": 0
+    }
+  },
+  "real_app_udp_tcp": "PASS_BOTH",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "same_origin_roundtrip_p99_ms": {
+    "windows": 47,
+    "linux": 52.073
+  },
+  "udp_rtt_probes": {
+    "windows": {
+      "sent": 2743,
+      "replied": 2743,
+      "not_returned": 0
+    },
+    "linux": {
+      "sent": 2997,
+      "replied": 2997,
+      "not_returned": 0
+    }
+  },
+  "native_windows_product_process": {
+    "pid_scope": "SAME_ORIGINAL_GO_EXE_AND_RUST_DLL_PROCESS",
+    "observations": 309,
+    "observed_elapsed_s": 316.406,
+    "cpu_total_s": 19.0312,
+    "cpu_kernel_s": 13.5312,
+    "cpu_user_s": 5.5,
+    "cpu_avg_pct_one_core": 6.015,
+    "peak_working_set_bytes": 41447424,
+    "peak_private_bytes": 37728256
+  },
+  "traffic_generator_cpu_s": {
+    "windows": 25.4375,
+    "linux": 52.4816
+  },
+  "native_windows_npf_ingress_local_drops": 0,
+  "native_windows_original_rust_driver_outcome": {
+    "tx_records": 503674,
+    "rx_first_delivered_ipv4": 503472,
+    "source_stage_failures": 0,
+    "pending_original_rust_frozen_or_unacked_legacy_carrier_records": 0,
+    "oldest_unacked_carrier_ms": 0,
+    "process_charged_repair_bytes": 0,
+    "process_pending_repair_bytes": 0
+  },
+  "not_measured": [
+    "cross_OS_clock_calibrated_one_way_p99",
+    "same_runner A/B CPU delta",
+    "Linux whole product CPU/RSS process with comparable Windows scope",
+    "full bilateral F/R/C and actual kernel host memory pressure",
+    "50/100/200Mbps tier",
+    "Windows GameFEC true real product and B106; B rotation host global DNS/WFP/IPv6; C burst; physical"
+  ],
+  "next_capacity": {
+    "scenario": "scenarios/plan027-c-normal-50m-25ms-loss0-60s.json",
+    "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+    "status": "DISPATCH_PENDING_NEW_ACTION",
+    "reason": "exact precompiled SOURCE6ece, after real 10Mbps 300s PASS; do not skip 50M ladder or claim 100M."
+  }
+}
