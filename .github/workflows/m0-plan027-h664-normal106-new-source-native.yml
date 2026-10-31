@@ -1,0 +1,47 @@
+name: M0 PLAN027 H664 new source original normal 106s peer-dead TLS reauth
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h664-normal106-new-source-native.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  single-real-106s:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h664-b106]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      STOP_CANDIDATE_SOURCE: 1d51040496f365911b9d58843f3cf80767861718
+      STOP_WINDOWS_COMPILE: "41224620319"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Freeze proven Rust bounded Normal Stop, exactly one original signed Windows Linux B106 scene
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$STOP_WINDOWS_COMPILE" --jq .head_sha)" = "$STOP_CANDIDATE_SOURCE"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$STOP_WINDOWS_COMPILE" --jq .conclusion)" = success
+          git fetch --depth=1 origin "$STOP_CANDIDATE_SOURCE"
+          test -z "$(git diff --name-only "$STOP_CANDIDATE_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_wl_netem.py tools/m0_wl_perf_v2_config.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py)"
+          grep -q 'M0_PLAN027_NORMAL_NATIVE_STOP_NOT_DRAINED' crates/wbd-engine/src/v4_windows_native_runtime.rs
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario("scenarios/plan027-b-normal-blackhole106-recover-10m-25ms-0loss-60s.json")
+          assert s["public_mode"]=="normal" and s["lifecycle_blackhole_s"]==106 and s["duration_s"]==60
+          for d in ("windows_to_linux","linux_to_windows"):
+              r=s[d];assert r["offered_mbps"]==10 and r["loss_pct"]==0 and r["delay_ms"]==25
+          print("H664_GENUINE_B106_FROZEN_SOURCE_SCENE",s["scenario_sha256"])
+          PY
+          scene=scenarios/plan027-b-normal-blackhole106-recover-10m-25ms-0loss-60s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|normal|$scene"
+          prior="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg title "$title" '.workflow_runs[]|select(.display_title==$title)|.id'|head -1)"
+          if [ -n "$prior" ];then echo "H664_B106_ALREADY_DISPATCHED run=$prior";exit 0;fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_scenario_file="$scene" \
+            -f perf_reuse_run_id="" -f perf_binary_source_sha=""
+          echo "H664_NEW_PRODUCT_BINARY_SOURCE=$GITHUB_SHA TRUE_106S_TL_REAUTH_ACTION=PENDING_NO_PASS"
