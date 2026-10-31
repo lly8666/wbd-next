@@ -1,0 +1,254 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "result": "NINE_ORIGINAL_TWO_OS_SCENES_TRUE_BUSINESS_STOP_PASS; GAME_FEC_TWO_CANCELLED; A5_FAIL_NO_COMPARISON; PLAN027_NOT_DONE",
+  "binary_source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+  "harness_source_sha": "935a677221d2713c7cdc600eaa8cb2bad5a113ed",
+  "build": {
+    "run_id": 41166008870,
+    "windows_artifact": 13028693506,
+    "windows_zip_sha256": "881c64d6de8ebbfa98eda77022e011e4ac18458f783a38913186dbda3da8a291",
+    "linux_artifact": 13028673203,
+    "linux_zip_sha256": "0d5eb97b89b5d071b4e39ef282debc936cd6fcbf95acbc6d2668ea7ad298cd41"
+  },
+  "normal_loss_tiers": [
+    {
+      "loss_pct": 1,
+      "run_id": 41167348101,
+      "artifact_id": 13028614625,
+      "artifact_sha256": "2dfeb9260f91cf93d5e750fb099d0cd3d7aebec4a3d6287d9830ed59b3a69e2b",
+      "scenario": "Normal/off each direction 10Mbps/250ms one-way/60s true tc",
+      "windows": {
+        "F_bytes": 86424067,
+        "R_bytes": 98785,
+        "C_bytes": 179382,
+        "R_over_F_percent": 0.1143,
+        "R_over_total_percent": 0.1139,
+        "first_fraction": 0.990979
+      },
+      "linux": {
+        "F_bytes": 85004964,
+        "R_bytes": 88774,
+        "C_bytes": "NOT_MEASURED",
+        "R_over_F_percent": 0.1044,
+        "first_fraction": 0.990538,
+        "burst_paced_blocked_count": 0
+      },
+      "genuine_tcp_udp": "PASS_BOTH",
+      "owned_stop": "PASS_BOTH",
+      "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb"
+    },
+    {
+      "loss_pct": 5,
+      "run_id": 41167349797,
+      "artifact_id": 13029766430,
+      "artifact_sha256": "e1233daf53ede6bab7c442eafc60a63240eb10c12936f1e158328329445d230e",
+      "scenario": "Normal/off each direction 10Mbps/250ms one-way/60s true tc",
+      "windows": {
+        "F_bytes": 86391323,
+        "R_bytes": 668355,
+        "C_bytes": 184498,
+        "R_over_F_percent": 0.7736,
+        "R_over_total_percent": 0.7661,
+        "first_fraction": 0.953441
+      },
+      "linux": {
+        "F_bytes": 85004357,
+        "R_bytes": 579081,
+        "C_bytes": "NOT_MEASURED",
+        "R_over_F_percent": 0.6812,
+        "first_fraction": 0.953496,
+        "burst_paced_blocked_count": 0
+      },
+      "genuine_tcp_udp": "PASS_BOTH",
+      "owned_stop": "PASS_BOTH",
+      "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb"
+    },
+    {
+      "loss_pct": 15,
+      "run_id": 41167351360,
+      "artifact_id": 13029726627,
+      "artifact_sha256": "1fe29bd71e57599f6307fae42307f0138cdac68dbf88270639a86fbad88123dd",
+      "scenario": "Normal/off each direction 10Mbps/250ms one-way/60s true tc",
+      "windows": {
+        "F_bytes": 86393113,
+        "R_bytes": 2446659,
+        "C_bytes": 167050,
+        "R_over_F_percent": 2.832,
+        "R_over_total_percent": 2.7488,
+        "first_fraction": 0.855993
+      },
+      "linux": {
+        "F_bytes": 84997270,
+        "R_bytes": 2597215,
+        "C_bytes": "NOT_MEASURED",
+        "R_over_F_percent": 3.0556,
+        "first_fraction": 0.857887,
+        "burst_paced_blocked_count": 235
+      },
+      "genuine_tcp_udp": "PASS_BOTH",
+      "owned_stop": "PASS_BOTH",
+      "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb"
+    },
+    {
+      "loss_pct": 30,
+      "run_id": 41167353156,
+      "artifact_id": 13029945925,
+      "artifact_sha256": "a21cf66037c666679a4af6d694f48a9dc296e36177391fef631662ec73ca66d9",
+      "scenario": "Normal/off each direction 10Mbps/250ms one-way/60s true tc",
+      "windows": {
+        "F_bytes": 86374837,
+        "R_bytes": 3537177,
+        "C_bytes": 148057,
+        "R_over_F_percent": 4.0951,
+        "R_over_total_percent": 3.9276,
+        "first_fraction": 0.709013
+      },
+      "linux": {
+        "F_bytes": 84987297,
+        "R_bytes": 3542559,
+        "C_bytes": "NOT_MEASURED",
+        "R_over_F_percent": 4.1683,
+        "first_fraction": 0.711029,
+        "burst_paced_blocked_count": 1190
+      },
+      "genuine_tcp_udp": "PASS_BOTH",
+      "owned_stop": "PASS_BOTH",
+      "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb"
+    }
+  ],
+  "fixed30": {
+    "run_id": 41167354629,
+    "artifact_id": 13030015748,
+    "artifact_sha256": "8048a126469976230de0511c52fa96db9d888c70c3a15392fd355076d37652d7",
+    "windows": {
+      "F": 210063400,
+      "R": 4578183,
+      "C": 199865,
+      "first": 0.999638
+    },
+    "linux": {
+      "F": 207959229,
+      "R": 5286836,
+      "C": "NOT_MEASURED",
+      "first": 0.996502
+    },
+    "stop": "PASS_BOTH_OWNED",
+    "scope": "Fixed highest FEC, 10Mbps each/250ms one-way/30% true loss/60s"
+  },
+  "auto240": {
+    "run_id": 41167356282,
+    "artifact_id": 13030405198,
+    "artifact_sha256": "ea82b0ebb31517e5002415d180f24c92fbff5d70c7f606f66c1efb9b34fccb89",
+    "first": {
+      "windows": 1,
+      "linux": 0.996709
+    },
+    "stop": "PASS_BOTH_OWNED",
+    "quality": "Linux authenticated s2c VALID 4096 matched effective sampled sources, logs 30s one-step down to profile0 revision6; Windows native requested/applied revision5; bilateral 120s independent full-grade proof not claimed",
+    "report_a4_grade": "NOT_PROVEN_UNTIL_NATIVE_QUALITY_AND_APPLIED_READBACK"
+  },
+  "c50": {
+    "run_id": 41167357685,
+    "artifact_id": 13030165245,
+    "artifact_sha256": "7720a10954b0ed11ec0099a77cda592292d1d64acd77c4b4f2539805539285dc",
+    "normal_50Mbps_each_25ms_0pct_60s": {
+      "offered_mbps": [
+        49.9866,
+        49.9999
+      ],
+      "first": [
+        1,
+        1
+      ],
+      "F_windows": 431291753,
+      "R_windows": 0,
+      "C_windows": 954310,
+      "F_linux": 424415332,
+      "R_linux": 0,
+      "C_linux": "NOT_MEASURED",
+      "stop": "PASS_BOTH_OWNED"
+    }
+  },
+  "game_off": [
+    {
+      "mode": "Game2/off",
+      "run_id": 41167359078,
+      "artifact_id": 13029995718,
+      "artifact_sha256": "10cbf9de1af87778808c2f74f3e4907b88035dbdf7ef25293d709dcde9dcfa74",
+      "first": [
+        0.997851,
+        1
+      ],
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "mode": "Game4/off",
+      "run_id": 41167360719,
+      "artifact_id": 13029651597,
+      "artifact_sha256": "410da408351d4c3df7161e75cf8269c47cd247822079f0465e046a6e91ee3829",
+      "first": [
+        1,
+        1
+      ],
+      "stop": "PASS_BOTH_OWNED"
+    }
+  ],
+  "game_fec_cancelled": [
+    {
+      "mode": "Game2 highestFEC",
+      "run_id": 41167362490,
+      "conclusion": "CANCELLED",
+      "at_stage": "WSL2 real guest boot prerequisite",
+      "product": "NOT_RUN",
+      "owned_stop": "NOT_RUN"
+    },
+    {
+      "mode": "Game4 highestFEC",
+      "run_id": 41167363904,
+      "conclusion": "CANCELLED",
+      "at_stage": "full public two-OS product",
+      "product": "NOT_VERIFIED",
+      "owned_stop": "NOT_RUN"
+    }
+  ],
+  "A5": {
+    "run_id": 41167365369,
+    "artifact_id": 13029617013,
+    "artifact_sha256": "d55e076c4d30dbde19c7771c01e5efc512be33a166472e82fefd76f3311b7169",
+    "result": "FAIL_GO_LEG_A_NO_COMPARABLE_CPU",
+    "same_vm": true,
+    "rust_B": {
+      "first": [
+        1,
+        1
+      ],
+      "whole_exe_cpu_s": 3.5312,
+      "peak_rss_bytes": 42332160,
+      "owned_stop": "PASS_BOTH_OWNED"
+    },
+    "go_A": {
+      "error": "real public product exited during WL-N0",
+      "stop": "NOT_RUN",
+      "cpu_s_before_failure": 13.5
+    },
+    "comparison": "NOT_MEASURED"
+  },
+  "harness_repair": {
+    "commit": "03fab6371fb8f802965678bc297cff7103534246",
+    "regression_commit": "6720bc720180b8ee484267d36761910f877c8950",
+    "scope": "External independent Linux-hosted Actions job cancels same exact frozen Windows run after 1200s native job; A5 uses bounded file-backed process instead of raw PowerShell Tee PIPE",
+    "preflight_actions_success": [
+      41170438515,
+      41170456546
+    ],
+    "real_game_fec_new_source": "NOT_RUN"
+  },
+  "limitations": [
+    "New §0.4 overrides narrow exact 0.5p ratio. Ratio remains lower than ideal half-loss in all tiers, must not falsely mark old ratio PASS; authenticated unique opportunities + bounded repair and real first/Stop PASS are the relevant scoped result.",
+    "Linux C bytes NOT_MEASURED, no invented cross-machine one-way p99.",
+    "No sameVM valid old-Go CPU comparison because A failed; compare no CPU improvement.",
+    "No true Game2/4 highestFEC product/Stop result; cancelled when Windows runner froze, cannot assert Rust bug.",
+    "A/B/C/lifecycle and 300s stability still OPEN, one-source only."
+  ]
+}
