@@ -37,10 +37,16 @@ class NativeWslDeadlineTests(unittest.TestCase):
         # The original Windows 2025 runner can freeze *above* PowerShell,
         # defeating its on-host watchdog and the step timeout entirely.
         # A different Ubuntu Actions worker must cancel the stuck exact run.
-        self.assertIn("native-wsl-external-deadline:",y)
-        self.assertIn("WL_INDEPENDENT_DEADLINE_CANCEL exact_run=",y)
-        self.assertIn('actions: write',y)
-        self.assertIn('1200',y)
+        # A watcher inside the tested Action cancels itself with Windows.
+        # The native deadline must run in a distinct Linux workflow_run.
+        self.assertNotIn("native-wsl-external-deadline:",y)
+        independent=(ROOT/".github/workflows/m0-plan027-independent-native-deadline.yml").read_text()
+        self.assertIn("types: [requested]",independent)
+        self.assertIn("github.event.workflow_run.event == 'workflow_dispatch'",independent)
+        self.assertIn("M0_EXTERNAL_NATIVE_TIMEOUT",independent)
+        self.assertIn("/force-cancel",independent)
+        self.assertIn("actions: write",independent)
+        self.assertIn('1200',independent)
         # An A5 old-Go process must not hold a PowerShell Tee pipe open.
         self.assertIn("m0_wl_native_step_runner.py tools/m0_wl_perf_v2_ab.py",y)
         self.assertNotIn("& python tools/m0_wl_perf_v2_ab.py 2>&1 |",y)
