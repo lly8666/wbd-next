@@ -1,18 +1,14 @@
-name: M0 PLAN027 H557 source525 verified-zero to unique-gap four-rate and four Game B plus A5 C50
+# H564 replaces unobserved workflow_run callback, not a new scheduler.
+# Only this exact tagged main push invokes the original report and digest gate.
+name: M0 PLAN027 H564 one-time verified original zero source525 and B A5 C scenes C50
 on:
-  workflow_run:
-    workflows: [M0 Windows Linux original native whole-wiring capability and functional entry]
-    types: [completed]
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h557-structural-rate-gated.yml]
 permissions: {contents: read, actions: write}
 jobs:
   real-zero-gate:
-    if: >-
-      github.event.workflow_run.id == 41166008870 &&
-      github.event.workflow_run.run_attempt == 1 &&
-      github.event.workflow_run.event == 'workflow_dispatch' &&
-      github.event.workflow_run.head_branch == 'main' &&
-      github.event.workflow_run.head_sha == '52566af216edf9dee4068f0bb8bfd0fb8d18dfcb' &&
-      github.event.workflow_run.conclusion == 'success'
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h564-source525-once]')
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
