@@ -373,11 +373,11 @@ func waitForNativeReconnectTraffic(ctx context.Context,tun *ownedTun)error{
 }
 
 func productNativeCleanup(c config,tun *ownedTun)func()error{
- if c.fecMode==realityfront.FecV2Auto{
-  // Retain only outer-owned TUN between cleanly drained Auto generations.
-  return func()error{return nil}
- }
- return tun.Close
+ // Every Normal off/Fixed/Auto generation can enter the same authenticated
+ // dead90 reauthorization path. Rust Stop joins its workers; the original Go
+ // Run owner retains the same TUN between generations and closes on final exit.
+ // Game has its separate grouped lifetime and never calls this helper.
+ return func()error{return nil}
 }
 
 func Run(role string,args []string)error{
@@ -398,10 +398,10 @@ func Run(role string,args []string)error{
     log.Printf("V4_PUBLIC_MTU_PREPARE role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d record_offer=%d tun_planned=%d",cfg.role,cfg.outerMTU,iface.MTU,publicMSS,cfg.recordLimit,cfg.innerMTU)
     tun,err:=openTun(cfg.tunName,cfg.tunCIDR,cfg.innerMTU)
     if err!=nil{return err}
-    // This fallback is ONLY used if no authenticated Rust owner was started.
-    // An active owner's Close performs Stop->release->network cleanup instead.
+    // The Go cold lifetime owns TUN; each Rust generation Stop joins and
+    // releases kernel loans before the FINAL Go close or a fresh TLS generation.
     connected:=false
-    defer func(){if !connected || cfg.fecMode==realityfront.FecV2Auto {_ = tun.Close()}}()
+    defer func(){_ = tun.Close()}()
     if err=setOwnedTunTxQueue(tun.name,cfg.tunTxQLenPackets);err!=nil{return err}
     log.Printf("V4_PUBLIC_TUN_TXQLEN role=%s interface=%s packets=%d readback=REAL_ORIGINAL_LINUX_TUN",cfg.role,tun.name,cfg.tunTxQLenPackets)
     if err=setOwnedTunFq(tun.name,cfg.tunFqMaxrateMbps);err!=nil{return err}
@@ -433,8 +433,7 @@ func Run(role string,args []string)error{
             runErr=runServer(ctx,cfg,uint32(iface.Index),tun,raw,emit,&connected)
         }
         closeErr:=raw.Close()
-        if !errors.Is(runErr,errPublicNativePeerDead)||
-            cfg.fecMode!=realityfront.FecV2Auto||ctx.Err()!=nil{
+        if !errors.Is(runErr,errPublicNativePeerDead)||ctx.Err()!=nil{
             return errors.Join(runErr,closeErr)
         }
         if closeErr!=nil{return closeErr}
@@ -644,11 +643,9 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     *connected=true
     log.Printf("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client Rust_owner=active real_raw_tun=1")
     startV3ProductTimeline(ctx,"client",native.OriginalLoopPulse,native.OriginalOuterCounters)
-    if c.fecMode==realityfront.FecV2Auto {
-        err=monitorPublicNativePeer(ctx,errs,func()bool{return handoffCommitted.Load()},native.OriginalLoopPulse)
-    }else{
-        select{case <-ctx.Done():case err=<-errs:}
-    }
+    // Rust authenticates dead90. Observe one low-frequency terminal flag in
+    // ALL Normal modes; neither ACK nor local driver errors may reauthorize TLS.
+    err=monitorPublicNativePeer(ctx,errs,func()bool{return handoffCommitted.Load()},native.OriginalLoopPulse)
     log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=client mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())
     counters,countErr:=native.OriginalOuterCounters()
     logAuthenticOuter("client",counters,countErr)
@@ -814,11 +811,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             }
         }
     }()
-    if c.fecMode==realityfront.FecV2Auto {
-        err=monitorPublicNativePeer(ctx,errs,func()bool{return handoffCommitted.Load()},product.OriginalLoopPulse)
-    }else{
-        select{case <-ctx.Done():case err=<-errs:}
-    }
+    err=monitorPublicNativePeer(ctx,errs,func()bool{return handoffCommitted.Load()},product.OriginalLoopPulse)
     // The public product's authenticated readiness is published atomically
     // by the admission worker; only this caller writes the lifecycle flag.
     *connected=handoffCommitted.Load()

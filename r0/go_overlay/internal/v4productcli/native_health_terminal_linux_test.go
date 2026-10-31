@@ -5,6 +5,16 @@ import (
     "github.com/lly8666/wobuzhidao/internal/realityfront"
 )
 func TestPlan027NativeColdReconnectOnlyOnAuthenticated90sDead(t *testing.T){
+    // Rust native Stop must complete before old Go TUN closes. All Normal
+    // modes (not just Auto) retain it for the next original TLS generation.
+    for _,mode:=range []realityfront.FecV2Mode{
+        realityfront.FecV2Off,realityfront.FecV2Fixed,realityfront.FecV2Auto,
+    }{
+        closeAfterStop:=productNativeCleanup(config{fecMode:mode},nil)
+        if closeAfterStop==nil||closeAfterStop()!=nil{
+            t.Fatalf("Normal mode %s failed cold retained TUN cleanup",mode)
+        }
+    }
     for _,p:=range []realityfront.V4PublicLoopPulse{
         {TxErrors:1,TxRecords:32},
         {TxErrors:500,TxRecords:1500,RxErrors:17},

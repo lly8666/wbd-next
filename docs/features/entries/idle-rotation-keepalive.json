@@ -25,7 +25,8 @@
     "crates/wbd-engine/src/runtime/generation.rs",
     "crates/wbd-engine/src/v4_native_health.rs",
     "crates/wbd-engine/src/v4_embedded_go.rs",
-    "crates/wbd-engine/src/v4_windows_owner.rs"
+    "crates/wbd-engine/src/v4_windows_owner.rs",
+    "r0/go_overlay/internal/v4productcli/linux.go"
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
@@ -36,7 +37,8 @@
     "docs/evidence/M0/PLAN026-LINUX-REAL-DISCONNECT-NEW-FLOW-SOURCEA8-FAIL-20261029.json",
     "docs/evidence/M0/PLAN026-LINUX-AUTO-TRUE-DEAD-NEW-FLOW-REAUTH-SOURCE134914-20261029.json",
     "docs/devlog/M0/20261029-PLAN026-GAME-NATIVE-WRITE-COMMIT-LANE-ISOLATION-HEALTH-ORACLE-BATCH.md",
-    "docs/devlog/M0/20261030-PLAN026-RECOVERY-M2-LOW-FREQUENCY-HEALTH-GAME-LANE-SEND-WINTUN-BOUNDARIES.md"
+    "docs/devlog/M0/20261030-PLAN026-RECOVERY-M2-LOW-FREQUENCY-HEALTH-GAME-LANE-SEND-WINTUN-BOUNDARIES.md",
+    "docs/devlog/M0/20261031-PLAN027-H621-NORMAL-FIXED-AUTH-DEAD-REAUTH.md"
   ],
   "verification": [
     {
@@ -94,6 +96,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "134914f4263f905047b1096c771609558bcdde82",
       "evidence": "docs/evidence/M0/PLAN026-LINUX-AUTO-TRUE-DEAD-NEW-FLOW-REAUTH-SOURCE134914-20261029.json"
+    },
+    {
+      "platform": "linux/amd64 original Go TLS/Rust Normal off+Fixed",
+      "scope": "H621 shared Rust-authenticated dead90 cold reauthorization implementation and TUN generation lifetime; actual true two-OS blackhole/reconnect not yet measured",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
@@ -109,7 +118,8 @@
     "New PLAN026 Linux Auto only original Go cold lifecycle reconnect on native Health-dead and new TUN source candidate: 1Hz cold terminal observation, Rust Stop before fresh authenticated TLS and new generation, original TUN held across generations; exact new SOURCE real Linux reconnect and Windows physical NOT_RUN until Actions.",
     "Latest source134914 authentic Linux Auto new-flow reauthorization from true 106s bilateral dead PASS; old source7e negative and sourcea8 failed test retained. Does not validate Windows signed Npcap/Wintun, true FIN/Dormant/Wake/lane or physical no-CPU-regression.",
     "Candidate: ±10% Health send jitter, bounded optional random record padding, merge M2+Health after real copy. Game per-lane Health/FIN-Dormant-Wake UNWIRED.",
-    "Candidate: authentic Health only piggybacks on M2 when 15s clock is due. Ordinary frequent M2 replies stay immediate, no per-M2 random padding or keepalive reset. Game lane Health and FIN/Dormant/Wake UNWIRED. H597 Game shared authenticated kind0 Health receive + producer seal core staged for Windows/Linux, TX actual driver copy/timer and 90s lifecycle NOT_CONNECTED/NOT_RUN; no native Game PASS. H599 source candidate: Rust Windows NPF and Linux raw Game2/4 TX now use same 15s±10% HealthClock, encrypted per-lane kind0, actual copied-driver result, authenticated RX/dead90; compile/native 90s/rotation NOT_RUN. H597 core alone did NOT qualify product. H602 stuck H601 Game2-FEC SOURCE511c action41186157073 after authentic WSL boot with no business/Stop; original NOT_PASS, exact scoped rescue; future Game 510/600/720s fail-closed bounds, Health origin native worker attach. No new-source 90s Game PASS."
+    "Candidate: authentic Health only piggybacks on M2 when 15s clock is due. Ordinary frequent M2 replies stay immediate, no per-M2 random padding or keepalive reset. Game lane Health and FIN/Dormant/Wake UNWIRED. H597 Game shared authenticated kind0 Health receive + producer seal core staged for Windows/Linux, TX actual driver copy/timer and 90s lifecycle NOT_CONNECTED/NOT_RUN; no native Game PASS. H599 source candidate: Rust Windows NPF and Linux raw Game2/4 TX now use same 15s±10% HealthClock, encrypted per-lane kind0, actual copied-driver result, authenticated RX/dead90; compile/native 90s/rotation NOT_RUN. H597 core alone did NOT qualify product. H602 stuck H601 Game2-FEC SOURCE511c action41186157073 after authentic WSL boot with no business/Stop; original NOT_PASS, exact scoped rescue; future Game 510/600/720s fail-closed bounds, Health origin native worker attach. No new-source 90s Game PASS.",
+    "H621 source candidate: Linux original Normal off/Fixed now observes Rust authenticated dead90 at existing 1Hz cold controller and, after Rust owned Stop/join, reauthorizes original TLS preserving Go-owned TUN between generations (Auto semantics reused). No ACK/driver error falsely reauthorizes, no extra hot worker. Genuine 90s two-end Windows/Linux recovery, rotation, Game grouped health and physical remain NOT_RUN until source-locked Actions."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

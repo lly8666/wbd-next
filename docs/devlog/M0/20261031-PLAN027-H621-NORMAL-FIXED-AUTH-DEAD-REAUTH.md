@@ -1,0 +1,9 @@
+# PLAN027 H621 — fix actual Linux Normal/off Fixed authenticated dead90 & owner lifetime
+
+Static design inspection of existing `r0/go_overlay/internal/v4productcli/linux.go` after authentic H616/H620 short-idle and blackout positives: Rust native HealthClock already emits `V4PublicLoopPulse.AuthenticatedPeerDead`, and original Go cold `monitorPublicNativePeer` samples it 1Hz without any hot packet path or false ACK liveness. **But only Auto** client/server called it; `Run` additionally rejected nonAuto generation reauthorization even on true Rust dead, while nonAuto `productNativeCleanup` closed original TUN as part of old Rust Stop. Thus Normal/off/Fixed could never use the mature original-Go authenticated dead90 new-generation behavior after a real 106s blackout.
+
+Minimal coherent fix: reuse the existing 1Hz monitor on Normal/off/Fixed (not Game), preserve Go-owned TUN until the last Run exit for *all* Normal modes, and allow reauthorization **only** on authenticated Rust peer-dead, after existing native `Close`/joined Stop and raw endpoint release. Client waits for new actual kernel TUN readability, server listens for new genuine SYN; original credentials/generation and no data-plane Go pump unchanged. Rust M3 integrity/PN/MTU/driver outcomes/Stop unchanged. No new timer, actor, protocol or fake health. Existing Go test extends three-mode TUN retention contract. Source candidate; no real 90s Win/Linux successful rejoin yet. The previous source80ee original long/short B/C PASS remains independent, not transferred to new product source.
+
+```feature-impact
+{"kind":"updated","ids":["idle-rotation-keepalive"],"reason":"Linux Go cold Native Rust-authenticated dead90 reconnect expanded from Auto-only to Normal/off/Fixed, preserving Go-owned TUN across joined Rust generations; real >90s B pending."}
+```
