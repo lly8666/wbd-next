@@ -158,6 +158,8 @@ jobs:
             -f target_run_id="$GITHUB_RUN_ID" -f target_sha="$GITHUB_SHA" \
             -f target_job_limit="$limit"
           echo "M0_SEPARATE_NATIVE_DEADLINE_ARMED exact_run=$GITHUB_RUN_ID"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
       # Opt-in, once per source-tagged commit; no unattended native matrix.
       # Manual workflow_dispatch produces its own independent native deadline
       # watcher. This job owns only dispatch, never manufactures test PASS.
@@ -182,8 +184,6 @@ jobs:
               -f "public_mode=$mode" -f "perf_scenario_file=$scenario"
             echo "M0_PLAN027_ORIGINAL_NATIVE_DISPATCH source=$GITHUB_SHA mode=$mode scene=$scenario status=DISPATCHED_NOT_PASS"
           done
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with: {persist-credentials: false}
       - run: python -m pip install PyYAML==6.0.2
       - run: python tools/check_workflows.py
       - run: python -m unittest tests.test_delivery_ci -v
