@@ -470,6 +470,9 @@ struct OriginalOuterRepair{
     repair_blocked:u64,
     block_reasons:[u64;ORIGINAL_REPAIR_BLOCK_REASON_COUNT],
     retired:u64,
+    ready_repairs:VecDeque<wbd_recovery::RepairCandidate<crate::memory::FrozenRecord>>,
+    repair_retry_after_ns:Option<u64>,
+    repair_burst_deferred:u64,
 }
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -4271,9 +4274,8 @@ fn background_raw_once(
     #[cfg(feature="fec2_product_record")]
     let abandoned=sack_negotiated&&authenticated_at!=0&&
         presentation_ack.abandon_stalled(loop_now().0);
+    #[cfg(feature="fec2_product_record")]
     if let (Some(owner),Some(ack32))=(outer,outer_hint){
-        // Once per bounded RX turn. This is an untrusted presentation hint
-        // after TCP checksum and session tuple checks, not a Go/AEAD ACK.
         let mut owned=owner.lock().map_err(|_|BAD_STAGE)?;
         let lane=owned.shadow.lane();
         let epoch=owned.epoch;
@@ -4283,14 +4285,14 @@ fn background_raw_once(
             for pn in update.retired{
                 let _=owned.shadow.discard_outer_ack_hint(pn);
             }
-            for pn in update.gap_candidates {
+            if !update.gap_candidates.is_empty(){
                 let now=loop_now();
-                if wbd_recovery::outer_ack::cosmetic_half_gap(pn) {
-                    // The old head may have expired. Reuse authentic gap
-                    // evidence on up to four ACTUAL retained shadows.
-                    let _=owned.shadow.on_outer_gap_hint(pn,now);
-                    let _=owned.shadow.on_outer_gap_recent_followups(now,4);
+                for pn in update.gap_candidates{
+                    if wbd_recovery::outer_ack::cosmetic_half_gap(pn){
+                        let _=owned.shadow.on_outer_gap_hint(pn,now);
+                    }
                 }
+                let _=owned.shadow.on_outer_gap_recent_followups(now,32);
             }
         }
     }
@@ -5959,6 +5961,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             authentic_ack:0,
             repair_copied:0,repair_uncertain:0,repair_blocked:0,
             block_reasons:[0;ORIGINAL_REPAIR_BLOCK_REASON_COUNT],retired:0,
+            ready_repairs:VecDeque::with_capacity(32),
+            repair_retry_after_ns:None,repair_burst_deferred:0,
         }));
         e.original_outer=Some(Arc::clone(&active));
         Some(active)
