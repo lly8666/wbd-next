@@ -2,26 +2,23 @@
 
 2026-10-30用户明确授权；M0在main施工。本计划覆盖PLAN026后续优先级、M2/Auto/重传测量和测试顺序；其他认证、MTU、Stop、成熟FEC/Game及原TLS/OS冷层保持。**计划不是实现或PASS。**
 
-## 0. 全任务完成判定（用户2026-10-30明确补正）
-正式任务为 **R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT，本次派工尚未完成**。这是下面五项的完整授权，不是只做当前next_action；做完一项立即接下一项，不等再次派工。现有PLAN026未完接线/生命周期也在范围内，旧任务完成不替代本任务验收。
+## 0. 全任务完成判定（唯一总门）
 
-只有以下清单全部闭环，才能宣告本轮完成/没有后续任务：
-1. 去M2及质量、重传、Health替代产品逻辑/双方调用/参数入口完成，不能只完成文档。
-2. 简化验证A完成，必要用例有真实证据。
-3. 剩余接线与生命周期B完成；必要功能未接通、NOT_RUN或阻断bug不能靠声明风险跳过。
-4. 容量内代表矩阵C与约定稳定长测完成。只准对已有测量支持的更高同族负载标CAPACITY_LIMITED并记录原因，其他可跑工况/模式继续。
-5. 必要bug修复、受影响回归及功能卡/devlog/证据/最终结论齐全，没有未决必要Action、待修阻断缺陷或漏项。
+正式任务 `R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT` 覆盖本计划及 PLAN026 剩余接线/生命周期，仍 **PARTIAL**；当前 `next_action` 只是一阶段，完成后自动推进，不等待新派工。**以下五项全部闭环才可报告整体完成**：
 
-在现有cursor.partial_summary/短devlog记五项状态、证据或下一步即可，不新增系统。有效未受影响旧证据可说明影响范围后复用，不强求全矩阵重跑。旧PLAN026/聊天完成、READY字样、open_requests为空、单次Action PASS、只写完代码未测试，都不是全任务完成。外部真阻塞则明确“未完成、被何事阻塞”，推进独立部分，不能说没任务。
-“不过度开发/容量止步/定时提示收尾”仅限制无收益追加，绝不允许漏做上述范围。五项闭环后才适用重复提示停止规则；本段优先于宽泛“基本完成”措辞。最终按更新证据判定，不因本段初始“尚未完成”再次重做已完成任务。
+1. 两端线上逐 record M2 Receipt/位图及无用热依赖退役，低频质量、Health、原密文机会重传和配置/调用方完成。
+2. 简化验证 **A1–A4** 取得真证据；**A5 用户豁免**（§0.5），不是 PASS。
+3. 剩余 Windows/Linux 接线及 Game/FEC、Health、idle/dead、rotation、Stop 等必要生命周期 **B** 有同源真实证据。
+4. 容量内代表网络矩阵 **C** 和至少一条稳定 **300s** 长测完成。只有实测容量不足的更重**同族**负载可标 CAPACITY_LIMITED，不豁免其他族/功能。
+5. 必要修复、受影响回归、配置读回、功能卡/devlog/evidence、F/R/C、CPU/RSS/p99/真实驱动/Stop、最终结论齐全；无阻断缺陷或必要在途测试。
 
-## 0.5 2026-10-31最新用户决定：退役 A5 与旧 Go 稳态代码（覆盖此前 A5 必测要求）
+旧 PLAN026 READY、单个 Action 绿灯、空请求、旧 SOURCE、文档更新或单族容量触顶，都不能代替全任务验收。有效旧证据须核受影响范围；FAIL/NOT_RUN/physical NOT_RUN 原样保留。真阻塞记录原因并推进独立部分。完成五项后重复提示只核 main/在途并停止扩测。
 
-用户明确“A5没必要跑了，不要去修老旧程序，同时把那些退役功能代码都清理掉，其他继续”。因此 PLAN027 **不再要求 A5 旧 Go 数据面与新 Rust 的同 VM CPU 对照**，不再给 Go-steady 旧路径修复、发 Action、或以它的历史失败阻塞新产品交付。H591 A5 原实测 FAIL、旧制品、CPU 不可比结论保留在历史证据中；取消用旧 Go 稳态数据面当未来性能准入门，不能把用户豁免写成测试 PASS。
+## 0.5 2026-10-31 用户豁免 A5 与退役旧 Go 稳态路径
 
-主线移除旧 A5 `perf_ab` dispatch、Go-steady 专用测试 runner/诊断和两条 A5 一次性工作流，撤销仅针对旧 A5 且未取得新原生业务 PASS 的 H591 Windows M2 F 字节合批改动，恢复此前同源验证的 Windows 热路径逻辑。必要 TLS/OS/GUI 原 Go 冷层和真实 Rust NativeOwner 仍保留。**名称含 M2/receipt/legacy 但仍被 Fixed、Auto、ACK/SACK、额度、真实 Stop 依赖的现役代码不能仅因名称删掉**；后续退役旧逐包 M2 须同时移除真实调用并保持认证/驱动/Stop。
+用户取消 A5 旧 Go-steady 对新 Rust 的同 VM CPU 对照，不再修复、dispatch 该退役数据面或以旧失败阻断交付。标记 **A5 = WAIVED_BY_USER_2026-10-31**（非 PASS）。H591 A5 Rust leg 有限定通过、Go leg 失败且 CPU 不可比；原失败留在历史证据。
 
-原第0节剩余范围不减：A1–A4、B 所有必要接线/Windows与Linux Game 15s Health、90s 失联、rotation、Stop，C 代表矩阵与5分钟长测，第⑤项必需修复及证据齐全。A5 记 **WAIVED_BY_USER_2026-10-31** 而不是已通过。
+旧 A5 `perf_ab` dispatch、专用 runner/诊断、两个一次性 workflow 与仅为 A5 引入而无新原生业务 PASS 的 H591 Windows M2 F 合批改动属于已授权退役范围，不重复开发。**Go TLS/OS/GUI 冷层、Rust 原生 owner 和仍供 Fixed/Auto/ACK/SACK/额度/Stop 使用的现役代码不得误删。** A1–A4/B/C、Game 15s Health、90s dead、rotation、5分钟长测、最终交付均不减项。
 
 ## 0.1 老版成熟语义优先（用户2026-10-30后续授权）
 用户明确“老版逻辑能跑通，现在可以放宽到老版逻辑”。本节覆盖下文额外的质量证明门，不撤销第0节完整任务范围，也不把NOT_RUN变PASS。
@@ -30,54 +27,16 @@
 - **Auto借鉴旧wobuzhidao@a7a82db3运行时逻辑**：仅Normal Auto持续低频统计，约1.5–2s有新观察才报告，顺带Health，未知则保留档位/继续业务。旧quality.go/control_policy.go/quality_window.go/quality_pair.go/quality_echo_live.go已有有界窗口、低频快照、匹配摘要和乱序处理；优先移植这些语义，不为每个抽样窗口增加必需START→CLOSE→成熟回报的三段成功条件。已有简单有效的控制体可复用，无须重写数据包格式。
 - 抽样丢失率与FEC实际k分布必须同口径：可以用有代表性的归一化k分布辅助选档；若要求数量守恒，就在同一抽样集合取k。**禁止拿全量块对应源数除抽样源数，要求接近1。**不再硬套旧全量“每2s至少512个有效源”门；跨有效独立样本积累，短时没有新样本不生成零损，不因一个空tick把合法缓降进度全部清空。升档期不考丢包，合格低损条件120s降一档即可。
 - 所有低频统计/启动观察必须真正结束：停止/耗尽后没有到期任务就移除deadline，不能返回“已到期”却永远不产出；控制丢失/乱序使该样本UNKNOWN，不让新业务等它，不启动无界重试。固定档保留Health，不持续采样。
-- 外层机会重传可恢复老版廉价ACK缺口提示方法，最多一次原密文，R≤0.10F及稀疏绝对界保留；只负责外观，不保证内层修复。SACK路径需真实协商/发送/解析/调用贯通；若采用旧合法累计/重复ACK规则要明确触发条件，不能核心只认SACK而运行时永远传空列表。无损不凑量，高损不为追比例扫描全缓存。首次“stage0”也受有界平滑预算，不能沿用“优先保障首次业务恢复”绕过8MTU桶。
+- 外层只作廉价外观机会重传、不承担内层可靠恢复；累计/重复ACK与协商SACK须在真实生产调用链触发，首次stage0不能绕过8MTU平滑预算。精确候选/额度/原密文要求统一见§0.4及§4。
 - 删除退役M2无消费者的逐包位图/成熟观察，保留必要发送字节额度和可选原密文缓存；不是把M2文件改名。认证/完整性、lane/代次、固定密文、MTU、真实驱动结果、无HOL和有界Stop保持，性能/功能证据不能伪造。
 
-当前静态审查的具体断点及最小验证见[代码审查](M0-PLAN027-LEGACY-SEMANTICS-REVIEW-20261030.md)。M0优先修这些已知断点，再继续原A/B/C，不另起方案比赛。复用已有夹具：短Fixed业务后空闲验证无忙转；Auto持续10Mbps验证样本口径/升降；既有0%/30% off对照验证机会重传真有候选和有限份额。无需为每条发现另开大矩阵。
+原[静态代码审查](M0-PLAN027-LEGACY-SEMANTICS-REVIEW-20261030.md)是旧SOURCE诊断：先核对最新代码/证据，已修不复修；仅对仍真实存在的ACK接线、Auto口径、Fixed空转和旧热状态进行最小回归。A/B/C以§6–§9为准。
 
-## 0.2 最新用户放宽：表演式机会重传收口（覆盖冲突的验收门）
+## 0.2–0.3 旧版机会重传授权与修复试验（已被§0.4覆盖，仅作历史索引）
 
-外层只负责低成本 TCP-like 机会表演，**不承担可靠交付、内层补洞或对每个候选精确丢失证明**。取消历史6–10%重传参考下限、高损恢复率和业务零丢包门槛；R≤0.10F是持续开销上限，原稀疏绝对额度与8MTU突发边界不变。真实丢包时不能让第一个老洞永久挡住后续候选，0%时不能持续大量无据重传。缓存没有、过期、额度不足或IO忙都直接跳过，单包最多一次同Seq/PN/原密文，原业务从不等待可选重传。
-
-复用现有认证后接收区间、TCP-like ACK/SACK与部分可靠的“旧洞放弃”；真实认证新包证实后续流量持续，若同一旧表演 ACK 缺口长期未填，可在已有RX批次放弃过时区间并推进外观 ACK，释放可选影子缓存、重新发现后续机会。**外观ACK不是M3业务交付或Auto质量证明**，不刷新Health。继续用已有普通ACK/SACK报文、同一Rust worker和有界异步回收，不新增M2、特别重传标记、每包定时器、单独扫描线程或Go稳态包泵。
-
-本子任务只用同一新SOURCE原双端 Normal/off 10Mbps每方向、单程250ms，0%和30%各一条60秒Action；证据包含持续首到、旧洞后的重传机会、F/R/C、CPU/RSS、队列/Stop。**重传几乎为零本身不等于功能通过，但没有任何百分比下限**；不为凑比例加码。如果达标即停止本子任务的扩测，继续第0节剩余A/B/C生命周期、容量矩阵及交付，不可把子项完成误称全部完成。
-
-### H538 外层子任务已按宽松授权收口，后续 B/C 继续（SOURCE080）
-
-本子任务的核心算法与双端接线冻结在产品 SOURCE `08069b1513a9cba61d0b315dde03505f97ef796c`，随后仓库仅做验收记录和 Action 派发，无新数据代码。同源码 Windows 签名 NPF/Wintun↔Linux WSL2 原 Go TLS/Rust、独立 Action 0% [41072984387](https://github.com/lly8666/wbd-next/actions/runs/41072984387) 与 30% [41075416858](https://github.com/lly8666/wbd-next/actions/runs/41075416858)，各向 10Mbps/250ms/60s。0% 两端首到100%、R=0；30% 真正 tc drops30930/30434、首到70.0254/70.0708%、Windows F/R/C=86375024/303259/17593，Linux F/R=84988535/149128（Linux C 旧日志尚无独立 wire 字节口径，不伪填），原记录重复发送 Windows300/Linux180 次，双向 UDP/TCP/Stop 均通过，结束后影子缓存0、TUN drop0、无持续大量误重传。Windows 30% Go+Rust全进程 CPU约单核3.87%、峰值 RSS43.5MB，**没有同VM父子对照，不宣称CPU提高**。旧 SOURCE7a 的 Windows6/Linux2 次采用不同负载/延迟，仅作原风险记录，不能做精确修复率因果 A/B。缓存/单包只一次/额度继续用原语；没有额外的重传门槛。
-
-因此按照最新版授权，**外层机会重传单项 DONE，不再发新比例追求或多 seed**；剩余 B 的 Windows 健康/轮换、Game 全模式和 C 的边界矩阵、A5 同VM比较，仍逐项 OPEN，不阻塞后续开发派发。
-
-## 0.3 最新用户2026-10-30再次调整：按真实损伤比选取更多外层机会（覆盖§0.2旧“无下限/DONE”）
-
-本轮外层已恢复为**有目标比例的廉价表演式重传**，不负责业务恢复，单包最多一次、原TCP数据位置/PN/密文、发送驱动真正确认、无业务HOL。低丢包时每个方向外层实际 `R/F` 应在有效真实链路丢包率 `p` 的 **0.4–0.6倍**；较高丢包率时 **0.25–0.6倍**，最终由**已存在的单一持续字节预算R≤0.10F**限制；汇报 `R/(F+R+C)`，不把它与R/F混用。0%无持续无据重传。参考各持续60s目标（R/F）：1%→0.4–0.6%；5%→2–3%；15%→3.75–9%；30%→7.5–10%（用户的10%硬上限优先）。损伤实际由tc/场景和收包证据交叉核对，不能拿失败或不测当PASS；稀疏小样本只保有界绝对额度，不强迫严密命中比例。
-
-**实现算法只有一个采样决策，无额外限速器**：老版真实外观累计ACK/协商SACK已提供便宜候选。每次最多扫描最近32个真实发送记录的外观缺口（BTree索引反向范围），只考虑仍在1.4s原密文缓存窗口内、过20ms乱序余量的候选；PN稳定popcount奇偶约选一半，其他直接跳过。真实认证RX先选最新4组正SACK而非积压最老4组；同一表演ACK头卡250ms后，在已有RX批次从真实认证future推进到其末尾并清理旧范围。新业务原直接路径和旧Stop/回收不变。0%时无候选，低损约0.5p；高损仍有持续机会但由现有10%预算自然封顶，无需采样质量/额外握手和重扫。**这是设计预测，不是性能证明**，若真实档位不达标按证据定位最小瓶颈修复，不绕过安全/缓存预算、不制造无证随机发包。
-
-同源码冻结一套原Windows NPF/Wintun Go TLS+Rust 和Linux Rust/TUN build，先0%，再复用相同二进制分别运行1/5/15/30%四个独立 Actions；每场景Normal/OFF双向10Mbps/250ms/60s、相同固定seed和包形状，双端场景进程各跑一套，不同VM场景可并行，同VM不可并发吞吐。报告每向真实F/R/C（未暴露的C写NOT_MEASURED）、F初发、R比例、业务首到/尾延迟、CPU/RSS/队列/驱动/Stop。旧SOURCE080 0/30%证据和原H538 Game B正负保留，但**旧“机会式重传 DONE”被本节重开**，直到新比例验收；且PLAN027剩余Windows GameFEC/Health、B/C/A5不等待无关完美统计。
-
-### H544 实损反馈后的最小补齐：一个缺口带三个近期缓存机会（待新 SOURCE 验证）
-
-原产品 SOURCE `10001c7eefb52387a5c71aa71129b80418273ac9` 通过原始双 OS 0%/60s，但在1/5/15/30% real tc 的四条独立 Action 41087790680/41087795350/41087799226/41087803404，Windows R/F 只有0.098/0.712/1.796/2.184%，Linux 0.099/0.581/2.045/2.610%。实际真业务/Stop均通过，**新比例目标四档双端均 FAIL**，详见 [H544原始证据](../evidence/M0/PLAN027-H544-SOURCE100-FOUR-RATE-TIERS-ORIGINAL-20261030.json)。该真证据不能以green工作流充作重传达标。原有半选只能发现部分稀疏SACK缺口，反复放大单包概率不足。
-
-H544仅补一条候选扩张：当现有 SACK/累计重复ACK 已有**真实缓存、尚未被标记的缺口记录**被原1/2轻量选中时，再从有序原发送索引的最近≤256条记录中，取**最多3条** age≥50ms、还没被本批选过、<1.4s 的原密文候选，立即走相同 `shadow.on_outer_gap_hint`→原budget→驱动真正发送→owned释放。只有反馈触发；无损0%，不主动重传业务；未缓存或已排队跳过。只用一bit sent index 已额外候选标记，保证同一批反馈不反复拿同一项，不加timer、新独立限速器/控制报文/Go热泵。这相当于将已有低概率反馈机会的一次原包候选扩成最多四条便宜机会；**预测**缓解比例不足，不把四倍当实测结论。最高10%旧字节预算/8MTU突发/一次不可变密文/原Seq PN、generation、MTU、真实驱动/Stop均不动。
-
-H544同时修原 Windows Game cold TLS 交接：原 Game4 FEC Action41079630362 FAIL，在4条Linux lane已真实开始后Windows尚未Ready，Go已Detach lane 的256项可选早到M3缓存溢出此前会直接结束 reader，可能连带阻塞剩余TLS。现在仅丢弃该可选早到记录，reader继续原TLS工作；定量队列不增、M3仍Rust验证、无热Go数据环。新源码需编译并以Game2/4最高FEC实际回归，不能把这项候选修复提前标PASS。剩余Windows Game idle/Health、rotation、A5和容量C亦继续。
-
-### H547 四档真实二次失败后的最终化简（当前 SOURCE 候选、待真实验证）
-
-BA8D 源码的 H545/H546 四档真实 Win/Linux 双端 Actions 41126738290/41126741528/41126744763/41126748120 全部业务/owned Stop PASS，但用户重传比例 **仍八方向 FAIL**：Win R/F 0.108/0.722/2.702/3.476%，Linux 0.100/0.625/3.203/3.941%，完整 F/R/C、源 binary/hash、CPU/RSS 见 [H547 证据](../evidence/M0/PLAN027-H547-SOURCEBA8D-FOUR-TIER-A5-GAME-20261031.json)。失败显示候选足够少、quota_rejected=0；不要增加新限速器或假定采样率可填预算。
-
-根因检查：H544 的三条候选从**原外层 ACK index**向后取，这个索引已经因可靠的累计 ACK/positive SACK 退休大量序号，得到的 PN 在原密文 `ReceiptState.entries` 常已不存在；并且 H544 把“原第一个旧洞还在缓存”当作继续扩张的必要条件，从而错过刚因旧洞过期放弃产生的有效反馈线索。H547 删除第二份 index 选择函数和多余标记，只在**真正收到实际 ACK/SACK 后、Index 报告真实序列缺口**时，基于每个 sampled gap，从当前真实原密文 `ReceiptState` BTreeMap 末尾最多看256条、挑最多4条 age≥50ms、尚未排队/未标记、未超缓存寿命的包（每包一次），立刻沿用原 `on_outer_gap_hint` 与已有10%F/8MTU/驱动/Stop。第一个缺口本身已过期时**也允许近期候选**，不向旧洞等待交付；0%没有缺口不触发。此处增加的4次机会是少量反馈采样，不生成业务重发PTO/新增控制报文。若真实四档仍不命中，只根据测量回看实际现有TCP SACK是否协商/候选与cache的有效比例，不能无限加复杂度或用假随机重发凑数。
-
-H546 Game2/4 FEC 原 Action41126751247/41126754244在WSL guest boot之后**CANCELLED**（未产生业务通过），之前 Game4 源080已 FAIL Windows cold Ready。H547 同批按老版仅改Go冷TLS的串行“每条Start后等待20s”成为“全部原TCP SYN Start后，每条独立WaitEstablished，共享原单次20s deadline及100ms重试 tick”，不创Go hot actor、协议或新控制轮次，维持独立原握手/epoch/generation及原密文。既有Game冷M3容量溢出仅跳过可选早到包、不杀别的TLS reader。需下一新 SOURCE build并真实 Game2/4FEC各一Action验证。H546 A5 Action41126757601同VM顺序 Rust B先PASS100%/Stop，Go A在14s因Windows产品崩溃 fail，没有可比较的A5结果；需回看Go A原运行设计做最小修复/受影响回归，不能宣称CPU提升。其余B生命周期/Auto/矩阵C长测继续。
-
-### H552 最新 SOURCEf031 四档验收与最小反馈节奏改进（2026-10-31）
-
-最新冻结产品 SOURCE `f0313d565e4e271aeb3cce3df11762b046d76f2e`，原 Windows Npcap/Wintun+Go TLS/Rust ↔ Linux Raw/TUN Rust 双向同二进制真实60秒，最新比例目标只在 **15%** 同时达标（Win 4.6963%、Linux 4.2179%）。1%为0.1372/0.1174%，低于0.4%门；5%为1.2732/1.1446%，低于2%门；30%为5.8654/4.8735%，低于7.5%门。四档真实内核业务/Stop均通过，但这些 rate FAIL 必须保留 SOURCE、run、hash，不拿 banner 当 PASS。无损两侧 R0。15%与30%的底层单次/额度仍正确，反馈短时突发拒绝的记录远多于1%/5%；不能简单全面放大并承诺达标。其余 Game/Auto 在途单独留证。
-
-H552仅在已有 `ReceiptState.on_outer_gap_recent_followups` 中加入一处 O(1) 最近**成功选到新缓存**的真实反馈时间戳：首次/间隔≥350ms 最多12条，间隔65–350ms最多8条，频繁真实缺口（<65ms）最多7条，同一次反馈时间戳维持旧4条。最多只查看现存 BTree 的近期256条，50ms至已有硬过期内且PN从未排队/重发；无损绝不进入该调用。单次原密文/PN/Seq/不可变数据及真实 driver receipt/Stop 不变；10% F 持续字节预算/8MTU短时突发仍为唯一额度，没有另建估计器、反馈报文、定时器或 Go 热线程。该选择是简单的反馈稀疏度代理，**不是声称真实丢包概率已精确估计**。新 SOURCE先0%业务/Stop→复用二进制独立1/5/15/30%四档；比例不达用户要求时按证据继续最小修复，不能靠数学预测宣称PASS。
+- **历史优先级**：H538 曾按宽松门槛收口；随后§0.3重新提出外层 R/F≈0.4–0.6p 的分档硬门；最终用户在 **§0.4** 撤销狭窄比例硬门，采用真实ACK/SACK、有界FIFO、原密文一次重传和10%F/8MTU预算。旧方案中的最近256项扫描、3/4/7/8/12条扩张及重复调参规则**不再作为任务或产品标准**；有效细则统一见§4。
+- **历史正负证据均保留，不转新SOURCE**：H538 SOURCE080 的0/30%双端业务+Stop与F/R/C（[0%](https://github.com/lly8666/wbd-next/actions/runs/41072984387)、[30%](https://github.com/lly8666/wbd-next/actions/runs/41075416858)）；[H544四档比例FAIL](../evidence/M0/PLAN027-H544-SOURCE100-FOUR-RATE-TIERS-ORIGINAL-20261030.json)；[H547四档比例FAIL及早期GameFEC取消](../evidence/M0/PLAN027-H547-SOURCEBA8D-FOUR-TIER-A5-GAME-20261031.json)；H552 SOURCEf031 的1/5/30%旧严格比例未达标、15%达标，其网络业务/Stop另有正例。以上**不能改写为全部PASS**，也不能让旧失败的比例硬门阻断§0现行全任务。
+- **历史原文**：见改写前 [PLAN027 @ SOURCE 11f1881f](https://github.com/lly8666/wbd-next/blob/11f1881ff68afa22c5b0ca957d6808420a878a06/docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md) 和上述精确证据；本文件不再重复H538/H544/H547/H552逐轮实现叙事。历史Game冷交接与A5 FAIL不等于后来GameFEC或A5验收；A5已由§0.5明确豁免。
 
 ## 0.4 用户2026-10-31结构性收口授权（覆盖§0.3狭窄比例硬门）
 
@@ -85,12 +44,11 @@ H552仅在已有 `ReceiptState.on_outer_gap_recent_followups` 中加入一处 O(
 
 仅报告唯一候选原密文字节、真实 R/F/C、突发临时等待、淘汰、业务首到/p99、CPU/RSS、队列、Stop。不要求恰好达到1/5/15/30%中严格的0.4–0.6p小数带：仅作为约0.5p且受9%平滑目标与10%硬上限裁剪的参考曲线。无损须少无据重传，持续实损须有合理、可解释的真实机会，新业务不阻塞、CPU无明显异常即停止反复调参。仅按同SOURCE冻结编译一次并复用二进制各一Action跑0/1/5/15/30%真实双端场景；先零损门，后四档。同VM前后顺序CPU，不跨runner比改善。**修完该子项继续 §0 全部 A/B/C/长测及交付**，不将本项结束当作整轮完成。
 
-## 1. 唯一顺序与恢复
-1. 默认上个聊天意外中断：刷新main，读cursor checkpoint后提交、短devlog、已登记Actions和SOURCE/hash；先补recovered事实、取在途结果，不重复dispatch。新registry/本计划优先于旧cursor next_action。
-2. **先整批实现M2退役及替代逻辑、双方调用、配置/功能卡/夹具→冻结SOURCE→一次编译→简化验证A。**
-3. **再补剩余新接线与生命周期B→代表网络矩阵C→按结果修bug/优化→交付即停。**暂缓为旧M2继续启动新大矩阵和性能微调；已有运行只收结果，不删除失败。
-4. 保留最近Game写后确认、lane隔离、原始序号、ACK builder、handoff、MTU修复；不重写成熟FEC数学/硬件后端、Game复制错峰和平台驱动，不返回Go每包路径。
-5. 原行为oracle为lly8666/wobuzhidao@a7a82db3：internal/runtimeowner/{ack.go,ack_feedback.go,control_policy.go,health.go,quality.go,quality_window.go,quality_pair.go,quality_echo_live.go,quality_first_attempt_bound.go}，internal/runtimeentry/lifecycle_health.go。借鉴决策/参数，不复制Go包泵/定时线程、RS20 wire或旧端兼容层。
+## 1. 施工顺序与接班恢复
+
+1. 默认上轮可能中断：刷新 main、registry、cursor；**只读 checkpoint 后的提交/短devlog、在途 Actions、精确 SOURCE/hash**；先收已有结果并补 recovered，不重复派发。新用户授权/registry/本计划优先旧 `next_action`。
+2. 按序：线上 M2 Receipt 退役及替代逻辑/双方调用/配置/功能卡/夹具 → 冻结单SOURCE/构建 → A → B → C → 必需修复、回归、交付。旧 M2 专项矩阵与无收益微调暂缓。
+3. 保留既有 Game/FEC、写后回执、lane隔离、ACK builder、handoff、MTU 修复；不重造 FEC 数学/Go 热包泵。老版行为参考 `lly8666/wobuzhidao@a7a82db3` 的 `internal/runtimeowner/{ack.go,ack_feedback.go,control_policy.go,health.go,quality.go,quality_window.go,quality_pair.go,quality_echo_live.go,quality_first_attempt_bound.go}` 和 `internal/runtimeentry/lifecycle_health.go`；只借鉴语义，不迁旧 Go 定时包泵/RS20/兼容层。
 
 ## 2. 去M2的精确边界
 - 两端默认停止生成、发送和依赖逐record的WBC4 Receipt/位图，涵盖Normal/off、Fixed、Auto；Game不新增此机制。移除无用报告队列、计时和热路径逐包回执关联，不能改名为高频Quality后宣称已删除。
@@ -110,7 +68,7 @@ H552仅在已有 `ReceiptState.on_outer_gap_recent_followups` 中加入一处 O(
 - 缓降一次一档；约30s可信低损稳定，参考累计4096个不重叠有效样本，可跨窗口。**持续业务/反馈有效且具备降档条件后120s内降一档即合格**，不是120s降到底。向Off可沿用约60s更谨慎门。稀疏/未知/黑洞不强制降；超过120s报告具体blocker，不刷seed或伪造零损。
 
 ## 4. 机会式重传：外层反馈+简单字节额度
-- 仍最多一次、原Seq/PN/密文，不重新加密。ACK/SACK跳过已收记录，对有缓存且超过乱序余量的缺口择机发送；不要求全部丢包修复，不加持续DATA PTO盲重传。Game若原策略关闭重传，继续保持，不为凑比例强开。
+- 仍最多一次、原Seq/PN/密文，不重新加密。ACK/SACK跳过已收记录，对有缓存且超过乱序余量的缺口择机发送；不要求全部丢包修复，不加持续DATA PTO盲重传。Windows Game2/4 已在 H633–H637 接入共享 Normal M2 的原密文机会重传候选；Linux方向及当前新SOURCE实际ACK/SACK触发、F/R/C/Stop仍需按§7/§8同源验证，不以Game复制或FEC冗余冒充外层R，不为凑比例强开。
 - 优先移植旧ACK/SACK退休索引，复用现有shadow原密文句柄/回收/额度；新业务不因缓存满、缺反馈或修复限额等待。缓存允许抽样，不要求整个BDP全驻留；上限按需分配。
 - 本轮最大单程250ms/RTT约500ms，兼顾已有300ms边界。保留现有RTT护栏；缺口沿用20–50ms乱序余量，缓存期限参考clamp(2*SRTT+200ms,500ms,2s)。已有成熟参数更合适时说明后小调；deadline/分批回收，不每包全表扫描。重传发出或放弃后释放影子。
 - F=实际确认首发的外层数据字节（含FEC及Game实际副本），R=保守记账重传字节，C=ACK/Health/Quality等控制字节。统一外层IP或已有wire口径，不混业务字节。持续额度 **R≤0.10F**；真实占比报告 **R/(F+R+C)**，用满且不含C约9.09%。不再把首发9%误称总带宽9%。
@@ -130,7 +88,7 @@ A1 一轮core：ACK/SACK范围/代次/乱序、一次重传/额度/回收、窗�
 A2 Normal/off双向混包每方向10Mbps、250ms单程，0%和30%随机损伤各独立60s。线上Receipt=0，新业务不挂死；分别报R/F和R/总量，无损不能持续异常重传，off不要求零损或优于线路。
 A3 Fixed最高档同负载30%一条，确认源包即时交付和FEC恢复，不重验全部低档数学。
 A4 Auto一条连续升降场景：低损→5/15/30%→低损至少120s，方向可不对称，持续足够真实流量。升档不考损失，合格条件下120s降一档，控制量/RSS有界。
-A5 必要父/新CPU对照仅选Normal/off代表负载一次，同VM顺序比较交付、CPU/字节、p99、控制开销；差异模糊最多一次反序，不无限刷。
+A5 **WAIVED_BY_USER_2026-10-31**：取消旧Go稳态对新Rust的同VM CPU对照，不运行旧A5，不将既有FAIL改写为PASS；独立当前产品CPU/RSS观测及必要优化仍属§9。
 
 ## 7. 剩余接线B
 按最新功能卡补缺：真实Windows Npcap/Wintun↔Linux原TLS/Rust，Normal off/Fixed/Auto、Game2/4 off/最高FEC各一条短UDP+TCP/Stop。旧SOURCE009d七模式正例保留，不冒充当前SOURCE；只回归变更影响，不重新开发已完成能力。
@@ -158,7 +116,6 @@ A5 必要父/新CPU对照仅选Normal/off代表负载一次，同VM顺序比较�
 - 最小观测：各向offered/首到delivered/丢失/重复/损坏、F/R/C及总重传比、DATA/parity/控制量、实际tc损伤、模式/档位/MTU/加速器读回、Go+Rust及内核/线程CPU、host busy/steal/PSI、RSS/队列年龄、driver/socket/TUN drop、Stop。锁等待仅可选稀疏诊断。不存大pcap，必要短抓包只留头部/长度方向间隔摘要/hash，清理自有大文件。
 - 持续host busy约90%以上且有PSI/steal/注入不足/drop佐证，或单热点线程先满，均应停止更高负载同族。区分环境整体耗尽和产品单核/锁瓶颈；后者保留首证据并修有收益热点，不甩锅VM。按PPS/FEC/Game放大率推算未测上界，不写实测PASS。
 - 只修真实功能bug和显著CPU/尾延迟问题。小于噪声最多一次反序，无收益撤回；不要求每项大幅超过旧版，不恢复旧升档零损/瞬间恢复等苛刻门。
-- 完成条件：M2线上及热依赖退役，替代质量/重传/保活有效，B必要接线生命周期有证据，C容量内代表矩阵和稳定长测完成，无损坏/持续跨流卡死/资源无界/Stop失败；重大bug已修，剩余是容量或已声明非阻断限制。更新功能卡、devlog/evidence、cursor，使用合法schema字段表达READY_FOR_USER_REVIEW，不冒充physical PASS。
-- **第0节五项全部闭环后定时器再输入提示词，只轻量核对main/在途状态，回复“本轮基本完成，待用户验收；无需重复开发测试”并结束。**不重开矩阵、不追加微优化、不循环睡眠轮询。确需用户决定/外部条件才写明阻塞；普通问题自主连续处理。
+- **交付/停止以§0完整五项为唯一准绳**：更新功能卡、devlog/evidence、cursor；仅全部通过或有明确允许容量豁免且无阻断/在途必要测试时，在合法schema表达READY_FOR_USER_REVIEW。重复定时提示只轻核main/在途并答待用户验收；不冒充物理PASS、不重开矩阵。
 
-本次文档不修改产品、不dispatch、不取消别人已在途运行、不发其他聊天消息。后续由M0按计划施工。
+文档压缩只调整说明与引用，不改变产品实现、原有授权、既有测试资格或在途Actions。
