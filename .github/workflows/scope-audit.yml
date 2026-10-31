@@ -4,6 +4,8 @@ on:
   workflow_run:
     workflows: [Governance]
     types: [completed]
+    branches:
+      - 'work/**'
 permissions:
   contents: read
   actions: read
