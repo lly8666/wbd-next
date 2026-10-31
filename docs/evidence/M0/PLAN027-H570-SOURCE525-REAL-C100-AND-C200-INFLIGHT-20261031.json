@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "result": "C100_60S_TRUE_ORIGINAL_TWO_OS_FIRST_AND_STOP_PASS; C200_GATED_IN_FLIGHT; GAME_FEC_AND_LONG_IN_FLIGHT",
+  "c100": {
+    "run_id": 41170803766,
+    "harness_sha": "3ab182fa6448241f139dcf7a8736c7479bd7d567",
+    "artifact_id": 13031017688,
+    "artifact_zip_sha256": "0ab15cfd1d965189db4ae473fded6a410fffb06c4977d703f2eb578d7a2cb94e",
+    "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+    "scenario": "plan027-c-normal-100m-25ms-loss0-60s",
+    "scenario_sha256": "737eaf5b2b2da784a0cd740ab41ed9525e00e30c7a46d224d47b81d30f110f15",
+    "offered_mbps_windows": 99.9749,
+    "offered_mbps_linux": 99.9997,
+    "first_delivery_windows": 0.999992,
+    "first_delivery_linux": 1,
+    "windows_F_bytes": 862417082,
+    "windows_R_bytes": 0,
+    "windows_C_bytes": 322092,
+    "linux_F_bytes": 848673931,
+    "linux_R_bytes": 0,
+    "linux_C_bytes": "NOT_MEASURED",
+    "win_whole_process_cpu_s": 44.2188,
+    "win_whole_process_elapsed_s": 77.203,
+    "win_one_core_average_percent": 57.276,
+    "win_peak_rss_bytes": 43126784,
+    "win_npcap_ingress_local_drops": 0,
+    "stop": "PASS_BOTH_OWNED",
+    "business": "TRUE_KERNEL_UDP_AND_TCP_BOTH_OS_PASS",
+    "p99": "NOT_MEASURED_UNCALIBRATED_WINDOWS_LINUX_CLOCKS"
+  },
+  "c200": {
+    "gate_run_id": 41171215690,
+    "gate_conclusion": "SUCCESS_REAL_C100_QUALIFIED",
+    "run_id": 41171236689,
+    "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+    "binary_reuse_build_run_id": 41166008870,
+    "scenario": "plan027-c-normal-200m-25ms-loss0-60s",
+    "result": "IN_PROGRESS_NOT_PASS"
+  },
+  "five_min_stability": {
+    "run_id": 41170805473,
+    "scenario": "plan027-c-normal-50m-25ms-loss0-300s",
+    "result": "IN_PROGRESS_NOT_PASS"
+  },
+  "game_fec": {
+    "game2_run_id": 41170807537,
+    "game4_run_id": 41170809210,
+    "result": "IN_PROGRESS_NOT_PASS",
+    "deadline": "INDEPENDENT_LINUX_ACTIONS_MONITOR_ACTIVE_1200S"
+  },
+  "limitations": [
+    "C100 99.9992 percent Windows first delivery is not absolute 100 percent; do not hide 8ppm missing.",
+    "C100 whole Go+Rust process CPU measurement is independent hosted runner; no causal speed-up against old Go A because A failed.",
+    "C100 successful does not qualify C200/long/weak/physical, continue while host capacity allows."
+  ]
+}
