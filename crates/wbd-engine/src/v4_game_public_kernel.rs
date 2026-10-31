@@ -386,7 +386,7 @@ impl GameKernelOwner{
                         let now=MonoNs(rx_start.elapsed().as_nanos()
                             .min(u128::from(u64::MAX)) as u64);
                         let decoded=match opened{
-                            Ok((id,payload))=>{
+                            Ok(Some((id,payload)))=>{
                                 let Ok(mut receiver)=receiver_owner.lock()else{break};
                                 let acquired=timing.then(Instant::now);
                                 rx_held.fetch_add(1,Ordering::Relaxed);
@@ -397,6 +397,7 @@ impl GameKernelOwner{
                                 }
                                 value
                             },
+                            Ok(None)=>Ok(None),
                             Err(e)=>Err(e)
                         };
                         match decoded{
@@ -453,7 +454,7 @@ impl GameKernelOwner{
                         continue
                     }
                     let received=match opened{
-                        Ok((id,payload))=>{
+                        Ok(Some((id,payload)))=>{
                             let Ok(mut receiver)=receiver_owner.lock()else{break};
                             let acquired=timing.then(Instant::now);
                             rx_held.fetch_add(1,Ordering::Relaxed);
@@ -465,6 +466,7 @@ impl GameKernelOwner{
                             }
                             value
                         },
+                        Ok(None)=>Ok(None),
                         Err(e)=>Err(e)
                     };
                     match received{

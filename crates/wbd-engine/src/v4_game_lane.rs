@@ -9,6 +9,8 @@ use crate::v4_game_fec::{GameFecTx,GameFecRx,GameFecCounters};
 #[cfg(feature="fec2_product_record")]
 use crate::v4_fec2_live_rx::VerifiedReceiveEpoch;
 use std::sync::{Arc,Mutex};
+use std::time::Instant;
+use crate::v4_native_health::{AuthenticatedActivity,parse_authenticated_control,encode_authenticated_health_live};
 use crate::cold_v4::UntrustedColdV4;
 use wbd_types::TunnelKey;
 use crate::runtime::game_shared::{
@@ -25,22 +27,42 @@ struct TxLane{key:LaneKey,tx:LaneTxCrypto}
 struct RxLane{key:LaneKey,rx:ReplayProtectedLaneRx}
 /// One original per-lane AEAD/replay owner, moved (not cloned) into its
 /// sole authenticated Linux worker before any DATA can be delivered.
-pub(crate) struct GameLaneOpener{lane:RxLane,inner_mtu:usize}
+pub(crate) struct GameLaneOpener{
+    lane:RxLane,inner_mtu:usize,health_origin:Instant,
+    health:Arc<AuthenticatedActivity>,last_health_record_ns:u64,
+}
 impl GameLaneOpener{
     pub(crate) fn open<'a>(&mut self,wire:&'a mut [u8])
-        ->Result<(LogicalPacketId,&'a [u8]),Error>{
+        ->Result<Option<(LogicalPacketId,&'a [u8])>,Error>{
         let opened=self.lane.rx.open_unique_in_place(wire).map_err(|e|match e{
             UniqueOpenError::InvalidRecord(CryptoError::Authentication)=>Error::Crypto,
             UniqueOpenError::InvalidRecord(_)=>Error::Invalid,
             UniqueOpenError::Duplicate=>Error::Duplicate,
             UniqueOpenError::Retired=>Error::Stale,
         })?;
+        let now=self.health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64;
+        if opened.kind==0{
+            read_game_health(opened.payload,now,&self.health)?;
+            return Ok(None)
+        }
         if opened.kind!=1{return Err(Error::Invalid)}
         let (id,payload)=wbd_codec::decode_game(opened.payload,self.inner_mtu+16)
             .map_err(|_|Error::Invalid)?;
         if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
-        Ok((id,payload))
+        if now.saturating_sub(self.last_health_record_ns)>=500_000_000{
+            self.health.record_batch(now,0,None);
+            self.last_health_record_ns=now;
+        }
+        Ok(Some((id,payload)))
     }
+}
+fn read_game_health(wire:&[u8],now:u64,evidence:&AuthenticatedActivity)
+    ->Result<(),Error>{
+    let value=parse_authenticated_control(wire).map_err(|_|Error::Invalid)?;
+    let idle=value.peer_idle_ns.ok_or(Error::Invalid)?;
+    if value.receipt.is_some()||value.quality{return Err(Error::Invalid)}
+    evidence.record_batch(now,0,Some((now,idle)));
+    Ok(())
 }
 #[derive(Debug,PartialEq,Eq)]
 pub enum Error{Unauthorized,Invalid,Capacity,Stopped,Duplicate,Stale,Crypto,Game(GameError)}
@@ -77,6 +99,8 @@ pub(crate) struct GameReceiveOwner{
     // A pending entry suppresses a concurrent duplicate but does not set
     // shared delivery bits until the genuine TUN write succeeds.
     pending:Vec<LogicalPacketId>,
+    health_origin:Instant,health:Arc<AuthenticatedActivity>,
+    last_health_record_ns:u64,
     #[cfg(feature="fec2_product_record")]
     fec:Option<GameFecRx>,
 }
@@ -89,7 +113,9 @@ impl GameReceiveOwner{
         let at=self.lanes.iter().position(|l|l.key==lane_key)
             .ok_or(Error::Unauthorized)?;
         Ok(GameLaneOpener{
-            lane:self.lanes.swap_remove(at),inner_mtu:self.inner_mtu
+            lane:self.lanes.swap_remove(at),inner_mtu:self.inner_mtu,
+            health_origin:self.health_origin,health:Arc::clone(&self.health),
+            last_health_record_ns:0,
         })
     }
     pub(crate) fn prepare_receive(&mut self,lane_key:LaneKey,wire:&mut [u8])
@@ -105,10 +131,19 @@ impl GameReceiveOwner{
             UniqueOpenError::Duplicate=>Error::Duplicate,
             UniqueOpenError::Retired=>Error::Stale,
         })?;
+        let observed=self.health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64;
+        if opened.kind==0{
+            read_game_health(opened.payload,observed,&self.health)?;
+            return Ok(None)
+        }
         if opened.kind!=1{return Err(Error::Invalid)}
         let (id,payload)=wbd_codec::decode_game(opened.payload,self.inner_mtu+16)
             .map_err(|_|Error::Invalid)?;
         if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
+        if observed.saturating_sub(self.last_health_record_ns)>=500_000_000{
+            self.health.record_batch(observed,0,None);
+            self.last_health_record_ns=observed;
+        }
         self.prepare_opened_receive(lane_key,id,payload)
     }
     /// Only callable after authentic original lane AEAD/replay open.
@@ -164,10 +199,19 @@ impl GameReceiveOwner{
             UniqueOpenError::Duplicate=>Error::Duplicate,
             UniqueOpenError::Retired=>Error::Stale,
         })?;
+        let observed=self.health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64;
+        if opened.kind==0{
+            read_game_health(opened.payload,observed,&self.health)?;
+            return Ok(None)
+        }
         if opened.kind!=1{return Err(Error::Invalid)}
         let (id,payload)=wbd_codec::decode_game(opened.payload,self.inner_mtu+16)
             .map_err(|_|Error::Invalid)?;
         if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
+        if observed.saturating_sub(self.last_health_record_ns)>=500_000_000{
+            self.health.record_batch(observed,0,None);
+            self.last_health_record_ns=observed;
+        }
         self.prepare_opened_fec_batch(lane_key,id,payload,now)
     }
     /// Shared cross-lane GameRX and ONE FEC recovery owner. Only AEAD
@@ -224,10 +268,19 @@ impl GameReceiveOwner{
             UniqueOpenError::Duplicate=>Error::Duplicate,
             UniqueOpenError::Retired=>Error::Stale
         })?;
+        let observed=self.health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64;
+        if opened.kind==0{
+            read_game_health(opened.payload,observed,&self.health)?;
+            return Ok(Vec::new())
+        }
         if opened.kind!=1{return Err(Error::Invalid)}
         let (id,payload)=wbd_codec::decode_game(opened.payload,self.inner_mtu+16)
             .map_err(|_|Error::Invalid)?;
         if payload.len()>self.inner_mtu{return Err(Error::Invalid)}
+        if observed.saturating_sub(self.last_health_record_ns)>=500_000_000{
+            self.health.record_batch(observed,0,None);
+            self.last_health_record_ns=observed;
+        }
         match self.rx.first_delivery_candidate(self.rx_scope,lane_key,id){
             Ok(true)=>{},
             Ok(false)=>return Ok(Vec::new()),
@@ -268,6 +321,7 @@ pub struct GameAdapter{
     tx:GameTx,rx_owner:Arc<Mutex<GameReceiveOwner>>,
     lanes:Vec<TxLane>,arena:Arena,stopped:bool,inner_mtu:usize,
     wire_scratch:[u8;2048],
+    health_origin:Instant,health:Arc<AuthenticatedActivity>,
     #[cfg(feature="fec2_product_record")]
     fec:Option<GameFecTx>,
 }
@@ -324,14 +378,18 @@ impl GameAdapter{
         let rx_arena=Arena::new(906,256,2048,256,1024*1024)
             .map_err(|_|Error::Capacity)?;
         let lane_count=rx_lanes.len();
+        let health_origin=Instant::now();
+        let health=Arc::new(AuthenticatedActivity::default());
         let rx_owner=Arc::new(Mutex::new(GameReceiveOwner{
             rx,rx_scope,lanes:rx_lanes,arena:rx_arena,stopped:false,inner_mtu,lane_count,
             pending:Vec::with_capacity(lane_count),
+            health_origin,health:Arc::clone(&health),last_health_record_ns:0,
             #[cfg(feature="fec2_product_record")]
             fec:None
         }));
         Ok(Self{tx,rx_owner,lanes,arena,stopped:false,inner_mtu,
             wire_scratch:[0u8;2048],
+            health_origin,health,
             #[cfg(feature="fec2_product_record")]
             fec:None})
     }
@@ -411,6 +469,23 @@ impl GameAdapter{
     }
     pub fn counters(&self)->GameCounters{self.tx.counters()}
     pub(crate) fn inner_mtu(&self)->usize{self.inner_mtu}
+    pub(crate) fn health_context(&self)->(Instant,Arc<AuthenticatedActivity>){
+        (self.health_origin,Arc::clone(&self.health))
+    }
+    // Authenticated control kind0 shares per-lane AEAD/PN but never enters
+    // Game logical source/FEC/TUN. This is a cold control packet at 15s.
+    pub(crate) fn seal_native_health(&mut self,slot:u32,idle_ns:u64,
+        wire:&mut [u8])->Result<(u64,usize),Error>{
+        if self.stopped{return Err(Error::Stopped)}
+        let idx=slot.checked_sub(1).and_then(|v|usize::try_from(v).ok())
+            .filter(|&v|v<self.lanes.len()).ok_or(Error::Unauthorized)?;
+        let body=encode_authenticated_health_live(idle_ns,None,None,
+            wire.len().saturating_sub(31)).map_err(|_|Error::Invalid)?;
+        if 14+body.len()>wire.len(){return Err(Error::Invalid)}
+        wire[14..14+body.len()].copy_from_slice(&body);
+        self.lanes[idx].tx.seal_in_place(0,wire,body.len(),0)
+            .map_err(|_|Error::Crypto)
+    }
     pub(crate) fn receiver_handle(&self)->Arc<Mutex<GameReceiveOwner>>{
         Arc::clone(&self.rx_owner)
     }
@@ -627,6 +702,22 @@ mod tests{
                 generation:7},mss:1400},
             tx:keys((i+1) as u8),rx:keys((i+1) as u8)
         }).collect(),RecordSuite::ChaCha20Poly1305).unwrap()
+    }
+    #[test]
+    fn game_health_kind0_has_authenticated_PN_but_no_game_delivery(){
+        let mut sender=build(2);
+        let (origin,activity)=sender.health_context();
+        let mut wire=[0u8;512];
+        let (_,size)=sender.seal_native_health(1,20_000_000_000,&mut wire).unwrap();
+        let receiver=sender.receiver_handle();
+        let mut guard=receiver.lock().unwrap();
+        let lane=LaneKey{tunnel:TunnelKey{slot:4,generation:7},slot:1,generation:7};
+        assert!(guard.prepare_receive(lane,&mut wire[..size]).unwrap().is_none());
+        let mut clock=crate::v4_native_health::HealthClock::new(
+            crate::v4_native_health::HealthPolicy::default_connected(),0);
+        activity.absorb(&mut clock);
+        assert!(!clock.unhealthy(origin.elapsed().as_nanos() as u64));
+        assert!(guard.pending.is_empty());
     }
     #[test]
     fn game4_stagger_due_fifo_source_immediate_and_tail_not_5ms_expired(){
@@ -1008,14 +1099,14 @@ mod tests{
             *broken.last_mut().unwrap()^=1;
             assert!(matches!(opener0.open(&mut broken),Err(Error::Crypto)));
             let mut sealed_replay=wire0.clone();
-            let (id,payload)=opener0.open(&mut wire0).unwrap();
+            let (id,payload)=opener0.open(&mut wire0).unwrap().unwrap();
             assert_eq!(id,key);
             let mut candidate=owner.lock().unwrap()
                 .prepare_opened_receive(lane0,id,payload).unwrap().unwrap();
             assert_eq!(candidate.payload(),b"w143-lane-owned");
             assert!(matches!(opener0.open(&mut sealed_replay),Err(Error::Duplicate)),
                 "replay MUST present unchanged sealed ciphertext");
-            let (other_id,other_payload)=opener1.open(&mut wire1).unwrap();
+            let (other_id,other_payload)=opener1.open(&mut wire1).unwrap().unwrap();
             assert_eq!(other_id,key);
             assert!(owner.lock().unwrap().prepare_opened_receive(
                 lane1,other_id,other_payload).unwrap().is_none(),
@@ -1025,14 +1116,14 @@ mod tests{
                 let (lane2,mut wire2)=copies.remove(0);
                 let mut opener2=owner.lock().unwrap().take_lane_for_worker(lane2)
                     .unwrap();
-                let (third_id,third_payload)=opener2.open(&mut wire2).unwrap();
+                let (third_id,third_payload)=opener2.open(&mut wire2).unwrap().unwrap();
                 let received=owner.lock().unwrap().prepare_opened_receive(
                     lane2,third_id,third_payload).unwrap().unwrap();
                 owner.lock().unwrap().finish_receive(received,true).unwrap();
                 let (lane3,mut wire3)=copies.remove(0);
                 let mut opener3=owner.lock().unwrap().take_lane_for_worker(lane3)
                     .unwrap();
-                let (id3,payload3)=opener3.open(&mut wire3).unwrap();
+                let (id3,payload3)=opener3.open(&mut wire3).unwrap().unwrap();
                 assert!(owner.lock().unwrap().prepare_opened_receive(
                     lane3,id3,payload3).unwrap().is_none(),
                     "after TUN-success commit another fully authenticated copy must be deduped");
@@ -1058,7 +1149,7 @@ mod tests{
         let (lane1,_wire1)=copies.remove(0);
         let mut opener0=owner.lock().unwrap().take_lane_for_worker(lane0).unwrap();
         let mut opener1=owner.lock().unwrap().take_lane_for_worker(lane1).unwrap();
-        let (id,payload)=opener0.open(&mut wire0).unwrap();
+        let (id,payload)=opener0.open(&mut wire0).unwrap().unwrap();
         let batch=owner.lock().unwrap().prepare_opened_fec_batch(
             lane0,id,payload,MonoNs(11)).unwrap().unwrap();
         assert!(!batch.frames().is_empty());
