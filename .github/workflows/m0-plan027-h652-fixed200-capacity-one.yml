@@ -27,7 +27,22 @@ jobs:
           gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/artifacts?per_page=100" |
             jq -e --arg w "m0-wl-windows-product-binaries-$PRODUCT_SOURCE" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' >/dev/null
           git fetch --depth=1 origin "$PRODUCT_SOURCE"
-          test -z "$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_wl_netem.py tools/m0_wl_perf_v2_config.py tools/m0_wl_public_normal_e2e.py)"
+          # Frozen executable provenance is the real product source and SHA,
+          # NOT a false requirement to revert H647's later B106 TEST oracle.
+          # This guard is exactly the earlier H649 product-only guard which
+          # passed and produced Fixed100 and Fixed50/300 real positive reports.
+          test -z "$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_wl_netem.py tools/m0_wl_perf_v2_config.py)"
+          # Explicitly audit the sole expected test-side diff rather than
+          # implicitly white-list any future changes to the harness.
+          harness_delta="$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- tools/m0_wl_public_normal_e2e.py)"
+          if [ -n "$harness_delta" ];then
+            test "$harness_delta" = tools/m0_wl_public_normal_e2e.py
+            # The existing real 106s bilateral-TLS proof is the only reason
+            # the harness differs; forbid accidental loss of both checks.
+            grep -q 'WBD_WINDOWS_ORIGINAL_GO_TLS_REAUTHORIZE generation=' tools/m0_wl_public_normal_e2e.py
+            grep -q 'V4_PUBLIC_ORIGINAL_GO_TLS_REAUTHORIZE role=server' tools/m0_wl_public_normal_e2e.py
+            echo H653_TEST_ORACLE_DELTA_REVIEWED_BINARY_PRODUCT_SOURCE_UNCHANGED
+          fi
           python3 - <<'PY'
           from tools.m0_wl_perf_v2_config import read_scenario
           s=read_scenario("scenarios/plan027-c-fixed-200m-25ms-loss0-60s.json")

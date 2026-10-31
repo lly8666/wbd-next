@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 652,
-  "checkpoint_sha": "84042ece0041594fc95ac312c32b06423759dc6a",
+  "sequence": 653,
+  "checkpoint_sha": "802423bc05083a9f357309dd9b7d113cf485373d",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H652 true SOURCE11f Linux original Go TLS Game2/FEC6 15% two-netns 64/64 native UDP with client parity128/128, server125/125, tc drops68/61 and Stop PASS Action41219083345; Windows GameFEC/B106 remain canceled. Next Fixed200Mbps/25ms/0/60s bounded C source11f once, no premature PASS.",
-  "why_now": "H651 source-locked original GameFEC Linux native PASS isolates shared Rust codec/L4 from repeatedly cancelled Windows NPF/Wintun/WSL2. Frozen SOURCE11f Fixed100/0 60s and Fixed50/0 300s exact original Windows+Linux PASS, so one Fixed200/25ms/0 is legitimate next capacity boundary. No identical Windows FEC retry.",
+  "current_task": "H653 H652 Fixed200 one-action controller41219400009 failed BEFORE native dispatch at over-broad source-diff gate because H647 bilateral-B106 harness-only change tools/m0_wl_public_normal_e2e.py. GitHub exact compare SOURCE11f..H652 confirms no product paths changed, only permitted six-line harness. H653 narrows source guard to H649 successful product-only set with explicit B106 test oracle audit, retries only controller; Fixed200 genuine native result NOT_RUN.",
+  "why_now": "H652 controller exited after git fetch SOURCE11f, before scenario validation or any 2OS Action. Exact compare source11f→H652 shows zero changes in crates/r0/Cargo/prep/netem/perf config, and only tools/m0_wl_public_normal_e2e.py 6-line legitimate test-only H647 B106 actual bilateral auth oracle. Preserve frozen binary SHA check and H647 test stricter oracle; distinguish test fixture from product freeze.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H652 Fixed200 one original hosted Windows/WSL2 native result, stop higher Fixed family if genuine capacity/drop; move Windows GameFEC native handoff/Stop debug and Normal106 unverified root, B rotation/MTU/DNS/IPv6, C mixed/burst/p99. M1 and M2 own branches not touched.",
+  "next_action": "Collect H653 Fixed200 source-locked independent genuine native Action result/CPU/RSS/TUN drops/Stop, stop Fixed high-load same family on measured capacity failure. Continue B Windows FEC/Normal106 original owner investigation without unchanged replay; B rotation/DNS/IPv6/MTU, C burst/p99 remain. M1/M2 independent preserved.",
   "unverified": true,
   "last_tested_source": "11f1881ff68afa22c5b0ca957d6808420a878a06",
   "evidence_refs": [
@@ -30,5 +30,5 @@
     "docs/testing/WL_PERF_HARNESS_V2.md"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN027 PARTIAL. H651 Action41219083345 frozen source11f Linux original Go credential TLS Game2 fixed6 15% real bidirectional kernel loss, 64/64 echoed, client original parity128 offered/128 M4 copied, server125/125, tc drop68/61, both owned Stop PASS. Linux ONLY, Windows GameFEC and Normal106 Actions41216712816/41216716864 canceled, no native report, blocking. Fixed100/25ms/0/60s Action41216928738 original twoOS first1/1, Fixed50/25ms/0/300s Action41216934805 Win.999998/Linux1, both UDP/TCP+Stop and TUN drops0, p99 not calibrated. Fixed200 25ms0 60s one scenario/source-reuse pending, no higher 250ms/2% until positive. A5 WAIVED; M1 scoped ready M2 scoped HOLD unchanged."
+  "partial_summary": "PLAN027 PARTIAL. H651 Action41219083345 frozen source11f Linux original Go credential TLS Game2 fixed6 15% real bidirectional kernel loss, 64/64 echoed, client original parity128 offered/128 M4 copied, server125/125, tc drop68/61, both owned Stop PASS. Linux ONLY, Windows GameFEC and Normal106 Actions41216712816/41216716864 canceled, no native report, blocking. Fixed100/25ms/0/60s Action41216928738 original twoOS first1/1, Fixed50/25ms/0/300s Action41216934805 Win.999998/Linux1, both UDP/TCP+Stop and TUN drops0, p99 not calibrated. Fixed200 25ms0 60s one scenario/source-reuse pending, no higher 250ms/2% until positive. A5 WAIVED; M1 scoped ready M2 scoped HOLD unchanged. H653 H652 original Fixed200 dispatcher Action41219400009 FAILED PRE_DISPATCH_NO_PRODUCT_RUN: overly broad source guard included H647 test-only tools/m0_wl_public_normal_e2e.py; exact original SOURCE11f vs H652 diff has no production Rust/Go or product scenario engine changes. H653 splits immutable product guard from explicit existing B106 harness readback, preserves real source/hashes, resubmits only one Fixed200 action for genuine result. Other source-scoped positive/negative remains untouched."
 }
