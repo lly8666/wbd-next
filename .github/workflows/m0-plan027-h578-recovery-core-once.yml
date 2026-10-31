@@ -1,0 +1,24 @@
+name: M0 PLAN027 H578 frozen shared recovery pure A1 once
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h578-recovery-core-once.yml]
+permissions: {contents: read}
+jobs:
+  pure-recovery:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h578-recovery-a1]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify frozen product scope and run shared ACK/SACK quota FIFO A1 test suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE=d5e7e3eca7b4988419ca60e008f2644aea775629
+          git fetch --depth=1 origin "$SOURCE"
+          test -z "$(git diff --name-only "$SOURCE" HEAD -- crates Cargo.toml Cargo.lock r0/go_overlay)"
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          cargo +1.85.1 test --locked -p wbd-recovery --lib -- --test-threads=1
+          echo "H578_FROZEN_SHARED_RECOVERY_A1_PASS SOURCE=$SOURCE"
