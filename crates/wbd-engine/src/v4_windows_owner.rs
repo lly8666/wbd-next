@@ -684,7 +684,7 @@ fn m2_outer_ack_hint_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let (lane,scope_epoch)=e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
     if scope_epoch!=epoch{return Err(INVALID)}
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
-    if m.auto_low_rate_mode{return Ok(())}
+    // Auto and Normal share authentic outer ACK/SACK gap feedback.
     let now=m2_clock();
     let Ok(result)=m.outer_ack.on_feedback(lane,epoch,ack32,sacks,
         now,20_000_000)else{return Ok(())};
