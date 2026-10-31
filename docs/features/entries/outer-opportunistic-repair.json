@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "outer-opportunistic-repair",
   "name": "外层机会式重传",
-  "summary": "认证成熟缺口后以有界预算最多机会式修复同一Seq的原冻结密文；无持续DATA PTO。",
+  "summary": "实际受当前lane/generation约束的外层 ACK/SACK 缺口提示，在有界预算内最多一次重发原Seq/PN/冻结密文；不保证业务修复、不证明Health/Auto质量，不持续DATA PTO。",
   "owner": "M2/M0 + FEC实验",
   "stage": "experimental",
   "development_branch": "experiment/fec-network-tuning",
@@ -30,7 +30,8 @@
     "crates/wbd-engine/src/v4_windows_native_runtime.rs",
     "tools/m0_wl_outer_repair_verify.py",
     "crates/wbd-platform/src/ipv4_tcp.rs",
-    "crates/wbd-platform/src/rx_ipv4_tcp.rs"
+    "crates/wbd-platform/src/rx_ipv4_tcp.rs",
+    "crates/wbd-engine/src/v4_embedded_go.rs"
   ],
   "doc_refs": [
     "docs/handoff/CURRENT_INTEGRATION.md",
@@ -43,7 +44,9 @@
     "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-OUTER-REPAIR-RTT-FLOOR.md",
     "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-24-SIGNED-RESULT.md",
     "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-FEATURE-STATUS-CORRECTION.md",
-    "docs/devlog/M0/20261030-PLAN027-OUTER-ACK-SACK-INDEX-FIRST-CODE.md"
+    "docs/devlog/M0/20261030-PLAN027-OUTER-ACK-SACK-INDEX-FIRST-CODE.md",
+    "docs/devlog/M0/20261031-PLAN027-H555-STRUCTURAL-REAL-GAP-FIFO.md",
+    "docs/devlog/M0/20261031-PLAN027-H573-GAME-EXTERNAL-ACTIONS-AND-V3-PACED-LIFETIME.md"
   ],
   "verification": [
     {
@@ -171,6 +174,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
       "evidence": "docs/evidence/M0/PLAN027-H566-SOURCE525-RECOVERED-TWELVE-SCENES-20261031.json"
+    },
+    {
+      "platform": "Windows2025 NPF/Wintun+Linux WSL2 raw/TUN",
+      "scope": "PLAN027 H574 unchanged product from bf603: v3-only 200ms paced FIFO and 5ms deadline while existing monotone ACK/SACK cursor/half PN, 32 immutable candidates, 8MTU/10%F unchanged; new true 0% original Action41173614494 IN_PROGRESS. Affected 1/5/15/30% and Game B/C NOT_RUN on this source, no claimed ratio/pass.",
+      "status": "NOT_RUN",
+      "source_sha": "d5e7e3eca7b4988419ca60e008f2644aea775629",
+      "evidence": null
     }
   ],
   "limitations": [
@@ -201,7 +211,8 @@
     "H538 source080 0pct and 30pct authentic original product confirms bounded optional opportunities, Stop release and no sustained false resend; individual cosmetic gap skip not directly instrumented. Linux C wire bytes not separated by existing stop log; no CPU speedup or zero business loss assertion. User cancels any R percentage minimum; subtask CLOSED.",
     "H552 original SOURCEf031 1/5/15/30 true Win/Linux ACK repair R/F Win0.1372/1.2732/4.6963/5.8654%, Linux0.1174/1.1446/4.2179/4.8735%; all original UDP/TCP/Stop PASS but newest rate targets FAIL at1/5/30,15 PASS (H552 JSON). New candidate after genuine ACK/SACK selected gap uses only existing live frozen shadows and single feedback cadence time to nominate 4/7/8/12 once, unchanged R<=10%F/MTU/owned Stop, new SOURCE 0/1/5/15/30 NOT_RUN.",
     "H555/H561 SOURCE525: real SACK-gap cursor, one-shot PN half-sample, bounded frozen FIFO; original native NOT_RUN, old f031 rate FAIL remains; PLAN027 B/C open.",
-    "H566 SOURCE525 genuine 9 real business/Stop positives recorded with exact artifact and ratios; cancelled Game highestFEC and failed A5 remain separately NOT_VERIFIED, C100/300s initially IN_FLIGHT, p99 one-way NOT_MEASURED, old SOURCEf031 failure retained. No sameVM CPU speedup inference."
+    "H566 SOURCE525 genuine 9 real business/Stop positives recorded with exact artifact and ratios; cancelled Game highestFEC and failed A5 remain separately NOT_VERIFIED, C100/300s initially IN_FLIGHT, p99 one-way NOT_MEASURED, old SOURCEf031 failure retained. No sameVM CPU speedup inference.",
+    "H573 old GameFEC Actions41170807537/09210 still IN_PROGRESS immediately after separately completed exact-force-cancel Action41173524500; cannot infer host/job termination or Game PASS. H574 cheap Action41173607539 PASS but original signed Windows/Linux product new 0% Action41173614494 remains IN_PROGRESS; bounded v3 FIFO logic not a real performance proof."
   ],
   "promotion": null
 }
