@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "source_sha": "11f1881ff68afa22c5b0ca957d6808420a878a06",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "result": "LINUX_GAMEFEC_NATIVE_PASS_WINDOWS_GAMEFEC_B106_BLOCKING_FIXED200_PENDING",
+  "linux_game2_fec6": {
+    "run": 41219083345,
+    "artifact": 13049261843,
+    "original_source_sha": "11f1881ff68afa22c5b0ca957d6808420a878a06",
+    "real_two_linux_netns_original_Go_TLS": "PASS",
+    "source_udp_sent": 64,
+    "real_udp_first_echo": 64,
+    "parity_native_kernel": {
+      "client_offered": 128,
+      "client_copied": 128,
+      "server_offered": 125,
+      "server_copied": 125
+    },
+    "kernel_tc_dropped": {
+      "client": 68,
+      "server": 61
+    },
+    "original_owned_stop": "PASS",
+    "windows_NPF_Wintun": "NOT_RUN",
+    "full_rate_20s": "NOT_RUN"
+  },
+  "windows_unverified": [
+    {
+      "run": 41216712816,
+      "mode": "game2-fec",
+      "outcome": "CANCELLED"
+    },
+    {
+      "run": 41216716864,
+      "mode": "normal-blackhole106",
+      "outcome": "CANCELLED"
+    }
+  ],
+  "next_c": {
+    "scenario": "plan027-c-fixed-200m-25ms-loss0-60s",
+    "mode": "fixed",
+    "offered_each_mbps": 200,
+    "delay_ms": 25,
+    "loss_pct": 0,
+    "duration_s": 60,
+    "source_sha": "11f1881ff68afa22c5b0ca957d6808420a878a06",
+    "status": "DISPATCHING_NOT_PASS",
+    "host_capacity_stop_rule": "IF_TRUE_HOST_OR_DRIVER_LOSS_STOP_HIGHER_FIXED_FAMILY"
+  },
+  "p99": "NOT_MEASURED"
+}
