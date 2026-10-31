@@ -1,0 +1,53 @@
+name: M0 PLAN027 H619 independent Fixed C capacity and Game OFF weak-network fanout
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h619-fixed-gameoff-c.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  source-frozen-independent-scenes:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h619-fixed-gameoff]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_SOURCE: 80ee526cc7b466ec6ccbe3cc25caf2f3754996ef
+      PRODUCT_RUN: "41190352345"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify one binary SOURCE and four distinct independent Action scenarios
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN" --jq .head_sha)" = "$PRODUCT_SOURCE"
+          gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN/artifacts?per_page=100" | jq -e --arg w "m0-wl-windows-product-binaries-$PRODUCT_SOURCE" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' >/dev/null
+          git fetch --depth=1 origin "$PRODUCT_SOURCE"
+          test -z "$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py)"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          cases=[["fixed","plan027-c-fixed-100m-25ms-loss0-60s"],["fixed","plan027-c-fixed-50m-250ms-loss15-60s"],["game2","plan027-c-game2-off-10m-250ms-loss30-60s"],["game4","plan027-c-game4-off-10m-250ms-loss30-60s"]]
+          for mode,name in cases:
+              scene=read_scenario('scenarios/'+name+'.json')
+              assert scene['public_mode']==mode and scene['duration_s']==60
+              for side in ('windows_to_linux','linux_to_windows'):
+                  assert scene[side]['delay_ms'] in (25,250) and scene[side]['offered_mbps'] in (10,50,100)
+              print('H619_SOURCE_SCENE',mode,name,scene['scenario_sha256'])
+          PY
+          while IFS=' ' read -r mode file; do
+            title="M0-WIN-LINUX|$GITHUB_SHA|$mode|scenarios/$file"
+            exists="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" | jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id'|head -1)"
+            if test -n "$exists";then echo "H619_ALREADY_SCOPED run=$exists";continue;fi
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode="$mode" -f run_n0=false -f perf_scenario_file="scenarios/$file" \
+              -f perf_reuse_run_id="$PRODUCT_RUN" -f perf_binary_source_sha="$PRODUCT_SOURCE"
+            echo "H619_DISPATCHED_INDEPENDENT_NATIVE_ACTION mode=$mode file=$file binary=$PRODUCT_SOURCE"
+          done <<'CASES'
+          fixed plan027-c-fixed-100m-25ms-loss0-60s.json
+          fixed plan027-c-fixed-50m-250ms-loss15-60s.json
+          game2 plan027-c-game2-off-10m-250ms-loss30-60s.json
+          game4 plan027-c-game4-off-10m-250ms-loss30-60s.json
+          CASES
+          echo H619_FOUR_SEPARATE_ACTIONS_SENT_NOT_PRODUCT_PASS
