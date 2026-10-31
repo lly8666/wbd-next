@@ -67,5 +67,6 @@
     "B rotation and host-global DNS/manual DNS/WFP/routes/IPv6",
     "C burst/p99 and final source-specific accounting"
   ],
-  "physical": "NOT_RUN"
+  "physical": "NOT_RUN",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8"
 }
