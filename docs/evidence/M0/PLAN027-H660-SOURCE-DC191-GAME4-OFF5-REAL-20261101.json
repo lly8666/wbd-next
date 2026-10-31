@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "source_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+  "result": "PARTIAL_GAME4_OFF_B_NATIVE_PASS",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "run": 41223674122,
+  "artifact": 13051166184,
+  "runner_source_sha": "ba29f6e62eaa71ddf2f3789bdf12009d2166b6b1",
+  "product_binary_source_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+  "windows_cli_sha256": "8c9949de4e86a495f3ce7b2856c0d1941337ea6846dcb629aa27c6bf83b53663",
+  "linux_server_sha256": "373cae784aae258b17f6ec1ad2c054f7b5d66f12c55ba2780630ee26b4b82a77",
+  "scenario": "plan027-b-game4-off-10m-75ms-loss5-20s",
+  "scenario_sha256": "ecc420728964fa76e03e73332b8dae4a0ce559a429510a666c294e09f7cb7d2a",
+  "mode": "game4-off",
+  "offered_mbps": {
+    "windows": 9.9996,
+    "linux": 9.9996
+  },
+  "delivered_mbps": {
+    "windows": 9.9996,
+    "linux": 9.9996
+  },
+  "first_delivery_fraction": {
+    "windows": 1,
+    "linux": 1
+  },
+  "app_udp": "PASS_ACTUAL_TWO_OS_KERNEL",
+  "app_tcp": "PASS_ACTUAL_TWO_OS_KERNEL",
+  "native_stop": "PASS_BOTH_OWNED",
+  "linux_tun_rx_dropped": 0,
+  "linux_tun_tx_dropped": 0,
+  "windows_go_plus_rust_pid_avg_pct_one_core": 14.381,
+  "windows_go_plus_rust_peak_working_set_bytes": 65662976,
+  "latency": {
+    "linux_same_origin_rtt_p99_ms": 275.827,
+    "linux_rtt_sent": 200,
+    "linux_rtt_replied": 200,
+    "windows_rtt_sent": 183,
+    "windows_rtt_replied": 183,
+    "windows_rtt_p99": "NOT_MEASURED_INSUFFICIENT_SAMPLES",
+    "cross_os_oneway_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS"
+  },
+  "not_qualified": [
+    "Game4 fixed FEC",
+    "Game2 fixed FEC native crossOS",
+    "Windows >90s dead recovery",
+    "physical hardware",
+    "C 20Mbps Game4"
+  ]
+}
