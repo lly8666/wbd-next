@@ -1,0 +1,9 @@
+# PLAN027 H657 — collect fresh Game2/off owned Stop, reuse exact binaries for three independent B checks
+
+H656 frozen original SOURCE `dc191cf5686ddff2e433312b8ec2258954bd018f` [native Action41220597229](https://github.com/lly8666/wbd-next/actions/runs/41220597229) **real original-Go TLS Windows native signed Npcap/Wintun and Linux original Rust raw/TUN Game2/off** 10Mbps/250ms/30%/60s. Both UDP and TCP and owned Stop actual PASS; source rate Windows9.9972/Linux9.9999Mbps, first delivery Win .907198/Linux .907687 (9.0739/9.0768Mbps), real Linux TUN tx/rx dropped0, Windows whole original Go+Rust process avg2.362% of one logical core, peak working set52,346,880B. No calibrated one-way p99, no Game/FEC in this positive. Verified `m0-wl-full-public-normal-direct` artifact 13049722943, same-source cached original Windows binaries13050335919 and Linux13050006739, and manifest SHA recorded in evidence. This promotes only H654 bounded Stop to actual signed **Game2/off** OS Stop, not Game2/FEC.
+
+H657 creates one GitHub Actions orchestration that validates original frozen source+artifacts and requests **three independent one-scene Actions**, each on its own VM and no shared concurrency: Game2/fixed6 at 10Mbps 75ms 15% for20s (real Windows FEC needed), Normal 105s no payload with authentic Health+post-idle kernel wake then 10Mbps loss0 60s, and Game4/off 10Mbps 75ms 5% 20s (four actual lanes). All must still report true duplex and owned Stop; setup/timeout cancellations remain FAIL/NOT_VERIFIED. Fixed200 previous capacity limit never makes these tests pass, and no build is repeated.
+
+```feature-impact
+{"kind":"updated","ids":["game-lanes"],"reason":"Source-current genuine original Windows/Linux native Game2/off two-OS UDP/TCP/Stop now verified; new GameFEC/Game4 and Normal idle remain in flight, no capability falsely marked complete."}
+```

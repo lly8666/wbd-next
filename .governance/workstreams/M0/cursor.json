@@ -4,23 +4,24 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 656,
-  "checkpoint_sha": "e6fca5ce7c28569b4aef9fe9cc75c7aaa8024626",
+  "sequence": 657,
+  "checkpoint_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H656 H654 new-source Windows actual Game native bounded Stop Rust test and release DLL build Action41220134129 SUCCESS; source-only test/compile, no signed NPF/Wintun real Stop yet. H655 frozen SOURCE11f Fixed200 first delivery real capacity-limit FAIL and both owned Stop pass. H656 one new-source (not reused SOURCE11f) original Windows+Linux Game2/off30 real native build/60s kernel+Stop regression dispatched independently; FEC not run until genuine baseline.",
-  "why_now": "Windows real Game Stop had indefinitely blocking join, now H654 bounded retryable source-current Windows Rust unit and release link PASS; must regenerate products for new Rust source and prove original signed OS/Stop, not reuse source11f frozen for new semantics. One Game2/off30 scenario is a lower-risk measured baseline with Linux Game native copied0 error historical; no unrelated source changes since H654.",
+  "current_task": "H657 recovered H656 actual source dc191 original Windows Go TLS + native Rust bounded Game Stop + Linux native Game2/off 10M/250ms/30% Action41220597229 PASS true dual UDP/TCP, first Windows0.907198/Linux0.907687, owned Stop, 0 Linux TUN drops, Windows process CPU2.362% single core RSS52.35MB. New signed Windows/Linux binary artifacts manifest 13050335919/13050006739 frozen. H657 three independent native scenarios source-reuse dispatch: Game2FEC6 10M/75ms/15% 20s, Normal 105s payload-idle then genuine wake, Game4/off 10M/75ms/5% 20s.",
+  "why_now": "H656 new-source Rust bounded Stop has original Windows signed driver/Go TLS/native Game2/off actual source match positive, so exact manifest reuse to narrow Windows GameFEC hang without recompilation; other B idle and Game4/off modes independent. Do not mistake Linux-only FEC as Windows qualification, and do not repeat old canceled source11f.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H656 one exact new source full Go+Rust build and authentic original Windows/WSL2 Game2/off30 60s+Stop; if PASS reuse its exact binary/manifest for one Game2FEC15 to test bounded Stop outcome; if FAIL stop, inspect first negative. Then B106/rotation/MTU/DNS/IPv6 and C scoped closure, no Fixed200 higher.",
+  "next_action": "First collect H657 Game2/FEC native, Normal105 idle wake and Game4/off three independent Actions; preserve actual first delivered/Stop and defect stages. If Windows FEC still canceled, inspect original native stage/Windows WSL external watchdog and fix minimal root, don't blindly repeat. Then plan B106 death reauth, rotation, DNS IPv6 MTU and C burst/mixed scoped evidence; no Fixed200 higher.",
   "unverified": true,
-  "last_tested_source": "11f1881ff68afa22c5b0ca957d6808420a878a06",
+  "last_tested_source": "dc191cf5686ddff2e433312b8ec2258954bd018f",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H643-SOURCE11F-GAME2-AND-CANCEL-20261031.json",
     "docs/evidence/M0/PLAN027-H646-SOURCE11F-A4-C-COLLECTED-20261031.json",
     "docs/evidence/M0/PLAN027-H648-SOURCE11F-C-REAL-THREE-AND-B-GATE-20261031.json",
     "docs/evidence/M0/PLAN027-H650-SOURCE11F-FIXED-C-AND-LINUX-ISOLATE-20261101.json",
     "docs/evidence/M0/PLAN027-H652-SOURCE11F-LINUX-GAMEFEC-AND-FIXED200-20261101.json",
-    "docs/evidence/M0/PLAN027-H655-SOURCE11F-FIXED200-CAPACITY-LIMIT-20261101.json"
+    "docs/evidence/M0/PLAN027-H655-SOURCE11F-FIXED200-CAPACITY-LIMIT-20261101.json",
+    "docs/evidence/M0/PLAN027-H657-NEW-SOURCE-GAME2-OFF-PASS-AND-B-THREE-20261101.json"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md",
@@ -31,5 +32,5 @@
     "docs/testing/WL_PERF_HARNESS_V2.md"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN027 §0 PARTIAL. H653 actual frozen SOURCE11f Fixed200/25ms/0/60s Action41219651031 native Windows original signed NPF/Wintun+Linux raw/TUN real UDP/TCP/Stop PASS BUT throughput/first-delivery FAIL target: windows sender offered199.233Mbps, Linux sender only126.831Mbps (Linux sender CPU92.089% one core), first windows.816586/linux.525883, delivered Win103.8543/Linux90.7956Mbps, Linux TUN tx_dropped231651, NPF local drop observed0, process Windows whole PID CPU64.074% core RSS50.68MB; V2=CAPACITY_LIMITED_GENERATOR_OFFER; no 200 Mbps Fixed PASS, stop higher Fixed same family. H654 new Rust Windows Game bounded Stop source candidate compile Actions pending, no OS product PASS. H651 real Linux original-Go Game2 fixed6 15%/64 source parity128/125 Stop PASS; Windows FEC+B106 external cancels unresolved. M1 scoped ready, M2 paused; A5 waived, p99 not calibrated, physical NOT_RUN. H654 source3e959 Rust Windows native Stop timeout negative synthetic blocked-worker→retry positive test AND release DLL compiled PASS Action41220134129, not original OS Stop. H656 enqueues one fresh original-Go TLS+Windows signed kernel Game2/off30 10Mbps250ms30%60s built from current source (not H641 SOURCE11f), request source+hash+duplex+Stop. No FEC or B106 product PASS yet, no same source third/fourth waste. H655 Fixed200 real capacity-limited negative preserved."
+  "partial_summary": "H657 recovered H656 source dc191cf5686ddff2e433312b8ec2258954bd018f original-Go TLS Windows Wintun/Npcap+Linux raw/TUN genuine two-OS Game2/off 10Mbps 250ms 30% 60s Action41220597229 PASS, measured source9.9972/9.9999Mbps, first0.907198/0.907687 (9.0739/9.0768Mbps), owned Stop BOTH, real TCP/UDP, Linux TUN tx/rx dropped 0, Windows whole Go+Rust PID avg2.362% of one core peak working-set52,346,880 bytes, p99 NOT_MEASURED. Same-source archived Windows binaries id13050335919/Linux id13050006739, hash in artifact. H654 candidate bounded Stop now source-current Windows original Game2/off real signed OS validated; FEC Windows NOT_RUN on new SOURCE. Three separate source-reused H657 B scenarios Game2FEC15, Normal idle105, Game4off5 are pending, not product PASS. H655 Fixed200 capacity-limited remains negative, A5 waived. PLAN027 §0 still PARTIAL."
 }

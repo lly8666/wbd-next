@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "current_source_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+  "original_Go_peer_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "status": "H656_SOURCE_CURRENT_GAME2_OFF_B_NATIVE_PASS_H657_THREE_INDEPENDENT_PENDING",
+  "H656": {
+    "run": 41220597229,
+    "artifact_id": 13049722943,
+    "scenario_sha256": "a97db9272f9e305d181c9e881f719a874acf79e53d0e28e143740d907c98c45f",
+    "mode": "game2",
+    "offered_mbps_each": {
+      "windows": 9.9972,
+      "linux": 9.9999
+    },
+    "first_delivery_fraction": {
+      "windows": 0.907198,
+      "linux": 0.907687
+    },
+    "first_delivered_mbps": {
+      "windows": 9.0739,
+      "linux": 9.0768
+    },
+    "real_udp": "PASS_BOTH",
+    "real_tcp": "PASS_BOTH",
+    "owned_stop": "PASS_BOTH",
+    "windows_go_tls_rust_signed_driver": "PASS",
+    "linux_rust_raw_tun": "PASS",
+    "linux_tun_rx_dropped": 0,
+    "linux_tun_tx_dropped": 0,
+    "windows_whole_pid_avg_one_core_pct": 2.362,
+    "windows_peak_working_set_bytes": 52346880,
+    "p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+    "windows_cli_sha256": "8c9949de4e86a495f3ce7b2856c0d1941337ea6846dcb629aa27c6bf83b53663",
+    "linux_server_sha256": "373cae784aae258b17f6ec1ad2c054f7b5d66f12c55ba2780630ee26b4b82a77"
+  },
+  "build_reuse": {
+    "run": 41220597229,
+    "windows_artifact_id": 13050335919,
+    "linux_artifact_id": 13050006739,
+    "original_source": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+    "manifest": "VERIFY_IN_HOST_BEFORE_EACH_SCENE"
+  },
+  "H657": {
+    "game2_fixed6": {
+      "scenario": "scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json",
+      "result": "PENDING"
+    },
+    "normal_idle105": {
+      "scenario": "scenarios/plan027-b-normal-idle-wake-10m-25ms-0loss-60s.json",
+      "result": "PENDING"
+    },
+    "game4_off5": {
+      "scenario": "scenarios/plan027-b-game4-off-10m-75ms-loss5-20s.json",
+      "result": "PENDING"
+    }
+  },
+  "unresolved": {
+    "windows_fec": "PENDING_REAL",
+    "normal_dead106": "CANCELLED_H648_RETRY_NOT_PLANNED_UNTIL_ISOLATED",
+    "rotation_dns_ipv6_mtu": "NOT_CLOSED",
+    "C_mixed_burst_p99": "NOT_CLOSED",
+    "fixed200": "CAPACITY_LIMITED_ACTUAL_H655"
+  }
+}
