@@ -9,6 +9,7 @@ use std::sync::{Arc,Mutex,atomic::{AtomicBool,AtomicU64,Ordering}};
 use std::thread::{self,JoinHandle};
 use std::time::{Instant,Duration};
 use crate::v4_game_lane::{GameAdapter,Error as GameAdapterError};
+use crate::v4_native_health::{HealthClock,HealthPolicy,ControlDue};
 use crate::runtime::game_shared::GameError;
 use crate::v4_protected_handoff::GoFlow;
 use crate::memory::Arena;
@@ -138,9 +139,10 @@ impl GameKernelOwner{
         let outer_denied=Arc::clone(&outer_blocked_duplicate);
         let outer_repeated=Arc::clone(&outer_repeated_copy_sent);
         #[allow(unused_variables)]
-        let (inner_mtu,rx_owner,fec_enabled)={
+        let (inner_mtu,rx_owner,fec_enabled,health_origin,health_rx)={
             let game=adapter.lock().map_err(|_|())?;
-            (game.inner_mtu(),game.receiver_handle(),game.has_game_fec())
+            let (origin,evidence)=game.health_context();
+            (game.inner_mtu(),game.receiver_handle(),game.has_game_fec(),origin,evidence)
         };
         // Take the ORIGINAL per-lane replay state exactly once, before
         // either TX or RX worker starts. Failed admission cannot create an
@@ -161,6 +163,7 @@ impl GameKernelOwner{
                 let Ok(mut arena)=Arena::new(generation^0x4000_0000,64,2048,64,1_000_000)
                     else{return};
                 let start=epoch_clock;
+                let mut health=HealthClock::new(HealthPolicy::default_connected(),0);
                 let mut inbound=[0u8;2048];
                 while !tx_stop.load(Ordering::Acquire){
                     // Never hold the TUN device's shared serialized mutex
@@ -189,6 +192,8 @@ impl GameKernelOwner{
                     if let Some(len)=size{
                         if len>0&&len<=inner_mtu{
                             did_business=true;
+                            health.on_local_business(health_origin.elapsed().as_nanos()
+                                .min(u128::from(u64::MAX)) as u64);
                             if game.offer(&inbound[..len],now).is_err(){
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                             }
@@ -303,7 +308,67 @@ impl GameKernelOwner{
                     let fec_due=game.game_fec_next_due_ns(MonoNs(clock_ns));
                     let next_due=copy_due.into_iter().chain(fec_due).min();
                     let stagger=game.game4_stagger_enabled();
-                    drop(flush);drop(game);
+                    drop(flush);
+                    // One authenticated Health on the existing TX worker,
+                    // every ~15s after REAL copied control. Never a Game
+                    // logical source/FEC symbol or new Go packet pump.
+                    health_rx.absorb(&mut health);
+                    let health_now=health_origin.elapsed().as_nanos()
+                        .min(u128::from(u64::MAX)) as u64;
+                    match health.control_due(health_now){
+                        ControlDue::DeadPeer=>{
+                            eprintln!("M0_GAME_M4_HEALTH_DEAD authenticated_idle_ns={} threshold_ns={}",
+                                health_now,health.policy().dead_ns());
+                            tx_stop.store(true,Ordering::Release);
+                            break
+                        },
+                        ControlDue::Health=>{
+                            let copied=if let Some(lane)=lanes.first_mut(){
+                                let mut wire=[0u8;512];
+                                match game.seal_native_health(lane.key.slot,
+                                    health.local_idle_ns(health_now),&mut wire){
+                                    Ok((pn,n))=>{
+                                        let mut accepted=false;
+                                        if let Ok(mut slab)=arena.allocate(){
+                                            slab.writable()[..n].copy_from_slice(&wire[..n]);
+                                            if let Ok(frozen)=slab.freeze(0..n,FrozenMetadata{
+                                                lane:lane.key,seq:SeqOffset(lane.seq),
+                                                pn:RecordPn(pn),carrier_snapshot:1,
+                                            }){
+                                                let f=lane.flow;
+                                                let (src,dst,sp,dp)=if server{
+                                                    (f.server_ip,f.client_ip,f.server_port,f.client_port)
+                                                }else{
+                                                    (f.client_ip,f.server_ip,f.client_port,f.server_port)
+                                                };
+                                                let tuple=Ipv4Tuple{
+                                                    src_ip:&src,dst_ip:&dst,
+                                                    src_port:sp,dst_port:dp,
+                                                };
+                                                let presentation=Presentation{
+                                                    ack32:1,advertised_window:4096,
+                                                    ip_id:(pn as u16).wrapping_add(75),
+                                                    persona:peer_persona,
+                                                };
+                                                accepted=lane.raw.send_one(generation,&frozen,
+                                                    tuple,presentation).is_ok();
+                                                if accepted{
+                                                    lane.seq=lane.seq.saturating_add(n as u64);
+                                                    tx_copy.fetch_add(1,Ordering::Relaxed);
+                                                }
+                                            }
+                                        }
+                                        accepted
+                                    },
+                                    Err(_)=>false,
+                                }
+                            }else{false};
+                            health.on_health_send_result(health_now,copied);
+                            if !copied{tx_rejected.fetch_add(1,Ordering::Relaxed);}
+                        },
+                        ControlDue::None=>{},
+                    }
+                    drop(game);
                     if stagger||fec_enabled{
                         // Earliest of ready new TUN bytes (poll wake-up),
                         // staggered copies and authentic FEC close/expiry.

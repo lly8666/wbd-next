@@ -7,6 +7,7 @@ use std::sync::atomic::{AtomicBool,AtomicI32,AtomicU32,AtomicU64,Ordering};
 use std::sync::{Arc,Mutex,OnceLock};
 use std::collections::{BTreeMap,VecDeque};
 use std::thread::{self,JoinHandle};
+use crate::v4_native_health::{HealthClock,HealthPolicy,ControlDue};
 use wbd_platform::windows_native_io::{
     self as io,NpcapRx,NpcapTx,NpcapFns,WintunRx,WintunTx,
     WintunFns,WakeEvent,ReadResult,WaitResult,NativeIoError,
@@ -268,6 +269,11 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     // TX and RX capture endpoints have distinct native failure lifetimes.
     // Retiring one local TX handle must never stop another lane's NPF send.
     let mut active=vec![true;npf.len()];
+    let (health_origin,health_evidence)={
+        let g=match group.lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
+        game::native_game_health_context(&g)
+    };
+    let mut health=HealthClock::new(HealthPolicy::default_connected(),0);
     loop{
         if c.stop.load(Ordering::Acquire){return OK}
         let mut did_work=false;
@@ -284,6 +290,8 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                     },Err(e)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_result rc={e}");return e}};
                     if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&lanes,&mut npf,
                         &c,rows,&mut id,&mut active){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_send_records rc={rc}");return rc}
+                    health.on_local_business(health_origin.elapsed().as_nanos()
+                        .min(u128::from(u64::MAX)) as u64);
                     did_work=true;
                 }
                 Ok(ReadResult::NoPacket|ReadResult::EndOfStream)=>break,
@@ -315,11 +323,69 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=send_ack rc={rc}");
             return rc
         }
+        // Only unique AEAD-opened inbound Game records/Health refresh
+        // the live peer deadline. Raw presentation ACK cannot.
+        health_evidence.absorb(&mut health);
+        let now_health=health_origin.elapsed().as_nanos()
+            .min(u128::from(u64::MAX)) as u64;
+        match health.control_due(now_health){
+            ControlDue::DeadPeer=>{
+                eprintln!("M0_GAME_NATIVE_HEALTH_DEAD age_ns={} threshold_ns={}",
+                    now_health,health.policy().dead_ns());
+                return BAD_STAGE
+            },
+            ControlDue::Health=>{
+                let Some(index)=active.iter().position(|v|*v)else{return BAD_STAGE};
+                let mut wire=[0u8;512];
+                let sealed={
+                    let mut g=match group.lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
+                    game::native_game_seal_health(&mut g,(index+1) as u32,
+                        health.local_idle_ns(now_health),&mut wire)
+                };
+                let copied=match sealed{
+                    Ok((_pn,n))=>{
+                        let mut scratch=[0u8;FRAME_CAP];
+                        let seq=c.tx_seq[index].load(Ordering::Acquire);
+                        let ack=c.ack[index].load(Ordering::Acquire);
+                        match wire_frame(&cfg.first,&lanes[index],seq,ack,
+                            &wire[..n],id,&mut scratch){
+                            Ok(frame)=>{
+                                id=id.wrapping_add(1);
+                                let result=npf[index].send_batch(&[frame]);
+                                let copied=result.accepted_prefix==1;
+                                if copied{
+                                    c.tx_seq[index].fetch_add(n as u32,Ordering::Release);
+                                    c.ack_sent[index].store(ack,Ordering::Release);
+                                    c.tx.fetch_add(1,Ordering::Relaxed);
+                                }
+                                if result.error.is_some()||result.uncertain_index.is_some(){
+                                    let _=retire_game_tx_lane(&mut active,index);
+                                }
+                                copied
+                            },
+                            Err(_)=>false,
+                        }
+                    },
+                    Err(_)=>false,
+                };
+                health.on_health_send_result(now_health,copied);
+                if !active.iter().any(|v|*v){return BAD_STAGE}
+                // A genuine failed control copy waits >=1s; fresh DATA and
+                // parity are independent, never blocked behind Health.
+            },
+            ControlDue::None=>{},
+        }
         if did_work{continue}
         let timeout={
             let group=match group.lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
             let (now,due)=game::native_game_wait_deadline(&group);
-            game_wait_timeout_ms(now,due)
+            let game_timeout=game_wait_timeout_ms(now,due);
+            let health_wait=health.next_deadline().map(|at|{
+                at.saturating_sub(health_origin.elapsed().as_nanos()
+                    .min(u128::from(u64::MAX)) as u64)
+                    .div_ceil(1_000_000).max(1).min(u64::from(u32::MAX-1)) as u32
+            }).unwrap_or(u32::MAX);
+            game_timeout.min(health_wait)
         };
         match io::wait_ready(&[stop.handle(),tun.event(),wake.handle()],timeout){
             Ok(WaitResult::Ready(0))=>return OK,

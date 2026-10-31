@@ -11,6 +11,17 @@ use wbd_types::{MonoNs,LaneKey,TunnelKey};
 #[cfg(feature="fec2_product_record")]
 #[derive(Clone,Copy)]
 struct WinGameStagedRecord{lane:u32,id:u64,pn:u64}
+#[cfg(feature="fec2_product_record")]
+pub(super) fn native_game_health_context(
+    group:&WinGameGroup
+)->(std::time::Instant,Arc<crate::v4_native_health::AuthenticatedActivity>){
+    group.adapter.health_context()
+}
+#[cfg(feature="fec2_product_record")]
+pub(super) fn native_game_seal_health(group:&mut WinGameGroup,slot:u32,
+    idle_ns:u64,wire:&mut [u8])->Result<(u64,usize),i32>{
+    group.adapter.seal_native_health(slot,idle_ns,wire).map_err(|_|BAD_STAGE)
+}
 pub(super) struct WinGameGroup {
     adapter:GameAdapter,
     handles:Vec<u64>,
