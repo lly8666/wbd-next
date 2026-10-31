@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 654,
-  "checkpoint_sha": "cfa277e9dc01deeb157605e147d6cf050162009d",
+  "sequence": 655,
+  "checkpoint_sha": "3e95910ccd142b5966ea7f5b86207d81a50d1a62",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H654 actual Windows Game native Stop code has unbounded FFI JoinHandle::join on two real NPF/Wintun workers after session removed; Go context cannot interrupt. Candidate fixes with <=12s check before removing any native session and leaves NPF/Wintun loans/WAL retained on STOP_INCOMPLETE, retryable, with negative/positive Rust worker test. SOURCE/H654 Windows compilation and product regression pending. Independent frozen SOURCE11f Fixed200 native Action41219651031 still in-flight.",
-  "why_now": "Repeated Windows Game/FEC native run external cancellations after unbounded driver job, Linux original GameFEC core actually PASS; even if exact FEC stall cause unknown, indefinite Game Stop join is a source-proven product lifecycle hazard violating PLAN027 B Stop, and must be fail-closed before more long Windows FEC runs. Don't invent successful cleanup or compromise Rust worker ownership.",
+  "current_task": "H655 collect H653 frozen original Fixed200/25ms/0/60s actual two-OS action41219651031: true signed Windows/Linux original TLS UDP+TCP Stop PASS but C target FAIL CAPACITY_LIMITED_GENERATOR_OFFER, Windows offered199.233Mbps vs Linux126.831, first ratios Win.816586/Linux.525883, Linux generator92.089% one core, TUN TX drops231651. Stop high Fixed200 family. H654 new-source bounded Windows Game native Stop compile/unit Actions in flight, not product proven.",
+  "why_now": "Fixed200 actually ran to authentic original signed 2OS driver Stop, but no-loss target failed and Linux generator could only offer126.8 of requested200 with 231651 real TUN drops; plan capacity stopping rule prohibits higher same family and diagnosis cannot simply blame VM for all residuals. H654 source-only Stop ownership correction is independent and must not inherit Fixed200 PASS.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Run H654 source-current Windows Rust scoped unit test and compile; if passed build one new source original Windows/Linux product for bounded Game/off Stop regression and FEC low-rate diagnostic (not reuse SOURCE11f for modified Rust), keeping Fixed200 H653 separate. Continue B106 and remaining DNS/IPv6/MTU/rotation; no unverified product PASS.",
+  "next_action": "Collect H654 Windows pinned Rust bounded Game native Stop test/build Actions; any negative compiler fix immediately; then new source original Go/signed Windows+Linux bounded Game Stop regression plus targeted GameFEC first stage, keeping Linux GameFEC proven and Windows/106 blockers. Finish B rotation/MTU/DNS/IPv6, C bursts/mixed on <=accepted capacity and measured p99 where possible; no Fixed200 higher reruns.",
   "unverified": true,
   "last_tested_source": "11f1881ff68afa22c5b0ca957d6808420a878a06",
   "evidence_refs": [
@@ -19,7 +19,8 @@
     "docs/evidence/M0/PLAN027-H646-SOURCE11F-A4-C-COLLECTED-20261031.json",
     "docs/evidence/M0/PLAN027-H648-SOURCE11F-C-REAL-THREE-AND-B-GATE-20261031.json",
     "docs/evidence/M0/PLAN027-H650-SOURCE11F-FIXED-C-AND-LINUX-ISOLATE-20261101.json",
-    "docs/evidence/M0/PLAN027-H652-SOURCE11F-LINUX-GAMEFEC-AND-FIXED200-20261101.json"
+    "docs/evidence/M0/PLAN027-H652-SOURCE11F-LINUX-GAMEFEC-AND-FIXED200-20261101.json",
+    "docs/evidence/M0/PLAN027-H655-SOURCE11F-FIXED200-CAPACITY-LIMIT-20261101.json"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md",
@@ -30,5 +31,5 @@
     "docs/testing/WL_PERF_HARNESS_V2.md"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN027 PARTIAL. H651 Action41219083345 frozen source11f Linux original Go credential TLS Game2 fixed6 15% real bidirectional kernel loss, 64/64 echoed, client original parity128 offered/128 M4 copied, server125/125, tc drop68/61, both owned Stop PASS. Linux ONLY, Windows GameFEC and Normal106 Actions41216712816/41216716864 canceled, no native report, blocking. Fixed100/25ms/0/60s Action41216928738 original twoOS first1/1, Fixed50/25ms/0/300s Action41216934805 Win.999998/Linux1, both UDP/TCP+Stop and TUN drops0, p99 not calibrated. Fixed200 25ms0 60s one scenario/source-reuse pending, no higher 250ms/2% until positive. A5 WAIVED; M1 scoped ready M2 scoped HOLD unchanged. H653 H652 original Fixed200 dispatcher Action41219400009 FAILED PRE_DISPATCH_NO_PRODUCT_RUN: overly broad source guard included H647 test-only tools/m0_wl_public_normal_e2e.py; exact original SOURCE11f vs H652 diff has no production Rust/Go or product scenario engine changes. H653 splits immutable product guard from explicit existing B106 harness readback, preserves real source/hashes, resubmits only one Fixed200 action for genuine result. Other source-scoped positive/negative remains untouched. H654 source candidate bounded Windows Game2/4 native Rust Stop: FFI old code removed session and joined two handles indefinitely, ignoring Go ctx; new logic sends genuine original stop wake, polls is_finished <=12s releasing registry mutex each tick, on timeout returns STOP_INCOMPLETE while retaining both NPF/Wintun loans and OS/WAL owner for retry, only removes/joins after both finished. No fake Stop. Rust test with blocked thread verifies timeout and later successful joining; real Windows/WSL signed driver new source NOT_RUN. Frozen SOURCE11f independent Fixed200 Action41219651031 remains in progress, not H654 proof."
+  "partial_summary": "PLAN027 §0 PARTIAL. H653 actual frozen SOURCE11f Fixed200/25ms/0/60s Action41219651031 native Windows original signed NPF/Wintun+Linux raw/TUN real UDP/TCP/Stop PASS BUT throughput/first-delivery FAIL target: windows sender offered199.233Mbps, Linux sender only126.831Mbps (Linux sender CPU92.089% one core), first windows.816586/linux.525883, delivered Win103.8543/Linux90.7956Mbps, Linux TUN tx_dropped231651, NPF local drop observed0, process Windows whole PID CPU64.074% core RSS50.68MB; V2=CAPACITY_LIMITED_GENERATOR_OFFER; no 200 Mbps Fixed PASS, stop higher Fixed same family. H654 new Rust Windows Game bounded Stop source candidate compile Actions pending, no OS product PASS. H651 real Linux original-Go Game2 fixed6 15%/64 source parity128/125 Stop PASS; Windows FEC+B106 external cancels unresolved. M1 scoped ready, M2 paused; A5 waived, p99 not calibrated, physical NOT_RUN."
 }

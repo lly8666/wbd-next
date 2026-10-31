@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "11f1881ff68afa22c5b0ca957d6808420a878a06",
+  "harness_sha": "cfa277e9dc01deeb157605e147d6cf050162009d",
+  "result": "REAL_TWO_OS_DUPLEX_STOP_PASS_C200_CAPACITY_LIMITED_NOT_QUALIFIED",
+  "action": 41219651031,
+  "artifact": 13049790864,
+  "scenario_id": "plan027-c-fixed-200m-25ms-loss0-60s",
+  "scenario_sha256": "7d704293d883ae24fec2a661f86ab7d1e05fb0b3fca62c9373165912fcf8a677",
+  "duration_s": 60,
+  "requested_mbps": {
+    "windows": 200,
+    "linux": 200
+  },
+  "offered_actual_mbps": {
+    "windows": 199.2333,
+    "linux": 126.8313
+  },
+  "first_delivered_mbps": {
+    "windows": 103.8543,
+    "linux": 90.7956
+  },
+  "first_delivery_fraction": {
+    "windows": 0.816586,
+    "linux": 0.525883
+  },
+  "original_real_kernel": {
+    "windows_genuine_signed_NPF_Wintun_original_Go_TLS_Rust": "PASS",
+    "linux_original_Go_TLS_Rust_raw_TUN": "PASS",
+    "bidirectional_udp": "PASS",
+    "bidirectional_tcp": "PASS",
+    "both_owned_stop": "PASS",
+    "linux_tun_tx_dropped": 231651,
+    "linux_tun_rx_dropped": 0,
+    "local_npf_drop_approx": 0,
+    "netem_loss_pct": 0
+  },
+  "resource": {
+    "linux_generator_cpu_one_core_pct": 92.089,
+    "linux_generator_cpu_s": 59.8603,
+    "windows_generator_cpu_one_core_pct": 44.327,
+    "windows_process_go_plus_rust_cpu_one_core_pct": 64.074,
+    "windows_process_cpu_s": 49.7969,
+    "windows_process_peak_rss_bytes": 50675712
+  },
+  "status": "CAPACITY_LIMITED_GENERATOR_OFFER",
+  "lossless_fixed200": "FAIL",
+  "same_family_higher_rate_or_250ms": "STOP_NOT_RUN",
+  "business_oneway_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+  "limits": [
+    "Both sender host/generator and TUN kernel drops prove substantial capacity pressure, but cannot definitively partition every residual loss from product backpressure",
+    "Do not infer Fixed200 PASS or Windows GameFEC from real owned Stop"
+  ],
+  "new_source_stop_candidate": "H654 Windows Game native bounded join separate new Rust source, currently compile/unit pending"
+}
