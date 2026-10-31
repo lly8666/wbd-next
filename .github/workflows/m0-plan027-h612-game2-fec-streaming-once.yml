@@ -1,0 +1,44 @@
+name: M0 PLAN027 H612 Game2 FEC source-prebuilt streaming native diagnostic
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h612-game2-fec-streaming-once.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  dispatch-game2-fec:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h612-game-fec]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE: 80ee526cc7b466ec6ccbe3cc25caf2f3754996ef
+      BUILD_RUN: "41190352345"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Dispatch one real original Game2-FEC with transparent bounded child logs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .head_sha)" = "$SOURCE"
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/artifacts?per_page=100" | jq -e --arg w "m0-wl-windows-product-binaries-$SOURCE" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' >/dev/null
+          git fetch --depth=1 origin "$SOURCE"
+          test -z "$(git diff --name-only "$SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py)"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          scene=read_scenario('scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json')
+          assert scene['public_mode']=='game2-fec' and scene['duration_s']==20
+          for k in ('windows_to_linux','linux_to_windows'):
+              assert scene[k]['offered_mbps']==10 and scene[k]['loss_pct']==15
+          print('H612_ORIGINAL_GAME2_FEC_SCENARIO_SHA',scene['scenario_sha256'])
+          PY
+          title="M0-WIN-LINUX|$GITHUB_SHA|game2-fec|scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json"
+          previous="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" | jq -r --arg title "$title" '.workflow_runs[]|select(.display_title==$title)|.id'|head -1)"
+          if test -n "$previous";then echo "H612_REUSE_INFLIGHT_OR_FINISHED run=$previous";exit 0;fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=game2-fec -f run_n0=false \
+            -f perf_scenario_file=scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json \
+            -f perf_reuse_run_id="$BUILD_RUN" -f perf_binary_source_sha="$SOURCE"
+          echo "H612_REAL_GAME2_FEC_DISPATCHED streaming_440s=1 windows_step_600s=1 external_720s=1 SOURCE=$SOURCE"
