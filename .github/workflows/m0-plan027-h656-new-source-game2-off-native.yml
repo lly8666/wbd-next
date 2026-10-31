@@ -1,0 +1,50 @@
+name: M0 PLAN027 H656 fresh real Game2 off kernel Stop on bounded native source
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h656-new-source-game2-off-native.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  exact-once:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h656-new-game-off]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RUST_STOP_SOURCE: 3e95910ccd142b5966ea7f5b86207d81a50d1a62
+      H654_WINDOWS_TEST: "41220134129"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Validate source current bounded Rust Stop, original build and one true signed-kernel Game2/off regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$H654_WINDOWS_TEST" --jq .head_sha)" = "$RUST_STOP_SOURCE"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$H654_WINDOWS_TEST" --jq .conclusion)" = success
+          git fetch --depth=1 origin "$RUST_STOP_SOURCE"
+          test -z "$(git diff --name-only "$RUST_STOP_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_wl_netem.py tools/m0_wl_perf_v2_config.py tools/m0_wl_public_normal_e2e.py)"
+          grep -q 'M0_PLAN027_GAME_NATIVE_STOP_NOT_DRAINED' crates/wbd-engine/src/v4_windows_game_native_runtime.rs
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario("scenarios/plan027-c-game2-off-10m-250ms-loss30-60s.json")
+          assert s["public_mode"]=="game2" and s["duration_s"]==60
+          for name in ("windows_to_linux","linux_to_windows"):
+              d=s[name]
+              assert d["offered_mbps"]==10 and d["loss_pct"]==30 and d["delay_ms"]==250
+          print("H656_NEW_STOP_SOURCE_ONE_ORIGINAL_GAME2_SCENE",s["scenario_sha256"])
+          PY
+          scene=scenarios/plan027-c-game2-off-10m-250ms-loss30-60s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|game2|$scene"
+          prior="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" | jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id'|head -1)"
+          if [ -n "$prior" ];then echo "H656_ALREADY_REGISTERED action=$prior";exit 0;fi
+          # No old SOURCE11f reuse for NEW Windows Game Rust code:
+          # the native original Go Windows and Linux products build once
+          # from this exact current immutable main SHA on Actions.
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=game2 -f run_n0=false -f perf_scenario_file="$scene" \
+            -f perf_reuse_run_id="" -f perf_binary_source_sha=""
+          echo H656_FRESH_SOURCE_SIGNED_WINDOWS_AND_REAL_LINUX_GAME2_OFF_NATIVE_DISPATCHED_NOT_PASS
