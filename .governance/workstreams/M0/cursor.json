@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 643,
-  "checkpoint_sha": "2446cf5a57e6fc89f549a8aa2cb22cff2227e0dd",
+  "sequence": 644,
+  "checkpoint_sha": "f93a625a4c89d7f688f0e65f6b7cf3723bd739d0",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H643 actual SOURCE11f Game2/off30 original full 2OS native first-arrival 91.01/90.97 and TX reject=0 proof recovered; FEC2/4 and B106 native jobs canceled at watchdog with no logs. Fix catalog oversized card, parallel A4 Auto and 300s Normal stability and Fixed C50 using exact SOURCE11f binaries while investigating FEC/B106.",
-  "why_now": "H641 Game2/off30 real original kernel + owned Stop confirmed .910076/.909715 first arrival, corrected multiport tc; FEC and B106 four trials watcher canceled no product/Stop output, so cannot claim complete. H642 main Feature Catalog failed due game-lanes.json >16KiB; trim duplicate historical notes without losing Git evidence.",
+  "current_task": "H644 repair actual governance evidence schema/provenance after H643 real source11f Game2 proof; Auto240 Normal300 FixedC50 independent Actions 41214482312/41214487018/41214491798 IN_FLIGHT, no premature PASS; GameFEC+B106 four cancelled blockers still open.",
+  "why_now": "H643 three new same SOURCE native Actions dispatched; governance catalog card size is fixed, but governance STRUCTURE still fails because H643 evidence omitted schema_version/source_sha (and old H640 schema absent). Precise evidence schema correction only; keep all prior original business data.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Inspect H643 three independently dispatched A4 Auto240/C Normal10 300s/C Fixed50 original Actions; collect real full reports and SOURCE/hash, any FAIL genuine. For GameFEC/B106 isolate original cold/OS/PID hang in scoped lifecycle tests without blindly rebuilding same source. Complete remaining B rotation/auth/MTU/DNS and C 300s/capacity/mixed then feature closure.",
+  "next_action": "Collect SOURCE11f A4/C native Action results 41214482312/41214487018/41214491798 and real metrics; repair FEC/B106 original native hang via exact OS/cold implementation evidence, finish remaining B/C. No duplicate Actions or builds.",
   "unverified": true,
   "last_tested_source": "11f1881ff68afa22c5b0ca957d6808420a878a06",
   "evidence_refs": [
@@ -26,5 +26,5 @@
     "docs/testing/WL_PERF_HARNESS_V2.md"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN027 §0 remains PARTIAL. H641 SOURCE11f Action41210457594 Game2/off30 10Mbps/250ms/60s true Windows+Linux UDP/TCP/Stop PASS, first delivery .910076/.909715 vs independent dual-copy 30% expected .91, Linux M4 TX offer/slab/record/policy/raw errors all zero, full Game outer ACK examined0/retrans0 (not qualified). FEC Game2/4 Actions41211105194/41211110192 CANCELED after >720s, B106 Normal/Fixed Actions41211114737/41211119313 CANCELED after >1200s; pre-cancel live logs unavailable, no first business or owned Stop PASS. H643 feature catalog card size repair and in same SOURCE planned independent A4 Auto240 and Normal10 300s/Fixed50 C one-scenario Actions with binary run41210457594 reuse (not verified yet). A5 waived; B FEC/Windows dead90 rotation DNS/IPv6 MTU and remaining C matrix/true long open; no user completion."
+  "partial_summary": "PLAN027 §0 remains PARTIAL. H641 SOURCE11f Action41210457594 Game2/off30 10Mbps/250ms/60s true Windows+Linux UDP/TCP/Stop PASS, first delivery .910076/.909715 vs independent dual-copy 30% expected .91, Linux M4 TX offer/slab/record/policy/raw errors all zero, full Game outer ACK examined0/retrans0 (not qualified). FEC Game2/4 Actions41211105194/41211110192 CANCELED after >720s, B106 Normal/Fixed Actions41211114737/41211119313 CANCELED after >1200s; pre-cancel live logs unavailable, no first business or owned Stop PASS. H643 feature catalog card size repair and in same SOURCE planned independent A4 Auto240 and Normal10 300s/Fixed50 C one-scenario Actions with binary run41210457594 reuse (not verified yet). A5 waived; B FEC/Windows dead90 rotation DNS/IPv6 MTU and remaining C matrix/true long open; no user completion. H644 governance repair: H643 & H640 evidence file schemas need schema_version1, H643 current evidence source_sha must equal last_tested_source SOURCE11f. Source and business data unchanged; 3 in-flight A4/C action IDs from H643 preserved, not PASS."
 }

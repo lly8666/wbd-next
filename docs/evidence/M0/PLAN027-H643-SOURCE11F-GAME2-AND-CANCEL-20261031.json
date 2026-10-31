@@ -82,5 +82,8 @@
     "A4 continuous grade verification",
     "C representative and 300s stable"
   ],
-  "governance": "H642 feature catalog fail due game-lanes card size>16384; H643 trims duplicate older descriptions, retains previous card in Git history and existing evidence."
+  "governance": "H642 feature catalog fail due game-lanes card size>16384; H643 trims duplicate older descriptions, retains previous card in Git history and existing evidence.",
+  "schema_version": 1,
+  "source_sha": "11f1881ff68afa22c5b0ca957d6808420a878a06",
+  "result": "PARTIAL_GAME2_OFF_PASS_FEC_B106_CANCELLED"
 }

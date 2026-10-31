@@ -38,5 +38,6 @@
     "quality": "FAIL_TOO_LOW_FIRST_ARRIVAL"
   },
   "findings": "V2 original Game IFB ingress matched only TCP443, not Game sibling ports444..446. Linux rejected counter did not distinguish owner capacity vs real driver; no causal conclusion yet.",
-  "new_product_verification": "PENDING"
+  "new_product_verification": "PENDING",
+  "schema_version": 1
 }
