@@ -64,6 +64,8 @@ type m0NativeV4ProductPeer interface {
  Stats()m0NativeV4PacketStats
  RequestAutoStartProfile(realityfront.FecV2Profile)(realityfront.FecV2State,error)
 }
+var errM0NativeV4AuthenticatedPeerDead=errors.New("Rust verified authenticated peer dead; cold TLS reauthorization after native Stop")
+
 func runM0NativeV4Windows(o m0NativeV4Options)error{
  // Mode-specific original Rust capability is queried before Npcap,
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
@@ -88,6 +90,24 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  slot,err:=acquireGUIClientSlot()
  if err!=nil{return err}
  defer windows.CloseHandle(slot)
+ for generation:=uint64(1);;generation++{
+  if ctx.Err()!=nil{return nil}
+  err:=runM0NativeV4WindowsGeneration(ctx,o,autoOperatorRequests)
+  if !errors.Is(err,errM0NativeV4AuthenticatedPeerDead)||ctx.Err()!=nil{return err}
+  fmt.Printf("WBD_WINDOWS_NATIVE_DEAD_RECONNECT_ARMED generation=%d old_owner_drained=1\n",generation)
+  timer:=time.NewTimer(time.Second)
+  select{
+  case <-ctx.Done():timer.Stop();return nil
+  case <-timer.C:
+  }
+  fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_REAUTHORIZE generation=%d\n",generation+1)
+ }
+}
+
+// One original-Go credential TLS + Rust NativeOwner generation. The caller
+// owns GUI/stop and starts the next epoch only after this one's WAL Stop.
+func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
+ autoOperatorRequests <-chan realityfront.FecV2Profile)error{
  underlay,err:=windowsclient.DiscoverPhysicalUnderlay(o.ServerIP,0)
  if err!=nil{return err}
  ncfg,err:=underlay.NpcapConfig(o.SourcePort,o.ServerPort,1,faketcp.PacketPersonaWindows11)
@@ -446,7 +466,9 @@ waitNative:
   }else{fmt.Println("WBD_WINDOWS_NATIVE_FAILURE_SOURCE "+runtimeErr.Error())}
  }
  stopErr:=cleanup()
- if stopErr!=nil{return errors.Join(runtimeErr,stopErr)}
+ if stopErr!=nil{
+  return fmt.Errorf("native owned Stop failed after %v: %w",runtimeErr,stopErr)
+ }
  fmt.Println("WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1")
  return runtimeErr
 }

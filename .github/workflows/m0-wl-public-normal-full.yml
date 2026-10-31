@@ -263,7 +263,1617 @@ jobs:
             if($LASTEXITCODE -ne 0){throw 'Linux shared Auto pending-original-M2 functional regression FAIL'}
             & go test -count=1 -tags wbd_v4_embedded_go -run '^TestNpcapNativeGameColdRead' ./internal/faketcp
             if($LASTEXITCODE -ne 0){throw 'native Game NPF cold idle/EOF regression FAIL'}
-            & ../result/client.test.exe '-test.run=^TestM0PLAN026GameColdHandoffQueueNeverBlocksRustJoin$' '-test.count=1'
+            & ../result/client.test.exe '-test.run=^TestM0PLAN027WindowsNativeAuthDeadOnlyAfterOriginalRustHealth
+            if($LASTEXITCODE -ne 0){throw 'native Game cold queue overload regression FAIL'}
+            & ../result/client.test.exe '-test.run=^TestM0PLAN025WindowsNativeSourceInvalidIPv4DoesNotPoisonBatch$' '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Windows pre-seal native IPv4 Wintun filtering boundary FAIL'}
+            & ../result/realityfront.test.exe '-test.run=^TestM0PLAN025WindowsNativeNormalOpenFirstFaultIsBoundedAndSafe$' '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Windows original M3 authenticated IPv4 drop vs ABI fatal regression FAIL'}
+            & ../result/realityfront.test.exe '-test.run=^TestM0PLAN025WindowsOriginalM2BatchPreflightClassifiesFirstRefusal$' '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Original Windows M2 NPF firstsend batch first-error provenance FAIL'}
+            & ../result/realityfront.test.exe '-test.run=TestM0WindowsFEC2OpenABICodeClassificationSurvivesWrapper' '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Windows FEC2 original ABI error provenance / fail-closed regression FAIL'}
+            & ../result/realityfront.test.exe '-test.run=TestM0WindowsAutoAlignedMatureCohortPreservesTrueKWindow' '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Windows original Auto real 2s/8s actual-k cohort alignment regression FAIL'}
+          } finally {Pop-Location}
+          @{source=$env:GITHUB_SHA;scope='GO_COMPILE_ONLY';result='PASS';native_product='NOT_RUN'} |
+            ConvertTo-Json | Set-Content result/preflight.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: windows-compile-preflight-${{ github.run_id }}
+          path: result/*.json
+          retention-days: 14
+          if-no-files-found: warn
+  windows-rust-contract-preflight:
+    name: Windows Rust eligible library unit tests (special M1 separate)
+    needs: [wiring-contract]
+    if: inputs.perf_reuse_run_id == '' && !contains(github.event.head_commit.message, '[plan026-coding]') && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
+    runs-on: windows-2025
+    timeout-minutes: 25
+    env:
+      AWS_LC_SYS_PREBUILT_NASM: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Windows native Rust M1/M3/FEC2 entire library unit regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib -- --test-threads=1 --skip runtime::directional::pinned_rtrb_overlay_proof::r1_direction_m0_pinned_rtrb_overlay_source_exact_native_ci --skip runtime::generation_release::r1_owner_release_compiled_once_hosted_cpu_latency_provenance
+          if($LASTEXITCODE -ne 0){throw 'Windows full Rust library unit regression FAIL'}
+          # M0/R2 genuine frozen M1 receipt, M3 AEAD replay and M4
+          # ready-only copy: run EVERY integration fixture as a separate
+          # non-network, source-locked Windows program, no skip/xfail.
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --test r2_receipt_ingress -- --test-threads=1
+          if($LASTEXITCODE -ne 0){throw 'Windows actual M1-M2-M3-M4 R2 receipt integration regression FAIL'}
+          New-Item -ItemType Directory -Force -Path result | Out-Null
+          @{source=$env:GITHUB_SHA;scope='WINDOWS_RUST_ELIGIBLE_LIB_M1_SPECIAL_NOT_RUN';result='PASS';native_product='NOT_RUN';real_two_os='NOT_RUN'} |
+            ConvertTo-Json | Set-Content result/rust-owner-contract.json
+          @{source=$env:GITHUB_SHA;scope='WINDOWS_R2_FROZEN_M1_AUTHENTICATED_M3_READY_M4_ALL_FIXTURES';result='PASS';native_product='NOT_RUN';M1_special='NOT_RUN'} |
+            ConvertTo-Json | Set-Content result/r2-receipt-contract.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: rust-owner-compile-preflight-${{ github.run_id }}
+          path: |
+            result/rust-owner-contract.json
+            result/r2-receipt-contract.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  linux-rust-contract-preflight:
+    name: Linux Rust eligible library unit tests (special M1 separate)
+    needs: [wiring-contract]
+    if: inputs.perf_reuse_run_id == '' && !contains(github.event.head_commit.message, '[plan026-coding]') && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Compile and run Linux original Rust library tests without TUN or network changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib -- --test-threads=1 --skip runtime::directional::pinned_rtrb_overlay_proof::r1_direction_m0_pinned_rtrb_overlay_source_exact_native_ci
+          # Same Rust integration fixtures, but compile with the original
+          # Linux target and native M0 probe feature contract. Do not
+          # pretend an in-memory ready sink is the real Windows driver.
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --test r2_receipt_ingress -- --test-threads=1
+          mkdir -p result
+          printf '{"source":"%s","scope":"LINUX_RUST_ELIGIBLE_LIB_M1_SPECIAL_NOT_RUN","result":"PASS","native_product":"NOT_RUN","real_two_os":"NOT_RUN"}\n' "$GITHUB_SHA" > result/linux-rust-contract.json
+          printf '{"source":"%s","scope":"LINUX_R2_FROZEN_M1_AUTHENTICATED_M3_READY_M4_ALL_FIXTURES","result":"PASS","native_product":"NOT_RUN","M1_special":"NOT_RUN"}\n' "$GITHUB_SHA" > result/r2-linux-contract.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: linux-rust-contract-preflight-${{ github.run_id }}
+          path: |
+            result/linux-rust-contract.json
+            result/r2-linux-contract.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  linux-source-locked-public:
+    # PLAN026 coding commits use [plan026-coding]: compile/cheap ABI only.
+    # Full signed two-OS qualification is reserved for the completed bundle
+    # via workflow_dispatch or a separately source-locked full marker.
+    needs: [windows-compile-preflight]
+    if: (github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || contains(github.event.head_commit.message, '[wiring-full]')) && !contains(github.event.head_commit.message, '[plan026-coding]') && inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
+    name: Build true original Go and new Linux Rust peer persona from same SOURCE
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: "1"
+      GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Compile source-pinned actual original-Go TLS and Rust M4 Linux binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git -C legacy rev-parse HEAD)" = "$GO_SRC"
+          mkdir -p linux-product legacy/internal/v4productcli legacy/cmd/wbd-v4-server legacy/cmd/wbd-v4-client
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record
+          # W168 Go/Linux public TUN + outer policy requires two precise
+          # original-Go FakeTCP adapters, already source-locked and exercised
+          # by freeze's tools/arm64_public_go_rust_bundle.sh. The legacy Go
+          # repository remains pinned/immutable; patch only this Actions copy.
+          mkdir -p legacy/internal/faketcp
+          cp r0/go_overlay/internal/faketcp/public_v4_mss.go legacy/internal/faketcp/public_v4_mss.go
+          cp r0/go_overlay/internal/faketcp/raw_detached_data_linux.go legacy/internal/faketcp/raw_detached_data_linux.go
+          cp r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go legacy/internal/faketcp/raw_detached_data_linux_test.go
+          python3 - <<'PY'
+          from pathlib import Path
+          patches={
+              'association.go':[('MSS: DefaultMSS, MSSSet: true,','MSS: PublicV4AdvertisedMSS(), MSSSet: true,',1)],
+              'client_association.go':[('MSS: DefaultMSS, MSSSet: true,','MSS: PublicV4AdvertisedMSS(), MSSSet: true,',1)],
+              'packet.go':[
+                  ('s.MSSSet && s.MSS == DefaultMSS &&','s.MSSSet && s.MSS == PublicV4AdvertisedMSS() &&',1),
+                  ('binary.BigEndian.PutUint16(o[2:4], DefaultMSS)','binary.BigEndian.PutUint16(o[2:4], PublicV4AdvertisedMSS())',2),
+              ],
+          }
+          for name,changes in patches.items():
+              p=Path('legacy/internal/faketcp')/name
+              raw=p.read_text()
+              for find,replace,expected in changes:
+                  actual=raw.count(find)
+                  if actual!=expected:raise RuntimeError(f'frozen W168 source mismatch {name}: {find!r} expected={expected} actual={actual}')
+                  raw=raw.replace(find,replace)
+              p.write_text(raw)
+          PY
+          # The private original-Go credential logic remains pinned; only
+          # new V4 named overlay files from the identical checkout are added.
+          for f in r0/go_overlay/internal/realityfront/*.go; do
+            dst="legacy/internal/realityfront/$(basename "$f")"
+            test ! -e "$dst" || { echo "refused overwrite of original Go: $dst" >&2; exit 1; }
+            cp "$f" "$dst"
+          done
+          cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
+          cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
+          cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
+          (cd legacy && go test ./internal/faketcp -run TestDetachedDataKernelFilterPreservesHandshakeAndControl -count=1)
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/linux-product/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/linux-product/wbd-v4-server" ./cmd/wbd-v4-server)
+          cp target/release/libwbd_engine.so linux-product/libwbd_engine.so
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path('linux-product')
+          names=('wbd-v4-client','wbd-v4-server','libwbd_engine.so')
+          checks={n:hashlib.sha256((p/n).read_bytes()).hexdigest() for n in names}
+          assert all((p/n).stat().st_size>100000 for n in names)
+          (p/'manifest.json').write_text(json.dumps({
+              'schema_version':1,'source_sha':os.environ['GITHUB_SHA'],
+              'original_go_sha':os.environ['GO_SRC'],'sha256':checks,
+              'go':'1.23.12','rust':'1.85.1',
+              'peer_persona':'selected_only_after_original_credential_TLS',
+              'binary_qualification':'BUILD_ONLY_NOT_PRODUCT'
+          },indent=2)+'\n')
+          print('M0_PLAN024_NEW_LINUX_ORIGINAL_GO_RUST_PEER_PERSONA_SOURCE_VERIFIED')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-plan024-linux-product
+          path: linux-product/
+          retention-days: 30
+
+  native-public-two-os:
+    needs: [wiring-contract, linux-source-locked-public]
+    if: always() && !contains(github.event.head_commit.message, '[plan026-coding]') && needs.wiring-contract.result == 'success' && (needs.linux-source-locked-public.result == 'success' || inputs.perf_reuse_run_id != '' || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
+    runs-on: windows-2025
+    timeout-minutes: 38
+    env:
+      AWS_LC_SYS_PREBUILT_NASM: "1"
+      GH_TOKEN: ${{ github.token }}
+      GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
+      LINUX_BINARY_SRC: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]') && '7fc38591c501ff4a06e1862c7b08d5d3dbc1be95' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '0abd1b04ee7a39d8aa426963564a079523c1036a' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '0543b805ca25d804ccd131be6686b0b99f61f80f' || inputs.perf_binary_source_sha || github.sha }}
+      # PLAN027 main push selects only Normal. Subsequent B public modes
+      # each own a separate Action and reuse source-verified signed binaries,
+      # never mixing throughput scenes on one VM.
+      WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-game2-historical-order]') && 'through-game2' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-game2-only]') && 'game2' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]') || contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || (contains(github.event.head_commit.message, '[plan026-win-wake-150]') || contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]')) || contains(github.event.head_commit.message, '[plan026-win-npf-borrow-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))) && 'normal' || inputs.public_mode || 'all' }}
+      WBD_WL_ABBA_NATIVE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]') && '1' || '0' }}
+      WBD_WL_RUN_N0: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '1' || inputs.run_n0 == true && '1' || '0' }}
+      WBD_WL_RUN_P200: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') && '1' || '0' }}
+      WBD_WL_PROBE_LOCKS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-probe-locks]') && '1' || '0' }}
+      WBD_WL_V2_CPU_AUDIT: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || (contains(github.event.head_commit.message, '[plan026-win-wake-150]') || contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]')) || contains(github.event.head_commit.message, '[plan026-win-npf-borrow-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')) && '1' || '0' }}
+      WBD_WL_N0_SECONDS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '240' || '60' }}
+      WBD_WL_V2_SCENARIO: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]') && 'scenarios/wl-outer-repair-50m-300ms-loss30-60s.json' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || (contains(github.event.head_commit.message, '[plan026-win-wake-150]') || contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]')) || contains(github.event.head_commit.message, '[plan026-win-npf-borrow-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))) && ((contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]')) && 'scenarios/wl-normal-100m-300ms-0loss-60s.json' || 'scenarios/wl-normal-150m-300ms-0loss-60s.json') || inputs.perf_scenario_file || '' }}
+      WBD_WL_REUSE_RUN_ID: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]') && '40693430836' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '40681039919' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '40668581343' || inputs.perf_reuse_run_id || '' }}
+      WBD_WL_BINARY_SOURCE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]') && '7fc38591c501ff4a06e1862c7b08d5d3dbc1be95' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '0abd1b04ee7a39d8aa426963564a079523c1036a' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '0543b805ca25d804ccd131be6686b0b99f61f80f' || inputs.perf_binary_source_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Prepare exact original Go and current native bridge with shared preflight assembler
+        if: env.WBD_WL_REUSE_RUN_ID == ''
+        run: python tools/prepare_windows_wiring.py
+      - name: Compile original Windows product from the verified assembly
+        if: env.WBD_WL_REUSE_RUN_ID == ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          Push-Location legacy
+          try {
+            & go build -tags wbd_v4_embedded_go ./internal/windowsownerlease
+            if($LASTEXITCODE -ne 0){throw 'actual Go native owner build FAIL'}
+            & go build -trimpath -tags wbd_v4_embedded_go -o ../result/wbd-client-embedded.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'actual original-Go native CLI build FAIL'}
+          } finally {Pop-Location}
+      - name: Build actual original Windows Rust M1 M2 M3 release DLL
+        if: env.WBD_WL_REUSE_RUN_ID == ''
+        shell: pwsh
+        timeout-minutes: 20
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'Rust 1.85.1 toolchain missing'}
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          if($LASTEXITCODE -ne 0){throw 'actual Windows MSVC target missing'}
+          $features='m0_v4_embedded_go,fec2_product_record'
+          if($env:WBD_WL_PROBE_LOCKS -eq '1'){$features+=',win_native_lock_profile'}
+          & cargo +1.85.1 build --locked --release -p wbd-engine --features $features
+          if($LASTEXITCODE -ne 0){throw 'actual Windows Rust M2 library build failed'}
+          New-Item -ItemType Directory -Force result/wl-public | Out-Null
+          # Native Rust-only regression: a too-short reverse-M2 draft buffer
+          # cannot burn one PN/TCP span and silently misalign original Go.
+          # Whole native M1/M2/M3/FEC2/Game-owner module regressions as
+          # one bounded suite. Do not promote isolated Fixed6 samples or
+          # run a dedicated profile6 public Windows/Linux sequence.
+          & cargo +1.85.1 test --locked -p wbd-engine --features $features --lib v4_windows_owner -- --test-threads=1 --nocapture
+          if($LASTEXITCODE -ne 0){throw 'Windows native original owner full-module functional regression FAIL'}
+          Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
+          Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe
+          [ordered]@{source_sha=$env:GITHUB_SHA;features=$features;sha256=[ordered]@{
+              exe=(Get-FileHash result/wl-public/wbd-client-embedded.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+              dll=(Get-FileHash result/wl-public/wbd_engine.dll -Algorithm SHA256).Hash.ToLowerInvariant()
+            }} | ConvertTo-Json -Depth 6 | Set-Content result/wl-public/windows-binary-manifest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: env.WBD_WL_REUSE_RUN_ID == ''
+        with:
+          name: m0-wl-windows-product-binaries-${{ github.sha }}
+          path: |
+            result/wl-public/wbd-client-embedded.exe
+            result/wl-public/wbd_engine.dll
+            result/wl-public/windows-binary-manifest.json
+          retention-days: 30
+          if-no-files-found: error
+      - name: Verify Windows bound authenticated RX high-water without false TCP ACK
+        if: env.WBD_WL_REUSE_RUN_ID == ''
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $ErrorActionPreference='Stop'
+          $env:WBD_M0_TEST_NATIVE_V4_DLL=(Resolve-Path result/wl-public/wbd_engine.dll).Path
+          try {
+            Push-Location legacy
+            try {
+              & go test -count=1 -tags wbd_v4_embedded_go -run '^TestM0PLAN(023WindowsNativeV4FiveModes|024WindowsNativeWholeProductCapabilityGate|024AuthenticatedHighWater)' ./cmd/wbd-client
+              if($LASTEXITCODE -ne 0){throw 'native original-Go selected modes / actual Rust DLL public-capability and M3 RX regression FAIL'}
+              & go test -count=1 -tags wbd_v4_embedded_go -run TestM0WindowsGameFecProtectedExtensionBounds ./internal/realityfront
+              if($LASTEXITCODE -ne 0){throw 'original-Go Game2/4 protected FEC2 profile admission guard FAIL'}
+            } finally {Pop-Location}
+          } finally {Remove-Item Env:WBD_M0_TEST_NATIVE_V4_DLL -ErrorAction SilentlyContinue}
+          Write-Output 'WL_PUBLIC_NATIVE_ORIGINAL_OWNER_EFFECTIVE_MODE_GATE_PASS_SCOPED'
+      - name: Restore exact prebuilt Windows EXE/DLL (no rebuild)
+        if: env.WBD_WL_REUSE_RUN_ID != '' && env.WBD_WL_ABBA_NATIVE != '1'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $id=$env:WBD_WL_REUSE_RUN_ID
+          $sha=$env:WBD_WL_BINARY_SOURCE
+          if($id -notmatch '^[1-9][0-9]{5,16}$' -or $sha -notmatch '^[0-9a-f]{40}$'){throw 'invalid run or SHA selector'}
+          $record=(& gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$id" | ConvertFrom-Json)
+          if($LASTEXITCODE -ne 0 -or $record.head_sha -ne $sha -or
+             $record.repository.full_name -ne $env:GITHUB_REPOSITORY){throw 'untrusted binary provenance'}
+          if($sha -ne $env:GITHUB_SHA){
+            & git fetch --depth=1 origin $sha
+            if($LASTEXITCODE -ne 0){throw 'unreadable original product source'}
+            $changes=@(& git diff --name-only $sha $env:GITHUB_SHA -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py)
+            if($LASTEXITCODE -ne 0 -or $changes.Count -gt 0){throw ('product/ABI changed: '+($changes -join ','))}
+          }
+          New-Item -ItemType Directory -Force result/wl-public | Out-Null
+          & gh run download $id --repo $env:GITHUB_REPOSITORY --name "m0-wl-windows-product-binaries-$sha" --dir result/wl-public
+          if($LASTEXITCODE -ne 0){throw 'exact Windows product artifact missing'}
+          @'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path('result/wl-public')
+          m=json.loads((p/'windows-binary-manifest.json').read_text())
+          assert m['source_sha']==os.environ['WBD_WL_BINARY_SOURCE']
+          assert m['features']=='m0_v4_embedded_go,fec2_product_record'
+          for name,key in [('wbd-client-embedded.exe','exe'),('wbd_engine.dll','dll')]:
+              b=(p/name).read_bytes()
+              assert len(b)>100000 and hashlib.sha256(b).hexdigest()==m['sha256'][key]
+          print('WL_V2_REUSED_WINDOWS_NATIVE_EXACT_BINARY_SHA_PASS')
+          '@ | python -
+          if($LASTEXITCODE -ne 0){throw 'reuse binary manifest SHA mismatch'}
+      - name: Full public-run signed original Npcap and Wintun driver install
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=Join-Path $env:RUNNER_TEMP 'wl-public-real'
+          $drv=Join-Path $root 'npcap'
+          $usr=Join-Path $root 'user'
+          New-Item -ItemType Directory -Force $root,$drv,$usr,result/wl-public | Out-Null
+          $zip=Join-Path $root 'npcap-test.zip'
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/user-attachments/files/32200327/npcap.zip' -OutFile $zip
+          if((Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6380ebe6d5b06bbb0dc03a43151ee05a4a25be97efebd742c463e0e466621a32'){throw 'approved old driver package hash changed'}
+          Expand-Archive $zip $drv -Force
+          $installer=Join-Path $root 'npcap-1.88.exe'
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://npcap.com/dist/npcap-1.88.exe' -OutFile $installer
+          if((Get-FileHash $installer -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'a2f4ec1e5ea353ff67efd24b2ebf081ba44532410fae8d5e146af0310aa4f56b'){throw 'official Npcap hash changed'}
+          $sg=Get-AuthenticodeSignature $installer
+          if($sg.Status -ne 'Valid' -or $sg.SignerCertificate.Subject -notmatch 'Nmap Software LLC'){throw 'official Npcap invalid signature'}
+          & 7z x -y "-o$usr" $installer | Out-File result/wl-public/npcap-extract.log
+          if($LASTEXITCODE -ne 0){throw 'Npcap DLL extraction failed'}
+          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Install -DriverPackageDir $drv -UserlandExtractDir $usr 2>&1 |
+            Tee-Object result/wl-public/npcap-install.log
+          if((Get-Service npcap -ErrorAction Stop).Status -ne 'Running'){throw 'Npcap real kernel service not running'}
+          Copy-Item -LiteralPath "$env:WINDIR/System32/Npcap/wpcap.dll" -Destination result/wl-public/wpcap.dll
+          Copy-Item -LiteralPath "$env:WINDIR/System32/Npcap/Packet.dll" -Destination result/wl-public/Packet.dll
+          $wzip=Join-Path $root 'wintun.zip'
+          $wdir=Join-Path $root 'wintun'
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile $wzip
+          if((Get-FileHash $wzip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw 'official Wintun archive hash changed'}
+          Expand-Archive $wzip $wdir -Force
+          $dll=Join-Path $wdir 'wintun/bin/amd64/wintun.dll'
+          if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'official Wintun DLL unsigned'}
+          Copy-Item $dll result/wl-public/wintun.dll
+      - name: Prepare source-locked A/B Rust binaries for same-runner ABBA
+        if: env.WBD_WL_ABBA_NATIVE == '1'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $A='7fc38591c501ff4a06e1862c7b08d5d3dbc1be95'
+          $B='e6be9358d2272d7e1960a935be7fe772885bb034'
+          & git fetch --depth=2 origin $A $B
+          if($LASTEXITCODE -ne 0){throw 'cannot fetch immutable native source refs'}
+          $now=@(& git diff --name-only $B $env:GITHUB_SHA -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py)
+          if($LASTEXITCODE -ne 0 -or $now.Count -gt 0){throw ('ABBA product changed since compiled B: '+($now -join ','))}
+          $delta=@(& git diff --name-only $A $B -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py | Sort-Object)
+          $expected=@('crates/wbd-engine/src/v4_windows_native_runtime.rs','crates/wbd-platform/src/windows_native_io.rs')
+          if(@(Compare-Object $delta $expected).Count -ne 0){throw ('ABBA unexpected product delta: '+($delta -join ','))}
+          & python -u tools/m0_wl_native_abba_prepare.py
+          if($LASTEXITCODE -ne 0){throw 'exact compiled A/B artifacts unavailable'}
+      - name: Restore SAME-RUN new original Go Linux Rust binary with exact SHA checks
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force linux-product | Out-Null
+          $from=if($env:WBD_WL_REUSE_RUN_ID){$env:WBD_WL_REUSE_RUN_ID}else{$env:GITHUB_RUN_ID}
+          & gh run download $from --repo $env:GITHUB_REPOSITORY --name m0-plan024-linux-product --dir linux-product
+          if($LASTEXITCODE -ne 0){throw 'actual same-SOURCE original Linux build artifact missing'}
+          @'
+          import hashlib,json,pathlib,os
+          p=pathlib.Path("linux-product")
+          m=json.loads((p/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["LINUX_BINARY_SRC"]==os.environ["WBD_WL_BINARY_SOURCE"]
+          if not os.environ.get("WBD_WL_REUSE_RUN_ID"):
+              assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["original_go_sha"]==os.environ["GO_SRC"]
+          assert m["binary_qualification"]=="BUILD_ONLY_NOT_PRODUCT"
+          for name in ("wbd-v4-server","wbd-v4-client","libwbd_engine.so"):
+              f=p/name
+              assert f.is_file() and f.stat().st_size>100000
+              assert hashlib.sha256(f.read_bytes()).hexdigest()==m["sha256"][name]
+          print("WL_NEW_LINUX_ORIGINAL_GO_RUST_SOURCE_MATCH_VERIFIED")
+          '@ | python -
+          if($LASTEXITCODE -ne 0){throw 'new exact Linux Go/Rust binary integrity failed'}
+      # Preserve actual Ubuntu on the SAME Windows runner for the later
+      # native kernel job. A completed step gives inspectable first-error
+      # logs even if the later Game2 process tree wedges the runner.
+      - name: Real WSL2 Ubuntu kernel boot and TUN prerequisite (independent bounded stage)
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          Write-Output ('WL_WSL2_BOOT_STAGE_SOURCE '+$env:GITHUB_SHA)
+          $known=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          if($LASTEXITCODE -ne 0){throw 'bounded WSL2 distribution listing failed'}
+          if($known -notmatch 'Ubuntu'){
+            # Old WSL Store/network launcher hung until the full product
+            # step timed out. Import real Ubuntu 24.04.5 WSL rootfs directly
+            # from Ubuntu's official release, pinning its published digest.
+            # This remains a genuine Ubuntu WSL2 guest/kernel, never a mock.
+            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+            $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
+            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
+            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'official Ubuntu WSL image integrity mismatch'}
+            New-Item -ItemType Directory -Force $vm | Out-Null
+            & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2 2>&1 |
+              Tee-Object result/wl-public/wsl-import.log
+            if($LASTEXITCODE -ne 0){throw 'actual Ubuntu WSL2 distribution import failed'}
+            $installed=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+            if($LASTEXITCODE -ne 0){throw 'bounded post-import WSL2 distribution listing failed'}
+            if($installed -notmatch 'Ubuntu'){throw 'real Ubuntu WSL2 distribution not registered after import'}
+            Write-Output 'WL_REAL_PINNED_UBUNTU_24045_WSL2_IMPORTED'
+          }
+          # One real Linux-kernel preflight, now bounded: past SOURCE bdf574
+          # imported Ubuntu but its first guest command hung until 22m timeout.
+          # A failed precondition is ENVIRONMENT_BLOCKED, not product FAIL.
+          Write-Output 'WL_WSL2_STAGE_BEGIN real_guest_kernel_probe'
+          & python tools/m0_wl_real_wsl2_guest_probe.py
+          if($LASTEXITCODE -ne 0){throw 'real WSL2 native guest boot ENVIRONMENT_BLOCKED; see bounded probe JSON'}
+          Write-Output 'WL_WSL2_STAGE_PASS real_guest_kernel_probe'
+          Write-Output 'WL_WSL2_BOOT_STAGE_COMPLETE_REAL_KERNEL'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success() || failure()
+        with:
+          name: m0-wl-real-guest-boot-${{ github.run_id }}
+          path: |
+            result/wl-public/wsl2-real-guest-probe.json
+            result/wl-public/wsl-import.log
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Launch actual WSL2 Linux and direct full public two-OS product
+        shell: pwsh
+        timeout-minutes: 24
+        run: |
+          $ErrorActionPreference='Stop'
+          # Whole-step external native OS process-tree watchdog, including
+          # WSL2 import/boot/firewall, 7 modes, and cleanup (not just mode).
+          $watchdogDone=Join-Path $env:RUNNER_TEMP ('wbd-wl-'+$env:GITHUB_RUN_ID+'-guard-done.flag')
+          Remove-Item $watchdogDone -Force -ErrorAction SilentlyContinue
+          $watchdogScript=(Resolve-Path 'tools/m0_wl_windows_step_watchdog.py').Path
+          $gameSingle=($env:WBD_WL_PUBLIC_MODES -like 'game*')
+          $wholeLimit=if($gameSingle){600}else{1020}
+          $guard=Start-Process -FilePath python -ArgumentList @('-u',$watchdogScript,[string]$PID,[string]$wholeLimit,$watchdogDone) -PassThru
+          if($null -eq $guard){throw 'external WSL2 whole-step watchdog not armed'}
+          Write-Output ('WL_WSL2_OUTER_WATCHDOG_ARMED max_seconds='+$wholeLimit+' windows_parent_pid='+$PID)
+          try {
+          & python tools/m0_wl_windows_bounded_cmd.py 120 wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
+          if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
+          & python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443:446 -j DROP
+          if($LASTEXITCODE -ne 0){throw 'real Linux original FakeTCP RST suppression unavailable'}
+          'owned' | Set-Content result/wl-public/linux-rst-rule-owned.flag
+          # Observed genuine source 1445e2c: Windows WSL NPF sees TCP SYN,
+          # Linux eth0 does not. Admit only this host->WSL raw product flow
+          # across WSL's actual Hyper-V firewall; never change default policy.
+          $creator=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop |
+            Where-Object {$_.FriendlyName -eq 'WSL'})
+          if($creator.Count -ne 1){throw 'exact WSL HyperV firewall VM creator unavailable'}
+          $guestText=(& python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0 | Out-String)
+          if($LASTEXITCODE -ne 0){throw 'bounded WSL2 eth0 address lookup failed'}
+          $match=[regex]::Match($guestText,'\binet\s+(\d{1,3}(?:\.\d{1,3}){3})/')
+          if(-not $match.Success){throw 'actual WSL2 guest eth0 address missing'}
+          $guestIP=$match.Groups[1].Value
+          $nic=@(Get-NetAdapter -IncludeHidden -ErrorAction Stop |
+            Where-Object {$_.Name -match '^vEthernet \(WSL' -and $_.Status -eq 'Up'})
+          if($nic.Count -ne 1){throw 'WSL2 vEthernet owner ambiguous'}
+          $source=@(Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -ErrorAction Stop |
+            Where-Object {$_.IPAddress -notmatch '^169\.254\.'})
+          if($source.Count -ne 1){throw 'host WSL2 source address ambiguous'}
+          $ruleName='WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT
+          if(Get-NetFirewallHyperVRule -Name $ruleName -ErrorAction SilentlyContinue){throw 'foreign same-name WSL hyperv rule'}
+          New-NetFirewallHyperVRule -Name $ruleName -DisplayName $ruleName -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol TCP -LocalAddresses $guestIP -RemoteAddresses $source[0].IPAddress -LocalPorts @('443','444','445','446') -RemotePorts @('41031','41032','41033','41034') -ErrorAction Stop | Out-Null
+          $live=Get-NetFirewallHyperVRule -Name $ruleName -ErrorAction Stop
+          if($null -eq $live -or $live.Direction -ne 'Inbound' -or $live.Action -ne 'Allow'){throw 'original WSL HyperV per-flow rule not actually installed'}
+          [ordered]@{name=$ruleName;creator_id=[string]$creator[0].VMCreatorId;linux_guest=$guestIP;windows_host=$source[0].IPAddress;server_tcp_ports=@(443,444,445,446);client_tcp_ports=@(41031,41032,41033,41034);scope='OWNED_WSL2_ORIGINAL_NPCAP_GAME4_FOUR_LANES_MAX'} |
+            ConvertTo-Json | Set-Content result/wl-public/hyperv-rule.json
+          Write-Output 'WL_REAL_WSL_HYPERV_TCP443_TO_446_EXACT_OWNER_ALLOW_INSTALLED'
+          # Real NPF header showed original product SYN destination MAC equals
+          # Windows vEthernet own source MAC. Resolve ONLY this actual WSL2
+          # Linux eth0 MAC, never fabricate an IP/TLS/ACK or replace Npcap.
+          $guestLink=(& python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -j link show dev eth0 | ConvertFrom-Json)
+          if($LASTEXITCODE -ne 0){throw 'bounded WSL2 eth0 MAC lookup failed'}
+          $guestMAC=[string]$guestLink.address
+          $hostMAC=([string]$nic[0].MacAddress).Replace('-',':')
+          if(@($guestMAC.Split(':')).Count -ne 6 -or $guestMAC -eq $hostMAC){throw 'actual WSL2 guest Ethernet MAC invalid or same as Windows host'}
+          $existing=@(Get-NetNeighbor -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -IPAddress $guestIP -ErrorAction SilentlyContinue)
+          if(@($existing|Where-Object {$_.State -eq 'Permanent'}).Count -gt 0){throw 'foreign WSL neighbor present, refusing overwrite'}
+          [ordered]@{owner=$ruleName;interface_index=$nic[0].InterfaceIndex;guest_ip=$guestIP;guest_mac=$guestMAC;source_host_mac=$hostMAC} |
+            ConvertTo-Json | Set-Content result/wl-public/native-wsl-neighbor-owner.json
+          & netsh.exe interface ipv4 set neighbors "interface=$($nic[0].InterfaceIndex)" "address=$guestIP" "neighbor=$($guestMAC.Replace(':','-'))" "store=active"
+          if($LASTEXITCODE -ne 0){throw 'native WSL2 exact Linux eth0 neighbor install failed'}
+          $entry=@(Get-NetNeighbor -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -IPAddress $guestIP -ErrorAction Stop)
+          if($entry.Count -ne 1 -or $entry[0].LinkLayerAddress.Replace('-',':') -ne $guestMAC){throw 'real WSL2 guest neighbor MAC readback mismatch'}
+          Write-Output ('WL_REAL_GUEST_MAC_NEIGHBOR_BOUND mac='+$guestMAC)
+          # Pass only the exact MAC already read from ACTUAL Linux eth0 and
+          # verified by Windows NetNeighbor into this public Go/Npcap child.
+          # SendARP alone returned the host self MAC (proven wrong SYN L2).
+          $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_MAC=$guestMAC
+          $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_IP4=$guestIP
+          $env:WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4=[string]$source[0].IPAddress
+          $env:WBD_PLAN024_NATIVE_VERIFIED_IFINDEX=[string]$nic[0].InterfaceIndex
+          Write-Output 'WL_REAL_ORIGINAL_GO_SCOPED_LINUX_GUEST_MAC_FFI_HANDOFF_ARMED'
+          # Functional TCP test uses a genuine Windows TCP listener on the
+          # created Wintun's 10.66.0.2:45902. Windows host firewall may
+          # independently deny new inbound SYNs even when authenticated Rust
+          # M3 delivered the packet. Admit ONLY Linux TUN 10.66.0.1 to this
+          # single testing listener; NEVER disable global firewall/WFP.
+          # The rule is owned by this exact run and deleted in finally.
+          $tcpRuleName='WBD-M0-WL-TCP-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT
+          if(Get-NetFirewallRule -Name $tcpRuleName -ErrorAction SilentlyContinue){throw 'foreign scoped TCP listener firewall rule'}
+          New-NetFirewallRule -Name $tcpRuleName -DisplayName $tcpRuleName -Direction Inbound -Action Allow -Enabled True -Profile Any -Protocol TCP -LocalAddress '10.66.0.2' -RemoteAddress '10.66.0.1' -LocalPort 45902 -ErrorAction Stop | Out-Null
+          $tcpRule=Get-NetFirewallRule -Name $tcpRuleName -ErrorAction Stop
+          $tcpPort=Get-NetFirewallPortFilter -AssociatedNetFirewallRule $tcpRule -ErrorAction Stop
+          $tcpIP=Get-NetFirewallAddressFilter -AssociatedNetFirewallRule $tcpRule -ErrorAction Stop
+          if($tcpRule.Action -ne 'Allow' -or $tcpRule.Direction -ne 'Inbound' -or
+             [string]$tcpPort.LocalPort -ne '45902' -or [string]$tcpPort.Protocol -notin @('TCP','6') -or
+             [string]$tcpIP.LocalAddress -ne '10.66.0.2' -or [string]$tcpIP.RemoteAddress -ne '10.66.0.1'){
+            throw 'scoped WinTun TCP test listener firewall rule readback mismatch'
+          }
+          [ordered]@{name=$tcpRuleName;local='10.66.0.2';remote='10.66.0.1';port=45902;type='OWNED_FUNCTIONAL_TCP_LISTENER_NOT_PRODUCT_FIREWALL_POLICY'} |
+            ConvertTo-Json | Set-Content result/wl-public/functional-tcp-firewall-owned.json
+          Write-Output 'WL_REAL_WINDOWS_WINTUN_TCP_FUNCTIONAL_LISTENER_RULE_SCOPED_READBACK'
+          # Passive wire witness observes THIS SAME real public handshake, never injects traffic.
+          $drive=$PWD.Path.Substring(0,1).ToLowerInvariant()
+          $traceScript='/mnt/'+$drive+'/'+$PWD.Path.Substring(3).Replace('\','/')+'/tools/m0_wl_public_native_wire_trace.py'
+          Write-Output 'WL_WSL2_STAGE_BEGIN signed_product_wire_witness'
+          $witness=Start-Process -FilePath wsl.exe -ArgumentList @('-d','Ubuntu','-u','root','--','python3','-u',$traceScript,'eth0') -PassThru -RedirectStandardOutput result/wl-public/native-link-tcp443.log -RedirectStandardError result/wl-public/native-link-stderr.log
+          # These OS route witnesses are captured during the SAME public
+          # TLS/Npcap/WSL2 product run; no synthetic sender or mock route.
+          Get-NetRoute -AddressFamily IPv4 -ErrorAction Continue |
+            Select-Object DestinationPrefix,InterfaceIndex,NextHop,RouteMetric |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/windows-route.json
+          Get-NetAdapter -IncludeHidden -ErrorAction Continue |
+            Select-Object Name,InterfaceIndex,InterfaceGuid,MacAddress,Status |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/windows-adapters.json
+          & python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -j -4 addr show dev eth0 |
+            Out-File result/wl-public/linux-eth0.json
+          if($LASTEXITCODE -ne 0){throw 'bounded WSL2 eth0 native witness failed'}
+          $npf=Start-Process -FilePath python -ArgumentList @('-u','tools/m0_wl_public_native_npf_trace.py') -PassThru -RedirectStandardOutput result/wl-public/native-windows-npf.log -RedirectStandardError result/wl-public/native-windows-npf-stderr.log
+          Start-Sleep -Milliseconds 800
+          try {
+            # A code-source-tagged Auto revision candidate saves costly
+            # replay of seven already source-proven startup modes.
+            if($env:GITHUB_EVENT_NAME -eq 'push' -and
+               $env:WBD_WL_PUBLIC_MODES -eq 'all'){
+              if((& git log -1 --format=%B) -like '*auto-natural-only*'){
+                $env:WBD_WL_PUBLIC_MODES='auto-adaptive'
+              } elseif((& git log -1 --format=%B) -like '*auto-start-only*'){
+              $env:WBD_WL_PUBLIC_MODES='auto'
+            } elseif((& git log -1 --format=%B) -like '*auto-revision-only*'){
+                $env:WBD_WL_PUBLIC_MODES='auto-revision'
+              }
+            }
+            if($env:WBD_WL_ABBA_NATIVE -eq '1'){
+              & python -u tools/m0_wl_native_rx_abba.py 2>&1 |
+                Tee-Object result/wl-public/direct-full.log
+            }else{
+              # No native PowerShell PIPE/EOF dependency: a detached original
+              # WSL/Go child may inherit stdout and outlive its owning test.
+              # Tail a real file by PID so its genuine error/exit is promptly
+              # surfaced without waiting for unrelated descendant handles.
+              Write-Output ('WL_WSL2_STAGE_BEGIN actual_native_modes mode='+$env:WBD_WL_PUBLIC_MODES)
+              if($gameSingle){
+                # The direct PID-owned file-backed runner already enforces
+                # the real 360s mode / 440s batch deadline. The previous
+                # second 510s temp-file wrapper hid its live progress and
+                # errors; launch this one directly so Actions records them.
+                Write-Output 'WL_GAME_NATIVE_FILE_BACKED_STREAMING_DEADLINE seconds=440'
+              }
+              & python -u tools/m0_wl_native_step_runner.py tools/m0_wl_public_modes_e2e.py result/wl-public/direct-full.log
+            }
+            $e2eExit=$LASTEXITCODE
+            if($e2eExit -ne 0){throw 'real Windows-to-Linux public original Go TLS/Rust M1-M3/native I/O path failed'}
+            if($env:WBD_WL_PUBLIC_MODES -eq 'all'){
+              Copy-Item result/wl-public/normal-report.json result/wl-public/report.json -Force
+            } elseif($env:WBD_WL_PUBLIC_MODES -eq 'through-game2'){
+              # Historical original mode order up to Game2; the last
+              # source-signed Game2 result is the scoped terminal verdict.
+              Copy-Item result/wl-public/game2-report.json result/wl-public/report.json -Force
+            } else {
+              Copy-Item "result/wl-public/$env:WBD_WL_PUBLIC_MODES-report.json" result/wl-public/report.json -Force
+            }
+            # Other effective public modes remain UNWIRED/NOT_RUN until
+            # they use the genuine shared Linux owner/lane/lifecycle ABI.
+            # No separate Fixed6-only public Action or repeated WSL2 startup.
+          } finally {
+            Remove-NetFirewallRule -Name $tcpRuleName -ErrorAction Stop
+            if(Get-NetFirewallRule -Name $tcpRuleName -ErrorAction SilentlyContinue){
+              throw 'owned TCP test firewall rule survived scoped cleanup'
+            }
+            Write-Output 'WL_REAL_WINDOWS_WINTUN_TCP_FUNCTIONAL_LISTENER_RULE_REMOVED'
+            foreach($p in @($witness,$npf)){
+              if($null -ne $p -and -not $p.HasExited){Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue}
+            }
+            Get-Content result/wl-public/native-link-tcp443.log -Tail 75 -ErrorAction SilentlyContinue
+            Get-Content result/wl-public/native-windows-npf.log -Tail 75 -ErrorAction SilentlyContinue
+            Get-Content result/wl-public/native-windows-npf-stderr.log -Tail 15 -ErrorAction SilentlyContinue
+          }
+          if($e2eExit -ne 0){throw 'true public Windows Go TLS Rust Npcap Wintun to Linux raw/TUN direct chain FAILED'}
+          $result=Get-Content result/wl-public/report.json -Raw | ConvertFrom-Json
+          if($env:WBD_WL_ABBA_NATIVE -eq '1'){
+            $abba=Get-Content result/wl-public/wl-native-abba/summary.json -Raw | ConvertFrom-Json
+            if($abba.type -ne 'SAME_RUNNER_RUST_NATIVE_ABBA' -or
+               $abba.order -ne 'ABBA' -or @($abba.legs).Count -ne 4){
+              throw 'Missing real same Windows runner Rust NativeOwner ABBA'
+            }
+            Write-Output ('WL_REAL_SAME_WINDOWS_RUNNER_ABBA_DECISION '+$abba.decision.decision)
+          }
+          if($env:WBD_WL_V2_SCENARIO -and $env:WBD_WL_ABBA_NATIVE -ne '1'){
+            $v2Config=Get-Content $env:WBD_WL_V2_SCENARIO -Raw | ConvertFrom-Json
+            $modeForScenario=if($v2Config.public_mode){$v2Config.public_mode}else{'normal'}
+            if($modeForScenario -ne $env:WBD_WL_PUBLIC_MODES){
+              throw 'V2 real mode must equal committed scenario public_mode'
+            }
+            if($env:WBD_WL_V2_SCENARIO -like 'scenarios/wl-outer-repair-*.json' -and $modeForScenario -eq 'normal'){
+              # Intentional netem damage: 99.9% app delivery is not a valid
+              # hard gate. Verify actual tc drops, offered rate, Rust Stop
+              # and accepted/uncertain outer R/F, R/total, R/C instead.
+              & python tools/m0_wl_outer_repair_verify.py --scenario $env:WBD_WL_V2_SCENARIO --mode-root result/wl-public/mode-results/normal --out result/wl-public/outer-repair-verdict.json
+              if($LASTEXITCODE -ne 0){throw 'Windows Rust native outer repair: scoped budget, coverage or capacity FAIL'}
+            }else{
+              $real=$result.WL_V2
+              if($real.status -ne 'MEASURED_BOTH_OS_KERNEL' -or
+                 $real.owned_stop -ne 'PASS_BOTH_OWNED'){
+                throw 'Rust V2 real kernel measurement or owned Stop not proven'
+              }
+              # A deliberately damaged FEC/Game netem profile is not a 0-loss
+              # Normal trial. Require genuine positive first-arrival each way;
+              # the existing per-mode report checks true TLS/UDP/TCP/Stop.
+              # Keep the historical >=99.9% gate for loss=0 unchanged.
+              $damaged=($v2Config.windows_to_linux.loss_pct -gt 0 -or
+                        $v2Config.linux_to_windows.loss_pct -gt 0)
+              # A staged Auto profile begins clean but deliberately damages
+              # one or both directions later. Overall 240s first arrival is
+              # NOT the clean 99.9% oracle. Keep genuine tc-stage readbacks.
+              foreach($stage in @($v2Config.impairment_stages)){
+                if($stage.windows_to_linux.loss_pct -gt 0 -or
+                   $stage.linux_to_windows.loss_pct -gt 0){
+                  $damaged=$true
+                  break
+                }
+              }
+              if($damaged){
+                if($real.first_delivery_fraction.windows -le 0 -or
+                   $real.first_delivery_fraction.linux -le 0){
+                  throw 'damaged V2 mode had no authentic first-delivery in one direction'
+                }
+              } elseif($real.first_delivery_fraction.windows -lt 0.999 -or
+                       $real.first_delivery_fraction.linux -lt 0.999){
+                throw 'clean V2 native first delivery below existing 99.9 percent gate'
+              }
+            }
+          }
+          if($env:WBD_WL_PUBLIC_MODES -eq 'auto-adaptive'){
+            if($result.mode -ne 'auto-adaptive' -or
+               $result.mode_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE_auto-adaptive' -or
+               $result.auto_adaptive_applied -ne $true -or
+               $result.auto_adaptive_native_revision -lt 2 -or
+               $result.auto_adaptive_native_profile -ge 5 -or
+               $result.app_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
+               $result.tcp_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP' -or
+               $result.stop -ne 'PASS_BOTH_OWNED'){
+              throw 'native original M2 2s/8s shared Linux Auto naturally applied grade, both-OS UDP/TCP or owned Stop missing'
+            }
+            Write-Output 'WL_ACTUAL_AUTO_NATURAL_SHARED_POLICY_GRADE_NATIVE_TWO_OS_AND_STOP_PASS'
+          } elseif($env:WBD_WL_PUBLIC_MODES -eq 'auto-revision'){
+            if($result.mode -ne 'auto-revision' -or
+               $result.mode_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE_auto-revision' -or
+               $result.auto_revision_applied -ne $true -or
+               $result.app_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
+               $result.tcp_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP' -or
+               $result.stop -ne 'PASS_BOTH_OWNED'){
+              throw 'actual Windows original M2 Auto revision2 native both-OS delivery/Stop proof missing'
+            }
+            Write-Output 'WL_ACTUAL_AUTO_REVISION2_NATIVE_TWO_OS_AND_STOP_PASS'
+          } elseif($env:WBD_WL_PUBLIC_MODES -ne 'all' -and $env:WBD_WL_ABBA_NATIVE -ne '1') {
+            if($result.mode -ne $env:WBD_WL_PUBLIC_MODES -or
+               $result.mode_public -ne ('PASS_ACTUAL_WINDOWS_LINUX_NATIVE_'+$env:WBD_WL_PUBLIC_MODES) -or
+               $result.app_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
+               $result.tcp_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP' -or
+               $result.stop -ne 'PASS_BOTH_OWNED'){
+              throw 'selected same-SOURCE native public mode lacks actual two-OS UDP/TCP/Stop proof'
+            }
+          } elseif($env:WBD_WL_ABBA_NATIVE -ne '1' -and $result.normal_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE'){
+            throw 'real public original Normal product proof not emitted'
+          }
+          if($env:WBD_WL_RUN_N0 -eq '1' -and
+             $result.WL_N0 -notlike 'PASS_SCOPED_*'){
+            throw 'one-mode native N0 throughput/TC/delivery measured FAIL; functional startup cannot qualify performance'
+          }
+          if($env:WBD_WL_RUN_P200 -eq '1' -and
+             $result.WL_P200 -notlike 'PASS_SCOPED_*'){
+            throw 'P200 true kernel impairment reached capacity limit, missing delivery, or failed owned Stop'
+          }
+          } finally {
+            Set-Content -Path $watchdogDone -Value 'owner-finished'
+            if($null -ne $guard -and -not $guard.HasExited){Stop-Process -Id $guard.Id -Force -ErrorAction SilentlyContinue}
+            Write-Output 'WL_WSL2_OUTER_WATCHDOG_DISARMED'
+          }
+      - name: Restore Linux raw FakeTCP fixture RST rule after product Stop
+        if: always()
+        timeout-minutes: 2
+        shell: pwsh
+        run: |
+          if(Test-Path result/wl-public/linux-rst-rule-owned.flag){
+            & wsl.exe -d Ubuntu -u root -- iptables -D OUTPUT -p tcp --tcp-flags RST RST --sport 443:446 -j DROP
+            if($LASTEXITCODE -ne 0){throw 'owned real WSL2 Linux RST rule removal failed'}
+            Write-Output 'WL_REAL_LINUX_RST_OWNED_RULE_REMOVED'
+          }else{Write-Output 'WL_REAL_LINUX_RST_RULE_NOT_INSTALLED_SKIP_CLEANUP'}
+      - name: Remove exact owned WSL HyperV per-flow rule after full public product Stop
+        if: always()
+        timeout-minutes: 2
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $name='WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT
+          $installed=Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue
+          if($null -ne $installed){
+            $cid=[string]$installed.VMCreatorId
+            $known=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop | Where-Object {$_.FriendlyName -eq 'WSL'})
+            if($known.Count -ne 1 -or [string]$known[0].VMCreatorId -ne $cid){throw 'foreign HyperV VM creator refused cleanup'}
+            Remove-NetFirewallHyperVRule -Name $name -ErrorAction Stop
+            if(Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue){throw 'owned WSL HyperV per-flow rule remains installed'}
+            Write-Output 'WL_REAL_WSL_HYPERV_TCP443_EXACT_OWNER_REMOVED'
+          }else{Write-Output 'WL_REAL_WSL_HYPERV_RULE_NOT_CREATED_SKIP_CLEANUP'}
+      - name: Delete only exact owned WSL2 guest MAC neighbor after public Stop
+        if: always()
+        timeout-minutes: 2
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $path='result/wl-public/native-wsl-neighbor-owner.json'
+          if(Test-Path $path){
+            $owned=Get-Content $path -Raw | ConvertFrom-Json
+            if($owned.owner -ne ('WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT)){throw 'foreign guest neighbor refused cleanup'}
+            & netsh.exe interface ipv4 delete neighbors "name=$($owned.interface_index)" "address=$($owned.guest_ip)"
+            if($LASTEXITCODE -ne 0){throw 'real WSL guest neighbor cleanup failed'}
+            Write-Output 'WL_REAL_GUEST_MAC_NEIGHBOR_OWNER_CLEARED'
+          }else{Write-Output 'WL_GUEST_MAC_NEIGHBOR_NOT_CREATED'}
+      - name: Restore Npcap owned Windows kernel service after product Stop
+        if: always()
+        timeout-minutes: 4
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Continue'
+          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Cleanup 2>&1 |
+            Tee-Object result/wl-public/npcap-cleanup.log
+          $result=Get-Content result/wl-public/npcap-cleanup.log -Raw
+          if(-not ($result.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_PASS') -or $result.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_SKIP reason=no_state'))){throw 'Npcap owned cleanup unverified'}
+          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'Npcap native driver still installed'}
+      - name: Report only public business source result, not native scoped success
+        if: always()
+        shell: pwsh
+        run: |
+          if(Test-Path result/wl-public/report.json){Get-Content result/wl-public/report.json}
+          else {Write-Output 'WL_PUBLIC_WINDOWS_LINUX_NORMAL_OFF=NOT_RUN_OR_FAILED_BEFORE_START'}
+          if(Test-Path result/wl-public/report.json){Write-Output ('WL_N0='+$result.WL_N0)}
+          Write-Output 'WL_N1_N5=NOT_RUN'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-wl-full-public-normal-direct
+          path: |
+            result/wl-public/report.json
+            result/wl-public/normal-report.json
+            result/wl-public/*-report.json
+            result/wl-public/mode-batch.json
+            result/wl-public/mode-results/
+            result/wl-public/wl-n0-*-app.json
+            result/wl-public/wl-n0-netem-*.json
+            result/wl-public/wl-ab-v2/
+            result/wl-public/wl-native-abba/
+            result/wl-public/wl-v2-kernel-stage-*.json
+            result/wl-public/wl-v2-scenario.json
+            result/wl-public/outer-repair-verdict.json
+            result/wl-public/windows-binary-manifest.json
+            result/wl-public/assembly.json
+            result/wl-public/native-link-tcp443.log
+            result/wl-public/native-windows-npf.log
+            result/wl-public/native-windows-npf-stderr.log
+            result/wl-public/npcap-cleanup.log
+            result/wl-public/*.pid
+            result/wl-public/windows-route.json
+            result/wl-public/windows-adapters.json
+            result/wl-public/linux-eth0.json
+            result/wl-public/hyperv-rule.json
+            result/wl-public/native-wsl-neighbor-owner.json
+          retention-days: 30
+          if-no-files-found: warn
+ '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Windows authenticated HealthDead distinct from generic Rust worker failures FAIL'}
+            & ../result/client.test.exe '-test.run=^TestM0PLAN026GameColdHandoffQueueNeverBlocksRustJoin
+            if($LASTEXITCODE -ne 0){throw 'native Game cold queue overload regression FAIL'}
+            & ../result/client.test.exe '-test.run=^TestM0PLAN025WindowsNativeSourceInvalidIPv4DoesNotPoisonBatch$' '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Windows pre-seal native IPv4 Wintun filtering boundary FAIL'}
+            & ../result/realityfront.test.exe '-test.run=^TestM0PLAN025WindowsNativeNormalOpenFirstFaultIsBoundedAndSafe$' '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Windows original M3 authenticated IPv4 drop vs ABI fatal regression FAIL'}
+            & ../result/realityfront.test.exe '-test.run=^TestM0PLAN025WindowsOriginalM2BatchPreflightClassifiesFirstRefusal$' '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Original Windows M2 NPF firstsend batch first-error provenance FAIL'}
+            & ../result/realityfront.test.exe '-test.run=TestM0WindowsFEC2OpenABICodeClassificationSurvivesWrapper' '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Windows FEC2 original ABI error provenance / fail-closed regression FAIL'}
+            & ../result/realityfront.test.exe '-test.run=TestM0WindowsAutoAlignedMatureCohortPreservesTrueKWindow' '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Windows original Auto real 2s/8s actual-k cohort alignment regression FAIL'}
+          } finally {Pop-Location}
+          @{source=$env:GITHUB_SHA;scope='GO_COMPILE_ONLY';result='PASS';native_product='NOT_RUN'} |
+            ConvertTo-Json | Set-Content result/preflight.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: windows-compile-preflight-${{ github.run_id }}
+          path: result/*.json
+          retention-days: 14
+          if-no-files-found: warn
+  windows-rust-contract-preflight:
+    name: Windows Rust eligible library unit tests (special M1 separate)
+    needs: [wiring-contract]
+    if: inputs.perf_reuse_run_id == '' && !contains(github.event.head_commit.message, '[plan026-coding]') && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
+    runs-on: windows-2025
+    timeout-minutes: 25
+    env:
+      AWS_LC_SYS_PREBUILT_NASM: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Windows native Rust M1/M3/FEC2 entire library unit regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib -- --test-threads=1 --skip runtime::directional::pinned_rtrb_overlay_proof::r1_direction_m0_pinned_rtrb_overlay_source_exact_native_ci --skip runtime::generation_release::r1_owner_release_compiled_once_hosted_cpu_latency_provenance
+          if($LASTEXITCODE -ne 0){throw 'Windows full Rust library unit regression FAIL'}
+          # M0/R2 genuine frozen M1 receipt, M3 AEAD replay and M4
+          # ready-only copy: run EVERY integration fixture as a separate
+          # non-network, source-locked Windows program, no skip/xfail.
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --test r2_receipt_ingress -- --test-threads=1
+          if($LASTEXITCODE -ne 0){throw 'Windows actual M1-M2-M3-M4 R2 receipt integration regression FAIL'}
+          New-Item -ItemType Directory -Force -Path result | Out-Null
+          @{source=$env:GITHUB_SHA;scope='WINDOWS_RUST_ELIGIBLE_LIB_M1_SPECIAL_NOT_RUN';result='PASS';native_product='NOT_RUN';real_two_os='NOT_RUN'} |
+            ConvertTo-Json | Set-Content result/rust-owner-contract.json
+          @{source=$env:GITHUB_SHA;scope='WINDOWS_R2_FROZEN_M1_AUTHENTICATED_M3_READY_M4_ALL_FIXTURES';result='PASS';native_product='NOT_RUN';M1_special='NOT_RUN'} |
+            ConvertTo-Json | Set-Content result/r2-receipt-contract.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: rust-owner-compile-preflight-${{ github.run_id }}
+          path: |
+            result/rust-owner-contract.json
+            result/r2-receipt-contract.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  linux-rust-contract-preflight:
+    name: Linux Rust eligible library unit tests (special M1 separate)
+    needs: [wiring-contract]
+    if: inputs.perf_reuse_run_id == '' && !contains(github.event.head_commit.message, '[plan026-coding]') && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Compile and run Linux original Rust library tests without TUN or network changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --lib -- --test-threads=1 --skip runtime::directional::pinned_rtrb_overlay_proof::r1_direction_m0_pinned_rtrb_overlay_source_exact_native_ci
+          # Same Rust integration fixtures, but compile with the original
+          # Linux target and native M0 probe feature contract. Do not
+          # pretend an in-memory ready sink is the real Windows driver.
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record --test r2_receipt_ingress -- --test-threads=1
+          mkdir -p result
+          printf '{"source":"%s","scope":"LINUX_RUST_ELIGIBLE_LIB_M1_SPECIAL_NOT_RUN","result":"PASS","native_product":"NOT_RUN","real_two_os":"NOT_RUN"}\n' "$GITHUB_SHA" > result/linux-rust-contract.json
+          printf '{"source":"%s","scope":"LINUX_R2_FROZEN_M1_AUTHENTICATED_M3_READY_M4_ALL_FIXTURES","result":"PASS","native_product":"NOT_RUN","M1_special":"NOT_RUN"}\n' "$GITHUB_SHA" > result/r2-linux-contract.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: linux-rust-contract-preflight-${{ github.run_id }}
+          path: |
+            result/linux-rust-contract.json
+            result/r2-linux-contract.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  linux-source-locked-public:
+    # PLAN026 coding commits use [plan026-coding]: compile/cheap ABI only.
+    # Full signed two-OS qualification is reserved for the completed bundle
+    # via workflow_dispatch or a separately source-locked full marker.
+    needs: [windows-compile-preflight]
+    if: (github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || contains(github.event.head_commit.message, '[wiring-full]')) && !contains(github.event.head_commit.message, '[plan026-coding]') && inputs.perf_reuse_run_id == '' && !(contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))
+    name: Build true original Go and new Linux Rust peer persona from same SOURCE
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: "1"
+      GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Compile source-pinned actual original-Go TLS and Rust M4 Linux binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git -C legacy rev-parse HEAD)" = "$GO_SRC"
+          mkdir -p linux-product legacy/internal/v4productcli legacy/cmd/wbd-v4-server legacy/cmd/wbd-v4-client
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 build --locked --release -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record
+          # W168 Go/Linux public TUN + outer policy requires two precise
+          # original-Go FakeTCP adapters, already source-locked and exercised
+          # by freeze's tools/arm64_public_go_rust_bundle.sh. The legacy Go
+          # repository remains pinned/immutable; patch only this Actions copy.
+          mkdir -p legacy/internal/faketcp
+          cp r0/go_overlay/internal/faketcp/public_v4_mss.go legacy/internal/faketcp/public_v4_mss.go
+          cp r0/go_overlay/internal/faketcp/raw_detached_data_linux.go legacy/internal/faketcp/raw_detached_data_linux.go
+          cp r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go legacy/internal/faketcp/raw_detached_data_linux_test.go
+          python3 - <<'PY'
+          from pathlib import Path
+          patches={
+              'association.go':[('MSS: DefaultMSS, MSSSet: true,','MSS: PublicV4AdvertisedMSS(), MSSSet: true,',1)],
+              'client_association.go':[('MSS: DefaultMSS, MSSSet: true,','MSS: PublicV4AdvertisedMSS(), MSSSet: true,',1)],
+              'packet.go':[
+                  ('s.MSSSet && s.MSS == DefaultMSS &&','s.MSSSet && s.MSS == PublicV4AdvertisedMSS() &&',1),
+                  ('binary.BigEndian.PutUint16(o[2:4], DefaultMSS)','binary.BigEndian.PutUint16(o[2:4], PublicV4AdvertisedMSS())',2),
+              ],
+          }
+          for name,changes in patches.items():
+              p=Path('legacy/internal/faketcp')/name
+              raw=p.read_text()
+              for find,replace,expected in changes:
+                  actual=raw.count(find)
+                  if actual!=expected:raise RuntimeError(f'frozen W168 source mismatch {name}: {find!r} expected={expected} actual={actual}')
+                  raw=raw.replace(find,replace)
+              p.write_text(raw)
+          PY
+          # The private original-Go credential logic remains pinned; only
+          # new V4 named overlay files from the identical checkout are added.
+          for f in r0/go_overlay/internal/realityfront/*.go; do
+            dst="legacy/internal/realityfront/$(basename "$f")"
+            test ! -e "$dst" || { echo "refused overwrite of original Go: $dst" >&2; exit 1; }
+            cp "$f" "$dst"
+          done
+          cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
+          cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
+          cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
+          (cd legacy && go test ./internal/faketcp -run TestDetachedDataKernelFilterPreservesHandshakeAndControl -count=1)
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/linux-product/wbd-v4-client" ./cmd/wbd-v4-client)
+          (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/linux-product/wbd-v4-server" ./cmd/wbd-v4-server)
+          cp target/release/libwbd_engine.so linux-product/libwbd_engine.so
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path('linux-product')
+          names=('wbd-v4-client','wbd-v4-server','libwbd_engine.so')
+          checks={n:hashlib.sha256((p/n).read_bytes()).hexdigest() for n in names}
+          assert all((p/n).stat().st_size>100000 for n in names)
+          (p/'manifest.json').write_text(json.dumps({
+              'schema_version':1,'source_sha':os.environ['GITHUB_SHA'],
+              'original_go_sha':os.environ['GO_SRC'],'sha256':checks,
+              'go':'1.23.12','rust':'1.85.1',
+              'peer_persona':'selected_only_after_original_credential_TLS',
+              'binary_qualification':'BUILD_ONLY_NOT_PRODUCT'
+          },indent=2)+'\n')
+          print('M0_PLAN024_NEW_LINUX_ORIGINAL_GO_RUST_PEER_PERSONA_SOURCE_VERIFIED')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-plan024-linux-product
+          path: linux-product/
+          retention-days: 30
+
+  native-public-two-os:
+    needs: [wiring-contract, linux-source-locked-public]
+    if: always() && !contains(github.event.head_commit.message, '[plan026-coding]') && needs.wiring-contract.result == 'success' && (needs.linux-source-locked-public.result == 'success' || inputs.perf_reuse_run_id != '' || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
+    runs-on: windows-2025
+    timeout-minutes: 38
+    env:
+      AWS_LC_SYS_PREBUILT_NASM: "1"
+      GH_TOKEN: ${{ github.token }}
+      GO_SRC: a7a82db31fe736ffedee330795a3234d358f1984
+      LINUX_BINARY_SRC: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]') && '7fc38591c501ff4a06e1862c7b08d5d3dbc1be95' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '0abd1b04ee7a39d8aa426963564a079523c1036a' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '0543b805ca25d804ccd131be6686b0b99f61f80f' || inputs.perf_binary_source_sha || github.sha }}
+      # PLAN027 main push selects only Normal. Subsequent B public modes
+      # each own a separate Action and reuse source-verified signed binaries,
+      # never mixing throughput scenes on one VM.
+      WBD_WL_PUBLIC_MODES: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-game2-historical-order]') && 'through-game2' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-game2-only]') && 'game2' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan025-n0-240s]') || contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') || contains(github.event.head_commit.message, '[plan026-normal-only]') || contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || (contains(github.event.head_commit.message, '[plan026-win-wake-150]') || contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]')) || contains(github.event.head_commit.message, '[plan026-win-npf-borrow-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))) && 'normal' || inputs.public_mode || 'all' }}
+      WBD_WL_ABBA_NATIVE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]') && '1' || '0' }}
+      WBD_WL_RUN_N0: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '1' || inputs.run_n0 == true && '1' || '0' }}
+      WBD_WL_RUN_P200: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') && '1' || '0' }}
+      WBD_WL_PROBE_LOCKS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-probe-locks]') && '1' || '0' }}
+      WBD_WL_V2_CPU_AUDIT: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || (contains(github.event.head_commit.message, '[plan026-win-wake-150]') || contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]')) || contains(github.event.head_commit.message, '[plan026-win-npf-borrow-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')) && '1' || '0' }}
+      WBD_WL_N0_SECONDS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '240' || '60' }}
+      WBD_WL_V2_SCENARIO: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]') && 'scenarios/wl-outer-repair-50m-300ms-loss30-60s.json' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-ab-150]') || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || (contains(github.event.head_commit.message, '[plan026-win-wake-150]') || contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]')) || contains(github.event.head_commit.message, '[plan026-win-npf-borrow-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]'))) && ((contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-100]')) && 'scenarios/wl-normal-100m-300ms-0loss-60s.json' || 'scenarios/wl-normal-150m-300ms-0loss-60s.json') || inputs.perf_scenario_file || '' }}
+      WBD_WL_REUSE_RUN_ID: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]') && '40693430836' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '40681039919' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '40668581343' || inputs.perf_reuse_run_id || '' }}
+      WBD_WL_BINARY_SOURCE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]') && '7fc38591c501ff4a06e1862c7b08d5d3dbc1be95' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]')) && '0abd1b04ee7a39d8aa426963564a079523c1036a' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]')) && '0543b805ca25d804ccd131be6686b0b99f61f80f' || inputs.perf_binary_source_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Prepare exact original Go and current native bridge with shared preflight assembler
+        if: env.WBD_WL_REUSE_RUN_ID == ''
+        run: python tools/prepare_windows_wiring.py
+      - name: Compile original Windows product from the verified assembly
+        if: env.WBD_WL_REUSE_RUN_ID == ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          Push-Location legacy
+          try {
+            & go build -tags wbd_v4_embedded_go ./internal/windowsownerlease
+            if($LASTEXITCODE -ne 0){throw 'actual Go native owner build FAIL'}
+            & go build -trimpath -tags wbd_v4_embedded_go -o ../result/wbd-client-embedded.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'actual original-Go native CLI build FAIL'}
+          } finally {Pop-Location}
+      - name: Build actual original Windows Rust M1 M2 M3 release DLL
+        if: env.WBD_WL_REUSE_RUN_ID == ''
+        shell: pwsh
+        timeout-minutes: 20
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'Rust 1.85.1 toolchain missing'}
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          if($LASTEXITCODE -ne 0){throw 'actual Windows MSVC target missing'}
+          $features='m0_v4_embedded_go,fec2_product_record'
+          if($env:WBD_WL_PROBE_LOCKS -eq '1'){$features+=',win_native_lock_profile'}
+          & cargo +1.85.1 build --locked --release -p wbd-engine --features $features
+          if($LASTEXITCODE -ne 0){throw 'actual Windows Rust M2 library build failed'}
+          New-Item -ItemType Directory -Force result/wl-public | Out-Null
+          # Native Rust-only regression: a too-short reverse-M2 draft buffer
+          # cannot burn one PN/TCP span and silently misalign original Go.
+          # Whole native M1/M2/M3/FEC2/Game-owner module regressions as
+          # one bounded suite. Do not promote isolated Fixed6 samples or
+          # run a dedicated profile6 public Windows/Linux sequence.
+          & cargo +1.85.1 test --locked -p wbd-engine --features $features --lib v4_windows_owner -- --test-threads=1 --nocapture
+          if($LASTEXITCODE -ne 0){throw 'Windows native original owner full-module functional regression FAIL'}
+          Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
+          Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe
+          [ordered]@{source_sha=$env:GITHUB_SHA;features=$features;sha256=[ordered]@{
+              exe=(Get-FileHash result/wl-public/wbd-client-embedded.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+              dll=(Get-FileHash result/wl-public/wbd_engine.dll -Algorithm SHA256).Hash.ToLowerInvariant()
+            }} | ConvertTo-Json -Depth 6 | Set-Content result/wl-public/windows-binary-manifest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: env.WBD_WL_REUSE_RUN_ID == ''
+        with:
+          name: m0-wl-windows-product-binaries-${{ github.sha }}
+          path: |
+            result/wl-public/wbd-client-embedded.exe
+            result/wl-public/wbd_engine.dll
+            result/wl-public/windows-binary-manifest.json
+          retention-days: 30
+          if-no-files-found: error
+      - name: Verify Windows bound authenticated RX high-water without false TCP ACK
+        if: env.WBD_WL_REUSE_RUN_ID == ''
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $ErrorActionPreference='Stop'
+          $env:WBD_M0_TEST_NATIVE_V4_DLL=(Resolve-Path result/wl-public/wbd_engine.dll).Path
+          try {
+            Push-Location legacy
+            try {
+              & go test -count=1 -tags wbd_v4_embedded_go -run '^TestM0PLAN(023WindowsNativeV4FiveModes|024WindowsNativeWholeProductCapabilityGate|024AuthenticatedHighWater)' ./cmd/wbd-client
+              if($LASTEXITCODE -ne 0){throw 'native original-Go selected modes / actual Rust DLL public-capability and M3 RX regression FAIL'}
+              & go test -count=1 -tags wbd_v4_embedded_go -run TestM0WindowsGameFecProtectedExtensionBounds ./internal/realityfront
+              if($LASTEXITCODE -ne 0){throw 'original-Go Game2/4 protected FEC2 profile admission guard FAIL'}
+            } finally {Pop-Location}
+          } finally {Remove-Item Env:WBD_M0_TEST_NATIVE_V4_DLL -ErrorAction SilentlyContinue}
+          Write-Output 'WL_PUBLIC_NATIVE_ORIGINAL_OWNER_EFFECTIVE_MODE_GATE_PASS_SCOPED'
+      - name: Restore exact prebuilt Windows EXE/DLL (no rebuild)
+        if: env.WBD_WL_REUSE_RUN_ID != '' && env.WBD_WL_ABBA_NATIVE != '1'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $id=$env:WBD_WL_REUSE_RUN_ID
+          $sha=$env:WBD_WL_BINARY_SOURCE
+          if($id -notmatch '^[1-9][0-9]{5,16}$' -or $sha -notmatch '^[0-9a-f]{40}$'){throw 'invalid run or SHA selector'}
+          $record=(& gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$id" | ConvertFrom-Json)
+          if($LASTEXITCODE -ne 0 -or $record.head_sha -ne $sha -or
+             $record.repository.full_name -ne $env:GITHUB_REPOSITORY){throw 'untrusted binary provenance'}
+          if($sha -ne $env:GITHUB_SHA){
+            & git fetch --depth=1 origin $sha
+            if($LASTEXITCODE -ne 0){throw 'unreadable original product source'}
+            $changes=@(& git diff --name-only $sha $env:GITHUB_SHA -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py)
+            if($LASTEXITCODE -ne 0 -or $changes.Count -gt 0){throw ('product/ABI changed: '+($changes -join ','))}
+          }
+          New-Item -ItemType Directory -Force result/wl-public | Out-Null
+          & gh run download $id --repo $env:GITHUB_REPOSITORY --name "m0-wl-windows-product-binaries-$sha" --dir result/wl-public
+          if($LASTEXITCODE -ne 0){throw 'exact Windows product artifact missing'}
+          @'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path('result/wl-public')
+          m=json.loads((p/'windows-binary-manifest.json').read_text())
+          assert m['source_sha']==os.environ['WBD_WL_BINARY_SOURCE']
+          assert m['features']=='m0_v4_embedded_go,fec2_product_record'
+          for name,key in [('wbd-client-embedded.exe','exe'),('wbd_engine.dll','dll')]:
+              b=(p/name).read_bytes()
+              assert len(b)>100000 and hashlib.sha256(b).hexdigest()==m['sha256'][key]
+          print('WL_V2_REUSED_WINDOWS_NATIVE_EXACT_BINARY_SHA_PASS')
+          '@ | python -
+          if($LASTEXITCODE -ne 0){throw 'reuse binary manifest SHA mismatch'}
+      - name: Full public-run signed original Npcap and Wintun driver install
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=Join-Path $env:RUNNER_TEMP 'wl-public-real'
+          $drv=Join-Path $root 'npcap'
+          $usr=Join-Path $root 'user'
+          New-Item -ItemType Directory -Force $root,$drv,$usr,result/wl-public | Out-Null
+          $zip=Join-Path $root 'npcap-test.zip'
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/user-attachments/files/32200327/npcap.zip' -OutFile $zip
+          if((Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6380ebe6d5b06bbb0dc03a43151ee05a4a25be97efebd742c463e0e466621a32'){throw 'approved old driver package hash changed'}
+          Expand-Archive $zip $drv -Force
+          $installer=Join-Path $root 'npcap-1.88.exe'
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://npcap.com/dist/npcap-1.88.exe' -OutFile $installer
+          if((Get-FileHash $installer -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'a2f4ec1e5ea353ff67efd24b2ebf081ba44532410fae8d5e146af0310aa4f56b'){throw 'official Npcap hash changed'}
+          $sg=Get-AuthenticodeSignature $installer
+          if($sg.Status -ne 'Valid' -or $sg.SignerCertificate.Subject -notmatch 'Nmap Software LLC'){throw 'official Npcap invalid signature'}
+          & 7z x -y "-o$usr" $installer | Out-File result/wl-public/npcap-extract.log
+          if($LASTEXITCODE -ne 0){throw 'Npcap DLL extraction failed'}
+          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Install -DriverPackageDir $drv -UserlandExtractDir $usr 2>&1 |
+            Tee-Object result/wl-public/npcap-install.log
+          if((Get-Service npcap -ErrorAction Stop).Status -ne 'Running'){throw 'Npcap real kernel service not running'}
+          Copy-Item -LiteralPath "$env:WINDIR/System32/Npcap/wpcap.dll" -Destination result/wl-public/wpcap.dll
+          Copy-Item -LiteralPath "$env:WINDIR/System32/Npcap/Packet.dll" -Destination result/wl-public/Packet.dll
+          $wzip=Join-Path $root 'wintun.zip'
+          $wdir=Join-Path $root 'wintun'
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile $wzip
+          if((Get-FileHash $wzip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw 'official Wintun archive hash changed'}
+          Expand-Archive $wzip $wdir -Force
+          $dll=Join-Path $wdir 'wintun/bin/amd64/wintun.dll'
+          if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'official Wintun DLL unsigned'}
+          Copy-Item $dll result/wl-public/wintun.dll
+      - name: Prepare source-locked A/B Rust binaries for same-runner ABBA
+        if: env.WBD_WL_ABBA_NATIVE == '1'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $A='7fc38591c501ff4a06e1862c7b08d5d3dbc1be95'
+          $B='e6be9358d2272d7e1960a935be7fe772885bb034'
+          & git fetch --depth=2 origin $A $B
+          if($LASTEXITCODE -ne 0){throw 'cannot fetch immutable native source refs'}
+          $now=@(& git diff --name-only $B $env:GITHUB_SHA -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py)
+          if($LASTEXITCODE -ne 0 -or $now.Count -gt 0){throw ('ABBA product changed since compiled B: '+($now -join ','))}
+          $delta=@(& git diff --name-only $A $B -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py | Sort-Object)
+          $expected=@('crates/wbd-engine/src/v4_windows_native_runtime.rs','crates/wbd-platform/src/windows_native_io.rs')
+          if(@(Compare-Object $delta $expected).Count -ne 0){throw ('ABBA unexpected product delta: '+($delta -join ','))}
+          & python -u tools/m0_wl_native_abba_prepare.py
+          if($LASTEXITCODE -ne 0){throw 'exact compiled A/B artifacts unavailable'}
+      - name: Restore SAME-RUN new original Go Linux Rust binary with exact SHA checks
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force linux-product | Out-Null
+          $from=if($env:WBD_WL_REUSE_RUN_ID){$env:WBD_WL_REUSE_RUN_ID}else{$env:GITHUB_RUN_ID}
+          & gh run download $from --repo $env:GITHUB_REPOSITORY --name m0-plan024-linux-product --dir linux-product
+          if($LASTEXITCODE -ne 0){throw 'actual same-SOURCE original Linux build artifact missing'}
+          @'
+          import hashlib,json,pathlib,os
+          p=pathlib.Path("linux-product")
+          m=json.loads((p/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["LINUX_BINARY_SRC"]==os.environ["WBD_WL_BINARY_SOURCE"]
+          if not os.environ.get("WBD_WL_REUSE_RUN_ID"):
+              assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["original_go_sha"]==os.environ["GO_SRC"]
+          assert m["binary_qualification"]=="BUILD_ONLY_NOT_PRODUCT"
+          for name in ("wbd-v4-server","wbd-v4-client","libwbd_engine.so"):
+              f=p/name
+              assert f.is_file() and f.stat().st_size>100000
+              assert hashlib.sha256(f.read_bytes()).hexdigest()==m["sha256"][name]
+          print("WL_NEW_LINUX_ORIGINAL_GO_RUST_SOURCE_MATCH_VERIFIED")
+          '@ | python -
+          if($LASTEXITCODE -ne 0){throw 'new exact Linux Go/Rust binary integrity failed'}
+      # Preserve actual Ubuntu on the SAME Windows runner for the later
+      # native kernel job. A completed step gives inspectable first-error
+      # logs even if the later Game2 process tree wedges the runner.
+      - name: Real WSL2 Ubuntu kernel boot and TUN prerequisite (independent bounded stage)
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          Write-Output ('WL_WSL2_BOOT_STAGE_SOURCE '+$env:GITHUB_SHA)
+          $known=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          if($LASTEXITCODE -ne 0){throw 'bounded WSL2 distribution listing failed'}
+          if($known -notmatch 'Ubuntu'){
+            # Old WSL Store/network launcher hung until the full product
+            # step timed out. Import real Ubuntu 24.04.5 WSL rootfs directly
+            # from Ubuntu's official release, pinning its published digest.
+            # This remains a genuine Ubuntu WSL2 guest/kernel, never a mock.
+            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+            $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
+            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
+            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'official Ubuntu WSL image integrity mismatch'}
+            New-Item -ItemType Directory -Force $vm | Out-Null
+            & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2 2>&1 |
+              Tee-Object result/wl-public/wsl-import.log
+            if($LASTEXITCODE -ne 0){throw 'actual Ubuntu WSL2 distribution import failed'}
+            $installed=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+            if($LASTEXITCODE -ne 0){throw 'bounded post-import WSL2 distribution listing failed'}
+            if($installed -notmatch 'Ubuntu'){throw 'real Ubuntu WSL2 distribution not registered after import'}
+            Write-Output 'WL_REAL_PINNED_UBUNTU_24045_WSL2_IMPORTED'
+          }
+          # One real Linux-kernel preflight, now bounded: past SOURCE bdf574
+          # imported Ubuntu but its first guest command hung until 22m timeout.
+          # A failed precondition is ENVIRONMENT_BLOCKED, not product FAIL.
+          Write-Output 'WL_WSL2_STAGE_BEGIN real_guest_kernel_probe'
+          & python tools/m0_wl_real_wsl2_guest_probe.py
+          if($LASTEXITCODE -ne 0){throw 'real WSL2 native guest boot ENVIRONMENT_BLOCKED; see bounded probe JSON'}
+          Write-Output 'WL_WSL2_STAGE_PASS real_guest_kernel_probe'
+          Write-Output 'WL_WSL2_BOOT_STAGE_COMPLETE_REAL_KERNEL'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success() || failure()
+        with:
+          name: m0-wl-real-guest-boot-${{ github.run_id }}
+          path: |
+            result/wl-public/wsl2-real-guest-probe.json
+            result/wl-public/wsl-import.log
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Launch actual WSL2 Linux and direct full public two-OS product
+        shell: pwsh
+        timeout-minutes: 24
+        run: |
+          $ErrorActionPreference='Stop'
+          # Whole-step external native OS process-tree watchdog, including
+          # WSL2 import/boot/firewall, 7 modes, and cleanup (not just mode).
+          $watchdogDone=Join-Path $env:RUNNER_TEMP ('wbd-wl-'+$env:GITHUB_RUN_ID+'-guard-done.flag')
+          Remove-Item $watchdogDone -Force -ErrorAction SilentlyContinue
+          $watchdogScript=(Resolve-Path 'tools/m0_wl_windows_step_watchdog.py').Path
+          $gameSingle=($env:WBD_WL_PUBLIC_MODES -like 'game*')
+          $wholeLimit=if($gameSingle){600}else{1020}
+          $guard=Start-Process -FilePath python -ArgumentList @('-u',$watchdogScript,[string]$PID,[string]$wholeLimit,$watchdogDone) -PassThru
+          if($null -eq $guard){throw 'external WSL2 whole-step watchdog not armed'}
+          Write-Output ('WL_WSL2_OUTER_WATCHDOG_ARMED max_seconds='+$wholeLimit+' windows_parent_pid='+$PID)
+          try {
+          & python tools/m0_wl_windows_bounded_cmd.py 120 wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
+          if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
+          & python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443:446 -j DROP
+          if($LASTEXITCODE -ne 0){throw 'real Linux original FakeTCP RST suppression unavailable'}
+          'owned' | Set-Content result/wl-public/linux-rst-rule-owned.flag
+          # Observed genuine source 1445e2c: Windows WSL NPF sees TCP SYN,
+          # Linux eth0 does not. Admit only this host->WSL raw product flow
+          # across WSL's actual Hyper-V firewall; never change default policy.
+          $creator=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop |
+            Where-Object {$_.FriendlyName -eq 'WSL'})
+          if($creator.Count -ne 1){throw 'exact WSL HyperV firewall VM creator unavailable'}
+          $guestText=(& python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0 | Out-String)
+          if($LASTEXITCODE -ne 0){throw 'bounded WSL2 eth0 address lookup failed'}
+          $match=[regex]::Match($guestText,'\binet\s+(\d{1,3}(?:\.\d{1,3}){3})/')
+          if(-not $match.Success){throw 'actual WSL2 guest eth0 address missing'}
+          $guestIP=$match.Groups[1].Value
+          $nic=@(Get-NetAdapter -IncludeHidden -ErrorAction Stop |
+            Where-Object {$_.Name -match '^vEthernet \(WSL' -and $_.Status -eq 'Up'})
+          if($nic.Count -ne 1){throw 'WSL2 vEthernet owner ambiguous'}
+          $source=@(Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -ErrorAction Stop |
+            Where-Object {$_.IPAddress -notmatch '^169\.254\.'})
+          if($source.Count -ne 1){throw 'host WSL2 source address ambiguous'}
+          $ruleName='WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT
+          if(Get-NetFirewallHyperVRule -Name $ruleName -ErrorAction SilentlyContinue){throw 'foreign same-name WSL hyperv rule'}
+          New-NetFirewallHyperVRule -Name $ruleName -DisplayName $ruleName -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol TCP -LocalAddresses $guestIP -RemoteAddresses $source[0].IPAddress -LocalPorts @('443','444','445','446') -RemotePorts @('41031','41032','41033','41034') -ErrorAction Stop | Out-Null
+          $live=Get-NetFirewallHyperVRule -Name $ruleName -ErrorAction Stop
+          if($null -eq $live -or $live.Direction -ne 'Inbound' -or $live.Action -ne 'Allow'){throw 'original WSL HyperV per-flow rule not actually installed'}
+          [ordered]@{name=$ruleName;creator_id=[string]$creator[0].VMCreatorId;linux_guest=$guestIP;windows_host=$source[0].IPAddress;server_tcp_ports=@(443,444,445,446);client_tcp_ports=@(41031,41032,41033,41034);scope='OWNED_WSL2_ORIGINAL_NPCAP_GAME4_FOUR_LANES_MAX'} |
+            ConvertTo-Json | Set-Content result/wl-public/hyperv-rule.json
+          Write-Output 'WL_REAL_WSL_HYPERV_TCP443_TO_446_EXACT_OWNER_ALLOW_INSTALLED'
+          # Real NPF header showed original product SYN destination MAC equals
+          # Windows vEthernet own source MAC. Resolve ONLY this actual WSL2
+          # Linux eth0 MAC, never fabricate an IP/TLS/ACK or replace Npcap.
+          $guestLink=(& python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -j link show dev eth0 | ConvertFrom-Json)
+          if($LASTEXITCODE -ne 0){throw 'bounded WSL2 eth0 MAC lookup failed'}
+          $guestMAC=[string]$guestLink.address
+          $hostMAC=([string]$nic[0].MacAddress).Replace('-',':')
+          if(@($guestMAC.Split(':')).Count -ne 6 -or $guestMAC -eq $hostMAC){throw 'actual WSL2 guest Ethernet MAC invalid or same as Windows host'}
+          $existing=@(Get-NetNeighbor -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -IPAddress $guestIP -ErrorAction SilentlyContinue)
+          if(@($existing|Where-Object {$_.State -eq 'Permanent'}).Count -gt 0){throw 'foreign WSL neighbor present, refusing overwrite'}
+          [ordered]@{owner=$ruleName;interface_index=$nic[0].InterfaceIndex;guest_ip=$guestIP;guest_mac=$guestMAC;source_host_mac=$hostMAC} |
+            ConvertTo-Json | Set-Content result/wl-public/native-wsl-neighbor-owner.json
+          & netsh.exe interface ipv4 set neighbors "interface=$($nic[0].InterfaceIndex)" "address=$guestIP" "neighbor=$($guestMAC.Replace(':','-'))" "store=active"
+          if($LASTEXITCODE -ne 0){throw 'native WSL2 exact Linux eth0 neighbor install failed'}
+          $entry=@(Get-NetNeighbor -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -IPAddress $guestIP -ErrorAction Stop)
+          if($entry.Count -ne 1 -or $entry[0].LinkLayerAddress.Replace('-',':') -ne $guestMAC){throw 'real WSL2 guest neighbor MAC readback mismatch'}
+          Write-Output ('WL_REAL_GUEST_MAC_NEIGHBOR_BOUND mac='+$guestMAC)
+          # Pass only the exact MAC already read from ACTUAL Linux eth0 and
+          # verified by Windows NetNeighbor into this public Go/Npcap child.
+          # SendARP alone returned the host self MAC (proven wrong SYN L2).
+          $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_MAC=$guestMAC
+          $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_IP4=$guestIP
+          $env:WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4=[string]$source[0].IPAddress
+          $env:WBD_PLAN024_NATIVE_VERIFIED_IFINDEX=[string]$nic[0].InterfaceIndex
+          Write-Output 'WL_REAL_ORIGINAL_GO_SCOPED_LINUX_GUEST_MAC_FFI_HANDOFF_ARMED'
+          # Functional TCP test uses a genuine Windows TCP listener on the
+          # created Wintun's 10.66.0.2:45902. Windows host firewall may
+          # independently deny new inbound SYNs even when authenticated Rust
+          # M3 delivered the packet. Admit ONLY Linux TUN 10.66.0.1 to this
+          # single testing listener; NEVER disable global firewall/WFP.
+          # The rule is owned by this exact run and deleted in finally.
+          $tcpRuleName='WBD-M0-WL-TCP-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT
+          if(Get-NetFirewallRule -Name $tcpRuleName -ErrorAction SilentlyContinue){throw 'foreign scoped TCP listener firewall rule'}
+          New-NetFirewallRule -Name $tcpRuleName -DisplayName $tcpRuleName -Direction Inbound -Action Allow -Enabled True -Profile Any -Protocol TCP -LocalAddress '10.66.0.2' -RemoteAddress '10.66.0.1' -LocalPort 45902 -ErrorAction Stop | Out-Null
+          $tcpRule=Get-NetFirewallRule -Name $tcpRuleName -ErrorAction Stop
+          $tcpPort=Get-NetFirewallPortFilter -AssociatedNetFirewallRule $tcpRule -ErrorAction Stop
+          $tcpIP=Get-NetFirewallAddressFilter -AssociatedNetFirewallRule $tcpRule -ErrorAction Stop
+          if($tcpRule.Action -ne 'Allow' -or $tcpRule.Direction -ne 'Inbound' -or
+             [string]$tcpPort.LocalPort -ne '45902' -or [string]$tcpPort.Protocol -notin @('TCP','6') -or
+             [string]$tcpIP.LocalAddress -ne '10.66.0.2' -or [string]$tcpIP.RemoteAddress -ne '10.66.0.1'){
+            throw 'scoped WinTun TCP test listener firewall rule readback mismatch'
+          }
+          [ordered]@{name=$tcpRuleName;local='10.66.0.2';remote='10.66.0.1';port=45902;type='OWNED_FUNCTIONAL_TCP_LISTENER_NOT_PRODUCT_FIREWALL_POLICY'} |
+            ConvertTo-Json | Set-Content result/wl-public/functional-tcp-firewall-owned.json
+          Write-Output 'WL_REAL_WINDOWS_WINTUN_TCP_FUNCTIONAL_LISTENER_RULE_SCOPED_READBACK'
+          # Passive wire witness observes THIS SAME real public handshake, never injects traffic.
+          $drive=$PWD.Path.Substring(0,1).ToLowerInvariant()
+          $traceScript='/mnt/'+$drive+'/'+$PWD.Path.Substring(3).Replace('\','/')+'/tools/m0_wl_public_native_wire_trace.py'
+          Write-Output 'WL_WSL2_STAGE_BEGIN signed_product_wire_witness'
+          $witness=Start-Process -FilePath wsl.exe -ArgumentList @('-d','Ubuntu','-u','root','--','python3','-u',$traceScript,'eth0') -PassThru -RedirectStandardOutput result/wl-public/native-link-tcp443.log -RedirectStandardError result/wl-public/native-link-stderr.log
+          # These OS route witnesses are captured during the SAME public
+          # TLS/Npcap/WSL2 product run; no synthetic sender or mock route.
+          Get-NetRoute -AddressFamily IPv4 -ErrorAction Continue |
+            Select-Object DestinationPrefix,InterfaceIndex,NextHop,RouteMetric |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/windows-route.json
+          Get-NetAdapter -IncludeHidden -ErrorAction Continue |
+            Select-Object Name,InterfaceIndex,InterfaceGuid,MacAddress,Status |
+            ConvertTo-Json -Depth 4 | Out-File result/wl-public/windows-adapters.json
+          & python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -j -4 addr show dev eth0 |
+            Out-File result/wl-public/linux-eth0.json
+          if($LASTEXITCODE -ne 0){throw 'bounded WSL2 eth0 native witness failed'}
+          $npf=Start-Process -FilePath python -ArgumentList @('-u','tools/m0_wl_public_native_npf_trace.py') -PassThru -RedirectStandardOutput result/wl-public/native-windows-npf.log -RedirectStandardError result/wl-public/native-windows-npf-stderr.log
+          Start-Sleep -Milliseconds 800
+          try {
+            # A code-source-tagged Auto revision candidate saves costly
+            # replay of seven already source-proven startup modes.
+            if($env:GITHUB_EVENT_NAME -eq 'push' -and
+               $env:WBD_WL_PUBLIC_MODES -eq 'all'){
+              if((& git log -1 --format=%B) -like '*auto-natural-only*'){
+                $env:WBD_WL_PUBLIC_MODES='auto-adaptive'
+              } elseif((& git log -1 --format=%B) -like '*auto-start-only*'){
+              $env:WBD_WL_PUBLIC_MODES='auto'
+            } elseif((& git log -1 --format=%B) -like '*auto-revision-only*'){
+                $env:WBD_WL_PUBLIC_MODES='auto-revision'
+              }
+            }
+            if($env:WBD_WL_ABBA_NATIVE -eq '1'){
+              & python -u tools/m0_wl_native_rx_abba.py 2>&1 |
+                Tee-Object result/wl-public/direct-full.log
+            }else{
+              # No native PowerShell PIPE/EOF dependency: a detached original
+              # WSL/Go child may inherit stdout and outlive its owning test.
+              # Tail a real file by PID so its genuine error/exit is promptly
+              # surfaced without waiting for unrelated descendant handles.
+              Write-Output ('WL_WSL2_STAGE_BEGIN actual_native_modes mode='+$env:WBD_WL_PUBLIC_MODES)
+              if($gameSingle){
+                # The direct PID-owned file-backed runner already enforces
+                # the real 360s mode / 440s batch deadline. The previous
+                # second 510s temp-file wrapper hid its live progress and
+                # errors; launch this one directly so Actions records them.
+                Write-Output 'WL_GAME_NATIVE_FILE_BACKED_STREAMING_DEADLINE seconds=440'
+              }
+              & python -u tools/m0_wl_native_step_runner.py tools/m0_wl_public_modes_e2e.py result/wl-public/direct-full.log
+            }
+            $e2eExit=$LASTEXITCODE
+            if($e2eExit -ne 0){throw 'real Windows-to-Linux public original Go TLS/Rust M1-M3/native I/O path failed'}
+            if($env:WBD_WL_PUBLIC_MODES -eq 'all'){
+              Copy-Item result/wl-public/normal-report.json result/wl-public/report.json -Force
+            } elseif($env:WBD_WL_PUBLIC_MODES -eq 'through-game2'){
+              # Historical original mode order up to Game2; the last
+              # source-signed Game2 result is the scoped terminal verdict.
+              Copy-Item result/wl-public/game2-report.json result/wl-public/report.json -Force
+            } else {
+              Copy-Item "result/wl-public/$env:WBD_WL_PUBLIC_MODES-report.json" result/wl-public/report.json -Force
+            }
+            # Other effective public modes remain UNWIRED/NOT_RUN until
+            # they use the genuine shared Linux owner/lane/lifecycle ABI.
+            # No separate Fixed6-only public Action or repeated WSL2 startup.
+          } finally {
+            Remove-NetFirewallRule -Name $tcpRuleName -ErrorAction Stop
+            if(Get-NetFirewallRule -Name $tcpRuleName -ErrorAction SilentlyContinue){
+              throw 'owned TCP test firewall rule survived scoped cleanup'
+            }
+            Write-Output 'WL_REAL_WINDOWS_WINTUN_TCP_FUNCTIONAL_LISTENER_RULE_REMOVED'
+            foreach($p in @($witness,$npf)){
+              if($null -ne $p -and -not $p.HasExited){Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue}
+            }
+            Get-Content result/wl-public/native-link-tcp443.log -Tail 75 -ErrorAction SilentlyContinue
+            Get-Content result/wl-public/native-windows-npf.log -Tail 75 -ErrorAction SilentlyContinue
+            Get-Content result/wl-public/native-windows-npf-stderr.log -Tail 15 -ErrorAction SilentlyContinue
+          }
+          if($e2eExit -ne 0){throw 'true public Windows Go TLS Rust Npcap Wintun to Linux raw/TUN direct chain FAILED'}
+          $result=Get-Content result/wl-public/report.json -Raw | ConvertFrom-Json
+          if($env:WBD_WL_ABBA_NATIVE -eq '1'){
+            $abba=Get-Content result/wl-public/wl-native-abba/summary.json -Raw | ConvertFrom-Json
+            if($abba.type -ne 'SAME_RUNNER_RUST_NATIVE_ABBA' -or
+               $abba.order -ne 'ABBA' -or @($abba.legs).Count -ne 4){
+              throw 'Missing real same Windows runner Rust NativeOwner ABBA'
+            }
+            Write-Output ('WL_REAL_SAME_WINDOWS_RUNNER_ABBA_DECISION '+$abba.decision.decision)
+          }
+          if($env:WBD_WL_V2_SCENARIO -and $env:WBD_WL_ABBA_NATIVE -ne '1'){
+            $v2Config=Get-Content $env:WBD_WL_V2_SCENARIO -Raw | ConvertFrom-Json
+            $modeForScenario=if($v2Config.public_mode){$v2Config.public_mode}else{'normal'}
+            if($modeForScenario -ne $env:WBD_WL_PUBLIC_MODES){
+              throw 'V2 real mode must equal committed scenario public_mode'
+            }
+            if($env:WBD_WL_V2_SCENARIO -like 'scenarios/wl-outer-repair-*.json' -and $modeForScenario -eq 'normal'){
+              # Intentional netem damage: 99.9% app delivery is not a valid
+              # hard gate. Verify actual tc drops, offered rate, Rust Stop
+              # and accepted/uncertain outer R/F, R/total, R/C instead.
+              & python tools/m0_wl_outer_repair_verify.py --scenario $env:WBD_WL_V2_SCENARIO --mode-root result/wl-public/mode-results/normal --out result/wl-public/outer-repair-verdict.json
+              if($LASTEXITCODE -ne 0){throw 'Windows Rust native outer repair: scoped budget, coverage or capacity FAIL'}
+            }else{
+              $real=$result.WL_V2
+              if($real.status -ne 'MEASURED_BOTH_OS_KERNEL' -or
+                 $real.owned_stop -ne 'PASS_BOTH_OWNED'){
+                throw 'Rust V2 real kernel measurement or owned Stop not proven'
+              }
+              # A deliberately damaged FEC/Game netem profile is not a 0-loss
+              # Normal trial. Require genuine positive first-arrival each way;
+              # the existing per-mode report checks true TLS/UDP/TCP/Stop.
+              # Keep the historical >=99.9% gate for loss=0 unchanged.
+              $damaged=($v2Config.windows_to_linux.loss_pct -gt 0 -or
+                        $v2Config.linux_to_windows.loss_pct -gt 0)
+              # A staged Auto profile begins clean but deliberately damages
+              # one or both directions later. Overall 240s first arrival is
+              # NOT the clean 99.9% oracle. Keep genuine tc-stage readbacks.
+              foreach($stage in @($v2Config.impairment_stages)){
+                if($stage.windows_to_linux.loss_pct -gt 0 -or
+                   $stage.linux_to_windows.loss_pct -gt 0){
+                  $damaged=$true
+                  break
+                }
+              }
+              if($damaged){
+                if($real.first_delivery_fraction.windows -le 0 -or
+                   $real.first_delivery_fraction.linux -le 0){
+                  throw 'damaged V2 mode had no authentic first-delivery in one direction'
+                }
+              } elseif($real.first_delivery_fraction.windows -lt 0.999 -or
+                       $real.first_delivery_fraction.linux -lt 0.999){
+                throw 'clean V2 native first delivery below existing 99.9 percent gate'
+              }
+            }
+          }
+          if($env:WBD_WL_PUBLIC_MODES -eq 'auto-adaptive'){
+            if($result.mode -ne 'auto-adaptive' -or
+               $result.mode_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE_auto-adaptive' -or
+               $result.auto_adaptive_applied -ne $true -or
+               $result.auto_adaptive_native_revision -lt 2 -or
+               $result.auto_adaptive_native_profile -ge 5 -or
+               $result.app_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
+               $result.tcp_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP' -or
+               $result.stop -ne 'PASS_BOTH_OWNED'){
+              throw 'native original M2 2s/8s shared Linux Auto naturally applied grade, both-OS UDP/TCP or owned Stop missing'
+            }
+            Write-Output 'WL_ACTUAL_AUTO_NATURAL_SHARED_POLICY_GRADE_NATIVE_TWO_OS_AND_STOP_PASS'
+          } elseif($env:WBD_WL_PUBLIC_MODES -eq 'auto-revision'){
+            if($result.mode -ne 'auto-revision' -or
+               $result.mode_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE_auto-revision' -or
+               $result.auto_revision_applied -ne $true -or
+               $result.app_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
+               $result.tcp_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP' -or
+               $result.stop -ne 'PASS_BOTH_OWNED'){
+              throw 'actual Windows original M2 Auto revision2 native both-OS delivery/Stop proof missing'
+            }
+            Write-Output 'WL_ACTUAL_AUTO_REVISION2_NATIVE_TWO_OS_AND_STOP_PASS'
+          } elseif($env:WBD_WL_PUBLIC_MODES -ne 'all' -and $env:WBD_WL_ABBA_NATIVE -ne '1') {
+            if($result.mode -ne $env:WBD_WL_PUBLIC_MODES -or
+               $result.mode_public -ne ('PASS_ACTUAL_WINDOWS_LINUX_NATIVE_'+$env:WBD_WL_PUBLIC_MODES) -or
+               $result.app_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
+               $result.tcp_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP' -or
+               $result.stop -ne 'PASS_BOTH_OWNED'){
+              throw 'selected same-SOURCE native public mode lacks actual two-OS UDP/TCP/Stop proof'
+            }
+          } elseif($env:WBD_WL_ABBA_NATIVE -ne '1' -and $result.normal_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE'){
+            throw 'real public original Normal product proof not emitted'
+          }
+          if($env:WBD_WL_RUN_N0 -eq '1' -and
+             $result.WL_N0 -notlike 'PASS_SCOPED_*'){
+            throw 'one-mode native N0 throughput/TC/delivery measured FAIL; functional startup cannot qualify performance'
+          }
+          if($env:WBD_WL_RUN_P200 -eq '1' -and
+             $result.WL_P200 -notlike 'PASS_SCOPED_*'){
+            throw 'P200 true kernel impairment reached capacity limit, missing delivery, or failed owned Stop'
+          }
+          } finally {
+            Set-Content -Path $watchdogDone -Value 'owner-finished'
+            if($null -ne $guard -and -not $guard.HasExited){Stop-Process -Id $guard.Id -Force -ErrorAction SilentlyContinue}
+            Write-Output 'WL_WSL2_OUTER_WATCHDOG_DISARMED'
+          }
+      - name: Restore Linux raw FakeTCP fixture RST rule after product Stop
+        if: always()
+        timeout-minutes: 2
+        shell: pwsh
+        run: |
+          if(Test-Path result/wl-public/linux-rst-rule-owned.flag){
+            & wsl.exe -d Ubuntu -u root -- iptables -D OUTPUT -p tcp --tcp-flags RST RST --sport 443:446 -j DROP
+            if($LASTEXITCODE -ne 0){throw 'owned real WSL2 Linux RST rule removal failed'}
+            Write-Output 'WL_REAL_LINUX_RST_OWNED_RULE_REMOVED'
+          }else{Write-Output 'WL_REAL_LINUX_RST_RULE_NOT_INSTALLED_SKIP_CLEANUP'}
+      - name: Remove exact owned WSL HyperV per-flow rule after full public product Stop
+        if: always()
+        timeout-minutes: 2
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $name='WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT
+          $installed=Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue
+          if($null -ne $installed){
+            $cid=[string]$installed.VMCreatorId
+            $known=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop | Where-Object {$_.FriendlyName -eq 'WSL'})
+            if($known.Count -ne 1 -or [string]$known[0].VMCreatorId -ne $cid){throw 'foreign HyperV VM creator refused cleanup'}
+            Remove-NetFirewallHyperVRule -Name $name -ErrorAction Stop
+            if(Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue){throw 'owned WSL HyperV per-flow rule remains installed'}
+            Write-Output 'WL_REAL_WSL_HYPERV_TCP443_EXACT_OWNER_REMOVED'
+          }else{Write-Output 'WL_REAL_WSL_HYPERV_RULE_NOT_CREATED_SKIP_CLEANUP'}
+      - name: Delete only exact owned WSL2 guest MAC neighbor after public Stop
+        if: always()
+        timeout-minutes: 2
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $path='result/wl-public/native-wsl-neighbor-owner.json'
+          if(Test-Path $path){
+            $owned=Get-Content $path -Raw | ConvertFrom-Json
+            if($owned.owner -ne ('WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT)){throw 'foreign guest neighbor refused cleanup'}
+            & netsh.exe interface ipv4 delete neighbors "name=$($owned.interface_index)" "address=$($owned.guest_ip)"
+            if($LASTEXITCODE -ne 0){throw 'real WSL guest neighbor cleanup failed'}
+            Write-Output 'WL_REAL_GUEST_MAC_NEIGHBOR_OWNER_CLEARED'
+          }else{Write-Output 'WL_GUEST_MAC_NEIGHBOR_NOT_CREATED'}
+      - name: Restore Npcap owned Windows kernel service after product Stop
+        if: always()
+        timeout-minutes: 4
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Continue'
+          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Cleanup 2>&1 |
+            Tee-Object result/wl-public/npcap-cleanup.log
+          $result=Get-Content result/wl-public/npcap-cleanup.log -Raw
+          if(-not ($result.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_PASS') -or $result.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_SKIP reason=no_state'))){throw 'Npcap owned cleanup unverified'}
+          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'Npcap native driver still installed'}
+      - name: Report only public business source result, not native scoped success
+        if: always()
+        shell: pwsh
+        run: |
+          if(Test-Path result/wl-public/report.json){Get-Content result/wl-public/report.json}
+          else {Write-Output 'WL_PUBLIC_WINDOWS_LINUX_NORMAL_OFF=NOT_RUN_OR_FAILED_BEFORE_START'}
+          if(Test-Path result/wl-public/report.json){Write-Output ('WL_N0='+$result.WL_N0)}
+          Write-Output 'WL_N1_N5=NOT_RUN'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-wl-full-public-normal-direct
+          path: |
+            result/wl-public/report.json
+            result/wl-public/normal-report.json
+            result/wl-public/*-report.json
+            result/wl-public/mode-batch.json
+            result/wl-public/mode-results/
+            result/wl-public/wl-n0-*-app.json
+            result/wl-public/wl-n0-netem-*.json
+            result/wl-public/wl-ab-v2/
+            result/wl-public/wl-native-abba/
+            result/wl-public/wl-v2-kernel-stage-*.json
+            result/wl-public/wl-v2-scenario.json
+            result/wl-public/outer-repair-verdict.json
+            result/wl-public/windows-binary-manifest.json
+            result/wl-public/assembly.json
+            result/wl-public/native-link-tcp443.log
+            result/wl-public/native-windows-npf.log
+            result/wl-public/native-windows-npf-stderr.log
+            result/wl-public/npcap-cleanup.log
+            result/wl-public/*.pid
+            result/wl-public/windows-route.json
+            result/wl-public/windows-adapters.json
+            result/wl-public/linux-eth0.json
+            result/wl-public/hyperv-rule.json
+            result/wl-public/native-wsl-neighbor-owner.json
+          retention-days: 30
+          if-no-files-found: warn
+ '-test.count=1'
             if($LASTEXITCODE -ne 0){throw 'native Game cold queue overload regression FAIL'}
             & ../result/client.test.exe '-test.run=^TestM0PLAN025WindowsNativeSourceInvalidIPv4DoesNotPoisonBatch$' '-test.count=1'
             if($LASTEXITCODE -ne 0){throw 'Windows pre-seal native IPv4 Wintun filtering boundary FAIL'}

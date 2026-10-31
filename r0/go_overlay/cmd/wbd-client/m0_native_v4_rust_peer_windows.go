@@ -177,9 +177,15 @@ func(p *m0WinRustNativePeer) DrainPeerAndKernelLoans(ctx context.Context,
  if p.tx!=nil{err=errors.Join(err,p.tx.CloseAfterRustJoin());p.tx=nil}
  return err
 }
+// Only the native Rust HealthClock's authenticated 90s verdict may
+// reauthorize. All ordinary kernel/crypto/driver errors remain fatal.
+func m0WindowsRustNativeWorkerError(code int32)error{
+ if code==6{return errM0NativeV4AuthenticatedPeerDead}
+ return fmt.Errorf("Rust native worker rc=%d",code)
+}
 func(p *m0WinRustNativePeer) RefreshEffective(ctx context.Context)error{
  s,err:=p.owner.NativeIOStats(ctx);if err!=nil{return err}
- if s.WorkerError!=0{return fmt.Errorf("Rust native worker rc=%d",s.WorkerError)}
+ if s.WorkerError!=0{return m0WindowsRustNativeWorkerError(s.WorkerError)}
  p.last=s
  p.effective,err=p.owner.ReadBoundOriginalM2Effective(ctx)
  if err!=nil{return err}

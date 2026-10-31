@@ -55,6 +55,8 @@
  const MAX_LINK:usize=2304;
  const MAX_NPF:usize=65535+64;
  const IDLE_WAIT:u32=u32::MAX;
+ // Rust HealthClock only: never coalesce authenticated dead with BAD_STAGE=3.
+ const AUTHENTICATED_PEER_DEAD:i32=6;
 
  // This diagnostic is compiled out of ordinary Windows production
  // builds. At most 1/64 owner-lock attempts per direction reads a clock.
@@ -678,7 +680,7 @@
                  if e.m2.as_ref().is_some_and(|m|
                      m.health.unhealthy(m2_clock().0)){
                      eprintln!("WBD_WINDOWS_RUST_NATIVE_HEALTH_TIMEOUT reason=authenticated_dead_after_90s");
-                     return Err(BAD_STAGE)
+                     return Err(AUTHENTICATED_PEER_DEAD)
                  }
              }
              let mut work=0;

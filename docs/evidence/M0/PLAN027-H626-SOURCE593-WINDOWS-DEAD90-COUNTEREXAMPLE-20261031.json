@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "source_sha": "593ce4a1073773429d7739a086fe3e060af89a3d",
+  "result": "FAIL_TWO_REAL_FULL_BLACKHOLE_WINDOWS_REAUTH_NOT_RECOVERED",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "witness_runs": [
+    {
+      "run_id": 41198145690,
+      "mode": "normal",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41198145690",
+      "actual_bilateral_loss_duration_s": 106,
+      "linux_auth_dead": true,
+      "linux_original_tls_generation2": true,
+      "windows_auth_dead": true,
+      "windows_native_worker_status": 3,
+      "windows_owned_stop": "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1",
+      "failure": "original owner exited during real kernel outage",
+      "actual_post_recovery_udp": "NOT_RUN"
+    },
+    {
+      "run_id": 41198150974,
+      "mode": "fixed",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41198150974",
+      "actual_bilateral_loss_duration_s": 106,
+      "linux_auth_dead": true,
+      "linux_original_tls_generation2": true,
+      "windows_auth_dead": true,
+      "windows_native_worker_status": 3,
+      "windows_owned_stop": "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1",
+      "failure": "original owner exited during real kernel outage",
+      "actual_post_recovery_udp": "NOT_RUN"
+    }
+  ],
+  "candidate": "H626 Rust rc6 authentic dead and Go cold reauth only after owned Stop, not verified yet",
+  "other_open": [
+    "GameFEC true native Stop",
+    "C100 lossless 60/300s first fraction failures",
+    "Normal50 250ms 30percent early native BAD_STAGE rc3",
+    "B DNS/IPv6/rotation/MTU"
+  ]
+}

@@ -1,0 +1,76 @@
+name: M0 PLAN027 H626 source-auth Windows cold reauthorization B106 and Fixed reuse
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h626-windows-auth-reauth.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-binary-two-independent:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h626-real-reauth]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Freeze new product, source-build only Normal B106, source-reuse Fixed B106 independently after binaries exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          for mode,file in (("normal","plan027-b-normal-blackhole106-recover-10m-25ms-0loss-60s.json"),("fixed","plan027-b-fixed-blackhole106-recover-10m-25ms-0loss-60s.json")):
+              s=read_scenario("scenarios/"+file)
+              assert s["public_mode"]==mode and s["lifecycle_blackhole_s"]==106
+              print("H626_REAL_DEAD90_CASE",mode,file,s["scenario_sha256"])
+          PY
+          scene=scenarios/plan027-b-normal-blackhole106-recover-10m-25ms-0loss-60s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|normal|$scene"
+          before="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" | jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id' | head -1)"
+          if [ -n "$before" ];then
+            first="$before";echo "H626_EXISTING_NORMAL_SOURCE_BUILD $first"
+          else
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode=normal -f run_n0=false -f perf_scenario_file="$scene" \
+              -f perf_reuse_run_id="" -f perf_binary_source_sha=""
+            first=""
+            for attempt in $(seq 1 40);do
+              first="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" | jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id' | head -1)"
+              if [ -n "$first" ];then break;fi
+              sleep 5
+            done
+          fi
+          test -n "$first" || { echo H626_ORIGINAL_RUN_NOT_FOUND >&2;exit 1; }
+          test "$(gh api "repos/$GH_REPO/actions/runs/$first" --jq .head_sha)" = "$GITHUB_SHA"
+          echo "H626_NORMAL_REAL_NATIVE_BUILD_AND_B106_RUN=$first"
+          artifact_ready=0
+          for attempt in $(seq 1 85);do
+            artifacts="$(gh api "repos/$GH_REPO/actions/runs/$first/artifacts?per_page=100")"
+            if jq -e --arg w "m0-wl-windows-product-binaries-$GITHUB_SHA" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' <<<"$artifacts" >/dev/null;then
+              artifact_ready=1;break
+            fi
+            status="$(gh api "repos/$GH_REPO/actions/runs/$first" --jq .status)"
+            if [ "$status" = completed ];then
+              echo "H626_SOURCE_BUILD_NO_BOTH_BINARIES first=$first status=$status" >&2
+              exit 1
+            fi
+            sleep 12
+          done
+          test "$artifact_ready" = 1 || { echo H626_BUILD_ARTIFACT_TIMEOUT_NO_DUPLICATE >&2;exit 1; }
+          echo "H626_EXACT_SOURCE_WINDOWS_LINUX_BINARIES_FROZEN run=$first source=$GITHUB_SHA"
+          fixedscene=scenarios/plan027-b-fixed-blackhole106-recover-10m-25ms-0loss-60s.json
+          fixedtitle="M0-WIN-LINUX|$GITHUB_SHA|fixed|$fixedscene"
+          existing="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" | jq -r --arg t "$fixedtitle" '.workflow_runs[]|select(.display_title==$t)|.id'|head -1)"
+          if [ -z "$existing" ];then
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode=fixed -f run_n0=false -f perf_scenario_file="$fixedscene" \
+              -f perf_reuse_run_id="$first" -f perf_binary_source_sha="$GITHUB_SHA"
+            echo H626_FIXED_106S_INDEPENDENT_ORIGINAL_ACTION_DISPATCHED_PENDING
+          else
+            echo "H626_FIXED_ALREADY_DISPATCHED $existing"
+          fi
+          echo "H626_BOTH_NATIVE_SCENES_AWAIT_REAL_BILATERAL_NEW_TLS_AND_STOP; NOT_PASS_YET"
