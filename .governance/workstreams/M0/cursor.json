@@ -4,18 +4,19 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 644,
-  "checkpoint_sha": "f93a625a4c89d7f688f0e65f6b7cf3723bd739d0",
+  "sequence": 646,
+  "checkpoint_sha": "cf5948080c27acb3e92cee2a9fe15b03d1ccf875",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H644 repair actual governance evidence schema/provenance after H643 real source11f Game2 proof; Auto240 Normal300 FixedC50 independent Actions 41214482312/41214487018/41214491798 IN_FLIGHT, no premature PASS; GameFEC+B106 four cancelled blockers still open.",
-  "why_now": "H643 three new same SOURCE native Actions dispatched; governance catalog card size is fixed, but governance STRUCTURE still fails because H643 evidence omitted schema_version/source_sha (and old H640 schema absent). Precise evidence schema correction only; keep all prior original business data.",
+  "current_task": "H646 collected actual H643 A4 Auto240 (one-step down 30s/4096 valid), Normal10M300s and Fixed50M/25ms one SOURCE11f true business/Stop successful; 3 additional independent C weaknet test Actions dispatched using same SOURCE binaries. GameFEC and B106 4 original watchdog cancellations remain blockers.",
+  "why_now": "Original H643 A4 5 measured kernel tc stages 0/5/15/30/0% with actual Auto Linux stage rev2-5 down readback, Normal10 300s full business and Fixed50 60s 100% first arrival; no more need to wait for these. H641 FEC/B106 four cancellations have no available native logs; do not blind repeat. Use source-locked spare independent C while diagnosing B.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect SOURCE11f A4/C native Action results 41214482312/41214487018/41214491798 and real metrics; repair FEC/B106 original native hang via exact OS/cold implementation evidence, finish remaining B/C. No duplicate Actions or builds.",
+  "next_action": "Collect H646 independently dispatched Game4/off 30%, Normal50/250ms/15% and Fixed50/250ms/15% real native run results, F/R/C/p99 where measured, CPU/RSS/drop/Stop, capacity stop rule. Inspect original Game SACK path across both Linux and Windows before any implementation (Linux pure ACK absent), then B106/FEC native OS cold/hang/rotation and remaining C requirements. No repeat same unresolved FEC scenes.",
   "unverified": true,
   "last_tested_source": "11f1881ff68afa22c5b0ca957d6808420a878a06",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H643-SOURCE11F-GAME2-AND-CANCEL-20261031.json"
+    "docs/evidence/M0/PLAN027-H643-SOURCE11F-GAME2-AND-CANCEL-20261031.json",
+    "docs/evidence/M0/PLAN027-H646-SOURCE11F-A4-C-COLLECTED-20261031.json"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md",
@@ -26,5 +27,5 @@
     "docs/testing/WL_PERF_HARNESS_V2.md"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN027 §0 remains PARTIAL. H641 SOURCE11f Action41210457594 Game2/off30 10Mbps/250ms/60s true Windows+Linux UDP/TCP/Stop PASS, first delivery .910076/.909715 vs independent dual-copy 30% expected .91, Linux M4 TX offer/slab/record/policy/raw errors all zero, full Game outer ACK examined0/retrans0 (not qualified). FEC Game2/4 Actions41211105194/41211110192 CANCELED after >720s, B106 Normal/Fixed Actions41211114737/41211119313 CANCELED after >1200s; pre-cancel live logs unavailable, no first business or owned Stop PASS. H643 feature catalog card size repair and in same SOURCE planned independent A4 Auto240 and Normal10 300s/Fixed50 C one-scenario Actions with binary run41210457594 reuse (not verified yet). A5 waived; B FEC/Windows dead90 rotation DNS/IPv6 MTU and remaining C matrix/true long open; no user completion. H644 governance repair: H643 & H640 evidence file schemas need schema_version1, H643 current evidence source_sha must equal last_tested_source SOURCE11f. Source and business data unchanged; 3 in-flight A4/C action IDs from H643 preserved, not PASS."
+  "partial_summary": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT remains PARTIAL. H643 frozen actual product binary SOURCE11f run41210457594: original Game2/off 10Mbps/250ms/30 first .910076/.909715, both kernel UDP/TCP and Stop, Linux TX reject0; A4 240s 5 real tc stages source scenario sha940e6e actual full business/Stop first Win .999997 Lin .998681, server valid 30s 4096 matching samples down profile5→4→3→2→1 request rev2-5 final readback applied rev5 profile1 pendingfalse, Windows profile requests differ, no cross OS p99. Normal 10Mbps/25ms/0 300s action41214487018 first1/1 real Stop, CPU19.7188s ~6.2% one core RSS42.16MB, kernel TUN drop0; Fixed50Mbps/25ms/0 60s action41214491798 first1/1 real Stop, CPU52.0156s ~67.717% one core RSS46.05MB, TUN drop0. H646 independent Game4/off30 and Fixed/Normal50 loss15 60s dispatched pending. Important source audit: Windows Game native parse_ack_packet(...,false) and on_hint empty sacks, Linux Game raw uses ack32=1 and no SACK-only ACK; true Game outer shared repair not proven and must be coordinated both endpoints, not only Windows. Four Game2/4 FEC15 + Normal/Fixed B106 native Actions41211105194/41211110192/41211114737/41211119313 CANCELED at watcher, live logs unavailable, remain necessary blockers. A5 waived by user, other B lifecycle and C mixed/high pressure not closed. H644 governance PASS 41214642341. No fake all-done."
 }

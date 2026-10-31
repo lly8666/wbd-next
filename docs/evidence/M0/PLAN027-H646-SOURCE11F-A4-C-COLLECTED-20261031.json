@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "11f1881ff68afa22c5b0ca957d6808420a878a06",
+  "harness_sha": "f93a625a4c89d7f688f0e65f6b7cf3723bd739d0",
+  "verified_at": "2026-10-31",
+  "result": "PARTIAL_A4_C_REAL_PASS_B_OPEN",
+  "same_binary_source_run": 41210457594,
+  "source_binary_hashes": {
+    "windows_cli": "8c9949de4e86a495f3ce7b2856c0d1941337ea6846dcb629aa27c6bf83b53663",
+    "linux_server": "373cae784aae258b17f6ec1ad2c054f7b5d66f12c55ba2780630ee26b4b82a77"
+  },
+  "scenarios": [
+    {
+      "mode": "auto",
+      "run": 41214482312,
+      "artifact": 13046894380,
+      "scene": "plan027-a4-auto-10m-staged-240s",
+      "scene_sha256": "940e6e713f81397996e156507affe6309bd482262569df1542cd4d0570a815ba",
+      "stage_count": 5,
+      "tc_loss_phases": [
+        "0/0",
+        "5/0",
+        "15/5",
+        "30/15",
+        "0/0"
+      ],
+      "offered_mbps": {
+        "windows": 9.9993,
+        "linux": 10
+      },
+      "first_fraction": {
+        "windows": 0.999997,
+        "linux": 0.998681
+      },
+      "status": "REAL_UDP_TCP_OWNED_STOP_PASS",
+      "linux_server_mature_stage": [
+        {
+          "revision": 2,
+          "profile": 4,
+          "at": "15:26:11"
+        },
+        {
+          "revision": 3,
+          "profile": 3,
+          "at": "15:26:43"
+        },
+        {
+          "revision": 4,
+          "profile": 2,
+          "at": "15:27:18"
+        },
+        {
+          "revision": 5,
+          "profile": 1,
+          "at": "15:27:50"
+        }
+      ],
+      "quality_evidence": "Each old-source valid 30s and 4096 matching sampled sources, one-step down",
+      "final_original_server_readback": "V4_PUBLIC_FEC2_READBACK role=server mode=auto requested=5 applied=5 profile=1 pending=false",
+      "windows_revision_requests": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "windows_final_requested_profile": 4,
+      "qualifier": "SERVER_MATURE_DOWN_READBACK_ONLY_NOT_CROSS_DIRECTION_GLOBAL_SCORE",
+      "cpu_whole_process_s": 59.9219,
+      "cpu_avg_single_core_pct": 23.295,
+      "rss_peak_bytes": 43696128,
+      "tun_tx_drop": 0
+    },
+    {
+      "mode": "normal",
+      "run": 41214487018,
+      "artifact": 13046779737,
+      "scene": "plan027-c-normal-10m-25ms-loss0-300s",
+      "scene_sha256": "d9f63884476a935782b37a5704890daa239ba0da3d6eb1705e67fa931ab461d3",
+      "offered_mbps": {
+        "windows": 9.9995,
+        "linux": 10
+      },
+      "first_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "status": "REAL_UDP_TCP_OWNED_STOP_PASS",
+      "cpu_whole_process_s": 19.7188,
+      "cpu_avg_single_core_pct": 6.2,
+      "rss_peak_bytes": 42160128,
+      "tun_tx_drop": 0,
+      "tun_rx_drop": 0
+    },
+    {
+      "mode": "fixed",
+      "run": 41214491798,
+      "artifact": 13047419148,
+      "scene": "plan027-c-fixed-50m-25ms-loss0-60s",
+      "scene_sha256": "1a97e25f609bf6691d656b397d65f3467d2b018326a7b8d5495c560a071e853d",
+      "offered_mbps": {
+        "windows": 49.9866,
+        "linux": 49.9999
+      },
+      "first_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "status": "REAL_UDP_TCP_OWNED_STOP_PASS",
+      "cpu_whole_process_s": 52.0156,
+      "cpu_avg_single_core_pct": 67.717,
+      "rss_peak_bytes": 46051328,
+      "tun_tx_drop": 0,
+      "tun_rx_drop": 0
+    }
+  ],
+  "scope_limits": [
+    "No calibrated cross-OS one-way p99",
+    "No same-host CPU before-after A/B",
+    "Auto full A4 harness stage grade NOT_PROVEN although actual server one-step readback exists",
+    "Game FEC and B106 four previous source11f original native Actions all canceled without product business/Stop",
+    "Game outer ACK/SACK not actually wired across independent Linux Game and Windows Game",
+    "C200 earlier host capacity evidenced separately, not automatically passed"
+  ],
+  "new_c_actions": "H646 one SOURCE reuse independent one-scenario C mode jobs, results pending"
+}
