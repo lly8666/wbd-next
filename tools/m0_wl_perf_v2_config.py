@@ -58,6 +58,10 @@ def read_scenario(path):
         if (mode!="normal" or type(idle) is not int or not 95<=idle<=130 or
             cfg["duration_s"]!=60 or any(cfg[d]["loss_pct"]!=0 for d in ("windows_to_linux","linux_to_windows"))):
             raise ValueError("WL_V2_BAD_IDLE_LIFECYCLE")
+    outage=cfg.get("lifecycle_blackhole_s")
+    if outage is not None and (mode!="normal" or outage!=20 or cfg["duration_s"]!=60 or
+            any(cfg[d]["loss_pct"]!=0 for d in ("windows_to_linux","linux_to_windows"))):
+        raise ValueError("WL_V2_BAD_BLACKHOLE_LIFECYCLE")
     stages=cfg.get("impairment_stages")
     if stages is not None:
         if mode!="auto" or not isinstance(stages,list) or not 3<=len(stages)<=12:

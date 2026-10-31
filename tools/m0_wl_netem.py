@@ -127,6 +127,28 @@ if action == "arm":
     except Exception:
         clean()
         raise
+elif action in ("blackhole", "recover"):
+    # Touch only the qdiscs we created via arm; no host-global policy edit.
+    if profile_name!="v2" or not scenario_path or not owner.exists():
+        raise RuntimeError("WL_B_BLACKHOLE_UNOWNED")
+    from m0_wl_perf_v2_config import read_scenario
+    case=read_scenario(scenario_path)
+    if case.get("lifecycle_blackhole_s")!=20:
+        raise RuntimeError("WL_B_BLACKHOLE_WRONG_SCENARIO")
+    state=json.loads(owner.read_text())
+    if state.get("owner")!="M0-WL-N0-ETH0-IFB" or state.get("interface")!=iface or state.get("profile")!="v2":
+        raise RuntimeError("WL_B_BLACKHOLE_FOREIGN_OWNER")
+    for device,handle,side in ((iface,"10:","windows_to_linux"),("eth0","20:","linux_to_windows")):
+        rows=json.loads(call("tc","-j","qdisc","show","dev",device)["stdout"] or "[]")
+        if not any(row.get("kind")=="netem" and row.get("handle")==handle for row in rows):
+            raise RuntimeError("WL_B_BLACKHOLE_NO_OWNED_QDISC")
+        p=case[side]
+        args=["netem","delay",f'{p["delay_ms"]}ms',
+              "loss","100%" if action=="blackhole" else f'{p["loss_pct"]}%',"limit","32768"]
+        if p["tc_rate_mbps"] is not None:args+=["rate",f'{p["tc_rate_mbps"]}mbit']
+        call("tc","qdisc","change","dev",device,"root","handle",handle,*args)
+    (out/("wl-v2-b-"+action+".json")).write_text(json.dumps(probe(),indent=2)+"\n")
+    print("WL_B_REAL_TC_"+("BLACKHOLE_BOTH" if action=="blackhole" else "RESTORED_BOTH"),flush=True)
 elif action == "stage":
     # In-place kernel qdisc change ONLY for the M0-owned WSL2 eth0/IFB.
     # No application shim, no link recreation, no new process or reboot.

@@ -4,6 +4,20 @@ from tools.m0_wl_perf_v2_config import read_scenario,profile,first_delivery_ok_f
 from tools.m0_wl_impairment_profile import get_profile
 SCENE=pathlib.Path(__file__).resolve().parents[1]/"scenarios"/"wl-normal-150m-300ms-0loss-60s.json"
 class V2Scenarios(unittest.TestCase):
+ def test_plan027_b_real_20s_outer_blackhole_restore(self):
+  name="plan027-b-normal-blackhole20-recover-10m-25ms-0loss-60s.json"
+  path=SCENE.parent/name
+  c=read_scenario(path)
+  self.assertEqual((c["public_mode"],c["duration_s"],c["lifecycle_blackhole_s"]),("normal",60,20))
+  script=(SCENE.parents[1]/"tools/m0_wl_public_normal_e2e.py").read_text()
+  self.assertIn("WL_B_REAL_20S_BLACKHOLE_RESTORED_NEW_BILATERAL_UDP_PASS",script)
+  net=(SCENE.parents[1]/"tools/m0_wl_netem.py").read_text()
+  self.assertIn('elif action in ("blackhole", "recover"):',net)
+  self.assertIn('"loss","100%" if action=="blackhole"',net)
+  with tempfile.TemporaryDirectory() as d:
+   invalid=json.loads(path.read_text());invalid["lifecycle_blackhole_s"]=105
+   p=pathlib.Path(d)/"invalid.json";p.write_text(json.dumps(invalid))
+   with self.assertRaisesRegex(ValueError,"BAD_BLACKHOLE_LIFECYCLE"):read_scenario(p)
  def test_plan027_b_real_normal_idle_wake_no_payload_90s(self):
   path=SCENE.parent/"plan027-b-normal-idle-wake-10m-25ms-0loss-60s.json"
   c=read_scenario(path)

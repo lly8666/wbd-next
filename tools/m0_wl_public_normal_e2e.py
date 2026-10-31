@@ -331,6 +331,46 @@ print(json.dumps(result),flush=True)
    "both_owners_stayed_alive":True,"post_idle_genuine_udp":"PASS_BOTH_KERNEL_DIRECTIONS",
    "authenticated_health_count":"NOT_EXPLICITLY_MEASURED"}
   print("WL_V2_B_IDLE_90S_NO_PAYLOAD_THEN_REAL_BIDIRECTIONAL_WAKE_PASS",flush=True)
+ # A source-controlled lifecycle phase with 100% *real tc loss* in
+ # both original FakeTCP directions. Stop the outage before the 90s dead
+ # threshold, demand new independent kernel UDP, then run the normal V2.
+ blackhole_scene=os.environ.get("WBD_WL_V2_SCENARIO","").strip()
+ blackout=read_scenario(root/blackhole_scene).get("lifecycle_blackhole_s",0) if blackhole_scene else 0
+ if blackout:
+  ctl=unix(root/"tools/m0_wl_netem.py")
+  scenario_file=unix(root/blackhole_scene)
+  def change_blackhole(action):
+   return wsl("python3",ctl,action,unix(out),"v2",scenario_file,timeout=35)
+  print("WL_B_KERNEL_BLACKHOLE_BEGIN seconds="+str(blackout),flush=True)
+  change_blackhole("arm")
+  try:
+   change_blackhole("blackhole")
+   time.sleep(blackout)
+   change_blackhole("recover")
+  finally:
+   change_blackhole("cleanup")
+  if w.poll() is not None or s.poll() is not None:
+   raise RuntimeError("original owner exited during reversible 20s kernel outage")
+  bw=(out/"blackhole-windows-udp.log").open("w");bl=(out/"blackhole-linux-udp.log").open("w")
+  logs.extend([bw,bl])
+  wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1",str(done),"3"],stdout=bw,stderr=subprocess.STDOUT)
+  la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),"10.66.0.1","10.66.0.2",unix(done),"3"],stdout=bl,stderr=subprocess.STDOUT)
+  until=time.monotonic()+65
+  while wa.poll() is None or la.poll() is None:
+   if w.poll() is not None or s.poll() is not None:
+    raise RuntimeError("original owner exited during post-blackhole wake")
+   if time.monotonic()>until:
+    wa.terminate();la.terminate()
+    raise RuntimeError("bounded real post-blackhole UDP failed")
+   time.sleep(.2)
+  if wa.returncode or la.returncode:raise RuntimeError("real UDP blackout wake returned nonzero")
+  for name in ("windows","linux"):
+   wake=json.loads((out/("blackhole-"+name+"-udp.log")).read_text().splitlines()[-1])
+   if not wake.get("public_ready_seen") or wake.get("sent",0)<24 or wake.get("received",0)<12:
+    raise RuntimeError("real post-blackhole first UDP missing "+name+" "+repr(wake))
+  report["lifecycle_blackhole_recovery"]={"blackhole_s":blackout,"kernel_loss_pct":100,
+      "fresh_udp_both_directions":"PASS_REAL_KERNEL_UDP"}
+  print("WL_B_REAL_20S_BLACKHOLE_RESTORED_NEW_BILATERAL_UDP_PASS",flush=True)
  if mode=="auto-revision":
   # Exact original Go TLS→Linux FecV2Step→Rust quiescent revision.
   # No alternate first-send ACK, kernel shortcut or fake Applied marker.
