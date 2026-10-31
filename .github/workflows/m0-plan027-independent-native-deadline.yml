@@ -51,13 +51,15 @@ jobs:
               exit 0
             fi
             jobs="$(gh api "repos/$GH_REPO/actions/runs/$TARGET_ID/jobs?per_page=100")"
-            stage="$(jq -c '.jobs[] | select(.name=="native-public-two-os") | {status,started_at}' <<<"$jobs" | head -1)"
+            stage="$(jq -c '.jobs[] | select(.name=="native-public-two-os") | {status,started_at,launch_at:([.steps[]? | select(.name=="Launch actual WSL2 Linux and direct full public two-OS product") | .started_at] | first)}' <<<"$jobs" | head -1)"
             if [ -n "$stage" ]; then
               if [ "$(jq -r .status <<<"$stage")" = completed ]; then
                 echo "M0_EXTERNAL_NATIVE_JOB_FINISHED target=$TARGET_ID"
                 exit 0
               fi
-              since="$(jq -r '.started_at // empty' <<<"$stage")"
+              # Game's 720s budget begins with the ACTUAL native step,
+              # not several minutes of prior verified driver/WSL2 setup.
+              since="$(jq -r --arg limit "$JOB_LIMIT" 'if $limit=="720" then (.launch_at // .started_at // empty) else (.started_at // empty) end' <<<"$stage")"
               if [ -n "$since" ]; then
                 seconds="$(($(date -u +%s)-$(date -u -d "$since" +%s)))"
                 if [ "$seconds" -ge "$JOB_LIMIT" ]; then
@@ -105,30 +107,3 @@ jobs:
           done
           echo "M0_GAME_FEC_NOT_PASS_STUCK_JOBS_CLEANED"
 
-  recover-h601-stuck:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h602-rescue-stuck-game]')
-    runs-on: ubuntu-24.04
-    timeout-minutes: 4
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-    steps:
-      - name: Stop only original verified H601 stuck Game2 action; preserve FAIL
-        shell: bash
-        run: |
-          set -euo pipefail
-          target=41186157073
-          source=511c7dd21af7611ce97f75c0660a089dc359f500
-          run="$(gh api "repos/$GH_REPO/actions/runs/$target")"
-          test "$(jq -r .head_sha <<<"$run")" = "$source"
-          test "$(jq -r .event <<<"$run")" = workflow_dispatch
-          test "$(jq -r .path <<<"$run")" = ".github/workflows/m0-wl-public-normal-full.yml"
-          if [ "$(jq -r .status <<<"$run")" = completed ]; then
-            echo "H602_EXACT_GAME_ALREADY_FINISHED_NOT_RETRIED id=$target"
-            exit 0
-          fi
-          job="$(gh api "repos/$GH_REPO/actions/runs/$target/jobs?per_page=100" | jq -r '.jobs[] | select(.name=="native-public-two-os") | .status')"
-          test "$job" = in_progress
-          echo "H602_FORCE_CANCEL_STUCK_REAL_GAME2 id=$target source=$source verdict=NOT_PASS"
-          gh api -X POST "repos/$GH_REPO/actions/runs/$target/force-cancel" --silent
-          echo "H602_ORIGINAL_CANCEL_REQUEST_SENT no_new_product_test=1"
