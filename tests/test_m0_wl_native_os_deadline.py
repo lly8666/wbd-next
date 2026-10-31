@@ -52,7 +52,7 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertIn('720',independent)
         self.assertIn('launch_at:',independent)
         self.assertNotIn("recover-h601-stuck:",independent)
-        self.assertIn('WL_GAME_NATIVE_FILE_BACKED_STREAMING_DEADLINE seconds=440',y)
+        self.assertIn('WL_GAME_NATIVE_FILE_BACKED_STREAMING_DEADLINE seconds=310',y)
         self.assertNotIn('m0_wl_windows_bounded_cmd.py 510 python -u tools/m0_wl_native_step_runner.py',y)
         self.assertIn('& python -u tools/m0_wl_native_step_runner.py',y)
         # Retired old Go A5 has no runner or Tee path; live Rust/Game
@@ -61,6 +61,8 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertIn("m0_wl_native_step_runner.py tools/m0_wl_public_modes_e2e.py",y)
         child=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()
         self.assertIn("WL_REAL_LINUX_OWNED_STOP_REQUEST_TIMEOUT",child)
+        self.assertIn("WBD_WINDOWS_ORIGINAL_GO_TLS_REAUTHORIZE generation=",child)
+        self.assertIn('win_log.count("WBD_WINDOWS_CLIENT_READY")<2',child)
         batch=(ROOT/"tools/m0_wl_public_modes_e2e.py").read_text()
         self.assertIn("WL_PUBLIC_REAL_MODE_ABORT_ON_TIMEOUT",batch)
 

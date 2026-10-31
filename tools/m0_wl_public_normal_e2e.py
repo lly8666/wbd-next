@@ -375,6 +375,12 @@ print(json.dumps(result),flush=True)
    if ("V4_PUBLIC_NATIVE_DEAD_RECONNECT_ARMED role=server" not in server_log or
        "V4_PUBLIC_ORIGINAL_GO_TLS_REAUTHORIZE role=server" not in server_log):
     raise RuntimeError("106s blackout missing original new TLS generation "+server_log[-600:])
+   win_log=(out/"client.log").read_text(errors="replace")
+   if ("WBD_WINDOWS_NATIVE_DEAD_RECONNECT_ARMED generation=" not in win_log or
+       "WBD_WINDOWS_ORIGINAL_GO_TLS_REAUTHORIZE generation=" not in win_log or
+       win_log.count("WBD_WINDOWS_CLIENT_READY")<2):
+    raise RuntimeError("106s blackout lacks Windows original new authenticated TLS generation "+win_log[-600:])
+   report["lifecycle_blackhole_recovery"]["windows_reauth"]="PASS_NATIVE_DEAD90_ORIGINAL_TLS"
    report["lifecycle_blackhole_recovery"]["linux_reauth"]="PASS_NATIVE_DEAD90_ORIGINAL_TLS"
    print("WL_B_REAL_106S_AUTHENTICATED_DEAD_RECOVER_BOTH_OS_PASS",flush=True)
   else:

@@ -32,11 +32,11 @@ for mode in modes:
  # Bound EVERY full functional mode separately; capacity N0/V2 can take longer.
  slow=bool(env.get("WBD_WL_RUN_N0")=="1" or env.get("WBD_WL_RUN_P200")=="1"
            or env.get("WBD_WL_V2_SCENARIO"))
- # GAME long-run 60s must fail *before* the independent Windows/WSL2
- # 1200s job watchdog. Previously 1200s nested mode / 970s child /
- # 1200s outer deadline raced, suppressing every Game diagnostic artifact.
- # 360s still leaves ample time for authentic TLS + 60s business + Stop.
- mode_seconds=360 if (slow and mode.startswith("game")) else 1200 if slow else 165
+ # One genuine V2 scene can run at most 300s of offered application;
+ # close its owning PID long before the Windows step-level OS/cleanup guard
+ # (Game 600s / other 1020s). Previous 360/440 and 1200/970 nested
+ # limits collided with setup/finally, hiding native errors at cancellation.
+ mode_seconds=240 if (slow and mode.startswith("game")) else 690 if slow else 165
  child=subprocess.Popen([sys.executable,"tools/m0_wl_public_normal_e2e.py"],env=env,
   creationflags=0) # restore last terminating pre-a8 original Windows child launch
  timed_out=False

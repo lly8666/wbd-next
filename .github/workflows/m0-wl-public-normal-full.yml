@@ -870,10 +870,10 @@ jobs:
               Write-Output ('WL_WSL2_STAGE_BEGIN actual_native_modes mode='+$env:WBD_WL_PUBLIC_MODES)
               if($gameSingle){
                 # The direct PID-owned file-backed runner already enforces
-                # the real 360s mode / 440s batch deadline. The previous
-                # second 510s temp-file wrapper hid its live progress and
-                # errors; launch this one directly so Actions records them.
-                Write-Output 'WL_GAME_NATIVE_FILE_BACKED_STREAMING_DEADLINE seconds=440'
+                # Real Game 240s mode / 310s file batch. Both finish before
+                # this step's 600s including true WSL/Firewall preflight
+                # and owned cleanup; keep full failure/status artifacts.
+                Write-Output 'WL_GAME_NATIVE_FILE_BACKED_STREAMING_DEADLINE seconds=310'
               }
               & python -u tools/m0_wl_native_step_runner.py tools/m0_wl_public_modes_e2e.py result/wl-public/direct-full.log
             }
