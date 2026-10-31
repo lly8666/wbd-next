@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "result": "REAL_NATIVE_WINDOWS_LINUX_10M_MTU1280_PREPARED_RECEIVER_GATE_0PCT_60S_FIRST_FULL_STOP_PASS",
+  "run": 41237331346,
+  "original_source_build_run": 41226521824,
+  "windows_binary_artifact": 13051429248,
+  "linux_binary_artifact": 13051109212,
+  "stage": "H677_PREPARED_BARIIER_HARNESS_ONLY",
+  "harness_sha": "92354d5a70f34640918f61b25859ba0bb05989dd",
+  "real_report_artifact": {
+    "id": 13055479500,
+    "digest": "sha256:dfc8033d54d4500b25f79905ef83e88454e93264254f48c858b86fff4c633072"
+  },
+  "scene": "plan027-b-normal-1280-mtu-10m-25ms-loss0-60s",
+  "original_win_tun_requested_mtu": 1280,
+  "original_linux_kernel_tun_mtu": 1209,
+  "duration_s": 60,
+  "offered_each_mbps": 10,
+  "one_way_kernel_netem_ms": 25,
+  "kernel_loss_pct": 0,
+  "first_mbps": {
+    "windows": 10,
+    "linux": 9.9974
+  },
+  "first_fraction": {
+    "windows": 1,
+    "linux": 1
+  },
+  "received_sequence_start": {
+    "windows": 0,
+    "linux": 0
+  },
+  "received_sequence_gaps": {
+    "windows": 0,
+    "linux": 0
+  },
+  "real_udp_rtt": {
+    "windows": {
+      "p99_ms": 47,
+      "probe_sent": 549,
+      "replied": 549,
+      "not_returned": 0
+    },
+    "linux": {
+      "p99_ms": 52.872,
+      "probe_sent": 600,
+      "replied": 600,
+      "not_returned": 0
+    }
+  },
+  "real_udp_tcp_duplex": "PASS",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "generator_cpu_s": {
+    "windows": 5.75,
+    "linux": 12.0789
+  },
+  "one_way_p99": "NOT_MEASURED_UNCALIBRATED_CROSS_OS_CLOCKS",
+  "comparison": {
+    "original_run": 41226521824,
+    "original_same_source": true,
+    "original_harness_before_ready_fix": true,
+    "original_first_fraction_windows": 0.998172,
+    "original_first_missing_window": {
+      "start": 0,
+      "end_exclusive": 182
+    },
+    "original_run_verdict": "FAIL_PRESERVED",
+    "inference": "First run's startup deficit coincides with early bound flag before receiver cold-prep; H677 corrected barrier and no missing in this independent VM. Different VM rules out definitive same-host attribution. Product bytes/driver original unchanged."
+  },
+  "next_long": {
+    "scenario": "scenarios/plan027-c-normal-10m-25ms-loss0-300s.json",
+    "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+    "build_run": 41226521824,
+    "status": "PENDING_ACTION_PUSH_DISPATCH",
+    "purpose": "5-min sustained same-source Windows-Linux original no-loss 10Mbps capacity-representative C; not proven until result."
+  },
+  "unverified": [
+    "10M source under old H669 harness still FAIL",
+    "No calibrated single-direction p99",
+    "30%/burst, 100/200M, Windows GameFEC/B106 rotation/full DNS WFP IPv6, physical remain independent"
+  ]
+}

@@ -78,6 +78,13 @@
       "status": "PERFORMANCE_PASS",
       "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
       "evidence": "docs/evidence/M0/PLAN027-H676-SOURCE6ECE-MTU1280-START-PREFIX-5M-20261101.json"
+    },
+    {
+      "platform": "windows/x64 signed NPF/Wintun ↔ WSL2 Linux amd64 true original Go TLS/Rust",
+      "scope": "H677 original prebuilt SOURCE6ece true kernel dual 10Mbps 25ms0% 60s mixed payload MTU1280; prepared receive app barrier, Windows first1.0/Linux1.0, no source sequence gaps from seq0, native original Linux TUN1209, UDP/TCP and both owned Stop PASS; same-origin RTT p99 Windows47/Linux52.872 (all replies), NOT one-way. H669 old premature-'bound' harness first182 loss FAIL preserved different runner.",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+      "evidence": "docs/evidence/M0/PLAN027-H678-SOURCE6ECE-PREPARED-RECEIVER-10M-MTU-20261101.json"
     }
   ],
   "limitations": [
@@ -87,7 +94,8 @@
     "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
     "PLAN027 H669 candidate fixes original Windows Normal/Fixed/Auto and Game2/4 protected TLS ClientLimit using existing Linux wire-to-inner 31+14+16+15 mode-specific overhead; Windows native Go compile and true H669 1280 dual-OS test NOT_RUN until Action, earlier H668 SOURCE5fb4 mismatch remains FAIL.",
     "H673 real H669 Source6ece first fraction Windows0.998172/Linux1.0, native MTU cap real OS PASS but no full lossless10M qualification. Same built SHA reused for one distinct 5M diagnostic, no result until Action.",
-    "H676 source6ece: 5M both authentic first 100% Stop/MTU PASS, but 10M failed solely 182 contiguous startup sequence0..181 at Windows (afterward no gaps). Prior failure remains; do not treat 5M as 10M/long or assume cause. See docs/evidence/M0/PLAN027-H676-SOURCE6ECE-MTU1280-START-PREFIX-5M-20261101.json"
+    "H676 source6ece: 5M both authentic first 100% Stop/MTU PASS, but 10M failed solely 182 contiguous startup sequence0..181 at Windows (afterward no gaps). Prior failure remains; do not treat 5M as 10M/long or assume cause. See docs/evidence/M0/PLAN027-H676-SOURCE6ECE-MTU1280-START-PREFIX-5M-20261101.json",
+    "H678 H677 new-source original source6ece Windows/Linux 10M MTU1280 60s prepared receiving READY actual first100% both, RTT own-clock p99 47/52.872; old H669 10M first182 FAIL (different harness and runner) preserved; 300s scenario pending."
   ],
   "promotion": null
 }
