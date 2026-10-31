@@ -720,7 +720,7 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                         Ok(mut m)=>m.on_hint(i,hint.ack32,&[]),
                         Err(_)=>return BAD_STAGE,
                     };
-                    if changed{let _=tx_wake.wake()}
+                    if changed{let _=tx_wake.wake();}
                     continue
                 }
                 let Ok(p)=parse_data_packet(ipv4,trusted)else{continue};
@@ -732,7 +732,7 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                             Ok(mut m)=>m.on_hint(i,p.presentation_ack32,&[]),
                             Err(_)=>return BAD_STAGE,
                         };
-                        if changed{let _=tx_wake.wake()}
+                        if changed{let _=tx_wake.wake();}
                     },
                     Err(INVALID)=>{c.rejected.fetch_add(1,Ordering::Relaxed);},
                     Err(e)=>return e,
