@@ -1,0 +1,66 @@
+name: M0 PLAN027 H551 sourcef031 C50 gated independent C100 and 300s
+on:
+  workflow_run:
+    workflows:
+      - M0 Windows Linux original native whole-wiring capability and functional entry
+    types: [completed]
+permissions: {contents: read, actions: write}
+jobs:
+  source-f031-c50-gate:
+    if: >-
+      github.event.workflow_run.id == 41161016522 &&
+      github.event.workflow_run.run_attempt == 1 &&
+      github.event.workflow_run.event == 'workflow_dispatch' &&
+      github.event.workflow_run.head_sha == 'dd015719ab49250d3b40c6411936a055346fca7f' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Actual C50 first and owned Stop before higher and 5min original source reuse
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          src=f0313d565e4e271aeb3cce3df11762b046d76f2e
+          build=41155198489
+          measured=41161016522
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .head_sha)" = "$src"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$build/artifacts" --jq '.artifacts[].name' > "$RUNNER_TEMP/products"
+          grep -Fx "m0-wl-windows-product-binaries-$src" "$RUNNER_TEMP/products"
+          grep -Fx m0-plan024-linux-product "$RUNNER_TEMP/products"
+          mkdir -p "$RUNNER_TEMP/c50"
+          gh run download "$measured" --repo "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/c50"
+          export H551_C50_RESULT="$RUNNER_TEMP/c50"
+          python3 - <<'PY'
+          import json,os,pathlib
+          from tools.m0_wl_perf_v2_config import read_scenario
+          root=pathlib.Path(os.environ['H551_C50_RESULT'])
+          r=json.loads((root/'report.json').read_text())
+          assert r['source']=='dd015719ab49250d3b40c6411936a055346fca7f'
+          assert r['linux_binary_source']=='f0313d565e4e271aeb3cce3df11762b046d76f2e'
+          assert r['stop']=='PASS_BOTH_OWNED'
+          v=r['WL_V2']
+          x=read_scenario('scenarios/plan027-c-normal-50m-25ms-loss0-60s.json')
+          assert v['status']=='MEASURED_BOTH_OS_KERNEL' and v['scenario_sha256']==x['scenario_sha256']
+          assert all(v['first_delivery_fraction'][side]>=.999 for side in ('windows','linux'))
+          for p,duration,rate in (
+              ('scenarios/plan027-c-normal-100m-25ms-loss0-60s.json',60,100),
+              ('scenarios/plan027-c-normal-50m-25ms-loss0-300s.json',300,50)):
+              y=read_scenario(p)
+              assert y.get('public_mode','normal')=='normal' and y['duration_s']==duration
+              assert all(y[side]['offered_mbps']==rate and y[side]['loss_pct']==0 for side in ('windows_to_linux','linux_to_windows'))
+              print('H551_SCENE_SOURCE_F031',p,y['scenario_sha256'])
+          print('H551_REAL_C50_GATE_PASS',v['first_delivery_fraction'])
+          PY
+          for scene in scenarios/plan027-c-normal-100m-25ms-loss0-60s.json scenarios/plan027-c-normal-50m-25ms-loss0-300s.json; do
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode=normal -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="$scene" \
+              -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
+            echo "H551_ONE_SCENE_OWN_VM $scene build=$build source=$src"
+          done
