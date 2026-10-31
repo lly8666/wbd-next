@@ -1,0 +1,53 @@
+name: M0 PLAN027 H665 same source Game2 fixed6 minimal true native
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h665-game2-fec-minimum-native.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-game2-fec-minimum:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h665-fec-minimal]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_SOURCE: dc191cf5686ddff2e433312b8ec2258954bd018f
+      BUILD_RUN: "41220597229"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Original immutable Game2/FEC binary and distinct minimal real kernel test
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .head_sha)" = "$PRODUCT_SOURCE"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/artifacts?per_page=100" |
+            jq -e --arg w "m0-wl-windows-product-binaries-$PRODUCT_SOURCE" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' >/dev/null
+          git fetch --depth=1 origin "$PRODUCT_SOURCE"
+          # Do not reuse changed production binaries except unaffected Game
+          # path. H662 only modified the separate Normal-native Stop module.
+          delta="$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_wl_netem.py tools/m0_wl_perf_v2_config.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py)"
+          test "$delta" = crates/wbd-engine/src/v4_windows_native_runtime.rs
+          grep -q 'M0_PLAN027_NORMAL_NATIVE_STOP_NOT_DRAINED' crates/wbd-engine/src/v4_windows_native_runtime.rs
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario("scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json")
+          assert s["public_mode"]=="game2-fec" and s["duration_s"]==10
+          for side in ("windows_to_linux","linux_to_windows"):
+              d=s[side]
+              assert d["offered_mbps"]==1 and d["delay_ms"]==25 and d["loss_pct"]==0
+          print("H665_SOURCE_LOCKED_REAL_GAME_FEC_COLD_MINIMUM",s["scenario_sha256"])
+          PY
+          scene=scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|game2-fec|$scene"
+          prior="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id'|head -1)"
+          if [ -n "$prior" ];then echo "H665_ALREADY_DISPATCHED run=$prior";exit 0;fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=game2-fec -f run_n0=false -f perf_scenario_file="$scene" \
+            -f perf_reuse_run_id="$BUILD_RUN" -f perf_binary_source_sha="$PRODUCT_SOURCE"
+          echo H665_GAME2FEC_MINIMUM_ORIGINAL_REAL_NATIVE_PENDING_NO_PRODUCT_PASS

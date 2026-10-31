@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+  "result": "PARTIAL_WINDOWS_GAME2FEC15_WATCHDOG_CANCELLED_MINIMUM_REAL_NATIVE_NOT_RUN",
+  "failed": {
+    "run": 41223662496,
+    "harness_sha": "ba29f6e62eaa71ddf2f3789bdf12009d2166b6b1",
+    "frozen_binary_source": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+    "mode": "game2-fec",
+    "duration_s": 20,
+    "rate_each_mbps": 10,
+    "delay_each_ms": 75,
+    "random_loss_each_pct": 15,
+    "status": "CANCELLED_EXTERNAL_WATCHDOG_NO_PRODUCT_REPORT_OR_STOP",
+    "artifact_real_guest": 13050574638,
+    "real_business": "NOT_VERIFIED",
+    "stop": "NOT_VERIFIED"
+  },
+  "new_one_shot_diagnostic": {
+    "source": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+    "build_run": 41220597229,
+    "windows_artifact": 13050335919,
+    "linux_artifact": 13050006739,
+    "scenario": "plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s",
+    "mode": "game2-fec",
+    "offered_each_mbps": 1,
+    "delay_each_ms": 25,
+    "loss_each_pct": 0,
+    "duration_s": 10,
+    "need_original_go_tls_rust_driver_stop": true,
+    "status": "PENDING_NO_PRODUCT_RESULT"
+  },
+  "known_scope": {
+    "linux_only_real_game_fec6": "PASS_RUN_41219083345_SOURCE11F_64_SOURCE",
+    "windows_Game2_off_new_source": "PASS_RUN_41220597229",
+    "normal_106_new_source": "IN_FLIGHT_RUN_41224887969",
+    "no_effect_on_fixed200_capacity": "SOURCE11F_CAPACITY_LIMITED"
+  }
+}

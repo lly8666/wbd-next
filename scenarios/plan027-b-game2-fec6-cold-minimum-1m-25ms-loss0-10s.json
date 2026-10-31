@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "scenario_id": "plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s",
+  "duration_s": 10,
+  "warmup_s": 3,
+  "drain_s": 5,
+  "tun_mtu": 1400,
+  "seed": 20261029,
+  "windows_to_linux": {
+    "offered_mbps": 1,
+    "delay_ms": 25,
+    "loss_pct": 0,
+    "tc_rate_mbps": null,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 96,
+        "packets_weight": 10
+      },
+      {
+        "udp_payload_bytes": 288,
+        "packets_weight": 15
+      },
+      {
+        "udp_payload_bytes": 1060,
+        "packets_weight": 30
+      },
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 45
+      }
+    ]
+  },
+  "linux_to_windows": {
+    "offered_mbps": 1,
+    "delay_ms": 25,
+    "loss_pct": 0,
+    "tc_rate_mbps": null,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 96,
+        "packets_weight": 10
+      },
+      {
+        "udp_payload_bytes": 288,
+        "packets_weight": 15
+      },
+      {
+        "udp_payload_bytes": 1060,
+        "packets_weight": 30
+      },
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 45
+      }
+    ]
+  },
+  "public_mode": "game2-fec"
+}
