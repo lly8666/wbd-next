@@ -1,0 +1,148 @@
+name: M0 PLAN027 H587 exact prior Game10 then source reused 20M
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h587-exact-game-capacity-gate.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  once:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h587-exact-game-gate]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 68
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE: cb475c89a29bc79c1608b747e76e136fd9341500
+      BUILD: "41177831521"
+      REAL_GAME10: "41178602168"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Honor original Game10 result; no repeat Game10 or Fixed50 dispatch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          git fetch --depth=1 origin "$SOURCE"
+          test -z "$(git diff --name-only "$SOURCE" HEAD -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py)"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          for filename,rate,loss in (
+            ('plan027-c-game4-fec-10m-250ms-loss0-60s.json',10,0),
+            ('plan027-c-game4-fec-20m-250ms-loss0-60s.json',20,0),
+            ('plan027-c-game4-fec-20m-250ms-loss30-60s.json',20,30)):
+              s=read_scenario('scenarios/'+filename)
+              assert s['public_mode']=='game4-fec' and s['duration_s']==60
+              for d in ('windows_to_linux','linux_to_windows'):
+                  assert s[d]['offered_mbps']==rate and s[d]['delay_ms']==250 and s[d]['loss_pct']==loss
+              print('H587_PINNED_SCENE',filename,s['scenario_sha256'])
+          PY
+          run="$(gh api "repos/$GH_REPO/actions/runs/$REAL_GAME10")"
+          test "$(jq -r .event <<<"$run")" = workflow_dispatch
+          test "$(jq -r .head_sha <<<"$run")" = 185229889e5d2657eeb94a9b268a4c654cc93d4e
+          test "$(jq -r .repository.full_name <<<"$run")" = "$GH_REPO"
+          base="$(gh api "repos/$GH_REPO/actions/runs/$BUILD")"
+          test "$(jq -r .head_sha <<<"$base")" = "$SOURCE"
+          test "$(jq -r .conclusion <<<"$base")" = success
+          for i in $(seq 1 56); do
+            run="$(gh api "repos/$GH_REPO/actions/runs/$REAL_GAME10")"
+            if [ "$(jq -r .status <<<"$run")" = completed ]; then
+              test "$(jq -r .conclusion <<<"$run")" = success || {
+                echo "H587_GAME10_GENUINE_NATIVE_FAILURE_NO_HIGHER_RATE" >&2;exit 1;
+              }
+              break
+            fi
+            test "$i" -lt 56 || { echo H587_GAME10_PENDING_DO_NOT_REPEAT >&2;exit 2; }
+            sleep 30
+          done
+          native="$(gh api "repos/$GH_REPO/actions/runs/$REAL_GAME10/jobs?per_page=100")"
+          test "$(jq -r '[.jobs[]|select(.name=="native-public-two-os")|.conclusion]|first' <<<"$native")" = success
+          artifacts="$(gh api "repos/$GH_REPO/actions/runs/$BUILD/artifacts?per_page=100")"
+          jq -e --arg name "m0-wl-windows-product-binaries-$SOURCE" '.artifacts[]|select(.name==$name and .expired==false)' <<<"$artifacts" >/dev/null
+          jq -e '.artifacts[]|select(.name=="m0-plan024-linux-product" and .expired==false)' <<<"$artifacts" >/dev/null
+          verify(){
+            local runid="$1" scene="$2" dir="h587-$1"
+            mkdir -p "$dir"
+            gh run download "$runid" --repo "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$dir"
+            H587_DIR="$dir" H587_SCENE="$scene" H587_SOURCE="$SOURCE" python3 - <<'PY'
+          import json,os,pathlib
+          from tools.m0_wl_perf_v2_config import read_scenario
+          obj=json.loads((pathlib.Path(os.environ['H587_DIR'])/'report.json').read_text())
+          expected=read_scenario('scenarios/'+os.environ['H587_SCENE'])['scenario_sha256']
+          assert obj['linux_binary_source']==os.environ['H587_SOURCE']
+          assert obj['mode']=='game4-fec'
+          assert obj['mode_public']=='PASS_ACTUAL_WINDOWS_LINUX_NATIVE_game4-fec'
+          assert obj['stop']=='PASS_BOTH_OWNED'
+          assert obj['app_duplex']=='PASS' and obj['tcp_duplex']=='PASS'
+          assert obj['WL_V2']['scenario_sha256']==expected
+          assert obj['WL_V2']['status']=='MEASURED_BOTH_OS_KERNEL'
+          assert min(obj['WL_V2']['first_delivery_fraction'].values())>=.999
+          print('H587_GAME4_SAME_SOURCE_TRUE_NATIVE_AND_STOP_PASS',os.environ['H587_SCENE'])
+          PY
+          }
+          verify "$REAL_GAME10" plan027-c-game4-fec-10m-250ms-loss0-60s.json
+          # One immutable SOURCE reuse. Never choose the first recent
+          # Action blindly: require exactly one new run in this precise
+          # dispatch interval; ambiguity stops without higher-rate dispatch.
+          run_once(){
+            local scene="$1" baseline id count
+            baseline="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=70" --jq '.workflow_runs[].id')"
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode=game4-fec -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="scenarios/$scene" \
+              -f perf_reuse_run_id="$BUILD" -f perf_binary_source_sha="$SOURCE"
+            for i in $(seq 1 24);do
+              id=""
+              count=0
+              for candidate in $(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=70" --jq '.workflow_runs[].id');do
+                grep -qx "$candidate" <<<"$baseline" && continue
+                test "$(gh api "repos/$GH_REPO/actions/runs/$candidate" --jq .head_sha)" = "$GITHUB_SHA" || continue
+                id="$candidate"
+                count=$((count+1))
+              done
+              if [ "$count" = 1 ];then echo "$id";return 0;fi
+              if [ "$count" -gt 1 ];then
+                echo "H587_MULTIPLE_NEW_RUNS_AMBIGUOUS_DO_NOT_CLAIM" >&2;return 1;
+              fi
+              sleep 6
+            done
+            echo H587_NEW_ACTION_ID_NOT_FOUND >&2
+            return 1
+          }
+          await_run(){
+            local runid="$1"
+            for i in $(seq 1 52);do
+              run="$(gh api "repos/$GH_REPO/actions/runs/$runid")"
+              if [ "$(jq -r .status <<<"$run")" = completed ];then
+                test "$(jq -r .conclusion <<<"$run")" = success || {
+                  echo "H587_CAPACITY_FAIL_OR_STOP_FAILED run=$runid" >&2;return 1;
+                }
+                return 0
+              fi
+              test "$i" -lt 52 || { echo "H587_CAPACITY_PENDING run=$runid" >&2;return 2; }
+              sleep 30
+            done
+          }
+          game20="$(run_once plan027-c-game4-fec-20m-250ms-loss0-60s.json)"
+          echo "H587_EXACT_GAME20_ZERO id=$game20"
+          await_run "$game20"
+          verify "$game20" plan027-c-game4-fec-20m-250ms-loss0-60s.json
+          game30="$(run_once plan027-c-game4-fec-20m-250ms-loss30-60s.json)"
+          echo "H587_EXACT_GAME20_30 id=$game30"
+          await_run "$game30"
+          # Damaged scene must pass business and Stop, but cannot require
+          # lossless ≥.999 first delivery under actual 30% netem.
+          mkdir -p "h587-$game30"
+          gh run download "$game30" --repo "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "h587-$game30"
+          H587_DIR="h587-$game30" H587_SOURCE="$SOURCE" python3 - <<'PY'
+          import os,json,pathlib
+          from tools.m0_wl_perf_v2_config import read_scenario
+          r=json.loads((pathlib.Path(os.environ['H587_DIR'])/'report.json').read_text())
+          assert r['linux_binary_source']==os.environ['H587_SOURCE']
+          assert r['mode_public']=='PASS_ACTUAL_WINDOWS_LINUX_NATIVE_game4-fec'
+          assert r['stop']=='PASS_BOTH_OWNED'
+          assert r['WL_V2']['scenario_sha256']==read_scenario('scenarios/plan027-c-game4-fec-20m-250ms-loss30-60s.json')['scenario_sha256']
+          assert r['WL_V2']['status']=='MEASURED_BOTH_OS_KERNEL'
+          print('H587_TRUE_GAME4_20M30_BUSINESS_STOP_PASS')
+          PY
