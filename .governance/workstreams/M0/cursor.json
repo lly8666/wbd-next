@@ -4,8 +4,8 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 562,
-  "checkpoint_sha": "ed9f1a8b21ec1b985475e2b98a313655796d4ff4",
+  "sequence": 563,
+  "checkpoint_sha": "948477fe97d15e8e78ec9966bac2b84d177e1c88",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
   "current_task": "H562 true SOURCE525 original native zero Action41166008870 100% both first, R0 F86398905/85005869, Windows C219748 Linux C unknown, Stop PASS, CPU3.4531s/75.485s RSS42.5MB drops0; original binary Win13028693506 Linux13028673203 SHA registered. H557 child fanout result pending. Entire PLAN027 A/B/C still OPEN.",
@@ -13,9 +13,8 @@
   "done_when": "PLAN027 online Receipt retired with real replacement behavior; necessary Windows/Linux native wiring, Health/idle/dead/rotation/Stop qualified; continuous valid Auto can lower one grade within120s, no loss gate during upward transition; representative 10-200Mbps 0-30pct <=250ms one-way matrix inside actual host capacity, Game4 maximum FEC <=20Mbps each direction. Report actual first delivery/p99/F-R-C/CPU/RSS/drop and source manifests. No corruption/cross-flow stuckness/unbounded state/Stop failures; remaining capacity and nonblocking limits declared. Mark readiness in existing legal cursor fields, update evidence/features. Repeated prompt after completion returns ready-for-user-review and stops without new dispatch unless substantive new work. No physical PASS inference. ALL FIVE PLAN027 section0 obligations must close with implementation/test evidence or specifically justified permitted capacity exclusions. No unresolved required function, pending necessary run or blocking defect. One capacity-limited family never completes other tasks. Old PLAN026 completion, docs-only plan, empty open_requests or one passing Action cannot satisfy this task. Reuse valid unaffected evidence with a scope check; no needless full reruns.",
   "next_action": "Fetch H557 workflow_run after 41166008870 completion, verify it has dispatched 12 source-reused scenarios and one sequential A5 once (no duplicate); collect each real F/R/C, first/Stop, candidate/CPU. After C50 gate qualify C100/300s, then relevant C200 and weaknet/mixed/burst by capacity. Windows Game Health/idle/dead/rotation and DNS/MTU remaining B must be implemented/verified, then close full PLAN027 §0 only on evidence.",
   "unverified": true,
-  "last_tested_source": "f0313d565e4e271aeb3cce3df11762b046d76f2e",
+  "last_tested_source": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H552-SOURCEF031-RATE-FIXED-AUTO-C50-20261031.json",
     "docs/evidence/M0/PLAN027-H562-SOURCE525-TRUE-NATIVE-ZERO-20261031.json"
   ],
   "context_refs": [
@@ -29,5 +28,5 @@
     "docs/testing/WL_PERF_HARNESS_V2.md"
   ],
   "open_requests": [],
-  "partial_summary": "H552 f031 native p1/5/30 user OLD narrow rate FAIL both, p15 PASS; Fixed30/Auto240 Linux down1/C50 source-scoped PASS. f031 Game2/4FEC actions41161010440/11977 CANCELLED; source556 original0 action41162105859 CANCELLED after build/WSL; never infer PASS. H555-H556 SOURCE525 structural real-positive-SACK monotonic age>=50ms cursor at most32 checks, once-only PN half-sample, Windows/Linux bounded original frozen FIFO with BurstPaced 1ms direction timer, existing R<=.10F/8MTU, no new wire or Go hot. Real old SACK cursor range panic prevented. H561 main Governance/feature catalog 41166599993 PASS. H562 exact original native source525 Action41166008870 TRUE0 both first100%, R0, Win F86398905 C219748, Linux F85005869 C NOT_MEASURED, Stop PASS, Win CPU3.4531s/75.485s RSS42504192, NPF/TUN drop0, p99 NOT_MEASURED. Source ZIP Win13028693506 sha881c64d6de8ebbfa98eda77022e011e4ac18458f783a38913186dbda3da8a291 Linux13028673203 sha0d5eb97b89b5d071b4e39ef282debc936cd6fcbf95acbc6d2668ea7ad298cd41; report13029600713 sha3f869f0d1762a1819326893a60704be45f16c262bdfd75f7abb2c1980fab72d6. H557 gate pending to source-reuse p1/5/15/30, Fixed30,Auto240,Game2/4 off/FEC,C50,A5; other B/C/300s remain OPEN."
+  "partial_summary": "H552 f031 native p1/5/30 user OLD narrow rate FAIL both, p15 PASS; Fixed30/Auto240 Linux down1/C50 source-scoped PASS. f031 Game2/4FEC actions41161010440/11977 CANCELLED; source556 original0 action41162105859 CANCELLED after build/WSL; never infer PASS. H555-H556 SOURCE525 structural real-positive-SACK monotonic age>=50ms cursor at most32 checks, once-only PN half-sample, Windows/Linux bounded original frozen FIFO with BurstPaced 1ms direction timer, existing R<=.10F/8MTU, no new wire or Go hot. Real old SACK cursor range panic prevented. H561 main Governance/feature catalog 41166599993 PASS. H562 exact original native source525 Action41166008870 TRUE0 both first100%, R0, Win F86398905 C219748, Linux F85005869 C NOT_MEASURED, Stop PASS, Win CPU3.4531s/75.485s RSS42504192, NPF/TUN drop0, p99 NOT_MEASURED. Source ZIP Win13028693506 sha881c64d6de8ebbfa98eda77022e011e4ac18458f783a38913186dbda3da8a291 Linux13028673203 sha0d5eb97b89b5d071b4e39ef282debc936cd6fcbf95acbc6d2668ea7ad298cd41; report13029600713 sha3f869f0d1762a1819326893a60704be45f16c262bdfd75f7abb2c1980fab72d6. H557 gate pending to source-reuse p1/5/15/30, Fixed30,Auto240,Game2/4 off/FEC,C50,A5; other B/C/300s remain OPEN. H563 governance source scope correction: cursor.last_tested_source exact SOURCE525 and only H562 same-source evidence_refs; earlier f031/H552 evidence remains immutable in prior devlog/history, NOT transferred to source525. Real 0/Stop PASS only; p1/5/15/30 and B/C NOT_RUN."
 }
