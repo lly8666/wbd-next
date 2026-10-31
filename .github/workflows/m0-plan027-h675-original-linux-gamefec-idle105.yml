@@ -1,0 +1,68 @@
+name: M0 PLAN027 H675 source-pinned Linux Game2 FEC6 105s authentic idle then kernel impaired UDP
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h675-original-linux-gamefec-idle105.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  one-genuine-linux-game-fec-idle-105:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h675-game-idle]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 13
+    env:
+      PRODUCT_SOURCE: 6ece9eab653f46a716e8d3a0927fb74bec4819e8
+      WBD_V4_PUBLIC_MODE: game2-fec
+      WBD_V4_PUBLIC_KERNEL_LOSS: "15"
+      WBD_PLAN027_GAME_IDLE105: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-plan024-linux-product
+          run-id: 41226521824
+          repository: lly8666/wbd-next
+          github-token: ${{ github.token }}
+          path: frozen-linux
+      - name: Exact original credential Go TLS/Rust M4 native built SOURCE and binary SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          root=pathlib.Path("frozen-linux")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["PRODUCT_SOURCE"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          assert m["binary_qualification"]=="BUILD_ONLY_NOT_PRODUCT"
+          for name,sha in m["sha256"].items():
+              f=root/name
+              assert f.stat().st_size>100000 and hashlib.sha256(f.read_bytes()).hexdigest()==sha
+          print("H675_ORIGINAL_LINUX_GO_TLS_RUST_SHA_SOURCE_REUSE_VERIFIED")
+          PY
+          chmod +x frozen-linux/wbd-v4-client frozen-linux/wbd-v4-server
+      - name: One genuine two-netns 105s zero business then Game2 fixed6 15pct kernel UDP FEC and Stop
+        shell: bash
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          test -c /dev/net/tun
+          mkdir -p fixed-kernel-result
+          python3 tools/m0_plan027_h650_linux_gamefec_overlay.py tools/m0-v4-public-real-linux-netns.sh "$RUNNER_TEMP/h675-fec-base.sh"
+          python3 tools/m0_plan027_h675_linux_gamefec_idle.py "$RUNNER_TEMP/h675-fec-base.sh" "$RUNNER_TEMP/h675-fec-idle.sh"
+          bash "$RUNNER_TEMP/h675-fec-idle.sh" "$GITHUB_WORKSPACE/frozen-linux" 2>&1 | tee h675-real-game-fec-idle.log
+          test "${PIPESTATUS[0]}" = 0
+          grep -q 'H675_REAL_GAME2_FEC6_IDLE105_OWNER_BOTH_ALIVE_NO_FALSE_DEAD' h675-real-game-fec-idle.log
+          grep -q 'M0_PLAN027_LINUX_ORIGINAL_GAME2_FIXED6_15PCT_REAL_TLS_FEC_KERNEL_UDP_STOP_PASS' h675-real-game-fec-idle.log
+          echo H675_REAL_ORIGINAL_GAME2_FEC6_105S_IDLE_POST_WAKE_TRUE_KERNEL_15PCT_UDP_FEC_STOP_PASS_LINUX_ONLY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h675-real-original-game-fec-idle105-${{ github.run_id }}
+          path: |
+            h675-real-game-fec-idle.log
+            fixed-kernel-result/
+          retention-days: 21
+          if-no-files-found: warn
