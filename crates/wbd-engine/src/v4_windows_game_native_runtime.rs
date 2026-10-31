@@ -347,7 +347,8 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             let outcome=npf[index].send_batch(&[frame]);
             let copied=outcome.accepted_prefix==1;
             let sent=if copied{1}else if outcome.uncertain_index.is_some(){2}else{0};
-            outer.lock().map_err(|_|BAD_STAGE)?.complete(index,pn,sent)?;
+            let rc=match outer.lock(){Ok(mut m)=>m.complete(index,pn,sent),Err(_)=>Err(BAD_STAGE)};
+            if let Err(e)=rc{return e}
             if copied{
                 c.tx.fetch_add(1,Ordering::Relaxed);
                 c.ack_sent[index].store(ack,Ordering::Release);
@@ -396,8 +397,8 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                                 if copied{
                                     // Health consumes real TCP sequence
                                     // bytes, not an M2 DATA repair candidate.
-                                    if outer.lock().map_err(|_|BAD_STAGE)?
-                                        .on_health_copy(index,health_pn,seq,n).is_err(){
+                                    if !outer.lock().is_ok_and(|mut m|
+                                        m.on_health_copy(index,health_pn,seq,n).is_ok()){
                                         return BAD_STAGE
                                     }
                                     c.tx_seq[index].fetch_add(n as u32,Ordering::Release);
@@ -715,8 +716,10 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 // hint. It never creates FEC recovery, Health or delivered.
                 if let Ok(hint)=wbd_platform::rx_ipv4_tcp::parse_ack_packet(
                     ipv4,trusted,false){
-                    let changed=outer.lock().map_err(|_|BAD_STAGE)?
-                        .on_hint(i,hint.ack32,&[]);
+                    let changed=match outer.lock(){
+                        Ok(mut m)=>m.on_hint(i,hint.ack32,&[]),
+                        Err(_)=>return BAD_STAGE,
+                    };
                     if changed{let _=tx_wake.wake()}
                     continue
                 }
@@ -725,8 +728,10 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                     &mut deferred,i,p.seq32,p.ciphertext){
                     Ok(())=>{
                         verified=true;
-                        let changed=outer.lock().map_err(|_|BAD_STAGE)?
-                            .on_hint(i,p.presentation_ack32,&[]);
+                        let changed=match outer.lock(){
+                            Ok(mut m)=>m.on_hint(i,p.presentation_ack32,&[]),
+                            Err(_)=>return BAD_STAGE,
+                        };
                         if changed{let _=tx_wake.wake()}
                     },
                     Err(INVALID)=>{c.rejected.fetch_add(1,Ordering::Relaxed);},
