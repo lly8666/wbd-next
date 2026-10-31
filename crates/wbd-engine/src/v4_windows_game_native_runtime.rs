@@ -592,13 +592,16 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             Ok(false)=>{},
             Err(e)=>return e,
         }
-        // Drain real Go TLS->Rust handoff backlog before new Npcap records.
-        loop{
+        // A backpressured lane must not block sibling original Go TLS
+        // handoff records behind it in the bounded early queue. Rotate only
+        // the already admitted prefix; no second packet owner or busy loop.
+        let queued=match early.lock(){Ok(q)=>q.len(),Err(_)=>return BAD_STAGE};
+        for _ in 0..queued{
             let row=match early.lock(){Ok(mut q)=>q.pop_front(),Err(_)=>return BAD_STAGE};
             let Some((i,seq,wire))=row else{break};
             if deferred.get(i).is_some_and(Option::is_some){
                 let Ok(mut q)=early.lock()else{return BAD_STAGE};
-                q.push_front((i,seq,wire));break
+                q.push_back((i,seq,wire));continue
             }
             match receive_one(&cfg,&group,&mut tun,&c,&mut ledgers,
                 &mut deferred,i,seq,&wire){
@@ -606,6 +609,13 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 Err(INVALID)=>{c.rejected.fetch_add(1,Ordering::Relaxed);},
                 Err(e)=>return e,
             }
+        }
+        // A successfully retried FEC batch can reopen an NPF RX lane in
+        // THIS turn. Rebuild the event set BEFORE an infinite wait; keeping
+        // last turn's handles would strand a now-healthy lane forever.
+        handles.truncate(2);
+        for (i,&e) in events.iter().enumerate(){
+            if active[i]&&deferred[i].is_none(){handles.push(e)}
         }
         // Never park indefinitely while a real decoded FEC batch is
         // awaiting Wintun capacity; never poll when there is no backlog.
