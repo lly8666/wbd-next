@@ -64,6 +64,13 @@
       "status": "FAIL",
       "source_sha": "5fb4c9d79d481334631a4f894e82d2f8c7b078ca",
       "evidence": "docs/evidence/M0/PLAN027-H669-SOURCE5FB4-MTU1280-PEER-CAP-FAIL-20261101.json"
+    },
+    {
+      "platform": "windows/x64 signed NPF Wintun + linux/amd64 WSL2 original TLS Rust",
+      "scope": "H669 SOURCE6ece native original Windows TUN requested1280 / genuine Linux post-TLS TUN1209 <=1280 FIX PASS, same 10Mbps25ms0%60s mixed UDP/TCP+Stop failed stringent Windows first 99.8172% <99.9%; Linux first100%, both Stop PASS. MTU contract scoped positive does NOT make full scenario PASS.",
+      "status": "FAIL",
+      "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+      "evidence": "docs/evidence/M0/PLAN027-H673-RECOVERED-H669-H671-MTU-AND-AUTH-DEAD-20261101.json"
     }
   ],
   "limitations": [
@@ -71,7 +78,8 @@
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637.",
     "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
-    "PLAN027 H669 candidate fixes original Windows Normal/Fixed/Auto and Game2/4 protected TLS ClientLimit using existing Linux wire-to-inner 31+14+16+15 mode-specific overhead; Windows native Go compile and true H669 1280 dual-OS test NOT_RUN until Action, earlier H668 SOURCE5fb4 mismatch remains FAIL."
+    "PLAN027 H669 candidate fixes original Windows Normal/Fixed/Auto and Game2/4 protected TLS ClientLimit using existing Linux wire-to-inner 31+14+16+15 mode-specific overhead; Windows native Go compile and true H669 1280 dual-OS test NOT_RUN until Action, earlier H668 SOURCE5fb4 mismatch remains FAIL.",
+    "H673 real H669 Source6ece first fraction Windows0.998172/Linux1.0, native MTU cap real OS PASS but no full lossless10M qualification. Same built SHA reused for one distinct 5M diagnostic, no result until Action."
   ],
   "promotion": null
 }

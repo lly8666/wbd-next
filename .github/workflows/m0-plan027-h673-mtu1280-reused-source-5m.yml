@@ -1,0 +1,54 @@
+name: M0 PLAN027 H673 one prebuilt real MTU1280 five-megabit isolation
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h673-mtu1280-reused-source-5m.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-source-locked-mtu1280-5m:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h673-mtu5m]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_SOURCE: 6ece9eab653f46a716e8d3a0927fb74bec4819e8
+      BUILD_RUN: "41226521824"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Reuse only authentic built both-OS H669 binaries, isolate 5M MTU scope, one Action
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .head_sha)" = "$PRODUCT_SOURCE"
+          # H669 total FAIL is a real business first-arrival verdict. Both independent
+          # production builds succeeded; do not require its failing scene to pass.
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/jobs?per_page=100" |
+            jq -e '[.jobs[]|select(.name=="Windows Go production and test compilation only" or .name=="Build true original Go and new Linux Rust peer persona from same SOURCE")]|length == 2' >/dev/null
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/jobs?per_page=100" |
+            jq -e '[.jobs[]|select(.name=="Windows Go production and test compilation only" or .name=="Build true original Go and new Linux Rust peer persona from same SOURCE")|.conclusion]|all(.=="success")' >/dev/null
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/artifacts?per_page=100" |
+            jq -e --arg w "m0-wl-windows-product-binaries-$PRODUCT_SOURCE" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' >/dev/null
+          git fetch --depth=1 origin "$PRODUCT_SOURCE"
+          test -z "$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_wl_netem.py tools/m0_wl_perf_v2_config.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py)"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario("scenarios/plan027-b-normal-1280-mtu-5m-25ms-loss0-60s.json")
+          assert s["public_mode"]=="normal" and s["tun_mtu"]==1280 and s["duration_s"]==60
+          for direction in ("windows_to_linux","linux_to_windows"):
+              d=s[direction];assert d["offered_mbps"]==5 and d["delay_ms"]==25 and d["loss_pct"]==0
+              assert [p["udp_payload_bytes"] for p in d["packet_mix"]]==[64,128,512,1200]
+          print("H673_REAL_ORIGINAL_MTU1280_5M_ISOLATION",s["scenario_sha256"])
+          PY
+          scene=scenarios/plan027-b-normal-1280-mtu-5m-25ms-loss0-60s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|normal|$scene"
+          previous="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg title "$title" '.workflow_runs[]|select(.display_title==$title)|.id' | head -1)"
+          if [ -n "$previous" ]; then echo "H673_ALREADY_DISPATCHED action=$previous";exit 0;fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_scenario_file="$scene" \
+            -f perf_reuse_run_id="$BUILD_RUN" -f perf_binary_source_sha="$PRODUCT_SOURCE"
+          echo "H673_ORIGINAL_PREBUILT_MTU1280_REAL_5M_DISPATCHED_NOT_PASS"

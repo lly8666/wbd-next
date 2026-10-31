@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "result": "RECOVERED_REAL_H669_PARTIAL_MTU_FIX_WITH_NATIVE_ZERO_LOSS_FAIL_H671_LINUX_AUTH_DEAD106_PASS",
+  "recovery_base_head": "c352456b19d7e7db2d59f88ffba3cbca409b43b7",
+  "source_windows_linux": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "source_linux_only": "5fb4c9d79d481334631a4f894e82d2f8c7b078ca",
+  "h669": {
+    "run": 41226521824,
+    "run_conclusion": "failure",
+    "build_jobs": "PASS_WINDOWS_ORIGINAL_GO_RUST_AND_LINUX_ORIGINAL_GO_RUST",
+    "artifact_windows": 13051429248,
+    "artifact_linux": 13051109212,
+    "scene": "plan027-b-normal-1280-mtu-10m-25ms-loss0-60s",
+    "tun_mtu_windows_requested": 1280,
+    "linux_original_tun_mtu_after_authenticated_tls": 1209,
+    "former_unsafe_linux_tun_mtu": 1329,
+    "mtu_guard": "PASS_REAL_NATIVE_NEW_TLS_PEER_CAP",
+    "offered_mbps_each": 10,
+    "first_delivered_mbps": {
+      "windows": 9.9828,
+      "linux": 9.9974
+    },
+    "first_delivery_fraction": {
+      "windows": 0.998172,
+      "linux": 1
+    },
+    "zero_loss_required_min_fraction": 0.999,
+    "zero_loss_scene": "FAIL_WINDOWS_FIRST_DELIVERY_BELOW_99_9",
+    "authenticated_duplex_udp_tcp": "OBSERVED",
+    "owned_stop": "PASS_BOTH_OWNED",
+    "calibrated_one_way_p99": "NOT_MEASURED",
+    "generator_cpu_s": {
+      "windows": 5.3281,
+      "linux": 12.479
+    },
+    "issue": "Do not promote repaired MTU subcheck to full 10Mbps scenario PASS, no fabricated packet or wire accounting."
+  },
+  "h671": {
+    "run": 41227150973,
+    "run_conclusion": "success",
+    "artifact": 13052510309,
+    "source_sha": "5fb4c9d79d481334631a4f894e82d2f8c7b078ca",
+    "real_original_go_tls_rust_linux_two_netns": true,
+    "tc_loss_percent": 100,
+    "blackhole_seconds": 106,
+    "authenticated_dead90_kernel_drops": {
+      "client": 22,
+      "server": 23
+    },
+    "new_original_tls_generation": 2,
+    "genuine_new_udp_echo": "PASS_BOTH",
+    "owned_stop": "PASS",
+    "scope": "LINUX_ONLY_NOT_WINDOWS_SIGNED_OR_FULL_C_OR_ROTATION"
+  },
+  "new_diagnostic": {
+    "scenario": "scenarios/plan027-b-normal-1280-mtu-5m-25ms-loss0-60s.json",
+    "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+    "build_reuse_run": 41226521824,
+    "rate_each_mbps": 5,
+    "scenario_status": "PENDING_AUTOMATIC_PUSH_DISPATCH",
+    "why": "Different-rate same packet-mix true MTU1280 diagnostic. Do not repeat H669 same 10M seed or mark PASS before real artifact."
+  },
+  "blocking_scope": [
+    "Windows original authenticated dead106 after earlier external watchdog cancellation",
+    "Windows original Game2/4 FEC current source after repeated cancelled actions",
+    "B rotation and host-global DNS/manual DNS/WFP/routes/IPv6",
+    "C burst/p99 and final source-specific accounting"
+  ],
+  "physical": "NOT_RUN"
+}

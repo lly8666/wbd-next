@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "scenario_id": "plan027-b-normal-1280-mtu-5m-25ms-loss0-60s",
+  "public_mode": "normal",
+  "duration_s": 60,
+  "warmup_s": 5,
+  "drain_s": 5,
+  "tun_mtu": 1280,
+  "seed": 20261030,
+  "windows_to_linux": {
+    "offered_mbps": 5,
+    "delay_ms": 25,
+    "loss_pct": 0,
+    "tc_rate_mbps": null,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 64,
+        "packets_weight": 10
+      },
+      {
+        "udp_payload_bytes": 128,
+        "packets_weight": 15
+      },
+      {
+        "udp_payload_bytes": 512,
+        "packets_weight": 25
+      },
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 50
+      }
+    ]
+  },
+  "linux_to_windows": {
+    "offered_mbps": 5,
+    "delay_ms": 25,
+    "loss_pct": 0,
+    "tc_rate_mbps": null,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 64,
+        "packets_weight": 10
+      },
+      {
+        "udp_payload_bytes": 128,
+        "packets_weight": 15
+      },
+      {
+        "udp_payload_bytes": 512,
+        "packets_weight": 25
+      },
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 50
+      }
+    ]
+  }
+}

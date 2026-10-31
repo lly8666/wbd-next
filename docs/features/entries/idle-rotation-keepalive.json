@@ -104,6 +104,13 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "linux/amd64 original Go TLS+Rust two real netns",
+      "scope": "H671 SOURCE5fb4 two real authenticated Normal/off Rust owners, 106s symmetric 100% kernel tc drops22/23, both native auth-dead90, restored fresh TUN UDP triggers second Go credential TLS+generation2 both, true UDP echo and owned Stop PASS. Windows B106/FIN/DORMANT/rotation still NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "5fb4c9d79d481334631a4f894e82d2f8c7b078ca",
+      "evidence": "docs/evidence/M0/PLAN027-H673-RECOVERED-H669-H671-MTU-AND-AUTH-DEAD-20261101.json"
     }
   ],
   "limitations": [

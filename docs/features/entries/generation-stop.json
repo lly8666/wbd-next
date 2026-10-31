@@ -70,6 +70,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
       "evidence": "docs/evidence/M0/PLAN027-H663-SOURCE-DC191-FIXED-IDLE105-20261101.json"
+    },
+    {
+      "platform": "linux/amd64 original Go TLS+Rust two netns",
+      "scope": "H671 true bilateral 106s authentic dead90 then new TLS generation2 both original Linux Rust owners, real UDP echo/owned Stop PASS; genuine Windows Wintun B106 remains NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "5fb4c9d79d481334631a4f894e82d2f8c7b078ca",
+      "evidence": "docs/evidence/M0/PLAN027-H673-RECOVERED-H669-H671-MTU-AND-AUTH-DEAD-20261101.json"
     }
   ],
   "limitations": [

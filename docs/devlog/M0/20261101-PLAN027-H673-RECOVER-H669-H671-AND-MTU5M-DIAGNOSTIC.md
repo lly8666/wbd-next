@@ -1,0 +1,15 @@
+# PLAN027 H673 — recovered H669 lossless traffic FAIL with true MTU fix; H671 Linux dead106 PASS
+
+## Recovered (not new source qualification)
+- [H669 real original same-SOURCE dual-OS run 41226521824](https://github.com/lly8666/wbd-next/actions/runs/41226521824), product SOURCE `6ece9eab653f46a716e8d3a0927fb74bec4819e8`, exact Windows original/Go-Rust and Linux original/Go-Rust builds PASS with artifacts 13051429248/13051109212. After real authenticated original TLS, Windows requested native Wintun MTU **1280** and Linux real kernel TUN readback **1209** (prior SOURCE5fb4 1329 >1280 mismatch): **MTU cap fixed and measured**. Actual both UDP/TCP and owned Stop yes, 60s mixed 10Mbps/25ms/0%; Windows first fraction **0.998172** and Linux **1.0**, strict 0% >=0.999 rule **FAIL**. Entire Action conclusion failure, no p99, not a 10Mbps lossless product PASS; Windows first9.9828 Mbps/Linux9.9974. The native job's own CLI prints an early scoped "PASS" before business gate; the strict final verdict wins.
+- [H671 real Linux-only source-locked Action 41227150973](https://github.com/lly8666/wbd-next/actions/runs/41227150973), original frozen SOURCE `5fb4c9d79d481334631a4f894e82d2f8c7b078ca`, artifact13052510309: real two netns Go protected TLS/Rust native, bilateral 106s 100% tc underlay drop, original authenticated dead90 counted client22/server23; after restore **both** new credential TLS generation2 and true TUN UDP echo, Stop PASS. Windows original Wintun/NPF authenticated B106 remains unproved after external cancellation.
+- H672 source6ece signed Windows local WAL/5-mode first-reverse remains separately scoped. Historical FAILs, source hashes and fixed200 capacity guard retained. No new hot Go pump, protocol round, FEC, quality or security behavior changed.
+
+## Independent one-source diagnostic (not qualification in advance)
+Add `scenarios/plan027-b-normal-1280-mtu-5m-25ms-loss0-60s.json`: same 1280 mixed64/128/512/1200B, 25ms, 0% both, genuine 60s UDP+TCP+Stop, **5Mbps per direction**. `.github/workflows/m0-plan027-h673-mtu1280-reused-source-5m.yml` push-only dispatch checks H669 exact source, both actual build jobs/artifacts and unchanged product/harness before calling existing original signed Windows/Linux native workflow **once**, reusing H669 binaries without recompilation. Do **not** interpret 5M as satisfying failed 10M or higher C. No same unchanged H669 10M replay. Future Action result must be recovered before next diagnosis.
+
+Remaining PLAN027 §0: Windows B106 native and GameFEC current source external cancels, B rotation/full DNS/manual/IPv6/host-global OS, C burst/p99, required outcome-led fixes and source-specific final delivery; physical NOT_RUN. Task **PARTIAL**.
+
+```feature-impact
+{"kind":"updated","ids":["path-mtu-budget","idle-rotation-keepalive","generation-stop"],"reason":"Recovered genuine SOURCE6ece mixed 10Mbps MTU1280 Linux actual1209 subcheck PASS but first delivery FAIL, and SOURCE5fb4 genuine Linux-only 106s auth-dead second TLS generation+Stop PASS; one new source-reused 5Mbps diagnostic fixture/workflow; no production code change."}
+```
