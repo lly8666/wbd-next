@@ -2,7 +2,6 @@
 //! payload mutation, new PN allocation, or encryption. M0 owns the actual
 //! M3 opened-record -> AuthenticatedReceipt trust-boundary adapter.
 use std::collections::{BTreeMap, BTreeSet};
-use std::ops::Bound;
 use wbd_types::buffer_contract::{BufferOrigin, FrozenRecordHandle};
 use wbd_types::{DataError, LaneKey, LimitedResource, MonoNs, RecordPn};
 
@@ -34,7 +33,6 @@ pub struct ReceiptDiagnosticSnapshot{
     pub repair_accepted_retired:u64,pub repair_uncertain_retired:u64,
     pub repair_abandoned_retired:u64,pub max_queue_age_ns:u64,
     pub cosmetic_candidates:u64,pub cosmetic_candidate_bytes:u64,
-    pub cosmetic_examined:u64,pub cosmetic_sampled_out:u64,
 }
 #[derive(Clone,Copy)]
 struct AdaptiveTiming{
@@ -315,8 +313,6 @@ pub struct ReceiptState<H: FrozenRecordHandle> {
     rack_ack_ns: Option<u64>,
     adaptive:Option<AdaptiveTiming>,
     opportunistic_v3:bool,
-    // Monotone sender-PN cursor: never rescan the newest 256 (often too young).
-    cosmetic_scan_after:Option<RecordPn>,
     diagnostics:ReceiptDiagnosticSnapshot,
 }
 fn serial_newer(seq: u32, prev: u32) -> bool {
@@ -337,7 +333,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             last_timer_index_pops: 0,
             last_report_seq: None,
             witnesses: Vec::with_capacity(3), rack_ack_ns: None,adaptive:None,
-            opportunistic_v3:false,cosmetic_scan_after:None,
+            opportunistic_v3:false,
             diagnostics:ReceiptDiagnosticSnapshot::default(),
         })
     }
@@ -458,56 +454,15 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         if e.queued.is_some()||e.missing_reported||
             e.repair_attempts>=OUTER_REPAIR_ATTEMPT_LIMIT as u8||
             now>=e.hard_expiry||now<e.last_sent{return false}
+        let cipher_bytes=e.frozen.bytes().len() as u64;
         e.missing_reported=true;
         e.negative_since=Some(now);
         self.refresh_wake(pn);
-        true
-    }
-
-    /// Only a NEW scoped TCP-like gap calls this. Walk original first-send
-    /// PN order once, stopping at the first record not yet 50ms old. The
-    /// persistent cursor is not advanced past too-young entries: at high PPS
-    /// the newest 256 never hide the old eligible cohort. One call examines
-    /// at most 32 entries, without per-feedback Vec scans over the tail or
-    /// timers. Already examined entries are not revisited after ACK expiry.
-    /// Samples only once per candidate, using the same stable half-PN choice
-    /// as direct real-gap hints. Actual R remains subject to the byte quota.
-    pub fn on_outer_gap_recent_followups(&mut self,now:MonoNs,max:usize)->usize{
-        if !self.opportunistic_v3||max==0{return 0}
-        let limit=max.min(MAX_POLL_CANDIDATES);
-        let mut chosen=Vec::with_capacity(limit);
-        let mut visited=0usize;
-        let mut last=self.cosmetic_scan_after;
-        let start=last.map_or(Bound::Unbounded,Bound::Excluded);
-        for (&pn,e) in self.entries.range((start,Bound::Unbounded)){
-            if visited>=MAX_POLL_CANDIDATES||chosen.len()>=limit{break}
-            if now<e.last_sent || now.0-e.last_sent.0<50_000_000{
-                break; // future RX feedback can inspect this PN when mature
-            }
-            last=Some(pn);
-            visited+=1;
-            if e.queued.is_none()&&!e.missing_reported&&e.repair_attempts==0&&
-               now<e.hard_expiry{
-                if crate::outer_ack::cosmetic_half_gap(pn){chosen.push(pn)}
-                else{self.diagnostics.cosmetic_sampled_out=
-                    self.diagnostics.cosmetic_sampled_out.saturating_add(1);}
-            }
-        }
-        self.cosmetic_scan_after=last;
-        self.diagnostics.cosmetic_examined=self.diagnostics.cosmetic_examined
-            .saturating_add(visited as u64);
-        let mut accepted=0;
-        for pn in chosen{
-            let bytes=self.entries.get(&pn).map_or(0,|e|e.frozen.bytes().len() as u64);
-            if self.on_outer_gap_hint(pn,now){
-                accepted+=1;
-                self.diagnostics.cosmetic_candidate_bytes=self.diagnostics
-                    .cosmetic_candidate_bytes.saturating_add(bytes);
-            }
-        }
         self.diagnostics.cosmetic_candidates=self.diagnostics.cosmetic_candidates
-            .saturating_add(accepted as u64);
-        accepted
+            .saturating_add(1);
+        self.diagnostics.cosmetic_candidate_bytes=self.diagnostics.cosmetic_candidate_bytes
+            .saturating_add(cipher_bytes);
+        true
     }
 
     /// Positive bitmap bits may release once even from an old report.
@@ -1067,47 +1022,6 @@ mod tests {
         assert_eq!(s.outstanding(),0);
         assert!(!s.on_outer_gap_hint(RecordPn(1),MonoNs(751_000_000)));
         assert!(s.on_timer(MonoNs(800_000_000)).candidates.is_empty());
-    }
-    #[test]
-    fn plan027_cursor_never_rescans_tail_or_unmatured_high_pps(){
-        let mut s=state(512,100_000_000);
-        s.enable_adaptive_timing(600_000_000,50_000_000).unwrap();
-        s.enable_opportunistic_v3().unwrap();
-        for pn in 1..=400 {
-            let at=if pn<=80{0}else{55_000_000};
-            s.on_sent_adaptive(frozen(pn),MonoNs(at)).unwrap();
-        }
-        let retired=s.discard_outer_ack_hint(RecordPn(9)).unwrap();
-        assert_eq!(retired.metadata().pn,RecordPn(9));
-        let first=s.on_outer_gap_recent_followups(MonoNs(60_000_000),32);
-        let second=s.on_outer_gap_recent_followups(MonoNs(60_000_001),32);
-        assert!(first>0 && second>0); // old eligible cohort, not newest256
-        assert_eq!(s.diagnostic_snapshot().cosmetic_examined,64);
-        let third=s.on_outer_gap_recent_followups(MonoNs(60_000_002),32);
-        assert!(third>0);
-        let inspected=s.diagnostic_snapshot().cosmetic_examined;
-        assert!(inspected<=80);
-        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(60_000_003),32),0);
-        assert_eq!(s.diagnostic_snapshot().cosmetic_examined,inspected);
-        // A later real positive SACK may now expose the previously too-young
-        // cohort; no old candidates are rescanned or repeated.
-        assert!(s.on_outer_gap_recent_followups(MonoNs(110_000_000),32)>0);
-        assert!(s.diagnostic_snapshot().cosmetic_examined>inspected);
-        assert!(s.diagnostic_snapshot().cosmetic_candidate_bytes>0);
-    }
-    #[test]
-    fn plan027_unique_half_sample_independent_of_feedback_time(){
-        let mut s=state(48,100_000_000);
-        s.enable_adaptive_timing(600_000_000,50_000_000).unwrap();
-        s.enable_opportunistic_v3().unwrap();
-        for pn in 1..=40{s.on_sent_adaptive(frozen(pn),MonoNs(0)).unwrap();}
-        let first=s.on_outer_gap_recent_followups(MonoNs(60_000_000),32);
-        let second=s.on_outer_gap_recent_followups(MonoNs(60_000_001),32);
-        assert!(first>0 && second>0);
-        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(140_000_001),32),0);
-        assert_eq!(s.diagnostic_snapshot().cosmetic_examined,40);
-        assert_eq!(s.diagnostic_snapshot().cosmetic_candidates,(first+second) as u64);
-        assert_eq!(s.on_outer_gap_recent_followups(MonoNs(500_000_001),32),0);
     }
     #[test]
     fn r2_plan027_outer_ack_hint_discards_only_shadow_and_cancels_queued_repair() {
