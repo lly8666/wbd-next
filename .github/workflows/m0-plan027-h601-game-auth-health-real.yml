@@ -1,0 +1,98 @@
+name: M0 PLAN027 H601 Game Health genuine one-source Game2 then Game4 native
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h601-game-auth-health-real.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-source:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h601-game-health-real]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Freeze original product once, native Game2-fec then reuse Game4-fec only if true first and Stop PASS
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          for name,mode,loss in (
+            ('wl-game2-fixed6-10m-75ms-loss15-20s.json','game2-fec',15),
+            ('wl-game4-fixed6-10m-75ms-loss30-20s.json','game4-fec',30)):
+              scene=read_scenario('scenarios/'+name)
+              assert scene['public_mode']==mode and scene['duration_s']==20
+              for d in ('windows_to_linux','linux_to_windows'):
+                assert scene[d]['offered_mbps']==10 and scene[d]['delay_ms']==75 and scene[d]['loss_pct']==loss
+              print('H601_REAL_NATIVE_FEC_HEALTH_SCENE',name,scene['scenario_sha256'])
+          PY
+          dispatch_one(){
+            local mode="$1" file="$2" reuse="$3" before id count
+            before="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=75" --jq '.workflow_runs[].id')"
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode="$mode" -f run_n0=false \
+              -f perf_scenario_file="scenarios/$file" \
+              -f perf_reuse_run_id="$reuse" \
+              -f perf_binary_source_sha="$([ -n "$reuse" ] && echo "$GITHUB_SHA" || echo "")" 1>&2
+            id=""
+            for attempt in $(seq 1 25);do
+              id="";count=0
+              for candidate in $(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=75" --jq '.workflow_runs[].id');do
+                grep -qx "$candidate" <<<"$before" && continue
+                test "$(gh api "repos/$GH_REPO/actions/runs/$candidate" --jq .head_sha)" = "$GITHUB_SHA" || continue
+                id="$candidate";count=$((count+1))
+              done
+              if [ "$count" -eq 1 ];then break;fi
+              if [ "$count" -gt 1 ];then echo "H601_AMBIGUOUS_ORIGINAL_RUN" >&2;return 1;fi
+              sleep 6
+            done
+            test -n "$id" || { echo "H601_RUN_ID_NOT_FOUND" >&2;return 1; }
+            echo "$id"
+          }
+          verify_real(){
+            local runid="$1" scene="$2" mode="$3" root="h601-$1"
+            for i in $(seq 1 72);do
+              run="$(gh api "repos/$GH_REPO/actions/runs/$runid")"
+              if [ "$(jq -r .status <<<"$run")" = completed ];then
+                test "$(jq -r .conclusion <<<"$run")" = success || {
+                  echo "H601_REAL_SCENE_FAILURE source=$GITHUB_SHA mode=$mode run=$runid" >&2;return 1;
+                }
+                break
+              fi
+              test "$i" -lt 72 || { echo "H601_NATIVE_NOT_FINISHED_NO_DUPLICATE run=$runid" >&2;return 2; }
+              sleep 20
+            done
+            mkdir -p "$root"
+            gh run download "$runid" --repo "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$root"
+            H601_DIR="$root" H601_SCENE="$scene" H601_MODE="$mode" H601_SOURCE="$GITHUB_SHA" python3 - <<'PY'
+          import json,os,pathlib
+          from tools.m0_wl_perf_v2_config import read_scenario
+          r=json.loads((pathlib.Path(os.environ['H601_DIR'])/'report.json').read_text())
+          scene=read_scenario('scenarios/'+os.environ['H601_SCENE'])
+          assert r['linux_binary_source']==os.environ['H601_SOURCE']
+          assert r['mode_public']=='PASS_ACTUAL_WINDOWS_LINUX_NATIVE_'+os.environ['H601_MODE']
+          assert r['app_duplex']=='PASS_ACTUAL_TWO_OS_KERNEL_UDP'
+          assert r['tcp_duplex']=='PASS_ACTUAL_TWO_OS_KERNEL_TCP'
+          assert r['stop']=='PASS_BOTH_OWNED'
+          assert r['WL_V2']['status']=='MEASURED_BOTH_OS_KERNEL'
+          assert r['WL_V2']['scenario_sha256']==scene['scenario_sha256']
+          assert min(r['WL_V2']['first_delivery_fraction'].values())>0
+          print('H601_GAME_AUTHENTIC_NATIVE_BUSINESS_AND_OWNED_STOP_PASS',os.environ['H601_MODE'],os.environ['H601_SOURCE'])
+          PY
+          }
+          game2="$(dispatch_one game2-fec wl-game2-fixed6-10m-75ms-loss15-20s.json "")"
+          echo "H601_GAME2_SOURCE_BUILD_RUN=$game2"
+          verify_real "$game2" wl-game2-fixed6-10m-75ms-loss15-20s.json game2-fec
+          artifacts="$(gh api "repos/$GH_REPO/actions/runs/$game2/artifacts?per_page=100")"
+          jq -e --arg n "m0-wl-windows-product-binaries-$GITHUB_SHA" '.artifacts[]|select(.name==$n and .expired==false)' <<<"$artifacts" >/dev/null
+          jq -e '.artifacts[]|select(.name=="m0-plan024-linux-product" and .expired==false)' <<<"$artifacts" >/dev/null
+          game4="$(dispatch_one game4-fec wl-game4-fixed6-10m-75ms-loss30-20s.json "$game2")"
+          echo "H601_GAME4_REUSE_SOURCE_RUN=$game4 build=$game2"
+          verify_real "$game4" wl-game4-fixed6-10m-75ms-loss30-20s.json game4-fec
+          echo H601_BOTH_GAMES_20S_TRUE_NATIVE_PASS_NOT_90S_IDLE_QUALIFICATION
