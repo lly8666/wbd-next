@@ -75,19 +75,19 @@ impl GameFecTx{
     /// must not sleep; an uncredited in-flight row waits only until expiry.
     /// No per-packet timer or new source-group ownership is created.
     pub(crate) fn next_due_ns(&self,now:MonoNs)->Option<u64>{
-        if self.in_flight.is_none() && self.owner.has_ready_parity(){
-            return Some(now.0)
-        }
-        let mut earliest=self.owner.next_deadline().map(|at|at.0);
         if let Some(f)=self.in_flight.as_ref(){
             if f.prepared.remaining_rows()>0 &&
                 (f.rows.is_empty() || f.rows.iter().all(|(_,ok)|*ok)){
                 return Some(now.0)
             }
-            let expiry=f.job.expire_at.0.saturating_add(1);
-            earliest=Some(earliest.map_or(expiry,|at|at.min(expiry)));
+            // A staged parity quantum cannot advance until an actual M4
+            // kernel copy (or expiry). Older source-group deadlines cannot
+            // change that. Including them here creates a 1ms busy poll
+            // under loss, starving Game4 stagger and the real NPF writer.
+            return Some(f.job.expire_at.0.saturating_add(1))
         }
-        earliest
+        if self.owner.has_ready_parity(){return Some(now.0)}
+        self.owner.next_deadline().map(|at|at.0)
     }
 
     /// The callback submits a logical Game symbol to the existing GameTx.

@@ -845,6 +845,11 @@ mod tests{
             tx.drain(t,|lane,_,_,_|lane.slot==1);
         }
         assert!(tx.poll_game_fec(MonoNs(1_030)).unwrap()>0);
+        // Parity M4 receipts are still outstanding. The scheduler must
+        // wait for the bounded flight expiry or an actual kernel-copy wake,
+        // NOT spin on an already matured source block deadline.
+        let waiting=tx.game_fec_next_due_ns(MonoNs(1_031)).unwrap();
+        assert!(waiting>1_031,"uncredited parity flight must not spin");
         tx.drain(MonoNs(1_031),|_,_,_,_|true);
         let credited=tx.game_fec_counters().unwrap().0.parity_kernel_copied;
         assert!(credited>0);
