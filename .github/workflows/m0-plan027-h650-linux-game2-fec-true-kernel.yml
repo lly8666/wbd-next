@@ -48,6 +48,10 @@ jobs:
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
           test -c /dev/net/tun
+          # Existing original Linux script writes its bounded status here.
+          # Older combined build job created this; direct frozen-artifact
+          # H650 job must own it before launching genuine kernel processes.
+          mkdir -p fixed-kernel-result
           python3 tools/m0_plan027_h650_linux_gamefec_overlay.py tools/m0-v4-public-real-linux-netns.sh "$RUNNER_TEMP/h650-real-original-gamefec.sh"
           bash "$RUNNER_TEMP/h650-real-original-gamefec.sh" "$GITHUB_WORKSPACE/frozen-linux" 2>&1 |
             tee h650-linux-original-gamefec.log

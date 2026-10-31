@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 650,
-  "checkpoint_sha": "fbb9cab11ec1048f6efb8e62982f9c79fcbfeb24",
+  "sequence": 651,
+  "checkpoint_sha": "64c4a3be44ae932dfad34204be2dc0c9cc34e0ad",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H650 recovered real H649 frozen SOURCE11f Fixed100M60s 1/1 and Fixed50M300s .999998/1 kernel UDP/TCP/owned Stop. H648 Game2FEC15 and Normal106 second original Windows Actions both externally CANCELED despite H647 timeout changes. Run one separate source-locked original Linux two-netns Game2 fixed6 real 15% tc parity and Stop probe to isolate FEC vs Windows WSL2 owner.",
+  "current_task": "H651 real H650 Linux frozen source11f original GameFEC isolated test preflight failed only because new harness omitted existing fixed-kernel-result output directory, while artifact hash passed. Create owned directory, retry one exact Linux Game2 FEC15 isolated native case. Windows GameFEC and Normal B106 remain canceled.",
   "why_now": "H647 timer hierarchy improvement was not enough for GameFEC and B106 real 2OS runs; need independent Linux FEC original kernel positive or negative to split FEC code fault from WSL/Windows host. H649 Fixed C100 and Fixed50 300s already passed without new binaries.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect Linux Game2/FEC original Go protected TLS Rust native parity copy/real app/Stop from H650 isolate Action; if failure, fix original Linux FEC root. Separately resolve Windows GameFEC and Normal B106 true native stage without identical reruns. Proceed B rotation/MTU/IPv6/DNS and C bounded mixed cases; source manifests and adverse outcomes retained.",
+  "next_action": "Collect H651 Linux real original-CLI source/parity/Stop vs native first error, no Windows substitute. Fix only proven test/backend fault; continue independent PLAN027 B rotation DNS/IPv6 MTU and C matrix as needed.",
   "unverified": true,
   "last_tested_source": "11f1881ff68afa22c5b0ca957d6808420a878a06",
   "evidence_refs": [
@@ -29,5 +29,5 @@
     "docs/testing/WL_PERF_HARNESS_V2.md"
   ],
   "open_requests": [],
-  "partial_summary": "H650 SOURCE11f authentic Fixed100/25ms/0/60s Action41216928738 both first1/1 UDP/TCP+Stop, Linux TUN drops0. Fixed50/25ms/0/300s Action41216934805 first Win.999998 Lin1, real Stop, drop0. H648 Game2FEC15 Action41216712816 and Normal B106 Action41216716864 AGAIN external CANCELLED, no native pass/artifact; H647 timer ordering insufficient. H650 only one Linux original Go/TLS Rust shared Game2FEC6 original RAW/TUN two true netns at bidirectional 15% real kernel netem, require source+parity M4 copied, UDP first and Stop, frozen H641 SOURCE11f manifest SHA, Windows NOT_RUN until proven. M1 ready for integration and M2 paused on own branches; M0 only active global delivery writer. PLAN027 overall partial, A5 waived; no p99/physical inference."
+  "partial_summary": "H650 SOURCE11f authentic Fixed100/25ms/0/60s Action41216928738 both first1/1 UDP/TCP+Stop, Linux TUN drops0. Fixed50/25ms/0/300s Action41216934805 first Win.999998 Lin1, real Stop, drop0. H648 Game2FEC15 Action41216712816 and Normal B106 Action41216716864 AGAIN external CANCELLED, no native pass/artifact; H647 timer ordering insufficient. H650 only one Linux original Go/TLS Rust shared Game2FEC6 original RAW/TUN two true netns at bidirectional 15% real kernel netem, require source+parity M4 copied, UDP first and Stop, frozen H641 SOURCE11f manifest SHA, Windows NOT_RUN until proven. M1 ready for integration and M2 paused on own branches; M0 only active global delivery writer. PLAN027 overall partial, A5 waived; no p99/physical inference. H651 H650 original Linux-only GameFEC Action41218976128 FAILED before product business when new direct isolated harness omitted fixed-kernel-result output dir (line154 No such file); checksum H641 frozen binary PASS. H651 fixes one harness prerequisite and repeats only that aborted Linux case; not product regression test success."
 }
