@@ -1,0 +1,55 @@
+name: M0 PLAN027 H569 SOURCE525 one C200 after actual original C100
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h569-source525-c200-after-c100.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  source-locked-c200:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h569-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Gate only valid real previous 100M first and owned Stop before 200M
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          src=52566af216edf9dee4068f0bb8bfd0fb8d18dfcb
+          build=41166008870
+          previous=41170803766
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build" --jq .head_sha)" = "$src"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$previous" --jq .conclusion)" = success
+          mkdir -p "$RUNNER_TEMP/c100"
+          gh run download "$previous" --repo "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/c100"
+          export C100_ROOT="$RUNNER_TEMP/c100"
+          python3 - <<'PY'
+          import json,os,pathlib,re
+          from tools.m0_wl_perf_v2_config import read_scenario
+          root=pathlib.Path(os.environ["C100_ROOT"])
+          r=json.loads((root/"report.json").read_text())
+          src="52566af216edf9dee4068f0bb8bfd0fb8d18dfcb"
+          q=read_scenario("scenarios/plan027-c-normal-100m-25ms-loss0-60s.json")
+          assert r["linux_binary_source"]==src and r["stop"]=="PASS_BOTH_OWNED"
+          assert r["WL_V2"]["status"]=="MEASURED_BOTH_OS_KERNEL"
+          assert r["WL_V2"]["scenario_sha256"]==q["scenario_sha256"]
+          assert all(r["WL_V2"]["first_delivery_fraction"][d]>=.999 for d in ("windows","linux"))
+          # Ensure source-reused original data-plane real R=0 at zero loss.
+          t=(root/"mode-results/normal/client.log").read_text(errors="replace")
+          w=re.findall(r'WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=(\d+) repair_accepted_wire_bytes=(\d+) repair_uncertain_wire_bytes=(\d+)',t)
+          assert w and int(w[-1][0])>0 and int(w[-1][1])+int(w[-1][2])==0
+          p=read_scenario("scenarios/plan027-c-normal-200m-25ms-loss0-60s.json")
+          assert p["duration_s"]==60 and p["public_mode"]=="normal"
+          assert all(p[d]["offered_mbps"]==200 and p[d]["delay_ms"]==25 and p[d]["loss_pct"]==0 for d in ("windows_to_linux","linux_to_windows"))
+          print("H569_TRUE_C100_FIRST_STOP_SOURCE_GATE_PASS",p["scenario_sha256"])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_ab=false \
+            -f perf_scenario_file=scenarios/plan027-c-normal-200m-25ms-loss0-60s.json \
+            -f perf_reuse_run_id="$build" -f perf_binary_source_sha="$src"
+          echo H569_ONE_SOURCE525_C200_ORIGINAL_ACTION_DISPATCHED
