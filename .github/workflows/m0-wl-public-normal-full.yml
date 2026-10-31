@@ -11,7 +11,7 @@ name: M0 Windows Linux original native whole-wiring capability and functional en
 # PLAN026 verified Normal/off Rust-native signed NPF/Wintun functional PASS at SOURCE 055026fd (run 40646957672); N0 240s is separate and does not imply CPU A/B PASS.
 # Source-locked first compile gate on an experiment/windows-wiring-* branch:
 # do not run the expensive two-OS native app without an explicit full event.
-run-name: "M0-WIN-LINUX|${{ github.sha }}|preflight-or-explicit-full"
+run-name: "M0-WIN-LINUX|${{ github.sha }}|${{ inputs.public_mode || 'push' }}|${{ inputs.perf_scenario_file || 'no-scene' }}"
 on:
   push:
     branches: [main, fix/m0-windows-functional-wiring-20261026, integration/w168-freeze-windows-adapter-20261026, "experiment/windows-wiring-*"]

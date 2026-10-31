@@ -1,0 +1,11 @@
+# PLAN027 H610 — restore actual Game hang, unblock independent A/B/C in parallel
+
+Recovered main `5c40fe88d0230ff623e1a569b3eaf47a30fb477a`; registry/cursor still task R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT. H608 genuine Game2/off `SOURCEa83b55e` Action41189248640 delivered both UDP/TCP and owned Stop. H609 Game2-FEC `SOURCE80ee526cc7b466ec6ccbe3cc25caf2f3754996ef` Action41190352345 compiled Windows/Go/Rust and Linux binaries and booted WSL guest, but native step remained stuck and independent watcher41190359324 **force-cancelled at +727s**. Orchestrator41190341706 FAILED at same run; Game4-FEC was not launched. Neither FEC mode is PASS; original 200 NPF packets only show TCP traffic, not TLS/Stop. Later main5c40 removed stale test fanouts, no product code changed.
+
+User explicitly requested no Game-only serial bottleneck and bulk independent scenes in separate Actions. Reuse still-valid immutable, artifact-verified Windows/Linux product binaries **one build** from cancelled run41190352345 and exact product SOURCE `80ee526cc7b466ec6ccbe3cc25caf2f3754996ef`. New H610 push-only coordinator submits 13 separate workflow_dispatch runs with one scenario test controller on each different hosted Windows+WSL2 VM: Normal A2 0/30, highest Fixed 30, Auto staged 240s, C50 loss1/15/30, Fixed C50 loss0, Normal C100 loss0/loss5, C100 300s long, plus Game2/4 off loss5. All sourced from committed scenarios, source/build hash independently checked by the existing native workflow; no scenario shares the same VM. Not a 13-case single Action or parallel load on one VM. Include scenario in run display_title for identifying in-flight Actions. Prior C200 capacity issue means don't blindly re-run 200M; per-family capacity stop remains. H610 only dispatches, no verdict until source-bound real reports.
+
+Game FEC remains explicitly blocking product qualification. Do not retry unchanged indefinitely; recover original first-error logs or repair watchdog/phase diagnostics, then one bounded Game2-FEC and Game4-FEC. The independent 90s Health, sleep/resume, rotation, blackhole and remaining lifecycle B stay OPEN. A5 is user-WAIVED.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Test orchestration, per-scene Actions naming and M0 recovery notes only; no product, wire or config behavior change."}
+```

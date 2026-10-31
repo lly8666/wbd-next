@@ -1,0 +1,66 @@
+name: M0 PLAN027 H610 independent source-frozen A B C parallel native fanout
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h610-independent-parallel.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  dispatch-independent:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h610-parallel]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_SOURCE: 80ee526cc7b466ec6ccbe3cc25caf2f3754996ef
+      PRODUCT_BUILD_RUN: "41190352345"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Validate immutable binary artifacts, then dispatch one separate Action per scene
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_BUILD_RUN" --jq .head_sha)" = "$PRODUCT_SOURCE"
+          gh api "repos/$GH_REPO/actions/runs/$PRODUCT_BUILD_RUN/artifacts?per_page=100" | jq -e --arg w "m0-wl-windows-product-binaries-$PRODUCT_SOURCE" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' >/dev/null
+          git fetch --no-tags --depth=1 origin "$PRODUCT_SOURCE"
+          test -z "$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py)"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          scenes=[["normal","plan027-a2-normal-10m-250ms-0loss-60s.json"],["normal","wl-outer-repair-10m-250ms-loss30-60s.json"],["fixed","wl-outer-repair-fixed-10m-250ms-loss30-60s.json"],["auto","plan027-a4-auto-10m-staged-240s.json"],["normal","plan027-c-normal-50m-25ms-loss1-60s.json"],["normal","plan027-c-normal-50m-250ms-loss15-60s.json"],["normal","plan027-c-normal-50m-250ms-loss30-60s.json"],["fixed","plan027-c-fixed-50m-25ms-loss0-60s.json"],["normal","plan027-c-normal-100m-25ms-loss0-60s.json"],["normal","plan027-c-normal-100m-100ms-loss5-60s.json"],["normal","plan027-c-normal-100m-qlen2048-loss0-300s.json"],["game2","plan027-b-game2-off-10m-75ms-loss5-20s.json"],["game4","plan027-b-game4-off-10m-75ms-loss5-20s.json"]]
+          for mode,file in scenes:
+              d=read_scenario('scenarios/'+file)
+              assert d['public_mode']==mode, (mode,file,d['public_mode'])
+              print('H610_VALID_SCENARIO',mode,file,d['scenario_sha256'])
+          PY
+          # Controller-only fanout; each scenario runs as its own native Action
+          # on an independent hosted Windows VM. No bulk test in this job.
+          while IFS=' ' read -r mode scene; do
+            test -n "$mode" || continue
+            title="M0-WIN-LINUX|$GITHUB_SHA|$mode|scenarios/$scene"
+            exists="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" | jq -r --arg title "$title" '.workflow_runs[] | select(.display_title == $title) | .id' | head -1)"
+            if test -n "$exists"; then echo "H610_ALREADY_DISPATCHED mode=$mode scene=$scene run=$exists"; continue; fi
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode="$mode" -f run_n0=false \
+              -f perf_scenario_file="scenarios/$scene" \
+              -f perf_reuse_run_id="$PRODUCT_BUILD_RUN" \
+              -f perf_binary_source_sha="$PRODUCT_SOURCE"
+            echo "H610_DISPATCHED mode=$mode scene=$scene product_source=$PRODUCT_SOURCE prebuilt_run=$PRODUCT_BUILD_RUN"
+          done <<'SCENES'
+          normal plan027-a2-normal-10m-250ms-0loss-60s.json
+          normal wl-outer-repair-10m-250ms-loss30-60s.json
+          fixed wl-outer-repair-fixed-10m-250ms-loss30-60s.json
+          auto plan027-a4-auto-10m-staged-240s.json
+          normal plan027-c-normal-50m-25ms-loss1-60s.json
+          normal plan027-c-normal-50m-250ms-loss15-60s.json
+          normal plan027-c-normal-50m-250ms-loss30-60s.json
+          fixed plan027-c-fixed-50m-25ms-loss0-60s.json
+          normal plan027-c-normal-100m-25ms-loss0-60s.json
+          normal plan027-c-normal-100m-100ms-loss5-60s.json
+          normal plan027-c-normal-100m-qlen2048-loss0-300s.json
+          game2 plan027-b-game2-off-10m-75ms-loss5-20s.json
+          game4 plan027-b-game4-off-10m-75ms-loss5-20s.json
+          SCENES
+          echo H610_ALL_INDEPENDENT_ACTIONS_SENT_OUTCOMES_NOT_YET_PASS
