@@ -1,0 +1,55 @@
+name: M0 PLAN027 H643 independent A4 and C source11f reusable original network
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h643-source-reuse-a4-c-long.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  exact-three:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h643-reuse]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_SOURCE: 11f1881ff68afa22c5b0ca957d6808420a878a06
+      BUILD_RUN: "41210457594"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Exact artifact provenance and one independent Action per authentic original mode scenario
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .head_sha)" = "$PRODUCT_SOURCE"
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/artifacts?per_page=100" |
+            jq -e --arg w "m0-wl-windows-product-binaries-$PRODUCT_SOURCE" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' >/dev/null
+          git fetch --depth=1 origin "$PRODUCT_SOURCE"
+          test -z "$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_wl_netem.py tools/m0_wl_perf_v2_config.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py)"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          cases=(("auto","plan027-a4-auto-10m-staged-240s.json",240),
+              ("normal","plan027-c-normal-10m-25ms-loss0-300s.json",300),
+              ("fixed","plan027-c-fixed-50m-25ms-loss0-60s.json",60))
+          for mode,name,duration in cases:
+              s=read_scenario("scenarios/"+name)
+              assert s["public_mode"]==mode and s["duration_s"]==duration,(mode,name)
+              print("H643_INDEPENDENT_SCENE_SHA",mode,name,s["scenario_sha256"])
+          PY
+          while read -r mode filename; do
+            scene="scenarios/$filename"
+            title="M0-WIN-LINUX|$GITHUB_SHA|$mode|$scene"
+            prior="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" | jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id'|head -1)"
+            if [ -n "$prior" ]; then echo "H643_ALREADY_REGISTERED mode=$mode action=$prior"; continue; fi
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode="$mode" -f run_n0=false -f perf_scenario_file="$scene" \
+              -f perf_reuse_run_id="$BUILD_RUN" -f perf_binary_source_sha="$PRODUCT_SOURCE"
+            echo "H643_INDEPENDENT_NATIVE_ACTION_SENT mode=$mode source=$PRODUCT_SOURCE scene=$scene status=NOT_VERIFIED"
+          done <<'SCENARIOS'
+          auto plan027-a4-auto-10m-staged-240s.json
+          normal plan027-c-normal-10m-25ms-loss0-300s.json
+          fixed plan027-c-fixed-50m-25ms-loss0-60s.json
+          SCENARIOS
+          echo H643_THREE_SCENE_FANOUT_ONLY_NO_PRODUCT_PASS

@@ -1,0 +1,11 @@
+# PLAN027 H643 — original Game2 30% actual result and parallel independent A4/C
+
+H642 main 2446cf5a recovered. H641 SOURCE `11f1881ff68afa22c5b0ca957d6808420a878a06` original Action [41210457594](https://github.com/lly8666/wbd-next/actions/runs/41210457594) includes exact SOURCE/Windows-CLI SHA 8c9949de4e86a495f3ce7b2856c0d1941337ea6846dcb629aa27c6bf83b53663 / Linux-server SHA 373cae784aae258b17f6ec1ad2c054f7b5d66f12c55ba2780630ee26b4b82a77, dual kernel netem IFB lane443+444 and 60s offered ~10Mbps each way at 250ms/30%. Real first-arrival Windows 91.0076%, Linux90.9715%, expected independent 2-copy ~91%; genuine UDP+TCP and both owned Stop PASS; Linux at-Stop original Game M4 TX errors **all zero**; real Tun tx drop0, Windows whole PID CPU2.6094s/77.407s, peak RSS51.8MB. Authentic Game outer ACK examined0/R0: this result does NOT prove outer retransmission or highest FEC. No calibrated one-way p99. Prior SOURCE020f 38.14/41.86 and 96344 TX rejections remains real historical failure, not rewritten. See [H643 evidence](../evidence/M0/PLAN027-H643-SOURCE11F-GAME2-AND-CANCEL-20261031.json).
+
+Same SOURCE11f Game2/FEC15 41211105194 and Game4/FEC15 41211110192 externally cancelled at 739/730s native step. Genuine Normal and Fixed 106s B dead/reauth 41211114737 / 41211119313 externally canceled at 1215/1214s. All four have no native final report or Stop; independent watchdog attempted live job logs, GitHub returned unavailable. Treat all as **NOT_PASS**, no blind exact-source replay. Separate frozen binary build run41210457594 still has Windows and Linux verified artifacts; H643 submits independent remaining Auto A4 240s, Normal 10Mbps 300s stability and Fixed 50Mbps25ms C (one controller each), rather than block all tasks behind GameFEC or rebuild binaries.
+
+H642 Feature Catalog had `game-lanes.json` >16KiB. Compact only superseded H303/H307 explanatory paragraphs into one provenance note with previous-card Git @2446cf5a; exact old fail IDs in git/history/evidence unchanged. No old Go A5 return, no new FEC protocol or shared data-plane edit.
+
+```feature-impact
+{"kind":"updated","ids":["game-lanes"],"reason":"Accurately record H641 original Game2 real 30% loss source-scoped success and FEC/B106 native cancellations; compact superseded descriptive provenance below catalog size cap, retain exact previous Git evidence."}
+```

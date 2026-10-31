@@ -1,0 +1,86 @@
+{
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "observed": "2026-10-31",
+  "binary_source": "11f1881ff68afa22c5b0ca957d6808420a878a06",
+  "build_run": 41210457594,
+  "game2_off": {
+    "run": 41210457594,
+    "artifact_id": 13046258164,
+    "scene": "plan027-c-game2-off-10m-250ms-loss30-60s",
+    "loss_pct": 30,
+    "offered_mbps": {
+      "windows": 9.9972,
+      "linux": 9.9999
+    },
+    "first_delivery_fraction": {
+      "windows": 0.910076,
+      "linux": 0.909715
+    },
+    "first_delivered_mbps": {
+      "windows": 9.0974,
+      "linux": 9.1086
+    },
+    "duplex": "PASS_BOTH_OS_UDP_TCP",
+    "owned_stop": "PASS_BOTH_OWNED",
+    "linux_m4_tx_reject_breakdown": {
+      "offer": 0,
+      "slab": 0,
+      "record": 0,
+      "policy": 0,
+      "raw": 0,
+      "raw_backpressure": 0,
+      "raw_route": 0,
+      "raw_mtu": 0
+    },
+    "linux_tun_tx_dropped": 0,
+    "windows_original_exe_cpu_s": 2.6094,
+    "windows_original_exe_wall_s": 77.407,
+    "windows_process_avg_one_core_pct": 3.371,
+    "windows_peak_working_set": 51806208,
+    "p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+    "outer_game_ack_examined": 0,
+    "outer_game_repair_accepted": 0,
+    "exact_binary_sha256": {
+      "windows_cli": "8c9949de4e86a495f3ce7b2856c0d1941337ea6846dcb629aa27c6bf83b53663",
+      "linux_server": "373cae784aae258b17f6ec1ad2c054f7b5d66f12c55ba2780630ee26b4b82a77"
+    }
+  },
+  "canceled": [
+    {
+      "run": 41211105194,
+      "mode": "game2-fec",
+      "native_job": 124566159666,
+      "watcher": 41211111974,
+      "watch_time_seconds": 739
+    },
+    {
+      "run": 41211110192,
+      "mode": "game4-fec",
+      "native_job": 124566217606,
+      "watcher": 41211131964,
+      "watch_time_seconds": 730
+    },
+    {
+      "run": 41211114737,
+      "mode": "normal B106",
+      "native_job": 124566187016,
+      "watcher": 41211120879,
+      "watch_time_seconds": 1215
+    },
+    {
+      "run": 41211119313,
+      "mode": "fixed B106",
+      "native_job": 124566199002,
+      "watcher": 41211126098,
+      "watch_time_seconds": 1214
+    }
+  ],
+  "incomplete_scope": [
+    "Game FEC 15% authentic Windows/Linux business/Stop",
+    "Normal Fixed B106 new generation 90s dead+Stop",
+    "Game outer ACK/SACK repair positive",
+    "A4 continuous grade verification",
+    "C representative and 300s stable"
+  ],
+  "governance": "H642 feature catalog fail due game-lanes card size>16384; H643 trims duplicate older descriptions, retains previous card in Git history and existing evidence."
+}
