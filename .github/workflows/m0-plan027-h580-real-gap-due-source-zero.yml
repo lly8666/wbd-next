@@ -1,0 +1,50 @@
+name: M0 PLAN027 H580 authentic gap no-second-RTT source zero gate
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h580-real-gap-due-source-zero.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  once:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h580-one-source-zero]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Dispatch only one new-source frozen real zero product scene
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario('scenarios/plan027-h539-normal-10m-250ms-loss0-60s.json')
+          assert s['public_mode']=='normal' and s['duration_s']==60
+          for d in ('windows_to_linux','linux_to_windows'):
+              assert s[d]['loss_pct']==0 and s[d]['offered_mbps']==10 and s[d]['delay_ms']==250
+          print('H580_FROZEN_ZERO_SCENARIO_SHA',s['scenario_sha256'])
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+             -f public_mode=normal -f run_n0=false -f perf_ab=false \
+             -f perf_scenario_file=scenarios/plan027-h539-normal-10m-250ms-loss0-60s.json \
+             -f perf_reuse_run_id="" -f perf_binary_source_sha=""
+          echo "H580_ONE_SOURCE_ZERO_DISPATCHED SOURCE=$GITHUB_SHA"
+  recovery-core:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h580-one-source-zero]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: One shared recovery A1 exact source pure regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          cargo +1.85.1 test --locked -p wbd-recovery --lib -- --test-threads=1
+          echo "H580_SHARED_A1_PASSED SOURCE=$GITHUB_SHA"

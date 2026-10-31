@@ -18,8 +18,9 @@ const FEEDBACK_ALLOWANCE_NS:u64=10_000_000;
 const MIN_PTO_VARIATION_NS:u64=4_000_000;
 pub const OUTER_REPAIR_ATTEMPT_LIMIT:u64=1;
 const MAX_RETAIN_NS:u64=1_500_000_000;
-const V3_GAP_MIN_NS:u64=20_000_000;
-const V3_GAP_MAX_NS:u64=100_000_000;
+// ACK/SACK already proves a genuine later carrier on this presentation
+// lane. Give its new gap one short reorder grace; never wait a second RTT.
+const V3_GAP_MIN_AGE_NS:u64=50_000_000;
 const V3_FEEDBACK_MARGIN_NS:u64=20_000_000;
 
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
@@ -352,10 +353,6 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
         self.opportunistic_v3=true;
         Ok(())
     }
-    fn v3_guard_ns(&self)->u64{
-        self.adaptive.map_or(V3_GAP_MIN_NS,|x|
-            x.rttvar_ns.saturating_mul(4).clamp(V3_GAP_MIN_NS,V3_GAP_MAX_NS))
-    }
     pub fn timing_snapshot(&self)->Option<AdaptiveTimingSnapshot>{
         self.adaptive.map(|x|x.snapshot())
     }
@@ -565,12 +562,14 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             let Some(negative)=entry.negative_since else {
                 return entry.hard_expiry;
             };
-            let srtt=self.adaptive.map_or(self.config.pto_ns,|x|
-                x.srtt_ns.max(x.recent_rtt_ns));
-            let guard=self.v3_guard_ns();
-            return MonoNs(entry.last_sent.0.saturating_add(srtt)
-                .saturating_add(guard).saturating_add(V3_FEEDBACK_MARGIN_NS)
-                .max(negative.0.saturating_add(guard)));
+            // Only authenticated ACK/SACK gap nomination (or the legacy
+            // authenticated positive-witness oracle) sets negative_since.
+            // OuterAckIndex separately requires a mature >=50ms original send.
+            // Adding a second RTT+4*RTTVAR here let the receiver's legitimate
+            // 250ms stale-hole abandonment ACK retire shadows before repair.
+            // Keep this as the same bounded wake event, not a blind DATA PTO.
+            return MonoNs(entry.last_sent.0.saturating_add(V3_GAP_MIN_AGE_NS)
+                .max(negative.0.saturating_add(V3_FEEDBACK_MARGIN_NS)));
         }
         let pto = entry.last_sent.0.saturating_add(self.effective_pto_ns());
         let mut due = pto;
@@ -841,14 +840,14 @@ mod tests {
         // A later authenticated DATA PN can witness this gap even when that
         // later record was not selected into the optional repair shadow.
         s.on_receipt(&receipt(1,3,vec![page(0,&[3])]),MonoNs(400_000_000)).unwrap();
-        assert!(s.on_timer(MonoNs(439_999_999)).candidates.is_empty());
-        let mut candidates=s.on_timer(MonoNs(440_000_000)).candidates;
+        assert!(s.on_timer(MonoNs(419_999_999)).candidates.is_empty());
+        let mut candidates=s.on_timer(MonoNs(420_000_000)).candidates;
         assert_eq!(candidates.len(),1);
         assert_eq!(candidates[0].pn(),RecordPn(1));
         let candidate=candidates.remove(0);
         // Authentic positive wins a candidate-versus-dispatch race.
-        s.on_receipt(&receipt(2,3,vec![page(0,&[1,3])]),MonoNs(440_000_001)).unwrap();
-        assert!(!s.preflight(&candidate,MonoNs(440_000_002)));
+        s.on_receipt(&receipt(2,3,vec![page(0,&[1,3])]),MonoNs(420_000_001)).unwrap();
+        assert!(!s.preflight(&candidate,MonoNs(420_000_002)));
         assert_eq!(s.outstanding(),0);
         assert!(s.on_timer(MonoNs(1_000_000_000)).candidates.is_empty());
     }
@@ -861,11 +860,11 @@ mod tests {
         s.on_sent_adaptive(frozen(2),MonoNs(0)).unwrap();
         s.on_receipt(&receipt(1,3,vec![page(0,&[3])]),MonoNs(600_000_000)).unwrap();
         s.on_receipt(&receipt(1,3,vec![page(0,&[3])]),MonoNs(610_000_000)).unwrap();
-        assert!(s.on_timer(MonoNs(639_999_999)).candidates.is_empty());
-        let candidate=s.on_timer(MonoNs(640_000_000)).candidates.remove(0);
+        assert!(s.on_timer(MonoNs(619_999_999)).candidates.is_empty());
+        let candidate=s.on_timer(MonoNs(620_000_000)).candidates.remove(0);
         assert_eq!(candidate.pn(),RecordPn(2));
         s.on_send_result(&candidate,RepairSendResult::Uncertain,
-            MonoNs(640_000_001)).unwrap();
+            MonoNs(620_000_001)).unwrap();
         assert_eq!(s.outstanding(),0);
         assert_eq!(s.diagnostic_snapshot().repair_uncertain_retired,1);
         assert!(s.on_timer(MonoNs(2_000_000_000)).candidates.is_empty());
@@ -1008,6 +1007,27 @@ mod tests {
     }
 
     #[test]
+    fn v3_genuine_outer_gap_does_not_wait_a_second_full_rtt(){
+        let mut s=state(8,810_000_000);
+        s.enable_adaptive_timing(600_000_000,50_000_000).unwrap();
+        s.enable_opportunistic_v3().unwrap();
+        s.on_sent_adaptive(frozen(3),MonoNs(0)).unwrap();
+        // Even past an RTT, an unseen peer never creates a DATA PTO.
+        assert!(s.on_timer(MonoNs(549_999_999)).candidates.is_empty());
+        assert!(s.on_outer_gap_hint(RecordPn(3),MonoNs(550_000_000)));
+        assert_eq!(s.next_deadline(),Some(MonoNs(570_000_000)));
+        assert!(s.on_timer(MonoNs(569_999_999)).candidates.is_empty());
+        let c=s.on_timer(MonoNs(570_000_000)).candidates.remove(0);
+        assert_eq!(c.pn(),RecordPn(3));
+        assert!(s.preflight(&c,MonoNs(570_000_000)));
+        s.on_send_result(&c,RepairSendResult::Accepted,MonoNs(570_000_000))
+            .unwrap();
+        assert!(!s.on_outer_gap_hint(RecordPn(3),MonoNs(571_000_000)));
+        assert_eq!(s.outstanding(),0);
+        assert!(s.on_timer(MonoNs(850_000_000)).candidates.is_empty());
+    }
+
+    #[test]
     fn r2_plan027_outer_gap_is_bounded_not_a_peer_receipt_or_blind_pto(){
         let mut s=state(4,810_000_000);
         s.enable_adaptive_timing(600_000_000,50_000_000).unwrap();
@@ -1019,10 +1039,10 @@ mod tests {
         assert!(!s.on_outer_gap_hint(RecordPn(1),MonoNs(651_000_000)));
         assert_eq!(s.diagnostic_snapshot().acked_attempt0,0);
         assert!(s.witnesses.is_empty());
-        assert!(s.on_timer(MonoNs(749_000_000)).candidates.is_empty());
-        let c=s.on_timer(MonoNs(750_000_000)).candidates.remove(0);
+        assert!(s.on_timer(MonoNs(669_999_999)).candidates.is_empty());
+        let c=s.on_timer(MonoNs(670_000_000)).candidates.remove(0);
         assert_eq!(c.pn(),RecordPn(1));
-        s.on_send_result(&c,RepairSendResult::Accepted,MonoNs(750_000_000))
+        s.on_send_result(&c,RepairSendResult::Accepted,MonoNs(670_000_000))
             .unwrap();
         assert_eq!(s.outstanding(),0);
         assert!(!s.on_outer_gap_hint(RecordPn(1),MonoNs(751_000_000)));

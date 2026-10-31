@@ -46,7 +46,8 @@
     "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-FEATURE-STATUS-CORRECTION.md",
     "docs/devlog/M0/20261030-PLAN027-OUTER-ACK-SACK-INDEX-FIRST-CODE.md",
     "docs/devlog/M0/20261031-PLAN027-H555-STRUCTURAL-REAL-GAP-FIFO.md",
-    "docs/devlog/M0/20261031-PLAN027-H573-GAME-EXTERNAL-ACTIONS-AND-V3-PACED-LIFETIME.md"
+    "docs/devlog/M0/20261031-PLAN027-H573-GAME-EXTERNAL-ACTIONS-AND-V3-PACED-LIFETIME.md",
+    "docs/devlog/M0/20261031-PLAN027-H580-AUTH-GAP-NO-SECOND-RTT.md"
   ],
   "verification": [
     {
@@ -219,7 +220,8 @@
     "H552 original SOURCEf031 1/5/15/30 true Win/Linux ACK repair R/F Win0.1372/1.2732/4.6963/5.8654%, Linux0.1174/1.1446/4.2179/4.8735%; all original UDP/TCP/Stop PASS but newest rate targets FAIL at1/5/30,15 PASS (H552 JSON). New candidate after genuine ACK/SACK selected gap uses only existing live frozen shadows and single feedback cadence time to nominate 4/7/8/12 once, unchanged R<=10%F/MTU/owned Stop, new SOURCE 0/1/5/15/30 NOT_RUN.",
     "H555/H561 SOURCE525: real SACK-gap cursor, one-shot PN half-sample, bounded frozen FIFO; original native NOT_RUN, old f031 rate FAIL remains; PLAN027 B/C open.",
     "H566 SOURCE525 genuine 9 real business/Stop positives recorded with exact artifact and ratios; cancelled Game highestFEC and failed A5 remain separately NOT_VERIFIED, C100/300s initially IN_FLIGHT, p99 one-way NOT_MEASURED, old SOURCEf031 failure retained. No sameVM CPU speedup inference.",
-    "H573 old GameFEC Actions41170807537/09210 still IN_PROGRESS immediately after separately completed exact-force-cancel Action41173524500; cannot infer host/job termination or Game PASS. H574 cheap Action41173607539 PASS but original signed Windows/Linux product new 0% Action41173614494 remains IN_PROGRESS; bounded v3 FIFO logic not a real performance proof."
+    "H573 old GameFEC Actions41170807537/09210 still IN_PROGRESS immediately after separately completed exact-force-cancel Action41173524500; cannot infer host/job termination or Game PASS. H574 cheap Action41173607539 PASS but original signed Windows/Linux product new 0% Action41173614494 remains IN_PROGRESS; bounded v3 FIFO logic not a real performance proof.",
+    "H580 old SOURCEd5e 1/5/15/30 true dual-source rate ratios below theoretical half-loss even with bounded FIFO; v3 real ACK gap deadline was double RTT, H580 changed only due timing, not measured PASS until new SOURCE A1 and true 0/damage. Game2/4 FEC source d5e functional PASS only, no Game idle/rotation qualification."
   ],
   "promotion": null
 }

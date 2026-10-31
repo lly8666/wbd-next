@@ -1,0 +1,13 @@
+# PLAN027 H580 — genuine candidate survived? remove duplicate whole-RTT wait
+
+Frozen SOURCEd5e original Windows/Linux no-loss+four real loss tier (1/5/15/30%) all business/Stop completed SUCCESS, and Game2/4 highestFEC original Actions41174428731/30566 both COMPLETED SUCCESS with real original TLS/auth, Windows native Wintun/NPF, Linux Game FEC profile6 applied, UDP/TCP and owned Stop; retained bytes0. Exact product SOURCEd5e vs workflow HEAD0f2 documented in H579 hashes. Old GameFEC Actions correctly CANCELLED, do not claim those PASS.
+
+Actual R/F% Win=0.10056/0.76598/2.75501/4.07850, Linux=0.08854/0.59327/2.94318/3.95475. All real 60s at 10Mbps each/250ms; zero Windows R0, Linux R133B (rare). Candidate counts 5% win3217, Linux2937, BurstPaced wait 0/2; 30% win10063, Linux7639, waits38/374; FIFO 200ms didn't measurably improve ratios. The hard byte cap wasn't saturated; do not blame just quota or change half sample.
+
+Specific source root: after a *genuine* authenticated ACK/SACK gap, shared `ReceiptState::due_at` v3 waits **since original first send + max(RTT/recent RTT) + 4×RTTVAR + margin** (at bootstrap ~820ms even though ACK feedback arrives after ~500–600ms). Live RX may abandon old appearance gap after250ms of authenticated future, so a real cumulative ACK retires the still-unused candidate before due. That's a redundant second RTT admission and a plausible measured candidate loss root, not proof of precise retransmission gain. H580 v3-only replaces that with age≥50ms and short20ms grace after the authenticated nomination, using the same wake index and old one-shot immutable handle, existing bounded FIFO/byte quota and no DATA PTO. No ACK/SACK triggers means no repair. Existing v3 pure timing assertions updated to new intended semantics; A1 regression added to prove no second RTT and no blind PTO/duplicate send. No extra timer actor, no new control round or 4/7/12 thresholds.
+
+One SOURCE frozen build will run original Windows/Linux zero test first plus Rust core A1; only after real zero/Stop PASS use new binary for 1/5/15/30 affected tiers. Latest prior GameFEC functional PASS remains scoped unaffected (no Game M2 receipt path). Windows Game Health/idle/rotation, old Go A5 RUST_PEER, remaining C/matrix longtest still OPEN.
+
+```feature-impact
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Eliminate verified redundant second RTT delay for genuine authenticated ACK/SACK-nominated cosmetic v3 gaps; preserve one-shot immutable ciphertext, 50ms age/20ms reorder grace, 10%F/8MTU and shared owner Stop. New SOURCE build/zero/A1 pending."}
+```
