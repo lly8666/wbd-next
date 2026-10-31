@@ -185,10 +185,17 @@
     },
     {
       "platform": "Windows2025 original signed NPF/Wintun + Linux WSL2 raw/TUN",
-      "scope": "H583 frozen SOURCEd5e genuine 1/5/15/30% each 10Mbps/250ms/60s double OS original Actions41174422266/23925/25541/27152 + Game2/4 highestFEC41174428731/30566: ALL COMPLETED SUCCESS native UDP/TCP/owned Stop, valid true F/R/C scoped; R/F Win 0.1006/0.766/2.755/4.0785%, Linux 0.0885/0.5933/2.9432/3.9548%, less than half-p ideal; no source502c gain inference.",
+      "scope": "H583 source d5e original 1/5/15/30% + Game2/4 highestFEC real Windows/Linux UDP/TCP/Stop PASS; exact F/R/C and parity in evidence, no later-source inference.",
       "status": "FUNCTIONAL_PASS",
       "source_sha": "d5e7e3eca7b4988419ca60e008f2644aea775629",
       "evidence": "docs/evidence/M0/PLAN027-H583-SOURCED5E7-FIVE-RATE-AND-GAME-FEC-20261031.json"
+    },
+    {
+      "platform": "Win NPF/Wintun + WSL2 Linux",
+      "scope": "H586 SOURCEcb475 real 0/1/5/15/30 10M/250ms/60s two-OS UDP/TCP/Stop PASS; 1% Win R/F0.4575%, Linux0.4815%.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "cb475c89a29bc79c1608b747e76e136fd9341500",
+      "evidence": "docs/evidence/M0/PLAN027-H586-SOURCECB475-REAL-RATES-FIXED50-20261031.json"
     }
   ],
   "limitations": [
@@ -203,7 +210,7 @@
     "H555/H561 SOURCE525: real SACK-gap cursor, one-shot PN half-sample, bounded frozen FIFO; original native NOT_RUN, old f031 rate FAIL remains; PLAN027 B/C open.",
     "H566 SOURCE525 genuine 9 real business/Stop positives recorded with exact artifact and ratios; cancelled Game highestFEC and failed A5 remain separately NOT_VERIFIED, C100/300s initially IN_FLIGHT, p99 one-way NOT_MEASURED, old SOURCEf031 failure retained. No sameVM CPU speedup inference.",
     "H573 old GameFEC Actions41170807537/09210 still IN_PROGRESS immediately after separately completed exact-force-cancel Action41173524500; cannot infer host/job termination or Game PASS. H574 cheap Action41173607539 PASS but original signed Windows/Linux product new 0% Action41173614494 remains IN_PROGRESS; bounded v3 FIFO logic not a real performance proof.",
-    "H584 previous SOURCE502c native 1% true R/F Windows0.2093% Linux0.2196%; BurstPaced=0 both. Two independent half-samples identified in live Windows/Linux first-send snapshot and ACK-gap path; remove only latter. NEW SOURCE 0/1/5/15/30% native tests NOT_RUN, 0.4–0.55% is user target not PASS. Preserve one cached immutable PN sample, real ACK gap, 10%F, Stop."
+    "H586 sourcecb475 real 1% R/F Win0.4575 Linux0.4815 user band PASS; all rates/Stop PASS under10%F. CPU high-loss separate runner caveat; Game Health/A5 OPEN."
   ],
   "promotion": null
 }

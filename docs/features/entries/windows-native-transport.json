@@ -168,6 +168,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "d5e7e3eca7b4988419ca60e008f2644aea775629",
       "evidence": "docs/evidence/M0/PLAN027-H583-SOURCED5E7-FIVE-RATE-AND-GAME-FEC-20261031.json"
+    },
+    {
+      "platform": "Win NPF/Wintun + WSL2 Linux",
+      "scope": "H586 SOURCEcb475 original highest Fixed50Mbps/25ms/0% two-OS first100% UDP/TCP/Stop PASS; Action41178599622.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "cb475c89a29bc79c1608b747e76e136fd9341500",
+      "evidence": "docs/evidence/M0/PLAN027-H586-SOURCECB475-REAL-RATES-FIXED50-20261031.json"
     }
   ],
   "limitations": [
