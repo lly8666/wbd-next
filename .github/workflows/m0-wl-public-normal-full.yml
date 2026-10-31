@@ -841,14 +841,13 @@ jobs:
               # surfaced without waiting for unrelated descendant handles.
               Write-Output ('WL_WSL2_STAGE_BEGIN actual_native_modes mode='+$env:WBD_WL_PUBLIC_MODES)
               if($gameSingle){
-                # Bound the PowerShell native-command wait itself, not only
-                # its Python descendants. Keep the actual child's regular
-                # direct-full.log; on timeout follow native owned cleanup.
-                Write-Output 'WL_GAME_NATIVE_SEPARATE_SHELL_HARD_DEADLINE seconds=510'
-                & python -u tools/m0_wl_windows_bounded_cmd.py 510 python -u tools/m0_wl_native_step_runner.py tools/m0_wl_public_modes_e2e.py result/wl-public/direct-full.log
-              }else{
-                & python -u tools/m0_wl_native_step_runner.py tools/m0_wl_public_modes_e2e.py result/wl-public/direct-full.log
+                # The direct PID-owned file-backed runner already enforces
+                # the real 360s mode / 440s batch deadline. The previous
+                # second 510s temp-file wrapper hid its live progress and
+                # errors; launch this one directly so Actions records them.
+                Write-Output 'WL_GAME_NATIVE_FILE_BACKED_STREAMING_DEADLINE seconds=440'
               }
+              & python -u tools/m0_wl_native_step_runner.py tools/m0_wl_public_modes_e2e.py result/wl-public/direct-full.log
             }
             $e2eExit=$LASTEXITCODE
             if($e2eExit -ne 0){throw 'real Windows-to-Linux public original Go TLS/Rust M1-M3/native I/O path failed'}

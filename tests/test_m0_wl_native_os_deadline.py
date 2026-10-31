@@ -52,8 +52,9 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertIn('720',independent)
         self.assertIn('launch_at:',independent)
         self.assertNotIn("recover-h601-stuck:",independent)
-        self.assertIn('WL_GAME_NATIVE_SEPARATE_SHELL_HARD_DEADLINE',y)
-        self.assertIn('m0_wl_windows_bounded_cmd.py 510 python -u tools/m0_wl_native_step_runner.py',y)
+        self.assertIn('WL_GAME_NATIVE_FILE_BACKED_STREAMING_DEADLINE seconds=440',y)
+        self.assertNotIn('m0_wl_windows_bounded_cmd.py 510 python -u tools/m0_wl_native_step_runner.py',y)
+        self.assertIn('& python -u tools/m0_wl_native_step_runner.py',y)
         # Retired old Go A5 has no runner or Tee path; live Rust/Game
         # still uses the file-backed bounded native process guard.
         self.assertNotIn("m0_wl_perf_v2_ab.py",y)
