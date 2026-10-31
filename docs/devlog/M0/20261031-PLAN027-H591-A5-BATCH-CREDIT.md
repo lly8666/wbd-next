@@ -1,0 +1,11 @@
+# PLAN027 H591 — A5 exact original failure, once-per-batch F ledger
+
+Recovered signed original SOURCE cb475c89 Go TLS+Windows Rust NPF/Wintun↔WSL2 Linux raw/TUN current same-VM Action41180437390 original artifact13035011274 SHA256 c1242c98888e90010a2512c2ad14cc3af2ffb86262a3c6cecccceaea1ec02eb0. Rust native B 10Mbps each/25ms/0%/60s actual UDP/TCP first100%, Stop PASS; Windows whole-process CPU1.6719s /59s (~2.821% one core), peak RSS42.17MB. Old Go steady A passed initial UDP/TCP, had source batch stage failures0, but process exited RC1 after53.109s with **M2_FIRSTSEND_BATCH**; Stop NOT_RUN, process CPU8.0625s (15.181% one core); **CPU A/B INVALID** because A failed. Latest 1% original R/F Win0.4576%, Linux0.4815% remains already PASS and should not be retuned.
+
+Windows native Rust m2_kernel_firstsend_batch_entry was performing per-PN global repair allocator locking and pending reservation scans despite an existing on_fresh_accepted_batch API; it wasted hot CPU and could sample a monotonic timestamp before acquiring the shared global lock. H591 retains preflight of every immutable original PN/SEQ/length and each row's genuine NPF definitely-copied/uncertain/NotSent settlement, charges global F **once per verified copied prefix** after row completion, including only the accepted prefix on callback error, and samples monotonic time AFTER global lock. Single-row ABI retains exact behavior. No changed keys, AEAD, replay, ciphertext, TCP ACK, repair sample, 8MTU/10%F budgets, driver ownership or Stop. Existing Rust unit batch fixture now asserts one accepted + one uncertain creates exactly accepted wire length+54 bytes F. The batch path is a root-cause candidate and NOT_RUN until new real SOURCE A5 B→A compile and test.
+
+Game4 max FEC native 10Mbps/250ms/0/60s original Action41180441138 CANCELLED after hosted 20min; only WSL boot artifact exists. Cannot call Game PASS or escalate 20M; native 15s Health/90s dead/rotation and other C/5min are OPEN.
+
+```feature-impact
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Coalesce Windows NPF firstsend global copied F byte ledger once per actual driver-settled batch; repair/PN/Stop unchanged, new source unverified."}
+```

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "prior_source": "cb475c89a29bc79c1608b747e76e136fd9341500",
+  "a5": {
+    "run": 41180437390,
+    "artifact": 13035011274,
+    "digest": "c1242c98888e90010a2512c2ad14cc3af2ffb86262a3c6cecccceaea1ec02eb0",
+    "scenario_sha256": "666b857cc87a6652d2ac9367fd50a2208b543bfefb15d997abc01b35da196adf",
+    "same_vm": true,
+    "prior_B": {
+      "business": "UDP_TCP_FIRST100_PASS",
+      "stop": "PASS_BOTH_OWNED",
+      "cpu_seconds": 1.6719,
+      "one_core_pct": 2.821
+    },
+    "prior_A": {
+      "business": "EXIT_EARLY",
+      "stop": "NOT_RUN",
+      "elapsed_seconds": 53.109,
+      "cpu_seconds": 8.0625,
+      "one_core_pct": 15.181,
+      "stage": "M2_FIRSTSEND_BATCH",
+      "source_batch_stage_failures": 0
+    },
+    "comparison": "INVALID_AB_A_DID_NOT_FINISH"
+  },
+  "game60": {
+    "run": 41180441138,
+    "conclusion": "CANCELLED",
+    "product_report": "NOT_AVAILABLE",
+    "grade20": "NOT_DISPATCHED"
+  },
+  "h591": {
+    "candidate": "NOT_RUN",
+    "change": "Windows original Rust NPF copied prefix global F byte accounting once per batch with monotonic clock after global mutex",
+    "original_PN_SEQ_AEAD": "UNCHANGED",
+    "hard_R_over_F_limit": "UNCHANGED"
+  }
+}
