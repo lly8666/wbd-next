@@ -4,6 +4,21 @@ from tools.m0_wl_perf_v2_config import read_scenario,profile,first_delivery_ok_f
 from tools.m0_wl_impairment_profile import get_profile
 SCENE=pathlib.Path(__file__).resolve().parents[1]/"scenarios"/"wl-normal-150m-300ms-0loss-60s.json"
 class V2Scenarios(unittest.TestCase):
+ def test_plan027_b_real_normal_idle_wake_no_payload_90s(self):
+  path=SCENE.parent/"plan027-b-normal-idle-wake-10m-25ms-0loss-60s.json"
+  c=read_scenario(path)
+  self.assertEqual((c["public_mode"],c["lifecycle_idle_s"],c["duration_s"]),("normal",105,60))
+  for d in ("windows_to_linux","linux_to_windows"):
+   self.assertEqual((c[d]["offered_mbps"],c[d]["loss_pct"]),(10,0))
+  script=(SCENE.parents[1]/"tools/m0_wl_public_normal_e2e.py").read_text()
+  self.assertIn("WL_V2_B_IDLE_90S_NO_PAYLOAD_THEN_REAL_BIDIRECTIONAL_WAKE_PASS",script)
+  self.assertIn('"post_idle_genuine_udp":"PASS_BOTH_KERNEL_DIRECTIONS"',script)
+  with tempfile.TemporaryDirectory() as temp:
+   p=pathlib.Path(temp)/"bad.json";bad=json.loads(path.read_text())
+   bad["lifecycle_idle_s"]=20;p.write_text(json.dumps(bad))
+   with self.assertRaisesRegex(ValueError,"BAD_IDLE_LIFECYCLE"):read_scenario(p)
+   bad["lifecycle_idle_s"]=105;bad["public_mode"]="fixed";p.write_text(json.dumps(bad))
+   with self.assertRaisesRegex(ValueError,"BAD_IDLE_LIFECYCLE"):read_scenario(p)
  def test_plan027_game2_damaged_real_first_is_not_lossless_oracle(self):
   root=SCENE.parent
   off=read_scenario(root/"plan027-b-game2-off-10m-75ms-loss5-20s.json")

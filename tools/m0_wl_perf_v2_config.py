@@ -53,6 +53,11 @@ def read_scenario(path):
             any(cfg[d]["loss_pct"]!=0 for d in
                 ("windows_to_linux","linux_to_windows"))):
             raise ValueError("WL_V2_TUN_QLEN_BOUNDED_NORMAL_LOSS0_ONLY")
+    idle=cfg.get("lifecycle_idle_s")
+    if idle is not None:
+        if (mode!="normal" or type(idle) is not int or not 95<=idle<=130 or
+            cfg["duration_s"]!=60 or any(cfg[d]["loss_pct"]!=0 for d in ("windows_to_linux","linux_to_windows"))):
+            raise ValueError("WL_V2_BAD_IDLE_LIFECYCLE")
     stages=cfg.get("impairment_stages")
     if stages is not None:
         if mode!="auto" or not isinstance(stages,list) or not 3<=len(stages)<=12:

@@ -291,6 +291,46 @@ print(json.dumps(result),flush=True)
   tcp[role]=observed
  report["actual_kernel_tcp"]=tcp
  report["tcp_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_TCP"
+ # One scoped B lifecycle scenario: both original 10.66.x app sockets have
+ # closed after real UDP+TCP, so the owned tunnel has no user payload. Keep
+ # the genuine Go TLS/Rust owners alive beyond the 90s authenticated-dead
+ # threshold, then demand new reverse+first kernel UDP before V2 traffic.
+ lifecycle_s=0
+ source_scene=os.environ.get("WBD_WL_V2_SCENARIO","").strip()
+ if source_scene:
+  from m0_wl_perf_v2_config import read_scenario
+  lifecycle_s=read_scenario(root/source_scene).get("lifecycle_idle_s",0)
+ if lifecycle_s:
+  print("WL_V2_B_IDLE_BEGIN seconds="+str(lifecycle_s),flush=True)
+  started_idle=time.monotonic()
+  while time.monotonic()-started_idle<lifecycle_s:
+   if w.poll() is not None or s.poll() is not None:
+    raise RuntimeError("genuine authenticated owner lost during no-payload idle")
+   time.sleep(.5)
+  awake=[]
+  for name in ("windows","linux"):
+   f=(out/("idle-wake-"+name+".log")).open("w")
+   logs.append(f);awake.append(f)
+  wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1",str(done),"3"],stdout=awake[0],stderr=subprocess.STDOUT)
+  la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),"10.66.0.1","10.66.0.2",unix(done),"3"],stdout=awake[1],stderr=subprocess.STDOUT)
+  deadline=time.monotonic()+65
+  while wa.poll() is None or la.poll() is None:
+   if w.poll() is not None or s.poll() is not None:raise RuntimeError("real owner exited during idle wake")
+   if time.monotonic()>deadline:
+    wa.terminate();la.terminate()
+    raise RuntimeError("real idle wake kernel UDP deadline")
+   time.sleep(.2)
+  if wa.returncode or la.returncode:
+   raise RuntimeError("real post-idle duplex failed win="+str(wa.returncode)+" linux="+str(la.returncode))
+  for name in ("windows","linux"):
+   rows=(out/("idle-wake-"+name+".log")).read_text().splitlines()
+   wake=json.loads(rows[-1])
+   if wake.get("received",0)<12 or wake.get("sent",0)<24 or not wake.get("public_ready_seen"):
+    raise RuntimeError("real post-90s idle payload absent "+name+" "+repr(wake))
+  report["lifecycle_idle_wake"]={"idle_seconds":round(time.monotonic()-started_idle,2),
+   "both_owners_stayed_alive":True,"post_idle_genuine_udp":"PASS_BOTH_KERNEL_DIRECTIONS",
+   "authenticated_health_count":"NOT_EXPLICITLY_MEASURED"}
+  print("WL_V2_B_IDLE_90S_NO_PAYLOAD_THEN_REAL_BIDIRECTIONAL_WAKE_PASS",flush=True)
  if mode=="auto-revision":
   # Exact original Go TLS→Linux FecV2Step→Rust quiescent revision.
   # No alternate first-send ACK, kernel shortcut or fake Applied marker.
