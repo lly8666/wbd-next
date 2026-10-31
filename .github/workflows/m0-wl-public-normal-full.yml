@@ -579,7 +579,7 @@ jobs:
           try {
             Push-Location legacy
             try {
-              & go test -count=1 -tags wbd_v4_embedded_go -run '^TestM0PLAN(023WindowsNativeV4FiveModes|024WindowsNativeWholeProductCapabilityGate|024AuthenticatedHighWater)' ./cmd/wbd-client
+              & go test -count=1 -tags wbd_v4_embedded_go -run '^TestM0PLAN(023WindowsNativeV4FiveModes|024WindowsNativeWholeProductCapabilityGate|024AuthenticatedHighWater|027WindowsOriginalNativeRecordOfferRespectsTLSTunnelBudget)' ./cmd/wbd-client
               if($LASTEXITCODE -ne 0){throw 'native original-Go selected modes / actual Rust DLL public-capability and M3 RX regression FAIL'}
               & go test -count=1 -tags wbd_v4_embedded_go -run TestM0WindowsGameFecProtectedExtensionBounds ./internal/realityfront
               if($LASTEXITCODE -ne 0){throw 'original-Go Game2/4 protected FEC2 profile admission guard FAIL'}

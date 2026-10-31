@@ -132,7 +132,7 @@ func runM0NativeV4WindowsGame(
   },
   AutoLease:false,DesiredLanes:uint8(count),
   InstallationID:o.Installation[:],Username:o.Username,Password:o.Password,
-  TunnelID:o.TunnelID[:],ClientLimit:1400,Policy:policy,
+  TunnelID:o.TunnelID[:],ClientLimit:m0WindowsV4PeerRecordCap(o.TunnelMTU,o.Mode,o.FEC2Mode=="fixed"),Policy:policy,
  }
  fecMode:=uint8(0)
  if o.FEC2Mode=="fixed"{
@@ -143,7 +143,7 @@ func runM0NativeV4WindowsGame(
  group,err:=realityfront.V4WindowsEstablishOriginalGameClientGroup(
   ctx,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),assocs,cfg,fecMode)
  if err!=nil{return err}
- fmt.Printf("WBD_WINDOWS_GAME_COLD_TLS_JOINED lanes=%d fec=%d\n",count,fecMode)
+ fmt.Printf("WBD_WINDOWS_GAME_COLD_TLS_JOINED lanes=%d fec=%d client_record_offer=%d requested_tun_mtu=%d\n",count,fecMode,cfg.ClientLimit,o.TunnelMTU)
  tun,err:=windowsclient.OpenTUN(o.AdapterAlias)
  if err!=nil{return err}
  defer tun.Close()

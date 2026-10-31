@@ -66,6 +66,21 @@ type m0NativeV4ProductPeer interface {
 }
 var errM0NativeV4AuthenticatedPeerDead=errors.New("Rust verified authenticated peer dead; cold TLS reauthorization after native Stop")
 
+// Cold authenticated original V4 record offer must not exceed the receiving
+// Windows native TUN's selected inner MTU after Linux's existing framing.
+// This is the SAME original Go TLS ClientLimit, not a new control round.
+// Normal wire->inner reserves31; Fixed/Auto another14, Game another16,
+// and Game fixedFEC another15. The existing 1400 default cap is unchanged.
+func m0WindowsV4PeerRecordCap(tunMTU uint32,mode m0WindowsV4Mode,gameFEC bool)uint16{
+ reserve:=uint32(31)
+ if mode==m0WinModeFixed||mode==m0WinModeAuto{reserve+=14}
+ if mode==m0WinModeGame2||mode==m0WinModeGame4{
+  reserve+=16
+  if gameFEC{reserve+=15}
+ }
+ return uint16(min(tunMTU+reserve,uint32(1400)))
+}
+
 func runM0NativeV4Windows(o m0NativeV4Options)error{
  // Mode-specific original Rust capability is queried before Npcap,
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
@@ -282,7 +297,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
     RouteKey:append([]byte(nil),o.RouteKey...),Timeout:15*time.Second},
   AutoLease:false,DesiredLanes:1,InstallationID:o.Installation[:],
   Username:o.Username,Password:o.Password,
-  TunnelID:o.TunnelID[:],ClientLimit:1400,
+  TunnelID:o.TunnelID[:],ClientLimit:m0WindowsV4PeerRecordCap(o.TunnelMTU,o.Mode,false),
   LaneID:1,Policy:policy,
  }
  dll:=filepath.Join(windowsExecutableDir(),"wbd_engine.dll")
@@ -298,6 +313,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   owner,session,err=realityfront.V4WindowsEstablishOriginalFEC2ClientOwner(ctx,dll,assoc,auth)
  }
  if err!=nil{return fmt.Errorf("original credential TLS→mode-specific native Rust V4 owner rejected: %w",err)}
+ fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_RECORD_CAP_AUTHENTICATED mode=%v requested_tun_mtu=%d client_record_offer=%d original_tls=1\n",o.Mode,o.TunnelMTU,auth.ClientLimit)
  // After TLS+Rust, either the same native product service assumes
  // full ownership or we retire Rust FIRST; never return GUI Applied
  // because the Wintun alias/process exists.

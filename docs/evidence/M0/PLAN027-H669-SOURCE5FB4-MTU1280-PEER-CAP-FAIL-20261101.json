@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "5fb4c9d79d481334631a4f894e82d2f8c7b078ca",
+  "outcome": "FAIL_TRUE_WINDOWS_LINUX_TUN_MTU_MISMATCH_BEFORE_APP",
+  "run": 41225856887,
+  "artifact": 13051912842,
+  "scenario": "plan027-b-normal-1280-mtu-10m-25ms-loss0-60s",
+  "harness_sha": "4439d59b5eec942e6ddf887060cbb1caf7662dfc",
+  "windows_requested_and_original_applied_tun_mtu": 1280,
+  "linux_original_peer_mss": 1360,
+  "linux_original_peer_record_cap": 1400,
+  "linux_original_wire_cap": 1360,
+  "linux_real_kernel_tun_mtu": 1329,
+  "linux_budget_formula": "min(outer,ifc)-40 vs peer MSS and TLS record limit, wire-31",
+  "error": "Linux original TUN negotiated larger than Windows 1280 budget 1329",
+  "native_bilateral_app": "NOT_RUN_AFTER_FAIL_CLOSED_MTU_CHECK",
+  "owned_stop": "NOT_QUALIFIED",
+  "new_candidate": "H669 original Windows protected TLS ClientLimit dynamically capped at tunnel MTU+original mode framing; MUST BUILD_AND_TEST_FRESH_SOURCE"
+}

@@ -1,0 +1,42 @@
+name: M0 PLAN027 H669 one real original Windows Linux native 1280 TLS cap
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h669-fixed-native-mtu-record-cap.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-current-native-mtu1280:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h669-real-mtu]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: One fresh original Go and Rust build with same SOURCE and true signed Windows Linux MTU1280
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario("scenarios/plan027-b-normal-1280-mtu-10m-25ms-loss0-60s.json")
+          assert s["public_mode"]=="normal" and s["tun_mtu"]==1280 and s["duration_s"]==60
+          for k in ("windows_to_linux","linux_to_windows"):
+              d=s[k];assert d["offered_mbps"]==10 and d["delay_ms"]==25 and d["loss_pct"]==0
+          print("H669_TRUE_AUTHENTICATED_TUN_MTU1280_FIXED_SOURCE",s["scenario_sha256"])
+          PY
+          grep -q 'm0WindowsV4PeerRecordCap(o.TunnelMTU,o.Mode,false)' r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go
+          grep -q 'm0WindowsV4PeerRecordCap(o.TunnelMTU,o.Mode,o.FEC2Mode=="fixed")' r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go
+          scene=scenarios/plan027-b-normal-1280-mtu-10m-25ms-loss0-60s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|normal|$scene"
+          previous="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id'|head -1)"
+          if [ -n "$previous" ];then echo "H669_ALREADY_DISPATCHED action=$previous";exit 0;fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_scenario_file="$scene" \
+            -f perf_reuse_run_id="" -f perf_binary_source_sha=""
+          echo "H669_ONE_CURRENT_PRODUCT_SOURCE_BOTH_OS_BUILD_AND_REAL_MTU1280_NATIVE_PENDING"
