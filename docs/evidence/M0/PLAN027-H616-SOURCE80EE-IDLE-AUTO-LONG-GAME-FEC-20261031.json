@@ -1,0 +1,98 @@
+{
+  "schema": "M0_PLAN027_H616_ADDITIONAL_NATIVE_RESULTS_V1",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "product_binary_source": "80ee526cc7b466ec6ccbe3cc25caf2f3754996ef",
+  "build_run": 41190352345,
+  "results": [
+    {
+      "run_id": 41193562170,
+      "harness_sha": "cd067310cf8fa100f3ae5994ebf008be84fbc188",
+      "case": "Normal off real first UDP/TCP, 105s no user payload, genuine fresh bilateral UDP wake, 10M 25ms loss0 60s, true owned Stop",
+      "verdict": "PASS_REAL_105S_IDLE_WAKE_AND_OWNED_STOP",
+      "proof": [
+        "WL_V2_B_IDLE_BEGIN seconds=105",
+        "WL_V2_B_IDLE_90S_NO_PAYLOAD_THEN_REAL_BIDIRECTIONAL_WAKE_PASS",
+        "WL_V2_TRUE_KERNEL_MEASUREMENT MEASURED_BOTH_OS_KERNEL",
+        "WBD_WL_TRUE_PUBLIC_MODE_WIN_LINUX_DUPLEX_STOP_PASS normal"
+      ],
+      "limits": "Authenticated Health control count not individually read; not 90s two-way blackhole/rotation"
+    },
+    {
+      "run_id": 41193689768,
+      "harness_sha": "99f55bd0fecbc9581c19836f2b35568717b4c442",
+      "case": "Auto real config revision2 installed",
+      "verdict": "PASS_REAL_NATIVE_REVISION2_AND_UDP_TCP_STOP",
+      "proof": [
+        "WL_ACTUAL_AUTO_REVISION2_NATIVE_TWO_OS_AND_STOP_PASS"
+      ],
+      "limits": "Not evidence every quality window is mature"
+    },
+    {
+      "run_id": 41193684899,
+      "harness_sha": "99f55bd0fecbc9581c19836f2b35568717b4c442",
+      "case": "Auto real low-loss sustained original adaptive one-grade downshift",
+      "verdict": "PASS_REAL_NATIVE_FIRST_GRADE_APPLIED_WITHIN_119S_AND_STOP",
+      "native_stats": {
+        "first_applied_snapshot_index": 43,
+        "applied_revision": 2,
+        "profile": 4
+      },
+      "proof": [
+        "WBD_WL_REAL_AUTO_NATURAL_SHARED_POLICY_M2_2S8S_APPLIED_AFTER_KERNEL_UDP",
+        "WL_ACTUAL_AUTO_NATURAL_SHARED_POLICY_GRADE_NATIVE_TWO_OS_AND_STOP_PASS"
+      ],
+      "limits": "Does not prove every independent up/down weak network and every quality unit; 119s positive for one grade"
+    },
+    {
+      "run_id": 41193679877,
+      "harness_sha": "99f55bd0fecbc9581c19836f2b35568717b4c442",
+      "case": "Normal off real 100Mbps/each 25ms/0% 300s product default TUN queue",
+      "verdict": "PASS_REAL_BOTH_OS_KERNEL_300S_AND_OWNED_STOP",
+      "measurements": {
+        "duration_seconds": 300,
+        "actual_sent_payload_mbps": {
+          "windows": 99.9947,
+          "linux": 100
+        },
+        "first_delivery_fraction": {
+          "windows": 0.999994,
+          "linux": 1
+        },
+        "received_first_payload_mbps": {
+          "windows": 99.9997,
+          "linux": 99.9947
+        },
+        "windows_cpu_pct_one_logical_core": 14.69,
+        "windows_peak_working_set_bytes": 42827776,
+        "oneway_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS"
+      },
+      "proof": [
+        "WL_V2_TRUE_KERNEL_MEASUREMENT MEASURED_BOTH_OS_KERNEL",
+        "WBD_WL_TRUE_PUBLIC_MODE_WIN_LINUX_DUPLEX_STOP_PASS normal"
+      ],
+      "limits": "Different runner from C100/60s, cannot claim CPU improved"
+    },
+    {
+      "run_id": 41193144417,
+      "harness_sha": "55fe3c451433858512e860cf6ea54d735687492f",
+      "case": "Game2 FEC original real 10M/75ms/15%/20s with direct 360/440s file-backed runner",
+      "verdict": "CANCELLED_NOT_PASS_NO_BUSINESS_OR_OWNED_STOP",
+      "watchdog_run": 41193172484,
+      "watchdog_log": [
+        "M0_EXTERNAL_NATIVE_TIMEOUT target=41193144417 job_seconds=720",
+        "M0_EXTERNAL_NATIVE_FORCE_CANCEL target=41193144417"
+      ],
+      "actual_native_step": "IN_PROGRESS_UNTIL_FORCE_CANCEL",
+      "original_job_log": "NOT_AVAILABLE_404_BLOB_NOT_FOUND",
+      "cause": "UNKNOWN_NO_STAGE_LOG; cannot assume Rust deadlock",
+      "next": "Root-stage isolate, no unchanged duplicate"
+    }
+  ],
+  "unverified_required": [
+    "Game2/4 highest FEC real original Windows/Linux UDP TCP owned Stop",
+    "Blackhole authentic 90s dead and real recovery/rotation",
+    "Further DNS/IPv6/MTU/config readback lifecycle B",
+    "Normalized outer F/R/C and p99 within measurement capabilities"
+  ],
+  "physical": "NOT_RUN"
+}
