@@ -127,6 +127,18 @@ impl GameOuter{
             frozen,now,WIN_NORMAL_M2_MIN_RETAIN_NS);
         Ok(())
     }
+    // Game Health is an original authenticated kind0 record with its OWN
+    // PN and TCP sequence bytes. It advances the exact outbound sequence
+    // ledger but NEVER enters the DATA repair shadow or first-send F.
+    pub(super) fn on_health_copy(&mut self,index:usize,pn:u64,
+        seq:u32,wire_len:usize)->Result<(),i32>{
+        let m=self.lanes.get_mut(index).ok_or(INVALID)?;
+        let high=m.ack.highest_sent_end();
+        if seq!=high as u32 || wire_len==0{return Err(BAD_STAGE)}
+        let _=m.ack.on_definitely_sent(
+            RecordPn(pn),high,wire_len as u32,m2_clock());
+        Ok(())
+    }
     pub(super) fn on_hint(&mut self,index:usize,ack:u32,
         sacks:&[SackRange32])->bool{
         let Some(m)=self.lanes.get_mut(index)else{return false};

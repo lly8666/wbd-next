@@ -383,7 +383,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                         health.local_idle_ns(now_health),&mut wire)
                 };
                 let copied=match sealed{
-                    Ok((_pn,n))=>{
+                    Ok((health_pn,n))=>{
                         let mut scratch=[0u8;FRAME_CAP];
                         let seq=c.tx_seq[index].load(Ordering::Acquire);
                         let ack=c.ack[index].load(Ordering::Acquire);
@@ -394,6 +394,12 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                                 let result=npf[index].send_batch(&[frame]);
                                 let copied=result.accepted_prefix==1;
                                 if copied{
+                                    // Health consumes real TCP sequence
+                                    // bytes, not an M2 DATA repair candidate.
+                                    if outer.lock().map_err(|_|BAD_STAGE)?
+                                        .on_health_copy(index,health_pn,seq,n).is_err(){
+                                        return BAD_STAGE
+                                    }
                                     c.tx_seq[index].fetch_add(n as u32,Ordering::Release);
                                     c.ack_sent[index].store(ack,Ordering::Release);
                                     c.tx.fetch_add(1,Ordering::Relaxed);
