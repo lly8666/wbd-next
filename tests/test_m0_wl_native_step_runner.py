@@ -83,6 +83,8 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         self.assertIn("WL_PUBLIC_REAL_MODE_HEARTBEAT",mode)
         self.assertIn("WL_ORIGINAL_NATIVE_E2E_BATCH_TIMEOUT",runner)
         self.assertIn("WL_ORIGINAL_NATIVE_E2E_BATCH_HEARTBEAT",runner)
+        self.assertIn("$gameSingle",flow)
+        self.assertIn("$wholeLimit=if($gameSingle){600}else{1020}",flow)
 
     def test_wsl_real_boot_is_own_action_step_before_native_game(self):
         flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()

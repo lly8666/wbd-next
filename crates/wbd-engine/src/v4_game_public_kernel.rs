@@ -163,7 +163,8 @@ impl GameKernelOwner{
                 let Ok(mut arena)=Arena::new(generation^0x4000_0000,64,2048,64,1_000_000)
                     else{return};
                 let start=epoch_clock;
-                let mut health=HealthClock::new(HealthPolicy::default_connected(),0);
+                let mut health=HealthClock::new(HealthPolicy::default_connected(),
+                    health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
                 let mut inbound=[0u8;2048];
                 while !tx_stop.load(Ordering::Acquire){
                     // Never hold the TUN device's shared serialized mutex

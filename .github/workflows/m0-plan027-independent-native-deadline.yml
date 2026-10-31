@@ -10,6 +10,11 @@ on:
         description: "Exact native workflow HEAD SHA"
         type: string
         required: true
+      target_job_limit:
+        description: "Seconds from native job start, 720 for scoped Game; 1200 otherwise"
+        type: string
+        required: false
+        default: "1200"
   push:
     branches: [main]
     paths: [.github/workflows/m0-plan027-independent-native-deadline.yml]
@@ -24,6 +29,7 @@ jobs:
       GH_REPO: ${{ github.repository }}
       TARGET_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.target_run_id || '41173614494' }}
       TARGET_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.target_sha || 'd5e7e3eca7b4988419ca60e008f2644aea775629' }}
+      JOB_LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.target_job_limit || '1200' }}
     steps:
       - name: Cancel exact stale Windows native job from DIFFERENT Action
         shell: bash
@@ -31,6 +37,7 @@ jobs:
           set -euo pipefail
           [[ "$TARGET_ID" =~ ^[1-9][0-9]{5,16}$ ]] || exit 2
           [[ "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 2
+          [[ "$JOB_LIMIT" =~ ^(720|1200)$ ]] || exit 2
           initial="$(gh api "repos/$GH_REPO/actions/runs/$TARGET_ID")"
           test "$(jq -r .head_sha <<<"$initial")" = "$TARGET_SHA"
           test "$(jq -r .event <<<"$initial")" = workflow_dispatch
@@ -53,7 +60,7 @@ jobs:
               since="$(jq -r '.started_at // empty' <<<"$stage")"
               if [ -n "$since" ]; then
                 seconds="$(($(date -u +%s)-$(date -u -d "$since" +%s)))"
-                if [ "$seconds" -ge 1200 ]; then
+                if [ "$seconds" -ge "$JOB_LIMIT" ]; then
                   echo "M0_EXTERNAL_NATIVE_TIMEOUT target=$TARGET_ID job_seconds=$seconds"
                   gh api -X POST "repos/$GH_REPO/actions/runs/$TARGET_ID/cancel" --silent || true
                   sleep 45
@@ -97,3 +104,31 @@ jobs:
             fi
           done
           echo "M0_GAME_FEC_NOT_PASS_STUCK_JOBS_CLEANED"
+
+  recover-h601-stuck:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h602-rescue-stuck-game]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Stop only original verified H601 stuck Game2 action; preserve FAIL
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=41186157073
+          source=511c7dd21af7611ce97f75c0660a089dc359f500
+          run="$(gh api "repos/$GH_REPO/actions/runs/$target")"
+          test "$(jq -r .head_sha <<<"$run")" = "$source"
+          test "$(jq -r .event <<<"$run")" = workflow_dispatch
+          test "$(jq -r .path <<<"$run")" = ".github/workflows/m0-wl-public-normal-full.yml"
+          if [ "$(jq -r .status <<<"$run")" = completed ]; then
+            echo "H602_EXACT_GAME_ALREADY_FINISHED_NOT_RETRIED id=$target"
+            exit 0
+          fi
+          job="$(gh api "repos/$GH_REPO/actions/runs/$target/jobs?per_page=100" | jq -r '.jobs[] | select(.name=="native-public-two-os") | .status')"
+          test "$job" = in_progress
+          echo "H602_FORCE_CANCEL_STUCK_REAL_GAME2 id=$target source=$source verdict=NOT_PASS"
+          gh api -X POST "repos/$GH_REPO/actions/runs/$target/force-cancel" --silent
+          echo "H602_ORIGINAL_CANCEL_REQUEST_SENT no_new_product_test=1"

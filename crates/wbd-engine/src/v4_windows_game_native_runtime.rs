@@ -273,7 +273,8 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         let g=match group.lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
         game::native_game_health_context(&g)
     };
-    let mut health=HealthClock::new(HealthPolicy::default_connected(),0);
+    let mut health=HealthClock::new(HealthPolicy::default_connected(),
+        health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
     loop{
         if c.stop.load(Ordering::Acquire){return OK}
         let mut did_work=false;
