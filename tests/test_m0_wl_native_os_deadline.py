@@ -34,6 +34,16 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertIn("WL_WSL2_OUTER_WATCHDOG_ARMED",y)
         self.assertIn("m0_wl_windows_bounded_cmd.py 180 wsl.exe --import",y)
         self.assertIn("timeout-minutes: 24",y)
+        # The original Windows 2025 runner can freeze *above* PowerShell,
+        # defeating its on-host watchdog and the step timeout entirely.
+        # A different Ubuntu Actions worker must cancel the stuck exact run.
+        self.assertIn("native-wsl-external-deadline:",y)
+        self.assertIn("WL_INDEPENDENT_DEADLINE_CANCEL exact_run=",y)
+        self.assertIn('actions: write',y)
+        self.assertIn('1200',y)
+        # An A5 old-Go process must not hold a PowerShell Tee pipe open.
+        self.assertIn("m0_wl_native_step_runner.py tools/m0_wl_perf_v2_ab.py",y)
+        self.assertNotIn("& python tools/m0_wl_perf_v2_ab.py 2>&1 |",y)
         child=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()
         self.assertIn("WL_REAL_LINUX_OWNED_STOP_REQUEST_TIMEOUT",child)
         batch=(ROOT/"tools/m0_wl_public_modes_e2e.py").read_text()
