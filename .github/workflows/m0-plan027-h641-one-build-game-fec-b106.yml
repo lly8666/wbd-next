@@ -1,0 +1,87 @@
+name: M0 PLAN027 H641 one exact SOURCE build and independent Game FEC B106
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h641-one-build-game-fec-b106.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  exact-source-reuse:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h641-build-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: One frozen H640 product build then four independent true two-OS scene Actions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          python3 -m unittest tests.test_m0_wl_impairment_profile -v
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          cases=(("game2","plan027-c-game2-off-10m-250ms-loss30-60s.json"),
+                 ("game2-fec","wl-game2-fixed6-10m-75ms-loss15-20s.json"),
+                 ("game4-fec","wl-game4-fixed6-10m-75ms-loss15-20s.json"),
+                 ("normal","plan027-b-normal-blackhole106-recover-10m-25ms-0loss-60s.json"),
+                 ("fixed","plan027-b-fixed-blackhole106-recover-10m-25ms-0loss-60s.json"))
+          for mode,name in cases:
+              s=read_scenario("scenarios/"+name)
+              assert s["public_mode"]==mode,(mode,s["public_mode"])
+              print("H641_REAL_SCENE_SOURCE",mode,name,s["scenario_sha256"])
+          PY
+          # Only the first independent scenario compiles, from THIS exact SHA.
+          # Later modes restore its same Windows+Linux manifests/hashes.
+          scene=scenarios/plan027-c-game2-off-10m-250ms-loss30-60s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|game2|$scene"
+          first="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id' | head -1)"
+          if [ -z "$first" ];then
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode=game2 -f run_n0=false -f perf_scenario_file="$scene" \
+              -f perf_reuse_run_id="" -f perf_binary_source_sha=""
+            for attempt in $(seq 1 50);do
+              first="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+                jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id' | head -1)"
+              [ -n "$first" ] && break
+              sleep 5
+            done
+          fi
+          test -n "$first" || { echo H641_SINGLE_BUILD_RUN_NOT_FOUND >&2;exit 1; }
+          test "$(gh api "repos/$GH_REPO/actions/runs/$first" --jq .head_sha)" = "$GITHUB_SHA"
+          echo "H641_NEW_EXACT_SOURCE_GAME2_SINGLE_BUILD_AND_REAL_30PCT_RUN=$first"
+          ready=0
+          for attempt in $(seq 1 90);do
+            artifacts="$(gh api "repos/$GH_REPO/actions/runs/$first/artifacts?per_page=100")"
+            if jq -e --arg w "m0-wl-windows-product-binaries-$GITHUB_SHA" \
+              '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' <<<"$artifacts" >/dev/null;then
+              ready=1;break
+            fi
+            status="$(gh api "repos/$GH_REPO/actions/runs/$first" --jq .status)"
+            [ "$status" != completed ] || { echo H641_BUILD_CLOSED_WITHOUT_SOURCE_BINARIES >&2;exit 1; }
+            sleep 12
+          done
+          test "$ready" = 1 || { echo H641_EXACT_SOURCE_BUILD_NOT_READY >&2;exit 1; }
+          echo "H641_WINDOWS_LINUX_BINARY_SOURCE_FROZEN=$GITHUB_SHA BUILD=$first"
+          while IFS=' ' read -r mode filename; do
+            test -n "$mode" || continue
+            scene="scenarios/$filename"
+            title="M0-WIN-LINUX|$GITHUB_SHA|$mode|$scene"
+            previous="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+              jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id' | head -1)"
+            if [ -n "$previous" ];then echo "H641_EXISTING_SCENE source=$GITHUB_SHA run=$previous";continue;fi
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f "public_mode=$mode" -f run_n0=false -f "perf_scenario_file=$scene" \
+              -f "perf_reuse_run_id=$first" -f "perf_binary_source_sha=$GITHUB_SHA"
+            echo "H641_ORIGINAL_NATIVE_ONE_SCENE_INDEPENDENT_ACTION mode=$mode scene=$scene source=$GITHUB_SHA status=DISPATCHED_NOT_PASS"
+          done <<'CASES'
+          game2-fec wl-game2-fixed6-10m-75ms-loss15-20s.json
+          game4-fec wl-game4-fixed6-10m-75ms-loss15-20s.json
+          normal plan027-b-normal-blackhole106-recover-10m-25ms-0loss-60s.json
+          fixed plan027-b-fixed-blackhole106-recover-10m-25ms-0loss-60s.json
+          CASES
+          echo "H641_SAME_BINARY_SOURCE_FIVE_INDEPENDENT_ORIGINAL_ACTIONS_PENDING_NOT_PRODUCT_PASS"
