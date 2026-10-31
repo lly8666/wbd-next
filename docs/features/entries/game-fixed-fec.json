@@ -120,7 +120,8 @@
   "Candidate: preserve FEC batch copied prefix and isolate single failed Game NPF RX lane. New SOURCE native untested.",
   "Candidate: Game FEC retains exact NPF copy and real Wintun prefix; TX/RX lane errors isolated; temporary Wintun full does not mark uncommitted recovered packet delivered. Native FEC/burst proof pending.",
   "PLAN027 H631 source candidate: Windows original Game FEC Wintun BufferTooSmall now retains a bounded per-lane decoded FEC delivery batch and retries ONLY the missing kernel prefix, without reopening the same AEAD PN or falsely committing a recovered source; all original new-source FEC loss/Stop tests remain NOT_RUN.",
-  "PLAN027 H632: deferred Game-FEC Wintun retries re-arm newly unblocked Npcap event handles before any infinite wait and rotate early authenticated TLS records so a backpressured lane cannot block a sibling. Native original Game FEC e2e still NOT_RUN."
+  "PLAN027 H632: deferred Game-FEC Wintun retries re-arm newly unblocked Npcap event handles before any infinite wait and rotate early authenticated TLS records so a backpressured lane cannot block a sibling. Native original Game FEC e2e still NOT_RUN.",
+  "PLAN027 H638 original sourced scenario for Game4 fixed6 10Mbps/75ms/15% symmetric loss/20s now supplied; explicit SHA-locked three-mode Game2FEC/Game4FEC/Game2off 30% Actions dispatch gate prepared, never automatic unless tagged and no real PASS yet."
  ],
  "promotion": null
 }

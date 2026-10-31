@@ -62,6 +62,8 @@ on:
       - crates/wbd-engine/src/v4_windows_game_owner.rs
       # Actual PLAN026 Game2/4 Rust two-worker implementation must trigger real Windows/WSL2 tests.
       - crates/wbd-engine/src/v4_windows_game_native_runtime.rs
+      - crates/wbd-engine/src/v4_windows_game_outer.rs
+      - scenarios/wl-game4-fixed6-10m-75ms-loss15-20s.json
       - crates/wbd-engine/src/v4_game_lane.rs
       - crates/wbd-engine/src/v4_game_fec.rs
       - crates/wbd-engine/src/v4_windows_fec2_owner.rs
@@ -156,6 +158,30 @@ jobs:
             -f target_run_id="$GITHUB_RUN_ID" -f target_sha="$GITHUB_SHA" \
             -f target_job_limit="$limit"
           echo "M0_SEPARATE_NATIVE_DEADLINE_ARMED exact_run=$GITHUB_RUN_ID"
+      # Opt-in, once per source-tagged commit; no unattended native matrix.
+      # Manual workflow_dispatch produces its own independent native deadline
+      # watcher. This job owns only dispatch, never manufactures test PASS.
+      - name: Dispatch original source-locked Game FEC and Game outer weaknet
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[m0-real-game-fec]')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = main
+          current=$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq '.object.sha')
+          test "$current" = "$GITHUB_SHA" || { echo "Ref moved, skip unsafe cross-source dispatch"; exit 1; }
+          for row in \
+            "game2-fec:scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json" \
+            "game4-fec:scenarios/wl-game4-fixed6-10m-75ms-loss15-20s.json" \
+            "game2:scenarios/plan027-c-game2-off-10m-250ms-loss30-60s.json"; do
+            mode="${row%%:*}"; scenario="${row#*:}"
+            test -f "$scenario"
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f "public_mode=$mode" -f "perf_scenario_file=$scenario"
+            echo "M0_PLAN027_ORIGINAL_NATIVE_DISPATCH source=$GITHUB_SHA mode=$mode scene=$scenario status=DISPATCHED_NOT_PASS"
+          done
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
       - run: python -m pip install PyYAML==6.0.2
