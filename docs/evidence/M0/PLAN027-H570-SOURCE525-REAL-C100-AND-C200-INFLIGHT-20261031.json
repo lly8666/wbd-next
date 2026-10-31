@@ -41,7 +41,7 @@
     "product_report_mode": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
     "product_report_stop": "PASS_BOTH_OWNED",
     "workflow_native_job": "FAIL_STRICT_DELIVERY_GATE",
-    "overall_run_at_collection": "IN_PROGRESS_EXTERNAL_GUARD_FINISH_PENDING",
+    "overall_run_at_collection": "COMPLETED_FAILURE",
     "offered_mbps": {
       "windows": 199.9467,
       "linux": 197.1906
@@ -64,7 +64,9 @@
     "windows_process_avg_one_core_percent": 61.119,
     "windows_peak_rss_bytes": 44060672,
     "classification": "CAPACITY_LIMITED_OR_PRODUCT_KERNEL_QUEUE_DROP_AT_200M; STRICT_FIRST_DELIVERY_FAIL; NO_LARGER_SAME_FAMILY",
-    "warning": "WL_REAL_LINUX_OWNED_STOP_REQUEST_FAILED code=1 appeared during harness cleanup, but report final stop PASS_BOTH_OWNED and Rust server V4_PUBLIC_NATIVE_STOP_DRAINED; preserve both, do not invent hard Stop failure or PASS network gate"
+    "warning": "WL_REAL_LINUX_OWNED_STOP_REQUEST_FAILED code=1 appeared during harness cleanup, but report final stop PASS_BOTH_OWNED and Rust server V4_PUBLIC_NATIVE_STOP_DRAINED; preserve both, do not invent hard Stop failure or PASS network gate",
+    "native_job": "COMPLETED_FAILURE",
+    "stop_report_scope": "PRODUCT_REPORT_PASS_BOTH_OWNED_BUT_INTERMEDIATE_LINUX_STOP_REQUEST_FAILED_CODE_1"
   },
   "five_min_stability": {
     "run_id": 41170805473,
