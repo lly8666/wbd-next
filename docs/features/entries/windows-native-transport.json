@@ -154,6 +154,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
       "evidence": "docs/evidence/M0/PLAN027-H566-SOURCE525-RECOVERED-TWELVE-SCENES-20261031.json"
+    },
+    {
+      "platform": "Windows2025 signed NPF/Wintun ↔ Linux WSL2 raw/TUN, original Go TLS+Rust",
+      "scope": "SOURCE525 Normal/off C100 25ms/0%/60s true bidirectional first 99.9992/100%, Windows whole exe CPU44.22s/77.20s peak RSS43MB, owned Stop PASS; independent 50Mbps 25ms/0% 300s first100% both/Stop PASS; C200 25ms/0%/60s native product sends ~200M but Windows first99.8764% <99.9 and Linux TUN TX drop2112/fq314, capacity-gate FAIL, no greater same family stress. A5 old-Go leg FAIL remains.",
+      "status": "CAPACITY_LIMITED",
+      "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+      "evidence": "docs/evidence/M0/PLAN027-H570-SOURCE525-REAL-C100-AND-C200-INFLIGHT-20261031.json"
     }
   ],
   "limitations": [
