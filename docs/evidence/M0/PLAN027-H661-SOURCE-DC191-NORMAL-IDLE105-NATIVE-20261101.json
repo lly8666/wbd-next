@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+  "result": "PARTIAL_B_NORMAL_PAYLOAD_IDLE_WAKE_PASS_HEALTH_COUNT_UNKNOWN",
+  "run": 41223668774,
+  "artifact": 13051640524,
+  "harness_sha": "ba29f6e62eaa71ddf2f3789bdf12009d2166b6b1",
+  "scenario": "plan027-b-normal-idle-wake-10m-25ms-0loss-60s",
+  "scenario_sha256": "f08884d64decfbcd70284417c720283fa0690987bcacd65ec3a252fe6e1777fd",
+  "no_payload_idle_s": 108.49,
+  "all_native_owners_alive": true,
+  "post_idle_real_kernel_udp": "PASS_BOTH",
+  "post_idle_real_kernel_tcp": "PASS_BOTH",
+  "owned_stop": "PASS_BOTH",
+  "first": {
+    "windows": 1,
+    "linux": 1
+  },
+  "rate_mbps": {
+    "windows": 9.9974,
+    "linux": 10
+  },
+  "linux_tun_drops": {
+    "tx": 0,
+    "rx": 0
+  },
+  "windows_original_whole_exe": {
+    "avg_one_core_pct": 2.407,
+    "peak_working_set_bytes": 41971712
+  },
+  "health_count": "NOT_EXPLICITLY_MEASURED",
+  "peer_no_auth_dead90_and_bilateral_tls_reauth": "NOT_RUN",
+  "oneway_p99": "NOT_MEASURED"
+}

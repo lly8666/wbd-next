@@ -49,11 +49,19 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "windows/x64 + WSL2/linux",
+      "scope": "Original Windows native + Linux Rust Normal true no-payload 108.49s owner alive, post-idle dual kernel UDP/TCP and real owned Stop, 10Mbps25ms0 first1/1; Health 15s frame count NOT_EXPLICITLY_MEASURED and B106 reauth NOT_PROVEN",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+      "evidence": "docs/evidence/M0/PLAN027-H661-SOURCE-DC191-NORMAL-IDLE105-NATIVE-20261101.json"
     }
   ],
   "limitations": [
     "gone ghost端点可安全终结WAL但不能声称已恢复不存在的MTU；Stop合格范围≠整个GUI/OS生命周期PASS。",
-    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。"
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "H661 source dc191 genuine Normal idle108.49s kernel wake + Stop Action41223668774 passes; authenticated Health record count and >90s no-auth dead/reconnect not qualified."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
