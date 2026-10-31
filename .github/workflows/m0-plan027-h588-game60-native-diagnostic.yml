@@ -1,3 +1,4 @@
+# H590 repeat only after repaired H588 native-step regression contract
 name: M0 PLAN027 H588 bounded Game4 native 60s origin diagnostic
 on:
   push:

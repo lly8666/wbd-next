@@ -97,7 +97,19 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         mode=(ROOT/"tools/m0_wl_public_modes_e2e.py").read_text()
         self.assertIn("creationflags=0)",mode)
         self.assertNotIn("creationflags=getattr(subprocess",mode)
-        self.assertIn("mode_seconds=1200 if slow else 165",mode)
+        self.assertIn('mode_seconds=360 if (slow and mode.startswith("game")) else 1200 if slow else 165',mode)
+
+    def test_game_v2_nested_deadlines_finish_before_external_windows_watchdog(self):
+        from tools.m0_wl_native_step_runner import native_batch_deadline
+        game={"WBD_WL_PUBLIC_MODES":"game4-fec",
+              "WBD_WL_V2_SCENARIO":"scenarios/plan027-c-game4-fec-10m-250ms-loss0-60s.json"}
+        normal={"WBD_WL_PUBLIC_MODES":"normal",
+                "WBD_WL_V2_SCENARIO":"scenarios/plan027-c-normal-50m-25ms-loss0-60s.json"}
+        self.assertEqual(native_batch_deadline(game),440)
+        self.assertEqual(native_batch_deadline(normal),970)
+        self.assertLess(360,440)
+        self.assertLess(440,1200)
+        self.assertEqual(native_batch_deadline({"WBD_WL_PUBLIC_MODES":"game2"}),320)
 
     def test_real_workflow_regular_batch_does_not_use_tee_pipeline(self):
         content=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
