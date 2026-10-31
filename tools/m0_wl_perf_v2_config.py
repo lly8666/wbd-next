@@ -55,11 +55,11 @@ def read_scenario(path):
             raise ValueError("WL_V2_TUN_QLEN_BOUNDED_NORMAL_LOSS0_ONLY")
     idle=cfg.get("lifecycle_idle_s")
     if idle is not None:
-        if (mode!="normal" or type(idle) is not int or not 95<=idle<=130 or
+        if (mode not in ("normal","fixed") or type(idle) is not int or not 95<=idle<=130 or
             cfg["duration_s"]!=60 or any(cfg[d]["loss_pct"]!=0 for d in ("windows_to_linux","linux_to_windows"))):
             raise ValueError("WL_V2_BAD_IDLE_LIFECYCLE")
     outage=cfg.get("lifecycle_blackhole_s")
-    if outage is not None and (mode!="normal" or outage!=20 or cfg["duration_s"]!=60 or
+    if outage is not None and (mode not in ("normal","fixed") or type(outage) is not int or outage not in (20,106) or cfg["duration_s"]!=60 or
             any(cfg[d]["loss_pct"]!=0 for d in ("windows_to_linux","linux_to_windows"))):
         raise ValueError("WL_V2_BAD_BLACKHOLE_LIFECYCLE")
     stages=cfg.get("impairment_stages")

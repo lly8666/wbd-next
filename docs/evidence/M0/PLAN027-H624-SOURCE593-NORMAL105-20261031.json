@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "source_sha": "593ce4a1073773429d7739a086fe3e060af89a3d",
+  "result": "PARTIAL_HEALTHY_IDLE_REAL_PASS_90S_TRUE_BLACKHOLE_NOT_YET_PROVEN",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "build_run": 41195637726,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/41195637726",
+  "scenario": "plan027-b-normal-idle-wake-10m-25ms-0loss-60s.json",
+  "proof": [
+    "Win Go/Win Rust/Linux Rust/native Linux product built",
+    "WL_V2_B_IDLE_BEGIN seconds=105",
+    "WL_V2_B_IDLE_90S_NO_PAYLOAD_THEN_REAL_BIDIRECTIONAL_WAKE_PASS",
+    "WL_V2_TRUE_KERNEL_MEASUREMENT MEASURED_BOTH_OS_KERNEL",
+    "WBD_WL_TRUE_PUBLIC_MODE_WIN_LINUX_DUPLEX_STOP_PASS normal",
+    "WL_ORIGINAL_NATIVE_E2E_CHILD_EXIT pid=2184 rc=0"
+  ],
+  "limitations": [
+    "Not 90s underlay loss/reauthorization or GameFEC PASS",
+    "oneway p99 not calibrated",
+    "physical NOT_RUN"
+  ]
+}

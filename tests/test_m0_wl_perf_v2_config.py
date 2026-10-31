@@ -32,7 +32,7 @@ class V2Scenarios(unittest.TestCase):
    bad["lifecycle_idle_s"]=20;p.write_text(json.dumps(bad))
    with self.assertRaisesRegex(ValueError,"BAD_IDLE_LIFECYCLE"):read_scenario(p)
    bad["lifecycle_idle_s"]=105;bad["public_mode"]="fixed";p.write_text(json.dumps(bad))
-   with self.assertRaisesRegex(ValueError,"BAD_IDLE_LIFECYCLE"):read_scenario(p)
+   self.assertEqual(read_scenario(p)["public_mode"],"fixed")
  def test_plan027_game2_damaged_real_first_is_not_lossless_oracle(self):
   root=SCENE.parent
   off=read_scenario(root/"plan027-b-game2-off-10m-75ms-loss5-20s.json")

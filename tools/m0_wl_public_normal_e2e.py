@@ -332,8 +332,8 @@ print(json.dumps(result),flush=True)
    "authenticated_health_count":"NOT_EXPLICITLY_MEASURED"}
   print("WL_V2_B_IDLE_90S_NO_PAYLOAD_THEN_REAL_BIDIRECTIONAL_WAKE_PASS",flush=True)
  # A source-controlled lifecycle phase with 100% *real tc loss* in
- # both original FakeTCP directions. Stop the outage before the 90s dead
- # threshold, demand new independent kernel UDP, then run the normal V2.
+ # both original FakeTCP directions. A 106s outage must prove authentic new generation
+ # instead of pretending the old 20s recovery implies dead90.
  blackhole_scene=os.environ.get("WBD_WL_V2_SCENARIO","").strip()
  blackout=read_scenario(root/blackhole_scene).get("lifecycle_blackhole_s",0) if blackhole_scene else 0
  if blackout:
@@ -350,7 +350,7 @@ print(json.dumps(result),flush=True)
   finally:
    change_blackhole("cleanup")
   if w.poll() is not None or s.poll() is not None:
-   raise RuntimeError("original owner exited during reversible 20s kernel outage")
+   raise RuntimeError("original owner exited during real kernel outage")
   bw=(out/"blackhole-windows-udp.log").open("w");bl=(out/"blackhole-linux-udp.log").open("w")
   logs.extend([bw,bl])
   wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1",str(done),"3"],stdout=bw,stderr=subprocess.STDOUT)
@@ -370,7 +370,15 @@ print(json.dumps(result),flush=True)
     raise RuntimeError("real post-blackhole first UDP missing "+name+" "+repr(wake))
   report["lifecycle_blackhole_recovery"]={"blackhole_s":blackout,"kernel_loss_pct":100,
       "fresh_udp_both_directions":"PASS_REAL_KERNEL_UDP"}
-  print("WL_B_REAL_20S_BLACKHOLE_RESTORED_NEW_BILATERAL_UDP_PASS",flush=True)
+  if blackout==106:
+   server_log=(out/"server.log").read_text(errors="replace")
+   if ("V4_PUBLIC_NATIVE_DEAD_RECONNECT_ARMED role=server" not in server_log or
+       "V4_PUBLIC_ORIGINAL_GO_TLS_REAUTHORIZE role=server" not in server_log):
+    raise RuntimeError("106s blackout missing original new TLS generation "+server_log[-600:])
+   report["lifecycle_blackhole_recovery"]["linux_reauth"]="PASS_NATIVE_DEAD90_ORIGINAL_TLS"
+   print("WL_B_REAL_106S_AUTHENTICATED_DEAD_RECOVER_BOTH_OS_PASS",flush=True)
+  else:
+   print("WL_B_REAL_20S_BLACKHOLE_RESTORED_NEW_BILATERAL_UDP_PASS",flush=True)
  if mode=="auto-revision":
   # Exact original Go TLS→Linux FecV2Step→Rust quiescent revision.
   # No alternate first-send ACK, kernel shortcut or fake Applied marker.
