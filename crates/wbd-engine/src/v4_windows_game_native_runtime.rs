@@ -3,6 +3,8 @@
 //! remain the sole cryptographic/FEC authorities. Go has no steady packet
 //! callbacks. Every M4 outcome is an actual Npcap driver receipt.
 use super::*;
+#[path="v4_windows_game_outer.rs"]
+mod outer;
 use std::sync::atomic::{AtomicBool,AtomicI32,AtomicU32,AtomicU64,Ordering};
 use std::sync::{Arc,Mutex,OnceLock};
 use std::collections::{BTreeMap,VecDeque};
@@ -176,6 +178,7 @@ fn presentation_ack_frame<'a>(
 }
 fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
     owner:&Arc<Mutex<game::WinGameGroup>>,
+    outer:&Arc<Mutex<outer::GameOuter>>,
     lanes:&[LaneConfig],npf:&mut [NpcapTx],c:&GameCounters,
     records:Vec<game::WbdWindowsGameRecordV4>,ip_id:&mut u16,
     active:&mut [bool],
@@ -208,6 +211,10 @@ fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
             return Err(rc)
         }
         if copied{
+            // Use the exact original GameAdapter PN/ciphertext AFTER NPF.
+            // Same Normal ReceiptState/OuterAckIndex/global M2 budget.
+            outer.lock().map_err(|_|BAD_STAGE)?
+                .on_firstsend(idx,r.pn,seq,&r.wire[..r.length as usize])?;
             c.tx_seq[idx].fetch_add(r.length,Ordering::Release);
             c.ack_sent[idx].store(ack,Ordering::Release);
             c.tx.fetch_add(1,Ordering::Relaxed);
@@ -262,6 +269,7 @@ fn send_ack(cfg:&WbdWinNativeAttachV1,lanes:&[LaneConfig],
 }
 fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     group:Arc<Mutex<game::WinGameGroup>>,
+    outer:Arc<Mutex<outer::GameOuter>>,
     mut tun:WintunRx,mut npf:Vec<NpcapTx>,stop:Arc<WakeEvent>,
     wake:Arc<WakeEvent>,c:Arc<GameCounters>,
 )->i32{
@@ -289,7 +297,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                     let rows=match records{Ok(v)=>v,Err(INVALID)=>{
                         c.rejected.fetch_add(1,Ordering::Relaxed);continue
                     },Err(e)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_result rc={e}");return e}};
-                    if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&lanes,&mut npf,
+                    if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&outer,&lanes,&mut npf,
                         &c,rows,&mut id,&mut active){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_send_records rc={rc}");return rc}
                     health.on_local_business(health_origin.elapsed().as_nanos()
                         .min(u128::from(u64::MAX)) as u64);
@@ -313,12 +321,43 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         };
         match due{
             Ok(rows) if !rows.is_empty()=>{
-                if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&lanes,
+                if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&outer,&lanes,
                     &mut npf,&c,rows,&mut id,&mut active){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=due_send_records rc={rc}");return rc}
                 did_work=true;
             },
             Err(rc)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=game_native_due rc={rc}");return rc},
             _=>{},
+        }
+        // Exactly one Normal M2 opportunity per owner turn, using the
+        // original same-lane Game ciphertext/PN and original TCP Seq.
+        let repair=match outer.lock(){
+            Ok(mut m)=>match m.prepare(&active){Ok(v)=>v,Err(e)=>return e},
+            Err(_)=>return BAD_STAGE,
+        };
+        if let Some(row)=repair{
+            let index=row.index;
+            let seq=row.seq;let pn=row.pn;
+            let ack=c.ack[index].load(Ordering::Acquire);
+            let mut scratch=[0u8;FRAME_CAP];
+            let frame=match wire_frame(&cfg.first,&lanes[index],seq,ack,
+                row.wire.as_ref(),id,&mut scratch){
+                Ok(v)=>v,Err(e)=>return e,
+            };
+            id=id.wrapping_add(1);
+            let outcome=npf[index].send_batch(&[frame]);
+            let copied=outcome.accepted_prefix==1;
+            let sent=if copied{1}else if outcome.uncertain_index.is_some(){2}else{0};
+            outer.lock().map_err(|_|BAD_STAGE)?.complete(index,pn,sent)?;
+            if copied{
+                c.tx.fetch_add(1,Ordering::Relaxed);
+                c.ack_sent[index].store(ack,Ordering::Release);
+            }
+            if outcome.error.is_some()||outcome.uncertain_index.is_some(){
+                eprintln!("M0_PLAN027_GAME_NORMAL_OUTER_LANE_RETIRED lane={} npf={:?}",index+1,outcome.error);
+                let _=retire_game_tx_lane(&mut active,index);
+            }
+            if !active.iter().any(|x|*x){return BAD_STAGE}
+            did_work=true;
         }
         if let Err(rc)=send_ack(&cfg.first,&lanes,&mut npf,&c,&mut id,&mut active){
             eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=send_ack rc={rc}");
@@ -386,7 +425,11 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                     .min(u128::from(u64::MAX)) as u64)
                     .div_ceil(1_000_000).max(1).min(u64::from(u32::MAX-1)) as u32
             }).unwrap_or(u32::MAX);
-            game_timeout.min(health_wait)
+            let outer_wait={
+                let m=match outer.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+                game_wait_timeout_ms(m2_clock().0,m.next_deadline())
+            };
+            game_timeout.min(health_wait).min(outer_wait)
         };
         match io::wait_ready(&[stop.handle(),tun.event(),wake.handle()],timeout){
             Ok(WaitResult::Ready(0))=>return OK,
@@ -559,7 +602,8 @@ fn abort_deferred_fec(group:&Arc<Mutex<game::WinGameGroup>>,
     OK
 }
 fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
-    group:Arc<Mutex<game::WinGameGroup>>,mut tun:WintunTx,
+    group:Arc<Mutex<game::WinGameGroup>>,
+    outer:Arc<Mutex<outer::GameOuter>>,mut tun:WintunTx,
     mut npf:Vec<NpcapRx>,stop:Arc<WakeEvent>,wake:Arc<WakeEvent>,
     tx_wake:Arc<WakeEvent>,early:Arc<Mutex<VecDeque<(usize,u32,Vec<u8>)>>>,
     c:Arc<GameCounters>,
@@ -661,10 +705,24 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                     &cfg.first.peer_ip,&cfg.first.local_ip,
                     l.peer_port,l.local_port,cfg.first.path_mtu as usize,
                 );
+                // Pure checksum/tuple-checked ACK is only an appearance
+                // hint. It never creates FEC recovery, Health or delivered.
+                if let Ok(hint)=wbd_platform::rx_ipv4_tcp::parse_ack_packet(
+                    ipv4,trusted,false){
+                    let changed=outer.lock().map_err(|_|BAD_STAGE)?
+                        .on_hint(i,hint.ack32,&[]);
+                    if changed{let _=tx_wake.wake()}
+                    continue
+                }
                 let Ok(p)=parse_data_packet(ipv4,trusted)else{continue};
                 match receive_one(&cfg,&group,&mut tun,&c,&mut ledgers,
                     &mut deferred,i,p.seq32,p.ciphertext){
-                    Ok(())=>verified=true,
+                    Ok(())=>{
+                        verified=true;
+                        let changed=outer.lock().map_err(|_|BAD_STAGE)?
+                            .on_hint(i,p.presentation_ack32,&[]);
+                        if changed{let _=tx_wake.wake()}
+                    },
                     Err(INVALID)=>{c.rejected.fetch_add(1,Ordering::Relaxed);},
                     Err(e)=>return e,
                 }
@@ -723,13 +781,21 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_start(
     let early=Arc::new(Mutex::new(VecDeque::with_capacity(EARLY_CAP)));
     let mut sessions=match sessions().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
     if sessions.contains_key(&cfg.group){return BAD_STAGE}
+    // The protected native_game_group lookup above already verified every
+    // genuine lane and borrowed NPF handle. Distinct per-lane M2 accounts,
+    // identical shared Normal global process cap.
+    let outer=match outer::GameOuter::new(&cfg,&lanes){
+        Ok(v)=>Arc::new(Mutex::new(v)),Err(rc)=>return rc,
+    };
+    let tx_outer=Arc::clone(&outer);
+    let rx_outer=Arc::clone(&outer);
     let tx_group=Arc::clone(&group);
     let tx_stop=Arc::clone(&stop);
     let tx_notify=Arc::clone(&tx_wake);
     let tx_counters=Arc::clone(&counters);
     let tx_lanes=lanes.clone();
     let tx=match thread::Builder::new().name("wbd-game-native-tx".into()).spawn(move||{
-        let rc=tx_loop(cfg,tx_lanes,tx_group,tun_rx,senders,
+        let rc=tx_loop(cfg,tx_lanes,tx_group,tx_outer,tun_rx,senders,
             Arc::clone(&tx_stop),tx_notify,Arc::clone(&tx_counters));
         if rc!=OK{
             eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=worker_exit rc={rc}");
@@ -745,7 +811,7 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_start(
     let rx_counter=Arc::clone(&counters);
     let rx_early=Arc::clone(&early);
     let rx=match thread::Builder::new().name("wbd-game-native-rx".into()).spawn(move||{
-        let rc=rx_loop(cfg,lanes,rx_group,tun_tx,captures,
+        let rc=rx_loop(cfg,lanes,rx_group,rx_outer,tun_tx,captures,
             Arc::clone(&rx_stop),rx_notify,wake_tx,rx_early,
             Arc::clone(&rx_counter));
         if rc!=OK{
