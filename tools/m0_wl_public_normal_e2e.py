@@ -511,9 +511,27 @@ print(json.dumps(result),flush=True)
                      "Stop","source","batch","peer","owner","route",
                      "expired","timeout","closed","ring","failure",
                      "capacity","kernel","NET","OS","backpressure")
-            rows.append({"marker":marker,
-                         "sha256":hashlib.sha256(raw.encode("utf-8")).hexdigest(),
-                         "tokens":[t for t in allowed if t.lower() in raw.lower()]})
+            # A5 Go-steady only: emit an allowlisted product-code stage,
+            # never raw session keys/addresses/packet bytes/free-form logs.
+            stage=None
+            if os.environ.get("WBD_WL_PERF_AB_GO_STEADY")=="1" and marker=="WBD_WINDOWS_NATIVE_FAILURE_SOURCE":
+             for label,needle in (
+              ("NPF_READER","native NPF reader:"),
+              ("RUST_PEER","native original Rust peer worker:"),
+              ("RUST_EFFECTIVE_READBACK","original Rust M2 effective readback:"),
+              ("M4_MTU_DRIFT","original M4 OS interface MTU drift/invalid WAL"),
+              ("NORMAL_M3_OPEN","original Normal M1/M3 open owner failure"),
+              ("NPF_INGRESS_QUEUE","original NPF peer ingress queue closed"),
+              ("WINTUN_NATIVE_EVENT","original Wintun native ready event failed"),
+              ("NPF_CARRIER_FLAGS","native peer TCP carrier FIN/RST"),
+             ):
+              if needle in raw:stage=label;break
+             if stage is None:stage="OTHER_NATIVE_FAILURE"
+            item={"marker":marker,
+                  "sha256":hashlib.sha256(raw.encode("utf-8")).hexdigest(),
+                  "tokens":[t for t in allowed if t.lower() in raw.lower()]}
+            if stage is not None:item["a5_go_failure_stage"]=stage
+            rows.append(item)
         diagnostic[key]=rows[-6:]
        else:diagnostic[key]=[]
       report["native_early_exit"]={
