@@ -48,9 +48,10 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertIn("/force-cancel",independent)
         self.assertIn("actions: write",independent)
         self.assertIn('1200',independent)
-        # An A5 old-Go process must not hold a PowerShell Tee pipe open.
-        self.assertIn("m0_wl_native_step_runner.py tools/m0_wl_perf_v2_ab.py",y)
-        self.assertNotIn("& python tools/m0_wl_perf_v2_ab.py 2>&1 |",y)
+        # Retired old Go A5 has no runner or Tee path; live Rust/Game
+        # still uses the file-backed bounded native process guard.
+        self.assertNotIn("m0_wl_perf_v2_ab.py",y)
+        self.assertIn("m0_wl_native_step_runner.py tools/m0_wl_public_modes_e2e.py",y)
         child=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()
         self.assertIn("WL_REAL_LINUX_OWNED_STOP_REQUEST_TIMEOUT",child)
         batch=(ROOT/"tools/m0_wl_public_modes_e2e.py").read_text()
