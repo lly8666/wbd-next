@@ -1,1 +1,229 @@
-{"schema_version":1,"id":"fec-auto","name":"Normal 自动FEC2","summary":"Normal Auto FEC2 authenticated Quality and normalized actual-k; SOURCE7a continuous 240s native valid one-rung/120s downgrade applied both OS; not physical or every profile.","owner":"M0/M2/M3 + FEC实验","stage":"experimental","development_branch":"experiment/fec-network-tuning","available_on":["integration/w168-freeze-windows-adapter-20261026","main","experiment/windows-wiring-arm64-native-parallel-20261028","experiment/windows-wiring-s33-source-locked-preflight-20261027"],"defaults":{"mode":"fec-auto","startup":"strong（源码注释）","production":"off"},"usage":{"cli":"Windows native --native-v4-product --fec.mode auto --fec.auto_policy normal|aggressive --fec.auto_start_profile light|mild|medium|balanced|high|strong|maximum; source4977f Auto initial Strong duplex+Stop PASS, Linux FecV2Step dynamic adaptive applied revision NOT_RUN. Runtime Auto profile revisions now accept stdin `fec.profile=light|mild|medium|balanced|high|strong|maximum` on explicit --control-stdin, before `stop`; prints REQUESTED_NOT_APPLIED until the authenticated native M2 Applied readback; exact source a0c8eeb native Actions40457048399 operator-requested revision2 Light0 real two-OS UDP/M2-APPLIED/Stop FUNCTIONAL_PASS; natural 2s/8s network-driven auto up/down still NOT_RUN.","config":"原Go V3 fixed4 carrier仅是入场包络，Rust FixedStream本身支持profile 0..6和revision；不是单独Fixed6测试活动，默认FEC2 OFF","gui":"Windows真实WinForms Applied/Disconnect仍NOT_RUN，不从CLI或M2组件PASS推断"},"code_refs":["r0/go_overlay/internal/v4productcli/linux.go","r0/go_overlay/internal/realityfront/fec_v2_policy.go","r0/go_overlay/internal/realityfront/fec_v2_runtime_controller.go","crates/wbd-engine/src/runtime/fec2_owner.rs","r0/go_overlay/internal/realityfront/bridge_v4_windows_auto_controller.go","crates/wbd-engine/src/v4_windows_fec2_owner.rs","crates/wbd-engine/src/v4_windows_rust_auto.rs","crates/wbd-engine/src/v4_native_health.rs","crates/wbd-recovery/src/quality_window.rs","crates/wbd-engine/src/v4_windows_owner.rs"],"doc_refs":["docs/architecture/FEC_V2_BALANCED.md","docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json","docs/evidence/M0/PLAN026-LINUX-AUTO-KEEPALIVE-SOURCE7E984-20261029.json","docs/evidence/M0/PLAN026-LINUX-AUTO-NATURAL-REAL-26000-SOURCE80BF-20261029.json","docs/devlog/M0/20261029-PLAN026-GAME-NATIVE-WRITE-COMMIT-LANE-ISOLATION-HEALTH-ORACLE-BATCH.md","docs/devlog/M0/20261030-PLAN026-RECOVERY-M2-LOW-FREQUENCY-HEALTH-GAME-LANE-SEND-WINTUN-BOUNDARIES.md","docs/evidence/M0/PLAN027-H395-NATIVE-QUALITY-AND-CI-RESULTS-20261030.json","docs/evidence/M0/PLAN027-H405-QUALITY-BOUNDARY-SOURCE-NATIVE-RESULTS-20261030.json","docs/devlog/M0/20261030-PLAN027-H407-RECEIVER-ANNOUNCED-CLOSE-WIRE-GLUE.md","docs/devlog/M0/20261030-PLAN027-H498-NEW-SOURCE-A-SHORT-TRUE-NATIVE.md","docs/evidence/M0/PLAN027-H532-SOURCE7A-A4-C50-C100-ORIGINAL-20261030.json"],"verification":[{"platform":"linux/amd64","scope":"原Go TLS与Rust真实raw/TUN：Auto启动初始revision Applied与UDP/Stop，非完整升降档（旧L源码，非本次审阅SHA）","status":"FUNCTIONAL_PASS","source_sha":"c81838f10371d9ecb6a88fd3cabb8692fd8fff85","evidence":"docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"},{"platform":"linux/arm64","scope":"W132原始M2有限动态窗口及降档观测，旧F源码","status":"FUNCTIONAL_PASS","source_sha":"6c38ed0df9da3547c7bd604b51f13443d6863181","evidence":"docs/evidence/fec-network-work/20261026-W130-W134-Go-Rust-RX-handoff-real-five-mode-Actions.json"},{"platform":"windows/x64","scope":"undefined；候选源 8e0daba5，不是Linux或Normal的通过","status":"FAIL","source_sha":"8e0daba50b793b4b38d64ccb094f9547a96374b5","evidence":"docs/devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md"},{"platform":"physical","scope":"长窗口和自适应质量","status":"NOT_RUN","source_sha":null,"evidence":null},{"platform":"windows/x64","scope":"Windows original Go→Rust M2 FEC2 Auto adaptive controller real Windows native startup + 2OS duplex and Stop","status":"FAIL","source_sha":"8e0daba50b793b4b38d64ccb094f9547a96374b5","evidence":"docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source8e0daba-20261027.json"},{"platform":"windows/x64 + linux/amd64 WSL2","scope":"original Go protected TLS feature7 Windows→Linux native auto original M4 first-send; Windows reverse FEC2 C-ABI first 103B failed before Ready despite verified Linux raw/TUN TX","status":"FAIL","source_sha":"350199f9885d6310b71181b25bee2308b462557c","evidence":"docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json"},{"platform":"windows/x64 + linux/amd64 WSL2","scope":"Original Go protected TLS→shared Rust FixedStream initial Auto Strong(profile5), live two-OS native duplex UDP/TCP and owned Stop. Linux shared FecV2Step dynamic control exists in source but genuine Auto adaptive revision positive NOT_RUN.","status":"FUNCTIONAL_PASS","source_sha":"4977f1200daec7c9f9fb6fd47810a1a372fd1e78","evidence":"docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json"},{"platform":"windows/x64 + linux/amd64 WSL2","scope":"Windows original Go Auto live operator profile revision2 via Linux FecV2Step, Rust quiescent_change, real signed Npcap/Wintun UDP both ways and authenticated mature M2 Applied; exact-source native targeted action currently in flight, not a positive evidence yet.","status":"NOT_RUN","source_sha":"80e5289ab4b4c47adf55740632b0960f8319dfef","evidence":null},{"platform":"windows/x64 + linux/amd64 WSL2","scope":"Exact source a0c8eeb original credential-TLS signed Npcap/Wintun Auto start Strong5 → operator selected Light0 revision2 via existing Linux FecV2Step + Rust FixedStream quiescent change, real Windows/Linux kernel UDP both directions after change, authenticated mature M2 auto_applied_revision>=2 and owned Stop. NOT natural automatic 2s/8s loss-feedback choice.","status":"FUNCTIONAL_PASS","source_sha":"a0c8eeb29796aa41d0f41e76798d3d00c672adaf","evidence":"docs/evidence/M0/PLAN024-W168-Windows-Auto-live-revision2-sourcea0c8eeb-20261027.json"},{"platform":"windows/x64 + linux/amd64 WSL2","scope":"Exact source67ed real 53s native Windows/Linux kernel UDP/TCP and owned Wintun/TUN, original Go TLS and 2s/8s M2 Rust quality; native Auto revision STAYED 1. Physical Windows Python timer 1.5ms single send per wake only delivered 3393 C2S source packets vs 16508 Linux S2C; genuine fast window 128..268<512 samples, so Linux FecV2Step appropriately withheld natural downgrade. Native run failed target; fixture-paced follow-up sourcea3bb in flight.","status":"FAIL","source_sha":"67ed412e9075ad95f863d4e042f119d81dce407a","evidence":"docs/evidence/M0/PLAN024-W168-Windows-Auto-natural-M2-source67ed-failure-20261027.json"},{"platform":"windows/x64 + linux/amd64 WSL2","scope":"Original Go credential TLS original Rust FEC2 Auto initial Strong5 native Windows signed Npcap/Wintun and Linux raw/TUN, genuine bidirectional UDP/TCP and both-owned Stop; source772b8b3 narrow starter only, natural feedback grade and performance NOT_RUN","status":"FUNCTIONAL_PASS","source_sha":"772b8b3af48ee8f8600b16baaf2ddc3c53e84c37","evidence":"docs/evidence/M0/PLAN025-S48-Auto-start-native-source772b8b3-success-20261028.json"},{"platform":"windows/x64 + linux/amd64 WSL2","scope":"S52 signed original Windows↔Linux auto-adaptive real 119s two-OS UDP: 79299 Windows /39669 Linux genuine source packets; Windows revision1 Strong5 never downshifted despite M2 zero-loss mature windows and Linux s2c genuine profile0; full Stop not reached. Native auto one-step <=120s FAIL, not app-rate-limited and not a performance test.","status":"FAIL","source_sha":"1b33e4a4bb4543961957124ac0c49b63d7e3cab0","evidence":"docs/evidence/M0/PLAN025-S52-Auto-natural-source1b33e4a-failure-20261028.json"},{"platform":"windows/x64 + linux/amd64 WSL2","scope":"S54 genuine original Go TLS signed Windows↔Linux FEC2 Auto 119s, 79,320/39,668 real kernel UDP, Rust M2 Applied rev2/3/4 profiles4/3/2 by snapshot38; whole run FAIL because test's omitted JSON false treated as pending, owned Stop NOT_RUN","status":"FAIL","source_sha":"0af9b5859c282a6efa0bda6c8d0c9fa01c14d9f1","evidence":"docs/evidence/M0/PLAN025-S54-Auto-natural-source0af9b585-applied-fixture-failure-20261028.json"},{"platform":"linux/aarch64 native GitHub-hosted two-netns raw/TUN","scope":"ARM64 original TLS/Rust Auto two-netns 20 ICMP/side and Stop PASS; natural dynamic grade NOT_RUN.","status":"FUNCTIONAL_PASS","source_sha":"f7ee097e116ab813f9ba23514df01a3f0f9d342a","evidence":"docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"},{"platform":"windows/x64 + linux/amd64 WSL2","scope":"S55 signed Windows/Linux true Auto healthy Strong5→4→2, UDP/TCP/Stop PASS; N0 and loss-rise NOT_RUN.","status":"FUNCTIONAL_PASS","source_sha":"49f816375a9e69bd1cde41df2543b15b58066313","evidence":"docs/evidence/M0/PLAN025-S55-Auto-natural-source49f81637-full-native-pass-20261028.json"},{"platform":"windows/x64 signed Npcap+Wintun original Go TLS Rust ↔ linux/amd64 WSL2 raw/TUN","scope":"b6b964 signed Windows/Linux Auto initial Strong5 UDP/TCP/Stop; p99/CPU and natural grade NOT_RUN.","status":"FUNCTIONAL_PASS","source_sha":"b6b964afa7ffec5795f2c11c6e0620f223e684ac","evidence":"docs/evidence/M0/PLAN025-H307-main-source-b6b964-seven-mode-native-20261028.json"},{"platform":"windows/x64 signed Npcap Wintun ↔ linux/amd64 WSL2 true kernel","scope":"S61 native initial Auto UDP/TCP/Stop PASS; natural 120s grade only old S55, loss-rise NOT_RUN.","status":"FUNCTIONAL_PASS","source_sha":"33ed20b4717dac23a2d70c02da170a57daeb02e1","evidence":"docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"},{"platform":"linux/amd64 original Go TLS + Rust real 2-netns raw/TUN","scope":"7e984 Linux Auto app64/64, 1% offered512/delivered509, M2 Applied/Stop; no Windows or 120s claim.","status":"FUNCTIONAL_PASS","source_sha":"7e9842f6e99769d9919e75a4b15da8d6d88e7257","evidence":"docs/evidence/M0/PLAN026-LINUX-AUTO-KEEPALIVE-SOURCE7E984-20261029.json"},{"platform":"linux/amd64 original Go TLS + Rust native 2-netns","scope":"80bf Linux app26000, 30s/4096 natural 5→4 applied rev2/Stop; Win CPU GUI physical NOT_RUN.","status":"FUNCTIONAL_PASS","source_sha":"80bf1608d4aa5b15cd16767aae24427c5b26f31b","evidence":"docs/evidence/M0/PLAN026-LINUX-AUTO-NATURAL-REAL-26000-SOURCE80BF-20261029.json"},{"platform":"Windows2025 x64 signed NPF/Wintun ↔ Linux WSL2 true original Go TLS/Rust","scope":"787ad4 Auto 10Mbps/25ms/0% UDP/TCP/Stop, Linux sampled VALID applied rev2/grade4; Win rev1, 120s NOT_PROVEN.","status":"FUNCTIONAL_PASS","source_sha":"787ad4c900f3bae867c5c9556c4702339deef8cb","evidence":"docs/evidence/M0/PLAN027-H498-NEW-SOURCE-A-C10-FIXED30-AUTO-20261030.json"},{"platform":"Windows Server x64 signed NPF/Wintun + Linux/amd64 WSL2 actual TLS/Rust native","scope":"H532 7a5d Auto true240s staged UDP/TCP/Stop; Linux 30s/4096 grade5→4→3→2→1, both applied rev5; one-rung120s PASS; p99 unknown and transient UNKNOWN preserved.","status":"FUNCTIONAL_PASS","source_sha":"7a5d7e83823e96539d2a904a8193a85ec18df30d","evidence":"docs/evidence/M0/PLAN027-H532-SOURCE7A-A4-C50-C100-ORIGINAL-20261030.json"}],"limitations":["历史启动Applied不可推广为所有升/降档场景PASS。","历史 verification 仅适用各自 SOURCE；main HEAD 不继承，未列范围 NOT_RUN。","Windows Rust 30-field mature M2 and Linux FecV2Step share decision reference; previous candidate source still separately scoped.","Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS.","SOURCE4977f Auto initial Strong5 duplex/Stop source-scoped PASS only; dynamic/physical NOT_RUN.","Only Auto startup Strong profile5 completed real Windows bidirectional business; no positive dynamic up/down revision or late GUI profile Applied receipt in this run.","a0c8eeb Action40457048399 Windows↔Linux Auto operator rev2/Stop PASS; no dynamic grade; old80e5289 harness FAIL retained.","6707bd52 Linux old sampling; Windows compile PASS40462558630, argv FAIL40462738560, preflight PASS40463122392; native NOT_RUN.","67ed Action40465641281 Windows natural Auto FAIL: 53s 3393 source below 512 Fast; no fabricated downgrade.","S48 772b8b3 native initial Auto/Stop PASS40546243971; S45 FAIL retained, dynamic120s NOT_RUN.","S52 1b33e4a Action40550358765 Auto119s FAIL: actual-k vs sampled source clock mismatch; no 120s proof.","H303 目录声明修复；原治理 FAIL、S52 Auto 降档 FAIL 保留，旧 Fixed/Game PASS 仍仅原 SOURCE。","f7ee097e Action40557336142 ARM64 actual TLS/Rust MTU/ICMP/Stop only, no Windows/Auto dynamics/perf.","S55 49f81637 Action40556191100 natural one-grade/120s+Stop PASS; S52/S54 FAIL retained, loss-rise NOT_RUN.","H307 exact S55 source49f81637 reviewed integration to main; original per-SOURCE tests and limitations unchanged. See docs/devlog/M0/PLAN025-H307-S55-frozen-product-main-integration-20261028.md.","H307 b6b964a main seven-mode native PASS40560287417 artifact12760173657; not N0/dynamic/physical.","PLAN026 Linux source80bf true Auto 26k real M2/k cohort VALID 30s/4096, revision2 profile4 Applied both roles + owned Stop PASS; Windows Auto/CPU/GUI/physical still NOT_RUN.","H393 99c78aa Action40936343251 recovery89 engine134 codec114 PASS; H396 source driver probe40944961945; live NOT_RUN.","PLAN027 S404 9a2af725 native Action40953849123 engine135 passed, 1 optional ignored; strict START/CLOSE tests PASS. Source-only; Windows/Linux live Quality, Auto and M2 retirement NOT_RUN.","PLAN027 H438 Linux Auto cold Go 1Hz reauthorization checks Rust authenticated Health 90s terminal flag, not M4 diagnostic TxErrors; duplex regression unverified.","H440 candidate disables Fixed/off per-record M2 report producer/consumer on both Rust platforms; Auto low-rate Quality/Health kept; no claim of H440 true Windows/Linux Auto or 120s grade proof.","H451 §0.1 candidate sampled/actual-k fix, no old Fixed maturity gate or Linux idle spin; new-source live proof pending.","H498 SOURCE787 60s Auto: Linux profile4, Windows revision1. 120s bilateral and B lifecycle not proven.","H502 SOURCE787 A4 staged: Linux profile5→0/Windows2 and Stop PASS; prior damage incorrectly gated as lossless. 120s grade unproven.","H552 original SOURCEf031 Auto staged240s real Win/Linux UDP/TCP Stop PASS, first0.785462/0.785082, Windows whole Go+Rust CPU11.5938s /255.44s RSS43425792, Linux genuine30s/4096 valid sample one-rung down within120s observed; exact grade details remain in original artifact13027885028. No startup measurement gate or no-loss requirement, new source must requalify if affected."],"promotion":null}
+{
+  "schema_version": 1,
+  "id": "fec-auto",
+  "name": "Normal 自动FEC2",
+  "summary": "Normal Auto FEC2 authenticated Quality and normalized actual-k; SOURCE7a continuous 240s native valid one-rung/120s downgrade applied both OS; not physical or every profile.",
+  "owner": "M0/M2/M3 + FEC实验",
+  "stage": "experimental",
+  "development_branch": "experiment/fec-network-tuning",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026",
+    "main",
+    "experiment/windows-wiring-arm64-native-parallel-20261028",
+    "experiment/windows-wiring-s33-source-locked-preflight-20261027"
+  ],
+  "defaults": {
+    "mode": "fec-auto",
+    "startup": "strong（源码注释）",
+    "production": "off"
+  },
+  "usage": {
+    "cli": "Windows native --native-v4-product --fec.mode auto --fec.auto_policy normal|aggressive --fec.auto_start_profile light|mild|medium|balanced|high|strong|maximum; source4977f Auto initial Strong duplex+Stop PASS, Linux FecV2Step dynamic adaptive applied revision NOT_RUN. Runtime Auto profile revisions now accept stdin `fec.profile=light|mild|medium|balanced|high|strong|maximum` on explicit --control-stdin, before `stop`; prints REQUESTED_NOT_APPLIED until the authenticated native M2 Applied readback; exact source a0c8eeb native Actions40457048399 operator-requested revision2 Light0 real two-OS UDP/M2-APPLIED/Stop FUNCTIONAL_PASS; natural 2s/8s network-driven auto up/down still NOT_RUN.",
+    "config": "原Go V3 fixed4 carrier仅是入场包络，Rust FixedStream本身支持profile 0..6和revision；不是单独Fixed6测试活动，默认FEC2 OFF",
+    "gui": "Windows真实WinForms Applied/Disconnect仍NOT_RUN，不从CLI或M2组件PASS推断"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "r0/go_overlay/internal/realityfront/fec_v2_policy.go",
+    "r0/go_overlay/internal/realityfront/fec_v2_runtime_controller.go",
+    "crates/wbd-engine/src/runtime/fec2_owner.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_auto_controller.go",
+    "crates/wbd-engine/src/v4_windows_fec2_owner.rs",
+    "crates/wbd-engine/src/v4_windows_rust_auto.rs",
+    "crates/wbd-engine/src/v4_native_health.rs",
+    "crates/wbd-recovery/src/quality_window.rs",
+    "crates/wbd-engine/src/v4_windows_owner.rs"
+  ],
+  "doc_refs": [
+    "docs/architecture/FEC_V2_BALANCED.md",
+    "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
+    "docs/evidence/M0/PLAN026-LINUX-AUTO-KEEPALIVE-SOURCE7E984-20261029.json",
+    "docs/evidence/M0/PLAN026-LINUX-AUTO-NATURAL-REAL-26000-SOURCE80BF-20261029.json",
+    "docs/devlog/M0/20261029-PLAN026-GAME-NATIVE-WRITE-COMMIT-LANE-ISOLATION-HEALTH-ORACLE-BATCH.md",
+    "docs/devlog/M0/20261030-PLAN026-RECOVERY-M2-LOW-FREQUENCY-HEALTH-GAME-LANE-SEND-WINTUN-BOUNDARIES.md",
+    "docs/evidence/M0/PLAN027-H395-NATIVE-QUALITY-AND-CI-RESULTS-20261030.json",
+    "docs/evidence/M0/PLAN027-H405-QUALITY-BOUNDARY-SOURCE-NATIVE-RESULTS-20261030.json",
+    "docs/devlog/M0/20261030-PLAN027-H407-RECEIVER-ANNOUNCED-CLOSE-WIRE-GLUE.md",
+    "docs/devlog/M0/20261030-PLAN027-H498-NEW-SOURCE-A-SHORT-TRUE-NATIVE.md",
+    "docs/evidence/M0/PLAN027-H532-SOURCE7A-A4-C50-C100-ORIGINAL-20261030.json",
+    "docs/devlog/M0/20261031-PLAN027-H628-AUTO-NORMAL-OUTER-GAME-GAP.md"
+  ],
+  "verification": [
+    {
+      "platform": "linux/amd64",
+      "scope": "原Go TLS与Rust真实raw/TUN：Auto启动初始revision Applied与UDP/Stop，非完整升降档（旧L源码，非本次审阅SHA）",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
+      "evidence": "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
+    },
+    {
+      "platform": "linux/arm64",
+      "scope": "W132原始M2有限动态窗口及降档观测，旧F源码",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "6c38ed0df9da3547c7bd604b51f13443d6863181",
+      "evidence": "docs/evidence/fec-network-work/20261026-W130-W134-Go-Rust-RX-handoff-real-five-mode-Actions.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "undefined；候选源 8e0daba5，不是Linux或Normal的通过",
+      "status": "FAIL",
+      "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
+      "evidence": "docs/devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md"
+    },
+    {
+      "platform": "physical",
+      "scope": "长窗口和自适应质量",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "Windows original Go→Rust M2 FEC2 Auto adaptive controller real Windows native startup + 2OS duplex and Stop",
+      "status": "FAIL",
+      "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
+      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source8e0daba-20261027.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "original Go protected TLS feature7 Windows→Linux native auto original M4 first-send; Windows reverse FEC2 C-ABI first 103B failed before Ready despite verified Linux raw/TUN TX",
+      "status": "FAIL",
+      "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
+      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "Original Go protected TLS→shared Rust FixedStream initial Auto Strong(profile5), live two-OS native duplex UDP/TCP and owned Stop. Linux shared FecV2Step dynamic control exists in source but genuine Auto adaptive revision positive NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
+      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "Windows original Go Auto live operator profile revision2 via Linux FecV2Step, Rust quiescent_change, real signed Npcap/Wintun UDP both ways and authenticated mature M2 Applied; exact-source native targeted action currently in flight, not a positive evidence yet.",
+      "status": "NOT_RUN",
+      "source_sha": "80e5289ab4b4c47adf55740632b0960f8319dfef",
+      "evidence": null
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "Exact source a0c8eeb original credential-TLS signed Npcap/Wintun Auto start Strong5 → operator selected Light0 revision2 via existing Linux FecV2Step + Rust FixedStream quiescent change, real Windows/Linux kernel UDP both directions after change, authenticated mature M2 auto_applied_revision>=2 and owned Stop. NOT natural automatic 2s/8s loss-feedback choice.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "a0c8eeb29796aa41d0f41e76798d3d00c672adaf",
+      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-Auto-live-revision2-sourcea0c8eeb-20261027.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "Exact source67ed real 53s native Windows/Linux kernel UDP/TCP and owned Wintun/TUN, original Go TLS and 2s/8s M2 Rust quality; native Auto revision STAYED 1. Physical Windows Python timer 1.5ms single send per wake only delivered 3393 C2S source packets vs 16508 Linux S2C; genuine fast window 128..268<512 samples, so Linux FecV2Step appropriately withheld natural downgrade. Native run failed target; fixture-paced follow-up sourcea3bb in flight.",
+      "status": "FAIL",
+      "source_sha": "67ed412e9075ad95f863d4e042f119d81dce407a",
+      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-Auto-natural-M2-source67ed-failure-20261027.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "Original Go credential TLS original Rust FEC2 Auto initial Strong5 native Windows signed Npcap/Wintun and Linux raw/TUN, genuine bidirectional UDP/TCP and both-owned Stop; source772b8b3 narrow starter only, natural feedback grade and performance NOT_RUN",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "772b8b3af48ee8f8600b16baaf2ddc3c53e84c37",
+      "evidence": "docs/evidence/M0/PLAN025-S48-Auto-start-native-source772b8b3-success-20261028.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "S52 signed original Windows↔Linux auto-adaptive real 119s two-OS UDP: 79299 Windows /39669 Linux genuine source packets; Windows revision1 Strong5 never downshifted despite M2 zero-loss mature windows and Linux s2c genuine profile0; full Stop not reached. Native auto one-step <=120s FAIL, not app-rate-limited and not a performance test.",
+      "status": "FAIL",
+      "source_sha": "1b33e4a4bb4543961957124ac0c49b63d7e3cab0",
+      "evidence": "docs/evidence/M0/PLAN025-S52-Auto-natural-source1b33e4a-failure-20261028.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "S54 genuine original Go TLS signed Windows↔Linux FEC2 Auto 119s, 79,320/39,668 real kernel UDP, Rust M2 Applied rev2/3/4 profiles4/3/2 by snapshot38; whole run FAIL because test's omitted JSON false treated as pending, owned Stop NOT_RUN",
+      "status": "FAIL",
+      "source_sha": "0af9b5859c282a6efa0bda6c8d0c9fa01c14d9f1",
+      "evidence": "docs/evidence/M0/PLAN025-S54-Auto-natural-source0af9b585-applied-fixture-failure-20261028.json"
+    },
+    {
+      "platform": "linux/aarch64 native GitHub-hosted two-netns raw/TUN",
+      "scope": "ARM64 original TLS/Rust Auto two-netns 20 ICMP/side and Stop PASS; natural dynamic grade NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
+      "evidence": "docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "S55 signed Windows/Linux true Auto healthy Strong5→4→2, UDP/TCP/Stop PASS; N0 and loss-rise NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "49f816375a9e69bd1cde41df2543b15b58066313",
+      "evidence": "docs/evidence/M0/PLAN025-S55-Auto-natural-source49f81637-full-native-pass-20261028.json"
+    },
+    {
+      "platform": "windows/x64 signed Npcap+Wintun original Go TLS Rust ↔ linux/amd64 WSL2 raw/TUN",
+      "scope": "b6b964 signed Windows/Linux Auto initial Strong5 UDP/TCP/Stop; p99/CPU and natural grade NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
+      "evidence": "docs/evidence/M0/PLAN025-H307-main-source-b6b964-seven-mode-native-20261028.json"
+    },
+    {
+      "platform": "windows/x64 signed Npcap Wintun ↔ linux/amd64 WSL2 true kernel",
+      "scope": "S61 native initial Auto UDP/TCP/Stop PASS; natural 120s grade only old S55, loss-rise NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
+      "evidence": "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
+    },
+    {
+      "platform": "linux/amd64 original Go TLS + Rust real 2-netns raw/TUN",
+      "scope": "7e984 Linux Auto app64/64, 1% offered512/delivered509, M2 Applied/Stop; no Windows or 120s claim.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "7e9842f6e99769d9919e75a4b15da8d6d88e7257",
+      "evidence": "docs/evidence/M0/PLAN026-LINUX-AUTO-KEEPALIVE-SOURCE7E984-20261029.json"
+    },
+    {
+      "platform": "linux/amd64 original Go TLS + Rust native 2-netns",
+      "scope": "80bf Linux app26000, 30s/4096 natural 5→4 applied rev2/Stop; Win CPU GUI physical NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "80bf1608d4aa5b15cd16767aae24427c5b26f31b",
+      "evidence": "docs/evidence/M0/PLAN026-LINUX-AUTO-NATURAL-REAL-26000-SOURCE80BF-20261029.json"
+    },
+    {
+      "platform": "Windows2025 x64 signed NPF/Wintun ↔ Linux WSL2 true original Go TLS/Rust",
+      "scope": "787ad4 Auto 10Mbps/25ms/0% UDP/TCP/Stop, Linux sampled VALID applied rev2/grade4; Win rev1, 120s NOT_PROVEN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "787ad4c900f3bae867c5c9556c4702339deef8cb",
+      "evidence": "docs/evidence/M0/PLAN027-H498-NEW-SOURCE-A-C10-FIXED30-AUTO-20261030.json"
+    },
+    {
+      "platform": "Windows Server x64 signed NPF/Wintun + Linux/amd64 WSL2 actual TLS/Rust native",
+      "scope": "H532 7a5d Auto true240s staged UDP/TCP/Stop; Linux 30s/4096 grade5→4→3→2→1, both applied rev5; one-rung120s PASS; p99 unknown and transient UNKNOWN preserved.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "7a5d7e83823e96539d2a904a8193a85ec18df30d",
+      "evidence": "docs/evidence/M0/PLAN027-H532-SOURCE7A-A4-C50-C100-ORIGINAL-20261030.json"
+    }
+  ],
+  "limitations": [
+    "历史启动Applied不可推广为所有升/降档场景PASS。",
+    "历史 verification 仅适用各自 SOURCE；main HEAD 不继承，未列范围 NOT_RUN。",
+    "Windows Rust 30-field mature M2 and Linux FecV2Step share decision reference; previous candidate source still separately scoped.",
+    "Exact later source candidate implementation is not an accepted Windows public mode until same-source real two-OS UDP/TCP plus owned Stop PASS.",
+    "SOURCE4977f Auto initial Strong5 duplex/Stop source-scoped PASS only; dynamic/physical NOT_RUN.",
+    "Only Auto startup Strong profile5 completed real Windows bidirectional business; no positive dynamic up/down revision or late GUI profile Applied receipt in this run.",
+    "a0c8eeb Action40457048399 Windows↔Linux Auto operator rev2/Stop PASS; no dynamic grade; old80e5289 harness FAIL retained.",
+    "6707bd52 Linux old sampling; Windows compile PASS40462558630, argv FAIL40462738560, preflight PASS40463122392; native NOT_RUN.",
+    "67ed Action40465641281 Windows natural Auto FAIL: 53s 3393 source below 512 Fast; no fabricated downgrade.",
+    "S48 772b8b3 native initial Auto/Stop PASS40546243971; S45 FAIL retained, dynamic120s NOT_RUN.",
+    "S52 1b33e4a Action40550358765 Auto119s FAIL: actual-k vs sampled source clock mismatch; no 120s proof.",
+    "H303 目录声明修复；原治理 FAIL、S52 Auto 降档 FAIL 保留，旧 Fixed/Game PASS 仍仅原 SOURCE。",
+    "f7ee097e Action40557336142 ARM64 actual TLS/Rust MTU/ICMP/Stop only, no Windows/Auto dynamics/perf.",
+    "S55 49f81637 Action40556191100 natural one-grade/120s+Stop PASS; S52/S54 FAIL retained, loss-rise NOT_RUN.",
+    "H307 exact S55 source49f81637 reviewed integration to main; original per-SOURCE tests and limitations unchanged. See docs/devlog/M0/PLAN025-H307-S55-frozen-product-main-integration-20261028.md.",
+    "H307 b6b964a main seven-mode native PASS40560287417 artifact12760173657; not N0/dynamic/physical.",
+    "PLAN026 Linux source80bf true Auto 26k real M2/k cohort VALID 30s/4096, revision2 profile4 Applied both roles + owned Stop PASS; Windows Auto/CPU/GUI/physical still NOT_RUN.",
+    "H393 99c78aa Action40936343251 recovery89 engine134 codec114 PASS; H396 source driver probe40944961945; live NOT_RUN.",
+    "PLAN027 S404 9a2af725 native Action40953849123 engine135 passed, 1 optional ignored; strict START/CLOSE tests PASS. Source-only; Windows/Linux live Quality, Auto and M2 retirement NOT_RUN.",
+    "PLAN027 H438 Linux Auto cold Go 1Hz reauthorization checks Rust authenticated Health 90s terminal flag, not M4 diagnostic TxErrors; duplex regression unverified.",
+    "H440 candidate disables Fixed/off per-record M2 report producer/consumer on both Rust platforms; Auto low-rate Quality/Health kept; no claim of H440 true Windows/Linux Auto or 120s grade proof.",
+    "H451 §0.1 candidate sampled/actual-k fix, no old Fixed maturity gate or Linux idle spin; new-source live proof pending.",
+    "H498 SOURCE787 60s Auto: Linux profile4, Windows revision1. 120s bilateral and B lifecycle not proven.",
+    "H502 SOURCE787 A4 staged: Linux profile5→0/Windows2 and Stop PASS; prior damage incorrectly gated as lossless. 120s grade unproven.",
+    "H552 original SOURCEf031 Auto staged240s real Win/Linux UDP/TCP Stop PASS, first0.785462/0.785082, Windows whole Go+Rust CPU11.5938s /255.44s RSS43425792, Linux genuine30s/4096 valid sample one-rung down within120s observed; exact grade details remain in original artifact13027885028. No startup measurement gate or no-loss requirement, new source must requalify if affected.",
+    "H628 latest Auto Windows Rust M2 same Normal frozen M1 outer-repair scheduler: removed auto_low_rate_mode bypass of authentic outer ACK/SACK and shadow deadline. This is only a source candidate, true original new SOURCE Windows/Linux 15%/30% lost-wire test is NOT_RUN. Game per-lane shared Normal outer retry remains NOT_CONNECTED."
+  ],
+  "promotion": null
+}
