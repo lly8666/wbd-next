@@ -56,12 +56,20 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
       "evidence": "docs/evidence/M0/PLAN027-H661-SOURCE-DC191-NORMAL-IDLE105-NATIVE-20261101.json"
+    },
+    {
+      "platform": "windows/x64 + WSL2/linux",
+      "scope": "Normal 20s actual bilateral 100% tc underlay blackhole, fresh genuine kernel UDP both ways after recover, TCP and owned Stop, 10Mbps25ms0 first1/1; not 90s authenticated-dead/rejoin",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+      "evidence": "docs/evidence/M0/PLAN027-H662-SOURCE-DC191-NORMAL-BLACKHOLE20-AND-STOP-CANDIDATE-20261101.json"
     }
   ],
   "limitations": [
     "gone ghost端点可安全终结WAL但不能声称已恢复不存在的MTU；Stop合格范围≠整个GUI/OS生命周期PASS。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
-    "H661 source dc191 genuine Normal idle108.49s kernel wake + Stop Action41223668774 passes; authenticated Health record count and >90s no-auth dead/reconnect not qualified."
+    "H661 source dc191 genuine Normal idle108.49s kernel wake + Stop Action41223668774 passes; authenticated Health record count and >90s no-auth dead/reconnect not qualified.",
+    "H662 Normal Rust native Stop remove-before-unbounded-join product risk fixed as SOURCE-candidate: <=12s wait and retain original loans on STOP_INCOMPLETE; Windows source-current compile/new native B106 still pending. Blackhole20 Action41224016836 positive is NOT B106 reauthentication."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

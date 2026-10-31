@@ -1093,17 +1093,45 @@
      unsafe{out.write(session.counters.snapshot())};
      OK
  }
+ // Stop belongs to the original Win32 native owner, not the Go timeout.
+ // Never remove a still-live NPF/Wintun loan holder from the registry and
+ // then join indefinitely inside synchronous FFI. Return the truthful
+ // incomplete state; the original caller may retry after kernel I/O wakes.
+ fn wait_normal_native_workers<F:FnMut()->Result<bool,i32>>(
+     mut done:F,limit:Duration,
+ )->Result<(),i32>{
+     let start=std::time::Instant::now();
+     loop{
+         if done()?{return Ok(())}
+         if start.elapsed()>=limit{return Err(STOP_INCOMPLETE)}
+         thread::sleep(Duration::from_millis(10));
+     }
+ }
  #[no_mangle]
  pub extern "C" fn wbd_m0_win_native_v1_stop(h:u64)->i32{
+     {
+         let g=match active().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+         let Some(s)=g.get(&h)else{return UNKNOWN};
+         s.counters.stopping.store(true,Ordering::Release);
+         let _=s.stop.wake();
+         let _=s.tx_notify.wake();
+         let _=s.rx_notify.wake();
+     }
+     if let Err(rc)=wait_normal_native_workers(||{
+         let g=active().lock().map_err(|_|BAD_STAGE)?;
+         let s=g.get(&h).ok_or(UNKNOWN)?;
+         Ok(s.tx.is_finished()&&s.rx.is_finished())
+     },Duration::from_secs(12)){
+         eprintln!("M0_PLAN027_NORMAL_NATIVE_STOP_NOT_DRAINED handle={h} rc={rc} retained_npfcapture_wintun_loan=1 retryable=1");
+         return rc
+     }
+     // All Rust workers finished genuine OS calls; removal and JoinHandle
+     // consumption are now immediate. Only then may Go close the NPF/WAL.
      let session={
          let mut g=match active().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
          let Some(s)=g.remove(&h)else{return UNKNOWN};
          s
      };
-     session.counters.stopping.store(true,Ordering::Release);
-     let _=session.stop.wake();
-     let _=session.tx_notify.wake();
-     let _=session.rx_notify.wake();
      let tx=session.tx.join().unwrap_or(STOP_INCOMPLETE);
      let rx=session.rx.join().unwrap_or(STOP_INCOMPLETE);
      eprintln!("WBD_WINDOWS_RUST_NATIVE_WAKE_BATCH max_verified_per_wake={} tx_wake_attempts={} rx_data_delivered={} joined=true",
@@ -1154,6 +1182,30 @@
          assert_eq!(c.profile.tx.samples.load(Ordering::Relaxed),1);
          assert_eq!(c.profile.rx.samples.load(Ordering::Relaxed),0);
          assert_eq!(*lock.lock().unwrap(),0);
+     }
+     #[test]
+     fn normal_native_stop_timeout_retains_worker_until_real_join(){
+         // Only Stop ownership and bounded wait; no simulated Wintun,
+         // no kernel or TLS product PASS inferred from this test.
+         let release=Arc::new(AtomicBool::new(false));
+         let gate=Arc::clone(&release);
+         let tx=thread::spawn(move||{
+             while !gate.load(Ordering::Acquire){
+                 thread::sleep(Duration::from_millis(1));
+             }
+             OK
+         });
+         let rx=thread::spawn(||OK);
+         assert_eq!(wait_normal_native_workers(
+             ||Ok(tx.is_finished()&&rx.is_finished()),Duration::from_millis(15)
+         ),Err(STOP_INCOMPLETE));
+         assert!(!tx.is_finished()); // Neither native loan was discarded.
+         release.store(true,Ordering::Release);
+         assert_eq!(wait_normal_native_workers(
+             ||Ok(tx.is_finished()&&rx.is_finished()),Duration::from_secs(2)
+         ),Ok(()));
+         assert_eq!(tx.join().unwrap(),OK);
+         assert_eq!(rx.join().unwrap(),OK);
      }
      #[test]
      fn h517_negotiated_positive_sack_is_not_starved_by_full_native_business_batch(){

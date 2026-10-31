@@ -1,0 +1,11 @@
+# PLAN027 H662 — genuine Normal 20s blackhole success and source-proven Normal unbounded Stop hazard
+
+[Real original Normal native blackout20 Action41224016836](https://github.com/lly8666/wbd-next/actions/runs/41224016836), frozen H656 PRODUCT SOURCE `dc191cf5686ddff2e433312b8ec2258954bd018f`, harness d2804c683445d3c85df4df6f1d5020b72a73e009: 100% genuine kernel tc loss BOTH underlay directions for20s after original TLS, then new real UDP received in both directions, and original dual native TCP+owned Stop PASS. Following 10Mbps25ms0 profile first1.0/1.0, no Linux TUN drop, Windows whole Go+Rust PID CPU4.098% core and peak working set41,926,656B. **Does not prove 90s authenticated-dead or new TLS generation**; original B106 canceled runs remain negative.
+
+Code audit found `wbd_m0_win_native_v1_stop` for Windows Normal/off/Fixed/Auto **removed session from native registry before unbounded `tx.join(); rx.join()`**, so a driver worker stalled during dead90/Stop can trap synchronous Rust FFI longer than any Go Context deadline. Same real design defect as H654 Game Stop. Minimal H662 edit: wake actual original TX/RX/Stop kernel handles, wait <=12 seconds for **both** Rust JoinHandles to finish; re-check without holding registry lock between polls. If unfinished, log a single stop failure and return `STOP_INCOMPLETE` while retaining original NPF/Wintun loan and WAL ownership; subsequent retry may join. Only remove session and join after real workers have finished. Source-scoped synthetic blocked-thread negative and later release/join positive unit test added, not driver proof. No new FEC/Health/Go packet pump/crypto/protocol; this is necessary Stop correctness not speculative fallback.
+
+New-source Windows pinned unit test/release build in dedicated Action; **new-source 106s auth-dead reauthorization and original OS Stop are NOT_RUN**, do not repeat unchanged SOURCE11f cancellation. H657 Game2FEC15 and H659 Fixed idle105 still in flight, no duplicate dispatch.
+
+```feature-impact
+{"kind":"updated","ids":["generation-stop"],"reason":"Source-proven Windows Normal native Stop unbounded remove-before-join corrected to bounded retryable ownership; new-source driver/106s verification mandatory. Also source-frozen 20s true blackhole recovery positive."}
+```

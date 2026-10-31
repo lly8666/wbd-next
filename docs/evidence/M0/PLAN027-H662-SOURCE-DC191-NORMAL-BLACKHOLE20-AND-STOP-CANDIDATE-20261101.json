@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "source_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+  "result": "PARTIAL_B_NORMAL_BLACKHOLE20_PASS_B106_NEW_NORMAL_STOP_CANDIDATE_UNVERIFIED",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "normal_blackhole20": {
+    "run": 41224016836,
+    "artifact": 13051001378,
+    "harness_sha": "d2804c683445d3c85df4df6f1d5020b72a73e009",
+    "source_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+    "scenario_sha256": "13eec3df4a3c7ddb59901707228e870891f212dfa047654a7bf89a2e9b62b63d",
+    "kernel_bidirectional_loss_pct": 100,
+    "duration_s": 20,
+    "fresh_real_udp_after_recovery": "PASS_BOTH",
+    "both_native_tcp": "PASS",
+    "stop": "PASS_BOTH",
+    "offered_mbps": {
+      "windows": 9.9973,
+      "linux": 10
+    },
+    "first_fraction": {
+      "windows": 1,
+      "linux": 1
+    },
+    "linux_tun_drop": {
+      "tx": 0,
+      "rx": 0
+    },
+    "windows_cpu_one_core_pct": 4.098,
+    "windows_peak_rss_bytes": 41926656
+  },
+  "new_candidate": {
+    "target": "crates/wbd-engine/src/v4_windows_native_runtime.rs",
+    "scope": "Windows Normal/off/Fixed/Auto shared native Stop",
+    "test": "NOT_RUN_NEW_SOURCE_RUST_WINDOWS_SCOPED",
+    "auth_dead106": "NOT_RUN_NEW_SOURCE",
+    "policy": "12s bounded wait, real wake first, retain original native loans until workers both genuinely finished, STOP_INCOMPLETE retryable"
+  },
+  "other_inflight": [
+    41223662496,
+    41224025507
+  ]
+}
