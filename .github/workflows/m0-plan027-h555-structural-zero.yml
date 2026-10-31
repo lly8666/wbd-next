@@ -1,3 +1,4 @@
+# Source H556 repairs real older-SACK cursor range panic before the exact once build.
 name: M0 PLAN027 H555 structural ACK gap original frozen zero once
 on:
   push:

@@ -219,7 +219,10 @@ impl OuterAckIndex {
                 .map_or(ack,|seq|seq.saturating_add(1).max(ack));
             let mut examined=0usize;
             let mut last=None;
-            for (&seq,span) in self.sent.range(start..highest_positive){
+            // Out-of-order older SACK summaries may have a lower bound
+            // than a previously examined newer one. Empty, not panic.
+            let end=highest_positive.max(start);
+            for (&seq,span) in self.sent.range(start..end){
                 if examined>=MAX_GAPS_PER_FEEDBACK{break}
                 let age=now.0.saturating_sub(span.at.0);
                 if age<50_000_000{break}
@@ -333,6 +336,11 @@ mod tests {
         assert_eq!(third.gap_candidates[0],RecordPn(65));
         let waiting=x.on_feedback(lane(),[7;16],0,&sack,MonoNs(60_000_003),20).unwrap();
         assert_eq!(waiting.gap_candidates.len(),4);
+        // A valid but older/out-of-order SACK has a lower positive end
+        // than our forward cursor. It must be harmless and cannot rewind.
+        assert!(x.on_feedback(lane(),[7;16],0,
+            &[SackRange32{start:4500,end:5000}],MonoNs(60_000_003),20)
+            .unwrap().gap_candidates.is_empty());
         assert!(x.on_feedback(lane(),[7;16],0,&sack,MonoNs(60_000_004),20)
             .unwrap().gap_candidates.is_empty());
         // The original SACK can only continue when other candidates age;
