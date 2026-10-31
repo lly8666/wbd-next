@@ -24,6 +24,7 @@ type m0WinRustGamePeer struct{
  flows []faketcp.ClientFlow
  inbound <-chan m0GameInbound
  handoff chan struct{}
+ stopColdReaders func()
  readers *sync.WaitGroup
  errorSource <-chan error
  loan *windowsclient.N4RustWintunLoan
@@ -43,7 +44,7 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
 )(err error){
  if p==nil||ring==nil||p.group==nil||p.first==nil||p.tun==nil||
   p.live||p.moved||(len(p.endpoints)!=2&&len(p.endpoints)!=4)||
-  len(p.flows)!=len(p.endpoints)||p.handoff==nil||p.readers==nil{
+  len(p.flows)!=len(p.endpoints)||p.handoff==nil||p.stopColdReaders==nil||p.readers==nil{
   return windowsclient.ErrN4NativeGuard
  }
  // Any partial cold capture handoff must first Join Rust if Start succeeded,
@@ -70,7 +71,7 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
  // Stop ALL post-TLS Go NPF readers and join them before moving ANY native
  // pcap_t. Their already-read bounded ciphertext is offered to Rust M3
  // for normal authenticated opening and never written into Wintun by Go.
- close(p.handoff);p.moved=true
+ p.stopColdReaders();p.moved=true
  p.readers.Wait()
  // Readers have joined, so the next native live pcap_next_ex MUST NOT
  // inherit an unconsumed pcap_breakloop (-2) from the old Go handoff.

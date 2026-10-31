@@ -40,11 +40,15 @@ func runM0NativeV4WindowsGame(
  // Native M3 authenticates the finite real pre-handoff NPF backlog.
  inbound:=make(chan m0GameInbound,256)
  handoff:=make(chan struct{})
+ // On failed TLS/Apply, close the cold read signal before joining NPF
+ // readers. Successful Rust handoff shares the same idempotent close.
+ stopColdReaders:=sync.OnceFunc(func(){close(handoff)})
  failed:=make(chan error,count+1)
  var readers sync.WaitGroup
  defer func(){
-  for _,ep:=range endpoints{_ = ep.Close()}
+  stopColdReaders()
   readers.Wait()
+  for _,ep:=range endpoints{_ = ep.Close()}
   for _,assoc:=range assocs{assoc.Close()}
  }()
  for i:=0;i<count;i++{
@@ -148,7 +152,7 @@ func runM0NativeV4WindowsGame(
  packet:=&m0WinRustGamePeer{
   group:group,first:group.FirstOriginalOwner(),tun:tun,
   endpoints:endpoints,flows:flows,inbound:inbound,handoff:handoff,
-  readers:&readers,errorSource:failed,pathMTU:uint32(o.TunnelMTU),
+  stopColdReaders:stopColdReaders,readers:&readers,errorSource:failed,pathMTU:uint32(o.TunnelMTU),
   errors:make(chan error,1),
  }
  product,err:=windowsownerlease.PrepareOriginalTLSNativeGameProduct(
