@@ -81,7 +81,9 @@ struct WindowsOriginalM2 {
     direction:BudgetDirection,
     route:ReceiptRouteScope,
     in_flight:Option<WindowsM2QueuedRepair>,
-    ready_repairs:VecDeque<RepairCandidate<FrozenRecord>>, // one bounded 32-candidate M2 turn
+    ready_repairs:VecDeque<RepairCandidate<FrozenRecord>>, // 32 immutable handles, no extra ciphertext
+    repair_retry_after_ns:Option<u64>, // one direction-wide paced deadline
+    repair_burst_deferred:u64,
     reverse_authenticated_receipts:u64,
     repair_polls:u64,
     repair_preflight_stale:u64,
@@ -363,6 +365,7 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         ready_repairs:VecDeque::with_capacity(32),
         reverse_authenticated_receipts:0,repair_polls:0,
         repair_preflight_stale:0,repair_quota_rejected:0,
+        repair_retry_after_ns:None,repair_burst_deferred:0,
         feedback,feedback_pending:None,
         quality_receive,quality_due:VecDeque::with_capacity(4),
         quality_awaiting:None,
@@ -686,19 +689,15 @@ fn m2_outer_ack_hint_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let Ok(result)=m.outer_ack.on_feedback(lane,epoch,ack32,sacks,
         now,20_000_000)else{return Ok(())};
     for pn in result.retired{let _=m.shadow.discard_outer_ack_hint(pn);}
-    // Cosmetic half-sampling is tied to genuine TCP-like SACK/dupACK gaps,
-    // never to all new business bytes. Existing 10% single byte credit wins.
-    for pn in result.gap_candidates {
-        // True SACK/dupACK gap is the sole trigger. After admitting this
-        // original immutable shadow, borrow <=3 newer cached first sends;
-        // never scan all DATA, never invent a PTO or consume new PN.
-        if wbd_recovery::outer_ack::cosmetic_half_gap(pn) {
-            // A stale old ACK head must not silence new cached shadows.
-            // Real gap evidence is enough for four bounded opportunities:
-            // the existing one-shot shadow, age and byte budget decide.
-            let _=m.shadow.on_outer_gap_hint(pn,now);
-            let _=m.shadow.on_outer_gap_recent_followups(now,4);
+    // Each new real ACK/SACK gap is handled once per owner turn. The shared
+    // original-shadow cursor selects mature PNs, never newest-256 by cadence.
+    if !result.gap_candidates.is_empty(){
+        for pn in result.gap_candidates{
+            if wbd_recovery::outer_ack::cosmetic_half_gap(pn){
+                let _=m.shadow.on_outer_gap_hint(pn,now);
+            }
         }
+        let _=m.shadow.on_outer_gap_recent_followups(now,32);
     }
     Ok(())
 }
@@ -710,6 +709,8 @@ fn m2_next_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if m.in_flight.is_some(){return Err(BAD_STAGE)}
     let now=m2_clock();
     m.repair_polls+=1;
+    if m.repair_retry_after_ns.is_some_and(|at|at>now.0){return Ok(None)}
+    m.repair_retry_after_ns=None;
     // A single timer call supplies up to 32 ready candidates; Windows
     // previously threw away every one after the first. Preserve the bounded
     // turn and recheck authenticated positives just before driver send.
@@ -746,6 +747,16 @@ fn m2_next_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
             Ok(v) if v.driver.metadata==candidate.frozen().metadata()
                 && v.driver.wire.as_ptr()==candidate.frozen().bytes().as_ptr() =>
                 v.reservation_id,
+            Err(wbd_recovery::GlobalRepairError::Local(
+                wbd_recovery::BudgetError::BurstPaced))=>{
+                let _=g.revoke(lease,now);
+                // Temporarily paced, NOT permanently lost. Same immutable
+                // candidate stays at the head until its 20ms hard deadline.
+                m.repair_burst_deferred=m.repair_burst_deferred.saturating_add(1);
+                m.repair_retry_after_ns=Some(now.0.saturating_add(1_000_000));
+                m.ready_repairs.push_front(candidate);
+                return Ok(None)
+            }
             _=>{
                 let _=g.revoke(lease,now);
                 let _=m.shadow.on_send_result(&candidate,RepairSendResult::NotSent,now);
