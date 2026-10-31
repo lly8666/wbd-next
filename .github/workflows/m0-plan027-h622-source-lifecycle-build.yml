@@ -1,0 +1,35 @@
+name: M0 PLAN027 H622 freeze one revised Linux Normal Fixed 90s-owner source binary
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h622-source-lifecycle-build.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  dispatch-one-build-and-original-idle:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h622-lifecycle-build]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Start one exact-source Windows and Linux build, Go tests and true 105s idle product
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario('scenarios/plan027-b-normal-idle-wake-10m-25ms-0loss-60s.json')
+          assert (s['public_mode'],s['lifecycle_idle_s'],s['duration_s'])==('normal',105,60)
+          print('H622_FREEZE_NEW_LINUX_COLD_LIFECYCLE_SOURCE',s['scenario_sha256'])
+          PY
+          title="M0-WIN-LINUX|$GITHUB_SHA|normal|scenarios/plan027-b-normal-idle-wake-10m-25ms-0loss-60s.json"
+          prior="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" | jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id'|head -1)"
+          if test -n "$prior";then echo "H622_SCOPED_SOURCE_ALREADY_TRIGGERED run=$prior";exit 0;fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f run_n0=false \
+            -f perf_scenario_file=scenarios/plan027-b-normal-idle-wake-10m-25ms-0loss-60s.json
+          echo "H622_FROZEN_SOURCE_BUILD_DISPATCHED source=$GITHUB_SHA result=NOT_YET_PROVEN"
