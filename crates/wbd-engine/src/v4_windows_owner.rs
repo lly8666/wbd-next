@@ -697,7 +697,6 @@ fn m2_outer_ack_hint_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                 let _=m.shadow.on_outer_gap_hint(pn,now);
             }
         }
-        let _=m.shadow.on_outer_gap_recent_followups(now,32);
     }
     Ok(())
 }
@@ -1102,7 +1101,7 @@ fn stop(r:&mut Registry,h:u64)->i32{
             m.repair_quota_rejected,m.ready_repairs.len());
         eprintln!("WBD_WINDOWS_NATIVE_OUTER_CURSOR unique_candidates={} unique_candidate_cipher_bytes={} checked_once={} sampled_out={} burst_wait={} fifo_left={}",
             d.cosmetic_candidates,d.cosmetic_candidate_bytes,
-            d.cosmetic_examined,d.cosmetic_sampled_out,
+            m.outer_ack.gap_scanned_once(),0u64,
             m.repair_burst_deferred,m.ready_repairs.len());
         // Return original M1 frozen clones and retire the exact global
         // direction before original owner retirement. No late kernel sender.
