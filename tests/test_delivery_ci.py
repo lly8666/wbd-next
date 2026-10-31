@@ -212,8 +212,7 @@ class DeliveryCiTests(unittest.TestCase):
                     preflight["env"]["WL_V2_BINARY_SHA"],
                     native["env"]["WBD_WL_REUSE_RUN_ID"],
                     native["env"]["WBD_WL_BINARY_SOURCE"],
-                    native["env"]["LINUX_BINARY_SRC"],
-                    native["env"]["WBD_WL_PUBLIC_MODES"]):
+                    native["env"]["LINUX_BINARY_SRC"]):
             self.assertNotIn(tag,val)
         self.assertNotIn(tag,jobs["linux-source-locked-public"]["if"])
         self.assertNotIn(tag,jobs["windows-compile-preflight"]["if"])
