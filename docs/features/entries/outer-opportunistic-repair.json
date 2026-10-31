@@ -1,1 +1,199 @@
-{"schema_version":1,"id":"outer-opportunistic-repair","name":"外层机会式重传","summary":"认证成熟缺口后以有界预算最多机会式修复同一Seq的原冻结密文；无持续DATA PTO。","owner":"M2/M0 + FEC实验","stage":"experimental","development_branch":"experiment/fec-network-tuning","available_on":["integration/w168-freeze-windows-adapter-20261026","main"],"defaults":{"--outer-repair":"on（默认）","rollback":"off","windows-v3":"outer-opportunistic-v3"},"usage":{"cli":"Linux --outer-repair on|off；Windows native策略和只读状态按实际owner","config":"公开V4 CLI有开关，不能宣称旧Go配置全部映射","gui":"无完整Windows GUI逐方向修复策略操作的同源证据"},"code_refs":["r0/go_overlay/internal/v4productcli/linux.go","crates/wbd-recovery/src/budget.rs","crates/wbd-recovery/src/global_sparse.rs","crates/wbd-recovery/src/outer_ack.rs","crates/wbd-recovery/src/receipt.rs","crates/wbd-engine/src/v4_windows_owner.rs","crates/wbd-engine/src/v4_windows_native_runtime.rs","tools/m0_wl_outer_repair_verify.py","crates/wbd-platform/src/ipv4_tcp.rs","crates/wbd-platform/src/rx_ipv4_tcp.rs"],"doc_refs":["docs/handoff/CURRENT_INTEGRATION.md","docs/evidence/fec-network-work/20261026-W167-Outer-ON-DualArch-Matrix-and-Deferred-RX-250ms.json","docs/devlog/M0/20261028-PLAN026-WIN-OUTER-OPPORTUNISTIC-REPAIR.md","docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-WINDOWS-UNIT-REGRESSION.md","docs/devlog/M0/20261028-PLAN026-WIN-OUTER-FIRST-REAL-FAIL-DIAGNOSTIC.md","docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-M2-RETENTION-FLOOR.md","docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-24-SIGNED-MATRIX.md","docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-OUTER-REPAIR-RTT-FLOOR.md","docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-24-SIGNED-RESULT.md","docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-FEATURE-STATUS-CORRECTION.md","docs/devlog/M0/20261030-PLAN027-OUTER-ACK-SACK-INDEX-FIRST-CODE.md"],"verification":[{"platform":"windows/x64 + WSL2/linux","scope":"原生 Normal/off：短反馈不烧PN/SEQ且无无据PTO的受限原生功能回归；此结果仅旧W源码，不是盘点HEAD的重新测试","status":"FUNCTIONAL_PASS","source_sha":"4fb263dd38b68e6a1763e7d79f5654b611f4ac8b","evidence":"docs/evidence/M0/PLAN024-W168-recovered-Windows-v3-native-run-20261027.json"},{"platform":"linux/arm64 + linux/amd64","scope":"F实验分支W168：外层ON选择与低/高损限定观察；非10%全线路能力证明，仅观察/特定case通过，非全平台质量门","status":"FUNCTIONAL_PASS","source_sha":"0776fc4ede72fabd711e8333568eb88a58e8a6ea","evidence":"docs/evidence/fec-network-work/20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json"},{"platform":"windows/x64","scope":"WL-N0/N1/N5与+103B高载再验","status":"NOT_RUN","source_sha":null,"evidence":null},{"platform":"physical","scope":"持续真实损伤与带宽预算","status":"NOT_RUN","source_sha":null,"evidence":null},{"platform":"Windows2025 x64 signed NPF/Wintun + WSL2 Linux","scope":"Source9ed3 signed Win/WSL2 Rust Normal/off authentic UDP/TCP/Stop 24/24 50/100Mbps × 1/5/10/30% real netem × 50/150/300ms per direction, max real R/total 8.1055% and R/F 8.876%, no separate physical qualification","status":"PERFORMANCE_PASS","source_sha":"9ed3da3153e20a1787ed731c45dd3359c7e0654e","evidence":"docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE9ED3-50-100M-24-SIGNED-20261028.json"},{"platform":"Windows2025 signed Npcap/Wintun+WSL2 Linux","scope":"50Mbps each/30% tc loss/300ms one-way/60s first real candidate: Windows actual outer repair0 despite Linux same scenario repair37.1MB; functional/Stop PASS, opportunistic repair FAIL","status":"FAIL","source_sha":"504c517fee8bb658f58689560f891e2601c995b9","evidence":"docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE504C-50M-30P-300MS-FAIL-20261028.json"},{"platform":"Windows x64 signed Npcap/Wintun + WSL2","scope":"b2fb 50M each/30% netem/300ms one-way: 7381 authenticated reverse receipts, no candidates, 206546 expiry and Windows R0 despite kernel loss; Normal-only 1200ms floor fix pending new SOURCE","status":"FAIL","source_sha":"b2fb57f5087532ae43fac35ec99c2d68fa3ddc0a","evidence":"docs/evidence/M0/PLAN026-WIN-OUTER-SOURCEB2FB-50M-30P-300MS-RETENTION-FAIL-20261028.json"},{"platform":"Linux original Go TLS x86_64 client+server Rust raw/TUN, true network namespaces","scope":"50/100Mbps 1/5/10/30% 50/150/300ms source-specific 24 cases, client and server independently; repair snapshot minimum 1200ms","status":"NOT_RUN","source_sha":null,"evidence":null},{"platform":"Linux x86_64 original Go TLS / Rust raw M4 TUN original real client+server, isolated netns","scope":"New Linux dual source b9c after c589 shared 1.2s v3 bounded retention; 50/100Mbps each ×1/5/10/30% tc each ×50/150/300ms one-way, 60s, UDP mix. Both roles nonzero authentic M4 R and <=10% R/(F+R) all24; 12/12 50M native PASS, 10/12 100M native PASS, 2/12 100M 50ms pacing catch-up INCONCLUSIVE.","status":"CAPACITY_LIMITED","source_sha":"b9c2c1707c917816c6d615a5283c9ea2329ee6b5","evidence":"docs/evidence/M0/PLAN026-LINUX-DUAL-SOURCEB9C2-50M-12-SIGNED-20261029.json"},{"platform":"Windows2025 signed Npcap/Wintun + WSL2 Linux original Go TLS/Rust","scope":"New SOURCE787ad4 Normal/off 10Mbps each 250ms true 30% netem 60s; first 70.1962/70.1991%, frozen retransmit R0 and candidate_first0 both, Stop PASS; live ACK opportunistic repair FAIL despite carrier pass","status":"FAIL","source_sha":"787ad4c900f3bae867c5c9556c4702339deef8cb","evidence":"docs/evidence/M0/PLAN027-H500-A4-A5-C50-OFF30-NEW-SOURCE-20261030.json"},{"platform":"Windows2025 signed Wintun/Npcap↔WSL2 original Go TLS Linux raw/TUN","scope":"PLAN027 H501 10Mbps both/250ms/true 30% tc/60s. Both original immutable real retries, native owned Stop PASS; Windows R/F1.39%, R/(F+R+C)1.37%, Linux R/F4.34%. No business recovery improvement or 1/5/10/30 matrix proven.","status":"FUNCTIONAL_PASS","source_sha":"0b7391a182f05947419c1211f01058b4798370a3","evidence":"docs/evidence/M0/PLAN027-H503-RECOVERED-H501-LIVE-REPAIR-AND-TIER-20261030.json"},{"platform":"Windows2025 x64 signed Npcap/Wintun + WSL2 Linux original Go TLS/Rust","scope":"SOURCE1644 true Normal/off 50Mbps each/150ms one-way/0% tc/60s: Windows first 99.9995% (not exact-zero), Linux first100%, owned Stop both. Original Linux R133B/F415911076 (one retransmit, 0.00003198% of F) vs old source0b R4.304% false; Windows R0. Scoped no-loss low-repair PASS, source C100/A/B/C still incomplete.","status":"FUNCTIONAL_PASS","source_sha":"1644df34d241d487c5c5eb704a1a0a2e5f506f5e","evidence":"docs/evidence/M0/PLAN027-H510-RECOVERED-SOURCE1644-NOLOSS-AND-GOV-20261030.json"},{"platform":"Windows2025 signed NPF/Wintun ↔ Linux WSL2 original TLS/Rust raw/TUN","scope":"SOURCE1644 Normal/off 50Mbps each/150ms true 1/5/10% netem/60s source-locked Actions. First follows true injected loss, Stop PASS; outer retransmit almost 0 at real loss. 30% Windows R0 and first~70% also measured. This is outer presentation shortfall, NOT a complete opportunistic repair PASS.","status":"FAIL","source_sha":"1644df34d241d487c5c5eb704a1a0a2e5f506f5e","evidence":"docs/evidence/M0/PLAN027-H513-SOURCE1644-TRUE-NATIVE-RECOVERY-20261030.json"},{"platform":"Windows signed Npcap/Wintun + Linux original TLS/Rust SOURCE H533","scope":"Latest user-scoped old ACK gap abandonment, true Normal/off 0%/30% independent new SOURCE tests pending; no repair-percentage floor.","status":"NOT_RUN","source_sha":null,"evidence":null},{"platform":"Windows signed Npcap/Wintun and Linux WSL2 Rust original owner","scope":"H537 SOURCE080 genuine Native Normal/off 10Mbps each 250ms/0% 60s, first100% both, Win R0 Linux R0, no excess no-loss retransmission, true UDP/TCP/Stop. One-scene only; 30% future opportunities NOT_RUN.","status":"FUNCTIONAL_PASS","source_sha":"08069b1513a9cba61d0b315dde03505f97ef796c","evidence":"docs/evidence/M0/PLAN027-H537-SOURCE080-TRUE-NATIVE-NOLOSS-20261030.json"},{"platform":"Windows Npcap/Wintun Go TLS + WSL2 Linux Rust original SOURCE080","scope":"H538 exact same binary 10Mbps each/250ms/30pct 60s source080, genuine tc loss, first70.0254/70.0708%, Win300/Linux180 immutable opportunities, R/F0.3511/0.1755%, both owned Stop and no backlog; 0pct baseline R0. No recovery rate floor or same-VM A/B improvement claim.","status":"FUNCTIONAL_PASS","source_sha":"08069b1513a9cba61d0b315dde03505f97ef796c","evidence":"docs/evidence/M0/PLAN027-H538-SOURCE080-TRUE-30P-OPPORTUNISTIC-REPAIR-20261030.json"},{"platform":"True signed Windows NPF/Wintun Go TLS vs Linux WSL2 Rust TUN","status":"FUNCTIONAL_PASS","scope":"H545 product SOURCEba8d new feedback-tail candidate, real 0%/10M each/250ms/60s first100% both, Win F86397074 R0 C215130 Linux F85007731 R0, owned Stop. 1/5/15/30% ratio UNVERIFIED.","source_sha":"ba8d999aa806800cfb562ed34dfd738a98fb45bc","evidence":"docs/evidence/M0/PLAN027-H545-SOURCEBA8D-REAL-ZERO-ORIGINAL-20261030.json"}],"limitations":["PLAN027 main source introduced pure scoped outer ACK/SACK cache retirement/gap-hint index, optional shadow discard and required native tests; not connected to either live owner, M2 per-record Receipt still active, no new-source real kernel or matrix PASS. Exact code/devlog reference above.","FEC修复/多lane副本不计入outer DATA重传；pre-netem DATA统计不能除post-netem线路字节。","本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。","M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.","Old standalone unit tests alone did not prove Windows repair; SOURCE9ed3 true 24-case signed NPF/WSL2 native PASS replaces that NOT_RUN. 30% R/C has only business-target proxy, not real configured outer C.","SOURCE504c Fixed/FEC originally needed its 1536 arena-backed shadow retained. SOURCE9ed3 scopes independent detached snapshot and 1200ms retention to Normal/off only; no broader mode or physical proof.","Original SOURCE504c/b2fb 50/30/300 R0 FAIL retained. SOURCE9ed3 24 independently signed CI VM runs, no same-host CPU A/B or repeat-run stability/physical qualification.","Old source9ed3 Linux server R=0 in 10/24 and 50M30%300ms 266B; Linux both-endpoint source-local verification must precede qualification.","Linux dual original Go/Rust pure-UDP capacity matrix b9c is 22/24 full PASS, two 100M/50ms pacing-catchup INCONCLUSIVE; source c589 90/10 UDP/TCP exploratory runs are not capacity-qualified. Physical outer link C, repeated stability and Linux client TCP under 300ms not proven.","PLAN027 changes v3 hard byte credit to R<=0.10F on confirmed outer first sends; 9%-rate smoothing remains. Sparse absolute/global caps unchanged. Pure-source regression is not a real live wire ratio or source-scoped platform PASS; report R/(F+R+C) separately.","PLAN027 H400 source-only strict pure ACK/SACK build/parse (cold SACK capability required); no Windows/Linux owner feed, live Receipt retirement or A/B/C qualification.","PLAN027 H401 source c8dad610 native platform95/95 (2 new pure ACK/SACK tests), engine134/134 and four other groups PASS Action40946233170; source-only, no live owner/Receipt/A/B/C proof.","H431 Windows original NPF strict cumulative ACK batch → current lane/epoch definitely-sent seq64 shadow index. No Health/Auto authority; SACK cold handshake and Linux remain open.","PLAN027 H439 bounded R2 ACK index recovers one stale 2s metadata entry per new real first-send, without hot scans or DATA blocking; two-OS end-to-end and M2 retirement still OPEN.","H440 source candidate removes live Fixed/off and Auto per-record WBC4 Receipt transmit/receive dependency; existing scoped ACK/SACK shadow hints and native Health remain. Exact H440 native/real two-OS qualification pending, not PASS.","H451 candidate cumulative ACK uses 3 legal duplicate ACKs plus later definitely-sent span and reorder guard to nominate at most one optional immutable repair, even without unnegotiated SACK; all stage0 repairs obey 8MTU tokens. Real 0/30% repair candidate, F/R/C and source-scoped platform qualification pending.","H500 real 30% loss per direction, R0 with F>0/C>0 and no repair candidates, despite full Stop. Linux outgoing outer ACK hardcoded 1, Windows RX no SACK negotiation, oldest ACK gap outlives shadow; fix peer trigger before claiming live repair.","H503 prior H501 true Windows/Linux repaired candidate/Stop verified at 30%, but no SACK negotiation, R values below old SOURCE9ed3 different-feedback 8% high-loss reference; tier runs 1/5/10/30 pending and no new-source matrix or stable long-test transfer.","H505 Rust source on main compresses adjacent authenticated future TCP ACK spans on BOTH Linux and Windows instead of saturating at 256 individual records; correctness unit and new-source two-OS results NOT_RUN at code commit, no claimed tier improvement. Original FakeTCP SYN/SYN-ACK already carries negotiated SACK but native handoff currently does not, so stale cumulative ACK cannot replace true per-gap SACK; do not fake ACK or increase retry budget.","H504 true no-loss normal 50M/150ms original source0b proves 15,485 unnecessary Linux retries (R/F4.304%) with 100% first/Stop, hard FAIL for no-loss product behavior. H505 source dedupes repeated unchanged cumulative ACK nominations until real progress; pending new-binary zero-loss and graded tests. No fake loss matching historical percentages.","H510 recovered exact native SOURCE1644 no-loss 50M/150ms suppressed spurious Linux R from old H504 4.304% to 133B (0.00003198% of F), Win R0; first Win 99.9995% prevents strict exact-zero claim. Old damage tiers SOURCE0b do NOT transfer to SOURCE1644; real source loss1/5/10/30 and 5-minute stability queued separately, presentation-only opportunity not inner reliability.","H513 source1644 true 1/5/10/30% damaged signed original native: Windows R/F=0/0/~0.00005%/0; Linux R/F=0/0/~0.000032%/unverified, far below old source0b levels. No R padding; real cold-negotiated SACK not propagated; incomplete outer appearance. H513 Game2 damaged 5% had first99.7305%/100% and business/Stop PASS but wrong lossless>=.999 script marked Action FAIL; source-matched corrected oracle rerun pending. H512 Linux 100s idle, 106s dead, dead→TLS reconnect all PASS scoped.","H515 Windows/Linux actual Go FakeTCP SACK negotiation is now explicitly carried to native Rust-only ACK/SACK. Linux original authenticated M3 future seq spans may emit one bounded 20ms pure SACK, Windows NativeOwner V2 Normal/Fixed/Auto publishes only <=50Hz authenticated future spans, and both RX indices parse only negotiated SACK. Source candidate unverified pending exact new-build Actions; no loss-tier or hardware PASS inferred.","H533 candidate: old appearance ACK head can be abandoned after 600ms authentic RX, enabling later optional hints. Prior SOURCE7a 30% Windows6/Linux2 immutable retries and old failures remain exact-source scoped; new H533 product NOT_RUN.","H538 source080 0pct and 30pct authentic original product confirms bounded optional opportunities, Stop release and no sustained false resend; individual cosmetic gap skip not directly instrumented. Linux C wire bytes not separated by existing stop log; no CPU speedup or zero business loss assertion. User cancels any R percentage minimum; subtask CLOSED.","H552 original SOURCEf031 1/5/15/30 true Win/Linux ACK repair R/F Win0.1372/1.2732/4.6963/5.8654%, Linux0.1174/1.1446/4.2179/4.8735%; all original UDP/TCP/Stop PASS but newest rate targets FAIL at1/5/30,15 PASS (H552 JSON). New candidate after genuine ACK/SACK selected gap uses only existing live frozen shadows and single feedback cadence time to nominate 4/7/8/12 once, unchanged R<=10%F/MTU/owned Stop, new SOURCE 0/1/5/15/30 NOT_RUN."],"promotion":null}
+{
+  "schema_version": 1,
+  "id": "outer-opportunistic-repair",
+  "name": "外层机会式重传",
+  "summary": "认证成熟缺口后以有界预算最多机会式修复同一Seq的原冻结密文；无持续DATA PTO。",
+  "owner": "M2/M0 + FEC实验",
+  "stage": "experimental",
+  "development_branch": "experiment/fec-network-tuning",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026",
+    "main"
+  ],
+  "defaults": {
+    "--outer-repair": "on（默认）",
+    "rollback": "off",
+    "windows-v3": "outer-opportunistic-v3"
+  },
+  "usage": {
+    "cli": "Linux --outer-repair on|off；Windows native策略和只读状态按实际owner",
+    "config": "公开V4 CLI有开关，不能宣称旧Go配置全部映射",
+    "gui": "无完整Windows GUI逐方向修复策略操作的同源证据"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "crates/wbd-recovery/src/budget.rs",
+    "crates/wbd-recovery/src/global_sparse.rs",
+    "crates/wbd-recovery/src/outer_ack.rs",
+    "crates/wbd-recovery/src/receipt.rs",
+    "crates/wbd-engine/src/v4_windows_owner.rs",
+    "crates/wbd-engine/src/v4_windows_native_runtime.rs",
+    "tools/m0_wl_outer_repair_verify.py",
+    "crates/wbd-platform/src/ipv4_tcp.rs",
+    "crates/wbd-platform/src/rx_ipv4_tcp.rs"
+  ],
+  "doc_refs": [
+    "docs/handoff/CURRENT_INTEGRATION.md",
+    "docs/evidence/fec-network-work/20261026-W167-Outer-ON-DualArch-Matrix-and-Deferred-RX-250ms.json",
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-OPPORTUNISTIC-REPAIR.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-WINDOWS-UNIT-REGRESSION.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-FIRST-REAL-FAIL-DIAGNOSTIC.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-M2-RETENTION-FLOOR.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-OUTER-REPAIR-24-SIGNED-MATRIX.md",
+    "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-OUTER-REPAIR-RTT-FLOOR.md",
+    "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-24-SIGNED-RESULT.md",
+    "docs/devlog/M0/20261029-PLAN026-LINUX-DUAL-FEATURE-STATUS-CORRECTION.md",
+    "docs/devlog/M0/20261030-PLAN027-OUTER-ACK-SACK-INDEX-FIRST-CODE.md"
+  ],
+  "verification": [
+    {
+      "platform": "windows/x64 + WSL2/linux",
+      "scope": "原生 Normal/off：短反馈不烧PN/SEQ且无无据PTO的受限原生功能回归；此结果仅旧W源码，不是盘点HEAD的重新测试",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "4fb263dd38b68e6a1763e7d79f5654b611f4ac8b",
+      "evidence": "docs/evidence/M0/PLAN024-W168-recovered-Windows-v3-native-run-20261027.json"
+    },
+    {
+      "platform": "linux/arm64 + linux/amd64",
+      "scope": "F实验分支W168：外层ON选择与低/高损限定观察；非10%全线路能力证明，仅观察/特定case通过，非全平台质量门",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "0776fc4ede72fabd711e8333568eb88a58e8a6ea",
+      "evidence": "docs/evidence/fec-network-work/20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json"
+    },
+    {
+      "platform": "windows/x64",
+      "scope": "WL-N0/N1/N5与+103B高载再验",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "持续真实损伤与带宽预算",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "Windows2025 x64 signed NPF/Wintun + WSL2 Linux",
+      "scope": "Source9ed3 signed Win/WSL2 Rust Normal/off authentic UDP/TCP/Stop 24/24 50/100Mbps × 1/5/10/30% real netem × 50/150/300ms per direction, max real R/total 8.1055% and R/F 8.876%, no separate physical qualification",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "9ed3da3153e20a1787ed731c45dd3359c7e0654e",
+      "evidence": "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE9ED3-50-100M-24-SIGNED-20261028.json"
+    },
+    {
+      "platform": "Windows2025 signed Npcap/Wintun+WSL2 Linux",
+      "scope": "50Mbps each/30% tc loss/300ms one-way/60s first real candidate: Windows actual outer repair0 despite Linux same scenario repair37.1MB; functional/Stop PASS, opportunistic repair FAIL",
+      "status": "FAIL",
+      "source_sha": "504c517fee8bb658f58689560f891e2601c995b9",
+      "evidence": "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCE504C-50M-30P-300MS-FAIL-20261028.json"
+    },
+    {
+      "platform": "Windows x64 signed Npcap/Wintun + WSL2",
+      "scope": "b2fb 50M each/30% netem/300ms one-way: 7381 authenticated reverse receipts, no candidates, 206546 expiry and Windows R0 despite kernel loss; Normal-only 1200ms floor fix pending new SOURCE",
+      "status": "FAIL",
+      "source_sha": "b2fb57f5087532ae43fac35ec99c2d68fa3ddc0a",
+      "evidence": "docs/evidence/M0/PLAN026-WIN-OUTER-SOURCEB2FB-50M-30P-300MS-RETENTION-FAIL-20261028.json"
+    },
+    {
+      "platform": "Linux original Go TLS x86_64 client+server Rust raw/TUN, true network namespaces",
+      "scope": "50/100Mbps 1/5/10/30% 50/150/300ms source-specific 24 cases, client and server independently; repair snapshot minimum 1200ms",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "Linux x86_64 original Go TLS / Rust raw M4 TUN original real client+server, isolated netns",
+      "scope": "New Linux dual source b9c after c589 shared 1.2s v3 bounded retention; 50/100Mbps each ×1/5/10/30% tc each ×50/150/300ms one-way, 60s, UDP mix. Both roles nonzero authentic M4 R and <=10% R/(F+R) all24; 12/12 50M native PASS, 10/12 100M native PASS, 2/12 100M 50ms pacing catch-up INCONCLUSIVE.",
+      "status": "CAPACITY_LIMITED",
+      "source_sha": "b9c2c1707c917816c6d615a5283c9ea2329ee6b5",
+      "evidence": "docs/evidence/M0/PLAN026-LINUX-DUAL-SOURCEB9C2-50M-12-SIGNED-20261029.json"
+    },
+    {
+      "platform": "Windows2025 signed Npcap/Wintun + WSL2 Linux original Go TLS/Rust",
+      "scope": "New SOURCE787ad4 Normal/off 10Mbps each 250ms true 30% netem 60s; first 70.1962/70.1991%, frozen retransmit R0 and candidate_first0 both, Stop PASS; live ACK opportunistic repair FAIL despite carrier pass",
+      "status": "FAIL",
+      "source_sha": "787ad4c900f3bae867c5c9556c4702339deef8cb",
+      "evidence": "docs/evidence/M0/PLAN027-H500-A4-A5-C50-OFF30-NEW-SOURCE-20261030.json"
+    },
+    {
+      "platform": "Windows2025 signed Wintun/Npcap↔WSL2 original Go TLS Linux raw/TUN",
+      "scope": "PLAN027 H501 10Mbps both/250ms/true 30% tc/60s. Both original immutable real retries, native owned Stop PASS; Windows R/F1.39%, R/(F+R+C)1.37%, Linux R/F4.34%. No business recovery improvement or 1/5/10/30 matrix proven.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "0b7391a182f05947419c1211f01058b4798370a3",
+      "evidence": "docs/evidence/M0/PLAN027-H503-RECOVERED-H501-LIVE-REPAIR-AND-TIER-20261030.json"
+    },
+    {
+      "platform": "Windows2025 x64 signed Npcap/Wintun + WSL2 Linux original Go TLS/Rust",
+      "scope": "SOURCE1644 true Normal/off 50Mbps each/150ms one-way/0% tc/60s: Windows first 99.9995% (not exact-zero), Linux first100%, owned Stop both. Original Linux R133B/F415911076 (one retransmit, 0.00003198% of F) vs old source0b R4.304% false; Windows R0. Scoped no-loss low-repair PASS, source C100/A/B/C still incomplete.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "1644df34d241d487c5c5eb704a1a0a2e5f506f5e",
+      "evidence": "docs/evidence/M0/PLAN027-H510-RECOVERED-SOURCE1644-NOLOSS-AND-GOV-20261030.json"
+    },
+    {
+      "platform": "Windows2025 signed NPF/Wintun ↔ Linux WSL2 original TLS/Rust raw/TUN",
+      "scope": "SOURCE1644 Normal/off 50Mbps each/150ms true 1/5/10% netem/60s source-locked Actions. First follows true injected loss, Stop PASS; outer retransmit almost 0 at real loss. 30% Windows R0 and first~70% also measured. This is outer presentation shortfall, NOT a complete opportunistic repair PASS.",
+      "status": "FAIL",
+      "source_sha": "1644df34d241d487c5c5eb704a1a0a2e5f506f5e",
+      "evidence": "docs/evidence/M0/PLAN027-H513-SOURCE1644-TRUE-NATIVE-RECOVERY-20261030.json"
+    },
+    {
+      "platform": "Windows signed Npcap/Wintun + Linux original TLS/Rust SOURCE H533",
+      "scope": "Latest user-scoped old ACK gap abandonment, true Normal/off 0%/30% independent new SOURCE tests pending; no repair-percentage floor.",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "Windows signed Npcap/Wintun and Linux WSL2 Rust original owner",
+      "scope": "H537 SOURCE080 genuine Native Normal/off 10Mbps each 250ms/0% 60s, first100% both, Win R0 Linux R0, no excess no-loss retransmission, true UDP/TCP/Stop. One-scene only; 30% future opportunities NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "08069b1513a9cba61d0b315dde03505f97ef796c",
+      "evidence": "docs/evidence/M0/PLAN027-H537-SOURCE080-TRUE-NATIVE-NOLOSS-20261030.json"
+    },
+    {
+      "platform": "Windows Npcap/Wintun Go TLS + WSL2 Linux Rust original SOURCE080",
+      "scope": "H538 exact same binary 10Mbps each/250ms/30pct 60s source080, genuine tc loss, first70.0254/70.0708%, Win300/Linux180 immutable opportunities, R/F0.3511/0.1755%, both owned Stop and no backlog; 0pct baseline R0. No recovery rate floor or same-VM A/B improvement claim.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "08069b1513a9cba61d0b315dde03505f97ef796c",
+      "evidence": "docs/evidence/M0/PLAN027-H538-SOURCE080-TRUE-30P-OPPORTUNISTIC-REPAIR-20261030.json"
+    },
+    {
+      "platform": "True signed Windows NPF/Wintun Go TLS vs Linux WSL2 Rust TUN",
+      "status": "FUNCTIONAL_PASS",
+      "scope": "H545 product SOURCEba8d new feedback-tail candidate, real 0%/10M each/250ms/60s first100% both, Win F86397074 R0 C215130 Linux F85007731 R0, owned Stop. 1/5/15/30% ratio UNVERIFIED.",
+      "source_sha": "ba8d999aa806800cfb562ed34dfd738a98fb45bc",
+      "evidence": "docs/evidence/M0/PLAN027-H545-SOURCEBA8D-REAL-ZERO-ORIGINAL-20261030.json"
+    }
+  ],
+  "limitations": [
+    "PLAN027 main source introduced pure scoped outer ACK/SACK cache retirement/gap-hint index, optional shadow discard and required native tests; not connected to either live owner, M2 per-record Receipt still active, no new-source real kernel or matrix PASS. Exact code/devlog reference above.",
+    "FEC修复/多lane副本不计入outer DATA重传；pre-netem DATA统计不能除post-netem线路字节。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "M0 PLAN025 H307 integrates byte-exact verified S55 frozen Windows Go/Rust source49f81637 assembly/test/workflow product code from experiment into main, retaining 2026-10-28 user Auto <=120s rule and all main evidence. Main integration commit source itself has not yet earned native PASS; inherited S55 Windows Auto functional positive remains scoped to original exact source, independent WL-N0 300ms sourceaa93183d FAIL remains and higher stress paused.",
+    "Old standalone unit tests alone did not prove Windows repair; SOURCE9ed3 true 24-case signed NPF/WSL2 native PASS replaces that NOT_RUN. 30% R/C has only business-target proxy, not real configured outer C.",
+    "SOURCE504c Fixed/FEC originally needed its 1536 arena-backed shadow retained. SOURCE9ed3 scopes independent detached snapshot and 1200ms retention to Normal/off only; no broader mode or physical proof.",
+    "Original SOURCE504c/b2fb 50/30/300 R0 FAIL retained. SOURCE9ed3 24 independently signed CI VM runs, no same-host CPU A/B or repeat-run stability/physical qualification.",
+    "Old source9ed3 Linux server R=0 in 10/24 and 50M30%300ms 266B; Linux both-endpoint source-local verification must precede qualification.",
+    "Linux dual original Go/Rust pure-UDP capacity matrix b9c is 22/24 full PASS, two 100M/50ms pacing-catchup INCONCLUSIVE; source c589 90/10 UDP/TCP exploratory runs are not capacity-qualified. Physical outer link C, repeated stability and Linux client TCP under 300ms not proven.",
+    "PLAN027 changes v3 hard byte credit to R<=0.10F on confirmed outer first sends; 9%-rate smoothing remains. Sparse absolute/global caps unchanged. Pure-source regression is not a real live wire ratio or source-scoped platform PASS; report R/(F+R+C) separately.",
+    "PLAN027 H400 source-only strict pure ACK/SACK build/parse (cold SACK capability required); no Windows/Linux owner feed, live Receipt retirement or A/B/C qualification.",
+    "PLAN027 H401 source c8dad610 native platform95/95 (2 new pure ACK/SACK tests), engine134/134 and four other groups PASS Action40946233170; source-only, no live owner/Receipt/A/B/C proof.",
+    "H431 Windows original NPF strict cumulative ACK batch → current lane/epoch definitely-sent seq64 shadow index. No Health/Auto authority; SACK cold handshake and Linux remain open.",
+    "PLAN027 H439 bounded R2 ACK index recovers one stale 2s metadata entry per new real first-send, without hot scans or DATA blocking; two-OS end-to-end and M2 retirement still OPEN.",
+    "H440 source candidate removes live Fixed/off and Auto per-record WBC4 Receipt transmit/receive dependency; existing scoped ACK/SACK shadow hints and native Health remain. Exact H440 native/real two-OS qualification pending, not PASS.",
+    "H451 candidate cumulative ACK uses 3 legal duplicate ACKs plus later definitely-sent span and reorder guard to nominate at most one optional immutable repair, even without unnegotiated SACK; all stage0 repairs obey 8MTU tokens. Real 0/30% repair candidate, F/R/C and source-scoped platform qualification pending.",
+    "H500 real 30% loss per direction, R0 with F>0/C>0 and no repair candidates, despite full Stop. Linux outgoing outer ACK hardcoded 1, Windows RX no SACK negotiation, oldest ACK gap outlives shadow; fix peer trigger before claiming live repair.",
+    "H503 prior H501 true Windows/Linux repaired candidate/Stop verified at 30%, but no SACK negotiation, R values below old SOURCE9ed3 different-feedback 8% high-loss reference; tier runs 1/5/10/30 pending and no new-source matrix or stable long-test transfer.",
+    "H505 Rust source on main compresses adjacent authenticated future TCP ACK spans on BOTH Linux and Windows instead of saturating at 256 individual records; correctness unit and new-source two-OS results NOT_RUN at code commit, no claimed tier improvement. Original FakeTCP SYN/SYN-ACK already carries negotiated SACK but native handoff currently does not, so stale cumulative ACK cannot replace true per-gap SACK; do not fake ACK or increase retry budget.",
+    "H504 true no-loss normal 50M/150ms original source0b proves 15,485 unnecessary Linux retries (R/F4.304%) with 100% first/Stop, hard FAIL for no-loss product behavior. H505 source dedupes repeated unchanged cumulative ACK nominations until real progress; pending new-binary zero-loss and graded tests. No fake loss matching historical percentages.",
+    "H510 recovered exact native SOURCE1644 no-loss 50M/150ms suppressed spurious Linux R from old H504 4.304% to 133B (0.00003198% of F), Win R0; first Win 99.9995% prevents strict exact-zero claim. Old damage tiers SOURCE0b do NOT transfer to SOURCE1644; real source loss1/5/10/30 and 5-minute stability queued separately, presentation-only opportunity not inner reliability.",
+    "H513 source1644 true 1/5/10/30% damaged signed original native: Windows R/F=0/0/~0.00005%/0; Linux R/F=0/0/~0.000032%/unverified, far below old source0b levels. No R padding; real cold-negotiated SACK not propagated; incomplete outer appearance. H513 Game2 damaged 5% had first99.7305%/100% and business/Stop PASS but wrong lossless>=.999 script marked Action FAIL; source-matched corrected oracle rerun pending. H512 Linux 100s idle, 106s dead, dead→TLS reconnect all PASS scoped.",
+    "H515 Windows/Linux actual Go FakeTCP SACK negotiation is now explicitly carried to native Rust-only ACK/SACK. Linux original authenticated M3 future seq spans may emit one bounded 20ms pure SACK, Windows NativeOwner V2 Normal/Fixed/Auto publishes only <=50Hz authenticated future spans, and both RX indices parse only negotiated SACK. Source candidate unverified pending exact new-build Actions; no loss-tier or hardware PASS inferred.",
+    "H533 candidate: old appearance ACK head can be abandoned after 600ms authentic RX, enabling later optional hints. Prior SOURCE7a 30% Windows6/Linux2 immutable retries and old failures remain exact-source scoped; new H533 product NOT_RUN.",
+    "H538 source080 0pct and 30pct authentic original product confirms bounded optional opportunities, Stop release and no sustained false resend; individual cosmetic gap skip not directly instrumented. Linux C wire bytes not separated by existing stop log; no CPU speedup or zero business loss assertion. User cancels any R percentage minimum; subtask CLOSED.",
+    "H552 original SOURCEf031 1/5/15/30 true Win/Linux ACK repair R/F Win0.1372/1.2732/4.6963/5.8654%, Linux0.1174/1.1446/4.2179/4.8735%; all original UDP/TCP/Stop PASS but newest rate targets FAIL at1/5/30,15 PASS (H552 JSON). New candidate after genuine ACK/SACK selected gap uses only existing live frozen shadows and single feedback cadence time to nominate 4/7/8/12 once, unchanged R<=10%F/MTU/owned Stop, new SOURCE 0/1/5/15/30 NOT_RUN.",
+    "PLAN027 H555 user override: source d765aef9 product code introduces genuine positive SACK bounded monotone mature-gap cursor and one-shot 50% PN sample, per-direction 32-handle FIFO deferring only BurstPaced within existing 20ms expiry; non-FEC cfg build fix. New-source original two-OS 0/1/5/15/30, CPU and owned Stop NOT_RUN at this code commit; prior SOURCEf031 1/5/30 ratio FAIL remains provenance, no strict narrow ratio tuning or invented win. Game and full lifecycle/C still open."
+  ],
+  "promotion": null
+}

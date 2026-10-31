@@ -1,1 +1,207 @@
-{"schema_version":1,"id":"normal-off","name":"Normal / FEC OFF 原生通道","summary":"原Go认证TLS冷层交给Rust数据面，以真实raw/TUN实现独立包首到交付，默认不开FEC。","owner":"M0/M1/M3/M4","stage":"experimental","development_branch":"integration/w168-freeze-windows-adapter-20261026","available_on":["integration/w168-freeze-windows-adapter-20261026","experiment/windows-wiring-arm64-native-parallel-20261028","experiment/windows-wiring-n0-normal-parallel-20261028","main"],"defaults":{"--mode":"normal（Linux V4默认）","FEC2":"off"},"usage":{"cli":"wbd-v4-client/server --mode normal；另需raw-interface、本地/对端IP、真实TLS与owned TUN选项","config":"本Linux V4公开入口是CLI，原Go配置与完整V4映射尚未逐键验证","gui":"Windows V4模式选择源码存在；真GUI完整OS Applied尚未验证"},"code_refs":["r0/go_overlay/internal/v4productcli/linux.go","crates/wbd-engine/src/v4_embedded_go.rs","crates/wbd-platform/src/linux_raw_carrier.rs","r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go","crates/wbd-engine/src/v4_windows_native_runtime.rs","crates/wbd-platform/src/windows_native_io.rs","r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go","r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io.go","tools/m0_wl_lock_profile.py"],"doc_refs":["docs/handoff/CURRENT_INTEGRATION.md","docs/architecture/MIGRATION.md","docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md","docs/devlog/M0/20261028-PLAN026-WIN-RX-WAKE-COALESCING-150M.md","docs/devlog/M0/20261028-PLAN026-WIN-NPCAP-ZEROCOPY-RX-BORROW-150M.md","docs/devlog/M0/20261028-PLAN026-WIN-NPF-ABBA-ROLLBACK.md","docs/devlog/M0/20261028-PLAN026-WIN-NPF-ROLLBACK-NATIVE-RESULT.md","docs/evidence/M0/PLAN027-H532-SOURCE7A-A4-C50-C100-ORIGINAL-20261030.json"],"verification":[{"platform":"windows/x64 + WSL2/linux","scope":"原生 Normal/off：双向真实UDP/TCP、M2回归、owned Stop；此结果仅旧W源码，不是盘点HEAD的重新测试","status":"FUNCTIONAL_PASS","source_sha":"4fb263dd38b68e6a1763e7d79f5654b611f4ac8b","evidence":"docs/evidence/M0/PLAN024-W168-recovered-Windows-v3-native-run-20261027.json"},{"platform":"linux/amd64","scope":"盘点HEAD本次独立产品Normal验证没有运行","status":"NOT_RUN","source_sha":null,"evidence":null},{"platform":"physical","scope":"物理运行、低损持续/大包/p99","status":"NOT_RUN","source_sha":null,"evidence":null},{"platform":"linux/aarch64 native GitHub-hosted two-netns raw/TUN","scope":"ARM64 actual original Go TLS→Rust raw/TUN Normal/off real bidirectional ICMP & Stop, MTU 1280/1500 IPv4 budgets 1209/1429 and DF overbudget rejection","status":"FUNCTIONAL_PASS","source_sha":"f7ee097e116ab813f9ba23514df01a3f0f9d342a","evidence":"docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"},{"platform":"windows/x64 + linux/amd64 WSL2","scope":"Normal original Go signed native Windows/Linux WL-N0 300ms both-direction 0% injected loss/10Mbps target: initial real UDP/TCP and tc/IFB owned readback PASS but product Normal Rust/Go kind1 owner refused after29s, safe cleanup and failed normal owned Stop. Actual 4.87Mbps sent,4.78Mbps received only before termination. N0 FAIL, source is independent frozen product copy.","status":"FAIL","source_sha":"aa93183d7183681efd5408f3cb2e1a0d1e32fada","evidence":"docs/evidence/M0/PLAN025-N0-normal-sourceaa93183d-owner-failure-20261028.json"},{"platform":"windows/x64 signed Npcap+Wintun original Go TLS Rust ↔ linux/amd64 WSL2 raw/TUN","scope":"Normal/off actual original signed Windows/Linux two-way kernel UDP, TCP echo and both owned Stop; source b6b964a Action40560287417 native PASS; WL-N0/N1/N5, scored p99/CPU, physical, fast-loss Auto NOT_RUN","status":"FUNCTIONAL_PASS","source_sha":"b6b964afa7ffec5795f2c11c6e0620f223e684ac","evidence":"docs/evidence/M0/PLAN025-H307-main-source-b6b964-seven-mode-native-20261028.json"},{"platform":"windows/x64 signed Npcap Wintun ↔ linux/amd64 WSL2 true kernel","scope":"Main S61 original Windows/Linux seven-mode authenticated native complete; separate N0 dd0767 60s 10Mbps/300ms one success but old aa931 owner FAIL; Linux x64 1% true netem after 69 sequential echoes FAIL with both Stop; ARM64 f7ee reused capacity success standalone","status":"FUNCTIONAL_PASS","source_sha":"33ed20b4717dac23a2d70c02da170a57daeb02e1","evidence":"docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"},{"platform":"windows/x64 ↔ linux/amd64 WSL2","scope":"Isolated exact dd0767 300ms each direction 0%-loss configured, 60s real UDP10Mbps each dir and Stop PASS once; older aa931 same N0 owner failure unresolved; Windows Npcap local drop137, no calibrated p99.","status":"PERFORMANCE_PASS","source_sha":"dd0767abfc076c97bc42304083f42105a514cda1","evidence":"docs/evidence/M0/PLAN025-H309-WL-N0-dd0767-PASS-previous-FAIL-20261028.json"},{"platform":"linux/amd64 original-Go TLS Rust real two-netns raw/TUN","scope":"Exact product SOURCE33ed20b4 reused original Go/Rust binary artifact12760744437 with test harness fb653d01; real 1% netem both dirs actual drop16, independent 512 offered UDP, 508 unique echoed, 4 missing, 0 duplicate; Rust M2 firstsend1023, authenticated ACK547, original frozen retransmitted4; both native owned Stop PASS. Diagnostic band <=20 of512, not a formal loss-recovery/p99 or Windows result.","status":"FUNCTIONAL_PASS","source_sha":"33ed20b4717dac23a2d70c02da170a57daeb02e1","evidence":"docs/evidence/M0/PLAN025-H312-source33ed-linux-loss1-512-genuine-20261028.json"},{"platform":"windows/x64 signed Wintun+Npcap ↔ linux/amd64 WSL2","scope":"PLAN026 Rust-only Normal/off NativeOwner product-source wiring, GO NPF/Wintun handoff, real M3/Ack/M2 and owned Stop; source build/native bidirectional/network performance for this new path","status":"NOT_RUN","source_sha":null,"evidence":null},{"platform":"Windows2025 x64 signed Wintun/Npcap ↔ WSL2 Linux x86_64 raw/TUN","scope":"PLAN026 SOURCE055 Rust NativeOwner Normal/off real bidirectional UDP/TCP and both owned Stop; excludes N0/CPU A-B and excludes legacy Fixed/Auto/Game","status":"FUNCTIONAL_PASS","source_sha":"055026fda1cf6ef31e1a8d81b7e04badeb617c34","evidence":"docs/evidence/M0/PLAN026-S2-source055-Windows-Rust-Normal-real-native-functional-20261028.json"},{"platform":"Windows2025 signed Npcap Wintun to WSL2 Linux x64","scope":"PLAN026 P200 actual 60s kernel 200ms per direction 250Mbit/s rate 30% loss, offered Windows 148.02 Linux 108.12Mbps <225Mbps floor, real duplex/Stop PASS but 250Mbps capacity NOT MET","status":"CAPACITY_LIMITED","source_sha":"0d09cd5e61266b716aa5ade9bbce55a63120f2f1","evidence":"docs/evidence/M0/PLAN026-P200-source0d09-Windows-Linux-capacity-limited-20261028.json"},{"platform":"Windows2025 signed Npcap Wintun ↔ WSL2 Linux native raw TUN","scope":"Original Rust Normal/off 10Mbps genuine kernel both-direction 300ms delay 0% injected loss for 240s UDP, separate TCP and owned Stop; N0 1-run source-locked scoped performance","status":"PERFORMANCE_PASS","source_sha":"a1238c4d6964f60d88e65e2668314160fefe038f","evidence":"docs/evidence/M0/PLAN026-N0-sourcea123-Windows-Normal-300ms-10Mbps-240s-PASS-20261028.json"},{"platform":"Windows2025 signed Npcap/Wintun and Linux WSL2 x64 raw/TUN","scope":"PLAN026 P200 200ms one-way per direction 250Mbps TC cap 30pct real random loss, optimized Python source sent Windows249.01/Linux198.27Mbps over60s, genuine kernel UDP/TCP/Stop PASS, Linux source<225Mbps 90pct floor","status":"CAPACITY_LIMITED","source_sha":"c8352931e15c954aa2c5de7a31e024af3a7eeb35","evidence":"docs/evidence/M0/PLAN026-P200-sourcec835-windows-linux-generator-improved-capacity-20261028.json"},{"platform":"Windows amd64 + WSL2 Linux amd64 signed real Npcap/Wintun","scope":"Rust NativeOwner Normal/off 150Mbps each direction 300ms one-way 0% tc netem 60s, RX→TX 32-record bounded wake optimization new exact product SOURCE7fc; original TLS/raw/TUN, unique first 100% W→L/99.98947% L→W, 0 Linux raw/UDP and tc drops, both Stop PASS; absolute zero missing not met; 39,701 SetEvent attempts for 1,236,151 RX deliveries; same-VM CPU optimization not proven","status":"PERFORMANCE_PASS","source_sha":"7fc38591c501ff4a06e1862c7b08d5d3dbc1be95","evidence":"docs/evidence/M0/PLAN026-WIN-RX-WAKE-150M-SOURCE7FC3-ACTUAL-PASS-20261028.json"},{"platform":"Windows amd64 signed Npcap/Wintun↔WSL2 Linux Rust raw/TUN","scope":"Compiled SOURCEe6be Windows Rust NativeOwner Normal/off 150Mbps each /300ms one-way/0% tc netem/60s: attempt1 same-source runner1000107783 FAIL Windows first receipt98.6538%, CPU51.25s; attempt2 runner1000107784 PASS first unique100% both, CPU11s, both owned Stop PASS. NPF in-place RX 1.267GB extra Rust scratch memcpy avoided. Stable cross-run performance and sameVM CPU improvement NOT_PROVEN.","status":"PERFORMANCE_PASS","source_sha":"e6be9358d2272d7e1960a935be7fe772885bb034","evidence":"docs/evidence/M0/PLAN026-SOURCEE6BE-NPF-BORROW-150M-ATTEMPTS-20261028.json"},{"platform":"Windows-2025 + same-runner WSL2","scope":"A1/B1/B2/A2 signed 150M/300ms 60s: all network/Stop gates PASS; B CPU+1.63%/GB => rollback (A compiled product only; B exact SHA in evidence).","status":"PERFORMANCE_PASS","source_sha":"7fc38591c501ff4a06e1862c7b08d5d3dbc1be95","evidence":"docs/evidence/M0/PLAN026-WIN-NPF-ABBA-SAME-HOST-ROLLBACK-20261028.json"},{"platform":"Windows2025 signed native + WSL2 Linux x64","scope":"Rollback main b1bc fresh 150M/300ms one-way/60s Normal/off: kernel UDP/TCP and both Stop PASS; Win first 98.2784% FAIL, Linux offered 140.9482 Mbps below 142.5, Linux UDP socket drops81, TX CPU hotspot; 150M NOT_QUALIFIED.","status":"FAIL","source_sha":"b1bc9315be23a78b2af65c52c2d6f53bbf858aa2","evidence":"docs/evidence/M0/PLAN026-WIN-NPF-ABBA-ROLLBACK-NEW-SOURCE150M-FAIL-20261028.json"},{"platform":"Windows Server x64 signed NPF/Wintun + Linux/amd64 WSL2 actual TLS/Rust native","scope":"H532 SOURCE7a signed Windows NPF/Wintun original Go TLS↔Linux Rust native WSL2 50M/25ms/0%/60s and 100M/25ms/0%/60s, bidirectional first 99.9974–100%, 99.9992–100%, authentic TCP/UDP and both owned Stop. 100M process CPU59.152% 1logicalcore, peakRSS42.6MB, TUN zero drop. Not 200M nor long yet; prior true damaged source7a H528 separate.","status":"FUNCTIONAL_PASS","source_sha":"7a5d7e83823e96539d2a904a8193a85ec18df30d","evidence":"docs/evidence/M0/PLAN027-H532-SOURCE7A-A4-C50-C100-ORIGINAL-20261030.json"}],"limitations":["Windows W168 功能PASS只限Normal/off，不含WL-N0/N1/N5、GUI、Fixed/Auto/Game。","Linux公开V4 IPv4-only；未提供与旧V3数据面互通资格。","本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。","2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637.","Action40557095692 exact sourceaa93183d Normal WL-N0 300ms 10Mbps target/0% tc loss FAIL due untyped native Normal M1/M3 owner failure. 4.87Mbps attempted until early Stop, not a scored peak or proven host cap. Pause N1/N5/higher pending root, preserve older functional positives.","H307: S55 signed Windows Go/Rust import to main; prior S55 scope only. Independent old N0 aa931 FAIL; source b6b product evidence retained.","H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.","S61: source33ed FEC2-off Linux Rust build fix; old b6b native positive remains source-specific; earlier NORMAL-COMMON FAIL retained.","H311: source33ed 7 modes PASS, N0dd0767 one-sample PASS, aa931 FAIL, ARM64f7ee separate; Linux serial-echo 1% FAIL retained.","Linux 1% original-Go product source33ed Action40587653027 now source-locked native 512 offered/508 unique received/4 residual via non-stop-and-wait, both Stop PASS; old source33ed harness Action40566375977 FAIL remains. No equivalence with physical Windows or FEC2/Game loss tests.","2026-10-28 PLAN026 新Normal/off直接转 Rust 两固定worker，无Go包FFI/Go数据泵作为正式候选；此代码尚未获Windows Rust/Go生产编译、真双端应用、N0 240s或同机CPU/首到A/B证据。旧已测SOURCE不是新路径PASS，Fixed/Auto/Game仍沿当前独立旧热路径待逐模式迁入同一个NativeOwner。","2026-10-28 PLAN026 follow-up: new raw Rust NativeOwner Windows build previously blocked at E0502 in pure TCP ACK checksum; source patch separates checksum computation. Windows native Go ABI 192-byte V1 layout explicitly asserted in test. This is a build correction, not a Windows actual Npcap/Wintun or performance PASS.","PLAN026 authenticated TCP presentation ACK correction: Rust NativeOwner now records the ACK value actually included in a Npcap-accepted carrier; only when authenticated contiguous progress exceeds this value does it send a standalone ACK. Source changed on main but live Windows/Npcap/A-B still requires independent evidence.","PLAN026 Stop scheduling: Rust RX prefers stop event and checks AtomicBool before each early packet and NPF frame; TX also prefers stop over Wintun read events. Windows live load/Stop regression on this exact post-fix SOURCE must be re-run; past live PASS belongs only to earlier SOURCE.","2026-10-28 H326 Windows Rust Normal/off TX event-only scheduling: M2 feedback.next_deadline and shadow.next_deadline wake earliest deadline in one M2 monotonic clock, replacing fixed 20ms poll/2s post-RX spin; removes per-delivery last_rx_ns atomic writes. Requires exact-source real Windows signed NPF/Wintun tests; earlier PASS does not transfer.","2026-10-28 H326 optional win_native_lock_profile compiled only when explicitly enabled: samples 1/64 shared Entry lock acquisitions for TX and RX, prints counts/total/max wait on owned Stop. Does not split owner yet, no default per-packet instrumentation or claim of measured lock contention before live run.","PLAN026 RX→TX <=32 authenticated records wake batch; real signed SOURCE7fc PASS; no same-host speedup proved.","PLAN026 SOURCE7fc new Rust RX bounded SetEvent coalescing actual real 150Mbps /300ms /tc0% /60s Normal/off PASS first unique>=99.9 each, signed Windows/WSL2 true Stop. 130 Linux→Windows app packets missing in last sequence window; not absolute zero. New actual OS TID CPU identifies RX>T X; CPU differences vs SOURCE0abd from different Windows VMs cannot prove causal speedup; ETW stage attribution and physical/FEC modes NOT_MEASURED.","Historic e6be borrowed RX: 150Mbps 1 FAIL/1 PASS on different Windows runners; host variance and CPU ROI unproven. See source-specific evidence and ABBA record.","ABBA 40707758779: B NPF borrow rejected (A 4.852864 vs B 4.932077 CPU s/GB); new main rollback SOURCE not qualified until separate native Action.","Rollback main b1bc signed Action40710227335: fresh native CPU50.90625s/75.921s, Rust TX sample43.72s, Linux offered140.95 and UDP socket drops81, Windows first98.2784%; 150M FAIL, no host-only attribution. ABBA A/B remains earlier-source decision.","H552 original sourcef031 true Normal0 and Normal C50 50Mbps/25ms/0 first0.999984/1.0 Stop PASS, Win F431290555 R0 C776264, Linux F424414102 R0; 1/5/15/30 throughput/Stop PASS and rate only15% both PASS, user ratio other3 FAIL. Sourcef031 C100/long conditional pending, prior source7a C200 failure retained."],"promotion":null,"legacy_branch_reason":"对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"}
+{
+  "schema_version": 1,
+  "id": "normal-off",
+  "name": "Normal / FEC OFF 原生通道",
+  "summary": "原Go认证TLS冷层交给Rust数据面，以真实raw/TUN实现独立包首到交付，默认不开FEC。",
+  "owner": "M0/M1/M3/M4",
+  "stage": "experimental",
+  "development_branch": "integration/w168-freeze-windows-adapter-20261026",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026",
+    "experiment/windows-wiring-arm64-native-parallel-20261028",
+    "experiment/windows-wiring-n0-normal-parallel-20261028",
+    "main"
+  ],
+  "defaults": {
+    "--mode": "normal（Linux V4默认）",
+    "FEC2": "off"
+  },
+  "usage": {
+    "cli": "wbd-v4-client/server --mode normal；另需raw-interface、本地/对端IP、真实TLS与owned TUN选项",
+    "config": "本Linux V4公开入口是CLI，原Go配置与完整V4映射尚未逐键验证",
+    "gui": "Windows V4模式选择源码存在；真GUI完整OS Applied尚未验证"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "crates/wbd-platform/src/linux_raw_carrier.rs",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+    "crates/wbd-engine/src/v4_windows_native_runtime.rs",
+    "crates/wbd-platform/src/windows_native_io.rs",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io.go",
+    "tools/m0_wl_lock_profile.py"
+  ],
+  "doc_refs": [
+    "docs/handoff/CURRENT_INTEGRATION.md",
+    "docs/architecture/MIGRATION.md",
+    "docs/decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-RX-WAKE-COALESCING-150M.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-NPCAP-ZEROCOPY-RX-BORROW-150M.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ABBA-ROLLBACK.md",
+    "docs/devlog/M0/20261028-PLAN026-WIN-NPF-ROLLBACK-NATIVE-RESULT.md",
+    "docs/evidence/M0/PLAN027-H532-SOURCE7A-A4-C50-C100-ORIGINAL-20261030.json"
+  ],
+  "verification": [
+    {
+      "platform": "windows/x64 + WSL2/linux",
+      "scope": "原生 Normal/off：双向真实UDP/TCP、M2回归、owned Stop；此结果仅旧W源码，不是盘点HEAD的重新测试",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "4fb263dd38b68e6a1763e7d79f5654b611f4ac8b",
+      "evidence": "docs/evidence/M0/PLAN024-W168-recovered-Windows-v3-native-run-20261027.json"
+    },
+    {
+      "platform": "linux/amd64",
+      "scope": "盘点HEAD本次独立产品Normal验证没有运行",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "物理运行、低损持续/大包/p99",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/aarch64 native GitHub-hosted two-netns raw/TUN",
+      "scope": "ARM64 actual original Go TLS→Rust raw/TUN Normal/off real bidirectional ICMP & Stop, MTU 1280/1500 IPv4 budgets 1209/1429 and DF overbudget rejection",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
+      "evidence": "docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"
+    },
+    {
+      "platform": "windows/x64 + linux/amd64 WSL2",
+      "scope": "Normal original Go signed native Windows/Linux WL-N0 300ms both-direction 0% injected loss/10Mbps target: initial real UDP/TCP and tc/IFB owned readback PASS but product Normal Rust/Go kind1 owner refused after29s, safe cleanup and failed normal owned Stop. Actual 4.87Mbps sent,4.78Mbps received only before termination. N0 FAIL, source is independent frozen product copy.",
+      "status": "FAIL",
+      "source_sha": "aa93183d7183681efd5408f3cb2e1a0d1e32fada",
+      "evidence": "docs/evidence/M0/PLAN025-N0-normal-sourceaa93183d-owner-failure-20261028.json"
+    },
+    {
+      "platform": "windows/x64 signed Npcap+Wintun original Go TLS Rust ↔ linux/amd64 WSL2 raw/TUN",
+      "scope": "Normal/off actual original signed Windows/Linux two-way kernel UDP, TCP echo and both owned Stop; source b6b964a Action40560287417 native PASS; WL-N0/N1/N5, scored p99/CPU, physical, fast-loss Auto NOT_RUN",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
+      "evidence": "docs/evidence/M0/PLAN025-H307-main-source-b6b964-seven-mode-native-20261028.json"
+    },
+    {
+      "platform": "windows/x64 signed Npcap Wintun ↔ linux/amd64 WSL2 true kernel",
+      "scope": "Main S61 original Windows/Linux seven-mode authenticated native complete; separate N0 dd0767 60s 10Mbps/300ms one success but old aa931 owner FAIL; Linux x64 1% true netem after 69 sequential echoes FAIL with both Stop; ARM64 f7ee reused capacity success standalone",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
+      "evidence": "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
+    },
+    {
+      "platform": "windows/x64 ↔ linux/amd64 WSL2",
+      "scope": "Isolated exact dd0767 300ms each direction 0%-loss configured, 60s real UDP10Mbps each dir and Stop PASS once; older aa931 same N0 owner failure unresolved; Windows Npcap local drop137, no calibrated p99.",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "dd0767abfc076c97bc42304083f42105a514cda1",
+      "evidence": "docs/evidence/M0/PLAN025-H309-WL-N0-dd0767-PASS-previous-FAIL-20261028.json"
+    },
+    {
+      "platform": "linux/amd64 original-Go TLS Rust real two-netns raw/TUN",
+      "scope": "Exact product SOURCE33ed20b4 reused original Go/Rust binary artifact12760744437 with test harness fb653d01; real 1% netem both dirs actual drop16, independent 512 offered UDP, 508 unique echoed, 4 missing, 0 duplicate; Rust M2 firstsend1023, authenticated ACK547, original frozen retransmitted4; both native owned Stop PASS. Diagnostic band <=20 of512, not a formal loss-recovery/p99 or Windows result.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
+      "evidence": "docs/evidence/M0/PLAN025-H312-source33ed-linux-loss1-512-genuine-20261028.json"
+    },
+    {
+      "platform": "windows/x64 signed Wintun+Npcap ↔ linux/amd64 WSL2",
+      "scope": "PLAN026 Rust-only Normal/off NativeOwner product-source wiring, GO NPF/Wintun handoff, real M3/Ack/M2 and owned Stop; source build/native bidirectional/network performance for this new path",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "Windows2025 x64 signed Wintun/Npcap ↔ WSL2 Linux x86_64 raw/TUN",
+      "scope": "PLAN026 SOURCE055 Rust NativeOwner Normal/off real bidirectional UDP/TCP and both owned Stop; excludes N0/CPU A-B and excludes legacy Fixed/Auto/Game",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "055026fda1cf6ef31e1a8d81b7e04badeb617c34",
+      "evidence": "docs/evidence/M0/PLAN026-S2-source055-Windows-Rust-Normal-real-native-functional-20261028.json"
+    },
+    {
+      "platform": "Windows2025 signed Npcap Wintun to WSL2 Linux x64",
+      "scope": "PLAN026 P200 actual 60s kernel 200ms per direction 250Mbit/s rate 30% loss, offered Windows 148.02 Linux 108.12Mbps <225Mbps floor, real duplex/Stop PASS but 250Mbps capacity NOT MET",
+      "status": "CAPACITY_LIMITED",
+      "source_sha": "0d09cd5e61266b716aa5ade9bbce55a63120f2f1",
+      "evidence": "docs/evidence/M0/PLAN026-P200-source0d09-Windows-Linux-capacity-limited-20261028.json"
+    },
+    {
+      "platform": "Windows2025 signed Npcap Wintun ↔ WSL2 Linux native raw TUN",
+      "scope": "Original Rust Normal/off 10Mbps genuine kernel both-direction 300ms delay 0% injected loss for 240s UDP, separate TCP and owned Stop; N0 1-run source-locked scoped performance",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "a1238c4d6964f60d88e65e2668314160fefe038f",
+      "evidence": "docs/evidence/M0/PLAN026-N0-sourcea123-Windows-Normal-300ms-10Mbps-240s-PASS-20261028.json"
+    },
+    {
+      "platform": "Windows2025 signed Npcap/Wintun and Linux WSL2 x64 raw/TUN",
+      "scope": "PLAN026 P200 200ms one-way per direction 250Mbps TC cap 30pct real random loss, optimized Python source sent Windows249.01/Linux198.27Mbps over60s, genuine kernel UDP/TCP/Stop PASS, Linux source<225Mbps 90pct floor",
+      "status": "CAPACITY_LIMITED",
+      "source_sha": "c8352931e15c954aa2c5de7a31e024af3a7eeb35",
+      "evidence": "docs/evidence/M0/PLAN026-P200-sourcec835-windows-linux-generator-improved-capacity-20261028.json"
+    },
+    {
+      "platform": "Windows amd64 + WSL2 Linux amd64 signed real Npcap/Wintun",
+      "scope": "Rust NativeOwner Normal/off 150Mbps each direction 300ms one-way 0% tc netem 60s, RX→TX 32-record bounded wake optimization new exact product SOURCE7fc; original TLS/raw/TUN, unique first 100% W→L/99.98947% L→W, 0 Linux raw/UDP and tc drops, both Stop PASS; absolute zero missing not met; 39,701 SetEvent attempts for 1,236,151 RX deliveries; same-VM CPU optimization not proven",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "7fc38591c501ff4a06e1862c7b08d5d3dbc1be95",
+      "evidence": "docs/evidence/M0/PLAN026-WIN-RX-WAKE-150M-SOURCE7FC3-ACTUAL-PASS-20261028.json"
+    },
+    {
+      "platform": "Windows amd64 signed Npcap/Wintun↔WSL2 Linux Rust raw/TUN",
+      "scope": "Compiled SOURCEe6be Windows Rust NativeOwner Normal/off 150Mbps each /300ms one-way/0% tc netem/60s: attempt1 same-source runner1000107783 FAIL Windows first receipt98.6538%, CPU51.25s; attempt2 runner1000107784 PASS first unique100% both, CPU11s, both owned Stop PASS. NPF in-place RX 1.267GB extra Rust scratch memcpy avoided. Stable cross-run performance and sameVM CPU improvement NOT_PROVEN.",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "e6be9358d2272d7e1960a935be7fe772885bb034",
+      "evidence": "docs/evidence/M0/PLAN026-SOURCEE6BE-NPF-BORROW-150M-ATTEMPTS-20261028.json"
+    },
+    {
+      "platform": "Windows-2025 + same-runner WSL2",
+      "scope": "A1/B1/B2/A2 signed 150M/300ms 60s: all network/Stop gates PASS; B CPU+1.63%/GB => rollback (A compiled product only; B exact SHA in evidence).",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "7fc38591c501ff4a06e1862c7b08d5d3dbc1be95",
+      "evidence": "docs/evidence/M0/PLAN026-WIN-NPF-ABBA-SAME-HOST-ROLLBACK-20261028.json"
+    },
+    {
+      "platform": "Windows2025 signed native + WSL2 Linux x64",
+      "scope": "Rollback main b1bc fresh 150M/300ms one-way/60s Normal/off: kernel UDP/TCP and both Stop PASS; Win first 98.2784% FAIL, Linux offered 140.9482 Mbps below 142.5, Linux UDP socket drops81, TX CPU hotspot; 150M NOT_QUALIFIED.",
+      "status": "FAIL",
+      "source_sha": "b1bc9315be23a78b2af65c52c2d6f53bbf858aa2",
+      "evidence": "docs/evidence/M0/PLAN026-WIN-NPF-ABBA-ROLLBACK-NEW-SOURCE150M-FAIL-20261028.json"
+    },
+    {
+      "platform": "Windows Server x64 signed NPF/Wintun + Linux/amd64 WSL2 actual TLS/Rust native",
+      "scope": "H532 SOURCE7a signed Windows NPF/Wintun original Go TLS↔Linux Rust native WSL2 50M/25ms/0%/60s and 100M/25ms/0%/60s, bidirectional first 99.9974–100%, 99.9992–100%, authentic TCP/UDP and both owned Stop. 100M process CPU59.152% 1logicalcore, peakRSS42.6MB, TUN zero drop. Not 200M nor long yet; prior true damaged source7a H528 separate.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "7a5d7e83823e96539d2a904a8193a85ec18df30d",
+      "evidence": "docs/evidence/M0/PLAN027-H532-SOURCE7A-A4-C50-C100-ORIGINAL-20261030.json"
+    }
+  ],
+  "limitations": [
+    "Windows W168 功能PASS只限Normal/off，不含WL-N0/N1/N5、GUI、Fixed/Auto/Game。",
+    "Linux公开V4 IPv4-only；未提供与旧V3数据面互通资格。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637.",
+    "Action40557095692 exact sourceaa93183d Normal WL-N0 300ms 10Mbps target/0% tc loss FAIL due untyped native Normal M1/M3 owner failure. 4.87Mbps attempted until early Stop, not a scored peak or proven host cap. Pause N1/N5/higher pending root, preserve older functional positives.",
+    "H307: S55 signed Windows Go/Rust import to main; prior S55 scope only. Independent old N0 aa931 FAIL; source b6b product evidence retained.",
+    "H307 exact integrated main b6b964a seven modes native true duplex/Stop PASS Action40560287417, artifact12760173657 hash verified; not N0/capacity, dynamic natural Auto, damaged network or global/physical qualification.",
+    "S61: source33ed FEC2-off Linux Rust build fix; old b6b native positive remains source-specific; earlier NORMAL-COMMON FAIL retained.",
+    "H311: source33ed 7 modes PASS, N0dd0767 one-sample PASS, aa931 FAIL, ARM64f7ee separate; Linux serial-echo 1% FAIL retained.",
+    "Linux 1% original-Go product source33ed Action40587653027 now source-locked native 512 offered/508 unique received/4 residual via non-stop-and-wait, both Stop PASS; old source33ed harness Action40566375977 FAIL remains. No equivalence with physical Windows or FEC2/Game loss tests.",
+    "2026-10-28 PLAN026 新Normal/off直接转 Rust 两固定worker，无Go包FFI/Go数据泵作为正式候选；此代码尚未获Windows Rust/Go生产编译、真双端应用、N0 240s或同机CPU/首到A/B证据。旧已测SOURCE不是新路径PASS，Fixed/Auto/Game仍沿当前独立旧热路径待逐模式迁入同一个NativeOwner。",
+    "2026-10-28 PLAN026 follow-up: new raw Rust NativeOwner Windows build previously blocked at E0502 in pure TCP ACK checksum; source patch separates checksum computation. Windows native Go ABI 192-byte V1 layout explicitly asserted in test. This is a build correction, not a Windows actual Npcap/Wintun or performance PASS.",
+    "PLAN026 authenticated TCP presentation ACK correction: Rust NativeOwner now records the ACK value actually included in a Npcap-accepted carrier; only when authenticated contiguous progress exceeds this value does it send a standalone ACK. Source changed on main but live Windows/Npcap/A-B still requires independent evidence.",
+    "PLAN026 Stop scheduling: Rust RX prefers stop event and checks AtomicBool before each early packet and NPF frame; TX also prefers stop over Wintun read events. Windows live load/Stop regression on this exact post-fix SOURCE must be re-run; past live PASS belongs only to earlier SOURCE.",
+    "2026-10-28 H326 Windows Rust Normal/off TX event-only scheduling: M2 feedback.next_deadline and shadow.next_deadline wake earliest deadline in one M2 monotonic clock, replacing fixed 20ms poll/2s post-RX spin; removes per-delivery last_rx_ns atomic writes. Requires exact-source real Windows signed NPF/Wintun tests; earlier PASS does not transfer.",
+    "2026-10-28 H326 optional win_native_lock_profile compiled only when explicitly enabled: samples 1/64 shared Entry lock acquisitions for TX and RX, prints counts/total/max wait on owned Stop. Does not split owner yet, no default per-packet instrumentation or claim of measured lock contention before live run.",
+    "PLAN026 RX→TX <=32 authenticated records wake batch; real signed SOURCE7fc PASS; no same-host speedup proved.",
+    "PLAN026 SOURCE7fc new Rust RX bounded SetEvent coalescing actual real 150Mbps /300ms /tc0% /60s Normal/off PASS first unique>=99.9 each, signed Windows/WSL2 true Stop. 130 Linux→Windows app packets missing in last sequence window; not absolute zero. New actual OS TID CPU identifies RX>T X; CPU differences vs SOURCE0abd from different Windows VMs cannot prove causal speedup; ETW stage attribution and physical/FEC modes NOT_MEASURED.",
+    "Historic e6be borrowed RX: 150Mbps 1 FAIL/1 PASS on different Windows runners; host variance and CPU ROI unproven. See source-specific evidence and ABBA record.",
+    "ABBA 40707758779: B NPF borrow rejected (A 4.852864 vs B 4.932077 CPU s/GB); new main rollback SOURCE not qualified until separate native Action.",
+    "Rollback main b1bc signed Action40710227335: fresh native CPU50.90625s/75.921s, Rust TX sample43.72s, Linux offered140.95 and UDP socket drops81, Windows first98.2784%; 150M FAIL, no host-only attribution. ABBA A/B remains earlier-source decision.",
+    "H552 original sourcef031 true Normal0 and Normal C50 50Mbps/25ms/0 first0.999984/1.0 Stop PASS, Win F431290555 R0 C776264, Linux F424414102 R0; 1/5/15/30 throughput/Stop PASS and rate only15% both PASS, user ratio other3 FAIL. Sourcef031 C100/long conditional pending, prior source7a C200 failure retained.",
+    "PLAN027 H555 user override: source d765aef9 product code introduces genuine positive SACK bounded monotone mature-gap cursor and one-shot 50% PN sample, per-direction 32-handle FIFO deferring only BurstPaced within existing 20ms expiry; non-FEC cfg build fix. New-source original two-OS 0/1/5/15/30, CPU and owned Stop NOT_RUN at this code commit; prior SOURCEf031 1/5/30 ratio FAIL remains provenance, no strict narrow ratio tuning or invented win. Game and full lifecycle/C still open."
+  ],
+  "promotion": null,
+  "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
+}
