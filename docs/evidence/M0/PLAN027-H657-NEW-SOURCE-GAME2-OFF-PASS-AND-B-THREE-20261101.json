@@ -61,5 +61,7 @@
     "rotation_dns_ipv6_mtu": "NOT_CLOSED",
     "C_mixed_burst_p99": "NOT_CLOSED",
     "fixed200": "CAPACITY_LIMITED_ACTUAL_H655"
-  }
+  },
+  "source_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+  "result": "PARTIAL_NATIVE_GAME2_OFF_TRUE_PASS_B_THREE_PENDING"
 }

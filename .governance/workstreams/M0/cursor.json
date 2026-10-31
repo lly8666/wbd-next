@@ -4,23 +4,17 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 657,
-  "checkpoint_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+  "sequence": 658,
+  "checkpoint_sha": "ba29f6e62eaa71ddf2f3789bdf12009d2166b6b1",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H657 recovered H656 actual source dc191 original Windows Go TLS + native Rust bounded Game Stop + Linux native Game2/off 10M/250ms/30% Action41220597229 PASS true dual UDP/TCP, first Windows0.907198/Linux0.907687, owned Stop, 0 Linux TUN drops, Windows process CPU2.362% single core RSS52.35MB. New signed Windows/Linux binary artifacts manifest 13050335919/13050006739 frozen. H657 three independent native scenarios source-reuse dispatch: Game2FEC6 10M/75ms/15% 20s, Normal 105s payload-idle then genuine wake, Game4/off 10M/75ms/5% 20s.",
-  "why_now": "H656 new-source Rust bounded Stop has original Windows signed driver/Go TLS/native Game2/off actual source match positive, so exact manifest reuse to narrow Windows GameFEC hang without recompilation; other B idle and Game4/off modes independent. Do not mistake Linux-only FEC as Windows qualification, and do not repeat old canceled source11f.",
+  "current_task": "H658 governance recovery: H657 governance source-scope FAIL because cursor.last_tested_source was updated from 11f to dc191 while historical evidence_refs still pointed at six SOURCE11f files; H657 evidence also lacked required source_sha. Retain old evidence files, move their identity to explicit historical refs in H658 devlog, narrow current evidence_refs to exact SOURCE dc191. H657 three independent source-reused Actions are in-flight, no re-dispatch.",
+  "why_now": "Real H657 current SOURCE dc191 evidence and older immutable SOURCE11f must not share cursor.evidence_refs; tools/governance.py exact equality intentionally enforces source provenance. Correct metadata only, not disable source guard or alter binary/test.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "First collect H657 Game2/FEC native, Normal105 idle wake and Game4/off three independent Actions; preserve actual first delivered/Stop and defect stages. If Windows FEC still canceled, inspect original native stage/Windows WSL external watchdog and fix minimal root, don't blindly repeat. Then plan B106 death reauth, rotation, DNS IPv6 MTU and C burst/mixed scoped evidence; no Fixed200 higher.",
+  "next_action": "Collect already in-flight H657 source dc191 Game2/FEC15, Normal idle105, Game4/off5 original native source/result, do not duplicate. Governance should PASS source-scoped after H658; if actual B tests fail diagnose nearest module and minimal fix. Continue B blackhole/rejoin, rotation, DNS/IPv6, MTU, C burst/p99, no Fixed200 higher.",
   "unverified": true,
   "last_tested_source": "dc191cf5686ddff2e433312b8ec2258954bd018f",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H643-SOURCE11F-GAME2-AND-CANCEL-20261031.json",
-    "docs/evidence/M0/PLAN027-H646-SOURCE11F-A4-C-COLLECTED-20261031.json",
-    "docs/evidence/M0/PLAN027-H648-SOURCE11F-C-REAL-THREE-AND-B-GATE-20261031.json",
-    "docs/evidence/M0/PLAN027-H650-SOURCE11F-FIXED-C-AND-LINUX-ISOLATE-20261101.json",
-    "docs/evidence/M0/PLAN027-H652-SOURCE11F-LINUX-GAMEFEC-AND-FIXED200-20261101.json",
-    "docs/evidence/M0/PLAN027-H655-SOURCE11F-FIXED200-CAPACITY-LIMIT-20261101.json",
     "docs/evidence/M0/PLAN027-H657-NEW-SOURCE-GAME2-OFF-PASS-AND-B-THREE-20261101.json"
   ],
   "context_refs": [
@@ -32,5 +26,5 @@
     "docs/testing/WL_PERF_HARNESS_V2.md"
   ],
   "open_requests": [],
-  "partial_summary": "H657 recovered H656 source dc191cf5686ddff2e433312b8ec2258954bd018f original-Go TLS Windows Wintun/Npcap+Linux raw/TUN genuine two-OS Game2/off 10Mbps 250ms 30% 60s Action41220597229 PASS, measured source9.9972/9.9999Mbps, first0.907198/0.907687 (9.0739/9.0768Mbps), owned Stop BOTH, real TCP/UDP, Linux TUN tx/rx dropped 0, Windows whole Go+Rust PID avg2.362% of one core peak working-set52,346,880 bytes, p99 NOT_MEASURED. Same-source archived Windows binaries id13050335919/Linux id13050006739, hash in artifact. H654 candidate bounded Stop now source-current Windows original Game2/off real signed OS validated; FEC Windows NOT_RUN on new SOURCE. Three separate source-reused H657 B scenarios Game2FEC15, Normal idle105, Game4off5 are pending, not product PASS. H655 Fixed200 capacity-limited remains negative, A5 waived. PLAN027 §0 still PARTIAL."
+  "partial_summary": "H657 recovered H656 source dc191cf5686ddff2e433312b8ec2258954bd018f original-Go TLS Windows Wintun/Npcap+Linux raw/TUN genuine two-OS Game2/off 10Mbps 250ms 30% 60s Action41220597229 PASS, measured source9.9972/9.9999Mbps, first0.907198/0.907687 (9.0739/9.0768Mbps), owned Stop BOTH, real TCP/UDP, Linux TUN tx/rx dropped 0, Windows whole Go+Rust PID avg2.362% of one core peak working-set52,346,880 bytes, p99 NOT_MEASURED. Same-source archived Windows binaries id13050335919/Linux id13050006739, hash in artifact. H654 candidate bounded Stop now source-current Windows original Game2/off real signed OS validated; FEC Windows NOT_RUN on new SOURCE. Three separate source-reused H657 B scenarios Game2FEC15, Normal idle105, Game4off5 are pending, not product PASS. H655 Fixed200 capacity-limited remains negative, A5 waived. PLAN027 §0 still PARTIAL. H658 governance FAIL H657 independent tests do not imply product fail: workflow41223648429 feature/Gov and41223648327 maintenance reported 'evidence is for a different SOURCE' because c.last_tested_source dc191 but evidence_refs six retained SOURCE11f historical refs, and H657 new file had current_source_sha but not expected source_sha. Preserve old evidence by files and H658 devlog, restrict evidence_refs to H657 with explicit source_sha dc191. No product change and no new native Actions. H657 three distinct native runs already dispatched source dc191."
 }
