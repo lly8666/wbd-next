@@ -867,24 +867,78 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_stats(
     let Some(s)=map.get(&h)else{return UNKNOWN};
     unsafe{out.write(s.counters.snapshot())};OK
 }
+// A Win32/NPF worker may be stuck in its original kernel read even after
+// native Stop/wake. A Rust JoinHandle has no context-aware blocking join.
+// Wait with bounded polling *before* removing the session: if the deadline
+// expires, retain both worker handles, NPF/Wintun loans and WAL ownership.
+// The caller may retry Stop; never publish a false drained receipt.
+fn game_native_stop_wait<F:FnMut()->Result<bool,i32>>(
+    mut finished:F,limit:std::time::Duration,
+)->Result<(),i32>{
+    let start=std::time::Instant::now();
+    loop{
+        if finished()?{return Ok(())}
+        if start.elapsed()>=limit{return Err(STOP_INCOMPLETE)}
+        thread::sleep(std::time::Duration::from_millis(10));
+    }
+}
 #[no_mangle]
 pub extern "C" fn wbd_m0_win_game_native_v3_stop(h:u64)->i32{
+    let (counters,stop,tx_wake,rx_wake)={
+        let map=match sessions().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+        let Some(s)=map.get(&h)else{return UNKNOWN};
+        (Arc::clone(&s.counters),Arc::clone(&s.stop),
+         Arc::clone(&s.tx_wake),Arc::clone(&s.rx_wake))
+    };
+    counters.stop.store(true,Ordering::Release);
+    let _=stop.wake();
+    let _=tx_wake.wake();let _=rx_wake.wake();
+    if let Err(rc)=game_native_stop_wait(||{
+        let map=sessions().lock().map_err(|_|BAD_STAGE)?;
+        let s=map.get(&h).ok_or(UNKNOWN)?;
+        Ok(s.tx.is_finished()&&s.rx.is_finished())
+    },std::time::Duration::from_secs(12)){
+        eprintln!("M0_PLAN027_GAME_NATIVE_STOP_NOT_DRAINED group={h} rc={rc} retained_loans=1 retryable=1");
+        return rc
+    }
     let session={
         let mut map=match sessions().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
         let Some(s)=map.remove(&h)else{return UNKNOWN};s
     };
-    session.counters.stop.store(true,Ordering::Release);
-    let _=session.stop.wake();
-    let _=session.tx_wake.wake();let _=session.rx_wake.wake();
+    // This can no longer block on native I/O: both workers finished before
+    // their owning sessions were removed from the single original registry.
     let tx=session.tx.join().unwrap_or(STOP_INCOMPLETE);
     let rx=session.rx.join().unwrap_or(STOP_INCOMPLETE);
     if tx!=OK&&tx!=BAD_STAGE{return tx}
     if rx!=OK&&rx!=BAD_STAGE{return rx}
-    OK // all real Wintun+Npcap loans returned before Go Stop/EndSession
+    OK // Both native workers ended before Wintun/NPF loans return to Go.
 }
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[test]
+    fn game_native_stop_wait_preserves_unfinished_workers_and_allows_later_true_join(){
+        // A synthetic parked worker tests only the native Stop ownership
+        // contract, never claims NPF/Wintun or product kernel Stop PASS.
+        let release=Arc::new(AtomicBool::new(false));
+        let copied=Arc::clone(&release);
+        let tx=thread::spawn(move||{
+            while !copied.load(Ordering::Acquire){
+                thread::sleep(std::time::Duration::from_millis(1));
+            }
+            OK
+        });
+        let rx=thread::spawn(||OK);
+        let short=game_native_stop_wait(||Ok(tx.is_finished()&&rx.is_finished()),
+            std::time::Duration::from_millis(15));
+        assert_eq!(short,Err(STOP_INCOMPLETE));
+        assert!(!tx.is_finished());
+        release.store(true,Ordering::Release);
+        assert_eq!(game_native_stop_wait(||Ok(tx.is_finished()&&rx.is_finished()),
+            std::time::Duration::from_secs(2)),Ok(()));
+        assert_eq!(tx.join().unwrap(),OK);
+        assert_eq!(rx.join().unwrap(),OK);
+    }
     #[test]
     fn game_v3_rejects_missing_owned_attachment_without_driver_borrow(){
         assert_eq!(unsafe{wbd_m0_win_game_native_v3_start(std::ptr::null())},INVALID);
