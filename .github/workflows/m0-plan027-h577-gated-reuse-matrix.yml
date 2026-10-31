@@ -1,0 +1,78 @@
+name: M0 PLAN027 H577 gated one-build loss-tier and Game FEC
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h577-gated-reuse-matrix.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  once:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h577-gated-reuse]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE: d5e7e3eca7b4988419ca60e008f2644aea775629
+      ZERO_RUN: "41173614494"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Wait only for in-flight real zero PASS; never fabricate or duplicate its scene
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          for name,loss in [('plan027-h539-normal-10m-250ms-loss1-60s.json',1),
+              ('plan027-h539-normal-10m-250ms-loss5-60s.json',5),
+              ('plan027-h539-normal-10m-250ms-loss15-60s.json',15),
+              ('wl-outer-repair-10m-250ms-loss30-60s.json',30)]:
+              sc=read_scenario('scenarios/'+name)
+              assert sc['public_mode']=='normal' and sc['duration_s']==60
+              for d in ('windows_to_linux','linux_to_windows'):
+                  assert sc[d]['loss_pct']==loss and sc[d]['offered_mbps']==10 and sc[d]['delay_ms']==250
+              print('H577_VERIFIED_SCENE',name,sc['scenario_sha256'])
+          PY
+          initial="$(gh api "repos/$GH_REPO/actions/runs/$ZERO_RUN")"
+          test "$(jq -r .head_sha <<<"$initial")" = "$SOURCE"
+          test "$(jq -r .event <<<"$initial")" = workflow_dispatch
+          test "$(jq -r '.repository.full_name' <<<"$initial")" = "$GH_REPO"
+          for i in $(seq 1 52); do
+            live="$(gh api "repos/$GH_REPO/actions/runs/$ZERO_RUN")"
+            status="$(jq -r .status <<<"$live")"
+            if [ "$status" = completed ]; then
+              conclusion="$(jq -r .conclusion <<<"$live")"
+              echo "H577_SOURCE_ZERO_COMPLETED run=$ZERO_RUN conclusion=$conclusion"
+              test "$conclusion" = success || { echo 'H577_ZERO_FAILED_NO_OTHER_DISPATCH' >&2; exit 1; }
+              break
+            fi
+            test "$i" -lt 52 || { echo 'H577_ZERO_STILL_INFLIGHT_NO_DISPATCH' >&2; exit 2; }
+            sleep 30
+          done
+          jobs="$(gh api "repos/$GH_REPO/actions/runs/$ZERO_RUN/jobs?per_page=100")"
+          test "$(jq -r '[.jobs[] | select(.name=="native-public-two-os") | .conclusion] | first' <<<"$jobs")" = success
+          artifacts="$(gh api "repos/$GH_REPO/actions/runs/$ZERO_RUN/artifacts?per_page=100")"
+          jq -e --arg n "m0-wl-windows-product-binaries-$SOURCE" '.artifacts[] | select(.name==$n and .expired==false)' <<<"$artifacts" >/dev/null
+          jq -e '.artifacts[] | select(.name=="m0-plan024-linux-product" and .expired==false)' <<<"$artifacts" >/dev/null
+          echo "H577_ONE_FROZEN_BUILD_VERIFIED source=$SOURCE run=$ZERO_RUN"
+          for scen in \
+            plan027-h539-normal-10m-250ms-loss1-60s.json \
+            plan027-h539-normal-10m-250ms-loss5-60s.json \
+            plan027-h539-normal-10m-250ms-loss15-60s.json \
+            wl-outer-repair-10m-250ms-loss30-60s.json; do
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode=normal -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="scenarios/$scen" \
+              -f perf_reuse_run_id="$ZERO_RUN" -f perf_binary_source_sha="$SOURCE"
+            echo "H577_ONE_SCENE_DISPATCHED scene=$scen source=$SOURCE"
+          done
+          for mode in game2-fec game4-fec; do
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode="$mode" -f run_n0=false -f perf_ab=false \
+              -f perf_scenario_file="" \
+              -f perf_reuse_run_id="$ZERO_RUN" -f perf_binary_source_sha="$SOURCE"
+            echo "H577_ONE_GAME_FEC_DISPATCHED mode=$mode source=$SOURCE"
+          done
+          echo 'H577_SIX_INDEPENDENT_SOURCE_LOCKED_SCENES_DISPATCHED'
