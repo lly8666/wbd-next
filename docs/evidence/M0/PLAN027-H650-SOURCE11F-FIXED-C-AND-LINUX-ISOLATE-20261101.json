@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "11f1881ff68afa22c5b0ca957d6808420a878a06",
+  "result": "PARTIAL_FIXED_C_PASS_WITH_GAMEFEC_B106_WATCHDOG_CANCELED",
+  "fixed": [
+    {
+      "run": 41216928738,
+      "artifact": 13047763076,
+      "mode": "fixed",
+      "rate_mbps_each": 100,
+      "duration_seconds": 60,
+      "loss_pct": 0,
+      "first_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "real_udp_tcp_stop": "PASS_BOTH",
+      "linux_tun_drops": 0,
+      "scenario_sha256": "a1c71aa156f7a61d091505721fcebfc4352ce3fea6d557f69fcc655092568366"
+    },
+    {
+      "run": 41216934805,
+      "artifact": 13047803504,
+      "mode": "fixed",
+      "rate_mbps_each": 50,
+      "duration_seconds": 300,
+      "loss_pct": 0,
+      "first_fraction": {
+        "windows": 0.999998,
+        "linux": 1
+      },
+      "real_udp_tcp_stop": "PASS_BOTH",
+      "linux_tun_drops": 0,
+      "scenario_sha256": "863394366cf3e1c66c72e45f05f27ce6238cd8c8a293c4ca3e2eeb946a8fb116"
+    }
+  ],
+  "cancelled": [
+    {
+      "run": 41216712816,
+      "mode": "game2-fec",
+      "result": "CANCELLED_NO_NATIVE_PRODUCT_REPORT"
+    },
+    {
+      "run": 41216716864,
+      "mode": "normal-blackhole106",
+      "result": "CANCELLED_NO_NATIVE_PRODUCT_REPORT"
+    }
+  ],
+  "linux_isolate": {
+    "frozen_run": 41210457594,
+    "artifact": 13045459264,
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "mode": "game2 fixed6",
+    "kernel_loss_pct_both": 15,
+    "real_udp_plus_parity_m4_stop": "NOT_RUN_PENDING_ACTION",
+    "windows": "NOT_RUN"
+  }
+}

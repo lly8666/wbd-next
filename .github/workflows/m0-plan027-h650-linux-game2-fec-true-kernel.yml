@@ -1,0 +1,64 @@
+name: M0 PLAN027 H650 original Linux Game2 fixed6 FEC kernel isolation
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h650-linux-game2-fec-true-kernel.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  one-linux-game2-fec:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 13
+    env:
+      FROZEN_SOURCE: 11f1881ff68afa22c5b0ca957d6808420a878a06
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-plan024-linux-product
+          run-id: 41210457594
+          repository: lly8666/wbd-next
+          github-token: ${{ github.token }}
+          path: frozen-linux
+      - name: Verify H641 exact Linux original-Go and Rust binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os,hashlib,pathlib
+          root=pathlib.Path('frozen-linux')
+          m=json.loads((root/'manifest.json').read_text())
+          assert m['schema_version']==1 and m['source_sha']==os.environ['FROZEN_SOURCE']
+          assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
+          assert m['binary_qualification']=='BUILD_ONLY_NOT_PRODUCT'
+          for name,sha in m['sha256'].items():
+              file=root/name
+              assert file.stat().st_size>100000 and hashlib.sha256(file.read_bytes()).hexdigest()==sha
+          print('H650_EXACT_LINUX_ORIGINAL_GO_TLS_RUST_SOURCE_AND_BINARY_SHA_VERIFIED')
+          PY
+          chmod +x frozen-linux/wbd-v4-client frozen-linux/wbd-v4-server
+      - name: Genuine original Go TLS Game2 FEC6 15 percent bidirectional Linux kernel and Stop
+        shell: bash
+        timeout-minutes: 7
+        env:
+          WBD_V4_PUBLIC_MODE: game2-fec
+          WBD_V4_PUBLIC_KERNEL_LOSS: "15"
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          test -c /dev/net/tun
+          python3 tools/m0_plan027_h650_linux_gamefec_overlay.py tools/m0-v4-public-real-linux-netns.sh "$RUNNER_TEMP/h650-real-original-gamefec.sh"
+          bash "$RUNNER_TEMP/h650-real-original-gamefec.sh" "$GITHUB_WORKSPACE/frozen-linux" 2>&1 |
+            tee h650-linux-original-gamefec.log
+          test "${PIPESTATUS[0]}" = 0
+          grep -q 'M0_PLAN027_LINUX_ORIGINAL_GAME2_FIXED6_15PCT_REAL_TLS_FEC_KERNEL_UDP_STOP_PASS' h650-linux-original-gamefec.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h650-linux-original-game2-fec-${{ github.run_id }}
+          path: |
+            h650-linux-original-gamefec.log
+            fixed-kernel-result/
+          if-no-files-found: warn
+          retention-days: 21
