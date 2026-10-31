@@ -114,7 +114,7 @@ func runM0NativeV4WindowsGame(
   case <-tick.C:
    now:=time.Now()
    for i,a:=range assocs{
-    if _,err=a.EmitRetransmitDue(now);err!=nil{
+    if _,err:=a.EmitRetransmitDue(now);err!=nil{
      return fmt.Errorf("original Game%d lane%d TCP retransmit: %w",count,i+1,err)
     }
    }
