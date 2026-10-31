@@ -58,8 +58,22 @@
     "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
     "build_reuse_run": 41226521824,
     "rate_each_mbps": 5,
-    "scenario_status": "PENDING_AUTOMATIC_PUSH_DISPATCH",
-    "why": "Different-rate same packet-mix true MTU1280 diagnostic. Do not repeat H669 same 10M seed or mark PASS before real artifact."
+    "scenario_status": "PASS_SCOPED_REAL_BOTH_OS_5MBPS_25MS_ZERO_LOSS_60S",
+    "why": "Different-rate same packet-mix true MTU1280 diagnostic. Do not repeat H669 same 10M seed or mark PASS before real artifact.",
+    "run": 41236475558,
+    "artifact": 13056465340,
+    "artifact_sha256": "8ec648e2b587d2789252c56e933d4a2e49930ce13154013e42813ff183a59eca",
+    "first_fraction": {
+      "windows": 1,
+      "linux": 1
+    },
+    "first_mbps": {
+      "windows": 4.9999,
+      "linux": 4.9986
+    },
+    "linux_actual_tun_mtu": 1209,
+    "owned_stop": "PASS_BOTH_OWNED",
+    "not": "NOT_TEN_MBPS_PASS"
   },
   "blocking_scope": [
     "Windows original authenticated dead106 after earlier external watchdog cancellation",

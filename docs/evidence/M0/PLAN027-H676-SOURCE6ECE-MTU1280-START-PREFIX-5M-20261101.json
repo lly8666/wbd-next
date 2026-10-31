@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "result": "H673_GENUINE_TWO_OS_5M_FIRST_100PCT_STOP_PASS_H669_10M_FAIL_START_PREFIX182",
+  "run_5m": 41236475558,
+  "run_10m": 41226521824,
+  "original_binary_build_run": 41226521824,
+  "original_windows_build_artifact": 13051429248,
+  "original_linux_build_artifact": 13051109212,
+  "real_5m_report_artifact": {
+    "id": 13056465340,
+    "sha256": "8ec648e2b587d2789252c56e933d4a2e49930ce13154013e42813ff183a59eca"
+  },
+  "scenarios": [
+    {
+      "scenario": "plan027-b-normal-1280-mtu-10m-25ms-loss0-60s",
+      "offered_each_mbps": 10,
+      "run": 41226521824,
+      "status": "FAIL_STRICT_ZERO_LOSS_999_FRACTION",
+      "rate_delivery_mbps": {
+        "windows": 9.9828,
+        "linux": 9.9974
+      },
+      "first_delivery_fraction": {
+        "windows": 0.998172,
+        "linux": 1
+      },
+      "windows_source_sequence_first_received": 182,
+      "windows_source_missing_ranges": [
+        {
+          "start": 0,
+          "end_exclusive": 182,
+          "missing_packets": 182
+        }
+      ],
+      "windows_other_sequence_missing_after_prefix": 0,
+      "linux_source_missing_ranges": [],
+      "both_owned_stop": "PASS_BOTH_OWNED",
+      "linux_original_kernel_tun_mtu": 1209
+    },
+    {
+      "scenario": "plan027-b-normal-1280-mtu-5m-25ms-loss0-60s",
+      "offered_each_mbps": 5,
+      "run": 41236475558,
+      "status": "PASS_REAL_BOTH_OS_SUSTAINED_5M_0PCT_60S_UDP_TCP_OWNED_STOP",
+      "rate_delivery_mbps": {
+        "windows": 4.9999,
+        "linux": 4.9986
+      },
+      "first_delivery_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "windows_source_missing_ranges": [],
+      "linux_source_missing_ranges": [],
+      "both_owned_stop": "PASS_BOTH_OWNED",
+      "linux_original_kernel_tun_mtu": 1209,
+      "generator_cpu_seconds": {
+        "windows": 2.5938,
+        "linux": 4.5092
+      }
+    }
+  ],
+  "analysis": "H669 entire observed 182 misses form sequence 0..181 at Windows receiver, with no later missing among observed sequence; sender/receiver readiness or early raw/NPF startup behavior is the next investigation. Does not prove which component dropped the initial packets; different Windows runners preclude causal CPU comparison. Do not rewrite 10M FAIL or count sparse RTT as calibrated one-way p99.",
+  "limitations": [
+    "MTU 1280 real original Go TLS cap applies; no 10Mbps zero loss PASS",
+    "Windows receiver leading seq0..181 gap is measured app, not a fabricated remote receipt",
+    "No present in-place MTU mutation, physical host WFP/IPv6, full GUI Applied, 10Mbps stress, calibrated one-way p99",
+    "Source is original product exact compiled from H669, H673 reuses verified artifacts and no extra product compilation."
+  ]
+}

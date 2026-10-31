@@ -4,19 +4,20 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 675,
-  "checkpoint_sha": "15875a6fa286d1d19b478db965a57d33564ac0ed",
+  "sequence": 676,
+  "checkpoint_sha": "1a26a64958db51c0925db97a16232015c9d85017",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H675 true original Linux Game2 FEC6 mature zero-business105+15% real kernel damage/real app+Stop independent Action, SOURCE6ece frozen Linux binary artifact H669, separate from H673 5M Windows full product still in-flight. Source H674 governance fixed, full PLAN027 PARTIAL.",
-  "why_now": "Advance B real Game2/FEC authenticated idle and post-idle true app via existing source-locked original Linux binary on independent VM while Windows H673 native runs; never infer Windows from Linux.",
+  "current_task": "H676 collected SOURCE6ece original Windows/Linux H673 5Mbps MTU1280 60s both first1.0 Stop PASS, H669 10Mbps FAIL has exact 182 contiguous missing Windows startup sequence 0..181 and no later gaps. Linux Game2 FEC6 idle105 Action41236824445 in flight.",
+  "why_now": "Use actual H669/H673 native receiver sequence, not green banner; preserve 10M FAIL and focus initial 182 missing startup source when business and NPF/driver ready. Run H675 independently pending.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H673 Action41236475558 original Windows 5M and H675 new Linux GameFEC idle Action from this tagged push; do not duplicate. Preserve H669 10M FAIL. Continue Windows GameFEC/B106/rotation, DNS/IPv6 global OS, C burst/p99, final.",
+  "next_action": "Collect H675 Linux Game/FEC genuine idle105 original Action41236824445 first; do not redispatch. Investigate 10Mbps initial Windows receive 182 missing prefix without assuming root, prioritize real first business. Finish Windows B106/GameFEC, B global DNS/WFP/routes/IPv6/rotation and remaining C bursts/p99.",
   "unverified": true,
   "last_tested_source": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H672-SOURCE6ECE-REAL-WINDOWS-LOCAL-WAL-AND-MODES-20261101.json",
-    "docs/evidence/M0/PLAN027-H673-RECOVERED-H669-H671-MTU-AND-AUTH-DEAD-20261101.json"
+    "docs/evidence/M0/PLAN027-H673-RECOVERED-H669-H671-MTU-AND-AUTH-DEAD-20261101.json",
+    "docs/evidence/M0/PLAN027-H676-SOURCE6ECE-MTU1280-START-PREFIX-5M-20261101.json"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md",
@@ -27,5 +28,5 @@
     "docs/testing/WL_PERF_HARNESS_V2.md"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN027 §0 PARTIAL, A5 WAIVED. H673 recovered H669 Action41226521824 SOURCE6ece full job FAIL: MTU1280 authentically applied Linux1209 after previous1329 FAIL; true business win first0.998172<0.999, lin1, Stop BOTH PASS; never upgrade zero-loss PASS. H671 Action41227150973 SOURCE5fb4 Linux2-netns 106s/100% tc native auth dead90 drops22/23, second Go TLS generation both, real UDP/Stop PASS only Linux. H672 Windows local signed WAL and 5 modes scoped PASS, not full public OS. H673 new 5M mixed MTU1280 scenario same prebuilt SOURCE6ece dispatcher pending. Existing older A/B/C/300s evidence scope preserved, Windows GameFEC/B106 repeated canceled, rotation/DNS/IPv6 global and C burst/p99 still open; Fixed200 capacity-limited same family. No whole-task READY, physical NOT_RUN. H674 governance PASS both jobs Action41236615583. H675 true Linux Game2 FEC6 idle105 + 15% kernel real app/Stop independent source-locked prebuilt test dispatch pending. Other scope open."
+  "partial_summary": "PLAN027 §0 PARTIAL, A5 WAIVED. H673 recovered H669 Action41226521824 SOURCE6ece full job FAIL: MTU1280 authentically applied Linux1209 after previous1329 FAIL; true business win first0.998172<0.999, lin1, Stop BOTH PASS; never upgrade zero-loss PASS. H671 Action41227150973 SOURCE5fb4 Linux2-netns 106s/100% tc native auth dead90 drops22/23, second Go TLS generation both, real UDP/Stop PASS only Linux. H672 Windows local signed WAL and 5 modes scoped PASS, not full public OS. H673 new 5M mixed MTU1280 scenario same prebuilt SOURCE6ece dispatcher pending. Existing older A/B/C/300s evidence scope preserved, Windows GameFEC/B106 repeated canceled, rotation/DNS/IPv6 global and C burst/p99 still open; Fixed200 capacity-limited same family. No whole-task READY, physical NOT_RUN. H674 governance PASS both jobs Action41236615583. H675 true Linux Game2 FEC6 idle105 + 15% kernel real app/Stop independent source-locked prebuilt test dispatch pending. Other scope open. H676 H673 native 5Mbps MTU1280 real original two OS/source6ece 60s 0pct windows/linux first1.0, 4.9999/4.9986Mbps and Stop PASS; 10Mbps original H669 remains FAIL from exactly initial 182 Windows receiver missing seq0..181, no later loss, pointer to startup timing not proven cause."
 }
