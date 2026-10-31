@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "source_sha": "593ce4a1073773429d7739a086fe3e060af89a3d",
+  "result": "PARTIAL_WITH_SEVEN_SUCCESSFUL_H623_AND_THREE_REAL_FAILS_PLUS_FIXED_IDLE105",
+  "observer_sha": "3f8064e75140b56f23d03191abffc9a8ef4e85ae",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "prebuilt_product_run": 41195637726,
+  "run_results": [
+    {
+      "run_id": 41197182076,
+      "scene": "normal A2 10M/250ms 0%",
+      "verdict": "PASS_ACTION",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41197182076"
+    },
+    {
+      "run_id": 41197187134,
+      "scene": "normal A2 10M/250ms 30%",
+      "verdict": "PASS_ACTION",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41197187134"
+    },
+    {
+      "run_id": 41197192017,
+      "scene": "fixed A3 10M/250ms 30%",
+      "verdict": "PASS_ACTION",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41197192017"
+    },
+    {
+      "run_id": 41197197325,
+      "scene": "auto A4 240s staged 0→5→15→30→0%",
+      "verdict": "PASS_ACTION",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41197197325"
+    },
+    {
+      "run_id": 41197201998,
+      "scene": "normal C100M/100ms 5%",
+      "verdict": "PASS_ACTION",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41197201998"
+    },
+    {
+      "run_id": 41197206789,
+      "scene": "normal C50M/250ms 30%",
+      "verdict": "FAIL_WINDOWS_NATIVE_WORKER_RC3_BEFORE_READY",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41197206789"
+    },
+    {
+      "run_id": 41197211756,
+      "scene": "fixed C100M/25ms 0%",
+      "verdict": "FAIL_LOSSLESS_DELIVERY_GATE_REAL_STOP_PASS",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41197211756"
+    },
+    {
+      "run_id": 41197216400,
+      "scene": "normal C100M/25ms 0% 300s",
+      "verdict": "FAIL_LOSSLESS_DELIVERY_GATE_REAL_STOP_PASS",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41197216400"
+    },
+    {
+      "run_id": 41197220901,
+      "scene": "auto natural downshift",
+      "verdict": "PASS_ACTION",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41197220901"
+    },
+    {
+      "run_id": 41197225338,
+      "scene": "auto manual revision",
+      "verdict": "PASS_ACTION",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41197225338"
+    },
+    {
+      "run_id": 41197625979,
+      "scene": "fixed 105s healthy-idle/wake B",
+      "verdict": "PASS_ACTION",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41197625979"
+    },
+    {
+      "run_id": 41197630321,
+      "scene": "normal 106s blackhole B",
+      "verdict": "FAIL_PRE_DAMAGE_NETEM_WRONG_SCENARIO_NOT_A_DEAD90_TEST",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41197630321"
+    },
+    {
+      "run_id": 41197633876,
+      "scene": "fixed 106s blackhole B",
+      "verdict": "FAIL_PRE_DAMAGE_NETEM_WRONG_SCENARIO_NOT_A_DEAD90_TEST",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/41197633876"
+    }
+  ],
+  "fail_details": {
+    "normal_50m_250ms_30pct": {
+      "source": "original mode-results/normal/client.log",
+      "error": "native Rust owner rc=3",
+      "reached_ready": false,
+      "rust_rx_data_delivered_early": 18,
+      "product_state": "FAIL_STARTUP_NOT_THROUGHPUT"
+    },
+    "fixed_100m_loss0": {
+      "first_delivery_fraction": {
+        "windows": 0.997808,
+        "linux": 1
+      },
+      "linux_tun_tx_dropped": 2171,
+      "real_udp_tcp_owned_stop": true,
+      "threshold": 0.999
+    },
+    "normal_100m_300s_loss0": {
+      "first_delivery_fraction": {
+        "windows": 0.999996,
+        "linux": 0.99086
+      },
+      "linux_tun_tx_dropped": 0,
+      "real_udp_tcp_owned_stop": true,
+      "threshold": 0.999
+    }
+  },
+  "blackhole_validation": {
+    "first_attempts": [
+      41197630321,
+      41197633876
+    ],
+    "cause": "WL_B_BLACKHOLE_WRONG_SCENARIO in tools/m0_wl_netem.py before loss injection",
+    "source_106_seconds": "NOT_YET_MEASURED",
+    "fix": "only change allow-list from 20 to (20,106)",
+    "new_actions": "H625_IN_FLIGHT"
+  },
+  "limitations": [
+    "Game2/4 FEC original live result NOT_PASS",
+    "B 106s authenticated dead new generation NOT_MEASURED",
+    "C200 capacity-limited on older source, no new upward C200",
+    "Physical NOT_RUN",
+    "One-way p99 not calibrated"
+  ]
+}

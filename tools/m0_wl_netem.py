@@ -133,7 +133,7 @@ elif action in ("blackhole", "recover"):
         raise RuntimeError("WL_B_BLACKHOLE_UNOWNED")
     from m0_wl_perf_v2_config import read_scenario
     case=read_scenario(scenario_path)
-    if case.get("lifecycle_blackhole_s")!=20:
+    if case.get("lifecycle_blackhole_s") not in (20,106):
         raise RuntimeError("WL_B_BLACKHOLE_WRONG_SCENARIO")
     state=json.loads(owner.read_text())
     if state.get("owner")!="M0-WL-N0-ETH0-IFB" or state.get("interface")!=iface or state.get("profile")!="v2":
