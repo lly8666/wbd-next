@@ -1,5 +1,5 @@
 import unittest
-from tools.m0_wl_impairment_profile import get_profile
+from tools.m0_wl_impairment_profile import get_profile, ingress_ports_for_mode
 
 class KernelImpairmentProfileContract(unittest.TestCase):
     def test_exact_two_os_reproducible_p200_250m_30p(self):
@@ -10,6 +10,13 @@ class KernelImpairmentProfileContract(unittest.TestCase):
     def test_old_300ms_n0_is_not_reinterpreted(self):
         p=get_profile("n0")
         self.assertEqual((p["delay_ms"],p["loss_pct"],p["tc_mbit"],p["offered_mbps"]), (300,0,None,10.0))
+    def test_original_game_sibling_ingress_ports(self):
+        for mode in ("normal","fixed","auto"):
+            self.assertEqual(ingress_ports_for_mode(mode),(443,))
+        for mode in ("game2","game2-fec"):
+            self.assertEqual(ingress_ports_for_mode(mode),(443,444))
+        for mode in ("game4","game4-fec"):
+            self.assertEqual(ingress_ports_for_mode(mode),(443,444,445,446))
     def test_unknown_profile_is_not_silently_clamped(self):
         with self.assertRaises(KeyError): get_profile("200ms-without-rate")
 if __name__ == "__main__": unittest.main()

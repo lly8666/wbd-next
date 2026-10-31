@@ -1,0 +1,42 @@
+{
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source": "020f6b5805996ab1148d9c97587fbe6c7e741d0f",
+  "observed_at": "2026-10-31",
+  "game2_fec": {
+    "run": 41206215082,
+    "native_job": 124552447170,
+    "status": "CANCELLED_WATCH_720S_NO_RESULT"
+  },
+  "game4_fec": {
+    "run": 41206217160,
+    "native_job": 124552678307,
+    "status": "CANCELLED_WATCH_720S_NO_RESULT"
+  },
+  "game2_off": {
+    "run": 41206219407,
+    "native_job": 124552600350,
+    "artifact": 13045150643,
+    "scenario_sha256": "a97db9272f9e305d181c9e881f719a874acf79e53d0e28e143740d907c98c45f",
+    "binary_sha": {
+      "windows_cli": "8c9949de4e86a495f3ce7b2856c0d1941337ea6846dcb629aa27c6bf83b53663",
+      "linux_server": "373cae784aae258b17f6ec1ad2c054f7b5d66f12c55ba2780630ee26b4b82a77"
+    },
+    "offered_both_mbps": [
+      9.9972,
+      9.9999
+    ],
+    "first_arrival": {
+      "windows": 0.381408,
+      "linux": 0.418635
+    },
+    "real_UDP_TCP_owned_stop": "PASS",
+    "linux_tun_tx_drop": 0,
+    "linux_game_M4_rejected": 96344,
+    "game_outer_ack_examined": 0,
+    "game_repair_accepted": 0,
+    "p99": "NOT_MEASURED",
+    "quality": "FAIL_TOO_LOW_FIRST_ARRIVAL"
+  },
+  "findings": "V2 original Game IFB ingress matched only TCP443, not Game sibling ports444..446. Linux rejected counter did not distinguish owner capacity vs real driver; no causal conclusion yet.",
+  "new_product_verification": "PENDING"
+}

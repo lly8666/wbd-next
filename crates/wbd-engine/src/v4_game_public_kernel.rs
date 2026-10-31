@@ -15,7 +15,7 @@ use crate::v4_protected_handoff::GoFlow;
 use crate::memory::Arena;
 use wbd_types::{MonoNs,RecordPn,SeqOffset,LaneKey,TunnelKey};
 use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable};
-use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx};
+use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx,RawTxError};
 use wbd_platform::linux_tun_sink::{ScopedTunSink,TunReadyEntry};
 use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
 use wbd_platform::r1::StopResult;
@@ -43,6 +43,11 @@ impl RxLockSample{
     }
 }
 #[derive(Default)]
+struct TxRejectReasons {
+    offer:AtomicU64,slab:AtomicU64,record:AtomicU64,policy:AtomicU64,
+    raw:AtomicU64,raw_backpressure:AtomicU64,raw_route:AtomicU64,raw_mtu:AtomicU64,
+}
+#[derive(Default)]
 struct RxRejectReasons {
     aead:AtomicU64,invalid:AtomicU64,duplicate:AtomicU64,
     stale:AtomicU64,capacity:AtomicU64,scope:AtomicU64,
@@ -58,7 +63,7 @@ pub(crate) struct GameKernelOwner{
     rx_mutex_acquired:Arc<AtomicU64>,rx_authenticated_some:Arc<AtomicU64>,
     rx_dedup_none:Arc<AtomicU64>,rx_tun_failed:Arc<AtomicU64>,
     rx_delivery_commit_failed:Arc<AtomicU64>,
-    rx_lock_sample:Arc<RxLockSample>,
+    rx_lock_sample:Arc<RxLockSample>,tx_reasons:Arc<TxRejectReasons>,
     outer_blocked_duplicate:Arc<AtomicU64>,
     outer_repeated_copy_sent:Arc<AtomicU64>,
 }
@@ -110,6 +115,7 @@ impl GameKernelOwner{
         let copied=Arc::new(AtomicU64::new(0));
         let delivered=Arc::new(AtomicU64::new(0));
         let rejected=Arc::new(AtomicU64::new(0));
+        let tx_reasons=Arc::new(TxRejectReasons::default());
         let raw_received=Arc::new(AtomicU64::new(0));
         let rx_reject=Arc::new(RxRejectReasons::default());
         let rx_driver_timeout=Arc::new(AtomicU64::new(0));
@@ -136,6 +142,7 @@ impl GameKernelOwner{
         let tx_tun=Arc::clone(&tun);
         let tx_copy=Arc::clone(&copied);
         let tx_rejected=Arc::clone(&rejected);
+        let tx_fail=Arc::clone(&tx_reasons);
         let outer_denied=Arc::clone(&outer_blocked_duplicate);
         let outer_repeated=Arc::clone(&outer_repeated_copy_sent);
         #[allow(unused_variables)]
@@ -196,6 +203,7 @@ impl GameKernelOwner{
                             health.on_local_business(health_origin.elapsed().as_nanos()
                                 .min(u128::from(u64::MAX)) as u64);
                             if game.offer(&inbound[..len],now).is_err(){
+                                tx_fail.offer.fetch_add(1,Ordering::Relaxed);
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                             }
                         }else if len!=0{
@@ -222,15 +230,18 @@ impl GameKernelOwner{
                             };
                             if !outer_repair_enabled &&
                                 !game_first_lane_copy(item.last_initial_id,id.0){
+                                tx_fail.policy.fetch_add(1,Ordering::Relaxed);
                                 outer_denied.fetch_add(1,Ordering::Relaxed);
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                                 return false
                             }
                             let Ok(mut slab)=arena.allocate()else{
+                                tx_fail.slab.fetch_add(1,Ordering::Relaxed);
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                                 return false
                             };
                             if wire.len()>slab.writable().len(){
+                                tx_fail.record.fetch_add(1,Ordering::Relaxed);
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                                 return false
                             }
@@ -239,6 +250,7 @@ impl GameKernelOwner{
                                 lane,seq:SeqOffset(item.seq),pn:RecordPn(pn),
                                 carrier_snapshot:1
                             })else{
+                                tx_fail.record.fetch_add(1,Ordering::Relaxed);
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                                 return false
                             };
@@ -255,8 +267,8 @@ impl GameKernelOwner{
                                 ack32:1,advertised_window:4096,ip_id:(pn as u16).wrapping_add(75),
                                 persona:peer_persona
                             };
-                            let ok=item.raw.send_one(generation,&frozen,tuple,presentation)
-                                .is_ok();
+                            let sent=item.raw.send_one(generation,&frozen,tuple,presentation);
+                            let ok=sent.is_ok();
                             if ok {
                                 item.seq=item.seq.saturating_add(wire.len() as u64);
                                 // Count ACTUAL successful same-lane repeat
@@ -270,6 +282,19 @@ impl GameKernelOwner{
                                 tx_copy.fetch_add(1,Ordering::Relaxed);
                                 true
                             }else{
+                                tx_fail.raw.fetch_add(1,Ordering::Relaxed);
+                                match sent {
+                                    Err(RawTxError::Kernel(11)|RawTxError::NoCapacity)=>{
+                                        tx_fail.raw_backpressure.fetch_add(1,Ordering::Relaxed);
+                                    },
+                                    Err(RawTxError::RouteStale|RawTxError::RouteUnavailable)=>{
+                                        tx_fail.raw_route.fetch_add(1,Ordering::Relaxed);
+                                    },
+                                    Err(RawTxError::PacketExceedsBudget|RawTxError::BoundedMtu)=>{
+                                        tx_fail.raw_mtu.fetch_add(1,Ordering::Relaxed);
+                                    },
+                                    _=>{},
+                                }
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                                 false
                             }
@@ -603,7 +628,7 @@ impl GameKernelOwner{
             raw_received,rx_reject,
             rx_driver_timeout,rx_driver_other,rx_mutex_acquired,
             rx_authenticated_some,rx_dedup_none,rx_tun_failed,
-            rx_delivery_commit_failed,rx_lock_sample,outer_blocked_duplicate,
+            rx_delivery_commit_failed,rx_lock_sample,tx_reasons,outer_blocked_duplicate,
             outer_repeated_copy_sent})
     }
     pub(crate) fn outer_policy_counters(&self)->(u64,u64,u64){
@@ -627,6 +652,17 @@ impl GameKernelOwner{
         // Give in-flight M4 kernel borrows a bounded opportunity to finish
         // before owner release, without tearing down Go-owned TUN early.
         for w in self.threads.drain(..){if w.join().is_err(){return Err(())}}
+        // On-owned-Stop aggregate only; rejected native copies are not WAN loss.
+        eprintln!("M0_GAME_M4_TX_REJECT_BREAKDOWN offer={} slab={} record={} policy={} raw={} raw_backpressure={} raw_route={} raw_mtu={} total_rejected={}",
+            self.tx_reasons.offer.load(Ordering::Relaxed),
+            self.tx_reasons.slab.load(Ordering::Relaxed),
+            self.tx_reasons.record.load(Ordering::Relaxed),
+            self.tx_reasons.policy.load(Ordering::Relaxed),
+            self.tx_reasons.raw.load(Ordering::Relaxed),
+            self.tx_reasons.raw_backpressure.load(Ordering::Relaxed),
+            self.tx_reasons.raw_route.load(Ordering::Relaxed),
+            self.tx_reasons.raw_mtu.load(Ordering::Relaxed),
+            self.rejected.load(Ordering::Relaxed));
         // Counters distinguish real kernel ingress from blocked shared
         // GameAdapter lock, AEAD/GameRx duplicate and TUN failure.
         // No packet content, secret, raw key, TLS material or payload emitted.

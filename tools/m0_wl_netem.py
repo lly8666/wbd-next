@@ -12,13 +12,18 @@ import pathlib
 import subprocess
 import sys
 import time
-from m0_wl_impairment_profile import get_profile
+from m0_wl_impairment_profile import get_profile, ingress_ports_for_mode
 
 action, directory = sys.argv[1:3]
 profile_name = sys.argv[3] if len(sys.argv)>3 else "n0"
 scenario_path = sys.argv[4] if len(sys.argv)>4 else None
 profile = get_profile(profile_name, side="windows", configfile=scenario_path)
 egress_profile = get_profile(profile_name, side="linux", configfile=scenario_path)
+if profile_name == "v2":
+    from m0_wl_perf_v2_config import read_scenario
+    ingress_ports = ingress_ports_for_mode(read_scenario(scenario_path)["public_mode"])
+else:
+    ingress_ports = (443,)
 out = pathlib.Path(directory)
 out.mkdir(parents=True, exist_ok=True)
 owner = out / "wl-n0-netem-owned.json"
@@ -86,7 +91,7 @@ if action == "arm":
         raise RuntimeError("foreign ifb device name exists")
     state = {"owner": "M0-WL-N0-ETH0-IFB", "interface": iface,
              "profile": profile_name, "egress": False, "ingress": False, "ifb_created": False,
-             "stage_index": 0}
+             "stage_index": 0, "ingress_ports": list(ingress_ports)}
     persist(state)
     try:
         call("ip", "link", "add", iface, "type", "ifb")
@@ -103,19 +108,20 @@ if action == "arm":
         state["egress"] = True; persist(state)
         call("tc", "qdisc", "add", "dev", "eth0", "handle", "ffff:", "ingress")
         state["ingress"] = True; persist(state)
-        # Only the original TCP-like Windows client → Linux public server
-        # packets are mirrored. Other incoming WSL/host control traffic stays
-        # outside the measured path. tc on IFB is the actual ingress delay.
-        call("tc", "filter", "add", "dev", "eth0", "parent", "ffff:",
-             "protocol", "ip", "prio", "1", "u32",
-             "match", "ip", "protocol", "6", "0xff",
-             "match", "ip", "dport", "443", "0xffff",
-             "action", "mirred", "egress", "redirect", "dev", iface)
+        # Genuine Game2/4 cold TLS uses 2/4 distinct original server
+        # destination ports. Impair all lanes, but never unrelated traffic.
+        for order, port in enumerate(ingress_ports, 1):
+            call("tc", "filter", "add", "dev", "eth0", "parent", "ffff:",
+                 "protocol", "ip", "prio", str(order), "u32",
+                 "match", "ip", "protocol", "6", "0xff",
+                 "match", "ip", "dport", str(port), "0xffff",
+                 "action", "mirred", "egress", "redirect", "dev", iface)
         snapshot = probe()
         root = [x for x in snapshot["eth0"] if x.get("kind") == "netem"]
         incoming = [x for x in snapshot["ifb"] if x.get("kind") == "netem"]
-        if len(root) != 1 or len(incoming) != 1 or "mirred" not in snapshot["ingress_filters"]:
+        if len(root) != 1 or len(incoming) != 1 or snapshot["ingress_filters"].count("mirred") < len(ingress_ports):
             raise RuntimeError("real tc netem root/IFB/ingress readback incomplete")
+        snapshot["ingress_ports"] = list(ingress_ports)
         snapshot["declared_profile"] = profile_name
         snapshot["requested_kernel_profile"] = profile
         snapshot["requested_linux_egress_profile"] = egress_profile

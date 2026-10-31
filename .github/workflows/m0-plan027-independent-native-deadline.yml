@@ -51,7 +51,7 @@ jobs:
               exit 0
             fi
             jobs="$(gh api "repos/$GH_REPO/actions/runs/$TARGET_ID/jobs?per_page=100")"
-            stage="$(jq -c '.jobs[] | select(.name=="native-public-two-os") | {status,started_at,launch_at:([.steps[]? | select(.name=="Launch actual WSL2 Linux and direct full public two-OS product") | .started_at] | first)}' <<<"$jobs" | head -1)"
+            stage="$(jq -c '.jobs[] | select(.name=="native-public-two-os") | {id,status,started_at,launch_at:([.steps[]? | select(.name=="Launch actual WSL2 Linux and direct full public two-OS product") | .started_at] | first)}' <<<"$jobs" | head -1)"
             if [ -n "$stage" ]; then
               if [ "$(jq -r .status <<<"$stage")" = completed ]; then
                 echo "M0_EXTERNAL_NATIVE_JOB_FINISHED target=$TARGET_ID"
@@ -64,6 +64,20 @@ jobs:
                 seconds="$(($(date -u +%s)-$(date -u -d "$since" +%s)))"
                 if [ "$seconds" -ge "$JOB_LIMIT" ]; then
                   echo "M0_EXTERNAL_NATIVE_TIMEOUT target=$TARGET_ID job_seconds=$seconds"
+                  # Canceled Windows jobs can lose their final log blob. Try
+                  # bounded live retrieval of original diagnostic stage lines
+                  # before cancellation; missing live API remains UNKNOWN.
+                  job_id="$(jq -r .id <<<"$stage")"
+                  if [[ "$job_id" =~ ^[1-9][0-9]{5,16}$ ]]; then
+                    live="$RUNNER_TEMP/m0-game-$TARGET_ID.log"
+                    if timeout 25s gh api "repos/$GH_REPO/actions/jobs/$job_id/logs" >"$live" 2>/dev/null; then
+                      echo "M0_EXTERNAL_NATIVE_LIVE_LOG_FOUND target=$TARGET_ID job=$job_id"
+                      grep -E 'WL_PUBLIC_REAL_MODE_|WL_ORIGINAL_NATIVE_|M0_GAME_M4_|V4_PUBLIC_GAME_' "$live" | tail -n 100 || true
+                    else
+                      echo "M0_EXTERNAL_NATIVE_LIVE_LOG_UNAVAILABLE target=$TARGET_ID job=$job_id"
+                    fi
+                    rm -f "$live"
+                  fi
                   gh api -X POST "repos/$GH_REPO/actions/runs/$TARGET_ID/cancel" --silent || true
                   sleep 45
                   current="$(gh api "repos/$GH_REPO/actions/runs/$TARGET_ID" --jq .status)"

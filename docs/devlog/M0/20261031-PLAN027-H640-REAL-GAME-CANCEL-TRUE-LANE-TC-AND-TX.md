@@ -1,0 +1,11 @@
+# PLAN027 H640 — original Game FEC canceled, Game2/off loss evidence and true multi-lane tc
+
+Recovered main H639 source 020f6b5805996ab1148d9c97587fbe6c7e741d0f and three independent original Windows signed NPF/Wintun ↔ Linux raw/TUN Actions. Game2 highest FEC Action41206215082 and Game4 highest FEC Action41206217160 both **CANCELLED** after 720s external native-step watchdog; all Windows Rust/Linux Rust/Windows Go compiled but no original native UDP/TCP/Stop report and canceled native job logs BlobNotFound. Cannot infer product deadlock from elapsed time alone. Game2/off loss30 10Mbps each way/250ms/60s Action41206219407 actually delivered UDP+TCP and both owned Stop but first-arrival Windows38.1408%, Linux41.8635%; Linux Game TX rejected96344, outer ACK examined0. F/R/C and p99 not measured accurately. Preserve real positive Stop and negative weaknet quality separately, with binary SHA and scenario SHA in [evidence](../evidence/M0/PLAN027-H640-SOURCE020F-GAME-RECOVERY-20261031.json).
+
+Root test defect: the original Linux IFB ingress tc filter only selected port443 while Game2/4 protected independent TLS lane ports 444..446 were not mirrored into the same real impaired IFB. Change only V2 Game selected ingress ports, retain Normal/Fixed/Auto original port and scoped tc cleanup. Original Linux M4 Game raw TCP sender had only one rejected aggregate; add bounded per-cause atomic accounting with one Stop diagnostic (offer/slab/record/policy/raw/kernel EAGAIN/route/MTU), never packet logs or Go hot actor. External native cancellation attempts to recover current job diagnostic log before cancel; if unavailable still UNKNOWN, no fake pass. Auth/original ciphertext/PN, OS/driver true result and owned Stop unchanged.
+
+New SOURCE only code candidate until same-source Linux+Windows builds and real 2OS Game2/off30 + FEC native tests. PLAN027 §0 A/B/C and 300s remain open, A5 waiver stays. No blind 720s repeat for the old SOURCE.
+
+```feature-impact
+{"kind":"updated","ids":["game-lanes"],"reason":"Bounded Linux M4 Game TX failure reason classification at owned Stop, correct real Game2/4 ingress netem lane coverage, and recover canceled native diagnostics; exact new source original two-OS tests pending."}
+```

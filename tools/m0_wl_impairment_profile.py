@@ -17,3 +17,11 @@ def get_profile(name, side=None, configfile=None):
             from m0_wl_perf_v2_config import read_scenario, profile
         return profile(read_scenario(configfile),side)
     return PROFILES[name]
+
+# The original Game cold TLS owner binds independent 443..446 server ports.
+def ingress_ports_for_mode(mode):
+    if mode in ("game2", "game2-fec"):
+        return (443, 444)
+    if mode in ("game4", "game4-fec"):
+        return (443, 444, 445, 446)
+    return (443,)
