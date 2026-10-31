@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "source_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "result": "PARTIAL_B_FIXED_IDLE_NATIVE_PASS_HEALTH_FRAME_COUNT_NOT_MEASURED",
+  "run": 41224025507,
+  "artifact": 13050824544,
+  "harness_sha": "d2804c683445d3c85df4df6f1d5020b72a73e009",
+  "scenario": "plan027-b-fixed-idle-wake-10m-25ms-0loss-60s",
+  "scenario_sha256": "8ba8ddb8b44e45f6396e62d728b40cf8e51c5550f1308f55019a16b9a083a97e",
+  "fixed_profile": "6 maximum",
+  "no_payload_idle_s": 108.28,
+  "owners_alive": true,
+  "post_idle_udp": "PASS_BOTH_REAL_KERNEL",
+  "tcp_duplex": "PASS_BOTH",
+  "owned_stop": "PASS_BOTH",
+  "offered_mbps": {
+    "windows": 9.9974,
+    "linux": 10
+  },
+  "first_delivery_fraction": {
+    "windows": 1,
+    "linux": 1
+  },
+  "linux_tun_drops": {
+    "tx": 0,
+    "rx": 0
+  },
+  "windows_go_plus_rust_exe": {
+    "avg_one_core_pct": 2.991,
+    "peak_working_set_bytes": 41541632
+  },
+  "health_auth_frame_count": "NOT_EXPLICITLY_MEASURED",
+  "dead_peer90_authenticated_reauthorization": "NOT_RUN",
+  "p99_oneway": "NOT_MEASURED"
+}
