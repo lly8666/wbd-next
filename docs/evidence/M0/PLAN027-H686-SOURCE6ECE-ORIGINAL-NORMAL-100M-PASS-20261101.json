@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "result": "PASS_SCOPED_REAL_SIGNED_ORIGINAL_WINDOWS_LINUX_100MBPS_EACH_25MS_0PCT_60S_FIRST_AT_LEAST_99_9_AND_OWNED_STOP",
+  "run": 41239367781,
+  "build_run": 41226521824,
+  "original_windows_product_artifact": 13051429248,
+  "original_linux_product_artifact": 13051109212,
+  "prepared_harness_source_sha": "92354d5a70f34640918f61b25859ba0bb05989dd",
+  "real_report_artifact": {
+    "id": 13056593134,
+    "sha256": "0264666914dfb563fefe92a7e36587e27cd8524e1811785fa89bbc038082f5bf"
+  },
+  "scene": "plan027-c-normal-100m-25ms-loss0-60s",
+  "signed_windows_npf_wintun_linux_wsl2": true,
+  "duration_s": 60,
+  "netem_delay_ms_each": 25,
+  "injected_loss_percent": 0,
+  "offered_mbps_each": 100,
+  "first_received_mbps": {
+    "windows": 99.9985,
+    "linux": 99.9733
+  },
+  "first_delivery_fraction": {
+    "windows": 0.999984,
+    "linux": 1
+  },
+  "sequence_start": {
+    "windows": 0,
+    "linux": 0
+  },
+  "real_gaps_inside_observed_sequence": {
+    "windows": 2,
+    "linux": 0
+  },
+  "window_with_two_gaps": "WINDOW21_OF_4096_SEQUENCE_NOT_STARTUP",
+  "real_udp_tcp": "PASS_BOTH",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "source_monotonic_rtt_p99_ms": {
+    "windows": 63,
+    "linux": 65.802
+  },
+  "rtt_probes": {
+    "windows": {
+      "sent": 549,
+      "replied": 549,
+      "unreturned": 0
+    },
+    "linux": {
+      "sent": 598,
+      "replied": 598,
+      "unreturned": 0
+    }
+  },
+  "generator_cpu_s": {
+    "windows": 9.3594,
+    "linux": 43.9891
+  },
+  "native_original_windows_product": {
+    "cpu_s": 10.8594,
+    "cpu_kernel_s": 7.5781,
+    "cpu_user_s": 3.2812,
+    "observed_elapsed_s": 77.406,
+    "avg_one_core_pct": 14.029,
+    "npcap_ingress_local_drops": 0
+  },
+  "limitations": [
+    "100Mbps result qualifies >=99.9% threshold despite TWO genuine packet gaps on Win receive; NEVER call zero physical loss",
+    "Own-clock RTT p99 is not calibrated cross-OS one-way p99, all RTT probes returned",
+    "200Mbps is unverified until next independent capacity Action; Linux generator 43.99s/77s approaches potential CPU/core capacity",
+    "No same-host A/B or host-wide CPU + WSL comparable process accounting, F/R/C loss0 meaningless",
+    "Unverified full Game/FEC native Windows B and lifecycle/host-global OS requirements"
+  ]
+}
