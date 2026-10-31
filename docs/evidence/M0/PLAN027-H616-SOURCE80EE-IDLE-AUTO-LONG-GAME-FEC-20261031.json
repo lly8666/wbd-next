@@ -94,5 +94,8 @@
     "Further DNS/IPv6/MTU/config readback lifecycle B",
     "Normalized outer F/R/C and p99 within measurement capabilities"
   ],
-  "physical": "NOT_RUN"
+  "physical": "NOT_RUN",
+  "schema_version": 1,
+  "source_sha": "80ee526cc7b466ec6ccbe3cc25caf2f3754996ef",
+  "result": "PARTIAL_SOURCE_SCOPED_REAL_ACTIONS_WITH_RETAINED_FAIL"
 }
