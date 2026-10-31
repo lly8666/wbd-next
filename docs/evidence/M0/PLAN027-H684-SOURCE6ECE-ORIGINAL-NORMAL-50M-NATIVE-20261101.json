@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "result": "PASS_CURRENT_SOURCE_SIGNED_WINDOWS_NPF_WINTUN_LINUX_WSL2_NORMAL_50MBPS_EACH_0PCT_60S_FIRST_FULL_STOP",
+  "run": 41238777543,
+  "scenario": "plan027-c-normal-50m-25ms-loss0-60s",
+  "original_prebuilt_source_run": 41226521824,
+  "original_windows_binaries_artifact": 13051429248,
+  "original_linux_binaries_artifact": 13051109212,
+  "harness_source_sha": "92354d5a70f34640918f61b25859ba0bb05989dd",
+  "actual_artifact": {
+    "id": 13056641840,
+    "sha256": "1c967f6c90153f8e35224ae9893403e4b3cd04743f0846e1845239b3eb9bfeaa"
+  },
+  "real_os": "SIGNED_WINDOWS_NPF_WINTUN_AND_LINUX_WSL2_KERNEL_ORIGINAL_GO_TLS_RUST",
+  "tun_mtu_requested": 1400,
+  "duration_s": 60,
+  "real_kernel_one_way_delay_ms": 25,
+  "real_kernel_loss_percent": 0,
+  "offered_each_mbps": 50,
+  "first_unique_delivery_mbps": {
+    "windows": 49.9999,
+    "linux": 49.9874
+  },
+  "first_unique_delivery_fraction": {
+    "windows": 1,
+    "linux": 1
+  },
+  "receiver_sequences": {
+    "windows": {
+      "first_seq": 0,
+      "last_seq": 497635,
+      "missing_middle": 0
+    },
+    "linux": {
+      "first_seq": 0,
+      "last_seq": 497490,
+      "missing_middle": 0
+    }
+  },
+  "real_udp_tcp": "PASS",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "source_monotonic_real_udp_roundtrip_p99_ms": {
+    "windows": 62,
+    "linux": 58.346
+  },
+  "real_udp_rtt_probes": {
+    "windows": {
+      "sent": 549,
+      "replied": 549,
+      "not_returned": 0
+    },
+    "linux": {
+      "sent": 599,
+      "replied": 599,
+      "not_returned": 0
+    }
+  },
+  "windows_original_go_rust_process": {
+    "observations": 76,
+    "elapsed_s": 77.625,
+    "cpu_total_s": 9.7656,
+    "cpu_kernel_s": 6.2812,
+    "cpu_user_s": 3.4844,
+    "average_single_core_pct": 12.581,
+    "peak_working_set_bytes": 42446848,
+    "peak_private_bytes": 38477824
+  },
+  "traffic_generators_cpu_s": {
+    "windows": 10.8125,
+    "linux": 34.3767
+  },
+  "windows_npf_ingress_local_drops": 0,
+  "windows_native_rust_outcome": {
+    "tx_records": 498753,
+    "rx_first_delivered_ipv4": 498893,
+    "source_stage_failures": 0,
+    "oversize_rejects": 0,
+    "pending_original_rust_frozen_or_unacked_legacy_carrier_records": 0
+  },
+  "limits": [
+    "Different Windows VM than 300s10M, no same-host A/B CPU ratio",
+    "One-way p99 not calibrated; RTT probes all returned",
+    "50Mbps tier passed, 100Mbps tier NOT_RUN until separate Action; no extrapolated 200Mbps qualification",
+    "This no-loss run has no proof of useful ACK/SACK repair at damaged underlay; H683 1percent independent in flight"
+  ],
+  "next_rung": {
+    "scenario": "scenarios/plan027-c-normal-100m-25ms-loss0-60s.json",
+    "status": "PENDING_SEPARATE_REAL_SOURCE_LOCKED_ACTION",
+    "same_prebuilt_source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8"
+  }
+}
