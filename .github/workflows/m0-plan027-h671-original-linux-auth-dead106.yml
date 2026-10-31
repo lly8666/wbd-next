@@ -1,0 +1,62 @@
+name: M0 PLAN027 H671 one genuine Linux original TLS authenticated dead106
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h671-original-linux-auth-dead106.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  one-genuine-linux-auth-dead106:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      PRODUCT_SOURCE: 5fb4c9d79d481334631a4f894e82d2f8c7b078ca
+      WBD_V4_PUBLIC_MODE: normal
+      WBD_V4_PUBLIC_KERNEL_LOSS: "0"
+      WBD_PLAN027_LINUX_DEAD106: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-plan024-linux-product
+          run-id: 41224887969
+          repository: lly8666/wbd-next
+          github-token: ${{ github.token }}
+          path: frozen-linux
+      - name: Immutable original Go TLS and Rust binary manifest SHA and exact one scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,hashlib,pathlib,os
+          root=pathlib.Path("frozen-linux");m=json.loads((root/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["PRODUCT_SOURCE"]
+          assert m["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+          for name,sha in m["sha256"].items():
+              p=root/name
+              assert p.stat().st_size>100000 and hashlib.sha256(p.read_bytes()).hexdigest()==sha,(name,sha)
+          print("H671_ORIGINAL_LINUX_TWO_REAL_GO_TLS_RUST_BINARY_SOURCE_SHA_VERIFIED")
+          PY
+          chmod +x frozen-linux/wbd-v4-server frozen-linux/wbd-v4-client
+      - name: True symmetric 106 second Linux netns peer outage plus original new TLS both ways and Stop
+        shell: bash
+        timeout-minutes: 7
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl
+          test -c /dev/net/tun
+          mkdir -p fixed-kernel-result
+          bash tools/m0-plan027-h671-real-linux-original-dead106.sh "$GITHUB_WORKSPACE/frozen-linux" 2>&1 |
+            tee h671-genuine-dead106.log
+          test "${PIPESTATUS[0]}" = 0
+          grep -q 'H671_ORIGINAL_LINUX_BILATERAL_DEAD106_TLS_REAUTH_AND_REAL_UDP_STOP_PASS' h671-genuine-dead106.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h671-true-original-linux-dead106-${{ github.run_id }}
+          path: |
+            h671-genuine-dead106.log
+            fixed-kernel-result/
+          retention-days: 21
+          if-no-files-found: warn
