@@ -5726,13 +5726,6 @@ fn background_original_repair_once(
         (shared,raw,e.flow,e.server_side,e.generation,mature,
          e.counters.outer_presentation_ack.load(Ordering::Acquire))
     };
-    let now=loop_now();
-    let candidates={
-        let mut own=shared.lock().map_err(|_|BAD_STAGE)?;
-        let polled=own.shadow.on_timer(now);
-        own.retired=own.retired.saturating_add(polled.releases.len() as u64);
-        polled.candidates
-    };
     let tuple=if server{Ipv4Tuple{
         src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
         src_port:flow.server_port,dst_port:flow.client_port,
@@ -5745,8 +5738,25 @@ fn background_original_repair_once(
         persona:PacketPersona::Legacy,
     };
     let mut repaired=0;
-    for candidate in candidates{
-        if stop.load(Ordering::Acquire){break}
+    let mut examined=0usize;
+    loop{
+        if stop.load(Ordering::Acquire)||examined>=16{break}
+        let now=loop_now();
+        let candidate={
+            let mut own=shared.lock().map_err(|_|BAD_STAGE)?;
+            if own.repair_retry_after_ns.is_some_and(|at|at>now.0){None}
+            else{
+                own.repair_retry_after_ns=None;
+                if own.ready_repairs.is_empty(){
+                    let polled=own.shadow.on_timer(now);
+                    own.retired=own.retired.saturating_add(polled.releases.len() as u64);
+                    own.ready_repairs.extend(polled.candidates); // <=32 handles
+                }
+                own.ready_repairs.pop_front()
+            }
+        };
+        let Some(candidate)=candidate else{break};
+        examined+=1;
         let wire_bytes=(candidate.frozen().bytes().len()+
             wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64;
         let now=loop_now();
@@ -5790,6 +5800,16 @@ fn background_original_repair_once(
                             let _=global.revoke(lease,now);
                             let reason=original_repair_reserve_block_reason(err);
                             own.note_block(reason);
+                            if reason==OriginalRepairBlockReason::Burst{
+                                // Existing grant/tokens refill. Keep the same
+                                // immutable one-shot handle until bounded expiry;
+                                // fresh TUN always has priority over this FIFO.
+                                own.repair_burst_deferred=
+                                    own.repair_burst_deferred.saturating_add(1);
+                                own.repair_retry_after_ns=Some(now.0.saturating_add(1_000_000));
+                                own.ready_repairs.push_front(candidate);
+                                return Ok(repaired)
+                            }
                             if reason==OriginalRepairBlockReason::Quota{
                                 if own.shadow.on_quota_exhausted(&candidate,now).is_ok(){
                                     own.retired=own.retired.saturating_add(1);
