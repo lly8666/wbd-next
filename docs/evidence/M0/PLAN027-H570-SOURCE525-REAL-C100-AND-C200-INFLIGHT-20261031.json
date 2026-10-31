@@ -2,7 +2,7 @@
   "schema_version": 1,
   "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "result": "C100_60S_TRUE_ORIGINAL_TWO_OS_FIRST_AND_STOP_PASS; C200_GATED_IN_FLIGHT; GAME_FEC_AND_LONG_IN_FLIGHT",
+  "result": "C100_TRUE_60S_AND_C50_300S_ORIGINAL_FIRST_STOP_PASS; C200_IN_PROGRESS; GAME_FEC_IN_PROGRESS",
   "c100": {
     "run_id": 41170803766,
     "harness_sha": "3ab182fa6448241f139dcf7a8736c7479bd7d567",
@@ -42,7 +42,25 @@
   "five_min_stability": {
     "run_id": 41170805473,
     "scenario": "plan027-c-normal-50m-25ms-loss0-300s",
-    "result": "IN_PROGRESS_NOT_PASS"
+    "artifact_id": 13031341892,
+    "artifact_sha256": "49c971e0eead4e605c55d3cebb3000e2e17d668b5d7124e0cf514fbb3f104897",
+    "result": "GENUINE_BOTH_OS_FIRST_100PCT_300S_UDP_TCP_STOP_PASS",
+    "offered_mbps_windows": 49.9973,
+    "offered_mbps_linux": 50,
+    "first_delivery_windows": 1,
+    "first_delivery_linux": 1,
+    "windows_F": 2156892088,
+    "windows_R": 0,
+    "windows_C": 4466544,
+    "linux_F": 2122019385,
+    "linux_R": 0,
+    "linux_C": "NOT_MEASURED",
+    "windows_cpu_s": 38.0312,
+    "windows_elapsed_s": 317.812,
+    "windows_avg_one_core_percent": 11.967,
+    "windows_peak_rss_bytes": 42102784,
+    "stop": "PASS_BOTH_OWNED",
+    "p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS"
   },
   "game_fec": {
     "game2_run_id": 41170807537,
