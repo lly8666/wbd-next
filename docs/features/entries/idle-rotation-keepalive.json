@@ -111,6 +111,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "5fb4c9d79d481334631a4f894e82d2f8c7b078ca",
       "evidence": "docs/evidence/M0/PLAN027-H673-RECOVERED-H669-H671-MTU-AND-AUTH-DEAD-20261101.json"
+    },
+    {
+      "platform": "linux/amd64 original Go credential TLS Rust two real netns",
+      "scope": "H675 SOURCE6ece original immutable built Linux Game2 fixed6 105s zero business after real TLS Ready both; no false auth dead, 64/64 genuine app UDP unique after idle under real symmetric 15% tc dropped58/53, parity copied client128/server123, both true Stop. Linux only, Health frame count/Windows NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+      "evidence": "docs/evidence/M0/PLAN027-H677-SOURCE6ECE-LINUX-GAME2FEC-IDLE105-20261101.json"
     }
   ],
   "limitations": [
@@ -128,7 +135,8 @@
     "Candidate: ±10% Health send jitter, bounded optional random record padding, merge M2+Health after real copy. Game per-lane Health/FIN-Dormant-Wake UNWIRED.",
     "Candidate: authentic Health only piggybacks on M2 when 15s clock is due. Ordinary frequent M2 replies stay immediate, no per-M2 random padding or keepalive reset. Game lane Health and FIN/Dormant/Wake UNWIRED. H597 Game shared authenticated kind0 Health receive + producer seal core staged for Windows/Linux, TX actual driver copy/timer and 90s lifecycle NOT_CONNECTED/NOT_RUN; no native Game PASS. H599 source candidate: Rust Windows NPF and Linux raw Game2/4 TX now use same 15s±10% HealthClock, encrypted per-lane kind0, actual copied-driver result, authenticated RX/dead90; compile/native 90s/rotation NOT_RUN. H597 core alone did NOT qualify product. H602 stuck H601 Game2-FEC SOURCE511c action41186157073 after authentic WSL boot with no business/Stop; original NOT_PASS, exact scoped rescue; future Game 510/600/720s fail-closed bounds, Health origin native worker attach. No new-source 90s Game PASS.",
     "H621 source candidate: Linux original Normal off/Fixed now observes Rust authenticated dead90 at existing 1Hz cold controller and, after Rust owned Stop/join, reauthorizes original TLS preserving Go-owned TUN between generations (Auto semantics reused). No ACK/driver error falsely reauthorizes, no extra hot worker. Genuine 90s two-end Windows/Linux recovery, rotation, Game grouped health and physical remain NOT_RUN until source-locked Actions.",
-    "H626 candidate: Windows original Normal/Fixed/Auto Rust-authenticated dead90 uses rc6 distinct from driver/crypto errors rc3; Go cold supervisor retries credential TLS after verified native owned Stop and 1s backoff, existing GUI slot/control once. H625 106s true two-OS both FAIL on previous SOURCE593 as Windows exited after native auth-dead; exact new-source real recovered UDP/TCP/Stop NOT_YET_RUN."
+    "H626 candidate: Windows original Normal/Fixed/Auto Rust-authenticated dead90 uses rc6 distinct from driver/crypto errors rc3; Go cold supervisor retries credential TLS after verified native owned Stop and 1s backoff, existing GUI slot/control once. H625 106s true two-OS both FAIL on previous SOURCE593 as Windows exited after native auth-dead; exact new-source real recovered UDP/TCP/Stop NOT_YET_RUN.",
+    "H675 Linux original Game2 FEC6 105s zero business after ready then true 15% tc kernel UDP first64/64, parity and Stop PASS source6ece; authenticated Health frame counts not independently measured. Windows B106/GameFEC and FIN/Dormant/Wake/rotation remain open."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

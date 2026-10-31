@@ -33,12 +33,6 @@ sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 2 * 1024 * 1024)
 receiver_rcvbuf_effective = sock.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
 sock.bind((local, 45903))
 sock.setblocking(False)
-print(json.dumps({"phase":"bound","side":side,"address":local}), flush=True)
-
-wait_start = time.monotonic() + 25
-while not pathlib.Path(start_flag).exists():
-    if time.monotonic() > wait_start: raise RuntimeError("two-OS rate start barrier unavailable")
-    time.sleep(.015)
 
 prefix=b"WBD-WL-N0/"
 probe_request=b"WBD-WL-RTT-Q/"
@@ -67,10 +61,24 @@ if (profile_name=="v2" and duration!=profile["duration_s"]) or (profile_name!="v
         (duration not in (60.0,240.0) or (profile_name!="n0" and duration!=profile["duration_s"]))):
     raise ValueError("invalid declared impairment duration")
 drain=5.0
-start=time.monotonic()
-# Linux socket inode/proc UDP global counters are scoped to this real socket
-# (except explicitly named guest-global MIB). Read 1Hz, never per frame.
+# H677 original rate app was declaring "bound" while each OS still parsed
+# its profile, queried socket/host statistics and allocated its RX bitmap.
+# At 10Mbps source6ece the Windows receiver lacked ONLY seq0..181.
+# Declare the existing two-OS barrier ready after all per-side cold setup;
+# no data packets, protocol controls or statistical exclusions are added.
 socket_start=udp_socket_probe(sock) if profile_name=="v2" else None
+first=FirstDeliveryBitmap(bounded_sequence_limit(rate_bytes_per_sec,duration,min(sizes)))
+recv_slabs=bytearray(2048) if stress else None
+recv_view=memoryview(recv_slabs) if stress else None
+print(json.dumps({"phase":"bound","side":side,"address":local,
+                  "receiver_prepared":"PROFILE_TELEMETRY_BITMAP_SLAB_READY"}),flush=True)
+wait_start=time.monotonic()+25
+while not pathlib.Path(start_flag).exists():
+    if time.monotonic()>wait_start:raise RuntimeError("two-OS rate start barrier unavailable")
+    time.sleep(.015)
+start=time.monotonic()
+# The initial socket telemetry snapshot is intentionally PRE-barrier.
+# Do not mislabel its Windows/global counters as exact in-window deltas.
 socket_timeline=[]
 cpu_start=time.process_time()
 loop_count=0
@@ -80,15 +88,12 @@ last_heartbeat=start
 credit=0.0
 sent=0
 sent_bytes=0
-first=FirstDeliveryBitmap(bounded_sequence_limit(rate_bytes_per_sec,duration,min(sizes)))
 recv_bytes=0
 duplicate=0
 invalid=0
 last_delivery=None
 # P200-only reusable receive slab: the original recvfrom() allocated one
 # Python bytes object for every one of ~1 million observed native UDP frames.
-recv_slabs=bytearray(2048) if stress else None
-recv_view=memoryview(recv_slabs) if stress else None
 max_interdelivery_ms=0
 bins=[0] * int((duration+drain)*100)
 # Diagnostic-only V2 timing: receive bins are loop-observation timestamps,

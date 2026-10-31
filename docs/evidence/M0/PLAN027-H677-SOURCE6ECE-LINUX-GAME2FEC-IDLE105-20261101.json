@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "result": "LINUX_ORIGINAL_GAME2_FIXED6_REAL_AUTHENTICATED_IDLE105_POST_WAKE_15PCT_KERNEL_FEC_FIRST_AND_STOP_PASS",
+  "run": 41236824445,
+  "runner": "ubuntu-24.04",
+  "original_linux_binary_build_run": 41226521824,
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "source": "original Go TLS Rust native verified manifest and binary digest",
+  "artifact": {
+    "id": 13056306628,
+    "sha256": "7f90de17b047b15b4e44904b39f24aed2a3bc4e1654d7fd9d2de55ed14c02581"
+  },
+  "scenario": "one Linux two-netns game2-fec fixed profile6 original TLS, authentic ready then no business for 105s, subsequent 64 real UDP sources and symmetric 15% tc kernel netem, bidirectional owned Stop",
+  "idle_seconds": 105,
+  "original_rust_owner_alive_after_idle": {
+    "client": true,
+    "server": true
+  },
+  "false_authenticated_dead_detected": false,
+  "actual_udp": {
+    "offered_source": 64,
+    "unique_delivered": 64,
+    "missing": 0
+  },
+  "genuine_m4_copied_parity": {
+    "client": {
+      "source": 64,
+      "parity_offered": 128,
+      "parity_copied": 128
+    },
+    "server": {
+      "source": 64,
+      "parity_offered": 123,
+      "parity_copied": 123
+    }
+  },
+  "actual_kernel_tc_dropped": {
+    "client": 58,
+    "server": 53
+  },
+  "owned_stop": "PASS_BOTH_GENUINE",
+  "unverified": [
+    "Windows signed Game2/4 FEC idle/rejoin remains NOT_RUN",
+    "Health kind1 frame count NOT_EXPLICITLY_MEASURED",
+    "No 10Mbps 30% GameFEC, full p99 or physical verdict",
+    "Real sustained 105s idle is not 105s traffic throughput test"
+  ]
+}
