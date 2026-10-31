@@ -187,6 +187,24 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  report["linux_ready"]="PASS_REAL_AFTER_ORIGINAL_TLS"
  if "WBD_WINDOWS_OS_APPLIED" not in (out/"client.log").read_text():raise RuntimeError("Windows public READY lacks native OS Applied")
  report["windows_ready"]="PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL"
+ if os.environ.get("WBD_WL_V2_SCENARIO"):
+  from m0_wl_perf_v2_config import read_scenario
+  scene_mtu=read_scenario(root/os.environ["WBD_WL_V2_SCENARIO"])["tun_mtu"]
+  if configured_mtu!=scene_mtu:
+   raise RuntimeError("original Windows native requested MTU does not match immutable scenario")
+  if configured_mtu==1280:
+   # Read the original Linux TUN AFTER protected TLS admission, not a
+   # requested value in a JSON file. Both TUN owners must obey one budget.
+   kernel=json.loads(wsl("ip","-j","link","show","dev","wbdwl4",timeout=12))
+   if len(kernel)!=1 or type(kernel[0].get("mtu")) is not int:
+    raise RuntimeError("Linux original TUN 1280 MTU real OS readback missing")
+   linux_actual=kernel[0]["mtu"]
+   report["original_native_mtu1280_kernel_readback"]={
+    "requested_windows":configured_mtu,"linux_actual":linux_actual,
+    "source":"REAL_LINUX_TUN_AFTER_AUTHENTICATED_ORIGINAL_GO_TLS"}
+   if not 576<=linux_actual<=1280:
+    raise RuntimeError("Linux original TUN negotiated larger than Windows 1280 budget "+str(linux_actual))
+   print("H668_NATIVE_ORIGINAL_MTU1280_WINTUN_REQUEST_AND_REAL_LINUX_TUN_MAX_PASS linux_mtu="+str(linux_actual),flush=True)
  done.write_text("observed authentic client and Linux server READY\n")
  # The actual UDP app has a 30s real OS bind bound plus 35s payload
  # deadline. 18s parent wait previously killed it before it could report

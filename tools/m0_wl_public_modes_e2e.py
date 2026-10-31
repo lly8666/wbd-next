@@ -23,6 +23,11 @@ failed=[]
 for mode in modes:
  env=os.environ.copy()
  env["WBD_WL_PUBLIC_MODE"]=mode
+ if env.get("WBD_WL_V2_SCENARIO"):
+  # One canonical source-controlled MTU per original Windows native mode.
+  # A read-only scenario argument, not a production fallback or handshake.
+  v2_scene=read_scenario(env["WBD_WL_V2_SCENARIO"])
+  env["WBD_WL_TUN_MTU"]=str(v2_scene["tun_mtu"])
  # Never reinterpret the preceding mode's report as this mode's result.
  (out/"report.json").unlink(missing_ok=True)
  baseline=capture_mode_evidence_baseline(out)
