@@ -1099,9 +1099,9 @@ fn stop(r:&mut Registry,h:u64)->i32{
             d.acked_attempt0,d.repair_accepted_retired,
             d.repair_abandoned_retired,m.repair_preflight_stale,
             m.repair_quota_rejected,m.ready_repairs.len());
-        eprintln!("WBD_WINDOWS_NATIVE_OUTER_CURSOR unique_candidates={} unique_candidate_cipher_bytes={} checked_once={} sampled_out={} burst_wait={} fifo_left={}",
+        eprintln!("WBD_WINDOWS_NATIVE_OUTER_CURSOR unique_candidates={} unique_candidate_cipher_bytes={} checked_once={} burst_wait={} fifo_left={}",
             d.cosmetic_candidates,d.cosmetic_candidate_bytes,
-            m.outer_ack.gap_scanned_once(),0u64,
+            m.outer_ack.gap_scanned_once(),
             m.repair_burst_deferred,m.ready_repairs.len());
         // Return original M1 frozen clones and retire the exact global
         // direction before original owner retirement. No late kernel sender.
