@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+  "result": "PARTIAL_B_THREE_IN_FLIGHT_TWO_LIFECYCLE_NEW_PENDING",
+  "real_prequal": {
+    "h656_original_mode": "game2-off",
+    "run": 41220597229,
+    "source": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+    "genuine_bilateral_first_and_stop": "PASS"
+  },
+  "in_flight_original": [
+    {
+      "id": 41223662496,
+      "mode": "game2-fec",
+      "scenario": "wl-game2-fixed6-10m-75ms-loss15-20s"
+    },
+    {
+      "id": 41223668774,
+      "mode": "normal",
+      "scenario": "plan027-b-normal-idle-wake-10m-25ms-0loss-60s"
+    },
+    {
+      "id": 41223674122,
+      "mode": "game4",
+      "scenario": "plan027-b-game4-off-10m-75ms-loss5-20s"
+    }
+  ],
+  "new_independent": [
+    {
+      "mode": "normal",
+      "source": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+      "scenario": "plan027-b-normal-blackhole20-recover-10m-25ms-0loss-60s",
+      "scene_durations": {
+        "blackhole_s": 20,
+        "post_s": 60
+      },
+      "result": "PENDING"
+    },
+    {
+      "mode": "fixed",
+      "source": "dc191cf5686ddff2e433312b8ec2258954bd018f",
+      "scenario": "plan027-b-fixed-idle-wake-10m-25ms-0loss-60s",
+      "scene_durations": {
+        "real_no_payload_idle_s": 105,
+        "post_s": 60
+      },
+      "result": "PENDING"
+    }
+  ],
+  "blocked": {
+    "normal_blackhole_106": "CANCELLED_H648_NO_BILATERAL_REAUTH",
+    "signed_GameFEC": "PENDING_H657",
+    "rotation_dns_ipv6_mtu": "NOT_CLOSED",
+    "fixed200_high": "CAPACITY_LIMITED_SOURCE11F"
+  },
+  "binary_build_run": 41220597229
+}
