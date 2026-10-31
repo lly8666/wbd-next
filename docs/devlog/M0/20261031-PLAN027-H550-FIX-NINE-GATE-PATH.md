@@ -1,0 +1,9 @@
+# PLAN027 H550 — no H549 dispatched scenes; fix one workstream trigger
+
+H549 latest main [b74e31c8](https://github.com/lly8666/wbd-next/commit/b74e31c84df82b33a018da40a3f55eca48c4378a) governance [41160857970](https://github.com/lly8666/wbd-next/actions/runs/41160857970) PASS, but H549 nine-scenes workflow never appeared in Actions because new file `.github/workflows/m0-plan027-h549-sourcef031-independent-nine.yml` had `push.paths` incorrectly pointing to old `...h549-source-true-six-scenes.yml`; its conditional token was also `[plan027-h549-six-once]` rather than commit `[plan027-h549-scene-once]`. Thus no H549 fanout, **zero** children run, no product/business result or lower-bound rate falsely claimed. H550 correct only path filter and unique literal token `[plan027-h550-nine-once]` for one new gate. Reuse product SOURCE `f0313d565e4e271aeb3cce3df11762b046d76f2e` compiled once full signed Windows Go TLS/ Rust and Linux Rust Action [41155198489](https://github.com/lly8666/wbd-next/actions/runs/41155198489) artifacts Win13024188713 Linux13024594029 original report13024948759. The gate checks *actual* no-loss first/Stop/F/R/C and same build before launching distinct p1/5/15/30 + two Game FEC + Fixed30 + Auto240 + Normal C50 one-Action scenes. No new/source rebuild and no old tests repeated.
+
+H547 SOURCEba8d genuine 1/5/15/30 user-rate FAIL eight original directions retained in evidence. A5 Go steady leg early RC1 in B→A same VM after Rust B passed, no comparable CPU claim; Game2/4FEC sourceba8d canceled. Product H547 shared live-shadow feedback and H548 Go Game cold syntax were already frozen in SOURCEf031; B Windows Health/rotation and C outstanding.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Correct exactly a misnamed new Actions push filter and one-shot token; code, binary, test scenarios, feature state unchanged."}
+```

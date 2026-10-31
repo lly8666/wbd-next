@@ -2,11 +2,11 @@ name: M0 PLAN027 H549 real f031 all damage Game FEC Auto Fixed C50
 on:
   push:
     branches: [main]
-    paths: [.github/workflows/m0-plan027-h549-source-true-six-scenes.yml]
+    paths: [.github/workflows/m0-plan027-h549-sourcef031-independent-nine.yml]
 permissions: {contents: read, actions: write}
 jobs:
   source-locked-nine:
-    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h549-six-once]')
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h550-nine-once]')
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
