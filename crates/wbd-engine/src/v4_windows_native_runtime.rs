@@ -749,7 +749,8 @@
                   let receive_due=m.quality_due.front().map(|(_,due)|MonoNs(*due));
                   let shadow_due=if m.auto_low_rate_mode{None}
                       else{m.shadow.next_deadline()};
-                  let next=shadow_due.into_iter().chain(quality_due)
+                  let paced_due=m.repair_retry_after_ns.map(MonoNs);
+                  let next=shadow_due.into_iter().chain(paced_due).chain(quality_due)
                       .chain(receive_due).chain(fec_due)
                       .chain(m.health.next_tx_deadline().map(MonoNs))
                       .chain(auto_due).min_by_key(|d|d.0);
