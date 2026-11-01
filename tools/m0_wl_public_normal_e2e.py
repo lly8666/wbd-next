@@ -18,7 +18,13 @@ if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec",
 fixed6=mode=="fixed"
 is_game=mode.startswith("game")
 game_fixed=mode.endswith("-fec")
+def game_cold_stage(stage):
+ if not game_fixed:return
+ # Append-only fixed stage name; no TLS/route keys, packets or identity.
+ with (out/"gamefec-cold-stage.txt").open("a") as f:
+  f.write(stage+"\n")
 if game_fixed:
+ game_cold_stage("COLD_E2E_STARTED")
  _e2e_stack=(out/"gamefec-e2e-stack.txt").open("w")
  faulthandler.dump_traceback_later(105,file=_e2e_stack,exit=False)
  atexit.register(lambda:(faulthandler.cancel_dump_traceback_later(),_e2e_stack.close()))
@@ -126,12 +132,14 @@ try:
  m=re.search(r"\binet (\d+(?:\.\d+){3})/",ip)
  if not m:raise RuntimeError("WSL2 actual eth0 IPv4 missing")
  peer=m.group(1);server=unix(root/"linux-product");result=unix(out)
+ game_cold_stage("COLD_WSL_IP_READY")
  route="aabbccddeeff0011223344556677889900112233445566778899aabbccddeeff"
  tunnel="102030405060708090a0b0c0d0e0f001"
  user="wbd-ci-native";password="native-tls-ci-only"
  wsl("openssl","req","-x509","-newkey","rsa:2048","-sha256","-days","1","-nodes",
      "-keyout",result+"/key.pem","-out",result+"/cert.pem","-subj","/CN=wbd-v4.example.test",
      "-addext","subjectAltName=DNS:wbd-v4.example.test")
+ game_cold_stage("COLD_TLS_CERT_READY")
  linux=out/"start-linux.sh"
  # Original TLS-authenticated server selects the actual Windows11 carrier
  # persona before Rust M4 kernel RX; default W168 Linux legacy is unchanged.
@@ -152,6 +160,7 @@ try:
   "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode","bypass-lan"]
  log=(out/"client.log").open("w");logs.append(log)
  w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,text=True)
+ game_cold_stage("COLD_CLIENT_SPAWNED")
  resource_worker=threading.Thread(
   target=sample_windows_original_process,
   args=(w,out/"windows-original-go-rust-process-1hz.jsonl",resource_stop),
@@ -225,8 +234,10 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),"10.66.0.1","10.66.0.2",unix(done)],stdout=llog,stderr=subprocess.STDOUT)
  wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1",str(done)],stdout=wlog,stderr=subprocess.STDOUT)
  # This READY remains owned exclusively by the unmodified real product.
+ game_cold_stage("COLD_READY_WAIT")
  ready(out/"client.log","WBD_WINDOWS_CLIENT_READY",w,30)
  ready(out/"server.log","V4_ORIGINAL_GO_GAME_NATIVE_READY" if is_game else "V4_ORIGINAL_GO_SERVER_NATIVE_READY",s,8)
+ game_cold_stage("COLD_READY_COMPLETE")
  report["linux_ready"]="PASS_REAL_AFTER_ORIGINAL_TLS"
  if "WBD_WINDOWS_OS_APPLIED" not in (out/"client.log").read_text():raise RuntimeError("Windows public READY lacks native OS Applied")
  report["windows_ready"]="PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL"

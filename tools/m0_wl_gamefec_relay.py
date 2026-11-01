@@ -8,9 +8,16 @@ import pathlib
 import queue
 import re
 import subprocess
+import threading
 
 SAFE = re.compile(r"[^A-Za-z0-9_.:-]")
 MARKERS = (
+    ("gamefec-cold-stage.txt", "COLD_E2E_STARTED", "COLD_E2E_STARTED"),
+    ("gamefec-cold-stage.txt", "COLD_WSL_IP_READY", "COLD_WSL_IP_READY"),
+    ("gamefec-cold-stage.txt", "COLD_TLS_CERT_READY", "COLD_TLS_CERT_READY"),
+    ("gamefec-cold-stage.txt", "COLD_CLIENT_SPAWNED", "COLD_CLIENT_SPAWNED"),
+    ("gamefec-cold-stage.txt", "COLD_READY_WAIT", "COLD_READY_WAIT"),
+    ("gamefec-cold-stage.txt", "COLD_READY_COMPLETE", "COLD_READY_COMPLETE"),
     ("client.log", "WBD_WINDOWS_GAME_COLD_TLS_JOINED", "CLIENT_TLS_JOINED"),
     ("client.log", "WBD_WINDOWS_GAME_NATIVE_APPLIED", "CLIENT_OS_APPLIED"),
     ("client.log", "WBD_WINDOWS_OS_APPLIED", "OS_APPLIED"),
@@ -54,6 +61,7 @@ class GameFecRelay:
         self.env = os.environ if env is None else env
         self.send = send if send is not None else self._send_to_actions
         self.seen = set()
+        self._delivery_slots = threading.BoundedSemaphore(3)
 
     def _send_to_actions(self, event, detail):
         if self.env.get("WBD_WL_GAME_FEC_RESCUE") != "1": return
@@ -65,11 +73,18 @@ class GameFecRelay:
                 "--repo",self.env.get("GITHUB_REPOSITORY","lly8666/wbd-next"),
                 "--ref","main", "-f","target_run="+run, "-f","source="+source,
                 "-f","stage="+event,"-f","detail="+detail]
-        try:
-            subprocess.run(args,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
-                           stdin=subprocess.DEVNULL,timeout=8,check=False)
-        except (OSError,subprocess.TimeoutExpired):
-            pass
+        def deliver():
+            with self._delivery_slots:
+                try:
+                    subprocess.run(args,stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.DEVNULL,
+                                   stdin=subprocess.DEVNULL,timeout=8,check=False)
+                except (OSError,subprocess.TimeoutExpired):
+                    pass
+        # Only diagnostic calls run in bounded daemon senders. One stalled
+        # GitHub request cannot starve the next first-fault/heartbeat marker.
+        threading.Thread(target=deliver,daemon=True,
+                         name="gamefec-gh-evidence").start()
 
     def emit(self,event,detail):
         # Independent receiver accepts [A-Z_], not numbers. Previous
@@ -131,4 +146,4 @@ class GameFecRelay:
             except queue.Empty: event=None
             if event: self.emit(event,"SUPERVISOR_ALIVE")
             self.observe()
-            self.stop.wait(1)
+            self.stop.wait(.1)
