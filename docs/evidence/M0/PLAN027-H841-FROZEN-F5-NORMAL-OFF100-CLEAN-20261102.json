@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_sha": "136d27133acae426354d84aff0c339fb776bcc74",
+  "result": "PASS_SCOPED_NORMAL_OFF100_CLEAN_CAPACITY",
+  "run_id": 41364351191,
+  "artifact_name": "plan027-n-normal-off100-cap",
+  "scope": "Original Linux Go TLS Rust M4 Normal FEC OFF and DATA repair OFF true 100Mbps each direction,25ms one-way,0pct random loss/60s, full 1200B app",
+  "native": {
+    "offered_mbps": {
+      "c2s": 99.99888,
+      "s2c": 99.99984
+    },
+    "first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "p99_ms": {
+      "c2s": 25.9,
+      "s2c": 25.9
+    },
+    "CPU_s_60": {
+      "client": 25.72,
+      "server": 25.79
+    },
+    "rss_peak_bytes": {
+      "client": 32698368,
+      "server": 32829440
+    },
+    "true_tun_drop": 0,
+    "netem_drops": 0,
+    "host_psi_peak_pct": 7.96,
+    "steal_pct": 0,
+    "Go_handoff": true,
+    "owned_stop": true,
+    "namespace_absent": true
+  },
+  "theory": {
+    "app_PPS_per_direction": 10416.667,
+    "RTT_ms": 50,
+    "app_BDP_bytes_per_direction": 625000
+  },
+  "limits": [
+    "No assumption 200Mbps can pass; 100M ~43% one-core equivalent and 7.96% host PSI peak, product/host memory bounded",
+    "No Windows/physical or TCP mixed qualification from this 60s original Linux UDP-only case; C not measured at physical wire"
+  ]
+}

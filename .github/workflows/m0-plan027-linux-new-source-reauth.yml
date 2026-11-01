@@ -1,0 +1,89 @@
+name: M0 PLAN027 native Go cold TLS reauth bounded retry original blackhole source
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-plan027-linux-new-source-reauth.yml
+permissions:
+  contents: read
+jobs:
+  one-source-built-original-linux-product:
+    if: contains(github.event.head_commit.message, '[plan027-newsource-reauth]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Source-only Go real cold reauth unit and Python source-frozen original scenario
+        run: |
+          set -euo pipefail
+          python3 -m unittest tests.test_m0_plan027_linux_blackhole_recover tests.test_m0_plan027_native_reauth_diag -v
+          python3 -m py_compile tools/network_harness/m0_plan027_linux_blackhole_recover.py
+      - name: Build new SOURCE original Go TLS client/server and same Rust M4 exactly once
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm
+          sed -e 's/aarch64/x86_64/g' -e 's/arm64/amd64/g' tools/arm64_public_go_rust_bundle.sh > "$RUNNER_TEMP/plan027-source-reconnected-amd64.sh"
+          bash "$RUNNER_TEMP/plan027-source-reconnected-amd64.sh"
+          (cd amd64-public-bundle && sha256sum -c SHA256SUMS)
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("amd64-public-bundle/manifest.json"))
+          assert m["source"]==os.environ["GITHUB_SHA"] and m["architecture"]=="x86_64"
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: plan027-original-reauth-once-source-bundle
+          path: amd64-public-bundle/
+          if-no-files-found: error
+          retention-days: 30
+  exactly-one-original-real-blackhole:
+    needs: one-source-built-original-linux-product
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: plan027-original-reauth-once-source-bundle
+          path: native-bundle
+      - name: Source strict SHA manifest, three immutable native binaries and TUN
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("native-bundle/manifest.json"))
+          assert m["source"]==os.environ["GITHUB_SHA"] and m["architecture"]=="x86_64"
+          PY
+          (cd native-bundle && sha256sum -c SHA256SUMS)
+          chmod +x native-bundle/wbd-v4-client native-bundle/wbd-v4-server
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+          test -c /dev/net/tun
+      - name: Exactly ONE original two-way real 105s blackhole then 120s restored new business
+        run: |
+          set -euo pipefail
+          sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB \
+            python3 -m tools.network_harness.m0_plan027_linux_blackhole_recover \
+              --bundle "$GITHUB_WORKSPACE/native-bundle" \
+              --product-source "$GITHUB_SHA" \
+              --scenario scenarios/plan027-n-normal-both-blackhole105-recover120.json \
+              --out "$GITHUB_WORKSPACE/plan027-reauth-newsource"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan027-reauth-newsource-105-blackhole-recover120
+          path: |
+            plan027-reauth-newsource/result.json
+            plan027-reauth-newsource/double-blackhole-recovery/result.json
+            plan027-reauth-newsource/double-blackhole-recovery/client-product-markers.log
+            plan027-reauth-newsource/double-blackhole-recovery/server-product-markers.log
+            plan027-reauth-newsource/double-blackhole-recovery/network-snapshots.json
+            plan027-reauth-newsource/double-blackhole-recovery/summary.md
+          if-no-files-found: warn
+          retention-days: 30

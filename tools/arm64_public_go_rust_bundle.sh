@@ -89,6 +89,7 @@ for file in bridge_v4_game_native_linux.go bridge_v4_linux_game_product.go bridg
   cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
 done
 cp r0/go_overlay/internal/v4productcli/secret_linux_test.go legacy/internal/v4productcli/secret_linux_test.go
+cp r0/go_overlay/internal/v4productcli/cold_reconnect_linux_test.go legacy/internal/v4productcli/cold_reconnect_linux_test.go
 cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/main.go
 cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/main.go
 mkdir -p arm64-public-bundle

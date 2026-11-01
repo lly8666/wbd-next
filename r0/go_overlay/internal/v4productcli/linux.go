@@ -338,6 +338,25 @@ func originalRandomISN()(uint32,error){
 }
 var errPublicNativePeerDead=errors.New("original Rust authenticated peer dead; Go cold TLS reauthorization required")
 
+// Only after authenticated Rust HealthClock dead AND a real TUN wake may the
+// original Go cold client retry a transient TLS/FakeTCP timeout. This never
+// retries a rejected credential, certificate or protocol invariant error,
+// and never changes the Rust data/PN/MTU owner or one-use ciphertext.
+func nativeColdTLSRetryable(err error)bool{
+    if errors.Is(err,context.DeadlineExceeded)||errors.Is(err,syscall.ETIMEDOUT){return true}
+    var ne net.Error
+    return errors.As(err,&ne)&&ne.Timeout()
+}
+func originalColdRetryAllowed(role string,authorized,ready bool,retries int,runErr,closeErr error)bool{
+    return role=="client"&&authorized&&!ready&&retries<2&&closeErr==nil&&nativeColdTLSRetryable(runErr)
+}
+func nativeColdFailureClass(err error)string{
+    if nativeColdTLSRetryable(err){return "timeout"}
+    if errors.Is(err,context.Canceled){return "cancelled"}
+    if errors.Is(err,io.EOF){return "eof"}
+    return "other"
+}
+
 // Rust alone owns native Health. Go cold control must never mistake a
 // cumulative raw M4 NotSent, transient backpressure, or optional feedback
 // scheduling error for 90s of missing authenticated peer activity.
@@ -417,6 +436,8 @@ func Run(role string,args []string)error{
     }
     ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
     defer stop()
+    reauthAuthorized:=false
+    coldRetries:=0
     for attempt:=uint64(1);;attempt++{
         if ctx.Err()!=nil{return nil}
         raw,err:=faketcp.OpenRawIPv4EndpointWithOptions(
@@ -433,10 +454,24 @@ func Run(role string,args []string)error{
             runErr=runServer(ctx,cfg,uint32(iface.Index),tun,raw,emit,&connected)
         }
         closeErr:=raw.Close()
+        if reauthAuthorized&&ctx.Err()==nil&&runErr!=nil&&
+           !errors.Is(runErr,errPublicNativePeerDead){
+            retry:=originalColdRetryAllowed(role,reauthAuthorized,connected,coldRetries,runErr,closeErr)
+            log.Printf("V4_PUBLIC_NATIVE_COLD_TLS_RESULT role=%s attempt=%d class=%s retry=%t",
+                role,attempt,nativeColdFailureClass(runErr),retry)
+            if retry{
+                coldRetries++
+                select{case <-ctx.Done():return nil
+                case <-time.After(2*time.Second):}
+                continue
+            }
+        }
         if !errors.Is(runErr,errPublicNativePeerDead)||ctx.Err()!=nil{
             return errors.Join(runErr,closeErr)
         }
         if closeErr!=nil{return closeErr}
+        reauthAuthorized=true
+        coldRetries=0
         log.Printf("V4_PUBLIC_NATIVE_DEAD_RECONNECT_ARMED role=%s generation=%d old_owner_drained=1",role,attempt)
         if role=="client"{
             if e:=waitForNativeReconnectTraffic(ctx,tun);e!=nil{
@@ -627,7 +662,11 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         Username:c.username,Password:c.password,TunnelID:c.tunnel[:],
         ClientLimit:c.recordLimit,DesiredLanes:1,LaneID:1,Policy:policy,
     }
-    if _,err=native.ConnectAuthenticatedPeer(dialCtx,assoc,cfg);err!=nil{return err}
+    if _,err=native.ConnectAuthenticatedPeer(dialCtx,assoc,cfg);err!=nil{
+        // Failed cold admission still owns a constructed native product.
+        // It must release its loans/socket/generation before a new attempt.
+        return errors.Join(err,native.Close())
+    }
     // Existing client product returns only after authenticated TLS detach,
     // exact Rust M4 RX attachment and native loop start.
     if assoc.State()!=faketcp.ClientAssociationDetached{
