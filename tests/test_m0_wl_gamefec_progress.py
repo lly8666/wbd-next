@@ -45,7 +45,7 @@ class GameFecProgressTests(unittest.TestCase):
                 relay=lambda event, detail: events.append((event,detail)),now=lambda:50)
             (root/"client.log").write_text(
                 "M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=due_send_records "
-                "rc=1 lane=2 token=SENSITIVE\\n".replace("\\\\n","\\n"))
+                "rc=1 lane=2 token=SENSITIVE\n")
             class DeadConsole(io.StringIO):
                 def write(self, value):
                     raise OSError("native job stdout unavailable")
