@@ -84,7 +84,11 @@ def ready(path,marker,process,seconds):
   time.sleep(.2)
  raise RuntimeError(marker+" not observed: "+path.read_text(errors="replace")[-800:])
 def stop_linux():
- # This cleanup runs in Python's finally on both PASS and product FAIL.
+ # A true Stop is witnessed by the server's drained marker and exit status.
+ # The outer finally must not signal an already-exited PID again and emit
+ # a misleading STOP_REQUEST_FAILED after an actual owned Stop PASS.
+ if s is not None and s.poll() is not None:
+  return
  # wsl.exe can hang independently of the original Rust server, and an
  # unbounded wsl.exe here previously swallowed the real preceding error.
  f=out/"linux-server.pid"
