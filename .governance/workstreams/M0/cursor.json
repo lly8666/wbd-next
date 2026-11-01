@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 835,
-  "checkpoint_sha": "120c4c7afcc183b7af568b3385acabea739aecd3",
+  "sequence": 836,
+  "checkpoint_sha": "badffe732214d363c990db7c1cb5440d18aad4aa",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H835: original Linux Normal source f5 100s idle/wake PASS true business, new independent BOTH-WAY true tc100pct blackhole105 with source app/probe silent then 120s recovered new UDP source-frozen Action pending (no native result). Signed original Windows Normal ON 10M250ms30pct Action41351342840 source d0c149 wiring and Rust tests PASS, Windows Go build active, signed NPF real result pending. Prior R/N/Game2/4 and Auto/Normal300 source-locked scoped PASS preserved.",
-  "why_now": "Idle100 product survived without payload, but actual missing Health/blackhole lifecycle is not covered. One bounded true both-way netem100pct for105s and restored120s with no fake probes is highest-information next test while Windows signed Action independently compiles.",
+  "current_task": "PLAN027 H836: original Linux source f5 scoped R Normal OFF/ON, N Normal/Fixed6/Auto/Game2/4 OFF, Normal ON300 mixed HOL, Auto240 real stage, Game4 ON and idle100 PASS; two independent Fixed6/Auto outer ON10M250ms30pct native source-frozen Actions pending, not an A/B CPU benefit. H835 true blackhole105/restore120 Action41351767832 native running; Windows signed Normal ON source d0c149 Action41351342840 building original Windows Rust DLL, native result pending. Full Windows/Health-loss/key rotation/FRC remain open.",
+  "why_now": "PLAN027 still needs affected Fixed6 and Auto repair ON combinations; existing same frozen source and exact OFF scenario allow two independent targeted adaptation checks while ongoing Windows and blackhole runs progress. No unsupported optimization assumption.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H835 blackhole105 true kernel drop and 120s post-restore business/Stop result, collect H833 signed Windows source d0c149 NPF native actual result; classify limits, decide rejoin/Windows OFF paired and next-necessary acceptance not repeated loss matrix.",
+  "next_action": "Collect H835 true double blackhole recover120, H833 Windows NPF native ON and H836 independent Fixed6+Auto ON original source-scoped F/R/first/Stop; then address actual blockers (Windows OFF, rejoin/rotation, Game F/R/C), no redundant OFF tests.",
   "unverified": true,
   "last_tested_source": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
   "evidence_refs": [
@@ -25,15 +25,15 @@
     "docs/evidence/M0/PLAN027-H834-FROZEN-F5-NORMAL-OFF-100S-IDLE-REAL-WAKE-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H828-GAME4-CLEAN20-CAP.md",
     "docs/devlog/M0/20261102-PLAN027-H829-GAME4-ZERO-AUTO-ASSERT-LOSS30.md",
     "docs/devlog/M0/20261102-PLAN027-H830-NORMAL-ON-MIXED300.md",
     "docs/devlog/M0/20261102-PLAN027-H831-GAME4-LOSS30-ON-NEXT.md",
     "docs/devlog/M0/20261102-PLAN027-H832-AUTO-NORMAL300-GAMEON-IDLE.md",
     "docs/devlog/M0/20261102-PLAN027-H833-WIN-NORMAL-ON30-ONE-SCENE.md",
     "docs/devlog/M0/20261102-PLAN027-H834-IDLE100-WAKE-RECOVERY.md",
-    "docs/devlog/M0/20261102-PLAN027-H835-BLACKHOLE105-RECOVER120.md"
+    "docs/devlog/M0/20261102-PLAN027-H835-BLACKHOLE105-RECOVER120.md",
+    "docs/devlog/M0/20261102-PLAN027-H836-FIXED-AUTO-ON-INTEGRATION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H834 original Normal f5 Linux 20s active10Mbps each /100s no payload/no probe /40s resumed10Mbps both, 100% unique first active and resumed, p9925.5ms, CPU5.08/5.10s over160, Stop PASS. Signed Windows ON highloss Action41351342840 still compiling; product outcome NOT_RUN. Rest of PLAN027 incomplete: Health-loss, key/lane rotation, Windows paired OFF and physical C; old source not promoted. H835 one source-frozen Linux original Normal true 105s two-way blackhole/no app-probe and 120s new business recovery test in flight, with positive tc drops required on both to establish Health loss exposure. No product source change, Windows signed native Action still in flight."
+  "partial_summary": "H834 original Normal f5 Linux 20s active10Mbps each /100s no payload/no probe /40s resumed10Mbps both, 100% unique first active and resumed, p9925.5ms, CPU5.08/5.10s over160, Stop PASS. Signed Windows ON highloss Action41351342840 still compiling; product outcome NOT_RUN. Rest of PLAN027 incomplete: Health-loss, key/lane rotation, Windows paired OFF and physical C; old source not promoted. H835 one source-frozen Linux original Normal true 105s two-way blackhole/no app-probe and 120s new business recovery test in flight, with positive tc drops required on both to establish Health loss exposure. No product source change, Windows signed native Action still in flight. H836 separately launched Fixed6 and Auto real native ON high-loss 10Mbps/250ms/30% two independent Actions reusing frozen product source f5, feature/hotpath unchanged, verdicts pending. H835 blackhole and H833 signed Windows in progress."
 }
