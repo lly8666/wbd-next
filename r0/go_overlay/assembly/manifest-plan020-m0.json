@@ -870,6 +870,18 @@
       "path": "internal/windowsclient/native_full_route_receipt_preflight_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_full_route_receipt_preflight_windows_test.go",
       "result_blob": "e4f80f584ca5e4356b30afd58184e7a98d48f06c"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_original_route_recover_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_original_route_recover_windows.go",
+      "result_blob": "b808cdd49c0984ed1939550687bbc451cd533160"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_original_route_recover_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_original_route_recover_windows_test.go",
+      "result_blob": "dc2877293f3a94544f33409c8d3060da0d51b179"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
