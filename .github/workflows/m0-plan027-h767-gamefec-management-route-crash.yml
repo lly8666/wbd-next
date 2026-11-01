@@ -6,7 +6,7 @@ on:
 permissions: {contents: read}
 jobs:
   scoped-management-only-process-crash:
-    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h767-mgmt-fixture]')
+    if: github.ref == 'refs/heads/main' && (contains(github.event.head_commit.message, '[plan027-h767-mgmt-fixture]') || contains(github.event.head_commit.message, '[plan027-h776-upload-after-recovery]'))
     runs-on: windows-2025
     timeout-minutes: 6
     env:
@@ -45,7 +45,20 @@ jobs:
           }
           & gh api "repos/$env:GH_REPO" --jq .full_name
           if($LASTEXITCODE -ne 0){throw 'GitHub management network unavailable after exact recovery'}
+            New-Item -ItemType Directory -Force 'result/wl-public' | Out-Null
+            [ordered]@{
+              schema='m0-h776-managed-upload-fixture/v1'
+              source=$env:GITHUB_SHA
+              run=$env:GITHUB_RUN_ID
+              child_abnormal_rc=37
+              management_original_route_armed=$true
+              management_exact_lease_restored=$true
+              github_api_after_restore=$true
+              product_wal_recovery='NOT_TESTED_BY_THIS_FIXTURE'
+              product_game_delivery='NOT_TESTED_BY_THIS_FIXTURE'
+            } | ConvertTo-Json -Depth 5 | Set-Content result/wl-public/h776-upload-after-management-restore.json
             Write-Output 'H768_WINDOWS_SCOPED_REAL_MANAGEMENT_ROUTE_CHILD_ABNORMAL_AND_RESTORE_PASS_NOT_PRODUCT_WAL'
+
           } finally {
             # Never strand this test-owned /32, even if a synthetic assert
             # fails. The exact receipt remains fail-closed on foreign state.
@@ -54,3 +67,13 @@ jobs:
               if(-not $?){throw 'GameFEC management fixture final exact Restore FAIL'}
             }
           }
+      # This step must actually create a real artifact on Windows after
+      # temporary route mutation, abnormal child exit and exact restoration.
+      # Does not qualify product Wintun/WFP/route/DNS WAL recovery.
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h776-windows-mgmt-restore-crash-upload-not-product
+          path: result/wl-public/h776-upload-after-management-restore.json
+          retention-days: 14
+          if-no-files-found: error
