@@ -49,5 +49,6 @@
   "real_fec_first_delivery": "UNKNOWN_FOR_FROZEN_PRODUCT_SOURCE",
   "full_product_wfp_routes_dns_mtu_lease_crash_recovery": "NOT_QUALIFIED",
   "physical": "NOT_RUN",
-  "status": "ACTIONS_CONTROL_EVIDENCE_PATH_PASS_PRODUCT_GAME_FEC_NOT_PASS"
+  "status": "ACTIONS_CONTROL_EVIDENCE_PATH_PASS_PRODUCT_GAME_FEC_NOT_PASS",
+  "source_sha": "48ed7ffe82aafa17a125948068a2ca6ee6a1593e"
 }
