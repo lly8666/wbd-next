@@ -1,0 +1,12 @@
+# PLAN027 H712 — one original signed Windows B106 auth-dead/TLS rejoin using frozen H710 binary
+
+Task `R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT` remains **PARTIAL**, physical **NOT_RUN**.
+
+- H710 immutable product SOURCE `d0661a2e110b523ad06b311da23fc1b7291442ba`, genuine Windows Go credential TLS/Rust native and Linux raw/TUN binaries from build run [41274450306](https://github.com/lly8666/wbd-next/actions/runs/41274450306). Real Windows package artifact **13071196733**, ZIP digest sha256:b6baac6ba45a6825665addf329447e56564240c310ae8f636d119b6c6d0eaa6a; Linux artifact **13070622152**, ZIP digest sha256:837cb7a113f871914c2d04f0caead8a93a7a97ce7e3bd53c9878819cd9dbb5c3. ZIP digests are **not** inventable individual EXE/DLL SHA; actual embedded original product manifests are verified in native job.
+- H712 controller [41275005876](https://github.com/lly8666/wbd-next/actions/runs/41275005876) **PASS dispatch only**, verifies exact source, both unexpired artifacts, no source changes in `crates`, `r0/go_overlay`, Cargo, prepared original TLS/real harness/scenarios. Retains original seed20261030, 2Mbps each, 25ms, 0% loss ordinary stages plus **106s 100% real underlay blackout**, 12s post-outage genuine traffic; no reused or fabricated dead/Stop count.
+- Exactly one real signed Windows Npcap/Wintun↔WSL2 Linux original TLS/Rust B106 [native Action 41275015266](https://github.com/lly8666/wbd-next/actions/runs/41275015266) **IN_FLIGHT** at record. Independent [watcher 41275020610](https://github.com/lly8666/wbd-next/actions/runs/41275020610) separately armed for true native job. A separate H710 Game2FEC1M original [Action 41274450306](https://github.com/lly8666/wbd-next/actions/runs/41274450306) and its watcher41274456331 are likewise IN_FLIGHT; these are distinct native actions/runners/scenes, not concurrent scenarios on one VM.
+- Do not claim actual Windows native 106s both-authenticated dead, original Go credential TLS generation2, real first UDP/TCP or owned WAL Stop without original job proof; earlier Windows SOURCE6ece B106 cancellation/BlobNotFound and original Linux-only dead106 PASS remain separate source-scoped history. If H712 proves a real fault, capture first reason and fix minimally; if canceled, preserve CANCELLED and LOG_UNAVAILABLE.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only one original Windows/Linux B106 native qualification scene and separate diagnostic watcher, reusing exact existing genuine Go/Rust product builds and hash-attested manifests, no runtime or configuration change."}
+```
