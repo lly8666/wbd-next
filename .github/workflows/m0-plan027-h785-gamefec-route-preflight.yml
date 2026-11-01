@@ -1,4 +1,4 @@
-name: M0 PLAN027 H787 GameFEC confirmed route replay fake-backend Windows Go
+name: M0 PLAN027 H788 GameFEC exact frozen owner route replay Windows Go
 on:
   push:
     branches: [main]
@@ -30,11 +30,7 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Windows original Go assembly failed'}
           Push-Location legacy
           try {
-            go test -tags wbd_v4_embedded_go -count=1 -run '^TestN4(WindowsPersistedFullRouteReceiptsRejectMismatchWithoutOSWrites|OriginalConfirmedFullRouteCrashReplayFakeBackend)
+            go test -tags wbd_v4_embedded_go -count=1 -run '^TestN4(WindowsPersistedFullRouteReceiptsRejectMismatchWithoutOSWrites|OriginalConfirmedFullRouteCrashReplayFakeBackend)$' -v ./internal/windowsclient
             if($LASTEXITCODE -ne 0){throw 'full route read-only parent/sidecar source test FAILED'}
           } finally {Pop-Location}
-          Write-Output 'H787_WINDOWS_ORIGINAL_GO_ROUTESTAGE_FAKE_REPLAY_PASS_NOT_REAL_OS'
- -v ./internal/windowsclient
-            if($LASTEXITCODE -ne 0){throw 'full route read-only parent/sidecar source test FAILED'}
-          } finally {Pop-Location}
-          Write-Output 'H785_WINDOWS_ORIGINAL_GO_WAL_RECEIPTS_PASS_TEST_ONLY_NO_WFP_ROUTE_MUTATION'
+          Write-Output 'H788_WINDOWS_ORIGINAL_GO_ROUTESTAGE_FAKE_REPLAY_PASS_NOT_REAL_OS'
