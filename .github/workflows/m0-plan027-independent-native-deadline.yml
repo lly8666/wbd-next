@@ -21,15 +21,15 @@ on:
 permissions: {contents: read, actions: write}
 jobs:
   watch-native:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-h576-arm-current]'))
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (contains(github.event.head_commit.message, '[plan027-h576-arm-current]') || contains(github.event.head_commit.message, '[plan027-h775-watcher-fixture]')))
     runs-on: ubuntu-24.04
     timeout-minutes: 28
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      TARGET_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.target_run_id || '41173614494' }}
-      TARGET_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.target_sha || 'd5e7e3eca7b4988419ca60e008f2644aea775629' }}
-      JOB_LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.target_job_limit || '1200' }}
+      TARGET_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.target_run_id || contains(github.event.head_commit.message, '[plan027-h775-watcher-fixture]') && '41299653430' || '41173614494' }}
+      TARGET_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.target_sha || contains(github.event.head_commit.message, '[plan027-h775-watcher-fixture]') && 'dbe9ad45a6dcc39237a1dfcd5898669fff6d8a59' || 'd5e7e3eca7b4988419ca60e008f2644aea775629' }}
+      JOB_LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.target_job_limit || contains(github.event.head_commit.message, '[plan027-h775-watcher-fixture]') && '480' || '1200' }}
     steps:
       - name: Cancel exact stale Windows native job from DIFFERENT Action
         shell: bash
@@ -162,6 +162,41 @@ jobs:
           done
           echo "M0_EXTERNAL_NATIVE_WATCH_WINDOW_EXHAUSTED target=$TARGET_ID" >&2
           exit 1
+      # This independent Ubuntu uploader stays reachable when the original
+      # Windows Wintun/default-route/DNS/artifact service connection fails.
+      - name: Save bounded source-scoped independent GameFEC evidence
+        if: always() && env.JOB_LIMIT == '480'
+        shell: bash
+        run: |
+          set -u
+          dir=gamefec-watcher-evidence
+          mkdir -p "$dir"
+          printf 'schema=m0-gamefec-independent-watch/v1\nrun=%s\nsource=%s\nwatcher=%s\n' "$TARGET_ID" "$TARGET_SHA" "$GITHUB_RUN_ID" >"$dir/identity.txt"
+          printf 'INDEPENDENT_STAGE_METADATA_ONLY_NOT_ORIGINAL_WINDOWS_LOG. No product first delivery, owned Stop, WFP, DNS or WAL recovery inferred.\n' >"$dir/README.txt"
+          if [[ "$TARGET_ID" =~ ^[1-9][0-9]{5,16}$ && "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            if timeout 15s gh api "repos/$GH_REPO/actions/runs/$TARGET_ID" >"$dir/raw.json" 2>/dev/null; then
+              jq --arg source "$TARGET_SHA" 'if .head_sha==$source then {id,head_sha,status,conclusion,created_at,updated_at,html_url} else {status:"SOURCE_MISMATCH_NOT_PASS"} end' "$dir/raw.json" >"$dir/run-status.json" || true
+            fi
+            rm -f "$dir/raw.json"
+            if timeout 15s gh api "repos/$GH_REPO/actions/runs/$TARGET_ID/jobs?per_page=100" >"$dir/raw.json" 2>/dev/null; then
+              jq '{jobs:[.jobs[]|{name,status,conclusion,started_at,completed_at,steps:[.steps[]?|{name,status,conclusion}]}]}' "$dir/raw.json" >"$dir/jobs.json" || true
+            fi
+            rm -f "$dir/raw.json"
+            if timeout 20s gh api "repos/$GH_REPO/actions/workflows/m0-plan027-gamefec-rescue-record.yml/runs?per_page=100" >"$dir/raw.json" 2>/dev/null; then
+              jq --arg prefix "GAMEFEC-RESCUE|$TARGET_ID|" '{coverage:"LATEST_100_RESCUE_WORKFLOW_RUNS_ONLY_MAY_OMIT_EARLIER",stages:[.workflow_runs[]|select(.name|startswith($prefix))|{name,status,conclusion,id,created_at,head_sha}]}' "$dir/raw.json" >"$dir/stages.json" || true
+            fi
+            rm -f "$dir/raw.json"
+          fi
+          test -s "$dir/run-status.json" || printf '{"status":"RUN_API_UNAVAILABLE_NOT_PASS"}\n' >"$dir/run-status.json"
+          test -s "$dir/stages.json" || printf '{"status":"STAGES_API_UNAVAILABLE_NOT_PASS"}\n' >"$dir/stages.json"
+          echo GAMEFEC_INDEPENDENT_WATCHER_ARTIFACT_PAYLOAD_READY_NOT_PRODUCT_PASS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && env.JOB_LIMIT == '480'
+        with:
+          name: gamefec-independent-watch-evidence
+          path: gamefec-watcher-evidence/
+          retention-days: 30
+          if-no-files-found: error
   recover-two-previous-stuck:
     if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-recover-stuck]')
     runs-on: ubuntu-24.04
