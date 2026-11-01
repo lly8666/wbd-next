@@ -72,7 +72,7 @@ class GameFecRelay:
                  "SUPERVISOR_60S_ALIVE":"SUPERVISOR_ALIVE_SECOND"}.get(event,event)
         event = SAFE.sub("_",event)[:30]
         detail = SAFE.sub("_",detail)[:80]
-        if not re.fullmatch(r"[A-Z_]{3,30}",event) or not detail: return
+        if not re.fullmatch(r"[A-Z0-9_]{3,30}",event) or not detail: return
         if event in self.seen: return
         self.seen.add(event)
         self.send(event,detail)
