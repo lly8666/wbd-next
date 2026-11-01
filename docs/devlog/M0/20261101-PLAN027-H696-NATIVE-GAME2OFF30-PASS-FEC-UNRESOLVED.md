@@ -1,0 +1,9 @@
+# PLAN027 H696 — genuine current-source Game2/off 30% positive, FEC remains blocked
+
+[H693 Game2/off true original signed Windows NPF/Wintun↔Linux WSL2 Action41263021112](https://github.com/lly8666/wbd-next/actions/runs/41263021112), frozen product `6ece9eab653f46a716e8d3a0927fb74bec4819e8` source build run41226521824, prebuilt Go credential TLS+Rust, original real Game2/off 10Mbps each, 250ms each, 30% symmetric tc kernel random loss, 60s with genuine both UDP/TCP and owned Stop **PASS**. Windows/Linux first fractions 0.909116/0.911889 at9.0893/9.1152Mbps. Same-origin UDP roundtrip p99 625/623.814ms *returned* with 98/101 missing probe replies (not p99=zero), NOT calibrated one-way. Windows original Go+Rust combined process CPU2.2969s over77.25s, peak working set51,392,512B. True source/manifest and artifact ID13066615332 SHA256:4520c951b3d958f25d427b9ddb3dc695b7c9faa3a3405cd178da6bd96a09f52c. This is **Game2 OFF**, not FEC, not a claim p^2 exact/independent lane loss and not direct+cross stream HOL proof.
+
+Earlier same original SOURCE `6ece9eab653f46a716e8d3a0927fb74bec4819e8` [H679 Game2 fixed6 1Mbps25ms0%](https://github.com/lly8666/wbd-next/actions/runs/41238055914) true Windows/Linux first~4.4/4.2% and missing native owned Stop FAIL remains a separate unresolved product issue; Game2/off positive narrows away from universal lane/owner failure, **not** yet enough to name FEC root. New independent Game4/FEC6 Action41263019349 in flight to differentiate common/shared FEC vs Game2 lane-specific defect. Auto staged240 and B106 Windows fresh TLS separate in flight. No product changes.
+
+```feature-impact
+{"kind":"updated","ids":["game-fixed-fec"],"reason":"Add actual same SOURCE6ece signed Game2 OFF under real 30%/250ms two-way business+Stop with measured first/RTT/CPU and explicit FEC/previous Game2FEC failure distinction."}
+```

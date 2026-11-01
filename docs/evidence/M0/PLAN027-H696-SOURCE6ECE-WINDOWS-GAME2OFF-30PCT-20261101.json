@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "result": "FUNCTIONAL_PASS_ACTUAL_ORIGINAL_SIGNED_WINDOWS_LINUX_GAME2_OFF_10MBPS_EACH_250MS_30PCT_60S_OWNED_STOP",
+  "run": 41263021112,
+  "workflow_head_sha": "70c7048b129e49889b2b41998663bf846589e79c",
+  "product_binary_source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "product_build_run": 41226521824,
+  "scenario": "plan027-c-game2-off-10m-250ms-loss30-60s",
+  "artifact": {
+    "id": 13066615332,
+    "sha256": "4520c951b3d958f25d427b9ddb3dc695b7c9faa3a3405cd178da6bd96a09f52c"
+  },
+  "real_os": "SIGN_WIN_NPF_WINTUN_GO_TLS_RUST_LINUX_WSL2",
+  "offered_mbps_each": 10,
+  "real_kernel_netem_delay_ms": 250,
+  "real_kernel_netem_loss_pct": 30,
+  "duration_s": 60,
+  "first_delivery_fraction": {
+    "windows": 0.909116,
+    "linux": 0.911889
+  },
+  "first_delivery_mbps": {
+    "windows": 9.0893,
+    "linux": 9.1152
+  },
+  "true_app_udp_tcp": "PASS",
+  "both_owned_stop": "PASS_BOTH_OWNED",
+  "own_origin_udp_roundtrip_rtt_p99_ms": {
+    "windows": 625,
+    "linux": 623.814
+  },
+  "udp_rtt_probes": {
+    "windows": {
+      "sent": 549,
+      "replied": 451,
+      "unreturned": 98
+    },
+    "linux": {
+      "sent": 600,
+      "replied": 499,
+      "unreturned": 101
+    }
+  },
+  "windows_original_go_rust_same_process": {
+    "cpu_s": 2.2969,
+    "peak_working_set_bytes": 51392512,
+    "elapsed_s": 77.25
+  },
+  "limitations": [
+    "Game2 OFF only, no FEC recovery verification",
+    "Actual loss30 results residual9%, do not apply p^2 as exact under related network path/combined tunneled source",
+    "P99 only returned RTT, 98/101 real nonreturns not included; no one-way p99",
+    "Earlier SOURCE6ece Game2 FEC6 1Mbps 0% first4.4235%/4.2121%, missing owned Stop remains FAIL",
+    "Game4 FEC6 Action41263019349 in-flight; cannot promote pending result"
+  ]
+}
