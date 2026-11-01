@@ -184,6 +184,20 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         self.assertIn("path+\".routes\"", (ROOT/"r0/go_overlay/internal/windowsclient/native_orphan_persisted_preroute_windows.go").read_text())
         self.assertNotIn("product_network_recovery=PASS",flow)
 
+    def test_h778_early_gamefec_local_artifact_precedes_separate_cleanup(self):
+        flow=(ROOT/'.github/workflows/m0-wl-public-normal-full.yml').read_text()
+        prepare='Prepare bounded original GameFEC first-fault evidence for early upload'
+        remote='name: gamefec-native-local-early-evidence'
+        later='Restore Linux raw FakeTCP fixture RST rule after product Stop'
+        full='name: m0-wl-full-public-normal-direct'
+        self.assertIn(prepare,flow)
+        self.assertIn(remote,flow)
+        self.assertLess(flow.index(prepare),flow.index(remote))
+        self.assertLess(flow.index(remote),flow.index(later))
+        self.assertLess(flow.index(later),flow.index(full))
+        self.assertIn('gamefec-local-first-fault-summary.txt',flow)
+        self.assertIn('GAMEFEC_SAME_STEP_MANAGEMENT_RESTORED_BEFORE_ARTIFACT_NOT_PRODUCT_WAL',flow)
+        self.assertNotIn('product_network_recovery=PASS',flow)
     def test_h748_actual_unread_os_pipe_full_does_not_hold_game_deadline(self):
         # This is a genuine kernel pipe with NO reader until the owned native
         # process has exited. Merely mocking a slow Python StringIO is not
