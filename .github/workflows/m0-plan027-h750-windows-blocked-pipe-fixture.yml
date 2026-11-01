@@ -1,0 +1,21 @@
+name: M0 PLAN027 H750 Windows native supervisor real unconsumed pipe fixture
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h750-windows-blocked-pipe-fixture.yml]
+permissions: {contents: read}
+jobs:
+  one-windows-pipe-fixture:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h750-windows-pipe]')
+    runs-on: windows-2025
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: One real Windows stdout PIPE blocked until child terminated, no WSL or driver
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          python -m unittest -v tests.test_m0_wl_native_step_runner.NativeChildStdoutLifetimeTests.test_h748_actual_unread_os_pipe_full_does_not_hold_game_deadline
+          if($LASTEXITCODE -ne 0){throw 'Windows native GameFEC PID deadline not proven'}
+          Write-Output 'H750_REAL_WINDOWS_UNREAD_PIPE_CHILD_TREE_STACK_PASS_NOT_PRODUCT'

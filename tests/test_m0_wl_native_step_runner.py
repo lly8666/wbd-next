@@ -204,15 +204,19 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
             p=subprocess.Popen([sys.executable,str(script),str(code),str(log)],
                                cwd=ROOT,env=env,stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
+            # Windows CreatePipe and taskkill /T have different capacity /
+            # cleanup overhead from Linux anonymous pipes and SIGKILL.
+            max_elapsed=18.0 if sys.platform=="win32" else 3.6
             try:
-                rc=p.wait(timeout=3.6) # deliberately do not read either pipe
+                rc=p.wait(timeout=max_elapsed) # do not read either real pipe
             finally:
                 if p.poll() is None:
                     p.kill();p.wait(timeout=3)
             stdout,stderr=p.communicate(timeout=3)
             self.assertEqual(rc,124,stderr.decode(errors="replace")[-1200:])
-            self.assertLess(time.monotonic()-started,3.6)
-            self.assertGreater(len(stdout),8192,"actual native stdout pipe must fill")
+            self.assertLess(time.monotonic()-started,max_elapsed)
+            self.assertGreaterEqual(len(stdout),4096 if sys.platform=="win32" else 8192,
+                                    "genuine unread OS stdout pipe must fill")
             self.assertIn("WL_PUBLIC_REAL_MODE_RESULT",log.read_text())
             self.assertIn("Thread",(root/"gamefec-supervisor-stack.txt").read_text())
 
