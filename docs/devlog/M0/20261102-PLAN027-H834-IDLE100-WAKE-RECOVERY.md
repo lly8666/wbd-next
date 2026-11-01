@@ -1,0 +1,10 @@
+# PLAN027 H834 | Recover exact Normal 100s real idle/wake, leave Windows Action in flight
+
+- [Action 41351062754](https://github.com/lly8666/wbd-next/actions/runs/41351062754) **PASS_SCOPED_100S_REAL_PAYLOAD_IDLE_AND_NEW_BUSINESS_WAKE**, original Linux Go TLS/Rust M4, frozen product SOURCE `f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3`, fixture SOURCE `c645e321`. 10Mbps UDP each direction/25ms each/0%/160s measurement. Active20: 33,184 sent each, 100% unique-first, p99 25.5ms. Then exact true **100 seconds 0 sent, 0 app bytes and probe_hz=0** (no fake echo keeping transport alive). Resume40: 66,366/66,367 real new packets, first100%, p99 25.5ms, no missed after drain. Whole process CPU5.08/5.10s/160, RSS19,845,120/19,722,240B; normal repair OFF native verified, Go handoff both and owned Stop/namespace absent PASS.
+- This qualifies **payload-idle >90s followed by new business** in this Linux original product, not Health-loss/dead rejoin or dual lane idle, no control-only traffic/Health wire count. No user physical machine action.
+- Windows original signed NPF/Wintun/WSL2 Normal outer ON 10Mbps each 250ms30% one existing exact scenario Action `41351342840` SOURCE `d0c149fbeef76b57b628d646253ff3c9767d62e2` currently completed wiring-contract and building Go/Rust eligible Windows/Linux components, actual native NOT_RUN/PENDING. Do not re-dispatch or infer Windows PASS. This H834 note does not change the Windows workflow path and will not launch another copy.
+- Need full PLAN027 remaining Health-loss, A→A+B→B, actual Windows paired OFF, comprehensive native Game F/R/C bytes, rotation and final feature risk table. No evidence-driven Normal shared CPU refactor yet: observed high-loss ON +0.54/0.55 CPU seconds/60 alongside extra ~8.2MB actual encrypted repair/side; cannot attribute that delta solely to the tree/locks without targeted stack. Not enough reason to touch product hotpath speculatively.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only one source-frozen Linux original payload-idle/wake lifecycle evidence and recovered pending Windows run reference; no product code or UI changed."}
+```

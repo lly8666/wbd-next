@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_sha": "c645e3216d6d4f991ef92dcab0088c1c0ef982ad",
+  "result": "PASS_SCOPED_100S_REAL_PAYLOAD_IDLE_AND_NEW_BUSINESS_WAKE",
+  "artifact_verified": true,
+  "run_id": 41351062754,
+  "artifact_name": "plan027-n-original-idle100-wake",
+  "scope": "Original Linux Go TLS+Rust raw/TUN Normal outer OFF, both directions 10Mbps/25ms/0pct, 20s real UDP +100s 0 synthetic probes/real payload +40s real new UDP, warmup5 drain10",
+  "phases": {
+    "initial20": {
+      "c2s": {
+        "sent": 33184,
+        "first_fraction": 1,
+        "offered_mbps": 10.000128,
+        "delivered_p99_ms": 25.5,
+        "missing": 0
+      },
+      "s2c": {
+        "sent": 33184,
+        "first_fraction": 1,
+        "offered_mbps": 10.000128,
+        "delivered_p99_ms": 25.5,
+        "missing": 0
+      }
+    },
+    "payload_idle100": {
+      "c2s": {
+        "sent": 0,
+        "offered_mbps": 0,
+        "delivered_mbps": 0
+      },
+      "s2c": {
+        "sent": 0,
+        "offered_mbps": 0,
+        "delivered_mbps": 0
+      },
+      "test_probe_hz": 0
+    },
+    "resume40": {
+      "c2s": {
+        "sent": 66366,
+        "first_fraction": 1,
+        "offered_mbps": 10.0001984,
+        "delivered_p99_ms": 25.5,
+        "missing": 0
+      },
+      "s2c": {
+        "sent": 66367,
+        "first_fraction": 1,
+        "offered_mbps": 10.0003008,
+        "delivered_p99_ms": 25.5,
+        "missing": 0
+      }
+    }
+  },
+  "steady_cpu_s_160s": {
+    "client": 5.08,
+    "server": 5.1
+  },
+  "peak_rss_bytes": {
+    "client": 19845120,
+    "server": 19722240
+  },
+  "native_outer_off_readback": true,
+  "original_go_rx_handoff": true,
+  "owned_stop_both": true,
+  "owned_namespaces_absent": true,
+  "limits": [
+    "No synthetically injected probe or application payload for 100s; product's native Health left operating; no native separate wire Health counter in this fixture",
+    "A→A+B→B, Health packet loss, per-lane dead/rejoin, blackholes and rotation not exercised; cannot infer complete lifecycle",
+    "Only original Linux owned same-host netns, not signed Windows NPF/Wintun or physical machine",
+    "All first arrival p99 are delivered-only; this zero-loss sample has no final missing; not a general latency bound"
+  ]
+}
