@@ -51,6 +51,34 @@ class GameFecRescueRelayTests(unittest.TestCase):
             self.assertIn(("SUPERVISOR_LOOP_ENTER","SUPERVISOR_ALIVE"),events)
             self.assertIn(("SUPERVISOR_ALIVE_FIRST","SUPERVISOR_ALIVE"),events)
 
+    def test_priority_supervisor_receipts_before_expensive_log_observation(self):
+        with tempfile.TemporaryDirectory() as d:
+            out=pathlib.Path(d)
+            events=[]
+            q=queue.SimpleQueue()
+            stopped=threading.Event()
+            relay=GameFecRelay(out,q,stopped,env={},
+                               send=lambda stage,detail:events.append((stage,detail)))
+            q.put("SUPERVISOR_20S_ALIVE")
+            (out/"client.log").write_text(
+                "WBD_WINDOWS_GAME_COLD_TLS_JOINED lanes=2 fec=7\\n"
+                "WBD_WINDOWS_GAME_NATIVE_APPLIED lanes=2 fec=7 tls=1\\n"
+                "WBD_WINDOWS_OS_APPLIED\\n")
+            thread=threading.Thread(target=relay.run,daemon=True)
+            thread.start()
+            for _ in range(70):
+                if any(a=="CLIENT_OS_APPLIED" for a,b in events): break
+                stopped.wait(.06)
+            stopped.set();thread.join(2)
+            names=[a for a,b in events]
+            self.assertFalse(thread.is_alive())
+            self.assertEqual(names[0],"SUPERVISOR_ALIVE_FIRST",
+                             "PID heartbeat outranks client marker API calls")
+            self.assertIn("CLIENT_TLS_JOINED",names)
+            self.assertIn("CLIENT_OS_APPLIED",names)
+            self.assertIn("OS_APPLIED",names)
+            self.assertEqual(names.count("SUPERVISOR_ALIVE_FIRST"),1)
+
     def test_stage_classifier_never_carries_python_locals(self):
         self.assertEqual(stack_stage("Thread 0xa\nFile ... in stop_linux token=secret"),"STOP_LINUX")
         self.assertEqual(stack_stage("Current thread ... subprocess.py:120\nuser=private"),"PROCESS_WAIT")
