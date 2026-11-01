@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "0264c2cfc91e05c7c4b8d518fa0efc6707a2ff6b",
+  "controller_source_sha": "045a580ec7743acd6bd3cbec658dfa629e34c3dd",
+  "original_binary_build_run": 41280564979,
+  "windows_binary_artifact": {
+    "id": 13072889005,
+    "sha256": "b2ed3b6d2cd7712e36863d26e9fedee35a8b5c0a18c23db282d2dc9e586d67c8"
+  },
+  "linux_binary_artifact": {
+    "id": 13072973000,
+    "sha256": "3a6593f40b411ca829588c9556aca3a644836e982de3027f1bc2b4b825512f11"
+  },
+  "native_run": 41286724011,
+  "native_job": 124789465024,
+  "watcher_run": 41286729417,
+  "watcher_job": 124789427186,
+  "watcher_limit_seconds": 480,
+  "measured_native_step_timeout_seconds": 502,
+  "watcher_verdict": "SUCCESS_MONITOR_ONLY",
+  "watcher_action": "CANCEL_FIRST, FORCE_CANCEL, THEN LOG_RECOVERY",
+  "native_workflow_conclusion": "cancelled",
+  "native_job_log": "GITHUB_REST_BLOBNOTFOUND",
+  "watcher_post_cancel_log": "LOG_UNAVAILABLE_AFTER_FIVE_RETRIES",
+  "independent_stage_runs": {
+    "PRE_NATIVE_STEP": 41286849285,
+    "STEP_ENTER": 41286852981,
+    "STEP_PREFLIGHT_COMPLETE": 41286876510,
+    "MODE_STARTED": 41286878151,
+    "SUPERVISOR_LOOP_ENTER": 41286879994
+  },
+  "no_stage_observed": [
+    "SUPERVISOR_20S_ALIVE",
+    "SUPERVISOR_60S_ALIVE",
+    "MODE_TIMEOUT",
+    "FIRST_ERROR",
+    "BOTH_READY",
+    "BUSINESS",
+    "OWNED_STOP"
+  ],
+  "first_error": "UNKNOWN",
+  "real_duplex": "UNKNOWN",
+  "owned_stop": "UNKNOWN",
+  "result": "NOT_QUALIFIED",
+  "next": "H744/H745 no blocked console and independent first-fault before console, H746 one source-frozen exact native to identify first poll vs outer failure. Stop on 480s."
+}
