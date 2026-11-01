@@ -118,6 +118,33 @@ class GameFecRescueRelayTests(unittest.TestCase):
                 "COLD_READY_WAIT"}<=names)
             self.assertNotIn("DO_NOT_LEAK",str(events))
 
+    def test_h762_real_go_native_handoff_stages_have_independent_evidence(self):
+        with tempfile.TemporaryDirectory() as d:
+            out=pathlib.Path(d)
+            sent=[]
+            relay=GameFecRelay(out,queue.SimpleQueue(),threading.Event(),
+                env={},send=lambda stage,detail:sent.append((stage,detail)))
+            (out/"client.log").write_text(
+                "M0_GAME_COLD_STAGE WINTUN_OPEN_ENTER\n"
+                "M0_GAME_COLD_STAGE WINTUN_OPEN_DONE\n"
+                "M0_GAME_COLD_STAGE PRODUCT_PREPARE_ENTER\n"
+                "M0_GAME_COLD_STAGE BIND_RING_ENTER\n"
+                "M0_GAME_COLD_STAGE NPF_READER_JOIN_ENTER\n"
+                "M0_GAME_COLD_STAGE NPF_READER_JOIN_DONE\n"
+                "M0_GAME_COLD_STAGE RUST_GAME_START_ENTER\n"
+                "M0_GAME_COLD_STAGE RUST_GAME_START_DONE\n"
+                "M0_GAME_COLD_STAGE OS_APPLY_ENTER\n"
+                "M0_GAME_COLD_STAGE OS_APPLY_DONE\n")
+            for _ in range(34): relay.observe()
+            expected=("WINTUN_OPEN_ENTER","WINTUN_OPEN_DONE",
+                "PRODUCT_PREPARE_ENTER","BIND_RING_ENTER",
+                "NPF_READER_JOIN_ENTER","NPF_READER_JOIN_DONE",
+                "RUST_GAME_START_ENTER","RUST_GAME_START_DONE",
+                "OS_APPLY_ENTER","OS_APPLY_DONE")
+            for stage in expected:
+                self.assertEqual([s for s,_ in sent].count(stage),1)
+            self.assertNotIn("PASSWORD",str(sent))
+
     def test_stage_classifier_never_carries_python_locals(self):
         self.assertEqual(stack_stage("Thread 0xa\nFile ... in stop_linux token=secret"),"STOP_LINUX")
         self.assertEqual(stack_stage("Current thread ... subprocess.py:120\nuser=private"),"PROCESS_WAIT")

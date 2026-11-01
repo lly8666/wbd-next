@@ -55,10 +55,12 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
   defer cancel()
   err=errors.Join(err,p.DrainPeerAndKernelLoans(stop,p.first,p.tun,id))
  }()
+ fmt.Println("M0_GAME_COLD_STAGE BIND_RING_ENTER")
  created:=windowsownerlease.CreatedWintun{TUN:p.tun}
  deviceID,err:=created.Identity(ctx,id.Installation,id.Generation)
  if err!=nil{return err}
  if err=p.group.BindAndJoinOriginalWintun(ctx,created,deviceID);err!=nil{return err}
+ fmt.Println("M0_GAME_COLD_STAGE WINTUN_RUST_BOUND")
  max,err:=p.group.EffectiveGamePayloadMTU()
  if err!=nil||max<20{return windowsclient.ErrN4NativeGuard}
  boundaries,err:=p.group.OriginalGameTCPBoundaries()
@@ -71,8 +73,10 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
  // Stop ALL post-TLS Go NPF readers and join them before moving ANY native
  // pcap_t. Their already-read bounded ciphertext is offered to Rust M3
  // for normal authenticated opening and never written into Wintun by Go.
+ fmt.Println("M0_GAME_COLD_STAGE NPF_READER_JOIN_ENTER")
  p.stopColdReaders();p.moved=true
  p.readers.Wait()
+ fmt.Println("M0_GAME_COLD_STAGE NPF_READER_JOIN_DONE")
  // Readers have joined, so the next native live pcap_next_ex MUST NOT
  // inherit an unconsumed pcap_breakloop (-2) from the old Go handoff.
  select{case e:=<-p.errorSource:return fmt.Errorf("original Game capture handoff: %w",e)
@@ -92,6 +96,7 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
   p.senders=append(p.senders,send)
   nativeTX[i],err=send.Native();if err!=nil{return err}
  }
+ fmt.Println("M0_GAME_COLD_STAGE NPF_CAPTURE_MOVED")
  p.loan,err=ring.BorrowRustNativeRing(ctx)
  if err!=nil{return err}
  native,err:=p.loan.Native()
@@ -133,7 +138,9 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
    QueueDestroy:nativeTX[i].Fns.QueueDestroy,
   }
  }
+ fmt.Println("M0_GAME_COLD_STAGE RUST_GAME_START_ENTER")
  if err=p.group.StartNativeGameIO(ctx,cfg);err!=nil{return err}
+ fmt.Println("M0_GAME_COLD_STAGE RUST_GAME_START_DONE")
  p.live=true;p.identity=id;p.maxIPv4=max
  for{
   select{

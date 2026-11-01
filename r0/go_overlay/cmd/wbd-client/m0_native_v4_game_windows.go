@@ -46,8 +46,10 @@ func runM0NativeV4WindowsGame(
  failed:=make(chan error,count+1)
  var readers sync.WaitGroup
  defer func(){
+  fmt.Println("M0_GAME_COLD_STAGE DEFER_NPF_JOIN_ENTER")
   stopColdReaders()
   readers.Wait()
+  fmt.Println("M0_GAME_COLD_STAGE DEFER_NPF_JOIN_DONE")
   for _,ep:=range endpoints{_ = ep.Close()}
   for _,assoc:=range assocs{assoc.Close()}
  }()
@@ -144,20 +146,26 @@ func runM0NativeV4WindowsGame(
   ctx,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),assocs,cfg,fecMode)
  if err!=nil{return err}
  fmt.Printf("WBD_WINDOWS_GAME_COLD_TLS_JOINED lanes=%d fec=%d client_record_offer=%d requested_tun_mtu=%d\n",count,fecMode,cfg.ClientLimit,o.TunnelMTU)
+ fmt.Println("M0_GAME_COLD_STAGE WINTUN_OPEN_ENTER")
  tun,err:=windowsclient.OpenTUN(o.AdapterAlias)
  if err!=nil{return err}
+ fmt.Println("M0_GAME_COLD_STAGE WINTUN_OPEN_DONE")
  defer tun.Close()
+ fmt.Println("M0_GAME_COLD_STAGE PLAN_MAKE_ENTER")
  plan,err:=makePlan()
  if err!=nil{return err}
+ fmt.Println("M0_GAME_COLD_STAGE PLAN_MAKE_DONE")
  packet:=&m0WinRustGamePeer{
   group:group,first:group.FirstOriginalOwner(),tun:tun,
   endpoints:endpoints,flows:flows,inbound:inbound,handoff:handoff,
   stopColdReaders:stopColdReaders,readers:&readers,errorSource:failed,pathMTU:uint32(o.TunnelMTU),
   errors:make(chan error,1),
  }
+ fmt.Println("M0_GAME_COLD_STAGE PRODUCT_PREPARE_ENTER")
  product,err:=windowsownerlease.PrepareOriginalTLSNativeGameProduct(
   ctx,group,tun,plan,o.Installation,group.Epoch(),packet)
  if err!=nil{return err}
+ fmt.Println("M0_GAME_COLD_STAGE PRODUCT_PREPARE_DONE")
  stop:=func()error{
   done,cancel:=context.WithTimeout(context.Background(),60*time.Second)
   defer cancel()
@@ -169,10 +177,14 @@ func runM0NativeV4WindowsGame(
   }
   return e
  }
+ fmt.Println("M0_GAME_COLD_STAGE OS_APPLY_ENTER")
  receipt,err:=product.Apply(ctx)
  if err!=nil{return errors.Join(err,stop())}
+ fmt.Println("M0_GAME_COLD_STAGE OS_APPLY_DONE")
  if !receipt.AllNativeOSApplied{return errors.Join(windowsclient.ErrN4NativeGuard,stop())}
+ fmt.Println("M0_GAME_COLD_STAGE LIVE_RECEIPT_ENTER")
  live,err:=product.LiveReceipt(ctx)
+ if err==nil{fmt.Println("M0_GAME_COLD_STAGE LIVE_RECEIPT_DONE")}
  if err!=nil||!live.AllNativeOSApplied{
   return errors.Join(err,windowsclient.ErrN4NativeGuard,stop())
  }
