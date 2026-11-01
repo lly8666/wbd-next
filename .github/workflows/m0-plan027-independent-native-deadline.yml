@@ -53,8 +53,34 @@ jobs:
             fi
             local pattern='M0_PLAN027_GAME_DUE_FAULT|M0_PLAN026_GAME_NATIVE_FIRST_ERROR|M0_PLAN027_GAME_NATIVE_STOP_|M0_PLAN027_GAME_STOP_RESULT|M0_PLAN027_NATIVE_STOP_RESULT|WL_GAME_ORIGINAL_STOP_FAILURE|WL_GAME_FATAL_|WL_GAME_DUE_|WL_PUBLIC_REAL_MODE_(TIMEOUT|RESULT|PROCESS_EXIT)|WL_ORIGINAL_NATIVE_E2E_(BATCH_TIMEOUT|CHILD_EXIT)|WBD_WL_TRUE_PUBLIC_MODE_FAIL|WL_DIAG'
             for attempt in 1 2 3 4 5; do
-              if timeout 25s gh api "repos/$GH_REPO/actions/jobs/$job_id/logs" >"$log" 2>/dev/null && test -s "$log"; then
-                echo "M0_EXTERNAL_NATIVE_JOB_LOG_RECOVERED target=$TARGET_ID job=$job_id reason=$reason attempt=$attempt"
+              # Try direct REST first, then GitHub CLI's run/job log reader.
+              # Some external runners expose a completed job before its
+              # redirect blob is available to a GITHUB_TOKEN client.
+              local method="REST" error="$RUNNER_TEMP/m0-log-$TARGET_ID.err"
+              if timeout 25s gh api "repos/$GH_REPO/actions/jobs/$job_id/logs" >"$log" 2>"$error" && test -s "$log"; then
+                :
+              else
+                method="RUN_VIEW"
+                if timeout 25s gh run view "$TARGET_ID" --repo "$GH_REPO" --job "$job_id" --log >"$log" 2>"$error" && test -s "$log"; then
+                  :
+                else
+                  # Only public error classification, NEVER echo the REST
+                  # redirect URL, token or arbitrary blob content.
+                  if grep -Eqi 'HTTP 404|404 Not Found|BlobNotFound' "$error"; then
+                    echo "M0_EXTERNAL_NATIVE_LOG_RETRY attempt=$attempt reason=HTTP_404_OR_BLOB_MISSING"
+                  elif grep -Eqi 'HTTP 403|403 Forbidden|Resource not accessible' "$error"; then
+                    echo "M0_EXTERNAL_NATIVE_LOG_RETRY attempt=$attempt reason=TOKEN_PERMISSION"
+                  else
+                    echo "M0_EXTERNAL_NATIVE_LOG_RETRY attempt=$attempt reason=CLI_OR_ARCHIVE_UNAVAILABLE"
+                  fi
+                  rm -f "$log" "$error"
+                  if [ "$attempt" -lt 5 ]; then sleep 10; fi
+                  continue
+                fi
+              fi
+              rm -f "$error"
+              if test -s "$log"; then
+                echo "M0_EXTERNAL_NATIVE_JOB_LOG_RECOVERED target=$TARGET_ID job=$job_id reason=$reason attempt=$attempt method=$method"
                 echo "M0_EXTERNAL_NATIVE_FIRST_DIAGNOSTICS"
                 grep -aE -m 5 "$pattern" "$log" | cut -c 1-440 || true
                 echo "M0_EXTERNAL_NATIVE_LAST_DIAGNOSTICS"
