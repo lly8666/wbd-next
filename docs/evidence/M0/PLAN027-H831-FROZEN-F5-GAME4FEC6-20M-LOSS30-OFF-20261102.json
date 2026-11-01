@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_sha": "635c326dcc1a762a724198b7c0ac1d88865bc407",
+  "result": "PASS_SCOPED_GAME4_FEC6_20M_LOSS30_OUTER_OFF_CAPACITY",
+  "artifact_verified": true,
+  "run_id": 41349878723,
+  "artifact_name": "plan027-n-game4fec6-20m-loss30",
+  "scenario": "plan027-c-game4-fec-20m-250ms-loss30-60s",
+  "scope": "Original Linux Go TLS client+server Rust M4 Game4 fixed6 four lanes, 20Mbps each direction 250ms one-way true 30pct tc 60s, outer DATA repair OFF",
+  "native": {
+    "first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "first_mbps": {
+      "c2s": 20.00032,
+      "s2c": 20.00032
+    },
+    "p99_ms": {
+      "c2s": 258.8,
+      "s2c": 258.9
+    },
+    "missing": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "tc_netem_drops": {
+      "client": 453745,
+      "server": 454393
+    },
+    "cpu_s": {
+      "client": 28.12,
+      "server": 28.18
+    },
+    "rss_bytes": {
+      "client": 45412352,
+      "server": 45752320
+    },
+    "game_fec_parity_copied": {
+      "client": 229126,
+      "server": 229116
+    },
+    "real_4lane_copy_schedule": {
+      "client": [
+        410140,
+        410140,
+        410140,
+        410140
+      ],
+      "server": [
+        410130,
+        410130,
+        410130,
+        410130
+      ]
+    },
+    "abandoned": {
+      "client": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "server": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "outer_data_retransmitted": {
+      "client": 0,
+      "server": 0
+    },
+    "native_off_policy": true,
+    "native_go_handoff": true,
+    "owned_stop": true,
+    "netns_absent": true
+  },
+  "limits": [
+    "60s original Linux owned netns genuine 30pct iid netem, not Windows NPF nor physical machine",
+    "Game4 4-lane actual copies and FEC parity increase external byte/pps costs; no full F/R/C wire byte budget measured",
+    "Higher impairment has fewer delivered outer packets; lower CPU than clean20 is NOT performance improvement in like-for-like payload processing",
+    "This mode is outer DATA OFF only and not ON adaptation/300s/rotation/HOL proof"
+  ]
+}
