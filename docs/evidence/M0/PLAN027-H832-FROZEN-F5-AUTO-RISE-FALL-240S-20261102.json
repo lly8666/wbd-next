@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_sha": "635c326dcc1a762a724198b7c0ac1d88865bc407",
+  "result": "PASS_SCOPED_REAL_AUTO_LIFECYCLE_MEASUREMENT_NOT_FULL_HEALTH_OR_WINDOWS",
+  "artifact_verified": true,
+  "run_id": 41349878755,
+  "artifact_name": "plan027-n-auto-rise-fall-240s",
+  "scenario": "plan027-n-auto-rise-fall-10m-250ms-240s",
+  "scope": "Original Linux Go TLS Rust M4 Auto outer DATA repair OFF; 10Mbps each, 250ms one-way, 240s warmup5 drain10; uplink1/15/30/1pct, downlink5/0/0/0pct; final 150s low",
+  "native_fec_final": {
+    "client": {
+      "revision": 5,
+      "profile": 3
+    },
+    "server": {
+      "revision": 4,
+      "profile": 2
+    }
+  },
+  "native_stage_events": {
+    "client": [
+      {
+        "utc_local_log": "2026-11-01 21:04:00",
+        "revision": 2,
+        "profile": 6,
+        "reason": "two valid rising fast windows"
+      },
+      {
+        "utc_local_log": "2026-11-01 21:05:05",
+        "revision": 3,
+        "profile": 5,
+        "reason": "30s and 4096 valid sources; one-step down"
+      },
+      {
+        "utc_local_log": "2026-11-01 21:05:37",
+        "revision": 4,
+        "profile": 4,
+        "reason": "30s and 4096 valid sources; one-step down"
+      },
+      {
+        "utc_local_log": "2026-11-01 21:06:19",
+        "revision": 5,
+        "profile": 3,
+        "reason": "30s and 4096 valid sources; one-step down"
+      }
+    ],
+    "server": [
+      {
+        "utc_local_log": "2026-11-01 21:05:22",
+        "revision": 2,
+        "profile": 4,
+        "reason": "30s and 4096 valid sources; one-step down"
+      },
+      {
+        "utc_local_log": "2026-11-01 21:05:56",
+        "revision": 3,
+        "profile": 3,
+        "reason": "30s and 4096 valid sources; one-step down"
+      },
+      {
+        "utc_local_log": "2026-11-01 21:06:29",
+        "revision": 4,
+        "profile": 2,
+        "reason": "30s and 4096 valid sources; one-step down"
+      }
+    ]
+  },
+  "native_quality_sample_counts": {
+    "client": 111,
+    "server": 111
+  },
+  "actual_kernel_tc_drop_pct_by_phase": {
+    "uplink1_down5": {
+      "c2s": 0.9903,
+      "s2c": 5.1201
+    },
+    "uplink15_down0": {
+      "c2s": 15.01,
+      "s2c": 0
+    },
+    "uplink30_down0": {
+      "c2s": 30.29,
+      "s2c": 0
+    },
+    "uplink1_down0_low150": {
+      "c2s": 0.98,
+      "s2c": 0
+    }
+  },
+  "first_delivery_by_phase": {
+    "uplink1_down5": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "uplink15_down0": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "uplink30_down0": {
+      "c2s": 0.9989101913565009,
+      "s2c": 1,
+      "missing_c2s": 65
+    },
+    "uplink1_down0_low150": {
+      "c2s": 1,
+      "s2c": 1
+    }
+  },
+  "delivered_p99_ms_by_phase": {
+    "uplink1_down5": {
+      "c2s": 251,
+      "s2c": 264.7
+    },
+    "uplink15_down0": {
+      "c2s": 266.3,
+      "s2c": 250.4
+    },
+    "uplink30_down0": {
+      "c2s": 266.3,
+      "s2c": 250.4
+    },
+    "uplink1_down0_low150": {
+      "c2s": 251,
+      "s2c": 250.5
+    }
+  },
+  "whole_process_steady_cpu_s": {
+    "client": 19.58,
+    "server": 18.73
+  },
+  "peak_rss_bytes": {
+    "client": 22736896,
+    "server": 22212608
+  },
+  "native_outer_off_readback": true,
+  "go_tls_rx_handoff": true,
+  "owned_stop": true,
+  "owned_netns_absent": true,
+  "limits": [
+    "Actual four-phase Auto activity and one-or-more VALID one-grade downshift both directions within the low150 observation; not proof of all Auto/Health lifecycle or full Windows acceptance",
+    "Cross-clock absolute phase-to-native log alignment not calibrated, so do not assert a precise low-phase-to-downshift duration; timestamps/stage proofs are preserved",
+    "Native initial profile appears as5 in quality log despite user config fec_profile1 (CLI startup policy encoding); product Auto selected grade semantics rather than interpreting 1 as grade",
+    "Source repair OFF and UDP-only; C physical wire, independent first per10ms TCP cross-HOL, actual loss-of-Health, dual idle or authenticated dead/rejoin NOT_RUN",
+    "A 65-packet residual loss at30pct uplink remains visible; 100pct on other phases is scoped, not all impairment qualification"
+  ]
+}

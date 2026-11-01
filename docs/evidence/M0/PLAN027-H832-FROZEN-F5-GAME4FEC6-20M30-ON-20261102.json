@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_sha": "1c379f3a0f33986a4ec662d6e54f4f292ae0574c",
+  "result": "PASS_SCOPED_GAME4_FEC6_ON_NATIVE_COPIES_NOT_WIRE_RATIO",
+  "artifact_verified": true,
+  "run_id": 41350486611,
+  "artifact_name": "plan027-integration-game4-fec6-on20m30",
+  "scope": "Original Linux Go TLS Rust M4 Game4 fixed6 4 lanes 20Mbps each/250ms one-way true30pct/60s, outer DATA ON, same immutable product binary and packet mix as H831 OFF",
+  "native": {
+    "repair_enabled_readback": {
+      "client": 1,
+      "server": 1
+    },
+    "outer_data_frozen_retransmitted_count": {
+      "client": 788,
+      "server": 788
+    },
+    "original_first_lane_copied": {
+      "client": 1638542,
+      "server": 1638406
+    },
+    "game_fec_parity_separate": {
+      "client": 1,
+      "server": 1
+    },
+    "four_copy_sent": {
+      "client": [
+        409634,
+        409634,
+        409634,
+        409634
+      ],
+      "server": [
+        409600,
+        409600,
+        409600,
+        409600
+      ]
+    },
+    "four_copy_abandoned": {
+      "client": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "server": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "first_mbps": {
+      "c2s": 20.00032,
+      "s2c": 20.00032
+    },
+    "first_p99_ms": {
+      "c2s": 258.8,
+      "s2c": 258.8
+    },
+    "final_missing": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "real_netem_drops": {
+      "client": 453153,
+      "server": 453226
+    },
+    "whole_process_cpu_s": {
+      "client": 28.08,
+      "server": 28.08
+    },
+    "rss_peak_bytes": {
+      "client": 46198784,
+      "server": 45735936
+    },
+    "owned_stop": true,
+    "owned_netns_absent": true,
+    "go_handoff": true
+  },
+  "F_R_C": "NOT_MEASURED_NATIVE_COUNTER_ONLY",
+  "limits": [
+    "Native frozen-copy count 788 each is not an R/F byte numerator; cannot claim aggregate all-lane10% wire byte cap from this Action",
+    "OFF vs ON are different independent VMs and distinct iid loss samples, not a same-VM CPU benefit",
+    "Full physical wire C, Windows NPF ON 20Mbps, Game4 300s and independent key/lane rotation NOT_RUN"
+  ]
+}

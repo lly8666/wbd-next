@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "scenario_id": "plan027-n-normal-idle100-then-wake-160s",
+  "mode": "normal",
+  "repair": "off",
+  "duration_s": 160,
+  "warmup_s": 5,
+  "drain_s": 10,
+  "mbps_each_direction_when_active": 10,
+  "one_way_delay_ms": 25,
+  "loss_pct": 0,
+  "udp_payload_mix": [
+    [
+      64,
+      10
+    ],
+    [
+      128,
+      15
+    ],
+    [
+      512,
+      25
+    ],
+    [
+      1200,
+      50
+    ]
+  ],
+  "phases": [
+    {
+      "name": "initial20",
+      "seconds": 20,
+      "rate_scale": 1
+    },
+    {
+      "name": "payload_idle100",
+      "seconds": 100,
+      "rate_scale": 0
+    },
+    {
+      "name": "resume40",
+      "seconds": 40,
+      "rate_scale": 1
+    }
+  ],
+  "injected_probe_hz": 0,
+  "purpose": "Real original Linux Go TLS/Rust raw-TUN keepalive under >90s no application/probe and new business on wake; distinct from loss-of-Health, dual-idle, lane fail/rejoin or Windows"
+}
