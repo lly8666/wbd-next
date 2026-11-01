@@ -1,0 +1,31 @@
+name: M0 PLAN027 Game FEC independent first-fault stage evidence
+run-name: "GAMEFEC-RESCUE|${{ inputs.target_run }}|${{ inputs.stage }}|${{ inputs.detail }}"
+on:
+  workflow_dispatch:
+    inputs:
+      target_run: {description: "Original real native run ID", type: string, required: true}
+      source: {description: "Frozen native product source SHA", type: string, required: true}
+      stage: {description: "Native stage or first-fault event", type: string, required: true}
+      detail: {description: "Sanitized bounded error/status marker", type: string, required: true}
+permissions: {contents: read}
+jobs:
+  independent-snapshot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    env:
+      TARGET_RUN: ${{ inputs.target_run }}
+      PRODUCT_SOURCE: ${{ inputs.source }}
+      TRACE_STAGE: ${{ inputs.stage }}
+      TRACE_DETAIL: ${{ inputs.detail }}
+    steps:
+      - name: Preserve source-bound independent stage on separate native log
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$TARGET_RUN" =~ ^[0-9]{8,15}$ ]] || exit 1
+          [[ "$PRODUCT_SOURCE" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          [[ "$TRACE_STAGE" =~ ^[A-Z_]{3,30}$ ]] || exit 1
+          [[ "$TRACE_DETAIL" =~ ^[A-Za-z0-9_.:-]{1,80}$ ]] || exit 1
+          printf 'M0_GAMEFEC_INDEPENDENT_STAGE target=%s source=%s stage=%s detail=%s diagnostic_only=1\n' \
+            "$TARGET_RUN" "$PRODUCT_SOURCE" "$TRACE_STAGE" "$TRACE_DETAIL"
+          echo M0_GAMEFEC_INDEPENDENT_STAGE_NOT_BUSINESS_OR_STOP_PASS
