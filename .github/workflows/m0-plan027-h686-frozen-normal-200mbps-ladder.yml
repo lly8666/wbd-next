@@ -6,7 +6,7 @@ on:
 permissions: {contents: read, actions: write}
 jobs:
   one-real-c200:
-    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h686-200m]')
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h687-200m]')
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     env:
@@ -32,7 +32,11 @@ jobs:
           gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/artifacts?per_page=100" |
             jq -e --arg w "m0-wl-windows-product-binaries-$PRODUCT_SOURCE" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' >/dev/null
           git fetch --depth=1 origin "$PREPARED_HARNESS_SOURCE"
-          test -z "$(git diff --name-only "$PREPARED_HARNESS_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools scenarios)"
+          # The only cross-harness addition since H677 is the H683 standalone
+          # damaged-network scenario. Do not mistake a new unrelated immutable
+          # scenario fixture for a changed 200Mbps product/harness.
+          test -z "$(git diff --name-only "$PREPARED_HARNESS_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools)"
+          test -z "$(git diff --name-only "$PREPARED_HARNESS_SOURCE" "$GITHUB_SHA" -- scenarios/plan027-c-normal-200m-25ms-loss0-60s.json)"
           python3 - <<'PY'
           from tools.m0_wl_perf_v2_config import read_scenario
           s=read_scenario('scenarios/plan027-c-normal-200m-25ms-loss0-60s.json')
@@ -46,8 +50,8 @@ jobs:
           title="M0-WIN-LINUX|$GITHUB_SHA|normal|$scene"
           existing="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
             jq -r --arg title "$title" '.workflow_runs[]|select(.display_title==$title)|.id' | head -1)"
-          if [ -n "$existing" ];then echo "H686_ALREADY_DISPATCHED run=$existing";exit 0;fi
+          if [ -n "$existing" ];then echo "H687_ALREADY_DISPATCHED run=$existing";exit 0;fi
           gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
             -f public_mode=normal -f run_n0=false -f perf_scenario_file="$scene" \
             -f perf_reuse_run_id="$BUILD_RUN" -f perf_binary_source_sha="$PRODUCT_SOURCE"
-          echo H686_REAL_WINDOWS_WSL2_ORIGINAL_200MBPS_0PCT_60S_DISPATCHED_NOT_PASS
+          echo H687_REAL_WINDOWS_WSL2_ORIGINAL_200MBPS_0PCT_60S_DISPATCHED_NOT_PASS

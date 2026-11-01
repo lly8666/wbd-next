@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "failed_run": 41239921167,
+  "failed_job_id": 124651515753,
+  "workflow_head_sha": "2feaeebbdf70da562dc70e739730e863ae0bfe63",
+  "failed_step": "Require authentic C100 threshold PASS, original same binaries; one 200M no auto higher",
+  "result": "PREDISPATCH_HARNESS_SCOPE_CHECK_FAIL_NOT_REAL_C200_PRODUCT_OR_CAPACITY_OUTCOME",
+  "exact_observed": "After git fetch SOURCE92354d5a, test -z git diff -- crates r0/go_overlay Cargo.toml Cargo.lock tools scenarios exits1; unrelated H683 scenarios/wl-outer-repair-10m-250ms-loss1-60s.json added after H677",
+  "corrected": "freeze identical crates/r0/go_overlay/Cargo/tools, check exact C200 target fixture unmodified, preserve same-source bin artifacts and predecessor C100 success",
+  "new_action": "H687_PUSH_PENDING",
+  "excluded_conclusions": [
+    "No C200 capacity measurement",
+    "No new original binaries or product code",
+    "Not a C200 packet-loss or Stop FAIL"
+  ]
+}

@@ -1,0 +1,7 @@
+# PLAN027 H687 — H686 was a pre-dispatch fixture-scope error, not C200 saturation
+
+Recovered [Action 41239921167](https://github.com/lly8666/wbd-next/actions/runs/41239921167), original source6ece frozen build and H686 controller: completed **FAIL** in the dispatch-only job, before any real Windows/WSL2 200Mbps product Action was created. First available stdout after `git fetch SOURCE92354d5a` is exit1; broad `git diff -- crates r0/go_overlay Cargo.toml Cargo.lock tools scenarios` included new independent H683 `scenarios/wl-outer-repair-10m-250ms-loss1-60s.json`, not a mutation of the original C200 scene. Previous C100 Action41239367781 authentic PASS preserved. Under H687 only narrow source-freeze comparison to product and actual harness `tools`, plus exact existing C200 scenario unchanged; keep both original source binaries, previous rung precondition, requested 200Mbps/25ms0%60s/MTU1400 and strict 99.9% first/owned Stop. No capacity result, p99, CPU or Stop for 200M until new actual Action returns; do not claim 200M from precheck error. This remains the SINGLE original C200 scene attempt, no seed refresh, one controller/VM. Unrelated Game2FEC native FAIL and B/C unfinished remain unchanged.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Repair exact failing dispatch-only broad scenario diff after unrelated H683 addition; product, target C200 scenario and harness unchanged; no real 200Mbps Action had run."}
+```
