@@ -737,6 +737,19 @@ jobs:
             result/wl-public/wsl-import.log
           retention-days: 14
           if-no-files-found: ignore
+      # The prior native step had no recoverable GitHub job blob after
+      # cancellation. Dispatch from a SEPARATE completed Actions step before
+      # entering risky PowerShell/WSL/Win32 orchestration, not inside it only.
+      - name: Game FEC independent proof before original native step
+        if: env.WBD_WL_PUBLIC_MODES == 'game2-fec' || env.WBD_WL_PUBLIC_MODES == 'game4-fec'
+        shell: pwsh
+        timeout-minutes: 2
+        run: |
+          $ErrorActionPreference='Stop'
+          Write-Output ('WL_GAME_NATIVE_PRESTEP_ENTER run='+$env:GITHUB_RUN_ID+' source='+$env:WBD_WL_BINARY_SOURCE)
+          & gh workflow run m0-plan027-gamefec-rescue-record.yml --repo $env:GITHUB_REPOSITORY --ref main -f "target_run=$env:GITHUB_RUN_ID" -f "source=$env:WBD_WL_BINARY_SOURCE" -f stage=PRE_NATIVE_STEP -f detail=GUEST_BOOT_AND_DRIVER_READY
+          if($LASTEXITCODE -ne 0){throw 'Independent GameFEC first-stage dispatch unavailable before native step'}
+          Write-Output 'WL_GAME_NATIVE_PRESTEP_RESCUE_DISPATCHED_NOT_PRODUCT_PASS'
       - name: Launch actual WSL2 Linux and direct full public two-OS product
         shell: pwsh
         timeout-minutes: 24
