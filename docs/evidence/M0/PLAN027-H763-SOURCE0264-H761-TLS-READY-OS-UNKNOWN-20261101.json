@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "0264c2cfc91e05c7c4b8d518fa0efc6707a2ff6b",
+  "native_run": 41294182175,
+  "watcher_run": 41294188947,
+  "original_native_job": 124811529590,
+  "conclusion": "CANCELLED",
+  "native_step_seconds_at_cancel": 507,
+  "original_job_log": "BLOB_NOT_FOUND",
+  "available_artifact": "m0-wl-real-guest-boot-41294182175",
+  "independent_stages": [
+    "COLD_WSL_IP_READY",
+    "COLD_TLS_CERT_READY",
+    "COLD_CLIENT_SPAWNED",
+    "CLIENT_TLS_JOINED",
+    "SERVER_READY",
+    "LINUX_UDP_ALIVE"
+  ],
+  "unverified": [
+    "WINTUN_OPEN",
+    "ORIGINAL_NPF_HANDOFF",
+    "RUST_GAME_START",
+    "OS_APPLIED",
+    "BIDIRECTIONAL_FIRST_DELIVERY",
+    "OWNED_STOP"
+  ],
+  "verdict": "PARTIAL_AUTHENTICATED_TLS_ONLY_PRODUCT_NOT_PASS",
+  "notes": "H762 Go source adds diagnostic-only postTLS entry/exit markers, requiring newly compiled same-source binary; old SOURCE0264 cannot validate them."
+}

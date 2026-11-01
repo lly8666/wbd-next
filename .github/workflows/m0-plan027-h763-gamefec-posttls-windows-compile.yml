@@ -1,0 +1,47 @@
+name: M0 PLAN027 H763 GameFEC postTLS Go native owner compile only
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h763-gamefec-posttls-windows-compile.yml]
+permissions: {contents: read}
+jobs:
+  one-windows-original-go-source:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h763-game-compile]')
+    runs-on: windows-2025
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Assemble frozen Go overlay and build genuine Windows Game/TLS owner
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          python tools/prepare_windows_wiring.py --check-only
+          if($LASTEXITCODE -ne 0){throw 'Game original overlay exact Git blob FAIL'}
+          python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'Game original assembly FAIL'}
+          New-Item -ItemType Directory -Force result | Out-Null
+          Push-Location legacy
+          try {
+            go build -tags wbd_v4_embedded_go ./internal/windowsownerlease
+            if($LASTEXITCODE -ne 0){throw 'Windows original owner compilation FAIL'}
+            go build -trimpath -tags wbd_v4_embedded_go -o ../result/h763-game-client.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'Windows Game client compilation FAIL'}
+            go test -c -tags wbd_v4_embedded_go -o ../result/h763-game-client.test.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'Windows original Game tests compilation FAIL'}
+            & ../result/h763-game-client.test.exe '-test.run=^TestM0PLAN027GameColdBacklogDropsOnlyOptionalDetachedM3$' '-test.v' '-test.count=1'
+            if($LASTEXITCODE -ne 0){throw 'Game cold handoff regression FAIL'}
+          } finally {Pop-Location}
+          python -m unittest -v tests.test_m0_wl_gamefec_relay
+          if($LASTEXITCODE -ne 0){throw 'Game independent stage marker relay fixture FAIL'}
+          python -m py_compile tools/m0_wl_gamefec_relay.py tools/m0_wl_public_normal_e2e.py
+          if($LASTEXITCODE -ne 0){throw 'Game stage collector source syntax FAIL'}
+          Write-Output 'H763_REAL_WINDOWS_GO_GAME_TLS_STAGE_COMPILE_PASS_NOT_PRODUCT'
