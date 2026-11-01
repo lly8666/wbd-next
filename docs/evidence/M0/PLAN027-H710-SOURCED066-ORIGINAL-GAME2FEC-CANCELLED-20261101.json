@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "product_source_sha": "d0661a2e110b523ad06b311da23fc1b7291442ba",
+  "scene": "plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s",
+  "native_run": 41274450306,
+  "native_job_id": 124754385608,
+  "native_job_conclusion": "cancelled",
+  "native_step": "Launch actual WSL2 Linux and direct full public two-OS product",
+  "independent_watcher_run": 41274456331,
+  "watcher_conclusion": "success",
+  "watcher_observed": "M0_EXTERNAL_NATIVE_TIMEOUT target=41274450306 job_seconds=749; native logs before/after cancel LOG_UNAVAILABLE",
+  "native_product_result": "INCONCLUSIVE_NO_COMPLETE_NATIVE_BUSINESS_OR_STOP",
+  "native_job_log_result": "404_BLOB_NOT_FOUND_AT_2026-11-01T05:14Z_EVEN_INSTALLED_GITHUB_CONNECTOR",
+  "original_windows_product_artifact": {
+    "id": 13071196733,
+    "digest": "sha256:b6baac6ba45a6825665addf329447e56564240c310ae8f636d119b6c6d0eaa6a"
+  },
+  "original_linux_product_artifact": {
+    "id": 13070622152,
+    "digest": "sha256:837cb7a113f871914c2d04f0caead8a93a7a97ce7e3bd53c9878819cd9dbb5c3"
+  },
+  "original_preflight": "PASS_WINDOWS_AND_LINUX_UNIT_GO_AND_RUST_BUILDS_ONLY",
+  "guestboot_artifact": {
+    "id": 13070857529,
+    "digest": "sha256:2bf8ef0dfa74b22702a78613aa7c881f7ae29d85cec37abde61ed7b501ea7763"
+  },
+  "prior_original_product_failure": {
+    "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+    "native_run": 41238055914,
+    "first_unique_fraction": {
+      "windows": 0.044235,
+      "linux": 0.042121
+    },
+    "owned_windows_wal_stop": "FAIL_MISSING"
+  },
+  "scoped_unit_latest": {
+    "source_sha": "79ca1b7d9bede83360934e7ea51de98de5216046",
+    "rust_windows_unit": "PASS_1_TEST",
+    "effective_source_cap_ipv4_bytes_at_mtu1400": 1298,
+    "outer_frame_bytes": 1400,
+    "limits": "Private unit does not count as native business, driver receipt or Stop"
+  },
+  "limits": [
+    "No first original GameFEC due INVALID/MTU failure branch recovered from this cancelled Action",
+    "Cannot claim MTU repair solved original ~4% first/Stop failure",
+    "Do not repeat unchanged Game2FEC scene or widen test/watchdog timeout without a new proven reason",
+    "Independent watcher can recover archived job logs via gh run view fallback for other finished Action but cannot recover this missing underlying Blob",
+    "Still blocking B GameFEC/Stop qualification; PLAN027 incomplete; physical NOT_RUN"
+  ]
+}
