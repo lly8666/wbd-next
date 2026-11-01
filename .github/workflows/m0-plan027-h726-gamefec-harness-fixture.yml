@@ -1,4 +1,4 @@
-name: M0 PLAN027 H745 GameFEC first-fault receipt before blocked stdout fixture
+name: M0 PLAN027 H745 verified newline first-fault before blocked stdout fixture
 on:
   push:
     branches: [main]
