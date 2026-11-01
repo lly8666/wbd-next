@@ -483,6 +483,10 @@ jobs:
           retention-days: 30
 
   native-public-two-os:
+    # The independent first-fault receiver is an ACTION dispatch from this
+    # exact Windows job; workflow-level actions:read was a proven 403.
+    # Scope write here only, do not elevate the rest of the workflow.
+    permissions: {contents: read, actions: write}
     needs: [wiring-contract, linux-source-locked-public]
     if: always() && !contains(github.event.head_commit.message, '[plan026-coding]') && needs.wiring-contract.result == 'success' && (needs.linux-source-locked-public.result == 'success' || inputs.perf_reuse_run_id != '' || (contains(github.event.head_commit.message, '[plan026-rust-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-reuse-100]') || contains(github.event.head_commit.message, '[plan026-rust-rxbuf-reuse-150]') || contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')))
     runs-on: windows-2025
