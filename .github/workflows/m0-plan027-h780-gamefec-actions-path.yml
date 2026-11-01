@@ -1,4 +1,4 @@
-name: M0 PLAN027 H780 Windows native runner exit and actual artifact delivery
+name: M0 PLAN027 H782 Windows native runner full pass and actual artifact delivery
 on:
   push:
     branches: [main]

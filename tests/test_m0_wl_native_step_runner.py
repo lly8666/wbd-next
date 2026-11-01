@@ -36,12 +36,12 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
             log=pathlib.Path(d)/"real.log"
             pidfile=code.with_suffix(".pid")
             code.write_text(
-                "import pathlib,subprocess,sys\\n"
+                "import pathlib,subprocess,sys\n"
                 "c=subprocess.Popen([sys.executable,'-c','import time;time.sleep(3)'],"
-                " stdout=sys.stdout,stderr=sys.stderr)\\n"
-                "pathlib.Path(sys.argv[0]).with_suffix('.pid').write_text(str(c.pid))\\n"
-                "print('GENUINE_NATIVE_FAILURE_STAGE',flush=True)\\n"
-                "sys.exit(3)\\n")
+                " stdout=sys.stdout,stderr=sys.stderr)\n"
+                "pathlib.Path(sys.argv[0]).with_suffix('.pid').write_text(str(c.pid))\n"
+                "print('GENUINE_NATIVE_FAILURE_STAGE',flush=True)\n"
+                "sys.exit(3)\n")
             try:
                 start=time.monotonic()
                 p=subprocess.run([sys.executable,str(RUNNER),str(code),str(log)],

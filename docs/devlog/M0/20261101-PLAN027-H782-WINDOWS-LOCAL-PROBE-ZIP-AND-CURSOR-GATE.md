@@ -1,0 +1,11 @@
+# H782 — real uploaded original Windows runner ZIP readback and two exact gates
+
+Source-scoped H781 [Actions run41307178883](https://github.com/lly8666/wbd-next/actions/runs/41307178883) is **FAIL** because Windows suite 20/21 passed, one new H781 test fixture child text literally contained `\\n`, causing SyntaxError / rc1 instead of expected rc3. Original H748 unread OS stdout pipe had failed on H780 with 0xC0000005, but now **passes genuine Windows bounded rc124** after H781 same-process TerminateProcess. Do not hide previous FAIL.
+
+Even with test-suite failure, H781 *original* Windows `tools/m0_wl_native_step_runner.py` ran as a real subprocess with test-only synthetic child exit37 and returned matching parent rc37. Original `h780-original-direct-full.log` contained injected `M0_PLAN027_GAME_DUE_FAULT fixture=H780_NOT_PRODUCT`; stdout `WL_DIAG_FIRST_ERROR marker=INJECTED_TEST_MARKER` verified. Post-run GitHub API returned `lly8666/wbd-next`; actions/upload-artifact **SUCCESS** produced [artifact13082874543](https://github.com/lly8666/wbd-next/actions/runs/41307178883/artifacts/13082874543), size1330, sha256 `e21fb3ffa430fba8046d6a3a12a0a6f0397779cf6a4e79f38b9712b3ecc866ef`. ZIP was actually downloaded and opened: five files, the original direct fault, diagnostic stdout, probe JSON, GitHub transport readback and empty normal stack (expected for fast exit). This only validates Windows original runner control/first-fault upload, **NOT** original two-OS product FEC/Stop/WAL.
+
+Source H781 Governance and maintenance also **FAIL**: current cursor context_refs10 exceeded exact policy `max_cursor_refs=8`, cascading test failures. H782 reduces to seven most relevant recent refs while retaining all old devlogs/evidence unchanged and corrects only the test-child newline escape; no false PASS or policy weakening. One new short Windows Action and existing Governance tests are triggered by workflow path update. Next collect genuine job+artifact, inspect ZIP, do not re-dispatch native Game until WAL safety qualified.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Fix one synthetic Windows process fixture newline and legal bounded cursor references, existing original runner/production Game FEC untouched."}
+```
