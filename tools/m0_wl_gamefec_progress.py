@@ -106,23 +106,28 @@ class GameFecProgress:
                     if marker in line and stage not in self.markers:
                         self.markers.add(stage)
                         self.stage = stage
-                        print("WL_GAME_NATIVE_STAGE file="+name+" stage="+stage, flush=True)
+                        # Dispatch independent recovered stage BEFORE any
+                        # untrusted native GitHub console write, whose pipe
+                        # may be blocked by another WSL/Go descendant.
                         if stage in ("CLIENT_READY","SERVER_READY") and (
                             "CLIENT_READY" in self.markers and "SERVER_READY" in self.markers):
                             self.snapshot("BOTH_READY")
+                        print("WL_GAME_NATIVE_STAGE file="+name+" stage="+stage, flush=True)
                 if name.endswith("app.log") and '"phase": "udp_1hz"' in line:
                     self.stage = "REAL_UDP_IN_PROGRESS"
                 if FAULT.search(line) and self.first_error=="UNKNOWN":
                     fields = {k:v for k,v in SAFE_FIELD.findall(line)}
                     self.first_error = _safe(fields.get("stage", "WORKER_FATAL"))
                     self.stage = "FIRST_FAULT"
+                    # First-error independent receipt must land even if
+                    # the target job's stdout/Artifact service is wedged.
+                    self.snapshot("FIRST_ERROR")
                     print("WL_GAME_NATIVE_FIRST_FAULT file="+name+
                           " kind="+self.first_error+
                           " lane="+_safe(fields.get("lane"))+
                           " rc="+_safe(fields.get("rc"))+
                           " cipher_len="+_safe(fields.get("cipher_len"))+
                           " path_mtu="+_safe(fields.get("path_mtu")), flush=True)
-                    self.snapshot("FIRST_ERROR")
         now = self.now()
         if now-self.last_heartbeat>=10:
             print("WL_GAME_NATIVE_STAGE_HEARTBEAT stage="+_safe(self.stage)+

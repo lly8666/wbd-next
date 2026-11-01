@@ -1,4 +1,4 @@
-name: M0 PLAN027 H744 GameFEC no-blocked-main-console native deadline fixture
+name: M0 PLAN027 H745 GameFEC first-fault receipt before blocked stdout fixture
 on:
   push:
     branches: [main]

@@ -37,6 +37,24 @@ class GameFecProgressTests(unittest.TestCase):
         for stage in ("SUPERVISOR_20S_ALIVE","SUPERVISOR_60S_ALIVE"):
             self.assertRegex(stage,r"^[A-Z0-9_]{3,30}$")
 
+    def test_h745_independent_first_fault_receipt_precedes_blocked_console(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=pathlib.Path(d)
+            events=[]
+            trace=GameFecProgress(root,env={},
+                relay=lambda event, detail: events.append((event,detail)),now=lambda:50)
+            (root/"client.log").write_text(
+                "M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=due_send_records "
+                "rc=1 lane=2 token=SENSITIVE\\n".replace("\\\\n","\\n"))
+            class DeadConsole(io.StringIO):
+                def write(self, value):
+                    raise OSError("native job stdout unavailable")
+            with contextlib.redirect_stdout(DeadConsole()):
+                with self.assertRaises(OSError):
+                    trace.poll()
+            self.assertEqual(events,[("FIRST_ERROR","due_send_records")])
+            self.assertEqual(trace.first_error,"due_send_records")
+
     def test_true_ready_and_due_failure_sends_bounded_independent_snapshots(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = pathlib.Path(tmp)
