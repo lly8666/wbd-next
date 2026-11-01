@@ -92,9 +92,21 @@ def _inspect(state, data):
         for field in ("lane", "cipher_len", "path_mtu"):
             match = re.search(r"\b" + field + r"=(\d{1,7})\b", line)
             if match: state[field] = match.group(1)
-        if "WL_GAME_NATIVE_TX_JOINED" in line: state["tx"] = "EXITED"
-        if "WL_GAME_NATIVE_RX_JOINED" in line: state["rx"] = "EXITED"
-        if "WL_GAME_WAL_RESTORED" in line: state["wal"] = "RESTORED"
+        # Read the actual H700 Rust/Go owned Stop printouts, not imagined
+        # helper markers. A finished worker is not yet an owned Join/Stop.
+        if "M0_PLAN027_GAME_NATIVE_STOP_NOT_DRAINED" in line:
+            for kind in ("tx", "rx"):
+                match = re.search(kind + r"_finished=(true|false)", line)
+                if match:
+                    state[kind] = ("FINISHED_UNJOINED" if match.group(1)=="true"
+                                   else "NOT_EXITED")
+        if "M0_PLAN027_GAME_NATIVE_STOP_JOIN" in line:
+            state["tx"] = state["rx"] = "EXITED"
+        if "M0_PLAN027_NATIVE_STOP_RESULT" in line:
+            if "stage=wal_kernel_crypto result=PASS" in line:
+                state["wal"] = "RESTORED"
+            elif "stage=wal_disconnect result=FAIL" in line:
+                state["wal"] = "NOT_RESTORED"
         if FIRST_FAULT.search(line) and state["first_error"] == "UNKNOWN":
             match = re.search(r"\b(?:first_error|reason|rc|result)=([A-Za-z0-9_-]{1,40})", line)
             state["first_error"] = (match.group(1) if match else
