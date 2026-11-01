@@ -11,8 +11,14 @@ import subprocess
 
 SAFE = re.compile(r"[^A-Za-z0-9_.:-]")
 MARKERS = (
+    ("client.log", "WBD_WINDOWS_GAME_COLD_TLS_JOINED", "CLIENT_TLS_JOINED"),
+    ("client.log", "WBD_WINDOWS_GAME_NATIVE_APPLIED", "CLIENT_OS_APPLIED"),
+    ("client.log", "WBD_WINDOWS_OS_APPLIED", "OS_APPLIED"),
     ("client.log", "WBD_WINDOWS_CLIENT_READY", "CLIENT_READY"),
     ("server.log", "V4_ORIGINAL_GO_GAME_NATIVE_READY", "SERVER_READY"),
+    ("client.log", "original Game2 lanes TCP:", "GAME_TCP_FAILED"),
+    ("direct-full.log", "WBD_WL_TRUE_PUBLIC_MODE_FAIL", "E2E_FAILURE"),
+    ("direct-full.log", "WL_PUBLIC_REAL_MODE_TIMEOUT", "MODE_TEST_TIMEOUT"),
     ("client.log", "M0_PLAN026_GAME_NATIVE_FIRST_ERROR", "GAME_FIRST_ERROR"),
     ("client.log", "M0_PLAN027_GAME_DUE_FAULT first_failure=1", "GAME_FIRST_ERROR"),
     ("client.log", "M0_PLAN027_GAME_NATIVE_STOP_NOT_DRAINED", "GAME_STOP_FAILED"),
@@ -88,7 +94,9 @@ class GameFecRelay:
                     count = f.tell()
                     f.seek(max(0,count-32768))
                     value = f.read(32768).decode("utf-8","replace")
-                if needle in value: self.emit(event,name.replace(".log","").upper())
+                if needle in value:
+                    self.emit(event,name.replace(".log","").upper())
+                    return  # Never let a burst of API calls starve PID events
             except OSError: pass
         for name,event in STACKS:
             if event in self.seen: continue
@@ -98,6 +106,7 @@ class GameFecRelay:
                 with p.open("rb") as f: data = f.read(32768).decode("utf-8","replace")
                 if "Thread" in data or "Current thread" in data:
                     self.emit(event,stack_stage(data))
+                    return
             except OSError: pass
         for name,event in (("client.log","CLIENT_LOG_STARTED"),
                            ("server.log","SERVER_LOG_STARTED"),
@@ -105,7 +114,9 @@ class GameFecRelay:
                            ("linux-app.log","LINUX_APP_STARTED")):
             if event in self.seen: continue
             try:
-                if (self.output/name).stat().st_size: self.emit(event,"LOG_HAS_BYTES")
+                if (self.output/name).stat().st_size:
+                    self.emit(event,"LOG_HAS_BYTES")
+                    return
             except OSError: pass
 
     def run(self):
@@ -113,8 +124,11 @@ class GameFecRelay:
         # At most one queued event per iteration to avoid starvation of
         # actual client/server and pre-cancel stack-file observations.
         while not self.stop.is_set():
-            self.observe()
+            # Main-PID clock stages MUST outrank any slow log file or gh API.
+            # Older order observed two file-start receipts then starved every
+            # supervisor heartbeat; sender is still never the PID owner.
             try: event=self.events.get_nowait()
             except queue.Empty: event=None
             if event: self.emit(event,"SUPERVISOR_ALIVE")
+            self.observe()
             self.stop.wait(1)
