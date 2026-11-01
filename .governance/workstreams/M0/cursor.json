@@ -4,31 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 817,
-  "checkpoint_sha": "df2f8cfe4510d0ec2e553f4c77a259efddb771ab",
+  "sequence": 818,
+  "checkpoint_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
   "current_task": "PLAN027 R/N active: H815 scoped native Game2FEC6 cosmetic Windows NPF success remains; H816 first same-VM Normal Linux OFF→ON Action41342667546 failed prebuild fixture only, no native result. H817 corrected validator-only SHA placeholder and queued one identical paired scene; R CPU and N repair-OFF capacity/lifecycle and final ON combinations still NOT_RUN on new SOURCE.",
   "why_now": "Current PLAN027 replaces old pause. First same-VM R measurement prebuild rejected only placeholder artifact hash; use exact known legacy validator contract; no repeated Game/H815 dispatch.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect new H817 trigger Action/run source, exact build manifest and OFF→ON paired native verdict before optimizing; do independent N-line OFF/lifecycle work; never infer current CPU/Windows performance from prebuild success.",
+  "next_action": "Collect f5e8f30 Action41342800664 exact native build/paired measurement and manifest; governance rerun for shortened cursor; then independent N OFF network/FEC/Game and affected ON combinations.",
   "unverified": true,
   "last_tested_source": "96a2acd0b4ed0ee1b22d4836d205f1379bad6e59",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H815-SOURCE96A2-GAMEFEC-NORMAL-OUTER-REAL-COPIED-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H808-GAME2FEC-FIRST-PERF-TRUE-10M15LOSS-TO-30LOSS.md",
-    "docs/devlog/M0/20261102-PLAN027-H809-GAMEFEC-SPARSE-COSMETIC-OUTER-REPLAY.md",
-    "docs/devlog/M0/20261102-PLAN027-H810-COSMETIC-FROZEN-CLONE-FIRST-COMPILE-FAULT.md",
     "docs/devlog/M0/20261102-PLAN027-H811-GAMEFEC-NORMAL-OUTER-ACK-SPARSE-RETRANSMIT.md",
     "docs/devlog/M0/20261102-PLAN027-H812-GAMEFEC-LINUX-NORMAL-ACK-AEAD-HANDOFF.md",
     "docs/devlog/M0/20261102-PLAN027-H813-NORMAL-ACK-GAMEFEC-OUTER-REAL-10LOSS-TEST.md",
     "docs/devlog/M0/20261102-PLAN027-H814-RESTORE-NORMAL-PTO-FULL-OUTER-GAMEFEC.md",
     "docs/devlog/M0/20261102-PLAN027-H815-GAMEFEC-NPF-NORMAL-PTO-REAL-RETRANSMIT-PASS.md",
     "docs/devlog/M0/20261102-PLAN027-H816-NORMAL-REPAIR-COST-PAIR.md",
-    "docs/devlog/M0/20261102-PLAN027-H817-NORMAL-REPAIR-PAIR-PREBUILD-FIX.md"
+    "docs/devlog/M0/20261102-PLAN027-H817-NORMAL-REPAIR-PAIR-PREBUILD-FIX.md",
+    "docs/devlog/M0/20261102-PLAN027-H818-RESTORE-CURSOR-REF-BOUND.md"
   ],
   "open_requests": [],
-  "partial_summary": "H815 real Game2FEC6 SOURCE96a2 Windows NPF copied310, Linux78, original UDP/TCP first and owned Stop PASS (1Mbps/25ms/10%/10s); broader Game/CPU NOT_RUN. H816 prebuild Action41342667546 failed test-only missing SHA placeholder; no native. H817 matching established fixture validation staged, new exact R paired run pending."
+  "partial_summary": "H815 real Game2FEC6 SOURCE96a2 Windows NPF copied310, Linux78, original UDP/TCP first and owned Stop PASS (1Mbps/25ms/10%/10s); broader Game/CPU NOT_RUN. H816 prebuild Action41342667546 failed test-only missing SHA placeholder; no native. H817 matching established fixture validation staged, new exact R paired run pending. H818 scope audit caught >8 context refs; recent 8 retained, older devlogs remain in git."
 }
