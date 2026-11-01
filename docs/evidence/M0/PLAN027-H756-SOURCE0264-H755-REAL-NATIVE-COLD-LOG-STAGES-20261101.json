@@ -44,14 +44,20 @@
       "status": "success"
     }
   ],
-  "evidence_time": "source scoped during in-flight native; not final",
-  "auth_tls_ready": "NOT_YET_OBSERVED",
+  "evidence_time": "native completed, externally cancelled; no late stage receipts",
+  "auth_tls_ready": "NOT_OBSERVED",
   "rust_game_rx_tx_first_error": "UNKNOWN",
   "first_udp_tcp": "NOT_MEASURED",
   "owned_stop": "NOT_MEASURED",
-  "original_native_status_at_checkpoint": "IN_FLIGHT",
+  "original_native_status_at_checkpoint": "CANCELLED",
   "external_limit_seconds": 480,
-  "native_job_logging": "BLOB_NOT_FOUND_WHILE_RUNNING",
+  "native_job_logging": "GITHUB_BLOB_NOT_FOUND_CANNOT_RECOVER",
   "note": "Actual client/server log bytes exist; the only proved result is reached native product startup. No business or Stop PASS implied.",
-  "physical": "NOT_RUN"
+  "physical": "NOT_RUN",
+  "native_step_seconds_at_cancel": 484,
+  "watcher_conclusion": "success_watchdog_not_product",
+  "watcher_cancel_first": true,
+  "watcher_real_logs_retrieval": "LOG_UNAVAILABLE_AFTER_5_ATTEMPTS",
+  "real_game_business": "NOT_MEASURED",
+  "real_game_stop": "NOT_MEASURED"
 }
