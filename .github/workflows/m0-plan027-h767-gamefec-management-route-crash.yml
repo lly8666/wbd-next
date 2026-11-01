@@ -1,0 +1,47 @@
+name: M0 PLAN027 H767 short Windows original management route lease / abnormal child exit
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h767-gamefec-management-route-crash.yml]
+permissions: {contents: read}
+jobs:
+  scoped-management-only-process-crash:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h767-mgmt-fixture]')
+    runs-on: windows-2025
+    timeout-minutes: 6
+    env:
+      WBD_WL_PUBLIC_MODES: game2-fec
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Prove original host route only for current Runner.Worker management peers, then child abnormal exit and restore
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $path='result/wl-public/gamefec-management-route-lease.json'
+          & ./tools/m0_wl_gamefec_management_route.ps1 -Action Arm -Receipt $path
+          if($LASTEXITCODE -ne 0){throw 'GameFEC management original underlay pin failed'}
+          $lease=Get-Content $path -Raw|ConvertFrom-Json
+          if($lease.owner -ne ($env:GITHUB_RUN_ID+':'+$env:GITHUB_RUN_ATTEMPT) -or @($lease.routes).Count -lt 1){throw 'no strictly owned management peer'}
+          foreach($r in @($lease.routes)){
+            $rows=@(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix $r.prefix -ErrorAction Stop | Where-Object {$_.InterfaceIndex -eq $lease.interface_index -and $_.NextHop -eq $lease.next_hop})
+            if($rows.Count -ne 1){throw 'live management /32 route not installed'}
+          }
+          # A deliberately abnormal short subprocess exit after the scoped
+          # management route was genuinely installed. No product network,
+          # full WAL, WFP or FEC payload is modified by this fixture.
+          $f=Join-Path $env:RUNNER_TEMP 'h767-abnormal-child.py'
+          'import os;os._exit(37)' | Set-Content -Path $f
+          $child=Start-Process -FilePath python -ArgumentList @($f) -PassThru -Wait
+          if($child.ExitCode -ne 37){throw 'unexpected synthetic abnormal child exit'}
+          & ./tools/m0_wl_gamefec_management_route.ps1 -Action Restore -Receipt $path
+          if($LASTEXITCODE -ne 0){throw 'owned management route restoration failed'}
+          if(Test-Path $path){throw 'management intent receipt survived successful restoration'}
+          foreach($r in @($lease.routes)){
+            if(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix $r.prefix -ErrorAction SilentlyContinue){throw 'owned management route still present'}
+          }
+          & gh api "repos/$env:GH_REPO" --jq .full_name
+          if($LASTEXITCODE -ne 0){throw 'GitHub management network unavailable after exact recovery'}
+          Write-Output 'H767_WINDOWS_SCOPED_REAL_MANAGEMENT_ROUTE_CHILD_ABNORMAL_AND_RESTORE_PASS_NOT_PRODUCT_WAL'
