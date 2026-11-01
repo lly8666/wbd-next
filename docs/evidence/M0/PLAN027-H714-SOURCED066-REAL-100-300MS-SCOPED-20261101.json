@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "product_source_sha": "d0661a2e110b523ad06b311da23fc1b7291442ba",
+  "harness_source_sha": "415ad28b305b751f134146f7b009a27b0c080d08",
+  "binary_build_run": 41274450306,
+  "original_windows_artifact": {
+    "id": 13071196733,
+    "digest": "sha256:b6baac6ba45a6825665addf329447e56564240c310ae8f636d119b6c6d0eaa6a"
+  },
+  "original_linux_artifact": {
+    "id": 13070622152,
+    "digest": "sha256:837cb7a113f871914c2d04f0caead8a93a7a97ce7e3bd53c9878819cd9dbb5c3"
+  },
+  "native_run": 41275419791,
+  "native_job": 124756566987,
+  "native_workflow_conclusion": "failure",
+  "native_job_conclusion": "failure",
+  "native_step_conclusion": "failure",
+  "native_result_artifact": {
+    "id": 13070547584,
+    "digest": "sha256:b46104f69f148f7bb91357862d76e317040339332f57585dfcab0caf376e59be",
+    "name": "m0-wl-full-public-normal-direct"
+  },
+  "native_guestboot_artifact": {
+    "id": 13071332134,
+    "digest": "sha256:3bd91bd0acf1f410036dc38a1b137eb5f440c2dd4bff69e505d852182d0365f5"
+  },
+  "scene": "plan027-c-normal-10m-25ms-0pct-burst100-300ms-60s",
+  "scene_sha256": "75e2f6aa2e3f8909872390641233db8bc0a27db78908773697c798c9ce7ec63e",
+  "real_os": "TRUE_SIGNED_WINDOWS_NPF_WINTUN_LINUX_WSL2_ORIGINAL_TLS_RUST",
+  "duration_s": 60,
+  "offered_mbps_each": 10,
+  "baseline_one_way_kernel_delay_ms": 25,
+  "declared_loss_bursts": [
+    {
+      "start_s": 20,
+      "duration_ms": 100
+    },
+    {
+      "start_s": 40,
+      "duration_ms": 300
+    }
+  ],
+  "measured_min_simultaneous_full_bilateral_loss_ms": [
+    103.963,
+    304.289
+  ],
+  "first_unique_fraction": {
+    "windows": 0.994114,
+    "linux": 0.994352
+  },
+  "actual_native_report": "PASS_WL_PUBLIC_REAL_MODE_BATCH_AND_BOTH_OWNED_STOP",
+  "actual_native_child": {
+    "rc": 0,
+    "stdout": "WL_PUBLIC_REAL_MODE_BATCH PASS",
+    "wl_diag_result": "EXITED_NOT_AUTOMATIC_PASS",
+    "stop": "PASS_BOTH_OWNED"
+  },
+  "windows_original_process": {
+    "cpu_s": 2.9531,
+    "elapsed_s": 75.672,
+    "avg_one_core_percent": 3.903,
+    "peak_working_set_bytes": 42020864
+  },
+  "native_post_child_powershell_error": "clean V2 native first delivery below existing 99.9 percent gate",
+  "root_of_parent_failure": "SECOND_POWERSHELL_ORACLE_UNCONDITIONALLY_CLASSIFIED_EXPLICIT_FULL_100_PERCENT_KERNEL_PULSES_AS_LOSSLESS",
+  "fixed_in_source_commit": "4603970be5abdcab8bf1bf8651a2789259c90d40",
+  "result": "PASS_SCOPED_REAL_KERNEL_BURST_BUSINESS_AND_OWNED_STOP_WITH_PARENT_WORKFLOW_FAIL_FROM_OBSOLETE_SECOND_ORACLE",
+  "watcher": {
+    "run": 41275426382,
+    "conclusion": "success",
+    "actual_log_status": "LOG_UNAVAILABLE",
+    "reason": "job_log_endpoint_unavailable_during_watcher_run",
+    "later_github_connector_log": "AVAILABLE_FULL_1963673_CHARS"
+  },
+  "watcher_retrospective": {
+    "run": 41275850101,
+    "conclusion": "success",
+    "actual_log_status": "LOG_UNAVAILABLE_AFTER_5_SPACED_ATTEMPTS"
+  },
+  "limits": [
+    "Original whole Action is failure and MUST NOT be renamed a pass",
+    "No same-source re-run of 60s scene just to get green after fixing second PowerShell oracle",
+    "Cross-host calibrated one-way p99 NOT_MEASURED; probe misses and tail recovery require separate source evidence",
+    "Native product source frozen to d066, harness is 415ad28, PowerShell oracle fixed on later main only",
+    "Independent watcher failed to fetch same log that Github connector later read: external token/CLI retrieval still not verified",
+    "Physical NOT_RUN; other PLAN027 B/C and Windows GameFEC remain unresolved"
+  ]
+}
