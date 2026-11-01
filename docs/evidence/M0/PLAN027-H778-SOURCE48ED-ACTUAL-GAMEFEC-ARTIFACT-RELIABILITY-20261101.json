@@ -15,10 +15,13 @@
     "artifact_id": 13082013849,
     "artifact_name": "gamefec-independent-watch-evidence",
     "artifact_bytes": 3195,
-    "source_binding": "H771 run-id and exact product source HEAD verified",
+    "source_binding": "Watcher ZIP independently verifies H771 workflow HEAD dbe9ad45a6dcc39237a1dfcd5898669fff6d8a59; product SOURCE48ed comes from pinned H771 binary setup, not inferred from rescue run HEAD.",
     "scope": "GITHUB_RUN_JOB_AND_SAVED_INDEPENDENT_STAGE_METADATA_ONLY",
     "product_windows_local_logs": "NOT_AVAILABLE_FROM_WATCHER",
-    "product_qualification": "NOT_PASS"
+    "product_qualification": "NOT_PASS",
+    "zip_contents_verified": true,
+    "independent_stage_count": 9,
+    "native_job_conclusion_in_zip": "cancelled"
   },
   "windows_abnormal_management_route": {
     "commit": "e2960645b59dfdade426ae156b87c148398fe58f",
@@ -33,7 +36,8 @@
     "actual_github_api_after_restore": "SUCCESS",
     "actual_artifact_upload": "SUCCESS",
     "scope": "TEST_RUN_OWNED_GITHUB_MANAGEMENT_HOST_ROUTES_ONLY",
-    "product_full_WAL_WFP_DNS_ROUTES_recovery": "NOT_TESTED"
+    "product_full_WAL_WFP_DNS_ROUTES_recovery": "NOT_TESTED",
+    "zip_contents_verified": true
   },
   "native_game_early_local_artifact": {
     "commit": "79a11be79f3dcbd6abe2263366dc5c9c9a23321f",
