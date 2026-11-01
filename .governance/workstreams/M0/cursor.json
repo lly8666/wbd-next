@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 832,
-  "checkpoint_sha": "1c379f3a0f33986a4ec662d6e54f4f292ae0574c",
+  "sequence": 833,
+  "checkpoint_sha": "c645e3216d6d4f991ef92dcab0088c1c0ef982ad",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H832 source f5 original Go TLS/Rust: Auto 240s up1→15→30→1/down5→0 native VALID grade up/down, 65 residual missing at30% else first100%, CPU19.58/18.73s, Stop PASS scoped; Normal outer ON real mixed 300s TCP+UDP 1% no independent cross-flow HOL 10ms bins (UDP first~99.46%, TCP 100%/p99425ms) CPU12.19/12.23s, Stop PASS; Game4FEC6 ON20M30 actual frozen retry788 each first100 Stop PASS (R/F byte NOT_MEASURED). New Normal OFF 100s payload/probe silent idle+resume source-locked Action pending; Windows, full Health/blackhole/rotation, physical C still NOT_RUN.",
-  "why_now": "Three independently completed source-frozen real original native measurements closed Auto rise/down stage, one 300s mixed ON no cross-business HOL and Game4 ON copied outer data; next missing lifecycle is >90s payload idle without synthetic probe yet new business wake, not more same-family loss matrix.",
+  "current_task": "PLAN027 H833: H832 Linux source f5 scoped 240s Auto, Normal300 ON mixed, Game4 ON+OFF true30 all real verified; Linux idle100 true silent wake Action41351062754 running. New Windows2025 signed original NPF/Wintun vs Linux WSL2 Normal ON 10Mbps each/250ms/30pct/60s one existing exact scenario via H833 workflow marker pending native Action/source=H833 commit, no product change, not yet Windows PASS. Same-VM Windows OFF/ON still unqualified.",
+  "why_now": "Original Windows/WSL2 signed Normal ON at real 30% 10Mbps 250ms is an explicit missing public-platform proof while Linux 300s+FEC/Game scoped tests succeeded. Existing native workflow/outer-repair verification supports exact scene and avoids new fixtures.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect 100s payload-idle/wake original Normal OFF Action and exact real offered/received/Stop. Then prioritize independent Windows native ON/OFF/lifecycle/rotation and Game4 byte F/R/C metering if possible; cannot promote Linux OFF or copies to physical qualification. Stop repeated CPU experiments without measured attribution.",
+  "next_action": "Collect H833 one Windows signed Normal ON native readback, NPF F/R/C and actual first/Stop, classify any guest/product/host limit. Separately collect Linux idle100 Action. Then decide Windows OFF paired hook/remaining Health/rotation and feature card closeout without old-source PASS inflation.",
   "unverified": true,
   "last_tested_source": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
   "evidence_refs": [
@@ -25,15 +25,15 @@
     "docs/evidence/M0/PLAN027-H832-FROZEN-F5-GAME4FEC6-20M30-ON-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H825-R-NORMAL-REAL30-PAIRED.md",
     "docs/devlog/M0/20261102-PLAN027-H826-AUTO-RESULT-AND-RISE-FALL.md",
     "docs/devlog/M0/20261102-PLAN027-H827-R-HIGHLOSS-AND-AUTO-FIX.md",
     "docs/devlog/M0/20261102-PLAN027-H828-GAME4-CLEAN20-CAP.md",
     "docs/devlog/M0/20261102-PLAN027-H829-GAME4-ZERO-AUTO-ASSERT-LOSS30.md",
     "docs/devlog/M0/20261102-PLAN027-H830-NORMAL-ON-MIXED300.md",
     "docs/devlog/M0/20261102-PLAN027-H831-GAME4-LOSS30-ON-NEXT.md",
-    "docs/devlog/M0/20261102-PLAN027-H832-AUTO-NORMAL300-GAMEON-IDLE.md"
+    "docs/devlog/M0/20261102-PLAN027-H832-AUTO-NORMAL300-GAMEON-IDLE.md",
+    "docs/devlog/M0/20261102-PLAN027-H833-WIN-NORMAL-ON30-ONE-SCENE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H832 Auto240 real stage VALID up/down client profile6→5→4→3, server5→4→3→2 last150s low (30% phase 65 missing); Normal300 ON real mixed 2 TCP flows+UDP both ways no cross-flow HOL across29700 10ms bins, UDP first99.46%, TCP all delivered p99425ms, Stop, CPU12.2s/300; Game4 ON20M30 real retry788/side first100% p99258.8, Stop, Game F/R/C byte unknown. All source f5. New Normal100s true no-app/probe wake independent Action pending, source product still unchanged. Full Windows/Health-loss/rotation/physical NOT_RUN."
+  "partial_summary": "H832 Auto240 real stage VALID up/down client profile6→5→4→3, server5→4→3→2 last150s low (30% phase 65 missing); Normal300 ON real mixed 2 TCP flows+UDP both ways no cross-flow HOL across29700 10ms bins, UDP first99.46%, TCP all delivered p99425ms, Stop, CPU12.2s/300; Game4 ON20M30 real retry788/side first100% p99258.8, Stop, Game F/R/C byte unknown. All source f5. New Normal100s true no-app/probe wake independent Action pending, source product still unchanged. Full Windows/Health-loss/rotation/physical NOT_RUN. H833 added narrow one-action Windows original Normal outer ON 10Mbps250ms30% existing scenario selection, new native Windows/WSL SOURCE pending; Linux f5 scoped evidence retained, not claimed Windows. Linux idle100 still in flight."
 }

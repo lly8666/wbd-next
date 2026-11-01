@@ -1,0 +1,11 @@
+# PLAN027 H833 | One existing Windows/WSL2 original Normal ON native high-loss scene
+
+- H832 source f5 Linux original Go TLS/Rust M4 R/N/Game2/Fixed/Auto/Game4 and ON multi-flow300s, exact 240s Auto stages, source-frozen scope closeouts recorded. Separate 100s true payload/probe idle Linux native Action `41351062754` in progress; do not redispatch. No product native source/Go DLL logic modified so far.
+- Windows original signed NPF/Wintun + real Go TLS client and Linux WSL2 Rust M4 **not yet qualified at 10Mbps each/250ms/true30%/60s Normal outer ON on the current head**; H815 Game2FEC6 1Mbps25ms10pct10s original NPF functional PASS is older source and must not be promoted.
+- Reuse EXISTING single-mode signed workflow `.github/workflows/m0-wl-public-normal-full.yml` and EXISTING exact `scenarios/wl-outer-repair-10m-250ms-loss30-60s.json`; four internal workflow selections are narrowly prefixed with marker `[plan027-win-normal-on30]` for public_mode=normal, one-scene V2. This doesn't change any native source/default, nor launch all seven product modes. The workflow's own `m0_wl_outer_repair_verify.py` measures actual signed Windows NPF DATA F/R+control and Linux/Windows first/OS, Stop and genuine losses; original Windows+Linux binary build source will be this H833 commit (not frozen Linux f5 artifact). No build reuse possible across Windows platform from Linux-only f5; workflow builds each source/platform once and hashes its artifacts.
+- This is a **single new Action single real Windows→Linux scenario**, not user physical Windows install. If Windows hosted-VM capacity breaks, retain exact product/guest/VM fault and don't blame VM merely due UI green. Normal ON/OFF Windows CPU same-VM paired result still missing due no exact OFF native exposed; do not claim pairing from this test.
+- After this one Windows native result, reconcile its own SOURCE and exact NPF Stop; decide missing OFF readback/low-CPU measurement and multi-mode ON as needed, not repeat Linux matrix.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Source-locked Windows original signed single existing Normal ON true-loss scenario selection, only workflow test selector and cursor/devlog changed; no native/product config/UI switch introduced."}
+```
