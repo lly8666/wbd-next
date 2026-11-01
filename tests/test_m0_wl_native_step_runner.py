@@ -196,6 +196,7 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
             )
             env=__import__("os").environ.copy()
             env.update({
+                "PYTHONPATH":str(ROOT)+__import__("os").pathsep+env.get("PYTHONPATH",""),
                 "WBD_WL_PUBLIC_MODES":"game2-fec",
                 "WBD_WL_GAME_FEC_RESCUE":"0"
             })
@@ -275,7 +276,7 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         mode=(ROOT/"tools/m0_wl_public_modes_e2e.py").read_text()
         runner=(ROOT/"tools/m0_wl_native_step_runner.py").read_text()
         rescue=(ROOT/"tools/m0_wl_gamefec_progress.py").read_text()
-        self.assertIn("GameFecProgress(output.parent,env=os.environ)",runner)
+        self.assertIn("GameFecProgress(output.parent, env=os.environ)",runner)
         self.assertIn('events.put("MODE_TIMEOUT")',runner)
         self.assertIn('events.put("MODE_EXIT")',runner)
         self.assertNotIn("GameFecProgress",mode)
