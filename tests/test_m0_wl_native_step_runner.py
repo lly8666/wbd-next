@@ -109,6 +109,37 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
             self.assertLess(elapsed,3.0,captured.getvalue())
             self.assertIn("WL_ORIGINAL_NATIVE_E2E_BATCH_TIMEOUT",captured.getvalue())
 
+    def test_h741_raw_game_stdout_block_cannot_hold_supervisor_timeout(self):
+        from tools import m0_wl_native_step_runner as native
+        with tempfile.TemporaryDirectory() as d:
+            code=pathlib.Path(d)/"game-stdout-stuck.py"
+            log=pathlib.Path(d)/"direct-full.log"
+            code.write_text(
+                "import time\nprint('H741_RAW_LOG_WILL_BLOCK',flush=True)\ntime.sleep(15)\n")
+            started=__import__("threading").Event()
+            class BlockingLog(io.StringIO):
+                def write(self, s):
+                    if "H741_RAW_LOG_WILL_BLOCK" in s:
+                        started.set()
+                        time.sleep(4)
+                    return super().write(s)
+            captured=BlockingLog()
+            with (mock.patch.object(native,"native_batch_deadline",return_value=1),
+                  mock.patch.object(sys,"argv",[str(RUNNER),str(code),str(log)]),
+                  mock.patch.dict("os.environ",{
+                      "WBD_WL_PUBLIC_MODES":"game2-fec",
+                      "WBD_WL_GAME_FEC_RESCUE":"0"
+                  }),
+                  contextlib.redirect_stdout(captured),
+                  contextlib.redirect_stderr(captured)):
+                start=time.monotonic()
+                rc=native.main()
+                elapsed=time.monotonic()-start
+            self.assertTrue(started.is_set())
+            self.assertEqual(rc,124)
+            self.assertLess(elapsed,3.0)
+            self.assertIn("WL_ORIGINAL_NATIVE_E2E_BATCH_TIMEOUT",captured.getvalue())
+
     def test_h711_real_native_stop_markers_not_guessed(self):
         from tools import m0_wl_native_step_runner as native
         state={"stage":"UNKNOWN","first_error":"UNKNOWN","fragment":"",

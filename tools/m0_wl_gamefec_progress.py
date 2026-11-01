@@ -50,8 +50,6 @@ class GameFecProgress:
             return
         self.signalled.add(event)
         detail = _safe(self.first_error if event == "FIRST_ERROR" else self.stage)
-        print("WL_GAME_RESCUE_INTENT event="+event+" stage="+_safe(self.stage)+
-              " first_error="+_safe(self.first_error), flush=True)
         if self.relay is not None:
             self.relay(event, detail)
         elif self.env.get("WBD_WL_GAME_FEC_RESCUE") == "1":
@@ -71,6 +69,8 @@ class GameFecProgress:
                                  else "UNAVAILABLE"), flush=True)
             except (OSError, subprocess.TimeoutExpired):
                 print("WL_GAME_RESCUE_DISPATCH event="+event+" status=UNAVAILABLE", flush=True)
+        print("WL_GAME_RESCUE_INTENT event="+event+" stage="+_safe(self.stage)+
+              " first_error="+_safe(self.first_error), flush=True)
 
     def poll(self):
         for name in ("client.log", "server.log", "windows-app.log", "linux-app.log"):

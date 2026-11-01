@@ -148,67 +148,86 @@ def main() -> int:
         trace = (GameFecProgress(output.parent,env=os.environ)
                  if os.environ.get("WBD_WL_PUBLIC_MODES","").endswith("-fec") else None)
         if trace: trace.snapshot("MODE_STARTED")
-        # The old supervisor synchronously inspected Windows files/ran gh
-        # dispatch inside its only deadline loop. A stalled filesystem or
-        # CLI operation could disable its own 250s timeout. A daemon sampler
-        # in this SAME supervisor PID keeps sampling separate from stop
-        # enforcement. It is NOT a second watchdog or product worker.
+        # GameFEC's fatal/native stdout and Windows file tails may block in
+        # Win32/WSL2 output or an external logger. NONE of those reads or
+        # writes may own the only PID deadline. A single daemon diagnostic
+        # thread in the same supervisor PID owns both tail operations;
+        # there is no second watchdog, job or product worker.
         sample_stop=threading.Event()
         sample_thread=None
-        if trace:
-            def sample_game_log():
-                while not sample_stop.is_set():
-                    trace.poll()
-                    sample_stop.wait(2)
-            sample_thread=threading.Thread(target=sample_game_log,
-                                           name="game-native-log-sample",daemon=True)
-            sample_thread.start()
-        offset = 0
         state={"stage":"UNKNOWN","first_error":"UNKNOWN","fragment":"",
                "lane":"UNKNOWN","cipher_len":"UNKNOWN","path_mtu":"UNKNOWN",
                "tx":"UNKNOWN","rx":"UNKNOWN","wal":"UNKNOWN"}
+        offset = 0
+        if trace:
+            def sample_game_log():
+                sample_offset=0
+                last_trace=0.0
+                while not sample_stop.is_set():
+                    now=time.monotonic()
+                    if now-last_trace>=2:
+                        trace.poll()
+                        last_trace=now
+                    with output.open("rb") as reader:
+                        reader.seek(sample_offset)
+                        data=reader.read(64*1024)
+                    sample_offset+=len(data)
+                    if data:
+                        _inspect(state,data)
+                        sys.stdout.write(data.decode("utf-8","replace"))
+                        sys.stdout.flush()
+                    sample_stop.wait(.2)
+            sample_thread=threading.Thread(target=sample_game_log,
+                                           name="game-native-log-sample",daemon=True)
+            sample_thread.start()
         started=time.monotonic()
         last_heartbeat=started
         limit=native_batch_deadline(os.environ)
         print('WL_ORIGINAL_NATIVE_E2E_BATCH_DEADLINE seconds='+str(limit),flush=True)
         while True:
             now = time.monotonic()
-            with output.open("rb") as reader:
-                reader.seek(offset)
-                data = reader.read(64 * 1024)
-                offset += len(data)
-            if data:
-                sys.stdout.write(data.decode("utf-8", "replace"))
-                sys.stdout.flush()
-                _inspect(state,data)
-            rc = child.poll()
-            if rc is not None:
-                # Drain bytes already committed by the owning test, but DO
-                # NOT wait for inherited handles or arbitrary native peers.
+            if not trace:
                 with output.open("rb") as reader:
                     reader.seek(offset)
-                    rest = reader.read(256 * 1024)
-                if rest:
-                    sys.stdout.write(rest.decode("utf-8", "replace"))
+                    data = reader.read(64 * 1024)
+                    offset += len(data)
+                if data:
+                    sys.stdout.write(data.decode("utf-8", "replace"))
                     sys.stdout.flush()
-                    _inspect(state,rest)
+                    _inspect(state,data)
+            rc = child.poll()
+            if rc is not None:
+                # Game diagnostic tail is daemon-owned and never holds the
+                # native process exit. Other modes keep their prior file tail.
                 if trace:
                     sample_stop.set()
+                    sample_thread.join(timeout=.5)
                     trace.snapshot("MODE_EXIT")
+                else:
+                    with output.open("rb") as reader:
+                        reader.seek(offset)
+                        rest = reader.read(256 * 1024)
+                    if rest:
+                        sys.stdout.write(rest.decode("utf-8", "replace"))
+                        sys.stdout.flush()
+                        _inspect(state,rest)
                 _diagnostic(state,rc,"EXITED_NOT_AUTOMATIC_PASS" if rc==0 else "FAIL_NATIVE")
                 print("WL_ORIGINAL_NATIVE_E2E_CHILD_EXIT pid=" + str(child.pid) +
                       " rc=" + str(rc), flush=True)
                 return rc
             now=time.monotonic()
             if now-started>=limit:
+                if trace:
+                    sample_stop.set()
+                # Actual game PID tree stop happens before anything that
+                # might block on a missing GitHub log/Actions service.
+                kill_native_child_tree(child)
+                if trace:
+                    trace.snapshot("MODE_TIMEOUT")
                 print("WL_ORIGINAL_NATIVE_E2E_BATCH_TIMEOUT seconds="+str(limit)+
                       " owner_pid="+str(child.pid)+" mode="+os.environ.get("WBD_WL_PUBLIC_MODES","all"),
                       file=sys.stderr,flush=True)
-                if trace:
-                    sample_stop.set()
-                    trace.snapshot("MODE_TIMEOUT")
                 _diagnostic(state,None,"TIMEOUT_FAIL_NATIVE")
-                kill_native_child_tree(child)
                 return 124
             if now-last_heartbeat>=20:
                 if trace and now-started<65:

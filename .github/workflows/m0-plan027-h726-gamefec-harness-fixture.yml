@@ -1,4 +1,4 @@
-name: M0 PLAN027 H740 GameFEC real-log numeric rescue synthetic fixture
+name: M0 PLAN027 H741 GameFEC isolated file logger and deadline synthetic fixture
 on:
   push:
     branches: [main]
