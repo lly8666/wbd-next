@@ -66,3 +66,46 @@ jobs:
           gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
             -f public_mode=game2-fec -f run_n0=false -f perf_scenario_file="$scene"
           echo H702_ONE_TRUE_1MBPS_ZERO_LOSS_GAME2_FEC_SOURCE_BUILD_AND_NATIVE_DISPATCHED_NOT_PASS
+
+  one-gamefec-source-wire-bound:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h710-original-gamefec-after-mtu]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: One source-locked REAL signed Game2FEC6 1Mbps zero-loss and owned Stop; do not re-run old source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          grep -q 'FEC2 typed1+header14' docs/devlog/M0/20261101-PLAN027-H708-H709-LOG-RECOVERY-AND-GAME-FEC-MTU.md || true
+          grep -q 'let fec_overhead=if fec{15}else{0}' crates/wbd-engine/src/v4_windows_game_owner.rs
+          grep -q 'WL_DIAG_FIRST_ERROR' tools/m0_wl_native_step_runner.py
+          grep -q 'recover_logs()' .github/workflows/m0-plan027-independent-native-deadline.yml
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario('scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json')
+          assert s["public_mode"]=="game2-fec" and s["duration_s"]==10
+          assert s["warmup_s"]==3 and s["drain_s"]==5 and s["tun_mtu"]==1400
+          assert s["seed"]==20261029
+          for k in ("windows_to_linux","linux_to_windows"):
+              d=s[k]
+              assert d["offered_mbps"]==1 and d["delay_ms"]==25 and d["loss_pct"]==0
+              assert [x["udp_payload_bytes"] for x in d["packet_mix"]]==[96,288,1060,1200]
+          print("M0_H710_SOURCE_AUTHENTIC_ORIGINAL_GAMEFEC6_ONLY",s["scenario_sha256"])
+          PY
+          scene=scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|game2-fec|$scene"
+          prior="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg title "$title" '.workflow_runs[]|select(.display_title==$title)|.id' | head -n 1)"
+          if [ -n "$prior" ]; then
+            echo "M0_H710_ONE_NATIVE_ALREADY_DISPATCHED run=$prior"
+            exit 0
+          fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main             -f public_mode=game2-fec -f run_n0=false -f perf_scenario_file="$scene"
+          echo "M0_H710_NATIVE_1MBPS_0PCT_SOURCE=$GITHUB_SHA DISPATCHED_NOT_PASS"
