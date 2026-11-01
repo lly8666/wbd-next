@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 797,
-  "checkpoint_sha": "3be46050915457c23dc19d5ccc2945f1867457a5",
+  "sequence": 798,
+  "checkpoint_sha": "196b5f19df2fa453b40833674ad01a398b5a70ae",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H797 GameFEC ONLY: H796 run41316798050 CANCELLED, watcher41316805149 SUCCESS with ZIP13087388449 downloaded proving original native job cancelled, independent stages through COLD_READY_WAIT/CLIENT_LOG_STARTED only. Frozen product SOURCE48ed, actual signed NPF/Wintun, WSL2 and source manifests PASS pretest; real full Game2FEC first delivery/Stop UNKNOWN, no local first error artifact. Found unconditional defer tun.Close in original Windows Game path despite outstanding Rust native Wintun loan on partial Stop failure: concrete liveness/owner correctness defect. H797 makes Close only after full verified product.Stop returns success, preserves original error/WAL otherwise. New candidate source compilation/testing pending, unrelated PLAN027 paused.",
-  "why_now": "Two true native Game2FEC runs could not retain first product fault; H796 entered product and was externally cancelled despite nested PID deadline. Actual source exposes one specific unbounded Wintun Close hazard after failed owned Stop; fix production ownership ordering rather than add watchdog/seed/timeout or repeat identical old source.",
+  "current_task": "H798 GameFEC only: H797 196b5f19 full original Go product native TUN.Close after verified owned Stop candidate, original source build Action41318440672 IN_FLIGHT; H797 Governance/structure PASS but Feature catalog41318440673 FAIL because own devlog feature-impact kind=modified is invalid (valid updated/none). H798 repairs exact declaration to updated, nothing changed in executable, original source SAME H797. H796 real native41316798050 CANCELLED, watcher artifact13087388449 actual ZIP confirms COLD_READY_WAIT/CLIENT_LOG_STARTED but no original first error, product FEC+Stop UNKNOWN, unrelated PLAN027 paused.",
+  "why_now": "Actual feature-catalog GitHub log names one invalid JSON feature-impact kind in product change devlog, fix only declaration while preserving original Windows source compile in flight.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect source-locked Windows Actions build/game2fec scoped tests caused by H797 manifest source change, retain true FAIL. After compile and scope qualification, run ONE new product SOURCE Game2FEC native two-OS trial; inspect actual first cold TLS/NPF/FEC/Stop and full owned WAL, no duplicate old source or other PLAN027 matrices.",
+  "next_action": "Collect H797 original Windows Action41318440672 and H798 governance, resolve genuine Windows compile/test first failure; H797 source candidate WAL/loan safety fix not yet product PASS. If qualified build, one NEW SOURCE real dual-OS Game2FEC with exact new build product artifacts, no repeat old frozen SOURCE48ed trial.",
   "unverified": true,
   "last_tested_source": "48ed7ffe82aafa17a125948068a2ca6ee6a1593e",
   "evidence_refs": [
@@ -21,14 +21,14 @@
     "docs/evidence/M0/PLAN027-H783-SOURCE48ED-H782-WINDOWS-ACTIONS-ARTIFACT-20261101.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261101-PLAN027-H790-REAL-ORIGINAL-PNP-TESTNET-ROUTE-WAL.md",
     "docs/devlog/M0/20261101-PLAN027-H791-ORIGINAL-GAME2FEC6-TLS-WINTUN-FIRST-REVERSE.md",
     "docs/devlog/M0/20261101-PLAN027-H792-GAMEFEC-POWERSHELL-TEST-FIRST-FAULT.md",
     "docs/devlog/M0/20261101-PLAN027-H793-FEC6-DUE-NOTSENT-OWNER-STOP.md",
     "docs/devlog/M0/20261101-PLAN027-H794-REMOVE-DUPLICATE-WAL-PIPE-SUFFIX.md",
     "docs/devlog/M0/20261101-PLAN027-H795-ONE-REAL-GAME2FEC-NPF-WINTUN-LINUX.md",
     "docs/devlog/M0/20261101-PLAN027-H796-PREBUILT-DIFF-EXACT-SIX.md",
-    "docs/devlog/M0/20261101-PLAN027-H797-GAMEFEC-WINTUN-STOP-CLOSE-ORDER.md"
+    "docs/devlog/M0/20261101-PLAN027-H797-GAMEFEC-WINTUN-STOP-CLOSE-ORDER.md",
+    "docs/devlog/M0/20261101-PLAN027-H798-FEATURE-IMPACT-KIND-REPAIR.md"
   ],
   "open_requests": [],
   "partial_summary": "d100 25ms zero-loss native source business FAIL: Windows first0.997456/Linux0.9819, Linux TUN TX drops2503, generator CPU54.14s, original owned Stop marker+exit PASS; watcher RUN_VIEW recovered. H721 avoid duplicate Linux TERM cleanup warning. H722 one 50Mbps250ms15% Fixed6 new native Action queued/dispatch pending exact current controller; not PASS. H723 new native Rust+Go 72B Windows Fixed selected profile/revision installed readback and Go unit test committed but fresh product NOT_RUN; legacy mature Quality is separate, no extra RTT. H722 real original source d066 in flight. H724 source d066 true highest Fixed50/250ms15 real both UDP/TCP Stop PASS, first.994254/.974935, TUN0/NPF0; Win CPU55.1/78.375 (70.3% core), RSS47MB. Residual Linux2.5% and p99/unreturned bilateral F/R/C still unverified. New H723 72B Windows Fixed installation ABI source65618 cheap assembly mismatch, H724 correct three Go result blobs pending Actions. H739: H738 cheap source-locked tests PASS, mixed-source hot cursor evidence refs cleared without deleting archived historical evidence. Real native GameFEC remains unverified. H742: source0264 H739 true Game2FEC CANCELLED after watcher 493s native step, independent 4 stages only, no original job log or Stop. Source-bound evidence H742 preserved, one H741 IO isolated runner next. User ~8min cap satisfied (30s watcher polling). Other work paused. H743: H742 exact original Game2FEC product SOURCE0264 new harness source045a run41286724011/watcher41286729417 in flight, no product/Stop proof. H741 single PID isolated logging passed synthetic; H739 true native cancel 493s and independent 4 stage receipts archived. H746: H742 new IO diagnostic already reached SUPERVISOR_LOOP_ENTER but no child.poll or timeout and external hard-cancel at502s, BlobNotFound; H744/H745 blocked-console fixtures both PASS, one real source0264 H746 needed. Other PLAN027 paused. H747 H746 actual same frozen original Game2FEC source0264 run41287639141/watcher41287646432 IN_FLIGHT; H744/H745 blocked-main/first-fault synthetic PASSED, product and owned Stop not qualified."

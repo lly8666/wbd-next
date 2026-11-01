@@ -7,5 +7,5 @@ One independent code-definite liveness/owner defect found in original Game Windo
 M0 manifest blob of this single Go Windows Game product file updated, feature `generation-stop` updated. Existing source-based Windows Go+Rust Actions should build/verify and record true results; no old product PASS promoted. Full original owned WFP/routes/DNS/MTU/lease abnormal crash recovery remains NOT_QUALIFIED and Game2FEC NPF copied parity STILL UNKNOWN.
 
 ```feature-impact
-{"kind":"modified","ids":["generation-stop"],"reason":"Original Windows Game2FEC native owned Stop no longer closes Wintun under a live Rust ring loan or incomplete network WAL; single product-lifecycle correctness change, no protocol or quality tuning."}
+{"kind":"updated","ids":["generation-stop"],"reason":"Original Windows Game2FEC native owned Stop no longer closes Wintun under a live Rust ring loan or incomplete network WAL; single product-lifecycle correctness change, no protocol or quality tuning."}
 ```
