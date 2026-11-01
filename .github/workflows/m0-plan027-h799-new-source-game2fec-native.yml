@@ -1,0 +1,57 @@
+name: M0 PLAN027 H799 one newly fixed Game2FEC6 full native source
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h799-new-source-game2fec-native.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  dispatch-single-new-source-game2fec:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h799-game2fec]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      ORIGINAL_FIXED_PRODUCT_COMMIT: "196b5f19df2fa453b40833674ad01a398b5a70ae"
+      SCENE: "scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 5}
+      - name: One new product-source signed Windows and Linux Game2FEC6
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          # Actual original Windows source H797 compile and scoped
+          # native TLS/Rust/Game2FEC6 test have already finished. Never
+          # substitute one successful dispatch for this source-scoped job.
+          gh api "repos/$GH_REPO/actions/runs/41318440672/jobs?per_page=100" |
+            jq -e '[.jobs[]|select(.name=="original-go-native-wal" and .conclusion=="success")]|length==1' >/dev/null
+          # All post-H797 changes must be harness/docs/features only.
+          # If any product source changed since the compiled candidate,
+          # this is no longer the exact fix awaiting a real trial.
+          git fetch --depth=1 origin "$ORIGINAL_FIXED_PRODUCT_COMMIT"
+          git diff --quiet "$ORIGINAL_FIXED_PRODUCT_COMMIT" "$GITHUB_SHA" -- \
+            crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json")
+          j=json.loads(p.read_text())
+          assert j["public_mode"]=="game2-fec"
+          assert (j["duration_s"],j["warmup_s"],j["drain_s"])==(10,3,5)
+          assert j["tun_mtu"]==1400
+          for side in ("windows_to_linux","linux_to_windows"):
+              v=j[side]
+              assert (v["offered_mbps"],v["delay_ms"],v["loss_pct"])==(1,25,0)
+          print("H799_EXACT_ORIGINAL_GAME2FEC6_SCENE_VALIDATED_NO_PRODUCT_PASS")
+          PY
+          # No prebuilt-source reuse: the native job compiles the NEW H797
+          # Windows Game Stop implementation and corresponding Linux
+          # binaries exactly once for THIS runnable product-source manifest.
+          # The target's existing independent watcher owns the 480s limit;
+          # the controller only dispatches, never grades App/Stop/WAL.
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=game2-fec -f run_n0=false -f perf_scenario_file="$SCENE"
+          echo "H799_ONE_NEW_SOURCE_GAME2FEC6_ACTUAL_NATIVE_DISPATCHED_NOT_PRODUCT_PASS"

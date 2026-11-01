@@ -7,7 +7,8 @@
   "stage": "experimental",
   "development_branch": "integration/w168-freeze-windows-adapter-20261026",
   "available_on": [
-    "integration/w168-freeze-windows-adapter-20261026"
+    "integration/w168-freeze-windows-adapter-20261026",
+    "main"
   ],
   "defaults": {
     "stop": "仅owned资源，禁止清理外来状态",
@@ -28,7 +29,8 @@
   "doc_refs": [
     "docs/handoff/CURRENT_INTEGRATION.md",
     "docs/evidence/M0/PLAN020-S659-exact-Windows2022-native-TESTNET-WFP-and-guard-crash-PASS_SCOPED-20261021.json",
-    "docs/devlog/M0/20261101-PLAN027-H797-GAMEFEC-WINTUN-STOP-CLOSE-ORDER.md"
+    "docs/devlog/M0/20261101-PLAN027-H797-GAMEFEC-WINTUN-STOP-CLOSE-ORDER.md",
+    "docs/devlog/M0/20261101-PLAN027-H799-NEW-SOURCE-GAME2FEC-ONE-NATIVE.md"
   ],
   "verification": [
     {
@@ -87,7 +89,8 @@
     "H661 source dc191 genuine Normal idle108.49s kernel wake + Stop Action41223668774 passes; authenticated Health record count and >90s no-auth dead/reconnect not qualified.",
     "H662 Normal Rust native Stop remove-before-unbounded-join product risk fixed as SOURCE-candidate: <=12s wait and retain original loans on STOP_INCOMPLETE; Windows source-current compile/new native B106 still pending. Blackhole20 Action41224016836 positive is NOT B106 reauthentication.",
     "H663 Fixed6 native no-payload108.28s+fresh dual UDP/Stop Action41224025507 authentic, but periodic Health records uncounted, no-auth 106s TLS reauth still unqualified. H662 normal native bounded Stop new source pending.",
-    "H797 候选：Windows Game2FEC 原生 TUN.Close 仅在真正 product.Stop（Rust Join、WFP/routes/WAL、内核 lease）通过后执行。失败保留错误/待清网络状态，不得阻塞于未解除 Rust loan 的 TUN.Close。H796 双端真实 native 取消，首个产品原因与新源码回归仍 UNKNOWN，不能当 PASS。"
+    "H797 候选：Windows Game2FEC 原生 TUN.Close 仅在真正 product.Stop（Rust Join、WFP/routes/WAL、内核 lease）通过后执行。失败保留错误/待清网络状态，不得阻塞于未解除 Rust loan 的 TUN.Close。H796 双端真实 native 取消，首个产品原因与新源码回归仍 UNKNOWN，不能当 PASS。",
+    "H797 SOURCE196b5f19 原始 Windows WAL Go/Rust/signed-Wintun Action41318440672 的 original-go-native-wal 任务 SUCCESS，Game2FEC6 原生独立接收/Stop 限定 PASS；全局 WFP/路由与实际双端 NPF parity 尚待 H799 新源码真实业务，不能以短测代替。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
