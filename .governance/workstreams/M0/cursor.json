@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 737,
-  "checkpoint_sha": "3d3dee80d6103e0246867f67eab969d9589b771d",
+  "sequence": 738,
+  "checkpoint_sha": "fc6ca92fae512405cd87691a8f3f010d0922b01b",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H737 GAMEFEC ONLY: H735 true SOURCE0264 Game2FEC1M zero-loss native41282739002 cancelled at watcher 734s, original job log 404 BlobNotFound, independent 4 receipts PRE_NATIVE_STEP→STEP_ENTER→STEP_PREFLIGHT_COMPLETE→MODE_STARTED, no BOTH_READY/FIRST_ERROR/MODE_TIMEOUT/Stop. H736 move watcher into already-existing outer PID supervisor, avoid inherited stdout pipes, one minimal 185/250s budget; scoped cheap assembly Action41283787485 PASS. H737 frozen SOURCE0264 prebuilt genuine Game2FEC native41283910551/watcher41283917268 IN_FLIGHT; all unrelated PLAN027 tasks paused.",
-  "why_now": "H735 live native GameFEC stage proved through MODE_STARTED, but no subsequent child-owned heartbeat/timeout and blob erased at external cancellation; place observation and timeout on existing outer PID owner, not mode child. Preserve exact previous failure, no duplicate build.",
+  "current_task": "H738 GAMEFEC SOLE PRIORITY; H737 SOURCE0264 same authentic native run41283910551 CANCELLED after 721s external native step watcher (job 124781282400 logs BlobNotFound), 4 independent stage receipts PRE_NATIVE_STEP/STEP_ENTER/STEP_PREFLIGHT_COMPLETE/MODE_STARTED, no supervisor 20s/250s timeout, business/owned Stop still UNKNOWN. Fix watcher GameFEC limit to native-step 480s and CANCEL FIRST (old five log attempts occurred before cancel, delayed up to minutes), logs recovered only after cancel. Isolate original GameFEC log poll in same PID daemon diagnostic thread so it cannot block primary PID 250s timeout; proof fixture planned, current product unchanged frozen SOURCE0264. Game only; other PLAN027 paused.",
+  "why_now": "User explicitly requires Game FEC final Action test to force-stop after ~8min. Observed independent run41283917268 fired timeout 721s but performed five lengthy REST/CLI attempts BEFORE cancel; no first-fault or Stop and 404 log. Need enforce hard 480s native step ceiling and keep one supervisor's deadline independent from synchronous diagnosis.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H737 exact native41283910551, watcher41283917268 and all GAMEFEC-RESCUE|41283910551 stage records; if first Rust error, fix exact Game2/4FEC source/driver Stop; if outer supervision now exits with bounded fault, preserve client/server/mode artifacts. No new or unrelated actions before in-flight result.",
+  "next_action": "Collect H738 pure tests/watchdog workflow check and governance, freeze SOURCE0264 same signed Windows+Linux binaries build41280564979 and dispatch exactly one Game2FEC1M0%10s native only. Check independent PRE_NATIVE to MODE_STARTED, 20/60s supervisor receipts, timeout receipt or actual FIRST_ERROR/Stop. If supervisor now exits 250s, use log contents or missing child stage to pinpoint original Game product vs WSL process. No other work.",
   "unverified": true,
   "last_tested_source": "d0661a2e110b523ad06b311da23fc1b7291442ba",
   "evidence_refs": [
@@ -24,14 +24,14 @@
     "docs/evidence/M0/PLAN027-H736-SOURCE0264-GAME2FEC-INDEPENDENT-STAGES-CANCELLED-20261101.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261101-PLAN027-H721-H722-FIXED100-TRUTH-AND-FIXED50-LOSS15.md",
     "docs/devlog/M0/20261101-PLAN027-H723-WINDOWS-FIXED-ACTUAL-INSTALLED-READBACK.md",
     "docs/devlog/M0/20261101-PLAN027-H724-FIXED15-NATIVE-AND-MANIFEST-REPAIR.md",
     "docs/devlog/M0/20261101-PLAN027-H725-USER-PRIORITY-GAMEFEC-ONLY-PAUSE-REGISTRY.md",
     "docs/devlog/M0/20261101-PLAN027-H728-H733-GAMEFEC-FIRST-STAGE-RELAY.md",
     "docs/devlog/M0/20261101-PLAN027-H734-H735-GAMEFEC-NATIVE-ACTIONS-PERMISSIONS.md",
     "docs/devlog/M0/20261101-PLAN027-H736-GAMEFEC-OUTER-PID-STAGE-OWNER.md",
-    "docs/devlog/M0/20261101-PLAN027-H737-GAMEFEC-OUTER-PID-FIRST-FAULT-NATIVE.md"
+    "docs/devlog/M0/20261101-PLAN027-H737-GAMEFEC-OUTER-PID-FIRST-FAULT-NATIVE.md",
+    "docs/devlog/M0/20261101-PLAN027-H738-GAMEFEC-480S-CANCEL-FIRST.md"
   ],
   "open_requests": [],
   "partial_summary": "PLAN027 §0 remains PARTIAL. A5 USER_WAIVED not PASS. Original SOURCE6ece true Windows/Linux Normal10M300s and 50M PASS, C100 >=99.9 but 2 true Windows sequence gaps; C200 host capacity FAIL Linux generator134.759/200, Linux first0.61916/TUN3145 drops, stop higher Normal tier. Windows B105 idle108s real wake/Stop PASS; Linux-only dead106 second TLS PASS but Windows dead106 external CANCELLED and still NOT_RUN. Auto A4 true one grade down in109.24s and Win revision4 Applied; final Linux profile0 pending. Normal damaged1/5/15/30% real Windows-only F/R/C opportunity and Stop scoped PASS, NOT bilateral recovery grade. Fixed6 at30% first~99.96/99.94, Game4off30 ~99.22/99.17, Game2off30 ~90.91/91.19 real original. Game2FEC source6ece 1M0% delivered~4% both and Stop missing FAIL; new H700 Rust due_send_records INVALID(1) first-failure/worker stop probes compiled SOURCE653744, but H702 native Action41266830417 external CANCELLED, log BlobNotFound and first branch unknown. H703 tests same prebuilt source653 only 1M0%10s Action41271574007 in flight with immediate first-fault + native/WAL output; no matrix/time extension. H699 burst Action FAIL; Fixed50 Action externally cancelled. Unverified Windows Game FEC/106s/rotation/FIN-DORMANT/host-global DNS-WFP-IPv6/routes, C burst and some capacit H720 legal d066 evidence source scope reset: 4 d066 truth records (GameFEC CANCELLED, Win B106 CANCELLED, Normal burst real child+Stop positive but workflow FAIL, Fixed6 C50 real full PASS). Legacy older 6ece results remain immutable evidence but not in current-source cursor refs. Next Fixed C100 controller41276661322 in flight. H721 Frozen SOURCEd066 Fixed100 25ms zero-loss native source business FAIL: Windows first0.997456/Linux0.9819, Linux TUN TX drops2503, generator CPU54.14s, original owned Stop marker+exit PASS; watcher RUN_VIEW recovered. H721 avoid duplicate Linux TERM cleanup warning. H722 one 50Mbps250ms15% Fixed6 new native Action queued/dispatch pending exact current controller; not PASS. H723 new native Rust+Go 72B Windows Fixed selected profile/revision installed readback and Go unit test committed but fresh product NOT_RUN; legacy mature Quality is separate, no extra RTT. H722 real original source d066 in flight. H724 source d066 true highest Fixed50/250ms15 real both UDP/TCP Stop PASS, first.994254/.974935, TUN0/NPF0; Win CPU55.1/78.375 (70.3% core), RSS47MB. Residual Linux2.5% and p99/unreturned bilateral F/R/C still unverified. New H723 72B Windows Fixed installation ABI source65618 cheap assembly mismatch, H724 correct three Go result blobs pending Actions."

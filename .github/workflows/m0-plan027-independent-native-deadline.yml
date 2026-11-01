@@ -11,7 +11,7 @@ on:
         type: string
         required: true
       target_job_limit:
-        description: "Seconds from native job start, 720 for scoped Game; 1200 otherwise"
+        description: "Seconds from native test step start: 480 GameFEC, 720 other Game; 1200 otherwise"
         type: string
         required: false
         default: "1200"
@@ -37,7 +37,7 @@ jobs:
           set -euo pipefail
           [[ "$TARGET_ID" =~ ^[1-9][0-9]{5,16}$ ]] || exit 2
           [[ "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 2
-          [[ "$JOB_LIMIT" =~ ^(720|1200)$ ]] || exit 2
+          [[ "$JOB_LIMIT" =~ ^(480|720|1200)$ ]] || exit 2
           initial="$(gh api "repos/$GH_REPO/actions/runs/$TARGET_ID")"
           test "$(jq -r .head_sha <<<"$initial")" = "$TARGET_SHA"
           test "$(jq -r .event <<<"$initial")" = workflow_dispatch
@@ -130,29 +130,29 @@ jobs:
                 sleep 30
                 continue
               fi
-              # Game's 720s budget begins with the ACTUAL native step,
+              # GameFEC 480s and Game 720s begin with the ACTUAL native step,
               # not several minutes of prior verified driver/WSL2 setup.
-              since="$(jq -r --arg limit "$JOB_LIMIT" 'if $limit=="720" then (.launch_at // .started_at // empty) else (.started_at // empty) end' <<<"$stage")"
+              since="$(jq -r --arg limit "$JOB_LIMIT" 'if $limit=="480" or $limit=="720" then (.launch_at // .started_at // empty) else (.started_at // empty) end' <<<"$stage")"
               if [ -n "$since" ]; then
                 seconds="$(($(date -u +%s)-$(date -u -d "$since" +%s)))"
                 if [ "$seconds" -ge "$JOB_LIMIT" ]; then
                   echo "M0_EXTERNAL_NATIVE_TIMEOUT target=$TARGET_ID job_seconds=$seconds"
-                  # Capture before cancel while the runner may still be live.
+                  # The previous watcher spent 5*REST + CLI retries BEFORE
+                  # the first cancel, turning 720s into ~15 minutes. The user
+                  # requires GameFEC native-step stop at approximately 8min:
+                  # CANCEL FIRST, recover native GitHub logs independently
+                  # AFTER stop. Artifacts are never prerequisites to cancel.
                   job_id="$(jq -r .id <<<"$stage")"
-                  log_before=unavailable
-                  if recover_logs "before_timeout_cancel" "$job_id"; then
-                    log_before=recovered
-                  fi
-                  gh api -X POST "repos/$GH_REPO/actions/runs/$TARGET_ID/cancel" --silent || true
-                  sleep 45
-                  current="$(gh api "repos/$GH_REPO/actions/runs/$TARGET_ID" --jq .status)"
+                  echo "M0_EXTERNAL_NATIVE_CANCEL_FIRST target=$TARGET_ID job=$job_id limit=$JOB_LIMIT"
+                  timeout 12s gh api -X POST "repos/$GH_REPO/actions/runs/$TARGET_ID/cancel" --silent || true
+                  sleep 12
+                  current="$(timeout 12s gh api "repos/$GH_REPO/actions/runs/$TARGET_ID" --jq .status || echo unknown)"
                   if [ "$current" != completed ]; then
                     echo "M0_EXTERNAL_NATIVE_FORCE_CANCEL target=$TARGET_ID"
-                    gh api -X POST "repos/$GH_REPO/actions/runs/$TARGET_ID/force-cancel" --silent || true
+                    timeout 12s gh api -X POST "repos/$GH_REPO/actions/runs/$TARGET_ID/force-cancel" --silent || true
                   fi
-                  if [ "$log_before" != recovered ]; then
-                    recover_logs "after_timeout_cancel" "$job_id" || true
-                  fi
+                  echo "M0_EXTERNAL_NATIVE_CANCEL_SENT_BEFORE_LOG_READ target=$TARGET_ID"
+                  recover_logs "after_immediate_timeout_cancel" "$job_id" || true
                   echo "M0_EXTERNAL_NATIVE_TIMEOUT_EXIT target=$TARGET_ID job=$job_id (not_product_pass)"
                   exit 0
                 fi

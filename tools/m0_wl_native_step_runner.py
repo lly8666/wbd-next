@@ -14,6 +14,7 @@ import re
 import signal
 import subprocess
 import sys
+import threading
 import time
 if __package__:
     from .m0_wl_gamefec_progress import GameFecProgress
@@ -147,7 +148,21 @@ def main() -> int:
         trace = (GameFecProgress(output.parent,env=os.environ)
                  if os.environ.get("WBD_WL_PUBLIC_MODES","").endswith("-fec") else None)
         if trace: trace.snapshot("MODE_STARTED")
-        last_trace = time.monotonic()
+        # The old supervisor synchronously inspected Windows files/ran gh
+        # dispatch inside its only deadline loop. A stalled filesystem or
+        # CLI operation could disable its own 250s timeout. A daemon sampler
+        # in this SAME supervisor PID keeps sampling separate from stop
+        # enforcement. It is NOT a second watchdog or product worker.
+        sample_stop=threading.Event()
+        sample_thread=None
+        if trace:
+            def sample_game_log():
+                while not sample_stop.is_set():
+                    trace.poll()
+                    sample_stop.wait(2)
+            sample_thread=threading.Thread(target=sample_game_log,
+                                           name="game-native-log-sample",daemon=True)
+            sample_thread.start()
         offset = 0
         state={"stage":"UNKNOWN","first_error":"UNKNOWN","fragment":"",
                "lane":"UNKNOWN","cipher_len":"UNKNOWN","path_mtu":"UNKNOWN",
@@ -158,9 +173,6 @@ def main() -> int:
         print('WL_ORIGINAL_NATIVE_E2E_BATCH_DEADLINE seconds='+str(limit),flush=True)
         while True:
             now = time.monotonic()
-            if trace and now-last_trace>=2:
-                trace.poll()
-                last_trace=now
             with output.open("rb") as reader:
                 reader.seek(offset)
                 data = reader.read(64 * 1024)
@@ -181,7 +193,7 @@ def main() -> int:
                     sys.stdout.flush()
                     _inspect(state,rest)
                 if trace:
-                    trace.poll()
+                    sample_stop.set()
                     trace.snapshot("MODE_EXIT")
                 _diagnostic(state,rc,"EXITED_NOT_AUTOMATIC_PASS" if rc==0 else "FAIL_NATIVE")
                 print("WL_ORIGINAL_NATIVE_E2E_CHILD_EXIT pid=" + str(child.pid) +
@@ -193,12 +205,14 @@ def main() -> int:
                       " owner_pid="+str(child.pid)+" mode="+os.environ.get("WBD_WL_PUBLIC_MODES","all"),
                       file=sys.stderr,flush=True)
                 if trace:
-                    trace.poll()
+                    sample_stop.set()
                     trace.snapshot("MODE_TIMEOUT")
                 _diagnostic(state,None,"TIMEOUT_FAIL_NATIVE")
                 kill_native_child_tree(child)
                 return 124
             if now-last_heartbeat>=20:
+                if trace and now-started<65:
+                    trace.snapshot("SUPERVISOR_"+("20S" if now-started<40 else "60S")+"_ALIVE")
                 print("WL_ORIGINAL_NATIVE_E2E_BATCH_HEARTBEAT elapsed_seconds="+
                       str(int(now-started))+" owner_pid="+str(child.pid),flush=True)
                 last_heartbeat=now

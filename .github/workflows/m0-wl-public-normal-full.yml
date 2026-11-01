@@ -153,7 +153,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          limit="${{ startsWith(inputs.public_mode, 'game') && '720' || '1200' }}"
+          limit="${{ (inputs.public_mode == 'game2-fec' || inputs.public_mode == 'game4-fec') && '480' || startsWith(inputs.public_mode, 'game') && '720' || '1200' }}"
           gh workflow run m0-plan027-independent-native-deadline.yml --repo "$GH_REPO" --ref main \
             -f target_run_id="$GITHUB_RUN_ID" -f target_sha="$GITHUB_SHA" \
             -f target_job_limit="$limit"

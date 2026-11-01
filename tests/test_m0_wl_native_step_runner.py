@@ -80,6 +80,35 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
             self.assertIn("result=TIMEOUT_FAIL_NATIVE",captured.getvalue())
             self.assertIn("M0_PLAN027_GAME_DUE_FAULT",log.read_text())
 
+
+    def test_h738_blocked_game_log_read_cannot_block_owning_pid_deadline(self):
+        from tools import m0_wl_native_step_runner as native
+        with tempfile.TemporaryDirectory() as d:
+            code=pathlib.Path(d)/"stuck-game.py"
+            log=pathlib.Path(d)/"direct-full.log"
+            code.write_text("import time\nprint('GAME_CHILD_RUNNING',flush=True)\ntime.sleep(15)\n")
+            trace_started=__import__("threading").Event()
+            def blocked_read(_self):
+                trace_started.set()
+                time.sleep(4)
+            captured=io.StringIO()
+            with (mock.patch.object(native,"native_batch_deadline",return_value=1),
+                  mock.patch.object(native.GameFecProgress,"poll",blocked_read),
+                  mock.patch.object(sys,"argv",[str(RUNNER),str(code),str(log)]),
+                  mock.patch.dict("os.environ",{
+                      "WBD_WL_PUBLIC_MODES":"game2-fec",
+                      "WBD_WL_GAME_FEC_RESCUE":"0"
+                  }),
+                  contextlib.redirect_stdout(captured),
+                  contextlib.redirect_stderr(captured)):
+                start=time.monotonic()
+                rc=native.main()
+                elapsed=time.monotonic()-start
+            self.assertTrue(trace_started.is_set())
+            self.assertEqual(rc,124,captured.getvalue())
+            self.assertLess(elapsed,3.0,captured.getvalue())
+            self.assertIn("WL_ORIGINAL_NATIVE_E2E_BATCH_TIMEOUT",captured.getvalue())
+
     def test_h711_real_native_stop_markers_not_guessed(self):
         from tools import m0_wl_native_step_runner as native
         state={"stage":"UNKNOWN","first_error":"UNKNOWN","fragment":"",

@@ -49,6 +49,10 @@ class NativeWslDeadlineTests(unittest.TestCase):
         self.assertIn("actions: write",independent)
         self.assertIn('1200',independent)
         self.assertIn('target_job_limit:',independent)
+        self.assertIn('480',independent)
+        self.assertIn('M0_EXTERNAL_NATIVE_CANCEL_FIRST',independent)
+        self.assertLess(independent.index('M0_EXTERNAL_NATIVE_CANCEL_FIRST'),
+                        independent.index('recover_logs "after_immediate_timeout_cancel"'))
         self.assertIn('720',independent)
         self.assertIn('launch_at:',independent)
         self.assertNotIn("recover-h601-stuck:",independent)
