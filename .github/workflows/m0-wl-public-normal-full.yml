@@ -759,19 +759,8 @@ jobs:
             result/wl-public/wsl-import.log
           retention-days: 14
           if-no-files-found: ignore
-      # The prior native step had no recoverable GitHub job blob after
-      # cancellation. Dispatch from a SEPARATE completed Actions step before
-      # entering risky PowerShell/WSL/Win32 orchestration, not inside it only.
-      - name: Game FEC independent proof before original native step
-        if: env.WBD_WL_PUBLIC_MODES == 'game2-fec' || env.WBD_WL_PUBLIC_MODES == 'game4-fec'
-        shell: pwsh
-        timeout-minutes: 2
-        run: |
-          $ErrorActionPreference='Stop'
-          Write-Output ('WL_GAME_NATIVE_PRESTEP_ENTER run='+$env:GITHUB_RUN_ID+' source='+$env:WBD_WL_BINARY_SOURCE)
-          & gh workflow run m0-plan027-gamefec-rescue-record.yml --repo $env:GITHUB_REPOSITORY --ref main -f "target_run=$env:GITHUB_RUN_ID" -f "source=$env:WBD_WL_BINARY_SOURCE" -f stage=PRE_NATIVE_STEP -f detail=GUEST_BOOT_AND_DRIVER_READY
-          if($LASTEXITCODE -ne 0){throw 'Independent GameFEC first-stage dispatch unavailable before native step'}
-          Write-Output 'WL_GAME_NATIVE_PRESTEP_RESCUE_DISPATCHED_NOT_PRODUCT_PASS'
+      # H804: no per-stage satellite Actions. The original native job now
+      # uploads all 43 scoped files and retains a single independent timeout.
       - name: Launch actual WSL2 Linux and direct full public two-OS product
         shell: pwsh
         timeout-minutes: 24
@@ -789,12 +778,8 @@ jobs:
           if($null -eq $guard){throw 'external WSL2 whole-step watchdog not armed'}
           Write-Output ('WL_WSL2_OUTER_WATCHDOG_ARMED max_seconds='+$wholeLimit+' windows_parent_pid='+$PID)
           try {
-          # Preserve the first GameFEC native stage OUTSIDE the fragile
-          # original GitHub job blob, without artifacts or extra watchdog.
           if($env:WBD_WL_GAME_FEC_RESCUE -eq '1'){
             Write-Output 'WL_GAME_NATIVE_STAGE STEP_ENTER_BEFORE_WSL_IPTABLES'
-            & python tools/m0_wl_windows_bounded_cmd.py 12 gh workflow run m0-plan027-gamefec-rescue-record.yml --repo $env:GITHUB_REPOSITORY --ref main -f "target_run=$env:GITHUB_RUN_ID" -f "source=$env:WBD_WL_BINARY_SOURCE" -f stage=STEP_ENTER -f detail=BEFORE_WSL_IPTABLES
-            if($LASTEXITCODE -ne 0){Write-Output 'WL_GAME_NATIVE_INDEPENDENT_STEP_ENTER_UNAVAILABLE_NOT_PASS'}
           }
           & python tools/m0_wl_windows_bounded_cmd.py 120 wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
           if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
@@ -924,8 +909,6 @@ jobs:
               Write-Output ('WL_WSL2_STAGE_BEGIN actual_native_modes mode='+$env:WBD_WL_PUBLIC_MODES)
               if($env:WBD_WL_GAME_FEC_RESCUE -eq '1'){
                 Write-Output 'WL_GAME_NATIVE_STAGE STEP_PREFLIGHT_COMPLETE_BEFORE_MODE_PROCESS'
-                & python tools/m0_wl_windows_bounded_cmd.py 12 gh workflow run m0-plan027-gamefec-rescue-record.yml --repo $env:GITHUB_REPOSITORY --ref main -f "target_run=$env:GITHUB_RUN_ID" -f "source=$env:WBD_WL_BINARY_SOURCE" -f stage=STEP_PREFLIGHT_COMPLETE -f detail=MODE_PROCESS_LAUNCH_NEXT
-                if($LASTEXITCODE -ne 0){Write-Output 'WL_GAME_NATIVE_INDEPENDENT_PREFLIGHT_UNAVAILABLE_NOT_PASS'}
               }
               if($gameSingle){
                 # The direct PID-owned file-backed runner already enforces
@@ -937,14 +920,10 @@ jobs:
               & python -u tools/m0_wl_native_step_runner.py tools/m0_wl_public_modes_e2e.py result/wl-public/direct-full.log
             }
             $e2eExit=$LASTEXITCODE
-            # Record the original Python supervisor's actual return BEFORE
-            # file scanning, Stop/WSL cleanup or artifact service. If no
-            # NATIVE_PYTHON_EXIT receipt appears, PowerShell may still be
-            # waiting for the Python process/its inherited output handles.
+            # Local-only actual supervisor exit. The main job owns the
+            # report, Stop/WAL readback and artifact; no separate API run.
             if($env:WBD_WL_GAME_FEC_RESCUE -eq '1'){
-              $nativeRC='RC'+[string]$e2eExit
-              & python tools/m0_wl_windows_bounded_cmd.py 12 gh workflow run m0-plan027-gamefec-rescue-record.yml --repo $env:GITHUB_REPOSITORY --ref main -f "target_run=$env:GITHUB_RUN_ID" -f "source=$env:WBD_WL_BINARY_SOURCE" -f stage=NATIVE_PYTHON_EXIT -f "detail=$nativeRC"
-              if($LASTEXITCODE -ne 0){Write-Output 'WL_GAME_NATIVE_RETURN_RECEIPT_UNAVAILABLE_NOT_PASS'}
+              Write-Output ('WL_GAME_NATIVE_PYTHON_EXIT RC'+[string]$e2eExit)
             }
             # First failure and last owned Stop status belong in native job
             # stdout BEFORE any WSL2/NPF cleanup or artifact upload.

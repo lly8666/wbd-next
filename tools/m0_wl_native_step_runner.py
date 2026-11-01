@@ -207,7 +207,8 @@ def main() -> int:
             # prints to stdout and never shares its queue consumer.
             if game:
                 reporter=threading.Thread(
-                    target=GameFecRelay(output.parent,events,stop).run,
+                    target=GameFecRelay(output.parent,events,stop,
+                        env={**os.environ, "WBD_WL_GAME_FEC_RESCUE":"0"}).run,
                     name="game-fec-independent-stages",daemon=True)
                 reporter.start()
             diagnostic = threading.Thread(

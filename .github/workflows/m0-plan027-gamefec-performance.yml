@@ -1,0 +1,51 @@
+name: M0 PLAN027 GameFEC source-locked performance single mode
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-gamefec-performance.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  launch-game2fec-performance:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-game2fec-perf]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      FIXED_PRODUCT_SOURCE: "6a1d8fd8c4d574d6e86d72300aaec7ebc595c9a4"
+      PROVEN_MINIMUM_RUN: "41323048788"
+      SCENE: "scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 5}
+      - name: Exact SOURCE, proven minimum, real impairment and one performance dispatch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          # H803 true original driver/Linux BOTH-OS and owned Stop run
+          # was SUCCESS; dispatch is NOT an app performance verdict.
+          gh api "repos/$GH_REPO/actions/runs/$PROVEN_MINIMUM_RUN" |
+            jq -e '.conclusion=="success" and .head_sha=="21ae892fddd6a8d6338fb74a73e8e45380f1631a"' >/dev/null
+          # No source drift since the working original GameFEC outer-MTU fix.
+          git fetch --depth=1 origin "$FIXED_PRODUCT_SOURCE"
+          git diff --quiet "$FIXED_PRODUCT_SOURCE" "$GITHUB_SHA" -- \
+            crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py
+          python3 tools/prepare_windows_wiring.py --check-only
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("scenarios/wl-game2-fixed6-10m-75ms-loss15-20s.json")
+          j=json.loads(p.read_text())
+          assert j["public_mode"]=="game2-fec"
+          assert (j["duration_s"],j["warmup_s"],j["drain_s"])==(20,5,10)
+          assert j["tun_mtu"]==1400
+          for side in ("windows_to_linux","linux_to_windows"):
+              s=j[side]
+              assert (s["offered_mbps"],s["delay_ms"],s["loss_pct"])==(10,75,15)
+          print("GAME2FEC_PERF_SCENE_DECLARATION_EXACT_NO_PRODUCT_PASS",flush=True)
+          PY
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=game2-fec -f run_n0=false -f perf_scenario_file="$SCENE"
+          echo GAME2FEC_PERF_SINGLE_REAL_NATIVE_DISPATCHED_NOT_VERDICT

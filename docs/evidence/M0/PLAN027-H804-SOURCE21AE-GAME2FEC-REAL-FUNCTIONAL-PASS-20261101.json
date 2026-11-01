@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "role": "M0",
+  "workflow_run_id": 41323048788,
+  "workflow_head": "21ae892fddd6a8d6338fb74a73e8e45380f1631a",
+  "product_source_sha": "21ae892fddd6a8d6338fb74a73e8e45380f1631a",
+  "workflow_conclusion": "SUCCESS",
+  "native_job_id": 124898262998,
+  "artifacts": {
+    "real_native_id": 13090647227,
+    "real_native_digest": "sha256:62ae79fa7b033fc8ccacabd043ea6fe3d3f9bf40c6294ab489eb42bd9c3b878d",
+    "zip_bytes": 56116,
+    "zip_files_verified": 43
+  },
+  "mode": "game2-fec",
+  "profile": "fixed6",
+  "kernel": "real Windows signed original Go TLS Rust NPF/Wintun to WSL2 Linux raw/TUN",
+  "scene": "scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json",
+  "scene_sha256": "07c7638edb3545b202eb9807637a56b63959a6670cd9d8068e2b6c33becd3afb",
+  "duration_s": 10,
+  "offered_mbps_each_way": 1,
+  "delay_ms_each_way": 25,
+  "loss_pct_each_way": 0,
+  "reported_rate_mbps": {
+    "offered_windows": 0.998,
+    "offered_linux": 0.9999,
+    "first_delivered_windows": 0.9999,
+    "first_delivered_linux": 0.998
+  },
+  "first_delivery_fraction": {
+    "windows": 1,
+    "linux": 1
+  },
+  "genuine_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+  "genuine_tcp": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+  "gamefec": {
+    "linux_parity_offered": 3226,
+    "linux_parity_copied": 3226,
+    "source_offered": 1672,
+    "linux_fec_recovered_candidate": 0,
+    "linux_repair_loss_injection": 0,
+    "windows_native_tx_records": 8645,
+    "windows_rx_first_delivered_ipv4": 1672,
+    "original_fec_tlv": 7
+  },
+  "mtu": {
+    "requested_outer_connection": 1400,
+    "derived_wintun_inner": 1329,
+    "due_entry_path_mtu": 1400,
+    "original_1330_vs_1329_failure": "NOT_REPRODUCED"
+  },
+  "owned_stop": {
+    "windows": "PASS",
+    "linux": "PASS",
+    "windows_rust_tx_rc": 0,
+    "windows_rust_rx_rc": 0,
+    "rust_workers_joined": true,
+    "wal_kernel_crypto": "PASS",
+    "windows_product_wal_present": false,
+    "windows_product_routes_sidecar_present": false,
+    "management_route": "RESTORED_RUN_SCOPED_ONLY"
+  },
+  "performance_limits": {
+    "nonzero_loss": "NOT_RUN_IN_THIS_SCENE",
+    "higher_throughput": "NOT_RUN",
+    "oneway_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+    "tcp_roundtrip_p99": "NOT_MEASURED_INSUFFICIENT_REAL_RTT_SAMPLES",
+    "abnormal_exit_full_wfp_recovery": "NOT_QUALIFIED",
+    "cpu": "0.875s Windows original Go+Rust same PID over26.578s, 3.292% of one logical core, 49MB peak working set",
+    "physical": "NOT_RUN"
+  },
+  "overall": "FUNCTIONAL_PASS_SOURCE_SCOPED_NOT_PERFORMANCE_PASS"
+}

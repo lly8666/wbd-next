@@ -182,13 +182,11 @@ jobs:
               jq '{jobs:[.jobs[]|{name,status,conclusion,started_at,completed_at,steps:[.steps[]?|{name,status,conclusion}]}]}' "$dir/raw.json" >"$dir/jobs.json" || true
             fi
             rm -f "$dir/raw.json"
-            if timeout 20s gh api "repos/$GH_REPO/actions/workflows/m0-plan027-gamefec-rescue-record.yml/runs?per_page=100" >"$dir/raw.json" 2>/dev/null; then
-              jq --arg prefix "GAMEFEC-RESCUE|$TARGET_ID|" '{coverage:"LATEST_100_RESCUE_WORKFLOW_RUNS_ONLY_MAY_OMIT_EARLIER",stages:[.workflow_runs[]|select(.name|startswith($prefix))|{name,status,conclusion,id,created_at,head_sha}]}' "$dir/raw.json" >"$dir/stages.json" || true
-            fi
-            rm -f "$dir/raw.json"
+            # H804: the test job owns local source logs. No satellite
+            # stage Actions to poll; watcher keeps only job/run metadata.
           fi
           test -s "$dir/run-status.json" || printf '{"status":"RUN_API_UNAVAILABLE_NOT_PASS"}\n' >"$dir/run-status.json"
-          test -s "$dir/stages.json" || printf '{"status":"STAGES_API_UNAVAILABLE_NOT_PASS"}\n' >"$dir/stages.json"
+          printf '{"status":"SATELLITE_ACTIONS_RETIRED_LOCAL_JOB_ARTIFACT_PRIMARY"}\n' >"$dir/stages.json"
           echo GAMEFEC_INDEPENDENT_WATCHER_ARTIFACT_PAYLOAD_READY_NOT_PRODUCT_PASS
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always() && env.JOB_LIMIT == '480'
