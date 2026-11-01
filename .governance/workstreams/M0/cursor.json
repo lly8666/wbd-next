@@ -4,36 +4,36 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 838,
-  "checkpoint_sha": "472f44f351b3b4f58eb0ff253eae5880037b2315",
+  "sequence": 839,
+  "checkpoint_sha": "cce85a6e425a3e20df5674a57ef8d3003763e534",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H838: source f5 original Linux/Windows scoped R/N native genuine first/perf; H837 one targeted >90s dual-blackhole diagnostic Action41352697856 pending after real H835 client exit1. New independent original Linux Normal OFF 50Mbps each/25ms clean 1200B/60s source-frozen full business+native CPU/host capacity Action pending, conditional 100M only if real headroom. Existing Windows signed Normal ON source d0 10M30% NPF F/R/C PASS scoped, grade bilateral false. Fixed6/Auto ON source f5 PASS scoped. Full task still partial, physical not run.",
-  "why_now": "PLAN027 N high-speed Normal 10→50→100 progression not measured at source f5. Real 50Mbps near-MTU 25ms bounded capacity differentiates product PPS/CPU/host before conditional high load; run independently of focused blackhole reauthorization diagnostic.",
+  "current_task": "PLAN027 H839 recovered original Linux Normal OFF50 clean source f5 true native first100% dual 50Mbps/25ms p9925.4 CPU8.34/8.35s/60 RSS24.7/25MB PSI peak1.31 zero TUN/drop Stop PASS; conditional genuine100Mbps each same source Action pending. H837 blackhole105 targeted diagnostic again FAIL client exit1 after both authenticated dead/Stop/Go reauth and real client TUN trigger, server still alive; rejoin not qualified. Existing ON combos 300s/Windows scoped.",
+  "why_now": "50Mbps healthy native product and host margins justify one bounded 100Mbps original Normal zero-loss capacity screen, independent from reauth correctness. Earlier true blackhole FAIL now narrowed to reauth post-Stop pre-ready with no raw TLS root cause.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H837 reauth diagnostic exact marker counts for client exit and H838 50Mbps clean first/CPU/host/backpressure; if 50M healthy consider 100M bounded, else stop heavier same family. Next reauth correctness and Windows OFF/native source grade; no speculative optimization or duplicate dispatch.",
+  "next_action": "Collect 100Mbps clean Action result & classify actual PPS/CPU/drop/PSI capacity, avoid 200Mbps if 100 bottleneck. Investigate Go cold preauth reconnect terminal error, fix minimal owned/reauthorization behavior with new source and same-scenario native. Windows OFF same-VM and A→A+B→B remain open.",
   "unverified": true,
   "last_tested_source": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H831-FROZEN-F5-GAME4FEC6-20M-LOSS30-OFF-20261102.json",
     "docs/evidence/M0/PLAN027-H832-FROZEN-F5-AUTO-RISE-FALL-240S-20261102.json",
     "docs/evidence/M0/PLAN027-H832-FROZEN-F5-NORMAL-ON300-MIXED-HOL-20261102.json",
     "docs/evidence/M0/PLAN027-H832-FROZEN-F5-GAME4FEC6-20M30-ON-20261102.json",
     "docs/evidence/M0/PLAN027-H834-FROZEN-F5-NORMAL-OFF-100S-IDLE-REAL-WAKE-20261102.json",
     "docs/evidence/M0/PLAN027-H837-FROZEN-F5-FIXED6-ON30-20261102.json",
     "docs/evidence/M0/PLAN027-H837-FROZEN-F5-AUTO-ON30-20261102.json",
-    "docs/evidence/M0/PLAN027-H837-FROZEN-F5-BLACKHOLE105-FAIL-20261102.json"
+    "docs/evidence/M0/PLAN027-H837-FROZEN-F5-BLACKHOLE105-FAIL-20261102.json",
+    "docs/evidence/M0/PLAN027-H839-FROZEN-F5-NORMAL-OFF50-CLEAN-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H831-GAME4-LOSS30-ON-NEXT.md",
     "docs/devlog/M0/20261102-PLAN027-H832-AUTO-NORMAL300-GAMEON-IDLE.md",
     "docs/devlog/M0/20261102-PLAN027-H833-WIN-NORMAL-ON30-ONE-SCENE.md",
     "docs/devlog/M0/20261102-PLAN027-H834-IDLE100-WAKE-RECOVERY.md",
     "docs/devlog/M0/20261102-PLAN027-H835-BLACKHOLE105-RECOVER120.md",
     "docs/devlog/M0/20261102-PLAN027-H836-FIXED-AUTO-ON-INTEGRATION.md",
     "docs/devlog/M0/20261102-PLAN027-H837-WIN-NATIVE-ON-BLACKHOLE-DIAG.md",
-    "docs/devlog/M0/20261102-PLAN027-H838-NORMAL-OFF50-CAP.md"
+    "docs/devlog/M0/20261102-PLAN027-H838-NORMAL-OFF50-CAP.md",
+    "docs/devlog/M0/20261102-PLAN027-H839-NORMAL-50-TO-100.md"
   ],
   "open_requests": [],
-  "partial_summary": "H837 Win d0 signed Normal ON genuine 30pct source-d0 both NPF/Stop PASS scoped, R/F8.878%, C164837B, first72.4%, BUT repair grade false and no Windows OFF pair. Linux f5 Fixed6 ON/Auto ON real and R/F<=10% each PASS. 105s true blackhole f5 FAILED client exit1, qdisc drops8/8, Stop/recovery not run; targeted safe Go-reconnect marker diagnostic queued once. Full PLAN027 still partial. H838 independent 50Mbps per-direction original Normal OFF clean25ms 1200B source-f5 capacity Action pending. Theory 5208pps/direction and312.5KB business BDP/direction, not outer wire. H837 blackhole stage diagnosis still pending. Existing signed Windows Normal ON, Fixed6/Auto ON exact results in H837 evidence."
+  "partial_summary": "H837 Win d0 signed Normal ON genuine 30pct source-d0 both NPF/Stop PASS scoped, R/F8.878%, C164837B, first72.4%, BUT repair grade false and no Windows OFF pair. Linux f5 Fixed6 ON/Auto ON real and R/F<=10% each PASS. 105s true blackhole f5 FAILED client exit1, qdisc drops8/8, Stop/recovery not run; targeted safe Go-reconnect marker diagnostic queued once. Full PLAN027 still partial. H838 independent 50Mbps per-direction original Normal OFF clean25ms 1200B source-f5 capacity Action pending. Theory 5208pps/direction and312.5KB business BDP/direction, not outer wire. H837 blackhole stage diagnosis still pending. Existing signed Windows Normal ON, Fixed6/Auto ON exact results in H837 evidence. H839 records 50Mbps/25ms Normal real OFF PASS source f5 first100 CPU8.34/8.35s/60, RSS25MB, PSI1.31, zero drop; one 100Mbps next rung pending. H837 rerun real blackhole diagnostic confirms both old Stop/TLS reauth client new TUN trigger then process exit1, real restore FAIL, not a VM verdict."
 }

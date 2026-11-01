@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_sha": "cce85a6e425a3e20df5674a57ef8d3003763e534",
+  "result": "PASS_SCOPED_NORMAL_OFF50_CLEAN_CAPACITY",
+  "run_id": 41352909348,
+  "artifact_name": "plan027-n-normal-off50-cap",
+  "native_original_linux_go_tls_rust": true,
+  "mode": "Normal outer OFF",
+  "scope": "50Mbps each direction 25ms one-way zero random damage 1200B app/60s, warmup5 drain10, source locked product x86_64",
+  "theory": {
+    "pps_per_direction": 5208.333,
+    "BDP_bytes_per_direction_at_RTT50ms": 312500,
+    "first_app_bps_per_direction": 50000000
+  },
+  "native": {
+    "offered_mbps": {
+      "c2s": 49.99952,
+      "s2c": 50
+    },
+    "unique_first_mbps": {
+      "c2s": 49.99952,
+      "s2c": 50
+    },
+    "first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "delivered_p99_ms": {
+      "c2s": 25.4,
+      "s2c": 25.4
+    },
+    "missing_after_drain": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "CPU_s_60": {
+      "client": 8.34,
+      "server": 8.35
+    },
+    "peak_RSS_bytes": {
+      "client": 24694784,
+      "server": 24965120
+    },
+    "host_CPU_PSI_some_peak_pct": 1.31,
+    "steal_pct_peak": 0,
+    "source_TUN_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "netem_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "outer_repair_off_readback": true,
+    "original_go_handoff": true,
+    "owned_stop": true,
+    "owned_namespaces_absent": true
+  },
+  "limits": [
+    "50Mbps one original Linux same-host real netns, not signed Windows or physical",
+    "CPU whole Go+Rust ~14% one core per role; not a standalone Rust CPU measurement",
+    "F wire byte ledger in native nested result but control C physical not measured; no claim that 100/200M automatically passes",
+    "No TCP mix in this single near-MTU UDP case; separate original Normal ON300 mixed TCP/UDP HOL evidence exists"
+  ]
+}

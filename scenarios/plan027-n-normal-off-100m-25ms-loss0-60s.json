@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "scenario_id": "plan027-n-normal-off-100m-25ms-loss0-60s",
+  "public_mode": "normal",
+  "outer_repair": "off",
+  "offered_mbps_each_direction": 100,
+  "delay_ms_each_direction": 25,
+  "loss_pct_each_direction": 0,
+  "tun_mtu": 1400,
+  "warmup_s": 5,
+  "duration_s": 60,
+  "drain_s": 10,
+  "packet_mix": [
+    [
+      1200,
+      100
+    ]
+  ],
+  "seed": 20261102,
+  "purpose": "One source-frozen original Normal 100 Mbps each direction 1200B zero-loss after healthy 50M; distinguish real product PPS and CPU/host capacity, no 200M extrapolation."
+}
