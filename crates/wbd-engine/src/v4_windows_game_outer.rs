@@ -41,6 +41,9 @@ pub(super) struct GameRepair{
 }
 pub(super) struct GameOuter{
     lanes:Vec<GameOuterLane>,epoch:[u8;16],
+    // Game FEC uses a sparse single-shot cosmetic snapshot, not the full
+    // Normal M2 feedback/ReceiptState allocator on every parity packet.
+    cosmetic:Option<crate::v4_game_cosmetic_outer::CosmeticOuter>,
 }
 impl GameOuter{
     pub(super) fn new(cfg:&WbdWinGameNativeAttachV3,
@@ -49,7 +52,16 @@ impl GameOuter{
         // TLS lane, owner handle, epoch, Wintun lease and kernel capture.
         let generation=(cfg.group>>32) as u32;
         if generation==0{return Err(INVALID)}
-        let mut owner=Self{lanes:Vec::with_capacity(lanes.len()),epoch:cfg.first.epoch};
+        // After real first NPF copied result, the same PN/SEQ ciphertext
+        // can be sparsely re-presented. FEC replay is useless for recovery;
+        // avoid Normal's per-packet global allocator, shadow/ACK BTree maps,
+        // PTO scan and lock. Game/off retains the original M2 implementation.
+        if cfg.fec==1{
+            return Ok(Self{lanes:Vec::new(),epoch:cfg.first.epoch,
+                cosmetic:Some(crate::v4_game_cosmetic_outer::CosmeticOuter::new(lanes.len()))})
+        }
+        let mut owner=Self{lanes:Vec::with_capacity(lanes.len()),
+            epoch:cfg.first.epoch,cosmetic:None};
         for (index,entry) in lanes.iter().enumerate(){
             // Each independent Game TCP sequence stream needs its OWN
             // Normal budget direction. No collision with the group crypto
@@ -97,6 +109,14 @@ impl GameOuter{
     }
     pub(super) fn on_firstsend(&mut self,index:usize,pn:u64,seq:u32,
         wire:&[u8])->Result<(),i32>{
+        if let Some(c)=self.cosmetic.as_mut(){
+            if c.should_sample(index){
+                // No clock or ciphertext heap copy in the other 255 kernel
+                // copies. Snapshot only after real positive pcap_sendpacket.
+                c.sample(index,pn,u64::from(seq),wire,m2_clock().0);
+            }
+            return Ok(())
+        }
         let m=self.lanes.get_mut(index).ok_or(INVALID)?;
         let now=m2_clock();
         let high=m.ack.highest_sent_end();
@@ -132,6 +152,7 @@ impl GameOuter{
     // ledger but NEVER enters the DATA repair shadow or first-send F.
     pub(super) fn on_health_copy(&mut self,index:usize,pn:u64,
         seq:u32,wire_len:usize)->Result<(),i32>{
+        if self.cosmetic.is_some(){return Ok(())} // no FEC appearance DATA
         let m=self.lanes.get_mut(index).ok_or(INVALID)?;
         let high=m.ack.highest_sent_end();
         if seq!=high as u32 || wire_len==0{return Err(BAD_STAGE)}
@@ -141,6 +162,8 @@ impl GameOuter{
     }
     pub(super) fn on_hint(&mut self,index:usize,ack:u32,
         sacks:&[SackRange32])->bool{
+        // No FEC recovery should be induced by untrusted appearance ACK.
+        if self.cosmetic.is_some(){return false}
         let Some(m)=self.lanes.get_mut(index)else{return false};
         let now=m2_clock();
         let Ok(update)=m.ack.on_feedback(
@@ -154,6 +177,11 @@ impl GameOuter{
     }
     pub(super) fn prepare(&mut self,active:&[bool])
         ->Result<Option<GameRepair>,i32>{
+        if let Some(c)=self.cosmetic.as_mut(){
+            return Ok(c.take_due(m2_clock().0,active).map(|row|GameRepair{
+                index:row.lane,seq:row.seq as u32,pn:row.pn,wire:row.wire
+            }))
+        }
         let now=m2_clock();
         for (index,m) in self.lanes.iter_mut().enumerate(){
             if !active[index]||m.held.is_some()||
@@ -209,6 +237,14 @@ impl GameOuter{
     pub(super) fn complete(&mut self,index:usize,pn:u64,sent:u32)
         ->Result<(),i32>{
         if sent>2{return Err(INVALID)}
+        if let Some(c)=self.cosmetic.as_mut(){
+            // Driver copy is only an appearance counter. No M4 firstsend
+            // credit, Rust AEAD/PN/FEC call, GlobalRepairAllocator or
+            // independent ACK/liveness/OS WAL owner is involved.
+            return if c.complete(index,pn,sent==1,m2_clock().0){
+                Ok(())
+            }else{Err(BAD_STAGE)}
+        }
         let m=self.lanes.get_mut(index).ok_or(INVALID)?;
         let held=m.held.take().ok_or(BAD_STAGE)?;
         if held.candidate.pn()!=RecordPn(pn){
@@ -232,6 +268,7 @@ impl GameOuter{
         Ok(())
     }
     pub(super) fn next_deadline(&self)->Option<u64>{
+        if let Some(c)=self.cosmetic.as_ref(){return c.next_due()}
         self.lanes.iter().flat_map(|m|{
             m.shadow.next_deadline().map(|x|x.0)
                 .into_iter().chain(m.retry_after_ns)
@@ -240,6 +277,11 @@ impl GameOuter{
 }
 impl Drop for GameOuter{
     fn drop(&mut self){
+        if let Some(c)=self.cosmetic.as_ref(){
+            eprintln!("WBD_GAME_FEC_COSMETIC_OUTER_STOP copied_appearance={} only_original_cipher=1 independent_crypto_or_fec_recovery=0",
+                c.sent());
+            return
+        }
         if let Ok(mut g)=m2_global().lock(){
             let now=m2_clock();
             for lane in &self.lanes{

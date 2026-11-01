@@ -9,6 +9,7 @@ use std::sync::{Arc,Mutex,atomic::{AtomicBool,AtomicU64,Ordering}};
 use std::thread::{self,JoinHandle};
 use std::time::{Instant,Duration};
 use crate::v4_game_lane::{GameAdapter,Error as GameAdapterError};
+use crate::v4_game_cosmetic_outer::CosmeticOuter;
 use crate::v4_native_health::{HealthClock,HealthPolicy,ControlDue};
 use crate::runtime::game_shared::GameError;
 use crate::v4_protected_handoff::GoFlow;
@@ -173,6 +174,9 @@ impl GameKernelOwner{
                 let mut health=HealthClock::new(HealthPolicy::default_connected(),
                     health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
                 let mut inbound=[0u8;2048];
+                // Game FEC presentation-only replay has two/four fixed
+                // lane slots, owned exclusively by this existing TX worker.
+                let mut cosmetic=CosmeticOuter::new(n);
                 while !tx_stop.load(Ordering::Acquire){
                     // Never hold the TUN device's shared serialized mutex
                     // during a 750ms missing-app poll: authenticated RX
@@ -270,6 +274,13 @@ impl GameKernelOwner{
                             let sent=item.raw.send_one(generation,&frozen,tuple,presentation);
                             let ok=sent.is_ok();
                             if ok {
+                                // Only the real raw first copied PN/SEQ is
+                                // eligible; most packets pay one mask test.
+                                if fec_enabled&&outer_repair_enabled&&
+                                    cosmetic.should_sample(index){
+                                    cosmetic.sample(index,pn,item.seq,
+                                        wire,due_now.0);
+                                }
                                 item.seq=item.seq.saturating_add(wire.len() as u64);
                                 // Count ACTUAL successful same-lane repeat
                                 // sends, not a fake zero returned by FFI.
@@ -332,9 +343,13 @@ impl GameKernelOwner{
                         .min(u128::from(u64::MAX)) as u64;
                     let copy_due=game.game4_next_due_ns();
                     let fec_due=game.game_fec_next_due_ns(MonoNs(clock_ns));
-                    let next_due=copy_due.into_iter().chain(fec_due).min();
                     let stagger=game.game4_stagger_enabled();
-                    drop(flush);
+                    drop(flush); // release mutable cosmetic capture
+                    let cosmetic_due=if fec_enabled&&outer_repair_enabled{
+                        cosmetic.next_due()
+                    }else{None};
+                    let next_due=copy_due.into_iter().chain(fec_due)
+                        .chain(cosmetic_due).min();
                     // One authenticated Health on the existing TX worker,
                     // every ~15s after REAL copied control. Never a Game
                     // logical source/FEC symbol or new Go packet pump.
@@ -395,6 +410,35 @@ impl GameKernelOwner{
                         ControlDue::None=>{},
                     }
                     drop(game);
+                    // Immutable ciphertext replay is solely TCP-looking.
+                    // It does not enter AEAD, GameRx/FEC, original first-send
+                    // credit, Health or the authenticated delivery ledger.
+                    if fec_enabled&&outer_repair_enabled{
+                        if let Some(copy)=cosmetic.take_due(clock_ns,&[]){
+                            let copied=if let Some(item)=lanes.get(copy.lane){
+                                let f=item.flow;
+                                let (src,dst,sp,dp)=if server{
+                                    (f.server_ip,f.client_ip,f.server_port,f.client_port)
+                                }else{
+                                    (f.client_ip,f.server_ip,f.client_port,f.server_port)
+                                };
+                                let tuple=Ipv4Tuple{
+                                    src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp
+                                };
+                                let view=copy.frozen(item.key);
+                                item.raw.send_one(generation,&view,tuple,Presentation{
+                                    ack32:1,advertised_window:4096,
+                                    ip_id:(copy.pn as u16).wrapping_add(76),
+                                    persona:peer_persona
+                                }).is_ok()
+                            }else{false};
+                            if copied{
+                                outer_repeated.fetch_add(1,Ordering::Relaxed);
+                            }
+                            let _=cosmetic.complete(copy.lane,copy.pn,copied,
+                                clock_ns);
+                        }
+                    }
                     if stagger||fec_enabled{
                         // Earliest of ready new TUN bytes (poll wake-up),
                         // staggered copies and authentic FEC close/expiry.

@@ -18,6 +18,10 @@ mod v4_native_health;
 mod v4_game_lane;
 #[cfg(feature="fec2_product_record")]
 mod v4_game_fec;
+// Sparse immutable outer TCP appearance only; shared by original Game FEC
+// Windows signed NPF and Linux raw. No product retransmission guarantee.
+#[cfg(feature="fec2_product_record")]
+mod v4_game_cosmetic_outer;
 /// Linux-only privileged same-Actions original-Go TLS Game2/4 actual M4
 /// raw/TUN/UDP application ingress. Never a public capability or default run.
 #[cfg(all(test,target_os="linux"))]
