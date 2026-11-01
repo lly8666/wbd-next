@@ -1,10 +1,13 @@
 """Regression: native descendants keeping stdio open must not trap a passed/failed test."""
+import contextlib
+import io
 import pathlib
 import subprocess
 import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
 
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 RUNNER=ROOT/"tools/m0_wl_native_step_runner.py"
@@ -43,6 +46,39 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
             self.assertIn("GENUINE_NATIVE_FAILURE_STAGE",p.stdout)
             self.assertIn("WL_ORIGINAL_NATIVE_E2E_CHILD_EXIT",p.stdout)
             self.assertIn("GENUINE_NATIVE_FAILURE_STAGE",log.read_text())
+
+    def test_h708_first_fault_then_stuck_process_is_logged_before_kill(self):
+        # One deliberately hung child, no product or OS driver. No artifact
+        # service or final child flush is needed to see the first fault.
+        from tools import m0_wl_native_step_runner as native
+        with tempfile.TemporaryDirectory() as d:
+            code=pathlib.Path(d)/"original-e2e-fixture.py"
+            log=pathlib.Path(d)/"direct-full.log"
+            code.write_text(
+                "import time\\n"
+                "print('M0_PLAN027_GAME_DUE_FAULT stage=due_send_records "
+                "first_error=INVALID lane=2 cipher_len=1391 path_mtu=1400',flush=True)\\n"
+                "time.sleep(30)\\n"
+            .replace('\\\\n','\\n'))
+            captured=io.StringIO()
+            with (mock.patch.object(native,"native_batch_deadline",return_value=1),
+                  mock.patch.object(sys,"argv",[str(RUNNER),str(code),str(log)]),
+                  mock.patch.dict("os.environ",{
+                      "GITHUB_RUN_ID":"123456789",
+                      "GITHUB_SHA":"653744efca9e6878c456595b508a2968d7ad83ff",
+                      "WBD_WL_PUBLIC_MODES":"game2-fec",
+                      "WBD_WL_V2_SCENARIO":"scenarios/original-game2-fec.json"
+                  }),
+                  contextlib.redirect_stdout(captured),
+                  contextlib.redirect_stderr(captured)):
+                rc=native.main()
+            self.assertEqual(rc,124,captured.getvalue())
+            self.assertIn("WL_DIAG_FIRST_ERROR marker=INVALID",captured.getvalue())
+            self.assertIn("first_error=INVALID",captured.getvalue())
+            self.assertIn("stage=due_send_records",captured.getvalue())
+            self.assertIn("tx=UNKNOWN rx=UNKNOWN wal=UNKNOWN",captured.getvalue())
+            self.assertIn("result=TIMEOUT_FAIL_NATIVE",captured.getvalue())
+            self.assertIn("M0_PLAN027_GAME_DUE_FAULT",log.read_text())
 
     def test_inner_wsl_control_does_not_capture_a_raw_wsl_pipe(self):
         content=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()
