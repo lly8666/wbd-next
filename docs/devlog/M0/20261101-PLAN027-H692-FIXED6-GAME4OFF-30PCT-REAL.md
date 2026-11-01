@@ -1,0 +1,9 @@
+# PLAN027 H692 — highest Fixed6 and Game4/off independent real 30% OS regressions
+
+Current product SOURCE `6ece9eab653f46a716e8d3a0927fb74bec4819e8` original Windows NPF/Wintun and Linux WSL2 Rust from H669 immutable original Go TLS binaries: H691 Normal30 10Mbps250ms real kernel tc both+Stop, Windows R/F8.825% scoped PASS; not evidence for Fixed FEC residual or Game4 lane behavior. Same SOURCE H679 Windows Game2 FEC6 full public failed first4%/Stop; Linux-only Game2 FEC6 pass does not transfer. To close distinct B/C damaged families dispatch **one Action each** on separate Windows/WSL2 runner, no shared VM throughput and no rebuilt binaries: existing `scenarios/wl-outer-repair-fixed-10m-250ms-loss30-60s.json` highest Fixed6 10Mbps/250ms30%60s genuine and existing `scenarios/plan027-c-game4-off-10m-250ms-loss30-60s.json` Game4/off 10Mbps/250ms30%60s genuine. Exact immutable seed and mixture, signed driver authentic TLS, UDP/TCP first+repair/FEC readback where available and owned Stop; no assumed 0% residual gate under random loss, no pretend full Windows GameFEC qualification. Each dispatcher confirms source6ece binary artifacts, original H677 product/harness paths unchanged (only test-fatal Game tail change), exact target fixture, and once-only dispatch by run title. No new M2 receipt, protocol round, fake ACK, source build, or blanket rollout.
+
+H688 independent Game2FEC root/B106 and H691 Normal5/15 remain in flight. C200 Normal stopped at measured capacity. Missing host-global OS WFP/DNS/IPv6/routes, original FIN/DORMANT/rotation, burst/long and evidence-led Game native fix remain; task PARTIAL.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Two new frozen-source independently controlled real Windows/WSL2 damaged scenario Actions for highest Fixed and Game4 OFF under30pct, no product/config/source behavior change or unearned PASS."}
+```
