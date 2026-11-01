@@ -989,6 +989,42 @@ jobs:
             Get-Content result/wl-public/native-link-tcp443.log -Tail 75 -ErrorAction SilentlyContinue
             Get-Content result/wl-public/native-windows-npf.log -Tail 75 -ErrorAction SilentlyContinue
             Get-Content result/wl-public/native-windows-npf-stderr.log -Tail 15 -ErrorAction SilentlyContinue
+            # The owner and its child tree must have exited before any
+            # external management lease can be retired. The underlying
+            # product OS/WAL state is NOT recovered by this /32 operation.
+            if($env:WBD_WL_GAME_FEC_RESCUE -eq '1'){
+              $nativeWal='result/wl-public/owned-wal.json.n4-owned-wal'
+              $nativeRoutes=$nativeWal+'.routes'
+              $localRecord='result/wl-public/gamefec-network-final.txt'
+              $walPresent=Test-Path -LiteralPath $nativeWal
+              $routesPresent=Test-Path -LiteralPath $nativeRoutes
+              @(
+                'source='+$env:WBD_WL_BINARY_SOURCE
+                'native_python_exit='+[string]$e2eExit
+                'native_wal_present='+[string]$walPresent
+                'routes_sidecar_present='+[string]$routesPresent
+                'product_network_recovery=NOT_VERIFIED_BY_MANAGEMENT_ROUTE_RESTORE'
+              ) | Set-Content -LiteralPath $localRecord
+              if($walPresent -or $routesPresent){
+                'PRODUCT_NATIVE_WAL_OR_ROUTES_PENDING_FAIL_CLOSED' | Add-Content -LiteralPath $localRecord
+                Write-Output 'GAMEFEC_PRODUCT_WAL_OR_ROUTES_PENDING_NOT_RECOVERED'
+              }
+              # Do this IN THE CURRENT STEP, not after artifact upload:
+              # upload-artifact uses a NEW HTTPS/DNS endpoint, not one of
+              # the pinned Runner.Worker sockets. An unhealthy product
+              # default route can make it fail ENOTFOUND before the old
+              # after-artifact Restore step is ever reached.
+              $managed='result/wl-public/gamefec-management-route-lease.json'
+              if(Test-Path -LiteralPath $managed){
+                & ./tools/m0_wl_gamefec_management_route.ps1 -Action Restore
+                if(-not $?){throw 'GAMEFEC_SAME_STEP_EXACT_MANAGEMENT_RESTORE_FAILED'}
+                if(Test-Path -LiteralPath $managed){throw 'GAMEFEC_MANAGEMENT_LEASE_REMAINS_AFTER_RESTORE'}
+                'management_route=RESTORED_EXACT_RUN_OWNER_ONLY_NOT_PRODUCT_WAL' | Add-Content -LiteralPath $localRecord
+                Write-Output 'GAMEFEC_SAME_STEP_MANAGEMENT_RESTORED_BEFORE_ARTIFACT_NOT_PRODUCT_WAL'
+              }else{
+                'management_route=NOT_ARMED_OR_ALREADY_RESTORED' | Add-Content -LiteralPath $localRecord
+              }
+            }
           }
           if($e2eExit -ne 0){throw 'true public Windows Go TLS Rust Npcap Wintun to Linux raw/TUN direct chain FAILED'}
           $result=Get-Content result/wl-public/report.json -Raw | ConvertFrom-Json
@@ -1193,6 +1229,7 @@ jobs:
             result/wl-public/gamefec-mode-outcome.txt
             result/wl-public/gamefec-cold-stage.txt
             result/wl-public/gamefec-management-state.txt
+            result/wl-public/gamefec-network-final.txt
             result/wl-public/windows-route-after.json
             result/wl-public/report.json
             result/wl-public/normal-report.json
@@ -1220,9 +1257,9 @@ jobs:
             result/wl-public/native-wsl-neighbor-owner.json
           retention-days: 30
           if-no-files-found: warn
-      # Only management /32 leases are removed here, after the evidence
-      # upload. Product restoration always belongs to the ORIGINAL Go/WAL
-      # Stop inside the previous native step; never accept this as its PASS.
+      # Fallback ONLY: the current native step normally retired its run-
+      # owned management /32 before upload. If earlier setup failed, still
+      # attempt exact lease cleanup; this does not recover product WAL.
       - name: Reclaim only the exact test-owned GitHub management route lease
         if: always()
         shell: pwsh

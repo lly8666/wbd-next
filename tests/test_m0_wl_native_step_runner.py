@@ -169,6 +169,21 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
             # events. First send proves its independent thread is scheduled.
             self.assertIn("MODE_STARTED",events)
 
+    def test_h772_restore_management_before_artifact_without_claiming_wal(self):
+        # This validates the existing run's step order; H768 independently
+        # exercised actual owned /32 Windows Arm -> abnormal exit37 ->
+        # exact Restore and GitHub API underlay on a hosted runner.
+        flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        marker="GAMEFEC_SAME_STEP_MANAGEMENT_RESTORED_BEFORE_ARTIFACT_NOT_PRODUCT_WAL"
+        self.assertIn(marker,flow)
+        self.assertIn("gamefec-network-final.txt",flow)
+        self.assertIn("PRODUCT_NATIVE_WAL_OR_ROUTES_PENDING_FAIL_CLOSED",flow)
+        self.assertLess(flow.index(marker),flow.index("- uses: actions/upload-artifact@",flow.index(marker)))
+        self.assertIn("N4NativeRecoverState", (ROOT/"r0/go_overlay/internal/windowsclient/native_product_entry_windows.go").read_text())
+        self.assertIn("N4WindowsRecoverPersistedPreRouteWAL", (ROOT/"r0/go_overlay/internal/windowsclient/native_product_entry_windows.go").read_text())
+        self.assertIn("path+\".routes\"", (ROOT/"r0/go_overlay/internal/windowsclient/native_orphan_persisted_preroute_windows.go").read_text())
+        self.assertNotIn("product_network_recovery=PASS",flow)
+
     def test_h748_actual_unread_os_pipe_full_does_not_hold_game_deadline(self):
         # This is a genuine kernel pipe with NO reader until the owned native
         # process has exited. Merely mocking a slow Python StringIO is not
