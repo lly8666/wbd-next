@@ -1,0 +1,9 @@
+# PLAN027 H695 — five feature cards receive bounded H693 native evidence
+
+Actual prebuilt SOURCE `6ece9eab653f46a716e8d3a0927fb74bec4819e8` native signed Windows NPF/Wintun and WSL2 Linux outcomes already frozen in [H693 evidence](../evidence/M0/PLAN027-H693-SOURCE6ECE-REAL-5-15-FIXED30-GAME4OFF-20261101.json). Update exactly five affected feature entries: Normal5%100M and15%50M true both UDP/TCP Stop first0.950686/.952337 and0.853688/.858701; Windows outer actual F/R/C 5%862406648/33247365/218235 B (R/F3.855%, R/total3.711%) and15%431285752/26033813/244907 B (R/F6.036%, R/total5.690%), Linux repair ledger NOT measured; Fixed6 30% first0.999648/0.999447 true Stop, Linux Fixed native Installed readback yes, Windows same direct readback NOT instrumented; Game4 OFF 30% first0.992193/0.991705 Stop, **not** Windows FEC. H688 Win B106 externally cancelled full logs BlobNotFound and earlier true Game2FEC current-source4% first/missing Stop FAIL retained. Native 5/15 local p99 with missing probes in evidence, not fabricated one-way.
+
+`normal-off` under established 16KiB feature card limit: only shorten redundant prior H677/H678/H681/H684/H687 scope prose, preserving each precise source SHA, status, evidence reference and critical genuine loss facts. Other cards append narrow source-scoped records; no old verification deleted or historical failure overwritten. Separate independently running current source Game4FEC, Auto240, Game2off30, genuine 106s B106 post12s remain NOT_YET_RESULT. H694 governance Action41263240121 PASS. Product/source/CLI/ABI unchanged. All PLAN027 tasks PARTIAL.
+
+```feature-impact
+{"kind":"updated","ids":["normal-off","outer-opportunistic-repair","fec-fixed","game-fixed-fec","idle-rotation-keepalive"],"reason":"Record exact source6ece genuine Native 5/15 Windows F/R/C and both Stop, Fixed6+Game4off30 true first+Stop/readback scopes, and B106 cancellation, without fabricating Windows FEC or global effects."}
+```
