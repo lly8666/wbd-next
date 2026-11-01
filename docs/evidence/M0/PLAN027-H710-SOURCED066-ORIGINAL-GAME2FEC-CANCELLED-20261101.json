@@ -47,5 +47,6 @@
     "Do not repeat unchanged Game2FEC scene or widen test/watchdog timeout without a new proven reason",
     "Independent watcher can recover archived job logs via gh run view fallback for other finished Action but cannot recover this missing underlying Blob",
     "Still blocking B GameFEC/Stop qualification; PLAN027 incomplete; physical NOT_RUN"
-  ]
+  ],
+  "source_sha": "d0661a2e110b523ad06b311da23fc1b7291442ba"
 }
