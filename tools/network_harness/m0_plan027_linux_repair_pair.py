@@ -41,8 +41,12 @@ def configuration(scene, source, run_id, enabled):
     # ON may legitimately send zero repairs on a 0%-loss link.
     config["acceptance"]["require_retransmission"] = False
     config["acceptance"]["max_repair_fresh_pct"] = 10
-    config["bundles"]["A"].update(repair_enabled=enabled,
-                                  require_go_rx_handoff=True)
+    # The validator requires a complete hypothetical artifact locator.
+    # Strip it immediately after validation; the runner uses checked local
+    # binaries and the actual manifest SHA, never a placeholder artifact.
+    config["bundles"]["A"].update(
+        run_id=run_id, artifact_id=run_id, attempt=1, sha256="0" * 64,
+        repair_enabled=enabled, require_go_rx_handoff=True)
     config = validate(config)
     # The real locally built product is verified from manifest/hash, not a
     # fictitious Actions artifact locator entered into a runtime config.

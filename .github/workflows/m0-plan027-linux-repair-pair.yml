@@ -1,3 +1,4 @@
+# H817: recover prebuild unit failure in validation-only artifact placeholder; one R pair.
 name: M0 PLAN027 R Normal original Linux same-VM repair OFF to ON cost
 on:
   push:
