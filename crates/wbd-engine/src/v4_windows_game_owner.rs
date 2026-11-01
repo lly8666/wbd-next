@@ -236,15 +236,27 @@ fn game_record(lane:LaneKey,id:wbd_types::LogicalPacketId,
 // the only source of the public Game packet budget, not an arbitrary 1200B
 // temporary test fixture. Both native output and TCP MSS remain capped.
 fn game_effective_payload_mtu(game:&WinGameGroup,h:u64)->Result<usize,i32>{
-    let mut cap=game.adapter.inner_mtu().min(1536-31-16);
-    if game.adapter.has_game_fec(){cap=cap.saturating_sub(14);}
+    // Real NPF egress wraps a sealed M3 record with IPv4+TCP (40B).
+    // For FEC there is also a 1B typed symbol plus 14B FEC2 prefix
+    // BEFORE the 16B Game envelope and 31B sealed record overhead.
+    // The old "inner_mtu - 14" check omitted the 40B outer wrapper and
+    // typed byte, admitting genuine FEC due wire > installed path MTU.
+    let fec=game.adapter.has_game_fec();
+    let fec_overhead=if fec{15}else{0};
+    let frame_overhead=wbd_platform::ipv4_tcp::BASE_OVERHEAD
+        +wbd_codec::record_frame::FIXED_WIRE_OVERHEAD
+        +wbd_codec::path_budget::GAME_OVERHEAD+fec_overhead;
+    let mut cap=game.adapter.inner_mtu().min(
+        1536-wbd_codec::record_frame::FIXED_WIRE_OVERHEAD
+            -wbd_codec::path_budget::GAME_OVERHEAD);
+    if fec{cap=cap.saturating_sub(fec_overhead);}
     for lane in &game.lanes{
         let e=lane.lock().map_err(|_|BAD_STAGE)?;
         if e.game_group!=Some(h)||e.phase!=PH_ACTIVE||
             !e.device.is_some_and(|d|!d.quiesced)||e.path_mtu==0{
             return Err(BAD_STAGE)
         }
-        cap=cap.min(usize::from(e.path_mtu));
+        cap=cap.min(usize::from(e.path_mtu).saturating_sub(frame_overhead));
     }
     if cap<20{return Err(INVALID)}
     Ok(cap)
@@ -991,7 +1003,7 @@ mod tests{
         use wbd_platform::ipv4_tcp::{
             build_bytes,Ipv4Tuple,Presentation,PacketPersona,
         };
-        for source_len in [1228usize,1329usize]{
+        for source_len in [1228usize,1298usize,1299usize,1329usize]{
             let mut r=Registry{generation:1,entries:BTreeMap::new(),
                 game_groups:BTreeMap::new()};
             let client=setup(&mut r,2,false);
@@ -1002,12 +1014,17 @@ mod tests{
                 let g=group.lock().unwrap();
                 game_effective_payload_mtu(&g,h).unwrap()
             };
-            assert!(source_len<=actual_limit,
-                "trial must be a legal original authenticated Wintun input");
+            assert_eq!(actual_limit,1298,
+                "authenticated 1400-MTU egress must reserve real FEC due wire");
             let mut ipv4=vec![0x42;source_len];
             ipv4[0]=0x45;ipv4[1]=0;
             ipv4[2..4].copy_from_slice(&(source_len as u16).to_be_bytes());
             ipv4[8]=64;ipv4[9]=17;
+            if source_len>actual_limit{
+                assert_eq!(offer_records(&r,h,&ipv4,2),Err(INVALID),
+                    "oversized input must be refused before FEC sealing/NPF send");
+                continue
+            }
             let rows=offer_records(&r,h,&ipv4,2).unwrap();
             assert_eq!(rows.len(),2);
             {
