@@ -138,6 +138,17 @@ impl GameKernelOwner{
                 last_initial_id:None
             });
         }
+        // Per-lane original outer ACK observed only AFTER real AEAD opened
+        // a reverse DATA record. Atomics replace per-packet queues/locks;
+        // each receiver owns one index, existing TX processes batched hints.
+        let presentation_hints=Arc::new((0..n)
+            .map(|_|AtomicU64::new(0)).collect::<Vec<_>>());
+        let tx_hints=Arc::clone(&presentation_hints);
+        let mut feedback_epoch=[0u8;16];
+        feedback_epoch[..4].copy_from_slice(&generation.to_be_bytes());
+        let scoped_cosmetic=CosmeticOuter::with_normal_feedback(
+            &lanes.iter().map(|l|l.key).collect::<Vec<_>>(),
+            &seqs,feedback_epoch).map_err(|_|())?;
         let tx_adapter=Arc::clone(&adapter);
         let tx_stop=Arc::clone(&stop);
         let tx_tun=Arc::clone(&tun);
@@ -176,7 +187,8 @@ impl GameKernelOwner{
                 let mut inbound=[0u8;2048];
                 // Game FEC presentation-only replay has two/four fixed
                 // lane slots, owned exclusively by this existing TX worker.
-                let mut cosmetic=CosmeticOuter::new(n);
+                let mut cosmetic=scoped_cosmetic;
+                let mut observed_hints=[0u64;4];
                 while !tx_stop.load(Ordering::Acquire){
                     // Never hold the TUN device's shared serialized mutex
                     // during a 750ms missing-app poll: authenticated RX
@@ -276,10 +288,15 @@ impl GameKernelOwner{
                             if ok {
                                 // Only the real raw first copied PN/SEQ is
                                 // eligible; most packets pay one mask test.
-                                if fec_enabled&&outer_repair_enabled&&
-                                    cosmetic.should_sample(index){
-                                    cosmetic.sample(index,pn,item.seq,
-                                        wire,due_now.0);
+                                if fec_enabled&&outer_repair_enabled{
+                                    // Genuine first raw kernel success only.
+                                    // Normal ACK metadata is sparse; a
+                                    // lost optional hint never changes M4/FEC
+                                    // copied result or original sender credit.
+                                    if cosmetic.on_firstsend(index,pn,item.seq,
+                                        wire,due_now.0).is_err(){
+                                        eprintln!("WBD_GAME_FEC_NORMAL_OUTER_HINT_DROP lane={} reason=sparse_index",index+1);
+                                    }
                                 }
                                 item.seq=item.seq.saturating_add(wire.len() as u64);
                                 // Count ACTUAL successful same-lane repeat
@@ -394,6 +411,10 @@ impl GameKernelOwner{
                                                 accepted=lane.raw.send_one(generation,&frozen,
                                                     tuple,presentation).is_ok();
                                                 if accepted{
+                                                    if fec_enabled&&outer_repair_enabled &&
+                                                        cosmetic.on_health_copy(0,lane.seq,n).is_err(){
+                                                        eprintln!("WBD_GAME_FEC_NORMAL_OUTER_HINT_DROP lane=1 reason=health_seq");
+                                                    }
                                                     lane.seq=lane.seq.saturating_add(n as u64);
                                                     tx_copy.fetch_add(1,Ordering::Relaxed);
                                                 }
@@ -414,6 +435,21 @@ impl GameKernelOwner{
                     // It does not enter AEAD, GameRx/FEC, original first-send
                     // credit, Health or the authenticated delivery ledger.
                     if fec_enabled&&outer_repair_enabled{
+                        // Reverse Game DATA's checksum/tuple-checked ACK
+                        // becomes eligible only AFTER AEAD opened. Read
+                        // the last atomic ACK per lane, bounded to 3
+                        // duplicated reports per TX owner turn.
+                        for (i,hint) in tx_hints.iter().enumerate(){
+                            let current=hint.load(Ordering::Acquire);
+                            if current==observed_hints[i]{continue}
+                            let count=(current>>32)
+                                .wrapping_sub(observed_hints[i]>>32).min(3);
+                            for _ in 0..count{
+                                let _=cosmetic.on_feedback(i,current as u32,
+                                    clock_ns);
+                            }
+                            observed_hints[i]=current;
+                        }
                         if let Some(copy)=cosmetic.take_due(clock_ns,&[]){
                             let copied=if let Some(item)=lanes.get(copy.lane){
                                 let f=item.flow;
@@ -455,6 +491,10 @@ impl GameKernelOwner{
                     }
                     arena.drain_returns();
                 }
+                if fec_enabled&&outer_repair_enabled{
+                    eprintln!("WBD_GAME_FEC_LINUX_NORMAL_OUTER_STOP copied_appearance={} original_pn_seq_only=1 no_fec_credit=1 peer_ack_after_aead=1",
+                        cosmetic.sent());
+                }
             }).map_err(|_|())?;
         let mut threads=vec![tx_worker];
         for i in 0..n{
@@ -465,6 +505,7 @@ impl GameKernelOwner{
             let receiver_owner=Arc::clone(&rx_owner);
             let rx_tun=Arc::clone(&tun);
             let rx_stop=Arc::clone(&stop);
+            let rx_hints=Arc::clone(&presentation_hints);
             let recv_count=Arc::clone(&delivered);
             let recv_rejected=Arc::clone(&rejected);
             let raw_seen=Arc::clone(&raw_received);
@@ -491,7 +532,7 @@ impl GameKernelOwner{
                     .as_deref()==Ok("1");
                 let mut sampled_sequence=0u64;
                 while !rx_stop.load(Ordering::Acquire){
-                    let (len,_)=match raw.recv_one_into(
+                    let (len,_,ack32)=match raw.recv_one_with_ack_into(
                         generation,&mut wire,tuple,peer_persona
                     ){
                         Ok(data)=>data,
@@ -515,6 +556,16 @@ impl GameKernelOwner{
                     // decode are done solely by THIS physical lane worker,
                     // with no shared GameReceiveOwner lock and no extra copy.
                     let opened=lane_opener.open(&mut wire[..len]);
+                    if fec_enabled && matches!(&opened,Ok(Some(_))){
+                        // TCP appearance is not AEAD-authenticated by
+                        // itself: only actual original Game opens may
+                        // nominate peer ACK gaps. This does not award
+                        // business, Health, FEC or receipt credit.
+                        let last=rx_hints[i].load(Ordering::Relaxed);
+                        rx_hints[i].store(
+                            ((last>>32).wrapping_add(1)<<32)|u64::from(ack32),
+                            Ordering::Release);
+                    }
                     let before_lock=timing.then(Instant::now);
                     #[cfg(feature="fec2_product_record")]
                     if fec_enabled{

@@ -317,6 +317,15 @@ impl ScopedRawIpv4Rx {
     pub fn recv_one_into(&self,generation:u32,buffer:&mut [u8],
         tuple:Ipv4Tuple<'_>,persona:PacketPersona)
         ->Result<(usize,u32),RawTxError>{
+        self.recv_one_with_ack_into(generation,buffer,tuple,persona)
+            .map(|(len,seq,_)|(len,seq))
+    }
+    /// Exact tuple/checksum DATA only. The raw TCP ACK is an UNTRUSTED
+    /// presentation hint until original game AEAD opens this record.
+    /// No extra recv/poll, allocation or copy vs the ordinary reader.
+    pub fn recv_one_with_ack_into(&self,generation:u32,buffer:&mut [u8],
+        tuple:Ipv4Tuple<'_>,persona:PacketPersona)
+        ->Result<(usize,u32,u32),RawTxError>{
         if generation!=self.generation{return Err(RawTxError::InvalidScope)}
         if self.is_stopping(){return Err(RawTxError::Stopped)}
         if buffer.len()<64{return Err(RawTxError::InvalidPacket)}
@@ -366,9 +375,10 @@ impl ScopedRawIpv4Rx {
             let start=n-parsed.ciphertext.len();
             let len=parsed.ciphertext.len();
             let seq=parsed.seq32;
+            let ack=parsed.presentation_ack32;
             if len==0 {return Err(RawTxError::InvalidPacket)}
             buffer.copy_within(start..n,0);
-            return Ok((len,seq))
+            return Ok((len,seq,ack))
         }
         Err(RawTxError::Kernel(110))
     }
