@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "scenario_id": "plan027-integration-normal-on-300s-mixed-hol",
+  "public_mode": "normal",
+  "outer_repair": "on",
+  "duration_s": 300,
+  "warmup_s": 5,
+  "drain_s": 10,
+  "tun_mtu": 1400,
+  "seed": 20261102,
+  "offered_mbps_each_direction": 10,
+  "udp_share": 0.6,
+  "tcp_flows": 2,
+  "one_way_delay_ms": 25,
+  "loss_pct": 1,
+  "packet_mix": [
+    [
+      64,
+      10
+    ],
+    [
+      128,
+      15
+    ],
+    [
+      512,
+      25
+    ],
+    [
+      1200,
+      50
+    ]
+  ],
+  "purpose": "Original Go TLS Rust M4 Normal OUTER ON 300s: real mixed UDP/TCP independent sockets, per-flow 10ms bins and owned Stop, NOT a substitute for physical Windows"
+}
