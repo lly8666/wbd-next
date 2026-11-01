@@ -90,13 +90,13 @@ def _inspect(state, data):
         stage = STAGE.search(line)
         if stage: state["stage"] = stage.group(0).lower()
         for field in ("lane", "cipher_len", "path_mtu"):
-            match = re.search(r"\\b" + field + r"=(\\d{1,7})\\b", line)
+            match = re.search(r"\b" + field + r"=(\d{1,7})\b", line)
             if match: state[field] = match.group(1)
         if "WL_GAME_NATIVE_TX_JOINED" in line: state["tx"] = "EXITED"
         if "WL_GAME_NATIVE_RX_JOINED" in line: state["rx"] = "EXITED"
         if "WL_GAME_WAL_RESTORED" in line: state["wal"] = "RESTORED"
         if FIRST_FAULT.search(line) and state["first_error"] == "UNKNOWN":
-            match = re.search(r"\\b(?:first_error|reason|rc|result)=([A-Za-z0-9_-]{1,40})", line)
+            match = re.search(r"\b(?:first_error|reason|rc|result)=([A-Za-z0-9_-]{1,40})", line)
             state["first_error"] = (match.group(1) if match else
                                     FIRST_FAULT.search(line).group(0))
             print("WL_DIAG_FIRST_ERROR marker=" + _safe(state["first_error"]) +
