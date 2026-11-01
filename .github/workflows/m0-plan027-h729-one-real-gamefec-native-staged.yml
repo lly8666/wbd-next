@@ -1,0 +1,58 @@
+name: M0 PLAN027 H729 one original signed Game2FEC6 stage-visible native
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h729-one-real-gamefec-native-staged.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-source-locked-game2fec:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h729-game-real]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE: d0661a2e110b523ad06b311da23fc1b7291442ba
+      BUILD: "41274450306"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Only one 1M/zero-loss exact prebuilt GameFEC after live-log rescue fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BUILD" --jq .head_sha)" = "$SOURCE"
+          test "$(gh api "repos/$GH_REPO/actions/runs/41280323396" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$BUILD/artifacts?per_page=100" |
+            jq -e --arg win "m0-wl-windows-product-binaries-$SOURCE" '
+              [.artifacts[] | select(.expired==false) | .name] |
+              index($win)!=null and index("m0-plan024-linux-product")!=null' > /dev/null
+          git fetch --depth=1 origin "$SOURCE"
+          test -z "$(git diff --name-only "$SOURCE" "$GITHUB_SHA" -- scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json)"
+          grep -Fq 'from m0_wl_gamefec_progress import GameFecProgress' tools/m0_wl_public_modes_e2e.py
+          grep -Fq 'M0_PLAN026_GAME_NATIVE_FIRST_ERROR' tools/m0_wl_public_normal_e2e.py
+          grep -Fq 'WBD_WL_GAME_FEC_RESCUE' .github/workflows/m0-wl-public-normal-full.yml
+          python3 -m unittest -v tests.test_m0_wl_gamefec_progress
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario('scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json')
+          assert s['public_mode']=='game2-fec' and s['duration_s']==10
+          assert s['warmup_s']==3 and s['drain_s']==5 and s['tun_mtu']==1400
+          assert s['seed']==20261029
+          for d in ('windows_to_linux','linux_to_windows'):
+            x=s[d]
+            assert x['offered_mbps']==1 and x['delay_ms']==25 and x['loss_pct']==0
+            assert [v['udp_payload_bytes'] for v in x['packet_mix']]==[96,288,1060,1200]
+          print('H729_GENUINE_GAME2FEC6_1M_ORIGINAL_SOURCE',s['scenario_sha256'])
+          PY
+          scene=scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|game2-fec|$scene"
+          existing="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg title "$title" '.workflow_runs[]|select(.display_title==$title)|.id' | head -n 1)"
+          if [ -n "$existing" ]; then echo "H729_ALREADY_DISPATCHED=$existing"; exit 0; fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=game2-fec -f run_n0=false -f perf_scenario_file="$scene" \
+            -f perf_reuse_run_id="$BUILD" -f perf_binary_source_sha="$SOURCE"
+          echo H729_ONE_TRUE_SIGNED_GAME2FEC6_NATIVE_DISPATCHED_NOT_PASS
