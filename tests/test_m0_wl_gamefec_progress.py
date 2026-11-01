@@ -30,12 +30,28 @@ class GameFecProgressTests(unittest.TestCase):
             ])
             self.assertNotIn("DO_NOT_LOG", output.getvalue())
 
-    def test_h740_independent_receiver_accepts_numeric_supervisor_stages(self):
-        recv=(pathlib.Path(__file__).resolve().parents[1]/
-              ".github/workflows/m0-plan027-gamefec-rescue-record.yml").read_text()
-        self.assertIn('[[ "$TRACE_STAGE" =~ ^[A-Z0-9_]{3,30}$ ]]',recv)
-        for stage in ("SUPERVISOR_20S_ALIVE","SUPERVISOR_60S_ALIVE"):
-            self.assertRegex(stage,r"^[A-Z0-9_]{3,30}$")
+    def test_h807_retired_satellite_preserves_local_numeric_stage_receipts(self):
+        # The H804 caller no longer fans out a dozen Actions for one native
+        # mode. Prove the deleted receiver cannot be required, while local
+        # supervisor marker classification still accepts numeric stages.
+        base=pathlib.Path(__file__).resolve().parents[1]
+        self.assertFalse((base/
+            ".github/workflows/m0-plan027-gamefec-rescue-record.yml").exists())
+        self.assertTrue((base/
+            ".github/workflows/m0-plan027-independent-native-deadline.yml").is_file())
+        from tools.m0_wl_gamefec_relay import GameFecRelay
+        import queue
+        import threading
+        with tempfile.TemporaryDirectory() as tmp:
+            events=[]
+            relay=GameFecRelay(pathlib.Path(tmp),queue.SimpleQueue(),
+                threading.Event(),env={},send=lambda stage,detail:events.append((stage,detail)))
+            relay.emit("SUPERVISOR_20S_ALIVE","SUPERVISOR_ALIVE")
+            relay.emit("SUPERVISOR_60S_ALIVE","SUPERVISOR_ALIVE")
+            self.assertEqual(events,[
+                ("SUPERVISOR_ALIVE_FIRST","SUPERVISOR_ALIVE"),
+                ("SUPERVISOR_ALIVE_SECOND","SUPERVISOR_ALIVE"),
+            ])
 
     def test_h745_independent_first_fault_receipt_precedes_blocked_console(self):
         with tempfile.TemporaryDirectory() as d:
