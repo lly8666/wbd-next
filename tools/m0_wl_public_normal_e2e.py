@@ -777,7 +777,16 @@ print(json.dumps(result),flush=True)
      print(netem("cleanup"),flush=True)
  stop_windows(w)
  stop_marker="WBD_WINDOWS_GAME_NATIVE_DISCONNECTED" if is_game else "WBD_WINDOWS_NATIVE_DISCONNECTED_V1"
- if w.returncode!=0 or stop_marker not in (out/"client.log").read_text():raise RuntimeError("Windows native owned WAL Stop missing")
+ if w.returncode!=0 or stop_marker not in (out/"client.log").read_text():
+  if is_game:
+   # H679 lost the entire original client/server artifact when the artifact
+   # service failed. Emit only a sanitized bounded diagnostic tail on this
+   # actual product failure; not a new data-plane logger or source gate.
+   for role in ("client","server"):
+    content=(out/(role+".log")).read_text(errors="replace")[-4200:]
+    content=re.sub(r"(?i)\\b(password|secret|credential|token|key)([=:])\\S+",r"\\1\\2[REDACTED]",content)
+    print("WL_GAME_ORIGINAL_STOP_FAILURE_"+role.upper()+"_TAIL "+content,flush=True)
+  raise RuntimeError("Windows native owned WAL Stop missing")
  stop_linux();s.wait(timeout=10)
  stop_marker="V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server" if is_game else "V4_PUBLIC_NATIVE_STOP_DRAINED role=server"
  if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
