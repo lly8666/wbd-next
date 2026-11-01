@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "source_sha": "48ed7ffe82aafa17a125948068a2ca6ee6a1593e",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "run": 41296364265,
+  "watcher_run": 41296372101,
+  "original_native_job": 124818951699,
+  "mode": "game2-fec",
+  "scenario": "scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json",
+  "first_window_source": "SOURCE_48ED_FRESH_SIGNED_WINDOWS_AND_LINUX",
+  "source_build": {
+    "win_artifact": 13080200535,
+    "linux_artifact": 13080245081,
+    "go_preflight": "SUCCESS",
+    "windows_rust_preflight": "SUCCESS",
+    "linux_rust_preflight": "SUCCESS"
+  },
+  "actual_run": "CANCELLED_NOT_PRODUCT_PASS",
+  "stage_recieved": [
+    "PRE_NATIVE_STEP",
+    "STEP_ENTER",
+    "STEP_PREFLIGHT_COMPLETE",
+    "MODE_STARTED",
+    "SUPERVISOR_LOOP_ENTER",
+    "SUPERVISOR_POLL_OK",
+    "COLD_E2E_STARTED",
+    "COLD_WSL_IP_READY",
+    "COLD_TLS_CERT_READY",
+    "COLD_CLIENT_SPAWNED",
+    "COLD_READY_WAIT",
+    "CLIENT_LOG_STARTED"
+  ],
+  "missing_remote_markers": [
+    "CLIENT_TLS_JOINED",
+    "WINTUN_OPEN_ENTER",
+    "NPF_READER_JOIN_ENTER",
+    "RUST_GAME_START_ENTER",
+    "OS_APPLY_ENTER",
+    "CLIENT_READY",
+    "OWNED_STOP"
+  ],
+  "interpretation": "NO_REMOTE_MARKER_IS_NOT_EVIDENCE_CALLEE_DID_NOT_RUN; MANAGEMENT_PUBLIC_ROUTE_MAY_BE_LOST_UNVERIFIED",
+  "artifact": "GUEST_BOOT_ONLY",
+  "original_log": "UNRECOVERABLE_BLOB",
+  "real_business": "UNKNOWN",
+  "normal_stop": "UNKNOWN",
+  "network_recovery": "UNKNOWN",
+  "restore_gap": "N4NativeRecoverState->N4WindowsRecoverPersistedPreRouteWAL rejects any routes sidecar; complete route/WFP/DNS crash restore NOT_PROVEN",
+  "prior_scope_test": {
+    "run": 41294981531,
+    "go_test": "TestN4WindowsHostedRealPreRouteIPCrashWAL",
+    "conclusion": "PASS_PRE_ROUTE_ONLY_FAKE_WFP_NO_ROUTES",
+    "native_elapsed_seconds": 21.6
+  },
+  "h765_h766_short_supervisor_checks": {
+    "run": 41298466562,
+    "conclusion": "SUCCESS",
+    "tests": [
+      "test_h766_owned_game_stop_request_precedes_terminal_kill",
+      "test_h766_routes_sidecar_kept_when_recovery_unverified"
+    ],
+    "scope": "synthetic parent PID only, no product network recovery"
+  },
+  "physical": "NOT_RUN"
+}
