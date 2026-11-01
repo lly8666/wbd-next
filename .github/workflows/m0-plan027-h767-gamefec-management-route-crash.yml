@@ -21,9 +21,10 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           $path='result/wl-public/gamefec-management-route-lease.json'
-          & ./tools/m0_wl_gamefec_management_route.ps1 -Action Arm -Receipt $path
-          if($LASTEXITCODE -ne 0){throw 'GameFEC management original underlay pin failed'}
-          $lease=Get-Content $path -Raw|ConvertFrom-Json
+          try {
+            & ./tools/m0_wl_gamefec_management_route.ps1 -Action Arm -Receipt $path
+            if(-not $?){throw 'GameFEC management original underlay pin failed'}
+            $lease=Get-Content $path -Raw|ConvertFrom-Json
           if($lease.owner -ne ($env:GITHUB_RUN_ID+':'+$env:GITHUB_RUN_ATTEMPT) -or @($lease.routes).Count -lt 1){throw 'no strictly owned management peer'}
           foreach($r in @($lease.routes)){
             $rows=@(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix $r.prefix -ErrorAction Stop | Where-Object {$_.InterfaceIndex -eq $lease.interface_index -and $_.NextHop -eq $lease.next_hop})
@@ -36,12 +37,20 @@ jobs:
           'import os;os._exit(37)' | Set-Content -Path $f
           $child=Start-Process -FilePath python -ArgumentList @($f) -PassThru -Wait
           if($child.ExitCode -ne 37){throw 'unexpected synthetic abnormal child exit'}
-          & ./tools/m0_wl_gamefec_management_route.ps1 -Action Restore -Receipt $path
-          if($LASTEXITCODE -ne 0){throw 'owned management route restoration failed'}
-          if(Test-Path $path){throw 'management intent receipt survived successful restoration'}
+            & ./tools/m0_wl_gamefec_management_route.ps1 -Action Restore -Receipt $path
+            if(-not $?){throw 'owned management route restoration failed'}
+            if(Test-Path $path){throw 'management intent receipt survived successful restoration'}
           foreach($r in @($lease.routes)){
             if(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix $r.prefix -ErrorAction SilentlyContinue){throw 'owned management route still present'}
           }
           & gh api "repos/$env:GH_REPO" --jq .full_name
           if($LASTEXITCODE -ne 0){throw 'GitHub management network unavailable after exact recovery'}
-          Write-Output 'H767_WINDOWS_SCOPED_REAL_MANAGEMENT_ROUTE_CHILD_ABNORMAL_AND_RESTORE_PASS_NOT_PRODUCT_WAL'
+            Write-Output 'H768_WINDOWS_SCOPED_REAL_MANAGEMENT_ROUTE_CHILD_ABNORMAL_AND_RESTORE_PASS_NOT_PRODUCT_WAL'
+          } finally {
+            # Never strand this test-owned /32, even if a synthetic assert
+            # fails. The exact receipt remains fail-closed on foreign state.
+            if(Test-Path -LiteralPath $path){
+              & ./tools/m0_wl_gamefec_management_route.ps1 -Action Restore -Receipt $path
+              if(-not $?){throw 'GameFEC management fixture final exact Restore FAIL'}
+            }
+          }
