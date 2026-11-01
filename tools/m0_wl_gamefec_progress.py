@@ -64,7 +64,8 @@ class GameFecProgress:
                                          or self.env.get("GITHUB_SHA"), 60),
                     "-f", "stage="+event, "-f", "detail="+detail]
             try:
-                result = subprocess.run(args, capture_output=True, timeout=8, check=False)
+                result = subprocess.run(args, stdout=subprocess.DEVNULL,
+                                        stderr=subprocess.DEVNULL, timeout=8, check=False)
                 print("WL_GAME_RESCUE_DISPATCH event="+event+
                       " status="+("QUEUED_NOT_PRODUCT_PASS" if result.returncode == 0
                                  else "UNAVAILABLE"), flush=True)
