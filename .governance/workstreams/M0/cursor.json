@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 822,
-  "checkpoint_sha": "ff3d43d9a60d4f372704386a97eae0f8a07f3f2e",
+  "sequence": 823,
+  "checkpoint_sha": "29f41bfa77916ec0d3fcb3306d6428939ada56be",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H822: source f5e8 same original Linux Go TLS+Rust binaries R Normal OFF→ON 10M250ms zero loss PASS scoped CPU cost +0.29/+0.33s/60; independent N Normal OFF true 30% PASS first~70.09% both; Game2FEC6 outer DATA OFF true30% 10Mbps each p99 258.7ms, first100% and native parity120539/120572, R0, owned Stop PASS. C, Windows perf, Game4, Fixed/Auto, integrated ON 300s remain NOT_RUN. H822 corrected feature-impact kind and same-source cursor evidence schema.",
-  "why_now": "Reconcile three completed original Go TLS+Rust same-binary R/N/Game2FEC6 genuine real kernel measurements and repair explicit H820/H821 governance failures, then choose next Game4/Fixed/Auto/ON contrast, not speculative low-CPU repair rewrite.",
+  "current_task": "PLAN027 H823: H820 zero-loss Normal R cost and 30% OFF real native, H822 Game2FEC6 30% OFF first100% source-frozen all PASS scoped. Governance H822 41344218807 PASS. New independent Normal Fixed6 single lane at exact Game2 packet mix/10Mbps/30% impairment prepared reusing same binary; native verdict pending.",
+  "why_now": "Game2FEC6 recovered 100% unique-first at real 30% loss but Normal control uses different packet sizes. Isolate effect of native single-lane Fixed6 vs Game2FEC6 with matched traffic and same source before allocating Game4 20Mbps or optimizing shared repair timers.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Verify new H822 governance PASS, then choose one next high-information Game4/FEC6 or Fixed/Auto repair-OFF true-loss scenario reusing frozen binary and compare CPU/bandwidth; preserve different packet mixes and controlled VM. Final ON/300s and Windows R OFF performance still outstanding.",
+  "next_action": "Collect H823 Fixed6 OFF Action and exact native FEC6 readback/real loss/CPU/first/Stop; only then select next Fixed/Auto/Game4 or affected ON/300s test per plan, do not rerun passed R/N/Game2. CPU and recovery attribution must preserve source+mode limitations.",
   "unverified": true,
   "last_tested_source": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
   "evidence_refs": [
@@ -19,15 +19,15 @@
     "docs/evidence/M0/PLAN027-H822-FROZEN-F5-GAME2FEC6-OUTER-OFF30-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H815-GAMEFEC-NPF-NORMAL-PTO-REAL-RETRANSMIT-PASS.md",
     "docs/devlog/M0/20261102-PLAN027-H816-NORMAL-REPAIR-COST-PAIR.md",
     "docs/devlog/M0/20261102-PLAN027-H817-NORMAL-REPAIR-PAIR-PREBUILD-FIX.md",
     "docs/devlog/M0/20261102-PLAN027-H818-RESTORE-CURSOR-REF-BOUND.md",
     "docs/devlog/M0/20261102-PLAN027-H819-NORMAL-OFF30-REUSE.md",
     "docs/devlog/M0/20261102-PLAN027-H820-FROZEN-R-N-AND-GAME2FEC6-NEXT.md",
     "docs/devlog/M0/20261102-PLAN027-H821-BOUND-FEATURE-CARD.md",
-    "docs/devlog/M0/20261102-PLAN027-H822-GAME2FEC6-RESULT-AND-GOVERNANCE.md"
+    "docs/devlog/M0/20261102-PLAN027-H822-GAME2FEC6-RESULT-AND-GOVERNANCE.md",
+    "docs/devlog/M0/20261102-PLAN027-H823-FIXED6-MATCHED-GAME2-MIX-NEXT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H822 factual R/N/Game2FEC6 original Linux source f5e8: R zero-loss Normal OFF->ON CPU+0.29/+0.33sec RSS+0.52/+1.06MB p99 250.5 100% first; N Normal true30 OFF 70.087/70.097% first CPU2.04 each; Game2FEC6 30% outer OFF first100% p99 258.7, native parity >120k, recovered_candidate ~8.2k, CPU8.24 each, owned Stop all. No C/Windows/300s final acceptance. H820/H821 invalid feature-impact declaration and inconsistent evidence source corrected H822. Historical H815 evidence source96a2 retained in git but not in f5 cursor evidence set."
+  "partial_summary": "H823 new matched-mix Fixed6 Normal OFF scene pending real network Action. H822 existing three independent source-frozen original Linux real measurements R Normal cost 0loss, N Normal OFF30 first~70%, N Game2FEC6 OFF30 first100%/p99 258.7 parity120k; all scoped PASS, no native product changes. H822 governance PASS."
 }
