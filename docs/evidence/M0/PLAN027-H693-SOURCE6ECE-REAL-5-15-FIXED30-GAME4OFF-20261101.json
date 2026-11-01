@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "product_source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "binary_build_run": 41226521824,
+  "harness_source_sha": "92354d5a70f34640918f61b25859ba0bb05989dd",
+  "results": [
+    {
+      "run": 41257669861,
+      "mode": "normal",
+      "loss_pct": 5,
+      "mbps": 100,
+      "delay_ms": 100,
+      "first_fraction_windows_linux": [
+        0.950686,
+        0.952337
+      ],
+      "true_both_udp_tcp_owned_stop": "PASS",
+      "windows_first_wire_F": 862406648,
+      "windows_repair_R": 33247365,
+      "windows_control_C": 218235,
+      "R_over_F": 0.038551842193127434,
+      "R_over_total": 0.03711172555486952,
+      "tc_drops_eth0_ifb": [
+        51412,
+        51702
+      ],
+      "rtt_p99_windows_linux_ms": [
+        266,
+        266.772
+      ],
+      "probe_nonreturned_win_linux": [
+        54,
+        55
+      ],
+      "win_product_cpu_s": 43.6406,
+      "artifact_id": 13063883613,
+      "artifact_sha256": "57498ef525c45a73a22ff03a66e598628c09372bde3adbe14ac7df2fcd2a92c2"
+    },
+    {
+      "run": 41257672818,
+      "mode": "normal",
+      "loss_pct": 15,
+      "mbps": 50,
+      "delay_ms": 250,
+      "first_fraction_windows_linux": [
+        0.853688,
+        0.858701
+      ],
+      "true_both_udp_tcp_owned_stop": "PASS",
+      "windows_first_wire_F": 431285752,
+      "windows_repair_R": 26033813,
+      "windows_control_C": 244907,
+      "R_over_F": 0.06036325772245776,
+      "R_over_total": 0.05689649129926329,
+      "tc_drops_eth0_ifb": [
+        79953,
+        79487
+      ],
+      "rtt_p99_windows_linux_ms": [
+        1110,
+        1090.176
+      ],
+      "probe_nonreturned_win_linux": [
+        142,
+        164
+      ],
+      "win_product_cpu_s": 14.0625,
+      "artifact_id": 13063953230,
+      "artifact_sha256": "83e8b4cb155e59af02a0a1e3a7d817a32b644c4fcc6516f8cdc3ac55d2c75034"
+    },
+    {
+      "run": 41257965821,
+      "mode": "fixed",
+      "loss_pct": 30,
+      "mbps": 10,
+      "delay_ms": 250,
+      "first_fraction_windows_linux": [
+        0.999648,
+        0.999447
+      ],
+      "true_both_udp_tcp_owned_stop": "PASS",
+      "linux_fixed6_installed": true,
+      "windows_fixed_readback": "NOT_INSTRUMENTED",
+      "rtt_p99_windows_linux_ms": [
+        531,
+        534.289
+      ],
+      "probe_nonreturned_win_linux": [
+        8,
+        9
+      ],
+      "win_product_cpu_s": 35.9375,
+      "artifact_id": 13064111018,
+      "artifact_sha256": "1150aeb3fc10d57bb11f13891a467ca8e6200a67704a24489c053c8bc802687e"
+    },
+    {
+      "run": 41257966529,
+      "mode": "game4",
+      "fec": "off",
+      "loss_pct": 30,
+      "mbps": 10,
+      "delay_ms": 250,
+      "first_fraction_windows_linux": [
+        0.992193,
+        0.991705
+      ],
+      "true_both_udp_tcp_owned_stop": "PASS",
+      "rtt_p99_windows_linux_ms": [
+        719,
+        715.36
+      ],
+      "probe_nonreturned_win_linux": [
+        8,
+        10
+      ],
+      "win_product_cpu_s": 19.0469,
+      "artifact_id": 13064071347,
+      "artifact_sha256": "0937a9f489cd2118e74a7103f81c847ca8392434a4d5cbd8f4a3af8481c3cf77"
+    }
+  ],
+  "open_failures": [
+    {
+      "run": 41238055914,
+      "mode": "game2-fec",
+      "real_first_fraction": [
+        0.044235,
+        0.042121
+      ],
+      "owned_stop": "FAIL",
+      "artifact_upload": "ENOTFOUND"
+    },
+    {
+      "run": 41257173322,
+      "mode": "game2-fec",
+      "status": "CANCELLED",
+      "full_log": "BLOB_NOT_FOUND",
+      "boot_artifact": 13063328874
+    },
+    {
+      "run": 41257171644,
+      "mode": "normal-b106",
+      "status": "CANCELLED",
+      "full_log": "BLOB_NOT_FOUND",
+      "boot_artifact": 13063142634
+    }
+  ],
+  "limitations": [
+    "F/R/C current SOURCE ledger Windows direction only, not bilateral repair",
+    "Fixed Windows native Installed readback not captured, Linux verified",
+    "Game4/off not GameFEC",
+    "RTT p99 is returned same-origin roundtrip, missing probes separate; not one-way",
+    "B106 Windows unverified"
+  ]
+}
