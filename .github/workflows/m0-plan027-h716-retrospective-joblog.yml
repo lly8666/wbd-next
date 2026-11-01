@@ -1,4 +1,4 @@
-name: M0 PLAN027 H716 recover completed H714 native first diagnostics without product rerun
+name: M0 PLAN027 H717 recover finished H714 job via gh REST or run view, no product
 on:
   push:
     branches: [main]
@@ -6,7 +6,7 @@ on:
 permissions: {contents: read, actions: write}
 jobs:
   one-independent-native-log-recovery:
-    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h716-joblog-proof]')
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h717-log-fallback]')
     runs-on: ubuntu-24.04
     timeout-minutes: 7
     env:
@@ -30,4 +30,4 @@ jobs:
           # The prior live watcher H714 was inconclusive LOG_UNAVAILABLE;
           # this is intentionally ONE delayed post-finalization recovery.
           gh workflow run m0-plan027-independent-native-deadline.yml --repo "$GH_REPO" --ref main             -f target_run_id="$target" -f target_sha="$source" -f target_job_limit=1200
-          echo "M0_H716_INDEPENDENT_GITHUB_JOB_LOG_RECOVERY_DISPATCHED_ONLY prior_watcher=41275426382 target=$target"
+          echo "M0_H717_INDEPENDENT_LOG_READER_FALLBACK_ONLY previous=41275850101 target=$target"
