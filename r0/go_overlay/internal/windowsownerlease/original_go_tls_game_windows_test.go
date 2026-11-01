@@ -128,7 +128,26 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int,fecSelection ...uint8){
  if e!=nil{t.Fatalf("Game%d signed Wintun create: %v",n,e)}
  // On a Fatal Stop failure, unblock Wintun consumers before native close;
  // ordinary Go defers run in LIFO order, after the group Stop cleanup.
- defer func(){cancel();tun.Close()}()
+ // For FEC a failed Rust owner Stop cannot release the Wintun loan:
+ // never enter an unbounded native Close while its original ring is held.
+ // The fresh hosted VM will be discarded on an explicit FAIL instead.
+ safeToClose:=gameFec==0
+ defer func(){
+  cancel()
+  if !safeToClose{
+   t.Log("H793_GAMEFEC_NATIVE_STOP_UNDRAINED_SKIP_TEST_TUN_CLOSE_NOT_PASS")
+   return
+  }
+  if gameFec==0{_ = tun.Close();return}
+  done:=make(chan error,1)
+  go func(){done<-tun.Close()}()
+  select{
+  case err:=<-done:
+   if err!=nil{t.Errorf("Game2FEC6 owned Wintun Close: %v",err)}
+  case <-time.After(6*time.Second):
+   t.Error("Game2FEC6 owned Stop completed but signed Wintun Close exceeded 6s")
+  }
+ }()
  // This is a scoped real Wintun/M3-only test, NOT an NPF send. On any
  // fatal assertion, first cancel only ACTUALLY UNSUBMITTED Game M4
  // tickets and join original Rust owner holds before closing Wintun.
@@ -159,12 +178,15 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int,fecSelection ...uint8){
     t.Errorf("Game%d original server never-NPF tickets cleanup: %v",n,err)
    }
   }
-  if err:=clientGroup.StopCryptoAfterDriverDrain(cleanup);err!=nil{
-   t.Errorf("Game%d original client failure-path owner Stop: %v",n,err)
+  clientStopErr:=clientGroup.StopCryptoAfterDriverDrain(cleanup)
+  if clientStopErr!=nil{
+   t.Errorf("Game%d original client failure-path owner Stop: %v",n,clientStopErr)
   }
-  if err:=serverGroup.StopCryptoAfterDriverDrain(cleanup);err!=nil{
-   t.Errorf("Game%d original server failure-path owner Stop: %v",n,err)
+  serverStopErr:=serverGroup.StopCryptoAfterDriverDrain(cleanup)
+  if serverStopErr!=nil{
+   t.Errorf("Game%d original server failure-path owner Stop: %v",n,serverStopErr)
   }
+  if clientStopErr==nil && serverStopErr==nil{safeToClose=true}
  }()
  device:=CreatedWintun{TUN:tun}
  identity,e:=device.Identity(ctx,[16]byte{19},clientGroup.Epoch())
@@ -211,13 +233,24 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int,fecSelection ...uint8){
  }
  unsubmittedClient=nil
  if gameFec!=0{
-  // M4 NPF has NOT copied a record. Timed GameFecTx cannot mint parity
-  // credits or a normal send receipt out of a Go-only staging buffer.
+  // FEC encoder MAY schedule parity on a logically admitted source
+  // even when every NPF source send failed. Due != kernel copied.
+  // Retire every ACTUALLY returned M4 ticket with NotSent, and never
+  // give copied credit to Rust from this test-only Go output array.
   time.Sleep(25*time.Millisecond)
   due,err:=clientGroup.DueGameFecParity(ctx,16)
-  if err!=nil||len(due)!=0{
-   t.Fatalf("Game2FEC6 no-NPF copied source still emitted due parity: %d %v",len(due),err)
+  if err!=nil{t.Fatalf("Game2FEC6 real due owner: %v",err)}
+  if len(due)>0{
+   unsubmittedClient=due
+   if err:=clientGroup.CancelUnsubmittedGameTickets(ctx,due);err!=nil{
+    t.Fatalf("Game2FEC6 exact due NotSent M4 settlement: %v",err)
+   }
+   unsubmittedClient=nil
+   if err:=clientGroup.ReportGameFecNpcapCopy(ctx,due[0],true);err==nil{
+    t.Fatal("Game2FEC6 previously rejected native due ticket falsely accepted NPF copied credit")
+   }
   }
+  t.Logf("H793_GAME2FEC6_CLIENT_DUE_SCHEDULED_BUT_NPF_NOT_SENT count=%d",len(due))
  }
  reverse:=m0OriginalTLSRustAEADKernelUDP([]byte(fmt.Sprintf("game%d-native-reverse",n)),41991)
  backward,e:=serverGroup.StageGameRecords(ctx,reverse)
@@ -256,19 +289,29 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int,fecSelection ...uint8){
  if gameFec!=0{
   time.Sleep(25*time.Millisecond)
   due,err:=serverGroup.DueGameFecParity(ctx,16)
-  if err!=nil||len(due)!=0{
-   t.Fatalf("Game2FEC6 no-server-NPF copied still emitted due parity: %d %v",len(due),err)
+  if err!=nil{t.Fatalf("Game2FEC6 real server due owner: %v",err)}
+  if len(due)>0{
+   unsubmittedServer=due
+   if err:=serverGroup.CancelUnsubmittedGameTickets(ctx,due);err!=nil{
+    t.Fatalf("Game2FEC6 server exact due NotSent M4 settlement: %v",err)
+   }
+   unsubmittedServer=nil
+   if err:=serverGroup.ReportGameFecNpcapCopy(ctx,due[0],true);err==nil{
+    t.Fatal("Game2FEC6 server stale due M4 ticket falsely accepted copied")
+   }
   }
+  t.Logf("H793_GAME2FEC6_SERVER_DUE_SCHEDULED_BUT_NPF_NOT_SENT count=%d",len(due))
  }
  stop,cancelStop:=context.WithTimeout(context.Background(),15*time.Second)
  defer cancelStop()
  if e=clientGroup.StopCryptoAfterDriverDrain(stop);e!=nil{t.Fatalf("Game%d client native Stop: %v",n,e)}
  if e=serverGroup.StopCryptoAfterDriverDrain(stop);e!=nil{t.Fatalf("Game%d server native Stop: %v",n,e)}
+ safeToClose=true
  if _,e=clientGroup.StageGameRecords(ctx,packet);e==nil{
   t.Fatalf("Game%d stale authenticated group accepted post Stop",n)
  }
  if gameFec!=0{
-  t.Log("M0_PLAN027_REAL_ORIGINAL_GO_TLS_GAME2FEC6_SIGNED_WINTUN_RUST_RX_FIRST_REVERSE_OWNED_STOP_PASS_SCOPED NPF_NOT_RUN=1 PARITY_NOT_QUALIFIED=1 WFP_GLOBAL_NOT_RUN=1")
+  t.Log("M0_PLAN027_REAL_ORIGINAL_GO_TLS_GAME2FEC6_SIGNED_WINTUN_RUST_RX_FIRST_REVERSE_OWNED_STOP_PASS_SCOPED NPF_NOT_RUN=1 DUE_ROWS_SETTLED_NOT_SENT=1 PARITY_COPY_NOT_QUALIFIED=1 WFP_GLOBAL_NOT_RUN=1")
  }else{
   t.Logf("M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_GAME%d_NATIVE_RUST_M4_SIGNED_WINTUN_KERNEL_APP_LANE1_BLOCKED_FIRST_REVERSE_NO_HOL_STOP_PASS_SCOPED host_global_WFP_NOT_RUN=1",n)
  }

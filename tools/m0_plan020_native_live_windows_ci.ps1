@@ -68,7 +68,7 @@ Write-Output 'M0_PLAN024_WINDOWS_REAL_ORIGINAL_GO_GAME2_GAME4_NATIVE_TLS_RUST_WI
 # H792 real original protected GameFec=7 fixed6 native RX/Stop.
 # Do not add an EOF-anchor dollar next to PowerShell quote delimiters:
 # explicit single test name and required exact PASS marker are sufficient.
-& ./result/wintun-release/m0-original-peer-real.exe '-test.v=true' '-test.timeout=5m' '-test.run=^TestM0PLAN027WindowsRealOriginalGoGame2Fec6SignedWintunFirstReverseStop' 2>&1 |
+& ./result/wintun-release/m0-original-peer-real.exe '-test.v=true' '-test.timeout=75s' '-test.run=^TestM0PLAN027WindowsRealOriginalGoGame2Fec6SignedWintunFirstReverseStop' 2>&1 |
   Tee-Object -FilePath result/m0-h791-original-game2fec6-signed-wintun.log
 if ($LASTEXITCODE -ne 0) {throw 'H792 original signed Wintun Game2FEC6 first/reverse or owned Stop FAILED'}
 $gameFec=Get-Content result/m0-h791-original-game2fec6-signed-wintun.log -Raw
