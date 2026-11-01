@@ -73,6 +73,19 @@ jobs:
             throw 'Original Windows native GameFEC test script has a PowerShell parser error'
           }
           Write-Output 'H792_ORIGINAL_WINDOWS_NATIVE_PS_AST_PARSE_PASS_NOT_PRODUCT'
+          $scriptText=Get-Content -LiteralPath tools/m0_plan020_native_live_windows_ci.ps1 -Raw
+          $terminal='M0_PLAN020_REAL_WINDOWS_CHILD_CRASH_NATIVE_OS_WAL_RESULT'
+          if(([regex]::Matches($scriptText,[regex]::Escape($terminal))).Count -ne 1){
+            throw 'native Windows test script unexpectedly duplicated genuine WAL rollback tail'
+          }
+          if($scriptText -match '(?m)^\s*2>&1\s*\|'){
+            throw 'native Windows test script contains orphaned redirection without process owner'
+          }
+          if(([regex]::Matches($scriptText,'-test.run=\^TestM0PLAN027WindowsRealOriginalGoGame2Fec6SignedWintunFirstReverseStop')).Count -ne 1){
+            throw 'original native Game2FEC6 test must be invoked exactly once'
+          }
+          Write-Output 'H794_ORIGINAL_WIN_SCRIPT_SINGLE_WAL_TAIL_NO_ORPHAN_PIPE_PASS_NOT_PRODUCT'
+
 
       - name: Assemble exact original Go plus source-locked M0 Windows WAL and WinForms
         shell: pwsh
