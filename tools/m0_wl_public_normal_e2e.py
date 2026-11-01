@@ -92,6 +92,8 @@ def game_due_first_fault():
  raise RuntimeError("GAME_FEC_REAL_NATIVE_FIRST_FAULT native="+native+" wal="+wal)
 def ready(path,marker,process,seconds):
  for _ in range(seconds*5):
+  if game_fixed and (out/"gamefec-stop-request.flag").exists():
+   raise RuntimeError("GAMEFEC_ORIGINAL_OWNER_STOP_REQUESTED_BEFORE_READY")
   game_due_first_fault()
   if path.exists() and marker in path.read_text(errors="replace"):return
   if process.poll() is not None:raise RuntimeError(marker+" process exited "+str(process.returncode)+": "+path.read_text(errors="replace")[-800:])

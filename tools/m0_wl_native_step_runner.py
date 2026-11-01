@@ -216,6 +216,7 @@ def main() -> int:
                 daemon=True)
             diagnostic.start()
             if game:
+                (output.parent/"gamefec-stop-request.flag").unlink(missing_ok=True)
                 events.put("MODE_STARTED")
                 events.put("SUPERVISOR_LOOP_ENTER")
             else:
@@ -240,13 +241,8 @@ def main() -> int:
                     diagnostic.join(timeout=.15)
                     return rc
                 if now - started >= limit:
-                    # TERM/KILL happens before any optional diagnostic work.
-                    kill_native_child_tree(child)
-                    if game:
-                        events.put("MODE_TIMEOUT")
-                    stop.set()
-                    diagnostic.join(timeout=.15)
-                    return 124
+                    break
+
                 if game and not near_deadline_sent and now-started >= max(1,limit-35):
                     events.put("SUPERVISOR_NEAR_DEADLINE")
                     near_deadline_sent=True
@@ -256,6 +252,44 @@ def main() -> int:
                                    else "SUPERVISOR_60S_ALIVE")
                     last_heartbeat = now
                 time.sleep(.2)
+            # The sole monotonic PID loop has ENDED. Do not close a live
+            # original Windows Game WAL owner without offering native Stop.
+            if game:
+                events.put("SUPERVISOR_LOCAL_TIMEOUT")
+                (output.parent/"gamefec-supervisor-timeout.txt").write_text(
+                    "result=TIMEOUT\nsource="+os.environ.get("GITHUB_SHA","UNKNOWN")+
+                    "\nchild_pid="+str(child.pid)+"\n")
+                (output.parent/"gamefec-stop-request.flag").write_text(
+                    "ORIGINAL_OWNER_STOP_REQUESTED\n")
+                try:child.wait(timeout=12 if limit>10 else .2)
+                except subprocess.TimeoutExpired:pass
+            if child.poll() is None:
+                kill_native_child_tree(child)
+            if game:
+                # Never claim that N4NativeRecoverState restored routes:
+                # its PreRoute-only path rejects *.routes sidecars.
+                wal=output.parent/"owned-wal.json.n4-owned-wal"
+                side=output.parent/"owned-wal.json.n4-owned-wal.routes"
+                client=output.parent/"client.log"
+                owner_stopped=False
+                if client.is_file():
+                    with client.open("rb") as f:
+                        f.seek(max(0,client.stat().st_size-32768))
+                        data=f.read(32768)
+                    owner_stopped=(b"WBD_WINDOWS_GAME_NATIVE_DISCONNECTED" in data
+                        and b"M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS" in data)
+                verdict=("PRODUCT_STOP_LOG_ONLY_OS_READBACK_NOT_INDEPENDENT"
+                    if owner_stopped and not wal.exists() and not side.exists()
+                    else "NETWORK_RECOVERY_UNVERIFIED_KEEP_WAL")
+                with (output.parent/"gamefec-supervisor-timeout.txt").open("a") as f:
+                    f.write("child_exit="+str(child.poll())+
+                        "\nwal_present="+str(wal.exists()).lower()+
+                        "\nroute_sidecar_present="+str(side.exists()).lower()+
+                        "\nnetwork_recovery="+verdict+"\n")
+                events.put("MODE_TIMEOUT")
+            stop.set()
+            diagnostic.join(timeout=.15)
+            return 124
     finally:
         if stack_handle is not None:
             faulthandler.cancel_dump_traceback_later()

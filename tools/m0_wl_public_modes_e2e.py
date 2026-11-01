@@ -59,16 +59,22 @@ for mode in modes:
  if mode.endswith("-fec"):
   for name in ("client.log","server.log","windows-app.log","linux-app.log"):
    (out/name).unlink(missing_ok=True)
+ if mode.endswith("-fec"):
+  (out/"gamefec-stop-request.flag").unlink(missing_ok=True)
  child=subprocess.Popen([sys.executable,"tools/m0_wl_public_normal_e2e.py"],env=env,
   creationflags=0) # restore last terminating pre-a8 original Windows child launch
  timed_out=False
  started=time.monotonic()
  try:
+  owner_stop_requested=False
   while True:
    remaining=mode_seconds-(time.monotonic()-started)
    if remaining<=0:raise subprocess.TimeoutExpired(child.args,mode_seconds)
+   if mode.endswith("-fec") and not owner_stop_requested and remaining<=65:
+    (out/"gamefec-stop-request.flag").write_text("ORIGINAL_OWNER_STOP_REQUESTED\n")
+    owner_stop_requested=True
    try:
-    rc=child.wait(timeout=min(remaining,20))
+    rc=child.wait(timeout=min(remaining,5 if mode.endswith("-fec") else 20))
     break
    except subprocess.TimeoutExpired:
     if time.monotonic()-started>=mode_seconds:raise
@@ -76,6 +82,10 @@ for mode in modes:
           str(int(time.monotonic()-started))+" source="+env.get("GITHUB_SHA",""),flush=True)
  except subprocess.TimeoutExpired:
   timed_out=True
+  if mode.endswith("-fec"):
+   (out/"gamefec-stop-request.flag").write_text("ORIGINAL_OWNER_STOP_REQUESTED\n")
+   try:child.wait(timeout=8)
+   except subprocess.TimeoutExpired:pass
   # Terminate the entire test-child tree on Windows; no orphan native Go/Wsl
   # product may be reused by another mode as a fake Ready or stale evidence.
   if os.name=="nt":
