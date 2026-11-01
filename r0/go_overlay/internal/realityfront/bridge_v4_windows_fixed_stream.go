@@ -11,6 +11,8 @@ import (
 )
 type V4WindowsFixedMatureReadback struct{
  Version,Size,Applied,Censored uint32
+ Profile,Reserved uint32
+ Revision uint64
  CopiedSource,CopiedParity,ReverseReports,Positive2s,Covered2s uint64
 }
 type V4WindowsFixedParity struct{
@@ -121,7 +123,8 @@ func(s *V4WindowsAuthenticatedClientOwner) ReadBoundOriginalFixedMature(
   uintptr(unsafe.Pointer(&out)),uintptr(unsafe.Sizeof(out)))
  runtime.KeepAlive(s.bridge.epoch)
  if err!=nil||out.Version!=1||out.Size!=uint32(unsafe.Sizeof(out))||
-  out.Applied>1||out.Censored>1{
+  out.Applied>1||out.Censored>1||out.Reserved!=0||
+  out.Profile>6||(out.Applied==1&&out.Revision==0){
   return V4WindowsFixedMatureReadback{},errors.Join(errV4WindowsOwner,err)
  }
  return out,nil

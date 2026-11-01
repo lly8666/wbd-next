@@ -731,6 +731,8 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v8_fec2_auto_quality(
 #[repr(C)]
 pub struct WindowsFixedMatureReadback {
     pub version:u32,pub size:u32,pub applied:u32,pub censored:u32,
+    // Actual local FixedStream installation; no mature Quality required.
+    pub profile:u32,pub reserved:u32,pub revision:u64,
     pub copied_source:u64,pub copied_parity:u64,
     pub reverse_reports:u64,pub positive_2s:u64,pub covered_2s:u64,
 }
@@ -752,13 +754,16 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v8_fixed_mature_readback(
     if !v3_ready(&e,epoch,luid,ifindex)||!e.feature7{return BAD_STAGE}
     // Fixed Applied is a local owner installation fact; old mature
     // Receipt counters are separate diagnostics and cannot gate config.
-    let applied=e.fec2_tx.as_ref().is_some_and(|tx|tx.revision().0>0);
+    let tx=e.fec2_tx.as_ref();
+    let applied=tx.is_some_and(|tx|tx.revision().0>0);
+    let profile=tx.map_or(0,|tx|u32::from(tx.profile_index()));
+    let revision=tx.map_or(0,|tx|tx.revision().0);
     let Some(m)=e.m2.as_ref()else{return BAD_STAGE};
     let censored=m.fec_censored||original_m2_recent_capacity(
         m.fec_last_capacity_at,m2_clock());
     unsafe{out.write(WindowsFixedMatureReadback{
         version:1,size,applied:u32::from(applied),
-        censored:u32::from(censored),
+        censored:u32::from(censored),profile,reserved:0,revision,
         copied_source:m.fec_copied_source,copied_parity:m.fec_copied_parity,
         reverse_reports:m.fec_reverse_reports,positive_2s:m.fec_positive_2s,
         covered_2s:m.fec_covered_2s,

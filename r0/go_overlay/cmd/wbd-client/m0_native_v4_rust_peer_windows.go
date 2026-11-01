@@ -34,6 +34,7 @@ type m0WinRustNativePeer struct{
  healthInterval,healthDead,healthDormant uint32
  effectiveHealth realityfront.V4WindowsNativeHealthPolicyV1
  fixedMatureReported bool
+ fixedInstalledReported bool
  autoController *realityfront.V4WindowsOriginalFEC2AutoController
 }
 func newM0WinRustNativePeer(owner *realityfront.V4WindowsAuthenticatedClientOwner,
@@ -189,22 +190,36 @@ func(p *m0WinRustNativePeer) RefreshEffective(ctx context.Context)error{
  p.last=s
  p.effective,err=p.owner.ReadBoundOriginalM2Effective(ctx)
  if err!=nil{return err}
- if p.mode==m0WinModeFixed&&!p.fixedMatureReported{
-  // Exactly one 1Hz original Rust M2 readback, never a Go packet callback.
+ if p.mode==m0WinModeFixed&&(!p.fixedInstalledReported||!p.fixedMatureReported){
+  // One existing 1Hz native readback. Fixed installed configuration is
+  // independent of optional mature Quality; no extra network round.
   m,mErr:=p.owner.ReadBoundOriginalFixedMature(ctx)
-  if mErr!=nil{return fmt.Errorf("original Rust Fixed mature M2 readback: %w",mErr)}
-  if m0WindowsFixedMatureVerified(m){
-   fmt.Printf("WBD_WINDOWS_FEC2_M2_MATURE_SCOPED mode=fec-fixed source=original_rust_authenticated_m2 copied_source=%d copied_parity=%d reverse_reports=%d positive_2s=%d covered_2s=%d censored=%d\\n",
+  if mErr!=nil{return fmt.Errorf("original Rust Fixed owner readback: %w",mErr)}
+  if !p.fixedInstalledReported {
+   if !m0WindowsFixedInstalledVerified(m,p.initialProfile){
+    return fmt.Errorf("original Rust Fixed selected revision/profile not installed")
+   }
+   fmt.Printf("WBD_WINDOWS_FEC2_INSTALLED mode=fec-fixed profile=%d revision=%d applied=1 source=original_rust_owner\n",
+    m.Profile,m.Revision)
+   p.fixedInstalledReported=true
+  }
+  if !p.fixedMatureReported&&m0WindowsFixedMatureVerified(m){
+   fmt.Printf("WBD_WINDOWS_FEC2_M2_MATURE_SCOPED mode=fec-fixed source=original_rust_authenticated_m2 copied_source=%d copied_parity=%d reverse_reports=%d positive_2s=%d covered_2s=%d censored=%d\n",
     m.CopiedSource,m.CopiedParity,m.ReverseReports,m.Positive2s,m.Covered2s,m.Censored)
    p.fixedMatureReported=true
   }
  }
  return nil
 }
-// The 56B original Rust M2 ABI proves genuine copied-firstsend and mature
-// authenticated feedback, never a CLI/OS/config-intent Applied surrogate.
+// Installation is real FixedStream selected profile/revision, not M2 quality.
+func m0WindowsFixedInstalledVerified(m realityfront.V4WindowsFixedMatureReadback,
+ selected realityfront.FecV2Profile)bool{
+ return m.Version==1&&m.Size==72&&m.Applied==1&&
+  m.Profile==uint32(selected)&&m.Revision>0&&m.Reserved==0
+}
+// Mature Quality remains a separate optional diagnostic, never Applied.
 func m0WindowsFixedMatureVerified(m realityfront.V4WindowsFixedMatureReadback)bool{
- return m.Version==1&&m.Size==56&&m.Applied==1&&m.Censored==0&&
+ return m.Version==1&&m.Size==72&&m.Applied==1&&m.Censored==0&&
   m.CopiedSource>0&&m.CopiedParity>0&&m.ReverseReports>0&&
   m.Positive2s>0&&m.Covered2s>0
 }

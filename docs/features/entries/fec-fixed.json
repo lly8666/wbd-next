@@ -18,7 +18,7 @@
   },
   "usage": {
     "cli": "Windows isolated candidate --native-v4-product --lanes 1 --fec-mode fixed --fec-parity 4 --fec.mode fixed --fec.profile light|mild|medium|balanced|high|strong|maximum; original carrier fixed4 separate from Rust FEC2 selection. Fixed profile6 native two-OS functional PASS at precise source4977f; other profiles and real WinForms remain unverified.",
-    "config": "原Go V3 fixed4 carrier仅是入场包络，Rust FixedStream本身支持profile 0..6和revision；不是单独Fixed6测试活动，默认FEC2 OFF",
+    "config": "Existing Windows original Rust Fixed readback H723 now exposes actual installed profile/revision independently from optional Quality maturity; new SOURCE native proof pending. Legacy Go carrier fixed4 is not FEC2 profile6 and GUI actual Applied remains NOT_RUN.",
     "gui": "Windows真实WinForms Applied/Disconnect仍NOT_RUN，不从CLI或M2组件PASS推断"
   },
   "code_refs": [
@@ -38,7 +38,8 @@
     "docs/architecture/FEC_V2_BALANCED.md",
     "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
     "docs/evidence/M0/PLAN026-WINDOWS-FIXED-MATURE-SOURCE4C6-20261029.json",
-    "docs/devlog/M0/20261101-PLAN027-H720-FIXED50-PASS-NEXT-C100.md"
+    "docs/devlog/M0/20261101-PLAN027-H720-FIXED50-PASS-NEXT-C100.md",
+    "docs/devlog/M0/20261101-PLAN027-H723-WINDOWS-FIXED-ACTUAL-INSTALLED-READBACK.md"
   ],
   "verification": [
     {
