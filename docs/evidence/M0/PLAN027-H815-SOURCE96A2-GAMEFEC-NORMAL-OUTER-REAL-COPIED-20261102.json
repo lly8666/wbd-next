@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "source_sha": "96a2acd0b4ed0ee1b22d4836d205f1379bad6e59",
+  "run_id": 41338211724,
+  "run_status": "completed",
+  "run_conclusion": "success",
+  "native_job_id": 124943594045,
+  "artifact": {
+    "id": 13096042611,
+    "name": "m0-wl-full-public-normal-direct",
+    "bytes": 56652,
+    "digest": "sha256:ddb60d61b7aa00373e9c62e345740761f6a306ada4801a9debd77ff4b1d52597",
+    "downloaded_and_unzipped": true,
+    "files": 43
+  },
+  "scenario": "scenarios/plan027-d-game2-fec6-normal-outer-1m-25ms-loss10-10s.json",
+  "scope": "Windows original signed NPF Wintun Rust Game2FEC6 ↔ WSL2 Linux real two-OS first copy and cosmetic outer retransmit, 1Mbps25ms10%10s",
+  "comparison": {
+    "before": {
+      "source_sha": "89b373bfde0f3817651601920a95a57bc7b65c15",
+      "run": 41335510708,
+      "windows_outer_copied": 0,
+      "windows_sampled_original": [
+        263,
+        263
+      ],
+      "windows_lane_expiry": [
+        263,
+        263
+      ],
+      "linux_outer_copied": 76
+    },
+    "after": {
+      "windows_outer_copied": 310,
+      "windows_acked_repair_accepted_by_lane": [
+        153,
+        153
+      ],
+      "windows_original_seen_by_lane": [
+        4265,
+        4265
+      ],
+      "windows_expired_first_untreated_by_lane": [
+        3946,
+        3947
+      ],
+      "linux_outer_copied": 78,
+      "windows_tx_rc": 0,
+      "windows_rx_rc": 0,
+      "windows_linux_real_kernel_udp_tcp": "PASS",
+      "windows_udp_first_fraction": 1,
+      "linux_udp_first_fraction": 1,
+      "windows_offered_mbps": 0.998,
+      "linux_offered_mbps": 0.9999,
+      "first_delivered_windows_mbps": 0.9999,
+      "first_delivered_linux_mbps": 0.998,
+      "windows_product_wal": "RESTORED_ABSENT",
+      "windows_routes_sidecar": "ABSENT",
+      "linux_owned_stop": "PASS",
+      "windows_owned_stop": "PASS"
+    }
+  },
+  "mechanism": "Reuse Normal full bounded 1536 frozen originals and exact ACK index with adaptive 810ms nominal PTO, 1.2s hard retention floor, shared process-global M2 budget 7MB/256/524288, same original immutable ciphertext/PN/SEQ, real signed NPF copied receipt and 80ms minimum per lane; no new GameFEC source/parity/recovery/Health/business delivery credit.",
+  "limitations": [
+    "This scene proves actual presentation retransmit not authentic data retransmit/recovery.",
+    "PTO fallback may select a non-lost original; reoptimization deferred by user.",
+    "Only Game2FEC6 1Mbps25ms10%10s; Game4 and sustained performance/abnormal five-stage WAL crash unqualified.",
+    "Windows shadow diagnostic cosmetic_candidates=0 is gap-only counter; actual first timer repairs accepted 153/153, copied outer310."
+  ],
+  "verdict": "PASS_SCOPED_REAL_WINDOWS_NPF_COSMETIC_OUTER_RETRANSMISSION_AND_OWNED_STOP"
+}

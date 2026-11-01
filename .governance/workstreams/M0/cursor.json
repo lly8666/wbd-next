@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 814,
-  "checkpoint_sha": "89b373bfde0f3817651601920a95a57bc7b65c15",
+  "sequence": 815,
+  "checkpoint_sha": "96a2acd0b4ed0ee1b22d4836d205f1379bad6e59",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H814 GAMEFEC ONLY: user says Windows outer cosmetic retransmission did NOT work; prefer reuse Normal mode retransmission parameters now before CPU/architectural optimization. Real H813 original Windows signed NPF/Wintun↔WSL2 Linux Game2FEC6 1Mbps25ms10%10s Action41335510708 SUCCESS business/Stop/WAL, artifact13095815466 real 39-file ZIP downloaded: WINDOWS copied_appearance=0 sampled_original=[263,263], each lane candidates0/repair0/expiry263, LINUX copied_appearance=76. Source exact. Cause Windows FEC sparse 1/16 plus opportunistic-v3 GAP_ONLY no PTO, unmatched peer ACK heads -> all shadows expired. H814 source candidate switch Windows GameFEC to full Normal 1536 original ACK spans, 810ms adaptive PTO and 1200ms finite retention, Normal 7MB/256/524288 M2, unchanged 80ms per-lane cap, driver-copy exact same original PN/TCP seq. Game/off unchanged, no FEC/Health/firstsend credit. Source test/real NPF retest pending. Other PLAN027 paused.",
-  "why_now": "True 10%-loss original H813 archived ZIP proves 0 Windows cosmetic repeats (not Actions failure) while Linux 76; fix the actual scheduling path first, not reduce 1/16 sample further or start throughput/CPU optimization.",
+  "current_task": "H815 GameFEC outer Normal-mode appearance retransmission actual source scope PASS: H813 SOURCE89b true Windows↔WSL2 signed Game2FEC6 loss10% 1Mbps25ms10s Action41335510708 business/Stop PASS but Windows copied=0, Linux76, two lanes shadow expiries263 each. H814 Normal full receipt/ACK 1536 and 810ms adaptive PTO fallback plus 1200ms frozen floor (instead 1/16/gap-only), shared M2 7MB/256/524288 and 80ms lane cap, original immutable PN/SEQ, no FEC recovery credit; H814 SOURCE96a2 signed Windows NPF↔WSL2 same exact scene Action41338211724 all SUCCESS, actual ZIP13096042611 43 files downloaded checksum ddb60d, Windows NPF copied_appearance=310, Normal accepted153/153, Linux78, original UDP/TCP first Windows/Linux1.0, Rust TX/RX0, owned Stop BOTH and WAL/routes sidecar absent. True no-copied gate PASS. User explicitly requested optimize CPU/architecture later; no further perf/other PLAN027 dispatch. General five-stage crash WAL and Game4 remain unqualified/paused.",
+  "why_now": "Actual H814 ZIP demonstrates user-requested Normal-like GameFEC cosmetic retransmission now sends real original Windows NPF repeats (0→310), not just unit/test launch green; preserve source and artifacts with strict per-mode limits.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H814 GitHub Actions Rust unit/native checks and source-locked ONE real signed Windows↔WSL2 Game2FEC6 loss10 run + actual ZIP, enforce Windows copied_appearance>0, bounded by M2 and 80ms lane cap, verify real NPF driver + Linux parity, UDP/TCP, normal owned Stop/full WAL OS readback. If failure fix first native error. No throughput/other PLAN027 until retransmission works.",
+  "next_action": "No further Action dispatch without new user authorization. On next requested change, resume live main and check current H815 evidence; CPU optimization/ACK lost targeting and other PLAN027 are deferred by user. H815 performance/physical and full abnormal-crash WAL still NOT_QUALIFIED.",
   "unverified": true,
-  "last_tested_source": "89b373bfde0f3817651601920a95a57bc7b65c15",
+  "last_tested_source": "96a2acd0b4ed0ee1b22d4836d205f1379bad6e59",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H814-H813-REAL-GAMEFEC-NORMAL-OUTER-ZERO-WINDOWS-20261102.json"
+    "docs/evidence/M0/PLAN027-H815-SOURCE96A2-GAMEFEC-NORMAL-OUTER-REAL-COPIED-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261101-PLAN027-H807-MAINTENANCE-RETIRED-SATELLITE-TEST.md",
     "docs/devlog/M0/20261102-PLAN027-H808-GAME2FEC-FIRST-PERF-TRUE-10M15LOSS-TO-30LOSS.md",
     "docs/devlog/M0/20261102-PLAN027-H809-GAMEFEC-SPARSE-COSMETIC-OUTER-REPLAY.md",
     "docs/devlog/M0/20261102-PLAN027-H810-COSMETIC-FROZEN-CLONE-FIRST-COMPILE-FAULT.md",
     "docs/devlog/M0/20261102-PLAN027-H811-GAMEFEC-NORMAL-OUTER-ACK-SPARSE-RETRANSMIT.md",
     "docs/devlog/M0/20261102-PLAN027-H812-GAMEFEC-LINUX-NORMAL-ACK-AEAD-HANDOFF.md",
     "docs/devlog/M0/20261102-PLAN027-H813-NORMAL-ACK-GAMEFEC-OUTER-REAL-10LOSS-TEST.md",
-    "docs/devlog/M0/20261102-PLAN027-H814-RESTORE-NORMAL-PTO-FULL-OUTER-GAMEFEC.md"
+    "docs/devlog/M0/20261102-PLAN027-H814-RESTORE-NORMAL-PTO-FULL-OUTER-GAMEFEC.md",
+    "docs/devlog/M0/20261102-PLAN027-H815-GAMEFEC-NPF-NORMAL-PTO-REAL-RETRANSMIT-PASS.md"
   ],
   "open_requests": [],
   "partial_summary": "d100 25ms zero-loss native source business FAIL: Windows first0.997456/Linux0.9819, Linux TUN TX drops2503, generator CPU54.14s, original owned Stop marker+exit PASS; watcher RUN_VIEW recovered. H721 avoid duplicate Linux TERM cleanup warning. H722 one 50Mbps250ms15% Fixed6 new native Action queued/dispatch pending exact current controller; not PASS. H723 new native Rust+Go 72B Windows Fixed selected profile/revision installed readback and Go unit test committed but fresh product NOT_RUN; legacy mature Quality is separate, no extra RTT. H722 real original source d066 in flight. H724 source d066 true highest Fixed50/250ms15 real both UDP/TCP Stop PASS, first.994254/.974935, TUN0/NPF0; Win CPU55.1/78.375 (70.3% core), RSS47MB. Residual Linux2.5% and p99/unreturned bilateral F/R/C still unverified. New H723 72B Windows Fixed installation ABI source65618 cheap assembly mismatch, H724 correct three Go result blobs pending Actions. H739: H738 cheap source-locked tests PASS, mixed-source hot cursor evidence refs cleared without deleting archived historical evidence. Real native GameFEC remains unverified. H742: source0264 H739 true Game2FEC CANCELLED after watcher 493s native step, independent 4 stages only, no original job log or Stop. Source-bound evidence H742 preserved, one H741 IO isolated runner next. User ~8min cap satisfied (30s watcher polling). Other work paused. H743: H742 exact original Game2FEC product SOURCE0264 new harness source045a run41286724011/watcher41286729417 in flight, no product/Stop proof. H741 single PID isolated logging passed synthetic; H739 true native cancel 493s and independent 4 stage receipts archived. H746: H742 new IO diagnostic already reached SUPERVISOR_LOOP_ENTER but no child.poll or timeout and external hard-cancel at502s, BlobNotFound; H744/H745 blocked-console fixtures both PASS, one real source0264 H746 needed. Other PLAN027 paused. H747 H746 actual same frozen original Game2FEC source0264 run41287639141/watcher41287646432 IN_FLIGHT; H744/H745 blocked-main/first-fault synthetic PASSED, product and owned Stop not qualified."
