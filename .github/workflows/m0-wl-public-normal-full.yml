@@ -911,6 +911,15 @@ jobs:
               & python -u tools/m0_wl_native_step_runner.py tools/m0_wl_public_modes_e2e.py result/wl-public/direct-full.log
             }
             $e2eExit=$LASTEXITCODE
+            # Record the original Python supervisor's actual return BEFORE
+            # file scanning, Stop/WSL cleanup or artifact service. If no
+            # NATIVE_PYTHON_EXIT receipt appears, PowerShell may still be
+            # waiting for the Python process/its inherited output handles.
+            if($env:WBD_WL_GAME_FEC_RESCUE -eq '1'){
+              $nativeRC='RC'+[string]$e2eExit
+              & python tools/m0_wl_windows_bounded_cmd.py 12 gh workflow run m0-plan027-gamefec-rescue-record.yml --repo $env:GITHUB_REPOSITORY --ref main -f "target_run=$env:GITHUB_RUN_ID" -f "source=$env:WBD_WL_BINARY_SOURCE" -f stage=NATIVE_PYTHON_EXIT -f "detail=$nativeRC"
+              if($LASTEXITCODE -ne 0){Write-Output 'WL_GAME_NATIVE_RETURN_RECEIPT_UNAVAILABLE_NOT_PASS'}
+            }
             # First failure and last owned Stop status belong in native job
             # stdout BEFORE any WSL2/NPF cleanup or artifact upload.
             $directLog='result/wl-public/direct-full.log'
