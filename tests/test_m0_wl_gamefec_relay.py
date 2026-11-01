@@ -21,8 +21,8 @@ class GameFecRescueRelayTests(unittest.TestCase):
             (out/"windows-app.log").write_text('{"phase": "udp_1hz","sent":50,"received":0}\n')
             (out/"gamefec-e2e-stack.txt").write_text(
               'Timeout (0:01:45)!\nThread 0x13\n  File "m0_wl_public_normal_e2e.py", line 90 in ready\n')
-            relay.observe()
-            relay.observe()
+            for _ in range(20):
+                relay.observe()
             names=[x[0] for x in events]
             for expected in ("CLIENT_READY","SERVER_READY","GAME_FIRST_ERROR",
                              "STACK_E2E","WINDOWS_UDP_ALIVE",
