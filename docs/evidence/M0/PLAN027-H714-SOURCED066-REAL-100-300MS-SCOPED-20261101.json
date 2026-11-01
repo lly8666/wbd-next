@@ -86,5 +86,17 @@
     "Native product source frozen to d066, harness is 415ad28, PowerShell oracle fixed on later main only",
     "Independent watcher failed to fetch same log that Github connector later read: external token/CLI retrieval still not verified",
     "Physical NOT_RUN; other PLAN027 B/C and Windows GameFEC remain unresolved"
-  ]
+  ],
+  "watcher_fallback_qualified": {
+    "run": 41276110492,
+    "job_id": 124758497930,
+    "status": "PASS_SCOPED_EXTERNAL_INDEPENDENT_JOB_LOG_RECOVERY",
+    "github_action_conclusion": "success",
+    "terminal_log": "M0_EXTERNAL_NATIVE_JOB_LOG_RECOVERED target=41275419791 job=124756566987 reason=run_completed_failure attempt=1 method=RUN_VIEW",
+    "actual_recovered": [
+      "WL_PUBLIC_REAL_MODE_RESULT normal PASS",
+      "WL_DIAG run=41275419791 source=d0661a2e110b523ad06b311da23fc1b7291442ba ... child_rc=0 result=EXITED_NOT_AUTOMATIC_PASS"
+    ],
+    "limit": "retrospective already archived job only; original H714 workflow failure remains failure; early cancelled native logs might still be unavailable"
+  }
 }
