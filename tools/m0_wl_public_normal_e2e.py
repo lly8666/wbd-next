@@ -784,7 +784,7 @@ print(json.dumps(result),flush=True)
    # actual product failure; not a new data-plane logger or source gate.
    for role in ("client","server"):
     content=(out/(role+".log")).read_text(errors="replace")[-4200:]
-    content=re.sub(r"(?i)\\b(password|secret|credential|token|key)([=:])\\S+",r"\\1\\2[REDACTED]",content)
+    content=re.sub(r"(?i)\b(password|secret|credential|token|key)([=:])\S+",r"\1\2[REDACTED]",content)
     print("WL_GAME_ORIGINAL_STOP_FAILURE_"+role.upper()+"_TAIL "+content,flush=True)
   raise RuntimeError("Windows native owned WAL Stop missing")
  stop_linux();s.wait(timeout=10)
