@@ -1,0 +1,15 @@
+# PLAN027 H700–H701 — focused Windows Game FEC due_send_records INVALID(1) first-fault localization
+
+Latest user narrows active diagnosis explicitly: no Action-wide timeout tuning or repeated 10Mbps/15%/30% Game FEC matrix. At H699 main recovery source6ece original signed Windows Game2 FEC6 genuine 1Mbps/25ms0%/10s produced first≈4% and no owned WAL Stop; latest run indicated `due_send_records → INVALID(1)`. All older FAIL/CANCELLED and original fixture logs preserved.
+
+Product patch from H700 immutable code commit `fd7b1a242fa9f3e6c6043e990c3b89fd1c4c37a9`: Rust native Game TX `send_records` identifies **first** due batch entry (lane/PN/actual cipher len/actual path MTU/logical ID), then first actual invalid lane, cipher-length check, `wire_frame` returned code including first original `build_bytes` `PacketError` debug reason, `m4_receipt` and `on_firstsend` exact error. Original encrypted record bytes/keys are NEVER logged. Return codes, original ticket settlement, PN/ciphertext reuse, NPF receipt, lane isolation, MTU rejection and ACK semantics UNCHANGED. Error capture is single-shot, not a per-packet instrumentation pump.
+
+Independent Stop classification: original Rust `wbd_m0_win_game_native_v3_stop` now prints TX/RX `is_finished` and worker_rc when native join times out (retaining loans), and actual separate joined TX/RX return codes when both stopped. Go Game peer prints native worker Join result, Game public Stop prints product Stop result, Windows owner WAL prints precise `wal_disconnect` vs `kernel_lease` vs `crypto_after_wal` failures. The diagnostic does **not** convert a failed Stop into success, weaken recovery-required WAL or add an extra control round.
+
+`.github/workflows/m0-plan027-h701-gamefec-due-send-first-fault-1m.yml` one push dispatcher verifies **same code** as `fd7b1a242fa9f3e6c6043e990c3b89fd1c4c37a9`, unchanged existing 1Mbps/25ms/0%/10s/MTU1400 Game2/FEC6 source fixture seed20261029, and triggers exactly one fresh-source original Windows Go TLS/Rust + Linux original binary build and one **real signed NPF/Wintun↔WSL2** Game2/FEC6 scenario. Existing native test always writes source-scoped report.json in finally, echoes a bounded sanitized client/server failure tail if Stop misses, and fails immediately on actual product error after normal owned cleanup. No increase to existing workflow deadline; no same old-source artifact reuse. A dispatch-success banner is NOT product PASS. Only after actual job artifact/log verdict should diagnosis select one minimal fix and one affected-source regression.
+
+Feature-impact: `game-fixed-fec` updated **diagnostic only**, NOT functional/performance promotion. Full PLAN027 B/C remains PARTIAL; unrelated scenarios are deferred under this latest user focus.
+
+```feature-impact
+{"kind":"updated","ids":["game-fixed-fec"],"reason":"H700 first-fault-only native Game due TX lane/PN/cipher length/pathMTU/PacketError and separate Rust worker/WAL Stop stage diagnosis; H701 one original source-locked 1Mbps0% Game2FEC Action only. No runtime return/packet/protocol semantics changed or product PASS claimed."}
+```
