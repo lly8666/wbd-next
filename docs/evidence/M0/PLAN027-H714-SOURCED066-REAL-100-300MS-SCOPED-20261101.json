@@ -98,5 +98,6 @@
       "WL_DIAG run=41275419791 source=d0661a2e110b523ad06b311da23fc1b7291442ba ... child_rc=0 result=EXITED_NOT_AUTOMATIC_PASS"
     ],
     "limit": "retrospective already archived job only; original H714 workflow failure remains failure; early cancelled native logs might still be unavailable"
-  }
+  },
+  "source_sha": "d0661a2e110b523ad06b311da23fc1b7291442ba"
 }
