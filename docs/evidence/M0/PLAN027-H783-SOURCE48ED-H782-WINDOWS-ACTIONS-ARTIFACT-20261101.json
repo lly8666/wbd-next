@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "verified_at_utc": "2026-11-01",
+  "frozen_product_source": "48ed7ffe82aafa17a125948068a2ca6ee6a1593e",
+  "action_workflow_sha": "b035d79f05913c41384227c0821fe4f2d9e68b57",
+  "windows_original_runner": {
+    "run": 41307403459,
+    "job": 124850504998,
+    "conclusion": "SUCCESS",
+    "bounded_original_pid_tests": "PASS_21_OF_21",
+    "synthetic_injected_child_exit": 37,
+    "runner_exit": "PASS_PARENT_EXIT_37_NO_EXTERNAL_CANCEL",
+    "local_first_fault": "PASS_UNMODIFIED_NATIVE_RUNNER",
+    "diagnostic": "WL_DIAG_FIRST_ERROR_INJECTED_TEST_MARKER",
+    "github_after_original_runner": "PASS",
+    "actual_upload": "PASS",
+    "artifact_id": 13084260528,
+    "artifact_size_bytes": 1329,
+    "artifact_sha256": "64d0086624d459ba4e48bd6f655b8a20f423be949eb44a1fac2b95d710d32c33",
+    "zip_downloaded_and_inspected": true,
+    "zip_files": [
+      "h780-actions-probe.json",
+      "h780-native-runner-stdout.txt",
+      "h780-actions-transport.txt",
+      "h780-original-direct-full.log",
+      "gamefec-supervisor-stack.txt"
+    ],
+    "product_source_binary_built": "NO",
+    "original_tls_npf_wintun_rust_gamefec": "NOT_RUN",
+    "product_stop_wal": "NOT_RUN"
+  },
+  "other_action_runs": {
+    "governance": 41307403426,
+    "governance_status": "SUCCESS",
+    "maintenance": 41307403472,
+    "maintenance_status": "SUCCESS",
+    "cheap_assembly": 41307403464,
+    "cheap_assembly_status": "SUCCESS"
+  },
+  "retained_negative": {
+    "h780_run": 41306817415,
+    "h780": "FAIL_WINDOWS_2_OF_21_AND_NO_ARTIFACT",
+    "h781_run": 41307178883,
+    "h781": "FAIL_1_OF_21_ESCAPE_FIXTURE_DESPITE_ACTUAL_ARTIFACT_UPLOAD",
+    "h771_native": 41299653430,
+    "h771": "CANCELLED_NATIVE_LOG_BLOB_NOT_FOUND_PRODUCT_UNKNOWN"
+  },
+  "real_fec_first_delivery": "UNKNOWN_FOR_FROZEN_PRODUCT_SOURCE",
+  "full_product_wfp_routes_dns_mtu_lease_crash_recovery": "NOT_QUALIFIED",
+  "physical": "NOT_RUN",
+  "status": "ACTIONS_CONTROL_EVIDENCE_PATH_PASS_PRODUCT_GAME_FEC_NOT_PASS"
+}
