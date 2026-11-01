@@ -969,7 +969,37 @@ jobs:
                   break
                 }
               }
-              if($damaged){
+              # Explicit 100/300ms complete kernel outages are NOT a
+              # 60-second lossless scene merely because random loss_pct=0.
+              # Require same measured pulses plus a source-first floor from
+              # their actual time fraction with PLAN027's 2pp allowance.
+              $bursts=if($null -ne $v2Config.kernel_loss_bursts){
+                @($v2Config.kernel_loss_bursts)
+              }else{@()}
+              if($bursts.Count -gt 0){
+                $observed=@($real.kernel_bursts_applied)
+                if($observed.Count -ne $bursts.Count){
+                  throw 'real kernel 100/300ms bursts absent from native readback'
+                }
+                $totalBurstMs=0
+                for($b=0;$b -lt $bursts.Count;$b++){
+                  $target=$bursts[$b];$actual=$observed[$b]
+                  if($null -eq $actual -or
+                     [int]$actual.index -ne $b -or
+                     [double]$actual.min_bilateral_100pct_active_ms -lt [double]$target.duration_ms){
+                    throw 'original two-direction kernel pulse duration unproven'
+                  }
+                  $totalBurstMs += [double]$target.duration_ms
+                }
+                $burstFloor=[Math]::Max(0,1-$totalBurstMs/(1000*[double]$v2Config.duration_s)-0.02)
+                if($real.first_delivery_fraction.windows -lt $burstFloor -or
+                   $real.first_delivery_fraction.linux -lt $burstFloor){
+                  throw 'actual kernel burst first delivery below time-weighted tolerance'
+                }
+                Write-Output ('WL_V2_REAL_KERNEL_PULSES_DELIVERY_SCOPED floor='+$burstFloor+
+                  ' window='+$real.first_delivery_fraction.windows+
+                  ' linux='+$real.first_delivery_fraction.linux)
+              }elseif($damaged){
                 if($real.first_delivery_fraction.windows -le 0 -or
                    $real.first_delivery_fraction.linux -le 0){
                   throw 'damaged V2 mode had no authentic first-delivery in one direction'
