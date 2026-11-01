@@ -66,6 +66,10 @@ class GameFecRelay:
             pass
 
     def emit(self,event,detail):
+        # Independent receiver accepts [A-Z_], not numbers. Previous
+        # SUPERVISOR_20S_ALIVE / _60S_ALIVE were silently filtered.
+        event = {"SUPERVISOR_20S_ALIVE":"SUPERVISOR_ALIVE_FIRST",
+                 "SUPERVISOR_60S_ALIVE":"SUPERVISOR_ALIVE_SECOND"}.get(event,event)
         event = SAFE.sub("_",event)[:30]
         detail = SAFE.sub("_",detail)[:80]
         if not re.fullmatch(r"[A-Z_]{3,30}",event) or not detail: return
