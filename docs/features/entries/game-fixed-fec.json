@@ -36,7 +36,8 @@
     "docs/architecture/FEC_V2_BALANCED.md",
     "docs/evidence/fec-network-work/20261026-W103-Game2-Game4-fixed6-outerDATAoff-real-clean-PASS.json",
     "docs/devlog/M0/20261029-PLAN026-GAME-NATIVE-WRITE-COMMIT-LANE-ISOLATION-HEALTH-ORACLE-BATCH.md",
-    "docs/devlog/M0/20261030-PLAN026-RECOVERY-M2-LOW-FREQUENCY-HEALTH-GAME-LANE-SEND-WINTUN-BOUNDARIES.md"
+    "docs/devlog/M0/20261030-PLAN026-RECOVERY-M2-LOW-FREQUENCY-HEALTH-GAME-LANE-SEND-WINTUN-BOUNDARIES.md",
+    "docs/devlog/M0/20261101-PLAN027-H708-H709-LOG-RECOVERY-AND-GAME-FEC-MTU.md"
   ],
   "verification": [
     {
@@ -129,6 +130,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
       "evidence": "docs/evidence/M0/PLAN027-H696-SOURCE6ECE-WINDOWS-GAME2OFF-30PCT-20261101.json"
+    },
+    {
+      "platform": "windows-2025/msvc isolated Rust Game2-FEC6 owner unit (NOT real Npcap/Wintun)",
+      "scope": "H707 genuine Windows Rust sealed Game2/FEC6 due record requires1431 for pathMTU1400 at 1329B original source; source2dcd one unit FAILED. H709 SOURCE79ca authenticated bounded source cap1298; 1/1 MSVC unit PASS (1329 rejected, 1298 outer1400 exact), BUT Action overall FAIL stale h707 post-log filename. Not signed Wintun/Npcap, real Game2FEC+Stop stays NOT_RUN/older SOURCE6ece FAIL.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "79ca1b7d9bede83360934e7ea51de98de5216046",
+      "evidence": "docs/devlog/M0/20261101-PLAN027-H708-H709-LOG-RECOVERY-AND-GAME-FEC-MTU.md"
     }
   ],
   "limitations": [
