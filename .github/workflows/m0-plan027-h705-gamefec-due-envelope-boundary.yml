@@ -24,7 +24,7 @@ jobs:
           rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
           & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_plan027_game2_fec6_actual_due_ciphertext_outer_ipv4_mtu_envelope -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/h709-original-due-mtu.log"
           $rc=$LASTEXITCODE
-          $proof=Get-Content "$env:RUNNER_TEMP/h707-original-due-mtu.log" -Raw
+          $proof=Get-Content "$env:RUNNER_TEMP/h709-original-due-mtu.log" -Raw
           if($proof -notmatch 'running 1 test'){throw 'WINDOWS_ORIGINAL_FEC_DUE_UNIT_DID_NOT_EXECUTE_ONE_TEST'}
           if($rc -ne 0){throw "H709_REAL_WINDOWS_TARGET_GAME_FEC_BOUND_UNIT_FAIL rc=$rc"}
           Write-Output H709_REAL_WINDOWS_TARGET_GAMEFEC_MTU_SINGLE_UNIT_PASS_NOT_NATIVE_DRIVER_OR_STOP
