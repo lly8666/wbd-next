@@ -229,6 +229,58 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
             self.assertIn("block_actual_output",stack,
                           "Python dump must catch auxiliary diagnostic in real OS pipe write")
 
+    def test_h766_owned_game_stop_request_precedes_terminal_kill(self):
+        # Synthetic owner observes the actual file written by the EXISTING
+        # supervisor and closes itself; no product, WAL, or OS PASS inferred.
+        from tools import m0_wl_native_step_runner as native
+        import os
+        with tempfile.TemporaryDirectory() as d:
+            root=pathlib.Path(d);log=root/"direct-full.log";code=root/"owner.py"
+            code.write_text(
+                "import pathlib,sys,time\n"
+                "root=pathlib.Path(sys.argv[0]).parent\n"
+                "deadline=time.monotonic()+8\n"
+                "while not (root/'gamefec-stop-request.flag').exists():\n"
+                " if time.monotonic()>deadline:sys.exit(23)\n"
+                " time.sleep(.025)\n"
+                "(root/'client.log').write_text("
+                "'M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS\\n'"
+                "'WBD_WINDOWS_GAME_NATIVE_DISCONNECTED\\n')\n"
+                "sys.exit(0)\n"
+            )
+            with (mock.patch.object(native,"native_batch_deadline",return_value=1),
+                  mock.patch.object(sys,"argv",[str(RUNNER),str(code),str(log)]),
+                  mock.patch.dict(os.environ,{"WBD_WL_PUBLIC_MODES":"game2-fec",
+                    "WBD_WL_GAME_FEC_RESCUE":"0"})):
+                rc=native.main()
+            self.assertEqual(rc,124,"deadline is NOT a product PASS")
+            result=(root/"gamefec-supervisor-timeout.txt").read_text()
+            self.assertIn("child_exit=0",result)
+            self.assertIn("PRODUCT_STOP_LOG_ONLY_OS_READBACK_NOT_INDEPENDENT",result)
+            self.assertFalse((root/"gamefec-stop-request.flag").read_text()=="")
+            self.assertIn("Thread",(root/"gamefec-supervisor-stack.txt").read_text())
+
+    def test_h766_routes_sidecar_kept_when_recovery_unverified(self):
+        # No execution of N4NativeRecoverState's PreRoute-only helper:
+        # a routes sidecar requires actual original full-WAL Undo.
+        from tools import m0_wl_native_step_runner as native
+        import os
+        with tempfile.TemporaryDirectory() as d:
+            root=pathlib.Path(d);log=root/"direct-full.log";code=root/"stuck.py"
+            code.write_text("import time\ntime.sleep(30)\n")
+            side=root/"owned-wal.json.n4-owned-wal.routes"
+            side.write_text("OWNED_ROUTE_SIDECAR_MUST_NOT_BE_REMOVED\n")
+            with (mock.patch.object(native,"native_batch_deadline",return_value=1),
+                  mock.patch.object(sys,"argv",[str(RUNNER),str(code),str(log)]),
+                  mock.patch.dict(os.environ,{"WBD_WL_PUBLIC_MODES":"game2-fec",
+                     "WBD_WL_GAME_FEC_RESCUE":"0"})):
+                rc=native.main()
+            self.assertEqual(rc,124)
+            self.assertTrue(side.is_file())
+            text=(root/"gamefec-supervisor-timeout.txt").read_text()
+            self.assertIn("route_sidecar_present=true",text)
+            self.assertIn("NETWORK_RECOVERY_UNVERIFIED_KEEP_WAL",text)
+
     def test_h711_real_native_stop_markers_not_guessed(self):
         from tools import m0_wl_native_step_runner as native
         state={"stage":"UNKNOWN","first_error":"UNKNOWN","fragment":"",
