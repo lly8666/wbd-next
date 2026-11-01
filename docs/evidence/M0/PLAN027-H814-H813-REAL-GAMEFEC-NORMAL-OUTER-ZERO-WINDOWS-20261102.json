@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "source_sha": "89b373bfde0f3817651601920a95a57bc7b65c15",
+  "run_id": 41335510708,
+  "run_conclusion": "SUCCESS",
+  "native_job": 124935576003,
+  "artifact": {
+    "id": 13095815466,
+    "bytes": 56987,
+    "digest": "sha256:1df10fe027055ec6643b4ebc2c0246f2055916ca3f15d24dba913c8f932f6c4c",
+    "downloaded_and_unzipped": true,
+    "file_count": 39
+  },
+  "scenario": "scenarios/plan027-d-game2-fec6-normal-outer-1m-25ms-loss10-10s.json",
+  "scenario_parameters": {
+    "each_direction_mbps": 1,
+    "delay_ms": 25,
+    "loss_pct": 10,
+    "duration_s": 10
+  },
+  "scope": "REAL_ORIGINAL_WINDOWS_SIGNED_NPF_WINTUN_RUST_TLS_GAME2FEC6_TO_WSL2_LINUX",
+  "observed": {
+    "windows_outer": {
+      "copied_appearance": 0,
+      "original_sampled": [
+        263,
+        263
+      ],
+      "lane1": {
+        "candidates": 0,
+        "expiry": 263,
+        "repair_accepted": 0,
+        "ack_examined_sack": 0
+      },
+      "lane2": {
+        "candidates": 0,
+        "expiry": 263,
+        "repair_accepted": 0,
+        "ack_examined_sack": 0
+      }
+    },
+    "linux_outer": {
+      "copied_appearance": 76,
+      "peer_ack_after_aead": true,
+      "real_original_pn_seq_only": true
+    },
+    "windows_linux_owned_stop": "PASS",
+    "real_kernel_udp_tcp": "PASS",
+    "windows_normal_retransmission": "FAIL_ZERO_DRIVER_COPIED_OUTER_REPEATS"
+  },
+  "root_cause": "Windows GameFEC optional 1/16 shadow plus Normal opportunistic_v3 gap-only mode: actual receiver cumulative ACK seldom equals sparse sampled head and no fallback PTO; every 263 frozen sample expires with zero nominations. Single source real traffic positive but cosmetic Windows retransmission absent.",
+  "correction_h814": "Reuse Normal full 1536 shadow ACK index and ReceiptState 810ms adaptive PTO with finite 1200ms retain, same global M2 budget, original sealed ciphertext/PN/seq, maximum one copied outer repeat per80ms per lane. Recheck real zero under loss10; do not confer FEC/business recovery credit.",
+  "candidate_verdict": "NOT_YET_TESTED",
+  "physical": "NOT_RUN"
+}

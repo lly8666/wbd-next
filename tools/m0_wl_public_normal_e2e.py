@@ -886,6 +886,16 @@ print(json.dumps(result),flush=True)
   expected="V4_PUBLIC_GAME_FEC_APPLIED role=server lanes=%d mode=fixed profile=6"%lanes
   if expected not in (out/"server.log").read_text(errors="replace"):
    raise RuntimeError("actual Game FEC2 protected Linux profile readback missing")
+  # H814: genuine 10%-loss native packet copies are required, not merely
+  # a green test launcher. Cosmetic copies NEVER create FEC recovery credit.
+  client_text=(out/"client.log").read_text(errors="replace")
+  copied=re.search(r"WBD_GAME_FEC_NORMAL_OUTER_STOP copied_appearance=(\d+)",client_text)
+  copied_count=int(copied.group(1)) if copied else None
+  report["windows_game_outer_copied_appearance"]=copied_count if copied_count is not None else "NOT_MEASURED"
+  if scenario and scenario.get("scenario_id")=="plan027-d-game2-fec6-normal-outer-1m-25ms-loss10-10s":
+   if copied_count is None or copied_count<1:
+    raise RuntimeError("H814_REAL_WINDOWS_GAMEFEC_NORMAL_OUTER_ZERO_NPF_COPIES")
+   print("H814_REAL_WINDOWS_GAMEFEC_NORMAL_OUTER_NPF_COPIED="+str(copied_count),flush=True)
  report["mode_public"]="PASS_ACTUAL_WINDOWS_LINUX_NATIVE_"+mode
  if mode=="normal":report["normal_public"]="PASS_ACTUAL_WINDOWS_LINUX_NATIVE"
  print("WBD_WL_TRUE_PUBLIC_MODE_WIN_LINUX_DUPLEX_STOP_PASS "+mode)
