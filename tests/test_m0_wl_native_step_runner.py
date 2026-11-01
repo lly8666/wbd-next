@@ -85,12 +85,12 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         state={"stage":"UNKNOWN","first_error":"UNKNOWN","fragment":"",
                "lane":"UNKNOWN","cipher_len":"UNKNOWN","path_mtu":"UNKNOWN",
                "tx":"UNKNOWN","rx":"UNKNOWN","wal":"UNKNOWN"}
-        native._inspect(state,b"M0_PLAN027_GAME_NATIVE_STOP_NOT_DRAINED group=7 rc=3 tx_finished=true rx_finished=false worker_rc=3 retained_loans=1\\n")
+        native._inspect(state,b"M0_PLAN027_GAME_NATIVE_STOP_NOT_DRAINED group=7 rc=3 tx_finished=true rx_finished=false worker_rc=3 retained_loans=1\n")
         self.assertEqual(state["tx"],"FINISHED_UNJOINED")
         self.assertEqual(state["rx"],"NOT_EXITED")
         self.assertEqual(state["wal"],"UNKNOWN")
-        native._inspect(state,b"M0_PLAN027_GAME_NATIVE_STOP_JOIN group=7 tx_finished=true rx_finished=true tx_rc=0 rx_rc=0\\n")
-        native._inspect(state,b"M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS\\n")
+        native._inspect(state,b"M0_PLAN027_GAME_NATIVE_STOP_JOIN group=7 tx_finished=true rx_finished=true tx_rc=0 rx_rc=0\n")
+        native._inspect(state,b"M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS\n")
         self.assertEqual((state["tx"],state["rx"],state["wal"]),
                          ("EXITED","EXITED","RESTORED"))
 
