@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_R": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_N": "061ba0bf4dde27ecb788e53ca22beb310f2e71f3",
+  "mode": "normal",
+  "platform": "Linux amd64 original Go TLS client/server + Rust M4 raw/TUN, owned network namespaces",
+  "binary_sha256": {
+    "libwbd_engine.so": "f4b53039a6d393e7c2584df3b074470267b9218dfa281e9e5f31f3bc9b48dc78",
+    "wbd-v4-client": "949fc7bc467276fe6557870174858f548d5d365c25065cbd4b32b1a244a074e4",
+    "wbd-v4-server": "373cae784aae258b17f6ec1ad2c054f7b5d66f12c55ba2780630ee26b4b82a77"
+  },
+  "paired_R": {
+    "action_run_id": 41342800664,
+    "artifact_name": "plan027-r-normal10-250-zero-off-on",
+    "scenario": "plan027-h539-normal-10m-250ms-loss0-60s",
+    "dimensions": "10 Mbps each direction, 250ms one-way, 0pct tc loss, 60s measured, 5s warmup, 10s drain, UDP payload sizes 64/128/512/1200, same VM sequential OFF then ON",
+    "status": "PASS_SCOPED_PAIRED_COST_OBSERVATION_NOT_OPTIMIZATION",
+    "frozen_binary_manifest_verified": true,
+    "OFF": {
+      "cpu_s": {
+        "client": 4.73,
+        "server": 4.73
+      },
+      "peak_rss_bytes": {
+        "client": 19591168,
+        "server": 19582976
+      },
+      "first_fraction": {
+        "c2s": 1,
+        "s2c": 1
+      },
+      "first_p99_ms": {
+        "c2s": 250.5,
+        "s2c": 250.5
+      },
+      "F_ip_wire_bytes": {
+        "c2s": 92347464,
+        "s2c": 92345631
+      },
+      "R_ip_wire_bytes": {
+        "c2s": 0,
+        "s2c": 0
+      },
+      "native_repair_readback": true,
+      "owned_stop": true,
+      "owned_netns_absent": true
+    },
+    "ON": {
+      "cpu_s": {
+        "client": 5.02,
+        "server": 5.06
+      },
+      "peak_rss_bytes": {
+        "client": 20115456,
+        "server": 20639744
+      },
+      "first_fraction": {
+        "c2s": 1,
+        "s2c": 1
+      },
+      "first_p99_ms": {
+        "c2s": 250.5,
+        "s2c": 250.5
+      },
+      "F_ip_wire_bytes": {
+        "c2s": 92347138,
+        "s2c": 92345916
+      },
+      "R_ip_wire_bytes": {
+        "c2s": 163,
+        "s2c": 163
+      },
+      "native_repair_readback": true,
+      "owned_stop": true,
+      "owned_netns_absent": true
+    },
+    "cost_ON_minus_OFF": {
+      "cpu_seconds": {
+        "client": 0.29,
+        "server": 0.33
+      },
+      "rss_bytes": {
+        "client": 524288,
+        "server": 1056768
+      },
+      "cpu_share_of_ON": {
+        "client": 0.057768924302788856,
+        "server": 0.06521739130434785
+      }
+    }
+  },
+  "independent_N": {
+    "action_run_id": 41343186000,
+    "artifact_name": "plan027-n-normal10-250-loss30-off",
+    "scenario": "wl-outer-repair-10m-250ms-loss30-60s",
+    "source_binary_reused_from_R": true,
+    "dimensions": "10 Mbps each direction, 250ms one-way, true 30pct tc loss, 60s measured +5s warmup+10s drain, outer DATA repair OFF, same UDP packet mix as R",
+    "status": "PASS_SCOPED_REAL_LOSS30_REPAIR_OFF_CONTROL_NOT_RECOVERY",
+    "first_fraction": {
+      "c2s": 0.7008693860197233,
+      "s2c": 0.7009695602290866
+    },
+    "received_mbps": {
+      "c2s": 7.0087850666666665,
+      "s2c": 7.009674666666667
+    },
+    "first_p99_ms_delivered_only": {
+      "c2s": 250.4,
+      "s2c": 250.4
+    },
+    "netem_real_drops": {
+      "client": 31334,
+      "server": 31170
+    },
+    "F_ip_wire_bytes": {
+      "c2s": 92275785,
+      "s2c": 92280349
+    },
+    "R_ip_wire_bytes": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "cpu_s": {
+      "client": 2.04,
+      "server": 2.04
+    },
+    "rss_peak_bytes": {
+      "client": 19906560,
+      "server": 20176896
+    },
+    "native_outer_off_readback": true,
+    "owned_stop": true,
+    "owned_netns_absent": true
+  },
+  "scope_exclusions": [
+    "All above CPU are complete Go+Rust process 60s, not Rust thread attribution",
+    "R F and R are cumulative warmup+measurement, CPU steady only; neither L2 C nor full physical line budget measured",
+    "N data first arrival p99 excludes missing 30pct; cannot report recovery gain from OFF only",
+    "R ON slight nonzero 163B per direction on 0pct possible noisy ACK; not a no-repair-zero hard gate",
+    "Normal vs Game/FEC with changed payload mixes not causal side-by-side",
+    "One same-VM R order OFF then ON only; no repeated samples/thermal reversal; do not claim steady 6pct CPU benefit or regression",
+    "Original Windows/WSL2 per-flow HOL, long 300s, Game/FEC integrated ON and physical host NOT_RUN"
+  ],
+  "decision": "Do not patch ReceiptState/BTreeMap based solely on measured ~0.3 CPU-s/60s ON delta at 10Mbps. Advance independently useful genuine Game2FEC6 repair-OFF loss30 measurement from same original product binary."
+}

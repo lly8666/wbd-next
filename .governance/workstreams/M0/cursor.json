@@ -4,29 +4,30 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 819,
-  "checkpoint_sha": "f3940f49f05ee4d3758e14ce990f157c27fa74b4",
+  "sequence": 820,
+  "checkpoint_sha": "061ba0bf4dde27ecb788e53ca22beb310f2e71f3",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 active R/N: R same-VM original Normal OFF→ON source f5e8 build manifest PASS, paired CPU/first-delivery job in progress Action41342800664. N separate true 30% original Normal OFF scenario prepared to reuse exact same f5e8 binary in own Action; product FEC/Game higher-loss and integrated ON still open.",
-  "why_now": "R source-frozen build artifact is complete, allowing independently useful N repair-OFF 30% loss measurement with zero extra native compilation while R pair runs.",
+  "current_task": "PLAN027 H820 R zero-loss Normal same VM OFF→ON real original Linux source f5e8 scoped measured PASS, CPU+0.29/+0.33s/60, RSS+0.52/+1.06MB, first both100pct. N true 30pct loss Normal OFF independent same product source PASS, first70.087/70.097pct, netem31334/31170, Stop. New independent Game2FEC6 outer-OFF true 30pct source-reuse test pending. No general CPU optimization/P99 physical acceptance.",
+  "why_now": "New exact measured R/N facts show limited zero-loss outer ON CPU differential and real OFF 30pct loss baseline; most discriminatory next step is independent Game2FEC6 intact FEC with outer OFF under high loss, not speculative repair hotpath code.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H817 R Action41342800664 paired OFF/ON verdict and H819 separate N loss30 OFF Action; reconcile product vs fixture SHA and F/R/CPU/RSS/native Stop; only then optimize measured Normal shared bottleneck and reuse Game/Fixed/Auto, followed by affected ON and 300s.",
+  "next_action": "Collect new Game2FEC6 OFF30 Action source f5e8 artifact/fixture sha, native FEC/parity/outer OFF/first CPU RSS/Stop. Compare only scoped physical facts, preserve different mix. Then next Fixed/Auto/Game4/lifecycle and impacted ON/300s per current PLAN027; no unnecessary same-family R repeat.",
   "unverified": true,
   "last_tested_source": "96a2acd0b4ed0ee1b22d4836d205f1379bad6e59",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H815-SOURCE96A2-GAMEFEC-NORMAL-OUTER-REAL-COPIED-20261102.json"
+    "docs/evidence/M0/PLAN027-H815-SOURCE96A2-GAMEFEC-NORMAL-OUTER-REAL-COPIED-20261102.json",
+    "docs/evidence/M0/PLAN027-H820-FROZEN-F5-R-ONOFF-AND-N-OFF30-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H812-GAMEFEC-LINUX-NORMAL-ACK-AEAD-HANDOFF.md",
     "docs/devlog/M0/20261102-PLAN027-H813-NORMAL-ACK-GAMEFEC-OUTER-REAL-10LOSS-TEST.md",
     "docs/devlog/M0/20261102-PLAN027-H814-RESTORE-NORMAL-PTO-FULL-OUTER-GAMEFEC.md",
     "docs/devlog/M0/20261102-PLAN027-H815-GAMEFEC-NPF-NORMAL-PTO-REAL-RETRANSMIT-PASS.md",
     "docs/devlog/M0/20261102-PLAN027-H816-NORMAL-REPAIR-COST-PAIR.md",
     "docs/devlog/M0/20261102-PLAN027-H817-NORMAL-REPAIR-PAIR-PREBUILD-FIX.md",
     "docs/devlog/M0/20261102-PLAN027-H818-RESTORE-CURSOR-REF-BOUND.md",
-    "docs/devlog/M0/20261102-PLAN027-H819-NORMAL-OFF30-REUSE.md"
+    "docs/devlog/M0/20261102-PLAN027-H819-NORMAL-OFF30-REUSE.md",
+    "docs/devlog/M0/20261102-PLAN027-H820-FROZEN-R-N-AND-GAME2FEC6-NEXT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H815 Game2FEC6 1Mbps loss10 original Windows NPF copied310, Linux78, both Stop PASS. H816 unit prebuild failed placeholder, H817 corrected, Action41342800664 build once manifest PASS paired R measurement running. H818 governance bound fixed PASS41342911798. H819 separate N 30% true loss Normal repair OFF reuses exact H817 source artifact, result pending. No new performance acceptance."
+  "partial_summary": "H820 actual R Action41342800664 original Linux Normal 10M250ms0pct OFF→ON one VM CPU+0.29/+0.33s, RSS+0.52/+1.06MB, first1.0 both, p99 250.5ms, Stop PASS; single-order not general causal speedup. N Action41343186000 same binary Normal30pct OFF first~0.701 both, true drops31334/31170, R0, Stop PASS. Product source f5e8. Next one independent Game2FEC6 OFF30 source-reuse Action pending. C, Windows ON/OFF costs, cross-stream HOL, 300s NOT_RUN."
 }
