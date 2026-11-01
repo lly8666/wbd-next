@@ -18,8 +18,12 @@ import(
  "github.com/lly8666/wobuzhidao/internal/realityfront"
  "github.com/lly8666/wobuzhidao/internal/windowsclient"
 )
-func m0PLAN024WindowsRealGame(t *testing.T,n int){
+func m0PLAN024WindowsRealGame(t *testing.T,n int,fecSelection ...uint8){
  t.Helper()
+ if len(fecSelection)>1{t.Fatal("one protected GameFec parameter only")}
+ var gameFec uint8
+ if len(fecSelection)==1{gameFec=fecSelection[0]}
+ if gameFec!=0 && (gameFec!=7||n!=2){t.Fatal("only isolated Game2FEC6 is selected here")}
  dll:=os.Getenv("WBD_M0_WIN_OWNER_DLL")
  if dll==""{t.Fatal("original Go source-locked Rust owner DLL missing")}
  if !m0NativeWintunAvailable(t){t.Fatal("official signed Wintun required by real Game integration")}
@@ -90,7 +94,7 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int){
     },
     ExpectedUsername:"protected-owner",ExpectedPassword:"secret",
     ServerLimit:1400,
-   },epochs)
+   },epochs,gameFec)
   answer<-struct{
    group *realityfront.V4WindowsAuthenticatedGameServerGroup
    err error
@@ -106,7 +110,7 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int){
    Username:"protected-owner",Password:"secret",
    TunnelID:[]byte("0123456789abcdef"),ClientLimit:1400,
    DesiredLanes:uint8(n),Policy:policy,
-  })
+  },gameFec)
  var answerValue struct{
   group *realityfront.V4WindowsAuthenticatedGameServerGroup
   err error
@@ -130,9 +134,21 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int){
  // tickets and join original Rust owner holds before closing Wintun.
  // A false NPF copied receipt must never be invented to make Stop pass.
  var unsubmittedClient,unsubmittedServer []realityfront.V4WindowsGameRecord
+ var clientFecPending,serverFecPending bool
+ var clientFecLane,serverFecLane uint32
  defer func(){
   cleanup,cancel:=context.WithTimeout(context.Background(),15*time.Second)
   defer cancel()
+  if serverFecPending{
+   if err:=serverGroup.CompleteGameFecBatch(cleanup,serverFecLane,0);err!=nil{
+    t.Errorf("Game2FEC6 original server uncommitted inner Wintun batch: %v",err)
+   }
+  }
+  if clientFecPending{
+   if err:=clientGroup.CompleteGameFecBatch(cleanup,clientFecLane,0);err!=nil{
+    t.Errorf("Game2FEC6 original client uncommitted inner Wintun batch: %v",err)
+   }
+  }
   if len(unsubmittedClient)>0{
    if err:=clientGroup.CancelUnsubmittedGameTickets(cleanup,unsubmittedClient);err!=nil{
     t.Errorf("Game%d original client never-NPF tickets cleanup: %v",n,err)
@@ -167,12 +183,26 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int){
  // the original server's Rust first-delivery dedup after real OS kernel.
  lane2:=records[1]
  fromKernel:=m0RealOriginalTLSRustAEADToSignedWintunKernelApp(t,ctx,tun,lane2.Wire)
- delivered,e:=serverGroup.OpenGameRecord(ctx,lane2.Lane,fromKernel)
- if e!=nil||string(delivered)!=string(packet){
-  t.Fatalf("Game%d independent lane2 first-delivery no-HOL: %v %v",n,e,delivered)
- }
- if replay,err:=serverGroup.OpenGameRecord(ctx,lane2.Lane,fromKernel);err==nil{
-  t.Fatalf("Game%d original M3 replay delivered %d bytes",n,len(replay))
+ if gameFec!=0{
+  frames,pending,err:=serverGroup.OpenGameFecBatch(ctx,lane2.Lane,fromKernel)
+  if pending{serverFecPending=true;serverFecLane=lane2.Lane}
+  if err!=nil||!pending||len(frames)!=1||string(frames[0])!=string(packet){
+   t.Fatalf("Game2FEC6 server actual kernel ciphertext first receive: count=%d pending=%t err=%v",len(frames),pending,err)
+  }
+  // Kernel delivered the OUTER ciphertext, not the returned INNER IPv4
+  // back into Wintun. A confirmed copied-prefix would be false evidence.
+  if err:=serverGroup.CompleteGameFecBatch(ctx,lane2.Lane,0);err!=nil{
+   t.Fatalf("Game2FEC6 server not-copied inner result: %v",err)
+  }
+  serverFecPending=false
+ }else{
+  delivered,e:=serverGroup.OpenGameRecord(ctx,lane2.Lane,fromKernel)
+  if e!=nil||string(delivered)!=string(packet){
+   t.Fatalf("Game%d independent lane2 first-delivery no-HOL: %v %v",n,e,delivered)
+  }
+  if replay,err:=serverGroup.OpenGameRecord(ctx,lane2.Lane,fromKernel);err==nil{
+   t.Fatalf("Game%d original M3 replay delivered %d bytes",n,len(replay))
+  }
  }
  // Genuine kernel delivery above was Wintun->UDP, NEVER Npcap TX.
  // Conservatively report NotSent for all original staged lane tickets.
@@ -180,33 +210,56 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int){
   t.Fatalf("Game%d original not-submitted client M4 ticket settle: %v",n,err)
  }
  unsubmittedClient=nil
+ if gameFec!=0{
+  // M4 NPF has NOT copied a record. Timed GameFecTx cannot mint parity
+  // credits or a normal send receipt out of a Go-only staging buffer.
+  time.Sleep(25*time.Millisecond)
+  due,err:=clientGroup.DueGameFecParity(ctx,16)
+  if err!=nil||len(due)!=0{
+   t.Fatalf("Game2FEC6 no-NPF copied source still emitted due parity: %d %v",len(due),err)
+  }
+ }
  reverse:=m0OriginalTLSRustAEADKernelUDP([]byte(fmt.Sprintf("game%d-native-reverse",n)),41991)
  backward,e:=serverGroup.StageGameRecords(ctx,reverse)
  if e!=nil||len(backward)!=n{t.Fatalf("Game%d original server reverse AEAD: %v",n,e)}
  unsubmittedServer=backward
  lane:=backward[n-1]
  reverseFromKernel:=m0RealOriginalTLSRustAEADToSignedWintunKernelApp(t,ctx,tun,lane.Wire)
- got,e:=clientGroup.OpenGameRecord(ctx,lane.Lane,reverseFromKernel)
- if e!=nil||string(got)!=string(reverse){
-  t.Fatalf("Game%d original Go TLS Rust reverse first-delivery: %v",n,e)
- }
- // OpenGameRecord prepares one Rust Game/off first-delivery ticket. In
- // this scenario the real signed-Wintun kernel delivered the OUTER encrypted
- // UDP record, but the returned INNER plaintext was never written to the
- // Wintun device. Retire the exact pending ticket as DefinitelyNotSent;
- // claiming a successful inner kernel copy here would forge delivery.
- // This must precede group Stop, whose owned fence correctly rejects
- // uncompleted prepare/commit pairs with C ABI rc=5.
- if err:=clientGroup.CompleteGameOff(ctx,lane.Lane,0);err!=nil{
-  t.Fatalf("Game%d original reverse not-copied inner M4 settlement: %v",n,err)
- }
- if err:=clientGroup.CompleteGameOff(ctx,lane.Lane,0);err==nil{
-  t.Fatalf("Game%d duplicate inner Wintun result accepted",n)
+ if gameFec!=0{
+  frames,pending,err:=clientGroup.OpenGameFecBatch(ctx,lane.Lane,reverseFromKernel)
+  if pending{clientFecPending=true;clientFecLane=lane.Lane}
+  if err!=nil||!pending||len(frames)!=1||string(frames[0])!=string(reverse){
+   t.Fatalf("Game2FEC6 client true signed Wintun reverse receive: count=%d pending=%t err=%v",len(frames),pending,err)
+  }
+  if err:=clientGroup.CompleteGameFecBatch(ctx,lane.Lane,0);err!=nil{
+   t.Fatalf("Game2FEC6 client not-copied inner result: %v",err)
+  }
+  clientFecPending=false
+ }else{
+  got,e:=clientGroup.OpenGameRecord(ctx,lane.Lane,reverseFromKernel)
+  if e!=nil||string(got)!=string(reverse){
+   t.Fatalf("Game%d original Go TLS Rust reverse first-delivery: %v",n,e)
+  }
+  // Kernel delivery was OUTER ciphertext only. The inner Wintun packet
+  // never went to OS, so commit one exact definitely-not-sent receipt.
+  if err:=clientGroup.CompleteGameOff(ctx,lane.Lane,0);err!=nil{
+   t.Fatalf("Game%d original reverse not-copied inner M4 settlement: %v",n,err)
+  }
+  if err:=clientGroup.CompleteGameOff(ctx,lane.Lane,0);err==nil{
+   t.Fatalf("Game%d duplicate inner Wintun result accepted",n)
+  }
  }
  if err:=serverGroup.CancelUnsubmittedGameTickets(ctx,unsubmittedServer);err!=nil{
   t.Fatalf("Game%d original not-submitted server M4 ticket settle: %v",n,err)
  }
  unsubmittedServer=nil
+ if gameFec!=0{
+  time.Sleep(25*time.Millisecond)
+  due,err:=serverGroup.DueGameFecParity(ctx,16)
+  if err!=nil||len(due)!=0{
+   t.Fatalf("Game2FEC6 no-server-NPF copied still emitted due parity: %d %v",len(due),err)
+  }
+ }
  stop,cancelStop:=context.WithTimeout(context.Background(),15*time.Second)
  defer cancelStop()
  if e=clientGroup.StopCryptoAfterDriverDrain(stop);e!=nil{t.Fatalf("Game%d client native Stop: %v",n,e)}
@@ -214,10 +267,23 @@ func m0PLAN024WindowsRealGame(t *testing.T,n int){
  if _,e=clientGroup.StageGameRecords(ctx,packet);e==nil{
   t.Fatalf("Game%d stale authenticated group accepted post Stop",n)
  }
- t.Logf("M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_GAME%d_NATIVE_RUST_M4_SIGNED_WINTUN_KERNEL_APP_LANE1_BLOCKED_FIRST_REVERSE_NO_HOL_STOP_PASS_SCOPED host_global_WFP_NOT_RUN=1",n)
+ if gameFec!=0{
+  t.Log("M0_PLAN027_REAL_ORIGINAL_GO_TLS_GAME2FEC6_SIGNED_WINTUN_RUST_RX_FIRST_REVERSE_OWNED_STOP_PASS_SCOPED NPF_NOT_RUN=1 PARITY_NOT_QUALIFIED=1 WFP_GLOBAL_NOT_RUN=1")
+ }else{
+  t.Logf("M0_PLAN024_ORIGINAL_GO_TLS_WINDOWS_GAME%d_NATIVE_RUST_M4_SIGNED_WINTUN_KERNEL_APP_LANE1_BLOCKED_FIRST_REVERSE_NO_HOL_STOP_PASS_SCOPED host_global_WFP_NOT_RUN=1",n)
+ }
 }
 func TestM0PLAN024WindowsRealOriginalGoGame2Game4SignedWintunFirstReverse(t *testing.T){
  for _,n:=range []int{2,4}{
   t.Run(fmt.Sprintf("game%d",n),func(t *testing.T){m0PLAN024WindowsRealGame(t,n)})
  }
+}
+
+// Genuine protected GameFec=7 fixed6 over the SAME original Go TLS, native
+// Rust Game2 group and real signed Wintun outer ciphertext kernel path.
+// This intentionally DOES NOT send NPF, apply host-global routes/WFP or
+// claim timed parity/business throughput. Both pending Wintun receipts are
+// precisely negative, and original group Stop must still drain cleanly.
+func TestM0PLAN027WindowsRealOriginalGoGame2Fec6SignedWintunFirstReverseStop(t *testing.T){
+ m0PLAN024WindowsRealGame(t,2,7)
 }
