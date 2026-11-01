@@ -1,27 +1,27 @@
-name: M0 PLAN027 GameFEC source-locked performance single mode
+name: M0 PLAN027 GameFEC Normal outer short real functional
 on:
   push:
     branches: [main]
     paths: [.github/workflows/m0-plan027-gamefec-performance.yml]
 permissions: {contents: read, actions: write}
 jobs:
-  launch-game2fec-performance:
-    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-game2fec-perf]')
+  launch-game2fec-outer-functional:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-gamefec-outer-functional]')
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      FIXED_PRODUCT_SOURCE: "6a1d8fd8c4d574d6e86d72300aaec7ebc595c9a4"
+      FIXED_PRODUCT_SOURCE: "f0b1b024da708d25c5ea7477101dd3b015e7ca8c"
       PROVEN_MINIMUM_RUN: "41323048788"
       PROVEN_10M15_RUN: "41325559876"
-      SCENE: "scenarios/plan027-c-game2-fec-10m-250ms-loss30-60s.json"
+      SCENE: "scenarios/plan027-d-game2-fec6-normal-outer-1m-25ms-loss10-10s.json"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false, fetch-depth: 5}
-      # H808 next Game2FEC capacity/latency/quality rung, no product change.
-      # One retained independent 480s watcher, zero satellite rescue fanout.
-      - name: Exact SOURCE, proven minimum, real impairment and one performance dispatch
+      # H813 uses the existing SINGLE native dispatcher for functional loss
+      # selection, NOT a performance/throughput sweep. One hard watchdog.
+      - name: Exact SOURCE and original Normal-style outer GameFEC functional dispatch
         shell: bash
         run: |
           set -euo pipefail
@@ -33,24 +33,27 @@ jobs:
             jq -e '.conclusion=="success" and .head_sha=="21ae892fddd6a8d6338fb74a73e8e45380f1631a"' >/dev/null
           gh api "repos/$GH_REPO/actions/runs/$PROVEN_10M15_RUN" |
             jq -e '.conclusion=="success" and .head_sha=="d5c7fcf192ccb2c0ccba7a9bdeb3da19a5ebbc74"' >/dev/null
-          # No source drift since the working original GameFEC outer-MTU fix.
+          # Source-locked H812 actual Normal-ACK outer candidate, not H808 codec.
           git fetch --depth=1 origin "$FIXED_PRODUCT_SOURCE"
           git diff --quiet "$FIXED_PRODUCT_SOURCE" "$GITHUB_SHA" -- \
             crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py
           python3 tools/prepare_windows_wiring.py --check-only
+          grep -Fq "tracks_cumulative_head" crates/wbd-recovery/src/outer_ack.rs
+          grep -Fq "with_normal_feedback" crates/wbd-engine/src/v4_game_public_kernel.rs
+          grep -Fq "recv_one_with_ack_into" crates/wbd-platform/src/linux_raw_carrier.rs
           python3 - <<'PY'
           import json
           from pathlib import Path
-          p=Path("scenarios/plan027-c-game2-fec-10m-250ms-loss30-60s.json")
+          p=Path("scenarios/plan027-d-game2-fec6-normal-outer-1m-25ms-loss10-10s.json")
           j=json.loads(p.read_text())
           assert j["public_mode"]=="game2-fec"
-          assert (j["duration_s"],j["warmup_s"],j["drain_s"])==(60,5,10)
+          assert (j["duration_s"],j["warmup_s"],j["drain_s"])==(10,3,5)
           assert j["tun_mtu"]==1400
           for side in ("windows_to_linux","linux_to_windows"):
               s=j[side]
-              assert (s["offered_mbps"],s["delay_ms"],s["loss_pct"])==(10,250,30)
-          print("GAME2FEC_250MS_30LOSS_SCENE_DECLARATION_EXACT_NOT_PERFORMANCE_PASS",flush=True)
+              assert (s["offered_mbps"],s["delay_ms"],s["loss_pct"])==(1,25,10)
+          print("GAME2FEC_NORMAL_OUTER_1MBPS_10LOSS_SCENE_EXACT_NOT_PRODUCT_PASS",flush=True)
           PY
           gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
             -f public_mode=game2-fec -f run_n0=false -f perf_scenario_file="$SCENE"
-          echo GAME2FEC_PERF_SINGLE_REAL_NATIVE_DISPATCHED_NOT_VERDICT
+          echo GAME2FEC_NORMAL_OUTER_SINGLE_REAL_NATIVE_DISPATCHED_NOT_VERDICT
