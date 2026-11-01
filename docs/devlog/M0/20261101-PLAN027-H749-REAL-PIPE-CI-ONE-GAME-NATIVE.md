@@ -1,0 +1,13 @@
+# PLAN027 H749 — 1s genuine unread OS PIPE proof and ONE real Game2FEC native dispatch
+
+M0 GameFEC ONLY, all other PLAN027 paused, overall PARTIAL. User requested no console/read/GitHub in owning PID loop; instead verify a **real unconsumed OS stdout PIPE** before another expensive signed original Windows+Linux FEC trial, plus independently saved Python stack files before cancel.
+
+H748 staged two initial CI failures at SOURCES ceed798/4f4b8 due stale old fixture assertions and temporary fixture Python import, honestly retained; source ba8c487 corrected both. Cheap actual GitHub Actions [41289214593](https://github.com/lly8666/wbd-next/actions/runs/41289214593) **SUCCESS** with test `test_h748_actual_unread_os_pipe_full_does_not_hold_game_deadline` **PASS**; real 1s PID timeout returns 124 while stdout PIPE is deliberately unread and fills beyond 8 KiB, original Game test child is killed, `faulthandler` wrote Python threads. Governance-maintenance [41289214607](https://github.com/lly8666/wbd-next/actions/runs/41289214607) and main governance [41289214648](https://github.com/lly8666/wbd-next/actions/runs/41289214648) **SUCCESS**. No products compiled/qualified in this test.
+
+Latest original SOURCE 0264c2cfc91e05c7c4b8d518fa0efc6707a2ff6b build 41280564979 pinned windows binary artifact13072889005 SHA256 b2ed3b6d2cd7712e36863d26e9fedee35a8b5c0a18c23db282d2dc9e586d67c8, Linux13072973000 SHA256 3a6593f40b411ca829588c9556aca3a644836e982de3027f1bc2b4b825512f11. Previous native [41287639141](https://github.com/lly8666/wbd-next/actions/runs/41287639141) **CANCELLED**, watcher41287646432 hard stop at native 507s, job BlobNotFound, distinct receipts only PRE_NATIVE_STEP→STEP_ENTER→STEP_PREFLIGHT_COMPLETE→MODE_STARTED→SUPERVISOR_LOOP_ENTER, no actual Go/Rust business, Stop, 20s, single poll proof.
+
+One H749 controller `.github/workflows/m0-plan027-h749-gamefec-one-native-after-real-pipe.yml` authenticates immutable SOURCE, single 1M/25ms/0%/10s Game2FEC, exact 250s PID + external 480s native step, uses only new diagnostic/source-locked Python harness. Await its actual native run, independent first-fault receipts, and stack files. Do not call mere controller PASS a real product PASS. If observer threads now independently show first error, fix actual Rust/Go Game. If not, stack clarifies process vs output vs WSL/cleanup; uploaded artifacts only if runner steps survive. **No other mode or matrix dispatch**.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"GameFEC diagnostic-only, true blocked OS pipe/fault fixture passes; frozen signed original SOURCE0264 native newly requested, product remains unverified."}
+```
