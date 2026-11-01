@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "scenario_id": "plan027-n-normal-off-50m-25ms-loss0-60s",
+  "public_mode": "normal",
+  "outer_repair": "off",
+  "offered_mbps_each_direction": 50,
+  "delay_ms_each_direction": 25,
+  "loss_pct_each_direction": 0,
+  "tun_mtu": 1400,
+  "warmup_s": 5,
+  "duration_s": 60,
+  "drain_s": 10,
+  "packet_mix": [
+    [
+      1200,
+      100
+    ]
+  ],
+  "seed": 20261102,
+  "purpose": "Bounded original Normal real 50Mbps per direction full-MTU-range UDP before optional 100/200; distinguish product/TUN queue, host CPU/PSI and source loss; not a physical Windows result."
+}
