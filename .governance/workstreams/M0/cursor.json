@@ -4,29 +4,30 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 774,
-  "checkpoint_sha": "6c99159e83e99664453f78c4fce04eaf67934764",
+  "sequence": 778,
+  "checkpoint_sha": "bd1ca5aea80bfc36a54539de98a3a5cb7cabc250",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H774 GAMEFEC ONLY. H771 exact product SOURCE48ed Game2FEC run41299653430 CANCELLED at native504s by watcher41299659992, no original artifact/log, last independent COLD_TLS_CERT_READY; user-provided unbound late log shows UDP receiver seq0..55 contiguous, sampled drops0, CreateArtifact ENOTFOUND before management /32 restore PASS. H772 same-native-step exact management route restore BEFORE artifact, preserves local WAL/routes presence and explicit NOT_VERIFIED (cheap tests41300747033 PASS). H773 user log source-scope limited evidence doc and devlog committed governance41300895976 PASS. H774 explicitly fail native test if run-owned WAL or .routes survives original Stop; does not repair unsupported N4NativeRecoverState PreRoute-only full routes. No new native or other PLAN027; full original abnormal five-stage recovery NOT_PROVEN.",
-  "why_now": "User demonstrated artifact DNS failure before managed underlay route restoration. Preserve true receiver packets as only observed-span sample; fail closed on surviving product WAL/route sidecar instead of treating management-route restore as full original product Stop. No additional 480s native until exact-owned five-stage recovery is safe.",
+  "current_task": "H778 GAMEFEC ONLY: H771 actual SOURCE48ed original Game2FEC native41299653430 CANCELLED, BlobNotFound, product WAL/WFP/DNS/routes abnormal recovery UNKNOWN. H775 independent Ubuntu watcher fixture41303183366 SUCCESS, real artifact13082013849 size3195 source-typed GitHub stages/status. H776 Windows scoped 4 management /32 peers Arm->child os._exit(37)->exact Restore->gh api->real artifact SUCCESS Action41303261469 artifact13082385501 size448, product five-stage recovery NOT_TESTED. H777 early bounded original GameFEC first-fault/stack artifact before secondary cleanup, no new native run; H778 static ordering regression. Other PLAN027 paused; original product 10s business+normal Stop+full OS recovery+Action self-exit UNQUALIFIED.",
+  "why_now": "User asked artifact upload reliability after GameFEC CreateArtifact ENOTFOUND. Two real artifact uploads now independently proven from separate Ubuntu watcher and Windows run-scoped management route abnormal-exit fixture; early original native artifact can preserve first fault before cleanup if native step exits.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Inspect exact original Go N4UnifiedTxn five-stage crash WAL recovery prerequisites (pinned PnP identity, live persistent WFP guard, full route sidecar CAS), implement only if ownership can be preserved after child exit and test short Windows abnormal product exit→native full route/WFP/DNS absence; otherwise retain blocker/receipts. Next original Game2FEC one scene only after that gate, then Game4FEC short. Other tasks paused.",
+  "next_action": "First collect H778 low-cost source-scoped CI. Then qualify one SHORT Windows ORIGINAL complete network WAL/WFP/route/DNS abnormal child crash and ownership exact recovery, with actual independent OS absence and artifact; retain explicit blocker if pinned Wintun owner no longer exists. Only after true safety gate one original Game2FEC1M25ms0%10s → bidirectional business → normal Stop → full OS restored → own Action exits and real artifact, Game4FEC only afterward. No duplicate native now.",
   "unverified": true,
   "last_tested_source": "48ed7ffe82aafa17a125948068a2ca6ee6a1593e",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H766-SOURCE48ED-H764-GAME2FEC-CANCEL-RECOVERY-GAP-20261101.json",
-    "docs/evidence/M0/PLAN027-H773-SOURCE48ED-H771-GAME2FEC-CANCEL-ARTIFACT-NETWORK-20261101.json"
+    "docs/evidence/M0/PLAN027-H773-SOURCE48ED-H771-GAME2FEC-CANCEL-ARTIFACT-NETWORK-20261101.json",
+    "docs/evidence/M0/PLAN027-H778-SOURCE48ED-ACTUAL-GAMEFEC-ARTIFACT-RELIABILITY-20261101.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261101-PLAN027-H756-GAMEFEC-REAL-LOG-STAGES-FIRST.md",
     "docs/devlog/M0/20261101-PLAN027-H760-H761-FAST-GAMEFEC-COLD-BOUNDARY.md",
     "docs/devlog/M0/20261101-PLAN027-H763-GAME-POSTTLS-NATIVE-HANDOFF.md",
     "docs/devlog/M0/20261101-PLAN027-H764-SOURCE-FRESH-POSTTLS-CONTROLLER.md",
     "docs/devlog/M0/20261101-PLAN027-H766-CANCEL-RECOVERY-NOT_YET_FULL.md",
     "docs/devlog/M0/20261101-PLAN027-H767-H771-MANAGEMENT-PIN-AND-ONE-NATIVE.md",
     "docs/devlog/M0/20261101-PLAN027-H772-H773-GAMEFEC-ARTIFACT-MANAGEMENT-RESTORE-ORDER.md",
-    "docs/devlog/M0/20261101-PLAN027-H774-FAIL-CLOSED-SURVIVING-NATIVE-WAL.md"
+    "docs/devlog/M0/20261101-PLAN027-H774-FAIL-CLOSED-SURVIVING-NATIVE-WAL.md",
+    "docs/devlog/M0/20261101-PLAN027-H775-H778-GAMEFEC-ARTIFACT-UPLOAD-RECOVERY.md"
   ],
   "open_requests": [],
   "partial_summary": "d100 25ms zero-loss native source business FAIL: Windows first0.997456/Linux0.9819, Linux TUN TX drops2503, generator CPU54.14s, original owned Stop marker+exit PASS; watcher RUN_VIEW recovered. H721 avoid duplicate Linux TERM cleanup warning. H722 one 50Mbps250ms15% Fixed6 new native Action queued/dispatch pending exact current controller; not PASS. H723 new native Rust+Go 72B Windows Fixed selected profile/revision installed readback and Go unit test committed but fresh product NOT_RUN; legacy mature Quality is separate, no extra RTT. H722 real original source d066 in flight. H724 source d066 true highest Fixed50/250ms15 real both UDP/TCP Stop PASS, first.994254/.974935, TUN0/NPF0; Win CPU55.1/78.375 (70.3% core), RSS47MB. Residual Linux2.5% and p99/unreturned bilateral F/R/C still unverified. New H723 72B Windows Fixed installation ABI source65618 cheap assembly mismatch, H724 correct three Go result blobs pending Actions. H739: H738 cheap source-locked tests PASS, mixed-source hot cursor evidence refs cleared without deleting archived historical evidence. Real native GameFEC remains unverified. H742: source0264 H739 true Game2FEC CANCELLED after watcher 493s native step, independent 4 stages only, no original job log or Stop. Source-bound evidence H742 preserved, one H741 IO isolated runner next. User ~8min cap satisfied (30s watcher polling). Other work paused. H743: H742 exact original Game2FEC product SOURCE0264 new harness source045a run41286724011/watcher41286729417 in flight, no product/Stop proof. H741 single PID isolated logging passed synthetic; H739 true native cancel 493s and independent 4 stage receipts archived. H746: H742 new IO diagnostic already reached SUPERVISOR_LOOP_ENTER but no child.poll or timeout and external hard-cancel at502s, BlobNotFound; H744/H745 blocked-console fixtures both PASS, one real source0264 H746 needed. Other PLAN027 paused. H747 H746 actual same frozen original Game2FEC source0264 run41287639141/watcher41287646432 IN_FLIGHT; H744/H745 blocked-main/first-fault synthetic PASSED, product and owned Stop not qualified."

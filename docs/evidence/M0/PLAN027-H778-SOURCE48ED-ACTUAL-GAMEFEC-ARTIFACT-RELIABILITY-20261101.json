@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "source_sha": "48ed7ffe82aafa17a125948068a2ca6ee6a1593e",
+  "original_h771": {
+    "run": 41299653430,
+    "status": "CANCELLED",
+    "native_job_log": "BLOB_NOT_FOUND",
+    "product_wal_recovery": "UNKNOWN",
+    "bidirectional_delivery": "NOT_QUALIFIED"
+  },
+  "independent_ubuntu_watcher": {
+    "commit": "ff4ae9e09468796c1e05fe64a39026f12272ce15",
+    "test_run": 41303183366,
+    "conclusion": "SUCCESS",
+    "artifact_id": 13082013849,
+    "artifact_name": "gamefec-independent-watch-evidence",
+    "artifact_bytes": 3195,
+    "source_binding": "H771 run-id and exact product source HEAD verified",
+    "scope": "GITHUB_RUN_JOB_AND_SAVED_INDEPENDENT_STAGE_METADATA_ONLY",
+    "product_windows_local_logs": "NOT_AVAILABLE_FROM_WATCHER",
+    "product_qualification": "NOT_PASS"
+  },
+  "windows_abnormal_management_route": {
+    "commit": "e2960645b59dfdade426ae156b87c148398fe58f",
+    "test_run": 41303261469,
+    "conclusion": "SUCCESS",
+    "artifact_id": 13082385501,
+    "artifact_name": "h776-windows-mgmt-restore-crash-upload-not-product",
+    "artifact_bytes": 448,
+    "actual_route_setup": "FOUR_RUNNER_MANAGEMENT_IPv4_PEER_ROUTES_READ_BACK",
+    "actual_child_exit": 37,
+    "actual_lease_restore": "EXACT_OWNED",
+    "actual_github_api_after_restore": "SUCCESS",
+    "actual_artifact_upload": "SUCCESS",
+    "scope": "TEST_RUN_OWNED_GITHUB_MANAGEMENT_HOST_ROUTES_ONLY",
+    "product_full_WAL_WFP_DNS_ROUTES_recovery": "NOT_TESTED"
+  },
+  "native_game_early_local_artifact": {
+    "commit": "79a11be79f3dcbd6abe2263366dc5c9c9a23321f",
+    "artifact_name": "gamefec-native-local-early-evidence",
+    "content": "bounded original Go/Rust first fault and exact postTLS markers, Python stacks, local network state",
+    "ordering": "AFTER_NATIVE_STEP_BEFORE_SEPARATE_WSL_NPF_CLEANUP",
+    "native_Game_test": "NOT_RUN_FOR_THIS_CHANGE",
+    "watcher_cancel_limitation": "CANCEL_DURING_NATIVE_STEP_CANNOT_REACH_EARLY_UPLOAD_STEP",
+    "independent_fallback": "H775_WATCHER_METADATA_ONLY"
+  },
+  "status": "ARTIFACT_UPLOADER_FIXTURES_PASS_NOT_GAMEFEC_PRODUCT_PASS"
+}
