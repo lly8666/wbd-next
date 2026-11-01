@@ -29,6 +29,7 @@ impl CosmeticCopy{
         }
     }
 }
+#[derive(Clone)]
 pub(crate) struct CosmeticFrozen{
     wire:Arc<[u8]>,meta:FrozenMetadata,origin:BufferOrigin,
 }
