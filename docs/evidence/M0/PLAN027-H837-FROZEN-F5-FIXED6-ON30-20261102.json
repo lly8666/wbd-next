@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_sha": "5cc8c8eab101220034febf6b5d586225fd77b6e6",
+  "result": "PASS_SCOPED_FIXED6_NATIVE_REPAIR_ON_TRUE30",
+  "artifact_verified": true,
+  "run_id": 41352100420,
+  "artifact_name": "plan027-integration-fixed6-on30",
+  "scope": "Original Linux Go TLS Rust M4 one-lane Fixed6 outer repair ON, 10Mbps each/250ms one-way/true30pct/60s, same packet mix as original OFF scene",
+  "readback": {
+    "fec_fixed_profile6_both": true,
+    "real_parity_rsent": {
+      "client": 116424,
+      "server": 116402
+    },
+    "outer_on_both": true,
+    "real_netem_drops": {
+      "client": 63552,
+      "server": 63218
+    }
+  },
+  "first": {
+    "c2s_fraction": 0.9994591912028437,
+    "s2c_fraction": 0.9999769599938558,
+    "p99_ms": 266.3,
+    "missing": {
+      "c2s": 49,
+      "s2c": 18
+    }
+  },
+  "wire": {
+    "F_ip_bytes": {
+      "c2s": 209243395,
+      "s2c": 209247397
+    },
+    "R_ip_bytes": {
+      "c2s": 17433069,
+      "s2c": 17413286
+    },
+    "R_over_F": {
+      "c2s": 0.08331478754681838,
+      "s2c": 0.08321865050488537
+    },
+    "C": "NOT_MEASURED_PHYSICAL"
+  },
+  "cpu_s": {
+    "client": 3.48,
+    "server": 3.58
+  },
+  "rss_peak_bytes": {
+    "client": 22343680,
+    "server": 22736896
+  },
+  "owned_stop": true,
+  "namespace_absent": true,
+  "limits": [
+    "Not paired same-VM with previous Fixed6 OFF; CPU delta is not causal ON overhead",
+    "Single iid real source/scenario; C not physical and no Windows/rotation guarantee",
+    "F/R original M4 IP full warmup+steady, CPU steady only"
+  ]
+}

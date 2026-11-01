@@ -567,8 +567,24 @@ def startup_diagnostic(log_text):
     }
     text = log_text.lower()
     reasons = [label for label, token in tokens.items() if token in text]
+    # Hardcoded status-family counts only. These are already emitted by the
+    # authentic Go cold reauthorization path; never retain raw TLS logs,
+    # payload, addresses, argv or secrets while diagnosing an owner exit.
+    lifecycle = (
+        ("dead_reconnect_armed", "V4_PUBLIC_NATIVE_DEAD_RECONNECT_ARMED"),
+        ("real_tun_reconnect_trigger", "V4_PUBLIC_NATIVE_RECONNECT_TRIGGER"),
+        ("cold_tls_reauthorize", "V4_PUBLIC_ORIGINAL_GO_TLS_REAUTHORIZE"),
+        ("client_ready", "V4_ORIGINAL_GO_CLIENT_NATIVE_READY"),
+        ("server_ready", "V4_ORIGINAL_GO_SERVER_NATIVE_READY"),
+        ("native_stop_drained", "V4_PUBLIC_NATIVE_STOP_DRAINED"),
+    )
+    counts = {name: min(log_text.count(token), 100) for name,token in lifecycle}
+    latest = max(((log_text.rfind(token), name) for name,token in lifecycle),
+                 default=(-1,"NOT_OBSERVED"))
     return {"safe_failure_classes": reasons or ["UNCLASSIFIED_NO_RAW_LOG_PERSISTED"],
-            "log_lines_present": min(len(log_text.splitlines()), 100000)}
+            "log_lines_present": min(len(log_text.splitlines()), 100000),
+            "native_reauthorization_stage_counts":counts,
+            "last_native_reauthorization_marker":latest[1] if latest[0]>=0 else "NOT_OBSERVED"}
 
 class LinuxExperiment:
     def __init__(self, config, bundle_dir, out, label):

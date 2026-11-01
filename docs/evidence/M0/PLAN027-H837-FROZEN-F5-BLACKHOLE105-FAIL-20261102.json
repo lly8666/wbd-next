@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_sha": "badffe732214d363c990db7c1cb5440d18aad4aa",
+  "result": "FAIL_NATIVE_BLACKHOLE_RESTORATION_CLIENT_EXIT1",
+  "artifact_verified": true,
+  "run_id": 41351767832,
+  "artifact_name": "plan027-n-original-blackhole105-recover120",
+  "scenario": "plan027-n-normal-both-blackhole105-recover120",
+  "scope": "Original Linux Go TLS+Rust M4 Normal outer OFF 20s active then both true 100pct netem 105s with no app/probes, then attempt restore120s",
+  "observed": {
+    "preflight_config_unit": "PASS",
+    "same_frozen_source_and_sha256": "PASS",
+    "actual_phase_snapshots": [
+      "warmup-start",
+      "before-pre20",
+      "before-double_blackhole105",
+      "before-recovery120"
+    ],
+    "real_qdisc_100pct_loss_each_direction": true,
+    "netem_dropped_during_blackhole": {
+      "client": 8,
+      "server": 8
+    },
+    "actual_exit_before_cleanup": {
+      "client": 1,
+      "server": null
+    },
+    "stopped_before_new_business_phase_completed": true,
+    "native_final_product_stop": "NOT_RUN",
+    "original_go_handoff_readback": "NOT_RUN_AT_ABORT",
+    "owned_namespaces_absent": true,
+    "native_result": "FAIL",
+    "failures": [
+      "product exited during real traffic"
+    ],
+    "safe_startup_diagnostics": {
+      "client": {
+        "classes": [
+          "UNCLASSIFIED_NO_RAW_LOG_PERSISTED"
+        ],
+        "log_lines_present": 2740
+      },
+      "server": {
+        "classes": [
+          "UNCLASSIFIED_NO_RAW_LOG_PERSISTED"
+        ],
+        "log_lines_present": 2728
+      }
+    }
+  },
+  "interpretation": "Real authenticated peer death >90s and reauthorization path is implicated, but exact failure stage unknown: original Go client exit 1 occurred after actual both-direction 100pct netem interval and before 120s recovery measurement; not a PASS and not attributable to hosted VM without contrary evidence",
+  "followup": "One diagnostic rerun with fixed-label native reauthorization status counts and no raw TLS logs, same source/scenario; if failure remains inspect exact stage and fix genuine product path, not repeated arbitrary parameter sweeps."
+}

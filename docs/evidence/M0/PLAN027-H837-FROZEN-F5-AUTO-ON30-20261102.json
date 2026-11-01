@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_sha": "5cc8c8eab101220034febf6b5d586225fd77b6e6",
+  "result": "PASS_SCOPED_AUTO_NATIVE_REPAIR_ON_TRUE30",
+  "artifact_verified": true,
+  "run_id": 41352100480,
+  "artifact_name": "plan027-integration-auto-on30",
+  "scope": "Original Linux Go TLS Rust M4 single-lane Auto outer repair ON, 10Mbps each/250ms one-way/true30pct/60s, same mix as original OFF scene",
+  "readback": {
+    "fec_auto_final_profile6_both": true,
+    "real_parity_rsent": {
+      "client": 93510,
+      "server": 106366
+    },
+    "outer_on_both": true,
+    "real_netem_drops": {
+      "client": 56751,
+      "server": 60557
+    }
+  },
+  "first": {
+    "c2s_fraction": 0.9964644756926038,
+    "s2c_fraction": 0.9983598928959714,
+    "p99_ms": {
+      "c2s": 266.3,
+      "s2c": 266.4
+    },
+    "missing": {
+      "c2s": 306,
+      "s2c": 159
+    }
+  },
+  "wire": {
+    "F_ip_bytes": {
+      "c2s": 186700465,
+      "s2c": 199536793
+    },
+    "R_ip_bytes": {
+      "c2s": 15741966,
+      "s2c": 16539715
+    },
+    "R_over_F": {
+      "c2s": 0.0843166941228561,
+      "s2c": 0.08289055242057539
+    },
+    "C": "NOT_MEASURED_PHYSICAL"
+  },
+  "cpu_s": {
+    "client": 5.43,
+    "server": 5.64
+  },
+  "rss_peak_bytes": {
+    "client": 22728704,
+    "server": 22867968
+  },
+  "owned_stop": true,
+  "namespace_absent": true,
+  "limits": [
+    "Not same-VM paired with original Auto OFF; CPU reduction/gain not attributable",
+    "Native Auto final profile6 is not stage timing proof; separate actual Auto240 original stage proof exists",
+    "C physical not measured, p99 excludes missing, one real source seed sample only"
+  ]
+}

@@ -1,3 +1,4 @@
+# H837: exactly one diagnostic rerun after genuine original Go client exit1; only fixed-label lifecycle counts, never raw TLS logs.
 name: M0 PLAN027 N original Normal both-way real blackhole105 recover120
 on:
   push:
@@ -22,7 +23,7 @@ jobs:
           set -euo pipefail
           git cat-file -e "$PRODUCT_SOURCE^{commit}"
           git diff --quiet "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/arm64_public_go_rust_bundle.sh
-          python3 -m unittest tests.test_m0_plan027_linux_blackhole_recover -v
+          python3 -m unittest tests.test_m0_plan027_linux_blackhole_recover tests.test_m0_plan027_native_reauth_diag -v
           python3 -m py_compile tools/network_harness/m0_plan027_linux_blackhole_recover.py
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
@@ -59,6 +60,8 @@ jobs:
           path: |
             plan027-n-blackhole-recover/result.json
             plan027-n-blackhole-recover/double-blackhole-recovery/result.json
+            plan027-n-blackhole-recover/double-blackhole-recovery/client-product-markers.log
+            plan027-n-blackhole-recover/double-blackhole-recovery/server-product-markers.log
             plan027-n-blackhole-recover/double-blackhole-recovery/network-snapshots.json
             plan027-n-blackhole-recover/double-blackhole-recovery/summary.md
           if-no-files-found: warn

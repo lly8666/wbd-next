@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "source_sha": "d0c149fbeef76b57b628d646253ff3c9767d62e2",
+  "result": "PASS_SCOPED_WINDOWS_NORMAL_OUTER_ON_NOT_BILATERAL_FULL_PRODUCT_GRADE",
+  "artifact_verified": true,
+  "run_id": 41351342840,
+  "artifact_name": "m0-wl-full-public-normal-direct",
+  "scenario": "wl-outer-repair-10m-250ms-loss30-60s",
+  "scenario_sha256": "73bf61884e54551e16f290af78c447db1a717232aaa2b238c71fc03f35ddf0a8",
+  "platform": "Windows2025 original signed Go TLS Rust Wintun+Npcap NPF vs Linux WSL2 original Rust raw/TUN; both source locked to this commit",
+  "native_workflow_conclusion": "success",
+  "native_app": {
+    "both_udp_smoke": "PASS",
+    "both_tcp_echo": "PASS",
+    "both_owned_stop": "PASS",
+    "both_source_binary_verified": true
+  },
+  "performance": {
+    "offered_mbps": {
+      "windows": 9.9974,
+      "linux": 10
+    },
+    "first_mbps": {
+      "windows": 7.2408,
+      "linux": 7.2544
+    },
+    "first_fraction": {
+      "windows": 0.72384,
+      "linux": 0.724216
+    },
+    "real_tc_drops": {
+      "eth0": 33484,
+      "ifb": 33607
+    },
+    "genuine_windows_npf_outer_repair_packets": 9462,
+    "F_ip_wire_bytes": 86375673,
+    "R_accepted_ip_wire_bytes": 7668080,
+    "R_uncertain": 0,
+    "C_control_wire_bytes": 164837,
+    "R_over_F": 0.08877592189643489,
+    "R_over_F_plus_R_plus_C": 0.08139470084415869,
+    "native_qualifier": {
+      "status": "PASS_SCOPED_WINDOWS_OUTER_REPAIR",
+      "repair_signal_grade": "NONZERO_WINDOWS_REPAIR_NOT_BILATERAL_GRADE",
+      "product_repair_qualified": false
+    }
+  },
+  "windows_whole_process_cpu_sample": {
+    "cpu_s": 24.5,
+    "window_s": 77.843,
+    "cpu_kernel_s": 11.5469,
+    "cpu_user_s": 12.9531,
+    "avg_one_core_pct": 31.474,
+    "peak_working_set_bytes": 43065344
+  },
+  "limitations": [
+    "Exact 60s offered/delivery but process CPU observation 77.843s includes non-steady setup/Stop; don't compare to 60s Linux CPU",
+    "Cross OS clock uncalibrated, no one-way p99 or cross-flow HOL qualification",
+    "Native product_repair_qualified=false due lacking bilateral repair grade; do not promote one-sided NPF R to bilateral network repair acceptance",
+    "No Windows native repair OFF readback/same-VM A/B, no complete 300s physical Windows native result",
+    "Windows source d0c149 differs Linux frozen product source f5 even though native product tree unchanged; evidence separate from f5 M0 cursor evidence_refs"
+  ]
+}
