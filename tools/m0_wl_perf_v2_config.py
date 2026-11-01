@@ -115,11 +115,20 @@ def profile(cfg,side):
 # A damaged Game/Fixed/Normal source must be delivered, but cannot satisfy
 # a lossless >=99.9% oracle under a real requested 5/30% kernel loss.
 def first_delivery_ok_for_scenario(scene,first):
+    # Real 100/300ms 100%-loss kernel pulses are NOT a 0%-loss network.
+    # Use the measured impairment duty fraction plus PLAN027's 2pp
+    # allowance, while retaining an absolute delivered-first floor.
+    # The caller separately requires actual tc pulse readback + owned Stop.
+    bursts=scene.get("kernel_loss_bursts") or []
+    burst_floor=(max(0.,1.0-sum(p["duration_ms"] for p in bursts)
+                    /(1000*scene["duration_s"])-.02) if bursts else None)
     for receiver,direction in (("windows","linux_to_windows"),
                                ("linux","windows_to_linux")):
         v=first.get(receiver)
         if type(v) not in (int,float):return False
-        if scene[direction]["loss_pct"]>0:
+        if burst_floor is not None:
+            if v<burst_floor:return False
+        elif scene[direction]["loss_pct"]>0:
             if not v>0:return False
         elif v<.999:return False
     return True
