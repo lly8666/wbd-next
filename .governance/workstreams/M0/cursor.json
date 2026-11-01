@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 824,
-  "checkpoint_sha": "9d8bdc8fc410e2b536f4eed2d494cdcb3e9bb14a",
+  "sequence": 825,
+  "checkpoint_sha": "23b537f9cacded8f6a4e9b1ea53509cdb2a64a1e",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H824: original Linux source f5 same binary R zero-loss Normal OFF→ON cost PASS, N Normal OFF true30 PASS first70%, Game2FEC6 OFF true30 first100% p99 258.7 CPU8.24sec each, Fixed6 Normal one lane OFF same Game2 UDP mix true30 PASS scoped first99.9887/99.9729% p99 266.4 CPU6.07/6.59sec; new Auto exact-mix outer OFF source-reuse Action pending, no product modifications.",
-  "why_now": "Fixed6 original one-lane same Game2 UDP size mix under true30pct recovered almost all with lower CPU but 21/18 residual missing, p99 266.4. Next Auto policy must establish same-source dynamic FEC vs Fixed6 before optimizing or 20Mbps Game4.",
+  "current_task": "PLAN027 R/N H825: exact source-frozen Normal zero-loss R OFF→ON PASS cost +0.29/+0.33 sec; R true 30%-loss OFF→ON same-VM independent Action pending (source f5); N Normal OFF30, Fixed6 OFF30, Game2FEC6 OFF30 all scoped PASS; N Auto OFF30 Action41344886116 in flight. Product-source identical f5, fixtures separately versioned; no product optimization without measured hotpath.",
+  "why_now": "Plan's second R cost dimension (30% true loss same VM OFF→ON, same Normal packet mix) still absent; run concurrently with independent Auto network/FEC work using one already frozen product manifest, no duplicate build.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect new Normal Auto OFF real 30pct action and native readback/parity, first CPU RSS stop and exact artifact. Then choose next Game4 vs ON/300s from current plan. Do not repeat already closed original R/N/Fixed/Game2 scenes.",
+  "next_action": "Collect both R true30 OFF→ON native CPU/RSS/F/R/first/netem/Stop and Auto matched source result; then decide whether shared candidate cache optimization is material, finish Game4 and affected ON/300s/lifecycle as evidence and capacity allow.",
   "unverified": true,
   "last_tested_source": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
   "evidence_refs": [
@@ -20,15 +20,15 @@
     "docs/evidence/M0/PLAN027-H824-FROZEN-F5-FIXED6-OFF30-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H817-NORMAL-REPAIR-PAIR-PREBUILD-FIX.md",
     "docs/devlog/M0/20261102-PLAN027-H818-RESTORE-CURSOR-REF-BOUND.md",
     "docs/devlog/M0/20261102-PLAN027-H819-NORMAL-OFF30-REUSE.md",
     "docs/devlog/M0/20261102-PLAN027-H820-FROZEN-R-N-AND-GAME2FEC6-NEXT.md",
     "docs/devlog/M0/20261102-PLAN027-H821-BOUND-FEATURE-CARD.md",
     "docs/devlog/M0/20261102-PLAN027-H822-GAME2FEC6-RESULT-AND-GOVERNANCE.md",
     "docs/devlog/M0/20261102-PLAN027-H823-FIXED6-MATCHED-GAME2-MIX-NEXT.md",
-    "docs/devlog/M0/20261102-PLAN027-H824-FIXED6-RESULT-AUTO-NEXT.md"
+    "docs/devlog/M0/20261102-PLAN027-H824-FIXED6-RESULT-AUTO-NEXT.md",
+    "docs/devlog/M0/20261102-PLAN027-H825-R-NORMAL-REAL30-PAIRED.md"
   ],
   "open_requests": [],
-  "partial_summary": "H824 Fixed6 Normal one-lane true30% OFF real SOURCEf5 with Game2 matched 96/288/1060/1200B first0.999887/0.999729, p99266.4ms, 21/18 missing, CPU6.07/6.59s, parity_rsent116251/116250, kernel tc drops58492/58230, R0, Stop PASS; Game2FEC6 100% p99258.7ms CPU8.24s each is mode/lane differential not isolated codec cost. New Auto matched scene pending. Plan not fully accepted."
+  "partial_summary": "H824 Fixed6 Normal one-lane true30% OFF real SOURCEf5 with Game2 matched 96/288/1060/1200B first0.999887/0.999729, p99266.4ms, 21/18 missing, CPU6.07/6.59s, parity_rsent116251/116250, kernel tc drops58492/58230, R0, Stop PASS; Game2FEC6 100% p99258.7ms CPU8.24s each is mode/lane differential not isolated codec cost. New Auto matched scene pending. Plan not fully accepted. H825 initiated second required R high-loss same-VM sequential OFF→ON while Auto Action41344886116 active; no new optimization until native measured. Feature card unchanged due near-16KiB limit."
 }
