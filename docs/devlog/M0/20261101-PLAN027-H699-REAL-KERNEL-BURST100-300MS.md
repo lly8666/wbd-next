@@ -1,0 +1,7 @@
+# PLAN027 H699 — genuine bilateral tc kernel full-loss 100/300ms source-locked burst
+
+One representative original SOURCE 6ece9eab653f46a716e8d3a0927fb74bec4819e8 signed Windows NPF/Wintun ↔ Linux WSL2 Go TLS/Rust, 10Mbps each/25ms baseline/0% loss/60s with two in-measurement true 100% loss pulses at20s for100ms and40s for300ms, source seed unchanged. Existing original owned WSL2 eth0 egress and IFB ingress qdisc only; one Linux monotonic process changes both to loss100%, sleeps exactly requested, restores both even on error, writes actual elapsed/owned tc readback and raw tc drop counters. No Wintun application loss shim, no fake data packet or FEC. One exact bounded scenario schema; negative tests prevent 301ms, missing or reordered bursts and unrelated modes/lifecycle. Real two-OS original UDP/TCP/Stop, first sequence gaps, source10ms bin/PPS, own-origin RTT+nonreturns, actual tc loss and Windows CPU/RSS are required. One source-locked original artifact Action; no prequalified PASS. H698 Fixed50/Game4FEC min and Windows B106 already running separately. No product code/ABI/default change; full PLAN027 B/C/global OS/physical still PARTIAL.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Add only a single exact original-source measured 100/300ms real bilateral WSL tc burst fixture with bounded validator and one independent native Action; no product/default/protocol modifications."}
+```

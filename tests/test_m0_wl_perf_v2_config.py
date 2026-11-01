@@ -17,6 +17,19 @@ class V2Scenarios(unittest.TestCase):
    b=dict(c);b.pop("scenario_sha256");b["lifecycle_blackhole_s"]=20
    p=pathlib.Path(td)/"bad.json";p.write_text(json.dumps(b))
    with self.assertRaisesRegex(ValueError,"BAD_BLACKHOLE_LIFECYCLE"):read_scenario(p)
+ def test_h699_only_exact_real_100_and_300ms_kernel_burst_fixture(self):
+  from tempfile import TemporaryDirectory
+  scene=SCENE.parent/"plan027-c-normal-10m-25ms-0pct-burst100-300ms-60s.json"
+  cfg=read_scenario(scene)
+  self.assertEqual(cfg["kernel_loss_bursts"],
+   [{"start_s":20,"duration_ms":100},{"start_s":40,"duration_ms":300}])
+  with TemporaryDirectory() as td:
+   for bad in ([{"start_s":20,"duration_ms":300},{"start_s":40,"duration_ms":300}],
+               [{"start_s":20,"duration_ms":100}],
+               [{"start_s":20,"duration_ms":100},{"start_s":40,"duration_ms":301}]):
+    row=dict(cfg);row.pop("scenario_sha256");row["kernel_loss_bursts"]=bad
+    path=pathlib.Path(td)/"bad.json";path.write_text(json.dumps(row))
+    with self.assertRaisesRegex(ValueError,"BAD_BOUNDED_KERNEL_BURST"):read_scenario(path)
  def test_plan027_b_real_20s_outer_blackhole_restore(self):
   name="plan027-b-normal-blackhole20-recover-10m-25ms-0loss-60s.json"
   path=SCENE.parent/name

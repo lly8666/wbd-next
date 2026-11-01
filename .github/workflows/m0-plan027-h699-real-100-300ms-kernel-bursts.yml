@@ -1,0 +1,48 @@
+name: M0 PLAN027 H699 one genuine original 100ms and 300ms bilateral kernel tc bursts
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h699-real-100-300ms-kernel-bursts.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-true-native-burst:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h699-burst]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE: 6ece9eab653f46a716e8d3a0927fb74bec4819e8
+      BUILD_RUN: "41226521824"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Only source-locked original Go TLS and Rust, exact kernel pulse scene
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .head_sha)" = "$SOURCE"
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/artifacts?per_page=100" |
+            jq -e --arg w "m0-wl-windows-product-binaries-$SOURCE" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' >/dev/null
+          git fetch --depth=1 origin "$SOURCE"
+          test -z "$(git diff --name-only "$SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py)"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario('scenarios/plan027-c-normal-10m-25ms-0pct-burst100-300ms-60s.json')
+          assert s["public_mode"]=="normal" and s["duration_s"]==60 and s["tun_mtu"]==1400
+          assert s["kernel_loss_bursts"]==[{"start_s":20,"duration_ms":100},{"start_s":40,"duration_ms":300}]
+          for d in ("windows_to_linux","linux_to_windows"):
+              a=s[d];assert a["offered_mbps"]==10 and a["loss_pct"]==0 and a["delay_ms"]==25
+          print("H699_TRUE_ORIGINAL_KERNEL100_300MS_SOURCE",s["scenario_sha256"])
+          PY
+          scene=scenarios/plan027-c-normal-10m-25ms-0pct-burst100-300ms-60s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|normal|$scene"
+          prev="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id'|head -1)"
+          if [ -n "$prev" ];then echo "H699_ALREADY_DISPATCHED=$prev";exit 0;fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_scenario_file="$scene" \
+            -f perf_reuse_run_id="$BUILD_RUN" -f perf_binary_source_sha="$SOURCE"
+          echo H699_ORIGINAL_TWO_OS_100_300MS_REAL_BURST_DISPATCHED_NOT_PASS

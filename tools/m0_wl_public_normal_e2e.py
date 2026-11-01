@@ -589,6 +589,9 @@ print(json.dumps(result),flush=True)
     (out/"wl-n0-start.flag").write_text("REAL_TWO_OS_KERNEL_APPLICATIONS_BOUND\n")
     phase_events=[]
     phase_schedule=scenario.get("impairment_stages") if scenario else None
+    kernel_bursts=scenario.get("kernel_loss_bursts") if scenario else None
+    kernel_burst_index=0
+    observed_kernel_bursts=[]
     phase_clock=time.monotonic()
     phase_next_index=1 if phase_schedule else 0
     if phase_schedule:
@@ -645,6 +648,19 @@ print(json.dumps(result),flush=True)
                             "scenario_sha256":scenario["scenario_sha256"],
                             "readback_file":f"wl-v2-kernel-stage-{phase_next_index:02}.json"})
        phase_next_index+=1
+     if kernel_bursts and kernel_burst_index<len(kernel_bursts):
+      pulse=kernel_bursts[kernel_burst_index]
+      if time.monotonic()-phase_clock>=pulse["start_s"]:
+       raw=netem("burst",kernel_burst_index)
+       mark="WL_V2_BURST_PULSE_MEASURED "
+       if mark not in raw:raise RuntimeError("true kernel burst missing tc readback")
+       receipt=json.loads(raw.split(mark,1)[1].splitlines()[0])
+       if (receipt.get("index")!=kernel_burst_index or
+           receipt.get("requested_duration_ms")!=pulse["duration_ms"] or
+           receipt.get("min_bilateral_100pct_active_ms",0)<pulse["duration_ms"]):
+        raise RuntimeError("native tc burst measured duration shorter than declared")
+       observed_kernel_bursts.append(receipt)
+       kernel_burst_index+=1
      if time.monotonic()>until:
       raise RuntimeError("bounded WL-N0 "+seconds+"s native app duration exceeded")
      time.sleep(.2)
@@ -710,6 +726,10 @@ print(json.dumps(result),flush=True)
       "generator_cpu_s":{k:v["sender_cpu_seconds"] for k,v in wl.items()},
       "kernel_qdisc":"wl-n0-netem-after.json",
       "scope":"REAL_WINDOWS_WINTUN_NPF_GO_TLS_AND_LINUX_TUN_NOT_ONEWAY_P99"}
+    if kernel_bursts:
+     if len(observed_kernel_bursts)!=len(kernel_bursts):
+      raise RuntimeError("WL_V2_REAL_KERNEL_BURST_SCOPE_NOT_COMPLETED")
+     report["WL_V2"]["kernel_bursts_applied"]=observed_kernel_bursts
     if phase_schedule:
      if len(phase_events)!=len(phase_schedule):
       raise RuntimeError("WL_V2_AUTO_KERNEL_PHASE_NOT_APPLIED "+

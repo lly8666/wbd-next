@@ -62,6 +62,17 @@ def read_scenario(path):
     if outage is not None and (mode not in ("normal","fixed") or type(outage) is not int or outage not in (20,106) or cfg["duration_s"] not in ((12,60) if outage==106 else (60,)) or
             any(cfg[d]["loss_pct"]!=0 for d in ("windows_to_linux","linux_to_windows"))):
         raise ValueError("WL_V2_BAD_BLACKHOLE_LIFECYCLE")
+    bursts=cfg.get("kernel_loss_bursts")
+    if bursts is not None:
+        if (mode!="normal" or cfg["duration_s"]!=60 or
+            cfg.get("impairment_stages") is not None or
+            cfg.get("lifecycle_blackhole_s") is not None or
+            cfg.get("lifecycle_idle_s") is not None or
+            bursts!=[{"start_s":20,"duration_ms":100},
+                     {"start_s":40,"duration_ms":300}] or
+            any(cfg[d]["loss_pct"]!=0 or cfg[d]["offered_mbps"]!=10
+                for d in ("windows_to_linux","linux_to_windows"))):
+            raise ValueError("WL_V2_BAD_BOUNDED_KERNEL_BURST")
     stages=cfg.get("impairment_stages")
     if stages is not None:
         if mode!="auto" or not isinstance(stages,list) or not 3<=len(stages)<=12:

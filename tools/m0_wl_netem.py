@@ -155,6 +155,55 @@ elif action in ("blackhole", "recover"):
         call("tc","qdisc","change","dev",device,"root","handle",handle,*args)
     (out/("wl-v2-b-"+action+".json")).write_text(json.dumps(probe(),indent=2)+"\n")
     print("WL_B_REAL_TC_"+("BLACKHOLE_BOTH" if action=="blackhole" else "RESTORED_BOTH"),flush=True)
+elif action == "burst":
+    # Only the two M0-owned original tc qdiscs, one WSL monotonic pulse.
+    if profile_name!="v2" or not scenario_path or not owner.exists() or len(sys.argv)!=6:
+        raise RuntimeError("WL_C_BURST_NEEDS_OWNED_V2")
+    from m0_wl_perf_v2_config import read_scenario
+    case=read_scenario(scenario_path)
+    pulses=case.get("kernel_loss_bursts")
+    if not pulses or not sys.argv[5].isdigit():
+        raise RuntimeError("WL_C_BURST_WRONG_SOURCE_SCENE")
+    index=int(sys.argv[5])
+    state=json.loads(owner.read_text())
+    if (state.get("owner")!="M0-WL-N0-ETH0-IFB" or
+        state.get("interface")!=iface or state.get("profile")!="v2" or
+        index!=state.get("burst_index",0) or not 0<=index<len(pulses)):
+        raise RuntimeError("WL_C_BURST_FOREIGN_OR_REPEATED")
+    for device,handle in ((iface,"10:"),("eth0","20:")):
+        rows=json.loads(call("tc","-j","qdisc","show","dev",device)["stdout"] or "[]")
+        if not any(row.get("kind")=="netem" and row.get("handle")==handle for row in rows):
+            raise RuntimeError("WL_C_BURST_MISSING_NATIVE_TC")
+    entered=None
+    try:
+        for device,handle,side in ((iface,"10:","windows_to_linux"),("eth0","20:","linux_to_windows")):
+            p=case[side]
+            args=["netem","delay",f'{p["delay_ms"]}ms',"loss","100%","limit","32768"]
+            if p["tc_rate_mbps"] is not None:args+=["rate",f'{p["tc_rate_mbps"]}mbit']
+            call("tc","qdisc","change","dev",device,"root","handle",handle,*args)
+        entered=time.monotonic_ns()
+        time.sleep(pulses[index]["duration_ms"]/1000.0)
+    finally:
+        # Guaranteed original tc recovery; outer test finally still removes all leases.
+        for device,handle,side in ((iface,"10:","windows_to_linux"),("eth0","20:","linux_to_windows")):
+            p=case[side]
+            args=["netem","delay",f'{p["delay_ms"]}ms',
+                  "loss",f'{p["loss_pct"]}%',"limit","32768"]
+            if p["tc_rate_mbps"] is not None:args+=["rate",f'{p["tc_rate_mbps"]}mbit']
+            call("tc","qdisc","change","dev",device,"root","handle",handle,*args)
+    observed_ms=round((time.monotonic_ns()-entered)/1e6,3)
+    state["burst_index"]=index+1
+    persist(state)
+    readback=probe()
+    readback["source_scenario_sha256"]=case["scenario_sha256"]
+    readback["requested_duration_ms"]=pulses[index]["duration_ms"]
+    readback["min_bilateral_100pct_active_ms"]=observed_ms
+    (out/f"wl-v2-burst-{index:02}.json").write_text(json.dumps(readback,indent=2)+"\n")
+    print("WL_V2_BURST_PULSE_MEASURED "+json.dumps({
+        "index":index,"scheduled_s":pulses[index]["start_s"],
+        "requested_duration_ms":pulses[index]["duration_ms"],
+        "min_bilateral_100pct_active_ms":observed_ms,
+        "scenario_sha256":case["scenario_sha256"]}),flush=True)
 elif action == "stage":
     # In-place kernel qdisc change ONLY for the M0-owned WSL2 eth0/IFB.
     # No application shim, no link recreation, no new process or reboot.
