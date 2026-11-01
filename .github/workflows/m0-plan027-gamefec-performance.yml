@@ -18,6 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false, fetch-depth: 5}
+      # H806 rerun only after H804 cheap preflight test synchronized with the
+      # retired-satellite architecture; no change to frozen Game2FEC product.
       - name: Exact SOURCE, proven minimum, real impairment and one performance dispatch
         shell: bash
         run: |

@@ -388,7 +388,13 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         runner=(ROOT/"tools/m0_wl_native_step_runner.py").read_text()
         rescue=(ROOT/"tools/m0_wl_gamefec_progress.py").read_text()
         self.assertIn("GameFecProgress(output.parent, env=quiet_env)",runner)
-        self.assertIn("GameFecRelay(output.parent,events,stop)",runner)
+        # H806 satellite rescue Actions are retired: the same PID-owned
+        # relay still observes file markers, but its live GH sender is disabled.
+        self.assertIn("GameFecRelay(output.parent,events,stop,",runner)
+        self.assertIn('env={**os.environ, "WBD_WL_GAME_FEC_RESCUE":"0"}',runner)
+        flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertNotIn("m0-plan027-gamefec-rescue-record.yml",flow)
+        self.assertIn("m0-plan027-independent-native-deadline.yml",flow)
         self.assertNotIn("stage_events.get_nowait()",runner)
         self.assertIn('events.put("MODE_TIMEOUT")',runner)
         self.assertIn('events.put("MODE_EXIT")',runner)
