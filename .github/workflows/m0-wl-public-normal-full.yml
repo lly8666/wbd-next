@@ -1005,7 +1005,8 @@ jobs:
                 'routes_sidecar_present='+[string]$routesPresent
                 'product_network_recovery=NOT_VERIFIED_BY_MANAGEMENT_ROUTE_RESTORE'
               ) | Set-Content -LiteralPath $localRecord
-              if($walPresent -or $routesPresent){
+              $gameProductWalPending=($walPresent -or $routesPresent)
+              if($gameProductWalPending){
                 'PRODUCT_NATIVE_WAL_OR_ROUTES_PENDING_FAIL_CLOSED' | Add-Content -LiteralPath $localRecord
                 Write-Output 'GAMEFEC_PRODUCT_WAL_OR_ROUTES_PENDING_NOT_RECOVERED'
               }
@@ -1025,6 +1026,13 @@ jobs:
                 'management_route=NOT_ARMED_OR_ALREADY_RESTORED' | Add-Content -LiteralPath $localRecord
               }
             }
+          }
+          # An unexpected positive E2E exit cannot conceal an exact owned
+          # WAL or routes sidecar still present after the test child died.
+          # Do not delete these receipts: an independent OS CAS restore is
+          # still unqualified and the caller must be told precisely.
+          if($gameProductWalPending){
+            throw 'GAMEFEC_EXACT_PRODUCT_WAL_OR_ROUTES_SURVIVED_STOP_FULL_RECOVERY_UNQUALIFIED'
           }
           if($e2eExit -ne 0){throw 'true public Windows Go TLS Rust Npcap Wintun to Linux raw/TUN direct chain FAILED'}
           $result=Get-Content result/wl-public/report.json -Raw | ConvertFrom-Json
