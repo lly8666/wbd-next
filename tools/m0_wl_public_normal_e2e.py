@@ -24,6 +24,7 @@ def game_cold_stage(stage):
  with (out/"gamefec-cold-stage.txt").open("a") as f:
   f.write(stage+"\n")
 if game_fixed:
+ (out/"gamefec-cold-stage.txt").unlink(missing_ok=True)
  game_cold_stage("COLD_E2E_STARTED")
  _e2e_stack=(out/"gamefec-e2e-stack.txt").open("w")
  faulthandler.dump_traceback_later(105,file=_e2e_stack,exit=False)

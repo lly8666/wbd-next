@@ -3,7 +3,9 @@ import pathlib
 import queue
 import tempfile
 import threading
+import time
 import unittest
+from unittest import mock
 from tools.m0_wl_gamefec_relay import GameFecRelay, stack_stage
 
 class GameFecRescueRelayTests(unittest.TestCase):
@@ -78,6 +80,43 @@ class GameFecRescueRelayTests(unittest.TestCase):
             self.assertIn("CLIENT_OS_APPLIED",names)
             self.assertIn("OS_APPLIED",names)
             self.assertEqual(names.count("SUPERVISOR_ALIVE_FIRST"),1)
+
+    def test_h760_stalled_gh_api_cannot_starve_observer(self):
+        # A real GH call may take eight seconds, but the diagnostics-only
+        # publisher must still accept successive unique marker events.
+        with tempfile.TemporaryDirectory() as d:
+            gate=threading.Event()
+            started=threading.Event()
+            def stalled_gh(*args,**kwargs):
+                started.set()
+                gate.wait(1.0)
+            with mock.patch("tools.m0_wl_gamefec_relay.subprocess.run",side_effect=stalled_gh):
+                relay=GameFecRelay(pathlib.Path(d),queue.SimpleQueue(),threading.Event(),
+                    env={"WBD_WL_GAME_FEC_RESCUE":"1",
+                         "GITHUB_RUN_ID":"41291160670",
+                         "GITHUB_SHA":"0264c2cfc91e05c7c4b8d518fa0efc6707a2ff6b"})
+                t=time.monotonic()
+                for name in ("SUPERVISOR_20S_ALIVE","COLD_READY_WAIT","GAME_FIRST_ERROR"):
+                    relay.emit(name,"TEST_ONLY")
+                self.assertLess(time.monotonic()-t,.7)
+                self.assertTrue(started.wait(.8))
+                gate.set()
+
+    def test_h760_append_only_cold_stages_and_no_secret_echo(self):
+        with tempfile.TemporaryDirectory() as d:
+            out=pathlib.Path(d); events=[]
+            relay=GameFecRelay(out,queue.SimpleQueue(),threading.Event(),
+                env={},send=lambda a,b:events.append((a,b)))
+            (out/"gamefec-cold-stage.txt").write_text(
+                "COLD_E2E_STARTED\nCOLD_WSL_IP_READY\n"
+                "COLD_TLS_CERT_READY\nCOLD_CLIENT_SPAWNED\n"
+                "COLD_READY_WAIT\nsecret=DO_NOT_LEAK\n")
+            for _ in range(8): relay.observe()
+            names={a for a,b in events}
+            self.assertTrue({"COLD_E2E_STARTED","COLD_WSL_IP_READY",
+                "COLD_TLS_CERT_READY","COLD_CLIENT_SPAWNED",
+                "COLD_READY_WAIT"}<=names)
+            self.assertNotIn("DO_NOT_LEAK",str(events))
 
     def test_stage_classifier_never_carries_python_locals(self):
         self.assertEqual(stack_stage("Thread 0xa\nFile ... in stop_linux token=secret"),"STOP_LINUX")

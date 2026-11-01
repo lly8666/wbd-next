@@ -1,0 +1,22 @@
+name: M0 PLAN027 H760 Windows cold-stage relay and blocked GH quick fixture
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h760-gamefec-cold-quick-fixture.yml]
+permissions: {contents: read}
+jobs:
+  one-windows-synthetic-gamefec:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h760-cold-fixture]')
+    runs-on: windows-2025
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: One Windows no-driver cold TLS/OS stage and slow GitHub diagnostic fixture
+        shell: pwsh
+        run: |
+          python -m unittest -v tests.test_m0_wl_gamefec_relay
+          if($LASTEXITCODE -ne 0){throw 'GameFEC independent relay synthetic failure'}
+          python -m py_compile tools/m0_wl_gamefec_relay.py tools/m0_wl_public_normal_e2e.py
+          if($LASTEXITCODE -ne 0){throw 'GameFEC original native E2E diagnostic syntax failure'}
+          Write-Output 'H760_WINDOWS_GH_STALL_COLD_STAGE_FIXTURE_PASS_NOT_PRODUCT'
