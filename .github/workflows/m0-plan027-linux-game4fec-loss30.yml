@@ -1,0 +1,66 @@
+name: M0 PLAN027 N original Linux Game4FEC6 20Mbps genuine 30pct
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-plan027-linux-game4fec-loss30.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  one-game4-fec6-native-real30:
+    if: contains(github.event.head_commit.message, '[plan027-n-game4-loss30]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PRODUCT_SOURCE: f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 25}
+      - name: Validate original four-lane FEC6 mode/scene and frozen product tree
+        run: |
+          set -euo pipefail
+          git cat-file -e "$PRODUCT_SOURCE^{commit}"
+          git diff --quiet "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/arm64_public_go_rust_bundle.sh
+          python3 -m unittest tests.test_m0_plan027_linux_game4fec_zero20 -v
+          python3 -m unittest tests.test_m0_plan027_linux_auto_rise_fall -v
+          python3 -m py_compile tools/network_harness/m0_plan027_linux_game4fec_zero20.py
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          run-id: 41342800664
+          name: plan027-r-once-frozen-linux-product
+          github-token: ${{ github.token }}
+          path: native-bundle
+      - name: Verify original source manifest, 3 binary SHA256, owned OS devices
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("native-bundle/manifest.json"))
+          assert m["source"]==os.environ["PRODUCT_SOURCE"] and m["architecture"]=="x86_64"
+          PY
+          (cd native-bundle && sha256sum -c SHA256SUMS)
+          chmod +x native-bundle/wbd-v4-client native-bundle/wbd-v4-server
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+          test -c /dev/net/tun
+      - name: Exactly one real 20Mbps / 250ms / 30pct Game4 FEC6 OFF original native scene
+        run: |
+          set -euo pipefail
+          sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB,PRODUCT_SOURCE \
+            python3 -m tools.network_harness.m0_plan027_linux_game4fec_zero20 \
+              --bundle "$GITHUB_WORKSPACE/native-bundle" \
+              --product-source "$PRODUCT_SOURCE" \
+              --scenario scenarios/plan027-c-game4-fec-20m-250ms-loss30-60s.json \
+              --out "$GITHUB_WORKSPACE/plan027-n-game4-loss30"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan027-n-game4fec6-20m-loss30
+          path: |
+            plan027-n-game4-loss30/result.json
+            plan027-n-game4-loss30/game4-fec6-loss30-20m/result.json
+            plan027-n-game4-loss30/game4-fec6-loss30-20m/network-snapshots.json
+            plan027-n-game4-loss30/game4-fec6-loss30-20m/summary.md
+          if-no-files-found: warn
+          retention-days: 30

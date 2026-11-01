@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 828,
-  "checkpoint_sha": "abb90749afc101e16d6a6a917496e31f14cbece1",
+  "sequence": 829,
+  "checkpoint_sha": "7d18edafcd7bb371d7793699d189f7adeeb2abc6",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H828: R true-loss Normal OFF→ON f5 has scoped PASS R/F8.9%, CPU+~0.55s/60, delivered-first p99 ON~882ms vs OFF250.5 with cohort caveats; N Normal/Fixed6/Auto/Game2 loss tests PASS scoped. H827 corrected Auto240 phase normalization rerun in flight, no native result yet. H828 one source-frozen genuine Game4FEC6 stagger copy 20Mbps each/250ms loss0/60s native capacity screen launched, no product changes, no Game4 qualified yet.",
-  "why_now": "Game4 20Mbps original four-lane real product under clean 250ms is missing required capacity discriminator. Existing Game2 10Mbps30% original Go/Rust first100%, host CPU well below full core. Start one independent Game4 upper clean screen using immutable source; only then consider 30% pressure.",
+  "current_task": "PLAN027 H829 source f5: original Linux Go TLS/Rust M4 Game4FEC6 20M/250ms/0pct OFF actual first100% both p99251.9ms, CPU33.76/33.81s/60 RSS44.1/44.2MB, real4-lane copy and Stop PASS scoped; 20M30% independent same product source Action pending. Auto 240s H827 Action41345863006 FAIL preflight test wrong phase-level rate_scale assertion, native NOT_RUN, H829 fixed exact assertion and requeued one original 4-stage scenario. Governance-maintenance prior failed due fixture unit, main governance success. Other R/N scope unchanged.",
+  "why_now": "Game4 real clean 20M shows headroom (~56% one core/endpoint) with 100% first and true four lane source, justify bounded same-load 30pct test. Auto long not yet native; one bad validator-unit assertion line is exact known blocker and must be corrected before re-dispatch.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect Auto replacement long native phase result + actual stages/grade, Game4 original clean20 capacity first/CPU/parity/copy/Stop and governance; if Game4 capacity not saturated continue loss30; then required ON combos/300s and partial lifecycle, without redundant same-family actions.",
+  "next_action": "Collect H829 Auto240 corrected 4-phase real native/quality/stage result and separate Game4 20M30% real first/CPU/host-pressure/Stop; if preflight fails recover fact and fix root only; then ON combos and 300s long mixed/TCP/UDP lifecycle per PLAN027, don't rerun settled OFF.",
   "unverified": true,
   "last_tested_source": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
   "evidence_refs": [
@@ -19,18 +19,19 @@
     "docs/evidence/M0/PLAN027-H822-FROZEN-F5-GAME2FEC6-OUTER-OFF30-20261102.json",
     "docs/evidence/M0/PLAN027-H824-FROZEN-F5-FIXED6-OFF30-20261102.json",
     "docs/evidence/M0/PLAN027-H826-FROZEN-F5-AUTO-OFF30-20261102.json",
-    "docs/evidence/M0/PLAN027-H827-FROZEN-F5-NORMAL-LOSS30-PAIRED-20261102.json"
+    "docs/evidence/M0/PLAN027-H827-FROZEN-F5-NORMAL-LOSS30-PAIRED-20261102.json",
+    "docs/evidence/M0/PLAN027-H829-FROZEN-F5-GAME4FEC6-20M-ZERO-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H821-BOUND-FEATURE-CARD.md",
     "docs/devlog/M0/20261102-PLAN027-H822-GAME2FEC6-RESULT-AND-GOVERNANCE.md",
     "docs/devlog/M0/20261102-PLAN027-H823-FIXED6-MATCHED-GAME2-MIX-NEXT.md",
     "docs/devlog/M0/20261102-PLAN027-H824-FIXED6-RESULT-AUTO-NEXT.md",
     "docs/devlog/M0/20261102-PLAN027-H825-R-NORMAL-REAL30-PAIRED.md",
     "docs/devlog/M0/20261102-PLAN027-H826-AUTO-RESULT-AND-RISE-FALL.md",
     "docs/devlog/M0/20261102-PLAN027-H827-R-HIGHLOSS-AND-AUTO-FIX.md",
-    "docs/devlog/M0/20261102-PLAN027-H828-GAME4-CLEAN20-CAP.md"
+    "docs/devlog/M0/20261102-PLAN027-H828-GAME4-CLEAN20-CAP.md",
+    "docs/devlog/M0/20261102-PLAN027-H829-GAME4-ZERO-AUTO-ASSERT-LOSS30.md"
   ],
   "open_requests": [],
-  "partial_summary": "H827 real R 30pct paired source f5 PASS: OFF CPU4.51/4.88 ON5.05/5.43s, R/F8.92/8.89%, ON first73.0/72.5% but delivered p99882ms (late recovery cohort) vs OFF first~70% p99250.5ms. Actual ledger PTO810ms no ACK on UDP-only; C unmeasured. Auto 240s Action41345513214 failed pretraffic fixture missing rate_scale and Stop NOT_RUN; H827 corrected validation normalization and retriggered exact same 240s lifecycle. Source f5 product unchanged; task partial. H828 Game4 four-lane 20Mbps clean original Linux Go TLS+Rust source f5 highest fixed6/stagger native independent Action pending; one per-scenario job, no binary recompile. Auto long fixture corrected H827, current native result pending."
+  "partial_summary": "H829 added Game4 clean 20M0 true source f5: 100% both p99 251.9ms, CPU33.76/33.81s/60 RSS44.1/44.2MB, parity229k, all four copies sent, outer R0, owned Stop PASS. H827 Auto240 pretest fail wrong rate_scale direction assertion; H829 fixes phase-level and launches identical Auto240. Game4 20M30% 60s independently queued using same binary. Native highloss/Auto240 NOT_RUN at commit."
 }

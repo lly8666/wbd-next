@@ -1,3 +1,4 @@
+# H829: fix actual phase-level rate_scale unit assertion (not direction-level); same 240s original Auto run, no new product.
 # H827: normalized validation per-phase rate_scale on the same original 240s scenario, no product change.
 name: M0 PLAN027 N original Auto native 1-15-30-1 rise-fall 240s
 on:

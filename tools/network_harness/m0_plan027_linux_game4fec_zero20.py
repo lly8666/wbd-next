@@ -16,25 +16,27 @@ from tools.network_harness.runner import LinuxExperiment
 
 def configuration(scene, source, run_id):
     assert scene["schema_version"]==1 and scene["public_mode"]=="game4-fec"
-    assert scene["scenario_id"]=="plan027-c-game4-fec-20m-250ms-loss0-60s"
+    assert scene["scenario_id"] in ("plan027-c-game4-fec-20m-250ms-loss0-60s",
+                                     "plan027-c-game4-fec-20m-250ms-loss30-60s")
+    loss=30 if scene["scenario_id"].endswith("loss30-60s") else 0
     assert (scene["duration_s"],scene["warmup_s"],scene["drain_s"],scene["tun_mtu"])==(60,5,10,1400)
     mix=[(96,10),(288,15),(1060,30),(1200,45)]
     for direction in ("windows_to_linux","linux_to_windows"):
         v=scene[direction]
-        assert (v["offered_mbps"],v["delay_ms"],v["loss_pct"],v["tc_rate_mbps"])==(20,250,0,None)
+        assert (v["offered_mbps"],v["delay_ms"],v["loss_pct"],v["tc_rate_mbps"])==(20,250,loss,None)
         assert [(x["udp_payload_bytes"],x["packets_weight"]) for x in v["packet_mix"]]==mix
     # The existing Game2 config is the SAME original TLS/Rust binary and
     # native FEC6 path. Change only Game4 public mode/schedule, load and tc.
     game2=json.loads(Path("scenarios/plan027-c-game2-fec-10m-250ms-loss30-60s.json").read_text())
     cfg=game2_configuration(game2,source,run_id)
-    cfg["id"]="M0_PLAN027_N_GAME4_FEC6_20M_250MS_LOSS0_OUTER_OFF"
+    cfg["id"]="M0_PLAN027_N_GAME4_FEC6_20M_250MS_LOSS"+str(loss)+"_OUTER_OFF"
     cfg["seed"]=scene["seed"]
     cfg["product"]["mode"]="game4"
     cfg["product"]["game4_copy_schedule"]="stagger-4-50-140"
     cfg["product"]["repair_enabled"]=False
     cfg["traffic"].update(c2s_mbps=20,s2c_mbps=20,
                           sizes=[list(x) for x in mix])
-    for direction in ("c2s","s2c"):cfg["phases"][0][direction]["loss_pct"]=0
+    for direction in ("c2s","s2c"):cfg["phases"][0][direction]["loss_pct"]=loss
     cfg["bundles"]["A"]["game4_copy_schedule"]="stagger-4-50-140"
     tmp=copy.deepcopy(cfg)
     tmp["bundles"]["A"].update(run_id=run_id,artifact_id=run_id,attempt=1,sha256="0"*64)
@@ -53,7 +55,8 @@ def main():
         parser.add_argument("--"+k,required=True)
     a=parser.parse_args()
     assert platform.machine()=="x86_64" and len(os.environ["GITHUB_SHA"])==40
-    assert Path(a.scenario).name=="plan027-c-game4-fec-20m-250ms-loss0-60s.json"
+    assert Path(a.scenario).name in ("plan027-c-game4-fec-20m-250ms-loss0-60s.json",
+                                     "plan027-c-game4-fec-20m-250ms-loss30-60s.json")
     scene=json.loads(Path(a.scenario).read_text())
     bundle=Path(a.bundle).resolve()
     manifest=json.loads((bundle/"manifest.json").read_text())
@@ -70,7 +73,8 @@ def main():
     home.mkdir(parents=True,exist_ok=True)
     for n in names:(home/n).symlink_to(bundle/n)
     config=configuration(scene,a.product_source,int(os.environ["GITHUB_RUN_ID"]))
-    case=root/"game4-fec6-zero20"
+    loss=30 if scene["scenario_id"].endswith("loss30-60s") else 0
+    case=root/("game4-fec6-loss30-20m" if loss else "game4-fec6-zero20")
     leg=LinuxExperiment(config,root/"bundle-A",case,"A").run()
     t=leg.get("telemetry",{})
     proof=t.get("game_fec_native_proof",{})
@@ -99,7 +103,7 @@ def main():
         "binary_sha256":{n:hashes[n] for n in names},
         "scenario":scene["scenario_id"],"native_result":leg.get("result"),
         "failures":leg.get("failures",[]),"limits":leg.get("limits",[]),
-        "scope":"Original Linux Go TLS/Rust Game4 4 lanes fixed6, 20Mbps each/250ms one-way/0pct tc/60s, stagger-4-50-140 native copy, outer DATA OFF",
+        "scope":f"Original Linux Go TLS/Rust Game4 4 lanes fixed6, 20Mbps each/250ms one-way/{loss}pct true tc/60s, stagger-4-50-140 native copy, outer DATA OFF",
         "native_game_parity_proof":proof,"native_outer_policy":policy,
         "native_game4_copy_schedule":schedule,
         "native_outer_off_readback":t.get("outer_repair_native_verified"),
@@ -117,14 +121,29 @@ def main():
             "first_fraction":first/offered if offered else None,
             "p99_ms":next((v.get("first_arrival_ms",{}).get("p99_ms") for v in rows if v.get("protocol")=="udp"),None),
             "missing_after_drain":sum(int(v.get("missing_after_drain",0)) for v in rows)}
-        if offered<19 or first<offered*.999:valid=False
+        if offered<19 or first<offered*(.99 if loss else .999):valid=False
         result["cpu_s"][role]=leg.get("measurement_cost",{}).get(role,{}).get("cpu_s")
         result["rss_bytes"][role]=leg.get("host",{}).get("processes",{}).get(role,{}).get("rss_peak_bytes")
         if not isinstance(result["cpu_s"][role],(int,float)):valid=False
-    for row in leg.get("network_accounting",[]):
-        if row.get("phase")=="iid":
-            result["tc_netem_drops"][row["role"]]=sum(int(v.get("drops",0)) for v in row.get("netem",[]))
-    result["verdict"]="PASS_SCOPED_GAME4_FEC6_20M_ZERO_OUTER_OFF_CAPACITY" if valid else "FAIL_OR_INCONCLUSIVE"
+    snapshots=json.loads((case/"network-snapshots.json").read_text())
+    before=next((v for v in snapshots if v["name"]=="before-iid"),None)
+    after=next((v for v in snapshots if v["name"]=="measurement-end"),None)
+    for role in ("client","server"):
+        def dropped(snapshot):
+            if snapshot is None:return None
+            rows=[q for q in snapshot["network"][role]["qdisc"] if q.get("kind")=="netem"]
+            return rows[0].get("drops") if len(rows)==1 else None
+        start,end=dropped(before),dropped(after)
+        delta=end-start if isinstance(start,int) and isinstance(end,int) else None
+        result["tc_netem_drops"][role]=delta
+        if not isinstance(delta,int) or (loss and delta<=0) or (not loss and delta!=0):
+            valid=False
+    result["limitations"]=[
+        "Only original Linux source-frozen one 60s source, not Windows/physical/300s",
+        "Game4 four-lane FEC parity and outer first copies distinct from R; physical C unmeasured",
+        "Different IID netem sequence than other modes; no causal CPU comparison",
+        "First-delivered p99 excludes missing, business residual >=1pct on loss30 is a scoped FAIL, not a VM excuse"]
+    result["verdict"]=("PASS_SCOPED_GAME4_FEC6_20M_"+("LOSS30" if loss else "ZERO")+"_OUTER_OFF_CAPACITY") if valid else "FAIL_OR_INCONCLUSIVE"
     (root/"result.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
     print("PLAN027_N_GAME4_20M_ZERO_VERDICT",result["verdict"],flush=True)
     if not valid:raise SystemExit(2)

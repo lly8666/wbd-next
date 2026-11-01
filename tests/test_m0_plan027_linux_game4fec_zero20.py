@@ -19,4 +19,16 @@ class Game4Zero20Test(unittest.TestCase):
         self.assertEqual(c["phases"][0]["c2s"]["loss_pct"],0)
         self.assertEqual(c["phases"][0]["seconds"],60)
 
+    def test_30pct_same_product_and_packet_mix(self):
+        s=json.loads(Path("scenarios/plan027-c-game4-fec-20m-250ms-loss30-60s.json").read_text())
+        c=configuration(s,"a"*40,4420)
+        self.assertEqual(c["product"]["mode"],"game4")
+        self.assertEqual(c["product"]["game_fec"],"fixed6")
+        self.assertEqual(c["product"]["game4_copy_schedule"],"stagger-4-50-140")
+        self.assertFalse(c["product"]["repair_enabled"])
+        self.assertEqual(c["traffic"]["c2s_mbps"],20)
+        self.assertEqual(c["phases"][0]["c2s"]["loss_pct"],30)
+        self.assertEqual(c["phases"][0]["s2c"]["loss_pct"],30)
+        self.assertEqual(c["traffic"]["sizes"],[[96,10],[288,15],[1060,30],[1200,45]])
+
 if __name__=="__main__":unittest.main()

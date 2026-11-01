@@ -17,8 +17,7 @@ class AutoRiseFallTest(unittest.TestCase):
             ("uplink30_down0",35,30,0),("uplink1_down0_low150",150,1,0)])
         self.assertEqual(c["traffic"]["sizes"],[[96,10],[288,15],[1060,30],[1200,45]])
         self.assertEqual(sum(x["seconds"] for x in c["phases"]),240)
-        self.assertTrue(all("rate_scale" in x["c2s"] and "rate_scale" in x["s2c"]
-                            for x in c["phases"]))
+        self.assertTrue(all(x["rate_scale"]==1 for x in c["phases"]))
         self.assertTrue(all("blackhole_lanes" in x["c2s"] and "blackhole_lanes" in x["s2c"]
                             for x in c["phases"]))
 

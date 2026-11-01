@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_sha": "7d18edafcd7bb371d7793699d189f7adeeb2abc6",
+  "result": "PASS_SCOPED_GAME4_FEC6_20M_ZERO_OUTER_OFF_CAPACITY",
+  "artifact_verified": true,
+  "run_id": 41346070456,
+  "artifact_name": "plan027-n-game4fec6-zero20",
+  "mode": "game4-fixed6",
+  "repair": "OFF",
+  "scenario": "plan027-c-game4-fec-20m-250ms-loss0-60s",
+  "platform": "Ubuntu24.04 same host two original Linux Go TLS client/server Rust M4 owned netns",
+  "workload": {
+    "mbps_each_direction": 20,
+    "one_way_delay_ms": 250,
+    "loss_pct": 0,
+    "seconds": 60,
+    "warmup_s": 5,
+    "drain_s": 10,
+    "mix_udp_bytes_weights": [
+      [
+        96,
+        10
+      ],
+      [
+        288,
+        15
+      ],
+      [
+        1060,
+        30
+      ],
+      [
+        1200,
+        45
+      ]
+    ],
+    "avg_udp_payload_bytes": 910.8,
+    "approx_business_pps_each_direction": 2745,
+    "bdp_bytes_each_direction_at_rtt500ms": 1250000
+  },
+  "actual": {
+    "first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "first_mbps": {
+      "c2s": 20.000178666666667,
+      "s2c": 20.000178666666667
+    },
+    "first_p99_ms": {
+      "c2s": 251.9,
+      "s2c": 251.9
+    },
+    "missing_after_drain": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "cpu_s": {
+      "client": 33.76,
+      "server": 33.81
+    },
+    "peak_rss_bytes": {
+      "client": 44101632,
+      "server": 44232704
+    },
+    "interface_tx_bytes": {
+      "client": 1587009196,
+      "server": 1586630835
+    },
+    "netem_drops": {
+      "client": 0,
+      "server": 0
+    },
+    "fec_parity_copied": {
+      "client": 229013,
+      "server": 228904
+    },
+    "outer_first_lane_copied": {
+      "client": 1640118,
+      "server": 1639682
+    },
+    "outer_data_retransmitted": {
+      "client": 0,
+      "server": 0
+    },
+    "schedule_mode": 2,
+    "schedule_sent": {
+      "client": [
+        410028,
+        410028,
+        410028,
+        410028
+      ],
+      "server": [
+        409919,
+        409919,
+        409919,
+        409919
+      ]
+    },
+    "schedule_abandoned": {
+      "client": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "server": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "go_handoff": true,
+    "owned_stop": true,
+    "owned_ns_absent": true
+  },
+  "limitations": [
+    "20Mbps offered BUSINESS each direction, 1.59GB outer interface bytes / 60s not product payload",
+    "CPU is whole Go+Rust process, ~56% of one core equivalent, not Rust-only or host capacity qualification",
+    "Real FEC parity and four copy duplicated bytes are not DATA outer repair R; C physical control unknown",
+    "Game4 zero-loss only, no high-loss behavior, no Windows, ON, 300s or physical PASS"
+  ]
+}
