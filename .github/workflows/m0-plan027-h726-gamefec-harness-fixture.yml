@@ -1,4 +1,4 @@
-name: M0 PLAN027 H726 GameFEC real-log fault and rescue synthetic fixture
+name: M0 PLAN027 H740 GameFEC real-log numeric rescue synthetic fixture
 on:
   push:
     branches: [main]

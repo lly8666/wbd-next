@@ -30,6 +30,13 @@ class GameFecProgressTests(unittest.TestCase):
             ])
             self.assertNotIn("DO_NOT_LOG", output.getvalue())
 
+    def test_h740_independent_receiver_accepts_numeric_supervisor_stages(self):
+        recv=(pathlib.Path(__file__).resolve().parents[1]/
+              ".github/workflows/m0-plan027-gamefec-rescue-record.yml").read_text()
+        self.assertIn('[[ "$TRACE_STAGE" =~ ^[A-Z0-9_]{3,30}$ ]]',recv)
+        for stage in ("SUPERVISOR_20S_ALIVE","SUPERVISOR_60S_ALIVE"):
+            self.assertRegex(stage,r"^[A-Z0-9_]{3,30}$")
+
     def test_true_ready_and_due_failure_sends_bounded_independent_snapshots(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = pathlib.Path(tmp)

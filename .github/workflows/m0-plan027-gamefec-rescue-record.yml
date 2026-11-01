@@ -24,7 +24,7 @@ jobs:
           set -euo pipefail
           [[ "$TARGET_RUN" =~ ^[0-9]{8,15}$ ]] || exit 1
           [[ "$PRODUCT_SOURCE" =~ ^[0-9a-f]{40}$ ]] || exit 1
-          [[ "$TRACE_STAGE" =~ ^[A-Z_]{3,30}$ ]] || exit 1
+          [[ "$TRACE_STAGE" =~ ^[A-Z0-9_]{3,30}$ ]] || exit 1
           [[ "$TRACE_DETAIL" =~ ^[A-Za-z0-9_.:-]{1,80}$ ]] || exit 1
           printf 'M0_GAMEFEC_INDEPENDENT_STAGE target=%s source=%s stage=%s detail=%s diagnostic_only=1\n' \
             "$TARGET_RUN" "$PRODUCT_SOURCE" "$TRACE_STAGE" "$TRACE_DETAIL"
