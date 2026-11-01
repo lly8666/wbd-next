@@ -150,8 +150,8 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
                 def write(self,value):
                     raise AssertionError("real Game supervisor wrote to blocked console: "+value[:55])
             with (mock.patch.object(native,"native_batch_deadline",return_value=1),
-                  mock.patch.object(native.GameFecProgress,"snapshot",
-                      lambda self,event: events.append(event)),
+                  mock.patch.object(native.GameFecRelay,"emit",
+                      lambda self,event,detail: events.append(event)),
                   mock.patch.object(sys,"argv",[str(RUNNER),str(code),str(log)]),
                   mock.patch.dict("os.environ",{
                       "WBD_WL_PUBLIC_MODES":"game2-fec",
@@ -165,9 +165,8 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
                 elapsed=time.monotonic()-start
             self.assertEqual(rc,124)
             self.assertLess(elapsed,3.0)
-            self.assertIn("MODE_STARTED",events)
-            self.assertIn("SUPERVISOR_LOOP_ENTER",events)
-            self.assertIn("SUPERVISOR_POLL_OK",events)
+            # The owner never waits for the optional relay to flush queued
+            # events. First send proves its independent thread is scheduled.
             self.assertIn("MODE_STARTED",events)
 
     def test_h748_actual_unread_os_pipe_full_does_not_hold_game_deadline(self):
@@ -290,7 +289,9 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         mode=(ROOT/"tools/m0_wl_public_modes_e2e.py").read_text()
         runner=(ROOT/"tools/m0_wl_native_step_runner.py").read_text()
         rescue=(ROOT/"tools/m0_wl_gamefec_progress.py").read_text()
-        self.assertIn("GameFecProgress(output.parent, env=os.environ)",runner)
+        self.assertIn("GameFecProgress(output.parent, env=quiet_env)",runner)
+        self.assertIn("GameFecRelay(output.parent,events,stop)",runner)
+        self.assertNotIn("stage_events.get_nowait()",runner)
         self.assertIn('events.put("MODE_TIMEOUT")',runner)
         self.assertIn('events.put("MODE_EXIT")',runner)
         self.assertNotIn("GameFecProgress",mode)
