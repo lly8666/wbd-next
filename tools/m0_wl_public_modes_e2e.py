@@ -10,7 +10,6 @@ from m0_wl_mode_evidence import (
  archive_mode_evidence,capture_mode_evidence_baseline,
  select_source_locked_modes)
 from m0_wl_perf_v2_config import read_scenario,first_delivery_ok_for_scenario
-from m0_wl_gamefec_progress import GameFecProgress
 root=pathlib.Path.cwd()
 out=root/"result"/"wl-public"
 try:
@@ -50,8 +49,6 @@ for mode in modes:
    (out/name).unlink(missing_ok=True)
  child=subprocess.Popen([sys.executable,"tools/m0_wl_public_normal_e2e.py"],env=env,
   creationflags=0) # restore last terminating pre-a8 original Windows child launch
- game_trace=GameFecProgress(out,env=env) if mode.endswith("-fec") else None
- if game_trace:game_trace.snapshot("MODE_STARTED")
  timed_out=False
  started=time.monotonic()
  try:
@@ -59,20 +56,14 @@ for mode in modes:
    remaining=mode_seconds-(time.monotonic()-started)
    if remaining<=0:raise subprocess.TimeoutExpired(child.args,mode_seconds)
    try:
-    rc=child.wait(timeout=min(remaining,2 if game_trace else 20))
-    if game_trace:game_trace.poll()
+    rc=child.wait(timeout=min(remaining,20))
     break
    except subprocess.TimeoutExpired:
-    if game_trace:game_trace.poll()
     if time.monotonic()-started>=mode_seconds:raise
-    if not game_trace:
-     print("WL_PUBLIC_REAL_MODE_HEARTBEAT mode="+mode+" elapsed_seconds="+
-           str(int(time.monotonic()-started))+" source="+env.get("GITHUB_SHA",""),flush=True)
+    print("WL_PUBLIC_REAL_MODE_HEARTBEAT mode="+mode+" elapsed_seconds="+
+          str(int(time.monotonic()-started))+" source="+env.get("GITHUB_SHA",""),flush=True)
  except subprocess.TimeoutExpired:
   timed_out=True
-  if game_trace:
-   game_trace.poll()
-   game_trace.snapshot("MODE_TIMEOUT")
   # Terminate the entire test-child tree on Windows; no orphan native Go/Wsl
   # product may be reused by another mode as a fake Ready or stale evidence.
   if os.name=="nt":
@@ -83,9 +74,6 @@ for mode in modes:
   except subprocess.TimeoutExpired: pass
   rc=124
   print("WL_PUBLIC_REAL_MODE_TIMEOUT mode="+mode+" bounded_seconds="+str(mode_seconds),flush=True)
- if game_trace:
-  game_trace.poll()
-  game_trace.snapshot("MODE_EXIT")
  print("WL_PUBLIC_REAL_MODE_PROCESS_EXIT mode="+mode+" rc="+str(rc)+
        " elapsed_seconds="+str(int(time.monotonic()-started)),flush=True)
  report=out/"report.json"

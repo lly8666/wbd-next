@@ -15,6 +15,7 @@ import signal
 import subprocess
 import sys
 import time
+from m0_wl_gamefec_progress import GameFecProgress
 
 def kill_native_child_tree(child):
     # A deadline kills exactly the one original E2E child tree.
@@ -131,6 +132,14 @@ def main() -> int:
                                  start_new_session=(os.name != "nt"))
         print("WL_ORIGINAL_NATIVE_E2E_CHILD_STARTED pid=" + str(child.pid) +
               " script=" + script.name, flush=True)
+        # One owning supervisor also samples the ACTUAL original Go/Rust
+        # native client/server/app files, not the possibly hung test child.
+        # This replaces the nested test child's GameFEC observer; no new
+        # watcher, subprocess, protocol RTT or product hot path.
+        trace = (GameFecProgress(output.parent,env=os.environ)
+                 if os.environ.get("WBD_WL_PUBLIC_MODES","").endswith("-fec") else None)
+        if trace: trace.snapshot("MODE_STARTED")
+        last_trace = time.monotonic()
         offset = 0
         state={"stage":"UNKNOWN","first_error":"UNKNOWN","fragment":"",
                "lane":"UNKNOWN","cipher_len":"UNKNOWN","path_mtu":"UNKNOWN",
@@ -140,6 +149,10 @@ def main() -> int:
         limit=native_batch_deadline(os.environ)
         print('WL_ORIGINAL_NATIVE_E2E_BATCH_DEADLINE seconds='+str(limit),flush=True)
         while True:
+            now = time.monotonic()
+            if trace and now-last_trace>=2:
+                trace.poll()
+                last_trace=now
             with output.open("rb") as reader:
                 reader.seek(offset)
                 data = reader.read(64 * 1024)
@@ -159,6 +172,9 @@ def main() -> int:
                     sys.stdout.write(rest.decode("utf-8", "replace"))
                     sys.stdout.flush()
                     _inspect(state,rest)
+                if trace:
+                    trace.poll()
+                    trace.snapshot("MODE_EXIT")
                 _diagnostic(state,rc,"EXITED_NOT_AUTOMATIC_PASS" if rc==0 else "FAIL_NATIVE")
                 print("WL_ORIGINAL_NATIVE_E2E_CHILD_EXIT pid=" + str(child.pid) +
                       " rc=" + str(rc), flush=True)
@@ -168,6 +184,9 @@ def main() -> int:
                 print("WL_ORIGINAL_NATIVE_E2E_BATCH_TIMEOUT seconds="+str(limit)+
                       " owner_pid="+str(child.pid)+" mode="+os.environ.get("WBD_WL_PUBLIC_MODES","all"),
                       file=sys.stderr,flush=True)
+                if trace:
+                    trace.poll()
+                    trace.snapshot("MODE_TIMEOUT")
                 _diagnostic(state,None,"TIMEOUT_FAIL_NATIVE")
                 kill_native_child_tree(child)
                 return 124
