@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 690,
-  "checkpoint_sha": "1581d7eee4f2e8c3f35f678d71ee48fcdd0c6463",
+  "sequence": 691,
+  "checkpoint_sha": "357349582591b0d9ba7088f1a50674ff777057bf",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H690 consume H687 genuine original Windows/Linux C200 source6ece real product capacity FAIL, strict business FAIL but both Stop PASS. Fix observed 8192B cursor bound by compact summary pointing immutable H685–H690 records. H688 Game/B106/C30 separate native Actions still in flight. All five PLAN027 §0 unfinished.",
-  "why_now": "200M true 60s Action41256954589 measured actual Linux generator offer134.759Mbps, severe first delivery, TUN drops3145 and CPU; mark capacity-limited and stop higher Normal family, no auto-tuning. H688 governance had cursor-too-large; replace repeatedly concatenated summary with bounded scope-source fact index; evidence files retain every historic FAIL/PASS.",
+  "current_task": "H691 recovered H688 true Normal source6ece 30% real Windows/Linux 10Mbps250ms60s both business Stop PASS, signed Windows joined F86375643 R7622620 C160349, R/F8.825%, R/total8.0955%, no bilateral repair qualification, RTT probe loss247/292. Independently dispatched Normal5% 100Mbps100ms and Normal15% 50Mbps250ms real FRC on same binaries, separate Actions; Game diagnostics and Windows B106 in flight; 200M family capacity-limited and stopped.",
+  "why_now": "Current SOURCE6ece real positive 30% damage R/F below10% proves bounded Windows opportunity, not bilateral and not reliable high-loss repair; cover missing 5/15% representative C at existing truthful 100M/100ms and 50M/250ms scenes with exact seed/mix unchanged except strict F/R/C test route.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect existing H688 Game diagnostics Action41257173322, B106 Action41257171644, C30 FRC Action41257172069; do not resend. Root-fix real Game2FEC and run affected one-source tests; independent C 5/15% and other B Windows OS/global/FIN/rotation, physical remains NOT_RUN. Stop higher Normal >=200 family.",
+  "next_action": "Collect Game2FEC real fatal logs Action41257173322, Windows B106 Action41257171644, H691 5/15% original C Actions. Do not re-run already-completed C200 capacity-limited or unchanged Game. Then fix proven product Game bug, B host-global DNS/WFP/IPv6 + lane lifecycle, C bursts/matrix and source-locked regressions.",
   "unverified": true,
   "last_tested_source": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H678-SOURCE6ECE-PREPARED-RECEIVER-10M-MTU-20261101.json",
     "docs/evidence/M0/PLAN027-H681-SOURCE6ECE-ORIGINAL-NORMAL-300S-NATIVE-20261101.json",
     "docs/evidence/M0/PLAN027-H684-SOURCE6ECE-ORIGINAL-NORMAL-50M-NATIVE-20261101.json",
     "docs/evidence/M0/PLAN027-H685-SOURCE6ECE-WINDOWS-ORIGINAL-NORMAL-IDLE105-20261101.json",
     "docs/evidence/M0/PLAN027-H685-SOURCE6ECE-REAL-LOSS1-FRC-WIN-20261101.json",
     "docs/evidence/M0/PLAN027-H685-SOURCE6ECE-GAME2FEC-WINDOWS-REAL-FAIL-20261101.json",
     "docs/evidence/M0/PLAN027-H686-SOURCE6ECE-ORIGINAL-NORMAL-100M-PASS-20261101.json",
-    "docs/evidence/M0/PLAN027-H690-SOURCE6ECE-ORIGINAL-C200-CAPACITY-LIMIT-20261101.json"
+    "docs/evidence/M0/PLAN027-H690-SOURCE6ECE-ORIGINAL-C200-CAPACITY-LIMIT-20261101.json",
+    "docs/evidence/M0/PLAN027-H691-SOURCE6ECE-ORIGINAL-NORMAL-30PCT-FRC-20261101.json"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN027-LOW-RATE-FEEDBACK-CLOSEOUT-20261030.md",
@@ -33,5 +33,5 @@
     "docs/testing/WL_PERF_HARNESS_V2.md"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN027 §0 PARTIAL; A5 WAIVED (not PASS). Product SOURCE6ece Windows/Linux prebuilt from H669 build41226521824. Current native Normal: MTU1280 10M/60s first100% both H677, 10M/300s H678 PASS, B105 Windows idle+wake H682 PASS; C50 H681 PASS, C100 H684 PASS with two real mid-window gaps, C200 H687 run41256954589 FAIL: Linux offered134.759/200M, Windows/Linux first0.997645/0.61916, Linux TUN TX drops3145, RTT probe missing30/21, CPU/Stop in H690 evidence; STOP higher Normal capacity family. H683 1% true loss Windows F/R/C accepted R/F0.4482%, scoped only, not bilateral; H679 Game2FEC Windows 1M first4%, missing Stop FAIL, artifact ENOTFOUND, diagnostic Action41257173322 in flight. Independent B106 Action41257171644 and 30% damage F/R/C Action41257172069 in flight: no duplication. H669 old premature-ready harness first182 FAIL preserved; H671 Linux-only original 106s second TLS gen2 PASS, not Windows. Remaining B Game native/rotation/FIN-Dormant/host-global DNS/WFP/IPv6, C damaged5/15/30/burst, p99 + final source-specific closeout; physical NOT_RUN. Full histories H685/H686/H687/H688/H689 devlogs/evidence; no whole READY."
+  "partial_summary": "PLAN027 §0 PARTIAL; A5 WAIVED (not PASS). Product SOURCE6ece Windows/Linux prebuilt from H669 build41226521824. Current native Normal: MTU1280 10M/60s first100% both H677, 10M/300s H678 PASS, B105 Windows idle+wake H682 PASS; C50 H681 PASS, C100 H684 PASS with two real mid-window gaps, C200 H687 run41256954589 FAIL: Linux offered134.759/200M, Windows/Linux first0.997645/0.61916, Linux TUN TX drops3145, RTT probe missing30/21, CPU/Stop in H690 evidence; STOP higher Normal capacity family. H683 1% true loss Windows F/R/C accepted R/F0.4482%, scoped only, not bilateral; H679 Game2FEC Windows 1M first4%, missing Stop FAIL, artifact ENOTFOUND, diagnostic Action41257173322 in flight. Independent B106 Action41257171644 and 30% damage F/R/C Action41257172069 in flight: no duplication. H669 old premature-ready harness first182 FAIL preserved; H671 Linux-only original 106s second TLS gen2 PASS, not Windows. Remaining B Game native/rotation/FIN-Dormant/host-global DNS/WFP/IPv6, C damaged5/15/30/burst, p99 + final source-specific closeout; physical NOT_RUN. Full histories H685/H686/H687/H688/H689 devlogs/evidence; no whole READY. H691 C30 SOURCE6ece real kernel30% 10Mbps/250ms60s signed Win/Lin first0.7239/0.726303, both Stop, genuine Win F86.38MB R7.62MB C0.160MB R/F8.825%, R/total8.0955%; 247/292 probes missing, one-sided only. C5 100M/100ms and C15 50M/250ms independent exact-seed scenarios in flight. Other PLAN027 B/C open."
 }

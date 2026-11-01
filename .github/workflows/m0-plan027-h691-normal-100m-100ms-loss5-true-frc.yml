@@ -1,0 +1,57 @@
+name: M0 PLAN027 H691 original signed Normal 100M 100ms true 5pct real FRC
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h691-normal-100m-100ms-loss5-true-frc.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-independent-loss-5:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h691-loss5]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_SOURCE: 6ece9eab653f46a716e8d3a0927fb74bec4819e8
+      BUILD_RUN: "41226521824"
+      PREPARED_HARNESS_SOURCE: 92354d5a70f34640918f61b25859ba0bb05989dd
+      PREVIOUS_LOSS30: "41257172069"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: One original source and truthful real kernel 5pct, frozen previous scenario
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .head_sha)" = "$PRODUCT_SOURCE"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$PREVIOUS_LOSS30" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/artifacts?per_page=100" |
+            jq -e --arg w "m0-wl-windows-product-binaries-$PRODUCT_SOURCE" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' >/dev/null
+          git fetch --depth=1 origin "$PREPARED_HARNESS_SOURCE"
+          test -z "$(git diff --name-only "$PREPARED_HARNESS_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock)"
+          test "$(git diff --name-only "$PREPARED_HARNESS_SOURCE" "$GITHUB_SHA" -- tools)" = tools/m0_wl_public_normal_e2e.py
+          python3 - <<'PY'
+          import json
+          from tools.m0_wl_perf_v2_config import read_scenario
+          a=json.load(open('scenarios/wl-outer-repair-100m-100ms-loss5-60s.json'))
+          b=json.load(open('scenarios/plan027-c-normal-100m-100ms-loss5-60s.json'))
+          assert a.pop('scenario_id')=='wl-outer-repair-100m-100ms-loss5-60s'
+          b.pop('scenario_id')
+          assert a==b
+          s=read_scenario('scenarios/wl-outer-repair-100m-100ms-loss5-60s.json')
+          assert s['public_mode']=='normal' and s['duration_s']==60 and s['tun_mtu']==1400
+          for d in ('windows_to_linux','linux_to_windows'):
+              c=s[d];assert c['offered_mbps']==100 and c['delay_ms']==100 and c['loss_pct']==5
+          print('H691_ONE_SIGNED_REAL_FRC_LOSS_5',s['scenario_sha256'])
+          PY
+          scene=scenarios/wl-outer-repair-100m-100ms-loss5-60s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|normal|$scene"
+          old="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg title "$title" '.workflow_runs[]|select(.display_title==$title)|.id' | head -1)"
+          if [ -n "$old" ];then echo "H691_EXISTING_ACTION=$old";exit 0;fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f run_n0=false -f perf_scenario_file="$scene" \
+            -f perf_reuse_run_id="$BUILD_RUN" -f perf_binary_source_sha="$PRODUCT_SOURCE"
+          echo "H691_REAL_ORIGINAL_LOSS_5_DISPATCHED_NOT_PASS"

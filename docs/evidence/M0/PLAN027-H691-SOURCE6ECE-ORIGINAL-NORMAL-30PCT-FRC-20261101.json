@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "result": "PASS_REAL_KERNEL_30PCT_SIGNED_ORIGINAL_NORMAL_BOTH_BUSINESS_STOP_AND_SCOPED_WINDOWS_OUTER_FRC_NOT_BILATERAL_GRADE",
+  "run": 41257172069,
+  "prebuilt_build_run": 41226521824,
+  "original_windows_binary_artifact": 13051429248,
+  "original_linux_binary_artifact": 13051109212,
+  "prepared_harness_sha": "c510f723a661c385a3dd3bdee7d6a1f50b52514e",
+  "real_report_artifact": {
+    "id": 13063349132,
+    "sha256": "8081dd230be1740adf5f4f5b0e5f03786fb731e27d7de5c48d7494d808304f9d"
+  },
+  "scene": "wl-outer-repair-10m-250ms-loss30-60s",
+  "scenario_sha256": "73bf61884e54551e16f290af78c447db1a717232aaa2b238c71fc03f35ddf0a8",
+  "original_go_tls_rust_drivers": "TRUE_SIGNED_WINDOWS_NPF_WINTUN_LINUX_WSL2_TUN",
+  "duration_s": 60,
+  "offered_each_mbps": 10,
+  "kernel_netem_delay_ms": 250,
+  "loss_pct": 30,
+  "real_tc_drops": {
+    "eth0": 33587,
+    "ifb": 33549
+  },
+  "actual_offered_mbps": {
+    "windows": 9.9973,
+    "linux": 10
+  },
+  "first_delivered_mbps": {
+    "windows": 7.2464,
+    "linux": 7.2502
+  },
+  "first_unique_fraction": {
+    "windows": 0.7239,
+    "linux": 0.726303
+  },
+  "real_received_sequence_gap_count": {
+    "windows": 27485,
+    "linux": 27232
+  },
+  "real_udp_tcp": "PASS_TRULY_KERNEL",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "joined_windows_wire": {
+    "F": 86375643,
+    "R_accepted": 7622620,
+    "R_uncertain": 0,
+    "C": 160349,
+    "repair_packets": 9754,
+    "R_over_F": 0.08824964695197696,
+    "R_over_FplusRplusC": 0.08095510158964535
+  },
+  "scoped_oracle": "PASS_SCOPED_WINDOWS_OUTER_REPAIR",
+  "oracle_signal": "NONZERO_WINDOWS_REPAIR_NOT_BILATERAL_GRADE",
+  "product_repair_qualified": false,
+  "own_clock_rtt_ms": {
+    "windows_p99": 1219,
+    "linux_p99": 1191.882
+  },
+  "rtt_probes": {
+    "windows": {
+      "sent": 549,
+      "replied": 302,
+      "not_returned": 247
+    },
+    "linux": {
+      "sent": 600,
+      "replied": 308,
+      "not_returned": 292
+    }
+  },
+  "windows_original_product_process": {
+    "cpu_s": 21.7812,
+    "observed_s": 77.625,
+    "one_logical_core_avg_pct": 28.06
+  },
+  "limitations": [
+    "True 30% tc independent random damage; residual app approximately27.6%, not FEC or full repair quality",
+    "Only Windows joined F/R/C evidence, Linux repair budget/attribution NOT_VERIFIED",
+    "30% RTT p99 excludes 247/292 lost probes; never report p99 as all packets delivered",
+    "No host-global DNS/IPv6, Windows Game FEC, physical source-wide qualification"
+  ]
+}
