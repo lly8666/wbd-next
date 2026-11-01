@@ -1,4 +1,4 @@
-name: M0 PLAN027 H741 GameFEC isolated file logger and deadline synthetic fixture
+name: M0 PLAN027 H744 GameFEC no-blocked-main-console native deadline fixture
 on:
   push:
     branches: [main]

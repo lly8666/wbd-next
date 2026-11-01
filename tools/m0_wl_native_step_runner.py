@@ -139,14 +139,16 @@ def main() -> int:
                                  stdout=writer, stderr=subprocess.STDOUT,
                                  stdin=subprocess.DEVNULL, env=os.environ.copy(),
                                  start_new_session=(os.name != "nt"))
-        print("WL_ORIGINAL_NATIVE_E2E_CHILD_STARTED pid=" + str(child.pid) +
-              " script=" + script.name, flush=True)
         # One owning supervisor also samples the ACTUAL original Go/Rust
         # native client/server/app files, not the possibly hung test child.
         # This replaces the nested test child's GameFEC observer; no new
         # watcher, subprocess, protocol RTT or product hot path.
         trace = (GameFecProgress(output.parent,env=os.environ)
                  if os.environ.get("WBD_WL_PUBLIC_MODES","").endswith("-fec") else None)
+        quiet_game=bool(trace and os.environ.get("WBD_WL_GAME_FEC_RESCUE")=="1")
+        if not quiet_game:
+            print("WL_ORIGINAL_NATIVE_E2E_CHILD_STARTED pid=" + str(child.pid) +
+                  " script=" + script.name, flush=True)
         if trace: trace.snapshot("MODE_STARTED")
         # GameFEC's fatal/native stdout and Windows file tails may block in
         # Win32/WSL2 output or an external logger. NONE of those reads or
@@ -174,8 +176,16 @@ def main() -> int:
                     sample_offset+=len(data)
                     if data:
                         _inspect(state,data)
-                        sys.stdout.write(data.decode("utf-8","replace"))
-                        sys.stdout.flush()
+                        # A failed GitHub job-log pipe must NEVER stall the
+                        # only timeout owner. Keep the full test log in the
+                        # regular file; emit only bounded verdicts to native
+                        # job stdout from this optional diagnostic thread.
+                        for line in data.decode("utf-8","replace").splitlines():
+                            if line.startswith(("WL_PUBLIC_REAL_MODE_RESULT",
+                                "WL_PUBLIC_REAL_MODE_TIMEOUT",
+                                "WL_PUBLIC_REAL_MODE_PROCESS_EXIT",
+                                "WL_GAME_DUE_DIAGNOSTIC_FINAL")):
+                                print("WL_GAME_BOUNDED_NATIVE_RESULT "+line[:420],flush=True)
                     sample_stop.wait(.2)
             sample_thread=threading.Thread(target=sample_game_log,
                                            name="game-native-log-sample",daemon=True)
@@ -185,7 +195,9 @@ def main() -> int:
         limit=native_batch_deadline(os.environ)
         if trace:
             trace.snapshot("SUPERVISOR_LOOP_ENTER")
-        print('WL_ORIGINAL_NATIVE_E2E_BATCH_DEADLINE seconds='+str(limit),flush=True)
+        if not quiet_game:
+            print('WL_ORIGINAL_NATIVE_E2E_BATCH_DEADLINE seconds='+str(limit),flush=True)
+        first_polled=False
         while True:
             now = time.monotonic()
             if not trace:
@@ -198,6 +210,9 @@ def main() -> int:
                     sys.stdout.flush()
                     _inspect(state,data)
             rc = child.poll()
+            if trace and not first_polled:
+                first_polled=True
+                trace.snapshot("SUPERVISOR_POLL_OK")
             if rc is not None:
                 # Game diagnostic tail is daemon-owned and never holds the
                 # native process exit. Other modes keep their prior file tail.
@@ -213,9 +228,10 @@ def main() -> int:
                         sys.stdout.write(rest.decode("utf-8", "replace"))
                         sys.stdout.flush()
                         _inspect(state,rest)
-                _diagnostic(state,rc,"EXITED_NOT_AUTOMATIC_PASS" if rc==0 else "FAIL_NATIVE")
-                print("WL_ORIGINAL_NATIVE_E2E_CHILD_EXIT pid=" + str(child.pid) +
-                      " rc=" + str(rc), flush=True)
+                if not quiet_game:
+                    _diagnostic(state,rc,"EXITED_NOT_AUTOMATIC_PASS" if rc==0 else "FAIL_NATIVE")
+                    print("WL_ORIGINAL_NATIVE_E2E_CHILD_EXIT pid=" + str(child.pid) +
+                          " rc=" + str(rc), flush=True)
                 return rc
             now=time.monotonic()
             if now-started>=limit:
@@ -226,16 +242,18 @@ def main() -> int:
                 kill_native_child_tree(child)
                 if trace:
                     trace.snapshot("MODE_TIMEOUT")
-                print("WL_ORIGINAL_NATIVE_E2E_BATCH_TIMEOUT seconds="+str(limit)+
-                      " owner_pid="+str(child.pid)+" mode="+os.environ.get("WBD_WL_PUBLIC_MODES","all"),
-                      file=sys.stderr,flush=True)
-                _diagnostic(state,None,"TIMEOUT_FAIL_NATIVE")
+                if not quiet_game:
+                    print("WL_ORIGINAL_NATIVE_E2E_BATCH_TIMEOUT seconds="+str(limit)+
+                          " owner_pid="+str(child.pid)+" mode="+os.environ.get("WBD_WL_PUBLIC_MODES","all"),
+                          file=sys.stderr,flush=True)
+                    _diagnostic(state,None,"TIMEOUT_FAIL_NATIVE")
                 return 124
             if now-last_heartbeat>=20:
                 if trace and now-started<65:
                     trace.snapshot("SUPERVISOR_"+("20S" if now-started<40 else "60S")+"_ALIVE")
-                print("WL_ORIGINAL_NATIVE_E2E_BATCH_HEARTBEAT elapsed_seconds="+
-                      str(int(now-started))+" owner_pid="+str(child.pid),flush=True)
+                if not quiet_game:
+                    print("WL_ORIGINAL_NATIVE_E2E_BATCH_HEARTBEAT elapsed_seconds="+
+                          str(int(now-started))+" owner_pid="+str(child.pid),flush=True)
                 last_heartbeat=now
             time.sleep(.2)
 

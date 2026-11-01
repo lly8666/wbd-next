@@ -1,0 +1,9 @@
+# PLAN027 H744 — GameFEC main PID must never write to a blocked native GitHub job console
+
+User GameFEC sole priority, other work paused. H742 real original SOURCE0264 Game2FEC native run41286724011/watcher41286729417 still IN_FLIGHT. Its separate Actions receipts establish PRE_NATIVE_STEP, STEP_ENTER, STEP_PREFLIGHT_COMPLETE, MODE_STARTED and SUPERVISOR_LOOP_ENTER (07:58:24Z). No 20s supervisor heartbeat at 07:59:14Z. After H741 placed full native log file tail in daemon thread, the authoritative main PID still printed MODE_STARTED snapshot, BATCH_DEADLINE and heartbeat to a potentially blocked Github stdout. No visible business/Stop proof, do not call Rust product hung just from this.
+
+H744 narrow harness change: when Game2/4 FEC independently protected original native Action has WBD_WL_GAME_FEC_RESCUE=1, do not print any stage, deadline, child-exit or heartbeat from authoritative PID main thread. Exact stage/status is first dispatched to separate GH workflow via bounded no-stdout subprocess, full original direct-full.log stays on disk and the same PID daemon thread emits bounded product verdicts. The main loop only checks child.poll/monotonic deadline and terminates Game child at 250s, regardless of external log backpressure. Add one independent SUPERVISOR_POLL_OK stage after first true child.poll, so LOOP_ENTER without POLL_OK identifies Win32 process query or immediate boundary. No new watchdog, no FEC/Go/Rust product change. H744 pure fixture blocks all main console writes and requires 1s test PID timeout, plus prior Game diagnostics regression. Native Game2FEC full proof remains NOT_RUN on new harness until one source-reused authentic Action after H742 finishes. 480s external watcher unchanged.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"GameFEC-only test supervisor blocked-console/child-poll isolation, no product data path or telemetry protocol change."}
+```

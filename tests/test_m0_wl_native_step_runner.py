@@ -135,10 +135,44 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
                 start=time.monotonic()
                 rc=native.main()
                 elapsed=time.monotonic()-start
-            self.assertTrue(started.is_set())
+            # The full Game child log remains in the regular file but its
+            # arbitrary raw bytes no longer block native job stdout.
+            self.assertFalse(started.is_set())
+            self.assertIn("H741_RAW_LOG_WILL_BLOCK",log.read_text())
             self.assertEqual(rc,124)
             self.assertLess(elapsed,3.0)
             self.assertIn("WL_ORIGINAL_NATIVE_E2E_BATCH_TIMEOUT",captured.getvalue())
+
+    def test_h744_game_main_deadline_does_not_print_to_blocked_console(self):
+        from tools import m0_wl_native_step_runner as native
+        with tempfile.TemporaryDirectory() as d:
+            code=pathlib.Path(d)/"blocked-console.py"
+            log=pathlib.Path(d)/"direct-full.log"
+            code.write_text("import time\ntime.sleep(20)\n")
+            events=[]
+            class BlockedConsole(io.StringIO):
+                def write(self,value):
+                    raise AssertionError("real Game supervisor wrote to blocked console: "+value[:55])
+            with (mock.patch.object(native,"native_batch_deadline",return_value=1),
+                  mock.patch.object(native.GameFecProgress,"snapshot",
+                      lambda self,event: events.append(event)),
+                  mock.patch.object(sys,"argv",[str(RUNNER),str(code),str(log)]),
+                  mock.patch.dict("os.environ",{
+                      "WBD_WL_PUBLIC_MODES":"game2-fec",
+                      "WBD_WL_GAME_FEC_RESCUE":"1",
+                      "GITHUB_SHA":"0264c2cfc91e05c7c4b8d518fa0efc6707a2ff6b"
+                  }),
+                  contextlib.redirect_stdout(BlockedConsole()),
+                  contextlib.redirect_stderr(BlockedConsole())):
+                start=time.monotonic()
+                rc=native.main()
+                elapsed=time.monotonic()-start
+            self.assertEqual(rc,124)
+            self.assertLess(elapsed,3.0)
+            self.assertIn("MODE_STARTED",events)
+            self.assertIn("SUPERVISOR_LOOP_ENTER",events)
+            self.assertIn("SUPERVISOR_POLL_OK",events)
+            self.assertIn("MODE_TIMEOUT",events)
 
     def test_h711_real_native_stop_markers_not_guessed(self):
         from tools import m0_wl_native_step_runner as native

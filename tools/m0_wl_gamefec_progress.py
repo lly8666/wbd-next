@@ -7,6 +7,7 @@ import os
 import pathlib
 import re
 import subprocess
+import threading
 import time
 
 MARKERS = (
@@ -50,6 +51,10 @@ class GameFecProgress:
             return
         self.signalled.add(event)
         detail = _safe(self.first_error if event == "FIRST_ERROR" else self.stage)
+        # Native Game supervisor must never synchronously print to an
+        # unresponsive job log on its authoritative deadline thread.
+        quiet_owner=(self.env.get("WBD_WL_GAME_FEC_RESCUE")=="1" and
+                     threading.current_thread() is threading.main_thread())
         if self.relay is not None:
             self.relay(event, detail)
         elif self.env.get("WBD_WL_GAME_FEC_RESCUE") == "1":
@@ -64,13 +69,16 @@ class GameFecProgress:
             try:
                 result = subprocess.run(args, stdout=subprocess.DEVNULL,
                                         stderr=subprocess.DEVNULL, timeout=8, check=False)
-                print("WL_GAME_RESCUE_DISPATCH event="+event+
-                      " status="+("QUEUED_NOT_PRODUCT_PASS" if result.returncode == 0
-                                 else "UNAVAILABLE"), flush=True)
+                if not quiet_owner:
+                    print("WL_GAME_RESCUE_DISPATCH event="+event+
+                          " status="+("QUEUED_NOT_PRODUCT_PASS" if result.returncode == 0
+                                     else "UNAVAILABLE"), flush=True)
             except (OSError, subprocess.TimeoutExpired):
-                print("WL_GAME_RESCUE_DISPATCH event="+event+" status=UNAVAILABLE", flush=True)
-        print("WL_GAME_RESCUE_INTENT event="+event+" stage="+_safe(self.stage)+
-              " first_error="+_safe(self.first_error), flush=True)
+                if not quiet_owner:
+                    print("WL_GAME_RESCUE_DISPATCH event="+event+" status=UNAVAILABLE", flush=True)
+        if not quiet_owner:
+            print("WL_GAME_RESCUE_INTENT event="+event+" stage="+_safe(self.stage)+
+                  " first_error="+_safe(self.first_error), flush=True)
 
     def poll(self):
         for name in ("client.log", "server.log", "windows-app.log", "linux-app.log"):
