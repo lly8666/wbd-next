@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "0264c2cfc91e05c7c4b8d518fa0efc6707a2ff6b",
+  "controller_sha": "eb1485491d1ee6682bdc2f153ead6783bb389b0f",
+  "original_build_run": 41280564979,
+  "windows_binary_artifact": {
+    "id": 13072889005,
+    "sha256": "b2ed3b6d2cd7712e36863d26e9fedee35a8b5c0a18c23db282d2dc9e586d67c8"
+  },
+  "linux_binary_artifact": {
+    "id": 13072973000,
+    "sha256": "3a6593f40b411ca829588c9556aca3a644836e982de3027f1bc2b4b825512f11"
+  },
+  "run": 41285808472,
+  "native_job": 124786821875,
+  "watcher_run": 41285816289,
+  "watcher_job": 124786778353,
+  "scenario": "scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json",
+  "original_native_status": "CANCELLED_NOT_PRODUCT_PASS",
+  "native_step_elapsed_s_at_cancel_signal": 493,
+  "watcher_limit_native_step_s": 480,
+  "watcher_cancel_order": "CANCEL_FIRST_BEFORE_ANY_GITHUB_LOG_FETCH",
+  "watcher_actual_signal": "TIMEOUT at 493s then first cancel, force cancel issued ~13s later",
+  "watcher_conclusion": "success_cancel_monitor_only",
+  "native_job_log": "GitHub job logs REST BlobNotFound 404; watcher five post-cancel attempts CLI_OR_ARCHIVE_UNAVAILABLE",
+  "independent_stage_runs": {
+    "PRE_NATIVE_STEP": 41285945963,
+    "STEP_ENTER": 41285950191,
+    "STEP_PREFLIGHT_COMPLETE": 41285978255,
+    "MODE_STARTED": 41285980126
+  },
+  "missing": [
+    "SUPERVISOR_20S_ALIVE",
+    "SUPERVISOR_60S_ALIVE",
+    "MODE_TIMEOUT_250S",
+    "FIRST_ERROR",
+    "BOTH_READY",
+    "REAL_UDP_TCP",
+    "OWNED_STOP"
+  ],
+  "result": "NOT_QUALIFIED",
+  "business_udp_tcp": "UNKNOWN",
+  "owned_stop": "UNKNOWN",
+  "first_failure": "UNKNOWN",
+  "source_scope": "frozen 0264 signed original Go TLS Windows NPF/Wintun Linux WSL2 Rust only",
+  "necessary_next": "H741 relocated both GameFecProgress and full 64KB raw stdout/file tail into same PID daemon diagnostic thread; H742 one prebuilt original native retest with SUPERVISOR_LOOP_ENTER receipt and 480s watcher; never infer product PASS from cancellation"
+}

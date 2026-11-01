@@ -183,6 +183,8 @@ def main() -> int:
         started=time.monotonic()
         last_heartbeat=started
         limit=native_batch_deadline(os.environ)
+        if trace:
+            trace.snapshot("SUPERVISOR_LOOP_ENTER")
         print('WL_ORIGINAL_NATIVE_E2E_BATCH_DEADLINE seconds='+str(limit),flush=True)
         while True:
             now = time.monotonic()
