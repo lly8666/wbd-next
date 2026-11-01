@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "48ed7ffe82aafa17a125948068a2ca6ee6a1593e",
+  "harness_sha": "3be46050915457c23dc19d5ccc2945f1867457a5",
+  "run": 41316798050,
+  "job": 124878546083,
+  "native_conclusion": "CANCELLED_EXTERNAL",
+  "watcher_run": 41316805149,
+  "watcher": "SUCCESS_METADATA_ONLY",
+  "downloaded_watcher_zip_id": 13087388449,
+  "downloaded_wsl_boot_zip_id": 13088030407,
+  "last_independent_stage": "CLIENT_LOG_STARTED_AFTER_COLD_READY_WAIT",
+  "pretest": {
+    "binary_reuse": "PASS_REAL_HASH",
+    "signed_npf_wintun": "PASS_INSTALL",
+    "wsl2": "PASS_REAL_BOOT"
+  },
+  "game2_fec_first_delivery": "UNKNOWN",
+  "npf_parity_copy": "UNKNOWN",
+  "owned_stop_and_full_network_wal": "UNKNOWN",
+  "new_candidate": {
+    "file": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
+    "change": "No TUN.Close before fully successful product.Stop; error retains native loans and WAL",
+    "product_pass": "PENDING_SOURCE_BUILD"
+  },
+  "result": "PARTIAL_UNKNOWN_GAME2FEC_KEEP_FAIL"
+}

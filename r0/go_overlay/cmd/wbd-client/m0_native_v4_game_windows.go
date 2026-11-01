@@ -150,7 +150,9 @@ func runM0NativeV4WindowsGame(
  tun,err:=windowsclient.OpenTUN(o.AdapterAlias)
  if err!=nil{return err}
  fmt.Println("M0_GAME_COLD_STAGE WINTUN_OPEN_DONE")
- defer tun.Close()
+ // Never run TUN.Close in an unconditional defer: Rust's native Wintun
+ // ring loan pins the original TUN active-call fence until full Join.
+ // A failed OS WAL/Stop must return its actual error, not block in Close.
  fmt.Println("M0_GAME_COLD_STAGE PLAN_MAKE_ENTER")
  plan,err:=makePlan()
  if err!=nil{return err}
@@ -171,11 +173,17 @@ func runM0NativeV4WindowsGame(
   defer cancel()
   e:=product.Stop(done)
   if e!=nil{
-   fmt.Printf("M0_PLAN027_GAME_STOP_RESULT stage=product_stop error=%v native_joined=%t\n",e,!packet.live)
-  }else{
-   fmt.Println("M0_PLAN027_GAME_STOP_RESULT stage=product_stop result=PASS")
+   fmt.Printf("M0_PLAN027_GAME_STOP_RESULT stage=product_stop result=FAIL error=%v native_joined=%t wintun_close=RETAINED\n",e,!packet.live)
+   return e
   }
-  return e
+  // Full owned Rust Join, WFP/routes/MTU/DNS WAL recovery and kernel
+  // lease release are positively verified BEFORE Wintun Close.
+  if e=tun.Close();e!=nil{
+   fmt.Printf("M0_PLAN027_GAME_STOP_RESULT stage=wintun_close result=FAIL error=%v\n",e)
+   return e
+  }
+  fmt.Println("M0_PLAN027_GAME_STOP_RESULT stage=product_stop result=PASS wintun_closed=1")
+  return nil
  }
  fmt.Println("M0_GAME_COLD_STAGE OS_APPLY_ENTER")
  receipt,err:=product.Apply(ctx)
