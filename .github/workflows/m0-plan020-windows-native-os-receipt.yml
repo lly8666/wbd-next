@@ -59,6 +59,21 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with: {go-version: "1.23.12", cache: false}
+      - name: Parse native source Windows PowerShell CI script before building Rust DLL
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $tokens=$null
+          $parseErrors=$null
+          [void][System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path tools/m0_plan020_native_live_windows_ci.ps1).Path,
+            [ref]$tokens,[ref]$parseErrors)
+          if(@($parseErrors).Count -ne 0){
+            $parseErrors | ForEach-Object { Write-Error $_.ToString() }
+            throw 'Original Windows native GameFEC test script has a PowerShell parser error'
+          }
+          Write-Output 'H792_ORIGINAL_WINDOWS_NATIVE_PS_AST_PARSE_PASS_NOT_PRODUCT'
+
       - name: Assemble exact original Go plus source-locked M0 Windows WAL and WinForms
         shell: pwsh
         run: |

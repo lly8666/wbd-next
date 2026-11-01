@@ -65,10 +65,19 @@ foreach($lane in @(2,4)){
 if ($game -match 'UNSUPPORTED|--- SKIP:') {throw 'Game2/4 positive was skipped'}
 Write-Output 'M0_PLAN024_WINDOWS_REAL_ORIGINAL_GO_GAME2_GAME4_NATIVE_TLS_RUST_WINTUN_FIRST_REVERSE_NOHOL_PASS_SCOPED'
 
-# New H791 protected GameFec=7 Fixed6: real original TLS Rust/Game2
-# signed Wintun OUTER ciphertext first and reverse, bounded native crypto
-# Stop, no invented NPF copied/OS WFP or full public product claim.
-& ./result/wintun-release/m0-original-peer-real.exe '-test.v=true' '-test.timeout=5m' '-test.run=^TestM0PLAN027WindowsRealOriginalGoGame2Fec6SignedWintunFirstReverseStop
+# H792 real original protected GameFec=7 fixed6 native RX/Stop.
+# Do not add an EOF-anchor dollar next to PowerShell quote delimiters:
+# explicit single test name and required exact PASS marker are sufficient.
+& ./result/wintun-release/m0-original-peer-real.exe '-test.v=true' '-test.timeout=5m' '-test.run=^TestM0PLAN027WindowsRealOriginalGoGame2Fec6SignedWintunFirstReverseStop' 2>&1 |
+  Tee-Object -FilePath result/m0-h791-original-game2fec6-signed-wintun.log
+if ($LASTEXITCODE -ne 0) {throw 'H792 original signed Wintun Game2FEC6 first/reverse or owned Stop FAILED'}
+$gameFec=Get-Content result/m0-h791-original-game2fec6-signed-wintun.log -Raw
+$marker='M0_PLAN027_REAL_ORIGINAL_GO_TLS_GAME2FEC6_SIGNED_WINTUN_RUST_RX_FIRST_REVERSE_OWNED_STOP_PASS_SCOPED'
+if (!$gameFec.Contains($marker) -or $gameFec -match 'UNSUPPORTED|--- SKIP:' -or
+    $gameFec -notmatch '--- PASS:'){
+  throw 'H792 protected GameFEC original first/reverse and owned Stop unverified'
+}
+Write-Output 'H792_ORIGINAL_WINDOWS_GO_TLS_RUST_GAME2FEC6_SCOPED_FIRST_REVERSE_STOP_NOT_PUBLIC_PASS'
 
 # M0-only exact SOURCE post-donor test override. This does not change the
 # 12 pinned Windows donor paths nor any production implementation. Check

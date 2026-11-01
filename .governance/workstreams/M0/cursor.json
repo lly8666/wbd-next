@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 791,
-  "checkpoint_sha": "ae5b2f5dbbfcefbbcd1ad5bd95954b3ffb707051",
+  "sequence": 792,
+  "checkpoint_sha": "9a95bd8a1a475ad020abc322e5e928954c7f280a",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H791 GameFEC ONLY: H790 real Windows route safety Action41311494957 PASS downloaded ZIP13085128154; H790 governance/maintenance and cheap assembly PASS. H790 auto full WAL build41311494848 was in flight at start of H791. New exact original protected Go TLS → Rust native Game2 GameFec7 fixed6 → signed Wintun scoped first/reverse RX with not-copied Wintun receipt, no NPF credit, canceled unsubmitted tickets, due no parity without real copied and joined Stop. H791 patch original test and same-source Windows script to run before native WAL, source test pending Actions. All other PLAN027 paused, original frozen-source full Game2FEC native still unqualified.",
-  "why_now": "User wants Actions transport test fully working first (H782 PASS), then fix Game Mode FEC. Real route safety H790 PASS_SCOPED. Run source-compatible GameFEC6 native RX/Stop via existing original Go/TLS Rust signed-Wintun test fixture without dangerous global /1/WFP.",
+  "current_task": "H792 GameFEC ONLY: H791 Windows WAL Action41312346860 FAIL first fault PowerShell ParserError at script line78, before any original GameFEC test; Go assembly+Rust release+signed Wintun were PASS, artifact13085583518 uploaded but not product receipt. H792 repairs exact truncated GameFEC6 test command and adds pre-build Windows PowerShell AST parse gate. H790 real PnP Win32 route safety PASS Action41311494957 artifact13085128154 true ZIP. H791 Governance41312346905 and maintenance41312346742 PASS. Product FEC remains NOT_QUALIFIED, unrelated PLAN027 paused.",
+  "why_now": "True source-scoped H791 job stdout proves malformed PowerShell test command before FEC, not GameFEC product fail; one narrowly scoped repair and AST guard avoids repeated expensive build parser failure.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H791 Windows original Action test log real first failure and uploaded run artifact; if first GameFEC6 fail, fix exact source, not suppress. If PASS_SCOPED, next prove real NPF copied FEC due and full WAL rollback before one full Game2FEC; Game4 afterward.",
+  "next_action": "Collect H792 Windows native PowerShell parse and authentic Go TLS Rust Game2FEC6 signed Wintun RX/Stop logs and uploaded ZIP. Diagnose next first real fault only; never promote NPF parity/global route or fake WFP from scoped test.",
   "unverified": true,
   "last_tested_source": "48ed7ffe82aafa17a125948068a2ca6ee6a1593e",
   "evidence_refs": [
@@ -21,14 +21,14 @@
     "docs/evidence/M0/PLAN027-H783-SOURCE48ED-H782-WINDOWS-ACTIONS-ARTIFACT-20261101.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261101-PLAN027-H784-H783-EVIDENCE-SOURCE-SCHEMA.md",
     "docs/devlog/M0/20261101-PLAN027-H785-GAMEFEC-PERSISTED-FULL-ROUTE-READONLY.md",
     "docs/devlog/M0/20261101-PLAN027-H786-GAMEFEC-FROZEN-DONOR-REPAIR.md",
     "docs/devlog/M0/20261101-PLAN027-H787-GAMEFEC-CONFIRMED-ROUTE-RECOVERY-UNIT.md",
     "docs/devlog/M0/20261101-PLAN027-H788-GAMEFEC-WORKFLOW-EXACT-REGEX.md",
     "docs/devlog/M0/20261101-PLAN027-H789-GAMEFEC-WINDOWS-ACTIONS-PASS-SCOPED.md",
     "docs/devlog/M0/20261101-PLAN027-H790-REAL-ORIGINAL-PNP-TESTNET-ROUTE-WAL.md",
-    "docs/devlog/M0/20261101-PLAN027-H791-ORIGINAL-GAME2FEC6-TLS-WINTUN-FIRST-REVERSE.md"
+    "docs/devlog/M0/20261101-PLAN027-H791-ORIGINAL-GAME2FEC6-TLS-WINTUN-FIRST-REVERSE.md",
+    "docs/devlog/M0/20261101-PLAN027-H792-GAMEFEC-POWERSHELL-TEST-FIRST-FAULT.md"
   ],
   "open_requests": [],
   "partial_summary": "d100 25ms zero-loss native source business FAIL: Windows first0.997456/Linux0.9819, Linux TUN TX drops2503, generator CPU54.14s, original owned Stop marker+exit PASS; watcher RUN_VIEW recovered. H721 avoid duplicate Linux TERM cleanup warning. H722 one 50Mbps250ms15% Fixed6 new native Action queued/dispatch pending exact current controller; not PASS. H723 new native Rust+Go 72B Windows Fixed selected profile/revision installed readback and Go unit test committed but fresh product NOT_RUN; legacy mature Quality is separate, no extra RTT. H722 real original source d066 in flight. H724 source d066 true highest Fixed50/250ms15 real both UDP/TCP Stop PASS, first.994254/.974935, TUN0/NPF0; Win CPU55.1/78.375 (70.3% core), RSS47MB. Residual Linux2.5% and p99/unreturned bilateral F/R/C still unverified. New H723 72B Windows Fixed installation ABI source65618 cheap assembly mismatch, H724 correct three Go result blobs pending Actions. H739: H738 cheap source-locked tests PASS, mixed-source hot cursor evidence refs cleared without deleting archived historical evidence. Real native GameFEC remains unverified. H742: source0264 H739 true Game2FEC CANCELLED after watcher 493s native step, independent 4 stages only, no original job log or Stop. Source-bound evidence H742 preserved, one H741 IO isolated runner next. User ~8min cap satisfied (30s watcher polling). Other work paused. H743: H742 exact original Game2FEC product SOURCE0264 new harness source045a run41286724011/watcher41286729417 in flight, no product/Stop proof. H741 single PID isolated logging passed synthetic; H739 true native cancel 493s and independent 4 stage receipts archived. H746: H742 new IO diagnostic already reached SUPERVISOR_LOOP_ENTER but no child.poll or timeout and external hard-cancel at502s, BlobNotFound; H744/H745 blocked-console fixtures both PASS, one real source0264 H746 needed. Other PLAN027 paused. H747 H746 actual same frozen original Game2FEC source0264 run41287639141/watcher41287646432 IN_FLIGHT; H744/H745 blocked-main/first-fault synthetic PASSED, product and owned Stop not qualified."
