@@ -136,6 +136,18 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         self.assertIn("$gameSingle",flow)
         self.assertIn("$wholeLimit=if($gameSingle){600}else{1020}",flow)
 
+    def test_gamefec_actual_log_observer_is_owned_by_one_pid_supervisor(self):
+        mode=(ROOT/"tools/m0_wl_public_modes_e2e.py").read_text()
+        runner=(ROOT/"tools/m0_wl_native_step_runner.py").read_text()
+        rescue=(ROOT/"tools/m0_wl_gamefec_progress.py").read_text()
+        self.assertIn("GameFecProgress(output.parent,env=os.environ)",runner)
+        self.assertIn('trace.snapshot("MODE_TIMEOUT")',runner)
+        self.assertIn('trace.snapshot("MODE_EXIT")',runner)
+        self.assertNotIn("GameFecProgress",mode)
+        self.assertNotIn("capture_output=True,timeout=20",mode)
+        self.assertIn("stderr=subprocess.DEVNULL, timeout=8",rescue)
+        self.assertNotIn("capture_output=True",rescue)
+
     def test_wsl_real_boot_is_own_action_step_before_native_game(self):
         flow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
         stage="Real WSL2 Ubuntu kernel boot and TUN prerequisite (independent bounded stage)"
