@@ -61,6 +61,7 @@ struct GameCounters{
     stop:AtomicBool,err:AtomicI32,tx:AtomicU64,
     rx:AtomicU64,after:AtomicU64,rejected:AtomicU64,
     ack:[AtomicU32;4],ack_sent:[AtomicU32;4],tx_seq:[AtomicU32;4],
+    first_due_entry:AtomicBool,first_send_failure:AtomicBool,
 }
 impl GameCounters{
     fn new(lanes:&[LaneConfig])->Self{
@@ -70,6 +71,7 @@ impl GameCounters{
             ack:std::array::from_fn(|i|AtomicU32::new(lanes.get(i).map_or(0,|x|x.rx_seq))),
             ack_sent:std::array::from_fn(|i|AtomicU32::new(lanes.get(i).map_or(0,|x|x.rx_seq))),
             tx_seq:std::array::from_fn(|i|AtomicU32::new(lanes.get(i).map_or(0,|x|x.tx_seq))),
+            first_due_entry:AtomicBool::new(false),first_send_failure:AtomicBool::new(false),
         }
     }
     fn snapshot(&self)->WbdWinNativeStatsV1{
@@ -154,7 +156,13 @@ fn wire_frame<'a>(cfg:&WbdWinNativeAttachV1,l:&LaneConfig,
     },Presentation{ack32:ack,advertised_window:65535,
         ip_id:id,persona:PacketPersona::Windows11},
         u64::from(seq),wire,None,cfg.path_mtu as usize,&mut out[14..])
-        .map_err(|_|INVALID)?;
+        .map_err(|e|{
+            static FIRST_WIRE_ERROR:AtomicBool=AtomicBool::new(false);
+            if !FIRST_WIRE_ERROR.swap(true,Ordering::AcqRel){
+                eprintln!("M0_PLAN027_GAME_DUE_FAULT stage=wire_frame_build_bytes detail={e:?} wire_len={} path_mtu={} seq={} local_port={} rc={INVALID}",wire.len(),cfg.path_mtu,seq,l.local_port);
+            }
+            INVALID
+        })?;
     let n=14+packet.len();
     out[..6].copy_from_slice(&cfg.next_hop_mac);
     out[6..12].copy_from_slice(&cfg.source_mac);
@@ -176,24 +184,46 @@ fn presentation_ack_frame<'a>(
     out[12..14].copy_from_slice(&0x0800u16.to_be_bytes());
     Ok(&out[..n])
 }
+fn game_send_failure(c:&GameCounters,stage:&str,rc:i32,
+    r:&game::WbdWindowsGameRecordV4,cfg:&WbdWinNativeAttachV1,
+    origin:&str,
+)->i32{
+    if !c.first_send_failure.swap(true,Ordering::AcqRel){
+        eprintln!("M0_PLAN027_GAME_DUE_FAULT first_failure=1 stage={stage} origin={origin} lane={} pn={} cipher_len={} path_mtu={} logical_id={} rc={rc}",r.lane,r.pn,r.length,cfg.path_mtu,r.logical_id);
+    }
+    rc
+}
 fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
     owner:&Arc<Mutex<game::WinGameGroup>>,
     outer:&Arc<Mutex<outer::GameOuter>>,
     lanes:&[LaneConfig],npf:&mut [NpcapTx],c:&GameCounters,
     records:Vec<game::WbdWindowsGameRecordV4>,ip_id:&mut u16,
-    active:&mut [bool],
+    active:&mut [bool],origin:&str,
 )->Result<usize,i32>{
     let total=records.len();
+    if origin=="due" && !records.is_empty() &&
+        !c.first_due_entry.swap(true,Ordering::AcqRel){
+        let first=&records[0];
+        eprintln!("M0_PLAN027_GAME_DUE_FAULT stage=send_records_entry origin=due batch={} lane={} pn={} cipher_len={} path_mtu={} logical_id={}",
+            total,first.lane,first.pn,first.length,cfg.path_mtu,first.logical_id);
+    }
     for r in records{
-        let idx=usize::try_from(r.lane).map_err(|_|INVALID)?
-            .checked_sub(1).ok_or(INVALID)?;
-        let l=lanes.get(idx).ok_or(INVALID)?;
-        if r.length<32||r.length>1536{return Err(INVALID)}
+        let idx=match usize::try_from(r.lane).ok().and_then(|v|v.checked_sub(1)){
+            Some(i) if i<lanes.len()=>i,
+            _=>return Err(game_send_failure(c,"lane",INVALID,&r,cfg,origin)),
+        };
+        let l=&lanes[idx];
+        if r.length<32||r.length>1536{
+            return Err(game_send_failure(c,"cipher_length",INVALID,&r,cfg,origin))
+        }
         let seq=c.tx_seq[idx].load(Ordering::Acquire);
         let ack=c.ack[idx].load(Ordering::Acquire);
         let mut scratch=[0u8;FRAME_CAP];
-        let frame=wire_frame(cfg,l,seq,ack,
-            &r.wire[..r.length as usize],*ip_id,&mut scratch)?;
+        let frame=match wire_frame(cfg,l,seq,ack,
+            &r.wire[..r.length as usize],*ip_id,&mut scratch){
+            Ok(frame)=>frame,
+            Err(rc)=>return Err(game_send_failure(c,"wire_frame",rc,&r,cfg,origin)),
+        };
         *ip_id=ip_id.wrapping_add(1);
         let outcome=if active[idx]{
             Some(npf[idx].send_batch(&[frame]))
@@ -203,18 +233,21 @@ fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
         // AFTER the real Npcap success/unknown/not-sent result. No Go
         // fake receipt, no inferred application ACK.
         let rc={
-            let mut g=owner.lock().map_err(|_|BAD_STAGE)?;
+            let mut g=owner.lock().map_err(|_|game_send_failure(c,"m4_owner_lock",BAD_STAGE,&r,cfg,origin))?;
             game::game_m4_result_group(&mut g,group,r.lane,r.logical_id,r.pn,copied)
         };
         if rc!=OK{
             eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=game_m4_receipt rc={rc} lane={} copied={copied}",r.lane);
-            return Err(rc)
+            return Err(game_send_failure(c,"m4_receipt",rc,&r,cfg,origin))
         }
         if copied{
             // Use the exact original GameAdapter PN/ciphertext AFTER NPF.
             // Same Normal ReceiptState/OuterAckIndex/global M2 budget.
-            outer.lock().map_err(|_|BAD_STAGE)?
-                .on_firstsend(idx,r.pn,seq,&r.wire[..r.length as usize])?;
+            let first_result=outer.lock().map_err(|_|BAD_STAGE)
+                .and_then(|mut m|m.on_firstsend(idx,r.pn,seq,&r.wire[..r.length as usize]));
+            if let Err(rc)=first_result{
+                return Err(game_send_failure(c,"on_firstsend",rc,&r,cfg,origin))
+            }
             c.tx_seq[idx].fetch_add(r.length,Ordering::Release);
             c.ack_sent[idx].store(ack,Ordering::Release);
             c.tx.fetch_add(1,Ordering::Relaxed);
@@ -298,7 +331,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                         c.rejected.fetch_add(1,Ordering::Relaxed);continue
                     },Err(e)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_result rc={e}");return e}};
                     if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&outer,&lanes,&mut npf,
-                        &c,rows,&mut id,&mut active){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_send_records rc={rc}");return rc}
+                        &c,rows,&mut id,&mut active,"offer"){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_send_records rc={rc}");return rc}
                     health.on_local_business(health_origin.elapsed().as_nanos()
                         .min(u128::from(u64::MAX)) as u64);
                     did_work=true;
@@ -322,7 +355,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         match due{
             Ok(rows) if !rows.is_empty()=>{
                 if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&outer,&lanes,
-                    &mut npf,&c,rows,&mut id,&mut active){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=due_send_records rc={rc}");return rc}
+                    &mut npf,&c,rows,&mut id,&mut active,"due"){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=due_send_records rc={rc}");return rc}
                 did_work=true;
             },
             Err(rc)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=game_native_due rc={rc}");return rc},
@@ -898,7 +931,14 @@ pub extern "C" fn wbd_m0_win_game_native_v3_stop(h:u64)->i32{
         let s=map.get(&h).ok_or(UNKNOWN)?;
         Ok(s.tx.is_finished()&&s.rx.is_finished())
     },std::time::Duration::from_secs(12)){
-        eprintln!("M0_PLAN027_GAME_NATIVE_STOP_NOT_DRAINED group={h} rc={rc} retained_loans=1 retryable=1");
+        let (tx_done,rx_done,worker_rc)=match sessions().lock(){
+            Ok(map)=>map.get(&h).map(|s|(
+                s.tx.is_finished(),s.rx.is_finished(),
+                s.counters.err.load(Ordering::Acquire)
+            )).unwrap_or((false,false,UNKNOWN)),
+            Err(_)=>(false,false,BAD_STAGE),
+        };
+        eprintln!("M0_PLAN027_GAME_NATIVE_STOP_NOT_DRAINED group={h} rc={rc} tx_finished={tx_done} rx_finished={rx_done} worker_rc={worker_rc} retained_loans=1 retryable=1");
         return rc
     }
     let session={
@@ -909,6 +949,7 @@ pub extern "C" fn wbd_m0_win_game_native_v3_stop(h:u64)->i32{
     // their owning sessions were removed from the single original registry.
     let tx=session.tx.join().unwrap_or(STOP_INCOMPLETE);
     let rx=session.rx.join().unwrap_or(STOP_INCOMPLETE);
+    eprintln!("M0_PLAN027_GAME_NATIVE_STOP_JOIN group={h} tx_finished=true rx_finished=true tx_rc={tx} rx_rc={rx}");
     if tx!=OK&&tx!=BAD_STAGE{return tx}
     if rx!=OK&&rx!=BAD_STAGE{return rx}
     OK // Both native workers ended before Wintun/NPF loans return to Go.

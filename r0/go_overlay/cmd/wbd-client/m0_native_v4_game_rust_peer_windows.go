@@ -177,8 +177,12 @@ func(p *m0WinRustGamePeer) DrainPeerAndKernelLoans(
 )error{
  if p==nil||p.first!=first||p.tun!=tun{return windowsclient.ErrN4NativeGuard}
  if p.live{
-  if err:=p.group.JoinNativeGameIO(ctx);err!=nil{return err}
+  if err:=p.group.JoinNativeGameIO(ctx);err!=nil{
+   fmt.Printf("M0_PLAN027_GAME_STOP_RESULT stage=native_worker_join result=FAIL error=%v\n",err)
+   return err
+  }
   p.live=false
+  fmt.Println("M0_PLAN027_GAME_STOP_RESULT stage=native_worker_join result=PASS")
  }
  var err error
  if p.loan!=nil{err=errors.Join(err,p.loan.ReleaseAfterRustJoin());p.loan=nil}

@@ -161,7 +161,13 @@ func runM0NativeV4WindowsGame(
  stop:=func()error{
   done,cancel:=context.WithTimeout(context.Background(),60*time.Second)
   defer cancel()
-  return product.Stop(done)
+  e:=product.Stop(done)
+  if e!=nil{
+   fmt.Printf("M0_PLAN027_GAME_STOP_RESULT stage=product_stop error=%v native_joined=%t\n",e,!packet.live)
+  }else{
+   fmt.Println("M0_PLAN027_GAME_STOP_RESULT stage=product_stop result=PASS")
+  }
+  return e
  }
  receipt,err:=product.Apply(ctx)
  if err!=nil{return errors.Join(err,stop())}

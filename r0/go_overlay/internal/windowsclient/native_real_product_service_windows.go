@@ -9,6 +9,7 @@ package windowsclient
 import (
  "context"
  "errors"
+ "fmt"
  "sync"
 )
 
@@ -162,7 +163,10 @@ func(s *N4RealWindowsProduct) Stop(ctx context.Context)error{
  }
  switch s.controller.state{
  case "applied","recovery_required":
-  if err:=s.controller.Disconnect(ctx);err!=nil{return err}
+  if err:=s.controller.Disconnect(ctx);err!=nil{
+   fmt.Printf("M0_PLAN027_NATIVE_STOP_RESULT stage=wal_disconnect result=FAIL error=%v\n",err)
+   return err
+  }
  case "requested":
   // No stage is armed; still inspect actual OS/WAL absence before
   // retiring Rust, because a previous interrupted Connect may exist.
@@ -181,10 +185,15 @@ func(s *N4RealWindowsProduct) Stop(ctx context.Context)error{
  if err:=s.owner.VerifyOriginalNativeHold(ctx,s.identity);err!=nil{
   return err
  }
- if err:=s.kernel.Stop(ctx);err!=nil{return err}
- if err:=s.owner.FinishOriginalNativeStop(ctx,s.identity);err!=nil{
+ if err:=s.kernel.Stop(ctx);err!=nil{
+  fmt.Printf("M0_PLAN027_NATIVE_STOP_RESULT stage=kernel_lease result=FAIL error=%v\n",err)
   return err
  }
+ if err:=s.owner.FinishOriginalNativeStop(ctx,s.identity);err!=nil{
+  fmt.Printf("M0_PLAN027_NATIVE_STOP_RESULT stage=crypto_after_wal result=FAIL error=%v\n",err)
+  return err
+ }
+ fmt.Println("M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS")
  s.applied=false
  s.receipt=N4NativeLiveOSReceipt{}
  s.stopped=true
