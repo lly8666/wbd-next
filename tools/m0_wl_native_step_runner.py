@@ -42,6 +42,11 @@ def kill_native_child_tree(child):
 def native_batch_deadline(env):
     # One functional mode has <=165s, historical four modes <=4*165s.
     # Leave substantial OS setup/owned cleanup time before the whole-step 600/1020s guard.
+    if (env.get("WBD_WL_PUBLIC_MODES")=="game2-fec" and
+            env.get("WBD_WL_V2_SCENARIO")=="scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json"):
+        # One 10s real first-fault reproduction: nested 185s mode, one
+        # bounded Windows child tree cleanup, no repeated 600s test.
+        return 250
     if env.get("WBD_WL_V2_SCENARIO") and env.get("WBD_WL_PUBLIC_MODES","").startswith("game"):
         # Nested 240s mode + bounded tree cleanup; native Windows guard
         # includes its own WSL/Firewall preflight and finally within 600s.
