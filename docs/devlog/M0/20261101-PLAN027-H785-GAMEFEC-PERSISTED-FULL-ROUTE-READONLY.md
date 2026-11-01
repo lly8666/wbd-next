@@ -1,0 +1,11 @@
+# H785 — first safe GameFEC owned full-WAL route receipt work after Actions transport PASS
+
+New user priority: Actions path verified at H782, then real Game FEC. H784 Governance [41308552272](https://github.com/lly8666/wbd-next/actions/runs/41308552272) SUCCESS after restoring exact evidence source_sha, no product FEC PASS. Genuine H771 source48ed Game2FEC Windows↔Linux original native Action41299653430 CANCELLED, job BlobNotFound, first delivery and owned Stop UNKNOWN. Full five-stage original WFP/routes/DNS/MTU/lease crash recovery remains UNQUALIFIED; `N4NativeRecoverState` still calls only PreRoute reject-sidecar recovery.
+
+First safe Go product-internal step: reuse pinned original `wobuzhidao@a7a82db3` five-stage route design; add `n4ValidatePersistedFullRouteReceipts` to existing overlay recovery module. It checks pinned PnP hash/generation, exactly five parent records, existing strict guard+lease+MTU+DNS receipt validation, bounded native compact route keys, Wintun index/physical interface and every extra DNS /32 against original DNS servers. An optional sidecar must have a valid exact ordered per-route entry prefix and active/intent/owned relationship; an unconfirmed child intent cannot be promoted to a parent owned record. Mismatched identity, route, or DNS gets `ErrN4JournalConflict`, with **NO route changes, no WFP Disarm, no WAL unlink**. The public CLI recovery path remains fail-closed on `.routes`; this is an internal preflight prerequisite, **NOT** full recovery activation.
+
+One new scoped [H785 workflow](../../.github/workflows/m0-plan027-h785-gamefec-route-preflight.yml) assembles exact original Go donor on Windows2025 and runs one read-only positive+negative route WAL test. Manifest source blob pins and `windows-network-wal` feature card updated in the same commit. Test-only green cannot be promoted to real crash, GameFEC first delivery or normal Stop. No 480s Game2 re-dispatch or unrelated PLAN027 matrix until full owned safety proof.
+
+```feature-impact
+{"kind":"updated","ids":["windows-network-wal"],"reason":"GameFEC owned five-stage original route parent/child WAL read-only integrity preflight, no OS mutation or unsafe recovery activation."}
+```

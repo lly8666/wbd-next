@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 784,
-  "checkpoint_sha": "1eb64a4b807cd74be02e335b8076e9c70c948588",
+  "sequence": 785,
+  "checkpoint_sha": "1e93ac3198ef738e23a4b9e33210db2b3cc5e0a3",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H784 H783 evidence schema correction: H782 Windows native Actions real job/21 unit/actual ZIP remains SUCCESS. H783 Governance41308031500 FAILED structure: evidence is for a different SOURCE because new H783 document had frozen_product_source but lacked contract source_sha. Correct exact source_sha=48ed7ffe82aafa17a125948068a2ca6ee6a1593e; keep unverified=true. First product GameFEC blocker remains full owned five-stage WFP/routes/DNS/MTU/lease crash WAL and original two-way first delivery/Stop UNKNOWN, other PLAN027 paused.",
-  "why_now": "Downloaded actual Governance structure.json proved missing mandatory source_sha field in referenced evidence, not product or Actions executor regression. Preserve negative and repair source-scoped evidence format.",
+  "current_task": "H785 GameFEC product full-WAL route sidecar READ-ONLY preflight implementation, no OS mutation/production recovery activation. H782 original Windows Actions controller/21 tests/GH/ZIP verified; H784 Governance41308552272 SUCCESS after true source_sha field repair. New source only validates pinned original parent 5-stage WAL vs child confirmed intent/owned and DNS /32; one Windows Go assembly targeted test planned, no full WFP/routes/Stop product PASS. Other PLAN027 paused.",
+  "why_now": "Actions transport is proven; product FEC genuine native remains blocked by unsafe unknown full WAL route recovery. First independently test strict parent/child receipts before any OS cleanup, preserving fail-closed on ambiguous route.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect Governance for H784, then implement/qualify narrowly scoped GameFEC original full WAL route-stage reclaimer only if pinned original Wintun and sidecar intent ownership independently verified. Never delete ambiguous route/guard or rerun identical 480s Game2FEC until safety evidence.",
+  "next_action": "Collect H785 Windows original Go assembly targeted test and actual job/log. If green, advance narrowly from read-only confirmed parent/sidecar to bounded real Windows abnormal-exit route/WFP/lease/MTU/DNS recovery under pinned owner before ONE original Game2FEC; do not claim H785 parser unit as product PASS.",
   "unverified": true,
   "last_tested_source": "48ed7ffe82aafa17a125948068a2ca6ee6a1593e",
   "evidence_refs": [
@@ -21,14 +21,14 @@
     "docs/evidence/M0/PLAN027-H783-SOURCE48ED-H782-WINDOWS-ACTIONS-ARTIFACT-20261101.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261101-PLAN027-H767-H771-MANAGEMENT-PIN-AND-ONE-NATIVE.md",
     "docs/devlog/M0/20261101-PLAN027-H774-FAIL-CLOSED-SURVIVING-NATIVE-WAL.md",
     "docs/devlog/M0/20261101-PLAN027-H775-H778-GAMEFEC-ARTIFACT-UPLOAD-RECOVERY.md",
     "docs/devlog/M0/20261101-PLAN027-H780-ACTIONS-NATIVE-OWNER-EVIDENCE-PATH.md",
     "docs/devlog/M0/20261101-PLAN027-H781-ACTIONS-WINDOWS-FAIL-FIRST-FIX.md",
     "docs/devlog/M0/20261101-PLAN027-H782-WINDOWS-LOCAL-PROBE-ZIP-AND-CURSOR-GATE.md",
     "docs/devlog/M0/20261101-PLAN027-H783-ACTIONS-VERIFIED-GAMEFEC-WAL-BOUNDARY.md",
-    "docs/devlog/M0/20261101-PLAN027-H784-H783-EVIDENCE-SOURCE-SCHEMA.md"
+    "docs/devlog/M0/20261101-PLAN027-H784-H783-EVIDENCE-SOURCE-SCHEMA.md",
+    "docs/devlog/M0/20261101-PLAN027-H785-GAMEFEC-PERSISTED-FULL-ROUTE-READONLY.md"
   ],
   "open_requests": [],
   "partial_summary": "d100 25ms zero-loss native source business FAIL: Windows first0.997456/Linux0.9819, Linux TUN TX drops2503, generator CPU54.14s, original owned Stop marker+exit PASS; watcher RUN_VIEW recovered. H721 avoid duplicate Linux TERM cleanup warning. H722 one 50Mbps250ms15% Fixed6 new native Action queued/dispatch pending exact current controller; not PASS. H723 new native Rust+Go 72B Windows Fixed selected profile/revision installed readback and Go unit test committed but fresh product NOT_RUN; legacy mature Quality is separate, no extra RTT. H722 real original source d066 in flight. H724 source d066 true highest Fixed50/250ms15 real both UDP/TCP Stop PASS, first.994254/.974935, TUN0/NPF0; Win CPU55.1/78.375 (70.3% core), RSS47MB. Residual Linux2.5% and p99/unreturned bilateral F/R/C still unverified. New H723 72B Windows Fixed installation ABI source65618 cheap assembly mismatch, H724 correct three Go result blobs pending Actions. H739: H738 cheap source-locked tests PASS, mixed-source hot cursor evidence refs cleared without deleting archived historical evidence. Real native GameFEC remains unverified. H742: source0264 H739 true Game2FEC CANCELLED after watcher 493s native step, independent 4 stages only, no original job log or Stop. Source-bound evidence H742 preserved, one H741 IO isolated runner next. User ~8min cap satisfied (30s watcher polling). Other work paused. H743: H742 exact original Game2FEC product SOURCE0264 new harness source045a run41286724011/watcher41286729417 in flight, no product/Stop proof. H741 single PID isolated logging passed synthetic; H739 true native cancel 493s and independent 4 stage receipts archived. H746: H742 new IO diagnostic already reached SUPERVISOR_LOOP_ENTER but no child.poll or timeout and external hard-cancel at502s, BlobNotFound; H744/H745 blocked-console fixtures both PASS, one real source0264 H746 needed. Other PLAN027 paused. H747 H746 actual same frozen original Game2FEC source0264 run41287639141/watcher41287646432 IN_FLIGHT; H744/H745 blocked-main/first-fault synthetic PASSED, product and owned Stop not qualified."

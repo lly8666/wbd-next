@@ -22,7 +22,8 @@
     "r0/go_overlay/internal/windowsclient/native_unified_network_transaction.go",
     "r0/go_overlay/internal/windowsclient/native_product_preflight_windows.go",
     "r0/go_overlay/internal/windowsclient/native_wfp_exact_arm_windows.go",
-    "r0/go_overlay/internal/windowsclient/native_orphan_ghost_terminal_windows.go"
+    "r0/go_overlay/internal/windowsclient/native_orphan_ghost_terminal_windows.go",
+    "r0/go_overlay/internal/windowsclient/native_orphan_persisted_preroute_windows.go"
   ],
   "doc_refs": [
     "docs/evidence/M0/PLAN020-S659-exact-Windows2022-native-TESTNET-WFP-and-guard-crash-PASS_SCOPED-20261021.json",
@@ -61,7 +62,8 @@
   "limitations": [
     "TEST-NET可用不代表host-global生产资格；preflight硬门不得解除。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
-    "H672 Action41226501543 SOURCE6ece actual native created-Wintun local five-stage WAL 3 genuine IP/MTU/DNS stages PASS, WFP/routes fake, global host DNS/IPv6/WFP/default route and GUI Applied/Disconnect NOT_RUN. Five mode kernel first/reverse packet samples are scoped, not sustained public mode or FEC native full-rate."
+    "H672 Action41226501543 SOURCE6ece actual native created-Wintun local five-stage WAL 3 genuine IP/MTU/DNS stages PASS, WFP/routes fake, global host DNS/IPv6/WFP/default route and GUI Applied/Disconnect NOT_RUN. Five mode kernel first/reverse packet samples are scoped, not sustained public mode or FEC native full-rate.",
+    "H785: 原始 Windows GameFEC 五阶段持久化路由父 WAL 与子 sidecar 的源身份、guard/lease/MTU/DNS、路由次序和 DNS /32 只读一致性校验新增；仅装配和无 OS 写单测，完整原生路由/WFP crash Recover、真实 GameFEC 业务和 Stop 仍 NOT_RUN。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
