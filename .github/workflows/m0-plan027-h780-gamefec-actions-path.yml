@@ -11,17 +11,29 @@ jobs:
     if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h780-actions-probe]')
     runs-on: windows-2025
     timeout-minutes: 9
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
+      - name: Initialize local artifact before any potential test failure
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force result/wl-public | Out-Null
+          'scope=H781_ACTIONS_TEST_ONLY_NOT_PRODUCT' | Set-Content result/wl-public/h780-actions-transport.txt
       - name: Run existing bounded original PID and blocked-output checks
+        id: native_suite
+        continue-on-error: true
         shell: pwsh
         timeout-minutes: 5
         run: |
           $ErrorActionPreference='Stop'
           & python -m unittest tests.test_m0_wl_native_step_runner -v
-          if($LASTEXITCODE -ne 0){throw 'H780 existing original PID deadline tests failed'}
-      - name: Exercise unmodified native runner as real Windows process and retain first fault
+          if($LASTEXITCODE -ne 0){throw 'H781 original Windows PID/blocked-output suite failed'}
+      - name: Exercise original native runner as real Windows process and retain first fault
+        if: always()
+        id: original_probe
+        continue-on-error: true
         shell: pwsh
         timeout-minutes: 2
         run: |
@@ -45,3 +57,9 @@ jobs:
             result/wl-public/h780-native-runner-stdout.txt
             result/wl-public/h780-original-direct-full.log
             result/wl-public/gamefec-supervisor-stack.txt
+      - name: Fail if Windows suite or original-PID probe failed, preserving prior upload
+        if: always()
+        shell: pwsh
+        run: |
+          if('${{ steps.native_suite.outcome }}' -ne 'success'){throw 'H781 original Windows native suite FAIL'}
+          if('${{ steps.original_probe.outcome }}' -ne 'success'){throw 'H781 original Windows native probe FAIL'}

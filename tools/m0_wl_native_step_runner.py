@@ -296,6 +296,21 @@ def main() -> int:
             stack_handle.close()
 
 
+def exit_game_timeout(rc=124):
+    # A blocked Windows stdout HANDLE must never convert a bounded test
+    # supervisor's intended rc124 into a CRT teardown crash/hang.
+    # The original owned child tree is already reaped by main(); kill only
+    # THIS test controller process, not any Wintun/route/WAL resource.
+    if sys.platform == "win32":
+        import ctypes
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.GetCurrentProcess.restype = ctypes.c_void_p
+        kernel.TerminateProcess.argtypes = (ctypes.c_void_p, ctypes.c_uint32)
+        kernel.TerminateProcess.restype = ctypes.c_int
+        kernel.TerminateProcess(kernel.GetCurrentProcess(), rc)
+    os._exit(rc)
+
+
 if __name__ == "__main__":
     code = main()
     if code == 124 and os.environ.get("WBD_WL_PUBLIC_MODES","").endswith("-fec"):
@@ -303,5 +318,5 @@ if __name__ == "__main__":
         # on an inherited pipe. The real child tree has ALREADY been killed,
         # stack file is preserved, and interpreter shutdown must not wait for
         # an optional diagnostic thread's global stdout lock.
-        os._exit(124)
+        exit_game_timeout(124)
     sys.exit(code)

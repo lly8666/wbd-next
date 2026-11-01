@@ -2,6 +2,8 @@
 import contextlib
 import io
 import pathlib
+import os
+import signal
 import subprocess
 import sys
 import tempfile
@@ -32,20 +34,35 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             code=pathlib.Path(d)/"child.py"
             log=pathlib.Path(d)/"real.log"
+            pidfile=code.with_suffix(".pid")
             code.write_text(
-                "import subprocess,sys\n"
-                "subprocess.Popen([sys.executable,'-c','import time;time.sleep(3)'],"
-                " stdout=sys.stdout,stderr=sys.stderr)\n"
-                "print('GENUINE_NATIVE_FAILURE_STAGE',flush=True)\n"
-                "sys.exit(3)\n")
-            start=time.monotonic()
-            p=subprocess.run([sys.executable,str(RUNNER),str(code),str(log)],
-                             capture_output=True,text=True,timeout=2.5)
-            self.assertEqual(p.returncode,3,p.stdout+p.stderr)
-            self.assertLess(time.monotonic()-start,2.4)
-            self.assertIn("GENUINE_NATIVE_FAILURE_STAGE",p.stdout)
-            self.assertIn("GENUINE_NATIVE_FAILURE_STAGE",log.read_text())
-            self.assertIn("GENUINE_NATIVE_FAILURE_STAGE",log.read_text())
+                "import pathlib,subprocess,sys\\n"
+                "c=subprocess.Popen([sys.executable,'-c','import time;time.sleep(3)'],"
+                " stdout=sys.stdout,stderr=sys.stderr)\\n"
+                "pathlib.Path(sys.argv[0]).with_suffix('.pid').write_text(str(c.pid))\\n"
+                "print('GENUINE_NATIVE_FAILURE_STAGE',flush=True)\\n"
+                "sys.exit(3)\\n")
+            try:
+                start=time.monotonic()
+                p=subprocess.run([sys.executable,str(RUNNER),str(code),str(log)],
+                                 capture_output=True,text=True,timeout=2.5)
+                self.assertEqual(p.returncode,3,p.stdout+p.stderr)
+                self.assertLess(time.monotonic()-start,2.4)
+                self.assertIn("GENUINE_NATIVE_FAILURE_STAGE",p.stdout)
+                self.assertIn("GENUINE_NATIVE_FAILURE_STAGE",log.read_text())
+            finally:
+                # Retire ONLY this test's known descendant: on Windows
+                # its inherited real.log HANDLE otherwise prevents cleanup.
+                if pidfile.is_file():
+                    pid=int(pidfile.read_text())
+                    if sys.platform=="win32":
+                        subprocess.run(["taskkill.exe","/PID",str(pid),"/F"],
+                                       stdin=subprocess.DEVNULL,
+                                       stdout=subprocess.DEVNULL,
+                                       stderr=subprocess.DEVNULL,timeout=5,check=False)
+                    else:
+                        try: os.kill(pid,signal.SIGKILL)
+                        except ProcessLookupError: pass
 
     def test_h708_first_fault_then_stuck_process_is_logged_before_kill(self):
         # One deliberately hung child, no product or OS driver. No artifact
@@ -226,7 +243,7 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
                 "m.native_batch_deadline=lambda env: 1\n"
                 "sys.argv=[str(m.__file__),sys.argv[1],sys.argv[2]]\n"
                 "rc=m.main()\n"
-                "if rc==124: os._exit(124)\n"
+                "if rc==124: m.exit_game_timeout(124)\n"
                 "sys.exit(rc)\n"
             )
             env=__import__("os").environ.copy()
