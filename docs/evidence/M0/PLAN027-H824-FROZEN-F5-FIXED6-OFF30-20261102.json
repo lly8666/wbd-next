@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_sha": "9d8bdc8fc410e2b536f4eed2d494cdcb3e9bb14a",
+  "result": "PASS_SCOPED_FIXED6_OUTER_OFF_TRUE30_LOSS",
+  "artifact_verified": true,
+  "run_id": 41344455780,
+  "artifact_name": "plan027-n-fixed6-loss30-off",
+  "scope": "Linux owned netns original Go TLS + Rust M4, Normal single-lane Fixed6 outer DATA repair OFF, 10Mbps both directions, 250ms one-way, 30pct true tc, 60s steady 5s warmup 10s drain, UDP96/288/1060/1200 weight10/15/30/45, exactly same packet mix as Game2FEC6.",
+  "native_fec_readback": {
+    "client": [
+      "fixed",
+      "1",
+      "1",
+      "6",
+      "false"
+    ],
+    "server": [
+      "fixed",
+      "1",
+      "1",
+      "6",
+      "false"
+    ]
+  },
+  "real_native_parity_rsent": {
+    "client": 116251,
+    "server": 116250
+  },
+  "parity_failure_counts": {
+    "client": 0,
+    "server": 0
+  },
+  "real_tc_netem_drops": {
+    "client": 58492,
+    "server": 58230
+  },
+  "first_business": {
+    "c2s": {
+      "offered_mbps": 9.999837333333334,
+      "unique_mbps": 9.998704,
+      "first_fraction": 0.9998866648230811,
+      "missing_after_drain": 21,
+      "delivered_p99_ms": 266.4
+    },
+    "s2c": {
+      "offered_mbps": 9.999837333333334,
+      "unique_mbps": 9.997125333333335,
+      "first_fraction": 0.9997287955884083,
+      "missing_after_drain": 18,
+      "delivered_p99_ms": 266.4
+    }
+  },
+  "real_original_outer_ip_wire_full_horizon": {
+    "c2s": {
+      "F": 209225329,
+      "R": 0,
+      "C": "NOT_MEASURED"
+    },
+    "s2c": {
+      "F": 209216236,
+      "R": 0,
+      "C": "NOT_MEASURED"
+    }
+  },
+  "whole_process_cpu_s_steady_60s": {
+    "client": 6.07,
+    "server": 6.59
+  },
+  "peak_rss_bytes": {
+    "client": 20504576,
+    "server": 21164032
+  },
+  "native_repair_off_readback": true,
+  "go_tls_rust_handoff": true,
+  "owned_stop_both": true,
+  "owned_namespaces_absent": true,
+  "limits": [
+    "Same source/payload mix vs Game2FEC6, but still a different lane count and mode, no isolated per-lane/RS CPU cost",
+    "0.999887/0.999729 first is not 100% and 21/18 final missing must stay visible; no full strict recovery gate claimed",
+    "Fixed6 F includes systematic/parity M4 wire; not comparable to Normal OFF no FEC F, C not captured",
+    "Real native parity_rsent is FEC cost, not outer DATA repair; R exactly 0",
+    "p99 of delivered packets only, UDP-only, no TCP cross-business HOL, no Windows NPF or >=300s or ON integration pass"
+  ]
+}

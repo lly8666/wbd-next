@@ -1,0 +1,11 @@
+# PLAN027 H824 | Fixed6 single lane under exact Game2 mix, next Auto distinction
+
+- Independent native Action [41344455780](https://github.com/lly8666/wbd-next/actions/runs/41344455780) PASS_SCOPED_FIXED6_OUTER_OFF_TRUE30_LOSS. Identical frozen product source `f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3` and 3 binary SHA256s from R build; fixture source 9d8bdc8, source-locked manifest verified and product diff empty.
+- Original Linux Go TLS/Rust Normal **single lane Fixed6**, outer DATA repair OFF/actual R0 both, UDP mix96/288/1060/1200 weights10/15/30/45 (same as Game2FEC6), 10Mbps each/250ms each/true30% tc/60s, FEC native fixed profile6 both, source accepted91790/91786, actual parity r-sent116251/116250, no native source/parity TX errors, kernel netem drops client58492/server58230. First c2s0.999886665 (21 final missing), s2c0.999728796 (18 missing), arrived-only p99 266.4ms each. Whole process CPU client6.07/server6.59sec steady60sec, RSS20,504,576/21,164,032; source/Stop/cleanup PASS.
+- This is not perfect first delivery: 39 missing across two streams. Compared to actual Game2FEC6 100%/p99 258.7ms and CPU8.24s each at **same packet mix/rate/damage**, Fixed6 uses less CPU per endpoint but has higher delivered-packet p99 and misses some business. 2-lane Game2 encodes/delivers different M4 wire and imposes different actual netem sample count; no simple causal attribution. Keep budget, MTU, source original.
+- Next one-source, one-scene `Normal Auto` with **same mix/network/steady duration and outer OFF**, start profile1, real Auto readback and parity, same SOURCE manifest/hash; this most sharply distinguishes adaptive FEC cost/quality from Fixed6 and Game2 before making product changes. Existing Normal/Fixed/Game2 source-frozen results are already closed, never redispatch.
+- R CPU cost remains modest zero-loss difference; no speculative RepairState replacement. C, true cross-flow HOL, Win NPF, 300s, Game4 and all affected ON modes not qualified here.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only scoped matched-mix Fixed6 source-frozen evidence, devlog/cursor, and one Auto independent measurement fixture/workflow; experimental feature defaults remain unchanged."}
+```
