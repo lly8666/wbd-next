@@ -252,4 +252,11 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    code = main()
+    if code == 124 and os.environ.get("WBD_WL_PUBLIC_MODES","").endswith("-fec"):
+        # Optional daemon stdout/Actions diagnostic may be indefinitely stuck
+        # on an inherited pipe. The real child tree has ALREADY been killed,
+        # stack file is preserved, and interpreter shutdown must not wait for
+        # an optional diagnostic thread's global stdout lock.
+        os._exit(124)
+    sys.exit(code)

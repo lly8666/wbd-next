@@ -1153,6 +1153,9 @@ jobs:
           name: m0-wl-full-public-normal-direct
           path: |
             result/wl-public/direct-full.log
+            result/wl-public/gamefec-supervisor-stack.txt
+            result/wl-public/gamefec-mode-stack.txt
+            result/wl-public/gamefec-e2e-stack.txt
             result/wl-public/report.json
             result/wl-public/normal-report.json
             result/wl-public/*-report.json

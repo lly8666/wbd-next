@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Run actual original-TLS Windows and Linux native public UDP/TCP, then Stop."""
-import os,sys,subprocess,time,json,hashlib,pathlib,re,threading
+import os,sys,subprocess,time,json,hashlib,pathlib,re,threading,faulthandler,atexit
 from m0_wl_native_resource_sampler import sample_windows_original_process
 from m0_wl_windows_cpu_audit import summarize_windows_cpu
 from m0_wl_mode_runtime_report import source_locked_observability,summarize_auto_udp_progress,native_auto_true_applied_snapshots
@@ -18,6 +18,10 @@ if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec",
 fixed6=mode=="fixed"
 is_game=mode.startswith("game")
 game_fixed=mode.endswith("-fec")
+if game_fixed:
+ _e2e_stack=(out/"gamefec-e2e-stack.txt").open("w")
+ faulthandler.dump_traceback_later(105,file=_e2e_stack,exit=False)
+ atexit.register(lambda:(faulthandler.cancel_dump_traceback_later(),_e2e_stack.close()))
 game_mode=mode[:5] if is_game else ""
 lanes=int(game_mode[-1]) if is_game else 1
 server_mode=("fec-fixed --fec-profile 6" if fixed6 else

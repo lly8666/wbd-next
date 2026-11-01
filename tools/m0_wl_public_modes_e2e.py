@@ -5,13 +5,19 @@ Reuse a single signed-driver/WSL host and compiled native artifacts.
 Never derive product PASS from compile or a different mode. A failed
 mode remains a FAIL with its exact original source and report.
 """
-import os,sys,json,subprocess,pathlib,time
+import os,sys,json,subprocess,pathlib,time,faulthandler,atexit
 from m0_wl_mode_evidence import (
  archive_mode_evidence,capture_mode_evidence_baseline,
  select_source_locked_modes)
 from m0_wl_perf_v2_config import read_scenario,first_delivery_ok_for_scenario
 root=pathlib.Path.cwd()
 out=root/"result"/"wl-public"
+# Independent all-Python-thread stack before the 185s minimal mode cutoff.
+# File remains open through the child test, no stdout or GitHub needed.
+if os.environ.get("WBD_WL_PUBLIC_MODES","").endswith("-fec"):
+ _mode_stack=(out/"gamefec-mode-stack.txt").open("w")
+ faulthandler.dump_traceback_later(145,file=_mode_stack,exit=False)
+ atexit.register(lambda:(faulthandler.cancel_dump_traceback_later(),_mode_stack.close()))
 try:
  modes=select_source_locked_modes(
   os.environ.get("WBD_WL_PUBLIC_MODES","all"),
