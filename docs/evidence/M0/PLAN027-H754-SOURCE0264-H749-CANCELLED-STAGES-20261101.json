@@ -1,0 +1,53 @@
+{
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "product_source_sha": "0264c2cfc91e05c7c4b8d518fa0efc6707a2ff6b",
+  "native_run": 41289375904,
+  "control_source_sha": "95d884b611480f08d73fcb93f245e237af9bd8d2",
+  "native_job": 124797310338,
+  "watcher_run": 41289383815,
+  "scene": "scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json",
+  "actual_result": "CANCELLED",
+  "native_age_at_cancel_s": 498,
+  "watcher_limit_s": 480,
+  "native_job_logs": "BLOB_NOT_FOUND",
+  "native_final_artifact": "ONLY_REAL_GUEST_BOOT",
+  "independent_stage_runs": [
+    {
+      "stage": "PRE_NATIVE_STEP",
+      "run": 41289497869
+    },
+    {
+      "stage": "STEP_ENTER",
+      "run": 41289501869
+    },
+    {
+      "stage": "STEP_PREFLIGHT_COMPLETE",
+      "run": 41289519925
+    },
+    {
+      "stage": "MODE_STARTED",
+      "run": 41289521788
+    },
+    {
+      "stage": "SUPERVISOR_LOOP_ENTER",
+      "run": 41289523289
+    },
+    {
+      "stage": "SUPERVISOR_POLL_OK",
+      "run": 41289524827
+    }
+  ],
+  "terminal_20s_60s_heartbeats": "NOT_OBSERVED",
+  "real_business_first_delivery": "NOT_MEASURED",
+  "game_fec_send_error": "UNKNOWN",
+  "go_and_rust_owned_stop": "NOT_MEASURED",
+  "physical": "NOT_RUN",
+  "diagnosis": "In H749, original PID supervisor entered poll once; subsequent independent events depended on shared stdout/file/GitHub diagnostics. No source-scoped proof of GameFEC product failure root or Stop available. H754 separates outbound relay, no product mutation.",
+  "h754_unit_regression": {
+    "run": 41290949069,
+    "conclusion": "success",
+    "native_control_tests": 17,
+    "relay_tests": 3,
+    "governance_run": 41290949111
+  }
+}
