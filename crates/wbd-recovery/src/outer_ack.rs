@@ -132,6 +132,29 @@ impl OuterAckIndex {
         expired
     }
 
+    /// FEC's low-CPU optional shadow sample must still advance the exact
+    /// original TCP byte-stream boundary on EVERY actually copied record.
+    /// Skipped symbols create no BTree node, frozen buffer or repair credit.
+    /// They must never be nominated as if a later sample were missing.
+    pub fn advance_untracked(&mut self,seq_start:u64,wire_len:u32)
+        ->Result<(),OuterAckError>{
+        let end=seq_start.checked_add(u64::from(wire_len))
+            .ok_or(OuterAckError::InvalidSend)?;
+        if wire_len==0||seq_start!=self.highest_sent_end{
+            return Err(OuterAckError::InvalidSend)
+        }
+        self.highest_sent_end=end;
+        Ok(())
+    }
+
+    /// With unsampled FEC spans, a repeated cumulative ACK proves a candidate
+    /// only if it points to the EXACT first byte of a retained original span.
+    /// ACK below a later sparse sample cannot imply that sample was lost.
+    pub fn tracks_cumulative_head(&self,ack32:u32)->bool{
+        extend_near(self.highest_sent_end,ack32).ok()
+            .is_some_and(|ack|self.sent.contains_key(&ack))
+    }
+
     /// Raw presentation ACK/SACK is untrusted: it can only retire optional
     /// shadow or nominate a bounded gap. It must not refresh Health, mark
     /// business delivered, increase first-send F, or bypass AEAD replay.
@@ -282,6 +305,32 @@ mod tests {
                 20_000_000).unwrap().gap_candidates;
         }
         assert_eq!(first,vec![RecordPn(201)]);
+    }
+
+    #[test]
+    fn h811_sparse_original_firstsend_ack_head_only_not_later_shadow(){
+        let mut x=index(100,16);
+        x.advance_untracked(100,10).unwrap();
+        x.on_definitely_sent(RecordPn(2),110,10,MonoNs(1_000_000)).unwrap();
+        x.advance_untracked(120,10).unwrap();
+        x.on_definitely_sent(RecordPn(4),130,10,MonoNs(2_000_000)).unwrap();
+        assert_eq!(x.highest_sent_end(),140);
+        assert!(!x.tracks_cumulative_head(100));
+        assert!(x.tracks_cumulative_head(110));
+        assert!(!x.tracks_cumulative_head(120));
+        assert!(x.tracks_cumulative_head(130));
+        assert!(x.advance_untracked(120,1).is_err());
+        for tick in [40_000_000,50_000_000,60_000_000]{
+            let result=x.on_feedback(lane(),[7;16],100,&[],MonoNs(tick),
+                20_000_000).unwrap();
+            // Normal may nominate a later sparse copy by itself.
+            // The Game FEC caller MUST reject that copy because
+            // actual 100-109 (not sampled) is the ACK's real hole.
+            assert!(!x.tracks_cumulative_head(100));
+            if tick==60_000_000{
+                assert_eq!(result.gap_candidates,vec![RecordPn(2)]);
+            }
+        }
     }
 
     use wbd_types::TunnelKey;

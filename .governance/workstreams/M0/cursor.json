@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 810,
-  "checkpoint_sha": "6e74752d7676e369ef7023b7334494a4e4b2d2b5",
+  "sequence": 811,
+  "checkpoint_sha": "d1d5f705701e2e7a2c7c2bb0f2929f89e141602d",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H810 Game FEC cosmetic outer replay ONLY; performance optimization DEFERRED by user. H809 commit6e7475 sparse same original FEC AEAD/PN/seq presentation-only outer repeat on Windows NPF and Linux raw, once per256 initial true copied frames, 120ms delay, 250ms minimum between per-lane attempts, no FEC/Health/business credit. H809 main Governance41330472518 and Maintenance41330472389 SUCCESS; actual Linux Rust library job124919409849 and PLAN012 native job124919301802 FAIL before any product due required FrozenRecordHandle:Clone missing on new CosmeticFrozen type E0277. H810 adds #[derive(Clone)] to frozen Arc-backed original record, no other logic modified. H809 real network NOT_RUN, H810 fresh original Actions pending. All other PLAN027 paused.",
-  "why_now": "Source-bound H809 Linux/native compiler logs pinpoint only missing Clone supertrait on ephemeral cosmetic FrozenRecordHandle, not codec, FEC or OS/product fault; restore trait contract without changing behavior.",
+  "current_task": "H811 GameFEC only: latest user overrides H809 blind cosmetic 1/256 timer; requires NORMAL mode retransmission gap logic with restrained rate, preferably genuinely missing original outer packets, CPU-light. H811 Windows candidate changes GameFEC to same Normal OuterAckIndex/ReceiptState+GlobalRepairBudget and exact copied NPF receipts, 1/16 optional shadow sampling, no clock/alloc/BTree on other 15/16 first frames, ACK cumulative gap must exactly match stored original seq head, <=12.5 copied attempts/s/lane, no FEC/Health/business credit. Game/off unchanged. Linux raw game RX currently discards peer pure ACK via recv_one_into, so still old sparse timer NOT genuinely feedback-driven; two-OS not qualified. H810 Clone compiled cheap basic jobs success, actual GameFEC product not tested. Other PLAN027 paused; user explicitly deferred performance.",
+  "why_now": "User specifically needs Normal's loss-aware outer ACK/packet selection and bounded, nontrivial cosmetic volume, not blind timer. Existing Game/off Normal M2 machinery is reusable; sample only optional FEC shadows and preserve original unique PN/seq.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H810 Windows/Linux Rust unit and real original signed NPF/Wintun↔WSL2 Game2FEC6 1Mbps25ms0loss10s native job. Verify sparse original same PN/seq outer copies physically >0, no new Game FEC first credit and actual original product parity, UDP/TCP, owned Stop/WAL. Do not run 10/15/30% stress or tweak performance.",
+  "next_action": "Collect H811 actual Rust Linux/Windows compile and relevant outer_ack/GameOuter tests from Actions first. If green, extend same Normal-like loss-feedback selection to Linux raw without fake ACK (currently bare ACK filtered); then one genuine original signed Windows NPF/Wintun↔WSL2 Linux Game2FEC6 short functional copied/repeat/Stop+WAL run. NO performance tuning, Game4 or unrelated PLAN027.",
   "unverified": true,
   "last_tested_source": "d5c7fcf192ccb2c0ccba7a9bdeb3da19a5ebbc74",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H808-SOURCE-D5C7-GAME2FEC-10M75MS15LOSS-PERFORMANCE-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261101-PLAN027-H803-ONE-NEW-OUTER-MTU-GAME2FEC6-REAL.md",
     "docs/devlog/M0/20261101-PLAN027-H804-GAMEFEC-GREEN-RETIRED-SATELLITES-10M-LOSS15-PERF.md",
     "docs/devlog/M0/20261101-PLAN027-H805-EVIDENCE-SOURCE-KEY-REPAIR.md",
     "docs/devlog/M0/20261101-PLAN027-H806-RETIRE-RELAY-TEST-EXPECTATION-PERF-REDISPATCH.md",
     "docs/devlog/M0/20261101-PLAN027-H807-MAINTENANCE-RETIRED-SATELLITE-TEST.md",
     "docs/devlog/M0/20261102-PLAN027-H808-GAME2FEC-FIRST-PERF-TRUE-10M15LOSS-TO-30LOSS.md",
     "docs/devlog/M0/20261102-PLAN027-H809-GAMEFEC-SPARSE-COSMETIC-OUTER-REPLAY.md",
-    "docs/devlog/M0/20261102-PLAN027-H810-COSMETIC-FROZEN-CLONE-FIRST-COMPILE-FAULT.md"
+    "docs/devlog/M0/20261102-PLAN027-H810-COSMETIC-FROZEN-CLONE-FIRST-COMPILE-FAULT.md",
+    "docs/devlog/M0/20261102-PLAN027-H811-GAMEFEC-NORMAL-OUTER-ACK-SPARSE-RETRANSMIT.md"
   ],
   "open_requests": [],
   "partial_summary": "d100 25ms zero-loss native source business FAIL: Windows first0.997456/Linux0.9819, Linux TUN TX drops2503, generator CPU54.14s, original owned Stop marker+exit PASS; watcher RUN_VIEW recovered. H721 avoid duplicate Linux TERM cleanup warning. H722 one 50Mbps250ms15% Fixed6 new native Action queued/dispatch pending exact current controller; not PASS. H723 new native Rust+Go 72B Windows Fixed selected profile/revision installed readback and Go unit test committed but fresh product NOT_RUN; legacy mature Quality is separate, no extra RTT. H722 real original source d066 in flight. H724 source d066 true highest Fixed50/250ms15 real both UDP/TCP Stop PASS, first.994254/.974935, TUN0/NPF0; Win CPU55.1/78.375 (70.3% core), RSS47MB. Residual Linux2.5% and p99/unreturned bilateral F/R/C still unverified. New H723 72B Windows Fixed installation ABI source65618 cheap assembly mismatch, H724 correct three Go result blobs pending Actions. H739: H738 cheap source-locked tests PASS, mixed-source hot cursor evidence refs cleared without deleting archived historical evidence. Real native GameFEC remains unverified. H742: source0264 H739 true Game2FEC CANCELLED after watcher 493s native step, independent 4 stages only, no original job log or Stop. Source-bound evidence H742 preserved, one H741 IO isolated runner next. User ~8min cap satisfied (30s watcher polling). Other work paused. H743: H742 exact original Game2FEC product SOURCE0264 new harness source045a run41286724011/watcher41286729417 in flight, no product/Stop proof. H741 single PID isolated logging passed synthetic; H739 true native cancel 493s and independent 4 stage receipts archived. H746: H742 new IO diagnostic already reached SUPERVISOR_LOOP_ENTER but no child.poll or timeout and external hard-cancel at502s, BlobNotFound; H744/H745 blocked-console fixtures both PASS, one real source0264 H746 needed. Other PLAN027 paused. H747 H746 actual same frozen original Game2FEC source0264 run41287639141/watcher41287646432 IN_FLIGHT; H744/H745 blocked-main/first-fault synthetic PASSED, product and owned Stop not qualified."
