@@ -1,0 +1,33 @@
+name: M0 PLAN027 H716 recover completed H714 native first diagnostics without product rerun
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h716-retrospective-joblog.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-independent-native-log-recovery:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h716-joblog-proof]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Verify original job completed and dispatch exactly one independent LOG ONLY watcher
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=41275419791
+          source=415ad28b305b751f134146f7b009a27b0c080d08
+          run="$(gh api "repos/$GH_REPO/actions/runs/$target")"
+          test "$(jq -r .head_sha <<<"$run")" = "$source"
+          test "$(jq -r .event <<<"$run")" = workflow_dispatch
+          test "$(jq -r .status <<<"$run")" = completed
+          test "$(jq -r .conclusion <<<"$run")" = failure
+          test "$(gh api "repos/$GH_REPO/actions/runs/$target/jobs?per_page=100" |
+            jq -r '.jobs[]|select(.name=="native-public-two-os")|.conclusion')" = failure
+          prior="$(gh api "repos/$GH_REPO/actions/workflows/m0-plan027-independent-native-deadline.yml/runs?per_page=100" 2>/dev/null || true)"
+          # The prior live watcher H714 was inconclusive LOG_UNAVAILABLE;
+          # this is intentionally ONE delayed post-finalization recovery.
+          gh workflow run m0-plan027-independent-native-deadline.yml --repo "$GH_REPO" --ref main             -f target_run_id="$target" -f target_sha="$source" -f target_job_limit=1200
+          echo "M0_H716_INDEPENDENT_GITHUB_JOB_LOG_RECOVERY_DISPATCHED_ONLY prior_watcher=41275426382 target=$target"
