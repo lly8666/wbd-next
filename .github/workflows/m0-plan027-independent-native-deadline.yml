@@ -52,7 +52,7 @@ jobs:
               return 1
             fi
             local pattern='M0_PLAN027_GAME_DUE_FAULT|M0_PLAN026_GAME_NATIVE_FIRST_ERROR|M0_PLAN027_GAME_NATIVE_STOP_|M0_PLAN027_GAME_STOP_RESULT|M0_PLAN027_NATIVE_STOP_RESULT|WL_GAME_ORIGINAL_STOP_FAILURE|WL_GAME_FATAL_|WL_GAME_DUE_|WL_PUBLIC_REAL_MODE_(TIMEOUT|RESULT|PROCESS_EXIT)|WL_ORIGINAL_NATIVE_E2E_(BATCH_TIMEOUT|CHILD_EXIT)|WBD_WL_TRUE_PUBLIC_MODE_FAIL|WL_DIAG'
-            for attempt in 1 2 3; do
+            for attempt in 1 2 3 4 5; do
               if timeout 25s gh api "repos/$GH_REPO/actions/jobs/$job_id/logs" >"$log" 2>/dev/null && test -s "$log"; then
                 echo "M0_EXTERNAL_NATIVE_JOB_LOG_RECOVERED target=$TARGET_ID job=$job_id reason=$reason attempt=$attempt"
                 echo "M0_EXTERNAL_NATIVE_FIRST_DIAGNOSTICS"
@@ -66,9 +66,9 @@ jobs:
                 return 0
               fi
               rm -f "$log"
-              if [ "$attempt" -lt 3 ]; then sleep 3; fi
+              if [ "$attempt" -lt 5 ]; then sleep 10; fi
             done
-            echo "M0_EXTERNAL_NATIVE_LOG_UNAVAILABLE target=$TARGET_ID job=$job_id reason=$reason attempts=3 (not_product_pass)"
+            echo "M0_EXTERNAL_NATIVE_LOG_UNAVAILABLE target=$TARGET_ID job=$job_id reason=$reason attempts=5 (not_product_pass)"
             return 1
           }
           native_job_id() {
