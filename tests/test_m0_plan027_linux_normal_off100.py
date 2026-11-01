@@ -1,4 +1,4 @@
-"""One original Normal raw/TUN 100Mbps clean before any 100/200M expansion."""
+"""One original Normal raw/TUN 100Mbps clean before conditional 200M expansion."""
 import json
 import unittest
 from pathlib import Path

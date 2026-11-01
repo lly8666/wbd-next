@@ -21,7 +21,7 @@ def configuration(scene,source,run_id):
     assert (scene["offered_mbps_each_direction"],scene["delay_ms_each_direction"],scene["loss_pct_each_direction"])==(100,25,0)
     assert (scene["warmup_s"],scene["duration_s"],scene["drain_s"],scene["tun_mtu"])==(5,60,10,1400)
     assert scene["packet_mix"]==[[1200,100]]
-    base=json.loads(Path("scenarios/plan027-h539-normal-10m-2100ms-loss0-60s.json").read_text())
+    base=json.loads(Path("scenarios/plan027-h539-normal-10m-250ms-loss0-60s.json").read_text())
     c=normal_config(base,source,run_id,False)
     c["id"]="M0_PLAN027_N_ORIGINAL_NORMAL_100M_25MS_ZERO_REPAIR_OFF"
     c["seed"]=scene["seed"]
@@ -69,9 +69,9 @@ def main():
             "scenario":scene["scenario_id"],"native_result":leg.get("result"),
             "failures":leg.get("failures",[]),"limits":leg.get("limits",[]),
             "theory":{"business_mbps_each_direction":100,"payload_bytes":1200,
-                      "approx_pps_each_direction":5208.333,
-                      "RTT_ms":100,"business_BDP_bytes_each_direction":625000,
-                      "nominal_total_bidirectional_business_pps":10416.666},
+                      "approx_pps_each_direction":10416.667,
+                      "RTT_ms":50,"business_BDP_bytes_each_direction":625000,
+                      "nominal_total_bidirectional_business_pps":20833.334},
             "original_native_outer_off_verified":t.get("outer_repair_native_verified"),
             "original_go_handoff":t.get("go_receive_handoff_verified"),
             "owned_stop":t.get("stop_drained_both"),

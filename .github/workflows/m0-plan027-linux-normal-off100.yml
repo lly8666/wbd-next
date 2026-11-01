@@ -13,9 +13,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      PRODUCT_SOURCE: f5e8f30fa4a10052c9797bbd15b385ec5cfc5d2c3
+      PRODUCT_SOURCE: f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3
     steps:
-      - uses: actions/checkout@11d5960a3267100d5838078e36cf38b85af677262
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false, fetch-depth: 45}
       - name: Same frozen original product and one clean Normal near-MTU scenario
         run: |
