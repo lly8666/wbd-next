@@ -1190,6 +1190,8 @@ jobs:
             result/wl-public/gamefec-mode-stack.txt
             result/wl-public/gamefec-e2e-stack.txt
             result/wl-public/gamefec-supervisor-timeout.txt
+            result/wl-public/gamefec-mode-outcome.txt
+            result/wl-public/gamefec-cold-stage.txt
             result/wl-public/gamefec-management-state.txt
             result/wl-public/windows-route-after.json
             result/wl-public/report.json

@@ -98,6 +98,25 @@ for mode in modes:
   print("WL_PUBLIC_REAL_MODE_TIMEOUT mode="+mode+" bounded_seconds="+str(mode_seconds),flush=True)
  print("WL_PUBLIC_REAL_MODE_PROCESS_EXIT mode="+mode+" rc="+str(rc)+
        " elapsed_seconds="+str(int(time.monotonic()-started)),flush=True)
+ if mode.endswith("-fec") and (timed_out or rc!=0):
+  # Local source-owned evidence survives a broken GitHub API / Stop. WAL
+  # disk absence alone is NEVER a positive independent OS route readback.
+  wal=out/"owned-wal.json.n4-owned-wal"
+  side=out/"owned-wal.json.n4-owned-wal.routes"
+  client=out/"client.log"
+  tail=b""
+  if client.is_file():
+   with client.open("rb") as f:
+    f.seek(max(0,client.stat().st_size-32768))
+    tail=f.read(32768)
+  stop_ok=(b"WBD_WINDOWS_GAME_NATIVE_DISCONNECTED" in tail and
+    b"M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS" in tail)
+  (out/"gamefec-mode-outcome.txt").write_text(
+   "mode="+mode+"\nchild_rc="+str(rc)+"\ntimed_out="+str(timed_out).lower()+
+   "\nwal_present="+str(wal.exists()).lower()+
+   "\nroute_sidecar_present="+str(side.exists()).lower()+
+   "\noriginal_stop_marker="+str(stop_ok).lower()+
+   "\nnetwork_restore=UNVERIFIED_NO_INDEPENDENT_OS_READBACK\n")
  report=out/"report.json"
  result=json.loads(report.read_text()) if report.exists() and not timed_out else {
   "mode":mode,"error":("native mode deadline "+str(mode_seconds)+"s expired" if timed_out
