@@ -45,8 +45,40 @@ def wsl(*a,timeout=30):return run(["wsl.exe","-d","Ubuntu","-u","root","--",*a],
 def unix(p):
  q=pathlib.Path(p).resolve()
  return "/mnt/"+q.drive[0].lower()+"/"+"/".join(q.relative_to(q.anchor).parts)
+def game_due_first_fault():
+ # Only the original Rust first-failure branch triggers an early verdict.
+ # No synthetic delivery, packet parsing, extended watchdog or telemetry loop.
+ if not is_game:return
+ path=out/"client.log"
+ if not path.exists():return
+ lines=path.read_text(errors="replace").splitlines()
+ fault=[line for line in lines if
+  "M0_PLAN027_GAME_DUE_FAULT first_failure=1" in line and "origin=due" in line]
+ if not fault:return
+ print("WL_GAME_DUE_EXACT_PRODUCT_FIRST_FAILURE "+fault[0][-850:],flush=True)
+ for line in lines:
+  if ("M0_PLAN027_GAME_DUE_FAULT stage=send_records_entry" in line or
+      "M0_PLAN027_GAME_DUE_FAULT stage=wire_frame_build_bytes" in line):
+   print("WL_GAME_DUE_EXACT_PRODUCT_BRANCH "+line[-850:],flush=True)
+ # Request normal owned Stop, then report Rust worker state separately
+ # from upper native product WAL. Never forge successful Stop receipts.
+ stop_windows(w)
+ after=path.read_text(errors="replace").splitlines()
+ for line in after:
+  if ("M0_PLAN027_GAME_NATIVE_STOP_JOIN" in line or
+      "M0_PLAN027_GAME_NATIVE_STOP_NOT_DRAINED" in line or
+      "M0_PLAN027_NATIVE_STOP_RESULT" in line or
+      "M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX" in line):
+   print("WL_GAME_DUE_ORIGINAL_WORKER_WAL "+line[-850:],flush=True)
+ native="JOINED" if any("M0_PLAN027_GAME_NATIVE_STOP_JOIN" in line for line in after) else (
+   "NOT_DRAINED" if any("M0_PLAN027_GAME_NATIVE_STOP_NOT_DRAINED" in line for line in after) else "NOT_OBSERVED")
+ wal="RESTORED" if any("WBD_WINDOWS_GAME_NATIVE_DISCONNECTED" in line for line in after) else "NOT_RESTORED"
+ print("WL_GAME_DUE_DIAGNOSTIC_FINAL native_worker_stop="+native+
+       " upper_wal_stop="+wal+" original_rc="+str(w.poll()),flush=True)
+ raise RuntimeError("GAME_FEC_DUE_INVALID_ORIGINAL_FIRST_FAULT native="+native+" wal="+wal)
 def ready(path,marker,process,seconds):
  for _ in range(seconds*5):
+  game_due_first_fault()
   if path.exists() and marker in path.read_text(errors="replace"):return
   if process.poll() is not None:raise RuntimeError(marker+" process exited "+str(process.returncode)+": "+path.read_text(errors="replace")[-800:])
   time.sleep(.2)
@@ -211,6 +243,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  # which true kernel side was missing. Observe only liveness at low cost.
  until=time.monotonic()+70
  while wa.poll() is None or la.poll() is None:
+  game_due_first_fault()
   if w.poll() is not None:
    raise RuntimeError("original Windows native product terminated before duplex: return="+str(w.returncode)+" client="+(out/"client.log").read_text(errors="replace")[-520:])
   if s.poll() is not None:
@@ -795,6 +828,7 @@ print(json.dumps(result),flush=True)
    finally:
     if owned.exists():
      print(netem("cleanup"),flush=True)
+ game_due_first_fault()
  stop_windows(w)
  stop_marker="WBD_WINDOWS_GAME_NATIVE_DISCONNECTED" if is_game else "WBD_WINDOWS_NATIVE_DISCONNECTED_V1"
  if w.returncode!=0 or stop_marker not in (out/"client.log").read_text():
@@ -831,6 +865,20 @@ print(json.dumps(result),flush=True)
  if mode=="normal":report["normal_public"]="PASS_ACTUAL_WINDOWS_LINUX_NATIVE"
  print("WBD_WL_TRUE_PUBLIC_MODE_WIN_LINUX_DUPLEX_STOP_PASS "+mode)
 except Exception as e:
+ if is_game and (out/"client.log").exists():
+  # On any fatal path, retain worker vs WAL states even if the normal
+  # test-report artifact service is unreachable or the peer already exited.
+  snap=(out/"client.log").read_text(errors="replace").splitlines()
+  for line in snap:
+   if ("M0_PLAN027_GAME_DUE_FAULT first_failure=1" in line or
+       "M0_PLAN027_GAME_NATIVE_STOP_NOT_DRAINED" in line or
+       "M0_PLAN027_GAME_NATIVE_STOP_JOIN" in line or
+       "M0_PLAN027_NATIVE_STOP_RESULT" in line):
+    print("WL_GAME_FATAL_EXACT_SOURCE "+line[-850:],flush=True)
+  print("WL_GAME_FATAL_SEPARATE_STOP native="+
+   ("JOINED" if any("M0_PLAN027_GAME_NATIVE_STOP_JOIN" in line for line in snap) else
+    "NOT_DRAINED" if any("M0_PLAN027_GAME_NATIVE_STOP_NOT_DRAINED" in line for line in snap) else "NOT_OBSERVED")+
+   " wal="+("RESTORED" if any("WBD_WINDOWS_GAME_NATIVE_DISCONNECTED" in line for line in snap) else "NOT_RESTORED"),flush=True)
  report["mode_public"]="FAIL_TRUE_PUBLIC_EXECUTION"
  if mode=="normal":report["normal_public"]="FAIL_TRUE_PUBLIC_EXECUTION"
  report["error"]=str(e)[-1100:]
