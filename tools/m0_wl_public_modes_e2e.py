@@ -68,7 +68,7 @@ for mode in modes:
   # product may be reused by another mode as a fake Ready or stale evidence.
   if os.name=="nt":
    subprocess.run(["taskkill","/PID",str(child.pid),"/T","/F"],
-     capture_output=True,timeout=20,check=False)
+     stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=20,check=False)
   if child.poll() is None: child.kill()
   try: child.wait(timeout=10)
   except subprocess.TimeoutExpired: pass
