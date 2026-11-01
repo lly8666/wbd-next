@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "result": "PASS_SCOPED_ORIGINAL_SIGNED_WINDOWS_LINUX_FIXED6_50MBPS_25MS_0LOSS_60S_BOTH_FIRST_100PCT_OWNED_STOP",
+  "product_source_sha": "d0661a2e110b523ad06b311da23fc1b7291442ba",
+  "workflow_head_sha": "5eeebf3a0f287f1ed75df634b320e4eaaefddb64",
+  "original_precompiled_build_run": 41274450306,
+  "original_windows_package": {
+    "id": 13071196733,
+    "digest": "sha256:b6baac6ba45a6825665addf329447e56564240c310ae8f636d119b6c6d0eaa6a"
+  },
+  "original_linux_package": {
+    "id": 13070622152,
+    "digest": "sha256:837cb7a113f871914c2d04f0caead8a93a7a97ce7e3bd53c9878819cd9dbb5c3"
+  },
+  "original_cli_sha256": "a586a58d0551164f71e42a57b92369471b2ae355a1bfba642a1dff0f23f7fe73",
+  "linux_server_sha256": "373cae784aae258b17f6ec1ad2c054f7b5d66f12c55ba2780630ee26b4b82a77",
+  "run": 41276271649,
+  "job_id": 124759028245,
+  "workflow_conclusion": "success",
+  "native_job_conclusion": "success",
+  "scene": "plan027-c-fixed-50m-25ms-loss0-60s",
+  "duration_s": 60,
+  "offered_mbps_each": 50,
+  "one_way_kernel_ms": 25,
+  "kernel_loss_percent": 0,
+  "actual_offered_mbps": {
+    "windows": 49.9874,
+    "linux": 49.9999
+  },
+  "first_delivered_mbps": {
+    "windows": 49.9999,
+    "linux": 49.9874
+  },
+  "first_delivery_fraction": {
+    "windows": 1,
+    "linux": 1
+  },
+  "authentic_both_os_go_tls_rust_udp_tcp": "PASS",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "native_fixed_readback": {
+    "linux_installed": true,
+    "windows_installed": "NOT_INSTRUMENTED_THIS_REAL_ABI",
+    "fixed_quality_maturity": "NOT_MEASURED_SHORT_BURST"
+  },
+  "same_origin_roundtrip_p99_ms": {
+    "windows": 63,
+    "linux": 69.862
+  },
+  "rtt_probes": {
+    "windows": {
+      "sent": 549,
+      "replied": 549,
+      "missing": 0
+    },
+    "linux": {
+      "sent": 598,
+      "replied": 598,
+      "missing": 0
+    }
+  },
+  "original_windows_product": {
+    "cpu_total_s": 49.4219,
+    "elapsed_s": 76.687,
+    "avg_one_core_pct": 64.446,
+    "peak_rss_bytes": 46141440,
+    "peak_private_bytes": 42881024,
+    "kernel_cpu_s": 28.9531,
+    "user_cpu_s": 20.4688,
+    "npcap_ingress_local_drops": 0
+  },
+  "windows_rust_driver_readback": {
+    "tx_records": 1082134,
+    "rx_first_delivered_ipv4": 498887,
+    "oversize_rejects": 0,
+    "source_stage_failures": 0
+  },
+  "real_artifact": {
+    "id": 13071477000,
+    "digest": "sha256:a53bfa8cfcc84a6dc686637bf8587390c8ee68f382bc8f9ee1ba69960b0cd57e",
+    "name": "m0-wl-full-public-normal-direct"
+  },
+  "boot_artifact": {
+    "id": 13071298872,
+    "digest": "sha256:6f39a9e8ddb39eafa47053e047bcf607905ebfe9b1f711151cec253885b92828"
+  },
+  "watcher_run": 41276277958,
+  "limitations": [
+    "Windows Fixed installed readback not instrumented and not to be inferred from Linux applied or profile intent",
+    "Product CPU64.446% of one logical core for 50M each on this runner, not proven low CPU versus same-VM baseline; check next capacity step and bottleneck",
+    "Original whole Go+Rust process CPU not language-attributed, no cross-host clock-calibrated one-way p99",
+    "No 100/200Mbps Fixed same-source PASS, no physical test",
+    "PLAN027 B Game2FEC and Windows authenticated dead106 remain NOT_QUALIFIED"
+  ]
+}
