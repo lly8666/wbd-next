@@ -200,6 +200,7 @@ jobs:
       - run: python -m unittest tests.test_m0_wl_native_rx_abba -v
       - run: python -m unittest tests.test_m0_wl_native_os_deadline -v
       - run: python -m unittest tests.test_m0_wl_native_step_runner -v
+      - run: python -m unittest tests.test_m0_wl_gamefec_relay -v
       - run: python -m unittest tests.test_m0_wl_scoped_game2_trigger -v
       - run: python -m unittest tests.test_m0_wl_outer_repair_verify -v
       - run: python -m unittest tests.test_m0_wl_lock_profile -v
@@ -248,7 +249,7 @@ jobs:
               raise ValueError('WL_V2_BINARY_SOURCE_WITHOUT_REUSE_RUN')
           print('SOURCE_LOCKED_MODE_ENTRY',','.join(modes),'N0='+os.environ['RUN_N0'],'A5=RETIRED')
           PY
-      - run: python -m py_compile tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_native_step_runner.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
+      - run: python -m py_compile tools/m0_wl_lock_profile.py tools/m0_wl_impairment_profile.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py tools/m0_wl_native_step_runner.py tools/m0_wl_gamefec_relay.py tools/m0_wl_windows_bounded_cmd.py tools/m0_wl_windows_step_watchdog.py tools/m0_wl_mode_evidence.py tools/m0_wl_business_latency.py tools/m0_wl_public_rate_app.py tools/m0_wl_n0_drop_delta.py tools/m0_wl_mode_runtime_report.py tools/m0_wl_native_mtu_contract.py tools/m0_wl_native_resource_sampler.py
 
   windows-compile-preflight:
     name: Windows Go production and test compilation only
