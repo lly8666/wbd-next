@@ -10,6 +10,8 @@ credential, test selection, and pass/fail exit code are unchanged.
 """
 import os
 import pathlib
+import re
+import signal
 import subprocess
 import sys
 import time
@@ -23,7 +25,13 @@ def kill_native_child_tree(child):
                            stderr=subprocess.DEVNULL,timeout=15,check=False)
         except (OSError,subprocess.TimeoutExpired):
             pass
-    if child.poll() is None:child.kill()
+    if child.poll() is None:
+        if os.name != "nt":
+            # Test child starts a separate session; kill its process group,
+            # not only the owning PID, when a fixture is permanently stuck.
+            try: os.killpg(child.pid, signal.SIGKILL)
+            except ProcessLookupError: pass
+        else: child.kill()
     try:child.wait(timeout=5)
     except subprocess.TimeoutExpired:pass
 
@@ -40,6 +48,60 @@ def native_batch_deadline(env):
     return 800 if selected=="through-game2" else 970 if selected=="all" else 320
 
 
+# Only bounded, de-identified diagnostic tokens are synthesized. Original
+# source log bytes are already streamed verbatim by the existing file tailer.
+FIRST_FAULT = re.compile(
+    r"M0_PLAN027_GAME_DUE_FAULT|M0_PLAN026_GAME_NATIVE_FIRST_ERROR"
+    r"|WL_GAME_ORIGINAL_STOP_FAILURE|WL_GAME_FATAL_|WBD_WL_TRUE_PUBLIC_MODE_FAIL"
+    r"|WL_ORIGINAL_NATIVE_E2E_BATCH_TIMEOUT|WL_PUBLIC_REAL_MODE_TIMEOUT"
+)
+STAGE = re.compile(r"due_send_records|m4_receipt|on_firstsend|wal_disconnect|"
+                   r"game2-fec|game4-fec|native_stop|stop", re.I)
+
+def _safe(value, max_len=100):
+    return re.sub(r"[^a-zA-Z0-9_./:-]", "_", str(value or "UNKNOWN"))[:max_len]
+
+def _diagnostic(state, rc, verdict):
+    fields = {
+        "run": _safe(os.environ.get("GITHUB_RUN_ID")),
+        "source": _safe(os.environ.get("WBD_WL_BINARY_SOURCE") or os.environ.get("GITHUB_SHA")),
+        "scene": _safe(os.environ.get("WBD_WL_V2_SCENARIO"), 140),
+        "mode": _safe(os.environ.get("WBD_WL_PUBLIC_MODES")),
+        "stage": _safe(state["stage"]),
+        "first_error": _safe(state["first_error"]),
+        "lane": _safe(state["lane"]),
+        "cipher_len": _safe(state["cipher_len"]),
+        "path_mtu": _safe(state["path_mtu"]),
+        "tx": state["tx"],
+        "rx": state["rx"],
+        "wal": state["wal"],
+        "child_rc": rc if rc is not None else "UNKNOWN",
+        "result": verdict,
+    }
+    print("WL_DIAG " + " ".join(f"{k}={v}" for k,v in fields.items()), flush=True)
+
+def _inspect(state, data):
+    # Handle log lines split across 64KiB reads. Never retain whole output,
+    # packets, identities, credentials, or arbitrary unbounded text.
+    chunks = (state["fragment"] + data.decode("utf-8", "replace")).split("\n")
+    state["fragment"] = chunks.pop()[-2048:]
+    for line in chunks:
+        line = line[:2048]
+        stage = STAGE.search(line)
+        if stage: state["stage"] = stage.group(0).lower()
+        for field in ("lane", "cipher_len", "path_mtu"):
+            match = re.search(r"\\b" + field + r"=(\\d{1,7})\\b", line)
+            if match: state[field] = match.group(1)
+        if "WL_GAME_NATIVE_TX_JOINED" in line: state["tx"] = "EXITED"
+        if "WL_GAME_NATIVE_RX_JOINED" in line: state["rx"] = "EXITED"
+        if "WL_GAME_WAL_RESTORED" in line: state["wal"] = "RESTORED"
+        if FIRST_FAULT.search(line) and state["first_error"] == "UNKNOWN":
+            match = re.search(r"\\b(?:first_error|reason|rc|result)=([A-Za-z0-9_-]{1,40})", line)
+            state["first_error"] = (match.group(1) if match else
+                                    FIRST_FAULT.search(line).group(0))
+            print("WL_DIAG_FIRST_ERROR marker=" + _safe(state["first_error"]) +
+                  " stage=" + _safe(state["stage"]), flush=True)
+
 def main() -> int:
     if len(sys.argv) != 3:
         raise SystemExit("usage: m0_wl_native_step_runner.py <source-test.py> <real-log>")
@@ -53,10 +115,14 @@ def main() -> int:
     with output.open("wb") as writer:
         child = subprocess.Popen([sys.executable, "-u", str(script)],
                                  stdout=writer, stderr=subprocess.STDOUT,
-                                 stdin=subprocess.DEVNULL, env=os.environ.copy())
+                                 stdin=subprocess.DEVNULL, env=os.environ.copy(),
+                                 start_new_session=(os.name != "nt"))
         print("WL_ORIGINAL_NATIVE_E2E_CHILD_STARTED pid=" + str(child.pid) +
               " script=" + script.name, flush=True)
         offset = 0
+        state={"stage":"UNKNOWN","first_error":"UNKNOWN","fragment":"",
+               "lane":"UNKNOWN","cipher_len":"UNKNOWN","path_mtu":"UNKNOWN",
+               "tx":"UNKNOWN","rx":"UNKNOWN","wal":"UNKNOWN"}
         started=time.monotonic()
         last_heartbeat=started
         limit=native_batch_deadline(os.environ)
@@ -69,6 +135,7 @@ def main() -> int:
             if data:
                 sys.stdout.write(data.decode("utf-8", "replace"))
                 sys.stdout.flush()
+                _inspect(state,data)
             rc = child.poll()
             if rc is not None:
                 # Drain bytes already committed by the owning test, but DO
@@ -79,6 +146,8 @@ def main() -> int:
                 if rest:
                     sys.stdout.write(rest.decode("utf-8", "replace"))
                     sys.stdout.flush()
+                    _inspect(state,rest)
+                _diagnostic(state,rc,"EXITED_NOT_AUTOMATIC_PASS" if rc==0 else "FAIL_NATIVE")
                 print("WL_ORIGINAL_NATIVE_E2E_CHILD_EXIT pid=" + str(child.pid) +
                       " rc=" + str(rc), flush=True)
                 return rc
@@ -87,6 +156,7 @@ def main() -> int:
                 print("WL_ORIGINAL_NATIVE_E2E_BATCH_TIMEOUT seconds="+str(limit)+
                       " owner_pid="+str(child.pid)+" mode="+os.environ.get("WBD_WL_PUBLIC_MODES","all"),
                       file=sys.stderr,flush=True)
+                _diagnostic(state,None,"TIMEOUT_FAIL_NATIVE")
                 kill_native_child_tree(child)
                 return 124
             if now-last_heartbeat>=20:
