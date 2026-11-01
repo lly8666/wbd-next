@@ -25,3 +25,7 @@ Do not spend another 8m real Game2FEC until product full route-sidecar/WFP/DNS/M
 ```feature-impact
 {"kind":"none","ids":[],"reason":"GameFEC test-only GitHub artifact packaging and run-owned management-route failure fixture; no new product data-plane behavior or false recovery qualification."}
 ```
+
+## H779 downloaded ZIP inspection and exact scope
+
+Both GitHub-hosted artifacts were downloaded and opened: H775 ZIP id13082013849 has `README.txt`, `identity.txt`, `run-status.json`, `jobs.json` and `stages.json`, 9 independently completed stage receipts, and the native job `cancelled`; original Windows private logs **are not** inside. H775 watcher `source` field is the H771 **workflow HEAD** `dbe9ad45a6dcc39237a1dfcd5898669fff6d8a59`, not the immutable product binary SOURCE `48ed7ffe82aafa17a125948068a2ca6ee6a1593e`. H776 ZIP id13082385501 contains actual management-route test JSON proving child exit37, scoped exact restore and GitHub API after restore; its `product_wal_recovery` is explicitly `NOT_TESTED_BY_THIS_FIXTURE`. The new original-local early artifact is implemented but not yet validated by a full product Game trial; no claim otherwise.
