@@ -20,8 +20,10 @@ import threading
 import time
 if __package__:
     from .m0_wl_gamefec_progress import GameFecProgress
+    from .m0_wl_gamefec_relay import GameFecRelay
 else:
     from m0_wl_gamefec_progress import GameFecProgress
+    from m0_wl_gamefec_relay import GameFecRelay
 
 def kill_native_child_tree(child):
     # A deadline kills exactly the one original E2E child tree.
@@ -126,24 +128,21 @@ def _inspect(state, data):
             print("WL_DIAG_FIRST_ERROR marker=" + _safe(state["first_error"]) +
                   " stage=" + _safe(state["stage"]), flush=True)
 
-def _diagnostic_tail(output, stop, stage_events, game):
+def _diagnostic_tail(output, stop, game):
     # All file reads, text parsing, stdout and GitHub CLI are isolated from
     # the only PID deadline. A blocked stdout PIPE or filesystem cannot hold
     # the process owner. No second watchdog or product worker is introduced.
-    trace = GameFecProgress(output.parent, env=os.environ) if game else None
+    # Local stdout/log side cannot own outbound evidence. A separate relay
+    # thread consumes the main PID events and scans the same on-disk files.
+    quiet_env=os.environ.copy()
+    quiet_env["WBD_WL_GAME_FEC_RESCUE"]="0"
+    trace = GameFecProgress(output.parent, env=quiet_env) if game else None
     state = {"stage":"UNKNOWN","first_error":"UNKNOWN","fragment":"",
              "lane":"UNKNOWN","cipher_len":"UNKNOWN","path_mtu":"UNKNOWN",
              "tx":"UNKNOWN","rx":"UNKNOWN","wal":"UNKNOWN"}
     offset = 0
     last_trace = 0.0
     while True:
-        try:
-            while True:
-                event = stage_events.get_nowait()
-                if trace:
-                    trace.snapshot(event)
-        except queue.Empty:
-            pass
         now = time.monotonic()
         if trace and now - last_trace >= 2:
             trace.poll()
@@ -203,8 +202,16 @@ def main() -> int:
                                      stdout=writer, stderr=subprocess.STDOUT,
                                      stdin=subprocess.DEVNULL, env=os.environ.copy(),
                                      start_new_session=(os.name != "nt"))
+            # Two optional, non-supervisory observers: stdout/file tailer
+            # may block forever, but the independent GH stage relay never
+            # prints to stdout and never shares its queue consumer.
+            if game:
+                reporter=threading.Thread(
+                    target=GameFecRelay(output.parent,events,stop).run,
+                    name="game-fec-independent-stages",daemon=True)
+                reporter.start()
             diagnostic = threading.Thread(
-                target=_diagnostic_tail, args=(output,stop,events,game),
+                target=_diagnostic_tail, args=(output,stop,game),
                 name="game-fec-diagnostics" if game else "native-diagnostics",
                 daemon=True)
             diagnostic.start()
@@ -217,6 +224,7 @@ def main() -> int:
             first_polled = False
             started = time.monotonic()
             last_heartbeat = started
+            near_deadline_sent=False
             while True:
                 # Deliberately only PID, monotonic time and process-tree
                 # termination. Never read files, format logs or call GitHub.
@@ -239,6 +247,9 @@ def main() -> int:
                     stop.set()
                     diagnostic.join(timeout=.15)
                     return 124
+                if game and not near_deadline_sent and now-started >= max(1,limit-35):
+                    events.put("SUPERVISOR_NEAR_DEADLINE")
+                    near_deadline_sent=True
                 if game and now - last_heartbeat >= 20:
                     if now - started < 65:
                         events.put("SUPERVISOR_20S_ALIVE" if now-started < 40
