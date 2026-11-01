@@ -1,0 +1,59 @@
+name: M0 PLAN027 H764 one NEW-source GameFEC signed Windows Linux after real Go postTLS compile
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h764-one-gamefec-posttls-native.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-original-game2-fec:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h764-posttls-native]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 17
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Wait bounded for SOURCE-compatible H763 Windows original Go compile, then dispatch ONE fresh signed Game2FEC product
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          # H763 is Windows Go assembly/build + relay; never use a
+          # controller PASS as evidence of Rust first delivery or Stop.
+          timeout 840s gh run watch 41296167101 --repo "$GH_REPO" --exit-status --interval 20
+          test "$(gh api "repos/$GH_REPO/actions/runs/41296167101" --jq .conclusion)" = success
+          python3 tools/prepare_windows_wiring.py --check-only
+          python3 -m unittest -v tests.test_m0_wl_gamefec_relay
+          python3 - <<'PY'
+          from pathlib import Path
+          from tools.m0_wl_perf_v2_config import read_scenario
+          from tools.m0_wl_native_step_runner import native_batch_deadline
+          s=read_scenario("scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json")
+          assert s["public_mode"]=="game2-fec" and s["duration_s"]==10
+          assert s["tun_mtu"]==1400 and s["warmup_s"]==3 and s["drain_s"]==5
+          assert s["seed"]==20261029
+          for direction in ("windows_to_linux","linux_to_windows"):
+              d=s[direction]
+              assert (d["offered_mbps"],d["delay_ms"],d["loss_pct"])==(1,25,0)
+          assert native_batch_deadline({"WBD_WL_PUBLIC_MODES":"game2-fec","WBD_WL_V2_SCENARIO":"scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json"})==250
+          source=Path("r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go").read_text()
+          relay=Path("tools/m0_wl_gamefec_relay.py").read_text()
+          for phase in ("WINTUN_OPEN_ENTER","BIND_RING_ENTER","NPF_READER_JOIN_ENTER","NPF_READER_JOIN_DONE","RUST_GAME_START_ENTER","RUST_GAME_START_DONE","OS_APPLY_ENTER"):
+              assert phase in relay
+          assert "M0_GAME_COLD_STAGE NPF_READER_JOIN_ENTER" in source
+          assert "(inputs.public_mode == 'game2-fec' || inputs.public_mode == 'game4-fec') && '480'" in Path(".github/workflows/m0-wl-public-normal-full.yml").read_text()
+          print("H764_ONE_SOURCE_SIGNED_GAMEFEC_POSTTLS_MARKERS_SOURCE_LOCKED_NOT_PASS",s["scenario_sha256"])
+          PY
+          scene="scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json"
+          title="M0-WIN-LINUX|$GITHUB_SHA|game2-fec|$scene"
+          previous="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg title "$title" '.workflow_runs[]|select(.display_title==$title)|.id'|head -n 1)"
+          if [ -n "$previous" ];then echo "H764_DUPLICATE_REFUSED existing=$previous";exit 0;fi
+          # No prebuilt binary: both signed Windows Go/Rust and original
+          # Linux TLS/Rust shall be compiled from THIS EXACT commit.
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=game2-fec -f run_n0=false -f perf_scenario_file="$scene"
+          echo "H764_ONE_FRESH_ORIGINAL_GAME2FEC_BUILD_AND_NATIVE_DISPATCHED_NOT_PASS source=$GITHUB_SHA"
