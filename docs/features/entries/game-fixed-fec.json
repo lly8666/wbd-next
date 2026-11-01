@@ -30,7 +30,10 @@
     "crates/wbd-engine/src/v4_windows_game_owner.rs",
     "crates/wbd-engine/src/v4_game_lane.rs",
     "crates/wbd-engine/src/v4_windows_game_native_runtime.rs",
-    "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go"
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go"
   ],
   "doc_refs": [
     "docs/architecture/FEC_V2_BALANCED.md",
@@ -137,6 +140,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "79ca1b7d9bede83360934e7ea51de98de5216046",
       "evidence": "docs/devlog/M0/20261101-PLAN027-H708-H709-LOG-RECOVERY-AND-GAME-FEC-MTU.md"
+    },
+    {
+      "platform": "Windows2025 signed Npcap/Wintun + WSL2 Linux original Go TLS/Rust",
+      "scope": "H799 SOURCE296e original two-OS Game2FEC6: signed native UDP/TCP FIRST arrival PASS; sustained UDP FAIL after due parity 1290B+40B outer IPv4/TCP=1330B > wrong 1329B inner Wintun limit passed to outer Rust NPF; tx rc1; real worker join true but product Stop/WAL FAIL; original native artifact ENOTFOUND, Action cancelled. H800 new candidate correction NOT_RUN.",
+      "status": "FAIL",
+      "source_sha": "296e06a220c26e6e78d26edcc21934bf40b24eb9",
+      "evidence": "docs/evidence/M0/PLAN027-H800-SOURCE296E-GAME2FEC-OUTER-MTU-FIRST-FAIL-20261101.json"
     }
   ],
   "limitations": [
@@ -161,7 +171,8 @@
     "PLAN027 H639 exact source original Game2+Game4 fixed6 FEC symmetric 15% and Game2/off 30% trigger: source SHA compared to protected main, checkout before scenario validation; dispatch is attempted by explicitly tagged push, actual original native results pending.",
     "H675 Linux source6ece true 105s idle and 15% real kernel Game2 FEC fixed6 64/64 Stop positive, DOES NOT qualify signed Windows GameFEC or physical; native Health kind1 count unmeasured.",
     "H679 true current SOURCE6ece signed Windows↔WSL2 Game2FEC6 1M native FAIL first4.4/4.2% and Windows Stop marker absent; bounded run cancelled and full artifact upload ENOTFOUND. No exact client-side root, cannot promote Linux FEC pass or repeat unchanged. Original Game2/4 Windows B remains open.",
-    "H700/H701 newest main Game2 FEC native due_send_records INVALID(1): first stage/lane/PN/cipher len/actual path MTU and underlying build_bytes PacketError isolated in original Rust only on failure, native TX/RX join vs WAL Stop phase now logged. H701 Action41266666129 failed before product compile because three Go assembly blob hashes stale; H702 exact source attestations corrected, one same-code 1Mbps/0%/10s Action pending; do NOT claim fix or PASS before report, no 10/15/30 Game matrix."
+    "H700/H701 newest main Game2 FEC native due_send_records INVALID(1): first stage/lane/PN/cipher len/actual path MTU and underlying build_bytes PacketError isolated in original Rust only on failure, native TX/RX join vs WAL Stop phase now logged. H701 Action41266666129 failed before product compile because three Go assembly blob hashes stale; H702 exact source attestations corrected, one same-code 1Mbps/0%/10s Action pending; do NOT claim fix or PASS before report, no 10/15/30 Game matrix.",
+    "H800: Windows original native --mtu connection outer egress limit and derived Wintun inner IPv4 interface MTU are distinct. H799 SOURCE296e real Game2FEC6 due frame proved the old mistaken handoff; new H800 source requires same-source original NPF and complete Stop/WAL retest, is not PASS."
   ],
   "promotion": null
 }

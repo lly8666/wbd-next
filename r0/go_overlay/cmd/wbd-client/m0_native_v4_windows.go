@@ -90,7 +90,8 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   o.ServerName==""||len(o.RouteKey)<16||o.Username==""||o.Password==""||
   o.TunnelID==([16]byte{})||o.Installation==([16]byte{})||
   !o.Lease4.IsValid()||!o.Lease4.Addr().Is4()||o.Lease4.Bits()!=32||
-  o.Lease4.Addr().IsUnspecified()||o.TunnelMTU<576||o.TunnelMTU>1500{
+  o.Lease4.Addr().IsUnspecified()||o.TunnelMTU<576||o.TunnelMTU>1500||
+  o.ConnectionMTU<576||o.ConnectionMTU>1500||o.TunnelMTU>o.ConnectionMTU{
   return windowsclient.ErrN4NativeGuard
  }
  ctx,cancel:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)

@@ -1058,6 +1058,21 @@ mod tests{
                 assert!(result.is_ok(),
                     "Game2FEC due ciphertext cannot fit actual outer 1400 MTU: source_ipv4={source_len} lane={} pn={} length={} builder={:?}",
                     row.lane,row.pn,row.length,result.err());
+                // H799 actual Windows 1290-byte due+40-byte IP/TCP needs
+                // outer 1330 bytes. Derived inner Wintun MTU 1329 is NOT
+                // a valid bound for native NPF's outer frame builder.
+                if source_len==1228{
+                    let mut inner_limit=[0u8;2048];
+                    assert!(build_bytes(Ipv4Tuple{
+                        src_ip:&[10,66,0,2],dst_ip:&[10,66,0,1],
+                        src_port:41031,dst_port:443,
+                    },Presentation{
+                        ack32:0,advertised_window:65535,ip_id:1,
+                        persona:PacketPersona::Windows11,
+                    },0,&row.wire[..row.length as usize],
+                        None,1329,&mut inner_limit[14..]).is_err(),
+                        "never pass the smaller Wintun inner MTU as outer NPF MTU");
+                }
                 assert!(row.length>=32&&row.length<=1536);
             }
             // Do not mint a positive kernel receipt: the above only builds

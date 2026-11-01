@@ -160,7 +160,8 @@ func runM0NativeV4WindowsGame(
  packet:=&m0WinRustGamePeer{
   group:group,first:group.FirstOriginalOwner(),tun:tun,
   endpoints:endpoints,flows:flows,inbound:inbound,handoff:handoff,
-  stopColdReaders:stopColdReaders,readers:&readers,errorSource:failed,pathMTU:uint32(o.TunnelMTU),
+  stopColdReaders:stopColdReaders,readers:&readers,errorSource:failed,
+  pathMTU:o.ConnectionMTU, // NPF outer IPv4/TCP, never derived Wintun inner MTU
   errors:make(chan error,1),
  }
  fmt.Println("M0_GAME_COLD_STAGE PRODUCT_PREPARE_ENTER")

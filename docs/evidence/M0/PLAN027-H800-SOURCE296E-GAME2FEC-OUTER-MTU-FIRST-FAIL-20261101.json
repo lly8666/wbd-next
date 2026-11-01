@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "296e06a220c26e6e78d26edcc21934bf40b24eb9",
+  "run_id": 41319169371,
+  "workflow": "m0-wl-public-normal-full.yml",
+  "workflow_outcome": "CANCELLED",
+  "log_origin": "User-supplied 1027-line excerpt of original native Windows job, source and run IDs independently checked against GitHub",
+  "measured_scope": "TRUE_WINDOWS_SIGNED_NPF_WINTUN_TO_WSL2_LINUX_GAME2_FEC6",
+  "positive": {
+    "original_go_tls": "PASS_REAL_READY",
+    "native_windows_linux_udp": "FIRST_ARRIVAL_BOTH_DIRECTIONS",
+    "native_windows_linux_tcp": "PASS_REAL_BIDIRECTIONAL_ECHO",
+    "owner_join": "TX_FINISHED_TRUE_RX_FINISHED_TRUE"
+  },
+  "first_product_fault": {
+    "stage": "wire_frame",
+    "origin": "due",
+    "lane": 1,
+    "pn": 313,
+    "logical_id": 313,
+    "cipher_bytes": 1290,
+    "ipv4_tcp_header_bytes": 40,
+    "needed_outer_path_mtu": 1330,
+    "actual_native_path_mtu": 1329,
+    "native_rc": 1,
+    "requested_cli_outer_mtu": 1400,
+    "derived_inner_wintun_mtu": 1329
+  },
+  "negative": {
+    "sustained_udp": "FAIL_EXIT_DURING_REQUIRED_60S",
+    "windows_owner_stop": "FAIL_C_ABI_RC1",
+    "product_wal_full_recovery": "FAIL_NATIVE_WAL_OR_ROUTES_PENDING",
+    "management_route_restore": "PASS_MANAGEMENT_SCOPE_ONLY",
+    "artifact_early": "ENOTFOUND",
+    "artifact_final": "ENOTFOUND"
+  },
+  "correction": "Original Go donor --mtu vs derived tunMTU separated into ConnectionMTU/TunnelMTU; Game native NPF outer uses ConnectionMTU; no FEC codec/driver receipt change",
+  "new_source_product": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "overall": "REAL_GAMEFEC_FIRST_FAULT_CONFIRMED_NEW_CORRECTION_UNVERIFIED"
+}

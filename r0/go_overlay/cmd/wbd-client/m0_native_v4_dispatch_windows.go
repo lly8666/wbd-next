@@ -20,7 +20,8 @@ type m0NativeV4Options struct {
  AdapterAlias,StatePath string
  DNSServers4 []netip.Addr
  Direct4,Bypass4 []netip.Prefix
- TunnelMTU uint32
+ TunnelMTU uint32 // derived inner Wintun IPv4 MTU
+ ConnectionMTU uint32 // exact original --mtu outer NPF IPv4/TCP MTU
  ControlStdin bool
  Mode m0WindowsV4Mode
  FEC2Mode,FEC2Profile,FEC2AutoPolicy,FEC2AutoStartProfile string
