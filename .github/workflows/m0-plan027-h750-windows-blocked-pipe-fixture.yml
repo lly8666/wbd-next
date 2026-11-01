@@ -1,4 +1,4 @@
-name: M0 PLAN027 H751 Windows demonstrably blocked pipe and native PID deadline
+name: M0 PLAN027 H752 Windows pre-filled blocked pipe and child-tree deadline
 on:
   push:
     branches: [main]
@@ -18,4 +18,4 @@ jobs:
           $ErrorActionPreference='Stop'
           python -m unittest -v tests.test_m0_wl_native_step_runner.NativeChildStdoutLifetimeTests.test_h748_actual_unread_os_pipe_full_does_not_hold_game_deadline
           if($LASTEXITCODE -ne 0){throw 'Windows native GameFEC PID deadline not proven'}
-          Write-Output 'H751_REAL_WINDOWS_UNREAD_PIPE_WRITE_STACK_AND_PID_PASS_NOT_PRODUCT'
+          Write-Output 'H752_REAL_WINDOWS_PREFILLED_UNREAD_PIPE_PID_AND_THREAD_STACK_PASS_NOT_PRODUCT'

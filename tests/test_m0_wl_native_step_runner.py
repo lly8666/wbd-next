@@ -186,12 +186,14 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
                 "time.sleep(30)\n"
             )
             script.write_text(
-                "import os,sys\n"
+                "import os,sys,threading,time\n"
                 "from tools import m0_wl_native_step_runner as m\n"
-                "# The diagnostic worker deliberately saturates a REAL OS\n"
-                "# stdout pipe with no reader; it must not own the PID clock.\n"
+                "# Fill unread actual stdout BEFORE the real PID deadline\n"
+                "# begins. 512B committed chunks avoid CRT partial writes.\n"
                 "def block_actual_output(*args):\n"
-                " while True: os.write(sys.stdout.fileno(),b'P'*65536)\n"
+                " while True: os.write(sys.stdout.fileno(),b'P'*512)\n"
+                "threading.Thread(target=block_actual_output,daemon=True).start()\n"
+                "time.sleep(.4)\n"
                 "m._diagnostic_tail=block_actual_output\n"
                 "m.native_batch_deadline=lambda env: 1\n"
                 "sys.argv=[str(m.__file__),sys.argv[1],sys.argv[2]]\n"
