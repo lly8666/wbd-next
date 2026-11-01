@@ -1,0 +1,15 @@
+# PLAN027 H734–H735 — exact GameFEC independent stage failure and minimal permissions fix
+
+User priority remains GameFEC-only, all other PLAN027 backlog PAUSED not completed. No physical qualification.
+
+H733 original signed Windows NPF/Wintun↔Linux raw/TUN `game2-fec` native [41282490955](https://github.com/lly8666/wbd-next/actions/runs/41282490955) **FAILED before product launch**, at independent `Game FEC independent proof before original native step`. Native Windows job124777125776 GITHUB_TOKEN permissions clearly `Actions: read, Contents: read`; PowerShell job log records `WL_GAME_NATIVE_PRESTEP_ENTER run=41282490955 source=0264c2cfc91e05c7c4b8d518fa0efc6707a2ff6b` then `could not create workflow dispatch event: HTTP 403 Resource not accessible by integration`. Corresponding `Launch actual WSL2 Linux and direct full public two-OS product` was **SKIPPED**. H732 Windows fixture succeeded because that dedicated job had `actions: write`. H730 had the exact same inherited read-only permission inside the large step, so no rescue stage ever appeared; its native product branch remains UNKNOWN because full job log BlobNotFound.
+
+H734 minimal wiring permission correction: `.github/workflows/m0-wl-public-normal-full.yml` grants `permissions: {contents: read, actions: write}` ONLY to `native-public-two-os`, keeps workflow-level `actions: read` and existing independent controller/watcher. No product code/metrics/Stop change. Source HEAD `35406075c371cdd905b2fa3350af0068c8fd5067`; cheap workflow assembly + governance Actions SUCCESS.
+
+H735 controller [41282724878](https://github.com/lly8666/wbd-next/actions/runs/41282724878) SUCCESS, one new signed real Game2/FEC6 `1Mbps/25ms/0%/10s` Windows/Linux run [41282739002](https://github.com/lly8666/wbd-next/actions/runs/41282739002) and independent watcher [41282744989](https://github.com/lly8666/wbd-next/actions/runs/41282744989) **IN_FLIGHT at write**. Exact product SOURCE `0264c2cfc91e05c7c4b8d518fa0efc6707a2ff6b`, same frozen Windows ZIP / Linux product from compiler run41280564979; no duplicate compile. Harness/controller HEAD `3ec13e1b8962cca584a94b826f549a041aa7fc89`. H735 controller verified required job permission, previous H733 failure, original compile jobs/artifacts and unmodified product/test source diff. Controller green = dispatch only.
+
+Collect all independent `GAMEFEC-RESCUE|41282739002` stage Actions first. If PRE_NATIVE_STEP but no STEP_ENTER, focus PowerShell guard/initialization; if STEP_ENTER only, WSL iptables/HyperV; if MODE_STARTED / BOTH_READY / FIRST_ERROR, use actual Rust/Go branch. Stage unknown remains UNKNOWN, not PASS. H677 historical Linux-only Game2FEC original authentic source6ece 105s idle, 15% real kernel drop, 64/64 delivery, parity copied128/128 and123/123, owned Stop PASS; Windows-specific integration more suspect than global FEC math but not proven.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"GameFEC-only native test orchestration permission correction and source-locked retest; no product data plane change or native performance qualification."}
+```
