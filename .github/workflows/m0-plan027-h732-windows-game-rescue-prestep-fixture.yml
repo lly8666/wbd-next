@@ -1,0 +1,24 @@
+name: M0 PLAN027 H732 Windows pre-native stage relay fixture only
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h732-windows-game-rescue-prestep-fixture.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-windows-stage-relay:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h732-windows-stage-fixture]')
+    runs-on: windows-2025
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Enter real Windows pwsh step and submit detached log without product
+        shell: pwsh
+        timeout-minutes: 3
+        run: |
+          $ErrorActionPreference='Stop'
+          Write-Output ('H732_WIN_PWSH_BEGIN run='+$env:GITHUB_RUN_ID)
+          & gh workflow run m0-plan027-gamefec-rescue-record.yml --repo $env:GH_REPO --ref main -f "target_run=$env:GITHUB_RUN_ID" -f "source=$env:GITHUB_SHA" -f stage=WINDOWS_PRESTEP -f detail=WINDOWS_PWSH_GH_DISPATCH
+          if($LASTEXITCODE -ne 0){throw 'Windows native GH_TOKEN independent stage relay failed'}
+          Write-Output 'H732_WIN_PWSH_RESCUE_ACCEPTED_NOT_PRODUCT_PASS'
