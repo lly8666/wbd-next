@@ -2,7 +2,7 @@ name: M0 PLAN027 H742 one original Game2FEC 480s native
 on:
   push:
     branches: [main]
-    paths: [.github/workflows/m0-plan027-h742-game480-one.yml]
+    paths: [.github/workflows/m0-plan027-h742-game480-io-separated.yml]
 permissions: {contents: read, actions: write}
 jobs:
   one-real-game2-fec:
