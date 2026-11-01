@@ -1021,7 +1021,7 @@ mod tests{
             ipv4[2..4].copy_from_slice(&(source_len as u16).to_be_bytes());
             ipv4[8]=64;ipv4[9]=17;
             if source_len>actual_limit{
-                assert_eq!(offer_records(&r,h,&ipv4,2),Err(INVALID),
+                assert!(matches!(offer_records(&r,h,&ipv4,2),Err(INVALID)),
                     "oversized input must be refused before FEC sealing/NPF send");
                 continue
             }
