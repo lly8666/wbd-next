@@ -91,5 +91,6 @@
     "Original whole Go+Rust process CPU not language-attributed, no cross-host clock-calibrated one-way p99",
     "No 100/200Mbps Fixed same-source PASS, no physical test",
     "PLAN027 B Game2FEC and Windows authenticated dead106 remain NOT_QUALIFIED"
-  ]
+  ],
+  "source_sha": "d0661a2e110b523ad06b311da23fc1b7291442ba"
 }
