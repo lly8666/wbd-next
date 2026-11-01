@@ -67,7 +67,7 @@ class GameFecRescueRelayTests(unittest.TestCase):
             thread=threading.Thread(target=relay.run,daemon=True)
             thread.start()
             for _ in range(70):
-                if any(a=="CLIENT_OS_APPLIED" for a,b in events): break
+                if any(a=="OS_APPLIED" for a,b in events): break
                 stopped.wait(.06)
             stopped.set();thread.join(2)
             names=[a for a,b in events]
