@@ -1,0 +1,20 @@
+name: M0 PLAN027 H726 GameFEC real-log fault and rescue synthetic fixture
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h726-gamefec-harness-fixture.yml]
+permissions: {contents: read}
+jobs:
+  one-synthetic-fault-fixture:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h726-fixture]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Test first-error and stage logger without driver or network
+        run: |
+          set -euo pipefail
+          python3 -m unittest -v tests.test_m0_wl_gamefec_progress
+          python3 -m py_compile tools/m0_wl_gamefec_progress.py tools/m0_wl_public_normal_e2e.py tools/m0_wl_public_modes_e2e.py
+          python3 -m unittest -v tests.test_m0_wl_native_step_runner
+          echo H726_GAME_FEC_FAULT_THEN_HANG_LOG_FIXTURE_PASS_NOT_NATIVE
