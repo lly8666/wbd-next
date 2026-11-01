@@ -982,6 +982,73 @@ mod tests{
     }
 
     #[test]
+    fn m0_plan027_game2_fec6_actual_due_ciphertext_outer_ipv4_mtu_envelope(){
+        // Pure product GameAdapter/M3 ciphertext from exactly the existing
+        // authenticated TLS MSS=1400 test owner and FEC fixed profile6.
+        // This unit has NO native NPF/Wintun receipt, business or Stop claim.
+        // It localizes whether a valid FEC due record can even be wrapped
+        // by the identical production IPv4/TCP builder at path MTU1400.
+        use wbd_platform::ipv4_tcp::{
+            build_bytes,Ipv4Tuple,Presentation,PacketPersona,
+        };
+        for source_len in [1228usize,1329usize]{
+            let mut r=Registry{generation:1,entries:BTreeMap::new(),
+                game_groups:BTreeMap::new()};
+            let client=setup(&mut r,2,false);
+            let h=join(&mut r,&client,false).unwrap();
+            assert_eq!(enable_fec(&r,h,6),OK);
+            let group=r.game_groups[&h].clone();
+            let actual_limit={
+                let g=group.lock().unwrap();
+                game_effective_payload_mtu(&g,h).unwrap()
+            };
+            assert!(source_len<=actual_limit,
+                "trial must be a legal original authenticated Wintun input");
+            let mut ipv4=vec![0x42;source_len];
+            ipv4[0]=0x45;ipv4[1]=0;
+            ipv4[2..4].copy_from_slice(&(source_len as u16).to_be_bytes());
+            ipv4[8]=64;ipv4[9]=17;
+            let rows=offer_records(&r,h,&ipv4,2).unwrap();
+            assert_eq!(rows.len(),2);
+            {
+                let mut g=group.lock().unwrap();
+                for row in &rows{
+                    assert_eq!(game_m4_result_group(&mut g,h,
+                        row.lane,row.logical_id,row.pn,true),OK);
+                }
+                g.started=std::time::Instant::now()
+                    -std::time::Duration::from_millis(12);
+            }
+            let due={
+                let mut g=group.lock().unwrap();
+                game_fec_poll_group(&mut g,h,16).unwrap()
+            };
+            assert!(!due.is_empty(),
+                "real fixed6 GameFecTx should close a sparse block");
+            for row in &due{
+                let mut scratch=[0u8;2048];
+                let result=build_bytes(Ipv4Tuple{
+                    src_ip:&[10,66,0,2],dst_ip:&[10,66,0,1],
+                    src_port:41031,dst_port:443,
+                },Presentation{
+                    ack32:0,advertised_window:65535,ip_id:1,
+                    persona:PacketPersona::Windows11,
+                },0,&row.wire[..row.length as usize],
+                    None,1400,&mut scratch[14..]);
+                eprintln!("M0_PLAN027_GAME_DUE_BOUNDARY source_ipv4={} lane={} pn={} cipher_len={} path_mtu=1400 ipv4_tcp={:?}",
+                    source_len,row.lane,row.pn,row.length,
+                    result.as_ref().map(|bytes|bytes.len()));
+                assert!(result.is_ok(),
+                    "Game2FEC due ciphertext cannot fit actual outer 1400 MTU: source_ipv4={source_len} lane={} pn={} length={} builder={:?}",
+                    row.lane,row.pn,row.length,result.err());
+                assert!(row.length>=32&&row.length<=1536);
+            }
+            // Do not mint a positive kernel receipt: the above only builds
+            // the exact outer frame and proves the size/packet contract.
+        }
+    }
+
+    #[test]
     fn m0_windows_game_two_four_shared_linux_fec2_fixed_profile_before_public_driver(){
         // Authenticated/protected owner+feature7 already supplied by setup.
         // An actual Go caller must negotiate GameFec=profile+1 in TLS

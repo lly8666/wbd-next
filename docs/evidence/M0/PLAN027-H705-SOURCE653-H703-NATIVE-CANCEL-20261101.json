@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "653744efca9e6878c456595b508a2968d7ad83ff",
+  "h703_run": 41271574007,
+  "h703_job": 124745320692,
+  "h703_run_conclusion": "cancelled",
+  "h703_native_conclusion": "cancelled",
+  "h703_actual_step": "Launch actual WSL2 Linux and direct full public two-OS product",
+  "h703_logs": "NOT_AVAILABLE_GITHUB_404_BlobNotFound",
+  "h703_artifacts": [
+    {
+      "id": 13068974722,
+      "name": "m0-wl-real-guest-boot-41271574007",
+      "sha256": "5d0b2de374a126a398abe6dbf6e6d82a460534e59be505c094e27878e8a8f267"
+    }
+  ],
+  "h703_product_business": "INCONCLUSIVE_NO_NATIVE_DIAGNOSTIC",
+  "first_invalid_branch": "NOT_MEASURED",
+  "native_tx_rx_stopped": "NOT_MEASURED",
+  "upper_wal_restored": "NOT_MEASURED",
+  "live_binary_source": "653744efca9e6878c456595b508a2968d7ad83ff",
+  "original_windows_product_artifact": 13067457880,
+  "original_linux_product_artifact": 13067282890,
+  "h705_unit": "PENDING_ONE_SOURCE_H705_RUST_FEC_DUE_REAL_SEAL_OUTER_BUILDER_ONLY",
+  "limits": [
+    "No new GameFEC native matrix or timeout increase",
+    "Static/private unit cannot qualify real Windows NPF/Wintun business or Stop",
+    "Original source6ece H679 4.4pct first and WAL Stop FAIL preserved"
+  ]
+}

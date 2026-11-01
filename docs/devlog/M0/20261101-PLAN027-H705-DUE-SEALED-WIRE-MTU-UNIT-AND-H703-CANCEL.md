@@ -1,0 +1,11 @@
+# PLAN027 H705 — H703 external native cancel; one original FEC due frame-contract unit, not a new network matrix
+
+[H703 Action41271574007](https://github.com/lly8666/wbd-next/actions/runs/41271574007) truly restored both source653744 prebuilt original Go TLS/Rust binaries and booted signed Windows/WSL2; the sole native job 124745320692 was **CANCELLED by external watchdog** at real original product launch after running from04:03 to04:18 UTC. [Job log](https://github.com/lly8666/wbd-next/actions/runs/41271574007) returns GitHub 404 `BlobNotFound` after completion; only guest boot artifact13068974722 survived. Not Game source first branch, not native worker Stop or WAL result; H679 original SOURCE6ece real first4.4%/4.2%, missing owned Stop remains actual FAIL. H702 SOURCE653744 Windows/Linux genuine builds and unit suite PASS unchanged. H704 cursor 8KiB structure fix PASS.
+
+User rejects another unchanged 1M full GameFEC or widening Action timeout. H705 adds **one PRIVATE source-derived unit only** `m0_plan027_game2_fec6_actual_due_ciphertext_outer_ipv4_mtu_envelope` in actual Rust Game owner, constructing authentic Game2 fixed6 original M3 encrypted due parity from both 1228B (real max1200 UDP payload+IPv4/UDP header) and legal1329B Game input, settling staged copies in private owner before parity due and running the exact production `wbd_platform::ipv4_tcp::build_bytes` with path MTU1400 and lane/PN/cipher length printed. It makes no positive real NPF send or Wintun delivery claims. One Action `.github/workflows/m0-plan027-h705-gamefec-due-envelope-boundary.yml` runs only this unit under existing Rust toolchain. If size invalid, root is a deterministic **bounded source-wire envelope mismatch for that input**, not yet H679 real min failure causality. Freeze production runtime, no guess fix before unit and true stage evidence.
+
+Outstanding B Windows GameFEC due first failure and native vs WAL diagnosis, full PLAN027 unqualified, physical NOT_RUN.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only private focused Rust parity-due and production IPv4/TCP MTU envelope unit plus one Action; archive H703 external cancel and BlobNotFound, no product release behavior, config, ABI, FEC formula, or native qualification promotion."}
+```
