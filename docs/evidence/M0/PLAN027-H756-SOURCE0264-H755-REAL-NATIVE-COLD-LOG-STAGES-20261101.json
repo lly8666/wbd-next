@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "product_source_sha": "0264c2cfc91e05c7c4b8d518fa0efc6707a2ff6b",
+  "control_source_sha": "22b1bb226cb6fedd868c448a0578d4b5dd2b5e09",
+  "native_run": 41291160670,
+  "native_job": 124802632680,
+  "watcher_run": 41291170270,
+  "binary_build_run": 41280564979,
+  "mode": "game2-fec",
+  "scenario": "scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json",
+  "control": {
+    "windows_fixture_run": 41291130499,
+    "result": "SUCCESS",
+    "unit_relay_tests": 3,
+    "actual_unread_windows_pipe": "PASS",
+    "single_native_dispatch": true
+  },
+  "source_scoped_independent_stage_receipts": [
+    {
+      "stage": "PRE_NATIVE_STEP",
+      "run": 41291346357,
+      "status": "success"
+    },
+    {
+      "stage": "STEP_ENTER",
+      "run": 41291350897,
+      "status": "success"
+    },
+    {
+      "stage": "STEP_PREFLIGHT_COMPLETE",
+      "run": 41291376841,
+      "status": "success"
+    },
+    {
+      "stage": "CLIENT_LOG_STARTED",
+      "run": 41291380242,
+      "status": "success"
+    },
+    {
+      "stage": "SERVER_LOG_STARTED",
+      "run": 41291382191,
+      "status": "success"
+    }
+  ],
+  "evidence_time": "source scoped during in-flight native; not final",
+  "auth_tls_ready": "NOT_YET_OBSERVED",
+  "rust_game_rx_tx_first_error": "UNKNOWN",
+  "first_udp_tcp": "NOT_MEASURED",
+  "owned_stop": "NOT_MEASURED",
+  "original_native_status_at_checkpoint": "IN_FLIGHT",
+  "external_limit_seconds": 480,
+  "native_job_logging": "BLOB_NOT_FOUND_WHILE_RUNNING",
+  "note": "Actual client/server log bytes exist; the only proved result is reached native product startup. No business or Stop PASS implied.",
+  "physical": "NOT_RUN"
+}
