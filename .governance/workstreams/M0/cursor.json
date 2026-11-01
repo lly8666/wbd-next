@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 727,
-  "checkpoint_sha": "bbee9d739a110ef49649395f13ba093577b77815",
+  "sequence": 733,
+  "checkpoint_sha": "1ff8a252471d3629d8278d0f45f904b8c1eeca9e",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H727 GameFEC-only priority. H726 synthetic first-fatal stage sampler fixture Action41280115892 SUCCESS, not native. Original SOURCEd066 Game2FEC after WSL2 boot enters real native test and independently cancelled 749s, job log 404 BlobNotFound. New Game observer reads bounded live client/server logs from one existing PID; independent rescue workflow available but real dispatch/Stop NOT_RUN. M0 governance failing unbounded context_refs (10>policy max8) originated older H723, fixed H727. Remaining PLAN027 paused, not completed.",
-  "why_now": "Real H726 fixture passed and governance root error unbounded context_refs. User required governance repairs as encountered, so enforce existing max8 without weakening policy; then continue Game-only first-failure capture.",
+  "current_task": "H733 user Game FEC only: H728 independent receiver and H732 Windows native pwsh receiver both SUCCESS. H729 frozen SOURCEd066 prebuilt ABI mismatch failed before network, not GameFEC product result. H730 SOURCE0264 same-build Windows/Linux success, real native41280564979 cancelled after 739s in native launch; BlobNotFound with no independent stage, exact phase unknown. H731 separate pre-native Windows stage relay added. H733 exact SOURCE0264 prebuilt Game2FEC1M25ms0%10s native41282490955 / watcher41282496618 IN_FLIGHT; no product PASS. Other tasks paused.",
+  "why_now": "Original GameFEC stuck in risky native step with missing logs. Independent Windows stage receiver proven by Action41282410138 -> 41282419599, now H733 tests whether target reaches even pre-native step, then streams first failure. Preserve exact compile/source, no unrelated jobs.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Finish stage PRE-NATIVE exact PowerShell milestone relay and game-only env enable; verify no-secret synthetic and receiver. Then dispatch one immutable SOURCEd066 real Windows/Linux Game2FEC1M0%10s using prebuilt unchanged binaries and game-only diagnostic harness. Recover separate rescue stages and exact first fatal or cleanup timeout, fix product minimally.",
+  "next_action": "Receive H733 run41282490955/watcher41282496618 and all GAMEFEC-RESCUE|41282490955 stage actions before dispatching anything else. If only PRE_NATIVE_STEP investigate early PowerShell guard/WSL prereq; if MODE_STARTED/FIRST_ERROR diagnose exact Go/Rust and Stop. If no stage investigate pre-step Windows setup. Fix minimal cause then one real regression; keep other PLAN027 paused.",
   "unverified": true,
   "last_tested_source": "d0661a2e110b523ad06b311da23fc1b7291442ba",
   "evidence_refs": [
@@ -23,14 +23,14 @@
     "docs/evidence/M0/PLAN027-H724-SOURCED066-FIXED50-15PCT-ACTUAL-PASS-20261101.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261101-PLAN027-H712-ORIGINAL-B106-FROZEN-BINARIES.md",
     "docs/devlog/M0/20261101-PLAN027-H713-BURST-REAL-ORACLE-RECOVER.md",
     "docs/devlog/M0/20261101-PLAN027-H714-BURST-SAME-BINARY-NATIVE.md",
     "docs/devlog/M0/20261101-PLAN027-H717-H718-WATCHER-FALLBACK-AND-FIXED50.md",
     "docs/devlog/M0/20261101-PLAN027-H721-H722-FIXED100-TRUTH-AND-FIXED50-LOSS15.md",
     "docs/devlog/M0/20261101-PLAN027-H723-WINDOWS-FIXED-ACTUAL-INSTALLED-READBACK.md",
     "docs/devlog/M0/20261101-PLAN027-H724-FIXED15-NATIVE-AND-MANIFEST-REPAIR.md",
-    "docs/devlog/M0/20261101-PLAN027-H725-USER-PRIORITY-GAMEFEC-ONLY-PAUSE-REGISTRY.md"
+    "docs/devlog/M0/20261101-PLAN027-H725-USER-PRIORITY-GAMEFEC-ONLY-PAUSE-REGISTRY.md",
+    "docs/devlog/M0/20261101-PLAN027-H728-H733-GAMEFEC-FIRST-STAGE-RELAY.md"
   ],
   "open_requests": [],
   "partial_summary": "PLAN027 §0 remains PARTIAL. A5 USER_WAIVED not PASS. Original SOURCE6ece true Windows/Linux Normal10M300s and 50M PASS, C100 >=99.9 but 2 true Windows sequence gaps; C200 host capacity FAIL Linux generator134.759/200, Linux first0.61916/TUN3145 drops, stop higher Normal tier. Windows B105 idle108s real wake/Stop PASS; Linux-only dead106 second TLS PASS but Windows dead106 external CANCELLED and still NOT_RUN. Auto A4 true one grade down in109.24s and Win revision4 Applied; final Linux profile0 pending. Normal damaged1/5/15/30% real Windows-only F/R/C opportunity and Stop scoped PASS, NOT bilateral recovery grade. Fixed6 at30% first~99.96/99.94, Game4off30 ~99.22/99.17, Game2off30 ~90.91/91.19 real original. Game2FEC source6ece 1M0% delivered~4% both and Stop missing FAIL; new H700 Rust due_send_records INVALID(1) first-failure/worker stop probes compiled SOURCE653744, but H702 native Action41266830417 external CANCELLED, log BlobNotFound and first branch unknown. H703 tests same prebuilt source653 only 1M0%10s Action41271574007 in flight with immediate first-fault + native/WAL output; no matrix/time extension. H699 burst Action FAIL; Fixed50 Action externally cancelled. Unverified Windows Game FEC/106s/rotation/FIN-DORMANT/host-global DNS-WFP-IPv6/routes, C burst and some capacit H720 legal d066 evidence source scope reset: 4 d066 truth records (GameFEC CANCELLED, Win B106 CANCELLED, Normal burst real child+Stop positive but workflow FAIL, Fixed6 C50 real full PASS). Legacy older 6ece results remain immutable evidence but not in current-source cursor refs. Next Fixed C100 controller41276661322 in flight. H721 Frozen SOURCEd066 Fixed100 25ms zero-loss native source business FAIL: Windows first0.997456/Linux0.9819, Linux TUN TX drops2503, generator CPU54.14s, original owned Stop marker+exit PASS; watcher RUN_VIEW recovered. H721 avoid duplicate Linux TERM cleanup warning. H722 one 50Mbps250ms15% Fixed6 new native Action queued/dispatch pending exact current controller; not PASS. H723 new native Rust+Go 72B Windows Fixed selected profile/revision installed readback and Go unit test committed but fresh product NOT_RUN; legacy mature Quality is separate, no extra RTT. H722 real original source d066 in flight. H724 source d066 true highest Fixed50/250ms15 real both UDP/TCP Stop PASS, first.994254/.974935, TUN0/NPF0; Win CPU55.1/78.375 (70.3% core), RSS47MB. Residual Linux2.5% and p99/unreturned bilateral F/R/C still unverified. New H723 72B Windows Fixed installation ABI source65618 cheap assembly mismatch, H724 correct three Go result blobs pending Actions."
