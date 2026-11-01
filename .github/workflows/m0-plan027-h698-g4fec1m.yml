@@ -1,0 +1,48 @@
+name: M0 PLAN027 H698 original signed g4fec1m unique source-locked real OS
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h698-g4fec1m.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-real-immutable-source-scene:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h698-g4fec1m]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE: 6ece9eab653f46a716e8d3a0927fb74bec4819e8
+      HARNESS: 92354d5a70f34640918f61b25859ba0bb05989dd
+      BUILD: "41226521824"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Original prebuilt SHA and one true game4-fec workload only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BUILD" --jq .head_sha)" = "$SOURCE"
+          gh api "repos/$GH_REPO/actions/runs/$BUILD/artifacts?per_page=100" |
+            jq -e --arg w "m0-wl-windows-product-binaries-$SOURCE" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' >/dev/null
+          git fetch --depth=1 origin "$HARNESS"
+          test -z "$(git diff --name-only "$HARNESS" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock)"
+          test "$(git diff --name-only "$HARNESS" "$GITHUB_SHA" -- tools)" = "$(printf 'tools/m0_wl_perf_v2_config.py\ntools/m0_wl_public_normal_e2e.py')"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario('scenarios/plan027-b-game4-fec6-cold-minimum-1m-25ms-loss0-10s.json')
+          assert s['public_mode']=='game4-fec' and s['tun_mtu']==1400
+          assert s['duration_s']==10 and s['seed']==20261029 and all(s[d]['offered_mbps']==1 and s[d]['loss_pct']==0 and s[d]['delay_ms']==25 for d in ('windows_to_linux','linux_to_windows'))
+          print("H698_ACTUAL_G4FEC1M_ORIGINAL_GO_RUST",s["scenario_sha256"])
+          PY
+          scene=scenarios/plan027-b-game4-fec6-cold-minimum-1m-25ms-loss0-10s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|game4-fec|$scene"
+          duplicate="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id'|head -1)"
+          if [ -n "$duplicate" ];then echo "H698_ALREADY_DISPATCHED $duplicate";exit 0;fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=game4-fec -f run_n0=false -f perf_scenario_file="$scene" \
+            -f perf_reuse_run_id="$BUILD" -f perf_binary_source_sha="$SOURCE"
+          echo H698_g4fec1m_ONE_REAL_ACTION_DISPATCHED_NOT_PASS

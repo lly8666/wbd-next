@@ -1,0 +1,11 @@
+# PLAN027 H698 — mode-specific Fixed50 and minimum Game4FEC6 independently on real original binaries
+
+SOURCE `6ece9eab653f46a716e8d3a0927fb74bec4819e8`, original signed Windows NPF/Wintun + WSL2 Go credential TLS/Rust binary manifest from H669 unchanged; no compiled source edit/build. Actual Normal200M 0% capacity-limited Linux offered134.759M vs200 with TUN drops; don't attempt heavier Normal same family. Fixed6 has genuine true 10Mbps/250ms30% source6ece first≥99.94%, Linux profile6 installed and both Stop, but cannot borrow Normal 50/100 capacity. Launch existing `scenarios/plan027-c-fixed-50m-25ms-loss0-60s.json` as ONE independent Fix6/50M/25ms0%/60s real capacity step, preserve original payload mix/seed/true driver and Stop; do not claim result or move to100M before observing host CPU/drop.
+
+Game2FEC source6ece H679 original Windows 1M0%10s first4% + missing Stop FAIL; Game4FEC 10M/250ms0%/60s Action41263019349 ended CANCELLED by external watchdog and full logs BlobNotFound (only boot artifact), not a positive or a 10M negative business result. Game2 OFF and Game4 OFF separately true PASS, Linux Game2 FEC independent positive, so identify common Windows native FEC issue without blind product change. NEW Game4FEC6 minimum `scenarios/plan027-b-game4-fec6-cold-minimum-1m-25ms-loss0-10s.json` is a **different lane count, lower load and shorter completed business** than canceled Game4FEC 10M60s, independent genuine signed Wintun↔TUN TLS native Action, exact Game2FEC minimum seed/payload mix; existing failure-case bounded client/server diagnostic in H688 fixture. If minimum fails capture actual native first/Stop/terminal log and fix root; don't rerun same unchanged seed indefinitely. Same original binary build, SHA/pinned harness; two distinct Actions/VMs and no sameVM parallel workload.
+
+B Windows actual106s dead + fresh TLS Action41263249979 in flight, preserve in-place results; Auto240 A4 natural one grade under120 recovered H697; global WFP/DNS/IPv6/routes, rotation/FIN/DORMANT and C burst still open. Task PARTIAL.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only one source-locked next Fixed6 50Mbps capacity scenario and one meaningfully different Game4FEC6 cold 1Mbps/10s original two-OS test to isolate persistent Windows FEC failure. Product/ABI/config unchanged, no previewed PASS."}
+```
