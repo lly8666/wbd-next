@@ -161,7 +161,8 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         mode=(ROOT/"tools/m0_wl_public_modes_e2e.py").read_text()
         self.assertIn("creationflags=0)",mode)
         self.assertNotIn("creationflags=getattr(subprocess",mode)
-        self.assertIn('mode_seconds=240 if (slow and mode.startswith("game")) else 690 if slow else 165',mode)
+        self.assertIn('185 if minimal_game_fec else',mode)
+        self.assertIn('240 if (slow and mode.startswith("game")) else 690 if slow else 165',mode)
 
     def test_game_v2_nested_deadlines_finish_before_external_windows_watchdog(self):
         from tools.m0_wl_native_step_runner import native_batch_deadline
@@ -170,6 +171,10 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         normal={"WBD_WL_PUBLIC_MODES":"normal",
                 "WBD_WL_V2_SCENARIO":"scenarios/plan027-c-normal-50m-25ms-loss0-60s.json"}
         self.assertEqual(native_batch_deadline(game),310)
+        minimal={"WBD_WL_PUBLIC_MODES":"game2-fec",
+                 "WBD_WL_V2_SCENARIO":"scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json"}
+        self.assertEqual(native_batch_deadline(minimal),250)
+        self.assertLess(185,250)
         self.assertEqual(native_batch_deadline(normal),760)
         self.assertLess(240,310)
         self.assertLess(310+160+90,600)
