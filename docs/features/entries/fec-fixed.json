@@ -145,6 +145,13 @@
       "status": "PERFORMANCE_PASS",
       "source_sha": "d0661a2e110b523ad06b311da23fc1b7291442ba",
       "evidence": "docs/evidence/M0/PLAN027-H718-SOURCED066-ORIGINAL-FIXED50-REAL-20261101.json"
+    },
+    {
+      "platform": "Windows2025 signed Npcap/Wintun↔WSL2 Linux original Go TLS+Rust highest Fixed6",
+      "scope": "H721 frozen SOURCEd066 Fixed100Mbps each 25ms/0%/60s true initial UDP/TCP and both owned Stop, but first windows99.7456% / linux98.1900% FAIL <99.9, Linux TUN TX drop2503, generator CPU54.14s; Windows local NPF drop0. Real capacity/product failure; skip higher same Fixed zero-loss family, continue lower-rate loss and B. Parent and watcher logs recovered; duplicate post-pass Linux STOP_REQUEST_FAILED is second cleanup signal, H721 fixture avoids, no 100M PASS.",
+      "status": "FAIL",
+      "source_sha": "d0661a2e110b523ad06b311da23fc1b7291442ba",
+      "evidence": "docs/evidence/M0/PLAN027-H721-SOURCED066-FIXED100-REAL-FAIL-20261101.json"
     }
   ],
   "limitations": [

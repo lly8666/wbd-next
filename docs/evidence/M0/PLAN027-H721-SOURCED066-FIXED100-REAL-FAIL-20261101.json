@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "product_source_sha": "d0661a2e110b523ad06b311da23fc1b7291442ba",
+  "controller_source_sha": "1b3a4ae3ea3cc522122d8b0924c20e6ee689f431",
+  "run": 41276671847,
+  "native_job": 124760189731,
+  "watcher_run": 41276679368,
+  "watcher_method": "RUN_VIEW_NATIVE_JOB_LOG_RECOVERED",
+  "binary_build_run": 41274450306,
+  "windows_binary_artifact": {
+    "id": 13071196733,
+    "digest": "sha256:b6baac6ba45a6825665addf329447e56564240c310ae8f636d119b6c6d0eaa6a"
+  },
+  "linux_binary_artifact": {
+    "id": 13070622152,
+    "digest": "sha256:837cb7a113f871914c2d04f0caead8a93a7a97ce7e3bd53c9878819cd9dbb5c3"
+  },
+  "report_artifact": {
+    "id": 13071399351,
+    "digest": "sha256:ea911147548e5b90f195e3ebc497118fe7abef86bdb5ba3497b2f028b02d4f69"
+  },
+  "scene": "plan027-c-fixed-100m-25ms-loss0-60s",
+  "true_signed_win_npf_wintun_linux_wsl2_original_tls_rust": true,
+  "offer_requested_mbps_each": 100,
+  "actual_offered_mbps": {
+    "windows": 99.9733,
+    "linux": 99.1814
+  },
+  "first_delivered_mbps": {
+    "windows": 98.9329,
+    "linux": 98.0952
+  },
+  "first_delivery_fraction": {
+    "windows": 0.997456,
+    "linux": 0.9819
+  },
+  "real_linux_tun_tx_drops": 2503,
+  "real_linux_tun_rx_drops": 0,
+  "windows_npf_local_drops": 0,
+  "linux_generator_cpu_seconds": 54.1391,
+  "app_udp_tcp": "REAL_DUAL_POSITIVE_ONLY_NOT_LOSSLESS_PERFORMANCE_PASS",
+  "native_stop_status": "PASS_BOTH_OWNED_BY_REAL_SERVER_DRAIN_MARKER_AND_BOTH_EXIT",
+  "scenario_verdict": "FAIL_CLEAN_99_9_PERCENT_FIRST_DELIVERY_THRESHOLD",
+  "workflow_status": "failure",
+  "direct_log_sequence": "ORIGINAL_NATIVE_CHILD_FIXED_RC0_THEN_PARENT_V2_FAIL_WITH_REAL_LOSS",
+  "cleanup_false_alarm": "WL_REAL_LINUX_OWNED_STOP_REQUEST_FAILED code=1 appears after first native Stop already drained because finally sent duplicate kill -TERM; existing stop marker/exit accepted. H721 source972c71 prevents duplicate signal only if process already exited. Do not promote clean 100M delivery.",
+  "capacity_scope": "Real Linux TUN tx_drops=2503 and near-single-core 54.1391s/80s Linux generator; probable capacity/product hotpath, not proven exclusive root. STOP_HIGHER_FIXED_0LOSS_FAMILY; continue other lower-rate weaknet and B.",
+  "not_measured": [
+    "true calibrated one-way p99 for all including missing",
+    "proof of Windows native Fixed installed separately",
+    "host-wide Linux PSI / exact hotspot root",
+    "physical"
+  ],
+  "source_sha": "d0661a2e110b523ad06b311da23fc1b7291442ba"
+}

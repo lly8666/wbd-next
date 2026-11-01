@@ -1,0 +1,55 @@
+name: M0 PLAN027 H722 single Fixed6 50M 250ms loss15 native source reuse
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h722-fixed50-loss15-source-reuse.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-original-fixed50-loss15:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h722-fixed50-loss15]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE: d0661a2e110b523ad06b311da23fc1b7291442ba
+      BUILD: "41274450306"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: One authentic highest Fixed 50Mbps/250ms/15percent native impairment using existing exact Go TLS Rust binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BUILD" --jq .head_sha)" = "$SOURCE"
+          test "$(gh api "repos/$GH_REPO/actions/runs/41276271649" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$BUILD/artifacts?per_page=100" |
+            jq -e --arg win "m0-wl-windows-product-binaries-$SOURCE" '
+              [.artifacts[]|select(.expired==false)|.name]
+              | index($win)!=null and index("m0-plan024-linux-product")!=null' >/dev/null
+          git fetch --depth=1 origin "$SOURCE"
+          test -z "$(git diff --name-only "$SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_wl_netem.py tools/m0_wl_public_modes_e2e.py scenarios)"
+          # H721 only corrected a duplicate post-success kill in the existing
+          # Python native harness; no product binary, traffic or seed mutation.
+          test "$(git diff --name-only "$SOURCE" "$GITHUB_SHA" -- tools/m0_wl_public_normal_e2e.py)" = tools/m0_wl_public_normal_e2e.py
+          grep -q 'if s is not None and s.poll() is not None:' tools/m0_wl_public_normal_e2e.py
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          s=read_scenario("scenarios/plan027-c-fixed-50m-250ms-loss15-60s.json")
+          assert s["public_mode"]=="fixed" and s["duration_s"]==60 and s["tun_mtu"]==1400 and s["seed"]==20261030
+          for k in ("windows_to_linux","linux_to_windows"):
+            d=s[k]
+            assert d["offered_mbps"]==50 and d["delay_ms"]==250 and d["loss_pct"]==15
+          print("M0_H722_FROZEN_FIXED50_REAL_LOSS15",s["scenario_sha256"])
+          PY
+          scene=scenarios/plan027-c-fixed-50m-250ms-loss15-60s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|fixed|$scene"
+          old="$(gh api "repos/$GH_REPO/actions/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg t "$title" '.workflow_runs[]|select(.display_title==$t)|.id' | head -1)"
+          if [ -n "$old" ];then echo "H722_ALREADY_DISPATCHED=$old"; exit 0;fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=fixed -f run_n0=false -f perf_scenario_file="$scene" \
+            -f perf_reuse_run_id="$BUILD" -f perf_binary_source_sha="$SOURCE"
+          echo H722_ONE_TRUE_ORIGINAL_FIXED50_15PCT_NATIVE_DISPATCHED_NOT_PASS
