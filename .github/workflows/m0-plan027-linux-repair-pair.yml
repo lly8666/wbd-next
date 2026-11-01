@@ -1,0 +1,90 @@
+name: M0 PLAN027 R Normal original Linux same-VM repair OFF to ON cost
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-plan027-linux-repair-pair.yml
+permissions:
+  contents: read
+jobs:
+  frozen-original-linux-product:
+    if: contains(github.event.head_commit.message, '[plan027-r-normal-pair]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Validate exact only-scenario pair and real native readback contracts
+        run: |
+          set -euo pipefail
+          python3 -m unittest tests.test_m0_plan027_linux_repair_pair -v
+          python3 -m py_compile tools/network_harness/m0_plan027_linux_repair_pair.py
+      - name: Build source-locked original Go TLS client/server and Rust M4 once
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm
+          sed -e 's/aarch64/x86_64/g' -e 's/arm64/amd64/g' tools/arm64_public_go_rust_bundle.sh > "$RUNNER_TEMP/m0-plan027-amd64-build.sh"
+          bash "$RUNNER_TEMP/m0-plan027-amd64-build.sh"
+          (cd amd64-public-bundle && sha256sum -c SHA256SUMS)
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("amd64-public-bundle/manifest.json"))
+          assert m["source"]==os.environ["GITHUB_SHA"] and m["architecture"]=="x86_64"
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: plan027-r-once-frozen-linux-product
+          path: amd64-public-bundle/
+          if-no-files-found: error
+          retention-days: 30
+  one-same-vm-normal-paired-measurement:
+    needs: frozen-original-linux-product
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: plan027-r-once-frozen-linux-product
+          path: native-bundle
+      - name: Verify exactly the immutable manifest/binary source
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("native-bundle/manifest.json"))
+          assert m["source"]==os.environ["GITHUB_SHA"] and m["architecture"]=="x86_64"
+          PY
+          (cd native-bundle && sha256sum -c SHA256SUMS)
+          chmod +x native-bundle/wbd-v4-client native-bundle/wbd-v4-server
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+          test -c /dev/net/tun
+      - name: Exactly ONE scenario OFF then ON sequential original native endpoints
+        run: |
+          set -euo pipefail
+          sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB \
+            python3 -m tools.network_harness.m0_plan027_linux_repair_pair \
+              --bundle "$GITHUB_WORKSPACE/native-bundle" \
+              --scenario scenarios/plan027-h539-normal-10m-250ms-loss0-60s.json \
+              --out "$GITHUB_WORKSPACE/plan027-r-pair-result"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan027-r-normal10-250-zero-off-on
+          path: |
+            plan027-r-pair-result/result.json
+            plan027-r-pair-result/leg-off/result.json
+            plan027-r-pair-result/leg-on/result.json
+            plan027-r-pair-result/leg-off/network-snapshots.json
+            plan027-r-pair-result/leg-on/network-snapshots.json
+            plan027-r-pair-result/leg-off/summary.md
+            plan027-r-pair-result/leg-on/summary.md
+          if-no-files-found: warn
+          retention-days: 30

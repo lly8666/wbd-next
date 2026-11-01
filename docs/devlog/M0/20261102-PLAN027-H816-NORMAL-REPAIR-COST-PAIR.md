@@ -1,0 +1,12 @@
+# PLAN027 H816 | Recovery and one paired Normal R measurement dispatch
+
+- Resumed latest main `3604cb883acee12fff37f8b0b512b0bdfaa3b874` from cursor checkpoint `96a2acd0`. Exactly two new commits, both documentation/evidence; H815 Game2FEC6 Windows NPF 310 actual immutable cosmetic copies + two-OS first-delivery/owned Stop already PASS at source `96a2acd0`. Do not redispatch that functional test. No new product qualification at HEAD.
+- Recovered main push Action `41341558605`: no-scene native assembly active; it is not a requested performance pair, and was not cancelled/duplicated.
+- PLAN027 R: single existing Normal 10Mbps each/250ms each way/0%/60s scene, 64/128/512/1200B packet-number-weight mix 10/15/25/50; avg payload 753.6B, ~1,659 packets/s/direction, 500ms RTT means ~830 outstanding application datagrams and 625kB payload BDP. Control/parity/header, OS buffers and RSS distinct. At 0% ideal R=0; full encrypted-cache and ledger cost can still be nonzero.
+- Real Linux original Go TLS+Rust M4 already exposes `--outer-repair off|on` with native readback and OFF zero shadow/candidate/retries. Windows public native harness lacks a complete OFF exposure; Linux two-product owned-netns same VM is first clean R baseline, **not Windows**. No product-source refactor until cost measured; no speculative BTreeMap/lock optimization.
+- New narrow workflow `m0-plan027-linux-repair-pair.yml` builds source once with manifest/SHA256, then one **sequential** OFF→ON 60s/leg job, same workload and runner, independent owned Stop/netns cleanup. Publishes both exact native results and delta CPU/RSS; conservative F/R full warmup+measurement, CPU measurement-only, C unmeasured. A result is measurement, never an optimization gain. Source-locked Action is triggered only by this workflow-file push with marker `[plan027-r-normal-pair]`. N-line OFF tests remain separately authorized, not falsely represented by this R experiment.
+- Validation: offline config/negative-readback unit test included; real native product outcome **NOT_RUN until Action completes**. Keep GameFEC/other mode ON, lifecycle, Windows OFF and >=300s integration NOT_RUN for this source. A5 historical Go steady benchmark stays user-waived.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only bounded R measurement fixture, one scoped Actions workflow and recovery notes; product switches/defaults/UI/source unchanged."}
+```
