@@ -1,4 +1,4 @@
-name: M0 PLAN027 H707 one real WINDOWS Game2 FEC6 due ciphertext outer MTU boundary unit
+name: M0 PLAN027 H709 Windows Game FEC sealed frame installed MTU regression
 on:
   push:
     branches: [main]
@@ -6,7 +6,7 @@ on:
 permissions: {contents: read}
 jobs:
   one-frozen-due-envelope:
-    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h707-windows-due-envelope]')
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h709-wire-bound]')
     runs-on: windows-2025
     timeout-minutes: 12
     steps:
@@ -22,9 +22,9 @@ jobs:
           if(-not (Select-String -Path 'crates/wbd-engine/src/v4_windows_game_owner.rs' -Pattern 'fn m0_plan027_game2_fec6_actual_due_ciphertext_outer_ipv4_mtu_envelope' -SimpleMatch)){throw 'missing exact GameFEC test'}
           rustup toolchain install 1.85.1 --profile minimal --no-self-update
           rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
-          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_plan027_game2_fec6_actual_due_ciphertext_outer_ipv4_mtu_envelope -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/h707-original-due-mtu.log"
+          & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_plan027_game2_fec6_actual_due_ciphertext_outer_ipv4_mtu_envelope -- --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/h709-original-due-mtu.log"
           $rc=$LASTEXITCODE
           $proof=Get-Content "$env:RUNNER_TEMP/h707-original-due-mtu.log" -Raw
           if($proof -notmatch 'running 1 test'){throw 'WINDOWS_ORIGINAL_FEC_DUE_UNIT_DID_NOT_EXECUTE_ONE_TEST'}
-          if($rc -ne 0){throw "H707_REAL_WINDOWS_TARGET_GAME_FEC_DUE_OUTER_FRAME_UNIT_FAIL rc=$rc"}
-          Write-Output H707_REAL_WINDOWS_TARGET_GAMEFEC_DUE_SINGLE_UNIT_PASS_NOT_NATIVE_DRIVER_OR_STOP
+          if($rc -ne 0){throw "H709_REAL_WINDOWS_TARGET_GAME_FEC_BOUND_UNIT_FAIL rc=$rc"}
+          Write-Output H709_REAL_WINDOWS_TARGET_GAMEFEC_MTU_SINGLE_UNIT_PASS_NOT_NATIVE_DRIVER_OR_STOP
