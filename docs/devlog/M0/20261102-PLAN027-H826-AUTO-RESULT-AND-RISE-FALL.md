@@ -1,0 +1,11 @@
+# PLAN027 H826 | Auto real-loss result and one true 4-stage low150 lifecycle measurement
+
+- New exact-source Auto OFF result: [Action 41344886116](https://github.com/lly8666/wbd-next/actions/runs/41344886116) original Linux Go TLS/Rust M4 product SOURCE `f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3`, fixture `23b537f9`, 10Mbps each,250ms each,30pct true tc60s, exact Fixed6/Game2 packet mix. Native Auto final revision2 profile6 both, r-sent parity102,539/109,439, netem drops54,918/56,658, first fractions0.99782528/0.99937889 (185/57 missing), p99 266.4ms arrived-only, CPU 5.61/5.65s per60s, RSS20.77/21.29MB, R=0, both Stop/cleanup PASS. CPU lower than Fixed6 6.07/6.59s but residual loss larger on this single sample. Not a generalized superiority or lifetime downshift.
+- Current PLAN027 requires Auto genuine four-stage **uplink1→15→30→1%, downlink5→0%, trusted low-loss last≥120s**. Use one explicit self-contained 240s owned network scenario `scenarios/plan027-n-auto-rise-fall-10m-250ms-240s.json`: 25+30+35+150s, 10Mbps each,250ms one-way, exactly same Go+Rust source and packet mix, outer DATA OFF. Native standalone Auto quality/stage whitelist logs captured for reviewed transition. No memory of fake profile switches or hardcoded runtime downshift.
+- Reuse immutable original product artifact from Action41342800664, manifest and SHA256 validated (3 binaries), product source diff empty, one Action/one 4-phase measurement job; Action `m0-plan027-linux-auto-rise-fall-240s.yml`. Archive exact phase business/tc network/native Auto readback, native-quality event lines, CPU/RSS, Go handoff and owned Stop. PASS_SCOPED_MEASUREMENT must **not** be claimed as actual ≥120s downshift without native time evidence.
+- R true30% same-VM OFF→ON Action `41345065128` running concurrently on independent VM (SOURCE f5); its result pending. Other previously tested R zero loss, N Normal/Fixed6/Game2 under true loss remain exactly recorded, not redispatched.
+- User's throughput/HOL/low CPU priorities still hold. No product/CLI/defaults modified; long Auto test is independent control evidence, not a new FEC controller.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Record one exact frozen Auto high-loss scoped result and one necessary predeclared four-stage Auto lifecycle measurement, product native implementation unchanged."}
+```

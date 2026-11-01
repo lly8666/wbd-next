@@ -4,31 +4,32 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 825,
-  "checkpoint_sha": "23b537f9cacded8f6a4e9b1ea53509cdb2a64a1e",
+  "sequence": 826,
+  "checkpoint_sha": "37661a5a0b9d75b7339b3897763b06ba87855f8d",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 R/N H825: exact source-frozen Normal zero-loss R OFF→ON PASS cost +0.29/+0.33 sec; R true 30%-loss OFF→ON same-VM independent Action pending (source f5); N Normal OFF30, Fixed6 OFF30, Game2FEC6 OFF30 all scoped PASS; N Auto OFF30 Action41344886116 in flight. Product-source identical f5, fixtures separately versioned; no product optimization without measured hotpath.",
-  "why_now": "Plan's second R cost dimension (30% true loss same VM OFF→ON, same Normal packet mix) still absent; run concurrently with independent Auto network/FEC work using one already frozen product manifest, no duplicate build.",
+  "current_task": "PLAN027 H826 current product source f5: N Normal Auto OFF30 same matched packet mix source exact PASS scoped first 0.997825/0.999379, p99 266.4ms, CPU5.61/5.65s/60, parity 102539/109439, auto final profile6, Stop. R Normal true30% same-VM OFF→ON Action41345065128 running. New necessary staged Auto uplink1→15→30→1 downlink5→0 low150s one-action source-frozen native test queued; transition NOT_RUN. Fixed6/Game2 similarly scoped PASS, Windows/300s/ON combinations outstanding.",
+  "why_now": "Auto one-60s loss30 final-only native profile6 cannot prove plan's sustained 120s low-loss one-grade downgrade. One explicit 240s multi-phase scenario captures genuine native Auto stage and quality logs plus first/Stop, while existing high-loss R pair completes.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect both R true30 OFF→ON native CPU/RSS/F/R/first/netem/Stop and Auto matched source result; then decide whether shared candidate cache optimization is material, finish Game4 and affected ON/300s/lifecycle as evidence and capacity allow.",
+  "next_action": "Collect R 30% paired real native CPU/RSS/F/R/first business; collect Auto 240s four-phase genuine quality/stage logs, confirm low-loss 120s grade down only from native timestamps, record exact proof or FAIL; then evaluate Game4 and affected ON 300s while capacity allows.",
   "unverified": true,
   "last_tested_source": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H820-FROZEN-F5-R-ONOFF-AND-N-OFF30-20261102.json",
     "docs/evidence/M0/PLAN027-H822-FROZEN-F5-GAME2FEC6-OUTER-OFF30-20261102.json",
-    "docs/evidence/M0/PLAN027-H824-FROZEN-F5-FIXED6-OFF30-20261102.json"
+    "docs/evidence/M0/PLAN027-H824-FROZEN-F5-FIXED6-OFF30-20261102.json",
+    "docs/evidence/M0/PLAN027-H826-FROZEN-F5-AUTO-OFF30-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H818-RESTORE-CURSOR-REF-BOUND.md",
     "docs/devlog/M0/20261102-PLAN027-H819-NORMAL-OFF30-REUSE.md",
     "docs/devlog/M0/20261102-PLAN027-H820-FROZEN-R-N-AND-GAME2FEC6-NEXT.md",
     "docs/devlog/M0/20261102-PLAN027-H821-BOUND-FEATURE-CARD.md",
     "docs/devlog/M0/20261102-PLAN027-H822-GAME2FEC6-RESULT-AND-GOVERNANCE.md",
     "docs/devlog/M0/20261102-PLAN027-H823-FIXED6-MATCHED-GAME2-MIX-NEXT.md",
     "docs/devlog/M0/20261102-PLAN027-H824-FIXED6-RESULT-AUTO-NEXT.md",
-    "docs/devlog/M0/20261102-PLAN027-H825-R-NORMAL-REAL30-PAIRED.md"
+    "docs/devlog/M0/20261102-PLAN027-H825-R-NORMAL-REAL30-PAIRED.md",
+    "docs/devlog/M0/20261102-PLAN027-H826-AUTO-RESULT-AND-RISE-FALL.md"
   ],
   "open_requests": [],
-  "partial_summary": "H824 Fixed6 Normal one-lane true30% OFF real SOURCEf5 with Game2 matched 96/288/1060/1200B first0.999887/0.999729, p99266.4ms, 21/18 missing, CPU6.07/6.59s, parity_rsent116251/116250, kernel tc drops58492/58230, R0, Stop PASS; Game2FEC6 100% p99258.7ms CPU8.24s each is mode/lane differential not isolated codec cost. New Auto matched scene pending. Plan not fully accepted. H825 initiated second required R high-loss same-VM sequential OFF→ON while Auto Action41344886116 active; no new optimization until native measured. Feature card unchanged due near-16KiB limit."
+  "partial_summary": "H826 Auto single high-loss source f5 scoped PASS, first99.7825/99.9379%, missing185/57, native final auto6 both, parity102539/109439, CPU5.61/5.65s vs Fixed6 6.07/6.59s, no broad CPU improvement. R high-loss OFF/ON and 240s Auto lifecycle independent Actions in progress/not completed. H825 governance green. Remaining Windows, 300s ON, Game4 and cross-HOL not verified."
 }

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "scenario_id": "plan027-n-auto-rise-fall-10m-250ms-240s",
+  "product_mode": "fec-auto",
+  "outer_repair": "off",
+  "fec_start_profile": 1,
+  "true_linux_tc_netem": "IID independent",
+  "offered_mbps_each_direction": 10,
+  "one_way_delay_ms_each_direction": 250,
+  "tun_mtu": 1400,
+  "warmup_s": 5,
+  "drain_s": 10,
+  "packet_mix": [
+    {
+      "udp_payload_bytes": 96,
+      "packets_weight": 10
+    },
+    {
+      "udp_payload_bytes": 288,
+      "packets_weight": 15
+    },
+    {
+      "udp_payload_bytes": 1060,
+      "packets_weight": 30
+    },
+    {
+      "udp_payload_bytes": 1200,
+      "packets_weight": 45
+    }
+  ],
+  "phases": [
+    {
+      "name": "uplink1_down5",
+      "seconds": 25,
+      "c2s_loss_pct": 1,
+      "s2c_loss_pct": 5
+    },
+    {
+      "name": "uplink15_down0",
+      "seconds": 30,
+      "c2s_loss_pct": 15,
+      "s2c_loss_pct": 0
+    },
+    {
+      "name": "uplink30_down0",
+      "seconds": 35,
+      "c2s_loss_pct": 30,
+      "s2c_loss_pct": 0
+    },
+    {
+      "name": "uplink1_down0_low150",
+      "seconds": 150,
+      "c2s_loss_pct": 1,
+      "s2c_loss_pct": 0
+    }
+  ],
+  "purpose": "Observe native Auto fast promotion under impaired uplink and 150s sustained low-loss downshift separately; distinct real impaired path per direction. Do not gate fast promotion by app loss; final profile alone not proof of downshift."
+}

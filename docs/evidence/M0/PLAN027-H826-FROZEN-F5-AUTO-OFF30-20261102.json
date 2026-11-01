@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_sha": "23b537f9cacded8f6a4e9b1ea53509cdb2a64a1e",
+  "result": "PASS_SCOPED_NORMAL_AUTO_FEC_OUTER_OFF_TRUE30",
+  "artifact_verified": true,
+  "run_id": 41344886116,
+  "artifact_name": "plan027-n-auto-loss30-off",
+  "scope": "10Mbps each/250ms one-way/30pct real tc/60s steady Normal single lane Auto, outer DATA repair OFF, same UDP96/288/1060/1200B 10/15/30/45 mix as Fixed6 and Game2FEC6, same product source f5 3 original Go TLS Rust M4 binaries",
+  "final_native_auto_readback": {
+    "client": [
+      "auto",
+      "2",
+      "2",
+      "6",
+      "false"
+    ],
+    "server": [
+      "auto",
+      "2",
+      "2",
+      "6",
+      "false"
+    ]
+  },
+  "native_parity_rsent": {
+    "client": 102539,
+    "server": 109439
+  },
+  "real_tc_netem_drops": {
+    "client": 54918,
+    "server": 56658
+  },
+  "first_business": {
+    "c2s": {
+      "offered_mbps": 9.999997333333335,
+      "first_unique_mbps": 9.978250133333333,
+      "fraction": 0.9978252794200744,
+      "missing_after_drain": 185,
+      "p99_ms_delivered_only": 266.4
+    },
+    "s2c": {
+      "offered_mbps": 10.000138666666667,
+      "first_unique_mbps": 9.993927466666667,
+      "fraction": 0.9993788886127446,
+      "missing_after_drain": 57,
+      "p99_ms_delivered_only": 266.4
+    }
+  },
+  "whole_process_cpu_s_steady_60s": {
+    "client": 5.61,
+    "server": 5.65
+  },
+  "rss_peak_bytes": {
+    "client": 20770816,
+    "server": 21286912
+  },
+  "outer_ip_first_wire": {
+    "c2s": 195636890,
+    "s2c": 202385120
+  },
+  "outer_ip_R_accepted": {
+    "c2s": 0,
+    "s2c": 0
+  },
+  "C": "NOT_MEASURED",
+  "native_handoff": true,
+  "stop_both": true,
+  "owned_netns_cleanup": true,
+  "limits": [
+    "Auto started at profile1 and final auto readback applied revision2/profile6; final-only is NOT proof of time-qualified later low-loss downgrade",
+    "Auto c2s first ratio0.997825 worse than Fixed6 0.999887 on one iid sample while CPU lower, do not generalize tradeoff from one VM or netem seed",
+    "Parity is FEC not outer R; p99 excludes missing; CPU whole Go+Rust not language split; different real kernel drops per mode",
+    "This one single 60s high-loss Auto is separate from required four-stage 1/15/30/1 and 5/0 low150 lifecycle, Windows NPF, 300s, true cross-stream HOL and integrated ON"
+  ]
+}
