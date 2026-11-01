@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "run": 41263019136,
+  "native_job_id": 124720024901,
+  "workflow_head_sha": "70c7048b129e49889b2b41998663bf846589e79c",
+  "build_run": 41226521824,
+  "report_artifact": {
+    "id": 13066835296,
+    "sha256": "53147e1f5d06cc515f1d42e41ea9b3ee56783434c198f814c7898438632341f4"
+  },
+  "result": "PASS_SCOPED_TRUE_240S_AUTHENTICATED_AUTO_DAMAGED_ASCENT_AND_ONE_STEP_VALID_LOWLOSS_FALL_NPF_WINTUN_BOTH_APP_STOP",
+  "raw_report_grade": "NOT_PROVEN_UNTIL_NATIVE_QUALITY_AND_APPLIED_READBACK",
+  "extra_review": "Actual original source-locked archived client/server logs inspected AFTER workflow PASS, not a rewritten native banner",
+  "scene": "plan027-a4-auto-10m-staged-240s",
+  "stage_profile": {
+    "phase0": [
+      0,
+      25,
+      0
+    ],
+    "phase1": [
+      20,
+      25,
+      5
+    ],
+    "phase2": [
+      40,
+      75,
+      15
+    ],
+    "phase3": [
+      65,
+      150,
+      30
+    ],
+    "phase4": [
+      95,
+      25,
+      0
+    ]
+  },
+  "last_clean_stage_actual_utc": "2026-11-01T02:00:36.760763Z",
+  "linux_quality_valid_one_step_down_utc": "2026-11-01T02:02:26",
+  "seconds_after_true_clean_tc_restore": 109.239237,
+  "linux_quality_sample": {
+    "direction": "s2c",
+    "revision": 4,
+    "profile": 2,
+    "validity": "VALID",
+    "reason": "30s and 4096 valid sources; one-step down",
+    "fast_first": 743,
+    "fast_observed": 743,
+    "fast_missing": 0,
+    "slow_first": 2971,
+    "slow_observed": 2971,
+    "slow_missing": 0,
+    "actual_k_sources": 13420,
+    "target_profile": 1,
+    "request": true
+  },
+  "windows_original_native_1hz_telemetry": {
+    "snapshot_count": 250,
+    "original_to_after": [
+      {
+        "index": 0,
+        "requested_revision": 1,
+        "applied_revision": 1,
+        "profile": 5
+      },
+      {
+        "index": 43,
+        "requested_revision": 2,
+        "applied_revision": 2,
+        "profile": 4
+      },
+      {
+        "index": 105,
+        "requested_revision": 3,
+        "applied_revision": 3,
+        "profile": 6
+      },
+      {
+        "index": 217,
+        "requested_revision": 4,
+        "applied_revision": 4,
+        "profile": 5
+      }
+    ],
+    "last_snapshot_revision": 4,
+    "last_applied_revision": 4,
+    "last_profile": 5,
+    "grade6_to5": "PASS_ONE_GRADE_INSTALLED_NOT_ONLY_REQUESTED",
+    "precise_windows_phase_to_profile_seconds": "NOT_DIRECTLY_MEASURED_UNTIMESTAMPED_NATIVE_WINDOWS_1HZ_LINE"
+  },
+  "linux_final_auto_readback": {
+    "requested": 6,
+    "applied": 5,
+    "profile": 0,
+    "pending": true,
+    "not_qualified": "PROFILE0_PENDING_NOT_INSTALLED"
+  },
+  "real_business": {
+    "duration_s": 240,
+    "offered_mbps_each": 10,
+    "first_mbps": {
+      "windows": 9.9996,
+      "linux": 9.9714
+    },
+    "first_fraction": {
+      "windows": 0.999965,
+      "linux": 0.997071
+    },
+    "missing_inside_span": {
+      "windows": 14,
+      "linux": 1166
+    },
+    "genuine_udp_tcp": "PASS",
+    "owned_stop": "PASS_BOTH_OWNED",
+    "rtt_p99_ms": {
+      "windows": 235,
+      "linux": 242.597
+    },
+    "rtt_probes": {
+      "windows": {
+        "sent": 2195,
+        "replied": 2179,
+        "unreturned": 16
+      },
+      "linux": {
+        "sent": 2398,
+        "replied": 2382,
+        "unreturned": 16
+      }
+    },
+    "original_win_go_rust_process": {
+      "cpu_s": 64.0156,
+      "observed_elapsed_s": 258.078
+    }
+  },
+  "limits": [
+    "This recovered exact client and server log proof upgrades only valid one-grade event, not claim all five phases each profile settled, 120s to Off or 100% first at damaged stages",
+    "Linux final requested profile0 with applied5 PENDING is not applied or qualified",
+    "Raw H693 result metadata a4_auto_mature_grade remains NOT_PROVEN in original report; this is a separate post-hoc source-locked inspection of full artifact logs, no banner rewriting",
+    "Windows telemetry snapshot index approximate 1Hz, lacks UTC timestamp, so Linux 109.24s after phase4 proves precise deadline and Windows installed grade6→5 proves real state, but not exact Windows subsecond timing",
+    "Cross-OS one-way p99 NOT_MEASURED; missing probes16/16 excluded from returned p99"
+  ]
+}
