@@ -4,32 +4,33 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 826,
-  "checkpoint_sha": "37661a5a0b9d75b7339b3897763b06ba87855f8d",
+  "sequence": 827,
+  "checkpoint_sha": "fdf72dad1317965d77c396a606aafd25d2d14753",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H826 current product source f5: N Normal Auto OFF30 same matched packet mix source exact PASS scoped first 0.997825/0.999379, p99 266.4ms, CPU5.61/5.65s/60, parity 102539/109439, auto final profile6, Stop. R Normal true30% same-VM OFF→ON Action41345065128 running. New necessary staged Auto uplink1→15→30→1 downlink5→0 low150s one-action source-frozen native test queued; transition NOT_RUN. Fixed6/Game2 similarly scoped PASS, Windows/300s/ON combinations outstanding.",
-  "why_now": "Auto one-60s loss30 final-only native profile6 cannot prove plan's sustained 120s low-loss one-grade downgrade. One explicit 240s multi-phase scenario captures genuine native Auto stage and quality logs plus first/Stop, while existing high-loss R pair completes.",
+  "current_task": "PLAN027 H827 R Normal 30% true tc loss same-VM OFF→ON source f5 PASS scoped, ON CPU+0.54/+0.55s/60 and R/F~8.9%, first delivered-only p99 ~882ms vs OFF250.5 but cohorts differ; actual UDP-only ACK gap0 PTO810ms, not yet a known CPU hotspot. Auto 240s run41345513214 fixture pretraffic FAIL 'rate_scale', native NOT_RUN; H827 validator-normalization corrected, exact same Auto 4-phase queued. Product source untouched. Remaining 300s ON, Windows, Game4, holistic lifecycle.",
+  "why_now": "Successful real-loss R ledger shows ~10% ON CPU incl real extra encrypted I/O at R/F~8.9%, not enough to blame tree/candidate maintenance. Correct actual Auto multi-phase pretraffic KeyError by returning validator-normalized phase settings before any new mode/capacity test.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect R 30% paired real native CPU/RSS/F/R/first business; collect Auto 240s four-phase genuine quality/stage logs, confirm low-loss 120s grade down only from native timestamps, record exact proof or FAIL; then evaluate Game4 and affected ON 300s while capacity allows.",
+  "next_action": "Collect H827 replacement Auto long native 4-phase Action, native quality/stage timeline and >=120s low-loss downgrade evidence, plus governance. Do independent Game4 10→20Mbps/250ms capacity and mixed ON/300s plan once need/capacity discrimination. No relaunch already passed Normal R/N/Fixed/Game.",
   "unverified": true,
   "last_tested_source": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H820-FROZEN-F5-R-ONOFF-AND-N-OFF30-20261102.json",
     "docs/evidence/M0/PLAN027-H822-FROZEN-F5-GAME2FEC6-OUTER-OFF30-20261102.json",
     "docs/evidence/M0/PLAN027-H824-FROZEN-F5-FIXED6-OFF30-20261102.json",
-    "docs/evidence/M0/PLAN027-H826-FROZEN-F5-AUTO-OFF30-20261102.json"
+    "docs/evidence/M0/PLAN027-H826-FROZEN-F5-AUTO-OFF30-20261102.json",
+    "docs/evidence/M0/PLAN027-H827-FROZEN-F5-NORMAL-LOSS30-PAIRED-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H819-NORMAL-OFF30-REUSE.md",
     "docs/devlog/M0/20261102-PLAN027-H820-FROZEN-R-N-AND-GAME2FEC6-NEXT.md",
     "docs/devlog/M0/20261102-PLAN027-H821-BOUND-FEATURE-CARD.md",
     "docs/devlog/M0/20261102-PLAN027-H822-GAME2FEC6-RESULT-AND-GOVERNANCE.md",
     "docs/devlog/M0/20261102-PLAN027-H823-FIXED6-MATCHED-GAME2-MIX-NEXT.md",
     "docs/devlog/M0/20261102-PLAN027-H824-FIXED6-RESULT-AUTO-NEXT.md",
     "docs/devlog/M0/20261102-PLAN027-H825-R-NORMAL-REAL30-PAIRED.md",
-    "docs/devlog/M0/20261102-PLAN027-H826-AUTO-RESULT-AND-RISE-FALL.md"
+    "docs/devlog/M0/20261102-PLAN027-H826-AUTO-RESULT-AND-RISE-FALL.md",
+    "docs/devlog/M0/20261102-PLAN027-H827-R-HIGHLOSS-AND-AUTO-FIX.md"
   ],
   "open_requests": [],
-  "partial_summary": "H826 Auto single high-loss source f5 scoped PASS, first99.7825/99.9379%, missing185/57, native final auto6 both, parity102539/109439, CPU5.61/5.65s vs Fixed6 6.07/6.59s, no broad CPU improvement. R high-loss OFF/ON and 240s Auto lifecycle independent Actions in progress/not completed. H825 governance green. Remaining Windows, 300s ON, Game4 and cross-HOL not verified."
+  "partial_summary": "H827 real R 30pct paired source f5 PASS: OFF CPU4.51/4.88 ON5.05/5.43s, R/F8.92/8.89%, ON first73.0/72.5% but delivered p99882ms (late recovery cohort) vs OFF first~70% p99250.5ms. Actual ledger PTO810ms no ACK on UDP-only; C unmeasured. Auto 240s Action41345513214 failed pretraffic fixture missing rate_scale and Stop NOT_RUN; H827 corrected validation normalization and retriggered exact same 240s lifecycle. Source f5 product unchanged; task partial."
 }

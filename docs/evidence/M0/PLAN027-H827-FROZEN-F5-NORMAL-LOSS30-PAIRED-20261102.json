@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_sha": "37661a5a0b9d75b7339b3897763b06ba87855f8d",
+  "artifact_verified": true,
+  "result": "PASS_SCOPED_NORMAL_REAL_LOSS30_PAIRED_COST_NOT_BUSINESS_REPAIR",
+  "run_id": 41345065128,
+  "artifact_name": "plan027-r-normal10-250-loss30-paired-off-on",
+  "scenario": "wl-outer-repair-10m-250ms-loss30-60s",
+  "scope": "Original Linux Go TLS client+server Rust M4 source-frozen, same VM OFF then ON sequential 10Mbps each, 250ms one-way, real independent tc30pct, 60s steady 5s warm 10s drain, UDP64/128/512/1200 weights10/15/25/50. Neither FEC nor Game.",
+  "binary_sha256": {
+    "libwbd_engine.so": "f4b53039a6d393e7c2584df3b074470267b9218dfa281e9e5f31f3bc9b48dc78",
+    "wbd-v4-client": "949fc7bc467276fe6557870174858f548d5d365c25065cbd4b32b1a244a074e4",
+    "wbd-v4-server": "373cae784aae258b17f6ec1ad2c054f7b5d66f12c55ba2780630ee26b4b82a77"
+  },
+  "OFF": {
+    "native_switch_readback": true,
+    "native_result": "PASS_SCOPED_OBSERVATION",
+    "cpu_s": {
+      "client": 4.51,
+      "server": 4.88
+    },
+    "rss_bytes": {
+      "client": 19591168,
+      "server": 20115456
+    },
+    "first_fraction": {
+      "c2s": 0.6994903843323049,
+      "s2c": 0.7027149493093692
+    },
+    "first_mbps": {
+      "c2s": 6.9948352,
+      "s2c": 7.027080533333333
+    },
+    "missing_after_drain": {
+      "c2s": 29885,
+      "s2c": 29859
+    },
+    "delivered_p99_ms": {
+      "c2s": 250.5,
+      "s2c": 250.5
+    },
+    "tc_netem_drops": {
+      "client": 31409,
+      "server": 31334
+    },
+    "F_ip_wire_bytes": {
+      "c2s": 92284954,
+      "s2c": 92282020
+    },
+    "R_ip_wire_bytes": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "owned_stop": true,
+    "owned_netns_cleanup": true
+  },
+  "ON": {
+    "native_switch_readback": true,
+    "native_result": "PASS_SCOPED_OBSERVATION",
+    "cpu_s": {
+      "client": 5.05,
+      "server": 5.43
+    },
+    "rss_bytes": {
+      "client": 20766720,
+      "server": 20770816
+    },
+    "first_fraction": {
+      "c2s": 0.7300849538537288,
+      "s2c": 0.7251360760020258
+    },
+    "first_mbps": {
+      "c2s": 7.300827733333334,
+      "s2c": 7.2512896
+    },
+    "missing_after_drain": {
+      "c2s": 26814,
+      "s2c": 27266
+    },
+    "delivered_p99_ms": {
+      "c2s": 881.9,
+      "s2c": 883.8
+    },
+    "tc_netem_drops": {
+      "client": 34122,
+      "server": 34656
+    },
+    "F_ip_wire_bytes": {
+      "c2s": 92289803,
+      "s2c": 92284139
+    },
+    "R_ip_wire_bytes": {
+      "c2s": 8232781,
+      "s2c": 8201881
+    },
+    "R_over_F": {
+      "c2s": 0.08920574898182414,
+      "s2c": 0.08887638860671387
+    },
+    "R_over_F_plus_R": {
+      "c2s": 0.08189981467249191,
+      "s2c": 0.0816221102199092
+    },
+    "native_ledger": {
+      "client": {
+        "candidate_first": 15405,
+        "candidate_retry": 0,
+        "original_frozen_retransmitted": 10703,
+        "authenticated_ack": 0,
+        "timing_samples": 0,
+        "pto_us": 810000,
+        "blocked_burst": 8099,
+        "blocked_quota": 979,
+        "cache_us": 910000,
+        "shadow_limit": 65536
+      },
+      "server": {
+        "candidate_first": 15599,
+        "candidate_retry": 0,
+        "original_frozen_retransmitted": 10771,
+        "authenticated_ack": 0,
+        "timing_samples": 0,
+        "pto_us": 810000,
+        "blocked_burst": 8062,
+        "blocked_quota": 833,
+        "cache_us": 910000,
+        "shadow_limit": 65536
+      }
+    },
+    "owned_stop": true,
+    "owned_netns_cleanup": true
+  },
+  "on_minus_off": {
+    "cpu_s": {
+      "client": 0.54,
+      "server": 0.55
+    },
+    "cpu_fraction_of_on": {
+      "client": 0.10693069306930694,
+      "server": 0.10128913443830569
+    },
+    "rss_bytes": {
+      "client": 1175552,
+      "server": 655360
+    }
+  },
+  "limitations": [
+    "C physical and L2 wire NOT_MEASURED; F/R are original M4 IP first/outer repair bytes full warmup+steady, CPU measured steady only",
+    "Outer appearance repair R/F obeys <=10% in both directions. No causal guarantee that 2-3 percentage point first delta repairs business; random tc sample differs between OFF and ON legs",
+    "Delivered p99 ON near882ms vs OFF250.5ms. ON makes some formerly dropped packets available late; p99 cohorts differ, not proof of HOL on common packets, but low latency risk real",
+    "UDP-only: authenticated ACK and timing samples 0; candidate_first>15k, PTO810ms fixed/default and near quota, no ACK-gap evidence. Do not accuse broken ACK handling for UDP-only",
+    "ON adds 0.54/0.55 CPU-sec per60 (>10% of ON CPU), includes ~8.2MB extra real encrypted sends, not purely index maintenance overhead; no call-stack CPU attribution",
+    "No Windows NPF OFF readback, no mixed TCP/UDP cross-flow HOL or 300s ON/full product pass"
+  ]
+}

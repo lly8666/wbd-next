@@ -41,8 +41,11 @@ def configuration(scene, source, run_id):
     cfg["seed"]=20261102
     tmp=copy.deepcopy(cfg)
     tmp["bundles"]["A"].update(run_id=run_id,artifact_id=run_id,attempt=1,sha256="0"*64)
-    validate(tmp)
-    return cfg
+    normalized=validate(tmp)
+    # The runner consumes validator-normalized per-phase rate_scale and
+    # blackhole_lanes, not the bare authoring dict used for validation.
+    normalized["bundles"]["A"]=cfg["bundles"]["A"]
+    return normalized
 
 
 def main():
