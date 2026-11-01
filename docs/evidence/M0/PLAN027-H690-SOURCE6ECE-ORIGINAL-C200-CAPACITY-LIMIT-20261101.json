@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+  "result": "FAIL_REAL_ORIGINAL_WINDOWS_LINUX_NORMAL_200MBPS_CAPACITY_LIMITED_AND_FIRST_LOSS_NOT_FULL_PASS",
+  "run": 41256954589,
+  "preflight_run_failed": 41239921167,
+  "original_product_binary_build_run": 41226521824,
+  "original_windows_build_artifact": 13051429248,
+  "original_linux_build_artifact": 13051109212,
+  "prepared_harness_source_sha": "92354d5a70f34640918f61b25859ba0bb05989dd",
+  "real_report_artifact": {
+    "id": 13064026186,
+    "digest": "sha256:296168fb8f4426f687481340f30a001f3f4d0aff23d9ac30f2f5ce1199c3d4a"
+  },
+  "scene": "plan027-c-normal-200m-25ms-loss0-60s",
+  "genuine_os": "SIGNED_WIN_NPF_WINTUN_AND_LINUX_WSL2_GO_TLS_RUST",
+  "duration_s": 60,
+  "requested_offered_each_mbps": 200,
+  "real_kernel_netem_delay_ms_each": 25,
+  "loss_pct": 0,
+  "real_generator_offered_mbps": {
+    "windows": 199.9499,
+    "linux": 134.7593
+  },
+  "first_delivery_mbps": {
+    "windows": 134.4407,
+    "linux": 110.6656
+  },
+  "first_delivery_fraction": {
+    "windows": 0.997645,
+    "linux": 0.61916
+  },
+  "received_midwindow_missing": {
+    "windows": 3159,
+    "linux": 757852
+  },
+  "linux_real_tun_tx_drop": 3145,
+  "linux_real_tun_rx_drop": 0,
+  "linux_real_tun_fq_drop": 0,
+  "windows_npf_local_ingress_drop": 0,
+  "native_original_windows_go_rust": {
+    "observed_s": 78.281,
+    "cpu_total_s": 48,
+    "cpu_kernel_s": 36.5312,
+    "cpu_user_s": 11.4688,
+    "cpu_avg_one_logical_core_pct": 61.318,
+    "peak_working_set_bytes": 44007424,
+    "peak_private_bytes": 40873984
+  },
+  "generator_cpu_s": {
+    "windows": 33.9844,
+    "linux": 59.8401
+  },
+  "real_business_udp_tcp": "PASS_CONNECTION_AND_SOME_PAYLOAD_BUT_SUSTAINED_DELIVERY_FAIL",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "original_udp_rtt_p99_ms": {
+    "windows": 438,
+    "linux": 472.631
+  },
+  "rtt_probe": {
+    "windows": {
+      "sent": 549,
+      "replied": 519,
+      "missing": 30
+    },
+    "linux": {
+      "sent": 577,
+      "replied": 556,
+      "missing": 21
+    }
+  },
+  "qualification": "CAPACITY_LIMITED_GENERATOR_OFFER; FAIL_ZERO_LOSS_BUSINESS_THRESHOLD",
+  "not_measured": [
+    "host-wide busy PSI/steal in same guest conclusively",
+    "single root cause of 200Mbps collapse across generator/NIC/tun",
+    "calibrated one-way p99",
+    "200Mbps continuous source sustained PASS"
+  ],
+  "next": "STOP_UNQUALIFIED_HIGHER_NORMAL_FAMILY; continue B, damaged C at proven rates, Game, OS lifecycle; source-specific effects only"
+}
