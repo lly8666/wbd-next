@@ -15,7 +15,10 @@ import signal
 import subprocess
 import sys
 import time
-from m0_wl_gamefec_progress import GameFecProgress
+if __package__:
+    from .m0_wl_gamefec_progress import GameFecProgress
+else:
+    from m0_wl_gamefec_progress import GameFecProgress
 
 def kill_native_child_tree(child):
     # A deadline kills exactly the one original E2E child tree.
