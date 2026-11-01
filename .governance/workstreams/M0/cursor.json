@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 804,
-  "checkpoint_sha": "21ae892fddd6a8d6338fb74a73e8e45380f1631a",
+  "sequence": 805,
+  "checkpoint_sha": "fd59c0cd0a11c9674ba2936dcfa61e3ff65b25bb",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H804 GAMEFEC only, user authorized retire superfluous Actions and test perf: H803 SAME-SOURCE 21ae original signed Windows Go TLS Rust NPF/Wintun↔WSL2 Linux Game2FEC6 true native Action41323048788 ALL SUCCESS; actual artifact13090647227 43 files downloaded, exact reported 1Mbps25ms0loss10s first Windows1.0/Linux1.0, genuine UDP/TCP, Linux 3226/3226 FEC parity copied, native TX/RX join rc0, product WAL+routes sidecar ABSENT and owned Stop BOTH PASS. Full abnormal-crash WFP/lease/route/MTU/DNS recovery not qualified; higher-rate/real p99 not run. H804 retires 23 old satellite fixture/one-shot controller Actions (not archived evidence), disables GH per-stage rescue calls, keeps canonical full uploader/native in-process deadline and SINGLE independent external stuck watcher. Adds one source-locked reusable performance dispatch to same native Game2FEC6 10Mbps75ms15loss20s. Results pending, no speculative perf PASS. Other PLAN027 paused.",
-  "why_now": "Source21ae H803 real original Windows/Linux first+parity+owned Stop and ZIP now fully PASS, allowing abandonment of multi-workflow rescue fanout; next meaningful frontier is true high-loss capacity and quality, not another 1Mbps zero-loss rerun.",
+  "current_task": "H805 M0 GameFEC only: H803 source21ae real original Windows signed NPF/Wintun ↔ WSL2 Game2FEC6 actual Action41323048788 SUCCESS and artifact13090647227 downloaded 43 files, true 1Mbps25ms0loss10s first Windows/Linux 100%, Linux parity copied3226, native Rust TX/RX join0, owned Stop pass and OS product WAL/sidecar absent; 15%/10Mbps next performance H804 controller41325197048 SUCCESS DISPATCH only; real native Action41325214203 and one watchdog41325223158 in progress. H804 deleted23 obsolete GameFEC assistant workflow files and eliminated per-stage gh dispatch, keeps full log and one independent timeout. Governance41325197123 FAIL only evidence H804 JSON lacked required source_sha (used product_source_sha), H805 restores explicit source key without changing measured data. Other PLAN027 paused.",
+  "why_now": "H804 downloaded governance artifact pinpoints source_sha missing from already reviewed source-bound real native evidence, not product/CI regression; H805 corrects schema only while true performance native in flight.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H804 governance/feature checks, verify 23 retired workflows no longer active, then one Game2FEC6 real Windows↔WSL2 native performance run dispatched by H804 controller; inspect 10Mbps/75ms/15%/20s source-locked native artifacts, true first F/R/C, copied parity, OS tc readback, CPU, RTT p99 and owned Stop/WAL. Fix first observed source product/perf fault, do NOT run Game4 or non-Game PLAN027 until current rung graded.",
+  "next_action": "Collect H805 governance, H804 original Game2FEC6 10Mbps75ms15loss20s native Action41325214203 and full artifact; grade exact first F/R/C, copied parity, Linux TUN/NPF drops, CPU, RTT samples and Stop/WAL. Fix observed first product/performance defect, no same-SOURCE duplicates or other PLAN027.",
   "unverified": true,
   "last_tested_source": "21ae892fddd6a8d6338fb74a73e8e45380f1631a",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H804-SOURCE21AE-GAME2FEC-REAL-FUNCTIONAL-PASS-20261101.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261101-PLAN027-H797-GAMEFEC-WINTUN-STOP-CLOSE-ORDER.md",
     "docs/devlog/M0/20261101-PLAN027-H798-FEATURE-IMPACT-KIND-REPAIR.md",
     "docs/devlog/M0/20261101-PLAN027-H799-NEW-SOURCE-GAME2FEC-ONE-NATIVE.md",
     "docs/devlog/M0/20261101-PLAN027-H800-ORIGINAL-GAMEFEC-CONNECTION-VS-WINTUN-MTU.md",
     "docs/devlog/M0/20261101-PLAN027-H801-EVIDENCE-SOURCE-AND-FEATURE-CARD-BOUND.md",
     "docs/devlog/M0/20261101-PLAN027-H802-H801-FEATURE-DECLARATION-REPAIR.md",
     "docs/devlog/M0/20261101-PLAN027-H803-ONE-NEW-OUTER-MTU-GAME2FEC6-REAL.md",
-    "docs/devlog/M0/20261101-PLAN027-H804-GAMEFEC-GREEN-RETIRED-SATELLITES-10M-LOSS15-PERF.md"
+    "docs/devlog/M0/20261101-PLAN027-H804-GAMEFEC-GREEN-RETIRED-SATELLITES-10M-LOSS15-PERF.md",
+    "docs/devlog/M0/20261101-PLAN027-H805-EVIDENCE-SOURCE-KEY-REPAIR.md"
   ],
   "open_requests": [],
   "partial_summary": "d100 25ms zero-loss native source business FAIL: Windows first0.997456/Linux0.9819, Linux TUN TX drops2503, generator CPU54.14s, original owned Stop marker+exit PASS; watcher RUN_VIEW recovered. H721 avoid duplicate Linux TERM cleanup warning. H722 one 50Mbps250ms15% Fixed6 new native Action queued/dispatch pending exact current controller; not PASS. H723 new native Rust+Go 72B Windows Fixed selected profile/revision installed readback and Go unit test committed but fresh product NOT_RUN; legacy mature Quality is separate, no extra RTT. H722 real original source d066 in flight. H724 source d066 true highest Fixed50/250ms15 real both UDP/TCP Stop PASS, first.994254/.974935, TUN0/NPF0; Win CPU55.1/78.375 (70.3% core), RSS47MB. Residual Linux2.5% and p99/unreturned bilateral F/R/C still unverified. New H723 72B Windows Fixed installation ABI source65618 cheap assembly mismatch, H724 correct three Go result blobs pending Actions. H739: H738 cheap source-locked tests PASS, mixed-source hot cursor evidence refs cleared without deleting archived historical evidence. Real native GameFEC remains unverified. H742: source0264 H739 true Game2FEC CANCELLED after watcher 493s native step, independent 4 stages only, no original job log or Stop. Source-bound evidence H742 preserved, one H741 IO isolated runner next. User ~8min cap satisfied (30s watcher polling). Other work paused. H743: H742 exact original Game2FEC product SOURCE0264 new harness source045a run41286724011/watcher41286729417 in flight, no product/Stop proof. H741 single PID isolated logging passed synthetic; H739 true native cancel 493s and independent 4 stage receipts archived. H746: H742 new IO diagnostic already reached SUPERVISOR_LOOP_ENTER but no child.poll or timeout and external hard-cancel at502s, BlobNotFound; H744/H745 blocked-console fixtures both PASS, one real source0264 H746 needed. Other PLAN027 paused. H747 H746 actual same frozen original Game2FEC source0264 run41287639141/watcher41287646432 IN_FLIGHT; H744/H745 blocked-main/first-fault synthetic PASSED, product and owned Stop not qualified."

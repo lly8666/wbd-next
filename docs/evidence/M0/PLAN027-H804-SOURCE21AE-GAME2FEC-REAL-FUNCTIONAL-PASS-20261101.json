@@ -69,5 +69,8 @@
     "cpu": "0.875s Windows original Go+Rust same PID over26.578s, 3.292% of one logical core, 49MB peak working set",
     "physical": "NOT_RUN"
   },
-  "overall": "FUNCTIONAL_PASS_SOURCE_SCOPED_NOT_PERFORMANCE_PASS"
+  "overall": "FUNCTIONAL_PASS_SOURCE_SCOPED_NOT_PERFORMANCE_PASS",
+  "source_sha": "21ae892fddd6a8d6338fb74a73e8e45380f1631a",
+  "result": "FUNCTIONAL_PASS_SCOPED_REAL_SOURCE",
+  "artifact_verified": true
 }
