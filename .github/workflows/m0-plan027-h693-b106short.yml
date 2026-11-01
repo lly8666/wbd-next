@@ -29,7 +29,7 @@ jobs:
             jq -e --arg w "m0-wl-windows-product-binaries-$SOURCE" '[.artifacts[]|select(.expired==false)|.name]|index($w)!=null and index("m0-plan024-linux-product")!=null' >/dev/null
           git fetch --depth=1 origin "$HARNESS"
           test -z "$(git diff --name-only "$HARNESS" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock)"
-          test "$(git diff --name-only "$HARNESS" "$GITHUB_SHA" -- tools)" = tools/m0_wl_public_normal_e2e.py
+          test "$(git diff --name-only "$HARNESS" "$GITHUB_SHA" -- tools)" = "$(printf 'tools/m0_wl_perf_v2_config.py\ntools/m0_wl_public_normal_e2e.py')"
           python3 - <<'PY'
           from tools.m0_wl_perf_v2_config import read_scenario
           s=read_scenario('scenarios/plan027-b-normal-blackhole106-recover-2m-25ms-0loss-12s.json')

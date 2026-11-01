@@ -4,6 +4,19 @@ from tools.m0_wl_perf_v2_config import read_scenario,profile,first_delivery_ok_f
 from tools.m0_wl_impairment_profile import get_profile
 SCENE=pathlib.Path(__file__).resolve().parents[1]/"scenarios"/"wl-normal-150m-300ms-0loss-60s.json"
 class V2Scenarios(unittest.TestCase):
+ def test_h694_106s_blackhole_true_outage_short_postwake_only(self):
+  from tempfile import TemporaryDirectory
+  scene=SCENE.parent/"plan027-b-normal-blackhole106-recover-2m-25ms-0loss-12s.json"
+  c=read_scenario(scene)
+  self.assertEqual((c["lifecycle_blackhole_s"],c["duration_s"]),(106,12))
+  with TemporaryDirectory() as td:
+   for duration in (10,20,59):
+    b=dict(c);b.pop("scenario_sha256");b["duration_s"]=duration
+    p=pathlib.Path(td)/"bad.json";p.write_text(json.dumps(b))
+    with self.assertRaisesRegex(ValueError,"BAD_BLACKHOLE_LIFECYCLE"):read_scenario(p)
+   b=dict(c);b.pop("scenario_sha256");b["lifecycle_blackhole_s"]=20
+   p=pathlib.Path(td)/"bad.json";p.write_text(json.dumps(b))
+   with self.assertRaisesRegex(ValueError,"BAD_BLACKHOLE_LIFECYCLE"):read_scenario(p)
  def test_plan027_b_real_20s_outer_blackhole_restore(self):
   name="plan027-b-normal-blackhole20-recover-10m-25ms-0loss-60s.json"
   path=SCENE.parent/name
