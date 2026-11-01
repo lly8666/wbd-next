@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "source_sha": "48ed7ffe82aafa17a125948068a2ca6ee6a1593e",
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "recorded_at": "2026-11-01",
+  "harness_head_sha": "26c2425da21292fcb51c227ee89669f928ea311c",
+  "verified_h794": {
+    "run_id": 41314897277,
+    "conclusion": "SUCCESS",
+    "original_wal_job": 124872736457,
+    "original_windows_scoped_modes": [
+      "normal",
+      "fixed",
+      "auto",
+      "game2",
+      "game4"
+    ],
+    "game2_fec6_tls_wintun_first_reverse": "PASS_SCOPED",
+    "both_due_rows_not_sent": 4,
+    "original_crypto_stop": "PASS_SCOPED",
+    "go_game2_zip_id": 13087047093,
+    "go_game2_zip_decompressed": true,
+    "go_game2_log_first_reverse_stop": "PASS_SCOPED",
+    "real_full_network_wal": "NOT_QUALIFIED",
+    "npcap_copied_parity": "NOT_RUN",
+    "production_dual_os_game2fec": "UNKNOWN"
+  },
+  "original_product": {
+    "source_sha": "48ed7ffe82aafa17a125948068a2ca6ee6a1593e",
+    "build_run": 41296364265,
+    "windows_binary_artifact_id": 13080200535,
+    "linux_binary_artifact_id": 13080245081
+  },
+  "historical": {
+    "h771": 41299653430,
+    "h771_status": "CANCELLED",
+    "native_job_logs": "BLOB_NOT_FOUND",
+    "first_business": "UNKNOWN",
+    "original_stop": "UNKNOWN"
+  },
+  "new_dispatch": {
+    "controller_workflow": "m0-plan027-h795-one-frozen-game2fec-after-actions.yml",
+    "target_workflow": "m0-wl-public-normal-full.yml",
+    "scene": "scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json",
+    "scenario_seconds": 10,
+    "internal_native_deadline_seconds": 250,
+    "external_native_deadline_seconds": 480,
+    "status": "PENDING_NOT_YET_PRODUCT_TESTED"
+  },
+  "status": "PARTIAL_FEC_REAL_NPF_NOT_YET_QUALIFIED",
+  "physical": "NOT_RUN"
+}
