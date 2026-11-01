@@ -433,7 +433,7 @@
       "original_blob": "8e230ed317d4b36034a308b7ed8d0120e894717b",
       "donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340",
       "donor_blob": "888d51375480b5f90134e5f910fa03292d5aaa4f",
-      "result_blob": "489348cad18e3d6acd5f11e5929b969713f46864"
+      "result_blob": "888d51375480b5f90134e5f910fa03292d5aaa4f"
     },
     {
       "kind": "replace",
@@ -530,7 +530,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_product_entry_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_product_entry_windows_test.go",
-      "result_blob": "13703f649a0b8c975d21c4387df4cc7805b9c3af"
+      "result_blob": "9866a5815f91d4678b5c30fab544aa7567e2e3ee"
     },
     {
       "kind": "create",
@@ -858,6 +858,18 @@
       "path": "cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go",
       "result_blob": "258c73dde9294b21a7e294ea140021b512d4a4ea"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_full_route_receipt_preflight_windows.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_full_route_receipt_preflight_windows.go",
+      "result_blob": "8185f38385d20948c9a783852fee4d23102335c8"
+    },
+    {
+      "kind": "create",
+      "path": "internal/windowsclient/native_full_route_receipt_preflight_windows_test.go",
+      "overlay_path": "r0/go_overlay/internal/windowsclient/native_full_route_receipt_preflight_windows_test.go",
+      "result_blob": "e4f80f584ca5e4356b30afd58184e7a98d48f06c"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
