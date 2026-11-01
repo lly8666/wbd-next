@@ -45,8 +45,20 @@
     "scenario_seconds": 10,
     "internal_native_deadline_seconds": 250,
     "external_native_deadline_seconds": 480,
-    "status": "PENDING_NOT_YET_PRODUCT_TESTED"
+    "status": "PENDING_NOT_YET_PRODUCT_TESTED",
+    "controller_run": 41316418921,
+    "controller_status": "SUCCESS_DISPATCH_ONLY",
+    "native_run": 41316431602,
+    "native_job": 124877466456,
+    "native_status": "FAIL_PROVENANCE_BEFORE_PRODUCT_START",
+    "native_first_failure": "SOURCE_REUSE_REJECTED_SIX_NONCOMPILED_PRIVATE_WAL_TEST_MANIFEST_PATHS",
+    "watcher_run": 41316438343,
+    "watcher_status": "SUCCESS",
+    "real_product_first_delivery": "NOT_RUN",
+    "real_product_stop": "NOT_RUN",
+    "first_fault_artifact": 13087501776,
+    "final_artifact": 13086664576
   },
-  "status": "PARTIAL_FEC_REAL_NPF_NOT_YET_QUALIFIED",
+  "status": "H795_NATIVE_PRESTART_INFRA_FAIL_H796_NARROW_FIX_PENDING",
   "physical": "NOT_RUN"
 }

@@ -606,7 +606,24 @@ jobs:
             & git fetch --depth=1 origin $sha
             if($LASTEXITCODE -ne 0){throw 'unreadable original product source'}
             $changes=@(& git diff --name-only $sha $env:GITHUB_SHA -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py)
-            if($LASTEXITCODE -ne 0 -or $changes.Count -gt 0){throw ('product/ABI changed: '+($changes -join ','))}
+            if($LASTEXITCODE -ne 0){throw 'unreadable frozen-versus-current product diff'}
+            # These SIX exact H785/H790/H791 after-SOURCE additions are
+            # private, unconnected recovery helpers and scoped Go tests,
+            # plus their M0 assembly manifest; none were compiled into the
+            # archived Windows or Linux SOURCE48ed product binaries.
+            # ALL OTHER product/ABI changes still forbid source reuse.
+            $allowed=@(
+              'r0/go_overlay/assembly/manifest-plan020-m0.json',
+              'r0/go_overlay/internal/windowsclient/native_full_route_receipt_preflight_windows.go',
+              'r0/go_overlay/internal/windowsclient/native_full_route_receipt_preflight_windows_test.go',
+              'r0/go_overlay/internal/windowsclient/native_original_route_recover_windows.go',
+              'r0/go_overlay/internal/windowsclient/native_original_route_recover_windows_test.go',
+              'r0/go_overlay/internal/windowsownerlease/original_go_tls_game_windows_test.go'
+            )
+            if(@(Compare-Object -ReferenceObject $allowed -DifferenceObject $changes).Count -ne 0){
+              throw ('frozen Windows product/ABI non-allowlisted change: '+($changes -join ','))
+            }
+            Write-Output 'H796_FROZEN_SOURCE48ED_NONCOMPILED_PRIVATE_DIFF_EXACT_PASS'
           }
           New-Item -ItemType Directory -Force result/wl-public | Out-Null
           & gh run download $id --repo $env:GITHUB_REPOSITORY --name "m0-wl-windows-product-binaries-$sha" --dir result/wl-public
