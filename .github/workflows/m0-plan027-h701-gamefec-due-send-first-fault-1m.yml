@@ -1,4 +1,4 @@
-name: M0 PLAN027 H701 one original Windows Game2 FEC due-send first fault 1Mbps
+name: M0 PLAN027 H702 original Windows Game2 FEC first-fault exact-manifest 1Mbps
 on:
   push:
     branches: [main]
@@ -6,7 +6,7 @@ on:
 permissions: {contents: read, actions: write}
 jobs:
   one-source-one-game2-fec0-fault:
-    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h701-due-fault1m]')
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h702-due-fault1m]')
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     env:
@@ -23,7 +23,23 @@ jobs:
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
           git fetch --depth=1 origin "$FAULT_SOURCE"
-          test -z "$(git diff --name-only "$FAULT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay tools scenarios Cargo.lock Cargo.toml)"
+          # Only the assembly manifest's three expected Go-blob SHA values
+          # changed; the exact product source and test bytes are unchanged.
+          test -z "$(git diff --name-only "$FAULT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay/cmd r0/go_overlay/internal tools scenarios Cargo.lock Cargo.toml)"
+          python3 - <<'PY'
+          import json,subprocess
+          rows=json.load(open("r0/go_overlay/assembly/manifest-plan020-m0.json"))["operations"]
+          expected={
+           "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go":"742be1997939a5417c020e2c971aaf099c3256be",
+           "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go":"8450b0863c5ad5d5d95ac72d7cbb5e3701998da7",
+           "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go":"859acb4599157ff1f5e5f1e591c8457a5ebed7db",
+          }
+          found={o["overlay_path"]:o["result_blob"] for o in rows if o.get("overlay_path") in expected}
+          assert found==expected
+          for p,s in expected.items():
+           assert subprocess.check_output(["git","rev-parse","HEAD:"+p],text=True).strip()==s
+          print("H702_ORIGINAL_GO_ASSEMBLY_EXACT_THREE_BLOBS_ATTESTED")
+          PY
           grep -q 'M0_PLAN027_GAME_DUE_FAULT stage=send_records_entry' crates/wbd-engine/src/v4_windows_game_native_runtime.rs
           grep -q 'game_send_failure(c,"on_firstsend"' crates/wbd-engine/src/v4_windows_game_native_runtime.rs
           grep -q 'M0_PLAN027_GAME_NATIVE_STOP_NOT_DRAINED group=' crates/wbd-engine/src/v4_windows_game_native_runtime.rs
@@ -37,16 +53,16 @@ jobs:
               d=s[k]
               assert d["offered_mbps"]==1 and d["delay_ms"]==25 and d["loss_pct"]==0
               assert [p["udp_payload_bytes"] for p in d["packet_mix"]]==[96,288,1060,1200]
-          print("H701_REAL_GAME_FEC_SINGLE_FROZEN_SOURCE_FIRST_BRANCH",s["scenario_sha256"])
+          print("H702_REAL_GAME_FEC_SINGLE_FROZEN_SOURCE_FIRST_BRANCH",s["scenario_sha256"])
           PY
           scene=scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json
           title="M0-WIN-LINUX|$GITHUB_SHA|game2-fec|$scene"
           old="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
             jq -r --arg title "$title" '.workflow_runs[]|select(.display_title==$title)|.id' | head -1)"
-          if [ -n "$old" ]; then echo "H701_ALREADY_DISPATCHED run=$old"; exit 0; fi
+          if [ -n "$old" ]; then echo "H702_ALREADY_DISPATCHED run=$old"; exit 0; fi
           # One new same SOURCE build for original Windows + Linux, one
           # measurement job. No old binaries with different diagnostics,
           # no 10Mbps/15%/30% Game matrix, no Action deadline inflation.
           gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
             -f public_mode=game2-fec -f run_n0=false -f perf_scenario_file="$scene"
-          echo H701_ONE_TRUE_1MBPS_ZERO_LOSS_GAME2_FEC_SOURCE_BUILD_AND_NATIVE_DISPATCHED_NOT_PASS
+          echo H702_ONE_TRUE_1MBPS_ZERO_LOSS_GAME2_FEC_SOURCE_BUILD_AND_NATIVE_DISPATCHED_NOT_PASS

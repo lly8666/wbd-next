@@ -623,7 +623,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_real_product_service_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go",
-      "result_blob": "7ab79fcde1e080babc096db2b7194b560a838a6c"
+      "result_blob": "742be1997939a5417c020e2c971aaf099c3256be"
     },
     {
       "kind": "create",
@@ -725,7 +725,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "a187e2b9b340f0fce22eb4d1427ce1e63ac5211d"
+      "result_blob": "8450b0863c5ad5d5d95ac72d7cbb5e3701998da7"
     },
     {
       "kind": "create",
@@ -839,7 +839,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go",
-      "result_blob": "5095c582d93ea03cffd8282625dd1ac6f73b6855"
+      "result_blob": "859acb4599157ff1f5e5f1e591c8457a5ebed7db"
     },
     {
       "kind": "create",

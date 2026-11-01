@@ -153,7 +153,7 @@
     "PLAN027 H639 exact source original Game2+Game4 fixed6 FEC symmetric 15% and Game2/off 30% trigger: source SHA compared to protected main, checkout before scenario validation; dispatch is attempted by explicitly tagged push, actual original native results pending.",
     "H675 Linux source6ece true 105s idle and 15% real kernel Game2 FEC fixed6 64/64 Stop positive, DOES NOT qualify signed Windows GameFEC or physical; native Health kind1 count unmeasured.",
     "H679 true current SOURCE6ece signed Windows↔WSL2 Game2FEC6 1M native FAIL first4.4/4.2% and Windows Stop marker absent; bounded run cancelled and full artifact upload ENOTFOUND. No exact client-side root, cannot promote Linux FEC pass or repeat unchanged. Original Game2/4 Windows B remains open.",
-    "H700/H701 newest main Game2 FEC native due_send_records INVALID(1): first stage/lane/PN/cipher len/actual path MTU and underlying build_bytes PacketError isolated in original Rust only on failure, native TX/RX join vs WAL Stop phase now logged. Same-source 1Mbps/0%/10s Action pending; do NOT claim fix or PASS before report, no 10/15/30 Game matrix."
+    "H700/H701 newest main Game2 FEC native due_send_records INVALID(1): first stage/lane/PN/cipher len/actual path MTU and underlying build_bytes PacketError isolated in original Rust only on failure, native TX/RX join vs WAL Stop phase now logged. H701 Action41266666129 failed before product compile because three Go assembly blob hashes stale; H702 exact source attestations corrected, one same-code 1Mbps/0%/10s Action pending; do NOT claim fix or PASS before report, no 10/15/30 Game matrix."
   ],
   "promotion": null
 }

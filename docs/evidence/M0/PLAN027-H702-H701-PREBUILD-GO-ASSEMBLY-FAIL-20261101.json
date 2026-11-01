@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "e59a884b61b568057d64158927ea47b6adb667b9",
+  "run": 41266666129,
+  "dispatcher": 41266656096,
+  "result": "PREBUILD_FAIL_NOT_NATIVE_GAME_RESULT",
+  "failure": "tools/prepare_windows_wiring.py --check-only refuses stale result_blob for 3 modified Go files",
+  "exact_blobs": [
+    [
+      "r0/go_overlay/internal/windowsclient/native_real_product_service_windows.go",
+      "7ab79fcde1e080babc096db2b7194b560a838a6c",
+      "742be1997939a5417c020e2c971aaf099c3256be"
+    ],
+    [
+      "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
+      "a187e2b9b340f0fce22eb4d1427ce1e63ac5211d",
+      "8450b0863c5ad5d5d95ac72d7cbb5e3701998da7"
+    ],
+    [
+      "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go",
+      "5095c582d93ea03cffd8282625dd1ac6f73b6855",
+      "859acb4599157ff1f5e5f1e591c8457a5ebed7db"
+    ]
+  ],
+  "corrected": "manifest only, retains original legacy source and all original bytes",
+  "native_game_due_result": "NOT_RUN",
+  "next": "one genuine Game2FEC 1Mbps0pct10s Action after H702 push"
+}
