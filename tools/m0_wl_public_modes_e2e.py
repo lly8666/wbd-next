@@ -41,7 +41,13 @@ for mode in modes:
  # close its owning PID long before the Windows step-level OS/cleanup guard
  # (Game 600s / other 1020s). Previous 360/440 and 1200/970 nested
  # limits collided with setup/finally, hiding native errors at cancellation.
- mode_seconds=240 if (slow and mode.startswith("game")) else 690 if slow else 165
+ # The one real 10s cold Game2/FEC first-fault reproduction is not a
+ # 300s throughput matrix. Keep bounded Go TLS, real UDP/TCP and Stop room,
+ # but don't spend 240s on an already-stuck minimal fixture.
+ minimal_game_fec=(mode=="game2-fec" and env.get("WBD_WL_V2_SCENARIO")==
+  "scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json")
+ mode_seconds=(185 if minimal_game_fec else
+  240 if (slow and mode.startswith("game")) else 690 if slow else 165)
  # Previous mode logs are archived already. Never observe stale prior-run
  # READY/fault lines as this new real GameFEC test's own evidence.
  if mode.endswith("-fec"):
