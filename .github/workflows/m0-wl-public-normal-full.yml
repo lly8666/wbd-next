@@ -1165,6 +1165,59 @@ jobs:
             if($null -ne $guard -and -not $guard.HasExited){Stop-Process -Id $guard.Id -Force -ErrorAction SilentlyContinue}
             Write-Output 'WL_WSL2_OUTER_WATCHDOG_DISARMED'
           }
+      # Native GameFEC producer may fail after changing OS default route.
+      # Upload a SMALL original local summary BEFORE separate WSL/NPF cleanup.
+      # The existing final full artifact still runs; a canceled parent step
+      # cannot reach this step and is backed only by independent Ubuntu stages.
+      - name: Prepare bounded original GameFEC first-fault evidence for early upload
+        if: always() && (env.WBD_WL_PUBLIC_MODES == 'game2-fec' || env.WBD_WL_PUBLIC_MODES == 'game4-fec')
+        shell: pwsh
+        timeout-minutes: 1
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force result/wl-public | Out-Null
+          $dest='result/wl-public/gamefec-local-first-fault-summary.txt'
+          @(
+            'schema=m0-gamefec-original-local-allowlisted/v1'
+            'run='+$env:GITHUB_RUN_ID
+            'product_source='+$env:WBD_WL_BINARY_SOURCE
+            'scope=GAMEFEC_ORIGINAL_WINDOWS_LOCAL_FILES_NOT_INDEPENDENT_PRODUCT_PASS'
+          ) | Set-Content -LiteralPath $dest
+          foreach($role in @('client','server')){
+            $path='result/wl-public/'+$role+'.log'
+            if(-not (Test-Path -LiteralPath $path)){
+              Add-Content $dest ($role+'_LOG_NOT_FOUND')
+              continue
+            }
+            # Read only the tail and preserve fixed stage names / first
+            # original native faults; never forward an arbitrary TLS log.
+            $lines=@(Get-Content -LiteralPath $path -Tail 4096 -ErrorAction Stop)
+            foreach($line in $lines){
+              $line=[string]$line
+              if($line -match '(?i)password|secret|credential|token|private[_-]?key'){continue}
+              if($line -match 'M0_GAME_COLD_STAGE [A-Z0-9_]+|M0_PLAN026_GAME_NATIVE_FIRST_ERROR|M0_PLAN027_GAME_(DUE_FAULT|NATIVE_STOP_)|M0_PLAN027_NATIVE_STOP_RESULT|WBD_WINDOWS_GAME_COLD_TLS_JOINED|WBD_WINDOWS_OS_APPLIED|WBD_WINDOWS_CLIENT_READY|V4_ORIGINAL_GO_GAME_NATIVE_READY|V4_PUBLIC_GAME_NATIVE_STOP_DRAINED'){
+                Add-Content -LiteralPath $dest -Value ($role+':'+$line.Substring(0,[Math]::Min(350,$line.Length)))
+              }
+            }
+          }
+          Write-Output 'GAMEFEC_LOCAL_BOUNDED_SUMMARY_PREPARED_NO_PASS'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && (env.WBD_WL_PUBLIC_MODES == 'game2-fec' || env.WBD_WL_PUBLIC_MODES == 'game4-fec')
+        with:
+          name: gamefec-native-local-early-evidence
+          path: |
+            result/wl-public/gamefec-local-first-fault-summary.txt
+            result/wl-public/gamefec-network-final.txt
+            result/wl-public/gamefec-supervisor-stack.txt
+            result/wl-public/gamefec-mode-stack.txt
+            result/wl-public/gamefec-e2e-stack.txt
+            result/wl-public/gamefec-supervisor-timeout.txt
+            result/wl-public/gamefec-mode-outcome.txt
+            result/wl-public/gamefec-cold-stage.txt
+            result/wl-public/windows-route-after.json
+          retention-days: 30
+          compression-level: 6
+          if-no-files-found: warn
       - name: Restore Linux raw FakeTCP fixture RST rule after product Stop
         if: always()
         timeout-minutes: 2
