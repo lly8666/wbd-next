@@ -1,0 +1,85 @@
+name: M0 PLAN027 H790 original Windows pinned Wintun real route WAL replay
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h790-real-original-route-replay.yml]
+permissions: {contents: read}
+jobs:
+  real-original-wintun-testnet-route:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h790-real-route]')
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Initialize exact-SOURCE local fail-closed artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force result/wl-public, win-native | Out-Null
+          "SOURCE=$env:GITHUB_SHA TEST_ONLY_NOT_PRODUCT" | Set-Content result/wl-public/h790-scope.txt
+      - name: Assemble original frozen Go, pin signed Wintun, compile test
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          python tools/prepare_windows_wiring.py --check-only
+          if($LASTEXITCODE -ne 0){throw 'H790 frozen original Go blob/hash mismatch'}
+          python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'H790 original Go assembly failed'}
+          $zip='win-native/wintun.zip'
+          Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile $zip
+          $sha=(Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($sha -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw 'signed Wintun exact ZIP hash mismatch'}
+          Expand-Archive -LiteralPath $zip -DestinationPath win-native/official -Force
+          $driver='win-native/official/wintun/bin/amd64/wintun.dll'
+          $sig=Get-AuthenticodeSignature -LiteralPath $driver
+          if($sig.Status -ne 'Valid'){throw 'real original Wintun DLL signature invalid'}
+          Copy-Item -LiteralPath $driver -Destination win-native/wintun.dll
+          Push-Location legacy
+          try {
+            go test -c -tags wbd_v4_embedded_go -o ../win-native/h790-replay.test.exe ./internal/windowsclient
+            if($LASTEXITCODE -ne 0){throw 'H790 original Go Windows native test compile failed'}
+          } finally {Pop-Location}
+      - name: Real Windows original Wintun PnP and TEST-NET /32 route replay
+        shell: pwsh
+        timeout-minutes: 3
+        env:
+          WBD_M0_PLAN027_REAL_ROUTE_REPLAY: "1"
+          WBD_M0_PLAN027_ROUTE_REPORT: ${{ github.workspace }}\\result\\wl-public\\h790-real-route.json
+        run: |
+          $ErrorActionPreference='Stop'
+          $defaults=@(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix '0.0.0.0/0' -ErrorAction Stop |
+            Where-Object {$_.NextHop -ne '0.0.0.0' -and $_.InterfaceIndex -gt 0} |
+            Sort-Object RouteMetric,InterfaceMetric)
+          if($defaults.Count -lt 1){throw 'no original unambiguous physical default route for test-only /32'}
+          $first=$defaults[0]
+          $same=@($defaults | Where-Object {$_.RouteMetric -eq $first.RouteMetric -and $_.InterfaceMetric -eq $first.InterfaceMetric})
+          if($same.Count -ne 1){throw 'test-only physical next-hop ownership ambiguous'}
+          $env:WBD_M0_ROUTE_TEST_PHYS_IF=[string]$first.InterfaceIndex
+          $env:WBD_M0_ROUTE_TEST_PHYS_GW=[string]$first.NextHop
+          & ./win-native/h790-replay.test.exe '-test.v=true' '-test.timeout=100s' '-test.run=^TestN4OriginalConfirmedRouteReplayRealPinnedWintunTestNetOS$' 2>&1 |
+            Tee-Object -FilePath result/wl-public/h790-native-output.log
+          if($LASTEXITCODE -ne 0){throw 'H790 real Windows native scoped OS route rollback FAILED'}
+          $data=Get-Content -Raw result/wl-public/h790-real-route.json | ConvertFrom-Json
+          if($data.result -ne 'PASS_SCOPED_REAL_ORIGINAL_PNP_CONFIRMED_TESTNET_ROUTE_ONLY' -or
+            $data.wfp -ne 'TEST_ONLY_FAKE_GUARD' -or $data.full_network_wal -ne 'NOT_RUN' -or
+            $data.game_fec_product -ne 'NOT_RUN'){throw 'H790 scoped OS result omitted explicit limits'}
+          'H790_REAL_TESTNET_ONLY_NO_GAMEFEC_PROMOTION' | Add-Content result/wl-public/h790-scope.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h790-original-windows-pnp-testnet-route-replay-not-full-wal
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            result/wl-public/h790-scope.txt
+            result/wl-public/h790-real-route.json
+            result/wl-public/h790-native-output.log
