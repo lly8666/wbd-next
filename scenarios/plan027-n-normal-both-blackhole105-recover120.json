@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "scenario_id": "plan027-n-normal-both-blackhole105-recover120",
+  "public_mode": "normal",
+  "outer_repair": "off",
+  "warmup_s": 5,
+  "drain_s": 10,
+  "offered_mbps_per_active_direction": 10,
+  "one_way_delay_ms": 25,
+  "probe_hz": 0,
+  "packet_mix": [
+    [
+      64,
+      10
+    ],
+    [
+      128,
+      15
+    ],
+    [
+      512,
+      25
+    ],
+    [
+      1200,
+      50
+    ]
+  ],
+  "phases": [
+    {
+      "name": "pre20",
+      "seconds": 20,
+      "scale": 1,
+      "loss_pct": 0
+    },
+    {
+      "name": "double_blackhole105",
+      "seconds": 105,
+      "scale": 0,
+      "loss_pct": 100
+    },
+    {
+      "name": "recovery120",
+      "seconds": 120,
+      "scale": 1,
+      "loss_pct": 0
+    }
+  ],
+  "notes": "Both owned underlay directions true 100pct tc netem for >90s with no generated app/probe; restore clean for 120s and inject new original UDP. No fake Health ACK, no physical deploy."
+}
