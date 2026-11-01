@@ -1,0 +1,59 @@
+name: M0 PLAN027 H755 Windows independent GameFEC relay proof and one native
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h755-relay-windows-fixture-then-single-game.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-windows-relay-proof-then-dispatch:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h755-game-relay]')
+    runs-on: windows-2025
+    timeout-minutes: 7
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_SOURCE: 0264c2cfc91e05c7c4b8d518fa0efc6707a2ff6b
+      BINARY_BUILD: "41280564979"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Validate true Windows stage reporter, blocked OS stdout and frozen original Game2FEC binaries before dispatch
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA){throw 'controller source mismatch'}
+          $remote=(gh api "repos/$env:GH_REPO/branches/main" --jq '.commit.sha').Trim()
+          if($LASTEXITCODE -ne 0 -or $remote -ne $env:GITHUB_SHA){throw 'main changed; no stale dispatch'}
+          foreach($check in @('41290949069','41290949111')){
+            $v=(gh api "repos/$env:GH_REPO/actions/runs/$check" --jq '.conclusion').Trim()
+            if($LASTEXITCODE -ne 0 -or $v -ne 'success'){throw "H754 cheap validation not green: $check"}
+          }
+          & python -m unittest -v tests.test_m0_wl_gamefec_relay
+          if($LASTEXITCODE -ne 0){throw 'Windows independent stage relay not proven'}
+          & python -m unittest -v tests.test_m0_wl_native_step_runner.NativeChildStdoutLifetimeTests.test_h748_actual_unread_os_pipe_full_does_not_hold_game_deadline
+          if($LASTEXITCODE -ne 0){throw 'Windows real blocked pipe not proven'}
+          $binary=(gh api "repos/$env:GH_REPO/actions/runs/$env:BINARY_BUILD" --jq .head_sha).Trim()
+          if($LASTEXITCODE -ne 0 -or $binary -ne $env:PRODUCT_SOURCE){throw 'frozen binary SOURCE mismatch'}
+          $art=(gh api "repos/$env:GH_REPO/actions/runs/$env:BINARY_BUILD/artifacts?per_page=100" | ConvertFrom-Json).artifacts
+          $names=@($art | Where-Object {-not $_.expired} | ForEach-Object {$_.name})
+          if(($names -notcontains "m0-wl-windows-product-binaries-$env:PRODUCT_SOURCE") -or
+             ($names -notcontains 'm0-plan024-linux-product')){throw 'frozen signed product artifact missing'}
+          & git fetch --depth=1 origin $env:PRODUCT_SOURCE
+          if($LASTEXITCODE -ne 0){throw 'missing product source proof'}
+          $changed=@(git diff --name-only $env:PRODUCT_SOURCE $env:GITHUB_SHA -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py tools/m0_wl_netem.py scenarios)
+          if($LASTEXITCODE -ne 0 -or $changed.Count -gt 0){throw ('changed product: '+($changed -join ','))}
+          $scene='scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json'
+          $s=Get-Content -Raw $scene | ConvertFrom-Json
+          if($s.public_mode -ne 'game2-fec' -or $s.duration_s -ne 10 -or $s.tun_mtu -ne 1400){throw 'wrong Game2FEC cold test scenario'}
+          foreach($dir in @('windows_to_linux','linux_to_windows')){
+            $d=$s.$dir
+            if($d.offered_mbps -ne 1 -or $d.delay_ms -ne 25 -or $d.loss_pct -ne 0){throw "wrong impairment: $dir"}
+          }
+          $title="M0-WIN-LINUX|$env:GITHUB_SHA|game2-fec|$scene"
+          $runs=(gh api "repos/$env:GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" | ConvertFrom-Json).workflow_runs
+          if(@($runs | Where-Object {$_.display_title -eq $title}).Count -gt 0){
+            Write-Output 'H755_ALREADY_DISPATCHED_NOT_PASS';exit 0
+          }
+          & gh workflow run m0-wl-public-normal-full.yml --repo $env:GH_REPO --ref main -f public_mode=game2-fec -f run_n0=false -f perf_scenario_file="$scene" -f perf_reuse_run_id=$env:BINARY_BUILD -f perf_binary_source_sha=$env:PRODUCT_SOURCE
+          if($LASTEXITCODE -ne 0){throw 'GameFEC dispatch failed'}
+          Write-Output H755_ONE_SIGNED_ORIGINAL_GAMEFEC_DISPATCHED_NOT_PRODUCT_PASS
