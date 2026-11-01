@@ -30,6 +30,21 @@ class V2Scenarios(unittest.TestCase):
     row=dict(cfg);row.pop("scenario_sha256");row["kernel_loss_bursts"]=bad
     path=pathlib.Path(td)/"bad.json";path.write_text(json.dumps(row))
     with self.assertRaisesRegex(ValueError,"BAD_BOUNDED_KERNEL_BURST"):read_scenario(path)
+ def test_h713_real_burst_duty_does_not_use_zero_loss_oracle(self):
+  scene=read_scenario(SCENE.parent/"plan027-c-normal-10m-25ms-0pct-burst100-300ms-60s.json")
+  # H699 genuine two-OS first fractions under 100ms+300ms FULL
+  # loss pulses and real Stop, not a 60-second lossless network.
+  self.assertTrue(first_delivery_ok_for_scenario(scene,
+   {"windows":0.994154,"linux":0.994462}))
+  self.assertFalse(first_delivery_ok_for_scenario(scene,
+   {"windows":0.90,"linux":0.994462}))
+  self.assertFalse(first_delivery_ok_for_scenario(scene,
+   {"windows":0.994154,"linux":0}))
+  # Without real kernel pulse declaration the original no-loss
+  # 99.9% gate must remain strict.
+  unchanged=dict(scene);unchanged.pop("kernel_loss_bursts")
+  self.assertFalse(first_delivery_ok_for_scenario(unchanged,
+   {"windows":0.994154,"linux":0.994462}))
  def test_plan027_b_real_20s_outer_blackhole_restore(self):
   name="plan027-b-normal-blackhole20-recover-10m-25ms-0loss-60s.json"
   path=SCENE.parent/name
