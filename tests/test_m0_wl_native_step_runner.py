@@ -188,6 +188,11 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
             script.write_text(
                 "import os,sys\n"
                 "from tools import m0_wl_native_step_runner as m\n"
+                "# The diagnostic worker deliberately saturates a REAL OS\n"
+                "# stdout pipe with no reader; it must not own the PID clock.\n"
+                "def block_actual_output(*args):\n"
+                " while True: os.write(sys.stdout.fileno(),b'P'*65536)\n"
+                "m._diagnostic_tail=block_actual_output\n"
                 "m.native_batch_deadline=lambda env: 1\n"
                 "sys.argv=[str(m.__file__),sys.argv[1],sys.argv[2]]\n"
                 "rc=m.main()\n"
@@ -218,7 +223,10 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
             self.assertGreaterEqual(len(stdout),4096 if sys.platform=="win32" else 8192,
                                     "genuine unread OS stdout pipe must fill")
             self.assertIn("WL_PUBLIC_REAL_MODE_RESULT",log.read_text())
-            self.assertIn("Thread",(root/"gamefec-supervisor-stack.txt").read_text())
+            stack=(root/"gamefec-supervisor-stack.txt").read_text()
+            self.assertIn("Thread",stack)
+            self.assertIn("block_actual_output",stack,
+                          "Python dump must catch auxiliary diagnostic in real OS pipe write")
 
     def test_h711_real_native_stop_markers_not_guessed(self):
         from tools import m0_wl_native_step_runner as native

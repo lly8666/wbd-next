@@ -194,7 +194,7 @@ def main() -> int:
         stack_path = output.parent / "gamefec-supervisor-stack.txt"
         stack_handle = stack_path.open("w")
         faulthandler.dump_traceback_later(
-            max(.25, float(limit)-12), repeat=False, file=stack_handle,
+            max(.5, float(limit)-12), repeat=False, file=stack_handle,
             exit=False)
     try:
         # Give the product a regular output file, never an inherited PIPE.
