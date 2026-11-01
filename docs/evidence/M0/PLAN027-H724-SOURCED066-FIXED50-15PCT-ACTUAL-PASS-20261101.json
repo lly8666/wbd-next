@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "d0661a2e110b523ad06b311da23fc1b7291442ba",
+  "harness_source_sha": "dd79ff752c9cece69ab998a2d9a3297cd26a5ee7",
+  "run": 41278093660,
+  "native_job": 124764345864,
+  "controller_run": 41278076087,
+  "independent_watcher": 41278100197,
+  "binary_build_run": 41274450306,
+  "window_binary_artifact": {
+    "id": 13071196733,
+    "digest": "sha256:b6baac6ba45a6825665addf329447e56564240c310ae8f636d119b6c6d0eaa6a"
+  },
+  "linux_binary_artifact": {
+    "id": 13070622152,
+    "digest": "sha256:837cb7a113f871914c2d04f0caead8a93a7a97ce7e3bd53c9878819cd9dbb5c3"
+  },
+  "real_report_artifact": {
+    "id": 13071479378,
+    "digest": "sha256:bbb6285a8b9570d82862d0f4f5487a05ff84aa9cec55d0f8470503d97f07cfc9"
+  },
+  "scene": "plan027-c-fixed-50m-250ms-loss15-60s",
+  "scenario_sha256": "40c13fc9b94ea3fff35a91b36b5075deda71f454eb4075972448683485d8eb78",
+  "real_signed_original_go_tls_rust_wintun_npf_linux_tun": true,
+  "duration_seconds": 60,
+  "one_way_tc_delay_ms": 250,
+  "tc_injected_loss_percent": 15,
+  "offered_mbps": {
+    "windows": 49.9999,
+    "linux": 49.9982
+  },
+  "first_delivered_mbps": {
+    "windows": 49.7172,
+    "linux": 48.7962
+  },
+  "first_delivery_fraction": {
+    "windows": 0.994254,
+    "linux": 0.974935
+  },
+  "linux_tun_tx_drop": 0,
+  "linux_tun_rx_drop": 0,
+  "windows_npf_ingress_local_drops": 0,
+  "original_windows_process": {
+    "cpu_s": 55.1094,
+    "elapsed_s": 78.375,
+    "avg_one_core_pct": 70.315,
+    "peak_working_set_bytes": 47099904
+  },
+  "generator_cpu_s": {
+    "windows": 12.0781,
+    "linux": 40.5902
+  },
+  "signed_native_udp_tcp": "PASS_BOTH",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "workflow_conclusion": "success",
+  "quality": "FUNCTIONAL_PASS_ONLY_NOT_99_9_PERCENT_UNDER_INTENTIONAL_LOSS; Linux 2.5065% residual, Windows0.5746%; no explicit measured per-direction F/R/C or restored FEC symbol counts in this public report; do not claim <1% FEC quality at 15% or reliable unreturned probes.",
+  "not_measured": [
+    "calibrated one-way p99",
+    "returned/timeout RTT p99 aligned with all losses",
+    "bilateral outer F/R/C",
+    "true FEC restored symbols/readback on Windows",
+    "Windows Fixed installed profile/revision on this old d066 ABI",
+    "physical"
+  ],
+  "limits": [
+    "H720 Fixed100 zero-loss FAILURE remains; no increased Fixed100/200",
+    "H723 new ABI not used in frozen d066 binaries",
+    "separate GameFEC and B106 cancelled, no whole PLAN027 PASS"
+  ]
+}

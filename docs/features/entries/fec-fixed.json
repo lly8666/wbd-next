@@ -153,6 +153,13 @@
       "status": "FAIL",
       "source_sha": "d0661a2e110b523ad06b311da23fc1b7291442ba",
       "evidence": "docs/evidence/M0/PLAN027-H721-SOURCED066-FIXED100-REAL-FAIL-20261101.json"
+    },
+    {
+      "platform": "Windows2025 real signed NPF/Wintun original Go TLS+Rust ↔ Linux WSL2 raw/TUN",
+      "scope": "H724 frozen SOURCEd066 Fixed6 50Mbps each/250ms15%/60s original native both UDP/TCP and owned Stop PASS, real first win99.4254%/Linux97.4935%, Linux TUN drops0/NPF0, Win Go+Rust CPU55.109s/78.375s (70.3% one core), RSS47.10MB; Linux residual2.5065% not full FEC <1% quality or p99 probe proof, Windows Fixed installed profile readback still NOT instrumented for OLD SOURCE. Distinct Fixed100 clean first failure remains.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "d0661a2e110b523ad06b311da23fc1b7291442ba",
+      "evidence": "docs/evidence/M0/PLAN027-H724-SOURCED066-FIXED50-15PCT-ACTUAL-PASS-20261101.json"
     }
   ],
   "limitations": [

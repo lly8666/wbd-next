@@ -1,0 +1,11 @@
+# PLAN027 H724 — exact Fixed50 loss15 evidence and three Go assembly blob repair
+
+M0 task PARTIAL. SOURCEd066 frozen original Go TLS+Rust signed Windows NPF/Wintun↔Linux WSL2 raw/TUN Game/Fixed native product build run41274450306 unchanged, H724 actual Fixed6/50M/250ms/15%/60s run [41278093660](https://github.com/lly8666/wbd-next/actions/runs/41278093660) concluded **SUCCESS** with both real UDP/TCP and owned Stop. First unique Win0.994254 Linux0.974935, actual offered49.9999/49.9982 Mbps, delivered49.7172/48.7962, Linux TUN RX/TX drops0, Windows local NPF drops0, Windows whole original Go+Rust CPU55.1094s/78.375s (70.315% one core), RSS47.10MB. Native job124764345864, evidence artifact13071479378 sha256:bbb6285a8b9570d82862d0f4f5487a05ff84aa9cec55d0f8470503d97f07cfc9. This is a **functional damaged-line PASS**, not a guaranteed FEC <1% residual or complete p99/timeout/bilateral F/R/C grade; Linux app residual2.5065% and underlying 15% intentional loss. Source-fixed C100 zero-loss 0.997456/0.9819 failure with Linux TUN TX2503 from H721 remains NEGATIVE and its higher same-mode capacity ladder stays stopped.
+
+H723 new Rust+Go Fixed local Installed profile/revision readback is an ABI product change unrelated to H724 frozen binary. Cheap workflow [41278363089](https://github.com/lly8666/wbd-next/actions/runs/41278363089) FAILED `prepare_windows_wiring.py --check-only` because three new Go overlay result_blob hashes not synced; no product compile/Stop proof follows from earlier success. H724 updates exactly these three manifest blobs: `bridge_v4_windows_fixed_stream.go`, `m0_native_v4_rust_peer_windows.go`, `m0_native_v4_rust_fixed_mature_windows_test.go` to current Git Git-blob SHA, without rebuilding previous Fixed50. Wait for new source-locked cheap/Windows native-Go/Rust compile, then one new exact-source original Windows Fixed installed readback native scene if qualified. No extra M2 quality wait, no protocol round.
+
+B Game2FEC/Win B106 remain CANCELLED and BlobNotFound, no fake runtime PASS; B rotation/FIN-DORMANT/OS config and C remaining, physical NOT_RUN.
+
+```feature-impact
+{"kind":"updated","ids":["fec-fixed"],"reason":"Register genuine SOURCEd066 Fixed50 loss15 functional first/Stop/CPU/drops, not full FEC recovery target; align three current Go assembly result_blob SHA for H723 72B owner-readback ABI."}
+```
