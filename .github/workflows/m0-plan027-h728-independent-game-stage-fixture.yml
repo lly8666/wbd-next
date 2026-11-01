@@ -1,0 +1,27 @@
+name: M0 PLAN027 H728 prove truly independent GameFEC rescue Action dispatch
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027-h728-independent-game-stage-fixture.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-real-actions-rescue-channel-fixture:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027-h728-rescue-fixture]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: One synthetic cross-Action error relay (no native product)
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m unittest -v tests.test_m0_wl_gamefec_progress
+          gh workflow run m0-plan027-gamefec-rescue-record.yml --repo "$GH_REPO" --ref main \
+            -f target_run=41274450306 \
+            -f source=d0661a2e110b523ad06b311da23fc1b7291442ba \
+            -f stage=FIXTURE -f detail=SYNTHETIC_NOT_PRODUCT
+          echo H728_INDEPENDENT_RESCUE_DISPATCH_ACCEPTED_NOT_PRODUCT_PASS
