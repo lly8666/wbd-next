@@ -27,7 +27,8 @@
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
-    "docs/testing/NETWORK_CAPACITY_ENVELOPE.md"
+    "docs/testing/NETWORK_CAPACITY_ENVELOPE.md",
+    "docs/devlog/M0/20261101-PLAN027-H708-H709-LOG-RECOVERY-AND-GAME-FEC-MTU.md"
   ],
   "verification": [
     {
@@ -85,6 +86,13 @@
       "status": "PERFORMANCE_PASS",
       "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
       "evidence": "docs/evidence/M0/PLAN027-H678-SOURCE6ECE-PREPARED-RECEIVER-10M-MTU-20261101.json"
+    },
+    {
+      "platform": "windows-2025/msvc isolated Rust Game2-FEC6 owner unit (NOT real Npcap/Wintun)",
+      "scope": "H707 genuine Windows Rust Game2FEC due frame source1329 cipher1391 + outer40=1431 > pathMTU1400 (FAIL). H709 SOURCE79ca source cap1298 yields cipher1360 + outer40=1400 and rejects1299/1329 before NPF (one actual MSVC unit PASS); Action FAIL due stale proof path. Live MTU readback/Windows GameFEC/Stop still NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "79ca1b7d9bede83360934e7ea51de98de5216046",
+      "evidence": "docs/devlog/M0/20261101-PLAN027-H708-H709-LOG-RECOVERY-AND-GAME-FEC-MTU.md"
     }
   ],
   "limitations": [
