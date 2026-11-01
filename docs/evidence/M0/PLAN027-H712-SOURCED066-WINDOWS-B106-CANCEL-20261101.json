@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "d0661a2e110b523ad06b311da23fc1b7291442ba",
+  "scenario": "plan027-b-normal-blackhole106-recover-2m-25ms-0loss-12s",
+  "true_original_two_os_build_run": 41274450306,
+  "prebuilt_windows": {
+    "id": 13071196733,
+    "digest": "sha256:b6baac6ba45a6825665addf329447e56564240c310ae8f636d119b6c6d0eaa6a"
+  },
+  "prebuilt_linux": {
+    "id": 13070622152,
+    "digest": "sha256:837cb7a113f871914c2d04f0caead8a93a7a97ce7e3bd53c9878819cd9dbb5c3"
+  },
+  "dispatch_controller_run": 41275005876,
+  "dispatch_controller_conclusion": "success",
+  "native_run": 41275015266,
+  "native_job_id": 124755374280,
+  "native_run_conclusion": "cancelled",
+  "native_job_conclusion": "cancelled",
+  "native_stage": "Launch actual WSL2 Linux and direct full public two-OS product",
+  "watcher_run": 41275020610,
+  "watcher_conclusion": "success",
+  "watcher_evidence": "M0_EXTERNAL_NATIVE_TIMEOUT target=41275015266 job_seconds=1219; before/after cancellation LOG_UNAVAILABLE; FORCE_CANCEL",
+  "native_original_log_recovery": "404_BLOB_NOT_FOUND_EVEN_GITHUB_CONNECTOR_AFTER_CANCEL",
+  "result": "CANCELLED_EXTERNAL_TIMEOUT_NO_GENUINE_WINDOWS_DEAD106_TLS_GENERATION2_OR_OWNED_STOP_EVIDENCE",
+  "status": "NOT_QUALIFIED",
+  "preserve_previous": {
+    "source_sha": "5fb4c9d7",
+    "scope": "Linux-to-Linux original 106s authenticated dead restored TLS and Stop only",
+    "status": "FUNCTIONAL_PASS_SCOPED_NOT_WINDOWS"
+  },
+  "limitations": [
+    "No native Windows 106s authenticated dead90 assertion could be recovered, no TLS generation2 or real postblackout UDP/TCP proof",
+    "No synthetic PASS from previous Linux-only success or Go cold control source",
+    "Do not extend global timeout or redispatch same unchanged source/seed without first-fault reason",
+    "External GitHub native cancelled job log 404 BlobNotFound even after completion",
+    "Separate Windows GameFEC source d066 run41274450306 also cancelled and logged BlobNotFound; C Fixed50 independent native run in flight",
+    "PLAN027 §0 B/Stop remains partial; physical NOT_RUN"
+  ]
+}
