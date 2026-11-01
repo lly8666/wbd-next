@@ -74,6 +74,7 @@ jobs:
           native_job_id() {
             jq -r '.jobs[] | select(.name=="native-public-two-os") | .id' | head -n 1
           }
+          completed_job_log_attempted=""
           for i in $(seq 1 53); do
             run="$(gh api "repos/$GH_REPO/actions/runs/$TARGET_ID")"
             status="$(jq -r .status <<<"$run")"
@@ -88,9 +89,20 @@ jobs:
             stage="$(jq -c '.jobs[] | select(.name=="native-public-two-os") | {id,status,started_at,launch_at:([.steps[]? | select(.name=="Launch actual WSL2 Linux and direct full public two-OS product") | .started_at] | first)}' <<<"$jobs" | head -1)"
             if [ -n "$stage" ]; then
               if [ "$(jq -r .status <<<"$stage")" = completed ]; then
-                recover_logs "job_completed" "$(jq -r .id <<<"$stage")" || true
-                echo "M0_EXTERNAL_NATIVE_JOB_FINISHED target=$TARGET_ID (not_product_pass)"
-                exit 0
+                job_id="$(jq -r .id <<<"$stage")"
+                if [ "$completed_job_log_attempted" != "$job_id" ]; then
+                  if recover_logs "job_completed_before_run" "$job_id"; then
+                    echo "M0_EXTERNAL_NATIVE_JOB_FINISHED target=$TARGET_ID (not_product_pass)"
+                    exit 0
+                  fi
+                  completed_job_log_attempted="$job_id"
+                fi
+                # A job can finish while finalization/artifact cleanup keeps
+                # its parent run in progress. Do not disarm on a transient
+                # 404: the run-completed branch retries the same native log.
+                echo "M0_EXTERNAL_NATIVE_JOB_LOG_WAIT_RUN_COMPLETION target=$TARGET_ID job=$job_id"
+                sleep 30
+                continue
               fi
               # Game's 720s budget begins with the ACTUAL native step,
               # not several minutes of prior verified driver/WSL2 setup.
