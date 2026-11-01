@@ -53,7 +53,10 @@ def game_due_first_fault():
  if not path.exists():return
  lines=path.read_text(errors="replace").splitlines()
  fault=[line for line in lines if
-  "M0_PLAN027_GAME_DUE_FAULT first_failure=1" in line and "origin=due" in line]
+  "M0_PLAN027_GAME_DUE_FAULT first_failure=1" in line or
+  "M0_PLAN026_GAME_NATIVE_FIRST_ERROR" in line or
+  "M0_PLAN027_GAME_NATIVE_STOP_NOT_DRAINED" in line or
+  "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_disconnect result=FAIL" in line]
  if not fault:return
  print("WL_GAME_DUE_EXACT_PRODUCT_FIRST_FAILURE "+fault[0][-850:],flush=True)
  for line in lines:
@@ -75,7 +78,7 @@ def game_due_first_fault():
  wal="RESTORED" if any("WBD_WINDOWS_GAME_NATIVE_DISCONNECTED" in line for line in after) else "NOT_RESTORED"
  print("WL_GAME_DUE_DIAGNOSTIC_FINAL native_worker_stop="+native+
        " upper_wal_stop="+wal+" original_rc="+str(w.poll()),flush=True)
- raise RuntimeError("GAME_FEC_DUE_INVALID_ORIGINAL_FIRST_FAULT native="+native+" wal="+wal)
+ raise RuntimeError("GAME_FEC_REAL_NATIVE_FIRST_FAULT native="+native+" wal="+wal)
 def ready(path,marker,process,seconds):
  for _ in range(seconds*5):
   game_due_first_fault()
