@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "product_source_sha": "0264c2cfc91e05c7c4b8d518fa0efc6707a2ff6b",
+  "harness_sha": "3ec13e1b8962cca584a94b826f549a041aa7fc89",
+  "run": 41282739002,
+  "native_job": 124777842387,
+  "watcher_run": 41282744989,
+  "prebuilt_run": 41280564979,
+  "real_scenario": "plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s",
+  "stage_results": [
+    {
+      "event": "PRE_NATIVE_STEP",
+      "receiver_run": 41282847590,
+      "conclusion": "success"
+    },
+    {
+      "event": "STEP_ENTER",
+      "receiver_run": 41282851089,
+      "conclusion": "success"
+    },
+    {
+      "event": "STEP_PREFLIGHT_COMPLETE",
+      "receiver_run": 41282875508,
+      "conclusion": "success"
+    },
+    {
+      "event": "MODE_STARTED",
+      "receiver_run": 41282877118,
+      "conclusion": "success"
+    }
+  ],
+  "last_independent_stage": "MODE_STARTED",
+  "missing_stages": [
+    "BOTH_READY",
+    "FIRST_ERROR",
+    "MODE_TIMEOUT",
+    "MODE_EXIT",
+    "owned Stop"
+  ],
+  "product_result": "NOT_VERIFIED_HUNG_BEFORE_FIRST_BUSINESS_OR_FAILURE_LOG",
+  "real_udp_tcp": "UNKNOWN",
+  "owned_stop": "UNKNOWN",
+  "workflow_conclusion": "cancelled",
+  "watchdog_conclusion": "success_not_product",
+  "native_job_logging": "GITHUB_NATIVE_JOB_LOG_HTTP404_BLOB_NOT_FOUND",
+  "watcher_log_source": "run41282744989 job124777811837",
+  "watcher_timeout_seconds_from_launch": 734,
+  "watcher_log_retry": "5 REST/run-view attempts before and after cancel, all unavailable",
+  "live_step": "Launch actual WSL2 Linux and direct full public two-OS product",
+  "success_before_step": [
+    "Windows Go/Rust prebuilt integrity",
+    "Linux Rust prebuilt integrity",
+    "signed NPF/Wintun install",
+    "real WSL guest boot",
+    "HyperV and RST preflight via independent STEP_PREFLIGHT_COMPLETE"
+  ],
+  "artifact": {
+    "id": 13074530548,
+    "name": "m0-wl-real-guest-boot-41282739002",
+    "digest": "sha256:bb8723dad6e43462fc6d31c644bf2e098c43d8222ecd4b2e6d64cbf7c329b1c5"
+  },
+  "necessary_next": "Source-identical outer PID supervisor H736, no inherited stdout pipe, shorter 185/250s single 10s GameFEC regression; capture actual Go/Rust first fatal or Stop, no full PASS until genuine business and owned Stop."
+}

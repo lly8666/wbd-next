@@ -1,0 +1,15 @@
+# H737 — Game2FEC: durable first native phase + one outer PID-only follow-up
+
+User's Game-only override remains active; all unrelated M0 PLAN027 tasks paused, not cancelled/complete. SOURCE `0264c2cfc91e05c7c4b8d518fa0efc6707a2ff6b` frozen original products compile once (build41280564979).
+
+H735 real Windows2025 signed NPF/Wintun↔WSL2 raw/TUN, original Go credential TLS/Rust Game2FEC6 1Mbps/25ms/0%/10s, Action [41282739002](https://github.com/lly8666/wbd-next/actions/runs/41282739002) native job124777842387 **CANCELLED external**, independent watchdog41282744989 **SUCCESS ONLY AT WATCHDOG**. Real step stage independently proved via four separate complete Action logs: PRE_NATIVE_STEP41282847590; STEP_ENTER41282851089; STEP_PREFLIGHT_COMPLETE41282875508; MODE_STARTED41282877118. No BOTH_READY, FIRST_ERROR, MODE_TIMEOUT, MODE_EXIT, app first delivery or owned Stop. Watcher reached native step age734s, five REST/CLI attempts before/after cancel all unavailable; original job log HTTP404 `BlobNotFound`. **No claim of FEC runtime branch or product PASS/FAIL after MODE_STARTED; stage is UNKNOWN.** Original WSL boot evidence artifact13074530548 SHA256 bb8723da....
+
+H736 fixture diagnosis: nested mode parent previously owned the 2s file watcher and `gh workflow run` capture_output PIPE; it can block along with Win32/WSL/product, and inherited IO PIPE can keep communication alive despite timeouts. Move the exact GameFecProgress sampler into the already-existing **one outer PID-owned file-backed test supervisor**. Original mode script no longer samples/dispatches stages. Both independent GH dispatch and Windows taskkill output use DEVNULL instead of inherited PIPE. No extra native worker, watchdog, RTT, retry or product data change. Distinguish only this genuine Game2FEC/1M0%10s mode budget **185s inner/250s supervisor**, not 240/310 or 300s longtest; existing Windows/Actions final guards retained. Initial direct-vs-package import failure Action41283288111 preserved; corrected; targeted tests/assembly run41283787485 SUCCESS, governance green. H736 is fixture NOT product pass.
+
+H737 single source-locked controller [41283896904](https://github.com/lly8666/wbd-next/actions/runs/41283896904) SUCCESS; genuine native [41283910551](https://github.com/lly8666/wbd-next/actions/runs/41283910551) and independent watcher [41283917268](https://github.com/lly8666/wbd-next/actions/runs/41283917268) **IN_FLIGHT at write**. Controller source 3d3dee80d6103e0246867f67eab969d9589b771d, product SOURCE0264 exact, binary build41280564979 reused, no new compile. Consume actual native and GAMEFEC-RESCUE stages before any further dispatch.
+
+Historical Linux-only Game2FEC authentic H677 source6ece 105s idle +15% tc recovered64/64 and owned Stop PASS; Windows↔Linux source6ece original 1M zero loss only ~4.4/4.2% first with failed Stop. Avoid rewriting shared FEC math without Windows-specific evidence.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Record exact original GameFEC cancelled stage evidence and fixture-only single-PID observer+deadline; product SOURCE unchanged and true Game FEC still NOT VERIFIED."}
+```
