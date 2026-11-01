@@ -143,5 +143,8 @@
     "One same-VM R order OFF then ON only; no repeated samples/thermal reversal; do not claim steady 6pct CPU benefit or regression",
     "Original Windows/WSL2 per-flow HOL, long 300s, Game/FEC integrated ON and physical host NOT_RUN"
   ],
-  "decision": "Do not patch ReceiptState/BTreeMap based solely on measured ~0.3 CPU-s/60s ON delta at 10Mbps. Advance independently useful genuine Game2FEC6 repair-OFF loss30 measurement from same original product binary."
+  "decision": "Do not patch ReceiptState/BTreeMap based solely on measured ~0.3 CPU-s/60s ON delta at 10Mbps. Advance independently useful genuine Game2FEC6 repair-OFF loss30 measurement from same original product binary.",
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "result": "PASS_SCOPED_MEASUREMENTS_NOT_PLAN027_CLOSEOUT",
+  "artifact_verified": true
 }

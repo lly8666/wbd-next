@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_source_sha": "45c06aaa0b68db30319b79fc61df6043a90c7bcf",
+  "result": "PASS_SCOPED_GAME2FEC6_OUTER_OFF_TRUE_30LOSS",
+  "artifact_verified": true,
+  "run_id": 41343702310,
+  "artifact_name": "plan027-n-game2fec6-loss30-off",
+  "status": "PASS_SCOPED_MEASUREMENT_NOT_INTEGRATED_ACCEPTANCE",
+  "product": "Original Go TLS Linux client+server Rust M4 raw/TUN Game2FEC6 with outer DATA repair disabled",
+  "scenario": "plan027-c-game2-fec-10m-250ms-loss30-60s",
+  "theory": {
+    "packet_mix": [
+      {
+        "payload": 96,
+        "weight": 10
+      },
+      {
+        "payload": 288,
+        "weight": 15
+      },
+      {
+        "payload": 1060,
+        "weight": 30
+      },
+      {
+        "payload": 1200,
+        "weight": 45
+      }
+    ],
+    "avg_payload_bytes": 910.8,
+    "approx_pps_each_direction": 1372,
+    "offered_business_mbps_each_direction": 10,
+    "one_way_ms": 250,
+    "tc_loss_pct": 30,
+    "measurement_s": 60,
+    "warmup_s": 5,
+    "drain_s": 10
+  },
+  "source_frozen_binary_sha256": {
+    "libwbd_engine.so": "f4b53039a6d393e7c2584df3b074470267b9218dfa281e9e5f31f3bc9b48dc78",
+    "wbd-v4-client": "949fc7bc467276fe6557870174858f548d5d365c25065cbd4b32b1a244a074e4",
+    "wbd-v4-server": "373cae784aae258b17f6ec1ad2c054f7b5d66f12c55ba2780630ee26b4b82a77"
+  },
+  "first_business": {
+    "c2s": {
+      "offered_mbps": 9.999997333333335,
+      "received_unique_mbps": 9.999997333333335,
+      "first_fraction": 1,
+      "p99_ms": 258.7,
+      "missing_after_drain": 0
+    },
+    "s2c": {
+      "offered_mbps": 9.999997333333335,
+      "received_unique_mbps": 9.999997333333335,
+      "first_fraction": 1,
+      "p99_ms": 258.7,
+      "missing_after_drain": 0
+    }
+  },
+  "netem_real_drops": {
+    "client": 117544,
+    "server": 117607
+  },
+  "netem_approx_loss_pct": {
+    "client": 29.98869785514375,
+    "server": 29.994746131010068
+  },
+  "game_fec_original_native": {
+    "client": {
+      "source_offered": 91803,
+      "parity_offered": 120539,
+      "parity_copied": 120539,
+      "recovered_candidate": 8217,
+      "systematic_candidate": 83586,
+      "failed": 252,
+      "fec_rx_invalid": 245,
+      "fec_rx_conflict": 7
+    },
+    "server": {
+      "source_offered": 91803,
+      "parity_offered": 120572,
+      "parity_copied": 120572,
+      "recovered_candidate": 8244,
+      "systematic_candidate": 83558,
+      "failed": 212,
+      "fec_rx_invalid": 206,
+      "fec_rx_conflict": 6
+    }
+  },
+  "outer_data_retransmitted": {
+    "client": 0,
+    "server": 0
+  },
+  "repair_enabled_readback": {
+    "client": false,
+    "server": false
+  },
+  "native_parity_separate": {
+    "client": true,
+    "server": true
+  },
+  "whole_process_steady_cpu_s": {
+    "client": 8.24,
+    "server": 8.24
+  },
+  "peak_rss_bytes": {
+    "client": 25096192,
+    "server": 24428544
+  },
+  "go_tls_to_rust_handoff_verified": true,
+  "owned_stop_both": true,
+  "owned_namespaces_absent": true,
+  "limitations": [
+    "Game2FEC6 FEC parity copies NOT outer DATA R or F denominator; v3 R/C/F N/A Game multi-lane",
+    "Recovered candidate is native FEC candidate, not proof of final unique business by itself; first-cohort result independently 100pct",
+    "Delivered-packet p99 258.7ms only; this scenario had zero missing. No per-flow cross-business HOL/TCP p99.",
+    "Normal OFF control uses different 64/128/512/1200B packet mix (avg753.6 vs Game910.8), so 70pct vs100pct is not isolated causal FEC delta",
+    "CPU 8.24sec per endpoint whole process Go+Rust, not directly comparable to Normal2.04sec at high loss due mode/mix/lane overhead",
+    "Single 60s Linux dual scenario, not Windows NPF, Game4, Fixed/Auto or integrated ON/300s. No physical C line bytes."
+  ]
+}

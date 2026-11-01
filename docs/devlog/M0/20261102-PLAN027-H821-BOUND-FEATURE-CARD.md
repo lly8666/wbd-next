@@ -6,5 +6,5 @@
 - Game2FEC6 30% outer-OFF Action `41343702310` on SOURCE f5e8 binary is in flight; no verdict fabricated. A5 old Go experiment remains waived by user.
 
 ```feature-impact
-{"kind":"verification","ids":["outer-opportunistic-repair"],"reason":"Correct only bounded JSON serialization after strict feature card size CI failure; preserve actual scoped verification records unchanged."}
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Correct only bounded JSON serialization after strict feature card size CI failure; preserve actual scoped verification records unchanged."}
 ```

@@ -7,5 +7,5 @@
 - Reference `docs/evidence/M0/PLAN027-H820-FROZEN-F5-R-ONOFF-AND-N-OFF30-20261102.json` records exact measured numbers. Remaining Windows NPF/R OFF interface, Fixed/Auto/Game4, multi-stream HOL and >=300s ON combination **NOT_RUN** at this source.
 
 ```feature-impact
-{"kind":"verification","ids":["outer-opportunistic-repair"],"reason":"Append two scoped original Linux source-frozen R cost and N 30-loss OFF verification entries; stage stays experimental; no product/CLI/GUI defaults changed."}
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Append two scoped original Linux source-frozen R cost and N 30-loss OFF verification entries; stage stays experimental; no product/CLI/GUI defaults changed."}
 ```
