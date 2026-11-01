@@ -874,6 +874,15 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'bounded WSL2 eth0 native witness failed'}
           $npf=Start-Process -FilePath python -ArgumentList @('-u','tools/m0_wl_public_native_npf_trace.py') -PassThru -RedirectStandardOutput result/wl-public/native-windows-npf.log -RedirectStandardError result/wl-public/native-windows-npf-stderr.log
           Start-Sleep -Milliseconds 800
+          # Arm only the existing GitHub Runner.Worker/Listener live IPv4
+          # peers on the original physical underlay before ANY product WAL
+          # may change default routes. Business packets still use Wintun.
+          # This is a run-scoped management /32 lease, NOT full WAL Recover.
+          if($env:WBD_WL_GAME_FEC_RESCUE -eq '1'){
+            & ./tools/m0_wl_gamefec_management_route.ps1 -Action Arm
+            if(-not $?){throw 'GameFEC exact runner management underlay cannot be pinned; refuse product start'}
+            'MANAGEMENT_UNDERLAY_PINNED_GITHUB_RUNNER_ONLY' | Set-Content result/wl-public/gamefec-management-state.txt
+          }
           try {
             # A code-source-tagged Auto revision candidate saves costly
             # replay of seven already source-proven startup modes.
@@ -955,6 +964,20 @@ jobs:
             # they use the genuine shared Linux owner/lane/lifecycle ABI.
             # No separate Fixed6-only public Action or repeated WSL2 startup.
           } finally {
+            # Local-only route snapshot also runs on a genuine failed E2E.
+            # Missing GitHub rescue messages are NOT product stage evidence.
+            if($env:WBD_WL_GAME_FEC_RESCUE -eq '1'){
+              Get-NetRoute -AddressFamily IPv4 -ErrorAction Continue |
+                Select-Object DestinationPrefix,InterfaceIndex,NextHop,RouteMetric |
+                ConvertTo-Json -Depth 4 | Out-File result/wl-public/windows-route-after.json
+              if($e2eExit -ne 0){
+                'NATIVE_FAIL_MANAGEMENT_PIN_RETAINED_UNTIL_EVIDENCE_UPLOAD' |
+                  Add-Content result/wl-public/gamefec-management-state.txt
+              }else{
+                'PRODUCT_PYTHON_EXIT_ZERO_MANAGEMENT_PIN_RETAINED_UNTIL_EVIDENCE_UPLOAD' |
+                  Add-Content result/wl-public/gamefec-management-state.txt
+              }
+            }
             Remove-NetFirewallRule -Name $tcpRuleName -ErrorAction Stop
             if(Get-NetFirewallRule -Name $tcpRuleName -ErrorAction SilentlyContinue){
               throw 'owned TCP test firewall rule survived scoped cleanup'
@@ -1166,6 +1189,9 @@ jobs:
             result/wl-public/gamefec-supervisor-stack.txt
             result/wl-public/gamefec-mode-stack.txt
             result/wl-public/gamefec-e2e-stack.txt
+            result/wl-public/gamefec-supervisor-timeout.txt
+            result/wl-public/gamefec-management-state.txt
+            result/wl-public/windows-route-after.json
             result/wl-public/report.json
             result/wl-public/normal-report.json
             result/wl-public/*-report.json
@@ -1192,3 +1218,16 @@ jobs:
             result/wl-public/native-wsl-neighbor-owner.json
           retention-days: 30
           if-no-files-found: warn
+      # Only management /32 leases are removed here, after the evidence
+      # upload. Product restoration always belongs to the ORIGINAL Go/WAL
+      # Stop inside the previous native step; never accept this as its PASS.
+      - name: Reclaim only the exact test-owned GitHub management route lease
+        if: always()
+        shell: pwsh
+        timeout-minutes: 2
+        run: |
+          if($env:WBD_WL_PUBLIC_MODES -match '^game[24]-fec$'){
+            & ./tools/m0_wl_gamefec_management_route.ps1 -Action Restore
+            if(-not $?){throw 'GITHUB_MANAGEMENT_LEASE_EXACT_RESTORE_FAIL_NOT_PRODUCT_WAL'}
+            Write-Output 'GITHUB_MANAGEMENT_LEASE_POST_ARTIFACT_RESTORED_NOT_PRODUCT_WAL'
+          }
