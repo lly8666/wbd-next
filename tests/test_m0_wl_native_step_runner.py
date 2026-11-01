@@ -55,11 +55,11 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
             code=pathlib.Path(d)/"original-e2e-fixture.py"
             log=pathlib.Path(d)/"direct-full.log"
             code.write_text(
-                "import time\\n"
+                "import time\n"
                 "print('M0_PLAN027_GAME_DUE_FAULT stage=due_send_records "
-                "first_error=INVALID lane=2 cipher_len=1391 path_mtu=1400',flush=True)\\n"
-                "time.sleep(30)\\n"
-            .replace('\\\\n','\\n'))
+                "first_error=INVALID lane=2 cipher_len=1391 path_mtu=1400',flush=True)\n"
+                "time.sleep(30)\n"
+            )
             captured=io.StringIO()
             with (mock.patch.object(native,"native_batch_deadline",return_value=1),
                   mock.patch.object(sys,"argv",[str(RUNNER),str(code),str(log)]),
