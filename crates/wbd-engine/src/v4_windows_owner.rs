@@ -818,7 +818,12 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
         (!e.feature7||e.game_group.is_some()||!m.auto_low_rate_mode){
         return Err(INVALID)
     }
-    if let Some(idle)=control.peer_idle_ns{
+    // This exact old-generation retirement is admitted only by M3 AEAD
+    // + replay-unique PN on the current bound epoch (never raw NPF ACK).
+    // It is not an Auto quality sample or receipt bitmap.
+    if control.peer_retire{
+        m.health.on_authenticated_peer_retire(now.0);
+    }else if let Some(idle)=control.peer_idle_ns{
         m.health.on_peer_idle_hint(now.0,idle);
     }else{m.health.on_authenticated_control(now.0)}
     #[cfg(feature="fec2_product_record")]
@@ -2670,6 +2675,37 @@ mod tests {
         e.rx_unwrapped_high=(1u64<<32)+120;
         assert_eq!(m0_tcp_unwrap(&e,30,40).unwrap(),(1u64<<32)+30);
         assert_eq!(m0_tcp_unwrap(&e,150,40).unwrap(),(1u64<<32)+150);
+    }
+
+    #[test]
+    fn plan027_windows_receives_only_authenticated_old_generation_retire(){
+        let mut r=Registry{generation:1991,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        let ep=[2u8;16];
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        assert_eq!(bind_wintun(&mut r,h,ep,91,19),OK);
+        assert!(set_path_mtu(&mut r,h,ep,91,19,1400).is_ok());
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            assert!(m2_arm_entry(&mut e,ep,91,19).is_ok());
+            assert!(!e.m2.as_ref().unwrap().health.unhealthy(m2_clock().0));
+            let unchanged=crate::v4_native_health::encode_authenticated_health(0,None,None).unwrap();
+            let plain=crate::v4_native_health::parse_authenticated_control(&unchanged).unwrap();
+            assert_eq!(m2_authenticated_kind1_entry(&mut e,1,&plain),Ok(0));
+            assert!(!e.m2.as_ref().unwrap().health.peer_retired());
+            // One caller: the already-AEAD-opened M3 kind1 replay gate;
+            // a synthetic raw wire alone NEVER calls this Rust function.
+            let wire=crate::v4_native_health::encode_authenticated_retire_live(0,512).unwrap();
+            let control=crate::v4_native_health::parse_authenticated_control(&wire).unwrap();
+            assert!(control.peer_retire);
+            assert_eq!(m2_authenticated_kind1_entry(&mut e,2,&control),Ok(0));
+            assert!(e.m2.as_ref().unwrap().health.peer_retired());
+            assert!(e.m2.as_ref().unwrap().health.unhealthy(m2_clock().0));
+            assert!(e.m2.as_ref().unwrap().quality_due.is_empty());
+        }
+        assert_eq!(quiesce_wintun(&mut r,h,ep,91,19),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
     }
 
     #[cfg(feature="fec2_product_record")]
