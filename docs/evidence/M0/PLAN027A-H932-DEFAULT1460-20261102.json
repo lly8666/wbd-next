@@ -2,7 +2,7 @@
   "schema_version": 1,
   "source_before": "adc18d75354c24103f10cfc5a90bf7d4207690fa",
   "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "phase": "H932_CODE_NOT_NATIVE_QUALIFIED",
+  "phase": "H932_SOURCE_EXACT_BUILD_PASS_NATIVE_UNVERIFIED",
   "legacy_source": "a7a82db31fe736ffedee330795a3234d358f1984",
   "operator_default_outer_ipv4_mtu": 1460,
   "operator_explicit_max_ipv4_mtu": 1500,
@@ -77,5 +77,54 @@
   "actual_df0_df1": "NOT_RUN",
   "weaknet": "NOT_RUN",
   "performance": "NOT_RUN",
-  "repeat_dispatch": false
+  "repeat_dispatch": false,
+  "actual_source_sha": "f2a6644908ecf567bed17987e51099e5cbd0d7da",
+  "automatic_actions": {
+    "rust_g2_scoped": {
+      "run": 41441674179,
+      "status": "PASS_BUILD_UNIT"
+    },
+    "rust_native_abi": {
+      "run": 41441674180,
+      "status": "PASS_BUILD_UNIT"
+    },
+    "rust_cross_abi": {
+      "run": 41441674210,
+      "status": "PASS_COMPILE"
+    },
+    "native_functional": {
+      "run": 41441674238,
+      "status": "PASS_UNIT"
+    },
+    "original_go_plan012": {
+      "run": 41441674284,
+      "status": "PASS_BUILD"
+    },
+    "original_windows_wal": {
+      "run": 41441674060,
+      "status": "PASS_BUILD_UNIT"
+    },
+    "static_audit": {
+      "run": 41441673991,
+      "status": "PASS"
+    },
+    "initial_governance": {
+      "run": 41441674213,
+      "status": "FAIL_SCOPE_CONTEXT_REFS"
+    },
+    "post_bounded_governance": {
+      "source": "a5e2fe8250b248a243664bfbd446f9c08aba5d21",
+      "run": 41442301517,
+      "status": "PASS"
+    },
+    "original_wsl_native": {
+      "run": 41441674297,
+      "status": "IN_PROGRESS_AT_H939"
+    },
+    "new_windows_owner": {
+      "source": "07cfeeb793d7f43a719bc7424d0671a1510f6960",
+      "run": 41443312153,
+      "status": "IN_PROGRESS_AT_H939"
+    }
+  }
 }

@@ -135,9 +135,9 @@
     },
     {
       "platform": "Linux client/server original-Go, Windows original-Go and GUI/catalog; Linux V4 + Rust cold ABI",
-      "scope": "H932 source-pinned 1460 default; assembly hash/build/native OS readback pending",
-      "status": "NOT_RUN",
-      "source_sha": null,
+      "scope": "H932 default1460 source-locked original Go assembly + Windows WAL/Linux Go + Rust native/cross ABI compile PASS; actual default OS applied and seven native modes NOT_RUN",
+      "status": "BUILD_PASS",
+      "source_sha": "f2a6644908ecf567bed17987e51099e5cbd0d7da",
       "evidence": "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json"
     }
   ],
@@ -164,7 +164,8 @@
     "H935 fixes actual source adc18d75 Windows Fixed pre-READY rc=1: v5 original TLS Rust owner used peer TX record cap without applying local receiving Wintun planned-inner ceiling. Cold-only pure Rust receive derivation narrows TX cap; no RX authorization, OS Applied or Game group changed. Native Fixed still NOT_RUN at new SOURCE.",
     "H936 Windows-only Rust original M3 integration unit asserts actual v5 FEC2 fixed outer1400, planned inner1273, wire1318, stop/rollback and independent authenticated RX; no actual Windows↔WSL app delivery claimed.",
     "H935 SOURCE2b2ad98 Windows owner ABI run41442869483 FAIL E0502 immutable Registry lane borrow crossing mutable cold bind; H937 clone existing Arc handle only, no byte/authorization change, new exact SOURCE test pending.",
-    "H938 OpenWrt disabled UCI wrapper now has one explicit outer_mtu default1460 passed to same Linux --outer-mtu; Android currently no connected native owner, its setMtu(1200) is a non-operational INNER placeholder, never treated as outer1460; neither platform native applied qualified."
+    "H938 OpenWrt disabled UCI wrapper now has one explicit outer_mtu default1460 passed to same Linux --outer-mtu; Android currently no connected native owner, its setMtu(1200) is a non-operational INNER placeholder, never treated as outer1460; neither platform native applied qualified.",
+    "H939 scoped exact H932 source f2a66449 build results PASS, not application OS readback. H937 Windows Rust original-owner v5 E0502 fix plus native WSL remain IN_PROGRESS. H932 earlier M0-WIN-LINUX source did not pass as of checkpoint; do not substitute builds."
   ],
   "promotion": null
 }

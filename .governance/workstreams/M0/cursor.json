@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 938,
-  "checkpoint_sha": "07cfeeb793d7f43a719bc7424d0671a1510f6960",
+  "sequence": 939,
+  "checkpoint_sha": "e92bbb694cc1b220b83a6a85b92f5bb017e7057e",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H938 outer default1460 compatibility: source-locked original Go Linux client/server/Windows, M0 V4 Linux, OpenWrt opt-in UCI same outer unit; Android JNI absent and not falsely marked 1460 OS applied.",
+  "current_task": "PLAN027A H939 exact SOURCE H932 default outer1460 code and original-Go assembly confirmed build-only; H937 Windows v5 Fixed owner native regression plus Windows WSL pending; 028 not started.",
   "why_now": "Recovery verified PLAN027 USER_ACCEPTED_SCOPED closed; no old Actions inflight on entry. New source push has auto CI only; do not dispatch duplicate native scenarios.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect H937 Windows original owner ABI, PLAN020 original Go WAL and real WSL fixed source; collect H938 OpenWrt source static/Android comments, no broad old 027 dispatch. Remaining 027A cross-boundary DF/weaknet/native remains.",
+  "next_action": "Collect existing 07cfeeb7 Windows native owner ABI (41443312153) and WSL original real app (41443311972), original H932 WSL41441674297; avoid duplicate dispatch. Next prove actual OS applied requested/default1460 and explicit1500 boundaries, Windows Game/FEC DF0/DF1 and weaknet perf if host capacity; no 028 until exits.",
   "unverified": true,
   "last_tested_source": "6693910f879f9e55e77dd823c1b05d8942321929",
   "evidence_refs": [
@@ -34,5 +34,5 @@
     "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json"
   ],
   "open_requests": [],
-  "partial_summary": "Source2b2ad98 Windows owner ABI Action41442869483 FAIL at crates/wbd-engine/src/v4_windows_owner.rs:1163 E0502 immutable registry lane borrow over mutable set_path_mtu. H937 clones existing Arc lane, no new OS or owner. Other H935 Rust Linux/cross native ABI builds PASS. H936 v5 exact regression test added but CI not yet collected. Previous real fixed pre-READY rc1 remains FAIL pending new native source."
+  "partial_summary": "SOURCE f2a66449 H932 default1460 original-Go Windows WAL41441674060, Go PLAN012 41441674284, native ABI41441674180, cross ABI41441674210 and native-functional41441674238 PASS build/unit scope only. H934 governance41442301517 PASS. Source adc18d75 WSL native Fixed rc1 FAIL preserved. H935 narrowing original owner v5 added; H937 E0502 repaired source07cfeeb7 Windows owner ABI still IN_PROGRESS, no new-source native all-mode PASS. H938 OpenWrt UCI default1460, Android disconnected inner1200 untouched."
 }
