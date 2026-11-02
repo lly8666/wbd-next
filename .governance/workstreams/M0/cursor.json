@@ -4,28 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 949,
-  "checkpoint_sha": "adc63a8b8af209dbe589d072403b7bceae8e038b",
+  "sequence": 950,
+  "checkpoint_sha": "ebc2b15bea71858706b1f5a034d7324cc180b4f9",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H949: H948 source-locked manifest check PASS, bounded native Windows source build underway; governance feature check FAIL because H948 none-impact JSON omitted required ids:[]; amend metadata only without source rebuild.",
-  "why_now": "The feature catalog schema requires ids list even for kind=none after current manifest product-path change. Do not alter code, manifests, past failed evidence or rerun native job.",
+  "current_task": "PLAN027A H950: existing H948 product source compiled and all 7 native modes at legacy1400 passed; H949 governance PASS. One-shot six independently dispatched native default1460, explicit1500, 3Mbps Game4, and Auto staged weaknet, all source-verified prebuilt reuse.",
+  "why_now": "The existing 41452689481 Windows EXE/Rust DLL/Linux product artifacts match immutable source adc63a8 and are enough for independent current-source harness-only tests; do not rebuild.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect H948 exact-source Windows Go/Rust and Linux build result and H949 governance. Do not dispatch duplicate H943 runs. Current-source real Windows numeric pre-READY receipt and other PLAN027A exits still pending.",
+  "next_action": "Collect H950 workflow dispatcher and each resulting exact-source m0-wl-public-normal-full.yml run. Require per-scenario receipts (not just job success), Windows numeric Wintun pre-READY readback, OS MTU and Stop; H950 does not yet address native DF0/DF1, Game4 staged 5-30-5, ARM64 latest-source or PLAN028.",
   "unverified": true,
   "last_tested_source": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027A-H943-SIX-ACTIONS-COLLECTED.md",
     "docs/devlog/M0/20261102-PLAN027A-H945-1460-PROMPT-LOCK.md",
     "docs/evidence/M0/PLAN027A-H947-ESCAPE-AND-CURSOR-ACTION-RECOVERY-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H947-AUTO-FAIL-RECOVERY.md",
     "docs/evidence/M0/PLAN027A-H948-REPINCURRENT-MANIFEST-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H948-REPINCURRENT-WIN-BLOB.md",
-    "docs/devlog/M0/20261102-PLAN027A-H949-FEATURE-NONE-SCHEMA.md"
+    "docs/devlog/M0/20261102-PLAN027A-H949-FEATURE-NONE-SCHEMA.md",
+    "docs/evidence/M0/PLAN027A-H950-PREBUILT-ONE-SHOT-20261102.json",
+    "docs/devlog/M0/20261102-PLAN027A-H950-ONE-SHOT-REUSE-DISPATCH.md"
   ],
   "open_requests": [],
-  "partial_summary": "H943 source ae3e7e9f six real native Actions all SUCCESS (default1460 all7, explicit1500 all7, 1460 Normal/Game4FEC loss0, Fixed/Game4FEC loss30). Governance on H943 source96ead0 FAIL because M0 cursor evidence_refs mixed old 6693 and current ae3e7e9 source and feature card >16KiB; H944 fixes only scope/size. Old evidence files not changed, historical FAILs preserved, Game4FEC 10M p99 high and true native DF1/DF0 still NOT_RUN. PLAN028 not started. H945 user reconfirmed permanent ordinary 1460 outer default; prompt-only update, no code or native qualification. H946 code extends Windows cold READY numeric verified inner MTU and harness evidence; actual fresh native numeric receipt NOT_RUN pending current SOURCE Action. H945 governance FAIL due context_refs 9>8; H946 initial E2E cheap workflow FAIL due accidental double-escaped regex/newlines; H947 fixes at source and retains FAIL evidence. H947 source7f84 governance+parser PASS but prepare_windows_wiring.py --check-only FAIL because current m0_native_v4_windows.go blob changed and plan020 manifest result_blob was stale; H948 current-only pin. H948 feature-catalog Action 41452689560 FAIL invalid feature-impact IDs: H948 note kind none lacked ids:[]; H949 fixes only documentation; H948 native build stays same SOURCE."
+  "partial_summary": "H943 source ae3e7e9f six real native Actions all SUCCESS (default1460 all7, explicit1500 all7, 1460 Normal/Game4FEC loss0, Fixed/Game4FEC loss30). Governance on H943 source96ead0 FAIL because M0 cursor evidence_refs mixed old 6693 and current ae3e7e9 source and feature card >16KiB; H944 fixes only scope/size. Old evidence files not changed, historical FAILs preserved, Game4FEC 10M p99 high and true native DF1/DF0 still NOT_RUN. PLAN028 not started. H945 user reconfirmed permanent ordinary 1460 outer default; prompt-only update, no code or native qualification. H946 code extends Windows cold READY numeric verified inner MTU and harness evidence; actual fresh native numeric receipt NOT_RUN pending current SOURCE Action. H945 governance FAIL due context_refs 9>8; H946 initial E2E cheap workflow FAIL due accidental double-escaped regex/newlines; H947 fixes at source and retains FAIL evidence. H947 source7f84 governance+parser PASS but prepare_windows_wiring.py --check-only FAIL because current m0_native_v4_windows.go blob changed and plan020 manifest result_blob was stale; H948 current-only pin. H948 feature-catalog Action 41452689560 FAIL invalid feature-impact IDs: H948 note kind none lacked ids:[]; H949 fixes only documentation; H948 native build stays same SOURCE. H948 Actions 41452689481 native/7-mode legacy1400 and 41452689382 Windows original WAL completed SUCCESS, H949 governance 41452968540 SUCCESS. H950 adds a one-shot dispatcher using H948 SHA-verified prebuilt artifacts, plus 3Mbps Game4 / Normal and Auto 5-30-5 source-controlled scenes; native scene outcomes initially NOT_RUN. No code/product/manifest delta."
 }

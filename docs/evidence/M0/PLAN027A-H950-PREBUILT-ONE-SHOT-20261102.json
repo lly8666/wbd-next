@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "harness_source": "H950_NEW_COMMIT_PENDING",
+  "binary_source_sha": "adc63a8b8af209dbe589d072403b7bceae8e038b",
+  "prebuilt_run_id": 41452689481,
+  "windows_artifact": "m0-wl-windows-product-binaries-adc63a8b8af209dbe589d072403b7bceae8e038b",
+  "linux_artifact": "m0-plan024-linux-product",
+  "build_reuse_policy": "NO_PRODUCT_RECOMPILE_EXACT_GIT_PROVENANCE_SHA256",
+  "h948_native_run": {
+    "id": 41452689481,
+    "conclusion": "success",
+    "mode": "all",
+    "outer_mtu": "legacy1400",
+    "seven_mode_scoped": "PASS",
+    "source_sha": "adc63a8b8af209dbe589d072403b7bceae8e038b"
+  },
+  "h948_wal_run": {
+    "id": 41452689382,
+    "conclusion": "success",
+    "source_sha": "adc63a8b8af209dbe589d072403b7bceae8e038b"
+  },
+  "h949_governance_run": {
+    "id": 41452968540,
+    "conclusion": "success",
+    "source_sha": "ebc2b15bea71858706b1f5a034d7324cc180b4f9"
+  },
+  "planned_scenes": [
+    "all default1460 7-modes numeric pre-READY OS receipt",
+    "all explicit1500 7-modes numeric pre-READY OS receipt",
+    "normal scenarios/plan027a-h950-normal-1460-3m-25ms-loss0-60s.json",
+    "game4-fec scenarios/plan027a-h950-game4fec-1460-3m-25ms-loss0-60s.json",
+    "game4-fec scenarios/plan027a-h950-game4fec-1460-3m-250ms-loss30-60s.json",
+    "auto scenarios/plan027a-h950-auto-1460-10m-staged5-30-5-210s.json"
+  ],
+  "qualification": "NOT_RUN_UNTIL_ACTIONS_COLLECTED",
+  "missing_scope": [
+    "true OS DF0/DF1 oversize native",
+    "Game4-FEC native staged5-30-5",
+    "latest source ARM64 boundary",
+    "3Mbps CPU/RSS and p99 scoped performance findings",
+    "PLAN028 multi-client/session and seven rotation modes"
+  ],
+  "notes": "All old FAILs remain. Default outer1460 permanently; 1500 explicit upper bound only."
+}

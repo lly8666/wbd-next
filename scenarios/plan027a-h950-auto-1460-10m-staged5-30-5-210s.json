@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "scenario_id": "plan027a-h950-auto10m-staged5-30-5-210s",
+  "public_mode": "auto",
+  "duration_s": 210,
+  "warmup_s": 5,
+  "drain_s": 10,
+  "tun_mtu": 1460,
+  "seed": 20261102,
+  "windows_to_linux": {
+    "offered_mbps": 10,
+    "delay_ms": 250,
+    "loss_pct": 5,
+    "tc_rate_mbps": null,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 64,
+        "packets_weight": 10
+      },
+      {
+        "udp_payload_bytes": 128,
+        "packets_weight": 15
+      },
+      {
+        "udp_payload_bytes": 512,
+        "packets_weight": 25
+      },
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 50
+      }
+    ]
+  },
+  "linux_to_windows": {
+    "offered_mbps": 10,
+    "delay_ms": 250,
+    "loss_pct": 5,
+    "tc_rate_mbps": null,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 64,
+        "packets_weight": 10
+      },
+      {
+        "udp_payload_bytes": 128,
+        "packets_weight": 15
+      },
+      {
+        "udp_payload_bytes": 512,
+        "packets_weight": 25
+      },
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 50
+      }
+    ]
+  },
+  "impairment_stages": [
+    {
+      "start_s": 0,
+      "windows_to_linux": {
+        "delay_ms": 250,
+        "loss_pct": 5
+      },
+      "linux_to_windows": {
+        "delay_ms": 250,
+        "loss_pct": 5
+      }
+    },
+    {
+      "start_s": 40,
+      "windows_to_linux": {
+        "delay_ms": 250,
+        "loss_pct": 30
+      },
+      "linux_to_windows": {
+        "delay_ms": 250,
+        "loss_pct": 30
+      }
+    },
+    {
+      "start_s": 80,
+      "windows_to_linux": {
+        "delay_ms": 250,
+        "loss_pct": 5
+      },
+      "linux_to_windows": {
+        "delay_ms": 250,
+        "loss_pct": 5
+      }
+    }
+  ]
+}
