@@ -139,3 +139,15 @@ Normal定型后所有模式只做适配与预算/切换/原密文/真实发送/S
 复用WL夹具和NETWORK_TRIAGE；`WL_PERF_HARNESS_V2.md`退役Go对照/旧模式限制只作历史，入口以实际workflow inputs及本计划为准，不另造平台。开发前定向读相关模块设计/近期修复。
 
 每批短devlog记录“证据→原因→改变→保持约束→验证”，同步必要功能卡/证据；阶段更新cursor。最终一表列模式/平台/重传ON-OFF、SOURCE、容量、恢复/延迟、CPU/RSS及重传成本、生命周期、剩余风险。OFF矩阵、ON组合、组件/真实驱动/物理资格分开。无必要缺项/阻断/在途后待验收；重复定时提示只核新事实，不扩测。
+
+## 7. 2026-11-02 H920 用户授权限定范围收口
+
+**USER_ACCEPTED_SCOPED_NETWORK_CLOSEOUT / REVIEW_READY，不是全模式全平台正式发布。** 用户明确授予一次M0写权限并要求根据已有真实网络结果结案，不再为相同SOURCE重复压测。详细结案：[H920 evidence](../../evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json)、[devlog](../../devlog/M0/20261102-PLAN027-H920-USER-SCOPED-CLOSEOUT.md)。没有新源码构建/原生跑测/物理部署；产品二进制来源仍为 H908 `6693910f879f9e55e77dd823c1b05d8942321929`。
+
+五项有限结算：① Game/FEC及外层 ON 真实Windows/Linux原生正例和105s单向黑洞恢复；② Normal成本同VM OFF/ON100M，Windows CPU16.4062s→19.2188s，**ON多2.8126s，优化收益未证明**；③ OFF Normal/Fixed6/Game代表工况，Fixed6 50M CPU约单核66%达到同族容量停止线；④ ON Normal300s、Auto240s真实Server降档及GameFEC10M/30%正例，Stop合格，短TCP smoke不冒充持续300s独立TCP+UDP；⑤ H920归档SOURCE、F/R/C可得量、CPU/RSS/RTT/首到/Stop与缺失项，A5旧Go比较仍按用户豁免。
+
+原始失败保留：burst [Action41424741198](https://github.com/lly8666/wbd-next/actions/runs/41424741198)整体FAIL，虽原生child+Stop PASS；后置PowerShell重复规则与Python canonical不一致，H918修正但不回写旧结论。H918治理 [41427002255](https://github.com/lly8666/wbd-next/actions/runs/41427002255)因11项游标证据超8而FAIL，H919治理 [41427303752](https://github.com/lly8666/wbd-next/actions/runs/41427303752)后续SUCCESS。
+
+未升级为全面PASS：Windows Auto客户端逐方向降档 NOT_PROVEN（Linux server 4→3→2→1已验证）；Game全聚合F/R/C wire字节、跨OS校准单向p99 NOT_MEASURED；Windows全程持续TCP+UDP300s、七模式rotation、GUI重传开关持久化、物理WAN、全平台超MTU/9k能力 NOT_PROVEN/NOT_RUN。这些是本次用户接受的**限制及后续接口实际改变时应补的资格**，不能改写为测试通过。
+
+外层重传早已独立登记为 [`outer-opportunistic-repair`](../../features/entries/outer-opportunistic-repair.json)，默认ON/回退OFF，Linux `--outer-repair on|off`，Windows原生cold有效策略已在真Action覆盖；GUI未完整验。功能仍 `experimental`、`promotion:null`。按既定依赖，M0 registry/cursor改登PLAN027A为PLANNED，MTU统一1399→1398与超限IP施工尚未实施。

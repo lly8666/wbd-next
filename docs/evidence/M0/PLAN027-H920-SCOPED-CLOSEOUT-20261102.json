@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "closeout": "USER_ACCEPTED_SCOPED_NETWORK_CLOSEOUT",
+  "reviewed_main_sha": "f99cb27c64b7422dbdb049fe18a46b759a31d834",
+  "product_source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "docs_only": true,
+  "new_product_test": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "feature_id": "outer-opportunistic-repair",
+  "obligations": [
+    "Game/FEC and original ON repairs: exact-source native scoped representative PASS, older FAIL retained",
+    "Normal shared repair: sameVM 100M OFF->ON accepted but NO CPU gain (16.4062 vs 19.2188 CPU-s)",
+    "Repair OFF: Normal/Fixed6/Game representative PASS, Fixed50 65.8% one core capacity stop",
+    "Repair ON: Normal300s, Auto240s, GameFEC10M highloss and owned Stop scoped PASS",
+    "Source-specific F/R/C if measured, CPU/RSS/RTT and unfinished scopes recorded; no necessary in-progress Action; A5 user waived"
+  ],
+  "key_runs": [
+    41420996043,
+    41424747367,
+    41424744233,
+    41424750494,
+    41422017446,
+    41419022830
+  ],
+  "old_failed_action_unchanged": 41424741198,
+  "old_gov_failed_action_unchanged": 41427002255,
+  "gov_after_fix_pass": 41427303752,
+  "limits": [
+    "Windows Auto CLIENT downgrade NOT_PROVEN, Linux server 4->3->2->1 proven",
+    "Game aggregate real F/R/C wire byte totals and calibrated cross-OS one-way p99 NOT_MEASURED",
+    "300s continuous independent TCP+UDP Windows and 7-mode rotation NOT_PROVEN",
+    "Windows GUI outer repair toggle/persistence and physical WAN NOT_RUN",
+    "PLAN027A GameFEC 1399->1398/typed MTU/DF/fragment remains PLANNED NOT_RUN",
+    "No CPU optimization success claim; Normal100M ON cost +2.8126s",
+    "Original burst action failure not converted to PASS"
+  ],
+  "next_task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "acceptance_scope": "User-requested existing-evidence limited closure, not universal product promotion"
+}
