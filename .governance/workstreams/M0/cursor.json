@@ -4,24 +4,17 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 943,
-  "checkpoint_sha": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
+  "sequence": 944,
+  "checkpoint_sha": "96ead0c07d3bc0121116bc801617c7e32d9bf142",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H943: one-shot six actions all functional SUCCESS source ae3e7e9f, native default outer1460 and explicit1500 seven public modes plus Normal/Game4FEC loss0 and Fixed/Game4FEC loss30. Remain DF0/DF1 true giant UDP, weaknet5-30-5, 3Mbps GameFEC p99/CPU and OS Windows numeric.",
+  "current_task": "PLAN027A H944 governance-only scope correction: H943 source ae3e7e9f six true native successes retained, cursor evidence_refs now only that exact SOURCE, historical PLAN027 evidence still in original files and dated devlog; compact feature card below 16KiB.",
   "why_now": "Recovery verified PLAN027 USER_ACCEPTED_SCOPED closed; no old Actions inflight on entry. New source push has auto CI only; do not dispatch duplicate native scenarios.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Do NOT rerun H941 six scenes. One precise 3Mbps Game4FEC 1460 CPU/RSS/p99 same-VM independent against Normal/old only if signal merits; actual DF1/DF0 oversize kernel ICMP/fragmentation and Windows numeric OS readback must be proven per supported mode, 5→30→5 staged if feasible. Resolve by exact SOURCE with no false PASS, then authorize PLAN028.",
+  "next_action": "Collect H944 governance + feature catalog checks. Avoid replay six native source ae3e7e9f. 027A functional default1460/explicit1500 COMPLETE_SCOPED; final exit still blocked by real DF0/DF1 packet and ICMP, Windows numeric OS MTU readback, staged weaknet and Game4 3Mbps/CPU-RSS-p99 protection. PLAN028 not started.",
   "unverified": true,
   "last_tested_source": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json",
-    "docs/evidence/M0/PLAN027-H915-SOURCE6693-NORMAL100-PAIR-PASS-20261102.json",
-    "docs/evidence/M0/PLAN027-H917-SOURCE6693-NORMAL-BURST-POSTORACLE-FAIL-20261102.json",
-    "docs/evidence/M0/PLAN027-H917-SOURCE6693-NORMAL-ON300-SMALL1-PASS-20261102.json",
-    "docs/evidence/M0/PLAN027-H917-SOURCE6693-AUTO240-ON-PASS-20261102.json",
-    "docs/evidence/M0/PLAN027-H917-SOURCE6693-FIXED6-OFF50-PASS-20261102.json",
-    "docs/evidence/M0/PLAN027-H916-SOURCE6693-GAME4FEC-OFF20-HIGHLOSS-PASS-20261102.json",
     "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
   ],
   "context_refs": [
@@ -35,5 +28,5 @@
     "docs/devlog/M0/20261102-PLAN027A-H943-SIX-ACTIONS-COLLECTED.md"
   ],
   "open_requests": [],
-  "partial_summary": "H943 6/6 true NPF/Wintun↔WSL2 source ae3e7e9f: 41446644468 default1460 all7 PASS, 41446654756 explicit1500 all7 PASS, 41446664669 Normal0 10Mbps first100 both p99 47/52 PASS, 41446675044 Game4FEC0 first100 both but high p99 1297/1328ms (PERF_UNQUALIFIED), 41446684870 Fixed30 first .99947/.998818 PASS, 41446696380 Game4FEC30 first .997094/.998832 PASS. All actual Linux TUN OS inner<=outer and owned Stop. H943 evidence. DF0/DF1 and staged5-30-5 NOT_RUN; 028 not started."
+  "partial_summary": "H943 source ae3e7e9f six real native Actions all SUCCESS (default1460 all7, explicit1500 all7, 1460 Normal/Game4FEC loss0, Fixed/Game4FEC loss30). Governance on H943 source96ead0 FAIL because M0 cursor evidence_refs mixed old 6693 and current ae3e7e9 source and feature card >16KiB; H944 fixes only scope/size. Old evidence files not changed, historical FAILs preserved, Game4FEC 10M p99 high and true native DF1/DF0 still NOT_RUN. PLAN028 not started."
 }
