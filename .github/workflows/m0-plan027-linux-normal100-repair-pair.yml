@@ -16,7 +16,7 @@ jobs:
       PRODUCT_SOURCE: f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with: {persist-credentials: false}
+        with: {persist-credentials: false, fetch-depth: 80}
       - name: Verify exact original high-PPS OFF/ON contract and source selection
         run: |
           set -euo pipefail
