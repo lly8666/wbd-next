@@ -18,6 +18,8 @@ class NormalCap100PairTest(unittest.TestCase):
         self.assertEqual(a["network"],b["network"])
         self.assertEqual(a["traffic"]["c2s_mbps"],100)
         self.assertEqual(a["traffic"]["sizes"],[[1200,100]])
+        self.assertFalse(a["traffic"]["observe_size_classes"])
+        self.assertFalse(b["traffic"]["observe_size_classes"])
         self.assertEqual(a["phases"][0]["c2s"]["delay_ms"],25)
 
 if __name__=="__main__":unittest.main()

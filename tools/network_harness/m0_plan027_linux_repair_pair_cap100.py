@@ -23,7 +23,8 @@ def configuration(scene,source,run_id,enabled):
     c=normal_base(original,source,run_id,enabled)
     c["id"]="M0_PLAN027_R_NORMAL_100M_25MS_ZERO_"+("ON" if enabled else "OFF")
     c["traffic"].update(c2s_mbps=100,s2c_mbps=100,
-                        sizes=[[1200,100]],udp_share=1.0,deadline_ms=6000)
+                        sizes=[[1200,100]],udp_share=1.0,deadline_ms=6000,
+                        observe_size_classes=False)
     for d in ("c2s","s2c"):
         c["phases"][0][d].update(delay_ms=25,loss_pct=0,rate_mbps=0)
     c["phases"][0]["seconds"]=60

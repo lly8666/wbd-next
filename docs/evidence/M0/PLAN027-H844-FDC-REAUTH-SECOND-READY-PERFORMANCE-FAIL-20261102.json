@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "source_sha": "fdc2fbb77e5c22eec5489f03eaed9a4c406d1165",
+  "fixture_sha": "fdc2fbb77e5c22eec5489f03eaed9a4c406d1165",
+  "run_id": 41364798287,
+  "artifact": "plan027-reauth-newsource-105-blackhole-recover120",
+  "result": "FAIL_OR_INCONCLUSIVE_NATIVE_RECOVERY_PERFORMANCE",
+  "scope": "original Go TLS Rust M4 Linux true bilateral 105s netem100pct no app/probe, then 120s real 10Mbps each new business; repair OFF",
+  "observed": {
+    "native_built_and_Go_unit": "PASS",
+    "pre20_first": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "blackhole_native_drops": {
+      "client": 9,
+      "server": 8
+    },
+    "second_gen_Go_Rust_handoff_and_READY_each": 2,
+    "owned_stop": true,
+    "owned_netns_absent": true,
+    "recovery_first_fraction": {
+      "c2s": 0.8239300598692025,
+      "s2c": 0.824901945537494
+    },
+    "recovery_missing": {
+      "c2s": 35046,
+      "s2c": 34852
+    },
+    "recovery_delivered_p99_ms": {
+      "c2s": 21285.8,
+      "s2c": 21304.1
+    },
+    "source_TUN_drops_during_measurement": {
+      "client": 34825,
+      "server": 34852
+    },
+    "CPU_s_245": {
+      "client": 10.23,
+      "server": 10.31
+    }
+  },
+  "limitations": [
+    "Actual run fails both first/latency target; may not promote authentic second READY or owned Stop to business recovery PASS",
+    "Native old harness wrongly expected exactly one handoff (H844 multi-gen parser corrected), but the 17.6pct lost app cohort and p99~21sec remain real",
+    "Host pressure noted, not proven host-only bottleneck; TUN drop real while cold TLS not yet active",
+    "Old source f5 2x dead native client exit1, newer fdc reached second READY; different runner/time, not causal Go retry optimization proof",
+    "Windows, physical, Game rejoin and native generation rotation separately NOT_RUN"
+  ]
+}

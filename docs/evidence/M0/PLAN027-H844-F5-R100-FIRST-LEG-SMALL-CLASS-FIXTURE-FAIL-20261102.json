@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "run_id": 41365414788,
+  "source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_sha": "1b2a04e259a123a33efcc24050207f93ab6d1fec",
+  "result": "FAIL_FIXTURE_NOT_PRODUCT",
+  "reason": "old mixed-size config enabled mandatory small64-256B cohort for a 1200B-only 100Mbps test; no such packets are offered",
+  "off_leg": {
+    "offered_mbps": {
+      "c2s": 100.0008,
+      "s2c": 100.00016
+    },
+    "first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "p99_ms": 25.6,
+    "cpu_s_60": {
+      "client": 11.71,
+      "server": 11.72
+    },
+    "peak_rss_bytes": {
+      "client": 32567296,
+      "server": 32829440
+    },
+    "repair_R": 0,
+    "native_Stop": true
+  },
+  "on_leg": "NOT_RUN",
+  "followup": "H844 only observe_size_classes=False; full real first/CPU/Stop/repair ratio still required. Do not infer paired CPU from this failed action."
+}

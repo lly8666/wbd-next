@@ -140,14 +140,18 @@ def public_go_rx_handoff(log_text, role):
     end_pattern=r"V4_PUBLIC_(?:GAME_)?GO_RX_POST_HANDOFF role="+re.escape(role)+r" .*go_data_full_copies=([0-9]+)"
     pre=re.findall(pattern,log_text)
     post=re.findall(end_pattern,log_text)
-    if len(pre)!=1 or len(post)!=1: return None
-    filtered,ready,send_open=map(int,pre[0])
-    copies=int(post[0])
-    if not 1<=filtered<=4 or ready!=1 or send_open!=1:
+    if not pre or len(pre)!=len(post): return None
+    records=[tuple(map(int,v)) for v in pre]
+    copies=[int(v) for v in post]
+    filtered,ready,send_open=records[-1]
+    if (not 1<=filtered<=4 or any(n!=filtered or r!=1 or o!=1
+                                  for n,r,o in records)
+        or any(n>32 for n in copies)):
         return None
     return {"kernel_filtered_lanes":filtered,"rust_ready":ready,
             "go_send_fd_retained":send_open,
-            "go_data_full_copies_after_handoff":copies}
+            "go_data_full_copies_after_handoff":max(copies),
+            "authenticated_generations_observed":len(records)}
 
 
 def public_fec_m1_stage(log_text):
@@ -1178,13 +1182,15 @@ class LinuxExperiment:
                      "GO_RX_POST_HANDOFF role=" in line or
                      "M0_GAME_M4_RX_MULTIMSG " in line or
                      "M0_GAME_M4_RX_LOCK_SAMPLE " in line]
+            reconnect_events=[line for line in lines if "V4_PUBLIC_NATIVE_COLD_TLS_RESULT " in line]
             other=[line for line in lines if "V4_PUBLIC_TIMELINE " not in line
                    and "V4_PUBLIC_FEC2_AUTO_QUALITY " not in line
                    and "GO_RX_HANDOFF role=" not in line
                    and "GO_RX_POST_HANDOFF role=" not in line
                    and "M0_GAME_M4_RX_MULTIMSG " not in line
-                   and "M0_GAME_M4_RX_LOCK_SAMPLE " not in line]
-            logs[role] = "\n".join(handoff[-4:]+other[-40:])
+                   and "M0_GAME_M4_RX_LOCK_SAMPLE " not in line
+                and "V4_PUBLIC_NATIVE_COLD_TLS_RESULT " not in line]
+            logs[role] = "\n".join(handoff[-8:]+reconnect_events[-8:]+other[-40:])
             (self.out / (role + "-product-markers.log")).write_text(logs[role] + "\n")
         return logs
 

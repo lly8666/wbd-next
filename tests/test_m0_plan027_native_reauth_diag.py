@@ -1,6 +1,6 @@
 """No raw original Go TLS logs survive a failed source-frozen blackhole run."""
 import unittest
-from tools.network_harness.runner import startup_diagnostic
+from tools.network_harness.runner import startup_diagnostic, public_go_rx_handoff
 
 class SafeOriginalReauthDiagnosticTest(unittest.TestCase):
     def test_counts_only_fixed_markers_no_keys_addresses_or_raw_logs(self):
@@ -23,5 +23,15 @@ class SafeOriginalReauthDiagnosticTest(unittest.TestCase):
         d=startup_diagnostic("product exited")
         self.assertEqual(d["last_native_reauthorization_marker"],"NOT_OBSERVED")
         self.assertTrue(all(v==0 for v in d["native_reauthorization_stage_counts"].values()))
+
+    def test_two_authenticated_generations_handoff(self):
+        pre="V4_PUBLIC_GO_RX_HANDOFF role=client mode=off filtered=1 rust_ready=1 original_send_fd_open=1"
+        post="V4_PUBLIC_GO_RX_POST_HANDOFF role=client mode=off go_data_full_copies=0"
+        both=pre+"\n"+post+"\n"+pre+"\n"+post
+        got=public_go_rx_handoff(both,"client")
+        self.assertEqual(got["authenticated_generations_observed"],2)
+        self.assertEqual(got["go_data_full_copies_after_handoff"],0)
+        self.assertIsNone(public_go_rx_handoff(pre+"\n"+pre+"\n"+post,"client"))
+        self.assertIsNone(public_go_rx_handoff(pre+"\n"+post.replace("copies=0","copies=33"),"client"))
 
 if __name__=="__main__":unittest.main()

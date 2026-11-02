@@ -1,3 +1,4 @@
+# H844: only 1200B large UDP exists; optional 64..256B source-size gate not applicable.
 name: M0 PLAN027 R Normal100Mbps original frozen same VM OFF then ON
 on:
   push:
