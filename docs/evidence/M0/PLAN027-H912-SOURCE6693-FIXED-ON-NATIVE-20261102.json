@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "fixture_source_sha": "7c4e7a0984af909583a496a8908f67eeed802bab",
+  "result": "PASS_SCOPED_TRUE_WINDOWS_LINUX_NATIVE_OUTER_ON_AND_OWNED_STOP",
+  "mode": "fixed",
+  "outer_repair": "ON_EFFECTIVE_BOTH",
+  "run_id": 41419029240,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41419029240",
+  "artifact_id": 13129675605,
+  "scenario_id": "plan027-h911-fixed-outer-on-10m-250ms30-60s",
+  "scenario_duration_s": 60,
+  "both_os_same_prebuilt_source": true,
+  "readback": {
+    "native_original_windows_npf_wintun": true,
+    "original_linux_raw_tun": true,
+    "owned_stop": "PASS_BOTH_OWNED",
+    "actual_linux_qdisc_drops": {
+      "eth0": 55610,
+      "ifb": 54021
+    },
+    "offered_mbps": {
+      "windows": 9.9973,
+      "linux": 9.9998
+    },
+    "first_fraction": {
+      "windows": 0.999375,
+      "linux": 0.998248
+    },
+    "first_mbps": {
+      "windows": 9.9962,
+      "linux": 9.9843
+    },
+    "windows_exe_whole_cpu_s": 5.2656,
+    "windows_exe_peak_rss_bytes": 43560960,
+    "windows_exe_elapsed_s": 77.344
+  },
+  "latency": {
+    "same_origin_udp_rtt_p99_ms": {
+      "windows": 532,
+      "linux": 544.738
+    },
+    "udp_probe": {
+      "windows": {
+        "sent": 549,
+        "replied": 527
+      },
+      "linux": {
+        "sent": 600,
+        "replied": 581
+      }
+    },
+    "oneway_p99": "NOT_MEASURED_CROSS_OS_CLOCKS",
+    "note": "RTT measured only for replied probes; lost replies counted separately"
+  },
+  "outer_wire": {
+    "windows_reported_outer": {
+      "F_link_bytes": 192534625,
+      "R_accepted_link_bytes": 7518385,
+      "R_uncertain_bytes": 0,
+      "C_link_bytes": 191465,
+      "ratio_R_over_F": 0.039049521612021736
+    },
+    "linux_reported_outer": {
+      "F_wire_bytes": 189948549,
+      "R_accepted_wire_bytes": 15059402,
+      "ratio_R_over_F": 0.07928147953370257,
+      "C": "NOT_MEASURED"
+    },
+    "note": "Windows and Linux counters may count different framing; only within a side ratio"
+  },
+  "limits": [
+    "Product source is H908; fixture/Actions config is H912; no same-VM comparison with H900/H897 historical OFF",
+    "Whole Windows original Go+Rust includes startup/Stop; no language-level CPU attribution",
+    "Physical machine NOT_RUN; independent lane/key rotation NOT_RUN",
+    "Explicit unknown F/R/C bytes not claimed measured"
+  ]
+}

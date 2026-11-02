@@ -247,6 +247,29 @@ jobs:
             -f outer_repair=on -f outer_pair=true -f perf_reuse_run_id=41415722303 \
             -f perf_binary_source_sha=6693910f879f9e55e77dd823c1b05d8942321929
           echo "PLAN027_PAIR100_QUEUED fixture_source=$GITHUB_SHA product_source=6693910f879f9e55e77dd823c1b05d8942321929 same_vm_sequential=1 status=DISPATCHED_NOT_PASS"
+      - name: Dispatch PLAN027 phase2 Auto Game2 ON and Game4 20M OFF
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-batch2]')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = main
+          current=$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq '.object.sha')
+          test "$current" = "$GITHUB_SHA" || { echo "ref moved; refuse foreign batch"; exit 1; }
+          for row in \
+            "auto:on:scenarios/plan027-h914-auto-on-10m-250ms30-60s.json" \
+            "game2-fec:on:scenarios/plan027-h914-game2fec6-on-10m-250ms30-60s.json" \
+            "game4-fec:off:scenarios/plan027-h914-game4fec6-off-20m-25ms0-60s.json"; do
+            IFS=: read -r mode policy scene <<< "$row"
+            test -f "$scene"
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f "public_mode=$mode" -f "perf_scenario_file=$scene" \
+              -f "outer_repair=$policy" -f perf_reuse_run_id=41415722303 \
+              -f perf_binary_source_sha=6693910f879f9e55e77dd823c1b05d8942321929
+            echo "PLAN027_BATCH2_QUEUED fixture_source=$GITHUB_SHA product_source=6693910f879f9e55e77dd823c1b05d8942321929 mode=$mode outer=$policy scene=$scene status=DISPATCHED_NOT_PASS"
+          done
       - run: python -m pip install PyYAML==6.0.2
       - run: python tools/check_workflows.py
       - run: python -m unittest tests.test_delivery_ci -v

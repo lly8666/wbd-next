@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "fixture_source_sha": "7c4e7a0984af909583a496a8908f67eeed802bab",
+  "result": "PASS_SCOPED_TRUE_WINDOWS_LINUX_NATIVE_OUTER_ON_AND_OWNED_STOP",
+  "mode": "normal",
+  "outer_repair": "ON_EFFECTIVE_BOTH",
+  "run_id": 41419026103,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41419026103",
+  "artifact_id": 13128932168,
+  "scenario_id": "plan027-h911-normal-outer-on-100m-25ms0-60s",
+  "scenario_duration_s": 60,
+  "both_os_same_prebuilt_source": true,
+  "readback": {
+    "native_original_windows_npf_wintun": true,
+    "original_linux_raw_tun": true,
+    "owned_stop": "PASS_BOTH_OWNED",
+    "actual_linux_qdisc_drops": {
+      "eth0": 0,
+      "ifb": 0
+    },
+    "offered_mbps": {
+      "windows": 99.9732,
+      "linux": 99.9998
+    },
+    "first_fraction": {
+      "windows": 1,
+      "linux": 1
+    },
+    "first_mbps": {
+      "windows": 99.9998,
+      "linux": 99.9732
+    },
+    "windows_exe_whole_cpu_s": 9.3438,
+    "windows_exe_peak_rss_bytes": 43110400,
+    "windows_exe_elapsed_s": 76.438
+  },
+  "latency": {
+    "same_origin_udp_rtt_p99_ms": {
+      "windows": 125,
+      "linux": 107.682
+    },
+    "udp_probe": {
+      "windows": {
+        "sent": 549,
+        "replied": 549
+      },
+      "linux": {
+        "sent": 599,
+        "replied": 599
+      }
+    },
+    "oneway_p99": "NOT_MEASURED_CROSS_OS_CLOCKS",
+    "note": "RTT measured only for replied probes; lost replies counted separately"
+  },
+  "outer_wire": {
+    "windows_reported_outer": {
+      "F_link_bytes": 825933098,
+      "R_accepted_link_bytes": 1313,
+      "R_uncertain_bytes": 0,
+      "C_link_bytes": 1057238,
+      "ratio_R_over_F": 0.000001589717137113689
+    },
+    "linux_reported_outer": {
+      "F_wire_bytes": 816707766,
+      "R_accepted_wire_bytes": 2591,
+      "ratio_R_over_F": 0.0000031724934032279057,
+      "C": "NOT_MEASURED"
+    },
+    "note": "One cosmetic Windows packet repaired at 0% netem, minimal; not actual WAN loss witness"
+  },
+  "limits": [
+    "Product source is H908; fixture/Actions config is H912; no same-VM comparison with H900/H897 historical OFF",
+    "Whole Windows original Go+Rust includes startup/Stop; no language-level CPU attribution",
+    "Physical machine NOT_RUN; independent lane/key rotation NOT_RUN",
+    "Explicit unknown F/R/C bytes not claimed measured"
+  ]
+}

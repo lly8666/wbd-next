@@ -4,18 +4,21 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 913,
-  "checkpoint_sha": "7c4e7a0984af909583a496a8908f67eeed802bab",
+  "sequence": 914,
+  "checkpoint_sha": "ae2779f8c4c6d010f723b5c332ecc4aad155dccd",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H913 source-locked separate Normal high-PPS true same-Windows-VM OFF→ON cost measurement scheduled via workflow_dispatch source H908 signed original Windows/Linux native binaries. H912 three other ON mode Actions actually started: Game4FEC6 ON 41419022830, Normal ON100 41419026103, Fixed ON highloss 41419029240; independent runner per scene, each source-verified reuse H908 run41415722303. H913 pair scenario 100M25ms0 60s two sequential legs in ONE native runner Action, no ABI/product diff; fixture source H913 separate. No actual results yet. H908 native 105s PASS. Historic H890 300s Normal ON, H892/H897 OFF50/100 and Linux-only Game4 20M 0/30 OFF+ON preserve exact scope.",
-  "why_now": "Normal100 ON independent Action and H897 OFF historic source/runner cannot establish CPU delta or repair cache growth. PLAN027 requires same-VM sequential pair at high PPS. Reuse H908 signed prebuilt source and allowlist one 100M scene, enforce 95% delivered offered both legs, keep budget F/R/C ledger, owned Stop and source checks; avoid duplicate product builds and VM interference.",
+  "current_task": "H914 harvest all three H912 signed frozen H908 product ON native Actions complete success: Game4-FEC6 ON10M250ms30 run41419022830 first Win .999891 Linux .999144, Windows whole CPU35.2656s RSS73.6MB RTT641/653ms, real tc eth0 207003 IFB151725, both owned Stop; Game4 R bytes NOT_MEASURED (Windows lane repair accept 645/647/635/632). Fixed6 ON10M250ms30 run41419029240 first .999375/.998248, CPU5.2656s RSS43.6MB, tc 55610/54021, Windows F192534625 R7518385 C191465 ratio3.9% Windows, Linux F189948549 R15059402 ratio7.9% Linux, Stop PASS. Normal ON100M25ms0 run41419026103 first1/1 CPU9.3438s RSS43.1MB, zero tc loss, Win F825933098 R1313 C1057238 near-zero; Stop PASS. All actual native and same signed H908 product 6693, H912 fixture7c4e; distinct VM not causal CPU comparison. H913 same-VM 100M OFF→ON run41419832546 in progress. H914 stage2 frozen signed reuse dispatch targets Auto ON10M250ms30, Game2-FEC6 ON10M250ms30, Game4-FEC6 OFF20M25ms0 as three independent Actions; NOT_RUN at H914 commit.",
+  "why_now": "Collect real source-specific ON results, not just green status: first, tc actual drops, RTT probe losses, F/R/C scope, CPU/RSS. Distinct Windows Game4 ON highloss total 35s/77s vs OFF H900 10s on different SOURCE/VM is a signal for future same-source on/off attribution, not proof repair caused +25s. Remaining ON Auto/Game2 and missing Windows Game4 20M OFF capacity discriminate integration and capacity. Reuse H908 signed products, not rebuild.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect 3 H912 ON actions native receipts and H913 true Normal100 OFF→ON paired Action. Assess CPU delta relative to same-runner after real first delivery and F/R/C; if high pair source still fails error, repair fixture only as evidence warrants. Existing Linux 20M Game4 ON/OFF source f5e8/3776 PASS but NOT Windows; other Auto and Game2 affected ON combos and lifecycle still to close. No physical deploy.",
+  "next_action": "Collect H913 same-VM Normal100 OFF→ON total CPU/RSS/first/R/F and check actual code quality. Collect H914 three independent original same-source ON Auto/Game2 and OFF Game4 20M, stop Game4 heavier family if capacity drops/host or product single-core proven. H914 native success/pending/failure classify precisely, do not infer automatically; physical NOT_RUN. Then remaining distinct lifecycle/Auto stage tests and final PLAN027 §0 only if truly satisfied.",
   "unverified": true,
   "last_tested_source": "6693910f879f9e55e77dd823c1b05d8942321929",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H908-SOURCE6693-WIN105-RECOVERY-NATIVE-PASS-20261102.json"
+    "docs/evidence/M0/PLAN027-H908-SOURCE6693-WIN105-RECOVERY-NATIVE-PASS-20261102.json",
+    "docs/evidence/M0/PLAN027-H912-SOURCE6693-GAME4FEC-ON-NATIVE-20261102.json",
+    "docs/evidence/M0/PLAN027-H912-SOURCE6693-FIXED-ON-NATIVE-20261102.json",
+    "docs/evidence/M0/PLAN027-H912-SOURCE6693-NORMAL-ON-NATIVE-20261102.json"
   ],
   "context_refs": [
     "docs/devlog/M0/20261102-PLAN027-H899-WIN105-DIAGNOSTIC-REPRO.md",
@@ -23,9 +26,9 @@
     "docs/devlog/M0/20261102-PLAN027-H902-SOURCE-REF-CONTRACT.md",
     "docs/devlog/M0/20261102-PLAN027-H906-QUANTIFIED-NATIVE-COSTS.md",
     "docs/devlog/M0/20261102-PLAN027-H907-COLD-TLS-RETRY.md",
-    "docs/devlog/M0/20261102-PLAN027-H911-RECOVER-FROZEN-ON-BATCH1.md",
     "docs/devlog/M0/20261102-PLAN027-H912-QUOTE-CHOICE-ON.md",
-    "docs/devlog/M0/20261102-PLAN027-H913-NORMAL100-PAIR.md"
+    "docs/devlog/M0/20261102-PLAN027-H913-NORMAL100-PAIR.md",
+    "docs/devlog/M0/20261102-PLAN027-H914-COLLECT-ON-DISPATCH-BATCH2.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."
