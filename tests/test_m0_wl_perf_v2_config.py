@@ -17,6 +17,28 @@ class V2Scenarios(unittest.TestCase):
    b=dict(c);b.pop("scenario_sha256");b["lifecycle_blackhole_s"]=20
    p=pathlib.Path(td)/"bad.json";p.write_text(json.dumps(b))
    with self.assertRaisesRegex(ValueError,"BAD_BLACKHOLE_LIFECYCLE"):read_scenario(p)
+ def test_h882_windows_origin_only105_kernel_ifb_source_and_negative_guard(self):
+  scene=SCENE.parent/"plan027-h882-win-c2s105-10m-25ms0-60s.json"
+  c=read_scenario(scene)
+  self.assertEqual((c["public_mode"],c["lifecycle_blackhole_s"],
+                    c["lifecycle_blackhole_direction"],c["duration_s"]),
+                   ("normal",105,"windows_to_linux",60))
+  net=(SCENE.parents[1]/"tools/m0_wl_netem.py").read_text()
+  e2e=(SCENE.parents[1]/"tools/m0_wl_public_normal_e2e.py").read_text()
+  self.assertIn('if unilateral and side!="windows_to_linux":continue',net)
+  self.assertIn("WL_B_REAL_WINDOWS_ORIGIN_105S_IFB_DROPS",e2e)
+  self.assertIn('hold="120" if blackout==105 else "3"',e2e)
+  with tempfile.TemporaryDirectory() as tmp:
+   path=pathlib.Path(tmp)/"invalid.json"
+   for field,value in (("lifecycle_blackhole_direction","linux_to_windows"),
+                       ("lifecycle_blackhole_direction",None),
+                       ("lifecycle_blackhole_s",106)):
+    item=dict(c);item.pop("scenario_sha256")
+    if value is None:item.pop(field)
+    else:item[field]=value
+    path.write_text(json.dumps(item))
+    with self.assertRaisesRegex(ValueError,"BLACKHOLE_DIRECTION|UNILATERAL_DIRECTION"):
+     read_scenario(path)
  def test_h699_only_exact_real_100_and_300ms_kernel_burst_fixture(self):
   from tempfile import TemporaryDirectory
   scene=SCENE.parent/"plan027-c-normal-10m-25ms-0pct-burst100-300ms-60s.json"

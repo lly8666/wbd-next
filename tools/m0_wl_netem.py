@@ -139,12 +139,19 @@ elif action in ("blackhole", "recover"):
         raise RuntimeError("WL_B_BLACKHOLE_UNOWNED")
     from m0_wl_perf_v2_config import read_scenario
     case=read_scenario(scenario_path)
-    if case.get("lifecycle_blackhole_s") not in (20,106):
+    if case.get("lifecycle_blackhole_s") not in (20,105,106):
         raise RuntimeError("WL_B_BLACKHOLE_WRONG_SCENARIO")
+    unilateral=(case.get("lifecycle_blackhole_s")==105 and
+                case.get("lifecycle_blackhole_direction")=="windows_to_linux")
+    if case.get("lifecycle_blackhole_s")==105 and not unilateral:
+        raise RuntimeError("WL_B_UNILATERAL_DIRECTION_REQUIRED")
     state=json.loads(owner.read_text())
     if state.get("owner")!="M0-WL-N0-ETH0-IFB" or state.get("interface")!=iface or state.get("profile")!="v2":
         raise RuntimeError("WL_B_BLACKHOLE_FOREIGN_OWNER")
     for device,handle,side in ((iface,"10:","windows_to_linux"),("eth0","20:","linux_to_windows")):
+        # The one-way branch must not modify the Linux->Windows eth0
+        # qdisc; only the existing IFB capture of original Windows->443.
+        if unilateral and side!="windows_to_linux":continue
         rows=json.loads(call("tc","-j","qdisc","show","dev",device)["stdout"] or "[]")
         if not any(row.get("kind")=="netem" and row.get("handle")==handle for row in rows):
             raise RuntimeError("WL_B_BLACKHOLE_NO_OWNED_QDISC")
@@ -154,7 +161,10 @@ elif action in ("blackhole", "recover"):
         if p["tc_rate_mbps"] is not None:args+=["rate",f'{p["tc_rate_mbps"]}mbit']
         call("tc","qdisc","change","dev",device,"root","handle",handle,*args)
     (out/("wl-v2-b-"+action+".json")).write_text(json.dumps(probe(),indent=2)+"\n")
-    print("WL_B_REAL_TC_"+("BLACKHOLE_BOTH" if action=="blackhole" else "RESTORED_BOTH"),flush=True)
+    what=("BLACKHOLE_WINDOWS_TO_LINUX_IFB" if action=="blackhole"
+          else "RESTORED_WINDOWS_TO_LINUX_IFB") if unilateral else (
+          "BLACKHOLE_BOTH" if action=="blackhole" else "RESTORED_BOTH")
+    print("WL_B_REAL_TC_"+what,flush=True)
 elif action == "burst":
     # Only the two M0-owned original tc qdiscs, one WSL monotonic pulse.
     if profile_name!="v2" or not scenario_path or not owner.exists() or len(sys.argv)!=6:

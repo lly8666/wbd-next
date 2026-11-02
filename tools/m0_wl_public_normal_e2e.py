@@ -427,6 +427,17 @@ print(json.dumps(result),flush=True)
   try:
    change_blackhole("blackhole")
    time.sleep(blackout)
+   if blackout==105:
+    # The original Windows->Linux 443 IFB is actually dropping, rather
+    # than merely receiving a requested 100% loss configuration.
+    change_blackhole("snapshot")
+    tc=json.loads((out/"wl-n0-netem-after.json").read_text())
+    observed=[row.get("drops") for row in tc.get("ifb",[])
+              if row.get("kind")=="netem"]
+    if len(observed)!=1 or type(observed[0]) is not int or observed[0]<=0:
+     raise RuntimeError("original Windows-origin 105s real IFB drops not observed")
+    report["lifecycle_unilateral_ifb_drops"]=observed[0]
+    print("WL_B_REAL_WINDOWS_ORIGIN_105S_IFB_DROPS="+str(observed[0]),flush=True)
    change_blackhole("recover")
   finally:
    change_blackhole("cleanup")
@@ -434,9 +445,10 @@ print(json.dumps(result),flush=True)
    raise RuntimeError("original owner exited during real kernel outage")
   bw=(out/"blackhole-windows-udp.log").open("w");bl=(out/"blackhole-linux-udp.log").open("w")
   logs.extend([bw,bl])
-  wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1",str(done),"3"],stdout=bw,stderr=subprocess.STDOUT)
-  la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),"10.66.0.1","10.66.0.2",unix(done),"3"],stdout=bl,stderr=subprocess.STDOUT)
-  until=time.monotonic()+65
+  hold="120" if blackout==105 else "3"
+  wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2","10.66.0.1",str(done),hold],stdout=bw,stderr=subprocess.STDOUT)
+  la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),"10.66.0.1","10.66.0.2",unix(done),hold],stdout=bl,stderr=subprocess.STDOUT)
+  until=time.monotonic()+(155 if blackout==105 else 65)
   while wa.poll() is None or la.poll() is None:
    if w.poll() is not None or s.poll() is not None:
     raise RuntimeError("original owner exited during post-blackhole wake")
@@ -451,7 +463,16 @@ print(json.dumps(result),flush=True)
     raise RuntimeError("real post-blackhole first UDP missing "+name+" "+repr(wake))
   report["lifecycle_blackhole_recovery"]={"blackhole_s":blackout,"kernel_loss_pct":100,
       "fresh_udp_both_directions":"PASS_REAL_KERNEL_UDP"}
-  if blackout==106:
+  if blackout in (105,106):
+   if blackout==105:
+    report["lifecycle_blackhole_recovery"]["blackhole_direction"]="windows_to_linux"
+    report["lifecycle_blackhole_recovery"]["actual_ifb_drops"]=report["lifecycle_unilateral_ifb_drops"]
+    report["lifecycle_blackhole_recovery"]["restored_observation_seconds"]=120
+    for name in ("windows","linux"):
+     rows=[json.loads(line) for line in (out/("blackhole-"+name+"-udp.log")).read_text().splitlines() if line.startswith("{")]
+     recovered=[i for i,row in enumerate(rows) if row.get("phase")=="udp_1hz" and row.get("received",0)>0]
+     if not recovered:raise RuntimeError("genuine post-unilateral recovery first sample absent "+name)
+     report["lifecycle_blackhole_recovery"][name+"_first_received_sample_index"]=recovered[0]
    server_log=(out/"server.log").read_text(errors="replace")
    if ("V4_PUBLIC_NATIVE_DEAD_RECONNECT_ARMED role=server" not in server_log or
        "V4_PUBLIC_ORIGINAL_GO_TLS_REAUTHORIZE role=server" not in server_log):
@@ -463,7 +484,10 @@ print(json.dumps(result),flush=True)
     raise RuntimeError("106s blackout lacks Windows original new authenticated TLS generation "+win_log[-600:])
    report["lifecycle_blackhole_recovery"]["windows_reauth"]="PASS_NATIVE_DEAD90_ORIGINAL_TLS"
    report["lifecycle_blackhole_recovery"]["linux_reauth"]="PASS_NATIVE_DEAD90_ORIGINAL_TLS"
-   print("WL_B_REAL_106S_AUTHENTICATED_DEAD_RECOVER_BOTH_OS_PASS",flush=True)
+   if blackout==105:
+    print("WL_B_REAL_WINDOWS_UNILATERAL_105S_AUTHENTICATED_DEAD_RECOVER_BOTH_OS_PASS",flush=True)
+   else:
+    print("WL_B_REAL_106S_AUTHENTICATED_DEAD_RECOVER_BOTH_OS_PASS",flush=True)
   else:
    print("WL_B_REAL_20S_BLACKHOLE_RESTORED_NEW_BILATERAL_UDP_PASS",flush=True)
  if mode=="auto-revision":

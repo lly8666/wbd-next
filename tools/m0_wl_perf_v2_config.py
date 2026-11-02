@@ -59,9 +59,18 @@ def read_scenario(path):
             cfg["duration_s"]!=60 or any(cfg[d]["loss_pct"]!=0 for d in ("windows_to_linux","linux_to_windows"))):
             raise ValueError("WL_V2_BAD_IDLE_LIFECYCLE")
     outage=cfg.get("lifecycle_blackhole_s")
-    if outage is not None and (mode not in ("normal","fixed") or type(outage) is not int or outage not in (20,106) or cfg["duration_s"] not in ((12,60) if outage==106 else (60,)) or
+    if outage is not None and (mode not in ("normal","fixed") or type(outage) is not int or outage not in (20,105,106) or cfg["duration_s"] not in ((12,60) if outage==106 else (60,)) or
             any(cfg[d]["loss_pct"]!=0 for d in ("windows_to_linux","linux_to_windows"))):
         raise ValueError("WL_V2_BAD_BLACKHOLE_LIFECYCLE")
+    # Only the specifically authorized 105s genuine Windows-origin
+    # unilateral tc ingress->IFB outage. Existing 20/106 both-direction
+    # scripts retain their exact old semantics.
+    direction=cfg.get("lifecycle_blackhole_direction")
+    if direction is not None and (outage!=105 or mode!="normal" or
+            direction!="windows_to_linux"):
+        raise ValueError("WL_V2_BAD_BLACKHOLE_DIRECTION")
+    if outage==105 and direction!="windows_to_linux":
+        raise ValueError("WL_V2_MISSING_UNILATERAL_DIRECTION")
     bursts=cfg.get("kernel_loss_bursts")
     if bursts is not None:
         if (mode!="normal" or cfg["duration_s"]!=60 or
