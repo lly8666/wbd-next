@@ -144,7 +144,7 @@ func assertHostedWireDirection(t *testing.T, name string, segs []faketcp.Segment
 			t.Fatalf("%s segment %d unexpectedly has no payload", name, i)
 		}
 		if len(seg.Payload) > faketcp.DefaultBootstrapChunk ||
-			len(seg.Payload) > faketcp.PublicV4AdvertisedMSS() {
+			len(seg.Payload) > int(faketcp.PublicV4AdvertisedMSS()) {
 			t.Fatalf("%s segment %d payload=%d exceeds bootstrap/MSS bound", name, i, len(seg.Payload))
 		}
 		if i != 0 && seg.Seq != wantSeq {

@@ -1000,7 +1000,7 @@
       "path": "internal/realityfront/wire_qualification_test.go",
       "original_blob": "16ec82491d4ae869724b506e0d33e5e84f196930",
       "overlay_path": "r0/go_overlay/internal/realityfront/wire_qualification_test.go",
-      "result_blob": "5b8e8b48b589422c23172ccc00c1a72795cfc0b4"
+      "result_blob": "cbd4577b7c6261d97e15473843381fa92c4540e4"
     },
     {
       "kind": "create",

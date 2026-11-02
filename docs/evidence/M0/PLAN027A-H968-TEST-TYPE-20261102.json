@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "h967_windows_go_failed_run": 41479134759,
+  "cause": "wire_qualification_test.go:147 Go historical test int>uint16 invalid",
+  "fix": "int(PublicV4AdvertisedMSS()) only in _test.go",
+  "old_source": "791937b084fb2faa5fb7434a1c786080b09fdb95",
+  "new_test_blob": "cbd4577b7c6261d97e15473843381fa92c4540e4",
+  "new_manifest_sha": "f3582c1df023e7a5b4cc1dc4f8bb3bb53f8f79b8",
+  "exact_source_native": "NOT_RUN",
+  "preserve_h958_df_failed_run": 41463910871
+}
