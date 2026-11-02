@@ -8,4 +8,4 @@
 
 功能：[features](docs/features/README.md)；夹具：[WL V2](docs/testing/WL_PERF_HARNESS_V2.md)（历史限制以实际workflow及PLAN027为准）；诊断：[NETWORK_TRIAGE](docs/testing/NETWORK_TRIAGE.md)；历史：[INDEX](docs/history/INDEX.md)。按问题再追SOURCE/devlog/evidence，不将旧PASS迁到新源码或物理机。
 
-当前顺序：**PLAN027已限定收口→[PLAN027A](docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md)→[PLAN028–030](docs/decisions/M0-LEGACY-ROLLOUT-20261102.md)**。源码 H922 首批自动触发基础 CI，具体 PASS/FAIL 以 evidence 中精确 SOURCE 为准；暂不重复手动 dispatch。
+当前顺序：**PLAN027已限定收口→[PLAN027A](docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md)→[PLAN028–030](docs/decisions/M0-LEGACY-ROLLOUT-20261102.md)**。H932 产品默认1460 SOURCE f2a66449；其新编译/原生测试以Actions实际SOURCE为准；旧H931原始Windows WAL、内核UDP编译PASS而两端fixed READY前失败仍照实保留，不重复手动dispatch。

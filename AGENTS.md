@@ -6,6 +6,6 @@
 4. Go保留成熟TLS/OS/GUI冷控制，Rust稳态，禁止Go逐包FFI/空轮询/双控制器。普通实现选择自主做，不增防御性包装/通用框架，不为假设极端钻牛角尖；必要正确性检查保持。
 5. 同一批代码/双方调用/配置读回/功能卡/夹具先齐再冻结SOURCE。执行测试在Actions：一Action一场景测试控制进程/测量job，必要双端进程允许；不同场景可独立Action并行，同VM A/B顺序。一次构建按SOURCE/manifest/hash复用；容量耗尽停更重同族，不刷seed，产品锁/单核瓶颈不能伪称环境。
 6. 单main写入，不覆盖未知变更、不reset/force。每批短devlog带feature-impact，功能卡统一记录；阶段/恢复更新cursor与在途run。旧SOURCE PASS不转移新SOURCE，失败/未验/物理范围保留。
-7. 完成以当前registry所指方案全部退出条件为准；PLAN027限定收口后按用户指定PLAN027A→028–030。PLAN027A当前仅PLANNED、产品代码/新测试未运行；不能把规范当实现。凭据/正文/大pcap不入库，不擅自部署物理机或发其他聊天消息。
+7. 完成以当前registry所指方案全部退出条件为准；PLAN027限定收口后按用户指定PLAN027A→028–030。PLAN027A已在main持续施工；用户新默认外层完整IPv4 IP MTU=1460，最大仍允许显式1500，内层由Rust预算自动推导/OS读回。真实七模式/DF/弱网/性能尚未验满，不能把编译当产品通过。凭据/正文/大pcap不入库，不擅自部署物理机或发其他聊天消息。
 
 历史细节按需读docs/GOVERNANCE.md、docs/history/2026-10-28-M0-MAIN-HANDOFF.md及原证据。

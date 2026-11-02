@@ -4,7 +4,7 @@
 
 开工：[M0-PLAN027A](../prompts/M0-PLAN027A.md)。唯一规范：[MTU_CONTRACT](../architecture/MTU_CONTRACT.md)。下游028会话/config、029 padding消费它，不再重算。
 
-用户输入口径已确认：**MTU设置为外层完整IP上限，默认1500，不含L2；内层自动计算且只读展示。**现有Windows `--mtu`/Linux `--outer-mtu`不改单位，归同一意图字段；不得把内层手动override作为常规配置保留下游。实施/导入/UI细则见契约第1节。
+用户输入口径已确认：**MTU设置为外层完整IP上限，默认1460，不含L2；显式最大1500不变；内层自动计算且只读展示。**现有Windows `--mtu`/Linux `--outer-mtu`不改单位，归同一意图字段；不得把内层手动override作为常规配置保留下游。实施/导入/UI细则见契约第1节。
 
 ## 1. 审阅结论与实证缺口
 
@@ -52,11 +52,11 @@ Normal已有LINK原文/乱序/有界回收继续可用；Windows/FEC/Game不能�
 | 层 | 具体覆盖 | 合格条件 |
 |---|---|---|
 | 纯模型/实际codec | 1500/1492/1400/1280、最小可用/不可用、peer MSS536/1200/1460、TCP20/32/60和IP options、caps较小、三AEAD、源/最大repair/partial、Game、合法LINK、padding | 手工独立literal golden与**真实编码→seal→IP packet**一致；1500 GameFEC1398合法/1399不能单record；不从被测函数自生成expected |
-| 协商/OS/能力 | 两端同MTU与1500:1280、较小peer cap、Go offer/MSS/owner/OS读回、所有7模式 | Normal off/fixed最高/auto、Game2/4 off/最高；已知实际限制一致，数据放行前applied；不能单靠日志数字相等 |
+| 协商/OS/能力 | 两端默认1460与1460:1280；另保留显式1500边界、较小peer cap、Go offer/MSS/owner/OS读回、所有7模式 | Normal off/fixed最高/auto、Game2/4 off/最高；已知实际限制一致，数据放行前applied；不能单靠日志数字相等 |
 | 真原生边界 | 7模式Windows↔Linux逐项60–90s、5–10M Normal/3M Game，模式cap−1/= /+1；一端1280的代表组合 | 合法业务无损完整、超限按DF/能力处理，后一小包与其他流继续、Stop成功，外层DF无超P；损伤设0以隔离尺寸错误 |
 | 应用大包 | 持续TCP 64KiB write+小UDP；UDP小包/边界/1728/4096/65507应用payload，DF on/off分清；IP options及已分片输入做低成本组件用例 | 内核分段/碎片实际发生且能重组，DF正确拒绝/ICMP/EMSGSIZE；高PPS不先与jumbo压力叠加；故意raw注入单独记，不冒充普通应用 |
 | LINK既有兼容 | Linux Normal/off已支持路径1728、跨32片、最大合法65535内层IP；一片丢失/乱序/重复，旁路小流 | 全片无损完整、缺片有界过期、不HOL、不混generation；不把组件重组PASS声明Windows已接通 |
-| 动态组合 | 1500→1280→恢复、peer cap收窄、新lane容量不同、Auto切档、旧repair/parity在途 | 新包不越界，已冻结repair不改密文；无无限等待，受影响owner可有说明的有界重建。选Normal和Game4/FEC代表，不重刷027全部黑洞矩阵 |
+| 动态组合 | 默认1460→1280→恢复、peer cap收窄、新lane容量不同、Auto切档、旧repair/parity在途 | 新包不越界，已冻结repair不改密文；无无限等待，受影响owner可有说明的有界重建。选Normal和Game4/FEC代表，不重刷027全部黑洞矩阵 |
 | 保护性能 | Normal off与Game4最高各一容量内代表，新旧同VM顺序，普通近cap包+小UDP；初始外层参数相同另报实际包型/新增PPS | 分端CPU-s/百万交付包、CPU-s/GiB、RSS、offered/first/missing、p99与最长全流空洞；不靠换包型/扩大实际业务包误称算法收益 |
 
 Linux ARM64原生完成预算ABI/codec和Normal+GameFEC边界代表；Windows amd64实际新DLL加载与两端包尺寸必须测，编译成功不是运行。相同驱动路径无变化可按diff引用未变部分精确旧资格，修预算后的关键界值必须新SOURCE实测。
@@ -67,7 +67,7 @@ Linux ARM64原生完成预算ABI/codec和Normal+GameFEC边界代表；Windows am
 
 若附件说“跨32片/65KB都要过”，须区分supported LINK、内核IPv4碎片与未支持模式；不能靠下调真实TUN MTU后应用已经拒绝，写成“大包成功通过”。反之合法OS的EMSGSIZE是正确DF结果，不当作产品坏包。
 
-普通原生夹具只输入外层MTU，让真实产品自动应用内层；不可另注入预先算好的TUN值帮助产品过关。明确标出的异常/兼容测试才可强制虚拟MTU。补配置保存/加载/CLI别名/UI只读生效值用例：配置外层1500经过模式切换或路径收窄仍保存1500，内层随实际预算更新，server无需手填同一内层值。
+普通原生夹具只输入外层MTU，让真实产品自动应用内层；不可另注入预先算好的TUN值帮助产品过关。明确标出的异常/兼容测试才可强制虚拟MTU。补配置保存/加载/CLI别名/UI只读生效值用例：配置外层1460经过模式切换或路径收窄仍保存1460，内层随实际预算更新，server无需手填同一内层值。
 
 ## 4. 宽而明确的门与退出
 

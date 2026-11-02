@@ -6,7 +6,7 @@ PLANNED。读[总入口](M0-LEGACY-ROLLOUT-20261102.md)及当前M0 cursor，复�
 
 前置[PLAN027A](M0-PLAN027A-MTU-UNIFICATION-20261102.md)应先完成，配置/每client MTU直接消费[MTU_CONTRACT](../architecture/MTU_CONTRACT.md)的typed预算与readback。028只补会话归属/配置接线，不重新写Go加减公式或重刷单模式字节门。
 
-**配置里的MTU统一指外层完整IP包上限（默认1500，不含L2）。**client传每session外层意图；server结合本方向出口/MSS/协商限制收窄。两端内层MTU均由027A自动推导，不新增用户手填内层MTU，不把收到的外层值直接写进TUN。requested外层值与effective内层/OS读回分别存取；多个客户端各有外层意图，不相互覆盖全局TUN。
+**配置里的MTU统一指外层完整IP包上限（默认1460，不含L2；可显式配置1500）。**client传每session外层意图；server结合本方向出口/MSS/协商限制收窄。两端内层MTU均由027A自动推导，不新增用户手填内层MTU，不把收到的外层值直接写进TUN。requested外层值与effective内层/OS读回分别存取；多个客户端各有外层意图，不相互覆盖全局TUN。
 
 - 服务端常用配置仅 `listen`、`server-name`、`users`；默认示例 `0.0.0.0:443`、`www.cisco.com`。每client模式/FEC/cipher/MTU等来自认证配置，不是服务端进程级单值。
 - 客户端服务器地址可填IPv4或域名，端口单独填写；它与**借站域名/SNI**是不同字段。连接信息由服务端提供/导出，支持手填和导入，用户不手填route-key/tunnel-id/lane ID。解析机制交029，028接口接收已选择的数值endpoint，不在热路径查DNS。
@@ -60,7 +60,7 @@ PLANNED。读[总入口](M0-LEGACY-ROLLOUT-20261102.md)及当前M0 cursor，复�
 
 换lane每模式约120–180s、Normal5–10Mbps/方向、Game逻辑3Mbps，允许测试配置20–30s轮换，至少2次**成功的**A→A+B→B，含一段5%随机损伤。保持真实建链/加密/owner，不伪造ready或直接切指针。0%健康片段不应因正常轮换重置内层TCP；first/p99/超时/10ms发送与到达桶分阶段报告。确认新lane真实包已到、旧lane最终回收、IP/配置保持，计时器触发不算完成。
 
-MTU配置组合复用上述多client场景：一方外层1500、另一client外层1280，server有自己真实出口限制；分别核外层意图、方向effective与自动内层，不手填内层预期到产品里。模式/换lane后用户保存的外层数值不被自动结果覆盖。
+MTU配置组合复用上述多client场景：一方默认外层1460、另一client显式外层1280，server有自己真实出口限制；分别核外层意图、方向effective与自动内层，不手填内层预期到产品里。模式/换lane后用户保存的外层数值不被自动结果覆盖。
 
 30%/250ms只选Normal最高FEC及Game4最高FEC代表，允许失败重试和网络理论残余；验新包不中断、最终成功/明确退避、资源可回收，不要求一次成功或零损。正常低损容量内出现新增连续秒级全流停顿、异常TCP重置、跨client污染应定位；细小丢失/p99波动先比较同源无轮换基线，不硬压零。若需要真实5–10min轮换区间，仅一个代表长测约11min，已有等价027证据可替代，不让七模式都跑长测。
 
