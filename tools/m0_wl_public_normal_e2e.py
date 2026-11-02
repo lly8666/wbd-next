@@ -476,13 +476,25 @@ print(json.dumps(result),flush=True)
     fault["role_samples"][role]={"count":len(rows),"first":rows[:1],"last":rows[-3:]}
    allow=("NATIVE_DEAD_RECONNECT_ARMED","ORIGINAL_GO_TLS_REAUTHORIZE",
           "WBD_WINDOWS_CLIENT_READY","NATIVE_STOP_DRAINED",
-          "NATIVE_DISCONNECTED","NATIVE_HEALTH","HEALTH_DEAD")
+          "NATIVE_DISCONNECTED","NATIVE_HEALTH","HEALTH_DEAD",
+          "RUST_NATIVE_HEALTH_TIMEOUT","NATIVE_FAILURE_SOURCE",
+          "NATIVE_STOP_NOT_DRAINED","NATIVE_STOP_RESULT")
    for role,name in (("windows","client.log"),("linux","server.log")):
     path=out/name
     lines=[line[-320:] for line in path.read_text(errors="replace").splitlines()
            if any(marker in line for marker in allow)] if path.exists() else []
     fault["owner_markers"][role]={"count":len(lines),"tail":lines[-16:]}
    (out/"normal105-first-fault.json").write_text(json.dumps(fault,indent=2)+"\n")
+   # A failed GitHub artifact upload previously erased the only uncut
+   # owner markers. The existing one-shot failure path, not a packet loop,
+   # prints at most six allowlisted terminal lines per OS to live stdout.
+   # Each line is capped; no TLS credentials, payloads or wire bytes.
+   for role in ("windows","linux"):
+    tail=fault["owner_markers"][role]["tail"]
+    for marker in tail[-6:]:
+     clean=marker.replace("\r","\\r").replace("\n","\\n")
+     print("PLAN027_ORIGINAL_105_OWNER_TAIL role="+role+
+           " line="+clean[-320:],flush=True)
    print("PLAN027_ORIGINAL_105_FIRST_FAULT "+json.dumps(fault,separators=(",",":")),flush=True)
    report["lifecycle_blackhole_failure"]="POST105_WAKE_NOT_PROVEN"
    raise RuntimeError("real UDP blackout wake returned nonzero")

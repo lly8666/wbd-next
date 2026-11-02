@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 902,
-  "checkpoint_sha": "af05239733740b8526faa70aaa9a7444acfc7ac2",
+  "sequence": 903,
+  "checkpoint_sha": "61e0dfce07f0bafb5d81e47a40b927e6488a1763",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H902 correct current-SOURCE evidence-reference constraint after genuine H901 governance FAIL. Evidence is immutable H899 real unilateral105 FAIL at SOURCE33e1 and H900 Game4 highest fixed6 OFF native PASS at SOURCEf3f4; current cursor last_tested_source f3f4 and evidence_refs only H900 source-matched; older evidence remains independently archived with source. No product or test-source mutation, no new performance dispatch. H899 native run API still in_progress after real failed product step with DNS artifact fault.",
-  "why_now": "H901 governance run41409840487 structure blocked: evidence is for a different SOURCE, because cursor mixed H897 c85b/H899 33e1/H900 f3f4 refs. Keep source-specific result records without presenting cross-source evidence as same-build validation.",
+  "current_task": "H903 source-locked one additional diagnostic-only real Windows-origin105s blackout Action: append six bounded allowlisted owner terminal markers per side before truncated first-fault JSON; original dual-sided Go TLS/Rust native code and OS/driver network behavior unchanged. This is a DIFFERENT diagnostic than H899, not proof of recovered product: Action NOT_RUN at commit. H902 governance Action41410510325 PASS; H899 genuine lifecycle/Stop FAIL and separate DNS ENOTFOUND, H900 Game4FEC6 OFF high-loss genuine PASS preserved.",
+  "why_now": "H899 and prior H895 same actual product failure; their first-fault stdout clipped after 1024 characters exactly at Windows Rust Health timeout marker, and H899 uploaded no complete artifact due ENOTFOUND. One failure-only bounded direct marker witness can distinguish dead6 event, Go error, Stop worker drain, and Linux reauth without per-packet logs, blind state-machine edits, or changing workload. Separate H900 Game4 completed; no repeat.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Do not redispatch H899/H900. Check whether Action41406960914 has finished; if product logs absent because artifact DNS failed, add source-scoped bounded exact owner-side retirement TX/definite NPF receipt/RX/open and post-recovery tc snapshot to distinguish protocol, lifecycle, OS fixture before another native test; fix shared validated cause only. In parallel resume Normal same-VM OFF→ON repair-cost baseline and other independent OFF/network work. After changes run affected ON Fixed/Auto/Game and >=300s scenario, update F/R/C CPU/RSS/p99 and Stop; physical remains NOT_RUN.",
+  "next_action": "Collect H903 source-bound single 105s diagnostic failure-only tail lines plus actual Stop/WAL and host default/DNS first error. Distinguish Windows Rust terminal vs Go readback vs owned Stop before product fix; do not promote tc request to recovered delivery. In parallel measure Normal public OFF→ON on same VM (prior H876/H880/H884 evidence review first) and other OFF matrix, then final affected ON & 300s. No physical deploy.",
   "unverified": true,
   "last_tested_source": "f3f4c86fee7ec8630b49c565ba9c7ffb517636d5",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H900-SOURCEF3F4-GAME4FEC6-OFF-NATIVE-PASS-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H895-ON300-RECEIPT-WIN105-SUBSCRIPTION.md",
     "docs/devlog/M0/20261102-PLAN027-H896-GAME2-FEC6-OUTER-OFF-30LOSS.md",
     "docs/devlog/M0/20261102-PLAN027-H897-NORMAL-OFF-100M-SIGNED.md",
     "docs/devlog/M0/20261102-PLAN027-H898-SIGNED-RECEIPTS-H888-DNS-SPLIT.md",
     "docs/devlog/M0/20261102-PLAN027-H899-WIN105-DIAGNOSTIC-REPRO.md",
     "docs/devlog/M0/20261102-PLAN027-H900-GAME4-FEC6-HIGHLOSS-OFF.md",
     "docs/devlog/M0/20261102-PLAN027-H901-RECOVER-NATIVE-ACTIONS.md",
-    "docs/devlog/M0/20261102-PLAN027-H902-SOURCE-REF-CONTRACT.md"
+    "docs/devlog/M0/20261102-PLAN027-H902-SOURCE-REF-CONTRACT.md",
+    "docs/devlog/M0/20261102-PLAN027-H903-NATIVE105-TERMINAL-TAIL.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."
