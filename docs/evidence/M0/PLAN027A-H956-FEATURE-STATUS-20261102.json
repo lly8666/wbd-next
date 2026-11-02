@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "previous_game_native": "10/10 PASS",
+  "h955_feature_catalog_fail_run": 41459947652,
+  "error": "path-mtu-budget: unknown verification status",
+  "fix": "two verification statuses were generic PASS, replaced with accepted FUNCTIONAL_PASS and PERFORMANCE_PASS",
+  "product_code_unchanged": true,
+  "pending": [
+    "real DF0/DF1 native",
+    "Game4FEC staged loss5-30-5",
+    "current source ARM64",
+    "PLAN028",
+    "PLAN029",
+    "PLAN030"
+  ]
+}

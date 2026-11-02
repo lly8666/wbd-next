@@ -171,14 +171,14 @@
     {
       "platform": "Windows signed Wintun/Npcap original-Go/Rust ↔ actual WSL2 Linux TUN",
       "scope": "H955 exact H952 binary source 54160ac88b9b reused across H954 eight true-native Game2/4 off/FEC on outer default1460 and explicit1500; all 8/8 PASS, Windows numeric inner MTU before READY and owned Stop in native report. Earlier H950/H951 old-source Game FAILs preserved.",
-      "status": "PASS",
+      "status": "FUNCTIONAL_PASS",
       "source_sha": "54160ac88b9b41d10f4c3f885879dd68646466a0",
       "evidence": "docs/evidence/M0/PLAN027A-H955-GAME-10OF10-SOURCE-REUSE-20261102.json"
     },
     {
       "platform": "Windows signed Npcap/Wintun Game4FEC 3Mbps ↔ WSL2 Linux kernel",
       "scope": "H954 exact H952 prebuilt Game4FEC 3Mbps outer default1460 25ms/0% and 250ms/30% two scenarios 60s, both PASS with actual OS MTU, real first delivery/perf and owned Stop; directional latency p99 188/182.6ms and 672/646.504ms (not clock-calibrated one-way).",
-      "status": "PASS",
+      "status": "PERFORMANCE_PASS",
       "source_sha": "54160ac88b9b41d10f4c3f885879dd68646466a0",
       "evidence": "docs/evidence/M0/PLAN027A-H955-GAME-10OF10-SOURCE-REUSE-20261102.json"
     }
