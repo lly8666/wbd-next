@@ -8,11 +8,12 @@ from pathlib import Path
 import hashlib,json,sys
 ROOT=Path(__file__).resolve().parents[1]
 MANIFEST=ROOT/"r0/go_overlay/assembly/manifest-plan020-m0.json"
-FILES={"tls_test.go":(("faketcp.DefaultMSS","faketcp.PublicV4AdvertisedMSS()"),),
+FILES={"tls_test.go":(("MSS:            faketcp.DefaultMSS,","MSS:            faketcp.PublicV4AdvertisedMSS(),"),),
        "wire_qualification_test.go":(
-        ("faketcp.DefaultMSS","faketcp.PublicV4AdvertisedMSS()"),
-        ("len(seg.Payload) > faketcp.PublicV4AdvertisedMSS()",
-         "len(seg.Payload) > int(faketcp.PublicV4AdvertisedMSS())"))}
+        ("!syn.MSSSet || syn.MSS != faketcp.DefaultMSS ||",
+         "!syn.MSSSet || syn.MSS != faketcp.PublicV4AdvertisedMSS() ||"),
+        ("len(seg.Payload) > faketcp.DefaultMSS {",
+         "len(seg.Payload) > int(faketcp.PublicV4AdvertisedMSS()) {"))}
 SOURCE="a7a82db31fe736ffedee330795a3234d358f1984"
 def blob(data):
     return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
