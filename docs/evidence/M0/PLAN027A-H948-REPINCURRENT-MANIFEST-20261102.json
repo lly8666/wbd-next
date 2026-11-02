@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_before": "7f84df245baf1f9924193dec8da5a38f22ae984f",
+  "manifest": "r0/go_overlay/assembly/manifest-plan020-m0.json",
+  "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+  "old_manifest_blob": "0af34654807a7f2523fc0070d72438303220a05c",
+  "exact_go_blob": "204fed35bc5919795b498e0d786796845abfdd90",
+  "observed_auto_run": 41452393607,
+  "observed_result": "FAIL_CURRENT_SOURCE_MANIFEST_STALE",
+  "parser_unit": "PASS_SOURCE_7f84",
+  "governance": "PASS_SOURCE_7f84",
+  "new_source_build": "NOT_RUN",
+  "new_source_native_windows": "NOT_RUN",
+  "default_outer_ipv4_ip_mtu": 1460,
+  "explicit_max": 1500,
+  "old_source_h943": "PRESERVED_SCOPED_PASS"
+}
