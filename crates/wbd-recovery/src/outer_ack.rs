@@ -96,14 +96,10 @@ impl OuterAckIndex {
     pub fn on_definitely_sent(&mut self, pn: RecordPn, seq_start: u64,
         wire_len: u32, now: MonoNs) -> Result<bool, OuterAckError>
     {
-        let end = seq_start.checked_add(u64::from(wire_len))
-            .ok_or(OuterAckError::InvalidSend)?;
-        if wire_len == 0 || seq_start < self.highest_sent_end
-            || now < self.last_sent_at {
-            return Err(OuterAckError::InvalidSend);
-        }
-        self.highest_sent_end = end;
-        self.last_sent_at = now;
+        // Both retained and unretained first-copies advance the authentic
+        // carrier ACK bound; only ciphertext held for an actual once-repair
+        // opportunity warrants an ordered ACK node.
+        self.on_unretained_firstsend(seq_start,wire_len,now)?;
         if self.sent.len() >= self.capacity {
             // The optional ACK index must recover after two seconds of
             // missing feedback. No background timer, heap scan or DATA
@@ -117,6 +113,22 @@ impl OuterAckIndex {
         if self.sent.len() >= self.capacity { return Ok(false); }
         self.sent.insert(seq_start, SentSpan { end, pn, at: now });
         Ok(true)
+    }
+
+    /// Actual first M4 copy without a corresponding retained immutable
+    /// repair shadow. Preserve ACK/SACK authentication bounds even if prior
+    /// first-copy attempts burned a sequence gap; do not allocate a useless
+    /// BTree node or pretend the unretained packet is repairable.
+    pub fn on_unretained_firstsend(&mut self,seq_start:u64,wire_len:u32,
+        now:MonoNs)->Result<(),OuterAckError>{
+        let end=seq_start.checked_add(u64::from(wire_len))
+            .ok_or(OuterAckError::InvalidSend)?;
+        if wire_len==0||seq_start<self.highest_sent_end||now<self.last_sent_at{
+            return Err(OuterAckError::InvalidSend)
+        }
+        self.highest_sent_end=end;
+        self.last_sent_at=now;
+        Ok(())
     }
 
     /// Amortized removal from the oldest sent sequence; caller supplies the
@@ -305,6 +317,34 @@ mod tests {
                 20_000_000).unwrap().gap_candidates;
         }
         assert_eq!(first,vec![RecordPn(201)]);
+    }
+
+    #[test]
+    fn plan027_h852_unretained_real_firstcopy_only_advances_authentic_ack_bound(){
+        let mut x=index(100,4);
+        x.on_unretained_firstsend(100,100,MonoNs(1)).unwrap();
+        assert_eq!(x.outstanding(),0);
+        assert_eq!(x.highest_sent_end(),200);
+        // A burned first-copy gap must not make later actual M4 copy invalid.
+        x.on_unretained_firstsend(250,50,MonoNs(2)).unwrap();
+        assert_eq!(x.highest_sent_end(),300);
+        assert_eq!(x.outstanding(),0);
+        x.on_definitely_sent(RecordPn(4),300,100,MonoNs(3)).unwrap();
+        assert_eq!(x.outstanding(),1);
+        assert!(!x.tracks_cumulative_head(100));
+        assert!(!x.tracks_cumulative_head(250));
+        assert!(x.tracks_cumulative_head(300));
+        assert_eq!(x.on_feedback(lane(),[7;16],400,&[],MonoNs(4),1)
+            .unwrap().retired,vec![RecordPn(4)]);
+        assert_eq!(x.outstanding(),0);
+        assert_eq!(x.on_feedback(lane(),[7;16],401,&[],MonoNs(5),1),
+            Err(OuterAckError::OutOfRange));
+        assert_eq!(x.on_unretained_firstsend(399,1,MonoNs(6)),
+            Err(OuterAckError::InvalidSend));
+        assert_eq!(x.on_unretained_firstsend(400,0,MonoNs(6)),
+            Err(OuterAckError::InvalidSend));
+        assert_eq!(x.on_unretained_firstsend(400,1,MonoNs(1)),
+            Err(OuterAckError::InvalidSend));
     }
 
     #[test]

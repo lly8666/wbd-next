@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 851,
-  "checkpoint_sha": "d0830514d480a794912b8e16c268b48e8c14e485",
+  "sequence": 852,
+  "checkpoint_sha": "e92507102324f6970694dcb0bf40b233557d5bf0",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H851: H849 real f5 original Normal100 OFF→ON both legs PASS measured sameVM, but bounded RX/TX Rust Stop CPU postprocessor failed writing root-owned sudo fixture dir (PermissionError), CPU worker attribution NOT_RECORDED. H851 output moved to unprivileged Actions workspace, exact one source-frozen sameVM pair one Action queued to recover numeric; no product source change. H850 current e928 evidence canonical source_sha governance green. H848 blackhole source e928 100%/99.813% recovered first but upstream TUN27/INCONCLUSIVE; Windows signed seven-mode short functional PASS source fdc. Complete PLAN027 still partial.",
-  "why_now": "R100 original native two valid legs before H849 failure; numeric Stop cost extractor computed in memory then lacked write permission inside root-only measurement directory. One precise output-only fixture correction to preserve already selected high-information CPU attribution, not a product regression.",
+  "current_task": "PLAN027 H852: f5 same-VM Normal100 OFF→ON 100% unique first CPU whole +1.55/+1.41s, native Rust RX+TX +1.561/+1.434s, of which Rust TX +1.228/+1.112s (~79% of whole delta), RX +.333/.323. H852 narrow shared Rust original TX reduces optional ACK BTree index nodes from all first copies to only genuinely retained ciphertext shadows, all other real first copies advance validated TCP seq bound; new exact-source build/test Action pending, optimization performance NOT_RUN. Go original cold SYN e928 blackhole first100/99.813% but TUN27 and harness limited => INCONCLUSIVE; Windows fdc seven-mode short functional only.",
+  "why_now": "H851 native worker count proves product Rust TX accounts for ~79% of 100Mbps ON incremental CPU. Directed review finds original TX creates BTree ACK node on EVERY M4 first copy although v3 retains only sampled subset; unretained node cannot produce legal immutable repair. One targeted shared index path avoids useless nodes without changing sample, quota, sealed bytes, ACK upper bound or generation.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H851 source-f5 paired worker rx/tx full-owner CPU and compare to whole process full observation/steady window; decide if targeted shared optimization pays. Keep H848 e928 INCONCLUSIVE and Windows OFF/lifecycle remaining. Don't dispatch further R100 same-family absent new evidence.",
+  "next_action": "Collect H852 new exact source product build and Rust unit; then one same-VM old-e928→new-source Normal ON100 25ms0% A/B plus one independent real 10M250ms30% ON regression from SAME manifest, not mixing machines. If no benefit or high loss quality regression, revert narrow optimization. Cold reauth upstream remaining unqualified and Windows OFF/rotation still open.",
   "unverified": true,
   "last_tested_source": "e928b50cf872b6746a62c56662e5fc0768c5ca45",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H848-E928-BILATERAL-BLACKHOLE-RECOVERY-INCONCLUSIVE-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H844-GENERATION-R100-COHORT.md",
     "docs/devlog/M0/20261102-PLAN027-H845-SOURCE-GOVERNANCE.md",
     "docs/devlog/M0/20261102-PLAN027-H846-REAUTH-SYN-R100.md",
     "docs/devlog/M0/20261102-PLAN027-H847-WINDOWS-FDC-SEVEN-NATIVE.md",
     "docs/devlog/M0/20261102-PLAN027-H848-E928-COLD-SYN-NATIVE-RECOVERY.md",
     "docs/devlog/M0/20261102-PLAN027-H849-R100-WORKER-CPU-ATTRIBUTION.md",
     "docs/devlog/M0/20261102-PLAN027-H850-EXACT-SOURCE-KEY.md",
-    "docs/devlog/M0/20261102-PLAN027-H851-WORKER-ATTR-OUTPUT-OWNERSHIP.md"
+    "docs/devlog/M0/20261102-PLAN027-H851-WORKER-ATTR-OUTPUT-OWNERSHIP.md",
+    "docs/devlog/M0/20261102-PLAN027-H852-RUST-TX-SHADOW-INDEX-BUILD.md"
   ],
   "open_requests": [],
-  "partial_summary": "H848 e928 real double blackhole105 original TLS/Rust new Ready each and Stop: restored120s c2s first100% s2c first99.813% (379 missing), p99 60.2/25.8ms, zero deliver gap~1.2s, source TUN27 upstream, host PSI0.1; native INCONCLUSIVE not full PASS. Prior fdc recovery82.4% p99~21.3s retained FAIL. H846 R100 f5 sameVM CPU ON delta5.53/5.78% with R163/0B. H847 Win fdc seven-mode native functional not WL load. No new physical."
+  "partial_summary": "H848 e928 real double blackhole105 original TLS/Rust new Ready each and Stop: restored120s c2s first100% s2c first99.813% (379 missing), p99 60.2/25.8ms, zero deliver gap~1.2s, source TUN27 upstream, host PSI0.1; native INCONCLUSIVE not full PASS. Prior fdc recovery82.4% p99~21.3s retained FAIL. H846 R100 f5 sameVM CPU ON delta5.53/5.78% with R163/0B. H847 Win fdc seven-mode native functional not WL load. No new physical. H852 H851 full-owner worker CPU exact f5 Normal100 ON cost +1.55/+1.41 whole, Rust TX +1.228/+1.112 (~79%), RX+.333/.323. Targeted ACK index only for truly retained ciphertext; no branch/source performance claim yet, build pending."
 }

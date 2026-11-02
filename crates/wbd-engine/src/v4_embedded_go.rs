@@ -5348,22 +5348,32 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         let mut fresh_bytes=0u64;
         for record in frozen_for_outer.iter().take(real_copied){
             let meta=record.metadata();
-            let _=original.outer_ack.on_definitely_sent(
-                meta.pn,meta.seq.0,record.bytes().len() as u32,now);
             fresh_bytes=fresh_bytes.saturating_add((record.bytes().len()+
                 wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64);
             original.sent_fresh=original.sent_fresh.saturating_add(1);
+            // The authenticated carrier ACK index can nominate only a
+            // ciphertext shadow we ACTUALLY retained. Indexing unsampled
+            // first-copies made a BTree node per ~10kpps even though half
+            // could never legally be repaired, wasting Rust TX CPU/heap.
+            let mut retained=false;
             if allow_repair && v3_admit_shadow(meta.pn.0,meta.lane,now){
-                // A selected once-repair must never pin the shared source
-                // M1 slab for a whole RTT. Copy ciphertext exactly once into
-                // bounded process-shared repair-only backing after M4 copy.
-                // No new PN, AEAD or business HOL on admission failure.
-                let tracked=record.try_v3_repair_snapshot().is_some_and(|frozen|
+                // Freeze the original exact M4-copied ciphertext into a
+                // bounded optional backing, not the M1 source slab.
+                retained=record.try_v3_repair_snapshot().is_some_and(|frozen|
                     original.shadow.on_sent_adaptive_with_floor(
                         frozen,now,LINUX_ORIGINAL_V3_RETAIN_FLOOR_NS).is_ok());
-                if !tracked{
+                if !retained{
                     original.note_block(OriginalRepairBlockReason::FreshShadow);
                 }
+            }
+            if retained{
+                let _=original.outer_ack.on_definitely_sent(
+                    meta.pn,meta.seq.0,record.bytes().len() as u32,now);
+            }else{
+                // Every REAL first-copy still advances the exact monotonic
+                // TCP byte boundary for peer ACK/SACK range validation.
+                let _=original.outer_ack.on_unretained_firstsend(
+                    meta.seq.0,record.bytes().len() as u32,now);
             }
         }
         original.sent_first_wire_bytes=original.sent_first_wire_bytes
