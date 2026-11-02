@@ -445,6 +445,18 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  if e!=nil||!observed.AllNativeOSApplied{
   return errors.Join(e,windowsclient.ErrN4NativeGuard,cleanup())
  }
+ // The five-stage OS/WAL receipt alone has no numeric inner MTU. Before
+ // publishing READY, run the existing current-generation native MTU CAS
+ // inspection and demand equality to the Rust-derived Wintun plan.
+ // This read occurs only on cold activation (and existing low-frequency
+ // drift checks), never on the packet/FFI hot path.
+ actualInner,e:=product.RuntimeMTU(ctx)
+ if e!=nil||actualInner!=o.TunnelMTU{
+  return errors.Join(fmt.Errorf("Windows owned Wintun OS MTU not applied planned=%d inspected=%d: %w",
+   o.TunnelMTU,actualInner,windowsclient.ErrN4NativeGuard),e,cleanup())
+ }
+ fmt.Printf("WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 planned=%d applied=%d outer_config=%d\n",
+  o.TunnelMTU,actualInner,o.ConnectionMTU)
  fmt.Println("WBD_WINDOWS_NATIVE_APPLIED_V1 original_tls=1 rust_m3=1 signed_wintun=1 os_wal=1")
  // Native OS readback and original Rust M3 peer first+reverse proved.
  fmt.Println("WBD_WINDOWS_OS_APPLIED")

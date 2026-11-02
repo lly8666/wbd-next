@@ -4,7 +4,7 @@ import os,sys,subprocess,time,json,hashlib,pathlib,re,threading,faulthandler,ate
 from m0_wl_native_resource_sampler import sample_windows_original_process
 from m0_wl_windows_cpu_audit import summarize_windows_cpu
 from m0_wl_mode_runtime_report import source_locked_observability,summarize_auto_udp_progress,native_auto_true_applied_snapshots
-from m0_wl_native_mtu_contract import configured_native_test_mtu,native_outer_choice
+from m0_wl_native_mtu_contract import configured_native_test_mtu,native_outer_choice,verified_native_windows_inner_mtu
 from m0_wl_n0_drop_delta import latest_counter, measured_delta
 from m0_wl_impairment_profile import get_profile
 from m0_wl_lock_profile import parse_native_lock_profile
@@ -252,9 +252,16 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  ready(out/"server.log","V4_ORIGINAL_GO_GAME_NATIVE_READY" if is_game else "V4_ORIGINAL_GO_SERVER_NATIVE_READY",s,8)
  game_cold_stage("COLD_READY_COMPLETE")
  report["linux_ready"]="PASS_REAL_AFTER_ORIGINAL_TLS"
- if "WBD_WINDOWS_OS_APPLIED" not in (out/"client.log").read_text():raise RuntimeError("Windows public READY lacks native OS Applied")
+ winlog=(out/"client.log").read_text(errors="replace")
+ if "WBD_WINDOWS_OS_APPLIED" not in winlog:raise RuntimeError("Windows public READY lacks native OS Applied")
  report["windows_ready"]="PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL"
  if native_outer!="legacy1400":
+  # Independently validate the numeric receipt emitted by the REAL
+  # same-generation Windows N4 owner before READY; no hand-fed inner MTU.
+  windows_inner=verified_native_windows_inner_mtu(winlog,configured_mtu)
+  report["plan027a_windows_os_inner_mtu_verified"]=windows_inner
+  print("PLAN027A_WINDOWS_INNER_OS_READBACK",windows_inner,"outer",
+        configured_mtu,"selector",native_outer,flush=True)
   # Real OS TUN readback AFTER authenticated TLS and original owner Apply.
   kernel=json.loads(wsl("ip","-j","link","show","dev","wbdwl4",timeout=12))
   if len(kernel)!=1 or type(kernel[0].get("mtu")) is not int:

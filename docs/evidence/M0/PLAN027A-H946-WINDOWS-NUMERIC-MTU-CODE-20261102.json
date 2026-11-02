@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "phase": "CODING_COMPLETE_NATIVE_NOT_RUN",
+  "source_before": "f09395c4d38e59da8789b8d4e275a45d8691a901",
+  "source_sha": null,
+  "default_outer_ipv4_ip_mtu": 1460,
+  "explicit_max_outer_ipv4_ip_mtu": 1500,
+  "change": [
+    "Windows authenticated owner pre-READY product.RuntimeMTU generation/WAL/OS CAS inspected numeric result equals planned derived inner",
+    "source-locked real native harness requires and records Windows inner numeric OS MTU for default1460/explicit selectors",
+    "pure negative receipt parser test guards missing/duplicate/mismatch"
+  ],
+  "unit_test": "NOT_RUN",
+  "build": "NOT_RUN",
+  "native_windows_wintun_numeric": "NOT_RUN",
+  "native_linux_tun_numeric_prior_h943": "PASS_OLD_SOURCE_ONLY",
+  "DF0_DF1": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "reused_original_m4_owner": true,
+  "retained_previous_results": true
+}

@@ -113,9 +113,9 @@
       "evidence": "docs/devlog/M0/20261101-PLAN027-H708-H709-LOG-RECOVERY-AND-GAME-FEC-MTU.md"
     },
     {
-      "platform": "windows/amd64 + linux/amd64 + linux/arm64",
-      "scope": "PLAN027A统一预算/七模式实际边界/超限IP处置与保护性能；本次仅设计登记",
-      "status": "PLANNED",
+      "platform": "Windows original-Go/Rust owner + source-locked native WSL2",
+      "scope": "H946 pre-READY generation-owned numeric Wintun MTU CAS readback and genuine native harness parser added; real current SOURCE validation still NOT_RUN. Do not treat legacy H943 marker-only OS Applied as numeric proof.",
+      "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
     },
@@ -176,7 +176,7 @@
     "H935 fixes actual source adc18d75 Windows Fixed pre-READY rc=1: v5 original TLS Rust owner used peer TX record cap without applying local receiving Wintun planned-inner ceiling. Cold-only pure Rust receive derivation narrows TX cap; no RX authorization, OS Applied or Game group changed. Native Fixed still NOT_RUN at new SOURCE.",
     "H936 Windows-only Rust original M3 integration unit asserts actual v5 FEC2 fixed outer1400, planned inner1273, wire1318, stop/rollback and independent authenticated RX; no actual Windows↔WSL app delivery claimed.",
     "H938 OpenWrt disabled UCI wrapper now has one explicit outer_mtu default1460 passed to same Linux --outer-mtu; Android currently no connected native owner, its setMtu(1200) is a non-operational INNER placeholder, never treated as outer1460; neither platform native applied qualified.",
-    "H943 user one-shot six runs all Action SUCCESS at exact source ae3e7e9f. Game4FEC 10Mbps 25ms loss0 round-trip p99 1297/1328ms vs Normal47/52ms; formal performance gate NOT_PASS/NOT_QUALIFIED until planned Game3Mbps and CPU/RSS/p99 same-host controlled comparison. Actual DF0/DF1 giant UDP/ICMP/Windows netIP numeric remains NOT_RUN; no promotion/PLAN028.",
+    "H943 user one-shot six runs all Action SUCCESS at exact source ae3e7e9f. Game4FEC 10Mbps 25ms loss0 round-trip p99 1297/1328ms vs Normal47/52ms; formal performance gate NOT_PASS/NOT_QUALIFIED until planned Game3Mbps and CPU/RSS/p99 same-host controlled comparison. Actual DF0/DF1 giant UDP/ICMP/H946 Windows numeric live proof remains NOT_RUN; no promotion/PLAN028.",
     "Historical H669/H673/H676/H678 first-delivery counterexamples, H928/H935 compilation failures and source-locked prior limitations remain in H943 parent SOURCE 96ead0c07d3bc0121116bc801617c7e32d9bf142 and original dated evidence/devlogs. No old failure was deleted or promoted. H943 is only a scoped functional native result; Game4FEC p99, DF/ICMP, staged weaknet and capacity remain unresolved."
   ],
   "promotion": null
