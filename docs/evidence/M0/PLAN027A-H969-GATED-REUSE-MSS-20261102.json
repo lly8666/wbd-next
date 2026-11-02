@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "h968_build_run": 41480121662,
+  "source_sha": "0645b22ea852b80075a2227f472802bc76acf499",
+  "normal_default1460": "NOT_RUN",
+  "normal_explicit1500": "NOT_RUN",
+  "modes": [
+    "fixed",
+    "auto",
+    "game2",
+    "game4",
+    "game2-fec",
+    "game4-fec"
+  ],
+  "all_modes_qualification": "NOT_RUN",
+  "binary_reuse": "EXACT_H968_WINDOWS_EXE_RUST_DLL_LINUX_PROGRAM",
+  "per_mode_one_action": true,
+  "guard": "Before any followups Normal1460 signed original two-OS full SUCCESS and source-SHA/signed drivers/Stop; no source mismatch.",
+  "not_proven": [
+    "asymmetric real native negative",
+    "H958 DF",
+    "PLAN028–030"
+  ]
+}
