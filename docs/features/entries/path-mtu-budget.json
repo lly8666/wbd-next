@@ -160,7 +160,8 @@
     "H932 default changed from 1500 to1460 at user request; explicit 1500 maximum and historical 1500 GameFEC1398 boundary remain valid. Archived 1500 default on older SOURCE is historic, not current.",
     "H934 fixes stale --outer-mtu default1500 in feature card and governance context_refs length9>8; source H932 default1460 implementation unchanged; old governance failures remain historical.",
     "H935 fixes actual source adc18d75 Windows Fixed pre-READY rc=1: v5 original TLS Rust owner used peer TX record cap without applying local receiving Wintun planned-inner ceiling. Cold-only pure Rust receive derivation narrows TX cap; no RX authorization, OS Applied or Game group changed. Native Fixed still NOT_RUN at new SOURCE.",
-    "H936 Windows-only Rust original M3 integration unit asserts actual v5 FEC2 fixed outer1400, planned inner1273, wire1318, stop/rollback and independent authenticated RX; no actual Windows↔WSL app delivery claimed."
+    "H936 Windows-only Rust original M3 integration unit asserts actual v5 FEC2 fixed outer1400, planned inner1273, wire1318, stop/rollback and independent authenticated RX; no actual Windows↔WSL app delivery claimed.",
+    "H935 SOURCE2b2ad98 Windows owner ABI run41442869483 FAIL E0502 immutable Registry lane borrow crossing mutable cold bind; H937 clone existing Arc handle only, no byte/authorization change, new exact SOURCE test pending."
   ],
   "promotion": null
 }

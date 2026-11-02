@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 936,
-  "checkpoint_sha": "2b2ad98eb47b6d8eadca656f02bdcec03007d90f",
+  "sequence": 937,
+  "checkpoint_sha": "30d962917c3a6e1ca216e2e655ac2ccda7e6b31c",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H936 Windows original Rust FEC2 v5 cold record 1318/1273 regression tests, no lifecycle rewrite; default outer1460 still locked",
+  "current_task": "PLAN027A H937 narrow Windows Rust registry Arc lifetime correction after H935 E0502 native owner ABI; preserving default1460 and v5 Rust receive cap.",
   "why_now": "Recovery verified PLAN027 USER_ACCEPTED_SCOPED closed; no old Actions inflight on entry. New source push has auto CI only; do not dispatch duplicate native scenarios.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect H936 auto Windows Rust owner tests (including feature7)/WAL/WSL source-specific results; diagnose only actual product failure; 027A native seven-mode/DF1/weaknet/RSS/CPU/p99 not yet qualified. PLAN028 awaits exit.",
+  "next_action": "Collect H937 Windows original owner ABI and no-scene Windows↔Linux exact source plus original Go WAL. If v5 Fixed still fails, use actual counters/log to locate smallest boundary. Do not re-dispatch old 027; PLAN028 pending 027A.",
   "unverified": true,
   "last_tested_source": "6693910f879f9e55e77dd823c1b05d8942321929",
   "evidence_refs": [
@@ -34,5 +34,5 @@
     "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json"
   ],
   "open_requests": [],
-  "partial_summary": "H932 product source f2a66449 default1460 passed Rust native-functional, ABI, G2, original Go PLAN012; H934 governance PASS after context refs capped8. Historical adc18d75 Windows↔WSL fixed FAIL: original Go TLS authenticated client_record_offer=1318, requested TUN1273 but Rust v5 bind reused larger peer TX record cap and returned C ABI rc=1 before READY. H935 uses same Rust receive budget to narrow local owner TX only; awaiting new-source real Windows Fixed validation. Prior FAIL remains."
+  "partial_summary": "Source2b2ad98 Windows owner ABI Action41442869483 FAIL at crates/wbd-engine/src/v4_windows_owner.rs:1163 E0502 immutable registry lane borrow over mutable set_path_mtu. H937 clones existing Arc lane, no new OS or owner. Other H935 Rust Linux/cross native ABI builds PASS. H936 v5 exact regression test added but CI not yet collected. Previous real fixed pre-READY rc1 remains FAIL pending new native source."
 }

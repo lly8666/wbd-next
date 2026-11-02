@@ -1122,7 +1122,9 @@ fn set_outer_inner_budget(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,
     ifindex:u32,outer:u16,planned_inner:u16)->Result<u32,i32>{
     if !(576..=1500).contains(&outer)||!(576..=1500).contains(&planned_inner)
         ||planned_inner>outer{return Err(INVALID)}
-    let lane=r.entries.get(&h).ok_or(UNKNOWN)?;
+    // Do not hold an immutable Registry map borrow across the legacy
+    // mutable cold bind: the lane's original Arc remains generation pinned.
+    let lane=Arc::clone(r.entries.get(&h).ok_or(UNKNOWN)?);
     let (old_cap,cold)={
         let e=lane.lock().map_err(|_|BAD_STAGE)?;
         if e.path_mtu!=0||e.phase!=PH_ACTIVE||e.authenticated_epoch!=epoch||
