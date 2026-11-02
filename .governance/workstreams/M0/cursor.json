@@ -4,30 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 901,
-  "checkpoint_sha": "f3f4c86fee7ec8630b49c565ba9c7ffb517636d5",
+  "sequence": 902,
+  "checkpoint_sha": "af05239733740b8526faa70aaa9a7444acfc7ac2",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H901 recovered two existing signed native Actions: H900 SOURCE f3f4 Game4 highest protected FEC6 outer OFF at 10Mbps/dir, 250ms/30% 60s PASS genuine original Windows NPF/Wintun↔WSL2, first fractions Win 1.000000 / Linux .999973 and both owned Stop; Action41407246598 complete success. H899 SOURCE33e1 Windows→Linux unilateral105s IFB116 authentic blackout native FAIL, after restore both UDP probes rc8/received0, Linux cold TLS reauthorized but Windows not, Windows owned WAL and route sidecar survive; matching default routes before/after scoped management restore yet github.com DNS Win32Exception, artifact upload ENOTFOUND. H899 Actions API native job still in_progress at observation; never infer overall terminal result. Product recovery and runner DNS remain separate. No source change or new performance dispatch in H901.",
-  "why_now": "Preserve immutable H899 FAIL and H900 PASS before any subsequent work. H899 genuine failed recovery path needs first causality (retire notice send/driver result/authenticated receive vs OS tc restoration) not another same-fixture blind rerun; H900 Game4 10M high-loss family already qualified OFF.",
+  "current_task": "H902 correct current-SOURCE evidence-reference constraint after genuine H901 governance FAIL. Evidence is immutable H899 real unilateral105 FAIL at SOURCE33e1 and H900 Game4 highest fixed6 OFF native PASS at SOURCEf3f4; current cursor last_tested_source f3f4 and evidence_refs only H900 source-matched; older evidence remains independently archived with source. No product or test-source mutation, no new performance dispatch. H899 native run API still in_progress after real failed product step with DNS artifact fault.",
+  "why_now": "H901 governance run41409840487 structure blocked: evidence is for a different SOURCE, because cursor mixed H897 c85b/H899 33e1/H900 f3f4 refs. Keep source-specific result records without presenting cross-source evidence as same-build validation.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
   "next_action": "Do not redispatch H899/H900. Check whether Action41406960914 has finished; if product logs absent because artifact DNS failed, add source-scoped bounded exact owner-side retirement TX/definite NPF receipt/RX/open and post-recovery tc snapshot to distinguish protocol, lifecycle, OS fixture before another native test; fix shared validated cause only. In parallel resume Normal same-VM OFF→ON repair-cost baseline and other independent OFF/network work. After changes run affected ON Fixed/Auto/Game and >=300s scenario, update F/R/C CPU/RSS/p99 and Stop; physical remains NOT_RUN.",
   "unverified": true,
   "last_tested_source": "f3f4c86fee7ec8630b49c565ba9c7ffb517636d5",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H897-SOURCEC85B-NORMAL-OFF-100M-NATIVE-PASS-20261102.json",
-    "docs/evidence/M0/PLAN027-H899-SOURCE33E1-WIN105-NATIVE-FAIL-20261102.json",
     "docs/evidence/M0/PLAN027-H900-SOURCEF3F4-GAME4FEC6-OFF-NATIVE-PASS-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H894-CLEAN-OWNED-ROUTE-LEASE.md",
     "docs/devlog/M0/20261102-PLAN027-H895-ON300-RECEIPT-WIN105-SUBSCRIPTION.md",
     "docs/devlog/M0/20261102-PLAN027-H896-GAME2-FEC6-OUTER-OFF-30LOSS.md",
     "docs/devlog/M0/20261102-PLAN027-H897-NORMAL-OFF-100M-SIGNED.md",
     "docs/devlog/M0/20261102-PLAN027-H898-SIGNED-RECEIPTS-H888-DNS-SPLIT.md",
     "docs/devlog/M0/20261102-PLAN027-H899-WIN105-DIAGNOSTIC-REPRO.md",
     "docs/devlog/M0/20261102-PLAN027-H900-GAME4-FEC6-HIGHLOSS-OFF.md",
-    "docs/devlog/M0/20261102-PLAN027-H901-RECOVER-NATIVE-ACTIONS.md"
+    "docs/devlog/M0/20261102-PLAN027-H901-RECOVER-NATIVE-ACTIONS.md",
+    "docs/devlog/M0/20261102-PLAN027-H902-SOURCE-REF-CONTRACT.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."

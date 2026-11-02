@@ -51,5 +51,6 @@
     "user-supplied H899 native job full log",
     "H899 source-linked devlog",
     "original public native fixture"
-  ]
+  ],
+  "source_sha": "33e1cfff9cce9b0fe6650f4bc45528da23bf5f8b"
 }
