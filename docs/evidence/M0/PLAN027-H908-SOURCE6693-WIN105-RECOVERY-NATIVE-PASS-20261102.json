@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "run_id": 41415722303,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41415722303",
+  "result": "PASS_SCOPED_GENUINE_WINDOWS_TO_LINUX_UNILATERAL_105S_RECONNECT_AND_OWNED_STOP",
+  "scenario_id": "plan027-h882-win-c2s105-10m-25ms0-60s",
+  "mode": "normal",
+  "outer_repair": "OFF_EFFECTIVE_BOTH",
+  "native": {
+    "windows": "original_Go_TLS_plus_Rust_NPF_Wintun",
+    "linux": "original_Go_TLS_plus_Rust_raw_TUN",
+    "same_source_both": true,
+    "source": "6693910f879f9e55e77dd823c1b05d8942321929"
+  },
+  "blackhole": {
+    "direction": "windows_to_linux",
+    "kernel_loss_pct": 100,
+    "duration_s": 105,
+    "real_linux_ifb_drop_packets": 180,
+    "post_restore_observation_s": 120
+  },
+  "post_restore": {
+    "windows_go_original_tls_reauth": "PASS_NATIVE_DEAD90_ORIGINAL_TLS",
+    "linux_go_original_tls_reauth": "PASS_NATIVE_DEAD90_ORIGINAL_TLS",
+    "duplex_udp": "PASS_REAL_KERNEL_UDP",
+    "windows_first_received_sample_index": 1,
+    "linux_first_received_sample_index": 7
+  },
+  "business_60s": {
+    "offered_mbps": {
+      "windows": 9.9975,
+      "linux": 9.9999
+    },
+    "first_delivered_mbps": {
+      "windows": 9.9999,
+      "linux": 9.9975
+    },
+    "first_fraction": {
+      "windows": 1,
+      "linux": 1
+    },
+    "udp_tcp_real_kernel": "PASS_BOTH",
+    "owned_stop": "PASS_BOTH_OWNED"
+  },
+  "runner_management": {
+    "default_route_exact_before": true,
+    "default_route_exact_after": true,
+    "github_com_dns_before": "RESOLVED_A",
+    "github_com_dns_after": "RESOLVED_A",
+    "artifact_uploaded": true
+  },
+  "boundary": "Not full lifecycle matrix, does not certify Game/Auto or physical host and does not prove zero cross-flow HOL; same-origin app RTT only; F/R/C actual wire still separate",
+  "supersedes_failure_as_fixed_at_new_source": [
+    "H899_SOURCE33e1_FAIL",
+    "H905_SOURCE9816_FAIL"
+  ],
+  "historical_fail_records_retained": true
+}

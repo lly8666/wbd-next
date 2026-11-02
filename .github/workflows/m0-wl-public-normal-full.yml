@@ -196,6 +196,34 @@ jobs:
               -f "public_mode=$mode" -f "perf_scenario_file=$scenario"
             echo "M0_PLAN027_ORIGINAL_NATIVE_DISPATCH source=$GITHUB_SHA mode=$mode scene=$scenario status=DISPATCHED_NOT_PASS"
           done
+      - name: Dispatch PLAN027 frozen binary ON integration (one Action per scenario)
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-on-batch1]')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = main
+          current=$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq '.object.sha')
+          test "$current" = "$GITHUB_SHA" || { echo "New main source, refuse nonfrozen test dispatch"; exit 1; }
+          # H908 genuinely completed 105s IFB native+TLS+WAL on both OS.
+          # The three scoped Actions reuse the SAME signed product binaries,
+          # while fixture Git SHA and scenario SHA are separately frozen.
+          source=6693910f879f9e55e77dd823c1b05d8942321929
+          reused_run=41415722303
+          for row in \
+            "game4-fec:scenarios/plan027-h911-game4fec6-on-10m-250ms30-60s.json" \
+            "normal:scenarios/plan027-h911-normal-on-100m-25ms0-60s.json" \
+            "fixed:scenarios/plan027-h911-fixed-on-10m-250ms30-60s.json"; do
+            mode="${row%%:*}"; scene="${row#*:}"
+            test -f "$scene"
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f "public_mode=$mode" -f "perf_scenario_file=$scene" \
+              -f "outer_repair=on" -f "perf_reuse_run_id=$reused_run" \
+              -f "perf_binary_source_sha=$source"
+            echo "PLAN027_ON_BATCH1_QUEUED product_source=$source fixture_source=$GITHUB_SHA mode=$mode scenario=$scene status=DISPATCHED_NOT_PASS"
+          done
       - run: python -m pip install PyYAML==6.0.2
       - run: python tools/check_workflows.py
       - run: python -m unittest tests.test_delivery_ci -v
@@ -651,10 +679,13 @@ jobs:
               'r0/go_overlay/internal/windowsclient/native_original_route_recover_windows_test.go',
               'r0/go_overlay/internal/windowsownerlease/original_go_tls_game_windows_test.go'
             )
-            if(@(Compare-Object -ReferenceObject $allowed -DifferenceObject $changes).Count -ne 0){
+            if($changes.Count -eq 0){
+              Write-Output 'PLAN027_FROZEN_IDENTICAL_PRODUCT_CODE_SOURCE_REUSE_PASS'
+            } elseif(@(Compare-Object -ReferenceObject $allowed -DifferenceObject $changes).Count -eq 0){
+              Write-Output 'H796_FROZEN_SOURCE48ED_NONCOMPILED_PRIVATE_DIFF_EXACT_PASS'
+            } else {
               throw ('frozen Windows product/ABI non-allowlisted change: '+($changes -join ','))
             }
-            Write-Output 'H796_FROZEN_SOURCE48ED_NONCOMPILED_PRIVATE_DIFF_EXACT_PASS'
           }
           New-Item -ItemType Directory -Force result/wl-public | Out-Null
           & gh run download $id --repo $env:GITHUB_REPOSITORY --name "m0-wl-windows-product-binaries-$sha" --dir result/wl-public

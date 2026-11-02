@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "scenario_id": "plan027-h911-normal-outer-on-100m-25ms0-60s",
+  "duration_s": 60,
+  "warmup_s": 5,
+  "drain_s": 10,
+  "tun_mtu": 1400,
+  "seed": 20261102,
+  "windows_to_linux": {
+    "offered_mbps": 100,
+    "delay_ms": 25,
+    "loss_pct": 0,
+    "tc_rate_mbps": null,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 96,
+        "packets_weight": 2
+      },
+      {
+        "udp_payload_bytes": 288,
+        "packets_weight": 3
+      },
+      {
+        "udp_payload_bytes": 1060,
+        "packets_weight": 25
+      },
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 70
+      }
+    ]
+  },
+  "linux_to_windows": {
+    "offered_mbps": 100,
+    "delay_ms": 25,
+    "loss_pct": 0,
+    "tc_rate_mbps": null,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 96,
+        "packets_weight": 2
+      },
+      {
+        "udp_payload_bytes": 288,
+        "packets_weight": 3
+      },
+      {
+        "udp_payload_bytes": 1060,
+        "packets_weight": 25
+      },
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 70
+      }
+    ]
+  },
+  "public_mode": "normal"
+}
