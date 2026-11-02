@@ -686,7 +686,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "204fed35bc5919795b498e0d786796845abfdd90"
+      "result_blob": "7c39c179839c79cdfeb3f34220a1d90b36c3794a"
     },
     {
       "kind": "create",
@@ -758,7 +758,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "01a311d0f5f9e0e86d4b203ebdead6573d5a287d"
+      "result_blob": "b8a118b837acc1068c745db585e018c3fc588403"
     },
     {
       "kind": "create",
@@ -920,7 +920,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_budget_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_budget_windows.go",
-      "result_blob": "485b29a8141e4882c190815b448604c26ef28c24"
+      "result_blob": "d6f87ebafba4a2d1e45266f29a2883f2f8ed35ab"
     },
     {
       "kind": "replace",

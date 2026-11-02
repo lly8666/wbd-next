@@ -29,7 +29,7 @@ func offerGameColdInbound(inbound chan<- m0GameInbound,record m0GameInbound)bool
 }
 
 func runM0NativeV4WindowsGame(
- ctx context.Context,o m0NativeV4Options,localIP [4]byte,
+ ctx context.Context,o m0NativeV4Options,localIP [4]byte,physical uint32,
  open func(uint16,uint16)(*faketcp.NpcapEndpoint,error),
  makePlan func()(windowsclient.NetworkPlan,error),
 )error{
@@ -67,6 +67,13 @@ func runM0NativeV4WindowsGame(
   if _,err=rand.Read(seed[:]);err!=nil{return err}
   assoc,err:=faketcp.NewClientAssociation(flow,binary.BigEndian.Uint32(seed[:]),
    time.Second,func(seg faketcp.Segment)error{
+    if seg.Flags&faketcp.FlagSYN!=0{
+     wire:=faketcp.MarshalSegment(seg,1,faketcp.PacketPersonaWindows11)
+     decoded,decodeErr:=faketcp.ParseIPv4TCP(wire)
+     if decodeErr!=nil||!decoded.MSSSet||decoded.MSS!=faketcp.PublicV4AdvertisedMSS(){return windowsclient.ErrN4NativeGuard}
+     fmt.Printf("WBD_WINDOWS_GAME_ACTUAL_SYN_MSS_V1 side=client lane=%d local_advertised_mss=%d tcp_option_bytes=%x\n",
+      i,decoded.MSS,wire[40:44])
+    }
     _,e:=ep.WriteSegment(1,seg);return e
    })
   if err!=nil{return err}
@@ -130,7 +137,7 @@ func runM0NativeV4WindowsGame(
  if err!=nil{return err}
  recordOffer,err:=m0WindowsV4ColdRecordOffer(
   filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),
-  o.ConnectionMTU,o.TunnelMTU,o.Mode,o.FEC2Mode=="fixed",
+  o.ConnectionMTU,physical,o.TunnelMTU,o.Mode,o.FEC2Mode=="fixed",
  )
  if err!=nil{return err}
  cfg:=realityfront.ClientAdmissionConfig{

@@ -36,7 +36,7 @@ func m0WindowsV4BudgetMode(mode m0WindowsV4Mode,gameFEC bool)(uint32,error){
  }
  return 0,fmt.Errorf("Windows V4 cold MTU mode/GameFEC invalid")
 }
-func m0WindowsV4ColdRecordOffer(library string,outer,plannedInner uint32,
+func m0WindowsV4ColdRecordOffer(library string,outer,physical,plannedInner uint32,
  mode m0WindowsV4Mode,gameFEC bool)(uint16,error){
  if !filepath.IsAbs(library)||filepath.Ext(library)!=".dll"||
   outer<576||outer>1500||plannedInner<576||plannedInner>1500{
@@ -54,7 +54,7 @@ func m0WindowsV4ColdRecordOffer(library string,outer,plannedInner uint32,
   OuterIPMTU:outer,
   // Unknown physical egress is zero, not the inner TUN. Linux + Rust
   // active TX route snapshots independently narrow actual local PMTU.
-  PhysicalIPMTU:0,
+  PhysicalIPMTU:physical,
   PeerRawMSS:outer-40,IPHeader:20,TCPHeader:20,Mode:kind,
  },PlannedReceivingInnerMTU:plannedInner}
  var out m0RustColdBudgetOutput
@@ -70,4 +70,36 @@ func m0WindowsV4ColdRecordOffer(library string,outer,plannedInner uint32,
   return 0,errors.Join(fmt.Errorf("Windows V4 Rust cold MTU ABI refused rc=%d offer=%d",rc,out.RecordWire),callErr)
  }
  return uint16(out.RecordWire),nil
+}
+
+// Rust's one pre-TLS budget computes the local source's SYN MSS
+// from REAL OS egress IP MTU, not from Wintun's derived inner MTU.
+func m0WindowsV4LocalSYNBudget(library string,outer,physical uint32,
+ mode m0WindowsV4Mode,gameFEC bool)(m0RustColdBudgetOutput,error){
+ if outer<576||outer>1500||physical<576||
+  !filepath.IsAbs(library)||filepath.Ext(library)!=".dll"{
+  return m0RustColdBudgetOutput{},fmt.Errorf("Rust Windows MSS local physical source invalid")
+ }
+ kind,err:=m0WindowsV4BudgetMode(mode,gameFEC)
+ if err!=nil{return m0RustColdBudgetOutput{},err}
+ dll,err:=syscall.LoadDLL(library)
+ if err!=nil{return m0RustColdBudgetOutput{},err}
+ defer dll.Release()
+ proc,err:=dll.FindProc("wbd_m0_v4_mtu_budget_v1")
+ if err!=nil{return m0RustColdBudgetOutput{},err}
+ input:=m0RustColdBudgetInput{Version:1,Size:uint32(unsafe.Sizeof(m0RustColdBudgetInput{})),
+  OuterIPMTU:outer,PhysicalIPMTU:physical,PeerRawMSS:outer-40,
+  IPHeader:20,TCPHeader:20,Mode:kind}
+ var result m0RustColdBudgetOutput
+ rc,_,callErr:=proc.Call(uintptr(unsafe.Pointer(&input)),uintptr(unsafe.Sizeof(input)),
+  uintptr(unsafe.Pointer(&result)),uintptr(unsafe.Sizeof(result)))
+ runtime.KeepAlive(input);runtime.KeepAlive(result)
+ if rc!=0||result.Version!=1||result.Size!=uint32(unsafe.Sizeof(result))||
+  result.EffectiveOuterIPMTU>outer||result.EffectiveOuterIPMTU>physical||
+  result.AdvertisedSynMSS<536||result.AdvertisedSynMSS>1460||result.InnerIPCap<576{
+  return m0RustColdBudgetOutput{},errors.Join(fmt.Errorf(
+   "Rust original Windows SYN MSS refused rc=%d mss=%d effective_outer=%d",
+   rc,result.AdvertisedSynMSS,result.EffectiveOuterIPMTU),callErr)
+ }
+ return result,nil
 }

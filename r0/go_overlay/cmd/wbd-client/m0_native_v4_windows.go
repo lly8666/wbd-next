@@ -112,7 +112,7 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  for generation:=uint64(1);;{
   if ctx.Err()!=nil{return nil}
   applied:=false
-  err:=runM0NativeV4WindowsGeneration(ctx,o,autoOperatorRequests,&applied)
+  err:=runM0NativeV4WindowsGeneration(ctx,o,generation,autoOperatorRequests,&applied)
   // After genuine dead90, a new FakeTCP SYN can precede recovery of a
   // 105s one-way outage. Keep GUI alive and retry only cold timeouts,
   // never bypass TLS authentication or reuse the old Rust generation.
@@ -144,9 +144,28 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
 // One original-Go credential TLS + Rust NativeOwner generation. The caller
 // owns GUI/stop and starts the next epoch only after this one's WAL Stop.
 func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
- autoOperatorRequests <-chan realityfront.FecV2Profile,applied *bool)error{
+ generation uint64,autoOperatorRequests <-chan realityfront.FecV2Profile,applied *bool)error{
  underlay,err:=windowsclient.DiscoverPhysicalUnderlay(o.ServerIP,0)
  if err!=nil{return err}
+ // The actual OS physical egress path, not the inner Wintun interface.
+ // This pure Rust budget is installed BEFORE any original SYN and is
+ // renewed only after the previous authenticated generation has stopped.
+ physicalIface,err:=net.InterfaceByIndex(int(underlay.InterfaceIndex))
+ if err!=nil{return err}
+ if physicalIface.MTU<576{return windowsclient.ErrN4NativeGuard}
+ physical:=uint32(physicalIface.MTU)
+ gameFEC:=(o.Mode==m0WinModeGame2||o.Mode==m0WinModeGame4)&&o.FEC2Mode=="fixed"
+ cold,err:=m0WindowsV4LocalSYNBudget(
+  filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),
+  o.ConnectionMTU,physical,o.Mode,gameFEC)
+ if err!=nil{return err}
+ if err=faketcp.SetPublicV4AdvertisedMSS(uint16(cold.AdvertisedSynMSS));err!=nil{return err}
+ if cold.InnerIPCap<o.TunnelMTU{o.TunnelMTU=cold.InnerIPCap}
+ reason:="configured_outer_ipv4"
+ if physical<o.ConnectionMTU{reason="physical_interface_ipv4"}
+ fmt.Printf("WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=%d mode=%v configured_outer_mtu=%d physical_outer_mtu=%d effective_outer_mtu=%d local_advertised_mss=%d inner_mtu_planned=%d limiting_reason=%s source=RUST_V1_REAL_OS\n",
+  generation,o.Mode,o.ConnectionMTU,physical,cold.EffectiveOuterIPMTU,
+  cold.AdvertisedSynMSS,o.TunnelMTU,reason)
  ncfg,err:=underlay.NpcapConfig(o.SourcePort,o.ServerPort,1,faketcp.PacketPersonaWindows11)
  if err!=nil{return err}
  // PLAN024 original public Windows↔WSL2 real-NPF correction. Genuine
@@ -221,7 +240,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
     StatePath:o.StatePath,
    })
   }
-  return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),open,planForGame)
+  return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),physical,open,planForGame)
  }
  endpoint,err:=faketcp.OpenNpcapEndpoint(ncfg)
  if err!=nil{return err}
@@ -234,6 +253,15 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  if _,err=rand.Read(seed[:]);err!=nil{return err}
  assoc,err:=faketcp.NewClientAssociation(flow,binary.BigEndian.Uint32(seed[:]),time.Second,
   func(seg faketcp.Segment)error{
+   if seg.Flags&faketcp.FlagSYN!=0{
+    wire:=faketcp.MarshalSegment(seg,1,faketcp.PacketPersonaWindows11)
+    decoded,decodeErr:=faketcp.ParseIPv4TCP(wire)
+    if decodeErr!=nil||!decoded.MSSSet||decoded.MSS!=uint16(cold.AdvertisedSynMSS){
+     return windowsclient.ErrN4NativeGuard
+    }
+    fmt.Printf("WBD_WINDOWS_ACTUAL_SYN_MSS_V1 side=client generation=%d local_advertised_mss=%d tcp_option_bytes=%x\n",
+     generation,decoded.MSS,wire[40:44])
+   }
    _,e:=endpoint.WriteSegment(1,seg)
    return e
   })
@@ -270,6 +298,14 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
      ingressLocalDrops.Add(1)
     }
     continue
+   }
+   if seg.Flags&(faketcp.FlagSYN|faketcp.FlagACK)==(faketcp.FlagSYN|faketcp.FlagACK){
+    if !seg.MSSSet||seg.MSS<536||seg.MSS>1460{
+     select{case failure<-windowsclient.ErrN4NativeGuard:default:}
+     return
+    }
+    fmt.Printf("WBD_WINDOWS_PEER_SYNACK_MSS_V1 side=client generation=%d peer_advertised_mss=%d local_advertised_mss=%d\n",
+     generation,seg.MSS,cold.AdvertisedSynMSS)
    }
    if e=assoc.HandleSegment(seg,time.Now());e!=nil{
     select{case failure<-e:default:}
@@ -318,7 +354,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  // WFP mutation occurs until this pure cold result is accepted.
  recordOffer,err:=m0WindowsV4ColdRecordOffer(
   filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),
-  o.ConnectionMTU,o.TunnelMTU,o.Mode,false,
+  o.ConnectionMTU,physical,o.TunnelMTU,o.Mode,false,
  )
  if err!=nil{return err}
  auth:=realityfront.ClientAdmissionConfig{
