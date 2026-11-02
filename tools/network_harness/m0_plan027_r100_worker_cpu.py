@@ -62,11 +62,13 @@ def parse(root):
 def main():
     p=argparse.ArgumentParser()
     p.add_argument("--root",required=True)
+    p.add_argument("--output",required=True)
     a=p.parse_args()
     root=Path(a.root)
     out=parse(root)
-    (root/"worker-attribution.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
-    print("PLAN027_R100_WORKER_ATTRIBUTION",out["status"],flush=True)
+    Path(a.output).write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+    # Numeric-only result; never expose raw Go TLS/product logs.
+    print("PLAN027_R100_WORKER_ATTRIBUTION",json.dumps(out,sort_keys=True),flush=True)
     if out["status"]!="PASS_SCOPED_NUMERIC_RUST_WORKER_COST_ATTRIBUTION":
         raise SystemExit(2)
 

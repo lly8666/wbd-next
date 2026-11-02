@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 850,
-  "checkpoint_sha": "3ebbcde88be47eebd6db5bd40c06a2a855db7158",
+  "sequence": 851,
+  "checkpoint_sha": "d0830514d480a794912b8e16c268b48e8c14e485",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H849: source e928 genuine blackhole reauth now first100%/99.813% but native INCONCLUSIVE TUN27 and injector, 1.2s zero-delivery; source f5 sameVM Normal100 OFF/ON CPU+5.53/5.78% mostly no R, exact RX vs TX Rust worker cost not sampled; H849 one independent frozen source f5 sameVM OFF→ON 100M0 numeric native Rust worker Stop attribution Action pending, no new product hotpath. Windows source fdc signed seven modes functional only, other lifecycle/Windows paired open. H850 repaired canonical source_sha key in exact H848 current source e928 evidence; no test or product result changed. H849 CPU worker Action already in flight.",
-  "why_now": "Governance evidence/source mismatch is precisely missing canonical source_sha key in H848 evidence, despite matching product_source_sha; one correction preserves same actual native INCONCLUSIVE. Concurrent H849 R100 attribution Action still independent.",
+  "current_task": "PLAN027 H851: H849 real f5 original Normal100 OFF→ON both legs PASS measured sameVM, but bounded RX/TX Rust Stop CPU postprocessor failed writing root-owned sudo fixture dir (PermissionError), CPU worker attribution NOT_RECORDED. H851 output moved to unprivileged Actions workspace, exact one source-frozen sameVM pair one Action queued to recover numeric; no product source change. H850 current e928 evidence canonical source_sha governance green. H848 blackhole source e928 100%/99.813% recovered first but upstream TUN27/INCONCLUSIVE; Windows signed seven-mode short functional PASS source fdc. Complete PLAN027 still partial.",
+  "why_now": "R100 original native two valid legs before H849 failure; numeric Stop cost extractor computed in memory then lacked write permission inside root-only measurement directory. One precise output-only fixture correction to preserve already selected high-information CPU attribution, not a product regression.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H849 genuine sameVM worker CPU ON/OFF and first/Stop; determine where ~1.5CPU-sec delta resides, only optimize shared cost if meaningful. e928 true reauth still native INCONCLUSIVE due 27 source TUN drops, no repeat blackhole without new hypothesis. Windows OFF/ON paired and rotation remain necessary scope.",
+  "next_action": "Collect H851 source-f5 paired worker rx/tx full-owner CPU and compare to whole process full observation/steady window; decide if targeted shared optimization pays. Keep H848 e928 INCONCLUSIVE and Windows OFF/lifecycle remaining. Don't dispatch further R100 same-family absent new evidence.",
   "unverified": true,
   "last_tested_source": "e928b50cf872b6746a62c56662e5fc0768c5ca45",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H848-E928-BILATERAL-BLACKHOLE-RECOVERY-INCONCLUSIVE-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H843-R100-CHECKOUT-DEPTH.md",
     "docs/devlog/M0/20261102-PLAN027-H844-GENERATION-R100-COHORT.md",
     "docs/devlog/M0/20261102-PLAN027-H845-SOURCE-GOVERNANCE.md",
     "docs/devlog/M0/20261102-PLAN027-H846-REAUTH-SYN-R100.md",
     "docs/devlog/M0/20261102-PLAN027-H847-WINDOWS-FDC-SEVEN-NATIVE.md",
     "docs/devlog/M0/20261102-PLAN027-H848-E928-COLD-SYN-NATIVE-RECOVERY.md",
     "docs/devlog/M0/20261102-PLAN027-H849-R100-WORKER-CPU-ATTRIBUTION.md",
-    "docs/devlog/M0/20261102-PLAN027-H850-EXACT-SOURCE-KEY.md"
+    "docs/devlog/M0/20261102-PLAN027-H850-EXACT-SOURCE-KEY.md",
+    "docs/devlog/M0/20261102-PLAN027-H851-WORKER-ATTR-OUTPUT-OWNERSHIP.md"
   ],
   "open_requests": [],
   "partial_summary": "H848 e928 real double blackhole105 original TLS/Rust new Ready each and Stop: restored120s c2s first100% s2c first99.813% (379 missing), p99 60.2/25.8ms, zero deliver gap~1.2s, source TUN27 upstream, host PSI0.1; native INCONCLUSIVE not full PASS. Prior fdc recovery82.4% p99~21.3s retained FAIL. H846 R100 f5 sameVM CPU ON delta5.53/5.78% with R163/0B. H847 Win fdc seven-mode native functional not WL load. No new physical."

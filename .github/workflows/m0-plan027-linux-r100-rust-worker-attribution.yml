@@ -1,3 +1,4 @@
+# H851: postprocess numeric Stop CPU into runner-owned workspace (sudo fixture root-owned), exact same source and business, never product FAIL.
 # H844: only 1200B large UDP exists; optional 64..256B source-size gate not applicable.
 name: M0 PLAN027 R original Normal100 same VM bounded Rust RX TX attribution
 on:
@@ -57,13 +58,14 @@ jobs:
           set -euo pipefail
           python3 -m unittest tests.test_m0_plan027_r100_worker_cpu -v
           python3 -m tools.network_harness.m0_plan027_r100_worker_cpu \
-            --root "$GITHUB_WORKSPACE/plan027-r-normal100-pair"
+            --root "$GITHUB_WORKSPACE/plan027-r-normal100-pair" \
+            --output "$GITHUB_WORKSPACE/plan027-r100-worker-attribution.json"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: plan027-r100-worker-cpu-attribution
           path: |
-            plan027-r-normal100-pair/worker-attribution.json
+            plan027-r100-worker-attribution.json
             plan027-r-normal100-pair/result.json
             plan027-r-normal100-pair/leg-off/result.json
             plan027-r-normal100-pair/leg-on/result.json
