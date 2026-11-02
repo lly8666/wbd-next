@@ -96,5 +96,6 @@
     "independent lane rejoin",
     "physical wire C"
   ],
-  "next": "Do not rerun identical old 105s scenario on same product just to chase PASS. Reconcile real upstream 27 TUN drops and remaining downtime by targeted Go staged TLS timing if needed, in parallel prioritize Windows OFF pair and shared Normal repair cost."
+  "next": "Do not rerun identical old 105s scenario on same product just to chase PASS. Reconcile real upstream 27 TUN drops and remaining downtime by targeted Go staged TLS timing if needed, in parallel prioritize Windows OFF pair and shared Normal repair cost.",
+  "source_sha": "e928b50cf872b6746a62c56662e5fc0768c5ca45"
 }
