@@ -162,6 +162,7 @@ func runM0NativeV4WindowsGame(
   endpoints:endpoints,flows:flows,inbound:inbound,handoff:handoff,
   stopColdReaders:stopColdReaders,readers:&readers,errorSource:failed,
   pathMTU:o.ConnectionMTU, // NPF outer IPv4/TCP, never derived Wintun inner MTU
+  disableOuterRepair:o.DisableOuterRepair,
   errors:make(chan error,1),
  }
  fmt.Println("M0_GAME_COLD_STAGE PRODUCT_PREPARE_ENTER")

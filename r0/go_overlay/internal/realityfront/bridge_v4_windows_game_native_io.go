@@ -19,6 +19,7 @@ type V4WindowsGameNativeIOV3 struct{
  Version,Size uint32
  Group uint64
  Lanes,FEC uint32
+ DisableOuterRepair uint32 // 0=ON default, 1=OFF cold native owner
  First V4WindowsNativeIOV1
  Extra [3]V4WindowsGameExtraLaneV3
 }
@@ -31,7 +32,7 @@ func(g *V4WindowsAuthenticatedGameGroup) StartNativeGameIO(
  if err:=ctx.Err();err!=nil{return err}
  g.mu.Lock();defer g.mu.Unlock()
  n:=len(g.members)
- if g.closed||g.joined==0||(n!=2&&n!=4)||
+ if g.closed||g.joined==0||(n!=2&&n!=4)||cfg.DisableOuterRepair>1||
    cfg.First.WintunSession==0||cfg.First.WintunReadEvent==0||
    cfg.First.RXCapture==0||cfg.First.TXCapture==0{
   return errV4WindowsOwner
@@ -116,4 +117,22 @@ func(g *V4WindowsAuthenticatedGameGroup) JoinNativeGameIO(
  proc,err:=g.members[0].bridge.fixedProc("wbd_m0_win_game_native_v3_stop")
  if err!=nil{return err}
  return winOwnerCall(proc,uintptr(g.joined))
+}
+
+// Source-authoritative frozen GameOuter, exact authenticated live joined
+// generation; this is never a Go flag echo or an Applied/Stop grant.
+func(g *V4WindowsAuthenticatedGameGroup) NativeGameOuterRepairEffective(
+ ctx context.Context,
+)(uint32,error){
+ if g==nil||ctx==nil{return 0,errV4WindowsOwner}
+ if err:=ctx.Err();err!=nil{return 0,err}
+ g.mu.Lock();defer g.mu.Unlock()
+ if g.closed||g.joined==0||len(g.members)==0{return 0,errV4WindowsOwner}
+ proc,err:=g.members[0].bridge.fixedProc("wbd_m0_win_game_native_v4_outer_repair_effective")
+ if err!=nil{return 0,err}
+ var enabled uint32
+ if err=winOwnerCall(proc,uintptr(g.joined),uintptr(unsafe.Pointer(&enabled)));err!=nil||enabled>1{
+  return 0,errV4WindowsOwner
+ }
+ return enabled,nil
 }

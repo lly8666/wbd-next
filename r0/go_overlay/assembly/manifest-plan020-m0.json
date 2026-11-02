@@ -737,7 +737,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "6e10b584abee65d9810982d1bb6a8ec4fe726b68"
+      "result_blob": "e1c2622cd761da0abb5ab24889df646ccc9a815a"
     },
     {
       "kind": "create",
@@ -845,13 +845,13 @@
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_game_native_io.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_native_io.go",
-      "result_blob": "d9ca97a973c97338c4be7319bd1397801e46df93"
+      "result_blob": "706a172d9c5fc8e8b3f54e333fc5252153fdfcac"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go",
-      "result_blob": "25042c5bbb2db714d961d1a834d7df1185f92f56"
+      "result_blob": "f0e2713147d63258266a788cc1135edd115a1983"
     },
     {
       "kind": "create",

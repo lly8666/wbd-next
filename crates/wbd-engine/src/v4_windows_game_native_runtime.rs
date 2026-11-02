@@ -48,6 +48,7 @@ pub struct WbdWinGameExtraLaneV3 {
 pub struct WbdWinGameNativeAttachV3{
     pub version:u32,pub size:u32,
     pub group:u64,pub lanes:u32,pub fec:u32,
+    pub disable_outer_repair:u32, // 0=default ON, 1=real no optional DATA shadow
     pub first:WbdWinNativeAttachV1,
     pub extra:[WbdWinGameExtraLaneV3;3],
 }
@@ -114,6 +115,7 @@ struct GameSession{
     early:Arc<Mutex<VecDeque<(usize,u32,Vec<u8>)>>>,
     counters:Arc<GameCounters>,
     tx:JoinHandle<i32>,rx:JoinHandle<i32>,
+    repair_enabled:bool, // read back from constructed actual GameOuter
 }
 static GAME_NATIVE:OnceLock<Mutex<BTreeMap<u64,GameSession>>>=OnceLock::new();
 fn sessions()->&'static Mutex<BTreeMap<u64,GameSession>>{
@@ -122,6 +124,7 @@ fn sessions()->&'static Mutex<BTreeMap<u64,GameSession>>{
 fn configs(c:&WbdWinGameNativeAttachV3)->Result<Vec<LaneConfig>,i32>{
     if c.version!=3||c.size as usize!=std::mem::size_of::<WbdWinGameNativeAttachV3>()||
         !matches!(c.lanes,2|4)||c.group==0||c.fec>1||
+        c.disable_outer_repair>1||
         c.first.version!=1||
         c.first.size as usize!=std::mem::size_of::<WbdWinNativeAttachV1>()||
         c.first.wintun_session==0||c.first.wintun_read_event==0||
@@ -831,6 +834,9 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_start(
     let outer=match outer::GameOuter::new(&cfg,&lanes){
         Ok(v)=>Arc::new(Mutex::new(v)),Err(rc)=>return rc,
     };
+    let repair_enabled=match outer.lock(){
+        Ok(v)=>v.repair_enabled,Err(_)=>return BAD_STAGE,
+    };
     let tx_outer=Arc::clone(&outer);
     let rx_outer=Arc::clone(&outer);
     let tx_group=Arc::clone(&group);
@@ -873,7 +879,7 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_start(
         }
     };
     sessions.insert(cfg.group,GameSession{
-        stop,tx_wake,rx_wake,early,counters,tx,rx,
+        stop,tx_wake,rx_wake,early,counters,tx,rx,repair_enabled,
     });
     OK
 }
@@ -899,6 +905,18 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_stats(
     let map=match sessions().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
     let Some(s)=map.get(&h)else{return UNKNOWN};
     unsafe{out.write(s.counters.snapshot())};OK
+}
+// Exact authenticated native group readback, not a Go CLI echo or another
+// per-packet controller. The bool is frozen from the actual GameOuter.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_game_native_v4_outer_repair_effective(
+    h:u64,out:*mut u32,
+)->i32{
+    if out.is_null(){return INVALID}
+    let map=match sessions().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+    let Some(s)=map.get(&h)else{return UNKNOWN};
+    unsafe{out.write(u32::from(s.repair_enabled))};
+    OK
 }
 // A Win32/NPF worker may be stuck in its original kernel read even after
 // native Stop/wake. A Rust JoinHandle has no context-aware blocking join.

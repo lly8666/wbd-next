@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 877,
-  "checkpoint_sha": "862f3df93983a67abb23f00a5f346362036047aa",
+  "sequence": 878,
+  "checkpoint_sha": "219003e9b061c3233135338b058a726f1df8fa2e",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H875 SOURCE cdb4 signed original Windows NPF/Wintun↔WSL2 Linux/Go TLS/Rust Normal OFF 10Mbps/25ms0%60s both first100%, actual Win/Linux effective OFF, UDP/TCP and both owned Stop PASS; Win whole EXE CPU2.5156s over74.297s RSS peak41.7MB, kernel drops0. H876 one same-VM sequential Normal OFF→ON, 10Mbps/250ms0%60s source-frozen binary both OS, result NOT_RUN at commit. H877 governance scope correction: live evidence_refs now only H875 cdb, historical b747 H870 evidence remains in Git/card/devlog, not mixed into one last_tested_source.",
-  "why_now": "H875 true Windows original OFF qualified first; compare same-source/same-runner optional M2 CPU/RSS overhead at RTT500ms before speculative shared recovery optimization or heavier loss scenes. Only cold flag differs, all business and owned Stops independently gated.",
+  "current_task": "H875 source cdb4 genuine Normal OFF 10M25ms0%60s Win/Linux first100%/both original owned Stop PASS; H876 SOURCE862f same-VM Normal OFF→ON/250ms0% pair Action41391560849 in flight, build/ABI PASS; H877 main cursor evidence source-only guard fixed governance PASS. H878 Windows original Game2/4 outer OFF cold joining GameOuter new source, proposed Game2/off 10M25ms5%60s exact one native Action NOT_RUN until commit. Game4/FEC OFF and affected ON remain NOT_RUN.",
+  "why_now": "Normal OFF native first qualified and same-runner CPU paired in progress. Independent Game Rust owner still spent optional global budget/shadow/ACK-gap work with OFF; adapt existing shared primitives/real readback before Game OFF network matrix.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect exact H876 sameVM native OFF/ON Action #41391560849 and record CPU/RSS/effective/first delivery/Stop independently of green workflow; H875 evidence source cdb only in cursor; historical b747 sources preserved in existing immutable evidence. Then target 30% pair and missing Game OFF/Win one-way native lifecycle.",
+  "next_action": "Collect H876 same-VM OFF/ON Action result without re-dispatch and H878 first Game2/off native scenario after exact source; diagnose ABI/driver/Stop if failure. If valid complete Game4/FEC OFF with source reuse, Windows one-way105, Normal 30%-loss paired and representative 50M; ON combinations and 300s last. No physical install.",
   "unverified": true,
   "last_tested_source": "cdb4ed347d15c840ebedfd7c43ead2a0ecef11d3",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H875-SOURCECDB4-WINDOWS-NORMAL-OFF-10M-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H868-COLLECT-H867-MISSING-RECEIPTS.md",
     "docs/devlog/M0/20261102-PLAN027-H869-WINDOWS-AUTH-RETIRE-RECEIVER.md",
     "docs/devlog/M0/20261102-PLAN027-H870-COLLECT-NATIVE-LIFECYCLE.md",
     "docs/devlog/M0/20261102-PLAN027-H871-SOURCE-REF-CONSISTENCY.md",
     "docs/devlog/M0/20261102-PLAN027-H872-WINDOWS-RETIRE-SENDER.md",
     "docs/devlog/M0/20261102-PLAN027-H873-WINDOWS-OUTER-OFF.md",
     "docs/devlog/M0/20261102-PLAN027-H875-WINDOWS-NORMAL-OFF-NATIVE.md",
-    "docs/devlog/M0/20261102-PLAN027-H876-NORMAL-SAMEVM-OUTER-PAIR.md"
+    "docs/devlog/M0/20261102-PLAN027-H876-NORMAL-SAMEVM-OUTER-PAIR.md",
+    "docs/devlog/M0/20261102-PLAN027-H878-GAME-COLD-OUTER-OFF.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."

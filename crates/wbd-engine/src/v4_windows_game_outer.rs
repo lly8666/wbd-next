@@ -52,6 +52,7 @@ pub(super) struct GameOuter{
     // GameFEC uses Normal's full first-copy ACK/ReceiptState/M2 path
     // plus classic bounded PTO fallback; same original ciphertext/PN/seq.
     // Keep the single-repair hard expiry and per-lane rate cap.
+    pub(super) repair_enabled:bool,
     fec_sparse:bool,fec_seen:Vec<u64>,fec_copied:u64,
 }
 impl GameOuter{
@@ -66,8 +67,9 @@ impl GameOuter{
         // validated cumulative ACK/immutable shadow, Normal PTO and
         // global driver settlement. Performance tuning is deferred.
         let fec_sparse=cfg.fec==1;
+        let repair_enabled=cfg.disable_outer_repair==0;
         let mut owner=Self{lanes:Vec::with_capacity(lanes.len()),
-            epoch:cfg.first.epoch,fec_sparse,
+            epoch:cfg.first.epoch,repair_enabled,fec_sparse,
             fec_seen:vec![0;lanes.len()],fec_copied:0};
         for (index,entry) in lanes.iter().enumerate(){
             // Each independent Game TCP sequence stream needs its OWN
@@ -100,8 +102,8 @@ impl GameOuter{
             let ack=OuterAckIndex::new(lane,cfg.first.epoch,
                 u64::from(entry.tx_seq),MAX_M2_FIXED_FROZEN)
                 .map_err(|_|BAD_STAGE)?;
-            let now=m2_clock();
-            {
+            if repair_enabled {
+                let now=m2_clock();
                 let mut g=m2_global().lock().map_err(|_|BAD_STAGE)?;
                 g.register(dir,RepairBudgetConfig{
                     outer_mtu:u64::from(cfg.first.path_mtu).saturating_add(54),
@@ -140,6 +142,12 @@ impl GameOuter{
         // Only the exact next original TCP sequence. An old/overlapped
         // carrier cannot become repair-eligible or spend new first credit.
         if delta!=0{return Err(BAD_STAGE)}
+        if !self.repair_enabled{
+            // Preserve exact FakeTCP sequence without M2 shadow/index,
+            // optional global repair-credit lock or ciphertext Arc copy.
+            return m.ack.advance_untracked(high,wire.len() as u32)
+                .map_err(|_|BAD_STAGE)
+        }
         if !retain{
             // Normal ACK still bounds all actual copied TCP bytes; gaps
             // at unsampled spans MUST NOT nominate the next held record.
@@ -180,7 +188,7 @@ impl GameOuter{
         let m=self.lanes.get_mut(index).ok_or(INVALID)?;
         let high=m.ack.highest_sent_end();
         if seq!=high as u32 || wire_len==0{return Err(BAD_STAGE)}
-        if self.fec_sparse{
+        if !self.repair_enabled||self.fec_sparse{
             return m.ack.advance_untracked(high,wire_len as u32)
                 .map_err(|_|BAD_STAGE)
         }
@@ -193,6 +201,7 @@ impl GameOuter{
         // Untrusted ACK can only nominate a Normal M2 shadow; an FEC
         // candidate must begin at the exact first missing TCP byte. Full
         // first-copy indexing makes such gaps observable. No FEC credit.
+        if !self.repair_enabled{return false}
         let Some(m)=self.lanes.get_mut(index)else{return false};
         let exact=!self.fec_sparse||m.ack.tracks_cumulative_head(ack);
         let now=m2_clock();
@@ -209,6 +218,7 @@ impl GameOuter{
     }
     pub(super) fn prepare(&mut self,active:&[bool])
         ->Result<Option<GameRepair>,i32>{
+        if !self.repair_enabled{return Ok(None)}
         let now=m2_clock();
         for (index,m) in self.lanes.iter_mut().enumerate(){
             if !active[index]||m.held.is_some()||
@@ -293,6 +303,7 @@ impl GameOuter{
         Ok(())
     }
     pub(super) fn next_deadline(&self)->Option<u64>{
+        if !self.repair_enabled{return None}
         self.lanes.iter().filter_map(|m|{
             let shadow=m.shadow.next_deadline().map(|x|x.0);
             // A past-due shadow under the FEC per-lane rate cap must
@@ -308,6 +319,10 @@ impl GameOuter{
 }
 impl Drop for GameOuter{
     fn drop(&mut self){
+        if !self.repair_enabled{
+            eprintln!("WBD_GAME_NORMAL_SHARED_OUTER_STOP enabled=0 lanes={} copied_appearance=0 optional_shadow=0",self.lanes.len());
+            return
+        }
         if self.fec_sparse{
             eprintln!("WBD_GAME_FEC_NORMAL_OUTER_STOP copied_appearance={} sampled_original={:?} exact_ack_head_only=1 same_original_pn_seq=1 no_fec_recovery_credit=1",
                 self.fec_copied,self.fec_seen.iter().map(|n|n/(FEC_SHADOW_SAMPLE_MASK+1)).collect::<Vec<_>>());
@@ -328,6 +343,29 @@ impl Drop for GameOuter{
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[test]
+    fn plan027_game_cold_outer_off_preserves_original_seq_without_shadow_or_timer(){
+        // Synthetic authenticated attachment values ONLY; this does not
+        // claim OS/Wintun/NPF native business success.
+        let mut cfg:WbdWinGameNativeAttachV3=unsafe{std::mem::zeroed()};
+        cfg.group=(877u64<<32)|1;
+        cfg.first.epoch=[3;16];
+        cfg.first.path_mtu=1400;
+        cfg.disable_outer_repair=1;
+        let lane=LaneConfig{owner:123,tx_seq:200,rx_seq:300,
+            local_port:41031,peer_port:443,rx_capture:0,tx_capture:0,
+            npcap:unsafe{std::mem::zeroed()}};
+        let mut owner=GameOuter::new(&cfg,&[lane]).unwrap();
+        assert!(!owner.repair_enabled);
+        assert_eq!(owner.on_firstsend(0,1,200,&[7u8;120]),Ok(()));
+        assert_eq!(owner.lanes[0].ack.highest_sent_end(),320);
+        assert_eq!(owner.lanes[0].shadow.outstanding(),0);
+        assert_eq!(owner.on_health_copy(0,2,320,40),Ok(()));
+        assert_eq!(owner.lanes[0].ack.highest_sent_end(),360);
+        assert!(!owner.on_hint(0,360,&[]));
+        assert!(owner.prepare(&[true]).unwrap().is_none());
+        assert_eq!(owner.next_deadline(),None);
+    }
     #[test]
     fn h811_fec_reuses_normal_cumulative_gap_without_flooding_every_record(){
         assert_eq!(FEC_SHADOW_SAMPLE_MASK+1,1);

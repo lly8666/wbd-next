@@ -33,6 +33,7 @@ type m0WinRustGamePeer struct{
  identity windowsclient.N4UnifiedIdentity
  maxIPv4 int
  pathMTU uint32
+ disableOuterRepair bool
  live bool
  moved bool
  last realityfront.V4WindowsNativeWorkerStatsV1
@@ -138,10 +139,16 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
    QueueDestroy:nativeTX[i].Fns.QueueDestroy,
   }
  }
+ if p.disableOuterRepair{cfg.DisableOuterRepair=1}
  fmt.Println("M0_GAME_COLD_STAGE RUST_GAME_START_ENTER")
  if err=p.group.StartNativeGameIO(ctx,cfg);err!=nil{return err}
- fmt.Println("M0_GAME_COLD_STAGE RUST_GAME_START_DONE")
  p.live=true;p.identity=id;p.maxIPv4=max
+ enabled,readErr:=p.group.NativeGameOuterRepairEffective(ctx)
+ if readErr!=nil||((enabled==0)!=p.disableOuterRepair){
+  return fmt.Errorf("native original Game outer-repair effective mismatch: %w",errors.Join(readErr,windowsclient.ErrN4NativeGuard))
+ }
+ fmt.Printf("WBD_WINDOWS_GAME_OUTER_REPAIR_EFFECTIVE enabled=%d source=rust_game_outer\n",enabled)
+ fmt.Println("M0_GAME_COLD_STAGE RUST_GAME_START_DONE")
  for{
   select{
   case rec:=<-p.inbound:
@@ -207,6 +214,10 @@ func(p *m0WinRustGamePeer) HealthError(ctx context.Context)error{
  mtu,e:=p.group.RefreshGamePayloadMTU(ctx)
  if e!=nil{return e}
  if mtu!=p.maxIPv4{return fmt.Errorf("Game Rust native effective MTU changed from %d to %d: require new authenticated native attach",p.maxIPv4,mtu)}
+ enabled,readErr:=p.group.NativeGameOuterRepairEffective(ctx)
+ if readErr!=nil||((enabled==0)!=p.disableOuterRepair){
+  return fmt.Errorf("Game original outer repair mode drift: %w",errors.Join(readErr,windowsclient.ErrN4NativeGuard))
+ }
  return nil
 }
 func(p *m0WinRustGamePeer) Stats()string{

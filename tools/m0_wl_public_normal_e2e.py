@@ -20,7 +20,7 @@ is_game=mode.startswith("game")
 game_fixed=mode.endswith("-fec")
 # One exact SOURCE-selected cold policy for both ORIGINAL endpoints.
 outer_repair=os.environ.get("WBD_WL_OUTER_REPAIR","on")
-if outer_repair not in ("on","off") or (is_game and outer_repair!="on"):
+if outer_repair not in ("on","off"):
  raise RuntimeError("unsupported original Windows outer-repair selection")
 def game_cold_stage(stage):
  if not game_fixed:return
@@ -887,6 +887,17 @@ print(json.dumps(result),flush=True)
     "enabled":expected}
   if not (win_ok and linux_ok):
    raise RuntimeError("real original two-OS outer repair effective mismatch")
+ if is_game:
+  # Two authenticated Go TLS lane groups; Rust effective rather than CLI.
+  expected=1 if outer_repair=="on" else 0
+  windows=(out/"client.log").read_text(errors="replace")
+  linux=(out/"server.log").read_text(errors="replace")
+  win_ok=(f"WBD_WINDOWS_GAME_OUTER_REPAIR_EFFECTIVE enabled={expected} " in windows)
+  linux_ok=(f"V4_PUBLIC_GAME_OUTER role=server lanes={lanes} repair_enabled={expected} " in linux)
+  report["original_outer_repair_effective"]={"windows":win_ok,"linux":linux_ok,
+    "enabled":expected,"game_lanes":lanes}
+  if not (win_ok and linux_ok):
+   raise RuntimeError("original Game two-OS Rust outer repair effective mismatch")
  if scenario:
   report["WL_V2"]["owned_stop"]="PASS_BOTH_OWNED"
   report["WL_V2"]["variant"]="rust-native"
