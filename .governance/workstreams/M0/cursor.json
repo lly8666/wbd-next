@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 854,
-  "checkpoint_sha": "2b531228a470906469d79b0bb6127a82c3530607",
+  "sequence": 855,
+  "checkpoint_sha": "c8f1732a7eec71f562a05a4aeb9d06b57de6b05f",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H854: H853 new Rust shared index source2b5312 builder Action41373270074 in progress, build+3 hash pending. Two independent source-frozen original Linux Actions queued: same-VM old e928→new H853 Normal outer ON100Mbps25ms0%1200B60s real first/p99/CPU/RSS/Stop to determine actual optimization, and new-H853 Normal ON10Mbps250ms real 30pct F/R/first tc/Stop adaptation. No perf PASS yet. H851 old f5 Rust TX ~79% of ON overhead; H848 e928 real blackhole first100/99.813 native INCONCLUSIVE TUN27. Windows fdc short functional seven modes PASS, WL performance/physical NOT_RUN.",
-  "why_now": "New shared Rust ACK index source build started; proactively complete both independent test/fixture contracts with exact source manifest hash and proper old/new sameVM match so measurements can run after once-build. Product frozen SHA2b5312, no further product changes in fixtures.",
+  "current_task": "PLAN027 H855: source2b5312 original Go TLS/Rust M4 shared shadow-only ACK index build+hash PASS, H854 independent sameVM old-e928/new-source Normal ON100 and new-source ON10Mbps250ms30pct both real Actions in progress, measurement NOT_YET_VERDICT. H855 feature card 16KiB boundary corrected by compacting overlapping H846/H852 limitation, no code or native change. H851 frozen f5 worker TX explains ~79% ON overhead.",
+  "why_now": "H854 feature catalog failed bounded regular JSON size 16,482>16,384 bytes due redundant card limitation appended in H852, not product code failure; compact only newest overlapping note, keep exact H846 blackhole INCONCLUSIVE, H852 native pending.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect builder Action41373270074 first and H854 independent sameVM BEFORE/AFTER ON100 and true loss30 ON results. Qualify/rollback shared index based on measured full process and no first/p99/Stop/RF regression. No excess same-family tests, continue lifecycle and Windows OFF if independent.",
+  "next_action": "Collect already-running H854 sameVM old/new ON100 CPU/first and independent new-source true30% ON F/R/Stop; decide accept vs rollback shared Rust index. No repeat Actions. Governance/feature check via H855.",
   "unverified": true,
   "last_tested_source": "e928b50cf872b6746a62c56662e5fc0768c5ca45",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H848-E928-BILATERAL-BLACKHOLE-RECOVERY-INCONCLUSIVE-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H847-WINDOWS-FDC-SEVEN-NATIVE.md",
     "docs/devlog/M0/20261102-PLAN027-H848-E928-COLD-SYN-NATIVE-RECOVERY.md",
     "docs/devlog/M0/20261102-PLAN027-H849-R100-WORKER-CPU-ATTRIBUTION.md",
     "docs/devlog/M0/20261102-PLAN027-H850-EXACT-SOURCE-KEY.md",
     "docs/devlog/M0/20261102-PLAN027-H851-WORKER-ATTR-OUTPUT-OWNERSHIP.md",
     "docs/devlog/M0/20261102-PLAN027-H852-RUST-TX-SHADOW-INDEX-BUILD.md",
     "docs/devlog/M0/20261102-PLAN027-H853-ACK-END-COMPILE.md",
-    "docs/devlog/M0/20261102-PLAN027-H854-SHARED-INDEX-AB-LOSS.md"
+    "docs/devlog/M0/20261102-PLAN027-H854-SHARED-INDEX-AB-LOSS.md",
+    "docs/devlog/M0/20261102-PLAN027-H855-FEATURE-SIZE-BOUNDED.md"
   ],
   "open_requests": [],
   "partial_summary": "H848 e928 real double blackhole105 original TLS/Rust new Ready each and Stop: restored120s c2s first100% s2c first99.813% (379 missing), p99 60.2/25.8ms, zero deliver gap~1.2s, source TUN27 upstream, host PSI0.1; native INCONCLUSIVE not full PASS. Prior fdc recovery82.4% p99~21.3s retained FAIL. H846 R100 f5 sameVM CPU ON delta5.53/5.78% with R163/0B. H847 Win fdc seven-mode native functional not WL load. No new physical. H852 H851 full-owner worker CPU exact f5 Normal100 ON cost +1.55/+1.41 whole, Rust TX +1.228/+1.112 (~79%), RX+.333/.323. Targeted ACK index only for truly retained ciphertext; no branch/source performance claim yet, build pending."
