@@ -6,6 +6,8 @@
 
 域名解析必须用原物理出口的bootstrap路径，DNS劫持/WFP与路由都要避开自身控制流，不能只在首次启动GetAddrInfo；保留业务DNS政策，不放行全机DNS。服务器地址≠借站SNI；Game一组固定endpoint，多A/地址变化不承诺跨独立server无缝迁移。
 
+GUI只编辑“外层 MTU（字节，上限）”，默认1500、不含L2；有效外层与自动内层/OS应用状态只读。保存/重连/切模式不能把内层读回写进外层配置，padding只用027A预算余量。
+
 复用老网络/GUI/portable和现有flow/record padding，别换框架。padding默认off，flows模式有界、无等待、无每流线程，不因lane轮换或30s计时重复启动；实际MTU/首到优先。七模式换lane表归028，仅补域名/配置影响，不重新跑全性能矩阵。
 
 自主计算和判断，先查真实调用链/旧成熟测试再修；不为假想极端堆防御，不用mock假装真实网络。代码/配置/帮助/UI/夹具同批齐，产物按SOURCE/hash复用；独立Actions并行，一Action一场景测量，同VM新旧顺序。容量止步、噪声不刷，保留真实失败。

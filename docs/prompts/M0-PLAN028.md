@@ -6,6 +6,8 @@
 
 2026-11-02新增前置：027后先做PLAN027A统一MTU，再到本包；读取其交付摘要与docs/architecture/MTU_CONTRACT.md，直接复用预算/OS读回，不另写公式。若用户启动完整序列，按此顺序连续推进。
 
+MTU配置只有外层IP上限（默认1500、不含L2）；client传意图，server按自身实际限制收窄，内层自动算/应用/读回。不要要求两端手填内层MTU，不把派生结果回写为用户外层值或覆盖其他client的TUN。
+
 目标：账号密码操作简化、自动/手动IP、同账号多设备、一个服务端口、每client独立配置接入既有数据面。先定最小配置/session/endpoint/snapshot接口，再连续写齐双方与调用方；029 DNS、030 CLI独立模块可并行，main共享接口单写入。
 
 重点真实证明七模式换laneA→A+B→B、同账号不串身份/IP/配置、Game健康lane不中断；复用老15s Health/90s dead/1–30s退避和当前修复，别重做FEC/重传/密码算法。route-key自动化若有握手前依赖要解决，不隐藏手工key要求或关闭认证。

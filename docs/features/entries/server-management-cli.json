@@ -21,7 +21,8 @@
   "code_refs": [],
   "doc_refs": [
     "docs/decisions/M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md",
-    "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md"
+    "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
+    "docs/architecture/MTU_CONTRACT.md"
   ],
   "verification": [
     {
@@ -36,7 +37,8 @@
     "仅设计预登记，非IMPLEMENTED或PASS；当前认证/多客户端配置接线能力不得从菜单方案推断。",
     "不含在线升级平台；OpenWrt复用独立procd工作，不从systemd资格推断。",
     "当前M0 PLAN027和在途Actions不变，后续实施按原任务机制接续。",
-    "原独立CLI提案已撤回并由PLAN030吸收，依赖PLAN028真实会话/config接口；本卡仍仅PLANNED。"
+    "原独立CLI提案已撤回并由PLAN030吸收，依赖PLAN028真实会话/config接口；本卡仍仅PLANNED。",
+    "PLAN030后续约定：无新增必填server MTU/内层字段；沿client外层意图与本地约束自动派生，clients分列外层设置/有效外层/自动内层。仍仅PLANNED。"
   ],
   "promotion": null
 }

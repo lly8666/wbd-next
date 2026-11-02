@@ -4,6 +4,14 @@
 
 ## 1. 单位和范围
 
+### 用户配置的唯一含义
+
+**配置/CLI/GUI中供用户填写的MTU始终指最外层完整IP包的大小上限，默认1500B，不含以太网头。内层TUN/Wintun MTU自动推导、安装并读回，只作状态展示，不再提供第二个常规手填值。**Linux `--outer-mtu`与Windows现有外层 `--mtu`统一映射 `configured_outer_ip_mtu`；别名不成为两份独立设置，冲突沿统一配置规则处理，禁止按数字大小猜单位。
+
+界面输入标“外层 MTU（字节，上限）”；状态分别显示配置外层上限、当前有效外层上限、自动内层MTU及OS应用状态。保存外层1500不会因为effective更小而被覆盖成内层1429；模式/FEC/lane/路径变化只按本契约更新effective，不改用户意图。内层MTU自动计算不代表主动探测出未知公网PMTU。
+
+客户端传入的是每session的外层意图；服务端结合自身物理/路由/MSS/协商限制独立收窄，不能照抄客户端数值到server TUN、忽略自己的出口，或要求用户两边手填算好的内层值。共用server TUN的多client隔离仍按第4节。旧配置若明确存过内层override，导入时明确迁移为自动派生，不能默默把它当外层输入；有边界诊断需要的强制虚拟MTU仅限明确测试/实验入口及已支持LINK能力，不进入普通配置/UI。
+
 | 名称 | 精确定义 |
 |---|---|
 | configured_outer_ip_mtu | 用户允许的完整外层IP包上限，默认1500；不含以太网头 |
@@ -82,7 +90,7 @@ PPPoE若OS出口已报告1492，就用1492，不能再减8；以太网/VLAN属�
 
 先准备设备/认证协商→derive→安装OS及Rust同revision→读回→放行真实TUN业务。健康热路径只读不可变快照、现有长度比较；不逐包FFI、查网卡/路由、拼JSON或遍历lane集合。codec仍验证传入载荷/输出长度，但不能对已是source cap的输入再扣14/31。平台发送器检查最终IP总长≤P、record≤W；防越界用错误结果，不能用户一个超限包就panic/Stop全部会话。
 
-Windows1400 cap去向必须明确：用户显式record上限继续保留；历史默认魔数若没有独立实现限制，经实际1460 record全链验证后去掉，自动取预算。不能静默调大并跨越真实arena/驱动容量。旧Windows `--mtu`已标作外层ConnectionMTU，Linux `--outer-mtu`保持同语义；TUN字段是derive结果或明确高级override，不能把旧键默默改单位。帮助/配置/UI/启动readback同步。
+Windows1400 cap去向必须明确：用户显式record上限继续保留；历史默认魔数若没有独立实现限制，经实际1460 record全链验证后去掉，自动取预算。不能静默调大并跨越真实arena/驱动容量。旧Windows `--mtu`已标作外层ConnectionMTU，Linux `--outer-mtu`保持同语义；TUN字段仅为derive结果/OS读回，普通配置不开放内层override。帮助/配置/UI/启动readback按第1节统一。
 
 ## 4. lane、Auto、路径变化
 
