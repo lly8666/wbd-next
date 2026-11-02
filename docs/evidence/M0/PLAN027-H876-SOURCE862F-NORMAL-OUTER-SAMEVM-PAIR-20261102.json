@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "862f3df93983a67abb23f00a5f346362036047aa",
+  "run_id": 41391560849,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41391560849",
+  "product_artifact": {
+    "id": 13118295364,
+    "digest": "sha256:5a63c3b7a48b2c1c46c5573500ec093d2d5176b0785d814cd24c999b816c3a29"
+  },
+  "linux_artifact": {
+    "id": 13117692129,
+    "digest": "sha256:3b1f9dadc77dea98d25bbfcb288844f6d3cbfd89630f291c5c1c5a847f464574"
+  },
+  "paired_artifact": {
+    "id": 13117288945,
+    "name": "m0-wl-full-public-normal-direct",
+    "digest": "sha256:a1f3d3469740fd0cfd118c57cd5595ae237f905b6b33caf69efbc684f0f397a7"
+  },
+  "scenario": "plan027-h876-normal-pair-10m-250ms-0loss-60s",
+  "order": [
+    "off",
+    "on"
+  ],
+  "settings": {
+    "public_mode": "normal",
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "wintun_tun_mtu": 1400,
+    "offered_mbps_per_direction": 10,
+    "one_way_delay_ms": 250,
+    "actual_injected_loss_pct": 0,
+    "duration_s_per_leg": 60,
+    "seed": 20261030,
+    "packet_mix_weights_pct": {
+      "64": 10,
+      "128": 15,
+      "512": 25,
+      "1200": 50
+    }
+  },
+  "same_run_one_native_job": true,
+  "same_binary_sha256": {
+    "windows_cli": "8934d9755b2e23050ae2378bb29a5219605d5737946f4bd3ef25c17a4d0a43c0",
+    "linux_server": "ea7fa23ac679bba6a4eef4a6197e8d7d000bba08fc55e783b33e74cb8d70d6df"
+  },
+  "legs": [
+    {
+      "policy": "off",
+      "effective": {
+        "windows": 0,
+        "linux": 0
+      },
+      "first_arrival_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "offered_mbps": {
+        "windows": 9.9973,
+        "linux": 10
+      },
+      "first_delivered_mbps": {
+        "windows": 10,
+        "linux": 9.9973
+      },
+      "native_owned_stop": "PASS_BOTH_OWNED",
+      "remaining_wal_or_routes": 0,
+      "windows_process_cpu_total_s": 4.0312,
+      "kernel_cpu_s": 3,
+      "user_cpu_s": 1.0312,
+      "windows_cpu_sampling_elapsed_s": 78.265,
+      "peak_working_set_bytes": 41332736,
+      "wall_seconds": 80.188,
+      "result": "PASS"
+    },
+    {
+      "policy": "on",
+      "effective": {
+        "windows": 1,
+        "linux": 1
+      },
+      "first_arrival_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "offered_mbps": {
+        "windows": 9.9974,
+        "linux": 10
+      },
+      "first_delivered_mbps": {
+        "windows": 10,
+        "linux": 9.9974
+      },
+      "native_owned_stop": "PASS_BOTH_OWNED",
+      "remaining_wal_or_routes": 0,
+      "windows_process_cpu_total_s": 4.0469,
+      "kernel_cpu_s": 2.8594,
+      "user_cpu_s": 1.1875,
+      "windows_cpu_sampling_elapsed_s": 76.109,
+      "peak_working_set_bytes": 41291776,
+      "wall_seconds": 78.078,
+      "result": "PASS"
+    }
+  ],
+  "comparison": {
+    "delta_cpu_on_minus_off_s": 0.0157,
+    "fraction_of_cpu_on": 0.00388,
+    "rss_peak_on_minus_off_bytes": -40960,
+    "stable_algorithm_cpu_proven": false,
+    "reason": "single sequential sample includes cold TLS/app/Stop; difference smaller than stable attribution",
+    "frc_windows": "NOT_MEASURED",
+    "cross_os_oneway_p99": "NOT_MEASURED_CLOCKS_UNCALIBRATED"
+  },
+  "verdict": "TWO_GENUINE_NATIVE_PASS_CPU_DELTA_SMALL_NO_OPTIMIZATION_CLAIM",
+  "limitations": "No 30%-loss repairs, no high-PPS/50Mbps; F/R/C not fully captured in this pair. Linux/Windows process CPU not combined or double counted. Does not prove absolute algorithm cost, Game affected ON, physical or 300s."
+}

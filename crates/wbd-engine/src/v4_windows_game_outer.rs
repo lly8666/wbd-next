@@ -347,15 +347,25 @@ mod tests{
     fn plan027_game_cold_outer_off_preserves_original_seq_without_shadow_or_timer(){
         // Synthetic authenticated attachment values ONLY; this does not
         // claim OS/Wintun/NPF native business success.
-        let mut cfg:WbdWinGameNativeAttachV3=unsafe{std::mem::zeroed()};
-        cfg.group=(877u64<<32)|1;
-        cfg.first.epoch=[3;16];
-        cfg.first.path_mtu=1400;
-        cfg.disable_outer_repair=1;
-        let lane=LaneConfig{owner:123,tx_seq:200,rx_seq:300,
-            local_port:41031,peer_port:443,rx_capture:0,tx_capture:0,
-            npcap:unsafe{std::mem::zeroed()}};
-        let mut owner=GameOuter::new(&cfg,&[lane]).unwrap();
+        let generation=877;
+        let lane=LaneKey{tunnel:TunnelKey{
+            slot:0x474d_0001,generation},slot:1,generation};
+        let dir=BudgetDirection{tunnel:lane.tunnel,
+            direction:WireDirection::ClientToServer};
+        let route=ReceiptRouteScope::checked(lane,lane,
+            WireDirection::ClientToServer,[3;16],
+            (RecordPn(0),RecordPn(u64::MAX)),
+            (RecordPn(0),RecordPn(u64::MAX))).unwrap();
+        let shadow=ReceiptState::<GameFrozen>::new(lane,ReceiptConfig{
+            max_shadow_entries:MAX_M2_FIXED_FROZEN,
+            pto_ns:810_000_000,reorder_window_ns:20_000_000,
+        }).unwrap();
+        let ack=OuterAckIndex::new(lane,[3;16],200,MAX_M2_FIXED_FROZEN).unwrap();
+        let mut owner=GameOuter{lanes:vec![GameOuterLane{
+            lane,direction:dir,route,ack,shadow,
+            ready:VecDeque::new(),held:None,retry_after_ns:None,
+        }],epoch:[3;16],repair_enabled:false,
+        fec_sparse:false,fec_seen:vec![0],fec_copied:0};
         assert!(!owner.repair_enabled);
         assert_eq!(owner.on_firstsend(0,1,200,&[7u8;120]),Ok(()));
         assert_eq!(owner.lanes[0].ack.highest_sent_end(),320);
