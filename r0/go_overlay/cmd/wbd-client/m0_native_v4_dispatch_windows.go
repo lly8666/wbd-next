@@ -23,6 +23,7 @@ type m0NativeV4Options struct {
  TunnelMTU uint32 // derived inner Wintun IPv4 MTU
  ConnectionMTU uint32 // exact original --mtu outer NPF IPv4/TCP MTU
  ControlStdin bool
+ DisableOuterRepair bool
  Mode m0WindowsV4Mode
  FEC2Mode,FEC2Profile,FEC2AutoPolicy,FEC2AutoStartProfile string
  // Explicit cold original Rust Health policy. Zero means 15/90/0 defaults;

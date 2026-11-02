@@ -75,6 +75,7 @@ struct WindowsM2QueuedRepair {
     reservation_id:GlobalReservationId,
 }
 struct WindowsOriginalM2 {
+    outer_repair_enabled:bool, // cold owner policy; no optional DATA repair for OFF
     shadow:ReceiptState<FrozenRecord>,
     outer_ack:OuterAckIndex, // untrusted hints retire optional shadow only
     pending:BTreeMap<RecordPn,FrozenRecord>,
@@ -363,6 +364,7 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         ).ok_or(BAD_STAGE)?);
     }
     e.m2=Some(WindowsOriginalM2{
+        outer_repair_enabled:true,
         shadow,outer_ack,pending:BTreeMap::new(),direction,route,in_flight:None,
         ready_repairs:VecDeque::with_capacity(32),
         reverse_authenticated_receipts:0,repair_polls:0,
@@ -401,6 +403,18 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         #[cfg(feature="fec2_product_record")]
         auto_reverse_base:0,
     });
+    Ok(())
+}
+// Same authenticated owner, old-generation scoped; cold-only configuration.
+fn m2_set_outer_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
+    ifindex:u32,enabled:bool)->Result<(),i32>{
+    if !v3_ready(e,epoch,luid,ifindex)||e.role_server||
+        e.game_group.is_some(){return Err(BAD_STAGE)}
+    let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+    if m.shadow.outstanding()>0||!m.pending.is_empty()||
+        m.in_flight.is_some()||!m.ready_repairs.is_empty()||
+        m.feedback_pending.is_some(){return Err(BAD_STAGE)}
+    m.outer_repair_enabled=enabled;
     Ok(())
 }
 // Only the four announced RX windows can become mature low-rate summaries.
@@ -639,7 +653,7 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if row.metadata().pn!=key||row.metadata().seq.0 as u32!=seq
         ||row.bytes().len()!=wire_len {return Err(INVALID)}
     let frozen=m.pending.remove(&key).ok_or(INVALID)?;
-    if sent==1{
+    if sent==1 && m.outer_repair_enabled{
         // Optional index contention or capacity never blocks fresh data.
         let _=m.outer_ack.on_definitely_sent(key,
             frozen.metadata().seq.0,wire_len as u32,m2_clock());
@@ -665,6 +679,7 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     // kernel submission, NEVER proof of remote peer delivery.
     let now=m2_clock();
     let bytes=wire_len.checked_add(54).ok_or(INVALID)? as u64;
+    if !m.outer_repair_enabled{return Ok(0)}
     let mut global=m2_global().lock().map_err(|_|BAD_STAGE)?;
     global.on_fresh_accepted(m.direction,bytes,now).map_err(|_|BAD_STAGE)?;
     // Every successful NPF submission counts as a first send. Repair
@@ -704,6 +719,7 @@ fn m2_outer_ack_hint_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let (lane,scope_epoch)=e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
     if scope_epoch!=epoch{return Err(INVALID)}
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+    if !m.outer_repair_enabled{return Ok(())}
     // Auto and Normal share authentic outer ACK/SACK gap feedback.
     let now=m2_clock();
     let Ok(result)=m.outer_ack.on_feedback(lane,epoch,ack32,sacks,
@@ -726,6 +742,7 @@ fn m2_next_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if !v3_ready(e,epoch,luid,ifindex){return Err(INVALID)}
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
     if m.in_flight.is_some(){return Err(BAD_STAGE)}
+    if !m.outer_repair_enabled{return Ok(None)}
     let now=m2_clock();
     m.repair_polls+=1;
     if m.repair_retry_after_ns.is_some_and(|at|at>now.0){return Ok(None)}
@@ -1800,7 +1817,7 @@ fn m2_effective_entry(e:&Entry,epoch:[u8;16],luid:u64,ifindex:u32)
         version:1,size:std::mem::size_of::<WbdWindowsM2Effective>() as u32,
         path_mtu:u32::from(e.path_mtu),
         business_ipv4_mtu:mtu as u32,
-        shadow_limit:m.shadow.policy_limits().1 as u32,
+        shadow_limit:if m.outer_repair_enabled{m.shadow.policy_limits().1 as u32}else{0},
         feedback_page_limit:m.feedback.config().max_retained_pages as u32,
         mature_live_limit:{
             #[cfg(feature="fec2_product_record")]
@@ -1808,7 +1825,7 @@ fn m2_effective_entry(e:&Entry,epoch:[u8;16],luid:u64,ifindex:u32)
             #[cfg(not(feature="fec2_product_record"))]
             {0}
         },
-        v3_enabled:u32::from(m.shadow.is_opportunistic_v3()),
+        v3_enabled:u32::from(m.outer_repair_enabled&&m.shadow.is_opportunistic_v3()),
         process_repair_hard_cap:process.hard_cap,
         direction_epoch_limit:dir.epoch_repair_limit,
         direction_fresh_confirmed:dir.fresh_confirmed_bytes,
@@ -1851,6 +1868,24 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v6_arm_original_m2(
     let Ok(mut e)=lane.lock()else{return BAD_STAGE};
     match m2_arm_entry(&mut e,exact,luid,ifindex){
         Ok(())=>OK,Err(err)=>err
+    }
+}
+// Protected cold original-Go owner only: real driver identity and native
+// worker absence required. No writable packet-path or Go steady controller.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v12_set_outer_repair(
+    h:u64,ep:*const u8,ep_len:usize,luid:u64,ifindex:u32,enabled:u32
+)->i32{
+    if enabled>1||native_runtime::active_owner(h){return BAD_STAGE}
+    let Some(epoch)=v3_epoch(ep,ep_len)else{return INVALID};
+    let lane={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(lane)=r.entries.get(&h)else{return UNKNOWN};
+        Arc::clone(lane)
+    };
+    let Ok(mut e)=lane.lock()else{return BAD_STAGE};
+    match m2_set_outer_repair_entry(&mut e,epoch,luid,ifindex,enabled==1){
+        Ok(())=>OK,Err(code)=>code
     }
 }
 #[no_mangle]
@@ -2109,6 +2144,42 @@ mod tests {
             assert_eq!(actual.direction_fresh_confirmed,0);
             assert!(actual.direction_epoch_limit>0);
             assert_eq!(m2_effective_entry(&e,[9;16],93,21).map(|_|()),Err(INVALID));
+        }
+        assert_eq!(quiesce_wintun(&mut r,h,ep,93,21),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
+    #[test]
+    fn plan027_cold_windows_outer_off_skips_optional_data_work(){
+        let mut r=Registry{generation:873,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        let ep=[2u8;16];
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        assert_eq!(bind_wintun(&mut r,h,ep,93,21),OK);
+        assert!(set_path_mtu(&mut r,h,ep,93,21,1400).is_ok());
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_arm_entry(&mut e,ep,93,21).unwrap();
+            assert_eq!(m2_set_outer_repair_entry(&mut e,ep,93,21,false),Ok(()));
+            let x=m2_effective_entry(&e,ep,93,21).unwrap();
+            assert_eq!((x.v3_enabled,x.shadow_limit),(0,0));
+            assert_eq!(x.feedback_page_limit,1024);
+        }
+        let mut ipv4=[0u8;90];ipv4[0]=0x45;
+        ipv4[2..4].copy_from_slice(&90u16.to_be_bytes());
+        ipv4[8]=64;ipv4[9]=17;
+        let mut wire=[0u8;2048];
+        let (used,seq,pn)=v3_seal_one(&r,h,ep,93,21,&ipv4,&mut wire).unwrap();
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            assert_eq!(m2_kernel_firstsend_entry(&mut e,ep,93,21,pn,seq,used,1),Ok(0));
+            assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),0);
+            let mut out=[0u8;2048];
+            assert!(m2_next_repair_entry(&mut e,ep,93,21,&mut out).unwrap().is_none());
+            assert_eq!(e.m2.as_ref().unwrap().repair_polls,0);
+            assert_eq!(m2_effective_entry(&e,ep,93,21).unwrap().direction_fresh_confirmed,0);
+            assert_eq!(m2_set_outer_repair_entry(&mut e,ep,93,21,true),Ok(()));
+            assert_eq!(m2_effective_entry(&e,ep,93,21).unwrap().v3_enabled,1);
         }
         assert_eq!(quiesce_wintun(&mut r,h,ep,93,21),OK);
         assert_eq!(stop(&mut r,h),OK);

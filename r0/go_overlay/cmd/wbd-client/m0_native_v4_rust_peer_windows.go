@@ -32,6 +32,7 @@ type m0WinRustNativePeer struct{
  autoStartProfile realityfront.FecV2Profile
  autoPolicy realityfront.FecV2AutoPolicy
  healthInterval,healthDead,healthDormant uint32
+ disableOuterRepair bool
  effectiveHealth realityfront.V4WindowsNativeHealthPolicyV1
  fixedMatureReported bool
  fixedInstalledReported bool
@@ -61,6 +62,10 @@ func(p *m0WinRustNativePeer) BindNativeRing(ctx context.Context,
   err=errors.Join(err,p.DrainPeerAndKernelLoans(stopped,p.owner,nil,id))
  }()
  if err=p.owner.ArmBoundOriginalM2(ctx);err!=nil{return err}
+ effectiveRepair,e:=p.owner.SetBoundOriginalOuterRepair(ctx,!p.disableOuterRepair)
+ if e!=nil{return fmt.Errorf("original Rust outer repair readback: %w",e)}
+ fmt.Printf("WBD_WINDOWS_OUTER_REPAIR_EFFECTIVE enabled=%d shadow_limit=%d source=original_rust_owner\n",
+  effectiveRepair.V3Enabled,effectiveRepair.RepairShadowLimit)
  interval,dead:=p.healthInterval,p.healthDead
  if interval==0{interval=15}
  if dead==0{dead=90}
@@ -82,7 +87,8 @@ func(p *m0WinRustNativePeer) BindNativeRing(ctx context.Context,
  maxIPv4,err:=p.owner.BoundOriginalIPv4Budget(ctx)
  if err!=nil||maxIPv4<20{return windowsclient.ErrN4NativeGuard}
  p.effective,err=p.owner.ReadBoundOriginalM2Effective(ctx)
- if err!=nil||p.effective.BusinessIPv4MTU!=uint32(maxIPv4){return windowsclient.ErrN4NativeGuard}
+ if err!=nil||p.effective.BusinessIPv4MTU!=uint32(maxIPv4)||
+  (p.effective.V3Enabled==0)!=p.disableOuterRepair{return windowsclient.ErrN4NativeGuard}
  // Reader sees the expected transfer close and exits without fatal error.
  close(p.handoff)
  p.rx,err=p.endpoint.TakeNativeCapture(p.cfg.Generation);if err!=nil{return err}
@@ -190,6 +196,7 @@ func(p *m0WinRustNativePeer) RefreshEffective(ctx context.Context)error{
  p.last=s
  p.effective,err=p.owner.ReadBoundOriginalM2Effective(ctx)
  if err!=nil{return err}
+ if (p.effective.V3Enabled==0)!=p.disableOuterRepair{return fmt.Errorf("original Rust outer repair mode drift")}
  if p.mode==m0WinModeFixed&&(!p.fixedInstalledReported||!p.fixedMatureReported){
   // One existing 1Hz native readback. Fixed installed configuration is
   // independent of optional mature Quality; no extra network round.

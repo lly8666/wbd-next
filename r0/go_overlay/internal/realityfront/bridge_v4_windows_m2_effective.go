@@ -42,10 +42,39 @@ func(s *V4WindowsAuthenticatedClientOwner) ReadBoundOriginalM2Effective(
  runtime.KeepAlive(s.bridge.epoch)
  if err!=nil||out.Version!=1||out.Size!=uint32(unsafe.Sizeof(out))||
   out.PathMTU<576||out.BusinessIPv4MTU<20||
-  out.BusinessIPv4MTU>out.PathMTU||out.RepairShadowLimit==0||
-  out.FeedbackPageLimit==0||out.V3Enabled!=1||
+  out.BusinessIPv4MTU>out.PathMTU||
+  out.FeedbackPageLimit==0||out.V3Enabled>1||
+  (out.V3Enabled==0&&out.RepairShadowLimit!=0)||
+  (out.V3Enabled==1&&out.RepairShadowLimit==0)||
   out.ProcessRepairHardCap==0{
   return V4WindowsM2Effective{},errors.Join(errV4WindowsOwner,err)
  }
  return out,nil
+}
+
+// One cold authenticated M2 setter and exact native effective readback;
+// it never authorizes WFP Applied or makes an ACK into loss evidence.
+func(s *V4WindowsAuthenticatedClientOwner) SetBoundOriginalOuterRepair(
+ ctx context.Context,enabled bool,
+)(V4WindowsM2Effective,error){
+ var zero V4WindowsM2Effective
+ if s==nil||s.bridge==nil||s.device==nil||ctx==nil{return zero,errV4WindowsOwner}
+ loan,err:=s.device.borrowHot(ctx)
+ if err!=nil{return zero,errors.Join(errV4WindowsOwner,err)}
+ proc,err:=s.bridge.fixedProc("wbd_m0_win_owner_v12_set_outer_repair")
+ if err==nil{
+  value:=uintptr(0)
+  if enabled{value=1}
+  err=winOwnerCall(proc,uintptr(s.bridge.handle),
+   uintptr(unsafe.Pointer(&s.bridge.epoch[0])),16,
+   uintptr(s.device.identity.LUID),uintptr(s.device.identity.InterfaceIndex),value)
+  runtime.KeepAlive(s.bridge.epoch)
+ }
+ loan()
+ if err!=nil{return zero,errors.Join(errV4WindowsOwner,err)}
+ actual,err:=s.ReadBoundOriginalM2Effective(ctx)
+ if err!=nil||(actual.V3Enabled==1)!=enabled{
+  return zero,errors.Join(errV4WindowsOwner,err)
+ }
+ return actual,nil
 }

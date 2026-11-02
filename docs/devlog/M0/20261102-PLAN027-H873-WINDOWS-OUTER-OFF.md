@@ -1,0 +1,7 @@
+# PLAN027 H873｜Windows native genuine outer-repair OFF
+- Recovered 7eed: H872 owner ABI #41386728213 PASS, native-functional #41386728296 PASS, governance #41386728171 PASS; original Windows/Linux #41386728192 no-scene assembly/build only. No existing actual Windows OFF scene to reuse.
+- Original Windows Rust M2 always admitted optional shadows, ACK-gap index and repair polls; effective readback rejected OFF. Added one cold original CLI/config --outer-repair on|off (ON default) to native owner before TX starts, with generation/Wintun identity bound setter, strict Rust 0/1 effective readback and drift checks. OFF skips optional DATA shadow/index/global repair budget first-send update and candidate poll; real NPF firstsend, authenticated Health, low-rate quality/FEC and owned Stop unaffected. Windows Game2/4 native group remains separate and NOT_RUN for OFF.
+- Theory for 1200B offered: 10Mbps≈1042pps/dir; 100Mbps≈10417pps/dir, 1.2s unthinned shadow demand ≈1250/12500 records/dir (24,576 hard max, not observed memory). OFF removes only optional M2 work; CPU gain is NOT measured and cannot be inferred from compiling. Native Windows OFF/ON A/B, Windows-origin unilateral105 and physical remain NOT_RUN.
+```feature-impact
+{"kind":"updated","ids":["normal-off"],"reason":"Windows original Native Normal/Fixed/Auto cold outer-repair on|off CLI/config and source-authoritative Rust M2 effective readback; OFF avoids optional repair ledger work."}
+```

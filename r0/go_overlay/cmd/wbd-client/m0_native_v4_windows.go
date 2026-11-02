@@ -384,6 +384,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   nativePeer.healthInterval=o.HealthIntervalSeconds
   nativePeer.healthDead=o.HealthDeadSeconds
   nativePeer.healthDormant=o.HealthDormantSeconds
+  nativePeer.disableOuterRepair=o.DisableOuterRepair
   transport=nativePeer
  }else{
   // Explicit source-locked A/B only. Never a product Fixed/Auto fallback.

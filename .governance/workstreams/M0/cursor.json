@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 872,
-  "checkpoint_sha": "bd4d09c39bba7e0c4c33e4aa91373334e93af94c",
+  "sequence": 873,
+  "checkpoint_sha": "7eededca7442a56e5b296cfee47a617c588a24b5",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H872: new Windows original native sender now mirrors Linux authenticated old-generation retirement: upon true native Rust Health-dead, same M2 TX sends <=3 sealed original kind1 control via real M4 NPF accepted completion before returning AUTHENTICATED_PEER_DEAD and owned Stop, no new timer/Go data pump. Windows receiver H869 M3 authenticated retire readback owner ABI PASS Action41385713900. H872 targeted Windows owner ABI and native functional CI NOT_RUN pending source, Windows actual signed native unilateral/repair OFF A/B/key-lane rotation still NOT_RUN. Linux previous b747 source unilateral c2s-only105 2M and bilateral105 10M source b747 first100/100 Stop PASS, earlier artifact-less bilateral negative retained. H871 governance PASS bd4d09, PLAN028-030 remain PLANNED.",
-  "why_now": "Linux unilateral native generations now converge within 484ms after true authenticated retire control; Windows m2 peer RX H869 was fixed but its TX Health-dead returned immediately without the matching notice, so Windows→Linux healthy reverse remained stale. Implement symmetric bounded generation retire on original Windows Rust M3/M4 NPF path, no raw ACK/TCP shortcut.",
+  "current_task": "H873 Windows original cold outer-repair on|off CLI/config→Rust M2 pre-native owner switch with source-effective readback; OFF skips optional ACK-gap/shadow/budget/poll, retains authenticated Health, quality/FEC, real NPF DATA and Stop. Previous 7eed H872 Windows owner/native-functional/governance PASS; no-scene Windows/Linux only compile. H873 CI and actual Windows OFF/ON, unilateral native105 NOT_RUN.",
+  "why_now": "Windows original product ON-only despite Linux public OFF switch, blocking valid sameVM Normal repair cost attribution and repair OFF network qualification.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H872 Windows original owner ABI/native test result. If PASS, build once exact signed Windows + original Linux product under new SOURCE and test Windows-originated one-way original105/healthy reverse; separate true product Windows repair OFF config/effective Rust readback/sameVM OFF→ON, then lane/key rotation and affected long ON gate. No physical deployment. Do not inflate Rust ABI to Windows OS PASS.",
+  "next_action": "Collect H873 source CI/assembly results. If PASS qualify Windows signed native true OFF config/effective + sameVM ON/OFF sequential, then Windows→Linux genuine one-way105 separately; Game adapter and affected ON long gates still pending; no physical deployment.",
   "unverified": true,
   "last_tested_source": "b74728ba0b1ee45c632c31117fc8c08c042e11a0",
   "evidence_refs": [
@@ -26,7 +26,8 @@
     "docs/devlog/M0/20261102-PLAN027-H869-WINDOWS-AUTH-RETIRE-RECEIVER.md",
     "docs/devlog/M0/20261102-PLAN027-H870-COLLECT-NATIVE-LIFECYCLE.md",
     "docs/devlog/M0/20261102-PLAN027-H871-SOURCE-REF-CONSISTENCY.md",
-    "docs/devlog/M0/20261102-PLAN027-H872-WINDOWS-RETIRE-SENDER.md"
+    "docs/devlog/M0/20261102-PLAN027-H872-WINDOWS-RETIRE-SENDER.md",
+    "docs/devlog/M0/20261102-PLAN027-H873-WINDOWS-OUTER-OFF.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."
