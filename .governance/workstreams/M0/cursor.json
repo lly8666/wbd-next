@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 934,
-  "checkpoint_sha": "49e6b89ca56482f5b1bcf45cf6cdb5e149f8ae61",
+  "sequence": 935,
+  "checkpoint_sha": "a5e2fe8250b248a243664bfbd446f9c08aba5d21",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H934 corrected recovery checkpoint context_refs max8; default outer IPv4 IP MTU1460 product/contract/PLAN028-030 complete source-side, OS/native pending.",
+  "current_task": "PLAN027A H935 Windows Normal/Fixed owner cold v5 direction mismatch: Rust receive-bound cap before Windows Wintun planned INNER check, preserve original negotiated cap/OS readback and default outer1460.",
   "why_now": "Recovery verified PLAN027 USER_ACCEPTED_SCOPED closed; no old Actions inflight on entry. New source push has auto CI only; do not dispatch duplicate native scenarios.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect H934 governance and the already running H932 product builds (no new dispatch). If source-locked default1460 works, isolate fixed-mode WSL READY failure, OS applied/DF0-DF1/7-mode native bounds. 028 not started.",
+  "next_action": "Collect H935 cross Windows ABI/real original Go WAL first; preserve existing H932 inflight as historical SOURCE. If Windows v5 Fixed native still fails, inspect actual C ABI owner readback. Qualify OS 1460/explicit1500/DF1 and Game after, 028 not yet started.",
   "unverified": true,
   "last_tested_source": "6693910f879f9e55e77dd823c1b05d8942321929",
   "evidence_refs": [
@@ -34,5 +34,5 @@
     "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json"
   ],
   "open_requests": [],
-  "partial_summary": "H932 f2a66449 source-locked original Go Linux client/server Windows + GUI/catalog default1460 plus Rust pure tests. H933 49e6b89c sole spec and future plans. H932/H933 governance FAIL context_refs 9>max8; H934 bounded, stale failure retained. H932 native compiled unit PASS, original Windows WAL/WSL still collecting."
+  "partial_summary": "H932 product source f2a66449 default1460 passed Rust native-functional, ABI, G2, original Go PLAN012; H934 governance PASS after context refs capped8. Historical adc18d75 Windows↔WSL fixed FAIL: original Go TLS authenticated client_record_offer=1318, requested TUN1273 but Rust v5 bind reused larger peer TX record cap and returned C ABI rc=1 before READY. H935 uses same Rust receive budget to narrow local owner TX only; awaiting new-source real Windows Fixed validation. Prior FAIL remains."
 }

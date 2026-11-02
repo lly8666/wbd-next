@@ -1122,12 +1122,57 @@ fn set_outer_inner_budget(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,
     ifindex:u32,outer:u16,planned_inner:u16)->Result<u32,i32>{
     if !(576..=1500).contains(&outer)||!(576..=1500).contains(&planned_inner)
         ||planned_inner>outer{return Err(INVALID)}
-    let business=set_path_mtu(r,h,epoch,luid,ifindex,outer)?;
     let lane=r.entries.get(&h).ok_or(UNKNOWN)?;
+    let (old_cap,cold)={
+        let e=lane.lock().map_err(|_|BAD_STAGE)?;
+        if e.path_mtu!=0||e.phase!=PH_ACTIVE||e.authenticated_epoch!=epoch||
+            !e.device.is_some_and(|d|!d.quiesced&&d.luid==luid&&d.ifindex==ifindex){
+            return Err(BAD_STAGE)
+        }
+        // The original Go TLS admission has distinct SEND (peer receiver)
+        // and RECEIVE (this Wintun) record caps. Narrow the local owner TX
+        // to the planned receiving-inner ceiling with the SAME pure Rust
+        // budget, rather than failing when the peer advertises more space.
+        // This cannot enlarge the authenticated peer record bound.
+        let cap=u32::try_from(e.record_wire_limit).map_err(|_|INVALID)?;
+        (e.record_wire_limit,crate::v4_mtu_budget_ffi::WbdV4MTUBudgetInputV1{
+            version:crate::v4_mtu_budget_ffi::MTU_BUDGET_ABI_VERSION,
+            struct_size:36,configured_outer_ip_mtu:u32::from(outer),
+            physical_outer_ip_mtu:0,
+            peer_advertised_mss:if e.peer_mss_advertised {
+                u32::from(e.peer_mss)
+            }else{0},
+            agreed_record_wire_cap:cap,ipv4_header_bytes:20,
+            tcp_data_header_bytes:20,mode:if e.feature7{1}else{0},
+        })
+    };
+    let receive=crate::v4_mtu_budget_ffi::derive_receive(
+        crate::v4_mtu_budget_ffi::WbdV4MTUReceiveInputV1{
+            cold,receiving_inner_ip_mtu:u32::from(planned_inner),
+        }).map_err(|_|INVALID)?;
+    if receive.single_inner_ip_cap<576||receive.record_wire_cap as usize>old_cap{
+        return Err(INVALID)
+    }
+    // Only a cold, unauthenticated-for-application owner budget field is
+    // changed. We do not touch authenticated RX record eligibility, M3 PN,
+    // outstanding ciphertext, OS/WFP Applied or existing Stop ownership.
+    {
+        let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+        e.record_wire_limit=receive.record_wire_cap as usize;
+    }
+    let business=match set_path_mtu(r,h,epoch,luid,ifindex,outer){
+        Ok(n)=>n,
+        Err(code)=>{
+            let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+            e.record_wire_limit=old_cap;
+            return Err(code)
+        },
+    };
     let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
-    if business<20||business>u32::from(planned_inner){
+    if business<576||business>u32::from(planned_inner){
         e.path_mtu=0;
         e.path_mtu_is_outer=false;
+        e.record_wire_limit=old_cap;
         return Err(INVALID)
     }
     e.path_mtu_is_outer=true;

@@ -158,7 +158,8 @@
     "H930 Linux Game worker DF1 local ICMP3/4 applies only if cold trusted OS TUN IPv4 exists; per second <=20 local kernel writes, still requires real native DF1/EMSGSIZE/ICMP and two-direction measurements. Normal FEC/Windows stay pending.",
     "H931 Windows M4 existing receive-ring oversized frame is explicitly a nonfatal one-packet outcome (Normal/FEC/Game), not io.ErrShortBuffer owner Stop; there is no claim of Wintun/FEC/Game LINK or real DF0 fallback. Native giant-UDP/DF1 still NOT_RUN.",
     "H932 default changed from 1500 to1460 at user request; explicit 1500 maximum and historical 1500 GameFEC1398 boundary remain valid. Archived 1500 default on older SOURCE is historic, not current.",
-    "H934 fixes stale --outer-mtu default1500 in feature card and governance context_refs length9>8; source H932 default1460 implementation unchanged; old governance failures remain historical."
+    "H934 fixes stale --outer-mtu default1500 in feature card and governance context_refs length9>8; source H932 default1460 implementation unchanged; old governance failures remain historical.",
+    "H935 fixes actual source adc18d75 Windows Fixed pre-READY rc=1: v5 original TLS Rust owner used peer TX record cap without applying local receiving Wintun planned-inner ceiling. Cold-only pure Rust receive derivation narrows TX cap; no RX authorization, OS Applied or Game group changed. Native Fixed still NOT_RUN at new SOURCE."
   ],
   "promotion": null
 }

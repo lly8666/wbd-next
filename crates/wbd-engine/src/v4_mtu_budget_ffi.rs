@@ -144,7 +144,7 @@ pub struct WbdV4MTUReceiveInputV1 {
     /// IPv4 TUN MTU and becomes an independently verified OS Applied readback.
     pub receiving_inner_ip_mtu:u32,
 }
-fn derive_receive(input:WbdV4MTUReceiveInputV1)->Result<WbdV4MTUBudgetOutputV1,i32>{
+pub(crate) fn derive_receive(input:WbdV4MTUReceiveInputV1)->Result<WbdV4MTUBudgetOutputV1,i32>{
     let cold=input.cold;
     let first=derive(cold)?;
     let recv=input.receiving_inner_ip_mtu;
@@ -187,6 +187,7 @@ mod receive_tests{
     fn windows_cold_receive_outer_and_inner_differ_without_hidden_1400(){
         for (mode,receiving,expected_wire,expected_inner) in [
             (0,1400,1431,1400),(1,1386,1431,1386),
+            (1,1273,1318,1273),
             (2,1400,1447,1400),(3,1398,1460,1398),
         ]{
             let cold=WbdV4MTUBudgetInputV1{
