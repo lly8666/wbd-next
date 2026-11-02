@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 885,
-  "checkpoint_sha": "9fbb51e57a6183091b91516760c68c73c837934e",
+  "sequence": 886,
+  "checkpoint_sha": "5a0cd6b8e10a1408aae9bb9d496e9aa3e68f2b02",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H881 SOURCE b84 real signed original Windows NPF/Wintun↔Linux WSL2 native Game2 2 lanes outer OFF actual two-OS Rust effective0, 10Mbps25ms5%60s first Win0.997268/Linux0.997437, genuine UDP/TCP/Stop PASS Win CPU2.5781s peak WS47.55MB. H880 SOURCEaba Normal same-VM 30%-loss OFF→ON both real PASS, Win CPU3.2188→24.4375s R/F=8.8467% first~70→72%; H884 SOURCE9fbb targeted Rust shadow/pace Wait(0) fix sameVM pair Action41395887599 still IN_FLIGHT. H883 SOURCEf361 Windows-origin 105s Health-dead original native Action41395214862 IN_FLIGHT. H885 H881 artifact/source/gates and game-lanes card collected, H884 Normal card feature-impact corrected.",
-  "why_now": "Collect source-verified actual Game2 OFF real driver PASS without promoting Game4/FEC; honor small Normal zero-loss overhead but huge loss30 cost. H884 targeted actual-source paired regression and H883 unilateral105 are in flight, no duplicate native dispatch.",
+  "current_task": "H881 SOURCEb84 original signed Windows↔Linux Game2 outer OFF 10M25ms5%60s actual both Rust effective0 first99.7268/99.7437%, UDP/TCP/Stop PASS; artifact/card/evidence committed H885. H884 SOURCE9fbb Normal native 30%-loss OFF/ON paced-wake fix Action41395887599 in flight, Rust/Windows Go/Linux Rust contract PASS, actual CPU ROI NOT_RUN. H883 SOURCEf361 genuine Windows-origin single IFB105 +120s recovery Action41395214862 in flight; actual result NOT_RUN. H886 one true signed Game4 outer OFF 10M25ms5%60s exact source/native Action gated on one marker, NOT_RUN before receipt. H885 governance feature-declaration mismatch corrected by recording H884 pending Normal owner status in updated normal-off card.",
+  "why_now": "Real Game2 OFF source proven and independent 4-lane Game still not qualified. H884 candidate 5ms paced shadow wake had high H880 CPU cost and awaits actual source test; H883 asymmetric lifecycle in parallel. Run smallest independent Game4 OFF native scene now, no repeated Game2/old-source labels.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H884 30%-loss paired exact SRC actual OFF/ON CPU/RSS, F/R/C, first and Stop; diagnose only material regression and source/host attribution. Collect H883 Windows-origin105 positive IFB drop, generation reauth/120s restored and Stop. Then independent Game4/Game2/4-FEC OFF/ON, capacity 50M near MTU and at least one 300s affected ON; no physical install. Current Game2 OFF PASS source b84 only.",
+  "next_action": "Collect H884 new-source paired actual CPU/first/F-R-C/Stop and H883 Windows-origin105 actual IFB/reauth120+ business result; also H886 single real Game4 OFF Action. If H884 cost remains high profile hot TX/driver; if functional PASS proceed affected GameFEC/Fixed/Auto ON and OFF and one 300s ON near MTU; no more heavy same-family if capacity limit. Physical NOT_RUN.",
   "unverified": true,
   "last_tested_source": "b84d71d582131aa78a02e19ef9196aae6400485f",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H881-SOURCEB84-GAME2-OUTER-OFF-5P-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H878-GAME-COLD-OUTER-OFF.md",
     "docs/devlog/M0/20261102-PLAN027-H879-RUST-GAME-TEST-FIX-H876-RECEIPT.md",
     "docs/devlog/M0/20261102-PLAN027-H880-NORMAL-LOSS30-OUTER-PAIR.md",
     "docs/devlog/M0/20261102-PLAN027-H881-GAME2-OUTER-OFF-REAL-SCENE.md",
     "docs/devlog/M0/20261102-PLAN027-H882-WINDOWS-UNILATERAL105-NATIVE.md",
     "docs/devlog/M0/20261102-PLAN027-H883-UNILATERAL-TEST-CONTRACT.md",
     "docs/devlog/M0/20261102-PLAN027-H884-NORMAL-REPAIR-PACED-WAKE.md",
-    "docs/devlog/M0/20261102-PLAN027-H885-GAME2-REAL-OFF-COLLECT.md"
+    "docs/devlog/M0/20261102-PLAN027-H885-GAME2-REAL-OFF-COLLECT.md",
+    "docs/devlog/M0/20261102-PLAN027-H886-GAME4-OUTER-OFF-SIGNED.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."
