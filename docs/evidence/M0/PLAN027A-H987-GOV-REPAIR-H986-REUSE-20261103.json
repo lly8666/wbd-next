@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "parent_source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
+  "product_binary_source_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
+  "product_build_action": 41546652567,
+  "build_conclusion": "IN_PROGRESS_AT_H987_AUTHORING",
+  "orchestrator": "NOT_RUN",
+  "df_native": "NOT_RUN",
+  "auto_staged": "NOT_RUN",
+  "game4fec_staged": "NOT_RUN",
+  "icmp_native": "NOT_MEASURED",
+  "governance_root_cause": "H986 cursor context_refs 10 > 8; repair to eight, preserve exact source evidence",
+  "qualifier": "Never treat GitHub workflow dispatch/launch as product PASS. Product source equals H986 binary; harness H987 only if unchanged crates/r0/go_overlay.",
+  "plan028": "NOT_STARTED"
+}

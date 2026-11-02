@@ -4,31 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 986,
-  "checkpoint_sha": "038136b5e9021c33af600f4069dd06a363e72f9b",
+  "sequence": 987,
+  "checkpoint_sha": "1e8325f16e2975a9da3497ab97ac570771a97238",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "H986 source-gated one current-origin signed Windows/WSL2 build and three independent DF/Auto-staged/GameFEC-staged measurements; NOT_RUN until native Actions complete; scoped H985 MSS PASS retained.",
-  "why_now": "H958 DF and H957 staged scenes NOT_RUN, previous source-locked helper points at stale binary; avoid reusing old signed product and duplicate dispatch.",
+  "current_task": "H987 fix governance cursor over-8 history refs; reuse H986 already running original binary and separately dispatch native DF/Auto/Game staged if success",
+  "why_now": "H986 governance failed solely because M0 context_refs had 10 and max is 8; avoid duplicate current-source native build already action41546652567",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect H986 build/three native action run IDs and actual per-source statuses, CPU/RSS/p99/Stop and DF OS feedback; then address remaining exceptional platform/mode/route/ARM64 gaps. Do not close full 027A or start 028 before gates.",
+  "next_action": "Collect H987 gated H986 build/real three scene run IDs and OS/service evidence; do not infer PASS from launch. Resume outstanding platform/mode MTU/DF then PLAN028.",
   "unverified": true,
   "last_tested_source": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN027A-H982-LINUX-INITIAL-SYN-20261102.json",
-    "docs/devlog/M0/20261102-PLAN027A-H982-LINUX-INITIAL-SYN.md",
-    "docs/evidence/M0/PLAN027A-H983-PER-ACTION-MSS-FIXED-20261102.json",
-    "docs/devlog/M0/20261102-PLAN027A-H983-PLAN012-FULL-FAKETCP.md",
     "docs/evidence/M0/PLAN027A-H984-OLD-TEST-MSS-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H984-TEST-FIXTURE.md",
     "docs/evidence/M0/PLAN027A-H985-MSS-FEC-COLLECT-20261103.json",
     "docs/devlog/M0/20261103-PLAN027A-H985-COLLECT.md",
     "docs/evidence/M0/PLAN027A-H986-SOURCE-BUILD-THREE-SCENES-20261103.json",
-    "docs/devlog/M0/20261103-PLAN027A-H986-DF-STAGED-ONE-BUILD.md"
+    "docs/devlog/M0/20261103-PLAN027A-H986-DF-STAGED-ONE-BUILD.md",
+    "docs/evidence/M0/PLAN027A-H987-GOV-REPAIR-H986-REUSE-20261103.json",
+    "docs/devlog/M0/20261103-PLAN027A-H987-GOV-CURSOR-BINARY-REUSE.md"
   ],
   "open_requests": [],
-  "partial_summary": "Existing H981/H982 Windows/Linux MSS Fixed/Auto/Normal/GameFEC functional PASS and H984 original-Go combined PASS; H986 new actual native scenes and dynamic MTU/DF remain NOT_RUN; no current in-flight Actions at handover."
+  "partial_summary": "H986 source and fixture preflight PASS, original Win/WSL product build Action 41546652567 IN_PROGRESS; governance H986 FAIL due 10>8 context_refs fixed in H987. DF/Auto/Game stages NOT_RUN. Full 027A still open; 028 not started."
 }
