@@ -52,7 +52,9 @@ for mode in modes:
  # but don't spend 240s on an already-stuck minimal fixture.
  minimal_game_fec=(mode=="game2-fec" and env.get("WBD_WL_V2_SCENARIO")==
   "scenarios/plan027-b-game2-fec6-cold-minimum-1m-25ms-loss0-10s.json")
- mode_seconds=(185 if minimal_game_fec else
+ game_stages=bool(mode=="game4-fec" and env.get("WBD_WL_V2_SCENARIO") and
+  read_scenario(env["WBD_WL_V2_SCENARIO"]).get("impairment_stages"))
+ mode_seconds=(185 if minimal_game_fec else 350 if game_stages else
   240 if (slow and mode.startswith("game")) else 690 if slow else 165)
  # Previous mode logs are archived already. Never observe stale prior-run
  # READY/fault lines as this new real GameFEC test's own evidence.
@@ -135,23 +137,26 @@ for mode in modes:
  # not a filename prefix. Game2/4/Fixed at real 5/15/30% tc must not be
  # mislabeled product FAIL by a lossless 99.9% gate. Loss0 stays strict.
  scene=read_scenario(os.environ["WBD_WL_V2_SCENARIO"]) if rust_v2 else None
- # Auto A4 intentionally cycles real kernel impairment 0..30..0%:
- # the no-loss >=.999 gate is invalid. Admit only exact five actual tc
- # stages, nonzero first business each direction and genuine owned Stop;
- # 120s mature bilateral grade still needs independent evidence.
- staged_auto=rust_v2 and os.environ["WBD_WL_V2_SCENARIO"]==(
-  "scenarios/plan027-a4-auto-10m-staged-240s.json")
+ # Strict source-locked phase and genuine owned-kernel tc readback for
+ # every staged scenario; no 99.9% lossless oracle under intentional loss.
+ staged=bool(rust_v2 and scene.get("impairment_stages"))
  phases=v2.get("kernel_phases_applied",[])
- staged_real=(staged_auto and len(phases)==5 and
-  [q.get("index") for q in phases]==list(range(5)) and
-  all(q.get("source","").startswith("REAL_") for q in phases) and
-  all(v2.get("first_delivery_fraction",{}).get(k,0)>0
-   for k in ("windows","linux")))
+ expected=scene.get("impairment_stages",[]) if staged else []
+ staged_real=(staged and len(phases)==len(expected) and
+  [q.get("index") for q in phases]==list(range(len(expected))) and
+  all(q.get("source","").startswith("REAL_") and
+      q.get("scenario_sha256")==scene["scenario_sha256"] for q in phases) and
+  all(v2.get("first_delivery_fraction",{}).get(k,0)>0 for k in ("windows","linux")) and
+  all((out/f"wl-v2-kernel-stage-{n:02}.json").exists() and
+      (lambda x:x.get("source_scenario_sha256")==scene["scenario_sha256"] and
+       x.get("stage_index")==n and x.get("requested_kernel_stage")==expected[n])(
+       json.loads((out/f"wl-v2-kernel-stage-{n:02}.json").read_text()))
+      for n in range(1,len(expected))))
  v2_delivery_ok=(not rust_v2 or (
   v2.get("status")=="MEASURED_BOTH_OS_KERNEL" and
   v2.get("owned_stop")=="PASS_BOTH_OWNED" and
-  (staged_real or (not staged_auto and
-   first_delivery_ok_for_scenario(scene,v2.get("first_delivery_fraction",{}))))))
+  (staged_real if staged else
+   first_delivery_ok_for_scenario(scene,v2.get("first_delivery_fraction",{})))))
  passed=rc==0 and result.get("mode_public","").startswith("PASS_ACTUAL_") and (
   not performance or str(result.get("WL_N0","")).startswith("PASS_SCOPED_")) and (
   not stress or str(result.get("WL_P200","")).startswith("PASS_SCOPED_")) and v2_delivery_ok

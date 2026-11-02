@@ -84,8 +84,17 @@ def read_scenario(path):
             raise ValueError("WL_V2_BAD_BOUNDED_KERNEL_BURST")
     stages=cfg.get("impairment_stages")
     if stages is not None:
-        if mode!="auto" or not isinstance(stages,list) or not 3<=len(stages)<=12:
+        if mode not in ("auto","game4-fec") or not isinstance(stages,list) or not 3<=len(stages)<=12:
             raise ValueError("WL_V2_BAD_AUTO_STAGE_SCOPE")
+        if mode=="game4-fec" and (
+            cfg["tun_mtu"]!=1460 or cfg["duration_s"]!=210 or len(stages)!=3 or
+            [s.get("start_s") for s in stages if isinstance(s,dict)]!=[0,40,80] or
+            any(cfg[d]["offered_mbps"]!=3 or cfg[d]["delay_ms"]!=250 or
+                cfg[d]["loss_pct"]!=5 for d in ("windows_to_linux","linux_to_windows")) or
+            any(s.get(d)!={"delay_ms":250,"loss_pct":loss}
+                for s,loss in zip(stages,(5,30,5))
+                for d in ("windows_to_linux","linux_to_windows"))):
+            raise ValueError("WL_V2_GAME4FEC_EXACT_STAGES")
         previous=-1
         for i,stage in enumerate(stages):
             if not isinstance(stage,dict) or set(stage)!={"start_s","windows_to_linux","linux_to_windows"}:

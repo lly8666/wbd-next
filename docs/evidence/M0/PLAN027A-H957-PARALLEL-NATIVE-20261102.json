@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "staged_game": {
+    "status": "NOT_RUN",
+    "scenario": "scenarios/plan027a-h957-game4fec-1460-3m-staged5-30-5-210s.json",
+    "product_binary_source": "54160ac88b9b41d10f4c3f885879dd68646466a0",
+    "artifact_run": 41456643128,
+    "binary_recompiled": false
+  },
+  "arm64": {
+    "status": "NOT_RUN",
+    "mode_cases": 9,
+    "current_source": "H957_HEAD",
+    "native_platform": "aarch64",
+    "one_native_build": true
+  },
+  "unmet": [
+    "native DF0/DF1",
+    "PLAN028",
+    "PLAN029",
+    "PLAN030"
+  ],
+  "user_outer_ipv4_ip_mtu_default": 1460,
+  "explicit_max": 1500
+}
