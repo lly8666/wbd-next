@@ -1,0 +1,9 @@
+# PLAN027 H847 | Recover fdc Windows original seven-mode short native functional evidence
+
+- Recovered exact [Windows/WSL2 Action 41364798472](https://github.com/lly8666/wbd-next/actions/runs/41364798472) signed Windows Npcap/Wintun original Go TLS+Rust M4 with Linux WSL2 original Go TLS+Rust M4 all frozen same SOURCE `fdc2fbb77e5c22eec5489f03eaed9a4c406d1165` and verified native binaries. Seven modes Normal, Fixed, Auto, Game2, Game4, Game2+FEC, Game4+FEC each **real two-OS original TLS/UDP/TCP and both owned Stop PASS**. Example Normal Windows UDP sent27/received24, Linux sent93/received24, TCP echo both, Windows short-sample CPU0.4531s over10.312s, peak WS41.398MB, NPF local drops0; Game2+FEC copied appearance52, Game4+FEC108. Native mode-batch PASS seven. **All WL_N0/N1/N5/P200/V2 load throughput/first p99/C/Wire and 300s NOT_RUN**; not a performance matrix or restored generation proof. Separate Windows d0 ON true-loss data remains a scoped result with product_repair_qualified=false.
+- This evidence is fdc SOURCE with known independent Linux post105s blackhole source-fdc real first82.4% FAIL, no retroactive PASS. H846 new Go cold SYN control SOURCE `e928b50cf872b6746a62c56662e5fc0768c5ca45` source build/one exact blackhole Action41368426841 in progress. Windows fdc short source cannot be promoted to H846 Go reauth/physical status. No redispatch.
+- H846 f5 Normal100 0%-loss same-VM OFF→ON original CPU+1.52/1.59s per60 (+5.53/5.78% of ON), R actual163/0B; common code hotspot not yet sampled, do not change Rust cache/tree speculatively. Focus authentic blackout until native new source business measured.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Record newly recovered exact-source seven-mode short native Windows functional evidence, no runtime/config/UI changes."}
+```

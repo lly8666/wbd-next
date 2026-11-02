@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "source_sha": "fdc2fbb77e5c22eec5489f03eaed9a4c406d1165",
+  "run_id": 41364798472,
+  "artifact_name": "m0-wl-full-public-normal-direct",
+  "result": "PASS_SCOPED_WINDOWS_LINUX_SEVEN_MODE_ORIGINAL_NATIVE_FUNCTIONAL",
+  "platform": "Windows Server 2025 signed Npcap/Wintun original Go TLS+Rust M4 client ↔ Linux WSL2 original Go TLS+Rust M4 server",
+  "modes": [
+    "normal",
+    "fixed",
+    "auto",
+    "game2",
+    "game4",
+    "game2-fec",
+    "game4-fec"
+  ],
+  "per_mode_result": {
+    "normal": {
+      "real_os_udp_bidirectional": true,
+      "real_os_tcp_echo_bidirectional": true,
+      "real_tls_and_rust_owner_ready_both": true,
+      "owned_stop_both": true,
+      "performance": "NOT_RUN"
+    },
+    "fixed": {
+      "real_os_udp_bidirectional": true,
+      "real_os_tcp_echo_bidirectional": true,
+      "real_tls_and_rust_owner_ready_both": true,
+      "owned_stop_both": true,
+      "performance": "NOT_RUN"
+    },
+    "auto": {
+      "real_os_udp_bidirectional": true,
+      "real_os_tcp_echo_bidirectional": true,
+      "real_tls_and_rust_owner_ready_both": true,
+      "owned_stop_both": true,
+      "performance": "NOT_RUN"
+    },
+    "game2": {
+      "real_os_udp_bidirectional": true,
+      "real_os_tcp_echo_bidirectional": true,
+      "real_tls_and_rust_owner_ready_both": true,
+      "owned_stop_both": true,
+      "performance": "NOT_RUN"
+    },
+    "game4": {
+      "real_os_udp_bidirectional": true,
+      "real_os_tcp_echo_bidirectional": true,
+      "real_tls_and_rust_owner_ready_both": true,
+      "owned_stop_both": true,
+      "performance": "NOT_RUN"
+    },
+    "game2-fec": {
+      "real_os_udp_bidirectional": true,
+      "real_os_tcp_echo_bidirectional": true,
+      "real_tls_and_rust_owner_ready_both": true,
+      "owned_stop_both": true,
+      "performance": "NOT_RUN"
+    },
+    "game4-fec": {
+      "real_os_udp_bidirectional": true,
+      "real_os_tcp_echo_bidirectional": true,
+      "real_tls_and_rust_owner_ready_both": true,
+      "owned_stop_both": true,
+      "performance": "NOT_RUN"
+    }
+  },
+  "observed_sample_normal": {
+    "windows_udp": {
+      "sent": 27,
+      "received": 24
+    },
+    "linux_udp": {
+      "sent": 93,
+      "received": 24
+    },
+    "windows_cpu_total_s": 0.4531,
+    "windows_cpu_sample_seconds": 10.312,
+    "windows_peak_working_set_bytes": 41398272,
+    "windows_npcap_ingress_local_drops": 0
+  },
+  "observed_game_cosmetic_appearance": {
+    "game2_fec": 52,
+    "game4_fec": 108
+  },
+  "frozen_binary_sha256": {
+    "windows_original_cli": "55f4583d955e05d04f229f9e845686a184ec5b602fcfae175c5d5bea9d66d3c5",
+    "linux_server": "868612ba1d9517b4aeba1767996a049b72380be11a2e55433de7cda14c1267b4"
+  },
+  "scope": "True signed native original Windows+Linux, one short per-mode functional smoke, not seven load performance measurements",
+  "limits": [
+    "WL_N0/N1/N5/P200/V2 first-delivery/load/p99/300s all NOT_RUN in this Action",
+    "Same source fdc old Go cold reauth real 105s bilateral blackhole first82.4% FAIL in independent Linux Action41364798287, seven short smoke does not fix/qualify reauth",
+    "Game FEC appearance 52/108 is copied count, not F/R/C all-lane bytes or repair quality/benefit",
+    "Windows and Linux OS clock offset not calibrated so no one-way p99",
+    "Source fdc differs new H846 e928 Go cold SYN due source; no automatic qualification transfer",
+    "User physical Windows NOT_RUN"
+  ]
+}
