@@ -48,6 +48,11 @@ func TestOriginalColdTLSRetryOnlyAfterAuthenticatedDeadAndRealWake(t *testing.T)
 }
 
 func TestOriginalColdFakeTCPActuallyRetriesSYNWhenServerNotReady(t *testing.T){
+    // This is a transport-retry unit test, not a product cold budget.
+    // Explicitly install the local SYN ceiling that real Rust would supply
+    // before NewClientAssociation; never resurrect a production 1360 fallback.
+    if err:=faketcp.SetPublicV4AdvertisedMSS(1420);err!=nil{t.Fatal(err)}
+
     flow:=faketcp.ClientFlow{LocalIP:[4]byte{10,22,1,2},
         PeerIP:[4]byte{10,22,1,1},LocalPort:41031,PeerPort:443}
     count:=0

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "prior_source": "c122cc6804249b53a574fbed8a8b6df73fc8f36f",
+  "observed_failed_h963": [
+    41475128813,
+    41475128735
+  ],
+  "first_error": "panic: Rust local V4 SYN MSS not installed before handshake in direct NewClientAssociation test fixture",
+  "linux_test": "TestOriginalColdFakeTCPActuallyRetriesSYNWhenServerNotReady",
+  "windows_test": "TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration",
+  "correction": "explicit 1460 outer => 1420 local MSS in _test.go ONLY",
+  "production_changed": false,
+  "source_h964": "c122cc6804249b53a574fbed8a8b6df73fc8f36f",
+  "fresh_native": "NOT_RUN",
+  "history": {
+    "h957_stage": 41462417865,
+    "h957_arm64": 41462378097,
+    "h958_df_fail": 41463910871
+  }
+}
