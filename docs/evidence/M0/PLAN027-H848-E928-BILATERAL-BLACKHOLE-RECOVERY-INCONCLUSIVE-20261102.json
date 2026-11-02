@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "product_source_sha": "e928b50cf872b6746a62c56662e5fc0768c5ca45",
+  "run_id": 41368426841,
+  "artifact_name": "plan027-reauth-newsource-105-blackhole-recover120",
+  "result": "INCONCLUSIVE_NATIVE_WITH_REAL_BUSINESS_RECOVERY_IMPROVEMENT",
+  "native_result": "INCONCLUSIVE",
+  "harness_result": "FAIL_OR_INCONCLUSIVE",
+  "original_go_build_and_frozen_manifest": "PASS",
+  "scope": "Original Linux Go TLS/Rust M4 Normal outer DATA OFF,25ms one-way0pct before/after, 20s 10Mbps each active,105s true both-way100pct netem with generator+probe0,120s 10Mbps each real resumed business, full owned Stop",
+  "product_change": "Only post-Health authenticated-dead original Go cold calls original FakeTCP EmitRetransmitDue at1s RTO with max native retries, no initial/TLS auth/data plane change",
+  "observed": {
+    "pre20": {
+      "c2s_first_fraction": 1,
+      "s2c_first_fraction": 1,
+      "p99_ms": 25.4
+    },
+    "blackhole105": {
+      "kernel_qdisc_drops": {
+        "client": 10,
+        "server": 9
+      },
+      "source_sent_packets": 0,
+      "synthetic_probe_hz": 0
+    },
+    "recovery120": {
+      "c2s": {
+        "offered_mbps": 10.0001568,
+        "first_fraction": 1,
+        "missing": 0,
+        "p99_ms_delivered_only": 60.2
+      },
+      "s2c": {
+        "offered_mbps": 10.0001568,
+        "first_fraction": 0.9981344292521493,
+        "missing": 379,
+        "p99_ms_delivered_only": 25.8
+      },
+      "active_zero_delivery_ms": {
+        "c2s": 1230,
+        "s2c": 1260
+      },
+      "source_tun_tx_kernel_drops": {
+        "client": 0,
+        "server": 27
+      },
+      "whole_process_cpu_s_245": {
+        "client": 6.04,
+        "server": 6.15
+      },
+      "peak_rss_bytes": {
+        "client": 26296320,
+        "server": 27164672
+      },
+      "host_cpu_psi_some_peak_pct": 0.1,
+      "host_steal_pct_peak": 0,
+      "native_go_rx_handoff_verified": true,
+      "native_authenticated_generations_observed": {
+        "client": 2,
+        "server": 2
+      },
+      "owned_stop_both": true,
+      "owned_netns_absent": true
+    }
+  },
+  "comparison_old_source": {
+    "product_source_sha": "fdc2fbb77e5c22eec5489f03eaed9a4c406d1165",
+    "run_id": 41364798287,
+    "recovery_first_fraction": {
+      "c2s": 0.8239300598692025,
+      "s2c": 0.824901945537494
+    },
+    "p99_ms_delivered_only": {
+      "c2s": 21285.8,
+      "s2c": 21304.1
+    },
+    "missing_after_drain": {
+      "c2s": 35046,
+      "s2c": 34852
+    },
+    "source_tun_drop": {
+      "client": 34825,
+      "server": 34852
+    },
+    "warning": "Separate hosted runner source/seed, substantial improvement direction supported but no same-VM causal CPU gain claim"
+  },
+  "native_limits": [
+    "client: HARNESS_CAPACITY_LIMITED",
+    "SOURCE_TUN_TX_DROPS: kernel upstream loss before product"
+  ],
+  "natives_failures": [],
+  "interpretation": "Strong evidence missing original client cold SYN due contributed to 20s+ outage, but still 1.2s true UDP zero-delivery and 379 residual lost, and reporter correctly says INCONCLUSIVE for upstream source TUN drops and injector capacity; do NOT promote full lifecycle/physical PASS",
+  "not_measured": [
+    "Windows post-dead",
+    "A->A+B->B",
+    "independent lane rejoin",
+    "physical wire C"
+  ],
+  "next": "Do not rerun identical old 105s scenario on same product just to chase PASS. Reconcile real upstream 27 TUN drops and remaining downtime by targeted Go staged TLS timing if needed, in parallel prioritize Windows OFF pair and shared Normal repair cost."
+}
