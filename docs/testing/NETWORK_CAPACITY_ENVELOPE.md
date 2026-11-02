@@ -1,5 +1,7 @@
 # 极限容量、包长和真实生效参数闭环
 
+**2026-11-02 MTU专项覆盖：**尺寸/单位/选项/GameFEC额外type1/超限处理的唯一规范改为[MTU_CONTRACT](../architecture/MTU_CONTRACT.md)，[PLAN027A](../decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md)负责实施与有限真实边界测试。下文“机会式v3权威”的MTU部分以新契约为准；历史表和成本工具不自动代表已更新，更不得将旧1399或固定1280帽复制回公有V4。当前重传政策按PLAN027，本文旧模型只供复算。
+
 **当前权威为[机会式v3](../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)。** 其§2–3定义抽样/共享缓存/清理，§4统一MTU与动态MSS，§5–7定义TCP500应用目标、UDP/CPU与有限测试。下文是历史容量审计与旧模型，不能把全量shadow、两次或v2快速恢复、MSS1360/MTU1329当新默认。旧表保留用于比较，真实工具输出尚需实施agent同步policy与公式；不复制旧数字回新代码。
 
 ## 1. 历史口径与可复算入口（旧模型）

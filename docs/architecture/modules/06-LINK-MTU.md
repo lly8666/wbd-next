@@ -1,12 +1,14 @@
 # 06 LINK、MTU与大包慢路径
 
+> **2026-11-02统一规范：** [MTU_CONTRACT](../MTU_CONTRACT.md)是尺寸/字段/超限策略的唯一目标，实施[PLAN027A](../../decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md)在027与028之间。这里保留LINK组件历史语义，**不代表所有平台/模式已接通LINK**；真实能力查新契约/功能卡。GameFEC还需type1，不能只加Game16+FEC14。
+
 > FEC v2工作包采用[新预算](../FEC_V2_BALANCED.md#6-新wire一次协商无旧格式嗅探)：FEC最大额外14B替代下述V1的56B，新类型不再为WF前缀escape。其余LINK分片/大包行为本轮保留；以下旧56B/WF文字只适用V1参考实现。不得为V2保留双生产wire或在多个模块重复扣开销。
 
 ## 正常路径
 
-`FrameBudget`/等价统一冷路径快照是唯一预算来源。当前V4/FEC2按[机会式v3 MTU](../../decisions/NETWORK-OPPORTUNISTIC-REPAIR-MTU-20261023.md)落实：实际outer IP/TCP、真实peer MSS和双端record限制取最小，再扣record31、FEC2 off=0/on-auto最坏repair14、Game16一次；LINK20只用于分片。旧FEC56/MSS1360/record1180或1280不得作新默认；真实对端小限制仍须遵守。auto即使off也维持on预算，避免切档超长。源码还有旧预算接口，必须审计真实调用，不把文档更新当已修复。
+统一冷路径快照的推导和实际编码向量以MTU_CONTRACT为准；除了record31/FEC14/Game16，还包括GameFEC type1、真实DATA选项对peer MSS的修正，以及已认证能力和实际buffer上限。LINK20只用于已支持的分片。旧FEC56/MSS1360/record1180或1280不得作新默认；真实对端小限制须遵守，Auto保持FEC最坏预留。源码重复入口尚待027A归口，文档不是已修复证明。
 
-原包≤LINK frame budget且不撞保留magic时，直接移动handle，不加新头。Game先加16B逻辑envelope再进入LINK。启动padding是额外动态字节，只能利用当前剩余空间，不能挤掉已经确定的业务包尾部。
+原包≤相应单record预算且不撞该schema保留magic时，直接移动handle，不加新头。各模式实际层次按MTU_CONTRACT；历史Game-before-LINK组件算法不能被当作现行Game产品已支持LINK。启动padding仅用真实剩余空间，不挤掉业务包尾部。
 
 ## 兼容分片
 
@@ -30,9 +32,9 @@ ReassemblyTable按(tunnel_epoch,direction,packet_id_ext)查slot，默认保留�
 
 ## TUN与真实网络行为
 
-TUN有效MTU在网络配置成功后读回；TCP MSS处理沿用原方案并记录实际SYN MSS。TCP应用一次write64KiB通常由协议栈分成多个TCP包，测试不能把它当一个线上64KiB record。合法UDP大datagram通过旧兼容路径；不能因为大包统计不好就静默禁掉合法普通包。
+TUN有效MTU在网络配置成功后读回；TCP MSS处理沿用原方案并记录实际SYN MSS。TCP应用一次write64KiB通常由协议栈分成多个TCP包，不能当一个线上64KiB record。大UDP区分IPv4 DF/内核分片与已有LINK路径，不能声称所有模式均已兼容LINK，也不能静默禁掉合法IP碎片。
 
-操作系统允许的TUN最小MTU（原IPv4路径存在576B下限）可能仍大于极小路径的无分片预算。此时设置合法TUN MTU并使用兼容分片，报告实际budget；不能写入非法MTU，也不能继续宣称普通包必定一个record。
+产品最小TUN政策（当前576）若高于推导容量，只有双方明确支持对应LINK能力的通路才可宣告更大的虚拟MTU。否则建链前明确预算不支持，不以max(576,budget)偷偷放大上限；IPv4-only没有普遍1280下限。
 
 DF/PMTU/ICMP错误语义沿用原功能，超限时明确返回/生成合适错误或有计数的drop，不能永久等待。IPv6默认拦截空路由走原策略，不在codec内误当普通IPv4包。外层不依赖IP fragmentation；探测到实际record超过peer MSS就拒绝该发送并报告budget错误。
 

@@ -4,6 +4,8 @@ PLANNED。读[总入口](M0-LEGACY-ROLLOUT-20261102.md)及当前M0 cursor，复�
 
 ## 1. 对用户的行为
 
+前置[PLAN027A](M0-PLAN027A-MTU-UNIFICATION-20261102.md)应先完成，配置/每client MTU直接消费[MTU_CONTRACT](../architecture/MTU_CONTRACT.md)的typed预算与readback。028只补会话归属/配置接线，不重新写Go加减公式或重刷单模式字节门。
+
 - 服务端常用配置仅 `listen`、`server-name`、`users`；默认示例 `0.0.0.0:443`、`www.cisco.com`。每client模式/FEC/cipher/MTU等来自认证配置，不是服务端进程级单值。
 - 客户端服务器地址可填IPv4或域名，端口单独填写；它与**借站域名/SNI**是不同字段。连接信息由服务端提供/导出，支持手填和导入，用户不手填route-key/tunnel-id/lane ID。解析机制交029，028接口接收已选择的数值endpoint，不在热路径查DNS。
 - 用户名密码允许同账号多终端；正常启动自动生成内部安装/会话标识，各设备不互踢。安装标识可沿老版保存在portable目录，IP租约仍不持久化，不能误把“不持久IP”解释成每次换lane换设备身份。

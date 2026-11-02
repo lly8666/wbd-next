@@ -4,6 +4,8 @@
 
 ## 0. 已有成果与完整完成条件
 
+**后续次序补充（2026-11-02）：**本包按原范围收口，随后进入[PLAN027A统一MTU与超限处理](M0-PLAN027A-MTU-UNIFICATION-20261102.md)，再进入028。027已发现的MTU阻断可直接摘取027A最小修复，证据复用不重做；027不以完成整份后续规范为前置，避免依赖循环。不得把新方案当当前功能已通过。
+
 任务仍为 `R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT`。接线主体、线上逐record M2 Receipt退役、低频质量/Health、Normal外层重传比例已有实现/证据，不从头开发。A5旧Go稳态对Rust比较继续 `WAIVED_BY_USER_2026-10-31`，不复活旧数据面。
 
 审阅基线main `6a343f4c`：H815记录Game2/FEC6实际Windows NPF补发从0到310、双向业务和正常Stop通过，SOURCE `96a2acd0`，仅1Mbps/25ms/10%/10s；不证明CPU成本、丢包选中率、Game4或全矩阵。Normal比例达标保留，成本尚未隔离测量。实时状态看最新cursor/证据。

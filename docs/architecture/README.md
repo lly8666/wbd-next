@@ -2,6 +2,8 @@
 
 这是长期设计入口，不是当前进度快照。实现和资格分别读取 main 的 project、registry 及角色分支 cursor/evidence；不得从早期方案推断“尚未开始”或“已完成产品”。2026-10-14 用户明确的同机顺序 A/B 要求覆盖旧版“每 run 禁止 multi-leg”约定。
 
+MTU唯一规范：[MTU_CONTRACT](MTU_CONTRACT.md)，实施为[PLAN027A](../decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md)，安排在027与028之间；覆盖旧文档的MTU公式/字段含义与超限策略，不改变其他算法的任务归属。规范已定不代表产品已通过。
+
 ## Windows方案B（2026-10-28最新授权）
 当前Windows产品目标详见 [PLAN026](../decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md) / [Windows NativeOwner v2](WINDOWS_NATIVE_OWNER_V2.md)：Go保留认证建链与设备/系统管理，Rust 独占Wintun/Npcap业务、M2/FEC/Game/Health；固定双worker、支持动态lane。下文早期v1如写“Windows Go稳态包pump/全部策略永远留Go”只是历史阶段计划，不再是当前授权。现有Linux原Rust路径不动，新增产品功能/性能须真实验证。
 

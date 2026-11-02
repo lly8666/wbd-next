@@ -4,6 +4,8 @@ PLANNED；[总入口](M0-LEGACY-ROLLOUT-20261102.md)、[提示词](../prompts/M0
 
 ## 1. 地址字段与解析职责
 
+MTU与padding余量统一消费先行[PLAN027A](M0-PLAN027A-MTU-UNIFICATION-20261102.md)落实的[MTU_CONTRACT](../architecture/MTU_CONTRACT.md)。内层IPv4后续片没有TCP/UDP端口，不得当新流重领填充；无需为识别填充重组所有IP分片。
+
 - 客户端“服务器地址”允许IPv4字面值或DNS域名，端口独立；沿既有配置schema增加/明确canonical服务器地址键，旧server-ip可作为读取别名，不多维护两份值。server-name仍是服务端配置的借站域名/SNI；**不能把服务器地址的域名自动拿去替换SNI**。
 - IPv4不查DNS，域名由冷层EndpointResolver解析。IPv6外层未获资格前，AAAA-only/IPv6字面值明确不支持，不能因此关闭隧道内IPv6阻断政策或转入死循环。本包不顺带开发IPv6外层。
 - Resolver返回带来源/时间的候选数值IP及选定出口，raw/TLS接线只消费数值endpoint。既有API只有ParseAddr的地方不能只改GUI校验就算完成；需覆盖初建、重连、休眠唤醒及轮换。
