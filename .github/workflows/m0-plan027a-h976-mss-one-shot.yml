@@ -1,0 +1,127 @@
+# H976 one-shot qualification of the single current V4 MSS source.
+# Build Windows EXE/Rust DLL/Linux product exactly once in the existing H971
+# 41484325423 workflow. Never recompile in any of the scoped native Actions.
+name: M0 PLAN027A H976 verified prebuilt MSS Native narrow regression
+run-name: "M0|PLAN027A-H976-MSS-ONE-SHOT|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027a-h976-mss-one-shot.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  first-normal-1460:
+    if: contains(github.event.head_commit.message, '[plan027a-h976-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_SHA: "335b25c878e8497aab143239cc8629c23826a9b9"
+      PRODUCT_RUN: "41484325423"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Await H968 already-compiled exact product and strict source proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN" --jq .head_sha)" = "$PRODUCT_SHA"
+          state=
+          for i in $(seq 1 95); do
+            state="$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN" --jq .conclusion)"
+            if [ "$state" = success ]; then break; fi
+            if [ -n "$state" ] && [ "$state" != null ]; then
+              echo "H976_PREVIOUS_SOURCE_BUILD_FAILED $state"; exit 1
+            fi
+            sleep 12
+          done
+          test "$state" = success || { echo H976_PREVIOUS_SOURCE_BUILD_TIMEOUT; exit 1; }
+          gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN/artifacts" \
+            --jq '.artifacts[] | select(.expired==false) | .name' >/tmp/h976-artifacts
+          grep -Fx "m0-wl-windows-product-binaries-$PRODUCT_SHA" /tmp/h976-artifacts
+          grep -Fx m0-plan024-linux-product /tmp/h976-artifacts
+          git fetch --depth=1 origin "$PRODUCT_SHA"
+          delta="$(git diff --name-only "$PRODUCT_SHA" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py tools/m0_install_public_faketcp.py tools/m0_install_public_realityfront_tests.py)"
+          test -z "$delta" || { echo "H976_PRODUCT_CHANGED $delta"; exit 1; }
+          python3 -m unittest tests.test_m0_wl_public_mss_contract tests.test_m0_wl_native_mtu_contract -v
+          echo H976_REUSE_H968_COMPILED_SOURCE_EXACT_NO_REBUILD_PASS
+      - name: First real signed Windows/Linux Normal default1460 SYN+SYNACK and OS readbacks
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          wanted="M0-WIN-LINUX|$GITHUB_SHA|normal|no-scene|outer=default1460"
+          old="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg name "$wanted" '.workflow_runs[] | select(.display_title==$name) | .id' | head -1)"
+          if [ -n "$old" ]; then echo "H976_EXISTING_NORMAL_RUN $old"; exit 0; fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f run_n0=false -f outer_repair=on \
+            -f native_outer_mtu=default1460 -f perf_scenario_file= \
+            -f "perf_reuse_run_id=$PRODUCT_RUN" \
+            -f "perf_binary_source_sha=$PRODUCT_SHA"
+          echo H976_DEFAULT1460_NATIVE_MSS_SENT_NOT_YET_PASS
+  then-seven-minimal-single-modes:
+    needs: [first-normal-1460]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 27
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_SHA: "335b25c878e8497aab143239cc8629c23826a9b9"
+      PRODUCT_RUN: "41484325423"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Require actual new-source Normal1460 full Windows/Linux native PASS first
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          desired="M0-WIN-LINUX|$GITHUB_SHA|normal|no-scene|outer=default1460"
+          observed=
+          for i in $(seq 1 125); do
+            prior="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+              jq -r --arg name "$desired" '.workflow_runs[] | select(.display_title==$name) | .id' | head -1)"
+            if [ -n "$prior" ]; then
+              observed="$(gh api "repos/$GH_REPO/actions/runs/$prior" --jq .conclusion)"
+              if [ "$observed" = success ]; then
+                echo "H976_FIRST_REAL_NATIVE_NORMAL_PASS run=$prior"; exit 0
+              fi
+              if [ -n "$observed" ] && [ "$observed" != null ]; then
+                echo "H976_FIRST_REAL_NATIVE_NORMAL_FAILED run=$prior conclusion=$observed"; exit 1
+              fi
+            fi
+            sleep 12
+          done
+          echo "H976_FIRST_REAL_NATIVE_NORMAL_NO_FINAL_RESULT run=${prior:-unknown}"
+          exit 1
+      - name: Dispatch only affected current MSS modes plus explicit1500 Normal
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          checks=(
+            'normal|1500'
+            'fixed|default1460'
+            'auto|default1460'
+            'game2|default1460'
+            'game4|default1460'
+            'game2-fec|default1460'
+            'game4-fec|default1460'
+          )
+          for item in "${checks[@]}"; do
+            IFS='|' read -r mode outer <<<"$item"
+            wanted="M0-WIN-LINUX|$GITHUB_SHA|$mode|no-scene|outer=$outer"
+            prior="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+              jq -r --arg name "$wanted" '.workflow_runs[] | select(.display_title==$name) | .id' | head -1)"
+            if [ -n "$prior" ]; then echo "H976_ALREADY_QUEUED mode=$mode outer=$outer run=$prior"; continue; fi
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f "public_mode=$mode" -f run_n0=false -f outer_repair=on \
+              -f "native_outer_mtu=$outer" -f perf_scenario_file= \
+              -f "perf_reuse_run_id=$PRODUCT_RUN" \
+              -f "perf_binary_source_sha=$PRODUCT_SHA"
+            echo "H976_SCOPED_MSS_QUEUED mode=$mode outer=$outer new_binary=$PRODUCT_SHA NOT_PASS"
+          done
+          echo H976_SEVEN_SCOPED_NATIVE_FOLLOWUPS_DISPATCHED_NOT_QUALIFIED

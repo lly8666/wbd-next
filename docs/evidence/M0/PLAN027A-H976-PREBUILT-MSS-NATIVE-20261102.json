@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "product_source": "335b25c878e8497aab143239cc8629c23826a9b9",
+  "product_run": 41484325423,
+  "product_full_status": "IN_PROGRESS",
+  "native_status": "NOT_RUN",
+  "first": "normal default1460 true source-wired original Go SYN and SYNACK MSS+peer record, real OS readback and Stop",
+  "followups": [
+    "Normal explicit1500",
+    "Fixed default1460",
+    "Auto default1460",
+    "Game2 default1460",
+    "Game4 default1460",
+    "Game2FEC default1460",
+    "Game4FEC default1460"
+  ],
+  "source_reuse_guard": "same immutable Rust+Go+manifest+two installers, original signed artifacts",
+  "old_failures": [
+    41480121662,
+    41480968817,
+    41482859398,
+    41483256779,
+    41484186232
+  ],
+  "asymmetric_negative": "NOT_RUN"
+}
