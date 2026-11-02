@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_parent": "884518887b02c57509ef5a564cd0732e84703916",
+  "previous_h981_governance_fail": {
+    "run": 41494964163,
+    "reason": "cursor too large 8256 >8192",
+    "outcome": "FAIL_NO_PRODUCT_CAUSE"
+  },
+  "h980_full_original_native": {
+    "run": 41494436902,
+    "conclusion": "success",
+    "scope": "legacy1400"
+  },
+  "h980_original_windows_wal": {
+    "run": 41494436971,
+    "conclusion": "success"
+  },
+  "h981_prebuilt_window_modes": [
+    41496471520,
+    41496482942,
+    41496496092,
+    41496509099,
+    41496520728
+  ],
+  "windows_native_numeric_qualification": "NOT_YET_COLLECTED",
+  "h981_linux_native_fail": {
+    "run": 41494964168,
+    "result": "FAIL_ORIGINAL_INITIAL_SYN_NOT_ESTABLISHED",
+    "first_case": "normal:1460:1460",
+    "actual_client_initial_mss": 1420,
+    "actual_client_tcp_option": "0204058c",
+    "client_initial_tun": 1389,
+    "server_initial_tun": 1389,
+    "real_phys_both": 1500,
+    "stop": "NOT_QUALIFIED",
+    "old_source": "884518887b02c57509ef5a564cd0732e84703916"
+  },
+  "root": "Netns launched original Linux client as soon as server TUN appeared before original AF_PACKET raw receive bind, and Linux initial cold Connect skipped existing bounded original FakeTCP SYN retransmit helper; run timed out after first SYN.",
+  "h982_change": "Log actual AF_PACKET raw endpoint readiness after original Go bind; Linux netns waits that marker; call existing original bounded SYN RTO/MaxSYNRetries on initial and reauth, local MSS frozen per Association. Product Go Linux-only, no protocol compatibility or new retry loop.",
+  "h982_real_linux_cases": [
+    "normal1460/1460",
+    "fec-fixed1460/1460",
+    "fec-auto1460/1460",
+    "fec-fixed1500/1500",
+    "fec-fixed1500/1280"
+  ],
+  "h982_native_status": "NOT_RUN",
+  "x64_products_recompiled": false,
+  "outer_default": 1460,
+  "explicit_max": 1500,
+  "old_fixed_wrong": 1333,
+  "fixed_expected_1460": 1375,
+  "fixed_expected_1500": 1415
+}

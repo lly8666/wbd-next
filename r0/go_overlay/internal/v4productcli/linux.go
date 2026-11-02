@@ -491,6 +491,10 @@ func Run(role string,args []string)error{
             faketcp.RawIPv4EndpointOptions{ReceivePort:cfg.localPort},
         )
         if err!=nil{return err}
+        // Real AF_PACKET endpoint is now bound to the configured local
+        // port. The netns harness must not equate an earlier TUN file
+        // with a listening FakeTCP server (SYN startup race).
+        log.Printf("V4_PUBLIC_RAW_AF_PACKET_READY role=%s attempt=%d interface=%s port=%d",role,attempt,cfg.rawInterface,cfg.localPort)
         emit:=func(seg faketcp.Segment)error{
             if seg.Flags&faketcp.FlagSYN!=0{
                 wire:=faketcp.MarshalSegment(seg,1,faketcp.PacketPersonaLegacy)
@@ -710,13 +714,11 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if err:=assoc.Start(coldSynStart);err!=nil{return err}
     dialCtx,cancel:=context.WithTimeout(ctx,20*time.Second)
     defer cancel()
-    // Initial connect remains unchanged; only a prior Rust-authenticated-dead
-    // and real TUN new-business trigger authorize SYN retransmission polling.
-    if coldReauth {
-        err=waitForOriginalColdSYN(dialCtx,assoc)
-    }else{
-        err=assoc.WaitEstablished(dialCtx)
-    }
+    // A first SYN may precede server AF_PACKET bind just as a post-dead
+    // SYN can. Drive the SAME original bounded FakeTCP RTO/MaxSYNRetries
+    // at initial connect and cold reauth. Association freezes local MSS at
+    // creation; retries cannot change SYN TCP options or skip TLS admission.
+    err=waitForOriginalColdSYN(dialCtx,assoc)
     if err!=nil{return err}
     if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=syn_established unix_ms=%d elapsed_ms=%d",time.Now().UnixMilli(),time.Since(coldSynStart).Milliseconds())}
     var policy realityfront.AdmissionPolicy

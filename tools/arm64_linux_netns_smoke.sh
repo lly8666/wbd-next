@@ -132,6 +132,24 @@ if [ "$found" -ne 1 ]; then
   tail -n 35 "$out/server.log" || true
   exit 1
 fi
+# A newly opened TUN precedes original Go's raw AF_PACKET receive socket.
+# The first source-locked SYN MUST start only after the REAL server raw
+# endpoint has bound its exact port; do not silently paper over cold loss.
+raw_listen=0
+for i in $(seq 1 100); do
+  if grep -Eq 'V4_PUBLIC_RAW_AF_PACKET_READY role=server attempt=[0-9]+ interface=v4as port=443' "$out/server.log"; then
+    raw_listen=1
+    break
+  fi
+  if ! kill -0 "$server_launcher" 2>/dev/null; then break; fi
+  sleep .1
+done
+if [ "$raw_listen" -ne 1 ];then
+  echo 'ARM64_OS_SERVER_RAW_LISTENER_NOT_READY_BEFORE_CLIENT_SYN'
+  tail -n 25 "$out/server.log" || true
+  exit 1
+fi
+echo ARM64_REAL_GO_AF_PACKET_SERVER_LISTENING_BEFORE_SYN_PASS
 sudo -n ip netns exec "$client_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-client" "$@" \
   --raw-interface v4ac --local-ip 198.18.7.1 --peer-ip 198.18.7.2 \
   "${client_mtu_args[@]}" \
