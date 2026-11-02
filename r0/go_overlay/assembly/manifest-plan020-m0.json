@@ -653,7 +653,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "bda125e25e720a877adca5a0355c962fb7b8d548"
+      "result_blob": "4b44e76026dfcd339aa9c5ab5ee5aa9fab990439"
     },
     {
       "kind": "create",
@@ -665,7 +665,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "c84de1865e8cf914a7aa667fb6ad10785bce04f7"
+      "result_blob": "4536c3b3dedc778f74f182d633b4080c648e1d12"
     },
     {
       "kind": "create",
@@ -761,7 +761,7 @@
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_m2_effective.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_m2_effective.go",
-      "result_blob": "e287f8938572fc8a74be201fc7d1de96065ef66a"
+      "result_blob": "404a3d34720b31ef20915dafb54e9fc71b6d125e"
     },
     {
       "kind": "create",
@@ -839,7 +839,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
-      "result_blob": "46551f2e650d5d14a63b20339bce6e0c1d908b42"
+      "result_blob": "b6c5cf347a7a18a8cd9534f0bfcb9a82794133f9"
     },
     {
       "kind": "create",

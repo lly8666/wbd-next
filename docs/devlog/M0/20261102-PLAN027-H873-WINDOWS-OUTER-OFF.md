@@ -5,3 +5,5 @@
 ```feature-impact
 {"kind":"updated","ids":["normal-off"],"reason":"Windows original Native Normal/Fixed/Auto cold outer-repair on|off CLI/config and source-authoritative Rust M2 effective readback; OFF avoids optional repair ledger work."}
 ```
+
+- H874 recovered CI fact: H873 Rust native-functional/r0 ABI PASS, original-Go assembly failed solely four overlay result_blob hashes after same-source edits; governance rejected 9 hot context_refs and card over 16KiB. Updated exact manifest hashes, pruned one oldest hot context link and two historical card notes (still in Git/devlog); not a product PASS.

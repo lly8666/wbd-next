@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 873,
-  "checkpoint_sha": "7eededca7442a56e5b296cfee47a617c588a24b5",
+  "sequence": 874,
+  "checkpoint_sha": "d7091bf9c34791c1e6c6463612ec3b6400f9bd79",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H873 Windows original cold outer-repair on|off CLI/config→Rust M2 pre-native owner switch with source-effective readback; OFF skips optional ACK-gap/shadow/budget/poll, retains authenticated Health, quality/FEC, real NPF DATA and Stop. Previous 7eed H872 Windows owner/native-functional/governance PASS; no-scene Windows/Linux only compile. H873 CI and actual Windows OFF/ON, unilateral native105 NOT_RUN.",
-  "why_now": "Windows original product ON-only despite Linux public OFF switch, blocking valid sameVM Normal repair cost attribution and repair OFF network qualification.",
+  "current_task": "H873 Windows original cold outer-repair on|off CLI/config→Rust M2 pre-native owner switch with source-effective readback; OFF skips optional ACK-gap/shadow/budget/poll, retains authenticated Health, quality/FEC, real NPF DATA and Stop. Previous 7eed H872 Windows owner/native-functional/governance PASS; no-scene Windows/Linux only compile. H873 CI and actual Windows OFF/ON, unilateral native105 NOT_RUN. H873 source d709 native-functional #41389020971, cross ABI #41389020909, native ABI #41389020882 PASS. H873 governance #41389021006 FAIL context_refs=9 and feature card>16KiB, assembly/PLAN020 FAIL four changed overlays hashes stale; H874 fixes these source-only gates. Owner #41389021003 pending, Windows signed OFF scene NOT_RUN.",
+  "why_now": "H873 actual source builds are partly green, but independent governance and original-Go source-lock reject stale assembly hashes and oversized hot card/cursor; fix exactly these known gates before native business claims.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H873 source CI/assembly results. If PASS qualify Windows signed native true OFF config/effective + sameVM ON/OFF sequential, then Windows→Linux genuine one-way105 separately; Game adapter and affected ON long gates still pending; no physical deployment.",
+  "next_action": "Verify H874 governance and source-locked original-Go assembly/Windows owner ABI after new commit; then sameVM native OFF/ON A/B and Windows-origin one-way105 dedicated Actions, preserving Linux b747 only tested SOURCE.",
   "unverified": true,
   "last_tested_source": "b74728ba0b1ee45c632c31117fc8c08c042e11a0",
   "evidence_refs": [
@@ -19,7 +19,6 @@
     "docs/evidence/M0/PLAN027-H870-B747-AUTH-RETIRE-BILATERAL105-10M-PASS-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H865-AUTHENTICATED-RETIRE.md",
     "docs/devlog/M0/20261102-PLAN027-H866-RETIRE-COMPILE-AND-ON-EVIDENCE.md",
     "docs/devlog/M0/20261102-PLAN027-H867-RETIRE-UNILATERAL-BILATERAL.md",
     "docs/devlog/M0/20261102-PLAN027-H868-COLLECT-H867-MISSING-RECEIPTS.md",
