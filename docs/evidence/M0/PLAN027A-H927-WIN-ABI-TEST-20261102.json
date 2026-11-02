@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_before": "91f244147c07be7a201c00258a4aca85313070a8",
+  "automatic_windows_WAL_run": 41434561392,
+  "prior_result": "FAIL",
+  "prior_cause": "compiled product source no longer contains obsolete Go MTU formula used by test",
+  "recovery": "ABI layout and mode test only; no Go numeric budget arithmetic",
+  "next_actual_source": "THIS_COMMIT",
+  "windows_os_applied": "NOT_RUN",
+  "native_seven_mode": "NOT_RUN",
+  "df0_df1": "NOT_RUN",
+  "weaknet": "NOT_RUN",
+  "manual_dispatch": false
+}

@@ -1,6 +1,6 @@
 //go:build windows && wbd_v4_embedded_go
 package main
-import("context";"errors";"fmt";"syscall";"testing";"github.com/lly8666/wobuzhidao/internal/faketcp")
+import("context";"errors";"fmt";"syscall";"testing";"unsafe";"github.com/lly8666/wobuzhidao/internal/faketcp")
 func TestM0PLAN027WindowsColdRetryRequiresAuthenticatedDeadAndNoAppliedOS(t *testing.T){
  timeout:=fmt.Errorf("original cold FakeTCP: %w",faketcp.ErrBootstrapTimeout)
  for _,e:=range []error{timeout,fmt.Errorf("network timed out: %w",context.DeadlineExceeded),syscall.ETIMEDOUT}{
@@ -40,43 +40,39 @@ func TestM0PLAN027WindowsNativeAuthDeadOnlyAfterOriginalRustHealth(t *testing.T)
  }
 }
 
-// This uses the original Linux deriveMTUBudget: wire - (31 + FEC14
-// + Game16 + GameFEC15) may never exceed this Windows TUN configuration.
-// An unchanged 1400 default must preserve all previous authentic modes.
-func TestM0PLAN027WindowsOriginalNativeRecordOfferRespectsTLSTunnelBudget(t *testing.T){
- rows:=[]struct{
-  mtu uint32
-  mode m0WindowsV4Mode
-  gameFEC bool
-  record uint16
- }{
-  {1280,m0WinModeNormal,false,1311},
-  {1280,m0WinModeFixed,false,1325},
-  {1280,m0WinModeAuto,false,1325},
-  {1280,m0WinModeGame2,false,1327},
-  {1280,m0WinModeGame4,false,1327},
-  {1280,m0WinModeGame2,true,1342},
-  {1280,m0WinModeGame4,true,1342},
-  {1400,m0WinModeNormal,false,1400},
-  {1400,m0WinModeFixed,false,1400},
-  {1400,m0WinModeGame4,true,1400},
-  {1500,m0WinModeNormal,false,1400},
-  {576,m0WinModeNormal,false,607},
+// Windows native Go no longer carries a duplicate 31/14/16/15 formula
+// or hidden 1400 cap. Production cold TLS consumes the versioned Rust ABI.
+// These tests validate only C layout and mode mapping; numerical vectors
+// live in Rust v4_mtu_budget_ffi::receive_tests.
+func TestM0PLAN027AWindowsColdBudgetABIShapeAndModes(t *testing.T){
+ if n:=unsafe.Sizeof(m0RustColdBudgetInput{});n!=36{
+  t.Fatalf("Rust cold input layout changed: %d",n)
  }
- for _,r:=range rows{
-  actual:=m0WindowsV4PeerRecordCap(r.mtu,r.mode,r.gameFEC)
-  if actual!=r.record{
-   t.Fatalf("native MTU %d mode=%v gameFEC=%v original TLS limit actual=%d want=%d",
-    r.mtu,r.mode,r.gameFEC,actual,r.record)
+ if n:=unsafe.Sizeof(m0RustColdReceiveInput{});n!=40{
+  t.Fatalf("Rust cold receiving input layout changed: %d",n)
+ }
+ if n:=unsafe.Sizeof(m0RustColdBudgetOutput{});n!=32{
+  t.Fatalf("Rust cold output layout changed: %d",n)
+ }
+ for _,row:=range []struct{mode m0WindowsV4Mode;fec bool;want uint32}{
+  {m0WinModeNormal,false,0},
+  {m0WinModeFixed,false,1},
+  {m0WinModeAuto,false,1},
+  {m0WinModeGame2,false,2},
+  {m0WinModeGame4,false,2},
+  {m0WinModeGame2,true,3},
+  {m0WinModeGame4,true,3},
+ }{
+  got,err:=m0WindowsV4BudgetMode(row.mode,row.fec)
+  if err!=nil||got!=row.want{
+   t.Fatalf("mode=%s gameFEC=%v Rust kind=%d err=%v want=%d",
+    row.mode,row.fec,got,err,row.want)
   }
-  reserve:=uint32(31)
-  if r.mode==m0WinModeFixed||r.mode==m0WinModeAuto{reserve+=14}
-  if r.mode==m0WinModeGame2||r.mode==m0WinModeGame4{
-   reserve+=16
-   if r.gameFEC{reserve+=15}
-  }
-  if uint32(actual)>reserve&&uint32(actual)-reserve>r.mtu{
-   t.Fatal("peer Linux real TUN may exceed local Windows configured MTU")
+ }
+ for _,row:=range []m0WindowsV4Mode{"",m0WindowsV4Mode("future"),m0WinModeFixed,m0WinModeNormal}{
+  fec:=row==m0WinModeFixed||row==m0WinModeNormal
+  if _,err:=m0WindowsV4BudgetMode(row,fec);err==nil{
+   t.Fatalf("unknown/unsupported FEC mode=%s must reject",row)
   }
  }
 }

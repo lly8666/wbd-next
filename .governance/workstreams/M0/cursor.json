@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 925,
-  "checkpoint_sha": "7d853983208b72443234f46aba013fc9a947b603",
+  "sequence": 927,
+  "checkpoint_sha": "91f244147c07be7a201c00258a4aca85313070a8",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
   "current_task": "PLAN027A H925 source-locked Rust budget + Go cold Linux/Windows + v5 Windows Normal/Fixed/Auto outer/inner owner bound; public jumbo=9000 fixture corrected; original native build and DF semantics not yet proven.",
   "why_now": "Recovery verified PLAN027 USER_ACCEPTED_SCOPED closed; no old Actions inflight on entry. New source push has auto CI only; do not dispatch duplicate native scenarios.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion.",
-  "next_action": "Collect H925 exact-source assembly/build results and fix only verified failure. Complete IPv4 DF0/DF1 game/fec exception path and Windows Game outer/inner if supported, then create source-locked manifest hashes, run one bounded native 7-mode boundary matrix + two weak network and OS Applied/Stop evidence. Do not re-dispatch 027.",
+  "next_action": "Collect H927 automated Windows assembly/test and Linux no-scene results; then implement bounded valid DF0 IPv4 fragmentation + DF1 local PMTU response on actual supported packet path, native boundary tests only after exact SOURCE freeze. Game group outer-vs-inner and OS readback not yet qualified.",
   "unverified": true,
   "last_tested_source": "6693910f879f9e55e77dd823c1b05d8942321929",
   "evidence_refs": [
@@ -34,5 +34,5 @@
     "docs/evidence/M0/PLAN027A-H925-SOURCE7D85-CODING-20261102.json"
   ],
   "open_requests": [],
-  "partial_summary": "H922 source ecf77 codec/cross ABI PASS; old no-feature and governance FAIL fixed at H923 source09a043 (NORMAL-COMMON/governance success). H924 Windows pure receive-budget and hidden1400 removal; H925 v5 owner separate outer/inner, Go/Linux fixture corrected. Source H925 automated Actions IN_PROGRESS as of this checkpoint, no manual dispatch. Earlier no-scene Windows+Linux failed due old jumbo test, not product PASS; no native 7-mode/DF evidence."
+  "partial_summary": "H926 SOURCE 91f24414 PLAN020 Windows WAL source-locked assembly PASS, Go CLI unit FAIL undefined removed duplicate Go m0WindowsV4PeerRecordCap. H927 replaces old formula-only test with ABI layout+mode tests, refreshes exact manifest blobs. Rust H925 Windows ABI and cross builds PASS; H927 actual native seven-mode/DF/weaknet still NOT_RUN."
 }

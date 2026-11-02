@@ -23,21 +23,27 @@ type m0RustColdBudgetOutput struct{
  Version,Size,EffectiveOuterIPMTU,AdvertisedSynMSS,RecordWire,
  RecordPayload,InnerIPCap,LinkFragmentCap uint32
 }
+// Only an enum-to-Rust-ABI mapping, not a second MTU byte formula.
+func m0WindowsV4BudgetMode(mode m0WindowsV4Mode,gameFEC bool)(uint32,error){
+ switch mode{
+ case m0WinModeNormal:
+  if !gameFEC{return 0,nil}
+ case m0WinModeFixed,m0WinModeAuto:
+  if !gameFEC{return 1,nil}
+ case m0WinModeGame2,m0WinModeGame4:
+  if gameFEC{return 3,nil}
+  return 2,nil
+ }
+ return 0,fmt.Errorf("Windows V4 cold MTU mode/GameFEC invalid")
+}
 func m0WindowsV4ColdRecordOffer(library string,outer,plannedInner uint32,
  mode m0WindowsV4Mode,gameFEC bool)(uint16,error){
  if !filepath.IsAbs(library)||filepath.Ext(library)!=".dll"||
   outer<576||outer>1500||plannedInner<576||plannedInner>1500{
   return 0,fmt.Errorf("Windows V4 cold MTU outer/inner/dll invalid")
  }
- var kind uint32
- switch mode{
- case m0WinModeNormal:kind=0
- case m0WinModeFixed,m0WinModeAuto:kind=1
- case m0WinModeGame2,m0WinModeGame4:
-  kind=2
-  if gameFEC{kind=3}
- default:return 0,fmt.Errorf("Windows V4 cold MTU mode invalid")
- }
+ kind,err:=m0WindowsV4BudgetMode(mode,gameFEC)
+ if err!=nil{return 0,err}
  dll,err:=syscall.LoadDLL(library)
  if err!=nil{return 0,err}
  defer dll.Release()
