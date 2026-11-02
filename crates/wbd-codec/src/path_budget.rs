@@ -10,6 +10,8 @@ pub const MIN_CONNECTION_MTU: usize = 576;
 pub const MAX_CONNECTION_MTU: usize = 9000;
 pub const DEFAULT_IPV4_PEER_MSS: usize = 536;
 pub const GAME_OVERHEAD: usize = 16;
+/// Game FEC2 typed source/repair selector, OUTSIDE the FEC2 14-byte reservation.
+pub const GAME_FEC_TYPE_OVERHEAD: usize = 1;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BudgetError { ConnectionMtu, InvalidHeader, InvalidMss, InvalidRecordLimit, InvalidFecProfile, PayloadExceeded }
@@ -44,6 +46,7 @@ pub struct FrameBudgetInput {
     pub ipv4_header_len: usize,
     pub tcp_header_len: usize,
     /// None means Go faketcp 536B IPv4 fallback; Some(0) is invalid.
+    /// Raw MSS from peer SYN, BEFORE DATA IPv4/TCP options (RFC 6691).
     pub peer_mss: Option<u16>,
     /// Complete negotiated wire limit, including 31B record overhead.
     pub record_wire_limit: usize,
@@ -69,6 +72,8 @@ pub struct FrameBudget {
     pub link_fragment_payload_mtu: usize,
     /// Zero for Normal; 16 bytes for a complete Game logical packet.
     pub game_overhead: usize,
+    /// One type byte only for Game+FEC2; never counted twice in the live GameFecTx.
+    pub game_fec_type_overhead: usize,
     /// Single ordinary BUSINESS packet limit before required magic escape.
     pub single_business_payload_mtu: usize,
 }
@@ -108,14 +113,24 @@ impl FrameBudget {
             Some(0) => return Err(BudgetError::InvalidMss),
             Some(n) => (usize::from(n),true),
         };
-        let carrier_payload = packet_payload.min(mss);
+        // RFC 6691: peer SYN MSS is measured with *minimum* headers. Only
+        // actual DATA options reduce its usable payload, not a SYN-only
+        // option or an already option-adjusted capacity masquerading as MSS.
+        let options = (i.ipv4_header_len - 20) + (i.tcp_header_len - 20);
+        let adjusted_mss = mss.checked_sub(options).ok_or(BudgetError::InvalidMss)?;
+        let carrier_payload = packet_payload.min(adjusted_mss);
         if carrier_payload < FIXED_WIRE_OVERHEAD { return Err(BudgetError::ConnectionMtu); }
         let record_wire = carrier_payload.min(i.record_wire_limit);
         let record_payload = record_wire-FIXED_WIRE_OVERHEAD;
         let link_frame = record_payload.checked_sub(fec_overhead).ok_or(BudgetError::ConnectionMtu)?;
         if link_frame <= LINK_HEADER { return Err(BudgetError::ConnectionMtu); }
         let game_overhead = if i.game { GAME_OVERHEAD } else { 0 };
-        let business = link_frame.checked_sub(game_overhead).ok_or(BudgetError::ConnectionMtu)?;
+        let game_fec_type = if i.game && matches!(i.fec,
+            FecReservation::V3Fec2Fixed | FecReservation::V3Fec2Adaptive) {
+            GAME_FEC_TYPE_OVERHEAD
+        } else { 0 };
+        let business = link_frame.checked_sub(game_overhead + game_fec_type)
+            .ok_or(BudgetError::ConnectionMtu)?;
         Ok(Self {
             effective_packet_mtu: effective, ipv4_header_len:i.ipv4_header_len,
             tcp_header_len:i.tcp_header_len, peer_mss:mss, peer_mss_advertised:advertised,
@@ -123,7 +138,8 @@ impl FrameBudget {
             record_wire_mtu:record_wire, record_payload_mtu:record_payload,
             record_overhead:FIXED_WIRE_OVERHEAD, fec_overhead,
             link_frame_mtu:link_frame, link_fragment_payload_mtu:link_frame-LINK_HEADER,
-            game_overhead, single_business_payload_mtu:business,
+            game_overhead, game_fec_type_overhead:game_fec_type,
+            single_business_payload_mtu:business,
         })
     }
     /// Size-only test; reserved LINK magic can force escape even when this fits.

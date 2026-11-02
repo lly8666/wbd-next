@@ -7,6 +7,18 @@ package realityfront
 /*
 #include <stdint.h>
 #include <stddef.h>
+typedef struct {
+ uint32_t version,struct_size,configured_outer_ip_mtu,physical_outer_ip_mtu;
+ uint32_t peer_advertised_mss,agreed_record_wire_cap,ipv4_header_bytes;
+ uint32_t tcp_data_header_bytes,mode;
+} WbdV4MTUBudgetInputV1;
+typedef struct {
+ uint32_t version,struct_size,effective_outer_ip_ceiling,local_syn_advertised_mss;
+ uint32_t record_wire_cap,record_payload_cap,single_inner_ip_cap;
+ uint32_t link_fragment_payload_cap;
+} WbdV4MTUBudgetOutputV1;
+extern int32_t wbd_m0_v4_mtu_budget_v1(
+ const WbdV4MTUBudgetInputV1 *,uint32_t,WbdV4MTUBudgetOutputV1 *,uint32_t);
 extern int32_t wbd_m0_embedded_go_prepare(const unsigned char *,size_t,
     const unsigned char *,size_t,uint64_t *);
 extern int32_t wbd_m0_embedded_go_prepare_client(const unsigned char *,size_t,
@@ -615,4 +627,44 @@ func (b *v4EmbeddedNativeBridge) rustOwnerRouteEventState()(uint64,bool,error){
     rc:=C.wbd_m0_embedded_go_loop_route_events(C.uint64_t(b.handle),&revision,&healthy)
     if rc!=0{return 0,false,fmt.Errorf("%w: route event observer=%d",errV4Embedded,int(rc))}
     return uint64(revision),healthy==1,nil
+}
+
+// V4ColdMTUBudgetInput is pure, usable before TLS. MSS is raw SYN MSS.
+// OS installed/applied is a separate receipt, never inferred from this output.
+type V4ColdMTUBudgetInput struct {
+ ConfiguredOuterIPMTU,PhysicalOuterIPMTU uint32
+ PeerAdvertisedMSS,AgreedRecordWireCap uint32
+ IPv4HeaderBytes,TCPDataHeaderBytes,Mode uint32
+}
+type V4ColdMTUBudgetOutput struct {
+ EffectiveOuterIPCeiling,LocalSYNAdvertisedMSS uint32
+ RecordWireCap,RecordPayloadCap,SingleInnerIPCap uint32
+ LinkFragmentPayloadCap uint32
+}
+func V4DeriveColdMTUBudget(i V4ColdMTUBudgetInput)(V4ColdMTUBudgetOutput,error){
+ req:=C.WbdV4MTUBudgetInputV1{
+  version:1,struct_size:C.uint32_t(unsafe.Sizeof(C.WbdV4MTUBudgetInputV1{})),
+  configured_outer_ip_mtu:C.uint32_t(i.ConfiguredOuterIPMTU),
+  physical_outer_ip_mtu:C.uint32_t(i.PhysicalOuterIPMTU),
+  peer_advertised_mss:C.uint32_t(i.PeerAdvertisedMSS),
+  agreed_record_wire_cap:C.uint32_t(i.AgreedRecordWireCap),
+  ipv4_header_bytes:C.uint32_t(i.IPv4HeaderBytes),
+  tcp_data_header_bytes:C.uint32_t(i.TCPDataHeaderBytes),
+  mode:C.uint32_t(i.Mode),
+ }
+ var out C.WbdV4MTUBudgetOutputV1
+ rc:=C.wbd_m0_v4_mtu_budget_v1(&req,C.uint32_t(unsafe.Sizeof(req)),
+  &out,C.uint32_t(unsafe.Sizeof(out)))
+ if rc!=0 {return V4ColdMTUBudgetOutput{},fmt.Errorf("V4 Rust MTU ABI v1 rejected: %d",int(rc))}
+ if out.version!=1||out.struct_size!=C.uint32_t(unsafe.Sizeof(out)){
+  return V4ColdMTUBudgetOutput{},fmt.Errorf("V4 Rust MTU ABI readback layout mismatch")
+ }
+ return V4ColdMTUBudgetOutput{
+  EffectiveOuterIPCeiling:uint32(out.effective_outer_ip_ceiling),
+  LocalSYNAdvertisedMSS:uint32(out.local_syn_advertised_mss),
+  RecordWireCap:uint32(out.record_wire_cap),
+  RecordPayloadCap:uint32(out.record_payload_cap),
+  SingleInnerIPCap:uint32(out.single_inner_ip_cap),
+  LinkFragmentPayloadCap:uint32(out.link_fragment_payload_cap),
+ },nil
 }

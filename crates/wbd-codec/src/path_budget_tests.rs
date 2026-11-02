@@ -11,9 +11,9 @@ use crate::link_fec_wire::LINK_HEADER;
     #[test]
     fn v3_fec2_dynamic_cold_envelope_matches_go_1500_1400_1280(){
         for (outer,wire,normal,fec,game,game_fec) in [
-            (1500,1460,1429,1415,1413,1399),
-            (1400,1360,1329,1315,1313,1299),
-            (1280,1240,1209,1195,1193,1179),
+            (1500,1460,1429,1415,1413,1398),
+            (1400,1360,1329,1315,1313,1298),
+            (1280,1240,1209,1195,1193,1178),
         ] {
             for (choice,is_game,want) in [
                 (FecReservation::FixedOff,false,normal),
@@ -168,3 +168,33 @@ use crate::link_fec_wire::LINK_HEADER;
         assert_eq!(resolve_record_wire_limit(1400,20,20,51),Err(BudgetError::InvalidRecordLimit));
     }
 
+
+    /// Independent literals: peer SYN MSS uses 20+20, DATA headers may grow.
+    #[test]
+    fn plan027a_peer_mss_is_raw_and_game_fec_type_is_once() {
+        let mut i=input(1500,FecReservation::FixedOff);
+        i.peer_mss=Some(1200);
+        i.tcp_header_len=32;
+        let b=FrameBudget::derive(i).unwrap();
+        assert_eq!((b.record_wire_mtu,b.single_business_payload_mtu),(1188,1157));
+        i.ipv4_header_len=24;
+        i.tcp_header_len=40;
+        let b=FrameBudget::derive(i).unwrap();
+        assert_eq!((b.record_wire_mtu,b.single_business_payload_mtu),(1176,1145));
+        i.peer_mss=None;
+        assert_eq!(FrameBudget::derive(i).unwrap().record_wire_mtu,512);
+        i.peer_mss=Some(8);
+        assert_eq!(FrameBudget::derive(i),Err(BudgetError::InvalidMss));
+
+        let mut game=input(1500,FecReservation::V3Fec2Fixed);
+        game.game=true;
+        let b=FrameBudget::derive(game).unwrap();
+        assert_eq!((b.record_wire_mtu,b.fec_overhead,b.game_overhead,
+                    b.game_fec_type_overhead,b.single_business_payload_mtu),
+                   (1460,14,16,1,1398));
+        assert!(b.fits_single_business_by_size(1398));
+        assert!(!b.fits_single_business_by_size(1399));
+        assert_eq!(b.outer_packet_len_for_record(1460),Some(1500));
+        game.fec=FecReservation::FixedOff;
+        assert_eq!(FrameBudget::derive(game).unwrap().game_fec_type_overhead,0);
+    }

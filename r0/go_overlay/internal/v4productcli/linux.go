@@ -125,7 +125,7 @@ func parse(role string,args []string)(config,error){
     gameFec:=flags.String("game-fec","off","Game2/4 inner fixed FEC: off or fixed0..fixed6; BOTH authenticated endpoints must match; no Game Auto")
     game4Copy:=flags.String("game4-copy-schedule","","Game4 default stagger-4-50-140; explicit stagger-4-20-60 legacy fallback or immediate rollback; Game2 unchanged")
     outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and actual receipt feedback remain enabled")
-    outerMTU:=flags.Int("outer-mtu",1500,"outer IPv4 packet MTU; inner TUN MTU is derived automatically and clamped to device/peer limits")
+    outerMTU:=flags.Int("outer-mtu",1500,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
     tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
     tunTxQLen:=flags.Int("tun-txqlen-packets",2048,"owned original Linux TUN TX queue: 2048 bounded default, 500 explicit rollback")
     if err:=flags.Parse(args);err!=nil{return c,err}
@@ -179,7 +179,7 @@ func parse(role string,args []string)(config,error){
         c.game4CopyWideStagger=*game4Copy=="stagger-4-50-140"
     default:return c,fmt.Errorf("game4-copy-schedule must be immediate, stagger-4-20-60 or stagger-4-50-140")
     }
-    if *outerMTU<576||*outerMTU>9000{return c,fmt.Errorf("outer-mtu must be 576..9000")}
+    if *outerMTU<576||*outerMTU>1500{return c,fmt.Errorf("outer-mtu public IPv4 range is 576..1500; jumbo is experimental/unsupported")}
     // User authorized product-owned fq600 for ALL Linux public modes:
     // Normal/off, FEC Fixed/Auto, Game2/Game4. It is applied only after
     // creating our ephemeral TUN; explicit0 remains a safe rollback.
@@ -251,7 +251,7 @@ func validateOwnedTunTxQueueReadback(raw []byte,name string,packets int)error{
     }
     if err:=json.Unmarshal(raw,&links);err!=nil{return fmt.Errorf("TUN tx queue JSON readback: %w",err)}
     if len(links)!=1||links[0].IfName!=name||links[0].IfIndex<=0||
-       links[0].MTU<1280||links[0].MTU>1500||links[0].QLen!=packets||
+       links[0].MTU<576||links[0].MTU>1500||links[0].QLen!=packets||
        links[0].LinkType!="none"{return fmt.Errorf("original Linux TUN tx queue identity mismatch")}
     seen:=map[string]bool{}
     for _,flag:=range links[0].Flags{seen[flag]=true}
@@ -294,6 +294,27 @@ func setOwnedTunFq(name string,rateMbps int)error{
     }
     return fmt.Errorf("owned TUN fq maxrate readback mismatch on %s",name)
 }
+// A real iproute2 readback is a receipt, not the planned Rust budget.
+// This is cold setup/reconfiguration only; never called on packet hot path.
+func validateOwnedTunMTUReadback(raw []byte,name string)(int,error){
+ var links []struct{
+  IfName string `json:"ifname"`
+  IfIndex int `json:"ifindex"`
+  MTU int `json:"mtu"`
+  LinkType string `json:"link_type"`
+ }
+ if err:=json.Unmarshal(raw,&links);err!=nil{return 0,fmt.Errorf("TUN MTU JSON: %w",err)}
+ if len(links)!=1||links[0].IfName!=name||links[0].IfIndex<=0||
+  links[0].LinkType!="none"||links[0].MTU<576||links[0].MTU>1500{
+  return 0,fmt.Errorf("owned TUN MTU OS identity/size mismatch")
+ }
+ return links[0].MTU,nil
+}
+func readOwnedTunMTU(name string)(int,error){
+ raw,err:=exec.Command("ip","-j","link","show","dev",name).CombinedOutput()
+ if err!=nil{return 0,fmt.Errorf("owned TUN MTU readback: %w: %s",err,raw)}
+ return validateOwnedTunMTUReadback(raw,name)
+}
 type ownedTun struct{
     f *os.File
     name string
@@ -318,6 +339,11 @@ func openTun(name,cidr string,mtu int)(*ownedTun,error){
     if err!=nil&&!errors.Is(err,os.ErrNotExist){_ = device.Close();return nil,err}
     if err=runIP("addr","add",cidr,"dev",name);err==nil{
         err=runIP("link","set","dev",name,"mtu",strconv.Itoa(mtu),"up")
+    }
+    if err==nil {
+        var applied int
+        applied,err=readOwnedTunMTU(name)
+        if err==nil&&applied!=mtu {err=fmt.Errorf("owned TUN OS-applied MTU mismatch requested=%d actual=%d",mtu,applied)}
     }
     if err!=nil{_ = device.Close();return nil,err}
     return device,nil
@@ -421,13 +447,18 @@ func Run(role string,args []string)error{
     if err!=nil{return err}
     // Product SYN MSS and initial record offer are computed from the same
     // real cold outer/interface envelope. No inherited 1360/1280 ceiling.
-    publicMSS:=min(cfg.outerMTU,iface.MTU)-40
-    if publicMSS<536||publicMSS>8960{return fmt.Errorf("unsupported public IPv4 MSS %d",publicMSS)}
+    // Pure Rust pre-TLS derives the advertised SYN ceiling from the same
+    // outer/device units as the authenticated data record budget.
+    coldBudget,err:=realityfront.V4DeriveColdMTUBudget(realityfront.V4ColdMTUBudgetInput{
+        ConfiguredOuterIPMTU:uint32(cfg.outerMTU),PhysicalOuterIPMTU:uint32(iface.MTU),
+        IPv4HeaderBytes:20,TCPDataHeaderBytes:20,Mode:0,
+    })
+    if err!=nil{return err}
+    publicMSS:=int(coldBudget.LocalSYNAdvertisedMSS)
+    if publicMSS<536||publicMSS>1460{return fmt.Errorf("unsupported public IPv4 MSS %d",publicMSS)}
     if err=faketcp.SetPublicV4AdvertisedMSS(uint16(publicMSS));err!=nil{return err}
     cfg.recordLimit,cfg.innerMTU,err=deriveMTUBudget(cfg.outerMTU,iface.MTU,
-        uint16(publicMSS),0,cfg.fecMode,cfg.gameLanes!=0)
-    if err!=nil{return err}
-    cfg.innerMTU,err=gameFecBudget(cfg,cfg.innerMTU)
+        uint16(publicMSS),0,cfg.fecMode,cfg.gameLanes!=0,cfg.gameFecEnabled)
     if err!=nil{return err}
     log.Printf("V4_PUBLIC_MTU_PREPARE role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d record_offer=%d tun_planned=%d",cfg.role,cfg.outerMTU,iface.MTU,publicMSS,cfg.recordLimit,cfg.innerMTU)
     tun,err:=openTun(cfg.tunName,cfg.tunCIDR,cfg.innerMTU)
@@ -570,33 +601,36 @@ func logAuthenticFecFailures(role string,v realityfront.V4PublicFecTxFailures,er
 // No legacy 1180/1280 default record cap: deriveMTUBudget is the
 // single cold-path source of the actual offer and authenticated TUN ceiling.
 
-// One cold-path budget, in bytes. Normal data uses IPv4/TCP20+20,
-// independent record31, FEC2 repair14, and optional logical Game envelope16.
-// LINK20 is charged ONLY by fragmentation, not deducted from every packet.
-// Auto reserves the maximum FEC2 framing even while its profile changes.
-// Peer MSS/record limit can only narrow the configured/interface envelope.
+// Rust is the sole V4 codec/mode budget oracle. This Go cold helper never
+// subtracts a second FEC/Game/type byte. The optional final bool is GameFEC
+// for old helper callers; public product always passes it explicitly.
 func deriveMTUBudget(outer,device int,peerMSS,recordLimit uint16,
-    mode realityfront.FecV2Mode,game bool)(uint16,int,error){
-    if outer<576||outer>9000||device<576||peerMSS==0 {
-        return 0,0,fmt.Errorf("invalid outer/device MTU or peer MSS")
-    }
-    wire:=min(outer,device)-40
-    wire=min(wire,int(peerMSS))
-    if recordLimit!=0 {wire=min(wire,int(recordLimit))}
-    inner:=wire-31
-    if mode==realityfront.FecV2Fixed||mode==realityfront.FecV2Auto {inner-=14}
-    if game {inner-=16}
-    if inner<576 {return 0,0,fmt.Errorf("effective inner MTU %d below product minimum 576 after framing; unsupported path budget",inner)}
-    return uint16(wire),inner,nil
-}
-// A Game-FEC source uses one typed symbol byte and M3's 14-byte
-// reservation INSIDE the original 16B Game envelope. Both cold and
-// authenticated MTU must subtract exactly once; off path stays unchanged.
-func gameFecBudget(c config,inner int)(int,error){
-    if !c.gameFecEnabled{return inner,nil}
-    inner-=15
-    if inner<576{return 0,fmt.Errorf("Game+FEC inner MTU %d below 576",inner)}
-    return inner,nil
+ mode realityfront.FecV2Mode,game bool,gameFEC ...bool)(uint16,int,error){
+ if outer<576||outer>1500||device<576||peerMSS==0{
+  return 0,0,fmt.Errorf("invalid public outer/device MTU or raw peer MSS")
+ }
+ if len(gameFEC)>1{return 0,0,fmt.Errorf("ambiguous GameFEC budget")}
+ fec:=mode==realityfront.FecV2Fixed||mode==realityfront.FecV2Auto
+ if fec&&game{return 0,0,fmt.Errorf("Game and Normal FEC mode cannot combine")}
+ gameFecOn:=len(gameFEC)==1&&gameFEC[0]
+ if gameFecOn&&!game{return 0,0,fmt.Errorf("GameFEC needs game lanes")}
+ var modeID uint32
+ switch{
+ case gameFecOn:modeID=3
+ case game:modeID=2
+ case fec:modeID=1
+ default:modeID=0
+ }
+ b,err:=realityfront.V4DeriveColdMTUBudget(realityfront.V4ColdMTUBudgetInput{
+  ConfiguredOuterIPMTU:uint32(outer),PhysicalOuterIPMTU:uint32(device),
+  PeerAdvertisedMSS:uint32(peerMSS),AgreedRecordWireCap:uint32(recordLimit),
+  IPv4HeaderBytes:20,TCPDataHeaderBytes:20,Mode:modeID,
+ })
+ if err!=nil{return 0,0,err}
+ if b.SingleInnerIPCap<576{
+  return 0,0,fmt.Errorf("effective inner IP MTU %d below product floor 576",b.SingleInnerIPCap)
+ }
+ return uint16(b.RecordWireCap),int(b.SingleInnerIPCap),nil
 }
 // Called with authenticated record limits before Rust begins reading TUN.
 // Multiple Game lanes can only lower the shared TUN MTU. No per-packet work.
@@ -606,14 +640,15 @@ func configureTunnelMTU(c config,tun *ownedTun)func(uint16,uint16,uint16)error{
         if err!=nil{return err}
         limit:=min(clientLimit,serverLimit)
         if limit==0{return fmt.Errorf("missing authenticated record limit")}
-        wire,inner,err:=deriveMTUBudget(c.outerMTU,iface.MTU,peerMSS,limit,c.fecMode,c.gameLanes!=0)
+        wire,inner,err:=deriveMTUBudget(c.outerMTU,iface.MTU,peerMSS,limit,c.fecMode,c.gameLanes!=0,c.gameFecEnabled)
         if err!=nil{return err}
-        inner,err=gameFecBudget(c,inner)
-        if err!=nil{return err}
-        if inner<tun.mtu {
+        if inner!=tun.mtu {
             if err=runIP("link","set","dev",tun.name,"mtu",strconv.Itoa(inner));err!=nil{return err}
-            tun.mtu=inner
         }
+        applied,err:=readOwnedTunMTU(tun.name)
+        if err!=nil{return err}
+        if applied!=inner{return fmt.Errorf("owned TUN OS-applied MTU mismatch requested=%d actual=%d",inner,applied)}
+        tun.mtu=applied
         log.Printf("V4_PUBLIC_MTU role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d peer_mss=%d local_record_cap=%d peer_record_cap=%d record_wire=%d tun_mtu=%d fec=%s lanes=%d",
             c.role,c.outerMTU,iface.MTU,faketcp.PublicV4AdvertisedMSS(),peerMSS,
             c.recordLimit,limit,wire,tun.mtu,c.fecMode,c.gameLanes)

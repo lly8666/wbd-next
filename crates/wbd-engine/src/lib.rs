@@ -45,6 +45,8 @@ mod v4_owner_crypto;
 // Versioned actual owner Prepare is in ordinary builds; test FFI only routes
 // the already authenticated private Go callback into this same code.
 mod v4_protected_handoff;
+/// Pure versioned V4 MTU oracle, cold pre-TLS Go ABI; no owner/token/OS mutation.
+mod v4_mtu_budget_ffi;
 /// PLAN026 pure Make-Before-Break lane generation state for Windows NativeOwner.
 /// Unit-testable without Npcap, Wintun or Go; no new crypto owner.
 #[cfg(any(target_os="windows", test))]
