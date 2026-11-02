@@ -7,19 +7,27 @@ cold original --outer-repair flag differs; never parallelize two OS leases.
 """
 import json
 import os
+import re
 import pathlib
 import shutil
 import subprocess
 import sys
 import time
 
+from m0_wl_perf_v2_config import read_scenario,first_delivery_ok_for_scenario
+from m0_wl_outer_repair_verify import MARKER
 root=pathlib.Path.cwd()
 out=root/"result"/"wl-public"
 pair=out/"outer-pair"
 scenario=os.environ.get("WBD_WL_V2_SCENARIO","")
-if os.environ.get("WBD_WL_PUBLIC_MODES")!="normal" or scenario!=(
-    "scenarios/plan027-h876-normal-pair-10m-250ms-0loss-60s.json"):
-    raise SystemExit("H876 refuses another mode or mutable scenario")
+allowed=(
+    "scenarios/plan027-h876-normal-pair-10m-250ms-0loss-60s.json",
+    "scenarios/wl-outer-repair-10m-250ms-loss30-60s.json",
+)
+if os.environ.get("WBD_WL_PUBLIC_MODES")!="normal" or scenario not in allowed:
+    raise SystemExit("original outer pair refuses another mode or mutable scenario")
+scene=read_scenario(scenario)
+damaged=any(scene[direction]["loss_pct"]>0 for direction in ("windows_to_linux","linux_to_windows"))
 if pair.exists():
     raise SystemExit("H876 refuses stale pair results")
 pair.mkdir(parents=True)
@@ -70,6 +78,34 @@ for repair in ("off","on"):
     expected=0 if repair=="off" else 1
     fractions=native.get("first_delivery_fraction",{})
     offers=native.get("offered_mbps",{})
+    # The existing real kernel tc snapshot is a separate loss witness;
+    # application packet counts cannot prove injected impairment.
+    evidence=legdir/"native-evidence"
+    netem=evidence/"wl-n0-netem-after.json"
+    tc=json.loads(netem.read_text()) if netem.is_file() else {}
+    tc_drops={}
+    for device in ("eth0","ifb"):
+        rows=[row for row in tc.get(device,[]) if row.get("kind")=="netem"]
+        tc_drops[device]=(rows[0].get("drops") if len(rows)==1 else None)
+    damage_applied=(not damaged or all(
+        isinstance(tc_drops[name],int) and tc_drops[name]>0
+        for name in ("eth0","ifb")))
+    # Report the existing Windows original Rust joined F/R/C ledger,
+    # charged unknown NPF driver status conservatively if observable.
+    marker=MARKER.findall((evidence/"client.log").read_text(errors="replace")
+                          if (evidence/"client.log").is_file() else "")
+    frc="NOT_MEASURED_WINDOWS_OUTER"
+    budget_ok=True
+    if len(marker)==1:
+        f,ra,ru,c,packets,rf,rt=map(int,marker[0])
+        r=ra+ru
+        budget_ok=(f>0 and r*10<=f and rf==r*1_000_000//f and
+                   rt==r*1_000_000//(f+r+c))
+        frc={"first_wire_bytes":f,"repair_accepted_wire_bytes":ra,
+             "repair_uncertain_charged_wire_bytes":ru,"control_wire_bytes":c,
+             "repair_packets":packets,"R_over_F":r/f if f else None,
+             "R_over_total":r/(f+r+c) if f+r+c else None,
+             "ledger_verified":budget_ok}
     qualifies=(code==0 and not timed_out and not wal_left and
        report.get("source")==source and report.get("linux_binary_source")==source and
        report.get("mode_public")=="PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal" and
@@ -78,8 +114,8 @@ for repair in ("off","on"):
        native.get("owned_stop")=="PASS_BOTH_OWNED" and
        all(effective.get(k) is True for k in ("windows","linux")) and
        effective.get("enabled")==expected and
-       all(isinstance(fractions.get(k),(int,float)) and fractions[k]>=.999
-           for k in ("windows","linux")) and
+       first_delivery_ok_for_scenario(scene,fractions) and damage_applied and
+       budget_ok and
        all(isinstance(offers.get(k),(int,float)) and offers[k]>=9.5
            for k in ("windows","linux")) and
        windows.get("result")=="MEASURED_SAME_NATIVE_PID" and
@@ -99,7 +135,9 @@ for repair in ("off","on"):
            "windows_peak_working_set_bytes":windows.get("peak_working_set_bytes"),
            "windows_cli_sha256":report.get("windows_cli_sha256"),
            "linux_server_sha256":report.get("linux_server_sha256"),
-           "wal_left":wal_left,"frc":"NOT_MEASURED_WINDOWS_OUTER"}
+           "wal_left":wal_left,"frc":frc,
+           "actual_tc_netem_drops":tc_drops,
+           "kernel_loss_applied":damage_applied}
     legs.append(entry)
     result["legs"]=legs
     result["result"]="IN_PROGRESS" if qualifies else "FAIL"
@@ -124,7 +162,12 @@ comparison={"cpu_on_minus_off_s":round(c_on-c_off,4),
             "on_peak_rss_bytes":on["windows_peak_working_set_bytes"],
             "order":"OFF_ON","scope":"SAME_RUNNER_SAME_BINARY_SEQUENTIAL",
             "not_a_proven_optimization":True,
-            "cold_start_and_stop_in_cpu_sample":True}
+            "cold_start_and_stop_in_cpu_sample":True,
+            "declared_kernel_loss_pct":scene["windows_to_linux"]["loss_pct"],
+            "off_first_delivery":off["first_delivery_fraction"],
+            "on_first_delivery":on["first_delivery_fraction"],
+            "actual_tc_netem_drops":{"off":off["actual_tc_netem_drops"],
+                                    "on":on["actual_tc_netem_drops"]}}
 result["comparison"]=comparison
 result["result"]="PASS_TWO_TRUE_NATIVE_LEGS"
 result["attribution"]="MEASURED_TOTAL_CPU_DELTA_NOT_ISOLATED_ALGORITHM_OR_DRIVER"
