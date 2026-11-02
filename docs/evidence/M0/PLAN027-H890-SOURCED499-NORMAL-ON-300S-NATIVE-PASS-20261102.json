@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "d4990f8c97b734bed546f99300b7d590e65a5e05",
+  "run_id": 41399819159,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41399819159",
+  "native_job_id": 125130149349,
+  "artifact_id": 13121064620,
+  "artifact_name": "m0-wl-full-public-normal-direct",
+  "artifact_digest": "sha256:6e0ed810e5471a51b8d2daefc0ac200d3e80b448a20f99a27c5a20c8cd0771ea",
+  "windows_binary_source_digest": "sha256:3a6643d2128e79e6796f011b7b64fcfbaa64243b0edfb07adec2c9c804c7fd92",
+  "linux_original_product_digest": "sha256:13f67483fbb5c92cf0d1545cd6c7d60c83d63655711818a95f7ef2c66f51f1c5",
+  "scenario_id": "plan027-h890-normal-on-10m-25ms0-300s",
+  "scenario_sha256": "d2a1ec9bc7c9c8642231e06201d56930303e4a07b48adbcfa59224aa8759649d",
+  "platform": "Windows2025 signed NPF/Wintun ↔ WSL2 Ubuntu Linux original Go TLS/Rust native TUN",
+  "public_mode": "normal",
+  "outer_repair_requested": "on",
+  "outer_repair_effective": {
+    "windows": 1,
+    "linux": 1
+  },
+  "offered_mbps": {
+    "windows": 9.9994,
+    "linux": 10
+  },
+  "first_delivered_mbps": {
+    "windows": 10,
+    "linux": 9.9994
+  },
+  "first_delivery_fraction": {
+    "windows": 1,
+    "linux": 1
+  },
+  "declared": {
+    "duration_s": 300,
+    "warmup_s": 5,
+    "drain_s": 10,
+    "oneway_delay_ms": 25,
+    "loss_pct": 0,
+    "tun_mtu": 1400,
+    "seed": 20261102,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 96,
+        "packets_weight": 5
+      },
+      {
+        "udp_payload_bytes": 288,
+        "packets_weight": 10
+      },
+      {
+        "udp_payload_bytes": 1060,
+        "packets_weight": 25
+      },
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 60
+      }
+    ]
+  },
+  "real_udp_roundtrip": {
+    "first_endpoint": {
+      "p99_ms": 47,
+      "real_sent": 2743,
+      "real_replied": 2743,
+      "not_returned": 0,
+      "late_over_2s": 0,
+      "max_delivered_rtt_ms": 141
+    },
+    "second_endpoint": {
+      "p99_ms": 52.594,
+      "real_sent": 2997,
+      "real_replied": 2997,
+      "not_returned": 0,
+      "late_over_2s": 0,
+      "max_delivered_rtt_ms": 141.728
+    },
+    "scope": "SAME_ORIGIN_MONOTONIC_REAL_OS_UDP_ROUNDTRIP_NOT_ONEWAY"
+  },
+  "kernel": {
+    "linux_tun_rx_drops": 0,
+    "linux_tun_tx_drops": 0,
+    "linux_tun_fq_drops": 0,
+    "windows_npcap_ingress_drops": 0
+  },
+  "windows_original_process": {
+    "sample_elapsed_s": 317.407,
+    "cpu_total_s": 17.9375,
+    "cpu_kernel_s": 13.1094,
+    "cpu_user_s": 4.8281,
+    "one_core_avg_pct": 5.651,
+    "peak_working_set_bytes": 41689088,
+    "peak_private_bytes": 37695488,
+    "scope": "WHOLE_ORIGINAL_GO_EXE_RUST_DLL_AND_KERNEL"
+  },
+  "windows_native_owner": {
+    "tx_records": 374382,
+    "rx_first_delivered_ipv4": 374006,
+    "optional_repair_shadow_limit": 24576,
+    "opportunistic_v3_enabled": 1,
+    "retained_feedback_pages": 1024,
+    "local_ingress_drops": 0
+  },
+  "genuine_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+  "genuine_tcp": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "verdict": "PASS_SOURCE_EXACT_ORIGINAL_WINDOWS_LINUX_NORMAL_ON_300S",
+  "limitations": "Zero-loss representative 10Mbps/25ms300s, not 250ms30%-loss 300s; F/R/C entire interval per direction not separately logged, one-way cross-OS p99 not measured, Windows CPU includes startup/Stop/kernel (not algorithm-only), no physical deployment or Fixed/Auto/Game qualification."
+}

@@ -30,6 +30,8 @@ on:
       - tools/m0_wl_lock_profile.py
       - tests/test_m0_wl_lock_profile.py
       - tools/m0_wl_netem.py
+      - tools/m0_wl_gamefec_management_route.ps1
+      - tests/test_m0_plan027_managed_unilateral.py
       - tools/m0_wl_outer_repair_verify.py
       - tests/test_m0_wl_outer_repair_verify.py
       - 'scenarios/wl-outer-repair-*.json'
