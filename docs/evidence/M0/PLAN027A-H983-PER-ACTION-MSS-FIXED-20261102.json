@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_parent": "d83159adf97256d4ce4983d8a95e8198cb0bdc72",
+  "previous_windows_product_source": "b9966eecb3e30820d298ff8b2fc5d069f10b9aad",
+  "windows_real_runs": [
+    {
+      "run": 41496471520,
+      "mode": "fixed",
+      "outer": 1460,
+      "client_mtu": 1375,
+      "server_mtu": 1375,
+      "conclusion": "success"
+    },
+    {
+      "run": 41496482942,
+      "mode": "fixed",
+      "outer": 1500,
+      "client_mtu": 1415,
+      "server_mtu": 1415,
+      "conclusion": "success"
+    },
+    {
+      "run": 41496496092,
+      "mode": "normal",
+      "outer": 1460,
+      "client_mtu": 1389,
+      "server_mtu": 1389,
+      "local_syn_mss": 1420,
+      "peer_synack_mss": 1420,
+      "physical_both": 1500,
+      "conclusion": "success"
+    },
+    {
+      "run": 41496509099,
+      "mode": "auto",
+      "outer": 1460,
+      "client_mtu": 1375,
+      "server_mtu": 1375,
+      "conclusion": "success"
+    },
+    {
+      "run": 41496520728,
+      "mode": "game4-fec",
+      "outer": 1460,
+      "client_mtu": 1358,
+      "server_mtu": 1358,
+      "conclusion": "success"
+    }
+  ],
+  "linux_original_two_end_source": "d83159adf97256d4ce4983d8a95e8198cb0bdc72",
+  "linux_original_two_end_run": 41496813152,
+  "linux_original_two_end_conclusion": "success",
+  "linux_cases": [
+    {
+      "mode": "normal",
+      "client_outer": 1460,
+      "server_outer": 1460,
+      "client_syn_mss": 1420,
+      "server_synack_mss": 1420,
+      "client_option": "0204058c",
+      "server_option": "0204058c",
+      "wire_cap": 1420,
+      "client_inner_applied": 1389,
+      "server_inner_applied": 1389
+    },
+    {
+      "mode": "fec-fixed",
+      "client_outer": 1460,
+      "server_outer": 1460,
+      "client_syn_mss": 1420,
+      "server_synack_mss": 1420,
+      "client_option": "0204058c",
+      "server_option": "0204058c",
+      "wire_cap": 1420,
+      "client_inner_applied": 1375,
+      "server_inner_applied": 1375
+    },
+    {
+      "mode": "fec-auto",
+      "client_outer": 1460,
+      "server_outer": 1460,
+      "client_syn_mss": 1420,
+      "server_synack_mss": 1420,
+      "client_option": "0204058c",
+      "server_option": "0204058c",
+      "wire_cap": 1420,
+      "client_inner_applied": 1375,
+      "server_inner_applied": 1375
+    },
+    {
+      "mode": "fec-fixed",
+      "client_outer": 1500,
+      "server_outer": 1500,
+      "client_syn_mss": 1460,
+      "server_synack_mss": 1460,
+      "client_option": "020405b4",
+      "server_option": "020405b4",
+      "wire_cap": 1460,
+      "client_inner_applied": 1415,
+      "server_inner_applied": 1415
+    },
+    {
+      "mode": "fec-fixed",
+      "client_outer": 1500,
+      "server_outer": 1280,
+      "client_syn_mss": 1460,
+      "server_synack_mss": 1240,
+      "client_option": "020405b4",
+      "server_option": "020404d8",
+      "wire_cap": 1240,
+      "client_inner_applied": 1195,
+      "server_inner_applied": 1195,
+      "real_limiting_reason": "server_outer_1280_peer_mss_1240"
+    }
+  ],
+  "linux_real_physical_both": 1500,
+  "linux_real_qualification": "REAL_BIDIRECTIONAL_GO_TLS_RUST_TUN_AF_PACKET_ACK_STOP_AND_POST_AUTH_OS_READBACK",
+  "unrelated_combined_existing_run": 41496813024,
+  "unrelated_combined_conclusion": "failure",
+  "unrelated_combined_first_error": "original current V4 SYN MSS actual bytes inconsistent; Rust advertises1420 but original raw packet/association 1360",
+  "root": "Plan012 workflow copied public_v4_mss.go helper only without original packet.go client_association.go association.go association_test.go, unlike canonical H970 installer",
+  "h983_fix": "Install all seven source-locked FakeTCP files from existing manifest, run actual Go packet/association unit tests before product compile",
+  "h983_new_action": "NOT_RUN",
+  "new_product_algorithm_delta": false,
+  "outer_default": 1460,
+  "explicit_max": 1500,
+  "not_qualified": [
+    "H983 PLAN012 true combined native until Actions",
+    "full PLAN027A physical WAN",
+    "PLAN028-030"
+  ]
+}

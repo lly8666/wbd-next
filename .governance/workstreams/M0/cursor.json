@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 982,
-  "checkpoint_sha": "884518887b02c57509ef5a564cd0732e84703916",
+  "sequence": 983,
+  "checkpoint_sha": "d83159adf97256d4ce4983d8a95e8198cb0bdc72",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H982: H980 one-source Windows/WSL2 baseline 41494436902 and WAL 41494436971 SUCCESS. H981 five prebuilt Windows numeric modes dispatched before H982 source change (IDs: 41496471520,41496482942,41496496092,41496509099,41496520728), pending real outputs. H981 Linux ARM64 Action 41494964168 FAILED actual initial Normal client SYN MSS1420 (tcp_option 0204058c) sent before server original raw AF_PACKET was ready; test harness only gated on TUN existed and product first connect never ran bounded SYN RTO. H982 adds native AF_PACKET ready marker/gate and uses existing bounded initial SYN retransmission helper; one Linux-only ARM64 build and five real netns tests. No x64 rebuilt.",
-  "why_now": "The 56B Fixed bug is fixed in H980 signed source; new target Linux test must not mistake TUN file for raw FakeTCP readiness, nor wait indefinitely without SYN retries. Keep all H981 old FAIL and green Fixed1333 wrong.",
+  "current_task": "PLAN027A H983: H981 five original Windows/WSL signed public Actions all SUCCESS with actual OS MTU: 1460 Normal1389, Fixed/Auto1375, Game4FEC1358; explicit1500 Fixed1415. H982 true original Linux client/server five netns MTU/MSS/record/Stop cases all PASS (41496813152). Independent PLAN012 same-source Linux combined build 41496813024 FAIL: only public_v4_mss.go installed without the four real FakeTCP packet/association replacements, so original SYN remained 1360 despite Rust-budget1420. H983 use single source-locked seven-file installer before Plan012 build, including bytes/retransmit Go tests; no changes to Rust/Go product source.",
+  "why_now": "PLAN012 is an actual separate Linux public product entrypoint and its initial SYN offered frozen 1360 while Rust cold budget1420, explicitly contradicting current unified contract. Fix assembly, not the correct Rust budget or old version compatibility.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect each five H981 Windows/WSL source-locked runs by actual MSS, record, Wintun/TUN 1375/1415, real TCP/UDP and Stop. Collect H982 Linux client/server five real native cases with per-direction MSS, options bytes, physical interface, negotiated record, OS TUN readback and Stop. Preserve failures.",
+  "next_action": "Collect H983 PLAN012 auto GitHub Actions and verify actual original Go client/server emitted SYN/SYNACK MSS byte 0204058c, peer, record, OS TUN, Stop; diagnose any new real failure. Reuse earlier five H981 Windows green and H982 Linux green without new requests. PLAN027A other long-term exits and PLAN028/029/030 stay separately scoped.",
   "unverified": true,
   "last_tested_source": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN027A-H978-SOURCE-REUSE-20261102.json",
-    "docs/devlog/M0/20261102-PLAN027A-H978-SOURCE-REUSE.md",
     "docs/evidence/M0/PLAN027A-H980-FIXED-PINS-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H980-FIXED-PINS.md",
     "docs/evidence/M0/PLAN027A-H981-NATIVE-FIXED-LINUX-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H981-NATIVE-FIXED-LINUX.md",
     "docs/evidence/M0/PLAN027A-H982-LINUX-INITIAL-SYN-20261102.json",
-    "docs/devlog/M0/20261102-PLAN027A-H982-LINUX-INITIAL-SYN.md"
+    "docs/devlog/M0/20261102-PLAN027A-H982-LINUX-INITIAL-SYN.md",
+    "docs/evidence/M0/PLAN027A-H983-PER-ACTION-MSS-FIXED-20261102.json",
+    "docs/devlog/M0/20261102-PLAN027A-H983-PLAN012-FULL-FAKETCP.md"
   ],
   "open_requests": [],
-  "partial_summary": "Chronology H943-H980 stays in earlier source-committed cursor/evidence/devlogs. H978 source638769dc eight native green but Fixed 1460 applied Windows/Linux1333 wrongly (old FEC1 56B instead of V4 FEC2 14B). H979 commit2e1b45ab fixes original Windows formal native Go entry to Rust cold budget; first Actions41493646650 FAIL only source-lock stale blobs, no product run. H980 commit b9966eec pins exact two Go blobs; full Windows/Linux native baseline41494436902 and WAL41494436971 SUCCESS but baseline outer legacy1400. H981 source88451888 native numeric Fixed guard and five independent x64-source prebuilt runs dispatched; H981 governance41494964163 FAIL cursor bytes8256 >8192. H981 ARM64 native two-Linux first Normal FAIL before handshake: client actual SYN MSS1420 option 0204058c, server initial raw listener not yet ready, no original initial retransmit. H982 source patch adds truthful AF_PACKET ready gate and bounded first-generation SYN retries frozen on original association; current source Linux-only true aarch64 five-case test starts, no duplicate x64 compile. No new Linux test PASS yet."
+  "partial_summary": "Historical H943-H980 remain source-committed evidence/devlogs. H981 source88451888 old Fixed1333 FAIL addressed; H981 Windows five Actions 41496471520 (Fixed1460 1375/1375),41496482942 (Fixed1500 1415/1415),41496496092 (Normal1460 1389/1389),41496509099 (Auto1460 1375/1375),41496520728 (Game4FEC1460 1358/1358) ALL PASS exact binary b9966eec. H982 new Linux-only source d83159ad ARM64 two true original-Go endpoints five-case Action41496813152 PASS: 1460/1460 Normal1389, Fixed/Auto1375, Fixed1500/1500 1415, asymmetric1500/1280 Fixed1195; actual SYN options 0204058c,020405b4,020404d8, peer/record/OS/Stop checked. H982 PLAN012 Action41496813024 FAIL: original Go `SYN MSS actual bytes inconsistent` because separate assembly only copied MSS helper and retained frozen 1360 in real packet/association; H983 fixes same-source seven-file installation and adds byte tests. No result promotion until new run."
 }

@@ -107,14 +107,19 @@ jobs:
           # not part of the frozen original donor; without them the Go V4
           # executable cannot compile. Pin these exact source files into the
           # SAME original-Go staging root before compiling any product CLI.
-          for file in raw_detached_data_linux.go public_v4_mss.go; do
-            source="r0/go_overlay/internal/faketcp/$file"
-            dest="legacy/internal/faketcp/$file"
-            test -f "$source"
-            test ! -e "$dest"
-            cp "$source" "$dest"
-            cmp -s "$source" "$dest"
-          done
+          # Never copy public_v4_mss.go alone: doing so keeps the original
+          # frozen SYN/SYN-ACK 1360B packet/association implementations.
+          # This seven-file installation is the SAME manifest-checked
+          # production FakeTCP source used by Windows and ARM64 Linux.
+          python3 tools/m0_install_public_faketcp.py legacy
+          test -f r0/go_overlay/internal/faketcp/raw_detached_data_linux.go
+          test ! -e legacy/internal/faketcp/raw_detached_data_linux.go
+          cp r0/go_overlay/internal/faketcp/raw_detached_data_linux.go legacy/internal/faketcp/raw_detached_data_linux.go
+          cmp -s r0/go_overlay/internal/faketcp/raw_detached_data_linux.go legacy/internal/faketcp/raw_detached_data_linux.go
+          # Actual Go SYN and SYN-ACK bytes, retransmission and MSS option tests
+          # run against the final assembled original-Go product package.
+          (cd legacy && go test -count=1 ./internal/faketcp)
+          echo H983_PLAN012_SEVEN_FILE_CURRENT_MSS_TRUE_BYTE_SOURCE_PASS
           cp r0/go_overlay/internal/v4productcli/linux.go legacy/internal/v4productcli/linux.go
           cp r0/go_overlay/internal/v4productcli/game_linux.go legacy/internal/v4productcli/game_linux.go
           cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/main.go
