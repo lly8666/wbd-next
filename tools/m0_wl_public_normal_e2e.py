@@ -18,6 +18,10 @@ if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec",
 fixed6=mode=="fixed"
 is_game=mode.startswith("game")
 game_fixed=mode.endswith("-fec")
+# One exact SOURCE-selected cold policy for both ORIGINAL endpoints.
+outer_repair=os.environ.get("WBD_WL_OUTER_REPAIR","on")
+if outer_repair not in ("on","off") or (is_game and outer_repair!="on"):
+ raise RuntimeError("unsupported original Windows outer-repair selection")
 def game_cold_stage(stage):
  if not game_fixed:return
  # Append-only fixed stage name; no TLS/route keys, packets or identity.
@@ -41,6 +45,7 @@ report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINU
  "linux_ready":"NOT_RUN","app_duplex":"NOT_RUN","tcp_duplex":"NOT_RUN",
  "stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_P200":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN",
  "requested_original_win_mtu":configured_mtu,
+  "requested_original_outer_repair":outer_repair,
  "runtime_os_mtu_guard":"ORIGINAL_NATIVE_M4_1HZ_FAIL_CLOSED"}
 def run(a,timeout=30):
  # The outer suite already writes to a file, but this inner WSL command
@@ -154,13 +159,13 @@ try:
  egress_diag=(" WBD_FEC_EGRESS_DIAG=1"
     if mode=="auto" and os.environ.get("WBD_WL_V2_SCENARIO","").endswith(
         "scenarios/plan027-h461-auto-egress-10m-25ms-loss0-60s.json") else "")
- linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+peer_persona+"\n").encode("utf-8"))
+ linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
  # Linux server authenticated READY only AFTER the genuine Windows TLS client starts.
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex",route,"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
-  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode","bypass-lan"]
+  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode","bypass-lan","--outer-repair",outer_repair]
  log=(out/"client.log").open("w");logs.append(log)
  w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,text=True)
  game_cold_stage("COLD_CLIENT_SPAWNED")
@@ -870,6 +875,18 @@ print(json.dumps(result),flush=True)
  stop_marker="V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server" if is_game else "V4_PUBLIC_NATIVE_STOP_DRAINED role=server"
  if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
  report["stop"]="PASS_BOTH_OWNED"
+ if mode=="normal":
+  # Same SOURCE actual effective on BOTH owners, not CLI intent.
+  expected=1 if outer_repair=="on" else 0
+  win_text=(out/"client.log").read_text(errors="replace")
+  linux_text=(out/"server.log").read_text(errors="replace")
+  win_ok=(f"WBD_WINDOWS_OUTER_REPAIR_EFFECTIVE enabled={expected} shadow_limit=" in win_text)
+  linux_ok=(f"V4_PUBLIC_M2_OUTER role=server " in linux_text and
+            f"repair_enabled={expected} " in linux_text)
+  report["original_outer_repair_effective"]={"windows":win_ok,"linux":linux_ok,
+    "enabled":expected}
+  if not (win_ok and linux_ok):
+   raise RuntimeError("real original two-OS outer repair effective mismatch")
  if scenario:
   report["WL_V2"]["owned_stop"]="PASS_BOTH_OWNED"
   report["WL_V2"]["variant"]="rust-native"
