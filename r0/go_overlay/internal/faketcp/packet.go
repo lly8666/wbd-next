@@ -14,7 +14,6 @@ const (
 	FlagACK = 0x10
 
 	DefaultWindowScale = 8
-	DefaultMSS         = 1360
 	DefaultIPv4PeerMSS = 536
 	MaxWindowScale     = 14
 
@@ -122,7 +121,7 @@ func SegmentTCPHeaderLen(seg Segment, persona PacketPersona) int {
 // MarshalSegment serializes the options carried by Segment itself. This is
 // needed for server SYN-ACK negotiation: SACK/window-scale are only offered
 // when the peer offered them. The legacy MarshalIPv4TCP helpers below keep the
-// fixed WBD client SYN presentation.
+// current V4 client SYN presentation from the source-locked Rust cold budget.
 func MarshalSegment(seg Segment, ipID uint16, persona PacketPersona) []byte {
 	// SACK and SYN options are at most 36 bytes. Keep the short option
 	// scratch local and copy it into the final owned wire packet; no

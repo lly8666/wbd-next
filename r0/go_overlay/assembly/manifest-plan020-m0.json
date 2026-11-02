@@ -927,7 +927,7 @@
       "path": "internal/faketcp/packet.go",
       "original_blob": "6ac1f9b3d7208278d31078be8d61e2f3a6dbbd3b",
       "overlay_path": "r0/go_overlay/internal/faketcp/packet.go",
-      "result_blob": "4dd669bedc455596fb9b9da3306cb0a7010246be"
+      "result_blob": "82d462d68149449e1f2d1a0d3de76ab1a80793cf"
     },
     {
       "kind": "replace",
@@ -960,7 +960,7 @@
       "kind": "create",
       "path": "internal/faketcp/public_v4_mss_test.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/public_v4_mss_test.go",
-      "result_blob": "20678052954fca4f849362dd3174abd20cfb1cb7"
+      "result_blob": "02d51e7cc65df95217c8510e859050d16305c798"
     },
     {
       "kind": "create",

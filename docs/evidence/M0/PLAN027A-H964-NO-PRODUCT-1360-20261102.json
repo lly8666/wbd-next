@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "previous_source": "df6afdaf8ed162331384e9c643001401e1829783",
+  "expected_new_product_source": "H964_COMMIT_PENDING",
+  "removed": "production r0/go_overlay/internal/faketcp/packet.go DefaultMSS=1360 export",
+  "historical_fixture": "_test.go only",
+  "real_source": "lly8666/wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984",
+  "manifest": "main and plan020 original Go exact overlay blobs",
+  "packet_blob": "82d462d68149449e1f2d1a0d3de76ab1a80793cf",
+  "test_fixture_blob": "02d51e7cc65df95217c8510e859050d16305c798",
+  "main_manifest_blob": "8e2f41a7984155302b2c1c8ac4b571c6b7f6a54f",
+  "current_native": "NOT_RUN",
+  "previous_h963_build": "IN_PROGRESS_SOURCE_SCOPED",
+  "old_h958_df_fail": 41463910871,
+  "expected_local_synthesis": [
+    {
+      "outer": 1400,
+      "mss": 1360
+    },
+    {
+      "outer": 1460,
+      "mss": 1420
+    },
+    {
+      "outer": 1500,
+      "mss": 1460
+    }
+  ],
+  "no_runtime_backward_compatibility": true,
+  "default_outer": 1460,
+  "explicit_max": 1500
+}

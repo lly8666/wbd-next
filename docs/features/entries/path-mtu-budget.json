@@ -40,7 +40,9 @@
     "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_peer_windows.go",
     "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
     "openwrt/package/files/wbd-next-v4.config",
-    "openwrt/package/files/wbd-next-v4.init"
+    "openwrt/package/files/wbd-next-v4.init",
+    "r0/go_overlay/internal/faketcp/packet.go",
+    "r0/go_overlay/internal/faketcp/public_v4_mss.go"
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
