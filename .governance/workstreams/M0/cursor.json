@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 940,
-  "checkpoint_sha": "13423742920cd0b9eea6b026c64f2a37cea33c4c",
+  "sequence": 941,
+  "checkpoint_sha": "4d24565c343f9feb788574fbce22e6d1e9a73f36",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H940 current M0 assembly manifest hash pin for user default outer1460 updated without changing frozen M4 historic SHA; H937 original Windows Rust owner ABI full Action PASS; true WSL/OS MTU pending.",
+  "current_task": "PLAN027A H941 user manual one-shot: actual seven mode native default1460/explicit1500 and four 1460 10Mbps loss0/30percent source-locked jobs; original Rust cold and owners preserved.",
   "why_now": "Recovery verified PLAN027 USER_ACCEPTED_SCOPED closed; no old Actions inflight on entry. New source push has auto CI only; do not dispatch duplicate native scenarios.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect H940 governance-maintenance, H937 existing PLAN020 original WAL and WSL two-OS results, no duplicate dispatch. Once full 027A native 1460/1500 DF/FEC/weaknet/CPU/RSS/Stop meets bounds, proceed authorized PLAN028; currently unqualified.",
+  "next_action": "Collect new H941 one-shot orchestrator Action and six dispatched runs (exact GITHUB_SHA), verify OS inner readback, first/Stop, loss0 vs true tc loss30, CPU/RSS/p99. Fix real failures under source lock, do not mark DF packet injection passed from generic functional tests. Remaining native IPv4 oversize/DF and staged 5-30-5 need explicit evidence before 027A exit; no 028 yet.",
   "unverified": true,
   "last_tested_source": "6693910f879f9e55e77dd823c1b05d8942321929",
   "evidence_refs": [
@@ -34,5 +34,5 @@
     "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json"
   ],
   "open_requests": [],
-  "partial_summary": "H937 source07cfeeb7 original Windows Rust owner ABI run41443312153 completed SUCCESS including MSVC original M3 tests/Go TLS/native DLL, not two-OS native data. Source H93913423742 governance-main run41443906395 PASS, governance-maintenance run41443906446 FAIL stale current manifest hash expected2f2476 actual25b6a9; H940 updates ONLY M0_AUTHORIZED_CURRENT current manifest hash, retains 34 frozen M4 PINNED_FILES and all source verified old failures. User default outer1460 code and docs already merged."
+  "partial_summary": "H940 main a1362b22 governance-maintenance run41444215558 PASS. H937 original Windows and WSL signed native seven modes run41443311972 PASS and Windows WAL modes run41443312219 PASS at original 1400; H941 native default1460 and explicit1500 not yet measured. Changed only existing harness selection + 1460 scenarios, and one tightly gated manual dispatch job. DF0/DF1 giant UDP still NOT_RUN; user default1460 and explicit1500 unchanged."
 }

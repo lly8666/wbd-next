@@ -165,7 +165,8 @@
     "H936 Windows-only Rust original M3 integration unit asserts actual v5 FEC2 fixed outer1400, planned inner1273, wire1318, stop/rollback and independent authenticated RX; no actual Windows↔WSL app delivery claimed.",
     "H935 SOURCE2b2ad98 Windows owner ABI run41442869483 FAIL E0502 immutable Registry lane borrow crossing mutable cold bind; H937 clone existing Arc handle only, no byte/authorization change, new exact SOURCE test pending.",
     "H938 OpenWrt disabled UCI wrapper now has one explicit outer_mtu default1460 passed to same Linux --outer-mtu; Android currently no connected native owner, its setMtu(1200) is a non-operational INNER placeholder, never treated as outer1460; neither platform native applied qualified.",
-    "H939 scoped exact H932 source f2a66449 build results PASS, not application OS readback. H937 Windows Rust original-owner v5 E0502 fix plus native WSL remain IN_PROGRESS. H932 earlier M0-WIN-LINUX source did not pass as of checkpoint; do not substitute builds."
+    "H939 scoped exact H932 source f2a66449 build results PASS, not application OS readback. H937 Windows Rust original-owner v5 E0502 fix plus native WSL remain IN_PROGRESS. H932 earlier M0-WIN-LINUX source did not pass as of checkpoint; do not substitute builds.",
+    "H941 one-shot requested manual action batch includes original Go/Windows/Wintun/Npcap/Linux signed kernel seven modes at implicit outer1460 and explicit1500 plus four separate 1460 60s loss0/30% scenes. A dispatch is NOT a result, and there is no actual DF/fragment/ICMP qualification from these UDP/TCP scenes."
   ],
   "promotion": null
 }
