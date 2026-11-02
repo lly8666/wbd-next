@@ -99,7 +99,8 @@ pub fn fragment_ipv4_df0(packet:&[u8],mtu:usize,max_fragments:usize)
         let fragment_flags=(offset/8) as u16|if last{0}else{0x2000};
         frame[6..8].copy_from_slice(&fragment_flags.to_be_bytes());
         frame[10..12].fill(0);
-        frame[10..12].copy_from_slice(&checksum(&frame[..hlen]).to_be_bytes());
+        let header_checksum=checksum(&frame[..hlen]);
+        frame[10..12].copy_from_slice(&header_checksum.to_be_bytes());
         frame[hlen..].copy_from_slice(&payload[offset..offset+chunk]);
         parts.push(frame);
         offset+=chunk;
@@ -166,7 +167,8 @@ mod tests{
         data[16..20].copy_from_slice(&[10,8,0,2]);
         data[20..hlen].copy_from_slice(options);
         for (i,byte) in data[hlen..].iter_mut().enumerate(){*byte=(i%251) as u8;}
-        data[10..12].copy_from_slice(&checksum(&data[..hlen]).to_be_bytes());
+        let header_checksum=checksum(&data[..hlen]);
+        data[10..12].copy_from_slice(&header_checksum.to_be_bytes());
         data
     }
     #[test]
@@ -208,7 +210,8 @@ mod tests{
         let mut fragmented=input.clone();
         fragmented[6..8].copy_from_slice(&0x4001u16.to_be_bytes());
         fragmented[10..12].fill(0);
-        fragmented[10..12].copy_from_slice(&checksum(&fragmented[..20]).to_be_bytes());
+        let header_checksum=checksum(&fragmented[..20]);
+        fragmented[10..12].copy_from_slice(&header_checksum.to_be_bytes());
         assert_eq!(icmp_fragmentation_needed(&fragmented,[10,8,0,254],1200),
                    Err(FragmentError::NotEligibleIcmp));
     }
