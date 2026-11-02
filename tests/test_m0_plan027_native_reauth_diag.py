@@ -1,6 +1,6 @@
 """No raw original Go TLS logs survive a failed source-frozen blackhole run."""
 import unittest
-from tools.network_harness.runner import startup_diagnostic, public_go_rx_handoff
+from tools.network_harness.runner import startup_diagnostic, public_go_rx_handoff, product_marker_line
 
 class SafeOriginalReauthDiagnosticTest(unittest.TestCase):
     def test_counts_only_fixed_markers_no_keys_addresses_or_raw_logs(self):
@@ -23,6 +23,11 @@ class SafeOriginalReauthDiagnosticTest(unittest.TestCase):
         d=startup_diagnostic("product exited")
         self.assertEqual(d["last_native_reauthorization_marker"],"NOT_OBSERVED")
         self.assertTrue(all(v==0 for v in d["native_reauthorization_stage_counts"].values()))
+
+    def test_only_safe_cold_event_family(self):
+        self.assertTrue(product_marker_line("V4_PUBLIC_COLD_STAGE role=client stage=syn_established unix_ms=1793580000123 elapsed_ms=61"))
+        self.assertFalse(product_marker_line("COLD_STAGE TLS_KEY=SENSITIVE"))
+        self.assertFalse(product_marker_line("Authorization: Bearer sensitive"))
 
     def test_two_authenticated_generations_handoff(self):
         pre="V4_PUBLIC_GO_RX_HANDOFF role=client mode=off filtered=1 rust_ready=1 original_send_fd_open=1"

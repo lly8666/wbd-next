@@ -88,7 +88,7 @@ def verify_native_game_counters(lanes,counters,traffic=None):
 def product_marker_line(line):
     """Only documented public numeric/status marker families enter artifacts."""
     return bool(re.search(
-        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |GAME_FEC_APPLIED |GAME_FEC_COUNTERS |GAME_OUTER |GAME4_COPY_SCHEDULE |GO_RX_HANDOFF |GO_RX_POST_HANDOFF |GAME_GO_RX_HANDOFF |GAME_GO_RX_POST_HANDOFF |NATIVE_STOP_DRAINED|NATIVE_COLD_TLS_RESULT |GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
+        r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |GAME_FEC_APPLIED |GAME_FEC_COUNTERS |GAME_OUTER |GAME4_COPY_SCHEDULE |GO_RX_HANDOFF |GO_RX_POST_HANDOFF |GAME_GO_RX_HANDOFF |GAME_GO_RX_POST_HANDOFF |NATIVE_STOP_DRAINED|NATIVE_COLD_TLS_RESULT |COLD_STAGE |GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
         line) or "M0_GAME_M4_RX_MULTIMSG " in line or
         "M0_GAME_M4_RX_LOCK_SAMPLE " in line)
 
@@ -1183,14 +1183,16 @@ class LinuxExperiment:
                      "M0_GAME_M4_RX_MULTIMSG " in line or
                      "M0_GAME_M4_RX_LOCK_SAMPLE " in line]
             reconnect_events=[line for line in lines if "V4_PUBLIC_NATIVE_COLD_TLS_RESULT " in line]
+            cold_events=[line for line in lines if "V4_PUBLIC_COLD_STAGE " in line]
             other=[line for line in lines if "V4_PUBLIC_TIMELINE " not in line
                    and "V4_PUBLIC_FEC2_AUTO_QUALITY " not in line
                    and "GO_RX_HANDOFF role=" not in line
                    and "GO_RX_POST_HANDOFF role=" not in line
                    and "M0_GAME_M4_RX_MULTIMSG " not in line
                    and "M0_GAME_M4_RX_LOCK_SAMPLE " not in line
-                and "V4_PUBLIC_NATIVE_COLD_TLS_RESULT " not in line]
-            logs[role] = "\n".join(handoff[-8:]+reconnect_events[-8:]+other[-40:])
+                and "V4_PUBLIC_NATIVE_COLD_TLS_RESULT " not in line
+                and "V4_PUBLIC_COLD_STAGE " not in line]
+            logs[role] = "\n".join(handoff[-8:]+reconnect_events[-8:]+cold_events[-12:]+other[-40:])
             (self.out / (role + "-product-markers.log")).write_text(logs[role] + "\n")
         return logs
 

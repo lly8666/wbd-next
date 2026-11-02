@@ -1,0 +1,10 @@
+# PLAN027 H859 | One-event cold generation milestones, no timer or hotpath changes
+
+- Source e928 original Go/Rust full bilateral blackout 105s and restored120s 10Mbps each, 25ms clean: first100/99.813%, 379 missing, kernel source TUN27 and ~1.23/1.26s no delivery, native INCONCLUSIVE. Same frozen source true blackhole105 with 2Mbps each first100% both, 0 TUN drop, yet ~1.24/1.26s zero-delivery. That is substantial evidence a fixed cold generation transition takes ~1.25s, not established proof whether Rust Health poll 1s, FakeTCP 1s SYN timer or TLS/native owner. No more repeat PPS sweeps.
+- Add **only cold after Rust AuthenticatedPeerDead and old Stop** Go numeric event times `V4_PUBLIC_COLD_STAGE` for dead_drained, real kernel TUN trigger, authentic client SYN start/established, client Rust Ready; server authentic first SYN and Rust Ready. Include epoch `unix_ms` and per-stage `elapsed_ms` (no TCP tuple, keys, raw packet). Existing 1Hz Health poll and original 1s SYN due remain unchanged; no Go packet pump, no new retry/control/MTU/PN/Stop behavior. One sanitized original marker regex, cap 12 per role separate from 40 Stop lines, unit verifies private lines are rejected.
+- Build one source-frozen Go TLS client/server + Rust M4 with exact manifest and three hashes. Next **two different real tests parallel** sharing identical binaries: old bilateral105/10Mbps (diagnose original 379 missing under substantial PPS, no fake PASS) and new unilateral c2s-only105/2Mbps (check Healthy reverse Health does not trap next generation, genuine 120s post-loss business). One Action per scene. This build alone NOT business PASS.
+- Current Windows e387 original native seven modes TLS/real Wintun-Npcap two-OS UDP/TCP/Stop PASS function only; true Windows product repair OFF switch and performance A/B missing. No physical deployment or speculative index rewrite.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only per-cold-control-stage safe timestamps and bounded harness retention; original Go/Rust behavior/defaults unchanged."}
+```

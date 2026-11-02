@@ -466,7 +466,7 @@ func Run(role string,args []string)error{
         if role=="client"{
             runErr=runClient(ctx,cfg,uint32(iface.Index),tun,raw,emit,reauthAuthorized,&connected)
         }else{
-            runErr=runServer(ctx,cfg,uint32(iface.Index),tun,raw,emit,&connected)
+            runErr=runServer(ctx,cfg,uint32(iface.Index),tun,raw,emit,reauthAuthorized,&connected)
         }
         closeErr:=raw.Close()
         if reauthAuthorized&&ctx.Err()==nil&&runErr!=nil&&
@@ -487,12 +487,14 @@ func Run(role string,args []string)error{
         if closeErr!=nil{return closeErr}
         reauthAuthorized=true
         coldRetries=0
+        log.Printf("V4_PUBLIC_COLD_STAGE role=%s stage=dead_drained unix_ms=%d",role,time.Now().UnixMilli())
         log.Printf("V4_PUBLIC_NATIVE_DEAD_RECONNECT_ARMED role=%s generation=%d old_owner_drained=1",role,attempt)
         if role=="client"{
             if e:=waitForNativeReconnectTraffic(ctx,tun);e!=nil{
                 if ctx.Err()!=nil{return nil}
                 return e
             }
+            log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=tun_trigger unix_ms=%d",time.Now().UnixMilli())
             log.Printf("V4_PUBLIC_NATIVE_RECONNECT_TRIGGER role=client source=real_kernel_tun_ready generation=%d",attempt+1)
         }
         log.Printf("V4_PUBLIC_ORIGINAL_GO_TLS_REAUTHORIZE role=%s generation=%d",role,attempt+1)
@@ -650,7 +652,9 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             }
         }
     }()
-    if err:=assoc.Start(time.Now());err!=nil{return err}
+    coldSynStart:=time.Now()
+    if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=syn_start unix_ms=%d",coldSynStart.UnixMilli())}
+    if err:=assoc.Start(coldSynStart);err!=nil{return err}
     dialCtx,cancel:=context.WithTimeout(ctx,20*time.Second)
     defer cancel()
     // Initial connect remains unchanged; only a prior Rust-authenticated-dead
@@ -661,6 +665,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         err=assoc.WaitEstablished(dialCtx)
     }
     if err!=nil{return err}
+    if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=syn_established unix_ms=%d elapsed_ms=%d",time.Now().UnixMilli(),time.Since(coldSynStart).Milliseconds())}
     var policy realityfront.AdmissionPolicy
     switch c.fecMode{
     case realityfront.FecV2Fixed:
@@ -684,6 +689,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         Username:c.username,Password:c.password,TunnelID:c.tunnel[:],
         ClientLimit:c.recordLimit,DesiredLanes:1,LaneID:1,Policy:policy,
     }
+    nativeAdmissionStart:=time.Now()
     if _,err=native.ConnectAuthenticatedPeer(dialCtx,assoc,cfg);err!=nil{
         // Failed cold admission still owns a constructed native product.
         // It must release its loans/socket/generation before a new attempt.
@@ -700,6 +706,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         return fmt.Errorf("Normal client receive ownership handoff: %w",e)
     }
     handoffCommitted.Store(true)
+    if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=native_ready unix_ms=%d elapsed_ms=%d",time.Now().UnixMilli(),time.Since(nativeAdmissionStart).Milliseconds())}
     log.Printf("V4_PUBLIC_GO_RX_HANDOFF role=client mode=%s filtered=1 rust_ready=1 original_send_fd_open=1",c.fecMode)
     *connected=true
     log.Printf("V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client Rust_owner=active real_raw_tun=1")
@@ -765,7 +772,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     return closeErr
 }
 func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
-    raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,connected *bool)error{
+    raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,coldReauth bool,connected *bool)error{
     certificate,err:=tls.LoadX509KeyPair(c.tlsCert,c.tlsKey)
     if err!=nil{return err}
     epochs,err:=realityfront.NewV4EpochStore(16)
@@ -796,6 +803,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     admitted:=make(chan struct{},1)
     var handoffCommitted atomic.Bool
     var goPostHandoffDataCopies atomic.Uint64
+    var firstColdSYN atomic.Bool
     go func(){
         for {
             seg,_,readErr:=raw.ReadSegment()
@@ -807,6 +815,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             if seg.DstPort!=c.localPort{continue}
             if faketcp.IsInitialSYN(seg){
                 if handoffCommitted.Load(){continue}
+                if coldReauth&&firstColdSYN.CompareAndSwap(false,true){log.Printf("V4_PUBLIC_COLD_STAGE role=server stage=first_syn unix_ms=%d",time.Now().UnixMilli())}
                 isn,e:=originalRandomISN()
                 if e!=nil{select{case errs<-e:default:};return}
                 assoc,e:=table.AddSYN(seg,isn,time.Second)
@@ -844,6 +853,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             if assoc.State()==faketcp.ServerAssociationEstablished{
                 select{case admitted<-struct{}{}:
                     go func(){
+                        nativeAcceptStart:=time.Now()
                         _,e:=product.AcceptAuthenticatedPeer(ctx,assoc,reply)
                         if e==nil&&ctx.Err()!=nil{e=errors.Join(ctx.Err(),product.Close())}
                         if e==nil{
@@ -864,6 +874,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                             return
                         }
                         handoffCommitted.Store(true)
+                        if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=server stage=native_ready unix_ms=%d elapsed_ms=%d",time.Now().UnixMilli(),time.Since(nativeAcceptStart).Milliseconds())}
                         log.Printf("V4_PUBLIC_GO_RX_HANDOFF role=server mode=%s filtered=1 rust_ready=1 original_send_fd_open=1",c.fecMode)
                         log.Printf("V4_ORIGINAL_GO_SERVER_NATIVE_READY role=server Rust_owner=active real_raw_tun=1")
                         startV3ProductTimeline(ctx,"server",product.OriginalLoopPulse,product.OriginalOuterCounters)
