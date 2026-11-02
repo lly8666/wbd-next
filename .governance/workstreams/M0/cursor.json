@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 845,
-  "checkpoint_sha": "595fbdfadc6c64b0afc3832d0c257a1db136a3d6",
+  "sequence": 846,
+  "checkpoint_sha": "67adcc7e51fcf6e6633427cfc3369edafd61581c",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H845: SOURCE fdc new original Go cold TLS after genuine dead achieved generation2 authenticated readiness/Stop but restored120s first only82.4%, delivered p99~21s, TUN kernel drops~35k => real BUSINESS FAIL (H844 exact fdc evidence). Original f5 earlier R100 OFF100 first100 but ON NOT_RUN from small-class fixture; H844 corrected exact sameVM R100 pair Action41366111073 in flight, F5 evidence kept separately not misgrouped in fdc cursor. H845 fixes feature-impact enumeration and cursor single-SOURCE reference, no product changes. Windows signed source fdc Action41364798472 completed native workflow success; exact product-mode outcome needs artifact review.",
-  "why_now": "Governance failed on mixing evidence_refs from f5 and fdc in cursor and invalid feature-impact enum. Keep newest real fdc failed business outcome as cursor tested SOURCE and only fdc evidence ref; old f5 evidence remains on disk linked from prior history. Fix label update to updated, not rerun product.",
+  "current_task": "PLAN027 H846: f5 original Normal100 0% sameVM OFF→ON first100% both p9926ms CPU25.98/25.93→27.50/27.52 s/60 (+5.53/5.78% ON), RSS+3.02/+3.22MB, R163/0B (no wire cause); fdc true105s double-blackhole new second TLS READY/Stop yet recovery first82.4% p9921sec TUN~35k dropped => FAIL. Found Go cold WaitEstablished never calls original FakeTCP EmitRetransmitDue; first reauth SYN before server ready may hang20s. H846 drives original bounded 1s cold SYN retry only authenticated-dead/TUN wake, new Go SOURCE build+one identical real blackhole Action pending; not yet native PASS.",
+  "why_now": "Native loss of first 21s real business after second TLS READY points to unserviced cold first SYN and server re-listen race. Pinned original faketcp WaitEstablished only waits state notification; existing bounded EmitRetransmitDue not invoked by current Go. Restore one cold-only call at 1s RTO, not a new data controller. 100M ON overhead actual but no per-symbol attribution, defer speculative cache rewrite.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect already dispatched H844 R100 same VM OFF/ON and exact Windows source fdc native artifact, review feature/governance result; prioritize cold reauth actual 21s interruption and 35k TUN drop; do not rerun old f5 blackhole or inflate second READY to business PASS.",
+  "next_action": "Collect H846 one new-SOURCE original Linux true105s bilateral blackhole restored120s unique-first/p99/physical TUN drop/Stop and auth generation; if still FAIL examine stage before further change. Collect source fdc signed Windows artifact, shared Normal ON CPU hotspot profiling only if justified, close remaining owner rotation/Windows OFF when feasible.",
   "unverified": true,
   "last_tested_source": "fdc2fbb77e5c22eec5489f03eaed9a4c406d1165",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H844-FDC-REAUTH-SECOND-READY-PERFORMANCE-FAIL-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H838-NORMAL-OFF50-CAP.md",
     "docs/devlog/M0/20261102-PLAN027-H839-NORMAL-50-TO-100.md",
     "docs/devlog/M0/20261102-PLAN027-H840-100M-FIXTURE-EXACT-PINS.md",
     "docs/devlog/M0/20261102-PLAN027-H841-NEW-SOURCE-REAL-COLD-REAUTH.md",
     "docs/devlog/M0/20261102-PLAN027-H842-R-NORMAL100-PAIR.md",
     "docs/devlog/M0/20261102-PLAN027-H843-R100-CHECKOUT-DEPTH.md",
     "docs/devlog/M0/20261102-PLAN027-H844-GENERATION-R100-COHORT.md",
-    "docs/devlog/M0/20261102-PLAN027-H845-SOURCE-GOVERNANCE.md"
+    "docs/devlog/M0/20261102-PLAN027-H845-SOURCE-GOVERNANCE.md",
+    "docs/devlog/M0/20261102-PLAN027-H846-REAUTH-SYN-R100.md"
   ],
   "open_requests": [],
   "partial_summary": "H837 Win d0 signed Normal ON genuine 30pct source-d0 both NPF/Stop PASS scoped, R/F8.878%, C164837B, first72.4%, BUT repair grade false and no Windows OFF pair. Linux f5 Fixed6 ON/Auto ON real and R/F<=10% each PASS. 105s true blackhole f5 FAILED client exit1, qdisc drops8/8, Stop/recovery not run; targeted safe Go-reconnect marker diagnostic queued once. Full PLAN027 still partial. H838 independent 50Mbps per-direction original Normal OFF clean25ms 1200B source-f5 capacity Action pending. Theory 5208pps/direction and312.5KB business BDP/direction, not outer wire. H837 blackhole stage diagnosis still pending. Existing signed Windows Normal ON, Fixed6/Auto ON exact results in H837 evidence. H839 records 50Mbps/25ms Normal real OFF PASS source f5 first100 CPU8.34/8.35s/60, RSS25MB, PSI1.31, zero drop; one 100Mbps next rung pending. H837 rerun real blackhole diagnostic confirms both old Stop/TLS reauth client new TUN trigger then process exit1, real restore FAIL, not a VM verdict. H840 immediately corrected H839 accidental broad substitution corrupting frozen SOURCE env, actions/checkout pin, base scenario 250ms path and PPS/RTT theoretical text. Original H839 attempt is fixture invalid PRE-NATIVE; no 100M product result. One corrected native Action queued. H841 100M real source-f5 Normal OFF PASS (CPU25.7s/60 RSS33MB host PSI7.96, zero loss). Product Go cold: failed native ConnectAuthenticatedPeer lacked Close; only authenticated-dead real TUN client cold timeout allowed <=2 retries after successful Stop. New H841 source native build/test Action pending, not a PASS yet. H842 one original-source f5 high-PPS 100M/25ms/0% 1200B same-VM sequential OFF/ON pair dispatched, no product rebuild. New Go cold fdc source real blackhole running, not yet classified. H842 paired100 only failed initial old f5 git object absent because checkout depth1; native NOT_RUN. H843 only fetch-depth80 fixes manifest ancestry and launches exact paired100, no workload edit. H844 original Go reauth source fdc2 built and second READY both/Stop, but genuine restored120s app first82.4% p9921.3s TUN drops~35k => FAIL. R100 paired original f5 first leg actual first100, CPU11.7s/60 but 1200B absent small packet fixture caused FAIL; ON NOT_RUN. H844 parser & class corrected, same R100 pair queued. Card size bound fixed."

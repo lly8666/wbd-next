@@ -8,6 +8,8 @@ import (
     "io"
     "syscall"
     "testing"
+    "time"
+    "github.com/lly8666/wobuzhidao/internal/faketcp"
 )
 
 func TestOriginalColdTLSRetryOnlyAfterAuthenticatedDeadAndRealWake(t *testing.T){
@@ -35,9 +37,32 @@ func TestOriginalColdTLSRetryOnlyAfterAuthenticatedDeadAndRealWake(t *testing.T)
             }
         })
     }
+    if !nativeColdTLSRetryable(faketcp.ErrBootstrapTimeout){
+        t.Fatal("original retry exhaustion is transient cold transport, not an auth rejection")
+    }
     if nativeColdFailureClass(timeout)!="timeout"||
        nativeColdFailureClass(syscall.ETIMEDOUT)!="timeout"||
        nativeColdFailureClass(errors.New("bad certificate"))!="other"{
         t.Fatal("safe fixed-category reporting must not leak or mask TLS auth failures")
+    }
+}
+
+func TestOriginalColdFakeTCPActuallyRetriesSYNWhenServerNotReady(t *testing.T){
+    flow:=faketcp.ClientFlow{LocalIP:[4]byte{10,22,1,2},
+        PeerIP:[4]byte{10,22,1,1},LocalPort:41031,PeerPort:443}
+    count:=0
+    assoc,e:=faketcp.NewClientAssociation(flow,1234,time.Second,
+        func(faketcp.Segment)error{count++;return nil})
+    if e!=nil{t.Fatal(e)}
+    defer assoc.Close()
+    if e=assoc.Start(time.Now());e!=nil{t.Fatal(e)}
+    ctx,stop:=context.WithTimeout(context.Background(),2300*time.Millisecond)
+    defer stop()
+    e=waitForOriginalColdSYN(ctx,assoc)
+    if !errors.Is(e,context.DeadlineExceeded){
+        t.Fatalf("no real server, association must time out: %v",e)
+    }
+    if count<2||count>4{
+        t.Fatalf("original FakeTCP SYN RTO did not fire: %d",count)
     }
 }

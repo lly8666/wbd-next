@@ -343,9 +343,24 @@ var errPublicNativePeerDead=errors.New("original Rust authenticated peer dead; G
 // retries a rejected credential, certificate or protocol invariant error,
 // and never changes the Rust data/PN/MTU owner or one-use ciphertext.
 func nativeColdTLSRetryable(err error)bool{
-    if errors.Is(err,context.DeadlineExceeded)||errors.Is(err,syscall.ETIMEDOUT){return true}
+    if errors.Is(err,context.DeadlineExceeded)||errors.Is(err,syscall.ETIMEDOUT)||
+       errors.Is(err,faketcp.ErrBootstrapTimeout){return true}
     var ne net.Error
     return errors.As(err,&ne)&&ne.Timeout()
+}
+// Original FakeTCP WaitEstablished only observes state: it does not drive
+// SYN retransmission. The first cold SYN can precede peer server readiness.
+// Advance its ORIGINAL bounded 1s RTO/MaxSYNRetries on the Go cold path only.
+func waitForOriginalColdSYN(ctx context.Context,assoc *faketcp.ClientAssociation)error{
+    for {
+        stepCtx,stop:=context.WithTimeout(ctx,time.Second)
+        e:=assoc.WaitEstablished(stepCtx)
+        stop()
+        if e==nil{return nil}
+        if ctx.Err()!=nil{return ctx.Err()}
+        if !errors.Is(e,context.DeadlineExceeded){return e}
+        if _,e=assoc.EmitRetransmitDue(time.Now());e!=nil{return e}
+    }
 }
 func originalColdRetryAllowed(role string,authorized,ready bool,retries int,runErr,closeErr error)bool{
     return role=="client"&&authorized&&!ready&&retries<2&&closeErr==nil&&nativeColdTLSRetryable(runErr)
@@ -449,7 +464,7 @@ func Run(role string,args []string)error{
         connected=false
         var runErr error
         if role=="client"{
-            runErr=runClient(ctx,cfg,uint32(iface.Index),tun,raw,emit,&connected)
+            runErr=runClient(ctx,cfg,uint32(iface.Index),tun,raw,emit,reauthAuthorized,&connected)
         }else{
             runErr=runServer(ctx,cfg,uint32(iface.Index),tun,raw,emit,&connected)
         }
@@ -605,7 +620,7 @@ func configureTunnelMTU(c config,tun *ownedTun)func(uint16,uint16,uint16)error{
 }
 
 func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
-    raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,connected *bool)error{
+    raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,coldReauth bool,connected *bool)error{
     flow:=faketcp.ClientFlow{LocalIP:c.localIP.As4(),PeerIP:c.peerIP.As4(),
         LocalPort:c.localPort,PeerPort:c.peerPort}
     isn,err:=originalRandomISN()
@@ -638,7 +653,14 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if err:=assoc.Start(time.Now());err!=nil{return err}
     dialCtx,cancel:=context.WithTimeout(ctx,20*time.Second)
     defer cancel()
-    if err:=assoc.WaitEstablished(dialCtx);err!=nil{return err}
+    // Initial connect remains unchanged; only a prior Rust-authenticated-dead
+    // and real TUN new-business trigger authorize SYN retransmission polling.
+    if coldReauth {
+        err=waitForOriginalColdSYN(dialCtx,assoc)
+    }else{
+        err=assoc.WaitEstablished(dialCtx)
+    }
+    if err!=nil{return err}
     var policy realityfront.AdmissionPolicy
     switch c.fecMode{
     case realityfront.FecV2Fixed:

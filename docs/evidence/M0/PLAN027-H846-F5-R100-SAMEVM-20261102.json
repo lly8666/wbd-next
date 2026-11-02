@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "product_source_sha": "f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3",
+  "fixture_sha": "595fbdfadc6c64b0afc3832d0c257a1db136a3d6",
+  "run_id": 41366111073,
+  "artifact_name": "plan027-r-normal100-same-vm-off-on",
+  "result": "PASS_SCOPED_ORIGINAL_NORMAL100_SAME_VM_OFF_ON_COST_NOT_OPTIMIZATION",
+  "scope": "Original Linux Go TLS Rust M4 100Mbps each 25ms 0% 1200B 60s, same VM sequential OFF then ON",
+  "theory": {
+    "app_pps_per_direction": 10416.667,
+    "RTT_ms": 50,
+    "app_BDP_bytes_per_direction": 625000
+  },
+  "OFF": {
+    "first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "p99_ms": 26,
+    "cpu_s": {
+      "client": 25.98,
+      "server": 25.93
+    },
+    "rss_bytes": {
+      "client": 32559104,
+      "server": 32751616
+    },
+    "F_IP_bytes": {
+      "c2s": 879953960,
+      "s2c": 879952661
+    },
+    "R_IP_bytes": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "owned_stop": true
+  },
+  "ON": {
+    "first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "p99_ms": 26,
+    "cpu_s": {
+      "client": 27.5,
+      "server": 27.52
+    },
+    "rss_bytes": {
+      "client": 35581952,
+      "server": 35975168
+    },
+    "F_IP_bytes": {
+      "c2s": 879952661,
+      "s2c": 879952661
+    },
+    "R_IP_bytes": {
+      "c2s": 163,
+      "s2c": 0
+    },
+    "owned_stop": true
+  },
+  "ON_minus_OFF": {
+    "CPU_s": {
+      "client": 1.52,
+      "server": 1.59
+    },
+    "fraction_of_ON_CPU": {
+      "client": 0.05527272727272726,
+      "server": 0.05777616279069767
+    },
+    "RSS_bytes": {
+      "client": 3022848,
+      "server": 3223552
+    }
+  },
+  "host_PSI_some_peak": {
+    "OFF": 7.99,
+    "ON": 8.49
+  },
+  "steal_pct_peak": 0,
+  "limits": [
+    "Only f5 source, not H841 fdc or H846 newer Go cold reconnect",
+    "Nearly no R bytes and ON CPU>5% suggests ledger/cache cost, but exact lock/tree/allocator hotspot not profiled",
+    "C physical not measured; no Windows or 30pct true loss qualification in this zero loss 100M scenario"
+  ]
+}

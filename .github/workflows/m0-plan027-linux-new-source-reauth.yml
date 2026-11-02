@@ -1,3 +1,4 @@
+# H846 exact new source Go cold FakeTCP 1s SYN due when post-authenticated dead; same real blackhole scenario and one binary build.
 name: M0 PLAN027 native Go cold TLS reauth bounded retry original blackhole source
 on:
   push:
