@@ -46,23 +46,35 @@ jobs:
           test -c /dev/net/tun
       - name: Exactly one real unilateral c2s105 at2Mbps with 120s restored business
         run: |
-          set -euo pipefail
+          set -uo pipefail
           sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB,PRODUCT_SOURCE \
             python3 -m tools.network_harness.m0_plan027_h861_unilateral \
               --bundle "$GITHUB_WORKSPACE/native-bundle" \
               --product-source "$PRODUCT_SOURCE" \
               --scenario scenarios/plan027-n-cold-unilateral-c2s105-2m.json \
               --out "$GITHUB_WORKSPACE/plan027-h867-oneway"
+          status=$?
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          result=Path("plan027-h867-oneway/result.json")
+          if result.exists():
+              r=json.loads(result.read_text())
+              fields=["source_sha","fixture_source_sha","verdict","native_result","failures","limits","native_failures","native_limits","business","recovery","source_tun_drops","owned_stop","native_owned_stop","actual_netem_drop_by_phase","actual_blackhole_tc_drops","original_go_cold_stages"]
+              print("H868_UNILATERAL_NATIVE_RECEIPT",json.dumps({k:r.get(k) for k in fields if k in r},sort_keys=True),flush=True)
+          else: print("H868_UNILATERAL_RESULT_FILE_NOT_FOUND",flush=True)
+          PY
+          exit "$status"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: plan027-h867-retire-oneway-c2s105-2m
           path: |
-            plan027-h861-oneway/result.json
-            plan027-h861-oneway/oneway/result.json
-            plan027-h861-oneway/oneway/client-product-markers.log
-            plan027-h861-oneway/oneway/server-product-markers.log
-            plan027-h861-oneway/oneway/network-snapshots.json
-            plan027-h861-oneway/oneway/summary.md
-          if-no-files-found: warn
+            plan027-h867-oneway/result.json
+            plan027-h867-oneway/oneway/result.json
+            plan027-h867-oneway/oneway/client-product-markers.log
+            plan027-h867-oneway/oneway/server-product-markers.log
+            plan027-h867-oneway/oneway/network-snapshots.json
+            plan027-h867-oneway/oneway/summary.md
+          if-no-files-found: error
           retention-days: 30

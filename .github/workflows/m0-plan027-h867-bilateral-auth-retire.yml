@@ -45,23 +45,35 @@ jobs:
           test -c /dev/net/tun
       - name: Exactly one real bilateral105 at10Mbps with 120s restored business
         run: |
-          set -euo pipefail
+          set -uo pipefail
           sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB,PRODUCT_SOURCE \
             python3 -m tools.network_harness.m0_plan027_linux_blackhole_recover \
               --bundle "$GITHUB_WORKSPACE/native-bundle" \
               --product-source "$PRODUCT_SOURCE" \
               --scenario scenarios/plan027-n-normal-both-blackhole105-recover120.json \
               --out "$GITHUB_WORKSPACE/plan027-h867-both"
+          status=$?
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          result=Path("plan027-h867-both/result.json")
+          if result.exists():
+              r=json.loads(result.read_text())
+              fields=["source_sha","fixture_source_sha","verdict","native_result","failures","limits","native_failures","native_limits","business","recovery","source_tun_drops","owned_stop","native_owned_stop","actual_netem_drop_by_phase","actual_blackhole_tc_drops","original_go_cold_stages"]
+              print("H868_BILATERAL_NATIVE_RECEIPT",json.dumps({k:r.get(k) for k in fields if k in r},sort_keys=True),flush=True)
+          else: print("H868_BILATERAL_RESULT_FILE_NOT_FOUND",flush=True)
+          PY
+          exit "$status"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: plan027-h867-retire-bilateral105-10m
           path: |
-            plan027-h861-both/result.json
-            plan027-h861-both/double-blackhole-recovery/result.json
-            plan027-h861-both/double-blackhole-recovery/client-product-markers.log
-            plan027-h861-both/double-blackhole-recovery/server-product-markers.log
-            plan027-h861-both/double-blackhole-recovery/network-snapshots.json
-            plan027-h861-both/double-blackhole-recovery/summary.md
-          if-no-files-found: warn
+            plan027-h867-both/result.json
+            plan027-h867-both/double-blackhole-recovery/result.json
+            plan027-h867-both/double-blackhole-recovery/client-product-markers.log
+            plan027-h867-both/double-blackhole-recovery/server-product-markers.log
+            plan027-h867-both/double-blackhole-recovery/network-snapshots.json
+            plan027-h867-both/double-blackhole-recovery/summary.md
+          if-no-files-found: error
           retention-days: 30
