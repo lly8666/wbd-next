@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 904,
-  "checkpoint_sha": "5cee5d51c5ad94ff4bd5dc9fb8a8192820cafcd1",
+  "sequence": 905,
+  "checkpoint_sha": "6b3ba8dd2dcb77e00dad4fb122d7fab7aeb1c95e",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H904 product correctness source patch: original Windows Rust NativeOwner native_v1_stop after ACTUALLY joined both TX/RX now treats authenticated peer dead6 solely in TX as lifecycle verdict, returning true ownership drain so Go WAL route/DNS/NPF/Wintun Stop can complete and cold TLS reauthorize; other worker errors and failure to join remain terminal. Added Windows native export unit with joined real Rust worker threads, check worker_error code6 preserved and Stop return OK. No native product qualification on H904 yet. Earlier H903 native diagnostic Action41410970576 still in_progress at review; read it before H904 repair trial.",
-  "why_now": "Targeted production source proves native_v1_stop currently returns TX error6 even after JoinHandle consumption. That causes Go JoinNativeIO failure, controller Drain failure and WAL retained rather than safe reauth. H899 observable Windows native Health timeout marker truncated and WAL stayed; H903 untruncated diagnostic still pending. Correct only terminal Stop receipt semantics when both worker loans actually joined, not M2 rules or timers.",
+  "current_task": "H905 source-specific repaired lifecycle qualification dispatched by ONE main native Action commit (pending/NOT_RUN at commit): H904 Windows NativeOwner already joined dead6 Stop fix plus H905 unit non-health fatal guard; H903 old-source native diagnostic Action41410970576 remains in_progress at last read, no result harvested; H904 cheap native-ABI/governance/static Actions PASS but no real product qualification. Scenario original Windows-origin105s IFB blackout, 120s authentic post-restore UDP, same old Go TLS+Rust signed NPF/Wintun/WSL2, outer OFF. Compare H903 unmodified old source to H905 repaired source as distinct valid source/fixture jobs, no same-VM CPU assertion, inspect full owner tails, OS WAL and cold TLS.",
+  "why_now": "Deterministic Stop code6 semantic contradiction found and fixed at H904 with one positive unit; H905 adds one necessary complementary negative test (unexpected TX return remains fatal) before exactly one corrected-source native product trial. This is not a rerun of unchanged H899 binary and avoids waiting for one stale workflow API status to block independent corrective validation. Preserves failing H899 source evidence and source separation.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H903 native105 exact owner markers and Stop audit first; if authenticated TX6 and Go WAL refused, freeze H904 source + paired Go/Rust build and run ONE scoped original Windows-origin105s real blackhole with same declared loss/120s recovery, requiring Windows authenticated fresh TLS, actual UDP both directions, both owned Stop/WAL no sidecar. If new evidence points elsewhere, revise cause and do not fake PASS. Parallel Normal CPU cost H876/H880/H884 accepted, need maintain ON affected mode/300s and remaining network matrix.",
+  "next_action": "Collect H903 pre-fix owner-tail stdout and H905 repaired Action original Windows105 actual first/recovery/owned Stop, after confirmed native job completion; classify source-specific. If repair fails use distinct first error and address only cause; do not rerun whole 105 family without changing discriminator. H900 Game4 highloss OFF PASS, historical H884 Normal OFF/ON30 8.82% R/F and no CPU penalty; consolidate measured 578/588ms RTT p99 and 9.35 first-lane count expansion (not byte factor) in final evidence, then impacted ON/300s and only missing capacity points.",
   "unverified": true,
   "last_tested_source": "f3f4c86fee7ec8630b49c565ba9c7ffb517636d5",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H900-SOURCEF3F4-GAME4FEC6-OFF-NATIVE-PASS-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H897-NORMAL-OFF-100M-SIGNED.md",
     "docs/devlog/M0/20261102-PLAN027-H898-SIGNED-RECEIPTS-H888-DNS-SPLIT.md",
     "docs/devlog/M0/20261102-PLAN027-H899-WIN105-DIAGNOSTIC-REPRO.md",
     "docs/devlog/M0/20261102-PLAN027-H900-GAME4-FEC6-HIGHLOSS-OFF.md",
     "docs/devlog/M0/20261102-PLAN027-H901-RECOVER-NATIVE-ACTIONS.md",
     "docs/devlog/M0/20261102-PLAN027-H902-SOURCE-REF-CONTRACT.md",
     "docs/devlog/M0/20261102-PLAN027-H903-NATIVE105-TERMINAL-TAIL.md",
-    "docs/devlog/M0/20261102-PLAN027-H904-WIN-DEAD6-OWNED-STOP.md"
+    "docs/devlog/M0/20261102-PLAN027-H904-WIN-DEAD6-OWNED-STOP.md",
+    "docs/devlog/M0/20261102-PLAN027-H905-POSTJOIN-NATIVE-105.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."

@@ -1225,6 +1225,27 @@
          assert!(!active_owner(owner));
      }
      #[test]
+     fn plan027_joined_non_health_worker_error_remains_fatal(){
+         // Health dead6 is the only intentional TX terminal exception.
+         // A joined but unexpectedly failed worker must not certify Stop.
+         let owner=u64::MAX-196;
+         let counters=Arc::new(Counters::new(0,0));
+         counters.worker_error.store(INVALID,Ordering::Release);
+         let session=NativeSession{
+             stop:Arc::new(WakeEvent::new().unwrap()),
+             tx_notify:Arc::new(WakeEvent::new_auto().unwrap()),
+             rx_notify:Arc::new(WakeEvent::new_auto().unwrap()),
+             early:Arc::new(Mutex::new(VecDeque::new())),
+             counters:Arc::clone(&counters),
+             tx:thread::spawn(||INVALID),
+             rx:thread::spawn(||OK),
+         };
+         assert!(active().lock().unwrap().insert(owner,session).is_none());
+         assert_eq!(counters.snapshot().worker_error,INVALID);
+         assert_eq!(wbd_m0_win_native_v1_stop(owner),INVALID);
+         assert!(!active_owner(owner));
+     }
+     #[test]
      fn normal_native_stop_timeout_retains_worker_until_real_join(){
          // Only Stop ownership and bounded wait; no simulated Wintun,
          // no kernel or TLS product PASS inferred from this test.
