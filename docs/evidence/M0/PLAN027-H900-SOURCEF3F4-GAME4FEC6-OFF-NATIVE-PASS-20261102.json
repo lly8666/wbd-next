@@ -64,5 +64,45 @@
   "references": [
     "H900 workflow native-public-two-os report in job125153486947"
   ],
-  "source_sha": "f3f4c86fee7ec8630b49c565ba9c7ffb517636d5"
+  "source_sha": "f3f4c86fee7ec8630b49c565ba9c7ffb517636d5",
+  "latency": {
+    "scope": "SAME_ORIGIN_MONOTONIC_REAL_OS_UDP_ROUNDTRIP_NOT_ONEWAY",
+    "windows_origin_p99_ms": 578,
+    "windows_real_replied": 549,
+    "windows_real_sent": 549,
+    "windows_not_returned": 0,
+    "linux_origin_p99_ms": 588.233,
+    "linux_real_replied": 600,
+    "linux_real_sent": 600,
+    "linux_not_returned": 0,
+    "late_over_2s_both": 0,
+    "oneway_p99": "NOT_MEASURED_UNCALIBRATED_WINDOWS_LINUX_CLOCKS"
+  },
+  "fec_native_accounting": {
+    "direction": "Linux_server_to_Windows",
+    "server_source_offered_records": 74882,
+    "server_parity_offered_records": 100230,
+    "server_parity_copied_records": 100230,
+    "server_game_first_lane_copied_records": 700281,
+    "server_recovered_candidate": 683,
+    "server_expired_candidate": 2,
+    "server_failed_candidate": 102,
+    "server_fec_rx_capacity": 0,
+    "server_retained_bytes_at_stop": 0,
+    "first_lane_packet_count_div_source_count": 9.351793488421784,
+    "parity_packet_count_div_source_count": 1.3385059159744666,
+    "count_amplification_only": "NOT_WIRE_BYTES_OR_FIXED_BOTH_DIRECTIONS",
+    "nominal_four_lane_unimpaired_max_record_count": 700448,
+    "source_counter_scope": "native_server_lifetime_including_warmup_not_60s_strict_packet_rate"
+  },
+  "artifacts": {
+    "direct_evidence_zip_id": 13123903909,
+    "direct_evidence_url": "https://github.com/lly8666/wbd-next/actions/runs/41407246598/artifacts/13123903909",
+    "source_logs": [
+      "mode-results/game4-fec/server.log",
+      "mode-results/game4-fec/client.log",
+      "wl-n0-windows-app.json",
+      "wl-n0-linux-app.json"
+    ]
+  }
 }

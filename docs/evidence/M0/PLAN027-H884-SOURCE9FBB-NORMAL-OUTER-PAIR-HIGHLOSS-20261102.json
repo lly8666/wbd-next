@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "9fbb51e57a6183091b91516760c68c73c837934e",
+  "result": "PASS_SCOPED_SAME_RUNNER_SEQUENTIAL_OFF_ON_NATIVE",
+  "run_id": 41395887599,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41395887599",
+  "mode": "normal",
+  "loss_pct": 30,
+  "delay_ms": 250,
+  "offered_mbps_each": 10,
+  "sequence": "OFF_ON",
+  "same_windows_vm": true,
+  "same_source_windows_linux_binary_hashes": true,
+  "legs": {
+    "off": {
+      "native_stop": "PASS_BOTH_OWNED",
+      "first_fraction_windows": 0.703047,
+      "first_fraction_linux": 0.700815,
+      "cpu_total_s": 4.0625,
+      "peak_rss_bytes": 41824256,
+      "F_wire_bytes": 86377098,
+      "R_wire_bytes": 0,
+      "C_wire_bytes": 139550,
+      "tc_drops_eth0": 30514,
+      "tc_drops_ifb": 30568
+    },
+    "on": {
+      "native_stop": "PASS_BOTH_OWNED",
+      "first_fraction_windows": 0.723679,
+      "first_fraction_linux": 0.724876,
+      "cpu_total_s": 3.7031,
+      "peak_rss_bytes": 41193472,
+      "F_wire_bytes": 86376838,
+      "R_wire_bytes": 7616208,
+      "C_wire_bytes": 150863,
+      "tc_drops_eth0": 33631,
+      "tc_drops_ifb": 33652,
+      "R_over_F": 0.08817419317896309,
+      "R_over_total": 0.0808996363216658
+    }
+  },
+  "comparison": {
+    "on_minus_off_cpu_s": -0.3594,
+    "cold_start_stop_included": true,
+    "same_source_true_loss_applied": true,
+    "algorithm_only_attribution": "NOT_PROVEN",
+    "first_delivery_delta_windows": 0.020632,
+    "first_delivery_delta_linux": 0.024061,
+    "interpretation": "ON cost no longer exhibited historical +21.2187s anomaly; negative delta alone cannot prove acceleration because sampling/OS variation"
+  },
+  "related_prior": {
+    "lossless_H876": {
+      "source_sha": "862f3df93983a67abb23f00a5f346362036047aa",
+      "run_id": 41391560849,
+      "cpu_on_minus_off_s": 0.0157,
+      "first_fraction_both": 1,
+      "frc": "NOT_MEASURED"
+    },
+    "loss30_H880": {
+      "source_sha": "aba5943f040d2030a6b07d61897036dfeda825ca",
+      "run_id": 41393878105,
+      "cpu_on_minus_off_s": 21.2187,
+      "off_cpu_s": 3.2188,
+      "on_cpu_s": 24.4375,
+      "R_over_F": 0.08846716198156863
+    }
+  },
+  "limits": [
+    "historical different SOURCE, does not qualify H905 lifecycle fix",
+    "process CPU includes Go+Rust, cold start/Stop, driver overhead; not separate FEC/algorithm CPU",
+    "same runner two sequential legs, OS loss counters differ; no deterministic proof of small CPU savings",
+    "one-way p99 NOT_MEASURED"
+  ]
+}
