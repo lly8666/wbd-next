@@ -120,6 +120,11 @@ jobs:
           # run against the final assembled original-Go product package.
           (cd legacy && go test -count=1 ./internal/faketcp)
           echo H983_PLAN012_SEVEN_FILE_CURRENT_MSS_TRUE_BYTE_SOURCE_PASS
+          # Frozen donor realityfront tests still cite removed DefaultMSS.
+          # Migrate ONLY those test fixtures into the current 1460-outer
+          # vector (MSS 1420), never restore a public 1360 product constant.
+          python3 tools/m0_prepare_original_go_mss_test_fixtures.py legacy
+          echo H984_PLAN012_NO_LEGACY_DEFAULTMSS_TEST_SHIM_PASS
           cp r0/go_overlay/internal/v4productcli/linux.go legacy/internal/v4productcli/linux.go
           cp r0/go_overlay/internal/v4productcli/game_linux.go legacy/internal/v4productcli/game_linux.go
           cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/main.go

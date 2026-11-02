@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_parent": "418eac036c3798b6a2e10fc3315086bc6289234f",
+  "prior_h983_run": 41502753626,
+  "prior_h983_result": "FAIL_GO_REALITYFRONT_TEST_COMPILE_ONLY",
+  "verified_h983_real_faketcp_unit": "H983_PLAN012_SEVEN_FILE_CURRENT_MSS_TRUE_BYTE_SOURCE_PASS",
+  "prior_h983_first_error": "internal/realityfront/admission_v4_test.go + bridge_v4_probe_linux_test.go + original tls_test.go/wire_qualification_test.go undefined faketcp.DefaultMSS",
+  "diagnosis": "Real production V4 removed DefaultMSS and installs actual Rust-derived value; four historical Go tests retained old symbol. 11 references verified exact.",
+  "scope": "EPHEMERAL_PINNED_GO_TEST_SOURCES_ONLY",
+  "fixture_outer": 1460,
+  "fixture_syn_mss": 1420,
+  "changed_test_file_count": 4,
+  "expected_test_reference_count": 11,
+  "no_product_code_changed": true,
+  "new_plan012_native": "NOT_RUN_PENDING",
+  "preserved_native_pass": {
+    "windows5": "41496471520 41496482942 41496496092 41496509099 41496520728",
+    "linux5": 41496813152
+  },
+  "legacy1360_reintroduced": false,
+  "default_outer": 1460,
+  "explicit_max": 1500
+}
