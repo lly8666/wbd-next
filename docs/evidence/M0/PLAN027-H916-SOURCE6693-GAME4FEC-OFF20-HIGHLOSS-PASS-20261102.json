@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "fixture_source_sha": "9947ac4a84340771e5154319bfab25237b260c5c",
+  "run_id": 41422017446,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41422017446",
+  "result": "PASS_SCOPED_ORIGINAL_WINDOWS_LINUX_GAME4FEC_OFF20_HIGHLOSS",
+  "mode": "game4-fec",
+  "scenario_id": "plan027-h916-game4-fec6-outer-off-20m-250ms30-60s",
+  "scenario_sha256": "a3717acdbcc3f54f3495c9d7bc29dc9032c439ec9f63c39a59a5ec792719a5ed",
+  "outer_repair": "OFF_EFFECTIVE_BOTH",
+  "fec": "highest protected fixed6",
+  "authenticated_lanes": 4,
+  "offered_mbps_each_direction": {
+    "windows": 19.9946,
+    "linux": 19.9999
+  },
+  "first_goodput_mbps": {
+    "windows": 19.9921,
+    "linux": 19.9759
+  },
+  "first_fraction": {
+    "windows": 0.999627,
+    "linux": 0.998594
+  },
+  "duration_s": 60,
+  "one_way_delay_ms": 250,
+  "loss_pct": 30,
+  "owned_stop": "PASS_BOTH_OWNED",
+  "windows_whole_exe_cpu_s": 36.125,
+  "windows_elapsed_s": 76.265,
+  "avg_one_logical_core_pct": 47.368,
+  "windows_peak_working_set_bytes": 61136896,
+  "oneway_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+  "F_wire_bytes": "NOT_MEASURED_GAME_AGGREGATE",
+  "R_wire_bytes": 0,
+  "C_wire_bytes": "NOT_MEASURED_GAME_AGGREGATE",
+  "limits": [
+    "Not 20M ON",
+    "Not an exact wire copy/byte factor",
+    "No physical qualification",
+    "Not a cross-VM CPU comparison to 10M"
+  ]
+}

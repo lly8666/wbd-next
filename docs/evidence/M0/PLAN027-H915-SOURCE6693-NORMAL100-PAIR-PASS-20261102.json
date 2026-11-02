@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "fixture_source_sha": "1d220ec1d2b83974e1c3a048bdb59223561942dc",
+  "run_id": 41420996043,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41420996043",
+  "result": "PASS_SCOPED_SAME_WINDOWS_VM_SEQUENTIAL_OFF_ON",
+  "mode": "normal",
+  "scenario": "plan027-h913-normal-pair-100m-25ms0-60s",
+  "config": {
+    "offered_mbps_per_direction": 100,
+    "one_way_ms": 25,
+    "loss_pct": 0,
+    "duration_s": 60,
+    "packet_mix": "large near MTU 1115.56B average"
+  },
+  "same_runner": true,
+  "order": "OFF_ON",
+  "binary_source": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "linux_server_sha256": "ea7fa23ac679bba6a4eef4a6197e8d7d000bba08fc55e783b33e74cb8d70d6df",
+  "windows_cli_sha256": "e6464a870a9d6f1333359be79c3523c8143ef44a947fc9787bc7a3f0430ae65c",
+  "off": {
+    "original_outer_effective": 0,
+    "first_fraction": {
+      "windows": 0.999993,
+      "linux": 1
+    },
+    "delivered_mbps": {
+      "windows": 99.9985,
+      "linux": 99.9732
+    },
+    "cpu_s": 16.4062,
+    "peak_rss_bytes": 41656320,
+    "F_bytes": 825923485,
+    "R_bytes": 0,
+    "C_bytes": 544874,
+    "tc_drops": {
+      "eth0": 0,
+      "ifb": 0
+    },
+    "stop": "PASS_BOTH_OWNED"
+  },
+  "on": {
+    "original_outer_effective": 1,
+    "first_fraction": {
+      "windows": 0.999997,
+      "linux": 1
+    },
+    "delivered_mbps": {
+      "windows": 99.9996,
+      "linux": 99.9732
+    },
+    "cpu_s": 19.2188,
+    "peak_rss_bytes": 41504768,
+    "F_bytes": 825927818,
+    "R_bytes": 281,
+    "C_bytes": 532416,
+    "repair_packets": 2,
+    "R_over_F": 3.402234358450922e-7,
+    "tc_drops": {
+      "eth0": 0,
+      "ifb": 0
+    },
+    "stop": "PASS_BOTH_OWNED"
+  },
+  "cpu_on_minus_off_s": 2.8126,
+  "cpu_delta_over_on": 0.14635,
+  "interpretation": "ON total whole-exe CPU increased despite only 2 repaired packets; not causal proof all delta is repair algorithm. Cold TLS/OS/Stop included; sameVM observational single sequence, algorithm attribution NOT_MEASURED",
+  "oneway_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS"
+}
