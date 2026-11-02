@@ -48,7 +48,7 @@ M0_AUTHORIZED_CURRENT = {
     # Historical M4 hash above is STILL immutable. The additional M0
     # Windows-owned Native IO entries belong to the live assembled source,
     # which is separately content-addressed; old M4 remains available.
-    "r0/go_overlay/assembly/manifest.json": "25b6a9469613d38019acf913707fa42a0aaa588b",
+    "r0/go_overlay/assembly/manifest.json": "7c26101e2d64b4f69335448d994437a892831671",
     "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go": "e5dbe438ea30f24f7e14f1e34f7895b403abc6d8",
     "r0/go_overlay/internal/realityfront/fec_v2_policy.go": "4b1a907673473e84a3753c0672ac3316b6f1b763",
     "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go": "aada7132a9edd492f2f1a00aa066021efcb1670b",
@@ -83,17 +83,28 @@ class M4FrozenOverlay(unittest.TestCase):
         # Four exact, source-locked M0 native Windows owner attachments were
         # appended after the frozen M4 37/17 baseline. Verify they are the
         # ONLY extra entries; the original donor hashes above are untouched.
-        self.assertEqual(len(obj["operations"]), 41)
+        # Preserve the historical M4 37 operations and require exactly
+        # four later native-I/O creations and seven current public FakeTCP
+        # MSS overrides (not old-version protocol compatibility).
+        self.assertEqual(len(obj["operations"]), 48)
         creates = [x for x in obj["operations"] if x["kind"] == "create"]
-        self.assertEqual(len(creates), 21)
+        self.assertEqual(len(creates), 24)
         expected_m0 = {
-            "internal/faketcp/npcap_native_handoff_windows.go",
-            "internal/faketcp/npcap_native_handoff_windows_test.go",
-            "internal/realityfront/bridge_v4_windows_native_io.go",
-            "internal/realityfront/bridge_v4_windows_native_io_test.go",
+            "internal/faketcp/npcap_native_handoff_windows.go": "create",
+            "internal/faketcp/npcap_native_handoff_windows_test.go": "create",
+            "internal/realityfront/bridge_v4_windows_native_io.go": "create",
+            "internal/realityfront/bridge_v4_windows_native_io_test.go": "create",
+            "internal/faketcp/packet.go": "replace",
+            "internal/faketcp/client_association.go": "replace",
+            "internal/faketcp/association.go": "replace",
+            "internal/faketcp/association_test.go": "replace",
+            "internal/faketcp/public_v4_mss.go": "create",
+            "internal/faketcp/public_v4_mss_test.go": "create",
+            "internal/faketcp/public_v4_mss_byte_test.go": "create",
         }
-        self.assertEqual({r["path"] for r in obj["operations"][37:]}, expected_m0)
-        self.assertTrue(all(r["kind"] == "create" for r in obj["operations"][37:]))
+        actual_m0 = obj["operations"][37:]
+        self.assertEqual({row["path"]: row["kind"] for row in actual_m0},expected_m0)
+        self.assertEqual(len({row["path"] for row in actual_m0}),len(expected_m0))
         live = json.loads((ROOT / "r0/go_overlay/assembly/manifest-plan020-m0.json").read_text())
         self.assertEqual(live["legacy_source"], ORIGINAL_GO)
         live_creates = {x["overlay_path"]: x for x in live["operations"]
@@ -116,7 +127,7 @@ class M4FrozenOverlay(unittest.TestCase):
         native = (ROOT / "r0/go_overlay/internal/windowsclient/native_product_entry_windows.go").read_text()
         self.assertIn("func N4NativeNetworkReady(", native)
         self.assertIn("production native WFP Apply and authenticated Stop have not been qualified", native)
-        print("M0_PLAN014_34_HISTORIC_M4_SHA_PINS_AND_6_EXACT_M0_CURRENT_OVERRIDES_PASS_NETWORK_NOT_RUN")
+        print("M0_PLAN027A_34_HISTORIC_M4_SHA_PINS_AND_11_EXACT_M0_OVERRIDES_PASS_NETWORK_NOT_RUN")
 
 if __name__ == "__main__":
     unittest.main()

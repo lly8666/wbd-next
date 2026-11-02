@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "prior_source": "011c7f42dd0460934ec4b550bf44e7f1dc845609",
+  "failures": {
+    "windows_compile": 41472045532,
+    "governance_catalog": 41472045492,
+    "historical_regression": 41472045542
+  },
+  "fix_scope": [
+    "rename only second Go PhysicalPath route variable, keep real physical uint32 Rust input",
+    "repin only current plan020 original Windows Go overlay blob",
+    "M4 historical 34 hashes remain pinned, check 48 current manifest operations with 11 named additions",
+    "compress feature card scope wording only: source, evidence and status unchanged"
+  ],
+  "manifest_old_blob": "7c39c179839c79cdfeb3f34220a1d90b36c3794a",
+  "manifest_new_blob": "ce16a5ac7300332f3d60d4898b361431e98ed0c6",
+  "feature_size_bytes": 14725,
+  "qualification": "NOT_RUN_NEW_SOURCE",
+  "preserved": {
+    "H957_stage_pass": 41462417865,
+    "H957_arm64_pass": 41462378097,
+    "H958_df_fail": 41463910871
+  },
+  "expected_default1460_local_mss": 1420,
+  "expected_inner": 1389
+}

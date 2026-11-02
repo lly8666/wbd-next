@@ -1,212 +1,212 @@
 {
- "schema_version": 1,
- "id": "path-mtu-budget",
- "name": "MTU/MSS/record预算",
- "summary": "统一计算外层IPv4、MSS、record及Game/FEC开销，派生内层TUN MTU与安全失败。",
- "owner": "M3/M4 + FEC实验",
- "stage": "experimental",
- "development_branch": "experiment/fec-network-tuning",
- "available_on": [
-  "integration/w168-freeze-windows-adapter-20261026",
-  "experiment/windows-wiring-arm64-native-parallel-20261028",
-  "main"
- ],
- "defaults": {
-  "--outer-mtu": "1460（默认完整外层IPv4 IP MTU；不含L2；最大显式1500）",
-  "allowed": "576..1500（IPv4 公开配置；jumbo 需独立实验验证）",
-  "tun-mtu": "由 Rust V4 冷预算自动计算并经 owned OS 接口真实读回；只读",
-  "windows_record_offer": "Rust original TLS cold receive budget v1; previously hard-coded 1400 cap removed in new production cold path; this does not alter authenticated peer MSS or OS applied checks",
-  "outer-ip-mtu": "1460B default, complete outer IPv4 IP packet (no L2); operator may still explicitly configure up to 1500B",
-  "default-1460-inner-golden": "Normal1389, FEC/Auto1375, Game1373, GameFEC1358 on 20+20 IPv4/TCP and no smaller per-direction path",
-  "local_syn_mss": "Rust冷预算：min(configured_outer_ip_mtu, live_physical_outer_ip_mtu)-IPv4(20)-TCP(20); 1400→1360 / 默认1460→1420 / 显式1500→1460；不扣record31，不用旧FakeTCP 1360回退"
- },
- "usage": {
-  "cli": "Linux V4 --outer-mtu default1460, source-locked original-Go Linux client/server and Windows client --mtu default1460; all values are full outer IPv4 IP ceilings; inner always derived/read-only",
-  "config": "只保存外层MTU configured intent(默认1460/显式最大1500)，内层和SYN MSS均由同一Rust cold预算自动派生；无legacy/modern MSS开关",
-  "gui": "GUI外层MTU默认1460/最大显式1500；本地MSS、peer MSS、record和真实Wintun MTU仅只读，完整GUI数值展示原生仍待验收"
- },
- "code_refs": [
-  "r0/go_overlay/internal/v4productcli/linux.go",
-  "crates/wbd-codec/src/path_budget.rs",
-  "crates/wbd-platform/src/linux_mtu_scope.rs",
-  "crates/wbd-engine/src/v4_mtu_budget_ffi.rs",
-  "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
-  "r0/go_overlay/cmd/wbd-client/m0_native_v4_budget_windows.go",
-  "r0/go_overlay/internal/realityfront/bridge_v4_windows_wintun_lease.go",
-  "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go",
-  "crates/wbd-platform/src/ipv4_fragment.rs",
-  "crates/wbd-engine/src/v4_game_public_kernel.rs",
-  "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
-  "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_peer_windows.go",
-  "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
-  "openwrt/package/files/wbd-next-v4.config",
-  "openwrt/package/files/wbd-next-v4.init"
- ],
- "doc_refs": [
-  "docs/architecture/MIGRATION.md",
-  "docs/testing/NETWORK_CAPACITY_ENVELOPE.md",
-  "docs/devlog/M0/20261101-PLAN027-H708-H709-LOG-RECOVERY-AND-GAME-FEC-MTU.md",
-  "docs/architecture/MTU_CONTRACT.md",
-  "docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md"
- ],
- "verification": [
-  {
-   "platform": "windows/x64",
-   "scope": "W168大UDP、中途PMTU与复杂MSS适配",
-   "status": "NOT_RUN",
-   "source_sha": null,
-   "evidence": null
+  "schema_version": 1,
+  "id": "path-mtu-budget",
+  "name": "MTU/MSS/record预算",
+  "summary": "统一计算外层IPv4、MSS、record及Game/FEC开销，派生内层TUN MTU与安全失败。",
+  "owner": "M3/M4 + FEC实验",
+  "stage": "experimental",
+  "development_branch": "experiment/fec-network-tuning",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026",
+    "experiment/windows-wiring-arm64-native-parallel-20261028",
+    "main"
+  ],
+  "defaults": {
+    "--outer-mtu": "1460（默认完整外层IPv4 IP MTU；不含L2；最大显式1500）",
+    "allowed": "576..1500（IPv4 公开配置；jumbo 需独立实验验证）",
+    "tun-mtu": "由 Rust V4 冷预算自动计算并经 owned OS 接口真实读回；只读",
+    "windows_record_offer": "Rust original TLS cold receive budget v1; previously hard-coded 1400 cap removed in new production cold path; this does not alter authenticated peer MSS or OS applied checks",
+    "outer-ip-mtu": "1460B default, complete outer IPv4 IP packet (no L2); operator may still explicitly configure up to 1500B",
+    "default-1460-inner-golden": "Normal1389, FEC/Auto1375, Game1373, GameFEC1358 on 20+20 IPv4/TCP and no smaller per-direction path",
+    "local_syn_mss": "Rust冷预算：min(configured_outer_ip_mtu, live_physical_outer_ip_mtu)-IPv4(20)-TCP(20); 1400→1360 / 默认1460→1420 / 显式1500→1460；不扣record31，不用旧FakeTCP 1360回退"
   },
-  {
-   "platform": "linux/arm64",
-   "scope": "9000上限真实Jumbo与中途路径变化",
-   "status": "NOT_RUN",
-   "source_sha": null,
-   "evidence": null
+  "usage": {
+    "cli": "Linux V4 --outer-mtu default1460, source-locked original-Go Linux client/server and Windows client --mtu default1460; all values are full outer IPv4 IP ceilings; inner always derived/read-only",
+    "config": "只保存外层MTU configured intent(默认1460/显式最大1500)，内层和SYN MSS均由同一Rust cold预算自动派生；无legacy/modern MSS开关",
+    "gui": "GUI外层MTU默认1460/最大显式1500；本地MSS、peer MSS、record和真实Wintun MTU仅只读，完整GUI数值展示原生仍待验收"
   },
-  {
-   "platform": "physical",
-   "scope": "真实宽带MTU黑洞恢复",
-   "status": "NOT_RUN",
-   "source_sha": null,
-   "evidence": null
-  },
-  {
-   "platform": "linux/aarch64 native GitHub-hosted two-netns raw/TUN",
-   "scope": "ARM64 original TLS Rust actual Linux TUN nine native mode/outer MTU 1280/1500/asymmetric1500:1280 boundary cases, each both directions budget-1/= pass DF+1 rejected; not in-place MTU mutation or Windows.",
-   "status": "FUNCTIONAL_PASS",
-   "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
-   "evidence": "docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"
-  },
-  {
-   "platform": "windows/x64 original native Wintun + linux/amd64 WSL2",
-   "scope": "H668 original SOURCE5fb4 actual Windows configured TUN1280, Linux credential-TLS peer_record_cap1400 and real TUN1329 exceeds Windows1280; test fails BEFORE app, no Stop/MTU PASS",
-   "status": "FAIL",
-   "source_sha": "5fb4c9d79d481334631a4f894e82d2f8c7b078ca",
-   "evidence": "docs/evidence/M0/PLAN027-H669-SOURCE5FB4-MTU1280-PEER-CAP-FAIL-20261101.json"
-  },
-  {
-   "platform": "windows/x64 signed NPF Wintun + linux/amd64 WSL2 original TLS Rust",
-   "scope": "H669 SOURCE6ece native original Windows TUN requested1280 / genuine Linux post-TLS TUN1209 <=1280 FIX PASS, same 10Mbps25ms0%60s mixed UDP/TCP+Stop failed stringent Windows first 99.8172% <99.9%; Linux first100%, both Stop PASS. MTU contract scoped positive does NOT make full scenario PASS.",
-   "status": "FAIL",
-   "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
-   "evidence": "docs/evidence/M0/PLAN027-H673-RECOVERED-H669-H671-MTU-AND-AUTH-DEAD-20261101.json"
-  },
-  {
-   "platform": "windows/x64 signed NPF Wintun + linux/amd64 WSL2 original Go TLS Rust native",
-   "scope": "H673 same SOURCE6ece H669 prebuilt source-verified real MTU1280 5Mbps each 25ms0%60s mixed64/128/512/1200B both first100%, 4.9999/4.9986Mbps; true UDP TCP and Stop both. Contrasts prior same SOURCE 10Mbps Windows first0.998172 with 182 lost contiguous startup prefix 0..181; original 10Mbps FAIL retained. Different Windows VM runs, no cross-host CPU causal conclusion.",
-   "status": "PERFORMANCE_PASS",
-   "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
-   "evidence": "docs/evidence/M0/PLAN027-H676-SOURCE6ECE-MTU1280-START-PREFIX-5M-20261101.json"
-  },
-  {
-   "platform": "windows/x64 signed NPF/Wintun ↔ WSL2 Linux amd64 true original Go TLS/Rust",
-   "scope": "H677 original prebuilt SOURCE6ece true kernel dual 10Mbps 25ms0% 60s mixed payload MTU1280; prepared receive app barrier, Windows first1.0/Linux1.0, no source sequence gaps from seq0, native original Linux TUN1209, UDP/TCP and both owned Stop PASS; same-origin RTT p99 Windows47/Linux52.872 (all replies), NOT one-way. H669 old premature-'bound' harness first182 loss FAIL preserved different runner.",
-   "status": "PERFORMANCE_PASS",
-   "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
-   "evidence": "docs/evidence/M0/PLAN027-H678-SOURCE6ECE-PREPARED-RECEIVER-10M-MTU-20261101.json"
-  },
-  {
-   "platform": "windows-2025/msvc isolated Rust Game2-FEC6 owner unit (NOT real Npcap/Wintun)",
-   "scope": "H707 genuine Windows Rust Game2FEC due frame source1329 cipher1391 + outer40=1431 > pathMTU1400 (FAIL). H709 SOURCE79ca source cap1298 yields cipher1360 + outer40=1400 and rejects1299/1329 before NPF (one actual MSVC unit PASS); Action FAIL due stale proof path. Live MTU readback/Windows GameFEC/Stop still NOT_RUN.",
-   "status": "FUNCTIONAL_PASS",
-   "source_sha": "79ca1b7d9bede83360934e7ea51de98de5216046",
-   "evidence": "docs/devlog/M0/20261101-PLAN027-H708-H709-LOG-RECOVERY-AND-GAME-FEC-MTU.md"
-  },
-  {
-   "platform": "Windows original-Go/Rust owner + source-locked native WSL2",
-   "scope": "H946 pre-READY generation-owned numeric Wintun MTU CAS readback and genuine native harness parser added; real current SOURCE validation still NOT_RUN. Do not treat legacy H943 marker-only OS Applied as numeric proof.",
-   "status": "NOT_RUN",
-   "source_sha": null,
-   "evidence": null
-  },
-  {
-   "platform": "linux/amd64 Windows GNU cross + linux/arm64 cross Actions",
-   "scope": "PLAN027A H922 Rust GameFEC1398/MSS options pure unit model, versioned cold ABI and cross builds only; Windows runtime+OS MTU+live boundary NOT_RUN",
-   "status": "BUILD_PASS",
-   "source_sha": "ecf77e78cd0b12b82e51a9d9f614aa96b59137d6",
-   "evidence": "docs/evidence/M0/PLAN027A-H922-SOURCEECF77-ACTIONS-20261102.json"
-  },
-  {
-   "platform": "Windows amd64 + Linux amd64/arm64 actions",
-   "scope": "PLAN027A H924-H925 new receive-budget ABI and Windows product outer-vs-inner cold geometry, source-scoped compile/native not yet qualified",
-   "status": "NOT_RUN",
-   "source_sha": "7d853983208b72443234f46aba013fc9a947b603",
-   "evidence": "docs/evidence/M0/PLAN027A-H925-SOURCE7D85-CODING-20261102.json"
-  },
-  {
-   "platform": "Linux client/server original-Go, Windows original-Go and GUI/catalog; Linux V4 + Rust cold ABI",
-   "scope": "H932 default1460 source-locked original Go assembly + Windows WAL/Linux Go + Rust native/cross ABI compile PASS; actual default OS applied and seven native modes NOT_RUN",
-   "status": "BUILD_PASS",
-   "source_sha": "f2a6644908ecf567bed17987e51099e5cbd0d7da",
-   "evidence": "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json"
-  },
-  {
-   "platform": "Windows signed Npcap/Wintun original-Go TLS + WSL2 Linux native TUN",
-   "scope": "H943 source ae3e7e9f authentic default1460 omit both CLI MTU flags and explicit1500 all seven public Normal/Fixed/Auto/Game2/Game4/Game2FEC/Game4FEC 7/7 real duplex+Stop each; Linux TUN actual MTU numeric readback 1329/1315/1313/1298; no DF or 3Mbps Game performance claim",
-   "status": "FUNCTIONAL_PASS",
-   "source_sha": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
-   "evidence": "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
-  },
-  {
-   "platform": "Windows signed original-Go/Rust WSL2 Linux native app mixed UDP/TCP + tc",
-   "scope": "H943 real outer1460 Normal/Game4FEC each 10Mbps 25ms 0pct 60s bidirectional first=1.0 Stop PASS, Game4FEC RTT p99 1297/1328ms performance CAUTION vs Normal 47/52ms; capacity and CPU gain not qualified",
-   "status": "FUNCTIONAL_PASS",
-   "source_sha": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
-   "evidence": "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
-  },
-  {
-   "platform": "Windows signed original-Go/Rust ↔ WSL2 Linux native kernel tc loss30",
-   "scope": "H943 true 1460 10Mbps each 250ms 30pct 60s fixed and Game4FEC first win/linux .99947/.998818 and .997094/.998832, real OS TUN1315/1298 Stop PASS; not 5-30-5 staged weaknet or full packet losslessness",
-   "status": "FUNCTIONAL_PASS",
-   "source_sha": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
-   "evidence": "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
-  },
-  {
-   "platform": "Windows signed Npcap/Wintun Game4FEC original-Go TLS/Rust ↔ WSL2 Linux TUN",
-   "scope": "H950 prebuilt H948 source native Game4FEC 3Mbps 25ms 0pct run41455568369 reached Game cold Ready, but lacks actual numeric Windows MTU readback before Ready. This is a real native FAIL before performance measurement or owned Stop. H952 fixes distinct Game cold path; current new source BUILD/QUALIFICATION NOT_RUN.",
-   "status": "FAIL",
-   "source_sha": "524c2d0f49eb7f14df0104dd6db62e291359f576",
-   "evidence": "docs/evidence/M0/PLAN027A-H952-GAME-NUMERIC-READBACK-20261102.json"
-  },
-  {
-   "platform": "Windows signed Wintun/Npcap original-Go/Rust ↔ actual WSL2 Linux TUN",
-   "scope": "H955 exact H952 binary source 54160ac88b9b reused across H954 eight true-native Game2/4 off/FEC on outer default1460 and explicit1500; all 8/8 PASS, Windows numeric inner MTU before READY and owned Stop in native report. Earlier H950/H951 old-source Game FAILs preserved.",
-   "status": "FUNCTIONAL_PASS",
-   "source_sha": "54160ac88b9b41d10f4c3f885879dd68646466a0",
-   "evidence": "docs/evidence/M0/PLAN027A-H955-GAME-10OF10-SOURCE-REUSE-20261102.json"
-  },
-  {
-   "platform": "Windows signed Npcap/Wintun Game4FEC 3Mbps ↔ WSL2 Linux kernel",
-   "scope": "H954 exact H952 prebuilt Game4FEC 3Mbps outer default1460 25ms/0% and 250ms/30% two scenarios 60s, both PASS with actual OS MTU, real first delivery/perf and owned Stop; directional latency p99 188/182.6ms and 672/646.504ms (not clock-calibrated one-way).",
-   "status": "PERFORMANCE_PASS",
-   "source_sha": "54160ac88b9b41d10f4c3f885879dd68646466a0",
-   "evidence": "docs/evidence/M0/PLAN027A-H955-GAME-10OF10-SOURCE-REUSE-20261102.json"
-  },
-  {
-   "platform": "current V4 Windows original Go TLS/Rust Npcap/Wintun and Linux raw/TUN peer",
-   "scope": "H959-H962 one shared source-locked original FakeTCP SYN/SYNACK MSS, byte-golden 1400/1460/1500, Rust real physical cold and original directional received options; new Windows/Linux genuine proof pending, old 1389 versus 1329 not yet requalified.",
-   "status": "IMPLEMENTED_NOT_TESTED",
-   "source_sha": "8d17deed6a4a4fdcefe2e2b2b893174a46e7bcd6",
-   "evidence": "docs/evidence/M0/PLAN027A-H962-MSS-SOURCE-FREEZE-20261102.json"
-  }
- ],
- "limitations": [
-  "CLI 9000上界是输入合法范围，绝非已验证9k实际互通。",
-  "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
-  "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637.",
-  "PLAN027A H922 首批 Rust/Go Cgo 冷 ABI 与 Linux owned OS readback 已编码；Windows outer/inner 量纲、DF0/DF1、完整 native 七模式/保护性能仍 NOT_RUN，不能以 cross build 替代产品合格。",
-  "PLAN027A H925 Windows Normal/Fixed/Auto binds explicit outer configured IP and planned receiving inner via v5 ABI. Planned != OS applied: native M4 WAL+live readback remains required. Game owner geometric binding still separate; real seven-mode MTU native qualification NOT_RUN.",
-  "H927 Windows legacy Go MTU budget fixture retired; versioned Rust cold ABI is the only numeric implementation. Exact Rust unit vectors and Windows C layout/mode mapping are separate tests, not Win32 OS Applied qualification.",
-  "H928 Rust RFC791 bounded DF0 fragment helper and RFC1191 ICMP3/4 pure builder implemented; Linux Game kernel TX only wires a <=32-fragment/4-per-turn DF0 fallback. DF1 builder has no live TUN writer in this batch, Windows/Normal FEC fallback and all native PMTU/weaknet NOT_RUN.",
-  "H930 Linux Game worker DF1 local ICMP3/4 applies only if cold trusted OS TUN IPv4 exists; per second <=20 local kernel writes, still requires real native DF1/EMSGSIZE/ICMP and two-direction measurements. Normal FEC/Windows stay pending.",
-  "H931 Windows M4 existing receive-ring oversized frame is explicitly a nonfatal one-packet outcome (Normal/FEC/Game), not io.ErrShortBuffer owner Stop; there is no claim of Wintun/FEC/Game LINK or real DF0 fallback. Native giant-UDP/DF1 still NOT_RUN.",
-  "H932 default changed from 1500 to1460 at user request; explicit 1500 maximum and historical 1500 GameFEC1398 boundary remain valid. Archived 1500 default on older SOURCE is historic, not current.",
-  "H935 fixes actual source adc18d75 Windows Fixed pre-READY rc=1: v5 original TLS Rust owner used peer TX record cap without applying local receiving Wintun planned-inner ceiling. Cold-only pure Rust receive derivation narrows TX cap; no RX authorization, OS Applied or Game group changed. Native Fixed still NOT_RUN at new SOURCE.",
-  "H936 Windows-only Rust original M3 integration unit asserts actual v5 FEC2 fixed outer1400, planned inner1273, wire1318, stop/rollback and independent authenticated RX; no actual Windows↔WSL app delivery claimed.",
-  "H938 OpenWrt disabled UCI wrapper now has one explicit outer_mtu default1460 passed to same Linux --outer-mtu; Android currently no connected native owner, its setMtu(1200) is a non-operational INNER placeholder, never treated as outer1460; neither platform native applied qualified.",
-  "H943 user one-shot six runs all Action SUCCESS at exact source ae3e7e9f. Game4FEC 10Mbps 25ms loss0 round-trip p99 1297/1328ms vs Normal47/52ms; formal performance gate NOT_PASS/NOT_QUALIFIED until planned Game3Mbps and CPU/RSS/p99 same-host controlled comparison. Actual DF0/DF1 giant UDP/ICMP/H946 Windows numeric live proof remains NOT_RUN; no promotion/PLAN028.",
-  "Historical H669/H673/H676/H678 first-delivery counterexamples, H928/H935 compilation failures and source-locked prior limitations remain in H943 parent SOURCE 96ead0c07d3bc0121116bc801617c7e32d9bf142 and original dated evidence/devlogs. No old failure was deleted or promoted. H943 is only a scoped functional native result; Game4FEC p99, DF/ICMP, staged weaknet and capacity remain unresolved."
- ],
- "promotion": null
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "crates/wbd-codec/src/path_budget.rs",
+    "crates/wbd-platform/src/linux_mtu_scope.rs",
+    "crates/wbd-engine/src/v4_mtu_budget_ffi.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_budget_windows.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_wintun_lease.go",
+    "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go",
+    "crates/wbd-platform/src/ipv4_fragment.rs",
+    "crates/wbd-engine/src/v4_game_public_kernel.rs",
+    "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_peer_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
+    "openwrt/package/files/wbd-next-v4.config",
+    "openwrt/package/files/wbd-next-v4.init"
+  ],
+  "doc_refs": [
+    "docs/architecture/MIGRATION.md",
+    "docs/testing/NETWORK_CAPACITY_ENVELOPE.md",
+    "docs/devlog/M0/20261101-PLAN027-H708-H709-LOG-RECOVERY-AND-GAME-FEC-MTU.md",
+    "docs/architecture/MTU_CONTRACT.md",
+    "docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md"
+  ],
+  "verification": [
+    {
+      "platform": "windows/x64",
+      "scope": "W168大UDP、中途PMTU与复杂MSS适配",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/arm64",
+      "scope": "9000上限真实Jumbo与中途路径变化",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "physical",
+      "scope": "真实宽带MTU黑洞恢复",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/aarch64 native GitHub-hosted two-netns raw/TUN",
+      "scope": "ARM64 original TLS/Rust real Linux netns: 9 native 1280/1500/asymmetric outer MTU mode boundaries, both directions.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
+      "evidence": "docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"
+    },
+    {
+      "platform": "windows/x64 original native Wintun + linux/amd64 WSL2",
+      "scope": "H668 source5fb4 Windows TUN1280 vs actual Linux TUN1329, mismatch before native traffic; FAIL.",
+      "status": "FAIL",
+      "source_sha": "5fb4c9d79d481334631a4f894e82d2f8c7b078ca",
+      "evidence": "docs/evidence/M0/PLAN027-H669-SOURCE5FB4-MTU1280-PEER-CAP-FAIL-20261101.json"
+    },
+    {
+      "platform": "windows/x64 signed NPF Wintun + linux/amd64 WSL2 original TLS Rust",
+      "scope": "H669 source6ece Windows TUN1280/Linux1209, but 10Mbps first-delivery Windows 99.8172% < 99.9%; overall native FAIL.",
+      "status": "FAIL",
+      "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+      "evidence": "docs/evidence/M0/PLAN027-H673-RECOVERED-H669-H671-MTU-AND-AUTH-DEAD-20261101.json"
+    },
+    {
+      "platform": "windows/x64 signed NPF Wintun + linux/amd64 WSL2 original Go TLS Rust native",
+      "scope": "H673 source6ece native MTU1280 5Mbps mixed packet sizes; first delivery 100% both, Stop PASS.",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+      "evidence": "docs/evidence/M0/PLAN027-H676-SOURCE6ECE-MTU1280-START-PREFIX-5M-20261101.json"
+    },
+    {
+      "platform": "windows/x64 signed NPF/Wintun ↔ WSL2 Linux amd64 true original Go TLS/Rust",
+      "scope": "H677 source6ece original native 10Mbps MTU1280; first delivery 100%, UDP/TCP and owned Stop PASS.",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "6ece9eab653f46a716e8d3a0927fb74bec4819e8",
+      "evidence": "docs/evidence/M0/PLAN027-H678-SOURCE6ECE-PREPARED-RECEIVER-10M-MTU-20261101.json"
+    },
+    {
+      "platform": "windows-2025/msvc isolated Rust Game2-FEC6 owner unit (NOT real Npcap/Wintun)",
+      "scope": "H707 original Game2FEC oversized 1431 >1400 FAIL; H709 repaired codec boundary in scoped native results.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "79ca1b7d9bede83360934e7ea51de98de5216046",
+      "evidence": "docs/devlog/M0/20261101-PLAN027-H708-H709-LOG-RECOVERY-AND-GAME-FEC-MTU.md"
+    },
+    {
+      "platform": "Windows original-Go/Rust owner + source-locked native WSL2",
+      "scope": "H946 Windows generation-owned Wintun numeric OS MTU readback code; new source native initially NOT_RUN.",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/amd64 Windows GNU cross + linux/arm64 cross Actions",
+      "scope": "PLAN027A H922 Rust GameFEC1398/MSS options pure unit model, versioned cold ABI and cross builds only; Windows runtime+OS MTU+live boundary NOT_RUN",
+      "status": "BUILD_PASS",
+      "source_sha": "ecf77e78cd0b12b82e51a9d9f614aa96b59137d6",
+      "evidence": "docs/evidence/M0/PLAN027A-H922-SOURCEECF77-ACTIONS-20261102.json"
+    },
+    {
+      "platform": "Windows amd64 + Linux amd64/arm64 actions",
+      "scope": "PLAN027A H924-H925 new receive-budget ABI and Windows product outer-vs-inner cold geometry, source-scoped compile/native not yet qualified",
+      "status": "NOT_RUN",
+      "source_sha": "7d853983208b72443234f46aba013fc9a947b603",
+      "evidence": "docs/evidence/M0/PLAN027A-H925-SOURCE7D85-CODING-20261102.json"
+    },
+    {
+      "platform": "Linux client/server original-Go, Windows original-Go and GUI/catalog; Linux V4 + Rust cold ABI",
+      "scope": "H932 default1460 source-locked original Go assembly + Windows WAL/Linux Go + Rust native/cross ABI compile PASS; actual default OS applied and seven native modes NOT_RUN",
+      "status": "BUILD_PASS",
+      "source_sha": "f2a6644908ecf567bed17987e51099e5cbd0d7da",
+      "evidence": "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json"
+    },
+    {
+      "platform": "Windows signed Npcap/Wintun original-Go TLS + WSL2 Linux native TUN",
+      "scope": "H943 source ae3e native outer default1460 and explicit1500 all 7 modes; exact old source only.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
+      "evidence": "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
+    },
+    {
+      "platform": "Windows signed original-Go/Rust WSL2 Linux native app mixed UDP/TCP + tc",
+      "scope": "H943 Normal/Game4FEC default1460 10Mbps no-loss real native, first delivery 1.0 and Stop PASS; Game p99 high.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
+      "evidence": "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
+    },
+    {
+      "platform": "Windows signed original-Go/Rust ↔ WSL2 Linux native kernel tc loss30",
+      "scope": "H943 fixed/Game4FEC 10Mbps 250ms/30% loss native TCP/UDP and owned Stop scoped PASS.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
+      "evidence": "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
+    },
+    {
+      "platform": "Windows signed Npcap/Wintun Game4FEC original-Go TLS/Rust ↔ WSL2 Linux TUN",
+      "scope": "H950 old Game4FEC3Mbps real native READY lacked numeric Windows MTU receipt, FAIL before performance.",
+      "status": "FAIL",
+      "source_sha": "524c2d0f49eb7f14df0104dd6db62e291359f576",
+      "evidence": "docs/evidence/M0/PLAN027A-H952-GAME-NUMERIC-READBACK-20261102.json"
+    },
+    {
+      "platform": "Windows signed Wintun/Npcap original-Go/Rust ↔ actual WSL2 Linux TUN",
+      "scope": "H955 current H952 binary source54160 Game2/Game4 off/FEC at outer1460/1500, real duplex/Stop 8 modes PASS.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "54160ac88b9b41d10f4c3f885879dd68646466a0",
+      "evidence": "docs/evidence/M0/PLAN027A-H955-GAME-10OF10-SOURCE-REUSE-20261102.json"
+    },
+    {
+      "platform": "Windows signed Npcap/Wintun Game4FEC 3Mbps ↔ WSL2 Linux kernel",
+      "scope": "H954 H952 Game4FEC3Mbps 25ms/0% and 250ms/30% real native both PASS, latency evidence separate.",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "54160ac88b9b41d10f4c3f885879dd68646466a0",
+      "evidence": "docs/evidence/M0/PLAN027A-H955-GAME-10OF10-SOURCE-REUSE-20261102.json"
+    },
+    {
+      "platform": "current V4 Windows original Go TLS/Rust Npcap/Wintun and Linux raw/TUN peer",
+      "scope": "H959–H962 unified FakeTCP source, Rust physical MSS, frozen SYN/SYNACK and golden byte tests; current native NOT_RUN.",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": "8d17deed6a4a4fdcefe2e2b2b893174a46e7bcd6",
+      "evidence": "docs/evidence/M0/PLAN027A-H962-MSS-SOURCE-FREEZE-20261102.json"
+    }
+  ],
+  "limitations": [
+    "CLI 9000上界是输入合法范围，绝非已验证9k实际互通。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "2026-10-28 Action40557336142 source f7ee097e authentic Linux ARM64 original-Go TLS Rust TUN MTU/ICMP and owned Stop only. It is NOT a Windows native, FEC restored-loss, throughput/p99 CPU, dynamic Auto or physical/global qualification; test branch product inherited S55 parent49f81637.",
+    "PLAN027A H922 首批 Rust/Go Cgo 冷 ABI 与 Linux owned OS readback 已编码；Windows outer/inner 量纲、DF0/DF1、完整 native 七模式/保护性能仍 NOT_RUN，不能以 cross build 替代产品合格。",
+    "PLAN027A H925 Windows Normal/Fixed/Auto binds explicit outer configured IP and planned receiving inner via v5 ABI. Planned != OS applied: native M4 WAL+live readback remains required. Game owner geometric binding still separate; real seven-mode MTU native qualification NOT_RUN.",
+    "H927 Windows legacy Go MTU budget fixture retired; versioned Rust cold ABI is the only numeric implementation. Exact Rust unit vectors and Windows C layout/mode mapping are separate tests, not Win32 OS Applied qualification.",
+    "H928 Rust RFC791 bounded DF0 fragment helper and RFC1191 ICMP3/4 pure builder implemented; Linux Game kernel TX only wires a <=32-fragment/4-per-turn DF0 fallback. DF1 builder has no live TUN writer in this batch, Windows/Normal FEC fallback and all native PMTU/weaknet NOT_RUN.",
+    "H930 Linux Game worker DF1 local ICMP3/4 applies only if cold trusted OS TUN IPv4 exists; per second <=20 local kernel writes, still requires real native DF1/EMSGSIZE/ICMP and two-direction measurements. Normal FEC/Windows stay pending.",
+    "H931 Windows M4 existing receive-ring oversized frame is explicitly a nonfatal one-packet outcome (Normal/FEC/Game), not io.ErrShortBuffer owner Stop; there is no claim of Wintun/FEC/Game LINK or real DF0 fallback. Native giant-UDP/DF1 still NOT_RUN.",
+    "H932 default changed from 1500 to1460 at user request; explicit 1500 maximum and historical 1500 GameFEC1398 boundary remain valid. Archived 1500 default on older SOURCE is historic, not current.",
+    "H935 fixes actual source adc18d75 Windows Fixed pre-READY rc=1: v5 original TLS Rust owner used peer TX record cap without applying local receiving Wintun planned-inner ceiling. Cold-only pure Rust receive derivation narrows TX cap; no RX authorization, OS Applied or Game group changed. Native Fixed still NOT_RUN at new SOURCE.",
+    "H936 Windows-only Rust original M3 integration unit asserts actual v5 FEC2 fixed outer1400, planned inner1273, wire1318, stop/rollback and independent authenticated RX; no actual Windows↔WSL app delivery claimed.",
+    "H938 OpenWrt disabled UCI wrapper now has one explicit outer_mtu default1460 passed to same Linux --outer-mtu; Android currently no connected native owner, its setMtu(1200) is a non-operational INNER placeholder, never treated as outer1460; neither platform native applied qualified.",
+    "H943 user one-shot six runs all Action SUCCESS at exact source ae3e7e9f. Game4FEC 10Mbps 25ms loss0 round-trip p99 1297/1328ms vs Normal47/52ms; formal performance gate NOT_PASS/NOT_QUALIFIED until planned Game3Mbps and CPU/RSS/p99 same-host controlled comparison. Actual DF0/DF1 giant UDP/ICMP/H946 Windows numeric live proof remains NOT_RUN; no promotion/PLAN028.",
+    "Historical H669/H673/H676/H678 first-delivery counterexamples, H928/H935 compilation failures and source-locked prior limitations remain in H943 parent SOURCE 96ead0c07d3bc0121116bc801617c7e32d9bf142 and original dated evidence/devlogs. No old failure was deleted or promoted. H943 is only a scoped functional native result; Game4FEC p99, DF/ICMP, staged weaknet and capacity remain unresolved."
+  ],
+  "promotion": null
 }
