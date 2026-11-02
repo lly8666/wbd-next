@@ -79,20 +79,8 @@ func m0WindowsOriginalColdRetryAllowed(authorized,applied bool,retries int,err e
  return errors.As(err,&ne)&&ne.Timeout()
 }
 
-// Cold authenticated original V4 record offer must not exceed the receiving
-// Windows native TUN's selected inner MTU after Linux's existing framing.
-// This is the SAME original Go TLS ClientLimit, not a new control round.
-// Normal wire->inner reserves31; Fixed/Auto another14, Game another16,
-// and Game fixedFEC another15. The existing 1400 default cap is unchanged.
-func m0WindowsV4PeerRecordCap(tunMTU uint32,mode m0WindowsV4Mode,gameFEC bool)uint16{
- reserve:=uint32(31)
- if mode==m0WinModeFixed||mode==m0WinModeAuto{reserve+=14}
- if mode==m0WinModeGame2||mode==m0WinModeGame4{
-  reserve+=16
-  if gameFEC{reserve+=15}
- }
- return uint16(min(tunMTU+reserve,uint32(1400)))
-}
+// Cold record offer is resolved by Rust's versioned full-IP budget ABI.
+// No separate Windows 1400 cap or Go framing arithmetic is authoritative.
 
 func runM0NativeV4Windows(o m0NativeV4Options)error{
  // Mode-specific original Rust capability is queried before Npcap,
@@ -326,12 +314,19 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   return windowsclient.ErrN4NativeGuard
  }
  if err!=nil{return err}
+ // This same DLL has already passed the mode-capability gate. No TLS or
+ // WFP mutation occurs until this pure cold result is accepted.
+ recordOffer,err:=m0WindowsV4ColdRecordOffer(
+  filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),
+  o.ConnectionMTU,o.TunnelMTU,o.Mode,false,
+ )
+ if err!=nil{return err}
  auth:=realityfront.ClientAdmissionConfig{
   TLS:realityfront.ClientConfig{ServerName:o.ServerName,
     RouteKey:append([]byte(nil),o.RouteKey...),Timeout:15*time.Second},
   AutoLease:false,DesiredLanes:1,InstallationID:o.Installation[:],
   Username:o.Username,Password:o.Password,
-  TunnelID:o.TunnelID[:],ClientLimit:m0WindowsV4PeerRecordCap(o.TunnelMTU,o.Mode,false),
+  TunnelID:o.TunnelID[:],ClientLimit:recordOffer,
   LaneID:1,Policy:policy,
  }
  dll:=filepath.Join(windowsExecutableDir(),"wbd_engine.dll")

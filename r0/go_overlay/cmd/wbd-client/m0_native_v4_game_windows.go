@@ -128,13 +128,18 @@ func runM0NativeV4WindowsGame(
  }
  policy,err:=realityfront.FixedPolicyForClient(count,4)
  if err!=nil{return err}
+ recordOffer,err:=m0WindowsV4ColdRecordOffer(
+  filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),
+  o.ConnectionMTU,o.TunnelMTU,o.Mode,o.FEC2Mode=="fixed",
+ )
+ if err!=nil{return err}
  cfg:=realityfront.ClientAdmissionConfig{
   TLS:realityfront.ClientConfig{
    ServerName:o.ServerName,RouteKey:append([]byte(nil),o.RouteKey...),Timeout:15*time.Second,
   },
   AutoLease:false,DesiredLanes:uint8(count),
   InstallationID:o.Installation[:],Username:o.Username,Password:o.Password,
-  TunnelID:o.TunnelID[:],ClientLimit:m0WindowsV4PeerRecordCap(o.TunnelMTU,o.Mode,o.FEC2Mode=="fixed"),Policy:policy,
+  TunnelID:o.TunnelID[:],ClientLimit:recordOffer,Policy:policy,
  }
  fecMode:=uint8(0)
  if o.FEC2Mode=="fixed"{

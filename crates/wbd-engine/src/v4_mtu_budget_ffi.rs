@@ -119,3 +119,86 @@ mod tests {
         assert_eq!(output.single_inner_ip_cap,1398);
     }
 }
+
+// Receiver-side cold offer keeps the *inner TUN bound* separate from the
+// configured OUTER full-IP MTU. The difference comes from the same Rust
+// FrameBudget; no second Go 31/14/16/1 formula or implicit 1400 cap.
+#[repr(C)]
+#[derive(Clone,Copy,Debug)]
+pub struct WbdV4MTUReceiveInputV1 {
+    pub cold:WbdV4MTUBudgetInputV1,
+    /// Zero means unknown/not yet provisioned; nonzero is the planned inner
+    /// IPv4 TUN MTU and becomes an independently verified OS Applied readback.
+    pub receiving_inner_ip_mtu:u32,
+}
+fn derive_receive(input:WbdV4MTUReceiveInputV1)->Result<WbdV4MTUBudgetOutputV1,i32>{
+    let cold=input.cold;
+    let first=derive(cold)?;
+    let recv=input.receiving_inner_ip_mtu;
+    if recv==0 {return Ok(first)}
+    if !(576..=1500).contains(&recv){return Err(UNSUPPORTED)}
+    let reserve=first.record_wire_cap.checked_sub(first.single_inner_ip_cap)
+        .ok_or(UNSUPPORTED)?;
+    let cap=recv.checked_add(reserve).ok_or(UNSUPPORTED)?
+        .min(first.record_wire_cap);
+    let mut limited=cold;
+    limited.agreed_record_wire_cap=cap;
+    let result=derive(limited)?;
+    if result.single_inner_ip_cap>recv{return Err(UNSUPPORTED)}
+    Ok(result)
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_v4_mtu_budget_receive_v1(
+ input:*const WbdV4MTUReceiveInputV1,input_size:u32,
+ output:*mut WbdV4MTUBudgetOutputV1,output_size:u32
+)->i32{
+    if input.is_null()||output.is_null(){return NULL_ARG}
+    if input_size!=std::mem::size_of::<WbdV4MTUReceiveInputV1>() as u32
+        ||output_size!=std::mem::size_of::<WbdV4MTUBudgetOutputV1>() as u32{
+        return BAD_SIZE
+    }
+    let i=unsafe{input.read()};
+    if i.cold.version!=MTU_BUDGET_ABI_VERSION ||
+        i.cold.struct_size!=std::mem::size_of::<WbdV4MTUBudgetInputV1>() as u32{
+        return BAD_VERSION
+    }
+    match derive_receive(i){
+        Ok(v)=>{unsafe{output.write(v)};OK},
+        Err(code)=>code,
+    }
+}
+#[cfg(test)]
+mod receive_tests{
+    use super::*;
+    #[test]
+    fn windows_cold_receive_outer_and_inner_differ_without_hidden_1400(){
+        for (mode,receiving,expected_wire,expected_inner) in [
+            (0,1400,1431,1400),(1,1386,1431,1386),
+            (2,1400,1447,1400),(3,1398,1460,1398),
+        ]{
+            let cold=WbdV4MTUBudgetInputV1{
+                version:1,struct_size:36,configured_outer_ip_mtu:1500,
+                physical_outer_ip_mtu:0,peer_advertised_mss:1460,
+                agreed_record_wire_cap:0,ipv4_header_bytes:20,
+                tcp_data_header_bytes:20,mode,
+            };
+            let result=derive_receive(WbdV4MTUReceiveInputV1{
+                cold,receiving_inner_ip_mtu:receiving
+            }).unwrap();
+            assert_eq!((result.record_wire_cap,result.single_inner_ip_cap),
+                       (expected_wire,expected_inner));
+            assert_eq!(result.effective_outer_ip_ceiling,1500);
+            assert_eq!(result.local_syn_advertised_mss,1460);
+        }
+        let base=WbdV4MTUBudgetInputV1{version:1,struct_size:36,
+            configured_outer_ip_mtu:1400,physical_outer_ip_mtu:1300,
+            peer_advertised_mss:1260,agreed_record_wire_cap:0,
+            ipv4_header_bytes:24,tcp_data_header_bytes:32,mode:0};
+        let r=derive_receive(WbdV4MTUReceiveInputV1{
+            cold:base,receiving_inner_ip_mtu:1200
+        }).unwrap();
+        assert_eq!(r.record_wire_cap,1231);
+        assert_eq!(r.single_inner_ip_cap,1200);
+        assert_eq!(r.effective_outer_ip_ceiling,1300);
+    }
+}
