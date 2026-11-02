@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "parent_source": "2e1b45abff8bdb1303d4cbebbd361cb3402aaf69",
+  "wrong_old_native": {
+    "run": 41488208305,
+    "conclusion": "success",
+    "scope": "Fixed old SOURCE",
+    "windows_inner": 1333,
+    "linux_inner": 1333,
+    "expected": 1375,
+    "semantic": "FAIL_WRONG_FEC1_56B"
+  },
+  "h979_first_failed_action": {
+    "run": 41493646650,
+    "conclusion": "failure",
+    "stage": "CHEAP_ASSEMBLY_MTU_BUDGET_NEW_OVERLAY_BLOB_MISMATCH",
+    "native": "NOT_RUN"
+  },
+  "fix_exact_rows": [
+    {
+      "path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_budget_windows.go",
+      "old": "d6f87ebafba4a2d1e45266f29a2883f2f8ed35ab",
+      "new": "ff06a74ce170e270371623b2b3fe16175fbeb372"
+    },
+    {
+      "path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_unavailable_windows.go",
+      "old": "c83b5ddc81aa09e606a9415c3bd595b1b7fe9332",
+      "new": "95d5aee4342b6482f71ceb1e53bc248a3a608c44"
+    }
+  ],
+  "official_outer_default": 1460,
+  "explicit_max": 1500,
+  "new_build": "NOT_RUN",
+  "new_native": "NOT_RUN",
+  "required_data": [
+    "real FEC2 Fixed SYN MSS1420 each side",
+    "real peer MSS1420 each",
+    "record wire1420",
+    "Windows Wintun OS 1375",
+    "Linux TUN OS 1375",
+    "real UDP and TCP, Stop"
+  ]
+}

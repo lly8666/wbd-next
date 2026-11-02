@@ -192,6 +192,13 @@
       "status": "IMPLEMENTED_NOT_TESTED",
       "source_sha": "8d17deed6a4a4fdcefe2e2b2b893174a46e7bcd6",
       "evidence": "docs/evidence/M0/PLAN027A-H962-MSS-SOURCE-FREEZE-20261102.json"
+    },
+    {
+      "platform": "Windows original-Go Fixed V4 Rust MTU cold budget ↔ Linux signed WSL2",
+      "scope": "H978 actual native run41488208305 green but wrong FEC1 56-byte inherited budget (both OS inner1333 vs FEC2 expected1375). H979 formal original-Windows V4 startup now Rust-only; H979 cheap assembly pin mismatch recorded, H980 pins exact two new blobs. Fresh signed native NOT_RUN.",
+      "status": "NOT_RUN",
+      "source_sha": "2e1b45abff8bdb1303d4cbebbd361cb3402aaf69",
+      "evidence": "docs/evidence/M0/PLAN027A-H980-FIXED-PINS-20261102.json"
     }
   ],
   "limitations": [

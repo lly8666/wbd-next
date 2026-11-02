@@ -151,3 +151,7 @@ F/R/C/副本与业务字节分账按**成功实际发出**的IP总长计数；L2
 ### H966 正式Go数据通路接收方向MSS
 
 `internal/datapath/handoff.go` 的 Client/Server `RxMTU.PeerMSS` 原来无条件使用历史1360，现在从同一Rust冷预算预先安装的本端 SYN/SYN-ACK MSS 取得；TX仍仅使用真实对端握手 MSS，不允许混成同一个方向或重复扣record开销。测试专用固定向量只在 `_test.go`，不进入V4生产程序，也不增加旧版本兼容分支。进一步多generation同时并存需要association冷快照隔离；当前正式产品仍按单世代退出认证再重建。
+
+## H979-H980 Windows 正式 Fixed 的历史 FEC 56B 预留修复（待当前源验证）
+
+H978 真实 Windows↔Linux 原生 Action `41488208305` 为绿色但数值不合规范：默认外层1460，Normal 双端1389、Auto 双端1375，Fixed **双端1333**（即1389-56，旧FEC V1）。旧 Go `main_windows.go` 在正式 `--native-v4-product` 调用前仍用 `pathmtu.DeriveTunnelInterfaceMTU(ParityShards:4)` 算出内层，递交至实际认证协商。H979 按 plan020 原始 Go 固定源码装配，将**正式 V4**冷入口改用同一 Rust `wbd_m0_v4_mtu_budget_v1`，生效 FEC2 14B；显式 record cap 仍合法收窄、物理出口由真实 Windows generation 再检查，不把1360/56换成另一个魔数。H979首个构建被精确overlay blob钉选拒绝，H980只修 manifest 两个blob。只有新SOURCE真实 Fixed MSS、record、双端OS均通过才可把1375/1415写为合格实测。
