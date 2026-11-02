@@ -1,5 +1,7 @@
 # 10 生命周期、自动档、配置与观测接入
 
+> 后续增量见[PLAN028–030](../../decisions/M0-LEGACY-ROLLOUT-20261102.md)，当前仅PLANNED。028复用当前已修复生命周期，不恢复下方历史Go/Rust责任划分；029明确域名bootstrap DNS不自环，并新增可选flows启动填充。旧tls-startup-padding触发和默认off保留，新模式不延迟业务；实现前不宣称这些新增功能已可用。
+
 ## Windows方案B生命周期责任更新
 Windows按 [PLAN026](../../decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md)：Rust保存Health/Keepalive/业务idle证据和lane active/retiring、发送控制事件；Go只作低频FakeTCP/TLS新lane/OS重连，Rust负责业务原子切换。Auto保证一个有效控制器，原Go低频策略可过渡保留，绝不与Rust另设双控制器。下面早期“Go永远决定rotation/idle”是旧设计背景；正确性（收包认证、真实idle、generation、owned Stop）不变，Linux运行路径暂不动。
 

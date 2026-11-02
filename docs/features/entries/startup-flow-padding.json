@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "startup-flow-padding",
+  "name": "TCP/UDP新流有限启动填充",
+  "summary": "规划扩展旧TLS启动填充为可选所有隧道TCP/UDP新流模式；默认关闭，不延迟首发。",
+  "owner": "M0",
+  "stage": "experimental",
+  "development_branch": "main",
+  "main_development_reason": "用户2026-11-02授权规划后续PLAN028–030；当前不切换PLAN027，仅预登记。",
+  "available_on": [],
+  "defaults": {
+    "planned_mode": "off；旧TLS bool映射tls，显式flows启用新增行为",
+    "planned_bounds": "256流，1–2s可填充窗口，12 record/2048B每流上界，单record≤256B且不超MTU"
+  },
+  "usage": {
+    "cli": "PLANNED: startup-padding off|tls|flows；旧tls-startup-padding含义保留，尚未新增解析。",
+    "config": "PLANNED: 同一模式配置/每会话effective，现有record padding位置执行，首发预算有界。",
+    "gui": "PLANNED: 关闭/仅TLS启动/所有TCP与UDP新流，与真实effective一致。"
+  },
+  "code_refs": [],
+  "doc_refs": [
+    "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
+    "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md"
+  ],
+  "verification": [
+    {
+      "platform": "windows/amd64 client + linux/amd64 or arm64 server",
+      "scope": "新流识别/预算/MTU/原密文重传/全模式无等待及CPU开销",
+      "status": "PLANNED",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "旧TLS启动功能存在不等于新flows模式已实现；当前仅PLANNED。",
+    "不承诺DPI不可识别；无padding-only流、无主动业务延迟，不重复触发长流，不改变AEAD/generation。"
+  ],
+  "promotion": null
+}

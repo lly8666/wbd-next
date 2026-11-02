@@ -8,17 +8,35 @@
   "development_branch": "main",
   "main_development_reason": "用户2026-11-02授权规划后续服务端管理；按既有M0 main开发机制登记，当前不替换PLAN027任务。",
   "available_on": [],
-  "defaults": {"planned_listen": "0.0.0.0:443", "planned_server_name": "www.cisco.com", "planned_watch_interval": "2s，仅主动watch时读取已有统计"},
+  "defaults": {
+    "planned_listen": "0.0.0.0:443",
+    "planned_server_name": "www.cisco.com",
+    "planned_watch_interval": "2s，仅主动watch时读取已有统计"
+  },
   "usage": {
     "cli": "PLANNED: wbd-next无参数中文菜单，install/config/status/clients/start/stop/restart/logs/uninstall；当前二进制不可据此使用。",
     "config": "PLANNED: listen、server-name、users；网卡/地址池等高级可选，客户端独立协商参数由既有认证功能接入。",
     "gui": "服务端仅终端菜单，不新建Web或桌面GUI。"
   },
   "code_refs": [],
-  "doc_refs": ["docs/decisions/M0-SERVER-CLI-SIMPLIFICATION-20261102.md"],
-  "verification": [
-    {"platform": "linux/amd64 + linux/arm64 systemd", "scope": "简化配置、真实安装/启停/客户端快照/owned卸载及打包", "status": "PLANNED", "source_sha": null, "evidence": null}
+  "doc_refs": [
+    "docs/decisions/M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md",
+    "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md"
   ],
-  "limitations": ["仅设计预登记，非IMPLEMENTED或PASS；当前认证/多客户端配置接线能力不得从菜单方案推断。", "不含在线升级平台；OpenWrt复用独立procd工作，不从systemd资格推断。", "当前M0 PLAN027和在途Actions不变，后续实施按原任务机制接续。"],
+  "verification": [
+    {
+      "platform": "linux/amd64 + linux/arm64 systemd",
+      "scope": "简化配置、真实安装/启停/客户端快照/owned卸载及打包",
+      "status": "PLANNED",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "仅设计预登记，非IMPLEMENTED或PASS；当前认证/多客户端配置接线能力不得从菜单方案推断。",
+    "不含在线升级平台；OpenWrt复用独立procd工作，不从systemd资格推断。",
+    "当前M0 PLAN027和在途Actions不变，后续实施按原任务机制接续。",
+    "原独立CLI提案已撤回并由PLAN030吸收，依赖PLAN028真实会话/config接口；本卡仍仅PLANNED。"
+  ],
   "promotion": null
 }

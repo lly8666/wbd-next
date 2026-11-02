@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "client-domain-bootstrap",
+  "name": "客户端服务器域名与独立bootstrap DNS",
+  "summary": "规划IP/域名连接，在Windows DNS接管后仍能解析、重连、唤醒和换lane；尚未实现。",
+  "owner": "M0",
+  "stage": "experimental",
+  "development_branch": "main",
+  "main_development_reason": "用户2026-11-02授权规划后续PLAN028–030；当前不切换PLAN027，仅预登记。",
+  "available_on": [],
+  "defaults": {
+    "planned_address": "IPv4或域名；借站SNI另列",
+    "planned_bootstrap": "物理出口DNS，失败备选1.1.1.1/8.8.8.8；可手动设置"
+  },
+  "usage": {
+    "cli": "PLANNED: 统一服务器地址参数/旧IP字段读取别名；具体canonical key随028配置schema冻结。",
+    "config": "PLANNED: 独立bootstrap解析与业务DNS配置，前者不依赖隧道。",
+    "gui": "PLANNED: 服务器地址可填域名，显示解析/所选IP/错误；当前二进制能力不由本卡推断。"
+  },
+  "code_refs": [],
+  "doc_refs": [
+    "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
+    "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md"
+  ],
+  "verification": [
+    {
+      "platform": "windows/amd64 client + linux/amd64 or arm64 server",
+      "scope": "真实DNS接管前后初建/重连/休眠唤醒/换lane与owned清理",
+      "status": "PLANNED",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "尚无产品代码或通过证据，不因旧直出UDP helper存在宣称域名接通。",
+    "不包含IPv6外层支持或跨独立后端无缝会话迁移；内层IPv6政策不改变。"
+  ],
+  "promotion": null
+}

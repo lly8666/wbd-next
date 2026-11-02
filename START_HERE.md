@@ -8,4 +8,4 @@
 
 功能：[features](docs/features/README.md)；夹具：[WL V2](docs/testing/WL_PERF_HARNESS_V2.md)（历史限制以实际workflow及PLAN027为准）；诊断：[NETWORK_TRIAGE](docs/testing/NETWORK_TRIAGE.md)；历史：[INDEX](docs/history/INDEX.md)。按问题再追SOURCE/devlog/evidence，不将旧PASS迁到新源码或物理机。
 
-后续已登记（仅PLANNED，不打断当前任务）：[服务端最小配置与统一CLI](docs/decisions/M0-SERVER-CLI-SIMPLIFICATION-20261102.md)，含服务端借站域名、持久安装/完整卸载、配置与客户端查看。
+后续已登记（仅PLANNED，不打断当前任务）：[老功能产品化PLAN028–030总入口](docs/decisions/M0-LEGACY-ROLLOUT-20261102.md)，拆为账号/单端口/每客户端配置、域名DNS与Windows/有限填充、服务端CLI交付。每包有M0提示词；开工只读当前包，原独立CLI提案由030替代。
