@@ -681,6 +681,26 @@
       "path": "internal/datapath/v4_public_mss_test.go",
       "overlay_path": "r0/go_overlay/internal/datapath/v4_public_mss_test.go",
       "result_blob": "1f35e7cab9d4d933ff59f40f1515a74332904d0c"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/realityfront/tls_test.go",
+      "original_blob": "81c0fe570790a9652732032085ce6b38ade946c1",
+      "overlay_path": "r0/go_overlay/internal/realityfront/tls_test.go",
+      "result_blob": "2e320c36820a366757cbfd99e20aa55b3049ecb0"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/realityfront/wire_qualification_test.go",
+      "original_blob": "16ec82491d4ae869724b506e0d33e5e84f196930",
+      "overlay_path": "r0/go_overlay/internal/realityfront/wire_qualification_test.go",
+      "result_blob": "5b8e8b48b589422c23172ccc00c1a72795cfc0b4"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/v4_public_mss_test.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/v4_public_mss_test.go",
+      "result_blob": "298230094a69ccbfaa101e896fe54e22e4e970c2"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

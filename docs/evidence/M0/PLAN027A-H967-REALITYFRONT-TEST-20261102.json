@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source": "H967_COMMIT_PENDING",
+  "parent": "9b14ad878f313bb9dc60d99faffcc859748ea35a",
+  "previous_h966_windows_go_run": 41478184185,
+  "previous_h966_go_compile_failure": "original realityfront tls_test.go:246 and wire_qualification_test.go:128,147 still refer to removed production faketcp.DefaultMSS",
+  "fix_scope": "Replace original historical tests DefaultMSS with installed current MSS; test init explicitly installs 1420 only for realityfront _test.go; no runtime code changes.",
+  "three_source_exact_operations": [
+    {
+      "kind": "replace",
+      "path": "internal/realityfront/tls_test.go",
+      "original_blob": "81c0fe570790a9652732032085ce6b38ade946c1",
+      "overlay_path": "r0/go_overlay/internal/realityfront/tls_test.go",
+      "result_blob": "2e320c36820a366757cbfd99e20aa55b3049ecb0"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/realityfront/wire_qualification_test.go",
+      "original_blob": "16ec82491d4ae869724b506e0d33e5e84f196930",
+      "overlay_path": "r0/go_overlay/internal/realityfront/wire_qualification_test.go",
+      "result_blob": "5b8e8b48b589422c23172ccc00c1a72795cfc0b4"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/v4_public_mss_test.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/v4_public_mss_test.go",
+      "result_blob": "298230094a69ccbfaa101e896fe54e22e4e970c2"
+    }
+  ],
+  "main_manifest_blob": "b719d92ecd66523a406ec1e6911b67b98fbcb5f9",
+  "native_mss": "NOT_RUN",
+  "other_tests": "CHECK_ACTIONS",
+  "other_scope": "H958 DF still failed, PLAN028-030 paused"
+}

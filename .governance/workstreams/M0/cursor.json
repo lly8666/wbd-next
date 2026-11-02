@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 966,
-  "checkpoint_sha": "970ee87caf921f5afcfbd4e8c1c969184b2f7472",
+  "sequence": 967,
+  "checkpoint_sha": "9b14ad878f313bb9dc60d99faffcc859748ea35a",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H966: hidden fixed1360 root in original Go internal/datapath/handoff.go both client/server RX budgets. Replace with Rust-installed local MSS from current V4 cold, keep TX peer MSS. H965 Windows frozen ABI FAIL from shared test fixture using new setter; restore it and stage PLAN020-only test init. H965 governance cursor exceeded 8192B; compact.",
-  "why_now": "Remove real receive-path fixed 1360, without fallback or version flag; unblock exact Windows/Linux Go compilation and real signed WAL.",
+  "current_task": "PLAN027A H967: H966 source-locked Windows Go compile 41478184185 FAIL only because original realityfront/tls_test.go and wire_qualification_test.go refer to removed production DefaultMSS. Add current-only exact original-Go _test.go overlays for both and test-only MSS1420 init. Both manifests pin same source; M4 frozen historical hashes intact. H966 Windows WAL and ABI still in progress; new source native MSS NOT_RUN.",
+  "why_now": "Keep production DefaultMSS removed and fail-closed Rust MSS install. Historical Go tests need exact-source test-only values instead of adding compatibility production constant.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect H966 assembly, tests, Windows Wintun WAL and Linux build. Real new-source Normal default1460 must prove SYN/SYNACK=1420, peer MSS, record, both OS inner1389 if same physical; then source-reuse 1500 and asymmetric/modes. H958 DF still FAIL.",
+  "next_action": "Collect H967 Go realityfront TEST compilation, source-locked Windows/Linux build and H966/H967 real WAL/ABI results. Once H967 prebuilt artifacts SUCCESS, run normal default1460 true SYN/SYNACK MSS and OS MTU, then explicit1500, asymmetric and minimal Game/FEC.",
   "unverified": true,
   "last_tested_source": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN027A-H963-MSS-CI-REPAIR-20261102.json",
-    "docs/devlog/M0/20261102-PLAN027A-H963-MSS-CI-REPAIR.md",
     "docs/evidence/M0/PLAN027A-H964-NO-PRODUCT-1360-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H964-NO-PRODUCT-1360.md",
     "docs/evidence/M0/PLAN027A-H965-TEST-SETUP-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H965-TEST-SETUP.md",
     "docs/evidence/M0/PLAN027A-H966-DATAPATH-MSS-20261102.json",
-    "docs/devlog/M0/20261102-PLAN027A-H966-DATAPATH-MSS.md"
+    "docs/devlog/M0/20261102-PLAN027A-H966-DATAPATH-MSS.md",
+    "docs/evidence/M0/PLAN027A-H967-REALITYFRONT-TEST-20261102.json",
+    "docs/devlog/M0/20261102-PLAN027A-H967-REALITYFRONT-TEST.md"
   ],
   "open_requests": [],
-  "partial_summary": "Earlier H943 true native default1460 and explicit1500 scoped PASS on old source. H952 Game Wintun numeric cold fixed; H954 Game 10/10 exact old binaries PASS, H957 staged Game and current ARM64 PASS; H958 DF real test FAIL separately. H959-H962 implemented Rust physical cold MSS + current FakeTCP SYN/SYNACK bytes; H963 fixed Windows physical variable/build and 16KiB feature card, but H963 Linux cold-retry and Windows WAL test fixtures omitted explicit MSS. H964 deleted production DefaultMSS=1360; compile exposed real original datapath RX capacity still using it. H965 test-only Windows MSS setter broke frozen M4 ABI, and cursor overrun. H966 fixes datapath and source-scopes explicit test-only 1420; current source native MSS still NOT_RUN. Preserve historical results in dated devlogs/evidence."
+  "partial_summary": "Earlier H943 true native default1460 and explicit1500 scoped PASS on old source. H952 Game Wintun numeric cold fixed; H954 Game 10/10 exact old binaries PASS, H957 staged Game and current ARM64 PASS; H958 DF real test FAIL separately. H959-H962 implemented Rust physical cold MSS + current FakeTCP SYN/SYNACK bytes; H963 fixed Windows physical variable/build and 16KiB feature card, but H963 Linux cold-retry and Windows WAL test fixtures omitted explicit MSS. H964 deleted production DefaultMSS=1360; compile exposed real original datapath RX capacity still using it. H965 test-only Windows MSS setter broke frozen M4 ABI, and cursor overrun. H966 fixes datapath and source-scopes explicit test-only 1420; current source native MSS still NOT_RUN. Preserve historical results in dated devlogs/evidence. H966 governance, feature, historical M4 and cheap assembly PASS. Rust Windows/Linux tests PASS. Windows Go H966 41478184185 failed TEST compile only at realityfront/tls_test.go and wire_qualification_test.go, both used stale exported faketcp.DefaultMSS. H967 patches ONLY exact original Go tests and test-only init, keeps production MSS installed by Rust. No new-source normal1460 native PASS yet. Historical H957 PASS and H958 DF FAIL preserved."
 }

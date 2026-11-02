@@ -48,7 +48,7 @@ M0_AUTHORIZED_CURRENT = {
     # Historical M4 hash above is STILL immutable. The additional M0
     # Windows-owned Native IO entries belong to the live assembled source,
     # which is separately content-addressed; old M4 remains available.
-    "r0/go_overlay/assembly/manifest.json": "ef19f0962e3857dafb9eb11c034ce30f93d064ff",
+    "r0/go_overlay/assembly/manifest.json": "b719d92ecd66523a406ec1e6911b67b98fbcb5f9",
     "r0/go_overlay/internal/runtimeentry/r0_fec2_product_adapter.go": "e5dbe438ea30f24f7e14f1e34f7895b403abc6d8",
     "r0/go_overlay/internal/realityfront/fec_v2_policy.go": "4b1a907673473e84a3753c0672ac3316b6f1b763",
     "r0/go_overlay/internal/realityfront/fec_v2_policy_test.go": "aada7132a9edd492f2f1a00aa066021efcb1670b",
@@ -86,9 +86,9 @@ class M4FrozenOverlay(unittest.TestCase):
         # Preserve the historical M4 37 operations and require exactly
         # four later native-I/O creations and seven current public FakeTCP
         # MSS overrides (not old-version protocol compatibility).
-        self.assertEqual(len(obj["operations"]), 51)
+        self.assertEqual(len(obj["operations"]), 54)
         creates = [x for x in obj["operations"] if x["kind"] == "create"]
-        self.assertEqual(len(creates), 25)
+        self.assertEqual(len(creates), 26)
         expected_m0 = {
             "internal/faketcp/npcap_native_handoff_windows.go": "create",
             "internal/faketcp/npcap_native_handoff_windows_test.go": "create",
@@ -104,6 +104,9 @@ class M4FrozenOverlay(unittest.TestCase):
             "internal/datapath/handoff.go": "replace",
             "internal/datapath/handoff_client_test.go": "replace",
             "internal/datapath/v4_public_mss_test.go": "create",
+            "internal/realityfront/tls_test.go": "replace",
+            "internal/realityfront/wire_qualification_test.go": "replace",
+            "internal/realityfront/v4_public_mss_test.go": "create",
         }
         actual_m0 = obj["operations"][37:]
         self.assertEqual({row["path"]: row["kind"] for row in actual_m0},expected_m0)
