@@ -641,7 +641,7 @@
       "kind": "create",
       "path": "internal/windowsownerlease/original_tls_native_product_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go",
-      "result_blob": "dab0206c949de9b0fcb4b7f9a2cccb527ed966d8"
+      "result_blob": "72ccfa181740e1a4b82c141409ce3d4064a8c9d5"
     },
     {
       "kind": "create",
@@ -665,7 +665,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "d4c7d840bab2b597bc7166559558a2e8e217fb88"
+      "result_blob": "0af34654807a7f2523fc0070d72438303220a05c"
     },
     {
       "kind": "create",
@@ -737,7 +737,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "e1c2622cd761da0abb5ab24889df646ccc9a815a"
+      "result_blob": "f8054ae8b8a2bb9bfb6457299a21b4b4020c5b16"
     },
     {
       "kind": "create",
@@ -894,6 +894,12 @@
       "path": "internal/windowsclient/native_original_route_recover_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_original_route_recover_windows_test.go",
       "result_blob": "e11070061aef942b1c337baa0fe41a0ab311c2b9"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_native_v4_budget_windows.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_budget_windows.go",
+      "result_blob": "f0418602df5ff5acd2ff698a134c32c9fa746616"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

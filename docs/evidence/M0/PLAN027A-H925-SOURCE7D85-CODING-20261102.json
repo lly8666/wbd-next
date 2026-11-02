@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_sha": "7d853983208b72443234f46aba013fc9a947b603",
+  "phase": "CODE_AND_ASSEMBLY_MANIFEST_IN_PROGRESS",
+  "exact_source_windows_pure_receive_abi": "IMPLEMENTED_NOT_TESTED",
+  "windows_normal_owner_v5_outer_inner": "IMPLEMENTED_NOT_TESTED",
+  "production_windows_1400_hidden_cap": "REMOVED_AT_H924_SOURCE_25502951b5303fe2219eec3794dc232068e389ca",
+  "manual_inner_tun_user_field": "NOT_ADDED",
+  "windows_m4_os_applied_readback": "EXISTING_WAL_MUST_CONFIRM_NOT_RUN_THIS_SOURCE",
+  "linux_legacy_jumbo_fixture": "corrected physical device9000, user outer1500, peer MSS1360; outer9000 negative",
+  "H922_initial_actions": {
+    "cross_abi": 41432365479,
+    "codec": 41432365522,
+    "governance_FAIL": 41432365461,
+    "normal_common_FAIL": 41432365444
+  },
+  "H923_followup_actions": {
+    "governance_PASS": 41432894513,
+    "normal_common_PASS": 41432894653
+  },
+  "H924_actions": {
+    "windows_plan020_FAIL": 41433528482,
+    "root_cause": "plan020 assembly pinned Git blob of modified Windows source; manifest update in this doc batch"
+  },
+  "H925_automatic_actions": {
+    "r0_cross_abi": 41434074557,
+    "windows_owner_abi": 41434074336,
+    "plan020_WAL": 41434074477,
+    "win_linux_no_scene": 41434074436
+  },
+  "native_mode7": "NOT_RUN",
+  "ips_df0_df1": "NOT_RUN",
+  "os_both_sides": "NOT_RUN",
+  "weaknet": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "no_duplicated_dispatch": true,
+  "old_027_FAIL_preserved": true
+}

@@ -2,7 +2,7 @@
 
 源码、计划和进度在main。每次默认上轮可能中断，读本页、AGENTS、PROJECT_CHARTER、project/registry、M0 prompt/cursor及features入口；只核checkpoint后相关增量与在途Actions，补recovered，不重扫历史/重复派发。
 
-当前任务：[PLAN027A统一MTU](docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md)（H922首批代码进行中：Rust预算/Go Linux冷ABI/OS读回已提交，真实跨端MTU/DF性能未验）；PLAN027按用户授权已[限定范围结案](docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json)，旧FAIL/NOT_MEASURED不改写为PASS。
+当前任务：[PLAN027A统一MTU](docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md)（H925 Rust+Go Linux/Windows 冷预算/计划内层绑定已提交；真实 DF/七模式 MTU/OS 性能未完成）；PLAN027按用户授权已[限定范围结案](docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json)，旧FAIL/NOT_MEASURED不改写为PASS。
 
 现行MTU唯一规范：[MTU_CONTRACT](docs/architecture/MTU_CONTRACT.md)。不重复旧网络矩阵，执行新增实际变更时仍守真实SOURCE、OS读回、原生Stop与一Action一场景。
 
