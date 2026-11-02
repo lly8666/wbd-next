@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 896,
-  "checkpoint_sha": "43abd0d8b43e69d55305689a004b006ca72e5a02",
+  "sequence": 897,
+  "checkpoint_sha": "d9d492bc6a971aa6424dc52ca7a7edfd5a610f9b",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H896 one signed original Windows/WSL2 Game2 highest FEC6 outer repair OFF, true 10Mbps each/250ms/30% kernel loss/60s protected FEC from two lanes, first>=.99/Stop and actual off readback required; NOT_RUN at commit. H890 exact d499 Normal ON300 true original signed native PASS and source evidence/feature card H895; H892 original OFF50 native Action41400799511 and H895 original managed unilateral105 Action41401870658 in progress. H883 original f361 cancelled missing native log, H889 original PS1 ParserError and H893 cheap duplicate source static failure recorded separately.",
-  "why_now": "Parallel independent mode-adapter branch OFF matrix while H892 Normal capacity and H895 long blackout lifecycle are in flight; highest Game2 protected FEC weaknet after source-qualified H886 Game4 FEC-off and Linux H822 Game2FEC6 OFF baseline. Actual Windows capacity and correlation must be measured, not inferred.",
+  "current_task": "H892 SOURCE6a093 original signed Windows/WSL2 Linux Normal OFF50Mbps25ms0%60s true offered49.9865/50, first .999997/1, zero kernel local drops, both owned Stop PASS, Windows8.5625 CPU-s/77.094s RSS41.55MB. H897 next original Normal OFF100Mbps/25ms0%60s one independent source Action NOT_RUN until receipt. H890 original Normal ON300 source d499 PASS with exact card/source artifact. H895 managed Windows-origin unilateral105 Action41401870658 Windows parser preflight PASS native pending; H896 Game2 highestFEC6 OFF30% Action41402318224 cheap PASS native pending. H883 cancelled old f361 unqualified.",
+  "why_now": "Staged one-source capacity progression 10→50 real PASS so qualify100 real, not 50 extrapolated; parallel unrelated original Game2 high-FEC damage and Windows unilateral reauth while preserving per-VM isolation.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H896 original signed Game2 highestFEC outer-OFF 30% real first/kernel injected/owner Stop and F/R/C CPU; collect H892 Normal OFF50 and H895 authenticated unilateral105. If Game2 FEC6 cannot achieve residual1%, compute actual parity/packet/host rates before tuning or H896 replay; separately qualify Game4 and Normal/Fixed/Auto affected ON as needed.",
+  "next_action": "Collect H897 100M OFF true exact first/offered/Stop/CPU/drop, H895 managed105 true blackhole/restore/auth rejoin owned Stop, H896 Game2 fixed6 outer-OFF 250ms30% first>=.99 and native CPU. Only advance Normal200M or Game4 high FEC if capacity/input evidence supports. Final source/FRC/RSS/p99/physical scope remains partial until PLAN027 done.",
   "unverified": true,
-  "last_tested_source": "d4990f8c97b734bed546f99300b7d590e65a5e05",
+  "last_tested_source": "6a093085313617e7322a064e9f3c09ec8e5981db",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H890-SOURCED499-NORMAL-ON-300S-NATIVE-PASS-20261102.json"
+    "docs/evidence/M0/PLAN027-H892-SOURCE6A09-NORMAL-OFF-50M-NATIVE-PASS-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H889-H888-PREFLIGHT-SOURCE-CORRECTION.md",
     "docs/devlog/M0/20261102-PLAN027-H890-NORMAL-ON-300S.md",
     "docs/devlog/M0/20261102-PLAN027-H891-SOURCE-CARDS-COLLECT.md",
     "docs/devlog/M0/20261102-PLAN027-H892-NORMAL-50M-OFF-SIGNED.md",
     "docs/devlog/M0/20261102-PLAN027-H893-RUNNER-POWERSHELL-PARSER-GATE.md",
     "docs/devlog/M0/20261102-PLAN027-H894-CLEAN-OWNED-ROUTE-LEASE.md",
     "docs/devlog/M0/20261102-PLAN027-H895-ON300-RECEIPT-WIN105-SUBSCRIPTION.md",
-    "docs/devlog/M0/20261102-PLAN027-H896-GAME2-FEC6-OUTER-OFF-30LOSS.md"
+    "docs/devlog/M0/20261102-PLAN027-H896-GAME2-FEC6-OUTER-OFF-30LOSS.md",
+    "docs/devlog/M0/20261102-PLAN027-H897-NORMAL-OFF-100M-SIGNED.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."

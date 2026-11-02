@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6a093085313617e7322a064e9f3c09ec8e5981db",
+  "run_id": 41400799511,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41400799511",
+  "native_job_id": 125133532280,
+  "artifact_id": 13121308859,
+  "artifact_name": "m0-wl-full-public-normal-direct",
+  "artifact_digest": "sha256:9effc1d5e0d15f5c4f34ca0d01aa04df5cb95a8b98b092c9773b45e9dc2911e1",
+  "windows_binaries_digest": "sha256:d860b792d32008b2bb1f5d48dda2ad7a3e82ab325c7afb109c2edb643db213b6",
+  "linux_binaries_digest": "sha256:3f56bf71fb3086672a643628f412f972f9598fead9b47ab890dbf205246bacde",
+  "scenario_id": "plan027-h892-normal-off-50m-25ms0-60s",
+  "scenario_sha256": "28d2da81748eaba1b7ba6debafcd1d2c5d0ff0590c8e7c0101f9495042e47833",
+  "platform": "Windows2025 signed NPF/Wintun ↔ WSL2 Ubuntu Linux original Go TLS/Rust real TUN",
+  "mode": "normal",
+  "outer_repair_requested": "off",
+  "outer_repair_effective": {
+    "windows": 0,
+    "linux": 0
+  },
+  "declared": {
+    "business_mbps_each": 50,
+    "oneway_delay_ms_each": 25,
+    "loss_pct": 0,
+    "duration_s": 60,
+    "warmup_s": 5,
+    "drain_s": 10,
+    "tun_mtu": 1400,
+    "seed": 20261102,
+    "packet_mix": [
+      {
+        "udp_payload_bytes": 96,
+        "packets_weight": 2
+      },
+      {
+        "udp_payload_bytes": 288,
+        "packets_weight": 3
+      },
+      {
+        "udp_payload_bytes": 1060,
+        "packets_weight": 25
+      },
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 70
+      }
+    ]
+  },
+  "business": {
+    "offered_mbps": {
+      "windows": 49.9865,
+      "linux": 50
+    },
+    "first_delivered_mbps": {
+      "windows": 49.9998,
+      "linux": 49.9865
+    },
+    "first_delivery_fraction": {
+      "windows": 0.999997,
+      "linux": 1
+    }
+  },
+  "kernel": {
+    "linux_tun_rx_drops": 0,
+    "linux_tun_tx_drops": 0,
+    "linux_tun_fq_drops": 0,
+    "windows_npcap_ingress_local_drops": 0
+  },
+  "windows_original_process": {
+    "sample_elapsed_s": 77.094,
+    "cpu_total_s": 8.5625,
+    "cpu_kernel_s": 6.0938,
+    "cpu_user_s": 2.4688,
+    "avg_one_core_pct": 11.107,
+    "peak_working_set_bytes": 41549824,
+    "peak_private_bytes": 37388288
+  },
+  "windows_native_owner": {
+    "tx_records": 337336,
+    "rx_first_delivered_ipv4": 337406,
+    "optional_repair_shadow_limit": 0,
+    "opportunistic_v3_enabled": 0,
+    "process_charged_repair_bytes": 0
+  },
+  "udp_same_origin_rtt_p99_ms": [
+    47,
+    61.793
+  ],
+  "original_native_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+  "original_native_tcp": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "verdict": "PASS_GENUINE_NORMAL_OFF_50M25MS0LOSS60S_SOURCE_EXACT",
+  "limitations": "50Mbps offered business mix not internet line speed; full F/R/C per both directions not measured, Windows CPU includes cold TLS/Stop/kernel, cross-OS one-way p99 uncalibrated, 100/200Mbps/250ms high-loss/physical unverified."
+}
