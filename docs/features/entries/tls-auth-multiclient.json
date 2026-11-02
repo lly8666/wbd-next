@@ -28,7 +28,8 @@
     "docs/architecture/MIGRATION.md",
     "docs/handoff/CURRENT_INTEGRATION.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/architecture/MTU_CONTRACT.md"
+    "docs/architecture/MTU_CONTRACT.md",
+    "docs/devlog/M0/20261102-PLAN028-NETWORK-CHANGE-SCOPE.md"
   ],
   "verification": [
     {
@@ -64,7 +65,8 @@
     "建连通路正向≠多租户隔离全部场景已验；Rust V4不支持和旧Go V3数据面互通保证。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
     "PLAN028仅规划补齐账号输入简化、单端口同账号多设备/自动地址/每会话独立配置；不改变本卡现有源码与资格。",
-    "PLAN028后续约定：client只提交外层MTU意图，server结合本地方向限制收窄；内层自动派生，不要求双端手填，不覆盖其他client全局TUN。本次仅方案同步。"
+    "PLAN028后续约定：client只提交外层MTU意图，server结合本地方向限制收窄；内层自动派生，不要求双端手填，不覆盖其他client全局TUN。本次仅方案同步。",
+    "PLAN028 PLANNED: changed underlay triggers fresh TLS/account authentication and authenticated device/session+lease continuation, allowing a new source IP without waiting for old-lane dead. Same username/source IP/public install ID alone cannot take over another session; sibling same-account devices and their config/TUN must remain unaffected. New lane keys/generation and owned old-resource cleanup are required; server restart may lose the lease, so inner TCP continuity is conditional. Default outer MTU1460 is preserved. No new steady wire fields; native and Android roaming are not qualified by this plan."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

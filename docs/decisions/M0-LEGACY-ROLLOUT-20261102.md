@@ -1,6 +1,6 @@
 # 老功能产品化接续｜PLAN028–030总入口
 
-2026-11-02用户授权准备后续方案，**当前仅PLANNED，不切换正在执行的PLAN027，不dispatch产品测试**。实际开工由用户调用对应M0提示词或明确启动本轮；届时M0在现有registry/cursor记录当前包，不另建任务系统。真实业务首到、无跨流HOL、低CPU优先；原认证/完整性/隔离/generation/固定密文/MTU/owned Stop硬门不变。
+2026-11-02用户授权准备后续方案，**本页028–030仅PLANNED，不切换当前registry任务（目前PLAN027A），不dispatch产品测试**。PLAN027已限定范围收口，历史NOT_RUN不重开旧矩阵。实际开工由用户调用对应M0提示词或按完整序列授权推进；届时M0在现有registry/cursor记录当前包，不另建任务系统。真实业务首到、无跨流HOL、低CPU优先；原认证/完整性/隔离/generation/固定密文/MTU/owned Stop硬门不变。
 
 ## 1. 三包与依赖
 
@@ -10,11 +10,13 @@
 
 | 包 | 只做这些增量 | 提示词 |
 |---|---|---|
-| [PLAN028](M0-PLAN028-SESSION-CONFIG-20261102.md) | 简化认证操作、自动IP、同账号多设备、单端口、每客户端配置；复用生命周期并验各模式换lane | [M0-PLAN028](../prompts/M0-PLAN028.md) |
+| [PLAN028](M0-PLAN028-SESSION-CONFIG-20261102.md) | 简化认证、自动IP、多客户端单端口/独立配置；各模式换lane；公共切网恢复与Windows/Linux通知接线 | [M0-PLAN028](../prompts/M0-PLAN028.md) |
 | [PLAN029](M0-PLAN029-CLIENT-DNS-PADDING-20261102.md) | 服务端域名解析不被自身DNS劫持、Windows配置/UI接入、有限新流填充 | [M0-PLAN029](../prompts/M0-PLAN029.md) |
 | [PLAN030](M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md) | 最小服务端配置、中文wbd-next管理CLI、持久服务化/完整卸载、组合交付 | [M0-PLAN030](../prompts/M0-PLAN030.md) |
 
 **先冻结028配置/会话接口，再并行029与030独立部分；集成与正式客户端测试依赖028实际接通。**生命周期、FEC、重传、加密数学不分别重新实现。总入口只管范围，进度只写既有cursor/devlog/evidence；每次接手读总入口+当前一包，不先读三包全部历史。
+
+网络切换范围由028§4.1–4.2统一：现在落公共会话续接/路径事件和Windows/Linux客户端接线，保留内网IP、重认证/重算MTU、休眠不唤醒；Android只在后续客户端阶段接平台网络回调、socket绑定/VPN旁路及Wi-Fi/蜂窝真机验证。不新增第二个控制器，不要求现在提前完成Android。
 
 ## 2. 不重复PLAN027，未通过也不当作已完成
 
