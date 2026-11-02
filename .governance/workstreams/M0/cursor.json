@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 903,
-  "checkpoint_sha": "61e0dfce07f0bafb5d81e47a40b927e6488a1763",
+  "sequence": 904,
+  "checkpoint_sha": "5cee5d51c5ad94ff4bd5dc9fb8a8192820cafcd1",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H903 source-locked one additional diagnostic-only real Windows-origin105s blackout Action: append six bounded allowlisted owner terminal markers per side before truncated first-fault JSON; original dual-sided Go TLS/Rust native code and OS/driver network behavior unchanged. This is a DIFFERENT diagnostic than H899, not proof of recovered product: Action NOT_RUN at commit. H902 governance Action41410510325 PASS; H899 genuine lifecycle/Stop FAIL and separate DNS ENOTFOUND, H900 Game4FEC6 OFF high-loss genuine PASS preserved.",
-  "why_now": "H899 and prior H895 same actual product failure; their first-fault stdout clipped after 1024 characters exactly at Windows Rust Health timeout marker, and H899 uploaded no complete artifact due ENOTFOUND. One failure-only bounded direct marker witness can distinguish dead6 event, Go error, Stop worker drain, and Linux reauth without per-packet logs, blind state-machine edits, or changing workload. Separate H900 Game4 completed; no repeat.",
+  "current_task": "H904 product correctness source patch: original Windows Rust NativeOwner native_v1_stop after ACTUALLY joined both TX/RX now treats authenticated peer dead6 solely in TX as lifecycle verdict, returning true ownership drain so Go WAL route/DNS/NPF/Wintun Stop can complete and cold TLS reauthorize; other worker errors and failure to join remain terminal. Added Windows native export unit with joined real Rust worker threads, check worker_error code6 preserved and Stop return OK. No native product qualification on H904 yet. Earlier H903 native diagnostic Action41410970576 still in_progress at review; read it before H904 repair trial.",
+  "why_now": "Targeted production source proves native_v1_stop currently returns TX error6 even after JoinHandle consumption. That causes Go JoinNativeIO failure, controller Drain failure and WAL retained rather than safe reauth. H899 observable Windows native Health timeout marker truncated and WAL stayed; H903 untruncated diagnostic still pending. Correct only terminal Stop receipt semantics when both worker loans actually joined, not M2 rules or timers.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H903 source-bound single 105s diagnostic failure-only tail lines plus actual Stop/WAL and host default/DNS first error. Distinguish Windows Rust terminal vs Go readback vs owned Stop before product fix; do not promote tc request to recovered delivery. In parallel measure Normal public OFF→ON on same VM (prior H876/H880/H884 evidence review first) and other OFF matrix, then final affected ON & 300s. No physical deploy.",
+  "next_action": "Collect H903 native105 exact owner markers and Stop audit first; if authenticated TX6 and Go WAL refused, freeze H904 source + paired Go/Rust build and run ONE scoped original Windows-origin105s real blackhole with same declared loss/120s recovery, requiring Windows authenticated fresh TLS, actual UDP both directions, both owned Stop/WAL no sidecar. If new evidence points elsewhere, revise cause and do not fake PASS. Parallel Normal CPU cost H876/H880/H884 accepted, need maintain ON affected mode/300s and remaining network matrix.",
   "unverified": true,
   "last_tested_source": "f3f4c86fee7ec8630b49c565ba9c7ffb517636d5",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H900-SOURCEF3F4-GAME4FEC6-OFF-NATIVE-PASS-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H896-GAME2-FEC6-OUTER-OFF-30LOSS.md",
     "docs/devlog/M0/20261102-PLAN027-H897-NORMAL-OFF-100M-SIGNED.md",
     "docs/devlog/M0/20261102-PLAN027-H898-SIGNED-RECEIPTS-H888-DNS-SPLIT.md",
     "docs/devlog/M0/20261102-PLAN027-H899-WIN105-DIAGNOSTIC-REPRO.md",
     "docs/devlog/M0/20261102-PLAN027-H900-GAME4-FEC6-HIGHLOSS-OFF.md",
     "docs/devlog/M0/20261102-PLAN027-H901-RECOVER-NATIVE-ACTIONS.md",
     "docs/devlog/M0/20261102-PLAN027-H902-SOURCE-REF-CONTRACT.md",
-    "docs/devlog/M0/20261102-PLAN027-H903-NATIVE105-TERMINAL-TAIL.md"
+    "docs/devlog/M0/20261102-PLAN027-H903-NATIVE105-TERMINAL-TAIL.md",
+    "docs/devlog/M0/20261102-PLAN027-H904-WIN-DEAD6-OWNED-STOP.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."

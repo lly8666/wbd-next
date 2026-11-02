@@ -1174,9 +1174,14 @@
          f,r,u,k,session.counters.repair_packets.load(Ordering::Relaxed),
          if f>0{(r+u).saturating_mul(1_000_000)/f}else{0},
          if f+r+u+k>0{(r+u).saturating_mul(1_000_000)/(f+r+u+k)}else{0});
-     if tx!=OK&&tx!=BAD_STAGE{return tx}
+     // Authenticated dead90 is the worker's lifecycle verdict, not a
+     // driver-loan drain failure. Both workers have already finished and
+     // joined above: give Go the owned Stop receipt so it can recover WAL,
+     // release NPF/Wintun and reauthorize the next cold TLS generation.
+     // A genuinely failed join/other worker error remains fatal.
+     if tx!=OK&&tx!=BAD_STAGE&&tx!=AUTHENTICATED_PEER_DEAD{return tx}
      if rx!=OK&&rx!=BAD_STAGE{return rx}
-     OK // all driver borrows returned before Go can EndSession/pcap_close
+     OK // both driver borrows returned before Go can EndSession/pcap_close
  }
 
  #[cfg(test)]
@@ -1196,6 +1201,28 @@
          assert_eq!(c.profile.tx.samples.load(Ordering::Relaxed),1);
          assert_eq!(c.profile.rx.samples.load(Ordering::Relaxed),0);
          assert_eq!(*lock.lock().unwrap(),0);
+     }
+     #[test]
+     fn plan027_joined_authenticated_dead_returns_owned_stop_not_worker_error(){
+         // Exact exported native Stop, not an unrelated mock: the Rust TX
+         // terminal code 6 stays visible as worker_error, while already-
+         // joined device loans must be allowed to proceed to Go WAL restore.
+         let owner=u64::MAX-195;
+         let counters=Arc::new(Counters::new(0,0));
+         counters.worker_error.store(AUTHENTICATED_PEER_DEAD,Ordering::Release);
+         let session=NativeSession{
+             stop:Arc::new(WakeEvent::new().unwrap()),
+             tx_notify:Arc::new(WakeEvent::new_auto().unwrap()),
+             rx_notify:Arc::new(WakeEvent::new_auto().unwrap()),
+             early:Arc::new(Mutex::new(VecDeque::new())),
+             counters:Arc::clone(&counters),
+             tx:thread::spawn(||AUTHENTICATED_PEER_DEAD),
+             rx:thread::spawn(||OK),
+         };
+         assert!(active().lock().unwrap().insert(owner,session).is_none());
+         assert_eq!(counters.snapshot().worker_error,AUTHENTICATED_PEER_DEAD);
+         assert_eq!(wbd_m0_win_native_v1_stop(owner),OK);
+         assert!(!active_owner(owner));
      }
      #[test]
      fn normal_native_stop_timeout_retains_worker_until_real_join(){
