@@ -7,5 +7,5 @@
 - Source H844 touches only fixture parser/evidence/feature record, not Go/Rust product. Full PLAN027 partial; no physical or bilateral Windows repair-grade promotion.
 
 ```feature-impact
-{"kind":"update","ids":["normal-off"],"reason":"Bounded feature card metadata after H841 Go cold reauth; test-only gen-scoped handoff and 1200B size-class correction, no new product code."}
+{"kind":"updated","ids":["normal-off"],"reason":"Bounded feature card metadata after H841 Go cold reauth; test-only gen-scoped handoff and 1200B size-class correction, no new product code."}
 ```
