@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "source_sha": "377613dec8ea3b2fdd123079a580326c2ba52dfb",
+  "fixture_source_sha": "456eabfa610af962a734fccf5a6c8661342f56c5",
+  "run_id": 41378829504,
+  "artifact_name": "plan027-h861-oneway-c2s105-2m",
+  "result": "FAIL_PRODUCT_ASYMMETRIC_AUTHENTICATED_GENERATION_REJOIN_AND_NATIVE_INCONCLUSIVE",
+  "native_result": "INCONCLUSIVE",
+  "scope": "Original Linux Go TLS Rust M4 Normal repair OFF 20s real 2Mbps both/25ms0%,105s real c2s-only 100pct tc loss while s2c 0pct with generator/probes stopped,120s clean resumed2Mbps each true UDP; no fake Health ACK",
+  "theory": {
+    "weighted_mean_payload_bytes": 753.6,
+    "app_pps_each": 331.74,
+    "RTT_ms": 50,
+    "business_BDP_bytes_each": 12500
+  },
+  "pre20": {
+    "first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    }
+  },
+  "recovery120": {
+    "unique_first_fraction": {
+      "c2s": 0.4688205327314541,
+      "s2c": 0.5153102693523682
+    },
+    "missing_after_drain": {
+      "c2s": 21166,
+      "s2c": 19296
+    },
+    "delivered_only_p99_ms": {
+      "c2s": 25.3,
+      "s2c": null
+    },
+    "active_zero_delivery_ms": {
+      "c2s_udp": 64110,
+      "s2c_udp": 64130
+    },
+    "source_tun_kernel_drops": {
+      "client": 0,
+      "server": 19241
+    }
+  },
+  "netem_blackhole105": {
+    "c2s_client_qdisc_drops": 11,
+    "s2c_server_qdisc_drops": 0
+  },
+  "native_ready_generations": {
+    "client": 2,
+    "server": 2
+  },
+  "native_owned_stop": true,
+  "native_cleanup": true,
+  "cold_stages_unix_ms": {
+    "server": {
+      "dead_drained": 1793587266891,
+      "first_syn": 1793587345328,
+      "native_ready": 1793587345533
+    },
+    "client": {
+      "dead_drained": 1793587345296,
+      "tun_trigger": 1793587345296,
+      "syn_start": 1793587345303,
+      "syn_established": 1793587345354,
+      "native_ready": 1793587345510
+    }
+  },
+  "asymmetric_dead_interval_ms": 78405,
+  "host_psi_peak_pct": 22.38,
+  "host_contention_warning": true,
+  "limits": [
+    "Native runner marked INCONCLUSIVE for injector capacity warning and TUN upstream loss but stage gap and real missing first cannot be labeled PASS; upstream losses occurred with ~64s native generation mismatch",
+    "Server authentic dead decision precedes client by78.405s under healthy reverse leg; restored outbound new business cannot rejoin until client eventually separately ages out its own Health. Exact cause from product state/Health, not claimed to be solely VM. 64.1s zero delivery and ~half first dominate.",
+    "Previous unilateral first attempt Action41378640770 invalid fixture KeyError jitter_ms, PRE_NATIVE not product failure; corrected exact full netem phase source done once here",
+    "Do not shorten global dead90 or trigger unverified Go reauth; an authenticated retirement/generation convergence protocol is required for robust asymmetric failure, NOT_RUN implementation",
+    "2Mbps diagnostic cannot grade Windows/physical or 10Mbps unilateral capacity"
+  ]
+}

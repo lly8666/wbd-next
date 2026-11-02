@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "source_sha": "377613dec8ea3b2fdd123079a580326c2ba52dfb",
+  "fixture_source_sha": "f969e733a7ea875c9721d6271d4221271d521f38",
+  "run_id": 41378640754,
+  "artifact_name": "plan027-h861-bilateral105-10m",
+  "result": "PASS_SCOPED_ORIGINAL_LINUX_BILATERAL_105S_HEALTH_REJOIN_10MBPS",
+  "native_result": "PASS_SCOPED_OBSERVATION",
+  "scope": "One source-frozen original Go TLS Rust M4 Linux Normal repair OFF true 20s 10Mbps each/25ms0%,105s both 100pct real tc/netem no source app/probes,120s clean 10Mbps each/25ms0%, original kernel TUN data and authenticated generational rejoin",
+  "theory": {
+    "weighted_mean_payload_bytes": 753.6,
+    "app_pps_each": 1658.7,
+    "RTT_ms": 50,
+    "app_BDP_bytes_each": 62500
+  },
+  "pre20": {
+    "unique_first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "p99_ms": {
+      "c2s": 25.5,
+      "s2c": 25.5
+    }
+  },
+  "recovery120": {
+    "unique_first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "p99_ms_delivered_only": {
+      "c2s": 25.4,
+      "s2c": 25.4
+    },
+    "missing_after_drain": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "active_zero_delivery_ms": {
+      "c2s_udp": 240,
+      "s2c_udp": 260
+    },
+    "source_tun_tx_kernel_drop": {
+      "client": 0,
+      "server": 0
+    }
+  },
+  "real_loss_during_blackhole": {
+    "client_netem_drops": 8,
+    "server_netem_drops": 8
+  },
+  "authenticated_generation_ready": {
+    "client": 2,
+    "server": 2
+  },
+  "native_go_RX_handoff_verified": true,
+  "owned_Stop": true,
+  "netns_absent": true,
+  "process_cpu_s_observed": {
+    "client": 9.87,
+    "server": 9.91
+  },
+  "rss_peak_bytes": {
+    "client": 26243072,
+    "server": 26652672
+  },
+  "host_PSI_some_peak_pct": 0.06,
+  "host_limits": [],
+  "cold_stages_unix_ms": {
+    "client": {
+      "dead_drained": 1793587138645,
+      "tun_trigger": 1793587152759,
+      "syn_start": 1793587152763,
+      "syn_established": 1793587152814,
+      "native_ready": 1793587152979
+    },
+    "server": {
+      "dead_drained": 1793587138208,
+      "first_syn": 1793587152789,
+      "native_ready": 1793587153000
+    }
+  },
+  "inference": "Client waited ~14.1s in dormant TUN-ready gate between old dead owner and genuine restored new business (network blackout still active). After real TUN new business, SYN established in 50ms, protected Go TLS+Rust M4 native readiness another164ms; server READY 241ms after trigger. True zero-delivery on new traffic 240/260ms. No need to shorten valid dead90 or SYN timer on these data; earlier old e928 same-code 10Mbps INCONCLUSIVE TUN27 remains independent runner/source evidence, not rewritten.",
+  "limits": [
+    "Exact SOURCE 3776 event-only Go diagnostic product; single hosted VM10M bilateral success, not Windows/physical/one-way healthy-lane test",
+    "First and p99 are of delivered business, packet-missing0 explicitly checked; no physical wire C or phase-aware authenticated OOB shutdown notice qualification",
+    "Same code except one-event Go markers vs e928; cannot infer performance improvement causally from separate VMs"
+  ]
+}
