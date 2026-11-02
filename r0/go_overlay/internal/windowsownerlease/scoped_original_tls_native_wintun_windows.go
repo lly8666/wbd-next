@@ -17,6 +17,7 @@ type ScopedOriginalTLSNativeWintun struct {
 func ConnectScopedOriginalTLSWintun(ctx context.Context,
  owner *realityfront.V4WindowsAuthenticatedClientOwner,
  tun *windowsclient.TUN,installation,epoch [16]byte,
+ geometry ...uint32,
 )(*ScopedOriginalTLSNativeWintun,error){
  if ctx==nil||owner==nil||tun==nil||installation==[16]byte{}||
  epoch==[16]byte{}{return nil,ErrNativeDeviceNotOwned}
@@ -24,7 +25,7 @@ func ConnectScopedOriginalTLSWintun(ctx context.Context,
  id,err:=out.native.Identity(ctx,installation,epoch)
  if err!=nil{return nil,err}
  out.identity=id
- if err=owner.BindOriginalM4NativeDevice(ctx,out.native,id);err!=nil{
+ if err=owner.BindOriginalM4NativeDevice(ctx,out.native,id,geometry...);err!=nil{
   return out,errors.Join(ErrNativeDeviceNotOwned,err)
  }
  state,err:=owner.OriginalOwnerReadback()

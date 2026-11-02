@@ -47,10 +47,10 @@ func V4WindowsEstablishOriginalClientOwner(
 // A successful device binding remains scoped, not a product Apply signal.
 func(s *V4WindowsAuthenticatedClientOwner) BindOriginalM4NativeDevice(
     ctx context.Context,device V4WindowsCurrentNativeDevice,
-    id V4WindowsNativeDeviceIdentity,
+    id V4WindowsNativeDeviceIdentity,geometry ...uint32,
 )error{
     if s==nil||s.bridge==nil||s.device!=nil{return errV4WindowsOwner}
-    held,err:=s.bridge.holdOriginalCreatedWintun(ctx,device,id)
+    held,err:=s.bridge.holdOriginalCreatedWintun(ctx,device,id,geometry...)
     if held!=nil{s.device=held}
     return err
 }

@@ -68,7 +68,7 @@ func (b *v4WindowsNativeOwnerBridge) realNativeDeviceState()(v4WindowsDeviceFenc
 }
 func (b *v4WindowsNativeOwnerBridge) holdOriginalCreatedWintun(
     ctx context.Context,device V4WindowsCurrentNativeDevice,
-    id V4WindowsNativeDeviceIdentity,
+    id V4WindowsNativeDeviceIdentity,geometry ...uint32,
 )(*v4WindowsRealDeviceLease,error){
     if b==nil||device==nil||ctx==nil||b.dll==nil||b.handle==0||
         !b.committed||b.stopped||b.epoch==[16]byte{}||
@@ -77,6 +77,9 @@ func (b *v4WindowsNativeOwnerBridge) holdOriginalCreatedWintun(
         len(id.GUID)>64||len(id.Alias)>128{
         return nil,errV4WindowsOwner
     }
+    if len(geometry)!=0&&len(geometry)!=2{return nil,errV4WindowsOwner}
+    if len(geometry)==2&&(geometry[0]<576||geometry[0]>1500||
+        geometry[1]<576||geometry[1]>geometry[0]){return nil,errV4WindowsOwner}
     if err:=ctx.Err();err!=nil{return nil,err}
     state,err:=b.state()
     if err!=nil||state.phase!=2||state.applied!=0{return nil,errV4WindowsOwner}
@@ -106,15 +109,26 @@ func (b *v4WindowsNativeOwnerBridge) holdOriginalCreatedWintun(
     // frame ceiling; use the smaller bound, never claim the OS MTU is 2048.
     effectiveMTU:=live.MTU
     if effectiveMTU>2048{effectiveMTU=2048}
-    proc,findErr:=b.dll.FindProc("wbd_m0_win_owner_v4_bind_real_path_mtu")
-    if findErr!=nil{return nil,fmt.Errorf("%w: native Rust FrameBudget ABI: %v",errV4WindowsOwner,findErr)}
+    procName:="wbd_m0_win_owner_v4_bind_real_path_mtu"
+    if len(geometry)==2{procName="wbd_m0_win_owner_v5_bind_outer_inner_budget"}
+    proc,findErr:=b.dll.FindProc(procName)
+    if findErr!=nil{
+        release()
+        return nil,fmt.Errorf("%w: native Rust FrameBudget ABI: %v",errV4WindowsOwner,findErr)
+    }
     var maxIPv4 uint32
-    bindErr:=winOwnerCall(proc,uintptr(b.handle),
-        uintptr(unsafe.Pointer(&b.epoch[0])),16,uintptr(id.LUID),
-        uintptr(id.InterfaceIndex),uintptr(effectiveMTU),
-        uintptr(unsafe.Pointer(&maxIPv4)))
+    args:=[]uintptr{uintptr(b.handle),uintptr(unsafe.Pointer(&b.epoch[0])),
+        16,uintptr(id.LUID),uintptr(id.InterfaceIndex)}
+    if len(geometry)==2{
+        // Outer user IP setting and planned INNER receiving Wintun MTU are
+        // different units. The pre-Apply live Wintun number is not Applied.
+        args=append(args,uintptr(geometry[0]),uintptr(geometry[1]))
+    }else{args=append(args,uintptr(effectiveMTU))}
+    args=append(args,uintptr(unsafe.Pointer(&maxIPv4)))
+    bindErr:=winOwnerCall(proc,args...)
     runtime.KeepAlive(b.epoch)
     if bindErr!=nil||maxIPv4<20||maxIPv4>2048{
+        release()
         return nil,fmt.Errorf("%w: native FrameBudget original MTU/peer MSS: %v",errV4WindowsOwner,bindErr)
     }
     lease:=&v4WindowsRealDeviceLease{bridge:b,device:device,identity:id,release:release,maxIPv4:int(maxIPv4)}

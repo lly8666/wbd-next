@@ -115,12 +115,13 @@ func PrepareOriginalTLSNativeProduct(
  client *realityfront.V4WindowsAuthenticatedClientOwner,
  tun *windowsclient.TUN,plan windowsclient.NetworkPlan,
  install,epoch [16]byte,packet N4NativeAuthenticatedPeerTraffic,
+ geometry ...uint32,
 )(*OriginalTLSNativeProductSession,error){
  if ctx==nil||client==nil||tun==nil||packet==nil{
   return nil,ErrNativeDeviceNotOwned
  }
  // REAL original TLS Rust owner+Win32 PnP Hold first, before OS mutation.
- return prepareOriginalTLSNativeProduct(ctx,client,nil,tun,plan,install,epoch,packet)
+ return prepareOriginalTLSNativeProduct(ctx,client,nil,tun,plan,install,epoch,packet,geometry...)
 }
 // Game reuses the SAME one signed Wintun, five-stage WAL and real OS
 // readback; one group rather than n private per-lane OS installations.
@@ -138,9 +139,10 @@ func prepareOriginalTLSNativeProduct(
  game *realityfront.V4WindowsAuthenticatedGameGroup,
  tun *windowsclient.TUN,plan windowsclient.NetworkPlan,
  install,epoch [16]byte,packet N4NativeAuthenticatedPeerTraffic,
+ geometry ...uint32,
 )(*OriginalTLSNativeProductSession,error){
  if ctx==nil||client==nil||tun==nil||packet==nil{return nil,ErrNativeDeviceNotOwned}
- scoped,err:=ConnectScopedOriginalTLSWintun(ctx,client,tun,install,epoch)
+ scoped,err:=ConnectScopedOriginalTLSWintun(ctx,client,tun,install,epoch,geometry...)
  if err!=nil{return nil,err}
  id,err:=windowsclient.N4OriginalCurrentPinnedWintunIdentity(
   ctx,tun,install,epoch)

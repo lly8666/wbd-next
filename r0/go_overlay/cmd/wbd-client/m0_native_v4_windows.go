@@ -422,7 +422,8 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   transport=legacy
  }
  product,e:=windowsownerlease.PrepareOriginalTLSNativeProduct(
-  ctx,owner,tun,plan,o.Installation,session.Epoch,transport)
+  ctx,owner,tun,plan,o.Installation,session.Epoch,transport,
+  o.ConnectionMTU,o.TunnelMTU)
  if e!=nil{return e}
  cleanup:=func()error{
   stop,c:=context.WithTimeout(context.Background(),60*time.Second)

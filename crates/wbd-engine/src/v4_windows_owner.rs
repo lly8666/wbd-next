@@ -338,7 +338,10 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
     let now=m2_clock();
     let mut g=m2_global().lock().map_err(|_|BAD_STAGE)?;
     g.register(direction,RepairBudgetConfig{
-        outer_mtu:u64::from(e.path_mtu).saturating_add(54),
+        // v5 precise OUTER IP bound needs no 54-byte hidden margin.
+        // Historical v4 Win32-TUN-only receipt retains its old formula.
+        outer_mtu:u64::from(e.path_mtu).saturating_add(
+            if e.path_mtu_is_outer{0}else{54}),
         max_repair_bytes_per_epoch:7_000_000,max_pending_reservations:256,
         max_pending_bytes:524_288,io_timeout_ns:100_000_000,
     },now).map_err(|_|BAD_STAGE)?;
@@ -940,8 +943,10 @@ struct Entry {
     peer_mss:u16,
     peer_mss_advertised:bool,
     record_wire_limit:usize,
-    // Real pinned Win32 interface MTU, enrolled after M4 Wintun Hold.
+    // v5 holds configured OUTER full IP MTU. The original v4 ABI still
+    // stores the pre-Apply inner Wintun MTU for legacy callers.
     path_mtu:u16,
+    path_mtu_is_outer:bool,
     device:Option<ScopedWindowsWintunIdentity>,
     feature7:bool,
     #[cfg(feature="fec2_product_record")]
@@ -1019,7 +1024,7 @@ fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i
         authenticated_epoch:identity.logical_epoch,
         peer_mss:handoff.peer_mss,
         peer_mss_advertised:handoff.peer_mss_advertised,
-        record_wire_limit,path_mtu:0,device:None,
+        record_wire_limit,path_mtu:0,path_mtu_is_outer:false,device:None,
         feature7:handoff.negotiated_features==7,
         #[cfg(feature="fec2_product_record")]
         fec2_tx:None,
@@ -1083,6 +1088,7 @@ fn set_path_mtu(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,
         !e.device.is_some_and(|d|!d.quiesced&&d.luid==luid&&d.ifindex==ifindex)||
         e.path_mtu!=0 {return Err(BAD_STAGE)}
     e.path_mtu=mtu;
+    e.path_mtu_is_outer=false;
     // Feature7 must reserve enough room for BOTH canonical FEC2
     // 10B source and 12B+2B protected-symbol repair, never return the
     // larger Normal/off packet ceiling and fail in the live seal path.
@@ -1106,6 +1112,40 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v4_bind_real_path_mtu(
     let Ok(mut registry)=registry().lock()else{return BAD_STAGE};
     match set_path_mtu(&mut registry,h,exact,luid,ifindex,mtu as u16){
         Ok(bound)=>{unsafe{out.write(bound)};OK},
+        Err(e)=>e,
+    }
+}
+// Only called with authenticated TLS + CURRENT Wintun identity, before
+// the existing five-stage M4 OS Apply. Inner is a planned receive ceiling;
+// the true OS MTU readback remains separately required for Applied.
+fn set_outer_inner_budget(r:&mut Registry,h:u64,epoch:[u8;16],luid:u64,
+    ifindex:u32,outer:u16,planned_inner:u16)->Result<u32,i32>{
+    if !(576..=1500).contains(&outer)||!(576..=1500).contains(&planned_inner)
+        ||planned_inner>outer{return Err(INVALID)}
+    let business=set_path_mtu(r,h,epoch,luid,ifindex,outer)?;
+    let lane=r.entries.get(&h).ok_or(UNKNOWN)?;
+    let mut e=lane.lock().map_err(|_|BAD_STAGE)?;
+    if business<20||business>u32::from(planned_inner){
+        e.path_mtu=0;
+        e.path_mtu_is_outer=false;
+        return Err(INVALID)
+    }
+    e.path_mtu_is_outer=true;
+    Ok(business)
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_owner_v5_bind_outer_inner_budget(
+    h:u64,epoch:*const u8,epoch_len:usize,luid:u64,ifindex:u32,
+    outer_ip_mtu:u32,planned_inner_ip_mtu:u32,out:*mut u32,
+)->i32{
+    if out.is_null()||outer_ip_mtu>1500||planned_inner_ip_mtu>1500{
+        return INVALID
+    }
+    let Some(epoch)=v3_epoch(epoch,epoch_len)else{return INVALID};
+    let Ok(mut registry)=registry().lock()else{return BAD_STAGE};
+    match set_outer_inner_budget(&mut registry,h,epoch,luid,ifindex,
+        outer_ip_mtu as u16,planned_inner_ip_mtu as u16){
+        Ok(b)=>{unsafe{out.write(b)};OK},
         Err(e)=>e,
     }
 }

@@ -62,7 +62,7 @@ func TestOriginalProductAutomaticTunnelMTU(t *testing.T){
         {"device-small",1500,1280,1360,0,realityfront.FecV2Auto,false,1240,1195},
         {"peer-mss",1500,1500,1200,0,realityfront.FecV2Fixed,false,1200,1155},
         {"peer-record",1500,1500,1360,1180,realityfront.FecV2Fixed,false,1180,1135},
-        {"jumbo-still-peer-limited",9000,9000,1360,0,realityfront.FecV2Off,false,1360,1329},
+        {"jumbo-device-still-peer-limited",1500,9000,1360,0,realityfront.FecV2Off,false,1360,1329},
     }{
         t.Run(tc.name,func(t *testing.T){
             wire,inner,err:=deriveMTUBudget(tc.outer,tc.device,tc.mss,tc.record,tc.mode,tc.game)
@@ -70,6 +70,12 @@ func TestOriginalProductAutomaticTunnelMTU(t *testing.T){
                 t.Fatalf("wire=%d inner=%d err=%v; want %d/%d",wire,inner,err,tc.wire,tc.inner)
             }
         })
+    }
+    if _,_,err:=deriveMTUBudget(9000,9000,1360,0,realityfront.FecV2Off,false);err==nil{
+        t.Fatal("public outer MTU 9000 requires separate experimental qualification")
+    }
+    if wire,inner,err:=deriveMTUBudget(1500,1500,1460,0,realityfront.FecV2Off,true,true);err!=nil||wire!=1460||inner!=1398{
+        t.Fatalf("Game+FEC typed type1 must be 1398, wire=%d inner=%d err=%v",wire,inner,err)
     }
     if _,_,err:=deriveMTUBudget(1500,1500,536,0,realityfront.FecV2Fixed,false);err==nil{
         t.Fatal("unsupported small path must fail explicitly before TUN worker starts")
