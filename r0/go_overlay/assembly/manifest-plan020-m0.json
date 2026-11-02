@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "d95d621f0fc10982bff81f18e2d998226841b779",
+      "result_blob": "ea9608a2ef80ce0eb983267334b849f3f45e4e61",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -144,6 +144,10 @@
         {
           "find": "flag.Int(\"mtu\", 1500, \"connection MTU\")",
           "replace": "flag.Int(\"mtu\", 1460, \"outer complete IPv4 IP packet ceiling (default 1460, no L2); inner auto-derived\")"
+        },
+        {
+          "find": "\ttunMTU, err := pathmtu.DeriveTunnelInterfaceMTU(pathmtu.Config{ConnectionMTU: *mtu, IPv4HeaderLen: 20, TCPHeaderLen: 20, RecordWireLimit: int(*clientLimit), ParityShards: fecBudgetParity})\n\tif err != nil {\n\t\treturn err\n\t}",
+          "replace": "\t// Native V4 uses the ONE Rust FEC2 codec budget, never Go FEC1/56B.\n\tvar tunMTU int\n\tif *nativeV4Product {\n\t\tmode,e:=m0ParseWindowsV4Mode(*lanes,*fec2Selection.Mode,*fecMode,*fecParity)\n\t\tif e!=nil{return e}\n\t\tgameFEC:=(mode==m0WinModeGame2||mode==m0WinModeGame4)&&*fec2Selection.Mode==\"fixed\"\n\t\ttunMTU,err=m0WindowsV4StartupInnerMTU(\n\t\t\tfilepath.Join(windowsExecutableDir(),\"wbd_engine.dll\"),\n\t\t\tuint32(*mtu),uint32(*clientLimit),mode,gameFEC)\n\t} else {\n\t\ttunMTU,err=pathmtu.DeriveTunnelInterfaceMTU(pathmtu.Config{\n\t\t\tConnectionMTU:*mtu,IPv4HeaderLen:20,TCPHeaderLen:20,\n\t\t\tRecordWireLimit:int(*clientLimit),ParityShards:fecBudgetParity})\n\t}\n\tif err!=nil{return err}"
         }
       ]
     },

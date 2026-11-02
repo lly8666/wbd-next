@@ -103,3 +103,40 @@ func m0WindowsV4LocalSYNBudget(library string,outer,physical uint32,
  }
  return result,nil
 }
+
+// Same Rust cold ABI as the original Windows SYN/data owner. Here the
+// physical outlet is still unknown (0); each authenticated generation
+// subsequently applies the REAL OS egress MTU as an additional ceiling.
+// A user-supplied record-wire cap is never silently raised.
+func m0WindowsV4StartupInnerMTU(library string,outer,recordCap uint32,
+ mode m0WindowsV4Mode,gameFEC bool)(int,error){
+ if outer<576||outer>1500||recordCap<51||recordCap>outer-40||
+  !filepath.IsAbs(library)||filepath.Ext(library)!=".dll"{
+  return 0,fmt.Errorf("native V4 Rust startup MTU/cap/DLL invalid")
+ }
+ kind,err:=m0WindowsV4BudgetMode(mode,gameFEC)
+ if err!=nil{return 0,err}
+ dll,err:=syscall.LoadDLL(library)
+ if err!=nil{return 0,err}
+ defer dll.Release()
+ proc,err:=dll.FindProc("wbd_m0_v4_mtu_budget_v1")
+ if err!=nil{return 0,err}
+ in:=m0RustColdBudgetInput{
+  Version:1,Size:uint32(unsafe.Sizeof(m0RustColdBudgetInput{})),
+  OuterIPMTU:outer,PhysicalIPMTU:0,PeerRawMSS:outer-40,
+  RecordCap:recordCap,IPHeader:20,TCPHeader:20,Mode:kind,
+ }
+ var out m0RustColdBudgetOutput
+ rc,_,callErr:=proc.Call(uintptr(unsafe.Pointer(&in)),uintptr(unsafe.Sizeof(in)),
+  uintptr(unsafe.Pointer(&out)),uintptr(unsafe.Sizeof(out)))
+ runtime.KeepAlive(in);runtime.KeepAlive(out)
+ if rc!=0||out.Version!=1||out.Size!=uint32(unsafe.Sizeof(out))||
+  out.EffectiveOuterIPMTU!=outer||out.AdvertisedSynMSS!=outer-40||
+  out.RecordWire>recordCap||out.RecordWire+40>outer||
+  out.InnerIPCap<576||out.InnerIPCap>out.RecordPayload{
+  return 0,errors.Join(fmt.Errorf(
+   "native V4 Rust startup mismatch mode=%s outer=%d record=%d inner=%d rc=%d",
+   mode,outer,out.RecordWire,out.InnerIPCap,rc),callErr)
+ }
+ return int(out.InnerIPCap),nil
+}
