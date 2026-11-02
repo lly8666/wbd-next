@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 909,
-  "checkpoint_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "sequence": 910,
+  "checkpoint_sha": "cd46b82bc8803f3fd2b45e3532460976c7c8e597",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H909 independent archival of genuine prior SOURCE H890 Normal ON original Windows NPF/Go TLS/Rust↔Linux 10Mbps per-dir 25ms0 loss 300s both first=1.0, 17.9375 Windows whole EXE CPU-s/317s 41.69MB RSS, dual owned Stop PASS, RTT p99 47/52.594ms, one-way p99 NOT_MEASURED; H892 Normal OFF 50M 60s first .999997/1, CPU8.56s 41.55MB, Stop PASS; H897 Normal OFF 100M 60s first .999993/1, CPU23.406s 41.44MB, Stop PASS, 234/249ms RTT p99. Old qualified source-specific; new H908 Windows cold TLS after authenticated dead retry Action41415722303 in progress and independently compiled; H903 old in_progress no result, H905 native105 gen2 bootstrap failure archived. No new product/fixture or native dispatch H909.",
-  "why_now": "Section0 requires ON≥300s and capacity OFF representative proof. These historical native runs already independently completed signed SAME-SOURCE for both endpoints, so use source-scoped results instead of rerunning unaffected Rust steady data path, which H907/H908 did not edit; do not claim later-SOURCE updated native recovery or new 200M qualification.",
+  "current_task": "H910 fix numeric theory source-mix boundary from immutable H909 actual scenario readback: H890 Normal ON10m uses 5/10/25/60 weighted 96/288/1060/1200 payload, avg 1018.6 B ~1227 PPS; H892/H897 Normal OFF50/100m use 2/3/25/70, avg 1115.56 B ~5603/~11205 PPS instead of erroneously copied 6136/12271. Actual signed native first delivery/CPU/Stop PASS unchanged. H908 source6693 native105 original Linux/Windows full tests compile PASS and native two-OS job still in_progress at last observation; H903 old Action41410970576 remains stuck; no new native test H910.",
+  "why_now": "User asks distinguish source, fixture and capacity; first archival note inadvertently reused H890 source packet mix for H892/H897, overstating high-throughput PPS by ~9.5%. Actual declared scenario files are authoritative. Correct before drawing CPU/memory limits; no extra product rerun.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H908 original 105s new TLS + business first + both owned Stop after timeout repair; if passed qualify exact same-SOURCE 105 lifecycle only. Continue independently checking whether prior Fixed/Auto/Game affected ON scenes and 200M Normal OFF already have PASS; add only missing discriminating tests. H903 stuck old run not rerun or promoted. Physical NOT_RUN.",
+  "next_action": "Collect H908 exact-source genuine Windows-origin 105s original TLS gen2 retry and both UDP+Stop after restored IFB; compare against H905 immutable failure first. Then finish missing ON affected and capacity-limited OFF representative scenarios; no duplicate old H903 and no physical deploy.",
   "unverified": true,
   "last_tested_source": "f3f4c86fee7ec8630b49c565ba9c7ffb517636d5",
   "evidence_refs": [
@@ -24,8 +24,8 @@
     "docs/devlog/M0/20261102-PLAN027-H902-SOURCE-REF-CONTRACT.md",
     "docs/devlog/M0/20261102-PLAN027-H906-QUANTIFIED-NATIVE-COSTS.md",
     "docs/devlog/M0/20261102-PLAN027-H907-COLD-TLS-RETRY.md",
-    "docs/devlog/M0/20261102-PLAN027-H908-ASSEMBLY-SOURCE-SYNC.md",
-    "docs/devlog/M0/20261102-PLAN027-H909-REUSE-ON300-OFF50-100.md"
+    "docs/devlog/M0/20261102-PLAN027-H909-REUSE-ON300-OFF50-100.md",
+    "docs/devlog/M0/20261102-PLAN027-H910-SOURCE-MIX-PPS-CORRECTION.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."

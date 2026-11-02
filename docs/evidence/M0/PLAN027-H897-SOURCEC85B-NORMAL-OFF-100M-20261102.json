@@ -45,10 +45,28 @@
     "C_wire_bytes": "NOT_MEASURED"
   },
   "theory": {
-    "mean_payload_bytes_assuming_mix_weights": 1018.6,
-    "pps_per_direction_approx": 12272,
+    "mean_payload_bytes_assuming_mix_weights": 1115.56,
+    "pps_per_direction_approx": 11205,
     "app_BDP_bytes_per_direction_approx": 625000,
-    "caveat": "25ms each way yields nominal 50ms RTT only; app source payload mean excludes outer overhead, FEC, copies or driver/OS buffering"
+    "caveat": "Actual original 2/3/25/70 packet-count mix gives 1115.56B mean payload; nominal 50ms two-way impairment RTT excludes packet headers/underlay/FEC and queue, not measured RTT. Source PPS is approximate from payload Mbps, not actual Ethernet PPS.",
+    "actual_packet_mix": [
+      {
+        "udp_payload_bytes": 96,
+        "packets_weight": 2
+      },
+      {
+        "udp_payload_bytes": 288,
+        "packets_weight": 3
+      },
+      {
+        "udp_payload_bytes": 1060,
+        "packets_weight": 25
+      },
+      {
+        "udp_payload_bytes": 1200,
+        "packets_weight": 70
+      }
+    ]
   },
   "scope_limits": [
     "Cold reconnect fix H907/H908 not executed at this historical source",
