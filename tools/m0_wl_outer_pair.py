@@ -109,7 +109,8 @@ for repair in ("off","on"):
              "R_over_total":r/(f+r+c) if f+r+c else None,
              "ledger_verified":budget_ok}
     qualifies=(code==0 and not timed_out and not wal_left and
-       report.get("source")==source and report.get("linux_binary_source")==source and
+       report.get("source")==os.environ["GITHUB_SHA"] and
+       report.get("linux_binary_source")==source and
        report.get("mode_public")=="PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal" and
        report.get("stop")=="PASS_BOTH_OWNED" and
        native.get("status")=="MEASURED_BOTH_OS_KERNEL" and

@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "fixture_source_sha": "ae2779f8c4c6d010f723b5c332ecc4aad155dccd",
+  "run_id": 41419832546,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41419832546",
+  "artifact_id": 13130155380,
+  "result": "FAIL_FIXTURE_SOURCE_GUARD_AFTER_PASS_OFF_LEG",
+  "off_leg": {
+    "mode": "normal",
+    "policy": "OFF",
+    "scenario": "plan027-h913-normal-pair-100m-25ms0-60s",
+    "duration_s": 60,
+    "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+    "fixture_source_sha": "ae2779f8c4c6d010f723b5c332ecc4aad155dccd",
+    "first_fraction": {
+      "windows": 0.999985,
+      "linux": 1
+    },
+    "offered_mbps": {
+      "windows": 99.4792,
+      "linux": 99.9999
+    },
+    "goodput_mbps": {
+      "windows": 99.9983,
+      "linux": 99.4792
+    },
+    "windows_whole_cpu_s": 9.0312,
+    "windows_peak_rss_bytes": 41811968,
+    "windows_F_wire_bytes": 821852694,
+    "windows_R_wire_bytes": 0,
+    "windows_C_wire_bytes": 1039610,
+    "tc_netem_drops": {
+      "eth0": 0,
+      "ifb": 0
+    },
+    "owned_stop": "PASS_BOTH_OWNED"
+  },
+  "on_leg": "NOT_RUN_DUE_TO_FIXTURE_SOURCE_MISMATCH",
+  "cause": "pair Python qualified report.source against product SOURCE; report.source is correctly fixture Git SHA while report.linux_binary_source is product SHA",
+  "classification": "HARNESS_FAIL_NOT_PRODUCT_STOP_OR_CAPACITY_FAIL"
+}

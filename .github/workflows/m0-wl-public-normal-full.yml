@@ -27,6 +27,7 @@ on:
       - tests/test_m0_wl_native_rx_abba.py
       - tools/m0_wl_windows_cpu_audit.py
       - tests/test_m0_wl_windows_cpu_audit.py
+      - tools/m0_wl_outer_pair.py
       - tools/m0_wl_lock_profile.py
       - tests/test_m0_wl_lock_profile.py
       - tools/m0_wl_netem.py
