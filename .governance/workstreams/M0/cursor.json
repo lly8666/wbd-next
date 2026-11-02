@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 985,
-  "checkpoint_sha": "464e4ebccd4c13272114ca3b5d34325939e60742",
+  "sequence": 986,
+  "checkpoint_sha": "038136b5e9021c33af600f4069dd06a363e72f9b",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "M0 PLAN027A H985 MSS/Fixed-FEC2 56B scoped native closeout: five Windows/WSL2 original-Go native Actions and five real two-Linux ARM64 cases all PASS; H984 PLAN012 true original-Go Linux combined 41503654559 fully SUCCESS. Preserve old failures and unqualified FEC quality.",
-  "why_now": "Actual byte-level MSS, record, both OS TUN readback and Stop verified.",
+  "current_task": "H986 source-gated one current-origin signed Windows/WSL2 build and three independent DF/Auto-staged/GameFEC-staged measurements; NOT_RUN until native Actions complete; scoped H985 MSS PASS retained.",
+  "why_now": "H958 DF and H957 staged scenes NOT_RUN, previous source-locked helper points at stale binary; avoid reusing old signed product and duplicate dispatch.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Scope complete; physical WAN/long Auto maturity and PLAN028-030 remain independent.",
+  "next_action": "Collect H986 build/three native action run IDs and actual per-source statuses, CPU/RSS/p99/Stop and DF OS feedback; then address remaining exceptional platform/mode/route/ARM64 gaps. Do not close full 027A or start 028 before gates.",
   "unverified": true,
   "last_tested_source": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
   "evidence_refs": [
@@ -25,8 +25,10 @@
     "docs/evidence/M0/PLAN027A-H984-OLD-TEST-MSS-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H984-TEST-FIXTURE.md",
     "docs/evidence/M0/PLAN027A-H985-MSS-FEC-COLLECT-20261103.json",
-    "docs/devlog/M0/20261103-PLAN027A-H985-COLLECT.md"
+    "docs/devlog/M0/20261103-PLAN027A-H985-COLLECT.md",
+    "docs/evidence/M0/PLAN027A-H986-SOURCE-BUILD-THREE-SCENES-20261103.json",
+    "docs/devlog/M0/20261103-PLAN027A-H986-DF-STAGED-ONE-BUILD.md"
   ],
   "open_requests": [],
-  "partial_summary": "Five Windows runs 41496471520 Fixed1460 MSS1420 record1420 inner1375; 41496482942 Fixed1500 MSS1460 record1460 inner1415; 41496496092 Normal1389; 41496509099 Auto1375; 41496520728 GameFEC1358 all genuine UDP/TCP/Stop. Linux ARM64 41496813152 five true two-Go clients/server modes PASS, asymmetric 1500/1280 MSS1460/1240 wire1240 OS1195. PLAN012 old 41496813024 failed original1360, H983 41502753626 old-test compile failed; H984 41503654559 all success (1pct 512/508, Fixed/Auto64, Game2/4 no HOL, Stop)."
+  "partial_summary": "Existing H981/H982 Windows/Linux MSS Fixed/Auto/Normal/GameFEC functional PASS and H984 original-Go combined PASS; H986 new actual native scenes and dynamic MTU/DF remain NOT_RUN; no current in-flight Actions at handover."
 }

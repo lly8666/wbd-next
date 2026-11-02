@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "checkpoint_parent_source": "038136b5e9021c33af600f4069dd06a363e72f9b",
+  "binary_source_sha": null,
+  "build_action_run": null,
+  "state": "SOURCE_SCENARIOS_AND_GATED_DISPATCH_PREPARED_NOT_RESULT",
+  "build_once": "NOT_RUN",
+  "independent_native": [
+    {
+      "mode": "Normal",
+      "scenario": "scenarios/plan027a-h958-normal-1460-5m-df-60s.json",
+      "actual_df0_1728": "NOT_RUN",
+      "actual_df1_emsgsize": "NOT_RUN",
+      "native_icmp3_code4": "NOT_MEASURED"
+    },
+    {
+      "mode": "Auto FEC2",
+      "scenario": "scenarios/plan027a-h986-auto-1460-5m-staged5-30-5-210s.json",
+      "stages_loss_pct": [
+        5,
+        30,
+        5
+      ],
+      "native_first_delivery": "NOT_RUN",
+      "cpu_rss_p99_stop": "NOT_RUN"
+    },
+    {
+      "mode": "Game4+FEC2",
+      "scenario": "scenarios/plan027a-h957-game4fec-1460-3m-staged5-30-5-210s.json",
+      "stages_loss_pct": [
+        5,
+        30,
+        5
+      ],
+      "native_first_delivery": "NOT_RUN",
+      "cpu_rss_p99_stop": "NOT_RUN"
+    }
+  ],
+  "source_policy": "new real binary at workflow head, both Windows and Linux artifacts; each measurement in its own Action, prebuilt source SHA and run ID exact; no duplicate dispatch; original old failures retained",
+  "existing_qualified": [
+    "H981 Windows MSS/Fixed",
+    "H982 five Linux ARM64 endpoints",
+    "H984 original Go combined"
+  ],
+  "unverified": [
+    "cross-mode exceptional DF0 user-space fragmentation and native ICMP3/4 across all platforms",
+    "dynamic route/lane shrink and OS reapplied",
+    "remaining ARM64 distinct Game/DF matrix",
+    "physical PMTUD/WAN",
+    "complete PLAN027A exit"
+  ],
+  "next_task": "PLAN027A_REMAINS_OPEN; PLAN028_NOT_STARTED"
+}

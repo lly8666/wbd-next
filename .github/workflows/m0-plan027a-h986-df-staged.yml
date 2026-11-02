@@ -1,0 +1,115 @@
+name: M0 PLAN027A H986 exact-source DF and staged independent native
+run-name: "M0|PLAN027A-H986-DF-STAGED|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027a-h986-df-staged.yml]
+permissions: {contents: read, actions: write}
+concurrency:
+  group: m0-plan027a-h986-single-source
+  cancel-in-progress: false
+jobs:
+  build-once-then-independent-scenarios:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: One immutable current source, validate genuine native fixtures first
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          python3 -m unittest tests.test_m0_wl_native_df_kernel tests.test_m0_wl_perf_v2_config tests.test_m0_wl_native_mtu_contract -v
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          rows=(
+            ("normal","scenarios/plan027a-h958-normal-1460-5m-df-60s.json",5),
+            ("auto","scenarios/plan027a-h986-auto-1460-5m-staged5-30-5-210s.json",5),
+            ("game4-fec","scenarios/plan027a-h957-game4fec-1460-3m-staged5-30-5-210s.json",3),
+          )
+          for mode,path,mbps in rows:
+              s=read_scenario(path)
+              assert s["public_mode"]==mode and s["tun_mtu"]==1460
+              assert all(s[d]["offered_mbps"]==mbps for d in ("windows_to_linux","linux_to_windows"))
+              if mode!="normal":
+                  assert [v["start_s"] for v in s["impairment_stages"]]==[0,40,80]
+                  assert s["duration_s"]==210
+                  assert all([p[d]["loss_pct"] for p in s["impairment_stages"]]==[5,30,5] for d in ("windows_to_linux","linux_to_windows"))
+              print("H986_ONE_SCENARIO_VALID",mode,path,s["scenario_sha256"])
+          PY
+          echo H986_CURRENT_SOURCE_FIXED_AND_GAME_HISTORICAL_OLD_FAIL_PRESERVED
+      - name: Build only once by a genuine Normal source-exact Windows Linux Action
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          wanted="M0-WIN-LINUX|$GITHUB_SHA|normal|no-scene|outer=default1460"
+          existing="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+            jq -r --arg x "$wanted" '.workflow_runs[] | select(.display_title==$x) | .id' | head -1)"
+          if [ -n "$existing" ]; then
+            echo "H986_REUSE_EXISTING_EXACT_BUILD_ACTION=$existing"
+          else
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode=normal -f native_outer_mtu=default1460 \
+              -f run_n0=false -f outer_repair=on -f perf_scenario_file=
+            echo H986_DISPATCHED_ONE_CURRENT_SOURCE_FUNCTIONAL_AND_BUILD_NOT_PASS
+          fi
+      - name: Collect complete exact build result and verify both OS artifacts before source reuse
+        shell: bash
+        run: |
+          set -euo pipefail
+          title="M0-WIN-LINUX|$GITHUB_SHA|normal|no-scene|outer=default1460"
+          rid=
+          result=
+          for trial in $(seq 1 285);do
+            test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA" ||
+              { echo H986_REFUSE_HEAD_DRIFT;exit 1; }
+            info="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+              jq -c --arg t "$title" '[.workflow_runs[]|select(.display_title==$t)]|sort_by(.created_at)|last // empty')"
+            if [ -n "$info" ];then
+              rid="$(echo "$info"|jq -r .id)"
+              status="$(echo "$info"|jq -r .status)"
+              result="$(echo "$info"|jq -r .conclusion)"
+              if [ "$status" = completed ];then break;fi
+            fi
+            sleep 12
+          done
+          test -n "$rid" && test "$result" = success ||
+            { echo "H986_BUILD_NOT_SUCCESS run=$rid status=$result (SCENES_NOT_DISPATCHED)";exit 1; }
+          test "$(gh api "repos/$GH_REPO/actions/runs/$rid" --jq .head_sha)" = "$GITHUB_SHA"
+          gh api "repos/$GH_REPO/actions/runs/$rid/artifacts" --jq '.artifacts[] | select(.expired==false) | .name' >/tmp/h986-artifacts
+          grep -Fx "m0-wl-windows-product-binaries-$GITHUB_SHA" /tmp/h986-artifacts
+          grep -Fx m0-plan024-linux-product /tmp/h986-artifacts
+          echo "H986_TRUE_CURRENT_SOURCE_BUILD_PASS run=$rid source=$GITHUB_SHA"
+          echo "BUILD_RUN_ID=$rid" >>"$GITHUB_ENV"
+      - name: Three separate native measurement Actions, same exact signed binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA" ||
+            { echo H986_REFUSE_STALE_MAIN;exit 1; }
+          while IFS='|' read -r mode scene;do
+            [ -n "$mode" ] || continue
+            title="M0-WIN-LINUX|$GITHUB_SHA|$mode|$scene|outer=default1460"
+            existing="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+              jq -r --arg x "$title" '.workflow_runs[] | select(.display_title==$x) | .id' | head -1)"
+            if [ -n "$existing" ];then
+              echo "H986_ALREADY_DISPATCHED $existing mode=$mode scene=$scene"
+              continue
+            fi
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f "public_mode=$mode" -f native_outer_mtu=default1460 \
+              -f run_n0=false -f outer_repair=on -f "perf_scenario_file=$scene" \
+              -f "perf_reuse_run_id=$BUILD_RUN_ID" -f "perf_binary_source_sha=$GITHUB_SHA"
+            echo "H986_NATIVE_QUEUED_NOT_PASS mode=$mode scene=$scene binary=$BUILD_RUN_ID source=$GITHUB_SHA"
+          done <<'SCENES'
+          normal|scenarios/plan027a-h958-normal-1460-5m-df-60s.json
+          auto|scenarios/plan027a-h986-auto-1460-5m-staged5-30-5-210s.json
+          game4-fec|scenarios/plan027a-h957-game4fec-1460-3m-staged5-30-5-210s.json
+          SCENES
+          echo H986_THREE_INDEPENDENT_ACTIONS_DISPATCHED_NOT_QUALIFIED

@@ -206,6 +206,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "d83159adf97256d4ce4983d8a95e8198cb0bdc72",
       "evidence": "docs/evidence/M0/PLAN027A-H985-MSS-FEC-COLLECT-20261103.json"
+    },
+    {
+      "platform": "Windows signed Npcap/Wintun + Linux/WSL2 original-Go/Rust",
+      "scope": "H986 current-source one-build three independent native DF0/DF1, staged Auto and Game4FEC 5/30/5; DO NOT inherit old source successes.",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": "docs/evidence/M0/PLAN027A-H986-SOURCE-BUILD-THREE-SCENES-20261103.json"
     }
   ],
   "limitations": [
