@@ -212,6 +212,7 @@ jobs:
       - run: python -m unittest tests.test_m0_wl_native_rx_abba -v
       - run: python -m unittest tests.test_m0_wl_native_os_deadline -v
       - run: python -m unittest tests.test_m0_wl_native_step_runner -v
+      - run: python -m py_compile tools/m0_wl_public_normal_e2e.py tests/test_m0_plan027_managed_unilateral.py
       - run: python -m unittest tests.test_m0_plan027_managed_unilateral -v
       - run: python -m unittest tests.test_m0_wl_gamefec_relay -v
       - run: python -m unittest tests.test_m0_wl_scoped_game2_trigger -v
@@ -1004,6 +1005,41 @@ jobs:
             # they use the genuine shared Linux owner/lane/lifecycle ABI.
             # No separate Fixed6-only public Action or repeated WSL2 startup.
           } finally {
+            # H898: exact host-network comparison is READ ONLY; restoring
+            # the runner's 3 known /32 peers is not restoring DNS or WAL.
+            # Print to live job stdout before artifact uploader DNS can fail.
+            function Write-Original105NetworkWitness([string]$stage){
+              if($env:WBD_WL_RUNNER_MGMT_PIN -ne '1'){return}
+              $original=@()
+              if(Test-Path result/wl-public/windows-route.json){
+                $original=@(Get-Content result/wl-public/windows-route.json -Raw |
+                  ConvertFrom-Json | Where-Object {$_.DestinationPrefix -eq '0.0.0.0/0'} |
+                  ForEach-Object { [string]$_.InterfaceIndex+':'+[string]$_.NextHop+':'+[string]$_.RouteMetric } |
+                  Sort-Object)
+              }
+              $live=@(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue |
+                ForEach-Object { [string]$_.InterfaceIndex+':'+[string]$_.NextHop+':'+[string]$_.RouteMetric } |
+                Sort-Object)
+              $exact=($original.Count -gt 0 -and
+                @(Compare-Object -ReferenceObject $original -DifferenceObject $live).Count -eq 0)
+              $dns='NOT_PROBED'
+              try{
+                $answer=@(Resolve-DnsName -Name github.com -Type A -QuickTimeout -ErrorAction Stop |
+                  Where-Object {$_.Type -eq 'A' -and $_.IPAddress})
+                $dns=if($answer.Count -gt 0){'RESOLVED_A'}else{'NO_A'}
+              }catch{$dns='FAIL_'+$_.Exception.GetType().Name}
+              $v=[ordered]@{source=$env:GITHUB_SHA;scope='RUNNER_OS_READ_ONLY_NOT_PRODUCT_ROUTE_RECOVERY'
+                stage=$stage;original_default=$original;live_default=$live;
+                exact_default_route_readback=$exact;github_com_dns=$dns;
+                native_exit=$e2eExit}
+              $v | ConvertTo-Json -Depth 6 | Set-Content ('result/wl-public/normal105-host-'+$stage+'.json')
+              Write-Output ('PLAN027_ORIGINAL_105_HOST_NET '+$stage+
+                ' exact_default='+$exact+' dns='+$dns+' live_defaults='+$live.Count+
+                ' native_exit='+$e2eExit)
+            }
+            if($env:WBD_WL_RUNNER_MGMT_PIN -eq '1'){
+              Write-Original105NetworkWitness 'before-runner-restore'
+            }
             # Restore exact runner-only peers before other cleanup; this
             # is NOT evidence of product WAL/route/TLS recovery. A vanished
             # runner socket may be recreated at a different IP; the receipt
@@ -1019,6 +1055,7 @@ jobs:
                   Add-Content result/wl-public/normal105-mgmt-state.txt
                 Write-Output 'PLAN027_H888_MANAGED_105_RUNNER_EXACT_RESTORED'
               }
+              Write-Original105NetworkWitness 'after-runner-restore'
             }
             # Local-only route snapshot also runs on a genuine failed E2E.
             # Missing GitHub rescue messages are NOT product stage evidence.
@@ -1428,6 +1465,9 @@ jobs:
             result/wl-public/gamefec-cold-stage.txt
             result/wl-public/gamefec-management-state.txt
             result/wl-public/normal105-mgmt-state.txt
+            result/wl-public/normal105-first-fault.json
+            result/wl-public/normal105-stop-audit.json
+            result/wl-public/normal105-host-*.json
             result/wl-public/gamefec-network-final.txt
             result/wl-public/windows-route-after.json
             result/wl-public/report.json

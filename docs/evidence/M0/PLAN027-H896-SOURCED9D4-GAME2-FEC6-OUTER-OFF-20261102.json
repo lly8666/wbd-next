@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "d9d492bc6a971aa6424dc52ca7a7edfd5a610f9b",
+  "run_id": 41402318224,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41402318224",
+  "artifact_id": 13122228282,
+  "artifact_digest": "sha256:2c52b64f12ae7ad98ef889c4e90d62217fcf052a609ada67a93f049708cd072f",
+  "windows_binary_artifact_digest": "sha256:3c1d763bb0a157d6ea055227b82b3ecd377fbbb28f5cc97a253232bbe60e2d3a",
+  "linux_binary_artifact_digest": "sha256:dd8a36559dae1b4dee8f78b681e6e8203468a078e1ae0b2bde32b268ca8635eb",
+  "scenario_id": "plan027-h896-game2-fec6-outer-off-10m-250ms30-60s",
+  "scenario_sha256": "5f10fc118112c1ca1e8c7215e5fedc400fdd2d7b1eca7b57c8caf5a3ab3e5e46",
+  "platform": "Windows2025 signed NPF/Wintun ↔ WSL2 Ubuntu Linux original Go TLS/Rust",
+  "mode": "game2-fec",
+  "lanes": 2,
+  "protected_fec_profile": "highest fixed6 (Linux actual FEC applied readback)",
+  "outer_repair_effective": {
+    "windows": 0,
+    "linux": 0
+  },
+  "scenario": {
+    "duration_s": 60,
+    "one_way_delay_ms": 250,
+    "loss_pct": 30,
+    "offered_mbps_each": 10,
+    "mtu": 1400
+  },
+  "offered_mbps": {
+    "windows": 9.9974,
+    "linux": 9.9998
+  },
+  "first_delivery_fraction": {
+    "windows": 0.999986,
+    "linux": 0.999932
+  },
+  "first_delivered_mbps": {
+    "windows": 9.9998,
+    "linux": 9.9966
+  },
+  "udp_roundtrip_p99_ms": {
+    "windows": 516,
+    "linux": 524.415
+  },
+  "udp_probe_timeout": {
+    "windows": 0,
+    "linux": 0
+  },
+  "windows_original_process": {
+    "elapsed_s": 75.985,
+    "cpu_total_s": 5.8594,
+    "cpu_kernel_s": 4.0469,
+    "cpu_user_s": 1.8125,
+    "peak_working_set_bytes": 48730112
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "verdict": "TRUE_SIGNED_GAME2_FIXED6_OUTER_OFF_30PCT_250MS_NATIVE_PASS",
+  "limitations": "FEC-protected Game2 independent lanes and random per-link loss only; not Game4 maximum, 20Mbps, all-lane common loss, ON variant, one-way p99 or physical; no complete per-OS F/R/C in final report."
+}

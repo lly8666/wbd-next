@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "c85b00a5b648f99c15fc599b9981ed5fa8df0e09",
+  "run_id": 41402692951,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41402692951",
+  "artifact_id": 13122143415,
+  "artifact_digest": "sha256:f23fe3fd8a4789e5b64ef6febc713b3205a9980434eb7442f5b436efeadc2fa5",
+  "windows_binary_artifact_digest": "sha256:ac366123f24ed61c8a900d0145a911a27e993cf072babd8b604fd1aaf02c14af",
+  "linux_binary_artifact_digest": "sha256:54fc266778c72f8c454af7270804dd30b5620c5033bd91c03da46bf98b2322d7",
+  "scenario_id": "plan027-h897-normal-off-100m-25ms0-60s",
+  "scenario_sha256": "9bf97a871c1f5ab12baa36558e75a4ad81d1378b216d7b8adc9796e63e6467e4",
+  "platform": "Windows2025 signed NPF/Wintun ↔ WSL2 Ubuntu Linux original Go TLS/Rust",
+  "mode": "normal",
+  "outer_repair_effective": {
+    "windows": 0,
+    "linux": 0
+  },
+  "scenario": {
+    "duration_s": 60,
+    "one_way_delay_ms": 25,
+    "loss_pct": 0,
+    "offered_mbps_each": 100,
+    "mtu": 1400,
+    "near_mtu_mix": {
+      "96": 2,
+      "288": 3,
+      "1060": 25,
+      "1200": 70
+    }
+  },
+  "offered_mbps": {
+    "windows": 99.9732,
+    "linux": 99.9601
+  },
+  "first_delivered_mbps": {
+    "windows": 99.9593,
+    "linux": 99.9732
+  },
+  "first_delivery_fraction": {
+    "windows": 0.999993,
+    "linux": 1
+  },
+  "udp_roundtrip_p99_ms": {
+    "windows": 234,
+    "linux": 249.31
+  },
+  "udp_probe_timeout": {
+    "windows": 0,
+    "linux": 0
+  },
+  "windows_original_process": {
+    "elapsed_s": 78.844,
+    "cpu_total_s": 23.4062,
+    "cpu_kernel_s": 17.9062,
+    "cpu_user_s": 5.5,
+    "average_one_core_pct": 29.687,
+    "peak_working_set_bytes": 41443328
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "verdict": "TRUE_SIGNED_NORMAL_OFF_100M25MS0LOSS_NATIVE_PASS_WITH_P99_PRESSURE",
+  "limitations": "Large RTT p99 234/249.31ms despite 25ms one-way configured indicates capacity/queuing pressure; this is same-host UDP round trip, NOT one-way; Linux offered generator CPU48.7881s/65s ~75% of core; 200M not automatically qualified, no physical, not F/R/C bilateral measurement."
+}

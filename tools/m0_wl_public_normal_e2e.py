@@ -456,7 +456,36 @@ print(json.dumps(result),flush=True)
     wa.terminate();la.terminate()
     raise RuntimeError("bounded real post-blackhole UDP failed")
    time.sleep(.2)
-  if wa.returncode or la.returncode:raise RuntimeError("real UDP blackout wake returned nonzero")
+  if wa.returncode or la.returncode:
+   # Source-owned, allowlisted diagnostics survive an artifact API DNS error.
+   # No TLS secrets, user identities, ciphertext, or packet bodies.
+   fault={"source":os.environ["GITHUB_SHA"],"blackhole_s":blackout,
+          "ifb_drops":report.get("lifecycle_unilateral_ifb_drops"),
+          "wake_rc":{"windows":wa.returncode,"linux":la.returncode},
+          "role_samples":{},"owner_markers":{}}
+   for role in ("windows","linux"):
+    path=out/("blackhole-"+role+"-udp.log")
+    rows=[]
+    if path.exists():
+     for line in path.read_text(errors="replace").splitlines():
+      if line.startswith("{"):
+       try:
+        item=json.loads(line)
+        rows.append({k:item[k] for k in ("phase","sent","received","public_ready_seen","kernel_bind") if k in item})
+       except (TypeError,ValueError):pass
+    fault["role_samples"][role]={"count":len(rows),"first":rows[:1],"last":rows[-3:]}
+   allow=("NATIVE_DEAD_RECONNECT_ARMED","ORIGINAL_GO_TLS_REAUTHORIZE",
+          "WBD_WINDOWS_CLIENT_READY","NATIVE_STOP_DRAINED",
+          "NATIVE_DISCONNECTED","NATIVE_HEALTH","HEALTH_DEAD")
+   for role,name in (("windows","client.log"),("linux","server.log")):
+    path=out/name
+    lines=[line[-320:] for line in path.read_text(errors="replace").splitlines()
+           if any(marker in line for marker in allow)] if path.exists() else []
+    fault["owner_markers"][role]={"count":len(lines),"tail":lines[-16:]}
+   (out/"normal105-first-fault.json").write_text(json.dumps(fault,indent=2)+"\n")
+   print("PLAN027_ORIGINAL_105_FIRST_FAULT "+json.dumps(fault,separators=(",",":")),flush=True)
+   report["lifecycle_blackhole_failure"]="POST105_WAKE_NOT_PROVEN"
+   raise RuntimeError("real UDP blackout wake returned nonzero")
   for name in ("windows","linux"):
    wake=json.loads((out/("blackhole-"+name+"-udp.log")).read_text().splitlines()[-1])
    if not wake.get("public_ready_seen") or wake.get("sent",0)<24 or wake.get("received",0)<12:
@@ -981,6 +1010,22 @@ finally:
   try:s.wait(timeout=4)
   except subprocess.TimeoutExpired:s.terminate()
  for log in logs:log.close()
+ if mode=="normal" and report.get("lifecycle_blackhole_failure"):
+  client=(out/"client.log").read_text(errors="replace") if (out/"client.log").exists() else ""
+  server=(out/"server.log").read_text(errors="replace") if (out/"server.log").exists() else ""
+  audit={"source":os.environ.get("GITHUB_SHA",""),
+    "windows_disconnected":"WBD_WINDOWS_NATIVE_DISCONNECTED_V1" in client,
+    "linux_drained":"V4_PUBLIC_NATIVE_STOP_DRAINED role=server" in server,
+    "windows_reauthorized":"WBD_WINDOWS_ORIGINAL_GO_TLS_REAUTHORIZE" in client,
+    "linux_reauthorized":"V4_PUBLIC_ORIGINAL_GO_TLS_REAUTHORIZE" in server,
+    "windows_dead_reconnect_armed":"WBD_WINDOWS_NATIVE_DEAD_RECONNECT_ARMED" in client,
+    "linux_dead_reconnect_armed":"V4_PUBLIC_NATIVE_DEAD_RECONNECT_ARMED" in server,
+    "wal_exists":(out/"owned-wal.json.n4-owned-wal").exists(),
+    "route_sidecar_exists":(out/"owned-wal.json.n4-owned-wal.routes").exists(),
+    "both_owned_stop":"NOT_QUALIFIED_FAIL_PATH"}
+  (out/"normal105-stop-audit.json").write_text(json.dumps(audit,indent=2)+"\n")
+  print("PLAN027_ORIGINAL_105_STOP_AUDIT "+json.dumps(audit,separators=(",",":")),flush=True)
+  report["lifecycle_blackhole_failed_stop_audit"]=audit
  if mode=="auto-adaptive":
   # On both PASS and FAIL, retain actual host socket progress per source.
   # These are application samples only, never synthetic M2 maturity.

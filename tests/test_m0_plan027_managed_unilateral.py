@@ -43,9 +43,31 @@ class ManagedUnilateral(unittest.TestCase):
   self.assertIn("PLAN027_H888_MANAGED_105_RUNNER_UNDERLAY_PINNED",s)
   self.assertIn("PLAN027_H888_MANAGED_105_RUNNER_EXACT_RESTORED",s)
   self.assertIn("timeout-minutes: 24",s)
+  for marker in ("PLAN027_ORIGINAL_105_HOST_NET",
+    "Write-Original105NetworkWitness 'before-runner-restore'",
+    "Write-Original105NetworkWitness 'after-runner-restore'",
+    "normal105-first-fault.json","normal105-stop-audit.json",
+    "normal105-host-*.json"):
+   self.assertIn(marker,s)
   self.assertLess(s.index("PLAN027_H888_MANAGED_105_RUNNER_UNDERLAY_PINNED"),
                   s.index("tools/m0_wl_native_step_runner.py tools/m0_wl_public_modes_e2e.py"))
   self.assertLess(s.index("PLAN027_H888_MANAGED_105_RUNNER_EXACT_RESTORED"),
                   s.index("Remove-NetFirewallRule -Name $tcpRuleName"))
 
+class Original105FailureAudit(unittest.TestCase):
+ def test_failure_has_separate_wake_and_stop_observations(self):
+  text=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()
+  for token in ("PLAN027_ORIGINAL_105_FIRST_FAULT",
+    '"wake_rc":{"windows":wa.returncode,"linux":la.returncode}',
+    '"role_samples":{},"owner_markers":{}',
+    '"windows_reauthorized"',
+    '"linux_reauthorized"',
+    '"wal_exists"',
+    '"route_sidecar_exists"',
+    '"both_owned_stop":"NOT_QUALIFIED_FAIL_PATH"'):
+   self.assertIn(token,text)
+  self.assertLess(text.index("PLAN027_ORIGINAL_105_FIRST_FAULT"),
+                  text.index('raise RuntimeError("real UDP blackout wake returned nonzero")'))
+  self.assertIn('if mode=="normal" and report.get("lifecycle_blackhole_failure")',text)
+  self.assertNotIn("stop="+repr(True),text)
 if __name__=="__main__":unittest.main()

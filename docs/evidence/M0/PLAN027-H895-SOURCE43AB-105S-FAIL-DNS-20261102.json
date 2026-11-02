@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "43abd0d8b43e69d55305689a004b006ca72e5a02",
+  "run_id": 41401870658,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41401870658",
+  "source": "User-provided full native job log pasted attachment 2026-11-02 (950 lines), GitHub run metadata also checked; action status was still in_progress with no published full artifact",
+  "mode": "normal",
+  "outer_repair_request": "off",
+  "scene": "scenarios/plan027-h882-win-c2s105-10m-25ms0-60s.json",
+  "observed": {
+    "signed_npcap_driver_installed": true,
+    "wsl2_guest_kernel_pass": true,
+    "runner_original_ipv4_management_peers_pinned": 3,
+    "real_windows_to_linux_ifb_blackhole_s": 105,
+    "real_ifb_drops": 118,
+    "mode_heartbeat_through_s": 260,
+    "real_udp_post_blackhole_wake_error": "real UDP blackout wake returned nonzero",
+    "native_mode_exit_code": 1,
+    "native_mode_elapsed_s": 262,
+    "runner_original_management_route_exact_restore": "PASS",
+    "original_product_owned_stop": "NOT_RUN (report field; finally attempted Stop but no verified both-owned PASS)",
+    "windows_client_process_cpu_s": 0.5781,
+    "windows_client_process_observed_s": 244.906,
+    "windows_client_peak_working_set_bytes": 41701376,
+    "artifact_create_status": "ENOTFOUND DNS while opening NEW upload endpoint",
+    "post_driver_cleanup": "Npcap uninstalled; Linux RST/HyperV rule, guest neighbor cleaned"
+  },
+  "verdict": "FAILED_AUTHENTIC_POST_UNILATERAL_105S_WAKE_AND_SEPARATE_ARTIFACT_DNS_UPLOAD_FAILURE",
+  "root_cause": "NOT_VERIFIED for wake and external DNS; same network / upload symptom as previous Actions, not proof same originating bug; /32 established-runner peers do not guarantee DNS/new HTTPS host routing",
+  "missing_evidence": "Windows/Linux blackout app per-role final returncodes, genuine native client/server original health/dead/reauth/Stop markers, post-product OS default-route/DNS state, local WAL/route-sidecar receipt; artifact unavailable due upload failure",
+  "do_not_promote": [
+    "owned Stop",
+    "new authenticated generation",
+    "post105 first delivery",
+    "no product hang",
+    "Runner physical route recovered"
+  ]
+}
