@@ -2296,6 +2296,52 @@ mod tests {
         assert_eq!(r.entries[&newer].lock().unwrap().phase,PH_PREPARED);
     }
     #[test]
+    fn plan027a_v5_receive_inner_cold_only_narrows_tx_not_authenticated_rx(){
+        let epoch=[2u8;16];
+        let mut r=Registry{generation:760,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        assert_eq!(bind_wintun(&mut r,h,[0u8;16],91,19),INVALID); // wrong epoch not authority
+        assert_eq!(bind_wintun(&mut r,h,epoch,91,19),OK);
+        let before_rx=r.entries[&h].lock().unwrap().limit;
+        // Negotiated outer/server record 1400, peer MSS1360. Local planned
+        // inner=1250 requires wire=1250+31, cannot force whole owner Stop.
+        assert_eq!(set_outer_inner_budget(&mut r,h,epoch,91,19,1460,1250),Ok(1250));
+        {
+            let e=r.entries[&h].lock().unwrap();
+            assert_eq!(e.record_wire_limit,1281);
+            assert_eq!(e.limit,before_rx,"authenticated RX window unchanged");
+            assert_eq!(e.path_mtu,1460);
+            assert!(e.path_mtu_is_outer);
+            assert_eq!(normal_off_windows_budget(&e).unwrap().single_business_payload_mtu,1250);
+        }
+        assert_eq!(set_outer_inner_budget(&mut r,h,epoch,91,19,1460,1240),Err(BAD_STAGE));
+        assert_eq!(quiesce_wintun(&mut r,h,epoch,91,19),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+        // Exact real source failure: Windows Fixed feature7, TLS receive
+        // inner1273 and cold record1318, not unconditional invalid binding.
+        #[cfg(feature="fec2_product_record")]
+        {
+            let mut fixed=cmd();
+            fixed[4..6].copy_from_slice(&2u16.to_be_bytes());
+            fixed[27..29].copy_from_slice(&7u16.to_be_bytes());
+            let mut r=Registry{generation:761,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+            let h=allocate(&mut r,&cold(false),&fixed,false).unwrap();
+            assert_eq!(commit(&mut r,h,0,0,500),OK);
+            assert_eq!(bind_wintun(&mut r,h,epoch,93,21),OK);
+            assert_eq!(set_outer_inner_budget(&mut r,h,epoch,93,21,1400,1273),Ok(1273));
+            {
+                let e=r.entries[&h].lock().unwrap();
+                assert_eq!(e.record_wire_limit,1318);
+                assert!(e.path_mtu_is_outer);
+            }
+            assert_eq!(quiesce_wintun(&mut r,h,epoch,93,21),OK);
+            assert_eq!(stop(&mut r,h),OK);
+            assert_eq!(release(&mut r,h),OK);
+        }
+    }
+    #[test]
     fn m0_windows_owner_role_fec2_bad_handoff_stale_and_prevent_public_apply(){
         let mut r=Registry{generation:3,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
         assert_eq!(allocate(&mut r,&cold(true),&cmd(),false),Err(INVALID));
