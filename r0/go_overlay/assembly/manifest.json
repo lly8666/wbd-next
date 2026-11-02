@@ -661,6 +661,26 @@
       "path": "internal/faketcp/public_v4_mss_byte_test.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/public_v4_mss_byte_test.go",
       "result_blob": "5ec59832eafafba158054fe4a0bea10671cf28c8"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/datapath/handoff.go",
+      "original_blob": "1dc5a05f8e6e3e50726d90feeffd66bb08345bc0",
+      "overlay_path": "r0/go_overlay/internal/datapath/handoff.go",
+      "result_blob": "28697f89d743390298e5220b9572634b701cae50"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/datapath/handoff_client_test.go",
+      "original_blob": "9a3606ea0385feea126167fda11aeaf650eee284",
+      "overlay_path": "r0/go_overlay/internal/datapath/handoff_client_test.go",
+      "result_blob": "5e1b91f20ea7b53d41ea217e6d09292068d84392"
+    },
+    {
+      "kind": "create",
+      "path": "internal/datapath/v4_public_mss_test.go",
+      "overlay_path": "r0/go_overlay/internal/datapath/v4_public_mss_test.go",
+      "result_blob": "1f35e7cab9d4d933ff59f40f1515a74332904d0c"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

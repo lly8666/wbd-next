@@ -42,7 +42,8 @@
     "openwrt/package/files/wbd-next-v4.config",
     "openwrt/package/files/wbd-next-v4.init",
     "r0/go_overlay/internal/faketcp/packet.go",
-    "r0/go_overlay/internal/faketcp/public_v4_mss.go"
+    "r0/go_overlay/internal/faketcp/public_v4_mss.go",
+    "r0/go_overlay/internal/datapath/handoff.go"
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",

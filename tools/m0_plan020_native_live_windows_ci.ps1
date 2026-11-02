@@ -8,7 +8,7 @@ import os,pathlib,subprocess
 root=pathlib.Path.cwd()
 dest=root/"legacy/internal/windowsownerlease"
 sha=os.environ["GITHUB_SHA"]
-for name in ("created_wintun_windows_test.go","original_go_tls_join_windows_test.go","original_go_tls_fec2_windows_test.go","original_go_tls_game_windows_test.go"):
+for name in ("created_wintun_windows_test.go","original_go_tls_join_windows_test.go","original_go_tls_fec2_windows_test.go","original_go_tls_game_windows_test.go","plan020_local_mss_windows_test.go"):
     src="r0/go_overlay/internal/windowsownerlease/"+name
     target=dest/name
     assert not target.exists(),"foreign original-Go test collision "+src

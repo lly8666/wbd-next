@@ -147,3 +147,7 @@ F/R/C/副本与业务字节分账按**成功实际发出**的IP总长计数；L2
 当前V4无旧协议兼容：外层完整IPv4 IP MTU默认**1460B**，1500B仅显式最大。**同一个Rust冷预算**使用配置外层及本地真实物理IPv4出口MTU，生成本方向的SYN/SYN-ACK **TCP载体MSS**，不扣加密record31B；无其他限制1400→1360、1460→1420、1500→1460。不能将Wintun/TUN内层MTU输入物理出口字段。Windows源自实际 `net.InterfaceByIndex.MTU`；Linux来自实际 `net.InterfaceByName.MTU`；物理/对端真正收窄允许不对称并必须记录原因。
 
 现行Go FakeTCP源文件使用同一加签Git blob在Windows正式plan020装配和Linux客户端/服务端安装。每个association创建时冻结本地MSS，SYN和SYN-ACK重发不重新读取全局；接收到的peer SYN MSS为不同的方向约束，记录真实解码及发出TCP options。保护后的TLS record与Rust owner在认证后按本端有效外层/对端MSS/record cap/模式开销收窄；TUN/Wintun实际应用、OS读回是独立证据，不是预算计算的输入。两侧真实约束相同Normal外层1460才要求内层都1389。H959-H962改码需要当前SOURCE原生资格，旧PASS/FAIL不提升；保留原上游测试数据不等于保留产品1360回退。
+
+### H966 正式Go数据通路接收方向MSS
+
+`internal/datapath/handoff.go` 的 Client/Server `RxMTU.PeerMSS` 原来无条件使用历史1360，现在从同一Rust冷预算预先安装的本端 SYN/SYN-ACK MSS 取得；TX仍仅使用真实对端握手 MSS，不允许混成同一个方向或重复扣record开销。测试专用固定向量只在 `_test.go`，不进入V4生产程序，也不增加旧版本兼容分支。进一步多generation同时并存需要association冷快照隔离；当前正式产品仍按单世代退出认证再重建。

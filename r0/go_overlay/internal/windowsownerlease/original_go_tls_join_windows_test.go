@@ -196,11 +196,6 @@ func m0WinJoinCert(t *testing.T)tls.Certificate{
     return tls.Certificate{Certificate:[][]byte{der},PrivateKey:key}
 }
 func TestM0WindowsRealOriginalGoTLSRustM4CreatedWintunSameGeneration(t *testing.T){
-    // This signed-driver/TLS unit test constructs associations directly.
-    // Production gets MSS from the Rust physical-outer cold budget; install
-    // its 1460-outer test vector explicitly, with no runtime fallback.
-    if err:=faketcp.SetPublicV4AdvertisedMSS(1420);err!=nil{t.Fatal(err)}
-
     library:=os.Getenv("WBD_M0_WIN_OWNER_DLL")
     if library==""{t.Fatal("pinned source real Windows Rust owner DLL missing")}
     ctx,cancel:=context.WithTimeout(context.Background(),28*time.Second)

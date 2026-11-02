@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "previous_source": "970ee87caf921f5afcfbd4e8c1c969184b2f7472",
+  "original": "lly8666/wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984",
+  "hidden_1360": "internal/datapath/handoff.go client/server RxMTU PeerMSS=faketcp.DefaultMSS",
+  "fixed": "faketcp.PublicV4AdvertisedMSS() Rust installed local SYN/SYNACK; Tx remains actual peer",
+  "manifest_additions": [
+    {
+      "kind": "replace",
+      "path": "internal/datapath/handoff.go",
+      "original_blob": "1dc5a05f8e6e3e50726d90feeffd66bb08345bc0",
+      "overlay_path": "r0/go_overlay/internal/datapath/handoff.go",
+      "result_blob": "28697f89d743390298e5220b9572634b701cae50"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/datapath/handoff_client_test.go",
+      "original_blob": "9a3606ea0385feea126167fda11aeaf650eee284",
+      "overlay_path": "r0/go_overlay/internal/datapath/handoff_client_test.go",
+      "result_blob": "5e1b91f20ea7b53d41ea217e6d09292068d84392"
+    },
+    {
+      "kind": "create",
+      "path": "internal/datapath/v4_public_mss_test.go",
+      "overlay_path": "r0/go_overlay/internal/datapath/v4_public_mss_test.go",
+      "result_blob": "1f35e7cab9d4d933ff59f40f1515a74332904d0c"
+    }
+  ],
+  "old_h965_failures": [
+    41476643366,
+    41476643027
+  ],
+  "frozen_test": "old original Go shared test unchanged; current PLAN020 only test MSS setup",
+  "cursor_before_bytes": 8288,
+  "cursor_after_bytes": 3150,
+  "new_source_native": "NOT_RUN",
+  "prior_result": {
+    "win_inner": 1389,
+    "linux_inner": 1329,
+    "outer": 1460
+  },
+  "expected_unrestricted": {
+    "syn": 1420,
+    "synack": 1420,
+    "inner_win": 1389,
+    "inner_linux": 1389
+  },
+  "H958_df_fail": 41463910871
+}
