@@ -4,29 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 948,
-  "checkpoint_sha": "7f84df245baf1f9924193dec8da5a38f22ae984f",
+  "sequence": 949,
+  "checkpoint_sha": "adc63a8b8af209dbe589d072403b7bceae8e038b",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H948: collect H947 source7f84 governance PASS and Python parser unit PASS, source-locked native cheap workflow FAIL solely on plan020 overlay manifest old Windows Go blob. Repin only authorized current manifest-plan020-m0.json to real Go blob.",
-  "why_now": "Existing assembly checker pin correctly rejected changed real Go product file; no evidence of runtime packet failure. Preserve immutable M4 historic manifest and all H943 PASS.",
+  "current_task": "PLAN027A H949: H948 source-locked manifest check PASS, bounded native Windows source build underway; governance feature check FAIL because H948 none-impact JSON omitted required ids:[]; amend metadata only without source rebuild.",
+  "why_now": "The feature catalog schema requires ids list even for kind=none after current manifest product-path change. Do not alter code, manifests, past failed evidence or rerun native job.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect H948 automatic source-scoped cheap workflow/Windows and Linux build and governance. If green, one native default1460 Windows numerical OS MTU scenario (not H943 six). Unverified genuine DF0/DF1 and Game 3Mbps protective results remain next.",
+  "next_action": "Collect H948 exact-source Windows Go/Rust and Linux build result and H949 governance. Do not dispatch duplicate H943 runs. Current-source real Windows numeric pre-READY receipt and other PLAN027A exits still pending.",
   "unverified": true,
   "last_tested_source": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json",
-    "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H943-SIX-ACTIONS-COLLECTED.md",
     "docs/devlog/M0/20261102-PLAN027A-H945-1460-PROMPT-LOCK.md",
     "docs/evidence/M0/PLAN027A-H947-ESCAPE-AND-CURSOR-ACTION-RECOVERY-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H947-AUTO-FAIL-RECOVERY.md",
     "docs/evidence/M0/PLAN027A-H948-REPINCURRENT-MANIFEST-20261102.json",
-    "docs/devlog/M0/20261102-PLAN027A-H948-REPINCURRENT-WIN-BLOB.md"
+    "docs/devlog/M0/20261102-PLAN027A-H948-REPINCURRENT-WIN-BLOB.md",
+    "docs/devlog/M0/20261102-PLAN027A-H949-FEATURE-NONE-SCHEMA.md"
   ],
   "open_requests": [],
-  "partial_summary": "H943 source ae3e7e9f six real native Actions all SUCCESS (default1460 all7, explicit1500 all7, 1460 Normal/Game4FEC loss0, Fixed/Game4FEC loss30). Governance on H943 source96ead0 FAIL because M0 cursor evidence_refs mixed old 6693 and current ae3e7e9 source and feature card >16KiB; H944 fixes only scope/size. Old evidence files not changed, historical FAILs preserved, Game4FEC 10M p99 high and true native DF1/DF0 still NOT_RUN. PLAN028 not started. H945 user reconfirmed permanent ordinary 1460 outer default; prompt-only update, no code or native qualification. H946 code extends Windows cold READY numeric verified inner MTU and harness evidence; actual fresh native numeric receipt NOT_RUN pending current SOURCE Action. H945 governance FAIL due context_refs 9>8; H946 initial E2E cheap workflow FAIL due accidental double-escaped regex/newlines; H947 fixes at source and retains FAIL evidence. H947 source7f84 governance+parser PASS but prepare_windows_wiring.py --check-only FAIL because current m0_native_v4_windows.go blob changed and plan020 manifest result_blob was stale; H948 current-only pin."
+  "partial_summary": "H943 source ae3e7e9f six real native Actions all SUCCESS (default1460 all7, explicit1500 all7, 1460 Normal/Game4FEC loss0, Fixed/Game4FEC loss30). Governance on H943 source96ead0 FAIL because M0 cursor evidence_refs mixed old 6693 and current ae3e7e9 source and feature card >16KiB; H944 fixes only scope/size. Old evidence files not changed, historical FAILs preserved, Game4FEC 10M p99 high and true native DF1/DF0 still NOT_RUN. PLAN028 not started. H945 user reconfirmed permanent ordinary 1460 outer default; prompt-only update, no code or native qualification. H946 code extends Windows cold READY numeric verified inner MTU and harness evidence; actual fresh native numeric receipt NOT_RUN pending current SOURCE Action. H945 governance FAIL due context_refs 9>8; H946 initial E2E cheap workflow FAIL due accidental double-escaped regex/newlines; H947 fixes at source and retains FAIL evidence. H947 source7f84 governance+parser PASS but prepare_windows_wiring.py --check-only FAIL because current m0_native_v4_windows.go blob changed and plan020 manifest result_blob was stale; H948 current-only pin. H948 feature-catalog Action 41452689560 FAIL invalid feature-impact IDs: H948 note kind none lacked ids:[]; H949 fixes only documentation; H948 native build stays same SOURCE."
 }

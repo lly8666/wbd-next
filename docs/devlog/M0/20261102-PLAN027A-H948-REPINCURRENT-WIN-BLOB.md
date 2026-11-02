@@ -5,5 +5,5 @@
 本批只更新 `manifest-plan020-m0.json` 该文件 `result_blob` 字段；老Go原始 SHA、M4冻结历史blob不改、不重复构建无关模式。H946/H947未有真实Windows数值OS读回网络验证，相关状态仍NOT_RUN。
 
 ```feature-impact
-{"kind":"none","reason":"Only current source-locked assembly manifest repin to already changed Windows Go product blob and cursor/evidence recovery; no additional behavior or public configuration change."}
+{"kind":"none","ids":[],"reason":"Only current source-locked assembly manifest repin to already changed Windows Go product blob and cursor/evidence recovery; no additional behavior or public configuration change."}
 ```

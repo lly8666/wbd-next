@@ -14,5 +14,8 @@
   "new_source_native_windows": "NOT_RUN",
   "default_outer_ipv4_ip_mtu": 1460,
   "explicit_max": 1500,
-  "old_source_h943": "PRESERVED_SCOPED_PASS"
+  "old_source_h943": "PRESERVED_SCOPED_PASS",
+  "h948_governance_feature_result": "FAIL_MISSING_EMPTY_IDS_ARRAY",
+  "feature_note_contract": "none still requires ids: []",
+  "h949_correction": "DOC_ONLY_BUILD_REUSE"
 }
