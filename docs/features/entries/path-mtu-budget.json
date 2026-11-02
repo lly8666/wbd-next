@@ -12,7 +12,7 @@
     "main"
   ],
   "defaults": {
-    "--outer-mtu": "1500（默认）",
+    "--outer-mtu": "1460（默认完整外层IPv4 IP MTU；不含L2；最大显式1500）",
     "allowed": "576..1500（IPv4 公开配置；jumbo 需独立实验验证）",
     "tun-mtu": "由 Rust V4 冷预算自动计算并经 owned OS 接口真实读回；只读",
     "windows_record_offer": "Rust original TLS cold receive budget v1; previously hard-coded 1400 cap removed in new production cold path; this does not alter authenticated peer MSS or OS applied checks",
@@ -22,7 +22,7 @@
   "usage": {
     "cli": "Linux V4 --outer-mtu default1460, source-locked original-Go Linux client/server and Windows client --mtu default1460; all values are full outer IPv4 IP ceilings; inner always derived/read-only",
     "config": "仅保存 configured_outer_ip_mtu 意图，不能以自动内层结果覆盖；Linux 已接 Rust pre-TLS/cold ABI，Windows 接口待继续",
-    "gui": "Windows GUI未验证完整MTU预算/回执"
+    "gui": "Windows GUI fields.json 由原始 Go source-locked assembly 编辑：外层MTU默认1460/最大1500；实际内层/OS应用状态的完整UI readback尚未原生验收"
   },
   "code_refs": [
     "r0/go_overlay/internal/v4productcli/linux.go",
@@ -157,7 +157,8 @@
     "H928 platform build FAIL E0502 header checksum concurrent borrow; H929 narrowly fixes shared helper and test borrow ordering, awaiting exact SOURCE Rust tests.",
     "H930 Linux Game worker DF1 local ICMP3/4 applies only if cold trusted OS TUN IPv4 exists; per second <=20 local kernel writes, still requires real native DF1/EMSGSIZE/ICMP and two-direction measurements. Normal FEC/Windows stay pending.",
     "H931 Windows M4 existing receive-ring oversized frame is explicitly a nonfatal one-packet outcome (Normal/FEC/Game), not io.ErrShortBuffer owner Stop; there is no claim of Wintun/FEC/Game LINK or real DF0 fallback. Native giant-UDP/DF1 still NOT_RUN.",
-    "H932 default changed from 1500 to1460 at user request; explicit 1500 maximum and historical 1500 GameFEC1398 boundary remain valid. Archived 1500 default on older SOURCE is historic, not current."
+    "H932 default changed from 1500 to1460 at user request; explicit 1500 maximum and historical 1500 GameFEC1398 boundary remain valid. Archived 1500 default on older SOURCE is historic, not current.",
+    "H934 fixes stale --outer-mtu default1500 in feature card and governance context_refs length9>8; source H932 default1460 implementation unchanged; old governance failures remain historical."
   ],
   "promotion": null
 }

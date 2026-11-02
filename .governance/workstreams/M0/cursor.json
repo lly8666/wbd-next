@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 933,
-  "checkpoint_sha": "f2a6644908ecf567bed17987e51099e5cbd0d7da",
+  "sequence": 934,
+  "checkpoint_sha": "49e6b89ca56482f5b1bcf45cf6cdb5e149f8ae61",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H933 source f2a66449: all default outer IPv4 MTU 1460 in original Go Linux client/server, Windows GUI, Linux V4 Rust cold, with plans 027A/028/029/030 in sync. Native SOURCE acceptance pending.",
+  "current_task": "PLAN027A H934 corrected recovery checkpoint context_refs max8; default outer IPv4 IP MTU1460 product/contract/PLAN028-030 complete source-side, OS/native pending.",
   "why_now": "Recovery verified PLAN027 USER_ACCEPTED_SCOPED closed; no old Actions inflight on entry. New source push has auto CI only; do not dispatch duplicate native scenarios.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect automatic H933 GitHub Actions, inspect actual source-locked original client/server/Windows manifest assembly plus Rust/Go ABI. If baseline compile fails, fix narrow failure only; run precise 1460 default real OS measurement and explicit1500 boundary. Need remaining PLAN027A DF/7-mode/weaknet/perf before 028.",
+  "next_action": "Collect H934 governance and the already running H932 product builds (no new dispatch). If source-locked default1460 works, isolate fixed-mode WSL READY failure, OS applied/DF0-DF1/7-mode native bounds. 028 not started.",
   "unverified": true,
   "last_tested_source": "6693910f879f9e55e77dd823c1b05d8942321929",
   "evidence_refs": [
@@ -24,7 +24,6 @@
     "docs/evidence/M0/PLAN027-H916-SOURCE6693-GAME4FEC-OFF20-HIGHLOSS-PASS-20261102.json"
   ],
   "context_refs": [
-    "docs/architecture/MTU_CONTRACT.md",
     "docs/prompts/M0-PLAN027A.md",
     "docs/devlog/M0/20261102-PLAN027-H918-FOUR-ACTIONS-POSTGATE.md",
     "docs/evidence/M0/PLAN027A-H922-SOURCEECF77-ACTIONS-20261102.json",
@@ -35,5 +34,5 @@
     "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json"
   ],
   "open_requests": [],
-  "partial_summary": "H932 product main f2a66449 source-locked two original Go assembly manifests (5 blobs each) + default1460 Linux V4 + Rust cold golden implemented; H933 sole MTU contract version2 and plans 028–030/prompts updated. Old test source adc18d75 WSL fixed READY before startup FAIL; Windows WAL/native kernel UDP build PASS; do not transfer PASS to H933."
+  "partial_summary": "H932 f2a66449 source-locked original Go Linux client/server Windows + GUI/catalog default1460 plus Rust pure tests. H933 49e6b89c sole spec and future plans. H932/H933 governance FAIL context_refs 9>max8; H934 bounded, stale failure retained. H932 native compiled unit PASS, original Windows WAL/WSL still collecting."
 }
