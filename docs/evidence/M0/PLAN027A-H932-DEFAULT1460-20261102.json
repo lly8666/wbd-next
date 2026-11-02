@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "source_before": "adc18d75354c24103f10cfc5a90bf7d4207690fa",
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "phase": "H932_CODE_NOT_NATIVE_QUALIFIED",
+  "legacy_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "operator_default_outer_ipv4_mtu": 1460,
+  "operator_explicit_max_ipv4_mtu": 1500,
+  "no_l2": true,
+  "manifest_source_locked_expected": {
+    "r0/go_overlay/assembly/manifest.json": [
+      {
+        "path": "cmd/wbd-client/main_linux.go",
+        "blob": "79f6cf9f65d7ecf72a97156023b26e75e45b25b9"
+      },
+      {
+        "path": "cmd/wbd-client/main_windows.go",
+        "blob": "b0bcc2f03ccdbe8364f0e48ad53d1b5fe239841a"
+      },
+      {
+        "path": "cmd/wbd-server/main_linux.go",
+        "blob": "bb969fc5d9b643c9a39c2dc22d9945d091b9f798"
+      },
+      {
+        "path": "windows/gui/fields.json",
+        "blob": "7c898d78e5fe46b2ff034f38c98147f12fba5032"
+      },
+      {
+        "path": "docs/PARAMETERS.json",
+        "blob": "5ded3b119b4e789118edb08c01f3d591ea52991a"
+      }
+    ],
+    "r0/go_overlay/assembly/manifest-plan020-m0.json": [
+      {
+        "path": "cmd/wbd-client/main_linux.go",
+        "blob": "79f6cf9f65d7ecf72a97156023b26e75e45b25b9"
+      },
+      {
+        "path": "cmd/wbd-client/main_windows.go",
+        "blob": "d95d621f0fc10982bff81f18e2d998226841b779"
+      },
+      {
+        "path": "cmd/wbd-server/main_linux.go",
+        "blob": "bb969fc5d9b643c9a39c2dc22d9945d091b9f798"
+      },
+      {
+        "path": "windows/gui/fields.json",
+        "blob": "7c898d78e5fe46b2ff034f38c98147f12fba5032"
+      },
+      {
+        "path": "docs/PARAMETERS.json",
+        "blob": "5ded3b119b4e789118edb08c01f3d591ea52991a"
+      }
+    ]
+  },
+  "derived_golden_inner_mode": {
+    "normal": 1389,
+    "fec_auto": 1375,
+    "game": 1373,
+    "game_fec": 1358
+  },
+  "max1500_gamefec": 1398,
+  "previous_original_windows_WAL_run": {
+    "id": 41437214846,
+    "status": "PASS_BUILD_UNIT"
+  },
+  "previous_native_windows_kernel_udp": {
+    "id": 41437214950,
+    "status": "PASS_SOURCED_TEST"
+  },
+  "previous_win_linux": {
+    "id": 41437214958,
+    "status": "FAIL_WINDOWS_FIXED_BEFORE_READY"
+  },
+  "actual_default_os_readback": "NOT_RUN",
+  "actual_cross_mode_boundary": "NOT_RUN",
+  "actual_df0_df1": "NOT_RUN",
+  "weaknet": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "repeat_dispatch": false
+}

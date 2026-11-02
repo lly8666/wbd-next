@@ -18,7 +18,7 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "Implement docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md according to docs/architecture/MTU_CONTRACT.md. Single Rust V4 budget and Go cold ABI, typed outer/inner/MSS/options, OS applied readback, IPv4 oversize DF/fragment/ICMP, precise mode capabilities and bounded native regression. PLAN027 accepted source-scoped per docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json; no duplicate old network matrix.",
+      "goal": "Implement docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md according to docs/architecture/MTU_CONTRACT.md. Single Rust V4 budget and Go cold ABI, typed outer/inner/MSS/options, OS applied readback, IPv4 oversize DF/fragment/ICMP, precise mode capabilities and bounded native regression. PLAN027 accepted source-scoped per docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json; no duplicate old network matrix. User-updated default complete outer IPv4 IP MTU 1460; 1500 explicit maximum.",
       "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion.",
       "assigned_task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE"
     },

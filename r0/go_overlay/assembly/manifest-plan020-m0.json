@@ -7,7 +7,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_linux.go",
       "original_blob": "b239b92006504500c76fb9148f735c484a0f011c",
-      "result_blob": "2b4adb951f40e0e0ec0901db098f98834a7205e9",
+      "result_blob": "79f6cf9f65d7ecf72a97156023b26e75e45b25b9",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -16,6 +16,10 @@
         {
           "find": "\tif handleVersion() {\n\t\treturn nil\n\t}\n",
           "replace": "\tif handleVersion() {\n\t\treturn nil\n\t}\n\tif err := fec2Selection.Validate(*lanes); err != nil { return err }\n\tif err := fec2Selection.RuntimeReady(); err != nil { return err }\n"
+        },
+        {
+          "find": "flag.Int(\"mtu\", 1500, \"connection MTU\")",
+          "replace": "flag.Int(\"mtu\", 1460, \"outer complete IPv4 IP packet ceiling (default 1460, no L2); inner auto-derived\")"
         }
       ]
     },
@@ -23,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "992ff1c71f2d2a537383ba4a3958eb482c53e06c",
+      "result_blob": "d95d621f0fc10982bff81f18e2d998226841b779",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -136,6 +140,10 @@
         {
           "find": "\t\t\tConnectionMTU:uint32(*mtu),\n\t\t\tMode:requestedNativeMode,ControlStdin:*controlStdin,",
           "replace": "\t\t\tConnectionMTU:uint32(*mtu),\n            DisableOuterRepair:*outerRepair==\"off\",\n\t\t\tMode:requestedNativeMode,ControlStdin:*controlStdin,"
+        },
+        {
+          "find": "flag.Int(\"mtu\", 1500, \"connection MTU\")",
+          "replace": "flag.Int(\"mtu\", 1460, \"outer complete IPv4 IP packet ceiling (default 1460, no L2); inner auto-derived\")"
         }
       ]
     },
@@ -143,7 +151,7 @@
       "kind": "replace",
       "path": "cmd/wbd-server/main_linux.go",
       "original_blob": "930976ec6b2d7fa82f98378c7aa985fb4e8e4363",
-      "result_blob": "e042732d613763b0748494b93d1e60339a9651f1",
+      "result_blob": "bb969fc5d9b643c9a39c2dc22d9945d091b9f798",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -160,6 +168,10 @@
         {
           "find": "\tdefer startQualificationCPUProfile()()",
           "replace": "\tif err := fec2Selection.RuntimeReady(); err != nil { return err }\n\tdefer startQualificationCPUProfile()()"
+        },
+        {
+          "find": "flag.Int(\"mtu\", 1500, \"outer IPv4 connection MTU; shared inner TUN auto-derived from record/FEC/LINK budget\")",
+          "replace": "flag.Int(\"mtu\", 1460, \"outer complete IPv4 IP packet ceiling (default 1460, no L2); shared inner TUN auto-derived\")"
         }
       ]
     },
@@ -167,7 +179,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "15c7b5e85e6a16a67ea6b2eb45a3155f7b7a2ed6",
+      "result_blob": "7c898d78e5fe46b2ff034f38c98147f12fba5032",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -188,6 +200,10 @@
         {
           "find": "  \"native-state-json\": [\n    \"操作\",\n    \"只读网络磁盘状态\",\n    \"读取便携 owned WAL，不能代表系统 WFP 已启用或真实连通\"\n  ],",
           "replace": "  \"native-state-json\": [\n    \"操作\",\n    \"只读网络磁盘状态\",\n    \"读取便携 owned WAL，不能代表系统 WFP 已启用或真实连通\"\n  ],\n  \"native-preflight-json\": [\n    \"操作\",\n    \"原生系统预检\",\n    \"只检查 Windows 原生 API、WFP 层、权限和磁盘状态；不会启动连接\"\n  ],"
+        },
+        {
+          "find": "外层 IPv4 包上限；576–9000，通常 1500",
+          "replace": "外层完整 IPv4 IP 包上限（不含 L2）；默认 1460，可显式设 576–1500，内层自动计算"
         }
       ]
     },
@@ -323,7 +339,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "08094cb000e114fe073b5f780386d54e37e80d5d",
+      "result_blob": "5ded3b119b4e789118edb08c01f3d591ea52991a",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -345,6 +361,11 @@
         {
           "find": "      \"native-state-json\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },",
           "replace": "      \"native-state-json\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"inspect owned Windows network journals read-only as JSON; never implies live WFP readiness\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },\n      \"native-preflight-json\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"inspect native Windows system APIs, WFP layer and own WAL read-only; never enables product network\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": false\n      },"
+        },
+        {
+          "find": "\"default_expression\": \"1500\"",
+          "replace": "\"default_expression\": \"1460\"",
+          "count": 3
         }
       ]
     },

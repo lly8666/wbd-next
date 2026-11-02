@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 931,
-  "checkpoint_sha": "5189c0b1d8f6e7ab0c8faf5d3fa579657b5fb0a1",
+  "sequence": 932,
+  "checkpoint_sha": "adc18d75354c24103f10cfc5a90bf7d4207690fa",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H931 Windows real original Wintun ring oversized packet local-drop not Stop across Normal/FEC/Game; source locked in original Go PLAN020 manifest; Linux Game DF0/DF1 code integrated.",
+  "current_task": "PLAN027A H932 user update: default outer full IPv4 IP MTU 1460 on original-Go Linux client+server/Windows client, GUI/catalog, Linux V4 Rust cold ABI; max1500 still explicit.",
   "why_now": "Recovery verified PLAN027 USER_ACCEPTED_SCOPED closed; no old Actions inflight on entry. New source push has auto CI only; do not dispatch duplicate native scenarios.",
-  "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion.",
-  "next_action": "Collect H931 original Windows WAL/Go and Rust exact SOURCE CI; only limited native boundary/weaknet based on capacity, do not claim full 027A. Remaining Windows/FEC legitimate big UDP DF0 shared fragment path and game v5 owner geometric bind plus OS applied PMTU receipts.",
+  "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
+  "next_action": "Synchronize MTU_CONTRACT and future plans/prompts with default1460, collect new main source hash/build; then finish PLAN027A true OS applied/DF0-DF1 and mode boundary tests before 028. Do not re-dispatch 027.",
   "unverified": true,
   "last_tested_source": "6693910f879f9e55e77dd823c1b05d8942321929",
   "evidence_refs": [
@@ -24,15 +24,16 @@
     "docs/evidence/M0/PLAN027-H916-SOURCE6693-GAME4FEC-OFF20-HIGHLOSS-PASS-20261102.json"
   ],
   "context_refs": [
-    "docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md",
     "docs/architecture/MTU_CONTRACT.md",
     "docs/prompts/M0-PLAN027A.md",
     "docs/devlog/M0/20261102-PLAN027-H918-FOUR-ACTIONS-POSTGATE.md",
     "docs/evidence/M0/PLAN027A-H922-SOURCEECF77-ACTIONS-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H922-RECOVER-FIRST-CODE.md",
     "docs/devlog/M0/20261102-PLAN027A-H925-WINDOWS-RECEIVE-BOUND.md",
-    "docs/evidence/M0/PLAN027A-H925-SOURCE7D85-CODING-20261102.json"
+    "docs/evidence/M0/PLAN027A-H925-SOURCE7D85-CODING-20261102.json",
+    "docs/devlog/M0/20261102-PLAN027A-H932-DEFAULT1460.md",
+    "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json"
   ],
   "open_requests": [],
-  "partial_summary": "H929 exact SOURCE 6af3e6ed Rust platform/native-functional/g2/scoped/perf/governance Actions PASS unit/build only; cross ABI and no-scene in progress at checkpoint. H930 adds cold Linux TUN SIOCGIFADDR source and bounded 20/s local ICMP3/4 kernel write for genuine DF1 ingress. Not qualified as end-to-end PMTU Applied. Previous PLAN027 evidence still intact."
+  "partial_summary": "Recovered source adc18d75: original Windows WAL run41437214846 PASS, Windows native kernel UDP run41437214950 PASS (source-scoped tests); Windows↔WSL run41437214958 FAIL Windows fixed exited before READY. No Actions in flight. H932 product and two assembly manifests updated, associated SOURCE tests pending, prior FAIL preserved."
 }

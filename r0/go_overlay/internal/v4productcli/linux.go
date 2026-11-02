@@ -125,7 +125,7 @@ func parse(role string,args []string)(config,error){
     gameFec:=flags.String("game-fec","off","Game2/4 inner fixed FEC: off or fixed0..fixed6; BOTH authenticated endpoints must match; no Game Auto")
     game4Copy:=flags.String("game4-copy-schedule","","Game4 default stagger-4-50-140; explicit stagger-4-20-60 legacy fallback or immediate rollback; Game2 unchanged")
     outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and actual receipt feedback remain enabled")
-    outerMTU:=flags.Int("outer-mtu",1500,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
+    outerMTU:=flags.Int("outer-mtu",1460,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
     tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
     tunTxQLen:=flags.Int("tun-txqlen-packets",2048,"owned original Linux TUN TX queue: 2048 bounded default, 500 explicit rollback")
     if err:=flags.Parse(args);err!=nil{return c,err}

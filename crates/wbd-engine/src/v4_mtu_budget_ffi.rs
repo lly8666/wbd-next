@@ -100,6 +100,19 @@ mod tests {
         }
     }
     #[test]
+    fn default_1460_outer_ip_and_explicit_1500_max_are_distinct() {
+        for (mode,inner) in [(0,1389),(1,1375),(2,1373),(3,1358)] {
+            let mut input=input(mode);
+            input.configured_outer_ip_mtu=1460;
+            input.peer_advertised_mss=1420;
+            let result=derive(input).unwrap();
+            assert_eq!((result.effective_outer_ip_ceiling,result.record_wire_cap,
+                result.single_inner_ip_cap,result.local_syn_advertised_mss),
+                (1460,1420,inner,1420));
+        }
+        assert_eq!(derive(input(3)).unwrap().single_inner_ip_cap,1398);
+    }
+    #[test]
     fn cold_ffi_golden_mode_mss_and_version() {
         for (mode,want) in [(0,1429),(1,1415),(2,1413),(3,1398)] {
             let b=derive(input(mode)).unwrap();

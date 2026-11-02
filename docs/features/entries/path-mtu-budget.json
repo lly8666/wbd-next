@@ -15,10 +15,12 @@
     "--outer-mtu": "1500（默认）",
     "allowed": "576..1500（IPv4 公开配置；jumbo 需独立实验验证）",
     "tun-mtu": "由 Rust V4 冷预算自动计算并经 owned OS 接口真实读回；只读",
-    "windows_record_offer": "Rust original TLS cold receive budget v1; previously hard-coded 1400 cap removed in new production cold path; this does not alter authenticated peer MSS or OS applied checks"
+    "windows_record_offer": "Rust original TLS cold receive budget v1; previously hard-coded 1400 cap removed in new production cold path; this does not alter authenticated peer MSS or OS applied checks",
+    "outer-ip-mtu": "1460B default, complete outer IPv4 IP packet (no L2); operator may still explicitly configure up to 1500B",
+    "default-1460-inner-golden": "Normal1389, FEC/Auto1375, Game1373, GameFEC1358 on 20+20 IPv4/TCP and no smaller per-direction path"
   },
   "usage": {
-    "cli": "Linux --outer-mtu N 为完整外层 IPv4 IP 包上限（无 L2）；Windows --mtu 同单位；已有 Windows 冷收口/OS 量纲仍待完成",
+    "cli": "Linux V4 --outer-mtu default1460, source-locked original-Go Linux client/server and Windows client --mtu default1460; all values are full outer IPv4 IP ceilings; inner always derived/read-only",
     "config": "仅保存 configured_outer_ip_mtu 意图，不能以自动内层结果覆盖；Linux 已接 Rust pre-TLS/cold ABI，Windows 接口待继续",
     "gui": "Windows GUI未验证完整MTU预算/回执"
   },
@@ -128,6 +130,13 @@
       "status": "NOT_RUN",
       "source_sha": "7d853983208b72443234f46aba013fc9a947b603",
       "evidence": "docs/evidence/M0/PLAN027A-H925-SOURCE7D85-CODING-20261102.json"
+    },
+    {
+      "platform": "Linux client/server original-Go, Windows original-Go and GUI/catalog; Linux V4 + Rust cold ABI",
+      "scope": "H932 source-pinned 1460 default; assembly hash/build/native OS readback pending",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json"
     }
   ],
   "limitations": [
@@ -147,7 +156,8 @@
     "H928 Rust RFC791 bounded DF0 fragment helper and RFC1191 ICMP3/4 pure builder implemented; Linux Game kernel TX only wires a <=32-fragment/4-per-turn DF0 fallback. DF1 builder has no live TUN writer in this batch, Windows/Normal FEC fallback and all native PMTU/weaknet NOT_RUN.",
     "H928 platform build FAIL E0502 header checksum concurrent borrow; H929 narrowly fixes shared helper and test borrow ordering, awaiting exact SOURCE Rust tests.",
     "H930 Linux Game worker DF1 local ICMP3/4 applies only if cold trusted OS TUN IPv4 exists; per second <=20 local kernel writes, still requires real native DF1/EMSGSIZE/ICMP and two-direction measurements. Normal FEC/Windows stay pending.",
-    "H931 Windows M4 existing receive-ring oversized frame is explicitly a nonfatal one-packet outcome (Normal/FEC/Game), not io.ErrShortBuffer owner Stop; there is no claim of Wintun/FEC/Game LINK or real DF0 fallback. Native giant-UDP/DF1 still NOT_RUN."
+    "H931 Windows M4 existing receive-ring oversized frame is explicitly a nonfatal one-packet outcome (Normal/FEC/Game), not io.ErrShortBuffer owner Stop; there is no claim of Wintun/FEC/Game LINK or real DF0 fallback. Native giant-UDP/DF1 still NOT_RUN.",
+    "H932 default changed from 1500 to1460 at user request; explicit 1500 maximum and historical 1500 GameFEC1398 boundary remain valid. Archived 1500 default on older SOURCE is historic, not current."
   ],
   "promotion": null
 }

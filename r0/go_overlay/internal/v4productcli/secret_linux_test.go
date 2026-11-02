@@ -26,6 +26,7 @@ func TestArm64V4PrivateCredentialsNoArgv(t *testing.T) {
     }
     got,err:=parse("client",args)
     if err!=nil{t.Fatal(err)}
+    if got.outerMTU!=1460 {t.Fatalf("original V4 default outer IP MTU=%d; want1460",got.outerMTU)}
     if got.password!="pinned-secret"||len(got.routeKey)!=32{
       t.Fatal("trusted fd-only config not applied")
     }
