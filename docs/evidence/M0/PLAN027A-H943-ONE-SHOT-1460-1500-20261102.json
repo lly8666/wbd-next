@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_sha": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
+  "legacy_original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "user_authorization": "2026-11-02 continue once manual",
+  "one_shot_dispatch_run": 41446575641,
+  "one_shot_status": "DISPATCH_SUCCESS",
+  "verification": "SIX_REAL_WINDOWS_SIGNED_NPF_WINTUN_ORIGINAL_GO_TLS_AND_LINUX_WSL2_NATIVE_ACTIONS_ALL_SUCCESS",
+  "runs": [
+    {
+      "mode": "default1460-all-seven",
+      "run": 41446644468,
+      "result": "FUNCTIONAL_PASS",
+      "outer_ip_configured": 1460,
+      "mtu_cli_flags": "OMITTED_FROM_BOTH_ORIGINAL_CLI",
+      "modes": [
+        "normal",
+        "fixed",
+        "auto",
+        "game2",
+        "game4",
+        "game2-fec",
+        "game4-fec"
+      ],
+      "linux_os_inner_mtu": [
+        1329,
+        1315,
+        1315,
+        1313,
+        1313,
+        1298,
+        1298
+      ],
+      "os_marker": true,
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "mode": "explicit1500-all-seven",
+      "run": 41446654756,
+      "result": "FUNCTIONAL_PASS",
+      "outer_ip_configured": 1500,
+      "mtu_cli_flags": "BOTH_EXPLICIT",
+      "modes": [
+        "normal",
+        "fixed",
+        "auto",
+        "game2",
+        "game4",
+        "game2-fec",
+        "game4-fec"
+      ],
+      "linux_os_inner_mtu": [
+        1329,
+        1315,
+        1315,
+        1313,
+        1313,
+        1298,
+        1298
+      ],
+      "os_marker": true,
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "mode": "normal-1460-loss0",
+      "run": 41446664669,
+      "result": "FUNCTIONAL_PASS",
+      "outer_ip_configured": 1460,
+      "linux_os_inner_mtu": 1329,
+      "rate_mbps_each": 10,
+      "delay_ms": 25,
+      "loss_pct": 0,
+      "duration_s": 60,
+      "first_delivery_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "first_delivered_mbps": {
+        "windows": 10,
+        "linux": 9.9973
+      },
+      "own_clock_rtt_p99_ms": {
+        "windows": 47,
+        "linux": 51.627
+      },
+      "generator_cpu_s": {
+        "windows": 4.5781,
+        "linux": 7.7396
+      },
+      "stop": "PASS_BOTH_OWNED"
+    },
+    {
+      "mode": "game4fec-1460-loss0",
+      "run": 41446675044,
+      "result": "FUNCTIONAL_PASS_PERFORMANCE_CAUTION",
+      "outer_ip_configured": 1460,
+      "linux_os_inner_mtu": 1298,
+      "rate_mbps_each": 10,
+      "delay_ms": 25,
+      "loss_pct": 0,
+      "duration_s": 60,
+      "first_delivery_fraction": {
+        "windows": 1,
+        "linux": 1
+      },
+      "first_delivered_mbps": {
+        "windows": 9.9999,
+        "linux": 9.9972
+      },
+      "own_clock_rtt_p99_ms": {
+        "windows": 1297,
+        "linux": 1327.63
+      },
+      "generator_cpu_s": {
+        "windows": 3.0938,
+        "linux": 19.9625
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "performance": "NOT_QUALIFIED_HIGH_P99_AT_10M_ABOVE_PLANNED_GAME_3M"
+    },
+    {
+      "mode": "fixed-1460-loss30",
+      "run": 41446684870,
+      "result": "FUNCTIONAL_PASS",
+      "outer_ip_configured": 1460,
+      "linux_os_inner_mtu": 1315,
+      "rate_mbps_each": 10,
+      "delay_ms": 250,
+      "loss_pct": 30,
+      "duration_s": 60,
+      "first_delivery_fraction": {
+        "windows": 0.99947,
+        "linux": 0.998818
+      },
+      "own_clock_rtt_p99_ms": {
+        "windows": 532,
+        "linux": 540.915
+      },
+      "generator_cpu_s": {
+        "windows": 1.8594,
+        "linux": 5.0557
+      },
+      "stop": "PASS_BOTH_OWNED",
+      "kernel_linux_tun": {
+        "rx_dropped_delta": 0,
+        "tx_dropped_delta": 0,
+        "rx_errors_delta": 0,
+        "tx_errors_delta": 0
+      }
+    },
+    {
+      "mode": "game4fec-1460-loss30",
+      "run": 41446696380,
+      "result": "FUNCTIONAL_PASS",
+      "outer_ip_configured": 1460,
+      "linux_os_inner_mtu": 1298,
+      "rate_mbps_each": 10,
+      "delay_ms": 250,
+      "loss_pct": 30,
+      "duration_s": 60,
+      "first_delivery_fraction": {
+        "windows": 0.997094,
+        "linux": 0.998832
+      },
+      "first_delivered_mbps": {
+        "windows": 9.9727,
+        "linux": 9.9875
+      },
+      "own_clock_rtt_p99_ms": {
+        "windows": 719,
+        "linux": 696.615
+      },
+      "generator_cpu_s": {
+        "windows": 2.9531,
+        "linux": 18.8572
+      },
+      "stop": "PASS_BOTH_OWNED"
+    }
+  ],
+  "all_six_native_results": "SCOPED_FUNCTIONAL_PASS",
+  "interpretation": {
+    "default_outer_ipv4_ip_mtu": 1460,
+    "explicit_outer_ceiling": 1500,
+    "no_ethernet_l2": true,
+    "inner_os_real_readback": true,
+    "full_line_rate_envelope": "NOT_QUALIFIED",
+    "source_scoped_native_oddity": "At 1500/1460 actual inner 1329/1315/1313/1298 is lower than unconstrained mathematical upper; not proof that all budget is utilized.",
+    "native_windows_os_applied": "MARKER_OBSERVED_NOT_PER_MODE_WINDOWS_NETIPINTERFACE_NUMERIC_READBACK",
+    "df1_actual_oversize_emsgsize_icmp": "NOT_RUN",
+    "df0_actual_large_udp_fragmentation": "NOT_RUN",
+    "normal_fec_windows_link": "NOT_IMPLEMENTED_AS_GENERIC_LINK",
+    "weaknet_five_thirty_five_stages": "NOT_RUN",
+    "linux_arm64_new_source_actual": "NOT_RUN",
+    "game4_fec_performance_3mbps_envelope": "NOT_RUN",
+    "game4_fec_10mbps_loss0_p99": "PERFORMANCE_INVESTIGATION_REQUIRED",
+    "product_cpu_s_per_gib_pair": "NOT_QUALIFIED",
+    "rtt_metric": "own-origin same-clock round-trip; NOT one-way"
+  },
+  "all_old_source_failures_retained": true,
+  "plan028": "NOT_STARTED",
+  "work": "Only evidence/status, do not make product changes while exact source tests ran."
+}

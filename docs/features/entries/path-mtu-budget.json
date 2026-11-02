@@ -139,6 +139,27 @@
       "status": "BUILD_PASS",
       "source_sha": "f2a6644908ecf567bed17987e51099e5cbd0d7da",
       "evidence": "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json"
+    },
+    {
+      "platform": "Windows signed Npcap/Wintun original-Go TLS + WSL2 Linux native TUN",
+      "scope": "H943 source ae3e7e9f authentic default1460 omit both CLI MTU flags and explicit1500 all seven public Normal/Fixed/Auto/Game2/Game4/Game2FEC/Game4FEC 7/7 real duplex+Stop each; Linux TUN actual MTU numeric readback 1329/1315/1313/1298; no DF or 3Mbps Game performance claim",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
+      "evidence": "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
+    },
+    {
+      "platform": "Windows signed original-Go/Rust WSL2 Linux native app mixed UDP/TCP + tc",
+      "scope": "H943 real outer1460 Normal/Game4FEC each 10Mbps 25ms 0pct 60s bidirectional first=1.0 Stop PASS, Game4FEC RTT p99 1297/1328ms performance CAUTION vs Normal 47/52ms; capacity and CPU gain not qualified",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
+      "evidence": "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
+    },
+    {
+      "platform": "Windows signed original-Go/Rust ↔ WSL2 Linux native kernel tc loss30",
+      "scope": "H943 true 1460 10Mbps each 250ms 30pct 60s fixed and Game4FEC first win/linux .99947/.998818 and .997094/.998832, real OS TUN1315/1298 Stop PASS; not 5-30-5 staged weaknet or full packet losslessness",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
+      "evidence": "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
     }
   ],
   "limitations": [
@@ -166,7 +187,8 @@
     "H935 SOURCE2b2ad98 Windows owner ABI run41442869483 FAIL E0502 immutable Registry lane borrow crossing mutable cold bind; H937 clone existing Arc handle only, no byte/authorization change, new exact SOURCE test pending.",
     "H938 OpenWrt disabled UCI wrapper now has one explicit outer_mtu default1460 passed to same Linux --outer-mtu; Android currently no connected native owner, its setMtu(1200) is a non-operational INNER placeholder, never treated as outer1460; neither platform native applied qualified.",
     "H939 scoped exact H932 source f2a66449 build results PASS, not application OS readback. H937 Windows Rust original-owner v5 E0502 fix plus native WSL remain IN_PROGRESS. H932 earlier M0-WIN-LINUX source did not pass as of checkpoint; do not substitute builds.",
-    "H941 one-shot requested manual action batch includes original Go/Windows/Wintun/Npcap/Linux signed kernel seven modes at implicit outer1460 and explicit1500 plus four separate 1460 60s loss0/30% scenes. A dispatch is NOT a result, and there is no actual DF/fragment/ICMP qualification from these UDP/TCP scenes."
+    "H941 one-shot requested manual action batch includes original Go/Windows/Wintun/Npcap/Linux signed kernel seven modes at implicit outer1460 and explicit1500 plus four separate 1460 60s loss0/30% scenes. A dispatch is NOT a result, and there is no actual DF/fragment/ICMP qualification from these UDP/TCP scenes.",
+    "H943 user one-shot six runs all Action SUCCESS at exact source ae3e7e9f. Game4FEC 10Mbps 25ms loss0 round-trip p99 1297/1328ms vs Normal47/52ms; formal performance gate NOT_PASS/NOT_QUALIFIED until planned Game3Mbps and CPU/RSS/p99 same-host controlled comparison. Actual DF0/DF1 giant UDP/ICMP/Windows netIP numeric remains NOT_RUN; no promotion/PLAN028."
   ],
   "promotion": null
 }

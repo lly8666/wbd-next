@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 941,
-  "checkpoint_sha": "4d24565c343f9feb788574fbce22e6d1e9a73f36",
+  "sequence": 943,
+  "checkpoint_sha": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H941 user manual one-shot: actual seven mode native default1460/explicit1500 and four 1460 10Mbps loss0/30percent source-locked jobs; original Rust cold and owners preserved.",
+  "current_task": "PLAN027A H943: one-shot six actions all functional SUCCESS source ae3e7e9f, native default outer1460 and explicit1500 seven public modes plus Normal/Game4FEC loss0 and Fixed/Game4FEC loss30. Remain DF0/DF1 true giant UDP, weaknet5-30-5, 3Mbps GameFEC p99/CPU and OS Windows numeric.",
   "why_now": "Recovery verified PLAN027 USER_ACCEPTED_SCOPED closed; no old Actions inflight on entry. New source push has auto CI only; do not dispatch duplicate native scenarios.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect new H941 one-shot orchestrator Action and six dispatched runs (exact GITHUB_SHA), verify OS inner readback, first/Stop, loss0 vs true tc loss30, CPU/RSS/p99. Fix real failures under source lock, do not mark DF packet injection passed from generic functional tests. Remaining native IPv4 oversize/DF and staged 5-30-5 need explicit evidence before 027A exit; no 028 yet.",
+  "next_action": "Do NOT rerun H941 six scenes. One precise 3Mbps Game4FEC 1460 CPU/RSS/p99 same-VM independent against Normal/old only if signal merits; actual DF1/DF0 oversize kernel ICMP/fragmentation and Windows numeric OS readback must be proven per supported mode, 5→30→5 staged if feasible. Resolve by exact SOURCE with no false PASS, then authorize PLAN028.",
   "unverified": true,
-  "last_tested_source": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "last_tested_source": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json",
     "docs/evidence/M0/PLAN027-H915-SOURCE6693-NORMAL100-PAIR-PASS-20261102.json",
@@ -21,18 +21,19 @@
     "docs/evidence/M0/PLAN027-H917-SOURCE6693-NORMAL-ON300-SMALL1-PASS-20261102.json",
     "docs/evidence/M0/PLAN027-H917-SOURCE6693-AUTO240-ON-PASS-20261102.json",
     "docs/evidence/M0/PLAN027-H917-SOURCE6693-FIXED6-OFF50-PASS-20261102.json",
-    "docs/evidence/M0/PLAN027-H916-SOURCE6693-GAME4FEC-OFF20-HIGHLOSS-PASS-20261102.json"
+    "docs/evidence/M0/PLAN027-H916-SOURCE6693-GAME4FEC-OFF20-HIGHLOSS-PASS-20261102.json",
+    "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
   ],
   "context_refs": [
-    "docs/prompts/M0-PLAN027A.md",
-    "docs/devlog/M0/20261102-PLAN027-H918-FOUR-ACTIONS-POSTGATE.md",
     "docs/evidence/M0/PLAN027A-H922-SOURCEECF77-ACTIONS-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H922-RECOVER-FIRST-CODE.md",
     "docs/devlog/M0/20261102-PLAN027A-H925-WINDOWS-RECEIVE-BOUND.md",
     "docs/evidence/M0/PLAN027A-H925-SOURCE7D85-CODING-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H932-DEFAULT1460.md",
-    "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json"
+    "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json",
+    "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json",
+    "docs/devlog/M0/20261102-PLAN027A-H943-SIX-ACTIONS-COLLECTED.md"
   ],
   "open_requests": [],
-  "partial_summary": "H940 main a1362b22 governance-maintenance run41444215558 PASS. H937 original Windows and WSL signed native seven modes run41443311972 PASS and Windows WAL modes run41443312219 PASS at original 1400; H941 native default1460 and explicit1500 not yet measured. Changed only existing harness selection + 1460 scenarios, and one tightly gated manual dispatch job. DF0/DF1 giant UDP still NOT_RUN; user default1460 and explicit1500 unchanged."
+  "partial_summary": "H943 6/6 true NPF/Wintun↔WSL2 source ae3e7e9f: 41446644468 default1460 all7 PASS, 41446654756 explicit1500 all7 PASS, 41446664669 Normal0 10Mbps first100 both p99 47/52 PASS, 41446675044 Game4FEC0 first100 both but high p99 1297/1328ms (PERF_UNQUALIFIED), 41446684870 Fixed30 first .99947/.998818 PASS, 41446696380 Game4FEC30 first .997094/.998832 PASS. All actual Linux TUN OS inner<=outer and owned Stop. H943 evidence. DF0/DF1 and staged5-30-5 NOT_RUN; 028 not started."
 }

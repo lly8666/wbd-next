@@ -2,7 +2,7 @@
 
 源码、计划和进度在main。每次默认上轮可能中断，读本页、AGENTS、PROJECT_CHARTER、project/registry、M0 prompt/cursor及features入口；只核checkpoint后相关增量与在途Actions，补recovered，不重扫历史/重复派发。
 
-当前任务：[PLAN027A统一MTU](docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md)（H939 所有CLI及OpenWrt UCI默认完整外层IPv4 IP MTU1460，最大显式1500；H932 source-locked构建PASS，H937 Windows owner原生/跨端仍在测，DF/七模式/弱网/保护性能未验）；PLAN027按用户授权已[限定范围结案](docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json)，旧FAIL/NOT_MEASURED不改写为PASS。
+当前任务：[PLAN027A统一MTU](docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md)（H943 CLI/OpenWrt UCI 默认完整外层IPv4 IP MTU1460、显式1500；真实七模式两种外层配置均通过、Normal和Game4FEC loss0/30定向场景功能PASS，Game10Mbps p99疑点及真实DF/分阶段弱网/性能尚未验）；PLAN027按用户授权已[限定范围结案](docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json)，旧FAIL/NOT_MEASURED不改写为PASS。
 
 现行MTU唯一规范：[MTU_CONTRACT](docs/architecture/MTU_CONTRACT.md)。不重复旧网络矩阵，执行新增实际变更时仍守真实SOURCE、OS读回、原生Stop与一Action一场景。
 
