@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 898,
-  "checkpoint_sha": "c85b00a5b648f99c15fc599b9981ed5fa8df0e09",
+  "sequence": 899,
+  "checkpoint_sha": "6a880c919d564d48436bdebae702f66e6800e709",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H898: H895 Action41401870658 exact SOURCE43abd original native Windows->Linux 105s IFB=118 real drops, runner 3 owned /32 management routes pinned/restored, product post105 two-OS UDP wake failed at~262s and owned Stop NOT_QUALIFIED; artifact create ENOTFOUND after route lease exact restore. H883 old f361 still cancelled unknown. Add per-side genuine wake rc/1Hz native Health/dead/reauth markers before abort, exact owned stop/WAL readback and pre/post hosted OS default-route/DNS source stdout before artifact; no new underlying Go/Rust data-plane changes, no blind route cleanup. Source H896 d9d492 signed Windows Game2 FEC6 OFF10M250ms30% first.999986/.999932 Stop PASS; H897 c85b signed Windows Normal OFF100M25ms0% first.999993/1, offered99.9732/99.9601 Stop PASS, RTT p99 234/249ms host risk.",
-  "why_now": "User provided 950-line real H895(H888-labeled) failure log: authentic recovery failure precedes separate GitHub ENOTFOUND; old-runner-peer /32 protection cannot restore DNS/new upload host. Need pinpoint genuine failed side and original authenticated Health/dead/rejoin and OS route/CAS cleanup instead of claim single old problem root or blindly rerun while old action in_progress.",
+  "current_task": "H899 one exact source-signed original Windows NPF/Wintun↔Linux WSL2 Normal outer-OFF 10M25ms 105s unilateral Windows-origin IFB blackout and restored120s runs with H898 true per-side UDP1Hz wake rc + original reauth/Health markers, owned Stop/WAL and OS default-route/DNS pre/post /32 restore main-stdout diagnostics. H895 SOURCE43abd original real IFB118/105s but postwake rc!=0 and Artifact ENOTFOUND; GH runner run stale in_progress despite uploaded log post-cleanup. H898 source6a880 cheap wiring/py_compile, governance/feature PASS, no native run. H896 d9d492 Game2 max FEC6 OFF30% first.999986/.999932 and Stop PASS; H897 c85b Normal100M OFF first.999993/1 Stop PASS RTT p99 234/249ms capacity risk.",
+  "why_now": "H895 actual 105 one-direction authenticated recovery failed but old per-side product logs lost when blob API DNS ENOTFOUND; source H898 added console-first scoped evidence and physical route/DNS witnesses. One bounded H899 reproduction is warranted to identify actual bad OS/reconnect/route before any Go/Rust product fix. Prevent automatic broad replays.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H898 cheap/governance. Query H895 action until terminal, do not repeat exact 105 stage without diagnostics; then perform one new SRC diagnostic native unilateral105 to identify failing side, original Go TLS generation/rejoin and actual product route/DNS cleanup, fix proven cause. Follow PLAN027 Fixed/Auto and Game4 maxFEC/ON affected combos, capacity-aware 100M RTT and higher, cost F/R/C/CPU/RSS/p99; physical NOT_RUN.",
+  "next_action": "Check H899 cheap/governance and exact signed Windows native; require source-bound live 105 IFB drops and last before-upload per-side real wake counters, original Go TLS generation/reconnect, Stop marker, owned WAL and exact original physical default/DNS snapshots. If product wake FAIL again, do NOT mark PASS, isolate first failure and address only causal product path. If host DNS not restored, preserve original WAL and OS readback without deleting foreign routes. Other PLAN027 Fixed/Auto/Game4 highFEC/ON and broad FRC/p99 remain.",
   "unverified": true,
   "last_tested_source": "c85b00a5b648f99c15fc599b9981ed5fa8df0e09",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H897-SOURCEC85B-NORMAL-OFF-100M-NATIVE-PASS-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H891-SOURCE-CARDS-COLLECT.md",
     "docs/devlog/M0/20261102-PLAN027-H892-NORMAL-50M-OFF-SIGNED.md",
     "docs/devlog/M0/20261102-PLAN027-H893-RUNNER-POWERSHELL-PARSER-GATE.md",
     "docs/devlog/M0/20261102-PLAN027-H894-CLEAN-OWNED-ROUTE-LEASE.md",
     "docs/devlog/M0/20261102-PLAN027-H895-ON300-RECEIPT-WIN105-SUBSCRIPTION.md",
     "docs/devlog/M0/20261102-PLAN027-H896-GAME2-FEC6-OUTER-OFF-30LOSS.md",
     "docs/devlog/M0/20261102-PLAN027-H897-NORMAL-OFF-100M-SIGNED.md",
-    "docs/devlog/M0/20261102-PLAN027-H898-SIGNED-RECEIPTS-H888-DNS-SPLIT.md"
+    "docs/devlog/M0/20261102-PLAN027-H898-SIGNED-RECEIPTS-H888-DNS-SPLIT.md",
+    "docs/devlog/M0/20261102-PLAN027-H899-WIN105-DIAGNOSTIC-REPRO.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."
