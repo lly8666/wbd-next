@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 944,
-  "checkpoint_sha": "96ead0c07d3bc0121116bc801617c7e32d9bf142",
+  "sequence": 945,
+  "checkpoint_sha": "bd132478ae9dd5ac0364fa1110b86d04525bc23c",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H944 governance-only scope correction: H943 source ae3e7e9f six true native successes retained, cursor evidence_refs now only that exact SOURCE, historical PLAN027 evidence still in original files and dated devlog; compact feature card below 16KiB.",
-  "why_now": "Recovery verified PLAN027 USER_ACCEPTED_SCOPED closed; no old Actions inflight on entry. New source push has auto CI only; do not dispatch duplicate native scenarios.",
+  "current_task": "PLAN027A H945: user reconfirmed future default 1460B outer full IPv4 IP, explicit 1500 maximum only. M0 long prompt and PLAN027A/028/029/030 prompts aligned in one source commit. No product/data-plane or tests changed.",
+  "why_now": "User explicitly interrupted prior ambiguous response to lock product default outer IPv4 MTU 1460. Existing architecture/plan/AGENTS and product default already 1460; this batch strengthens future prompt recovery only.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect H944 governance + feature catalog checks. Avoid replay six native source ae3e7e9f. 027A functional default1460/explicit1500 COMPLETE_SCOPED; final exit still blocked by real DF0/DF1 packet and ICMP, Windows numeric OS MTU readback, staged weaknet and Game4 3Mbps/CPU-RSS-p99 protection. PLAN028 not started.",
+  "next_action": "Continue PLAN027A open native work: genuine DF0/DF1 oversize behavior with ICMP/EMSGSIZE and no owner Stop; Windows numeric Wintun OS Applied readback; staged 5->30->5 weaknet; Game4FEC 3Mbps p99/CPU/RSS protective qualification; ARM64 current-source boundary. Do not redispatch completed H943 six runs. PLAN028 remains NOT_STARTED.",
   "unverified": true,
   "last_tested_source": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
   "evidence_refs": [
@@ -25,8 +25,9 @@
     "docs/devlog/M0/20261102-PLAN027A-H932-DEFAULT1460.md",
     "docs/evidence/M0/PLAN027A-H932-DEFAULT1460-20261102.json",
     "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json",
-    "docs/devlog/M0/20261102-PLAN027A-H943-SIX-ACTIONS-COLLECTED.md"
+    "docs/devlog/M0/20261102-PLAN027A-H943-SIX-ACTIONS-COLLECTED.md",
+    "docs/devlog/M0/20261102-PLAN027A-H945-1460-PROMPT-LOCK.md"
   ],
   "open_requests": [],
-  "partial_summary": "H943 source ae3e7e9f six real native Actions all SUCCESS (default1460 all7, explicit1500 all7, 1460 Normal/Game4FEC loss0, Fixed/Game4FEC loss30). Governance on H943 source96ead0 FAIL because M0 cursor evidence_refs mixed old 6693 and current ae3e7e9 source and feature card >16KiB; H944 fixes only scope/size. Old evidence files not changed, historical FAILs preserved, Game4FEC 10M p99 high and true native DF1/DF0 still NOT_RUN. PLAN028 not started."
+  "partial_summary": "H943 source ae3e7e9f six real native Actions all SUCCESS (default1460 all7, explicit1500 all7, 1460 Normal/Game4FEC loss0, Fixed/Game4FEC loss30). Governance on H943 source96ead0 FAIL because M0 cursor evidence_refs mixed old 6693 and current ae3e7e9 source and feature card >16KiB; H944 fixes only scope/size. Old evidence files not changed, historical FAILs preserved, Game4FEC 10M p99 high and true native DF1/DF0 still NOT_RUN. PLAN028 not started. H945 user reconfirmed permanent ordinary 1460 outer default; prompt-only update, no code or native qualification."
 }
