@@ -10,6 +10,8 @@
 pub mod r1;
 /// Scoped IPv4/TCP-like steady DATA bytes builder, not a raw OS driver.
 pub mod ipv4_tcp;
+/// RFC791 DF0 exception-only packet fragmentation and RFC1191 ICMP type3/code4 encoder.
+pub mod ipv4_fragment;
 /// Strict, allocation-free inbound IPv4/TCP DATA bytes parser (no AEAD authentication).
 pub mod rx_ipv4_tcp;
 

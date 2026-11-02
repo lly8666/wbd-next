@@ -7,6 +7,7 @@
 use std::os::fd::OwnedFd;
 use std::sync::{Arc,Mutex,atomic::{AtomicBool,AtomicU64,Ordering}};
 use std::thread::{self,JoinHandle};
+use std::collections::VecDeque;
 use std::time::{Instant,Duration};
 use crate::v4_game_lane::{GameAdapter,Error as GameAdapterError};
 use crate::v4_game_cosmetic_outer::CosmeticOuter;
@@ -184,7 +185,13 @@ impl GameKernelOwner{
                 let start=epoch_clock;
                 let mut health=HealthClock::new(HealthPolicy::default_connected(),
                     health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
-                let mut inbound=[0u8;2048];
+                // One full IPv4 TUN read buffer PER Game TX owner, never
+                // 64KiB per arena slab. A 2048B read irreversibly truncated
+                // actual oversized DF0 datagrams into false small packets.
+                let mut inbound=[0u8;65_535];
+                // One bounded exceptional datagram; ordinary small IP goes
+                // first on every loop, then at most 4 IP fragments per turn.
+                let mut pending_ip_fragments=VecDeque::<Vec<u8>>::new();
                 // Game FEC presentation-only replay has two/four fixed
                 // lane slots, owned exclusively by this existing TX worker.
                 let mut cosmetic=scoped_cosmetic;
@@ -223,8 +230,41 @@ impl GameKernelOwner{
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                             }
                         }else if len!=0{
-                            tx_rejected.fetch_add(1,Ordering::Relaxed);
+                            // Kernel should fragment DF0 before TUN; only a
+                            // complete, legal exceptional packet reaching M4
+                            // uses the same RFC791 bounded IP slow path.
+                            // Unlike LINK20 each part is an ordinary Game or
+                            // Game+FEC source, reassembled by the peer OS.
+                            if pending_ip_fragments.is_empty(){
+                                match wbd_platform::ipv4_fragment::fragment_ipv4_df0(
+                                    &inbound[..len],inner_mtu,32){
+                                    Ok(parts)=>pending_ip_fragments.extend(parts),
+                                    Err(_)=>{
+                                        // DF1 is normally rejected by the
+                                        // sender's OS (EMSGSIZE/ICMP) before
+                                        // this consumer. This branch does NOT
+                                        // pretend a Linux TUN write occurred.
+                                        tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                    },
+                                }
+                            }else{
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);
+                            }
                         }
+                    }
+                    for _ in 0..4 {
+                        let Some(part)=pending_ip_fragments.pop_front()else{break};
+                        if game.offer(&part,now).is_err(){
+                            tx_fail.offer.fetch_add(1,Ordering::Relaxed);
+                            tx_rejected.fetch_add(1,Ordering::Relaxed);
+                            // No speculative retry of an already partially
+                            // accounted Game/FEC source on a new lane/PN.
+                            pending_ip_fragments.clear();
+                            break
+                        }
+                        did_business=true;
+                        health.on_local_business(health_origin.elapsed().as_nanos()
+                            .min(u128::from(u64::MAX)) as u64);
                     }
                     // Single TX owner first drains source copies to M4 before
                     // any FEC parity quantum can enqueue additional work.

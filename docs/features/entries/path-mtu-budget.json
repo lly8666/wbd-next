@@ -30,7 +30,9 @@
     "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
     "r0/go_overlay/cmd/wbd-client/m0_native_v4_budget_windows.go",
     "r0/go_overlay/internal/realityfront/bridge_v4_windows_wintun_lease.go",
-    "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go"
+    "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go",
+    "crates/wbd-platform/src/ipv4_fragment.rs",
+    "crates/wbd-engine/src/v4_game_public_kernel.rs"
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
@@ -138,7 +140,8 @@
     "PLAN027A后续配置约定：用户MTU始终是外层完整IP上限（默认1500、不含以太网头）；内层由统一预算自动派生/应用/读回，普通配置无内层override。本次仅同步方案，既有输入范围和平台资格不变。",
     "PLAN027A H922 首批 Rust/Go Cgo 冷 ABI 与 Linux owned OS readback 已编码；Windows outer/inner 量纲、DF0/DF1、完整 native 七模式/保护性能仍 NOT_RUN，不能以 cross build 替代产品合格。",
     "PLAN027A H925 Windows Normal/Fixed/Auto binds explicit outer configured IP and planned receiving inner via v5 ABI. Planned != OS applied: native M4 WAL+live readback remains required. Game owner geometric binding still separate; real seven-mode MTU native qualification NOT_RUN.",
-    "H927 Windows legacy Go MTU budget fixture retired; versioned Rust cold ABI is the only numeric implementation. Exact Rust unit vectors and Windows C layout/mode mapping are separate tests, not Win32 OS Applied qualification."
+    "H927 Windows legacy Go MTU budget fixture retired; versioned Rust cold ABI is the only numeric implementation. Exact Rust unit vectors and Windows C layout/mode mapping are separate tests, not Win32 OS Applied qualification.",
+    "H928 Rust RFC791 bounded DF0 fragment helper and RFC1191 ICMP3/4 pure builder implemented; Linux Game kernel TX only wires a <=32-fragment/4-per-turn DF0 fallback. DF1 builder has no live TUN writer in this batch, Windows/Normal FEC fallback and all native PMTU/weaknet NOT_RUN."
   ],
   "promotion": null
 }
