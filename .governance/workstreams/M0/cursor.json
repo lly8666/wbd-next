@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 848,
-  "checkpoint_sha": "71200de7ca5fd1c2603ec6a512bae251568f7e84",
+  "sequence": 849,
+  "checkpoint_sha": "69344d3c9245f6643f8a3e34f340edf9df68b033",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H848: new SOURCE e928 Go cold original FakeTCP 1s SYN retransmit native 105s bilateral blackhole then restore120s original Normal. Real first100% c2s/99.813% s2c, p9960.2/25.8ms, missing0/379, true 1.23s zero-delivery, source TUN drops0/27, host PSI0.1, second TLS ready/Stop PASS. Native reporter INCONCLUSIVE due HARNESS_CAPACITY_LIMITED client and TUN upstream drop; full recovery still NOT_QUALIFIED. Older fdc first82.4%, 21s p99, 35k TUN loss retained FAIL. f5 sameVM Normal100 OFF→ON CPU+5.53/5.78% at R~0, hot symbol not attributed. Signed Windows fdc seven-mode short native PASS functional only, WL performance NOT_RUN. No running necessary Actions after H846.",
-  "why_now": "Exact new-source one scenario completed. Missing original FakeTCP cold SYN due strongly improved genuine first and latency, but performance/control qualification must respect native upstream TUN drops and 379 s2c missing, cannot promote workflow code PASS. Stop chasing same-seed test, plan next discriminating work.",
+  "current_task": "PLAN027 H849: source e928 genuine blackhole reauth now first100%/99.813% but native INCONCLUSIVE TUN27 and injector, 1.2s zero-delivery; source f5 sameVM Normal100 OFF/ON CPU+5.53/5.78% mostly no R, exact RX vs TX Rust worker cost not sampled; H849 one independent frozen source f5 sameVM OFF→ON 100M0 numeric native Rust worker Stop attribution Action pending, no new product hotpath. Windows source fdc signed seven modes functional only, other lifecycle/Windows paired open.",
+  "why_now": "Real f5 matched ON100 overhead >5% with R nearly zero triggers one bounded attribution; existing original native Stop emits Rust RX/TX CPU numeric but prior artifact omitted it. One same scene independent Action captures exact numeric producer and whole process full interval without general framework/per-packet logs.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Review any source e928 real capacity/tun upstream transition if needed; prioritize existing shared Normal ON100 CPU+5.5% hotspot attribution with minimal targeted instrument rather than rewrite and Windows OFF native sameVM cost/lifecycle; preserve e928 native INCONCLUSIVE and fdc prior FAIL. Continue independent tasks, physical NOT_RUN.",
+  "next_action": "Collect H849 genuine sameVM worker CPU ON/OFF and first/Stop; determine where ~1.5CPU-sec delta resides, only optimize shared cost if meaningful. e928 true reauth still native INCONCLUSIVE due 27 source TUN drops, no repeat blackhole without new hypothesis. Windows OFF/ON paired and rotation remain necessary scope.",
   "unverified": true,
   "last_tested_source": "e928b50cf872b6746a62c56662e5fc0768c5ca45",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H848-E928-BILATERAL-BLACKHOLE-RECOVERY-INCONCLUSIVE-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H841-NEW-SOURCE-REAL-COLD-REAUTH.md",
     "docs/devlog/M0/20261102-PLAN027-H842-R-NORMAL100-PAIR.md",
     "docs/devlog/M0/20261102-PLAN027-H843-R100-CHECKOUT-DEPTH.md",
     "docs/devlog/M0/20261102-PLAN027-H844-GENERATION-R100-COHORT.md",
     "docs/devlog/M0/20261102-PLAN027-H845-SOURCE-GOVERNANCE.md",
     "docs/devlog/M0/20261102-PLAN027-H846-REAUTH-SYN-R100.md",
     "docs/devlog/M0/20261102-PLAN027-H847-WINDOWS-FDC-SEVEN-NATIVE.md",
-    "docs/devlog/M0/20261102-PLAN027-H848-E928-COLD-SYN-NATIVE-RECOVERY.md"
+    "docs/devlog/M0/20261102-PLAN027-H848-E928-COLD-SYN-NATIVE-RECOVERY.md",
+    "docs/devlog/M0/20261102-PLAN027-H849-R100-WORKER-CPU-ATTRIBUTION.md"
   ],
   "open_requests": [],
   "partial_summary": "H848 e928 real double blackhole105 original TLS/Rust new Ready each and Stop: restored120s c2s first100% s2c first99.813% (379 missing), p99 60.2/25.8ms, zero deliver gap~1.2s, source TUN27 upstream, host PSI0.1; native INCONCLUSIVE not full PASS. Prior fdc recovery82.4% p99~21.3s retained FAIL. H846 R100 f5 sameVM CPU ON delta5.53/5.78% with R163/0B. H847 Win fdc seven-mode native functional not WL load. No new physical."

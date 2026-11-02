@@ -1,0 +1,73 @@
+# H844: only 1200B large UDP exists; optional 64..256B source-size gate not applicable.
+name: M0 PLAN027 R original Normal100 same VM bounded Rust RX TX attribution
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-plan027-linux-r100-rust-worker-attribution.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  exactly-one-sequential-same-vm-normal100-pair:
+    if: contains(github.event.head_commit.message, '[plan027-r100-worker-attribution]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PRODUCT_SOURCE: f5e8f30fa4a5052c9797bbd15b385ec5cfc5d2c3
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 80}
+      - name: Verify exact original high-PPS OFF/ON contract and source selection
+        run: |
+          set -euo pipefail
+          git cat-file -e "$PRODUCT_SOURCE^{commit}"
+          python3 -m unittest tests.test_m0_plan027_linux_repair_pair_cap100 -v
+          python3 -m py_compile tools/network_harness/m0_plan027_linux_repair_pair_cap100.py
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          run-id: 41342800664
+          name: plan027-r-once-frozen-linux-product
+          github-token: ${{ github.token }}
+          path: native-bundle
+      - name: Verify exact original f5 product manifest and all three binary hashes
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("native-bundle/manifest.json"))
+          assert m["source"]==os.environ["PRODUCT_SOURCE"] and m["architecture"]=="x86_64"
+          PY
+          (cd native-bundle && sha256sum -c SHA256SUMS)
+          chmod +x native-bundle/wbd-v4-client native-bundle/wbd-v4-server
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+          test -c /dev/net/tun
+      - name: One real source-frozen Normal100 same-VM OFF then ON, sequential Stop
+        run: |
+          set -euo pipefail
+          sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB,PRODUCT_SOURCE \
+            python3 -m tools.network_harness.m0_plan027_linux_repair_pair_cap100 \
+              --bundle "$GITHUB_WORKSPACE/native-bundle" \
+              --product-source "$PRODUCT_SOURCE" \
+              --scenario scenarios/plan027-n-normal-off-100m-25ms-loss0-60s.json \
+              --out "$GITHUB_WORKSPACE/plan027-r-normal100-pair"
+      - name: Extract native original Rust Stop worker CPU without raw logs or packet sampling
+        run: |
+          set -euo pipefail
+          python3 -m unittest tests.test_m0_plan027_r100_worker_cpu -v
+          python3 -m tools.network_harness.m0_plan027_r100_worker_cpu \
+            --root "$GITHUB_WORKSPACE/plan027-r-normal100-pair"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan027-r100-worker-cpu-attribution
+          path: |
+            plan027-r-normal100-pair/worker-attribution.json
+            plan027-r-normal100-pair/result.json
+            plan027-r-normal100-pair/leg-off/result.json
+            plan027-r-normal100-pair/leg-on/result.json
+            plan027-r-normal100-pair/leg-off/network-snapshots.json
+            plan027-r-normal100-pair/leg-on/network-snapshots.json
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,10 @@
+# PLAN027 H849 | One high-information R100 Rust worker CPU attribution, no speculative shared rewrite
+
+- Existing [f5 100Mbps/25ms zero-loss Normal OFF→ON same VM Action41366111073](https://github.com/lly8666/wbd-next/actions/runs/41366111073) first100% both, p99 26.0ms, ON CPU+1.52/+1.59s per60 and peak RSS+3MB, almost zero R (163/0B). Total ON overhead ~5.53/5.78% qualifies one focused investigation, not permission to unconditionally replace BTreeMaps/M2 timers or add a new control framework.
+- The native product already emits **one** `V4_PUBLIC_WORKER_CPU role=... rx_thread_cpu_ns=... tx_thread_cpu_ns=...` at owned Stop. Prior pair artifact did not archive that safe numeric readback. This one independent same-VM sequential OFF→ON run reuses EXACT source f5 three binaries/sha256 with same 100M/25ms/0%/1200B case, captures only these numeric original Rust two worker CPU times; no source/product code change or extra per-packet sampling. One Action/one measurement job, same byte/CPU/Stop gates. Separate worker CPU full native owner lifetime from steady process60s; compare ON-OFF to full process observation window and preserve other-thread/language attribution UNKNOWN.
+- If worker delta explains nearly the entire +1.5sec, investigate shared Rust **TX** shadow/index path already reviewed H848 rather than Go; if not, focus other threads/sampling. A single scoped numeric snapshot may still be inadequate for final attribution; don't assert a Go/Rust hotspot from remainder alone. Avoid speculative optimizer until data.
+- H848 new Go cold original SYN due source e928 true 105s blackout+120s restored first100%/99.813%, p9960/26ms but native INCONCLUSIVE due TUN upstream27 and injector limited; not in this f5 R cost test. Windows seven-mode fdc native functional PASS limited. No physical deploy.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"One source-frozen original Normal100 existing worker-CPU Stop numeric attribution Action; no product, CLI, config or user-facing code change."}
+```
