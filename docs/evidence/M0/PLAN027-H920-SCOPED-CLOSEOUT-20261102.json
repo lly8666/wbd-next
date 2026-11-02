@@ -36,5 +36,6 @@
     "Original burst action failure not converted to PASS"
   ],
   "next_task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "acceptance_scope": "User-requested existing-evidence limited closure, not universal product promotion"
+  "acceptance_scope": "User-requested existing-evidence limited closure, not universal product promotion",
+  "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929"
 }
