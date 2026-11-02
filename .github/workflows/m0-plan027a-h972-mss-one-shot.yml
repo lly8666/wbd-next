@@ -1,12 +1,12 @@
 # H972 one-shot qualification of the single current V4 MSS source.
-# Build Windows EXE/Rust DLL/Linux product exactly once in the existing H968
+# Build Windows EXE/Rust DLL/Linux product exactly once in the existing H971
 # 41482859398 workflow. Never recompile in any of the scoped native Actions.
 name: M0 PLAN027A H972 verified prebuilt MSS Native narrow regression
 run-name: "M0|PLAN027A-H972-MSS-ONE-SHOT|${{ github.sha }}"
 on:
   push:
     branches: [main]
-    paths: [.github/workflows/m0-plan027a-h972-mss-once.yml]
+    paths: [.github/workflows/m0-plan027a-h972-mss-one-shot.yml]
 permissions: {contents: read, actions: write}
 jobs:
   first-normal-1460:
