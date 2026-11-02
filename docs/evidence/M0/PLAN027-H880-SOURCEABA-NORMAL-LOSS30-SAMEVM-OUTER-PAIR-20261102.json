@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "aba5943f040d2030a6b07d61897036dfeda825ca",
+  "run_id": 41393878105,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41393878105",
+  "artifact": {
+    "id": 13119245783,
+    "name": "m0-wl-full-public-normal-direct",
+    "digest": "sha256:71ac7cca26b8643158c47d544522ee147a46256c51ca9c05cbb11f233fc5f3ad"
+  },
+  "windows_artifact": {
+    "id": 13118138708,
+    "digest": "sha256:e851174e20b6ad78829d10a73947e811f27c6160c487da47ac83bbde18b81d5e"
+  },
+  "linux_artifact": {
+    "id": 13118293694,
+    "digest": "sha256:2014bcfaa780747e0083e28446f1932c382f89861124f2fe5f14a2cd43f84846"
+  },
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "scenario": {
+    "path": "scenarios/wl-outer-repair-10m-250ms-loss30-60s.json",
+    "sha256": "73bf61884e54551e16f290af78c447db1a717232aaa2b238c71fc03f35ddf0a8",
+    "mode": "normal",
+    "duration_s_per_leg": 60,
+    "offer_mbps_per_direction": 10,
+    "delay_ms_per_direction": 250,
+    "loss_pct_per_direction": 30,
+    "order": "OFF_ON",
+    "one_windows_runner": true
+  },
+  "same_windows_binary_sha256": "09802ae5288bf2c4c037244e6c8cf43b22336d03ef7798190122f726853bb6ff",
+  "same_linux_binary_sha256": "ea7fa23ac679bba6a4eef4a6197e8d7d000bba08fc55e783b33e74cb8d70d6df",
+  "legs": [
+    {
+      "outer_repair": "off",
+      "effective_windows": 0,
+      "effective_linux": 0,
+      "linux_eth0_tc_drops": 30327,
+      "linux_ifb_tc_drops": 30645,
+      "actual_kernel_loss": true,
+      "offered_mbps": {
+        "windows": 9.9974,
+        "linux": 10
+      },
+      "first_arrival_fraction_by_receiver": {
+        "windows": 0.704654,
+        "linux": 0.699904
+      },
+      "first_delivered_mbps_by_receiver": {
+        "windows": 7.0441,
+        "linux": 6.9846
+      },
+      "windows_process_cpu_s": 3.2188,
+      "user_s": 0.9062,
+      "kernel_s": 2.3125,
+      "peak_workingset_bytes": 41910272,
+      "windows_outer_F_bytes": 86371627,
+      "R_accepted_bytes": 0,
+      "R_uncertain_charged_bytes": 0,
+      "C_bytes": 143530,
+      "R_over_F": 0,
+      "owned_stop": "PASS_BOTH_OWNED",
+      "wal_left": false,
+      "result": "PASS"
+    },
+    {
+      "outer_repair": "on",
+      "effective_windows": 1,
+      "effective_linux": 1,
+      "linux_eth0_tc_drops": 33535,
+      "linux_ifb_tc_drops": 33759,
+      "actual_kernel_loss": true,
+      "offered_mbps": {
+        "windows": 9.9974,
+        "linux": 10
+      },
+      "first_arrival_fraction_by_receiver": {
+        "windows": 0.72381,
+        "linux": 0.724125
+      },
+      "first_delivered_mbps_by_receiver": {
+        "windows": 7.2319,
+        "linux": 7.2256
+      },
+      "windows_process_cpu_s": 24.4375,
+      "user_s": 12.6094,
+      "kernel_s": 11.8281,
+      "peak_workingset_bytes": 40873984,
+      "windows_outer_F_bytes": 86380334,
+      "R_accepted_bytes": 7641823,
+      "R_uncertain_charged_bytes": 0,
+      "C_bytes": 161260,
+      "repair_packets": 9757,
+      "R_over_F": 0.08846716198156863,
+      "R_over_total": 0.0811376699148641,
+      "budget_verified": true,
+      "owned_stop": "PASS_BOTH_OWNED",
+      "wal_left": false,
+      "result": "PASS"
+    }
+  ],
+  "difference": {
+    "ON_minus_OFF_windows_process_cpu_s": 21.2187,
+    "share_of_ON_cpu": 0.86828,
+    "windows_first_fraction_delta": 0.019156,
+    "linux_first_fraction_delta": 0.024221,
+    "absolute_R_over_F_limit": 0.1,
+    "ratio_scope": "actual_windows_original_NPF_sent_outer_only",
+    "algorithm_causality": "INCONCLUSIVE_WITH_DRIVER_SEND_AND_EVENT_WAKE",
+    "root_hypothesis": "burst-paced ready candidate shadow deadline remains overdue, native TX Wait(0) busy spinning until retry; targeted H884 change required sameVM verification"
+  },
+  "verdict": "PASS_GENUINE_TWO_LEG_NETWORK_AND_REPAIR_QUOTA_CPU_OVERHEAD_REQUIRES_OPTIMIZATION",
+  "limitations": "Product first, kernel loss and Stop proven; no calibrated cross-OS one-way p99; only Windows original outer F/R/C in receipt, not Linux full bilateral. This source is not H884 fix and does not prove which subcomponent consumes CPU."
+}

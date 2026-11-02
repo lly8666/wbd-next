@@ -613,6 +613,15 @@
   /// Exact event-driven M2 wake. Both deadlines use the same Rust
  /// monotonic clock, and RX/TUN/Stop events wake earlier. No 20ms polling
  /// after a genuine authenticated reverse packet.
+ // An optional DATA candidate paced for another 5ms must NOT let an
+ // already-expired shadow index deadline make the native TX event wait(0)
+ // spin until burst tokens refill. Fresh TUN/RX/Stop wakes remain prompt;
+ // the bounded shadow expiry is revisited at the next paced opportunity.
+ #[inline]
+ fn m2_repair_deadline(shadow_due:Option<MonoNs>,
+     retry_after_ns:Option<u64>)->Option<MonoNs>{
+     retry_after_ns.map(MonoNs).or(shadow_due)
+ }
  fn m2_wake_timeout_ms(now:MonoNs,feedback:Option<MonoNs>,
      repair:Option<MonoNs>)->u32 {
      let Some(next)=feedback.into_iter().chain(repair).map(|x|x.0).min()
@@ -754,9 +763,9 @@
                               .then_some(MonoNs(m.quality_next_open_ns)))
                   }else{None};
                   let receive_due=m.quality_due.front().map(|(_,due)|MonoNs(*due));
-                  let shadow_due=m.shadow.next_deadline();
-                  let paced_due=m.repair_retry_after_ns.map(MonoNs);
-                  let next=shadow_due.into_iter().chain(paced_due).chain(quality_due)
+                  let repair_due=m2_repair_deadline(
+                      m.shadow.next_deadline(),m.repair_retry_after_ns);
+                  let next=repair_due.into_iter().chain(quality_due)
                       .chain(receive_due).chain(fec_due)
                       .chain(m.health.next_tx_deadline().map(MonoNs))
                       .chain(auto_due).min_by_key(|d|d.0);
@@ -1251,6 +1260,22 @@
              Some(MonoNs(55_000_100)),Some(MonoNs(4_000_100))),4);
          assert_eq!(m2_wake_timeout_ms(MonoNs(0),None,
              Some(MonoNs(u64::MAX))),u32::MAX-1);
+     }
+     #[test]
+     fn plan027_h884_burst_paced_candidate_never_spins_on_old_shadow_wake(){
+         let now=MonoNs(1_000_000_000);
+         // Exactly the H880 30%-loss case: the candidate is already
+         // due, but its global 8-MTU burst reservation is paced 5ms.
+         let due=m2_repair_deadline(Some(MonoNs(now.0-20_000_000)),
+             Some(now.0+5_000_000));
+         assert_eq!(due,Some(MonoNs(now.0+5_000_000)));
+         assert_eq!(m2_wake_timeout_ms(now,None,due),5);
+         // No pacing: an already-due authentic candidate must wake
+         // immediately, preserving the original non-HOL opportunity.
+         let old=m2_repair_deadline(Some(MonoNs(now.0-20_000_000)),None);
+         assert_eq!(m2_wake_timeout_ms(now,None,old),0);
+         assert_eq!(m2_wake_timeout_ms(now,None,
+             m2_repair_deadline(None,None)),IDLE_WAIT);
      }
      #[test]
      fn windows_native_thread_descriptions_are_exact() {
