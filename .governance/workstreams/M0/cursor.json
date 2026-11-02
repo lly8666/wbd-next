@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 917,
-  "checkpoint_sha": "9947ac4a84340771e5154319bfab25237b260c5c",
+  "sequence": 918,
+  "checkpoint_sha": "51876e01c0ee21b2f316cda753811f4a987a8d14",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H917 recovered immutable H915 same-VM sequential Normal100 OFF→ON genuine run41420996043 PASS (CPU 16.4062→19.2188 +2.8126 seconds, R281 B/825,927,818 F on zero-loss, both Stop); H916 protected Game4FEC6 OFF20M250ms30 run41422017446 genuine PASS with first Win .999627 Linux .998594, source offer both≥19.99Mbps, CPU36.125s RSS61.14MB and both owned Stop. Four independent source-locked H908 product binary reuse Actions queued via one H917 preflight dispatch, each one scene: 60s Normal OFF paired 100/300ms kernel burst, 240s Auto ON asymmetric 1→15→30→1% final150s, 300s Normal ON 10M short mix 1%, 60s Fixed6 OFF 50M no loss. At commit tests NOT_RUN; no new product changes, no 20M Game4 harder test, no physical deploy.",
-  "why_now": "H915/H916 results fully terminal and Game4 20M high-loss first/Stop within capacity ~47.4% of one logical core. Instead of repeating heavier same family, fan out 4 orthogonal unqualified parts of PLAN027: short burst/independent flow, sustained Auto adaptation, low-loss mixed packet ON300, Fixed high capacity. Preserve same SOURCE binary SHA, separate fixture SOURCE, one Action one job/VM, no cross-VM CPU A/B.",
+  "current_task": "H918 collect all four H917 source-pinned independent Windows2025↔WSL2 Actions: Fixed6 OFF50 Action41424750494 PASS first .999952/1 CPU51.609s RSS45.88MB, Stop both; Auto ON staged240 Action41424744233 PASS first1/.999083 CPU19.17 RSS43.38MB, four genuine tc phases and Linux server applied profile4→3→2→1, Windows grade NOT_PROVEN; Normal ON300 1% small-packet Action41424747367 PASS first .994438/.994516 CPU18.55 RSS41.86MB, true UDP+TCP smoke, not continuous mixed; Normal OFF 100/300ms burst Action41424741198 native first .993099/.993135, real full loss active105.269/304.778ms, Stop both PASS, but Action FAIL at duplicated PowerShell post-first-delivery tolerance, canonical Python 97.333% floor accepts. H918 de-duplicates postgate via existing Python first_delivery_ok_for_scenario and adds exact observed positive/negative unit; does NOT promote failed historical Action. All frozen H908 product SOURCE6693 and H917 fixture SOURCE51876, no new product build/dispatch.",
+  "why_now": "Burst native product and genuine kernel pulses are PASS but CI fails at second PowerShell float oracle despite values above declared duty-cycle floor. Use existing canonical validated Python source checker with exact scenario hash instead of add more arbitrary thresholds or rerun unchanged product. Three other independent genuine modes passed, Fixed50 already near 66% one core so heavy Fixed100 not justified; Auto Linux native downshift actually verified from server log, Windows grade still unqualified.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect four exact H917 workflow_dispatch runs separately (source match H917 fixture and H908 binaries, actual OS/readback, honest PASS/FAIL/NOT_RUN), study Auto stage actual profile traces and burst kernel 100/300ms first-gaps and Stop, stop if host capacity. In parallel review existing LAN/DNS/IPv6/GUI/MTU qualification and historical 300s mixed TCP/UDP to avoid duplicate. Product code and feature cards unchanged; full PLAN027 §0 partial until source-scoped summary / any blockers closed.",
+  "next_action": "Collect H918 cheap CI canonical postgate regression (not native rerun) and review any independent failure. Update PLAN027 source-scoped final matrix of all modes, 300s & lifecycle/GUI/DNS/IPv6 gaps; conclude if no remaining mandatory product blockers or necessary same-source jobs, with explicit physical NOT_RUN. If complete, mark review-ready then automatically take authorized PLAN027A per new registry; do not promote host-global DNS/IPv6/GUI or physical scope not tested.",
   "unverified": true,
   "last_tested_source": "6693910f879f9e55e77dd823c1b05d8942321929",
   "evidence_refs": [
@@ -21,17 +21,21 @@
     "docs/evidence/M0/PLAN027-H914-SOURCE6693-AUTO-ON10-20261102.json",
     "docs/evidence/M0/PLAN027-H914-SOURCE6693-GAME2FEC-ON10-20261102.json",
     "docs/evidence/M0/PLAN027-H915-SOURCE6693-NORMAL100-PAIR-PASS-20261102.json",
-    "docs/evidence/M0/PLAN027-H916-SOURCE6693-GAME4FEC-OFF20-HIGHLOSS-PASS-20261102.json"
+    "docs/evidence/M0/PLAN027-H916-SOURCE6693-GAME4FEC-OFF20-HIGHLOSS-PASS-20261102.json",
+    "docs/evidence/M0/PLAN027-H917-SOURCE6693-NORMAL-BURST-POSTORACLE-FAIL-20261102.json",
+    "docs/evidence/M0/PLAN027-H917-SOURCE6693-FIXED6-OFF50-PASS-20261102.json",
+    "docs/evidence/M0/PLAN027-H917-SOURCE6693-AUTO240-ON-PASS-20261102.json",
+    "docs/evidence/M0/PLAN027-H917-SOURCE6693-NORMAL-ON300-SMALL1-PASS-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H900-GAME4-FEC6-HIGHLOSS-OFF.md",
     "docs/devlog/M0/20261102-PLAN027-H902-SOURCE-REF-CONTRACT.md",
     "docs/devlog/M0/20261102-PLAN027-H906-QUANTIFIED-NATIVE-COSTS.md",
     "docs/devlog/M0/20261102-PLAN027-H907-COLD-TLS-RETRY.md",
     "docs/devlog/M0/20261102-PLAN027-H914-COLLECT-ON-DISPATCH-BATCH2.md",
     "docs/devlog/M0/20261102-PLAN027-H915-PAIR-SOURCE-FIX.md",
     "docs/devlog/M0/20261102-PLAN027-H916-GAME4-20M-30-OFF.md",
-    "docs/devlog/M0/20261102-PLAN027-H917-BURST-AUTO-LONG-FIXED50-BATCH.md"
+    "docs/devlog/M0/20261102-PLAN027-H917-BURST-AUTO-LONG-FIXED50-BATCH.md",
+    "docs/devlog/M0/20261102-PLAN027-H918-FOUR-ACTIONS-POSTGATE.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."

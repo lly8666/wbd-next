@@ -1417,14 +1417,13 @@ jobs:
                   }
                   $totalBurstMs += [double]$target.duration_ms
                 }
-                $burstFloor=[Math]::Max(0,1-$totalBurstMs/(1000*[double]$v2Config.duration_s)-0.02)
-                if($real.first_delivery_fraction.windows -lt $burstFloor -or
-                   $real.first_delivery_fraction.linux -lt $burstFloor){
-                  throw 'actual kernel burst first delivery below time-weighted tolerance'
+                # One source-of-truth floor: the same Python verifier
+                # already used by V2 scenario tests, not a second PowerShell
+                # numeric comparison. Keep actual OS burst readbacks above.
+                & python -c 'import json,sys; from tools.m0_wl_perf_v2_config import read_scenario,first_delivery_ok_for_scenario; c=read_scenario(sys.argv[1]); v=json.load(open(sys.argv[2],encoding="utf-8"))["WL_V2"]; ok=v["scenario_sha256"]==c["scenario_sha256"] and first_delivery_ok_for_scenario(c,v["first_delivery_fraction"]); print("WL_V2_REAL_KERNEL_PULSES_DELIVERY_SCOPED canonical="+str(ok)+" windows="+str(v["first_delivery_fraction"]["windows"])+" linux="+str(v["first_delivery_fraction"]["linux"])); sys.exit(0 if ok else 1)' $env:WBD_WL_V2_SCENARIO 'result/wl-public/report.json'
+                if($LASTEXITCODE -ne 0){
+                  throw 'actual kernel burst first delivery below canonical time-weighted tolerance or SOURCE mismatch'
                 }
-                Write-Output ('WL_V2_REAL_KERNEL_PULSES_DELIVERY_SCOPED floor='+$burstFloor+
-                  ' window='+$real.first_delivery_fraction.windows+
-                  ' linux='+$real.first_delivery_fraction.linux)
               }elseif($damaged){
                 if($real.first_delivery_fraction.windows -le 0 -or
                    $real.first_delivery_fraction.linux -le 0){

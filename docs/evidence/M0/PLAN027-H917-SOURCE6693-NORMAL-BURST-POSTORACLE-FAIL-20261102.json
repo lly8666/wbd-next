@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "fixture_source_sha": "51876e01c0ee21b2f316cda753811f4a987a8d14",
+  "source_separation": "source_sha is frozen original both-OS product binary; fixture_source_sha is H917 scenario/workflow; no product changes",
+  "platform": "original Windows2025 Go TLS+Rust signed NPF/Wintun↔Linux WSL2 raw/TUN",
+  "real_native_source_pinned": true,
+  "run_id": 41424741198,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41424741198",
+  "artifact_id": 13132330362,
+  "scenario_id": "plan027-c-normal-10m-25ms-0pct-burst100-300ms-60s",
+  "scenario_sha256": "75e2f6aa2e3f8909872390641233db8bc0a27db78908773697c798c9ce7ec63e",
+  "action_conclusion": "failure",
+  "native_result": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE",
+  "native_exit": 0,
+  "post_gate": "FAIL_DUPLICATE_POWERSHELL_NUMERIC_ORACLE",
+  "declared_bursts_ms": [
+    100,
+    300
+  ],
+  "measured_bilateral_100pct_bursts_ms": [
+    105.269,
+    304.778
+  ],
+  "canonical_min_first_fraction": 0.9733333333333334,
+  "first_fraction": {
+    "windows": 0.993099,
+    "linux": 0.993135
+  },
+  "offered_mbps": {
+    "windows": 9.9973,
+    "linux": 10
+  },
+  "goodput_mbps": {
+    "windows": 9.9317,
+    "linux": 9.9297
+  },
+  "original_outer_repair": "OFF_BOTH",
+  "native_owned_stop": "PASS_BOTH_OWNED",
+  "Windows_whole_exe_cpu_s": 3.9531,
+  "Windows_rss_peak_bytes": 41381888,
+  "udp_rtt_p99_ms_same_origin": {
+    "windows": 62,
+    "linux": 54.753
+  },
+  "probe_not_returned": {
+    "windows": 4,
+    "linux": 4
+  },
+  "post_gate_recheck_python": "canonical first_delivery_ok_for_scenario with exact observed values returns true",
+  "qualification": "NATIVE_PRODUCT_PASS_BUT_ACTION_FAIL_GATE_NOT_FULL_SCENE_PASS",
+  "limits": [
+    "Original GitHub Action must remain failure; no retroactive green",
+    "No additional 100/300ms rerun until actual differentiating postgate fix requires it",
+    "No physical qualification"
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "fixture_source_sha": "51876e01c0ee21b2f316cda753811f4a987a8d14",
+  "source_separation": "source_sha is frozen original both-OS product binary; fixture_source_sha is H917 scenario/workflow; no product changes",
+  "platform": "original Windows2025 Go TLS+Rust signed NPF/Wintun↔Linux WSL2 raw/TUN",
+  "real_native_source_pinned": true,
+  "run_id": 41424747367,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41424747367",
+  "result": "PASS_REAL_TWO_OS_NATIVE_NORMAL_ON300_SMALL1",
+  "scenario_id": "plan027-h917-normal-on-mix-10m-25ms1-300s",
+  "scenario_sha256": "e0cf03a6f42416b63131cc063a9c893691f12843e96a6c830d2b2a7a6dbf4b70",
+  "packet_mix_weights": [
+    {
+      "size": 64,
+      "weight": 10
+    },
+    {
+      "size": 128,
+      "weight": 15
+    },
+    {
+      "size": 512,
+      "weight": 25
+    },
+    {
+      "size": 1200,
+      "weight": 50
+    }
+  ],
+  "mean_payload_bytes": 753.6,
+  "pps_per_dir_approx": 1659,
+  "offered_mbps": {
+    "windows": 10,
+    "linux": 10
+  },
+  "first_goodput_mbps": {
+    "windows": 9.9456,
+    "linux": 9.9453
+  },
+  "first_fraction": {
+    "windows": 0.994438,
+    "linux": 0.994516
+  },
+  "duration_s": 300,
+  "kernel_oneway_delay_ms": 25,
+  "kernel_random_loss_pct": 1,
+  "outer_repair": "ON_BOTH",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "windows_whole_exe_cpu_s": 18.5469,
+  "windows_elapsed_s": 317.016,
+  "windows_peak_rss_bytes": 41861120,
+  "udp_rtt_p99_ms_same_origin": {
+    "windows": 47,
+    "linux": 53
+  },
+  "udp_rtt_probes_unreplied": {
+    "windows": 26,
+    "linux": 23
+  },
+  "F_R_C": "NOT_MEASURED_FOR_LONG_MODE_AGGREGATE",
+  "caveats": [
+    "Sustained UDP with real TCP smoke, not sustained simultaneous UDP+independent TCP 300s HOL proof",
+    "Linux legacy frozen source f5e8 H832 has distinct true 300s mixed TCP/UDP ON; do not inflate to Windows",
+    "No uncalibrated one-way p99, no physical machine"
+  ]
+}

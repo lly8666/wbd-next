@@ -1,0 +1,12 @@
+# PLAN027 H918｜四独立真 Windows Action 收结，复用唯一 burst 业务判定
+
+- H917 SOURCE fixture `51876e01c0ee21b2f316cda753811f4a987a8d14`、不变原始产品二进制 SOURCE `6693910f879f9e55e77dd823c1b05d8942321929`。独立真实 Windows2025签名 NPF/Wintun↔Linux WSL2 Rust 双OS四 Action全部终态；各独立 VM，不作跨VM CPU A/B；四条结果详见四份同PRODUCT-SOURCE证据。
+- [Fixed6 OFF50 41424750494](https://github.com/lly8666/wbd-next/actions/runs/41424750494) **PASS**，50Mbps/dir, 25ms0%, 60s，first Win .999952 Linux1，Stop both；Windows全进程CPU51.6094s/78.406s≈65.82%单核、RSS45.88MB。停止向100Mbps同族盲扩，F/C聚合未测。
+- [Auto ON240 41424744233](https://github.com/lly8666/wbd-next/actions/runs/41424744233) **PASS**，10Mbps/dir250ms不对称1→15→30→1%/5→0%，kernel阶段实际0/25.469/55.547/90.438s，first1/.999083、owned Stop PASS；Linux原始server.log可核4条 `V4_PUBLIC_FEC2_AUTO_STAGE` grade4→3→2→1，最后 `V4_PUBLIC_FEC2_READBACK ... profile=1 pending=false`，仅Server方向可信。Windows Auto升降级轨迹 **NOT_PROVEN**，不得用综合Action成功冒充。
+- [Normal ON300 41424747367](https://github.com/lly8666/wbd-next/actions/runs/41424747367) **PASS**，真实10Mbps/dir25ms1%持续300s的64/128/512/1200小包混合，first Win .994438 Linux .994516，Windows整个Go+Rust18.5469 CPU-s/317s、RSS41.86MB，RTT p99 47/53ms（仅有回复），双方 Stop；此Action只有短TCP smoke，不是“持续TCP+UDP多流300s”，既有Linux H832真持续混合留在独立源有效。
+- [Normal OFF 100/300ms burst 41424741198](https://github.com/lly8666/wbd-next/actions/runs/41424741198) 原始双OS product child rc0, `WL_PUBLIC_REAL_MODE_RESULT normal PASS`, 双端 Stop PASS，真实双向100% loss pulse最短105.269/304.778ms，first .993099/.993135，Windows CPU3.9531s RSS41.38MB，但 **Action整体 FAIL** 于紧随其后的 *另一次* PowerShell `actual kernel burst first delivery below time-weighted tolerance`。预声明400ms/60s损伤加2pp容忍的现有Python规范下限是 .9733333，实测均大于。H918仅把那个重复PS数值比较交给现成 `tools.m0_wl_perf_v2_config.first_delivery_ok_for_scenario`，验证精确scenario_SHA并保留原 kernel pulse readback，新增 H917 正/反样本测试；**不刷新的产品场景，不把原FAILED动作重写成通过**。历史旧Action FAIL和原生child PASS分层保留。
+- 业务payload均值短包753.6B，10Mbps≈1659PPS/dir；Fixed50 avg1115.56B≈5603PPS/dir；Auto10 avg?按实际mix；nominal 50ms RTT 的10M BDP62.5kB/dir、Fixed50 BDP312.5kB/dir，Auto500ms RTT 10M BDP625kB/dir；并非实际线速、FEC内存或驱动拥塞。新源码仅后置检测单测和留痕，无产品字节变更，physical NOT_RUN。旧 H908 105s单向真实冷TLS修复 PASS 不复测。
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Repair duplicate test-only PowerShell burst oracle using existing canonical Python scenario verifier; archive source-specific previously running original two-OS Actions; no product, public settings or mode semantics change."}
+```

@@ -58,6 +58,16 @@ class V2Scenarios(unittest.TestCase):
   # loss pulses and real Stop, not a 60-second lossless network.
   self.assertTrue(first_delivery_ok_for_scenario(scene,
    {"windows":0.994154,"linux":0.994462}))
+  # H917 original signed two-OS run41424741198: native rc0,
+  # original 100+300ms kernel pulses 105.269/304.778ms, Stop PASS.
+  # The old PowerShell duplicated oracle FALSE-FAILed despite 99.31%
+  # genuine delivery > canonical 97.3333% duty-cycle floor.
+  self.assertAlmostEqual(1-400/(1000*60)-0.02,.9733333333333334)
+  self.assertTrue(first_delivery_ok_for_scenario(scene,
+   {"windows":.993099,"linux":.993135}))
+  self.assertFalse(first_delivery_ok_for_scenario(scene,
+   {"windows":.9732,"linux":.993135}))
+
   self.assertFalse(first_delivery_ok_for_scenario(scene,
    {"windows":0.90,"linux":0.994462}))
   self.assertFalse(first_delivery_ok_for_scenario(scene,

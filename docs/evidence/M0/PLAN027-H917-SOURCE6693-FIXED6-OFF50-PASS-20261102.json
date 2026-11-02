@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "fixture_source_sha": "51876e01c0ee21b2f316cda753811f4a987a8d14",
+  "source_separation": "source_sha is frozen original both-OS product binary; fixture_source_sha is H917 scenario/workflow; no product changes",
+  "platform": "original Windows2025 Go TLS+Rust signed NPF/Wintun↔Linux WSL2 raw/TUN",
+  "real_native_source_pinned": true,
+  "run_id": 41424750494,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41424750494",
+  "result": "PASS_REAL_TWO_OS_NATIVE_FIXED6_OFF50",
+  "scenario_id": "plan027-h917-fixed6-off-50m-25ms0-60s",
+  "scenario_sha256": "881a25449155948de90a9f17cf0c72092477d0e320ce238ad01f129570977f65",
+  "offered_mbps": {
+    "windows": 49.9875,
+    "linux": 50
+  },
+  "first_goodput_mbps": {
+    "windows": 49.9976,
+    "linux": 49.9875
+  },
+  "first_fraction": {
+    "windows": 0.999952,
+    "linux": 1
+  },
+  "kernel_delay_oneway_ms": 25,
+  "kernel_random_loss_pct": 0,
+  "duration_s": 60,
+  "outer_repair": "OFF",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "windows_cpu_s": 51.6094,
+  "windows_kernel_cpu_s": 33.3125,
+  "windows_user_cpu_s": 18.2969,
+  "windows_process_elapsed_s": 78.406,
+  "windows_peak_rss_bytes": 45879296,
+  "one_core_cpu_pct": 65.823,
+  "udp_rtt_p99_ms_same_origin": {
+    "windows": 63,
+    "linux": 68.675
+  },
+  "rtt_unreplied": {
+    "windows": 0,
+    "linux": 0
+  },
+  "F_R_C": "NOT_MEASURED_FULL_MODE_AGGREGATE",
+  "scale_limit": "Fixed50 Mbps CPU ~66% one core; do not jump to 100M until cost/queue discriminating justification",
+  "physical": "NOT_RUN"
+}

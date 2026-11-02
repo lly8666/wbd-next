@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "fixture_source_sha": "51876e01c0ee21b2f316cda753811f4a987a8d14",
+  "source_separation": "source_sha is frozen original both-OS product binary; fixture_source_sha is H917 scenario/workflow; no product changes",
+  "platform": "original Windows2025 Go TLS+Rust signed NPF/Wintun↔Linux WSL2 raw/TUN",
+  "real_native_source_pinned": true,
+  "run_id": 41424744233,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41424744233",
+  "artifact_id": 13131782490,
+  "result": "PASS_REAL_TWO_OS_NATIVE_AUTO_240_STAGES_AND_STOP",
+  "scenario_id": "plan027-h917-auto-staged-on-10m-250ms-240s",
+  "scenario_sha256": "db1307bc5d103eac1e4d08ddc33460ac4e2bcca15db7c765e8d44df2ab02f438",
+  "source_offered_mbps": {
+    "windows": 9.9993,
+    "linux": 10
+  },
+  "first_fraction": {
+    "windows": 1,
+    "linux": 0.999083
+  },
+  "first_goodput_mbps": {
+    "windows": 10,
+    "linux": 9.9896
+  },
+  "kernel_stages": {
+    "c2s_loss_pct": [
+      1,
+      15,
+      30,
+      1
+    ],
+    "s2c_loss_pct": [
+      5,
+      0,
+      0,
+      0
+    ],
+    "nominal_start_s": [
+      0,
+      25,
+      55,
+      90
+    ],
+    "actual_elapsed_s": [
+      0,
+      25.469,
+      55.547,
+      90.438
+    ],
+    "last_low_loss_s": 150,
+    "readbacks": true
+  },
+  "native_server_auto_downshift": {
+    "profile_applied_sequence": [
+      4,
+      3,
+      2,
+      1
+    ],
+    "server_stage_log_event_count": 4,
+    "reasons": "30s and 4096 valid sources; one-step down",
+    "final_readback": "role=server mode=auto requested=5 applied=5 profile=1 pending=false",
+    "windows_client_downshift": "NOT_PROVEN_FROM_CURRENT_LOG"
+  },
+  "outer_repair": "ON_BOTH",
+  "owned_stop": "PASS_BOTH_OWNED",
+  "win_exe_cpu_s": 19.1719,
+  "win_peak_rss_bytes": 43380736,
+  "udp_rtt_p99_ms_same_origin": {
+    "windows": 516,
+    "linux": 522.489
+  },
+  "udp_probe_not_returned": {
+    "windows": 12,
+    "linux": 14
+  },
+  "oneway_p99": "NOT_MEASURED",
+  "limits": [
+    "Aggregate report a4_auto_mature_grade says NOT_PROVEN until native log readback; separately verified original Linux server 4 native stage events and applied final grade1",
+    "No claim Windows per-direction grade downshift or physical machine",
+    "F/R/C aggregated wire NOT_MEASURED"
+  ]
+}
