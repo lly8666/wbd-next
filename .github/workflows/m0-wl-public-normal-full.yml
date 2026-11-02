@@ -271,6 +271,23 @@ jobs:
               -f perf_binary_source_sha=6693910f879f9e55e77dd823c1b05d8942321929
             echo "PLAN027_BATCH2_QUEUED fixture_source=$GITHUB_SHA product_source=6693910f879f9e55e77dd823c1b05d8942321929 mode=$mode outer=$policy scene=$scene status=DISPATCHED_NOT_PASS"
           done
+      - name: Dispatch Game4 protected 20M highloss OFF scoped capacity
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-game4-20m30-off]')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = main
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq '.object.sha')" = "$GITHUB_SHA"
+          scene=scenarios/plan027-h916-game4fec6-off-20m-250ms30-60s.json
+          test -f "$scene"
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=game4-fec -f "perf_scenario_file=$scene" -f outer_repair=off \
+            -f perf_reuse_run_id=41415722303 \
+            -f perf_binary_source_sha=6693910f879f9e55e77dd823c1b05d8942321929
+          echo "PLAN027_GAME4_20M30_OFF_QUEUED product_source=6693910f879f9e55e77dd823c1b05d8942321929 fixture_source=$GITHUB_SHA status=DISPATCHED_NOT_PASS"
       - run: python -m pip install PyYAML==6.0.2
       - run: python tools/check_workflows.py
       - run: python -m unittest tests.test_delivery_ci -v

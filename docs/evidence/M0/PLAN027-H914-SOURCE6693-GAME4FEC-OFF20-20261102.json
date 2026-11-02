@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "fixture_source_sha": "7b1ff82565d5bd34c8a8b27604ae5eb7a879a355",
+  "run_id": 41420575955,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41420575955",
+  "artifact_id": 13130091693,
+  "result": "PASS_SCOPED_ORIGINAL_WINDOWS_LINUX_REAL_NATIVE_KERNEL_AND_OWNED_STOP",
+  "mode": "game4-fec",
+  "outer_repair_effective": "OFF_BOTH",
+  "scene": "plan027-h914-game4-fec6-outer-off-20m-25ms0-60s",
+  "duration_s": 60,
+  "readback": {
+    "first_fraction": {
+      "windows": 1,
+      "linux": 1
+    },
+    "offered_mbps": {
+      "windows": 19.9946,
+      "linux": 19.9999
+    },
+    "first_mbps": {
+      "windows": 19.9999,
+      "linux": 19.9946
+    },
+    "linux_tc_actual_netem_drops": {
+      "eth0": 0,
+      "ifb": 0
+    },
+    "windows_original_go_plus_rust_whole_process_cpu_s": 38.125,
+    "windows_peak_working_set_bytes": 60059648,
+    "owned_stop": "PASS_BOTH_OWNED"
+  },
+  "rtt": {
+    "measurement": "SAME_ORIGIN_MONOTONIC_UDP_RTT_ONLY_NOT_ONEWAY",
+    "p99_ms": {
+      "windows": 218,
+      "linux": 220.571
+    },
+    "real_probes": {
+      "windows": {
+        "sent": 549,
+        "replied": 549
+      },
+      "linux": {
+        "sent": 598,
+        "replied": 598
+      }
+    },
+    "not_returned_windows": 0,
+    "not_returned_linux": 0
+  },
+  "F_R_C": {
+    "R_actual_wire_bytes": 0,
+    "linux_server_outer_retransmitted": 0,
+    "F_link_bytes": "NOT_MEASURED",
+    "C_link_bytes": "NOT_MEASURED",
+    "note": "OFF effective on Windows and Linux; copied Game/FEC lanes are F not R"
+  },
+  "scope_limits": [
+    "Product executable H908 exact binary reused after SHA manifest verification, fixture H914 independent",
+    "Windows and Linux raw per-side F/R framing may differ; do not add",
+    "Go and Rust share process CPU, includes cold/Stop",
+    "No proof of 250ms 20M highloss/Auto staged 240s/physical qualification"
+  ]
+}

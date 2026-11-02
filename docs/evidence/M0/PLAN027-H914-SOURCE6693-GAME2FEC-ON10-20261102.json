@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "fixture_source_sha": "7b1ff82565d5bd34c8a8b27604ae5eb7a879a355",
+  "run_id": 41420572398,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41420572398",
+  "artifact_id": 13129927115,
+  "result": "PASS_SCOPED_ORIGINAL_WINDOWS_LINUX_REAL_NATIVE_KERNEL_AND_OWNED_STOP",
+  "mode": "game2-fec",
+  "outer_repair_effective": "ON_BOTH",
+  "scene": "plan027-h914-game2-fec6-outer-on-10m-250ms30-60s",
+  "duration_s": 60,
+  "readback": {
+    "first_fraction": {
+      "windows": 1,
+      "linux": 0.998873
+    },
+    "offered_mbps": {
+      "windows": 9.9998,
+      "linux": 9.9998
+    },
+    "first_mbps": {
+      "windows": 9.9998,
+      "linux": 9.9917
+    },
+    "linux_tc_actual_netem_drops": {
+      "eth0": 104945,
+      "ifb": 99733
+    },
+    "windows_original_go_plus_rust_whole_process_cpu_s": 14.7031,
+    "windows_peak_working_set_bytes": 56553472,
+    "owned_stop": "PASS_BOTH_OWNED"
+  },
+  "rtt": {
+    "measurement": "SAME_ORIGIN_MONOTONIC_UDP_RTT_ONLY_NOT_ONEWAY",
+    "p99_ms": {
+      "windows": 516,
+      "linux": 529.658
+    },
+    "real_probes": {
+      "windows": {
+        "sent": 549,
+        "replied": 546
+      },
+      "linux": {
+        "sent": 600,
+        "replied": 599
+      }
+    },
+    "not_returned_windows": 3,
+    "not_returned_linux": 1
+  },
+  "F_R_C": {
+    "linux_server_aggregate_retransmitted_packets": 385,
+    "GameFEC6_repair_bytes": "NOT_MEASURED",
+    "note": "lane counts not a wire byte R/F ratio"
+  },
+  "scope_limits": [
+    "Product executable H908 exact binary reused after SHA manifest verification, fixture H914 independent",
+    "Windows and Linux raw per-side F/R framing may differ; do not add",
+    "Go and Rust share process CPU, includes cold/Stop",
+    "No proof of 250ms 20M highloss/Auto staged 240s/physical qualification"
+  ]
+}

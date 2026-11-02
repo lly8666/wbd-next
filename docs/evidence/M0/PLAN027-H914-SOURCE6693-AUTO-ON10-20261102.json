@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "6693910f879f9e55e77dd823c1b05d8942321929",
+  "fixture_source_sha": "7b1ff82565d5bd34c8a8b27604ae5eb7a879a355",
+  "run_id": 41420568736,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41420568736",
+  "artifact_id": 13130305906,
+  "result": "PASS_SCOPED_ORIGINAL_WINDOWS_LINUX_REAL_NATIVE_KERNEL_AND_OWNED_STOP",
+  "mode": "auto",
+  "outer_repair_effective": "ON_BOTH",
+  "scene": "plan027-h914-auto-outer-on-10m-250ms30-60s",
+  "duration_s": 60,
+  "readback": {
+    "first_fraction": {
+      "windows": 0.996904,
+      "linux": 0.998248
+    },
+    "offered_mbps": {
+      "windows": 9.9974,
+      "linux": 9.9998
+    },
+    "first_mbps": {
+      "windows": 9.9793,
+      "linux": 9.9863
+    },
+    "linux_tc_actual_netem_drops": {
+      "eth0": 52500,
+      "ifb": 52315
+    },
+    "windows_original_go_plus_rust_whole_process_cpu_s": 5.1562,
+    "windows_peak_working_set_bytes": 43806720,
+    "owned_stop": "PASS_BOTH_OWNED"
+  },
+  "rtt": {
+    "measurement": "SAME_ORIGIN_MONOTONIC_UDP_RTT_ONLY_NOT_ONEWAY",
+    "p99_ms": {
+      "windows": 532,
+      "linux": 542.636
+    },
+    "real_probes": {
+      "windows": {
+        "sent": 549,
+        "replied": 514
+      },
+      "linux": {
+        "sent": 600,
+        "replied": 565
+      }
+    },
+    "not_returned_windows": 35,
+    "not_returned_linux": 35
+  },
+  "F_R_C": {
+    "windows": {
+      "F_link_bytes": 186947862,
+      "R_link_bytes": 7525807,
+      "C_link_bytes": 201326,
+      "R_over_F": 0.0402561811592154
+    },
+    "linux": {
+      "F_side_bytes": 177094238,
+      "R_side_bytes": 14258565,
+      "R_over_F": 0.08051399729899739
+    },
+    "scope": "PER_SIDE_MIXED_FRAMING_DO_NOT_ADD"
+  },
+  "scope_limits": [
+    "Product executable H908 exact binary reused after SHA manifest verification, fixture H914 independent",
+    "Windows and Linux raw per-side F/R framing may differ; do not add",
+    "Go and Rust share process CPU, includes cold/Stop",
+    "No proof of 250ms 20M highloss/Auto staged 240s/physical qualification"
+  ]
+}
