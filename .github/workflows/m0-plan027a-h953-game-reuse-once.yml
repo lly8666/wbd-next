@@ -1,0 +1,96 @@
+# H953: after H952 compiles exactly once, re-run only the Game cases
+# invalidated by the independently verified missing pre-READY MTU receipt.
+# Existing H948 binaries still qualify independent Normal/Fixed/Auto results.
+name: M0 PLAN027A H953 source-verified Game-only native reuse
+run-name: "M0|PLAN027A-H953-REUSE-GAME-10|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027a-h953-game-reuse-once.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  dispatch-ten:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027a-h953-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      GAME_BUILD_RUN: "41456643128"
+      GAME_SOURCE: "54160ac88b9b41d10f4c3f885879dd68646466a0"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Await exactly-one previous H952 source build (never start a second build)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$GAME_BUILD_RUN" --jq .head_sha)" = "$GAME_SOURCE"
+          # The original H952 workflow is independently building Windows Go/Rust
+          # and Linux Go/Rust once. Do not skip the SUCCESS and source gates.
+          state=unknown
+          for i in $(seq 1 85); do
+            state="$(gh api "repos/$GH_REPO/actions/runs/$GAME_BUILD_RUN" --jq .conclusion)"
+            if [ "$state" = success ]; then break; fi
+            if [ "$state" != null ]; then echo "H953_H952_BUILD_OR_NATIVE_FAILED $state"; exit 1; fi
+            sleep 12
+          done
+          test "$state" = success || { echo H953_H952_PREVIOUS_BUILD_TIMEOUT_NO_DISPATCH; exit 1; }
+          gh api "repos/$GH_REPO/actions/runs/$GAME_BUILD_RUN/artifacts" \
+            --jq '.artifacts[] | select(.expired == false) | .name' > /tmp/h953-artifacts
+          grep -Fx "m0-wl-windows-product-binaries-$GAME_SOURCE" /tmp/h953-artifacts
+          grep -Fx m0-plan024-linux-product /tmp/h953-artifacts
+          git fetch --depth=1 origin "$GAME_SOURCE"
+          product_delta="$(git diff --name-only "$GAME_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py)"
+          test -z "$product_delta" || { echo "H953_REUSE_REFUSE_CHANGED_PRODUCT $product_delta"; exit 1; }
+          python3 -m unittest tests.test_m0_wl_native_mtu_contract -v
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          for p in (
+            "scenarios/plan027a-h950-game4fec-1460-3m-25ms-loss0-60s.json",
+            "scenarios/plan027a-h950-game4fec-1460-3m-250ms-loss30-60s.json",
+          ):
+              s=read_scenario(p)
+              assert s["public_mode"]=="game4-fec" and s["tun_mtu"]==1460
+              assert s["duration_s"]==60
+              print("H953_GAME_SCENE", p, s["scenario_sha256"])
+          PY
+          echo H953_H952_EXACT_SOURCE_AND_PREBUILT_ARTIFACTS_VERIFIED_NO_RECOMPILE
+      - name: Dispatch exact new-Game-source 10 single-mode native Actions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          # Four Game modes x default1460 / explicit1500, plus two Game4FEC
+          # resource/impairment scenes at genuinely usable logical 3Mbps.
+          rows=(
+            'game2|default1460|'
+            'game4|default1460|'
+            'game2-fec|default1460|'
+            'game4-fec|default1460|'
+            'game2|1500|'
+            'game4|1500|'
+            'game2-fec|1500|'
+            'game4-fec|1500|'
+            'game4-fec|default1460|scenarios/plan027a-h950-game4fec-1460-3m-25ms-loss0-60s.json'
+            'game4-fec|default1460|scenarios/plan027a-h950-game4fec-1460-3m-250ms-loss30-60s.json'
+          )
+          for item in "${rows[@]}"; do
+            IFS='|' read -r mode outer scene <<<"$item"
+            desired="M0-WIN-LINUX|$GITHUB_SHA|$mode|${scene:-no-scene}|outer=$outer"
+            prior="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+              jq -r --arg wanted "$desired" '.workflow_runs[] | select(.display_title==$wanted) | .id' | head -1)"
+            if [ -n "$prior" ]; then
+              echo "H953_GAME_SCENE_ALREADY_DISPATCHED id=$prior mode=$mode outer=$outer scene=${scene:-none}"
+              continue
+            fi
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f "public_mode=$mode" -f run_n0=false -f outer_repair=on \
+              -f "native_outer_mtu=$outer" -f "perf_scenario_file=$scene" \
+              -f "perf_reuse_run_id=$GAME_BUILD_RUN" \
+              -f "perf_binary_source_sha=$GAME_SOURCE"
+            echo "H953_GAME_DISPATCHED_NOT_QUALIFIED mode=$mode outer=$outer scene=${scene:-none} binary=$GAME_SOURCE"
+          done
+          echo H953_TEN_GAME_PREBUILT_NATIVE_ACTIONS_DISPATCHED_NOT_QUALIFIED

@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "commit_parent": "54160ac88b9b41d10f4c3f885879dd68646466a0",
+  "new_product_source": "54160ac88b9b41d10f4c3f885879dd68646466a0",
+  "source_build_run": 41456643128,
+  "product_build_method": "H952 original exact SOURCE native Go/Rust Windows and Linux product build ONCE",
+  "usage": "H953 one-shot 10 independently dispatched single public mode native tests, same SHA256-verified exe/dll/linux product, skipped compilers",
+  "h950_h951_confirmed_non_game_pass": [
+    41455559195,
+    41455589665,
+    41455979188,
+    41455989497,
+    41455999662
+  ],
+  "h950_all_reuse_preflight_fail": [
+    41455534980,
+    41455549489
+  ],
+  "h950_h951_game_native_fail_legacy_product": [
+    41455568369,
+    41455580129,
+    41455945995,
+    41455955926,
+    41455967172,
+    41456015945,
+    41456027141,
+    41456037313
+  ],
+  "new_source_build_status": "IN_PROGRESS",
+  "new_native_status": "NOT_RUN",
+  "full_scope_remaining": [
+    "Game4-FEC 5→30→5 native",
+    "true DF0/DF1 real Windows Linux",
+    "new source Linux ARM64",
+    "full PLAN027A outer oversize qualification",
+    "PLAN028 session/multiclient/rotation",
+    "PLAN029 and PLAN030"
+  ],
+  "default_outer_complete_ipv4_ip_mtu": 1460,
+  "max_explicit": 1500,
+  "no_claim_product_complete": true
+}
