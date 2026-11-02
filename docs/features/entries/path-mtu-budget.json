@@ -160,6 +160,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
       "evidence": "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
+    },
+    {
+      "platform": "Windows signed Npcap/Wintun Game4FEC original-Go TLS/Rust ↔ WSL2 Linux TUN",
+      "scope": "H950 prebuilt H948 source native Game4FEC 3Mbps 25ms 0pct run41455568369 reached Game cold Ready, but lacks actual numeric Windows MTU readback before Ready. This is a real native FAIL before performance measurement or owned Stop. H952 fixes distinct Game cold path; current new source BUILD/QUALIFICATION NOT_RUN.",
+      "status": "FAIL",
+      "source_sha": "524c2d0f49eb7f14df0104dd6db62e291359f576",
+      "evidence": "docs/evidence/M0/PLAN027A-H952-GAME-NUMERIC-READBACK-20261102.json"
     }
   ],
   "limitations": [

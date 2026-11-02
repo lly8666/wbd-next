@@ -203,6 +203,15 @@ func runM0NativeV4WindowsGame(
  if err!=nil||!live.AllNativeOSApplied{
   return errors.Join(err,windowsclient.ErrN4NativeGuard,stop())
  }
+ // Distinct Game cold path: generation-scoped numeric Wintun MTU CAS
+ // MUST pass before READY. No extra OS writes or hot-packet calculation.
+ actualInner,err:=product.RuntimeMTU(ctx)
+ if err!=nil||actualInner!=o.TunnelMTU{
+  return errors.Join(fmt.Errorf("Game owned Wintun OS MTU not applied planned=%d inspected=%d: %w",
+   o.TunnelMTU,actualInner,windowsclient.ErrN4NativeGuard),err,stop())
+ }
+ fmt.Printf("WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 planned=%d applied=%d outer_config=%d\n",
+  o.TunnelMTU,actualInner,o.ConnectionMTU)
  fmt.Printf("WBD_WINDOWS_GAME_NATIVE_APPLIED lanes=%d fec=%d tls=1 rust=1 native_os_wal=1\n",count,fecMode)
  fmt.Println("WBD_WINDOWS_OS_APPLIED")
  fmt.Println("WBD_WINDOWS_CLIENT_READY")

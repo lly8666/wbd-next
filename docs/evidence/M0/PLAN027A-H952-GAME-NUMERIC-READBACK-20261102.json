@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "h950_failed_run": 41455568369,
+  "h950_harness_source": "524c2d0f49eb7f14df0104dd6db62e291359f576",
+  "h950_binary_source": "adc63a8b8af209dbe589d072403b7bceae8e038b",
+  "result": "FAIL_REAL_GAME_NATIVE_COLD_NUMERIC_MTU_RECEIPT",
+  "first_error": "WBD_WL_TRUE_PUBLIC_MODE_FAIL game4-fec: missing/duplicate live Windows numeric OS MTU receipt",
+  "root": "Game separate cold product path emitted OS_APPLIED and READY after LiveReceipt; RuntimeMTU existed only in 1Hz post-READY drift check",
+  "fix": "Immediately after native live receipt, inspect original generation-scoped RuntimeMTU and compare with derived inner plan; print one standardized numeric receipt before Ready or Stop on any failure.",
+  "new_game_blob": "01a311d0f5f9e0e86d4b203ebdead6573d5a287d",
+  "previous_game_blob": "f8054ae8b8a2bb9bfb6457299a21b4b4020c5b16",
+  "only_manifest": "r0/go_overlay/assembly/manifest-plan020-m0.json",
+  "default_outer_ipv4_ip_mtu": 1460,
+  "explicit_max": 1500,
+  "new_build": "NOT_RUN",
+  "new_native": "NOT_RUN",
+  "old_failures_preserved": [
+    41455534980,
+    41455549489,
+    41455568369
+  ],
+  "still_open": [
+    "native DF0 DF1",
+    "Game4 staged 5→30→5",
+    "latest ARM64",
+    "PLAN028"
+  ]
+}
