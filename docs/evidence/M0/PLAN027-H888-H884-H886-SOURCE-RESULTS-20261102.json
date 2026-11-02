@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "collected_on": "2026-11-02",
+  "h884": {
+    "source_sha": "9fbb51e57a6183091b91516760c68c73c837934e",
+    "run_id": 41395887599,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/41395887599",
+    "artifact_id": 13119857305,
+    "scope": "Same Windows2025 signed NPF/Wintun↔WSL2 original Go TLS/Rust sequential Normal OFF then ON; 10M each, 250ms each, 30% random loss, 60s each, same SHA binaries",
+    "verdict": "PASS_TWO_TRUE_NATIVE_LEGS_NOT_CPU_OPTIMIZATION",
+    "off": {
+      "effective": {
+        "windows": 0,
+        "linux": 0
+      },
+      "first_delivery": {
+        "linux": 0.700815,
+        "windows": 0.703047
+      },
+      "first_wire_bytes": 86377098,
+      "repair_wire_bytes": 0,
+      "control_wire_bytes": 139550,
+      "first_received_mbps": {
+        "linux": 7.0148,
+        "windows": 7.031
+      },
+      "kernel_loss_drops": {
+        "eth0": 30514,
+        "ifb": 30568
+      },
+      "windows_exe_cpu_s": 4.0625,
+      "windows_exe_rss_peak_bytes": 41824256,
+      "owned_stop": "PASS_BOTH_OWNED"
+    },
+    "on": {
+      "effective": {
+        "windows": 1,
+        "linux": 1
+      },
+      "first_delivery": {
+        "linux": 0.724876,
+        "windows": 0.723679
+      },
+      "first_wire_bytes": 86376838,
+      "repair_wire_bytes": 7616208,
+      "control_wire_bytes": 150863,
+      "repair_packets": 9853,
+      "repair_over_first": 0.08817419317896309,
+      "repair_over_total": 0.0808996363216658,
+      "first_received_mbps": {
+        "linux": 7.2424,
+        "windows": 7.2405
+      },
+      "kernel_loss_drops": {
+        "eth0": 33631,
+        "ifb": 33652
+      },
+      "windows_exe_cpu_s": 3.7031,
+      "windows_exe_rss_peak_bytes": 41193472,
+      "owned_stop": "PASS_BOTH_OWNED"
+    },
+    "cpu_on_minus_off_s": -0.3594,
+    "caveat": "Two independent loss samples, Windows EXE includes cold TLS/warmup/Stop, rust lock and per-algorithm attribution not separated; negative delta cannot demonstrate speedup; observed first arrival uplift is associated not a causal algorithm-only controlled proof. F/R/C is Windows Rust outer wire book, do not fabricate bilateral wire totals."
+  },
+  "h886": {
+    "source_sha": "e5f2e32977f3b4c6098c8ff2b1d957e0e00dd00f",
+    "run_id": 41396919297,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/41396919297",
+    "artifact_id": 13120620018,
+    "scenario": "plan027-h886-game4-outer-off-10m-25ms-loss5-60s",
+    "scenario_sha256": "f61524ee2b2fa3a60e4fe98ba09b95d9c2f7f25970bfb556c524e4f761382404",
+    "verdict": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_game4",
+    "game_lanes": 4,
+    "outer_repair_effective": {
+      "windows": 0,
+      "linux": 0
+    },
+    "offered_mbps": {
+      "windows": 9.9972,
+      "linux": 9.9999
+    },
+    "first_delivered_mbps": {
+      "windows": 9.9998,
+      "linux": 9.997
+    },
+    "first_delivery_fraction": {
+      "windows": 0.999988,
+      "linux": 0.999988
+    },
+    "owned_stop": "PASS_BOTH_OWNED",
+    "windows_process_cpu_s": 7.6406,
+    "windows_peak_working_set_bytes": 57163776,
+    "physical": "NOT_RUN",
+    "scope_boundary": "Game4 FEC-off + independent lane diversity 5% 25ms, not Game4 highest FEC, 250ms/30% or 20M; Win process CPU contains native Go+Rust/kernel; one-way p99 NOT_MEASURED."
+  },
+  "h883": {
+    "source_sha": "f36162183002b6e872f440eb9da6dab06c966c19",
+    "run_id": 41395214862,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/41395214862",
+    "at_last_read": "IN_PROGRESS native-public-two-os step16 > defined 24-min stage, live job log GET404 BlobNotFound; signed compiled Go Windows Rust Linux Rust + Npcap/Wintun + WSL2 boot preflight PASS; no owned Stop/recovery app report artifacts",
+    "verdict": "PENDING_UNRESOLVED_POSSIBLE_RUNNER_DISCONNECTION",
+    "not_proven": [
+      "product owner deadlock",
+      "GitHub runner network fault",
+      "actual IFB drop / authenticated reauth",
+      "cleanup"
+    ],
+    "hypothesis": "Normal long original WAL might disturb unpinned runner management, but no live stage logs; observe new exact /32 route-pin controlled run without falsely assigning root cause."
+  }
+}

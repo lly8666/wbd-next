@@ -56,6 +56,12 @@ def native_batch_deadline(env):
         # Nested 240s mode + bounded tree cleanup; native Windows guard
         # includes its own WSL/Firewall preflight and finally within 600s.
         return 310
+    if (env.get("WBD_WL_RUNNER_MGMT_PIN")=="1" and
+            env.get("WBD_WL_PUBLIC_MODES")=="normal" and
+            env.get("WBD_WL_V2_SCENARIO")=="scenarios/plan027-h882-win-c2s105-10m-25ms0-60s.json"):
+        # True 105s one-way +120s restored +60s load fits well within
+        # this native deadline; leave 180s for exact OS cleanup/witness.
+        return 600
     if (env.get("WBD_WL_RUN_N0")=="1" or env.get("WBD_WL_RUN_P200")=="1"
         or env.get("WBD_WL_V2_SCENARIO")):return 760
     selected=env.get("WBD_WL_PUBLIC_MODES","all")
