@@ -75,6 +75,7 @@ pub(crate) struct HealthClock {
     retry_not_before:u64,
     peer_idle:Option<(u64,u64)>,
     peer_write_closed:bool,
+    peer_retired:bool,
     disconnected:bool,
 }
 impl HealthClock {
@@ -82,7 +83,7 @@ impl HealthClock {
         Self{policy,attached_at:at,last_authenticated:None,
             last_business:at,next_health:at.saturating_add(policy.interval_ns),
             retry_not_before:at,peer_idle:None,peer_write_closed:false,
-            disconnected:false}
+            peer_retired:false,disconnected:false}
     }
     pub(crate) fn policy(&self)->HealthPolicy{self.policy}
     pub(crate) fn on_authenticated_control(&mut self,at:u64){
@@ -108,6 +109,10 @@ impl HealthClock {
     }
     /// A peer FIN must have been verified in sequence by cold/transport.
     pub(crate) fn on_verified_peer_fin(&mut self){self.peer_write_closed=true}
+    pub(crate) fn on_authenticated_peer_retire(&mut self,at:u64){
+        if at>=self.attached_at{self.on_authenticated_control(at);self.peer_retired=true}
+    }
+    pub(crate) fn peer_retired(&self)->bool{self.peer_retired}
     pub(crate) fn clear_on_new_incarnation(&mut self,now:u64){
         *self=Self::new(self.policy,now);
     }
@@ -128,8 +133,8 @@ impl HealthClock {
     }
     pub(crate) fn unhealthy(&self,now:u64)->bool{
         let from=self.last_authenticated.unwrap_or(self.attached_at);
-        !self.disconnected && now>=from &&
-            now.saturating_sub(from)>=self.policy.dead_ns
+        !self.disconnected && (self.peer_retired ||
+            (now>=from && now.saturating_sub(from)>=self.policy.dead_ns))
     }
     /// Sending Health must not become a 0ms busy loop if the peer has
     /// stopped reporting. Dead-peer policy is independent and is only
@@ -184,6 +189,7 @@ pub(crate) struct AuthenticatedActivity {
     business_ns:std::sync::atomic::AtomicU64,
     hint_at_ns:std::sync::atomic::AtomicU64,
     hint_idle_ns:std::sync::atomic::AtomicU64,
+    peer_retire_at:std::sync::atomic::AtomicU64,
 }
 impl AuthenticatedActivity {
     pub(crate) fn record_batch(&self,authenticated_ns:u64,business_ns:u64,
@@ -204,6 +210,9 @@ impl AuthenticatedActivity {
             }
         }
     }
+    pub(crate) fn record_peer_retire(&self,at:u64){
+        if at>0{self.peer_retire_at.fetch_max(at,std::sync::atomic::Ordering::Release)}
+    }
     pub(crate) fn absorb(&self,clock:&mut HealthClock){
         use std::sync::atomic::Ordering;
         let a=self.authenticated_ns.load(Ordering::Acquire);
@@ -215,6 +224,8 @@ impl AuthenticatedActivity {
             let idle=self.hint_idle_ns.load(Ordering::Relaxed);
             clock.on_peer_idle_hint(at,idle);
         }
+        let retire=self.peer_retire_at.load(Ordering::Acquire);
+        if retire!=0{clock.on_authenticated_peer_retire(retire)}
     }
 }
 
@@ -334,6 +345,7 @@ pub(crate) fn apply_authenticated_quality_signal(
 #[derive(Clone,Debug,PartialEq,Eq)]
 pub(crate) struct AuthenticatedControl {
     pub(crate) receipt:Option<wbd_codec::Receipt>,
+    pub(crate) peer_retire:bool,
     pub(crate) peer_idle_ns:Option<u64>,
     pub(crate) quality:bool,
     /// Parsed only from an already-authenticated kind1 control envelope.
@@ -346,7 +358,7 @@ pub(crate) fn parse_authenticated_control(wire:&[u8])
     use wbd_codec::{ControlTlv,CodecError};
     let items=wbd_codec::decode_control(wire,512)?;
     if items.is_empty(){return Err(CodecError::InvalidLength)}
-    let mut out=AuthenticatedControl{receipt:None,peer_idle_ns:None,quality:false,low_rate_quality:None,low_rate_signal:None};
+    let mut out=AuthenticatedControl{receipt:None,peer_retire:false,peer_idle_ns:None,quality:false,low_rate_quality:None,low_rate_signal:None};
     for item in items{
         match item{
             ControlTlv::Receipt(r)=>{
@@ -373,6 +385,9 @@ pub(crate) fn parse_authenticated_control(wire:&[u8])
                     out.low_rate_quality=Some(report);
                 }else if bytes[0]==3 {
                     out.low_rate_signal=Some(QualityWindowSignal::decode(&bytes)?);
+                }else if bytes[0]==4 {
+                    if bytes.as_slice()!=[4,1,0,0]{return Err(CodecError::InvalidLength)}
+                    out.peer_retire=true;
                 }
                 out.quality=true;
             },
@@ -427,6 +442,14 @@ pub(crate) fn encode_authenticated_low_rate_quality_live(idle_ns:u64,
     encode_authenticated_health_live(idle_ns,None,Some(&body),payload_budget)
 }
 
+/// Only an actual Rust authenticated Health-dead owner may seal this
+/// exact retirement marker. The peer needs unique M3 AEAD/PN and its own
+/// generation before this message can request old owner Stop.
+pub(crate) fn encode_authenticated_retire_live(idle_ns:u64,payload_budget:usize)
+    ->Result<Vec<u8>,wbd_codec::CodecError>{
+    encode_authenticated_health_live(idle_ns,None,Some(&[4,1,0,0]),payload_budget)
+}
+
 /// Boundary signals share the existing encrypted Health/Quality envelope.
 pub(crate) fn encode_authenticated_low_rate_signal_live(idle_ns:u64,
     signal:QualityWindowSignal,payload_budget:usize,
@@ -478,6 +501,18 @@ mod wire_tests{
         assert_eq!(parse_authenticated_control(&invalid),Err(CodecError::InvalidLength));
     }
     #[test]
+    fn retire_requires_explicit_exact_authenticated_control_variant(){
+        let body=encode_authenticated_retire_live(1234,128).unwrap();
+        let decoded=parse_authenticated_control(&body).unwrap();
+        assert!(decoded.peer_retire);
+        assert_eq!(decoded.peer_idle_ns,Some(1234));
+        assert!(decoded.low_rate_signal.is_none());
+        assert!(decoded.low_rate_quality.is_none());
+        let bad=wbd_codec::encode_control(&[ControlTlv::LegacyQuality(vec![4,1,0,1])],128).unwrap();
+        assert_eq!(parse_authenticated_control(&bad),Err(CodecError::InvalidLength));
+        assert!(!parse_authenticated_control(&encode_authenticated_health(7,None,None).unwrap()).unwrap().peer_retire);
+    }
+    #[test]
     fn bad_health_repeated_hint_and_oversize_quality_do_not_become_evidence(){
         let small=wbd_codec::encode_control(&[ControlTlv::LegacyHealth(vec![1])],512).unwrap();
         assert_eq!(parse_authenticated_control(&small),Err(CodecError::InvalidLength));
@@ -494,6 +529,22 @@ mod tests {
     use super::*;
     const S:u64=SECOND_NS;
     fn default()->HealthClock{HealthClock::new(HealthPolicy::default_connected(),0)}
+    #[test]
+    fn explicit_retire_does_not_shortcut_policy_without_a_verified_event(){
+        let mut clock=HealthClock::new(HealthPolicy::default_connected(),0);
+        let signal=AuthenticatedActivity::default();
+        clock.on_authenticated_control(20*SECOND_NS);
+        assert!(!clock.unhealthy(21*SECOND_NS));
+        signal.record_peer_retire(21*SECOND_NS);
+        signal.absorb(&mut clock);
+        assert!(clock.peer_retired());
+        assert!(clock.unhealthy(21*SECOND_NS));
+        clock.clear_on_new_incarnation(22*SECOND_NS);
+        assert!(!clock.unhealthy(23*SECOND_NS));
+        let mut later=HealthClock::new(HealthPolicy::default_connected(),30*SECOND_NS);
+        signal.absorb(&mut later);
+        assert!(!later.unhealthy(31*SECOND_NS));
+    }
     #[test]
     fn original_15s_90s_and_three_intervals_are_enforced(){
         assert!(HealthPolicy::new(15*S,90*S,None).is_some());

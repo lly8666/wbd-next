@@ -1,0 +1,43 @@
+name: M0 PLAN027 H865 build once original authenticated retire Rust Go
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-plan027-h865-once-auth-retire.yml
+permissions:
+  contents: read
+jobs:
+  original-once-source:
+    if: contains(github.event.head_commit.message, '[plan027-h865-build]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Exact authenticated kind1 retire and original native Health tests
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-engine --lib v4_native_health
+          python3 -m unittest tests.test_m0_plan027_h861_unilateral -v
+      - name: One original Linux Go TLS Rust source build and 3 SHA hashes
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm
+          sed -e 's/aarch64/x86_64/g' -e 's/arm64/amd64/g' tools/arm64_public_go_rust_bundle.sh > "$RUNNER_TEMP/plan027-h865-amd64.sh"
+          bash "$RUNNER_TEMP/plan027-h865-amd64.sh"
+          (cd amd64-public-bundle && sha256sum -c SHA256SUMS)
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("amd64-public-bundle/manifest.json"))
+          assert m["source"]==os.environ["GITHUB_SHA"] and m["architecture"]=="x86_64"
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: plan027-h865-once-original-auth-retire
+          path: amd64-public-bundle/
+          if-no-files-found: error
+          retention-days: 30

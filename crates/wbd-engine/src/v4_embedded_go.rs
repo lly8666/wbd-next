@@ -826,6 +826,14 @@ struct Entry{
     #[cfg(feature="fec2_product_record")]
     native_health_evidence:Option<Arc<crate::v4_native_health::AuthenticatedActivity>>,
     #[cfg(feature="fec2_product_record")]
+    native_retire_notice_due:bool,
+    #[cfg(feature="fec2_product_record")]
+    native_retire_notice_inflight:bool,
+    #[cfg(feature="fec2_product_record")]
+    native_retire_notice_sent:bool,
+    #[cfg(feature="fec2_product_record")]
+    native_retire_notice_attempts:u8,
+    #[cfg(feature="fec2_product_record")]
     original_outer:Option<Arc<Mutex<OriginalOuterRepair>>>,
     // One authenticated, immutable-per-worker public policy. V3 ON remains
     // unchanged; OFF cannot hold repair ciphertext or send outer DATA copies.
@@ -1131,6 +1139,14 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         native_health_policy:crate::v4_native_health::HealthPolicy::default_connected(),
         #[cfg(feature="fec2_product_record")]
         native_health_evidence:None,
+        #[cfg(feature="fec2_product_record")]
+        native_retire_notice_due:false,
+        #[cfg(feature="fec2_product_record")]
+        native_retire_notice_inflight:false,
+        #[cfg(feature="fec2_product_record")]
+        native_retire_notice_sent:false,
+        #[cfg(feature="fec2_product_record")]
+        native_retire_notice_attempts:0,
         #[cfg(feature="fec2_product_record")]
         original_outer:None,
         #[cfg(feature="fec2_product_record")]
@@ -4136,7 +4152,7 @@ fn background_raw_once(
     #[cfg(feature="fec2_product_record")]
     let mut outer_sack_hint=Vec::<wbd_recovery::outer_ack::SackRange32>::with_capacity(4);
     #[cfg(feature="fec2_product_record")]
-    let(mut authenticated_at,mut business_at,mut peer_idle_hint)=(0u64,0u64,None);
+    let(mut authenticated_at,mut business_at,mut peer_idle_hint,mut peer_retire_at)=(0u64,0u64,None,0u64);
     // Unused preposted original M1 slabs persist in this RX worker; used
     // ones return through the same bounded per-arena return path.
     for (i,slab) in rx_pending.drain(..batch.observed).enumerate(){
@@ -4231,6 +4247,9 @@ fn background_raw_once(
             }
             if let Some(idle)=receipt.authenticated_health_hint{
                 peer_idle_hint=Some((when.0,idle));
+            }
+            if receipt.authenticated_peer_retire&&receipt.authenticated_control{
+                peer_retire_at=peer_retire_at.max(when.0);
             }
         }
         pending_valid |=receipt.pending>0;
@@ -4342,6 +4361,7 @@ fn background_raw_once(
     if let Some(activity)=activity{
         // Exactly once per native RX batch; no per-packet cross-thread lock.
         activity.record_batch(authenticated_at,business_at,peer_idle_hint);
+        if peer_retire_at!=0{activity.record_peer_retire(peer_retire_at)}
     }
     arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP);
     // A unique authenticated LINK shard with no completed datagram is
@@ -4376,27 +4396,31 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
     if let (Some(clock),Some(evidence))=(
         e.native_health.as_mut(),e.native_health_evidence.as_ref()
     ){evidence.absorb(clock)}
+    let retire=e.native_retire_notice_due;
     let next=if e.quality_tx.is_some(){
         Some(e.owner.next_original_record_pn().ok_or(BAD_STAGE)?)
     }else{None};
-    let signal=if let Some(tx)=e.quality_tx.as_mut(){
+    let signal=if retire{None}else if let Some(tx)=e.quality_tx.as_mut(){
         tx.next_signal(next.ok_or(BAD_STAGE)?,now)?
     }else{None};
-    let quality=if signal.is_none(){
+    let quality=if !retire&&signal.is_none(){
         e.quality_rx.as_ref().and_then(|q|
             q.lock().ok().and_then(|mut rx|rx.mature_due(now)))
     }else{None};
     // All live modes retire old per-record M2 drafts.
     let draft:Option<wbd_recovery::FeedbackDraft>=None;
     let health_due=e.native_health.as_ref().is_some_and(|h|h.tx_due(now.0));
-    if draft.is_none()&&!health_due&&quality.is_none()&&signal.is_none(){
+    if !retire&&draft.is_none()&&!health_due&&quality.is_none()&&signal.is_none(){
         return Ok(false)
     }
     let attempt=(||->Result<u64,i32>{
         let budget=e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped.frame;
         let idle=e.native_health.as_ref().ok_or(BAD_STAGE)?
             .local_idle_ns(now.0);
-        let tlv=if let Some(signal)=signal{
+        let tlv=if retire{
+            crate::v4_native_health::encode_authenticated_retire_live(
+                idle,budget.record_payload_mtu).map_err(|_|INVALID)?
+        }else if let Some(signal)=signal{
             crate::v4_native_health::encode_authenticated_low_rate_signal_live(
                 idle,signal,budget.record_payload_mtu
             ).map_err(|_|INVALID)?
@@ -4419,6 +4443,7 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
     })();
     match attempt{
         Ok(pn)=>{
+            if retire{e.native_retire_notice_inflight=true;e.native_retire_notice_due=false;}
             e.quality_report_queued=quality.map(|(key,_)|key);
             e.quality_signal_queued=signal;
             e.feedback_queued=Some((draft,pn,health_due||
@@ -4426,6 +4451,10 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
             Ok(true)
         },
         Err(err)=>{
+            if retire{
+                e.native_retire_notice_due=false;
+                e.native_retire_notice_attempts=e.native_retire_notice_attempts.saturating_add(1);
+            }
             if let Some(signal)=signal{
                 if signal.kind==crate::v4_native_health::QualitySignalKind::Start{
                     e.quality_tx.as_mut().ok_or(BAD_STAGE)?
@@ -4980,6 +5009,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 s.report().queued_jobs>0 ||
                 s.next_deadline().is_some_and(|d|d.0<=loop_now().0));
             let reverse=e.feedback_queued.is_none() && (
+                e.native_retire_notice_due||
                 e.quality_tx.as_ref().is_some_and(|tx|tx.due(loop_now()))||
                 e.quality_rx.as_ref().is_some_and(|q|
                     q.lock().ok().is_some_and(|rx|rx.has_report()))||
@@ -5417,6 +5447,11 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             // M1 age eviction or no driver: no authenticated peer receipt.
             wbd_recovery::FeedbackSendResult::NotSent
         };
+        if e.native_retire_notice_inflight{
+            e.native_retire_notice_inflight=false;
+            e.native_retire_notice_attempts=e.native_retire_notice_attempts.saturating_add(1);
+            e.native_retire_notice_sent=matches!(status,wbd_recovery::FeedbackSendResult::Accepted);
+        }
         if let Some(signal)=e.quality_signal_queued.take(){
             if let Some(tx)=e.quality_tx.as_mut(){
                 tx.complete_signal(signal,matches!(status,
@@ -6318,6 +6353,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         // Authenticated feedback is independently due, even
                         // for strictly one-way data with an idle local TUN.
                         let fb=e.feedback_queued.is_none() && (
+                            e.native_retire_notice_due||
                             e.quality_tx.as_ref().is_some_and(|tx|tx.due(now))||
                             e.quality_rx.as_ref().is_some_and(|q|
                                 q.lock().ok().is_some_and(|rx|rx.has_report()))||
@@ -6336,10 +6372,18 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 // ordinary zero-business idle. Expired health never implies
                 // DORMANT; Stop is owned by the existing joined workers.
                 #[cfg(feature="fec2_product_record")]
-                if tx_cell.lock().ok().is_some_and(|e|
-                    e.native_health.as_ref().is_some_and(|h|h.unhealthy(loop_now().0))
-                ){
-                    eprintln!("WBD_M0_NATIVE_HEALTH_TIMEOUT side=tx reason=missing_authenticated_peer_dead_after_90s");
+                let dead_decision=tx_cell.lock().ok().map(|mut e|{
+                    let dead=e.native_health.as_ref().is_some_and(|h|h.unhealthy(loop_now().0));
+                    if !dead{return false}
+                    let remote_retired=e.native_health.as_ref().is_some_and(|h|h.peer_retired());
+                    if remote_retired||e.native_retire_notice_sent||e.native_retire_notice_attempts>=3{
+                        return true
+                    }
+                    e.native_retire_notice_due=true;
+                    false
+                }).unwrap_or(false);
+                if dead_decision{
+                    eprintln!("WBD_M0_NATIVE_HEALTH_TIMEOUT side=tx reason=authenticated_dead_or_peer_retired");
                     stats.tx_error.fetch_add(1,Ordering::Relaxed);
                     stats.authenticated_peer_dead.store(true,Ordering::Release);
                     stop_tx.store(true,Ordering::Release);
