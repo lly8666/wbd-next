@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_binary_sha": "5ff348e2f4edbe7e0cb9c2a6c0d2dda413056b01",
+  "source_build_run": 41482859398,
+  "source_build_status": "PENDING",
+  "previous_failed_build": 41480121662,
+  "previous_failed_dispatch": 41480968817,
+  "source_locks": "same original source/manifest+installer, frozen Windows SHA256 exe/dll and Linux product SHA256",
+  "runs": "NOT_RUN",
+  "first": "Normal default1460 bidirectional actual SYN TCP MSS 1420/1420; physical vs path; record/OS planned/applied 1389 without other limits; Stop",
+  "on_normal_success": "normal explicit1500 and six impacted default1460 Fixed Auto Game2 Game4 Game2FEC Game4FEC single-mode Actions",
+  "not_included": [
+    "manual physical asymmetric negative",
+    "unrelated H958 native DF failed",
+    "PLAN028 onward"
+  ]
+}
