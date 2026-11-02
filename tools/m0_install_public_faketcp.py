@@ -18,7 +18,7 @@ REPLACE=("packet.go","client_association.go","association.go","association_test.
 CREATE=("public_v4_mss.go","public_v4_mss_test.go","public_v4_mss_byte_test.go")
 
 def blob(data:bytes)->str:
-    return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\\0"+data).hexdigest()
+    return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
 
 def expected_rows():
     spec=json.loads(MANIFEST.read_text())

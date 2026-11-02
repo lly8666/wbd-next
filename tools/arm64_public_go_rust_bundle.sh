@@ -12,9 +12,9 @@ if [ ! -d legacy/.git ]; then
 fi
 git -C legacy checkout -q "$GO_SOURCE"
 test "$(git -C legacy rev-parse HEAD)" = "$GO_SOURCE"
-# Apply only the exact reviewed V4 cold SYN-MSS presentation adapter to the
-# pinned legacy temp checkout. Never change the old repository/commit. The
-# original DefaultMSS remains the fallback for old callers and tests.
+# Apply the exact same manifest-pinned current V4 SYN MSS source files that
+# Windows assembles; original Go checkout is immutable. No product fallback
+# to a fixed 1360 MSS exists.
 mkdir -p legacy/internal/faketcp
 python3 tools/m0_install_public_faketcp.py legacy
 cp r0/go_overlay/internal/faketcp/raw_detached_data_linux.go legacy/internal/faketcp/raw_detached_data_linux.go

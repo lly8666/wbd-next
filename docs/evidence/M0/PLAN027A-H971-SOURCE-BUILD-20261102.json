@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "parent": "486eab4170c35184f2ede771f1b5c430b9f80887",
+  "old_runs_failed": [
+    41480121662,
+    41480968817
+  ],
+  "trigger": "single main full Windows Linux source-locked native product build",
+  "why": "H970 no source-workflow path changed, and SHA NUL byte literal had one extra escape; H971 source installer+tests workflow include and actual Git b\\0 checksum corrected",
+  "no_product_algorithm_change": true,
+  "expected": "Windows Go SYN/SYNACK real byte compile, Linux Go original same seven overlays, Rust units, signed two-OS legacy1400 native Stop and artifact SHA",
+  "result": "NOT_RUN",
+  "next": "8 minimal current-source native MSS scenarios, Normal1460 first"
+}
