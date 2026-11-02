@@ -4,7 +4,7 @@ import os,sys,subprocess,time,json,hashlib,pathlib,re,threading,faulthandler,ate
 from m0_wl_native_resource_sampler import sample_windows_original_process
 from m0_wl_windows_cpu_audit import summarize_windows_cpu
 from m0_wl_mode_runtime_report import source_locked_observability,summarize_auto_udp_progress,native_auto_true_applied_snapshots
-from m0_wl_native_mtu_contract import configured_native_test_mtu
+from m0_wl_native_mtu_contract import configured_native_test_mtu,native_outer_choice
 from m0_wl_n0_drop_delta import latest_counter, measured_delta
 from m0_wl_impairment_profile import get_profile
 from m0_wl_lock_profile import parse_native_lock_profile
@@ -13,6 +13,7 @@ from m0_wl_plan027_linux_tun_link import link_delta,tun_queue_identity
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
 configured_mtu=configured_native_test_mtu()
+native_outer=native_outer_choice(os.environ.get('WBD_WL_NATIVE_OUTER_MTU_REQUEST','legacy1400'))
 if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec","auto-revision","auto-adaptive"):
  raise RuntimeError("unknown exact native Windows public mode "+mode)
 fixed6=mode=="fixed"
@@ -45,6 +46,7 @@ report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINU
  "linux_ready":"NOT_RUN","app_duplex":"NOT_RUN","tcp_duplex":"NOT_RUN",
  "stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_P200":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN",
  "requested_original_win_mtu":configured_mtu,
+ "requested_native_outer_selector":native_outer,
   "requested_original_outer_repair":outer_repair,
  "runtime_os_mtu_guard":"ORIGINAL_NATIVE_M4_1HZ_FAIL_CLOSED"}
 def run(a,timeout=30):
@@ -159,13 +161,16 @@ try:
  egress_diag=(" WBD_FEC_EGRESS_DIAG=1"
     if mode=="auto" and os.environ.get("WBD_WL_V2_SCENARIO","").endswith(
         "scenarios/plan027-h461-auto-egress-10m-25ms-loss0-60s.json") else "")
- linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+"\n").encode("utf-8"))
+ linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex "+route+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1460","1500") else "")+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
  # Linux server authenticated READY only AFTER the genuine Windows TLS client starts.
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex",route,"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
   "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode","bypass-lan","--outer-repair",outer_repair]
+ if native_outer=="default1460":
+  # Prove both real defaults by OMITTING their explicit user MTU flags.
+  index=args.index("--mtu");del args[index:index+2]
  log=(out/"client.log").open("w");logs.append(log)
  w=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,text=True)
  game_cold_stage("COLD_CLIENT_SPAWNED")
@@ -249,6 +254,16 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  report["linux_ready"]="PASS_REAL_AFTER_ORIGINAL_TLS"
  if "WBD_WINDOWS_OS_APPLIED" not in (out/"client.log").read_text():raise RuntimeError("Windows public READY lacks native OS Applied")
  report["windows_ready"]="PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL"
+ if native_outer!="legacy1400":
+  # Real OS TUN readback AFTER authenticated TLS and original owner Apply.
+  kernel=json.loads(wsl("ip","-j","link","show","dev","wbdwl4",timeout=12))
+  if len(kernel)!=1 or type(kernel[0].get("mtu")) is not int:
+   raise RuntimeError("PLAN027A Linux actual inner OS MTU readback missing")
+  inner=kernel[0]["mtu"]
+  report["plan027a_linux_actual_inner_os_mtu"]=inner
+  if not 576<=inner<=configured_mtu:
+   raise RuntimeError("PLAN027A Linux OS inner MTU exceeds outer IP cap")
+  print("PLAN027A_LINUX_INNER_OS_READBACK",inner,"outer",configured_mtu,"selector",native_outer,flush=True)
  if os.environ.get("WBD_WL_V2_SCENARIO"):
   from m0_wl_perf_v2_config import read_scenario
   scene_mtu=read_scenario(root/os.environ["WBD_WL_V2_SCENARIO"])["tun_mtu"]

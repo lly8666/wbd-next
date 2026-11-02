@@ -21,7 +21,7 @@ def read_scenario(path):
         value=cfg.get(field)
         if type(value) is not int or not minimum<=value<=maximum:
             raise ValueError("WL_V2_BAD_"+field)
-    if cfg["tun_mtu"] not in (1280,1400,1500):
+    if cfg["tun_mtu"] not in (1280,1400,1460,1500):
         raise ValueError("WL_V2_UNSUPPORTED_TUN_MTU")
     if type(cfg.get("seed")) is not int or not 0<=cfg["seed"]<2**32:
         raise ValueError("WL_V2_BAD_SEED")
