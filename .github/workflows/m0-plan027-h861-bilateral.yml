@@ -1,0 +1,67 @@
+name: M0 PLAN027 H861 original cold stage bilateral 10Mbps
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-plan027-h861-bilateral.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  one-original-cold-stage-both:
+    if: contains(github.event.head_commit.message, '[plan027-h861-bilateral]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PRODUCT_SOURCE: 377613dec8ea3b2fdd123079a580326c2ba52dfb
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 50}
+      - name: Verify only fixture changed since one product SOURCE and safe scenario
+        run: |
+          set -euo pipefail
+          git cat-file -e "$PRODUCT_SOURCE^{commit}"
+          git diff --quiet "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/arm64_public_go_rust_bundle.sh
+          python3 -m unittest tests.test_m0_plan027_native_reauth_diag tests.test_m0_plan027_linux_blackhole_recover -v
+          python3 -m py_compile tools/network_harness/m0_plan027_linux_blackhole_recover.py
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          run-id: "41378386073"
+          name: plan027-h859-original-cold-once-source
+          github-token: ${{ github.token }}
+          path: native-bundle
+      - name: Exact SOURCE manifest and frozen three original product SHA256
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("native-bundle/manifest.json"))
+          assert m["source"]==os.environ["PRODUCT_SOURCE"] and m["architecture"]=="x86_64"
+          PY
+          (cd native-bundle && sha256sum -c SHA256SUMS)
+          chmod +x native-bundle/wbd-v4-client native-bundle/wbd-v4-server
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+          test -c /dev/net/tun
+      - name: Exactly one real bilateral105 at10Mbps with 120s restored business
+        run: |
+          set -euo pipefail
+          sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB,PRODUCT_SOURCE \
+            python3 -m tools.network_harness.m0_plan027_linux_blackhole_recover \
+              --bundle "$GITHUB_WORKSPACE/native-bundle" \
+              --product-source "$PRODUCT_SOURCE" \
+              --scenario scenarios/plan027-n-normal-both-blackhole105-recover120.json \
+              --out "$GITHUB_WORKSPACE/plan027-h861-both"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan027-h861-bilateral105-10m
+          path: |
+            plan027-h861-both/result.json
+            plan027-h861-both/double-blackhole-recovery/result.json
+            plan027-h861-both/double-blackhole-recovery/client-product-markers.log
+            plan027-h861-both/double-blackhole-recovery/server-product-markers.log
+            plan027-h861-both/double-blackhole-recovery/network-snapshots.json
+            plan027-h861-both/double-blackhole-recovery/summary.md
+          if-no-files-found: warn
+          retention-days: 30
