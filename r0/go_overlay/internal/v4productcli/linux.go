@@ -491,7 +491,18 @@ func Run(role string,args []string)error{
             faketcp.RawIPv4EndpointOptions{ReceivePort:cfg.localPort},
         )
         if err!=nil{return err}
-        emit:=func(seg faketcp.Segment)error{_,e:=raw.WriteSegment(seg);return e}
+        emit:=func(seg faketcp.Segment)error{
+            if seg.Flags&faketcp.FlagSYN!=0{
+                wire:=faketcp.MarshalSegment(seg,1,faketcp.PacketPersonaLegacy)
+                parsed,e:=faketcp.ParseIPv4TCP(wire)
+                if e!=nil||!parsed.MSSSet||parsed.MSS!=faketcp.PublicV4AdvertisedMSS(){
+                    return fmt.Errorf("original current V4 SYN MSS actual bytes inconsistent")
+                }
+                kind:="SYN";if seg.Flags&faketcp.FlagACK!=0{kind="SYNACK"}
+                log.Printf("V4_PUBLIC_ACTUAL_HANDSHAKE_MSS_V1 side=%s generation=%d kind=%s local_advertised_mss=%d tcp_option_bytes=%x",role,attempt,kind,parsed.MSS,wire[40:44])
+            }
+            _,e:=raw.WriteSegment(seg);return e
+        }
         connected=false
         var runErr error
         if role=="client"{
@@ -677,6 +688,13 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                 return
             }
             if !flow.MatchesInbound(seg){continue}
+            if seg.Flags&(faketcp.FlagSYN|faketcp.FlagACK)==(faketcp.FlagSYN|faketcp.FlagACK){
+                if !seg.MSSSet||seg.MSS<536||seg.MSS>1460{
+                    select{case errs<-fmt.Errorf("invalid current V4 peer SYNACK MSS %d",seg.MSS):default:}
+                    return
+                }
+                log.Printf("V4_PUBLIC_ACTUAL_PEER_SYNACK_MSS_V1 side=client peer_advertised_mss=%d",seg.MSS)
+            }
             if assoc.State()!=faketcp.ClientAssociationDetached{
                 if e:=assoc.HandleSegment(seg,time.Now());e!=nil &&
                    !errors.Is(e,faketcp.ErrClientDetached){
@@ -850,6 +868,11 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             if seg.DstPort!=c.localPort{continue}
             if faketcp.IsInitialSYN(seg){
                 if handoffCommitted.Load(){continue}
+                if !seg.MSSSet||seg.MSS<536||seg.MSS>1460{
+                    select{case errs<-fmt.Errorf("invalid current V4 peer SYN MSS %d",seg.MSS):default:}
+                    return
+                }
+                log.Printf("V4_PUBLIC_ACTUAL_PEER_SYN_MSS_V1 side=server peer_advertised_mss=%d",seg.MSS)
                 if coldReauth&&firstColdSYN.CompareAndSwap(false,true){log.Printf("V4_PUBLIC_COLD_STAGE role=server stage=first_syn unix_ms=%d",time.Now().UnixMilli())}
                 isn,e:=originalRandomISN()
                 if e!=nil{select{case errs<-e:default:};return}
