@@ -1,3 +1,4 @@
+# H853: exact compiler E0425 end now derived from validated highest_sent_end; rerun build only, no native measurement.
 name: M0 PLAN027 H852 build once original Linux Go TLS Rust shared TX optimization
 on:
   push:

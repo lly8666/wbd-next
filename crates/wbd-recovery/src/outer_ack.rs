@@ -111,7 +111,7 @@ impl OuterAckIndex {
             if stale { self.sent.pop_first(); }
         }
         if self.sent.len() >= self.capacity { return Ok(false); }
-        self.sent.insert(seq_start, SentSpan { end, pn, at: now });
+        self.sent.insert(seq_start, SentSpan { end:self.highest_sent_end, pn, at: now });
         Ok(true)
     }
 
