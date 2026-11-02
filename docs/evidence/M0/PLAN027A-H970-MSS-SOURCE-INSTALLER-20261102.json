@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_parent": "c1945a68835bae48b16634bba76f292f4f5f8435",
+  "root_cause": "tools/m0_install_public_faketcp.py had second manually pinned RESULT set packet.go=4dd669... while manifest plan020 canonical source already 82d462...",
+  "h968_product_run": 41480121662,
+  "h968_status": "FAIL_LINUX_INSTALLER_SHA_NOT_PRODUCT_TEST",
+  "h968_windows_go": "PASS",
+  "h968_rust_units": "PASS",
+  "h969_dispatch_run": 41480968817,
+  "h969_result": "FAIL_CLOSED_DEPENDS_ON_FAILED_BUILD",
+  "fix": "Seven shared FakeTCP exact original and result blobs derived from canonical source-locked plan020 manifest with strict complete kind/path/no-patch guard; all verified before any file replaced; no old Go source modified",
+  "preflight": "NOT_RUN_PENDING_H970_ACTIONS",
+  "new_product_result": "NOT_RUN",
+  "signed_native": "NOT_RUN",
+  "before": {
+    "original_linux_applied_inner": 1329,
+    "windows_applied_inner": 1389,
+    "source": "old signed true native"
+  },
+  "after": {
+    "target": "1389 both at outer1460 absent physical shrink",
+    "status": "NOT_MEASURED"
+  },
+  "unverified": [
+    "true numeric actual two-direction MSS 1420",
+    "Normal1500 and modes length/Stop",
+    "artificial asymmetric physical or peer MSS negative",
+    "H958 DF0/DF1 independent fail",
+    "PLAN028-030"
+  ]
+}

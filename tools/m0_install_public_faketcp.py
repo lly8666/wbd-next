@@ -1,34 +1,73 @@
 #!/usr/bin/env python3
-"""Install the SAME exact current V4 FakeTCP sources Windows assembler uses.
+"""Install the ONE source-locked public V4 FakeTCP assembly for Linux and ARM64.
 
-Pinned upstream original files verified by Git blob SHA before any write.
-No Linux-only handwritten MSS replacements or old-V4 compatibility switches.
+The Windows assembly manifest is the sole list of original/result Git blobs.
+Never duplicate checked-in SHA constants: doing so previously blocked H968
+Linux while the exact same Windows Go source had passed byte-level tests.
+Writes happen only after ALL seven original and result blobs pass verification.
 """
 from pathlib import Path
-import hashlib,sys
+import hashlib
+import json
+import sys
+
 ROOT=Path(__file__).resolve().parents[1]
-ORIGINAL={"packet.go":"6ac1f9b3d7208278d31078be8d61e2f3a6dbbd3b","client_association.go":"83e85b4871ee59e7ab47ea2b53387bef584898c4","association.go":"779cb74a9719f15615b6315ec548996951ae9138","association_test.go":"1a0180f7c3033b4d0e6980bc351735cf93ef08cc"}
-RESULT={"packet.go":"4dd669bedc455596fb9b9da3306cb0a7010246be","client_association.go":"d80b51c69a577a73fcc6494ff3cf554dd44ba162","association.go":"aa584980df88e0f034049c6a83cb1e4409f8a7d9","association_test.go":"de20ef1d172e4c432546c69b89ac701944821074"}
-CREATED={"public_v4_mss.go":"f31c4ca427cee864e499d1c201c56070358d0c10","public_v4_mss_test.go":"20678052954fca4f849362dd3174abd20cfb1cb7","public_v4_mss_byte_test.go":"5ec59832eafafba158054fe4a0bea10671cf28c8"}
-def blob(content):
- return hashlib.sha1(b"blob "+str(len(content)).encode()+b"\0"+content).hexdigest()
-def install(where):
- target=Path(where).resolve(strict=True)/"internal"/"faketcp"
- pending=[]
- for name,sha in ORIGINAL.items():
-  dst=target/name
-  if blob(dst.read_bytes())!=sha:raise ValueError("original Go SHA changed "+name)
-  data=(ROOT/"r0"/"go_overlay"/"internal"/"faketcp"/name).read_bytes()
-  if blob(data)!=RESULT[name]:raise ValueError("shared MSS overlay SHA changed "+name)
-  pending.append((dst,data))
- for name,sha in CREATED.items():
-  dst=target/name
-  if dst.exists():raise ValueError("unexpected fake TCP overlay collision "+name)
-  data=(ROOT/"r0"/"go_overlay"/"internal"/"faketcp"/name).read_bytes()
-  if blob(data)!=sha:raise ValueError("shared MSS new source SHA changed "+name)
-  pending.append((dst,data))
- for dst,data in pending:dst.write_bytes(data)
- print("V4_ONE_ORIGINAL_GO_FAKETCP_MSS_SOURCE_INSTALLED files="+str(len(pending)))
+MANIFEST=ROOT/"r0/go_overlay/assembly/manifest-plan020-m0.json"
+ORIGINAL_SOURCE="a7a82db31fe736ffedee330795a3234d358f1984"
+REPLACE=("packet.go","client_association.go","association.go","association_test.go")
+CREATE=("public_v4_mss.go","public_v4_mss_test.go","public_v4_mss_byte_test.go")
+
+def blob(data:bytes)->str:
+    return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\\0"+data).hexdigest()
+
+def expected_rows():
+    spec=json.loads(MANIFEST.read_text())
+    if spec.get("schema_version")!=1 or spec.get("legacy_source")!=ORIGINAL_SOURCE:
+        raise ValueError("V4 shared FakeTCP source manifest provenance mismatch")
+    expected=set(REPLACE+CREATE)
+    matched={}
+    for row in spec["operations"]:
+        name=row["path"].removeprefix("internal/faketcp/")
+        if name not in expected or row["path"]!="internal/faketcp/"+name:
+            continue
+        if name in matched:raise ValueError("duplicate shared V4 FakeTCP operation "+name)
+        if row.get("kind")!=("replace" if name in REPLACE else "create"):
+            raise ValueError("wrong shared V4 FakeTCP operation "+name)
+        if row.get("overlay_path")!="r0/go_overlay/internal/faketcp/"+name:
+            raise ValueError("cross-source FakeTCP path "+name)
+        if row.get("patches") is not None or row.get("donor_blob") is not None:
+            raise ValueError("MSS file must be a full pinned copy "+name)
+        if name in REPLACE and not row.get("original_blob"):
+            raise ValueError("missing original Go blob "+name)
+        matched[name]=row
+    if set(matched)!=expected:
+        raise ValueError("incomplete shared V4 FakeTCP manifest "+repr(expected-set(matched)))
+    return matched
+
+def install(where,check_only=False):
+    target=Path(where).resolve(strict=True)/"internal"/"faketcp" if where else None
+    rows=expected_rows()
+    pending=[]
+    for name in REPLACE+CREATE:
+        row=rows[name]
+        content=(ROOT/row["overlay_path"]).read_bytes()
+        if blob(content)!=row["result_blob"]:
+            raise ValueError("shared MSS overlay SHA changed "+name)
+        if target is not None:
+            dst=target/name
+            if name in REPLACE:
+                if blob(dst.read_bytes())!=row["original_blob"]:
+                    raise ValueError("original pinned Go SHA changed "+name)
+            elif dst.exists():
+                raise ValueError("unexpected V4 FakeTCP overlay collision "+name)
+            pending.append((dst,content))
+    if not check_only:
+        if target is None:raise ValueError("original Go destination required")
+        for dst,content in pending:dst.write_bytes(content)
+    print("V4_ONE_ORIGINAL_GO_FAKETCP_MSS_SOURCE_"+("CHECKED" if check_only else "INSTALLED")+
+          " files="+str(len(rows))+" original="+ORIGINAL_SOURCE)
+
 if __name__=="__main__":
- if len(sys.argv)!=2:raise SystemExit("usage: m0_install_public_faketcp.py LEGACY_ROOT")
- install(sys.argv[1])
+    if len(sys.argv)==2 and sys.argv[1]=="--check-only":install(None,True)
+    elif len(sys.argv)==2:install(sys.argv[1])
+    else:raise SystemExit("usage: m0_install_public_faketcp.py LEGACY_ROOT | --check-only")
