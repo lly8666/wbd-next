@@ -279,6 +279,20 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with: {go-version: "1.23.12", cache: false}
+      - name: Parse original runner-management lease before native Windows drivers
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $tokens=$null
+          $parseErrors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path tools/m0_wl_gamefec_management_route.ps1).Path,
+            [ref]$tokens,[ref]$parseErrors) | Out-Null
+          if(@($parseErrors).Count -gt 0){
+            $parseErrors | ForEach-Object { Write-Output ('RUNNER_MGMT_SYNTAX '+$_.Message) }
+            throw 'Original runner management lease PS1 syntax invalid before signed native driver setup'
+          }
+          Write-Output 'PLAN027_H893_RUNNER_MANAGEMENT_POWERSHELL_PARSE_PASS'
       - name: Prepare the same source used by full native qualification
         run: python tools/prepare_windows_wiring.py
       - name: Compile production and test callers before Rust DLL and drivers

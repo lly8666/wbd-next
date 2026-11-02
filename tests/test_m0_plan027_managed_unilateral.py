@@ -27,6 +27,12 @@ class ManagedUnilateral(unittest.TestCase):
    "PREEXISTING_SPECIFIC_HOST_ROUTE","ORIGINAL_PHYSICAL_UNDERLAY_NOT_UNAMBIGUOUS",
    "Remove-NetRoute","GITHUB_RUN_ID","GITHUB_RUN_ATTEMPT"):
    self.assertIn(literal,text)
+  # H889 native run caught a PowerShell ParserError only *after* signed
+  # NPF/WSL boot: detect truncated regex/quoted guard at cheap preflight.
+  guard="if($env:WBD_WL_PUBLIC_MODES -notmatch '^game[24]-fec$' -and -not $longNative){throw 'MANAGEMENT_ROUTE_SCOPE_REFUSED'}"
+  self.assertEqual(text.splitlines().count(guard),1)
+  self.assertEqual(text.count("MANAGEMENT_ROUTE_SCOPE_REFUSED"),1)
+  self.assertNotIn("'^game[24]-fec\\n",text)
  def test_workflow_does_not_call_native_before_management_pin(self):
   s=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
   self.assertIn("H888-managed-WinC2S105-recover120",s)

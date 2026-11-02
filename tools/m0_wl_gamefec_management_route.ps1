@@ -8,7 +8,7 @@ $longNative=($env:WBD_WL_RUNNER_MGMT_PIN -eq '1' -and
   $env:WBD_WL_OUTER_REPAIR -eq 'off' -and
   $env:WBD_WL_V2_SCENARIO -eq 'scenarios/plan027-h882-win-c2s105-10m-25ms0-60s.json' -and
   $Receipt -eq 'result/wl-public/normal105-management-route-lease.json')
-if($env:WBD_WL_PUBLIC_MODES -notmatch '^game[24]-fec
+if($env:WBD_WL_PUBLIC_MODES -notmatch '^game[24]-fec$' -and -not $longNative){throw 'MANAGEMENT_ROUTE_SCOPE_REFUSED'}
 if($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_OS -ne 'Windows'){throw 'HOSTED_WINDOWS_ONLY'}
 $owner="$($env:GITHUB_RUN_ID):$($env:GITHUB_RUN_ATTEMPT)"
 if($owner -notmatch '^\d{8,15}:\d+$'){throw 'OWNER_ID_MISSING'}

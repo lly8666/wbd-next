@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 892,
-  "checkpoint_sha": "ba1b8128b695bf50d1d0ba98eea8941be0fd25a2",
+  "sequence": 893,
+  "checkpoint_sha": "6a093085313617e7322a064e9f3c09ec8e5981db",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H892 source-locked signed Windows NPF/Wintun↔WSL2 Linux Normal outer-repair OFF at offered50M each, 25ms0%60s near-MTU scene; Action NOT_RUN until source commit. H889 managed105 Action41399475839 and H890 Normal ON300 Action41399819159 independent in progress (preflight/build PASS at last poll), H883 f361 old original105 cancelled with no native report/Stop and logs404. H884 9fbb 30% OFF/ON true paired and H886 e5f Game4 OFF true native qualified by exact-source evidence.",
-  "why_now": "Parallelize capacity-aware Normal OFF 10→50M first step without silently inflating 0%/10M outcome; same-source kernel injection and first-delivery/Stop are hard guards. Two existing separate native Actions already occupy different runners.",
+  "current_task": "H893 correcting H889 Action41399475839 native runner-management script PowerShell ParserError before original product test (line11 truncated regex). Windows signed product builds, OS driver and WSL preflight PASS but no IFB105/Stop attempted; H893 actual PowerShell AST parse in Win Go preflight and exact static source guard. Separate H890 Normal ON300 Action41399819159 live, H892 Normal OFF50 Action41400799511 build in flight. H883 f361 cancelled INCONCLUSIVE without logs.",
+  "why_now": "Native H889 reproduced an actionable test-fixture syntax failure, not old H883 runner hang. Fix the precise PowerShell guard and catch malformed PS1 in Windows preflight before costly driver/WSL setup; do not change product protocol or re-dispatch unrelated scenarios.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H889 original managed one-way105 and H890 source ON300 and new H892 50M OFF first/CPU/RSS/drop/Stop; diagnose source-specific failure before broadening. Continue Fixed/Auto/Game2/4 high FEC on/off and capacity/cross-OS p99 evidence, avoid physical/test inflation.",
+  "next_action": "Collect H893 source-controlled managed Normal105 test with actual real IFB and authentic TLS reauthorization after restored120 and Stop; in parallel collect H890 ON300 and H892 OFF50 native Actions; treat each distinct SOURCE. If H893 environment pin fails, record strict refusal not product deadlock.",
   "unverified": true,
   "last_tested_source": "e5f2e32977f3b4c6098c8ff2b1d957e0e00dd00f",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H886-SOURCEE5F2-GAME4-OUTER-OFF-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H885-GAME2-REAL-OFF-COLLECT.md",
     "docs/devlog/M0/20261102-PLAN027-H886-GAME4-OUTER-OFF-SIGNED.md",
     "docs/devlog/M0/20261102-PLAN027-H887-AUTO-NORMAL-WAKE-CONTRACT.md",
     "docs/devlog/M0/20261102-PLAN027-H888-UNILATERAL-RUNNER-UNDERLAY.md",
     "docs/devlog/M0/20261102-PLAN027-H889-H888-PREFLIGHT-SOURCE-CORRECTION.md",
     "docs/devlog/M0/20261102-PLAN027-H890-NORMAL-ON-300S.md",
     "docs/devlog/M0/20261102-PLAN027-H891-SOURCE-CARDS-COLLECT.md",
-    "docs/devlog/M0/20261102-PLAN027-H892-NORMAL-50M-OFF-SIGNED.md"
+    "docs/devlog/M0/20261102-PLAN027-H892-NORMAL-50M-OFF-SIGNED.md",
+    "docs/devlog/M0/20261102-PLAN027-H893-RUNNER-POWERSHELL-PARSER-GATE.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."
