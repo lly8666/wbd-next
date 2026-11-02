@@ -4,29 +4,30 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 875,
-  "checkpoint_sha": "a7e6633c865b2143f6a8e85b7edd97cda1c650e9",
+  "sequence": 876,
+  "checkpoint_sha": "cdb4ed347d15c840ebedfd7c43ead2a0ecef11d3",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H875 source-locked Windows/WSL2 original-Go TLS Rust Normal outer-repair=off first real scene 10Mbps/25ms0%60s. H874 source a7e preflight exact assembled Go+Windows Go compile+Windows/Linux Rust unit PASS, governance PASS; H875 genuine Windows/Linux driver scene and effective both-OS readback NOT_RUN until Actions receipt. H873 owner ABI PASS. Linux b747 105s prior source PASS only.",
-  "why_now": "True Windows product original M2 OFF now assembled/compiles; isolate genuine ON/OFF disabled cost baseline with minimum 10M/25ms0% first before expensive sameVM speedup comparison.",
+  "current_task": "H875 SOURCE cdb4 signed original Windows NPF/Wintun↔WSL2 Linux/Go TLS/Rust Normal OFF 10Mbps/25ms0%60s both first100%, actual Win/Linux effective OFF, UDP/TCP and both owned Stop PASS; Win whole EXE CPU2.5156s over74.297s RSS peak41.7MB, kernel drops0. H876 one same-VM sequential Normal OFF→ON, 10Mbps/250ms0%60s source-frozen binary both OS, result NOT_RUN at commit.",
+  "why_now": "H875 true Windows original OFF qualified first; compare same-source/same-runner optional M2 CPU/RSS overhead at RTT500ms before speculative shared recovery optimization or heavier loss scenes. Only cold flag differs, all business and owned Stops independently gated.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H875 exact Windows signed NPF/Wintun + WSL2 Linux native one-scene job result, assert two-OS OFF effective, first-arrival, CPU/RSS and full owned Stop; if PASS move to sameVM sequential 50M ON/OFF and then unilateral Windows-origin 105s; if FAIL diagnose product or fixture without guessing VM capacity.",
+  "next_action": "Collect H876 Action exact two-leg source/hash/outer effective, genuine first arrival, OS owned Stops, process CPU/RSS and differences. Do not label cold+Stop CPU delta a steady algorithm benefit. If valid proceed sameVM 30%-loss pair and 50M near MTU OFF capacity, adapt mode-specific OFF and Windows-origin 105s independently; run final ON 300s after affected changes.",
   "unverified": true,
-  "last_tested_source": "b74728ba0b1ee45c632c31117fc8c08c042e11a0",
+  "last_tested_source": "cdb4ed347d15c840ebedfd7c43ead2a0ecef11d3",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H870-B747-AUTH-RETIRE-UNILATERAL105-2M-PASS-20261102.json",
-    "docs/evidence/M0/PLAN027-H870-B747-AUTH-RETIRE-BILATERAL105-10M-PASS-20261102.json"
+    "docs/evidence/M0/PLAN027-H870-B747-AUTH-RETIRE-BILATERAL105-10M-PASS-20261102.json",
+    "docs/evidence/M0/PLAN027-H875-SOURCECDB4-WINDOWS-NORMAL-OFF-10M-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H867-RETIRE-UNILATERAL-BILATERAL.md",
     "docs/devlog/M0/20261102-PLAN027-H868-COLLECT-H867-MISSING-RECEIPTS.md",
     "docs/devlog/M0/20261102-PLAN027-H869-WINDOWS-AUTH-RETIRE-RECEIVER.md",
     "docs/devlog/M0/20261102-PLAN027-H870-COLLECT-NATIVE-LIFECYCLE.md",
     "docs/devlog/M0/20261102-PLAN027-H871-SOURCE-REF-CONSISTENCY.md",
     "docs/devlog/M0/20261102-PLAN027-H872-WINDOWS-RETIRE-SENDER.md",
     "docs/devlog/M0/20261102-PLAN027-H873-WINDOWS-OUTER-OFF.md",
-    "docs/devlog/M0/20261102-PLAN027-H875-WINDOWS-NORMAL-OFF-NATIVE.md"
+    "docs/devlog/M0/20261102-PLAN027-H875-WINDOWS-NORMAL-OFF-NATIVE.md",
+    "docs/devlog/M0/20261102-PLAN027-H876-NORMAL-SAMEVM-OUTER-PAIR.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."

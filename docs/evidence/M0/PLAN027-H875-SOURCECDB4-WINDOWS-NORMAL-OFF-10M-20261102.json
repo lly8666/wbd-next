@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "cdb4ed347d15c840ebedfd7c43ead2a0ecef11d3",
+  "run_id": 41389888505,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41389888505",
+  "artifact": {
+    "id": 13116913436,
+    "name": "m0-wl-full-public-normal-direct",
+    "digest": "sha256:4c8091e30f78225d7bfb673346dc171ada3f51d978e246e77ac266d918891e95"
+  },
+  "linux_artifact": {
+    "id": 13116921475,
+    "name": "m0-plan024-linux-product",
+    "digest": "sha256:f54e5d3d95e7ebb08af55a0c0cf652275ed5c8fbadaa6540a7407e5cb83f29ba"
+  },
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "scene": "plan027-h875-windows-normal-off-10m-25ms-loss0-60s",
+  "scenario_sha256": "cbcff1b553e2edb69b3a5dbaf9c381aa46b90cdfdd101a4666a513a238da9685",
+  "platform": "Windows2025 signed Npcap/Wintun real native to WSL2 Ubuntu/Linux original-Go TLS/Rust TUN",
+  "measured": {
+    "offered_mbps_each_direction": {
+      "windows": 9.9975,
+      "linux": 9.9999
+    },
+    "first_arrival_fraction": {
+      "windows": 1,
+      "linux": 1
+    },
+    "first_delivered_mbps": {
+      "windows": 9.9999,
+      "linux": 9.9975
+    },
+    "duration_s": 60,
+    "delay_ms_each_direction": 25,
+    "loss_pct_each_direction": 0,
+    "tun_mtu": 1400,
+    "outer_repair_requested": "off",
+    "outer_repair_effective": {
+      "windows": 0,
+      "linux": 0
+    },
+    "windows_rust_repair_shadow_limit": 0,
+    "windows_rust_direction_accepted_fresh_bytes": 0,
+    "windows_rust_process_charged_repair_bytes": 0,
+    "windows_npcap_ingress_local_drops": 0,
+    "linux_tun_rx_drops": 0,
+    "linux_tun_tx_drops": 0,
+    "linux_tun_fq_drops": 0,
+    "windows_original_process_cpu_total_s": 2.5156,
+    "windows_original_process_cpu_kernel_s": 1.7344,
+    "windows_original_process_cpu_user_s": 0.7812,
+    "windows_original_process_sample_seconds": 74.297,
+    "windows_original_process_peak_working_set_bytes": 41705472,
+    "windows_original_process_peak_private_bytes": 37990400,
+    "windows_original_process_pid_sample_count": 74,
+    "windows_rust_native_tx_records": 83635,
+    "windows_rust_native_rx_first_ipv4": 83597,
+    "owned_stop": "PASS_BOTH_OWNED",
+    "udp_tcp": "PASS_REAL_KERNEL_BOTH"
+  },
+  "verdict": "FUNCTIONAL_PASS_NORMAL_OFF_CURRENT_SOURCE",
+  "scope_boundary": "One no-loss 10M/25ms 60s signed actual OFF scene, NOT a same-VM ON/OFF CPU delta; Windows original CPU sample includes warmup and Stop; cross-OS one-way p99 NOT_MEASURED; F/R/C not fully metered here; not physical, Game, Fixed or 300s qualification.",
+  "pending": [
+    "same-host OFF→ON paired CPU/RSS",
+    "30%-loss ratio/candidate coverage",
+    "Game/Fixed/Auto ON and OFF appropriate modes",
+    "Windows-origin unilateral Health-dead105",
+    "300s ON long"
+  ]
+}
