@@ -1,3 +1,4 @@
+# H862: corrected unilateral phase inherits validated jitter_ms/full netem fields; exactly one native job, frozen source.
 name: M0 PLAN027 H861 original cold stage unilateral 2Mbps
 on:
   push:

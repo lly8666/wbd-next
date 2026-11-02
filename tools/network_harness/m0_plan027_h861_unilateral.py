@@ -27,10 +27,13 @@ def configuration(scene,source,run):
     cfg["traffic"]["c2s_mbps"]=2
     cfg["traffic"]["s2c_mbps"]=2
     cfg["seed"]=scene["seed"]
-    cfg["phases"]=[{"name":p["name"],"seconds":p["seconds"],"rate_scale":p["scale"],
-                    "c2s":{"delay_ms":25,"loss_pct":p["c2s_loss_pct"],"rate_mbps":0},
-                    "s2c":{"delay_ms":25,"loss_pct":p["s2c_loss_pct"],"rate_mbps":0}}
-                   for p in scene["phases"]]
+    # Keep the existing validated full netem schema (jitter_ms, packet
+    # rate, all kernel-control fields). Only the failed direction and label
+    # differ from the already verified bilateral105 source scene.
+    assert [p["name"] for p in cfg["phases"]]==[
+        "pre20","double_blackhole105","recovery120"]
+    cfg["phases"][1]["name"]="c2s_blackhole105"
+    cfg["phases"][1]["s2c"]["loss_pct"]=0
     return cfg
 
 def stages(path,role):

@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 861,
-  "checkpoint_sha": "377613dec8ea3b2fdd123079a580326c2ba52dfb",
+  "sequence": 862,
+  "checkpoint_sha": "f969e733a7ea875c9721d6271d4221271d521f38",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H861: H859 product original Linux Go cold event timing source377613 build Action41378386073 currently in progress (H860 checkout pin repair), no current product native stage performance. H861 two independent original true105s 100pct kernel blackhole Actions queued on distinct hosted VMs with ONE source build/manifest and 3 hashes reused: existing bilateral10Mbps/25ms clean/120s and new asymmetric c2s-only105s/2Mbps (s2c uninjured) 120s new business. Actual first/p99/TUN/Stop and safe client/server stage timestamp markers decide; source e928 prior bilateral10M INCONCLUSIVE. e387 Windows native seven-mode short functional PASS only. Windows true product OFF/readback missing.",
-  "why_now": "User authorized parallel functional tests; original true dead105 bilateral data isolates ~1.25s constant rejoin gap across 2M/10M but not stage. Source H859 now numeric markers only. Distinct asymmetric one-way Health loss is independently missing and can expose generation mismatch, so freeze same binaries and run two scenarios in parallel without CPU crossover.",
+  "current_task": "PLAN027 H862: H861 unilateral 2Mbps c2s-only 105s Action41378640770 FAILED_PRE_NATIVE because fixture replaced known valid full tc phase descriptors without required jitter_ms; no business injected/Health result. Correct precisely: preserve original bilateral validated phases and change only one phase name + healthy reverse s2c loss_pct=0. Native unilateral retry one independent Action using SAME frozen 377613 original Go/Rust build, no duplicate compilation. Bilateral10Mbps Action41378640754 in progress or results to collect separately. H859 SOURCE build Action41378386073 PASS + three hashes.",
+  "why_now": "True single-direction scenario could not reach netem because rebuilt phase omitted jitter_ms required by LinuxExperiment. This is pre-native fixture shape, not source capacity or authenticated-dead logic. Inherit baseline validated nested structure; avoid second implementation of network config.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H859 builder first and both H861 Actions; classify each native, no unsupported old-source/physical promotion. If one-way fails with healthy reverse lane, target generation handoff rather than repeatedly sweeping rate; if both show 1s event stage, patch exact cold wait/Health tick after proof. Windows product OFF still needs genuine Go+Rust owner disable and readback.",
+  "next_action": "Collect corrected unilateral H862 original real105 once, and H861 independent bilateral10Mbps stage timestamps/first/p99/TUN/Stop; use evidence to diagnose actual fixed1.25s delay. No further seed/sweep, Windows genuine OFF still pending.",
   "unverified": true,
   "last_tested_source": "e928b50cf872b6746a62c56662e5fc0768c5ca45",
   "evidence_refs": [
@@ -19,14 +19,14 @@
     "docs/evidence/M0/PLAN027-H858-E928-ORIGINAL-COLD105-2M-RATE-DIAGNOSTIC-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H854-SHARED-INDEX-AB-LOSS.md",
     "docs/devlog/M0/20261102-PLAN027-H855-FEATURE-SIZE-BOUNDED.md",
     "docs/devlog/M0/20261102-PLAN027-H856-ROLLBACK-ACK-INDEX.md",
     "docs/devlog/M0/20261102-PLAN027-H857-DEAD2M-SOURCE-TUN-DISCRIMINATOR.md",
     "docs/devlog/M0/20261102-PLAN027-H858-DEAD2M-AND-WIN-E387.md",
     "docs/devlog/M0/20261102-PLAN027-H859-COLD-MILESTONES.md",
     "docs/devlog/M0/20261102-PLAN027-H860-EXACT-CHECKOUT-PIN.md",
-    "docs/devlog/M0/20261102-PLAN027-H861-PARALLEL-ONEWAY-BILATERAL.md"
+    "docs/devlog/M0/20261102-PLAN027-H861-PARALLEL-ONEWAY-BILATERAL.md",
+    "docs/devlog/M0/20261102-PLAN027-H862-UNILATERAL-FIXTURE-SCHEMA.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN."

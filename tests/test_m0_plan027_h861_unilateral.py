@@ -13,5 +13,8 @@ class OneWayOriginalCold(unittest.TestCase):
         self.assertEqual([(p["seconds"],p["rate_scale"],p["c2s"]["loss_pct"],p["s2c"]["loss_pct"]) for p in cfg["phases"]],
                         [(20,1,0,0),(105,0,100,0),(120,1,0,0)])
         self.assertEqual(cfg["network"]["lane_loss"],"shared")
+        for p in cfg["phases"]:
+            self.assertIn("jitter_ms",p["c2s"])
+            self.assertIn("jitter_ms",p["s2c"])
 
 if __name__=="__main__":unittest.main()
