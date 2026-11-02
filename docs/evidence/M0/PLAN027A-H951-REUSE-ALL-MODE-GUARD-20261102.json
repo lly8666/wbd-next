@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "h950_dispatcher": 41455490155,
+  "h950_governance": 41455490122,
+  "h950_all_mode_preflight_fail": [
+    41455534980,
+    41455549489
+  ],
+  "failure_class": "TEST_INFRA_REUSE_SCOPE_REJECTED_NOT_NATIVE_PRODUCT_FAIL",
+  "exact_error": "WL_SOURCE_REUSE_REQUIRES_ONE_MODE_NO_N0",
+  "h950_valid_single_mode_run_ids": [
+    41455559195,
+    41455568369,
+    41455580129,
+    41455589665
+  ],
+  "product_source": "adc63a8b8af209dbe589d072403b7bceae8e038b",
+  "product_artifact_run": 41452689481,
+  "repair": "Dispatch only missing 11 one-mode native jobs, no all-mode source reuse or recompile; keep failed Actions",
+  "missing_scenes": [
+    "default1460 fixed",
+    "default1460 game2",
+    "default1460 game4",
+    "default1460 game2-fec",
+    "explicit1500 normal",
+    "explicit1500 fixed",
+    "explicit1500 auto",
+    "explicit1500 game2",
+    "explicit1500 game4",
+    "explicit1500 game2-fec",
+    "explicit1500 game4-fec"
+  ],
+  "current_qualification": "NOT_RUN_PENDING_H951_ACTIONS",
+  "remaining_exits": [
+    "DF0/DF1 real native",
+    "Game4 staged loss5→30→5",
+    "current source ARM64",
+    "PLAN028 multi-client/session/lane rotations"
+  ]
+}

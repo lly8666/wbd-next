@@ -1,0 +1,75 @@
+# H951 follows the actual H950 preflight refusal: source reuse requires one mode.
+# Keep that guard. Dispatch one native mode per Actions job and reuse H948 artifacts.
+name: M0 PLAN027A H951 11 remaining prebuilt single-mode native scenes
+run-name: "M0|PLAN027A-H951-REUSE-11-MODES|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027a-h951-single-modes-once.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  dispatch-eleven:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[plan027a-h951-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      FROZEN_RUN: "41452689481"
+      FROZEN_SHA: "adc63a8b8af209dbe589d072403b7bceae8e038b"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Refuse changed product source, stale/missing binaries and old runner provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$FROZEN_RUN" --jq .head_sha)" = "$FROZEN_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$FROZEN_RUN" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$FROZEN_RUN/artifacts" --jq '.artifacts[].name' >/tmp/h951-artifacts
+          grep -Fx "m0-wl-windows-product-binaries-$FROZEN_SHA" /tmp/h951-artifacts
+          grep -Fx m0-plan024-linux-product /tmp/h951-artifacts
+          git fetch --depth=1 origin "$FROZEN_SHA"
+          delta="$(git diff --name-only "$FROZEN_SHA" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py)"
+          test -z "$delta" || { echo "H951_REFUSE_PRODUCT_DELTA $delta"; exit 1; }
+          python3 -m unittest tests.test_m0_wl_native_mtu_contract -v
+          echo H951_PRODUCT_UNCHANGED_REUSE_ONLY
+      - name: Run eleven independently scoped mode checks (no 'all' reuse and no rebuild)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          # H950 independently covers default1460 normal, auto, and game4-fec.
+          # Complete the remaining default1460 four modes and all seven 1500 modes.
+          rows=(
+            'fixed|default1460'
+            'game2|default1460'
+            'game4|default1460'
+            'game2-fec|default1460'
+            'normal|1500'
+            'fixed|1500'
+            'auto|1500'
+            'game2|1500'
+            'game4|1500'
+            'game2-fec|1500'
+            'game4-fec|1500'
+          )
+          for item in "${rows[@]}"; do
+            IFS='|' read -r mode outer <<<"$item"
+            wanted="M0-WIN-LINUX|$GITHUB_SHA|$mode|no-scene|outer=$outer"
+            prior="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+              jq -r --arg title "$wanted" '.workflow_runs[] | select(.display_title==$title) | .id' | head -1)"
+            if [ -n "$prior" ]; then
+              echo "H951_ALREADY_DISPATCHED $prior mode=$mode outer=$outer"
+              continue
+            fi
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f "public_mode=$mode" -f run_n0=false -f outer_repair=on \
+              -f "native_outer_mtu=$outer" -f perf_scenario_file= \
+              -f "perf_reuse_run_id=$FROZEN_RUN" \
+              -f "perf_binary_source_sha=$FROZEN_SHA"
+            echo "H951_QUEUED_NOT_PASS mode=$mode outer=$outer product=$FROZEN_SHA"
+          done
+          echo H951_ELEVEN_ONE_MODE_SOURCE_VERIFIED_DISPATCH_COMPLETE_NOT_QUALIFIED
