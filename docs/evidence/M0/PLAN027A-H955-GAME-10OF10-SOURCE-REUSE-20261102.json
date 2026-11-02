@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "observation": "2026-11-02",
+  "h955_status": "SCOPED_GAME_NATIVE_TEN_OF_TEN_SUCCESS_NOT_PLAN027A_ALL_DONE",
+  "h952_product_source_sha": "54160ac88b9b41d10f4c3f885879dd68646466a0",
+  "h954_harness_source_sha": "02bb4599e12902d0260ac22836a1cd5666131390",
+  "h952_sole_new_build_run": 41456643128,
+  "h952_sole_new_build_conclusion": "success",
+  "h952_windows_wal_run": 41456643143,
+  "h952_windows_wal_conclusion": "success",
+  "h954_one_shot_dispatcher": 41457592694,
+  "h954_dispatcher_conclusion": "success",
+  "game_native_boundary_runs": [
+    {
+      "mode": "game2",
+      "outer": "default1460",
+      "run": 41458474044,
+      "status": "PASS"
+    },
+    {
+      "mode": "game4",
+      "outer": "default1460",
+      "run": 41458487303,
+      "status": "PASS"
+    },
+    {
+      "mode": "game2-fec",
+      "outer": "default1460",
+      "run": 41458501914,
+      "status": "PASS"
+    },
+    {
+      "mode": "game4-fec",
+      "outer": "default1460",
+      "run": 41458516672,
+      "status": "PASS"
+    },
+    {
+      "mode": "game2",
+      "outer": "1500",
+      "run": 41458534163,
+      "status": "PASS"
+    },
+    {
+      "mode": "game4",
+      "outer": "1500",
+      "run": 41458544890,
+      "status": "PASS"
+    },
+    {
+      "mode": "game2-fec",
+      "outer": "1500",
+      "run": 41458560346,
+      "status": "PASS"
+    },
+    {
+      "mode": "game4-fec",
+      "outer": "1500",
+      "run": 41458575604,
+      "status": "PASS"
+    }
+  ],
+  "game_native_boundary_result": "8_OF_8_PASS",
+  "game4fec3mbps_native_measurements": [
+    {
+      "run": 41458588765,
+      "mode": "game4-fec",
+      "outer": "default1460",
+      "rate_mbps": 3,
+      "delay_ms": 25,
+      "loss_pct": 0,
+      "duration_s": 60,
+      "p99_ms_windows_direction": 188,
+      "p99_ms_linux_direction": 182.6,
+      "verified_windows_inner_mtu": 1389,
+      "linux_actual_inner_os_mtu": 1298,
+      "status": "PASS"
+    },
+    {
+      "run": 41458603763,
+      "mode": "game4-fec",
+      "outer": "default1460",
+      "rate_mbps": 3,
+      "delay_ms": 250,
+      "loss_pct": 30,
+      "duration_s": 60,
+      "p99_ms_windows_direction": 672,
+      "p99_ms_linux_direction": 646.504,
+      "verified_windows_inner_mtu": 1389,
+      "linux_actual_inner_os_mtu": 1298,
+      "status": "PASS"
+    }
+  ],
+  "game4fec3mbps_result": "2_OF_2_PASS",
+  "new_source_native_game_total": "10_OF_10_PASS",
+  "windows_inner_mtu_numeric_checked_before_ready": true,
+  "native_signed_kernel_original_go_rust_verified": true,
+  "reused_artifact_names": [
+    "m0-wl-windows-product-binaries-54160ac88b9b41d10f4c3f885879dd68646466a0",
+    "m0-plan024-linux-product"
+  ],
+  "reused_artifact_run": 41456643128,
+  "build_skipped_in_h954_all_scenes": true,
+  "non_game_existing_h948_prebuilt_pass": {
+    "default1460": [
+      41455559195,
+      41455933778,
+      41455589665
+    ],
+    "explicit1500": [
+      41455979188,
+      41455989497,
+      41455999662
+    ],
+    "scope": "H948 compiled product unchanged Normal/Fixed/Auto paths; not source-exact H952 binary"
+  },
+  "earlier_failures_not_erased": {
+    "h950_illegal_all_mode_preflight": [
+      41455534980,
+      41455549489
+    ],
+    "old_h948_game_missing_numeric_receipt": [
+      41455568369,
+      41455580129,
+      41455945995,
+      41455955926,
+      41455967172,
+      41456015945,
+      41456027141,
+      41456037313,
+      41456048225
+    ],
+    "h953_orchestrator_empty_pending_bug": 41457351564
+  },
+  "remaining_exits": {
+    "real_df0_df1_oversize": "NOT_RUN",
+    "game4fec_native_5_30_5_staged": "NOT_RUN",
+    "new_source_arm64": "NOT_RUN",
+    "full_game_cpu_rss_capacity_generalization": "NOT_QUALIFIED",
+    "PLAN028_auth_single_port_multi_client_rotation": "NOT_STARTED",
+    "PLAN029_030": "NOT_STARTED"
+  },
+  "outer_ipv4_ip_mtu_default_bytes": 1460,
+  "outer_ipv4_ip_mtu_explicit_max_bytes": 1500,
+  "remark": "Directional p99 is harness app latency sample, not calibrated one-way OS clocks. Do not derive new default from explicit1500."
+}
