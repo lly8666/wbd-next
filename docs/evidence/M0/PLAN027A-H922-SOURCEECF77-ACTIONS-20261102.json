@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "stage": "FIRST_CODE_BATCH_NOT_FINAL",
+  "product_source_sha": "ecf77e78cd0b12b82e51a9d9f614aa96b59137d6",
+  "unit_build_scope": "SOURCE_EXACT_BUILD_PASS",
+  "actions": {
+    "r0_record_wire_framing": {
+      "id": 41432365543,
+      "status": "PASS"
+    },
+    "r0_wire_codec": {
+      "id": 41432365522,
+      "status": "PASS"
+    },
+    "r0_v4_cold_native": {
+      "id": 41432365493,
+      "status": "PASS"
+    },
+    "r0_cross_abi": {
+      "id": 41432365479,
+      "status": "PASS"
+    },
+    "r0_link_fec_mtu": {
+      "id": 41432365408,
+      "status": "PASS"
+    },
+    "governance": {
+      "id": 41432365461,
+      "status": "FAIL",
+      "cause": "feature-impact missing in changed devlog"
+    },
+    "normal_common": {
+      "id": 41432365444,
+      "status": "FAIL",
+      "cause": "cfg-off dead_decision undeclared in embedded Go owner"
+    },
+    "native_functional": {
+      "id": 41432365471,
+      "status": "IN_PROGRESS_AT_RECOVERY"
+    }
+  },
+  "product_native_seven_mode_boundary": "NOT_RUN",
+  "windows_os_applied": "NOT_RUN",
+  "ipv4_df_fragment_icmp": "NOT_RUN",
+  "weaknet": "NOT_RUN",
+  "protect_cpu_rss_p99": "NOT_RUN",
+  "physical": "NOT_RUN",
+  "no_duplicate_dispatch": true,
+  "historical_plan027_failures": "UNCHANGED",
+  "qualification": "This is first batch build/compiled oracle only; not an applied native MTU or full PLAN027A PASS."
+}

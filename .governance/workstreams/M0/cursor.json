@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 920,
-  "checkpoint_sha": "f99cb27c64b7422dbdb049fe18a46b759a31d834",
-  "progress": "planned",
+  "sequence": 922,
+  "checkpoint_sha": "ecf77e78cd0b12b82e51a9d9f614aa96b59137d6",
+  "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "H920 USER_ACCEPTED_SCOPED PLAN027 closeout: existing H908 product source exact signed native functional/capacity evidence accepted with explicit nonqualifications. No new product run. Outer repair existing feature ID updated. Next PLAN027A is PLANNED, code NOT_RUN.",
-  "why_now": "User explicitly authorized M0 one-time read/write PLAN027 closeout and asked to stop redundant experiments; retain all historical FAIL and NOT_MEASURED. H919 governance PASS, no in-progress Actions.",
+  "current_task": "PLAN027A H922 first actual main product batch ecf77e78: Rust GameFEC 1398 and raw SYN MSS DATA options, versioned pure cold C ABI, Linux cold pre-TLS and authenticated readback written; governance missing changed devlog declaration, Normal Common no-feature dead_decision compile failure being fixed in follow-up. No new native MTU measurements.",
+  "why_now": "Recovery verified PLAN027 USER_ACCEPTED_SCOPED closed; no old Actions inflight on entry. New source push has auto CI only; do not dispatch duplicate native scenarios.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion.",
-  "next_action": "Start docs/prompts/M0-PLAN027A.md from one typed V4 budget/Go cold ABI, fix GameFEC missing 1B (1399->1398); run finite actual wire/native MTU/DF regression only after source freeze. Do not repeat PLAN027 matrix.",
+  "next_action": "After no-feature build/doc gate correction, finish Windows outer vs Wintun inner ABI and real outer MSS cold offer; audit all oversize IPv4 DF/fragment/error paths then freeze source and run bounded native boundary tests. Preserve old SOURCE and FAIL/NOT_RUN.",
   "unverified": true,
   "last_tested_source": "6693910f879f9e55e77dd823c1b05d8942321929",
   "evidence_refs": [
@@ -28,8 +28,10 @@
     "docs/decisions/M0-PLAN027A-MTU-UNIFICATION-20261102.md",
     "docs/architecture/MTU_CONTRACT.md",
     "docs/prompts/M0-PLAN027A.md",
-    "docs/devlog/M0/20261102-PLAN027-H918-FOUR-ACTIONS-POSTGATE.md"
+    "docs/devlog/M0/20261102-PLAN027-H918-FOUR-ACTIONS-POSTGATE.md",
+    "docs/evidence/M0/PLAN027A-H922-SOURCEECF77-ACTIONS-20261102.json",
+    "docs/devlog/M0/20261102-PLAN027A-H922-RECOVER-FIRST-CODE.md"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN027 closed within USER-ACCEPTED SOURCE-LOCKED scope, NOT all-mode/formal release: normal ON300, Auto ON240 Linux server grade4->3->2->1, Fixed6 OFF50 capacity CPU~66% single core, Game4FEC ON10/OFF20 highloss, H908 unilateral105s recovered, both owned Stop. 100Mbps same Windows VM OFF CPU16.4062s vs ON19.2188s, NO proven optimization. Burst original Action41424741198 FAILED though native child PASS. Game aggregate FRC/oneway p99/Windows Auto client/physical/GUI switch/independent TCP+UDP300 NOT_MEASURED or NOT_PROVEN. PLAN027A budget 1398/DF work remains PLANNED."
+  "partial_summary": "H922 source ecf77e78: r0-record-wire, wire-codec, cold-native, cross-abi, native-abi, link-fec-mtu, static audit PASS (build/unit scope); governance feature catalog FAIL missing feature-impact; NORMAL-COMMON FAIL no-feature dead_decision; remaining automatic Actions pending. No seven-mode IP/DF/native qualification. Existing PLAN027 scoped H920 evidence unchanged."
 }

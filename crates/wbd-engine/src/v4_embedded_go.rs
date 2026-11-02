@@ -6382,6 +6382,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     e.native_retire_notice_due=true;
                     false
                 }).unwrap_or(false);
+                // Without the optional FEC2 product feature, no native
+                // retirement notice exists; preserve the old non-FEC clock.
+                #[cfg(not(feature="fec2_product_record"))]
+                let dead_decision=false;
                 if dead_decision{
                     eprintln!("WBD_M0_NATIVE_HEALTH_TIMEOUT side=tx reason=authenticated_dead_or_peer_retired");
                     stats.tx_error.fetch_add(1,Ordering::Relaxed);
