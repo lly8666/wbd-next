@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "source_sha": "b74728ba0b1ee45c632c31117fc8c08c042e11a0",
+  "fixture_sha": "c298b292cf2765e4b9adc5bfeafb924cfb8b489d",
+  "run_id": 41385220985,
+  "artifact_name": "plan027-h867-retire-oneway-c2s105-2m",
+  "binary_sha256": {
+    "wbd-v4-client": "79c9b84758628b548ce33d32ba1867a97c01c97f8daf5134a51bbe57cb3d838d",
+    "wbd-v4-server": "ea7fa23ac679bba6a4eef4a6197e8d7d000bba08fc55e783b33e74cb8d70d6df",
+    "libwbd_engine.so": "8351a0fc3b792dae6e1d2a0531320459022ab83c7be99fed799adcb4d8e8ece9"
+  },
+  "verdict": "PASS_SCOPED_UNILATERAL_HEALTH_REJOIN_LOW_RATE",
+  "native_result": "PASS_SCOPED_OBSERVATION",
+  "native_failures": [],
+  "native_limits": [],
+  "scope": "Real original Go TLS Rust M4 Normal outer OFF c2s-only105s true100% Linux tc while s2c healthy, 0 application/probes during dead phase, 20s pre and 120s recovered genuine UDP each2Mbps 25ms one-way; new native authentication generation and owned Stop",
+  "theory": {
+    "weighted_mean_payload_bytes": 753.6,
+    "offered_pps_each": 331.74,
+    "RTT_ms": 50,
+    "app_BDP_bytes_each": 12500
+  },
+  "netem_dead105_drop": {
+    "client": 9,
+    "server": 0
+  },
+  "recovery": {
+    "c2s": {
+      "offered_mbps": 2.0000170666666666,
+      "first_fraction": 1,
+      "missing": 0,
+      "p99_delivered_only_ms": 49.5
+    },
+    "s2c": {
+      "offered_mbps": 2,
+      "first_fraction": 1,
+      "missing": 0,
+      "p99_delivered_only_ms": 73.4
+    }
+  },
+  "source_TUN_kernel_drops": {
+    "client": 0,
+    "server": 0
+  },
+  "max_zero_delivery_udp_ms": {
+    "c2s": 1230,
+    "s2c": 1260
+  },
+  "cold_stages_unix_ms": {
+    "server": {
+      "dead_drained": 1793591577692,
+      "first_syn": 1793591593311,
+      "native_ready": 1793591593519
+    },
+    "client": {
+      "dead_drained": 1793591578176,
+      "tun_trigger": 1793591592283,
+      "syn_start": 1793591592285,
+      "syn_established": 1793591593336,
+      "native_ready": 1793591593495
+    }
+  },
+  "cold_phase_elapsed_ms": {
+    "client_syn": 1050,
+    "client_TLS_Rust_native_ready": 158,
+    "server_accept_to_ready": 158,
+    "dead_drain_asymmetry": 484
+  },
+  "original_go_rx_handoff_verified_both_generations": true,
+  "owned_stop": true,
+  "owned_namespaces_absent": true,
+  "process_cpu_s_steady": {
+    "client": 3.81,
+    "server": 3.88
+  },
+  "rss_peak_bytes": {
+    "client": 19431424,
+    "server": 24612864
+  },
+  "host_PSI_some_peak_pct": 42.6,
+  "host_steal_pct_peak": 0,
+  "comparison_old_source": {
+    "source_sha": "377613dec8ea3b2fdd123079a580326c2ba52dfb",
+    "run_id": 41378829504,
+    "first_fraction": {
+      "c2s": 0.4688205327314541,
+      "s2c": 0.5153102693523682
+    },
+    "missing": {
+      "c2s": 21166,
+      "s2c": 19296
+    },
+    "dead_drain_asymmetry_ms": 78405,
+    "max_zero_delivery_udp_ms": 64110
+  },
+  "limits": [
+    "Same controlled scenario but different hosted VM, first/Stop and elapsed evidence legitimate not a same-VM CPU A/B",
+    "No explicit retired kind1 wire receive count in sanitized log: 484ms convergence consistent with authenticated signal, not direct per-record proof",
+    "True 105s unilateral 2Mbps qualification only; no 10Mbps unilateral or Windows full native claim",
+    "1.23/1.26s zero delivery remains, single SYN took1050ms; not low-latency seamless claim",
+    "Host PSI peak42.6% is real, no source TUN loss, no causal host attribution",
+    "No physical or long rotation source"
+  ]
+}

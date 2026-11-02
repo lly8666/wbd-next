@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "source_sha": "b74728ba0b1ee45c632c31117fc8c08c042e11a0",
+  "fixture_sha": "c298b292cf2765e4b9adc5bfeafb924cfb8b489d",
+  "run_id": 41385221081,
+  "artifact_name": "plan027-h867-retire-bilateral105-10m",
+  "binary_sha256": {
+    "wbd-v4-client": "79c9b84758628b548ce33d32ba1867a97c01c97f8daf5134a51bbe57cb3d838d",
+    "wbd-v4-server": "ea7fa23ac679bba6a4eef4a6197e8d7d000bba08fc55e783b33e74cb8d70d6df",
+    "libwbd_engine.so": "8351a0fc3b792dae6e1d2a0531320459022ab83c7be99fed799adcb4d8e8ece9"
+  },
+  "verdict": "PASS_SCOPED_REAL_DOUBLE_BLACKHOLE105_RECOVER120_NEW_BUSINESS",
+  "native_result": "PASS_SCOPED_OBSERVATION",
+  "native_failures": [],
+  "native_limits": [],
+  "scope": "Real original Go TLS Rust M4 Normal repair OFF 20s before/105s true both-way tc100%/120s new real UDP each10Mbps 25ms clean on active, no app/probes in dead105. Independent Action from unilateral, same original product SHA bundle.",
+  "theory": {
+    "weighted_mean_payload_bytes": 753.6,
+    "offered_pps_each": 1658.7,
+    "RTT_ms": 50,
+    "app_BDP_bytes_each": 62500
+  },
+  "netem_dead105_drop": {
+    "client": 8,
+    "server": 9
+  },
+  "pre20": {
+    "offered_mbps": {
+      "c2s": 10.000608,
+      "s2c": 10.000128
+    },
+    "first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "delivered_p99_ms": {
+      "c2s": 25.4,
+      "s2c": 25.4
+    }
+  },
+  "dead105": {
+    "offered_mbps": {
+      "c2s": 0,
+      "s2c": 0
+    }
+  },
+  "recovery120": {
+    "offered_mbps": {
+      "c2s": 10.0000768,
+      "s2c": 10.0000768
+    },
+    "first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "missing": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "p99_delivered_only_ms": {
+      "c2s": 25.4,
+      "s2c": 25.4
+    }
+  },
+  "source_TUN_kernel_drops": {
+    "client": 0,
+    "server": 0
+  },
+  "max_zero_delivery_udp_ms": {
+    "c2s": 230,
+    "s2c": 260
+  },
+  "cold_stages_unix_ms": {
+    "client": {
+      "dead_drained": 1793591576536,
+      "tun_trigger": 1793591590688,
+      "syn_start": 1793591590692,
+      "syn_established": 1793591590743,
+      "native_ready": 1793591590900
+    },
+    "server": {
+      "dead_drained": 1793591576080,
+      "first_syn": 1793591590718,
+      "native_ready": 1793591590924
+    }
+  },
+  "cold_phase_elapsed_ms": {
+    "client_syn": 50,
+    "client_TLS_Rust_native_ready": 157,
+    "server_accept_to_ready": 156,
+    "dead_drain_asymmetry": 456
+  },
+  "original_Go_Rust_handoff": true,
+  "owned_stop": true,
+  "owned_netns_absent": true,
+  "cpu_s_steady": {
+    "client": 7.64,
+    "server": 7.68
+  },
+  "rss_peak_bytes": {
+    "client": 22605824,
+    "server": 26431488
+  },
+  "host_PSI_some_peak_pct": 41.12,
+  "host_steal_pct_peak": 0,
+  "prior_same_source_run": {
+    "run_id": 41383536749,
+    "logged_process_verdict": "FAIL_OR_INCONCLUSIVE",
+    "artifact": "NONE_UPLOADED_DUE_TO_H867_OLD_OUTPUT_PATH",
+    "underlying_failure_reason": "NOT_RECOVERABLE_FROM_EXISTING_LOG",
+    "does_not_vanish": true
+  },
+  "limits": [
+    "One current PASS is positive native business evidence but prior same SOURCE 41383536749 unexplained FAIL_OR_INCONCLUSIVE remains; do not manufacture host cause from lack of artifact",
+    "Actual true100% qdisc sampled small drops8/9 during no-business segment, not high PPS stress during blackhole",
+    "No Windows/physical or independent key rotation proof",
+    "F/R/C outside phase not measured in these lifecycle scenarios"
+  ]
+}

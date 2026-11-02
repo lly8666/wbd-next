@@ -4,31 +4,33 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 869,
-  "checkpoint_sha": "c298b292cf2765e4b9adc5bfeafb924cfb8b489d",
+  "sequence": 870,
+  "checkpoint_sha": "afde7f41f341dfbee8bd7dc045e5f4fc5e3ea222",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H869: H868 independent b747 authenticated-retire original Linux unilateral105 2Mbps and bilateral105 10Mbps real Actions in flight after exact fixed upload roots; same immutable source/hashes no recompilation. New H869 Windows owner adaptation only: Windows original M3 AEAD+replay-unique kind1 peer_retire now marks current generation HealthClock dead before NativeOwner returns authenticated-dead to original Go TLS reauth, precise test of readback/closed owner. This does NOT add Windows outgoing retire-on-health-dead, nor real Windows repair OFF or Windows native full reconnect; Windows performance/real unilateral NOT_RUN. H864 source377 300s Normal ON & Game4/FEC6 ON PASS only old source.",
-  "why_now": "Shared Rust parser already accepts explicit replay-verified kind1 retire marker but Windows receiver m2_authenticated_kind1_entry silently treated it as ordinary Health, so Linux-server→Windows-client unilateral rejoin would remain stale. Apply the same HealthClock state transition only after Windows original M3 kind1 AEAD/unique PN, no new wire/probe/timers or Windows sender change, and qualify using existing owner ABI test.",
+  "current_task": "PLAN027 H870: H868 corrected result upload two independent frozen source b747 original Linux real Actions COMPLETE with true native measurement json. Unilateral c2s-only105s reverse healthy 2Mbps restored first100/100, missing0/0, TUN0/0, CPU3.81/3.88s, Stop PASS, dead_drained server/client separated484ms (old source377 separation78.405s; old first46.88/51.53%, 64s gap). But 1.23/1.26s zero delivery, client original SYN 1050ms, not seamless; no explicit on-wire retire count. Bilateral true105s both 10Mbps restored first100/100 p9925.4, TUN0, zero-delivery230/260ms, Stop PASS, CPU7.64/7.68s. Old b747 bilateral Action41383536749 result FAIL_OR_INCONCLUSIVE without artifact from path mismatch remains unexplained, cannot claim failure cause VM. H869 Windows original M3 peer_retire RX adapter source afde7f Windows owner ABI CI in flight, Windows outbound retire not yet implemented; Windows real OFF/ON/rotation open. H864 source377 ON300 Normal and Game4/FEC6 PASS old SOURCE only.",
+  "why_now": "H868 real JSON collected from the two previously orphaned measurements: exact same immutable b747 product hash/fixture, demonstrable first/Stop and 78s→0.484s native-generation convergence plus bilateral10Mbps regression, but conflicting earlier bilateral run remains and low-rate 1.25s wake gap persists. No seed sweeps or blind RETIRE edits warranted. Windows owner consume was independently missing, H869 adapter CI underway.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H868 two original Linux native source b747 receipts incl recovered first/TUN/Stop; if bilateral FAIL locate real failure before modifying protocol again. H869 Windows owner ABI test outcome; if valid complete symmetric Windows outgoing retire and true Windows repair OFF config/effective readback as separate product work, then Windows native tests. Do not infer Windows full native PASS from Rust unit.",
+  "next_action": "Collect H869 Windows Rust owner ABI outcome; if tests PASS, add necessary symmetric Windows outbound authenticated retirement under native Health-dead using original M4 budget, then real Windows signed scenario. Separately Windows explicit outer OFF setting + actual Rust M2 effective readback and same-VM ON/OFF qualify; verify key/lane rotation after lifecycle. Do not repeat source b747 unilateral/bilateral for noise, historical prior failure still noted.",
   "unverified": true,
   "last_tested_source": "377613dec8ea3b2fdd123079a580326c2ba52dfb",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H863-3776-BILATERAL105-10M-PASS-20261102.json",
     "docs/evidence/M0/PLAN027-H863-3776-UNILATERAL105-2M-FAIL-20261102.json",
     "docs/evidence/M0/PLAN027-H866-3776-GAME4FEC6-ON20M30-20261102.json",
-    "docs/evidence/M0/PLAN027-H866-3776-NORMAL-ON300-MIXED-HOL-20261102.json"
+    "docs/evidence/M0/PLAN027-H866-3776-NORMAL-ON300-MIXED-HOL-20261102.json",
+    "docs/evidence/M0/PLAN027-H870-B747-AUTH-RETIRE-UNILATERAL105-2M-PASS-20261102.json",
+    "docs/evidence/M0/PLAN027-H870-B747-AUTH-RETIRE-BILATERAL105-10M-PASS-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H862-UNILATERAL-FIXTURE-SCHEMA.md",
     "docs/devlog/M0/20261102-PLAN027-H863-PARALLEL-BILATERAL-PASS-UNILATERAL-FAIL.md",
     "docs/devlog/M0/20261102-PLAN027-H864-INDEPENDENT-LONG-AND-GAME.md",
     "docs/devlog/M0/20261102-PLAN027-H865-AUTHENTICATED-RETIRE.md",
     "docs/devlog/M0/20261102-PLAN027-H866-RETIRE-COMPILE-AND-ON-EVIDENCE.md",
     "docs/devlog/M0/20261102-PLAN027-H867-RETIRE-UNILATERAL-BILATERAL.md",
     "docs/devlog/M0/20261102-PLAN027-H868-COLLECT-H867-MISSING-RECEIPTS.md",
-    "docs/devlog/M0/20261102-PLAN027-H869-WINDOWS-AUTH-RETIRE-RECEIVER.md"
+    "docs/devlog/M0/20261102-PLAN027-H869-WINDOWS-AUTH-RETIRE-RECEIVER.md",
+    "docs/devlog/M0/20261102-PLAN027-H870-COLLECT-NATIVE-LIFECYCLE.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."
