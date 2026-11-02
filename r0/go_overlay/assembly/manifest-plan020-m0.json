@@ -647,7 +647,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_udp_kernel_driver_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
-      "result_blob": "90cd3240c26b21efaba0edae1b491705e82b2d39"
+      "result_blob": "47dc99a5053b20bf97b43b140791d80c63e681ff"
     },
     {
       "kind": "create",
@@ -671,7 +671,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
-      "result_blob": "4bec983f315ffaad93ccc6982a78575d79c950a7"
+      "result_blob": "eea43af17133746d13278eaa2e51255b99c43256"
     },
     {
       "kind": "create",
@@ -731,7 +731,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_peer_windows.go",
-      "result_blob": "b910ddac839731e4a46a55331647e9da0acadde4"
+      "result_blob": "e3a69b70d21aa49c8377def9b27a8e61a34dec3d"
     },
     {
       "kind": "create",

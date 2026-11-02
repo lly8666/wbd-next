@@ -17,6 +17,9 @@ import (
 )
 
 var ErrN4NativeNoPacket=errors.New("original native Wintun kernel ring has no packet ready")
+// This packet is already fully released from the original Wintun ring.
+// It is not an OS/WFP/credential failure and must not stop other traffic.
+var ErrN4NativeFrameOversize=errors.New("original native Wintun IPv4 packet exceeds receiving scratch; single frame discarded")
 
 // Exactly one live native kernel sender/receiver lease can own a particular
 // process-created Wintun. An attacker-provided generation with the SAME
@@ -172,9 +175,13 @@ func (d *N4OriginalKernelPacketLease) n4ReceiveReadyIPv4(
             return 0,ErrInvalidBinding
         }
         if packetSize>uint32(len(dst)){
+            // No truncated copy and NO owner Stop: already released this
+            // one full packet, preserve the live Wintun ring generation.
+            // A correctly configured Windows IP stack ordinarily fragments
+            // DF0 or returns EMSGSIZE for DF1 before the ring is reached.
             wintunReleaseReceivePacket.Call(d.tun.session,packet)
             d.rejected++
-            return 0,io.ErrShortBuffer
+            return 0,ErrN4NativeFrameOversize
         }
         n:=copy(dst,wire)
         wintunReleaseReceivePacket.Call(d.tun.session,packet)

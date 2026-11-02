@@ -283,6 +283,10 @@ func(p *m0NativeV4Peer) transmitReadySourceBatch(
  for slot:=0;slot<limit;slot++{
   n,err:=p.ring.ReceiveReadyIPv4(ctx,p.scratch)
   if errors.Is(err,windowsclient.ErrN4NativeNoPacket){break}
+  if errors.Is(err,windowsclient.ErrN4NativeFrameOversize){
+   p.mu.Lock();p.oversize++;p.mu.Unlock()
+   dropped++;continue
+  }
   if err!=nil{
    if errors.Is(err,context.Canceled){return dropped,err}
    if n==0{
@@ -365,6 +369,10 @@ func(p *m0NativeV4Peer) transmitOne(ctx context.Context)(bool,error){
     len(p.pending)>=m0V4TxPendingMax{return false,nil}
  n,err:=p.ring.ReceiveReadyIPv4(ctx,p.scratch)
  if errors.Is(err,windowsclient.ErrN4NativeNoPacket){return false,nil}
+ if errors.Is(err,windowsclient.ErrN4NativeFrameOversize){
+  p.mu.Lock();p.oversize++;p.mu.Unlock()
+  return true,nil
+ }
  if err!=nil{
   if errors.Is(err,context.Canceled){return false,err}
   // A malformed/oversize real kernel frame is an explicit failed copy,

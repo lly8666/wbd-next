@@ -148,6 +148,10 @@ func(p *m0NativeV4GamePeer) send(ctx context.Context,rec realityfront.V4WindowsG
 func(p *m0NativeV4GamePeer) transmit(ctx context.Context)(bool,error){
  n,err:=p.ring.ReceiveReadyIPv4(ctx,p.scratch)
  if errors.Is(err,windowsclient.ErrN4NativeNoPacket){return false,nil}
+ if errors.Is(err,windowsclient.ErrN4NativeFrameOversize){
+  p.mu.Lock();p.mtuDrops++;p.mu.Unlock()
+  return true,nil
+ }
  if err!=nil{return false,err}
  if n<20||n>p.maxIPv4{
   // A malformed/oversize genuine Wintun packet is a local negative

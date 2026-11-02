@@ -32,7 +32,10 @@
     "r0/go_overlay/internal/realityfront/bridge_v4_windows_wintun_lease.go",
     "r0/go_overlay/internal/windowsownerlease/original_tls_native_product_windows.go",
     "crates/wbd-platform/src/ipv4_fragment.rs",
-    "crates/wbd-engine/src/v4_game_public_kernel.rs"
+    "crates/wbd-engine/src/v4_game_public_kernel.rs",
+    "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_peer_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go"
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
@@ -143,7 +146,8 @@
     "H927 Windows legacy Go MTU budget fixture retired; versioned Rust cold ABI is the only numeric implementation. Exact Rust unit vectors and Windows C layout/mode mapping are separate tests, not Win32 OS Applied qualification.",
     "H928 Rust RFC791 bounded DF0 fragment helper and RFC1191 ICMP3/4 pure builder implemented; Linux Game kernel TX only wires a <=32-fragment/4-per-turn DF0 fallback. DF1 builder has no live TUN writer in this batch, Windows/Normal FEC fallback and all native PMTU/weaknet NOT_RUN.",
     "H928 platform build FAIL E0502 header checksum concurrent borrow; H929 narrowly fixes shared helper and test borrow ordering, awaiting exact SOURCE Rust tests.",
-    "H930 Linux Game worker DF1 local ICMP3/4 applies only if cold trusted OS TUN IPv4 exists; per second <=20 local kernel writes, still requires real native DF1/EMSGSIZE/ICMP and two-direction measurements. Normal FEC/Windows stay pending."
+    "H930 Linux Game worker DF1 local ICMP3/4 applies only if cold trusted OS TUN IPv4 exists; per second <=20 local kernel writes, still requires real native DF1/EMSGSIZE/ICMP and two-direction measurements. Normal FEC/Windows stay pending.",
+    "H931 Windows M4 existing receive-ring oversized frame is explicitly a nonfatal one-packet outcome (Normal/FEC/Game), not io.ErrShortBuffer owner Stop; there is no claim of Wintun/FEC/Game LINK or real DF0 fallback. Native giant-UDP/DF1 still NOT_RUN."
   ],
   "promotion": null
 }
