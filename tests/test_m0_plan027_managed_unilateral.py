@@ -32,6 +32,10 @@ class ManagedUnilateral(unittest.TestCase):
   guard="if($env:WBD_WL_PUBLIC_MODES -notmatch '^game[24]-fec$' -and -not $longNative){throw 'MANAGEMENT_ROUTE_SCOPE_REFUSED'}"
   self.assertEqual(text.splitlines().count(guard),1)
   self.assertEqual(text.count("MANAGEMENT_ROUTE_SCOPE_REFUSED"),1)
+  self.assertEqual(text.count("function Save-Lease($v){"),1)
+  self.assertEqual(text.count("function Undo-Lease($v){"),1)
+  self.assertEqual(text.count("if($env:GITHUB_ACTIONS -ne"),1)
+  self.assertLess(len(text.splitlines()),85)
   self.assertNotIn("'^game[24]-fec\\n",text)
  def test_workflow_does_not_call_native_before_management_pin(self):
   s=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
