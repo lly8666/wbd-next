@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "d4990f8c97b734bed546f99300b7d590e65a5e05",
+  "result": "PASS_SCOPED_REAL_NATIVE_BOTH_OS",
+  "run_id": 41399819159,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41399819159",
+  "scenario_id": "plan027-h890-normal-on-10m-25ms0-300s",
+  "scenario_sha256": "d2a1ec9bc7c9c8642231e06201d56930303e4a07b48adbcfa59224aa8759649d",
+  "configuration": {
+    "mode": "normal",
+    "outer_repair": "ON",
+    "offered_mbps_per_direction": 10,
+    "delay_ms": 25,
+    "loss_pct": 0,
+    "duration_s": 300,
+    "tun_mtu": 1400
+  },
+  "measurement": {
+    "source": "original Windows Go TLS/Rust NPF/Wintun to original Linux Go/Rust WSL2 TUN",
+    "offered_mbps": {
+      "windows": 9.9994,
+      "linux": 10
+    },
+    "first_delivered_mbps": {
+      "windows": 10,
+      "linux": 9.9994
+    },
+    "first_delivery_fraction": {
+      "windows": 1,
+      "linux": 1
+    },
+    "owned_stop": "PASS_BOTH_OWNED",
+    "native_io": "MEASURED_BOTH_OS_KERNEL",
+    "windows_whole_exe_cpu_s": 17.9375,
+    "windows_whole_exe_elapsed_s": 317.407,
+    "windows_peak_working_set_bytes": 41689088,
+    "udp_rtt_p99_ms_same_origin": {
+      "windows": 47,
+      "linux": 52.594
+    },
+    "oneway_p99": "NOT_MEASURED_UNCALIBRATED_OS_CLOCKS",
+    "F_wire_bytes": "NOT_MEASURED",
+    "R_wire_bytes": "NOT_MEASURED",
+    "C_wire_bytes": "NOT_MEASURED"
+  },
+  "theory": {
+    "mean_payload_bytes_assuming_mix_weights": 1018.6,
+    "pps_per_direction_approx": 1227,
+    "app_BDP_bytes_per_direction_approx": 62500,
+    "caveat": "25ms each way yields nominal 50ms RTT only; app source payload mean excludes outer overhead, FEC, copies or driver/OS buffering"
+  },
+  "scope_limits": [
+    "Cold reconnect fix H907/H908 not executed at this historical source",
+    "Full standalone 300s only for H890 ON; not evidence of later edited cold TLS reconnect",
+    "No cross-source CPU A/B; not proof of actual 200Mbps",
+    "Go+Rust CPU together, not algorithm-specific"
+  ]
+}
