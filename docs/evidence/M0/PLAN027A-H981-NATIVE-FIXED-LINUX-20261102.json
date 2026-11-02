@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_current": "H981_PENDING_SHA",
+  "product_binary_source": "b9966eecb3e30820d298ff8b2fc5d069f10b9aad",
+  "source_build_run": 41494436902,
+  "native_results": "NOT_RUN",
+  "old_fixed_wrong": {
+    "run": 41488208305,
+    "ci": "success",
+    "windows": 1333,
+    "linux": 1333,
+    "expected": 1375,
+    "semantic": "FAIL_FEC1_56B"
+  },
+  "windows_five": [
+    "Fixed1460=1375",
+    "Fixed1500=1415",
+    "Normal1460=1389",
+    "Auto1460=1375",
+    "Game4FEC1460=1358"
+  ],
+  "win_real_validation": "actual TCP SYN SYNACK 2/4 MSS bytes, physical, peer MSS, both TLS record, OS readback and Stop; no new build",
+  "linux_five": [
+    "Normal1460/1460 both1389",
+    "Fixed1460/1460 both1375",
+    "Auto1460/1460 both1375",
+    "Fixed1500/1500 both1415",
+    "Fixed1500/1280 asymmetric peer MSS 1460/1240 and record"
+  ],
+  "linux_true_native": "source-current ARM64 original-Go TLS/Rust 2 netns, actual emitted+received MSS TCP options, two record-wire, real ip-j TUN MTU/DF and Stop",
+  "one_arm64_build_for_five": true,
+  "default_outer": 1460,
+  "explicit_upper": 1500
+}

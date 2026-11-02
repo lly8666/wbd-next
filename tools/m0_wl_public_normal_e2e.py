@@ -278,6 +278,43 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   if not 576<=inner<=configured_mtu:
    raise RuntimeError("PLAN027A Linux OS inner MTU exceeds outer IP cap")
   print("PLAN027A_LINUX_INNER_OS_READBACK",inner,"outer",configured_mtu,"selector",native_outer,flush=True)
+  # H981: green alone does not qualify Fixed: old H978 1333/1333 was
+  # FEC1's 56B reserve, not V4 FEC2's 14B. Check wire, peer, record,
+  # both live OS TUNs and authentic physical source before acceptance.
+  if mode=="fixed" and native_outer in ("default1460","1500"):
+   linuxlog=(out/"server.log").read_text(errors="replace")
+   winlimit=re.findall(r"WBD_WINDOWS_COLD_MSS_BUDGET_V1[^\n]*physical_outer_mtu=(\d+)[^\n]*effective_outer_mtu=(\d+)",winlog)
+   linlimit=re.findall(r"V4_PUBLIC_MTU_PREPARE[^\n]*role=server[^\n]*interface=(\d+)[^\n]*advertised_mss=(\d+)",linuxlog)
+   winmss=re.findall(r"WBD_WINDOWS_ACTUAL_SYN_MSS_V1[^\n]*local_advertised_mss=(\d+)[^\n]*tcp_option_bytes=([0-9a-fA-F]+)",winlog)
+   linmss=re.findall(r"V4_PUBLIC_ACTUAL_HANDSHAKE_MSS_V1[^\n]*side=server[^\n]*local_advertised_mss=(\d+)[^\n]*tcp_option_bytes=([0-9a-fA-F]+)",linuxlog)
+   winpeer=re.findall(r"WBD_WINDOWS_PEER_SYNACK_MSS_V1[^\n]*peer_advertised_mss=(\d+)",winlog)
+   linpeer=re.findall(r"V4_PUBLIC_ACTUAL_PEER_SYN_MSS_V1[^\n]*peer_advertised_mss=(\d+)",linuxlog)
+   winoffer=re.findall(r"WBD_WINDOWS_ORIGINAL_GO_TLS_RECORD_CAP_AUTHENTICATED[^\n]*client_record_offer=(\d+)",winlog)
+   linrecord=re.findall(r"V4_PUBLIC_MTU role=server[^\n]*record_wire=(\d+)[^\n]*tun_mtu=(\d+)",linuxlog)
+   if not all((winlimit,linlimit,winmss,linmss,winpeer,linpeer,winoffer,linrecord)):
+    raise RuntimeError("H981_FIXED_AUTHENTIC_MSS_RECORD_PHYSICAL_OS_RECEIPT_MISSING")
+   wp,wo=map(int,winlimit[-1])
+   lp,lm=map(int,linlimit[-1])
+   syns=(int(winmss[-1][0]),int(linmss[-1][0]),int(winpeer[-1]),int(linpeer[-1]))
+   options=(winmss[-1][1].lower(),linmss[-1][1].lower())
+   expected=configured_mtu-40
+   proof={"windows_physical":wp,"linux_physical":lp,
+      "windows_inner_os":windows_inner,"linux_inner_os":inner,
+      "local_and_peer_syn_mss":syns,"option_bytes":options,
+      "windows_record_offer":int(winoffer[-1]),"linux_record_wire":int(linrecord[-1][0])}
+   report["plan027a_fixed_true_wire_and_os_proof"]=proof
+   if wp>=configured_mtu and lp>=configured_mtu:
+    if (wo!=configured_mtu or lm!=expected or syns!=(expected,)*4 or
+        options!=("0204"+format(expected,"04x"),)*2 or
+        int(winoffer[-1])!=expected or
+        int(linrecord[-1][0])!=expected or int(linrecord[-1][1])!=inner or
+        windows_inner!=configured_mtu-85 or inner!=configured_mtu-85):
+     raise RuntimeError("H981_FIXED_FEC1_56B_OR_MSS_RECORD_OS_REGRESSION "+repr(proof))
+    print("H981_REAL_FIXED_BOTH_OS_V4_FEC2_14B_MSS_RECORD_PASS",configured_mtu,
+          windows_inner,inner,flush=True)
+   else:
+    print("H981_REAL_FIXED_AUTHENTIC_PHYSICAL_NARROWING",proof,flush=True)
+
  if os.environ.get("WBD_WL_V2_SCENARIO"):
   from m0_wl_perf_v2_config import read_scenario
   scene_mtu=read_scenario(root/os.environ["WBD_WL_V2_SCENARIO"])["tun_mtu"]

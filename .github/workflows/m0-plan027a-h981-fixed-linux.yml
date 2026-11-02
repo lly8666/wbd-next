@@ -1,0 +1,103 @@
+name: M0 PLAN027A H981 Fixed Rust budget and two Linux OS endpoints
+run-name: "M0|PLAN027A-H981-FIXED-LINUX|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027a-h981-fixed-linux.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  five-windows-prebuilt:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BINARY_SHA: "b9966eecb3e30820d298ff8b2fc5d069f10b9aad"
+      BINARY_RUN: "41494436902"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify unchanged binary source and fail-closed Fixed 14B native guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BINARY_RUN" --jq .head_sha)" = "$BINARY_SHA"
+          git fetch --depth=1 origin "$BINARY_SHA"
+          delta="$(git diff --name-only "$BINARY_SHA" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py tools/m0_install_public_faketcp.py)"
+          test -z "$delta" || { echo "H981_PRODUCT_SOURCE_CHANGED $delta";exit 1; }
+          python3 -m unittest tests.test_m0_linux_two_end_mtu_receipt -v
+          python3 -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_linux_two_end_mtu_receipt.py
+          state=
+          for n in $(seq 1 165);do
+            state="$(gh api "repos/$GH_REPO/actions/runs/$BINARY_RUN" --jq .conclusion)"
+            if [ "$state" = success ];then break;fi
+            if [ -n "$state" ] && [ "$state" != null ];then echo "H981_PREVIOUS_NATIVE_SOURCE_BUILD_FAILED $state";exit 1;fi
+            sleep 12
+          done
+          test "$state" = success || { echo "H981_SOURCE_BUILD_NOT_COMPLETE";exit 1; }
+          gh api "repos/$GH_REPO/actions/runs/$BINARY_RUN/artifacts" --jq '.artifacts[] | select(.expired==false) | .name' >/tmp/h981-artifacts
+          grep -Fx "m0-wl-windows-product-binaries-$BINARY_SHA" /tmp/h981-artifacts
+          grep -Fx m0-plan024-linux-product /tmp/h981-artifacts
+          echo H981_EXACT_PRECOMPILED_WIN_LINUX_SOURCE_VERIFIED
+      - name: Dispatch five independent minimal native Windows/Linux functional and MTU cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          for pair in "fixed|default1460" "fixed|1500" "normal|default1460" "auto|default1460" "game4-fec|default1460";do
+            IFS='|' read -r mode outer <<<"$pair"
+            name="M0-WIN-LINUX|$GITHUB_SHA|$mode|no-scene|outer=$outer"
+            already="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+              jq -r --arg name "$name" '.workflow_runs[] | select(.display_title==$name) | .id' | head -1)"
+            if [ -n "$already" ];then echo "H981_ALREADY_QUEUED $already";continue;fi
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f "public_mode=$mode" -f "native_outer_mtu=$outer" \
+              -f perf_scenario_file= -f run_n0=false -f outer_repair=on \
+              -f "perf_reuse_run_id=$BINARY_RUN" -f "perf_binary_source_sha=$BINARY_SHA"
+            echo "H981_QUEUED_NOT_PASS mode=$mode outer=$outer"
+          done
+          echo H981_MINIMAL_FIVE_REAL_NATIVE_SCENES_DISPATCHED_NOT_PRODUCT_PASS
+  actual-linux-client-server:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 75
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Compile once current aarch64 original Go TLS Rust client and server
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc iproute2 iputils-ping openssl iptables
+          bash tools/arm64_public_go_rust_bundle.sh
+          (cd arm64-public-bundle && sha256sum -c SHA256SUMS)
+          python3 -m unittest tests.test_m0_linux_two_end_mtu_receipt -v
+      - name: Reuse one binary in five real Linux client/server two-netns sessions
+        shell: bash
+        run: |
+          set -euo pipefail
+          for spec in "normal:1460:1460" "fec-fixed:1460:1460" "fec-auto:1460:1460" "fec-fixed:1500:1500" "fec-fixed:1500:1280";do
+            IFS=: read -r mode client server <<<"$spec"
+            WBD_V4_MODE="$mode" WBD_ARM64_OUTER_MTU="$client" WBD_ARM64_SERVER_OUTER_MTU="$server" \
+              WBD_ARM64_MTU_BOUNDARY=1 bash tools/arm64_linux_netns_smoke.sh
+            dir="h981-linux-$mode-$client-$server"
+            mv arm64-netns-result "$dir"
+            python3 tools/m0_linux_two_end_mtu_receipt.py "$dir" "$mode" "$client" "$server" | tee "$dir/mtu-mss-receipt.jsonl"
+            echo "H981_TRUE_LINUX_CLIENT_SERVER_CASE_PASS source=$GITHUB_SHA $spec"
+          done
+          echo H981_LINUX_FIVE_REAL_TWO_DIRECTION_CASES_MSS_RECORD_TUN_STOP_PASS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-plan027a-h981-two-linux-${{ github.run_id }}
+          path: |
+            arm64-public-bundle/manifest.json
+            arm64-public-bundle/SHA256SUMS
+            h981-linux-*/
+          retention-days: 30
+          if-no-files-found: warn
