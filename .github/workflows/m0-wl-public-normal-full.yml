@@ -126,8 +126,8 @@ on:
         description: "Cold original Rust outer DATA repair on|off for signed native mode; FEC/Health remain"
         required: true
         type: choice
-        default: on
-        options: [on, off]
+        default: 'on'
+        options: ['on', 'off']
       perf_scenario_file:
         description: "One source-controlled scenarios/*.json matching public_mode; exclude N0/P200"
         type: string

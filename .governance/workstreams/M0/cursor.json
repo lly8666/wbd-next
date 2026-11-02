@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 911,
-  "checkpoint_sha": "9dd6949ff0e4e3b34c37e5798c460a9e41917e57",
+  "sequence": 912,
+  "checkpoint_sha": "30c4e829b08a03a4af9953415a32f46c098f0f37",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H911 collect H908 Action41415722303 genuine native Windows-origin105s/IFB180 all PASS: both original Go cold TLS reauth, post-restore 120s actual duplex UDP, both owned Stop, outer OFF, 60s first=1.0, default DNS restored. Stage frozen SAME H908 product binary source6693910 via manifest/hash source reuse and schedule three independent ON workflow_dispatch Actions (game4-fec6 10m 250ms30%, Normal 100m 25ms0, Fixed 10m 250ms30) from single one-shot push marker; exact fixture H911 scenario source separate; 1 Action 1 scene 1 VM. Not yet product PASS for these ON scenarios. H903 old run completed cancelled, no rerun. H890 historical ON300 and H892/H897 OFF50/100 retained separate source.",
-  "why_now": "With authentic H908 lifecycle fix verified and 3 eligible ON mode slots, parallel independent Actions address integration gaps quickly; SAME H908 product bytes avoid duplicated Go/Rust build. Existing reuse guard incorrectly demanded six historical post-source changes even when zero products changed, so allow ZERO product diff while preserving existing prior six-file exception, and refuse arbitrary changes. H908 real recovery wins; no blind repeat.",
+  "current_task": "H912 dispatch-only correction after H911 Action41418761998 failed in cheap dispatch step with GitHub workflow_dispatch 422 'outer_repair=on not in list of allowed values'; ZERO native ON Actions dispatched/started. Root workflow_dispatch choice values `[on, off]` YAML booleans not literal strings. Quote default and option values as 'on'/'off'. Preserve fully frozen H908 product source6693 and H911 three explicit committed scenes; H912 batch commit triggers same 3 separate workflow_dispatch jobs via verified source manifest reuse. H908 actual 105s duplex recovery and Stop PASS evidence preserved. No source code product change.",
+  "why_now": "Distinct first error HTTP422 before ANY dispatch, not product. Fix one YAML choice declaration rather than modify test thresholds, resend blindly, or recompile frozen old binaries. New workflow is still the existing verified mode runner with per-run signed hash.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect each ON workflow_dispatch actual IDs and one-scene mode/outer_effective/actual wire F-R-C/first/CPU/RSS/p99/Stop. If any original window/linux products fail independent source reuse, fix exact manifest/runner without counting product FAIL. Then Auto ON and Game2 ON affected combos, off Game4 20M/capacity/weaknet missing; no physical deploy; final PLAN027 §0 not yet complete.",
+  "next_action": "Inspect H912 push dispatcher stdout for three `PLAN027_ON_BATCH1_QUEUED` lines and three independent workflow_dispatch run IDs; if all queued, collect each native Run status/actual F/R/C/first/CPU/RSS/p99/Stop; if not, fix only observed CI failure. In parallel continue Auto ON/remaining OFF matrix only after matrix result inventory. Old H903 cancelled; physical NOT_RUN.",
   "unverified": true,
   "last_tested_source": "6693910f879f9e55e77dd823c1b05d8942321929",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H908-SOURCE6693-WIN105-RECOVERY-NATIVE-PASS-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H898-SIGNED-RECEIPTS-H888-DNS-SPLIT.md",
     "docs/devlog/M0/20261102-PLAN027-H899-WIN105-DIAGNOSTIC-REPRO.md",
     "docs/devlog/M0/20261102-PLAN027-H900-GAME4-FEC6-HIGHLOSS-OFF.md",
     "docs/devlog/M0/20261102-PLAN027-H902-SOURCE-REF-CONTRACT.md",
     "docs/devlog/M0/20261102-PLAN027-H906-QUANTIFIED-NATIVE-COSTS.md",
     "docs/devlog/M0/20261102-PLAN027-H907-COLD-TLS-RETRY.md",
     "docs/devlog/M0/20261102-PLAN027-H909-REUSE-ON300-OFF50-100.md",
-    "docs/devlog/M0/20261102-PLAN027-H911-RECOVER-FROZEN-ON-BATCH1.md"
+    "docs/devlog/M0/20261102-PLAN027-H911-RECOVER-FROZEN-ON-BATCH1.md",
+    "docs/devlog/M0/20261102-PLAN027-H912-QUOTE-CHOICE-ON.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."
