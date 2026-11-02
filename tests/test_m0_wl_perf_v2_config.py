@@ -80,7 +80,9 @@ class V2Scenarios(unittest.TestCase):
   with tempfile.TemporaryDirectory() as d:
    invalid=json.loads(path.read_text());invalid["lifecycle_blackhole_s"]=105
    p=pathlib.Path(d)/"invalid.json";p.write_text(json.dumps(invalid))
-   with self.assertRaisesRegex(ValueError,"BAD_BLACKHOLE_LIFECYCLE"):read_scenario(p)
+   # A 105s duration alone is STILL refused. Only the explicit
+   # Windows-origin IFB-only variant is authorized by source schema.
+   with self.assertRaisesRegex(ValueError,"MISSING_UNILATERAL_DIRECTION"):read_scenario(p)
  def test_plan027_b_real_normal_idle_wake_no_payload_90s(self):
   path=SCENE.parent/"plan027-b-normal-idle-wake-10m-25ms-0loss-60s.json"
   c=read_scenario(path)

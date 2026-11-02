@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 882,
-  "checkpoint_sha": "b84d71d582131aa78a02e19ef9196aae6400485f",
+  "sequence": 883,
+  "checkpoint_sha": "4363ab47ce228d21af75572e02b0e7581178cf67",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H876 original Windows normal OFF→ON no-loss sameVM signed first100% both Stop PASS, delta whole-Win CPU+0.0157s (+0.39%, not algorithm ROI). H880 SOURCE aba Normal 30% sameVM OFF→ON Action41393878105 in flight; H881 SOURCE b84 native Game2 outer OFF Action41394226504 in flight, fixed prior Game synthetic Rust test before driver. H882 one native signed Windows-origin→Linux IFB 105s full Health loss with real tc drops and 120s restored first business observation; source fixture/test/selector staged, NETWORK NOT_RUN.",
-  "why_now": "Windows-specific original signed NPF/Wintun unilateral 105s Health dead was not covered by b747 Linux-only 105s or 106s both-way existing scene; one-direction owned Linux IFB 100% loss and 120s restored probes distinguish asymmetric reauth and HOL.",
+  "current_task": "H876 signed sameVM Normal OFF→ON no-loss PASS ΔWin inclusive CPU+0.0157s; H880 SOURCEaba sameVM Normal30%-loss OFF/ON Action41393878105 IN_FLIGHT; H881 SOURCEb84 corrected Rust Game2 OFF signed Action41394226504 IN_FLIGHT. H882 SOURCE4363 Windows-origin105 only IFB action41394996188 cheap fixture FAIL: old 20s bilateral test expected generic error while new still rejects bare 105 with MISSING_UNILATERAL_DIRECTION; native NOT_RUN. H883 targeted test assertion now updated, rerun exact unilateral scene only.",
+  "why_now": "H882 no product change issue: safety rule still refuses 105s without direction, legacy fixture asserts old exception class text. Preserve exact fail-closed rule and avoid rerunning expensive unrelated native scenes.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H880 signed 30%-loss Normal OFF/ON pair and H881 true Game2 OFF without re-dispatch; then H882 original Windows-origin105 unilateral genuine IFB tc/owner generations/Stop outcome. Fix only real first failure. Continue Game4/FEC scoped OFF/ON, 50M near-MTU capacity, >=300s ON and source status; physical NOT_RUN.",
+  "next_action": "Collect H883 cheap/preflight & single signed Windows-origin105 Action; collect pending H880 real 30%-loss Normal pair and H881 actual Game2 OFF, diagnose first real fault. When validated, finish Game4/FEC OFF and affected ON, 50M near-MTU and ≥300s ON with detailed CPU/RSS p99; physical NOT_RUN.",
   "unverified": true,
   "last_tested_source": "862f3df93983a67abb23f00a5f346362036047aa",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H876-SOURCE862F-NORMAL-OUTER-SAMEVM-PAIR-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H873-WINDOWS-OUTER-OFF.md",
     "docs/devlog/M0/20261102-PLAN027-H875-WINDOWS-NORMAL-OFF-NATIVE.md",
     "docs/devlog/M0/20261102-PLAN027-H876-NORMAL-SAMEVM-OUTER-PAIR.md",
     "docs/devlog/M0/20261102-PLAN027-H878-GAME-COLD-OUTER-OFF.md",
     "docs/devlog/M0/20261102-PLAN027-H879-RUST-GAME-TEST-FIX-H876-RECEIPT.md",
     "docs/devlog/M0/20261102-PLAN027-H880-NORMAL-LOSS30-OUTER-PAIR.md",
     "docs/devlog/M0/20261102-PLAN027-H881-GAME2-OUTER-OFF-REAL-SCENE.md",
-    "docs/devlog/M0/20261102-PLAN027-H882-WINDOWS-UNILATERAL105-NATIVE.md"
+    "docs/devlog/M0/20261102-PLAN027-H882-WINDOWS-UNILATERAL105-NATIVE.md",
+    "docs/devlog/M0/20261102-PLAN027-H883-UNILATERAL-TEST-CONTRACT.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."
