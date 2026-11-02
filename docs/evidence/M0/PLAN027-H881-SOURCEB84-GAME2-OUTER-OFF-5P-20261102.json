@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "b84d71d582131aa78a02e19ef9196aae6400485f",
+  "action": {
+    "run_id": 41394226504,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/41394226504",
+    "native_job_id": 125113150734,
+    "status": "SUCCESS_NATIVE_TWO_OS"
+  },
+  "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "artifacts": {
+    "direct": {
+      "id": 13119281589,
+      "digest": "sha256:bef8415ae9edca70fab65bb6f219aea503675b408018967e4bc90593ded52ccf"
+    },
+    "windows_product": {
+      "id": 13119445195,
+      "digest": "sha256:e2726aad71775b482cb968d0ddf42b004585c982bf1c1247e40456845ec8d605"
+    },
+    "linux_product": {
+      "id": 13118591996,
+      "digest": "sha256:d426dba8dd045294c35cbeb8d5e6141aa056966165535e62c9659ee2298e5d31"
+    }
+  },
+  "scene": {
+    "name": "plan027-h878-game2-outer-off-10m-25ms-loss5-60s",
+    "sha256": "f3ae9ce4d814ff7795e9214f3ef950063e13a539553da22d78f9ae4a91513561",
+    "mode": "game2",
+    "native_lanes": 2,
+    "outer_repair_requested": "off",
+    "offered_mbps_per_direction": 10,
+    "oneway_delay_ms_per_direction": 25,
+    "injected_loss_pct_per_direction": 5,
+    "duration_s": 60,
+    "tun_mtu": 1400,
+    "seed": 20261102
+  },
+  "observed": {
+    "original_windows_game_outer_repair_effective": 0,
+    "original_linux_game_outer_repair_effective": 0,
+    "source": "genuine joined Rust GameOuter+Linux original owner readback",
+    "offered_mbps": {
+      "windows": 9.9972,
+      "linux": 9.9999
+    },
+    "first_delivered_mbps_by_receiver": {
+      "windows": 9.9731,
+      "linux": 9.9716
+    },
+    "first_delivery_fraction_by_receiver": {
+      "windows": 0.997268,
+      "linux": 0.997437
+    },
+    "mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_game2",
+    "native_result": "MEASURED_BOTH_OS_KERNEL",
+    "windows_native_tx_records": 167230,
+    "windows_native_rx_first_delivered_ipv4": 83389,
+    "original_ipv4_payload_mtu": 1329,
+    "real_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "real_tcp": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "owned_stop": "PASS_BOTH_OWNED",
+    "windows_native_process_cpu_total_s": 2.5781,
+    "cpu_kernel_s": 1.5781,
+    "cpu_user_s": 1,
+    "resource_observed_elapsed_s": 77.203,
+    "peak_working_set_bytes": 47546368,
+    "peak_private_bytes": 44032000,
+    "driver_local_drops": "NOT_EXTRACTED_IN_RECEIPT",
+    "netem_kernel_drop_count": "SEE_IMMUTABLE_ACTION_ARTIFACT",
+    "cross_os_oneway_p99": "NOT_MEASURED_CLOCK_UNCALIBRATED"
+  },
+  "verdict": "FUNCTIONAL_PASS_GENUINE_GAME2_OUTER_OFF",
+  "limitations": "Not a Game4 or Game2-FEC/Game4-FEC native result, not outer ON cost comparison or physical qualification. Kernel tc numerical drops were not independently extracted from local log; original report references wl-n0-netem-after.json in attached immutable artifact. No claim of independent lane IID vs correlated tc model or user-plane p99. F/R/C full bilateral NOT_MEASURED."
+}

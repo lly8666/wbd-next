@@ -6,5 +6,7 @@
 - H884 one source-locked exact native Normal **30% sameVM OFF→ON** scene uses existing fixture/manifest. Confirm first, kernel drops, actual effective, F/R/C, CPU/RSS and both Stop; comparison to H880 older SOURCE on a different Windows VM is indicative only, NOT a sameVM old/new optimization AB. Do not claim algorithm ROI before source/host-qualified evidence; if new-source ON remains costly, examine bounded native thread and send overhead next rather than blindly building larger caches.
 - Other independent in-flight: H881 Game2 outer OFF 5% original signed and H883 Windows-origin unilateral105 Health/reconnect. H884 does not supersede them, no physical deployment.
 ```feature-impact
-{"kind":"none","ids":[],"reason":"Use the same existing shared Normal Rust M2 timers/repair path, only prevent an already-expired shadow deadline from zero-time busy-spinning while the existing candidate is intentionally burst-paced 5ms; no product parameter/default semantics changed."}
+{"kind":"updated","ids":["normal-off"],"reason":"Recover actual same-source H880 Normal OFF/ON 30%-loss Windows/Linux CPU, first-arrival and genuine F/R/C/Stop witness in original normal-off card; shared Rust M2 paced wake fix itself preserves product parameters and defaults."}
 ```
+
+H885 correction: this H884 commit also updated the existing Normal/off feature card with H880 source-specific measurements; its earlier `none` feature-impact declaration was inaccurate. The corrected declaration distinguishes evidence registration from shared Rust TX wake implementation. H884 true new-source CPU outcome remains separately awaiting Action evidence.
