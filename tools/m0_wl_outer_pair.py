@@ -23,6 +23,7 @@ scenario=os.environ.get("WBD_WL_V2_SCENARIO","")
 allowed=(
     "scenarios/plan027-h876-normal-pair-10m-250ms-0loss-60s.json",
     "scenarios/wl-outer-repair-10m-250ms-loss30-60s.json",
+    "scenarios/plan027-h913-normal-pair-100m-25ms0-60s.json",
 )
 if os.environ.get("WBD_WL_PUBLIC_MODES")!="normal" or scenario not in allowed:
     raise SystemExit("original outer pair refuses another mode or mutable scenario")
@@ -31,10 +32,11 @@ damaged=any(scene[direction]["loss_pct"]>0 for direction in ("windows_to_linux",
 if pair.exists():
     raise SystemExit("H876 refuses stale pair results")
 pair.mkdir(parents=True)
-source=os.environ["GITHUB_SHA"]
+source=os.environ.get("WBD_WL_BINARY_SOURCE") or os.environ["GITHUB_SHA"]
 legs=[]
 result={"schema":"plan027-original-native-outer-pair/v1",
-        "source_sha":source,"scenario":scenario,"order":"OFF_ON",
+        "source_sha":source,"fixture_source_sha":os.environ["GITHUB_SHA"],
+        "scenario":scenario,"order":"OFF_ON",
         "result":"NOT_RUN","legs":[],"attribution":"NOT_ESTABLISHED"}
 (pair/"result.json").write_text(json.dumps(result,indent=2)+"\n")
 
@@ -116,7 +118,8 @@ for repair in ("off","on"):
        effective.get("enabled")==expected and
        first_delivery_ok_for_scenario(scene,fractions) and damage_applied and
        budget_ok and
-       all(isinstance(offers.get(k),(int,float)) and offers[k]>=9.5
+       all(isinstance(offers.get(k),(int,float)) and
+           offers[k]>=0.95*scene[("windows_to_linux" if k=="windows" else "linux_to_windows")]["offered_mbps"]
            for k in ("windows","linux")) and
        windows.get("result")=="MEASURED_SAME_NATIVE_PID" and
        isinstance(windows.get("cpu_total_s"),(int,float)) and

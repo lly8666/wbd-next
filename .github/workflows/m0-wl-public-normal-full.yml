@@ -133,6 +133,11 @@ on:
         type: string
         required: false
         default: ""
+      outer_pair:
+        description: "Run sequential Normal OFF/ON on one VM for an allowlisted scene; never concurrent"
+        type: boolean
+        required: false
+        default: false
       perf_reuse_run_id:
         description: "Full run ID containing archived source-verified prebuilt Windows and Linux products"
         type: string
@@ -224,6 +229,24 @@ jobs:
               -f "perf_binary_source_sha=$source"
             echo "PLAN027_ON_BATCH1_QUEUED product_source=$source fixture_source=$GITHUB_SHA mode=$mode scenario=$scene status=DISPATCHED_NOT_PASS"
           done
+      - name: Dispatch Normal100 same-VM sequential OFF ON with H908 signed products
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan027-pair100]')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = main
+          current=$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq '.object.sha')
+          test "$current" = "$GITHUB_SHA" || { echo 'ref moved before pair dispatch'; exit 1; }
+          scenario=scenarios/plan027-h913-normal-pair-100m-25ms0-60s.json
+          test -f "$scenario"
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f "perf_scenario_file=$scenario" \
+            -f outer_repair=on -f outer_pair=true -f perf_reuse_run_id=41415722303 \
+            -f perf_binary_source_sha=6693910f879f9e55e77dd823c1b05d8942321929
+          echo "PLAN027_PAIR100_QUEUED fixture_source=$GITHUB_SHA product_source=6693910f879f9e55e77dd823c1b05d8942321929 same_vm_sequential=1 status=DISPATCHED_NOT_PASS"
       - run: python -m pip install PyYAML==6.0.2
       - run: python tools/check_workflows.py
       - run: python -m unittest tests.test_delivery_ci -v
@@ -562,7 +585,7 @@ jobs:
       WBD_WL_RUN_P200: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-stress-p200-250m-30p]') && '1' || '0' }}
       WBD_WL_PROBE_LOCKS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan026-probe-locks]') && '1' || '0' }}
       WBD_WL_V2_CPU_AUDIT: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan026-rust-cpu-reuse-150]') || (contains(github.event.head_commit.message, '[plan026-win-wake-150]') || contains(github.event.head_commit.message, '[plan026-win-outer-repair-matrix]')) || contains(github.event.head_commit.message, '[plan026-win-npf-borrow-150]') || contains(github.event.head_commit.message, '[plan026-win-npf-abba-150]')) && '1' || '0' }}
-      WBD_WL_OUTER_PAIR: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h884-paced-repair]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h880-loss-pair]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h876-normal-pair]') && '1' || '0' }}
+      WBD_WL_OUTER_PAIR: ${{ inputs.outer_pair == true && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h884-paced-repair]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h880-loss-pair]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h876-normal-pair]') && '1' || '0' }}
       WBD_WL_RUNNER_MGMT_PIN: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h899-native105-diag]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h888-managed105]') && '1' || '0' }}
       WBD_WL_OUTER_REPAIR: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h900-game4fec6-off30]') && 'off' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h899-native105-diag]') && 'off' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h897-normal100-off]') && 'off' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h896-game2fec6-off30]') && 'off' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h892-normal50-off]') && 'off' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h890-normal-on300]') && 'on' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h888-managed105]') && 'off' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h886-game4-off]') && 'off' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h882-win-c2s105]') && 'off' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h878-game2-off]') && 'off' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan027-h875-normal-off]') && 'off' || inputs.outer_repair || 'on' }}
       WBD_WL_N0_SECONDS: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan025-n0-240s]') && '240' || '60' }}
