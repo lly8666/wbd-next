@@ -325,6 +325,7 @@ jobs:
       - run: python -m unittest tests.test_delivery_ci -v
       - run: python -m unittest tests.test_m0_wl_mode_evidence -v
       - run: python -m unittest tests.test_m0_wl_mode_runtime_report -v
+      - run: python -m unittest tests.test_m0_wl_public_mss_contract -v
       - run: python -m unittest tests.test_m0_wl_native_mtu_contract -v
       - run: python -m unittest tests.test_m0_wl_n0_drop_delta -v
       - run: python -m unittest tests.test_m0_wl_impairment_profile -v
@@ -428,6 +429,8 @@ jobs:
           $ErrorActionPreference='Stop'
           Push-Location legacy
           try {
+            & go test -tags wbd_v4_embedded_go ./internal/faketcp -run 'TestV4PublicSYNAndSYNACKRealEncodedOptionsAndFrozenRetries|TestV4LocalMSSRejectsInvalid' -count=1 -v
+            if($LASTEXITCODE -ne 0){throw 'original Go actual encoded SYN/SYNACK MSS byte test FAIL'}
             & go build -tags wbd_v4_embedded_go ./internal/windowsownerlease
             if($LASTEXITCODE -ne 0){throw 'Windows production compile preflight FAIL'}
             & go build -trimpath -tags wbd_v4_embedded_go -o ../result/wbd-client-embedded.exe ./cmd/wbd-client
@@ -588,7 +591,7 @@ jobs:
           cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
           cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
           cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
-          (cd legacy && go test ./internal/faketcp -run TestDetachedDataKernelFilterPreservesHandshakeAndControl -count=1)
+          (cd legacy && go test ./internal/faketcp -run "TestDetachedDataKernelFilterPreservesHandshakeAndControl|TestV4PublicSYNAndSYNACKRealEncodedOptionsAndFrozenRetries|TestV4LocalMSSRejectsInvalid" -count=1)
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
           (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli)

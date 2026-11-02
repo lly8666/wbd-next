@@ -141,3 +141,9 @@ F/R/C/副本与业务字节分账按**成功实际发出**的IP总长计数；L2
 一个datagram拆n片，每片最终未恢复概率q且独立时，完整交付约 `(1-q)^n`；一般相关损伤不能套独立式，可用联合上界 `P(缺失)≤min(1,Σq_i)`作宽参考。q必须是**该模式经过FEC/Game后的残余片损失**，不是直接把30%线路loss当q。另报完整datagram丢失、片损失、到达时延与重组到期，不能只看已到包p99。
 
 无损容量内、明确支持范围应完整通过；高损只要求表现可解释、迟到/丢片有界退役、不妨碍并行小UDP/其他TCP和Stop，不以大UDP零丢或统一1s恢复硬门误判。TCP同一流本来有序，项目要求的是隧道不把一个流缺片扩散为其他流HOL。
+
+## H962 正式双端 MSS 纠偏（最新用户优先）
+
+当前V4无旧协议兼容：外层完整IPv4 IP MTU默认**1460B**，1500B仅显式最大。**同一个Rust冷预算**使用配置外层及本地真实物理IPv4出口MTU，生成本方向的SYN/SYN-ACK **TCP载体MSS**，不扣加密record31B；无其他限制1400→1360、1460→1420、1500→1460。不能将Wintun/TUN内层MTU输入物理出口字段。Windows源自实际 `net.InterfaceByIndex.MTU`；Linux来自实际 `net.InterfaceByName.MTU`；物理/对端真正收窄允许不对称并必须记录原因。
+
+现行Go FakeTCP源文件使用同一加签Git blob在Windows正式plan020装配和Linux客户端/服务端安装。每个association创建时冻结本地MSS，SYN和SYN-ACK重发不重新读取全局；接收到的peer SYN MSS为不同的方向约束，记录真实解码及发出TCP options。保护后的TLS record与Rust owner在认证后按本端有效外层/对端MSS/record cap/模式开销收窄；TUN/Wintun实际应用、OS读回是独立证据，不是预算计算的输入。两侧真实约束相同Normal外层1460才要求内层都1389。H959-H962改码需要当前SOURCE原生资格，旧PASS/FAIL不提升；保留原上游测试数据不等于保留产品1360回退。

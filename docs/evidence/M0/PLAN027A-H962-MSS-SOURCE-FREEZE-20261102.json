@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_sha": "H962_COMMIT_PENDING",
+  "status": "NOT_RUN_FROZEN_FOR_ONE_BUILD",
+  "source_prior": "8d17deed6a4a4fdcefe2e2b2b893174a46e7bcd6",
+  "original_go_source": "lly8666/wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984",
+  "fix_commits": [
+    "b12cf8ca09df33097b05df3eab4ad09fac6544df",
+    "4ebd70ffa568f84d693ae02bc4e735f7366a65c9",
+    "6f25bb162967557de45fa255555a9dbd35a2e743",
+    "aee0b2729f6bdf75a9fb2087bf0b927b2d234918",
+    "8d17deed6a4a4fdcefe2e2b2b893174a46e7bcd6"
+  ],
+  "observed_before": {
+    "outer": 1460,
+    "win_inner": 1389,
+    "linux_inner": 1329,
+    "likely_source": "Windows original FakeTCP advertised 1360"
+  },
+  "expected_no_other_limit": [
+    {
+      "outer": 1400,
+      "syn_mss": 1360,
+      "normal_inner": 1329
+    },
+    {
+      "outer": 1460,
+      "syn_mss": 1420,
+      "normal_inner": 1389
+    },
+    {
+      "outer": 1500,
+      "syn_mss": 1460,
+      "normal_inner": 1429
+    }
+  ],
+  "new_source_native": "NOT_RUN",
+  "original_auth_tls_preserved": true,
+  "old_h958_df_fail": 41463910871,
+  "old_h957_staged_pass": 41462417865,
+  "old_h957_arm64_pass": 41462378097,
+  "missing": [
+    "current source native actual MSS wire",
+    "explicit1500",
+    "real negative asymmetric",
+    "current source Game/FEC Stop",
+    "full PLAN027A/028-030"
+  ]
+}
