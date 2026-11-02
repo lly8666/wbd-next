@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "previous_h974_build_run": 41484186232,
+  "previous_h974_source": "5f4c65e9a7452c7f84794908aadda0a06b9d71cb",
+  "root": "New test-only SHA helper uses literal b\\\\0 instead of b\\0",
+  "fix": "single one-character correction; source manifest unchanged, no production Go/Rust difference",
+  "new_build": "NOT_RUN",
+  "new_native": "NOT_RUN"
+}

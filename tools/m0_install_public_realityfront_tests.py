@@ -15,7 +15,7 @@ FILES={"tls_test.go":(("faketcp.DefaultMSS","faketcp.PublicV4AdvertisedMSS()"),)
          "len(seg.Payload) > int(faketcp.PublicV4AdvertisedMSS())"))}
 SOURCE="a7a82db31fe736ffedee330795a3234d358f1984"
 def blob(data):
-    return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\\0"+data).hexdigest()
+    return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
 def manifest_rows():
     manifest=json.loads(MANIFEST.read_text())
     if manifest.get("legacy_source")!=SOURCE or manifest.get("schema_version")!=1:
