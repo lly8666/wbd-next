@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "source_sha": "e387d0f043957c89de7153670a1ea7459ce23928",
+  "run_id": 41374076533,
+  "artifact_name": "m0-wl-full-public-normal-direct",
+  "result": "PASS_SCOPED_WINDOWS_LINUX_SEVEN_MODES_SHORT_FUNCTIONAL_ONLY",
+  "platform": "Windows Server 2025 original Go TLS Rust Wintun/Npcap original live kernel ↔ Linux WSL2 same source Go TLS Rust M4 raw/TUN, source-locked once product built/tested",
+  "modes": [
+    "normal",
+    "fixed",
+    "auto",
+    "game2",
+    "game4",
+    "game2-fec",
+    "game4-fec"
+  ],
+  "per_mode": "All seven have windows_ready PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL, linux_ready PASS_REAL_AFTER_ORIGINAL_TLS, app_duplex PASS_ACTUAL_TWO_OS_KERNEL_UDP, tcp_duplex PASS_ACTUAL_TWO_OS_KERNEL_TCP, stop PASS_BOTH_OWNED",
+  "normal_sample": {
+    "windows_udp_sent": 27,
+    "windows_udp_received": 25,
+    "linux_udp_sent": 97,
+    "linux_udp_received": 26
+  },
+  "game_cosmetic_appearance": {
+    "game2_fec": 52,
+    "game4_fec": 116
+  },
+  "manifest_and_artifact_verified": true,
+  "scopes_not_qualified": [
+    "WL_N0/N1/N5/V2/P200 load throughput/CPU and p99 NOT_RUN",
+    "300s underlay/rotation NOT_RUN",
+    "Native Windows repair OFF cannot be claimed from no-repair packets: original m2_arm_entry unconditionally enables opportunistic repair and no proven public OFF readback",
+    "Game copy appearance is not authenticated FEC or R/F/C aggregate",
+    "No user-owned physical device deployment or qualification",
+    "e387 source has same Go/Rust product files as e928 after rollback, but e928 Linux double blackhole remains INCONCLUSIVE and cannot be called Windows reauth PASS"
+  ]
+}

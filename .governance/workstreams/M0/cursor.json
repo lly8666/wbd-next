@@ -4,29 +4,30 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 857,
-  "checkpoint_sha": "e387d0f043957c89de7153670a1ea7459ce23928",
+  "sequence": 858,
+  "checkpoint_sha": "1334bf6db6d127e4c050461e8c30ce5869907220",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H857: H856 Rust unsuccessful shadow index optimization reverted exactly to e928, no pending H854; governance/core checks PASS. Current original Linux Go TLS/Rust source e928 genuine105s bilateral blackhole10M restore first100/99.813%, upstream TUN drops0/27, ~1.2s true zero-delivery, native INCONCLUSIVE; H857 single frozen SOURCE same genuine 105s bilateral blackhole but 2Mbps active diagnostic queued (332pps/dir vs1660pps), distinguish injector capacity/TUN drop from generation handoff latency, never promote 2M as 10M acceptance. Windows NativeOwner directly enables repair on m2_arm, no verified real product OFF CLI/Rust switch: Windows OFF paired NOT_RUN. WL native full check of rollback source e387 in-flight.",
-  "why_now": "Real 10M post-dead evidence had client HARNESS_CAPACITY_LIMITED and server source TUN27 drops while host PSI0.1% and zero-delivery1.2sec; one true5x-lower-PPS source-locked diagnostic while keeping dead105/probes0 tests whether upstream drops are load dependent and whether cold handshake gap persists. Does not dilute 10M FAIL/INCONCLUSIVE. Windows OFF needs proper Go config + owner wiring, cannot fake via zero R.",
+  "current_task": "PLAN027 H858: SOURCE e928 genuine dead105 original Go TLS+Rust cold 2Mbps diagnostic Action41375042066 completed first100% BOTH, missing0/0, source TUN drops0/0, yet max UDP zero-delivery 1.24/1.26s; original same-source 10M first100/99.813%, missing0/379, TUN0/27, same 1.23/1.26s gap and capacity limited. 2M diagnostic NOT acceptance of 10M INCONCLUSIVE. Current source e387 Windows signed seven modes all TLS/real NPF-Wintun/UDP/TCP/owned Stop PASS FUNCTIONAL only, WL perf NOT_RUN. Rust Windows native m2_arm unconditionally ON, no real Windows OFF product flag/readback; Windows OFF A/B NOT_RUN. e387 product path diff to e928 zero after rejected Rust index rollback; no further Rust CPU sweeps.",
+  "why_now": "H857 true105s 100% tc lower source 2M vs 10M same binaries removes upstream TUN drops/missing while fixed 1.25s silent reauth gap remains; after H856 rollback all seven Windows current-source original native functional results now complete, but OFF control missing and not a performance qualification. Preserve difference.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H857 one e928 native 2M diagnostic physical underlay drop, first/missing, TUN and zero-delivery gap. If 2M no capacity/TUN but still~1.2sec gap, prioritize cold auth generation latency, not injector; 10M remains INCONCLUSIVE. Continue Windows actual OFF public control wiring only after current real native WL Action completes; full PLAN027 still partial.",
+  "next_action": "Prioritize one bounded cold Go control-stage timing on postdead SYN→TLS→Rust to attribute 1.25s non-PPS gap before tuning. In parallel implement proper Windows public repair OFF owner/config readback (not mere zero R) and one sameVM Windows OFF/ON if product path succeeds; include CLI/help/applicable GUI/feature. Key/lane rotation and real 300s full integration remain open. Don't repeat 2M/10M PPS sweeps or Rust no-benefit index.",
   "unverified": true,
   "last_tested_source": "e928b50cf872b6746a62c56662e5fc0768c5ca45",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H848-E928-BILATERAL-BLACKHOLE-RECOVERY-INCONCLUSIVE-20261102.json"
+    "docs/evidence/M0/PLAN027-H848-E928-BILATERAL-BLACKHOLE-RECOVERY-INCONCLUSIVE-20261102.json",
+    "docs/evidence/M0/PLAN027-H858-E928-ORIGINAL-COLD105-2M-RATE-DIAGNOSTIC-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H850-EXACT-SOURCE-KEY.md",
     "docs/devlog/M0/20261102-PLAN027-H851-WORKER-ATTR-OUTPUT-OWNERSHIP.md",
     "docs/devlog/M0/20261102-PLAN027-H852-RUST-TX-SHADOW-INDEX-BUILD.md",
     "docs/devlog/M0/20261102-PLAN027-H853-ACK-END-COMPILE.md",
     "docs/devlog/M0/20261102-PLAN027-H854-SHARED-INDEX-AB-LOSS.md",
     "docs/devlog/M0/20261102-PLAN027-H855-FEATURE-SIZE-BOUNDED.md",
     "docs/devlog/M0/20261102-PLAN027-H856-ROLLBACK-ACK-INDEX.md",
-    "docs/devlog/M0/20261102-PLAN027-H857-DEAD2M-SOURCE-TUN-DISCRIMINATOR.md"
+    "docs/devlog/M0/20261102-PLAN027-H857-DEAD2M-SOURCE-TUN-DISCRIMINATOR.md",
+    "docs/devlog/M0/20261102-PLAN027-H858-DEAD2M-AND-WIN-E387.md"
   ],
   "open_requests": [],
-  "partial_summary": "H848 e928 real double blackhole105 original TLS/Rust new Ready each and Stop: restored120s c2s first100% s2c first99.813% (379 missing), p99 60.2/25.8ms, zero deliver gap~1.2s, source TUN27 upstream, host PSI0.1; native INCONCLUSIVE not full PASS. Prior fdc recovery82.4% p99~21.3s retained FAIL. H846 R100 f5 sameVM CPU ON delta5.53/5.78% with R163/0B. H847 Win fdc seven-mode native functional not WL load. No new physical. H852 H851 full-owner worker CPU exact f5 Normal100 ON cost +1.55/+1.41 whole, Rust TX +1.228/+1.112 (~79%), RX+.333/.323. Targeted ACK index only for truly retained ciphertext; no branch/source performance claim yet, build pending. H856 H854 sameVM old e928→H853 source2b ON100 CPU delta +0.01/+0.07s (no benefit), first100 p9926 Stop PASS, 30pct new source R/F8.9% first72.86% Stop PASS. Rollback shared Rust index exact e928 files, no new optimization pass claim. Prior e928 cold reauth still INCONCLUSIVE. H857 independent one SOURCE e928 2M active instead of10M diagnostic while identical real105s double100pct tc blackhole+120s restore; product binary unchanged, existing 10M 379 missing/TUN27 INCONCLUSIVE retained. Windows product default original M2 repair directly enabled; no verified OFF ingress, do not claim OFF."
+  "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN."
 }

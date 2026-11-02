@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "source_sha": "e928b50cf872b6746a62c56662e5fc0768c5ca45",
+  "fixture_source_sha": "1334bf6db6d127e4c050461e8c30ce5869907220",
+  "run_id": 41375042066,
+  "artifact_name": "plan027-original-reauth-105-2m-diagnostic",
+  "result": "DIAGNOSTIC_COMPLETE_NOT_BUSINESS_ACCEPTANCE",
+  "native_result": "PASS_SCOPED_OBSERVATION",
+  "scope": "Exact frozen original Linux Go TLS Rust M4 Normal repair OFF source e928. Pre20 real UDP 2Mbps each at25ms/0%; double true netem 100% both for105s without source app/probes; recovery120 real 2Mbps each at25ms/0%, 10s drain",
+  "verified": {
+    "source_manifest_and_client_server_rust_sha256": true,
+    "real_kernel_qdisc_loss_during_dead": {
+      "client": 9,
+      "server": 8
+    },
+    "original_go_native_handoff": true,
+    "owned_stop_both": true,
+    "owned_namespaces_absent": true
+  },
+  "theory": {
+    "mean_weighted_payload_bytes": 753.6,
+    "business_pps_each": 331.74,
+    "RTT_ms": 50,
+    "business_BDP_bytes_each": 12500,
+    "original_10m_business_pps_each": 1658.7
+  },
+  "pre20": {
+    "offered_mbps": {
+      "c2s": 1.999584,
+      "s2c": 2.000064
+    },
+    "unique_first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "p99_ms_delivered_only": {
+      "c2s": 25.4,
+      "s2c": 25.4
+    }
+  },
+  "recovery120": {
+    "offered_mbps": {
+      "c2s": 2,
+      "s2c": 2.0000256
+    },
+    "unique_first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "missing_after_drain": {
+      "c2s": 0,
+      "s2c": 0
+    },
+    "p99_ms_delivered_only": {
+      "c2s": 50.6,
+      "s2c": 71.2
+    },
+    "max_10ms_bucket_zero_delivery_ms": {
+      "c2s_udp": 1240,
+      "s2c_udp": 1260
+    },
+    "source_tun_tx_kernel_drop": {
+      "client": 0,
+      "server": 0
+    },
+    "original_Go_Rust_process_cpu_s_full_measurement": {
+      "client": 3.62,
+      "server": 3.66
+    },
+    "rss_peak_bytes": {
+      "client": 23724032,
+      "server": 19779584
+    },
+    "host_PSI_some_peak_pct": 0.39,
+    "host_steal_pct_peak": 0
+  },
+  "reference_fixed_10m": {
+    "source_sha": "e928b50cf872b6746a62c56662e5fc0768c5ca45",
+    "run_id": 41368426841,
+    "native_result": "INCONCLUSIVE",
+    "first_fraction": {
+      "c2s": 1,
+      "s2c": 0.9981344292521493
+    },
+    "missing": {
+      "c2s": 0,
+      "s2c": 379
+    },
+    "source_tun_tx_drops": {
+      "client": 0,
+      "server": 27
+    },
+    "max_zero_delivery_ms": {
+      "c2s_udp": 1230,
+      "s2c_udp": 1260
+    }
+  },
+  "interpretation": "Changing only active injection 10->2Mbps removed observed missing and source TUN drops while approximately 1.25s cold reauth delivery gap persisted unchanged. Two independent hosted Action runs, not same-VM source performance A/B. The low-rate PASS_SCOPED_OBSERVATION is strictly differential diagnostic; 10Mbps acceptance unchanged INCONCLUSIVE. Suspect reauthorization/owner switch rather than data PPS for the ~1.25s fixed gap, but exact stage not measured.",
+  "not_measured": [
+    "Windows dead105 recovery",
+    "A→A+B→B",
+    "cross-flow HOL under reauth",
+    "full physical Windows",
+    "exact cold TLS SYN-to-READY millisecond spans"
+  ]
+}
