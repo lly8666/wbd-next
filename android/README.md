@@ -16,3 +16,8 @@ must not claim an active tunnel based on `establish()` alone.
 Current 10.188.0.2/32 and full-route values are development placeholders,
 not product-approved addresses or leak protection. Android DNS and IPv6
 policies are **NOT_RUN**. Do not publish/deploy this app as a VPN.
+
+PLAN027A（2026-11-02）：未来完成同源JWT/JNI原始Go凭据授权后，**用户
+外层完整IPv4 IP上限默认1460、不含L2（可显式最大1500）**，内层必须消费
+唯一Rust预算并经Android OS真实读回。本Android壳的 `setMtu(1200)` 是旧
+**内层TUN占位值**，不能当成用户外层默认，也不能据此声称Android已接通。

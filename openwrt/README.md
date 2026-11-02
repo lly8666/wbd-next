@@ -26,3 +26,8 @@ publishes credentials via process argv. Add a tested fd-based secret input and
 owned procd Stop before enabling auto-start; do not substitute hard-coded
 test keys. Credential verification and real bidirectional kernel traffic must
 PASS on the target, otherwise OPENWRT_PRODUCT=NOT_RUN.
+
+PLAN027A（2026-11-02）：UCI唯一外层完整IPv4 IP MTU为 `outer_mtu`，
+默认1460（无L2，最大可显式1500）；init只透传 `--outer-mtu` 给同一
+Linux V4冷预算，绝不能把它作为TUN内层MTU。此包仍未通过OpenWrt设备原生
+认证/OS读回/Stop测试，默认配置 `enabled '0'` 不变。

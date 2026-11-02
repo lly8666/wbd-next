@@ -37,7 +37,9 @@
     "crates/wbd-engine/src/v4_game_public_kernel.rs",
     "r0/go_overlay/internal/windowsclient/native_udp_kernel_driver_windows.go",
     "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_peer_windows.go",
-    "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go"
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
+    "openwrt/package/files/wbd-next-v4.config",
+    "openwrt/package/files/wbd-next-v4.init"
   ],
   "doc_refs": [
     "docs/architecture/MIGRATION.md",
@@ -161,7 +163,8 @@
     "H934 fixes stale --outer-mtu default1500 in feature card and governance context_refs length9>8; source H932 default1460 implementation unchanged; old governance failures remain historical.",
     "H935 fixes actual source adc18d75 Windows Fixed pre-READY rc=1: v5 original TLS Rust owner used peer TX record cap without applying local receiving Wintun planned-inner ceiling. Cold-only pure Rust receive derivation narrows TX cap; no RX authorization, OS Applied or Game group changed. Native Fixed still NOT_RUN at new SOURCE.",
     "H936 Windows-only Rust original M3 integration unit asserts actual v5 FEC2 fixed outer1400, planned inner1273, wire1318, stop/rollback and independent authenticated RX; no actual Windows↔WSL app delivery claimed.",
-    "H935 SOURCE2b2ad98 Windows owner ABI run41442869483 FAIL E0502 immutable Registry lane borrow crossing mutable cold bind; H937 clone existing Arc handle only, no byte/authorization change, new exact SOURCE test pending."
+    "H935 SOURCE2b2ad98 Windows owner ABI run41442869483 FAIL E0502 immutable Registry lane borrow crossing mutable cold bind; H937 clone existing Arc handle only, no byte/authorization change, new exact SOURCE test pending.",
+    "H938 OpenWrt disabled UCI wrapper now has one explicit outer_mtu default1460 passed to same Linux --outer-mtu; Android currently no connected native owner, its setMtu(1200) is a non-operational INNER placeholder, never treated as outer1460; neither platform native applied qualified."
   ],
   "promotion": null
 }
