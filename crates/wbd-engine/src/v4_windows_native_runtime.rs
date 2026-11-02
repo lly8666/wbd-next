@@ -673,14 +673,19 @@
          if counters.stopping.load(Ordering::Acquire){return OK}
          let result=(||->Result<bool,i32>{
              {
-                 let e=lock_owner(&lane,&counters,LockDirection::Tx)?;
-                 // Genuine post-M3 AEAD+PN, not TCP ACK or inactivity.
-                 // DORMANT is not a dead-peer verdict: only a separate
-                 // verified client FIN plus business-idle may dormancy.
-                 if e.m2.as_ref().is_some_and(|m|
-                     m.health.unhealthy(m2_clock().0)){
-                     eprintln!("WBD_WINDOWS_RUST_NATIVE_HEALTH_TIMEOUT reason=authenticated_dead_after_90s");
-                     return Err(AUTHENTICATED_PEER_DEAD)
+                 let mut e=lock_owner(&lane,&counters,LockDirection::Tx)?;
+                 // One Rust authenticated clock decides dead90. Keep the
+                 // healthy reverse peer synchronized with an encrypted
+                 // old-generation retirement notice BEFORE owned Stop.
+                 // No new timer/control carrier or untrusted NPF trigger.
+                 let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+                 if m.health.unhealthy(m2_clock().0){
+                     if m.health.peer_retired() || m.retire_notice_sent ||
+                         m.retire_notice_attempts>=3{
+                         eprintln!("WBD_WINDOWS_RUST_NATIVE_HEALTH_TIMEOUT reason=authenticated_dead_or_peer_retired");
+                         return Err(AUTHENTICATED_PEER_DEAD)
+                     }
+                     m.retire_notice_due=true;
                  }
              }
              let mut work=0;

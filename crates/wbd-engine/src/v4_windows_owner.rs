@@ -110,6 +110,8 @@ struct WindowsOriginalM2 {
     quality_slow_due:VecDeque<(u64,wbd_recovery::quality_window::LossBounds)>,
     // Per-lane state, no thread/timer; TX Health deadline not yet activated.
     health:crate::v4_native_health::HealthClock,
+    retire_notice_due:bool,retire_notice_inflight:bool,
+    retire_notice_sent:bool,retire_notice_attempts:u8,
     // Same W168 mature source-only denominator as Linux Fixed; never a
     // Go carrier ACK or configuration-intent receipt.
     #[cfg(feature="fec2_product_record")]
@@ -376,6 +378,8 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         quality_slow_due:VecDeque::with_capacity(16),
         health:crate::v4_native_health::HealthClock::new(
             crate::v4_native_health::HealthPolicy::default_connected(),now.0),
+        retire_notice_due:false,retire_notice_inflight:false,
+        retire_notice_sent:false,retire_notice_attempts:0,
         #[cfg(feature="fec2_product_record")]
         mature,
         #[cfg(feature="fec2_product_record")]
@@ -426,10 +430,11 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let auto=e.feature7&&e.m2.as_ref().is_some_and(|m|m.auto_low_rate_mode)
         &&e.game_group.is_none();
     let next_pn=e.owner.next_original_record_pn().ok_or(BAD_STAGE)?;
-    let (draft,health_due,quality,signal)={
+    let (draft,health_due,quality,signal,retire)={
         let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
         if m.feedback_pending.is_some(){return Ok(None)}
-        let signal=if auto{
+        let retire=m.retire_notice_due;
+        let signal=if retire{None}else if auto{
             if let Some(window)=m.quality_close_waiting {
                 Some(crate::v4_native_health::QualityWindowSignal{
                     kind:crate::v4_native_health::QualitySignalKind::Close,
@@ -471,21 +476,26 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                 })
             }else{None}
         }else{None};
-        let quality=if signal.is_some(){None}else{win_mature_quality_due(m,now)};
+        let quality=if retire||signal.is_some(){None}else{win_mature_quality_due(m,now)};
         // Auto explicitly disables old bitmap draft generation; other
         // modes temporarily retain their existing unmodified repair path.
         let draft:Option<FeedbackDraft>=None;
         let health_due=m.health.tx_due(now.0);
-        if draft.is_none()&&!health_due&&quality.is_none()&&signal.is_none(){
+        if !retire&&draft.is_none()&&!health_due&&quality.is_none()&&signal.is_none(){
             return Ok(None)
         }
-        (draft,health_due,quality,signal)
+        (draft,health_due,quality,signal,retire)
     };
     let prepared=(||->Result<(usize,u32,u64),i32>{
         // PLAN027: only sparse Quality or authenticated Health controls.
         // Fixed/off must never send per-record bitmap Receipts.
         let budget=normal_off_windows_budget(e)?;
-        let tlv=if let Some(signal)=signal{
+        let tlv=if retire{
+            let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
+            crate::v4_native_health::encode_authenticated_retire_live(
+                m.health.local_idle_ns(now.0),budget.record_payload_mtu
+            ).map_err(|_|INVALID)?
+        }else if let Some(signal)=signal{
             let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
             crate::v4_native_health::encode_authenticated_low_rate_signal_live(
                 m.health.local_idle_ns(now.0),signal,budget.record_payload_mtu
@@ -543,13 +553,18 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
     match prepared{
         Ok((n,seq,pn))=>{
+            if retire{m.retire_notice_inflight=true;m.retire_notice_due=false;}
             m.quality_awaiting=quality.map(|(key,_)|key);
             m.quality_signal_awaiting=signal;
-            m.feedback_pending=Some((draft,pn,health_due||
+            m.feedback_pending=Some((draft,pn,retire||health_due||
                 m.quality_awaiting.is_some()||signal.is_some()));
             Ok(Some((n,seq,pn)))
         },
         Err(err)=>{
+            if retire{
+                m.retire_notice_due=false;
+                m.retire_notice_attempts=m.retire_notice_attempts.saturating_add(1);
+            }
             // No NPF syscall accepted this draft: restore dirty coverage.
             if let Some(draft)=draft.as_ref(){
                 let _=m.feedback.on_send_result(
@@ -575,6 +590,11 @@ fn m2_finish_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if *expected!=pn{return Err(INVALID)}
     let (draft,_,has_health)=m.feedback_pending.take().ok_or(BAD_STAGE)?;
     let now=m2_clock();
+    if m.retire_notice_inflight{
+        m.retire_notice_inflight=false;
+        m.retire_notice_attempts=m.retire_notice_attempts.saturating_add(1);
+        m.retire_notice_sent=npcap_sent==1;
+    }
     if let Some(signal)=m.quality_signal_awaiting.take(){
         match signal.kind{
             crate::v4_native_health::QualitySignalKind::Start=>{
@@ -2675,6 +2695,38 @@ mod tests {
         e.rx_unwrapped_high=(1u64<<32)+120;
         assert_eq!(m0_tcp_unwrap(&e,30,40).unwrap(),(1u64<<32)+30);
         assert_eq!(m0_tcp_unwrap(&e,150,40).unwrap(),(1u64<<32)+150);
+    }
+
+    #[test]
+    fn plan027_windows_retire_control_original_m4_driver_settlement(){
+        let mut r=Registry{generation:2027,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        let ep=[2u8;16];
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        assert_eq!(bind_wintun(&mut r,h,ep,91,19),OK);
+        assert!(set_path_mtu(&mut r,h,ep,91,19,1400).is_ok());
+        {
+            let mut e=r.entries[&h].lock().unwrap();
+            m2_arm_entry(&mut e,ep,91,19).unwrap();
+            assert!(!e.m2.as_ref().unwrap().health.unhealthy(m2_clock().0));
+            // The native TX loop only requests this after original Rust
+            // authenticated Health expires. This exercises the actual
+            // sealed M3 record / driver completion state.
+            e.m2.as_mut().unwrap().retire_notice_due=true;
+            let mut buf=[0u8;2048];
+            let (n,_,pn)=m2_next_feedback_entry(&mut e,ep,91,19,&mut buf).unwrap().unwrap();
+            assert!(n>51);
+            assert!(e.m2.as_ref().unwrap().retire_notice_inflight);
+            assert_eq!(m2_finish_feedback_entry(&mut e,ep,91,19,pn,1),Ok(()));
+            let m=e.m2.as_ref().unwrap();
+            assert!(!m.retire_notice_due&&!m.retire_notice_inflight);
+            assert!(m.retire_notice_sent);
+            assert_eq!(m.retire_notice_attempts,1);
+            assert_eq!(m.shadow.outstanding(),0);
+        }
+        assert_eq!(quiesce_wintun(&mut r,h,ep,91,19),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
     }
 
     #[test]
