@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "previous_dispatcher_run": 41457351564,
+  "previous_dispatcher_outcome": "FAIL_PREBUILD_WAIT_PARSER",
+  "previous_error": "H953_H952_BUILD_OR_NATIVE_FAILED <empty>",
+  "root": "GitHub CLI gh api --jq .conclusion renders pending JSON null as empty string, not literal null",
+  "fix": "Allow empty/null conclusion to poll; error for any other non-success terminal result; H952 original source run immutable 41456643128; product artifacts required; no compile",
+  "result": "NOT_RUN_WAITING_REDISPATCH",
+  "h952_product_run": 41456643128,
+  "h952_source": "54160ac88b9b41d10f4c3f885879dd68646466a0",
+  "old_failures_preserved": [
+    41455568369,
+    41457351564
+  ],
+  "remaining": "source-scoped 10 Game native tests and PLAN027A DF0/DF1/ARM64/staged Game4 and PLAN028"
+}

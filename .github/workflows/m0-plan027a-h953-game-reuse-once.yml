@@ -34,8 +34,11 @@ jobs:
           for i in $(seq 1 85); do
             state="$(gh api "repos/$GH_REPO/actions/runs/$GAME_BUILD_RUN" --jq .conclusion)"
             if [ "$state" = success ]; then break; fi
-            if [ "$state" != null ]; then echo "H953_H952_BUILD_OR_NATIVE_FAILED $state"; exit 1; fi
-            sleep 12
+            # GitHub CLI --jq renders a JSON null field as an empty string.
+            # An empty conclusion means the old build is still running,
+            # NOT a failed previous job; only a nonempty failure is terminal.
+            if [ -z "$state" ] || [ "$state" = null ]; then sleep 12; continue; fi
+            echo "H953_H952_BUILD_OR_NATIVE_FAILED $state"; exit 1
           done
           test "$state" = success || { echo H953_H952_PREVIOUS_BUILD_TIMEOUT_NO_DISPATCH; exit 1; }
           gh api "repos/$GH_REPO/actions/runs/$GAME_BUILD_RUN/artifacts" \
