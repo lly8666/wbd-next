@@ -1,0 +1,10 @@
+# PLAN027 H889｜H888 cheap gate: exact test and evidence contract correction
+
+- H888 SOURCE `0cd308c3acf6ff6e7919906d474f27b41c970b73` Action41399165868 stopped in **cheap** test `tests.test_m0_wl_native_step_runner.test_native_step_has_no_raw_wsl_pipe_and_own_progress`. The legacy fixture asserted literal `$wholeLimit=if($gameSingle){600}else{1020}`, while the new scoped test-only Normal105 underlay lease deliberately uses 600 Game / 780 Normal105 / 1020 other. This is test assertion drift, not genuine signed Windows native rerun or product regression.
+- H888 governance checks also correctly rejected cursor claiming latest tested source `e5f2e329` with a heterogeneous H884/H886 evidence JSON lacking one common `source_sha`. Do not falsify old evidence, relax the governor or call multi-source comparison a single-source qualification. Add dedicated H886 Game4 original 4-lane OFF native evidence with exact `source_sha=e5f2e32977f3b4c6098c8ff2b1d957e0e00dd00f`; cursor `evidence_refs` lists ONLY same-source proof. The combined H884/H886/H883 recovery file remains contextual and source-detailed, not cursor verified evidence.
+- H889 changes just the old static watchdog assertion to check three explicit bounds and adds the owned H888 name marker check; one exact H886 sourced evidence; cursor and this devlog. Original Go TLS/Rust and H888 run-owned management /32 lease unchanged. Cheap tests and governance still must actually pass. The corrected commit explicitly triggers **one** source-locked H888 105s managed original Windows→Linux IFB scenario `[plan027-h888-managed105]`, not all modes.
+- H883 Action41395214862 remains in_progress with unavailable completed job log (GET404) and no original true Stop/reconnect record. It cannot be retroactively given H889 result or assigned a root cause. No physical run.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Repair historical test assertion and single-SOURCE cursor evidence pin after cheap CI failure; test runner scoped management unchanged; no runtime product changes."}
+```

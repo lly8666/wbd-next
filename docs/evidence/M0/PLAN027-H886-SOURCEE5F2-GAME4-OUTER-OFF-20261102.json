@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source_sha": "e5f2e32977f3b4c6098c8ff2b1d957e0e00dd00f",
+  "run_id": 41396919297,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41396919297",
+  "artifact_id": 13120620018,
+  "artifact_digest": "sha256:3643354f7304b759a357a2d8b598433ee59782712e77727adbd0b9eeeda4dff8",
+  "scenario_id": "plan027-h886-game4-outer-off-10m-25ms-loss5-60s",
+  "scenario_sha256": "f61524ee2b2fa3a60e4fe98ba09b95d9c2f7f25970bfb556c524e4f761382404",
+  "platform": "Windows 2025 real signed NPF/Wintun ↔ Linux WSL2 TUN original Go TLS/Rust",
+  "mode": "game4",
+  "lanes": 4,
+  "game_fec": "off",
+  "outer_repair_requested": "off",
+  "outer_repair_effective": {
+    "windows": 0,
+    "linux": 0
+  },
+  "offered_mbps": {
+    "windows": 9.9972,
+    "linux": 9.9999
+  },
+  "first_delivered_mbps": {
+    "windows": 9.9998,
+    "linux": 9.997
+  },
+  "first_delivery_fraction": {
+    "windows": 0.999988,
+    "linux": 0.999988
+  },
+  "duration_s": 60,
+  "delay_ms": 25,
+  "loss_pct": 5,
+  "windows_original_process_cpu_s": 7.6406,
+  "windows_original_process_elapsed_s": 76,
+  "windows_original_process_peak_working_set_bytes": 57163776,
+  "windows_rust_native_tx_records": 334712,
+  "windows_rust_native_rx_first_ipv4": 83606,
+  "owned_stop": "PASS_BOTH_OWNED",
+  "verdict": "TRUE_NATIVE_PRODUCT_PASS_4LANE_FEC_OFF_OUTER_OFF_ONLY",
+  "limits": "Not highest Game FEC, 250ms 30%, long ON, physical or cross-OS one-way p99. Earlier source H884 and other Action's CPU are not comparable."
+}

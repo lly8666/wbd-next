@@ -381,7 +381,10 @@ class NativeChildStdoutLifetimeTests(unittest.TestCase):
         self.assertIn("kill_native_child_tree(child)",runner)
         self.assertIn("faulthandler.dump_traceback_later",runner)
         self.assertIn("$gameSingle",flow)
-        self.assertIn("$wholeLimit=if($gameSingle){600}else{1020}",flow)
+        # Game FEC stays at 600s; only exact Normal105 scoped management
+        # has its own intermediate 780s outer guard. Others keep 1020s.
+        self.assertIn("$wholeLimit=if($gameSingle){600}elseif($env:WBD_WL_RUNNER_MGMT_PIN -eq '1'){780}else{1020}",flow)
+        self.assertIn("PLAN027_H888_MANAGED_105_RUNNER_UNDERLAY_PINNED",flow)
 
     def test_gamefec_actual_log_observer_is_owned_by_one_pid_supervisor(self):
         mode=(ROOT/"tools/m0_wl_public_modes_e2e.py").read_text()
