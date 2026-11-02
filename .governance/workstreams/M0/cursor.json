@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 984,
-  "checkpoint_sha": "418eac036c3798b6a2e10fc3315086bc6289234f",
+  "sequence": 985,
+  "checkpoint_sha": "464e4ebccd4c13272114ca3b5d34325939e60742",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H984: H983 PLAN012 original-Go full seven-file MSS assembly and Go faketcp real SYN/SYNACK byte tests PASS, but later realityfront historical donor/overlay tests do not compile because references faketcp.DefaultMSS were correctly removed from current V4 product. H984 migrates exactly 11 references across four known *_test.go files in ephemeral original Go checkout to test-only 1460 outer -> MSS1420 vector; initializes current V4 MSS only for tests. Product MSS Rust budget, Go SYN/SYNACK and ABI unchanged.",
-  "why_now": "Do not restore DefaultMSS symbol or a silent fixed 1360 fallback in current V4. H983 failure is test-only compile at Go realityfront, not product runtime after seven-file assembly.",
+  "current_task": "M0 PLAN027A H985 MSS/Fixed-FEC2 56B scoped native closeout: five Windows/WSL2 original-Go native Actions and five real two-Linux ARM64 cases all PASS; H984 PLAN012 true original-Go Linux combined 41503654559 fully SUCCESS. Preserve old failures and unqualified FEC quality.",
+  "why_now": "Actual byte-level MSS, record, both OS TUN readback and Stop verified.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion. All default outer IPv4 user settings 1460; explicit1500 remains maximum and golden vector.",
-  "next_action": "Collect H984 PLAN012 native real CLI client/server SYN MSS1420 encoded options and post-authenticated record/TUN/Stop, preserve H983 Action41502753626 FAIL. If genuine native bug emerges, fix narrowly. H981 5 Windows and H982 5 Linux already native PASS without rerun.",
+  "next_action": "Scope complete; physical WAN/long Auto maturity and PLAN028-030 remain independent.",
   "unverified": true,
   "last_tested_source": "ae3e7e9f52c415b60d596b7e923ade07f463d4ed",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027A-H943-ONE-SHOT-1460-1500-20261102.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN027A-H981-NATIVE-FIXED-LINUX-20261102.json",
-    "docs/devlog/M0/20261102-PLAN027A-H981-NATIVE-FIXED-LINUX.md",
     "docs/evidence/M0/PLAN027A-H982-LINUX-INITIAL-SYN-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H982-LINUX-INITIAL-SYN.md",
     "docs/evidence/M0/PLAN027A-H983-PER-ACTION-MSS-FIXED-20261102.json",
     "docs/devlog/M0/20261102-PLAN027A-H983-PLAN012-FULL-FAKETCP.md",
     "docs/evidence/M0/PLAN027A-H984-OLD-TEST-MSS-20261102.json",
-    "docs/devlog/M0/20261102-PLAN027A-H984-TEST-FIXTURE.md"
+    "docs/devlog/M0/20261102-PLAN027A-H984-TEST-FIXTURE.md",
+    "docs/evidence/M0/PLAN027A-H985-MSS-FEC-COLLECT-20261103.json",
+    "docs/devlog/M0/20261103-PLAN027A-H985-COLLECT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H981 Windows native true b9966eec five Actions 41496471520/41496482942/41496496092/41496509099/41496520728 ALL PASS with 1460 Fixed1375, 1500 Fixed1415, 1460 Normal1389, Auto1375, Game4FEC1358. Fixed actual MSS options 0204058c or 020405b4 and Go record offer/wire 1420/1460. H982 Linux ARM64 source d83159ad Action41496813152 five true client/server real kernel MTU MSS/record/Stop PASS including 1500↔1280 Fixed1195 real peer MSS1240. PLAN012 source d831 Action41496813024 FAIL frozen1360 actual packet from helper-only assembly; H983 corrected seven file and tests PASS but subsequent Go realityfront test FAIL undefined faketcp.DefaultMSS (old donor test code). H984 test-only exact 1460/MSS1420 fixture migration in checkout; no current product fixed MSS reintroduced."
+  "partial_summary": "Five Windows runs 41496471520 Fixed1460 MSS1420 record1420 inner1375; 41496482942 Fixed1500 MSS1460 record1460 inner1415; 41496496092 Normal1389; 41496509099 Auto1375; 41496520728 GameFEC1358 all genuine UDP/TCP/Stop. Linux ARM64 41496813152 five true two-Go clients/server modes PASS, asymmetric 1500/1280 MSS1460/1240 wire1240 OS1195. PLAN012 old 41496813024 failed original1360, H983 41502753626 old-test compile failed; H984 41503654559 all success (1pct 512/508, Fixed/Auto64, Game2/4 no HOL, Stop)."
 }

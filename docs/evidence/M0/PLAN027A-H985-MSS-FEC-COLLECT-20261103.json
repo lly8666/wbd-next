@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "scope": "MSS_FIXED_FEC2_SCOPED_FUNCTIONAL_NOT_FULL_PLAN027A",
+  "outer_default": 1460,
+  "max_explicit": 1500,
+  "old_wrong": {
+    "run": 41488208305,
+    "Fixed1460": 1333,
+    "root": "FEC1_56B"
+  },
+  "windows_binary_source": "b9966eecb3e30820d298ff8b2fc5d069f10b9aad",
+  "windows_native": [
+    {
+      "run": 41496471520,
+      "mode": "Fixed",
+      "outer": 1460,
+      "actual_mss": 1420,
+      "option": "0204058c",
+      "record": 1420,
+      "os_inner": [
+        1375,
+        1375
+      ],
+      "stop": "PASS"
+    },
+    {
+      "run": 41496482942,
+      "mode": "Fixed",
+      "outer": 1500,
+      "actual_mss": 1460,
+      "option": "020405b4",
+      "record": 1460,
+      "os_inner": [
+        1415,
+        1415
+      ],
+      "stop": "PASS"
+    },
+    {
+      "run": 41496496092,
+      "mode": "Normal",
+      "outer": 1460,
+      "os_inner": [
+        1389,
+        1389
+      ],
+      "stop": "PASS"
+    },
+    {
+      "run": 41496509099,
+      "mode": "Auto",
+      "outer": 1460,
+      "os_inner": [
+        1375,
+        1375
+      ],
+      "stop": "PASS"
+    },
+    {
+      "run": 41496520728,
+      "mode": "Game4FEC",
+      "outer": 1460,
+      "os_inner": [
+        1358,
+        1358
+      ],
+      "stop": "PASS"
+    }
+  ],
+  "linux_two_end": {
+    "source": "d83159adf97256d4ce4983d8a95e8198cb0bdc72",
+    "run": 41496813152,
+    "all": "PASS_REAL_AF_PACKET_TLS_RUST_OS_TUN_STOP",
+    "cases": [
+      [
+        "Normal",
+        1460,
+        1460,
+        1420,
+        1420,
+        1420,
+        1389
+      ],
+      [
+        "Fixed",
+        1460,
+        1460,
+        1420,
+        1420,
+        1420,
+        1375
+      ],
+      [
+        "Auto",
+        1460,
+        1460,
+        1420,
+        1420,
+        1420,
+        1375
+      ],
+      [
+        "Fixed",
+        1500,
+        1500,
+        1460,
+        1460,
+        1460,
+        1415
+      ],
+      [
+        "Fixed",
+        1500,
+        1280,
+        1460,
+        1240,
+        1240,
+        1195
+      ]
+    ],
+    "columns": [
+      "mode",
+      "client_outer",
+      "server_outer",
+      "actual_client_syn_mss",
+      "actual_server_synack_mss",
+      "agreed_record",
+      "both_tun_os"
+    ],
+    "actual_options": [
+      "0204058c",
+      "020405b4",
+      "020404d8"
+    ],
+    "physical_both": 1500
+  },
+  "plan012": {
+    "prior_failures": [
+      41496813024,
+      41502753626
+    ],
+    "full_pass_run": 41503654559,
+    "source": "464e4ebccd4c13272114ca3b5d34325939e60742",
+    "real_udp_tcp_tls_stop": "PASS",
+    "tc_1pct": {
+      "offered": 512,
+      "first_unique": 508,
+      "missing": 4,
+      "tc_client": 7,
+      "tc_server": 4
+    },
+    "fixed_first": 64,
+    "auto_first": 64,
+    "game2_first": 5,
+    "game4_first": 5,
+    "damaged_lane_no_hol": "PASS",
+    "artifact_id": 13169233027,
+    "artifact_mss_numeric": "NOT_EXPORTED; source Go SYN byte validator PASS; separate H982 has true per-end byte logs"
+  },
+  "unqualified": [
+    "mature Auto FEC quality",
+    "physical WAN PMTUD",
+    "PLAN028-030"
+  ]
+}
