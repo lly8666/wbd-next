@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "previous_source": "1151a4da7e4e86125f95bc635cc0a5ef21b8980f",
+  "default_outer_ipv4_ip_mtu": 1460,
+  "windows_numeric_receipt_status": "NOT_RUN",
+  "observed_failures": [
+    {
+      "source": "f09395c4d38e59da8789b8d4e275a45d8691a901",
+      "run": 41451477835,
+      "result": "FAIL",
+      "reason": "cursor context_refs=9 exceeds 8"
+    },
+    {
+      "source": "1151a4da7e4e86125f95bc635cc0a5ef21b8980f",
+      "run": 41452055396,
+      "result": "FAIL",
+      "reason": "cursor context_refs=11 exceeds 8"
+    },
+    {
+      "source": "1151a4da7e4e86125f95bc635cc0a5ef21b8980f",
+      "run": 41452055617,
+      "result": "FAIL",
+      "reason": "Python receipt regex and sample log accidentally overescaped; cheap-workflow unit stopped before native build"
+    }
+  ],
+  "changes": [
+    "trim cursor context_refs to latest8 without deleting referenced historical evidence",
+    "Python r regex uses one backslash for digit class",
+    "Python test strings contain real newline escape"
+  ],
+  "new_source_build": "NOT_RUN",
+  "current_native": "NOT_RUN",
+  "old_source_native": "H943 scoped functional successes preserved"
+}

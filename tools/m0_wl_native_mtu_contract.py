@@ -34,7 +34,7 @@ def configured_native_test_mtu()->int:
 # its READY marker. The reported value is verified by its generation-scoped
 # Win32 MTU CAS inspection, not a CLI argument or a fabricated test input.
 _WINDOWS_INNER_MTU_RECEIPT=re.compile(
- r"^WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 planned=(\\d+) applied=(\\d+) outer_config=(\\d+)$",
+ r"^WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 planned=(\d+) applied=(\d+) outer_config=(\d+)$",
  re.MULTILINE,
 )
 

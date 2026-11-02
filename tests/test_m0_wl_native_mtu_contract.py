@@ -25,14 +25,14 @@ class NativeM4MTUTests(unittest.TestCase):
  def test_live_windows_numeric_mtu_receipt_is_required_and_not_outer_argument(self):
   prefix="WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 "
   line=prefix+"planned=1329 applied=1329 outer_config=1460"
-  self.assertEqual(verified_native_windows_inner_mtu("owned start\\n"+line+"\\nWBD_WINDOWS_CLIENT_READY\\n",1460),1329)
+  self.assertEqual(verified_native_windows_inner_mtu("owned start\n"+line+"\nWBD_WINDOWS_CLIENT_READY\n",1460),1329)
   self.assertEqual(verified_native_windows_inner_mtu(
-   prefix+"planned=1398 applied=1398 outer_config=1500\\n",1500),1398)
+   prefix+"planned=1398 applied=1398 outer_config=1500\n",1500),1398)
   for bad in (
    "",prefix+"planned=1329 applied=1328 outer_config=1460",
    prefix+"planned=1500 applied=1500 outer_config=1460",
    prefix+"planned=1329 applied=1329 outer_config=1500",
-   line+"\\n"+line,
+   line+"\n"+line,
    prefix+"planned=0 applied=0 outer_config=1460",
   ):
    with self.assertRaises(ValueError):
