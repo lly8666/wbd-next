@@ -259,6 +259,13 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   # Independently validate the numeric receipt emitted by the REAL
   # same-generation Windows N4 owner before READY; no hand-fed inner MTU.
   windows_inner=verified_native_windows_inner_mtu(winlog,configured_mtu)
+  if mode=="normal":
+   from m0_wl_public_mss_contract import verified_current_v4_mss
+   linux_log=(out/"server.log").read_text(errors="replace")
+   budget_and_wire=verified_current_v4_mss(winlog,linux_log,configured_mtu)
+   report["plan027a_real_syn_synack_mss"]=budget_and_wire
+   print("PLAN027A_BOTH_REAL_SYN_SYNACK_MSS_VERIFIED "+json.dumps(budget_and_wire,sort_keys=True),flush=True)
+
   report["plan027a_windows_os_inner_mtu_verified"]=windows_inner
   print("PLAN027A_WINDOWS_INNER_OS_READBACK",windows_inner,"outer",
         configured_mtu,"selector",native_outer,flush=True)
