@@ -1,6 +1,34 @@
 //go:build windows && wbd_v4_embedded_go
 package main
-import("errors";"testing")
+import("context";"errors";"fmt";"syscall";"testing";"github.com/lly8666/wobuzhidao/internal/faketcp")
+func TestM0PLAN027WindowsColdRetryRequiresAuthenticatedDeadAndNoAppliedOS(t *testing.T){
+ timeout:=fmt.Errorf("original cold FakeTCP: %w",faketcp.ErrBootstrapTimeout)
+ for _,e:=range []error{timeout,fmt.Errorf("network timed out: %w",context.DeadlineExceeded),syscall.ETIMEDOUT}{
+  if !m0WindowsOriginalColdRetryAllowed(true,false,0,e){
+   t.Fatalf("post-dead transient cold transport must retry: %v",e)
+  }
+ }
+ for _,row:=range []struct{
+  name string
+  authorized,applied bool
+  retry int
+  err error
+ }{
+  {"initial_cold",false,false,0,timeout},
+  {"already_applied",true,true,0,timeout},
+  {"limit",true,false,2,timeout},
+  {"auth_rejection",true,false,0,errors.New("credentials rejected")},
+  {"tls_invariant",true,false,0,errors.New("certificate mismatch")},
+  {"no_error",true,false,0,nil},
+ }{
+  t.Run(row.name,func(t *testing.T){
+   if m0WindowsOriginalColdRetryAllowed(row.authorized,row.applied,row.retry,row.err){
+    t.Fatal("must remain fail-closed")
+   }
+  })
+ }
+}
+
 func TestM0PLAN027WindowsNativeAuthDeadOnlyAfterOriginalRustHealth(t *testing.T){
  if !errors.Is(m0WindowsRustNativeWorkerError(6),errM0NativeV4AuthenticatedPeerDead){
   t.Fatal("Rust authenticated dead90 must reauthorize Go cold TLS after owned Stop")

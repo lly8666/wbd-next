@@ -66,6 +66,19 @@ type m0NativeV4ProductPeer interface {
 }
 var errM0NativeV4AuthenticatedPeerDead=errors.New("Rust verified authenticated peer dead; cold TLS reauthorization after native Stop")
 
+// Retry only a transient original Go cold transport timeout AFTER the
+// previous authenticated Rust-dead verdict and genuine owned Stop. A
+// credential reject, driver error, previously applied generation or initial
+// connect failure may never be reclassified as an authorized reconnect.
+func m0WindowsOriginalColdRetryAllowed(authorized,applied bool,retries int,err error)bool{
+ if !authorized||applied||retries>=2||err==nil{return false}
+ if errors.Is(err,context.DeadlineExceeded)||
+  errors.Is(err,syscall.ETIMEDOUT)||
+  errors.Is(err,faketcp.ErrBootstrapTimeout){return true}
+ var ne net.Error
+ return errors.As(err,&ne)&&ne.Timeout()
+}
+
 // Cold authenticated original V4 record offer must not exceed the receiving
 // Windows native TUN's selected inner MTU after Linux's existing framing.
 // This is the SAME original Go TLS ClientLimit, not a new control round.
@@ -106,24 +119,44 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
  slot,err:=acquireGUIClientSlot()
  if err!=nil{return err}
  defer windows.CloseHandle(slot)
- for generation:=uint64(1);;generation++{
+ reauthAuthorized:=false
+ coldRetries:=0
+ for generation:=uint64(1);;{
   if ctx.Err()!=nil{return nil}
-  err:=runM0NativeV4WindowsGeneration(ctx,o,autoOperatorRequests)
+  applied:=false
+  err:=runM0NativeV4WindowsGeneration(ctx,o,autoOperatorRequests,&applied)
+  // After genuine dead90, a new FakeTCP SYN can precede recovery of a
+  // 105s one-way outage. Keep GUI alive and retry only cold timeouts,
+  // never bypass TLS authentication or reuse the old Rust generation.
+  if ctx.Err()==nil && o.Mode!=m0WinModeGame2 && o.Mode!=m0WinModeGame4 &&
+   m0WindowsOriginalColdRetryAllowed(reauthAuthorized,applied,coldRetries,err){
+   coldRetries++
+   fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_COLD_RETRY generation=%d attempt=%d class=timeout\n",generation,coldRetries)
+   timer:=time.NewTimer(2*time.Second)
+   select{
+   case <-ctx.Done():timer.Stop();return nil
+   case <-timer.C:
+   }
+   continue
+  }
   if !errors.Is(err,errM0NativeV4AuthenticatedPeerDead)||ctx.Err()!=nil{return err}
+  reauthAuthorized=true
+  coldRetries=0
   fmt.Printf("WBD_WINDOWS_NATIVE_DEAD_RECONNECT_ARMED generation=%d old_owner_drained=1\n",generation)
   timer:=time.NewTimer(time.Second)
   select{
   case <-ctx.Done():timer.Stop();return nil
   case <-timer.C:
   }
-  fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_REAUTHORIZE generation=%d\n",generation+1)
+  generation++
+  fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_REAUTHORIZE generation=%d\n",generation)
  }
 }
 
 // One original-Go credential TLS + Rust NativeOwner generation. The caller
 // owns GUI/stop and starts the next epoch only after this one's WAL Stop.
 func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
- autoOperatorRequests <-chan realityfront.FecV2Profile)error{
+ autoOperatorRequests <-chan realityfront.FecV2Profile,applied *bool)error{
  underlay,err:=windowsclient.DiscoverPhysicalUnderlay(o.ServerIP,0)
  if err!=nil{return err}
  ncfg,err:=underlay.NpcapConfig(o.SourcePort,o.ServerPort,1,faketcp.PacketPersonaWindows11)
@@ -420,6 +453,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  // Native OS readback and original Rust M3 peer first+reverse proved.
  fmt.Println("WBD_WINDOWS_OS_APPLIED")
  fmt.Println("WBD_WINDOWS_CLIENT_READY")
+ if applied!=nil{*applied=true}
  // Read-only producer counters are emitted at 1 Hz (never per packet)
  // for isolated Windows sustained harness accounting. They do not grant
  // application goodput, CPU/RSS, WFP or product OS receipt.
