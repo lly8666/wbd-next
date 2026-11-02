@@ -615,6 +615,52 @@
       "path": "internal/realityfront/bridge_v4_windows_native_io_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io_test.go",
       "result_blob": "b35209efc4a81e7b55650d56cd6811274c74f0f9"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/faketcp/packet.go",
+      "original_blob": "6ac1f9b3d7208278d31078be8d61e2f3a6dbbd3b",
+      "overlay_path": "r0/go_overlay/internal/faketcp/packet.go",
+      "result_blob": "4dd669bedc455596fb9b9da3306cb0a7010246be"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/faketcp/client_association.go",
+      "original_blob": "83e85b4871ee59e7ab47ea2b53387bef584898c4",
+      "overlay_path": "r0/go_overlay/internal/faketcp/client_association.go",
+      "result_blob": "d80b51c69a577a73fcc6494ff3cf554dd44ba162"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/faketcp/association.go",
+      "original_blob": "779cb74a9719f15615b6315ec548996951ae9138",
+      "overlay_path": "r0/go_overlay/internal/faketcp/association.go",
+      "result_blob": "aa584980df88e0f034049c6a83cb1e4409f8a7d9"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/faketcp/association_test.go",
+      "original_blob": "1a0180f7c3033b4d0e6980bc351735cf93ef08cc",
+      "overlay_path": "r0/go_overlay/internal/faketcp/association_test.go",
+      "result_blob": "de20ef1d172e4c432546c69b89ac701944821074"
+    },
+    {
+      "kind": "create",
+      "path": "internal/faketcp/public_v4_mss.go",
+      "overlay_path": "r0/go_overlay/internal/faketcp/public_v4_mss.go",
+      "result_blob": "f31c4ca427cee864e499d1c201c56070358d0c10"
+    },
+    {
+      "kind": "create",
+      "path": "internal/faketcp/public_v4_mss_test.go",
+      "overlay_path": "r0/go_overlay/internal/faketcp/public_v4_mss_test.go",
+      "result_blob": "20678052954fca4f849362dd3174abd20cfb1cb7"
+    },
+    {
+      "kind": "create",
+      "path": "internal/faketcp/public_v4_mss_byte_test.go",
+      "overlay_path": "r0/go_overlay/internal/faketcp/public_v4_mss_byte_test.go",
+      "result_blob": "5ec59832eafafba158054fe4a0bea10671cf28c8"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

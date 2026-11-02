@@ -16,30 +16,9 @@ test "$(git -C legacy rev-parse HEAD)" = "$GO_SOURCE"
 # pinned legacy temp checkout. Never change the old repository/commit. The
 # original DefaultMSS remains the fallback for old callers and tests.
 mkdir -p legacy/internal/faketcp
-cp r0/go_overlay/internal/faketcp/public_v4_mss.go legacy/internal/faketcp/public_v4_mss.go
-# P0 shared: authenticated Normal/Game handoff replaces the AF_PACKET port filter,
-# not merely discard cloned data after ReadSegment.
+python3 tools/m0_install_public_faketcp.py legacy
 cp r0/go_overlay/internal/faketcp/raw_detached_data_linux.go legacy/internal/faketcp/raw_detached_data_linux.go
 cp r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go legacy/internal/faketcp/raw_detached_data_linux_test.go
-python3 - <<'PY'
-from pathlib import Path
-patches={
-    'association.go': [('MSS: DefaultMSS, MSSSet: true,','MSS: PublicV4AdvertisedMSS(), MSSSet: true,',1)],
-    'client_association.go': [('MSS: DefaultMSS, MSSSet: true,','MSS: PublicV4AdvertisedMSS(), MSSSet: true,',1)],
-    'packet.go': [
-        ('s.MSSSet && s.MSS == DefaultMSS &&','s.MSSSet && s.MSS == PublicV4AdvertisedMSS() &&',1),
-        ('binary.BigEndian.PutUint16(o[2:4], DefaultMSS)',
-         'binary.BigEndian.PutUint16(o[2:4], PublicV4AdvertisedMSS())',2),
-    ],
-}
-for name, fixes in patches.items():
-    p=Path('legacy/internal/faketcp')/name
-    text=p.read_text()
-    for old,new,expected in fixes:
-        assert text.count(old)==expected,(name,old,text.count(old))
-        text=text.replace(old,new)
-    p.write_text(text)
-PY
 if [ ! -d "$RUNNER_TEMP/wbd-isa-l/.git" ]; then
   git clone --quiet https://github.com/intel/isa-l.git "$RUNNER_TEMP/wbd-isa-l"
 fi

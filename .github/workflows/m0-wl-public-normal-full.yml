@@ -575,28 +575,9 @@ jobs:
           # by freeze's tools/arm64_public_go_rust_bundle.sh. The legacy Go
           # repository remains pinned/immutable; patch only this Actions copy.
           mkdir -p legacy/internal/faketcp
-          cp r0/go_overlay/internal/faketcp/public_v4_mss.go legacy/internal/faketcp/public_v4_mss.go
+          python3 tools/m0_install_public_faketcp.py legacy
           cp r0/go_overlay/internal/faketcp/raw_detached_data_linux.go legacy/internal/faketcp/raw_detached_data_linux.go
           cp r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go legacy/internal/faketcp/raw_detached_data_linux_test.go
-          python3 - <<'PY'
-          from pathlib import Path
-          patches={
-              'association.go':[('MSS: DefaultMSS, MSSSet: true,','MSS: PublicV4AdvertisedMSS(), MSSSet: true,',1)],
-              'client_association.go':[('MSS: DefaultMSS, MSSSet: true,','MSS: PublicV4AdvertisedMSS(), MSSSet: true,',1)],
-              'packet.go':[
-                  ('s.MSSSet && s.MSS == DefaultMSS &&','s.MSSSet && s.MSS == PublicV4AdvertisedMSS() &&',1),
-                  ('binary.BigEndian.PutUint16(o[2:4], DefaultMSS)','binary.BigEndian.PutUint16(o[2:4], PublicV4AdvertisedMSS())',2),
-              ],
-          }
-          for name,changes in patches.items():
-              p=Path('legacy/internal/faketcp')/name
-              raw=p.read_text()
-              for find,replace,expected in changes:
-                  actual=raw.count(find)
-                  if actual!=expected:raise RuntimeError(f'frozen W168 source mismatch {name}: {find!r} expected={expected} actual={actual}')
-                  raw=raw.replace(find,replace)
-              p.write_text(raw)
-          PY
           # The private original-Go credential logic remains pinned; only
           # new V4 named overlay files from the identical checkout are added.
           for f in r0/go_overlay/internal/realityfront/*.go; do
