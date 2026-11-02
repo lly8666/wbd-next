@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "source_sha": "2b531228a470906469d79b0bb6127a82c3530607",
+  "fixture_source_sha": "c8f1732a7eec71f562a05a4aeb9d06b57de6b05f",
+  "run_id": 41373552423,
+  "artifact_name": "plan027-h854-new-on30",
+  "result": "PASS_SCOPED_ORIGINAL_NORMAL_ON30_INTEGRATION_NOT_CPU_OPTIMIZATION",
+  "scope": "Original Linux Go TLS Rust M4, Normal outer ON, 10Mbps each/250ms one-way/real IID30pct/60s, UDP64/128/512/1200 bytes weights10/15/25/50",
+  "native": {
+    "first_fraction": {
+      "c2s": 0.7285505095089999,
+      "s2c": 0.728608896111903
+    },
+    "p99_ms_delivered_only": {
+      "c2s": 879.4,
+      "s2c": 882
+    },
+    "real_netem_drops": {
+      "client": 34191,
+      "server": 34328
+    },
+    "F_IP_bytes": {
+      "c2s": 92288051,
+      "s2c": 92291922
+    },
+    "R_IP_bytes": {
+      "c2s": 8213587,
+      "s2c": 8206218
+    },
+    "R_over_F": {
+      "c2s": 0.08899946321328207,
+      "s2c": 0.0889158858345154
+    },
+    "cpu_s_steady": {
+      "client": 3.39,
+      "server": 3.66
+    },
+    "rss_peak_bytes": {
+      "client": 20840448,
+      "server": 20905984
+    },
+    "owned_stop": true,
+    "owned_namespace_cleanup": true,
+    "original_tls_rust_handoff": true
+  },
+  "limitations": [
+    "Actual repair is cosmetic, no 99pct business requirement for nonFEC 30pct true loss",
+    "High-loss ON passes F/R 10pct and Stop but CPU and p99 cannot establish lossless source optimization ROI on different VM",
+    "This test does not override causal sameVM ON100 no-benefit result, C physical NOT_MEASURED"
+  ]
+}

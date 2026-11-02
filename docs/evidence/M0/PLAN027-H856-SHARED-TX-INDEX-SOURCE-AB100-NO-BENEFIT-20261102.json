@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "source_sha": "2b531228a470906469d79b0bb6127a82c3530607",
+  "baseline_source_sha": "e928b50cf872b6746a62c56662e5fc0768c5ca45",
+  "fixture_source_sha": "c8f1732a7eec71f562a05a4aeb9d06b57de6b05f",
+  "run_id": 41373552478,
+  "artifact_name": "plan027-h854-source-ab100",
+  "result": "PASS_SCOPED_AB_MEASURED_NO_CPU_BENEFIT_REJECT_OPTIMIZATION",
+  "scope": "Same VM sequential BEFORE e928→AFTER 2b5312 original Go TLS+Rust M4 Linux Normal repair ON 100Mbps each/25ms one-way/0pct 1200B/60s, original manifest and all three binary hashes each; exact Rust product delta only shadow ACK index",
+  "theory": {
+    "pps_per_direction": 10416.667,
+    "business_BDP_bytes_per_direction": 625000
+  },
+  "BEFORE": {
+    "cpu_s": {
+      "client": 27.58,
+      "server": 27.62
+    },
+    "first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "p99_ms": 26,
+    "owned_stop": true,
+    "peak_rss_bytes": {
+      "client": 35782656,
+      "server": 35930112
+    },
+    "R_ip_bytes": {
+      "c2s": 163,
+      "s2c": 163
+    }
+  },
+  "AFTER": {
+    "cpu_s": {
+      "client": 27.59,
+      "server": 27.69
+    },
+    "first_fraction": {
+      "c2s": 1,
+      "s2c": 1
+    },
+    "p99_ms": 26,
+    "owned_stop": true,
+    "peak_rss_bytes": {
+      "client": 35708928,
+      "server": 35979264
+    },
+    "R_ip_bytes": {
+      "c2s": 163,
+      "s2c": 163
+    }
+  },
+  "cpu_after_minus_before_s": {
+    "client": 0.01,
+    "server": 0.07
+  },
+  "CPU_gain_proven": false,
+  "decision": "REJECT_AND_ROLLBACK_H852_RUST_ACK_INDEX_CHANGE_NO_MEANINGFUL_CPU_GAIN",
+  "limitations": [
+    "Actual sameVM order BEFORE→AFTER one sample, tiny unfavorable deltas not justification for reverse noise chase",
+    "F/R original M4 IP full warm+steady, C physical not measured",
+    "Old source prior Go cold source e928 and optimized source H853 Go identical, Rust exactly two files changed; rollback restores old Rust source; no optimized source Windows/physical claim"
+  ]
+}
