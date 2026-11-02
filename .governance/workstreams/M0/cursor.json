@@ -4,28 +4,28 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 853,
-  "checkpoint_sha": "7d6baa7297020337520914afb58c0521aa9c3935",
+  "sequence": 854,
+  "checkpoint_sha": "2b531228a470906469d79b0bb6127a82c3530607",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H853: H852 Rust shared original TX retain-only ACK index source7d6 compiled FAILED PRE-NATIVE due `end` local moved into monotonic helper, true business NOT_RUN. H853 exact one-token fix `end:self.highest_sent_end` in existing validated insertion and trigger same single build Action. H851 genuine f5 worker CPU TX ~79% ON overhead, e928 cold105 restored first100%/99.813% but native INCONCLUSIVE. New optimization source binary and performance pending.",
-  "why_now": "H852 build preflight Rust compiler E0425 at only BTree insertion because local end moved into on_unretained_firstsend; source fix uses already validated monotonic upper bound, not semantic tuning. Rebuild once, no workload dispatch.",
+  "current_task": "PLAN027 H854: H853 new Rust shared index source2b5312 builder Action41373270074 in progress, build+3 hash pending. Two independent source-frozen original Linux Actions queued: same-VM old e928→new H853 Normal outer ON100Mbps25ms0%1200B60s real first/p99/CPU/RSS/Stop to determine actual optimization, and new-H853 Normal ON10Mbps250ms real 30pct F/R/first tc/Stop adaptation. No perf PASS yet. H851 old f5 Rust TX ~79% of ON overhead; H848 e928 real blackhole first100/99.813 native INCONCLUSIVE TUN27. Windows fdc short functional seven modes PASS, WL performance/physical NOT_RUN.",
+  "why_now": "New shared Rust ACK index source build started; proactively complete both independent test/fixture contracts with exact source manifest hash and proper old/new sameVM match so measurements can run after once-build. Product frozen SHA2b5312, no further product changes in fixtures.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H853 Rust unit+bundle manifest/sha. Only after successful build, create source-frozen two distinct measurement Actions: sameVM source e928→H853 ON100 business/CPU/RSS comparison, and one 10Mbps250ms true30% ON original raw TLS/Rust regression, both reuse H853 bundle.",
+  "next_action": "Collect builder Action41373270074 first and H854 independent sameVM BEFORE/AFTER ON100 and true loss30 ON results. Qualify/rollback shared index based on measured full process and no first/p99/Stop/RF regression. No excess same-family tests, continue lifecycle and Windows OFF if independent.",
   "unverified": true,
   "last_tested_source": "e928b50cf872b6746a62c56662e5fc0768c5ca45",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H848-E928-BILATERAL-BLACKHOLE-RECOVERY-INCONCLUSIVE-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H846-REAUTH-SYN-R100.md",
     "docs/devlog/M0/20261102-PLAN027-H847-WINDOWS-FDC-SEVEN-NATIVE.md",
     "docs/devlog/M0/20261102-PLAN027-H848-E928-COLD-SYN-NATIVE-RECOVERY.md",
     "docs/devlog/M0/20261102-PLAN027-H849-R100-WORKER-CPU-ATTRIBUTION.md",
     "docs/devlog/M0/20261102-PLAN027-H850-EXACT-SOURCE-KEY.md",
     "docs/devlog/M0/20261102-PLAN027-H851-WORKER-ATTR-OUTPUT-OWNERSHIP.md",
     "docs/devlog/M0/20261102-PLAN027-H852-RUST-TX-SHADOW-INDEX-BUILD.md",
-    "docs/devlog/M0/20261102-PLAN027-H853-ACK-END-COMPILE.md"
+    "docs/devlog/M0/20261102-PLAN027-H853-ACK-END-COMPILE.md",
+    "docs/devlog/M0/20261102-PLAN027-H854-SHARED-INDEX-AB-LOSS.md"
   ],
   "open_requests": [],
   "partial_summary": "H848 e928 real double blackhole105 original TLS/Rust new Ready each and Stop: restored120s c2s first100% s2c first99.813% (379 missing), p99 60.2/25.8ms, zero deliver gap~1.2s, source TUN27 upstream, host PSI0.1; native INCONCLUSIVE not full PASS. Prior fdc recovery82.4% p99~21.3s retained FAIL. H846 R100 f5 sameVM CPU ON delta5.53/5.78% with R163/0B. H847 Win fdc seven-mode native functional not WL load. No new physical. H852 H851 full-owner worker CPU exact f5 Normal100 ON cost +1.55/+1.41 whole, Rust TX +1.228/+1.112 (~79%), RX+.333/.323. Targeted ACK index only for truly retained ciphertext; no branch/source performance claim yet, build pending."
