@@ -1,5 +1,7 @@
 # 迁移顺序与旧功能继承
 
+> **后续服务端产品化方案（2026-11-02，PLANNED）：** [最小配置与wbd-next统一CLI](../decisions/M0-SERVER-CLI-SIMPLIFICATION-20261102.md)。服务端保留借站域名；规划持久安装/完整卸载/配置/客户端信息/启停，复用旧部署与租约语义。不替换当前PLAN027或声称已实现。
+
 > **新Windows优先包（2026-10-28）：** [PLAN026 Go冷控制 + Rust NativeOwner](../decisions/M0-PLAN026-WINDOWS-RUST-NATIVE-IO-OWNER-20261028.md)覆盖下方旧 Windows Go direct-TCP/Auto/keepalive热路径过渡策略。保留既有 Go TLS/OS管理和安全回滚，不保留每包Go业务泵；先 Normal/off，再 Fixed/Auto/Game/Health/换lane。旧表仍作历史复用来源和功能清单，不代表今天已实施。
 
 产品装配和并行归属按[PLAN-008](../decisions/M0-integration-unblock-2026-10-19.md)收口：复用固定旧SOURCE的Go冷层/配置/GUI已在用户授权范围；可在本仓库保存有hash的overlay/替换清单，Actions组装真实程序。缺少完整旧目录不构成再次申请许可的理由；不修改旧仓库主线、不移植旧数据wire、不移除未实现能力门来冒充接通。

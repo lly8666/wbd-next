@@ -7,3 +7,5 @@
 已完成接线/M2退役/Normal比例保留证据，仅补缺口；不恢复A5旧Go对照。新旧CPU仍需同VM顺序A/B。一Action一测量场景、产物复用；容量止步不免除其他任务，OFF矩阵不冒充ON全通过。完整完成条件见PLAN027§0，完成后不无限扩测。
 
 功能：[features](docs/features/README.md)；夹具：[WL V2](docs/testing/WL_PERF_HARNESS_V2.md)（历史限制以实际workflow及PLAN027为准）；诊断：[NETWORK_TRIAGE](docs/testing/NETWORK_TRIAGE.md)；历史：[INDEX](docs/history/INDEX.md)。按问题再追SOURCE/devlog/evidence，不将旧PASS迁到新源码或物理机。
+
+后续已登记（仅PLANNED，不打断当前任务）：[服务端最小配置与统一CLI](docs/decisions/M0-SERVER-CLI-SIMPLIFICATION-20261102.md)，含服务端借站域名、持久安装/完整卸载、配置与客户端查看。
