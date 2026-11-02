@@ -1,0 +1,48 @@
+name: M0 PLAN027A H958 exact existing native DF0 DF1
+run-name: "M0|PLAN027A-H958-REAL-DF|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-plan027a-h958-df.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  one-df:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_RUN: "41456643128"
+      PRODUCT_SHA: "54160ac88b9b41d10f4c3f885879dd68646466a0"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Exact compiled product gate and real socket contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN" --jq .head_sha)" = "$PRODUCT_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN" --jq .conclusion)" = success
+          gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN/artifacts" --jq '.artifacts[] | select(.expired==false) | .name' >/tmp/products
+          grep -Fx "m0-wl-windows-product-binaries-$PRODUCT_SHA" /tmp/products
+          grep -Fx m0-plan024-linux-product /tmp/products
+          git fetch --depth=1 origin "$PRODUCT_SHA"
+          diff="$(git diff --name-only "$PRODUCT_SHA" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py)"
+          test -z "$diff" || { echo "H958_REFUSE_PRODUCT_CHANGE $diff";exit 1; }
+          python3 -m unittest tests.test_m0_wl_native_df_kernel tests.test_m0_wl_perf_v2_config -v
+          python3 -m py_compile tools/m0_wl_native_df_kernel.py tools/m0_wl_public_normal_e2e.py
+      - name: Dispatch one genuine Windows Linux DF0 DF1 source-exact Action
+        shell: bash
+        run: |
+          set -euo pipefail
+          scene=scenarios/plan027a-h958-normal-1460-5m-df-60s.json
+          title="M0-WIN-LINUX|$GITHUB_SHA|normal|$scene|outer=default1460"
+          existing="$(gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" | jq -r --arg x "$title" '.workflow_runs[] | select(.display_title==$x) | .id' | head -1)"
+          if [ -n "$existing" ]; then echo "H958_ALREADY_DISPATCHED $existing"; exit 0; fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f native_outer_mtu=default1460 \
+            -f outer_repair=on -f run_n0=false -f "perf_scenario_file=$scene" \
+            -f "perf_reuse_run_id=$PRODUCT_RUN" -f "perf_binary_source_sha=$PRODUCT_SHA"
+          echo H958_ONE_TRUE_NATIVE_DF_QUEUED_NOT_PASS

@@ -394,6 +394,50 @@ print(json.dumps(result),flush=True)
   tcp[role]=observed
  report["actual_kernel_tcp"]=tcp
  report["tcp_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_TCP"
+ # Exact native DF0/DF1 scenario only, after authenticated original-Go
+ # TLS, actual Windows Wintun and WSL2 Linux TUN TCP+UDP smoke.
+ if os.environ.get("WBD_WL_V2_SCENARIO")==(
+     "scenarios/plan027a-h958-normal-1460-5m-df-60s.json"):
+  df_file=root/"tools/m0_wl_native_df_kernel.py"
+  df_flag=out/"df-real-kernel-ready.flag"
+  df_flag.unlink(missing_ok=True)
+  df_children=[]
+  try:
+   for name,cmd in (
+    ("windows",[sys.executable,str(df_file),"10.66.0.2","10.66.0.1",str(df_flag)]),
+    ("linux",["wsl.exe","-d","Ubuntu","-u","root","--","python3",
+              unix(df_file),"10.66.0.1","10.66.0.2",unix(df_flag)])):
+    log=(out/("df-"+name+".log")).open("w");logs.append(log)
+    df_children.append((name,subprocess.Popen(cmd,stdout=log,stderr=subprocess.STDOUT)))
+   for name,p in df_children:
+    ready(out/("df-"+name+".log"),'"phase": "bound"',p,25)
+   df_flag.write_text("REAL_BOTH_OS_SOCKETS_BOUND\n")
+   deadline=time.monotonic()+45
+   while any(p.poll() is None for _,p in df_children):
+    if s.poll() is not None or w.poll() is not None:
+     raise RuntimeError("original Rust/Go native product exited during DF probe")
+    if time.monotonic()>deadline:raise RuntimeError("real DF0/DF1 bounded OS deadline")
+    time.sleep(.15)
+   verified={}
+   for name,p in df_children:
+    content=(out/("df-"+name+".log")).read_text(errors="replace").strip().splitlines()
+    if p.returncode or not content:
+     raise RuntimeError("genuine "+name+" DF probe failed rc="+str(p.returncode)+
+                        " tail="+repr(content[-3:]))
+    item=json.loads(content[-1])
+    if (item.get("result")!="REAL_DF0_REASSEMBLED_DF1_EMSGSIZE" or
+        item.get("received_bytes")!=1728 or item.get("df1_errno") not in (90,10040)):
+     raise RuntimeError("invalid true "+name+" OS DF receipt "+repr(item))
+    verified[name]=item
+   report["plan027a_real_native_df0_df1"]=verified
+   print("PLAN027A_WINDOWS_LINUX_KERNEL_DF0_FRAGMENT_DF1_EMSGSIZE_PASS",flush=True)
+  finally:
+   for _,p in df_children:
+    if p.poll() is None:
+     p.terminate()
+     try:p.wait(timeout=3)
+     except subprocess.TimeoutExpired:p.kill()
+
  # One scoped B lifecycle scenario: both original 10.66.x app sockets have
  # closed after real UDP+TCP, so the owned tunnel has no user payload. Keep
  # the genuine Go TLS/Rust owners alive beyond the 90s authenticated-dead

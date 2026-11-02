@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source": "H958_HEAD",
+  "product_source": "54160ac88b9b41d10f4c3f885879dd68646466a0",
+  "binary_run": 41456643128,
+  "df0_native": "NOT_RUN",
+  "df1_native": "NOT_RUN",
+  "icmp_type3_code4": "NOT_MEASURED",
+  "scenario": "scenarios/plan027a-h958-normal-1460-5m-df-60s.json",
+  "new_product_code": false,
+  "required_results": "real both OS DF0 1728B datagram first/complete, DF1 OS local EMSGSIZE, existing UDP/TCP and 5Mbps two-OS kernel V2+Stop",
+  "other_unfinished": [
+    "PLAN028",
+    "PLAN029",
+    "PLAN030"
+  ]
+}
