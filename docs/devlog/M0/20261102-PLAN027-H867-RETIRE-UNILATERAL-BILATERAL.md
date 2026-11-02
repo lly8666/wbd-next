@@ -1,0 +1,9 @@
+# PLAN027 H867 | Parallel one-SOURCE real authenticated-retire unilateral vs bilateral
+
+- H866 immutable SOURCE `b74728ba0b1ee45c632c31117fc8c08c042e11a0` original Go TLS/Rust M4 [Action41383107457](https://github.com/lly8666/wbd-next/actions/runs/41383107457) Rust strict authenticated kind1 token and HealthClock tests, full native Go+Rust original binary build, manifest/three SHA256 **PASS**. Code semantics: only actual native Health-dead produces <=3 original M4 encrypted kind1 retire copies, receiver only M3 AEAD+unique PN and scoped generation may retire; neither Go timers nor raw ACK authorize TLS.
+- Launch **two distinct independent Actions and one scenario each** (no second builder, no performance A/B across hosted runners): unilateral real c2s-only 105s 100% netem with healthy reverse 2Mbps both before/after, 120s restored true TUN, and bilateral real both-direction105s 100% netem at10Mbps each after restore120s. Both reuse exactly same new product source/binary hashes via bundle run41383107457. Original prior source377613 unilateral [Action41378829504](https://github.com/lly8666/wbd-next/actions/runs/41378829504) failed first46.88/51.53% with 64.1s gap due server old Health dead78.4s earlier; prior source377 bilateral [Action41378640754](https://github.com/lly8666/wbd-next/actions/runs/41378640754) was a genuine first100/100% PASS. New SOURCE result NOT_RUN until artifacts measure both native roles, tc applied, first/p99/TUN/generation/Stop.
+- Retain H864 source377 ON mixed300 and Game4/FEC6 native qualified only within their old source, unaffected by a newer Rust authenticated-retire protocol until a warranted ON regression. Physical Windows not deployed; Windows real repair OFF product binding still missing.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Two immutable-source native correctness measurements of newly implemented authenticated retirement; no runtime code or user config changes."}
+```

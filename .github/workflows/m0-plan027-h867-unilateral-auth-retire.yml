@@ -1,0 +1,68 @@
+# H862: corrected unilateral phase inherits validated jitter_ms/full netem fields; exactly one native job, frozen source.
+name: M0 PLAN027 H867 authenticated-retire unilateral 105s true product
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-plan027-h867-unilateral-auth-retire.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  one-original-cold-stage-oneway:
+    if: contains(github.event.head_commit.message, '[plan027-h867-unilateral]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PRODUCT_SOURCE: b74728ba0b1ee45c632c31117fc8c08c042e11a0
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 50}
+      - name: Verify only fixture changed since one product SOURCE and safe scenario
+        run: |
+          set -euo pipefail
+          git cat-file -e "$PRODUCT_SOURCE^{commit}"
+          git diff --quiet "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/arm64_public_go_rust_bundle.sh
+          python3 -m unittest tests.test_m0_plan027_native_reauth_diag tests.test_m0_plan027_h861_unilateral -v
+          python3 -m py_compile tools/network_harness/m0_plan027_h861_unilateral.py
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          run-id: "41383107457"
+          name: plan027-h865-once-original-auth-retire
+          github-token: ${{ github.token }}
+          path: native-bundle
+      - name: Exact SOURCE manifest and frozen three original product SHA256
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("native-bundle/manifest.json"))
+          assert m["source"]==os.environ["PRODUCT_SOURCE"] and m["architecture"]=="x86_64"
+          PY
+          (cd native-bundle && sha256sum -c SHA256SUMS)
+          chmod +x native-bundle/wbd-v4-client native-bundle/wbd-v4-server
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+          test -c /dev/net/tun
+      - name: Exactly one real unilateral c2s105 at2Mbps with 120s restored business
+        run: |
+          set -euo pipefail
+          sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB,PRODUCT_SOURCE \
+            python3 -m tools.network_harness.m0_plan027_h861_unilateral \
+              --bundle "$GITHUB_WORKSPACE/native-bundle" \
+              --product-source "$PRODUCT_SOURCE" \
+              --scenario scenarios/plan027-n-cold-unilateral-c2s105-2m.json \
+              --out "$GITHUB_WORKSPACE/plan027-h867-oneway"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan027-h867-retire-oneway-c2s105-2m
+          path: |
+            plan027-h861-oneway/result.json
+            plan027-h861-oneway/oneway/result.json
+            plan027-h861-oneway/oneway/client-product-markers.log
+            plan027-h861-oneway/oneway/server-product-markers.log
+            plan027-h861-oneway/oneway/network-snapshots.json
+            plan027-h861-oneway/oneway/summary.md
+          if-no-files-found: warn
+          retention-days: 30
