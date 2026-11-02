@@ -48,6 +48,8 @@ impl RxLockSample{
 struct TxRejectReasons {
     offer:AtomicU64,slab:AtomicU64,record:AtomicU64,policy:AtomicU64,
     raw:AtomicU64,raw_backpressure:AtomicU64,raw_route:AtomicU64,raw_mtu:AtomicU64,
+    df0_fragments:AtomicU64,icmp3_code4_sent:AtomicU64,
+    icmp3_code4_denied:AtomicU64,
 }
 #[derive(Default)]
 struct RxRejectReasons {
@@ -96,6 +98,9 @@ impl GameKernelOwner{
             tun_name.len()>15||seqs.contains(&0){return Err(())}
         let tun=Arc::new(ScopedTunSink::from_owned_fd(fd,generation,tun_name)
             .map_err(|_|())?);
+        // One actual cold Win32/Go-equivalent OS-address readback, not
+        // a speculative use of public destination or carrier outer IP.
+        let trusted_tun_router_ip=tun.owned_local_ipv4().ok();
         let mut tx=Vec::with_capacity(n);
         let mut rx=Vec::with_capacity(n);
         for i in 0..n{
@@ -192,6 +197,11 @@ impl GameKernelOwner{
                 // One bounded exceptional datagram; ordinary small IP goes
                 // first on every loop, then at most 4 IP fragments per turn.
                 let mut pending_ip_fragments=VecDeque::<Vec<u8>>::new();
+                // Bounded local PMTU feedback: <=20 messages per 1s window,
+                // no per-flow timer/retry/extra worker. Usually Linux returns
+                // EMSGSIZE before a DF1 datagram enters this TUN owner.
+                let mut local_icmp_window=Instant::now();
+                let mut local_icmp_credit=20u32;
                 // Game FEC presentation-only replay has two/four fixed
                 // lane slots, owned exclusively by this existing TX worker.
                 let mut cosmetic=scoped_cosmetic;
@@ -238,12 +248,38 @@ impl GameKernelOwner{
                             if pending_ip_fragments.is_empty(){
                                 match wbd_platform::ipv4_fragment::fragment_ipv4_df0(
                                     &inbound[..len],inner_mtu,32){
-                                    Ok(parts)=>pending_ip_fragments.extend(parts),
+                                    Ok(parts)=>{
+                                        tx_fail.df0_fragments.fetch_add(
+                                            parts.len() as u64,Ordering::Relaxed);
+                                        pending_ip_fragments.extend(parts);
+                                    },
+                                    Err(wbd_platform::ipv4_fragment::FragmentError::DfSet)=>{
+                                        if local_icmp_window.elapsed()>=Duration::from_secs(1){
+                                            local_icmp_window=Instant::now();
+                                            local_icmp_credit=20;
+                                        }
+                                        if let Some(router)=trusted_tun_router_ip.filter(|_|
+                                            local_icmp_credit>0){
+                                            // Only a real scoped Linux TUN
+                                            // kernel write counts as emitted.
+                                            // No fabricated Applied/AEAD/FEC.
+                                            local_icmp_credit-=1;
+                                            if tx_tun.write_owned_local_pmtu_icmp(
+                                                generation,&inbound[..len],
+                                                router,inner_mtu as u16).is_ok(){
+                                                tx_fail.icmp3_code4_sent.fetch_add(
+                                                    1,Ordering::Relaxed);
+                                            }else{
+                                                tx_fail.icmp3_code4_denied.fetch_add(
+                                                    1,Ordering::Relaxed);
+                                            }
+                                        }else{
+                                            tx_fail.icmp3_code4_denied.fetch_add(
+                                                1,Ordering::Relaxed);
+                                        }
+                                        tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                    },
                                     Err(_)=>{
-                                        // DF1 is normally rejected by the
-                                        // sender's OS (EMSGSIZE/ICMP) before
-                                        // this consumer. This branch does NOT
-                                        // pretend a Linux TUN write occurred.
                                         tx_rejected.fetch_add(1,Ordering::Relaxed);
                                     },
                                 }
@@ -531,6 +567,10 @@ impl GameKernelOwner{
                     }
                     arena.drain_returns();
                 }
+                eprintln!("WBD_GAME_IPV4_MTU_EXCEPTION df0_ip_fragments={} icmp3_code4_kernel_sent={} icmp3_code4_rejected={} NOT_REMOTE_APPLIED=1",
+                    tx_fail.df0_fragments.load(Ordering::Relaxed),
+                    tx_fail.icmp3_code4_sent.load(Ordering::Relaxed),
+                    tx_fail.icmp3_code4_denied.load(Ordering::Relaxed));
                 if fec_enabled&&outer_repair_enabled{
                     eprintln!("WBD_GAME_FEC_LINUX_NORMAL_OUTER_STOP copied_appearance={} original_pn_seq_only=1 no_fec_credit=1 peer_ack_after_aead=1",
                         cosmetic.sent());

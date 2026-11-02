@@ -4,6 +4,7 @@
 //! Synchronous kernel write copy completion is NOT application receipt.
 #![cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use std::io;
+use std::net::UdpSocket;
 use std::os::fd::{AsRawFd,OwnedFd};
 use std::sync::atomic::{AtomicBool,Ordering};
 use std::sync::Mutex;
@@ -11,6 +12,8 @@ use crate::r1::{BorrowFence,BorrowError,StopResult};
 use std::time::Instant;
 
 const TUNGETIFF:usize=0x800454d2;
+const SIOCGIFADDR:usize=0x8915; // Linux socket ioctl, cold only
+const AF_INET:u16=2;
 const IFF_TUN:i16=0x0001;
 const IFF_NO_PI:i16=0x1000;
 const MAX_NAME:usize=15;
@@ -80,6 +83,43 @@ impl ScopedTunSink {
     }
     pub fn name(&self)->&str{&self.name}
     pub fn generation(&self)->u32{self.generation}
+    /// Cold lookup of the OS-owned TUN IPv4 address after Go configured it.
+    /// This is the actual interface identity pinned by TUNGETIFF, never an
+    /// outer FakeTCP address or guessed router source. No hot-path syscall.
+    pub fn owned_local_ipv4(&self)->Result<[u8;4],TunError>{
+        if self.is_stopping(){return Err(TunError::Stopped)}
+        let socket=UdpSocket::bind("0.0.0.0:0").map_err(|e|
+            TunError::Kernel(e.raw_os_error().unwrap_or(5)))?;
+        let mut ifreq=[0u8;40]; // audited Linux64 ifreq, same as TUNGETIFF
+        ifreq[..self.name.len()].copy_from_slice(self.name.as_bytes());
+        // SAFETY: the datagram socket is live and owned by this stack frame;
+        // ioctl writes only an ifreq(40) with sockaddr_in at bytes16..32.
+        if unsafe{ioctl(socket.as_raw_fd(),SIOCGIFADDR,ifreq.as_mut_ptr())}<0{
+            return Err(TunError::Kernel(io::Error::last_os_error()
+                .raw_os_error().unwrap_or(5)))
+        }
+        if u16::from_ne_bytes([ifreq[16],ifreq[17]])!=AF_INET{
+            return Err(TunError::InvalidPacket)
+        }
+        let ip=[ifreq[20],ifreq[21],ifreq[22],ifreq[23]];
+        if ip[0]==0||ip[0]>=224||ip==[255,255,255,255]{
+            return Err(TunError::InvalidPacket)
+        }
+        Ok(ip)
+    }
+    /// Local RFC1191 feedback for one DF1 packet consumed from THIS genuine
+    /// TUN owner. Input is untrusted TUN egress; the pure builder forbids
+    /// malformed/header-error/error-to-error/multicast/nonfirst-fragment.
+    /// Reuses the original serialized kernel fd; does not authenticate
+    /// remote ciphertext or create a second packet pump.
+    pub fn write_owned_local_pmtu_icmp(&self,generation:u32,original:&[u8],
+        router_ip:[u8;4],mtu:u16)->Result<usize,TunError>{
+        let message=crate::ipv4_fragment::icmp_fragmentation_needed(
+            original,router_ip,mtu).map_err(|_|TunError::InvalidPacket)?;
+        // The existing scoped TUN writer is a kernel submission primitive,
+        // not a claim that this locally built ICMP was authenticated remotely.
+        self.write_authenticated_ipv4(generation,&message)
+    }
     /// Poll-only while the owning generation is alive.
     pub fn readiness_fd(&self)->i32{self.fd.as_raw_fd()}
     pub fn begin_stop(&self){

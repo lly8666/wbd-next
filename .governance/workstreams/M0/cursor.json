@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 928,
-  "checkpoint_sha": "e854377fe796eb2d392a2c2be6266231881045a2",
+  "sequence": 930,
+  "checkpoint_sha": "6af3e6ed2003965e214b5947091ce83492f6011d",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
-  "current_task": "PLAN027A H928 Linux Game DF0 bounded IP exception fallback and pure ICMP3/4 builder; Windows cold Rust Go ABI test fix at H927, product remains incomplete pending OS and native matrix.",
+  "current_task": "PLAN027A H930 Linux Game local OS-owned DF1 ICMP3/4 bounded feedback, with existing Game DF0 slow path; Windows full-v5 group and FEC exception still pending.",
   "why_now": "Recovery verified PLAN027 USER_ACCEPTED_SCOPED closed; no old Actions inflight on entry. New source push has auto CI only; do not dispatch duplicate native scenarios.",
   "done_when": "PLAN027A planned scope fully implemented and qualified: one real-codec/record/Game/FEC typed budget (1500 GameFEC inner1398), Go/Rust cold/owner and OS MTU readback, correct oversize IPv4 DF/fragment/ICMP per supported mode, actual Windows/Linux and ARM64 bounded native boundary tests with SOURCE/FRC/CPU/RSS/p99/Stop reporting and feature cards. No unsupported 9k/physical/IPv6 assertion.",
-  "next_action": "Build/source-locked H928 cross & platform unit, fix compiler-only regressions; next wire DF1 actual scoped local ICMP/EMSGSIZE to tested kernel path and Fixed/Normal/Windows compatibility; collect H927 original Windows WAL and Linux Go, then native seven-mode bounded matrix and weaknet.",
+  "next_action": "Collect H930 actual Rust build and Windows-original Go plan020; follow up only compiler/root cause. Verify real DF0/DF1 behavior and capacity without re-running 027 full-rate, preserve per-source FAIL/NOT_RUN; 028 not started.",
   "unverified": true,
   "last_tested_source": "6693910f879f9e55e77dd823c1b05d8942321929",
   "evidence_refs": [
@@ -34,5 +34,5 @@
     "docs/evidence/M0/PLAN027A-H925-SOURCE7D85-CODING-20261102.json"
   ],
   "open_requests": [],
-  "partial_summary": "H926 SOURCE 91f24414 PLAN020 Windows WAL source-locked assembly PASS, Go CLI unit FAIL undefined removed duplicate Go m0WindowsV4PeerRecordCap. H927 replaces old formula-only test with ABI layout+mode tests, refreshes exact manifest blobs. Rust H925 Windows ABI and cross builds PASS; H927 actual native seven-mode/DF/weaknet still NOT_RUN."
+  "partial_summary": "H929 exact SOURCE 6af3e6ed Rust platform/native-functional/g2/scoped/perf/governance Actions PASS unit/build only; cross ABI and no-scene in progress at checkpoint. H930 adds cold Linux TUN SIOCGIFADDR source and bounded 20/s local ICMP3/4 kernel write for genuine DF1 ingress. Not qualified as end-to-end PMTU Applied. Previous PLAN027 evidence still intact."
 }
