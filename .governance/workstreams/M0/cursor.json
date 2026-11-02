@@ -4,29 +4,31 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 865,
-  "checkpoint_sha": "b1aaf8d00d2aaa76d743eaedbd6579a8ea4c7204",
+  "sequence": 866,
+  "checkpoint_sha": "7489ac1767b5fe285f76e5180a7043ffa27dfd31",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H865: H863 source377613 authentic unilateral c2s-only105s reverse healthy native FAILED first46.88/51.53%, zero-delivery64.1s because server authenticated-dead/owned Stop precedes client by78.405s, client still sees reverse Health; bilateral105 10Mbps original source377613 PASS first100/100. H865 new Rust original M3 AEAD+unique PN authenticated retire kind1 LegacyQuality [4,1,0,0] on real Health dead, bounded <=3 original M4 copy attempts before owned Stop; peer verified receipt sets generation's Health dead then original Go cold TLS. New SOURCE source-build/unit Action queued NOT_RUN, no real unilateral PASS claimed. H864 independent original source377613 Game4FEC6 ON20Mbps250ms30% first100/100 CPU14.97/14.99 Stop PASS but Game F/R/C wire NOT_MEASURED; Normal ON mixed300 Action41381633987 still running. Windows true repair OFF product wiring not done.",
-  "why_now": "One-way healthy reverse path leaves client holding old authenticated Rust generation while server dead/Stop; 78.405s mismatch is not solved by Go retry or host CPU. Existing AEAD kind1 low-rate control can carry a bounded explicit generation retirement token, received only after original replay-unique M3 opener; no unverified raw ACK or global Health timer reduction.",
+  "current_task": "PLAN027 H866: source377613 real H864 Game4/FEC6 ON20M30 true original 4-lane first100%/100 p99258.4ms, native parity and outer copied784/785 counts, CPU14.97/14.99 Stop PASS but aggregate F/R/C NOT_MEASURED; Normal ON 300s 10Mbps25ms1% mixed 60%UDP+2 real TCP independent each dir PASS UDP first99.459/99.478%, TCP first100%, p99UDP25.5, no all-business cross-flow HOL, R/F0.486/0.464%, CPU14.14/14.86s over300, Stop PASS. H865 authenticated retire protocol new source7489 first build pre-native Rust E0308 missing semicolon at peer_retire_at.fetch_max, no product perf. H866 exact semicolon repair + same one SOURCE builder in flight. Real unilateral old377 source still FAIL 64s zero delivery; no new source PASS.",
+  "why_now": "H864 both independent Actions complete under frozen source, exact first/Stop/performance facts archived. H865 Rust first test pre-native compiler E0308 because fetch_max returns u64 as if-expression; one semicolon fix only, no reauth semantics changed or business result.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H865 Rust compilation and strict verified-kind1/Health unit and single source build/manifest hashes. Then run one original unilateral105 2Mbps and one bilateral105 10Mbps independent Actions reusing one bundle; failed unilateral historical source377 preserved. Collect H864 ON300 mixed/HOL with exact source377, no duplicate. After native retirement grade, affected modes and Windows true OFF/readback/lane rotation still pending.",
+  "next_action": "Collect H866 one original Go/Rust new SOURCE bundle build and Rust strict-token/clock tests, then independent new-source unilateral105 and bilateral105 real original underlay/first/Stop. If compiler/native fails classify actual and adjust narrowly; do not infer from previous source. Windows real OFF wiring/lane rotation still open.",
   "unverified": true,
   "last_tested_source": "377613dec8ea3b2fdd123079a580326c2ba52dfb",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H863-3776-BILATERAL105-10M-PASS-20261102.json",
-    "docs/evidence/M0/PLAN027-H863-3776-UNILATERAL105-2M-FAIL-20261102.json"
+    "docs/evidence/M0/PLAN027-H863-3776-UNILATERAL105-2M-FAIL-20261102.json",
+    "docs/evidence/M0/PLAN027-H866-3776-GAME4FEC6-ON20M30-20261102.json",
+    "docs/evidence/M0/PLAN027-H866-3776-NORMAL-ON300-MIXED-HOL-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H858-DEAD2M-AND-WIN-E387.md",
     "docs/devlog/M0/20261102-PLAN027-H859-COLD-MILESTONES.md",
     "docs/devlog/M0/20261102-PLAN027-H860-EXACT-CHECKOUT-PIN.md",
     "docs/devlog/M0/20261102-PLAN027-H861-PARALLEL-ONEWAY-BILATERAL.md",
     "docs/devlog/M0/20261102-PLAN027-H862-UNILATERAL-FIXTURE-SCHEMA.md",
     "docs/devlog/M0/20261102-PLAN027-H863-PARALLEL-BILATERAL-PASS-UNILATERAL-FAIL.md",
     "docs/devlog/M0/20261102-PLAN027-H864-INDEPENDENT-LONG-AND-GAME.md",
-    "docs/devlog/M0/20261102-PLAN027-H865-AUTHENTICATED-RETIRE.md"
+    "docs/devlog/M0/20261102-PLAN027-H865-AUTHENTICATED-RETIRE.md",
+    "docs/devlog/M0/20261102-PLAN027-H866-RETIRE-COMPILE-AND-ON-EVIDENCE.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."

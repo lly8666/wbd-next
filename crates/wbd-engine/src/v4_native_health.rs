@@ -211,7 +211,7 @@ impl AuthenticatedActivity {
         }
     }
     pub(crate) fn record_peer_retire(&self,at:u64){
-        if at>0{self.peer_retire_at.fetch_max(at,std::sync::atomic::Ordering::Release)}
+        if at>0{self.peer_retire_at.fetch_max(at,std::sync::atomic::Ordering::Release);}
     }
     pub(crate) fn absorb(&self,clock:&mut HealthClock){
         use std::sync::atomic::Ordering;

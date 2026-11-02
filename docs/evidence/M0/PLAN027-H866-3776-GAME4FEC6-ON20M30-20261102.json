@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "source_sha": "377613dec8ea3b2fdd123079a580326c2ba52dfb",
+  "fixture_source_sha": "fef7c1287702cec002f89262657f90507c56225e",
+  "run_id": 41381633989,
+  "artifact_name": "plan027-integration-game4-fec6-on20m30",
+  "result": "PASS_SCOPED_GAME4_FEC6_ON_NATIVE_COPIES_NOT_WIRE_RATIO",
+  "scope": "original Linux Go TLS Rust M4 Game4 FEC6 4 real lanes repair ON, duplex20Mbps per direction 250ms one-way 30% real tc iid60s",
+  "first": {
+    "c2s": 1,
+    "s2c": 1
+  },
+  "p99_ms": {
+    "c2s": 258.4,
+    "s2c": 258.4
+  },
+  "missing": {
+    "c2s": 0,
+    "s2c": 0
+  },
+  "real_qdisc_drops": {
+    "client": 454947,
+    "server": 454236
+  },
+  "outer_repair_native_copied_count": {
+    "client": 784,
+    "server": 785
+  },
+  "fec_parity_copied": {
+    "client": 228968,
+    "server": 229041
+  },
+  "four_lane_sent": {
+    "client": [
+      409977,
+      409977,
+      409977,
+      409977
+    ],
+    "server": [
+      410051,
+      410051,
+      410051,
+      410051
+    ]
+  },
+  "cpu_s_60": {
+    "client": 14.97,
+    "server": 14.99
+  },
+  "rss_peak_bytes": {
+    "client": 45871104,
+    "server": 45682688
+  },
+  "owned_stop_both": true,
+  "owned_namespaces_absent": true,
+  "F_R_C": "NOT_MEASURED_PHYSICAL_AND_GAME_LANE_BYTE_AGGREGATE",
+  "limitations": [
+    "Game retransmission count not same as F/R byte fraction",
+    "Game FEC RX conflict counters nonzero; first100% not evidence FEC repair independent contribution",
+    "Only original Linux source377613, Windows/physical and key rotation NOT_RUN"
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "source_sha": "377613dec8ea3b2fdd123079a580326c2ba52dfb",
+  "fixture_source_sha": "fef7c1287702cec002f89262657f90507c56225e",
+  "run_id": 41381633987,
+  "artifact_name": "plan027-normal-on300-true-mixed-hol",
+  "result": "PASS_SCOPED_NORMAL_ON_300S_MIXED_HOL_NOT_PHYSICAL_ROTATION",
+  "scope": "original Linux Go TLS Rust M4 Normal outer ON 10Mbps each 25ms one-way actual1% tc 300s, 60% independent UDP 40% 2 real TCP sockets,5s warmup10s drain",
+  "first": {
+    "c2s": {
+      "tcp": 1,
+      "udp": 0.9945920653426475
+    },
+    "s2c": {
+      "tcp": 1,
+      "udp": 0.994779869987417
+    }
+  },
+  "p99_ms": {
+    "c2s": {
+      "tcp": 471.1,
+      "udp": 25.5
+    },
+    "s2c": {
+      "tcp": 388.8,
+      "udp": 25.5
+    }
+  },
+  "missing_after_drain": {
+    "c2s": {
+      "tcp": 0,
+      "udp": 1594
+    },
+    "s2c": {
+      "tcp": 0,
+      "udp": 1606
+    }
+  },
+  "real_qdisc_drops": {
+    "client": 4951,
+    "server": 4911
+  },
+  "M4_IP_wire_bytes": {
+    "c2s": {
+      "F": 435331220,
+      "R": 2116342
+    },
+    "s2c": {
+      "F": 436647688,
+      "R": 2025377
+    }
+  },
+  "R_over_F": {
+    "c2s": 0.004861452390205324,
+    "s2c": 0.004638469538856232
+  },
+  "cpu_s_300": {
+    "client": 14.14,
+    "server": 14.86
+  },
+  "rss_peak_bytes": {
+    "client": 21884928,
+    "server": 21897216
+  },
+  "HOL": {
+    "c2s": {
+      "longest_all_business_stall_while_udp_offered_ms": 0,
+      "independent_tcp_flows": 2,
+      "tcp_idle_ms": [
+        120,
+        190
+      ],
+      "udp_rx_bins_active": 29700
+    },
+    "s2c": {
+      "longest_all_business_stall_while_udp_offered_ms": 0,
+      "independent_tcp_flows": 2,
+      "tcp_idle_ms": [
+        200,
+        210
+      ],
+      "udp_rx_bins_active": 29700
+    }
+  },
+  "owned_stop_both": true,
+  "owned_namespaces_absent": true,
+  "C": "NOT_MEASURED_PHYSICAL_WIRE",
+  "key_rotation": "NOT_OBSERVED",
+  "limitations": [
+    "p99 delivered-only, any missing UDP not counted in p99",
+    "Original source377613 was used for both Game and Normal, new H865 retire product has not been qualified",
+    "No Windows/physical or independent actual key rotation credential changes"
+  ]
+}

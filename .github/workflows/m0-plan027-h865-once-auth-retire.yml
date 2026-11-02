@@ -1,3 +1,4 @@
+# H866: only Rust E0308 fetch_max semicolon pre-native correction; one SOURCE build.
 name: M0 PLAN027 H865 build once original authenticated retire Rust Go
 on:
   push:
