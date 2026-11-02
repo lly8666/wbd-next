@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_parent": "4040b8813205ab3108f283e63fa5fb72b2221bce",
+  "failed_h971_build_run": 41482859398,
+  "first_linux_error": "refused overwrite of original Go: legacy/internal/realityfront/tls_test.go",
+  "failed_h972_dispatch_run": 41483256779,
+  "existing_signed_windows_mss_byte_go_tests": "PASS",
+  "existing_windows_rust": "PASS",
+  "existing_linux_rust": "PASS",
+  "exact_allowed_collisions": [
+    "internal/realityfront/tls_test.go",
+    "internal/realityfront/wire_qualification_test.go"
+  ],
+  "actual_original_sha": [
+    "81c0fe570790a9652732032085ce6b38ade946c1",
+    "16ec82491d4ae869724b506e0d33e5e84f196930"
+  ],
+  "actual_overlay_sha": [
+    "2e320c36820a366757cbfd99e20aa55b3049ecb0",
+    "cbd4577b7c6261d97e15473843381fa92c4540e4"
+  ],
+  "source_lock": "one plan020 assembly manifest; entire test old->new exact replacements; all other original collision remains forbidden",
+  "build_h974": "NOT_RUN",
+  "native_mss_1460": "NOT_RUN",
+  "mtu_before": [
+    1389,
+    1329
+  ],
+  "mtu_after": "NOT_MEASURED",
+  "original_go_product_changed": false
+}

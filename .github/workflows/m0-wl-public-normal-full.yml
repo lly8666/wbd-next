@@ -20,6 +20,8 @@ on:
       - .github/workflows/m0-wl-public-normal-full.yml
       - tools/prepare_windows_wiring.py
       - tools/m0_install_public_faketcp.py
+      - tools/m0_install_public_realityfront_tests.py
+      - tests/test_m0_install_public_realityfront_tests.py
       - tests/test_m0_install_public_faketcp.py
       - tests/test_delivery_ci.py
       - tools/m0_wl_public_normal_e2e.py
@@ -329,6 +331,7 @@ jobs:
       - run: python -m unittest tests.test_m0_wl_mode_runtime_report -v
       - run: python -m unittest tests.test_m0_wl_public_mss_contract -v
       - run: python -m unittest tests.test_m0_install_public_faketcp -v
+      - run: python -m unittest tests.test_m0_install_public_realityfront_tests -v
       - run: python -m unittest tests.test_m0_wl_native_mtu_contract -v
       - run: python -m unittest tests.test_m0_wl_n0_drop_delta -v
       - run: python -m unittest tests.test_m0_wl_impairment_profile -v
@@ -586,7 +589,13 @@ jobs:
           cp r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go legacy/internal/faketcp/raw_detached_data_linux_test.go
           # The private original-Go credential logic remains pinned; only
           # new V4 named overlay files from the identical checkout are added.
+          # Only two exact original test collisions are allowed, both
+          # source-locked by the same authoritative Windows assembly manifest.
+          python3 tools/m0_install_public_realityfront_tests.py legacy
           for f in r0/go_overlay/internal/realityfront/*.go; do
+            case "$(basename "$f")" in
+              tls_test.go|wire_qualification_test.go) continue ;;
+            esac
             dst="legacy/internal/realityfront/$(basename "$f")"
             test ! -e "$dst" || { echo "refused overwrite of original Go: $dst" >&2; exit 1; }
             cp "$f" "$dst"
