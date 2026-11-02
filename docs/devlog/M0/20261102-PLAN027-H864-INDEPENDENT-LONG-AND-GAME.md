@@ -1,0 +1,10 @@
+# PLAN027 H864 | Two real independent source-frozen integrations concurrently
+
+- Recovery H863: one exact-source `377613dec8ea3b2fdd123079a580326c2ba52dfb` original Go TLS/Rust M4 bundle Action41378386073 built once, manifest/3 hash available; bilateral true105s blackhole restore10Mbps each native first100/100% p9925.4ms, Stop PASS Action41378640754. Independent unilateral c2s-only105s reverse healthy source-frozen2Mbps Action41378829504 is **real product FAIL**: source first46.88/51.53%, ~64.1s no delivery, server old generation Health-dead Stop 78.405s earlier than client, despite both later native Ready/Stop. Do not relax dead90 or equate reverse ACK with authorization.
+- Run source377613 same Go/Rust binaries in **two independent Linux GitHub Actions**, not simultaneous same VM: one Normal opportunistic repair ON **300s**, real10Mbps each/25ms/1% netem, 60% real UDP + 40% genuine TCP with two independent streams/direction, cross-business HOL and real first/p99, two owner Stop. One Game4/FEC6 outer repair ON 20Mbps each/250ms/30% real netem/60s, actual four-lane copy schedule, native FEC parity, total first and owned Stop. These are different load/action families, frozen SOURCE and SHA256 reuse from existing 41378386073, no second build.
+- No data-plane or CLI change, both are NOT_RUN until actual measured artifacts. Game4 appearance copy count cannot be substituted for aggregate F/R/C byte denominator. Source377613 game4 ON20M cannot be promoted from previously tested f5. Windows true product OFF/readback and real rotation remain missing.
+- Unilateral failure demands a replay-verified authenticated peer-generation retirement/convergence notice, or another source-grounded solution; a naked TCP flag/Health timeout shortcut would violate isolation. Analyze existing kind1 / replay gate before code.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Only two independent current SOURCE original native Linux integration workflows reusing same immutable binaries; no product feature/config change."}
+```

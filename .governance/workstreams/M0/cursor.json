@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 863,
-  "checkpoint_sha": "456eabfa610af962a734fccf5a6c8661342f56c5",
+  "sequence": 864,
+  "checkpoint_sha": "2cbbddc6ba64947682d6b6e4256ba597d132628b",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H863: original Go TLS/Rust M4 single immutable SOURCE377613 H859 cold event numeric, bilateral true105s blackhole10Mbps/25ms native PASS first100/100%, p9925.4ms, no missing/TUN drop, zero-delivery240/260ms, actual qdisc8/8, Stop PASS. Client cold after real TUN trigger SYN50ms + TLS/Rust164ms; earlier~1.25s silence in old lower/different host not universal protocol requirement. Independently unilateral c2s-only105s at2Mbps reverse healthy native INCONCLUSIVE and business FAIL first46.88/51.53%, missing21166/19296, 64s zero delivery, source TUN 19241. Server authenticated-dead drained78.405s BEFORE client, which cannot rejoin until its own Health expires; both eventually native READY, owned Stop PASS. Need true authenticated generation-retirement/convergence for unilateral, NOT solved by Go TLS retries or host CPU. Windows true product OFF/readback missing; Windows seven mode functional only; PLAN027 partial.",
-  "why_now": "Parallel source-frozen bilateral and unilateral Actions resolved distinct aspects: bilateral10M real full recovery can PASS when both Health die; asym one-way true damage reveals 78s gap between independent Health dead decisions and 64s business interruption despite restored netem. Precise product lifecycle defect, not false fixture result or data plane optimization.",
+  "current_task": "PLAN027 H864: product source377613 real bilateral blackhole105 restore10Mbps first100/100 p9925.4 Stop PASS but unilateral c2s-only105 2Mbps recovery first46.88/51.53 64s no-delivery FAIL; server Health dead78.405s before client healthy reverse, requires authenticated generation convergence, not shortened timers. Independent H864 two source-locked original Linux workflows queued parallel, reuse sole source377613 artifact run41378386073: Normal ON 300s real mixed 10Mbps each/25ms1% UDP60% +2 TCP flows cross-HOL and Game4/FEC6 ON 20Mbps each/250ms30% real. No new builds, no product logic change. Windows genuine repair OFF pending.",
+  "why_now": "Independent no-regression/long task obligations can run while unilateral auth-retire protocol is studied. Single frozen source377613 product artifact verified available, 300s mixed HOL and Game4/FEC6 high-loss ON measure different product behavior on isolated Actions and do not modify native Go/Rust.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Investigate existing authenticated old-epoch Health/Quality control for safe generation-retirement notice, or implement minimal authenticated retire signal with generation/identity and preserve Stop; avoid timer-only shortcuts. Independently implement real Windows NativeOwner repair OFF flag & Rust applied readback, test Windows actual sameVM OFF/ON; no physical machine. Keep unilateral FAIL, no blind re-dispatch.",
+  "next_action": "Collect H864 two independent Actions and exact first/R F /CPU/RSS/p99/HOL/Stop, no workflow-green shortcut. Investigate authenticated old-generation retirement signal for unilateral mismatch; scope to original replay-checked AEAD kind1 and joined Stop, never unverified timer. Windows real OFF flag/effective readback still separate.",
   "unverified": true,
   "last_tested_source": "377613dec8ea3b2fdd123079a580326c2ba52dfb",
   "evidence_refs": [
@@ -19,14 +19,14 @@
     "docs/evidence/M0/PLAN027-H863-3776-UNILATERAL105-2M-FAIL-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H856-ROLLBACK-ACK-INDEX.md",
     "docs/devlog/M0/20261102-PLAN027-H857-DEAD2M-SOURCE-TUN-DISCRIMINATOR.md",
     "docs/devlog/M0/20261102-PLAN027-H858-DEAD2M-AND-WIN-E387.md",
     "docs/devlog/M0/20261102-PLAN027-H859-COLD-MILESTONES.md",
     "docs/devlog/M0/20261102-PLAN027-H860-EXACT-CHECKOUT-PIN.md",
     "docs/devlog/M0/20261102-PLAN027-H861-PARALLEL-ONEWAY-BILATERAL.md",
     "docs/devlog/M0/20261102-PLAN027-H862-UNILATERAL-FIXTURE-SCHEMA.md",
-    "docs/devlog/M0/20261102-PLAN027-H863-PARALLEL-BILATERAL-PASS-UNILATERAL-FAIL.md"
+    "docs/devlog/M0/20261102-PLAN027-H863-PARALLEL-BILATERAL-PASS-UNILATERAL-FAIL.md",
+    "docs/devlog/M0/20261102-PLAN027-H864-INDEPENDENT-LONG-AND-GAME.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."
