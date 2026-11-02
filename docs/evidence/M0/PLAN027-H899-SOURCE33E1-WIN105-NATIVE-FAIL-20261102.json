@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source": "33e1cfff9cce9b0fe6650f4bc45528da23bf5f8b",
+  "scenario": "scenarios/plan027-h882-win-c2s105-10m-25ms0-60s.json",
+  "run_id": 41406960914,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41406960914",
+  "observation": "2026-11-02",
+  "action_api_status_at_review": "in_progress",
+  "result": "FAIL_ACTUAL_NATIVE_LIFECYCLE_AND_STOP",
+  "mode": "normal",
+  "outer_repair": "OFF_EFFECTIVE",
+  "path": "original Windows Go TLS + Rust NPF/Wintun to original Linux Rust raw/TUN WSL2",
+  "blackhole": {
+    "direction": "windows_to_linux",
+    "duration_seconds": 105,
+    "real_linux_ifb_drops": 116,
+    "post_recover_observation_seconds": 120
+  },
+  "post_recover": {
+    "windows_udp_wake_exit": 8,
+    "linux_udp_wake_exit": 8,
+    "windows_udp_last_received": 0,
+    "linux_udp_last_received": 0,
+    "windows_tls_reauthorized": false,
+    "linux_tls_reauthorized": true
+  },
+  "failed_stop": {
+    "windows_disconnected": false,
+    "linux_drained": true,
+    "windows_wal_exists": true,
+    "windows_route_sidecar_exists": true,
+    "owned_stop": "NOT_QUALIFIED_FAIL_PATH"
+  },
+  "host_dns": {
+    "pre_restore_physical_default_route_exact": true,
+    "post_restore_physical_default_route_exact": true,
+    "github_com_dns": "FAIL_Win32Exception",
+    "artifact_upload": "ENOTFOUND",
+    "separate_from_product_failure": true
+  },
+  "first_delivered_business": "NOT_QUALIFIED_AFTER_BLACKHOLE",
+  "attribution": "UNRESOLVED_retirement_notice_TX_driver_RX_or_kernel_fixture_after_recover",
+  "limits": [
+    "no evidence of authenticated retirement delivery at Windows after Linux cold generation",
+    "first-fault stdout payload was truncated at 1024 characters, no complete tail",
+    "Action still in_progress at API observation despite native step log failure",
+    "physical Windows host NOT_RUN"
+  ],
+  "references": [
+    "user-supplied H899 native job full log",
+    "H899 source-linked devlog",
+    "original public native fixture"
+  ]
+}

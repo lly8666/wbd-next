@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
+  "source": "f3f4c86fee7ec8630b49c565ba9c7ffb517636d5",
+  "scenario": "scenarios/plan027-h900-game4-fec6-outer-off-10m-250ms30-60s.json",
+  "scenario_sha256": "f846c4c29a9f0ae3297b86e24fd076ffa6cad4a55c1e92a2484d631cc147e3f5",
+  "run_id": 41407246598,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/41407246598",
+  "action_status": "completed_success",
+  "result": "PASS_SCOPED_REAL_BOTH_OS_KERNEL_AND_OWNED_STOP",
+  "mode": "game4-fec",
+  "authenticated_lanes": 4,
+  "protected_profile": "highest_fixed6",
+  "outer_repair": {
+    "windows_readback": true,
+    "linux_readback": true,
+    "effective": 0
+  },
+  "kernel_impairment": {
+    "one_way_delay_ms": 250,
+    "random_loss_pct": 30,
+    "both_directions": true
+  },
+  "business": {
+    "duration_s": 60,
+    "warmup_s": 5,
+    "drain_s": 10,
+    "tun_mtu": 1400,
+    "offered_mbps_windows": 9.9973,
+    "offered_mbps_linux": 9.9998,
+    "first_fraction_windows": 1,
+    "first_fraction_linux": 0.999973
+  },
+  "theory": {
+    "mix_weighted_payload_bytes_approx": 1018.6,
+    "source_pps_per_direction_approx": 1227,
+    "RTT_ms_approx": 500,
+    "business_BDP_bytes_per_direction_approx": 625000,
+    "independent_four_copy_residual_reference_pct": 0.81,
+    "note": "independent complete copies assumption only; protected FEC, correlation and queue budget change reality; cannot infer measured F/R/C or CPU scaling from it"
+  },
+  "runtime": {
+    "windows_go_plus_rust_exe_cpu_s": 10,
+    "windows_exe_elapsed_s": 74.75,
+    "windows_exe_peak_rss_bytes": 59326464,
+    "windows_exe_peak_private_bytes": 56479744,
+    "windows_exe_cpu_rust_vs_go": "NOT_ATTRIBUTED",
+    "generator_cpu_s_windows": 2.1406,
+    "generator_cpu_s_linux": 9.1563,
+    "one_way_p99": "NOT_MEASURED_UNCALIBRATED_CLOCKS"
+  },
+  "wire": {
+    "outer_repair": "OFF",
+    "R_actual_bytes": 0,
+    "F_actual_bytes": "NOT_MEASURED",
+    "C_actual_bytes": "NOT_MEASURED",
+    "expansion_ratio": "NOT_MEASURED"
+  },
+  "owned_stop": "PASS_BOTH_OWNED",
+  "qualifications": [
+    "one signed Action, genuine four-lane original TLS/NPF/TUN, source-pinned both OS",
+    "does not qualify outer ON, Game4 20Mbps, physical host, all mixed-burst scenarios, or F/R/C byte costs"
+  ],
+  "references": [
+    "H900 workflow native-public-two-os report in job125153486947"
+  ]
+}

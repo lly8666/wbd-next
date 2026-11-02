@@ -4,28 +4,30 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 900,
-  "checkpoint_sha": "33e1cfff9cce9b0fe6650f4bc45528da23bf5f8b",
+  "sequence": 901,
+  "checkpoint_sha": "f3f4c86fee7ec8630b49c565ba9c7ffb517636d5",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H900 one original Windows NPF/Wintun↔WSL2 Linux real Game4 highest fixed6 protected FEC, outer repair OFF both, 10Mbps each/250ms30% kernel loss60s mixed-MTU, four independent authenticated lanes, offered>=9.5Mbps each, first>=.99 each and both owned Stop, NOT_RUN at source commit. H899 original Normal unilateral105 diagnosis SHA33e1 true Windows real product Action41406960914 cheap PASS then full build in progress, saves per-side UDP wake RC/1Hz actual Health, Go TLS reauthorize Stop/WAL and default route/DNS pre/post run-scoped /32 restore stdout before ENOTFOUND. H895 source43abd authentic 105s IFB118 drops, post-wake real FAIL, GitHub Artifact ENOTFOUND, old Action still in_progress despite post-job cleanup. H896 Game2 highestFEC OFF high loss native PASS and H897 Normal100M OFF native PASS/CPU/RTT p99 noted. H898 source6a880 preflight/governance PASS.",
-  "why_now": "Follow PLAN027 off-outer networking independently of H899 genuine single-direction Health/reconnect/OS route diagnosis; H896 proven two-lane maximum protected FEC enables exact impacted Game4 four-lane high-loss validation without concurrent loading same VM. Keep standalone SOURCE and no speculative product edits.",
+  "current_task": "H901 recovered two existing signed native Actions: H900 SOURCE f3f4 Game4 highest protected FEC6 outer OFF at 10Mbps/dir, 250ms/30% 60s PASS genuine original Windows NPF/Wintun↔WSL2, first fractions Win 1.000000 / Linux .999973 and both owned Stop; Action41407246598 complete success. H899 SOURCE33e1 Windows→Linux unilateral105s IFB116 authentic blackout native FAIL, after restore both UDP probes rc8/received0, Linux cold TLS reauthorized but Windows not, Windows owned WAL and route sidecar survive; matching default routes before/after scoped management restore yet github.com DNS Win32Exception, artifact upload ENOTFOUND. H899 Actions API native job still in_progress at observation; never infer overall terminal result. Product recovery and runner DNS remain separate. No source change or new performance dispatch in H901.",
+  "why_now": "Preserve immutable H899 FAIL and H900 PASS before any subsequent work. H899 genuine failed recovery path needs first causality (retire notice send/driver result/authenticated receive vs OS tc restoration) not another same-fixture blind rerun; H900 Game4 10M high-loss family already qualified OFF.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H899 source-bound native actual blackout side-which UDP wake exit, first/last 1Hz, Go authenticated reconnect, after-owned Stop WAL and default route/DNS first-error; collect H900 protected Game4 highestFEC actual first/Stop and CPU/FRC. If H899 reauth fails, fix original shared lifetime causality before retest, do not erase product error with infrastructure. Continue affected ON variants, Fixed/Auto, capacity-aware H897 100M RTT attribution, no physical qualification.",
+  "next_action": "Do not redispatch H899/H900. Check whether Action41406960914 has finished; if product logs absent because artifact DNS failed, add source-scoped bounded exact owner-side retirement TX/definite NPF receipt/RX/open and post-recovery tc snapshot to distinguish protocol, lifecycle, OS fixture before another native test; fix shared validated cause only. In parallel resume Normal same-VM OFF→ON repair-cost baseline and other independent OFF/network work. After changes run affected ON Fixed/Auto/Game and >=300s scenario, update F/R/C CPU/RSS/p99 and Stop; physical remains NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "c85b00a5b648f99c15fc599b9981ed5fa8df0e09",
+  "last_tested_source": "f3f4c86fee7ec8630b49c565ba9c7ffb517636d5",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN027-H897-SOURCEC85B-NORMAL-OFF-100M-NATIVE-PASS-20261102.json"
+    "docs/evidence/M0/PLAN027-H897-SOURCEC85B-NORMAL-OFF-100M-NATIVE-PASS-20261102.json",
+    "docs/evidence/M0/PLAN027-H899-SOURCE33E1-WIN105-NATIVE-FAIL-20261102.json",
+    "docs/evidence/M0/PLAN027-H900-SOURCEF3F4-GAME4FEC6-OFF-NATIVE-PASS-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H893-RUNNER-POWERSHELL-PARSER-GATE.md",
     "docs/devlog/M0/20261102-PLAN027-H894-CLEAN-OWNED-ROUTE-LEASE.md",
     "docs/devlog/M0/20261102-PLAN027-H895-ON300-RECEIPT-WIN105-SUBSCRIPTION.md",
     "docs/devlog/M0/20261102-PLAN027-H896-GAME2-FEC6-OUTER-OFF-30LOSS.md",
     "docs/devlog/M0/20261102-PLAN027-H897-NORMAL-OFF-100M-SIGNED.md",
     "docs/devlog/M0/20261102-PLAN027-H898-SIGNED-RECEIPTS-H888-DNS-SPLIT.md",
     "docs/devlog/M0/20261102-PLAN027-H899-WIN105-DIAGNOSTIC-REPRO.md",
-    "docs/devlog/M0/20261102-PLAN027-H900-GAME4-FEC6-HIGHLOSS-OFF.md"
+    "docs/devlog/M0/20261102-PLAN027-H900-GAME4-FEC6-HIGHLOSS-OFF.md",
+    "docs/devlog/M0/20261102-PLAN027-H901-RECOVER-NATIVE-ACTIONS.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."
