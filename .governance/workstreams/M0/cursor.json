@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 907,
-  "checkpoint_sha": "a4a5d014d7af0a07360c2e453f074e84ac150dfb",
+  "sequence": 908,
+  "checkpoint_sha": "fcf10f16b66e09d24555a292e2db44337db961a8",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "H907 after H905 genuine SOURCE9816 failed during Windows-origin105s blackhole: IFB163 actual drops, both original Rust HealthClock dead90, Windows authenticated dead6 worker joined, owned native Stop wal_kernel_crypto PASS, Windows WAL restored and cold TLS generation2 authorized, Linux drained and generation2 authorized. New Windows generation2 original FakeTCP bootstrap stream timed out BEFORE 105s blackout restored; Windows process exited; harness required process alive and emitted 'original owner exited during real kernel outage'. Runner default/DNS after restored PASS and artifact uploaded. Fix in H907 original Windows Go cold after verified dead/Stop: max two transient FakeTCP/TLS timeout retries, only before OS Applied and when ctx live, no auth rejection/driver/steady retry; source-specific unverified until new original dual OS Action. Old H903 Action41410970576 remains API in_progress, do not dispatch it again.",
-  "why_now": "H905 source-verified archived Windows client/server log proves original H904 owned Stop fix WORKED; subsequent cold FakeTCP SYN timed out while one-way IFB still blackholed, not DNS or release failure. Linux already had bounded post-dead cold retry for client; align Windows only for verified post-dead cold before Appplied using same original TCP/TLS+native owner, no new hot path. Also note fixture's 'owner exited' is process exit, genuine incorrect for recoverable network outage.",
+  "current_task": "H908 correct native assembly pins for H907 Windows original Go source and test after Action41415356605 cheap manifest FAIL (no real Go Windows compile or native network). H905 original 105s source9816 failed, IFB163, dead90 both, Windows actual joined old Stop/WAL PASS and Linux drained, Windows generation2 cold FakeTCP timeout before outage ended; host DNS resolved and artifacts uploaded. H907 Go post-authenticated-dead cold transport bounded retry change prepared; H908 only two exact assembly result_blob hashes, one new real scenario Action NOT_RUN at commit. Old H903 Action41410970576 still stuck in_progress, no redispatch.",
+  "why_now": "Enforce existing pinned SOURCE assembly check rather than bypass; H907 changed source and test but forgot manifest source hashes. H908 changes only these exact content address entries.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Collect H907 compile/go unit and one exact-source new Windows-origin105s Action. Demand after blackout restored both genuine UDP and Windows/Linux new TLS generations plus no WAL sidecars; no silent fixture bypass. If still fails, inspect first bounded owner/client stage and stop. Meanwhile independently close outstanding OFF/ON and 300s reference gaps without rerunning H884/H900; H903 old stuck run never grant PASS; mark manual cancellation if tool lacks authorized cancel.",
+  "next_action": "Collect H908 cheap assembly/Go unit and original native105 restored 120s real UDP, read authenticated Windows/Linux TLS second generation and owned Stop/WAL; if FAIL fix observed cause only, never infer PASS from build or old-Stop subphase. Continue independent ON/300 and OFF matrix using already frozen signatures without rerunning past same-family evidence; H903 hung job not evidence.",
   "unverified": true,
   "last_tested_source": "f3f4c86fee7ec8630b49c565ba9c7ffb517636d5",
   "evidence_refs": [
@@ -22,10 +22,10 @@
     "docs/devlog/M0/20261102-PLAN027-H899-WIN105-DIAGNOSTIC-REPRO.md",
     "docs/devlog/M0/20261102-PLAN027-H900-GAME4-FEC6-HIGHLOSS-OFF.md",
     "docs/devlog/M0/20261102-PLAN027-H902-SOURCE-REF-CONTRACT.md",
-    "docs/devlog/M0/20261102-PLAN027-H904-WIN-DEAD6-OWNED-STOP.md",
     "docs/devlog/M0/20261102-PLAN027-H905-POSTJOIN-NATIVE-105.md",
     "docs/devlog/M0/20261102-PLAN027-H906-QUANTIFIED-NATIVE-COSTS.md",
-    "docs/devlog/M0/20261102-PLAN027-H907-COLD-TLS-RETRY.md"
+    "docs/devlog/M0/20261102-PLAN027-H907-COLD-TLS-RETRY.md",
+    "docs/devlog/M0/20261102-PLAN027-H908-ASSEMBLY-SOURCE-SYNC.md"
   ],
   "open_requests": [],
   "partial_summary": "H858 e928 double105 true blackhole diagnostic 2M first100/100, TUN0/0, missing0, yet gap1.24/1.26s; 10M original INCONCLUSIVE 379 missing/27 upstream and identical gap, cannot promote 2M to original business acceptance. H858 e387 exact current Windows seven-mode TLS/UDP/TCP/Stop PASS functional only, perf N0/N1/N5/V2/P200/300 NOT_RUN. H856 Rust index optimization reverted no ROI. Windows product OFF not wired: m2_arm unconditional ON, actual OFF A/B NOT_RUN. H863 same SOURCE3776 bilateral105 true10M first100/100 p9925.4 with 240/260ms gap and zero TUN drops PASS; unilateral c2s105 true2M reverse healthy first46.88/51.53%, ~64s no delivery, server Health dead 78.405s before client; actual lifecycle FAIL+native INCONCLUSIVE, demands authenticated generation retirement. Old pre-native unilateral fixture FAIL separately recorded."
