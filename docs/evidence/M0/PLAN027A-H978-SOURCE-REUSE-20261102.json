@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "task": "R0-M0-PLAN027A-UNIFIED-MTU-AND-OVERSIZE",
+  "source_binary_sha": "15216c23cda9f3302c624527d35fa5569d3d094a",
+  "source_build_run": 41485242975,
+  "source_status": "IN_PROGRESS",
+  "signed_native": "NOT_RUN",
+  "first": "Normal default1460 actual Go SYN/SYNACK MSS1420 both directions, original TLS record and Rust budget, Windows Wintun OS inner, Linux TUN OS inner and Stop",
+  "subsequent": [
+    "Normal explicit1500",
+    "Fixed default1460",
+    "Auto default1460",
+    "Game2 default1460",
+    "Game4 default1460",
+    "Game2+FEC default1460",
+    "Game4+FEC default1460"
+  ],
+  "original_failed_run_ids": [
+    41480121662,
+    41480968817,
+    41482859398,
+    41483256779,
+    41484186232,
+    41484325423,
+    41484581243
+  ],
+  "no_second_compilation": true,
+  "asymmetric_native_negative": "NOT_RUN"
+}
