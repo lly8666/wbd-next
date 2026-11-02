@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 3,
   "assignment_epoch": 1,
-  "sequence": 856,
-  "checkpoint_sha": "f51719bcff43760bb2113d865e476ef8818188bc",
+  "sequence": 857,
+  "checkpoint_sha": "e387d0f043957c89de7153670a1ea7459ce23928",
   "progress": "partial",
   "task_id": "R0-M0-PLAN027-FEEDBACK-AND-NETWORK-CLOSEOUT",
-  "current_task": "PLAN027 H856: H851 f5 sameVM Normal100 ON cost Rust TX ~79%+1.228/+1.112s, H852 shared Rust shadow-only ACK index source2b5312 built, H854 sameVM source e928 before→new ON100 first100/p9926/Stop PASS but CPU27.58/27.62→27.59/27.69 no gain (0.01/0.07s worse), RSS negligible. H854 new source true ON10M250ms30pct R/F8.900/8.892%, first72.855/72.861%, actual tc drops+Stop PASS. H856 revert two Rust files exactly e928 to avoid unprofitable complexity; Go cold SYN remains e928, prior 105s double blackhole native INCONCLUSIVE (first100/99.813 TUN27) still open. Need prioritize lifecycle/Windows OFF, no repeats.",
-  "why_now": "One source-controlled sameVM ON100 measurement shows zero net benefit from extra Rust BTree index path change despite high-loss integration PASS. Following plan <1–2% unproven/no benefit reject and restore old exact Rust code, preserving observed restored first and repair budget.",
+  "current_task": "PLAN027 H857: H856 Rust unsuccessful shadow index optimization reverted exactly to e928, no pending H854; governance/core checks PASS. Current original Linux Go TLS/Rust source e928 genuine105s bilateral blackhole10M restore first100/99.813%, upstream TUN drops0/27, ~1.2s true zero-delivery, native INCONCLUSIVE; H857 single frozen SOURCE same genuine 105s bilateral blackhole but 2Mbps active diagnostic queued (332pps/dir vs1660pps), distinguish injector capacity/TUN drop from generation handoff latency, never promote 2M as 10M acceptance. Windows NativeOwner directly enables repair on m2_arm, no verified real product OFF CLI/Rust switch: Windows OFF paired NOT_RUN. WL native full check of rollback source e387 in-flight.",
+  "why_now": "Real 10M post-dead evidence had client HARNESS_CAPACITY_LIMITED and server source TUN27 drops while host PSI0.1% and zero-delivery1.2sec; one true5x-lower-PPS source-locked diagnostic while keeping dead105/probes0 tests whether upstream drops are load dependent and whether cold handshake gap persists. Does not dilute 10M FAIL/INCONCLUSIVE. Windows OFF needs proper Go config + owner wiring, cannot fake via zero R.",
   "done_when": "PLAN027 §0 all five obligations: retire online per-record M2 Receipt and qualify low-rate replacements; A1–A4 real tests (A5 user-waived); B native Windows/Linux GameFEC, Health/idle/dead/rejoin/rotation/Stop and required networking/config; capacity-aware C representative 10–200Mbps, 0–30%/≤250ms and 300s long; required fixes/regressions, F/R/C, CPU/RSS/p99, cards/evidence. No unfinished necessary run/blocker, no old-SOURCE or physical PASS promotion. Finish whole task, not one substep.",
-  "next_action": "Verify H856 governance/source exact Rust diff restore and no running H854 Action; then tackle real outstanding post-blackhole TUN upstream loss/1.2s no first and Windows signed OFF/ON paired or key/lane rotation. Do not repeat R100 CPU optimization on old source or claim physical/Windows performance from Linux.",
+  "next_action": "Collect H857 one e928 native 2M diagnostic physical underlay drop, first/missing, TUN and zero-delivery gap. If 2M no capacity/TUN but still~1.2sec gap, prioritize cold auth generation latency, not injector; 10M remains INCONCLUSIVE. Continue Windows actual OFF public control wiring only after current real native WL Action completes; full PLAN027 still partial.",
   "unverified": true,
   "last_tested_source": "e928b50cf872b6746a62c56662e5fc0768c5ca45",
   "evidence_refs": [
     "docs/evidence/M0/PLAN027-H848-E928-BILATERAL-BLACKHOLE-RECOVERY-INCONCLUSIVE-20261102.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261102-PLAN027-H849-R100-WORKER-CPU-ATTRIBUTION.md",
     "docs/devlog/M0/20261102-PLAN027-H850-EXACT-SOURCE-KEY.md",
     "docs/devlog/M0/20261102-PLAN027-H851-WORKER-ATTR-OUTPUT-OWNERSHIP.md",
     "docs/devlog/M0/20261102-PLAN027-H852-RUST-TX-SHADOW-INDEX-BUILD.md",
     "docs/devlog/M0/20261102-PLAN027-H853-ACK-END-COMPILE.md",
     "docs/devlog/M0/20261102-PLAN027-H854-SHARED-INDEX-AB-LOSS.md",
     "docs/devlog/M0/20261102-PLAN027-H855-FEATURE-SIZE-BOUNDED.md",
-    "docs/devlog/M0/20261102-PLAN027-H856-ROLLBACK-ACK-INDEX.md"
+    "docs/devlog/M0/20261102-PLAN027-H856-ROLLBACK-ACK-INDEX.md",
+    "docs/devlog/M0/20261102-PLAN027-H857-DEAD2M-SOURCE-TUN-DISCRIMINATOR.md"
   ],
   "open_requests": [],
-  "partial_summary": "H848 e928 real double blackhole105 original TLS/Rust new Ready each and Stop: restored120s c2s first100% s2c first99.813% (379 missing), p99 60.2/25.8ms, zero deliver gap~1.2s, source TUN27 upstream, host PSI0.1; native INCONCLUSIVE not full PASS. Prior fdc recovery82.4% p99~21.3s retained FAIL. H846 R100 f5 sameVM CPU ON delta5.53/5.78% with R163/0B. H847 Win fdc seven-mode native functional not WL load. No new physical. H852 H851 full-owner worker CPU exact f5 Normal100 ON cost +1.55/+1.41 whole, Rust TX +1.228/+1.112 (~79%), RX+.333/.323. Targeted ACK index only for truly retained ciphertext; no branch/source performance claim yet, build pending. H856 H854 sameVM old e928→H853 source2b ON100 CPU delta +0.01/+0.07s (no benefit), first100 p9926 Stop PASS, 30pct new source R/F8.9% first72.86% Stop PASS. Rollback shared Rust index exact e928 files, no new optimization pass claim. Prior e928 cold reauth still INCONCLUSIVE."
+  "partial_summary": "H848 e928 real double blackhole105 original TLS/Rust new Ready each and Stop: restored120s c2s first100% s2c first99.813% (379 missing), p99 60.2/25.8ms, zero deliver gap~1.2s, source TUN27 upstream, host PSI0.1; native INCONCLUSIVE not full PASS. Prior fdc recovery82.4% p99~21.3s retained FAIL. H846 R100 f5 sameVM CPU ON delta5.53/5.78% with R163/0B. H847 Win fdc seven-mode native functional not WL load. No new physical. H852 H851 full-owner worker CPU exact f5 Normal100 ON cost +1.55/+1.41 whole, Rust TX +1.228/+1.112 (~79%), RX+.333/.323. Targeted ACK index only for truly retained ciphertext; no branch/source performance claim yet, build pending. H856 H854 sameVM old e928→H853 source2b ON100 CPU delta +0.01/+0.07s (no benefit), first100 p9926 Stop PASS, 30pct new source R/F8.9% first72.86% Stop PASS. Rollback shared Rust index exact e928 files, no new optimization pass claim. Prior e928 cold reauth still INCONCLUSIVE. H857 independent one SOURCE e928 2M active instead of10M diagnostic while identical real105s double100pct tc blackhole+120s restore; product binary unchanged, existing 10M 379 missing/TUN27 INCONCLUSIVE retained. Windows product default original M2 repair directly enabled; no verified OFF ingress, do not claim OFF."
 }

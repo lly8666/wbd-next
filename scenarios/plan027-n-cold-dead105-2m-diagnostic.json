@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "scenario_id": "plan027-n-cold-dead105-2m-diagnostic",
+  "public_mode": "normal",
+  "outer_repair": "off",
+  "warmup_s": 5,
+  "drain_s": 10,
+  "offered_mbps_per_active_direction": 2,
+  "one_way_delay_ms": 25,
+  "probe_hz": 0,
+  "packet_mix": [
+    [
+      64,
+      10
+    ],
+    [
+      128,
+      15
+    ],
+    [
+      512,
+      25
+    ],
+    [
+      1200,
+      50
+    ]
+  ],
+  "seed": 20261102,
+  "phases": [
+    {
+      "name": "pre20",
+      "seconds": 20,
+      "scale": 1,
+      "loss_pct": 0
+    },
+    {
+      "name": "double_blackhole105",
+      "seconds": 105,
+      "scale": 0,
+      "loss_pct": 100
+    },
+    {
+      "name": "recovery120",
+      "seconds": 120,
+      "scale": 1,
+      "loss_pct": 0
+    }
+  ],
+  "purpose": "Differential DIAGNOSTIC only vs SOURCE e928 native 10Mbps double105: 5x lower true active offered-PPS while keeping 105s bilateral genuine underlay blackhole/Health dead and120s recovery; differentiate source TUN injector drops from 1.2s Go cold-generation handoff interval. NEVER substitute 2M for required 10M recovery gate."
+}
