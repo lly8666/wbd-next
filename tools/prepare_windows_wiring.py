@@ -157,11 +157,19 @@ def prepare(root, legacy, output, source, spec):
         for name in names:
             relative = "r0/go_overlay/internal/" + part + "/" + name
             target = dest / name
-            need(not target.exists(), "competing original/overlay owner: " + relative)
             data = git(root, "show", source + ":" + relative)
             need(len(data) > 60, "empty bridge: " + relative)
             need(b"package realityfront" in data if name == "admission_v4.go"
                  else data.startswith(b"//go:build windows"), "wrong bridge target: " + relative)
+            if name == "admission_v4.go" and target.exists():
+                # The single exact PLAN020 manifest now assembles the same
+                # original-Go V4 admission. Do not create a second owner:
+                # only reuse a byte-identical, non-symlink SOURCE file.
+                need(target.is_file() and not target.is_symlink()
+                     and target.read_bytes() == data,
+                     "existing Go admission source differs from pinned manifest")
+                continue
+            need(not target.exists(), "competing original/overlay owner: " + relative)
             target.write_bytes(data)
     for path in ("internal/windowsownerlease/original_tls_native_product_windows.go",
                  "internal/windowsclient/native_real_product_service_windows.go",

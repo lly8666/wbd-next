@@ -25,3 +25,7 @@ H1048原Go分支构建Action缺新独立`v4_route_prelude.go`，报`undefined: v
 ## H1050 单owner原Go装配边界
 
 H1049 原Go TLS/cold fixture编译已PASS。Win PLAN020严格拒绝重复owner时发现：新的唯一manifest已拥有`admission_v4.go`，但旧 Windows bundle 又试图复制同名文件。只允许已存在的原Go admission **与本SOURCE Git blob完全一致**时复用，任何不符、软链或其他新文件仍拒绝；不另造Go TLS owner。真实Game2账户密码自动route认证及Windows双OS仍需新Action。
+
+## H1051 Windows相同源二次复制的唯一修正
+
+`prepare_windows_wiring.py` 已通过完整manifest原Go装配后，自己的`EXTRA_BRIDGES`又将同一`admission_v4.go`当作全新文件写入，触发`competing original/overlay owner`。只对该文件在已经由唯一manifest安装且和同SHA原Go overlay逐字节相符时**不再复制**；其余Windows独立文件仍执行旧严格不存在检查。无多余恢复器、不修改原认证决策、未主张Windows真实路径PASS。
