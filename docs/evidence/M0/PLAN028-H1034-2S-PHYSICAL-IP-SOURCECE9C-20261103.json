@@ -1,0 +1,44 @@
+{
+  "plan": "PLAN028",
+  "step": "H1034",
+  "source_sha": "ce9c128e712024164e586e89a76b395579370e78",
+  "result": "PASS_SCOPED",
+  "date": "2026-11-03",
+  "linux": {
+    "workflow": "m0-plan012-combined-functional.yml",
+    "run_id": 41623425219,
+    "conclusion": "success",
+    "checked": [
+      "original Go TLS+Rust native build",
+      "2s physical interface/IP poll unit",
+      "true Linux netns source/interface change A→A+B→B",
+      "new path MTU readback",
+      "multi-account single-port+native Stop",
+      "1pct loss counted but not lossless"
+    ]
+  },
+  "windows": {
+    "workflow": "m0-wl-public-normal-full.yml",
+    "run_id": 41623425293,
+    "go_preflight_job_id": 125874909144,
+    "go_preflight_conclusion": "success",
+    "checked": [
+      "real original-Go Windows client production and test compile",
+      "two 2s NIC/IP-only unit tests",
+      "Windows Rust eligible library regression"
+    ]
+  },
+  "governance": {
+    "workflow": "governance.yml",
+    "run_id": 41623425430,
+    "conclusion": "success"
+  },
+  "not_claimed": [
+    "real Windows physical NIC/IP switch and WFP/Npcap reconnection",
+    "Windows A+B overlap",
+    "Game multi-client single-port group handover",
+    "Android",
+    "PLAN028 complete"
+  ],
+  "artifact_verified": false
+}
