@@ -3,6 +3,9 @@
 # server 443, ONE authenticated Rust TUN reader, two independent /32 leases.
 set -euo pipefail
 MODE="${WBD_PLAN028_GAME_MULTI_MODE:-game2}"
+HANDOVER="${WBD_PLAN028_GAME_MULTI_HANDOVER:-0}"
+if [[ "$HANDOVER" != 0 && "$HANDOVER" != 1 ]];then echo "invalid Game handover selector" >&2; exit 2;fi
+if [[ "$HANDOVER" == 1 && "$MODE" != game2 ]];then echo "Game2 successor proof only" >&2;exit 2;fi
 case "$MODE" in
   game2) LANES=2 ;;
   game4) LANES=4 ;;
@@ -13,8 +16,8 @@ test -x "$ROOT/wbd-v4-client" && test -x "$ROOT/wbd-v4-server"
 test -s "$ROOT/libwbd_engine.so" && test -c /dev/net/tun
 : "${GITHUB_RUN_ID:?}" "${RUNNER_TEMP:?}"
 TAG="${GITHUB_RUN_ID: -7}"
-NSS="vgsv$TAG"; NSA="vgca$TAG"; NSB="vgcb$TAG"
-BR="vgb$TAG"; RS="vgs$TAG"; RA="vga$TAG"; RB="vgc$TAG"
+NSS="vgsv$TAG"; NSA="vgca$TAG"; NSB="vgcb$TAG"; NSR="vgcr$TAG"
+BR="vgb$TAG"; RS="vgs$TAG"; RA="vga$TAG"; RB="vgc$TAG"; RR="vgr$TAG"
 TMP="$RUNNER_TEMP/plan028-game-groups-$TAG"
 mkdir -m 0700 -p "$TMP"
 PIDS=()
@@ -23,25 +26,25 @@ cleanup(){
   set +e
   if ((code));then
     echo "PLAN028_GAME_MULTIGROUP_NATIVE_FAIL code=$code" >&2
-    for f in server.log A.log B.log echo.log a_echo.log b_echo.log b_after.log;do
+    for f in server.log A.log B.log R.log echo.log a_echo.log b_echo.log b_after.log r_echo.log r_b_echo.log;do
       if [[ -f "$TMP/$f" ]];then
         echo "=== $f ===" >&2;tail -60 "$TMP/$f" >&2
       fi
     done
   fi
   for p in "${PIDS[@]}";do sudo -n kill -TERM "$p" 2>/dev/null || true;done
-  for p in "$RS" "$RA" "$RB" "$BR";do sudo -n ip link del "$p" 2>/dev/null || true;done
-  for n in "$NSS" "$NSA" "$NSB";do sudo -n ip netns del "$n" 2>/dev/null || true;done
+  for p in "$RS" "$RA" "$RB" "$RR" "$BR";do sudo -n ip link del "$p" 2>/dev/null || true;done
+  for n in "$NSS" "$NSA" "$NSB" "$NSR";do sudo -n ip netns del "$n" 2>/dev/null || true;done
   rm -rf "$TMP"
 }
 trap cleanup EXIT
-for ns in "$NSS" "$NSA" "$NSB";do
+for ns in "$NSS" "$NSA" "$NSB" "$NSR";do
   sudo -n ip netns add "$ns"
   sudo -n ip -n "$ns" link set lo up
 done
 sudo -n ip link add "$BR" type bridge
 sudo -n ip link set "$BR" up
-for def in "$RS wbdvs0 $NSS 10.25.0.1/24" "$RA wbdva0 $NSA 10.25.0.2/24" "$RB wbdvb0 $NSB 10.25.0.3/24";do
+for def in "$RS wbdvs0 $NSS 10.25.0.1/24" "$RA wbdva0 $NSA 10.25.0.2/24" "$RB wbdvb0 $NSB 10.25.0.3/24" "$RR wbdvr0 $NSR 10.25.0.4/24";do
   read -r host guest ns addr <<<"$def"
   sudo -n ip link add "$host" type veth peer name "$guest"
   sudo -n ip link set "$host" master "$BR"
@@ -83,7 +86,7 @@ import socket
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.bind(("10.66.0.1",45901));s.settimeout(45)
 try:
-  for _ in range(30):
+  for _ in range(60):
     data,src=s.recvfrom(4096)
     assert data.startswith(b"WBD_GAME_GROUP/"),(src,data)
     s.sendto(b"WBD_GAME_ECHO/"+data,src)
@@ -155,15 +158,43 @@ a_echo_pid=$!
 send_udp "$NSB" "$IPB" "A_PLUS_B_B" 6 "$TMP/b_echo.log" &
 b_echo_pid=$!
 wait "$a_echo_pid" "$b_echo_pid"
+if [[ "$HANDOVER" == 1 ]];then
+  # Preserve the original A process PID; the replacement is the same
+  # authenticated Alice installation but has a NEW physical TCP tuple.
+  cp "$TMP/alice.pid" "$TMP/alice-old.pid"
+  start_client "$NSR" wbdvr0 10.25.0.4 wbdvr4 43031 alice game-alice-protected-20261103 "$TMP/install-A" "$TMP/R.log"
+  await_group "$TMP/R.log" 3
+  IPR="$(read_lease "$TMP/R.log")"
+  [[ "$IPR" == "$IPA" ]] || { echo 'Game authenticated successor changed original lease /32' >&2;exit 1; }
+  sudo -n ip -n "$NSR" route replace 10.66.0.1/32 dev wbdvr4
+  for _ in {1..80};do
+    if grep -q 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-new-generation' "$TMP/server.log";then break;fi
+    sleep .25
+  done
+  grep -q 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=same-protected-cohort-new-generation' "$TMP/server.log"
+  send_udp "$NSR" "$IPR" "ALICE_NEW_GENERATION" 6 "$TMP/r_echo.log" &
+  p_r=$!
+  send_udp "$NSB" "$IPB" "BOB_SURVIVES_SUCCESSOR" 6 "$TMP/r_b_echo.log" &
+  p_b=$!
+  wait "$p_r" "$p_b"
+fi
 # Only client A stops. Do not Stop the one server or B's Rust Game owner.
-sudo -n kill -TERM "$(cat "$TMP/alice.pid")"
+if [[ "$HANDOVER" == 1 ]];then
+  sudo -n kill -TERM "$(cat "$TMP/alice-old.pid")"
+else
+  sudo -n kill -TERM "$(cat "$TMP/alice.pid")"
+fi
 for _ in {1..80};do
  if grep -q "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=$LANES" "$TMP/A.log";then break;fi
  sleep .25
 done
 grep -q "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=$LANES" "$TMP/A.log"
 send_udp "$NSB" "$IPB" "B_AFTER_A_STOP" 6 "$TMP/b_after.log"
+if [[ "$HANDOVER" == 1 ]];then
+  send_udp "$NSR" "$IPR" "A2_AFTER_OLD_A_STOP" 3 "$TMP/r_echo.log"
+fi
 sudo -n kill -TERM "$(cat "$TMP/bob.pid")"
+if [[ "$HANDOVER" == 1 ]];then sudo -n kill -TERM "$(cat "$TMP/alice.pid")";fi
 sudo -n kill -TERM "$(cat "$TMP/server.pid")"
 for _ in {1..80};do
  if [[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log" || true)" -ge 2 ]] &&
@@ -173,4 +204,4 @@ done
 grep -q 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log"
 [[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log")" -eq 2 ]]
 grep -q 'V4_PUBLIC_SHARED_TUN_STOP generation=' "$TMP/server.log"
-echo "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$LANES verified_leases=2 simultaneous_udp=1 B_survives_A_stop=1 native_stop_drained=1"
+echo "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$LANES verified_leases=2 simultaneous_udp=1 B_survives_A_stop=1 native_stop_drained=1 handover_A_to_A2=$HANDOVER"

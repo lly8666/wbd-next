@@ -6,6 +6,10 @@
 
 真实交接和 per-group Health90 90s expiry 是不同义务；H1039 最后组 TLS-BPF 恢复由独立 classic-BPF VM Go 单测验证。H1040 原生 Action 成功前只算源码测试候选。
 
+## 真实双 Game4 同源码结果
+
+[Linux original Go/Rust Action 41642592457](https://github.com/lly8666/wbd-next/actions/runs/41642592457) **SUCCESS**，SOURCE `0a0bd7509f82d754917a2b7a6745276aa2cc6e7f`。二个不同账户 Game2 与 Game4 分别完成 2×2/2×4 原 TLS lane、真实共享 reader /32、双人同时真实 UDP、只停 A 后 B 继续 UDP、M4 精确 Stop。Game4 固定 FEC 双组、90秒自动 dead 仍未单独通过。
+
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H1040 native OS source test param: two independently authenticated Game2 AND Game4 groups on same one-port single Rust TUN with genuine UDP and exact group Stop, no protocol or hot-path change."}
 ```

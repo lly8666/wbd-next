@@ -538,12 +538,15 @@ jobs:
           # native Stop markers using actual $LANES; no literal Game2-only
           # assertions in the two-cohort Game4 scenario.
           for mode in game2 game4; do
-            WBD_PLAN028_GAME_MULTI_MODE="$mode" bash tools/m0-plan028-game-two-groups-real-linux-netns.sh fixed-build >"fixed-kernel-result/plan028-game-two-groups-$mode.log" 2>&1 || {
+            handover=0
+            if [[ "$mode" == game2 ]];then handover=1;fi
+            WBD_PLAN028_GAME_MULTI_MODE="$mode" WBD_PLAN028_GAME_MULTI_HANDOVER="$handover" bash tools/m0-plan028-game-two-groups-real-linux-netns.sh fixed-build >"fixed-kernel-result/plan028-game-two-groups-$mode.log" 2>&1 || {
               tail -120 "fixed-kernel-result/plan028-game-two-groups-$mode.log" >&2
               exit 1
             }
             lanes="${mode#game}"
             grep -Fq "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$lanes" "fixed-kernel-result/plan028-game-two-groups-$mode.log"
+            grep -Fq "handover_A_to_A2=$handover" "fixed-kernel-result/plan028-game-two-groups-$mode.log"
           done
       # Source-exact real 1% accounting and both owned Stop remain hard;
       # packet missing count is NOT manufactured as outer repair delivery.
