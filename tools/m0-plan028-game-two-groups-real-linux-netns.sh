@@ -2,6 +2,12 @@
 # PLAN028 two original Go TLS Game2 groups concurrently sharing a single
 # server 443, ONE authenticated Rust TUN reader, two independent /32 leases.
 set -euo pipefail
+MODE="${WBD_PLAN028_GAME_MULTI_MODE:-game2}"
+case "$MODE" in
+  game2) LANES=2 ;;
+  game4) LANES=4 ;;
+  *) echo "PLAN028 two-group real native only supports game2/game4" >&2;exit 2 ;;
+esac
 ROOT="$(realpath "${1:?fixed-build source directory}")"
 test -x "$ROOT/wbd-v4-client" && test -x "$ROOT/wbd-v4-server"
 test -s "$ROOT/libwbd_engine.so" && test -c /dev/net/tun
@@ -61,14 +67,14 @@ sudo -n ip netns exec "$NSS" bash -c "
   --tun-name wbdvs4 --tun-ipv4 10.66.0.1/24 \
   --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
   --users-file '$TMP/users.json' --lease-pool 10.66.0.128/25 \
-  --tls-cert '$TMP/cert.pem' --tls-key '$TMP/key.pem' --mode game2
+  --tls-cert '$TMP/cert.pem' --tls-key '$TMP/key.pem' --mode "$MODE"
 " >"$TMP/server.log" 2>&1 &
 PIDS+=("$!")
 for _ in {1..80};do
- if grep -q 'V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=443 lanes_per_group=2' "$TMP/server.log";then break;fi
+ if grep -q "V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=443 lanes_per_group=$LANES" "$TMP/server.log";then break;fi
  sleep .25
 done
-grep -q 'V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=443 lanes_per_group=2' "$TMP/server.log"
+grep -q "V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=443 lanes_per_group=$LANES" "$TMP/server.log"
 
 # One real server inner IPv4 UDP echo; no shadow tunnel or synthesized
 # FakeTCP/TLS receipt. Both clients send through their own real TUN.
@@ -93,14 +99,14 @@ start_client(){
    --peer-ip 10.25.0.1 --peer-port 443 --tun-name '$tun' \
    --server-name wbd-v4.example.test --route-key-hex '$ROUTE' \
    --username '$user' --password '$password' \
-   --auto-ip --installation-id-file '$key' --mode game2
+   --auto-ip --installation-id-file '$key' --mode "$MODE"
  " >"$log" 2>&1 &
  PIDS+=("$!")
 }
 await_group(){
  local log="$1" count="$2"
  for _ in {1..120};do
-  if grep -q 'V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=2' "$log" &&
+  if grep -q 'V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=$LANES' "$log" &&
      [[ "$(grep -c 'V4_PUBLIC_GAME_MULTI_GROUP_READY role=server' "$TMP/server.log" || true)" -ge "$count" ]];then
    return 0
   fi
@@ -167,4 +173,4 @@ done
 grep -q 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log"
 [[ "$(grep -c 'V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close' "$TMP/server.log")" -eq 2 ]]
 grep -q 'V4_PUBLIC_SHARED_TUN_STOP generation=' "$TMP/server.log"
-echo 'M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=2 verified_leases=2 simultaneous_udp=1 B_survives_A_stop=1 native_stop_drained=1'
+echo "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$LANES verified_leases=2 simultaneous_udp=1 B_survives_A_stop=1 native_stop_drained=1"

@@ -534,11 +534,14 @@ jobs:
           done
           # Separate actual auto-lease cohort flow: 2 credential-distinct
           # Game2 groups (4 TLS lanes) on ONE server 443/ONE Rust TUN reader.
-          bash tools/m0-plan028-game-two-groups-real-linux-netns.sh fixed-build >fixed-kernel-result/plan028-game-two-groups.log 2>&1 || {
-            tail -120 fixed-kernel-result/plan028-game-two-groups.log >&2
-            exit 1
-          }
-          grep -q 'M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS' fixed-kernel-result/plan028-game-two-groups.log
+          for mode in game2 game4; do
+            WBD_PLAN028_GAME_MULTI_MODE="$mode" bash tools/m0-plan028-game-two-groups-real-linux-netns.sh fixed-build >"fixed-kernel-result/plan028-game-two-groups-$mode.log" 2>&1 || {
+              tail -120 "fixed-kernel-result/plan028-game-two-groups-$mode.log" >&2
+              exit 1
+            }
+            lanes="${mode#game}"
+            grep -Fq "M0_PLAN028_GAME_TWO_PROTECTED_ACCOUNTS_ONE_443_ONE_RUST_TUN_NATIVE_PASS groups=2 lanes_each=$lanes" "fixed-kernel-result/plan028-game-two-groups-$mode.log"
+          done
       # Source-exact real 1% accounting and both owned Stop remain hard;
       # packet missing count is NOT manufactured as outer repair delivery.
       # Earlier independent Fixed/Game jobs complete first and can expose
