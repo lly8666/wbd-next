@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 998,
-  "checkpoint_sha": "f95f4f55e6090c9c12c96c18383c4b3df49757fe",
+  "sequence": 999,
+  "checkpoint_sha": "8219ce5c7fd2ec1499301dc5abbe9abaa12bf114",
   "progress": "planned",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "PLAN027A H998 user-accepted scoped closeout filed; PLAN028 PLANNED, awaiting separate new-agent activation (NOT_STARTED)",
-  "why_now": "User directly requested immediate PLAN027A closeout and said a newly started agent will implement PLAN028 later; exact-source passed cases and outstanding real failures are archived without falsification.",
+  "current_task": "H999 H998 PLAN027A scoped closure preserved; compact oversized feature-card JSON to pass 16KiB catalog guard; PLAN028 PLANNED NOT_STARTED",
+  "why_now": "H998 repo governance PASS but feature catalog JSON UTF-8 card crossed 16KiB; formatting-only change, no new native test",
   "done_when": "On explicit new-agent launch of PLAN028: true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. Existing PLAN027A source-accepted H998 closeout is not rewritten as unqualified PASS.",
-  "next_action": "When user activates a new agent, read START_HERE.md, AGENTS.md, docs/prompts/M0-PLAN028.md, registry, this cursor and docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json. Start PLAN028 then; do NOT dispatch old H990-H997 runs or assume hot physical PMTU shrink is supported.",
+  "next_action": "New agent starts PLAN028 upon user invocation; no further PLAN027A reruns. Check the H999 governance/catalog result and read PLAN027A H998 handoff.",
   "unverified": true,
   "last_tested_source": "26ca847019d8ffddaa163d40f77c61b6cc2401f9",
   "evidence_refs": [
@@ -23,10 +23,10 @@
     "docs/prompts/M0-PLAN028.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json",
     "docs/devlog/M0/20261103-PLAN027A-H998-USER-SCOPED-CLOSEOUT-PLAN028-HANDOFF.md",
-    "docs/evidence/M0/PLAN027A-H995-H994-11-OF-11-REAL-NATIVE-CLOSE-20261103.json",
+    "docs/devlog/M0/20261103-PLAN027A-H999-FEATURE-CARD-BOUNDED-REPAIR.md",
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md"
   ],
   "open_requests": [],
-  "partial_summary": "PLAN027A USER_ACCEPTED_SCOPED_CLOSEOUT (not all initial exit gates certified): 11/11 Win-WSL PASS incl jumbo DF0 and TCP64; ARM64 current source Normal + asymmetric PASS, GameFEC FEC/UDP/Stop observed but H997 Actions FAIL under duplicate reject assertion; H995 actual online physical MTU shrink leads 3/3 small-flow drop, real FAIL; remote ICMP3/4 and causal old/new CPU NOT_MEASURED. H996 Normal same-run and separate Game4FEC loss0 PASS. PLAN028 is planned and has NOT_STARTED. H998 docs/registry handoff only."
+  "partial_summary": "PLAN027A user-accepted H998 scoped closeout unchanged. H999 corrects only UTF8 card size JSON whitespace and awaits catalog status. PLAN028 reserved PLANNED, NOT_STARTED; H995 physical midflight MTU FAIL and H997 ARM64 Game FEC Action FAIL preserved in H998 evidence."
 }
