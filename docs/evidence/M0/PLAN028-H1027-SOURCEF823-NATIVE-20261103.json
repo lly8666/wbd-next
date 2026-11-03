@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN028",
+  "checkpoint": "H1027",
+  "source_sha": "f823600c052f7e25fecc0f3ef763c6245f6154c9",
+  "source_commit_url": "https://github.com/lly8666/wbd-next/commit/f823600c052f7e25fecc0f3ef763c6245f6154c9",
+  "result": "PASS",
+  "artifact_verified": true,
+  "action": {
+    "workflow": "m0-plan012-combined-functional.yml",
+    "run_id": 41606128749,
+    "run_attempt": 1,
+    "job_id": 125817863188,
+    "job_name": "native",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/41606128749",
+    "artifact_id": 13217595442,
+    "artifact_name": "m0-plan012-combined-41606128749-1",
+    "manifest_path": "fixed-kernel-result/manifest.json",
+    "manifest_source_sha": "f823600c052f7e25fecc0f3ef763c6245f6154c9",
+    "runtime_source_file_sha256": "1eca137eb02ba535be4f378609f23e23800e21c82c1ea19655e78ae8f9a7bb76",
+    "toolchains": {
+      "rust": "1.85.1",
+      "go": "1.23.12"
+    }
+  },
+  "tested": {
+    "saturated_queue_isolation": {
+      "test_name": "v4_embedded_go::m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop",
+      "rust_test_log": "fixed-kernel-result/plan028-nohol-test.log",
+      "result": "1 passed, 0 failed",
+      "scope": "Unit: full A inbox, eight deferred FIFO items and explicit overflow, B independent immediate delivery, old A retirement and new A live"
+    },
+    "real_linux_2_netns": {
+      "log": "fixed-kernel-result/plan028-auto-lease-real-native.log",
+      "result": "PASS",
+      "one_server_port": true,
+      "actual_udp_echoes": 5,
+      "server_reader_routed": 5,
+      "server_unrouted": 0,
+      "client_reader_routed": 5,
+      "joined_stop": true
+    },
+    "real_linux_path_switch": {
+      "log": "fixed-kernel-result/plan028-real-linux-path-switch-native.log",
+      "result": "PASS",
+      "old_source": "10.25.0.2",
+      "new_source": "10.25.0.3",
+      "new_physical_mtu": 1280,
+      "new_effective_tun_mtu": 1209,
+      "new_path_real_udp_echoes": 5,
+      "total_reader_routed": 10,
+      "old_exact_stop": true,
+      "app_path_epoch": "original Go TLS and Rust M4"
+    },
+    "real_linux_multiclient": {
+      "log": "fixed-kernel-result/plan028-two-account-one-port-real-native.log",
+      "result": "PASS",
+      "server_port": 443,
+      "distinct_installations": 3,
+      "distinct_leases": 3,
+      "protected_tls_sessions": 4,
+      "shared_tun_single_reader": 1,
+      "total_real_udp": 70,
+      "other_account_during_reauthentication": true,
+      "old_generation_exact_stop": true
+    },
+    "netem_1pct": {
+      "result": "PASS_SCOPED_ACCOUNTED_NOT_LOSSLESS",
+      "offered": 512,
+      "delivered_first_unique": 508,
+      "missing": 4,
+      "tc_client_drop": 9,
+      "tc_server_drop": 4,
+      "both_stop_drained": true
+    }
+  },
+  "separate_qualification": {
+    "code_defects_fixed": [
+      "shared TUN one-session unbounded queue-full wait (cross-client HOL)",
+      "Normal raw socket lacks 5-tuple kernel prefilter"
+    ],
+    "costs_optimized_but_benefit_unquantified": [
+      "small Vec reuse, with remaining TUN-to-Vec and Vec-to-M1 copies",
+      "250us idle check replaced with queue/deadline wait",
+      "at-most-8 immediately-ready batch per kernel-read turn"
+    ],
+    "no_native_full_queue_stress_benchmark": true,
+    "cpu_gain": "NOT_MEASURED",
+    "p99_gain": "NOT_MEASURED",
+    "windows_native_game_network_switch": "NOT_QUALIFIED",
+    "android": "NOT_QUALIFIED",
+    "physical_H998_narrow_1500_to_1280": "FAIL_RETAINED",
+    "ARM64_Game4FEC_historical_Action": "FAIL_RETAINED",
+    "remote_ICMP": "NOT_RUN",
+    "original_wire_and_crypto": "UNCHANGED",
+    "outer_MTU_default_bytes": 1460
+  },
+  "predecessor_failure": {
+    "source_sha": "b1d95455b592d3c7232e8ad1bfcc1cf37e2d645f",
+    "run_id": 41605334277,
+    "conclusion": "FAIL",
+    "first_failure": "existing Stop marker regex mismatch; old backpressure=... reader_joined=1 order restored",
+    "evidence": "docs/evidence/M0/PLAN028-H1027-SOURCEB1D-INITIAL-HARNESS-FAIL-20261103.json"
+  }
+}

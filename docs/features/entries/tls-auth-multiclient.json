@@ -55,7 +55,8 @@
     "docs/devlog/M0/20261103-PLAN028-H1025-CLIENT-SINGLE-TUN-REAL-SOURCE.md",
     "docs/devlog/M0/20261103-PLAN028-H1026-LINUX-RNETLINK-PATH-RECONNECT.md",
     "docs/devlog/M0/20261103-PLAN028-H1027-SHARED-TUN-NOHOL-EXACT-TUPLE.md",
-    "docs/evidence/M0/PLAN028-H1027-SOURCEB1D-INITIAL-HARNESS-FAIL-20261103.json"
+    "docs/evidence/M0/PLAN028-H1027-SOURCEB1D-INITIAL-HARNESS-FAIL-20261103.json",
+    "docs/evidence/M0/PLAN028-H1027-SOURCEF823-NATIVE-20261103.json"
   ],
   "verification": [
     {
@@ -183,6 +184,13 @@
       "status": "IMPLEMENTED_NOT_TESTED",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Linux/amd64 PLAN028 H1027 exact-source shared TUN Normal isolated HOL, native original Go/Rust",
+      "scope": "Source f823: bounded full-A/live-B FIFO and generation unit 1/1; native 2netns auto lease+reader Stop, real Linux source/MTU switch, 5netns 3 devices/one port70 UDP, 1% accounted. CPU/p99 and real saturated-load benefit NOT_MEASURED.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "f823600c052f7e25fecc0f3ef763c6245f6154c9",
+      "evidence": "docs/evidence/M0/PLAN028-H1027-SOURCEF823-NATIVE-20261103.json"
     }
   ],
   "limitations": [
@@ -201,7 +209,8 @@
     "H1023 SOURCE96a same-install zero-epoch handover 46 genuine Linux TUN/UDP incl Bob survives PASS, but not three distinct installations concurrently. H1024 5-netns 3-device cross-account/installation + handover source candidate requires NEW native Action; seven modes and Windows/Linux OS event rebind not yet native-qualified.",
     "H1024 SOURCE09cb native 3 simultaneously active devices (Alice two installs + Bob) and A/R same-install generation swap 70 real UDP PASS. H1025 client Rust single TUN reader source is untested and only foundation for in-process cross-network A+B; Windows/Linux true native events, 7-mode and per-client FEC/cipher/MTU remain NOT_RUN.",
     "H1026 Linux original numeric path notify and in-process Normal auto-IP A→A+B→B source candidate, no source-locked native Action yet; Windows notification and Game/FEC seven-mode path switching remain NOT_RUN; H998 physical 1500→1280 FAIL unchanged.",
-    "H1027 initial SOURCE b1d native mandatory gate FAIL (stable Stop log parser), despite compiled Rust and real 5+5 UDP/Stop observed; corrected SOURCE needs its own Action, and CPU/p99 gain remains unmeasured."
+    "H1027 initial SOURCE b1d native mandatory gate FAIL (stable Stop log parser), despite compiled Rust and real 5+5 UDP/Stop observed; corrected SOURCE needs its own Action, and CPU/p99 gain remains unmeasured.",
+    "H1027 source f823 native functional PASS only (Linux native Action 41606128749); full A inbox isolated by deterministic Rust unit, not Linux high-rate multi-tenant saturation. Original server batch8/pool/exact BPF code verified by real startup/traffic, CPU/p99 causal improvements not measured; historic H998 physical and ARM64 Game4FEC FAIL unchanged."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
