@@ -96,6 +96,10 @@ jobs:
             cat fixed-kernel-result/plan028-shared-route-test.log; exit 1;
           }
           grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/plan028-shared-route-test.log
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_plan028_client_shared_tun_default_generation_fence -- --test-threads=1 --nocapture >fixed-kernel-result/plan028-client-default-route-test.log 2>&1 || {
+            cat fixed-kernel-result/plan028-client-default-route-test.log; exit 1;
+          }
+          grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/plan028-client-default-route-test.log
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_join$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_state$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_fec2_probe_real_raw_tx$'
@@ -387,6 +391,8 @@ jobs:
               exit 1
             }
           grep -q 'M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS original_TLS=1' \
+            fixed-kernel-result/plan028-auto-lease-real-native.log
+          grep -q 'M0_PLAN028_REAL_CLIENT_PROTECTED_DEFAULT_SINGLE_TUN_READER_PASS' \
             fixed-kernel-result/plan028-auto-lease-real-native.log
           grep -q 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS' \
             fixed-kernel-result/plan028-auto-lease-real-native.log

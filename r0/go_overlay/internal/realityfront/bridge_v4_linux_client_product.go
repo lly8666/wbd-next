@@ -22,6 +22,10 @@ type V4LinuxClientProductConfig struct {
     NetworkIfIndex uint32
     Tun *os.File
     TunName string
+    // Only original Go authenticated AUTO /32 client mode uses one shared
+    // Rust physical TUN reader; future same-process generation A+B can't
+    // race destructive kernel TUN reads. Normal manual mode unchanged.
+    SharedTun *V4LinuxSharedTun
     CleanupOwnedNetwork func()error
     // Optional original OS owner callback, only after authentication and before TUN starts.
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
@@ -111,6 +115,20 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         if leaseErr=p.cfg.ConfigureLeaseIPv4(lease);leaseErr!=nil {
             return nil,errors.Join(leaseErr,p.closeLocked())
         }
+        if p.cfg.SharedTun!=nil {
+            // Original protected lease has ALREADY been installed and
+            // verified by the actual OS before the client may bind the
+            // process-wide default Rust M1 ingress. A forged mutable
+            // admission result or pre-TLS configuration is never authority.
+            if leaseErr=bridge.bindAuthenticatedClientIPv4(lease);leaseErr!=nil {
+                return nil,errors.Join(leaseErr,p.closeLocked())
+            }
+            if leaseErr=bridge.bindAuthenticatedSharedTun(p.cfg.SharedTun);leaseErr!=nil {
+                return nil,errors.Join(leaseErr,p.closeLocked())
+            }
+        }
+    }else if p.cfg.SharedTun!=nil {
+        return nil,errors.Join(ErrAdmissionParams,p.closeLocked())
     }
     if p.cfg.ConfigureTunnelMTU!=nil {
         clientLimit,serverLimit:=cold.RecordLimits()

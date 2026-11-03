@@ -102,6 +102,9 @@ type config struct{
     disableOuterRepair bool
     recordLimit uint16
     innerMTU int
+    // Process-scoped original Rust TUN reader. Never included in config
+    // wire/user arguments; only initialized by genuine cold OS Go owner.
+    sharedTun *realityfront.V4LinuxSharedTun
     tunFqMaxrateMbps int
     tunTxQLenPackets int
 }
@@ -498,7 +501,7 @@ func productNativeCleanup(c config,tun *ownedTun)func()error{
  return func()error{return nil}
 }
 
-func Run(role string,args []string)error{
+func Run(role string,args []string)(retErr error){
     cfg,err:=parse(role,args)
     if err!=nil{return err}
     iface,err:=net.InterfaceByName(cfg.rawInterface)
@@ -553,6 +556,24 @@ func Run(role string,args []string)error{
         ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
         defer stop()
         return runGame(ctx,cfg,uint32(iface.Index),tun,leases,epochs,&connected)
+    }
+    if role=="client"&&cfg.autoIP{
+        // Same original physical TUN fd survives native Rust generations.
+        // No second per-generation reader may steal kernel packets before
+        // the authenticated new lane can take over the shared M1 source.
+        // Server owns its own separate process-wide shared reader already.
+        shared,e:=realityfront.NewV4LinuxSharedTun(tun.f,cfg.tunName)
+        if e!=nil{return e}
+        cfg.sharedTun=shared
+        defer func(){
+            if e:=shared.Close();e!=nil{
+                retErr=errors.Join(retErr,e)
+                log.Printf("V4_PUBLIC_SHARED_TUN_STOP_INCOMPLETE role=client error=%v",e)
+            }else{
+                log.Printf("V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client")
+            }
+        }()
+        log.Printf("V4_PUBLIC_SHARED_TUN_READER_READY role=client auto_lease=1 owner=rust_single_kernel_reader")
     }
     ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
     defer stop()
@@ -874,7 +895,8 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     native,err:=realityfront.NewV4LinuxClientProduct(
         realityfront.V4LinuxClientProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
-            Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:productNativeCleanup(c,tun),
+            Tun:tun.f,TunName:c.tunName,SharedTun:c.sharedTun,
+            CleanupOwnedNetwork:productNativeCleanup(c,tun),
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
             FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,

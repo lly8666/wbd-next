@@ -402,15 +402,25 @@ if [[ "$AUTO_IP" == 1 ]];then
   # V4_PUBLIC_SHARED_TUN_READER_READY marker that it no longer emits.
   grep -q 'V4_PUBLIC_MULTI_SERVER_READY role=server port=443 capacity=32 shared_rust_tun=1' "$TMP/server.log"
   grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server' "$TMP/server.log"
+  # The client NOW also has exactly one original Rust TUN kernel reader,
+  # independently of its server process, so a future new authenticated
+  # generation cannot race destructively for the same client TUN packets.
+  grep -q 'V4_PUBLIC_SHARED_TUN_READER_READY role=client auto_lease=1 owner=rust_single_kernel_reader' "$TMP/client.log"
+  grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client' "$TMP/client.log"
   sudo -n ip netns exec "$NSS" true
-  python3 - "$TMP/server.log" "$PACKETS" <<'PY'
+  python3 - "$TMP/server.log" "$TMP/client.log" "$PACKETS" <<'PY'
 import pathlib,re,sys
-log=pathlib.Path(sys.argv[1]).read_text()
-matches=re.findall(r'V4_PUBLIC_SHARED_TUN_STOP generation=([0-9]+) routed=([0-9]+) unrouted=([0-9]+) backpressure=([0-9]+) reader_joined=1',log)
-assert len(matches)==1,matches
-gen,routed,unrouted,pressure=map(int,matches[0])
-assert gen>0 and routed>=int(sys.argv[2]),(gen,routed,unrouted,pressure)
-print("M0_PLAN028_REAL_SHARED_RUST_SINGLE_TUN_READER_PASS routed=%d unrouted=%d backpressure=%d reader_joined=1"%(routed,unrouted,pressure))
+pattern=r'V4_PUBLIC_SHARED_TUN_STOP generation=([0-9]+) routed=([0-9]+) unrouted=([0-9]+) backpressure=([0-9]+) reader_joined=1'
+for role,path in (('server',sys.argv[1]),('client',sys.argv[2])):
+    log=pathlib.Path(path).read_text()
+    matches=re.findall(pattern,log)
+    assert len(matches)==1,(role,matches)
+    gen,routed,unrouted,pressure=map(int,matches[0])
+    assert gen>0 and routed>=int(sys.argv[3]),(role,gen,routed,unrouted,pressure)
+    if role=='server':
+        print("M0_PLAN028_REAL_SHARED_RUST_SINGLE_TUN_READER_PASS routed=%d unrouted=%d backpressure=%d reader_joined=1"%(routed,unrouted,pressure))
+    else:
+        print("M0_PLAN028_REAL_CLIENT_PROTECTED_DEFAULT_SINGLE_TUN_READER_PASS authenticated_tls=1 os_lease_readback=1 routed=%d unrouted=%d backpressure=%d reader_joined=1"%(routed,unrouted,pressure))
 PY
   echo "M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS original_TLS=1 os_client_ipv4=$CLIENT_EFFECTIVE_IP app_udp=$PACKETS exact_generation_Rust_M4=1"
 fi

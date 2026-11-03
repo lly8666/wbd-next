@@ -170,12 +170,13 @@ func (b *v4EmbeddedNativeBridge) prepareAuthenticatedClient(
     b.committed=true
     return nil
 }
-// Private native source-IP authority: only the verified server TLS lease,
-// after original Rust owner commit and before any Rust raw/TUN worker starts.
-// No feature token, client source IP, manual fallback or pre-TLS address can
-// mint this binding. Manual-address product retains old behavior.
+// Private original-Go verified client /32 lease, checked after real
+// protected TLS and before Rust raw/TUN worker. Server uses the verified
+// lease to reject forged *incoming* inner IPv4 sources; client authorizes
+// its OS-installed /32 and one shared default M1 TUN reader. An untrusted
+// outer tuple, manual IP, feature token or mutable result cannot bind it.
 func (b *v4EmbeddedNativeBridge) bindAuthenticatedClientIPv4(lease string)error{
-    if b==nil||b.handle==0||!b.committed||!b.serverSide||lease==""{
+    if b==nil||b.handle==0||!b.committed||lease==""{
         return errV4Embedded
     }
     prefix,err:=netip.ParsePrefix(lease)
@@ -190,10 +191,11 @@ func (b *v4EmbeddedNativeBridge) bindAuthenticatedClientIPv4(lease string)error{
     if rc!=0{return fmt.Errorf("%w: authenticated client IPv4 bind=%d",errV4Embedded,int(rc))}
     return nil
 }
-// V4LinuxSharedTun owns ONE process-wide real Linux TUN kernel reader.
-// Go retains the original OS fd; Rust borrows/dups it and guarantees that
-// every registered original-TLS Rust M1 sender joins before Close succeeds.
-// A session Stop never closes this independent reader used by siblings.
+// V4LinuxSharedTun owns ONE process-wide real Linux TUN kernel reader,
+// whether that Go process is a server with per-/32 peers or a client with
+// a protected default. Go retains the OS fd; Rust clones it and joins every
+// registered original-TLS Rust M1 sender before Close succeeds.
+// Per-session Stop never closes this independent reader.
 type V4LinuxSharedTun struct{
     mu sync.Mutex
     handle uint64
@@ -220,7 +222,7 @@ func (r *V4LinuxSharedTun) Close()error{
     return nil
 }
 func (b *v4EmbeddedNativeBridge) bindAuthenticatedSharedTun(r *V4LinuxSharedTun)error{
-    if b==nil||b.handle==0||!b.committed||!b.serverSide||r==nil{
+    if b==nil||b.handle==0||!b.committed||r==nil{
         return errV4Embedded
     }
     r.mu.Lock()

@@ -249,6 +249,14 @@ if sudo -n kill -0 "$(cat "$TMP/b.pid")" 2>/dev/null ||
 fi
 grep -q 'V4_PUBLIC_NATIVE_STOP_DRAINED role=client' "$TMP/B.log"
 grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server' "$TMP/server.log"
+# A/R are two TLS generations of one installation, Bob and Alice-D are
+# siblings. Every REAL client process now owns ONE Rust TUN reader joined
+# AFTER its own M1/M4 generation native Stop; never a competing per-lane
+# destructive TUN reader even when the same device reauthenticates.
+for role in A B D R;do
+  grep -q 'V4_PUBLIC_SHARED_TUN_READER_READY role=client auto_lease=1 owner=rust_single_kernel_reader' "$TMP/$role.log"
+  grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client' "$TMP/$role.log"
+done
 python3 - "$TMP/server.log" <<'PY'
 import pathlib,re,sys
 t=pathlib.Path(sys.argv[1]).read_text()

@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 1024,
-  "checkpoint_sha": "96a420a0e2e5fd811272440be90700a5c35b6c34",
+  "sequence": 1025,
+  "checkpoint_sha": "09cbc73d326e74d34db6da310630345e96c0cf3c",
   "progress": "in_progress",
   "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
-  "current_task": "H1024 exact-source 5 real Linux netns same-account two different InstallationIDs + third other account simultaneous 3 independent /32, all genuine original Go TLS Rust M1/M4 single port443 shared TUN, 70 actual UDP and same-install A/R takeover; native Action PENDING",
-  "why_now": "H1023 source96a original protected zero-epoch same-install A->A+B->B true 4-netns native UDP46/sibling Bob and exact Rust Stop PASS, but PLAN028 explicitly also requires SAME-account 2 installs plus unrelated third client live simultaneously. Extend exact already qualified native scene rather than create separate framework.",
+  "current_task": "H1025 true original-Go authenticated Linux AUTO client process ONE Rust TUN kernel reader default-route to existing M1 owner; client new-generation physical reader fence source candidate, Rust+Go product and real 2/5netns test PENDING",
+  "why_now": "H1024 source09cb exact 5 Linux netns 3 independent devices Alice two installations/Bob another account 70 native UDP one server443 Rust shared TUN and same-install A/R takeover PASS. But each client was separate PROCESS: in-process A+B client would have two per-generation Rust destructive TUN readers. Reuse existing server SharedTunReader on true client auto /32 with default current-owner route first.",
   "done_when": "PLAN028 deliver true original authenticated single-port multi-client/config/IP, seven-mode A->A+B->B, real Windows/Linux path notifications/reconnect/MTU readback and user/Stop isolation, bounded original Go/Rust source-locked native tests/CPU/p99/FRC, exact feature/evidence; physical/Android qualifications accurately scoped. PLAN027A H998 source-accepted scoped closeout must not be rewritten as universal PASS.",
-  "next_action": "Collect H1024 exact-source PLAN012 native 5 netns 3 distinct auto /32/2 accounts, A/B/D simultaneous then old-A/new-R same-install takeover while Bob+D continue UDP, >=70 routed, all per-session original Rust owned Stop and shared reader join; fix concrete failure if any. Then implement Windows/Linux true OS route change notification/rebind 200/500ms cold debounce and 7 modes/per-client config with H998 physical FAIL preserved.",
+  "next_action": "Collect H1025 exact SOURCE product Go/Rust compile plus two real netns client original TLS/OS auto IP and shared native client M1 routed>=5/Stop; five-netns 3 devices native UDP70, both server/client reader owned Stop; repair exact failures. Then implement actual Linux rtnetlink and Windows path-notification 200/500ms coalescing and new underlay TLS/MTU old-A→A+B→B client supervisor; seven modes and per-client budgets still pending.",
   "unverified": true,
-  "last_tested_source": "96a420a0e2e5fd811272440be90700a5c35b6c34",
+  "last_tested_source": "09cbc73d326e74d34db6da310630345e96c0cf3c",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN028-H1023-SOURCE96A-ZERO-EPOCH-NATIVE-SAME-INSTALL-HANDOVER-20261103.json"
+    "docs/evidence/M0/PLAN028-H1024-SOURCE09CB-THREE-INSTALLATIONS-ONE-RUST-TUN-NATIVE-20261103.json"
   ],
   "context_refs": [
     "START_HERE.md",
@@ -24,9 +24,9 @@
     "docs/architecture/MTU_CONTRACT.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
-    "docs/devlog/M0/20261103-PLAN028-H1024-THREE-DEVICE-NATIVE-ISO.md",
+    "docs/devlog/M0/20261103-PLAN028-H1025-CLIENT-SINGLE-TUN-REAL-SOURCE.md",
     "docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json"
   ],
   "open_requests": [],
-  "partial_summary": "H1022 SOURCE9d5 two-account original Go TLS shared Rust TUN one443 netns A5+A/B12+12+B5=34 real UDP PASS. H1023 SOURCE96a original zero-epoch same installation A(old)->A+R(new)->R protected TLS overlap verified, with Bob independent UDP; 46 routed=46 zero unroute/backpressure and Stop PASS; netem 512/506/6; FEC short/Game2/4 limited PASS. H1023 FeatureCatalog FAIL due missing idle-rotation-keepalive card. H1024 updates both existing cards and extends SAME actual netns source scene to Alice two independent installs+Bob third device, plus R same-install takeover, 70 actual UDP. H1024 NOT_TESTED; 7 modes/OS route-change/MTU user physical pending."
+  "partial_summary": "H1024 SOURCE09cb original Go TLS 3 independent protected /32 devices Alice two installations plus Bob, one server443 and Rust shared server TUN, 5 actual netns 70 real UDP/Stop and same-install old/new Alice native PASS; netem512 offered507 delivered5 missing, Fixed/Auto limited64, Game2/4 scoped PASS; Governance+FeatureCatalog PASS. H1025 source candidate now moves client AUTO to same process-wide original Rust single TUN reader and verified lease default route so later client in-process overlap cannot destructively race TUN, tests require real dual-/five-netns native. OS native route events/7 modes/per-client FEC not implemented; H998/Win Game4 FAIL preserved."
 }

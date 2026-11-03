@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "task_id": "R0-M0-PLAN028-SESSION-CONFIG",
+  "checkpoint": "H1024",
+  "source_sha": "09cbc73d326e74d34db6da310630345e96c0cf3c",
+  "overall": "SCOPED_REAL_NATIVE_PASS",
+  "provenance": {
+    "workflow_run_id": 41593787277,
+    "native_job_id": 125776303834,
+    "conclusion": "success",
+    "artifact_id": 13211348017,
+    "git_source_one_release_bundle": true,
+    "governance_run_id": 41593787265,
+    "governance_jobs": {
+      "governance": "success",
+      "feature_catalog": "success"
+    }
+  },
+  "verified": [
+    {
+      "scene": "5 actual Linux network namespaces and bridge: original-Go protected TLS 3 distinct installations (Alice A and D; Bob B) concurrently with independent auto /32; Alice R takes A while B/D keep UDP",
+      "status": "PASS",
+      "witness": "M0_PLAN028_REAL_THREE_DEVICE_SAME_ACCOUNT_TWO_INSTALLATIONS_ANOTHER_ACCOUNT_ONE_PORT_NATIVE_PASS protected_tls_sessions=4 distinct_installations=3 distinct_lease32=3 live_devices=3 server_port=443 shared_tun_single_reader=1 total_real_udp=70 exact_generation_Stop=1"
+    },
+    {
+      "scene": "One real Rust server physical TUN reader, native Stop and no sibling pollution",
+      "status": "PASS",
+      "witness": "M0_PLAN028_REAL_TWO_ACCOUNT_SAME_SERVER_PORT_SHARED_RUST_TUN_PASS original_tls_sessions=4 distinct_auto_leases=3 server_port=443 A=5 overlap_A=12 overlap_B=12 triple_A=6 triple_B=6 triple_D=6 alice_new_generation=6 bob_while_alice_reauth=6 alice_sibling_while_reauth=6 B_after_A_Stop=5 routed=70 unrouted=0 backpressure=0 native_stop=1"
+    },
+    {
+      "scene": "Original TLS same-install A→A+B→B zero epoch exact-generation fencing and other account continuity",
+      "status": "PASS",
+      "witness": "M0_PLAN028_REAL_SAME_INSTALL_ZERO_EPOCH_NATIVE_A_TO_AB_TO_B_PASS same_verified_lease=1 fresh_original_go_tls=1 new_rust_owner=1 old_exact_Stop=1 other_account_delivered=1"
+    },
+    {
+      "scene": "Original protected auto /32 Linux client OS readback and Rust M4",
+      "status": "PASS",
+      "witness": "M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS original_TLS=1 os_client_ipv4=10.66.0.167 app_udp=5 exact_generation_Rust_M4=1"
+    },
+    {
+      "scene": "True 1% kernel netem on same binaries; unmodified accounting denominator",
+      "status": "SCOPED_PASS",
+      "witness": "M0_V4_PUBLIC_REAL_1PCT_LOSS_ACCOUNTED_STOP_PASS original_tls=1 offered=512 first_unique_delivered=507 missing=5 tc_client_drop=6 tc_server_drop=7 kernel_first_copy_client=512 kernel_first_copy_server=508 retired_m2_reports_client=0 retired_m2_reports_server=0 outer_repair_attempts_observed=7 outer_repair_delivery_not_required=1 Stop_drained_both=1"
+    },
+    {
+      "scene": "Fixed/Auto first 64 real app and Game2/Game4 native modes",
+      "status": "SCOPED_PASS",
+      "witness": [
+        "M0_PLAN027_PUBLIC_V4_FEC_SHORT_SMOKE_PASS mode=fec-fixed same_binary=1 first_app=64 auto_quality_maturity_not_claimed=1",
+        "M0_PLAN027_PUBLIC_V4_FEC_SHORT_SMOKE_PASS mode=fec-auto same_binary=1 first_app=64 auto_quality_maturity_not_claimed=1",
+        "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game2",
+        "M0_PUBLIC_GAME_REAL_PRODUCT_MODE_PASS mode=game4"
+      ]
+    }
+  ],
+  "not_claimed": [
+    "Client same-process overlapping two Rust generations consuming one client TUN: H1024 client still one worker per process, not full one-process handoff.",
+    "Seven modes of FEC + Game simultaneous multi-device and highest Game4FEC A+B handover, per-client mode/outer MTU/FEC/cipher independence.",
+    "Linux/Windows actual OS route/address notifications or 200ms/500ms coalescing, physically switched outbound interface and path MTU pre-READY readback.",
+    "Android, physical 1500->1280 outer MTU resolution, ARM64 Game4FEC fully successful Stop and speed/CPU p99 guarantees."
+  ],
+  "historical_failures_preserved": [
+    "PLAN027A H998 actual physical 1500->1280 reduced MTU 3/3 tiny echo absent, ARM64 Game4FEC app/Stop failure",
+    "Windows↔Linux Game4 lane2 bootstrap timeouts run41579974280",
+    "Legacy PLAN020 revision3 writer static audit fails against registry revision4"
+  ]
+}

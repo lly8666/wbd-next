@@ -3630,7 +3630,9 @@ fn attach_raw(handle:u64,ifindex:u32,ifname:&str)->i32{
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 // PLAN028: bind the original Go protected and credential-checked /32 before
 // any native M4 worker writes an inner IPv4 datagram to the server TUN.
-// This C call is package-private Go cold control, not a public IP setter.
+// This C call is package-private original-Go VERIFIED cold control,
+// not a public IP setter. Server uses it as inbound source ownership;
+// client uses its verified OS-installed /32 as default M1 TUN authority.
 #[cfg(target_os="linux")]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_bind_authenticated_client_ipv4(
@@ -3643,7 +3645,11 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_bind_authenticated_client_ipv4(
     if expected==[0;4]||expected[0]==0||expected[0]>=224{return INVALID}
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
-    if e.phase!=PH_ACTIVE||!e.server_side||
+    // Original-Go verified server lease fences inbound client source;
+    // original-Go verified client lease authorizes the process-level
+    // default TUN reader after that address was installed/read back.
+    // Manual-IP/product callers never reach this protected cold binding.
+    if e.phase!=PH_ACTIVE||
        e.workers.is_some()||e.client_lease_ipv4.is_some(){return BAD_STAGE}
     #[cfg(feature="fec2_product_record")]
     if e.game_joined{
@@ -3881,7 +3887,8 @@ enum OriginalTunIngress{
 }
 // PLAN028 real Linux process TUN ingress: exactly ONE kernel reader in this
 // process, independent of every session's duplicated Rust TUN *writer*.
-// Only original-Go credential-verified server AUTO /32 owners may bind.
+// Only original-Go verified AUTO /32 owners may bind: on server route
+// per destination lease, on client use ONE authenticated default M1 sender.
 // This is NOT a second crypto engine, transport, scheduler or recovery stack.
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[derive(Clone)]
@@ -3972,6 +3979,33 @@ fn m0_plan028_shared_tun_real_generation_scope_and_sibling_fence(){
     shared_route_retire(&mut routes,ip_a,11,&new);
     assert!(routes.is_empty());
 }
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan028_client_shared_tun_default_generation_fence(){
+    let mut routes=HashMap::<[u8;4],SharedTunRoute>::new();
+    let (a_send,_a_rx)=mpsc::sync_channel(1);
+    let (b_send,_b_rx)=mpsc::sync_channel(1);
+    let a=Arc::new(AtomicBool::new(true));
+    let b=Arc::new(AtomicBool::new(true));
+    let default=[0u8;4];
+    shared_route_publish(&mut routes,default,SharedTunRoute{
+        generation:1,alive:Arc::clone(&a),send:a_send,
+    });
+    for destination in [[10,66,0,1],[8,8,8,8],[192,168,1,200]]{
+        let selected=routes.get(&destination).or_else(||routes.get(&default))
+            .expect("verified client default route");
+        assert_eq!(selected.generation,1);
+    }
+    shared_route_publish(&mut routes,default,SharedTunRoute{
+        generation:2,alive:Arc::clone(&b),send:b_send,
+    });
+    assert!(!a.load(Ordering::Acquire));
+    shared_route_retire(&mut routes,default,1,&a);
+    assert_eq!(routes[&default].generation,2);
+    assert!(b.load(Ordering::Acquire));
+    shared_route_retire(&mut routes,default,2,&b);
+    assert!(routes.is_empty());
+}
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn retire_shared_tun_session(session:&SharedTunSession){
     // Revoke source before any owner/driver joining. A late old generation
@@ -4011,7 +4045,11 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>){
         // HashMap O(1) expected destination lookup. No original Entry, AEAD
         // bitmap, RX state or M1 owner is locked by this kernel reader.
         let route=router.routes.lock().ok()
-            .and_then(|routes|routes.get(&destination).cloned());
+            .and_then(|routes|routes.get(&destination)
+                // Client TUN packets may target ANY remote VPN/LAN IP.
+                // The reserved 0/0 key is the ONE currently authenticated
+                // client generation, never a server-issued lease /32.
+                .or_else(||routes.get(&[0u8;4])).cloned());
         let Some(route)=route else{
             router.unrouted.fetch_add(1,Ordering::Relaxed);
             continue
@@ -4049,8 +4087,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_shared_tun_open(
     let Ok(owned)=unsafe{BorrowedFd::borrow_raw(fd)}.try_clone_to_owned()
     else{return INVALID};
     let Ok(mut map)=shared_tun_registry().lock()else{return BAD_STAGE};
-    // One physical server TUN reader; adding a second independent owner
-    // would race kernel dequeue even if configured with different names.
+    // One physical TUN reader per original Go process (server OR client).
+    // Multiple generation owners must not independently dequeue one fd.
     if !map.is_empty(){return BAD_STAGE}
     static NEXT:AtomicU32=AtomicU32::new(1);
     let gen=NEXT.fetch_add(1,Ordering::AcqRel);
@@ -4112,11 +4150,17 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     let Ok(router)=shared_tun_reader(router_handle)else{return UNKNOWN};
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
-    if e.phase!=PH_ACTIVE||!e.server_side||e.workers.is_some()||
+    if e.phase!=PH_ACTIVE||e.workers.is_some()||
        e.shared_tun.is_some(){return BAD_STAGE}
     #[cfg(feature="fec2_product_record")]
     if e.game_joined{return BAD_STAGE}
-    let Some(ip)=e.client_lease_ipv4 else{return BAD_STAGE};
+    // Rust requires the verified original-Go /32 lease to have been bound
+    // BEFORE any client/server worker or kernel read may start. On server
+    // it is the O(1) destination route; on client default routing is keyed
+    // at reserved zero, so a new authenticated generation atomically takes
+    // all destinations without a second destructive TUN reader.
+    let Some(lease)=e.client_lease_ipv4 else{return BAD_STAGE};
+    let ip=if e.server_side{lease}else{[0u8;4]};
     let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(64);
     e.shared_tun=Some(SharedTunSession{
         router:router_handle,generation:e.generation,ip,
@@ -4124,8 +4168,9 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
         sender,receiver:Some(receiver),
     });
     // Cold bind itself is not active authority. The exact native loop's
-    // successful startup publishes this mapping atomically and fences an old
-    // same-/32 generation; failed worker startup leaves previous owner live.
+    // successful startup publishes this mapping atomically. Server uses
+    // its authenticated /32; client uses its one verified default route.
+    // Failed worker startup never replaces a healthy old generation.
     drop(router);
     OK
 }

@@ -49,7 +49,8 @@
     "docs/devlog/M0/20261103-PLAN028-H1016-SHARED-TUN-REAL-ROUTER-CANDIDATE.md",
     "docs/devlog/M0/20261103-PLAN028-H1019-TWO-ACCOUNT-CONCURRENT-NATIVE-CANDIDATE.md",
     "docs/devlog/M0/20261103-PLAN028-H1023-ZERO-EPOCH-REAL-NATIVE-HANDOVER.md",
-    "docs/devlog/M0/20261103-PLAN028-H1024-THREE-DEVICE-NATIVE-ISO.md"
+    "docs/devlog/M0/20261103-PLAN028-H1024-THREE-DEVICE-NATIVE-ISO.md",
+    "docs/devlog/M0/20261103-PLAN028-H1025-CLIENT-SINGLE-TUN-REAL-SOURCE.md"
   ],
   "verification": [
     {
@@ -152,7 +153,14 @@
     },
     {
       "platform": "Linux original-Go protected TLS 3 devices (same-account 2 installations + other-account 1), shared Rust real TUN",
-      "scope": "H1024 5 actual Linux netns, 3 independent simultaneous automatic /32 and UDP, then same-install old-A/new-A authenticated handover with other 2 devices continuously delivering, 70 genuine app UDP/Stop; exact-source native Actions PENDING",
+      "scope": "H1024 SOURCE09cb 5 real Linux netns, same-account 2 independent installations + Bob other account, 3 active auto /32, original Go TLS 4 auth sessions incl same-install A/R takeover, one server443, single Rust TUN routed70/0 unroute/0 backpressure, exact per-session Stop, genuine native SUCCESS",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "09cbc73d326e74d34db6da310630345e96c0cf3c",
+      "evidence": "docs/evidence/M0/PLAN028-H1024-SOURCE09CB-THREE-INSTALLATIONS-ONE-RUST-TUN-NATIVE-20261103.json"
+    },
+    {
+      "platform": "Linux original-Go auto-/32 client process native Rust shared TUN source owner",
+      "scope": "H1025 source candidate: client original protected TLS verified lease and real OS install/readback now binds ONE process-wide Rust TUN reader with default route to existing original M1/M4 generation; second-generation takeover still needs same-process client cold supervisor; exact native one-client + 5-netns Action pending",
       "status": "IMPLEMENTED_NOT_TESTED",
       "source_sha": null,
       "evidence": null
@@ -171,7 +179,8 @@
     "H1012 source candidate adds actual Rust owner binding of server-authenticated /32 before Normal/Game native kernel workers and checks all decrypted IP source addresses before TUN. Manual-IP remains unbound until manual ownership negotiation, so this alone is NOT multi-tenant isolation qualification. New separate source-locked Linux netns auto-IP real UDP test must PASS before any native product claim.",
     "H1016 source candidate routes a server-owned kernel TUN read by authenticated destination /32 into independent original Rust owner M1 ingress. It DOES NOT by itself make Go server accept two peers concurrently; A+B→B and 7 modes/OS path switch remain NOT_RUN.",
     "H1022 SOURCE9d5e verified 2 DIFFERENT accounts 3 real netns, 34 real UDP/Stop one port and shared reader. This is not same-install overlap, same-account two installs plus a third account, seven-mode Game4FEC or OS route-change validation. H1023 adds cold zero-epoch same-install handover candidate with native gate; historical Win Game4 cold and H998 failures unchanged.",
-    "H1023 SOURCE96a same-install zero-epoch handover 46 genuine Linux TUN/UDP incl Bob survives PASS, but not three distinct installations concurrently. H1024 5-netns 3-device cross-account/installation + handover source candidate requires NEW native Action; seven modes and Windows/Linux OS event rebind not yet native-qualified."
+    "H1023 SOURCE96a same-install zero-epoch handover 46 genuine Linux TUN/UDP incl Bob survives PASS, but not three distinct installations concurrently. H1024 5-netns 3-device cross-account/installation + handover source candidate requires NEW native Action; seven modes and Windows/Linux OS event rebind not yet native-qualified.",
+    "H1024 SOURCE09cb native 3 simultaneously active devices (Alice two installs + Bob) and A/R same-install generation swap 70 real UDP PASS. H1025 client Rust single TUN reader source is untested and only foundation for in-process cross-network A+B; Windows/Linux true native events, 7-mode and per-client FEC/cipher/MTU remain NOT_RUN."
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
