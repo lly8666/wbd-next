@@ -20,6 +20,7 @@ type V4LinuxGameProductConfig struct {
     NetworkIfIndex uint32
     Tun *os.File
     TunName string
+    SharedTun *V4LinuxSharedTun // optional verified server /32, one TUN reader across Game groups
     CleanupOwnedNetwork func()error
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     ConfigureLeaseIPv4 func(lease string)error // apply once before Game group Rust M4 start
@@ -92,6 +93,9 @@ func (p *V4LinuxGameProduct) commitGroupedOwnerLocked()error{
     if err=p.native.configureOuterRepair(!p.cfg.DisableOuterRepair);err!=nil{return err}
     if p.server{
         if err=p.native.configurePeerPersona(p.cfg.PeerPersona);err!=nil{return err}
+        if p.cfg.SharedTun!=nil{
+            if err=p.native.bindAuthenticatedSharedTun(p.cfg.SharedTun);err!=nil{return err}
+        }
     }
     if err=p.native.startNativeM4(
         p.cfg.NetworkInterface,p.cfg.NetworkIfIndex,p.cfg.Tun,p.cfg.TunName,

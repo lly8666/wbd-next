@@ -95,6 +95,7 @@ jobs:
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_shared_tun_open$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_shared_tun_bind$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_shared_tun_close$'
+          nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_shared_tun_bind$'
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_plan028_shared_tun_real_generation_scope_and_sibling_fence -- --test-threads=1 --nocapture >fixed-kernel-result/plan028-shared-route-test.log 2>&1 || {
             cat fixed-kernel-result/plan028-shared-route-test.log; exit 1;
           }
@@ -113,6 +114,11 @@ jobs:
             cat fixed-kernel-result/plan028-precopy-age.log; exit 1;
           }
           grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/plan028-precopy-age.log
+          # Native Game A/B/A2 route expiry must preserve sibling and successor.
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_plan028_game_groups_share_one_tun_lease_routes_and_exact_stop -- --test-threads=1 --nocapture >fixed-kernel-result/plan028-game-shared-tun-route.log 2>&1 || {
+            cat fixed-kernel-result/plan028-game-shared-tun-route.log; exit 1;
+          }
+          grep -q 'test result: ok. 1 passed; 0 failed' fixed-kernel-result/plan028-game-shared-tun-route.log
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_join$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_game_group_state$'
           nm -D target/release/libwbd_engine.so | grep -q ' wbd_m0_embedded_go_fec2_probe_real_raw_tx$'

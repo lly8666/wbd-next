@@ -8,6 +8,8 @@ use std::os::fd::OwnedFd;
 use std::sync::{Arc,Mutex,atomic::{AtomicBool,AtomicU64,Ordering}};
 use std::thread::{self,JoinHandle};
 use std::collections::VecDeque;
+use std::sync::mpsc::Receiver;
+use crate::v4_embedded_go::OriginalTunIngress;
 use std::time::{Instant,Duration};
 use crate::v4_game_lane::{GameAdapter,Error as GameAdapterError};
 use crate::v4_game_cosmetic_outer::CosmeticOuter;
@@ -91,6 +93,7 @@ impl GameKernelOwner{
         server:bool,ifname:&str,ifindex:u32,fd:OwnedFd,tun_name:&str,
         generation:u32,outer_repair_enabled:bool,
         peer_persona:PacketPersona,authenticated_client_ip:Option<[u8;4]>,
+        shared_ingress:Option<Receiver<OriginalTunIngress>>,
     )->Result<Self,()>{
         let n=flows.len();
         if !matches!(n,2|4)||seqs.len()!=n||generation==0||
@@ -211,20 +214,46 @@ impl GameKernelOwner{
                     // during a 750ms missing-app poll: authenticated RX
                     // needs the SAME device mutex for first-delivery write.
                     // Ready-only poll(0) holds it only for an actual read.
-                    let mut slots:[&mut [u8];1]=[&mut inbound];
-                    let size=match tx_tun.read_ready_batch(generation,&mut slots){
-                        Ok(batch)=>match batch.entry(0){
-                            Some(TunReadyEntry::UntrustedIpv4{len})=>Some(len),
-                            Some(TunReadyEntry::Rejected)=>{
+                    // With a Game server's verified /32 share, only the
+                    // process-wide SharedTunReader calls read(2) on the
+                    // physical device. This Game TX owns a bounded channel;
+                    // saturating a different group can never steal its TUN
+                    // packets or block this group's original M4/FEC.
+                    let size=if let Some(ingress)=shared_ingress.as_ref(){
+                        match ingress.try_recv(){
+                            Ok(OriginalTunIngress::Shared(packet))=>{
+                                let bytes=packet.as_slice();
+                                if bytes.len()<=inbound.len(){
+                                    inbound[..bytes.len()].copy_from_slice(bytes);
+                                    Some(bytes.len())
+                                }else{
+                                    tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                    None
+                                }
+                            },
+                            Ok(_)=>{
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                                 None
                             },
-                            _=>None
-                        },
-                        Err(_)=>{
-                            if tx_stop.load(Ordering::Acquire){break}
-                            tx_rejected.fetch_add(1,Ordering::Relaxed);
-                            None
+                            Err(std::sync::mpsc::TryRecvError::Empty)=>None,
+                            Err(std::sync::mpsc::TryRecvError::Disconnected)=>break,
+                        }
+                    }else{
+                        let mut slots:[&mut [u8];1]=[&mut inbound];
+                        match tx_tun.read_ready_batch(generation,&mut slots){
+                            Ok(batch)=>match batch.entry(0){
+                                Some(TunReadyEntry::UntrustedIpv4{len})=>Some(len),
+                                Some(TunReadyEntry::Rejected)=>{
+                                    tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                    None
+                                },
+                                _=>None
+                            },
+                            Err(_)=>{
+                                if tx_stop.load(Ordering::Acquire){break}
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                None
+                            }
                         }
                     };
                     let now=MonoNs(start.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
@@ -560,8 +589,14 @@ impl GameKernelOwner{
                             due.saturating_sub(start.elapsed().as_nanos()
                                 .min(u128::from(u64::MAX)) as u64));
                         let timeout=((remain.min(10_000_000)+999_999)/1_000_000) as i32;
-                        let mut pfd=GamePollFd{fd:tx_tun.readiness_fd(),events:1,revents:0};
-                        let _=unsafe{poll(&mut pfd,1,timeout)};
+                        if shared_ingress.is_some(){
+                            // Polling the duplicated TUN fd here would
+                            // compete with the sole process reader.
+                            thread::sleep(Duration::from_millis(timeout.max(1) as u64));
+                        }else{
+                            let mut pfd=GamePollFd{fd:tx_tun.readiness_fd(),events:1,revents:0};
+                            let _=unsafe{poll(&mut pfd,1,timeout)};
+                        }
                     }else if !did_business&&!parity_ready{
                         thread::sleep(Duration::from_millis(2));
                     }

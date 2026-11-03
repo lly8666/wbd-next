@@ -192,15 +192,30 @@ func runGameClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,con
     if closeErr==nil{log.Printf("V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=client lanes=%d",n)}
     return errors.Join(err,closeErr)
 }
-func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,connected *bool)error{
+func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,connected *bool)(retErr error){
     n:=int(c.gameLanes)
     cert,err:=tls.LoadX509KeyPair(c.tlsCert,c.tlsKey)
     if err!=nil{return err}
     if epochs==nil{return realityfront.ErrAdmissionParams}
+    // Each automatic Game /32 joins one Rust physical TUN reader.
+    // Without a verified lease retain original single-group M4 ownership.
+    var shared *realityfront.V4LinuxSharedTun
+    if c.autoIP{
+        if leases==nil{return realityfront.ErrAdmissionParams}
+        shared,err=realityfront.NewV4LinuxSharedTun(tun.f,c.tunName)
+        if err!=nil{return err}
+        defer func(){retErr=errors.Join(retErr,shared.Close())}()
+    }
+    // The Go Run() parent owns the single physical device until every
+    // native Game group and shared reader has drained. Per-group Close is
+    // never allowed to steal a sibling group's OS TUN.
+    cleanup:=tun.Close
+    if shared!=nil{cleanup=func()error{return nil}}
     native,err:=realityfront.NewV4LinuxGameServerProduct(
         realityfront.V4LinuxGameProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
-            Tun:tun.f,TunName:c.tunName,CleanupOwnedNetwork:tun.Close,
+            Tun:tun.f,TunName:c.tunName,SharedTun:shared,
+            CleanupOwnedNetwork:cleanup,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
             DisableOuterRepair:c.disableOuterRepair,

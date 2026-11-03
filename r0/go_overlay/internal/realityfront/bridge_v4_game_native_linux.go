@@ -6,6 +6,7 @@ package realityfront
 #include <stdint.h>
 #include <stddef.h>
 extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32_t,uint64_t *);
+extern int32_t wbd_m0_embedded_go_game_group_shared_tun_bind(uint64_t,uint64_t);
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_fec_network_game_group_fixed_configure(uint64_t,uint32_t);
 extern int32_t wbd_fec_network_game_group_outer_policy_set(uint64_t,uint32_t);
@@ -161,6 +162,21 @@ func (g *v4NativeGameJoined) configurePeerPersona(persona V4PublicNativePeerPers
     rc:=C.wbd_m0_embedded_go_game_group_peer_persona_set(
         C.uint64_t(g.handle),kind)
     if rc!=0{return fmt.Errorf("%w: Game native original-Go peer persona=%d",errV4Embedded,int(rc))}
+    return nil
+}
+// Only a whole REAL original-TLS authenticated Game group may bind one
+// protected server lease /32 to the process-shared Rust kernel TUN reader.
+// Go never selects the route using SYN order/source port or untrusted bytes.
+func (g *v4NativeGameJoined) bindAuthenticatedSharedTun(r *V4LinuxSharedTun)error{
+    if g==nil||g.handle==0||g.stopped||g.verified==nil||r==nil{
+        return ErrAdmissionParams
+    }
+    r.mu.Lock()
+    defer r.mu.Unlock()
+    if r.handle==0{return ErrAdmissionUnsupported}
+    rc:=C.wbd_m0_embedded_go_game_group_shared_tun_bind(
+        C.uint64_t(g.handle),C.uint64_t(r.handle))
+    if rc!=0{return fmt.Errorf("%w: Game group shared TUN bind=%d",errV4Embedded,int(rc))}
     return nil
 }
 // Real original-Go M4 raw/TUN worker install. The actual Go owner

@@ -926,6 +926,11 @@ struct GameGroupNative{
     adapter:Arc<Mutex<crate::v4_game_lane::GameAdapter>>,
     handles:Vec<u64>,stopped:bool,stopping:bool,
     client_lease_ipv4:Option<[u8;4]>,
+    // Game server's optional shared single-reader route is an authenticated
+    // /32. One Game group owns its private receiver and Stop fence only.
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")))]
+    shared_tun:Option<SharedTunSession>,
     // M4 Game never registers Normal's outer M2 shadow/repair timer.
     outer_repair_enabled:bool,
     // The SAME original-Go server-selected peer persona as Normal, for
@@ -2913,6 +2918,9 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
         client_lease_ipv4:client_lease.flatten(),
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
             any(target_env="gnu",target_env="musl")))]
+        shared_tun:None,
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+            any(target_env="gnu",target_env="musl")))]
         peer_persona:PacketPersona::Legacy,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         server,
@@ -3118,6 +3126,34 @@ pub unsafe extern "C" fn wbd_fec_network_game_group_outer_policy_read(
     unsafe{std::ptr::copy_nonoverlapping(values.as_ptr(),out,4)};
     OK
 }
+// PLAN028: a complete, credential-protected Game group may attach to the
+// SAME one physical TUN reader used by Normal multi-client sessions. This
+// reserves a bounded ingress queue; no /32 is published until the genuine
+// GameKernelOwner has started. Manual/no-lease groups stay in original
+// single-group dedicated-TUN mode and are not multi-client authority.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_bind(
+    group:u64,router_handle:u64,
+)->i32{
+    let Ok(router)=shared_tun_reader(router_handle)else{return UNKNOWN};
+    if router.stop.load(Ordering::Acquire){return BAD_STAGE}
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    let Some(g)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+    if !g.server||g.stopped||g.stopping||g.drivers.is_some()||
+        g.shared_tun.is_some(){return BAD_STAGE}
+    let Some(ip)=g.client_lease_ipv4 else{return BAD_STAGE};
+    let generation=(group>>32) as u32;
+    let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(64);
+    g.shared_tun=Some(SharedTunSession{
+        router:router_handle,generation,ip,
+        alive:Arc::new(AtomicBool::new(true)),sender,
+        receiver:Some(receiver),
+    });
+    OK
+}
 #[cfg(feature="fec2_product_record")]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
@@ -3127,6 +3163,11 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
         if e.stopped{return OK}
         if e.stopping{return STOP_INCOMPLETE}
         e.stopping=true;
+        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+            any(target_env="gnu",target_env="musl")))]
+        if let Some(shared)=e.shared_tun.as_ref(){
+            retire_shared_tun_session(shared);
+        }
         (Arc::clone(&e.adapter),
          {
              #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -3172,13 +3213,27 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
     let Ok(mut r)=registry().lock()else{return BAD_STAGE};
     let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
     if e.stopped||e.stopping||e.drivers.is_some(){return BAD_STAGE}
+    #[cfg(target_os="linux")]
+    let ingress=e.shared_tun.as_mut().and_then(|s|s.receiver.take());
+    #[cfg(not(target_os="linux"))]
+    let ingress=None;
     let owner=crate::v4_game_public_kernel::GameKernelOwner::start(
         Arc::clone(&e.adapter),e.flows.clone(),e.tx_seqs.clone(),e.server,
         ifname,ifindex,dup,tunname,(group>>32) as u32,
-        e.outer_repair_enabled,e.peer_persona,e.client_lease_ipv4
+        e.outer_repair_enabled,e.peer_persona,e.client_lease_ipv4,ingress
     );
     let Ok(owner)=owner else{return BAD_STAGE};
     e.drivers=Some(owner);
+    #[cfg(target_os="linux")]
+    if let Some(shared)=e.shared_tun.as_ref(){
+        let Ok(router)=shared_tun_reader(shared.router)else{return BAD_STAGE};
+        if router.stop.load(Ordering::Acquire){return BAD_STAGE}
+        let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
+        shared_route_publish(&mut routes,shared.ip,SharedTunRoute{
+            generation:shared.generation,alive:Arc::clone(&shared.alive),
+            send:shared.sender.clone(),
+        });
+    }
     OK
 }
 #[cfg(all(feature="fec2_product_record",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -3888,14 +3943,14 @@ struct LoopCounts {
 // Small packet storage recycles after the original per-generation M1 loan
 // has copied it. A full recycler drops the buffer; it never waits on TX.
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-struct SharedTunPacket{
+pub(crate) struct SharedTunPacket{
     bytes:Vec<u8>,
     recycle:std::sync::mpsc::SyncSender<Vec<u8>>,
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 impl SharedTunPacket{
     fn len(&self)->usize{self.bytes.len()}
-    fn as_slice(&self)->&[u8]{&self.bytes}
+    pub(crate) fn as_slice(&self)->&[u8]{&self.bytes}
     fn into_vec(mut self)->Vec<u8>{std::mem::take(&mut self.bytes)}
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -3910,7 +3965,7 @@ impl Drop for SharedTunPacket{
 // One bounded per-product Normal/off ingress. No AEAD/PN, raw socket or
 // forged TCP ACK is owned by this reader. The receiver remains sole M3/M4.
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-enum OriginalTunIngress{
+pub(crate) enum OriginalTunIngress{
     Small(crate::memory::UniqueBuffer,usize),
     Jumbo(Vec<u8>),
     // One process-wide physical TUN read, routed by the protected lease /32.
@@ -4263,6 +4318,43 @@ fn m0_plan028_client_shared_tun_default_generation_fence(){
     assert!(b.load(Ordering::Acquire));
     shared_route_retire(&mut routes,default,2,&b);
     assert!(routes.is_empty());
+}
+#[cfg(all(test,feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan028_game_groups_share_one_tun_lease_routes_and_exact_stop(){
+    // Two different protected /32 Game installations share ONE TUN reader;
+    // old generation A may not steal sibling B or remove new generation A2.
+    let a=[10,70,0,2];let b=[10,70,0,3];
+    let (a1tx,a1rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    let (btx,brx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    let (a2tx,a2rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    let mut routes=HashMap::<[u8;4],SharedTunRoute>::new();
+    let a1=Arc::new(AtomicBool::new(true));
+    let b1=Arc::new(AtomicBool::new(true));
+    let a2=Arc::new(AtomicBool::new(true));
+    shared_route_publish(&mut routes,a,SharedTunRoute{
+        generation:10,alive:Arc::clone(&a1),send:a1tx,
+    });
+    shared_route_publish(&mut routes,b,SharedTunRoute{
+        generation:20,alive:Arc::clone(&b1),send:btx,
+    });
+    assert_eq!(routes.len(),2);
+    shared_route_publish(&mut routes,a,SharedTunRoute{
+        generation:30,alive:Arc::clone(&a2),send:a2tx,
+    });
+    assert!(!a1.load(Ordering::Acquire));
+    assert!(b1.load(Ordering::Acquire));
+    shared_route_retire(&mut routes,a,10,&a1);
+    assert_eq!(routes.len(),2);
+    assert_eq!(routes[&a].generation,30);
+    assert_eq!(routes[&b].generation,20);
+    shared_route_retire(&mut routes,b,20,&b1);
+    assert!(routes.contains_key(&a));
+    shared_route_retire(&mut routes,a,30,&a2);
+    assert!(routes.is_empty());
+    drop((a1rx,brx,a2rx));
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn retire_shared_tun_session(session:&SharedTunSession){
